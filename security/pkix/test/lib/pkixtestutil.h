@@ -72,8 +72,9 @@ enum Version { v1 = 0, v2 = 1, v3 = 2 };
 // MUST NOT be freed.
 SECItem* CreateEncodedCertificate(PLArenaPool* arena, long version,
                                   SECOidTag signature, long serialNumber,
-                                  const char* issuerASCII, PRTime notBefore,
-                                  PRTime notAfter, const char* subjectASCII,
+                                  const SECItem* issuerNameDER,
+                                  PRTime notBefore, PRTime notAfter,
+                                  const SECItem* subjectNameDER,
                      /*optional*/ SECItem const* const* extensions,
                      /*optional*/ SECKEYPrivateKey* issuerPrivateKey,
                                   SECOidTag signatureHashAlg,
