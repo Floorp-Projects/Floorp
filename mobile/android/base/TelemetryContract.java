@@ -109,10 +109,10 @@ public interface TelemetryContract {
         public static final String READER = "reader.1";
 
         // URL bar focused.
-        public static final String URLBAR_FOCUSED = "urlbar.1:";
+        public static final String URLBAR_FOCUSED = "urlbar.1";
 
         // Awesomescreen frecency search is active.
-        public static final String FRECENCY = "frecency.1:";
+        public static final String FRECENCY = "frecency.1";
     }
 
     /**
