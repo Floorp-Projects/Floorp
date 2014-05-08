@@ -8,7 +8,7 @@
 interface nsIDOMCSSRule;
 interface nsIDOMCSSStyleSheet;
 
-[scriptable, builtinclass, uuid(36098d39-b471-47e9-976e-33fee3d81467)]
+[builtinclass, uuid(36098d39-b471-47e9-976e-33fee3d81467)]
 interface nsIDOMStyleRuleChangeEvent : nsIDOMEvent
 {
   readonly attribute nsIDOMCSSStyleSheet stylesheet;

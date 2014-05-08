@@ -13,7 +13,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[scriptable, uuid(a6cf90be-15b3-11d2-932e-00805f8add32)]
+[uuid(a6cf90be-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMCSSStyleDeclaration : nsISupports
 {
            attribute DOMString        cssText;

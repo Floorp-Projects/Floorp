@@ -6,7 +6,7 @@
 
 interface nsIVariant;
 
-[scriptable, builtinclass, uuid(251252ba-ed8c-47a0-8979-f7652b4d558a)]
+[builtinclass, uuid(251252ba-ed8c-47a0-8979-f7652b4d558a)]
 interface nsIDOMMozWifiStatusChangeEvent : nsIDOMEvent
 {
     /**

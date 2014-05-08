@@ -7,7 +7,7 @@
 
 interface nsIDOMFile;
 
-[scriptable, uuid(283aa7b2-da81-4c72-aea2-9797b440fe34)]
+[uuid(283aa7b2-da81-4c72-aea2-9797b440fe34)]
 interface nsIDOMFileList : nsISupports
 {
   readonly attribute unsigned long length;

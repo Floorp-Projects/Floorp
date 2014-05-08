@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(af628000-e3fa-40d2-9118-fbaa9f3ec6b9)]
+[uuid(af628000-e3fa-40d2-9118-fbaa9f3ec6b9)]
 interface nsIDOMDocumentXBL : nsISupports
 {
   /**

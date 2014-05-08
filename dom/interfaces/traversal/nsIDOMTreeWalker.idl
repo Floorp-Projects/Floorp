@@ -8,7 +8,7 @@
 
 interface nsIDOMNodeFilter;
 
-[scriptable, uuid(c4ffa159-237c-4dde-b0ba-20b9f9270cf6)]
+[uuid(c4ffa159-237c-4dde-b0ba-20b9f9270cf6)]
 // Introduced in DOM Level 2:
 interface nsIDOMTreeWalker : nsISupports {
   readonly attribute nsIDOMNode       root;
