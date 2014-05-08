@@ -5393,6 +5393,9 @@ class ICSetProp_CallNative : public ICSetPropCallSetter
 //      JSOP_FUNAPPLY
 //      JSOP_FUNCALL
 //      JSOP_NEW
+//      JSOP_SPREADCALL
+//      JSOP_SPREADNEW
+//      JSOP_SPREADEVAL
 
 class ICCallStubCompiler : public ICStubCompiler
 {
@@ -5464,14 +5467,20 @@ class ICCall_Fallback : public ICMonitoredFallbackStub
     class Compiler : public ICCallStubCompiler {
       protected:
         bool isConstructing_;
+        bool isSpread_;
         uint32_t returnOffset_;
         bool generateStubCode(MacroAssembler &masm);
         bool postGenerateStubCode(MacroAssembler &masm, Handle<JitCode *> code);
 
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(isSpread_) << 16);
+        }
+
       public:
-        Compiler(JSContext *cx, bool isConstructing)
+        Compiler(JSContext *cx, bool isConstructing, bool isSpread)
           : ICCallStubCompiler(cx, ICStub::Call_Fallback),
-            isConstructing_(isConstructing)
+            isConstructing_(isConstructing),
+            isSpread_(isSpread)
         { }
 
         ICStub *getStub(ICStubSpace *space) {
