@@ -1751,12 +1751,14 @@ Breakpoints.prototype = {
     // Initialize the breakpoint, but don't update the editor, since this
     // callback is invoked because a breakpoint was added in the editor itself.
     this.addBreakpoint(location, { noEditorUpdate: true }).then(aBreakpointClient => {
-      // If the breakpoint client has an "requestedLocation" attached, then
+      // If the breakpoint client has a "requestedLocation" attached, then
       // the original requested placement for the breakpoint wasn't accepted.
       // In this case, we need to update the editor with the new location.
       if (aBreakpointClient.requestedLocation) {
-        DebuggerView.editor.removeBreakpoint(aBreakpointClient.requestedLocation.line - 1);
-        DebuggerView.editor.addBreakpoint(aBreakpointClient.location.line - 1);
+        DebuggerView.editor.moveBreakpoint(
+          aBreakpointClient.requestedLocation.line - 1,
+          aBreakpointClient.location.line - 1
+        );
       }
       // Notify that we've shown a breakpoint in the source editor.
       window.emit(EVENTS.BREAKPOINT_SHOWN);
