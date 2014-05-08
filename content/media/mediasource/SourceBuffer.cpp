@@ -132,6 +132,8 @@ public:
   {
     return false;
   }
+
+  static ContainerParser* CreateForMIMEType(const nsACString& aType);
 };
 
 class WebMContainerParser : public ContainerParser {
@@ -155,6 +157,17 @@ public:
     return false;
   }
 };
+
+/*static*/ ContainerParser*
+ContainerParser::CreateForMIMEType(const nsACString& aType)
+{
+  if (aType.LowerCaseEqualsLiteral("video/webm") || aType.LowerCaseEqualsLiteral("audio/webm")) {
+    return new WebMContainerParser();
+  }
+
+  // XXX: Plug in parsers for MPEG4, etc. here.
+  return new ContainerParser();
+}
 
 namespace dom {
 
@@ -320,12 +333,7 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
   , mDecoderInit(false)
 {
   MOZ_ASSERT(aMediaSource);
-  if (mType.EqualsIgnoreCase("video/webm") || mType.EqualsIgnoreCase("audio/webm")) {
-    mParser = new WebMContainerParser();
-  } else {
-    // XXX: Plug in parsers for MPEG4, etc. here.
-    mParser = new ContainerParser();
-  }
+  mParser = ContainerParser::CreateForMIMEType(aType);
   MSE_DEBUG("%p SourceBuffer: Creating initial decoder.", this);
   InitNewDecoder();
 }
