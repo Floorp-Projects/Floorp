@@ -2520,54 +2520,15 @@ CASE(JSOP_SPREADCALL)
 CASE(JSOP_SPREADEVAL)
 {
     JS_ASSERT(REGS.stackDepth() >= 3);
-    RootedObject &aobj = rootObject0;
-    aobj = &REGS.sp[-1].toObject();
 
-    uint32_t length = aobj->as<ArrayObject>().length();
-
-    if (length > ARGS_LENGTH_MAX) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
-                             *REGS.pc == JSOP_SPREADNEW ? JSMSG_TOO_MANY_CON_SPREADARGS
-                                                        : JSMSG_TOO_MANY_FUN_SPREADARGS);
+    HandleValue callee = REGS.stackHandleAt(-3);
+    HandleValue thisv = REGS.stackHandleAt(-2);
+    HandleValue arr = REGS.stackHandleAt(-1);
+    MutableHandleValue ret = REGS.stackHandleAt(-3);
+    if (!SpreadCallOperation(cx, script, REGS.pc, thisv, callee, arr, ret))
         goto error;
-    }
-
-    InvokeArgs args(cx);
-
-    if (!args.init(length))
-        return false;
-
-    args.setCallee(REGS.sp[-3]);
-    args.setThis(REGS.sp[-2]);
-
-    if (!GetElements(cx, aobj, length, args.array()))
-        goto error;
-
-    switch (*REGS.pc) {
-      case JSOP_SPREADNEW:
-        if (!InvokeConstructor(cx, args))
-            goto error;
-        break;
-      case JSOP_SPREADCALL:
-        if (!Invoke(cx, args))
-            goto error;
-        break;
-      case JSOP_SPREADEVAL:
-        if (REGS.fp()->scopeChain()->global().valueIsEval(args.calleev())) {
-            if (!DirectEval(cx, args))
-                goto error;
-        } else {
-            if (!Invoke(cx, args))
-                goto error;
-        }
-        break;
-      default:
-        MOZ_ASSUME_UNREACHABLE("bad spread opcode");
-    }
 
     REGS.sp -= 2;
-    REGS.sp[-1] = args.rval();
-    TypeScript::Monitor(cx, script, REGS.pc, REGS.sp[-1]);
 }
 END_CASE(JSOP_SPREADCALL)
 
@@ -3973,5 +3934,58 @@ js::SpreadOperation(JSContext *cx, HandleObject arr, HandleValue countVal,
             return false;
     }
     resultCountVal.setInt32(count);
+    return true;
+}
+
+bool
+js::SpreadCallOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue thisv,
+                        HandleValue callee, HandleValue arr, MutableHandleValue res)
+{
+    RootedObject aobj(cx, &arr.toObject());
+    uint32_t length = aobj->as<ArrayObject>().length();
+    JSOp op = JSOp(*pc);
+
+    if (length > ARGS_LENGTH_MAX) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+                             op == JSOP_SPREADNEW ? JSMSG_TOO_MANY_CON_SPREADARGS
+                                                  : JSMSG_TOO_MANY_FUN_SPREADARGS);
+        return false;
+    }
+
+    InvokeArgs args(cx);
+
+    if (!args.init(length))
+        return false;
+
+    args.setCallee(callee);
+    args.setThis(thisv);
+
+    if (!GetElements(cx, aobj, length, args.array()))
+        return false;
+
+    switch (op) {
+      case JSOP_SPREADNEW:
+        if (!InvokeConstructor(cx, args))
+            return false;
+        break;
+      case JSOP_SPREADCALL:
+        if (!Invoke(cx, args))
+            return false;
+        break;
+      case JSOP_SPREADEVAL:
+        if (cx->global()->valueIsEval(args.calleev())) {
+            if (!DirectEval(cx, args))
+                return false;
+        } else {
+            if (!Invoke(cx, args))
+                return false;
+        }
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("bad spread opcode");
+    }
+
+    res.set(args.rval());
+    TypeScript::Monitor(cx, script, pc, res);
     return true;
 }
