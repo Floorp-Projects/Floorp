@@ -50,16 +50,22 @@ add_task(function* test_before_after_profile() {
 });
 
 // Test simple paths
-add_task(function() {
+add_task(function* test_simple_paths() {
   do_check_true(!!OS.Constants.Path.tmpDir);
-  do_check_eq(OS.Constants.Path.tmpDir, Services.dirsvc.get("TmpD", Components.interfaces.nsIFile).path);
+  compare_paths(OS.Constants.Path.tmpDir, "TmpD");
 
-  do_check_true(!!OS.Constants.Path.homeDir);
-  do_check_eq(OS.Constants.Path.homeDir, Services.dirsvc.get("Home", Components.interfaces.nsIFile).path);
+});
 
+// Test presence of paths that only exist on Desktop platforms
+add_task(function* test_desktop_paths() {
+  if (OS.Constants.Sys.Name == "Android") {
+    return;
+  }
   do_check_true(!!OS.Constants.Path.desktopDir);
-  do_check_eq(OS.Constants.Path.desktopDir, Services.dirsvc.get("Desk", Components.interfaces.nsIFile).path);
+  do_check_true(!!OS.Constants.Path.homeDir);
 
+  compare_paths(OS.Constants.Path.homeDir, "Home");
+  compare_paths(OS.Constants.Path.desktopDir, "Desk");
   compare_paths(OS.Constants.Path.userApplicationDataDir, "UAppData");
 
   compare_paths(OS.Constants.Path.winAppDataDir, "AppData");
@@ -70,7 +76,7 @@ add_task(function() {
 });
 
 // Open libxul
-add_task(function() {
+add_task(function* test_libxul() {
   ctypes.open(OS.Constants.Path.libxul);
   do_print("Linked to libxul");
 });

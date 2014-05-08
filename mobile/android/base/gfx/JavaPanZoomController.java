@@ -469,8 +469,11 @@ class JavaPanZoomController
             return false;
 
         case TOUCHING:
-            // Don't allow panning if there is an element in full-screen mode. See bug 775511.
-            if ((mTarget.isFullScreen() && !mSubscroller.scrolling()) || panDistance(event) < PAN_THRESHOLD) {
+            // Don't allow panning if there is a non-root element in full-screen mode. See bug 775511 and bug 859683.
+            if (mTarget.getFullScreenState() == FullScreenState.NON_ROOT_ELEMENT && !mSubscroller.scrolling()) {
+                return false;
+            }
+            if (panDistance(event) < PAN_THRESHOLD) {
                 return false;
             }
             cancelTouch();
@@ -1173,7 +1176,7 @@ class JavaPanZoomController
 
     @Override
     public boolean onScale(SimpleScaleGestureDetector detector) {
-        if (mTarget.isFullScreen())
+        if (mTarget.getFullScreenState() != FullScreenState.NONE)
             return false;
 
         if (mState != PanZoomState.PINCHING)

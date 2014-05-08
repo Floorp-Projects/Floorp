@@ -201,6 +201,10 @@
   margin: -4px; /* Compensate for the .panel-arrowcontent padding. */
 }
 
+.devtools-tooltip-variables-view-box .variable-or-property > .title {
+  -moz-padding-end: 6px;
+}
+
 /* Tooltip: Tiles */
 
 .devtools-tooltip-tiles {
