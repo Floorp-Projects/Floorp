@@ -16,7 +16,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(f02502b5-32a6-4df7-8a57-1416553a3188)]
+[uuid(f02502b5-32a6-4df7-8a57-1416553a3188)]
 interface nsIDOMHTMLQuoteElement : nsISupports
 {
            attribute DOMString        cite;

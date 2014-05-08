@@ -2021,47 +2021,11 @@ DefineInterfaceConstants(JSContext *cx, JS::Handle<JSObject*> obj, const nsIID *
 
   JS::Rooted<JS::Value> v(cx);
   for (i = parent_constant_count; i < constant_count; i++) {
-    const nsXPTConstant *c = nullptr;
+    nsXPIDLCString name;
+    rv = if_info->GetConstant(i, &v, getter_Copies(name));
+    NS_ENSURE_TRUE(NS_SUCCEEDED(rv), rv);
 
-    rv = if_info->GetConstant(i, &c);
-    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && c, rv);
-
-    uint16_t type = c->GetType().TagPart();
-
-    v.setUndefined();
-    switch (type) {
-      case nsXPTType::T_I8:
-      case nsXPTType::T_U8:
-      {
-        v.setInt32(c->GetValue()->val.u8);
-        break;
-      }
-      case nsXPTType::T_I16:
-      case nsXPTType::T_U16:
-      {
-        v.setInt32(c->GetValue()->val.u16);
-        break;
-      }
-      case nsXPTType::T_I32:
-      {
-        v = JS_NumberValue(c->GetValue()->val.i32);
-        break;
-      }
-      case nsXPTType::T_U32:
-      {
-        v = JS_NumberValue(c->GetValue()->val.u32);
-        break;
-      }
-      default:
-      {
-#ifdef DEBUG
-        NS_ERROR("Non-numeric constant found in interface.");
-#endif
-        continue;
-      }
-    }
-
-    if (!::JS_DefineProperty(cx, obj, c->GetName(), v,
+    if (!::JS_DefineProperty(cx, obj, name, v,
                              JSPROP_ENUMERATE | JSPROP_READONLY |
                              JSPROP_PERMANENT,
                              JS_PropertyStub, JS_StrictPropertyStub)) {

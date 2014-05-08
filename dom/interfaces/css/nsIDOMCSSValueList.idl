@@ -6,7 +6,7 @@
 #include "domstubs.idl"
 #include "nsIDOMCSSValue.idl"
 
-[scriptable, uuid(92364ed1-e364-4175-bc52-c2fe9671cbc7)]
+[uuid(92364ed1-e364-4175-bc52-c2fe9671cbc7)]
 interface nsIDOMCSSValueList : nsIDOMCSSValue
 {
 };

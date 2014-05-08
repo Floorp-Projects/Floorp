@@ -5,7 +5,7 @@
 #include "nsIDOMEvent.idl"
 interface nsIVariant;
 
-[scriptable, builtinclass, uuid(d5081bf4-6a63-4ee6-8ce6-f488082dc08f)]
+[builtinclass, uuid(d5081bf4-6a63-4ee6-8ce6-f488082dc08f)]
 interface nsIDOMMozSettingsEvent : nsIDOMEvent
 {
   readonly attribute DOMString  settingName;
