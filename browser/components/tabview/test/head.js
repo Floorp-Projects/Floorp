@@ -142,10 +142,7 @@ function afterAllTabsLoaded(callback, win) {
                          browser.__SS_restoreState &&
                          browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE);
 
-    let isLoading = browser.webProgress.isLoadingDocument ||
-                    browser.contentDocument.readyState != "complete";
-
-    if (isRestorable && isLoading) {
+    if (isRestorable && browser.webProgress.isLoadingDocument) {
       stillToLoad++;
       browser.addEventListener("load", onLoad, true);
     }

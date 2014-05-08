@@ -141,6 +141,10 @@ dictionary RTCStatsReportInternal {
   sequence<RTCIceCandidatePairStats>  iceCandidatePairStats;
   sequence<RTCIceCandidateStats>      iceCandidateStats;
   sequence<RTCCodecStats>             codecStats;
+  DOMString                           localSdp;
+  DOMString                           remoteSdp;
+  DOMHighResTimeStamp                 timestamp;
+  boolean                             closed; // Is the PC now closed
 };
 
 [Pref="media.peerconnection.enabled",

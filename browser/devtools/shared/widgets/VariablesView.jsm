@@ -2704,7 +2704,7 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
     this._openInspectorNode = this.document.createElement("toolbarbutton");
     this._openInspectorNode.className = "plain variables-view-open-inspector";
     this._openInspectorNode.addEventListener("mousedown", this.openNodeInInspector, false);
-    this._title.insertBefore(this._openInspectorNode, this._title.querySelector("toolbarbutton"));
+    this._title.appendChild(this._openInspectorNode);
 
     this._linkedToInspector = true;
   },

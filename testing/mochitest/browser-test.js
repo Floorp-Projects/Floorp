@@ -184,6 +184,7 @@ Tester.prototype = {
                            : this.currentTest ? "Found an unexpected {elt} at the end of test run"
                                               : "Found an unexpected {elt}";
 
+    // Remove stale tabs
     if (this.currentTest && window.gBrowser && gBrowser.tabs.length > 1) {
       while (gBrowser.tabs.length > 1) {
         let lastTab = gBrowser.tabContainer.lastChild;
@@ -194,6 +195,14 @@ Tester.prototype = {
       }
     }
 
+    // Replace the last tab with a fresh one
+    if (window.gBrowser) {
+      gBrowser.addTab("about:blank", { skipAnimation: true });
+      gBrowser.removeCurrentTab();
+      gBrowser.stop();
+    }
+
+    // Remove stale windows
     this.dumper.dump("TEST-INFO | checking window state\n");
     let windowsEnum = Services.wm.getEnumerator(null);
     while (windowsEnum.hasMoreElements()) {
@@ -435,16 +444,6 @@ Tester.prototype = {
     // is invoked to start the tests.
     this.waitForWindowsState((function () {
       if (this.done) {
-        // Many tests randomly add and remove tabs, resulting in the original
-        // tab being replaced by a new one. The last test in the suite doing this
-        // will erroneously be blamed for leaking this new tab's DOM window and
-        // docshell until shutdown. We can prevent this by removing this tab now
-        // that all tests are done.
-        if (window.gBrowser) {
-          gBrowser.addTab();
-          gBrowser.removeCurrentTab();
-        }
-
         // Uninitialize a few things explicitly so that they can clean up
         // frames and browser intentionally kept alive until shutdown to
         // eliminate false positives.

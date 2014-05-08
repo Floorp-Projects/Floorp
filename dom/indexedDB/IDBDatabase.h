@@ -10,7 +10,6 @@
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
 #include "nsIDocument.h"
-#include "nsIFileStorage.h"
 #include "nsIOfflineStorage.h"
 
 #include "mozilla/Attributes.h"
@@ -59,7 +58,6 @@ class IDBDatabase : public IDBWrapperCache,
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIFILESTORAGE
   NS_DECL_NSIOFFLINESTORAGE
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBDatabase, IDBWrapperCache)
@@ -74,13 +72,6 @@ public:
 
   static IDBDatabase*
   FromStorage(nsIOfflineStorage* aStorage);
-
-  static IDBDatabase*
-  FromStorage(nsIFileStorage* aStorage)
-  {
-    nsCOMPtr<nsIOfflineStorage> storage = do_QueryInterface(aStorage);
-    return storage ? FromStorage(storage) : nullptr;
-  }
 
   // nsIDOMEventTarget
   virtual nsresult PostHandleEvent(
@@ -109,6 +100,14 @@ public:
 
     nsCOMPtr<nsIDocument> doc = GetOwner()->GetExtantDoc();
     return doc.forget();
+  }
+
+  // Whether or not the database has been invalidated. If it has then no further
+  // transactions for this database will be allowed to run. This function may be
+  // called on any thread.
+  bool IsInvalidated() const
+  {
+    return mInvalidated;
   }
 
   void DisconnectFromActorParent();

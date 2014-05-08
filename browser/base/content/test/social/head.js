@@ -237,6 +237,8 @@ function checkSocialUI(win) {
     _is(!!a, !!b, msg);
   }
   isbool(win.SocialSidebar.canShow, sidebarEnabled, "social sidebar active?");
+  isbool(win.SocialChatBar.isAvailable, enabled, "chatbar available?");
+  isbool(!win.SocialChatBar.chatbar.hidden, enabled, "chatbar visible?");
 
   let contextMenus = [
     {
@@ -277,6 +279,8 @@ function checkSocialUI(win) {
   // and for good measure, check all the social commands.
   isbool(!doc.getElementById("Social:ToggleSidebar").hidden, sidebarEnabled, "Social:ToggleSidebar visible?");
   isbool(!doc.getElementById("Social:ToggleNotifications").hidden, enabled, "Social:ToggleNotifications visible?");
+  isbool(!doc.getElementById("Social:FocusChat").hidden, enabled, "Social:FocusChat visible?");
+  isbool(doc.getElementById("Social:FocusChat").getAttribute("disabled"), enabled ? "false" : "true", "Social:FocusChat disabled?");
 
   // and report on overall success of failure of the various checks here.
   is(numGoodTests, numTests, "The Social UI tests succeeded.")
@@ -399,7 +403,7 @@ function get3ChatsForCollapsing(mode, cb) {
   // To make our life easier we don't go via the worker and ports so we get
   // more control over creation *and* to make the code much simpler.  We
   // assume the worker/port stuff is individually tested above.
-  let chatbar = getChatBar();
+  let chatbar = window.SocialChatBar.chatbar;
   let chatWidth = undefined;
   let num = 0;
   is(chatbar.childNodes.length, 0, "chatbar starting empty");
@@ -443,21 +447,23 @@ function makeChat(mode, uniqueid, cb) {
   info("making a chat window '" + uniqueid +"'");
   let provider = SocialSidebar.provider;
   const chatUrl = provider.origin + "/browser/browser/base/content/test/social/social_chat.html";
-  // Note that we use promiseChatLoaded instead of the callback to ensure the
-  // content has started loading.
-  let chatbox = getChatBar().openChat(provider.origin, provider.name,
-                                      chatUrl + "?id=" + uniqueid, mode);
-  chatbox.promiseChatLoaded.then(
-    () => {
+  let isOpened = window.SocialChatBar.openChat(provider, chatUrl + "?id=" + uniqueid, function(chat) {
     info("chat window has opened");
-    chatbox.contentDocument.title = uniqueid;
-    cb();
-  });
+    // we can't callback immediately or we might close the chat during
+    // this event which upsets the implementation - it is only 1/2 way through
+    // handling the load event.
+    chat.document.title = uniqueid;
+    executeSoon(cb);
+  }, mode);
+  if (!isOpened) {
+    ok(false, "unable to open chat window, no provider? more failures to come");
+    executeSoon(cb);
+  }
 }
 
 function checkPopup() {
   // popup only showing if any collapsed popup children.
-  let chatbar = getChatBar();
+  let chatbar = window.SocialChatBar.chatbar;
   let numCollapsed = 0;
   for (let chat of chatbar.childNodes) {
     if (chat.collapsed) {
@@ -476,7 +482,7 @@ function checkPopup() {
 // Does a callback passing |true| if the window is now big enough or false
 // if we couldn't resize large enough to satisfy the test requirement.
 function resizeWindowToChatAreaWidth(desired, cb, count = 0) {
-  let current = getChatBar().getBoundingClientRect().width;
+  let current = window.SocialChatBar.chatbar.getBoundingClientRect().width;
   let delta = desired - current;
   info(count + ": resizing window so chat area is " + desired + " wide, currently it is "
        + current + ".  Screen avail is " + window.screen.availWidth
@@ -509,7 +515,7 @@ function resizeWindowToChatAreaWidth(desired, cb, count = 0) {
   }
   function resize_handler(event) {
     // we did resize - but did we get far enough to be able to continue?
-    let newSize = getChatBar().getBoundingClientRect().width;
+    let newSize = window.SocialChatBar.chatbar.getBoundingClientRect().width;
     let sizedOk = widthDeltaCloseEnough(newSize - desired);
     if (!sizedOk)
       return;
@@ -557,13 +563,8 @@ function resizeAndCheckWidths(first, second, third, checks, cb) {
   }, count);
 }
 
-function getChatBar() {
-  return document.getElementById("pinnedchats");
-}
-
 function getPopupWidth() {
-  let chatbar = getChatBar();
-  let popup = chatbar.menupopup;
+  let popup = window.SocialChatBar.chatbar.menupopup;
   ok(!popup.parentNode.collapsed, "asking for popup width when it is visible");
   let cs = document.defaultView.getComputedStyle(popup.parentNode);
   let margins = parseInt(cs.marginLeft) + parseInt(cs.marginRight);
@@ -571,8 +572,6 @@ function getPopupWidth() {
 }
 
 function closeAllChats() {
-  let chatbar = getChatBar();
-  while (chatbar.selectedChat) {
-    chatbar.selectedChat.close();
-  }
+  let chatbar = window.SocialChatBar.chatbar;
+  chatbar.removeAll();
 }

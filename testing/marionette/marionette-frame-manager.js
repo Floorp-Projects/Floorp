@@ -22,7 +22,7 @@ let remoteFrames = [];
  */
 function MarionetteRemoteFrame(windowId, frameId) {
   this.windowId = windowId; //outerWindowId relative to main process
-  this.frameId = frameId ? frameId : null; //actual frame relative to windowId's frames list
+  this.frameId = frameId; //actual frame relative to windowId's frames list
   this.targetFrameId = this.frameId; //assigned FrameId, used for messaging
 };
 
