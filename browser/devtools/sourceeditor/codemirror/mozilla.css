@@ -24,6 +24,11 @@
 
 .breakpoint {
   background-image: url("chrome://browser/skin/devtools/editor-breakpoint.png");
+  position: relative;
+}
+
+.breakpoint[adding] {
+  transition: transform .25s;
 }
 
 .debugLocation {
