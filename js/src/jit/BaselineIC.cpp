@@ -5688,6 +5688,9 @@ TryAttachGlobalNameStub(JSContext *cx, HandleScript script, jsbytecode *pc,
         return true;
     }
 
+    // Try to add a getter stub. We don't handle scripted getters yet; if this
+    // changes we need to make sure IonBuilder::getPropTryCommonGetter (which
+    // requires a Baseline stub) handles non-outerized this objects correctly.
     bool isScripted;
     if (IsCacheableGetPropCall(cx, global, global, shape, &isScripted) && !isScripted)
     {
@@ -5740,6 +5743,10 @@ TryAttachScopeNameStub(JSContext *cx, HandleScript script, ICGetName_Fallback *s
 
         scopeChain = scopeChain->enclosingScope();
     }
+
+    // We don't handle getters here. When this changes, we need to make sure
+    // IonBuilder::getPropTryCommonGetter (which requires a Baseline stub to
+    // work) handles non-outerized this objects correctly.
 
     if (!IsCacheableGetPropReadSlot(scopeChain, scopeChain, shape))
         return true;
