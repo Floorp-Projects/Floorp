@@ -105,7 +105,7 @@ function test() {
         "myVar.prop + 42": 2549
       }))
       .then(() => deleteWatchExpression("myVar.prop + 42"))
-      .then(() => testEdit("self", "0910", {
+      .then(() => testEdit("self", "910", {
         "myVar.prop": 910
       }))
       .then(() => deleteLastWatchExpression("myVar.prop"))

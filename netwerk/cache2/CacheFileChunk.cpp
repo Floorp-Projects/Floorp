@@ -7,8 +7,6 @@
 
 #include "CacheFile.h"
 #include "nsThreadUtils.h"
-#include "nsAlgorithm.h"
-#include <algorithm>
 
 namespace mozilla {
 namespace net {
@@ -45,55 +43,6 @@ public:
 protected:
   nsCOMPtr<CacheFileChunkListener> mCallback;
   nsRefPtr<CacheFileChunk>         mChunk;
-};
-
-
-class ValidityPair {
-public:
-  ValidityPair(uint32_t aOffset, uint32_t aLen)
-    : mOffset(aOffset), mLen(aLen)
-  {}
-
-  ValidityPair& operator=(const ValidityPair& aOther) {
-    mOffset = aOther.mOffset;
-    mLen = aOther.mLen;
-    return *this;
-  }
-
-  bool Overlaps(const ValidityPair& aOther) const {
-    if ((mOffset <= aOther.mOffset && mOffset + mLen >= aOther.mOffset) ||
-        (aOther.mOffset <= mOffset && aOther.mOffset + mLen >= mOffset))
-      return true;
-
-    return false;
-  }
-
-  bool LessThan(const ValidityPair& aOther) const {
-    if (mOffset < aOther.mOffset)
-      return true;
-
-    if (mOffset == aOther.mOffset && mLen < aOther.mLen)
-      return true;
-
-    return false;
-  }
-
-  void Merge(const ValidityPair& aOther) {
-    MOZ_ASSERT(Overlaps(aOther));
-
-    uint32_t offset = std::min(mOffset, aOther.mOffset);
-    uint32_t end = std::max(mOffset + mLen, aOther.mOffset + aOther.mLen);
-
-    mOffset = offset;
-    mLen = end - offset;
-  }
-
-  uint32_t Offset() { return mOffset; }
-  uint32_t Len()    { return mLen; }
-
-private:
-  uint32_t mOffset;
-  uint32_t mLen;
 };
 
 
@@ -367,6 +316,7 @@ CacheFileChunk::UpdateDataSize(uint32_t aOffset, uint32_t aLen, bool aEOF)
 
   MOZ_ASSERT(!aEOF, "Implement me! What to do with opened streams?");
   MOZ_ASSERT(aOffset <= mDataSize);
+  MOZ_ASSERT(aLen != 0);
 
   // UpdateDataSize() is called only when we've written some data to the chunk
   // and we never write data anymore once some error occurs.
@@ -391,8 +341,9 @@ CacheFileChunk::UpdateDataSize(uint32_t aOffset, uint32_t aLen, bool aEOF)
   if (mState == READY || mState == WRITING) {
     MOZ_ASSERT(mValidityMap.Length() == 0);
 
-    if (notify)
+    if (notify) {
       NotifyUpdateListeners();
+    }
 
     return;
   }
@@ -405,49 +356,8 @@ CacheFileChunk::UpdateDataSize(uint32_t aOffset, uint32_t aLen, bool aEOF)
   MOZ_ASSERT(mUpdateListeners.Length() == 0);
   MOZ_ASSERT(mState == READING);
 
-  ValidityPair pair(aOffset, aLen);
-
-  if (mValidityMap.Length() == 0) {
-    mValidityMap.AppendElement(pair);
-    return;
-  }
-
-
-  // Find out where to place this pair into the map, it can overlap with
-  // one preceding pair and all subsequent pairs.
-  uint32_t pos = 0;
-  for (pos = mValidityMap.Length() ; pos > 0 ; pos--) {
-    if (mValidityMap[pos-1].LessThan(pair)) {
-      if (mValidityMap[pos-1].Overlaps(pair)) {
-        // Merge with the preceding pair
-        mValidityMap[pos-1].Merge(pair);
-        pos--; // Point to the updated pair
-      }
-      else {
-        if (pos == mValidityMap.Length())
-          mValidityMap.AppendElement(pair);
-        else
-          mValidityMap.InsertElementAt(pos, pair);
-      }
-
-      break;
-    }
-  }
-
-  if (!pos)
-    mValidityMap.InsertElementAt(0, pair);
-
-  // Now pos points to merged or inserted pair, check whether it overlaps with
-  // subsequent pairs.
-  while (pos + 1 < mValidityMap.Length()) {
-    if (mValidityMap[pos].Overlaps(mValidityMap[pos + 1])) {
-      mValidityMap[pos].Merge(mValidityMap[pos + 1]);
-      mValidityMap.RemoveElementAt(pos + 1);
-    }
-    else {
-      break;
-    }
-  }
+  mValidityMap.AddPair(aOffset, aLen);
+  mValidityMap.Log();
 }
 
 nsresult
@@ -530,16 +440,21 @@ CacheFileChunk::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
           mRWBuf = nullptr;
           mRWBufSize = 0;
         } else {
+          LOG(("CacheFileChunk::OnDataRead() - Merging buffers. [this=%p]",
+               this));
+
           // Merge data with write buffer
           if (mRWBufSize < mBufSize) {
             mRWBuf = static_cast<char *>(moz_xrealloc(mRWBuf, mBufSize));
             mRWBufSize = mBufSize;
           }
 
+          mValidityMap.Log();
           for (uint32_t i = 0 ; i < mValidityMap.Length() ; i++) {
             memcpy(mRWBuf + mValidityMap[i].Offset(),
                    mBuf + mValidityMap[i].Offset(), mValidityMap[i].Len());
           }
+          mValidityMap.Clear();
 
           free(mBuf);
           mBuf = mRWBuf;

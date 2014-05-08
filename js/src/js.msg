@@ -195,7 +195,7 @@ MSG_DEF(JSMSG_UNTERMINATED_REGEXP,    141, 0, JSEXN_SYNTAXERR, "unterminated reg
 MSG_DEF(JSMSG_BAD_CLONE_FUNOBJ_SCOPE, 142, 0, JSEXN_TYPEERR, "bad cloned function scope chain")
 MSG_DEF(JSMSG_MISSING_OCTAL_DIGITS,   143, 0, JSEXN_SYNTAXERR, "missing octal digits after '0o'")
 MSG_DEF(JSMSG_ILLEGAL_CHARACTER,      144, 0, JSEXN_SYNTAXERR, "illegal character")
-MSG_DEF(JSMSG_BAD_OCTAL,              145, 1, JSEXN_SYNTAXERR, "{0} is not a legal ECMA-262 octal constant")
+MSG_DEF(JSMSG_BAD_OCTAL,              145, 1, JSEXN_SYNTAXERR, "numbers starting with 0 followed by a digit are octals and can't contain {0}")
 MSG_DEF(JSMSG_RESULTING_STRING_TOO_LARGE, 146, 0, JSEXN_RANGEERR, "repeat count must be less than infinity and not overflow maximum string size")
 MSG_DEF(JSMSG_UNCAUGHT_EXCEPTION,     147, 1, JSEXN_INTERNALERR, "uncaught exception: {0}")
 MSG_DEF(JSMSG_INVALID_BACKREF,        148, 0, JSEXN_SYNTAXERR, "non-octal digit in an escape sequence that doesn't match a back-reference")

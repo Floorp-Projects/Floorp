@@ -4,14 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsString.h"
 #include "nsIUnicodeEncoder.h"
-#include "nsICharsetConverterManager.h"
+#include "nsIUnicodeDecoder.h"
 #include "nsITextToSubURI.h"
 #include "nsEscape.h"
 #include "nsTextToSubURI.h"
 #include "nsCRT.h"
-#include "nsServiceManagerUtils.h"
+#include "mozilla/dom/EncodingUtils.h"
 
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+using mozilla::dom::EncodingUtils;
 
 nsTextToSubURI::nsTextToSubURI()
 {
@@ -25,54 +25,56 @@ NS_IMPL_ISUPPORTS(nsTextToSubURI, nsITextToSubURI)
 NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
   const char *charset, const char16_t *text, char **_retval) 
 {
-  if(nullptr == _retval)
+  if (!_retval) {
     return NS_ERROR_NULL_POINTER;
+  }
   *_retval = nullptr;
   nsresult rv = NS_OK;
   
-  // Get Charset, get the encoder.
-  nsICharsetConverterManager *ccm;
-  rv = CallGetService(kCharsetConverterManagerCID, &ccm);
-  if(NS_SUCCEEDED(rv)) {
-     nsIUnicodeEncoder *encoder;
-     rv = ccm->GetUnicodeEncoder(charset, &encoder);
-     NS_RELEASE(ccm);
-     if (NS_SUCCEEDED(rv)) {
-       rv = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nullptr, (char16_t)'?');
-       if(NS_SUCCEEDED(rv))
-       {
-          char buf[256];
-          char *pBuf = buf;
-          int32_t ulen = text ? NS_strlen(text) : 0;
-          int32_t outlen = 0;
-          if(NS_SUCCEEDED(rv = encoder->GetMaxLength(text, ulen, &outlen))) 
-          {
-             if(outlen >= 256) {
-                pBuf = (char*)NS_Alloc(outlen+1);
-             }
-             if(nullptr == pBuf) {
-                outlen = 255;
-                pBuf = buf;
-             }
-             int32_t bufLen = outlen;
-             if(NS_SUCCEEDED(rv = encoder->Convert(text,&ulen, pBuf, &outlen))) {
-                // put termination characters (e.g. ESC(B of ISO-2022-JP) if necessary
-                int32_t finLen = bufLen - outlen;
-                if (finLen > 0) {
-                  if (NS_SUCCEEDED(encoder->Finish((char *)(pBuf+outlen), &finLen)))
-                    outlen += finLen;
-                }
-                pBuf[outlen] = '\0';
-                *_retval = nsEscape(pBuf, url_XPAlphas);
-                if(nullptr == *_retval)
-                  rv = NS_ERROR_OUT_OF_MEMORY;
-             }
+  if (!charset) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsDependentCString label(charset);
+  nsAutoCString encoding;
+  if (!EncodingUtils::FindEncodingForLabelNoReplacement(label, encoding)) {
+    return NS_ERROR_UCONV_NOCONV;
+  }
+  nsCOMPtr<nsIUnicodeEncoder> encoder =
+    EncodingUtils::EncoderForEncoding(encoding);
+  rv = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nullptr, (char16_t)'?');
+  if (NS_SUCCEEDED(rv) ) {
+    char buf[256];
+    char *pBuf = buf;
+    int32_t ulen = text ? NS_strlen(text) : 0;
+    int32_t outlen = 0;
+    if (NS_SUCCEEDED(rv = encoder->GetMaxLength(text, ulen, &outlen))) {
+      if (outlen >= 256) {
+        pBuf = (char*)NS_Alloc(outlen+1);
+      }
+      if (nullptr == pBuf) {
+        outlen = 255;
+        pBuf = buf;
+      }
+      int32_t bufLen = outlen;
+      if (NS_SUCCEEDED(rv = encoder->Convert(text,&ulen, pBuf, &outlen))) {
+        // put termination characters (e.g. ESC(B of ISO-2022-JP) if necessary
+        int32_t finLen = bufLen - outlen;
+        if (finLen > 0) {
+          if (NS_SUCCEEDED(encoder->Finish((char *)(pBuf+outlen), &finLen))) {
+            outlen += finLen;
           }
-          if(pBuf != buf)
-             NS_Free(pBuf);
-       }
-       NS_RELEASE(encoder);
-     }
+        }
+        pBuf[outlen] = '\0';
+        *_retval = nsEscape(pBuf, url_XPAlphas);
+        if (nullptr == *_retval) {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
+    }
+    if (pBuf != buf) {
+      NS_Free(pBuf);
+    }
   }
   
   return rv;
@@ -91,6 +93,11 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
   *_retval = nullptr;
   nsresult rv = NS_OK;
   
+  if (!charset) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+
   // unescape the string, unescape changes the input
   char *unescaped = NS_strdup(text);
   if (nullptr == unescaped)
@@ -98,30 +105,27 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
   unescaped = nsUnescape(unescaped);
   NS_ASSERTION(unescaped, "nsUnescape returned null");
 
-  // Convert from the charset to unicode
-  nsCOMPtr<nsICharsetConverterManager> ccm = 
-           do_GetService(kCharsetConverterManagerCID, &rv); 
-  if (NS_SUCCEEDED(rv)) {
-    nsIUnicodeDecoder *decoder;
-    rv = ccm->GetUnicodeDecoder(charset, &decoder);
-    if (NS_SUCCEEDED(rv)) {
-      char16_t *pBuf = nullptr;
-      int32_t len = strlen(unescaped);
-      int32_t outlen = 0;
-      if (NS_SUCCEEDED(rv = decoder->GetMaxLength(unescaped, len, &outlen))) {
-        pBuf = (char16_t *) NS_Alloc((outlen+1)*sizeof(char16_t));
-        if (nullptr == pBuf)
-          rv = NS_ERROR_OUT_OF_MEMORY;
-        else {
-          if (NS_SUCCEEDED(rv = decoder->Convert(unescaped, &len, pBuf, &outlen))) {
-            pBuf[outlen] = 0;
-            *_retval = pBuf;
-          }
-          else
-            NS_Free(pBuf);
-        }
+  nsDependentCString label(charset);
+  nsAutoCString encoding;
+  if (!EncodingUtils::FindEncodingForLabelNoReplacement(label, encoding)) {
+    return NS_ERROR_UCONV_NOCONV;
+  }
+  nsCOMPtr<nsIUnicodeDecoder> decoder =
+    EncodingUtils::DecoderForEncoding(encoding);
+  char16_t *pBuf = nullptr;
+  int32_t len = strlen(unescaped);
+  int32_t outlen = 0;
+  if (NS_SUCCEEDED(rv = decoder->GetMaxLength(unescaped, len, &outlen))) {
+    pBuf = (char16_t *) NS_Alloc((outlen+1)*sizeof(char16_t));
+    if (nullptr == pBuf) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    } else {
+      if (NS_SUCCEEDED(rv = decoder->Convert(unescaped, &len, pBuf, &outlen))) {
+        pBuf[outlen] = 0;
+        *_retval = pBuf;
+      } else {
+        NS_Free(pBuf);
       }
-      NS_RELEASE(decoder);
     }
   }
   NS_Free(unescaped);
@@ -164,14 +168,13 @@ nsresult nsTextToSubURI::convertURItoUnicode(const nsAFlatCString &aCharset,
   // empty charset could indicate UTF-8, but aURI turns out not to be UTF-8.
   NS_ENSURE_FALSE(aCharset.IsEmpty(), NS_ERROR_INVALID_ARG);
 
-  nsCOMPtr<nsICharsetConverterManager> charsetConverterManager;
+  nsAutoCString encoding;
+  if (!EncodingUtils::FindEncodingForLabelNoReplacement(aCharset, encoding)) {
+    return NS_ERROR_UCONV_NOCONV;
+  }
+  nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder =
+    EncodingUtils::DecoderForEncoding(encoding);
 
-  charsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder;
-  rv = charsetConverterManager->GetUnicodeDecoder(aCharset.get(), 
-                                                  getter_AddRefs(unicodeDecoder));
   NS_ENSURE_SUCCESS(rv, rv);
   unicodeDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Signal);
 

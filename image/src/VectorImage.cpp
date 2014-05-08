@@ -22,8 +22,10 @@
 #include "nsMimeTypes.h"
 #include "nsPresContext.h"
 #include "nsRect.h"
+#include "nsString.h"
 #include "nsStubDocumentObserver.h"
 #include "nsSVGEffects.h" // for nsSVGRenderingObserver
+#include "nsWindowMemoryReporter.h"
 #include "Orientation.h"
 #include "SVGDocumentWrapper.h"
 #include "nsIDOMEventListener.h"
@@ -359,26 +361,59 @@ VectorImage::HeapSizeOfSourceWithComputedFallback(mozilla::MallocSizeOf aMallocS
   // We're not storing the source data -- we just feed that directly to
   // our helper SVG document as we receive it, for it to parse.
   // So 0 is an appropriate return value here.
+  // If implementing this, we'll need to restructure our callers to make sure
+  // any amount we return is attributed to the vector images measure (i.e.
+  // "explicit/images/{content,chrome}/vector/{used,unused}/...")
   return 0;
 }
 
 size_t
 VectorImage::HeapSizeOfDecodedWithComputedFallback(mozilla::MallocSizeOf aMallocSizeOf) const
 {
-  // XXXdholbert TODO: return num bytes used by helper SVG doc. (bug 590790)
+  // If implementing this, we'll need to restructure our callers to make sure
+  // any amount we return is attributed to the vector images measure (i.e.
+  // "explicit/images/{content,chrome}/vector/{used,unused}/...")
   return 0;
 }
 
 size_t
 VectorImage::NonHeapSizeOfDecoded() const
 {
+  // If implementing this, we'll need to restructure our callers to make sure
+  // any amount we return is attributed to the vector images measure (i.e.
+  // "explicit/images/{content,chrome}/vector/{used,unused}/...")
   return 0;
 }
 
 size_t
 VectorImage::OutOfProcessSizeOfDecoded() const
 {
+  // If implementing this, we'll need to restructure our callers to make sure
+  // any amount we return is attributed to the vector images measure (i.e.
+  // "explicit/images/{content,chrome}/vector/{used,unused}/...")
   return 0;
+}
+
+MOZ_DEFINE_MALLOC_SIZE_OF(WindowsMallocSizeOf);
+
+size_t
+VectorImage::HeapSizeOfVectorImageDocument(nsACString* aDocURL) const
+{
+  nsIDocument* doc = mSVGDocumentWrapper->GetDocument();
+  if (!doc) {
+    if (aDocURL) {
+      mURI->GetSpec(*aDocURL);
+    }
+    return 0; // No document, so no memory used for the document
+  }
+
+  if (aDocURL) {
+    doc->GetDocumentURI()->GetSpec(*aDocURL);
+  }
+
+  nsWindowSizes windowSizes(WindowsMallocSizeOf);
+  doc->DocAddSizeOfExcludingThis(&windowSizes);
+  return windowSizes.getTotalSize();
 }
 
 nsresult

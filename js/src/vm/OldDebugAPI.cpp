@@ -297,7 +297,7 @@ JS_SetWatchPoint(JSContext *cx, HandleObject origobj, HandleId id,
 {
     assertSameCompartment(cx, origobj);
 
-    RootedObject obj(cx, GetInnerObject(cx, origobj));
+    RootedObject obj(cx, GetInnerObject(origobj));
     if (!obj)
         return false;
 

@@ -9,5 +9,5 @@ const expectedString = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJ
 const aliases = [ "x-viet-tcvn5712" ];
 
 function run_test() {
-  testEncodeAliases();
+  testEncodeAliasesInternal();
 }

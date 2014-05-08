@@ -8,6 +8,7 @@
 #include "CacheFileIOManager.h"
 #include "CacheStorageService.h"
 #include "CacheHashUtils.h"
+#include "CacheFileUtils.h"
 #include "nsAutoPtr.h"
 #include "mozilla/Mutex.h"
 
@@ -19,7 +20,6 @@ namespace net {
 
 class CacheFileChunk;
 class CacheFile;
-class ValidityPair;
 
 
 #define CACHEFILECHUNKLISTENER_IID \
@@ -142,7 +142,7 @@ private:
                                           // prevent reference cycles
   nsCOMPtr<CacheFileChunkListener> mListener;
   nsTArray<ChunkListenerItem *>    mUpdateListeners;
-  nsTArray<ValidityPair>           mValidityMap;
+  CacheFileUtils::ValidityMap      mValidityMap;
 };
 
 
