@@ -198,7 +198,7 @@ private:
   struct VectorImageDocInfo {
     size_t mSize;
     bool mUsed;
-    nsAutoCString mURI;
+    nsCString mURI;
   };
 
   struct AllSizes {
