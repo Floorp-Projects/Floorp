@@ -7,10 +7,13 @@
 
 #include "prmem.h"
 #include "prprf.h"
-#include "nsICharsetConverterManager.h"
 #include "nsSaveAsCharset.h"
 #include "nsWhitespaceTokenizer.h"
-#include "nsServiceManagerUtils.h"
+#include "nsIUnicodeEncoder.h"
+#include "mozilla/dom/EncodingUtils.h"
+#include "nsComponentManagerUtils.h"
+
+using mozilla::dom::EncodingUtils;
 
 //
 // nsISupports methods
@@ -325,13 +328,19 @@ nsSaveAsCharset::DoConversionFallBack(uint32_t inUCS4, char *outString, int32_t 
 nsresult nsSaveAsCharset::SetupUnicodeEncoder(const char* charset)
 {
   NS_ENSURE_ARG(charset);
-  nsresult rv;
-
-  // set up unicode encoder
-  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return ccm->GetUnicodeEncoder(charset, getter_AddRefs(mEncoder));
+  nsDependentCString label(charset);
+  if (label.EqualsLiteral("replacement")) {
+    // Internal caller. "replacement" doesn't survive another label resolution.
+    mEncoder = EncodingUtils::EncoderForEncoding(label);
+    return NS_OK;
+  }
+  nsAutoCString encoding;
+  if (!EncodingUtils::FindEncodingForLabelNoReplacement(label,
+                                                        encoding)) {
+    return NS_ERROR_UCONV_NOCONV;
+  }
+  mEncoder = EncodingUtils::EncoderForEncoding(encoding);
+  return NS_OK;
 }
 
 nsresult nsSaveAsCharset::SetupCharsetList(const char *charsetList)

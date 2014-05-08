@@ -14,7 +14,7 @@ using namespace js::jit;
 
 IonBailoutIterator::IonBailoutIterator(const JitActivationIterator &activations,
                                        BailoutStack *bailout)
-  : IonFrameIterator(activations),
+  : JitFrameIterator(activations),
     machine_(bailout->machine())
 {
     uint8_t *sp = bailout->parentStackPointer();
@@ -49,7 +49,7 @@ IonBailoutIterator::IonBailoutIterator(const JitActivationIterator &activations,
 
 IonBailoutIterator::IonBailoutIterator(const JitActivationIterator &activations,
                                        InvalidationBailoutStack *bailout)
-  : IonFrameIterator(activations),
+  : JitFrameIterator(activations),
     machine_(bailout->machine())
 {
     returnAddressToFp_ = bailout->osiPointReturnAddress();

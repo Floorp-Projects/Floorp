@@ -17,7 +17,6 @@
 class nsIDateTimeFormat;
 class nsIStringBundle;
 class nsITextToSubURI;
-class nsIUnicodeEncoder;
 
 class nsIndexedToHTML : public nsIStreamConverter,
                         public nsIDirIndexListener
@@ -53,7 +52,6 @@ protected:
     nsCOMPtr<nsIStringBundle> mBundle;
 
     nsCOMPtr<nsITextToSubURI> mTextToSubURI;
-    nsCOMPtr<nsIUnicodeEncoder> mUnicodeEncoder;
 
 private:
     // Expecting absolute locations, given by 201 lines.

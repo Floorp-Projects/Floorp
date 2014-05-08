@@ -9,9 +9,6 @@
 #define NS_UNICODEDECODER_NAME "Charset Decoders"
 #define NS_UNICODEENCODER_NAME "Charset Encoders"
 
-#define NS_DATA_BUNDLE_CATEGORY     "uconv-charset-data"
-#define NS_TITLE_BUNDLE_CATEGORY    "uconv-charset-titles"
-
 #define NS_CONVERTER_REGISTRY_START \
   static const mozilla::Module::CategoryEntry kUConvCategories[] = {
 

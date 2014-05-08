@@ -14,7 +14,6 @@
   locale/@AB_CD@/global/netErrorApp.dtd                        (%chrome/netErrorApp.dtd)
   locale/@AB_CD@/global/global.dtd                             (%chrome/global.dtd)
   locale/@AB_CD@/global/appstrings.properties                  (%chrome/appstrings.properties)
-  locale/@AB_CD@/global/charsetTitles.properties               (%chrome/charsetTitles.properties)
   locale/@AB_CD@/global/global-strres.properties               (%chrome/global-strres.properties)
   locale/@AB_CD@/global/plugins.properties                     (%chrome/plugins.properties)
   locale/@AB_CD@/global/nsWebBrowserPersist.properties         (%chrome/nsWebBrowserPersist.properties)

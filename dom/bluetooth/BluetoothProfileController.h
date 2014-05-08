@@ -122,6 +122,9 @@ private:
   // Connect/Disconnect next profile in the array
   void Next();
 
+  // Is Bluetooth service available for profile connection/disconnection ?
+  bool IsBtServiceAvailable() const;
+
   const bool mConnect;
   nsString mDeviceAddress;
   nsRefPtr<BluetoothReplyRunnable> mRunnable;
