@@ -662,14 +662,14 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
   static const QITableEntry table[] = {
 
 #define NS_INTERFACE_TABLE_ENTRY(_class, _interface)                          \
-  { &NS_GET_IID(_interface),                                                  \
+  { &_interface::COMTypeInfo<int>::kIID,                                      \
     int32_t(reinterpret_cast<char*>(                                          \
                         static_cast<_interface*>((_class*) 0x1000)) -         \
                reinterpret_cast<char*>((_class*) 0x1000))                     \
   },
 
 #define NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, _interface, _implClass)    \
-  { &NS_GET_IID(_interface),                                                  \
+  { &_interface::COMTypeInfo<int>::kIID,                                      \
     int32_t(reinterpret_cast<char*>(                                          \
                         static_cast<_interface*>(                             \
                                        static_cast<_implClass*>(              \

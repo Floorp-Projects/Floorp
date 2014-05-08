@@ -315,13 +315,6 @@ struct FireChangeArgs {
   bool mHaveImageOverride;
 };
 
-// XXX Workaround for bug 980560 to maintain the existing broken semantics
-template<>
-struct nsIStyleRule::COMTypeInfo<css::Rule, void> {
-  static const nsIID kIID NS_HIDDEN;
-};
-const nsIID nsIStyleRule::COMTypeInfo<css::Rule, void>::kIID = NS_ISTYLE_RULE_IID;
-
 namespace mozilla {
 namespace dom {
 
