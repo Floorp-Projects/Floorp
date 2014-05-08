@@ -24,11 +24,8 @@ Cu.import("resource://gre/modules/systemlibs.js");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "RIL", function () {
-  let obj = {};
-  Cu.import("resource://gre/modules/ril_consts.js", obj);
-  return obj;
-});
+var RIL = {};
+Cu.import("resource://gre/modules/ril_consts.js", RIL);
 
 // set to true in ril_consts.js to see debug messages
 var DEBUG = RIL.DEBUG_RIL;
