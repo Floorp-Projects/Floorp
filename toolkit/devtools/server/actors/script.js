@@ -114,24 +114,16 @@ BreakpointStore.prototype = {
       if (!this._breakpoints[url][line]) {
         this._breakpoints[url][line] = [];
       }
-      if(this._breakpoints[url][line][column]) {
-        updating = true;
-      }
       this._breakpoints[url][line][column] = aBreakpoint;
     } else {
       // Add a breakpoint that breaks on the whole line.
       if (!this._wholeLineBreakpoints[url]) {
         this._wholeLineBreakpoints[url] = [];
       }
-      if(this._wholeLineBreakpoints[url][line]) {
-        updating = true;
-      }
       this._wholeLineBreakpoints[url][line] = aBreakpoint;
     }
 
-    if (!updating) {
-      this._size++;
-    }
+    this._size++;
   },
 
   /**

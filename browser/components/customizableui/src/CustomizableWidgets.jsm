@@ -78,18 +78,6 @@ function updateCombinedWidgetStyle(aNode, aArea, aModifyCloseMenu) {
   }
 }
 
-function addShortcut(aNode, aDocument, aItem) {
-  let shortcutId = aNode.getAttribute("key");
-  if (!shortcutId) {
-    return;
-  }
-  let shortcut = aDocument.getElementById(shortcutId);
-  if (!shortcut) {
-    return;
-  }
-  aItem.setAttribute("shortcut", ShortcutUtils.prettifyShortcut(shortcut));
-}
-
 function fillSubviewFromMenuItems(aMenuItems, aSubview) {
   let attrs = ["oncommand", "onclick", "label", "key", "disabled",
                "command", "observes", "hidden", "class", "origin",
@@ -111,7 +99,7 @@ function fillSubviewFromMenuItems(aMenuItems, aSubview) {
       subviewItem = doc.createElementNS(kNSXUL, "menuseparator");
     } else if (menuChild.localName == "menuitem") {
       subviewItem = doc.createElementNS(kNSXUL, "toolbarbutton");
-      addShortcut(menuChild, doc, subviewItem);
+      CustomizableUI.addShortcut(menuChild, subviewItem);
     } else {
       continue;
     }
@@ -168,6 +156,11 @@ const CustomizableWidgets = [{
       while (items.firstChild) {
         items.removeChild(items.firstChild);
       }
+
+      // Get all statically placed buttons to supply them with keyboard shortcuts.
+      let staticButtons = items.parentNode.getElementsByTagNameNS(kNSXUL, "toolbarbutton");
+      for (let i = 0, l = staticButtons.length; i < l; ++i)
+        CustomizableUI.addShortcut(staticButtons[i]);
 
       PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
                          .asyncExecuteLegacyQueries([query], 1, options, {
