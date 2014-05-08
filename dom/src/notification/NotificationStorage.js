@@ -36,7 +36,7 @@ function NotificationStorage() {
 
 NotificationStorage.prototype = {
 
-  put: function(origin, id, title, dir, lang, body, tag, icon, alertName) {
+  put: function(origin, id, title, dir, lang, body, tag, icon) {
     if (DEBUG) { debug("PUT: " + id + ": " + title); }
     var notification = {
       id: id,
@@ -45,9 +45,7 @@ NotificationStorage.prototype = {
       lang: lang,
       body: body,
       tag: tag,
-      icon: icon,
-      alertName: alertName,
-      timestamp: new Date().getTime()
+      icon: icon
     };
 
     this._notifications[id] = notification;
