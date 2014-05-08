@@ -217,6 +217,9 @@ class MNode : public TempObject
 
     virtual bool writeRecoverData(CompactBufferWriter &writer) const;
 
+    virtual void dump(FILE *fp) const = 0;
+    virtual void dump() const = 0;
+
   protected:
     // Sets an unset operand, updating use information.
     virtual void setOperand(size_t index, MDefinition *operand) = 0;
@@ -613,6 +616,7 @@ class MDefinition : public MNode
 #   undef OPCODE_CASTS
 
     inline MInstruction *toInstruction();
+    inline const MInstruction *toInstruction() const;
     bool isInstruction() const {
         return !isPhi();
     }
@@ -9669,7 +9673,7 @@ class MResumePoint MOZ_FINAL : public MNode, public InlineForwardListNode<MResum
     uint32_t stackDepth() const {
         return stackDepth_;
     }
-    MResumePoint *caller() {
+    MResumePoint *caller() const {
         return caller_;
     }
     void setCaller(MResumePoint *caller) {
@@ -9699,6 +9703,9 @@ class MResumePoint MOZ_FINAL : public MNode, public InlineForwardListNode<MResum
     }
 
     bool writeRecoverData(CompactBufferWriter &writer) const;
+
+    virtual void dump(FILE *fp) const;
+    virtual void dump() const;
 };
 
 class MIsCallable
@@ -10204,6 +10211,12 @@ MInstruction *MDefinition::toInstruction()
 {
     JS_ASSERT(!isPhi());
     return (MInstruction *)this;
+}
+
+const MInstruction *MDefinition::toInstruction() const
+{
+    JS_ASSERT(!isPhi());
+    return (const MInstruction *)this;
 }
 
 typedef Vector<MDefinition *, 8, IonAllocPolicy> MDefinitionVector;
