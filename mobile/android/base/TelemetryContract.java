@@ -49,6 +49,10 @@ public interface TelemetryContract {
 
         // Generic action, usually for tracking menu and toolbar actions.
         public static final String ACTION = "action.1";
+
+        // Launching (opening) an external application
+        // Note: Only used in JavaScript for now, but here for completeness.
+        public static final String ACTION = "launch.1";
     }
 
     /**
@@ -82,6 +86,10 @@ public interface TelemetryContract {
 
         // Action triggered from a suggestion provided to the user.
         public static final String SUGGESTION = "suggestion";
+
+        // Action triggered from a pageaction in the URLBar.
+        // Note: Only used in JavaScript for now, but here for completeness.
+        public static final String PAGEACTION = "pageaction";
     }
 
     /**
