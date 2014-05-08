@@ -8,6 +8,9 @@
 #define __nsScriptableUConv_h_
 
 #include "nsIScriptableUConv.h"
+#include "nsCOMPtr.h"
+#include "nsIUnicodeDecoder.h"
+#include "nsIUnicodeEncoder.h"
 
 class nsScriptableUnicodeConverter : public nsIScriptableUnicodeConverter
 {

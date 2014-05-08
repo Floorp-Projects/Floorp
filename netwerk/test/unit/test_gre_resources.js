@@ -22,6 +22,6 @@ function check_file(file) {
 }
 
 function run_test() {
-  for each(let file in ["charsetData.properties"])
+  for each(let file in ["ua.css"])
     check_file(file)
 }

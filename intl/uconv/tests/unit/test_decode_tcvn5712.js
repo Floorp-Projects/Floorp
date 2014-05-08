@@ -9,5 +9,5 @@ const expectedString = "\u00da\u1ee4\u1eea\u1eec\u1eee\u1ee8\u1ef0\u1ef2\u1ef6\u
 const aliases = [ "x-viet-tcvn5712" ];
 
 function run_test() {
-  testDecodeAliases();
+  testDecodeAliasesInternal();
 }

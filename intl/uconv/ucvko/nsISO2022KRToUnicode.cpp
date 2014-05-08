@@ -4,13 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsISO2022KRToUnicode.h"
 #include "nsUCSupport.h"
-#include "nsICharsetConverterManager.h"
-#include "nsServiceManagerUtils.h"
+#include "mozilla/dom/EncodingUtils.h"
+
+using mozilla::dom::EncodingUtils;
 
 NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, int32_t * aSrcLen, char16_t * aDest, int32_t * aDestLen)
 {
-  static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
   const unsigned char* srcEnd = (unsigned char*)aSrc + *aSrcLen;
   const unsigned char* src =(unsigned char*) aSrc;
   char16_t* destEnd = aDest + *aDestLen;
@@ -126,12 +125,8 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, int32_t * aSrcLen
         if ( 0x20 < (uint8_t) *src && (uint8_t) *src < 0x7f  ) {
           if (!mEUCKRDecoder) {
             // creating a delegate converter (EUC-KR)
-            nsresult rv;
-            nsCOMPtr<nsICharsetConverterManager> ccm = 
-                  do_GetService(kCharsetConverterManagerCID, &rv);
-            if (NS_SUCCEEDED(rv)) {
-              rv = ccm->GetUnicodeDecoderRaw("EUC-KR", &mEUCKRDecoder);
-            }
+            mEUCKRDecoder =
+              EncodingUtils::DecoderForEncoding(NS_LITERAL_CSTRING("EUC-KR"));
           }
 
           if (!mEUCKRDecoder) {// failed creating a delegate converter

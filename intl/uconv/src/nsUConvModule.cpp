@@ -3,13 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "mozilla/ModuleUtils.h"
-#include "nsICharsetConverterManager.h"
 #include "nsEncoderDecoderUtils.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncoder.h"
 
 #include "nsUConvCID.h"
-#include "nsCharsetConverterManager.h"
 #include "nsTextToSubURI.h"
 #include "nsUTF8ConverterService.h"
 #include "nsConverterInputStream.h"
@@ -296,9 +294,6 @@ NS_UCONV_REG_UNREG("gbk", NS_GBKTOUNICODE_CID, NS_UNICODETOGBK_CID)
 NS_UCONV_REG_UNREG("HZ-GB-2312", NS_HZTOUNICODE_CID, NS_UNICODETOHZ_CID)
 NS_UCONV_REG_UNREG("gb18030", NS_GB18030TOUNICODE_CID, NS_UNICODETOGB18030_CID)
 NS_UCONV_REG_UNREG_DECODER("ISO-2022-CN", NS_ISO2022CNTOUNICODE_CID)
-
-{ NS_TITLE_BUNDLE_CATEGORY, "chrome://global/locale/charsetTitles.properties", "" },
-{ NS_DATA_BUNDLE_CATEGORY, "resource://gre-resources/charsetData.properties", "" },
   
 NS_CONVERTER_REGISTRY_END
 
@@ -454,14 +449,12 @@ const uint16_t g_ufJohabJamoMapping[] ={
 #include "johabjamo.uf"
 };
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCharsetConverterManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextToSubURI)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUTF8ConverterService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsConverterInputStream)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsConverterOutputStream)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableUnicodeConverter)
 
-NS_DEFINE_NAMED_CID(NS_ICHARSETCONVERTERMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_TEXTTOSUBURI_CID);
 NS_DEFINE_NAMED_CID(NS_CONVERTERINPUTSTREAM_CID);
 NS_DEFINE_NAMED_CID(NS_CONVERTEROUTPUTSTREAM_CID);
@@ -628,7 +621,6 @@ NS_DEFINE_NAMED_CID(NS_UNICODETOGB18030_CID);
 NS_DEFINE_NAMED_CID(NS_ISO2022CNTOUNICODE_CID);
 
 static const mozilla::Module::CIDEntry kUConvCIDs[] = {
-  { &kNS_ICHARSETCONVERTERMANAGER_CID, false, nullptr, nsCharsetConverterManagerConstructor },
   { &kNS_TEXTTOSUBURI_CID, false, nullptr, nsTextToSubURIConstructor },
   { &kNS_CONVERTERINPUTSTREAM_CID, false, nullptr, nsConverterInputStreamConstructor },
   { &kNS_CONVERTEROUTPUTSTREAM_CID, false, nullptr, nsConverterOutputStreamConstructor },
@@ -797,7 +789,6 @@ static const mozilla::Module::CIDEntry kUConvCIDs[] = {
 };
 
 static const mozilla::Module::ContractIDEntry kUConvContracts[] = {
-  { NS_CHARSETCONVERTERMANAGER_CONTRACTID, &kNS_ICHARSETCONVERTERMANAGER_CID },
   { NS_ITEXTTOSUBURI_CONTRACTID, &kNS_TEXTTOSUBURI_CID },
   { NS_CONVERTERINPUTSTREAM_CONTRACTID, &kNS_CONVERTERINPUTSTREAM_CID },
   { "@mozilla.org/intl/converter-output-stream;1", &kNS_CONVERTEROUTPUTSTREAM_CID },

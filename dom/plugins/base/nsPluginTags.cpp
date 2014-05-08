@@ -8,18 +8,18 @@
 #include "prlink.h"
 #include "plstr.h"
 #include "nsIPluginInstanceOwner.h"
-#include "nsServiceManagerUtils.h"
 #include "nsPluginsDir.h"
 #include "nsPluginHost.h"
 #include "nsIBlocklistService.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIPlatformCharset.h"
-#include "nsICharsetConverterManager.h"
 #include "nsPluginLogging.h"
 #include "nsNPAPIPlugin.h"
 #include "mozilla/Preferences.h"
 #include <cctype>
+#include "mozilla/dom/EncodingUtils.h"
 
+using mozilla::dom::EncodingUtils;
 using namespace mozilla;
 
 // These legacy flags are used in the plugin registry. The states are now
@@ -236,17 +236,12 @@ nsresult nsPluginTag::EnsureMembersAreUTF8()
   do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIUnicodeDecoder> decoder;
-  nsCOMPtr<nsICharsetConverterManager> ccm =
-  do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
+
   nsAutoCString charset;
   rv = pcs->GetCharset(kPlatformCharsetSel_FileName, charset);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!charset.LowerCaseEqualsLiteral("utf-8")) {
-    rv = ccm->GetUnicodeDecoderRaw(charset.get(), getter_AddRefs(decoder));
-    NS_ENSURE_SUCCESS(rv, rv);
-    
+    decoder = EncodingUtils::DecoderForEncoding(charset);
     ConvertToUTF8(decoder, mFileName);
     ConvertToUTF8(decoder, mFullPath);
   }
@@ -257,9 +252,7 @@ nsresult nsPluginTag::EnsureMembersAreUTF8()
   rv = pcs->GetCharset(kPlatformCharsetSel_PlainTextInFile, charset);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!charset.LowerCaseEqualsLiteral("utf-8")) {
-    rv = ccm->GetUnicodeDecoderRaw(charset.get(), getter_AddRefs(decoder));
-    NS_ENSURE_SUCCESS(rv, rv);
-    
+    decoder = EncodingUtils::DecoderForEncoding(charset);
     ConvertToUTF8(decoder, mName);
     ConvertToUTF8(decoder, mDescription);
     for (uint32_t i = 0; i < mMimeDescriptions.Length(); ++i) {

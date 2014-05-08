@@ -17,6 +17,10 @@ static const char* labelsEncodings[][3] = {
 #include "labelsencodings.properties.h"
 };
 
+static const char* encodingsGroups[][3] = {
+#include "encodingsgroups.properties.h"
+};
+
 bool
 EncodingUtils::FindEncodingForLabel(const nsACString& aLabel,
                                     nsACString& aOutEncoding)
@@ -33,6 +37,20 @@ EncodingUtils::FindEncodingForLabel(const nsACString& aLabel,
   ToLowerCase(label);
   return NS_SUCCEEDED(nsUConvPropertySearch::SearchPropertyValue(
       labelsEncodings, ArrayLength(labelsEncodings), label, aOutEncoding));
+}
+
+bool
+EncodingUtils::FindEncodingForLabelNoReplacement(const nsACString& aLabel,
+                                                 nsACString& aOutEncoding)
+{
+  if(!FindEncodingForLabel(aLabel, aOutEncoding)) {
+    return false;
+  }
+  if (aOutEncoding.EqualsLiteral("replacement")) {
+    aOutEncoding.Truncate();
+    return false;
+  }
+  return true;
 }
 
 bool
@@ -67,6 +85,16 @@ EncodingUtils::EncoderForEncoding(const nsACString& aEncoding)
   nsCOMPtr<nsIUnicodeEncoder> encoder = do_CreateInstance(contractId.get());
   MOZ_ASSERT(encoder, "Tried to create encoder for unknown encoding.");
   return encoder.forget();
+}
+
+void
+EncodingUtils::LangGroupForEncoding(const nsACString& aEncoding,
+                                    nsACString& aOutGroup)
+{
+  if (NS_FAILED(nsUConvPropertySearch::SearchPropertyValue(
+      encodingsGroups, ArrayLength(encodingsGroups), aEncoding, aOutGroup))) {
+    aOutGroup.AssignLiteral("x-unicode");
+  }
 }
 
 } // namespace dom
