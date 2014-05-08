@@ -26,6 +26,7 @@
     _(NewArray)                     \
     _(ArraySplice)                  \
     _(NewObject)                    \
+    _(NewSlots)                     \
     _(NewDeclEnvObject)             \
     _(NewCallObject)                \
     _(NewSingletonCallObject)       \

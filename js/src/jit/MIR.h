@@ -9319,6 +9319,33 @@ class MPostWriteBarrier : public MBinaryInstruction, public ObjectPolicy<0>
 #endif
 };
 
+class MNewSlots : public MNullaryInstruction
+{
+    unsigned nslots_;
+
+    MNewSlots(unsigned nslots)
+      : nslots_(nslots)
+    {
+        setResultType(MIRType_Slots);
+    }
+
+  public:
+    INSTRUCTION_HEADER(NewSlots)
+
+    static MNewSlots *New(TempAllocator &alloc, unsigned nslots) {
+        return new(alloc) MNewSlots(nslots);
+    }
+    unsigned nslots() const {
+        return nslots_;
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+    bool possiblyCalls() const {
+        return true;
+    }
+};
+
 class MNewDeclEnvObject : public MNullaryInstruction
 {
     CompilerRootObject templateObj_;
@@ -9345,19 +9372,22 @@ class MNewDeclEnvObject : public MNullaryInstruction
     }
 };
 
-class MNewCallObjectBase : public MNullaryInstruction
+class MNewCallObjectBase : public MUnaryInstruction
 {
     CompilerRootObject templateObj_;
 
   protected:
-    MNewCallObjectBase(JSObject *templateObj)
-      : MNullaryInstruction(),
+    MNewCallObjectBase(JSObject *templateObj, MDefinition *slots)
+      : MUnaryInstruction(slots),
         templateObj_(templateObj)
     {
         setResultType(MIRType_Object);
     }
 
   public:
+    MDefinition *slots() {
+        return getOperand(0);
+    }
     JSObject *templateObject() {
         return templateObj_;
     }
@@ -9371,14 +9401,14 @@ class MNewCallObject : public MNewCallObjectBase
   public:
     INSTRUCTION_HEADER(NewCallObject)
 
-    MNewCallObject(JSObject *templateObj)
-      : MNewCallObjectBase(templateObj)
+    MNewCallObject(JSObject *templateObj, MDefinition *slots)
+      : MNewCallObjectBase(templateObj, slots)
     {}
 
     static MNewCallObject *
-    New(TempAllocator &alloc, JSObject *templateObj)
+    New(TempAllocator &alloc, JSObject *templateObj, MDefinition *slots)
     {
-        return new(alloc) MNewCallObject(templateObj);
+        return new(alloc) MNewCallObject(templateObj, slots);
     }
 };
 
@@ -9387,23 +9417,23 @@ class MNewRunOnceCallObject : public MNewCallObjectBase
   public:
     INSTRUCTION_HEADER(NewRunOnceCallObject)
 
-    MNewRunOnceCallObject(JSObject *templateObj)
-      : MNewCallObjectBase(templateObj)
+    MNewRunOnceCallObject(JSObject *templateObj, MDefinition *slots)
+      : MNewCallObjectBase(templateObj, slots)
     {}
 
     static MNewRunOnceCallObject *
-    New(TempAllocator &alloc, JSObject *templateObj)
+    New(TempAllocator &alloc, JSObject *templateObj, MDefinition *slots)
     {
-        return new(alloc) MNewRunOnceCallObject(templateObj);
+        return new(alloc) MNewRunOnceCallObject(templateObj, slots);
     }
 };
 
-class MNewCallObjectPar : public MUnaryInstruction
+class MNewCallObjectPar : public MBinaryInstruction
 {
     CompilerRootObject templateObj_;
 
-    MNewCallObjectPar(MDefinition *cx, JSObject *templateObj)
-        : MUnaryInstruction(cx),
+    MNewCallObjectPar(MDefinition *cx, JSObject *templateObj, MDefinition *slots)
+        : MBinaryInstruction(cx, slots),
           templateObj_(templateObj)
     {
         setResultType(MIRType_Object);
@@ -9413,11 +9443,15 @@ class MNewCallObjectPar : public MUnaryInstruction
     INSTRUCTION_HEADER(NewCallObjectPar);
 
     static MNewCallObjectPar *New(TempAllocator &alloc, MDefinition *cx, MNewCallObjectBase *callObj) {
-        return new(alloc) MNewCallObjectPar(cx, callObj->templateObject());
+        return new(alloc) MNewCallObjectPar(cx, callObj->templateObject(), callObj->slots());
     }
 
     MDefinition *forkJoinContext() const {
         return getOperand(0);
+    }
+
+    MDefinition *slots() const {
+        return getOperand(1);
     }
 
     JSObject *templateObj() const {

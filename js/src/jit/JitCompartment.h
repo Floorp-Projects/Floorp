@@ -186,10 +186,6 @@ class JitRuntime
     JitCode *valuePreBarrier_;
     JitCode *shapePreBarrier_;
 
-    // Thunk to call malloc/free.
-    JitCode *mallocStub_;
-    JitCode *freeStub_;
-
     // Thunk used by the debugger for breakpoint and step mode.
     JitCode *debugTrapHandler_;
 
@@ -243,8 +239,6 @@ class JitRuntime
     JitCode *generateBailoutHandler(JSContext *cx);
     JitCode *generateInvalidator(JSContext *cx);
     JitCode *generatePreBarrier(JSContext *cx, MIRType type);
-    JitCode *generateMallocStub(JSContext *cx);
-    JitCode *generateFreeStub(JSContext *cx);
     JitCode *generateDebugTrapHandler(JSContext *cx);
     JitCode *generateForkJoinGetSliceStub(JSContext *cx);
     JitCode *generateBaselineDebugModeOSRHandler(JSContext *cx, uint32_t *noFrameRegPopOffsetOut);
@@ -359,14 +353,6 @@ class JitRuntime
 
     JitCode *shapePreBarrier() const {
         return shapePreBarrier_;
-    }
-
-    JitCode *mallocStub() const {
-        return mallocStub_;
-    }
-
-    JitCode *freeStub() const {
-        return freeStub_;
     }
 
     bool ensureForkJoinGetSliceStubExists(JSContext *cx);
