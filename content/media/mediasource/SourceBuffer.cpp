@@ -132,6 +132,8 @@ public:
   {
     return false;
   }
+
+  static ContainerParser* CreateForMIMEType(const nsACString& aType);
 };
 
 class WebMContainerParser : public ContainerParser {
@@ -155,6 +157,17 @@ public:
     return false;
   }
 };
+
+/*static*/ ContainerParser*
+ContainerParser::CreateForMIMEType(const nsACString& aType)
+{
+  if (aType.LowerCaseEqualsLiteral("video/webm") || aType.LowerCaseEqualsLiteral("audio/webm")) {
+    return new WebMContainerParser();
+  }
+
+  // XXX: Plug in parsers for MPEG4, etc. here.
+  return new ContainerParser();
+}
 
 namespace dom {
 
@@ -267,10 +280,7 @@ SourceBuffer::Abort(ErrorResult& aRv)
   mAppendWindowEnd = PositiveInfinity<double>();
 
   MSE_DEBUG("%p Abort: Discarding decoder.", this);
-  if (mDecoder) {
-    mDecoder->GetResource()->Ended();
-    mDecoder = nullptr;
-  }
+  DiscardDecoder();
 }
 
 void
@@ -296,7 +306,7 @@ void
 SourceBuffer::Detach()
 {
   Ended();
-  mDecoder = nullptr;
+  DiscardDecoder();
   mMediaSource = nullptr;
 }
 
@@ -317,15 +327,10 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
   , mTimestampOffset(0)
   , mAppendMode(SourceBufferAppendMode::Segments)
   , mUpdating(false)
-  , mDecoderInit(false)
+  , mDecoderInitialized(false)
 {
   MOZ_ASSERT(aMediaSource);
-  if (mType.EqualsIgnoreCase("video/webm") || mType.EqualsIgnoreCase("audio/webm")) {
-    mParser = new WebMContainerParser();
-  } else {
-    // XXX: Plug in parsers for MPEG4, etc. here.
-    mParser = new ContainerParser();
-  }
+  mParser = ContainerParser::CreateForMIMEType(aType);
   MSE_DEBUG("%p SourceBuffer: Creating initial decoder.", this);
   InitNewDecoder();
 }
@@ -339,9 +344,7 @@ SourceBuffer::Create(MediaSource* aMediaSource, const nsACString& aType)
 
 SourceBuffer::~SourceBuffer()
 {
-  if (mDecoder) {
-    mDecoder->GetResource()->Ended();
-  }
+  DiscardDecoder();
 }
 
 MediaSource*
@@ -374,13 +377,25 @@ SourceBuffer::QueueAsyncSimpleEvent(const char* aName)
 bool
 SourceBuffer::InitNewDecoder()
 {
+  MOZ_ASSERT(!mDecoder);
   MediaSourceDecoder* parentDecoder = mMediaSource->GetDecoder();
   nsRefPtr<SubBufferDecoder> decoder = parentDecoder->CreateSubDecoder(mType);
   if (!decoder) {
     return false;
   }
   mDecoder = decoder;
+  mDecoderInitialized = false;
   return true;
+}
+
+void
+SourceBuffer::DiscardDecoder()
+{
+  if (mDecoder) {
+    mDecoder->GetResource()->Ended();
+  }
+  mDecoder = nullptr;
+  mDecoderInitialized = false;
 }
 
 void
@@ -424,18 +439,28 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   // TODO: Test buffer full flag.
   StartUpdating();
   // TODO: Run buffer append algorithm asynchronously (would call StopUpdating()).
-  if (!mDecoder || mParser->IsInitSegmentPresent(aData, aLength)) {
-    if (!mDecoder || mDecoderInit) {
-      MSE_DEBUG("%p AppendBuffer: New initialization segment, creating decoder.", this);
-      mDecoder->GetResource()->Ended();
+  if (mParser->IsInitSegmentPresent(aData, aLength)) {
+    MSE_DEBUG("%p AppendBuffer: New initialization segment.", this);
+    if (mDecoderInitialized) {
+      // Existing decoder has been used, time for a new one.
+      DiscardDecoder();
+    }
 
-      if (!InitNewDecoder()) {
-        aRv.Throw(NS_ERROR_FAILURE); // XXX: Review error handling.
-        return;
-      }
+    // If we've got a decoder here, it's not initialized, so we can use it
+    // rather than creating a new one.
+    if (!mDecoder && !InitNewDecoder()) {
+      aRv.Throw(NS_ERROR_FAILURE); // XXX: Review error handling.
+      return;
     }
     MSE_DEBUG("%p AppendBuffer: Decoder marked as initialized.", this);
-    mDecoderInit = true;
+    mDecoderInitialized = true;
+  } else if (!mDecoderInitialized) {
+    MSE_DEBUG("%p AppendBuffer: Non-initialization segment appended during initialization.");
+    Optional<MediaSourceEndOfStreamError> decodeError(MediaSourceEndOfStreamError::Decode);
+    ErrorResult dummy;
+    mMediaSource->EndOfStream(decodeError, dummy);
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
   }
   // XXX: For future reference: NDA call must run on the main thread.
   mDecoder->NotifyDataArrived(reinterpret_cast<const char*>(aData),
