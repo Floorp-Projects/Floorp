@@ -741,8 +741,9 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
     // to load its content, and we want to skip over any intermediate blank
     // pages that load. This issue is described in bug 554873.
     SimpleTest.waitForFocus_loaded =
-        (expectBlankPage == (getHref(targetWindow) == "about:blank")) &&
-        targetWindow.document.readyState == "complete";
+        expectBlankPage ?
+            getHref(targetWindow) == "about:blank" :
+            getHref(targetWindow) != "about:blank" && targetWindow.document.readyState == "complete";
     if (!SimpleTest.waitForFocus_loaded) {
         info("must wait for load");
         targetWindow.addEventListener("load", waitForEvent, true);

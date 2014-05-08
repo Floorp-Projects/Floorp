@@ -7,7 +7,7 @@
 
 function test() {
   Task.spawn(function*() {
-    const {tab} = yield loadTab("about:credits");
+    const {tab} = yield loadTab("about:config");
     ok(tab, "tab loaded");
 
     const hud = yield openConsole(tab);

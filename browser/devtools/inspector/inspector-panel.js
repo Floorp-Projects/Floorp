@@ -11,6 +11,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 let promise = require("devtools/toolkit/deprecated-sync-thenables");
 let EventEmitter = require("devtools/toolkit/event-emitter");
 let {CssLogic} = require("devtools/styleinspector/css-logic");
+let clipboard = require("sdk/clipboard");
 
 loader.lazyGetter(this, "MarkupView", () => require("devtools/markupview/markup-view").MarkupView);
 loader.lazyGetter(this, "HTMLBreadcrumbs", () => require("devtools/inspector/breadcrumbs").HTMLBreadcrumbs);
@@ -544,6 +545,22 @@ InspectorPanel.prototype = {
   },
 
   /**
+   * Returns the clipboard content if it is appropriate for pasting
+   * into the current node's outer HTML, otherwise returns null.
+   */
+  _getClipboardContentForOuterHTML: function Inspector_getClipboardContentForOuterHTML() {
+    let flavors = clipboard.currentFlavors;
+    if (flavors.indexOf("text") != -1 ||
+        (flavors.indexOf("html") != -1 && flavors.indexOf("image") == -1)) {
+      let content = clipboard.get();
+      if (content && content.trim().length > 0) {
+        return content;
+      }
+    }
+    return null;
+  },
+
+  /**
    * Disable the delete item if needed. Update the pseudo classes.
    */
   _setupNodeMenu: function InspectorPanel_setupNodeMenu() {
@@ -592,6 +609,17 @@ InspectorPanel.prototype = {
       editHTML.removeAttribute("disabled");
     } else {
       editHTML.setAttribute("disabled", "true");
+    }
+
+    // Enable the "paste outer HTML" item if the selection is an element and
+    // the root actor has the appropriate trait (isOuterHTMLEditable) and if
+    // the clipbard content is appropriate.
+    let pasteOuterHTML = this.panelDoc.getElementById("node-menu-pasteouterhtml");
+    if (this.isOuterHTMLEditable && isSelectionElement &&
+        this._getClipboardContentForOuterHTML()) {
+      pasteOuterHTML.removeAttribute("disabled");
+    } else {
+      pasteOuterHTML.setAttribute("disabled", "true");
     }
 
     // Enable the "copy image data-uri" item if the selection is previewable
@@ -707,6 +735,20 @@ InspectorPanel.prototype = {
     }
     if (this.markup) {
       this.markup.beginEditingOuterHTML(this.selection.nodeFront);
+    }
+  },
+
+  /**
+   * Paste the contents of the clipboard into the selected Node's outer HTML.
+   */
+  pasteOuterHTML: function InspectorPanel_pasteOuterHTML()
+  {
+    let content = this._getClipboardContentForOuterHTML();
+    if (content) {
+      let node = this.selection.nodeFront;
+      this.markup.getNodeOuterHTML(node).then((oldContent) => {
+        this.markup.updateNodeOuterHTML(node, content, oldContent);
+      });
     }
   },
 

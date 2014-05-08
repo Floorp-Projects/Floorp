@@ -58,3 +58,11 @@ function search(aQuery, aAttribute) {
     element.hidden = (attributeValue != aQuery);
   }
 }
+
+function helpButtonCommand() {
+  let pane = history.state;
+  let categories = document.getElementById("categories");
+  let helpTopic = categories.querySelector(".category[value=" + pane + "]")
+                            .getAttribute("helpTopic");
+  openHelpLink(helpTopic);
+}

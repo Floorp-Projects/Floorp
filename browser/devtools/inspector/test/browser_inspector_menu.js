@@ -4,6 +4,8 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function test() {
 
+  let clipboard = require("sdk/clipboard");
+
   waitForExplicitFinish();
 
   let doc;
@@ -41,6 +43,7 @@ function test() {
       checkDisabled("node-menu-copyouter");
       checkDisabled("node-menu-copyuniqueselector");
       checkDisabled("node-menu-delete");
+      checkDisabled("node-menu-pasteouterhtml");
 
       for (let name of ["hover", "active", "focus"]) {
         checkDisabled("node-menu-pseudo-" + name);
@@ -68,8 +71,59 @@ function test() {
         checkEnabled("node-menu-pseudo-" + name);
       }
 
-      testCopyInnerMenu();
+      checkElementPasteOuterHTMLMenuItemForText();
     });
+  }
+
+  function checkPasteOuterHTMLMenuItem(data, type, check, next) {
+    clipboard.set(data, type);
+    inspector.selection.setNode(doc.querySelector("p"));
+    inspector.once("inspector-updated", () => {
+      contextMenuClick(getMarkupTagNodeContaining("p"));
+      check("node-menu-pasteouterhtml");
+      next();
+    });
+  }
+
+  function checkElementPasteOuterHTMLMenuItemForText() {
+    checkPasteOuterHTMLMenuItem(
+      "some text",
+      undefined,
+      checkEnabled,
+      checkElementPasteOuterHTMLMenuItemForImage);
+  }
+
+  function checkElementPasteOuterHTMLMenuItemForImage() {
+    checkPasteOuterHTMLMenuItem(
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABC" +
+      "AAAAAA6fptVAAAACklEQVQYV2P4DwABAQEAWk1v8QAAAABJRU5ErkJggg==",
+      undefined,
+      checkDisabled,
+      checkElementPasteOuterHTMLMenuItemForHTML);
+  }
+
+  function checkElementPasteOuterHTMLMenuItemForHTML() {
+    checkPasteOuterHTMLMenuItem(
+      "<p>some text</p>",
+      "html",
+      checkEnabled,
+      checkElementPasteOuterHTMLMenuItemForEmptyString);
+  }
+
+  function checkElementPasteOuterHTMLMenuItemForEmptyString() {
+    checkPasteOuterHTMLMenuItem(
+      "",
+      undefined,
+      checkDisabled,
+      checkElementPasteOuterHTMLMenuItemForWhitespaceOnly);
+  }
+
+  function checkElementPasteOuterHTMLMenuItemForWhitespaceOnly() {
+    checkPasteOuterHTMLMenuItem(
+      " \n\n\t\n\n  \n",
+      undefined,
+      checkDisabled,
+      testCopyInnerMenu);
   }
 
   function testCopyInnerMenu() {
@@ -96,7 +150,26 @@ function test() {
 
     waitForClipboard("body > div:nth-child(1) > p:nth-child(2)",
                      function() { copyUniqueSelector.doCommand(); },
-                     testDeleteNode, testDeleteNode);
+                     testPasteOuterHTMLMenu, testPasteOuterHTMLMenu);
+  }
+
+  function testPasteOuterHTMLMenu() {
+    clipboard.set("this was pasted");
+    inspector.selection.setNode(doc.querySelector("h1"));
+    inspector.once("inspector-updated", () => {
+      contextMenuClick(getMarkupTagNodeContaining("h1"));
+      let menu = inspector.panelDoc.getElementById("node-menu-pasteouterhtml");
+      let event = document.createEvent("XULCommandEvent");
+      event.initCommandEvent("command", true, true, window, 0, false, false,
+                             false, false, null);
+      menu.dispatchEvent(event);
+      inspector.selection.once("new-node", (event, oldNode, newNode) => {
+        ok(doc.body.outerHTML.contains(clipboard.get()),
+           "Clipboard content was pasted into the node's outer HTML.");
+        ok(!doc.querySelector("h1"), "The original node was removed.");
+        testDeleteNode();
+      });
+    });
   }
 
   function testDeleteNode() {

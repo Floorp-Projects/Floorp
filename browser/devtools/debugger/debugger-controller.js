@@ -785,9 +785,13 @@ StackFrames.prototype = {
     if (!isClientEval && !isPopupShown) {
       // Move the editor's caret to the proper url and line.
       DebuggerView.setEditorLocation(where.url, where.line);
-      // Highlight the breakpoint at the specified url and line if it exists.
-      DebuggerView.Sources.highlightBreakpoint(where, { noEditorUpdate: true });
+    } else {
+      // Highlight the line where the execution is paused in the editor.
+      DebuggerView.setEditorLocation(where.url, where.line, { noCaret: true });
     }
+
+    // Highlight the breakpoint at the line and column if it exists.
+    DebuggerView.Sources.highlightBreakpointAtCursor();
 
     // Don't display the watch expressions textbox inputs in the pane.
     DebuggerView.WatchExpressions.toggleContents(false);
@@ -834,8 +838,8 @@ StackFrames.prototype = {
 
       // The innermost scope is always automatically expanded, because it
       // contains the variables in the current stack frame which are likely to
-      // be inspected.
-      if (innermost) {
+      // be inspected. The previously expanded scopes are also reexpanded here.
+      if (innermost || DebuggerView.Variables.wasExpanded(scope)) {
         scope.expand();
       }
     } while ((environment = environment.parent));

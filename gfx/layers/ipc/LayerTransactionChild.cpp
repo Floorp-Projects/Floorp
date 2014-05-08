@@ -22,10 +22,19 @@ namespace layers {
 void
 LayerTransactionChild::Destroy()
 {
+  if (!IPCOpen() || mDestroyed) {
+    return;
+  }
+  // mDestroyed is used to prevent calling Send__delete__() twice.
+  // When this function is called from CompositorChild::Destroy(),
+  // under Send__delete__() call, this function is called from
+  // ShadowLayerForwarder's destructor.
+  // When it happens, IPCOpen() is still true.
+  // See bug 1004191.
+  mDestroyed = true;
   NS_ABORT_IF_FALSE(0 == ManagedPLayerChild().Length(),
                     "layers should have been cleaned up by now");
   PLayerTransactionChild::Send__delete__(this);
-  // WARNING: |this| has gone to the great heap in the sky
 }
 
 

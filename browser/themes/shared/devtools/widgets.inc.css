@@ -703,6 +703,7 @@
 .variable-or-property-frozen-label,
 .variable-or-property-sealed-label,
 .variable-or-property-non-extensible-label {
+  height: 16px;
   -moz-padding-end: 4px;
 }
 
@@ -729,9 +730,29 @@
 
 /* Actions first */
 
+.variables-view-open-inspector {
+  -moz-box-ordinal-group: 1;
+}
+
+.variables-view-edit,
+.variables-view-add-property {
+  -moz-box-ordinal-group: 2;
+}
+
+.variable-or-property-frozen-label,
+.variable-or-property-sealed-label,
+.variable-or-property-non-extensible-label,
+.variable-or-property-non-writable-icon {
+  -moz-box-ordinal-group: 3;
+}
+
+.variables-view-delete {
+  -moz-box-ordinal-group: 4;
+}
+
 .variables-view-container[actions-first] .variables-view-delete,
-.variables-view-container[actions-first] .variables-view-open-inspector,
-.variables-view-container[actions-first] .variables-view-add-property {
+.variables-view-container[actions-first] .variables-view-add-property,
+.variables-view-container[actions-first] .variables-view-open-inspector {
   -moz-box-ordinal-group: 0;
 }
 
@@ -779,7 +800,7 @@
   -moz-image-region: rect(0,32px,16px,16px);
 }
 
-.variable-or-property:focus .variables-view-delete {
+.variable-or-property:focus > .title > .variables-view-delete {
   -moz-image-region: rect(0,16px,16px,0);
 }
 
@@ -798,7 +819,7 @@
   -moz-image-region: rect(0,32px,16px,16px);
 }
 
-.variable-or-property:focus .variables-view-edit {
+.variable-or-property:focus > .title > .variables-view-edit {
   -moz-image-region: rect(0,16px,16px,0);
 }
 
@@ -816,7 +837,7 @@
   -moz-image-region: rect(0,32px,16px,16px);
 }
 
-.variable-or-property:focus .variables-view-open-inspector {
+.variable-or-property:focus > .title > .variables-view-open-inspector {
   -moz-image-region: rect(0,16px,16px,0);
 }
 
@@ -826,8 +847,13 @@
   height: 16px;
 }
 
-.element-value-input {
+.variable-or-property > .title > .separator + .element-value-input {
   -moz-margin-start: -2px !important;
+  -moz-margin-end: 2px !important;
+}
+
+.variable-or-property > .title > .separator[hidden=true] + .element-value-input {
+  -moz-margin-start: 4px !important;
   -moz-margin-end: 2px !important;
 }
 
