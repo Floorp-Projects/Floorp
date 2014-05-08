@@ -181,6 +181,10 @@ public:
   virtual size_t NonHeapSizeOfDecoded() const;
   virtual size_t OutOfProcessSizeOfDecoded() const;
 
+  virtual size_t HeapSizeOfVectorImageDocument(nsACString* aDocURL = nullptr) const MOZ_OVERRIDE {
+    return 0;
+  }
+
   /* Triggers discarding. */
   void Discard(bool force = false);
   void ForceDiscard() { Discard(/* force = */ true); }
