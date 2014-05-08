@@ -95,6 +95,14 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
+    // Bluetooth just enabled, clear profile controllers and runnable arrays.
+    sControllerArray.Clear();
+    sBondingRunnableArray.Clear();
+    sChangeDiscoveryRunnableArray.Clear();
+    sGetDeviceRunnableArray.Clear();
+    sSetPropertyRunnableArray.Clear();
+    sUnbondingRunnableArray.Clear();
+
     // Bluetooth scan mode is NONE by default
     bt_scan_mode_t mode = BT_SCAN_MODE_CONNECTABLE;
     bt_property_t prop;
@@ -1149,8 +1157,9 @@ NextBluetoothProfileController()
   NS_ENSURE_FALSE_VOID(sControllerArray.IsEmpty());
   sControllerArray.RemoveElementAt(0);
   // Re-check if the task array is empty, if it's not, the next task will begin.
-  NS_ENSURE_FALSE_VOID(sControllerArray.IsEmpty());
-  sControllerArray[0]->StartSession();
+  if (!sControllerArray.IsEmpty()) {
+    sControllerArray[0]->StartSession();
+  }
 }
 
 static void
