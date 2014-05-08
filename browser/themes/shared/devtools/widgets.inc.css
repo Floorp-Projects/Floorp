@@ -689,17 +689,17 @@
 
 .variable-or-property-non-writable-icon {
   background: url("chrome://browser/skin/devtools/vview-lock.png") no-repeat;
+  background-size: cover;
   width: 16px;
   height: 16px;
 }
 
-/*@media (min-resolution: 2dppx) {
+@media (min-resolution: 2dppx) {
   .variable-or-property-non-writable-icon {
-    background-image: url("chrome://browser/skin/identity-icons-https@2x.png");
-    background-size: 32px;
+    background-image: url("chrome://browser/skin/devtools/vview-lock@2x.png");
   }
 }
-*/
+
 .variable-or-property-frozen-label,
 .variable-or-property-sealed-label,
 .variable-or-property-non-extensible-label {
@@ -788,63 +788,83 @@
 /* Variables and properties editing */
 
 .variables-view-delete {
-  list-style-image: url("chrome://browser/skin/devtools/vview-delete.png");
-  -moz-image-region: rect(0,16px,16px,0);
-}
-
-.variables-view-delete:hover {
-  -moz-image-region: rect(0,48px,16px,32px);
-}
-
-.variables-view-delete:active {
-  -moz-image-region: rect(0,32px,16px,16px);
-}
-
-.variable-or-property:focus > .title > .variables-view-delete {
-  -moz-image-region: rect(0,16px,16px,0);
-}
-
-.variables-view-edit {
-  list-style-image: url("chrome://browser/skin/devtools/vview-edit.png");
-  -moz-image-region: rect(0,16px,16px,0);
-  cursor: pointer;
-}
-
-.variables-view-edit:hover {
-  -moz-image-region: rect(0,48px,16px,32px);
-}
-
-.variables-view-edit:active {
-  -moz-image-region: rect(0,32px,16px,16px);
-}
-
-.variable-or-property:focus > .title > .variables-view-edit {
-  -moz-image-region: rect(0,16px,16px,0);
-}
-
-.variables-view-open-inspector {
-  list-style-image: url("chrome://browser/skin/devtools/vview-open-inspector.png");
-  -moz-image-region: rect(0,16px,16px,0);
-  cursor: pointer;
-}
-
-.variables-view-open-inspector:hover {
-  -moz-image-region: rect(0,48px,16px,32px);
-}
-
-.variables-view-open-inspector:active {
-  -moz-image-region: rect(0,32px,16px,16px);
-}
-
-.variable-or-property:focus > .title > .variables-view-open-inspector {
-  -moz-image-region: rect(0,16px,16px,0);
-}
-
-.variables-view-throbber {
-  background: url("chrome://global/skin/icons/loading_16.png") center no-repeat;
+  background: url("chrome://browser/skin/devtools/vview-delete.png");
+  background-size: cover;
   width: 16px;
   height: 16px;
 }
+
+@media (min-resolution: 2dppx) {
+  .variables-view-delete {
+    background-image: url("chrome://browser/skin/devtools/vview-delete@2x.png");
+  }
+}
+
+.variables-view-delete:hover {
+  background-position: 16px;
+}
+
+.variables-view-delete:active {
+  background-position: 32px;
+}
+
+.variable-or-property:focus > .title > .variables-view-delete {
+  background-position: 0px;
+}
+
+.variables-view-edit {
+  background: url("chrome://browser/skin/devtools/vview-edit.png");
+  background-size: cover;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+@media (min-resolution: 2dppx) {
+  .variables-view-edit {
+    background-image: url("chrome://browser/skin/devtools/vview-edit@2x.png");
+  }
+}
+
+.variables-view-edit:hover {
+  background-position: 16px;
+}
+
+.variables-view-edit:active {
+  background-position: 32px;
+}
+
+.variable-or-property:focus > .title > .variables-view-edit {
+  background-position: 0px;
+}
+
+.variables-view-open-inspector {
+  background: url("chrome://browser/skin/devtools/vview-open-inspector.png");
+  background-size: cover;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+@media (min-resolution: 2dppx) {
+  .variables-view-open-inspector {
+    background-image: url("chrome://browser/skin/devtools/vview-open-inspector@2x.png");
+  }
+}
+
+.variables-view-open-inspector:hover {
+  background-position: 16px;
+}
+
+.variables-view-open-inspector:active {
+  background-position: 32px;
+}
+
+.variable-or-property:focus > .title > .variables-view-open-inspector {
+  background-position: 0px;
+}
+
+/* Variables and properties input boxes */
 
 .variable-or-property > .title > .separator + .element-value-input {
   -moz-margin-start: -2px !important;
