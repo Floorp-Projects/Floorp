@@ -1244,6 +1244,32 @@ let CustomizableUIInternal = {
     return def;
   },
 
+  addShortcut: function(aShortcutNode, aTargetNode) {
+    if (!aTargetNode)
+      aTargetNode = aShortcutNode;
+    let document = aShortcutNode.ownerDocument;
+
+    // Detect if we've already been here before.
+    if (!aTargetNode || aTargetNode.hasAttribute("shortcut"))
+      return;
+
+    let shortcutId = aShortcutNode.getAttribute("key");
+    let shortcut;
+    if (shortcutId) {
+      shortcut = document.getElementById(shortcutId);
+    } else {
+      let commandId = aShortcutNode.getAttribute("command");
+      if (commandId)
+        shortcut = ShortcutUtils.findShortcut(document.getElementById(commandId));
+    }
+    if (!shortcut) {
+      ERROR("Could not find a keyboard shortcut for '" + aShortcutNode.outerHTML + "'.");
+      return;
+    }
+
+    aTargetNode.setAttribute("shortcut", ShortcutUtils.prettifyShortcut(shortcut));
+  },
+
   handleWidgetCommand: function(aWidget, aNode, aEvent) {
     LOG("handleWidgetCommand");
 
@@ -3249,6 +3275,18 @@ this.CustomizableUI = {
   getLocalizedProperty: function(aWidget, aProp, aFormatArgs, aDef) {
     return CustomizableUIInternal.getLocalizedProperty(aWidget, aProp,
       aFormatArgs, aDef);
+  },
+  /**
+   * Utility function to detect, find and set a keyboard shortcut for a menuitem
+   * or (toolbar)button.
+   *
+   * @param aShortcutNode the XUL node where the shortcut will be derived from;
+   * @param aTargetNode   (optional) the XUL node on which the `shortcut`
+   *                      attribute will be set. If NULL, the shortcut will be
+   *                      set on aShortcutNode;
+   */
+  addShortcut: function(aShortcutNode, aTargetNode) {
+    return CustomizableUIInternal.addShortcut(aShortcutNode, aTargetNode);
   },
   /**
    * Given a node, walk up to the first panel in its ancestor chain, and
