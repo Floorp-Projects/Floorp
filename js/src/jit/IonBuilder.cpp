@@ -8561,6 +8561,8 @@ IonBuilder::jsop_getprop(PropertyName *name)
         return emitted;
 
     types::TemporaryTypeSet *types = bytecodeTypes(pc);
+    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
+                                                       obj, name, types);
 
     // Always use a call if we are performing analysis and
     // not actually emitting code, to simplify later analysis. Also skip deeper
@@ -8582,9 +8584,6 @@ IonBuilder::jsop_getprop(PropertyName *name)
         current->push(call);
         return resumeAfter(call) && pushTypeBarrier(call, types, BarrierKind::TypeSet);
     }
-
-    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
-                                                       obj, name, types);
 
     // Try to hardcode known constants.
     if (!getPropTryConstant(&emitted, obj, name, types) || emitted)
