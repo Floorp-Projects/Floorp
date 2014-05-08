@@ -13,6 +13,10 @@ button[type="menu"] > .button-box > .button-menu-dropmarker {
   -moz-appearance: none !important;
 }
 
+.help-button > .button-box > .button-icon {
+  -moz-margin-end: 0;
+}
+
 menulist:not([editable="true"]) > .menulist-dropmarker {
   display: -moz-box;
   margin-top: 6px;
