@@ -25,6 +25,9 @@ class TestMultiMgrsBottomParent :
 public:
     TestMultiMgrsBottomParent() { }
     virtual ~TestMultiMgrsBottomParent() { }
+
+protected:
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE {}
 };
 
 class TestMultiMgrsLeftParent :
@@ -40,6 +43,8 @@ public:
     }
 
 protected:
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE {}
+
     virtual PTestMultiMgrsBottomParent* AllocPTestMultiMgrsBottomParent() MOZ_OVERRIDE
     {
         return new TestMultiMgrsBottomParent();
@@ -65,6 +70,8 @@ public:
     }
 
 protected:
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE {}
+
     virtual PTestMultiMgrsBottomParent* AllocPTestMultiMgrsBottomParent() MOZ_OVERRIDE
     {
         return new TestMultiMgrsBottomParent();

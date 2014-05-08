@@ -72,6 +72,7 @@ public:
     virtual ~TestManyChildAllocsSubParent() { }
 
 protected:
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE {}
     virtual bool RecvHello() MOZ_OVERRIDE { return true; }
 };
 
