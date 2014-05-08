@@ -771,7 +771,7 @@ Chunk::init(JSRuntime *rt)
     info.trailer.location = ChunkLocationTenuredHeap;
     info.trailer.runtime = rt;
 
-    /* The rest of info fields are initialized in PickChunk. */
+    /* The rest of info fields are initialized in pickChunk. */
 }
 
 static inline Chunk **
@@ -1502,11 +1502,9 @@ ArenaLists::allocateFromArenaInline(Zone *zone, AllocKind thingKind)
      * a lock.
      */
 
-    Chunk *chunk = nullptr;
-
-    ArenaList *al = &arenaLists[thingKind];
     AutoLockGC maybeLock;
 
+    bool backgroundFinalizationIsRunning = false;
 #ifdef JS_THREADSAFE
     ArenaLists::BackgroundFinalizeState *bfs = &backgroundFinalizeState[thingKind];
     if (*bfs != BFS_DONE) {
@@ -1518,15 +1516,7 @@ ArenaLists::allocateFromArenaInline(Zone *zone, AllocKind thingKind)
         JSRuntime *rt = zone->runtimeFromAnyThread();
         maybeLock.lock(rt);
         if (*bfs == BFS_RUN) {
-            JS_ASSERT(al->isCursorAtEnd());
-            chunk = rt->gc.pickChunk(zone);
-            if (!chunk) {
-                /*
-                 * Let the caller to wait for the background allocation to
-                 * finish and restart the allocation attempt.
-                 */
-                return nullptr;
-            }
+            backgroundFinalizationIsRunning = true;
         } else if (*bfs == BFS_JUST_FINISHED) {
             /* See comments before BackgroundFinalizeState definition. */
             *bfs = BFS_DONE;
@@ -1536,46 +1526,46 @@ ArenaLists::allocateFromArenaInline(Zone *zone, AllocKind thingKind)
     }
 #endif /* JS_THREADSAFE */
 
-    if (!chunk) {
-        if (ArenaHeader *aheader = al->arenaAfterCursor()) {
-            /*
-             * Normally, the empty arenas are returned to the chunk
-             * and should not present on the list. In parallel
-             * execution, however, we keep empty arenas in the arena
-             * list to avoid synchronizing on the chunk.
-             */
-            JS_ASSERT(!aheader->isEmpty() || InParallelSection());
+    ArenaHeader *aheader;
+    ArenaList *al = &arenaLists[thingKind];
+    if (!backgroundFinalizationIsRunning && (aheader = al->arenaAfterCursor())) {
+        /*
+         * Normally, the empty arenas are returned to the chunk
+         * and should not be present on the list. In parallel
+         * execution, however, we keep empty arenas in the arena
+         * list to avoid synchronizing on the chunk.
+         */
+        JS_ASSERT(!aheader->isEmpty() || InParallelSection());
 
-            al->moveCursorPast(aheader);
+        al->moveCursorPast(aheader);
 
-            /*
-             * Move the free span stored in the arena to the free list and
-             * allocate from it.
-             */
-            FreeSpan firstFreeSpan = aheader->getFirstFreeSpan();
-            freeLists[thingKind].setHead(&firstFreeSpan);
-            aheader->setAsFullyUsed();
-            if (MOZ_UNLIKELY(zone->wasGCStarted())) {
-                if (zone->needsBarrier()) {
-                    aheader->allocatedDuringIncremental = true;
-                    zone->runtimeFromMainThread()->gc.marker.delayMarkingArena(aheader);
-                } else if (zone->isGCSweeping()) {
-                    PushArenaAllocatedDuringSweep(zone->runtimeFromMainThread(), aheader);
-                }
+        /*
+         * Move the free span stored in the arena to the free list and
+         * allocate from it.
+         */
+        FreeSpan firstFreeSpan = aheader->getFirstFreeSpan();
+        freeLists[thingKind].setHead(&firstFreeSpan);
+        aheader->setAsFullyUsed();
+        if (MOZ_UNLIKELY(zone->wasGCStarted())) {
+            if (zone->needsBarrier()) {
+                aheader->allocatedDuringIncremental = true;
+                zone->runtimeFromMainThread()->gc.marker.delayMarkingArena(aheader);
+            } else if (zone->isGCSweeping()) {
+                PushArenaAllocatedDuringSweep(zone->runtimeFromMainThread(), aheader);
             }
-            void *thing = freeLists[thingKind].allocate(Arena::thingSize(thingKind));
-            JS_ASSERT(thing);   // This allocation is infallible.
-            return thing;
         }
-
-        /* Make sure we hold the GC lock before we call PickChunk. */
-        JSRuntime *rt = zone->runtimeFromAnyThread();
-        if (!maybeLock.locked())
-            maybeLock.lock(rt);
-        chunk = rt->gc.pickChunk(zone);
-        if (!chunk)
-            return nullptr;
+        void *thing = freeLists[thingKind].allocate(Arena::thingSize(thingKind));
+        JS_ASSERT(thing);   // This allocation is infallible.
+        return thing;
     }
+
+    /* Make sure we hold the GC lock before we call pickChunk. */
+    JSRuntime *rt = zone->runtimeFromAnyThread();
+    if (!maybeLock.locked())
+        maybeLock.lock(rt);
+    Chunk *chunk = rt->gc.pickChunk(zone);
+    if (!chunk)
+        return nullptr;
 
     /*
      * While we still hold the GC lock get an arena from some chunk, mark it
@@ -1587,7 +1577,7 @@ ArenaLists::allocateFromArenaInline(Zone *zone, AllocKind thingKind)
      * cache locality.
      */
     JS_ASSERT(al->isCursorAtEnd());
-    ArenaHeader *aheader = chunk->allocateArena(zone, thingKind);
+    aheader = chunk->allocateArena(zone, thingKind);
     if (!aheader)
         return nullptr;
 
