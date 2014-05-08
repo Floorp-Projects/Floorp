@@ -105,6 +105,7 @@ EXPORTS.mozilla.layers += [
     'apz/src/Axis.h',
     'apz/src/GestureEventListener.h',
     'apz/src/TaskThrottler.h',
+    'apz/testutil/APZTestData.h',
     'apz/util/ActiveElementManager.h',
     'apz/util/APZCCallbackHelper.h',
     'AtomicRefCountedWithFinalize.h',
