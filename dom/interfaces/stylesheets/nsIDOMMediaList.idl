@@ -13,7 +13,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[scriptable, uuid(9b0c2ed7-111c-4824-adf9-ef0da6dad371)]
+[uuid(9b0c2ed7-111c-4824-adf9-ef0da6dad371)]
 interface nsIDOMMediaList : nsISupports
 {
            attribute DOMString        mediaText;

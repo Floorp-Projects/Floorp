@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "domstubs.idl"
 
-[scriptable, uuid(7bd8c29f-8a76-453f-9373-79f820f2dc01)]
+[uuid(7bd8c29f-8a76-453f-9373-79f820f2dc01)]
 interface nsIDOMMediaError : nsISupports
 {
   /* The download of the media resource was aborted by

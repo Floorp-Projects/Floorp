@@ -16,7 +16,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(fa326d22-8739-4eef-a80e-6449bde605d2)]
+[uuid(fa326d22-8739-4eef-a80e-6449bde605d2)]
 interface nsIDOMHTMLStyleElement : nsISupports
 {
            [binaryname(MozDisabled)]

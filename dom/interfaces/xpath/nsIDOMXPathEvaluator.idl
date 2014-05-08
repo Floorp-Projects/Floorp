@@ -14,7 +14,7 @@ interface nsIDOMXPathResult;
 interface nsIDOMXPathExpression;
 interface XPathException;
 
-[scriptable, uuid(75506f8a-b504-11d5-a7f2-ca108ab8b6fc)]
+[uuid(75506f8a-b504-11d5-a7f2-ca108ab8b6fc)]
 interface nsIDOMXPathEvaluator : nsISupports
 {
   nsIDOMXPathExpression    createExpression(in DOMString expression, 

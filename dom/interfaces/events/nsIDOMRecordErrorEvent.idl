@@ -11,7 +11,7 @@
  * The name value is defined in the
  * http://www.w3.org/TR/2012/WD-dom-20121206/#error-names-table
  */
-[scriptable, builtinclass, uuid(606e6f94-bf02-11e2-8a01-e722108c6d66)]
+[builtinclass, uuid(606e6f94-bf02-11e2-8a01-e722108c6d66)]
 interface nsIDOMRecordErrorEvent : nsIDOMEvent
 {
   /**

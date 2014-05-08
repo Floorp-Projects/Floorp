@@ -7,6 +7,9 @@
 
 #include "xptiprivate.h"
 #include "mozilla/XPTInterfaceInfoManager.h"
+#include "mozilla/PodOperations.h"
+#include "nsCxPusher.h"
+#include "jsapi.h"
 
 using namespace mozilla;
 
@@ -233,28 +236,69 @@ xptiInterfaceEntry::GetMethodInfoForName(const char* methodName, uint16_t *index
 }
 
 nsresult
-xptiInterfaceEntry::GetConstant(uint16_t index, const nsXPTConstant** constant)
+xptiInterfaceEntry::GetConstant(uint16_t index, JS::MutableHandleValue constant,
+                                char** name)
 {
     if(!EnsureResolved())
         return NS_ERROR_UNEXPECTED;
 
     if(index < mConstantBaseIndex)
-        return mParent->GetConstant(index, constant);
+        return mParent->GetConstant(index, constant, name);
 
     if(index >= mConstantBaseIndex + 
                 mDescriptor->num_constants)
     {
         NS_PRECONDITION(0, "bad param");
-        *constant = nullptr;
         return NS_ERROR_INVALID_ARG;
     }
 
-    // else...
-    *constant =
-        reinterpret_cast<nsXPTConstant*>
-                        (&mDescriptor->
-                                const_descriptors[index -
-                                    mConstantBaseIndex]);
+    const auto& c = mDescriptor->const_descriptors[index - mConstantBaseIndex];
+    AutoJSContext cx;
+    JS::Rooted<JS::Value> v(cx);
+    v.setUndefined();
+
+    switch (c.type.prefix.flags) {
+      case nsXPTType::T_I8:
+      {
+        v.setInt32(c.value.i8);
+        break;
+      }
+      case nsXPTType::T_U8:
+      {
+        v.setInt32(c.value.ui8);
+        break;
+      }
+      case nsXPTType::T_I16:
+      {
+        v.setInt32(c.value.i16);
+        break;
+      }
+      case nsXPTType::T_U16:
+      {
+        v.setInt32(c.value.ui16);
+        break;
+      }
+      case nsXPTType::T_I32:
+      {
+        v = JS_NumberValue(c.value.i32);
+        break;
+      }
+      case nsXPTType::T_U32:
+      {
+        v = JS_NumberValue(c.value.ui32);
+        break;
+      }
+      default:
+      {
+#ifdef DEBUG
+        NS_ERROR("Non-numeric constant found in interface.");
+#endif
+      }
+    }
+
+    constant.set(v);
+    *name = ToNewCString(nsDependentCString(c.name));
+
     return NS_OK;
 }
 

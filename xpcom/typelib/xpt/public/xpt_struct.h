@@ -14,9 +14,7 @@
 #include "xpt_arena.h"
 #include <stdint.h>
 
-#ifdef __cplusplus
 extern "C" {
-#endif
 
 /*
  * Originally, I was going to have structures that exactly matched the on-disk
@@ -518,8 +516,6 @@ extern XPT_PUBLIC_API(XPTAnnotation *)
 XPT_NewAnnotation(XPTArena *arena, uint8_t flags, XPTString *creator, 
                   XPTString *private_data);
 
-#ifdef __cplusplus
 }
-#endif
 
 #endif /* __xpt_struct_h__ */

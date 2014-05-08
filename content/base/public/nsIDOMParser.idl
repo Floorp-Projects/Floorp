@@ -19,7 +19,7 @@ interface nsIScriptGlobalObject;
  * parsing with the XMLHttpRequest interface, which can be used for
  * asynchronous (callback-based) loading.
  */
-[scriptable, uuid(5677f36e-1842-4c6f-a39c-2e5576ab8b40)]
+[uuid(5677f36e-1842-4c6f-a39c-2e5576ab8b40)]
 interface nsIDOMParser : nsISupports
 {
   /**

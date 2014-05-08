@@ -20,7 +20,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(068630db-2c00-43dd-b167-495757a88236)]
+[uuid(068630db-2c00-43dd-b167-495757a88236)]
 interface nsIDOMHTMLBodyElement : nsISupports
 {
            attribute DOMString        aLink;
