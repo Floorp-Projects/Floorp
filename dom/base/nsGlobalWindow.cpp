@@ -7061,6 +7061,22 @@ nsGlobalWindow::ScrollTo(const CSSIntPoint& aScroll)
   }
 }
 
+void
+nsGlobalWindow::MozRequestOverfill(OverfillCallback& aCallback,
+                                   mozilla::ErrorResult& aError)
+{
+  nsIWidget* widget = nsContentUtils::WidgetForDocument(mDoc);
+  if (widget) {
+    mozilla::layers::LayerManager* manager = widget->GetLayerManager();
+    if (manager) {
+      manager->RequestOverfill(&aCallback);
+      return;
+    }
+  }
+
+  aError.Throw(NS_ERROR_NOT_AVAILABLE);
+}
+
 NS_IMETHODIMP
 nsGlobalWindow::ScrollBy(int32_t aXScrollDif, int32_t aYScrollDif)
 {
