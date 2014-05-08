@@ -15,7 +15,7 @@ function run_test() {
 }
 
 // Non-prototypical tests, operating on path names.
-add_task(function test_nonproto() {
+add_task(function* test_nonproto() {
   // First, create a file we can mess with.
   let path = OS.Path.join(OS.Constants.Path.tmpDir,
                               "test_osfile_async_setDates_nonproto.tmp");
@@ -96,7 +96,13 @@ add_task(function test_nonproto() {
 });
 
 // Prototypical tests, operating on |File| handles.
-add_task(function test_proto() {
+add_task(function* test_proto() {
+  if (OS.Constants.Sys.Name == "Android") {
+    do_print("File.prototype.setDates is not implemented for Android/B2G");
+    do_check_eq(OS.File.prototype.setDates, undefined);
+    return;
+  }
+
   // First, create a file we can mess with.
   let path = OS.Path.join(OS.Constants.Path.tmpDir,
                               "test_osfile_async_setDates_proto.tmp");

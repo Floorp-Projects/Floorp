@@ -16,7 +16,7 @@ const SUPP_PROP = "init.svc.wpa_supplicant";
 const WPA_SUPPLICANT = "wpa_supplicant";
 const DEBUG = false;
 
-this.WifiCommand = function(aControlMessage, aInterface) {
+this.WifiCommand = function(aControlMessage, aInterface, aSdkVersion) {
   function debug(msg) {
     if (DEBUG) {
       dump('-------------- WifiCommand: ' + msg);
@@ -142,17 +142,36 @@ this.WifiCommand = function(aControlMessage, aInterface) {
     doStringCommand("LOG_LEVEL", callback);
   };
 
-  command.wpsPbc = function (iface, callback) {
-    doBooleanCommand("WPS_PBC" + (iface ? (" interface=" + iface) : ""),
-                     "OK", callback);
+  command.wpsPbc = function (callback, iface) {
+    let cmd = 'WPS_PBC';
+
+    // If the network interface is specified and we are based on JB,
+    // append the argument 'interface=[iface]' to the supplicant command.
+    //
+    // Note: The argument "interface" is only required for wifi p2p on JB.
+    //       For other cases, the argument is useless and even leads error.
+    //       Check the evil work here:
+    //       http://androidxref.com/4.2.2_r1/xref/external/wpa_supplicant_8/wpa_supplicant/ctrl_iface_unix.c#172
+    //
+    if (iface && isJellybean()) {
+      cmd += (' inferface=' + iface);
+    }
+
+    doBooleanCommand(cmd, "OK", callback);
   };
 
   command.wpsPin = function (detail, callback) {
-    doStringCommand("WPS_PIN " +
-                    (detail.bssid === undefined ? "any" : detail.bssid) +
-                    (detail.pin === undefined ? "" : (" " + detail.pin)) +
-                    (detail.iface ? (" interface=" + detail.iface) : ""),
-                    callback);
+    let cmd = 'WPS_PIN ';
+
+    // See the comment above in wpsPbc().
+    if (detail.iface && isJellybean()) {
+      cmd += ('inferface=' + iface + ' ');
+    }
+
+    cmd += (detail.bssid === undefined ? "any" : detail.bssid);
+    cmd += (detail.pin === undefined ? "" : (" " + detail.pin));
+
+    doStringCommand(cmd, callback);
   };
 
   command.wpsCancel = function (callback) {
@@ -518,6 +537,18 @@ this.WifiCommand = function(aControlMessage, aInterface) {
       ok = false;
     }
     callback(ok);
+  }
+
+  function isJellybean() {
+    // According to http://developer.android.com/guide/topics/manifest/uses-sdk-element.html
+    // ----------------------------------------------------
+    // | Platform Version   | API Level |   VERSION_CODE  |
+    // ----------------------------------------------------
+    // | Android 4.1, 4.1.1 |    16     |  JELLY_BEAN_MR2 |
+    // | Android 4.2, 4.2.2 |    17     |  JELLY_BEAN_MR1 |
+    // | Android 4.3        |    18     |    JELLY_BEAN   |
+    // ----------------------------------------------------
+    return aSdkVersion === 16 || aSdkVersion === 17 || aSdkVersion === 18;
   }
 
   return command;

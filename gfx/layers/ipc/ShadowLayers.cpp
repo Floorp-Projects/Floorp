@@ -179,6 +179,7 @@ ShadowLayerForwarder::~ShadowLayerForwarder()
   delete mTxn;
   if (mShadowManager) {
     mShadowManager->SetForwarder(nullptr);
+    mShadowManager->Destroy();
   }
 }
 

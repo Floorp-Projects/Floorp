@@ -487,7 +487,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBDatabase, IDBWrapperCache)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBDatabase)
-  NS_INTERFACE_MAP_ENTRY(nsIFileStorage)
   NS_INTERFACE_MAP_ENTRY(nsIOfflineStorage)
 NS_INTERFACE_MAP_END_INHERITING(IDBWrapperCache)
 
@@ -745,31 +744,6 @@ IDBDatabase::Id()
   return mDatabaseId;
 }
 
-NS_IMETHODIMP_(bool)
-IDBDatabase::IsInvalidated()
-{
-  return mInvalidated;
-}
-
-NS_IMETHODIMP_(bool)
-IDBDatabase::IsShuttingDown()
-{
-  return QuotaManager::IsShuttingDown();
-}
-
-NS_IMETHODIMP_(void)
-IDBDatabase::SetThreadLocals()
-{
-  NS_ASSERTION(GetOwner(), "Should have owner!");
-  QuotaManager::SetCurrentWindow(GetOwner());
-}
-
-NS_IMETHODIMP_(void)
-IDBDatabase::UnsetThreadLocals()
-{
-  QuotaManager::SetCurrentWindow(nullptr);
-}
-
 NS_IMETHODIMP_(mozilla::dom::quota::Client*)
 IDBDatabase::GetClient()
 {
@@ -954,7 +928,7 @@ CreateFileHelper::GetSuccessResult(JSContext* aCx,
                                    JS::MutableHandle<JS::Value> aVal)
 {
   nsRefPtr<IDBFileHandle> fileHandle =
-    IDBFileHandle::Create(mDatabase, mName, mType, mFileInfo.forget());
+    IDBFileHandle::Create(mName, mType, mDatabase, mFileInfo.forget());
   IDB_ENSURE_TRUE(fileHandle, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   return WrapNative(aCx, NS_ISUPPORTS_CAST(EventTarget*, fileHandle), aVal);
