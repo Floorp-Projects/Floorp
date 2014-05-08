@@ -638,7 +638,7 @@ js::Execute(JSContext *cx, HandleScript script, JSObject &scopeChainArg, Value *
 {
     /* The scope chain could be anything, so innerize just in case. */
     RootedObject scopeChain(cx, &scopeChainArg);
-    scopeChain = GetInnerObject(cx, scopeChain);
+    scopeChain = GetInnerObject(scopeChain);
     if (!scopeChain)
         return false;
 
