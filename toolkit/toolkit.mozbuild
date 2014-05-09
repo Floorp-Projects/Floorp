@@ -49,6 +49,8 @@ add_tier_dir('platform', ['ipc', 'js/ipc'])
 
 add_tier_dir('platform', ['hal', 'js/xpconnect', 'intl/chardet'])
 
+add_tier_dir('platform', 'media/libyuv')
+
 add_tier_dir('platform', ['modules/libjar', 'storage'])
 
 if CONFIG['MOZ_PERMISSIONS']:
@@ -65,7 +67,6 @@ if CONFIG['MOZ_WEBRTC']:
         'media/mtransport/third_party',
         'media/mtransport/build',
         'media/mtransport/standalone',
-        'media/libyuv',
     ])
 
 if CONFIG['MOZ_OMX_PLUGIN']:
