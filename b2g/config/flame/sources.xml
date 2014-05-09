@@ -122,7 +122,7 @@
   <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="ecc08b2f0efea93c778e3525553bcd4bd5f2cf49"/>
   <project name="kernel/msm" path="kernel" revision="7158567fc83e7475f08db3adedc5df1ad6f54abd"/>
   <project name="platform/bootable/recovery" path="bootable/recovery" revision="f2914eacee9120680a41463708bb6ee8291749fc"/>
-  <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="fa892235a9bd8983f8b591129fc1a9398f64e514"/>
+  <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="4b7ae991637a216d745e154cd49b4db6ca55a19e"/>
   <project name="platform/external/bluetooth/bluez" path="external/bluetooth/bluez" revision="f0689ac1914cdbc59e53bdc9edd9013dc157c299"/>
   <project name="platform/external/bluetooth/glib" path="external/bluetooth/glib" revision="dd925f76e4f149c3d5571b80e12f7e24bbe89c59"/>
   <project name="platform/external/dbus" path="external/dbus" revision="ea87119c843116340f5df1d94eaf8275e1055ae8"/>
