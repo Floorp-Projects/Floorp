@@ -39,7 +39,7 @@ public class TopSitesGridItemView extends RelativeLayout {
 
     // Child views.
     private final TextView mTitleView;
-    private final ImageView mThumbnailView;
+    private final TopSitesThumbnailView mThumbnailView;
 
     // Data backing this view.
     private String mTitle;
@@ -71,7 +71,7 @@ public class TopSitesGridItemView extends RelativeLayout {
         LayoutInflater.from(context).inflate(R.layout.top_sites_grid_item_view, this);
 
         mTitleView = (TextView) findViewById(R.id.title);
-        mThumbnailView = (ImageView) findViewById(R.id.thumbnail);
+        mThumbnailView = (TopSitesThumbnailView) findViewById(R.id.thumbnail);
     }
 
     /**
@@ -286,7 +286,8 @@ public class TopSitesGridItemView extends RelativeLayout {
         mThumbnailView.setImageBitmap(favicon);
 
         if (mFaviconURL != null) {
-            mThumbnailView.setBackgroundColor(Favicons.getFaviconColor(mFaviconURL));
+            final int bgColor = Favicons.getFaviconColor(mFaviconURL);
+            mThumbnailView.setBackgroundColorWithOpacityFilter(bgColor);
         }
     }
 
