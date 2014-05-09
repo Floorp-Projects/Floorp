@@ -8,8 +8,6 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "jsprf.h"
-
 #include "jit/IonCode.h"
 #include "js/SliceBudget.h"
 #include "vm/ArgumentsObject.h"
@@ -148,27 +146,12 @@ template <> bool ThingIsPermanentAtom<PropertyName>(PropertyName *name) { return
 
 template<typename T>
 static inline void
-CheckMarkedThing(JSTracer *trc, T **thingp)
+CheckMarkedThing(JSTracer *trc, T *thing)
 {
-    JS_ASSERT(trc);
-    JS_ASSERT(thingp);
-
-    T *thing = *thingp;
-
-#ifdef JS_CRASH_DIAGNOSTICS
-    if (!thing) {
-        char msgbuf[1024];
-        const char *label = trc->tracingName("<unknown>");
-        JS_snprintf(msgbuf, sizeof(msgbuf),
-                    "[crash diagnostics] Marking nullptr \"%s\" @ %p of type %s",
-                    label, thingp, TraceKindAsAscii(MapTypeToTraceKind<T>::kind));
-        MOZ_ReportAssertionFailure(msgbuf, __FILE__, __LINE__);
-        MOZ_CRASH();
-    }
-#endif
-    JS_ASSERT(*thingp);
-
 #ifdef DEBUG
+    JS_ASSERT(trc);
+    JS_ASSERT(thing);
+
     /* This function uses data that's not available in the nursery. */
     if (IsInsideNursery(trc->runtime(), thing))
         return;
@@ -216,15 +199,16 @@ CheckMarkedThing(JSTracer *trc, T **thingp)
     JS_ASSERT_IF(IsThingPoisoned(thing) && rt->isHeapBusy(),
                  !InFreeList(thing->arenaHeader(), thing));
 #endif
-
 }
 
 template<typename T>
 static void
 MarkInternal(JSTracer *trc, T **thingp)
 {
-    CheckMarkedThing(trc, thingp);
+    JS_ASSERT(thingp);
     T *thing = *thingp;
+
+    CheckMarkedThing(trc, thing);
 
     if (!trc->callback) {
         /*
@@ -292,7 +276,7 @@ MarkPermanentAtom(JSTracer *trc, JSAtom *atom, const char *name)
 
     JS_ASSERT(atom->isPermanent());
 
-    CheckMarkedThing(trc, &atom);
+    CheckMarkedThing(trc, atom);
 
     if (!trc->callback) {
         // Atoms do not refer to other GC things so don't need to go on the mark stack.
