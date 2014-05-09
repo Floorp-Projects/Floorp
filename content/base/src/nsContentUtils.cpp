@@ -2881,14 +2881,15 @@ nsContentUtils::IsExactSitePermDeny(nsIPrincipal* aPrincipal, const char* aType)
 static const char *gEventNames[] = {"event"};
 static const char *gSVGEventNames[] = {"evt"};
 // for b/w compat, the first name to onerror is still 'event', even though it
-// is actually the error message.  (pre this code, the other 2 were not avail.)
-// XXXmarkh - a quick lxr shows no affected code - should we correct this?
-static const char *gOnErrorNames[] = {"event", "source", "lineno"};
+// is actually the error message
+static const char *gOnErrorNames[] = {"event", "source", "lineno",
+                                      "colno", "error"};
 
 // static
 void
 nsContentUtils::GetEventArgNames(int32_t aNameSpaceID,
                                  nsIAtom *aEventName,
+                                 bool aIsForWindow,
                                  uint32_t *aArgCount,
                                  const char*** aArgArray)
 {
@@ -2899,7 +2900,7 @@ nsContentUtils::GetEventArgNames(int32_t aNameSpaceID,
   // JSEventHandler is what does the arg magic for onerror, and it does
   // not seem to take the namespace into account.  So we let onerror in all
   // namespaces get the 3 arg names.
-  if (aEventName == nsGkAtoms::onerror) {
+  if (aEventName == nsGkAtoms::onerror && aIsForWindow) {
     SET_EVENT_ARG_NAMES(gOnErrorNames);
   } else if (aNameSpaceID == kNameSpaceID_SVG) {
     SET_EVENT_ARG_NAMES(gSVGEventNames);
