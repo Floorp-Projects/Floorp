@@ -2215,6 +2215,7 @@ WatchExpressionsView.prototype = Heritage.extend(WidgetMethods, {
   _createItemView: function(aExpression) {
     let container = document.createElement("hbox");
     container.className = "list-widget-item dbg-expression";
+    container.setAttribute("align", "center");
 
     let arrowNode = document.createElement("hbox");
     arrowNode.className = "dbg-expression-arrow";
