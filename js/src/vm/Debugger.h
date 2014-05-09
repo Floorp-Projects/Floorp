@@ -472,6 +472,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      *
      * If *vp is a magic JS_OPTIMIZED_OUT value, this produces a plain object
      * of the form { optimizedOut: true }.
+     *
+     * If *vp is a magic JS_OPTIMIZED_ARGUMENTS value signifying missing
+     * arguments, this produces a plain object of the form { missingArguments:
+     * true }.
      */
     bool wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp);
 
