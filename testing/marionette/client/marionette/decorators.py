@@ -33,7 +33,7 @@ def do_crash_check(func, always=False):
 
         try:
             return func(*args, **kwargs)
-        except MarionetteException:
+        except (MarionetteException, IOError):
             exc, val, tb = sys.exc_info()
             if not always:
                 check()
