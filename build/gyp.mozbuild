@@ -7,6 +7,7 @@
 gyp_vars = {
     'build_with_mozilla': 1,
     'build_with_chromium': 0,
+    'use_official_google_api_keys': 0,
     'have_clock_monotonic': 1 if CONFIG['HAVE_CLOCK_MONOTONIC'] else 0,
     'have_ethtool_cmd_speed_hi': 1 if CONFIG['MOZ_WEBRTC_HAVE_ETHTOOL_SPEED_HI'] else 0,
     'include_alsa_audio': 1 if CONFIG['MOZ_ALSA'] else 0,
