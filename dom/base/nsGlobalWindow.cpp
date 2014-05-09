@@ -8978,6 +8978,9 @@ nsGlobalWindow::ShowModalDialog(JSContext* aCx, const nsAString& aUrl,
   aError = nsContentUtils::XPConnect()->JSToVariant(aCx,
                                                     aArgument,
                                                     getter_AddRefs(args));
+  if (aError.Failed()) {
+    return JS::UndefinedValue();
+  }
 
   nsCOMPtr<nsIVariant> retVal = ShowModalDialog(aUrl, args, aOptions, aError);
   if (aError.Failed()) {
