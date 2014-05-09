@@ -187,6 +187,17 @@ protected:
   nsresult SetAnimationModeInternal(uint16_t aAnimationMode);
 
   /**
+   * Helper for RequestRefresh.
+   *
+   * If we've had a "recent" refresh (i.e. if this image is being used in
+   * multiple documents & some other document *just* called RequestRefresh() on
+   * this image with a timestamp close to aTime), this method returns true.
+   *
+   * Otherwise, this method updates mLastRefreshTime to aTime & returns false.
+   */
+  bool HadRecentRefresh(const mozilla::TimeStamp& aTime);
+
+  /**
    * Decides whether animation should or should not be happening,
    * and makes sure the right thing is being done.
    */
@@ -206,6 +217,7 @@ protected:
   // Member data shared by all implementations of this abstract class
   nsRefPtr<imgStatusTracker>    mStatusTracker;
   nsRefPtr<ImageURL>            mURI;
+  TimeStamp                     mLastRefreshTime;
   uint64_t                      mInnerWindowId;
   uint32_t                      mAnimationConsumers;
   uint16_t                      mAnimationMode; // Enum values in imgIContainer

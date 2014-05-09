@@ -8605,6 +8605,10 @@ IonBuilder::jsop_getprop(PropertyName *name)
     if (!getPropTryInlineAccess(&emitted, obj, name, barrier, types) || emitted)
         return emitted;
 
+    // Try to optimize accesses on outer window proxies, for example window.foo.
+    if (!getPropTryInnerize(&emitted, obj, name, types) || emitted)
+        return emitted;
+
     // Try to emit a polymorphic cache.
     if (!getPropTryCache(&emitted, obj, name, barrier, types) || emitted)
         return emitted;
@@ -9071,6 +9075,79 @@ IonBuilder::getPropTryCache(bool *emitted, MDefinition *obj, PropertyName *name,
         return false;
 
     *emitted = true;
+    return true;
+}
+
+MDefinition *
+IonBuilder::tryInnerizeWindow(MDefinition *obj)
+{
+    // Try to optimize accesses on outer window proxies (window.foo, for
+    // example) to go directly to the inner window, the global.
+    //
+    // Callers should be careful not to pass the inner object to getters or
+    // setters that require outerization.
+
+    if (obj->type() != MIRType_Object)
+        return obj;
+
+    types::TemporaryTypeSet *types = obj->resultTypeSet();
+    if (!types)
+        return obj;
+
+    JSObject *singleton = types->getSingleton();
+    if (!singleton)
+        return obj;
+
+    JSObject *inner = GetInnerObject(singleton);
+    if (inner == singleton || inner != &script()->global())
+        return obj;
+
+    // When we navigate, the outer object is brain transplanted and we'll mark
+    // its TypeObject as having unknown properties. The type constraint we add
+    // here will invalidate JIT code when this happens.
+    types::TypeObjectKey *objType = types::TypeObjectKey::get(singleton);
+    if (objType->hasFlags(constraints(), types::OBJECT_FLAG_UNKNOWN_PROPERTIES))
+        return obj;
+
+    obj->setImplicitlyUsedUnchecked();
+    return constant(ObjectValue(script()->global()));
+}
+
+bool
+IonBuilder::getPropTryInnerize(bool *emitted, MDefinition *obj, PropertyName *name,
+                               types::TemporaryTypeSet *types)
+{
+    // See the comment in tryInnerizeWindow for how this works.
+
+    MOZ_ASSERT(*emitted == false);
+
+    MDefinition *inner = tryInnerizeWindow(obj);
+    if (inner == obj)
+        return true;
+
+    // Note: the Baseline ICs don't know about this optimization, so it's
+    // possible the global property's HeapTypeSet has not been initialized
+    // yet. In this case we'll fall back to getPropTryCache for now.
+    //
+    // Also note that we don't call getPropTryCommonGetter below, because
+    // (a) it requires a Baseline getter stub, which we don't have for outer
+    // window proxies and (b) we have to be careful not to pass the inner
+    // object to scripted getters etc. See bug 1007631.
+
+    if (!getPropTryConstant(emitted, inner, name, types) || *emitted)
+        return *emitted;
+
+    if (!getStaticName(&script()->global(), name, emitted) || *emitted)
+        return *emitted;
+
+    // Passing the inner object to GetProperty IC is safe, see the
+    // needsOuterizedThisObject check in IsCacheableGetPropCallNative.
+    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
+                                                       inner, name, types);
+    if (!getPropTryCache(emitted, inner, name, barrier, types) || *emitted)
+        return *emitted;
+
+    MOZ_ASSERT(*emitted == false);
     return true;
 }
 

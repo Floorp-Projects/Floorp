@@ -8,6 +8,16 @@ var Cr = SpecialPowers.Cr;
 
 // Specifies whether we are using fake streams to run this automation
 var FAKE_ENABLED = true;
+try {
+  var audioDevice = SpecialPowers.getCharPref('media.audio_loopback_dev');
+  var videoDevice = SpecialPowers.getCharPref('media.video_loopback_dev');
+  dump('TEST DEVICES: Using media devices:\n');
+  dump('audio: ' + audioDevice + '\nvideo: ' + videoDevice + '\n');
+  FAKE_ENABLED = false;
+} catch (e) {
+  dump('TEST DEVICES: No test devices found (in media.{audio,video}_loopback_dev, using fake streams.\n');
+  FAKE_ENABLED = true;
+}
 
 
 /**
@@ -97,7 +107,7 @@ function createMediaElement(type, label) {
  *        The error callback if the stream fails to be retrieved
  */
 function getUserMedia(constraints, onSuccess, onError) {
-  if (!("fake" in constraints)) {
+  if (!("fake" in constraints) && FAKE_ENABLED) {
     constraints["fake"] = FAKE_ENABLED;
   }
 

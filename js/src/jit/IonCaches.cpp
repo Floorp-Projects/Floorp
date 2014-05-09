@@ -1161,6 +1161,12 @@ CanAttachNativeGetProp(typename GetPropCache::Context cx, const GetPropCache &ca
     // IonBuilder guarantees that it's impossible to generate a GetPropertyIC with
     // allowGetters() true and cache.output().hasValue() false. If this isn't true,
     // we will quickly assert during stub generation.
+    //
+    // Be careful when adding support for other getters here: for outer window
+    // proxies, IonBuilder can innerize and pass us the inner window (the global),
+    // see IonBuilder::getPropTryInnerize. This is fine for native getters because
+    // IsCacheableGetPropCallNative checks they can handle both the inner and
+    // outer object, but scripted getters would need a similar mechanism.
     if (cache.allowGetters() &&
         (IsCacheableGetPropCallNative(obj, holder, shape) ||
          IsCacheableGetPropCallPropertyOp(obj, holder, shape)))

@@ -397,6 +397,8 @@ class IonBuilder : public MIRGenerator
     bool storeSlot(MDefinition *obj, Shape *shape, MDefinition *value, bool needsBarrier,
                    MIRType slotType = MIRType_None);
 
+    MDefinition *tryInnerizeWindow(MDefinition *obj);
+
     // jsop_getprop() helpers.
     bool getPropTryArgumentsLength(bool *emitted, MDefinition *obj);
     bool getPropTryConstant(bool *emitted, MDefinition *obj, PropertyName *name,
@@ -418,6 +420,8 @@ class IonBuilder : public MIRGenerator
                                             TypeDescrSet fieldTypeReprs,
                                             size_t fieldIndex,
                                             types::TemporaryTypeSet *resultTypes);
+    bool getPropTryInnerize(bool *emitted, MDefinition *obj, PropertyName *name,
+                            types::TemporaryTypeSet *types);
     bool getPropTryCache(bool *emitted, MDefinition *obj, PropertyName *name,
                          BarrierKind barrier, types::TemporaryTypeSet *types);
     bool needsToMonitorMissingProperties(types::TemporaryTypeSet *types);
