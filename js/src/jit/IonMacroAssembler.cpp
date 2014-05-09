@@ -794,7 +794,8 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
         makeFrameDescriptor(temp, JitFrame_BaselineJS);
         push(temp);
         push(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeAddr)));
-        enterFakeExitFrame();
+        // No GC things to mark on the stack, push a bare token.
+        enterFakeExitFrame(IonExitFrameLayout::BareToken());
 
         // If monitorStub is non-null, handle resumeAddr appropriately.
         Label noMonitor;
