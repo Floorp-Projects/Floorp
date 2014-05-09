@@ -8,24 +8,6 @@
 #include "nsCRTGlue.h"
 #include "nsAutoPtr.h"
 
-static void*
-CloneCString(nsHashKey *aKey, void *aData, void* aClosure)
-{
-  return NS_strdup((const char*)aData);
-}
-
-static bool
-DeleteCString(nsHashKey *aKey, void *aData, void* aClosure)
-{
-  NS_Free(aData);
-  return true;
-}
-
-nsErrorService::nsErrorService()
-  : mErrorStringBundleURLMap(CloneCString, nullptr, DeleteCString, nullptr, 16)
-{
-}
-
 NS_IMPL_ISUPPORTS(nsErrorService, nsIErrorService)
 
 nsresult
@@ -40,42 +22,22 @@ nsErrorService::Create(nsISupports* aOuter, const nsIID& aIID, void** aInstanceP
 NS_IMETHODIMP
 nsErrorService::RegisterErrorStringBundle(int16_t aErrorModule, const char* aStringBundleURL)
 {
-  char* value = NS_strdup(aStringBundleURL);
-  if (!value) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsPRUint32Key k(aErrorModule);
-  char* oldValue = (char*)mErrorStringBundleURLMap.Put(&k, value);
-  if (oldValue) {
-    NS_Free(oldValue);
-  }
+  mErrorStringBundleURLMap.Put(aErrorModule, new nsCString(aStringBundleURL));
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsErrorService::UnregisterErrorStringBundle(int16_t aErrorModule)
 {
-  nsPRUint32Key k(aErrorModule);
-  char* oldValue = (char*)mErrorStringBundleURLMap.Remove(&k);
-  if (oldValue) {
-    NS_Free(oldValue);
-  }
+  mErrorStringBundleURLMap.Remove(aErrorModule);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsErrorService::GetErrorStringBundle(int16_t aErrorModule, char** aResult)
 {
-  nsPRUint32Key k(aErrorModule);
-  char* value = (char*)mErrorStringBundleURLMap.Get(&k);
-  if (!value) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  value = NS_strdup(value);
-  if (!value) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aResult = value;
+  nsCString* bundleURL = mErrorStringBundleURLMap.Get(aErrorModule);
+  *aResult = ToNewCString(*bundleURL);
   return NS_OK;
 }
 

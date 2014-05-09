@@ -10,7 +10,8 @@
 #include "mozilla/Attributes.h"
 
 #include "nsIErrorService.h"
-#include "nsHashtable.h"
+#include "nsClassHashtable.h"
+#include "nsHashKeys.h"
 
 class nsErrorService MOZ_FINAL : public nsIErrorService
 {
@@ -18,16 +19,19 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIERRORSERVICE
 
-  nsErrorService();
+  nsErrorService()
+  {
+  }
 
   static nsresult
   Create(nsISupports* aOuter, const nsIID& aIID, void** aInstancePtr);
 
 private:
-  ~nsErrorService() {}
+  ~nsErrorService()
+  {
+  }
 
-protected:
-  nsObjectHashtable mErrorStringBundleURLMap;
+  nsClassHashtable<nsUint32HashKey, nsCString> mErrorStringBundleURLMap;
 };
 
 #endif // nsErrorService_h__
