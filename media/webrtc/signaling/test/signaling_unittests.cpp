@@ -3968,10 +3968,8 @@ static int gtest_main(int argc, char **argv) {
 
 int main(int argc, char **argv) {
 
-#ifdef ANDROID
-  // Bug 1007196 - This test currently broken on Android
+  // This test can cause intermittent oranges on the builders
   CHECK_ENVIRONMENT_FLAG("MOZ_WEBRTC_TESTS")
-#endif
 
   if (isatty(STDOUT_FILENO) && is_color_terminal(getenv("TERM"))) {
     std::string ansiMagenta = "\x1b[35m";
