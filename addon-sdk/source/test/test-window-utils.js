@@ -90,37 +90,30 @@ exports['test close on unload'] = function(assert) {
 };
 
 exports.testWindowTracker = function(assert, done) {
-  var myWindow;
-  var finished = false;
+  var myWindow = makeEmptyWindow();
+  assert.pass('window was created');
 
-  var delegate = {
-    onTrack: function(window) {
-      if (window == myWindow) {
-        assert.pass("onTrack() called with our test window");
-        timer.setTimeout(function() myWindow.close());
-      }
-    },
-    onUntrack: function(window) {
-      if (window == myWindow) {
-        assert.pass("onUntrack() called with our test window");
-        timer.setTimeout(function() {
-          if (!finished) {
-           finished = true;
-           myWindow = null;
-           wt.unload();
-           done();
-          }
-          else {
-           assert.fail("finishTest() called multiple times.");
-          }
-        });
-      }
-    }
-  };
+  myWindow.addEventListener("load", function onload() {
+    myWindow.removeEventListener("load", onload, false);
+    assert.pass("test window has opened");
 
-  // test bug 638007 (new is optional), using new
-  var wt = new windowUtils.WindowTracker(delegate);
-  myWindow = makeEmptyWindow();
+    // test bug 638007 (new is optional), using new
+    var wt = new windowUtils.WindowTracker({
+      onTrack: window => {
+        if (window === myWindow) {
+          assert.pass("onTrack() called with our test window");
+          close(window);
+        }
+      },
+      onUntrack: window => {
+        if (window === myWindow) {
+          assert.pass("onUntrack() called with our test window");
+          wt.unload();
+          timer.setTimeout(done);
+        }
+      }
+    });
+  }, false);
 };
 
 exports['test window watcher untracker'] = function(assert, done) {

@@ -986,7 +986,7 @@ exports['test panel CSS'] = function(assert, done) {
     getActiveView(panel).querySelector('iframe').contentWindow;
 
   let panel = Panel({
-    contentURL: 'data:text/html;charset=utf-8,' + 
+    contentURL: 'data:text/html;charset=utf-8,' +
                 '<div style="background: silver">css test</div>',
     contentStyle: 'div { height: 100px; }',
     contentStyleFile: CSS_URL,
@@ -999,7 +999,7 @@ exports['test panel CSS'] = function(assert, done) {
 
         loader.unload();
         done();
-      }).then(null, assert.fail); 
+      }).then(null, assert.fail);
     }
   });
 
@@ -1016,7 +1016,7 @@ exports['test panel CSS list'] = function(assert, done) {
     getActiveView(panel).querySelector('iframe').contentWindow;
 
   let panel = Panel({
-    contentURL: 'data:text/html;charset=utf-8,' + 
+    contentURL: 'data:text/html;charset=utf-8,' +
                 '<div style="width:320px; max-width: 480px!important">css test</div>',
     contentStyleFile: [
       // Highlight evaluation order in this list
@@ -1049,8 +1049,7 @@ exports['test panel CSS list'] = function(assert, done) {
           'add-on author/page author stylesheet !important precedence works');
 
         loader.unload();
-        done();
-      }).then(null, assert.fail); 
+      }).then(done, assert.fail);
     }
   });
 
@@ -1065,12 +1064,12 @@ if (isWindowPBSupported) {
       toolbar: true,
       chrome: true,
       private: true
-    } }).then(function(window) {
+    } }).then(window => {
       assert.ok(isPrivate(window), 'window is private');
       assert.equal(getWindow(window.gBrowser), null, 'private window elements returns null');
       assert.equal(getWindow(activeWindow.gBrowser), activeWindow, 'non-private window elements returns window');
-      close(window).then(done);
-    })
+      return window;
+    }).then(close).then(done).then(null, assert.fail);
   }
 }
 else if (isGlobalPBSupported) {
@@ -1084,7 +1083,7 @@ else if (isGlobalPBSupported) {
       open(null, { features: {
         toolbar: true,
         chrome: true
-      } }).then(function(window) {
+      } }).then(window => {
         assert.ok(isPrivate(window), 'window is private');
         assert.equal(getWindow(window.gBrowser), window, 'private window elements returns window');
         assert.equal(getWindow(activeWindow.gBrowser), activeWindow, 'active window elements returns window');
