@@ -224,6 +224,10 @@ button[type="menu"] > .button-box > .button-menu-dropmarker {
   }
 }
 
+.help-button > .button-box > .button-text {
+  display: none;
+}
+
 .spinbuttons-button {
   -moz-margin-start: 10px !important;
   -moz-margin-end: 2px !important;

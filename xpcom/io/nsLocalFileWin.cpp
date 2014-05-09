@@ -3024,7 +3024,7 @@ nsLocalFile::Equals(nsIFile *inFile, bool *_retval)
 
 
 NS_IMETHODIMP
-nsLocalFile::Contains(nsIFile *inFile, bool recur, bool *_retval)
+nsLocalFile::Contains(nsIFile *inFile, bool *_retval)
 {
   // Check we are correctly initialized.
   CHECK_mWorkingPath();

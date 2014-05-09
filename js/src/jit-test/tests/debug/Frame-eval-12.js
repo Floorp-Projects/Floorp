@@ -4,16 +4,10 @@ var g = newGlobal();
 var dbg = new Debugger(g);
 
 // capture arguments object and test function
-var hits = 0;
 dbg.onDebuggerStatement = function (frame) {
-    try {
-        frame.older.environment.parent.getVariable('arguments')
-    } catch (e) {
-        assertEq(''+e, "Error: Debugger scope is not live");
-        hits++;
-    }
+  var args = frame.older.environment.parent.getVariable('arguments');
+  assertEq(args.missingArguments, true);
 };
 g.eval("function h() { debugger; }");
 g.eval("function f() { var x = 0; return function() { x++; h() } }");
 g.eval("f('ponies')()");
-assertEq(hits, 1);

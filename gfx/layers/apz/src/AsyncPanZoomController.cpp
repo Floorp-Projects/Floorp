@@ -880,6 +880,11 @@ nsEventStatus AsyncPanZoomController::OnScaleBegin(const PinchGestureInput& aEve
 
 nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
   APZC_LOG("%p got a scale in state %d\n", this, mState);
+
+  if (!TouchActionAllowPinchZoom()) {
+    return nsEventStatus_eIgnore;
+  }
+
   if (mState != PINCHING) {
     return nsEventStatus_eConsumeNoDefault;
   }
@@ -958,6 +963,10 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
 
 nsEventStatus AsyncPanZoomController::OnScaleEnd(const PinchGestureInput& aEvent) {
   APZC_LOG("%p got a scale-end in state %d\n", this, mState);
+
+  if (!TouchActionAllowPinchZoom()) {
+    return nsEventStatus_eIgnore;
+  }
 
   SetState(NOTHING);
 

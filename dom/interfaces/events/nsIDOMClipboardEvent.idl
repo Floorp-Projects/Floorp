@@ -8,7 +8,7 @@
 
 interface nsIDOMDataTransfer;
 
-[scriptable, builtinclass, uuid(8D92944A-F2E5-41F4-9CF3-D85043B90CAC)]
+[builtinclass, uuid(8D92944A-F2E5-41F4-9CF3-D85043B90CAC)]
 interface nsIDOMClipboardEvent : nsIDOMEvent
 {
   readonly attribute nsIDOMDataTransfer clipboardData;

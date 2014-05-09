@@ -71,11 +71,13 @@ IsMainProcess()
   return isMainProcess;
 }
 
+#ifdef DEBUG
 bool
 IsChildProcess()
 {
   return !IsMainProcess();
 }
+#endif
 
 void
 AssertIsInMainProcess()

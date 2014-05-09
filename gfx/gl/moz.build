@@ -46,6 +46,7 @@ EXPORTS += [
     'GLTextureImage.h',
     'GLTypes.h',
     'GLUploadHelpers.h',
+    'HeapCopyOfStackArray.h',
     'ScopedGLHelpers.h',
     'SharedSurface.h',
     'SharedSurfaceEGL.h',

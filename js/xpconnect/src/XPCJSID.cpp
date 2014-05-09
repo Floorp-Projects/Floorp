@@ -392,10 +392,7 @@ nsJSIID::NewResolve(nsIXPConnectWrappedNative *wrapper,
 
     AutoMarkingNativeInterfacePtr iface(ccx);
 
-    const nsIID* iid;
-    mInfo->GetIIDShared(&iid);
-
-    iface = XPCNativeInterface::GetNewOrUsed(iid);
+    iface = XPCNativeInterface::GetNewOrUsed(mInfo);
 
     if (!iface)
         return NS_OK;
@@ -427,10 +424,7 @@ nsJSIID::Enumerate(nsIXPConnectWrappedNative *wrapper,
 
     AutoMarkingNativeInterfacePtr iface(ccx);
 
-    const nsIID* iid;
-    mInfo->GetIIDShared(&iid);
-
-    iface = XPCNativeInterface::GetNewOrUsed(iid);
+    iface = XPCNativeInterface::GetNewOrUsed(mInfo);
 
     if (!iface)
         return NS_OK;

@@ -4125,7 +4125,7 @@ OpenKeyCursorHelper::DoDatabaseWork(mozIStorageConnection* /* aConnection */)
       break;
 
     default:
-      MOZ_ASSUME_UNREACHABLE("Unknown direction type!");
+      MOZ_CRASH("Unknown direction type!");
   }
 
   nsCString firstQuery = queryStart + keyRangeClause + directionClause +
@@ -4197,7 +4197,7 @@ OpenKeyCursorHelper::DoDatabaseWork(mozIStorageConnection* /* aConnection */)
       break;
 
     default:
-      MOZ_ASSUME_UNREACHABLE("Unknown direction type!");
+      MOZ_CRASH("Unknown direction type!");
   }
 
   mContinueQuery = queryStart + keyRangeClause + directionClause + openLimit;

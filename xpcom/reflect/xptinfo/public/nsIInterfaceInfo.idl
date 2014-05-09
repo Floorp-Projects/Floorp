@@ -11,7 +11,6 @@
 // forward declaration of non-XPCOM types
 
 [ptr] native nsXPTMethodInfoPtr(nsXPTMethodInfo);
-[ptr] native nsXPTConstantPtr(nsXPTConstant);
 [ptr] native nsXPTParamInfoPtr(nsXPTParamInfo);
       native nsXPTType(nsXPTType);
 
@@ -20,13 +19,12 @@
 
 %{C++
 class nsXPTMethodInfo;
-class nsXPTConstant;
 class nsXPTParamInfo;
 class nsXPTType;
 %}
 
 /* this is NOT intended to be scriptable */
-[uuid(1affa260-8965-4612-869a-78af4ccfb287)]
+[uuid(3f1ae084-607e-45b2-8f1e-8d450b0f9c65)]
 interface nsIInterfaceInfo : nsISupports
 {
     readonly attribute string   name;
@@ -55,8 +53,9 @@ interface nsIInterfaceInfo : nsISupports
     void getMethodInfoForName(in string methodName, out uint16_t index, 
                        [shared, retval] out nsXPTMethodInfoPtr info);
 
-    void getConstant(in uint16_t index, 
-                     [shared, retval] out nsXPTConstantPtr constant);
+    void getConstant(in uint16_t index,
+                     out jsval constant,
+                     out string name);
 
 
     /**

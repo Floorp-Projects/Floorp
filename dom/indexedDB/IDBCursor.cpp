@@ -351,7 +351,7 @@ IDBCursor::ConvertDirection(mozilla::dom::IDBCursorDirection aDirection)
       return PREV_UNIQUE;
 
     default:
-      MOZ_ASSUME_UNREACHABLE("Unknown direction!");
+      MOZ_CRASH("Unknown direction!");
   }
 }
 
@@ -492,7 +492,7 @@ IDBCursor::ContinueInternal(const Key& aKey, int32_t aCount, ErrorResult& aRv)
       break;
 
     default:
-      MOZ_ASSUME_UNREACHABLE("Unknown cursor type!");
+      MOZ_CRASH("Unknown cursor type!");
   }
 
   nsresult rv = helper->DispatchToTransactionPool();
@@ -560,7 +560,7 @@ IDBCursor::WrapObject(JSContext* aCx)
       return IDBCursorBinding::Wrap(aCx, this);
 
     default:
-      MOZ_ASSUME_UNREACHABLE("Bad type!");
+      MOZ_CRASH("Bad type!");
   }
 }
 
@@ -583,7 +583,7 @@ IDBCursor::GetDirection() const
       return mozilla::dom::IDBCursorDirection::Prevunique;
 
     default:
-      MOZ_ASSUME_UNREACHABLE("Bad direction!");
+      MOZ_CRASH("Bad direction!");
   }
 }
 
@@ -606,7 +606,7 @@ IDBCursor::GetSource(OwningIDBObjectStoreOrIDBIndex& aSource) const
       break;
 
     default:
-      MOZ_ASSUME_UNREACHABLE("Bad type!");
+      MOZ_ASSERT_UNREACHABLE("Bad type!");
   }
 }
 
@@ -724,7 +724,7 @@ IDBCursor::Continue(JSContext* aCx,
         break;
 
       default:
-        MOZ_ASSUME_UNREACHABLE("Unknown direction type!");
+        MOZ_CRASH("Unknown direction type!");
     }
   }
 

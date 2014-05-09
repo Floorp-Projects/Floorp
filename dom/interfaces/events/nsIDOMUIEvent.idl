@@ -13,7 +13,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Events/
  */
 
-[scriptable, builtinclass, uuid(d73852f8-7bd6-477d-8233-117dbf83860b)]
+[builtinclass, uuid(d73852f8-7bd6-477d-8233-117dbf83860b)]
 interface nsIDOMUIEvent : nsIDOMEvent
 {
   readonly attribute nsIDOMWindow       view;

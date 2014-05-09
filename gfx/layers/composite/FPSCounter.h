@@ -77,7 +77,7 @@ struct FPSState {
 
   FPSState() {}
 
-  void DrawFPS(TimeStamp, unsigned, Compositor* aCompositor);
+  void DrawFPS(TimeStamp, int offsetX, int offsetY, unsigned, Compositor* aCompositor);
 
   void NotifyShadowTreeTransaction() {
     mTransactionFps.AddFrame(TimeStamp::Now());

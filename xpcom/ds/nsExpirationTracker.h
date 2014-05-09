@@ -177,7 +177,7 @@ template <class T, uint32_t K> class nsExpirationTracker {
       // the indexes of objects in this generation to *decrease*, not increase.
       // So if we start from the end and work our way backwards we are guaranteed
       // to see each object at least once.
-      uint32_t index = generation.Length();
+      size_t index = generation.Length();
       for (;;) {
         // Objects could have been removed so index could be outside
         // the array
