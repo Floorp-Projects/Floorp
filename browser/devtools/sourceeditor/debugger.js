@@ -153,6 +153,29 @@ function removeBreakpoint(ctx, line) {
   ed.emit("breakpointRemoved", line);
 }
 
+function moveBreakpoint(ctx, fromLine, toLine) {
+  let { ed, cm } = ctx;
+  let info = cm.lineInfo(fromLine);
+
+  var fromTop = cm.cursorCoords({ line: fromLine }).top;
+  var toTop = cm.cursorCoords({ line: toLine }).top;
+
+  var marker = ed.getMarker(info.line, "breakpoints", "breakpoint");
+  if (marker) {
+    marker.setAttribute("adding", "");
+    marker.style.transform = "translateY(" + (toTop - fromTop) + "px)";
+    marker.addEventListener('transitionend', function(e) {
+      ed.removeBreakpoint(info.line);
+      ed.addBreakpoint(toLine);
+
+      // For some reason, we have to reset the styles after the marker
+      // is already removed, not before.
+      e.target.removeAttribute("adding");
+      e.target.style.transform = "none";
+    });
+  }
+}
+
 /**
  * Returns a list of all breakpoints in the current Editor.
  */
@@ -236,6 +259,6 @@ function findPrev(ctx, query) {
 
 [
   initialize, hasBreakpoint, addBreakpoint, removeBreakpoint,
-  getBreakpoints, setDebugLocation, getDebugLocation,
+  moveBreakpoint, getBreakpoints, setDebugLocation, getDebugLocation,
   clearDebugLocation, find, findNext, findPrev
 ].forEach(function (func) { module.exports[func.name] = func; });
