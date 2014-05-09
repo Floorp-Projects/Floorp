@@ -1868,15 +1868,15 @@ WrapPreserve3DList(nsIFrame* aFrame, nsDisplayListBuilder* aBuilder, nsDisplayLi
 class AutoSaveRestoreBlendMode
 {
   nsDisplayListBuilder& mBuilder;
-  bool                  AutoResetContainsBlendMode;
+  EnumSet<gfx::CompositionOp> mSavedBlendModes;
 public:
   AutoSaveRestoreBlendMode(nsDisplayListBuilder& aBuilder)
-    : mBuilder(aBuilder),
-      AutoResetContainsBlendMode(aBuilder.ContainsBlendMode()) {
-  }
+    : mBuilder(aBuilder)
+    , mSavedBlendModes(aBuilder.ContainedBlendModes())
+  { }
 
   ~AutoSaveRestoreBlendMode() {
-    mBuilder.SetContainsBlendMode(AutoResetContainsBlendMode);
+    mBuilder.SetContainsBlendModes(mSavedBlendModes);
   }
 };
 
@@ -1929,7 +1929,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   // a nsDisplayBlendContainer. Set the blend mode back when the routine exits
   // so we keep track if the parent stacking context needs a container too.
   AutoSaveRestoreBlendMode autoRestoreBlendMode(*aBuilder);
-  aBuilder->SetContainsBlendMode(false);
+  aBuilder->SetContainsBlendModes(BlendModeSet());
  
   if (isTransformed) {
     const nsRect overflow = GetVisualOverflowRectRelativeToSelf();
@@ -2129,7 +2129,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
   if (aBuilder->ContainsBlendMode()) {
       resultList.AppendNewToTop(
-        new (aBuilder) nsDisplayBlendContainer(aBuilder, this, &resultList));
+        new (aBuilder) nsDisplayBlendContainer(aBuilder, this, &resultList, aBuilder->ContainedBlendModes()));
   }
 
   /* If there's blending, wrap up the list in a blend-mode item. Note
@@ -2343,7 +2343,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   nsDisplayList extraPositionedDescendants;
   if (isStackingContext) {
     if (disp->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
-      aBuilder->SetContainsBlendMode(true);
+      aBuilder->SetContainsBlendMode(disp->mMixBlendMode);
     }
     // True stacking context.
     // For stacking contexts, BuildDisplayListForStackingContext handles

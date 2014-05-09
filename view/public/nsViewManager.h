@@ -10,7 +10,7 @@
 #include "nsView.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsDeviceContext.h"
 #include "nsTArray.h"
 #include "mozilla/EventForwards.h"
@@ -409,10 +409,9 @@ private:
   bool              mInScroll;
 
   //from here to public should be static and locked... MMP
-  static int32_t           mVMCount;        //number of viewmanagers
 
   //list of view managers
-  static nsVoidArray       *gViewManagers;
+  static nsTArray<nsViewManager*> *gViewManagers;
 };
 
 /**
