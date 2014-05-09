@@ -1855,7 +1855,7 @@ function switchToFrame(msg) {
           }
         }
       }
-      if (foundFrame == null) {
+      if (foundFrame === null) {
         // Either the frame has been removed or we have a OOP frame
         // so lets just get all the iframes and do a quick loop before
         // throwing in the towel
@@ -1869,12 +1869,26 @@ function switchToFrame(msg) {
       }
     }
   }
-  if (foundFrame == null) {
+  if (foundFrame === null) {
     if (typeof(msg.json.id) === 'number') {
       try {
         foundFrame = frames[msg.json.id].frameElement;
-        curFrame = foundFrame;
-        foundFrame = elementManager.addToKnownElements(curFrame);
+        if (foundFrame !== null) {
+          curFrame = foundFrame;
+          foundFrame = elementManager.addToKnownElements(curFrame);
+        }
+        else {
+          // If foundFrame is null at this point then we have the top level browsing
+          // context so should treat it accordingly.
+          sendSyncMessage("Marionette:switchedToFrame", { frameValue: null});
+          curFrame = content;
+          if(msg.json.focus == true) {
+            curFrame.focus();
+          }
+          sandbox = null;
+          checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
+          return;
+        }
       } catch (e) {
         // Since window.frames does not return OOP frames it will throw
         // and we land up here. Let's not give up and check if there are
@@ -1885,7 +1899,7 @@ function switchToFrame(msg) {
       }
     }
   }
-  if (foundFrame == null) {
+  if (foundFrame === null) {
     sendError("Unable to locate frame: " + (msg.json.id || msg.json.element), 8, null, command_id);
     return true;
   }
