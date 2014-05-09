@@ -681,8 +681,8 @@ ReorderCommutative(MDefinition **lhsp, MDefinition **rhsp)
     // be fully precise, we should check whether this is the *last* use,
     // but checking hasOneDefUse() is a decent approximation which doesn't
     // require any extra analysis.
-    JS_ASSERT(lhs->defUseCount() > 0);
-    JS_ASSERT(rhs->defUseCount() > 0);
+    JS_ASSERT(lhs->hasDefUses());
+    JS_ASSERT(rhs->hasDefUses());
     if (lhs->isConstant() || (rhs->hasOneDefUse() && !lhs->hasOneDefUse())) {
         *rhsp = lhs;
         *lhsp = rhs;
