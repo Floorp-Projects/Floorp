@@ -11,6 +11,7 @@
 #include "nsIAtom.h"
 #include "nsCOMArray.h"
 #include "nsICSSPseudoComparator.h"
+#include "nsRefPtrHashtable.h"
 #include "nsStyleContext.h"
 
 typedef nsCOMArray<nsIAtom> AtomArray;
@@ -92,8 +93,6 @@ public:
 
   static bool DeleteDFAState(nsHashKey *aKey, void *aData, void *closure);
 
-  static bool ReleaseStyleContext(nsHashKey *aKey, void *aData, void *closure);
-
 protected:
   // A transition table for a deterministic finite automaton.  The DFA
   // takes as its input a single pseudoelement and an ordered set of properties.
@@ -113,7 +112,8 @@ protected:
 
   // The cache of all active style contexts.  This is a hash from
   // a final state in the DFA, Sf, to the resultant style context.
-  nsAutoPtr<nsObjectHashtable> mCache;
+  typedef nsRefPtrHashtable<nsUint32HashKey, nsStyleContext> StyleContextCache;
+  nsAutoPtr<StyleContextCache> mCache;
 
   // An integer counter that is used when we need to make new states in the
   // DFA.
