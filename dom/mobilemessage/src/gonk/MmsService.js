@@ -1120,8 +1120,11 @@ function SendTransaction(mmsConnection, cancellableId, msg, requestDeliveryRepor
   }
   msg.headers["x-mms-mms-version"] = MMS.MMS_VERSION;
 
-  // Let MMS Proxy Relay insert from address automatically for us
-  msg.headers["from"] = null;
+  // Insert Phone number if available.
+  // Otherwise, Let MMS Proxy Relay insert from address automatically for us.
+  let phoneNumber = mmsConnection.getPhoneNumber();
+  msg.headers["from"] = (phoneNumber) ?
+                          { address: phoneNumber, type: "PLMN" } : null;
 
   msg.headers["date"] = new Date();
   msg.headers["x-mms-message-class"] = "personal";
@@ -1416,7 +1419,11 @@ function ReadRecTransaction(mmsConnection, messageID, toAddress) {
   let to = {address: toAddress,
             type: type}
   headers["to"] = to;
-  headers["from"] = null;
+  // Insert Phone number if available.
+  // Otherwise, Let MMS Proxy Relay insert from address automatically for us.
+  let phoneNumber = mmsConnection.getPhoneNumber();
+  headers["from"] = (phoneNumber) ?
+                      { address: phoneNumber, type: "PLMN" } : null;
   headers["x-mms-read-status"] = MMS.MMS_PDU_READ_STATUS_READ;
 
   this.istream = MMS.PduHelper.compose(null, {headers: headers});

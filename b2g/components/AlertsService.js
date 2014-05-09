@@ -43,6 +43,7 @@ const kMessageAlertNotificationSend  = "alert-notification-send";
 const kMessageAlertNotificationClose = "alert-notification-close";
 
 const kTopicAlertFinished      = "alertfinished";
+const kTopicAlertClickCallback = "alertclickcallback";
 
 function AlertsService() {
   Services.obs.addObserver(this, "xpcom-shutdown", false);
@@ -103,7 +104,8 @@ AlertsService.prototype = {
       id: aDetails.id || undefined,
       dbId: aDetails.dbId || undefined,
       dir: aDetails.dir || undefined,
-      tag: aDetails.tag || undefined
+      tag: aDetails.tag || undefined,
+      timestamp: aDetails.timestamp || undefined
     };
 
     cpmm.sendAsyncMessage(kMessageAppNotificationSend, {
@@ -135,6 +137,7 @@ AlertsService.prototype = {
       // the notification so the app get a change to react.
       if (data.target) {
         gSystemMessenger.sendMessage(kNotificationSystemMessageName, {
+            clicked: (topic === kTopicAlertClickCallback),
             title: listener.title,
             body: listener.text,
             imageURL: listener.imageURL,
@@ -142,7 +145,8 @@ AlertsService.prototype = {
             dir: listener.dir,
             id: listener.id,
             tag: listener.tag,
-            dbId: listener.dbId
+            dbId: listener.dbId,
+            timestamp: listener.timestamp
           },
           Services.io.newURI(data.target, null, null),
           Services.io.newURI(listener.manifestURL, null, null)

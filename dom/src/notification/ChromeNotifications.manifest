@@ -1,0 +1,3 @@
+# ChromeNotifications.js
+component {74f94093-8b37-497e-824f-c3b250a911da} ChromeNotifications.js
+contract @mozilla.org/mozChromeNotifications;1 {74f94093-8b37-497e-824f-c3b250a911da}

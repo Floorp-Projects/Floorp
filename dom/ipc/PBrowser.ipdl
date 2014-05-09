@@ -269,9 +269,7 @@ parent:
      * Create a layout frame (encapsulating a remote layer tree) for
      * the page that is currently loaded in the <browser>.
      */
-    sync PRenderFrame();
-
-    sync InitRenderFrame(PRenderFrame aFrame)
+    sync PRenderFrame()
         returns (ScrollingBehavior scrolling,
                  TextureFactoryIdentifier textureFactoryIdentifier, uint64_t layersId,
                  bool success);
