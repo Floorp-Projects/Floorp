@@ -7,7 +7,6 @@
 #define nsTreeStyleCache_h__
 
 #include "mozilla/Attributes.h"
-#include "nsHashtable.h"
 #include "nsIAtom.h"
 #include "nsCOMArray.h"
 #include "nsICSSPseudoComparator.h"
@@ -15,29 +14,6 @@
 #include "nsStyleContext.h"
 
 typedef nsCOMArray<nsIAtom> AtomArray;
-
-class nsDFAState : public nsHashKey
-{
-public:
-  uint32_t mStateID;
-
-  nsDFAState(uint32_t aID) :mStateID(aID) {}
-
-  uint32_t GetStateID() { return mStateID; }
-
-  uint32_t HashCode(void) const MOZ_OVERRIDE {
-    return mStateID;
-  }
-
-  bool Equals(const nsHashKey *aKey) const MOZ_OVERRIDE {
-    nsDFAState* key = (nsDFAState*)aKey;
-    return key->mStateID == mStateID;
-  }
-
-  nsHashKey *Clone(void) const MOZ_OVERRIDE {
-    return new nsDFAState(mStateID);
-  }
-};
 
 class nsTreeStyleCache
 {
@@ -67,20 +43,21 @@ public:
                                   const AtomArray & aInputWord);
 
 protected:
+  typedef uint32_t DFAState;
 
   class Transition MOZ_FINAL
   {
   public:
-    Transition(uint32_t aState, nsIAtom* aSymbol);
+    Transition(DFAState aState, nsIAtom* aSymbol);
     bool operator==(const Transition& aOther) const;
     uint32_t Hash() const;
 
   private:
-    uint32_t mState;
+    DFAState mState;
     nsCOMPtr<nsIAtom> mInputSymbol;
   };
 
-  typedef nsClassHashtable<nsGenericHashKey<Transition>, nsDFAState> TransitionTable;
+  typedef nsDataHashtable<nsGenericHashKey<Transition>, DFAState> TransitionTable;
 
   // A transition table for a deterministic finite automaton.  The DFA
   // takes as its input a single pseudoelement and an ordered set of properties.
@@ -105,7 +82,7 @@ protected:
 
   // An integer counter that is used when we need to make new states in the
   // DFA.
-  uint32_t mNextState;
+  DFAState mNextState;
 };
 
 #endif // nsTreeStyleCache_h__
