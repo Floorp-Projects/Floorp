@@ -48,6 +48,12 @@ function test_strict() {
   // This domain serves a cert that doesn't match the pinset, but subdomains
   // are excluded.
   add_connection_test("sub.exclude-subdomains.pinning.example.com", Cr.NS_OK);
+
+  // This domain's pinset is exactly the same as
+  // include-subdomains.pinning.example.com, serves the same cert as
+  // bad.include-subdomains.pinning.example.com, but it should pass because
+  // it's in test_mode.
+  add_connection_test("test-mode.pinning.example.com", Cr.NS_OK);
 };
 
 function test_mitm() {
@@ -67,6 +73,7 @@ function test_mitm() {
 
   add_connection_test("exclude-subdomains.pinning.example.com", Cr.NS_OK);
   add_connection_test("sub.exclude-subdomains.pinning.example.com", Cr.NS_OK);
+  add_connection_test("test-mode.pinning.example.com", Cr.NS_OK);
 };
 
 function test_disabled() {
@@ -81,6 +88,7 @@ function test_disabled() {
   add_connection_test("bad.include-subdomains.pinning.example.com", Cr.NS_OK);
   add_connection_test("exclude-subdomains.pinning.example.com", Cr.NS_OK);
   add_connection_test("sub.exclude-subdomains.pinning.example.com", Cr.NS_OK);
+  add_connection_test("test-mode.pinning.example.com", Cr.NS_OK);
 };
 
 function check_pinning_telemetry() {
