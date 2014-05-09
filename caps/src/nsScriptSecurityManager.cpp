@@ -1150,8 +1150,18 @@ NS_IMETHODIMP
 nsScriptSecurityManager::Observe(nsISupports* aObject, const char* aTopic,
                                  const char16_t* aMessage)
 {
-    ScriptSecurityPrefChanged();
-    return NS_OK;
+    nsresult rv = NS_OK;
+    NS_ConvertUTF16toUTF8 messageStr(aMessage);
+    const char *message = messageStr.get();
+
+    static const char jsPrefix[] = "javascript.";
+    static const char securityPrefix[] = "security.";
+    if ((PL_strncmp(message, jsPrefix, sizeof(jsPrefix)-1) == 0) ||
+        (PL_strncmp(message, securityPrefix, sizeof(securityPrefix)-1) == 0) )
+    {
+        ScriptSecurityPrefChanged();
+    }
+    return rv;
 }
 
 /////////////////////////////////////////////
@@ -1263,9 +1273,21 @@ nsScriptSecurityManager::SystemPrincipalSingletonConstructor()
 inline void
 nsScriptSecurityManager::ScriptSecurityPrefChanged()
 {
-    MOZ_ASSERT(mPrefInitialized);
+    // JavaScript defaults to enabled in failure cases.
+    mIsJavaScriptEnabled = true;
+
+    sStrictFileOriginPolicy = true;
+
+    nsresult rv;
+    if (!mPrefInitialized) {
+        rv = InitPrefs();
+        if (NS_FAILED(rv))
+            return;
+    }
+
     mIsJavaScriptEnabled =
         Preferences::GetBool(sJSEnabledPrefName, mIsJavaScriptEnabled);
+
     sStrictFileOriginPolicy =
         Preferences::GetBool(sFileOriginPolicyPrefName, false);
 }
