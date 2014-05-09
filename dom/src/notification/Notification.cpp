@@ -423,22 +423,6 @@ Notification::Notification(const nsAString& aID, const nsAString& aTitle, const 
     mID(aID), mTitle(aTitle), mBody(aBody), mDir(aDir), mLang(aLang),
     mTag(aTag), mIconUrl(aIconUrl), mIsClosed(false)
 {
-  nsAutoString alertName;
-  DebugOnly<nsresult> rv = GetOrigin(GetOwner(), alertName);
-  MOZ_ASSERT(NS_SUCCEEDED(rv), "GetOrigin should not have failed");
-
-  // Get the notification name that is unique per origin + tag/ID.
-  // The name of the alert is of the form origin#tag/ID.
-  alertName.AppendLiteral("#");
-  if (!mTag.IsEmpty()) {
-    alertName.Append(NS_LITERAL_STRING("tag:"));
-    alertName.Append(mTag);
-  } else {
-    alertName.Append(NS_LITERAL_STRING("notag:"));
-    alertName.Append(mID);
-  }
-
-  mAlertName = alertName;
 }
 
 // static
@@ -478,10 +462,6 @@ Notification::Constructor(const GlobalObject& aGlobal,
 
   nsString id;
   notification->GetID(id);
-
-  nsString alertName;
-  notification->GetAlertName(alertName);
-
   aRv = notificationStorage->Put(origin,
                                  id,
                                  aTitle,
@@ -489,8 +469,7 @@ Notification::Constructor(const GlobalObject& aGlobal,
                                  aOptions.mLang,
                                  aOptions.mBody,
                                  aOptions.mTag,
-                                 aOptions.mIcon,
-                                 alertName);
+                                 aOptions.mIcon);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -578,6 +557,10 @@ Notification::ShowInternal()
 
   nsCOMPtr<nsIObserver> observer = new NotificationObserver(this);
 
+  nsString alertName;
+  rv = GetAlertName(alertName);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
 #ifdef MOZ_B2G
   nsCOMPtr<nsIAppNotificationService> appNotifier =
     do_GetService("@mozilla.org/system-alerts-service;1");
@@ -595,7 +578,7 @@ Notification::ShowInternal()
         AppNotificationServiceOptions ops;
         ops.mTextClickable = true;
         ops.mManifestURL = manifestUrl;
-        ops.mId = mAlertName;
+        ops.mId = alertName;
         ops.mDbId = mID;
         ops.mDir = DirectionToString(mDir);
         ops.mLang = mLang;
@@ -619,7 +602,7 @@ Notification::ShowInternal()
   nsString uniqueCookie = NS_LITERAL_STRING("notification:");
   uniqueCookie.AppendInt(sCount++);
   alertService->ShowAlertNotification(absoluteUrl, mTitle, mBody, true,
-                                      uniqueCookie, observer, mAlertName,
+                                      uniqueCookie, observer, alertName,
                                       DirectionToString(mDir), mLang,
                                              GetPrincipal());
 }
@@ -788,8 +771,10 @@ Notification::CloseInternal()
     nsCOMPtr<nsIAlertsService> alertService =
       do_GetService(NS_ALERTSERVICE_CONTRACTID);
     if (alertService) {
+      nsString alertName;
+      rv = GetAlertName(alertName);
       if (NS_SUCCEEDED(rv)) {
-        alertService->CloseAlert(mAlertName, GetPrincipal());
+        alertService->CloseAlert(alertName, GetPrincipal());
       }
     }
   }
@@ -824,6 +809,24 @@ Notification::GetOrigin(nsPIDOMWindow* aWindow, nsString& aOrigin)
     appsService->GetManifestURLByLocalId(appId, aOrigin);
   }
 
+  return NS_OK;
+}
+
+nsresult
+Notification::GetAlertName(nsString& aAlertName)
+{
+  // Get the notification name that is unique per origin + tag/ID.
+  // The name of the alert is of the form origin#tag/ID.
+  nsresult rv = GetOrigin(GetOwner(), aAlertName);
+  NS_ENSURE_SUCCESS(rv, rv);
+  aAlertName.AppendLiteral("#");
+  if (!mTag.IsEmpty()) {
+    aAlertName.Append(NS_LITERAL_STRING("tag:"));
+    aAlertName.Append(mTag);
+  } else {
+    aAlertName.Append(NS_LITERAL_STRING("notag:"));
+    aAlertName.Append(mID);
+  }
   return NS_OK;
 }
 
