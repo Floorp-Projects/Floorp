@@ -305,6 +305,22 @@ const uint32_t Arena::FirstThingOffsets[] = {
 
 #undef OFFSET
 
+const char *
+TraceKindAsAscii(JSGCTraceKind kind)
+{
+    switch(kind) {
+      case JSTRACE_OBJECT: return "JSTRACE_OBJECT";
+      case JSTRACE_STRING: return "JSTRACE_STRING";
+      case JSTRACE_SCRIPT: return "JSTRACE_SCRIPT";
+      case JSTRACE_LAZY_SCRIPT: return "JSTRACE_SCRIPT";
+      case JSTRACE_JITCODE: return "JSTRACE_JITCODE";
+      case JSTRACE_SHAPE: return "JSTRACE_SHAPE";
+      case JSTRACE_BASE_SHAPE: return "JSTRACE_BASE_SHAPE";
+      case JSTRACE_TYPE_OBJECT: return "JSTRACE_TYPE_OBJECT";
+      default: return "INVALID";
+    }
+}
+
 /*
  * Finalization order for incrementally swept things.
  */
