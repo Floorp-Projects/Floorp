@@ -231,7 +231,7 @@ panelview:not([mainview]) .toolbarbutton-text,
 
 #PanelUI-contents {
   display: block;
-  flex: auto;
+  flex: 1 0 auto;
   margin-left: auto;
   margin-right: auto;
   padding: .5em 0;
