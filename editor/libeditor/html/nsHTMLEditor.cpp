@@ -500,9 +500,10 @@ nsHTMLEditor::SetFlags(uint32_t aFlags)
 NS_IMETHODIMP
 nsHTMLEditor::InitRules()
 {
-  MOZ_ASSERT(!mRules);
-  // instantiate the rules for the html editor
-  mRules = new nsHTMLEditRules();
+  if (!mRules) {
+    // instantiate the rules for the html editor
+    mRules = new nsHTMLEditRules();
+  }
   return mRules->Init(static_cast<nsPlaintextEditor*>(this));
 }
 
