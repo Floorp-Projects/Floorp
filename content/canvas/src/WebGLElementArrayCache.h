@@ -66,7 +66,7 @@ private:
   template<typename T>
   T* Elements() { return static_cast<T*>(mUntypedData); }
 
-  void UpdateTrees(size_t firstByte, size_t lastByte);
+  void InvalidateTrees(size_t firstByte, size_t lastByte);
 
   template<typename T>
   friend struct WebGLElementArrayCacheTree;
