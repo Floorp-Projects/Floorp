@@ -144,7 +144,7 @@ public:
       return;
     }
     for (uint32_t i = 0; i < mInputChannels.Length(); ++i) {
-      renderedBuffer->SetRawChannelContents(cx, i, mInputChannels[i]);
+      renderedBuffer->SetRawChannelContents(i, mInputChannels[i]);
     }
 
     nsRefPtr<OfflineAudioCompletionEvent> event =
