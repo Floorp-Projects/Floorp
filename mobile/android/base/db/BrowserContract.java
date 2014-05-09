@@ -422,10 +422,14 @@ public class BrowserContract {
         public static final int TYPE_BLANK = 0;
         public static final int TYPE_TOP = 1;
         public static final int TYPE_PINNED = 2;
+        public static final int TYPE_SUGGESTED = 3;
 
         public static final String BOOKMARK_ID = "bookmark_id";
         public static final String HISTORY_ID = "history_id";
         public static final String DISPLAY = "display";
+
+        public static final String IMAGE_URL = "image_url";
+        public static final String BG_COLOR = "bg_color";
 
         public static final String TYPE = "type";
     }
