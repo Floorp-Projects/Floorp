@@ -300,6 +300,8 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       }
       layer->SetScrollbarData(common.scrollbarTargetContainerId(),
         static_cast<Layer::ScrollDirection>(common.scrollbarDirection()));
+      layer->SetMixBlendMode((gfx::CompositionOp)common.mixBlendMode());
+      layer->SetForceIsolatedGroup(common.forceIsolatedGroup());
       if (PLayerParent* maskLayer = common.maskLayerParent()) {
         layer->SetMaskLayer(cast(maskLayer)->AsLayer());
       } else {

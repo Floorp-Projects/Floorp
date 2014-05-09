@@ -250,8 +250,3 @@ richlistitem:not([selected]) * {
 .view-pane:not([type="experiment"]) #detail-experiment-container {
   display: none;
 }
-
-.addon[type="experiment"][status="installing"] .experiment-time,
-.addon[type="experiment"][status="installing"] .experiment-state {
-  display: none;
-}

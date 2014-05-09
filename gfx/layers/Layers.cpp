@@ -31,6 +31,7 @@
 #include "nsCSSValue.h"                 // for nsCSSValue::Array, etc
 #include "nsPrintfCString.h"            // for nsPrintfCString
 #include "nsStyleStruct.h"              // for nsTimingFunction, etc
+#include "gfxPrefs.h"
 
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
@@ -949,7 +950,8 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
   mEffectiveTransform = SnapTransformTranslation(idealTransform, &residual);
 
   bool useIntermediateSurface;
-  if (GetMaskLayer()) {
+  if (GetMaskLayer() ||
+      GetForceIsolatedGroup()) {
     useIntermediateSurface = true;
 #ifdef MOZ_DUMP_PAINTING
   } else if (gfxUtils::sDumpPainting) {
@@ -957,7 +959,8 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
 #endif
   } else {
     float opacity = GetEffectiveOpacity();
-    if (opacity != 1.0f && HasMultipleChildren()) {
+    CompositionOp blendMode = GetEffectiveMixBlendMode();
+    if ((opacity != 1.0f || blendMode != CompositionOp::OP_OVER) && HasMultipleChildren()) {
       useIntermediateSurface = true;
     } else {
       useIntermediateSurface = false;
@@ -996,6 +999,40 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
     ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
   } else {
     ComputeEffectiveTransformForMaskLayer(Matrix4x4());
+  }
+}
+
+void
+ContainerLayer::DefaultComputeSupportsComponentAlphaChildren(bool* aNeedsSurfaceCopy)
+{
+  bool supportsComponentAlphaChildren = false;
+  bool needsSurfaceCopy = false;
+  CompositionOp blendMode = GetEffectiveMixBlendMode();
+  if (UseIntermediateSurface()) {
+    if (GetEffectiveVisibleRegion().GetNumRects() == 1 &&
+        (GetContentFlags() & Layer::CONTENT_OPAQUE))
+    {
+      supportsComponentAlphaChildren = true;
+    } else {
+      gfx::Matrix transform;
+      if (HasOpaqueAncestorLayer(this) &&
+          GetEffectiveTransform().Is2D(&transform) &&
+          !gfx::ThebesMatrix(transform).HasNonIntegerTranslation() &&
+          blendMode == gfx::CompositionOp::OP_OVER) {
+        supportsComponentAlphaChildren = true;
+        needsSurfaceCopy = true;
+      }
+    }
+  } else if (blendMode == gfx::CompositionOp::OP_OVER) {
+    supportsComponentAlphaChildren =
+      (GetContentFlags() & Layer::CONTENT_OPAQUE) ||
+      (GetParent() && GetParent()->SupportsComponentAlphaChildren());
+  }
+
+  mSupportsComponentAlphaChildren = supportsComponentAlphaChildren &&
+                                    gfxPrefs::ComponentAlphaEnabled();
+  if (aNeedsSurfaceCopy) {
+    *aNeedsSurfaceCopy = mSupportsComponentAlphaChildren && needsSurfaceCopy;
   }
 }
 
