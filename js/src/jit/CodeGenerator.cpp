@@ -2042,7 +2042,8 @@ CodeGenerator::visitCallNative(LCallNative *call)
     uint32_t safepointOffset;
     if (!masm.buildFakeExitFrame(tempReg, &safepointOffset))
         return false;
-    masm.enterFakeExitFrame(argContextReg, tempReg, executionMode);
+    masm.enterFakeExitFrame(argContextReg, tempReg, executionMode,
+                            IonNativeExitFrameLayout::Token());
 
     if (!markSafepointAt(safepointOffset, call))
         return false;
@@ -2152,7 +2153,7 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
     uint32_t safepointOffset;
     if (!masm.buildFakeExitFrame(argJSContext, &safepointOffset))
         return false;
-    masm.enterFakeExitFrame(ION_FRAME_DOMMETHOD);
+    masm.enterFakeExitFrame(IonDOMMethodExitFrameLayout::Token());
 
     if (!markSafepointAt(safepointOffset, call))
         return false;
@@ -8070,7 +8071,7 @@ CodeGenerator::visitGetDOMProperty(LGetDOMProperty *ins)
     uint32_t safepointOffset;
     if (!masm.buildFakeExitFrame(JSContextReg, &safepointOffset))
         return false;
-    masm.enterFakeExitFrame(ION_FRAME_DOMGETTER);
+    masm.enterFakeExitFrame(IonDOMExitFrameLayout::GetterToken());
 
     if (!markSafepointAt(safepointOffset, ins))
         return false;
@@ -8147,7 +8148,7 @@ CodeGenerator::visitSetDOMProperty(LSetDOMProperty *ins)
     uint32_t safepointOffset;
     if (!masm.buildFakeExitFrame(JSContextReg, &safepointOffset))
         return false;
-    masm.enterFakeExitFrame(ION_FRAME_DOMSETTER);
+    masm.enterFakeExitFrame(IonDOMExitFrameLayout::SetterToken());
 
     if (!markSafepointAt(safepointOffset, ins))
         return false;
