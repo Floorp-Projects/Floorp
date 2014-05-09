@@ -11,7 +11,8 @@ function test() {
       return false;
     }
     catch (ex) {
-      return ex.name == "NS_ERROR_ILLEGAL_VALUE";
+      return ex.name == "NS_ERROR_ILLEGAL_VALUE" ||
+             ex.name == "NS_ERROR_FAILURE";
     }
   }
 

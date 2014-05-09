@@ -399,15 +399,15 @@ ArenaHeader::checkSynchronizedWithFreeList() const
     FreeSpan firstSpan = FreeSpan::decodeOffsets(arenaAddress(), firstFreeSpanOffsets);
     if (firstSpan.isEmpty())
         return;
-    const FreeSpan *list = zone->allocator.arenas.getFreeList(getAllocKind());
-    if (list->isEmpty() || firstSpan.arenaAddress() != list->arenaAddress())
+    const FreeList *freeList = zone->allocator.arenas.getFreeList(getAllocKind());
+    if (freeList->isEmpty() || firstSpan.arenaAddress() != freeList->arenaAddress())
         return;
 
     /*
      * Here this arena has free things, FreeList::lists[thingKind] is not
      * empty and also points to this arena. Thus they must the same.
      */
-    JS_ASSERT(firstSpan.isSameNonEmptySpan(list));
+    JS_ASSERT(freeList->isSameNonEmptySpan(firstSpan));
 }
 #endif
 
@@ -1433,9 +1433,9 @@ inline void
 ArenaLists::prepareForIncrementalGC(JSRuntime *rt)
 {
     for (size_t i = 0; i != FINALIZE_LIMIT; ++i) {
-        FreeSpan *headSpan = &freeLists[i];
-        if (!headSpan->isEmpty()) {
-            ArenaHeader *aheader = headSpan->arenaHeader();
+        FreeList *freeList = &freeLists[i];
+        if (!freeList->isEmpty()) {
+            ArenaHeader *aheader = freeList->arenaHeader();
             aheader->allocatedDuringIncremental = true;
             rt->gc.marker.delayMarkingArena(aheader);
         }
@@ -1511,7 +1511,8 @@ ArenaLists::allocateFromArenaInline(Zone *zone, AllocKind thingKind)
              * Move the free span stored in the arena to the free list and
              * allocate from it.
              */
-            freeLists[thingKind] = aheader->getFirstFreeSpan();
+            FreeSpan firstFreeSpan = aheader->getFirstFreeSpan();
+            freeLists[thingKind].setHead(&firstFreeSpan);
             aheader->setAsFullyUsed();
             if (MOZ_UNLIKELY(zone->wasGCStarted())) {
                 if (zone->needsBarrier()) {

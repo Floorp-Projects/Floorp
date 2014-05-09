@@ -12,14 +12,14 @@
 #endif
 %}
 
-[scriptable, builtinclass, uuid(3ef760bb-ff19-4dbb-b552-af27ab84b9b8)]
+[builtinclass, uuid(3ef760bb-ff19-4dbb-b552-af27ab84b9b8)]
 interface nsIDOMMediaStream : nsISupports
 {
   /* Placeholder interface only; will be removed after further WebIDL conversion.
      Do not add anything here. */
 };
 
-[scriptable, builtinclass, uuid(dd37150a-9823-4605-ac4c-3516629a8aaf)]
+[builtinclass, uuid(dd37150a-9823-4605-ac4c-3516629a8aaf)]
 interface nsIDOMLocalMediaStream : nsIDOMMediaStream
 {
   /* Placeholder interface only; will be removed after further WebIDL conversion.

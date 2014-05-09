@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1007790
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1007790</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1007790 **/
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(function() {
+    is(frames[0].onerror.toString(),
+       "function onerror(event, source, lineno, colno, error) {\n\n}",
+       "Should have the right arguments for onerror on window");
+    is($("content").onerror.toString(),
+       "function onerror(event) {\n\n}",
+       "Should have the right arguments for onerror on element");
+    SimpleTest.finish();
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1007790">Mozilla Bug 1007790</a>
+<p id="display"></p>
+<div id="content" style="display: none" onerror="">
+  <iframe src="data:text/html,<body onerror=''>"></iframe>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

@@ -361,7 +361,8 @@ HTMLFormControlsCollection::GetFirstNamedElement(const nsAString& aName, bool& a
     nsINodeList& nodelist = result.GetAsNodeList();
     return nodelist.Item(0)->AsElement();
   }
-  MOZ_ASSUME_UNREACHABLE("Should only have Elements and NodeLists here.");
+  MOZ_ASSERT_UNREACHABLE("Should only have Elements and NodeLists here.");
+  return nullptr;
 }
 
 void
@@ -383,7 +384,7 @@ HTMLFormControlsCollection::NamedGetter(const nsAString& aName,
     aResult.SetValue().SetAsNodeList() = nodelist;
     return;
   }
-  MOZ_ASSERT(false, "Should only have Elements and NodeLists here.");
+  MOZ_ASSERT_UNREACHABLE("Should only have Elements and NodeLists here.");
 }
 
 static PLDHashOperator

@@ -138,6 +138,23 @@ CompositorChild::RecvDidComposite(const uint64_t& aId)
   return true;
 }
 
+bool
+CompositorChild::RecvOverfill(const uint32_t &aOverfill)
+{
+  for (size_t i = 0; i < mOverfillObservers.Length(); i++) {
+    mOverfillObservers[i]->RunOverfillCallback(aOverfill);
+  }
+  mOverfillObservers.Clear();
+  return true;
+}
+
+void
+CompositorChild::AddOverfillObserver(ClientLayerManager* aLayerManager)
+{
+  MOZ_ASSERT(aLayerManager);
+  mOverfillObservers.AppendElement(aLayerManager);
+}
+
 void
 CompositorChild::ActorDestroy(ActorDestroyReason aWhy)
 {

@@ -15,6 +15,8 @@
  * http://www.w3.org/TR/DOM-Level-2-Core/
  */
 
+// NOTE: Please do not attempt to make this not scriptable,
+// see https://bugzilla.mozilla.org/show_bug.cgi?id=994964#c73.
 [scriptable, uuid(450cf0ba-de90-4f86-85bf-e10cc8b8713f)]
 interface nsIDOMNodeList : nsISupports
 {

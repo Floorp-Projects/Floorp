@@ -10,7 +10,7 @@
 #define SMARTCARDEVENT_REMOVE "smartcard-remove"
 %}
 
-[scriptable, builtinclass, uuid(cd251f11-7020-4f85-a7bd-94c98d884fa7)]
+[builtinclass, uuid(cd251f11-7020-4f85-a7bd-94c98d884fa7)]
 interface nsIDOMSmartCardEvent : nsIDOMEvent
 {
   readonly attribute DOMString   tokenName;

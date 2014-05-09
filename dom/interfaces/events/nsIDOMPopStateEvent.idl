@@ -7,7 +7,7 @@
 
 interface nsIVariant;
 
-[scriptable, builtinclass, uuid(f0def4a3-0eb3-4c08-b476-582e37b8564b)]
+[builtinclass, uuid(f0def4a3-0eb3-4c08-b476-582e37b8564b)]
 interface nsIDOMPopStateEvent : nsIDOMEvent
 {
   /**

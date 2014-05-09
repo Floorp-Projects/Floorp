@@ -10,6 +10,10 @@ menulist:not([editable="true"]) > .menulist-dropmarker {
   margin-bottom: 1px;
 }
 
+.help-button > .button-box > .button-icon {
+  -moz-margin-start: 0;
+}
+
 checkbox:hover::before,
 checkbox[checked]::before {
   -moz-margin-end: -20px;

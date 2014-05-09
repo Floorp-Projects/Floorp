@@ -19,7 +19,7 @@ interface nsIDOMValidityState;
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(7a4aeb2e-fcf3-443e-b002-ca1c8ea322e9)]
+[uuid(7a4aeb2e-fcf3-443e-b002-ca1c8ea322e9)]
 interface nsIDOMHTMLTextAreaElement : nsISupports
 {
            attribute boolean               autofocus;
