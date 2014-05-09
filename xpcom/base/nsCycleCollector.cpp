@@ -1243,6 +1243,8 @@ private:
   void MarkRoots(SliceBudget &aBudget);
   void ScanRoots(bool aFullySynchGraphBuild);
   void ScanIncrementalRoots();
+  void ScanWhiteNodes(bool aFullySynchGraphBuild);
+  void ScanBlackNodes();
   void ScanWeakMaps();
 
   // returns whether anything was collected
@@ -2680,50 +2682,6 @@ FloodBlackNode(uint32_t& aWhiteNodeCount, bool& aFailed, PtrInfo* aPi)
     MOZ_ASSERT(aPi->mColor == black || !aPi->mParticipant, "FloodBlackNode should make aPi black");
 }
 
-struct scanVisitor
-{
-  scanVisitor(uint32_t &aWhiteNodeCount, bool &aFailed, bool aWasIncremental)
-    : mWhiteNodeCount(aWhiteNodeCount), mFailed(aFailed),
-      mWasIncremental(aWasIncremental)
-  {
-  }
-
-  bool ShouldVisitNode(PtrInfo const *pi)
-  {
-    return pi->mColor == grey;
-  }
-
-  MOZ_NEVER_INLINE void VisitNode(PtrInfo *pi)
-  {
-    if (pi->mInternalRefs > pi->mRefCount && pi->mRefCount > 0) {
-      // If we found more references to an object than its ref count, then
-      // the object should have already been marked as an incremental
-      // root. Note that this is imprecise, because pi could have been
-      // marked black for other reasons. Always fault if we weren't
-      // incremental, as there were no incremental roots in that case.
-      if (!mWasIncremental || pi->mColor != black) {
-        Fault("traversed refs exceed refcount", pi);
-      }
-    }
-
-    if (pi->mInternalRefs == pi->mRefCount || pi->mRefCount == 0) {
-      pi->mColor = white;
-      ++mWhiteNodeCount;
-    } else {
-      FloodBlackNode(mWhiteNodeCount, mFailed, pi);
-    }
-  }
-
-  void Failed() {
-    mFailed = true;
-  }
-
-private:
-  uint32_t &mWhiteNodeCount;
-  bool &mFailed;
-  bool mWasIncremental;
-};
-
 // Iterate over the WeakMaps.  If we mark anything while iterating
 // over the WeakMaps, we must iterate over all of the WeakMaps again.
 void
@@ -2742,10 +2700,6 @@ nsCycleCollector::ScanWeakMaps()
       uint32_t kdColor = wm->mKeyDelegate ? wm->mKeyDelegate->mColor : black;
       uint32_t vColor = wm->mVal ? wm->mVal->mColor : black;
 
-      // All non-null weak mapping maps, keys and values are
-      // roots (in the sense of WalkFromRoots) in the cycle
-      // collector graph, and thus should have been colored
-      // either black or white in ScanRoots().
       MOZ_ASSERT(mColor != grey, "Uncolored weak map");
       MOZ_ASSERT(kColor != grey, "Uncolored weak map key");
       MOZ_ASSERT(kdColor != grey, "Uncolored weak map key delegate");
@@ -2895,6 +2849,68 @@ nsCycleCollector::ScanIncrementalRoots()
   }
 }
 
+// Mark nodes white and make sure their refcounts are ok.
+// No nodes are marked black during this pass to ensure that refcount
+// checking is run on all nodes not marked black by ScanIncrementalRoots.
+void
+nsCycleCollector::ScanWhiteNodes(bool aFullySynchGraphBuild)
+{
+  NodePool::Enumerator nodeEnum(mGraph.mNodes);
+  while (!nodeEnum.IsDone()) {
+    PtrInfo* pi = nodeEnum.GetNext();
+    if (pi->mColor == black) {
+      // Incremental roots can be in a nonsensical state, so don't
+      // check them. This will miss checking nodes that are merely
+      // reachable from incremental roots.
+      MOZ_ASSERT(!aFullySynchGraphBuild,
+                 "In a synch CC, no nodes should be marked black early on.");
+      continue;
+    }
+    MOZ_ASSERT(pi->mColor == grey);
+
+    if (!pi->mParticipant) {
+      // This node has been deleted, so it could be in a mangled state, but
+      // that's okay because we're not going to look at it again.
+      continue;
+    }
+
+    if (pi->mInternalRefs == pi->mRefCount || pi->mRefCount == 0) {
+      pi->mColor = white;
+      ++mWhiteNodeCount;
+      continue;
+    }
+
+    if (MOZ_LIKELY(pi->mInternalRefs < pi->mRefCount)) {
+      // This node will get marked black in the next pass.
+      continue;
+    }
+
+    Fault("Traversed refs exceed refcount", pi);
+  }
+}
+
+// Any remaining grey nodes that haven't already been deleted must be alive,
+// so mark them and their children black. Any nodes that are black must have
+// already had their children marked black, so there's no need to look at them
+// again. This pass may turn some white nodes to black.
+void
+nsCycleCollector::ScanBlackNodes()
+{
+  bool failed = false;
+  NodePool::Enumerator nodeEnum(mGraph.mNodes);
+  while (!nodeEnum.IsDone()) {
+    PtrInfo* pi = nodeEnum.GetNext();
+    if (pi->mColor == grey && pi->mParticipant) {
+      FloodBlackNode(mWhiteNodeCount, failed, pi);
+    }
+  }
+
+  if (failed) {
+    NS_ASSERTION(false, "Ran out of memory in ScanBlackNodes");
+    CC_TELEMETRY(_OOM, true);
+  }
+}
+
 void
 nsCycleCollector::ScanRoots(bool aFullySynchGraphBuild)
 {
@@ -2909,19 +2925,11 @@ nsCycleCollector::ScanRoots(bool aFullySynchGraphBuild)
   }
 
   TimeLog timeLog;
+  ScanWhiteNodes(aFullySynchGraphBuild);
+  timeLog.Checkpoint("ScanRoots::ScanWhiteNodes");
 
-  // On the assumption that most nodes will be black, it's
-  // probably faster to use a GraphWalker than a
-  // NodePool::Enumerator.
-  bool failed = false;
-  scanVisitor sv(mWhiteNodeCount, failed, !aFullySynchGraphBuild);
-  GraphWalker<scanVisitor>(sv).WalkFromRoots(mGraph);
-  timeLog.Checkpoint("ScanRoots::WalkFromRoots");
-
-  if (failed) {
-    NS_ASSERTION(false, "Ran out of memory in ScanRoots");
-    CC_TELEMETRY(_OOM, true);
-  }
+  ScanBlackNodes();
+  timeLog.Checkpoint("ScanRoots::ScanBlackNodes");
 
   // Scanning weak maps must be done last.
   ScanWeakMaps();

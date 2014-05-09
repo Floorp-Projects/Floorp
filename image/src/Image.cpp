@@ -6,6 +6,8 @@
 #include "nsMimeTypes.h"
 
 #include "Image.h"
+#include "nsRefreshDriver.h"
+#include "mozilla/TimeStamp.h"
 
 namespace mozilla {
 namespace image {
@@ -126,6 +128,26 @@ ImageResource::SetAnimationModeInternal(uint16_t aAnimationMode)
   mAnimationMode = aAnimationMode;
 
   return NS_OK;
+}
+
+bool
+ImageResource::HadRecentRefresh(const TimeStamp& aTime)
+{
+  // Our threshold for "recent" is 1/2 of the default refresh-driver interval.
+  // This ensures that we allow for frame rates at least as fast as the
+  // refresh driver's default rate.
+  static TimeDuration recentThreshold =
+      TimeDuration::FromMilliseconds(nsRefreshDriver::DefaultInterval() / 2.0);
+
+  if (!mLastRefreshTime.IsNull() &&
+      aTime - mLastRefreshTime < recentThreshold) {
+    return true;
+  }
+
+  // else, we can proceed with a refresh.
+  // But first, update our last refresh time:
+  mLastRefreshTime = aTime;
+  return false;
 }
 
 void

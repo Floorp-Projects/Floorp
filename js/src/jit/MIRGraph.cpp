@@ -1278,6 +1278,9 @@ void
 MBasicBlock::dump(FILE *fp)
 {
 #ifdef DEBUG
+    if (MResumePoint *resume = entryResumePoint()) {
+        resume->dump();
+    }
     for (MPhiIterator iter(phisBegin()); iter != phisEnd(); iter++) {
         iter->dump(fp);
     }
