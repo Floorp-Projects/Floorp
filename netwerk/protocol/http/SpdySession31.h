@@ -25,9 +25,9 @@ class SpdyPushedStream31;
 class SpdyStream31;
 
 class SpdySession31 MOZ_FINAL : public ASpdySession
-                              , public nsAHttpConnection
-                              , public nsAHttpSegmentReader
-                              , public nsAHttpSegmentWriter
+  , public nsAHttpConnection
+  , public nsAHttpSegmentReader
+  , public nsAHttpSegmentWriter
 {
 public:
   NS_DECL_ISUPPORTS
@@ -36,11 +36,10 @@ public:
   NS_DECL_NSAHTTPSEGMENTREADER
   NS_DECL_NSAHTTPSEGMENTWRITER
 
-  SpdySession31(nsISocketTransport *);
+  SpdySession31(nsAHttpTransaction *, nsISocketTransport *, int32_t);
   ~SpdySession31();
 
-  bool AddStream(nsAHttpTransaction *, int32_t,
-                 bool, nsIInterfaceRequestor *);
+  bool AddStream(nsAHttpTransaction *, int32_t);
   bool CanReuse() { return !mShouldGoAway && !mClosed; }
   bool RoomForMoreStreams();
 
@@ -157,6 +156,10 @@ public:
   static nsresult HandleHeaders(SpdySession31 *);
   static nsresult HandleWindowUpdate(SpdySession31 *);
   static nsresult HandleCredential(SpdySession31 *);
+
+  template<typename T>
+    static void EnsureBuffer(nsAutoArrayPtr<T> &,
+                             uint32_t, uint32_t, uint32_t &);
 
   // For writing the SPDY data stream to LOG4
   static void LogIO(SpdySession31 *, SpdyStream31 *, const char *,

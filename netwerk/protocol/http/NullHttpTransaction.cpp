@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS(NullHttpTransaction, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS0(NullHttpTransaction)
 
 NullHttpTransaction::NullHttpTransaction(nsHttpConnectionInfo *ci,
                                          nsIInterfaceRequestor *callbacks,
@@ -159,12 +159,6 @@ NullHttpTransaction::Close(nsresult reason)
   mStatus = reason;
   mConnection = nullptr;
   mIsDone = true;
-}
-
-nsHttpConnectionInfo *
-NullHttpTransaction::ConnectionInfo()
-{
-  return mConnectionInfo;
 }
 
 nsresult

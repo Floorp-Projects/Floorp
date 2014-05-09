@@ -45,43 +45,47 @@ NS_INTERFACE_MAP_BEGIN(SpdySession31)
 NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsAHttpConnection)
 NS_INTERFACE_MAP_END
 
-SpdySession31::SpdySession31(nsISocketTransport *aSocketTransport)
-  : mSocketTransport(aSocketTransport)
-  , mSegmentReader(nullptr)
-  , mSegmentWriter(nullptr)
-  , mNextStreamID(1)
-  , mConcurrentHighWater(0)
-  , mDownstreamState(BUFFERING_FRAME_HEADER)
-  , mInputFrameBufferSize(kDefaultBufferSize)
-  , mInputFrameBufferUsed(0)
-  , mInputFrameDataLast(false)
-  , mInputFrameDataStream(nullptr)
-  , mNeedsCleanup(nullptr)
-  , mShouldGoAway(false)
-  , mClosed(false)
-  , mCleanShutdown(false)
-  , mDataPending(false)
-  , mGoAwayID(0)
-  , mMaxConcurrent(kDefaultMaxConcurrent)
-  , mConcurrent(0)
-  , mServerPushedResources(0)
-  , mServerInitialStreamWindow(kDefaultRwin)
-  , mLocalSessionWindow(kDefaultRwin)
-  , mRemoteSessionWindow(kDefaultRwin)
-  , mOutputQueueSize(kDefaultQueueSize)
-  , mOutputQueueUsed(0)
-  , mOutputQueueSent(0)
-  , mLastReadEpoch(PR_IntervalNow())
-  , mPingSentEpoch(0)
-  , mNextPingID(1)
+SpdySession31::SpdySession31(nsAHttpTransaction *aHttpTransaction,
+                             nsISocketTransport *aSocketTransport,
+                             int32_t firstPriority)
+  : mSocketTransport(aSocketTransport),
+  mSegmentReader(nullptr),
+  mSegmentWriter(nullptr),
+  mNextStreamID(1),
+  mConcurrentHighWater(0),
+  mDownstreamState(BUFFERING_FRAME_HEADER),
+  mInputFrameBufferSize(kDefaultBufferSize),
+  mInputFrameBufferUsed(0),
+  mInputFrameDataLast(false),
+  mInputFrameDataStream(nullptr),
+  mNeedsCleanup(nullptr),
+  mShouldGoAway(false),
+  mClosed(false),
+  mCleanShutdown(false),
+  mDataPending(false),
+  mGoAwayID(0),
+  mMaxConcurrent(kDefaultMaxConcurrent),
+  mConcurrent(0),
+  mServerPushedResources(0),
+  mServerInitialStreamWindow(kDefaultRwin),
+  mLocalSessionWindow(kDefaultRwin),
+  mRemoteSessionWindow(kDefaultRwin),
+  mOutputQueueSize(kDefaultQueueSize),
+  mOutputQueueUsed(0),
+  mOutputQueueSent(0),
+  mLastReadEpoch(PR_IntervalNow()),
+  mPingSentEpoch(0),
+  mNextPingID(1)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
   static uint64_t sSerial;
   mSerial = ++sSerial;
 
-  LOG3(("SpdySession31::SpdySession31 %p serial=0x%X\n", this, mSerial));
+  LOG3(("SpdySession31::SpdySession31 %p transaction 1 = %p serial=0x%X\n",
+        this, aHttpTransaction, mSerial));
 
+  mConnection = aHttpTransaction->Connection();
   mInputFrameBuffer = new char[mInputFrameBufferSize];
   mOutputQueueBuffer = new char[mOutputQueueSize];
   zlibInit();
@@ -91,15 +95,17 @@ SpdySession31::SpdySession31(nsISocketTransport *aSocketTransport)
   mSendingChunkSize = gHttpHandler->SpdySendingChunkSize();
   GenerateSettings();
 
+  if (!aHttpTransaction->IsNullTransaction())
+    AddStream(aHttpTransaction, firstPriority);
   mLastDataReadEpoch = mLastReadEpoch;
 
   mPingThreshold = gHttpHandler->SpdyPingThreshold();
 }
 
 PLDHashOperator
-SpdySession31::ShutdownEnumerator(nsAHttpTransaction *key,
-                                  nsAutoPtr<SpdyStream31> &stream,
-                                  void *closure)
+  SpdySession31::ShutdownEnumerator(nsAHttpTransaction *key,
+                                    nsAutoPtr<SpdyStream31> &stream,
+                                    void *closure)
 {
   SpdySession31 *self = static_cast<SpdySession31 *>(closure);
 
@@ -338,9 +344,7 @@ SpdySession31::RegisterStreamID(SpdyStream31 *stream, uint32_t aNewID)
 
 bool
 SpdySession31::AddStream(nsAHttpTransaction *aHttpTransaction,
-                         int32_t aPriority,
-                         bool aUseTunnel,
-                         nsIInterfaceRequestor *aCallbacks)
+                           int32_t aPriority)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -351,18 +355,6 @@ SpdySession31::AddStream(nsAHttpTransaction *aHttpTransaction,
     return false;
   }
 
-  // assert that
-  // a] in the case we have a connection, that the new transaction connection
-  //    is either undefined or on the same connection
-  // b] in the case we don't have a connection, that the new transaction
-  //    connection is defined so we can adopt it
-  MOZ_ASSERT((mConnection && (!aHttpTransaction->Connection() ||
-                              mConnection == aHttpTransaction->Connection())) ||
-             (!mConnection && aHttpTransaction->Connection()));
-
-  if (!mConnection) {
-    mConnection = aHttpTransaction->Connection();
-  }
   aHttpTransaction->SetConnection(this);
   SpdyStream31 *stream = new SpdyStream31(aHttpTransaction, this, aPriority);
 
@@ -523,7 +515,7 @@ SpdySession31::ChangeDownstreamState(enum stateType newState)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
-  LOG3(("SpdySession31::ChangeDownstreamState() %p from %X to %X",
+  LOG3(("SpdyStream31::ChangeDownstreamState() %p from %X to %X",
         this, mDownstreamState, newState));
   mDownstreamState = newState;
 }
@@ -533,7 +525,7 @@ SpdySession31::ResetDownstreamState()
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
-  LOG3(("SpdySession31::ResetDownstreamState() %p", this));
+  LOG3(("SpdyStream31::ResetDownstreamState() %p", this));
   ChangeDownstreamState(BUFFERING_FRAME_HEADER);
 
   if (mInputFrameDataLast && mInputFrameDataStream) {
@@ -547,6 +539,40 @@ SpdySession31::ResetDownstreamState()
   mInputFrameBufferUsed = 0;
   mInputFrameDataStream = nullptr;
 }
+
+template<typename T> void
+SpdySession31::EnsureBuffer(nsAutoArrayPtr<T> &buf,
+                            uint32_t newSize,
+                            uint32_t preserve,
+                            uint32_t &objSize)
+{
+  if (objSize >= newSize)
+    return;
+
+  // Leave a little slop on the new allocation - add 2KB to
+  // what we need and then round the result up to a 4KB (page)
+  // boundary.
+
+  objSize = (newSize + 2048 + 4095) & ~4095;
+
+  static_assert(sizeof(T) == 1, "sizeof(T) must be 1");
+  nsAutoArrayPtr<T> tmp(new T[objSize]);
+  memcpy(tmp, buf, preserve);
+  buf = tmp;
+}
+
+// Instantiate supported templates explicitly.
+template void
+SpdySession31::EnsureBuffer(nsAutoArrayPtr<char> &buf,
+                            uint32_t newSize,
+                            uint32_t preserve,
+                            uint32_t &objSize);
+
+template void
+SpdySession31::EnsureBuffer(nsAutoArrayPtr<uint8_t> &buf,
+                            uint32_t newSize,
+                            uint32_t preserve,
+                            uint32_t &objSize);
 
 void
 SpdySession31::DecrementConcurrent(SpdyStream31 *aStream)
@@ -2346,14 +2372,6 @@ SpdySession31::Close(nsresult aReason)
   mSegmentWriter = nullptr;
 }
 
-nsHttpConnectionInfo *
-SpdySession31::ConnectionInfo()
-{
-  nsRefPtr<nsHttpConnectionInfo> ci;
-  GetConnectionInfo(getter_AddRefs(ci));
-  return ci.get();
-}
-
 void
 SpdySession31::CloseTransaction(nsAHttpTransaction *aTransaction,
                                 nsresult aResult)
@@ -2615,7 +2633,6 @@ SpdySession31::TransactionHasDataToWrite(nsAHttpTransaction *caller)
         this, stream->StreamID()));
 
   mReadyForWrite.Push(stream);
-  SetWriteCallbacks();
 }
 
 void
@@ -2666,17 +2683,10 @@ SpdySession31::Classification()
   return mConnection->Classification();
 }
 
-void
-SpdySession31::GetSecurityCallbacks(nsIInterfaceRequestor **aOut)
-{
-  *aOut = nullptr;
-}
-
 //-----------------------------------------------------------------------------
 // unused methods of nsAHttpTransaction
 // We can be sure of this because SpdySession31 is only constructed in
-// nsHttpConnection and is never passed out of that object or a TLSFilterTransaction
-// TLS tunnel
+// nsHttpConnection and is never passed out of that object
 //-----------------------------------------------------------------------------
 
 void
@@ -2684,6 +2694,13 @@ SpdySession31::SetConnection(nsAHttpConnection *)
 {
   // This is unexpected
   MOZ_ASSERT(false, "SpdySession31::SetConnection()");
+}
+
+void
+SpdySession31::GetSecurityCallbacks(nsIInterfaceRequestor **)
+{
+  // This is unexpected
+  MOZ_ASSERT(false, "SpdySession31::GetSecurityCallbacks()");
 }
 
 void

@@ -12,7 +12,6 @@
 #include "nsAutoPtr.h"
 #include "nsProxyRelease.h"
 #include "prinrval.h"
-#include "TunnelUtils.h"
 
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
@@ -20,7 +19,6 @@
 #include "nsITimer.h"
 
 class nsISocketTransport;
-class nsISSLSocketControl;
 
 namespace mozilla {
 namespace net {
@@ -41,7 +39,6 @@ class nsHttpConnection : public nsAHttpSegmentReader
                        , public nsIOutputStreamCallback
                        , public nsITransportEventSink
                        , public nsIInterfaceRequestor
-                       , public NudgeTunnelCallback
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
@@ -51,7 +48,6 @@ public:
     NS_DECL_NSIOUTPUTSTREAMCALLBACK
     NS_DECL_NSITRANSPORTEVENTSINK
     NS_DECL_NSIINTERFACEREQUESTOR
-    NS_DECL_NUDGETUNNELCALLBACK
 
     nsHttpConnection();
     virtual ~nsHttpConnection();
@@ -63,8 +59,8 @@ public:
     //                alive.  a value of 0xffff indicates no limit.
     nsresult Init(nsHttpConnectionInfo *info, uint16_t maxHangTime,
                   nsISocketTransport *, nsIAsyncInputStream *,
-                  nsIAsyncOutputStream *, bool connectedTransport,
-                  nsIInterfaceRequestor *, PRIntervalTime);
+                  nsIAsyncOutputStream *, nsIInterfaceRequestor *,
+                  PRIntervalTime);
 
     // Activate causes the given transaction to be processed on this
     // connection.  It fails if there is already an existing transaction unless
@@ -77,37 +73,30 @@ public:
     //-------------------------------------------------------------------------
     // XXX document when these are ok to call
 
-    bool SupportsPipelining();
-    bool IsKeepAlive()
-    {
-        return mUsingSpdyVersion || (mKeepAliveMask && mKeepAlive);
-    }
-    bool CanReuse();   // can this connection be reused?
-    bool CanDirectlyActivate();
+    bool     SupportsPipelining();
+    bool     IsKeepAlive() { return mUsingSpdyVersion ||
+                                    (mKeepAliveMask && mKeepAlive); }
+    bool     CanReuse();   // can this connection be reused?
+    bool     CanDirectlyActivate();
 
     // Returns time in seconds for how long connection can be reused.
     uint32_t TimeToLive();
 
-    void DontReuse();
+    void     DontReuse();
 
-    bool IsProxyConnectInProgress()
+    bool     IsProxyConnectInProgress()
     {
         return mProxyConnectInProgress;
     }
 
-    bool LastTransactionExpectedNoContent()
+    bool     LastTransactionExpectedNoContent()
     {
         return mLastTransactionExpectedNoContent;
     }
 
-    void SetLastTransactionExpectedNoContent(bool val)
+    void     SetLastTransactionExpectedNoContent(bool val)
     {
         mLastTransactionExpectedNoContent = val;
-    }
-
-    bool NeedSpdyTunnel()
-    {
-        return mConnInfo->UsingHttpsProxy() && !mTLSFilter && mConnInfo->UsingConnect();
     }
 
     nsISocketTransport   *Transport()      { return mSocketTransport; }
@@ -131,8 +120,7 @@ public:
     int64_t  MaxBytesRead() {return mMaxBytesRead;}
     uint8_t GetLastHttpResponseVersion() { return mLastHttpResponseVersion; }
 
-    friend class nsHttpConnectionForceIO;
-    nsresult ForceSend();
+    friend class nsHttpConnectionForceRecv;
     nsresult ForceRecv();
 
     static NS_METHOD ReadFromStream(nsIInputStream *, void *, const char *,
@@ -174,8 +162,7 @@ public:
     // When the connection is active this is called every second
     void  ReadTimeoutTick();
 
-    int64_t BytesWritten() { return mTotalBytesWritten; } // includes TLS
-    int64_t ContentBytesWritten() { return mContentBytesWritten; }
+    int64_t BytesWritten() { return mTotalBytesWritten; }
 
     void    SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks);
     void    PrintDiagnostics(nsCString &log);
@@ -186,12 +173,6 @@ public:
     // non null HTTP transaction of any version.
     bool    IsExperienced() { return mExperienced; }
 
-    static nsresult MakeConnectString(nsAHttpTransaction *trans,
-                                      nsHttpRequestHead *request,
-                                      nsACString &result);
-    void    SetupSecondaryTLS();
-    void    SetInSpdyTunnel(bool arg);
-
 private:
     // Value (set in mTCPKeepaliveConfig) indicates which set of prefs to use.
     enum TCPKeepaliveConfig {
@@ -201,8 +182,7 @@ private:
     };
 
     // called to cause the underlying socket to start speaking SSL
-    nsresult InitSSLParams(bool connectingToProxy, bool ProxyStartSSL);
-    nsresult SetupNPNList(nsISSLSocketControl *ssl, uint32_t caps);
+    nsresult ProxyStartSSL();
 
     nsresult OnTransactionDone(nsresult reason);
     nsresult OnSocketWritable();
@@ -217,7 +197,7 @@ private:
     // Makes certain the SSL handshake is complete and NPN negotiation
     // has had a chance to happen
     bool     EnsureNPNComplete();
-    void     SetupSSL();
+    void     SetupSSL(uint32_t caps);
 
     // Start the Spdy transaction handler when NPN indicates spdy/*
     void     StartSpdy(uint8_t versionLevel);
@@ -245,7 +225,6 @@ private:
     // mTransaction only points to the HTTP Transaction callbacks if the
     // transaction is open, otherwise it is null.
     nsRefPtr<nsAHttpTransaction>    mTransaction;
-    nsRefPtr<TLSFilterTransaction>  mTLSFilter;
 
     nsRefPtr<nsHttpHandler>         mHttpHandler; // keep gHttpHandler alive
 
@@ -264,13 +243,11 @@ private:
     int64_t                         mMaxBytesRead;       // max read in 1 activation
     int64_t                         mTotalBytesRead;     // total data read
     int64_t                         mTotalBytesWritten;  // does not include CONNECT tunnel
-    int64_t                         mContentBytesWritten;  // does not include CONNECT tunnel or TLS
 
     nsRefPtr<nsIAsyncInputStream>   mInputOverflow;
 
     PRIntervalTime                  mRtt;
 
-    bool                            mConnectedTransport;
     bool                            mKeepAlive;
     bool                            mKeepAliveMask;
     bool                            mDontReuse;
@@ -281,7 +258,6 @@ private:
     bool                            mIdleMonitoring;
     bool                            mProxyConnectInProgress;
     bool                            mExperienced;
-    bool                            mInSpdyTunnel;
 
     // The number of <= HTTP/1.1 transactions performed on this connection. This
     // excludes spdy transactions.

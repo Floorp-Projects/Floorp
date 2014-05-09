@@ -213,19 +213,6 @@ SpdyPush31TransactionBuffer::OnTransportStatus(nsITransport* transport,
 {
 }
 
-nsHttpConnectionInfo *
-SpdyPush31TransactionBuffer::ConnectionInfo()
-{
-  if (!mPushStream) {
-    return nullptr;
-  }
-  if (!mPushStream->Transaction()) {
-    return nullptr;
-  }
-  MOZ_ASSERT(mPushStream->Transaction() != this);
-  return mPushStream->Transaction()->ConnectionInfo();
-}
-
 bool
 SpdyPush31TransactionBuffer::IsDone()
 {
@@ -268,8 +255,10 @@ SpdyPush31TransactionBuffer::WriteSegments(nsAHttpSegmentWriter *writer,
                                            uint32_t count, uint32_t *countWritten)
 {
   if ((mBufferedHTTP1Size - mBufferedHTTP1Used) < 20480) {
-    EnsureBuffer(mBufferedHTTP1, mBufferedHTTP1Size + kDefaultBufferSize,
-                 mBufferedHTTP1Used, mBufferedHTTP1Size);
+    SpdySession31::EnsureBuffer(mBufferedHTTP1,
+                                mBufferedHTTP1Size + kDefaultBufferSize,
+                                mBufferedHTTP1Used,
+                                mBufferedHTTP1Size);
   }
 
   count = std::min(count, mBufferedHTTP1Size - mBufferedHTTP1Used);

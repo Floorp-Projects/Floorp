@@ -753,7 +753,6 @@ nsSocketTransport::nsSocketTransport()
     , mProxyPort(0)
     , mProxyTransparent(false)
     , mProxyTransparentResolvesHost(false)
-    , mHttpsProxy(false)
     , mConnectionFlags(0)
     , mState(STATE_CLOSED)
     , mAttached(false)
@@ -784,21 +783,13 @@ nsSocketTransport::~nsSocketTransport()
 {
     SOCKET_LOG(("destroying nsSocketTransport @%p\n", this));
 
-    CleanupTypes();
-}
-
-void
-nsSocketTransport::CleanupTypes()
-{
     // cleanup socket type info
     if (mTypes) {
-        for (uint32_t i = 0; i < mTypeCount; ++i) {
+        uint32_t i;
+        for (i=0; i<mTypeCount; ++i)
             PL_strfree(mTypes[i]);
-        }
         free(mTypes);
-        mTypes = nullptr;
     }
-    mTypeCount = 0;
 }
 
 nsresult
@@ -819,22 +810,16 @@ nsSocketTransport::Init(const char **types, uint32_t typeCount,
     mPort = port;
     mHost = host;
 
-    if (proxyInfo) {
-        mHttpsProxy = proxyInfo->IsHTTPS();
-    }
-
     const char *proxyType = nullptr;
     if (proxyInfo) {
         mProxyPort = proxyInfo->Port();
         mProxyHost = proxyInfo->Host();
         // grab proxy type (looking for "socks" for example)
         proxyType = proxyInfo->Type();
-        if (proxyType && (proxyInfo->IsHTTP() ||
-                          proxyInfo->IsHTTPS() ||
-                          proxyInfo->IsDirect() ||
-                          !strcmp(proxyType, "unknown"))) {
+        if (proxyType && (strcmp(proxyType, "http") == 0 ||
+                          strcmp(proxyType, "direct") == 0 ||
+                          strcmp(proxyType, "unknown") == 0))
             proxyType = nullptr;
-        }
     }
 
     SOCKET_LOG(("nsSocketTransport::Init [this=%p host=%s:%hu proxy=%s:%hu]\n",
@@ -1120,14 +1105,8 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
             if (i == 0) {
                 // if this is the first type, we'll want the 
                 // service to allocate a new socket
-
-                // when https proxying we want to just connect to the proxy as if
-                // it were the end host (i.e. expect the proxy's cert)
-
                 rv = provider->NewSocket(mNetAddr.raw.family,
-                                         mHttpsProxy ? proxyHost : host,
-                                         mHttpsProxy ? proxyPort : port,
-                                         proxyHost, proxyPort,
+                                         host, port, proxyHost, proxyPort,
                                          proxyFlags, &fd,
                                          getter_AddRefs(secinfo));
 
@@ -1184,7 +1163,6 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
         }
     }
 
-    CleanupTypes();
     return rv;
 }
 
