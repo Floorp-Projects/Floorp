@@ -16,9 +16,6 @@ const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-                                  "resource://gre/modules/Services.jsm");
-
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
                                    "nsIMessageListenerManager");
@@ -36,23 +33,8 @@ const NOTIFICATION_STORE_DIR = OS.Constants.Path.profileDir;
 const NOTIFICATION_STORE_PATH =
         OS.Path.join(NOTIFICATION_STORE_DIR, "notificationstore.json");
 
-const kMessages = [
-  "Notification:Save",
-  "Notification:Delete",
-  "Notification:GetAll",
-  "Notification:GetAllCrossOrigin"
-];
-
 let NotificationDB = {
-
-  // Ensure we won't call init() while xpcom-shutdown is performed
-  _shutdownInProgress: false,
-
   init: function() {
-    if (this._shutdownInProgress) {
-      return;
-    }
-
     this.notifications = {};
     this.byTag = {};
     this.loaded = false;
@@ -60,29 +42,9 @@ let NotificationDB = {
     this.tasks = []; // read/write operation queue
     this.runningTask = false;
 
-    Services.obs.addObserver(this, "xpcom-shutdown", false);
-    this.registerListeners();
-  },
-
-  registerListeners: function() {
-    for (let message of kMessages) {
-      ppmm.addMessageListener(message, this);
-    }
-  },
-
-  unregisterListeners: function() {
-    for (let message of kMessages) {
-      ppmm.removeMessageListener(message, this);
-    }
-  },
-
-  observe: function(aSubject, aTopic, aData) {
-    if (DEBUG) debug("Topic: " + aTopic);
-    if (aTopic == "xpcom-shutdown") {
-      this._shutdownInProgress = true;
-      Services.obs.removeObserver(this, "xpcom-shutdown");
-      this.unregisterListeners();
-    }
+    ppmm.addMessageListener("Notification:Save", this);
+    ppmm.addMessageListener("Notification:Delete", this);
+    ppmm.addMessageListener("Notification:GetAll", this);
   },
 
   // Attempt to read notification file, if it's not there we will create it.
@@ -198,15 +160,6 @@ let NotificationDB = {
         });
         break;
 
-      case "Notification:GetAllCrossOrigin":
-        this.queueTask("getallaccrossorigin", message.data,
-          function(notifications) {
-            returnMessage("Notification:GetAllCrossOrigin:Return:OK", {
-              notifications: notifications
-            });
-          });
-        break;
-
       case "Notification:Save":
         this.queueTask("save", message.data, function() {
           returnMessage("Notification:Save:Return:OK", {
@@ -240,14 +193,14 @@ let NotificationDB = {
 
     // Only run immediately if we aren't currently running another task.
     if (!this.runningTask) {
-      if (DEBUG) { debug("Task queue was not running, starting now..."); }
+      if (DEBUG) { dump("Task queue was not running, starting now..."); }
       this.runNextTask();
     }
   },
 
   runNextTask: function() {
     if (this.tasks.length === 0) {
-      if (DEBUG) { debug("No more tasks to run, queue depleted"); }
+      if (DEBUG) { dump("No more tasks to run, queue depleted"); }
       this.runningTask = false;
       return;
     }
@@ -270,10 +223,6 @@ let NotificationDB = {
           this.taskGetAll(task.data, wrappedCallback);
           break;
 
-        case "getallaccrossorigin":
-          this.taskGetAllCrossOrigin(wrappedCallback);
-          break;
-
         case "save":
           this.taskSave(task.data, wrappedCallback);
           break;
@@ -292,27 +241,6 @@ let NotificationDB = {
     // Grab only the notifications for specified origin.
     for (var i in this.notifications[origin]) {
       notifications.push(this.notifications[origin][i]);
-    }
-    callback(notifications);
-  },
-
-  taskGetAllCrossOrigin: function(callback) {
-    if (DEBUG) { debug("Task, getting all whatever origin"); }
-    var notifications = [];
-    for (var origin in this.notifications) {
-      for (var i in this.notifications[origin]) {
-        var notification = this.notifications[origin][i];
-
-        // Notifications without the alertName field cannot be resent by
-        // mozResendAllNotifications, so we just skip them. They will
-        // still be available to applications via Notification.get()
-        if (!('alertName' in notification)) {
-          continue;
-        }
-
-        notification.origin = origin;
-        notifications.push(notification);
-      }
     }
     callback(notifications);
   },
