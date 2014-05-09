@@ -54,3 +54,10 @@ EffectSolidColor::PrintInfo(nsACString& aTo, const char* aPrefix)
   aTo += nsPrintfCString("EffectSolidColor (0x%p) [color=%x]", this, mColor.ToABGR());
 }
 
+void
+EffectBlendMode::PrintInfo(nsACString& aTo, const char* aPrefix)
+{
+  aTo += aPrefix;
+  aTo += nsPrintfCString("EffectBlendMode (0x%p) [blendmode=%i]", this, (int)mBlendMode);
+}
+

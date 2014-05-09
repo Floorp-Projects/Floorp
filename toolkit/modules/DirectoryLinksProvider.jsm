@@ -9,44 +9,21 @@ this.EXPORTED_SYMBOLS = ["DirectoryLinksProvider"];
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cu = Components.utils;
+const XMLHttpRequest =
+  Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1", "nsIXMLHttpRequest");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+  "resource://gre/modules/osfile.jsm")
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+  "resource://gre/modules/Promise.jsm");
 
-/**
- * Gets the currently selected locale for display.
- * @return  the selected locale or "en-US" if none is selected
- */
-function getLocale() {
-  let matchOS;
-  try {
-    matchOS = Services.prefs.getBoolPref(PREF_MATCH_OS_LOCALE);
-  }
-  catch (e) {}
-
-  if (matchOS) {
-    return Services.locale.getLocaleComponentForUserAgent();
-  }
-
-  try {
-    let locale = Services.prefs.getComplexValue(PREF_SELECTED_LOCALE,
-                                                Ci.nsIPrefLocalizedString);
-    if (locale) {
-      return locale.data;
-    }
-  }
-  catch (e) {}
-
-  try {
-    return Services.prefs.getCharPref(PREF_SELECTED_LOCALE);
-  }
-  catch (e) {}
-
-  return "en-US";
-}
+// The filename where directory links are stored locally
+const DIRECTORY_LINKS_FILE = "directoryLinks.json";
 
 // The preference that tells whether to match the OS locale
 const PREF_MATCH_OS_LOCALE = "intl.locale.matchOS";
@@ -77,7 +54,7 @@ let DirectoryLinksProvider = {
 
   _observers: [],
 
-  get _prefs() Object.freeze({
+  get _observedPrefs() Object.freeze({
     linksURL: PREF_DIRECTORY_SOURCE,
     matchOSLocale: PREF_MATCH_OS_LOCALE,
     prefSelectedLocale: PREF_SELECTED_LOCALE,
@@ -86,7 +63,7 @@ let DirectoryLinksProvider = {
   get _linksURL() {
     if (!this.__linksURL) {
       try {
-        this.__linksURL = Services.prefs.getCharPref(this._prefs["linksURL"]);
+        this.__linksURL = Services.prefs.getCharPref(this._observedPrefs["linksURL"]);
       }
       catch (e) {
         Cu.reportError("Error fetching directory links url from prefs: " + e);
@@ -95,11 +72,43 @@ let DirectoryLinksProvider = {
     return this.__linksURL;
   },
 
+  /**
+   * Gets the currently selected locale for display.
+   * @return  the selected locale or "en-US" if none is selected
+   */
+  get locale() {
+    let matchOS;
+    try {
+      matchOS = Services.prefs.getBoolPref(PREF_MATCH_OS_LOCALE);
+    }
+    catch (e) {}
+
+    if (matchOS) {
+      return Services.locale.getLocaleComponentForUserAgent();
+    }
+
+    try {
+      let locale = Services.prefs.getComplexValue(PREF_SELECTED_LOCALE,
+                                                  Ci.nsIPrefLocalizedString);
+      if (locale) {
+        return locale.data;
+      }
+    }
+    catch (e) {}
+
+    try {
+      return Services.prefs.getCharPref(PREF_SELECTED_LOCALE);
+    }
+    catch (e) {}
+
+    return "en-US";
+  },
+
   get linkTypes() LINK_TYPES,
 
   observe: function DirectoryLinksProvider_observe(aSubject, aTopic, aData) {
     if (aTopic == "nsPref:changed") {
-      if (aData == this._prefs["linksURL"]) {
+      if (aData == this._observedPrefs["linksURL"]) {
         delete this.__linksURL;
       }
       this._callObservers("onManyLinksChanged");
@@ -107,15 +116,15 @@ let DirectoryLinksProvider = {
   },
 
   _addPrefsObserver: function DirectoryLinksProvider_addObserver() {
-    for (let pref in this._prefs) {
-      let prefName = this._prefs[pref];
+    for (let pref in this._observedPrefs) {
+      let prefName = this._observedPrefs[pref];
       Services.prefs.addObserver(prefName, this, false);
     }
   },
 
   _removePrefsObserver: function DirectoryLinksProvider_removeObserver() {
-    for (let pref in this._prefs) {
-      let prefName = this._prefs[pref];
+    for (let pref in this._observedPrefs) {
+      let prefName = this._observedPrefs[pref];
       Services.prefs.removeObserver(prefName, this);
     }
   },
@@ -133,7 +142,7 @@ let DirectoryLinksProvider = {
             let json = NetUtil.readInputStreamToString(aInputStream,
                                                        aInputStream.available(),
                                                        {charset: "UTF-8"});
-            let locale = getLocale();
+            let locale = this.locale;
             output = JSON.parse(json)[locale];
           }
           catch (e) {
@@ -150,6 +159,42 @@ let DirectoryLinksProvider = {
       Cu.reportError(e);
       aCallback([]);
     }
+  },
+
+  _fetchAndCacheLinks: function DirectoryLinksProvider_fetchAndCacheLinks(uri) {
+    let deferred = Promise.defer();
+    let xmlHttp = new XMLHttpRequest();
+    xmlHttp.overrideMimeType("application/json");
+
+    let self = this;
+    xmlHttp.onload = function(aResponse) {
+      let json = this.responseText;
+      if (this.status && this.status != 200) {
+        json = "{}";
+      }
+      let directoryLinksFilePath = OS.Path.join(OS.Constants.Path.localProfileDir, DIRECTORY_LINKS_FILE);
+      OS.File.writeAtomic(directoryLinksFilePath, json, {tmpPath: directoryLinksFilePath + ".tmp"})
+        .then(() => {
+          deferred.resolve();
+          self._callObservers("onManyLinksChanged");
+        },
+        () => {
+          deferred.reject("Error writing uri data in profD.");
+        });
+    };
+
+    xmlHttp.onerror = function(e) {
+      deferred.reject("Fetching " + uri + " results in error code: " + e.target.status);
+    };
+
+    try {
+      xmlHttp.open('POST', uri);
+      xmlHttp.send(JSON.stringify({ locale: this.locale }));
+    } catch (e) {
+      deferred.reject("Error fetching " + uri);
+      Cu.reportError(e);
+    }
+    return deferred.promise;
   },
 
   /**

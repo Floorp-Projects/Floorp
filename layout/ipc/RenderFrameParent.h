@@ -55,20 +55,17 @@ class RenderFrameParent : public PRenderFrameParent,
 public:
   typedef std::map<ViewID, nsRefPtr<nsContentView> > ViewMap;
 
-  /* Init should be called immediately after allocation. */
-  RenderFrameParent();
-  virtual ~RenderFrameParent();
 
   /**
    * Select the desired scrolling behavior.  If ASYNC_PAN_ZOOM is
    * chosen, then RenderFrameParent will watch input events and use
    * them to asynchronously pan and zoom.
    */
-  void
-  Init(nsFrameLoader* aFrameLoader,
-       ScrollingBehavior aScrollingBehavior,
-       TextureFactoryIdentifier* aTextureFactoryIdentifier,
-       uint64_t* aId);
+  RenderFrameParent(nsFrameLoader* aFrameLoader,
+                    ScrollingBehavior aScrollingBehavior,
+                    TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                    uint64_t* aId, bool* aSuccess);
+  virtual ~RenderFrameParent();
 
   void Destroy();
 

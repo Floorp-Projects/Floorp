@@ -704,20 +704,20 @@ private:
   nsRegion mTouchSensitiveRegion;
 };
 
-RenderFrameParent::RenderFrameParent()
+RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader,
+                                     ScrollingBehavior aScrollingBehavior,
+                                     TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                     uint64_t* aId,
+                                     bool* aSuccess)
   : mLayersId(0)
+  , mFrameLoader(aFrameLoader)
   , mFrameLoaderDestroyed(false)
   , mBackgroundColor(gfxRGBA(1, 1, 1))
 {
-}
-
-void
-RenderFrameParent::Init(nsFrameLoader* aFrameLoader,
-                        ScrollingBehavior aScrollingBehavior,
-                        TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                        uint64_t* aId)
-{
-  mFrameLoader = aFrameLoader;
+  *aSuccess = false;
+  if (!mFrameLoader) {
+    return;
+  }
 
   *aId = 0;
 
@@ -752,6 +752,7 @@ RenderFrameParent::Init(nsFrameLoader* aFrameLoader,
   }
   // Set a default RenderFrameParent
   mFrameLoader->SetCurrentRemoteFrame(this);
+  *aSuccess = true;
 }
 
 APZCTreeManager*

@@ -15,6 +15,7 @@ const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const { dbg_assert, dumpn, update } = DevToolsUtils;
 const { SourceMapConsumer, SourceMapGenerator } = require("source-map");
 const { defer, resolve, reject, all } = require("devtools/toolkit/deprecated-sync-thenables");
+const {CssLogic} = require("devtools/styleinspector/css-logic");
 
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
@@ -1803,7 +1804,7 @@ ThreadActor.prototype = {
         }
 
         // There will be no tagName if the event listener is set on the window.
-        let selector = node.tagName ? findCssSelector(node) : "window";
+        let selector = node.tagName ? CssLogic.findCssSelector(node) : "window";
         let nodeDO = this.globalDebugObject.makeDebuggeeValue(node);
         listenerForm.node = {
           selector: selector,
@@ -4801,33 +4802,6 @@ update(AddonThreadActor.prototype, {
   // A constant prefix that will be used to form the actor ID by the server.
   actorPrefix: "addonThread",
 
-  onAttach: function(aRequest) {
-    if (!this.attached) {
-      Services.obs.addObserver(this, "chrome-document-global-created", false);
-      Services.obs.addObserver(this, "content-document-global-created", false);
-    }
-    return ThreadActor.prototype.onAttach.call(this, aRequest);
-  },
-
-  disconnect: function() {
-    if (this.attached) {
-      Services.obs.removeObserver(this, "content-document-global-created");
-      Services.obs.removeObserver(this, "chrome-document-global-created");
-    }
-    return ThreadActor.prototype.disconnect.call(this);
-  },
-
-  /**
-   * Called when a new DOM document global is created. Check if the DOM was
-   * loaded from an add-on and if so make the window a debuggee.
-   */
-  observe: function(aSubject, aTopic, aData) {
-    let id = {};
-    if (mapURIToAddonID(aSubject.location, id) && id.value === this.addonID) {
-      this.dbg.addDebuggee(aSubject.defaultView);
-    }
-  },
-
   /**
    * Override the eligibility check for scripts and sources to make
    * sure every script and source with a URL is stored when debugging
@@ -4938,11 +4912,6 @@ update(AddonThreadActor.prototype, {
 
     return false;
   }
-});
-
-AddonThreadActor.prototype.requestTypes = Object.create(ThreadActor.prototype.requestTypes);
-update(AddonThreadActor.prototype.requestTypes, {
-  "attach": AddonThreadActor.prototype.onAttach
 });
 
 exports.AddonThreadActor = AddonThreadActor;
@@ -5504,83 +5473,6 @@ function reportError(aError, aPrefix="") {
   let msg = aPrefix + aError.message + ":\n" + aError.stack;
   Cu.reportError(msg);
   dumpn(msg);
-}
-
-// The following are copied here verbatim from css-logic.js, until we create a
-// server-friendly helper module.
-
-/**
- * Find a unique CSS selector for a given element
- * @returns a string such that ele.ownerDocument.querySelector(reply) === ele
- * and ele.ownerDocument.querySelectorAll(reply).length === 1
- */
-function findCssSelector(ele) {
-  var document = ele.ownerDocument;
-  if (ele.id && document.getElementById(ele.id) === ele) {
-    return '#' + ele.id;
-  }
-
-  // Inherently unique by tag name
-  var tagName = ele.tagName.toLowerCase();
-  if (tagName === 'html') {
-    return 'html';
-  }
-  if (tagName === 'head') {
-    return 'head';
-  }
-  if (tagName === 'body') {
-    return 'body';
-  }
-
-  if (ele.parentNode == null) {
-    console.log('danger: ' + tagName);
-  }
-
-  // We might be able to find a unique class name
-  var selector, index, matches;
-  if (ele.classList.length > 0) {
-    for (var i = 0; i < ele.classList.length; i++) {
-      // Is this className unique by itself?
-      selector = '.' + ele.classList.item(i);
-      matches = document.querySelectorAll(selector);
-      if (matches.length === 1) {
-        return selector;
-      }
-      // Maybe it's unique with a tag name?
-      selector = tagName + selector;
-      matches = document.querySelectorAll(selector);
-      if (matches.length === 1) {
-        return selector;
-      }
-      // Maybe it's unique using a tag name and nth-child
-      index = positionInNodeList(ele, ele.parentNode.children) + 1;
-      selector = selector + ':nth-child(' + index + ')';
-      matches = document.querySelectorAll(selector);
-      if (matches.length === 1) {
-        return selector;
-      }
-    }
-  }
-
-  // So we can be unique w.r.t. our parent, and use recursion
-  index = positionInNodeList(ele, ele.parentNode.children) + 1;
-  selector = findCssSelector(ele.parentNode) + ' > ' +
-          tagName + ':nth-child(' + index + ')';
-
-  return selector;
-};
-
-/**
- * Find the position of [element] in [nodeList].
- * @returns an index of the match, or -1 if there is no match
- */
-function positionInNodeList(element, nodeList) {
-  for (var i = 0; i < nodeList.length; i++) {
-    if (element === nodeList[i]) {
-      return i;
-    }
-  }
-  return -1;
 }
 
 /**

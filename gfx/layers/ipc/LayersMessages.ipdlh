@@ -206,6 +206,8 @@ struct CommonLayerAttributes {
   LayerRect stickyScrollRangeInner;
   uint64_t scrollbarTargetContainerId;
   uint32_t scrollbarDirection;
+  int8_t mixBlendMode;
+  bool forceIsolatedGroup;
   nullable PLayer maskLayer;
   // Animated colors will only honored for ColorLayers.
   Animation[] animations;
