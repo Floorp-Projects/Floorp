@@ -617,6 +617,17 @@ public:
     mRegionToClear = aRegion;
   }
 
+  virtual bool SupportsMixBlendModes(EnumSet<gfx::CompositionOp>& aMixBlendModes)
+  {
+    return false;
+  }
+
+  bool SupportsMixBlendMode(gfx::CompositionOp aMixBlendMode)
+  {
+    EnumSet<gfx::CompositionOp> modes(aMixBlendMode);
+    return SupportsMixBlendModes(modes);
+  }
+
 protected:
   nsRefPtr<Layer> mRoot;
   gfx::UserData mUserData;
