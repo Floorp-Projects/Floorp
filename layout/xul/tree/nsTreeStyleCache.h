@@ -66,10 +66,22 @@ public:
 class nsTreeStyleCache
 {
 public:
-  nsTreeStyleCache() :mTransitionTable(nullptr), mCache(nullptr), mNextState(0) {}
-  ~nsTreeStyleCache() { Clear(); }
+  nsTreeStyleCache()
+    : mNextState(0)
+  {
+  }
 
-  void Clear() { delete mTransitionTable; mTransitionTable = nullptr; delete mCache; mCache = nullptr; mNextState = 0; }
+  ~nsTreeStyleCache()
+  {
+    Clear();
+  }
+
+  void Clear()
+  {
+    mTransitionTable = nullptr;
+    mCache = nullptr;
+    mNextState = 0;
+  }
 
   nsStyleContext* GetStyleContext(nsICSSPseudoComparator* aComparator,
                                   nsPresContext* aPresContext,
@@ -97,11 +109,11 @@ protected:
   //
   // Once the entire word has been consumed, the final state is used
   // to reference the cache table to locate the style context.
-  nsObjectHashtable* mTransitionTable;
+  nsAutoPtr<nsObjectHashtable> mTransitionTable;
 
   // The cache of all active style contexts.  This is a hash from
   // a final state in the DFA, Sf, to the resultant style context.
-  nsObjectHashtable* mCache;
+  nsAutoPtr<nsObjectHashtable> mCache;
 
   // An integer counter that is used when we need to make new states in the
   // DFA.
