@@ -28,10 +28,11 @@ public:
 
   TelephonyIPCProvider();
 
-protected:
-  virtual ~TelephonyIPCProvider();
+  void NoteActorDestroyed();
 
 private:
+  ~TelephonyIPCProvider();
+
   nsTArray<nsCOMPtr<nsITelephonyListener> > mListeners;
   PTelephonyChild* mPTelephonyChild;
   uint32_t mDefaultServiceId;

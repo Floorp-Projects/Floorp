@@ -416,6 +416,12 @@ class MochitestOptions(optparse.OptionParser):
           "help": "name of the pidfile to generate",
           "default": "",
         }],
+        [["--use-test-media-devices"],
+        { "action": "store_true",
+          "default": False,
+          "dest": "useTestMediaDevices",
+          "help": "Use test media device drivers for media testing.",
+        }],
     ]
 
     def __init__(self, **kwargs):
@@ -573,6 +579,13 @@ class MochitestOptions(optparse.OptionParser):
             if not os.path.isdir(options.dumpOutputDirectory):
                 self.error('--dump-output-directory not a directory: %s' %
                            options.dumpOutputDirectory)
+
+        if options.useTestMediaDevices:
+            if not mozinfo.isLinux:
+                self.error('--use-test-media-devices is only supported on Linux currently')
+            for f in ['/usr/bin/gst-launch-0.10', '/usr/bin/pactl']:
+                if not os.path.isfile(f):
+                    self.error('Missing binary %s required for --use-test-media-devices')
 
         return options
 
