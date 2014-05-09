@@ -17,6 +17,13 @@
 #ifdef _mips_hard_float
 #define JS_CODEGEN_MIPS_HARDFP
 #endif
+
+#if _MIPS_SIM == _ABIO32
+#define USES_O32_ABI
+#else
+#error "Unsupported ABI"
+#endif
+
 namespace js {
 namespace jit {
 
