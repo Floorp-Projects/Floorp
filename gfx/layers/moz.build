@@ -229,6 +229,7 @@ UNIFIED_SOURCES += [
     'apz/src/Axis.cpp',
     'apz/src/GestureEventListener.cpp',
     'apz/src/TaskThrottler.cpp',
+    'apz/testutil/APZTestData.cpp',
     'apz/util/ActiveElementManager.cpp',
     'apz/util/APZCCallbackHelper.cpp',
     'basic/BasicCanvasLayer.cpp',

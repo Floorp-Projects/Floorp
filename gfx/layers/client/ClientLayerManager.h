@@ -198,6 +198,15 @@ public:
     mApzTestData.LogTestDataForRepaintRequest(aSequenceNumber, aScrollId, aKey, aValue);
   }
 
+  // Get the content-side APZ test data for reading. For writing, use the
+  // LogTestData...() functions.
+  const APZTestData& GetAPZTestData() const {
+    return mApzTestData;
+  }
+
+  // Get a copy of the compositor-side APZ test data for our layers ID.
+  void GetCompositorSideAPZTestData(APZTestData* aData) const;
+
 protected:
   enum TransactionPhase {
     PHASE_NONE, PHASE_CONSTRUCTION, PHASE_DRAWING, PHASE_FORWARD
