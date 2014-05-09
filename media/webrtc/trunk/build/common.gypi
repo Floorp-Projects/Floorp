@@ -924,7 +924,7 @@
     'directx_sdk_default_path': '<(DEPTH)/third_party/directxsdk/files',
 
     'conditions': [
-      ['OS=="win" and "<!(<(PYTHON) <(DEPTH)/build/dir_exists.py <(windows_sdk_default_path))"=="True"', {
+      ['"<!(<(PYTHON) <(DEPTH)/build/dir_exists.py <(windows_sdk_default_path))"=="True"', {
         'windows_sdk_path%': '<(windows_sdk_default_path)',
       }, {
         'windows_sdk_path%': 'C:/Program Files (x86)/Windows Kits/8.0',
