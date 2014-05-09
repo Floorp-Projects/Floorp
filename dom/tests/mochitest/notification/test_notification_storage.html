@@ -117,12 +117,10 @@
       var n3 = new Notification("title3");
       var promise = Notification.get();
       promise.then(function (notifications) {
-        is(notifications.length, 3, "should return 3 notifications");
+        is(notifications.length, 3, "should return 2 notifications");
         done();
       });
-    },
-
-    deleteAllNotifications
+    }
   ];
 
   MockServices.register();

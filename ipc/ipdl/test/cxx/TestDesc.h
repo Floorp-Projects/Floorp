@@ -80,8 +80,8 @@ public:
     virtual ~TestDescSubParent() { }
 
 protected:
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE {}
     virtual PTestDescSubsubParent* AllocPTestDescSubsubParent() MOZ_OVERRIDE;
-
     virtual bool DeallocPTestDescSubsubParent(PTestDescSubsubParent* actor) MOZ_OVERRIDE;
 };
 
@@ -108,6 +108,9 @@ class TestDescSubsubParent :
 public:
     TestDescSubsubParent() { }
     virtual ~TestDescSubsubParent() { }
+
+protected:
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE {}
 };
 
 class TestDescSubsubChild :

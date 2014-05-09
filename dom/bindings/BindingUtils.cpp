@@ -14,7 +14,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Preferences.h"
 
 #include "AccessCheck.h"
 #include "jsfriendapi.h"
@@ -2156,10 +2155,6 @@ ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
 bool
 IsInPrivilegedApp(JSContext* aCx, JSObject* aObj)
 {
-  if (Preferences::GetBool("dom.ignore_webidl_scope_checks", false)) {
-    return true;
-  }
-
   using mozilla::dom::workers::GetWorkerPrivateFromContext;
   if (!NS_IsMainThread()) {
     return GetWorkerPrivateFromContext(aCx)->IsInPrivilegedApp();
@@ -2174,10 +2169,6 @@ IsInPrivilegedApp(JSContext* aCx, JSObject* aObj)
 bool
 IsInCertifiedApp(JSContext* aCx, JSObject* aObj)
 {
-  if (Preferences::GetBool("dom.ignore_webidl_scope_checks", false)) {
-    return true;
-  }
-
   using mozilla::dom::workers::GetWorkerPrivateFromContext;
   if (!NS_IsMainThread()) {
     return GetWorkerPrivateFromContext(aCx)->IsInCertifiedApp();

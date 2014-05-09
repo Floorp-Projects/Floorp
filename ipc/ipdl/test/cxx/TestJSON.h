@@ -18,6 +18,9 @@ class TestHandleParent :
 public:
     TestHandleParent() { }
     virtual ~TestHandleParent() { }
+
+protected:
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE {}
 };
 
 class TestJSONParent :
