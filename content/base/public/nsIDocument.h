@@ -105,6 +105,7 @@ struct ElementRegistrationOptions;
 class Event;
 class EventTarget;
 class FrameRequestCallback;
+class OverfillCallback;
 class HTMLBodyElement;
 struct LifecycleCallbackArgs;
 class Link;

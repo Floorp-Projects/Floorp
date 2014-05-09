@@ -382,6 +382,16 @@ void ValidateAssertConditionType()
 #endif /* DEBUG */
 
 /*
+ * MOZ_NIGHTLY_ASSERT is defined for both debug and release builds on the
+ * Nightly channel, but only debug builds on Aurora, Beta, and Release.
+ */
+#if defined(NIGHTLY_BUILD)
+#  define MOZ_NIGHTLY_ASSERT(...) MOZ_RELEASE_ASSERT(__VA_ARGS__)
+#else
+#  define MOZ_NIGHTLY_ASSERT(...) MOZ_ASSERT(__VA_ARGS__)
+#endif
+
+/*
  * MOZ_ASSERT_IF(cond1, cond2) is equivalent to MOZ_ASSERT(cond2) if cond1 is
  * true.
  *
@@ -403,9 +413,8 @@ void ValidateAssertConditionType()
 /*
  * MOZ_ASSUME_UNREACHABLE_MARKER() expands to an expression which states that it is
  * undefined behavior for execution to reach this point.  No guarantees are made
- * about what will happen if this is reached at runtime.  Most code should
- * probably use the higher level MOZ_ASSUME_UNREACHABLE, which uses this when
- * appropriate.
+ * about what will happen if this is reached at runtime.  Most code should use
+ * MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE because it has extra asserts.
  */
 #if defined(__clang__)
 #  define MOZ_ASSUME_UNREACHABLE_MARKER() __builtin_unreachable()
@@ -435,21 +444,22 @@ void ValidateAssertConditionType()
 #endif
 
 /*
- * MOZ_ASSUME_UNREACHABLE([reason]) tells the compiler that it can assume that
- * the macro call cannot be reached during execution.  This lets the compiler
- * generate better-optimized code under some circumstances, at the expense of
- * the program's behavior being undefined if control reaches the
- * MOZ_ASSUME_UNREACHABLE.
+ * MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE([reason]) tells the compiler that it
+ * can assume that the macro call cannot be reached during execution.  This lets
+ * the compiler generate better-optimized code under some circumstances, at the
+ * expense of the program's behavior being undefined if control reaches the
+ * MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE.
  *
  * In Gecko, you probably should not use this macro outside of performance- or
  * size-critical code, because it's unsafe.  If you don't care about code size
  * or performance, you should probably use MOZ_ASSERT or MOZ_CRASH.
  *
  * SpiderMonkey is a different beast, and there it's acceptable to use
- * MOZ_ASSUME_UNREACHABLE more widely.
+ * MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE more widely.
  *
- * Note that MOZ_ASSUME_UNREACHABLE is noreturn, so it's valid not to return a
- * value following a MOZ_ASSUME_UNREACHABLE call.
+ * Note that MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE is noreturn, so it's valid
+ * not to return a value following a MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE
+ * call.
  *
  * Example usage:
  *
@@ -469,19 +479,32 @@ void ValidateAssertConditionType()
  *     case VALUE_FLOAT:
  *       return (int) *(float*) value;
  *     default:
- *       MOZ_ASSUME_UNREACHABLE("can only handle VALUE_INT and VALUE_FLOAT");
+ *       MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected ValueType");
  *     }
  *   }
  */
-#if defined(DEBUG)
-#  define MOZ_ASSUME_UNREACHABLE(...) \
-     do { \
-       MOZ_ASSERT(false, "MOZ_ASSUME_UNREACHABLE(" __VA_ARGS__ ")"); \
-       MOZ_ASSUME_UNREACHABLE_MARKER(); \
-     } while (0)
-#else
-#  define MOZ_ASSUME_UNREACHABLE(reason)  MOZ_ASSUME_UNREACHABLE_MARKER()
-#endif
+
+/*
+ * Assert in all debug builds plus the Nightly channel's release builds. Take
+ * this extra testing precaution because hitting MOZ_ASSUME_UNREACHABLE_MARKER
+ * could trigger exploitable undefined behavior.
+ */
+#define MOZ_ASSERT_UNREACHABLE(reason) \
+   MOZ_NIGHTLY_ASSERT(false, "MOZ_ASSERT_UNREACHABLE: " reason)
+
+#define MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(reason) \
+   do { \
+     MOZ_ASSERT_UNREACHABLE(reason); \
+     MOZ_ASSUME_UNREACHABLE_MARKER(); \
+   } while (0)
+
+/*
+ * TODO: Bug 990764: Audit all MOZ_ASSUME_UNREACHABLE calls and replace them
+ * with MOZ_ASSERT_UNREACHABLE, MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE, or
+ * MOZ_CRASH. For now, preserve the macro's same meaning of unreachable.
+ */
+#define MOZ_ASSUME_UNREACHABLE(reason) \
+   MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(reason)
 
 /*
  * MOZ_ALWAYS_TRUE(expr) and MOZ_ALWAYS_FALSE(expr) always evaluate the provided

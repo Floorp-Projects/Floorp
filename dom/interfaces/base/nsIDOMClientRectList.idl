@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(f474c567-cbcb-458f-abad-ae42363da287)]
+[uuid(f474c567-cbcb-458f-abad-ae42363da287)]
 interface nsIDOMClientRectList : nsISupports
 {
   readonly attribute unsigned long length;

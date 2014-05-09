@@ -179,7 +179,7 @@ nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId,
       break;
 
     default:
-      MOZ_ASSUME_UNREACHABLE("Unanticipated camera mode!");
+      MOZ_ASSERT_UNREACHABLE("Unanticipated camera mode!");
   }
 
   config.mPreviewSize.width = aInitialConfig.mPreviewSize.mWidth;
@@ -1068,7 +1068,7 @@ nsDOMCameraControl::OnHardwareStateChange(CameraControlListener::HardwareState a
       break;
 
     default:
-      MOZ_ASSUME_UNREACHABLE("Unanticipated camera hardware state");
+      MOZ_ASSERT_UNREACHABLE("Unanticipated camera hardware state");
   }
 }
 
@@ -1163,7 +1163,7 @@ nsDOMCameraControl::OnRecorderStateChange(CameraControlListener::RecorderState a
 #endif
 
     default:
-      MOZ_ASSUME_UNREACHABLE("Unanticipated video recorder error");
+      MOZ_ASSERT_UNREACHABLE("Unanticipated video recorder error");
       return;
   }
 
@@ -1344,7 +1344,7 @@ nsDOMCameraControl::OnUserError(CameraControlListener::UserContext aContext, nsr
         nsPrintfCString msg("Unhandled aContext=%u, aError=0x%x\n", aContext, aError);
         NS_WARNING(msg.get());
       }
-      MOZ_ASSUME_UNREACHABLE("Unhandled user error");
+      MOZ_ASSERT_UNREACHABLE("Unhandled user error");
       return;
   }
 

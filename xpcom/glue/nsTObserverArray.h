@@ -22,9 +22,9 @@
 
 class NS_COM_GLUE nsTObserverArray_base {
   public:
-    typedef uint32_t index_type;
-    typedef uint32_t size_type;
-    typedef int32_t  diff_type;
+    typedef size_t index_type;
+    typedef size_t size_type;
+    typedef ptrdiff_t diff_type;
 
   protected:
     class Iterator_base {
@@ -69,7 +69,7 @@ class NS_COM_GLUE nsTObserverArray_base {
     mutable Iterator_base* mIterators;
 };
 
-template<class T, uint32_t N>
+template<class T, size_t N>
 class nsAutoTObserverArray : protected nsTObserverArray_base {
   public:
     typedef T           elem_type;
@@ -415,14 +415,14 @@ class nsTObserverArray : public nsAutoTObserverArray<T, 0> {
     }
 };
 
-template <typename T, uint32_t N>
+template <typename T, size_t N>
 inline void
 ImplCycleCollectionUnlink(nsAutoTObserverArray<T, N>& aField)
 {
   aField.Clear();
 }
 
-template <typename T, uint32_t N>
+template <typename T, size_t N>
 inline void
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             nsAutoTObserverArray<T, N>& aField,
@@ -430,8 +430,8 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             uint32_t aFlags = 0)
 {
   aFlags |= CycleCollectionEdgeNameArrayFlag;
-  uint32_t length = aField.Length();
-  for (uint32_t i = 0; i < length; ++i) {
+  size_t length = aField.Length();
+  for (size_t i = 0; i < length; ++i) {
     ImplCycleCollectionTraverse(aCallback, aField.ElementAt(i), aName, aFlags);
   }
 }

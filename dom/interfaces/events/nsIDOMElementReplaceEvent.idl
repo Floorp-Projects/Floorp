@@ -7,7 +7,7 @@
 
 interface nsIDOMElement;
 
-[scriptable, builtinclass, uuid(19a31767-54bf-4044-8769-cd172e37eca2)]
+[builtinclass, uuid(19a31767-54bf-4044-8769-cd172e37eca2)]
 interface nsIDOMElementReplaceEvent : nsIDOMEvent
 {
   readonly attribute nsIDOMElement upgrade;

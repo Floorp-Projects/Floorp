@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(B2F824C4-D9D3-499B-8D3B-45C8245497C6)]
+[uuid(B2F824C4-D9D3-499B-8D3B-45C8245497C6)]
 interface nsIDOMClientRect : nsISupports
 {
   readonly attribute float left;

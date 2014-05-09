@@ -11,7 +11,7 @@
 #endif
 %}
 
-[scriptable, uuid(2580b4a2-6d85-4ca6-9be2-98f3406ad296)]
+[uuid(2580b4a2-6d85-4ca6-9be2-98f3406ad296)]
 interface nsIDOMNSEvent : nsISupports
 {
   const long ALT_MASK     = 0x00000001;

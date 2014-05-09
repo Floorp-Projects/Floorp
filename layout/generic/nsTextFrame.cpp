@@ -2117,7 +2117,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   gfxTextRunFactory::Parameters params =
       { mContext, finalUserData, &skipChars,
         textBreakPointsAfterTransform.Elements(),
-        textBreakPointsAfterTransform.Length(),
+        uint32_t(textBreakPointsAfterTransform.Length()),
         int32_t(firstFrame->PresContext()->AppUnitsPerDevPixel())};
 
   if (mDoubleByteText) {

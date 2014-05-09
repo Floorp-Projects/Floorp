@@ -714,9 +714,10 @@ public:
    * Returns the appropriate event argument names for the specified
    * namespace and event name.  Added because we need to switch between
    * SVG's "evt" and the rest of the world's "event", and because onerror
-   * takes 3 args.
+   * on window takes 5 args.
    */
   static void GetEventArgNames(int32_t aNameSpaceID, nsIAtom *aEventName,
+                               bool aIsForWindow,
                                uint32_t *aArgCount, const char*** aArgNames);
 
   /**

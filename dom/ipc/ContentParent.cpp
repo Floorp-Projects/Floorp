@@ -1357,8 +1357,7 @@ ContentParent::GetCPOWManager()
     if (ManagedPJavaScriptParent().Length()) {
         return static_cast<JavaScriptParent*>(ManagedPJavaScriptParent()[0]);
     }
-    JavaScriptParent* actor = static_cast<JavaScriptParent*>(SendPJavaScriptConstructor());
-    return actor;
+    return nullptr;
 }
 
 TestShellParent*
@@ -2233,6 +2232,7 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline)
 mozilla::jsipc::PJavaScriptParent *
 ContentParent::AllocPJavaScriptParent()
 {
+    MOZ_ASSERT(!ManagedPJavaScriptParent().Length());
     mozilla::jsipc::JavaScriptParent *parent = new mozilla::jsipc::JavaScriptParent();
     if (!parent->init()) {
         delete parent;

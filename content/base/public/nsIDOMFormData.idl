@@ -7,7 +7,7 @@
 
 interface nsIVariant;
 
-[scriptable, uuid(256c9139-5a29-41e1-8698-f9f9aae7d6cf)]
+[uuid(256c9139-5a29-41e1-8698-f9f9aae7d6cf)]
 interface nsIDOMFormData : nsISupports 
 {
   void append(in DOMString name, in nsIVariant value);
