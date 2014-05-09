@@ -74,7 +74,7 @@ toolkit.jar:
    content/global/bindings/menulist.xml        (widgets/menulist.xml)
    content/global/bindings/notification.xml    (widgets/notification.xml)
    content/global/bindings/numberbox.xml       (widgets/numberbox.xml)
-   content/global/bindings/popup.xml           (widgets/popup.xml)
+*  content/global/bindings/popup.xml           (widgets/popup.xml)
 *+ content/global/bindings/preferences.xml     (widgets/preferences.xml)
    content/global/bindings/progressmeter.xml   (widgets/progressmeter.xml)
    content/global/bindings/radio.xml           (widgets/radio.xml)
