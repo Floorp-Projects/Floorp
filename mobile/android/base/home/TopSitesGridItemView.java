@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko.home;
 
+import com.squareup.picasso.Picasso;
+
 import org.mozilla.gecko.db.BrowserContract.TopSites;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.R;
@@ -138,7 +140,9 @@ public class TopSitesGridItemView extends RelativeLayout {
         updateTitleView();
         mTitleView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
         setLoadId(Favicons.NOT_LOADING);
+        Picasso.with(getContext()).cancelRequest(mThumbnailView);
         displayThumbnail(R.drawable.top_site_add);
+
     }
 
     public void markAsDirty() {
@@ -175,6 +179,7 @@ public class TopSitesGridItemView extends RelativeLayout {
         if (changed) {
             updateTitleView();
             setLoadId(Favicons.NOT_LOADING);
+            Picasso.with(getContext()).cancelRequest(mThumbnailView);
         }
 
         if (mType != type) {
@@ -220,10 +225,29 @@ public class TopSitesGridItemView extends RelativeLayout {
         }
         mThumbnailSet = true;
         Favicons.cancelFaviconLoad(mLoadId);
+        Picasso.with(getContext()).cancelRequest(mThumbnailView);
 
         mThumbnailView.setScaleType(SCALE_TYPE_THUMBNAIL);
         mThumbnailView.setImageBitmap(thumbnail);
         mThumbnailView.setBackgroundDrawable(null);
+    }
+
+    /**
+     * Display the thumbnail from a URL.
+     *
+     * @param imageUrl URL of the image to show.
+     * @param bgColor background color to use in the view.
+     */
+    public void displayThumbnail(String imageUrl, int bgColor) {
+        mThumbnailView.setScaleType(SCALE_TYPE_RESOURCE);
+        mThumbnailView.setBackgroundColor(bgColor);
+        mThumbnailSet = true;
+
+        Picasso.with(getContext())
+               .load(imageUrl)
+               .noFade()
+               .error(R.drawable.favicon)
+               .into(mThumbnailView);
     }
 
     public void displayFavicon(Bitmap favicon, String faviconURL, int expectedLoadId) {
