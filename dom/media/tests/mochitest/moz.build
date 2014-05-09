@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-WEBRTC_SIGNALLING_TEST_MANIFESTS += ['steeplechase.ini']
-
-MOCHITEST_MANIFESTS += ['mochitest.ini']
+if CONFIG ['MOZ_WEBRTC']:
+	MOCHITEST_MANIFESTS += ['mochitest.ini']
+	WEBRTC_SIGNALLING_TEST_MANIFESTS += ['steeplechase.ini']
 
