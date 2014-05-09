@@ -16,6 +16,8 @@ from devicemanager import DMError
 class DroidMixin(object):
     """Mixin to extend DeviceManager with Android-specific functionality"""
 
+    _stopApplicationNeedsRoot = True
+
     def _getExtraAmStartArgs(self):
         return []
 
@@ -115,7 +117,17 @@ class DroidMixin(object):
 
         return apps
 
+    def stopApplication(self, appName):
+        """
+        Stops the specified application (only works on Android 3.0+).
+
+        :param appName: Name of application (e.g. `com.android.chrome`)
+        """
+        self.shellCheckOutput([ "am", "force-stop", appName ], root=self._stopApplicationNeedsRoot)
+
 class DroidADB(DeviceManagerADB, DroidMixin):
+
+    _stopApplicationNeedsRoot = False
 
     def getTopActivity(self):
         package = None
