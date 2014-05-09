@@ -76,7 +76,8 @@
 }
 
 %ifdef WINDOWS_AERO
-@media not all and (-moz-windows-compositor) {
+@media not all and (-moz-windows-compositor),
+       not all and (-moz-windows-default-theme) {
 %endif
   #toolbar-menubar {
     background-color: transparent !important;
@@ -92,10 +93,20 @@
     color: InactiveCaptionText;
   }
 
+  #main-window[tabsintitlebar] #main-menubar > menu:not(:-moz-lwtheme) {
+    color: inherit;
+  }
+
   #TabsToolbar:-moz-lwtheme {
     background: linear-gradient(to top, @toolbarShadowColor@ 2px, transparent 2px);
   }
+%ifdef WINDOWS_AERO
+}
+%endif
 
+%ifdef WINDOWS_AERO
+@media not all and (-moz-windows-compositor) {
+%endif
   #main-window[tabsintitlebar] #titlebar:-moz-lwtheme {
     visibility: hidden;
   }
@@ -105,25 +116,6 @@
     visibility: visible;
   }
 %ifdef WINDOWS_AERO
-}
-%endif
-
-/* Make the menu inherit the toolbar's color. On non-compositor (Aero Basic, XP modern, classic)
- * this is defined above, but only for tabsintitlebar. Otherwise (Aero Glass, Windows 8),
- * this is hardcoded to black in browser-aero.css, even without tabsintitlebar. */
-%ifdef WINDOWS_AERO
-@media not all and (-moz-windows-compositor) {
-%endif
-  #main-window[tabsintitlebar] #main-menubar > menu:not(:-moz-lwtheme) {
-    color: inherit;
-  }
-%ifdef WINDOWS_AERO
-}
-
-@media (-moz-windows-compositor) {
-  #main-menubar > menu:not(:-moz-lwtheme) {
-    color: inherit;
-  }
 }
 %endif
 
