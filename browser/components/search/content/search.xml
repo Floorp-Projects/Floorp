@@ -36,7 +36,6 @@
                    autocompletepopup="PopupAutoComplete"
                    autocompletesearch="search-autocomplete"
                    autocompletesearchparam="searchbar-history"
-                   timeout="250"
                    maxrows="10"
                    completeselectedindex="true"
                    showcommentcolumn="true"
