@@ -21,45 +21,10 @@ DeleteCString(nsHashKey *aKey, void *aData, void* aClosure)
   return true;
 }
 
-nsInt2StrHashtable::nsInt2StrHashtable()
-  : mHashtable(CloneCString, nullptr, DeleteCString, nullptr, 16)
+nsErrorService::nsErrorService()
+  : mErrorStringBundleURLMap(CloneCString, nullptr, DeleteCString, nullptr, 16)
 {
 }
-
-nsresult
-nsInt2StrHashtable::Put(uint32_t aKey, const char* aData)
-{
-  char* value = NS_strdup(aData);
-  if (value == nullptr)
-    return NS_ERROR_OUT_OF_MEMORY;
-  nsPRUint32Key k(aKey);
-  char* oldValue = (char*)mHashtable.Put(&k, value);
-  if (oldValue)
-    NS_Free(oldValue);
-  return NS_OK;
-}
-
-char*
-nsInt2StrHashtable::Get(uint32_t aKey)
-{
-  nsPRUint32Key k(aKey);
-  const char* value = (const char*)mHashtable.Get(&k);
-  if (value == nullptr)
-    return nullptr;
-  return NS_strdup(value);
-}
-
-nsresult
-nsInt2StrHashtable::Remove(uint32_t aKey)
-{
-  nsPRUint32Key k(aKey);
-  char* oldValue = (char*)mHashtable.Remove(&k);
-  if (oldValue)
-    NS_Free(oldValue);
-  return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 NS_IMPL_ISUPPORTS(nsErrorService, nsIErrorService)
 
@@ -75,21 +40,41 @@ nsErrorService::Create(nsISupports* aOuter, const nsIID& aIID, void** aInstanceP
 NS_IMETHODIMP
 nsErrorService::RegisterErrorStringBundle(int16_t aErrorModule, const char* aStringBundleURL)
 {
-  return mErrorStringBundleURLMap.Put(aErrorModule, aStringBundleURL);
+  char* value = NS_strdup(aStringBundleURL);
+  if (!value) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsPRUint32Key k(aErrorModule);
+  char* oldValue = (char*)mErrorStringBundleURLMap.Put(&k, value);
+  if (oldValue) {
+    NS_Free(oldValue);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsErrorService::UnregisterErrorStringBundle(int16_t aErrorModule)
 {
-  return mErrorStringBundleURLMap.Remove(aErrorModule);
+  nsPRUint32Key k(aErrorModule);
+  char* oldValue = (char*)mErrorStringBundleURLMap.Remove(&k);
+  if (oldValue) {
+    NS_Free(oldValue);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsErrorService::GetErrorStringBundle(int16_t aErrorModule, char** aResult)
 {
-  char* value = mErrorStringBundleURLMap.Get(aErrorModule);
-  if (value == nullptr)
+  nsPRUint32Key k(aErrorModule);
+  char* value = (char*)mErrorStringBundleURLMap.Get(&k);
+  if (!value) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
+  value = NS_strdup(value);
+  if (!value) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   *aResult = value;
   return NS_OK;
 }
