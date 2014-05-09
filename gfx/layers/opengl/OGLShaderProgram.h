@@ -41,7 +41,8 @@ enum ShaderFeatures {
   ENABLE_BLUR=0x100,
   ENABLE_COLOR_MATRIX=0x200,
   ENABLE_MASK_2D=0x400,
-  ENABLE_MASK_3D=0x800
+  ENABLE_MASK_3D=0x800,
+  ENABLE_PREMULTIPLY=0x1000
 };
 
 class KnownUniform {
@@ -171,6 +172,7 @@ public:
   void SetBlur(bool aEnabled);
   void SetMask2D(bool aEnabled);
   void SetMask3D(bool aEnabled);
+  void SetPremultiply(bool aEnabled);
 
   bool operator< (const ShaderConfigOGL& other) const {
     return mFeatures < other.mFeatures;
