@@ -21,7 +21,6 @@ class nsHttpRequestHead
 {
 public:
     nsHttpRequestHead();
-    ~nsHttpRequestHead();
 
     void SetMethod(const nsACString &method);
     void SetVersion(nsHttpVersion version) { mVersion = version; }
@@ -32,9 +31,6 @@ public:
     const nsCString &Method()        const { return mMethod; }
     nsHttpVersion       Version()    const { return mVersion; }
     const nsCSubstring &RequestURI() const { return mRequestURI; }
-
-    void SetHTTPS(bool val) { mHTTPS = val; }
-    bool IsHTTPS() const { return mHTTPS; }
 
     const char *PeekHeader(nsHttpAtom h) const
     {
@@ -98,7 +94,6 @@ private:
     nsHttpVersion     mVersion;
     nsCString         mRequestURI;
     ParsedMethodType  mParsedMethod;
-    bool              mHTTPS;
 };
 
 }} // namespace mozilla::net

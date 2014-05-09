@@ -39,34 +39,34 @@ namespace net {
 Http2Stream::Http2Stream(nsAHttpTransaction *httpTransaction,
                          Http2Session *session,
                          int32_t priority)
-  : mStreamID(0)
-  , mSession(session)
-  , mUpstreamState(GENERATING_HEADERS)
-  , mState(IDLE)
-  , mAllHeadersSent(0)
-  , mAllHeadersReceived(0)
-  , mTransaction(httpTransaction)
-  , mSocketTransport(session->SocketTransport())
-  , mSegmentReader(nullptr)
-  , mSegmentWriter(nullptr)
-  , mChunkSize(session->SendingChunkSize())
-  , mRequestBlockedOnRead(0)
-  , mRecvdFin(0)
-  , mRecvdReset(0)
-  , mSentReset(0)
-  , mCountAsActive(0)
-  , mSentFin(0)
-  , mSentWaitingFor(0)
-  , mSetTCPSocketBuffer(0)
-  , mTxInlineFrameSize(Http2Session::kDefaultBufferSize)
-  , mTxInlineFrameUsed(0)
-  , mTxStreamFrameSize(0)
-  , mRequestBodyLenRemaining(0)
-  , mLocalUnacked(0)
-  , mBlockedOnRwin(false)
-  , mTotalSent(0)
-  , mTotalRead(0)
-  , mPushSource(nullptr)
+  : mStreamID(0),
+    mSession(session),
+    mUpstreamState(GENERATING_HEADERS),
+    mState(IDLE),
+    mAllHeadersSent(0),
+    mAllHeadersReceived(0),
+    mTransaction(httpTransaction),
+    mSocketTransport(session->SocketTransport()),
+    mSegmentReader(nullptr),
+    mSegmentWriter(nullptr),
+    mChunkSize(session->SendingChunkSize()),
+    mRequestBlockedOnRead(0),
+    mRecvdFin(0),
+    mRecvdReset(0),
+    mSentReset(0),
+    mCountAsActive(0),
+    mSentFin(0),
+    mSentWaitingFor(0),
+    mSetTCPSocketBuffer(0),
+    mTxInlineFrameSize(Http2Session::kDefaultBufferSize),
+    mTxInlineFrameUsed(0),
+    mTxStreamFrameSize(0),
+    mRequestBodyLenRemaining(0),
+    mLocalUnacked(0),
+    mBlockedOnRwin(false),
+    mTotalSent(0),
+    mTotalRead(0),
+    mPushSource(nullptr)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -290,8 +290,8 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
   *countUsed = avail - (oldLen - endHeader) + 4;
   mAllHeadersSent = 1;
 
-  nsAutoCString hostHeader;
-  nsAutoCString hashkey;
+  nsCString hostHeader;
+  nsCString hashkey;
   mTransaction->RequestHead()->GetHeader(nsHttp::Host, hostHeader);
 
   CreatePushHashKey(NS_LITERAL_CSTRING("https"),
@@ -421,8 +421,10 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
   messageSize += 13; // frame header + priority overhead in HEADERS frame
   messageSize += (numFrames - 1) * 8; // frame header overhead in CONTINUATION frames
 
-  EnsureBuffer(mTxInlineFrame, dataLength + messageSize,
-               mTxInlineFrameUsed, mTxInlineFrameSize);
+  Http2Session::EnsureBuffer(mTxInlineFrame,
+                             dataLength + messageSize,
+                             mTxInlineFrameUsed,
+                             mTxInlineFrameSize);
 
   mTxInlineFrameUsed += messageSize;
   LOG3(("%p Generating %d bytes of HEADERS for stream 0x%X with priority weight %u frames %u\n",
@@ -544,8 +546,10 @@ Http2Stream::AdjustInitialWindow()
   }
 
   uint8_t *packet = mTxInlineFrame.get() + mTxInlineFrameUsed;
-  EnsureBuffer(mTxInlineFrame, mTxInlineFrameUsed + 12,
-               mTxInlineFrameUsed, mTxInlineFrameSize);
+  Http2Session::EnsureBuffer(mTxInlineFrame,
+                             mTxInlineFrameUsed + 12,
+                             mTxInlineFrameUsed,
+                             mTxInlineFrameSize);
   mTxInlineFrameUsed += 12;
 
   mSession->CreateFrameHeader(packet, 4,
@@ -578,8 +582,10 @@ Http2Stream::AdjustPushedPriority()
     return;
 
   uint8_t *packet = mTxInlineFrame.get() + mTxInlineFrameUsed;
-  EnsureBuffer(mTxInlineFrame, mTxInlineFrameUsed + 13,
-               mTxInlineFrameUsed, mTxInlineFrameSize);
+  Http2Session::EnsureBuffer(mTxInlineFrame,
+                             mTxInlineFrameUsed + 13,
+                             mTxInlineFrameUsed,
+                             mTxInlineFrameSize);
   mTxInlineFrameUsed += 13;
 
   mSession->CreateFrameHeader(packet, 5,

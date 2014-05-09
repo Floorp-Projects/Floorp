@@ -555,7 +555,7 @@ nsHttpHandler::AsyncOnChannelRedirect(nsIChannel* oldChan, nsIChannel* newChan,
 
 /* static */ nsresult
 nsHttpHandler::GenerateHostPort(const nsCString& host, int32_t port,
-                                nsACString& hostLine)
+                                nsCString& hostLine)
 {
     return NS_GenerateHostPort(host, port, hostLine);
 }

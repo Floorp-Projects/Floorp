@@ -1209,10 +1209,10 @@ nsHttpChannel::ProcessResponse()
     // Gather data on whether the transaction and page (if this is
     // the initial page load) is being loaded with SSL.
     Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_IS_SSL,
-                          mConnectionInfo->EndToEndSSL());
+                          mConnectionInfo->UsingSSL());
     if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) {
         Telemetry::Accumulate(Telemetry::HTTP_PAGELOAD_IS_SSL,
-                              mConnectionInfo->EndToEndSSL());
+                              mConnectionInfo->UsingSSL());
     }
 
     LOG(("nsHttpChannel::ProcessResponse [this=%p httpStatus=%u]\n",
@@ -1325,7 +1325,7 @@ nsHttpChannel::ProcessResponse()
     case 401:
     case 407:
         rv = mAuthProvider->ProcessAuthentication(
-            httpStatus, mConnectionInfo->EndToEndSSL() &&
+            httpStatus, mConnectionInfo->UsingSSL() &&
                         mTransaction->ProxyConnectFailed());
         if (rv == NS_ERROR_IN_PROGRESS)  {
             // authentication prompt has been invoked and result
@@ -3751,7 +3751,7 @@ nsHttpChannel::UpdateInhibitPersistentCachingFlag()
 
     // Only cache SSL content on disk if the pref is set
     if (!gHttpHandler->IsPersistentHttpsCachingEnabled() &&
-        mConnectionInfo->EndToEndSSL())
+        mConnectionInfo->UsingSSL())
         mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
 }
 
@@ -4559,7 +4559,6 @@ nsHttpChannel::BeginConnect()
         proxyInfo = do_QueryInterface(mProxyInfo);
 
     mConnectionInfo = new nsHttpConnectionInfo(host, port, username, proxyInfo, usingSSL);
-    mRequestHead.SetHTTPS(usingSSL);
 
     mAuthProvider =
         do_CreateInstance("@mozilla.org/network/http-channel-auth-provider;1",
@@ -4834,7 +4833,7 @@ nsHttpChannel::GetResponseEnd(TimeStamp* _retval) {
 NS_IMETHODIMP
 nsHttpChannel::GetIsSSL(bool *aIsSSL)
 {
-    *aIsSSL = mConnectionInfo->EndToEndSSL();
+    *aIsSSL = mConnectionInfo->UsingSSL();
     return NS_OK;
 }
 
