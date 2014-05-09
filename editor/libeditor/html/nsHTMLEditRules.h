@@ -124,6 +124,8 @@ protected:
     kBlockEnd
   };
 
+  void InitFields();
+
   // nsHTMLEditRules implementation methods
   nsresult WillInsert(nsISelection *aSelection, bool *aCancel);
   nsresult WillInsertText(  EditAction aAction,
