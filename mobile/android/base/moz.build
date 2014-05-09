@@ -142,6 +142,7 @@ gbjar.sources += [
     'db/ReadingListProvider.java',
     'db/SharedBrowserDatabaseProvider.java',
     'db/SQLiteBridgeContentProvider.java',
+    'db/SuggestedSites.java',
     'db/TabsProvider.java',
     'db/TopSitesCursorWrapper.java',
     'Distribution.java',
