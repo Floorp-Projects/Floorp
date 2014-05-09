@@ -1332,6 +1332,8 @@ MediaManager::GetUserMedia(bool aPrivileged,
   nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> onSuccess(aOnSuccess);
   nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onError(aOnError);
 
+  MediaStreamConstraints c(aConstraints); // copy
+
   /**
    * If we were asked to get a picture, before getting a snapshot, we check if
    * the calling page is allowed to open a popup. We do this because
@@ -1391,8 +1393,6 @@ MediaManager::GetUserMedia(bool aPrivileged,
 
   // No need for locking because we always do this in the main thread.
   listeners->AppendElement(listener);
-
-  MediaStreamConstraints c(aConstraints); // copy
 
   // Developer preference for turning off permission check.
   if (Preferences::GetBool("media.navigator.permission.disabled", false)) {
