@@ -935,13 +935,18 @@ chatbox:-moz-full-screen-ancestor > .chat-titlebar {
   -moz-binding: url("chrome://browser/content/places/menu.xml#places-popup-arrow");
   background: transparent;
   border: none;
+  /* The popup inherits -moz-image-region from the button, must reset it */
+  -moz-image-region: auto;
+}
+
+%ifndef MOZ_WIDGET_GTK
+
+#BMB_bookmarksPopup {
   transform: scale(.7);
   opacity: 0;
   transition-property: transform, opacity;
   transition-duration: 0.15s;
   transition-timing-function: ease;
-  /* The popup inherits -moz-image-region from the button, must reset it */
-  -moz-image-region: auto;
 }
 
 #BMB_bookmarksPopup[animate="open"] {
@@ -975,6 +980,7 @@ chatbox:-moz-full-screen-ancestor > .chat-titlebar {
   transform: scale(.7) skew(-30deg, -20deg);
 }
 
+%endif
 
 /* Customize mode */
 #navigator-toolbox,
