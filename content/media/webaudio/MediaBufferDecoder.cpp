@@ -419,7 +419,7 @@ WebAudioDecodeJob::AllocateBuffer()
   }
 
   for (uint32_t i = 0; i < mChannelBuffers.Length(); ++i) {
-    mOutput->SetRawChannelContents(cx, i, mChannelBuffers[i]);
+    mOutput->SetRawChannelContents(i, mChannelBuffers[i]);
   }
 
   return true;
