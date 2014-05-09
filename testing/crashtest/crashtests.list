@@ -31,7 +31,7 @@ include ../../dom/xbl/crashtests/crashtests.list
 include ../../dom/xslt/crashtests/crashtests.list
 
 # Bug 811873 - mozRTCPeerConnection doesn't support remote browser yet
-skip-if(B2G||browserIsRemote) include ../../dom/media/tests/crashtests/crashtests.list
+skip-if(B2G||browserIsRemote||!webrtc) include ../../dom/media/tests/crashtests/crashtests.list
 
 include ../../dom/src/offline/crashtests/crashtests.list
 include ../../dom/src/jsurl/crashtests/crashtests.list
