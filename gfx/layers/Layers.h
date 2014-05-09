@@ -69,6 +69,10 @@ namespace css {
 class ComputedTimingFunction;
 }
 
+namespace dom {
+class OverfillCallback;
+}
+
 namespace layers {
 
 class Animation;
@@ -605,6 +609,8 @@ public:
   virtual bool IsCompositingCheap() { return true; }
 
   bool IsInTransaction() const { return mInTransaction; }
+  virtual bool RequestOverfill(mozilla::dom::OverfillCallback* aCallback) { return true; }
+  virtual void RunOverfillCallback(const uint32_t aOverfill) { }
 
   virtual void SetRegionToClear(const nsIntRegion& aRegion)
   {

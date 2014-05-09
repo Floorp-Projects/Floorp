@@ -2,6 +2,7 @@
 "runtests": {},
 "excludetests": {
   "robocop": "TIMED_OUT",
+  "content/canvas/test/webgl-conformance": "bug 865443 - separate suite -- mochitest-gl",
   "content/canvas/test/webgl-mochitest/test_no_arr_points.html": "Android 2.3 only; bug 975487",
   "content/html/content/test/test_ignoreuserfocus.html": "Android 2.3 only; bug 981895",
   "content/media/test": "Android 2.3 only; bug 981898",

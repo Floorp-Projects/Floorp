@@ -27,6 +27,7 @@
 #include "nsTArray.h"                   // for AutoInfallibleTArray
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType, etc
 #include "TiledLayerBuffer.h"
+#include "mozilla/dom/WindowBinding.h"  // for Overfill Callback
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
 #endif
@@ -39,7 +40,7 @@ namespace layers {
 
 ClientLayerManager::ClientLayerManager(nsIWidget* aWidget)
   : mPhase(PHASE_NONE)
-  , mWidget(aWidget) 
+  , mWidget(aWidget)
   , mTargetRotation(ROTATION_0)
   , mRepeatTransaction(false)
   , mIsRepeatTransaction(false)
@@ -291,7 +292,36 @@ ClientLayerManager::DidComposite()
   }
 }
 
-void 
+bool
+ClientLayerManager::RequestOverfill(mozilla::dom::OverfillCallback* aCallback)
+{
+  MOZ_ASSERT(aCallback != nullptr);
+  MOZ_ASSERT(HasShadowManager(), "Request Overfill only supported on b2g for now");
+
+  if (HasShadowManager()) {
+    CompositorChild* child = GetRemoteRenderer();
+    NS_ASSERTION(child, "Could not get CompositorChild");
+
+    child->AddOverfillObserver(this);
+    child->SendRequestOverfill();
+    mOverfillCallbacks.AppendElement(aCallback);
+  }
+
+  return true;
+}
+
+void
+ClientLayerManager::RunOverfillCallback(const uint32_t aOverfill)
+{
+  for (size_t i = 0; i < mOverfillCallbacks.Length(); i++) {
+    ErrorResult error;
+    mOverfillCallbacks[i]->Call(aOverfill, error);
+  }
+
+  mOverfillCallbacks.Clear();
+}
+
+void
 ClientLayerManager::MakeSnapshotIfRequired()
 {
   if (!mShadowTarget) {
@@ -576,5 +606,5 @@ ClientLayer::~ClientLayer()
   MOZ_COUNT_DTOR(ClientLayer);
 }
 
-}
-}
+} // layers
+} // mozilla

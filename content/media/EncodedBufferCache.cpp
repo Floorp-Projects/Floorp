@@ -29,8 +29,8 @@ EncodedBufferCache::AppendBuffer(nsTArray<uint8_t> & aBuf)
   if (mTempFileEnabled) {
     // has created temporary file, write buffer in it
     for (uint32_t i = 0; i < mEncodedBuffers.Length(); i++) {
-      int64_t amount = PR_Write(mFD, mEncodedBuffers.ElementAt(i).Elements(), mEncodedBuffers.ElementAt(i).Length());
-      if (amount <  mEncodedBuffers.ElementAt(i).Length()) {
+      int32_t amount = PR_Write(mFD, mEncodedBuffers.ElementAt(i).Elements(), mEncodedBuffers.ElementAt(i).Length());
+      if (amount < 0 || size_t(amount) < mEncodedBuffers.ElementAt(i).Length()) {
         NS_WARNING("Failed to write media cache block!");
       }
     }

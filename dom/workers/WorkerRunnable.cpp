@@ -67,7 +67,7 @@ WorkerRunnable::PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
       break;
 
     default:
-      MOZ_ASSUME_UNREACHABLE("Unknown behavior!");
+      MOZ_ASSERT_UNREACHABLE("Unknown behavior!");
   }
 #endif
 
@@ -154,7 +154,7 @@ WorkerRunnable::PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
       break;
 
     default:
-      MOZ_ASSUME_UNREACHABLE("Unknown behavior!");
+      MOZ_ASSERT_UNREACHABLE("Unknown behavior!");
   }
 #endif
 
@@ -190,7 +190,7 @@ WorkerRunnable::PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
       break;
 
     default:
-      MOZ_ASSUME_UNREACHABLE("Unknown behavior!");
+      MOZ_ASSERT_UNREACHABLE("Unknown behavior!");
   }
 #endif
 

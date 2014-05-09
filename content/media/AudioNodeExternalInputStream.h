@@ -92,8 +92,8 @@ private:
    * Creates a TrackMapEntry for the track, if needed. Returns the index
    * of the TrackMapEntry or NoIndex if no entry is needed yet.
    */
-  uint32_t GetTrackMapEntry(const StreamBuffer::Track& aTrack,
-                            GraphTime aFrom);
+  size_t GetTrackMapEntry(const StreamBuffer::Track& aTrack,
+                          GraphTime aFrom);
 };
 
 }

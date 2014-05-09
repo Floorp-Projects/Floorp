@@ -13,7 +13,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[scriptable, uuid(f6df7293-2dc9-4cb9-9531-778caf4370e0)]
+[uuid(f6df7293-2dc9-4cb9-9531-778caf4370e0)]
 interface nsIDOMCSSPrimitiveValue : nsIDOMCSSValue
 {
   // UnitTypes

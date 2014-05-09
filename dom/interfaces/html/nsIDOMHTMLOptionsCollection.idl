@@ -21,7 +21,7 @@ interface nsIDOMHTMLSelectElement;
  */
 
 // Introduced in DOM Level 2:
-[scriptable, uuid(4173cc53-30f6-4d12-a770-981ba53164e2)]
+[uuid(4173cc53-30f6-4d12-a770-981ba53164e2)]
 interface nsIDOMHTMLOptionsCollection : nsISupports
 {
            attribute unsigned long   length;

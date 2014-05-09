@@ -923,11 +923,16 @@ void precache_release(struct precache_output *p)
 	}
 }
 
-#ifdef HAS_POSIX_MEMALIGN
+#ifdef HAVE_POSIX_MEMALIGN
 static qcms_transform *transform_alloc(void)
 {
 	qcms_transform *t;
-	if (!posix_memalign(&t, 16, sizeof(*t))) {
+
+	void *allocated_memory;
+	if (!posix_memalign(&allocated_memory, 16, sizeof(qcms_transform))) {
+		/* Doing a memset to initialise all bits to 'zero'*/
+		memset(allocated_memory, 0, sizeof(qcms_transform));
+		t = allocated_memory;
 		return t;
 	} else {
 		return NULL;

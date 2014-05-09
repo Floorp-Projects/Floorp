@@ -78,6 +78,7 @@ public:
                 base::ProcessHandle aPeerProcess,
                 mozilla::ipc::ProtocolCloneContext* aCtx) MOZ_OVERRIDE;
 
+  virtual bool RecvRequestOverfill() MOZ_OVERRIDE;
   virtual bool RecvWillStop() MOZ_OVERRIDE;
   virtual bool RecvStop() MOZ_OVERRIDE;
   virtual bool RecvPause() MOZ_OVERRIDE;

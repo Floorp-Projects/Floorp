@@ -17,7 +17,7 @@
  */
 
 // Exists so that | element instanceof Ci.nsIDOMHTMLDirectoryElement | works.
-[scriptable, uuid(8cfff7a4-8b14-4ce0-97b0-babe78da16f8)]
+[uuid(8cfff7a4-8b14-4ce0-97b0-babe78da16f8)]
 interface nsIDOMHTMLDirectoryElement : nsISupports
 {
 };

@@ -16,3 +16,5 @@ FINAL_LIBRARY = 'xpcom_core'
 
 GENERATED_INCLUDES += ['/xpcom/base']
 LOCAL_INCLUDES += ['/xpcom/base']
+
+FAIL_ON_WARNINGS = True

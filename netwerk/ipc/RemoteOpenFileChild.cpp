@@ -435,9 +435,9 @@ RemoteOpenFileChild::Equals(nsIFile *inFile, bool *_retval)
 }
 
 NS_IMETHODIMP
-RemoteOpenFileChild::Contains(nsIFile *inFile, bool recur, bool *_retval)
+RemoteOpenFileChild::Contains(nsIFile *inFile, bool *_retval)
 {
-  return mFile->Contains(inFile, recur, _retval);
+  return mFile->Contains(inFile, _retval);
 }
 
 NS_IMETHODIMP

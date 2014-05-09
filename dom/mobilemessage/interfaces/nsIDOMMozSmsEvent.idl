@@ -6,7 +6,7 @@
 
 interface nsIDOMMozSmsMessage;
 
-[scriptable, builtinclass, uuid(f12f9208-0abd-4d95-9a27-93a74b5e47a2)]
+[builtinclass, uuid(f12f9208-0abd-4d95-9a27-93a74b5e47a2)]
 interface nsIDOMMozSmsEvent : nsIDOMEvent
 {
   readonly attribute nsIDOMMozSmsMessage message;

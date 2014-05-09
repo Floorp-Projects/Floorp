@@ -51,21 +51,10 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
                          HandleObject parent, jsval *vp)
 {
     if (IsConstant()) {
-        const nsXPTConstant* constant;
-        if (NS_FAILED(iface->GetInterfaceInfo()->GetConstant(mIndex, &constant)))
-            return false;
-
-        const nsXPTCMiniVariant& mv = *constant->GetValue();
-
-        // XXX Big Hack!
-        nsXPTCVariant v;
-        v.flags = 0;
-        v.type = constant->GetType();
-        memcpy(&v.val, &mv.val, sizeof(mv.val));
-
         RootedValue resultVal(ccx);
-
-        if (!XPCConvert::NativeData2JS(&resultVal, &v.val, v.type, nullptr, nullptr))
+        nsXPIDLCString name;
+        if (NS_FAILED(iface->GetInterfaceInfo()->GetConstant(mIndex, &resultVal,
+                                                             getter_Copies(name))))
             return false;
 
         *vp = resultVal;
@@ -310,13 +299,14 @@ XPCNativeInterface::NewInstance(nsIInterfaceInfo* aInfo)
 
     if (!failed) {
         for (i = 0; i < constCount; i++) {
-            const nsXPTConstant* constant;
-            if (NS_FAILED(aInfo->GetConstant(i, &constant))) {
+            RootedValue constant(cx);
+            nsXPIDLCString namestr;
+            if (NS_FAILED(aInfo->GetConstant(i, &constant, getter_Copies(namestr)))) {
                 failed = true;
                 break;
             }
 
-            str = JS_InternString(cx, constant->GetName());
+            str = JS_InternString(cx, namestr);
             if (!str) {
                 NS_ERROR("bad constant name");
                 failed = true;

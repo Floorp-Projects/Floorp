@@ -1807,7 +1807,38 @@ GLContext::MarkDestroyed()
     mSymbols.Zero();
 }
 
-#ifdef MOZ_ENABLE_GL_TRACKING
+#ifdef DEBUG
+/* static */ void
+GLContext::AssertNotPassingStackBufferToTheGL(const void* ptr)
+{
+  int somethingOnTheStack;
+  const void* someStackPtr = &somethingOnTheStack;
+  const int page_bits = 12;
+  intptr_t page = reinterpret_cast<uintptr_t>(ptr) >> page_bits;
+  intptr_t someStackPage = reinterpret_cast<uintptr_t>(someStackPtr) >> page_bits;
+  uintptr_t pageDistance = std::abs(page - someStackPage);
+
+  // Explanation for the "distance <= 1" check here as opposed to just
+  // an equality check.
+  //
+  // Here we assume that pages immediately adjacent to the someStackAddress page,
+  // are also stack pages. That allows to catch the case where the calling frame put
+  // a buffer on the stack, and we just crossed the page boundary. That is likely
+  // to happen, precisely, when using stack arrays. I hit that specifically
+  // with CompositorOGL::Initialize.
+  //
+  // In theory we could be unlucky and wrongly assert here. If that happens,
+  // it will only affect debug builds, and looking at stacks we'll be able to
+  // see that this assert is wrong and revert to the conservative and safe
+  // approach of only asserting when address and someStackAddress are
+  // on the same page.
+  bool isStackAddress = pageDistance <= 1;
+  MOZ_ASSERT(!isStackAddress,
+             "Please don't pass stack arrays to the GL. "
+             "Consider using HeapCopyOfStackArray. "
+             "See bug 1005658.");
+}
+
 void
 GLContext::CreatedProgram(GLContext *aOrigin, GLuint aName)
 {

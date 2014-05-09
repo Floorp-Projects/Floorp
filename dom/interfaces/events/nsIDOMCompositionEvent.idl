@@ -6,7 +6,7 @@
 
 #include "nsIDOMUIEvent.idl"
 
-[scriptable, builtinclass, uuid(ef545b90-a5f4-471c-b4f8-03b5e0f6fda2)]
+[builtinclass, uuid(ef545b90-a5f4-471c-b4f8-03b5e0f6fda2)]
 interface nsIDOMCompositionEvent : nsIDOMUIEvent
 {
   readonly attribute DOMString data;
