@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <iostream>
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "nsStringAPI.h"
@@ -31,8 +32,8 @@ inline bool operator<(const nsCOMPtr<T>& lhs, const nsCOMPtr<T>& rhs) {
 
 template <class ElementType>
 static bool test_basic_array(ElementType *data,
-                               uint32_t dataLen,
-                               const ElementType& extra) {
+                             size_t dataLen,
+                             const ElementType& extra) {
   nsTArray<ElementType> ary;
   ary.AppendElements(data, dataLen);
   if (ary.Length() != dataLen) {
@@ -41,7 +42,7 @@ static bool test_basic_array(ElementType *data,
   if (!(ary == ary)) {
     return false;
   }
-  uint32_t i;
+  size_t i;
   for (i = 0; i < ary.Length(); ++i) {
     if (ary[i] != data[i])
       return false;
@@ -55,7 +56,7 @@ static bool test_basic_array(ElementType *data,
     return false;
   // ensure sort results in ascending order
   ary.Sort();
-  uint32_t j = 0, k = ary.IndexOfFirstElementGt(extra);
+  size_t j = 0, k = ary.IndexOfFirstElementGt(extra);
   if (k != 0 && ary[k-1] == extra)
     return false;
   for (i = 0; i < ary.Length(); ++i) {
@@ -81,23 +82,23 @@ static bool test_basic_array(ElementType *data,
   }
   if (ary.BinaryIndexOf(extra) != ary.NoIndex)
     return false;
-  uint32_t oldLen = ary.Length();
+  size_t oldLen = ary.Length();
   ary.RemoveElement(data[dataLen / 2]);
   if (ary.Length() != (oldLen - 1))
     return false;
   if (!(ary == ary))
     return false;
 
-  uint32_t index = ary.Length() / 2;
+  size_t index = ary.Length() / 2;
   if (!ary.InsertElementAt(index, extra))
     return false;
   if (!(ary == ary))
     return false;
   if (ary[index] != extra)
     return false;
-  if (ary.IndexOf(extra) == UINT32_MAX)
+  if (ary.IndexOf(extra) == ary.NoIndex)
     return false;
-  if (ary.LastIndexOf(extra) == UINT32_MAX)
+  if (ary.LastIndexOf(extra) == ary.NoIndex)
     return false;
   // ensure proper searching
   if (ary.IndexOf(extra) > ary.LastIndexOf(extra))
@@ -114,16 +115,16 @@ static bool test_basic_array(ElementType *data,
   }
   if (!ary.AppendElements(copy))
     return false;
-  uint32_t cap = ary.Capacity();
+  size_t cap = ary.Capacity();
   ary.RemoveElementsAt(copy.Length(), copy.Length());
   ary.Compact();
   if (ary.Capacity() == cap)
     return false;
 
   ary.Clear();
-  if (ary.IndexOf(extra) != UINT32_MAX)
+  if (ary.IndexOf(extra) != ary.NoIndex)
     return false;
-  if (ary.LastIndexOf(extra) != UINT32_MAX)
+  if (ary.LastIndexOf(extra) != ary.NoIndex)
     return false;
 
   ary.Clear();
@@ -225,7 +226,7 @@ class Object {
 static bool test_object_array() {
   nsTArray<Object> objArray;
   const char kdata[] = "hello world";
-  uint32_t i;
+  size_t i;
   for (i = 0; i < ArrayLength(kdata); ++i) {
     char x[] = {kdata[i],'\0'};
     if (!objArray.AppendElement(Object(x, i)))
@@ -251,7 +252,7 @@ static bool test_object_array() {
 static bool test_autoptr_array() {
   nsTArray< nsAutoPtr<Object> > objArray;
   const char kdata[] = "hello world";
-  for (uint32_t i = 0; i < ArrayLength(kdata); ++i) {
+  for (size_t i = 0; i < ArrayLength(kdata); ++i) {
     char x[] = {kdata[i],'\0'};
     nsAutoPtr<Object> obj(new Object(x,i));
     if (!objArray.AppendElement(obj))  // XXX does not call copy-constructor for nsAutoPtr!!!
@@ -260,7 +261,7 @@ static bool test_autoptr_array() {
       return false;
     obj.forget();  // the array now owns the reference
   }
-  for (uint32_t i = 0; i < ArrayLength(kdata); ++i) {
+  for (size_t i = 0; i < ArrayLength(kdata); ++i) {
     if (objArray[i]->Str()[0] != kdata[i])
       return false;
     if (objArray[i]->Num() != i)
@@ -275,7 +276,7 @@ static bool test_autoptr_array() {
 static bool test_string_array() {
   nsTArray<nsCString> strArray;
   const char kdata[] = "hello world";
-  uint32_t i;
+  size_t i;
   for (i = 0; i < ArrayLength(kdata); ++i) {
     nsCString str;
     str.Assign(kdata[i]);
@@ -288,7 +289,7 @@ static bool test_string_array() {
   }
 
   const char kextra[] = "foo bar";
-  uint32_t oldLen = strArray.Length();
+  size_t oldLen = strArray.Length();
   if (!strArray.AppendElement(kextra))
     return false;
   strArray.RemoveElement(kextra);
@@ -342,7 +343,7 @@ static bool test_comptr_array() {
     "foo.txt", "bar.html", "baz.gif"
   };
   nsTArray<FilePointer> fileArray;
-  uint32_t i;
+  size_t i;
   for (i = 0; i < ArrayLength(kNames); ++i) {
     FilePointer f;
     tmpDir->Clone(getter_AddRefs(f));
@@ -474,7 +475,7 @@ static bool test_autoarray() {
     return false;
   if (hdr == array2.DebugGetHeader())
     return false;
-  uint32_t i;
+  size_t i;
   for (i = 0; i < ArrayLength(data); ++i) {
     if (array2[i] != data[i])
       return false;
@@ -519,8 +520,8 @@ static bool test_indexof() {
 //----
 
 template <class Array>
-static bool is_heap(const Array& ary, uint32_t len) {
-  uint32_t index = 1;
+static bool is_heap(const Array& ary, size_t len) {
+  size_t index = 1;
   while (index < len) {
     if (ary[index] > ary[(index - 1) >> 1])
       return false;
@@ -548,7 +549,7 @@ static bool test_heap() {
     return false;
   // make sure the heap looks like what we expect
   const int expected_data[] = {8,7,5,6,4,1,4,2,3};
-  uint32_t index;
+  size_t index;
   for (index = 0; index < ArrayLength(data); index++)
     if (ary[index] != expected_data[index])
       return false;
@@ -595,16 +596,18 @@ static bool test_heap() {
 #define CHECK_EQ_INT(actual, expected) \
   do {                                                                       \
     if ((actual) != (expected)) {                                            \
-      printf("%s:%d CHECK_EQ_INT(%s=%u, %s=%u) failed.\n",                   \
-             __FILE__, __LINE__, #actual, (actual), #expected, (expected));  \
-      return false;                                                       \
+      std::cout << __FILE__ << ":" << __LINE__ << " CHECK_EQ_INT("             \
+                << #actual << "=" << (actual) << ", "                        \
+                << #expected << "=" << (expected) << ") failed."             \
+                << std::endl;                                                \
+      return false;                                                          \
     }                                                                        \
   } while(0)
 
 #define CHECK_ARRAY(arr, data) \
   do {                                                          \
-    CHECK_EQ_INT((arr).Length(), (uint32_t)ArrayLength(data));  \
-    for (uint32_t _i = 0; _i < ArrayLength(data); _i++) {       \
+    CHECK_EQ_INT((arr).Length(), (size_t)ArrayLength(data));  \
+    for (size_t _i = 0; _i < ArrayLength(data); _i++) {       \
       CHECK_EQ_INT((arr)[_i], (data)[_i]);                      \
     }                                                           \
   } while(0)
@@ -755,7 +758,7 @@ static bool test_swap() {
     b.AppendElements(data2, ArrayLength(data2));
 
     CHECK_EQ_INT(a.Capacity(), 0);
-    uint32_t bCapacity = b.Capacity();
+    size_t bCapacity = b.Capacity();
 
     a.SwapElements(b);
 
@@ -852,12 +855,12 @@ static bool test_fallible()
   // 36 * 128MB > 4GB, so we should definitely OOM by the 36th array.
   const unsigned numArrays = 36;
   FallibleTArray<char> arrays[numArrays];
-  for (uint32_t i = 0; i < numArrays; i++) {
+  for (size_t i = 0; i < numArrays; i++) {
     bool success = arrays[i].SetCapacity(128 * 1024 * 1024);
     if (!success) {
       // We got our OOM.  Check that it didn't come too early.
       if (i < 8) {
-        printf("test_fallible: Got OOM on iteration %d.  Too early!\n", i);
+        printf("test_fallible: Got OOM on iteration %d.  Too early!\n", int(i));
         return false;
       }
       return true;
