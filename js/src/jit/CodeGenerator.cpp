@@ -8610,7 +8610,7 @@ CodeGenerator::visitRecompileCheck(LRecompileCheck *ins)
     masm.movePtr(ImmPtr(ins->mir()->script()->addressOfUseCount()), tmp);
     Address ptr(tmp, 0);
     masm.add32(Imm32(1), tmp);
-    masm.branch32(Assembler::BelowOrEqual, ptr, Imm32(ins->mir()->useCount()), &done);
+    masm.branch32(Assembler::BelowOrEqual, ptr, Imm32(ins->mir()->recompileThreshold()), &done);
 
     // Check if not yet recompiling.
     CodeOffsetLabel label = masm.movWithPatch(ImmWord(uintptr_t(-1)), tmp);

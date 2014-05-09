@@ -586,7 +586,7 @@ ParallelSafetyVisitor::visitNewDerivedTypedObject(MNewDerivedTypedObject *ins)
     // version of NewDerivedTypedObject. However, until that is
     // implemented, let's just ignore those with 0 uses, since they
     // will be stripped out by DCE later.
-    if (ins->useCount() == 0)
+    if (!ins->hasUses())
         return true;
 
     SpewMIR(ins, "visitNewDerivedTypedObject");

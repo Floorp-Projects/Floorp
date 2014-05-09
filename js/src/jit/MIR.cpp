@@ -305,6 +305,7 @@ MDefinition::dump() const
     dump(stderr);
 }
 
+#ifdef DEBUG
 size_t
 MDefinition::useCount() const
 {
@@ -323,6 +324,7 @@ MDefinition::defUseCount() const
             count++;
     return count;
 }
+#endif
 
 bool
 MDefinition::hasOneUse() const
