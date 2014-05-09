@@ -130,6 +130,7 @@ ThebesLayerComposite::RenderLayer(const nsIntRect& aClipRect)
 
   EffectChain effectChain(this);
   LayerManagerComposite::AutoAddMaskEffect autoMaskEffect(mMaskLayer, effectChain);
+  AddBlendModeEffect(effectChain);
 
   nsIntRegion visibleRegion = GetEffectiveVisibleRegion();
 

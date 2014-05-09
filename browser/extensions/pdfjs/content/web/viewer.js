@@ -17,9 +17,10 @@
 /* globals PDFJS, PDFBug, FirefoxCom, Stats, Cache, PDFFindBar, CustomStyle,
            PDFFindController, ProgressBar, TextLayerBuilder, DownloadManager,
            getFileName, scrollIntoView, getPDFFileNameFromURL, PDFHistory,
-           Preferences, ViewHistory, PageView, ThumbnailView, URL,
+           Preferences, SidebarView, ViewHistory, PageView, ThumbnailView, URL,
            noContextMenuHandler, SecondaryToolbar, PasswordPrompt,
-           PresentationMode, HandTool, Promise, DocumentProperties */
+           PresentationMode, HandTool, Promise, DocumentProperties,
+           DocumentOutlineView, DocumentAttachmentsView */
 
 'use strict';
 
@@ -309,11 +310,18 @@ var Cache = function cacheCache(size) {
 var DEFAULT_PREFERENCES = {
   showPreviousViewOnLoad: true,
   defaultZoomValue: '',
-  ifAvailableShowOutlineOnLoad: false,
+  sidebarViewOnLoad: 0,
   enableHandToolOnLoad: false,
   enableWebGL: false
 };
 
+
+var SidebarView = {
+  NONE: 0,
+  THUMBS: 1,
+  OUTLINE: 2,
+  ATTACHMENTS: 3
+};
 
 /**
  * Preferences - Utility for storing persistent settings.
@@ -587,26 +595,12 @@ var currentPageNumber = 1;
 var ViewHistory = (function ViewHistoryClosure() {
   function ViewHistory(fingerprint) {
     this.fingerprint = fingerprint;
-    var initializedPromiseResolve;
     this.isInitializedPromiseResolved = false;
-    this.initializedPromise = new Promise(function (resolve) {
-      initializedPromiseResolve = resolve;
-    });
-
-    var resolvePromise = (function ViewHistoryResolvePromise(db) {
+    this.initializedPromise =
+        this._readFromStorage().then(function (databaseStr) {
       this.isInitializedPromiseResolved = true;
-      this.initialize(db || '{}');
-      initializedPromiseResolve();
-    }).bind(this);
 
-
-    resolvePromise(sessionStorage.getItem('pdfjsHistory'));
-
-  }
-
-  ViewHistory.prototype = {
-    initialize: function ViewHistory_initialize(database) {
-      database = JSON.parse(database);
+      var database = JSON.parse(databaseStr || '{}');
       if (!('files' in database)) {
         database.files = [];
       }
@@ -626,19 +620,45 @@ var ViewHistory = (function ViewHistoryClosure() {
       }
       this.file = database.files[index];
       this.database = database;
+    }.bind(this));
+  }
+
+  ViewHistory.prototype = {
+    _writeToStorage: function ViewHistory_writeToStorage() {
+      return new Promise(function (resolve) {
+        var databaseStr = JSON.stringify(this.database);
+
+
+        sessionStorage.setItem('pdfjsHistory', databaseStr);
+        resolve();
+
+      }.bind(this));
+    },
+
+    _readFromStorage: function ViewHistory_readFromStorage() {
+      return new Promise(function (resolve) {
+
+        resolve(sessionStorage.getItem('pdfjsHistory'));
+
+      });
     },
 
     set: function ViewHistory_set(name, val) {
       if (!this.isInitializedPromiseResolved) {
         return;
       }
-      var file = this.file;
-      file[name] = val;
-      var database = JSON.stringify(this.database);
+      this.file[name] = val;
+      this._writeToStorage();
+    },
 
-
-      sessionStorage.setItem('pdfjsHistory',database);
-
+    setMultiple: function ViewHistory_setMultiple(properties) {
+      if (!this.isInitializedPromiseResolved) {
+        return;
+      }
+      for (var name in properties) {
+        this.file[name] = properties[name];
+      }
+      this._writeToStorage();
     },
 
     get: function ViewHistory_get(name, defaultValue) {
@@ -2178,11 +2198,11 @@ var HandTool = {
       toggleHandTool.addEventListener('click', this.toggle.bind(this), false);
 
       window.addEventListener('localized', function (evt) {
-        Preferences.get('enableHandToolOnLoad').then(function (prefValue) {
-          if (prefValue) {
+        Preferences.get('enableHandToolOnLoad').then(function resolved(value) {
+          if (value) {
             this.handTool.activate();
           }
-        }.bind(this));
+        }.bind(this), function rejected(reason) {});
       }.bind(this));
     }
   },
@@ -2515,9 +2535,12 @@ var PDFView = {
     }, false);
 
     var initializedPromise = Promise.all([
-      Preferences.get('enableWebGL').then(function (value) {
+      Preferences.get('enableWebGL').then(function resolved(value) {
         PDFJS.disableWebGL = !value;
-      })
+      }, function rejected(reason) {}),
+      Preferences.get('sidebarViewOnLoad').then(function resolved(value) {
+        self.preferenceSidebarViewOnLoad = value;
+      }, function rejected(reason) {})
       // TODO move more preferences and other async stuff here
     ]);
 
@@ -2536,6 +2559,9 @@ var PDFView = {
     state.down = true;
     state.lastY = viewAreaElement.scrollTop;
     viewAreaElement.addEventListener('scroll', function webViewerScroll(evt) {
+      if (!PDFView.pdfDocument) {
+        return;
+      }
       var currentY = viewAreaElement.scrollTop;
       var lastY = state.lastY;
       if (currentY > lastY) {
@@ -3109,7 +3135,7 @@ var PDFView = {
     // that we discard some of the loaded data. This can cause the loading
     // bar to move backwards. So prevent this by only updating the bar if it
     // increases.
-    if (percent > PDFView.loadingBar.percent) {
+    if (percent > PDFView.loadingBar.percent || isNaN(percent)) {
       PDFView.loadingBar.percent = percent;
     }
   },
@@ -3262,8 +3288,8 @@ var PDFView = {
         self.container.focus();
         self.container.blur();
       }
-    }, function rejected(errorMsg) {
-      console.error(errorMsg);
+    }, function rejected(reason) {
+      console.error(reason);
 
       firstPagePromise.then(function () {
         self.setInitialView(null, scale);
@@ -3306,23 +3332,27 @@ var PDFView = {
         self.outline = new DocumentOutlineView(outline);
         document.getElementById('viewOutline').disabled = !outline;
 
-        if (outline) {
-          Preferences.get('ifAvailableShowOutlineOnLoad').then(
-            function (prefValue) {
-              if (prefValue) {
-                if (!self.sidebarOpen) {
-                  document.getElementById('sidebarToggle').click();
-                }
-                self.switchSidebarView('outline');
-              }
-            });
+        if (outline &&
+            self.preferenceSidebarViewOnLoad === SidebarView.OUTLINE) {
+          self.switchSidebarView('outline', true);
         }
       });
       pdfDocument.getAttachments().then(function(attachments) {
         self.attachments = new DocumentAttachmentsView(attachments);
         document.getElementById('viewAttachments').disabled = !attachments;
+
+        if (attachments &&
+            self.preferenceSidebarViewOnLoad === SidebarView.ATTACHMENTS) {
+          self.switchSidebarView('attachments', true);
+        }
       });
     });
+
+    if (self.preferenceSidebarViewOnLoad === SidebarView.THUMBS) {
+      Promise.all([firstPagePromise, onePageRendered]).then(function () {
+        self.switchSidebarView('thumbs', true);
+      });
+    }
 
     pdfDocument.getMetadata().then(function(data) {
       var info = data.info, metadata = data.metadata;
@@ -3562,17 +3592,12 @@ var PDFView = {
         this.page = pageNumber; // simple page
       }
       if ('pagemode' in params) {
-        var toggle = document.getElementById('sidebarToggle');
         if (params.pagemode === 'thumbs' || params.pagemode === 'bookmarks' ||
             params.pagemode === 'attachments') {
-          if (!this.sidebarOpen) {
-            toggle.click();
-          }
-          this.switchSidebarView(params.pagemode === 'bookmarks' ?
-                                   'outline' :
-                                   params.pagemode);
+          this.switchSidebarView((params.pagemode === 'bookmarks' ?
+                                  'outline' : params.pagemode), true);
         } else if (params.pagemode === 'none' && this.sidebarOpen) {
-          toggle.click();
+          document.getElementById('sidebarToggle').click();
         }
       }
     } else if (/^\d+$/.test(hash)) { // page number
@@ -3583,7 +3608,10 @@ var PDFView = {
     }
   },
 
-  switchSidebarView: function pdfViewSwitchSidebarView(view) {
+  switchSidebarView: function pdfViewSwitchSidebarView(view, openSidebar) {
+    if (openSidebar && !this.sidebarOpen) {
+      document.getElementById('sidebarToggle').click();
+    }
     var thumbsView = document.getElementById('thumbnailView');
     var outlineView = document.getElementById('outlineView');
     var attachmentsView = document.getElementById('attachmentsView');
@@ -5069,7 +5097,6 @@ var DocumentOutlineView = function documentOutlineView(outline) {
     };
   }
 
-
   var queue = [{parent: outlineView, items: outline}];
   while (queue.length > 0) {
     var levelData = queue.shift();
@@ -5095,6 +5122,7 @@ var DocumentOutlineView = function documentOutlineView(outline) {
   }
 };
 
+
 var DocumentAttachmentsView = function documentAttachmentsView(attachments) {
   var attachmentsView = document.getElementById('attachmentsView');
   while (attachmentsView.firstChild) {
@@ -5109,7 +5137,6 @@ var DocumentAttachmentsView = function documentAttachmentsView(attachments) {
   }
 
   function bindItemLink(domObj, item) {
-    domObj.href = '#';
     domObj.onclick = function documentAttachmentsViewOnclick(e) {
       var downloadManager = new DownloadManager();
       downloadManager.downloadData(item.content, getFileName(item.filename),
@@ -5125,13 +5152,14 @@ var DocumentAttachmentsView = function documentAttachmentsView(attachments) {
     var item = attachments[names[i]];
     var div = document.createElement('div');
     div.className = 'attachmentsItem';
-    var a = document.createElement('a');
-    bindItemLink(a, item);
-    a.textContent = getFileName(item.filename);
-    div.appendChild(a);
+    var button = document.createElement('button');
+    bindItemLink(button, item);
+    button.textContent = getFileName(item.filename);
+    div.appendChild(button);
     attachmentsView.appendChild(div);
   }
 };
+
 
 
 function webViewerLoad(evt) {
@@ -5395,13 +5423,14 @@ function updateViewarea() {
     PDFView.currentPosition = { page: pageNumber, left: intLeft, top: intTop };
   }
 
-  var store = PDFView.store;
-  store.initializedPromise.then(function() {
-    store.set('exists', true);
-    store.set('page', pageNumber);
-    store.set('zoom', normalizedScaleValue);
-    store.set('scrollLeft', intLeft);
-    store.set('scrollTop', intTop);
+  PDFView.store.initializedPromise.then(function() {
+    PDFView.store.setMultiple({
+      'exists': true,
+      'page': pageNumber,
+      'zoom': normalizedScaleValue,
+      'scrollLeft': intLeft,
+      'scrollTop': intTop
+    });
   });
   var href = PDFView.getAnchorUrl(pdfOpenParams);
   document.getElementById('viewBookmark').href = href;
