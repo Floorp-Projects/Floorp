@@ -96,6 +96,19 @@ struct EffectMask : public Effect
   gfx::Matrix4x4 mMaskTransform;
 };
 
+struct EffectBlendMode : public Effect
+{
+  EffectBlendMode(gfx::CompositionOp aBlendMode)
+    : Effect(EffectTypes::BLEND_MODE)
+    , mBlendMode(aBlendMode)
+  { }
+
+  virtual const char* Name() { return "EffectBlendMode"; }
+  virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
+
+  gfx::CompositionOp mBlendMode;
+};
+
 // Render to a render target rather than the screen.
 struct EffectRenderTarget : public TexturedEffect
 {

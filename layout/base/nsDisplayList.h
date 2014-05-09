@@ -45,6 +45,10 @@ class ImageContainer;
 } //namepsace
 } //namepsace
 
+// A set of blend modes, that never includes OP_OVER (since it's
+// considered the default, rather than a specific blend mode).
+typedef mozilla::EnumSet<mozilla::gfx::CompositionOp> BlendModeSet;
+
 /*
  * An nsIFrame can have many different visual parts. For example an image frame
  * can have a background, border, and outline, the image itself, and a
@@ -688,8 +692,14 @@ public:
    * has a blend mode attached. We do this so we can insert a 
    * nsDisplayBlendContainer in the parent stacking context.
    */
-  void SetContainsBlendMode(bool aContainsBlendMode) { mContainsBlendMode = aContainsBlendMode; }
-  bool ContainsBlendMode() const { return mContainsBlendMode; }
+  void SetContainsBlendMode(uint8_t aBlendMode);
+  void SetContainsBlendModes(const BlendModeSet& aModes) {
+    mContainedBlendModes = aModes;
+  }
+  bool ContainsBlendMode() const { return !mContainedBlendModes.isEmpty(); }
+  BlendModeSet& ContainedBlendModes() {
+    return mContainedBlendModes;
+  }
 
   DisplayListClipState& ClipState() { return mClipState; }
 
@@ -731,6 +741,7 @@ private:
   nsTArray<DisplayItemClip*>     mDisplayItemClipsToDestroy;
   Mode                           mMode;
   ViewID                         mCurrentScrollParentId;
+  BlendModeSet                   mContainedBlendModes;
   bool                           mBuildCaret;
   bool                           mIgnoreSuppression;
   bool                           mHadToIgnoreSuppression;
@@ -749,7 +760,6 @@ private:
   bool                           mIsPaintingToWindow;
   bool                           mIsCompositingCheap;
   bool                           mContainsPluginItem;
-  bool                           mContainsBlendMode;
   bool                           mAncestorHasTouchEventHandler;
   // True when the first async-scrollable scroll frame for which we build a
   // display list has a display port. An async-scrollable scroll frame is one
@@ -2730,10 +2740,7 @@ public:
   }
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
-                                   const ContainerLayerParameters& aParameters) MOZ_OVERRIDE
-  {
-    return mozilla::LAYER_INACTIVE;
-  }
+                                   const ContainerLayerParameters& aParameters) MOZ_OVERRIDE;
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                  nsRegion* aVisibleRegion,
                                  const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE;
@@ -2744,7 +2751,10 @@ public:
 class nsDisplayBlendContainer : public nsDisplayWrapList {
 public:
     nsDisplayBlendContainer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                          nsDisplayList* aList, uint32_t aFlags = 0);
+                            nsDisplayList* aList,
+                            BlendModeSet& aContainedBlendModes);
+    nsDisplayBlendContainer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                            nsDisplayList* aList);
 #ifdef NS_BUILD_REFCNT_LOGGING
     virtual ~nsDisplayBlendContainer();
 #endif
@@ -2756,10 +2766,20 @@ public:
                                      LayerManager* aManager,
                                      const ContainerLayerParameters& aParameters) MOZ_OVERRIDE
     {
-        return mozilla::LAYER_INACTIVE;
+      if (mCanBeActive && aManager->SupportsMixBlendModes(mContainedBlendModes)) {
+        return mozilla::LAYER_ACTIVE;
+      }
+      return mozilla::LAYER_INACTIVE;
     }
     virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) MOZ_OVERRIDE;
     NS_DISPLAY_DECL_NAME("BlendContainer", TYPE_BLEND_CONTAINER)
+
+private:
+    // The set of all blend modes used by nsDisplayMixBlendMode descendents of this container.
+    BlendModeSet mContainedBlendModes;
+    // If this is true, then we should make the layer active if all contained blend
+    // modes can be supported by the current layer manager.
+    bool mCanBeActive;
 };
 
 /**

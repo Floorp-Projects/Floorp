@@ -252,17 +252,15 @@ ContainerRender(ContainerT* aContainer,
 
   nsIntRect visibleRect = aContainer->GetEffectiveVisibleRegion().GetBounds();
 
-  aContainer->mSupportsComponentAlphaChildren = false;
-
   float opacity = aContainer->GetEffectiveOpacity();
 
   bool needsSurface = aContainer->UseIntermediateSurface();
+  bool surfaceCopyNeeded;
+  aContainer->DefaultComputeSupportsComponentAlphaChildren(&surfaceCopyNeeded);
   if (needsSurface) {
     SurfaceInitMode mode = INIT_MODE_CLEAR;
-    bool surfaceCopyNeeded = false;
     gfx::IntRect surfaceRect = gfx::IntRect(visibleRect.x, visibleRect.y,
                                             visibleRect.width, visibleRect.height);
-    gfx::IntPoint sourcePoint = gfx::IntPoint(visibleRect.x, visibleRect.y);
     // we're about to create a framebuffer backed by textures to use as an intermediate
     // surface. What to do if its size (as given by framebufferRect) would exceed the
     // maximum texture size supported by the GL? The present code chooses the compromise
@@ -275,28 +273,19 @@ ContainerRender(ContainerT* aContainer,
     if (aContainer->GetEffectiveVisibleRegion().GetNumRects() == 1 &&
         (aContainer->GetContentFlags() & Layer::CONTENT_OPAQUE))
     {
-      // don't need a background, we're going to paint all opaque stuff
-      aContainer->mSupportsComponentAlphaChildren = true;
       mode = INIT_MODE_NONE;
-    } else {
-      const gfx::Matrix4x4& transform3D = aContainer->GetEffectiveTransform();
-      gfx::Matrix transform;
-      // If we have an opaque ancestor layer, then we can be sure that
-      // all the pixels we draw into are either opaque already or will be
-      // covered by something opaque. Otherwise copying up the background is
-      // not safe.
-      if (ContainerLayer::HasOpaqueAncestorLayer(aContainer) &&
-          transform3D.Is2D(&transform) && !ThebesMatrix(transform).HasNonIntegerTranslation()) {
-        surfaceCopyNeeded = gfxPrefs::ComponentAlphaEnabled();
-        sourcePoint.x += transform._31;
-        sourcePoint.y += transform._32;
-        aContainer->mSupportsComponentAlphaChildren
-          = gfxPrefs::ComponentAlphaEnabled();
-      }
     }
 
-    sourcePoint -= compositor->GetCurrentRenderTarget()->GetOrigin();
     if (surfaceCopyNeeded) {
+      gfx::IntPoint sourcePoint = gfx::IntPoint(visibleRect.x, visibleRect.y);
+
+      gfx::Matrix4x4 transform = aContainer->GetEffectiveTransform();
+      DebugOnly<gfx::Matrix> transform2d;
+      MOZ_ASSERT(transform.Is2D(&transform2d) && !gfx::ThebesMatrix(transform2d).HasNonIntegerTranslation());
+      sourcePoint += gfx::IntPoint(transform._41, transform._42);
+
+      sourcePoint -= compositor->GetCurrentRenderTarget()->GetOrigin();
+
       surface = compositor->CreateRenderTargetFromSource(surfaceRect, previousTarget, sourcePoint);
     } else {
       surface = compositor->CreateRenderTarget(surfaceRect, mode);
@@ -309,8 +298,6 @@ ContainerRender(ContainerT* aContainer,
     compositor->SetRenderTarget(surface);
   } else {
     surface = previousTarget;
-    aContainer->mSupportsComponentAlphaChildren = (aContainer->GetContentFlags() & Layer::CONTENT_OPAQUE) ||
-      (aContainer->GetParent() && aContainer->GetParent()->SupportsComponentAlphaChildren());
   }
 
   nsAutoTArray<Layer*, 12> children;
@@ -400,6 +387,7 @@ ContainerRender(ContainerT* aContainer,
                                                             effectChain,
                                                             !aContainer->GetTransform().CanDraw2D());
 
+    aContainer->AddBlendModeEffect(effectChain);
     effectChain.mPrimaryEffect = new EffectRenderTarget(surface);
 
     gfx::Rect rect(visibleRect.x, visibleRect.y, visibleRect.width, visibleRect.height);

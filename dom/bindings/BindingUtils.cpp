@@ -14,6 +14,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Preferences.h"
 
 #include "AccessCheck.h"
 #include "jsfriendapi.h"
@@ -2163,7 +2164,8 @@ IsInPrivilegedApp(JSContext* aCx, JSObject* aObj)
   nsIPrincipal* principal = nsContentUtils::GetObjectPrincipal(aObj);
   uint16_t appStatus = principal->GetAppStatus();
   return (appStatus == nsIPrincipal::APP_STATUS_CERTIFIED ||
-          appStatus == nsIPrincipal::APP_STATUS_PRIVILEGED);
+          appStatus == nsIPrincipal::APP_STATUS_PRIVILEGED) ||
+          Preferences::GetBool("dom.ignore_webidl_scope_checks", false);
 }
 
 bool
@@ -2175,7 +2177,8 @@ IsInCertifiedApp(JSContext* aCx, JSObject* aObj)
   }
 
   nsIPrincipal* principal = nsContentUtils::GetObjectPrincipal(aObj);
-  return principal->GetAppStatus() == nsIPrincipal::APP_STATUS_CERTIFIED;
+  return principal->GetAppStatus() == nsIPrincipal::APP_STATUS_CERTIFIED ||
+         Preferences::GetBool("dom.ignore_webidl_scope_checks", false);
 }
 
 void

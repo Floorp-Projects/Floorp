@@ -115,12 +115,11 @@ public:
     virtual bool RecvMoveFocus(const bool& aForward) MOZ_OVERRIDE;
     virtual bool RecvEvent(const RemoteDOMEvent& aEvent) MOZ_OVERRIDE;
     virtual bool RecvReplyKeyEvent(const WidgetKeyboardEvent& event);
-    virtual bool RecvPRenderFrameConstructor(PRenderFrameParent* actor) MOZ_OVERRIDE;
-    virtual bool RecvInitRenderFrame(PRenderFrameParent* aFrame,
-                                     ScrollingBehavior* scrolling,
-                                     TextureFactoryIdentifier* identifier,
-                                     uint64_t* layersId,
-                                     bool *aSuccess) MOZ_OVERRIDE;
+    virtual bool RecvPRenderFrameConstructor(PRenderFrameParent* aActor,
+                                             ScrollingBehavior* aScrolling,
+                                             TextureFactoryIdentifier* aFactoryIdentifier,
+                                             uint64_t* aLayersId,
+                                             bool* aSuccess) MOZ_OVERRIDE;
     virtual bool RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
                                             const nsString& aURL,
                                             const nsString& aName,
@@ -328,7 +327,10 @@ protected:
     bool AllowContentIME();
     nsIntPoint GetChildProcessOffset();
 
-    virtual PRenderFrameParent* AllocPRenderFrameParent() MOZ_OVERRIDE;
+    virtual PRenderFrameParent* AllocPRenderFrameParent(ScrollingBehavior* aScrolling,
+                                                        TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                                        uint64_t* aLayersId,
+                                                        bool* aSuccess) MOZ_OVERRIDE;
     virtual bool DeallocPRenderFrameParent(PRenderFrameParent* aFrame) MOZ_OVERRIDE;
 
     // IME
