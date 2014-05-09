@@ -10,6 +10,8 @@
 #include <sys/types.h>                  // for int32_t
 #include "LayersTypes.h"                // for LayersBackend, etc
 #include "nsXULAppAPI.h"                // for GeckoProcessType, etc
+#include "mozilla/gfx/Types.h"
+#include "mozilla/EnumSet.h"
 
 #include "mozilla/TypedEnum.h"
 #include "mozilla/TypedEnumBits.h"
@@ -192,6 +194,7 @@ struct TextureFactoryIdentifier
 {
   LayersBackend mParentBackend;
   GeckoProcessType mParentProcessId;
+  EnumSet<gfx::CompositionOp> mSupportedBlendModes;
   int32_t mMaxTextureSize;
   bool mSupportsTextureBlitting;
   bool mSupportsPartialUploads;
@@ -203,6 +206,7 @@ struct TextureFactoryIdentifier
                            bool aSupportsPartialUploads = false)
     : mParentBackend(aLayersBackend)
     , mParentProcessId(aParentProcessId)
+    , mSupportedBlendModes(gfx::CompositionOp::OP_OVER)
     , mMaxTextureSize(aMaxTextureSize)
     , mSupportsTextureBlitting(aSupportsTextureBlitting)
     , mSupportsPartialUploads(aSupportsPartialUploads)
