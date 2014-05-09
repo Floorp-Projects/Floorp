@@ -12,6 +12,7 @@ import sys
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
 sys.path.insert(0, SCRIPT_DIR);
 
+import ctypes
 import glob
 import json
 import mozcrash
@@ -754,11 +755,123 @@ class SSLTunnel:
     if os.path.exists(self.configFile):
       os.remove(self.configFile)
 
+def checkAndConfigureV4l2loopback(device):
+  '''
+  Determine if a given device path is a v4l2loopback device, and if so
+  toggle a few settings on it via fcntl. Very linux-specific.
+
+  Returns (status, device name) where status is a boolean.
+  '''
+  if not mozinfo.isLinux:
+    return False, ''
+
+  libc = ctypes.cdll.LoadLibrary('libc.so.6')
+  O_RDWR = 2
+  # These are from linux/videodev2.h
+  class v4l2_capability(ctypes.Structure):
+    _fields_ = [
+      ('driver', ctypes.c_char * 16),
+      ('card', ctypes.c_char * 32),
+      ('bus_info', ctypes.c_char * 32),
+      ('version', ctypes.c_uint32),
+      ('capabilities', ctypes.c_uint32),
+      ('device_caps', ctypes.c_uint32),
+      ('reserved', ctypes.c_uint32 * 3)
+      ]
+  VIDIOC_QUERYCAP = 0x80685600
+
+  fd = libc.open(device, O_RDWR)
+  if fd < 0:
+    return False, ''
+
+  vcap = v4l2_capability()
+  if libc.ioctl(fd, VIDIOC_QUERYCAP, ctypes.byref(vcap)) != 0:
+    return False, ''
+
+  if vcap.driver != 'v4l2 loopback':
+    return False, ''
+
+  class v4l2_control(ctypes.Structure):
+    _fields_ = [
+      ('id', ctypes.c_uint32),
+      ('value', ctypes.c_int32)
+    ]
+
+  # These are private v4l2 control IDs, see:
+  # https://github.com/umlaeute/v4l2loopback/blob/fd822cf0faaccdf5f548cddd9a5a3dcebb6d584d/v4l2loopback.c#L131
+  KEEP_FORMAT = 0x8000000
+  SUSTAIN_FRAMERATE = 0x8000001
+  VIDIOC_S_CTRL = 0xc008561c
+
+  control = v4l2_control()
+  control.id = KEEP_FORMAT
+  control.value = 1
+  libc.ioctl(fd, VIDIOC_S_CTRL, ctypes.byref(control))
+
+  control.id = SUSTAIN_FRAMERATE
+  control.value = 1
+  libc.ioctl(fd, VIDIOC_S_CTRL, ctypes.byref(control))
+  libc.close(fd)
+
+  return True, vcap.card
+
+def findTestMediaDevices():
+  '''
+  Find the test media devices configured on this system, and return a dict
+  containing information about them. The dict will have keys for 'audio'
+  and 'video', each containing the name of the media device to use.
+
+  If audio and video devices could not be found, return None.
+
+  This method is only currently implemented for Linux.
+  '''
+  if not mozinfo.isLinux:
+    return None
+
+  info = {}
+  # Look for a v4l2loopback device.
+  name = None
+  device = None
+  for dev in sorted(glob.glob('/dev/video*')):
+    result, name_ = checkAndConfigureV4l2loopback(dev)
+    if result:
+      name = name_
+      device = dev
+      break
+
+  if not (name and device):
+    log.error('Couldn\'t find a v4l2loopback video device')
+    return None
+
+  # Feed it a frame of output so it has something to display
+  subprocess.check_call(['/usr/bin/gst-launch-0.10', 'videotestsrc',
+                         'pattern=green', 'num-buffers=1', '!',
+                         'v4l2sink', 'device=%s' % device])
+  info['video'] = name
+
+  # Use pactl to see if the PulseAudio module-sine-source module is loaded.
+  def sine_source_loaded():
+    o = subprocess.check_output(['/usr/bin/pactl', 'list', 'short', 'modules'])
+    return filter(lambda x: 'module-sine-source' in x, o.splitlines())
+
+  if not sine_source_loaded():
+    # Load module-sine-source
+    subprocess.check_call(['/usr/bin/pactl', 'load-module',
+                           'module-sine-source'])
+  if not sine_source_loaded():
+    log.error('Couldn\'t load module-sine-source')
+    return None
+
+  # Hardcode the name since it's always the same.
+  info['audio'] = 'Sine source at 440 Hz'
+  return info
+
 class Mochitest(MochitestUtilsMixin):
   certdbNew = False
   sslTunnel = None
   vmwareHelper = None
   DEFAULT_TIMEOUT = 60.0
+  mediaDevices = None
 
   # XXX use automation.py for test name to avoid breaking legacy
   # TODO: replace this with 'runtests.py' or 'mochitest' or the like
@@ -876,6 +989,11 @@ class Mochitest(MochitestUtilsMixin):
     #             'ws': str(self.webSocketPort)
              'ws': options.sslPort
              }
+
+    # See if we should use fake media devices.
+    if options.useTestMediaDevices:
+      prefs['media.audio_loopback_dev'] = self.mediaDevices['audio']
+      prefs['media.video_loopback_dev'] = self.mediaDevices['video']
 
 
     # create a profile
@@ -1224,6 +1342,13 @@ class Mochitest(MochitestUtilsMixin):
                                    options.debugger,
                                    options.debuggerArgs,
                                    options.debuggerInteractive)
+
+    if options.useTestMediaDevices:
+      devices = findTestMediaDevices()
+      if not devices:
+        log.error("Could not find test media devices to use")
+        return 1
+      self.mediaDevices = devices
 
     self.leak_report_file = os.path.join(options.profilePath, "runtests_leaks.log")
 
