@@ -51,19 +51,21 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
   // We're in a final state.
   // Look up our style context for this state.
   nsStyleContext* result = nullptr;
-  if (mCache)
-    result = static_cast<nsStyleContext*>(mCache->Get(currState));
+  if (mCache) {
+    result = mCache->GetWeak(currState->GetStateID());
+  }
   if (!result) {
     // We missed the cache. Resolve this pseudo-style.
-    result = aPresContext->StyleSet()->
+    nsRefPtr<nsStyleContext> newResult = aPresContext->StyleSet()->
       ResolveXULTreePseudoStyle(aContent->AsElement(), aPseudoElement,
-                                aContext, aComparator).take();
+                                aContext, aComparator);
 
     // Put the style context in our table, transferring the owning reference to the table.
     if (!mCache) {
-      mCache = new nsObjectHashtable(nullptr, nullptr, ReleaseStyleContext, nullptr);
+      mCache = new StyleContextCache();
     }
-    mCache->Put(currState, result);
+    result = newResult.get();
+    mCache->Put(currState->GetStateID(), newResult.forget());
   }
 
   return result;
@@ -76,15 +78,5 @@ nsTreeStyleCache::DeleteDFAState(nsHashKey *aKey,
 {
   nsDFAState* entry = static_cast<nsDFAState*>(aData);
   delete entry;
-  return true;
-}
-
-bool
-nsTreeStyleCache::ReleaseStyleContext(nsHashKey *aKey,
-                                      void *aData,
-                                      void *closure)
-{
-  nsStyleContext* context = static_cast<nsStyleContext*>(aData);
-  context->Release();
   return true;
 }
