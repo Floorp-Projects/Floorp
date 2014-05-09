@@ -17,9 +17,9 @@ class nsInt2StrHashtable
 public:
   nsInt2StrHashtable();
 
-  nsresult  Put(uint32_t key, const char* aData);
-  char*     Get(uint32_t key);
-  nsresult  Remove(uint32_t key);
+  nsresult  Put(uint32_t aKey, const char* aData);
+  char*     Get(uint32_t aKey);
+  nsresult  Remove(uint32_t aKey);
 
 protected:
   nsObjectHashtable mHashtable;
@@ -34,7 +34,7 @@ public:
   nsErrorService() {}
 
   static nsresult
-  Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+  Create(nsISupports* aOuter, const nsIID& aIID, void** aInstancePtr);
 
 private:
   ~nsErrorService() {}
