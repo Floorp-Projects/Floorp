@@ -132,7 +132,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
 
   if (!IsHidden() && !clipExtents.IsEmpty()) {
     mContentClient->DrawTo(this, aContext->GetDrawTarget(), opacity,
-                           GetOperator(),
+                           effectiveOperator,
                            maskSurface, &maskTransform);
   }
 
