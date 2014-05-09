@@ -1007,6 +1007,7 @@ ContainerLayer::DefaultComputeSupportsComponentAlphaChildren(bool* aNeedsSurface
 {
   bool supportsComponentAlphaChildren = false;
   bool needsSurfaceCopy = false;
+  CompositionOp blendMode = GetEffectiveMixBlendMode();
   if (UseIntermediateSurface()) {
     if (GetEffectiveVisibleRegion().GetNumRects() == 1 &&
         (GetContentFlags() & Layer::CONTENT_OPAQUE))
@@ -1016,12 +1017,13 @@ ContainerLayer::DefaultComputeSupportsComponentAlphaChildren(bool* aNeedsSurface
       gfx::Matrix transform;
       if (HasOpaqueAncestorLayer(this) &&
           GetEffectiveTransform().Is2D(&transform) &&
-          !gfx::ThebesMatrix(transform).HasNonIntegerTranslation()) {
+          !gfx::ThebesMatrix(transform).HasNonIntegerTranslation() &&
+          blendMode == gfx::CompositionOp::OP_OVER) {
         supportsComponentAlphaChildren = true;
         needsSurfaceCopy = true;
       }
     }
-  } else {
+  } else if (blendMode == gfx::CompositionOp::OP_OVER) {
     supportsComponentAlphaChildren =
       (GetContentFlags() & Layer::CONTENT_OPAQUE) ||
       (GetParent() && GetParent()->SupportsComponentAlphaChildren());
