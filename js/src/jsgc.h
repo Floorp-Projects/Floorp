@@ -89,6 +89,8 @@ class ChunkPool {
         return emptyCount;
     }
 
+    inline bool wantBackgroundAllocation(JSRuntime *rt) const;
+
     /* Must be called with the GC lock taken. */
     inline Chunk *get(JSRuntime *rt);
 
