@@ -356,7 +356,7 @@ MSG_DEF(JSMSG_INTRINSIC_NOT_DEFINED,  302, 1, JSEXN_REFERENCEERR, "no intrinsic 
 MSG_DEF(JSMSG_ALREADY_HAS_PRAGMA, 303, 2, JSEXN_ERR,      "{0} is being assigned a {1}, but already has one")
 MSG_DEF(JSMSG_PAR_ARRAY_BAD_ARG,      304, 0, JSEXN_RANGEERR, "invalid parallel method argument")
 MSG_DEF(JSMSG_REGEXP_RUNTIME_ERROR,   305, 0, JSEXN_INTERNALERR, "an error occurred while executing regular expression")
-MSG_DEF(JSMSG_UNUSED306,              306, 0, JSEXN_NONE, "")
+MSG_DEF(JSMSG_DEBUG_OPTIMIZED_OUT,    306, 0, JSEXN_ERR, "variable has been optimized out")
 MSG_DEF(JSMSG_UNUSED307,              307, 0, JSEXN_NONE, "")
 MSG_DEF(JSMSG_PAR_ARRAY_SCATTER_CONFLICT, 308, 0, JSEXN_ERR, "no conflict resolution function provided")
 MSG_DEF(JSMSG_PAR_ARRAY_SCATTER_BOUNDS, 309, 0, JSEXN_ERR, "index in scatter vector out of bounds")

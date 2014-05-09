@@ -1087,11 +1087,10 @@ let DebuggerEnvironmentSupport = {
   getProperty: function(aObj, aName)
   {
     // TODO: we should use getVariableDescriptor() here - bug 725815.
-    let result = undefined;
-    try {
-      result = aObj.getVariable(aName);
-    } catch (ex) {
-      // getVariable() throws for invalid identifiers.
+    let result = aObj.getVariable(aName);
+    // FIXME: Need actual UI, bug 941287.
+    if (result.optimizedOut || result.missingArguments) {
+      return null;
     }
     return result === undefined ? null : { value: result };
   },

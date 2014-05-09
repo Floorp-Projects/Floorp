@@ -801,6 +801,10 @@ class DebugScopeObject : public ProxyObject
 
     /* Currently, the 'declarative' scopes are Call and Block. */
     bool isForDeclarative() const;
+
+    // Get a property by 'id', but returns sentinel values instead of throwing
+    // on exceptional cases.
+    bool getMaybeSentinelValue(JSContext *cx, HandleId id, MutableHandleValue vp);
 };
 
 /* Maintains per-compartment debug scope bookkeeping information. */
