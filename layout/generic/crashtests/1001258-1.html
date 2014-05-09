@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+
+.r {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+}
+
+</style>
+</head>
+
+<body onload="document.getElementById('willFloatLeft').style.cssFloat = 'left';">
+    <div style="width: 100px; background: lightgray;">
+        <div class="r" style="background: red; width: 10px; float: left;"></div>
+        <div class="r" style="background: violet; width: 120px;" id="willFloatLeft" ></div>
+        <div style="clear: left;"></div>
+        <div class="r" style="background: blue;"></div>
+        <div class="r" style="background: yellow; float: right;"></div>
+        <div class="r" style="background: orange; position: relative;"></div>
+    </div>
+</body>
+
+</html>
