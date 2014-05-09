@@ -32,13 +32,9 @@
       // geotrust ca info: http://www.geotrust.com/resources/root-certificates/index.html
       // In that same bug we also notice that our cdn sites use Verisign and
       // Baltimore
+      // This list does not contain any 1024 bit roots for those providers
       "name": "mozilla",
       "static_spki_hashes": [
-        "GTE CyberTrust Global Root",
-        "Verisign Class 3 Public Primary Certification Authority",
-        "Verisign Class 1 Public Primary Certification Authority - G2",
-        "Verisign Class 2 Public Primary Certification Authority - G2",
-        "Verisign Class 3 Public Primary Certification Authority - G2",
         "Verisign Class 1 Public Primary Certification Authority - G3",
         "Verisign Class 2 Public Primary Certification Authority - G3",
         "Verisign Class 3 Public Primary Certification Authority - G3",
@@ -46,8 +42,6 @@
         "VeriSign Class 3 Public Primary Certification Authority - G5",
         "VeriSign Universal Root Certification Authority",
         "VeriSign Class 3 Public Primary Certification Authority - G4",
-        "Verisign Class 1 Public Primary Certification Authority",
-        "Equifax Secure CA",
         "GeoTrust Primary Certification Authority",
         "GeoTrust Global CA",
         "GeoTrust Global CA 2",
