@@ -22,6 +22,7 @@ WEBIDL_FILES = [
     'AnimationTimeline.webidl',
     'AppInfo.webidl',
     'AppNotificationServiceOptions.webidl',
+    'APZTestData.webidl',
     'ArchiveReader.webidl',
     'ArchiveRequest.webidl',
     'Attr.webidl',

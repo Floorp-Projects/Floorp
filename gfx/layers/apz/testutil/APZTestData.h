@@ -14,6 +14,7 @@
 #include "mozilla/DebugOnly.h"   // for DebugOnly
 #include "mozilla/ToString.h"    // for ToString
 #include "ipc/IPCMessageUtils.h"
+#include "js/TypeDecls.h"
 
 namespace mozilla {
 namespace layers {
@@ -38,6 +39,7 @@ typedef uint32_t SequenceNumber;
 class APZTestData {
   typedef FrameMetrics::ViewID ViewID;
   friend struct IPC::ParamTraits<APZTestData>;
+  friend class APZTestDataToJSConverter;
 public:
   void StartNewPaint(SequenceNumber aSequenceNumber) {
     auto insertResult = mPaints.insert(DataStore::value_type(aSequenceNumber, Bucket()));
@@ -66,6 +68,9 @@ public:
                                     const std::string& aValue) {
     LogTestDataImpl(mRepaintRequests, aSequenceNumber, aScrollId, aKey, aValue);
   }
+
+  // Convert this object to a JS representation.
+  bool ToJS(JS::MutableHandleValue aOutValue, JSContext* aContext) const;
 
   // Use dummy derived structures wrapping the tyepdefs to work around a type
   // name length limit in MSVC.
