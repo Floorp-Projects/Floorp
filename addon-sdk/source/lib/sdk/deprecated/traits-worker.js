@@ -393,7 +393,7 @@ const WorkerSandbox = EventEmitter.compose({
 /**
  * Message-passing facility for communication between code running
  * in the content and add-on process.
- * @see https://addons.mozilla.org/en-US/developers/docs/sdk/latest/modules/sdk/content/worker.html
+ * @see https://developer.mozilla.org/en-US/Add-ons/SDK/Low-Level_APIs/content_worker
  */
 const Worker = EventEmitter.compose({
   on: Trait.required,

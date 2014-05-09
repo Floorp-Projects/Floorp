@@ -50,7 +50,8 @@ function PlainTextConsole(print, innerID) {
     prefix: self.name + ": ",
     maxLogLevel: logLevel,
     dump: print,
-    innerID: innerID
+    innerID: innerID,
+    consoleID: "addon/" + self.id
   };
   let console = new ConsoleAPI(consoleOptions);
 
