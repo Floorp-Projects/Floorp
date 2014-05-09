@@ -88,15 +88,27 @@ public class TopSitesThumbnailView extends ImageView {
     }
 
     /**
+     * Sets the background color with a filter to reduce the color opacity.
+     *
+     * @param color the color filter to apply over the drawable.
+     */
+    public void setBackgroundColorWithOpacityFilter(int color) {
+        setBackgroundColor(color & COLOR_FILTER);
+    }
+
+    /**
      * Sets the background to a Drawable by applying the specified color as a filter.
      *
      * @param color the color filter to apply over the drawable.
      */
     @Override
     public void setBackgroundColor(int color) {
-        int colorFilter = color == 0 ? DEFAULT_COLOR : color & COLOR_FILTER;
+        if (color == 0) {
+            color = DEFAULT_COLOR;
+        }
+
         Drawable drawable = getResources().getDrawable(R.drawable.top_sites_thumbnail_bg);
-        drawable.setColorFilter(colorFilter, Mode.SRC_ATOP);
+        drawable.setColorFilter(color, Mode.SRC_ATOP);
         setBackgroundDrawable(drawable);
     }
 }

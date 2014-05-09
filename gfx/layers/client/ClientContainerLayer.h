@@ -47,25 +47,7 @@ public:
       ToClientLayer(GetMaskLayer())->RenderLayer();
     }
     
-    // Setup mSupportsComponentAlphaChildren in the same way 
-    // that ContainerLayerComposite will do.
-    if (UseIntermediateSurface()) {
-      if (GetEffectiveVisibleRegion().GetNumRects() != 1 ||
-          !(GetContentFlags() & Layer::CONTENT_OPAQUE))
-      {
-        gfx::Matrix transform;
-        if (HasOpaqueAncestorLayer(this) &&
-            GetEffectiveTransform().Is2D(&transform) &&
-            !gfx::ThebesMatrix(transform).HasNonIntegerTranslation()) {
-          SetSupportsComponentAlphaChildren(
-            gfxPrefs::ComponentAlphaEnabled());
-        }
-      }
-    } else {
-      SetSupportsComponentAlphaChildren(
-        (GetContentFlags() & Layer::CONTENT_OPAQUE) ||
-        (GetParent() && GetParent()->SupportsComponentAlphaChildren()));
-    }
+    DefaultComputeSupportsComponentAlphaChildren();
 
     nsAutoTArray<Layer*, 12> children;
     SortChildrenBy3DZOrder(children);

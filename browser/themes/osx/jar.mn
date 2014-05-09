@@ -42,6 +42,7 @@ browser.jar:
   skin/classic/browser/identity-icons-https-mixed-display.png
   skin/classic/browser/identity-icons-https-mixed-display@2x.png
   skin/classic/browser/Info.png
+  skin/classic/browser/in-content/common.css                (../shared/in-content/common.css)
   skin/classic/browser/keyhole-circle.png
   skin/classic/browser/keyhole-circle@2x.png
   skin/classic/browser/KUI-background.png

@@ -178,11 +178,15 @@ public:
 
   virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() MOZ_OVERRIDE
   {
-    return TextureFactoryIdentifier(LayersBackend::LAYERS_OPENGL,
-                                    XRE_GetProcessType(),
-                                    GetMaxTextureSize(),
-                                    mFBOTextureTarget == LOCAL_GL_TEXTURE_2D,
-                                    SupportsPartialTextureUpdate());
+    TextureFactoryIdentifier result =
+      TextureFactoryIdentifier(LayersBackend::LAYERS_OPENGL,
+                               XRE_GetProcessType(),
+                               GetMaxTextureSize(),
+                               mFBOTextureTarget == LOCAL_GL_TEXTURE_2D,
+                               SupportsPartialTextureUpdate());
+    result.mSupportedBlendModes += gfx::CompositionOp::OP_SCREEN;
+    result.mSupportedBlendModes += gfx::CompositionOp::OP_MULTIPLY;
+    return result;
   }
 
   virtual TemporaryRef<CompositingRenderTarget>
@@ -360,7 +364,9 @@ private:
                           gfx::Rect *aClipRectOut = nullptr,
                           gfx::Rect *aRenderBoundsOut = nullptr) MOZ_OVERRIDE;
 
-  ShaderConfigOGL GetShaderConfigFor(Effect *aEffect, MaskType aMask = MaskType::MaskNone) const;
+  ShaderConfigOGL GetShaderConfigFor(Effect *aEffect,
+                                     MaskType aMask = MaskType::MaskNone,
+                                     gfx::CompositionOp aOp = gfx::CompositionOp::OP_OVER) const;
   ShaderProgramOGL* GetShaderProgramFor(const ShaderConfigOGL &aConfig);
 
   /**
