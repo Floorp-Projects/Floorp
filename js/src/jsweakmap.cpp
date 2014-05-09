@@ -500,7 +500,7 @@ js_InitWeakMapClass(JSContext *cx, HandleObject obj)
         return nullptr;
 
     RootedFunction ctor(cx, global->createConstructor(cx, WeakMap_construct,
-                                                      cx->names().WeakMap, 0));
+                                                      cx->names().WeakMap, 1));
     if (!ctor)
         return nullptr;
 
