@@ -1918,6 +1918,15 @@ IonBuilder::inlineBoundFunction(CallInfo &nativeCallInfo, JSFunction *target)
     JSFunction *scriptedTarget = &(target->getBoundFunctionTarget()->as<JSFunction>());
     JSRuntime *runtime = scriptedTarget->runtimeFromMainThread();
 
+    // Don't optimize if we're constructing and the callee is not a
+    // constructor, so that CallKnown does not have to handle this case
+    // (it should always throw).
+    if (nativeCallInfo.constructing() && !scriptedTarget->isInterpretedConstructor() &&
+        !scriptedTarget->isNativeConstructor())
+    {
+        return InliningStatus_NotInlined;
+    }
+
     if (gc::IsInsideNursery(runtime, scriptedTarget))
         return InliningStatus_NotInlined;
 
