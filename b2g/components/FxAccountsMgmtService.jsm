@@ -120,6 +120,16 @@ this.FxAccountsMgmtService = {
           }
         ).then(null, Components.utils.reportError);
         break;
+      case "resendVerificationEmail":
+        FxAccountsManager.resendVerificationEmail().then(
+          () => {
+            self._onFulfill(msg.id);
+          },
+          reason => {
+            self._onReject(msg.id, reason);
+          }
+        ).then(null, Components.utils.reportError);
+        break;
       case "signIn":
       case "signUp":
       case "refreshAuthentication":

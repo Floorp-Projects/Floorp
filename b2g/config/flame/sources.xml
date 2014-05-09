@@ -18,7 +18,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1f6a1fe07f81c5bc5e1d079c9b60f7f78ca2bf4f"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="4f352142a54f7f7ae2c460aad9049eda4b0edb14"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="15ac34804eb8b3c9b2582d7cf754c57e23182df6"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="f313e6d3aaaefe8c82eaed15912a09b120fb7260"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="ce95d372e6d285725b96490afdaaf489ad8f9ca9"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="3691614d0045f7968addce45d4140fb360c3ceaf"/>
@@ -119,7 +119,7 @@
   <!-- Flame specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="e8a318f7690092e639ba88891606f4183e846d3f"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="234ed34543345f58c0d4dcb1aa012de68802b9dc"/>
-  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="2a3f4c782daad9740f1b78766b636e0e00a0ff30"/>
+  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="ecc08b2f0efea93c778e3525553bcd4bd5f2cf49"/>
   <project name="kernel/msm" path="kernel" revision="1f47f3a180ed8b070f3cf3c4d11ff2523cca6c8a"/>
   <project name="platform/bootable/recovery" path="bootable/recovery" revision="f2914eacee9120680a41463708bb6ee8291749fc"/>
   <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="fa892235a9bd8983f8b591129fc1a9398f64e514"/>
