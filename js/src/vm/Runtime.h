@@ -925,10 +925,10 @@ struct JSRuntime : public JS::shadow::Runtime,
         gc.marker.setGCMode(mode);
     }
 
-    bool isHeapBusy() { return gc.isHeapBusy(); }
-    bool isHeapMajorCollecting() { return gc.isHeapMajorCollecting(); }
-    bool isHeapMinorCollecting() { return gc.isHeapMinorCollecting(); }
-    bool isHeapCollecting() { return gc.isHeapCollecting(); }
+    bool isHeapBusy() { return gc.heapState != js::Idle; }
+    bool isHeapMajorCollecting() { return gc.heapState == js::MajorCollecting; }
+    bool isHeapMinorCollecting() { return gc.heapState == js::MinorCollecting; }
+    bool isHeapCollecting() { return isHeapMajorCollecting() || isHeapMinorCollecting(); }
 
 #ifdef JS_GC_ZEAL
     int gcZeal() { return gc.zealMode; }

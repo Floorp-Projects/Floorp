@@ -34,7 +34,6 @@ void SetGCZeal(JSRuntime *, uint8_t, uint32_t);
 
 namespace gc {
 class Cell;
-class Collector;
 class MinorCollectionTracer;
 } /* namespace gc */
 
@@ -150,27 +149,6 @@ class Nursery
         JS_ASSERT(runtime_);
         return ((JS::shadow::Runtime *)runtime_)->gcNurseryEnd_;
     }
-
-#ifdef JS_GC_ZEAL
-    /*
-     * In debug and zeal builds, these bytes indicate the state of an unused
-     * segment of nursery-allocated memory.
-     */
-    void enterZealMode() {
-        if (isEnabled())
-            numActiveChunks_ = NumNurseryChunks;
-    }
-    void leaveZealMode() {
-        if (isEnabled()) {
-            JS_ASSERT(isEmpty());
-            setCurrentChunk(0);
-            currentStart_ = start();
-        }
-    }
-#else
-    void enterZealMode() {}
-    void leaveZealMode() {}
-#endif
 
   private:
     /*
@@ -311,8 +289,30 @@ class Nursery
 
     static void MinorGCCallback(JSTracer *trc, void **thingp, JSGCTraceKind kind);
 
+#ifdef JS_GC_ZEAL
+    /*
+     * In debug and zeal builds, these bytes indicate the state of an unused
+     * segment of nursery-allocated memory.
+     */
+    void enterZealMode() {
+        if (isEnabled())
+            numActiveChunks_ = NumNurseryChunks;
+    }
+    void leaveZealMode() {
+        if (isEnabled()) {
+            JS_ASSERT(isEmpty());
+            setCurrentChunk(0);
+            currentStart_ = start();
+        }
+    }
+#else
+    void enterZealMode() {}
+    void leaveZealMode() {}
+#endif
+
     friend class gc::MinorCollectionTracer;
     friend class jit::MacroAssembler;
+    friend void SetGCZeal(JSRuntime *, uint8_t, uint32_t);
 };
 
 } /* namespace js */

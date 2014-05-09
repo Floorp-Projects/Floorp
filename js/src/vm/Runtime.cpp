@@ -279,7 +279,10 @@ JSRuntime::init(uint32_t maxbytes)
     if (!threadPool.init())
         return false;
 
-    if (!gc.init(maxbytes))
+    if (!js_InitGC(this, maxbytes))
+        return false;
+
+    if (!gc.marker.init(gcMode()))
         return false;
 
     const char *size = getenv("JSGC_MARK_STACK_LIMIT");
@@ -426,7 +429,7 @@ JSRuntime::~JSRuntime()
     FinishRuntimeNumberState(this);
 #endif
 
-    gc.finish();
+    js_FinishGC(this);
     atomsCompartment_ = nullptr;
 
 #ifdef JS_THREADSAFE

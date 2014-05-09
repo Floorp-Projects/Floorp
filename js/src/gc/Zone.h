@@ -102,7 +102,6 @@ struct Zone : public JS::shadow::Zone,
 {
   private:
     friend bool js::CurrentThreadCanAccessZone(Zone *zone);
-    friend class js::gc::GCRuntime;
 
   public:
     js::Allocator                allocator;
@@ -322,7 +321,6 @@ struct Zone : public JS::shadow::Zone,
 
   private:
     void sweepBreakpoints(js::FreeOp *fop);
-    void sweepCompartments(js::FreeOp *fop, bool keepAtleastOne, bool lastGC);
 
 #ifdef JS_ION
     js::jit::JitZone *jitZone_;
