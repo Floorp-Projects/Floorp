@@ -162,6 +162,10 @@ class EnumSet
       return count;
     }
 
+    bool isEmpty() const {
+      return mBitField == 0;
+    }
+
     uint32_t serialize() const {
       return mBitField;
     }
