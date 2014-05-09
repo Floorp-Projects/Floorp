@@ -184,3 +184,8 @@ user_pref('browser.contentHandlers.types.5.uri', 'http://test1.example.org/rss?u
 
 // We want to collect telemetry, but we don't want to send in the results.
 user_pref('toolkit.telemetry.server', 'https://%(server)s/telemetry-dummy/');
+
+// We don't want to hit the real Firefox Accounts server for tests.  We don't
+// actually need a functioning FxA server, so just set it to something that
+// resolves and accepts requests, even if they all fail.
+user_pref('identity.fxaccounts.auth.uri', 'https://%(server)s/fxa-dummy/');
