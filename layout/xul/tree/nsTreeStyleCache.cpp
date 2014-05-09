@@ -11,7 +11,7 @@
 nsStyleContext*
 nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
                                   nsPresContext* aPresContext,
-                                  nsIContent* aContent, 
+                                  nsIContent* aContent,
                                   nsStyleContext* aContext,
                                   nsIAtom* aPseudoElement,
                                   const AtomArray & aInputWord)
