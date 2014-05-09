@@ -22,6 +22,8 @@
 #include <media/stagefright/foundation/AHandler.h>
 #include <utils/List.h>
 
+#include "prio.h"
+
 namespace android {
 
 struct MOZ_EXPORT ABuffer;
@@ -36,12 +38,13 @@ struct ARTPConnection : public AHandler {
     ARTPConnection(uint32_t flags = 0);
 
     void addStream(
-            int rtpSocket, int rtcpSocket,
+            PRFileDesc *rtpSocket, PRFileDesc *rtcpSocket,
+            int interleavedRTPIdx, int interleavedRTCPIdx,
             const sp<ASessionDescription> &sessionDesc, size_t index,
             const sp<AMessage> &notify,
             bool injected);
 
-    void removeStream(int rtpSocket, int rtcpSocket);
+    void removeStream(PRFileDesc *rtpSocket, PRFileDesc *rtcpSocket);
 
     void injectPacket(int index, const sp<ABuffer> &buffer);
 
@@ -49,7 +52,7 @@ struct ARTPConnection : public AHandler {
     // (the rtpSocket is bound to an even port, the rtcpSocket to the
     // next higher port).
     static void MakePortPair(
-            int *rtpSocket, int *rtcpSocket, unsigned *rtpPort);
+            PRFileDesc **rtpSocket, PRFileDesc **rtcpSocket, uint16_t *rtpPort);
 
 protected:
     virtual ~ARTPConnection();
@@ -63,7 +66,7 @@ private:
         kWhatInjectPacket,
     };
 
-    static const int64_t kSelectTimeoutUs;
+    static const uint32_t kSocketPollTimeoutUs;
 
     uint32_t mFlags;
 

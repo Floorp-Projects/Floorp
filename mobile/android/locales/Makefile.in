@@ -29,11 +29,13 @@ clobber-zip:
 # need to kill stage for repacks for now due to the library moves
 # in PACKAGE and UNPACKAGE
 # also clean up potential left-overs of multi-locale builds, notably
-# values-*/strings.xml. Those would be in the way of a single locale build,
-# which this target is for
+# values-*/strings.xml and raw-*/suggestedsites.json.
+# Those would be in the way of a single locale build, which this
+# target is for
 clobber-stage:
 	$(RM) -rf $(STAGEDIST)
 	$(RM) $(DEPTH)/mobile/android/base/res/values-*/strings.xml
+	$(RM) $(DEPTH)/mobile/android/base/res/raw-*/suggestedsites.json
 
 libs-%:
 	@$(MAKE) -C $(DEPTH)/mobile/locales libs-$*

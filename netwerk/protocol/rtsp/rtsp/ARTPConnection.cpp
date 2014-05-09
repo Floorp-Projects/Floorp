@@ -29,7 +29,12 @@
 #include <media/stagefright/foundation/hexdump.h>
 
 #include <arpa/inet.h>
-#include <sys/socket.h>
+
+#include "mozilla/NullPtr.h"
+#include "mozilla/mozalloc.h"
+#include "prnetdb.h"
+#include "prerr.h"
+#include "prerror.h"
 
 namespace android {
 
@@ -48,11 +53,13 @@ static uint64_t u64at(const uint8_t *data) {
 }
 
 // static
-const int64_t ARTPConnection::kSelectTimeoutUs = 1000ll;
+const uint32_t ARTPConnection::kSocketPollTimeoutUs = 1000ll;
 
 struct ARTPConnection::StreamInfo {
-    int mRTPSocket;
-    int mRTCPSocket;
+    PRFileDesc *mRTPSocket;
+    PRFileDesc *mRTCPSocket;
+    int mInterleavedRTPIdx;
+    int mInterleavedRTCPIdx;
     sp<ASessionDescription> mSessionDesc;
     size_t mIndex;
     sp<AMessage> mNotifyMsg;
@@ -60,7 +67,7 @@ struct ARTPConnection::StreamInfo {
 
     int64_t mNumRTCPPacketsReceived;
     int64_t mNumRTPPacketsReceived;
-    struct sockaddr_in mRemoteRTCPAddr;
+    PRNetAddr mRemoteRTCPAddr;
 
     bool mIsInjected;
 };
@@ -75,14 +82,17 @@ ARTPConnection::~ARTPConnection() {
 }
 
 void ARTPConnection::addStream(
-        int rtpSocket, int rtcpSocket,
+        PRFileDesc *rtpSocket, PRFileDesc *rtcpSocket,
+        int interleavedRTPIdx, int interleavedRTCPIdx,
         const sp<ASessionDescription> &sessionDesc,
         size_t index,
         const sp<AMessage> &notify,
         bool injected) {
     sp<AMessage> msg = new AMessage(kWhatAddStream, id());
-    msg->setInt32("rtp-socket", rtpSocket);
-    msg->setInt32("rtcp-socket", rtcpSocket);
+    msg->setPointer("rtp-socket", rtpSocket);
+    msg->setPointer("rtcp-socket", rtcpSocket);
+    msg->setInt32("interleaved-rtp", interleavedRTPIdx);
+    msg->setInt32("interleaved-rtcp", interleavedRTCPIdx);
     msg->setObject("session-desc", sessionDesc);
     msg->setSize("index", index);
     msg->setMessage("notify", notify);
@@ -90,28 +100,36 @@ void ARTPConnection::addStream(
     msg->post();
 }
 
-void ARTPConnection::removeStream(int rtpSocket, int rtcpSocket) {
+void ARTPConnection::removeStream(PRFileDesc *rtpSocket, PRFileDesc *rtcpSocket) {
     sp<AMessage> msg = new AMessage(kWhatRemoveStream, id());
-    msg->setInt32("rtp-socket", rtpSocket);
-    msg->setInt32("rtcp-socket", rtcpSocket);
+    msg->setPointer("rtp-socket", rtpSocket);
+    msg->setPointer("rtcp-socket", rtcpSocket);
     msg->post();
 }
 
-static void bumpSocketBufferSize(int s) {
-    int size = 256 * 1024;
-    CHECK_EQ(setsockopt(s, SOL_SOCKET, SO_RCVBUF, &size, sizeof(size)), 0);
+static void bumpSocketBufferSize(PRFileDesc *s) {
+    uint32_t size = 256 * 1024;
+    PRSocketOptionData opt;
+
+    opt.option = PR_SockOpt_RecvBufferSize;
+    opt.value.recv_buffer_size = size;
+    CHECK_EQ(PR_SetSocketOption(s, &opt), PR_SUCCESS);
 }
 
 // static
 void ARTPConnection::MakePortPair(
-        int *rtpSocket, int *rtcpSocket, unsigned *rtpPort) {
-    *rtpSocket = socket(AF_INET, SOCK_DGRAM, 0);
-    CHECK_GE(*rtpSocket, 0);
+        PRFileDesc **rtpSocket, PRFileDesc **rtcpSocket, uint16_t *rtpPort) {
+    *rtpSocket = PR_OpenUDPSocket(PR_AF_INET);
+    if (!*rtpSocket) {
+        TRESPASS();
+    }
 
     bumpSocketBufferSize(*rtpSocket);
 
-    *rtcpSocket = socket(AF_INET, SOCK_DGRAM, 0);
-    CHECK_GE(*rtcpSocket, 0);
+    *rtcpSocket = PR_OpenUDPSocket(PR_AF_INET);
+    if (!*rtcpSocket) {
+        TRESPASS();
+    }
 
     bumpSocketBufferSize(*rtcpSocket);
 
@@ -121,22 +139,19 @@ void ARTPConnection::MakePortPair(
     unsigned start = (unsigned)((rand() * 1000ll) / RAND_MAX) + 15550;
     start &= ~1;
 
-    for (unsigned port = start; port < 65536; port += 2) {
-        struct sockaddr_in addr;
-        memset(addr.sin_zero, 0, sizeof(addr.sin_zero));
-        addr.sin_family = AF_INET;
-        addr.sin_addr.s_addr = htonl(INADDR_ANY);
-        addr.sin_port = htons(port);
+    for (uint16_t port = start; port < 65536; port += 2) {
+        PRNetAddr addr;
+        addr.inet.family = PR_AF_INET;
+        addr.inet.ip = PR_htonl(PR_INADDR_ANY);
+        addr.inet.port = PR_htons(port);
 
-        if (bind(*rtpSocket,
-                 (const struct sockaddr *)&addr, sizeof(addr)) < 0) {
+        if (PR_Bind(*rtpSocket, &addr) == PR_FAILURE) {
             continue;
         }
 
-        addr.sin_port = htons(port + 1);
+        addr.inet.port = PR_htons(port + 1);
 
-        if (bind(*rtcpSocket,
-                 (const struct sockaddr *)&addr, sizeof(addr)) == 0) {
+        if (PR_Bind(*rtcpSocket, &addr) == PR_SUCCESS) {
             *rtpPort = port;
             return;
         }
@@ -183,11 +198,14 @@ void ARTPConnection::onAddStream(const sp<AMessage> &msg) {
     mStreams.push_back(StreamInfo());
     StreamInfo *info = &*--mStreams.end();
 
-    int32_t s;
-    CHECK(msg->findInt32("rtp-socket", &s));
-    info->mRTPSocket = s;
-    CHECK(msg->findInt32("rtcp-socket", &s));
-    info->mRTCPSocket = s;
+    void *s;
+    CHECK(msg->findPointer("rtp-socket", &s));
+    info->mRTPSocket = (PRFileDesc*)s;
+    CHECK(msg->findPointer("rtcp-socket", &s));
+    info->mRTCPSocket = (PRFileDesc*)s;
+
+    CHECK(msg->findInt32("interleaved-rtp", &info->mInterleavedRTPIdx));
+    CHECK(msg->findInt32("interleaved-rtcp", &info->mInterleavedRTCPIdx));
 
     int32_t injected;
     CHECK(msg->findInt32("injected", &injected));
@@ -203,7 +221,7 @@ void ARTPConnection::onAddStream(const sp<AMessage> &msg) {
 
     info->mNumRTCPPacketsReceived = 0;
     info->mNumRTPPacketsReceived = 0;
-    memset(&info->mRemoteRTCPAddr, 0, sizeof(info->mRemoteRTCPAddr));
+    PR_InitializeNetAddr(PR_IpAddrNull, 0, &info->mRemoteRTCPAddr);
 
     if (!injected) {
         postPollEvent();
@@ -211,9 +229,12 @@ void ARTPConnection::onAddStream(const sp<AMessage> &msg) {
 }
 
 void ARTPConnection::onRemoveStream(const sp<AMessage> &msg) {
-    int32_t rtpSocket, rtcpSocket;
-    CHECK(msg->findInt32("rtp-socket", &rtpSocket));
-    CHECK(msg->findInt32("rtcp-socket", &rtcpSocket));
+    PRFileDesc *rtpSocket = nullptr, *rtcpSocket = nullptr;
+    void *s;
+    CHECK(msg->findPointer("rtp-socket", &s));
+    rtpSocket = (PRFileDesc*)s;
+    CHECK(msg->findPointer("rtcp-socket", &s));
+    rtcpSocket = (PRFileDesc*)s;
 
     List<StreamInfo>::iterator it = mStreams.begin();
     while (it != mStreams.end()
@@ -246,50 +267,60 @@ void ARTPConnection::onPollStreams() {
         return;
     }
 
-    struct timeval tv;
-    tv.tv_sec = 0;
-    tv.tv_usec = kSelectTimeoutUs;
+    uint32_t pollCount = mStreams.size() * 2;
+    PRPollDesc *pollList = (PRPollDesc *)
+        moz_xcalloc(pollCount, sizeof(PRPollDesc));
 
-    fd_set rs;
-    FD_ZERO(&rs);
-
-    int maxSocket = -1;
+    // |pollIndex| is used to map different RTP & RTCP socket pairs.
+    int numSocketsToPoll = 0, pollIndex = 0;
     for (List<StreamInfo>::iterator it = mStreams.begin();
-         it != mStreams.end(); ++it) {
+         it != mStreams.end(); ++it, pollIndex += 2) {
+        if (pollIndex >= pollCount) {
+            // |pollIndex| should never equal or exceed |pollCount|.
+            TRESPASS();
+        }
+
         if ((*it).mIsInjected) {
             continue;
         }
 
-        FD_SET(it->mRTPSocket, &rs);
-        FD_SET(it->mRTCPSocket, &rs);
-
-        if (it->mRTPSocket > maxSocket) {
-            maxSocket = it->mRTPSocket;
+        if (it->mRTPSocket) {
+            pollList[pollIndex].fd = it->mRTPSocket;
+            pollList[pollIndex].in_flags = PR_POLL_READ;
+            pollList[pollIndex].out_flags = 0;
+            numSocketsToPoll++;
         }
-        if (it->mRTCPSocket > maxSocket) {
-            maxSocket = it->mRTCPSocket;
+        if (it->mRTCPSocket) {
+            pollList[pollIndex + 1].fd = it->mRTCPSocket;
+            pollList[pollIndex + 1].in_flags = PR_POLL_READ;
+            pollList[pollIndex + 1].out_flags = 0;
+            numSocketsToPoll++;
         }
     }
 
-    if (maxSocket == -1) {
+    if (numSocketsToPoll == 0) {
+        // No sockets need to poll. return.
         return;
     }
 
-    int res = select(maxSocket + 1, &rs, NULL, NULL, &tv);
+    int32_t numSocketsReadyToRead = PR_Poll(pollList, pollCount,
+        PR_MicrosecondsToInterval(kSocketPollTimeoutUs));
 
-    if (res > 0) {
+    if (numSocketsReadyToRead > 0) {
+        pollIndex = 0;
         List<StreamInfo>::iterator it = mStreams.begin();
         while (it != mStreams.end()) {
             if ((*it).mIsInjected) {
                 ++it;
+                pollIndex += 2;
                 continue;
             }
 
             status_t err = OK;
-            if (FD_ISSET(it->mRTPSocket, &rs)) {
+            if (pollList[pollIndex].out_flags != 0) {
                 err = receive(&*it, true);
             }
-            if (err == OK && FD_ISSET(it->mRTCPSocket, &rs)) {
+            if (err == OK && pollList[pollIndex + 1].out_flags != 0) {
                 err = receive(&*it, false);
             }
 
@@ -298,10 +329,12 @@ void ARTPConnection::onPollStreams() {
 
                 LOGW("failed to receive RTP/RTCP datagram.");
                 it = mStreams.erase(it);
+                pollIndex += 2;
                 continue;
             }
 
             ++it;
+            pollIndex += 2;
         }
     }
 
@@ -341,16 +374,16 @@ void ARTPConnection::onPollStreams() {
                 LOGV("Sending RR...");
 
                 ssize_t n;
+                PRErrorCode errorCode;
                 do {
-                    n = sendto(
-                        s->mRTCPSocket, buffer->data(), buffer->size(), 0,
-                        (const struct sockaddr *)&s->mRemoteRTCPAddr,
-                        sizeof(s->mRemoteRTCPAddr));
-                } while (n < 0 && errno == EINTR);
+                    n = PR_SendTo(s->mRTCPSocket, buffer->data(), buffer->size(),
+                                  0, &s->mRemoteRTCPAddr, PR_INTERVAL_NO_WAIT);
+                    errorCode = PR_GetError();
+                } while (n < 0 && errorCode == PR_PENDING_INTERRUPT_ERROR);
 
                 if (n <= 0) {
                     LOGW("failed to send RTCP receiver report (%s).",
-                         n == 0 ? "connection gone" : strerror(errno));
+                         n == 0 ? "connection gone" : "interrupt error");
 
                     it = mStreams.erase(it);
                     continue;
@@ -377,23 +410,24 @@ status_t ARTPConnection::receive(StreamInfo *s, bool receiveRTP) {
 
     sp<ABuffer> buffer = new ABuffer(65536);
 
-    socklen_t remoteAddrLen =
+    int32_t remoteAddrLen =
         (!receiveRTP && s->mNumRTCPPacketsReceived == 0)
             ? sizeof(s->mRemoteRTCPAddr) : 0;
 
     ssize_t nbytes;
+    PRErrorCode errorCode;
     do {
-        nbytes = recvfrom(
-            receiveRTP ? s->mRTPSocket : s->mRTCPSocket,
-            buffer->data(),
-            buffer->capacity(),
-            0,
-            remoteAddrLen > 0 ? (struct sockaddr *)&s->mRemoteRTCPAddr : NULL,
-            remoteAddrLen > 0 ? &remoteAddrLen : NULL);
-    } while (nbytes < 0 && errno == EINTR);
+        nbytes = PR_RecvFrom(receiveRTP ? s->mRTPSocket : s->mRTCPSocket,
+                             buffer->data(),
+                             buffer->size(),
+                             0,
+                             remoteAddrLen > 0 ? &s->mRemoteRTCPAddr : NULL,
+                             PR_INTERVAL_NO_WAIT);
+        errorCode = PR_GetError();
+    } while (nbytes < 0 && errorCode == PR_PENDING_INTERRUPT_ERROR);
 
     if (nbytes <= 0) {
-        return -ECONNRESET;
+        return -PR_CONNECT_RESET_ERROR;
     }
 
     buffer->setRange(0, nbytes);
@@ -656,7 +690,7 @@ void ARTPConnection::onInjectPacket(const sp<AMessage> &msg) {
 
     List<StreamInfo>::iterator it = mStreams.begin();
     while (it != mStreams.end()
-           && it->mRTPSocket != index && it->mRTCPSocket != index) {
+           && it->mInterleavedRTPIdx != index && it->mInterleavedRTCPIdx != index) {
         ++it;
     }
 
@@ -667,7 +701,7 @@ void ARTPConnection::onInjectPacket(const sp<AMessage> &msg) {
     StreamInfo *s = &*it;
 
     status_t err;
-    if (it->mRTPSocket == index) {
+    if (it->mInterleavedRTPIdx == index) {
         err = parseRTP(s, buffer);
     } else {
         err = parseRTCP(s, buffer);
@@ -675,4 +709,3 @@ void ARTPConnection::onInjectPacket(const sp<AMessage> &msg) {
 }
 
 }  // namespace android
-

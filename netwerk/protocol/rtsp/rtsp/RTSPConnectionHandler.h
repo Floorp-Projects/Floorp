@@ -32,13 +32,13 @@
 #include <media/stagefright/MediaErrors.h>
 
 #include <arpa/inet.h>
-#include <sys/socket.h>
 #include <netdb.h>
 #include "nsPrintfCString.h"
 
-#include "HTTPBase.h"
-
 #include "prlog.h"
+
+#include "prio.h"
+#include "prnetdb.h"
 
 extern PRLogModuleInfo* gRtspLog;
 #define LOGI(msg, ...) PR_LOG(gRtspLog, PR_LOG_ALWAYS, ("RTSP" msg, ##__VA_ARGS__))
@@ -149,7 +149,7 @@ struct RtspConnectionHandler : public AHandler {
         // Strip any authentication info from the session url, we don't
         // want to transmit user/pass in cleartext.
         AString host, path, user, pass;
-        unsigned port;
+        uint16_t port;
         CHECK(ARTSPConnection::ParseURL(
                     mSessionURL.c_str(), &host, &port, &path, &user, &pass));
 
@@ -256,10 +256,9 @@ struct RtspConnectionHandler : public AHandler {
         buf->setRange(0, buf->size() + 8);
     }
 
-    static void addSDES(int s, const sp<ABuffer> &buffer) {
-        struct sockaddr_in addr;
-        socklen_t addrSize = sizeof(addr);
-        CHECK_EQ(0, getsockname(s, (sockaddr *)&addr, &addrSize));
+    static void addSDES(PRFileDesc *s, const sp<ABuffer> &buffer) {
+        PRNetAddr addr;
+        CHECK_EQ(PR_GetSockName(s, &addr), PR_SUCCESS);
 
         uint8_t *data = buffer->data() + buffer->size();
         data[0] = 0x80 | 1;
@@ -274,7 +273,9 @@ struct RtspConnectionHandler : public AHandler {
         data[offset++] = 1;  // CNAME
 
         AString cname = "stagefright@";
-        cname.append(inet_ntoa(addr.sin_addr));
+        char buf[64];
+        PR_NetAddrToString(&addr, buf, sizeof(buf));
+        cname.append(buf);
         data[offset++] = cname.size();
 
         memcpy(&data[offset], cname.c_str(), cname.size());
@@ -314,30 +315,34 @@ struct RtspConnectionHandler : public AHandler {
     // In case we're behind NAT, fire off two UDP packets to the remote
     // rtp/rtcp ports to poke a hole into the firewall for future incoming
     // packets. We're going to send an RR/SDES RTCP packet to both of them.
-    bool pokeAHole(int rtpSocket, int rtcpSocket, const AString &transport) {
-        struct sockaddr_in addr;
-        memset(addr.sin_zero, 0, sizeof(addr.sin_zero));
-        addr.sin_family = AF_INET;
+    bool pokeAHole(PRFileDesc *rtpSocket, PRFileDesc *rtcpSocket, const AString &transport) {
+        PRNetAddr addr;
+        addr.inet.family = PR_AF_INET;
 
         AString source;
         AString server_port;
+        PRStatus status = PR_FAILURE;
         if (!GetAttribute(transport.c_str(),
                           "source",
                           &source)) {
             LOGW("Missing 'source' field in Transport response. Using "
                  "RTSP endpoint address.");
 
-            struct hostent *ent = gethostbyname(mSessionHost.c_str());
-            if (ent == NULL) {
+            char buffer[PR_NETDB_BUF_SIZE];
+            PRHostEnt hostentry;
+            status = PR_GetHostByName(mSessionHost.c_str(),
+                buffer, PR_NETDB_BUF_SIZE, &hostentry);
+
+            if (status == PR_FAILURE) {
                 LOGE("Failed to look up address of session host '%s'",
                      mSessionHost.c_str());
 
                 return false;
             }
 
-            addr.sin_addr.s_addr = *(in_addr_t *)ent->h_addr;
+            addr.inet.ip = *((uint32_t *) hostentry.h_addr_list[0]);
         } else {
-            addr.sin_addr.s_addr = inet_addr(source.c_str());
+            status = PR_StringToNetAddr(source.c_str(), &addr);
         }
 
         if (!GetAttribute(transport.c_str(),
@@ -365,11 +370,12 @@ struct RtspConnectionHandler : public AHandler {
                  "in the future.");
         }
 
-        if (addr.sin_addr.s_addr == INADDR_NONE) {
+        // Check if ip is vaild.
+        if (status == PR_FAILURE) {
             return true;
         }
 
-        if (IN_LOOPBACK(ntohl(addr.sin_addr.s_addr))) {
+        if (addr.inet.ip == PR_htonl(PR_INADDR_LOOPBACK)) {
             // No firewalls to traverse on the loopback interface.
             return true;
         }
@@ -380,22 +386,26 @@ struct RtspConnectionHandler : public AHandler {
         addRR(buf);
         addSDES(rtpSocket, buf);
 
-        addr.sin_port = htons(rtpPort);
+        addr.inet.port = PR_htons(rtpPort);
 
-        ssize_t n = sendto(
-                rtpSocket, buf->data(), buf->size(), 0,
-                (const sockaddr *)&addr, sizeof(addr));
+        if (!rtpSocket) {
+            return false;
+        }
+        ssize_t n = PR_SendTo(rtpSocket, buf->data(), buf->size(), 0, &addr,
+                              PR_INTERVAL_NO_WAIT);
 
         if (n < (ssize_t)buf->size()) {
             LOGE("failed to poke a hole for RTP packets");
             return false;
         }
 
-        addr.sin_port = htons(rtcpPort);
+        addr.inet.port = PR_htons(rtcpPort);
 
-        n = sendto(
-                rtcpSocket, buf->data(), buf->size(), 0,
-                (const sockaddr *)&addr, sizeof(addr));
+        if (!rtcpSocket) {
+            return false;
+        }
+        n = PR_SendTo(rtcpSocket, buf->data(), buf->size(), 0,
+                      &addr, PR_INTERVAL_NO_WAIT);
 
         if (n < (ssize_t)buf->size()) {
             LOGE("failed to poke a hole for RTCP packets");
@@ -657,6 +667,7 @@ struct RtspConnectionHandler : public AHandler {
 
                         mRTPConn->addStream(
                                 track->mRTPSocket, track->mRTCPSocket,
+                                track->mInterleavedRTPIdx, track->mInterleavedRTCPIdx,
                                 mSessionDesc, index,
                                 notify, track->mUsingInterleavedTCP);
 
@@ -667,14 +678,13 @@ struct RtspConnectionHandler : public AHandler {
                 if (result != OK) {
                     if (track) {
                         if (!track->mUsingInterleavedTCP) {
-                            // Clear the tag
-                            if (mUIDValid) {
-                                HTTPBase::UnRegisterSocketUserTag(track->mRTPSocket);
-                                HTTPBase::UnRegisterSocketUserTag(track->mRTCPSocket);
+                            if (track->mRTPSocket) {
+                                PR_Close(track->mRTPSocket);
                             }
 
-                            close(track->mRTPSocket);
-                            close(track->mRTCPSocket);
+                            if (track->mRTCPSocket) {
+                                PR_Close(track->mRTCPSocket);
+                            }
                         }
 
                         mTracks.removeItemsAt(trackIndex);
@@ -809,14 +819,13 @@ struct RtspConnectionHandler : public AHandler {
                     if (!info->mUsingInterleavedTCP) {
                         mRTPConn->removeStream(info->mRTPSocket, info->mRTCPSocket);
 
-                        // Clear the tag
-                        if (mUIDValid) {
-                            HTTPBase::UnRegisterSocketUserTag(info->mRTPSocket);
-                            HTTPBase::UnRegisterSocketUserTag(info->mRTCPSocket);
+                        if (info->mRTPSocket) {
+                            PR_Close(info->mRTPSocket);
                         }
 
-                        close(info->mRTPSocket);
-                        close(info->mRTCPSocket);
+                        if (info->mRTCPSocket) {
+                            PR_Close(info->mRTCPSocket);
+                        }
                     }
                 }
                 mTracks.clear();
@@ -1289,8 +1298,10 @@ struct RtspConnectionHandler : public AHandler {
 private:
     struct TrackInfo {
         AString mURL;
-        int mRTPSocket;
-        int mRTCPSocket;
+        PRFileDesc *mRTPSocket;
+        PRFileDesc *mRTCPSocket;
+        int mInterleavedRTPIdx;
+        int mInterleavedRTCPIdx;
         bool mUsingInterleavedTCP;
         uint32_t mFirstSeqNumInSegment;
         bool mNewSegment;
@@ -1399,24 +1410,17 @@ private:
         if (mTryTCPInterleaving) {
             size_t interleaveIndex = 2 * (mTracks.size() - 1);
             info->mUsingInterleavedTCP = true;
-            info->mRTPSocket = interleaveIndex;
-            info->mRTCPSocket = interleaveIndex + 1;
+            info->mInterleavedRTPIdx = interleaveIndex;
+            info->mInterleavedRTCPIdx = interleaveIndex + 1;
 
             request.append("Transport: RTP/AVP/TCP;interleaved=");
-            request.append(interleaveIndex);
+            request.append(info->mInterleavedRTPIdx);
             request.append("-");
-            request.append(interleaveIndex + 1);
+            request.append(info->mInterleavedRTCPIdx);
         } else {
-            unsigned rtpPort;
+            uint16_t rtpPort;
             ARTPConnection::MakePortPair(
                     &info->mRTPSocket, &info->mRTCPSocket, &rtpPort);
-
-            if (mUIDValid) {
-                HTTPBase::RegisterSocketUserTag(info->mRTPSocket, mUID,
-                                                (uint32_t)*(uint32_t*) "RTP_");
-                HTTPBase::RegisterSocketUserTag(info->mRTCPSocket, mUID,
-                                                (uint32_t)*(uint32_t*) "RTP_");
-            }
 
             request.append("Transport: RTP/AVP/UDP;unicast;client_port=");
             request.append(rtpPort);

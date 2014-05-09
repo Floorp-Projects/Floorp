@@ -1,0 +1,56 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+body {
+  font: message-box;
+  font-size: 15px;
+  font-weight: normal;
+  margin: 0;
+  color: #737980;
+  background-image: linear-gradient(#fff, #ededed 100px);
+}
+
+h1 {
+  font-size: 2.5em;
+  font-weight: lighter;
+  line-height: 1.2;
+  margin: 0;
+  margin-bottom: .5em;
+}
+
+button {
+  line-height: 20px;
+  height: 30px;
+  max-height: 30px;
+  padding: 3px;
+  color: #737980;
+  border: 1px solid rgba(23,50,77,.4);
+  border-radius: 5px;
+  background-color: #f1f1f1;
+  background-image: linear-gradient(#fff, rgba(255,255,255,.1));
+  box-shadow: 0 1px 1px 0 #fff, inset 0 2px 2px 0 #fff;
+  text-shadow: 0 1px 1px #fefffe;
+  -moz-appearance: none;
+  -moz-border-top-colors: none !important;
+  -moz-border-right-colors: none !important;
+  -moz-border-bottom-colors: none !important;
+  -moz-border-left-colors: none !important;
+}
+
+button:enabled:hover {
+  background-image: linear-gradient(#fff, rgba(255,255,255,.6));
+  cursor: pointer;
+}
+
+button:enabled:hover:active {
+  background-image: linear-gradient(rgba(255,255,255,.1), rgba(255,255,255,.6));
+}
+
+button:disabled {
+  cursor: not-allowed;
+  color: rgba(115,121,128,.5);
+  border-color: rgba(23,50,77,.25);
+  background-image: linear-gradient(rgba(255,255,255,.5), rgba(255,255,255,.1));
+  text-shadow: 0 1px 1px #fff;
+}
