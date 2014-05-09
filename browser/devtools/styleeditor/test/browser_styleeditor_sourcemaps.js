@@ -6,115 +6,120 @@
 const TESTCASE_URI = TEST_BASE_HTTPS + "sourcemaps.html";
 const PREF = "devtools.styleeditor.source-maps-enabled";
 
-function test()
-{
-  waitForExplicitFinish();
 
+const contents = {
+  "sourcemaps.scss": [
+    "",
+    "$paulrougetpink: #f06;",
+    "",
+    "div {",
+    "  color: $paulrougetpink;",
+    "}",
+    "",
+    "span {",
+    "  background-color: #EEE;",
+    "}"
+  ].join("\n"),
+  "contained.scss": [
+    "$pink: #f06;",
+    "",
+    "#header {",
+    "  color: $pink;",
+    "}"
+  ].join("\n"),
+  "sourcemaps.css": [
+    "div {",
+    "  color: #ff0066; }",
+    "",
+    "span {",
+    "  background-color: #EEE; }",
+    "",
+    "/*# sourceMappingURL=sourcemaps.css.map */"
+  ].join("\n"),
+  "contained.css": [
+    "#header {",
+    "  color: #f06; }",
+    "",
+    "/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiIiwic291cmNlcyI6WyJzYXNzL2NvbnRhaW5lZC5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUVBO0VBQ0UsT0FISyIsInNvdXJjZXNDb250ZW50IjpbIiRwaW5rOiAjZjA2O1xuXG4jaGVhZGVyIHtcbiAgY29sb3I6ICRwaW5rO1xufSJdfQ==*/"
+  ].join("\n")
+}
+
+const cssNames = ["sourcemaps.css", "contained.css"];
+const scssNames = ["sourcemaps.scss", "contained.scss"];
+
+waitForExplicitFinish();
+
+let test = asyncTest(function*() {
   Services.prefs.setBoolPref(PREF, true);
 
-  // wait for 3 editors - 1 for first style sheet, 1 for the
-  // generated style sheet, and 1 for original source after it
-  // loads and replaces the generated style sheet.
-  addTabAndOpenStyleEditors(3, panel => runTests(panel.UI));
+  let {UI} = yield addTabAndOpenStyleEditors(5, null, TESTCASE_URI);
 
-  content.location = TESTCASE_URI;
-}
+  is(UI.editors.length, 3,
+    "correct number of editors with source maps enabled");
 
-function runTests(UI)
-{
-  is(UI.editors.length, 2);
+  // Test first plain css editor
+  testFirstEditor(UI.editors[0]);
 
-  let firstEditor = UI.editors[0];
-  testFirstEditor(firstEditor);
+  // Test Scss editors
+  yield testEditor(UI.editors[1], scssNames);
+  yield testEditor(UI.editors[2], scssNames);
 
-  let ScssEditor = UI.editors[1];
+  // Test disabling original sources
+  yield togglePref(UI);
 
-  let link = getStylesheetNameLinkFor(ScssEditor);
-  link.click();
+  is(UI.editors.length, 3, "correct number of editors after pref toggled");
 
-  ScssEditor.getSourceEditor().then(() => {
-    testScssEditor(ScssEditor);
+  // Test CSS editors
+  yield testEditor(UI.editors[1], cssNames);
+  yield testEditor(UI.editors[2], cssNames);
 
-    togglePref(UI);
-  });
-}
-
-function togglePref(UI) {
-  let count = 0;
-
-  UI.on("editor-added", (event, editor) => {
-    if (++count == 2) {
-      testTogglingPref(UI);
-    }
-  })
-
-  Services.prefs.setBoolPref(PREF, false);
-}
-
-function testTogglingPref(UI) {
-  is(UI.editors.length, 2, "correct number of editors after pref toggled");
-
-  let CSSEditor = UI.editors[1];
-
-  let link = getStylesheetNameLinkFor(CSSEditor);
-  link.click();
-
-  CSSEditor.getSourceEditor().then(() => {
-    testCSSEditor(CSSEditor);
-
-    finishUp();
-  })
-}
+  Services.prefs.clearUserPref(PREF);
+});
 
 function testFirstEditor(editor) {
   let name = getStylesheetNameFor(editor);
   is(name, "simple.css", "First style sheet display name is correct");
 }
 
-function testScssEditor(editor) {
+function testEditor(editor, possibleNames) {
   let name = getStylesheetNameFor(editor);
-  is(name, "sourcemaps.scss", "Original source display name is correct");
+  ok(possibleNames.indexOf(name) >= 0, name + " editor name is correct");
 
-  let text = editor.sourceEditor.getText();
+  return openEditor(editor).then(() => {
+    let expectedText = contents[name];
 
-  is(text, "\n\
-$paulrougetpink: #f06;\n\
-\n\
-div {\n\
-  color: $paulrougetpink;\n\
-}\n\
-\n\
-span {\n\
-  background-color: #EEE;\n\
-}", "Original source text is correct");
-}
-
-function testCSSEditor(editor) {
-  let name = getStylesheetNameFor(editor);
-  is(name, "sourcemaps.css", "CSS source display name is correct");
-
-  let text = editor.sourceEditor.getText();
-
-  is(text, "div {\n\
-  color: #ff0066; }\n\
-\n\
-span {\n\
-  background-color: #EEE; }\n\
-\n\
-/*# sourceMappingURL=sourcemaps.css.map */", "CSS text is correct");
+    let text = editor.sourceEditor.getText();
+    is(text, expectedText, name + " editor contains expected text");
+  });
 }
 
 /* Helpers */
-function getStylesheetNameLinkFor(editor) {
+
+function togglePref(UI) {
+  let deferred = promise.defer();
+  let count = 0;
+
+  UI.on("editor-added", (event, editor) => {
+    if (++count == 3) {
+      deferred.resolve();
+    }
+  })
+
+  Services.prefs.setBoolPref(PREF, false);
+  return deferred.promise;
+}
+
+function openEditor(editor) {
+  getLinkFor(editor).click();
+
+  return editor.getSourceEditor();
+}
+
+function getLinkFor(editor) {
   return editor.summary.querySelector(".stylesheet-name");
 }
 
 function getStylesheetNameFor(editor) {
   return editor.summary.querySelector(".stylesheet-name > label")
          .getAttribute("value")
-}
-
-function finishUp() {
-  Services.prefs.clearUserPref(PREF);
-  finish();
 }
