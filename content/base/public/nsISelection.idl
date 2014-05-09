@@ -18,7 +18,7 @@ interface nsINode;
  * @version 1.0
  */
 
-[scriptable, builtinclass, uuid(e0a4d4b3-f34e-44bd-b1f2-4e3bde9b6915)]
+[builtinclass, uuid(e0a4d4b3-f34e-44bd-b1f2-4e3bde9b6915)]
 interface nsISelection : nsISupports
 {
     /**

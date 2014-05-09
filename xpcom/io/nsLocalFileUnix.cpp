@@ -1597,7 +1597,7 @@ nsLocalFile::Equals(nsIFile *inFile, bool *_retval)
 }
 
 NS_IMETHODIMP
-nsLocalFile::Contains(nsIFile *inFile, bool recur, bool *_retval)
+nsLocalFile::Contains(nsIFile *inFile, bool *_retval)
 {
   CHECK_mPath();
   if (NS_WARN_IF(!inFile))

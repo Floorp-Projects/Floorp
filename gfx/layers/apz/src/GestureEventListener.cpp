@@ -221,9 +221,9 @@ nsEventStatus GestureEventListener::HandleInputTouchMove()
                                    currentSpan,
                                    mLastTouchInput.modifiers);
 
-      mAsyncPanZoomController->HandleGestureEvent(pinchEvent);
+      rv = mAsyncPanZoomController->HandleGestureEvent(pinchEvent);
     }
-    rv = nsEventStatus_eConsumeNoDefault;
+
     mPreviousSpan = currentSpan;
     break;
   }
@@ -245,8 +245,7 @@ nsEventStatus GestureEventListener::HandleInputTouchMove()
                                  mPreviousSpan,
                                  mLastTouchInput.modifiers);
 
-    mAsyncPanZoomController->HandleGestureEvent(pinchEvent);
-    rv = nsEventStatus_eConsumeNoDefault;
+    rv = mAsyncPanZoomController->HandleGestureEvent(pinchEvent);
     mPreviousSpan = currentSpan;
 
     break;
@@ -277,8 +276,8 @@ nsEventStatus GestureEventListener::HandleInputTouchEnd()
                              mLastTouchInput.mTime,
                              mLastTouchInput.mTouches[0].mScreenPoint,
                              mLastTouchInput.modifiers);
-    nsEventStatus tapupStatus = mAsyncPanZoomController->HandleGestureEvent(tapEvent);
-    if (tapupStatus == nsEventStatus_eIgnore) {
+    rv = mAsyncPanZoomController->HandleGestureEvent(tapEvent);
+    if (rv == nsEventStatus_eIgnore) {
       SetState(GESTURE_FIRST_SINGLE_TOUCH_UP);
       CreateMaxTapTimeoutTask();
     } else {
@@ -295,7 +294,7 @@ nsEventStatus GestureEventListener::HandleInputTouchEnd()
                              mLastTouchInput.mTime,
                              mLastTouchInput.mTouches[0].mScreenPoint,
                              mLastTouchInput.modifiers);
-    mAsyncPanZoomController->HandleGestureEvent(tapEvent);
+    rv = mAsyncPanZoomController->HandleGestureEvent(tapEvent);
     break;
   }
 
@@ -311,7 +310,7 @@ nsEventStatus GestureEventListener::HandleInputTouchEnd()
                              mLastTouchInput.mTime,
                              mLastTouchInput.mTouches[0].mScreenPoint,
                              mLastTouchInput.modifiers);
-    mAsyncPanZoomController->HandleGestureEvent(tapEvent);
+    rv = mAsyncPanZoomController->HandleGestureEvent(tapEvent);
     break;
   }
 
@@ -330,9 +329,9 @@ nsEventStatus GestureEventListener::HandleInputTouchEnd()
                                    1.0f,
                                    1.0f,
                                    mLastTouchInput.modifiers);
-      mAsyncPanZoomController->HandleGestureEvent(pinchEvent);
+      rv = mAsyncPanZoomController->HandleGestureEvent(pinchEvent);
     }
-    rv = nsEventStatus_eConsumeNoDefault;
+
     break;
 
   default:

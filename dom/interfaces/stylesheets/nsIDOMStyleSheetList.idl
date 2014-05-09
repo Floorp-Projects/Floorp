@@ -13,7 +13,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[scriptable, uuid(0e424250-ac2a-4fe2-bccd-a45824af090e)]
+[uuid(0e424250-ac2a-4fe2-bccd-a45824af090e)]
 interface nsIDOMStyleSheetList : nsISupports
 {
   readonly attribute unsigned long    length;

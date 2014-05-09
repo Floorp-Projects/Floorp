@@ -16,7 +16,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(a2441b77-ad22-4275-b1dd-1b58c044fd04)]
+[uuid(a2441b77-ad22-4275-b1dd-1b58c044fd04)]
 interface nsIDOMHTMLPreElement : nsISupports
 {
            attribute long             width;

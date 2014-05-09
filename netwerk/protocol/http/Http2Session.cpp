@@ -752,7 +752,6 @@ Http2Session::GenerateGoAway(uint32_t aStatusCode)
   char *packet = EnsureOutputBuffer(16);
   mOutputQueueUsed += 16;
 
-  memset(packet + 8, 0, 8);
   CreateFrameHeader(packet, 8, FRAME_TYPE_GOAWAY, 0, 0);
 
   // last-good-stream-id are bytes 8-11 reflecting pushes

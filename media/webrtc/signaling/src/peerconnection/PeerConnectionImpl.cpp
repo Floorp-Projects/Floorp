@@ -105,7 +105,8 @@ static nsresult InitNSSInContent()
   NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_NOT_SAME_THREAD);
 
   if (XRE_GetProcessType() != GeckoProcessType_Content) {
-    MOZ_ASSUME_UNREACHABLE("Must be called in content process");
+    MOZ_ASSERT_UNREACHABLE("Must be called in content process");
+    return NS_ERROR_FAILURE;
   }
 
   static bool nssStarted = false;

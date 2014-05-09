@@ -68,7 +68,7 @@ public:
         return mStack[i];
       }
     }
-    MOZ_ASSUME_UNREACHABLE("Non-empty stack should always have an entry point");
+    MOZ_CRASH("Non-empty stack should always have an entry point");
   }
 
   nsIGlobalObject* EntryGlobal() {

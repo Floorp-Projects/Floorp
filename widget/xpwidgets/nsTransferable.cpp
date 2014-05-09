@@ -37,10 +37,10 @@ Notes to self:
 
 NS_IMPL_ISUPPORTS(nsTransferable, nsITransferable)
 
-uint32_t GetDataForFlavor (const nsTArray<DataStruct>& aArray,
+size_t GetDataForFlavor (const nsTArray<DataStruct>& aArray,
                            const char* aDataFlavor)
 {
-  for (uint32_t i = 0 ; i < aArray.Length () ; ++i) {
+  for (size_t i = 0 ; i < aArray.Length () ; ++i) {
     if (aArray[i].GetFlavor().Equals (aDataFlavor))
       return i;
   }
@@ -542,7 +542,7 @@ nsTransferable::FlavorsTransferableCanImport(nsISupportsArray **_retval)
       uint32_t importListLen;
       convertedList->Count(&importListLen);
 
-      for ( uint32_t i=0; i < importListLen; ++i ) {
+      for (uint32_t i = 0; i < importListLen; ++i ) {
         nsCOMPtr<nsISupports> genericFlavor;
         convertedList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
 

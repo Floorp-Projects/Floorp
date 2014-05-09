@@ -195,13 +195,13 @@ CompileZone::addressOfNeedsBarrier()
 const void *
 CompileZone::addressOfFreeListFirst(gc::AllocKind allocKind)
 {
-    return &zone()->allocator.arenas.getFreeList(allocKind)->first;
+    return zone()->allocator.arenas.getFreeList(allocKind)->addressOfFirst();
 }
 
 const void *
 CompileZone::addressOfFreeListLast(gc::AllocKind allocKind)
 {
-    return &zone()->allocator.arenas.getFreeList(allocKind)->last;
+    return zone()->allocator.arenas.getFreeList(allocKind)->addressOfLast();
 }
 
 JSCompartment *

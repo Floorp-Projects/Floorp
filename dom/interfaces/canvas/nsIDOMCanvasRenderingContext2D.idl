@@ -13,7 +13,7 @@
  * be referenced directly via a canvas context 2d rather than this interface,
  * and that should be preferred in new code. 
  */
-[scriptable, uuid(4417cab7-c7eb-4e0c-b00a-c43842f0cba8)]
+[uuid(4417cab7-c7eb-4e0c-b00a-c43842f0cba8)]
 interface nsIDOMCanvasRenderingContext2D : nsISupports
 {
   // Show the caret if appropriate when drawing

@@ -1824,7 +1824,7 @@ BluetoothHfpManager::OnUpdateSdpRecords(const nsAString& aDeviceAddress)
 {
   // UpdateSdpRecord() is not called so this callback function should not
   // be invoked.
-  MOZ_ASSUME_UNREACHABLE("UpdateSdpRecords() should be called somewhere");
+  MOZ_ASSERT_UNREACHABLE("UpdateSdpRecords() should be called somewhere");
 }
 
 void

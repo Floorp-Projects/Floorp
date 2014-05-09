@@ -12,7 +12,7 @@
  * For more information on this interface, please see
  * http://www.whatwg.org/specs/web-apps/current-work/#messageevent
  */
-[scriptable, builtinclass, uuid(bb869a03-5fc0-4a1b-838a-342e5025fc05)]
+[builtinclass, uuid(bb869a03-5fc0-4a1b-838a-342e5025fc05)]
 interface nsIDOMMessageEvent : nsIDOMEvent
 {
   /**

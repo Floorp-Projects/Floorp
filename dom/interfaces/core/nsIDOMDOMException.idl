@@ -17,7 +17,7 @@
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#domexception
  */
 
-[scriptable, uuid(5bd766d3-57a9-4833-995d-dbe21da29595)]
+[uuid(5bd766d3-57a9-4833-995d-dbe21da29595)]
 interface nsIDOMDOMException : nsISupports
 {
   const unsigned short      INDEX_SIZE_ERR                 = 1;

@@ -4,7 +4,7 @@
 
 #include "nsIDOMEvent.idl"
 
-[scriptable, builtinclass, uuid(82cad910-2019-11e3-8224-0800200c9a66)]
+[builtinclass, uuid(82cad910-2019-11e3-8224-0800200c9a66)]
 interface nsIDOMMozWifiP2pStatusChangeEvent : nsIDOMEvent
 {
   /**

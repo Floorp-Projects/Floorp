@@ -179,14 +179,14 @@ nsAnonymousContentList::IndexOf(nsIContent* aContent)
     return -1;
   }
 
-  uint32_t index = 0;
+  size_t index = 0;
   for (nsIContent* child = mParent->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
     if (child->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL)) {
       XBLChildrenElement* point = static_cast<XBLChildrenElement*>(child);
       if (!point->mInsertedChildren.IsEmpty()) {
-        uint32_t insIndex = point->mInsertedChildren.IndexOf(aContent);
+        size_t insIndex = point->mInsertedChildren.IndexOf(aContent);
         if (insIndex != point->mInsertedChildren.NoIndex) {
           return index + insIndex;
         }
@@ -195,7 +195,7 @@ nsAnonymousContentList::IndexOf(nsIContent* aContent)
       else {
         int32_t insIndex = point->IndexOf(aContent);
         if (insIndex != -1) {
-          return index + (uint32_t)insIndex;
+          return index + (size_t)insIndex;
         }
         index += point->GetChildCount();
       }

@@ -745,7 +745,7 @@ nsToolkitProfileService::CreateProfileInternal(nsIFile* aRootDir,
     nsCOMPtr<nsIFile> localDir;
 
     bool isRelative;
-    rv = mAppData->Contains(rootDir, true, &isRelative);
+    rv = mAppData->Contains(rootDir, &isRelative);
     if (NS_SUCCEEDED(rv) && isRelative) {
         nsAutoCString path;
         rv = rootDir->GetRelativeDescriptor(mAppData, path);
@@ -912,7 +912,7 @@ nsToolkitProfileService::Flush()
     while (cur) {
         // if the profile dir is relative to appdir...
         bool isRelative;
-        rv = mAppData->Contains(cur->mRootDir, true, &isRelative);
+        rv = mAppData->Contains(cur->mRootDir, &isRelative);
         if (NS_SUCCEEDED(rv) && isRelative) {
             // we use a relative descriptor
             rv = cur->mRootDir->GetRelativeDescriptor(mAppData, path);

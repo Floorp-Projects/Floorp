@@ -95,6 +95,9 @@ bool nsTArray_base<Alloc, Copy>::UsesAutoArrayBuffer() const {
   return mHdr == GetAutoArrayBuffer(4) || mHdr == GetAutoArrayBuffer(8);
 }
 
+// defined in nsTArray.cpp
+bool
+IsTwiceTheRequiredBytesRepresentableAsUint32(size_t capacity, size_t elemSize);
 
 template<class Alloc, class Copy>
 typename Alloc::ResultTypeProxy
@@ -105,10 +108,10 @@ nsTArray_base<Alloc, Copy>::EnsureCapacity(size_type capacity, size_type elemSiz
 
   // If the requested memory allocation exceeds size_type(-1)/2, then
   // our doubling algorithm may not be able to allocate it.
-  // Additionally we couldn't fit in the Header::mCapacity
-  // member. Just bail out in cases like that.  We don't want to be
-  // allocating 2 GB+ arrays anyway.
-  if ((uint64_t)capacity * elemSize > size_type(-1)/2) {
+  // Additionally, if it exceeds uint32_t(-1) then we couldn't fit in the
+  // Header::mCapacity member. Just bail out in cases like that.  We don't want
+  // to be allocating 2 GB+ arrays anyway.
+  if (!IsTwiceTheRequiredBytesRepresentableAsUint32(capacity, elemSize)) {
     Alloc::SizeTooBig((size_t)capacity * elemSize);
     return Alloc::FailureResult();
   }
@@ -130,11 +133,11 @@ nsTArray_base<Alloc, Copy>::EnsureCapacity(size_type capacity, size_type elemSiz
   // We increase our capacity so |capacity * elemSize + sizeof(Header)| is the
   // next power of two, if this value is less than pageSize bytes, or otherwise
   // so it's the next multiple of pageSize.
-  const uint32_t pageSizeBytes = 12;
-  const uint32_t pageSize = 1 << pageSizeBytes;
+  const size_t pageSizeBytes = 12;
+  const size_t pageSize = 1 << pageSizeBytes;
 
-  uint32_t minBytes = capacity * elemSize + sizeof(Header);
-  uint32_t bytesToAlloc;
+  size_t minBytes = capacity * elemSize + sizeof(Header);
+  size_t bytesToAlloc;
   if (minBytes >= pageSize) {
     // Round up to the next multiple of pageSize.
     bytesToAlloc = pageSize * ((minBytes + pageSize - 1) / pageSize);
@@ -173,7 +176,7 @@ nsTArray_base<Alloc, Copy>::EnsureCapacity(size_type capacity, size_type elemSiz
   }
 
   // How many elements can we fit in bytesToAlloc?
-  uint32_t newCapacity = (bytesToAlloc - sizeof(Header)) / elemSize;
+  size_t newCapacity = (bytesToAlloc - sizeof(Header)) / elemSize;
   MOZ_ASSERT(newCapacity >= capacity, "Didn't enlarge the array enough!");
   header->mCapacity = newCapacity;
 
