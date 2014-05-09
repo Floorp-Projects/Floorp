@@ -20,7 +20,7 @@
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsCOMArray.h"
-#include "nsTArray.h"
+#include "nsTArrayForwardDeclare.h"
 #include "nsString.h"
 #include "mozilla/CORSMode.h"
 #include "nsCycleCollectionParticipant.h"

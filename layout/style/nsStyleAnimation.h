@@ -9,7 +9,6 @@
 #define nsStyleAnimation_h_
 
 #include "nsStringFwd.h"
-#include "nsCRTGlue.h"
 #include "nsStringBuffer.h"
 #include "nsCSSProperty.h"
 #include "nsCoord.h"
