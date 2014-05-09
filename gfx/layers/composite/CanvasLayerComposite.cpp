@@ -99,6 +99,7 @@ CanvasLayerComposite::RenderLayer(const nsIntRect& aClipRect)
 #endif
 
   EffectChain effectChain(this);
+  AddBlendModeEffect(effectChain);
 
   LayerManagerComposite::AutoAddMaskEffect autoMaskEffect(mMaskLayer, effectChain);
   gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
