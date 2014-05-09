@@ -400,6 +400,7 @@ ContainerRender(ContainerT* aContainer,
                                                             effectChain,
                                                             !aContainer->GetTransform().CanDraw2D());
 
+    aContainer->AddBlendModeEffect(effectChain);
     effectChain.mPrimaryEffect = new EffectRenderTarget(surface);
 
     gfx::Rect rect(visibleRect.x, visibleRect.y, visibleRect.width, visibleRect.height);
