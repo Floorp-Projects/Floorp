@@ -299,6 +299,16 @@ ClientLayerManager::DidComposite()
   }
 }
 
+void
+ClientLayerManager::GetCompositorSideAPZTestData(APZTestData* aData) const
+{
+  if (mForwarder->HasShadowManager()) {
+    if (!mForwarder->GetShadowManager()->SendGetAPZTestData(aData)) {
+      NS_WARNING("Call to PLayerTransactionChild::SendGetAPZTestData() failed");
+    }
+  }
+}
+
 bool
 ClientLayerManager::RequestOverfill(mozilla::dom::OverfillCallback* aCallback)
 {
