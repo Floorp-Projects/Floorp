@@ -7,6 +7,8 @@
 #include "RtspControllerParent.h"
 #include "RtspController.h"
 #include "nsIAuthPromptProvider.h"
+#include "nsThreadUtils.h"
+#include "nsProxyRelease.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/unused.h"
@@ -14,7 +16,6 @@
 #include "prlog.h"
 
 #include <sys/types.h>
-#include <sys/socket.h>
 
 PRLogModuleInfo* gRtspLog;
 #undef LOG
@@ -32,9 +33,31 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS(RtspControllerParent,
-                  nsIInterfaceRequestor,
-                  nsIStreamingProtocolListener)
+void
+RtspControllerParent::Destroy()
+{
+  // If we're being destroyed on a non-main thread, we AddRef again and use a
+  // proxy to release the RtspControllerParent on the main thread, where the
+  // RtspControllerParent is deleted. This ensures we only delete the
+  // RtspControllerParent on the main thread.
+  if (!NS_IsMainThread()) {
+    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+    NS_ENSURE_TRUE_VOID(mainThread);
+    nsRefPtr<RtspControllerParent> doomed(this);
+    if (NS_FAILED(NS_ProxyRelease(mainThread,
+            static_cast<nsIStreamingProtocolListener*>(doomed), true))) {
+      NS_WARNING("Failed to proxy release to main thread!");
+    }
+  } else {
+    delete this;
+  }
+}
+
+NS_IMPL_ADDREF(RtspControllerParent)
+NS_IMPL_RELEASE_WITH_DESTROY(RtspControllerParent, Destroy())
+NS_IMPL_QUERY_INTERFACE(RtspControllerParent,
+                        nsIInterfaceRequestor,
+                        nsIStreamingProtocolListener)
 
 RtspControllerParent::RtspControllerParent()
   : mIPCOpen(true)
