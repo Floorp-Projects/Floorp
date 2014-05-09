@@ -63,7 +63,7 @@ public:
   }
 };
 
-class nsTreeStyleCache 
+class nsTreeStyleCache
 {
 public:
   nsTreeStyleCache() :mTransitionTable(nullptr), mCache(nullptr), mNextState(0) {}
@@ -72,8 +72,8 @@ public:
   void Clear() { delete mTransitionTable; mTransitionTable = nullptr; delete mCache; mCache = nullptr; mNextState = 0; }
 
   nsStyleContext* GetStyleContext(nsICSSPseudoComparator* aComparator,
-                                  nsPresContext* aPresContext, 
-                                  nsIContent* aContent, 
+                                  nsPresContext* aPresContext,
+                                  nsIContent* aContent,
                                   nsStyleContext* aContext,
                                   nsIAtom* aPseudoElement,
                                   const AtomArray & aInputWord);
@@ -84,10 +84,10 @@ public:
 
 protected:
   // A transition table for a deterministic finite automaton.  The DFA
-  // takes as its input a single pseudoelement and an ordered set of properties.  
+  // takes as its input a single pseudoelement and an ordered set of properties.
   // It transitions on an input word that is the concatenation of the pseudoelement supplied
   // with the properties in the array.
-  // 
+  //
   // It transitions from state to state by looking up entries in the transition table (which is
   // a mapping from (S,i)->S', where S is the current state, i is the next
   // property in the input word, and S' is the state to transition to.
@@ -99,7 +99,7 @@ protected:
   // to reference the cache table to locate the style context.
   nsObjectHashtable* mTransitionTable;
 
-  // The cache of all active style contexts.  This is a hash from 
+  // The cache of all active style contexts.  This is a hash from
   // a final state in the DFA, Sf, to the resultant style context.
   nsObjectHashtable* mCache;
 
