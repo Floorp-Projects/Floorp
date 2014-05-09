@@ -370,7 +370,7 @@ nsXBLPrototypeHandler::EnsureEventHandler(nsIScriptGlobalObject* aGlobal,
 
   uint32_t argCount;
   const char **argNames;
-  nsContentUtils::GetEventArgNames(kNameSpaceID_XBL, aName, &argCount,
+  nsContentUtils::GetEventArgNames(kNameSpaceID_XBL, aName, false, &argCount,
                                    &argNames);
 
   // Compile the event handler in the xbl scope.
