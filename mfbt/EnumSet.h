@@ -29,7 +29,7 @@ class EnumSet
     { }
 
     EnumSet(T aEnum)
-      : mBitField(aEnum)
+      : mBitField(bitFor(aEnum))
     { }
 
     EnumSet(T aEnum1, T aEnum2)
@@ -162,9 +162,17 @@ class EnumSet
       return count;
     }
 
+    uint32_t serialize() const {
+      return mBitField;
+    }
+
+    void deserialize(uint32_t aValue) {
+      mBitField = aValue;
+    }
+
   private:
     static uint32_t bitFor(T aEnum) {
-      uint32_t bitNumber(aEnum);
+      uint32_t bitNumber = (uint32_t)aEnum;
       MOZ_ASSERT(bitNumber < 32);
       return 1U << bitNumber;
     }
