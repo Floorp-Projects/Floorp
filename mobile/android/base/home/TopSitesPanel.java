@@ -32,6 +32,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
@@ -545,6 +546,14 @@ public class TopSitesPanel extends HomeFragment {
             // fetch...
             if (!updated) {
                 debug("bindView called twice for same values; short-circuiting.");
+                return;
+            }
+
+            final int imageUrlIndex = cursor.getColumnIndex(TopSites.IMAGE_URL);
+            if (!cursor.isNull(imageUrlIndex)) {
+                String imageUrl = cursor.getString(imageUrlIndex);
+                String bgColor = cursor.getString(cursor.getColumnIndex(TopSites.BG_COLOR));
+                view.displayThumbnail(imageUrl, Color.parseColor(bgColor));
                 return;
             }
 
