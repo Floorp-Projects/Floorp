@@ -31,6 +31,7 @@
 #include "nsCSSValue.h"                 // for nsCSSValue::Array, etc
 #include "nsPrintfCString.h"            // for nsPrintfCString
 #include "nsStyleStruct.h"              // for nsTimingFunction, etc
+#include "gfxPrefs.h"
 
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
@@ -998,6 +999,38 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
     ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
   } else {
     ComputeEffectiveTransformForMaskLayer(Matrix4x4());
+  }
+}
+
+void
+ContainerLayer::DefaultComputeSupportsComponentAlphaChildren(bool* aNeedsSurfaceCopy)
+{
+  bool supportsComponentAlphaChildren = false;
+  bool needsSurfaceCopy = false;
+  if (UseIntermediateSurface()) {
+    if (GetEffectiveVisibleRegion().GetNumRects() == 1 &&
+        (GetContentFlags() & Layer::CONTENT_OPAQUE))
+    {
+      supportsComponentAlphaChildren = true;
+    } else {
+      gfx::Matrix transform;
+      if (HasOpaqueAncestorLayer(this) &&
+          GetEffectiveTransform().Is2D(&transform) &&
+          !gfx::ThebesMatrix(transform).HasNonIntegerTranslation()) {
+        supportsComponentAlphaChildren = true;
+        needsSurfaceCopy = true;
+      }
+    }
+  } else {
+    supportsComponentAlphaChildren =
+      (GetContentFlags() & Layer::CONTENT_OPAQUE) ||
+      (GetParent() && GetParent()->SupportsComponentAlphaChildren());
+  }
+
+  mSupportsComponentAlphaChildren = supportsComponentAlphaChildren &&
+                                    gfxPrefs::ComponentAlphaEnabled();
+  if (aNeedsSurfaceCopy) {
+    *aNeedsSurfaceCopy = mSupportsComponentAlphaChildren && needsSurfaceCopy;
   }
 }
 
