@@ -1907,8 +1907,8 @@ JS_PUBLIC_API(void)
 JS_SetGCCallback(JSRuntime *rt, JSGCCallback cb, void *data)
 {
     AssertHeapIsIdle(rt);
-    rt->gc.gcCallback = cb;
-    rt->gc.gcCallbackData = data;
+    rt->gc.callback = cb;
+    rt->gc.callbackData = data;
 }
 
 JS_PUBLIC_API(void)

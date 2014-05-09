@@ -43,7 +43,6 @@ namespace gc {
 typedef Vector<JS::Zone *, 4, SystemAllocPolicy> ZoneVector;
 
 class MarkingValidator;
-class AutoPrepareForTracing;
 
 struct ConservativeGCData
 {
@@ -89,77 +88,8 @@ class GCRuntime
 {
   public:
     GCRuntime(JSRuntime *rt);
-    bool init(uint32_t maxbytes);
-    void finish();
-
-    void setGCZeal(uint8_t zeal, uint32_t frequency);
-    template <typename T> bool addRoot(T *rp, const char *name, JSGCRootType rootType);
-    void removeRoot(void *rp);
-    void setMarkStackLimit(size_t limit);
-
-    bool isHeapBusy() { return heapState != js::Idle; }
-    bool isHeapMajorCollecting() { return heapState == js::MajorCollecting; }
-    bool isHeapMinorCollecting() { return heapState == js::MinorCollecting; }
-    bool isHeapCollecting() { return isHeapMajorCollecting() || isHeapMinorCollecting(); }
-
-    bool triggerGC(JS::gcreason::Reason reason);
-    bool triggerZoneGC(Zone *zone, JS::gcreason::Reason reason);
-    void maybeGC(Zone *zone);
-    void minorGC(JS::gcreason::Reason reason);
-    void minorGC(JSContext *cx, JS::gcreason::Reason reason);
-    void gcIfNeeded(JSContext *cx);
-    void collect(bool incremental, int64_t budget, JSGCInvocationKind gckind,
-                 JS::gcreason::Reason reason);
-    void gcSlice(JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64_t millis);
-    void runDebugGC();
-
-  private:
-    // For ArenaLists::allocateFromArenaInline()
-    friend class ArenaLists;
-    Chunk *pickChunk(Zone *zone);
-
-    inline bool wantBackgroundAllocation() const;
-
-    bool initGCZeal();
-    void recordNativeStackTopForGC();
-    void requestInterrupt(JS::gcreason::Reason reason);
-    bool gcCycle(bool incremental, int64_t budget, JSGCInvocationKind gckind,
-                 JS::gcreason::Reason reason);
-    void budgetIncrementalGC(int64_t *budget);
-    void resetIncrementalGC(const char *reason);
-    void incrementalCollectSlice(int64_t budget, JS::gcreason::Reason reason,
-                                 JSGCInvocationKind gckind);
-    void pushZealSelectedObjects();
-    bool beginMarkPhase();
-    bool shouldPreserveJITCode(JSCompartment *comp, int64_t currentTime);
-    bool drainMarkStack(SliceBudget &sliceBudget, gcstats::Phase phase);
-    template <class CompartmentIterT> void markWeakReferences(gcstats::Phase phase);
-    void markWeakReferencesInCurrentGroup(gcstats::Phase phase);
-    template <class ZoneIterT, class CompartmentIterT> void markGrayReferences();
-    void markGrayReferencesInCurrentGroup();
-    void beginSweepPhase(bool lastGC);
-    void findZoneGroups();
-    void getNextZoneGroup();
-    void endMarkingZoneGroup();
-    void beginSweepingZoneGroup();
-    bool releaseObservedTypes();
-    void endSweepingZoneGroup();
-    bool sweepPhase(SliceBudget &sliceBudget);
-    void endSweepPhase(JSGCInvocationKind gckind, bool lastGC);
-    void sweepZones(FreeOp *fop, bool lastGC);
-
-    void computeNonIncrementalMarkingForValidation();
-    void validateIncrementalMarking();
-    void finishMarkingValidation();
-
-#ifdef DEBUG
-    void checkForCompartmentMismatches();
-    void markAllWeakReferences(gcstats::Phase phase);
-    void markAllGrayReferences();
-#endif
 
   public:  // Internal state, public for now
-    JSRuntime             *rt;
 
     /* Embedders can use this zone however they wish. */
     JS::Zone              *systemZone;
@@ -298,7 +228,7 @@ class GCRuntime
      */
     JS::Zone              *zoneGroups;
     JS::Zone              *currentZoneGroup;
-    int                   finalizePhase;
+    int                   sweepPhase;
     JS::Zone              *sweepZone;
     int                   sweepKindIndex;
     bool                  abortSweepAfterCurrentGroup;
@@ -396,11 +326,11 @@ class GCRuntime
     bool                  validate;
     bool                  fullCompartmentChecks;
 
-    JSGCCallback          gcCallback;
+    JSGCCallback          callback;
     JS::GCSliceCallback   sliceCallback;
     JSFinalizeCallback    finalizeCallback;
 
-    void                  *gcCallbackData;
+    void                  *callbackData;
 
     /*
      * Malloc counter to measure memory pressure for GC scheduling. It runs
@@ -447,13 +377,11 @@ class GCRuntime
     PRLock   *lock;
     mozilla::DebugOnly<PRThread *>   lockOwner;
 
-    js::GCHelperThread helperThread;
-
-    ConservativeGCData conservativeGC;
-
     friend class js::GCHelperThread;
-    friend class js::gc::AutoPrepareForTracing; /* For recordNativeStackTopForGC(). */
-    friend class js::gc::MarkingValidator;
+
+    js::GCHelperThread    helperThread;
+
+    ConservativeGCData    conservativeGC;
 };
 
 } /* namespace gc */
