@@ -660,6 +660,12 @@ function BuildConditionSandbox(aURL) {
     sandbox.AddressSanitizer = false;
 #endif
 
+#if MOZ_WEBRTC
+    sandbox.webrtc = true;
+#else
+    sandbox.webrtc = false;
+#endif
+
     var hh = CC[NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX + "http"].
                  getService(CI.nsIHttpProtocolHandler);
     sandbox.http = { __exposedProps__: {} };
