@@ -160,7 +160,7 @@ function loadCallgraph(file)
         suppressedFunctions[name] = true;
     }
 
-    for (var gcName of [ 'jsgc.cpp:void Collect(JSRuntime*, uint8, int64, uint32, uint32)',
+    for (var gcName of [ 'void GCRuntime::collect(uint8, int64, uint32, uint32)',
                          'void js::MinorGC(JSRuntime*, uint32)' ])
     {
         assert(gcName in mangledName);
