@@ -849,10 +849,11 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
     lineNo = 1;
   }
 
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mTarget);
   uint32_t argCount;
   const char **argNames;
   nsContentUtils::GetEventArgNames(aElement->GetNameSpaceID(),
-                                   typeAtom,
+                                   typeAtom, win,
                                    &argCount, &argNames);
 
   // Wrap the event target, so that we can use it as the scope for the event
@@ -902,7 +903,6 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
   NS_ENSURE_SUCCESS(result, result);
   NS_ENSURE_TRUE(handler, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mTarget);
   if (jsEventHandler->EventName() == nsGkAtoms::onerror && win) {
     nsRefPtr<OnErrorEventHandlerNonNull> handlerCallback =
       new OnErrorEventHandlerNonNull(handler, /* aIncumbentGlobal = */ nullptr);

@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(55226663-fe68-48ba-addf-08e32eaab569)]
+[uuid(55226663-fe68-48ba-addf-08e32eaab569)]
 interface nsIDOMHistory : nsISupports
 {
   // Empty interface that exists only for extension backwards compat

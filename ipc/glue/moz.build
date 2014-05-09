@@ -150,3 +150,5 @@ if CONFIG['MOZ_CONTENT_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
     LOCAL_INCLUDES += [
         '/security/sandbox/win/src/sandboxbroker',
     ]
+
+FAIL_ON_WARNINGS = True

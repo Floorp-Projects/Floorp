@@ -5,10 +5,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
+    'ShimInterfaceInfo.cpp',
     'xptiInterfaceInfo.cpp',
     'xptiInterfaceInfoManager.cpp',
     'xptiTypelibGuts.cpp',
     'xptiWorkingSet.cpp',
+]
+
+LOCAL_INCLUDES += [
+    '/dom/base',
 ]
 
 MSVC_ENABLE_PGO = True

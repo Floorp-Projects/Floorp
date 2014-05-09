@@ -13,7 +13,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[scriptable, uuid(009f7ea5-9e80-41be-b008-db62f10823f2)]
+[uuid(009f7ea5-9e80-41be-b008-db62f10823f2)]
 interface nsIDOMCSSValue : nsISupports
 {
   // UnitTypes

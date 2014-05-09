@@ -8,7 +8,7 @@
 interface nsIVariant;
 interface nsIDOMFileList;
 
-[scriptable, builtinclass, uuid(c71180e3-298b-4fbb-9ccb-82c822474741)]
+[builtinclass, uuid(c71180e3-298b-4fbb-9ccb-82c822474741)]
 interface nsIDOMDataTransfer : nsISupports
 {
   /**

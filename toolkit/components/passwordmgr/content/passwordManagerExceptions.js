@@ -89,7 +89,7 @@ function FinalizeRejectDeletions() {
 
 function HandleRejectKeyPress(e) {
   if (e.keyCode == 46) {
-    DeleteRejectSelected();
+    DeleteReject();
   }
 }
 

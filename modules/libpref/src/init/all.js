@@ -449,6 +449,8 @@ pref("gfx.content.azure.backends", "cairo");
 pref("gfx.work-around-driver-bugs", true);
 pref("gfx.prefer-mesa-llvmpipe", false);
 
+pref("gfx.draw-color-bars", false);
+
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
 

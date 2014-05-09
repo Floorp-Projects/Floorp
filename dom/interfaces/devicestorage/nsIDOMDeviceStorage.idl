@@ -16,7 +16,7 @@ struct DeviceStorageFileDescriptor;
 %}
 [ptr] native DeviceStorageFdPtr(DeviceStorageFileDescriptor);
 
-[scriptable, uuid(8b724547-3c78-4244-969a-f00a1f4ae0c3), builtinclass]
+[uuid(8b724547-3c78-4244-969a-f00a1f4ae0c3), builtinclass]
 interface nsIDOMDeviceStorage : nsIDOMEventTarget
 {
     [implicit_jscontext] attribute jsval onchange;

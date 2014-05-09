@@ -463,9 +463,9 @@ MacroAssembler::newGCThing(Register result, Register temp, gc::AllocKind allocKi
 
     CompileZone *zone = GetIonContext()->compartment->zone();
 
-    // Inline FreeSpan::allocate.
-    // There is always exactly one FreeSpan per allocKind per JSCompartment.
-    // If a FreeSpan is replaced, its members are updated in the freeLists table,
+    // Inline FreeList::allocate.
+    // There is always exactly one FreeList per allocKind per JSCompartment.
+    // If a FreeList is replaced, its members are updated in the freeLists table,
     // which the code below always re-reads.
     loadPtr(AbsoluteAddress(zone->addressOfFreeListFirst(allocKind)), result);
     branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(zone->addressOfFreeListLast(allocKind)), result, fail);
@@ -515,19 +515,19 @@ MacroAssembler::newGCThingPar(Register result, Register cx, Register tempReg1, R
             tempReg1);
 
     // Get a pointer to the relevant free list:
-    // tempReg1 = (FreeSpan*) &tempReg1->arenas.freeLists[(allocKind)]
+    // tempReg1 = (FreeList*) &tempReg1->arenas.freeLists[(allocKind)]
     uint32_t offset = (offsetof(Allocator, arenas) +
                        js::gc::ArenaLists::getFreeListOffset(allocKind));
     addPtr(Imm32(offset), tempReg1);
 
     // Load first item on the list
-    // tempReg2 = tempReg1->first
-    loadPtr(Address(tempReg1, offsetof(gc::FreeSpan, first)), tempReg2);
+    // tempReg2 = tempReg1->head.first
+    loadPtr(Address(tempReg1, gc::FreeList::offsetOfFirst()), tempReg2);
 
     // Check whether list is empty
-    // if tempReg1->last <= tempReg2, fail
+    // if tempReg1->head.last <= tempReg2, fail
     branchPtr(Assembler::BelowOrEqual,
-              Address(tempReg1, offsetof(gc::FreeSpan, last)),
+              Address(tempReg1, gc::FreeList::offsetOfLast()),
               tempReg2,
               fail);
 
@@ -538,8 +538,8 @@ MacroAssembler::newGCThingPar(Register result, Register cx, Register tempReg1, R
     addPtr(Imm32(thingSize), tempReg2);
 
     // Update `first`
-    // tempReg1->first = tempReg2;
-    storePtr(tempReg2, Address(tempReg1, offsetof(gc::FreeSpan, first)));
+    // tempReg1->head.first = tempReg2;
+    storePtr(tempReg2, Address(tempReg1, gc::FreeList::offsetOfFirst()));
 }
 
 void

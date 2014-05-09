@@ -12,7 +12,7 @@
 
 #include "nsIDOMEvent.idl"
 
-[scriptable, builtinclass, uuid(b5240841-dc69-43dd-bcf1-9306b8ddaa09)]
+[uuid(b5240841-dc69-43dd-bcf1-9306b8ddaa09)]
 interface nsIDOMSpeechSynthesisEvent : nsIDOMEvent {
   [noscript] void initSpeechSynthesisEvent(in DOMString aEventTypeArg,
                                            in boolean aCanBubbleArg,

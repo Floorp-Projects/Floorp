@@ -894,14 +894,14 @@ private:
   virtual bool
   PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
   {
-    MOZ_ASSUME_UNREACHABLE("Don't call Dispatch() on CloseEventRunnable!");
+    MOZ_CRASH("Don't call Dispatch() on CloseEventRunnable!");
   }
 
   virtual void
   PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
                bool aDispatchResult) MOZ_OVERRIDE
   {
-    MOZ_ASSUME_UNREACHABLE("Don't call Dispatch() on CloseEventRunnable!");
+    MOZ_CRASH("Don't call Dispatch() on CloseEventRunnable!");
   }
 
   virtual bool
@@ -1500,14 +1500,14 @@ private:
   virtual bool
   PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
   {
-    MOZ_ASSUME_UNREACHABLE("Don't call Dispatch() on KillCloseEventRunnable!");
+    MOZ_CRASH("Don't call Dispatch() on KillCloseEventRunnable!");
   }
 
   virtual void
   PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
                bool aDispatchResult) MOZ_OVERRIDE
   {
-    MOZ_ASSUME_UNREACHABLE("Don't call Dispatch() on KillCloseEventRunnable!");
+    MOZ_CRASH("Don't call Dispatch() on KillCloseEventRunnable!");
   }
 
   virtual bool
@@ -3113,13 +3113,13 @@ WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
   // First fire the error event at all SharedWorker objects. This may include
   // multiple objects in a single window as well as objects in different
   // windows.
-  for (uint32_t index = 0; index < sharedWorkers.Length(); index++) {
+  for (size_t index = 0; index < sharedWorkers.Length(); index++) {
     nsRefPtr<SharedWorker>& sharedWorker = sharedWorkers[index];
 
     // May be null.
     nsPIDOMWindow* window = sharedWorker->GetOwner();
 
-    uint32_t actionsIndex = windowActions.LastIndexOf(WindowAction(window));
+    size_t actionsIndex = windowActions.LastIndexOf(WindowAction(window));
 
     // Get the context for this window so that we can report errors correctly.
     JSContext* cx;
@@ -4066,7 +4066,7 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
     }
   }
 
-  MOZ_ASSUME_UNREACHABLE("Shouldn't get here!");
+  MOZ_CRASH("Shouldn't get here!");
 }
 
 void

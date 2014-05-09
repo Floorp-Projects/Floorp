@@ -131,7 +131,7 @@ DOMCameraControlListener::OnPreviewStateChange(PreviewState aState)
 
     default:
       DOM_CAMERA_LOGE("Unknown preview state %d\n", aState);
-      MOZ_ASSUME_UNREACHABLE("Invalid preview state");
+      MOZ_ASSERT_UNREACHABLE("Invalid preview state");
       return;
   }
   NS_DispatchToMainThread(new Callback(mDOMCameraControl, aState));

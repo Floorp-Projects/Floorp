@@ -1042,11 +1042,11 @@ MainProcessRunnable::Run()
     case eWaitingToOpenCacheFileForRead:
     case eOpened:
     case eFinished: {
-      MOZ_ASSUME_UNREACHABLE("Shouldn't Run() in this state");
+      MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Shouldn't Run() in this state");
     }
   }
 
-  MOZ_ASSUME_UNREACHABLE("Corrupt state");
+  MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Corrupt state");
   return NS_OK;
 }
 
@@ -1511,11 +1511,11 @@ ChildProcessRunnable::Run()
     case eOpening:
     case eOpened:
     case eFinished: {
-      MOZ_ASSUME_UNREACHABLE("Shouldn't Run() in this state");
+      MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Shouldn't Run() in this state");
     }
   }
 
-  MOZ_ASSUME_UNREACHABLE("Corrupt state");
+  MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Corrupt state");
   return NS_OK;
 }
 
@@ -1824,13 +1824,13 @@ public:
   WaitForStoragesToComplete(nsTArray<nsIOfflineStorage*>& aStorages,
                             nsIRunnable* aCallback) MOZ_OVERRIDE
   {
-    MOZ_ASSUME_UNREACHABLE("There are no storages");
+    MOZ_ASSERT_UNREACHABLE("There are no storages");
   }
 
   virtual void
   AbortTransactionsForStorage(nsIOfflineStorage* aStorage) MOZ_OVERRIDE
   {
-    MOZ_ASSUME_UNREACHABLE("There are no storages");
+    MOZ_ASSERT_UNREACHABLE("There are no storages");
   }
 
   virtual bool

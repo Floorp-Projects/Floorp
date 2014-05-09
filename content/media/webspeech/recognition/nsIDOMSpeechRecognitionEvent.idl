@@ -14,7 +14,7 @@
 
 interface SpeechRecognitionResultList;
 
-[scriptable, builtinclass, uuid(98dded70-33af-42d5-819d-e15b6f4a3aba)]
+[builtinclass, uuid(98dded70-33af-42d5-819d-e15b6f4a3aba)]
 interface nsIDOMSpeechRecognitionEvent : nsIDOMEvent {
     [noscript] void initSpeechRecognitionEvent(in DOMString eventTypeArg,
                                                in boolean canBubbleArg,

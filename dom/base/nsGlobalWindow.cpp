@@ -7061,6 +7061,22 @@ nsGlobalWindow::ScrollTo(const CSSIntPoint& aScroll)
   }
 }
 
+void
+nsGlobalWindow::MozRequestOverfill(OverfillCallback& aCallback,
+                                   mozilla::ErrorResult& aError)
+{
+  nsIWidget* widget = nsContentUtils::WidgetForDocument(mDoc);
+  if (widget) {
+    mozilla::layers::LayerManager* manager = widget->GetLayerManager();
+    if (manager) {
+      manager->RequestOverfill(&aCallback);
+      return;
+    }
+  }
+
+  aError.Throw(NS_ERROR_NOT_AVAILABLE);
+}
+
 NS_IMETHODIMP
 nsGlobalWindow::ScrollBy(int32_t aXScrollDif, int32_t aYScrollDif)
 {
@@ -8978,6 +8994,9 @@ nsGlobalWindow::ShowModalDialog(JSContext* aCx, const nsAString& aUrl,
   aError = nsContentUtils::XPConnect()->JSToVariant(aCx,
                                                     aArgument,
                                                     getter_AddRefs(args));
+  if (aError.Failed()) {
+    return JS::UndefinedValue();
+  }
 
   nsCOMPtr<nsIVariant> retVal = ShowModalDialog(aUrl, args, aOptions, aError);
   if (aError.Failed()) {

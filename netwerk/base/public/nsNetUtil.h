@@ -2021,14 +2021,14 @@ NS_RelaxStrictFileOriginPolicy(nsIURI *aTargetURI,
   bool allowed = false;
   nsresult rv = sourceFile->IsDirectory(&sourceIsDir);
   if (NS_SUCCEEDED(rv) && sourceIsDir) {
-    rv = sourceFile->Contains(targetFile, true, &allowed);
+    rv = sourceFile->Contains(targetFile, &allowed);
   } else {
     nsCOMPtr<nsIFile> sourceParent;
     rv = sourceFile->GetParent(getter_AddRefs(sourceParent));
     if (NS_SUCCEEDED(rv) && sourceParent) {
       rv = sourceParent->Equals(targetFile, &allowed);
       if (NS_FAILED(rv) || !allowed) {
-        rv = sourceParent->Contains(targetFile, true, &allowed);
+        rv = sourceParent->Contains(targetFile, &allowed);
       } else {
         MOZ_ASSERT(aAllowDirectoryTarget,
                    "sourceFile->Parent == targetFile, but targetFile "

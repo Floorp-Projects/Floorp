@@ -181,9 +181,7 @@ private:
     typedef nsTArray<PLHashEntry*> HashEntryArray;
     typedef typename HashEntryArray::index_type index_type;
     typedef typename HashEntryArray::size_type size_type;
-    enum {
-        NoIndex = HashEntryArray::NoIndex
-    };
+    static const HashEntryArray::index_type NoIndex = HashEntryArray::NoIndex;
 
     /**
      * Value type for the ordering table.  Contains the other

@@ -2450,7 +2450,7 @@ NS_IMETHODIMP
 RuntimeService::WorkerThread::Observer::OnDispatchedEvent(
                                                 nsIThreadInternal* /*aThread */)
 {
-  MOZ_ASSUME_UNREACHABLE("This should never be called!");
+  MOZ_CRASH("OnDispatchedEvent() should never be called!");
 }
 
 NS_IMETHODIMP

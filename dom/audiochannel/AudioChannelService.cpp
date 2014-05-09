@@ -750,9 +750,9 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic, const ch
     } else if (!keyStr.EqualsLiteral("audio.volume.bt_sco")) {
       // bt_sco is not a valid audio channel so we manipulate it in
       // AudioManager.cpp. And the others should not be used.
-      // We didn't use MOZ_ASSUME_UNREACHABLE here because any web content who
-      // has permission of mozSettings can set any names then it can be easy to
-      // crash the B2G.
+      // We didn't use MOZ_CRASH or MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE here
+      // because any web content who has permission of mozSettings can set any
+      // names then it can be easy to crash the B2G.
       NS_WARNING("unexpected audio channel for volume control");
     }
   }

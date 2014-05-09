@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "domstubs.idl"
 
-[scriptable, uuid(c43448db-0bab-461d-b648-1ca14a967f7e)]
+[uuid(c43448db-0bab-461d-b648-1ca14a967f7e)]
 interface nsIDOMTimeRanges : nsISupports
 {
   /* The number of ranges represented by the time range object */

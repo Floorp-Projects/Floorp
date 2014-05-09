@@ -26,6 +26,7 @@
 #include "gfxPlatformMac.h"
 #endif
 #include "gfxRect.h"                    // for gfxRect
+#include "gfxUtils.h"                   // for frame color util
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/RefPtr.h"             // for RefPtr, TemporaryRef
 #include "mozilla/gfx/2D.h"             // for DrawTarget
@@ -320,9 +321,9 @@ static const float FontScaleX = 2.f;
 static const float FontScaleY = 3.f;
 
 static void DrawDigits(unsigned int aValue,
-		       int aOffsetX, int aOffsetY,
+                       int aOffsetX, int aOffsetY,
                        Compositor* aCompositor,
-		       EffectChain& aEffectChain)
+                       EffectChain& aEffectChain)
 {
   if (aValue > 999) {
     aValue = 999;
@@ -349,6 +350,7 @@ static void DrawDigits(unsigned int aValue,
 }
 
 void FPSState::DrawFPS(TimeStamp aNow,
+                       int aOffsetX, int aOffsetY,
                        unsigned int aFillRatio,
                        Compositor* aCompositor)
 {
@@ -387,27 +389,43 @@ void FPSState::DrawFPS(TimeStamp aNow,
   unsigned int fps = unsigned(mCompositionFps.AddFrameAndGetFps(aNow));
   unsigned int txnFps = unsigned(mTransactionFps.GetFpsAt(aNow));
 
-  DrawDigits(fps, 0, 0, aCompositor, effectChain);
-  DrawDigits(txnFps, FontWidth * 4, 0, aCompositor, effectChain);
-  DrawDigits(aFillRatio, FontWidth * 8, 0, aCompositor, effectChain);
+  DrawDigits(fps, aOffsetX + 0, aOffsetY, aCompositor, effectChain);
+  DrawDigits(txnFps, aOffsetX + FontWidth * 4, aOffsetY, aCompositor, effectChain);
+  DrawDigits(aFillRatio, aOffsetX + FontWidth * 8, aOffsetY, aCompositor, effectChain);
 }
 
 static uint16_t sFrameCount = 0;
 void
 LayerManagerComposite::RenderDebugOverlay(const Rect& aBounds)
 {
-  if (gfxPrefs::LayersDrawFPS()) {
+  bool drawFps = gfxPrefs::LayersDrawFPS();
+  bool drawFrameCounter = gfxPrefs::DrawFrameCounter();
+  bool drawFrameColorBars = gfxPrefs::CompositorDrawColorBars();
+
+  if (drawFps) {
     if (!mFPS) {
       mFPS = new FPSState();
     }
 
     float fillRatio = mCompositor->GetFillRatio();
-    mFPS->DrawFPS(TimeStamp::Now(), unsigned(fillRatio), mCompositor);
+    mFPS->DrawFPS(TimeStamp::Now(), drawFrameColorBars ? 10 : 0, 0, unsigned(fillRatio), mCompositor);
   } else {
     mFPS = nullptr;
   }
 
-  if (gfxPrefs::DrawFrameCounter()) {
+  if (drawFrameColorBars) {
+    gfx::Rect sideRect(0, 0, 10, aBounds.height);
+
+    EffectChain effects;
+    effects.mPrimaryEffect = new EffectSolidColor(gfxUtils::GetColorForFrameNumber(sFrameCount));
+    mCompositor->DrawQuad(sideRect,
+                          sideRect,
+                          effects,
+                          1.0,
+                          gfx::Matrix4x4());
+  }
+
+  if (drawFrameCounter) {
     profiler_set_frame_number(sFrameCount);
 
     uint16_t frameNumber = sFrameCount;
@@ -430,6 +448,9 @@ LayerManagerComposite::RenderDebugOverlay(const Rect& aBounds)
                             opacity,
                             gfx::Matrix4x4());
     }
+  }
+
+  if (drawFrameColorBars || drawFrameCounter) {
     // We intentionally overflow at 2^16.
     sFrameCount++;
   }

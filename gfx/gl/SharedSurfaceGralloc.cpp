@@ -142,9 +142,8 @@ SharedSurface_Gralloc::Fence()
     // work.  glReadPixels seems to, though.
     if (gfxPrefs::GrallocFenceWithReadPixels()) {
         mGL->MakeCurrent();
-        // read a 1x1 pixel
-        unsigned char pixels[4];
-        mGL->fReadPixels(0, 0, 1, 1, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, &pixels[0]);
+        ScopedDeleteArray<char> buf(new char[4]);
+        mGL->fReadPixels(0, 0, 1, 1, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, buf);
     }
 }
 

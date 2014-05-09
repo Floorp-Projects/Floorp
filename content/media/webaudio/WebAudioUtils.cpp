@@ -16,7 +16,7 @@ namespace dom {
 
 // 32 is the minimum required by the spec and matches what is used by blink.
 // The limit protects against large memory allocations.
-const uint32_t WebAudioUtils::MaxChannelCount = 32;
+const size_t WebAudioUtils::MaxChannelCount = 32;
 
 struct ConvertTimeToTickHelper
 {
