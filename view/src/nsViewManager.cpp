@@ -1093,7 +1093,7 @@ nsViewManager::CallWillPaintOnObservers()
 {
   NS_PRECONDITION(IsRootVM(), "Must be root VM for this to be called!");
 
-  int32_t index;
+  uint32_t index;
   for (index = 0; index < gViewManagers->Length(); index++) {
     nsViewManager* vm = gViewManagers->ElementAt(index);
     if (vm->RootViewManager() == this) {
