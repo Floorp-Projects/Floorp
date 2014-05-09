@@ -153,32 +153,39 @@ static LayerSortOrder CompareDepth(Layer* aOne, Layer* aTwo) {
 #ifdef DEBUG
 static bool gDumpLayerSortList = getenv("MOZ_DUMP_LAYER_SORT_LIST") != 0;
 
-static const int BLACK = 0;
-static const int RED = 1;
-static const int GREEN = 2;
-static const int YELLOW = 3;
-static const int BLUE = 4;
-static const int MAGENTA = 5;
-static const int CYAN = 6;
-static const int WHITE = 7;
-
-//#define USE_XTERM_COLORING
+// #define USE_XTERM_COLORING
 #ifdef USE_XTERM_COLORING
+// List of color values, which can be added to the xterm foreground offset or
+// background offset to generate a xterm color code.
+// NOTE: The colors that we don't explicitly use (by name) are commented out,
+// to avoid triggering Wunused-const-variable build warnings.
+static const int XTERM_FOREGROUND_COLOR_OFFSET = 30;
+static const int XTERM_BACKGROUND_COLOR_OFFSET = 40;
+static const int BLACK = 0;
+//static const int RED = 1;
+static const int GREEN = 2;
+//static const int YELLOW = 3;
+//static const int BLUE = 4;
+//static const int MAGENTA = 5;
+//static const int CYAN = 6;
+//static const int WHITE = 7;
 
 static const int RESET = 0;
-static const int BRIGHT = 1;
-static const int DIM = 2;
-static const int UNDERLINE = 3;
-static const int BLINK = 4;
-static const int REVERSE = 7;
-static const int HIDDEN = 8;
+// static const int BRIGHT = 1;
+// static const int DIM = 2;
+// static const int UNDERLINE = 3;
+// static const int BLINK = 4;
+// static const int REVERSE = 7;
+// static const int HIDDEN = 8;
 
 static void SetTextColor(uint32_t aColor)
 {
   char command[13];
 
   /* Command is the control command to the terminal */
-  sprintf(command, "%c[%d;%d;%dm", 0x1B, RESET, aColor + 30, BLACK + 40);
+  sprintf(command, "%c[%d;%d;%dm", 0x1B, RESET,
+          aColor + XTERM_FOREGROUND_COLOR_OFFSET,
+          BLACK + XTERM_BACKGROUND_COLOR_OFFSET);
   printf("%s", command);
 }
 
