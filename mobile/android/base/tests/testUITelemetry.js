@@ -48,11 +48,11 @@ add_test(function test_telemetry_events() {
 
   let expected = [
     ["event",   TEST_PREFIX + "enone",   "method0", [], null],
-    ["event",   TEST_PREFIX + "efoo",    "method1", ["foo"], null],
-    ["event",   TEST_PREFIX + "efoo",    "method2", ["foo"], null],
-    ["event",   TEST_PREFIX + "efoobar", "method3", ["foo", "bar"], "foobarextras"],
+    ["event",   TEST_PREFIX + "efoo",    "method1", [TEST_PREFIX + "foo"], null],
+    ["event",   TEST_PREFIX + "efoo",    "method2", [TEST_PREFIX + "foo"], null],
+    ["event",   TEST_PREFIX + "efoobar", "method3", [TEST_PREFIX + "foo", TEST_PREFIX + "bar"], "foobarextras"],
     ["session", TEST_PREFIX + "foo",     "reasonfoo"],
-    ["event",   TEST_PREFIX + "ebar",    "method4", ["bar"], "barextras"],
+    ["event",   TEST_PREFIX + "ebar",    "method4", [TEST_PREFIX + "bar"], "barextras"],
     ["session", TEST_PREFIX + "bar",     "reasonbar"],
     ["event",   TEST_PREFIX + "enone",   "method5", [], null],
   ];
@@ -62,12 +62,13 @@ add_test(function test_telemetry_events() {
   for (let i = 0; i < measurements.length; ++i) {
     let m = measurements[i];
 
-    let type = m[0];
+    let type = m.type;
     if (type == "event") {
       let [type, action, method, sessions, extras] = expected[i];
       do_check_eq(m.action, action);
       do_check_eq(m.method, method);
-      do_check_array_eq(m.sessions, sessions);
+      // might receive real sessions in addition to the test ones -- remove the real ones
+      do_check_array_eq(m.sessions.filter(s => TEST_REGEX.test(s)), sessions);
       do_check_eq(m.extras, extras);
       continue;
     }
@@ -75,7 +76,7 @@ add_test(function test_telemetry_events() {
     if (type == "session") {
       let [type, name, reason] = expected[i];
       do_check_eq(m.name, name);
-      do_check_eq(m.reason, method);
+      do_check_eq(m.reason, reason);
       continue;
     }
   }
