@@ -79,7 +79,7 @@ nsXMLNameSpaceMap::AddPrefix(nsIAtom *aPrefix, nsString &aURI)
 int32_t
 nsXMLNameSpaceMap::FindNameSpaceID(nsIAtom *aPrefix) const
 {
-  uint32_t index = mNameSpaces.IndexOf(aPrefix);
+  size_t index = mNameSpaces.IndexOf(aPrefix);
   if (index != mNameSpaces.NoIndex) {
     return mNameSpaces[index].nameSpaceID;
   }
@@ -93,7 +93,7 @@ nsXMLNameSpaceMap::FindNameSpaceID(nsIAtom *aPrefix) const
 nsIAtom*
 nsXMLNameSpaceMap::FindPrefix(int32_t aNameSpaceID) const
 {
-  uint32_t index = mNameSpaces.IndexOf(aNameSpaceID);
+  size_t index = mNameSpaces.IndexOf(aNameSpaceID);
   if (index != mNameSpaces.NoIndex) {
     return mNameSpaces[index].prefix;
   }

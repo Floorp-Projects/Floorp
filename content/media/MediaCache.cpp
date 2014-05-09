@@ -779,7 +779,7 @@ MediaCache::FindReusableBlock(TimeStamp aNow,
 {
   mReentrantMonitor.AssertCurrentThreadIn();
 
-  uint32_t length = std::min(uint32_t(aMaxSearchBlockIndex), mIndex.Length());
+  uint32_t length = std::min(uint32_t(aMaxSearchBlockIndex), uint32_t(mIndex.Length()));
 
   if (aForStream && aForStreamBlock > 0 &&
       uint32_t(aForStreamBlock) <= aForStream->mBlocks.Length()) {

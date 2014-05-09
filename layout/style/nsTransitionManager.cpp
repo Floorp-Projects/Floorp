@@ -574,12 +574,12 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
                                   0.5, dummyValue);
 
   bool haveCurrentTransition = false;
-  uint32_t currentIndex = nsTArray<ElementPropertyTransition>::NoIndex;
+  size_t currentIndex = nsTArray<ElementPropertyTransition>::NoIndex;
   const ElementPropertyTransition *oldPT = nullptr;
   if (aElementTransitions) {
     nsTArray<ElementPropertyTransition> &pts =
       aElementTransitions->mPropertyTransitions;
-    for (uint32_t i = 0, i_end = pts.Length(); i < i_end; ++i) {
+    for (size_t i = 0, i_end = pts.Length(); i < i_end; ++i) {
       MOZ_ASSERT(pts[i].mProperties.Length() == 1,
                  "Should have one animation property for a transition");
       if (pts[i].mProperties[0].mProperty == aProperty) {

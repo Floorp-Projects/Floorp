@@ -285,7 +285,7 @@ template <class E, class Derived>
 struct nsTArray_SafeElementAtHelper
 {
   typedef E*       elem_type;
-  typedef uint32_t index_type;
+  typedef size_t   index_type;
 
   // No implementation is provided for these two methods, and that is on
   // purpose, since we don't support these functions on non-pointer type
@@ -298,7 +298,7 @@ template <class E, class Derived>
 struct nsTArray_SafeElementAtHelper<E*, Derived>
 {
   typedef E*       elem_type;
-  typedef uint32_t index_type;
+  typedef size_t   index_type;
 
   elem_type SafeElementAt(index_type i) {
     return static_cast<Derived*> (this)->SafeElementAt(i, nullptr);
@@ -315,7 +315,7 @@ template <class E, class Derived>
 struct nsTArray_SafeElementAtSmartPtrHelper
 {
   typedef E*       elem_type;
-  typedef uint32_t index_type;
+  typedef size_t   index_type;
 
   elem_type SafeElementAt(index_type i) {
     return static_cast<Derived*> (this)->SafeElementAt(i, nullptr);
@@ -360,8 +360,8 @@ protected:
   typedef nsTArrayHeader Header;
 
 public:
-  typedef uint32_t size_type;
-  typedef uint32_t index_type;
+  typedef size_t size_type;
+  typedef size_t index_type;
 
   // @return The number of elements in the array.
   size_type Length() const {
@@ -417,7 +417,7 @@ protected:
   // Note that mHdr may actually be sEmptyHdr in the case where a
   // zero-length array is inserted into our array. But then n should
   // always be 0.
-  void IncrementLength(uint32_t n) {
+  void IncrementLength(size_t n) {
     if (mHdr == EmptyHdr()) {
       if (MOZ_UNLIKELY(n != 0)) {
         // Writing a non-zero length to the empty header would be extremely bad.
@@ -1644,8 +1644,8 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             uint32_t aFlags = 0)
 {
   aFlags |= CycleCollectionEdgeNameArrayFlag;
-  uint32_t length = aField.Length();
-  for (uint32_t i = 0; i < length; ++i) {
+  size_t length = aField.Length();
+  for (size_t i = 0; i < length; ++i) {
     ImplCycleCollectionTraverse(aCallback, aField[i], aName, aFlags);
   }
 }
@@ -1693,7 +1693,7 @@ public:
 // nsAutoArrayBase is a base class for AutoFallibleTArray and nsAutoTArray.
 // You shouldn't use this class directly.
 //
-template <class TArrayBase, uint32_t N>
+template <class TArrayBase, size_t N>
 class nsAutoArrayBase : public TArrayBase
 {
 public:
@@ -1764,7 +1764,7 @@ private:
 // Note that you can cast an nsAutoTArray<E, N> to
 // |const AutoFallibleTArray<E, N>&|.
 //
-template<class E, uint32_t N>
+template<class E, size_t N>
 class nsAutoTArray : public nsAutoArrayBase<nsTArray<E>, N>
 {
   typedef nsAutoTArray<E, N> self_type;
@@ -1787,7 +1787,7 @@ public:
 // AutoFallibleTArray<E, N> is a fallible vector class with N elements of
 // inline storage.
 //
-template<class E, uint32_t N>
+template<class E, size_t N>
 class AutoFallibleTArray : public nsAutoArrayBase<FallibleTArray<E>, N>
 {
   typedef AutoFallibleTArray<E, N> self_type;
