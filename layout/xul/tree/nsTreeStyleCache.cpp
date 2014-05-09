@@ -17,8 +17,6 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
                                   const AtomArray & aInputWord)
 {
   uint32_t count = aInputWord.Length();
-  nsDFAState startState(0);
-  nsDFAState* currState = &startState;
 
   // Go ahead and init the transition table.
   if (!mTransitionTable) {
@@ -28,8 +26,8 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
   }
 
   // The first transition is always made off the supplied pseudo-element.
-  nsTransitionKey key(currState->GetStateID(), aPseudoElement);
-  currState = static_cast<nsDFAState*>(mTransitionTable->Get(&key));
+  nsTransitionKey key(0, aPseudoElement);
+  nsDFAState* currState = static_cast<nsDFAState*>(mTransitionTable->Get(&key));
 
   if (!currState) {
     // We had a miss. Make a new state and add it to our hash.
