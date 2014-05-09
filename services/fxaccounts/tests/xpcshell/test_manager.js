@@ -122,6 +122,15 @@ FxAccountsManager._fxAccounts = {
     return deferred.promise;
   },
 
+  resendVerificationEmail: function() {
+    return this.getSignedInUser().then(data => {
+      if (data) {
+        return Promise.resolve(true);
+      }
+      throw new Error("Cannot resend verification email; no signed-in user");
+    });
+  },
+
   setSignedInUser: function(user) {
     this._setSignedInUserCalled = true;
     let deferred = Promise.defer();
@@ -578,6 +587,33 @@ add_test(function(test_signIn_already_signed_user) {
       run_next_test();
     }
   );
+});
+
+add_test(function(test_resendVerificationEmail_error_handling) {
+  do_print("= resendVerificationEmail smoke test =");
+  let user = FxAccountsManager._fxAccounts._signedInUser;
+  FxAccountsManager._fxAccounts._signedInUser.verified = false;
+  FxAccountsManager.resendVerificationEmail().then(
+    (success) => {
+      do_check_true(success);
+    },
+    (error) => {
+      do_throw("Unexpected failure");
+    }
+  );
+  // Here we verify that when FxAccounts.resendVerificationEmail
+  // throws an error, we gracefully handle it in the reject() channel.
+  FxAccountsManager._fxAccounts._signedInUser = null;
+  FxAccountsManager.resendVerificationEmail().then(
+    (success) => {
+      do_throw("Unexpected success");
+    },
+    (error) => {
+      do_check_eq(error.error, ERROR_SERVER_ERROR);
+    }
+  );
+  FxAccountsManager._fxAccounts._signedInUser = user;
+  run_next_test();
 });
 
 add_test(function(test_verificationStatus_unverified_session_unverified_user) {
