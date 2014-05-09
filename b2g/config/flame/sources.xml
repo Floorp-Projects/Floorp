@@ -143,5 +143,5 @@
   <project name="platform/system/core" path="system/core" revision="bbf7212289fc8311e43f9d11e10788e310d36a08"/>
   <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="683f93486878469c2de912d175956845c2b919d6"/>
   <project name="platform/system/qcom" path="system/qcom" revision="1cdab258b15258b7f9657da70e6f06ebd5a2fc25"/>
-  <project name="platform/vendor/qcom/msm8610" path="device/qcom/msm8610" revision="b3001d5f1686f89995b7bf70963cf69c8faebd83"/>
+  <project name="platform/vendor/qcom/msm8610" path="device/qcom/msm8610" revision="4ae5df252123591d5b941191790e7abed1bce5a4"/>
 </manifest>
