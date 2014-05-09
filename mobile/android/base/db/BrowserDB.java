@@ -8,6 +8,7 @@ package org.mozilla.gecko.db;
 import java.util.List;
 
 import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
+import org.mozilla.gecko.db.SuggestedSites;
 import org.mozilla.gecko.favicons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.mozglue.RobocopTarget;
 
@@ -31,6 +32,7 @@ public class BrowserDB {
     }
 
     private static BrowserDBIface sDb = null;
+    private static SuggestedSites sSuggestedSites;
 
     public interface BrowserDBIface {
         public void invalidateCachedState();
@@ -145,6 +147,10 @@ public class BrowserDB {
         sDb = new LocalBrowserDB(profile);
     }
 
+    public static void setSuggestedSites(SuggestedSites suggestedSites) {
+        sSuggestedSites = suggestedSites;
+    }
+
     public static void invalidateCachedState() {
         sDb.invalidateCachedState();
     }
@@ -158,8 +164,19 @@ public class BrowserDB {
         // Note this is not a single query anymore, but actually returns a mixture
         // of two queries, one for topSites and one for pinned sites.
         Cursor pinnedSites = sDb.getPinnedSites(cr, minLimit);
-        Cursor topSites = sDb.getTopSites(cr, maxLimit - pinnedSites.getCount());
-        return new TopSitesCursorWrapper(pinnedSites, topSites, minLimit);
+
+        int pinnedCount = pinnedSites.getCount();
+        Cursor topSites = sDb.getTopSites(cr, maxLimit - pinnedCount);
+
+        Cursor suggestedSites = null;
+        if (sSuggestedSites != null) {
+            final int count = minLimit - pinnedCount - topSites.getCount();
+            if (count > 0) {
+                suggestedSites = sSuggestedSites.get(count);
+            }
+        }
+
+        return new TopSitesCursorWrapper(pinnedSites, topSites, suggestedSites, minLimit);
     }
 
     public static void updateVisitedHistory(ContentResolver cr, String uri) {

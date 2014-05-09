@@ -798,6 +798,13 @@
               <observes element="viewBookmarksSidebar" attribute="checked"/>
             </menuitem>
             <menuseparator/>
+            <!-- NB: temporary solution for bug 985024, this should go away soon. -->
+            <menuitem id="BMB_bookmarksShowAllTop"
+                      class="subviewbutton"
+                      label="&showAllBookmarks2.label;"
+                      command="Browser:ShowAllBookmarks"
+                      key="manBookmarkKb"/>
+            <menuseparator/>
             <menuitem id="BMB_subscribeToPageMenuitem"
 #ifndef XP_MACOSX
                       class="menuitem-iconic subviewbutton"
