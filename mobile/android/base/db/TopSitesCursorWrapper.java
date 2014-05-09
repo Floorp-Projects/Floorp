@@ -71,6 +71,9 @@ public class TopSitesCursorWrapper implements Cursor {
     // Current position of the cursor
     private int currentPosition = -1;
 
+    // Number of pinned sites before the current position
+    private int pinnedBefore = 0;
+
     // The size of the cursor wrapper
     private int count;
 
@@ -145,22 +148,19 @@ public class TopSitesCursorWrapper implements Cursor {
         }
     }
 
-    private int getPinnedBefore(int position) {
-        int numFound = 0;
+    private void updatePinnedBefore(int position) {
+        pinnedBefore = 0;
         for (int i = 0; i < position; i++) {
             if (pinnedPositions.get(i)) {
-                numFound++;
+                pinnedBefore++;
             }
         }
-
-        return numFound;
     }
 
     private void updateTopCursorPosition(int position) {
         // Move the real cursor as if we were stepping through it to this position.
         // Account for pinned sites, and be careful to update its position to the
         // minimum or maximum position, even if we're moving beyond its bounds.
-        final int pinnedBefore = getPinnedBefore(position);
         final int actualPosition = position - pinnedBefore;
 
         if (actualPosition <= -1) {
@@ -274,6 +274,7 @@ public class TopSitesCursorWrapper implements Cursor {
     public boolean moveToPosition(int position) {
         currentPosition = position;
 
+        updatePinnedBefore(position);
         updatePinnedCursorPosition(position);
         updateTopCursorPosition(position);
         updateRowState();
