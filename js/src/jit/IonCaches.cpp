@@ -435,23 +435,6 @@ IonCache::initializeAddCacheState(LInstruction *ins, AddCacheState *addState)
 {
 }
 
-static bool
-IsCacheableDOMProxy(JSObject *obj)
-{
-    if (!obj->is<ProxyObject>())
-        return false;
-
-    BaseProxyHandler *handler = obj->as<ProxyObject>().handler();
-
-    if (handler->family() != GetDOMProxyHandlerFamily())
-        return false;
-
-    if (obj->numFixedSlots() <= GetDOMProxyExpandoSlot())
-        return false;
-
-    return true;
-}
-
 static void
 GeneratePrototypeGuards(JSContext *cx, IonScript *ion, MacroAssembler &masm, JSObject *obj,
                         JSObject *holder, Register objectReg, Register scratchReg,
@@ -489,8 +472,11 @@ GeneratePrototypeGuards(JSContext *cx, IonScript *ion, MacroAssembler &masm, JSO
     }
 }
 
+// Note: This differs from IsCacheableProtoChain in BaselineIC.cpp in that
+// Ion caches can deal with objects on the proto chain that have uncacheable
+// prototypes.
 static bool
-IsCacheableProtoChain(JSObject *obj, JSObject *holder)
+IsCacheableProtoChainForIon(JSObject *obj, JSObject *holder)
 {
     while (obj != holder) {
         /*
@@ -507,9 +493,9 @@ IsCacheableProtoChain(JSObject *obj, JSObject *holder)
 }
 
 static bool
-IsCacheableGetPropReadSlot(JSObject *obj, JSObject *holder, Shape *shape)
+IsCacheableGetPropReadSlotForIon(JSObject *obj, JSObject *holder, Shape *shape)
 {
-    if (!shape || !IsCacheableProtoChain(obj, holder))
+    if (!shape || !IsCacheableProtoChainForIon(obj, holder))
         return false;
 
     if (!shape->hasSlot() || !shape->hasDefaultGetter())
@@ -605,7 +591,7 @@ IsOptimizableArgumentsObjectForGetElem(JSObject *obj, Value idval)
 static bool
 IsCacheableGetPropCallNative(JSObject *obj, JSObject *holder, Shape *shape)
 {
-    if (!shape || !IsCacheableProtoChain(obj, holder))
+    if (!shape || !IsCacheableProtoChainForIon(obj, holder))
         return false;
 
     if (!shape->hasGetterValue() || !shape->getterValue().isObject())
@@ -632,7 +618,7 @@ IsCacheableGetPropCallNative(JSObject *obj, JSObject *holder, Shape *shape)
 static bool
 IsCacheableGetPropCallPropertyOp(JSObject *obj, JSObject *holder, Shape *shape)
 {
-    if (!shape || !IsCacheableProtoChain(obj, holder))
+    if (!shape || !IsCacheableProtoChainForIon(obj, holder))
         return false;
 
     if (shape->hasSlot() || shape->hasGetterValue() || shape->hasDefaultGetter())
@@ -1139,7 +1125,7 @@ CanAttachNativeGetProp(typename GetPropCache::Context cx, const GetPropCache &ca
     RootedScript script(cx);
     jsbytecode *pc;
     cache.getScriptedLocation(&script, &pc);
-    if (IsCacheableGetPropReadSlot(obj, holder, shape) ||
+    if (IsCacheableGetPropReadSlotForIon(obj, holder, shape) ||
         IsCacheableNoProperty(obj, holder, shape, pc, cache.output()))
     {
         return GetPropertyIC::CanAttachReadSlot;
@@ -2031,7 +2017,7 @@ IsCacheableSetPropCallNative(HandleObject obj, HandleObject holder, HandleShape 
 {
     JS_ASSERT(obj->isNative());
 
-    if (!shape || !IsCacheableProtoChain(obj, holder))
+    if (!shape || !IsCacheableProtoChainForIon(obj, holder))
         return false;
 
     return shape->hasSetterValue() && shape->setterObject() &&
@@ -2047,7 +2033,7 @@ IsCacheableSetPropCallPropertyOp(HandleObject obj, HandleObject holder, HandleSh
     if (!shape)
         return false;
 
-    if (!IsCacheableProtoChain(obj, holder))
+    if (!IsCacheableProtoChainForIon(obj, holder))
         return false;
 
     if (shape->hasSlot())
@@ -4241,7 +4227,7 @@ IsCacheableNameReadSlot(JSContext *cx, HandleObject scopeChain, HandleObject obj
 
     if (obj->is<GlobalObject>()) {
         // Support only simple property lookups.
-        if (!IsCacheableGetPropReadSlot(obj, holder, shape) &&
+        if (!IsCacheableGetPropReadSlotForIon(obj, holder, shape) &&
             !IsCacheableNoProperty(obj, holder, shape, pc, output))
             return false;
     } else if (obj->is<CallObject>()) {
