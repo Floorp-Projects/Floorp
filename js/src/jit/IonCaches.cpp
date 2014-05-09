@@ -908,7 +908,7 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
 
         if (!masm.icBuildOOLFakeExitFrame(returnAddr, aic))
             return false;
-        masm.enterFakeExitFrame(ION_FRAME_OOL_NATIVE);
+        masm.enterFakeExitFrame(IonOOLNativeExitFrameLayout::Token());
 
         // Construct and execute call.
         masm.setupUnalignedABICall(3, scratchReg);
@@ -953,7 +953,7 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
 
         if (!masm.icBuildOOLFakeExitFrame(returnAddr, aic))
             return false;
-        masm.enterFakeExitFrame(ION_FRAME_OOL_PROPERTY_OP);
+        masm.enterFakeExitFrame(IonOOLPropertyOpExitFrameLayout::Token());
 
         // Make the call.
         masm.setupUnalignedABICall(4, scratchReg);
@@ -1337,7 +1337,7 @@ EmitCallProxyGet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
 
     if (!masm.icBuildOOLFakeExitFrame(returnAddr, aic))
         return false;
-    masm.enterFakeExitFrame(ION_FRAME_OOL_PROXY);
+    masm.enterFakeExitFrame(IonOOLProxyExitFrameLayout::Token());
 
     // Make the call.
     masm.setupUnalignedABICall(5, scratch);
@@ -2112,7 +2112,7 @@ EmitCallProxySet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
 
     if (!masm.icBuildOOLFakeExitFrame(returnAddr, aic))
         return false;
-    masm.enterFakeExitFrame(ION_FRAME_OOL_PROXY);
+    masm.enterFakeExitFrame(IonOOLProxyExitFrameLayout::Token());
 
     // Make the call.
     masm.setupUnalignedABICall(6, scratch);
@@ -2320,7 +2320,7 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
 
         if (!masm.icBuildOOLFakeExitFrame(returnAddr, aic))
             return false;
-        masm.enterFakeExitFrame(ION_FRAME_OOL_NATIVE);
+        masm.enterFakeExitFrame(IonOOLNativeExitFrameLayout::Token());
 
         // Make the call
         masm.setupUnalignedABICall(3, scratchReg);
@@ -2366,7 +2366,7 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
 
         if (!masm.icBuildOOLFakeExitFrame(returnAddr, aic))
             return false;
-        masm.enterFakeExitFrame(ION_FRAME_OOL_PROPERTY_OP);
+        masm.enterFakeExitFrame(IonOOLPropertyOpExitFrameLayout::Token());
 
         // Make the call.
         masm.setupUnalignedABICall(5, scratchReg);

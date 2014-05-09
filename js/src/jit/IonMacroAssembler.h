@@ -836,7 +836,10 @@ class MacroAssembler : public MacroAssemblerSpecific
         // Push VMFunction pointer, to mark arguments.
         Push(ImmPtr(f));
     }
-    void enterFakeExitFrame(JitCode *codeVal = nullptr) {
+
+    // The JitCode * argument here is one of the tokens defined in the various
+    // exit frame layout classes, e.g. IonNativeExitFrameLayout::Token().
+    void enterFakeExitFrame(JitCode *codeVal) {
         linkExitFrame();
         Push(ImmPtr(codeVal));
         Push(ImmPtr(nullptr));
@@ -857,12 +860,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     void enterExitFrameAndLoadContext(const VMFunction *f, Register cxReg, Register scratch,
                                       ExecutionMode executionMode);
 
-    void enterFakeParallelExitFrame(Register cx, Register scratch,
-                                    JitCode *codeVal = nullptr);
+    void enterFakeParallelExitFrame(Register cx, Register scratch, JitCode *codeVal);
 
-    void enterFakeExitFrame(Register cxReg, Register scratch,
-                            ExecutionMode executionMode,
-                            JitCode *codeVal = nullptr);
+    void enterFakeExitFrame(Register cxReg, Register scratch, ExecutionMode executionMode,
+                            JitCode *codeVal);
 
     void leaveExitFrame() {
         freeStack(IonExitFooterFrame::Size());

@@ -302,13 +302,6 @@ GetTopIonJSScript(uint8_t *jitTop, void **returnAddrOut, ExecutionMode mode)
     return iter.script();
 }
 
-static JitCode *const ION_FRAME_DOMGETTER       = (JitCode *)0x1;
-static JitCode *const ION_FRAME_DOMSETTER       = (JitCode *)0x2;
-static JitCode *const ION_FRAME_DOMMETHOD       = (JitCode *)0x3;
-static JitCode *const ION_FRAME_OOL_NATIVE      = (JitCode *)0x4;
-static JitCode *const ION_FRAME_OOL_PROPERTY_OP = (JitCode *)0x5;
-static JitCode *const ION_FRAME_OOL_PROXY       = (JitCode *)0x6;
-
 // Layout of the frame prefix. This assumes the stack architecture grows down.
 // If this is ever not the case, we'll have to refactor.
 class IonCommonFrameLayout
@@ -469,6 +462,10 @@ class IonExitFrameLayout : public IonCommonFrameLayout
     }
 
   public:
+    // Pushed for "bare" fake exit frames that have no GC things on stack to be
+    // marked.
+    static JitCode *const BareToken() { return (JitCode *)0xFF; }
+
     static inline size_t Size() {
         return sizeof(IonExitFrameLayout);
     }
@@ -492,50 +489,21 @@ class IonExitFrameLayout : public IonCommonFrameLayout
     inline bool isWrapperExit() {
         return footer()->function() != nullptr;
     }
-    inline bool isNativeExit() {
-        return footer()->jitCode() == nullptr;
-    }
-    inline bool isOOLNativeExit() {
-        return footer()->jitCode() == ION_FRAME_OOL_NATIVE;
-    }
-    inline bool isOOLPropertyOpExit() {
-        return footer()->jitCode() == ION_FRAME_OOL_PROPERTY_OP;
-    }
-    inline bool isOOLProxyExit() {
-        return footer()->jitCode() == ION_FRAME_OOL_PROXY;
-    }
-    inline bool isDomExit() {
-        JitCode *code = footer()->jitCode();
-        return
-            code == ION_FRAME_DOMGETTER ||
-            code == ION_FRAME_DOMSETTER ||
-            code == ION_FRAME_DOMMETHOD;
+    inline bool isBareExit() {
+        return footer()->jitCode() == BareToken();
     }
 
-    inline IonNativeExitFrameLayout *nativeExit() {
-        // see CodeGenerator::visitCallNative
-        JS_ASSERT(isNativeExit());
-        return reinterpret_cast<IonNativeExitFrameLayout *>(footer());
+    // See the various exit frame layouts below.
+    template <typename T> inline bool is() {
+        return footer()->jitCode() == T::Token();
     }
-    inline IonOOLNativeExitFrameLayout *oolNativeExit() {
-        JS_ASSERT(isOOLNativeExit());
-        return reinterpret_cast<IonOOLNativeExitFrameLayout *>(footer());
-    }
-    inline IonOOLPropertyOpExitFrameLayout *oolPropertyOpExit() {
-        JS_ASSERT(isOOLPropertyOpExit());
-        return reinterpret_cast<IonOOLPropertyOpExitFrameLayout *>(footer());
-    }
-    inline IonOOLProxyExitFrameLayout *oolProxyExit() {
-        JS_ASSERT(isOOLProxyExit());
-        return reinterpret_cast<IonOOLProxyExitFrameLayout *>(footer());
-    }
-    inline IonDOMExitFrameLayout *DOMExit() {
-        JS_ASSERT(isDomExit());
-        return reinterpret_cast<IonDOMExitFrameLayout *>(footer());
+    template <typename T> inline T *as() {
+        MOZ_ASSERT(is<T>());
+        return reinterpret_cast<T *>(footer());
     }
 };
 
-// Cannot inherit implementa<tion since we need to extend the top of
+// Cannot inherit implementation since we need to extend the top of
 // IonExitFrameLayout.
 class IonNativeExitFrameLayout
 {
@@ -550,6 +518,8 @@ class IonNativeExitFrameLayout
     uint32_t hiCalleeResult_;
 
   public:
+    static JitCode *const Token() { return (JitCode *)0x0; }
+
     static inline size_t Size() {
         return sizeof(IonNativeExitFrameLayout);
     }
@@ -586,6 +556,8 @@ class IonOOLNativeExitFrameLayout
     uint32_t hiThis_;
 
   public:
+    static JitCode *const Token() { return (JitCode *)0x4; }
+
     static inline size_t Size(size_t argc) {
         // The frame accounts for the callee/result and |this|, so we only need args.
         return sizeof(IonOOLNativeExitFrameLayout) + (argc * sizeof(Value));
@@ -630,6 +602,8 @@ class IonOOLPropertyOpExitFrameLayout
     JitCode *stubCode_;
 
   public:
+    static JitCode *const Token() { return (JitCode *)0x5; }
+
     static inline size_t Size() {
         return sizeof(IonOOLPropertyOpExitFrameLayout);
     }
@@ -680,6 +654,8 @@ class IonOOLProxyExitFrameLayout
     JitCode *stubCode_;
 
   public:
+    static JitCode *const Token() { return (JitCode *)0x6; }
+
     static inline size_t Size() {
         return sizeof(IonOOLProxyExitFrameLayout);
     }
@@ -718,6 +694,9 @@ class IonDOMExitFrameLayout
     uint32_t hiCalleeResult_;
 
   public:
+    static JitCode *const GetterToken() { return (JitCode *)0x1; }
+    static JitCode *const SetterToken() { return (JitCode *)0x2; }
+
     static inline size_t Size() {
         return sizeof(IonDOMExitFrameLayout);
     }
@@ -731,9 +710,7 @@ class IonDOMExitFrameLayout
     inline JSObject **thisObjAddress() {
         return &thisObj;
     }
-    inline bool isMethodFrame() {
-        return footer_.jitCode() == ION_FRAME_DOMMETHOD;
-    }
+    inline bool isMethodFrame();
 };
 
 struct IonDOMMethodExitFrameLayoutTraits;
@@ -757,6 +734,8 @@ class IonDOMMethodExitFrameLayout
     friend struct IonDOMMethodExitFrameLayoutTraits;
 
   public:
+    static JitCode *const Token() { return (JitCode *)0x3; }
+
     static inline size_t Size() {
         return sizeof(IonDOMMethodExitFrameLayout);
     }
@@ -778,6 +757,31 @@ class IonDOMMethodExitFrameLayout
         return argc_;
     }
 };
+
+inline bool
+IonDOMExitFrameLayout::isMethodFrame()
+{
+    return footer_.jitCode() == IonDOMMethodExitFrameLayout::Token();
+}
+
+template <>
+inline bool
+IonExitFrameLayout::is<IonDOMExitFrameLayout>()
+{
+    JitCode *code = footer()->jitCode();
+    return
+        code == IonDOMExitFrameLayout::GetterToken() ||
+        code == IonDOMExitFrameLayout::SetterToken() ||
+        code == IonDOMMethodExitFrameLayout::Token();
+}
+
+template <>
+inline IonDOMExitFrameLayout *
+IonExitFrameLayout::as<IonDOMExitFrameLayout>()
+{
+    MOZ_ASSERT(is<IonDOMExitFrameLayout>());
+    return reinterpret_cast<IonDOMExitFrameLayout *>(footer());
+}
 
 struct IonDOMMethodExitFrameLayoutTraits {
     static const size_t offsetOfArgcFromArgv =
