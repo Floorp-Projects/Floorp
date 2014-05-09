@@ -8,7 +8,6 @@ const { isPrivateBrowsingSupported } = require('sdk/self');
 const tabs = require('sdk/tabs');
 const { browserWindows: windows } = require('sdk/windows');
 const { isPrivate } = require('sdk/private-browsing');
-const { getOwnerWindow } = require('sdk/private-browsing/window/utils');
 const { is } = require('sdk/system/xul-app');
 const { isWindowPBSupported, isTabPBSupported } = require('sdk/private-browsing/utils');
 
@@ -19,47 +18,6 @@ exports.testIsPrivateBrowsingTrue = function(assert) {
             'isPrivateBrowsingSupported property is true');
 };
 
-// test tab.open with isPrivate: true
-// test isPrivate on a tab
-// test getOwnerWindow on windows and tabs
-exports.testGetOwnerWindow = function(assert, done) {
-  let window = windows.activeWindow;
-  let chromeWindow = getOwnerWindow(window);
-  assert.ok(chromeWindow instanceof Ci.nsIDOMWindow, 'associated window is found');
-
-  tabs.open({
-    url: 'about:blank',
-    isPrivate: true,
-    onOpen: function(tab) {
-      // test that getOwnerWindow works as expected
-      if (is('Fennec')) {
-        assert.notStrictEqual(chromeWindow, getOwnerWindow(tab));
-        assert.ok(getOwnerWindow(tab) instanceof Ci.nsIDOMWindow);
-      }
-      else {
-        if (isWindowPBSupported) {
-          assert.notStrictEqual(chromeWindow,
-                                getOwnerWindow(tab),
-                                'associated window is not the same for window and window\'s tab');
-        }
-        else {
-          assert.strictEqual(chromeWindow,
-                            getOwnerWindow(tab),
-                            'associated window is the same for window and window\'s tab');
-        }
-      }
-
-      let pbSupported = isTabPBSupported || isWindowPBSupported;
-
-      // test that the tab is private if it should be
-      assert.equal(isPrivate(tab), pbSupported);
-      assert.equal(isPrivate(getOwnerWindow(tab)), pbSupported);
-
-      tab.close(function() done());
-    }
-  });
-};
-
 // test that it is possible to open a private tab
 exports.testTabOpenPrivate = function(assert, done) {
   tabs.open({
@@ -68,10 +26,7 @@ exports.testTabOpenPrivate = function(assert, done) {
     onReady: function(tab) {
       assert.equal(tab.url, TAB_URL, 'opened correct tab');
       assert.equal(isPrivate(tab), (isWindowPBSupported || isTabPBSupported));
-
-      tab.close(function() {
-        done();
-      });
+      tab.close(done);
     }
   });
 }
@@ -84,10 +39,7 @@ exports.testTabOpenPrivateDefault = function(assert, done) {
     onReady: function(tab) {
       assert.equal(tab.url, TAB_URL, 'opened correct tab');
       assert.equal(isPrivate(tab), false);
-
-      tab.close(function() {
-        done();
-      });
+      tab.close(done);
     }
   });
 }
@@ -100,10 +52,7 @@ exports.testTabOpenPrivateOffExplicit = function(assert, done) {
     onReady: function(tab) {
       assert.equal(tab.url, TAB_URL, 'opened correct tab');
       assert.equal(isPrivate(tab), false);
-
-      tab.close(function() {
-        done();
-      });
+      tab.close(done);
     }
   });
 }
@@ -121,10 +70,7 @@ if (!is('Fennec')) {
         tab.once('ready', function() {
           assert.equal(tab.url, TAB_URL, 'opened correct tab');
           assert.equal(isPrivate(tab), isWindowPBSupported, 'tab is private');
-
-          window.close(function() {
-            done();
-          });
+          window.close(done);
         });
       }
     });

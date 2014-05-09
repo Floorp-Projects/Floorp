@@ -11,7 +11,7 @@ const { Trait } = require('../deprecated/traits');
 const { iteratorSymbol } = require('../util/iteration');
 
 /**
- * @see https://jetpack.mozillalabs.com/sdk/latest/docs/#module/api-utils/list
+ * @see https://developer.mozilla.org/en-US/Add-ons/SDK/Low-Level_APIs/util_list
  */
 const Iterable = Trait.compose({
   /**
