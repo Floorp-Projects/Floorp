@@ -949,7 +949,8 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
   mEffectiveTransform = SnapTransformTranslation(idealTransform, &residual);
 
   bool useIntermediateSurface;
-  if (GetMaskLayer()) {
+  if (GetMaskLayer() ||
+      GetForceIsolatedGroup()) {
     useIntermediateSurface = true;
 #ifdef MOZ_DUMP_PAINTING
   } else if (gfxUtils::sDumpPainting) {
@@ -957,7 +958,8 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
 #endif
   } else {
     float opacity = GetEffectiveOpacity();
-    if (opacity != 1.0f && HasMultipleChildren()) {
+    CompositionOp blendMode = GetEffectiveMixBlendMode();
+    if ((opacity != 1.0f || blendMode != CompositionOp::OP_OVER) && HasMultipleChildren()) {
       useIntermediateSurface = true;
     } else {
       useIntermediateSurface = false;
