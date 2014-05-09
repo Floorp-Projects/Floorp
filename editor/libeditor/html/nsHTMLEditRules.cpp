@@ -8145,8 +8145,8 @@ nsHTMLEditRules::RemoveEmptyNodes()
     NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
     nsINode* parent = node->GetParentNode();
-    
-    uint32_t idx = skipList.IndexOf(node);
+
+    size_t idx = skipList.IndexOf(node);
     if (idx != skipList.NoIndex) {
       // this node is on our skip list.  Skip processing for this node, 
       // and replace its value in the skip list with the value of its parent

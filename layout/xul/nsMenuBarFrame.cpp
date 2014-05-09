@@ -195,7 +195,7 @@ nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent)
 
   // Find a most preferred accesskey which should be returned.
   nsIFrame* foundMenu = nullptr;
-  uint32_t foundIndex = accessKeys.NoIndex;
+  size_t foundIndex = accessKeys.NoIndex;
   nsIFrame* currFrame = immediateParent->GetFirstPrincipalChild();
 
   while (currFrame) {
@@ -211,7 +211,7 @@ nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent)
         const char16_t* start = shortcutKey.BeginReading();
         const char16_t* end = shortcutKey.EndReading();
         uint32_t ch = UTF16CharEnumerator::NextChar(&start, end);
-        uint32_t index = accessKeys.IndexOf(ch);
+        size_t index = accessKeys.IndexOf(ch);
         if (index != accessKeys.NoIndex &&
             (foundIndex == accessKeys.NoIndex || index < foundIndex)) {
           foundMenu = currFrame;
