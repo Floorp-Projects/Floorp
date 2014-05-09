@@ -7,6 +7,27 @@
 #include "nsStyleSet.h"
 #include "mozilla/dom/Element.h"
 
+nsTreeStyleCache::Transition::Transition(uint32_t aState, nsIAtom* aSymbol)
+  : mState(aState), mInputSymbol(aSymbol)
+{
+}
+
+bool
+nsTreeStyleCache::Transition::operator==(const Transition& aOther) const
+{
+  return aOther.mState == mState && aOther.mInputSymbol == mInputSymbol;
+}
+
+uint32_t
+nsTreeStyleCache::Transition::Hash() const
+{
+  // Make a 32-bit integer that combines the low-order 16 bits of the state and the input symbol.
+  uint32_t hb = mState << 16;
+  uint32_t lb = (NS_PTR_TO_UINT32(mInputSymbol.get()) << 16) >> 16;
+  return hb+lb;
+}
+
+
 // The style context cache impl
 nsStyleContext*
 nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
@@ -21,30 +42,29 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
   // Go ahead and init the transition table.
   if (!mTransitionTable) {
     // Automatic miss. Build the table
-    mTransitionTable =
-      new nsObjectHashtable(nullptr, nullptr, DeleteDFAState, nullptr);
+    mTransitionTable = new TransitionTable();
   }
 
   // The first transition is always made off the supplied pseudo-element.
-  nsTransitionKey key(0, aPseudoElement);
-  nsDFAState* currState = static_cast<nsDFAState*>(mTransitionTable->Get(&key));
+  Transition transition(0, aPseudoElement);
+  nsDFAState* currState = mTransitionTable->Get(transition);
 
   if (!currState) {
     // We had a miss. Make a new state and add it to our hash.
     currState = new nsDFAState(mNextState);
     mNextState++;
-    mTransitionTable->Put(&key, currState);
+    mTransitionTable->Put(transition, currState);
   }
 
   for (uint32_t i = 0; i < count; i++) {
-    nsTransitionKey key(currState->GetStateID(), aInputWord[i]);
-    currState = static_cast<nsDFAState*>(mTransitionTable->Get(&key));
+    Transition transition(currState->GetStateID(), aInputWord[i]);
+    currState = mTransitionTable->Get(transition);
 
     if (!currState) {
       // We had a miss. Make a new state and add it to our hash.
       currState = new nsDFAState(mNextState);
       mNextState++;
-      mTransitionTable->Put(&key, currState);
+      mTransitionTable->Put(transition, currState);
     }
   }
 
@@ -71,12 +91,3 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
   return result;
 }
 
-bool
-nsTreeStyleCache::DeleteDFAState(nsHashKey *aKey,
-                                 void *aData,
-                                 void *closure)
-{
-  nsDFAState* entry = static_cast<nsDFAState*>(aData);
-  delete entry;
-  return true;
-}
