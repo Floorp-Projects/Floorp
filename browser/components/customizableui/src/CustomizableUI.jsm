@@ -492,6 +492,7 @@ let CustomizableUIInternal = {
     let window = document.defaultView;
     let inPrivateWindow = PrivateBrowsingUtils.isWindowPrivate(window);
     let container = aAreaNode.customizationTarget;
+    let areaIsPanel = gAreas.get(aArea).get("type") == CustomizableUI.TYPE_MENU_PANEL;
 
     if (!container) {
       throw new Error("Expected area " + aArea
@@ -516,6 +517,11 @@ let CustomizableUIInternal = {
 
         if (currentNode && currentNode.id == id) {
           currentNode = currentNode.nextSibling;
+          continue;
+        }
+
+        if (this.isSpecialWidget(id) && areaIsPanel) {
+          placementsToRemove.add(id);
           continue;
         }
 
@@ -548,7 +554,7 @@ let CustomizableUIInternal = {
 
         this.ensureButtonContextMenu(node, aAreaNode);
         if (node.localName == "toolbarbutton") {
-          if (aArea == CustomizableUI.AREA_PANEL) {
+          if (areaIsPanel) {
             node.setAttribute("wrap", "true");
           } else {
             node.removeAttribute("wrap");
@@ -1555,6 +1561,13 @@ let CustomizableUIInternal = {
       throw new Error("Unknown customization area: " + aArea);
     }
 
+    // Hack: don't want special widgets in the panel (need to check here as well
+    // as in canWidgetMoveToArea because the menu panel is lazy):
+    if (gAreas.get(aArea).get("type") == CustomizableUI.TYPE_MENU_PANEL &&
+        this.isSpecialWidget(aWidgetId)) {
+      return;
+    }
+
     // If this is a lazy area that hasn't been restored yet, we can't yet modify
     // it - would would at least like to add to it. So we keep track of it in
     // gFuturePlacements,  and use that to add it when restoring the area. We
@@ -2373,10 +2386,16 @@ let CustomizableUIInternal = {
 
   canWidgetMoveToArea: function(aWidgetId, aArea) {
     let placement = this.getPlacementOfWidget(aWidgetId);
-    if (placement && placement.area != aArea &&
-        !this.isWidgetRemovable(aWidgetId)) {
-      return false;
+    if (placement && placement.area != aArea) {
+      // Special widgets can't move to the menu panel.
+      if (this.isSpecialWidget(aWidgetId) && gAreas.has(aArea) &&
+          gAreas.get(aArea).get("type") == CustomizableUI.TYPE_MENU_PANEL) {
+        return false;
+      }
+      // For everything else, just return whether the widget is removable.
+      return this.isWidgetRemovable(aWidgetId);
     }
+
     return true;
   },
 
