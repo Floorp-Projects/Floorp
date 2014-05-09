@@ -21,7 +21,7 @@ class nsAHttpConnection;
 class nsHttpConnectionInfo;
 class nsHttpRequestHead;
 
-class NullHttpTransaction : public nsAHttpTransaction
+class NullHttpTransaction MOZ_FINAL : public nsAHttpTransaction
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -30,7 +30,9 @@ public:
   NullHttpTransaction(nsHttpConnectionInfo *ci,
                       nsIInterfaceRequestor *callbacks,
                       uint32_t caps);
-  virtual ~NullHttpTransaction();
+  ~NullHttpTransaction();
+
+  nsHttpConnectionInfo *ConnectionInfo() { return mConnectionInfo; }
 
   // Overload of nsAHttpTransaction methods
   bool IsNullTransaction() MOZ_OVERRIDE MOZ_FINAL { return true; }

@@ -18,15 +18,6 @@ extern PRLogModuleInfo *gHttpLog;
 // nsHttpConnectionInfo - holds the properties of a connection
 //-----------------------------------------------------------------------------
 
-// http:// uris through a proxy will all share the same CI, because they can
-// all use the same connection. (modulo pb and anonymous flags). They just use
-// the proxy as the origin host name.
-// however, https:// uris tunnel through the proxy so they will have different
-// CIs - the CI reflects both the proxy and the origin.
-// however, proxy conenctions made with http/2 (or spdy) can tunnel to the origin
-// and multiplex non tunneled transactions at the same time, so they have a
-// special wildcard CI that accepts all origins through that proxy.
-
 namespace mozilla { namespace net {
 
 class nsHttpConnectionInfo
@@ -35,7 +26,7 @@ public:
     nsHttpConnectionInfo(const nsACString &host, int32_t port,
                          const nsACString &username,
                          nsProxyInfo* proxyInfo,
-                         bool endToEndSSL = false);
+                         bool usingSSL=false);
 
     virtual ~nsHttpConnectionInfo()
     {
@@ -51,9 +42,8 @@ public:
         SetOriginServer(nsDependentCString(host), port);
     }
 
-    // OK to treat these as an infalible allocation
+    // OK to treat this as an infalible allocation
     nsHttpConnectionInfo* Clone() const;
-    nsresult CreateWildCard(nsHttpConnectionInfo **outParam);
 
     const char *ProxyHost() const { return mProxyInfo ? mProxyInfo->Host().get() : nullptr; }
     int32_t     ProxyPort() const { return mProxyInfo ? mProxyInfo->Port() : -1; }
@@ -75,7 +65,10 @@ public:
     int32_t       Port() const           { return mPort; }
     const char   *Username() const       { return mUsername.get(); }
     nsProxyInfo  *ProxyInfo()            { return mProxyInfo; }
-    int32_t       DefaultPort() const    { return mEndToEndSSL ? NS_HTTPS_DEFAULT_PORT : NS_HTTP_DEFAULT_PORT; }
+    bool          UsingHttpProxy() const { return mUsingHttpProxy; }
+    bool          UsingSSL() const       { return mUsingSSL; }
+    bool          UsingConnect() const   { return mUsingConnect; }
+    int32_t       DefaultPort() const    { return mUsingSSL ? NS_HTTPS_DEFAULT_PORT : NS_HTTP_DEFAULT_PORT; }
     void          SetAnonymous(bool anon)
                                          { mHashKey.SetCharAt(anon ? 'A' : '.', 2); }
     bool          GetAnonymous() const   { return mHashKey.CharAt(2) == 'A'; }
@@ -84,23 +77,8 @@ public:
 
     const nsCString &GetHost() { return mHost; }
 
-    // Returns true for any kind of proxy (http, socks, https, etc..)
+    // Returns true for any kind of proxy (http, socks, etc..)
     bool UsingProxy();
-
-    // Returns true when proxying over HTTP or HTTPS
-    bool UsingHttpProxy() const { return mUsingHttpProxy || mUsingHttpsProxy; }
-
-    // Returns true when proxying over HTTPS
-    bool UsingHttpsProxy() const { return mUsingHttpsProxy; }
-
-    // Returns true when a resource is in SSL end to end (e.g. https:// uri)
-    bool EndToEndSSL() const { return mEndToEndSSL; }
-
-    // Returns true when at least first hop is SSL (e.g. proxy over https or https uri)
-    bool FirstHopSSL() const { return mEndToEndSSL || mUsingHttpsProxy; }
-
-    // Returns true when CONNECT is used to tunnel through the proxy (e.g. https:// or ws://)
-    bool UsingConnect() const { return mUsingConnect; }
 
     // Returns true when mHost is an RFC1918 literal.
     bool HostIsLocalIPLiteral() const;
@@ -112,8 +90,7 @@ private:
     nsCString              mUsername;
     nsCOMPtr<nsProxyInfo>  mProxyInfo;
     bool                   mUsingHttpProxy;
-    bool                   mUsingHttpsProxy;
-    bool                   mEndToEndSSL;
+    bool                   mUsingSSL;
     bool                   mUsingConnect;  // if will use CONNECT with http proxy
 
 // for nsRefPtr

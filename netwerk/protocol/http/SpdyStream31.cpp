@@ -38,36 +38,36 @@ namespace net {
 SpdyStream31::SpdyStream31(nsAHttpTransaction *httpTransaction,
                            SpdySession31 *spdySession,
                            int32_t priority)
-  : mStreamID(0)
-  , mSession(spdySession)
-  , mUpstreamState(GENERATING_SYN_STREAM)
-  , mSynFrameComplete(0)
-  , mSentFinOnData(0)
-  , mTransaction(httpTransaction)
-  , mSocketTransport(spdySession->SocketTransport())
-  , mSegmentReader(nullptr)
-  , mSegmentWriter(nullptr)
-  , mChunkSize(spdySession->SendingChunkSize())
-  , mRequestBlockedOnRead(0)
-  , mRecvdFin(0)
-  , mFullyOpen(0)
-  , mSentWaitingFor(0)
-  , mReceivedData(0)
-  , mSetTCPSocketBuffer(0)
-  , mTxInlineFrameSize(SpdySession31::kDefaultBufferSize)
-  , mTxInlineFrameUsed(0)
-  , mTxStreamFrameSize(0)
-  , mZlib(spdySession->UpstreamZlib())
-  , mDecompressBufferSize(SpdySession31::kDefaultBufferSize)
-  , mDecompressBufferUsed(0)
-  , mDecompressedBytes(0)
-  , mRequestBodyLenRemaining(0)
-  , mPriority(priority)
-  , mLocalUnacked(0)
-  , mBlockedOnRwin(false)
-  , mTotalSent(0)
-  , mTotalRead(0)
-  , mPushSource(nullptr)
+  : mStreamID(0),
+  mSession(spdySession),
+  mUpstreamState(GENERATING_SYN_STREAM),
+  mSynFrameComplete(0),
+  mSentFinOnData(0),
+  mTransaction(httpTransaction),
+  mSocketTransport(spdySession->SocketTransport()),
+  mSegmentReader(nullptr),
+  mSegmentWriter(nullptr),
+  mChunkSize(spdySession->SendingChunkSize()),
+  mRequestBlockedOnRead(0),
+  mRecvdFin(0),
+  mFullyOpen(0),
+  mSentWaitingFor(0),
+  mReceivedData(0),
+  mSetTCPSocketBuffer(0),
+  mTxInlineFrameSize(SpdySession31::kDefaultBufferSize),
+  mTxInlineFrameUsed(0),
+  mTxStreamFrameSize(0),
+  mZlib(spdySession->UpstreamZlib()),
+  mDecompressBufferSize(SpdySession31::kDefaultBufferSize),
+  mDecompressBufferUsed(0),
+  mDecompressedBytes(0),
+  mRequestBodyLenRemaining(0),
+  mPriority(priority),
+  mLocalUnacked(0),
+  mBlockedOnRwin(false),
+  mTotalSent(0),
+  mTotalRead(0),
+  mPushSource(nullptr)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -194,8 +194,9 @@ SpdyStream31::ReadSegments(nsAHttpSegmentReader *reader,
 }
 
 // WriteSegments() is used to read data off the socket. Generally this is
-// just a call through to the associate nsHttpTransaciton for this stream
-// for the remaining data bytes indicated by the current DATA frame.
+// just the SPDY frame header and from there the appropriate SPDYStream
+// is identified from the Stream-ID. The http transaction associated with
+// that read then pulls in the data directly.
 
 nsresult
 SpdyStream31::WriteSegments(nsAHttpSegmentWriter *writer,
@@ -284,11 +285,11 @@ SpdyStream31::ParseHttpRequestHeaders(const char *buf,
   *countUsed = avail - (oldLen - endHeader) + 4;
   mSynFrameComplete = 1;
 
-  nsAutoCString hostHeader;
-  nsAutoCString hashkey;
+  nsCString hostHeader;
+  nsCString hashkey;
   mTransaction->RequestHead()->GetHeader(nsHttp::Host, hostHeader);
 
-  CreatePushHashKey(nsDependentCString(mTransaction->RequestHead()->IsHTTPS() ? "https" : "http"),
+  CreatePushHashKey(NS_LITERAL_CSTRING("https"),
                     hostHeader, mSession->Serial(),
                     mTransaction->RequestHead()->RequestURI(),
                     mOrigin, hashkey);
@@ -481,7 +482,7 @@ SpdyStream31::ParseHttpRequestHeaders(const char *buf,
   CompressToFrame(NS_LITERAL_CSTRING(":host"));
   CompressToFrame(hostHeader);
   CompressToFrame(NS_LITERAL_CSTRING(":scheme"));
-  CompressToFrame(nsDependentCString(mTransaction->RequestHead()->IsHTTPS() ? "https" : "http"));
+  CompressToFrame(NS_LITERAL_CSTRING("https"));
 
   hdrHash.Enumerate(hdrHashEnumerate, this);
   CompressFlushFrame();
@@ -575,8 +576,10 @@ SpdyStream31::AdjustInitialWindow()
     return;
   toack = PR_htonl(toack);
 
-  EnsureBuffer(mTxInlineFrame, mTxInlineFrameUsed + 16,
-               mTxInlineFrameUsed, mTxInlineFrameSize);
+  SpdySession31::EnsureBuffer(mTxInlineFrame,
+                              mTxInlineFrameUsed + 16,
+                              mTxInlineFrameUsed,
+                              mTxInlineFrameSize);
 
   unsigned char *packet = mTxInlineFrame.get() + mTxInlineFrameUsed;
   mTxInlineFrameUsed += 16;
@@ -1053,8 +1056,10 @@ SpdyStream31::Uncompress(z_stream *context,
         !context->avail_out && context->avail_in) {
       LOG3(("SpdyStream31::Uncompress %p Large Headers - so far %d",
             this, mDecompressBufferSize));
-      EnsureBuffer(mDecompressBuffer, mDecompressBufferSize + 4096,
-                   mDecompressBufferUsed, mDecompressBufferSize);
+      SpdySession31::EnsureBuffer(mDecompressBuffer,
+                                  mDecompressBufferSize + 4096,
+                                  mDecompressBufferUsed,
+                                  mDecompressBufferSize);
     }
   }
   while (context->avail_in);
@@ -1275,8 +1280,10 @@ SpdyStream31::ExecuteCompress(uint32_t flushMode)
   {
     uint32_t avail = mTxInlineFrameSize - mTxInlineFrameUsed;
     if (avail < 1) {
-      EnsureBuffer(mTxInlineFrame, mTxInlineFrameSize + 2000,
-                   mTxInlineFrameUsed, mTxInlineFrameSize);
+      SpdySession31::EnsureBuffer(mTxInlineFrame,
+                                  mTxInlineFrameSize + 2000,
+                                  mTxInlineFrameUsed,
+                                  mTxInlineFrameSize);
       avail = mTxInlineFrameSize - mTxInlineFrameUsed;
     }
 

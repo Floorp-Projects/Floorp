@@ -38,7 +38,6 @@ public:
 
   bool IsDirect();
   bool IsHTTP();
-  bool IsHTTPS();
   bool IsSOCKS();
 
 private:

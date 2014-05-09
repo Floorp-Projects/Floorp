@@ -38,11 +38,10 @@ public:
     NS_DECL_NSAHTTPSEGMENTREADER
     NS_DECL_NSAHTTPSEGMENTWRITER
 
-   Http2Session(nsISocketTransport *);
+   Http2Session(nsAHttpTransaction *, nsISocketTransport *, int32_t);
   ~Http2Session();
 
-  bool AddStream(nsAHttpTransaction *, int32_t,
-                 bool, nsIInterfaceRequestor *);
+  bool AddStream(nsAHttpTransaction *, int32_t);
   bool CanReuse() { return !mShouldGoAway && !mClosed; }
   bool RoomForMoreStreams();
 
@@ -167,6 +166,9 @@ public:
   static nsresult RecvAltSvc(Http2Session *);
   static nsresult RecvBlocked(Http2Session *);
 
+  template<typename T>
+  static void EnsureBuffer(nsAutoArrayPtr<T> &,
+                           uint32_t, uint32_t, uint32_t &);
   char       *EnsureOutputBuffer(uint32_t needed);
 
   template<typename charType>
