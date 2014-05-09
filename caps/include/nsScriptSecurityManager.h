@@ -20,7 +20,7 @@
 #include <stdint.h>
 
 class nsIDocShell;
-class nsCString;
+class nsString;
 class nsIClassInfo;
 class nsIIOService;
 class nsIStringBundle;
@@ -139,13 +139,9 @@ private:
     inline void
     ScriptSecurityPrefChanged();
 
-    inline void
-    AddSitesToFileURIWhitelist(const nsCString& aSiteList);
-
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
     bool mPrefInitialized;
     bool mIsJavaScriptEnabled;
-    nsTArray<nsCOMPtr<nsIURI>> mFileURIWhitelist;
 
     // This machinery controls new-style domain policies. The old-style
     // policy machinery will be removed soon.
