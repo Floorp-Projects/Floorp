@@ -49,6 +49,7 @@ GARBAGE += \
   classes.dex  \
   gecko.ap_  \
   res/values/strings.xml \
+  res/raw/suggestedsites.json \
   .aapt.deps \
   fennec_ids.txt \
   javah.out \
@@ -205,8 +206,26 @@ $(ANDROID_GENERATED_RESFILES): $(call mkdir_deps,$(sort $(dir $(ANDROID_GENERATE
 # makefile, and trying to work around the lack of information, we
 # force a rebuild of gecko.ap_ during packaging.  See below.
 
-res/values/strings.xml: FORCE
+# Since the sub-Make is forced, it doesn't matter that we touch the
+# target file before the command.  If in the future we stop forcing
+# the sub-Make, touching the target file first is better, because the
+# sub-Make outputs will be fresher than the target, and not require
+# rebuilding.  This is all safe because Make removes the target file
+# if any recipe command fails. It is crucial that the sub-Make touch
+# the target files (those depending on .locales.deps) only when there
+# contents have changed; otherwise, this will force rebuild them as
+# part of every build.
+.locales.deps: FORCE
+	$(TOUCH) $@
 	$(MAKE) -C locales
+
+# This .deps pattern saves an invocation of the sub-Make: the single
+# invocation generates both strings.xml and suggestedsites.json. The
+# trailing semi-colon defines an empty recipe: defining no recipe at
+# all causes Make to treat the target differently, in a way that
+# defeats our dependencies.
+res/values/strings.xml: .locales.deps ;
+res/raw/suggestedsites.json: .locales.deps ;
 
 all_resources = \
   $(CURDIR)/AndroidManifest.xml \

@@ -507,6 +507,7 @@ ANDROID_RES_DIRS += [
 ]
 
 ANDROID_GENERATED_RESFILES += [
+    'res/raw/suggestedsites.json',
     'res/values/strings.xml',
 ]
 
