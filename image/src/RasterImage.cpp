@@ -543,6 +543,10 @@ RasterImage::Init(const char* aMimeType,
 NS_IMETHODIMP_(void)
 RasterImage::RequestRefresh(const mozilla::TimeStamp& aTime)
 {
+  if (HadRecentRefresh(aTime)) {
+    return;
+  }
+
   EvaluateAnimation();
 
   if (!mAnimating) {

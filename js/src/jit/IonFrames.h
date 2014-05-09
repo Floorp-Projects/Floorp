@@ -268,6 +268,9 @@ void EnsureExitFrame(IonCommonFrameLayout *frame);
 void MarkJitActivations(JSRuntime *rt, JSTracer *trc);
 void MarkIonCompilerRoots(JSTracer *trc);
 
+JSCompartment *
+TopmostIonActivationCompartment(JSRuntime *rt);
+
 #ifdef JSGC_GENERATIONAL
 void UpdateJitActivationsForMinorGC(JSRuntime *rt, JSTracer *trc);
 #endif
