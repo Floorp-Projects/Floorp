@@ -58,17 +58,28 @@ using namespace mozilla::dom;
  ********************************************************/
 
 nsTextEditRules::nsTextEditRules()
-: mEditor(nullptr)
-, mPasswordText()
-, mPasswordIMEText()
-, mPasswordIMEIndex(0)
-, mActionNesting(0)
-, mLockRulesSniffing(false)
-, mDidExplicitlySetInterline(false)
-, mTheAction(EditAction::none)
-, mLastStart(0)
-, mLastLength(0)
 {
+  InitFields();
+}
+
+void
+nsTextEditRules::InitFields()
+{
+  mEditor = nullptr;
+  mPasswordText.Truncate();
+  mPasswordIMEText.Truncate();
+  mPasswordIMEIndex = 0;
+  mBogusNode = nullptr;
+  mCachedSelectionNode = nullptr;
+  mCachedSelectionOffset = 0;
+  mActionNesting = 0;
+  mLockRulesSniffing = false;
+  mDidExplicitlySetInterline = false;
+  mDeleteBidiImmediately = false;
+  mTheAction = EditAction::none;
+  mTimer = nullptr;
+  mLastStart = 0;
+  mLastLength = 0;
 }
 
 nsTextEditRules::~nsTextEditRules()
@@ -102,6 +113,8 @@ NS_IMETHODIMP
 nsTextEditRules::Init(nsPlaintextEditor *aEditor)
 {
   if (!aEditor) { return NS_ERROR_NULL_POINTER; }
+
+  InitFields();
 
   mEditor = aEditor;  // we hold a non-refcounted reference back to our editor
   nsCOMPtr<nsISelection> selection;
