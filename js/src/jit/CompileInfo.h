@@ -180,6 +180,9 @@ class CompileInfo
     JSScript *script() const {
         return script_;
     }
+    bool compilingAsmJS() const {
+        return script() == nullptr;
+    }
     JSFunction *funMaybeLazy() const {
         return fun_;
     }
