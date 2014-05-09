@@ -1,0 +1,67 @@
+/* -*- Mode: js; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
+
+/**
+ * Native Android logging for JavaScript.  Lets you specify a priority and tag
+ * in addition to the message being logged.  Resembles the android.util.Log API
+ * <http://developer.android.com/reference/android/util/Log.html>.
+ *
+ * // Import it as a JSM:
+ * let Log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog;
+ *
+ * // Or require it in a chrome worker:
+ * importScripts("resource://gre/modules/workers/require.js");
+ * let Log = require("resource://gre/modules/AndroidLog.jsm");
+ *
+ * // Use Log.i, Log.v, Log.d, Log.w, and Log.e to log verbose, debug, info,
+ * // warning, and error messages, respectively.
+ * Log.v("MyModule", "This is a verbose message.");
+ * Log.d("MyModule", "This is a debug message.");
+ * Log.i("MyModule", "This is an info message.");
+ * Log.w("MyModule", "This is a warning message.");
+ * Log.e("MyModule", "This is an error message.");
+ *
+ * // Bind a function with a tag to replace a bespoke dump/log/debug function:
+ * let debug = Log.d.bind(null, "MyModule");
+ * debug("This is a debug message.");
+ *
+ * Note: the module automatically prepends "Gecko" to the tag you specify,
+ * since all tags used by Fennec code should start with that string.
+ */
+
+if (typeof Components != "undefined") {
+  // Specify exported symbols for JSM module loader.
+  this.EXPORTED_SYMBOLS = ["AndroidLog"];
+  Components.utils.import("resource://gre/modules/ctypes.jsm");
+}
+
+// From <https://android.googlesource.com/platform/system/core/+/master/include/android/log.h>.
+const ANDROID_LOG_VERBOSE = 2;
+const ANDROID_LOG_DEBUG = 3;
+const ANDROID_LOG_INFO = 4;
+const ANDROID_LOG_WARN = 5;
+const ANDROID_LOG_ERROR = 6;
+
+let liblog = ctypes.open("liblog.so"); // /system/lib/liblog.so
+let __android_log_write = liblog.declare("__android_log_write",
+                                         ctypes.default_abi,
+                                         ctypes.int, // return value: num bytes logged
+                                         ctypes.int, // priority (ANDROID_LOG_* constant)
+                                         ctypes.char.ptr, // tag
+                                         ctypes.char.ptr); // message
+
+let AndroidLog = {
+  v: (tag, msg) => __android_log_write(ANDROID_LOG_VERBOSE, "Gecko" + tag, msg),
+  d: (tag, msg) => __android_log_write(ANDROID_LOG_DEBUG, "Gecko" + tag, msg),
+  i: (tag, msg) => __android_log_write(ANDROID_LOG_INFO, "Gecko" + tag, msg),
+  w: (tag, msg) => __android_log_write(ANDROID_LOG_WARN, "Gecko" + tag, msg),
+  e: (tag, msg) => __android_log_write(ANDROID_LOG_ERROR, "Gecko" + tag, msg),
+};
+
+if (typeof Components == "undefined") {
+  // Specify exported symbols for require.js module loader.
+  module.exports = AndroidLog;
+}
