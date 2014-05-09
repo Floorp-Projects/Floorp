@@ -30,6 +30,7 @@
 #include "XPCWrapper.h"
 #include "XrayWrapper.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/CSSBinding.h"
 #include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/TextDecoderBinding.h"
@@ -986,6 +987,8 @@ xpc::GlobalProperties::Parse(JSContext *cx, JS::HandleObject obj)
         NS_ENSURE_TRUE(name, false);
         if (promise && !strcmp(name.ptr(), "-Promise")) {
             Promise = false;
+        } else if (!strcmp(name.ptr(), "CSS")) {
+            CSS = true;
         } else if (!strcmp(name.ptr(), "indexedDB")) {
             indexedDB = true;
         } else if (!strcmp(name.ptr(), "XMLHttpRequest")) {
@@ -1011,6 +1014,9 @@ xpc::GlobalProperties::Parse(JSContext *cx, JS::HandleObject obj)
 bool
 xpc::GlobalProperties::Define(JSContext *cx, JS::HandleObject obj)
 {
+    if (CSS && !dom::CSSBinding::GetConstructorObject(cx, obj))
+        return false;
+
     if (Promise && !dom::PromiseBinding::GetConstructorObject(cx, obj))
         return false;
 
