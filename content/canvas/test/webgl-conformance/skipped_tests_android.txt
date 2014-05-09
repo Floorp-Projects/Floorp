@@ -26,6 +26,7 @@ conformance/glsl/functions/glsl-function-smoothstep-float.html
 conformance/glsl/functions/glsl-function-smoothstep-gentype.html
 conformance/glsl/functions/glsl-function-step-float.html
 conformance/glsl/functions/glsl-function-step-gentype.html
+conformance/misc/uninitialized-test.html
 conformance/more/conformance/quickCheckAPI-B2.html
 conformance/programs/gl-getshadersource.html
 conformance/reading/read-pixels-test.html
