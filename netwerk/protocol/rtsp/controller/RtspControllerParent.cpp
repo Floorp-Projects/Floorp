@@ -56,7 +56,6 @@ RtspControllerParent::Destroy()
 NS_IMPL_ADDREF(RtspControllerParent)
 NS_IMPL_RELEASE_WITH_DESTROY(RtspControllerParent, Destroy())
 NS_IMPL_QUERY_INTERFACE(RtspControllerParent,
-                        nsIInterfaceRequestor,
                         nsIStreamingProtocolListener)
 
 RtspControllerParent::RtspControllerParent()
@@ -289,13 +288,6 @@ RtspControllerParent::OnDisconnected(uint8_t index,
     mController = nullptr;
   }
   return NS_OK;
-}
-
-NS_IMETHODIMP
-RtspControllerParent::GetInterface(const nsIID & iid, void **result)
-{
-  LOG(("RtspControllerParent::GetInterface()"));
-  return QueryInterface(iid, result);
 }
 
 } // namespace net
