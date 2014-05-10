@@ -27,7 +27,7 @@ const EVENT_HEALTH_RESPONSE = "HealthReport:Response";
 
 // about:healthreport prefs are stored in Firefox's default Android
 // SharedPreferences.
-let sharedPrefs = new SharedPreferences();
+let sharedPrefs = SharedPreferences.forApp();
 
 let healthReportWrapper = {
   init: function () {
