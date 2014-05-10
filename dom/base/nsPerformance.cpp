@@ -360,18 +360,19 @@ nsPerformanceNavigation::WrapObject(JSContext *cx)
 }
 
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsPerformance,
-                                      mWindow, mTiming,
-                                      mNavigation, mEntries,
-                                      mParentPerformance)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPerformance)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPerformance)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(nsPerformance, DOMEventTargetHelper,
+                                   mWindow, mTiming,
+                                   mNavigation, mEntries,
+                                   mParentPerformance)
+NS_IMPL_ADDREF_INHERITED(nsPerformance, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(nsPerformance, DOMEventTargetHelper)
 
-nsPerformance::nsPerformance(nsIDOMWindow* aWindow,
+nsPerformance::nsPerformance(nsPIDOMWindow* aWindow,
                              nsDOMNavigationTiming* aDOMTiming,
                              nsITimedChannel* aChannel,
                              nsPerformance* aParentPerformance)
-  : mWindow(aWindow),
+  : DOMEventTargetHelper(aWindow),
+    mWindow(aWindow),
     mDOMTiming(aDOMTiming),
     mChannel(aChannel),
     mParentPerformance(aParentPerformance),
@@ -389,7 +390,7 @@ nsPerformance::~nsPerformance()
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsPerformance)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 
 nsPerformanceTiming*
@@ -404,6 +405,21 @@ nsPerformance::Timing()
         mDOMTiming->GetNavigationStart());
   }
   return mTiming;
+}
+
+void
+nsPerformance::DispatchBufferFullEvent()
+{
+  nsCOMPtr<nsIDOMEvent> event;
+  nsresult rv = NS_NewDOMEvent(getter_AddRefs(event), this, nullptr, nullptr);
+  if (NS_SUCCEEDED(rv)) {
+    // it bubbles, and it isn't cancelable
+    rv = event->InitEvent(NS_LITERAL_STRING("resourcetimingbufferfull"), true, false);
+    if (NS_SUCCEEDED(rv)) {
+      event->SetTrusted(true);
+      DispatchDOMEvent(nullptr, event, nullptr, nullptr);
+    }
+  }
 }
 
 nsPerformanceNavigation*
@@ -543,7 +559,7 @@ nsPerformance::AddEntry(nsIHttpChannel* channel,
         PerformanceEntryComparator());
     if (mEntries.Length() >= mPrimaryBufferSize) {
       // call onresourcetimingbufferfull
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=936813
+      DispatchBufferFullEvent();
     }
   }
 }
