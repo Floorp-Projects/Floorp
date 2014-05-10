@@ -237,8 +237,6 @@ function checkSocialUI(win) {
     _is(!!a, !!b, msg);
   }
   isbool(win.SocialSidebar.canShow, sidebarEnabled, "social sidebar active?");
-  isbool(win.SocialChatBar.isAvailable, enabled, "chatbar available?");
-  isbool(!win.SocialChatBar.chatbar.hidden, enabled, "chatbar visible?");
 
   let contextMenus = [
     {
@@ -279,8 +277,6 @@ function checkSocialUI(win) {
   // and for good measure, check all the social commands.
   isbool(!doc.getElementById("Social:ToggleSidebar").hidden, sidebarEnabled, "Social:ToggleSidebar visible?");
   isbool(!doc.getElementById("Social:ToggleNotifications").hidden, enabled, "Social:ToggleNotifications visible?");
-  isbool(!doc.getElementById("Social:FocusChat").hidden, enabled, "Social:FocusChat visible?");
-  isbool(doc.getElementById("Social:FocusChat").getAttribute("disabled"), enabled ? "false" : "true", "Social:FocusChat disabled?");
 
   // and report on overall success of failure of the various checks here.
   is(numGoodTests, numTests, "The Social UI tests succeeded.")
