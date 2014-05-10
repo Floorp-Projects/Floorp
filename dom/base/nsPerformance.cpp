@@ -375,7 +375,6 @@ nsPerformance::nsPerformance(nsIDOMWindow* aWindow,
     mDOMTiming(aDOMTiming),
     mChannel(aChannel),
     mParentPerformance(aParentPerformance),
-    mBufferSizeSet(kDefaultBufferSize),
     mPrimaryBufferSize(kDefaultBufferSize)
 {
   MOZ_ASSERT(aWindow, "Parent window object should be provided");
@@ -433,12 +432,7 @@ nsPerformance::GetEntries(nsTArray<nsRefPtr<PerformanceEntry> >& retval)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  retval.Clear();
-  uint32_t count = mEntries.Length();
-  if (count > mPrimaryBufferSize) {
-    count = mPrimaryBufferSize;
-  }
-  retval.AppendElements(mEntries.Elements(), count);
+  retval = mEntries;
 }
 
 void
@@ -449,7 +443,7 @@ nsPerformance::GetEntriesByType(const nsAString& entryType,
 
   retval.Clear();
   uint32_t count = mEntries.Length();
-  for (uint32_t i = 0 ; i < count && i < mPrimaryBufferSize ; i++) {
+  for (uint32_t i = 0 ; i < count; i++) {
     if (mEntries[i]->GetEntryType().Equals(entryType)) {
       retval.AppendElement(mEntries[i]);
     }
@@ -465,7 +459,7 @@ nsPerformance::GetEntriesByName(const nsAString& name,
 
   retval.Clear();
   uint32_t count = mEntries.Length();
-  for (uint32_t i = 0 ; i < count && i < mPrimaryBufferSize ; i++) {
+  for (uint32_t i = 0 ; i < count; i++) {
     if (mEntries[i]->GetName().Equals(name) &&
         (!entryType.WasPassed() ||
          mEntries[i]->GetEntryType().Equals(entryType.Value()))) {
@@ -478,7 +472,6 @@ void
 nsPerformance::ClearResourceTimings()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mPrimaryBufferSize = mBufferSizeSet;
   mEntries.Clear();
 }
 
@@ -486,11 +479,7 @@ void
 nsPerformance::SetResourceTimingBufferSize(uint64_t maxSize)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mBufferSizeSet = maxSize;
-  if (mBufferSizeSet < mEntries.Length()) {
-    // call onresourcetimingbufferfull
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=936813
-  }
+  mPrimaryBufferSize = maxSize;
 }
 
 /**
@@ -506,6 +495,12 @@ nsPerformance::AddEntry(nsIHttpChannel* channel,
   if (!nsContentUtils::IsResourceTimingEnabled()) {
     return;
   }
+
+  // Don't add the entry if the buffer is full
+  if (mEntries.Length() >= mPrimaryBufferSize) {
+    return;
+  }
+
   if (channel && timedChannel) {
     nsAutoCString name;
     nsAutoString initiatorType;
@@ -546,7 +541,7 @@ nsPerformance::AddEntry(nsIHttpChannel* channel,
 
     mEntries.InsertElementSorted(performanceEntry,
         PerformanceEntryComparator());
-    if (mEntries.Length() > mPrimaryBufferSize) {
+    if (mEntries.Length() >= mPrimaryBufferSize) {
       // call onresourcetimingbufferfull
       // https://bugzilla.mozilla.org/show_bug.cgi?id=936813
     }
