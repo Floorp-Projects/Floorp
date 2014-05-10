@@ -6322,6 +6322,23 @@ class ICRetSub_Resume : public ICStub
     };
 };
 
+inline bool
+IsCacheableDOMProxy(JSObject *obj)
+{
+    if (!obj->is<ProxyObject>())
+        return false;
+
+    BaseProxyHandler *handler = obj->as<ProxyObject>().handler();
+
+    if (handler->family() != GetDOMProxyHandlerFamily())
+        return false;
+
+    if (obj->numFixedSlots() <= GetDOMProxyExpandoSlot())
+        return false;
+
+    return true;
+}
+
 } // namespace jit
 } // namespace js
 
