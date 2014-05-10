@@ -4061,10 +4061,10 @@ AppcacheObserver.prototype = {
       app.downloading = false;
       DOMApplicationRegistry.broadcastMessage("Webapps:UpdateState", {
         app: app,
+        error: aError,
         manifestURL: app.manifestURL
       });
       DOMApplicationRegistry.broadcastMessage("Webapps:FireEvent", {
-        error: aError,
         eventType: "downloaderror",
         manifestURL: app.manifestURL
       });
