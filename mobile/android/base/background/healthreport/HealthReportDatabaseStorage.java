@@ -429,7 +429,7 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
 
       db.execSQL("ALTER TABLE environments ADD COLUMN addonsID INTEGER REFERENCES addons(id) ON DELETE RESTRICT");
 
-      createAddonsEnvironmentsView(db);
+      // No need to create view: we're just going to upgrade again.
     }
 
     private void upgradeDatabaseFrom3To4(SQLiteDatabase db) {
@@ -455,7 +455,7 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
     }
 
     private void upgradeDatabaseFrom5to6(SQLiteDatabase db) {
-      db.execSQL("DROP VIEW environments_with_addons");
+      db.execSQL("DROP VIEW IF EXISTS environments_with_addons");
 
       // Add version to environment (default to 1).
       db.execSQL("ALTER TABLE environments ADD COLUMN version INTEGER DEFAULT 1");
@@ -466,12 +466,11 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
       db.execSQL("ALTER TABLE environments ADD COLUMN appLocale TEXT DEFAULT ''");
       db.execSQL("ALTER TABLE environments ADD COLUMN acceptLangSet INTEGER DEFAULT 0");
 
-      // Recreate view.
-      createAddonsEnvironmentsView(db);
+      // No need to recreate view -- we're just going to upgrade to v7 next.
     }
 
     private void upgradeDatabaseFrom6to7(SQLiteDatabase db) {
-      db.execSQL("DROP VIEW environments_with_addons");
+      db.execSQL("DROP VIEW IF EXISTS environments_with_addons");
 
       // Add fields to environment (default to empty string and 0).
       db.execSQL("ALTER TABLE environments ADD COLUMN hasHardwareKeyboard INTEGER DEFAULT 0");

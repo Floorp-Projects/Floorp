@@ -113,31 +113,29 @@ public class EnvironmentBuilder {
     e.themeCount = 0;
 
     JSONObject addons = info.getAddonsJSON();
-    if (addons == null) {
-      return;
-    }
-
-    @SuppressWarnings("unchecked")
-    Iterator<String> it = addons.keys();
-    while (it.hasNext()) {
-      String key = it.next();
-      try {
-        JSONObject addon = addons.getJSONObject(key);
-        String type = addon.optString("type");
-        Logger.pii(LOG_TAG, "Add-on " + key + " is a " + type);
-        if ("extension".equals(type)) {
-          ++e.extensionCount;
-        } else if ("plugin".equals(type)) {
-          ++e.pluginCount;
-        } else if ("theme".equals(type)) {
-          ++e.themeCount;
-        } else if ("service".equals(type)) {
-          // Later.
-        } else {
-          Logger.debug(LOG_TAG, "Unknown add-on type: " + type);
+    if (addons != null) {
+      @SuppressWarnings("unchecked")
+      Iterator<String> it = addons.keys();
+      while (it.hasNext()) {
+        String key = it.next();
+        try {
+          JSONObject addon = addons.getJSONObject(key);
+          String type = addon.optString("type");
+          Logger.pii(LOG_TAG, "Add-on " + key + " is a " + type);
+          if ("extension".equals(type)) {
+            ++e.extensionCount;
+          } else if ("plugin".equals(type)) {
+            ++e.pluginCount;
+          } else if ("theme".equals(type)) {
+            ++e.themeCount;
+          } else if ("service".equals(type)) {
+            // Later.
+          } else {
+            Logger.debug(LOG_TAG, "Unknown add-on type: " + type);
+          }
+        } catch (Exception ex) {
+          Logger.warn(LOG_TAG, "Failed to process add-on " + key, ex);
         }
-      } catch (Exception ex) {
-        Logger.warn(LOG_TAG, "Failed to process add-on " + key, ex);
       }
     }
 
