@@ -439,7 +439,7 @@ nsWSRunObject::DeleteWSBackward()
   // Caller's job to ensure that previous char is really ws.  If it is normal
   // ws, we need to delete the whole run.
   if (nsCRT::IsAsciiSpace(point.mChar)) {
-    nsCOMPtr<Text> startNodeText, endNodeText;
+    nsCOMPtr<nsIContent> startNodeText, endNodeText;
     int32_t startOffset, endOffset;
     GetAsciiWSBounds(eBoth, point.mTextNode, point.mOffset + 1,
                      getter_AddRefs(startNodeText), &startOffset,
@@ -1495,7 +1495,7 @@ nsWSRunObject::GetCharAfter(nsIDOMNode *aNode, int32_t aOffset)
 {
   MOZ_ASSERT(aNode);
 
-  nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
+  nsCOMPtr<nsIContent> node(do_QueryInterface(aNode));
   int32_t idx = mNodeArray.IndexOf(node);
   if (idx == -1) 
   {
@@ -1515,7 +1515,7 @@ nsWSRunObject::GetCharBefore(nsIDOMNode *aNode, int32_t aOffset)
 {
   MOZ_ASSERT(aNode);
 
-  nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
+  nsCOMPtr<nsIContent> node(do_QueryInterface(aNode));
   int32_t idx = mNodeArray.IndexOf(node);
   if (idx == -1) 
   {
@@ -1648,15 +1648,15 @@ nsWSRunObject::ConvertToNBSP(WSPoint aPoint, AreaRestriction aAR)
 
 void
 nsWSRunObject::GetAsciiWSBounds(int16_t aDir, nsINode* aNode, int32_t aOffset,
-                                Text** outStartNode, int32_t* outStartOffset,
-                                Text** outEndNode, int32_t* outEndOffset)
+                                nsIContent** outStartNode, int32_t* outStartOffset,
+                                nsIContent** outEndNode, int32_t* outEndOffset)
 {
   nsCOMPtr<nsIDOMNode> outStartDOMNode, outEndDOMNode;
   GetAsciiWSBounds(aDir, GetAsDOMNode(aNode), aOffset,
                    address_of(outStartDOMNode), outStartOffset,
                    address_of(outEndDOMNode), outEndOffset);
-  nsCOMPtr<Text> start(do_QueryInterface(outStartDOMNode));
-  nsCOMPtr<Text> end(do_QueryInterface(outEndDOMNode));
+  nsCOMPtr<nsIContent> start(do_QueryInterface(outStartDOMNode));
+  nsCOMPtr<nsIContent> end(do_QueryInterface(outEndDOMNode));
   start.forget(outStartNode);
   end.forget(outEndNode);
 }
@@ -2001,7 +2001,7 @@ nsWSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
       // editor softwraps at this point, the spaces won't be split across lines,
       // which looks ugly and is bad for the moose.
 
-      nsCOMPtr<Text> startNode, endNode;
+      nsCOMPtr<nsIContent> startNode, endNode;
       int32_t startOffset, endOffset;
       GetAsciiWSBounds(eBoth, prevPoint.mTextNode, prevPoint.mOffset + 1,
                        getter_AddRefs(startNode), &startOffset,

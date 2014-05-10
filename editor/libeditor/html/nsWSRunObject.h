@@ -295,13 +295,13 @@ class MOZ_STACK_CLASS nsWSRunObject
     // stored in the struct.
     struct MOZ_STACK_CLASS WSPoint
     {
-      nsCOMPtr<mozilla::dom::Text> mTextNode;
+      nsCOMPtr<nsIContent> mTextNode;
       uint32_t mOffset;
       char16_t mChar;
 
       WSPoint() : mTextNode(0),mOffset(0),mChar(0) {}
-      WSPoint(nsINode* aNode, int32_t aOffset, char16_t aChar) :
-                     mTextNode(do_QueryInterface(aNode)),mOffset(aOffset),mChar(aChar)
+      WSPoint(nsIContent* aNode, int32_t aOffset, char16_t aChar) :
+                     mTextNode(aNode),mOffset(aOffset),mChar(aChar)
       {
         MOZ_ASSERT(mTextNode->IsNodeOfType(nsINode::eTEXT));
       }
@@ -348,9 +348,9 @@ class MOZ_STACK_CLASS nsWSRunObject
     nsresult ConvertToNBSP(WSPoint aPoint,
                            AreaRestriction aAR = eAnywhere);
     void     GetAsciiWSBounds(int16_t aDir, nsINode* aNode, int32_t aOffset,
-                              mozilla::dom::Text** outStartNode,
+                              nsIContent** outStartNode,
                               int32_t* outStartOffset,
-                              mozilla::dom::Text** outEndNode,
+                              nsIContent** outEndNode,
                               int32_t* outEndOffset);
     void     GetAsciiWSBounds(int16_t aDir, nsIDOMNode *aNode, int32_t aOffset,
                                 nsCOMPtr<nsIDOMNode> *outStartNode, int32_t *outStartOffset,
