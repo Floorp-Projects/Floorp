@@ -67,7 +67,10 @@ public class TestHealthReportGenerator extends FakeProfileTestCase {
                                                         + "nullnullnullnullnullnull00000";
 
   // v2 fields.
-  private static final String EXPECTED_MOCK_BASE_HASH_SUFFIX = "null" + "null" + 0 + "null";
+  private static final String EXPECTED_MOCK_BASE_HASH_SUFFIX_V2 = "null" + "null" + 0 + "null";
+
+  // v3 fields.
+  private static final String EXPECTED_MOCK_BASE_HASH_SUFFIX_V3 = "" + 0 + "default" + 0 + 0 + 0 + 0;
 
   public void testHashing() throws JSONException {
     MockHealthReportDatabaseStorage storage = new MockHealthReportDatabaseStorage(context, fakeProfileDirectory);
@@ -105,10 +108,14 @@ public class TestHealthReportGenerator extends FakeProfileTestCase {
     "}");
     env.addons.put("{addonA}", addonA1);
 
-    assertEquals(EXPECTED_MOCK_BASE_HASH + addonAHash + EXPECTED_MOCK_BASE_HASH_SUFFIX, env.getHash());
+    assertEquals(EXPECTED_MOCK_BASE_HASH + addonAHash +
+                 EXPECTED_MOCK_BASE_HASH_SUFFIX_V2 +
+                 EXPECTED_MOCK_BASE_HASH_SUFFIX_V3, env.getHash());
 
     env.addons.put("{addonA}", addonA1rev);
-    assertEquals(EXPECTED_MOCK_BASE_HASH + addonAHash + EXPECTED_MOCK_BASE_HASH_SUFFIX, env.getHash());
+    assertEquals(EXPECTED_MOCK_BASE_HASH + addonAHash +
+                 EXPECTED_MOCK_BASE_HASH_SUFFIX_V2 +
+                 EXPECTED_MOCK_BASE_HASH_SUFFIX_V3, env.getHash());
   }
 
   private void assertJSONDiff(JSONObject source, JSONObject diff) throws JSONException {
