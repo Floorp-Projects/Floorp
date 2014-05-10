@@ -47,10 +47,14 @@ public class AndroidSubmissionClient implements SubmissionClient {
   protected final ConfigurationProvider config;
 
   public AndroidSubmissionClient(Context context, SharedPreferences sharedPreferences, String profilePath) {
+    this(context, sharedPreferences, profilePath, new AndroidConfigurationProvider(context));
+  }
+
+  public AndroidSubmissionClient(Context context, SharedPreferences sharedPreferences, String profilePath, ConfigurationProvider config) {
     this.context = context;
     this.sharedPreferences = sharedPreferences;
     this.profilePath = profilePath;
-    this.config = new AndroidConfigurationProvider(context);
+    this.config = config;
   }
 
   public SharedPreferences getSharedPreferences() {
