@@ -491,7 +491,7 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
    *        The corresponding item.
    */
   _onStackframeRemoved: function(aItem) {
-    dumpn("Finalizing stackframe item: " + aItem);
+    dumpn("Finalizing stackframe item: " + aItem.stringify());
 
     // Remove the mirrored item in the classic list.
     let depth = aItem.attachment.depth;
