@@ -315,7 +315,6 @@ private:
   nsRefPtr<nsPerformanceNavigation> mNavigation;
   nsTArray<nsRefPtr<PerformanceEntry> > mEntries;
   nsRefPtr<nsPerformance> mParentPerformance;
-  uint64_t mBufferSizeSet;
   uint64_t mPrimaryBufferSize;
 
   static const uint64_t kDefaultBufferSize = 150;
