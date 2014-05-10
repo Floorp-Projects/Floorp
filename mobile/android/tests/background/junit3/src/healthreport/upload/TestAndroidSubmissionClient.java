@@ -7,6 +7,7 @@ import java.util.Collection;
 
 import org.mozilla.gecko.background.bagheera.BagheeraRequestDelegate;
 import org.mozilla.gecko.background.healthreport.Environment;
+import org.mozilla.gecko.background.healthreport.EnvironmentBuilder.ConfigurationProvider;
 import org.mozilla.gecko.background.healthreport.HealthReportStorage;
 import org.mozilla.gecko.background.healthreport.HealthReportDatabaseStorage;
 import org.mozilla.gecko.background.healthreport.MockHealthReportDatabaseStorage.PrepopulatedMockHealthReportDatabaseStorage;
@@ -20,6 +21,7 @@ import org.mozilla.gecko.background.testhelpers.StubDelegate;
 import android.content.ContentProviderClient;
 import android.content.Context;
 import android.content.SharedPreferences;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -95,7 +97,7 @@ public class TestAndroidSubmissionClient extends FakeProfileTestCase {
       public class MockTrackingGenerator extends TrackingGenerator {
         @Override
         public JSONObject generateDocument(final long localTime, final long last,
-            final String profilePath) throws JSONException {
+            final String profilePath, ConfigurationProvider config) throws JSONException {
           switch (documentStatus) {
           case VALID:
             return new JSONObject(); // Beyond == null, we don't check for valid FHR documents.
@@ -103,7 +105,7 @@ public class TestAndroidSubmissionClient extends FakeProfileTestCase {
           case NULL:
             // The overridden method should return null since we return a null has for the current
             // Environment.
-            return super.generateDocument(localTime, last, profilePath);
+            return super.generateDocument(localTime, last, profilePath, config);
 
           case EXCEPTION:
             throw new IllegalStateException("Intended Exception");

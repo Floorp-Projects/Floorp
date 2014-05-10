@@ -11,6 +11,7 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.SysInfo;
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.healthreport.Environment.UIType;
 
 import android.content.ContentProvider;
 import android.content.ContentProviderClient;
@@ -68,8 +69,20 @@ public class EnvironmentBuilder {
     public JSONObject getAddonsJSON();
   }
 
+  public static interface ConfigurationProvider {
+    public boolean hasHardwareKeyboard();
+
+    public UIType getUIType();
+    public int getUIModeType();
+
+    public int getScreenLayoutSize();
+    public int getScreenXInMM();
+    public int getScreenYInMM();
+  }
+
   protected static void populateEnvironment(Environment e,
-                                            ProfileInformationProvider info) {
+                                            ProfileInformationProvider info,
+                                            ConfigurationProvider config) {
     e.cpuCount = SysInfo.getCPUCount();
     e.memoryMB = SysInfo.getMemSize();
 
@@ -135,6 +148,14 @@ public class EnvironmentBuilder {
     e.osLocale = info.getOSLocale();
     e.appLocale = info.getAppLocale();
     e.acceptLangSet = info.isAcceptLangUserSet() ? 1 : 0;
+
+    // v3 environment fields.
+    e.hasHardwareKeyboard = config.hasHardwareKeyboard();
+    e.uiType = config.getUIType();
+    e.uiMode = config.getUIModeType();
+    e.screenLayout = config.getScreenLayoutSize();
+    e.screenXInMM = config.getScreenXInMM();
+    e.screenYInMM = config.getScreenYInMM();
   }
 
   /**
@@ -144,14 +165,14 @@ public class EnvironmentBuilder {
    * @param info a source of profile data
    * @return the new {@link Environment}
    */
-  public static Environment getCurrentEnvironment(ProfileInformationProvider info) {
+  public static Environment getCurrentEnvironment(ProfileInformationProvider info, ConfigurationProvider config) {
     Environment e = new Environment() {
       @Override
       public int register() {
         return 0;
       }
     };
-    populateEnvironment(e, info);
+    populateEnvironment(e, info, config);
     return e;
   }
 
@@ -159,9 +180,10 @@ public class EnvironmentBuilder {
    * @return the current environment's ID in the provided storage layer
    */
   public static int registerCurrentEnvironment(final HealthReportStorage storage,
-                                               final ProfileInformationProvider info) {
+                                               final ProfileInformationProvider info,
+                                               final ConfigurationProvider config) {
     Environment e = storage.getEnvironment();
-    populateEnvironment(e, info);
+    populateEnvironment(e, info, config);
     e.register();
     Logger.debug(LOG_TAG, "Registering current environment: " + e.getHash() + " = " + e.id);
     return e.id;
