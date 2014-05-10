@@ -73,6 +73,7 @@ neonisi.com: could not connect to host
 nexth.de: could not connect to host
 nexth.net: did not receive HSTS header
 nexth.us: could not connect to host
+noexpect.org: could not connect to host
 openshift.redhat.com: did not receive HSTS header
 ottospora.nl: could not connect to host
 paypal.com: max-age too low: 14400
@@ -86,8 +87,6 @@ sah3.net: could not connect to host
 saturngames.co.uk: did not receive HSTS header
 script.google.com: did not receive HSTS header (error ignored - included regardless)
 security.google.com: did not receive HSTS header (error ignored - included regardless)
-seifried.org: did not receive HSTS header
-semenkovich.com: could not connect to host
 serverdensity.io: did not receive HSTS header
 shops.neonisi.com: could not connect to host
 silentcircle.org: could not connect to host
