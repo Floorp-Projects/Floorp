@@ -96,7 +96,7 @@ class PeerConnectionCtx : public CSF::CC_Observer {
   // This is a singleton, so don't copy construct it, etc.
   PeerConnectionCtx(const PeerConnectionCtx& other) MOZ_DELETE;
   void operator=(const PeerConnectionCtx& other) MOZ_DELETE;
-  virtual ~PeerConnectionCtx() {};
+  virtual ~PeerConnectionCtx();
 
   nsresult Initialize();
   nsresult Cleanup();
@@ -105,8 +105,13 @@ class PeerConnectionCtx : public CSF::CC_Observer {
     mSipccState = aState;
   }
 
+  static void
+  EverySecondTelemetryCallback_m(nsITimer* timer, void *);
+
   // Telemetry Peer conection counter
   int mConnectionCounter;
+
+  nsCOMPtr<nsITimer> mTelemetryTimer;
 
   // SIPCC objects
   mozilla::dom::PCImplSipccState mSipccState;  // TODO(ekr@rtfm.com): refactor this out? What does it do?

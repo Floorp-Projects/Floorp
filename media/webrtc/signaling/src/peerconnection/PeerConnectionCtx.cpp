@@ -29,6 +29,8 @@
 #include "mozilla/Preferences.h"
 #endif
 
+#include "nsNetCID.h" // NS_SOCKETTRANSPORTSERVICE_CONTRACTID
+#include "nsServiceManagerUtils.h" // do_GetService
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "mozilla/Services.h"
@@ -241,6 +243,95 @@ void PeerConnectionCtx::Destroy() {
   }
 }
 
+#ifdef MOZILLA_INTERNAL_API
+typedef Vector<nsAutoPtr<RTCStatsQuery>> RTCStatsQueries;
+
+// Telemetry reporting every second after start of first call.
+// The threading model around the media pipelines is weird:
+// - The pipelines are containers,
+// - containers that are only safe on main thread, with members only safe on STS,
+// - hence the there and back again approach.
+
+static void
+FreeOnMain_m(nsAutoPtr<RTCStatsQueries> aQueryList) {
+  MOZ_ASSERT(NS_IsMainThread());
+}
+
+static void
+EverySecondTelemetryCallback_s(nsAutoPtr<RTCStatsQueries> aQueryList) {
+  using namespace Telemetry;
+
+  for (auto q = aQueryList->begin(); q != aQueryList->end(); ++q) {
+    PeerConnectionImpl::ExecuteStatsQuery_s(*q);
+    auto& r = (*q)->report;
+    if (r.mInboundRTPStreamStats.WasPassed()) {
+      auto& array = r.mInboundRTPStreamStats.Value();
+      for (uint32_t i = 0; i < array.Length(); i++) {
+        auto& s = array[i];
+        MOZ_ASSERT(s.mId.WasPassed());
+        bool isAudio = (s.mId.Value().Find("audio") != -1);
+        if (s.mPacketsLost.WasPassed()) {
+          Accumulate(s.mIsRemote?
+                     (isAudio? WEBRTC_AUDIO_QUALITY_OUTBOUND_PACKETLOSS :
+                               WEBRTC_VIDEO_QUALITY_OUTBOUND_PACKETLOSS) :
+                     (isAudio? WEBRTC_AUDIO_QUALITY_INBOUND_PACKETLOSS :
+                               WEBRTC_VIDEO_QUALITY_INBOUND_PACKETLOSS),
+                      s.mPacketsLost.Value());
+        }
+        if (s.mJitter.WasPassed()) {
+          Accumulate(s.mIsRemote?
+                     (isAudio? WEBRTC_AUDIO_QUALITY_OUTBOUND_JITTER :
+                               WEBRTC_VIDEO_QUALITY_OUTBOUND_JITTER) :
+                     (isAudio? WEBRTC_AUDIO_QUALITY_INBOUND_JITTER :
+                               WEBRTC_VIDEO_QUALITY_INBOUND_JITTER),
+                      s.mJitter.Value());
+        }
+        if (s.mMozRtt.WasPassed()) {
+          MOZ_ASSERT(s.mIsRemote);
+          Accumulate(isAudio? WEBRTC_AUDIO_QUALITY_OUTBOUND_RTT :
+                              WEBRTC_VIDEO_QUALITY_OUTBOUND_RTT,
+                      s.mMozRtt.Value());
+        }
+      }
+    }
+  }
+  // Container must be freed back on main thread
+  NS_DispatchToMainThread(WrapRunnableNM(&FreeOnMain_m, aQueryList),
+                          NS_DISPATCH_NORMAL);
+}
+
+void
+PeerConnectionCtx::EverySecondTelemetryCallback_m(nsITimer* timer, void *closure) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(PeerConnectionCtx::isActive());
+  auto ctx = static_cast<PeerConnectionCtx*>(closure);
+  if (ctx->mPeerConnections.empty()) {
+    return;
+  }
+  nsresult rv;
+  nsCOMPtr<nsIEventTarget> stsThread =
+      do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  MOZ_ASSERT(stsThread);
+
+  nsAutoPtr<RTCStatsQueries> queries(new RTCStatsQueries);
+  for (auto p = ctx->mPeerConnections.begin();
+        p != ctx->mPeerConnections.end(); ++p) {
+    if (p->second->HasMedia()) {
+      queries->append(nsAutoPtr<RTCStatsQuery>(new RTCStatsQuery(true)));
+      p->second->BuildStatsQuery_m(nullptr, // all tracks
+                                   queries->back());
+    }
+  }
+  rv = RUN_ON_THREAD(stsThread,
+                     WrapRunnableNM(&EverySecondTelemetryCallback_s, queries),
+                     NS_DISPATCH_NORMAL);
+  NS_ENSURE_SUCCESS_VOID(rv);
+}
+#endif
+
 nsresult PeerConnectionCtx::Initialize() {
   mCCM = CSF::CallControlManager::create();
 
@@ -302,8 +393,14 @@ nsresult PeerConnectionCtx::Initialize() {
   mConnectionCounter = 0;
 #ifdef MOZILLA_INTERNAL_API
   Telemetry::GetHistogramById(Telemetry::WEBRTC_CALL_COUNT)->Add(0);
-#endif
 
+  mTelemetryTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  MOZ_ASSERT(mTelemetryTimer);
+  nsresult rv = mTelemetryTimer->SetTarget(gMainThread);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mTelemetryTimer->InitWithFuncCallback(EverySecondTelemetryCallback_m, this, 1000,
+                                        nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP);
+#endif
   return NS_OK;
 }
 
@@ -314,6 +411,11 @@ nsresult PeerConnectionCtx::Cleanup() {
   mCCM->removeCCObserver(this);
   return NS_OK;
 }
+
+PeerConnectionCtx::~PeerConnectionCtx() {
+    // ensure mTelemetryTimer ends on main thread
+  MOZ_ASSERT(NS_IsMainThread());
+};
 
 CSF::CC_CallPtr PeerConnectionCtx::createCall() {
   return mDevice->createCall();
