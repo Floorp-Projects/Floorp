@@ -5,8 +5,10 @@
 package org.mozilla.gecko.background.healthreport.prune;
 
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.healthreport.AndroidConfigurationProvider;
 import org.mozilla.gecko.background.healthreport.Environment;
 import org.mozilla.gecko.background.healthreport.EnvironmentBuilder;
+import org.mozilla.gecko.background.healthreport.EnvironmentBuilder.ConfigurationProvider;
 import org.mozilla.gecko.background.healthreport.HealthReportDatabaseStorage;
 import org.mozilla.gecko.background.healthreport.ProfileInformationCache;
 
@@ -24,6 +26,7 @@ public class PrunePolicyDatabaseStorage implements PrunePolicyStorage {
 
   private final Context context;
   private final String profilePath;
+  private final ConfigurationProvider config;
 
   private ContentProviderClient client;
   private HealthReportDatabaseStorage storage;
@@ -33,6 +36,7 @@ public class PrunePolicyDatabaseStorage implements PrunePolicyStorage {
   public PrunePolicyDatabaseStorage(final Context context, final String profilePath) {
     this.context = context;
     this.profilePath = profilePath;
+    this.config = new AndroidConfigurationProvider(context);
 
     this.currentEnvironmentID = -1;
   }
@@ -128,7 +132,7 @@ public class PrunePolicyDatabaseStorage implements PrunePolicyStorage {
       if (!cache.restoreUnlessInitialized()) {
         throw new IllegalStateException("Current environment unknown.");
       }
-      final Environment env = EnvironmentBuilder.getCurrentEnvironment(cache);
+      final Environment env = EnvironmentBuilder.getCurrentEnvironment(cache, config);
       currentEnvironmentID = env.register();
     }
     return currentEnvironmentID;
