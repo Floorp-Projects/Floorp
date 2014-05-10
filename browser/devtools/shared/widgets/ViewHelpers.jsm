@@ -577,7 +577,12 @@ Item.prototype = {
    * @return string
    */
   toString: function() {
-    return this._value + " :: " + this._target + " :: " + this.attachment;
+    return JSON.stringify({
+      value: this._value,
+      target: this._target + "",
+      prebuiltNode: this._prebuiltNode + "",
+      attachment: this.attachment
+    }, null, 2);
   },
 
   _value: "",
