@@ -71,6 +71,9 @@ var gAdvancedPane = {
 #endif
     this.updateActualCacheSize();
     this.updateActualAppCacheSize();
+
+    // Notify observers that the UI is now ready
+    Services.obs.notifyObservers(window, "advanced-pane-loaded", null);
   },
 
   /**
