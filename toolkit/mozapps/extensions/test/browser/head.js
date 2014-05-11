@@ -432,12 +432,12 @@ function is_hidden(aElement) {
 
 function is_element_visible(aElement, aMsg) {
   isnot(aElement, null, "Element should not be null, when checking visibility");
-  ok(!is_hidden(aElement), aMsg);
+  ok(!is_hidden(aElement), aMsg || (aElement + " should be visible"));
 }
 
 function is_element_hidden(aElement, aMsg) {
   isnot(aElement, null, "Element should not be null, when checking visibility");
-  ok(is_hidden(aElement), aMsg);
+  ok(is_hidden(aElement), aMsg || (aElement + " should be hidden"));
 }
 
 /**
