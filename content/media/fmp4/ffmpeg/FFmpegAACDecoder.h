@@ -8,7 +8,6 @@
 #define __FFmpegAACDecoder_h__
 
 #include "FFmpegDataDecoder.h"
-#include "mp4_demuxer/DecoderData.h"
 
 namespace mozilla
 {

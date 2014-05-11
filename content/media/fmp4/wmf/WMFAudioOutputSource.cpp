@@ -65,19 +65,18 @@ AACAudioSpecificConfigToUserData(const uint8_t* aAudioSpecConfig,
   aOutUserData.AppendElements(aAudioSpecConfig, aConfigLength);
 }
 
-WMFAudioOutputSource::WMFAudioOutputSource(
-  const mp4_demuxer::AudioDecoderConfig& aConfig)
-  : mAudioChannels(aConfig.channel_count)
-  , mAudioBytesPerSample(aConfig.bytes_per_sample)
-  , mAudioRate(aConfig.samples_per_second)
+WMFAudioOutputSource::WMFAudioOutputSource(const mp4_demuxer::AudioDecoderConfig& aConfig)
+  : mAudioChannels(ChannelLayoutToChannelCount(aConfig.channel_layout()))
+  , mAudioBytesPerSample(aConfig.bits_per_channel() / 8)
+  , mAudioRate(aConfig.samples_per_second())
   , mAudioFrameOffset(0)
   , mAudioFrameSum(0)
   , mMustRecaptureAudioPosition(true)
 {
   MOZ_COUNT_CTOR(WMFAudioOutputSource);
-  AACAudioSpecificConfigToUserData(
-    reinterpret_cast<const uint8_t*>(aConfig.extra_data),
-    aConfig.extra_data_size, mUserData);
+  AACAudioSpecificConfigToUserData(aConfig.extra_data(),
+                                   aConfig.extra_data_size(),
+                                   mUserData);
 }
 
 WMFAudioOutputSource::~WMFAudioOutputSource()
