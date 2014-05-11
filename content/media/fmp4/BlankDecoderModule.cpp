@@ -158,12 +158,8 @@ private:
 
 class BlankAudioDataCreator {
 public:
-  BlankAudioDataCreator(uint32_t aChannelCount,
-                        uint32_t aSampleRate,
-                        uint16_t aBitsPerSample)
-    : mFrameSum(0)
-    , mChannelCount(aChannelCount)
-    , mSampleRate(aSampleRate)
+  BlankAudioDataCreator(uint32_t aChannelCount, uint32_t aSampleRate)
+    : mFrameSum(0), mChannelCount(aChannelCount), mSampleRate(aSampleRate)
   {
   }
 
@@ -219,9 +215,8 @@ public:
                                               layers::ImageContainer* aImageContainer,
                                               MediaTaskQueue* aVideoTaskQueue,
                                               MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE {
-    BlankVideoDataCreator* decoder = new BlankVideoDataCreator(aConfig.visible_rect().width(),
-                                                               aConfig.visible_rect().height(),
-                                                               aImageContainer);
+    BlankVideoDataCreator* decoder = new BlankVideoDataCreator(
+      aConfig.display_width, aConfig.display_height, aImageContainer);
     return new BlankMediaDataDecoder<BlankVideoDataCreator>(decoder,
                                                             aVideoTaskQueue,
                                                             aCallback);
@@ -231,10 +226,8 @@ public:
   virtual MediaDataDecoder* CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
                                              MediaTaskQueue* aAudioTaskQueue,
                                              MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE {
-    BlankAudioDataCreator* decoder =
-      new BlankAudioDataCreator(ChannelLayoutToChannelCount(aConfig.channel_layout()),
-                                aConfig.samples_per_second(),
-                                aConfig.bits_per_channel());
+    BlankAudioDataCreator* decoder = new BlankAudioDataCreator(
+      aConfig.channel_count, aConfig.samples_per_second);
     return new BlankMediaDataDecoder<BlankAudioDataCreator>(decoder,
                                                             aAudioTaskQueue,
                                                             aCallback);

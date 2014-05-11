@@ -20,7 +20,7 @@ bool FFmpegDataDecoder::sFFmpegInitDone = false;
 
 FFmpegDataDecoder::FFmpegDataDecoder(MediaTaskQueue* aTaskQueue,
                                      AVCodecID aCodecID)
-  : mTaskQueue(aTaskQueue), mCodecID(aCodecID)
+  : mExtraDataSize(0), mTaskQueue(aTaskQueue), mCodecID(aCodecID)
 {
   MOZ_COUNT_CTOR(FFmpegDataDecoder);
 }
@@ -86,6 +86,11 @@ FFmpegDataDecoder::Init()
 
   // FFmpeg will call back to this to negotiate a video pixel format.
   mCodecContext.get_format = ChoosePixelFormat;
+
+  if (mExtraData) {
+    mCodecContext.extradata = mExtraData;
+    mCodecContext.extradata_size = mExtraDataSize;
+  }
 
   AVDictionary* opts = nullptr;
   if (avcodec_open2(&mCodecContext, codec, &opts) < 0) {
