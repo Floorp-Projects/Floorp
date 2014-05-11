@@ -505,13 +505,10 @@ function openPreferences(paneID, extraArgs)
     }
 
     if (newLoad) {
-      Services.obs.addObserver(function advancedPaneLoadedObs(prefWin, topic, data) {
-        if (prefWin != browser.contentWindow) {
-          return;
-        }
-        Services.obs.removeObserver(advancedPaneLoadedObs, "advanced-pane-loaded");
+      browser.addEventListener("load", function onload() {
+        browser.removeEventListener("load", onload, true);
         switchToPane();
-      }, "advanced-pane-loaded", false);
+      }, true);
     } else {
       switchToPane();
     }
