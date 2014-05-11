@@ -29,6 +29,35 @@
 #include <log/logd.h>
 #include <log/logprint.h>
 
+#ifdef _MSC_VER
+#include <nspr/prprf.h>
+#define snprintf PR_snprintf
+#define inline
+/* We don't want to indent large blocks because it causes unnecessary merge
+ * conflicts */
+#define UNINDENTED_BLOCK_START {
+#define UNINDENTED_BLOCK_END }
+
+static char *
+strsep(char **stringp, const char *delim)
+{
+    char* res = *stringp;
+    while (**stringp) {
+        const char *c;
+        for (c = delim; *c; c++) {
+            if (**stringp == *c) {
+                **stringp++ = 0;
+                return res;
+            }
+        }
+    }
+    return res;
+}
+#else
+#define UNINDENTED_BLOCK_START
+#define UNINDENTED_BLOCK_END
+#endif
+
 typedef struct FilterInfo_t {
     char *mTag;
     android_LogPriority mPri;
@@ -268,6 +297,7 @@ int android_log_addFilterRule(AndroidLogFormat *p_format,
             pri = ANDROID_LOG_VERBOSE;
         }
 
+        UNINDENTED_BLOCK_START
         char *tagName;
 
 // Presently HAVE_STRNDUP is never defined, so the second case is always taken
@@ -280,11 +310,14 @@ int android_log_addFilterRule(AndroidLogFormat *p_format,
         tagName[tagNameLength] = '\0';
 #endif /*HAVE_STRNDUP*/
 
+        UNINDENTED_BLOCK_START
         FilterInfo *p_fi = filterinfo_new(tagName, pri);
         free(tagName);
 
         p_fi->p_next = p_format->filters;
         p_format->filters = p_fi;
+        UNINDENTED_BLOCK_END
+        UNINDENTED_BLOCK_END
     }
 
     return 0;
@@ -373,6 +406,7 @@ int android_log_processLogBuffer(struct logger_entry *buf,
         return -1;
     }
 
+    UNINDENTED_BLOCK_START
     int msgStart = -1;
     int msgEnd = -1;
 
@@ -404,6 +438,7 @@ int android_log_processLogBuffer(struct logger_entry *buf,
     entry->messageLen = msgEnd - msgStart;
 
     return 0;
+    UNINDENTED_BLOCK_END
 }
 
 /*
@@ -621,11 +656,7 @@ int android_log_processBinaryLogBuffer(struct logger_entry *buf,
     eventData += 4;
     inCount -= 4;
 
-    if (map != NULL) {
-        entry->tag = android_lookupEventTag(map, tagIndex);
-    } else {
-        entry->tag = NULL;
-    }
+    entry->tag = NULL;
 
     /*
      * If we don't have a map, or didn't find the tag number in the map,
@@ -644,6 +675,7 @@ int android_log_processBinaryLogBuffer(struct logger_entry *buf,
     /*
      * Format the event log data into the buffer.
      */
+    UNINDENTED_BLOCK_START
     char* outBuf = messageBuf;
     size_t outRemaining = messageBufLen-1;      /* leave one for nul byte */
     int result;
@@ -687,6 +719,7 @@ int android_log_processBinaryLogBuffer(struct logger_entry *buf,
     entry->message = messageBuf;
 
     return 0;
+    UNINDENTED_BLOCK_END
 }
 
 /**
@@ -737,6 +770,7 @@ char *android_log_formatLogLine (
     /*
      * Construct a buffer containing the log header and log message.
      */
+    UNINDENTED_BLOCK_START
     size_t prefixLen, suffixLen;
 
     switch (p_format->format) {
@@ -807,6 +841,7 @@ char *android_log_formatLogLine (
 
     /* the following code is tragically unreadable */
 
+    UNINDENTED_BLOCK_START
     size_t numLines;
     size_t i;
     char *p;
@@ -882,6 +917,8 @@ char *android_log_formatLogLine (
     }
 
     return ret;
+    UNINDENTED_BLOCK_END
+    UNINDENTED_BLOCK_END
 }
 
 /**
@@ -1014,3 +1051,6 @@ void logprint_run_tests()
     fprintf(stderr, "tests complete\n");
 #endif
 }
+
+#undef UNINDENTED_BLOCK_START
+#undef UNINDENTED_BLOCK_END

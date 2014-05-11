@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#undef LOG_TAG
 #define LOG_TAG "SampleTable"
 //#define LOG_NDEBUG 0
 #include <utils/Log.h>
@@ -829,3 +830,4 @@ uint32_t SampleTable::getCompositionTimeOffset(uint32_t sampleIndex) {
 
 }  // namespace android
 
+#undef LOG_TAG

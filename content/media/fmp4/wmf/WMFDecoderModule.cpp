@@ -11,7 +11,6 @@
 #include "WMFAudioOutputSource.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/DebugOnly.h"
-#include "mp4_demuxer/audio_decoder_config.h"
 #include "WMFMediaDataDecoder.h"
 
 namespace mozilla {

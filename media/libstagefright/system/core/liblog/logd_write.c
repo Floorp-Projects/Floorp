@@ -33,7 +33,19 @@
 
 #define LOG_BUF_SIZE	1024
 
+#ifdef _MSC_VER
+#include <nspr/prprf.h>
+#define snprintf PR_snprintf
+#define __builtin_trap abort
+static int W_OK = 0;
+static int access(char* c, int i) { return -1; }
+#endif
+
 #if FAKE_LOG_DEVICE
+int fakeLogOpen(const char *pathName, int flags);
+ssize_t fakeLogWritev(int fd, const struct iovec* vector, int count);
+int fakeLogClose(int fd);
+
 // This will be defined when building for the host.
 #define log_open(pathname, flags) fakeLogOpen(pathname, flags)
 #define log_writev(filedes, vector, count) fakeLogWritev(filedes, vector, count)
@@ -258,7 +270,11 @@ void __android_log_assert(const char *cond, const char *tag,
 
     __android_log_write(ANDROID_LOG_FATAL, tag, buf);
 
+#ifdef _MSC_VER
+    abort();
+#else
     __builtin_trap(); /* trap so we have a chance to debug the situation */
+#endif
 }
 
 int __android_log_bwrite(int32_t tag, const void *payload, size_t len)
