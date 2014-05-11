@@ -28,6 +28,9 @@ static const char16_t kRadicalChar = 0x221A;
 // updiagonalstrike
 static const uint8_t kArrowHeadSize = 10;
 
+// phasorangle
+static const uint8_t kPhasorangleWidth = 8;
+
 nsIFrame*
 NS_NewMathMLmencloseFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
@@ -122,6 +125,8 @@ nsresult nsMathMLmencloseFrame::AddNotation(const nsAString& aNotation)
     mNotationsToDraw |= NOTATION_HORIZONTALSTRIKE;
   } else if (aNotation.EqualsLiteral("madruwb")) {
     mNotationsToDraw |= (NOTATION_RIGHT | NOTATION_BOTTOM);
+  } else if (aNotation.EqualsLiteral("phasorangle")) {
+    mNotationsToDraw |= (NOTATION_BOTTOM | NOTATION_PHASORANGLE);
   }
 
   return NS_OK;
@@ -209,6 +214,11 @@ nsMathMLmencloseFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     rect.MoveBy(StyleVisibility()->mDirection ? -mContentWidth : rect.width, 0);
     rect.SizeTo(mContentWidth, mRuleThickness);
     DisplayBar(aBuilder, this, rect, aLists);
+  }
+
+  if (IsToDraw(NOTATION_PHASORANGLE)) {
+    DisplayNotation(aBuilder, this, mencloseRect, aLists,
+                mRuleThickness, NOTATION_PHASORANGLE);
   }
 
   if (IsToDraw(NOTATION_LONGDIV)) {
@@ -387,7 +397,8 @@ nsMathMLmencloseFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
       IsToDraw(NOTATION_CIRCLE) ||
       IsToDraw(NOTATION_ROUNDEDBOX) ||
       IsToDraw(NOTATION_RADICAL) ||
-      IsToDraw(NOTATION_LONGDIV)) {
+      IsToDraw(NOTATION_LONGDIV) ||
+      IsToDraw(NOTATION_PHASORANGLE)) {
       // set a minimal value for the base height
       bmBase.ascent = std::max(bmOne.ascent, bmBase.ascent);
       bmBase.descent = std::max(0, bmBase.descent);
@@ -409,6 +420,14 @@ nsMathMLmencloseFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
       IsToDraw(NOTATION_BOTTOM) ||
       IsToDraw(NOTATION_CIRCLE))
     mBoundingMetrics.descent += padding;
+
+   ///////////////
+   // phasorangle notation
+  if (IsToDraw(NOTATION_PHASORANGLE)) {
+    nscoord phasorangleWidth = kPhasorangleWidth * mRuleThickness;
+    // Update horizontal parameters
+    dx_left = std::max(dx_left, phasorangleWidth);
+  }
 
   ///////////////
   // updiagonal arrow notation. We need enough space at the top right corner to
@@ -613,6 +632,11 @@ nsMathMLmencloseFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
       IsToDraw(NOTATION_ROUNDEDBOX))
     mBoundingMetrics.descent = aDesiredSize.Height() - aDesiredSize.TopAscent();
 
+  // phasorangle notation:
+  // move up from the bottom by the angled line height
+  if (IsToDraw(NOTATION_PHASORANGLE))
+    mBoundingMetrics.ascent = std::max(mBoundingMetrics.ascent, 2 * kPhasorangleWidth * mRuleThickness - mBoundingMetrics.descent);
+  
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
   
   mReference.x = 0;
@@ -801,6 +825,20 @@ void nsDisplayNotation::Paint(nsDisplayListBuilder* aBuilder,
       gfxCtx->Fill();
     }
       break;
+
+    case NOTATION_PHASORANGLE: {
+      // Compute some parameters to draw the angled line,
+      // that uses a slope of 2 (angle = tan^-1(2)).
+      // H = w * tan(angle) = w * 2
+      gfxFloat w = gfxFloat(kPhasorangleWidth) * e;
+      gfxFloat H = 2 * w;
+
+      // Draw the angled line
+      gfxCtx->NewPath();
+      gfxCtx->Line(rect.BottomLeft(), rect.BottomLeft() + gfxPoint(w, -H));
+      gfxCtx->Stroke();
+      break;
+    }
 
     default:
       NS_NOTREACHED("This notation can not be drawn using nsDisplayNotation");

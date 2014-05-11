@@ -175,6 +175,7 @@ fails-if(B2G) == multiscripts-1.html multiscripts-1-ref.html # B2G - slight heig
 != menclose-1n.html menclose-1-ref.html
 != menclose-1o.html menclose-1-ref.html
 != menclose-1p.html menclose-1-ref.html
+!= menclose-1q.html menclose-1-ref.html
 fails-if(B2G) == menclose-2-actuarial.html menclose-2-actuarial-ref.html # B2G slight thickness variation
 == menclose-2-bottom.html menclose-2-bottom-ref.html
 fails-if(B2G) == menclose-2-box.html menclose-2-box-ref.html # B2G slight thickness variation
@@ -190,6 +191,7 @@ fails-if(B2G) == menclose-2-updiagonalarrow.html menclose-2-updiagonalarrow-ref.
 == menclose-2-updiagonalstrike.html menclose-2-updiagonalstrike-ref.html
 == menclose-2-verticalstrike.html menclose-2-verticalstrike-ref.html
 fails-if(B2G) == menclose-2-roundedbox.html menclose-2-roundedbox-ref.html # B2G slight thickness variation
+== menclose-2-phasorangle.html menclose-2-phasorangle-ref.html
 == menclose-3-box.html menclose-3-box-ref.html
 == menclose-3-madruwb.html menclose-3-madruwb-ref.html
 fails random-if(winWidget) == menclose-3-radical.html menclose-3-radical-ref.html # Bug 973917
@@ -214,6 +216,7 @@ fuzzy-if(OSX,1,100) == menclose-5-circle.html menclose-5-circle-ref.html
 == menclose-5-updiagonalarrow.html menclose-5-updiagonalarrow-ref.html
 == menclose-5-updiagonalstrike.html menclose-5-updiagonalstrike-ref.html
 == menclose-5-verticalstrike.html menclose-5-verticalstrike-ref.html
+== menclose-5-phasorangle.html menclose-5-phasorangle-ref.html
 == menclose-6-actuarial.html menclose-6-ref.html
 == menclose-6-bottom.html menclose-6-ref.html
 == menclose-6-box.html menclose-6-ref.html
@@ -230,6 +233,7 @@ fuzzy-if(OSX,1,100) == menclose-5-circle.html menclose-5-circle-ref.html
 == menclose-6-updiagonalarrow.html menclose-6-ref.html
 == menclose-6-updiagonalstrike.html menclose-6-ref.html
 == menclose-6-verticalstrike.html menclose-6-ref.html
+== menclose-6-phasorangle.html menclose-6-ref.html
 == mmultiscript-align.html mmultiscript-align-ref.html
 == subscript-italic-correction.html subscript-italic-correction-ref.html
 == mathvariant-1a.html mathvariant-1a-ref.html
