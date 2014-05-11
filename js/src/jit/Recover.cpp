@@ -15,6 +15,7 @@
 #include "jit/JitFrameIterator.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
+#include "jit/VMFunctions.h"
 
 #include "vm/Interpreter.h"
 
@@ -166,6 +167,41 @@ RAdd::recover(JSContext *cx, SnapshotIterator &iter) const
     if (isFloatOperation_ && !RoundFloat32(cx, result, &result))
         return false;
 
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
+MNewObject::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_NewObject));
+    writer.writeByte(templateObjectIsClassPrototype_);
+    return true;
+}
+
+RNewObject::RNewObject(CompactBufferReader &reader)
+{
+    templateObjectIsClassPrototype_ = reader.readByte();
+}
+
+bool
+RNewObject::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedObject templateObject(cx, &iter.read().toObject());
+    RootedValue result(cx);
+    JSObject *resultObject = nullptr;
+
+    // See CodeGenerator::visitNewObjectVMCall
+    if (templateObjectIsClassPrototype_)
+        resultObject = NewInitObjectWithClassPrototype(cx, templateObject);
+    else
+        resultObject = NewInitObject(cx, templateObject);
+
+    if (!resultObject)
+        return false;
+
+    result.setObject(*resultObject);
     iter.storeInstructionResult(result);
     return true;
 }
