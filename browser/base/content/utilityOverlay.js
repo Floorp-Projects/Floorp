@@ -505,10 +505,13 @@ function openPreferences(paneID, extraArgs)
     }
 
     if (newLoad) {
-      browser.addEventListener("load", function onload() {
-        browser.removeEventListener("load", onload, true);
+      Services.obs.addObserver(function advancedPaneLoadedObs(prefWin, topic, data) {
+        if (prefWin != browser.contentWindow) {
+          return;
+        }
+        Services.obs.removeObserver(advancedPaneLoadedObs, "advanced-pane-loaded");
         switchToPane();
-      }, true);
+      }, "advanced-pane-loaded", false);
     } else {
       switchToPane();
     }
