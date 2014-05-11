@@ -349,31 +349,42 @@ BookmarksEngine.prototype = {
     Task.spawn(function() {
       // For first-syncs, make a backup for the user to restore
       if (this.lastSync == 0) {
+        this._log.debug("Bookmarks backup starting.");
         yield PlacesBackups.create(null, true);
+        this._log.debug("Bookmarks backup done.");
       }
+    }.bind(this)).then(
+      cb, ex => {
+        // Failure to create a backup is somewhat bad, but probably not bad
+        // enough to prevent syncing of bookmarks - so just log the error and
+        // continue.
+        this._log.warn("Got exception \"" + Utils.exceptionStr(ex) +
+                       "\" backing up bookmarks, but continuing with sync.");
+        cb();
+      }
+    );
 
-      this.__defineGetter__("_guidMap", function() {
-        // Create a mapping of folder titles and separator positions to GUID.
-        // We do this lazily so that we don't do any work unless we reconcile
-        // incoming items.
-        let guidMap;
-        try {
-          guidMap = this._buildGUIDMap();
-        } catch (ex) {
-          this._log.warn("Got exception \"" + Utils.exceptionStr(ex) +
-                         "\" building GUID map." +
-                         " Skipping all other incoming items.");
-          throw {code: Engine.prototype.eEngineAbortApplyIncoming,
-                 cause: ex};
-        }
-        delete this._guidMap;
-        return this._guidMap = guidMap;
-      });
-
-      this._store._childrenToOrder = {};
-      cb();
-    }.bind(this));
     cb.wait();
+
+    this.__defineGetter__("_guidMap", function() {
+      // Create a mapping of folder titles and separator positions to GUID.
+      // We do this lazily so that we don't do any work unless we reconcile
+      // incoming items.
+      let guidMap;
+      try {
+        guidMap = this._buildGUIDMap();
+      } catch (ex) {
+        this._log.warn("Got exception \"" + Utils.exceptionStr(ex) +
+                       "\" building GUID map." +
+                       " Skipping all other incoming items.");
+        throw {code: Engine.prototype.eEngineAbortApplyIncoming,
+               cause: ex};
+      }
+      delete this._guidMap;
+      return this._guidMap = guidMap;
+    });
+
+    this._store._childrenToOrder = {};
   },
 
   _processIncoming: function (newitems) {
