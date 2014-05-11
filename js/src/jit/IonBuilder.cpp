@@ -5527,7 +5527,9 @@ IonBuilder::jsop_newobject()
         return abort("No template object for NEWOBJECT");
 
     JS_ASSERT(templateObject->is<JSObject>());
-    MNewObject *ins = MNewObject::New(alloc(), constraints(), templateObject,
+    MConstant *templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject);
+    current->add(templateConst);
+    MNewObject *ins = MNewObject::New(alloc(), constraints(), templateConst,
                                       templateObject->hasSingletonType()
                                       ? gc::TenuredHeap
                                       : templateObject->type()->initialHeap(constraints()),
