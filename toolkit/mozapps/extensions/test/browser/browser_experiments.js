@@ -134,17 +134,17 @@ add_task(function* testOpenPreferences() {
   let deferred = Promise.defer();
   Services.obs.addObserver(function observer(prefWin, topic, data) {
     Services.obs.removeObserver(observer, "advanced-pane-loaded");
-
     info("Advanced preference pane opened.");
+    executeSoon(function() {
+      // We want this test to fail if the preferences pane changes.
+      let el = prefWin.document.getElementById("dataChoicesPanel");
+      is_element_visible(el);
 
-    // We want this test to fail if the preferences pane changes.
-    let el = prefWin.document.getElementById("dataChoicesPanel");
-    is_element_visible(el);
+      prefWin.close();
+      info("Closed preferences pane.");
 
-    prefWin.close();
-    info("Closed preferences pane.");
-
-    deferred.resolve();
+      deferred.resolve();
+    });
   }, "advanced-pane-loaded", false);
 
   info("Loading preferences pane.");
