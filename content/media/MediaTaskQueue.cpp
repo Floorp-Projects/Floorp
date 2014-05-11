@@ -27,7 +27,7 @@ MediaTaskQueue::~MediaTaskQueue()
 }
 
 nsresult
-MediaTaskQueue::Dispatch(nsIRunnable* aRunnable)
+MediaTaskQueue::Dispatch(TemporaryRef<nsIRunnable> aRunnable)
 {
   MonitorAutoLock mon(mQueueMonitor);
   if (mIsShutdown) {
