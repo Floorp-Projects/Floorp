@@ -402,6 +402,13 @@ nsMIMEInfoAndroid::SystemChooser::SetDetailedDescription(const nsAString&) {
   return NS_OK;
 }
 
+// XXX Workaround for bug 986975 to maintain the existing broken semantics
+template<>
+struct nsIHandlerApp::COMTypeInfo<nsMIMEInfoAndroid::SystemChooser, void> {
+  static const nsIID kIID NS_HIDDEN;
+};
+const nsIID nsIHandlerApp::COMTypeInfo<nsMIMEInfoAndroid::SystemChooser, void>::kIID = NS_IHANDLERAPP_IID;
+
 nsresult
 nsMIMEInfoAndroid::SystemChooser::Equals(nsIHandlerApp *aHandlerApp, bool *aRetVal) {
   nsCOMPtr<nsMIMEInfoAndroid::SystemChooser> info = do_QueryInterface(aHandlerApp);
