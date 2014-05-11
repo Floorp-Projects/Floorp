@@ -48,6 +48,7 @@ public:
     virtual                 ~SortedVector();
 
     /*! copy operator */
+    const SortedVector<TYPE>&   operator = (const SortedVector<TYPE>& rhs) const;    
     SortedVector<TYPE>&         operator = (const SortedVector<TYPE>& rhs);    
 
     /*
@@ -162,6 +163,12 @@ SortedVector<TYPE>::~SortedVector() {
 
 template<class TYPE> inline
 SortedVector<TYPE>& SortedVector<TYPE>::operator = (const SortedVector<TYPE>& rhs) {
+    SortedVectorImpl::operator = (rhs);
+    return *this; 
+}
+
+template<class TYPE> inline
+const SortedVector<TYPE>& SortedVector<TYPE>::operator = (const SortedVector<TYPE>& rhs) const {
     SortedVectorImpl::operator = (rhs);
     return *this; 
 }

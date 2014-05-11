@@ -31,34 +31,6 @@
 #include <pthread.h>
 #endif
 
-#ifdef _MSC_VER
-#include <io.h>
-#include <process.h>
-#include <nspr/prprf.h>
-#define snprintf PR_snprintf
-
-/* We don't want to indent large blocks because it causes unnecessary merge
- * conflicts */
-#define UNINDENTED_BLOCK_START {
-#define UNINDENTED_BLOCK_END }
-#else
-#define UNINDENTED_BLOCK_START
-#define UNINDENTED_BLOCK_END
-#endif
-
-#ifdef _MSC_VER
-#include <io.h>
-#include <process.h>
-
-/* We don't want to indent large blocks because it causes unnecessary merge
- * conflicts */
-#define UNINDENTED_BLOCK_START {
-#define UNINDENTED_BLOCK_END }
-#else
-#define UNINDENTED_BLOCK_START
-#define UNINDENTED_BLOCK_END
-#endif
-
 #define kMaxTagLen  16      /* from the long-dead utils/Log.cpp */
 
 #define kTagSetSize 16      /* arbitrary */
@@ -219,7 +191,6 @@ static void configureInitialState(const char* pathName, LogState* logState)
     /*
      * This is based on the the long-dead utils/Log.cpp code.
      */
-    UNINDENTED_BLOCK_START
     const char* tags = getenv("ANDROID_LOG_TAGS");
     TRACE("Found ANDROID_LOG_TAGS='%s'\n", tags);
     if (tags != NULL) {
@@ -293,12 +264,11 @@ static void configureInitialState(const char* pathName, LogState* logState)
             }
         }
     }
-    UNINDENTED_BLOCK_END
+
 
     /*
      * Taken from the long-dead utils/Log.cpp
      */
-    UNINDENTED_BLOCK_START
     const char* fstr = getenv("ANDROID_PRINTF_LOG");
     LogFormat format;
     if (fstr == NULL) {
@@ -323,7 +293,6 @@ static void configureInitialState(const char* pathName, LogState* logState)
     }
 
     logState->outputFormat = format;
-    UNINDENTED_BLOCK_END
 }
 
 /*
@@ -352,7 +321,7 @@ static const char* getPriorityString(int priority)
  */
 static ssize_t fake_writev(int fd, const struct iovec *iov, int iovcnt) {
     int result = 0;
-    const struct iovec* end = iov + iovcnt;
+    struct iovec* end = iov + iovcnt;
     for (; iov < end; iov++) {
         int w = write(fd, iov->iov_base, iov->iov_len);
         if (w != iov->iov_len) {
@@ -385,11 +354,7 @@ static void showLog(LogState *state,
     char prefixBuf[128], suffixBuf[128];
     char priChar;
     time_t when;
-#ifdef _MSC_VER
-    int pid, tid;
-#else
     pid_t pid, tid;
-#endif
 
     TRACE("LOG %d: %s %s", logPrio, tag, msg);
 
@@ -417,7 +382,6 @@ static void showLog(LogState *state,
     /*
      * Construct a buffer containing the log header and log message.
      */
-    UNINDENTED_BLOCK_START
     size_t prefixLen, suffixLen;
 
     switch (state->outputFormat) {
@@ -467,7 +431,6 @@ static void showLog(LogState *state,
     /*
      * Figure out how many lines there will be.
      */
-    UNINDENTED_BLOCK_START
     const char* end = msg + strlen(msg);
     size_t numLines = 0;
     const char* p = msg;
@@ -480,8 +443,7 @@ static void showLog(LogState *state,
      * Create an array of iovecs large enough to write all of
      * the lines with a prefix and a suffix.
      */
-    UNINDENTED_BLOCK_START
-    #define INLINE_VECS 6
+    const size_t INLINE_VECS = 6;
     const size_t MAX_LINES   = ((size_t)~0)/(3*sizeof(struct iovec*));
     struct iovec stackVec[INLINE_VECS];
     struct iovec* vec = stackVec;
@@ -505,7 +467,6 @@ static void showLog(LogState *state,
      * Fill in the iovec pointers.
      */
     p = msg;
-    UNINDENTED_BLOCK_START
     struct iovec* v = vec;
     int totalLen = 0;
     while (numLines > 0 && p < end) {
@@ -515,7 +476,6 @@ static void showLog(LogState *state,
             totalLen += prefixLen;
             v++;
         }
-        UNINDENTED_BLOCK_START
         const char* start = p;
         while (p < end && *p != '\n') p++;
         if ((p-start) > 0) {
@@ -532,7 +492,6 @@ static void showLog(LogState *state,
             v++;
         }
         numLines -= 1;
-        UNINDENTED_BLOCK_END
     }
     
     /*
@@ -570,10 +529,6 @@ static void showLog(LogState *state,
     /* if we allocated storage for the iovecs, free it */
     if (vec != stackVec)
         free(vec);
-    UNINDENTED_BLOCK_END
-    UNINDENTED_BLOCK_END
-    UNINDENTED_BLOCK_END
-    UNINDENTED_BLOCK_END
 }
 
 
@@ -612,7 +567,6 @@ static ssize_t logWritev(int fd, const struct iovec* vector, int count)
     }
 
     /* pull out the three fields */
-    UNINDENTED_BLOCK_START
     int logPrio = *(const char*)vector[0].iov_base;
     const char* tag = (const char*) vector[1].iov_base;
     const char* msg = (const char*) vector[2].iov_base;
@@ -636,7 +590,6 @@ static ssize_t logWritev(int fd, const struct iovec* vector, int count)
     } else {
         //TRACE("+++ NOLOG(%d): %s %s", logPrio, tag, msg);
     }
-    UNINDENTED_BLOCK_END
 
 bail:
     unlock();
@@ -730,6 +683,3 @@ ssize_t fakeLogWritev(int fd, const struct iovec* vector, int count)
     /* Assume that open() was called first. */
     return redirectWritev(fd, vector, count);
 }
-
-#undef UNINDENTED_BLOCK_START
-#undef UNINDENTED_BLOCK_END
