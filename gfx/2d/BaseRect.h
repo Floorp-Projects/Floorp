@@ -92,7 +92,8 @@ struct BaseRect {
   // Always returns false if aRect is empty or 'this' is empty.
   bool Intersects(const Sub& aRect) const
   {
-    return x < aRect.XMost() && aRect.x < XMost() &&
+    return !IsEmpty() && !aRect.IsEmpty() &&
+           x < aRect.XMost() && aRect.x < XMost() &&
            y < aRect.YMost() && aRect.y < YMost();
   }
   // Returns the rectangle containing the intersection of the points
