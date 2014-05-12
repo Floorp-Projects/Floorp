@@ -1066,7 +1066,7 @@ nsContainerFrame::FinishReflowChild(nsIFrame*                  aKidFrame,
   aKidFrame->DidReflow(aPresContext, aReflowState, nsDidReflowStatus::FINISHED);
 }
 
-nsresult
+void
 nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPresContext,
                                                   const nsHTMLReflowState& aReflowState,
                                                   nsOverflowAreas&         aOverflowRects,
@@ -1112,7 +1112,7 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
     }
   }
   if (!overflowContainers) {
-    return NS_OK; // nothing to reflow
+    return; // nothing to reflow
   }
 
   nsOverflowContinuationTracker tracker(this, false, false);
@@ -1175,7 +1175,9 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
           // used to be a normal next-in-flow; steal it from the child list
           nsresult rv = static_cast<nsContainerFrame*>(nif->GetParent())
                  ->StealFrame(nif);
-          NS_ENSURE_SUCCESS(rv, rv);
+          if (NS_FAILED(rv)) {
+            return;
+          }
         }
 
         tracker.Insert(nif, frameStatus);
@@ -1192,8 +1194,6 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
     }
     ConsiderChildOverflow(aOverflowRects, frame);
   }
-
-  return NS_OK;
 }
 
 void
