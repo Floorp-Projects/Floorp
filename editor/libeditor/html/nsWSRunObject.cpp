@@ -14,8 +14,10 @@
 #include "nsError.h"
 #include "nsHTMLEditor.h"
 #include "nsIContent.h"
+#include "nsIDOMCharacterData.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
+#include "nsIDOMRange.h"
 #include "nsISupportsImpl.h"
 #include "nsRange.h"
 #include "nsSelectionState.h"
@@ -1403,7 +1405,7 @@ nsWSRunObject::GetCharAfter(nsINode* aNode, int32_t aOffset)
   int32_t idx = mNodeArray.IndexOf(aNode);
   if (idx == -1) {
     // Use range comparisons to get right ws node
-    return GetWSPointAfter(aNode, aOffset);
+    return GetWSPointAfter(GetAsDOMNode(aNode), aOffset);
   } else {
     // Use WSPoint version of GetCharAfter()
     return GetCharAfter(WSPoint(aNode, aOffset, 0));
@@ -1418,7 +1420,7 @@ nsWSRunObject::GetCharBefore(nsINode* aNode, int32_t aOffset)
   int32_t idx = mNodeArray.IndexOf(aNode);
   if (idx == -1) {
     // Use range comparisons to get right ws node
-    return GetWSPointBefore(aNode, aOffset);
+    return GetWSPointBefore(GetAsDOMNode(aNode), aOffset);
   } else {
     // Use WSPoint version of GetCharBefore()
     return GetCharBefore(WSPoint(aNode, aOffset, 0));
@@ -1645,48 +1647,52 @@ nsWSRunObject::GetCharAt(nsIContent *aTextNode, int32_t aOffset)
 }
 
 nsWSRunObject::WSPoint
-nsWSRunObject::GetWSPointAfter(nsINode* aNode, int32_t aOffset)
+nsWSRunObject::GetWSPointAfter(nsIDOMNode *aNode, int32_t aOffset)
 {
-  // Note: only to be called if aNode is not a ws node.
-
-  // Binary search on wsnodes
-  uint32_t numNodes = mNodeArray.Length();
-
+  // Note: only to be called if aNode is not a ws node.  
+  
+  // binary search on wsnodes
+  uint32_t numNodes, firstNum, curNum, lastNum;
+  numNodes = mNodeArray.Length();
+  
   if (!numNodes) {
-    // Do nothing if there are no nodes to search
+    // do nothing if there are no nodes to search
     WSPoint outPoint;
     return outPoint;
   }
 
-  uint32_t firstNum = 0, curNum = numNodes/2, lastNum = numNodes;
-  int16_t cmp = 0;
-  nsCOMPtr<Text> curNode;
-
-  // Begin binary search.  We do this because we need to minimize calls to
-  // ComparePoints(), which is expensive.
-  while (curNum != lastNum) {
-    curNode = mNodeArray[curNum];
+  firstNum = 0;
+  curNum = numNodes/2;
+  lastNum = numNodes;
+  int16_t cmp=0;
+  nsCOMPtr<nsIDOMNode>  curNode;
+  
+  // begin binary search
+  // we do this because we need to minimize calls to ComparePoints(),
+  // which is mongo expensive
+  while (curNum != lastNum)
+  {
+    curNode = GetAsDOMNode(mNodeArray[curNum]);
     cmp = nsContentUtils::ComparePoints(aNode, aOffset, curNode, 0);
-    if (cmp < 0) {
+    if (cmp < 0)
       lastNum = curNum;
-    } else {
+    else
       firstNum = curNum + 1;
-    }
-    curNum = (lastNum - firstNum)/2 + firstNum;
-    MOZ_ASSERT(firstNum <= curNum && curNum <= lastNum, "Bad binary search");
+    curNum = (lastNum - firstNum) / 2 + firstNum;
+    NS_ASSERTION(firstNum <= curNum && curNum <= lastNum, "Bad binary search");
   }
 
   // When the binary search is complete, we always know that the current node
   // is the same as the end node, which is always past our range. Therefore,
   // we've found the node immediately after the point of interest.
   if (curNum == mNodeArray.Length()) {
-    // hey asked for past our range (it's after the last node). GetCharAfter
+    // they asked for past our range (it's after the last node). GetCharAfter
     // will do the work for us when we pass it the last index of the last node.
     nsCOMPtr<Text> textNode(mNodeArray[curNum - 1]);
     WSPoint point(textNode, textNode->TextLength(), 0);
     return GetCharAfter(point);
   } else {
-    // The char after the point is the first character of our range.
+    // The char after the point of interest is the first character of our range.
     nsCOMPtr<Text> textNode(mNodeArray[curNum]);
     WSPoint point(textNode, 0, 0);
     return GetCharAfter(point);
@@ -1694,48 +1700,52 @@ nsWSRunObject::GetWSPointAfter(nsINode* aNode, int32_t aOffset)
 }
 
 nsWSRunObject::WSPoint
-nsWSRunObject::GetWSPointBefore(nsINode* aNode, int32_t aOffset)
+nsWSRunObject::GetWSPointBefore(nsIDOMNode *aNode, int32_t aOffset)
 {
-  // Note: only to be called if aNode is not a ws node.
-
-  // Binary search on wsnodes
-  uint32_t numNodes = mNodeArray.Length();
-
+  // Note: only to be called if aNode is not a ws node.  
+  
+  // binary search on wsnodes
+  uint32_t numNodes, firstNum, curNum, lastNum;
+  numNodes = mNodeArray.Length();
+  
   if (!numNodes) {
-    // Do nothing if there are no nodes to search
+    // do nothing if there are no nodes to search
     WSPoint outPoint;
     return outPoint;
   }
-
-  uint32_t firstNum = 0, curNum = numNodes/2, lastNum = numNodes;
-  int16_t cmp = 0;
-  nsCOMPtr<Text>  curNode;
-
-  // Begin binary search.  We do this because we need to minimize calls to
-  // ComparePoints(), which is expensive.
-  while (curNum != lastNum) {
-    curNode = mNodeArray[curNum];
+  
+  firstNum = 0;
+  curNum = numNodes/2;
+  lastNum = numNodes;
+  int16_t cmp=0;
+  nsCOMPtr<nsIDOMNode>  curNode;
+  
+  // begin binary search
+  // we do this because we need to minimize calls to ComparePoints(),
+  // which is mongo expensive
+  while (curNum != lastNum)
+  {
+    curNode = GetAsDOMNode(mNodeArray[curNum]);
     cmp = nsContentUtils::ComparePoints(aNode, aOffset, curNode, 0);
-    if (cmp < 0) {
+    if (cmp < 0)
       lastNum = curNum;
-    } else {
+    else
       firstNum = curNum + 1;
-    }
-    curNum = (lastNum - firstNum)/2 + firstNum;
-    MOZ_ASSERT(firstNum <= curNum && curNum <= lastNum, "Bad binary search");
+    curNum = (lastNum - firstNum) / 2 + firstNum;
+    NS_ASSERTION(firstNum <= curNum && curNum <= lastNum, "Bad binary search");
   }
 
   // When the binary search is complete, we always know that the current node
   // is the same as the end node, which is always past our range. Therefore,
   // we've found the node immediately after the point of interest.
   if (curNum == mNodeArray.Length()) {
-    // Get the point before the end of the last node, we can pass the length of
-    // the node into GetCharBefore, and it will return the last character.
+    // get the point before the end of the last node, we can pass the length
+    // of the node into GetCharBefore, and it will return the last character.
     nsCOMPtr<Text> textNode(mNodeArray[curNum - 1]);
     WSPoint point(textNode, textNode->TextLength(), 0);
     return GetCharBefore(point);
   } else {
-    // We can just ask the current node for the point immediately before it,
+    // we can just ask the current node for the point immediately before it,
     // it will handle moving to the previous node (if any) and returning the
     // appropriate character
     nsCOMPtr<Text> textNode(mNodeArray[curNum]);
