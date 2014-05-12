@@ -83,9 +83,7 @@ function*() {
 
   is(editor.value, "20px", "Should have the right value in the editor.");
   is(getStyle(node, "margin-left"), "20px", "Should have updated the margin.");
-
   EventUtils.synthesizeKey("VK_RETURN", {}, view);
-  yield waitForUpdate();
 
   is(getStyle(node, "margin-left"), "20px", "Should be the right margin-top on the element.")
   is(span.textContent, 20, "Should have the right value in the box model.");
@@ -139,7 +137,6 @@ function*() {
   is(getStyle(node, "margin-right"), "", "Should have updated the margin.");
 
   EventUtils.synthesizeKey("VK_RETURN", {}, view);
-  yield waitForUpdate();
 
   is(getStyle(node, "margin-right"), "", "Should be the right margin-top on the element.")
   is(span.textContent, 10, "Should have the right value in the box model.");
