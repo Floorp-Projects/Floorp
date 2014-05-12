@@ -187,9 +187,6 @@ let UI = {
     while (USBListNode.hasChildNodes()) {
       USBListNode.firstChild.remove();
     }
-    while (simulatorListNode.hasChildNodes()) {
-      simulatorListNode.firstChild.remove();
-    }
 
     this.console.log("Found " + AppManager.runtimeList.usb.length + " USB devices.");
     this.console.log("Found " + AppManager.runtimeList.simulators.length + " simulators.");
@@ -205,6 +202,9 @@ let UI = {
       }, true);
     }
 
+    while (simulatorListNode.hasChildNodes()) {
+      simulatorListNode.firstChild.remove();
+    }
     for (let runtime of AppManager.runtimeList.simulators) {
       let panelItemNode = document.createElement("toolbarbutton");
       panelItemNode.className = "panel-item runtime-panel-item-simulator";
@@ -530,9 +530,6 @@ let Cmds = {
       projectsNode.firstChild.remove();
     }
 
-    panelNode.openPopup(anchorNode);
-    panelVboxNode.scrollTop = 0;
-
     AppProjects.load().then(() => {
       let projects = AppProjects.store.object.projects;
       for (let i = 0; i < projects.length; i++) {
@@ -557,6 +554,14 @@ let Cmds = {
           AppManager.selectedProject = project;
         }, true);
       }
+
+      window.setTimeout(() => {
+        // Open the popup only when the projects are added.
+        // Not doing it in the next tick can cause mis-calculations
+        // of the size of the panel.
+        panelNode.openPopup(anchorNode);
+        panelVboxNode.scrollTop = 0;
+      }, 0);
     }, UI.console.error);
 
 
