@@ -45,11 +45,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         'nsExternalURLHandlerService.h',
     ]]
 
-if CONFIG['MOZ_ENABLE_MEEGOTOUCHSHARE']:
-    EXPORTS += [
-        osdir + '/nsExternalSharingAppService.h',
-    ]
-
 EXPORTS.mozilla.dom += [
     'ExternalHelperAppChild.h',
     'ExternalHelperAppParent.h',
@@ -109,11 +104,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 if CONFIG['MOZ_ENABLE_DBUS']:
     UNIFIED_SOURCES += [
         'nsDBusHandlerApp.cpp',
-    ]
-
-if CONFIG['MOZ_ENABLE_MEEGOTOUCHSHARE']:
-    UNIFIED_SOURCES += [
-        'unix/nsMeegoExternalSharingAppService.cpp',
     ]
 
 if CONFIG['MOZ_ENABLE_CONTENTACTION']:
