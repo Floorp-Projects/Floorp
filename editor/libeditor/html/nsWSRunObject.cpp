@@ -635,7 +635,8 @@ nsWSRunObject::GetWSNodes()
     nsCOMPtr<nsIContent> textNode(do_QueryInterface(mNode));
     const nsTextFragment* textFrag = textNode->GetText();
     
-    mNodeArray.InsertElementAt(0, static_cast<Text*>(mNode.get()));
+    res = PrependNodeToList(mNode);
+    NS_ENSURE_SUCCESS(res, res);
     if (mOffset) {
       for (int32_t pos = mOffset - 1; pos >= 0; pos--) {
         // sanity bounds check the char position.  bug 136165
@@ -680,7 +681,7 @@ nsWSRunObject::GetWSNodes()
         mStartReasonNode = priorNode;
       }
       else if (priorNode->NodeType() == nsIDOMNode::TEXT_NODE) {
-        mNodeArray.InsertElementAt(0, static_cast<Text*>(priorNode.get()));
+        res = PrependNodeToList(priorNode);
         NS_ENSURE_SUCCESS(res, res);
         nsCOMPtr<nsIContent> textNode(do_QueryInterface(priorNode));
         const nsTextFragment *textFrag;
@@ -792,7 +793,8 @@ nsWSRunObject::GetWSNodes()
         mEndReason = WSType::otherBlock;
         mEndReasonNode = nextNode;
       } else if (mHTMLEditor->IsTextNode(nextNode)) {
-        mNodeArray.AppendElement(static_cast<Text*>(nextNode.get()));
+        res = AppendNodeToList(nextNode);
+        NS_ENSURE_SUCCESS(res, res);
         nsCOMPtr<nsIContent> textNode(do_QueryInterface(nextNode));
         const nsTextFragment *textFrag;
         if (!textNode || !(textFrag = textNode->GetText())) {
@@ -1016,6 +1018,26 @@ nsWSRunObject::MakeSingleWSRun(WSType aType)
   mStartRun->mRightType   = mEndReason;
   
   mEndRun  = mStartRun;
+}
+
+nsresult 
+nsWSRunObject::PrependNodeToList(nsINode *aNode)
+{
+  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
+  if (!mNodeArray.InsertObjectAt(aNode, 0)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+nsresult 
+nsWSRunObject::AppendNodeToList(nsINode* aNode)
+{
+  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
+  if (!mNodeArray.AppendObject(aNode)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
 }
 
 nsresult 
@@ -1353,7 +1375,7 @@ nsWSRunObject::DeleteChars(nsIDOMNode *aStartNode, int32_t aStartOffset,
     }
   }
 
-  int32_t count = mNodeArray.Length();
+  int32_t count = mNodeArray.Count();
   while (idx < count)
   {
     node = GetAsDOMNode(mNodeArray[idx]);
@@ -1405,7 +1427,7 @@ nsWSRunObject::DeleteChars(nsIDOMNode *aStartNode, int32_t aStartOffset,
         res = mHTMLEditor->DeleteNode(node);
         NS_ENSURE_SUCCESS(res, res);
         nsCOMPtr<nsINode> node_ = do_QueryInterface(node);
-        mNodeArray.RemoveElement(node_);
+        mNodeArray.RemoveObject(node_);
         --count;
         --idx;
       }
@@ -1460,14 +1482,14 @@ nsWSRunObject::GetCharAfter(const WSPoint &aPoint)
     // Can't find point, but it's not an error
     return outPoint;
   }
-  int32_t numNodes = mNodeArray.Length();
+  int32_t numNodes = mNodeArray.Count();
 
   if (uint16_t(aPoint.mOffset) < aPoint.mTextNode->TextLength()) {
     outPoint = aPoint;
     outPoint.mChar = GetCharAt(aPoint.mTextNode, aPoint.mOffset);
     return outPoint;
   } else if (idx + 1 < numNodes) {
-    outPoint.mTextNode = mNodeArray[idx + 1];
+    outPoint.mTextNode = do_QueryInterface(mNodeArray[idx + 1]);
     MOZ_ASSERT(outPoint.mTextNode);
     outPoint.mOffset = 0;
     outPoint.mChar = GetCharAt(outPoint.mTextNode, 0);
@@ -1497,7 +1519,7 @@ nsWSRunObject::GetCharBefore(const WSPoint &aPoint)
     outPoint.mChar = GetCharAt(aPoint.mTextNode, aPoint.mOffset - 1);
     return outPoint;
   } else if (idx) {
-    outPoint.mTextNode = mNodeArray[idx - 1];
+    outPoint.mTextNode = do_QueryInterface(mNodeArray[idx - 1]);
 
     uint32_t len = outPoint.mTextNode->TextLength();
     if (len) {
@@ -1697,8 +1719,8 @@ nsWSRunObject::GetWSPointAfter(nsIDOMNode *aNode, int32_t aOffset)
   // Note: only to be called if aNode is not a ws node.  
   
   // binary search on wsnodes
-  uint32_t numNodes, firstNum, curNum, lastNum;
-  numNodes = mNodeArray.Length();
+  int32_t numNodes, firstNum, curNum, lastNum;
+  numNodes = mNodeArray.Count();
   
   if (!numNodes) {
     // do nothing if there are no nodes to search
@@ -1730,15 +1752,15 @@ nsWSRunObject::GetWSPointAfter(nsIDOMNode *aNode, int32_t aOffset)
   // When the binary search is complete, we always know that the current node
   // is the same as the end node, which is always past our range. Therefore,
   // we've found the node immediately after the point of interest.
-  if (curNum == mNodeArray.Length()) {
+  if (curNum == mNodeArray.Count()) {
     // they asked for past our range (it's after the last node). GetCharAfter
     // will do the work for us when we pass it the last index of the last node.
-    nsCOMPtr<Text> textNode(mNodeArray[curNum - 1]);
+    nsCOMPtr<nsIContent> textNode(do_QueryInterface(mNodeArray[curNum-1]));
     WSPoint point(textNode, textNode->TextLength(), 0);
     return GetCharAfter(point);
   } else {
     // The char after the point of interest is the first character of our range.
-    nsCOMPtr<Text> textNode(mNodeArray[curNum]);
+    nsCOMPtr<nsIContent> textNode(do_QueryInterface(mNodeArray[curNum]));
     WSPoint point(textNode, 0, 0);
     return GetCharAfter(point);
   }
@@ -1750,8 +1772,8 @@ nsWSRunObject::GetWSPointBefore(nsIDOMNode *aNode, int32_t aOffset)
   // Note: only to be called if aNode is not a ws node.  
   
   // binary search on wsnodes
-  uint32_t numNodes, firstNum, curNum, lastNum;
-  numNodes = mNodeArray.Length();
+  int32_t numNodes, firstNum, curNum, lastNum;
+  numNodes = mNodeArray.Count();
   
   if (!numNodes) {
     // do nothing if there are no nodes to search
@@ -1783,17 +1805,17 @@ nsWSRunObject::GetWSPointBefore(nsIDOMNode *aNode, int32_t aOffset)
   // When the binary search is complete, we always know that the current node
   // is the same as the end node, which is always past our range. Therefore,
   // we've found the node immediately after the point of interest.
-  if (curNum == mNodeArray.Length()) {
+  if (curNum == mNodeArray.Count()) {
     // get the point before the end of the last node, we can pass the length
     // of the node into GetCharBefore, and it will return the last character.
-    nsCOMPtr<Text> textNode(mNodeArray[curNum - 1]);
+    nsCOMPtr<nsIContent> textNode(do_QueryInterface(mNodeArray[curNum - 1]));
     WSPoint point(textNode, textNode->TextLength(), 0);
     return GetCharBefore(point);
   } else {
     // we can just ask the current node for the point immediately before it,
     // it will handle moving to the previous node (if any) and returning the
     // appropriate character
-    nsCOMPtr<Text> textNode(mNodeArray[curNum]);
+    nsCOMPtr<nsIContent> textNode(do_QueryInterface(mNodeArray[curNum]));
     WSPoint point(textNode, 0, 0);
     return GetCharBefore(point);
   }
