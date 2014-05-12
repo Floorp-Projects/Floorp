@@ -3210,23 +3210,6 @@ static void GetFixedOrDynamicSlotOffset(HandleObject obj, uint32_t slot,
                        : obj->dynamicSlotIndex(slot) * sizeof(Value);
 }
 
-static bool
-IsCacheableDOMProxy(JSObject *obj)
-{
-    if (!obj->is<ProxyObject>())
-        return false;
-
-    BaseProxyHandler *handler = obj->as<ProxyObject>().handler();
-
-    if (handler->family() != GetDOMProxyHandlerFamily())
-        return false;
-
-    if (obj->numFixedSlots() <= GetDOMProxyExpandoSlot())
-        return false;
-
-    return true;
-}
-
 static JSObject *
 GetDOMProxyProto(JSObject *obj)
 {
@@ -8810,7 +8793,7 @@ ICCall_Native::Compiler::generateStubCode(MacroAssembler &masm)
     EmitCreateStubFrameDescriptor(masm, scratch);
     masm.push(scratch);
     masm.push(BaselineTailCallReg);
-    masm.enterFakeExitFrame();
+    masm.enterFakeExitFrame(IonNativeExitFrameLayout::Token());
 
     // If needed, update SPS Profiler frame entry.  At this point, BaselineTailCallReg
     // and scratch can be clobbered.

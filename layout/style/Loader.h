@@ -9,12 +9,11 @@
 #define mozilla_css_Loader_h
 
 #include "nsIPrincipal.h"
-#include "nsAString.h"
 #include "nsAutoPtr.h"
 #include "nsCompatibility.h"
 #include "nsDataHashtable.h"
-#include "nsInterfaceHashtable.h"
 #include "nsRefPtrHashtable.h"
+#include "nsStringFwd.h"
 #include "nsTArray.h"
 #include "nsTObserverArray.h"
 #include "nsURIHashKey.h"

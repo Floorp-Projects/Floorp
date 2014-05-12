@@ -13,7 +13,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/css/Rule.h"
 #include "nsIDOMCSSImportRule.h"
-#include "nsCSSRules.h"
 
 class nsMediaList;
 class nsString;

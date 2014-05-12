@@ -59,6 +59,18 @@
 #undef GetCurrentTime
 #endif
 
+// XXX Workaround for bug 986974 to maintain the existing broken semantics
+template<>
+struct nsIMediaDevice::COMTypeInfo<mozilla::VideoDevice, void> {
+  static const nsIID kIID NS_HIDDEN;
+};
+const nsIID nsIMediaDevice::COMTypeInfo<mozilla::VideoDevice, void>::kIID = NS_IMEDIADEVICE_IID;
+template<>
+struct nsIMediaDevice::COMTypeInfo<mozilla::AudioDevice, void> {
+  static const nsIID kIID NS_HIDDEN;
+};
+const nsIID nsIMediaDevice::COMTypeInfo<mozilla::AudioDevice, void>::kIID = NS_IMEDIADEVICE_IID;
+
 namespace mozilla {
 
 #ifdef LOG

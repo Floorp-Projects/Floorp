@@ -40,7 +40,7 @@ namespace mozilla {
 // Uncomment to enable verbose per-sample logging.
 //#define LOG_SAMPLE_DECODE 1
 
-class MP4Stream : public mp4_demuxer::Stream {
+class MP4Stream : public Stream {
 public:
 
   MP4Stream(MediaResource* aResource)
@@ -265,7 +265,7 @@ MP4Reader::SampleQueue(TrackType aTrack)
 }
 
 MediaDataDecoder*
-MP4Reader::Decoder(mp4_demuxer::TrackType aTrack)
+MP4Reader::Decoder(TrackType aTrack)
 {
   return GetDecoderData(aTrack).mDecoder;
 }
@@ -385,7 +385,7 @@ TrackTypeToStr(TrackType aTrack)
 #endif
 
 void
-MP4Reader::Output(mp4_demuxer::TrackType aTrack, MediaData* aSample)
+MP4Reader::Output(TrackType aTrack, MediaData* aSample)
 {
 #ifdef LOG_SAMPLE_DECODE
   LOG("Decoded %s sample time=%lld dur=%lld",
@@ -420,7 +420,7 @@ MP4Reader::Output(mp4_demuxer::TrackType aTrack, MediaData* aSample)
 }
 
 void
-MP4Reader::InputExhausted(mp4_demuxer::TrackType aTrack)
+MP4Reader::InputExhausted(TrackType aTrack)
 {
   DecoderData& data = GetDecoderData(aTrack);
   MonitorAutoLock mon(data.mMonitor);
@@ -429,7 +429,7 @@ MP4Reader::InputExhausted(mp4_demuxer::TrackType aTrack)
 }
 
 void
-MP4Reader::Error(mp4_demuxer::TrackType aTrack)
+MP4Reader::Error(TrackType aTrack)
 {
   DecoderData& data = GetDecoderData(aTrack);
   MonitorAutoLock mon(data.mMonitor);
@@ -445,7 +445,7 @@ MP4Reader::DecodeAudioData()
 }
 
 void
-MP4Reader::Flush(mp4_demuxer::TrackType aTrack)
+MP4Reader::Flush(TrackType aTrack)
 {
   DecoderData& data = GetDecoderData(aTrack);
   if (!data.mDecoder) {

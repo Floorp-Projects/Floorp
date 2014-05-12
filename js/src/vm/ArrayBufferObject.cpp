@@ -1042,6 +1042,18 @@ JS_NeuterArrayBuffer(JSContext *cx, HandleObject obj,
     return true;
 }
 
+JS_FRIEND_API(bool)
+JS_IsNeuteredArrayBufferObject(JSObject *obj)
+{
+    obj = CheckedUnwrap(obj);
+    if (!obj)
+        return false;
+
+    return obj->is<ArrayBufferObject>()
+           ? obj->as<ArrayBufferObject>().isNeutered()
+           : false;
+}
+
 JS_FRIEND_API(JSObject *)
 JS_NewArrayBuffer(JSContext *cx, uint32_t nbytes)
 {

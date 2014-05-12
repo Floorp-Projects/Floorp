@@ -137,13 +137,12 @@ class PaintLayerContext {
 public:
   PaintLayerContext(gfxContext* aTarget, Layer* aLayer,
                     LayerManager::DrawThebesLayerCallback aCallback,
-                    void* aCallbackData, ReadbackProcessor* aReadback)
+                    void* aCallbackData)
    : mTarget(aTarget)
    , mTargetMatrixSR(aTarget)
    , mLayer(aLayer)
    , mCallback(aCallback)
    , mCallbackData(aCallbackData)
-   , mReadback(aReadback)
    , mPushedOpaqueRect(false)
   {}
 
@@ -229,7 +228,6 @@ public:
   Layer* mLayer;
   LayerManager::DrawThebesLayerCallback mCallback;
   void* mCallbackData;
-  ReadbackProcessor* mReadback;
   Matrix mTransform;
   bool mPushedOpaqueRect;
 };
@@ -593,9 +591,9 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
       mTarget ? !(mTarget->GetFlags() & gfxContext::FLAG_DISABLE_SNAPPING) : true;
     mRoot->ComputeEffectiveTransforms(mTarget ? Matrix4x4::From2D(ToMatrix(mTarget->CurrentMatrix())) : Matrix4x4());
 
-    ToData(mRoot)->Validate(aCallback, aCallbackData);
+    ToData(mRoot)->Validate(aCallback, aCallbackData, nullptr);
     if (mRoot->GetMaskLayer()) {
-      ToData(mRoot->GetMaskLayer())->Validate(aCallback, aCallbackData);
+      ToData(mRoot->GetMaskLayer())->Validate(aCallback, aCallbackData, nullptr);
     }
 
     if (aFlags & END_NO_COMPOSITE) {
@@ -624,7 +622,7 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
       }
     }
 
-    PaintLayer(mTarget, mRoot, aCallback, aCallbackData, nullptr);
+    PaintLayer(mTarget, mRoot, aCallback, aCallbackData);
     if (!mRegionToClear.IsEmpty()) {
       AutoSetOperator op(mTarget, gfxContext::OPERATOR_CLEAR);
       nsIntRegionRectIterator iter(mRegionToClear);
@@ -831,24 +829,20 @@ BasicLayerManager::PaintSelfOrChildren(PaintLayerContext& aPaintContext,
   if (!child) {
     if (aPaintContext.mLayer->AsThebesLayer()) {
       data->PaintThebes(aGroupTarget, aPaintContext.mLayer->GetMaskLayer(),
-          aPaintContext.mCallback, aPaintContext.mCallbackData,
-          aPaintContext.mReadback);
+          aPaintContext.mCallback, aPaintContext.mCallbackData);
     } else {
       data->Paint(aGroupTarget->GetDrawTarget(),
+                  aGroupTarget->GetDeviceOffset(),
                   aPaintContext.mLayer->GetMaskLayer());
     }
   } else {
-    ReadbackProcessor readback;
     ContainerLayer* container =
         static_cast<ContainerLayer*>(aPaintContext.mLayer);
-    if (IsRetained()) {
-      readback.BuildUpdates(container);
-    }
     nsAutoTArray<Layer*, 12> children;
     container->SortChildrenBy3DZOrder(children);
     for (uint32_t i = 0; i < children.Length(); i++) {
       PaintLayer(aGroupTarget, children.ElementAt(i), aPaintContext.mCallback,
-          aPaintContext.mCallbackData, &readback);
+          aPaintContext.mCallbackData);
       if (mTransactionIncomplete)
         break;
     }
@@ -885,11 +879,10 @@ void
 BasicLayerManager::PaintLayer(gfxContext* aTarget,
                               Layer* aLayer,
                               DrawThebesLayerCallback aCallback,
-                              void* aCallbackData,
-                              ReadbackProcessor* aReadback)
+                              void* aCallbackData)
 {
   PROFILER_LABEL("BasicLayerManager", "PaintLayer");
-  PaintLayerContext paintLayerContext(aTarget, aLayer, aCallback, aCallbackData, aReadback);
+  PaintLayerContext paintLayerContext(aTarget, aLayer, aCallback, aCallbackData);
 
   // Don't attempt to paint layers with a singular transform, cairo will
   // just throw an error.
