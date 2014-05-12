@@ -1,5 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 subscriptLoader.loadSubScript("resource://gre/modules/ril_consts.js", this);
 
@@ -45,7 +45,6 @@ add_test(function test_check_change_call_barring_password_result() {
     postMessage: function(message) {
       equal(barringPasswordOptions.pin, PIN);
       equal(barringPasswordOptions.newPin, NEW_PIN);
-      equal(message.errorMsg, GECKO_ERROR_SUCCESS);
     }
   });
 
