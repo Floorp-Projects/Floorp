@@ -313,8 +313,17 @@
         ]]></body>
       </method>
 
+      <method name="_shouldSetHeight">
+        <body><![CDATA[
+          return this.getAttribute("nosubviews") != "true";
+        ]]></body>
+      </method>
+
       <method name="_setMaxHeight">
         <body><![CDATA[
+          if (!this._shouldSetHeight())
+            return;
+
           // Ignore the mutation that'll fire when we set the height of
           // the main view.
           this.ignoreMutations = true;
@@ -339,7 +348,7 @@
       <method name="_syncContainerWithMainView">
         <body><![CDATA[
           // Check that this panel is still alive:
-          if (!this._panel || !this._panel.parentNode) {
+          if (!this._panel || !this._panel.parentNode || !this._shouldSetHeight()) {
             return;
           }
 

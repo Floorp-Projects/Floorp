@@ -200,7 +200,7 @@ const PanelUI = {
     }
   },
 
-  isReady: function() {
+  get isReady() {
     return !!this._isReady;
   },
 

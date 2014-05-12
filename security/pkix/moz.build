@@ -24,7 +24,7 @@ TEST_DIRS += [
 
 CXXFLAGS += ['-Wall']
 # -Wall with Visual C++ enables too many problematic warnings
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+if CONFIG['_MSC_VER']:
   CXXFLAGS += [
     '-wd4514', # 'function': unreferenced inline function has been removed
     '-wd4668', # 'symbol' is not defined as a preprocessor macro...

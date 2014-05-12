@@ -40,6 +40,7 @@ html,body {
 .col3 {
   -moz-columns: 3;
 }
+.unbalanced { -moz-column-fill:auto; }
 .vbreak { height:65px; width:41px; }
 .h { width:30px;height:30px; background:grey; }
 .m { margin-left:15px; }
@@ -70,8 +71,8 @@ pos4 { position:absolute; top:510px; width:700px; }
 </pos2>
 
 <pos3>
-<div class="columns"><div class="b vbreak clone"></div></div>
-<div class="columns col3"><div class="b vbreak clone"></div></div>
+<div class="unbalanced columns"><div class="b vbreak clone"></div></div>
+<div class="unbalanced columns col3"><div class="b vbreak clone"></div></div>
 </pos3>
 
 <pos4>

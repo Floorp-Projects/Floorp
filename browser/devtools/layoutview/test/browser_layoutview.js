@@ -1,5 +1,11 @@
+/* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
+ http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+// Test that the layout-view displays the right values and that it updates when
+// the node's style is changed
 
 // Expected values:
 let res1 = [
@@ -36,46 +42,22 @@ let res2 = [
       {selector: ".border.right > span",       value: 10},
 ];
 
-let inspector;
-let view;
-
 let test = asyncTest(function*() {
   let style = "div { position: absolute; top: 42px; left: 42px; height: 100px; width: 100px; border: 10px solid black; padding: 20px; margin: 30px auto;}";
   let html = "<style>" + style + "</style><div></div>"
 
-  let content = yield loadTab("data:text/html," + encodeURIComponent(html));
-  let node = content.document.querySelector("div");
-  ok(node, "node found");
+  yield addTab("data:text/html," + encodeURIComponent(html));
+  let {toolbox, inspector, view} = yield openLayoutView();
+  yield selectNode("div", inspector);
 
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = yield gDevTools.showToolbox(target, "inspector");
-  inspector = toolbox.getCurrentPanel();
+  yield runTests(inspector, view);
 
-  info("Inspector open");
-
-  inspector.sidebar.select("layoutview");
-  yield inspector.sidebar.once("layoutview-ready");
-
-  inspector.selection.setNode(node);
-  yield inspector.once("inspector-updated");
-
-  info("Layout view ready");
-
-  view = inspector.sidebar.getWindowForTab("layoutview");
-  ok(!!view.layoutview, "LayoutView document is alive.");
-
-  yield runTests();
-
-  executeSoon(function() {
-    inspector._toolbox.destroy();
-  });
-
-  yield gDevTools.once("toolbox-destroyed");
+  yield destroyToolbox(inspector);
 });
 
 addTest("Test that the initial values of the box model are correct",
-function*() {
-  let viewdoc = view.document;
+function*(inspector, view) {
+  let viewdoc = view.doc;
 
   for (let i = 0; i < res1.length; i++) {
     let elt = viewdoc.querySelector(res1[i].selector);
@@ -84,32 +66,16 @@ function*() {
 });
 
 addTest("Test that changing the document updates the box model",
-function*() {
-  let viewdoc = view.document;
+function*(inspector, view) {
+  let viewdoc = view.doc;
 
+  let onUpdated = waitForUpdate(inspector);
   inspector.selection.node.style.height = "150px";
   inspector.selection.node.style.paddingRight = "50px";
-
-  yield waitForUpdate();
+  yield onUpdated;
 
   for (let i = 0; i < res2.length; i++) {
     let elt = viewdoc.querySelector(res2[i].selector);
     is(elt.textContent, res2[i].value, res2[i].selector + " has the right value after style update.");
-  }
-});
-
-addTest("Test that long labels on left/right are rotated 90 degrees",
-function*() {
-  let viewdoc = view.document;
-  const LONG_TEXT_ROTATE_LIMIT = 3;
-
-  for (let i = 0; i < res1.length; i++) {
-    let elt = viewdoc.querySelector(res1[i].selector);
-    let isLong = elt.textContent.length > LONG_TEXT_ROTATE_LIMIT;
-    let classList = elt.parentNode.classList
-    let canBeRotated = classList.contains("left") || classList.contains("right");
-    let isRotated = classList.contains("rotate");
-
-    is(canBeRotated && isLong, isRotated, res1[i].selector + " correctly rotated.");
   }
 });

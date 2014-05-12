@@ -191,7 +191,7 @@ ElementStyle.prototype = {
       return this.dummyElementPromise.then(() => {
         if (this.populated != populated) {
           // Don't care anymore.
-          return promise.reject("unused");
+          return;
         }
 
         // Store the current list of rules (if any) during the population

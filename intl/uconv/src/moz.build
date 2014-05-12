@@ -58,9 +58,7 @@ UNIFIED_SOURCES += [
 UNIFIED_SOURCES += [
     '../ucvko/nsCP949ToUnicode.cpp',
     '../ucvko/nsISO2022KRToUnicode.cpp',
-    '../ucvko/nsJohabToUnicode.cpp',
     '../ucvko/nsUnicodeToCP949.cpp',
-    '../ucvko/nsUnicodeToJohab.cpp',
 ]
 
 UNIFIED_SOURCES += [
@@ -110,7 +108,6 @@ UNIFIED_SOURCES += [
     '../ucvlatin/nsMacIcelandicToUnicode.cpp',
     '../ucvlatin/nsMacRomanianToUnicode.cpp',
     '../ucvlatin/nsMacTurkishToUnicode.cpp',
-    '../ucvlatin/nsT61ToUnicode.cpp',
     '../ucvlatin/nsTCVN5712ToUnicode.cpp',
     '../ucvlatin/nsTIS620ToUnicode.cpp',
     '../ucvlatin/nsUnicodeToARMSCII8.cpp',
@@ -159,7 +156,6 @@ UNIFIED_SOURCES += [
     '../ucvlatin/nsUnicodeToMacIcelandic.cpp',
     '../ucvlatin/nsUnicodeToMacRomanian.cpp',
     '../ucvlatin/nsUnicodeToMacTurkish.cpp',
-    '../ucvlatin/nsUnicodeToT61.cpp',
     '../ucvlatin/nsUnicodeToTCVN5712.cpp',
     '../ucvlatin/nsUnicodeToTIS620.cpp',
     '../ucvlatin/nsUnicodeToUserDefined.cpp',
