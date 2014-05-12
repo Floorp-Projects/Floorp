@@ -155,18 +155,19 @@ nsWSRunObject::PrepareToDeleteRange(nsHTMLEditor* aHTMLEd,
   return leftWSObj.PrepareToDeleteRangePriv(&rightWSObj);
 }
 
-nsresult
-nsWSRunObject::PrepareToDeleteNode(nsHTMLEditor* aHTMLEd,
-                                   nsIContent* aContent)
+nsresult 
+nsWSRunObject::PrepareToDeleteNode(nsHTMLEditor *aHTMLEd, 
+                                   nsIDOMNode *aNode)
 {
-  NS_ENSURE_TRUE(aContent && aHTMLEd, NS_ERROR_NULL_POINTER);
-
-  nsCOMPtr<nsINode> parent = aContent->GetParentNode();
+  nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
+  NS_ENSURE_TRUE(node && aHTMLEd, NS_ERROR_NULL_POINTER);
+  
+  nsCOMPtr<nsINode> parent = node->GetParentNode();
   NS_ENSURE_STATE(parent);
-  int32_t offset = parent->IndexOf(aContent);
+  int32_t offset = parent->IndexOf(node);
 
   nsWSRunObject leftWSObj(aHTMLEd, parent, offset);
-  nsWSRunObject rightWSObj(aHTMLEd, parent, offset + 1);
+  nsWSRunObject rightWSObj(aHTMLEd, parent, offset+1);
 
   return leftWSObj.PrepareToDeleteRangePriv(&rightWSObj);
 }
