@@ -18,14 +18,61 @@ package org.mozilla.gecko.background.healthreport;
  * registered an <code>Environment</code>, don't do so again; start from scratch.
  *
  */
-public abstract class Environment extends EnvironmentV1 {
+public abstract class Environment extends EnvironmentV2 {
   // Version 2 adds osLocale, appLocale, acceptLangSet, and distribution.
-  public static final int CURRENT_VERSION = 2;
+  // Version 3 adds device characteristics.
+  public static final int CURRENT_VERSION = 3;
 
-  public String osLocale;                // The Android OS "Locale" value.
-  public String appLocale;
-  public int acceptLangSet;
-  public String distribution;            // ID + version. Typically empty.
+  public static enum UIType {
+    // Corresponds to the typical phone interface.
+    DEFAULT("default"),
+
+    // Corresponds to a device for which Fennec is displaying the large tablet UI.
+    LARGE_TABLET("largetablet"),
+
+    // Corresponds to a device for which Fennec is displaying the small tablet UI.
+    SMALL_TABLET("smalltablet");
+
+    private final String label;
+
+    private UIType(final String label) {
+      this.label = label;
+    }
+
+    public String toString() {
+      return this.label;
+    }
+
+    public static UIType fromLabel(final String label) {
+      for (UIType type : UIType.values()) {
+        if (type.label.equals(label)) {
+          return type;
+        }
+      }
+
+      throw new IllegalArgumentException("Bad enum value: " + label);
+    }
+  }
+
+  public UIType uiType = UIType.DEFAULT;
+
+  /**
+   * Mask of Configuration#uiMode. E.g., UI_MODE_TYPE_CAR.
+   */
+  public int uiMode = 0;     // UI_MODE_TYPE_UNDEFINED = 0
+
+  /**
+   * Computed physical dimensions in millimeters.
+   */
+  public int screenXInMM;
+  public int screenYInMM;
+
+  /**
+   * One of the Configuration#SCREENLAYOUT_SIZE_* constants.
+   */
+  public int screenLayout = 0;  // SCREENLAYOUT_SIZE_UNDEFINED = 0
+
+  public boolean hasHardwareKeyboard;
 
   public Environment() {
     this(Environment.HashAppender.class);
@@ -40,10 +87,12 @@ public abstract class Environment extends EnvironmentV1 {
   protected void appendHash(EnvironmentAppender appender) {
     super.appendHash(appender);
 
-    // v2.
-    appender.append(osLocale);
-    appender.append(appLocale);
-    appender.append(acceptLangSet);
-    appender.append(distribution);
+    // v3.
+    appender.append(hasHardwareKeyboard ? 1 : 0);
+    appender.append(uiType.toString());
+    appender.append(uiMode);
+    appender.append(screenLayout);
+    appender.append(screenXInMM);
+    appender.append(screenYInMM);
   }
 }

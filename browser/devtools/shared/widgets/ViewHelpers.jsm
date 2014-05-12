@@ -574,10 +574,16 @@ Item.prototype = {
 
   /**
    * Returns a string representing the object.
+   * Avoid using `toString` to avoid accidental JSONification.
    * @return string
    */
-  toString: function() {
-    return this._value + " :: " + this._target + " :: " + this.attachment;
+  stringify: function() {
+    return JSON.stringify({
+      value: this._value,
+      target: this._target + "",
+      prebuiltNode: this._prebuiltNode + "",
+      attachment: this.attachment
+    }, null, 2);
   },
 
   _value: "",

@@ -248,6 +248,14 @@ public class TestHealthReportProvider extends DBProviderTestCase<HealthReportPro
     v.put("appLocale", "en_us");
     v.put("acceptLangSet", 0);
 
+    // v3.
+    v.put("hasHardwareKeyboard", 0);
+    v.put("uiMode", 0);
+    v.put("uiType", "default");
+    v.put("screenLayout", 0);
+    v.put("screenXInMM", 100);
+    v.put("screenYInMM", 140);
+
     return v;
   }
 }
