@@ -9,11 +9,15 @@ import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.Proxy;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -106,6 +110,7 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.MimeTypeMap;
 import android.widget.AbsoluteLayout;
+import android.widget.Toast;
 
 public class GeckoAppShell
 {
@@ -2637,6 +2642,63 @@ public class GeckoAppShell
         }
 
         return "DIRECT";
+    }
+
+    /* Downloads the uri pointed to by a share intent, and alters the intent to point to the locally stored file.
+     */
+    public static void downloadImageForIntent(final Intent intent) {
+        final String src = intent.getStringExtra(Intent.EXTRA_TEXT);
+        final File dir = GeckoApp.getTempDirectory();
+
+        if (dir == null) {
+            showImageShareFailureToast();
+            return;
+        }
+
+        GeckoApp.deleteTempFiles();
+
+        OutputStream os = null;
+        try {
+            // Create a temporary file for the image
+            final String type = intent.getType().replace("image/", "");
+            final File imageFile = File.createTempFile("image", "." + type, dir);
+            os = new FileOutputStream(imageFile);
+
+            if (src.startsWith("data:")) {
+                int dataStart = src.indexOf(",");
+                byte[] buf = Base64.decode(src.substring(dataStart + 1), Base64.DEFAULT);
+                os.write(buf);
+
+                intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(imageFile));
+            } else {
+                InputStream is = null;
+                try {
+                    final byte[] buf = new byte[2048];
+                    final URL url = new URL(src);
+                    is = url.openStream();
+
+                    int length;
+                    while ((length = is.read(buf)) != -1) {
+                        os.write(buf, 0, length);
+                    }
+
+                    intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(imageFile));
+                } finally {
+                    safeStreamClose(is);
+                }
+            }
+        } catch(IOException ex) {
+        } finally {
+            safeStreamClose(os);
+        }
+    }
+
+    // Don't fail silently, tell the user that we weren't able to share the image
+    private static final void showImageShareFailureToast() {
+        Toast toast = Toast.makeText(getContext(),
+                                     getContext().getResources().getString(R.string.share_image_failed),
+                                     Toast.LENGTH_SHORT);
+        toast.show();
     }
 
 }
