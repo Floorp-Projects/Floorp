@@ -1471,6 +1471,52 @@ Navigator::GetDataStores(const nsAString& aName, ErrorResult& aRv)
   return GetDataStores(mWindow, aName, aRv);
 }
 
+already_AddRefed<Promise>
+Navigator::GetFeature(const nsAString& aName)
+{
+  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
+  nsRefPtr<Promise> p = new Promise(go);
+
+#if defined(XP_LINUX)
+  if (aName.EqualsLiteral("hardware.memory")) {
+    static int memLevel = 1;
+    if (memLevel == 1) {
+      FILE* f = fopen("/proc/meminfo", "r");
+      if (!f) {
+        p->MaybeReject(NS_LITERAL_STRING("CannotOpenMeminfo"));
+        return p.forget();
+      }
+
+      int memTotal;
+      int n = fscanf(f, "MemTotal: %d kB\n", &memTotal);
+      fclose(f);
+
+      if (memTotal == 0 || n != 1) {
+        p->MaybeReject(NS_LITERAL_STRING("Abnormal"));
+        return p.forget();
+      }
+      // From KB to MB
+      memTotal /= 1024;
+
+      // round the value up to the next power of two
+      while (memLevel <= memTotal) {
+        memLevel *= 2;
+      }
+    }
+    p->MaybeResolve(memLevel);
+  } // hardware.memory
+  else
+#endif
+  {
+    // resolve with <undefined> because the feature name is not supported
+    p->MaybeResolve(JS::UndefinedHandleValue);
+  }
+
+  return p.forget();
+
+}
+
+
 PowerManager*
 Navigator::GetMozPower(ErrorResult& aRv)
 {
@@ -2443,6 +2489,15 @@ Navigator::HasNetworkStatsSupport(JSContext* /* unused */, JSObject* aGlobal)
   nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
   return CheckPermission(win, "networkstats-manage");
 }
+
+/* static */
+bool
+Navigator::HasFeatureDetectionSupport(JSContext* /* unused */, JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return CheckPermission(win, "feature-detection");
+}
+
 
 /* static */
 already_AddRefed<nsPIDOMWindow>
