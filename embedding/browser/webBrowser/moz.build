@@ -49,6 +49,6 @@ FAIL_ON_WARNINGS = True
 FINAL_LIBRARY = 'webbrwsr'
 LOCAL_INCLUDES += [
     '../../../content/base/src',
-    '../../../dom/svg',
+    '../../../content/svg/content/src',
 ]
 
