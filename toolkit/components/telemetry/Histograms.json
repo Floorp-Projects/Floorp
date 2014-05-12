@@ -3613,7 +3613,7 @@
     "description": "Whether the decoder for ISO-2022-JP has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_JOHAB": {
-    "expires_in_version": "never",
+    "expires_in_version": "32",
     "kind": "flag",
     "description": "Whether the decoder for JOHAB has been instantiated in this session."
   },

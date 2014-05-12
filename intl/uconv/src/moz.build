@@ -58,9 +58,7 @@ UNIFIED_SOURCES += [
 UNIFIED_SOURCES += [
     '../ucvko/nsCP949ToUnicode.cpp',
     '../ucvko/nsISO2022KRToUnicode.cpp',
-    '../ucvko/nsJohabToUnicode.cpp',
     '../ucvko/nsUnicodeToCP949.cpp',
-    '../ucvko/nsUnicodeToJohab.cpp',
 ]
 
 UNIFIED_SOURCES += [
