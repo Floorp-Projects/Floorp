@@ -729,8 +729,8 @@ private: // data
   bool     IsDecodeFinished();
   TimeStamp mDrawStartTime;
 
-  inline bool CanQualityScale(const gfx::Size& scale);
-  inline bool CanScale(GraphicsFilter aFilter, gfx::Size aScale, uint32_t aFlags);
+  inline bool CanQualityScale(const gfxSize& scale);
+  inline bool CanScale(GraphicsFilter aFilter, gfxSize aScale, uint32_t aFlags);
 
   struct ScaleResult
   {
@@ -738,7 +738,7 @@ private: // data
      : status(SCALE_INVALID)
     {}
 
-    gfx::Size scale;
+    gfxSize scale;
     nsAutoPtr<imgFrame> frame;
     ScaleStatus status;
   };
