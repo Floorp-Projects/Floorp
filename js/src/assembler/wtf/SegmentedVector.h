@@ -204,7 +204,7 @@ namespace WTF {
             // not created by new.
             //for (size_t i = 1; i < m_segments.size(); i++)
             for (size_t i = 1; i < m_segments.length(); i++)
-                delete m_segments[i];
+                js_delete<Segment>(m_segments[i]);
         }
 
         bool segmentExistsFor(size_t index)
