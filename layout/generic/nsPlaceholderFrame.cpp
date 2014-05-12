@@ -98,7 +98,7 @@ nsPlaceholderFrame::AddInlinePrefWidth(nsRenderingContext* aRenderingContext,
   }
 }
 
-void
+nsresult
 nsPlaceholderFrame::Reflow(nsPresContext*           aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
@@ -143,6 +143,7 @@ nsPlaceholderFrame::Reflow(nsPresContext*           aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  return NS_OK;
 }
 
 void

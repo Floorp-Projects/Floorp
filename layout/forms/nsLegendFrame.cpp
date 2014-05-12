@@ -47,7 +47,7 @@ NS_QUERYFRAME_HEAD(nsLegendFrame)
   NS_QUERYFRAME_ENTRY(nsLegendFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
-void
+nsresult 
 nsLegendFrame::Reflow(nsPresContext*          aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,

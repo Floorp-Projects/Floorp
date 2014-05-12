@@ -58,13 +58,13 @@ public:
                     nsIFrame* aPrevInFlow) MOZ_OVERRIDE;
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
   virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  virtual void Reflow(nsPresContext* aPresContext,
-                      nsHTMLReflowMetrics& aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus& aStatus) MOZ_OVERRIDE;
-  virtual void DidReflow(nsPresContext* aPresContext,
-                         const nsHTMLReflowState* aReflowState,
-                         nsDidReflowStatus aStatus) MOZ_OVERRIDE;
+  virtual nsresult Reflow(nsPresContext* aPresContext,
+                          nsHTMLReflowMetrics& aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus& aStatus) MOZ_OVERRIDE;
+  virtual nsresult DidReflow(nsPresContext* aPresContext,
+                             const nsHTMLReflowState* aReflowState,
+                             nsDidReflowStatus aStatus) MOZ_OVERRIDE;
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;

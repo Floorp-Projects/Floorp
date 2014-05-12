@@ -688,7 +688,7 @@ nsSubDocumentFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                   aMargin, aBorder, aPadding, aFlags);
 }
 
-void
+nsresult
 nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
@@ -707,7 +707,9 @@ nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
                "Shouldn't happen");
 
   // XUL <iframe> or <browser>, or HTML <iframe>, <object> or <embed>
-  nsLeafFrame::DoReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  nsresult rv = nsLeafFrame::DoReflow(aPresContext, aDesiredSize, aReflowState,
+                                      aStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // "offset" is the offset of our content area from our frame's
   // top-left corner.
@@ -747,6 +749,7 @@ nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
       aDesiredSize.Width(), aDesiredSize.Height(), aStatus));
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  return NS_OK;
 }
 
 bool

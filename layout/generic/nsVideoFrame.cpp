@@ -239,7 +239,7 @@ public:
   nsCOMPtr<nsIContent> mContent;
 };
 
-void
+nsresult
 nsVideoFrame::Reflow(nsPresContext*           aPresContext,
                      nsHTMLReflowMetrics&     aMetrics,
                      const nsHTMLReflowState& aReflowState,
@@ -288,9 +288,7 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
       nsPoint posterTopLeft(0, 0);
 
       nsCOMPtr<nsIDOMHTMLImageElement> posterImage = do_QueryInterface(mPosterImage);
-      if (!posterImage) {
-        return;
-      }
+      NS_ENSURE_TRUE(posterImage, NS_ERROR_FAILURE);
       posterImage->GetNaturalHeight(&posterHeight);
       posterImage->GetNaturalWidth(&posterWidth);
 
@@ -358,6 +356,8 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
                   ("exit nsVideoFrame::Reflow: size=%d,%d",
                   aMetrics.Width(), aMetrics.Height()));
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
+
+  return NS_OK;
 }
 
 class nsDisplayVideo : public nsDisplayItem {

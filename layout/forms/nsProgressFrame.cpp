@@ -96,8 +96,7 @@ nsProgressFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
 }
 
-void
-nsProgressFrame::Reflow(nsPresContext*           aPresContext,
+nsresult nsProgressFrame::Reflow(nsPresContext*           aPresContext,
                                       nsHTMLReflowMetrics&     aDesiredSize,
                                       const nsHTMLReflowState& aReflowState,
                                       nsReflowStatus&          aStatus)
@@ -131,6 +130,8 @@ nsProgressFrame::Reflow(nsPresContext*           aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+
+  return NS_OK;
 }
 
 void

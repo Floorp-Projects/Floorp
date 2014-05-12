@@ -845,8 +845,7 @@ CalcUnpaginagedHeight(nsPresContext*        aPresContext,
   return computedHeight;
 }
 
-void
-nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
+nsresult nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
                                    nsHTMLReflowMetrics&     aDesiredSize,
                                    const nsHTMLReflowState& aReflowState,
                                    nsReflowStatus&          aStatus)
@@ -1015,6 +1014,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   SetDesiredSize(aDesiredSize);
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  return NS_OK;
 }
 
 /* ----- global methods ----- */

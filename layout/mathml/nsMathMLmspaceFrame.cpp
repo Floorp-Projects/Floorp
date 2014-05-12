@@ -91,7 +91,7 @@ nsMathMLmspaceFrame::ProcessAttributes(nsPresContext* aPresContext)
   }
 }
 
-void
+nsresult
 nsMathMLmspaceFrame::Reflow(nsPresContext*          aPresContext,
                             nsHTMLReflowMetrics&     aDesiredSize,
                             const nsHTMLReflowState& aReflowState,
@@ -114,6 +114,7 @@ nsMathMLmspaceFrame::Reflow(nsPresContext*          aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  return NS_OK;
 }
 
 /* virtual */ nsresult

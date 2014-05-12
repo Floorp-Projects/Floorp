@@ -28,15 +28,15 @@ public:
                        const nsHTMLReflowState& aParentRS);
   ~nsBlockReflowContext() { }
 
-  void ReflowBlock(const nsRect&       aSpace,
-                   bool                aApplyTopMargin,
-                   nsCollapsingMargin& aPrevMargin,
-                   nscoord             aClearance,
-                   bool                aIsAdjacentWithTop,
-                   nsLineBox*          aLine,
-                   nsHTMLReflowState&  aReflowState,
-                   nsReflowStatus&     aReflowStatus,
-                   nsBlockReflowState& aState);
+  nsresult ReflowBlock(const nsRect&       aSpace,
+                       bool                aApplyTopMargin,
+                       nsCollapsingMargin& aPrevMargin,
+                       nscoord             aClearance,
+                       bool                aIsAdjacentWithTop,
+                       nsLineBox*          aLine,
+                       nsHTMLReflowState&  aReflowState,
+                       nsReflowStatus&     aReflowStatus,
+                       nsBlockReflowState& aState);
 
   bool PlaceBlock(const nsHTMLReflowState& aReflowState,
                   bool                     aForceFit,
