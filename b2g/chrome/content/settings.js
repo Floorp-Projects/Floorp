@@ -562,7 +562,12 @@ setUpdateTrackingId();
         enabled = Services.prefs.getBoolPref('layers.composer2d.enabled');
       } else {
 #ifdef MOZ_WIDGET_GONK
-        enabled = (libcutils.property_get('ro.display.colorfill') === '1');
+        let androidVersion = libcutils.property_get("ro.build.version.sdk");
+        if (androidVersion >= 17 ) {
+          enabled = true;
+        } else {
+          enabled = (libcutils.property_get('ro.display.colorfill') === '1');
+        }
 #endif
       }
       navigator.mozSettings.createLock().set({'layers.composer2d.enabled': enabled });

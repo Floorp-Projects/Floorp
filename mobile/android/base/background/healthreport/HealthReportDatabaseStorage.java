@@ -141,7 +141,12 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
       "distribution", "osLocale", "appLocale", "acceptLangSet",
 
       // Joined to the add-ons table.
-      "addonsBody"
+      "addonsBody",
+
+      // v3.
+      "hasHardwareKeyboard",
+      "uiMode", "uiType",
+      "screenLayout", "screenXInMM", "screenYInMM"
   };
 
   public static final String[] COLUMNS_MEASUREMENT_DETAILS = new String[] {"id", "name", "version"};
@@ -190,7 +195,7 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
   protected final HealthReportSQLiteOpenHelper helper;
 
   public static class HealthReportSQLiteOpenHelper extends SQLiteOpenHelper {
-    public static final int CURRENT_VERSION = 6;
+    public static final int CURRENT_VERSION = 7;
     public static final String LOG_TAG = "HealthReportSQL";
 
     /**
@@ -287,6 +292,14 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
                  "                           acceptLangSet   INTEGER, " +
 
                  "                           addonsID        INTEGER, " +
+
+                 "                           hasHardwareKeyboard INTEGER, " +
+                 "                           uiMode          INTEGER, " +
+                 "                           uiType          TEXT, " +
+                 "                           screenLayout    INTEGER, " +
+                 "                           screenXInMM     INTEGER, " +
+                 "                           screenYInMM     INTEGER, " +
+
                  "                           FOREIGN KEY (addonsID) REFERENCES addons(id) ON DELETE RESTRICT, " +
                  "                           UNIQUE (hash) " +
                  ")");
@@ -395,7 +408,15 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
           "       e.osLocale AS osLocale, " +
           "       e.appLocale AS appLocale, " +
           "       e.acceptLangSet AS acceptLangSet, " +
-          "       addons.body AS addonsBody " +
+          "       addons.body AS addonsBody, " +
+
+          "       e.hasHardwareKeyboard AS hasHardwareKeyboard, " +
+          "       e.uiMode AS uiMode, " +
+          "       e.uiType AS uiType, " +
+          "       e.screenLayout AS screenLayout, " +
+          "       e.screenXInMM AS screenXInMM, " +
+          "       e.screenYInMM AS screenYInMM " +
+
           "FROM environments AS e, addons " +
           "WHERE e.addonsID = addons.id");
     }
@@ -408,7 +429,7 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
 
       db.execSQL("ALTER TABLE environments ADD COLUMN addonsID INTEGER REFERENCES addons(id) ON DELETE RESTRICT");
 
-      createAddonsEnvironmentsView(db);
+      // No need to create view: we're just going to upgrade again.
     }
 
     private void upgradeDatabaseFrom3To4(SQLiteDatabase db) {
@@ -434,7 +455,7 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
     }
 
     private void upgradeDatabaseFrom5to6(SQLiteDatabase db) {
-      db.execSQL("DROP VIEW environments_with_addons");
+      db.execSQL("DROP VIEW IF EXISTS environments_with_addons");
 
       // Add version to environment (default to 1).
       db.execSQL("ALTER TABLE environments ADD COLUMN version INTEGER DEFAULT 1");
@@ -444,6 +465,20 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
       db.execSQL("ALTER TABLE environments ADD COLUMN osLocale TEXT DEFAULT ''");
       db.execSQL("ALTER TABLE environments ADD COLUMN appLocale TEXT DEFAULT ''");
       db.execSQL("ALTER TABLE environments ADD COLUMN acceptLangSet INTEGER DEFAULT 0");
+
+      // No need to recreate view -- we're just going to upgrade to v7 next.
+    }
+
+    private void upgradeDatabaseFrom6to7(SQLiteDatabase db) {
+      db.execSQL("DROP VIEW IF EXISTS environments_with_addons");
+
+      // Add fields to environment (default to empty string and 0).
+      db.execSQL("ALTER TABLE environments ADD COLUMN hasHardwareKeyboard INTEGER DEFAULT 0");
+      db.execSQL("ALTER TABLE environments ADD COLUMN uiMode INTEGER DEFAULT 0");
+      db.execSQL("ALTER TABLE environments ADD COLUMN uiType TEXT DEFAULT ''");
+      db.execSQL("ALTER TABLE environments ADD COLUMN screenLayout INTEGER DEFAULT 0");
+      db.execSQL("ALTER TABLE environments ADD COLUMN screenXInMM INTEGER DEFAULT 0");
+      db.execSQL("ALTER TABLE environments ADD COLUMN screenYInMM INTEGER DEFAULT 0");
 
       // Recreate view.
       createAddonsEnvironmentsView(db);
@@ -466,6 +501,8 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
           upgradeDatabaseFrom4to5(db);
         case 5:
           upgradeDatabaseFrom5to6(db);
+        case 6:
+          upgradeDatabaseFrom6to7(db);
         }
       } catch (Exception e) {
         Logger.error(LOG_TAG, "Failure in onUpgrade.", e);
@@ -599,6 +636,12 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
       v.put("osLocale", osLocale);
       v.put("appLocale", appLocale);
       v.put("acceptLangSet", acceptLangSet);
+      v.put("hasHardwareKeyboard", hasHardwareKeyboard ? 1 : 0);
+      v.put("uiMode", uiMode);
+      v.put("uiType", uiType.toString());
+      v.put("screenLayout", screenLayout);
+      v.put("screenXInMM", screenXInMM);
+      v.put("screenYInMM", screenYInMM);
 
       final SQLiteDatabase db = storage.helper.getWritableDatabase();
 
@@ -685,6 +728,9 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
 
     public void init(ContentValues v) {
       version         = v.containsKey("version") ? v.getAsInteger("version") : Environment.CURRENT_VERSION;
+
+      Logger.debug(LOG_TAG, "Initializing environment with version " + version);
+
       profileCreation = v.getAsInteger("profileCreation");
       cpuCount        = v.getAsInteger("cpuCount");
       memoryMB        = v.getAsInteger("memoryMB");
@@ -718,6 +764,15 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
         setJSONForAddons(v.getAsString("addonsBody"));
       } catch (Exception e) {
         // Nothing we can do.
+      }
+
+      if (version >= 3) {
+        hasHardwareKeyboard = v.getAsInteger("hasHardwareKeyboard") != 0;
+        uiMode = v.getAsInteger("uiMode");
+        uiType = UIType.fromLabel(v.getAsString("uiType"));
+        screenLayout = v.getAsInteger("screenLayout");
+        screenXInMM = v.getAsInteger("screenXInMM");
+        screenYInMM = v.getAsInteger("screenYInMM");
       }
 
       this.hash = null;
@@ -769,6 +824,15 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
         setJSONForAddons(cursor.getBlob(i++));
       } catch (Exception e) {
         // Nothing we can do.
+      }
+
+      if (this.version >= 3) {
+        hasHardwareKeyboard = cursor.getInt(i++) != 0;
+        uiMode = cursor.getInt(i++);
+        uiType = UIType.fromLabel(cursor.getString(i++));
+        screenLayout = cursor.getInt(i++);
+        screenXInMM = cursor.getInt(i++);
+        screenYInMM = cursor.getInt(i++);
       }
 
       return cursor.moveToNext();

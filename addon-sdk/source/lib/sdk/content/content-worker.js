@@ -292,7 +292,7 @@ const ContentWorker = Object.freeze({
                     "function, which works the same. Replace calls to `on()` " +
                     "with calls to `self.on()`" +
                     "For more info on `self.on`, see " +
-                    "<https://addons.mozilla.org/en-US/developers/docs/sdk/latest/dev-guide/addon-development/web-content.html>.");
+                    "<https://developer.mozilla.org/en-US/Add-ons/SDK/Guides/Content_Scripts/using_postMessage>.");
       return self.on.apply(null, arguments);
     };
 
@@ -309,7 +309,7 @@ const ContentWorker = Object.freeze({
                       "definitions with calls to `self.on('message', " +
                       "function (data){})`. " +
                       "For more info on `self.on`, see " +
-                      "<https://addons.mozilla.org/en-US/developers/docs/sdk/latest/dev-guide/addon-development/web-content.html>.");
+                      "<https://developer.mozilla.org/en-US/Add-ons/SDK/Guides/Content_Scripts/using_postMessage>.");
         onMessage = v;
         if (typeof onMessage == "function")
           self.on("message", onMessage);

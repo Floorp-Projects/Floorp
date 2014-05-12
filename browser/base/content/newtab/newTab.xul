@@ -21,7 +21,7 @@
 
   <xul:panel id="sponsored-panel" orient="vertical" type="arrow">
     <xul:description id="sponsored-panel-release-descr">&newtab.sponsored.release.message;</xul:description>
-    <xul:description id="sponsored-panel-trial-descr">&newtab.sponsored.trial.message;</xul:description>
+    <xul:description id="sponsored-panel-trial-descr">&newtab.sponsored.trial.message2;</xul:description>
     <xul:label class="text-link"
                href="https://support.mozilla.org/kb/how-do-sponsored-tiles-work"
                value="&newtab.panel.link.text;" />

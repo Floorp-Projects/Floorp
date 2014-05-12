@@ -12,6 +12,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.background.common.DateUtils.DateFormatter;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.healthreport.EnvironmentBuilder.ConfigurationProvider;
 import org.mozilla.gecko.background.healthreport.HealthReportStorage.Field;
 
 import android.database.Cursor;
@@ -42,7 +43,7 @@ public class HealthReportGenerator {
    * @return null if no environment could be computed, or else the resulting document.
    * @throws JSONException if there was an error adding environment data to the resulting document.
    */
-  public JSONObject generateDocument(long since, long lastPingTime, String profilePath) throws JSONException {
+  public JSONObject generateDocument(long since, long lastPingTime, String profilePath, ConfigurationProvider config) throws JSONException {
     Logger.info(LOG_TAG, "Generating FHR document from " + since + "; last ping " + lastPingTime);
     Logger.pii(LOG_TAG, "Generating for profile " + profilePath);
 
@@ -51,7 +52,8 @@ public class HealthReportGenerator {
       Logger.warn(LOG_TAG, "Not enough profile information to compute current environment.");
       return null;
     }
-    Environment current = EnvironmentBuilder.getCurrentEnvironment(cache);
+
+    Environment current = EnvironmentBuilder.getCurrentEnvironment(cache, config);
     return generateDocument(since, lastPingTime, current);
   }
 
@@ -275,6 +277,7 @@ public class HealthReportGenerator {
     JSONObject gecko = getGeckoInfo(e, current);
     JSONObject appinfo = getAppInfo(e, current);
     JSONObject counts = getAddonCounts(e, current);
+    JSONObject config = getDeviceConfig(e, current);
 
     JSONObject out = new JSONObject();
     if (age != null)
@@ -292,10 +295,63 @@ public class HealthReportGenerator {
     if (active != null)
       out.put("org.mozilla.addons.active", active);
 
+    if (config != null)
+      out.put("org.mozilla.device.config", config);
+
     if (current == null) {
       out.put("hash", e.getHash());
     }
     return out;
+  }
+
+  // v3 environment fields.
+  private static JSONObject getDeviceConfig(Environment e, Environment current) throws JSONException {
+    JSONObject config = new JSONObject();
+    int changes = 0;
+    if (e.version < 3) {
+      return null;
+    }
+
+    if (current != null && current.version < 3) {
+      return getDeviceConfig(e, null);
+    }
+
+    if (current == null || current.hasHardwareKeyboard != e.hasHardwareKeyboard) {
+      config.put("hasHardwareKeyboard", e.hasHardwareKeyboard);
+      changes++;
+    }
+
+    if (current == null || current.screenLayout != e.screenLayout) {
+      config.put("screenLayout", e.screenLayout);
+      changes++;
+    }
+
+    if (current == null || current.screenXInMM != e.screenXInMM) {
+      config.put("screenXInMM", e.screenXInMM);
+      changes++;
+    }
+
+    if (current == null || current.screenYInMM != e.screenYInMM) {
+      config.put("screenYInMM", e.screenYInMM);
+      changes++;
+    }
+
+    if (current == null || current.uiType != e.uiType) {
+      config.put("uiType", e.uiType.toString());
+      changes++;
+    }
+
+    if (current == null || current.uiMode != e.uiMode) {
+      config.put("uiMode", e.uiMode);
+      changes++;
+    }
+
+    if (current != null && changes == 0) {
+      return null;
+    }
+
+    config.put("_v", 1);
+    return config;
   }
 
   private static JSONObject getProfileAge(Environment e, Environment current) throws JSONException {
@@ -421,6 +477,7 @@ public class HealthReportGenerator {
     switch (e.version) {
     // There's a straightforward correspondence between environment versions
     // and appinfo versions.
+    case 3:
     case 2:
       appinfo.put("_v", 3);
       break;
@@ -433,6 +490,7 @@ public class HealthReportGenerator {
     }
 
     switch (e.version) {
+    case 3:
     case 2:
       if (populateAppInfoV2(appinfo, e, current, outdated)) {
         changed = true;
