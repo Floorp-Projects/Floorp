@@ -420,11 +420,6 @@
 #define NS_UNICODETOUTF16BE_CID \
   { 0xba6151ad, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
 
-// Class ID for our UnicodeToT61 charset converter
-// {BA6151AF-1DFA-11d3-B3BF-00805F8A6670}
-#define NS_UNICODETOT61_CID \
-  { 0xba6151af, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
-
 // Class ID for our ISO885910ToUnicode charset converter
 // {BA6151B0-1DFA-11d3-B3BF-00805F8A6670}
 #define NS_ISO885910TOUNICODE_CID \
@@ -444,11 +439,6 @@
 // {BA6151B2-1DFA-11d3-B3BF-00805F8A6670}
 #define NS_UTF16BETOUNICODE_CID \
   { 0xba6151b2, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
-
-// Class ID for our T61ToUnicode charset converter
-// {BA6151B4-1DFA-11d3-B3BF-00805F8A6670}
-#define NS_T61TOUNICODE_CID \
-  { 0xba6151b4, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
 
 // Class ID for our UnicodeToUTF16LE charset converter
 // {BA6151B5-1DFA-11d3-B3BF-00805F8A6670}
