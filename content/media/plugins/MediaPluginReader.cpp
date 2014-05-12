@@ -324,7 +324,21 @@ nsresult MediaPluginReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aE
   mVideoQueue.Reset();
   mAudioQueue.Reset();
 
-  mAudioSeekTimeUs = mVideoSeekTimeUs = aTarget;
+  if (mHasAudio && mHasVideo) {
+    // The decoder seeks/demuxes audio and video streams separately. So if
+    // we seek both audio and video to aTarget, the audio stream can typically
+    // seek closer to the seek target, since typically every audio block is
+    // a sync point, whereas for video there are only keyframes once every few
+    // seconds. So if we have both audio and video, we must seek the video
+    // stream to the preceeding keyframe first, get the stream time, and then
+    // seek the audio stream to match the video stream's time. Otherwise, the
+    // audio and video streams won't be in sync after the seek.
+    mVideoSeekTimeUs = aTarget;
+    const VideoData* v = DecodeToFirstVideoData();
+    mAudioSeekTimeUs = v ? v->mTime : aTarget;
+  } else {
+    mAudioSeekTimeUs = mVideoSeekTimeUs = aTarget;
+  }
 
   return NS_OK;
 }
