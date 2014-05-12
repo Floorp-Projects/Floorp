@@ -1820,7 +1820,7 @@ public:
    * XXX Is this really the semantics we want? Because we have the NS_FRAME_IN_REFLOW
    * bit we can ensure we don't call it more than once...
    */
-  virtual void WillReflow(nsPresContext* aPresContext) = 0;
+  virtual nsresult  WillReflow(nsPresContext* aPresContext) = 0;
 
   /**
    * The frame is given an available size and asked for its desired
@@ -1865,10 +1865,10 @@ public:
    * @param aStatus a return value indicating whether the frame is complete
    *          and whether the next-in-flow is dirty and needs to be reflowed
    */
-  virtual void Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aReflowMetrics,
-                      const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus&          aStatus) = 0;
+  virtual nsresult Reflow(nsPresContext*          aPresContext,
+                          nsHTMLReflowMetrics&     aReflowMetrics,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&          aStatus) = 0;
 
   /**
    * Post-reflow hook. After a frame is reflowed this method will be called
@@ -1885,9 +1885,9 @@ public:
    * XXX Don't we want the semantics to dictate that we only call this once for
    * a given reflow?
    */
-  virtual void DidReflow(nsPresContext*           aPresContext,
-                         const nsHTMLReflowState* aReflowState,
-                         nsDidReflowStatus        aStatus) = 0;
+  virtual nsresult  DidReflow(nsPresContext*           aPresContext,
+                              const nsHTMLReflowState*  aReflowState,
+                              nsDidReflowStatus         aStatus) = 0;
 
   // XXX Maybe these three should be a separate interface?
 

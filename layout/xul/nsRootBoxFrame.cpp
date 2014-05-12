@@ -66,7 +66,7 @@ public:
   virtual nsresult RemoveFrame(ChildListID     aListID,
                                nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
-  virtual void Reflow(nsPresContext*          aPresContext,
+  virtual nsresult Reflow(nsPresContext*          aPresContext,
                           nsHTMLReflowMetrics&     aDesiredSize,
                           const nsHTMLReflowState& aReflowState,
                           nsReflowStatus&          aStatus) MOZ_OVERRIDE;
@@ -186,7 +186,7 @@ nsRootBoxFrame::RemoveFrame(ChildListID     aListID,
 int32_t gReflows = 0;
 #endif
 
-void
+nsresult
 nsRootBoxFrame::Reflow(nsPresContext*           aPresContext,
                        nsHTMLReflowMetrics&     aDesiredSize,
                        const nsHTMLReflowState& aReflowState,

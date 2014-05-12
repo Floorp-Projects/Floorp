@@ -68,18 +68,18 @@ public:
   virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
 
-  virtual void Reflow(nsPresContext*           aCX,
-                      nsHTMLReflowMetrics&     aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+  virtual nsresult Reflow(nsPresContext*           aCX,
+                          nsHTMLReflowMetrics&     aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   virtual void Init(nsIContent*      aContent,
                     nsIFrame*        aParent,
                     nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
 
-  virtual void DidReflow(nsPresContext*            aPresContext, 
-                         const nsHTMLReflowState*  aReflowState, 
-                         nsDidReflowStatus         aStatus) MOZ_OVERRIDE;
+  virtual nsresult DidReflow(nsPresContext*            aPresContext, 
+                             const nsHTMLReflowState*  aReflowState, 
+                             nsDidReflowStatus         aStatus) MOZ_OVERRIDE;
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -343,10 +343,10 @@ protected:
    * reflow as a listbox because the criteria for needing a second
    * pass are different.  This will be called from Reflow() as needed.
    */
-  void ReflowAsDropdown(nsPresContext*           aPresContext,
-                        nsHTMLReflowMetrics&     aDesiredSize,
-                        const nsHTMLReflowState& aReflowState,
-                        nsReflowStatus&          aStatus);
+  nsresult ReflowAsDropdown(nsPresContext*           aPresContext,
+                            nsHTMLReflowMetrics&     aDesiredSize,
+                            const nsHTMLReflowState& aReflowState,
+                            nsReflowStatus&          aStatus);
 
   // Selection
   bool     SetOptionsSelectedFromFrame(int32_t aStartIndex,

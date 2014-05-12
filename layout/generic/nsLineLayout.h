@@ -78,11 +78,11 @@ public:
   bool IsZeroBSize();
 
   // Reflows the frame and returns the reflow status. aPushedFrame is true
-  // if the frame is pushed to the next line because it doesn't fit.
-  void ReflowFrame(nsIFrame* aFrame,
-                   nsReflowStatus& aReflowStatus,
-                   nsHTMLReflowMetrics* aMetrics,
-                   bool& aPushedFrame);
+  // if the frame is pushed to the next line because it doesn't fit
+  nsresult ReflowFrame(nsIFrame* aFrame,
+                       nsReflowStatus& aReflowStatus,
+                       nsHTMLReflowMetrics* aMetrics,
+                       bool& aPushedFrame);
 
   void AddBulletFrame(nsIFrame* aFrame, const nsHTMLReflowMetrics& aMetrics);
 

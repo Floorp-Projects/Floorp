@@ -465,15 +465,15 @@ public:
   bool TryLayout(ScrollReflowState* aState,
                    nsHTMLReflowMetrics* aKidMetrics,
                    bool aAssumeVScroll, bool aAssumeHScroll,
-                   bool aForce);
+                   bool aForce, nsresult* aResult);
   bool ScrolledContentDependsOnHeight(ScrollReflowState* aState);
-  void ReflowScrolledFrame(ScrollReflowState* aState,
-                           bool aAssumeHScroll,
-                           bool aAssumeVScroll,
-                           nsHTMLReflowMetrics* aMetrics,
-                           bool aFirstPass);
-  void ReflowContents(ScrollReflowState* aState,
-                      const nsHTMLReflowMetrics& aDesiredSize);
+  nsresult ReflowScrolledFrame(ScrollReflowState* aState,
+                               bool aAssumeHScroll,
+                               bool aAssumeVScroll,
+                               nsHTMLReflowMetrics* aMetrics,
+                               bool aFirstPass);
+  nsresult ReflowContents(ScrollReflowState* aState,
+                          const nsHTMLReflowMetrics& aDesiredSize);
   void PlaceScrollArea(const ScrollReflowState& aState,
                        const nsPoint& aScrollPosition);
   nscoord GetIntrinsicVScrollbarWidth(nsRenderingContext *aRenderingContext);
@@ -488,10 +488,10 @@ public:
   virtual nsresult GetPadding(nsMargin& aPadding) MOZ_OVERRIDE;
   virtual bool IsCollapsed() MOZ_OVERRIDE;
   
-  virtual void Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+  virtual nsresult Reflow(nsPresContext*           aPresContext,
+                          nsHTMLReflowMetrics&     aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   virtual bool UpdateOverflow() MOZ_OVERRIDE {
     return mHelper.UpdateOverflow();

@@ -329,7 +329,7 @@ CacheRowHeightsForPrinting(nsPresContext*   aPresContext,
   }
 }
 
-void
+nsresult
 nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
                                      nsHTMLReflowMetrics&   aDesiredSize,
                                      nsRowGroupReflowState& aReflowState,
@@ -340,6 +340,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
     *aPageBreakBeforeEnd = false;
 
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  nsresult rv = NS_OK;
   const bool borderCollapse = tableFrame->IsBorderCollapse();
   nscoord cellSpacingY = tableFrame->GetCellSpacingY();
 
@@ -402,8 +403,8 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
         kidReflowState.mFlags.mIsTopOfPage = false;
       }
 
-      ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState,
-                  0, aReflowState.y, 0, aStatus);
+      rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState,
+                       0, aReflowState.y, 0, aStatus);
 
       // Place the child
       PlaceChild(aPresContext, aReflowState, kidFrame, desiredSize,
@@ -471,6 +472,8 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
       InvalidateFrame();
     }
   }
+
+  return rv;
 }
 
 nsTableRowFrame*  
@@ -1043,6 +1046,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
 {
   NS_PRECONDITION(aPresContext->IsPaginated(), "SplitRowGroup currently supports only paged media"); 
 
+  nsresult rv = NS_OK;
   nsTableRowFrame* prevRowFrame = nullptr;
   aDesiredSize.Height() = 0;
 
@@ -1095,8 +1099,9 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
 
         // Reflow the cell with the constrained height. A cell with rowspan >1 will get this
         // reflow later during SplitSpanningCells.
-        ReflowChild(rowFrame, aPresContext, rowMetrics, rowReflowState,
-                    0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
+        rv = ReflowChild(rowFrame, aPresContext, rowMetrics, rowReflowState,
+                         0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
+        if (NS_FAILED(rv)) return rv;
         rowFrame->SetSize(nsSize(rowMetrics.Width(), rowMetrics.Height()));
         rowFrame->DidReflow(aPresContext, nullptr, nsDidReflowStatus::FINISHED);
         rowFrame->DidResize();
@@ -1280,7 +1285,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
   * This method stacks rows vertically according to HTML 4.0 rules.
   * Rows are responsible for layout of their children.
   */
-void
+nsresult
 nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
                              nsHTMLReflowMetrics&     aDesiredSize,
                              const nsHTMLReflowState& aReflowState,
@@ -1289,6 +1294,7 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsTableRowGroupFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
+  nsresult rv = NS_OK;
   aStatus     = NS_FRAME_COMPLETE;
 
   // Row geometry may be going to change so we need to invalidate any row cursor.
@@ -1310,8 +1316,8 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
 
   // Reflow the existing frames. 
   bool splitDueToPageBreak = false;
-  ReflowChildren(aPresContext, aDesiredSize, state, aStatus,
-                 &splitDueToPageBreak);
+  rv = ReflowChildren(aPresContext, aDesiredSize, state, aStatus,
+                      &splitDueToPageBreak);
 
   // See if all the frames fit. Do not try to split anything if we're
   // not paginated ... we can't split across columns yet.
@@ -1353,6 +1359,7 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
   
   FinishAndStoreOverflow(&aDesiredSize);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  return rv;
 }
 
 bool

@@ -300,7 +300,7 @@ nsMathMLmpaddedFrame::UpdateValue(int32_t                  aSign,
   }
 }
 
-void
+nsresult
 nsMathMLmpaddedFrame::Reflow(nsPresContext*          aPresContext,
                              nsHTMLReflowMetrics&     aDesiredSize,
                              const nsHTMLReflowState& aReflowState,
@@ -310,9 +310,10 @@ nsMathMLmpaddedFrame::Reflow(nsPresContext*          aPresContext,
 
   ///////////////
   // Let the base class format our content like an inferred mrow
-  nsMathMLContainerFrame::Reflow(aPresContext, aDesiredSize,
-                                 aReflowState, aStatus);
+  nsresult rv = nsMathMLContainerFrame::Reflow(aPresContext, aDesiredSize,
+                                               aReflowState, aStatus);
   //NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
+  return rv;
 }
 
 /* virtual */ nsresult

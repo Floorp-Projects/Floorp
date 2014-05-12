@@ -29,7 +29,7 @@ public:
 
   virtual bool IsLeaf() const MOZ_OVERRIDE;
 
-  virtual void
+  virtual nsresult
   Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,

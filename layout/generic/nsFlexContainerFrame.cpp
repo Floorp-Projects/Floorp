@@ -1116,17 +1116,19 @@ nsFlexContainerFrame::
   nsHTMLReflowMetrics childDesiredSize(childRSForMeasuringHeight);
   nsReflowStatus childReflowStatus;
   const uint32_t flags = NS_FRAME_NO_MOVE_FRAME;
-  ReflowChild(aFlexItem.Frame(), aPresContext,
-              childDesiredSize, childRSForMeasuringHeight,
-              0, 0, flags, childReflowStatus);
+  nsresult rv = ReflowChild(aFlexItem.Frame(), aPresContext,
+                            childDesiredSize, childRSForMeasuringHeight,
+                            0, 0, flags, childReflowStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   MOZ_ASSERT(NS_FRAME_IS_COMPLETE(childReflowStatus),
              "We gave flex item unconstrained available height, so it "
              "should be complete");
 
-  FinishReflowChild(aFlexItem.Frame(), aPresContext,
-                    childDesiredSize, &childRSForMeasuringHeight,
-                    0, 0, flags);
+  rv = FinishReflowChild(aFlexItem.Frame(), aPresContext,
+                         childDesiredSize, &childRSForMeasuringHeight,
+                         0, 0, flags);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Subtract border/padding in vertical axis, to get _just_
   // the effective computed value of the "height" property.
@@ -2905,10 +2907,11 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
   nsHTMLReflowMetrics childDesiredSize(aChildReflowState);
   nsReflowStatus childReflowStatus;
   const uint32_t flags = NS_FRAME_NO_MOVE_FRAME;
-  ReflowChild(aItem.Frame(), aPresContext,
-              childDesiredSize, aChildReflowState,
-              0, 0, flags, childReflowStatus);
+  nsresult rv = ReflowChild(aItem.Frame(), aPresContext,
+                            childDesiredSize, aChildReflowState,
+                            0, 0, flags, childReflowStatus);
   aItem.SetHadMeasuringReflow();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // XXXdholbert Once we do pagination / splitting, we'll need to actually
   // handle incomplete childReflowStatuses. But for now, we give our kids
@@ -2919,8 +2922,9 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
 
   // Tell the child we're done with its initial reflow.
   // (Necessary for e.g. GetBaseline() to work below w/out asserting)
-  FinishReflowChild(aItem.Frame(), aPresContext,
-                    childDesiredSize, &aChildReflowState, 0, 0, flags);
+  rv = FinishReflowChild(aItem.Frame(), aPresContext,
+                         childDesiredSize, &aChildReflowState, 0, 0, flags);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Save the sizing info that we learned from this reflow
   // -----------------------------------------------------
@@ -2984,7 +2988,7 @@ FlexLine::PositionItemsInCrossAxis(nscoord aLineStartPosition,
   }
 }
 
-void
+nsresult
 nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
                              nsHTMLReflowMetrics&     aDesiredSize,
                              const nsHTMLReflowState& aReflowState,
@@ -2996,7 +3000,7 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
          ("Reflow() for nsFlexContainerFrame %p\n", this));
 
   if (IsFrameTreeTooDeep(aReflowState, aDesiredSize, aStatus)) {
-    return;
+    return NS_OK;
   }
 
   // We (and our children) can only depend on our ancestor's height if we have
@@ -3059,10 +3063,12 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   if (NS_SUCCEEDED(rv) && !struts.IsEmpty()) {
     // We're restarting flex layout, with new knowledge of collapsed items.
-    DoFlexLayout(aPresContext, aDesiredSize, aReflowState, aStatus,
-                 contentBoxMainSize, availableHeightForContent,
-                 struts, axisTracker);
+    rv = DoFlexLayout(aPresContext, aDesiredSize, aReflowState, aStatus,
+                      contentBoxMainSize, availableHeightForContent,
+                      struts, axisTracker);
   }
+
+  return rv;
 }
 
 // RAII class to clean up a list of FlexLines.
@@ -3312,10 +3318,11 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
 
       nsHTMLReflowMetrics childDesiredSize(childReflowState);
       nsReflowStatus childReflowStatus;
-      ReflowChild(item->Frame(), aPresContext,
-                  childDesiredSize, childReflowState,
-                  physicalPosn.x, physicalPosn.y,
-                  0, childReflowStatus);
+      nsresult rv = ReflowChild(item->Frame(), aPresContext,
+                                childDesiredSize, childReflowState,
+                                physicalPosn.x, physicalPosn.y,
+                                0, childReflowStatus);
+      NS_ENSURE_SUCCESS(rv, rv);
 
       // XXXdholbert Once we do pagination / splitting, we'll need to actually
       // handle incomplete childReflowStatuses. But for now, we give our kids
@@ -3327,9 +3334,10 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
 
       childReflowState.ApplyRelativePositioning(&physicalPosn);
 
-      FinishReflowChild(item->Frame(), aPresContext,
-                        childDesiredSize, &childReflowState,
-                        physicalPosn.x, physicalPosn.y, 0);
+      rv = FinishReflowChild(item->Frame(), aPresContext,
+                             childDesiredSize, &childReflowState,
+                             physicalPosn.x, physicalPosn.y, 0);
+      NS_ENSURE_SUCCESS(rv, rv);
 
       // If this is our first child and we haven't established a baseline for
       // the container yet (i.e. if we don't have 'align-self: baseline' on any

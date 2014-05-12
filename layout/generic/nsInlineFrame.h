@@ -72,10 +72,10 @@ public:
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
                              uint32_t aFlags) MOZ_OVERRIDE;
   virtual nsRect ComputeTightBounds(gfxContext* aContext) const MOZ_OVERRIDE;
-  virtual void Reflow(nsPresContext* aPresContext,
-                      nsHTMLReflowMetrics& aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus& aStatus) MOZ_OVERRIDE;
+  virtual nsresult Reflow(nsPresContext* aPresContext,
+                          nsHTMLReflowMetrics& aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus& aStatus) MOZ_OVERRIDE;
 
   virtual bool CanContinueTextRun() const MOZ_OVERRIDE;
 
@@ -128,17 +128,17 @@ protected:
 
   virtual int GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const MOZ_OVERRIDE;
 
-  void ReflowFrames(nsPresContext* aPresContext,
-                    const nsHTMLReflowState& aReflowState,
-                    InlineReflowState& rs,
-                    nsHTMLReflowMetrics& aMetrics,
-                    nsReflowStatus& aStatus);
+  nsresult ReflowFrames(nsPresContext* aPresContext,
+                        const nsHTMLReflowState& aReflowState,
+                        InlineReflowState& rs,
+                        nsHTMLReflowMetrics& aMetrics,
+                        nsReflowStatus& aStatus);
 
-  void ReflowInlineFrame(nsPresContext* aPresContext,
-                         const nsHTMLReflowState& aReflowState,
-                         InlineReflowState& rs,
-                         nsIFrame* aFrame,
-                         nsReflowStatus& aStatus);
+  nsresult ReflowInlineFrame(nsPresContext* aPresContext,
+                             const nsHTMLReflowState& aReflowState,
+                             InlineReflowState& rs,
+                             nsIFrame* aFrame,
+                             nsReflowStatus& aStatus);
 
   /**
    * Reparent floats whose placeholders are inline descendants of aFrame from
@@ -193,10 +193,10 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
-  virtual void Reflow(nsPresContext* aPresContext,
-                      nsHTMLReflowMetrics& aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus& aStatus) MOZ_OVERRIDE;
+  virtual nsresult Reflow(nsPresContext* aPresContext,
+                          nsHTMLReflowMetrics& aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus& aStatus) MOZ_OVERRIDE;
 
   virtual void Init(nsIContent* aContent, nsIFrame* aParent,
                     nsIFrame* aPrevInFlow) MOZ_OVERRIDE;

@@ -51,10 +51,10 @@ public:
     * Respond to the request to resize and/or reflow
     * @see nsIFrame::Reflow
     */
-  virtual void Reflow(nsPresContext*      aCX,
-                      nsHTMLReflowMetrics& aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus&      aStatus) MOZ_OVERRIDE;
+  virtual nsresult Reflow(nsPresContext*      aCX,
+                          nsHTMLReflowMetrics& aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&      aStatus) MOZ_OVERRIDE;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 

@@ -797,7 +797,7 @@ nsImageFrame::GetIntrinsicRatio()
   return mIntrinsicRatio;
 }
 
-void
+nsresult
 nsImageFrame::Reflow(nsPresContext*          aPresContext,
                      nsHTMLReflowMetrics&     aMetrics,
                      const nsHTMLReflowState& aReflowState,
@@ -900,6 +900,7 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
                   ("exit nsImageFrame::Reflow: size=%d,%d",
                   aMetrics.Width(), aMetrics.Height()));
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
+  return NS_OK;
 }
 
 bool

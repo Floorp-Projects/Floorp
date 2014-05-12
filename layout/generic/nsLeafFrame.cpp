@@ -42,7 +42,7 @@ nsLeafFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
   return nsSize(GetIntrinsicWidth(), GetIntrinsicHeight());
 }
 
-void
+nsresult
 nsLeafFrame::Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
                     const nsHTMLReflowState& aReflowState,
@@ -58,9 +58,10 @@ nsLeafFrame::Reflow(nsPresContext* aPresContext,
   DoReflow(aPresContext, aMetrics, aReflowState, aStatus);
 
   FinishAndStoreOverflow(&aMetrics);
+  return NS_OK;
 }
 
-void
+nsresult
 nsLeafFrame::DoReflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aMetrics,
                       const nsHTMLReflowState& aReflowState,
@@ -85,6 +86,8 @@ nsLeafFrame::DoReflow(nsPresContext* aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
 
   aMetrics.SetOverflowAreasToDesiredBounds();
+
+  return NS_OK;
 }
 
 nscoord

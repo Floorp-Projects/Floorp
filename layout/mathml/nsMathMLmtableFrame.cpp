@@ -545,16 +545,18 @@ nsMathMLmtableOuterFrame::GetRowFrameAt(nsPresContext* aPresContext,
   return nullptr;
 }
 
-void
+nsresult
 nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
                                  nsHTMLReflowMetrics&     aDesiredSize,
                                  const nsHTMLReflowState& aReflowState,
                                  nsReflowStatus&          aStatus)
 {
+  nsresult rv;
   nsAutoString value;
   // we want to return a table that is anchored according to the align attribute
 
-  nsTableOuterFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  rv = nsTableOuterFrame::Reflow(aPresContext, aDesiredSize, aReflowState,
+                                 aStatus);
   NS_ASSERTION(aDesiredSize.Height() >= 0, "illegal height for mtable");
   NS_ASSERTION(aDesiredSize.Width() >= 0, "illegal width for mtable");
 
@@ -645,6 +647,8 @@ nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
 
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+
+  return rv;
 }
 
 nsIFrame*
@@ -884,17 +888,18 @@ nsMathMLmtdInnerFrame::~nsMathMLmtdInnerFrame()
   mUniqueStyleText->Destroy(PresContext());
 }
 
-void
+nsresult
 nsMathMLmtdInnerFrame::Reflow(nsPresContext*          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus&          aStatus)
 {
   // Let the base class do the reflow
-  nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  nsresult rv = nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   // more about <maligngroup/> and <malignmark/> later
   // ...
+  return rv;
 }
 
 const

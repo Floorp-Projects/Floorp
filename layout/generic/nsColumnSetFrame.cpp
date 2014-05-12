@@ -949,7 +949,7 @@ nsColumnSetFrame::FindBestBalanceHeight(const nsHTMLReflowState& aReflowState,
   aRunWasFeasible = feasible;
 }
 
-void
+nsresult 
 nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,
                          const nsHTMLReflowState& aReflowState,
@@ -1019,6 +1019,8 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
   NS_ASSERTION(NS_FRAME_IS_FULLY_COMPLETE(aStatus) ||
                aReflowState.AvailableHeight() != NS_UNCONSTRAINEDSIZE,
                "Column set should be complete if the available height is unconstrained");
+
+  return NS_OK;
 }
 
 void

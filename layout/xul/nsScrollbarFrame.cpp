@@ -53,13 +53,14 @@ nsScrollbarFrame::Init(nsIContent* aContent,
   mState |= NS_FRAME_REFLOW_ROOT;
 }
 
-void
+nsresult
 nsScrollbarFrame::Reflow(nsPresContext*          aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,
                          const nsHTMLReflowState& aReflowState,
                          nsReflowStatus&          aStatus)
 {
-  nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  nsresult rv = nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // nsGfxScrollFrame may have told us to shrink to nothing. If so, make sure our
   // desired size agrees.
@@ -69,6 +70,8 @@ nsScrollbarFrame::Reflow(nsPresContext*          aPresContext,
   if (aReflowState.AvailableHeight() == 0) {
     aDesiredSize.Height() = 0;
   }
+
+  return NS_OK;
 }
 
 nsIAtom*

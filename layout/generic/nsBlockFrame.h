@@ -261,10 +261,10 @@ public:
                           nsHTMLReflowMetrics&     aMetrics,
                           nscoord                  aConsumed);
 
-  virtual void Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+  virtual nsresult Reflow(nsPresContext*           aPresContext,
+                          nsHTMLReflowMetrics&     aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
                                     nsIAtom*        aAttribute,
@@ -580,7 +580,7 @@ protected:
   void PrepareResizeReflow(nsBlockReflowState& aState);
 
   /** reflow all lines that have been marked dirty */
-  void ReflowDirtyLines(nsBlockReflowState& aState);
+  nsresult ReflowDirtyLines(nsBlockReflowState& aState);
 
   /** Mark a given line dirty due to reflow being interrupted on or before it */
   void MarkLineDirtyForInterrupt(nsLineBox* aLine);
@@ -594,9 +594,9 @@ protected:
    *                         or contain 1 or more inline frames.
    * @param aKeepReflowGoing [OUT] indicates whether the caller should continue to reflow more lines
    */
-  void ReflowLine(nsBlockReflowState& aState,
-                  line_iterator aLine,
-                  bool* aKeepReflowGoing);
+  nsresult ReflowLine(nsBlockReflowState& aState,
+                      line_iterator aLine,
+                      bool* aKeepReflowGoing);
 
   // Return false if it needs another reflow because of reduced space
   // between floats that are next to it (but not next to its top), and
@@ -639,30 +639,30 @@ protected:
   bool ShouldApplyTopMargin(nsBlockReflowState& aState,
                               nsLineBox* aLine);
 
-  void ReflowBlockFrame(nsBlockReflowState& aState,
-                        line_iterator aLine,
-                        bool* aKeepGoing);
-
-  void ReflowInlineFrames(nsBlockReflowState& aState,
-                          line_iterator aLine,
-                          bool* aKeepLineGoing);
-
-  void DoReflowInlineFrames(nsBlockReflowState& aState,
-                            nsLineLayout& aLineLayout,
+  nsresult ReflowBlockFrame(nsBlockReflowState& aState,
                             line_iterator aLine,
-                            nsFlowAreaRect& aFloatAvailableSpace,
-                            nscoord& aAvailableSpaceHeight,
-                            nsFloatManager::SavedState*
-                            aFloatStateBeforeLine,
-                            bool* aKeepReflowGoing,
-                            LineReflowStatus* aLineReflowStatus,
-                            bool aAllowPullUp);
+                            bool* aKeepGoing);
 
-  void ReflowInlineFrame(nsBlockReflowState& aState,
-                         nsLineLayout& aLineLayout,
-                         line_iterator aLine,
-                         nsIFrame* aFrame,
-                         LineReflowStatus* aLineReflowStatus);
+  nsresult ReflowInlineFrames(nsBlockReflowState& aState,
+                              line_iterator aLine,
+                              bool* aKeepLineGoing);
+
+  nsresult DoReflowInlineFrames(nsBlockReflowState& aState,
+                                nsLineLayout& aLineLayout,
+                                line_iterator aLine,
+                                nsFlowAreaRect& aFloatAvailableSpace,
+                                nscoord& aAvailableSpaceHeight,
+                                nsFloatManager::SavedState*
+                                  aFloatStateBeforeLine,
+                                bool* aKeepReflowGoing,
+                                LineReflowStatus* aLineReflowStatus,
+                                bool aAllowPullUp);
+
+  nsresult ReflowInlineFrame(nsBlockReflowState& aState,
+                             nsLineLayout& aLineLayout,
+                             line_iterator aLine,
+                             nsIFrame* aFrame,
+                             LineReflowStatus* aLineReflowStatus);
 
   // Compute the available width for a float. 
   nsRect AdjustFloatAvailableSpace(nsBlockReflowState& aState,
@@ -676,16 +676,16 @@ protected:
   // but only if the available height is constrained.
   // aAdjustedAvailableSpace is the result of calling
   // nsBlockFrame::AdjustFloatAvailableSpace.
-  void ReflowFloat(nsBlockReflowState& aState,
-                   const nsRect&       aAdjustedAvailableSpace,
-                   nsIFrame*           aFloat,
-                   nsMargin&           aFloatMargin,
-                   nsMargin&           aFloatOffsets,
-                   // Whether the float's position
-                   // (aAdjustedAvailableSpace) has been pushed down
-                   // due to the presence of other floats.
-                   bool                aFloatPushedDown,
-                   nsReflowStatus&     aReflowStatus);
+  nsresult ReflowFloat(nsBlockReflowState& aState,
+                       const nsRect&       aAdjustedAvailableSpace,
+                       nsIFrame*           aFloat,
+                       nsMargin&           aFloatMargin,
+                       nsMargin&           aFloatOffsets,
+                       // Whether the float's position
+                       // (aAdjustedAvailableSpace) has been pushed down
+                       // due to the presence of other floats.
+                       bool                aFloatPushedDown,
+                       nsReflowStatus&     aReflowStatus);
 
   //----------------------------------------
   // Methods for pushing/pulling lines/frames
