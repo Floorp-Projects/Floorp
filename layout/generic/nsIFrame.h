@@ -2931,6 +2931,10 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
    * Is this a flex item? (i.e. a non-abs-pos child of a flex container)
    */
   inline bool IsFlexItem() const;
+  /**
+   * Is this a flex or grid item? (i.e. a non-abs-pos child of a flex/grid container)
+   */
+  inline bool IsFlexOrGridItem() const;
 
   inline bool IsBlockInside() const;
   inline bool IsBlockOutside() const;
