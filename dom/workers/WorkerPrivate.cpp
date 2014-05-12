@@ -1315,7 +1315,7 @@ private:
         return true;
       }
 
-      if (aWorkerPrivate->IsSharedWorker()) {
+      if (aWorkerPrivate->IsSharedWorker() || aWorkerPrivate->IsServiceWorker()) {
         aWorkerPrivate->BroadcastErrorToSharedWorkers(aCx, mMessage, mFilename,
                                                       mLine, mLineNumber,
                                                       mColumnNumber, mFlags);
@@ -2116,9 +2116,9 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
 {
   SetIsDOMBinding();
 
-  MOZ_ASSERT_IF(IsSharedWorker(), !aSharedWorkerName.IsVoid() &&
-                                  NS_IsMainThread());
-  MOZ_ASSERT_IF(!IsSharedWorker(), aSharedWorkerName.IsEmpty());
+  MOZ_ASSERT_IF(!IsDedicatedWorker(),
+                !aSharedWorkerName.IsVoid() && NS_IsMainThread());
+  MOZ_ASSERT_IF(IsDedicatedWorker(), aSharedWorkerName.IsEmpty());
 
   if (aLoadInfo.mWindow) {
     AssertIsOnMainThread();
@@ -2347,7 +2347,7 @@ WorkerPrivateParent<Derived>::NotifyPrivate(JSContext* aCx, Status aStatus)
     mParentStatus = aStatus;
   }
 
-  if (IsSharedWorker()) {
+  if (IsSharedWorker() || IsServiceWorker()) {
     RuntimeService* runtime = RuntimeService::GetService();
     MOZ_ASSERT(runtime);
 
@@ -2399,7 +2399,7 @@ WorkerPrivateParent<Derived>::Suspend(JSContext* aCx, nsPIDOMWindow* aWindow)
 
   // Shared workers are only suspended if all of their owning documents are
   // suspended.
-  if (IsSharedWorker()) {
+  if (IsSharedWorker() || IsServiceWorker()) {
     AssertIsOnMainThread();
     MOZ_ASSERT(mSharedWorkers.Count());
 
@@ -2480,10 +2480,10 @@ WorkerPrivateParent<Derived>::Resume(JSContext* aCx, nsPIDOMWindow* aWindow)
 {
   AssertIsOnParentThread();
   MOZ_ASSERT(aCx);
-  MOZ_ASSERT_IF(!IsSharedWorker(), mParentSuspended);
+  MOZ_ASSERT_IF(IsDedicatedWorker(), mParentSuspended);
 
   // Shared workers are resumed if any of their owning documents are resumed.
-  if (IsSharedWorker()) {
+  if (IsSharedWorker() || IsServiceWorker()) {
     AssertIsOnMainThread();
     MOZ_ASSERT(mSharedWorkers.Count());
 
@@ -3034,14 +3034,16 @@ WorkerPrivateParent<Derived>::RegisterSharedWorker(JSContext* aCx,
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aSharedWorker);
-  MOZ_ASSERT(IsSharedWorker());
+  MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
   MOZ_ASSERT(!mSharedWorkers.Get(aSharedWorker->Serial()));
 
-  nsRefPtr<MessagePortRunnable> runnable =
-    new MessagePortRunnable(ParentAsWorkerPrivate(), aSharedWorker->Serial(),
-                            true);
-  if (!runnable->Dispatch(aCx)) {
-    return false;
+  if (IsSharedWorker()) {
+    nsRefPtr<MessagePortRunnable> runnable =
+      new MessagePortRunnable(ParentAsWorkerPrivate(), aSharedWorker->Serial(),
+                              true);
+    if (!runnable->Dispatch(aCx)) {
+      return false;
+    }
   }
 
   mSharedWorkers.Put(aSharedWorker->Serial(), aSharedWorker);
@@ -3063,7 +3065,7 @@ WorkerPrivateParent<Derived>::UnregisterSharedWorker(
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aSharedWorker);
-  MOZ_ASSERT(IsSharedWorker());
+  MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
   MOZ_ASSERT(mSharedWorkers.Get(aSharedWorker->Serial()));
 
   nsRefPtr<MessagePortRunnable> runnable =
@@ -3241,7 +3243,7 @@ WorkerPrivateParent<Derived>::GetAllSharedWorkers(
                                nsTArray<nsRefPtr<SharedWorker>>& aSharedWorkers)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(IsSharedWorker());
+  MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
 
   struct Helper
   {
@@ -3274,7 +3276,7 @@ WorkerPrivateParent<Derived>::CloseSharedWorkersForWindow(
                                                          nsPIDOMWindow* aWindow)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(IsSharedWorker());
+  MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
   MOZ_ASSERT(aWindow);
 
   struct Closure
@@ -3327,7 +3329,7 @@ WorkerPrivateParent<Derived>::WorkerScriptLoaded()
 {
   AssertIsOnMainThread();
 
-  if (IsSharedWorker()) {
+  if (IsSharedWorker() || IsServiceWorker()) {
     // No longer need to hold references to the window or document we came from.
     mLoadInfo.mWindow = nullptr;
     mLoadInfo.mScriptContext = nullptr;
@@ -3561,8 +3563,8 @@ WorkerPrivate::WorkerPrivate(JSContext* aCx,
   , mPRThread(nullptr)
 #endif
 {
-  MOZ_ASSERT_IF(IsSharedWorker(), !aSharedWorkerName.IsVoid());
-  MOZ_ASSERT_IF(!IsSharedWorker(), aSharedWorkerName.IsEmpty());
+  MOZ_ASSERT_IF(!IsDedicatedWorker(), !aSharedWorkerName.IsVoid());
+  MOZ_ASSERT_IF(IsDedicatedWorker(), aSharedWorkerName.IsEmpty());
 
   if (aParent) {
     aParent->AssertIsOnWorkerThread();
@@ -3649,9 +3651,9 @@ WorkerPrivate::Constructor(const GlobalObject& aGlobal,
 
   JSContext* cx = aGlobal.GetContext();
 
-  MOZ_ASSERT_IF(aWorkerType == WorkerTypeShared,
+  MOZ_ASSERT_IF(aWorkerType != WorkerTypeDedicated,
                 !aSharedWorkerName.IsVoid());
-  MOZ_ASSERT_IF(aWorkerType != WorkerTypeShared,
+  MOZ_ASSERT_IF(aWorkerType == WorkerTypeDedicated,
                 aSharedWorkerName.IsEmpty());
 
   Maybe<LoadInfo> stackLoadInfo;
