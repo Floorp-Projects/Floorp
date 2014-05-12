@@ -1348,8 +1348,7 @@ nsHTMLEditRules::WillInsertText(EditAction aAction,
   // we need to get the doc
   NS_ENSURE_STATE(mHTMLEditor);
   nsCOMPtr<nsIDOMDocument> doc = mHTMLEditor->GetDOMDocument();
-  nsCOMPtr<nsIDocument> doc_ = mHTMLEditor->GetDocument();
-  NS_ENSURE_TRUE(doc && doc_, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
 
   // for every property that is set, insert a new inline style node
   res = CreateStyleForInsertText(aSelection, doc);
@@ -1379,10 +1378,8 @@ nsHTMLEditRules::WillInsertText(EditAction aAction,
     else
     {
       NS_ENSURE_STATE(mHTMLEditor);
-      nsCOMPtr<nsINode> selNode_(do_QueryInterface(selNode));
-      nsWSRunObject wsObj(mHTMLEditor, selNode_, selOffset);
-      res = wsObj.InsertText(*inString, address_of(selNode_), &selOffset, doc_);
-      selNode = GetAsDOMNode(selNode_);
+      nsWSRunObject wsObj(mHTMLEditor, selNode, selOffset);
+      res = wsObj.InsertText(*inString, address_of(selNode), &selOffset, doc);
     }
     NS_ENSURE_SUCCESS(res, res);
   }
@@ -1486,9 +1483,7 @@ nsHTMLEditRules::WillInsertText(EditAction aAction,
         // is it a tab?
         if (subStr.Equals(tabStr))
         {
-          nsCOMPtr<nsINode> curNode_(do_QueryInterface(curNode));
-          res = wsObj.InsertText(spacesStr, address_of(curNode_), &curOffset, doc_);
-          curNode = GetAsDOMNode(curNode_);
+          res = wsObj.InsertText(spacesStr, address_of(curNode), &curOffset, doc);
           NS_ENSURE_SUCCESS(res, res);
           pos++;
         }
@@ -1504,9 +1499,7 @@ nsHTMLEditRules::WillInsertText(EditAction aAction,
         }
         else
         {
-          nsCOMPtr<nsINode> curNode_(do_QueryInterface(curNode));
-          res = wsObj.InsertText(subStr, address_of(curNode_), &curOffset, doc_);
-          curNode = GetAsDOMNode(curNode_);
+          res = wsObj.InsertText(subStr, address_of(curNode), &curOffset, doc);
           NS_ENSURE_SUCCESS(res, res);
         }
         NS_ENSURE_SUCCESS(res, res);
