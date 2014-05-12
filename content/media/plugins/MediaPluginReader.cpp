@@ -323,8 +323,8 @@ nsresult MediaPluginReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aE
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
-  mVideoQueue.Erase();
-  mAudioQueue.Erase();
+  mVideoQueue.Reset();
+  mAudioQueue.Reset();
 
   mAudioSeekTimeUs = mVideoSeekTimeUs = aTarget;
 
