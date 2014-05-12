@@ -173,7 +173,7 @@ ViewportFrame::AdjustReflowStateAsContainingBlock(nsHTMLReflowState* aReflowStat
   return rect;
 }
 
-nsresult
+void
 ViewportFrame::Reflow(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
@@ -200,8 +200,6 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
   // reflow.
   nscoord kidHeight = 0;
 
-  nsresult rv = NS_OK;
-  
   if (mFrames.NotEmpty()) {
     // Deal with a non-incremental reflow or an incremental reflow
     // targeted at our one-and-only principal child frame.
@@ -218,8 +216,8 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
 
       // Reflow the frame
       kidReflowState.SetComputedHeight(aReflowState.ComputedHeight());
-      rv = ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
-                       0, 0, 0, aStatus);
+      ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
+                  0, 0, 0, aStatus);
       kidHeight = kidDesiredSize.Height();
 
       FinishReflowChild(kidFrame, aPresContext, kidDesiredSize, nullptr, 0, 0, 0);
@@ -262,10 +260,10 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
     nsRect rect = AdjustReflowStateAsContainingBlock(&reflowState);
 
     // Just reflow all the fixed-pos frames.
-    rv = GetAbsoluteContainingBlock()->Reflow(this, aPresContext, reflowState, aStatus,
-                                              rect,
-                                              false, true, true, // XXX could be optimized
-                                              &aDesiredSize.mOverflowAreas);
+    GetAbsoluteContainingBlock()->Reflow(this, aPresContext, reflowState, aStatus,
+                                         rect,
+                                         false, true, true, // XXX could be optimized
+                                         &aDesiredSize.mOverflowAreas);
   }
 
   // If we were dirty then do a repaint
@@ -289,7 +287,6 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
 
   NS_FRAME_TRACE_REFLOW_OUT("ViewportFrame::Reflow", aStatus);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return rv; 
 }
 
 nsIAtom*

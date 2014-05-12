@@ -145,7 +145,7 @@ GetRadicalXOffsets(nscoord aIndexWidth, nscoord aSqrWidth,
     *aSqrOffset = dxSqr;
 }
 
-nsresult
+void
 nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
@@ -202,7 +202,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
     NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
     // Call DidReflow() for the child frames we successfully did reflow.
     DidReflowChildren(mFrames.FirstChild(), childFrame);
-    return NS_OK;
+    return;
   }
 
   ////////////
@@ -345,7 +345,6 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return NS_OK;
 }
 
 /* virtual */ void

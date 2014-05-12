@@ -91,7 +91,8 @@ NS_QUERYFRAME_HEAD(nsMeterFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 
-nsresult nsMeterFrame::Reflow(nsPresContext*           aPresContext,
+void
+nsMeterFrame::Reflow(nsPresContext*           aPresContext,
                                    nsHTMLReflowMetrics&     aDesiredSize,
                                    const nsHTMLReflowState& aReflowState,
                                    nsReflowStatus&          aStatus)
@@ -125,8 +126,6 @@ nsresult nsMeterFrame::Reflow(nsPresContext*           aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-
-  return NS_OK;
 }
 
 void

@@ -453,7 +453,7 @@ nsCanvasFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
   return result;
 }
 
-nsresult
+void
 nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
@@ -585,7 +585,6 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
 
   NS_FRAME_TRACE_REFLOW_OUT("nsCanvasFrame::Reflow", aStatus);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return NS_OK;
 }
 
 nsIAtom*

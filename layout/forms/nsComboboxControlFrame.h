@@ -69,10 +69,10 @@ public:
 
   virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
 
-  virtual nsresult Reflow(nsPresContext*           aCX,
-                          nsHTMLReflowMetrics&     aDesiredSize,
-                          const nsHTMLReflowState& aReflowState,
-                          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+  virtual void Reflow(nsPresContext*           aCX,
+                      nsHTMLReflowMetrics&     aDesiredSize,
+                      const nsHTMLReflowState& aReflowState,
+                      nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
                                mozilla::WidgetGUIEvent* aEvent,
@@ -201,8 +201,8 @@ protected:
   friend class nsResizeDropdownAtFinalPosition;
 
   // Utilities
-  nsresult ReflowDropdown(nsPresContext*          aPresContext, 
-                          const nsHTMLReflowState& aReflowState);
+  void ReflowDropdown(nsPresContext*          aPresContext, 
+                      const nsHTMLReflowState& aReflowState);
 
   enum DropDownPositionState {
     // can't show the dropdown at its current position

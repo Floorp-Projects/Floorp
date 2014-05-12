@@ -462,7 +462,7 @@ nsTextControlFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
   return autoSize;
 }
 
-nsresult
+void
 nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
@@ -490,10 +490,8 @@ nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
                                                    NS_AUTOHEIGHT, inflation);
   }
   nsRefPtr<nsFontMetrics> fontMet;
-  nsresult rv = nsLayoutUtils::GetFontMetricsForFrame(this, 
-                                                      getter_AddRefs(fontMet), 
-                                                      inflation);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet),
+                                        inflation);
   // now adjust for our borders and padding
   aDesiredSize.SetTopAscent( 
         nsLayoutUtils::GetCenteredFontBaseline(fontMet, lineHeight) 
@@ -513,7 +511,6 @@ nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return NS_OK;
 }
 
 void
