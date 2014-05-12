@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.widget;
 
+import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.menu.MenuItemActionView;
 
 import android.content.Context;
