@@ -141,7 +141,7 @@ public:
   ConsoleCallData()
     : mMethodName(Console::MethodLog)
     , mPrivate(false)
-    , mTimeStamp(JS_Now())
+    , mTimeStamp(JS_Now() / PR_USEC_PER_MSEC)
     , mMonotonicTimer(0)
   {
     MOZ_COUNT_CTOR(ConsoleCallData);

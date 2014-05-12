@@ -261,6 +261,9 @@ class DMCli(object):
         for app in self.dm.getInstalledApps():
             print app
 
+    def stopapp(self, args):
+        self.dm.stopApplication(args.appname)
+
     def kill(self, args):
         for name in args.process_name:
             self.dm.killProcess(name)

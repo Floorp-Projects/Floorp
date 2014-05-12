@@ -11,6 +11,8 @@ import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import android.os.Bundle;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -106,6 +108,14 @@ public class testEventDispatcher extends UITest
             fAssertSame("optObject returns fallback value if nonexistent",
                     null, message.optObject("nonexistent_object", null));
 
+            final Bundle bundle = message.toBundle();
+            checkBundle(bundle);
+            checkBundle(bundle.getBundle("object"));
+            fAssertNotSame("optBundle returns property value if it exists",
+                    null, message.optBundle("object", null));
+            fAssertSame("optBundle returns fallback value if property does not exist",
+                    null, message.optBundle("nonexistent_object", null));
+
         } else if (NATIVE_RESPONSE_EVENT.equals(event)) {
             final String response = message.getString("response");
             if ("success".equals(response)) {
@@ -121,6 +131,13 @@ public class testEventDispatcher extends UITest
         } else {
             fFail("Event type should be valid: " + event);
         }
+    }
+
+    private void checkBundle(final Bundle bundle) {
+        fAssertEquals("Bundle boolean has correct value", true, bundle.getBoolean("boolean"));
+        fAssertEquals("Bundle int has correct value", 1, bundle.getInt("int"));
+        fAssertEquals("Bundle double has correct value", 0.5, bundle.getDouble("double"));
+        fAssertEquals("Bundle string has correct value", "foo", bundle.getString("string"));
     }
 
     private void checkJSONObject(final JSONObject object) throws JSONException {

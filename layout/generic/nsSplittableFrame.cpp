@@ -210,12 +210,9 @@ nscoord
 nsSplittableFrame::GetConsumedHeight() const
 {
   nscoord height = 0;
-
-  // Reduce the height by the computed height of prev-in-flows.
   for (nsIFrame* prev = GetPrevInFlow(); prev; prev = prev->GetPrevInFlow()) {
-    height += prev->GetRect().height;
+    height += prev->GetContentRectRelativeToSelf().height;
   }
-
   return height;
 }
 
@@ -234,16 +231,8 @@ nsSplittableFrame::GetEffectiveComputedHeight(const nsHTMLReflowState& aReflowSt
 
   height -= aConsumedHeight;
 
-  if (aConsumedHeight != 0 && aConsumedHeight != NS_INTRINSICSIZE) {
-    // We just subtracted our top-border padding, since it was included in the
-    // first frame's height. Add it back to get the content height.
-    height += aReflowState.ComputedPhysicalBorderPadding().top;
-  }
-
   // We may have stretched the frame beyond its computed height. Oh well.
-  height = std::max(0, height);
-
-  return height;
+  return std::max(0, height);
 }
 
 int
@@ -271,7 +260,8 @@ nsSplittableFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) co
 
     if (NS_UNCONSTRAINEDSIZE != aReflowState->AvailableHeight()) {
       nscoord effectiveCH = this->GetEffectiveComputedHeight(*aReflowState);
-      if (effectiveCH > aReflowState->AvailableHeight()) {
+      if (effectiveCH != NS_INTRINSICSIZE &&
+          effectiveCH > aReflowState->AvailableHeight()) {
         // Our content height is going to exceed our available height, so we're
         // going to need a next-in-flow.
         skip |= LOGICAL_SIDE_B_END;

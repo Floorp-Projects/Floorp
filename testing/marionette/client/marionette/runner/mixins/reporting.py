@@ -133,10 +133,19 @@ class HTMLReportingTestRunnerMixin(object):
             _extract_html_from_skipped_manifest_test(test)
 
         generated = datetime.datetime.now()
-        version = mozversion.get_version(
-            binary=self.bin, sources=self.sources,
-            dm_type=os.environ.get('DM_TRANS', 'adb'))
         date_format = '%d %b %Y %H:%M:%S'
+        version = {}
+
+        if self.capabilities:
+            version.update({
+                'application_buildid': self.capabilities.get('appBuildId'),
+                'application_version': self.capabilities.get('version'),
+                'device_id': self.capabilities.get('device')})
+
+        if self.bin or self.capabilities.get('device') != 'desktop':
+            version.update(mozversion.get_version(
+                binary=self.bin, sources=self.sources,
+                dm_type=os.environ.get('DM_TRANS', 'adb')))
 
         configuration = {
             'Gecko version': version.get('application_version'),
@@ -150,8 +159,7 @@ class HTMLReportingTestRunnerMixin(object):
             time.strftime(date_format, time.localtime(
                 int(version.get('device_firmware_date')))),
             'Device firmware (incremental)': version.get('device_firmware_version_incremental'),
-            'Device firmware (release)': version.get('device_firmware_version_release'),
-        }
+            'Device firmware (release)': version.get('device_firmware_version_release')}
 
         if version.get('application_changeset') and version.get('application_repository'):
             configuration['Gecko revision'] = html.a(

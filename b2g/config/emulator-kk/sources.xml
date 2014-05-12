@@ -15,9 +15,9 @@
   <project name="platform_build" path="build" remote="b2g" revision="65fba428f8d76336b33ddd9e15900357953600ba">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="e8a1eedb848382323254edbd234baecebc5dc5ca"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="2f89c43e798ccba631025bedc47a1fb24e830cf2"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="f313e6d3aaaefe8c82eaed15912a09b120fb7260"/>
+  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="30f87e602509415be4f69493c23cba1912f91ef5"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="ce95d372e6d285725b96490afdaaf489ad8f9ca9"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
@@ -110,7 +110,7 @@
   <project name="platform/ndk" path="ndk" revision="cb5519af32ae7b4a9c334913a612462ecd04c5d0"/>
   <project name="platform/prebuilts/misc" path="prebuilts/misc" revision="99c9a644e84a1b0e0a5d240406753b6bc4caca54"/>
   <project name="platform/prebuilts/ndk" path="prebuilts/ndk" revision="6aa61f8557a22039a30b42b7f283996381fd625d"/>
-  <project name="platform/prebuilts/qemu-kernel" path="prebuilts/qemu-kernel" revision="0efba6f55dca4756b05f81b6cac3d5f28297da79"/>
+  <project name="platform_prebuilts_qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="21a68e06a104be3f98d776a5bb34ec98643c5bc9"/>
   <project name="platform/prebuilts/sdk" path="prebuilts/sdk" revision="b562b01c93de9578d5db537b6a602a38e1aaa0ce"/>
   <project name="platform/prebuilts/tools" path="prebuilts/tools" revision="387f03e815f57d536dd922706db1622bddba8d81"/>
   <project name="platform/system/extras" path="system/extras" revision="5356165f67f4a81c2ef28671c13697f1657590df"/>
