@@ -101,7 +101,6 @@ const char implementationString[] = "Mozilla JavaScript Debugger Service";
 
 const char jsdServiceCtrID[] = "@mozilla.org/js/jsd/debugger-service;1";
 const char jsdARObserverCtrID[] = "@mozilla.org/js/jsd/app-start-observer;2";
-const char jsdASObserverCtrID[] = "service,@mozilla.org/js/jsd/app-start-observer;2";
 
 #ifdef DEBUG_verbose
 uint32_t gScriptCount   = 0;
