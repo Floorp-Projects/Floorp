@@ -36,7 +36,6 @@ EXPORTS.mozilla.dom += [
     'SVGComponentTransferFunctionElement.h',
     'SVGDefsElement.h',
     'SVGDescElement.h',
-    'SVGDocument.h',
     'SVGEllipseElement.h',
     'SVGFEBlendElement.h',
     'SVGFEColorMatrixElement.h',
@@ -161,7 +160,6 @@ UNIFIED_SOURCES += [
     'SVGContentUtils.cpp',
     'SVGDefsElement.cpp',
     'SVGDescElement.cpp',
-    'SVGDocument.cpp',
     'SVGElementFactory.cpp',
     'SVGEllipseElement.cpp',
     'SVGFEBlendElement.cpp',
@@ -254,18 +252,16 @@ FAIL_ON_WARNINGS = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'gklayout'
-
 LOCAL_INCLUDES += [
     '/content/base/src',
     '/content/html/content/src',
+    '/content/xml/content/src',
     '/dom',
     '/dom/smil',
     '/dom/xbl',
-    '/dom/xml',
     '/layout/generic',
     '/layout/style',
     '/layout/svg',
     '/layout/xul',
 ]
 
-MOCHITEST_MANIFESTS += ['test/mochitest.ini']

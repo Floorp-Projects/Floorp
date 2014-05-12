@@ -273,7 +273,7 @@ GENERATED_FILES = [
 ]
 
 LOCAL_INCLUDES += [
-    '/dom/xml',
+    '/content/xml/document/src',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3', 'gonk', 'qt'):
