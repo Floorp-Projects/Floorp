@@ -1878,7 +1878,7 @@ void ScrollFrameHelper::MarkInactive()
     return;
 
   mScrollingActive = false;
-  mOuter->InvalidateFrameSubtree();
+  mOuter->SchedulePaint();
 }
 
 void ScrollFrameHelper::MarkActive()
