@@ -135,6 +135,7 @@ public:
     }
 
     static jobject CreateObjectInstance(JNIEnv* env, jobject object,
+                                        JSContext* cx,
                                         JS::HandleObject jsObject) {
         MOZ_ASSERT(object);
         MOZ_ASSERT(jsObject);
@@ -378,7 +379,9 @@ struct StringProperty
     }
 };
 
-struct ObjectProperty
+template <jobject (*FactoryMethod)
+    (JNIEnv*, jobject, JSContext*, JS::HandleObject)>
+struct BaseObjectProperty
 {
     typedef jobject Type;
 
@@ -392,9 +395,18 @@ struct ObjectProperty
             return nullptr;
         }
         JS::RootedObject object(cx, &val.toObject());
-        return NativeJSContainer::CreateObjectInstance(env, instance, object);
+        return FactoryMethod(env, instance, cx, object);
     }
 };
+
+jobject GetBundle(JNIEnv*, jobject, JSContext*, JS::HandleObject);
+
+// Returns a NativeJSObject from a JSObject
+typedef BaseObjectProperty<
+    NativeJSContainer::CreateObjectInstance> ObjectProperty;
+
+// Returns a Bundle from a JSObject
+typedef BaseObjectProperty<GetBundle> BundleProperty;
 
 struct HasProperty
 {
@@ -453,6 +465,13 @@ GetProperty(JNIEnv* env, jobject instance, jstring name,
     return Property::FromValue(env, instance, cx, val);
 }
 
+jobject
+GetBundle(JNIEnv* env, jobject instance, JSContext* cx, JS::HandleObject obj)
+{
+    // TODO: add implementation
+    return nullptr;
+}
+
 } // namespace
 
 extern "C" {
@@ -482,6 +501,19 @@ Java_org_mozilla_gecko_util_NativeJSObject_optBoolean(JNIEnv* env, jobject insta
                                                       jstring name, jboolean fallback)
 {
     return GetProperty<BooleanProperty>(env, instance, name, FallbackOption::RETURN, fallback);
+}
+
+NS_EXPORT jobject JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_getBundle(JNIEnv* env, jobject instance, jstring name)
+{
+    return GetProperty<BundleProperty>(env, instance, name);
+}
+
+NS_EXPORT jobject JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_optBundle(JNIEnv* env, jobject instance,
+                                                     jstring name, jobject fallback)
+{
+    return GetProperty<BundleProperty>(env, instance, name, FallbackOption::RETURN, fallback);
 }
 
 NS_EXPORT jdouble JNICALL
@@ -540,6 +572,20 @@ NS_EXPORT jboolean JNICALL
 Java_org_mozilla_gecko_util_NativeJSObject_has(JNIEnv* env, jobject instance, jstring name)
 {
     return GetProperty<HasProperty>(env, instance, name, FallbackOption::RETURN, JNI_FALSE);
+}
+
+NS_EXPORT jobject JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_toBundle(JNIEnv* env, jobject instance)
+{
+    MOZ_ASSERT(env);
+    MOZ_ASSERT(instance);
+
+    JSContext* const cx = NativeJSContainer::GetContextFromObject(env, instance);
+    const JS::RootedObject object(cx, NativeJSContainer::GetObjectFromObject(env, instance));
+    if (!object) {
+        return nullptr;
+    }
+    return GetBundle(env, instance, cx, object);
 }
 
 NS_EXPORT jstring JNICALL

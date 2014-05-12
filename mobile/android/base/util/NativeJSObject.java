@@ -7,6 +7,8 @@ package org.mozilla.gecko.util;
 
 import org.mozilla.gecko.mozglue.JNITarget;
 
+import android.os.Bundle;
+
 /**
  * NativeJSObject is a wrapper around the SpiderMonkey JSAPI to make it possible to
  * access Javascript objects in Java.
@@ -60,6 +62,40 @@ public class NativeJSObject
      *         If an internal JSAPI call failed
      */
     public native boolean optBoolean(String name, boolean fallback);
+
+    /**
+     * Returns the value of an object property as a Bundle.
+     *
+     * @param name
+     *        Property name
+     * @throws IllegalArgumentException
+     *         If the property does not exist or if its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native Bundle getBundle(String name);
+
+    /**
+     * Returns the value of an object property as a Bundle.
+     *
+     * @param name
+     *        Property name
+     * @param fallback
+     *        Value to return if property does not exist
+     * @throws IllegalArgumentException
+     *         If the property exists and its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native Bundle optBundle(String name, Bundle fallback);
 
     /**
      * Returns the value of a double property.
@@ -210,6 +246,18 @@ public class NativeJSObject
      *         If an internal JSAPI call failed
      */
     public native boolean has(String name);
+
+    /**
+     * Returns the Bundle representation of this object.
+     *
+     * @throws NullPointerException
+     *         If this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native Bundle toBundle();
 
     /**
      * Returns the JSON representation of this object.
