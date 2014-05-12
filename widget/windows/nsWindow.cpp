@@ -7293,6 +7293,13 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
             return false;
           }
         }
+      } else if (LOWORD(aWParam) == WA_CLICKACTIVE) {
+        // If the WM_ACTIVATE message is caused by a click in a popup,
+        // we should not rollup any popups.
+        if (EventIsInsideWindow(popupWindow) ||
+            !GetPopupsToRollup(rollupListener, &popupsToRollup)) {
+          return false;
+        }
       }
       break;
 
