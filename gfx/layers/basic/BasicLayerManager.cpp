@@ -835,6 +835,7 @@ BasicLayerManager::PaintSelfOrChildren(PaintLayerContext& aPaintContext,
           aPaintContext.mReadback);
     } else {
       data->Paint(aGroupTarget->GetDrawTarget(),
+                  aGroupTarget->GetDeviceOffset(),
                   aPaintContext.mLayer->GetMaskLayer());
     }
   } else {

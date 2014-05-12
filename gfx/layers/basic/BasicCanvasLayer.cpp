@@ -21,7 +21,9 @@ namespace mozilla {
 namespace layers {
 
 void
-BasicCanvasLayer::Paint(DrawTarget* aDT, Layer* aMaskLayer)
+BasicCanvasLayer::Paint(DrawTarget* aDT,
+                        const Point& aDeviceOffset,
+                        Layer* aMaskLayer)
 {
   if (IsHidden())
     return;
@@ -43,7 +45,7 @@ BasicCanvasLayer::Paint(DrawTarget* aDT, Layer* aMaskLayer)
     aDT->SetTransform(newTransform);
   }
 
-  FillRectWithMask(aDT,
+  FillRectWithMask(aDT, aDeviceOffset,
                    Rect(0, 0, mBounds.width, mBounds.height),
                    mSurface, ToFilter(mFilter),
                    DrawOptions(GetEffectiveOpacity(), GetEffectiveOperator(this)),
