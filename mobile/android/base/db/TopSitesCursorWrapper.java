@@ -7,12 +7,13 @@ import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.util.ArrayMap;
 import android.util.SparseBooleanArray;
 import android.util.SparseIntArray;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.TopSites;
@@ -45,12 +46,14 @@ public class TopSitesCursorWrapper implements Cursor {
         TopSites.TYPE
     };
 
-    private static final ArrayMap<String, Integer> columnIndexes =
-            new ArrayMap<String, Integer>(columnNames.length) {{
+    private static final Map<String, Integer> columnIndexes =
+            new HashMap<String, Integer>(columnNames.length);
+
+    static {
         for (int i = 0; i < columnNames.length; i++) {
-            put(columnNames[i], i);
+            columnIndexes.put(columnNames[i], i);
         }
-    }};
+    }
 
     // Maps column indexes from the wrapper to the cursor's.
     private SparseIntArray topIndexes;
