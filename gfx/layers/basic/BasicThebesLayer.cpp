@@ -48,24 +48,16 @@ void
 BasicThebesLayer::PaintThebes(gfxContext* aContext,
                               Layer* aMaskLayer,
                               LayerManager::DrawThebesLayerCallback aCallback,
-                              void* aCallbackData,
-                              ReadbackProcessor* aReadback)
+                              void* aCallbackData)
 {
   PROFILER_LABEL("BasicThebesLayer", "PaintThebes");
   NS_ASSERTION(BasicManager()->InDrawing(),
                "Can only draw in drawing phase");
 
-  nsTArray<ReadbackProcessor::Update> readbackUpdates;
-  if (aReadback && UsedForReadback()) {
-    aReadback->GetThebesLayerUpdates(this, &readbackUpdates);
-  }
-
   float opacity = GetEffectiveOpacity();
   CompositionOp effectiveOperator = GetEffectiveOperator(this);
 
   if (!BasicManager()->IsRetained()) {
-    NS_ASSERTION(readbackUpdates.IsEmpty(), "Can't do readback for non-retained layer");
-
     mValidRegion.SetEmpty();
     mContentClient->Clear();
 
@@ -214,6 +206,23 @@ BasicThebesLayer::Validate(LayerManager::DrawThebesLayerCallback aCallback,
     // instead.
     NS_WARN_IF_FALSE(state.mRegionToDraw.IsEmpty(),
                      "No context when we have something to draw, resource exhaustion?");
+  }
+  
+  for (uint32_t i = 0; i < readbackUpdates.Length(); ++i) {
+    ReadbackProcessor::Update& update = readbackUpdates[i];
+    nsIntPoint offset = update.mLayer->GetBackgroundLayerOffset();
+    nsRefPtr<gfxContext> ctx =
+      update.mLayer->GetSink()->BeginUpdate(update.mUpdateRect + offset,
+                                            update.mSequenceCounter);
+    if (ctx) {
+      NS_ASSERTION(GetEffectiveOpacity() == 1.0, "Should only read back opaque layers");
+      NS_ASSERTION(!GetMaskLayer(), "Should only read back layers without masks");
+      ctx->Translate(gfxPoint(offset.x, offset.y));
+      mContentClient->DrawTo(this, ctx->GetDrawTarget(), 1.0,
+                             CompositionOpForOp(ctx->CurrentOperator()),
+                             nullptr, nullptr);
+      update.mLayer->GetSink()->EndUpdate(ctx, update.mUpdateRect + offset);
+    }
   }
 }
 

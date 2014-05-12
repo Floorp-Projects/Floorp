@@ -59,11 +59,11 @@ public:
   virtual void PaintThebes(gfxContext* aContext,
                            Layer* aMaskLayer,
                            LayerManager::DrawThebesLayerCallback aCallback,
-                           void* aCallbackData,
-                           ReadbackProcessor* aReadback);
+                           void* aCallbackData);
 
   virtual void Validate(LayerManager::DrawThebesLayerCallback aCallback,
-                        void* aCallbackData) MOZ_OVERRIDE;
+                        void* aCallbackData,
+                        ReadbackProcessor* aReadback) MOZ_OVERRIDE;
 
   virtual void ClearCachedResources()
   {
