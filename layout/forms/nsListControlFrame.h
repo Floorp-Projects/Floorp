@@ -77,9 +77,9 @@ public:
                     nsIFrame*        aParent,
                     nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
 
-  virtual nsresult DidReflow(nsPresContext*            aPresContext, 
-                             const nsHTMLReflowState*  aReflowState, 
-                             nsDidReflowStatus         aStatus) MOZ_OVERRIDE;
+  virtual void DidReflow(nsPresContext*            aPresContext, 
+                         const nsHTMLReflowState*  aReflowState, 
+                         nsDidReflowStatus         aStatus) MOZ_OVERRIDE;
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
