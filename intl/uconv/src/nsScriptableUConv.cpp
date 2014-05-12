@@ -256,20 +256,47 @@ nsresult
 nsScriptableUnicodeConverter::InitConverter()
 {
   mEncoder = nullptr;
+  mDecoder = nullptr;
 
   nsAutoCString encoding;
   if (mIsInternal) {
-    encoding.Assign(mCharset);
-    // Better have a valid encoding name at this point! Otherwise, we'll
-    // crash with MOZ_ASSERT in debug builds. However, since this code
-    // might be called by severely misguided extensions in opt builds, the
-    // error condition is tested for below.
-    mEncoder = EncodingUtils::EncoderForEncoding(mCharset);
-    mDecoder = EncodingUtils::DecoderForEncoding(mCharset);
-    if (!mEncoder || !mDecoder) {
+    // For compatibility with legacy extensions, let's try to see if the label
+    // happens to be ASCII-case-insensitively an encoding. This should allow
+    // for things like "utf-7" and "x-Mac-Hebrew".
+    nsAutoCString contractId;
+    nsAutoCString label(mCharset);
+    EncodingUtils::TrimSpaceCharacters(label);
+    // Let's try in lower case if we didn't get an decoder. E.g. x-mac-ce
+    // and x-imap4-modified-utf7 are all lower case.
+    ToLowerCase(label);
+    if (label.EqualsLiteral("replacement")) {
+      // reject "replacement"
       return NS_ERROR_UCONV_NOCONV;
     }
-  } else {
+    contractId.AssignLiteral(NS_UNICODEENCODER_CONTRACTID_BASE);
+    contractId.Append(label);
+    mEncoder = do_CreateInstance(contractId.get());
+    contractId.AssignLiteral(NS_UNICODEDECODER_CONTRACTID_BASE);
+    contractId.Append(label);
+    mDecoder = do_CreateInstance(contractId.get());
+    if (!mDecoder) {
+      // The old code seemed to want both a decoder and an encoder. Since some
+      // internal encodings will be decoder-only in the future, let's relax
+      // this. Note that the other methods check mEncoder for null anyway.
+      // Let's try the upper case. E.g. UTF-7 and ISO-2022-CN have upper
+      // case Gecko-canonical names.
+      ToUpperCase(label);
+      contractId.AssignLiteral(NS_UNICODEENCODER_CONTRACTID_BASE);
+      contractId.Append(label);
+      mEncoder = do_CreateInstance(contractId.get());
+      contractId.AssignLiteral(NS_UNICODEDECODER_CONTRACTID_BASE);
+      contractId.Append(label);
+      mDecoder = do_CreateInstance(contractId.get());
+      // If still no decoder, use the normal non-internal case below.
+    }
+  }
+
+  if (!mDecoder) {
     if (!EncodingUtils::FindEncodingForLabelNoReplacement(mCharset, encoding)) {
       return NS_ERROR_UCONV_NOCONV;
     }
@@ -283,6 +310,10 @@ nsScriptableUnicodeConverter::InitConverter()
   // they should switch to TextDecoder.
   if (encoding.EqualsLiteral("UTF-8")) {
     mDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Signal);
+  }
+
+  if (!mEncoder) {
+    return NS_OK;
   }
 
   return mEncoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace,

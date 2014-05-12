@@ -1315,9 +1315,6 @@ QtSparql/qsparqlresult.h
 #if MOZ_TREE_PIXMAN!=1
 pixman.h
 #endif
-#if MOZ_ENABLE_MEEGOTOUCHSHARE
-shareuiinterface.h
-#endif
 #if MOZ_NATIVE_LIBVPX==1
 vpx/vpx_codec.h
 vpx/vpx_decoder.h

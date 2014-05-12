@@ -191,7 +191,7 @@ CustomizeMode.prototype = {
       // is really not going to work. We pass "true" to ensureReady to
       // indicate that we're handling calling startBatchUpdate and
       // endBatchUpdate.
-      if (!window.PanelUI.isReady()) {
+      if (!window.PanelUI.isReady) {
         yield window.PanelUI.ensureReady(true);
       }
 

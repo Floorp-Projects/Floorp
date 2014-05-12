@@ -37,6 +37,10 @@ registerCleanupFunction(() => {
 // Uncomment to log events
 // Services.prefs.setBoolPref("devtools.dump.emit", true);
 
+// Set the testing flag on gDevTools and reset it when the test ends
+gDevTools.testing = true;
+registerCleanupFunction(() => gDevTools.testing = false);
+
 // Clean-up all prefs that might have been changed during a test run
 // (safer here because if the test fails, then the pref is never reverted)
 registerCleanupFunction(() => {

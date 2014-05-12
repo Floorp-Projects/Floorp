@@ -4028,8 +4028,8 @@ LookupPropertyInline(ExclusiveContext *cx,
                      typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
                      typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp)
 {
-    /* NB: The logic of this procedure is implicitly reflected in IonBuilder.cpp's
-     *     |CanEffectlesslyCallLookupGenericOnObject| logic.
+    /* NB: The logic of this procedure is implicitly reflected in
+     *     BaselineIC.cpp's |EffectlesslyLookupProperty| logic.
      *     If this changes, please remember to update the logic there as well.
      */
 
@@ -4089,9 +4089,8 @@ baseops::LookupProperty<NoGC>(ExclusiveContext *cx, JSObject *obj, jsid id,
 JSObject::lookupGeneric(JSContext *cx, HandleObject obj, js::HandleId id,
                         MutableHandleObject objp, MutableHandleShape propp)
 {
-    /*
-     * NB: The logic of lookupGeneric is implicitly reflected in IonBuilder.cpp's
-     *     |CanEffectlesslyCallLookupGenericOnObject| logic.
+    /* NB: The logic of lookupGeneric is implicitly reflected in
+     *     BaselineIC.cpp's |EffectlesslyLookupProperty| logic.
      *     If this changes, please remember to update the logic there as well.
      */
     LookupGenericOp op = obj->getOps()->lookupGeneric;

@@ -570,14 +570,6 @@ WrapNative(JSContext *cx, nsISupports *native,
   return WrapNative(cx, native, nullptr, nullptr, vp, aAllowWrapping);
 }
 
-static inline nsresult
-WrapNative(JSContext *cx, nsISupports *native,
-           nsWrapperCache *cache, bool aAllowWrapping,
-           JS::MutableHandle<JS::Value> vp)
-{
-  return WrapNative(cx, native, cache, nullptr, vp, aAllowWrapping);
-}
-
 // Helper to handle torn-down inner windows.
 static inline nsresult
 SetParentToWindow(nsGlobalWindow *win, JSObject **parent)

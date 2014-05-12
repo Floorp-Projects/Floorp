@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Testcase for box-decoration-break:clone, block border+padding</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=988653">
+  <link rel="help" href="http://dev.w3.org/csswg/css-break/#break-decoration">
+  <link rel="match" href="box-decoration-break-block-border-padding-ref.html">
+  <meta charset="utf-8">
+  <style type="text/css">
+    html,body {
+      color:black; background-color:white; font-size:16px; padding:10px; margin:0;
+    }
+
+    .inner {
+      box-decoration-break: clone;
+      border: 5px dashed blue;
+      height: 99px;
+      width: 40px;
+      background: lime;
+      background-clip: content-box;
+    }
+
+    .columns {
+      -moz-columns: 3;
+      width: 250px;
+      height: 50px;
+      background: grey;
+      margin-top: 2px;
+    }
+
+    .unbalanced {
+      -moz-column-fill: auto;
+    }
+
+    .inner.p { height:93px; padding:1px 3px 5px 7px; }
+  </style>
+</head>
+<body>
+
+<div class="columns"><div class="inner"></div></div>
+<div class="columns unbalanced"><div class="inner"></div></div>
+<div class="columns"><div class="p inner"></div></div>
+<div class="columns unbalanced"><div class="p inner"></div></div>
+
+</body>
+</html>
