@@ -317,6 +317,8 @@ class MOZ_STACK_CLASS nsWSRunObject
     void     GetRuns();
     void     ClearRuns();
     void     MakeSingleWSRun(WSType aType);
+    nsresult PrependNodeToList(nsINode* aNode);
+    nsresult AppendNodeToList(nsINode* aNode);
     nsresult GetPreviousWSNode(::DOMPoint aPoint,
                                nsINode* aBlockParent,
                                nsCOMPtr<nsINode>* aPriorNode);
@@ -382,8 +384,7 @@ class MOZ_STACK_CLASS nsWSRunObject
     nsCOMPtr<nsINode> mLastNBSPNode;   // location of last nbsp in ws run, if any
     int32_t mLastNBSPOffset;           // ...
     
-    // the list of nodes containing ws in this run
-    nsTArray<nsCOMPtr<mozilla::dom::Text>> mNodeArray;
+    nsCOMArray<nsINode> mNodeArray;    //the list of nodes containing ws in this run
     
     WSFragment *mStartRun;             // the first WSFragment in the run
     WSFragment *mEndRun;               // the last WSFragment in the run, may be same as first
