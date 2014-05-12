@@ -4,28 +4,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['MOZ_XUL']:
-    MSVC_ENABLE_PGO = True
+EXPORTS.mozilla.dom += [
+    'SVGDocument.h',
+]
 
-    UNIFIED_SOURCES += [
-        'nsXULContextMenuBuilder.cpp',
-        'nsXULElement.cpp',
-        'nsXULPopupListener.cpp',
-    ]
+SOURCES += [
+    'SVGDocument.cpp',
+]
 
 FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [
-    '../../document/src',
-    '../../templates/src',
     '/content/base/src',
-    '/content/html/content/src',
-    '/content/xml/content/src',
+    '/content/html/document/src',
+    '/content/svg/content/src',
     '/content/xml/document/src',
-    '/dom/xbl',
-    '/layout/generic',
     '/layout/style',
-    '/layout/xul',
 ]
 
 FINAL_LIBRARY = 'gklayout'

@@ -4,28 +4,28 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['MOZ_XUL']:
-    MSVC_ENABLE_PGO = True
+EXPORTS.mozilla.dom += [
+    'XMLDocument.h',
+]
 
-    UNIFIED_SOURCES += [
-        'nsXULContextMenuBuilder.cpp',
-        'nsXULElement.cpp',
-        'nsXULPopupListener.cpp',
-    ]
+UNIFIED_SOURCES += [
+    'nsXMLContentSink.cpp',
+    'nsXMLFragmentContentSink.cpp',
+    'nsXMLPrettyPrinter.cpp',
+    'XMLDocument.cpp',
+]
 
 FAIL_ON_WARNINGS = True
 
+MSVC_ENABLE_PGO = True
+
 LOCAL_INCLUDES += [
-    '../../document/src',
-    '../../templates/src',
+    '/caps/include',
     '/content/base/src',
-    '/content/html/content/src',
-    '/content/xml/content/src',
-    '/content/xml/document/src',
-    '/dom/xbl',
-    '/layout/generic',
+    '/content/html/document/src',
+    '/content/xul/content/src',
+    '/dom/base',
     '/layout/style',
-    '/layout/xul',
 ]
 
 FINAL_LIBRARY = 'gklayout'

@@ -54,7 +54,6 @@ PARALLEL_DIRS += [
     'filesystem',
     'fmradio',
     'asmjscache',
-    'mathml',
     'media',
     'messages',
     'power',
@@ -70,7 +69,6 @@ PARALLEL_DIRS += [
     'plugins/base',
     'plugins/ipc',
     'indexedDB',
-    'svg',
     'system',
     'ipc',
     'identity',
@@ -83,7 +81,6 @@ PARALLEL_DIRS += [
     'inputmethod',
     'webidl',
     'xbl',
-    'xml',
     'xslt',
 ]
 

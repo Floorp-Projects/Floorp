@@ -43,7 +43,7 @@ LOCAL_INCLUDES += [
     '../tables',
     '../xul',
     '/content/base/src',
-    '/dom/mathml',
+    '/content/mathml/content/src',
 ]
 
 if CONFIG['ENABLE_TESTS']:
