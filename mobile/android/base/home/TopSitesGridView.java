@@ -112,7 +112,7 @@ public class TopSitesGridView extends GridView {
                 // If not, navigate to the page given by the url.
                 if (!TextUtils.isEmpty(url)) {
                     if (mUrlOpenListener != null) {
-                        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.GRID_ITEM);
+                        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.GRID_ITEM, Integer.toString(position));
 
                         mUrlOpenListener.onUrlOpen(url, EnumSet.noneOf(OnUrlOpenListener.Flags.class));
                     }
