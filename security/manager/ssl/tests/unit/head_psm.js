@@ -319,6 +319,11 @@ function _getBinaryUtil(binaryUtilName) {
     utilBin.append("bin");
     utilBin.append(binaryUtilName + (gIsWindows ? ".exe" : ""));
   }
+  // But maybe we're on Android or B2G, where binaries are in /data/local/xpcb.
+  if (!utilBin.exists()) {
+    utilBin.initWithPath("/data/local/xpcb/");
+    utilBin.append(binaryUtilName);
+  }
   do_check_true(utilBin.exists());
   return utilBin;
 }
