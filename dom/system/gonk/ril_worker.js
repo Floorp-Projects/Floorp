@@ -1582,16 +1582,15 @@ RilObject.prototype = {
     try {
       let str = getSearchListStr(options.searchList);
       this.cellBroadcastConfigs.MMI = this._convertCellBroadcastSearchList(str);
-      options.success = true;
     } catch (e) {
       if (DEBUG) {
         this.context.debug("Invalid Cell Broadcast search list: " + e);
       }
-      options.success = false;
+      options.errorMsg = GECKO_ERROR_UNSPECIFIED_ERROR;
     }
 
     this.sendChromeMessage(options);
-    if (!options.success) {
+    if (options.errorMsg) {
       return;
     }
 
@@ -1853,7 +1852,6 @@ RilObject.prototype = {
     }
 
     let _sendMMIError = (function(errorMsg) {
-      options.success = false;
       options.errorMsg = errorMsg;
       this.sendChromeMessage(options);
     }).bind(this);
@@ -2028,7 +2026,6 @@ RilObject.prototype = {
           return;
         }
         // If we already had the device's IMEI, we just send it to chrome.
-        options.success = true;
         options.statusMessage = this.IMEI;
         this.sendChromeMessage(options);
         return;
@@ -2163,7 +2160,6 @@ RilObject.prototype = {
    */
   sendUSSD: function(options, checkSession = true) {
     if (checkSession && !this._ussdSession) {
-      options.success = false;
       options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
       this.sendChromeMessage(options);
       return;
@@ -2889,7 +2885,6 @@ RilObject.prototype = {
    * Helper for processing responses of functions such as enterICC* and changeICC*.
    */
   _processEnterAndChangeICCResponses: function(length, options) {
-    options.success = !options.errorMsg;
     options.retryCount = length ? this.context.Buf.readInt32List()[0] : -1;
     if (options.rilMessageType != "sendMMI") {
       this.sendChromeMessage(options);
@@ -2898,7 +2893,7 @@ RilObject.prototype = {
 
     let serviceCode = options.mmi.serviceCode;
 
-    if (options.success) {
+    if (!options.errorMsg) {
       switch (serviceCode) {
         case MMI_SC_PIN:
           options.statusMessage = MMI_SM_KS_PIN_CHANGED;
@@ -4381,7 +4376,6 @@ RilObject.prototype = {
       return;
     }
 
-    options.success = !options.errorMsg;
     this.sendChromeMessage(options);
   },
 
@@ -4753,7 +4747,7 @@ RilObject.prototype[REQUEST_SEND_USSD] = function REQUEST_SEND_USSD(length, opti
   if (DEBUG) {
     this.context.debug("REQUEST_SEND_USSD " + JSON.stringify(options));
   }
-  options.success = (this._ussdSession = !options.errorMsg);
+  this._ussdSession = !options.errorMsg;
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_CANCEL_USSD] = function REQUEST_CANCEL_USSD(length, options) {
@@ -4761,8 +4755,7 @@ RilObject.prototype[REQUEST_CANCEL_USSD] = function REQUEST_CANCEL_USSD(length, 
     this.context.debug("REQUEST_CANCEL_USSD" + JSON.stringify(options));
   }
 
-  options.success = !options.errorMsg;
-  this._ussdSession = !options.success;
+  this._ussdSession = !!options.errorMsg;
 
   // The cancelUSSD is triggered by ril_worker itself.
   if (this.cachedUSSDRequest) {
@@ -4775,8 +4768,7 @@ RilObject.prototype[REQUEST_CANCEL_USSD] = function REQUEST_CANCEL_USSD(length, 
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_GET_CLIR] = function REQUEST_GET_CLIR(length, options) {
-  options.success = !options.errorMsg;
-  if (!options.success) {
+  if (options.errorMsg) {
     this.sendChromeMessage(options);
     return;
   }
@@ -4784,7 +4776,6 @@ RilObject.prototype[REQUEST_GET_CLIR] = function REQUEST_GET_CLIR(length, option
   let Buf = this.context.Buf;
   let bufLength = Buf.readInt32();
   if (!bufLength || bufLength < 2) {
-    options.success = false;
     options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
     this.sendChromeMessage(options);
     return;
@@ -4806,7 +4797,6 @@ RilObject.prototype[REQUEST_GET_CLIR] = function REQUEST_GET_CLIR(length, option
         break;
       // Unknown (e.g. no network, etc.).
       case 2:
-        options.success = false;
         options.errorMsg = MMI_ERROR_KS_ERROR;
         break;
       // CLIR temporary mode presentation restricted.
@@ -4824,7 +4814,6 @@ RilObject.prototype[REQUEST_GET_CLIR] = function REQUEST_GET_CLIR(length, option
             options.statusMessage = MMI_SM_KS_CLIR_DEFAULT_ON_NEXT_CALL_OFF;
             break;
           default:
-            options.success = false;
             options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
             break;
         }
@@ -4844,13 +4833,11 @@ RilObject.prototype[REQUEST_GET_CLIR] = function REQUEST_GET_CLIR(length, option
             options.statusMessage = MMI_SM_KS_CLIR_DEFAULT_OFF_NEXT_CALL_ON;
             break;
           default:
-            options.success = false;
             options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
             break;
         }
         break;
       default:
-        options.success = false;
         options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
         break;
     }
@@ -4863,8 +4850,8 @@ RilObject.prototype[REQUEST_SET_CLIR] = function REQUEST_SET_CLIR(length, option
     // The request was made by ril_worker itself automatically. Don't report.
     return;
   }
-  options.success = !options.errorMsg;
-  if (options.success && options.rilMessageType === "sendMMI") {
+
+  if (!options.errorMsg && options.rilMessageType === "sendMMI") {
     switch (options.procedure) {
       case MMI_PROCEDURE_ACTIVATION:
         options.statusMessage = MMI_SM_KS_SERVICE_ENABLED;
@@ -4879,8 +4866,7 @@ RilObject.prototype[REQUEST_SET_CLIR] = function REQUEST_SET_CLIR(length, option
 
 RilObject.prototype[REQUEST_QUERY_CALL_FORWARD_STATUS] =
   function REQUEST_QUERY_CALL_FORWARD_STATUS(length, options) {
-  options.success = !options.errorMsg;
-  if (!options.success) {
+  if (options.errorMsg) {
     this.sendChromeMessage(options);
     return;
   }
@@ -4891,7 +4877,6 @@ RilObject.prototype[REQUEST_QUERY_CALL_FORWARD_STATUS] =
     rulesLength = Buf.readInt32();
   }
   if (!rulesLength) {
-    options.success = false;
     options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
     this.sendChromeMessage(options);
     return;
@@ -4919,8 +4904,7 @@ RilObject.prototype[REQUEST_QUERY_CALL_FORWARD_STATUS] =
 };
 RilObject.prototype[REQUEST_SET_CALL_FORWARD] =
     function REQUEST_SET_CALL_FORWARD(length, options) {
-  options.success = !options.errorMsg;
-  if (options.success && options.rilMessageType === "sendMMI") {
+  if (!options.errorMsg && options.rilMessageType === "sendMMI") {
     switch (options.action) {
       case CALL_FORWARD_ACTION_ENABLE:
         options.statusMessage = MMI_SM_KS_SERVICE_ENABLED;
@@ -4940,8 +4924,7 @@ RilObject.prototype[REQUEST_SET_CALL_FORWARD] =
 };
 RilObject.prototype[REQUEST_QUERY_CALL_WAITING] =
   function REQUEST_QUERY_CALL_WAITING(length, options) {
-  options.success = !options.errorMsg;
-  if (!options.success) {
+  if (options.errorMsg) {
     if (options.callback) {
       // Prevent DataCloneError when sending chrome messages.
       delete options.callback;
@@ -4964,8 +4947,7 @@ RilObject.prototype[REQUEST_QUERY_CALL_WAITING] =
 };
 
 RilObject.prototype[REQUEST_SET_CALL_WAITING] = function REQUEST_SET_CALL_WAITING(length, options) {
-  options.success = !options.errorMsg;
-  if (!options.success) {
+  if (options.errorMsg) {
     if (options.callback) {
       // Prevent DataCloneError when sending chrome messages.
       delete options.callback;
@@ -4991,8 +4973,7 @@ RilObject.prototype[REQUEST_GET_IMEI] = function REQUEST_GET_IMEI(length, option
     return;
   }
 
-  options.success = !options.errorMsg;
-  if (options.success && this.IMEI == null) {
+  if (!options.errorMsg && this.IMEI == null) {
     options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
   }
   options.statusMessage = this.IMEI;
@@ -5012,14 +4993,12 @@ RilObject.prototype[REQUEST_DEACTIVATE_DATA_CALL] = function REQUEST_DEACTIVATE_
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_QUERY_FACILITY_LOCK] = function REQUEST_QUERY_FACILITY_LOCK(length, options) {
-  options.success = !options.errorMsg;
-  if (!options.success) {
+  if (options.errorMsg) {
     this.sendChromeMessage(options);
     return;
   }
 
   if (!length) {
-    options.success = false;
     options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
     this.sendChromeMessage(options);
     return;
@@ -5055,10 +5034,9 @@ RilObject.prototype[REQUEST_QUERY_FACILITY_LOCK] = function REQUEST_QUERY_FACILI
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_SET_FACILITY_LOCK] = function REQUEST_SET_FACILITY_LOCK(length, options) {
-  options.success = !options.errorMsg;
   options.retryCount = length ? this.context.Buf.readInt32List()[0] : -1;
 
-  if (options.success && (options.rilMessageType === "sendMMI")) {
+  if (!options.errorMsg && (options.rilMessageType === "sendMMI")) {
     switch (options.procedure) {
       case MMI_PROCEDURE_ACTIVATION:
         options.statusMessage = MMI_SM_KS_SERVICE_ENABLED;
@@ -5123,7 +5101,6 @@ RilObject.prototype[REQUEST_QUERY_AVAILABLE_NETWORKS] = function REQUEST_QUERY_A
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_DTMF_START] = function REQUEST_DTMF_START(length, options) {
-  options.success = !options.errorMsg;
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_DTMF_STOP] = null;
@@ -5141,8 +5118,7 @@ RilObject.prototype[REQUEST_SEPARATE_CONNECTION] = function REQUEST_SEPARATE_CON
 RilObject.prototype[REQUEST_SET_MUTE] = null;
 RilObject.prototype[REQUEST_GET_MUTE] = null;
 RilObject.prototype[REQUEST_QUERY_CLIP] = function REQUEST_QUERY_CLIP(length, options) {
-  options.success = !options.errorMsg;
-  if (!options.success) {
+  if (options.errorMsg) {
     this.sendChromeMessage(options);
     return;
   }
@@ -5150,7 +5126,6 @@ RilObject.prototype[REQUEST_QUERY_CLIP] = function REQUEST_QUERY_CLIP(length, op
   let Buf = this.context.Buf;
   let bufLength = Buf.readInt32();
   if (!bufLength) {
-    options.success = false;
     options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
     this.sendChromeMessage(options);
     return;
@@ -5171,7 +5146,6 @@ RilObject.prototype[REQUEST_QUERY_CLIP] = function REQUEST_QUERY_CLIP(length, op
         options.statusMessage = MMI_SM_KS_SERVICE_ENABLED;
         break;
       default:
-        options.success = false;
         options.errorMsg = MMI_ERROR_KS_ERROR;
         break;
     }
@@ -5520,7 +5494,6 @@ RilObject.prototype[REQUEST_EXIT_EMERGENCY_CALLBACK_MODE] = function REQUEST_EXI
     return;
   }
 
-  options.success = !options.errorMsg;
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_GET_SMSC_ADDRESS] = function REQUEST_GET_SMSC_ADDRESS(length, options) {
@@ -5639,11 +5612,9 @@ RilObject.prototype[REQUEST_SET_DATA_SUBSCRIPTION] = function REQUEST_SET_DATA_S
     // The request was made by ril_worker itself. Don't report.
     return;
   }
-  options.success = !options.errorMsg;
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_GET_UNLOCK_RETRY_COUNT] = function REQUEST_GET_UNLOCK_RETRY_COUNT(length, options) {
-  options.success = !options.errorMsg;
   options.retryCount = length ? this.context.Buf.readInt32List()[0] : -1;
   this.sendChromeMessage(options);
 };
@@ -5652,11 +5623,9 @@ RilObject.prototype[RIL_REQUEST_GPRS_ATTACH] = function RIL_REQUEST_GPRS_ATTACH(
     // The request was made by ril_worker itself. Don't report.
     return;
   }
-  options.success = !options.errorMsg;
   this.sendChromeMessage(options);
 };
 RilObject.prototype[RIL_REQUEST_GPRS_DETACH] = function RIL_REQUEST_GPRS_DETACH(length, options) {
-  options.success = !options.errorMsg;
   this.sendChromeMessage(options);
 };
 RilObject.prototype[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED() {

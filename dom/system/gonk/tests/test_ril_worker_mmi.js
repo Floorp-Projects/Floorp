@@ -63,7 +63,7 @@ add_test(function test_sendMMI_short_code() {
 
   let postedMessage = workerhelper.postedMessage;
   equal(ussdOptions.ussd, "**");
-  ok(postedMessage.success);
+  equal(postedMessage.errorMsg, undefined);
   ok(context.RIL._ussdSession);
 
   run_next_test();
@@ -84,7 +84,7 @@ add_test(function test_sendMMI_change_PIN() {
 
   let postedMessage = workerhelper.postedMessage;
 
-  ok(postedMessage.success);
+  equal(postedMessage.errorMsg, undefined);
 
   run_next_test();
 });
@@ -132,7 +132,7 @@ add_test(function test_sendMMI_change_PIN2() {
 
   let postedMessage = workerhelper.postedMessage;
 
-  ok(postedMessage.success);
+  equal(postedMessage.errorMsg, undefined);
 
   run_next_test();
 });
@@ -180,7 +180,7 @@ add_test(function test_sendMMI_unblock_PIN() {
 
   let postedMessage = workerhelper.postedMessage;
 
-  ok(postedMessage.success);
+  equal(postedMessage.errorMsg, undefined);
 
   run_next_test();
 });
@@ -228,7 +228,7 @@ add_test(function test_sendMMI_unblock_PIN2() {
 
   let postedMessage = workerhelper.postedMessage;
 
-  ok(postedMessage.success);
+  equal(postedMessage.errorMsg, undefined);
 
   run_next_test();
 });
@@ -277,7 +277,7 @@ add_test(function test_sendMMI_get_IMEI() {
   let postedMessage = workerhelper.postedMessage;
 
   notEqual(mmiOptions.mmi, null);
-  ok(postedMessage.success);
+  equal(postedMessage.errorMsg, undefined);
 
   run_next_test();
 });
@@ -301,7 +301,6 @@ add_test(function test_sendMMI_get_IMEI_error() {
 
   notEqual(mmiOptions.mmi, null);
   equal (postedMessage.errorMsg, GECKO_ERROR_RADIO_NOT_AVAILABLE);
-  ok(!postedMessage.success);
 
   run_next_test();
 });
@@ -327,7 +326,7 @@ add_test(function test_sendMMI_call_barring_BAIC_interrogation_voice() {
 
   let postedMessage = workerhelper.postedMessage;
 
-  ok(postedMessage.success);
+  equal(postedMessage.errorMsg, undefined);
   ok(postedMessage.enabled);
   equal(postedMessage.statusMessage,  MMI_SM_KS_SERVICE_ENABLED_FOR);
   ok(Array.isArray(postedMessage.additionalInformation));
@@ -357,7 +356,7 @@ add_test(function test_sendMMI_call_barring_BAIC_activation() {
   let postedMessage = workerhelper.postedMessage;
 
   equal(mmiOptions.procedure, MMI_PROCEDURE_ACTIVATION);
-  ok(postedMessage.success);
+  equal(postedMessage.errorMsg, undefined);
   equal(postedMessage.statusMessage,  MMI_SM_KS_SERVICE_ENABLED);
 
   run_next_test();
@@ -384,7 +383,7 @@ add_test(function test_sendMMI_call_barring_BAIC_deactivation() {
   let postedMessage = workerhelper.postedMessage;
 
   equal(mmiOptions.procedure, MMI_PROCEDURE_DEACTIVATION);
-  ok(postedMessage.success);
+  equal(postedMessage.errorMsg, undefined);
   equal(postedMessage.statusMessage,  MMI_SM_KS_SERVICE_DISABLED);
 
   run_next_test();
@@ -413,7 +412,7 @@ add_test(function test_sendMMI_USSD() {
   let postedMessage = workerhelper.postedMessage;
 
   equal(ussdOptions.ussd, "**123#");
-  ok(postedMessage.success);
+  equal(postedMessage.errorMsg, undefined);
   ok(context.RIL._ussdSession);
 
   run_next_test();
@@ -439,7 +438,6 @@ add_test(function test_sendMMI_USSD_error() {
 
   equal(ussdOptions.ussd, "**123#");
   equal(postedMessage.errorMsg, GECKO_ERROR_GENERIC_FAILURE);
-  ok(!postedMessage.success);
   ok(!context.RIL._ussdSession);
 
   run_next_test();
@@ -459,7 +457,7 @@ function setCallWaitingSuccess(mmi) {
 
   let postedMessage = workerhelper.postedMessage;
 
-  ok(postedMessage.success);
+  equal(postedMessage.errorMsg, undefined);
 }
 
 add_test(function test_sendMMI_call_waiting_activation() {
@@ -509,7 +507,7 @@ add_test(function test_sendMMI_call_waiting_interrogation() {
 
   let postedMessage = workerhelper.postedMessage;
 
-  ok(postedMessage.success);
+  equal(postedMessage.errorMsg, undefined);
   equal(postedMessage.length, 2);
   ok(postedMessage.enabled);
   run_next_test();

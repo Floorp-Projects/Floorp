@@ -29,7 +29,6 @@ add_test(function test_queryCLIP_provisioned() {
   let postedMessage = workerHelper.postedMessage;
 
   equal(postedMessage.errorMsg, undefined);
-  ok(postedMessage.success);
   equal(postedMessage.provisioned, 1);
   run_next_test();
 });
@@ -55,7 +54,6 @@ add_test(function test_getCLIP_error_generic_failure_invalid_length() {
 
   let postedMessage = workerHelper.postedMessage;
 
-  equal(postedMessage.errorMsg, "GenericFailure");
-  ok(!postedMessage.success);
+  equal(postedMessage.errorMsg, GECKO_ERROR_GENERIC_FAILURE);
   run_next_test();
 });

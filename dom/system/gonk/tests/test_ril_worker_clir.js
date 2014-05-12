@@ -34,7 +34,6 @@ add_test(function test_setCLIR_success() {
   let postedMessage = workerHelper.postedMessage;
 
   equal(postedMessage.errorMsg, undefined);
-  ok(postedMessage.success);
 
   run_next_test();
 });
@@ -58,7 +57,6 @@ add_test(function test_setCLIR_generic_failure() {
   let postedMessage = workerHelper.postedMessage;
 
   equal(postedMessage.errorMsg, GECKO_ERROR_GENERIC_FAILURE);
-  ok(!postedMessage.success);
 
   run_next_test();
 });
@@ -89,7 +87,6 @@ add_test(function test_getCLIR_n0_m1() {
   let postedMessage = workerHelper.postedMessage;
 
   equal(postedMessage.errorMsg, undefined);
-  ok(postedMessage.success);
   equal(postedMessage.n, 0);
   equal(postedMessage.m, 1);
   run_next_test();
@@ -120,7 +117,6 @@ add_test(function test_getCLIR_error_generic_failure_invalid_length() {
 
   let postedMessage = workerHelper.postedMessage;
 
-  equal(postedMessage.errorMsg, "GenericFailure");
-  ok(!postedMessage.success);
+  equal(postedMessage.errorMsg, GECKO_ERROR_GENERIC_FAILURE);
   run_next_test();
 });

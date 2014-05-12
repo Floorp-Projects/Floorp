@@ -156,7 +156,7 @@ add_test(function test_ril_worker_cellbroadcast_set_search_list() {
     context.RIL.setCellBroadcastSearchList(options);
     // Enforce the MMI result to string for comparison.
     equal("" + context.RIL.cellBroadcastConfigs.MMI, aExpected);
-    equal(options.success, true);
+    do_check_eq(options.errorMsg, undefined);
   }
 
   let searchListStr = "1,2,3,4";
