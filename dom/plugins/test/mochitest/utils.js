@@ -42,3 +42,59 @@ function setTestPluginEnabledState(newEnabledState, pluginName) {
     getTestPlugin(pluginName).enabledState = oldEnabledState;
   });
 }
+
+function crashAndGetCrashServiceRecord(crashMethodName, callback) {
+  var crashMan =
+    SpecialPowers.Cu.import("resource://gre/modules/Services.jsm").
+    Services.crashmanager;
+
+  // First, clear the crash record store.
+  info("Waiting for pruneOldCrashes");
+  var future = new Date(Date.now() + 1000 * 60 * 60 * 24);
+  crashMan.pruneOldCrashes(future).then(function () {
+
+    var iframe = document.getElementById("iframe1");
+    var p = iframe.contentDocument.getElementById("plugin1");
+
+    var crashDateMS = Date.now();
+    try {
+      p[crashMethodName]();
+      ok(false, "p." + crashMethodName + "() should throw an exception");
+    }
+    catch (e) {
+      ok(true, "p." + crashMethodName + "() should throw an exception");
+    }
+
+    // The crash record store is written and read back asyncly, so poll for
+    // the new record.
+    function tryGetCrash() {
+      info("Waiting for getCrashes");
+      crashMan.getCrashes().then(function (crashes) {
+        if (crashes.length) {
+          is(crashes.length, 1, "There should be only one record");
+          var crash = SpecialPowers.wrap(crashes[0]);
+          ok(!!crash.id, "Record should have an ID");
+          ok(!!crash.crashDate, "Record should have a crash date");
+          var dateMS = crash.crashDate.valueOf();
+          var twoMin = 1000 * 60 * 2;
+          ok(crashDateMS - twoMin <= dateMS &&
+             dateMS <= crashDateMS + twoMin,
+             "Record's crash date should be nowish: " +
+             "now=" + crashDateMS + " recordDate=" + dateMS);
+          callback(crashMan, crash);
+        }
+        else {
+          setTimeout(tryGetCrash, 1000);
+        }
+      }, function (err) {
+        ok(false, "Error getting crashes: " + err);
+        SimpleTest.finish();
+      });
+    }
+    setTimeout(tryGetCrash, 1000);
+
+  }, function () {
+    ok(false, "pruneOldCrashes error");
+    SimpleTest.finish();
+  });
+}
