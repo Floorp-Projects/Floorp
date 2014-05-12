@@ -277,7 +277,7 @@ public:
   // helper method to reflow a child frame. We are inline frames, and we don't
   // know our positions until reflow is finished. That's why we ask the
   // base method not to worry about our position.
-  nsresult 
+  void
   ReflowChild(nsIFrame*                aKidFrame,
               nsPresContext*          aPresContext,
               nsHTMLReflowMetrics&     aDesiredSize,
