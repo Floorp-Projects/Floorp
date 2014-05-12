@@ -28,6 +28,7 @@ Navigator implements NavigatorLanguage;
 Navigator implements NavigatorOnLine;
 Navigator implements NavigatorContentUtils;
 Navigator implements NavigatorStorageUtils;
+Navigator implements NavigatorFeatures;
 
 [NoInterfaceObject]
 interface NavigatorID {
@@ -78,6 +79,12 @@ interface NavigatorContentUtils {
 interface NavigatorStorageUtils {
   // NOT IMPLEMENTED
   //void yieldForStorageUpdates();
+};
+
+[NoInterfaceObject]
+interface NavigatorFeatures {
+  [Func="Navigator::HasFeatureDetectionSupport"]
+  Promise getFeature(DOMString name);
 };
 
 // Things that definitely need to be in the spec and and are not for some
