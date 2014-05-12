@@ -1,5 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 subscriptLoader.loadSubScript("resource://gre/modules/ril_consts.js", this);
 
@@ -37,7 +37,8 @@ add_test(function test_setCallWaiting_generic_failure() {
 
   context.RIL.setCallWaiting = function fakeSetCallWaiting(options) {
     context.RIL[REQUEST_SET_CALL_WAITING](0, {
-      rilRequestError: ERROR_GENERIC_FAILURE
+      rilRequestError: ERROR_GENERIC_FAILURE,
+      errorMsg: GECKO_ERROR_GENERIC_FAILURE
     });
   };
 
@@ -47,7 +48,7 @@ add_test(function test_setCallWaiting_generic_failure() {
 
   let postedMessage = workerHelper.postedMessage;
 
-  equal(postedMessage.errorMsg, "GenericFailure");
+  equal(postedMessage.errorMsg, GECKO_ERROR_GENERIC_FAILURE);
   ok(!postedMessage.success);
 
   run_next_test();
