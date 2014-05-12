@@ -177,10 +177,16 @@ int main(int argc, char* argv[])
     fail("Socket");
     result = 1;
   }
-  // currently UNC paths that are not mapped to drive letters are unsupported,
-  // so this should fail
-  if (TestNtPathToDosPath(L"\\Device\\Mup\\127.0.0.1\\C$", nullptr)) {
-    fail("Unmapped UNC path");
+  // UNC path (using MUP)
+  if (!TestNtPathToDosPath(L"\\Device\\Mup\\127.0.0.1\\C$",
+                           L"\\\\127.0.0.1\\C$")) {
+    fail("Unmapped UNC path (\\Device\\Mup\\)");
+    result = 1;
+  }
+  // UNC path (using LanmanRedirector)
+  if (!TestNtPathToDosPath(L"\\Device\\LanmanRedirector\\127.0.0.1\\C$",
+                           L"\\\\127.0.0.1\\C$")) {
+    fail("Unmapped UNC path (\\Device\\LanmanRedirector\\)");
     result = 1;
   }
   DriveMapping drvMapping(NS_LITERAL_STRING("\\\\127.0.0.1\\C$"));
