@@ -127,27 +127,12 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
                            effectiveOperator,
                            maskSurface, &maskTransform);
   }
-
-  for (uint32_t i = 0; i < readbackUpdates.Length(); ++i) {
-    ReadbackProcessor::Update& update = readbackUpdates[i];
-    nsIntPoint offset = update.mLayer->GetBackgroundLayerOffset();
-    nsRefPtr<gfxContext> ctx =
-      update.mLayer->GetSink()->BeginUpdate(update.mUpdateRect + offset,
-                                            update.mSequenceCounter);
-    if (ctx) {
-      NS_ASSERTION(opacity == 1.0, "Should only read back opaque layers");
-      ctx->Translate(gfxPoint(offset.x, offset.y));
-      mContentClient->DrawTo(this, ctx->GetDrawTarget(), 1.0,
-                             CompositionOpForOp(ctx->CurrentOperator()),
-                             maskSurface, &maskTransform);
-      update.mLayer->GetSink()->EndUpdate(ctx, update.mUpdateRect + offset);
-    }
-  }
 }
 
 void
 BasicThebesLayer::Validate(LayerManager::DrawThebesLayerCallback aCallback,
-                           void* aCallbackData)
+                           void* aCallbackData,
+                           ReadbackProcessor* aReadback)
 {
   if (!mContentClient) {
     // This client will have a null Forwarder, which means it will not have
@@ -157,6 +142,11 @@ BasicThebesLayer::Validate(LayerManager::DrawThebesLayerCallback aCallback,
 
   if (!BasicManager()->IsRetained()) {
     return;
+  }
+
+  nsTArray<ReadbackProcessor::Update> readbackUpdates;
+  if (aReadback && UsedForReadback()) {
+    aReadback->GetThebesLayerUpdates(this, &readbackUpdates);
   }
 
   uint32_t flags = 0;
