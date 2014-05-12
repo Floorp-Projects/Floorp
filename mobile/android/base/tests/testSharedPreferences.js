@@ -28,7 +28,7 @@ function makeObserver() {
 };
 
 add_task(function test_get_set() {
-  let branch = new SharedPreferences("test");
+  let branch = SharedPreferences.forAndroid("test");
 
   branch.setBoolPref("boolKey", true);
   branch.setCharPref("charKey", "string value");
@@ -52,7 +52,7 @@ add_task(function test_get_set() {
 });
 
 add_task(function test_default() {
-  let branch = new SharedPreferences();
+  let branch = SharedPreferences.forAndroid();
 
   branch.setBoolPref("boolKey", true);
   branch.setCharPref("charKey", "string value");
@@ -76,8 +76,8 @@ add_task(function test_default() {
 });
 
 add_task(function test_multiple_branches() {
-  let branch1 = new SharedPreferences("test1");
-  let branch2 = new SharedPreferences("test2");
+  let branch1 = SharedPreferences.forAndroid("test1");
+  let branch2 = SharedPreferences.forAndroid("test2");
 
   branch1.setBoolPref("boolKey", true);
   branch2.setBoolPref("boolKey", false);
@@ -93,7 +93,7 @@ add_task(function test_multiple_branches() {
 });
 
 add_task(function test_add_remove_observer() {
-  let branch = new SharedPreferences("test");
+  let branch = SharedPreferences.forAndroid("test");
 
   branch.setBoolPref("boolKey", false);
   do_check_eq(branch.getBoolPref("boolKey"), false);
@@ -145,7 +145,7 @@ add_task(function test_add_remove_observer() {
 });
 
 add_task(function test_observer_ignores() {
-  let branch = new SharedPreferences("test");
+  let branch = SharedPreferences.forAndroid("test");
 
   branch.setCharPref("charKey", "first value");
   do_check_eq(branch.getCharPref("charKey"), "first value");
@@ -176,7 +176,7 @@ add_task(function test_observer_ignores() {
 });
 
 add_task(function test_observer_ignores_branches() {
-  let branch = new SharedPreferences("test");
+  let branch = SharedPreferences.forAndroid("test");
 
   branch.setCharPref("charKey", "first value");
   do_check_eq(branch.getCharPref("charKey"), "first value");
@@ -186,9 +186,9 @@ add_task(function test_observer_ignores_branches() {
 
   try {
     // These should all be ignored.
-    let branch2 = new SharedPreferences("test2");
+    let branch2 = SharedPreferences.forAndroid("test2");
     branch2.setCharPref("charKey", "a wrong value");
-    let branch3 = new SharedPreferences("test.2");
+    let branch3 = SharedPreferences.forAndroid("test.2");
     branch3.setCharPref("charKey", "a different wrong value");
 
     // This should not be ignored.
@@ -206,6 +206,26 @@ add_task(function test_observer_ignores_branches() {
   } finally {
     branch.removeObserver("charKey", obs);
   }
+});
+
+add_task(function test_scopes() {
+  let forApp = SharedPreferences.forApp();
+  let forProfile = SharedPreferences.forProfile();
+  let forProfileName = SharedPreferences.forProfileName("testProfile");
+  let forAndroidDefault = SharedPreferences.forAndroid();
+  let forAndroidBranch = SharedPreferences.forAndroid("testBranch");
+
+  forApp.setCharPref("charKey", "forApp");
+  forProfile.setCharPref("charKey", "forProfile");
+  forProfileName.setCharPref("charKey", "forProfileName");
+  forAndroidDefault.setCharPref("charKey", "forAndroidDefault");
+  forAndroidBranch.setCharPref("charKey", "forAndroidBranch");
+
+  do_check_eq(forApp.getCharPref("charKey"), "forApp");
+  do_check_eq(forProfile.getCharPref("charKey"), "forProfile");
+  do_check_eq(forProfileName.getCharPref("charKey"), "forProfileName");
+  do_check_eq(forAndroidDefault.getCharPref("charKey"), "forAndroidDefault");
+  do_check_eq(forAndroidBranch.getCharPref("charKey"), "forAndroidBranch");
 });
 
 run_next_test();

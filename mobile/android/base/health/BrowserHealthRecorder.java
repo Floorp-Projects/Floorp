@@ -27,7 +27,9 @@ import org.mozilla.gecko.Distribution.DistributionDescriptor;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.background.healthreport.AndroidConfigurationProvider;
 import org.mozilla.gecko.background.healthreport.EnvironmentBuilder;
+import org.mozilla.gecko.background.healthreport.EnvironmentBuilder.ConfigurationProvider;
 import org.mozilla.gecko.background.healthreport.HealthReportDatabaseStorage;
 import org.mozilla.gecko.background.healthreport.HealthReportStorage.Field;
 import org.mozilla.gecko.background.healthreport.HealthReportStorage.MeasurementFields;
@@ -89,6 +91,7 @@ public class BrowserHealthRecorder implements HealthRecorder, GeckoEventListener
     private ContentProviderClient client;
     private volatile HealthReportDatabaseStorage storage;
     private final ProfileInformationCache profileCache;
+    private final ConfigurationProvider configProvider;
     private final EventDispatcher dispatcher;
     private final SharedPreferences prefs;
 
@@ -154,6 +157,8 @@ public class BrowserHealthRecorder implements HealthRecorder, GeckoEventListener
         } catch (Exception e) {
             Log.e(LOG_TAG, "Exception initializing.", e);
         }
+
+        this.configProvider = new AndroidConfigurationProvider(context);
 
         this.prefs = appPrefs;
     }
@@ -290,7 +295,8 @@ public class BrowserHealthRecorder implements HealthRecorder, GeckoEventListener
             return -1;
         }
         return this.env = EnvironmentBuilder.registerCurrentEnvironment(this.storage,
-                                                                        this.profileCache);
+                                                                        this.profileCache,
+                                                                        this.configProvider);
     }
 
     private static final String getTimesPath(final String profilePath) {

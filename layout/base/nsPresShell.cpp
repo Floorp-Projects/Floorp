@@ -2908,7 +2908,7 @@ PresShell::CreateReferenceRenderingContext()
   nsRefPtr<nsRenderingContext> rc;
   if (mPresContext->IsScreen()) {
     rc = new nsRenderingContext();
-    rc->Init(devCtx, gfxPlatform::GetPlatform()->ScreenReferenceSurface());
+    rc->Init(devCtx, gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
   } else {
     rc = devCtx->CreateRenderingContext();
   }

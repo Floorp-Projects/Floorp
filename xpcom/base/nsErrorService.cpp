@@ -8,89 +8,36 @@
 #include "nsCRTGlue.h"
 #include "nsAutoPtr.h"
 
-static void*
-CloneCString(nsHashKey *aKey, void *aData, void* closure)
-{
-  return NS_strdup((const char*)aData);
-}
-
-static bool
-DeleteCString(nsHashKey *aKey, void *aData, void* closure)
-{
-  NS_Free(aData);
-  return true;
-}
-
-nsInt2StrHashtable::nsInt2StrHashtable()
-  : mHashtable(CloneCString, nullptr, DeleteCString, nullptr, 16)
-{
-}
-
-nsresult
-nsInt2StrHashtable::Put(uint32_t key, const char* aData)
-{
-  char* value = NS_strdup(aData);
-  if (value == nullptr)
-    return NS_ERROR_OUT_OF_MEMORY;
-  nsPRUint32Key k(key);
-  char* oldValue = (char*)mHashtable.Put(&k, value);
-  if (oldValue)
-    NS_Free(oldValue);
-  return NS_OK;
-}
-
-char*
-nsInt2StrHashtable::Get(uint32_t key)
-{
-  nsPRUint32Key k(key);
-  const char* value = (const char*)mHashtable.Get(&k);
-  if (value == nullptr)
-    return nullptr;
-  return NS_strdup(value);
-}
-
-nsresult
-nsInt2StrHashtable::Remove(uint32_t key)
-{
-  nsPRUint32Key k(key);
-  char* oldValue = (char*)mHashtable.Remove(&k);
-  if (oldValue)
-    NS_Free(oldValue);
-  return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 NS_IMPL_ISUPPORTS(nsErrorService, nsIErrorService)
 
 nsresult
-nsErrorService::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
+nsErrorService::Create(nsISupports* aOuter, const nsIID& aIID, void** aInstancePtr)
 {
-  if (NS_WARN_IF(outer))
+  if (NS_WARN_IF(aOuter))
     return NS_ERROR_NO_AGGREGATION;
   nsRefPtr<nsErrorService> serv = new nsErrorService();
   return serv->QueryInterface(aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP
-nsErrorService::RegisterErrorStringBundle(int16_t errorModule, const char *stringBundleURL)
+nsErrorService::RegisterErrorStringBundle(int16_t aErrorModule, const char* aStringBundleURL)
 {
-  return mErrorStringBundleURLMap.Put(errorModule, stringBundleURL);
+  mErrorStringBundleURLMap.Put(aErrorModule, new nsCString(aStringBundleURL));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsErrorService::UnregisterErrorStringBundle(int16_t errorModule)
+nsErrorService::UnregisterErrorStringBundle(int16_t aErrorModule)
 {
-  return mErrorStringBundleURLMap.Remove(errorModule);
+  mErrorStringBundleURLMap.Remove(aErrorModule);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsErrorService::GetErrorStringBundle(int16_t errorModule, char **result)
+nsErrorService::GetErrorStringBundle(int16_t aErrorModule, char** aResult)
 {
-  char* value = mErrorStringBundleURLMap.Get(errorModule);
-  if (value == nullptr)
-    return NS_ERROR_OUT_OF_MEMORY;
-  *result = value;
+  nsCString* bundleURL = mErrorStringBundleURLMap.Get(aErrorModule);
+  *aResult = ToNewCString(*bundleURL);
   return NS_OK;
 }
 

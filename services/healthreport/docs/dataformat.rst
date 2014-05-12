@@ -306,6 +306,36 @@ The search counts measurement is now at version 5, which indicates that
 non-partner searches are recorded. You'll see identifiers like "other-Foo Bar"
 rather than "other".
 
+
+Version 3.2
+-----------
+
+In Firefox 32, Firefox for Android includes a device configuration section
+in the environment description::
+
+    "org.mozilla.device.config": {
+      "hasHardwareKeyboard": false,
+      "screenXInMM": 58,
+      "screenLayout": 2,
+      "uiType": "default",
+      "screenYInMM": 103,
+      "_v": 1,
+      "uiMode": 1
+    }
+
+Of these, the only keys that need explanation are:
+
+uiType
+    One of "default", "smalltablet", "largetablet".
+uiMode
+    A mask of the Android *Configuration.uiMode* value, e.g.,
+    *UI_MODE_TYPE_CAR*.
+screenLayout
+    A mask of the Android *Configuration.screenLayout* value. One of the
+    *SCREENLAYOUT_SIZE_* constants.
+
+Note that screen dimensions can be incorrect due to device inaccuracies and platform limitations.
+
 Other notable differences from Version 2
 ----------------------------------------
 

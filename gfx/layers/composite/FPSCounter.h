@@ -6,12 +6,15 @@
 #ifndef mozilla_layers_opengl_FPSCounter_h_
 #define mozilla_layers_opengl_FPSCounter_h_
 
-#include <stddef.h>                     // for size_t
 #include <algorithm>                    // for min
+#include <stddef.h>                     // for size_t
+#include <map>                          // for std::map
 #include "GLDefs.h"                     // for GLuint
+#include "mozilla/RefPtr.h"             // for TemporaryRef, RefCounted
 #include "mozilla/TimeStamp.h"          // for TimeStamp, TimeDuration
 #include "nsTArray.h"                   // for nsAutoTArray, nsTArray_Impl, etc
 #include "VBOArena.h"                   // for gl::VBOArena
+#include "prio.h"                       // for NSPR file i/o
 
 namespace mozilla {
 namespace gl {
@@ -21,67 +24,90 @@ namespace layers {
 
 class DataTextureSource;
 class ShaderProgramOGL;
+class Compositor;
 
-const double kFpsWindowMs = 250.0;
-const size_t kNumFrameTimeStamps = 16;
-struct FPSCounter {
-  FPSCounter() : mCurrentFrameIndex(0) {
-      mFrames.SetLength(kNumFrameTimeStamps);
-  }
+// Dump the FPS histogram every 10 seconds or kMaxFrameFPS
+const int kFpsDumpInterval = 10;
 
-  // We keep a circular buffer of the time points at which the last K
-  // frames were drawn.  To estimate FPS, we count the number of
-  // frames we've drawn within the last kFPSWindowMs milliseconds and
-  // divide by the amount time since the first of those frames.
-  nsAutoTArray<TimeStamp, kNumFrameTimeStamps> mFrames;
-  size_t mCurrentFrameIndex;
+// On desktop, we can have 240 hz monitors, so 10 seconds
+// times 240 frames = 2400
+const int kMaxFrames = 2400;
 
-  void AddFrame(TimeStamp aNewFrame) {
-    mFrames[mCurrentFrameIndex] = aNewFrame;
-    mCurrentFrameIndex = (mCurrentFrameIndex + 1) % kNumFrameTimeStamps;
-  }
+/**
+ * The FPSCounter tracks how often we composite or have a layer transaction.
+ * At each composite / layer transaction, we record the timestamp.
+ * After kFpsDumpInterval number of composites / transactions, we calculate
+ * the average and standard deviation of frames composited. We dump a histogram,
+ * which allows for more statistically significant measurements. We also dump
+ * absolute frame composite times to a file on the device.
+ * The FPS counters displayed on screen are based on how many frames we
+ * composited within the last ~1 second. The more accurate measurement is to
+ * grab the histogram from stderr or grab the FPS timestamp dumps written to file.
+ *
+ * To enable dumping to file, enable
+ * layers.acceleration.draw-fps.write-to-file pref.
 
   double AddFrameAndGetFps(TimeStamp aCurrentFrame) {
     AddFrame(aCurrentFrame);
     return EstimateFps(aCurrentFrame);
   }
+ * To enable printing histogram data to logcat,
+ * enable layers.acceleration.draw-fps.print-histogram
+ *
+ * Use the HasNext(), GetNextTimeStamp() like an iterator to read the data,
+ * backwards in time. This abstracts away the mechanics of reading the data.
+ */
+class FPSCounter {
+public:
+  FPSCounter(const char* aName);
+  ~FPSCounter();
 
-  double GetFpsAt(TimeStamp aNow) {
-    return EstimateFps(aNow);
-  }
+  void AddFrame(TimeStamp aTimestamp);
+  double AddFrameAndGetFps(TimeStamp aTimestamp);
+  double GetFPS(TimeStamp aTimestamp);
 
 private:
-  double EstimateFps(TimeStamp aNow) {
-    TimeStamp beginningOfWindow =
-      (aNow - TimeDuration::FromMilliseconds(kFpsWindowMs));
-    TimeStamp earliestFrameInWindow = aNow;
-    size_t numFramesDrawnInWindow = 0;
-    for (size_t i = 0; i < kNumFrameTimeStamps; ++i) {
-      const TimeStamp& frame = mFrames[i];
-      if (!frame.IsNull() && frame > beginningOfWindow) {
-        ++numFramesDrawnInWindow;
-        earliestFrameInWindow = std::min(earliestFrameInWindow, frame);
-      }
-    }
-    double realWindowSecs = (aNow - earliestFrameInWindow).ToSeconds();
-    if (realWindowSecs == 0.0 || numFramesDrawnInWindow == 1) {
-      return 0.0;
-    }
-    return double(numFramesDrawnInWindow - 1) / realWindowSecs;
-  }
+  void      Init();
+  bool      CapturedFullInterval(TimeStamp aTimestamp);
+
+  // Used while iterating backwards over the data
+  void      ResetReverseIterator();
+  bool      HasNext(TimeStamp aTimestamp, double aDuration = kFpsDumpInterval);
+  TimeStamp GetNextTimeStamp();
+  int       GetLatestReadIndex();
+  TimeStamp GetLatestTimeStamp();
+  void      WriteFrameTimeStamps(PRFileDesc* fd);
+  bool      IteratedFullInterval(TimeStamp aTimestamp, double aDuration);
+
+  void      PrintFPS();
+  int       BuildHistogram(std::map<int, int>& aHistogram);
+  void      PrintHistogram(std::map<int, int>& aHistogram);
+  double    GetMean(std::map<int,int> aHistogram);
+  double    GetStdDev(std::map<int, int> aHistogram);
+  nsresult  WriteFrameTimeStamps();
+
+  /***
+   * mFrameTimestamps is a psuedo circular buffer
+   * Since we have a constant write time and don't
+   * read at an offset except our latest write
+   * we don't need an explicit read pointer.
+   */
+  nsAutoTArray<TimeStamp, kMaxFrames> mFrameTimestamps;
+  int mWriteIndex;      // points to next open write slot
+  int mIteratorIndex;   // used only when iterating
+  const char* mFPSName;
+  TimeStamp mLastInterval;
 };
 
 struct FPSState {
-  FPSCounter mCompositionFps;
-  FPSCounter mTransactionFps;
-
-  FPSState() {}
-
+  FPSState();
   void DrawFPS(TimeStamp, int offsetX, int offsetY, unsigned, Compositor* aCompositor);
-
   void NotifyShadowTreeTransaction() {
     mTransactionFps.AddFrame(TimeStamp::Now());
   }
+
+  FPSCounter mCompositionFps;
+  FPSCounter mTransactionFps;
 
 private:
   RefPtr<DataTextureSource> mFPSTextureSource;

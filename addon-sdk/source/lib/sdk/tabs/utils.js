@@ -81,9 +81,9 @@ exports.getTabContainer = getTabContainer;
  */
 function getTabs(window) {
   if (arguments.length === 0) {
-    return getWindows().filter(isBrowser).reduce(function(tabs, window) {
-      return tabs.concat(getTabs(window))
-    }, []);
+    return getWindows().
+               filter(isBrowser).
+               reduce((tabs, window) => tabs.concat(getTabs(window)), []);
   }
 
   // fennec
@@ -91,7 +91,7 @@ function getTabs(window) {
     return window.BrowserApp.tabs;
 
   // firefox - default
-  return Array.slice(getTabContainer(window).children);
+  return Array.filter(getTabContainer(window).children, function(t) !t.closing);
 }
 exports.getTabs = getTabs;
 

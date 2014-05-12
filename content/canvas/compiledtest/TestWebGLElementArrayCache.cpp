@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
     // us some comfort margin.
     int repeat = std::min(maxBufferSize, 64);
     for (int i = 0; i < repeat; i++) {
-      size_t size = RandomInteger<size_t>(1, maxBufferSize);
+      size_t size = RandomInteger<size_t>(0, maxBufferSize);
       MakeRandomVector(v, size);
       b.BufferData(v.Elements(), size);
       CheckValidate(b, 0, size);

@@ -3,10 +3,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 importScripts("resource://gre/modules/osfile.jsm");
+importScripts("resource://gre/modules/workers/require.js");
+let Log = require("resource://gre/modules/AndroidLog.jsm");
 
-function log(message) {
-  dump("WebManagerWorker " + message + "\n");
-}
+// Define the "log" function as a binding of the Log.d function so it specifies
+// the "debug" priority and a log tag.
+let log = Log.d.bind(null, "WebappManagerWorker");
 
 onmessage = function(event) {
   let { url, path } = event.data;

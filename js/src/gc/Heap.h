@@ -135,42 +135,57 @@ const size_t ArenaBitmapBytes = ArenaBitmapBits / 8;
 const size_t ArenaBitmapWords = ArenaBitmapBits / JS_BITS_PER_WORD;
 
 /*
- * A FreeSpan represents a contiguous sequence of free cells in an Arena.
- * |first| is the address of the first free cell in the span. |last| is the
- * address of the last free cell in the span. This last cell holds a FreeSpan
- * data structure for the next span unless this is the last span on the list
- * of spans in the arena. For this last span |last| points to the last byte of
- * the last thing in the arena and no linkage is stored there, so
- * |last| == arenaStart + ArenaSize - 1. If the space at the arena end is
- * fully used this last span is empty and |first| == |last + 1|.
+ * A FreeSpan represents a contiguous sequence of free cells in an Arena. It
+ * can take two forms.
  *
- * Thus |first| < |last| implies that we have either the last span with at least
- * one element or that the span is not the last and contains at least 2
- * elements. In both cases to allocate a thing from this span we need simply
- * to increment |first| by the allocation size.
+ * - In an empty span, |first| and |last| are both zero.
  *
- * |first| == |last| implies that we have a one element span that records the
- * next span. So to allocate from it we need to update the span list head
- * with a copy of the span stored at |last| address so the following
- * allocations will use that span.
- *
- * |first| > |last| implies that we have an empty last span and the arena is
- * fully used.
- *
- * Also only for the last span (|last| & 1)! = 0 as all allocation sizes are
- * multiples of CellSize.
+ * - In a non-empty span, |first| is the address of the first free thing in the
+ *   span, and |last| is the address of the last free thing in the span.
+ *   Furthermore, the memory pointed to by |last| holds a FreeSpan structure
+ *   that points to the next span (which may be empty); this works because
+ *   sizeof(FreeSpan) is less than the smallest thingSize.
  */
-struct FreeSpan
+class FreeSpan
 {
+    friend class FreeList;
+    friend class ArenaCellIterImpl;
+
     uintptr_t   first;
     uintptr_t   last;
 
   public:
     FreeSpan() {}
 
-    FreeSpan(uintptr_t first, uintptr_t last)
-      : first(first), last(last) {
+    // This inits just |first| and |last|; if the span is non-empty it doesn't
+    // do anything with the next span stored at |last|.
+    void initBoundsUnchecked(uintptr_t first, uintptr_t last) {
+        this->first = first;
+        this->last = last;
+    }
+
+    void initBounds(uintptr_t first, uintptr_t last) {
+        initBoundsUnchecked(first, last);
         checkSpan();
+    }
+
+    void initAsEmpty() {
+        first = 0;
+        last = 0;
+        JS_ASSERT(isEmpty());
+    }
+
+    // This sets |first| and |last|, and also sets the next span stored at
+    // |last| as empty. (As a result, |firstArg| and |lastArg| cannot represent
+    // an empty span.)
+    void initFinal(uintptr_t firstArg, uintptr_t lastArg, size_t thingSize) {
+        first = firstArg;
+        last = lastArg;
+        FreeSpan *lastSpan = reinterpret_cast<FreeSpan*>(last);
+        lastSpan->first = 0;
+        lastSpan->last = 0;
+        JS_ASSERT(!isEmpty());
+        checkSpan(thingSize);
     }
 
     /*
@@ -179,140 +194,107 @@ struct FreeSpan
      */
     static size_t encodeOffsets(size_t firstOffset, size_t lastOffset) {
         static_assert(ArenaShift < 16, "Check that we can pack offsets into uint16_t.");
-        JS_ASSERT(firstOffset <= ArenaSize);
+        JS_ASSERT(firstOffset <= lastOffset);
         JS_ASSERT(lastOffset < ArenaSize);
-        JS_ASSERT(firstOffset <= ((lastOffset + 1) & ~size_t(1)));
         return firstOffset | (lastOffset << 16);
     }
 
     /*
-     * Encoded offsets for a full arena when its first span is the last one
-     * and empty.
+     * Encoded offsets for a full arena, i.e. one with an empty FreeSpan.
      */
-    static const size_t FullArenaOffsets = ArenaSize | ((ArenaSize - 1) << 16);
+    static const size_t FullArenaOffsets = 0;
 
     static FreeSpan decodeOffsets(uintptr_t arenaAddr, size_t offsets) {
         JS_ASSERT(!(arenaAddr & ArenaMask));
-
-        size_t firstOffset = offsets & 0xFFFF;
-        size_t lastOffset = offsets >> 16;
-        JS_ASSERT(firstOffset <= ArenaSize);
-        JS_ASSERT(lastOffset < ArenaSize);
-
-        /*
-         * We must not use | when calculating first as firstOffset is
-         * ArenaMask + 1 for the empty span.
-         */
-        return FreeSpan(arenaAddr + firstOffset, arenaAddr | lastOffset);
+        FreeSpan decodedSpan;
+        if (offsets == FullArenaOffsets) {
+            decodedSpan.initAsEmpty();
+        } else {
+            size_t firstOffset = offsets & 0xFFFF;
+            size_t lastOffset = offsets >> 16;
+            JS_ASSERT(firstOffset <= lastOffset);
+            JS_ASSERT(lastOffset < ArenaSize);
+            decodedSpan.initBounds(arenaAddr + firstOffset, arenaAddr + lastOffset);
+        }
+        return decodedSpan;
     }
 
     bool isEmpty() const {
         checkSpan();
-        return first > last;
+        return !first;
     }
 
-    bool hasNext() const {
-        checkSpan();
-        return !(last & uintptr_t(1));
+    // Like nextSpan(), but no checking of the following span is done.
+    FreeSpan *nextSpanUnchecked() const {
+        return reinterpret_cast<FreeSpan *>(last);
     }
 
     const FreeSpan *nextSpan() const {
-        JS_ASSERT(hasNext());
-        return reinterpret_cast<FreeSpan *>(last);
-    }
-
-    FreeSpan *nextSpanUnchecked(size_t thingSize) const {
-#ifdef DEBUG
-        uintptr_t lastOffset = last & ArenaMask;
-        JS_ASSERT(!(lastOffset & 1));
-        JS_ASSERT((ArenaSize - lastOffset) % thingSize == 0);
-#endif
-        return reinterpret_cast<FreeSpan *>(last);
-    }
-
-    uintptr_t arenaAddressUnchecked() const {
-        return last & ~ArenaMask;
+        JS_ASSERT(!isEmpty());
+        return nextSpanUnchecked();
     }
 
     uintptr_t arenaAddress() const {
-        checkSpan();
-        return arenaAddressUnchecked();
+        JS_ASSERT(!isEmpty());
+        return first & ~ArenaMask;
     }
 
+#ifdef DEBUG
     bool isWithinArena(uintptr_t arenaAddr) const {
         JS_ASSERT(!(arenaAddr & ArenaMask));
-
-        /* Return true for the last empty span as well. */
+        JS_ASSERT(!isEmpty());
         return arenaAddress() == arenaAddr;
     }
+#endif
 
     size_t encodeAsOffsets() const {
-        /*
-         * We must use first - arenaAddress(), not first & ArenaMask as
-         * first == ArenaMask + 1 for an empty span.
-         */
-        uintptr_t arenaAddr = arenaAddress();
-        return encodeOffsets(first - arenaAddr, last & ArenaMask);
+        return encodeOffsets(first & ArenaMask, last & ArenaMask);
     }
 
-    void checkSpan() const {
+    size_t length(size_t thingSize) const {
+        checkSpan();
+        JS_ASSERT((last - first) % thingSize == 0);
+        return (last - first) / thingSize + 1;
+    }
+
+    bool inFreeList(uintptr_t thing) {
+        for (const FreeSpan *span = this; !span->isEmpty(); span = span->nextSpan()) {
+            /* If the thing comes before the current span, it's not free. */
+            if (thing < span->first)
+                return false;
+
+            /* If we find it before the end of the span, it's free. */
+            if (thing <= span->last)
+                return true;
+        }
+        return false;
+    }
+
+    // Some callers can pass in |thingSize| easily, and we can do stronger
+    // checking in that case.
+    void checkSpan(size_t thingSize = 0) const {
 #ifdef DEBUG
-        /* We do not allow spans at the end of the address space. */
-        JS_ASSERT(last != uintptr_t(-1));
-        JS_ASSERT(first);
-        JS_ASSERT(last);
-        JS_ASSERT(first - 1 <= last);
-        uintptr_t arenaAddr = arenaAddressUnchecked();
-        if (last & 1) {
-            /* The span is the last. */
-            JS_ASSERT((last & ArenaMask) == ArenaMask);
-
-            if (first - 1 == last) {
-                /* The span is last and empty. The above start != 0 check
-                 * implies that we are not at the end of the address space.
-                 */
-                return;
-            }
-            size_t spanLength = last - first + 1;
-            JS_ASSERT(spanLength % CellSize == 0);
-
-            /* Start and end must belong to the same arena. */
-            JS_ASSERT((first & ~ArenaMask) == arenaAddr);
+        if (!first || !last) {
+            JS_ASSERT(!first && !last);
+            // An empty span.
             return;
         }
 
-        /* The span is not the last and we have more spans to follow. */
+        // |first| and |last| must be ordered appropriately, belong to the same
+        // arena, and be suitably aligned.
         JS_ASSERT(first <= last);
-        size_t spanLengthWithoutOneThing = last - first;
-        JS_ASSERT(spanLengthWithoutOneThing % CellSize == 0);
+        JS_ASSERT((first & ~ArenaMask) == (last & ~ArenaMask));
+        JS_ASSERT((last - first) % (thingSize ? thingSize : CellSize) == 0);
 
-        JS_ASSERT((first & ~ArenaMask) == arenaAddr);
-
-        /*
-         * If there is not enough space before the arena end to allocate one
-         * more thing, then the span must be marked as the last one to avoid
-         * storing useless empty span reference.
-         */
-        size_t beforeTail = ArenaSize - (last & ArenaMask);
-        JS_ASSERT(beforeTail >= sizeof(FreeSpan) + CellSize);
-
-        FreeSpan *next = reinterpret_cast<FreeSpan *>(last);
-
-        /*
-         * The GC things on the list of free spans come from one arena
-         * and the spans are linked in ascending address order with
-         * at least one non-free thing between spans.
-         */
-        JS_ASSERT(last < next->first);
-        JS_ASSERT(arenaAddr == next->arenaAddressUnchecked());
-
-        if (next->first > next->last) {
-            /*
-             * The next span is the empty span that terminates the list for
-             * arenas that do not have any free things at the end.
-             */
-            JS_ASSERT(next->first - 1 == next->last);
-            JS_ASSERT(arenaAddr + ArenaSize == next->first);
+        // If there's a following span, it must be from the same arena, it must
+        // have a higher address, and the gap must be at least 2*thingSize.
+        FreeSpan *next = reinterpret_cast<FreeSpan*>(last);
+        if (next->first) {
+            JS_ASSERT(next->last);
+            JS_ASSERT((first & ~ArenaMask) == (next->first & ~ArenaMask));
+            JS_ASSERT(thingSize
+                      ? last + 2 * thingSize <= next->first
+                      : last < next->first);
         }
 #endif
     }
@@ -346,9 +328,7 @@ class FreeList
     }
 
     void initAsEmpty() {
-        head.first = ArenaSize;
-        head.last = ArenaSize - 1;
-        JS_ASSERT(isEmpty());
+        head.initAsEmpty();
     }
 
     FreeSpan *getHead() { return &head; }
@@ -378,59 +358,40 @@ class FreeList
     }
 #endif
 
-    /* See comments before FreeSpan for details. */
     MOZ_ALWAYS_INLINE void *allocate(size_t thingSize) {
         JS_ASSERT(thingSize % CellSize == 0);
-        head.checkSpan();
+        head.checkSpan(thingSize);
         uintptr_t thing = head.first;
         if (thing < head.last) {
-            /* Bump-allocate from the current span. */
+            // We have two or more things in the free list head, so we can do a
+            // simple bump-allocate.
             head.first = thing + thingSize;
-        } else if (MOZ_LIKELY(thing == head.last)) {
-            /*
-             * Move to the next span. We use MOZ_LIKELY as without PGO
-             * compilers mis-predict == here as unlikely to succeed.
-             */
+        } else if (MOZ_LIKELY(thing)) {
+            // We have one thing in the free list head. Use it, but first
+            // update the free list head to point to the subseqent span (which
+            // may be empty).
             setHead(reinterpret_cast<FreeSpan *>(thing));
         } else {
+            // The free list head is empty.
             return nullptr;
         }
-        head.checkSpan();
-        JS_EXTRA_POISON(reinterpret_cast<void *>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
-        return reinterpret_cast<void *>(thing);
-    }
-
-    /* A version of allocate when we know that the span is not empty. */
-    MOZ_ALWAYS_INLINE void *infallibleAllocate(size_t thingSize) {
-        JS_ASSERT(!isEmpty());
-        JS_ASSERT(thingSize % CellSize == 0);
-        head.checkSpan();
-        uintptr_t thing = head.first;
-        if (thing < head.last) {
-            head.first = thing + thingSize;
-        } else {
-            JS_ASSERT(thing == head.last);
-            setHead(reinterpret_cast<FreeSpan *>(thing));
-        }
-        head.checkSpan();
+        head.checkSpan(thingSize);
         JS_EXTRA_POISON(reinterpret_cast<void *>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
         return reinterpret_cast<void *>(thing);
     }
 
     /*
-     * Allocate from a newly allocated arena. We do not move the free list
-     * from the arena. Rather we set the arena up as fully used during the
-     * initialization so to allocate we simply return the first thing in the
-     * arena and set the free list to point to the second.
+     * Allocate from a newly allocated arena. The arena will have been set up
+     * as fully used during the initialization so to allocate we simply return
+     * the first thing in the arena and set the free list to point to the
+     * second.
      */
     MOZ_ALWAYS_INLINE void *allocateFromNewArena(uintptr_t arenaAddr, size_t firstThingOffset,
                                                  size_t thingSize) {
         JS_ASSERT(isEmpty());
         JS_ASSERT(!(arenaAddr & ArenaMask));
-        uintptr_t thing = arenaAddr | firstThingOffset;
-        head.first = thing + thingSize;
-        head.last = arenaAddr | ArenaMask;
-        head.checkSpan();
+        uintptr_t thing = arenaAddr + firstThingOffset;
+        head.initFinal(thing + thingSize, arenaAddr + ArenaSize - thingSize, thingSize);
         JS_EXTRA_POISON(reinterpret_cast<void *>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
         return reinterpret_cast<void *>(thing);
     }
@@ -624,7 +585,7 @@ struct Arena
     }
 
     uintptr_t thingsStart(AllocKind thingKind) {
-        return address() | firstThingOffset(thingKind);
+        return address() + firstThingOffset(thingKind);
     }
 
     uintptr_t thingsEnd() {
@@ -954,7 +915,8 @@ ArenaHeader::isEmpty() const
     /* Arena is empty if its first span covers the whole arena. */
     JS_ASSERT(allocated());
     size_t firstThingOffset = Arena::firstThingOffset(getAllocKind());
-    return firstFreeSpanOffsets == FreeSpan::encodeOffsets(firstThingOffset, ArenaMask);
+    size_t lastThingOffset = ArenaSize - getThingSize();
+    return firstFreeSpanOffsets == FreeSpan::encodeOffsets(firstThingOffset, lastThingOffset);
 }
 
 FreeSpan
@@ -969,7 +931,7 @@ ArenaHeader::getFirstFreeSpan() const
 void
 ArenaHeader::setFirstFreeSpan(const FreeSpan *span)
 {
-    JS_ASSERT(span->isWithinArena(arenaAddress()));
+    JS_ASSERT_IF(!span->isEmpty(), span->isWithinArena(arenaAddress()));
     firstFreeSpanOffsets = span->encodeAsOffsets();
 }
 
@@ -1164,25 +1126,9 @@ InFreeList(ArenaHeader *aheader, void *thing)
     FreeSpan firstSpan(aheader->getFirstFreeSpan());
     uintptr_t addr = reinterpret_cast<uintptr_t>(thing);
 
-    for (const FreeSpan *span = &firstSpan;;) {
-        /* If the thing comes before the current span, it's not free. */
-        if (addr < span->first)
-            return false;
+    JS_ASSERT(Arena::isAligned(addr, aheader->getThingSize()));
 
-        /*
-         * If we find it inside the span, it's dead. We use here "<=" and not
-         * "<" even for the last span as we know that thing is inside the
-         * arena. Thus, for the last span thing < span->end.
-         */
-        if (addr <= span->last)
-            return true;
-
-        /*
-         * The last possible empty span is an the end of the arena. Here
-         * span->end < thing < thingsEnd and so we must have more spans.
-         */
-        span = span->nextSpan();
-    }
+    return firstSpan.inFreeList(addr);
 }
 
 } /* namespace gc */

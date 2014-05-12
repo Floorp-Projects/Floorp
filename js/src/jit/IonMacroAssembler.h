@@ -790,10 +790,30 @@ class MacroAssembler : public MacroAssemblerSpecific
     void branchEqualTypeIfNeeded(MIRType type, MDefinition *maybeDef, Register tag, Label *label);
 
     // Inline allocation.
-    void newGCThing(Register result, Register temp, gc::AllocKind allocKind, Label *fail,
-                    gc::InitialHeap initialHeap = gc::DefaultHeap);
-    void newGCThing(Register result, Register temp, JSObject *templateObject, Label *fail,
-                    gc::InitialHeap initialHeap);
+  private:
+    void checkAllocatorState(Label *fail);
+    bool shouldNurseryAllocate(gc::AllocKind allocKind, gc::InitialHeap initialHeap);
+    void nurseryAllocate(Register result, Register slots, gc::AllocKind allocKind,
+                         size_t nDynamicSlots, gc::InitialHeap initialHeap, Label *fail);
+    void freeSpanAllocate(Register result, Register temp, gc::AllocKind allocKind, Label *fail);
+    void allocateObject(Register result, Register slots, gc::AllocKind allocKind,
+                        uint32_t nDynamicSlots, gc::InitialHeap initialHeap, Label *fail);
+    void allocateNonObject(Register result, Register temp, gc::AllocKind allocKind, Label *fail);
+    void copySlotsFromTemplate(Register obj, const JSObject *templateObj,
+                               uint32_t start, uint32_t end);
+    void fillSlotsWithUndefined(Address addr, Register temp, uint32_t start, uint32_t end);
+    void initGCSlots(Register obj, Register temp, JSObject *templateObj);
+
+  public:
+    void callMallocStub(size_t nbytes, Register result, Label *fail);
+    void callFreeStub(Register slots);
+    void createGCObject(Register result, Register temp, JSObject *templateObj,
+                        gc::InitialHeap initialHeap, Label *fail);
+
+    void newGCThing(Register result, Register temp, JSObject *templateObj,
+                     gc::InitialHeap initialHeap, Label *fail);
+    void initGCThing(Register obj, Register temp, JSObject *templateObj);
+
     void newGCString(Register result, Register temp, Label *fail);
     void newGCFatInlineString(Register result, Register temp, Label *fail);
 
@@ -806,12 +826,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     void newGCFatInlineStringPar(Register result, Register cx, Register tempReg1, Register tempReg2,
                                  Label *fail);
 
-    void copySlotsFromTemplate(Register obj, Register temp, const JSObject *templateObj,
-                               uint32_t start, uint32_t end);
-    void fillSlotsWithUndefined(Register obj, Register temp, const JSObject *templateObj,
-                                uint32_t start, uint32_t end);
-    void initGCSlots(Register obj, Register temp, JSObject *templateObj);
-    void initGCThing(Register obj, Register temp, JSObject *templateObj);
 
     // Compares two strings for equality based on the JSOP.
     // This checks for identical pointers, atoms and length and fails for everything else.
@@ -836,7 +850,10 @@ class MacroAssembler : public MacroAssemblerSpecific
         // Push VMFunction pointer, to mark arguments.
         Push(ImmPtr(f));
     }
-    void enterFakeExitFrame(JitCode *codeVal = nullptr) {
+
+    // The JitCode * argument here is one of the tokens defined in the various
+    // exit frame layout classes, e.g. IonNativeExitFrameLayout::Token().
+    void enterFakeExitFrame(JitCode *codeVal) {
         linkExitFrame();
         Push(ImmPtr(codeVal));
         Push(ImmPtr(nullptr));
@@ -857,12 +874,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     void enterExitFrameAndLoadContext(const VMFunction *f, Register cxReg, Register scratch,
                                       ExecutionMode executionMode);
 
-    void enterFakeParallelExitFrame(Register cx, Register scratch,
-                                    JitCode *codeVal = nullptr);
+    void enterFakeParallelExitFrame(Register cx, Register scratch, JitCode *codeVal);
 
-    void enterFakeExitFrame(Register cxReg, Register scratch,
-                            ExecutionMode executionMode,
-                            JitCode *codeVal = nullptr);
+    void enterFakeExitFrame(Register cxReg, Register scratch, ExecutionMode executionMode,
+                            JitCode *codeVal);
 
     void leaveExitFrame() {
         freeStack(IonExitFooterFrame::Size());
