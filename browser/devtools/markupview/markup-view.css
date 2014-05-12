@@ -165,3 +165,7 @@
   background: rgba(205,205,255,0.2);
   outline: 1px solid transparent;
 }
+
+.tag-line .open, .tag-line .close, .comment {
+  cursor: default;
+}
