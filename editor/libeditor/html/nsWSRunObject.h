@@ -228,26 +228,28 @@ class MOZ_STACK_CLASS nsWSRunObject
     // makes any needed conversion to adjacent ws to retain its significance.
     nsresult DeleteWSForward();
 
-    // PriorVisibleNode returns the first piece of visible thing before
-    // {aNode,aOffset}.  If there is no visible ws qualifying it returns what
-    // is before the ws run.  Note that {outVisNode,outVisOffset} is set to
-    // just AFTER the visible object.
-    void PriorVisibleNode(nsINode* aNode,
+    // PriorVisibleNode returns the first piece of visible thing
+    // before {aNode,aOffset}.  If there is no visible ws qualifying
+    // it returns what is before the ws run.  Note that 
+    // {outVisNode,outVisOffset} is set to just AFTER the visible
+    // object.
+    void PriorVisibleNode(nsIDOMNode *aNode,
                           int32_t aOffset,
-                          nsCOMPtr<nsINode>* outVisNode,
-                          int32_t* outVisOffset,
-                          WSType* outType);
+                          nsCOMPtr<nsIDOMNode> *outVisNode,
+                          int32_t *outVisOffset,
+                          WSType *outType);
 
-    // NextVisibleNode returns the first piece of visible thing after
-    // {aNode,aOffset}.  If there is no visible ws qualifying it returns what
-    // is after the ws run.  Note that {outVisNode,outVisOffset} is set to just
-    // BEFORE the visible object.
-    void NextVisibleNode(nsINode* aNode,
+    // NextVisibleNode returns the first piece of visible thing
+    // after {aNode,aOffset}.  If there is no visible ws qualifying
+    // it returns what is after the ws run.  Note that 
+    // {outVisNode,outVisOffset} is set to just BEFORE the visible
+    // object.
+    void NextVisibleNode(nsIDOMNode *aNode,
                          int32_t aOffset,
-                         nsCOMPtr<nsINode>* outVisNode,
-                         int32_t* outVisOffset,
-                         WSType* outType);
-
+                         nsCOMPtr<nsIDOMNode> *outVisNode,
+                         int32_t *outVisOffset,
+                         WSType *outType);
+    
     // AdjustWhitespace examines the ws object for nbsp's that can
     // be safely converted to regular ascii space and converts them.
     nsresult AdjustWhitespace();
