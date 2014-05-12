@@ -280,8 +280,11 @@ public:
    * @param aApzc the APZC that is handing off the fling
    * @param aVelocity the current velocity of the fling, in |aApzc|'s screen
    *                  pixels per millisecond
+   * Returns true iff. another APZC accepted the handed-off fling. The caller
+   * (|aApzc|) uses this return value to determine whether it should consume
+   * the excess fling itself by going into an overscroll fling.
    */
-  void HandOffFling(AsyncPanZoomController* aApzc, ScreenPoint aVelocity);
+  bool HandOffFling(AsyncPanZoomController* aApzc, ScreenPoint aVelocity);
 
   bool FlushRepaintsForOverscrollHandoffChain();
 

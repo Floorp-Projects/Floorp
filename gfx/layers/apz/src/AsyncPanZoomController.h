@@ -759,14 +759,17 @@ private:
 
   /* ===================================================================
    * The functions and members in this section are used to manage
-   * fling animations.
+   * fling animations and handling overscroll during a fling.
    */
 public:
   /**
    * Take over a fling with the given velocity from another APZC. Used for
-   * during overscroll handoff for a fling.
+   * during overscroll handoff for a fling. If we are not pannable, calls
+   * mTreeManager->HandOffFling() to hand the fling off further.
+   * Returns true iff. any APZC (whether this one or one further in the handoff
+   * chain accepted the fling).
    */
-  void TakeOverFling(ScreenPoint aVelocity);
+  bool TakeOverFling(ScreenPoint aVelocity);
 
 private:
   friend class FlingAnimation;
@@ -774,6 +777,16 @@ private:
   ScreenPoint mLastFlingVelocity;
   // The time at which the most recent fling started.
   TimeStamp mLastFlingTime;
+
+  // Deal with overscroll resulting from a fling animation. This is only ever
+  // called on APZC instances that were actually performing a fling.
+  // The overscroll is handled by trying to hand the fling off to an APZC
+  // later in the handoff chain, or if there are no takers, continuing the
+  // fling and entering an overscrolled state.
+  void HandleFlingOverscroll(const ScreenPoint& aVelocity);
+
+  // Helper function used by TakeOverFling() and HandleFlingOverscroll().
+  void AcceptFling(const ScreenPoint& aVelocity, bool aAllowOverscroll);
 
 
   /* ===================================================================
