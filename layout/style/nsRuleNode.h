@@ -14,8 +14,6 @@
 #include "nsPresContext.h"
 #include "nsStyleStruct.h"
 
-#include <stdint.h>
-
 class nsStyleContext;
 struct nsRuleData;
 class nsIStyleRule;

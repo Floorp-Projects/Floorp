@@ -254,9 +254,13 @@ public:
    * before calling Encode() and GetNextEncodedFrame().
    * aBlobFormat specifies output blob format provided by encoder. It can be
    * AVC_MP4 or AVC_NAL.
+   * Configure sets up most format value to values appropriate for camera use.
+   * ConfigureDirect lets the caller determine all the defaults.
    */
   nsresult Configure(int aWidth, int aHeight, int aFrameRate,
                      BlobFormat aBlobFormat = BlobFormat::AVC_MP4);
+  nsresult ConfigureDirect(sp<AMessage>& aFormat,
+                           BlobFormat aBlobFormat = BlobFormat::AVC_MP4);
 
   /**
    * Encode a aWidth pixels wide and aHeight pixels tall video frame of
