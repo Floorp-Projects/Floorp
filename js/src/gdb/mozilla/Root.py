@@ -63,16 +63,8 @@ class Handle(Common):
 class MutableHandle(Common):
     handle = True
 
-@template_pretty_printer("js::PreBarriered")
+@template_pretty_printer("js::BarrieredBase")
 class PreBarriered(Common):
-    member = 'value'
-
-@pretty_printer("js::PreBarrieredValue")
-class PreBarrieredValue(Common):
-    member = 'value'
-
-@pretty_printer("js::BarrieredValue")
-class BarrieredValue(Common):
     member = 'value'
 
 # Return the referent of a HeapPtr, Rooted, or Handle.
