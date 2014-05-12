@@ -416,6 +416,8 @@ public:
    */
   PTextureParent* GetIPDLActor();
 
+  static void SendFenceHandleIfPresent(PTextureParent* actor);
+
   /**
    * Specific to B2G's Composer2D
    * XXX - more doc here

@@ -384,6 +384,7 @@ selfhosted_out_h_deps := \
   $(srcdir)/js.msg \
   $(srcdir)/builtin/embedjs.py \
   $(srcdir)/builtin/TypedObjectConstants.h \
+  $(srcdir)/builtin/SelfHostingDefines.h \
   $(NULL)
 
 SELFHOSTED_DEFINES += $(DEFINES) $(ACDEFINES)

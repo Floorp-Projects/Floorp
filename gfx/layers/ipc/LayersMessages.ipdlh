@@ -333,6 +333,18 @@ struct OpRemoveTexture {
   PTexture texture;
 };
 
+struct OpRemoveTextureAsync {
+  uint64_t transactionId;
+  PCompositable compositable;
+  PTexture texture;
+};
+
+struct OpReplyRemoveTexture {
+  uint64_t transactionId;
+  PCompositable compositable;
+  PTexture texture;
+};
+
 /**
  * Tells the compositor-side which texture to use (for example, as front buffer
  * if there is several textures for double buffering)
@@ -380,6 +392,7 @@ union CompositableOperation {
   OpUseTiledLayerBuffer;
 
   OpRemoveTexture;
+  OpRemoveTextureAsync;
 
   OpUpdateTexture;
   OpUseTexture;
@@ -442,6 +455,7 @@ union EditReply {
 
 union AsyncParentMessageData {
   OpDeliverFence;
+  OpReplyRemoveTexture;
 };
 
 union AsyncChildMessageData {
