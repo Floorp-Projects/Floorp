@@ -418,7 +418,8 @@ def run_app(harness_root_dir, manifest_rdf, harness_options,
             is_running_tests=False,
             overload_modules=False,
             bundle_sdk=True,
-            pkgdir=""):
+            pkgdir="",
+            enable_e10s=False):
     if binary:
         binary = os.path.expanduser(binary)
 
@@ -429,6 +430,9 @@ def run_app(harness_root_dir, manifest_rdf, harness_options,
 
     cmdargs = []
     preferences = dict(DEFAULT_COMMON_PREFS)
+
+    if enable_e10s:
+        preferences['browser.tabs.remote.autostart'] = True
 
     # For now, only allow running on Mobile with --force-mobile argument
     if app_type in ["fennec", "fennec-on-device"] and not enable_mobile:

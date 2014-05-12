@@ -30,49 +30,42 @@
 
     <implementation implements="nsIDOMEventListener">
       <constructor><![CDATA[
-        let Social = Components.utils.import("resource:///modules/Social.jsm", {}).Social;
         this.content.__defineGetter__("popupnotificationanchor",
                                       () => document.getAnonymousElementByAttribute(this, "anonid", "notification-icon"));
-        Social.setErrorListener(this.content, function(aBrowser) {
-          aBrowser.webNavigation.loadURI("about:socialerror?mode=compactInfo&origin=" +
-                                 encodeURIComponent(aBrowser.getAttribute("origin")),
-                                 null, null, null, null);
-        });
+
         if (!this.chatbar) {
           document.getAnonymousElementByAttribute(this, "anonid", "minimize").hidden = true;
           document.getAnonymousElementByAttribute(this, "anonid", "close").hidden = true;
         }
         let contentWindow = this.contentWindow;
+        // process this._callbacks, then set to null so the chatbox creator
+        // knows to make new callbacks immediately.
+        if (this._callbacks) {
+          for (let callback of this._callbacks) {
+            callback(this);
+          }
+          this._callbacks = null;
+        }
         this.addEventListener("DOMContentLoaded", function DOMContentLoaded(event) {
           if (event.target != this.contentDocument)
             return;
           this.removeEventListener("DOMContentLoaded", DOMContentLoaded, true);
           this.isActive = !this.minimized;
-          // process this._callbacks, then set to null so the chatbox creator
-          // knows to make new callbacks immediately.
-          if (this._callbacks) {
-            for (let callback of this._callbacks) {
-              if (callback)
-                callback(contentWindow);
-            }
-            this._callbacks = null;
-          }
-
-          // content can send a socialChatActivity event to have the UI update.
-          let chatActivity = function() {
-            this.setAttribute("activity", true);
-            if (this.chatbar)
-              this.chatbar.updateTitlebar(this);
-          }.bind(this);
-          contentWindow.addEventListener("socialChatActivity", chatActivity);
-          contentWindow.addEventListener("unload", function unload() {
-            contentWindow.removeEventListener("unload", unload);
-            contentWindow.removeEventListener("socialChatActivity", chatActivity);
-          });
+          this._deferredChatLoaded.resolve(this);
         }, true);
         if (this.src)
           this.setAttribute("src", this.src);
       ]]></constructor>
+
+      <field name="_deferredChatLoaded" readonly="true">
+        Promise.defer();
+      </field>
+
+      <property name="promiseChatLoaded">
+        <getter>
+          return this._deferredChatLoaded.promise;
+        </getter>
+      </property>
 
       <field name="content" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "content");
@@ -133,7 +126,7 @@
           this.contentDocument.documentElement.dispatchEvent(evt);
         </setter>
       </property>
-      
+
       <method name="showNotifications">
         <body><![CDATA[
         PopupNotifications._reshowNotifications(this.content.popupnotificationanchor,
@@ -148,15 +141,7 @@
           aTarget.src = this.src;
           aTarget.content.setAttribute("origin", this.content.getAttribute("origin"));
           aTarget.content.popupnotificationanchor.className = this.content.popupnotificationanchor.className;
-          this.content.socialErrorListener.remove();
-          aTarget.content.socialErrorListener.remove();
           this.content.swapDocShells(aTarget.content);
-          Social.setErrorListener(this.content, function(aBrowser) {}); // 'this' will be destroyed soon.
-          Social.setErrorListener(aTarget.content, function(aBrowser) {
-            aBrowser.webNavigation.loadURI("about:socialerror?mode=compactInfo&origin=" +
-                                 encodeURIComponent(aBrowser.getAttribute("origin")),
-                                 null, null, null, null);
-          });
         ]]></body>
       </method>
 
@@ -186,31 +171,40 @@
 
       <method name="swapWindows">
         <body><![CDATA[
-        let provider = Social._getProviderFromOrigin(this.content.getAttribute("origin"));
+        let deferred = Promise.defer();
+        let title = this.getAttribute("label");
         if (this.chatbar) {
-          this.chatbar.detachChatbox(this, { "centerscreen": "yes" }, win => {
-            win.document.title = provider.name;
-          });
+          this.chatbar.detachChatbox(this, { "centerscreen": "yes" }).then(
+            chatbox => {
+              chatbox.contentWindow.document.title = title;
+              deferred.resolve(chatbox);
+            }
+          );
         } else {
           // attach this chatbox to the topmost browser window
-          let findChromeWindowForChats = Cu.import("resource://gre/modules/MozSocialAPI.jsm").findChromeWindowForChats;
-          let win = findChromeWindowForChats();
-          let chatbar = win.SocialChatBar.chatbar;
-          chatbar.openChat(provider, "about:blank", win => {
-            let cb = chatbar.selectedChat;
-            this.swapDocShells(cb);
+          let Chat = Cu.import("resource:///modules/Chat.jsm").Chat;
+          let win = Chat.findChromeWindowForChats();
+          let chatbar = win.document.getElementById("pinnedchats");
+          let origin = this.content.getAttribute("origin");
+          let cb = chatbar.openChat(origin, title, "about:blank");
+          cb.promiseChatLoaded.then(
+            () => {
+              this.swapDocShells(cb);
 
-            // chatboxForURL is a map of URL -> chatbox used to avoid opening
-            // duplicate chat windows. Ensure reattached chat windows aren't
-            // registered with about:blank as their URL, otherwise reattaching
-            // more than one chat window isn't possible.
-            chatbar.chatboxForURL.delete("about:blank");
-            chatbar.chatboxForURL.set(this.src, Cu.getWeakReference(cb));
+              // chatboxForURL is a map of URL -> chatbox used to avoid opening
+              // duplicate chat windows. Ensure reattached chat windows aren't
+              // registered with about:blank as their URL, otherwise reattaching
+              // more than one chat window isn't possible.
+              chatbar.chatboxForURL.delete("about:blank");
+              chatbar.chatboxForURL.set(this.src, Cu.getWeakReference(cb));
 
-            chatbar.focus();
-            this.close();
-          });
+              chatbar.focus();
+              this.close();
+              deferred.resolve(cb);
+            }
+          );
         }
+        return deferred.promise;
         ]]></body>
       </method>
 
@@ -510,7 +504,6 @@
       <method name="_remove">
         <parameter name="aChatbox"/>
         <body><![CDATA[
-          aChatbox.content.socialErrorListener.remove();
           this.removeChild(aChatbox);
           // child might have been collapsed.
           let menuitem = this.menuitemMap.get(aChatbox);
@@ -522,22 +515,12 @@
         ]]></body>
       </method>
 
-      <method name="removeAll">
-        <body><![CDATA[
-          this.selectedChat = null;
-          while (this.firstElementChild) {
-            this._remove(this.firstElementChild);
-          }
-          // and the nub/popup must also die.
-          this.nub.collapsed = true;
-        ]]></body>
-      </method>
-
       <method name="openChat">
-        <parameter name="aProvider"/>
+        <parameter name="aOrigin"/>
+        <parameter name="aTitle"/>
         <parameter name="aURL"/>
-        <parameter name="aCallback"/>
         <parameter name="aMode"/>
+        <parameter name="aCallback"/>
         <body><![CDATA[
           let cb = this.chatboxForURL.get(aURL);
           if (cb) {
@@ -546,30 +529,35 @@
               this.showChat(cb, aMode);
               if (aCallback) {
                 if (cb._callbacks == null) {
-                  // DOMContentLoaded has already fired, so callback now.
-                  aCallback(cb.contentWindow);
+                  // Chatbox has already been created, so callback now.
+                  aCallback(cb);
                 } else {
-                  // DOMContentLoaded for this chat is yet to fire...
+                  // Chatbox is yet to have bindings created...
                   cb._callbacks.push(aCallback);
                 }
               }
-              return;
+              return cb;
             }
             this.chatboxForURL.delete(aURL);
           }
           cb = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "chatbox");
-          // _callbacks is a javascript property instead of a <field> as it
-          // must exist before the (possibly delayed) bindings are created.
-          cb._callbacks = [aCallback];
+          cb._callbacks = [];
+          if (aCallback) {
+            // _callbacks is a javascript property instead of a <field> as it
+            // must exist before the (possibly delayed) bindings are created.
+            cb._callbacks.push(aCallback);
+          }
           // src also a javascript property; the src attribute is set in the ctor.
           cb.src = aURL;
           if (aMode == "minimized")
             cb.setAttribute("minimized", "true");
-          cb.setAttribute("origin", aProvider.origin);
+          cb.setAttribute("origin", aOrigin);
+          cb.setAttribute("label", aTitle);
           this.insertBefore(cb, this.firstChild);
           this.selectedChat = cb;
           this.chatboxForURL.set(aURL, Cu.getWeakReference(cb));
           this.resize();
+          return cb;
         ]]></body>
       </method>
 
@@ -648,12 +636,14 @@
         ]]></body>
       </method>
 
-      <!-- Moves a chatbox to a new window. -->
+      <!-- Moves a chatbox to a new window. Returns a promise that is resolved
+           once the move to the other window is complete.
+      -->
       <method name="detachChatbox">
         <parameter name="aChatbox"/>
         <parameter name="aOptions"/>
-        <parameter name="aCallback"/>
         <body><![CDATA[
+          let deferred = Promise.defer();
           let options = "";
           for (let name in aOptions)
             options += "," + name + "=" + aOptions[name];
@@ -669,9 +659,9 @@
             let otherChatbox = otherWin.document.getElementById("chatter");
             aChatbox.swapDocShells(otherChatbox);
             aChatbox.close();
-            if (aCallback)
-              aCallback(otherWin);
+            deferred.resolve(otherChatbox);
           }, true);
+          return deferred.promise;
         ]]></body>
       </method>
 
@@ -750,11 +740,12 @@
         let top = Math.min(Math.max(eY, sY.value),
                            sY.value + sHeight.value - winHeight);
 
-        let provider = Social._getProviderFromOrigin(draggedChat.content.getAttribute("origin"));
-        this.detachChatbox(draggedChat, { screenX: left, screenY: top }, win => {
-          win.document.title = provider.name;
-        });
-
+        let title = draggedChat.content.getAttribute("title");
+        this.detachChatbox(draggedChat, { screenX: left, screenY: top }).then(
+          chatbox => {
+            chatbox.contentWindow.document.title = title;
+          }
+        );
         event.stopPropagation();
       ]]></handler>
     </handlers>

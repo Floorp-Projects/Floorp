@@ -6,7 +6,8 @@
 const { Cc, Ci } = require('chrome');
 const { Loader } = require('sdk/test/loader');
 const { setTimeout } = require('sdk/timers');
-const { getOwnerWindow } = require('sdk/private-browsing/window/utils');
+const { viewFor } = require('sdk/view/core');
+const { getOwnerWindow } = require('sdk/tabs/utils');
 const { windows, onFocus, getMostRecentBrowserWindow } = require('sdk/window/utils');
 const { open, focus, close } = require('sdk/window/helpers');
 const tabs = require('sdk/tabs');
@@ -165,12 +166,12 @@ exports.testTabPropertiesInNewWindow = function(assert, done) {
   });
 
   let tabs = loader.require('sdk/tabs');
-  let { getOwnerWindow } = loader.require('sdk/private-browsing/window/utils');
+  let { viewFor } = loader.require('sdk/view/core');
 
   let count = 0;
   function onReadyOrLoad (tab) {
     if (count++) {
-      close(getOwnerWindow(tab)).then(done).then(null, assert.fail);
+      close(getOwnerWindow(viewFor(tab))).then(done).then(null, assert.fail);
     }
   }
 
@@ -368,6 +369,33 @@ exports.testTabMove = function(assert, done) {
   }).then(null, assert.fail);
 };
 
+exports.testIgnoreClosing = function(assert, done) {
+  let originalWindow = browserWindows.activeWindow;
+  openBrowserWindow(function(window, browser) {
+    let url = "data:text/html;charset=utf-8,foobar";
+
+    assert.equal(tabs.length, 2, "should be two windows open each with one tab");
+
+    tabs.on('ready', function onReady(tab) {
+      tabs.removeListener('ready', onReady);
+
+      let win = tab.window;
+      assert.equal(win.tabs.length, 2, "should be two tabs in the new window");
+      assert.equal(tabs.length, 3, "should be three tabs in total");
+
+      tab.close(function() {
+        assert.equal(win.tabs.length, 1, "should be one tab in the new window");
+        assert.equal(tabs.length, 2, "should be two tabs in total");
+
+        originalWindow.once("activate", done);
+        close(window);
+      });
+    });
+
+    tabs.open(url);
+  });
+};
+
 // TEST: open tab with default options
 exports.testOpen = function(assert, done) {
   let url = "data:text/html;charset=utf-8,default";
@@ -413,6 +441,8 @@ exports.testPinUnpin = function(assert, done) {
 
 // TEST: open tab in background
 exports.testInBackground = function(assert, done) {
+  assert.equal(tabs.length, 1, "Should be one tab");
+
   let window = getMostRecentBrowserWindow();
   let activeUrl = tabs.activeTab.url;
   let url = "data:text/html;charset=utf-8,background";
@@ -441,7 +471,7 @@ exports.testOpenInNewWindow = function(assert, done) {
     url: url,
     inNewWindow: true,
     onReady: function(tab) {
-      let newWindow = getOwnerWindow(tab);
+      let newWindow = getOwnerWindow(viewFor(tab));
       assert.equal(windows().length, startWindowCount + 1, "a new window was opened");
 
       onFocus(newWindow).then(function() {
@@ -466,7 +496,7 @@ exports.testOpenInNewWindowOnOpen = function(assert, done) {
     url: url,
     inNewWindow: true,
     onOpen: function(tab) {
-      let newWindow = getOwnerWindow(tab);
+      let newWindow = getOwnerWindow(viewFor(tab));
 
       onFocus(newWindow).then(function() {
         assert.equal(windows().length, startWindowCount + 1, "a new window was opened");
@@ -942,9 +972,11 @@ exports['test unique tab ids'] = function(assert, done) {
   var one = openWindow(), two = openWindow();
   all([one, two]).then(function(results) {
     assert.notEqual(results[0].id, results[1].id, "tab Ids should not be equal.");
-    results[0].win.close();
-    results[1].win.close();
-    done();
+    results[0].win.close(function() {
+      results[1].win.close(function () {
+        done();
+      });
+    });
   });
 }
 

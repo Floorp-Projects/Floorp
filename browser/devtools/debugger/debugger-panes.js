@@ -758,7 +758,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    *        The corresponding item.
    */
   _onBreakpointRemoved: function(aItem) {
-    dumpn("Finalizing breakpoint item: " + aItem);
+    dumpn("Finalizing breakpoint item: " + aItem.stringify());
 
     // Destroy the context menu for the breakpoint.
     let contextMenu = aItem.attachment.popup;
@@ -2215,6 +2215,7 @@ WatchExpressionsView.prototype = Heritage.extend(WidgetMethods, {
   _createItemView: function(aExpression) {
     let container = document.createElement("hbox");
     container.className = "list-widget-item dbg-expression";
+    container.setAttribute("align", "center");
 
     let arrowNode = document.createElement("hbox");
     arrowNode.className = "dbg-expression-arrow";

@@ -1,9 +1,11 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 'use strict';
 
 const tabs = require('sdk/tabs');
 const { isPrivate } = require('sdk/private-browsing');
 const pbUtils = require('sdk/private-browsing/utils');
-const { getOwnerWindow } = require('sdk/private-browsing/window/utils');
 
 exports.testPrivateTabsAreListed = function (assert, done) {
   let originalTabCount = tabs.length;
@@ -12,7 +14,6 @@ exports.testPrivateTabsAreListed = function (assert, done) {
     url: 'about:blank',
     isPrivate: true,
     onOpen: function(tab) {
-      let win = getOwnerWindow(tab);
       // PWPB case
       if (pbUtils.isWindowPBSupported || pbUtils.isTabPBSupported) {
         assert.ok(isPrivate(tab), "tab is private");
