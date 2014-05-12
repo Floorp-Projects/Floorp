@@ -6,8 +6,10 @@
 #ifndef __wsrunobject_h__
 #define __wsrunobject_h__
 
+#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
-#include "nsIEditor.h" // for EDirection
+#include "nsIDOMNode.h"
+#include "nsIEditor.h"
 #include "nsINode.h"
 #include "nscore.h"
 #include "mozilla/dom/Text.h"
@@ -340,8 +342,8 @@ class MOZ_STACK_CLASS nsWSRunObject
     void     FindRun(nsINode* aNode, int32_t aOffset, WSFragment** outRun,
                      bool after);
     char16_t GetCharAt(nsIContent *aTextNode, int32_t aOffset);
-    WSPoint  GetWSPointAfter(nsINode* aNode, int32_t aOffset);
-    WSPoint  GetWSPointBefore(nsINode* aNode, int32_t aOffset);
+    WSPoint  GetWSPointAfter(nsIDOMNode *aNode, int32_t aOffset);
+    WSPoint  GetWSPointBefore(nsIDOMNode *aNode, int32_t aOffset);
     nsresult CheckTrailingNBSPOfRun(WSFragment *aRun);
     nsresult CheckTrailingNBSP(WSFragment* aRun, nsINode* aNode,
                                int32_t aOffset);
