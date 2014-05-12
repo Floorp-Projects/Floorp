@@ -1996,14 +1996,13 @@ nsTableFrame::UpdateOverflow()
   return FinishAndStoreOverflow(overflowAreas, GetSize());
 }
 
-nsresult
+void
 nsTableFrame::ReflowTable(nsHTMLReflowMetrics&     aDesiredSize,
                           const nsHTMLReflowState& aReflowState,
                           nscoord                  aAvailHeight,
                           nsIFrame*&               aLastChildReflowed,
                           nsReflowStatus&          aStatus)
 {
-  nsresult rv = NS_OK;
   aLastChildReflowed = nullptr;
 
   if (!GetPrevInFlow()) {
@@ -2019,7 +2018,6 @@ nsTableFrame::ReflowTable(nsHTMLReflowMetrics&     aDesiredSize,
                  aDesiredSize.mOverflowAreas);
 
   ReflowColGroups(aReflowState.rendContext);
-  return rv;
 }
 
 nsIFrame*
@@ -2831,9 +2829,8 @@ nsTableFrame::SetupHeaderFooterChild(const nsTableReflowState& aReflowState,
   nsHTMLReflowMetrics desiredSize(aReflowState.reflowState);
   desiredSize.Width() = desiredSize.Height() = 0;
   nsReflowStatus status;
-  nsresult rv = ReflowChild(aFrame, presContext, desiredSize, kidReflowState,
-                            aReflowState.x, aReflowState.y, 0, status);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ReflowChild(aFrame, presContext, desiredSize, kidReflowState,
+              aReflowState.x, aReflowState.y, 0, status);
   // The child will be reflowed again "for real" so no need to place it now
 
   aFrame->SetRepeatable(IsRepeatable(desiredSize.Height(), pageHeight));
@@ -2871,7 +2868,7 @@ nsTableFrame::PlaceRepeatedFooter(nsTableReflowState& aReflowState,
                     
 // Reflow the children based on the avail size and reason in aReflowState
 // update aReflowMetrics a aStatus
-nsresult
+void
 nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
                              nsReflowStatus&     aStatus,
                              nsIFrame*&          aLastChildReflowed,
@@ -2881,7 +2878,6 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
   aLastChildReflowed = nullptr;
 
   nsIFrame* prevKidFrame = nullptr;
-  nsresult  rv = NS_OK;
   nscoord   cellSpacingY = GetCellSpacingY();
 
   nsPresContext* presContext = PresContext();
@@ -2916,14 +2912,14 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
   if (isPaginated) {
     if (thead && !GetPrevInFlow()) {
       nscoord desiredHeight;
-      rv = SetupHeaderFooterChild(aReflowState, thead, &desiredHeight);
+      nsresult rv = SetupHeaderFooterChild(aReflowState, thead, &desiredHeight);
       if (NS_FAILED(rv))
-        return rv;
+        return;
     }
     if (tfoot) {
-      rv = SetupHeaderFooterChild(aReflowState, tfoot, &footerHeight);
+      nsresult rv = SetupHeaderFooterChild(aReflowState, tfoot, &footerHeight);
       if (NS_FAILED(rv))
-        return rv;
+        return;
     }
   }
    // if the child is a tbody in paginated mode reduce the height by a repeated footer
@@ -2995,8 +2991,8 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
       if (kidFrame->GetNextInFlow())
         reorder = true;
 
-      rv = ReflowChild(kidFrame, presContext, desiredSize, kidReflowState,
-                       aReflowState.x, aReflowState.y, 0, aStatus);
+      ReflowChild(kidFrame, presContext, desiredSize, kidReflowState,
+                  aReflowState.x, aReflowState.y, 0, aStatus);
 
       if (reorder) {
         // reorder row groups the reflow may have changed the nextinflows
@@ -3152,8 +3148,6 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
   // the children.
   mBits.mResizedColumns = false;
   ClearGeometryDirty();
-
-  return rv;
 }
 
 void
