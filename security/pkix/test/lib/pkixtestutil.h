@@ -60,6 +60,8 @@ SECStatus GenerateKeyPair(/*out*/ ScopedSECKEYPublicKey& publicKey,
 
 enum Version { v1 = 0, v2 = 1, v3 = 2 };
 
+// serialNumber is assumed to be the DER encoding of an INTEGER.
+//
 // If extensions is null, then no extensions will be encoded. Otherwise,
 // extensions must point to a null-terminated array of SECItem*. If the first
 // item of the array is null then an empty Extensions sequence will be encoded.
@@ -71,9 +73,10 @@ enum Version { v1 = 0, v2 = 1, v3 = 2 };
 // The return value, if non-null, is owned by the arena in the context and
 // MUST NOT be freed.
 SECItem* CreateEncodedCertificate(PLArenaPool* arena, long version,
-                                  SECOidTag signature, long serialNumber,
-                                  const char* issuerASCII, PRTime notBefore,
-                                  PRTime notAfter, const char* subjectASCII,
+                                  SECOidTag signature, SECItem* serialNumber,
+                                  const SECItem* issuerNameDER,
+                                  PRTime notBefore, PRTime notAfter,
+                                  const SECItem* subjectNameDER,
                      /*optional*/ SECItem const* const* extensions,
                      /*optional*/ SECKEYPrivateKey* issuerPrivateKey,
                                   SECOidTag signatureHashAlg,

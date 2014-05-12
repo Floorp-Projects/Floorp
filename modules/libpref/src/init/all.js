@@ -2064,6 +2064,12 @@ pref("svg.marker-improvements.enabled", false);
 pref("svg.marker-improvements.enabled", true);
 #endif
 
+#ifdef RELEASE_BUILD
+pref("svg.svg-iframe.enabled", false);
+#else
+pref("svg.svg-iframe.enabled", false);
+#endif
+
 
 // Default font types and sizes by locale
 pref("font.default.ar", "sans-serif");

@@ -172,4 +172,4 @@ exports["test modelFor(xulTab)"] = (assert, done) => {
   });
 };
 
-require("test").run(exports);
+require("sdk/test").run(exports);

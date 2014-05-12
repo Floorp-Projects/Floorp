@@ -165,7 +165,7 @@ function register(factory) {
     throw new Error("xpcom.register() expect a Factory instance.\n" +
                     "Please refactor your code to new xpcom module if you" +
                     " are repacking an addon from SDK <= 1.5:\n" +
-                    "https://addons.mozilla.org/en-US/developers/docs/sdk/latest/packages/api-utils/xpcom.html");
+                    "https://developer.mozilla.org/en-US/Add-ons/SDK/Low-Level_APIs/platform_xpcom");
   }
 
   registerFactory(factory.id, factory.description, factory.contract, factory);

@@ -207,7 +207,8 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         masm.makeFrameDescriptor(valuesSize, JitFrame_BaselineJS);
         masm.push(valuesSize);
         masm.push(Imm32(0)); // Fake return address.
-        masm.enterFakeExitFrame();
+        // No GC things to mark, push a bare token.
+        masm.enterFakeExitFrame(IonExitFrameLayout::BareToken());
 
         regs.add(valuesSize);
 
