@@ -48,7 +48,6 @@ function*() {
   is(getStyle(node, "padding-bottom"), "7px", "Should have updated the padding");
 
   EventUtils.synthesizeKey("VK_RETURN", {}, view);
-  yield waitForUpdate();
 
   is(getStyle(node, "padding-bottom"), "7px", "Should be the right padding.")
   is(span.textContent, 7, "Should have the right value in the box model.");
@@ -102,7 +101,6 @@ function*() {
   is(getStyle(node, "padding-left"), "", "Should have updated the padding");
 
   EventUtils.synthesizeKey("VK_RETURN", {}, view);
-  yield waitForUpdate();
 
   is(getStyle(node, "padding-left"), "", "Should be the right padding.")
   is(span.textContent, 3, "Should have the right value in the box model.");
