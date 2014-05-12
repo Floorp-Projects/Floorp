@@ -87,3 +87,17 @@ function runTests() {
     finish();
   }
 }
+
+const NDEF = {
+  TNF_WELL_KNOWN: 1
+};
+
+var NfcUtils = {
+  fromUTF8: function(str) {
+    let buf = new Uint8Array(str.length);
+    for (let i = 0; i < str.length; ++i) {
+      buf[i] = str.charCodeAt(i);
+    }
+    return buf;
+  }
+};
