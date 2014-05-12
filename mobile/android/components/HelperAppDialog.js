@@ -134,6 +134,7 @@ HelperAppLauncherDialog.prototype = {
       name: bundle.GetStringFromName("helperapps.saveToDisk"),
       packageName: "org.mozilla.gecko.Download",
       iconUri: "drawable://icon",
+      selected: true, // Default to download for all files
       launch: function() {
         // Reset the preferredAction here.
         aLauncher.MIMEInfo.preferredAction = Ci.nsIMIMEInfo.saveToDisk;
