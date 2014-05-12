@@ -22,5 +22,6 @@ EXTRA_JS_MODULES += [
     'ResourceStatsService.jsm',
 ]
 
-FINAL_LIBRARY = 'gklayout'
+TEST_DIRS += ['tests']
 
+FINAL_LIBRARY = 'gklayout'
