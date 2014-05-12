@@ -368,3 +368,5 @@ CXXFLAGS += [
         'frameworks/native/include/media/openmax',
     ]
 ]
+
+MOCHITEST_MANIFESTS += ['apz/test/mochitest.ini']
