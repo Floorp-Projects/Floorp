@@ -1,0 +1,242 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=982141
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 982141, helper page</title>
+  <script type="application/javascript">
+
+    // -------------------------------------------------------------------
+    // Infrastructure to get the test assertions to run at the right time.
+    // -------------------------------------------------------------------
+    var SimpleTest = window.opener.SimpleTest;
+
+    window.onload = function() {
+        window.addEventListener("MozAfterPaint", afterPaint, false);
+    };
+    var utils = SpecialPowers.getDOMWindowUtils(window);
+    function afterPaint(e) {
+      // If there is another paint pending, wait for it.
+      if (utils.isMozAfterPaintPending) {
+          return;
+      }
+
+      // Once there are no more paints pending, remove the
+      // MozAfterPaint listener and run the test logic.
+      window.removeEventListener("MozAfterPaint", afterPaint, false);
+      testBug982141();
+    }
+
+    // ----------------------------------------------------------------------
+    // Functions that convert the APZ test data into a more usable form.
+    // Every place we have a WebIDL sequence whose elements are dictionaries
+    // with two elements, a key, and a value, we convert this into a JS
+    // object with a property for each key/value pair. (This is the structure
+    // we really want, but we can't express in directly in WebIDL.)
+    // ----------------------------------------------------------------------
+
+    function convertEntries(entries) {
+      var result = {};
+      for (var i = 0; i < entries.length; ++i) {
+        result[entries[i].key] = entries[i].value;
+      }
+      return result;
+    }
+
+    function convertScrollFrameData(scrollFrames) {
+      var result = {};
+      for (var i = 0; i < scrollFrames.length; ++i) {
+        result[scrollFrames[i].scrollId] = convertEntries(scrollFrames[i].entries);
+      }
+      return result;
+    }
+
+    function convertBuckets(buckets) {
+      var result = {};
+      for (var i = 0; i < buckets.length; ++i) {
+        result[buckets[i].sequenceNumber] = convertScrollFrameData(buckets[i].scrollFrames);
+      }
+      return result;
+    }
+
+    function convertTestData(testData) {
+      var result = {};
+      result.paints = convertBuckets(testData.paints);
+      result.repaintRequests = convertBuckets(testData.repaintRequests);
+      return result;
+    }
+
+    // ----------------------------------------------------------------
+    // Utilities for reconstructing the structure of the APZC tree from
+    // 'parentScrollId' entries in the APZ test data.
+    // ----------------------------------------------------------------
+
+    // Create a node with scroll id 'id' in the APZC tree.
+    function makeNode(id) {
+      return {scrollId: id, children: []};
+    }
+
+    // Find a node with scroll id 'id' in the APZC tree rooted at 'root'.
+    function findNode(root, id) {
+      if (root.scrollId == id) {
+        return root;
+      }
+      for (var i = 0; i < root.children.length; ++i) {
+        var subtreeResult = findNode(root.children[i], id);
+        if (subtreeResult != null) {
+          return subtreeResult;
+        }
+      }
+      return null;
+    }
+
+    // Add a child -> parent link to the APZC tree rooted at 'root'.
+    function addLink(root, child, parent) {
+      var parentNode = findNode(root, parent);
+      if (parentNode == null) {
+        parentNode = makeNode(parent);
+        root.children.push(parentNode);
+      }
+      parentNode.children.push(makeNode(child));
+    }
+
+    // Add a root node to the APZC tree. It will become a direct
+    // child of 'root'.
+    function addRoot(root, id) {
+      root.children.push(makeNode(id));
+    }
+
+    // Given APZ test data for a single paint on the compositor side,
+    // reconstruct the APZC tree structure from the 'parentScrollId'
+    // entries that were logged.
+    function buildApzcTree(paint) {
+      // The APZC tree can potentially have multiple root nodes,
+      // so we invent a node that is the parent of all roots.
+      // This 'root' does not correspond to an APZC.
+      var root = makeNode(-1);
+      for (var scrollId in paint) {
+        if ("parentScrollId" in paint[scrollId]) {
+          addLink(root, scrollId, paint[scrollId]["parentScrollId"]);
+        } else {
+          addRoot(root, scrollId);
+        }
+      }
+      return root;
+    }
+
+    // --------------------------------------------------------------------
+    // The actual logic for testing bug 982141.
+    //
+    // In this test we have a simple page with a scrollable <div> which has
+    // enough content to make it scrollable. We test that this <div> got
+    // a displayport.
+    // --------------------------------------------------------------------
+
+    function testBug982141() {
+      // Get the content- and compositor-side test data from nsIDOMWindowUtils.
+      var contentTestData = utils.getContentAPZTestData();
+      var compositorTestData = utils.getCompositorAPZTestData();
+
+      // Get the sequence number of the last paint on the compositor side.
+      // We do this before converting the APZ test data because the conversion
+      // loses the order of the paints.
+      SimpleTest.ok(compositorTestData.paints.length > 0,
+                    "expected at least one paint in compositor test data");
+      var lastCompositorPaint = compositorTestData.paints[compositorTestData.paints.length - 1];
+      var lastCompositorPaintSeqNo = lastCompositorPaint.sequenceNumber;
+
+      // Convert the test data into a representation that's easier to navigate.
+      contentTestData = convertTestData(contentTestData);
+      compositorTestData = convertTestData(compositorTestData);
+
+      // Reconstruct the APZC tree structure in the last paint.
+      var apzcTree = buildApzcTree(compositorTestData.paints[lastCompositorPaintSeqNo]);
+
+      // The apzc tree for this page should consist of a single root APZC
+      // and a child APZC for the scrollable <div>.
+      SimpleTest.is(apzcTree.children.length, 1, "expected a single root APZC");
+      var rootApzc = apzcTree.children[0];
+      SimpleTest.is(rootApzc.children.length, 1, "expected a single child APZC");
+      var childScrollId = rootApzc.children[0].scrollId;
+
+      // We should have content-side data for the same paint.
+      SimpleTest.ok(lastCompositorPaintSeqNo in contentTestData.paints,
+                    "expected a content paint with sequence number" + lastCompositorPaintSeqNo);
+      var correspondingContentPaint = contentTestData.paints[lastCompositorPaintSeqNo];
+
+      // This content-side data should have a displayport for our scrollable <div>.
+      SimpleTest.ok(childScrollId in correspondingContentPaint,
+                    "expected scroll frame data for scroll id " + childScrollId);
+      SimpleTest.ok("displayport" in correspondingContentPaint[childScrollId],
+                    "expected a displayport for scroll id " + childScrollId);
+      var childDisplayport = correspondingContentPaint[childScrollId]["displayport"];
+      var dpFields = childDisplayport.replace(/[()\s]+/g, '').split(',');
+      SimpleTest.is(dpFields.length, 4, "expected displayport string of form (x,y,w,h)");
+      var dpWidth = dpFields[2];
+      var dpHeight = dpFields[3];
+      SimpleTest.ok(dpWidth >= 50 && dpHeight >= 50,
+                    "expected a displayport at least as large as the scrollable element");
+
+      window.opener.finishTest();
+    }
+  </script>
+</head>
+<body style="overflow: hidden;"><!-- Make sure the root frame is not scrollable -->
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=982141">Mozilla Bug 982141</a>
+  <!-- A scrollable subframe, with enough content to make it have a nonzero scroll range -->
+  <div style="height: 50px; width: 50px; overflow: scroll">
+    Line 1<br>
+    Line 2<br>
+    Line 3<br>
+    Line 4<br>
+    Line 5<br>
+    Line 6<br>
+    Line 7<br>
+    Line 8<br>
+    Line 9<br>
+    Line 10<br>
+    Line 11<br>
+    Line 12<br>
+    Line 13<br>
+    Line 14<br>
+    Line 15<br>
+    Line 16<br>
+    Line 17<br>
+    Line 18<br>
+    Line 19<br>
+    Line 20<br>
+    Line 21<br>
+    Line 22<br>
+    Line 23<br>
+    Line 24<br>
+    Line 25<br>
+    Line 26<br>
+    Line 27<br>
+    Line 28<br>
+    Line 29<br>
+    Line 30<br>
+    Line 31<br>
+    Line 32<br>
+    Line 33<br>
+    Line 34<br>
+    Line 35<br>
+    Line 36<br>
+    Line 37<br>
+    Line 38<br>
+    Line 39<br>
+    Line 40<br>
+    Line 41<br>
+    Line 42<br>
+    Line 43<br>
+    Line 44<br>
+    Line 45<br>
+    Line 46<br>
+    Line 40<br>
+    Line 48<br>
+    Line 49<br>
+    Line 50<br>
+  </div>
+</body>
+</html>
