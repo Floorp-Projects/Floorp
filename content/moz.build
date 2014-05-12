@@ -9,7 +9,6 @@ PARALLEL_DIRS += [
     'canvas',
     'html',
     'media',
-    'svg',
     'xul',
 ]
 
