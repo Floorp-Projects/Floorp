@@ -23,6 +23,7 @@ namespace mozilla {
 namespace layers {
 
 class CompositableClient;
+class AsyncTransactionTracker;
 class TextureFactoryIdentifier;
 class SurfaceDescriptor;
 class SurfaceDescriptorTiles;
@@ -106,12 +107,28 @@ public:
                                  const nsIntRect& aRect) = 0;
 
   /**
-   * Tell the CompositableHost on the compositor side to remove the texture.
+   * Tell the CompositableHost on the compositor side to remove the texture
+   * from the CompositableHost.
    * This function does not delete the TextureHost corresponding to the
    * TextureClient passed in parameter.
+   * When the TextureClient has TEXTURE_DEALLOCATE_CLIENT flag,
+   * the transaction becomes synchronous.
    */
   virtual void RemoveTextureFromCompositable(CompositableClient* aCompositable,
                                              TextureClient* aTexture) = 0;
+
+  /**
+   * Tell the CompositableHost on the compositor side to remove the texture
+   * from the CompositableHost. The compositor side sends back transaction
+   * complete message.
+   * This function does not delete the TextureHost corresponding to the
+   * TextureClient passed in parameter.
+   * It is used when the TextureClient recycled.
+   * Only ImageBridge implements it.
+   */
+  virtual void RemoveTextureFromCompositableAsync(AsyncTransactionTracker* aAsyncTransactionTracker,
+                                                  CompositableClient* aCompositable,
+                                                  TextureClient* aTexture) {}
 
   /**
    * Tell the compositor side to delete the TextureHost corresponding to the
@@ -175,6 +192,8 @@ public:
   }
 
   bool IsOnCompositorSide() const MOZ_OVERRIDE { return false; }
+
+  virtual bool IsImageBridgeChild() const { return false; }
 
   /**
    * Returns the type of backend that is used off the main thread.

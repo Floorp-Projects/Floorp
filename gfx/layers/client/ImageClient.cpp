@@ -41,6 +41,46 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace layers {
 
+/**
+ * Handle RemoveTextureFromCompositableAsync() transaction.
+ */
+class RemoveTextureFromCompositableTracker : public AsyncTransactionTracker {
+public:
+  RemoveTextureFromCompositableTracker(CompositableClient* aCompositableClient)
+    : mCompositableClient(aCompositableClient)
+  {
+    MOZ_COUNT_CTOR(RemoveTextureFromCompositableTracker);
+  }
+
+  ~RemoveTextureFromCompositableTracker()
+  {
+    MOZ_COUNT_DTOR(RemoveTextureFromCompositableTracker);
+  }
+
+  virtual void Complete() MOZ_OVERRIDE
+  {
+    // The TextureClient's recycling is postponed until the transaction
+    // complete.
+    mTextureClient = nullptr;
+    mCompositableClient = nullptr;
+  }
+
+  virtual void Cancel() MOZ_OVERRIDE
+  {
+    mTextureClient = nullptr;
+    mCompositableClient = nullptr;
+  }
+
+  virtual void SetTextureClient(TextureClient* aTextureClient) MOZ_OVERRIDE
+  {
+    mTextureClient = aTextureClient;
+  }
+
+private:
+  RefPtr<CompositableClient> mCompositableClient;
+  RefPtr<TextureClient> mTextureClient;
+};
+
 /* static */ TemporaryRef<ImageClient>
 ImageClient::CreateImageClient(CompositableType aCompositableHostType,
                                CompositableForwarder* aForwarder,
@@ -70,6 +110,36 @@ ImageClient::CreateImageClient(CompositableType aCompositableHostType,
   return result.forget();
 }
 
+void
+ImageClient::RemoveTextureFromCompositable(TextureClient* aTexture,
+                                           AsyncTransactionTracker* aAsyncTransactionTracker)
+{
+#ifdef MOZ_WIDGET_GONK
+  // AsyncTransactionTracker is supported only on ImageBridge.
+  // Use AsyncTransactionTracker only when TextureClient is recyeled.
+  if (GetForwarder()->IsImageBridgeChild() &&
+      aTexture->HasRecycleCallback()) {
+    RefPtr<AsyncTransactionTracker> request = aAsyncTransactionTracker;
+    if (!request) {
+      // Create AsyncTransactionTracker if it is not provided as argument.
+      request = new RemoveTextureFromCompositableTracker(this);
+    }
+    // Hold TextureClient until the transaction complete to postpone
+    // the TextureClient recycle.
+    request->SetTextureClient(aTexture);
+    GetForwarder()->RemoveTextureFromCompositableAsync(request, this, aTexture);
+    return;
+  }
+#endif
+
+  GetForwarder()->RemoveTextureFromCompositable(this, aTexture);
+  if (aAsyncTransactionTracker) {
+    // Do not need to wait a transaction complete message
+    // from the compositor side.
+    aAsyncTransactionTracker->NotifyComplete();
+  }
+}
+
 ImageClientSingle::ImageClientSingle(CompositableForwarder* aFwd,
                                      TextureFlags aFlags,
                                      CompositableType aType)
@@ -89,24 +159,36 @@ TextureInfo ImageClientSingle::GetTextureInfo() const
   return TextureInfo(CompositableType::IMAGE);
 }
 
+TemporaryRef<AsyncTransactionTracker>
+ImageClientSingle::PrepareFlushAllImages()
+{
+  RefPtr<AsyncTransactionTracker> status = new RemoveTextureFromCompositableTracker(this);
+  return status;
+}
+
 void
-ImageClientSingle::FlushAllImages(bool aExceptFront)
+ImageClientSingle::FlushAllImages(bool aExceptFront,
+                                  AsyncTransactionTracker* aAsyncTransactionTracker)
 {
   if (!aExceptFront && mFrontBuffer) {
-    GetForwarder()->RemoveTextureFromCompositable(this, mFrontBuffer);
+    RemoveTextureFromCompositable(mFrontBuffer, aAsyncTransactionTracker);
     mFrontBuffer = nullptr;
+  } else if(aAsyncTransactionTracker) {
+    // already flushed
+    aAsyncTransactionTracker->NotifyComplete();
   }
 }
 
 void
-ImageClientBuffered::FlushAllImages(bool aExceptFront)
+ImageClientBuffered::FlushAllImages(bool aExceptFront,
+                                    AsyncTransactionTracker* aAsyncTransactionTracker)
 {
   if (!aExceptFront && mFrontBuffer) {
-    GetForwarder()->RemoveTextureFromCompositable(this, mFrontBuffer);
+    RemoveTextureFromCompositable(mFrontBuffer);
     mFrontBuffer = nullptr;
   }
   if (mBackBuffer) {
-    GetForwarder()->RemoveTextureFromCompositable(this, mBackBuffer);
+    RemoveTextureFromCompositable(mBackBuffer, aAsyncTransactionTracker);
     mBackBuffer = nullptr;
   }
 }
@@ -139,9 +221,8 @@ ImageClientSingle::UpdateImageInternal(ImageContainer* aContainer,
     // fast path: no need to allocate and/or copy image data
     RefPtr<TextureClient> texture = image->AsSharedImage()->GetTextureClient(this);
 
-
     if (mFrontBuffer) {
-      GetForwarder()->RemoveTextureFromCompositable(this, mFrontBuffer);
+      RemoveTextureFromCompositable(mFrontBuffer);
     }
     mFrontBuffer = texture;
     if (!AddTextureClient(texture)) {
@@ -158,7 +239,7 @@ ImageClientSingle::UpdateImageInternal(ImageContainer* aContainer,
     }
 
     if (mFrontBuffer && mFrontBuffer->IsImmutable()) {
-      GetForwarder()->RemoveTextureFromCompositable(this, mFrontBuffer);
+      RemoveTextureFromCompositable(mFrontBuffer);
       mFrontBuffer = nullptr;
     }
 
@@ -202,7 +283,7 @@ ImageClientSingle::UpdateImageInternal(ImageContainer* aContainer,
     gfx::IntSize size = gfx::IntSize(image->GetSize().width, image->GetSize().height);
 
     if (mFrontBuffer) {
-      GetForwarder()->RemoveTextureFromCompositable(this, mFrontBuffer);
+      RemoveTextureFromCompositable(mFrontBuffer);
       mFrontBuffer = nullptr;
     }
 
@@ -223,7 +304,7 @@ ImageClientSingle::UpdateImageInternal(ImageContainer* aContainer,
 
     if (mFrontBuffer &&
         (mFrontBuffer->IsImmutable() || mFrontBuffer->GetSize() != size)) {
-      GetForwarder()->RemoveTextureFromCompositable(this, mFrontBuffer);
+      RemoveTextureFromCompositable(mFrontBuffer);
       mFrontBuffer = nullptr;
     }
 
