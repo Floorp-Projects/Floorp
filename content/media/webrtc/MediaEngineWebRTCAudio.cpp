@@ -62,6 +62,7 @@ AudioOutputObserver::AudioOutputObserver()
 
 AudioOutputObserver::~AudioOutputObserver()
 {
+  Clear();
 }
 
 void
@@ -70,6 +71,7 @@ AudioOutputObserver::Clear()
   while (mPlayoutFifo->size() > 0) {
     (void) mPlayoutFifo->Pop();
   }
+  mSaved = nullptr;
 }
 
 FarEndAudioChunk *
