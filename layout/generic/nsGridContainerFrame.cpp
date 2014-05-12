@@ -35,32 +35,6 @@ NS_NewGridContainerFrame(nsIPresShell* aPresShell,
 // nsGridContainerFrame Method Implementations
 // ===========================================
 
-void
-nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
-                             nsHTMLReflowMetrics&     aDesiredSize,
-                             const nsHTMLReflowState& aReflowState,
-                             nsReflowStatus&          aStatus)
-{
-  DO_GLOBAL_REFLOW_COUNT("nsGridContainerFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
-
-  if (IsFrameTreeTooDeep(aReflowState, aDesiredSize, aStatus)) {
-    return;
-  }
-
-  nsMargin bp = aReflowState.ComputedPhysicalBorderPadding();
-  ApplySkipSides(bp);
-  nscoord contentHeight = GetEffectiveComputedHeight(aReflowState);
-  if (contentHeight == NS_AUTOHEIGHT) {
-    contentHeight = 0;
-  }
-  aDesiredSize.Width() = aReflowState.ComputedWidth() + bp.LeftRight();
-  aDesiredSize.Height() = contentHeight + bp.TopBottom();
-  aDesiredSize.SetOverflowAreasToDesiredBounds();
-  aStatus = NS_FRAME_COMPLETE;
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-}
-
 nsIAtom*
 nsGridContainerFrame::GetType() const
 {
