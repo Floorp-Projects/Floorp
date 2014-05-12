@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test to ensure ResourceStatsManager does not create an instance for non-supported type</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+const type = "non-supported";
+
+SimpleTest.waitForExplicitFinish();
+
+// Test to ensure ResourceStatsManager does not create an instance for
+// non-supported type.
+SpecialPowers.addPermission("resourcestats-manage", true, document);
+SpecialPowers.pushPrefEnv({ 'set': [
+                            ["dom.resource_stats.enabled", true],
+                            ["dom.ignore_webidl_scope_checks", true]
+                          ]}, function() {
+  try {
+    var mgr = ResourceStatsManager(type);
+    ok(false,
+       "Creating an instance for non-supported type should throw an exeception.");
+  } catch (ex) {
+    ok(ex,
+       "Got an exception when creating an instance for non-supported type.");
+  }
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

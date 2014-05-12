@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test accessibility of interfaces</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// Test accessibility of interfaces.
+SpecialPowers.addPermission("resourcestats-manage", true, document);
+SpecialPowers.pushPrefEnv({ 'set': [
+                            ["dom.resource_stats.enabled", true],
+                            ["dom.ignore_webidl_scope_checks", true]
+                          ]}, function() {
+  ok(SpecialPowers.hasPermission("resourcestats-manage", document),
+     "Has permission 'resourcestats-manage'.");
+  ok(SpecialPowers.getBoolPref("dom.resource_stats.enabled"),
+     "Preference 'dom.resource_stats.enabled' is true.");
+
+  // Check all interfaces are accessible.
+  ok('ResourceStatsManager' in window, "ResourceStatsManager exist.");
+  ok('ResourceStatsAlarm' in window, "ResourceStatsAlarm exist.");
+  ok('ResourceStats' in window, "ResourceStats exist.");
+  ok('NetworkStatsData' in window, "NetworkStatsData exist.");
+  ok('PowerStatsData' in window, "PowerStatsData exist.");
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

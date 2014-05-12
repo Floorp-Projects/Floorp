@@ -1,0 +1,345 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for ResourceStats methods realted to network statistics</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+const invalidManifestURL = "app://invalid.gaiamobile.org/manifest.webapp";
+var networkStatsMgr = null; // ResourceStatsManager for network statistics.
+var sampleRate = 0;
+
+// Test WebIDL attributes.
+function testAttributes() {
+  // Test sampleRate.
+  ok('sampleRate' in networkStatsMgr,
+   "sampleRate should be a ResourceStatsManager attribute.");
+  sampleRate = networkStatsMgr.sampleRate;
+  ok(sampleRate > 0, "sampleRate is greater than 0.");
+
+  // Test maxStorageAge.
+  ok('maxStorageAge' in networkStatsMgr,
+   "maxStorageAge should be a ResourceStatsManager attribute.");
+  ok(networkStatsMgr.maxStorageAge > 0,
+   "maxStorageAge is greater than 0.");
+
+  // Test whether "network" in resourceTypes array.
+  ok('resourceTypes' in networkStatsMgr,
+   "resourceTypes should be a ResourceStatsManager attribute.");
+  ok(Array.isArray(networkStatsMgr.resourceTypes),
+   "networkStatsMgr.resourceTypes is an array.");
+  ok(networkStatsMgr.resourceTypes.indexOf("network") > -1,
+   "'network' is an element of networkStatsMgr.resourceTypes.");
+}
+
+// Check the content returned by ResourceStats.getData().
+function checkData(data, start, end) {
+  // Check if data is an array.
+  if (!Array.isArray(data)) {
+    ok(false, "getData does not return an array.")
+    return;
+  } else {
+    ok(true, "getData returns an array.")
+  }
+
+  // Iterate the array and check the timestamp and type of each element.
+  var success = true;
+  var obj = null;
+  var timestamp = start;
+  var i = 0;
+  var length = data.length;
+
+  do {
+    obj = data[i++];
+
+    // Check object type.
+    if (!(obj instanceof NetworkStatsData)) {
+      success = false;
+      ok(false, "The array contains a non-NetworkStatsData object.");
+      break;
+    }
+
+    // Check if the timestamp is continuous.
+    if (obj.timestamp !== timestamp) {
+      success = false;
+      ok(false, "The timestamp of NetworkStatsData object is correct.");
+      break;
+    }
+
+    timestamp += sampleRate;
+  } while (i < length);
+
+  if (!success) {
+    return;
+  }
+
+  // Check the timestamp of the last element is equal to end.
+  if (obj.timestamp != end) {
+    ok(false,
+       "The timestamp of the last element of the array is equal to end.");
+    return;
+  }
+
+  // Execute next test case.
+  ok(true, "The return of getData is an array of NetworkStatsData objects.");
+  testMethods();
+}
+
+// Test Cases for testing WebIDL methods.
+var testCases = [
+  function() {
+    // Test clearAllStats.
+    var promise = networkStatsMgr.clearAllStats();
+    promise.then(function() {
+      ok(true, "clearAllStats clears the network store.");
+      testMethods();
+    }, function() {
+      ok(false, "clearAllStats fails to clear the network store.");
+    });
+  },
+
+  function() {
+    // Test clearStats.
+    var promise = networkStatsMgr.clearStats();
+    promise.then(function() {
+      ok(true, "clearStats clears the network store.");
+      testMethods();
+    }, function() {
+      ok(false, "clearStats fails to clear the network store.");
+    });
+  },
+
+  function() {
+    // Check if clearStats throw exception when start is great than end.
+    var end = Date.now();
+    var start = end + 1000;
+    var promise = networkStatsMgr.clearStats(null, start, end);
+    promise.then(function() {
+      ok(false,
+         "clearStats does not throw exception when start is great than end.");
+    }, function() {
+      ok(true, "clearStats throw exception when start is great than end.");
+      testMethods();
+    });
+  },
+
+  function() {
+    // Check if clearStats throw exception when start is less than 0.
+    var end = Date.now();
+    var start = -1;
+    var promise = networkStatsMgr.clearStats(null, start, end);
+    promise.then(function() {
+      ok(false,
+         "clearStats dose not throw exception when start is less than 0.");
+    }, function() {
+      ok(true, "clearStats throw exception when start is less than 0.");
+      testMethods();
+    });
+  },
+
+  function() {
+    // Check if clearStats throw exception when manifestURL is invalid.
+    var options = {manifestURL: invalidManifestURL};
+    var promise = networkStatsMgr.clearStats(options);
+    promise.then(function() {
+      ok(false,
+         "clearStats does not throw exception when manifestURL is invalid.");
+    }, function() {
+      ok(true, "clearStats throw exception when manifestURL is invalid.");
+      testMethods();
+    });
+  },
+
+  function() {
+    // Test getAvailableComponents.
+    var promise = networkStatsMgr.getAvailableComponents();
+    promise.then(function(value) {
+      if (Array.isArray(value)) {
+        ok(true, "getAvailableComponents returns an array.");
+        testMethods();
+      } else {
+        ok(false, "getAvailableComponents does not return an array.");
+      }
+    }, function() {
+      ok(false, "Fail to execute getAvailableComponents.");
+    });
+  },
+
+  function() {
+    // Test getStats.
+    ok(true, "Get system stats when start and end are adapted to sampleRate.");
+
+    // Prepare start and end.
+    var offset = (new Date()).getTimezoneOffset() * 60 * 1000;
+    var end = Math.floor((Date.now() - offset) / sampleRate) * sampleRate + offset;
+    var start = end - sampleRate * 10;
+
+    // Launch request.
+    var promise = networkStatsMgr.getStats(null, start, end);
+    promise.then(function(value) {
+      // Check the object type.
+      if (value instanceof ResourceStats) {
+        ok(true, "Get a ResourceStats object.");
+      } else {
+        ok(false, "Fail to get a ResourceStats object.");
+        return;
+      }
+
+      // Check attributes of ResourceStats.
+      ok(value.type == "network", "type should be network.");
+      ok(value.component == null, "component should be null.");
+      ok(value.serviceType == null, "serviceType should be null.");
+      ok(value.manifestURL == null, "manifestURL should be null.");
+
+      // Check if the time range of ResourceStats is equal to the request.
+      ok(value.start == start, "start timestamp should be equal.");
+      ok(value.end == end, "end timestamp should be equal.");
+
+      // Check stats stored inside ResourceStats.
+      if ('getData' in value) {
+        checkData(value.getData(), start, end);
+      } else {
+        ok(false, "getData is not a method of ResourceStats.");
+        return;
+      }
+    }, function() {
+      ok(false, "Get network stats failed.");
+    });
+  },
+
+  function() {
+    // Test getStats when start and end are not adapted to sampleRate.
+    ok(true,
+       "Get system stats when start and end are not adapted to sampleRate.");
+
+    // Prepare start and end.
+    var end = Date.now();
+    var start = end - sampleRate * 10;
+
+    // Normalize start and end.
+    var offset = (new Date()).getTimezoneOffset() * 60 * 1000;
+    var normEnd = Math.floor((end - offset) / sampleRate)
+                    * sampleRate + offset;
+    var normStart = Math.floor((start - offset) / sampleRate)
+                      * sampleRate + offset;
+
+    // Launch request.
+    var promise = networkStatsMgr.getStats(null, start, end);
+    promise.then(function(value) {
+      // Check the object type.
+      if (value instanceof ResourceStats) {
+        ok(true, "Get a ResourceStats object.");
+      } else {
+        ok(false, "Fail to get a ResourceStats object.");
+        return;
+      }
+
+      // Check attributes of ResourceStats.
+      ok(value.type == "network", "type should be network.");
+      ok(value.component == null, "component should be null.");
+      ok(value.serviceType == null, "serviceType should be null.");
+      ok(value.manifestURL == null, "manifestURL should be null.");
+
+      // Check if time range of ResourceStats are normalized.
+      ok(value.start == normStart, "start timestamp should be normalized.");
+      ok(value.end == normEnd, "end timestamp should be normalized.");
+
+      // Check stats stored inside ResourceStats.
+      if ('getData' in value) {
+        checkData(value.getData(), normStart, normEnd);
+      } else {
+        ok(false, "getData is not a method of ResourceStats.");
+        return;
+      }
+    }, function() {
+      ok(false, "Get network stats failed.");
+    });
+  },
+
+  function () {
+    // Check if getStats throw exception when start is greater than end.
+    var end = Date.now();
+    var start = end + 1000;
+    var promise = networkStatsMgr.getStats(null, start, end);
+    promise.then(function() {
+      ok(false,
+         "getStats dose not throw exception when start is great than end.");
+    }, function() {
+      ok(true, "getStats throw exception when start is great than end.");
+      testMethods();
+    });
+  },
+
+  function() {
+    // Check if getStats throw exception when start is less than 0.
+    var end = Date.now();
+    var start = -1;
+    var promise = networkStatsMgr.getStats(null, start, end);
+    promise.then(function() {
+      ok(false,
+         "getStats dose not throw exception when start is less than 0.");
+    }, function() {
+      ok(true, "getStats throw exception when start is less than 0.");
+      testMethods();
+    });
+  },
+
+  function() {
+    // Check if getStats throw exception when manifestURL is invalid.
+    var options = {manifestURL: invalidManifestURL};
+    var promise = networkStatsMgr.getStats(options);
+    promise.then(function(value) {
+      ok(false,
+         "getStats does not throw exception when manifestURL is invalid.");
+    }, function() {
+      ok(true, "getStats throw exception when manifestURL is invalid.");
+      testMethods();
+    });
+  }
+];
+
+// Test WebIDL methods related stats operation.
+function testMethods() {
+  if (!testCases.length) {
+    ok(true, "Done.");
+    SpecialPowers.removePermission("resourcestats-manage", document);
+    SimpleTest.finish();
+    return;
+  }
+
+  var testCase = testCases.shift();
+  testCase();
+}
+
+function startTest() {
+  // Create an instance of ResourceStatsManager for network stats.
+  networkStatsMgr = new window.ResourceStatsManager("network");
+  ok(networkStatsMgr, "Create networkStatsMgr.");
+
+  // Test WebIDL attributes.
+  testAttributes();
+
+  // Test WebIDL methods related to stats operation.
+  testMethods();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+// Enable permission and preference.
+SpecialPowers.addPermission("resourcestats-manage", true, document);
+SpecialPowers.pushPrefEnv({ 'set': [
+                            ["dom.resource_stats.enabled", true],
+                            ["dom.ignore_webidl_scope_checks", true]
+                          ]}, startTest);
+
+</script>
+</pre>
+</body>
+</html>

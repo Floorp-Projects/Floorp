@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test to ensure ResourceStatsManager is not accessible without permission</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// Test to ensure ResourceStatsManager is not accessible without permission.
+SpecialPowers.removePermission("resourcestats-manage", document);
+SpecialPowers.pushPrefEnv({ 'set': [
+                            ["dom.resource_stats.enabled", true],
+                            ["dom.ignore_webidl_scope_checks", true]
+                          ]}, function() {
+  ok(!(SpecialPowers.hasPermission("resourcestats-manage", document)),
+     "Do not have permission 'resourcestats-manage'.");
+  ok(SpecialPowers.getBoolPref("dom.resource_stats.enabled"),
+     "Preference 'dom.resource_stats.enabled' is true.");
+
+  // Check ResourceStatsManager exist.
+  ok(!('ResourceStatsManager' in window),
+     "Cannot access window.ResourceStatsManager when have no permission");
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>
