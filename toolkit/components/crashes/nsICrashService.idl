@@ -1,0 +1,28 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(a1845b69-28f4-43db-be6e-02eb15a45481)]
+interface nsICrashService : nsISupports
+{
+  /**
+   * Records the occurrence of a crash.
+   *
+   * @param processType
+   *        One of the PROCESS_TYPE constants defined below.
+   * @param crashType
+   *        One of the CRASH_TYPE constants defined below.
+   * @param id
+   *        Crash ID. Likely a UUID.
+   */
+  void addCrash(in long processType, in long crashType, in AString id);
+
+  const long PROCESS_TYPE_MAIN = 0;
+  const long PROCESS_TYPE_CONTENT = 1;
+  const long PROCESS_TYPE_PLUGIN = 2;
+
+  const long CRASH_TYPE_CRASH = 0;
+  const long CRASH_TYPE_HANG = 1;
+};

@@ -1,0 +1,28 @@
+<head>
+  <title>nsICrashService plugin crash</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="utils.js"></script>
+
+<body>
+  <script class="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+  window.frameLoaded = function frameLoaded_toCrash() {
+   if (!SimpleTest.testPluginIsOOP()) {
+      ok(true, "Skipping this test when test plugin is not OOP.");
+      SimpleTest.finish();
+      return;
+    }
+
+    SimpleTest.expectChildProcessCrash();
+
+    crashAndGetCrashServiceRecord("crash", function (cm, crash) {
+      ok(crash.isOfType(cm.PROCESS_TYPE_PLUGIN, cm.CRASH_TYPE_CRASH),
+         "Record should be a plugin crash");
+      SimpleTest.finish();
+    });
+
+  }
+  </script>
+  <iframe id="iframe1" src="crashing_subpage.html" width="600" height="600"></iframe>

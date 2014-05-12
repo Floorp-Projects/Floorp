@@ -47,15 +47,12 @@ add_task(function* test_collect() {
   let day1 = new Date(2014, 0, 1, 0, 0, 0);
   let day2 = new Date(2014, 0, 3, 0, 0, 0);
 
-  // FUTURE Bug 982836 CrashManager will grow public APIs for adding crashes.
-  // Switch to that here.
-  let store = yield manager._getStore();
-  store.addMainProcessCrash("id1", day1);
-  store.addMainProcessCrash("id2", day1);
-  store.addMainProcessCrash("id3", day2);
-
-  // Flush changes (this may not be needed but it doesn't hurt).
-  yield store.save();
+  yield manager.addCrash(manager.PROCESS_TYPE_MAIN, manager.CRASH_TYPE_CRASH,
+                         "id1", day1);
+  yield manager.addCrash(manager.PROCESS_TYPE_MAIN, manager.CRASH_TYPE_CRASH,
+                         "id2", day1);
+  yield manager.addCrash(manager.PROCESS_TYPE_MAIN, manager.CRASH_TYPE_CRASH,
+                         "id3", day2);
 
   yield provider.collectDailyData();
 
@@ -73,9 +70,8 @@ add_task(function* test_collect() {
   do_check_eq(value.get("mainCrash"), 1);
 
   // Check that adding a new crash increments counter on next collect.
-  store = yield manager._getStore();
-  store.addMainProcessCrash("id4", day2);
-  yield store.save();
+  yield manager.addCrash(manager.PROCESS_TYPE_MAIN, manager.CRASH_TYPE_CRASH,
+                         "id4", day2);
 
   yield provider.collectDailyData();
   values = yield m.getValues();

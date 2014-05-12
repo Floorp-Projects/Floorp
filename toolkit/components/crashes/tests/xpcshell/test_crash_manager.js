@@ -166,7 +166,7 @@ add_task(function* test_prune_old() {
   let oldDate = new Date(Date.now() - 86400000);
   let newDate = new Date(Date.now() - 10000);
   yield m.createEventsFile("1", "crash.main.1", oldDate, "id1");
-  yield m.createEventsFile("2", "crash.plugin.1", newDate, "id2");
+  yield m.addCrash(m.PROCESS_TYPE_PLUGIN, m.CRASH_TYPE_CRASH, "id2", newDate);
 
   yield m.aggregateEventsFiles();
 
@@ -225,39 +225,7 @@ add_task(function* test_multiline_crash_id_rejected() {
   Assert.equal(crashes.length, 0);
 });
 
-add_task(function* test_plugin_crash_event_file() {
-  let m = yield getManager();
-  yield m.createEventsFile("1", "crash.plugin.1", DUMMY_DATE, "id1");
-  let count = yield m.aggregateEventsFiles();
-  Assert.equal(count, 1);
-
-  let crashes = yield m.getCrashes();
-  Assert.equal(crashes.length, 1);
-  Assert.equal(crashes[0].id, "id1");
-  Assert.equal(crashes[0].type, "plugin-crash");
-  Assert.deepEqual(crashes[0].crashDate, DUMMY_DATE);
-
-  count = yield m.aggregateEventsFiles();
-  Assert.equal(count, 0);
-});
-
-add_task(function* test_plugin_hang_event_file() {
-  let m = yield getManager();
-  yield m.createEventsFile("1", "hang.plugin.1", DUMMY_DATE, "id1");
-  let count = yield m.aggregateEventsFiles();
-  Assert.equal(count, 1);
-
-  let crashes = yield m.getCrashes();
-  Assert.equal(crashes.length, 1);
-  Assert.equal(crashes[0].id, "id1");
-  Assert.equal(crashes[0].type, "plugin-hang");
-  Assert.deepEqual(crashes[0].crashDate, DUMMY_DATE);
-
-  count = yield m.aggregateEventsFiles();
-  Assert.equal(count, 0);
-});
-
-// Excessive amounts of files should be processed properly.
+// Main process crashes should be remembered beyond the high water mark.
 add_task(function* test_high_water_mark() {
   let m = yield getManager();
 
@@ -265,15 +233,74 @@ add_task(function* test_high_water_mark() {
 
   for (let i = 0; i < store.HIGH_WATER_DAILY_THRESHOLD + 1; i++) {
     yield m.createEventsFile("m" + i, "crash.main.1", DUMMY_DATE, "m" + i);
-    yield m.createEventsFile("pc" + i, "crash.plugin.1", DUMMY_DATE, "pc" + i);
-    yield m.createEventsFile("ph" + i, "hang.plugin.1", DUMMY_DATE, "ph" + i);
   }
 
   let count = yield m.aggregateEventsFiles();
-  Assert.equal(count, 3 * bsp.CrashStore.prototype.HIGH_WATER_DAILY_THRESHOLD + 3);
+  Assert.equal(count, bsp.CrashStore.prototype.HIGH_WATER_DAILY_THRESHOLD + 1);
 
   // Need to fetch again in case the first one was garbage collected.
   store = yield m._getStore();
-  // +1 is for preserved main process crash.
-  Assert.equal(store.crashesCount, 3 * store.HIGH_WATER_DAILY_THRESHOLD + 1);
+
+  Assert.equal(store.crashesCount, store.HIGH_WATER_DAILY_THRESHOLD + 1);
+});
+
+add_task(function* test_addCrash() {
+  let m = yield getManager();
+
+  let crashes = yield m.getCrashes();
+  Assert.equal(crashes.length, 0);
+
+  yield m.addCrash(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_CRASH,
+                   "main-crash", DUMMY_DATE);
+  yield m.addCrash(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_HANG,
+                   "main-hang", DUMMY_DATE);
+  yield m.addCrash(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_CRASH,
+                   "content-crash", DUMMY_DATE);
+  yield m.addCrash(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_HANG,
+                   "content-hang", DUMMY_DATE);
+  yield m.addCrash(m.PROCESS_TYPE_PLUGIN, m.CRASH_TYPE_CRASH,
+                   "plugin-crash", DUMMY_DATE);
+  yield m.addCrash(m.PROCESS_TYPE_PLUGIN, m.CRASH_TYPE_HANG,
+                   "plugin-hang", DUMMY_DATE);
+
+  crashes = yield m.getCrashes();
+  Assert.equal(crashes.length, 6);
+
+  let map = new Map(crashes.map(crash => [crash.id, crash]));
+
+  let crash = map.get("main-crash");
+  Assert.ok(!!crash);
+  Assert.equal(crash.crashDate, DUMMY_DATE);
+  Assert.equal(crash.type, m.PROCESS_TYPE_MAIN + "-" + m.CRASH_TYPE_CRASH);
+  Assert.ok(crash.isOfType(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_CRASH));
+
+  crash = map.get("main-hang");
+  Assert.ok(!!crash);
+  Assert.equal(crash.crashDate, DUMMY_DATE);
+  Assert.equal(crash.type, m.PROCESS_TYPE_MAIN + "-" + m.CRASH_TYPE_HANG);
+  Assert.ok(crash.isOfType(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_HANG));
+
+  crash = map.get("content-crash");
+  Assert.ok(!!crash);
+  Assert.equal(crash.crashDate, DUMMY_DATE);
+  Assert.equal(crash.type, m.PROCESS_TYPE_CONTENT + "-" + m.CRASH_TYPE_CRASH);
+  Assert.ok(crash.isOfType(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_CRASH));
+
+  crash = map.get("content-hang");
+  Assert.ok(!!crash);
+  Assert.equal(crash.crashDate, DUMMY_DATE);
+  Assert.equal(crash.type, m.PROCESS_TYPE_CONTENT + "-" + m.CRASH_TYPE_HANG);
+  Assert.ok(crash.isOfType(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_HANG));
+
+  crash = map.get("plugin-crash");
+  Assert.ok(!!crash);
+  Assert.equal(crash.crashDate, DUMMY_DATE);
+  Assert.equal(crash.type, m.PROCESS_TYPE_PLUGIN + "-" + m.CRASH_TYPE_CRASH);
+  Assert.ok(crash.isOfType(m.PROCESS_TYPE_PLUGIN, m.CRASH_TYPE_CRASH));
+
+  crash = map.get("plugin-hang");
+  Assert.ok(!!crash);
+  Assert.equal(crash.crashDate, DUMMY_DATE);
+  Assert.equal(crash.type, m.PROCESS_TYPE_PLUGIN + "-" + m.CRASH_TYPE_HANG);
+  Assert.ok(crash.isOfType(m.PROCESS_TYPE_PLUGIN, m.CRASH_TYPE_HANG));
 });
