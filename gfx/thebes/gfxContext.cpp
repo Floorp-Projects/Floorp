@@ -2242,6 +2242,12 @@ gfxContext::GetAzureDeviceSpaceClipBounds()
   return rect;
 }
 
+Point
+gfxContext::GetDeviceOffset() const
+{
+  return CurrentState().deviceOffset;
+}
+
 Matrix
 gfxContext::GetDeviceTransform() const
 {
