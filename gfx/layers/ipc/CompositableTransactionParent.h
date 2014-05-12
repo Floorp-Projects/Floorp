@@ -53,6 +53,8 @@ protected:
                                     PCompositableParent* aParent);
   void ClearPrevFenceHandles();
 
+  virtual void ReplyRemoveTexture(const OpReplyRemoveTexture& aReply) {}
+
 protected:
   std::vector<FenceHandle> mPrevFenceHandles;
 };
