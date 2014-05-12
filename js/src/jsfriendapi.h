@@ -1465,6 +1465,14 @@ JS_NeuterArrayBuffer(JSContext *cx, JS::HandleObject obj,
                      NeuterDataDisposition changeData);
 
 /*
+ * Check whether the obj is ArrayBufferObject and neutered. Note that this
+ * may return false if a security wrapper is encountered that denies the
+ * unwrapping.
+ */
+extern JS_FRIEND_API(bool)
+JS_IsNeuteredArrayBufferObject(JSObject *obj);
+
+/*
  * Check whether obj supports JS_GetDataView* APIs.
  */
 JS_FRIEND_API(bool)
