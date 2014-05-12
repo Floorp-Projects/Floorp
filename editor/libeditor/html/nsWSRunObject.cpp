@@ -142,15 +142,34 @@ nsWSRunObject::PrepareToDeleteRange(nsHTMLEditor* aHTMLEd,
                                     nsCOMPtr<nsINode>* aEndNode,
                                     int32_t* aEndOffset)
 {
-  NS_ENSURE_TRUE(aHTMLEd && aStartNode && *aStartNode && aStartOffset &&
-                 aEndNode && *aEndNode && aEndOffset, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsIDOMNode> startNode(GetAsDOMNode(*aStartNode));
+  nsCOMPtr<nsIDOMNode> endNode(GetAsDOMNode(*aEndNode));
+  nsresult res =
+    PrepareToDeleteRange(aHTMLEd, address_of(startNode), aStartOffset,
+                         address_of(endNode), aEndOffset);
+  *aStartNode = do_QueryInterface(startNode);
+  *aEndNode = do_QueryInterface(endNode);
+  return res;
+}
 
-  nsAutoTrackDOMPoint trackerStart(aHTMLEd->mRangeUpdater, aStartNode,
-                                   aStartOffset);
+nsresult 
+nsWSRunObject::PrepareToDeleteRange(nsHTMLEditor *aHTMLEd, 
+                                    nsCOMPtr<nsIDOMNode> *aStartNode,
+                                    int32_t *aStartOffset, 
+                                    nsCOMPtr<nsIDOMNode> *aEndNode,
+                                    int32_t *aEndOffset)
+{
+  NS_ENSURE_TRUE(aStartNode && aEndNode && aStartOffset && aEndOffset &&
+                 aHTMLEd, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsINode> startNode(do_QueryInterface(*aStartNode));
+  nsCOMPtr<nsINode> endNode(do_QueryInterface(*aEndNode));
+  NS_ENSURE_TRUE(startNode && endNode, NS_ERROR_NULL_POINTER);
+
+  nsAutoTrackDOMPoint trackerStart(aHTMLEd->mRangeUpdater, aStartNode, aStartOffset);
   nsAutoTrackDOMPoint trackerEnd(aHTMLEd->mRangeUpdater, aEndNode, aEndOffset);
-
-  nsWSRunObject leftWSObj(aHTMLEd, *aStartNode, *aStartOffset);
-  nsWSRunObject rightWSObj(aHTMLEd, *aEndNode, *aEndOffset);
+  
+  nsWSRunObject leftWSObj(aHTMLEd, startNode, *aStartOffset);
+  nsWSRunObject rightWSObj(aHTMLEd, endNode, *aEndOffset);
 
   return leftWSObj.PrepareToDeleteRangePriv(&rightWSObj);
 }
