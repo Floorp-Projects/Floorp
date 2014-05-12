@@ -184,6 +184,12 @@ public class GeckoActionProvider {
             ActivityChooserModel dataModel = ActivityChooserModel.get(mContext, mHistoryFileName);
             Intent launchIntent = dataModel.chooseActivity(index);
             if (launchIntent != null) {
+                // Share image syncrhonously downloads the image before sharing it.
+                String type = launchIntent.getType();
+                if (Intent.ACTION_SEND.equals(launchIntent.getAction()) && type != null && type.startsWith("image/")) {
+                    GeckoAppShell.downloadImageForIntent(launchIntent);
+                }
+
                 launchIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
                 mContext.startActivity(launchIntent);
             }
