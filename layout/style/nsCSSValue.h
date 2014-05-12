@@ -9,13 +9,11 @@
 #define nsCSSValue_h___
 
 #include "mozilla/Attributes.h"
-#include "mozilla/FloatingPoint.h"
 #include "mozilla/MemoryReporting.h"
 
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
-#include "nsCRTGlue.h"
 #include "nsCSSKeywords.h"
 #include "nsCSSProperty.h"
 #include "nsColor.h"

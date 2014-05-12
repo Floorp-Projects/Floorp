@@ -63,11 +63,18 @@ function isnot(received, notExpected, message) {
   window.opener.isnot(received, notExpected, message);
 }
 
+var bufferFullCounter = 0;
+const expectedBufferFullEvents = 1;
+
 window.onload = function() {
   ok(!!window.performance, "Performance object should exist");
   ok(!!window.performance.getEntries, "Performance.getEntries() should exist");
   ok(!!window.performance.getEntriesByName, "Performance.getEntriesByName() should exist");
   ok(!!window.performance.getEntriesByType, "Performance.getEntriesByType() should exist");
+
+  window.performance.onresourcetimingbufferfull = function() {
+    bufferFullCounter += 1;
+  }
 
   // Here, we should have 6 entries (1 css, 3 png, 1 html) since the image was loaded.
   is(window.performance.getEntries().length, 5, "Performance.getEntries() returned wrong number of entries.");
@@ -205,6 +212,7 @@ function secondCheck() {
 function finishTest() {
   // Check if all the tests are completed.
   if (iframeTestsDone) {
+    is(bufferFullCounter, expectedBufferFullEvents, "onresourcetimingbufferfull called a wrong number of times");
     window.opener.finishTests();
   } else {
     mainWindowTestsDone = true;
@@ -232,6 +240,7 @@ function checkArraysHaveSameElementsInSameOrder(array1, array2) {
 
 function iframeTestsCompleted() {
   if (mainWindowTestsDone) {
+    is(bufferFullCounter, expectedBufferFullEvents, "onresourcetimingbufferfull called a wrong number of times");
     window.opener.finishTests();
   }
   else {

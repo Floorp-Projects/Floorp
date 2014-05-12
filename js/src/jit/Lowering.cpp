@@ -159,17 +159,6 @@ LIRGenerator::visitDefFun(MDefFun *ins)
 }
 
 bool
-LIRGenerator::visitNewSlots(MNewSlots *ins)
-{
-    // No safepoint needed, since we don't pass a cx.
-    LNewSlots *lir = new(alloc()) LNewSlots(tempFixed(CallTempReg0), tempFixed(CallTempReg1),
-                                            tempFixed(CallTempReg2));
-    if (!assignSnapshot(lir))
-        return false;
-    return defineReturn(lir, ins);
-}
-
-bool
 LIRGenerator::visitNewArray(MNewArray *ins)
 {
     LNewArray *lir = new(alloc()) LNewArray(temp());
@@ -193,20 +182,14 @@ LIRGenerator::visitNewDeclEnvObject(MNewDeclEnvObject *ins)
 bool
 LIRGenerator::visitNewCallObject(MNewCallObject *ins)
 {
-    LAllocation slots;
-    if (ins->slots()->type() == MIRType_Slots)
-        slots = useRegister(ins->slots());
-    else
-        slots = LConstantIndex::Bogus();
-
     LInstruction *lir;
     if (ins->templateObject()->hasSingletonType()) {
-        LNewSingletonCallObject *singletonLir = new(alloc()) LNewSingletonCallObject(slots);
+        LNewSingletonCallObject *singletonLir = new(alloc()) LNewSingletonCallObject(temp());
         if (!define(singletonLir, ins))
             return false;
         lir = singletonLir;
     } else {
-        LNewCallObject *normalLir = new(alloc()) LNewCallObject(slots, temp());
+        LNewCallObject *normalLir = new(alloc()) LNewCallObject(temp());
         if (!define(normalLir, ins))
             return false;
         lir = normalLir;
@@ -221,13 +204,7 @@ LIRGenerator::visitNewCallObject(MNewCallObject *ins)
 bool
 LIRGenerator::visitNewRunOnceCallObject(MNewRunOnceCallObject *ins)
 {
-    LAllocation slots;
-    if (ins->slots()->type() == MIRType_Slots)
-        slots = useRegister(ins->slots());
-    else
-        slots = LConstantIndex::Bogus();
-
-    LNewSingletonCallObject *lir = new(alloc()) LNewSingletonCallObject(slots);
+    LNewSingletonCallObject *lir = new(alloc()) LNewSingletonCallObject(temp());
     if (!define(lir, ins))
         return false;
 
@@ -251,17 +228,7 @@ bool
 LIRGenerator::visitNewCallObjectPar(MNewCallObjectPar *ins)
 {
     const LAllocation &parThreadContext = useRegister(ins->forkJoinContext());
-    const LDefinition &temp1 = temp();
-    const LDefinition &temp2 = temp();
-
-    LNewCallObjectPar *lir;
-    if (ins->slots()->type() == MIRType_Slots) {
-        const LAllocation &slots = useRegister(ins->slots());
-        lir = LNewCallObjectPar::NewWithSlots(alloc(), parThreadContext, slots, temp1, temp2);
-    } else {
-        lir = LNewCallObjectPar::NewSansSlots(alloc(), parThreadContext, temp1, temp2);
-    }
-
+    LNewCallObjectPar *lir = LNewCallObjectPar::New(alloc(), parThreadContext, temp(), temp());
     return define(lir, ins);
 }
 
@@ -681,8 +648,8 @@ ReorderCommutative(MDefinition **lhsp, MDefinition **rhsp)
     // be fully precise, we should check whether this is the *last* use,
     // but checking hasOneDefUse() is a decent approximation which doesn't
     // require any extra analysis.
-    JS_ASSERT(lhs->defUseCount() > 0);
-    JS_ASSERT(rhs->defUseCount() > 0);
+    JS_ASSERT(lhs->hasDefUses());
+    JS_ASSERT(rhs->hasDefUses());
     if (lhs->isConstant() || (rhs->hasOneDefUse() && !lhs->hasOneDefUse())) {
         *rhsp = lhs;
         *lhsp = rhs;
