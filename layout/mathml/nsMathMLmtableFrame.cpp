@@ -545,7 +545,7 @@ nsMathMLmtableOuterFrame::GetRowFrameAt(nsPresContext* aPresContext,
   return nullptr;
 }
 
-nsresult
+void
 nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
                                  nsHTMLReflowMetrics&     aDesiredSize,
                                  const nsHTMLReflowState& aReflowState,
@@ -645,8 +645,6 @@ nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
 
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-
-  return NS_OK;
 }
 
 nsIFrame*
@@ -886,7 +884,7 @@ nsMathMLmtdInnerFrame::~nsMathMLmtdInnerFrame()
   mUniqueStyleText->Destroy(PresContext());
 }
 
-nsresult
+void
 nsMathMLmtdInnerFrame::Reflow(nsPresContext*          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
@@ -897,7 +895,6 @@ nsMathMLmtdInnerFrame::Reflow(nsPresContext*          aPresContext,
 
   // more about <maligngroup/> and <malignmark/> later
   // ...
-  return NS_OK;
 }
 
 const

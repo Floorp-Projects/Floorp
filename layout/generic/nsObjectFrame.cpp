@@ -497,7 +497,7 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
   // call the superclass in all cases.
 }
 
-nsresult
+void
 nsObjectFrame::Reflow(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aMetrics,
                       const nsHTMLReflowState& aReflowState,
@@ -516,13 +516,13 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
   // plugin needs to see that haven't arrived yet.
   if (!GetContent()->IsDoneAddingChildren()) {
     aStatus = NS_FRAME_COMPLETE;
-    return NS_OK;
+    return;
   }
 
   // if we are printing or print previewing, bail for now
   if (aPresContext->Medium() == nsGkAtoms::print) {
     aStatus = NS_FRAME_COMPLETE;
-    return NS_OK;
+    return;
   }
 
   nsRect r(0, 0, aMetrics.Width(), aMetrics.Height());
@@ -543,7 +543,6 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
-  return NS_OK;
 }
 
 ///////////// nsIReflowCallback ///////////////

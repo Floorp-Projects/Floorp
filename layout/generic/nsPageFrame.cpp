@@ -43,7 +43,8 @@ nsPageFrame::~nsPageFrame()
 {
 }
 
-nsresult nsPageFrame::Reflow(nsPresContext*           aPresContext,
+void
+nsPageFrame::Reflow(nsPresContext*           aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredSize,
                                   const nsHTMLReflowState& aReflowState,
                                   nsReflowStatus&          aStatus)
@@ -84,7 +85,7 @@ nsresult nsPageFrame::Reflow(nsPresContext*           aPresContext,
       aDesiredSize.Width() = 0;
       aDesiredSize.Height() = 0;
       NS_WARNING("Reflow aborted; no space for content");
-      return NS_OK;
+      return;
     }
 
     nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame, maxSize);
@@ -157,7 +158,6 @@ nsresult nsPageFrame::Reflow(nsPresContext*           aPresContext,
   PR_PL(("[%d,%d]\n", aReflowState.AvailableWidth(), aReflowState.AvailableHeight()));
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return NS_OK;
 }
 
 nsIAtom*
@@ -648,7 +648,7 @@ nsPageBreakFrame::GetIntrinsicHeight()
   return 0;
 }
 
-nsresult 
+void
 nsPageBreakFrame::Reflow(nsPresContext*           aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,
                          const nsHTMLReflowState& aReflowState,
@@ -670,7 +670,6 @@ nsPageBreakFrame::Reflow(nsPresContext*           aPresContext,
   // DidReflow will always get called before the next Reflow() call.
   mHaveReflowed = true;
   aStatus = NS_FRAME_COMPLETE; 
-  return NS_OK;
 }
 
 nsIAtom*
