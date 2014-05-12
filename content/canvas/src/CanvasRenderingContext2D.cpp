@@ -4396,6 +4396,8 @@ CanvasPath::ArcTo(double x1, double y1, double x2, double y2, double radius,
     return;
   }
 
+  EnsurePathBuilder();
+
   // Current point in user space!
   Point p0 = mPathBuilder->CurrentPoint();
   Point p1(x1, y1);
@@ -4470,6 +4472,8 @@ CanvasPath::Arc(double x, double y, double radius,
     error.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
   }
+
+  EnsurePathBuilder();
 
   ArcToBezier(this, Point(x, y), Size(radius, radius), startAngle, endAngle, anticlockwise);
 }
