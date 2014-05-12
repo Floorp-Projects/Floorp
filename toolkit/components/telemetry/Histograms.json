@@ -5152,6 +5152,76 @@
     "n_buckets": 1000,
     "description": "The delay (in milliseconds) when video is behind audio. Zero delay is not counted. Measured every second of a call."
   },
+  "WEBRTC_VIDEO_QUALITY_INBOUND_PACKETLOSS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 100,
+    "description": "Locally measured packet loss on inbound video (permille). Sampled every second of a call."
+  },
+  "WEBRTC_AUDIO_QUALITY_INBOUND_PACKETLOSS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 100,
+    "description": "Locally measured packet loss on inbound audio (permille). Sampled every second of a call."
+  },
+  "WEBRTC_VIDEO_QUALITY_OUTBOUND_PACKETLOSS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 100,
+    "description": "RTCP-reported packet loss by remote recipient of outbound video (permille). Sampled every second of a call (for easy comparison)."
+  },
+  "WEBRTC_AUDIO_QUALITY_OUTBOUND_PACKETLOSS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 100,
+    "description": "RTCP-reported packet loss by remote recipient of outbound audio (permille). Sampled every second of a call (for easy comparison)."
+  },
+  "WEBRTC_VIDEO_QUALITY_INBOUND_JITTER": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "description": "Locally measured jitter on inbound video (ms). Sampled every second of a call."
+  },
+  "WEBRTC_AUDIO_QUALITY_INBOUND_JITTER": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 1000,
+    "description": "Locally measured jitter on inbound audio (ms). Sampled every second of a call."
+  },
+  "WEBRTC_VIDEO_QUALITY_OUTBOUND_JITTER": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 1000,
+    "description": "RTCP-reported jitter by remote recipient of outbound video (ms). Sampled every second of a call (for easy comparison)."
+  },
+  "WEBRTC_AUDIO_QUALITY_OUTBOUND_JITTER": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 1000,
+    "description": "RTCP-reported jitter by remote recipient of outbound audio (ms). Sampled every second of a call (for easy comparison)."
+  },
+  "WEBRTC_VIDEO_QUALITY_OUTBOUND_RTT": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 1000,
+    "description": "Roundtrip time of outbound video (ms). Sampled every second of a call."
+  },
+  "WEBRTC_AUDIO_QUALITY_OUTBOUND_RTT": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 1000,
+    "description": "Roundtrip time of outbound audio (ms). Sampled every second of a call."
+  },
   "WEBRTC_CALL_DURATION": {
     "expires_in_version": "never",
     "kind": "exponential",
