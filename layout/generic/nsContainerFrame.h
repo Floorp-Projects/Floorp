@@ -291,11 +291,11 @@ public:
    *
    * (aFlags just gets passed through to ReflowChild)
    */
-  nsresult ReflowOverflowContainerChildren(nsPresContext*           aPresContext,
-                                           const nsHTMLReflowState& aReflowState,
-                                           nsOverflowAreas&         aOverflowRects,
-                                           uint32_t                 aFlags,
-                                           nsReflowStatus&          aStatus);
+  void ReflowOverflowContainerChildren(nsPresContext*           aPresContext,
+                                       const nsHTMLReflowState& aReflowState,
+                                       nsOverflowAreas&         aOverflowRects,
+                                       uint32_t                 aFlags,
+                                       nsReflowStatus&          aStatus);
 
   /**
    * Move any frames on our overflow list to the end of our principal list.
