@@ -351,59 +351,87 @@ Navigator::GetAppName(nsAString& aAppName)
 }
 
 /**
- * JS property navigator.language, exposed to web content.
- * Take first value from Accept-Languages (HTTP header), which is
- * the "content language" freely set by the user in the Pref window.
+ * Returns the value of Accept-Languages (HTTP header) as a nsTArray of
+ * languages. The value is set in the preference by the user ("Content
+ * Languages").
  *
- * Do not use UI language (chosen app locale) here.
- * See RFC 2616, Section 15.1.4 "Privacy Issues Connected to Accept Headers"
+ * "en", "en-US" and "i-cherokee" and "" are valid languages tokens.
  *
- * "en", "en-US" and "i-cherokee" and "" are valid.
- * Fallback in case of invalid pref should be "" (empty string), to
- * let site do fallback, e.g. to site's local language.
+ * An empty array will be returned if there is no valid languages.
  */
-NS_IMETHODIMP
-Navigator::GetLanguage(nsAString& aLanguage)
+void
+Navigator::GetAcceptLanguages(nsTArray<nsString>& aLanguages)
 {
   // E.g. "de-de, en-us,en".
   const nsAdoptingString& acceptLang =
     Preferences::GetLocalizedString("intl.accept_languages");
 
-  // Take everything before the first "," or ";", without trailing space.
+  // Split values on commas.
   nsCharSeparatedTokenizer langTokenizer(acceptLang, ',');
-  const nsSubstring &firstLangPart = langTokenizer.nextToken();
-  nsCharSeparatedTokenizer qTokenizer(firstLangPart, ';');
-  aLanguage.Assign(qTokenizer.nextToken());
+  while (langTokenizer.hasMoreTokens()) {
+    nsDependentSubstring lang = langTokenizer.nextToken();
 
-  // Checks and fixups:
-  // replace "_" with "-" to avoid POSIX/Windows "en_US" notation.
-  if (aLanguage.Length() > 2 && aLanguage[2] == char16_t('_')) {
-    aLanguage.Replace(2, 1, char16_t('-')); // TODO replace all
-  }
-
-  // Use uppercase for country part, e.g. "en-US", not "en-us", see BCP47
-  // only uppercase 2-letter country codes, not "zh-Hant", "de-DE-x-goethe".
-  if (aLanguage.Length() <= 2) {
-    return NS_OK;
-  }
-
-  nsCharSeparatedTokenizer localeTokenizer(aLanguage, '-');
-  int32_t pos = 0;
-  bool first = true;
-  while (localeTokenizer.hasMoreTokens()) {
-    const nsSubstring& code = localeTokenizer.nextToken();
-
-    if (code.Length() == 2 && !first) {
-      nsAutoString upper(code);
-      ToUpperCase(upper);
-      aLanguage.Replace(pos, code.Length(), upper);
+    // Replace "_" with "-" to avoid POSIX/Windows "en_US" notation.
+    // NOTE: we should probably rely on the pref being set correctly.
+    if (lang.Length() > 2 && lang[2] == char16_t('_')) {
+      lang.Replace(2, 1, char16_t('-'));
     }
 
-    pos += code.Length() + 1; // 1 is the separator
-    first = false;
+    // Use uppercase for country part, e.g. "en-US", not "en-us", see BCP47
+    // only uppercase 2-letter country codes, not "zh-Hant", "de-DE-x-goethe".
+    // NOTE: we should probably rely on the pref being set correctly.
+    if (lang.Length() > 2) {
+      nsCharSeparatedTokenizer localeTokenizer(lang, '-');
+      int32_t pos = 0;
+      bool first = true;
+      while (localeTokenizer.hasMoreTokens()) {
+        const nsSubstring& code = localeTokenizer.nextToken();
+
+        if (code.Length() == 2 && !first) {
+          nsAutoString upper(code);
+          ToUpperCase(upper);
+          lang.Replace(pos, code.Length(), upper);
+        }
+
+        pos += code.Length() + 1; // 1 is the separator
+        first = false;
+      }
+    }
+
+    aLanguages.AppendElement(lang);
+  }
+}
+
+/**
+ * Do not use UI language (chosen app locale) here but the first value set in
+ * the Accept Languages header, see ::GetAcceptLanguages().
+ *
+ * See RFC 2616, Section 15.1.4 "Privacy Issues Connected to Accept Headers" for
+ * the reasons why.
+ */
+NS_IMETHODIMP
+Navigator::GetLanguage(nsAString& aLanguage)
+{
+  nsTArray<nsString> languages;
+  GetLanguages(languages);
+  if (languages.Length() >= 1) {
+    aLanguage.Assign(languages[0]);
+  } else {
+    aLanguage.Truncate();
   }
 
-  return NS_OK;
+    return NS_OK;
+}
+
+void
+Navigator::GetLanguages(nsTArray<nsString>& aLanguages)
+{
+  GetAcceptLanguages(aLanguages);
+
+  // The returned value is cached by the binding code. The window listen to the
+  // accept languages change and will clear the cache when needed. It has to
+  // take care of dispatching the DOM event already and the invalidation and the
+  // event has to be timed correctly.
 }
 
 NS_IMETHODIMP
