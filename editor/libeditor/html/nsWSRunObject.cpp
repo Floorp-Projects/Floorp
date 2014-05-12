@@ -1251,12 +1251,11 @@ nsWSRunObject::PrepareToDeleteRangePriv(nsWSRunObject* aEndObject)
       WSPoint point = GetCharBefore(mNode, mOffset);
       if (point.mTextNode && nsCRT::IsAsciiSpace(point.mChar))
       {
-        nsCOMPtr<Text> wsStartNode, wsEndNode;
+        nsCOMPtr<nsIDOMNode> wsStartNode, wsEndNode;
         int32_t wsStartOffset, wsEndOffset;
-        GetAsciiWSBounds(eBoth, mNode, mOffset,
-                         getter_AddRefs(wsStartNode), &wsStartOffset,
-                         getter_AddRefs(wsEndNode), &wsEndOffset);
-        point.mTextNode = wsStartNode;
+        GetAsciiWSBounds(eBoth, GetAsDOMNode(mNode), mOffset, address_of(wsStartNode),
+                         &wsStartOffset, address_of(wsEndNode), &wsEndOffset);
+        point.mTextNode = do_QueryInterface(wsStartNode);
         point.mOffset = wsStartOffset;
         res = ConvertToNBSP(point, eOutsideUserSelectAll);
         NS_ENSURE_SUCCESS(res, res);
@@ -1296,12 +1295,11 @@ nsWSRunObject::PrepareToSplitAcrossBlocksPriv()
     WSPoint point = GetCharBefore(mNode, mOffset);
     if (point.mTextNode && nsCRT::IsAsciiSpace(point.mChar))
     {
-      nsCOMPtr<Text> wsStartNode, wsEndNode;
+      nsCOMPtr<nsIDOMNode> wsStartNode, wsEndNode;
       int32_t wsStartOffset, wsEndOffset;
-      GetAsciiWSBounds(eBoth, mNode, mOffset,
-                       getter_AddRefs(wsStartNode), &wsStartOffset,
-                       getter_AddRefs(wsEndNode), &wsEndOffset);
-      point.mTextNode = wsStartNode;
+      GetAsciiWSBounds(eBoth, GetAsDOMNode(mNode), mOffset, address_of(wsStartNode),
+                       &wsStartOffset, address_of(wsEndNode), &wsEndOffset);
+      point.mTextNode = do_QueryInterface(wsStartNode);
       point.mOffset = wsStartOffset;
       res = ConvertToNBSP(point);
       NS_ENSURE_SUCCESS(res, res);
@@ -1534,53 +1532,80 @@ nsWSRunObject::GetAsciiWSBounds(int16_t aDir, nsINode* aNode, int32_t aOffset,
                                 nsIContent** outStartNode, int32_t* outStartOffset,
                                 nsIContent** outEndNode, int32_t* outEndOffset)
 {
-  MOZ_ASSERT(aNode && outStartNode && outStartOffset && outEndNode &&
-             outEndOffset);
+  nsCOMPtr<nsIDOMNode> outStartDOMNode, outEndDOMNode;
+  GetAsciiWSBounds(aDir, GetAsDOMNode(aNode), aOffset,
+                   address_of(outStartDOMNode), outStartOffset,
+                   address_of(outEndDOMNode), outEndOffset);
+  nsCOMPtr<nsIContent> start(do_QueryInterface(outStartDOMNode));
+  nsCOMPtr<nsIContent> end(do_QueryInterface(outEndDOMNode));
+  start.forget(outStartNode);
+  end.forget(outEndNode);
+}
 
-  nsCOMPtr<Text> startNode, endNode;
-  int32_t startOffset = 0, endOffset = 0;
+void
+nsWSRunObject::GetAsciiWSBounds(int16_t aDir, nsIDOMNode *aNode, int32_t aOffset,
+                                nsCOMPtr<nsIDOMNode> *outStartNode, int32_t *outStartOffset,
+                                nsCOMPtr<nsIDOMNode> *outEndNode, int32_t *outEndOffset)
+{
+  MOZ_ASSERT(aNode && outStartNode && outEndNode);
 
-  if (aDir & eAfter) {
-    WSPoint point = GetCharAfter(aNode, aOffset);
+  nsCOMPtr<nsIDOMNode> startNode, endNode;
+  int32_t startOffset=0, endOffset=0;
+  
+  nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
+  if (aDir & eAfter)
+  {
+    WSPoint point = GetCharAfter(node, aOffset);
     if (point.mTextNode) {
-      // We found a text node, at least
-      startNode = endNode = point.mTextNode;
-      startOffset = endOffset = point.mOffset;
-
-      // Scan ahead to end of ASCII ws
-      for (; nsCRT::IsAsciiSpace(point.mChar) && point.mTextNode;
-           point = GetCharAfter(point)) {
-        endNode = point.mTextNode;
-        // endOffset is _after_ ws
-        point.mOffset++;
+      // we found a text node, at least
+      endNode = do_QueryInterface(point.mTextNode);
+      endOffset = point.mOffset;
+      startNode = endNode;
+      startOffset = endOffset;
+      
+      // scan ahead to end of ascii ws
+      while (nsCRT::IsAsciiSpace(point.mChar))
+      {
+        endNode = do_QueryInterface(point.mTextNode);
+        point.mOffset++;  // endOffset is _after_ ws
         endOffset = point.mOffset;
+        point = GetCharAfter(point);
+        if (!point.mTextNode) {
+          break;
+        }
       }
     }
   }
-
-  if (aDir & eBefore) {
-    WSPoint point = GetCharBefore(aNode, aOffset);
+  
+  if (aDir & eBefore)
+  {
+    WSPoint point = GetCharBefore(node, aOffset);
     if (point.mTextNode) {
-      // We found a text node, at least
-      startNode = point.mTextNode;
-      startOffset = point.mOffset + 1;
-      if (!endNode) {
+      // we found a text node, at least
+      startNode = do_QueryInterface(point.mTextNode);
+      startOffset = point.mOffset+1;
+      if (!endNode)
+      {
         endNode = startNode;
         endOffset = startOffset;
       }
-
-      // Scan back to start of ASCII ws
-      for (; nsCRT::IsAsciiSpace(point.mChar) && point.mTextNode;
-           point = GetCharBefore(point)) {
-        startNode = point.mTextNode;
+      
+      // scan back to start of ascii ws
+      while (nsCRT::IsAsciiSpace(point.mChar))
+      {
+        startNode = do_QueryInterface(point.mTextNode);
         startOffset = point.mOffset;
+        point = GetCharBefore(point);
+        if (!point.mTextNode) {
+          break;
+        }
       }
     }
-  }
-
-  startNode.forget(outStartNode);
+  }  
+  
+  *outStartNode = startNode;
   *outStartOffset = startOffset;
-  endNode.forget(outEndNode);
+  *outEndNode = endNode;
   *outEndOffset = endOffset;
 }
 
