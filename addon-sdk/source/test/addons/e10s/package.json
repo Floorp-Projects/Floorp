@@ -1,0 +1,10 @@
+{
+  "name": "e10s-flag",
+  "title": "e10s-flag",
+  "id": "jid1-DYaXFHAPlHwbgw",
+  "description": "a basic e10s test add-on",
+  "author": "Tomislav Jovanovic",
+  "license": "MPL 2.0",
+  "version": "0.1",
+  "e10s": true
+}

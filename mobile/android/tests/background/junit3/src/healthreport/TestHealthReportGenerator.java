@@ -67,7 +67,10 @@ public class TestHealthReportGenerator extends FakeProfileTestCase {
                                                         + "nullnullnullnullnullnull00000";
 
   // v2 fields.
-  private static final String EXPECTED_MOCK_BASE_HASH_SUFFIX = "null" + "null" + 0 + "null";
+  private static final String EXPECTED_MOCK_BASE_HASH_SUFFIX_V2 = "null" + "null" + 0 + "null";
+
+  // v3 fields.
+  private static final String EXPECTED_MOCK_BASE_HASH_SUFFIX_V3 = "" + 0 + "default" + 0 + 0 + 0 + 0;
 
   public void testHashing() throws JSONException {
     MockHealthReportDatabaseStorage storage = new MockHealthReportDatabaseStorage(context, fakeProfileDirectory);
@@ -105,10 +108,14 @@ public class TestHealthReportGenerator extends FakeProfileTestCase {
     "}");
     env.addons.put("{addonA}", addonA1);
 
-    assertEquals(EXPECTED_MOCK_BASE_HASH + addonAHash + EXPECTED_MOCK_BASE_HASH_SUFFIX, env.getHash());
+    assertEquals(EXPECTED_MOCK_BASE_HASH + addonAHash +
+                 EXPECTED_MOCK_BASE_HASH_SUFFIX_V2 +
+                 EXPECTED_MOCK_BASE_HASH_SUFFIX_V3, env.getHash());
 
     env.addons.put("{addonA}", addonA1rev);
-    assertEquals(EXPECTED_MOCK_BASE_HASH + addonAHash + EXPECTED_MOCK_BASE_HASH_SUFFIX, env.getHash());
+    assertEquals(EXPECTED_MOCK_BASE_HASH + addonAHash +
+                 EXPECTED_MOCK_BASE_HASH_SUFFIX_V2 +
+                 EXPECTED_MOCK_BASE_HASH_SUFFIX_V3, env.getHash());
   }
 
   private void assertJSONDiff(JSONObject source, JSONObject diff) throws JSONException {
@@ -455,22 +462,22 @@ public class TestHealthReportGenerator extends FakeProfileTestCase {
       c1.close();
     }
 
-    // Insert a v2 environment.
-    final MockDatabaseEnvironment v2env = storage.getEnvironment();
-    v2env.mockInit("27.0a1");
-    v2env.appLocale = v2env.osLocale = "en_us";
-    v2env.acceptLangSet = 1;
+    // Insert a v3 environment.
+    final MockDatabaseEnvironment v3env = storage.getEnvironment();
+    v3env.mockInit("31.0a1");
+    v3env.appLocale = v3env.osLocale = "en_us";
+    v3env.acceptLangSet = 1;
 
-    final int v2ID = v2env.register();
-    assertFalse(v1ID == v2ID);
-    final Cursor c2 = db.query("environments", cols, "id = " + v2ID, null, null, null, null);
+    final int v3ID = v3env.register();
+    assertFalse(v1ID == v3ID);
+    final Cursor c2 = db.query("environments", cols, "id = " + v3ID, null, null, null, null);
     String v2envHash;
     try {
       assertTrue(c2.moveToFirst());
       assertEquals(1, c2.getCount());
 
-      assertEquals(v2ID, c2.getInt(0));
-      assertEquals(2,    c2.getInt(1));
+      assertEquals(v3ID, c2.getInt(0));
+      assertEquals(3,    c2.getInt(1));
 
       v2envHash = c2.getString(2);
       assertNotNull(v2envHash);
@@ -488,16 +495,16 @@ public class TestHealthReportGenerator extends FakeProfileTestCase {
     SparseArray<Environment> envs = storage.getEnvironmentRecordsByID();
 
     JSONObject oldEnv = HealthReportGenerator.jsonify(envs.get(v1ID), null).getJSONObject("org.mozilla.appInfo.appinfo");
-    JSONObject newEnv = HealthReportGenerator.jsonify(envs.get(v2ID), null).getJSONObject("org.mozilla.appInfo.appinfo");
+    JSONObject newEnv = HealthReportGenerator.jsonify(envs.get(v3ID), null).getJSONObject("org.mozilla.appInfo.appinfo");
 
     // Generate the new env as if the old were the current. This should rarely happen in practice.
     // Fields supported by the new env but not the old will appear, even if the 'default' for the
     // old implementation is equal to the new env's value.
-    JSONObject newVsOld = HealthReportGenerator.jsonify(envs.get(v2ID), envs.get(v1ID)).getJSONObject("org.mozilla.appInfo.appinfo");
+    JSONObject newVsOld = HealthReportGenerator.jsonify(envs.get(v3ID), envs.get(v1ID)).getJSONObject("org.mozilla.appInfo.appinfo");
 
     // Generate the old env as if the new were the current. This is normal. Fields not supported by the old
     // environment version should not appear in the output.
-    JSONObject oldVsNew = HealthReportGenerator.jsonify(envs.get(v1ID), envs.get(v2ID)).getJSONObject("org.mozilla.appInfo.appinfo");
+    JSONObject oldVsNew = HealthReportGenerator.jsonify(envs.get(v1ID), envs.get(v3ID)).getJSONObject("org.mozilla.appInfo.appinfo");
     assertEquals(2, oldEnv.getInt("_v"));
     assertEquals(3, newEnv.getInt("_v"));
     assertEquals(2, oldVsNew.getInt("_v"));

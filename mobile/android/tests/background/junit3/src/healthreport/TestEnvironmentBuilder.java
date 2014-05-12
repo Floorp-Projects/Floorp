@@ -55,7 +55,8 @@ public class TestEnvironmentBuilder extends FakeProfileTestCase {
     cache.completeInitialization();
     assertTrue(cache.getFile().exists());
 
-    Environment environment = EnvironmentBuilder.getCurrentEnvironment(cache);
+    final AndroidConfigurationProvider configProvider = new AndroidConfigurationProvider(context);
+    Environment environment = EnvironmentBuilder.getCurrentEnvironment(cache, configProvider);
     assertEquals(AppConstants.MOZ_APP_BUILDID, environment.appBuildID);
     assertEquals("Android", environment.os);
     assertTrue(100 < environment.memoryMB); // Seems like a sane lower bound...
@@ -63,14 +64,20 @@ public class TestEnvironmentBuilder extends FakeProfileTestCase {
     assertEquals(1, environment.isBlocklistEnabled);
     assertEquals(0, environment.isTelemetryEnabled);
     assertEquals(expectedDays, environment.profileCreation);
-    assertEquals(EnvironmentBuilder.getCurrentEnvironment(cache).getHash(),
+    assertEquals(EnvironmentBuilder.getCurrentEnvironment(cache, configProvider).getHash(),
                  environment.getHash());
+
+    // v3 sanity.
+    assertEquals(configProvider.hasHardwareKeyboard(), environment.hasHardwareKeyboard);
+    assertEquals(configProvider.getScreenXInMM(), environment.screenXInMM);
+    assertTrue(1 < environment.screenXInMM);
+    assertTrue(2000 > environment.screenXInMM);
 
     cache.beginInitialization();
     cache.setBlocklistEnabled(false);
     cache.completeInitialization();
 
-    assertFalse(EnvironmentBuilder.getCurrentEnvironment(cache).getHash()
+    assertFalse(EnvironmentBuilder.getCurrentEnvironment(cache, configProvider).getHash()
                                   .equals(environment.getHash()));
   }
 }
