@@ -267,17 +267,39 @@ void NS_MakeRandomString(char *aBuf, int32_t aBufLen)
 }
 
 #endif
-#if defined(XP_WIN)
 
-#define va_copy(dest, src) (dest = src)
+static StderrCallback sStderrCallback = nullptr;
+
+void
+set_stderr_callback(StderrCallback aCallback)
+{
+  sStderrCallback = aCallback;
+}
+
+#ifdef HAVE_VA_COPY
+#define VARARGS_ASSIGN(foo, bar)        VA_COPY(foo,bar)
+#elif defined(HAVE_VA_LIST_AS_ARRAY)
+#define VARARGS_ASSIGN(foo, bar)     foo[0] = bar[0]
+#else
+#define VARARGS_ASSIGN(foo, bar)     (foo) = (bar)
+#endif
+
+#if defined(XP_WIN)
 
 void
 vprintf_stderr(const char *fmt, va_list args)
 {
+  if (sStderrCallback) {
+    va_list argsCpy;
+    VARARGS_ASSIGN(argsCpy, args);
+    sStderrCallback(fmt, args);
+    va_end(argsCpy);
+  }
+
   if (IsDebuggerPresent()) {
     char buf[2048];
     va_list argsCpy;
-    va_copy(argsCpy, args);
+    VARARGS_ASSIGN(argsCpy, args);
     vsnprintf(buf, sizeof(buf), fmt, argsCpy);
     buf[sizeof(buf) - 1] = '\0';
     va_end(argsCpy);
@@ -293,18 +315,30 @@ vprintf_stderr(const char *fmt, va_list args)
   fclose(fp);
 }
 
-#undef va_copy
-
 #elif defined(ANDROID)
 void
 vprintf_stderr(const char *fmt, va_list args)
 {
+  if (sStderrCallback) {
+    va_list argsCpy;
+    VARARGS_ASSIGN(argsCpy, args);
+    sStderrCallback(fmt, args);
+    va_end(argsCpy);
+  }
+
   __android_log_vprint(ANDROID_LOG_INFO, "Gecko", fmt, args);
 }
 #else
 void
 vprintf_stderr(const char *fmt, va_list args)
 {
+  if (sStderrCallback) {
+    va_list argsCpy;
+    VARARGS_ASSIGN(argsCpy, args);
+    sStderrCallback(fmt, args);
+    va_end(argsCpy);
+  }
+
   vfprintf(stderr, fmt, args);
 }
 #endif

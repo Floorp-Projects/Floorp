@@ -40,7 +40,7 @@ const { notifyObservers } = Cc['@mozilla.org/observer-service;1'].
                         getService(Ci.nsIObserverService);
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 const { Reflect } = Cu.import("resource://gre/modules/reflect.jsm", {});
-const { console } = Cu.import("resource://gre/modules/devtools/Console.jsm");
+const { ConsoleAPI } = Cu.import("resource://gre/modules/devtools/Console.jsm");
 const { join: pathJoin, normalize, dirname } = Cu.import("resource://gre/modules/osfile/ospath_unix.jsm");
 
 // Define some shortcuts.
@@ -56,7 +56,7 @@ const NODE_MODULES = ["assert", "buffer_ieee754", "buffer", "child_process", "cl
 
 const COMPONENT_ERROR = '`Components` is not available in this context.\n' +
   'Functionality provided by Components may be available in an SDK\n' +
-  'module: https://jetpack.mozillalabs.com/sdk/latest/docs/ \n\n' +
+  'module: https://developer.mozilla.org/en-US/Add-ons/SDK \n\n' +
   'However, if you still need to import Components, you may use the\n' +
   '`chrome` module\'s properties for shortcuts to Component properties:\n\n' +
   'Shortcuts: \n' +
@@ -688,6 +688,10 @@ exports.unload = unload;
 //   If `resolve` does not returns `uri` string exception will be thrown by
 //   an associated `require` call.
 const Loader = iced(function Loader(options) {
+  let console = new ConsoleAPI({
+    consoleID: options.id ? "addon/" + options.id : ""
+  });
+
   let {
     modules, globals, resolve, paths, rootURI, manifest, requireMap, isNative
   } = override({

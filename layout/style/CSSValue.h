@@ -10,12 +10,13 @@
 #define mozilla_dom_CSSValue_h_
 
 #include "nsWrapperCache.h"
-
-#include "mozilla/ErrorResult.h"
-#include "nsString.h"
+#include "nsStringFwd.h"
 
 class nsIDOMCSSValue;
 class nsROCSSPrimitiveValue;
+namespace mozilla {
+class ErrorResult;
+}
 
 namespace mozilla {
 namespace dom {

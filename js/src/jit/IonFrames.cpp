@@ -162,43 +162,11 @@ JitFrameIterator::maybeCallee() const
 }
 
 bool
-JitFrameIterator::isNative() const
-{
-    if (type_ != JitFrame_Exit || isFakeExitFrame())
-        return false;
-    return exitFrame()->footer()->jitCode() == nullptr;
-}
-
-bool
-JitFrameIterator::isOOLNative() const
+JitFrameIterator::isBareExit() const
 {
     if (type_ != JitFrame_Exit)
         return false;
-    return exitFrame()->footer()->jitCode() == ION_FRAME_OOL_NATIVE;
-}
-
-bool
-JitFrameIterator::isOOLPropertyOp() const
-{
-    if (type_ != JitFrame_Exit)
-        return false;
-    return exitFrame()->footer()->jitCode() == ION_FRAME_OOL_PROPERTY_OP;
-}
-
-bool
-JitFrameIterator::isOOLProxy() const
-{
-    if (type_ != JitFrame_Exit)
-        return false;
-    return exitFrame()->footer()->jitCode() == ION_FRAME_OOL_PROXY;
-}
-
-bool
-JitFrameIterator::isDOMExit() const
-{
-    if (type_ != JitFrame_Exit)
-        return false;
-    return exitFrame()->isDomExit();
+    return exitFrame()->isBareExit();
 }
 
 bool
@@ -1056,16 +1024,17 @@ MarkJitExitFrame(JSTracer *trc, const JitFrameIterator &frame)
     // This correspond to the case where we have build a fake exit frame in
     // CodeGenerator.cpp which handle the case of a native function call. We
     // need to mark the argument vector of the function call.
-    if (frame.isNative()) {
-        IonNativeExitFrameLayout *native = frame.exitFrame()->nativeExit();
+    if (frame.isExitFrameLayout<IonNativeExitFrameLayout>()) {
+        IonNativeExitFrameLayout *native = frame.exitFrame()->as<IonNativeExitFrameLayout>();
         size_t len = native->argc() + 2;
         Value *vp = native->vp();
         gc::MarkValueRootRange(trc, len, vp, "ion-native-args");
         return;
     }
 
-    if (frame.isOOLNative()) {
-        IonOOLNativeExitFrameLayout *oolnative = frame.exitFrame()->oolNativeExit();
+    if (frame.isExitFrameLayout<IonOOLNativeExitFrameLayout>()) {
+        IonOOLNativeExitFrameLayout *oolnative =
+            frame.exitFrame()->as<IonOOLNativeExitFrameLayout>();
         gc::MarkJitCodeRoot(trc, oolnative->stubCode(), "ion-ool-native-code");
         gc::MarkValueRoot(trc, oolnative->vp(), "iol-ool-native-vp");
         size_t len = oolnative->argc() + 1;
@@ -1073,8 +1042,9 @@ MarkJitExitFrame(JSTracer *trc, const JitFrameIterator &frame)
         return;
     }
 
-    if (frame.isOOLPropertyOp()) {
-        IonOOLPropertyOpExitFrameLayout *oolgetter = frame.exitFrame()->oolPropertyOpExit();
+    if (frame.isExitFrameLayout<IonOOLPropertyOpExitFrameLayout>()) {
+        IonOOLPropertyOpExitFrameLayout *oolgetter =
+            frame.exitFrame()->as<IonOOLPropertyOpExitFrameLayout>();
         gc::MarkJitCodeRoot(trc, oolgetter->stubCode(), "ion-ool-property-op-code");
         gc::MarkValueRoot(trc, oolgetter->vp(), "ion-ool-property-op-vp");
         gc::MarkIdRoot(trc, oolgetter->id(), "ion-ool-property-op-id");
@@ -1082,8 +1052,8 @@ MarkJitExitFrame(JSTracer *trc, const JitFrameIterator &frame)
         return;
     }
 
-    if (frame.isOOLProxy()) {
-        IonOOLProxyExitFrameLayout *oolproxy = frame.exitFrame()->oolProxyExit();
+    if (frame.isExitFrameLayout<IonOOLProxyExitFrameLayout>()) {
+        IonOOLProxyExitFrameLayout *oolproxy = frame.exitFrame()->as<IonOOLProxyExitFrameLayout>();
         gc::MarkJitCodeRoot(trc, oolproxy->stubCode(), "ion-ool-proxy-code");
         gc::MarkValueRoot(trc, oolproxy->vp(), "ion-ool-proxy-vp");
         gc::MarkIdRoot(trc, oolproxy->id(), "ion-ool-proxy-id");
@@ -1092,8 +1062,8 @@ MarkJitExitFrame(JSTracer *trc, const JitFrameIterator &frame)
         return;
     }
 
-    if (frame.isDOMExit()) {
-        IonDOMExitFrameLayout *dom = frame.exitFrame()->DOMExit();
+    if (frame.isExitFrameLayout<IonDOMExitFrameLayout>()) {
+        IonDOMExitFrameLayout *dom = frame.exitFrame()->as<IonDOMExitFrameLayout>();
         gc::MarkObjectRoot(trc, dom->thisObjAddress(), "ion-dom-args");
         if (dom->isMethodFrame()) {
             IonDOMMethodExitFrameLayout *method =
@@ -1104,6 +1074,12 @@ MarkJitExitFrame(JSTracer *trc, const JitFrameIterator &frame)
         } else {
             gc::MarkValueRoot(trc, dom->vp(), "ion-dom-args");
         }
+        return;
+    }
+
+    if (frame.isBareExit()) {
+        // Nothing to mark. Fake exit frame pushed for VM functions with
+        // nothing to mark on the stack.
         return;
     }
 
@@ -1877,8 +1853,8 @@ JitFrameIterator::numActualArgs() const
     if (isScripted())
         return jsFrame()->numActualArgs();
 
-    JS_ASSERT(isNative());
-    return exitFrame()->nativeExit()->argc();
+    JS_ASSERT(isExitFrameLayout<IonNativeExitFrameLayout>());
+    return exitFrame()->as<IonNativeExitFrameLayout>()->argc();
 }
 
 void

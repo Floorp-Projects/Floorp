@@ -11,9 +11,10 @@
 #include "nsWrapperCache.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsContentUtils.h"
-#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
 #include "js/TypeDecls.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/DOMEventTargetHelper.h"
 
 class nsITimedChannel;
 class nsPerformance;
@@ -254,18 +255,17 @@ private:
 };
 
 // Script "performance" object
-class nsPerformance MOZ_FINAL : public nsISupports,
-                                public nsWrapperCache
+class nsPerformance MOZ_FINAL : public mozilla::DOMEventTargetHelper
 {
 public:
   typedef mozilla::dom::PerformanceEntry PerformanceEntry;
-  nsPerformance(nsIDOMWindow* aWindow,
+  nsPerformance(nsPIDOMWindow* aWindow,
                 nsDOMNavigationTiming* aDOMTiming,
                 nsITimedChannel* aChannel,
                 nsPerformance* aParentPerformance);
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsPerformance)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsPerformance, DOMEventTargetHelper)
 
   nsDOMNavigationTiming* GetDOMTiming() const
   {
@@ -282,7 +282,7 @@ public:
     return mParentPerformance;
   }
 
-  nsIDOMWindow* GetParentObject() const
+  nsPIDOMWindow* GetParentObject() const
   {
     return mWindow.get();
   }
@@ -304,18 +304,19 @@ public:
                 nsITimedChannel* timedChannel);
   void ClearResourceTimings();
   void SetResourceTimingBufferSize(uint64_t maxSize);
+  IMPL_EVENT_HANDLER(resourcetimingbufferfull)
 
 private:
   ~nsPerformance();
+  void DispatchBufferFullEvent();
 
-  nsCOMPtr<nsIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindow> mWindow;
   nsRefPtr<nsDOMNavigationTiming> mDOMTiming;
   nsCOMPtr<nsITimedChannel> mChannel;
   nsRefPtr<nsPerformanceTiming> mTiming;
   nsRefPtr<nsPerformanceNavigation> mNavigation;
   nsTArray<nsRefPtr<PerformanceEntry> > mEntries;
   nsRefPtr<nsPerformance> mParentPerformance;
-  uint64_t mBufferSizeSet;
   uint64_t mPrimaryBufferSize;
 
   static const uint64_t kDefaultBufferSize = 150;

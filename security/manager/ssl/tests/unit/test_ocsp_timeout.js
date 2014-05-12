@@ -4,6 +4,26 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 "use strict";
 
+// This test connects to ocsp-stapling-none.example.com to test that OCSP
+// requests are cancelled if they're taking too long.
+// ocsp-stapling-none.example.com doesn't staple an OCSP response, so
+// connecting to it will cause a request to the OCSP responder. As with all of
+// these tests, the OCSP AIA (i.e. the url of the responder) in the certificate
+// is http://localhost:8080. Since this test opens a TCP socket listening on
+// port 8080 that just accepts connections and then ignores them (with
+// connect/read/write timeouts of 30 seconds), the OCSP requests should cancel
+// themselves. When OCSP hard-fail is enabled, connections will be terminated.
+// Otherwise, they will succeed.
+
+let gSocketListener = {
+  onSocketAccepted: function(serverSocket, socketTransport) {
+    socketTransport.setTimeout(Ci.nsISocketTransport.TIMEOUT_CONNECT, 30);
+    socketTransport.setTimeout(Ci.nsISocketTransport.TIMEOUT_READ_WRITE, 30);
+  },
+
+  onStopListening: function(serverSocket, socketTransport) {}
+};
+
 function run_test() {
   do_get_profile();
 
@@ -12,7 +32,7 @@ function run_test() {
   let socket = Cc["@mozilla.org/network/server-socket;1"]
                  .createInstance(Ci.nsIServerSocket);
   socket.init(8080, true, -1);
-
+  socket.asyncListen(gSocketListener);
 
   add_tests_in_mode(true, true);
   add_tests_in_mode(false, true);

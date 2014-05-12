@@ -7,87 +7,63 @@
 #define nsTreeStyleCache_h__
 
 #include "mozilla/Attributes.h"
-#include "nsHashtable.h"
 #include "nsIAtom.h"
 #include "nsCOMArray.h"
 #include "nsICSSPseudoComparator.h"
+#include "nsRefPtrHashtable.h"
 #include "nsStyleContext.h"
 
 typedef nsCOMArray<nsIAtom> AtomArray;
 
-class nsDFAState : public nsHashKey
+class nsTreeStyleCache
 {
 public:
-  uint32_t mStateID;
-
-  nsDFAState(uint32_t aID) :mStateID(aID) {}
-
-  uint32_t GetStateID() { return mStateID; }
-
-  uint32_t HashCode(void) const MOZ_OVERRIDE {
-    return mStateID;
+  nsTreeStyleCache()
+    : mNextState(0)
+  {
   }
 
-  bool Equals(const nsHashKey *aKey) const MOZ_OVERRIDE {
-    nsDFAState* key = (nsDFAState*)aKey;
-    return key->mStateID == mStateID;
+  ~nsTreeStyleCache()
+  {
+    Clear();
   }
 
-  nsHashKey *Clone(void) const MOZ_OVERRIDE {
-    return new nsDFAState(mStateID);
+  void Clear()
+  {
+    mTransitionTable = nullptr;
+    mCache = nullptr;
+    mNextState = 0;
   }
-};
-
-class nsTransitionKey : public nsHashKey
-{
-public:
-  uint32_t mState;
-  nsCOMPtr<nsIAtom> mInputSymbol;
-
-  nsTransitionKey(uint32_t aState, nsIAtom* aSymbol) :mState(aState), mInputSymbol(aSymbol) {}
-
-  uint32_t HashCode(void) const MOZ_OVERRIDE {
-    // Make a 32-bit integer that combines the low-order 16 bits of the state and the input symbol.
-    int32_t hb = mState << 16;
-    int32_t lb = (NS_PTR_TO_INT32(mInputSymbol.get()) << 16) >> 16;
-    return hb+lb;
-  }
-
-  bool Equals(const nsHashKey *aKey) const MOZ_OVERRIDE {
-    nsTransitionKey* key = (nsTransitionKey*)aKey;
-    return key->mState == mState && key->mInputSymbol == mInputSymbol;
-  }
-
-  nsHashKey *Clone(void) const MOZ_OVERRIDE {
-    return new nsTransitionKey(mState, mInputSymbol);
-  }
-};
-
-class nsTreeStyleCache 
-{
-public:
-  nsTreeStyleCache() :mTransitionTable(nullptr), mCache(nullptr), mNextState(0) {}
-  ~nsTreeStyleCache() { Clear(); }
-
-  void Clear() { delete mTransitionTable; mTransitionTable = nullptr; delete mCache; mCache = nullptr; mNextState = 0; }
 
   nsStyleContext* GetStyleContext(nsICSSPseudoComparator* aComparator,
-                                  nsPresContext* aPresContext, 
-                                  nsIContent* aContent, 
+                                  nsPresContext* aPresContext,
+                                  nsIContent* aContent,
                                   nsStyleContext* aContext,
                                   nsIAtom* aPseudoElement,
                                   const AtomArray & aInputWord);
 
-  static bool DeleteDFAState(nsHashKey *aKey, void *aData, void *closure);
-
-  static bool ReleaseStyleContext(nsHashKey *aKey, void *aData, void *closure);
-
 protected:
+  typedef uint32_t DFAState;
+
+  class Transition MOZ_FINAL
+  {
+  public:
+    Transition(DFAState aState, nsIAtom* aSymbol);
+    bool operator==(const Transition& aOther) const;
+    uint32_t Hash() const;
+
+  private:
+    DFAState mState;
+    nsCOMPtr<nsIAtom> mInputSymbol;
+  };
+
+  typedef nsDataHashtable<nsGenericHashKey<Transition>, DFAState> TransitionTable;
+
   // A transition table for a deterministic finite automaton.  The DFA
-  // takes as its input a single pseudoelement and an ordered set of properties.  
+  // takes as its input a single pseudoelement and an ordered set of properties.
   // It transitions on an input word that is the concatenation of the pseudoelement supplied
   // with the properties in the array.
-  // 
+  //
   // It transitions from state to state by looking up entries in the transition table (which is
   // a mapping from (S,i)->S', where S is the current state, i is the next
   // property in the input word, and S' is the state to transition to.
@@ -97,15 +73,16 @@ protected:
   //
   // Once the entire word has been consumed, the final state is used
   // to reference the cache table to locate the style context.
-  nsObjectHashtable* mTransitionTable;
+  nsAutoPtr<TransitionTable> mTransitionTable;
 
-  // The cache of all active style contexts.  This is a hash from 
+  // The cache of all active style contexts.  This is a hash from
   // a final state in the DFA, Sf, to the resultant style context.
-  nsObjectHashtable* mCache;
+  typedef nsRefPtrHashtable<nsUint32HashKey, nsStyleContext> StyleContextCache;
+  nsAutoPtr<StyleContextCache> mCache;
 
   // An integer counter that is used when we need to make new states in the
   // DFA.
-  uint32_t mNextState;
+  DFAState mNextState;
 };
 
 #endif // nsTreeStyleCache_h__

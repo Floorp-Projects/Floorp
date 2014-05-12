@@ -8,6 +8,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "SocialService", "resource://gre/modules/SocialService.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Social", "resource:///modules/Social.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Chat", "resource:///modules/Chat.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils", "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 this.EXPORTED_SYMBOLS = ["MozSocialAPI", "openChatWindow", "findChromeWindowForChats", "closeAllChatWindows"];
@@ -125,7 +127,7 @@ function attachToWindow(provider, targetWindow) {
       writable: true,
       value: function(toURL, callback) {
         let url = targetWindow.document.documentURIObject.resolve(toURL);
-        openChatWindow(getChromeWindow(targetWindow), provider, url, callback);
+        openChatWindow(targetWindow, provider, url, callback);
       }
     },
     openPanel: {
@@ -270,92 +272,31 @@ function getChromeWindow(contentWin) {
                    .getInterface(Ci.nsIDOMWindow);
 }
 
-function isWindowGoodForChats(win) {
-  return win.SocialChatBar
-         && win.SocialChatBar.isAvailable
-         && !PrivateBrowsingUtils.isWindowPrivate(win);
-}
-
-function findChromeWindowForChats(preferredWindow) {
-  if (preferredWindow && isWindowGoodForChats(preferredWindow))
-    return preferredWindow;
-  // no good - we just use the "most recent" browser window which can host
-  // chats (we used to try and "group" all chats in the same browser window,
-  // but that didn't work out so well - see bug 835111
-
-  // Try first the most recent window as getMostRecentWindow works
-  // even on platforms where getZOrderDOMWindowEnumerator is broken
-  // (ie. Linux).  This will handle most cases, but won't work if the
-  // foreground window is a popup.
-
-  let mostRecent = Services.wm.getMostRecentWindow("navigator:browser");
-  if (isWindowGoodForChats(mostRecent))
-    return mostRecent;
-
-  let topMost, enumerator;
-  // *sigh* - getZOrderDOMWindowEnumerator is broken except on Mac and
-  // Windows.  We use BROKEN_WM_Z_ORDER as that is what some other code uses
-  // and a few bugs recommend searching mxr for this symbol to identify the
-  // workarounds - we want this code to be hit in such searches.
-  let os = Services.appinfo.OS;
-  const BROKEN_WM_Z_ORDER = os != "WINNT" && os != "Darwin";
-  if (BROKEN_WM_Z_ORDER) {
-    // this is oldest to newest and no way to change the order.
-    enumerator = Services.wm.getEnumerator("navigator:browser");
-  } else {
-    // here we explicitly ask for bottom-to-top so we can use the same logic
-    // where BROKEN_WM_Z_ORDER is true.
-    enumerator = Services.wm.getZOrderDOMWindowEnumerator("navigator:browser", false);
-  }
-  while (enumerator.hasMoreElements()) {
-    let win = enumerator.getNext();
-    if (!win.closed && isWindowGoodForChats(win))
-      topMost = win;
-  }
-  return topMost;
-}
-
 this.openChatWindow =
- function openChatWindow(chromeWindow, provider, url, callback, mode) {
-  chromeWindow = findChromeWindowForChats(chromeWindow);
-  if (!chromeWindow) {
-    Cu.reportError("Failed to open a social chat window - no host window could be found.");
-    return;
-  }
+ function openChatWindow(contentWindow, provider, url, callback, mode) {
   let fullURI = provider.resolveUri(url);
   if (!provider.isSameOrigin(fullURI)) {
     Cu.reportError("Failed to open a social chat window - the requested URL is not the same origin as the provider.");
     return;
   }
-  if (!chromeWindow.SocialChatBar.openChat(provider, fullURI.spec, callback, mode)) {
-    Cu.reportError("Failed to open a social chat window - the chatbar is not available in the target window.");
-    return;
+
+  let thisCallback = function(chatbox) {
+    // All social chat windows get a special error listener.
+    Social.setErrorListener(chatbox.content, function(aBrowser) {
+      aBrowser.webNavigation.loadURI("about:socialerror?mode=compactInfo&origin=" +
+                             encodeURIComponent(aBrowser.getAttribute("origin")),
+                             null, null, null, null);
+    });
   }
-  // getAttention is ignored if the target window is already foreground, so
-  // we can call it unconditionally.
-  chromeWindow.getAttention();
+  let chatbox = Chat.open(contentWindow, provider.origin, provider.name,
+                          fullURI.spec, mode, undefined, thisCallback);
+  if (callback) {
+    chatbox.promiseChatLoaded.then(() => {
+      callback(chatbox.contentWindow);
+    });
+  }
 }
 
-this.closeAllChatWindows =
- function closeAllChatWindows(provider) {
-  // close all attached chat windows
-  let winEnum = Services.wm.getEnumerator("navigator:browser");
-  while (winEnum.hasMoreElements()) {
-    let win = winEnum.getNext();
-    if (!win.SocialChatBar)
-      continue;
-    let chats = [c for (c of win.SocialChatBar.chatbar.children) if (c.content.getAttribute("origin") == provider.origin)];
-    [c.close() for (c of chats)];
-  }
-
-  // close all standalone chat windows
-  winEnum = Services.wm.getEnumerator("Social:Chat");
-  while (winEnum.hasMoreElements()) {
-    let win = winEnum.getNext();
-    if (win.closed)
-      continue;
-    let origin = win.document.getElementById("chatter").content.getAttribute("origin");
-    if (provider.origin == origin)
-      win.close();
-  }
+this.closeAllChatWindows = function closeAllChatWindows(provider) {
+  return Chat.closeAll(provider.origin);
 }

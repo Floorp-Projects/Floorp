@@ -10,12 +10,13 @@
 
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
-#include "nsCSSValue.h"
+#include "nsTArray.h"
 #include "imgIRequest.h"
 #include "imgIOnloadBlocker.h"
 #include "imgINotificationObserver.h"
 #include "mozilla/Attributes.h"
 
+class imgIContainer;
 class nsIFrame;
 class nsIDocument;
 class nsPresContext;
@@ -24,6 +25,8 @@ class nsIPrincipal;
 
 namespace mozilla {
 namespace css {
+
+class ImageValue;
 
 class ImageLoader MOZ_FINAL : public imgINotificationObserver,
                               public imgIOnloadBlocker {

@@ -1,8 +1,10 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 'use strict';
 
 const tabs = require('sdk/tabs');
 const { isPrivate } = require('sdk/private-browsing');
-const { getOwnerWindow } = require('sdk/private-browsing/window/utils');
 const { promise: windowPromise, close, focus } = require('sdk/window/helpers');
 const { getMostRecentBrowserWindow } = require('sdk/window/utils');
 
@@ -16,9 +18,6 @@ exports.testOpenTabWithPrivateActiveWindowNoIsPrivateOption = function(assert, d
       url: 'about:blank',
       onOpen: function(tab) {
         assert.ok(isPrivate(tab), 'new tab is private');
-        assert.ok(isPrivate(getOwnerWindow(tab)), 'new tab window is private');
-        assert.strictEqual(getOwnerWindow(tab), window, 'the tab window and the private window are the same');
-
         close(window).then(done).then(null, assert.fail);
       }
     })
@@ -35,9 +34,6 @@ exports.testOpenTabWithNonPrivateActiveWindowNoIsPrivateOption = function(assert
       url: 'about:blank',
       onOpen: function(tab) {
         assert.equal(isPrivate(tab), false, 'new tab is not private');
-        assert.equal(isPrivate(getOwnerWindow(tab)), false, 'new tab window is not private');
-        assert.strictEqual(getOwnerWindow(tab), window, 'the tab window and the new window are the same');
-
         close(window).then(done).then(null, assert.fail);
       }
     })
@@ -55,9 +51,6 @@ exports.testOpenTabWithPrivateActiveWindowWithIsPrivateOptionTrue = function(ass
       isPrivate: true,
       onOpen: function(tab) {
         assert.ok(isPrivate(tab), 'new tab is private');
-        assert.ok(isPrivate(getOwnerWindow(tab)), 'new tab window is private');
-        assert.strictEqual(getOwnerWindow(tab), window, 'the tab window and the private window are the same');
-
         close(window).then(done).then(null, assert.fail);
       }
     })
@@ -75,9 +68,6 @@ exports.testOpenTabWithNonPrivateActiveWindowWithIsPrivateOptionFalse = function
       isPrivate: false,
       onOpen: function(tab) {
         assert.equal(isPrivate(tab), false, 'new tab is not private');
-        assert.equal(isPrivate(getOwnerWindow(tab)), false, 'new tab window is not private');
-        assert.strictEqual(getOwnerWindow(tab), window, 'the tab window and the new window are the same');
-
         close(window).then(done).then(null, assert.fail);
       }
     })
