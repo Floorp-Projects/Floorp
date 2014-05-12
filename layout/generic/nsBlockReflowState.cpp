@@ -46,14 +46,14 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   SetFlag(BRS_ISOVERFLOWCONTAINER,
           IS_TRUE_OVERFLOW_CONTAINER(aFrame));
 
-  const nsMargin& borderPadding = BorderPadding();
-  mContainerWidth = aReflowState.ComputedWidth() +
-                    aReflowState.ComputedPhysicalBorderPadding().LeftRight();
+  mBorderPadding = mReflowState.ComputedPhysicalBorderPadding();
+  aFrame->ApplySkipSides(mBorderPadding, &aReflowState);
+  mContainerWidth = aReflowState.ComputedWidth() + mBorderPadding.LeftRight();
 
-  if (aTopMarginRoot || 0 != aReflowState.ComputedPhysicalBorderPadding().top) {
+  if (aTopMarginRoot || 0 != mBorderPadding.top) {
     SetFlag(BRS_ISTOPMARGINROOT, true);
   }
-  if (aBottomMarginRoot || 0 != aReflowState.ComputedPhysicalBorderPadding().bottom) {
+  if (aBottomMarginRoot || 0 != mBorderPadding.bottom) {
     SetFlag(BRS_ISBOTTOMMARGINROOT, true);
   }
   if (GetFlag(BRS_ISTOPMARGINROOT)) {
@@ -93,8 +93,8 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     // We are in a paginated situation. The bottom edge is just inside
     // the bottom border and padding. The content area height doesn't
     // include either border or padding edge.
-    mBottomEdge = aReflowState.AvailableHeight() - borderPadding.bottom;
-    mContentArea.height = std::max(0, mBottomEdge - borderPadding.top);
+    mBottomEdge = aReflowState.AvailableHeight() - mBorderPadding.bottom;
+    mContentArea.height = std::max(0, mBottomEdge - mBorderPadding.top);
   }
   else {
     // When we are not in a paginated situation then we always use
@@ -102,8 +102,8 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     SetFlag(BRS_UNCONSTRAINEDHEIGHT, true);
     mContentArea.height = mBottomEdge = NS_UNCONSTRAINEDSIZE;
   }
-  mContentArea.x = borderPadding.left;
-  mY = mContentArea.y = borderPadding.top;
+  mContentArea.x = mBorderPadding.left;
+  mY = mContentArea.y = mBorderPadding.top;
 
   mPrevChild = nullptr;
   mCurrentLine = aFrame->end_lines();
