@@ -60,7 +60,7 @@ ActivitiesDialog.prototype = {
   chooseActivity: function ap_chooseActivity(aOptions, aActivities, aCallback) {
     // B2G does not have an alternate activity system, make no choice and return.
     if (aActivities.length === 0) {
-      aCallback(Ci.nsIActivityUIGlueCallback.WEBAPPS_ACTIVITY, -1);
+      aCallback.handleEvent(Ci.nsIActivityUIGlueCallback.WEBAPPS_ACTIVITY, -1);
       return;
     }
 
