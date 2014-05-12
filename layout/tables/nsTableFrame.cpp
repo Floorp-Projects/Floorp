@@ -1764,7 +1764,8 @@ nsTableFrame::RequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState)
  ******************************************************************************************/
 
 /* Layout the entire inner table. */
-nsresult nsTableFrame::Reflow(nsPresContext*           aPresContext,
+void
+nsTableFrame::Reflow(nsPresContext*           aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus&          aStatus)
@@ -1776,9 +1777,8 @@ nsresult nsTableFrame::Reflow(nsPresContext*           aPresContext,
   aStatus = NS_FRAME_COMPLETE;
   if (!GetPrevInFlow() && !mTableLayoutStrategy) {
     NS_ASSERTION(false, "strategy should have been created in Init");
-    return NS_ERROR_NULL_POINTER;
+    return;
   }
-  nsresult rv = NS_OK;
 
   // see if collapsing borders need to be calculated
   if (!GetPrevInFlow() && IsBorderCollapse() && NeedToCalcBCBorders()) {
@@ -1918,7 +1918,6 @@ nsresult nsTableFrame::Reflow(nsPresContext*           aPresContext,
 
   FinishAndStoreOverflow(&aDesiredSize);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return rv;
 }
 
 void

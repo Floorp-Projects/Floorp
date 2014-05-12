@@ -878,7 +878,7 @@ nsMathMLContainerFrame::ReflowChild(nsIFrame*                aChildFrame,
   return NS_OK;
 }
 
-nsresult
+void
 nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
@@ -959,7 +959,6 @@ nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return NS_OK;
 }
 
 static nscoord AddInterFrameSpacingToSize(nsHTMLReflowMetrics&    aDesiredSize,

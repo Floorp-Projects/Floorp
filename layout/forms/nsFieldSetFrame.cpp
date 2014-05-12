@@ -339,7 +339,7 @@ nsFieldSetFrame::ComputeSize(nsRenderingContext *aRenderingContext,
   return result;
 }
 
-nsresult 
+void
 nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
                         nsHTMLReflowMetrics&     aDesiredSize,
                         const nsHTMLReflowState& aReflowState,
@@ -554,7 +554,6 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   InvalidateFrame();
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return NS_OK;
 }
 
 nsresult

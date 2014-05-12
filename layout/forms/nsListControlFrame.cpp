@@ -329,7 +329,7 @@ nsListControlFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
   return result;
 }
 
-nsresult 
+void
 nsListControlFrame::Reflow(nsPresContext*           aPresContext, 
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState, 
@@ -358,7 +358,8 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   if (IsInDropDownMode()) {
-    return ReflowAsDropdown(aPresContext, aDesiredSize, aReflowState, aStatus);
+    ReflowAsDropdown(aPresContext, aDesiredSize, aReflowState, aStatus);
+    return;
   }
 
   /*
@@ -398,9 +399,7 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
     state.SetComputedHeight(computedHeight);
   }
 
-  nsresult rv = nsHTMLScrollFrame::Reflow(aPresContext, aDesiredSize,
-                                          state, aStatus);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsHTMLScrollFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);
 
   if (!mMightNeedSecondPass) {
     NS_ASSERTION(!autoHeight || HeightOfARow() == oldHeightOfARow,
@@ -426,7 +425,7 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
       }
     }
 
-    return rv;
+    return;
   }
 
   mMightNeedSecondPass = false;
@@ -438,7 +437,7 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
     NS_ASSERTION(!IsScrollbarUpdateSuppressed(),
                  "Shouldn't be suppressing if the height of a row has not "
                  "changed!");
-    return rv;
+    return;
   }
 
   SetSuppressScrollbarUpdate(false);
@@ -461,10 +460,10 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
   // XXXbz to make the ascent really correct, we should add our
   // mComputedPadding.top to it (and subtract it from descent).  Need that
   // because nsGfxScrollFrame just adds in the border....
-  return nsHTMLScrollFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);
+  nsHTMLScrollFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);
 }
 
-nsresult
+void
 nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext, 
                                      nsHTMLReflowMetrics&     aDesiredSize,
                                      const nsHTMLReflowState& aReflowState, 
@@ -493,9 +492,7 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
     state.SetComputedHeight(mLastDropdownComputedHeight);
   }
 
-  nsresult rv = nsHTMLScrollFrame::Reflow(aPresContext, aDesiredSize,
-                                          state, aStatus);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsHTMLScrollFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);
 
   if (!mMightNeedSecondPass) {
     NS_ASSERTION(oldVisibleHeight == GetScrolledFrame()->GetSize().height,
@@ -506,7 +503,7 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
                  "Shouldn't be suppressing if we don't need a second pass!");
     NS_ASSERTION(!(GetStateBits() & NS_FRAME_FIRST_REFLOW),
                  "How can we avoid a second pass during first reflow?");
-    return rv;
+    return;
   }
 
   mMightNeedSecondPass = false;
@@ -517,7 +514,7 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
     // All done.  No need to do more reflow.
     NS_ASSERTION(!(GetStateBits() & NS_FRAME_FIRST_REFLOW),
                  "How can we avoid a second pass during first reflow?");
-    return rv;
+    return;
   }
 
   SetSuppressScrollbarUpdate(false);
@@ -579,7 +576,7 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
   mLastDropdownComputedHeight = state.ComputedHeight();
 
   nsHTMLScrollFrame::WillReflow(aPresContext);
-  return nsHTMLScrollFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);
+  nsHTMLScrollFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);
 }
 
 ScrollbarStyles
