@@ -38,7 +38,7 @@ public class IconGridInput extends PromptInput implements OnItemClickListener {
     private static int mColumnWidth = -1;  // The maximum width of columns
     private static int mMaxColumns = -1;  // The maximum number of columns to show
     private static int mIconSize = -1;    // Size of icons in the grid
-    private int mSelected = 0;           // Current selection, default to first item
+    private int mSelected = -1;           // Current selection
     private JSONArray mArray;
 
     public IconGridInput(JSONObject obj) {
@@ -76,6 +76,7 @@ public class IconGridInput extends PromptInput implements OnItemClickListener {
             items.add(item);
             if (item.selected) {
                 mSelected = i;
+                view.setSelection(i);
             }
         }
 
@@ -84,8 +85,6 @@ public class IconGridInput extends PromptInput implements OnItemClickListener {
 
         mAdapter = new IconGridAdapter(context, -1, items);
         view.setAdapter(mAdapter);
-        view.setItemChecked(mSelected, true);
-
         mView = view;
         return mView;
     }
