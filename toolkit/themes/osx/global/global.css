@@ -352,6 +352,11 @@ notification > button > .button-box > .button-text {
 }
 
 @media (min-resolution: 2dppx) {
+  .close-icon > .button-icon,
+  .close-icon > .toolbarbutton-icon {
+    width: 16px;
+  }
+
   .close-icon {
     list-style-image: url("chrome://global/skin/icons/close@2x.png");
     -moz-image-region: rect(0, 32px, 32px, 0);
