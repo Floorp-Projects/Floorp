@@ -7,86 +7,87 @@
 #include "nsStyleSet.h"
 #include "mozilla/dom/Element.h"
 
+nsTreeStyleCache::Transition::Transition(DFAState aState, nsIAtom* aSymbol)
+  : mState(aState), mInputSymbol(aSymbol)
+{
+}
+
+bool
+nsTreeStyleCache::Transition::operator==(const Transition& aOther) const
+{
+  return aOther.mState == mState && aOther.mInputSymbol == mInputSymbol;
+}
+
+uint32_t
+nsTreeStyleCache::Transition::Hash() const
+{
+  // Make a 32-bit integer that combines the low-order 16 bits of the state and the input symbol.
+  uint32_t hb = mState << 16;
+  uint32_t lb = (NS_PTR_TO_UINT32(mInputSymbol.get()) << 16) >> 16;
+  return hb+lb;
+}
+
+
 // The style context cache impl
 nsStyleContext*
 nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
                                   nsPresContext* aPresContext,
-                                  nsIContent* aContent, 
+                                  nsIContent* aContent,
                                   nsStyleContext* aContext,
                                   nsIAtom* aPseudoElement,
                                   const AtomArray & aInputWord)
 {
   uint32_t count = aInputWord.Length();
-  nsDFAState startState(0);
-  nsDFAState* currState = &startState;
 
   // Go ahead and init the transition table.
   if (!mTransitionTable) {
     // Automatic miss. Build the table
-    mTransitionTable =
-      new nsObjectHashtable(nullptr, nullptr, DeleteDFAState, nullptr);
+    mTransitionTable = new TransitionTable();
   }
 
   // The first transition is always made off the supplied pseudo-element.
-  nsTransitionKey key(currState->GetStateID(), aPseudoElement);
-  currState = static_cast<nsDFAState*>(mTransitionTable->Get(&key));
+  Transition transition(0, aPseudoElement);
+  DFAState currState = mTransitionTable->Get(transition);
 
   if (!currState) {
     // We had a miss. Make a new state and add it to our hash.
-    currState = new nsDFAState(mNextState);
+    currState = mNextState;
     mNextState++;
-    mTransitionTable->Put(&key, currState);
+    mTransitionTable->Put(transition, currState);
   }
 
   for (uint32_t i = 0; i < count; i++) {
-    nsTransitionKey key(currState->GetStateID(), aInputWord[i]);
-    currState = static_cast<nsDFAState*>(mTransitionTable->Get(&key));
+    Transition transition(currState, aInputWord[i]);
+    currState = mTransitionTable->Get(transition);
 
     if (!currState) {
       // We had a miss. Make a new state and add it to our hash.
-      currState = new nsDFAState(mNextState);
+      currState = mNextState;
       mNextState++;
-      mTransitionTable->Put(&key, currState);
+      mTransitionTable->Put(transition, currState);
     }
   }
 
   // We're in a final state.
   // Look up our style context for this state.
   nsStyleContext* result = nullptr;
-  if (mCache)
-    result = static_cast<nsStyleContext*>(mCache->Get(currState));
+  if (mCache) {
+    result = mCache->GetWeak(currState);
+  }
   if (!result) {
     // We missed the cache. Resolve this pseudo-style.
-    result = aPresContext->StyleSet()->
+    nsRefPtr<nsStyleContext> newResult = aPresContext->StyleSet()->
       ResolveXULTreePseudoStyle(aContent->AsElement(), aPseudoElement,
-                                aContext, aComparator).take();
+                                aContext, aComparator);
 
     // Put the style context in our table, transferring the owning reference to the table.
     if (!mCache) {
-      mCache = new nsObjectHashtable(nullptr, nullptr, ReleaseStyleContext, nullptr);
+      mCache = new StyleContextCache();
     }
-    mCache->Put(currState, result);
+    result = newResult.get();
+    mCache->Put(currState, newResult.forget());
   }
 
   return result;
 }
 
-bool
-nsTreeStyleCache::DeleteDFAState(nsHashKey *aKey,
-                                 void *aData,
-                                 void *closure)
-{
-  nsDFAState* entry = static_cast<nsDFAState*>(aData);
-  delete entry;
-  return true;
-}
-
-bool
-nsTreeStyleCache::ReleaseStyleContext(nsHashKey *aKey,
-                                      void *aData,
-                                      void *closure)
-{
-  nsStyleContext* context = static_cast<nsStyleContext*>(aData);
-  context->Release();
-  return true;
-}

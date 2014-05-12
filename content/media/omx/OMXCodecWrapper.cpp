@@ -23,10 +23,6 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
-#define ENCODER_CONFIG_BITRATE 2000000 // bps
-// How many seconds between I-frames.
-#define ENCODER_CONFIG_I_FRAME_INTERVAL 1
-// Wait up to 5ms for input buffers.
 #define INPUT_BUFFER_TIMEOUT_US (5 * 1000ll)
 // AMR NB kbps
 #define AMRNB_BITRATE 12200
@@ -137,27 +133,20 @@ IsRunningOnEmulator()
   return strncmp(qemu, "1", 1) == 0;
 }
 
+#define ENCODER_CONFIG_BITRATE 2000000 // bps
+// How many seconds between I-frames.
+#define ENCODER_CONFIG_I_FRAME_INTERVAL 1
+// Wait up to 5ms for input buffers.
+
 nsresult
 OMXVideoEncoder::Configure(int aWidth, int aHeight, int aFrameRate,
                            BlobFormat aBlobFormat)
 {
-  MOZ_ASSERT(!mStarted, "Configure() was called already.");
-
   NS_ENSURE_TRUE(aWidth > 0 && aHeight > 0 && aFrameRate > 0,
                  NS_ERROR_INVALID_ARG);
 
   OMX_VIDEO_AVCLEVELTYPE level = OMX_VIDEO_AVCLevel3;
   OMX_VIDEO_CONTROLRATETYPE bitrateMode = OMX_Video_ControlRateConstant;
-  // Limitation of soft AVC/H.264 encoder running on emulator in stagefright.
-  static bool emu = IsRunningOnEmulator();
-  if (emu) {
-    if (aWidth > 352 || aHeight > 288) {
-      CODEC_ERROR("SoftAVCEncoder doesn't support resolution larger than CIF");
-      return NS_ERROR_INVALID_ARG;
-    }
-    level = OMX_VIDEO_AVCLevel2;
-    bitrateMode = OMX_Video_ControlRateVariable;
-  }
 
   // Set up configuration parameters for AVC/H.264 encoder.
   sp<AMessage> format = new AMessage;
@@ -180,12 +169,42 @@ OMXVideoEncoder::Configure(int aWidth, int aHeight, int aFrameRate,
   format->setInt32("slice-height", aHeight);
   format->setInt32("frame-rate", aFrameRate);
 
-  status_t result = mCodec->configure(format, nullptr, nullptr,
+  return ConfigureDirect(format, aBlobFormat);
+}
+
+nsresult
+OMXVideoEncoder::ConfigureDirect(sp<AMessage>& aFormat,
+                                 BlobFormat aBlobFormat)
+{
+  MOZ_ASSERT(!mStarted, "Configure() was called already.");
+
+  int width = 0;
+  int height = 0;
+  int frameRate = 0;
+  aFormat->findInt32("width", &width);
+  aFormat->findInt32("height", &height);
+  aFormat->findInt32("frame-rate", &frameRate);
+  NS_ENSURE_TRUE(width > 0 && height > 0 && frameRate > 0,
+                 NS_ERROR_INVALID_ARG);
+
+  // Limitation of soft AVC/H.264 encoder running on emulator in stagefright.
+  static bool emu = IsRunningOnEmulator();
+  if (emu) {
+    if (width > 352 || height > 288) {
+      CODEC_ERROR("SoftAVCEncoder doesn't support resolution larger than CIF");
+      return NS_ERROR_INVALID_ARG;
+    }
+    aFormat->setInt32("level", OMX_VIDEO_AVCLevel2);
+    aFormat->setInt32("bitrate-mode", OMX_Video_ControlRateVariable);
+  }
+
+
+  status_t result = mCodec->configure(aFormat, nullptr, nullptr,
                                       MediaCodec::CONFIGURE_FLAG_ENCODE);
   NS_ENSURE_TRUE(result == OK, NS_ERROR_FAILURE);
 
-  mWidth = aWidth;
-  mHeight = aHeight;
+  mWidth = width;
+  mHeight = height;
   mBlobFormat = aBlobFormat;
 
   result = Start();

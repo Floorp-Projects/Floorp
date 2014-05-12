@@ -31,7 +31,7 @@ class WebGLElementArrayCache {
 
 public:
   bool BufferData(const void* ptr, size_t byteSize);
-  void BufferSubData(size_t pos, const void* ptr, size_t updateByteSize);
+  bool BufferSubData(size_t pos, const void* ptr, size_t updateByteSize);
 
   bool Validate(GLenum type, uint32_t maxAllowed, size_t first, size_t count,
                 uint32_t* out_upperBound = nullptr);
@@ -66,7 +66,7 @@ private:
   template<typename T>
   T* Elements() { return static_cast<T*>(mUntypedData); }
 
-  void InvalidateTrees(size_t firstByte, size_t lastByte);
+  bool UpdateTrees(size_t firstByte, size_t lastByte);
 
   template<typename T>
   friend struct WebGLElementArrayCacheTree;

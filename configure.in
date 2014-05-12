@@ -5790,14 +5790,20 @@ if test -n "$MOZ_ANGLE_RENDERER"; then
     if test -n "$WINDOWSSDKDIR"; then
       MOZ_D3DCOMPILER_VISTA_DLL_PATH="$WINDOWSSDKDIR/Redist/D3D/$MOZ_D3D_CPU_SUFFIX/$MOZ_D3DCOMPILER_VISTA_DLL"
       if test -f "$MOZ_D3DCOMPILER_VISTA_DLL_PATH"; then
-        MOZ_HAS_WINSDK_WITH_D3D=1
         AC_MSG_RESULT([Found MOZ_D3DCOMPILER_VISTA_DLL_PATH: $MOZ_D3DCOMPILER_VISTA_DLL_PATH])
+        MOZ_HAS_WINSDK_WITH_D3D=1
       else
         AC_MSG_RESULT([MOZ_D3DCOMPILER_VISTA_DLL_PATH doesn't exist: $MOZ_D3DCOMPILER_VISTA_DLL_PATH])
+        AC_MSG_ERROR([Windows SDK at "$WINDOWSSDKDIR" appears broken. Try updating to MozillaBuild 1.9 final or higher.])
+        MOZ_D3DCOMPILER_VISTA_DLL_PATH=
       fi
     else
-      AC_MSG_RESULT([WINDOWSSDKDIR is missing.])
+      AC_MSG_RESULT([Windows SDK not found.])
     fi
+  fi
+
+  if test -z "$MOZ_D3DCOMPILER_VISTA_DLL_PATH"; then
+    MOZ_D3DCOMPILER_VISTA_DLL=
   fi
 
   ######################################
@@ -5816,7 +5822,7 @@ if test -n "$MOZ_ANGLE_RENDERER"; then
      test -f "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_D3D_CPU_SUFFIX/dxguid.lib ; then
     AC_MSG_RESULT([Found DirectX SDK via registry, using $MOZ_DIRECTX_SDK_PATH])
   else
-    AC_MSG_RESULT([Couldn't find the DirectX SDK.])
+    AC_MSG_RESULT([DirectX SDK not found.])
     MOZ_DIRECTX_SDK_PATH=
   fi
 
@@ -5835,21 +5841,21 @@ if test -n "$MOZ_ANGLE_RENDERER"; then
 
     if test -n "$MOZ_D3DX9_VERSION" ; then
       MOZ_D3DCOMPILER_XP_CAB=`find "$MOZ_DIRECTX_SDK_PATH"/Redist -name *D3DCompiler_${MOZ_D3DX9_VERSION}_${MOZ_D3D_CPU_SUFFIX}.cab | head -n1`
-      MOZ_D3DCOMPILER_XP_DLL=D3DCompiler_$MOZ_D3DX9_VERSION.dll
+
+      if test -n "$MOZ_D3DCOMPILER_XP_CAB"; then
+        MOZ_D3DCOMPILER_XP_DLL=D3DCompiler_$MOZ_D3DX9_VERSION.dll
+      else
+        AC_MSG_RESULT([Couldn't find a CAB containing the D3D compiler DLL.])
+        AC_MSG_ERROR([DirectX SDK at "$MOZ_DIRECTX_SDK_PATH" appears broken.])
+        MOZ_DIRECTX_SDK_PATH=
+      fi
     else
       AC_MSG_RESULT([Couldn't determine the D3DX9 version for the DirectX SDK.])
-    fi
-
-    if test -z "$MOZ_D3DCOMPILER_XP_CAB"; then
-      AC_MSG_RESULT([Couldn't find a CAB containing the D3D compiler DLL.])
       MOZ_DIRECTX_SDK_PATH=
-      MOZ_D3DCOMPILER_XP_DLL=
     fi
   else
     AC_MSG_RESULT([Couldn't find an acceptable DirectX SDK for ANGLE, needed for d3dcompiler_43.])
     AC_MSG_RESULT([  Either ignore, install DirectX SDK (June 2010 version or newer), or reconfigure with --disable-webgl.])
-    MOZ_DIRECTX_SDK_PATH=
-    MOZ_D3DCOMPILER_XP_DLL=
   fi
 
   ######################################

@@ -50,6 +50,13 @@ public:
    */
   RefPtr* GetWeak(KeyType aKey, bool* aFound = nullptr) const;
 
+  // Overload Put, rather than overriding it.
+  using base_type::Put;
+
+  void Put(KeyType aKey, already_AddRefed<RefPtr> aData);
+
+  bool Put(KeyType aKey, already_AddRefed<RefPtr> aData, const mozilla::fallible_t&) MOZ_WARN_UNUSED_RESULT;
+
   // Overload Remove, rather than overriding it.
   using base_type::Remove;
 
@@ -134,6 +141,32 @@ nsRefPtrHashtable<KeyClass,RefPtr>::GetWeak
   }
 
   return nullptr;
+}
+
+template<class KeyClass, class RefPtr>
+void
+nsRefPtrHashtable<KeyClass,RefPtr>::Put(KeyType aKey, already_AddRefed<RefPtr> aData)
+{
+  if (!Put(aKey, mozilla::Move(aData), mozilla::fallible_t())) {
+    NS_ABORT_OOM(this->mTable.entrySize * this->mTable.entryCount);
+  }
+}
+
+template<class KeyClass, class RefPtr>
+bool
+nsRefPtrHashtable<KeyClass,RefPtr>::Put(KeyType aKey,
+                                        already_AddRefed<RefPtr> aData,
+                                        const mozilla::fallible_t&)
+{
+  typename base_type::EntryType* ent = this->PutEntry(aKey);
+
+  if (!ent) {
+    return false;
+  }
+
+  ent->mData = aData;
+
+  return true;
 }
 
 template<class KeyClass, class RefPtr>

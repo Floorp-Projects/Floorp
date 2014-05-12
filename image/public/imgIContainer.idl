@@ -152,6 +152,12 @@ interface imgIContainer : nsISupports
   const long FLAG_DECODE_NO_COLORSPACE_CONVERSION = 0x4;
   const long FLAG_CLAMP           = 0x8;
   const long FLAG_HIGH_QUALITY_SCALING = 0x10;
+  /**
+   * Can be passed to GetFrame when the caller wants a DataSourceSurface
+   * instead of a hardware accelerated surface. This can be important for
+   * performance (by avoiding an upload to/readback from the GPU) when the
+   * caller knows they want a SourceSurface of type DATA.
+   */
   const long FLAG_WANT_DATA_SURFACE = 0x20;
 
   /**

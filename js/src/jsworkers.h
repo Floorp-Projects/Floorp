@@ -444,6 +444,7 @@ OffThreadParsingMustWaitForGC(JSRuntime *rt);
 struct SourceCompressionTask
 {
     friend class ScriptSource;
+    friend class WorkerThread;
 
 #ifdef JS_THREADSAFE
     // Thread performing the compression.
@@ -455,16 +456,24 @@ struct SourceCompressionTask
     ExclusiveContext *cx;
 
     ScriptSource *ss;
-    const jschar *chars;
-    bool oom;
 
     // Atomic flag to indicate to a worker thread that it should abort
     // compression on the source.
     mozilla::Atomic<bool, mozilla::Relaxed> abort_;
 
+    // Stores the result of the compression.
+    enum ResultType {
+        OOM,
+        Aborted,
+        Success
+    } result;
+    void *compressed;
+    size_t compressedBytes;
+
   public:
     explicit SourceCompressionTask(ExclusiveContext *cx)
-      : cx(cx), ss(nullptr), chars(nullptr), oom(false), abort_(false)
+      : cx(cx), ss(nullptr), abort_(false),
+        result(OOM), compressed(nullptr), compressedBytes(0)
     {
 #ifdef JS_THREADSAFE
         workerThread = nullptr;
@@ -476,13 +485,11 @@ struct SourceCompressionTask
         complete();
     }
 
-    bool work();
+    ResultType work();
     bool complete();
     void abort() { abort_ = true; }
     bool active() const { return !!ss; }
     ScriptSource *source() { return ss; }
-    const jschar *uncompressedChars() { return chars; }
-    void setOOM() { oom = true; }
 };
 
 } /* namespace js */
