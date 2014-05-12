@@ -1061,9 +1061,6 @@ var gBrowserInit = {
     LightweightThemeListener.init();
     WebrtcIndicator.init();
 
-    // Ensure login manager is up and running.
-    Services.logins;
-
 #ifdef MOZ_CRASHREPORTER
     if (gMultiProcessBrowser)
       TabCrashReporter.init();
