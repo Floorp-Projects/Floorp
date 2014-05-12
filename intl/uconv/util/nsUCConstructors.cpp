@@ -119,27 +119,6 @@ CreateTableEncoder(uScanClassID aScanClass,
 }
 
 NS_METHOD
-CreateTableDecoder(uScanClassID aScanClass,
-                   uShiftInTable * aShiftInTable,
-                   uMappingTable  * aMappingTable,
-                   uint32_t aMaxLengthFactor,
-                   nsISupports* aOuter,
-                   REFNSIID aIID,
-                   void** aResult)
-{
-  if (aOuter)
-    return NS_ERROR_NO_AGGREGATION;
-  
-  nsTableDecoderSupport* decoder =
-      new nsTableDecoderSupport(aScanClass, aShiftInTable, aMappingTable,
-                                aMaxLengthFactor);
-  if (!decoder)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  return StabilizedQueryInterface(decoder, aIID, aResult);
-}
-
-NS_METHOD
 CreateOneByteDecoder(uMappingTable * aMappingTable,
                      
                      nsISupports* aOuter,

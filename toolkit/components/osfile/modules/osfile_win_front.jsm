@@ -414,9 +414,13 @@
            return;
          }
        } else if (ctypes.winLastError == Const.ERROR_ACCESS_DENIED) {
+         // Save winLastError before another ctypes call.
+         let lastError = ctypes.winLastError;
          let attributes = WinFile.GetFileAttributes(path);
-         if (attributes != Const.INVALID_FILE_ATTRIBUTES &&
-             attributes & Const.FILE_ATTRIBUTE_READONLY) {
+         if (attributes != Const.INVALID_FILE_ATTRIBUTES) {
+           if (!(attributes & Const.FILE_ATTRIBUTE_READONLY)) {
+             throw new File.Error("remove", lastError, path);
+           }
            let newAttributes = attributes & ~Const.FILE_ATTRIBUTE_READONLY;
            if (WinFile.SetFileAttributes(path, newAttributes) &&
                WinFile.DeleteFile(path)) {
