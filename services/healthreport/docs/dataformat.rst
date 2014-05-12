@@ -1073,6 +1073,23 @@ org.mozilla.crashes.crashes
 
 This measurement contains a historical record of application crashes.
 
+Version 3
+^^^^^^^^^
+
+This version follows up from version 2, building on improvements to
+the :ref:`crashes_crashmanager`.
+
+This measurement will be reported on each day there was a
+crash. Records may contain the following fields, whose values indicate
+the number of crashes or hangs that occurred on the given day:
+
+* main-crash
+* main-hang
+* content-crash
+* content-hang
+* plugin-crash
+* plugin-hang
+
 Version 2
 ^^^^^^^^^
 
