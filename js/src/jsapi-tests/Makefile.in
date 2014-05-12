@@ -23,6 +23,3 @@ JSAPI_TESTS_AUTOLOAD := jsapi-tests-gdb.py.in
 JSAPI_TESTS_AUTOLOAD_FLAGS := -Dtopsrcdir=$(abspath $(srcdir)/..)
 
 include $(topsrcdir)/config/rules.mk
-
-check::
-	$(wildcard $(RUN_TEST_PROGRAM)) $(DIST)/bin/jsapi-tests$(BIN_SUFFIX)
