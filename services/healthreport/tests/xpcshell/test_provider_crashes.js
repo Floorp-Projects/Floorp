@@ -47,36 +47,62 @@ add_task(function* test_collect() {
   let day1 = new Date(2014, 0, 1, 0, 0, 0);
   let day2 = new Date(2014, 0, 3, 0, 0, 0);
 
-  yield manager.addCrash(manager.PROCESS_TYPE_MAIN, manager.CRASH_TYPE_CRASH,
-                         "id1", day1);
-  yield manager.addCrash(manager.PROCESS_TYPE_MAIN, manager.CRASH_TYPE_CRASH,
-                         "id2", day1);
-  yield manager.addCrash(manager.PROCESS_TYPE_MAIN, manager.CRASH_TYPE_CRASH,
-                         "id3", day2);
+  yield manager.addCrash(manager.PROCESS_TYPE_MAIN,
+                         manager.CRASH_TYPE_CRASH,
+                         "mc1", day1);
+  yield manager.addCrash(manager.PROCESS_TYPE_MAIN,
+                         manager.CRASH_TYPE_CRASH,
+                         "mc2", day1);
+  yield manager.addCrash(manager.PROCESS_TYPE_CONTENT,
+                         manager.CRASH_TYPE_HANG,
+                         "ch", day1);
+  yield manager.addCrash(manager.PROCESS_TYPE_PLUGIN,
+                         manager.CRASH_TYPE_CRASH,
+                         "pc", day1);
+
+  yield manager.addCrash(manager.PROCESS_TYPE_MAIN,
+                         manager.CRASH_TYPE_HANG,
+                         "mh", day2);
+  yield manager.addCrash(manager.PROCESS_TYPE_CONTENT,
+                         manager.CRASH_TYPE_CRASH,
+                         "cc", day2);
+  yield manager.addCrash(manager.PROCESS_TYPE_PLUGIN,
+                         manager.CRASH_TYPE_HANG,
+                         "ph", day2);
 
   yield provider.collectDailyData();
 
-  let m = provider.getMeasurement("crashes", 2);
+  let m = provider.getMeasurement("crashes", 3);
   let values = yield m.getValues();
   do_check_eq(values.days.size, 2);
   do_check_true(values.days.hasDay(day1));
   do_check_true(values.days.hasDay(day2));
 
   let value = values.days.getDay(day1);
-  do_check_true(value.has("mainCrash"));
-  do_check_eq(value.get("mainCrash"), 2);
+  do_check_true(value.has("main-crash"));
+  do_check_eq(value.get("main-crash"), 2);
+  do_check_true(value.has("content-hang"));
+  do_check_eq(value.get("content-hang"), 1);
+  do_check_true(value.has("plugin-crash"));
+  do_check_eq(value.get("plugin-crash"), 1);
 
   value = values.days.getDay(day2);
-  do_check_eq(value.get("mainCrash"), 1);
+  do_check_true(value.has("main-hang"));
+  do_check_eq(value.get("main-hang"), 1);
+  do_check_true(value.has("content-crash"));
+  do_check_eq(value.get("content-crash"), 1);
+  do_check_true(value.has("plugin-hang"));
+  do_check_eq(value.get("plugin-hang"), 1);
 
   // Check that adding a new crash increments counter on next collect.
-  yield manager.addCrash(manager.PROCESS_TYPE_MAIN, manager.CRASH_TYPE_CRASH,
-                         "id4", day2);
+  yield manager.addCrash(manager.PROCESS_TYPE_MAIN,
+                         manager.CRASH_TYPE_HANG,
+                         "mc3", day2);
 
   yield provider.collectDailyData();
   values = yield m.getValues();
   value = values.days.getDay(day2);
-  do_check_eq(value.get("mainCrash"), 2);
+  do_check_eq(value.get("main-hang"), 2);
 
   yield provider.shutdown();
   yield storage.close();
