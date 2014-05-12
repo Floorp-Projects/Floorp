@@ -342,49 +342,35 @@ void ImageBridgeChild::DispatchImageClientUpdate(ImageClient* aClient,
       nsRefPtr<ImageContainer> >(&UpdateImageClientNow, aClient, aContainer));
 }
 
-static void FlushAllImagesSync(ImageClient* aClient, ImageContainer* aContainer, bool aExceptFront, ReentrantMonitor* aBarrier, bool* aDone)
-{
-  ImageBridgeChild::FlushAllImagesNow(aClient, aContainer, aExceptFront);
-
-  ReentrantMonitorAutoEnter autoMon(*aBarrier);
-  *aDone = true;
-  aBarrier->NotifyAll();
-}
-
-//static
-void ImageBridgeChild::FlushAllImages(ImageClient* aClient, ImageContainer* aContainer, bool aExceptFront)
-{
-  if (InImageBridgeChildThread()) {
-    FlushAllImagesNow(aClient, aContainer, aExceptFront);
-    return;
-  }
-
-  ReentrantMonitor barrier("CreateImageClient Lock");
-  ReentrantMonitorAutoEnter autoMon(barrier);
-  bool done = false;
-
-  sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
-    FROM_HERE,
-    NewRunnableFunction(&FlushAllImagesSync, aClient, aContainer, aExceptFront, &barrier, &done));
-
-  // should stop the thread until the ImageClient has been created on
-  // the other thread
-  while (!done) {
-    barrier.Wait();
-  }
-}
-
-//static
-void ImageBridgeChild::FlushAllImagesNow(ImageClient* aClient, ImageContainer* aContainer, bool aExceptFront)
+static void FlushAllImagesSync(ImageClient* aClient, ImageContainer* aContainer, bool aExceptFront, AsyncTransactionTracker* aStatus)
 {
   MOZ_ASSERT(aClient);
   sImageBridgeChildSingleton->BeginTransaction();
   if (aContainer && !aExceptFront) {
     aContainer->ClearCurrentImage();
   }
-  aClient->FlushAllImages(aExceptFront);
+  aClient->FlushAllImages(aExceptFront, aStatus);
   aClient->OnTransaction();
   sImageBridgeChildSingleton->EndTransaction();
+}
+
+//static
+void ImageBridgeChild::FlushAllImages(ImageClient* aClient, ImageContainer* aContainer, bool aExceptFront)
+{
+  MOZ_ASSERT(aClient);
+  MOZ_ASSERT(!InImageBridgeChildThread());
+  if (InImageBridgeChildThread()) {
+    NS_ERROR("ImageBridgeChild::FlushAllImages() is called on ImageBridge thread.");
+     return;
+   }
+ 
+  RefPtr<AsyncTransactionTracker> status = aClient->PrepareFlushAllImages();
+ 
+  sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
+    FROM_HERE,
+    NewRunnableFunction(&FlushAllImagesSync, aClient, aContainer, aExceptFront, status));
+ 
+  status->WaitComplete();
 }
 
 void
@@ -768,6 +754,12 @@ ImageBridgeChild::RecvParentAsyncMessage(const mozilla::layers::AsyncParentMessa
       HoldTransactionsToRespond(op.transactionId());
       break;
     }
+    case AsyncParentMessageData::TOpReplyRemoveTexture: {
+      const OpReplyRemoveTexture& op = aMessage.get_OpReplyRemoveTexture();
+
+      CompositableClient::TransactionCompleteted(op.compositableChild(), op.transactionId());
+      break;
+    }
     default:
       NS_ERROR("unknown AsyncParentMessageData type");
       return false;
@@ -793,6 +785,22 @@ ImageBridgeChild::RemoveTextureFromCompositable(CompositableClient* aCompositabl
     mTxn->AddNoSwapEdit(OpRemoveTexture(nullptr, aCompositable->GetIPDLActor(),
                                         nullptr, aTexture->GetIPDLActor()));
   }
+  // Hold texture until transaction complete.
+  HoldUntilTransaction(aTexture);
+}
+
+void
+ImageBridgeChild::RemoveTextureFromCompositableAsync(AsyncTransactionTracker* aAsyncTransactionTracker,
+                                                     CompositableClient* aCompositable,
+                                                     TextureClient* aTexture)
+{
+  mTxn->AddNoSwapEdit(OpRemoveTextureAsync(aAsyncTransactionTracker->GetId(),
+                                           nullptr, aCompositable->GetIPDLActor(),
+                                           nullptr, aTexture->GetIPDLActor()));
+  // Hold AsyncTransactionTracker until receving reply
+  CompositableClient::HoldUntilComplete(aCompositable->GetIPDLActor(),
+                                        aAsyncTransactionTracker);
+
   // Hold texture until transaction complete.
   HoldUntilTransaction(aTexture);
 }
