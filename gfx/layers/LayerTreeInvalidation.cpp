@@ -166,13 +166,6 @@ struct LayerPropertiesBase : public LayerProperties
       }
     }
 
-    nsIntRegion visible;
-    visible.Xor(mVisibleRegion, mLayer->GetVisibleRegion());
-    if (!visible.IsEmpty()) {
-      aGeometryChanged = true;
-    }
-    AddTransformedRegion(result, visible, mTransform);
-
     AddRegion(result, ComputeChangeInternal(aCallback, aGeometryChanged));
     AddTransformedRegion(result, mLayer->GetInvalidRegion(), mTransform);
 
