@@ -83,6 +83,7 @@ http://sub1.test2.example.com:80     privileged
 http://sub2.test1.example.com:80     privileged
 http://sub2.test2.example.com:80     privileged
 http://noxul.example.com:80          privileged,noxul
+http://example.net:80                privileged
 
 https://example.com:443                privileged
 https://test1.example.com:443          privileged
