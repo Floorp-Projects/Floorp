@@ -45,6 +45,33 @@ public:
             env, jNativeJSObject, "<init>",
             "(Lorg/mozilla/gecko/util/NativeJSContainer;I)V");
         MOZ_ASSERT(jContainerConstructor);
+
+        jBundle = AndroidBridge::GetClassGlobalRef(
+            env, "android/os/Bundle");
+        MOZ_ASSERT(jBundle);
+        jBundleConstructor = AndroidBridge::GetMethodID(
+            env, jBundle, "<init>", "(I)V");
+        MOZ_ASSERT(jBundleConstructor);
+        jBundlePutBoolean = AndroidBridge::GetMethodID(
+            env, jBundle, "putBoolean",
+            "(Ljava/lang/String;Z)V");
+        MOZ_ASSERT(jBundlePutBoolean);
+        jBundlePutBundle = AndroidBridge::GetMethodID(
+            env, jBundle, "putBundle",
+            "(Ljava/lang/String;Landroid/os/Bundle;)V");
+        MOZ_ASSERT(jBundlePutBundle);
+        jBundlePutDouble = AndroidBridge::GetMethodID(
+            env, jBundle, "putDouble",
+            "(Ljava/lang/String;D)V");
+        MOZ_ASSERT(jBundlePutDouble);
+        jBundlePutInt = AndroidBridge::GetMethodID(
+            env, jBundle, "putInt",
+            "(Ljava/lang/String;I)V");
+        MOZ_ASSERT(jBundlePutInt);
+        jBundlePutString = AndroidBridge::GetMethodID(
+            env, jBundle, "putString",
+            "(Ljava/lang/String;Ljava/lang/String;)V");
+        MOZ_ASSERT(jBundlePutString);
     }
 
     static jobject CreateInstance(JNIEnv* env, JSContext* cx,
@@ -193,6 +220,14 @@ public:
         return true;
     }
 
+    static jclass jBundle;
+    static jmethodID jBundleConstructor;
+    static jmethodID jBundlePutBoolean;
+    static jmethodID jBundlePutBundle;
+    static jmethodID jBundlePutDouble;
+    static jmethodID jBundlePutInt;
+    static jmethodID jBundlePutString;
+
 private:
     static jclass jNativeJSContainer;
     static jfieldID jContainerNativeObject;
@@ -257,6 +292,13 @@ jclass NativeJSContainer::jNativeJSObject = 0;
 jfieldID NativeJSContainer::jObjectContainer = 0;
 jfieldID NativeJSContainer::jObjectIndex = 0;
 jmethodID NativeJSContainer::jObjectConstructor = 0;
+jclass NativeJSContainer::jBundle = 0;
+jmethodID NativeJSContainer::jBundleConstructor = 0;
+jmethodID NativeJSContainer::jBundlePutBoolean = 0;
+jmethodID NativeJSContainer::jBundlePutBundle = 0;
+jmethodID NativeJSContainer::jBundlePutDouble = 0;
+jmethodID NativeJSContainer::jBundlePutInt = 0;
+jmethodID NativeJSContainer::jBundlePutString = 0;
 
 jobject
 CreateNativeJSContainer(JNIEnv* env, JSContext* cx, JS::HandleObject object)
@@ -364,7 +406,12 @@ struct StringProperty
 
     static Type FromValue(JNIEnv* env, jobject instance,
                           JSContext* cx, JS::HandleValue val) {
-        JS::RootedString str(cx, val.toString());
+        const JS::RootedString str(cx, val.toString());
+        return FromValue(env, instance, cx, str);
+    }
+
+    static Type FromValue(JNIEnv* env, jobject instance,
+                          JSContext* cx, const JS::HandleString str) {
         size_t strLen = 0;
         const jschar* const strChars =
             JS_GetStringCharsAndLength(cx, str, &strLen);
@@ -468,8 +515,74 @@ GetProperty(JNIEnv* env, jobject instance, jstring name,
 jobject
 GetBundle(JNIEnv* env, jobject instance, JSContext* cx, JS::HandleObject obj)
 {
-    // TODO: add implementation
-    return nullptr;
+    AutoLocalJNIFrame frame(env, 1);
+
+    const JS::AutoIdArray ids(cx, JS_Enumerate(cx, obj));
+    if (!CheckJSCall(env, !!ids)) {
+        return nullptr;
+    }
+
+    const size_t length = ids.length();
+    const jobject newBundle = env->NewObject(
+        NativeJSContainer::jBundle,
+        NativeJSContainer::jBundleConstructor,
+        static_cast<jint>(length));
+    AndroidBridge::HandleUncaughtException(env);
+    if (!newBundle) {
+        return nullptr;
+    }
+
+    for (size_t i = 0; i < ids.length(); i++) {
+        AutoLocalJNIFrame loopFrame(env, 2);
+
+        const JS::RootedId id(cx, ids[i]);
+        JS::RootedValue idVal(cx);
+        if (!CheckJSCall(env, JS_IdToValue(cx, id, &idVal))) {
+            return nullptr;
+        }
+
+        const JS::RootedString idStr(cx, JS::ToString(cx, idVal));
+        if (!CheckJSCall(env, !!idStr)) {
+            return nullptr;
+        }
+
+        const jstring name =
+            StringProperty::FromValue(env, instance, cx, idStr);
+        JS::RootedValue val(cx);
+        if (!name ||
+            !CheckJSCall(env, JS_GetPropertyById(cx, obj, id, &val))) {
+            return nullptr;
+        }
+
+#define PUT_IN_BUNDLE_IF_TYPE_IS(Type)                              \
+        if (Type##Property::InValue(val)) {                         \
+            env->CallVoidMethod(                                    \
+                newBundle,                                          \
+                NativeJSContainer::jBundlePut##Type,                \
+                name,                                               \
+                Type##Property::FromValue(env, instance, cx, val)); \
+            AndroidBridge::HandleUncaughtException(env);            \
+            continue;                                               \
+        }                                                           \
+        ((void) 0) // Accommodate trailing semicolon.
+
+        PUT_IN_BUNDLE_IF_TYPE_IS(Boolean);
+        // Int can be casted to double, so check int first.
+        PUT_IN_BUNDLE_IF_TYPE_IS(Int);
+        PUT_IN_BUNDLE_IF_TYPE_IS(Double);
+        PUT_IN_BUNDLE_IF_TYPE_IS(String);
+        // Use Bundle as the default catch-all for objects
+        PUT_IN_BUNDLE_IF_TYPE_IS(Bundle);
+
+#undef PUT_IN_BUNDLE_IF_TYPE_IS
+
+        // We tried all supported types; just bail.
+        AndroidBridge::ThrowException(env,
+            "java/lang/UnsupportedOperationException",
+            "Unsupported property type");
+        return nullptr;
+    }
+    return frame.Pop(newBundle);
 }
 
 } // namespace
