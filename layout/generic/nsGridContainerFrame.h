@@ -26,6 +26,10 @@ public:
   NS_DECL_QUERYFRAME
 
   // nsIFrame overrides
+  void Reflow(nsPresContext*           aPresContext,
+              nsHTMLReflowMetrics&     aDesiredSize,
+              const nsHTMLReflowState& aReflowState,
+              nsReflowStatus&          aStatus) MOZ_OVERRIDE;
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
 #ifdef DEBUG_FRAME_DUMP
