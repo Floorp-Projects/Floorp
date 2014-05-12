@@ -117,7 +117,7 @@ nsSimplePageSequenceFrame::SetDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
                                  nscoord(aHeight * PresContext()->GetPrintPreviewScale()));
 }
 
-void
+nsresult
 nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredSize,
                                   const nsHTMLReflowState& aReflowState,
@@ -138,7 +138,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
     SetDesiredSize(aDesiredSize, aReflowState, mSize.width, mSize.height);
     aDesiredSize.SetOverflowAreasToDesiredBounds();
     FinishAndStoreOverflow(&aDesiredSize);
-    return;
+    return NS_OK;
   }
 
   // See if we can get a Print Settings from the Context
@@ -266,12 +266,11 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   // Create current Date/Time String
-  if (!mDateFormatter) {
+  if (!mDateFormatter)
     mDateFormatter = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID);
-  }
-  if (!mDateFormatter) {
-    return;
-  }
+
+  NS_ENSURE_TRUE(mDateFormatter, NS_ERROR_FAILURE);
+
   nsAutoString formattedDateString;
   time_t ltime;
   time( &ltime );
@@ -298,6 +297,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
   NS_FRAME_TRACE_REFLOW_OUT("nsSimplePageSequeceFrame::Reflow", aStatus);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

@@ -27,7 +27,7 @@ public:
     return TransmitAutomaticDataForMrowLikeElement();
   }
 
-  virtual void
+  virtual nsresult
   Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,

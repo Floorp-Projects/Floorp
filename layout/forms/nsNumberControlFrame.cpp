@@ -99,7 +99,7 @@ nsNumberControlFrame::GetPrefWidth(nsRenderingContext* aRenderingContext)
   return result;
 }
 
-void
+nsresult
 nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
                              nsHTMLReflowMetrics& aDesiredSize,
                              const nsHTMLReflowState& aReflowState,
@@ -150,8 +150,10 @@ nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
                         wrapperReflowState.ComputedPhysicalMargin().top;
 
     nsReflowStatus childStatus;
-    ReflowChild(outerWrapperFrame, aPresContext, wrappersDesiredSize,
-                wrapperReflowState, xoffset, yoffset, 0, childStatus);
+    nsresult rv = ReflowChild(outerWrapperFrame, aPresContext,
+                              wrappersDesiredSize, wrapperReflowState,
+                              xoffset, yoffset, 0, childStatus);
+    NS_ENSURE_SUCCESS(rv, rv);
     MOZ_ASSERT(NS_FRAME_IS_FULLY_COMPLETE(childStatus),
                "We gave our child unconstrained height, so it should be complete");
 
@@ -179,8 +181,10 @@ nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
     yoffset += std::max(0, extraSpace / 2);
 
     // Place the child
-    FinishReflowChild(outerWrapperFrame, aPresContext, wrappersDesiredSize,
-                      &wrapperReflowState, xoffset, yoffset, 0);
+    rv = FinishReflowChild(outerWrapperFrame, aPresContext,
+                           wrappersDesiredSize, &wrapperReflowState,
+                           xoffset, yoffset, 0);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     aDesiredSize.SetTopAscent(wrappersDesiredSize.TopAscent() +
                               outerWrapperFrame->GetPosition().y);
@@ -202,6 +206,8 @@ nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+
+  return NS_OK;
 }
 
 void

@@ -827,7 +827,7 @@ nsMathMLContainerFrame::UpdateOverflow()
   return false;
 }
 
-void
+nsresult 
 nsMathMLContainerFrame::ReflowChild(nsIFrame*                aChildFrame,
                                     nsPresContext*           aPresContext,
                                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -849,9 +849,12 @@ nsMathMLContainerFrame::ReflowChild(nsIFrame*                aChildFrame,
   NS_ASSERTION(!inlineFrame, "Inline frames should be wrapped in blocks");
 #endif
   
-  nsContainerFrame::
+  nsresult rv = nsContainerFrame::
          ReflowChild(aChildFrame, aPresContext, aDesiredSize, aReflowState,
                      0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
+
+  if (NS_FAILED(rv))
+    return rv;
 
   if (aDesiredSize.TopAscent() == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
     // This will be suitable for inline frames, which are wrapped in a block.
@@ -875,9 +878,10 @@ nsMathMLContainerFrame::ReflowChild(nsIFrame*                aChildFrame,
     aDesiredSize.mBoundingMetrics.descent = r.YMost() - aDesiredSize.TopAscent();
     aDesiredSize.mBoundingMetrics.width = aDesiredSize.Width();
   }
+  return rv;
 }
 
-void
+nsresult
 nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
@@ -899,9 +903,15 @@ nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
                                          aDesiredSize.mFlags);
     nsHTMLReflowState childReflowState(aPresContext, aReflowState,
                                        childFrame, availSize);
-    ReflowChild(childFrame, aPresContext, childDesiredSize,
-                childReflowState, childStatus);
+    nsresult rv = ReflowChild(childFrame, aPresContext, childDesiredSize,
+                              childReflowState, childStatus);
     //NS_ASSERTION(NS_FRAME_IS_COMPLETE(childStatus), "bad status");
+    if (NS_FAILED(rv)) {
+      // Call DidReflow() for the child frames we successfully did reflow.
+      DidReflowChildren(mFrames.FirstChild(), childFrame);
+      return rv;
+    }
+
     SaveReflowAndBoundingMetricsFor(childFrame, childDesiredSize,
                                     childDesiredSize.mBoundingMetrics);
     childFrame = childFrame->GetNextSibling();
@@ -958,6 +968,7 @@ nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  return NS_OK;
 }
 
 static nscoord AddInterFrameSpacingToSize(nsHTMLReflowMetrics&    aDesiredSize,

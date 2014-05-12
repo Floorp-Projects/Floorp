@@ -550,15 +550,16 @@ nsBoxFrame::GetInitialAutoStretch(bool& aStretch)
   return true;
 }
 
-void
+nsresult
 nsBoxFrame::DidReflow(nsPresContext*           aPresContext,
                       const nsHTMLReflowState*  aReflowState,
                       nsDidReflowStatus         aStatus)
 {
   nsFrameState preserveBits =
     mState & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
-  nsFrame::DidReflow(aPresContext, aReflowState, aStatus);
+  nsresult rv = nsFrame::DidReflow(aPresContext, aReflowState, aStatus);
   mState |= preserveBits;
+  return rv;
 }
 
 bool
@@ -625,7 +626,7 @@ nsBoxFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
   return result;
 }
 
-void
+nsresult
 nsBoxFrame::Reflow(nsPresContext*          aPresContext,
                    nsHTMLReflowMetrics&     aDesiredSize,
                    const nsHTMLReflowState& aReflowState,
@@ -735,6 +736,7 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
   ReflowAbsoluteFrames(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  return NS_OK;
 }
 
 nsSize

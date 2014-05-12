@@ -190,15 +190,15 @@ public:
    * NS_FRAME_NO_MOVE_FRAME - don't move the frame. aX and aY are ignored in this
    *    case. Also implies NS_FRAME_NO_MOVE_VIEW
    */
-  void ReflowChild(nsIFrame*                      aKidFrame,
-                   nsPresContext*                 aPresContext,
-                   nsHTMLReflowMetrics&           aDesiredSize,
-                   const nsHTMLReflowState&       aReflowState,
-                   nscoord                        aX,
-                   nscoord                        aY,
-                   uint32_t                       aFlags,
-                   nsReflowStatus&                aStatus,
-                   nsOverflowContinuationTracker* aTracker = nullptr);
+  nsresult ReflowChild(nsIFrame*                      aKidFrame,
+                       nsPresContext*                 aPresContext,
+                       nsHTMLReflowMetrics&           aDesiredSize,
+                       const nsHTMLReflowState&       aReflowState,
+                       nscoord                        aX,
+                       nscoord                        aY,
+                       uint32_t                       aFlags,
+                       nsReflowStatus&                aStatus,
+                       nsOverflowContinuationTracker* aTracker = nullptr);
 
   /**
    * The second half of frame reflow. Does the following:
@@ -217,13 +217,13 @@ public:
    *    don't want to automatically sync the frame and view
    * NS_FRAME_NO_SIZE_VIEW - don't size the frame's view
    */
-  static void FinishReflowChild(nsIFrame*                  aKidFrame,
-                                nsPresContext*             aPresContext,
-                                const nsHTMLReflowMetrics& aDesiredSize,
-                                const nsHTMLReflowState*   aReflowState,
-                                nscoord                    aX,
-                                nscoord                    aY,
-                                uint32_t                   aFlags);
+  static nsresult FinishReflowChild(nsIFrame*                  aKidFrame,
+                                    nsPresContext*             aPresContext,
+                                    const nsHTMLReflowMetrics& aDesiredSize,
+                                    const nsHTMLReflowState*   aReflowState,
+                                    nscoord                    aX,
+                                    nscoord                    aY,
+                                    uint32_t                   aFlags);
 
   
   static void PositionChildViews(nsIFrame* aFrame);
@@ -291,11 +291,11 @@ public:
    *
    * (aFlags just gets passed through to ReflowChild)
    */
-  void ReflowOverflowContainerChildren(nsPresContext*           aPresContext,
-                                       const nsHTMLReflowState& aReflowState,
-                                       nsOverflowAreas&         aOverflowRects,
-                                       uint32_t                 aFlags,
-                                       nsReflowStatus&          aStatus);
+  nsresult ReflowOverflowContainerChildren(nsPresContext*           aPresContext,
+                                           const nsHTMLReflowState& aReflowState,
+                                           nsOverflowAreas&         aOverflowRects,
+                                           uint32_t                 aFlags,
+                                           nsReflowStatus&          aStatus);
 
   /**
    * Move any frames on our overflow list to the end of our principal list.

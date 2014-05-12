@@ -1653,7 +1653,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
   }
 }
 
-void
+nsresult
 nsBulletFrame::Reflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aMetrics,
                       const nsHTMLReflowState& aReflowState,
@@ -1694,6 +1694,7 @@ nsBulletFrame::Reflow(nsPresContext* aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
+  return NS_OK;
 }
 
 /* virtual */ nscoord

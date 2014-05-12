@@ -151,7 +151,7 @@ nsSelectsAreaFrame::BuildDisplayListInternal(nsDisplayListBuilder*   aBuilder,
   }
 }
 
-void
+nsresult 
 nsSelectsAreaFrame::Reflow(nsPresContext*           aPresContext, 
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState, 
@@ -177,7 +177,9 @@ nsSelectsAreaFrame::Reflow(nsPresContext*           aPresContext,
     }
   }
   
-  nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  nsresult rv = nsBlockFrame::Reflow(aPresContext, aDesiredSize,
+                                    aReflowState, aStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Check whether we need to suppress scrollbar updates.  We want to do that if
   // we're in a possible first pass and our height of a row has changed.
@@ -193,4 +195,6 @@ nsSelectsAreaFrame::Reflow(nsPresContext*           aPresContext,
       list->SetSuppressScrollbarUpdate(true);
     }
   }
+
+  return rv;
 }

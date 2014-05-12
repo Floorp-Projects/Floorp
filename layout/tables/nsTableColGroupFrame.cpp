@@ -358,8 +358,7 @@ nsTableColGroupFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState)
   return skip;
 }
 
-void
-nsTableColGroupFrame::Reflow(nsPresContext*          aPresContext,
+nsresult nsTableColGroupFrame::Reflow(nsPresContext*          aPresContext,
                                        nsHTMLReflowMetrics&     aDesiredSize,
                                        const nsHTMLReflowState& aReflowState,
                                        nsReflowStatus&          aStatus)
@@ -367,6 +366,7 @@ nsTableColGroupFrame::Reflow(nsPresContext*          aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsTableColGroupFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   NS_ASSERTION(nullptr!=mContent, "bad state -- null content for frame");
+  nsresult rv=NS_OK;
   
   const nsStyleVisibility* groupVis = StyleVisibility();
   bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
@@ -393,6 +393,7 @@ nsTableColGroupFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.Height() = 0;
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  return rv;
 }
 
 nsTableColFrame * nsTableColGroupFrame::GetFirstColumn()
