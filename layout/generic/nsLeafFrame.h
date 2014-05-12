@@ -59,10 +59,10 @@ public:
   /**
    * This method does most of the work that Reflow() above need done.
    */
-  virtual nsresult DoReflow(nsPresContext*      aPresContext,
-                            nsHTMLReflowMetrics& aDesiredSize,
-                            const nsHTMLReflowState& aReflowState,
-                            nsReflowStatus&      aStatus);
+  virtual void DoReflow(nsPresContext*      aPresContext,
+                        nsHTMLReflowMetrics& aDesiredSize,
+                        const nsHTMLReflowState& aReflowState,
+                        nsReflowStatus&      aStatus);
 
   virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
   {
