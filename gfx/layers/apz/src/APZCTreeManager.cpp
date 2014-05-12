@@ -747,7 +747,7 @@ APZCTreeManager::DispatchScroll(AsyncPanZoomController* aPrev, ScreenPoint aStar
   return next->AttemptScroll(aStartPoint, aEndPoint, aOverscrollHandoffChainIndex);
 }
 
-void
+bool
 APZCTreeManager::HandOffFling(AsyncPanZoomController* aPrev, ScreenPoint aVelocity)
 {
   // Build the overscroll handoff chain. This is necessary because it is
@@ -786,7 +786,7 @@ APZCTreeManager::HandOffFling(AsyncPanZoomController* aPrev, ScreenPoint aVeloci
 
   // Nothing to hand off fling to.
   if (next == nullptr) {
-    return;
+    return false;
   }
 
   // The fling's velocity needs to be transformed from the screen coordinates
@@ -802,7 +802,7 @@ APZCTreeManager::HandOffFling(AsyncPanZoomController* aPrev, ScreenPoint aVeloci
   ScreenPoint transformedVelocity = endPoint - startPoint;
 
   // Tell |next| to start a fling with the transformed velocity.
-  next->TakeOverFling(transformedVelocity);
+  return next->TakeOverFling(transformedVelocity);
 }
 
 bool
