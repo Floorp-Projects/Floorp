@@ -54,6 +54,7 @@ PARALLEL_DIRS += [
     'filesystem',
     'fmradio',
     'asmjscache',
+    'mathml',
     'media',
     'messages',
     'power',
