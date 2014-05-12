@@ -6337,9 +6337,6 @@ IonBuilder::pushDOMTypeBarrier(MInstruction *ins, types::TemporaryTypeSet *obser
     MDefinition* replace = ins;
     if (jitinfo->returnType() != JSVAL_TYPE_DOUBLE ||
         observed->getKnownMIRType() != MIRType_Int32) {
-        JS_ASSERT(jitinfo->returnType() == JSVAL_TYPE_UNKNOWN ||
-                  observed->getKnownMIRType() == MIRType_Value ||
-                  MIRTypeFromValueType(jitinfo->returnType()) == observed->getKnownMIRType());
         replace = ensureDefiniteType(ins, MIRTypeFromValueType(jitinfo->returnType()));
         if (replace != ins) {
             current->pop();
