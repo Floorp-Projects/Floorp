@@ -62,6 +62,11 @@ class AtomicRefCountedWithFinalize
     }
     void ClearRecycleCallback() { SetRecycleCallback(nullptr, nullptr); }
 
+    bool HasRecycleCallback() const
+    {
+      return !!mRecycleCallback;
+    }
+
 private:
     RecycleCallback mRecycleCallback;
     void *mClosure;
