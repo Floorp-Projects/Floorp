@@ -23,7 +23,6 @@ add_test(function test_setCallWaiting_success() {
   let postedMessage = workerHelper.postedMessage;
 
   equal(postedMessage.errorMsg, undefined);
-  ok(postedMessage.success);
 
   run_next_test();
 });
@@ -46,7 +45,6 @@ add_test(function test_setCallWaiting_generic_failure() {
   let postedMessage = workerHelper.postedMessage;
 
   equal(postedMessage.errorMsg, GECKO_ERROR_GENERIC_FAILURE);
-  ok(!postedMessage.success);
 
   run_next_test();
 });
@@ -74,7 +72,6 @@ add_test(function test_queryCallWaiting_success_enabled_true() {
   let postedMessage = workerHelper.postedMessage;
 
   equal(postedMessage.errorMsg, undefined);
-  ok(postedMessage.success);
   equal(postedMessage.length, 1);
   ok(postedMessage.enabled);
   run_next_test();
@@ -103,7 +100,6 @@ add_test(function test_queryCallWaiting_success_enabled_false() {
   let postedMessage = workerHelper.postedMessage;
 
   equal(postedMessage.errorMsg, undefined);
-  ok(postedMessage.success);
   equal(postedMessage.length, 1);
   ok(!postedMessage.enabled);
   run_next_test();
