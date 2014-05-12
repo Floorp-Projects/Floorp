@@ -123,6 +123,7 @@ interface WindowEventHandlers {
            attribute EventHandler onbeforeprint;
            attribute OnBeforeUnloadEventHandler onbeforeunload;
            attribute EventHandler onhashchange;
+           attribute EventHandler onlanguagechange;
            attribute EventHandler onmessage;
            attribute EventHandler onoffline;
            attribute EventHandler ononline;
