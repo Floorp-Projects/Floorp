@@ -1222,7 +1222,7 @@ const char* gfxFontUtils::gMSFontNameCharsets[] =
     /* [3] ENCODING_ID_MICROSOFT_PRC */         nullptr      ,
     /* [4] ENCODING_ID_MICROSOFT_BIG5 */        "Big5"      ,
     /* [5] ENCODING_ID_MICROSOFT_WANSUNG */     nullptr      ,
-    /* [6] ENCODING_ID_MICROSOFT_JOHAB */       "x-johab"   ,
+    /* [6] ENCODING_ID_MICROSOFT_JOHAB */       nullptr      ,
     /* [7] reserved */                          nullptr      ,
     /* [8] reserved */                          nullptr      ,
     /* [9] reserved */                          nullptr      ,
