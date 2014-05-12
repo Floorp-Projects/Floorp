@@ -4267,7 +4267,7 @@ nsFrame::ShrinkWidthToFit(nsRenderingContext *aRenderingContext,
   return result;
 }
 
-nsresult
+void
 nsFrame::WillReflow(nsPresContext* aPresContext)
 {
 #ifdef DEBUG_dbaron_off
@@ -4279,7 +4279,6 @@ nsFrame::WillReflow(nsPresContext* aPresContext)
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
                      ("WillReflow: oldState=%x", mState));
   mState |= NS_FRAME_IN_REFLOW;
-  return NS_OK;
 }
 
 void
