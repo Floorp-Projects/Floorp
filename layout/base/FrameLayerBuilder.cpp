@@ -3112,7 +3112,9 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
     // Set any matrix entries close to integers to be those exact integers.
     // This protects against floating-point inaccuracies causing problems
     // in the checks below.
-    transform.NudgeToIntegers();
+    // We use the fixed epsilon version here because we don't want the nudging
+    // to depend on the scroll position.
+    transform.NudgeToIntegersFixedEpsilon();
   }
   gfxMatrix transform2d;
   if (aContainerFrame &&

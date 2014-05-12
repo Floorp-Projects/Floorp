@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>Different epsilons in NudeToInteger and FuzzyEqual cause invalidations</title>
+
+<body>
+
+<svg viewBox="0 0 700 3000" width="700px" height="3000px">
+    <g transform="translate(0, -220.999756)">
+      <rect x="100" y="400" height="50" width="50" fill="grey" class="reftest-no-paint"/>
+    </g>
+</svg>
+
+<script>
+
+var scrollPositions = [0, 50];
+if (location.search.contains("reverse")) {
+  scrollPositions.reverse();
+}
+document.documentElement.scrollTop = scrollPositions[0];
+
+function doTest() {
+  document.documentElement.scrollTop = scrollPositions[1];
+  document.documentElement.removeAttribute("class");
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+
+</script>
