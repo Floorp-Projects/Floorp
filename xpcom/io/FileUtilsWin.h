@@ -80,15 +80,22 @@ NtPathToDosPath(const nsAString& aNtPath, nsAString& aDosPath)
     // Advance to the next NUL character in logicalDrives
     while (*cur++);
   } while (cur != end);
-  // Code for handling UNC paths would go here, if eventually required.
-#if defined(DEBUG)
+  // Try to handle UNC paths. NB: This must happen after we've checked drive
+  // mappings in case a UNC path is mapped to a drive!
+  NS_NAMED_LITERAL_STRING(uncPrefix, "\\\\");
   NS_NAMED_LITERAL_STRING(deviceMupPrefix, "\\Device\\Mup\\");
-  uint32_t deviceMupPrefixLen = deviceMupPrefix.Length();
-  if (ntPathLen >= deviceMupPrefixLen &&
-      Substring(aNtPath, 0, deviceMupPrefixLen).Equals(deviceMupPrefix)) {
-    NS_WARNING("UNC paths not yet supported in NtPathToDosPath");
+  if (StringBeginsWith(aNtPath, deviceMupPrefix)) {
+    aDosPath = uncPrefix;
+    aDosPath += Substring(aNtPath, deviceMupPrefix.Length());
+    return true;
   }
-#endif // defined(DEBUG)
+  NS_NAMED_LITERAL_STRING(deviceLanmanRedirectorPrefix,
+                          "\\Device\\LanmanRedirector\\");
+  if (StringBeginsWith(aNtPath, deviceLanmanRedirectorPrefix)) {
+    aDosPath = uncPrefix;
+    aDosPath += Substring(aNtPath, deviceLanmanRedirectorPrefix.Length());
+    return true;
+  }
   return false;
 }
 
