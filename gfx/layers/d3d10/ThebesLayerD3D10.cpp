@@ -404,6 +404,8 @@ ThebesLayerD3D10::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode)
     return;
   }
 
+  aRegion.SimplifyOutwardByArea(100 * 100);
+
   nsRefPtr<gfxASurface> destinationSurface;
   
   if (aMode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
@@ -411,8 +413,6 @@ ThebesLayerD3D10::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode)
   } else {
     destinationSurface = mD2DSurface;
   }
-
-  aRegion.SimplifyOutwardByArea(100 * 100);
 
   MOZ_ASSERT(mDrawTarget);
   nsRefPtr<gfxContext> context = new gfxContext(mDrawTarget);
