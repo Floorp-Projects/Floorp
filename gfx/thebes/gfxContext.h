@@ -657,6 +657,8 @@ public:
     gfxRect GetUserFillExtent();
     gfxRect GetUserStrokeExtent();
 
+    mozilla::gfx::Point GetDeviceOffset() const;
+
     /**
      ** Flags
      **/
