@@ -783,7 +783,7 @@ TelephonyService.prototype = {
   _dialCdmaThreeWayCall: function(aClientId, aNumber, aCallback) {
     this._sendToRilWorker(aClientId, "cdmaFlash", { featureStr: aNumber },
                           response => {
-      if (!response.success) {
+      if (response.errorMsg) {
         aCallback.notifyError(response.errorMsg);
         return;
       }
@@ -824,7 +824,7 @@ TelephonyService.prototype = {
     this._sendToRilWorker(aClientId, "dial", aOptions, response => {
       this._isDialing = false;
 
-      if (!response.success) {
+      if (response.errorMsg) {
         this._sendToRilWorker(aClientId, "getFailCause", null, response => {
           aCallback.notifyError(response.failCause);
         });
@@ -857,7 +857,7 @@ TelephonyService.prototype = {
                           { mmi: aMmi }, response => {
       if (DEBUG) debug("MMI response: " + JSON.stringify(response));
 
-      if (!response.success) {
+      if (response.errorMsg) {
         if (response.additionalInformation != null) {
           aCallback.notifyDialMMIErrorWithInfo(response.errorMsg,
                                                response.additionalInformation);
@@ -973,7 +973,7 @@ TelephonyService.prototype = {
    *        The response from ril_worker.
    */
   _defaultCallbackHandler: function(aCallback, aResponse) {
-    if (!aResponse.success) {
+    if (aResponse.errorMsg) {
       aCallback.notifyError(aResponse.errorMsg);
     } else {
       aCallback.notifySuccess();
@@ -1080,7 +1080,7 @@ TelephonyService.prototype = {
     let tones = aDtmfChars;
     let playTone = (tone) => {
       this._sendToRilWorker(aClientId, "startTone", { dtmfChar: tone }, response => {
-        if (!response.success) {
+        if (response.errorMsg) {
           aCallback.notifyError(response.errorMsg);
           return;
         }
@@ -1242,7 +1242,7 @@ TelephonyService.prototype = {
 
   _conferenceCallGsm: function(aClientId, aCallback) {
     this._sendToRilWorker(aClientId, "conferenceCall", null, response => {
-      if (!response.success) {
+      if (response.errorMsg) {
         aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
         // TODO: Bug 1124993. Deprecate it. Use callback response is enough.
         this._notifyAllListeners("notifyConferenceError",
@@ -1264,7 +1264,7 @@ TelephonyService.prototype = {
     }
 
     this._sendToRilWorker(aClientId, "cdmaFlash", null, response => {
-      if (!response.success) {
+      if (response.errorMsg) {
         aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
         // TODO: Bug 1124993. Deprecate it. Use callback response is enough.
         this._notifyAllListeners("notifyConferenceError",
@@ -1302,7 +1302,7 @@ TelephonyService.prototype = {
   _separateCallGsm: function(aClientId, aCallIndex, aCallback) {
     this._sendToRilWorker(aClientId, "separateCall", { callIndex: aCallIndex },
                           response => {
-      if (!response.success) {
+      if (response.errorMsg) {
         aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
         // TODO: Bug 1124993. Deprecate it. Use callback response is enough.
         this._notifyAllListeners("notifyConferenceError",
@@ -1332,7 +1332,7 @@ TelephonyService.prototype = {
   // controlling subscriber and the second party. Go to the 2-way state.
   _separateCallCdma: function(aClientId, aCallIndex, aCallback) {
     this._sendToRilWorker(aClientId, "cdmaFlash", null, response => {
-      if (!response.success) {
+      if (response.errorMsg) {
         aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
         // TODO: Bug 1124993. Deprecate it. Use callback response is enough.
         this._notifyAllListeners("notifyConferenceError",
