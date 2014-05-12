@@ -340,7 +340,8 @@ private:
 };
 
 bool
-CheckJSCall(JNIEnv* env, bool result) {
+CheckJSCall(JNIEnv* env, bool result)
+{
     if (!result) {
         AndroidBridge::ThrowException(env,
             "java/lang/UnsupportedOperationException", "JSAPI call failed");
@@ -349,7 +350,8 @@ CheckJSCall(JNIEnv* env, bool result) {
 }
 
 bool
-CheckJNIArgument(JNIEnv* env, jobject arg) {
+CheckJNIArgument(JNIEnv* env, jobject arg)
+{
     if (!arg) {
         AndroidBridge::ThrowException(env,
             "java/lang/IllegalArgumentException", "Null argument");
@@ -478,12 +480,17 @@ template <class Property>
 typename Property::Type
 GetProperty(JNIEnv* env, jobject instance, jstring name,
             FallbackOption option = FallbackOption::THROW,
-            typename Property::Type fallback = typename Property::Type()) {
+            typename Property::Type fallback = typename Property::Type())
+{
     MOZ_ASSERT(env);
     MOZ_ASSERT(instance);
 
     JSContext* const cx =
         NativeJSContainer::GetContextFromObject(env, instance);
+    if (!cx) {
+        return typename Property::Type();
+    }
+
     const JS::RootedObject object(cx,
         NativeJSContainer::GetObjectFromObject(env, instance));
     const JSJNIString strName(env, name);
@@ -694,6 +701,10 @@ Java_org_mozilla_gecko_util_NativeJSObject_toBundle(JNIEnv* env, jobject instanc
     MOZ_ASSERT(instance);
 
     JSContext* const cx = NativeJSContainer::GetContextFromObject(env, instance);
+    if (!cx) {
+        return nullptr;
+    }
+
     const JS::RootedObject object(cx, NativeJSContainer::GetObjectFromObject(env, instance));
     if (!object) {
         return nullptr;
@@ -708,6 +719,10 @@ Java_org_mozilla_gecko_util_NativeJSObject_toString(JNIEnv* env, jobject instanc
     MOZ_ASSERT(instance);
 
     JSContext* const cx = NativeJSContainer::GetContextFromObject(env, instance);
+    if (!cx) {
+        return nullptr;
+    }
+
     const JS::RootedObject object(cx, NativeJSContainer::GetObjectFromObject(env, instance));
     JS::RootedValue value(cx, JS::ObjectValue(*object));
     nsAutoString json;
