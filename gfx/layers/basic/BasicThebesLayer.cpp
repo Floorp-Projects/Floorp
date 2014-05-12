@@ -125,7 +125,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
   AutoMoz2DMaskData mask;
   SourceSurface* maskSurface = nullptr;
   Matrix maskTransform;
-  if (GetMaskData(aMaskLayer, &mask)) {
+  if (GetMaskData(aMaskLayer, Point(), &mask)) {
     maskSurface = mask.GetSurface();
     maskTransform = mask.GetTransform();
   }
