@@ -181,8 +181,8 @@ ProcessOrientation::OnSensorChanged(const SensorData& event,
   // Reset the orientation listener state if the samples are too far apart in
   // time or when we see values of (0, 0, 0) which indicates that we polled the
   // accelerometer too soon after turning it on and we don't have any data yet.
-  const long now = event.timestamp();
-  const long then = mLastFilteredTimestampNanos;
+  const int64_t now = (int64_t) event.timestamp();
+  const int64_t then = mLastFilteredTimestampNanos;
   const float timeDeltaMS = (now - then) * 0.000001f;
   bool skipSample = false;
   if (now < then
@@ -388,7 +388,7 @@ ProcessOrientation::IsOrientationAngleAcceptable(int rotation,
 }
 
 bool
-ProcessOrientation::IsPredictedRotationAcceptable(long now)
+ProcessOrientation::IsPredictedRotationAcceptable(int64_t now)
 {
   // The predicted rotation must have settled long enough.
   if (now < mPredictedRotationTimestampNanos + PROPOSAL_SETTLE_TIME_NANOS) {
@@ -416,11 +416,11 @@ ProcessOrientation::IsPredictedRotationAcceptable(long now)
 int
 ProcessOrientation::Reset()
 {
-  mLastFilteredTimestampNanos = LONG_MIN;
+  mLastFilteredTimestampNanos = std::numeric_limits<int64_t>::min();
   mProposedRotation = -1;
-  mFlatTimestampNanos = LONG_MIN;
-  mSwingTimestampNanos = LONG_MIN;
-  mAccelerationTimestampNanos = LONG_MIN;
+  mFlatTimestampNanos = std::numeric_limits<int64_t>::min();
+  mSwingTimestampNanos = std::numeric_limits<int64_t>::min();
+  mAccelerationTimestampNanos = std::numeric_limits<int64_t>::min();
   ClearPredictedRotation();
   ClearTiltHistory();
   return -1;
@@ -430,11 +430,11 @@ void
 ProcessOrientation::ClearPredictedRotation()
 {
   mPredictedRotation = -1;
-  mPredictedRotationTimestampNanos = LONG_MIN;
+  mPredictedRotationTimestampNanos = std::numeric_limits<int64_t>::min();
 }
 
 void
-ProcessOrientation::UpdatePredictedRotation(long now, int rotation)
+ProcessOrientation::UpdatePredictedRotation(int64_t now, int rotation)
 {
   if (mPredictedRotation != rotation) {
     mPredictedRotation = rotation;
@@ -452,21 +452,21 @@ ProcessOrientation::IsAccelerating(float magnitude)
 void
 ProcessOrientation::ClearTiltHistory()
 {
-  mTiltHistory.history[0].timestampNanos = LONG_MIN;
+  mTiltHistory.history[0].timestampNanos = std::numeric_limits<int64_t>::min();
   mTiltHistory.index = 1;
 }
 
 void
-ProcessOrientation::AddTiltHistoryEntry(long now, float tilt)
+ProcessOrientation::AddTiltHistoryEntry(int64_t now, float tilt)
 {
   mTiltHistory.history[mTiltHistory.index].tiltAngle = tilt;
   mTiltHistory.history[mTiltHistory.index].timestampNanos = now;
   mTiltHistory.index = (mTiltHistory.index + 1) % TILT_HISTORY_SIZE;
-  mTiltHistory.history[mTiltHistory.index].timestampNanos = LONG_MIN;
+  mTiltHistory.history[mTiltHistory.index].timestampNanos = std::numeric_limits<int64_t>::min();
 }
 
 bool
-ProcessOrientation::IsFlat(long now)
+ProcessOrientation::IsFlat(int64_t now)
 {
   for (int i = mTiltHistory.index; (i = NextTiltHistoryIndex(i)) >= 0;) {
     if (mTiltHistory.history[i].tiltAngle < FLAT_ANGLE) {
@@ -481,7 +481,7 @@ ProcessOrientation::IsFlat(long now)
 }
 
 bool
-ProcessOrientation::IsSwinging(long now, float tilt)
+ProcessOrientation::IsSwinging(int64_t now, float tilt)
 {
   for (int i = mTiltHistory.index; (i = NextTiltHistoryIndex(i)) >= 0;) {
     if (mTiltHistory.history[i].timestampNanos + SWING_TIME_NANOS < now) {
@@ -499,11 +499,11 @@ int
 ProcessOrientation::NextTiltHistoryIndex(int index)
 {
   index = (index == 0 ? TILT_HISTORY_SIZE : index) - 1;
-  return mTiltHistory.history[index].timestampNanos != LONG_MIN ? index : -1;
+  return mTiltHistory.history[index].timestampNanos != std::numeric_limits<int64_t>::min() ? index : -1;
 }
 
 float
-ProcessOrientation::RemainingMS(long now, long until)
+ProcessOrientation::RemainingMS(int64_t now, int64_t until)
 {
   return now >= until ? 0 : (until - now) * 0.000001f;
 }
