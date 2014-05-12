@@ -120,6 +120,8 @@ enum nsEventStructType
 // HiDPI mode.
 #define NS_PLUGIN_RESOLUTION_CHANGED     (NS_WINDOW_START + 69)
 
+#define NS_LANGUAGECHANGE                (NS_WINDOW_START + 70)
+
 #define NS_MOUSE_MESSAGE_START          300
 #define NS_MOUSE_MOVE                   (NS_MOUSE_MESSAGE_START)
 #define NS_MOUSE_BUTTON_UP              (NS_MOUSE_MESSAGE_START + 1)
