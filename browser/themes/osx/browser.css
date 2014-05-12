@@ -4430,3 +4430,10 @@ window > chatbox {
     width: 16px;
   }
 }
+
+%include ../shared/contextmenu.inc.css
+
+#context-navigation > .menuitem-iconic {
+  padding-left: 0;
+  padding-right: 0;
+}
