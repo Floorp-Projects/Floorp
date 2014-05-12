@@ -27,6 +27,7 @@
 #include <binder/IInterface.h>
 #include <ui/Rect.h>
 
+#include "mozilla/Types.h"
 #include "mozilla/layers/LayersSurfaces.h"
 
 namespace mozilla {
@@ -39,9 +40,9 @@ class TextureClient;
 namespace android {
 // ----------------------------------------------------------------------------
 
-class IConsumerListener;
-class GraphicBuffer;
-class Fence;
+class MOZ_EXPORT IConsumerListener;
+class MOZ_EXPORT GraphicBuffer;
+class MOZ_EXPORT Fence;
 
 class IGonkGraphicBufferConsumer : public IInterface {
     typedef mozilla::layers::TextureClient TextureClient;
