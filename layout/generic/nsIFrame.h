@@ -1820,7 +1820,7 @@ public:
    * XXX Is this really the semantics we want? Because we have the NS_FRAME_IN_REFLOW
    * bit we can ensure we don't call it more than once...
    */
-  virtual nsresult  WillReflow(nsPresContext* aPresContext) = 0;
+  virtual void WillReflow(nsPresContext* aPresContext) = 0;
 
   /**
    * The frame is given an available size and asked for its desired
