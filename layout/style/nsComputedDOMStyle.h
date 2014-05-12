@@ -12,7 +12,6 @@
 #include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nscore.h"
-#include "nsCSSProperty.h"
 #include "nsCSSProps.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsStyleContext.h"

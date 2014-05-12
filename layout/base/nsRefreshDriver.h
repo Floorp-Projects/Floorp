@@ -21,6 +21,7 @@
 #include "nsHashKeys.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
+#include "GeckoProfiler.h"
 
 class nsPresContext;
 class nsIPresShell;
@@ -151,8 +152,16 @@ public:
   bool AddStyleFlushObserver(nsIPresShell* aShell) {
     NS_ASSERTION(!mStyleFlushObservers.Contains(aShell),
 		 "Double-adding style flush observer");
+    // We only get the cause for the first observer each frame because capturing
+    // a stack is expensive. This is still useful if (1) you're trying to remove
+    // all flushes for a particial frame or (2) the costly flush is triggered
+    // near the call site where the first observer is triggered.
+    if (!mStyleCause) {
+      mStyleCause = profiler_get_backtrace();
+    }
     bool appended = mStyleFlushObservers.AppendElement(aShell) != nullptr;
     EnsureTimerStarted(false);
+
     return appended;
   }
   void RemoveStyleFlushObserver(nsIPresShell* aShell) {
@@ -161,6 +170,13 @@ public:
   bool AddLayoutFlushObserver(nsIPresShell* aShell) {
     NS_ASSERTION(!IsLayoutFlushObserver(aShell),
 		 "Double-adding layout flush observer");
+    // We only get the cause for the first observer each frame because capturing
+    // a stack is expensive. This is still useful if (1) you're trying to remove
+    // all flushes for a particial frame or (2) the costly flush is triggered
+    // near the call site where the first observer is triggered.
+    if (!mReflowCause) {
+      mReflowCause = profiler_get_backtrace();
+    }
     bool appended = mLayoutFlushObservers.AppendElement(aShell) != nullptr;
     EnsureTimerStarted(false);
     return appended;
@@ -300,6 +316,9 @@ private:
 
   mozilla::RefreshDriverTimer* ChooseTimer() const;
   mozilla::RefreshDriverTimer *mActiveTimer;
+
+  ProfilerBacktrace* mReflowCause;
+  ProfilerBacktrace* mStyleCause;
 
   nsPresContext *mPresContext; // weak; pres context passed in constructor
                                // and unset in Disconnect

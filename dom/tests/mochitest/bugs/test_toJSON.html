@@ -22,6 +22,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=760851
   // get tested as well.
   var toTest = [window.performance];
 
+  // The event handler has to be initialized or else jsonObj will be undefined
+  window.performance.onresourcetimingbufferfull = function() {};
+
   function checkAttributesMatch(obj, jsonObj) {
     if (typeof(obj) !== "object") {
       throw "Expected obj to be of type \"object\". Test failed.";

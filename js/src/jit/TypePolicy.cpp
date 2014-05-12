@@ -296,7 +296,7 @@ TypeBarrierPolicy::adjustInputs(TempAllocator &alloc, MInstruction *def)
         // We can't unbox a value to null/undefined/lazyargs. So keep output
         // also a value.
         if (IsNullOrUndefined(outputType) || outputType == MIRType_MagicOptimizedArguments) {
-            JS_ASSERT(ins->defUseCount() == 0);
+            JS_ASSERT(!ins->hasDefUses());
             ins->setResultType(MIRType_Value);
             return true;
         }
