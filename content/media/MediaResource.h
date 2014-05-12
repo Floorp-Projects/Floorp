@@ -639,7 +639,7 @@ protected:
   nsresult OpenChannel(nsIStreamListener** aStreamListener);
   nsresult RecreateChannel();
   // Add headers to HTTP request. Main thread only.
-  void SetupChannelHeaders();
+  nsresult SetupChannelHeaders();
   // Closes the channel. Main thread only.
   void CloseChannel();
 

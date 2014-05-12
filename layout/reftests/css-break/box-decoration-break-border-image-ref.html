@@ -48,10 +48,13 @@ b1,b2,b3,b4,b5,b6,b7,b8,b9,b10,.b.clone {
 .col3 {
   -moz-columns: 3;
 }
+.unbalanced { -moz-column-fill:auto; }
 .vbreak { height:65px; width:41px; }
+.unbalanced .vbreak { height:40px; }
 .h { width:30px;height:30px; background:grey; }
 .m { margin-left:15px; }
 .col3 .vbreak { height:115px; }
+.unbalanced.col3 .vbreak { height:40px; }
 x { display:inline-block; width:31px; height:18px; line-height:1; }
 y { display:inline-block; width:47px; height:18px; line-height:1; }
 pos1 { position:absolute; top:50px; width:700px; }
@@ -122,8 +125,8 @@ c10 { top:274px; left:20px; height:300px; width:156px; }
 </pos2>
 
 <pos3>
-<div class="columns"><div class="b vbreak clone"></div><div class="b vbreak clone"></div></div>
-<div class="columns col3"><div class="b vbreak clone"></div><div class="b vbreak clone"></div><div class="b vbreak clone"></div></div>
+<div class="unbalanced columns"><div class="b vbreak clone"></div><div class="b vbreak clone" style="height:25px"></div></div>
+<div class="unbalanced columns col3"><div class="b vbreak clone"></div><div class="b vbreak clone"></div><div class="b vbreak clone" style="height:35px"></div></div>
 </pos3>
 
 <pos4>

@@ -272,6 +272,10 @@ public:
   // Notifies the cache that the channel has closed with the given status.
   void NotifyDataEnded(nsresult aStatus);
 
+  // Notifies the stream that the channel is reopened. The stream should
+  // reset variables such as |mDidNotifyDataEnded|.
+  void NotifyChannelRecreated();
+
   // These methods can be called on any thread.
   // Cached blocks associated with this stream will not be evicted
   // while the stream is pinned.

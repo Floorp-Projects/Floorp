@@ -45,6 +45,33 @@ public:
             env, jNativeJSObject, "<init>",
             "(Lorg/mozilla/gecko/util/NativeJSContainer;I)V");
         MOZ_ASSERT(jContainerConstructor);
+
+        jBundle = AndroidBridge::GetClassGlobalRef(
+            env, "android/os/Bundle");
+        MOZ_ASSERT(jBundle);
+        jBundleConstructor = AndroidBridge::GetMethodID(
+            env, jBundle, "<init>", "(I)V");
+        MOZ_ASSERT(jBundleConstructor);
+        jBundlePutBoolean = AndroidBridge::GetMethodID(
+            env, jBundle, "putBoolean",
+            "(Ljava/lang/String;Z)V");
+        MOZ_ASSERT(jBundlePutBoolean);
+        jBundlePutBundle = AndroidBridge::GetMethodID(
+            env, jBundle, "putBundle",
+            "(Ljava/lang/String;Landroid/os/Bundle;)V");
+        MOZ_ASSERT(jBundlePutBundle);
+        jBundlePutDouble = AndroidBridge::GetMethodID(
+            env, jBundle, "putDouble",
+            "(Ljava/lang/String;D)V");
+        MOZ_ASSERT(jBundlePutDouble);
+        jBundlePutInt = AndroidBridge::GetMethodID(
+            env, jBundle, "putInt",
+            "(Ljava/lang/String;I)V");
+        MOZ_ASSERT(jBundlePutInt);
+        jBundlePutString = AndroidBridge::GetMethodID(
+            env, jBundle, "putString",
+            "(Ljava/lang/String;Ljava/lang/String;)V");
+        MOZ_ASSERT(jBundlePutString);
     }
 
     static jobject CreateInstance(JNIEnv* env, JSContext* cx,
@@ -135,6 +162,7 @@ public:
     }
 
     static jobject CreateObjectInstance(JNIEnv* env, jobject object,
+                                        JSContext* cx,
                                         JS::HandleObject jsObject) {
         MOZ_ASSERT(object);
         MOZ_ASSERT(jsObject);
@@ -191,6 +219,14 @@ public:
         mBuffer.clear();
         return true;
     }
+
+    static jclass jBundle;
+    static jmethodID jBundleConstructor;
+    static jmethodID jBundlePutBoolean;
+    static jmethodID jBundlePutBundle;
+    static jmethodID jBundlePutDouble;
+    static jmethodID jBundlePutInt;
+    static jmethodID jBundlePutString;
 
 private:
     static jclass jNativeJSContainer;
@@ -256,6 +292,13 @@ jclass NativeJSContainer::jNativeJSObject = 0;
 jfieldID NativeJSContainer::jObjectContainer = 0;
 jfieldID NativeJSContainer::jObjectIndex = 0;
 jmethodID NativeJSContainer::jObjectConstructor = 0;
+jclass NativeJSContainer::jBundle = 0;
+jmethodID NativeJSContainer::jBundleConstructor = 0;
+jmethodID NativeJSContainer::jBundlePutBoolean = 0;
+jmethodID NativeJSContainer::jBundlePutBundle = 0;
+jmethodID NativeJSContainer::jBundlePutDouble = 0;
+jmethodID NativeJSContainer::jBundlePutInt = 0;
+jmethodID NativeJSContainer::jBundlePutString = 0;
 
 jobject
 CreateNativeJSContainer(JNIEnv* env, JSContext* cx, JS::HandleObject object)
@@ -297,7 +340,8 @@ private:
 };
 
 bool
-CheckJSCall(JNIEnv* env, bool result) {
+CheckJSCall(JNIEnv* env, bool result)
+{
     if (!result) {
         AndroidBridge::ThrowException(env,
             "java/lang/UnsupportedOperationException", "JSAPI call failed");
@@ -306,7 +350,8 @@ CheckJSCall(JNIEnv* env, bool result) {
 }
 
 bool
-CheckJNIArgument(JNIEnv* env, jobject arg) {
+CheckJNIArgument(JNIEnv* env, jobject arg)
+{
     if (!arg) {
         AndroidBridge::ThrowException(env,
             "java/lang/IllegalArgumentException", "Null argument");
@@ -363,7 +408,12 @@ struct StringProperty
 
     static Type FromValue(JNIEnv* env, jobject instance,
                           JSContext* cx, JS::HandleValue val) {
-        JS::RootedString str(cx, val.toString());
+        const JS::RootedString str(cx, val.toString());
+        return FromValue(env, instance, cx, str);
+    }
+
+    static Type FromValue(JNIEnv* env, jobject instance,
+                          JSContext* cx, const JS::HandleString str) {
         size_t strLen = 0;
         const jschar* const strChars =
             JS_GetStringCharsAndLength(cx, str, &strLen);
@@ -378,7 +428,9 @@ struct StringProperty
     }
 };
 
-struct ObjectProperty
+template <jobject (*FactoryMethod)
+    (JNIEnv*, jobject, JSContext*, JS::HandleObject)>
+struct BaseObjectProperty
 {
     typedef jobject Type;
 
@@ -392,9 +444,18 @@ struct ObjectProperty
             return nullptr;
         }
         JS::RootedObject object(cx, &val.toObject());
-        return NativeJSContainer::CreateObjectInstance(env, instance, object);
+        return FactoryMethod(env, instance, cx, object);
     }
 };
+
+jobject GetBundle(JNIEnv*, jobject, JSContext*, JS::HandleObject);
+
+// Returns a NativeJSObject from a JSObject
+typedef BaseObjectProperty<
+    NativeJSContainer::CreateObjectInstance> ObjectProperty;
+
+// Returns a Bundle from a JSObject
+typedef BaseObjectProperty<GetBundle> BundleProperty;
 
 struct HasProperty
 {
@@ -419,12 +480,17 @@ template <class Property>
 typename Property::Type
 GetProperty(JNIEnv* env, jobject instance, jstring name,
             FallbackOption option = FallbackOption::THROW,
-            typename Property::Type fallback = typename Property::Type()) {
+            typename Property::Type fallback = typename Property::Type())
+{
     MOZ_ASSERT(env);
     MOZ_ASSERT(instance);
 
     JSContext* const cx =
         NativeJSContainer::GetContextFromObject(env, instance);
+    if (!cx) {
+        return typename Property::Type();
+    }
+
     const JS::RootedObject object(cx,
         NativeJSContainer::GetObjectFromObject(env, instance));
     const JSJNIString strName(env, name);
@@ -451,6 +517,79 @@ GetProperty(JNIEnv* env, jobject instance, jstring name,
         return fallback;
     }
     return Property::FromValue(env, instance, cx, val);
+}
+
+jobject
+GetBundle(JNIEnv* env, jobject instance, JSContext* cx, JS::HandleObject obj)
+{
+    AutoLocalJNIFrame frame(env, 1);
+
+    const JS::AutoIdArray ids(cx, JS_Enumerate(cx, obj));
+    if (!CheckJSCall(env, !!ids)) {
+        return nullptr;
+    }
+
+    const size_t length = ids.length();
+    const jobject newBundle = env->NewObject(
+        NativeJSContainer::jBundle,
+        NativeJSContainer::jBundleConstructor,
+        static_cast<jint>(length));
+    AndroidBridge::HandleUncaughtException(env);
+    if (!newBundle) {
+        return nullptr;
+    }
+
+    for (size_t i = 0; i < ids.length(); i++) {
+        AutoLocalJNIFrame loopFrame(env, 2);
+
+        const JS::RootedId id(cx, ids[i]);
+        JS::RootedValue idVal(cx);
+        if (!CheckJSCall(env, JS_IdToValue(cx, id, &idVal))) {
+            return nullptr;
+        }
+
+        const JS::RootedString idStr(cx, JS::ToString(cx, idVal));
+        if (!CheckJSCall(env, !!idStr)) {
+            return nullptr;
+        }
+
+        const jstring name =
+            StringProperty::FromValue(env, instance, cx, idStr);
+        JS::RootedValue val(cx);
+        if (!name ||
+            !CheckJSCall(env, JS_GetPropertyById(cx, obj, id, &val))) {
+            return nullptr;
+        }
+
+#define PUT_IN_BUNDLE_IF_TYPE_IS(Type)                              \
+        if (Type##Property::InValue(val)) {                         \
+            env->CallVoidMethod(                                    \
+                newBundle,                                          \
+                NativeJSContainer::jBundlePut##Type,                \
+                name,                                               \
+                Type##Property::FromValue(env, instance, cx, val)); \
+            AndroidBridge::HandleUncaughtException(env);            \
+            continue;                                               \
+        }                                                           \
+        ((void) 0) // Accommodate trailing semicolon.
+
+        PUT_IN_BUNDLE_IF_TYPE_IS(Boolean);
+        // Int can be casted to double, so check int first.
+        PUT_IN_BUNDLE_IF_TYPE_IS(Int);
+        PUT_IN_BUNDLE_IF_TYPE_IS(Double);
+        PUT_IN_BUNDLE_IF_TYPE_IS(String);
+        // Use Bundle as the default catch-all for objects
+        PUT_IN_BUNDLE_IF_TYPE_IS(Bundle);
+
+#undef PUT_IN_BUNDLE_IF_TYPE_IS
+
+        // We tried all supported types; just bail.
+        AndroidBridge::ThrowException(env,
+            "java/lang/UnsupportedOperationException",
+            "Unsupported property type");
+        return nullptr;
+    }
+    return frame.Pop(newBundle);
 }
 
 } // namespace
@@ -482,6 +621,19 @@ Java_org_mozilla_gecko_util_NativeJSObject_optBoolean(JNIEnv* env, jobject insta
                                                       jstring name, jboolean fallback)
 {
     return GetProperty<BooleanProperty>(env, instance, name, FallbackOption::RETURN, fallback);
+}
+
+NS_EXPORT jobject JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_getBundle(JNIEnv* env, jobject instance, jstring name)
+{
+    return GetProperty<BundleProperty>(env, instance, name);
+}
+
+NS_EXPORT jobject JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_optBundle(JNIEnv* env, jobject instance,
+                                                     jstring name, jobject fallback)
+{
+    return GetProperty<BundleProperty>(env, instance, name, FallbackOption::RETURN, fallback);
 }
 
 NS_EXPORT jdouble JNICALL
@@ -542,6 +694,24 @@ Java_org_mozilla_gecko_util_NativeJSObject_has(JNIEnv* env, jobject instance, js
     return GetProperty<HasProperty>(env, instance, name, FallbackOption::RETURN, JNI_FALSE);
 }
 
+NS_EXPORT jobject JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_toBundle(JNIEnv* env, jobject instance)
+{
+    MOZ_ASSERT(env);
+    MOZ_ASSERT(instance);
+
+    JSContext* const cx = NativeJSContainer::GetContextFromObject(env, instance);
+    if (!cx) {
+        return nullptr;
+    }
+
+    const JS::RootedObject object(cx, NativeJSContainer::GetObjectFromObject(env, instance));
+    if (!object) {
+        return nullptr;
+    }
+    return GetBundle(env, instance, cx, object);
+}
+
 NS_EXPORT jstring JNICALL
 Java_org_mozilla_gecko_util_NativeJSObject_toString(JNIEnv* env, jobject instance)
 {
@@ -549,6 +719,10 @@ Java_org_mozilla_gecko_util_NativeJSObject_toString(JNIEnv* env, jobject instanc
     MOZ_ASSERT(instance);
 
     JSContext* const cx = NativeJSContainer::GetContextFromObject(env, instance);
+    if (!cx) {
+        return nullptr;
+    }
+
     const JS::RootedObject object(cx, NativeJSContainer::GetObjectFromObject(env, instance));
     JS::RootedValue value(cx, JS::ObjectValue(*object));
     nsAutoString json;
