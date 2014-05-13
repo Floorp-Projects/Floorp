@@ -170,5 +170,16 @@ var gContentPane = {
   {
     document.documentElement.openSubDialog("chrome://browser/content/preferences/languages.xul",
                                            "", null);
+  },
+
+  /**
+   * Displays the translation exceptions dialog where specific site and language
+   * translation preferences can be set.
+   */
+  showTranslationExceptions: function ()
+  {
+    document.documentElement.openWindow("Browser:TranslationExceptions",
+                                        "chrome://browser/content/preferences/translation.xul",
+                                        "", null);
   }
 };

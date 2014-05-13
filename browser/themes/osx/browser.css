@@ -2897,10 +2897,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 @media (min-resolution: 2dppx) {
-  .tab-close-button > .toolbarbutton-icon {
-    width: 16px;
-  }
-
   .tab-close-button.close-icon:not([selected=true]):not(:hover):-moz-lwtheme-brighttext {
     -moz-image-region: rect(0, 128px, 32px, 96px);
   }
@@ -4340,10 +4336,6 @@ window > chatbox {
 
   #customization-titlebar-visibility-button > .button-box > .button-icon {
     width: 24px;
-  }
-
-  .customization-tipPanel-closeBox > .close-icon > .toolbarbutton-icon {
-    width: 16px;
   }
 
   .customization-tipPanel-infoBox {

@@ -27,3 +27,8 @@
 <!ENTITY chooseLanguage.label         "Choose your preferred language for displaying pages">
 <!ENTITY chooseButton.label           "Choose…">
 <!ENTITY chooseButton.accesskey       "o">
+
+<!ENTITY translateWebPages.label      "Translate web content">
+<!ENTITY translateWebPages.accesskey  "T">
+<!ENTITY translateExceptions.label    "Exceptions…">
+<!ENTITY translateExceptions.accesskey "x">

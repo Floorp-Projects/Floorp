@@ -1,0 +1,80 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!ENTITY windowTitle "Firefox App Manager">
+
+<!ENTITY projectMenu_label "Project">
+<!ENTITY projectMenu_accesskey "P">
+<!ENTITY projectMenu_newApp_label "New App…">
+<!ENTITY projectMenu_newApp_accesskey "N">
+<!ENTITY projectMenu_importPackagedApp_label "Open Packaged App…">
+<!ENTITY projectMenu_importPackagedApp_accesskey "P">
+<!ENTITY projectMenu_importHostedApp_label "Open Hosted App…">
+<!ENTITY projectMenu_importHostedApp_accesskey "H">
+<!ENTITY projectMenu_selectApp_label "Open App…">
+<!ENTITY projectMenu_selectApp_accessley "S">
+<!ENTITY projectMenu_play_label "Install and run">
+<!ENTITY projectMenu_play_accesskey "I">
+<!ENTITY projectMenu_stop_label "Stop App">
+<!ENTITY projectMenu_stop_accesskey "S">
+<!ENTITY projectMenu_debug_label "Debug App">
+<!ENTITY projectMenu_debug_accesskey "D">
+<!ENTITY projectMenu_remove_label "Remove Project">
+<!ENTITY projectMenu_remove_accesskey "R">
+
+<!ENTITY runtimeMenu_label "Runtime">
+<!ENTITY runtimeMenu_accesskey "R">
+<!ENTITY runtimeMenu_disconnect_label "Disconnect">
+<!ENTITY runtimeMenu_disconnect_accesskey "D">
+<!ENTITY runtimeMenu_showPermissionTable_label "Permissions Table">
+<!ENTITY runtimeMenu_showPermissionTable_accesskey "P">
+<!ENTITY runtimeMenu_takeScreenshot_label "Screenshot">
+<!ENTITY runtimeMenu_takeScreenshot_accesskey "S">
+<!ENTITY runtimeMenu_showDetails_label "Runtime Info">
+<!ENTITY runtimeMenu_showDetails_accesskey "E">
+
+<!ENTITY viewMenu_label "View">
+<!ENTITY viewMenu_accesskey "V">
+<!ENTITY viewMenu_toggleEditor_label "Toggle Editor">
+<!ENTITY viewMenu_toggleEditor_accesskey "E">
+
+<!ENTITY projectButton_label "Open App">
+<!ENTITY runtimeButton_label "Select Runtime">
+
+<!-- We try to repicate Firefox' bindings: -->
+<!-- quit app -->
+<!ENTITY key_quit "Q">
+<!-- open menu -->
+<!ENTITY key_showProjectPanel "O">
+<!-- reload app -->
+<!ENTITY key_play "R">
+<!-- close app -->
+<!ENTITY key_stop "W">
+<!-- show toolbox -->
+<!ENTITY key_toggleToolbox "VK_F12">
+<!-- toggle sidebar -->
+<!ENTITY key_toggleEditor "B">
+
+<!ENTITY projectPanel_myProjects "My Projects">
+<!ENTITY projectPanel_runtimeApps "Runtime Apps">
+<!ENTITY runtimePanel_USBDevices "USB Devices">
+<!ENTITY runtimePanel_simulators "Simulators">
+
+<!ENTITY logs "Logs">
+
+
+<!-- Lense -->
+<!ENTITY details_valid_header "valid">
+<!ENTITY details_warning_header "warnings">
+<!ENTITY details_error_header "errors">
+<!ENTITY details_description "Description">
+<!ENTITY details_location "Location">
+<!ENTITY details_manifestURL "App ID">
+<!ENTITY details_removeProject_button "Remove Project">
+
+<!-- New App -->
+<!ENTITY newAppWindowTitle "New App">
+<!ENTITY newAppHeader "Select template">
+<!ENTITY newAppLoadingTemplate "Loading templates…">
+<!ENTITY newAppProjectName "Project Name:">
