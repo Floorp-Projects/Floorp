@@ -275,13 +275,15 @@ DisplayItemClip::RemoveRoundedCorners()
   mRoundedClipRects.Clear();
 }
 
+// Computes the difference between aR1 and aR2, limited to aBounds.
 static void
-AccumulateRectDifference(const nsRect& aR1, const nsRect& aR2, nsRegion* aOut)
+AccumulateRectDifference(const nsRect& aR1, const nsRect& aR2, const nsRect& aBounds, nsRegion* aOut)
 {
   if (aR1.IsEqualInterior(aR2))
     return;
   nsRegion r;
   r.Xor(aR1, aR2);
+  r.And(r, aBounds);
   aOut->Or(*aOut, r);
 }
 
@@ -299,8 +301,8 @@ DisplayItemClip::AddOffsetAndComputeDifference(const nsPoint& aOffset,
     return;
   }
   if (mHaveClipRect) {
-    AccumulateRectDifference((mClipRect + aOffset).Intersect(aBounds),
-                             aOther.mClipRect.Intersect(aOtherBounds),
+    AccumulateRectDifference(mClipRect + aOffset, aOther.mClipRect,
+                             aBounds.Union(aOtherBounds),
                              aDifference);
   }
   for (uint32_t i = 0; i < mRoundedClipRects.Length(); ++i) {

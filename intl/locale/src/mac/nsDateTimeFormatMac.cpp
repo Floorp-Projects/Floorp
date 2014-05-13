@@ -188,12 +188,12 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
                                                   CFSTR("h"), CFSTR("H"),
                                                   CFRangeMake(0, CFStringGetLength(newFormat)),	
                                                   0);
-    NS_ASSERTION(replaceCount == 1, "Unexpected number of \"h\" occurrences");
+    NS_ASSERTION(replaceCount <= 2, "Unexpected number of \"h\" occurrences");
     replaceCount = CFStringFindAndReplace(newFormat,
                                           CFSTR("a"), CFSTR(""),
                                           CFRangeMake(0, CFStringGetLength(newFormat)),	
                                           0);
-    NS_ASSERTION(replaceCount == 1, "Unexpected number of \"a\" occurrences");
+    NS_ASSERTION(replaceCount <= 1, "Unexpected number of \"a\" occurrences");
     CFDateFormatterSetFormat(formatter, newFormat);
     CFRelease(newFormat); // note we don't own oldFormat
   }

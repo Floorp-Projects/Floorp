@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE window [
+  <!ENTITY % webideDTD SYSTEM "chrome://webide/locale/webide.dtd" >
+  %webideDTD;
+]>
+
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://webide/skin/newapp.css"?>
+
+<dialog id="webide:newapp" title="&newAppWindowTitle;"
+  width="600" height="400"
+  buttons="accept,cancel"
+  ondialogaccept="return doOK();"
+  buttondisabledaccept="true"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="newapp.js"></script>
+  <label class="header-name" value="&newAppHeader;"/>
+
+  <richlistbox id="templatelist" flex="1">
+    <description>&newAppLoadingTemplate;</description>
+  </richlistbox>
+  <vbox>
+    <label class="header-name" control="project-name" value="&newAppProjectName;"/>
+    <textbox id="project-name"/>
+  </vbox>
+
+</dialog>

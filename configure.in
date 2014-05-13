@@ -7640,6 +7640,19 @@ if test "$MOZ_CHROME_FILE_FORMAT" != "jar" &&
     AC_MSG_ERROR([--enable-chrome-format must be set to either jar, flat, or omni])
 fi
 
+dnl ========================================================
+dnl = Enable Support for devtools webide
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(devtools-webide,
+[  --enable-devtools-webide Set compile flags necessary for compiling devtools webide ],
+MOZ_DEVTOOLS_WEBIDE=1,
+MOZ_DEVTOOLS_WEBIDE= )
+
+if test -n "$MOZ_DEVTOOLS_WEBIDE"; then
+    AC_DEFINE(MOZ_DEVTOOLS_WEBIDE)
+fi
+AC_SUBST(MOZ_DEVTOOLS_WEBIDE)
+
 dnl =========================================================
 dnl Omnijar packaging (bug 552121)
 dnl =========================================================
@@ -7878,14 +7891,14 @@ else
     fi
     AC_SUBST(CL_INCLUDES_PREFIX)
     rm -f dummy-hello.c
+
+    dnl Make sure that the build system can handle non-ASCII characters
+    dnl in environment variables to prevent it from breaking silently on
+    dnl non-English systems.
+    NONASCII=$'\241\241'
+    AC_SUBST(NONASCII)
   fi
 fi
-
-dnl Make sure that the build system can handle non-ASCII characters
-dnl in environment variables to prevent it from breking silently on
-dnl non-English systems.
-NONASCII=$'\241\241'
-AC_SUBST(NONASCII)
 
 dnl ========================================================
 dnl =

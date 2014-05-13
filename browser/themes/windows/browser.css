@@ -926,20 +926,23 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   background-clip: padding-box !important;
   background-color: hsla(210,25%,98%,.08) !important;
   padding: 6px !important;
-  border-color: hsla(210,4%,10%,.25) !important;
-  transition-property: background-color, border-color !important;
+  border-style: none !important;
+  box-shadow: 0 1px 0 0 hsla(210,4%,10%,.25),
+              0 0 0 1px hsla(210,4%,10%,.25);
+  transition-property: background-color, box-shadow !important;
   transition-duration: 250ms !important;
 }
 
 #back-button:not([disabled="true"]):not([open="true"]):not(:active):hover > .toolbarbutton-icon {
   background-color: hsla(210,4%,10%,.08) !important;
-  box-shadow: none !important;
 }
 
 #back-button:not([disabled="true"]):hover:active > .toolbarbutton-icon,
 #back-button[open="true"] > .toolbarbutton-icon {
   background-color: hsla(210,4%,10%,.12) !important;
-  box-shadow: 0 1px 0 0 hsla(210,80%,20%,.1) inset !important;
+  box-shadow: 0 1px 0 0 hsla(210,4%,10%,.25),
+              0 0 0 1px hsla(210,4%,10%,.25),
+              0 1px 0 0 hsla(210,80%,20%,.1) inset !important;
 }
 
 %ifdef WINDOWS_AERO
@@ -947,13 +950,11 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
        (-moz-os-version: windows-win7) {
 %endif
   #back-button > .toolbarbutton-icon {
-    border: none !important;
     background-image: linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1)) !important;
     box-shadow: 0 1px 0 hsla(0,0%,100%,.3) inset,
                 0 0 0 1px hsla(0,0%,100%,.3) inset,
                 0 0 0 1px hsla(210,54%,20%,.25),
                 0 1px 0 hsla(210,54%,20%,.35) !important;
-    transition-property: background-color, box-shadow !important;
   }
 
   #back-button:not([disabled="true"]):not([open="true"]):not(:active):hover > .toolbarbutton-icon {

@@ -56,6 +56,7 @@ AppValidator.prototype._fetchManifest = function (manifestURL) {
   this.manifestURL = manifestURL;
 
   let req = new XMLHttpRequest();
+  req.overrideMimeType('text/plain');
   try {
     req.open("GET", manifestURL, true);
   } catch(e) {
@@ -155,6 +156,7 @@ AppValidator.prototype.validateLaunchPath = function (manifest) {
   }
 
   let req = new XMLHttpRequest();
+  req.overrideMimeType('text/plain');
   try {
     req.open("HEAD", indexURL, true);
   } catch(e) {

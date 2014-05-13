@@ -92,6 +92,7 @@ enum TracingMetadata {
 
 static inline void profiler_tracing(const char* aCategory, const char* aInfo,
                                     TracingMetadata metaData = TRACING_DEFAULT) {}
+class ProfilerBacktrace;
 
 static inline void profiler_tracing(const char* aCategory, const char* aInfo,
                                     ProfilerBacktrace* aCause,
@@ -132,7 +133,6 @@ static inline bool profiler_is_paused() { return false; }
 static inline void profiler_pause() {}
 static inline void profiler_resume() {}
 
-class ProfilerBacktrace;
 
 // Immediately capture the current thread's call stack and return it
 static inline ProfilerBacktrace* profiler_get_backtrace() { return nullptr; }

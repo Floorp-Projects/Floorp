@@ -6832,18 +6832,26 @@ nsBlockFrame::ReflowBullet(nsIFrame* aBulletFrame,
   // in the current writing mode. Then we subtract out the start
   // border/padding and the bullet's width and margin to offset the position.
   WritingMode wm = rs.GetWritingMode();
-  LogicalRect logicalFAS(wm, floatAvailSpace, floatAvailSpace.XMost());
+  nscoord containerWidth = floatAvailSpace.XMost();
+  LogicalRect logicalFAS(wm, floatAvailSpace, containerWidth);
+  // Get the bullet's margin, converted to our writing mode so that we can
+  // combine it with other logical values here.
+  WritingMode bulletWM = reflowState.GetWritingMode();
+  LogicalMargin bulletMargin =
+    reflowState.ComputedLogicalMargin().ConvertTo(wm, bulletWM);
   nscoord iStart = logicalFAS.IStart(wm) -
-    rs.ComputedLogicalBorderPadding().IStart(wm)
-    - reflowState.ComputedLogicalMargin().IEnd(wm) - aMetrics.ISize();
+                   rs.ComputedLogicalBorderPadding().IStart(wm) -
+                   bulletMargin.IEnd(wm) -
+                   aMetrics.ISize();
 
   // Approximate the bullets position; vertical alignment will provide
-  // the final vertical location.
+  // the final vertical location. We pass our writing-mode here, because
+  // it may be different from the bullet frame's mode.
   nscoord bStart = logicalFAS.BStart(wm);
-  aBulletFrame->SetRect(LogicalRect(wm, LogicalPoint(wm, iStart, bStart),
-                                    LogicalSize(wm, aMetrics.ISize(),
-                                                aMetrics.BSize())),
-                        floatAvailSpace.XMost());
+  aBulletFrame->SetRect(wm, LogicalRect(wm, LogicalPoint(wm, iStart, bStart),
+                                        LogicalSize(wm, aMetrics.ISize(),
+                                                    aMetrics.BSize())),
+                        containerWidth);
   aBulletFrame->DidReflow(aState.mPresContext, &aState.mReflowState,
                           nsDidReflowStatus::FINISHED);
 }
