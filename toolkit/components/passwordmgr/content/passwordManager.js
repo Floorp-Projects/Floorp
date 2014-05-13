@@ -180,7 +180,11 @@ function FinalizeSignonDeletions(syncNeeded) {
 }
 
 function HandleSignonKeyPress(e) {
-  if (e.keyCode == 46) {
+  if (e.keyCode == KeyEvent.DOM_VK_DELETE
+#ifdef XP_MACOSX
+      || e.keyCode == KeyEvent.DOM_VK_BACK_SPACE
+#endif
+     ) {
     DeleteSignon();
   }
 }
