@@ -32,7 +32,6 @@ struct WebAudioDecodeJob MOZ_FINAL
   // The callbacks are only necessary for asynchronous operation.
   WebAudioDecodeJob(const nsACString& aContentType,
                     dom::AudioContext* aContext,
-                    const dom::ArrayBuffer& aBuffer,
                     dom::DecodeSuccessCallback* aSuccessCallback = nullptr,
                     dom::DecodeErrorCallback* aFailureCallback = nullptr);
   ~WebAudioDecodeJob();
@@ -59,7 +58,6 @@ struct WebAudioDecodeJob MOZ_FINAL
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  JS::Heap<JSObject*> mArrayBuffer;
   nsCString mContentType;
   uint32_t mWriteIndex;
   nsRefPtr<dom::AudioContext> mContext;

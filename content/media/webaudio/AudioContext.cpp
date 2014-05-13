@@ -430,22 +430,29 @@ AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
                               DecodeSuccessCallback& aSuccessCallback,
                               const Optional<OwningNonNull<DecodeErrorCallback> >& aFailureCallback)
 {
+  AutoJSAPI jsapi;
+  JSContext* cx = jsapi.cx();
+  JSAutoCompartment ac(cx, aBuffer.Obj());
+
+  // Neuter the array buffer
+  size_t length = aBuffer.Length();
+  JS::RootedObject obj(cx, aBuffer.Obj());
+
+  uint8_t* data = static_cast<uint8_t*>(JS_StealArrayBufferContents(cx, obj));
+
   // Sniff the content of the media.
   // Failed type sniffing will be handled by AsyncDecodeMedia.
   nsAutoCString contentType;
-  NS_SniffContent(NS_DATA_SNIFFER_CATEGORY, nullptr,
-                  aBuffer.Data(), aBuffer.Length(),
-                  contentType);
+  NS_SniffContent(NS_DATA_SNIFFER_CATEGORY, nullptr, data, length, contentType);
 
   nsRefPtr<DecodeErrorCallback> failureCallback;
   if (aFailureCallback.WasPassed()) {
     failureCallback = &aFailureCallback.Value();
   }
   nsRefPtr<WebAudioDecodeJob> job(
-    new WebAudioDecodeJob(contentType, this, aBuffer,
+    new WebAudioDecodeJob(contentType, this,
                           &aSuccessCallback, failureCallback));
-  mDecoder.AsyncDecodeMedia(contentType.get(),
-                            aBuffer.Data(), aBuffer.Length(), *job);
+  mDecoder.AsyncDecodeMedia(contentType.get(), data, length, *job);
   // Transfer the ownership to mDecodeJobs
   mDecodeJobs.AppendElement(job);
 }
