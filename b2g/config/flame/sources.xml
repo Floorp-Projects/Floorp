@@ -118,7 +118,7 @@
   <default remote="caf" revision="jb_3.2" sync-j="4"/>
   <!-- Flame specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="e8a318f7690092e639ba88891606f4183e846d3f"/>
-  <project name="device/qcom/common" path="device/qcom/common" revision="66715ba03ef9dd277ebd65ef3c17231c4dcdf0ed"/>
+  <project name="device/qcom/common" path="device/qcom/common" revision="34ed8345250bb97262d70a052217a92e83444ede"/>
   <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="ecc08b2f0efea93c778e3525553bcd4bd5f2cf49"/>
   <project name="kernel/msm" path="kernel" revision="7158567fc83e7475f08db3adedc5df1ad6f54abd"/>
   <project name="platform/bootable/recovery" path="bootable/recovery" revision="f2914eacee9120680a41463708bb6ee8291749fc"/>
