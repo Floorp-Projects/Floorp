@@ -17,6 +17,7 @@
                  xbl:inherits="xbl:text=label,accesskey,wrap"/>
     </content>
     <implementation implements="nsIDOMEventListener, nsIObserver">
+      <field name="_useDynamicResizer">false</field>
       <field name="inMenuPanel">false</field>
 
       <property name="panel">
@@ -37,6 +38,11 @@
           if (this._frame)
             return this._frame;
           let notificationFrameId = "social-mark-frame-" + this.getAttribute("origin");
+          let provider = Social._getProviderFromOrigin(this.getAttribute("origin"));
+          let size = provider.getPageSize("marks");
+          let {width, height} = size ? size : {width: 330, height: 100};
+          this._useDynamicResizer = !size;
+
           this._frame = SharedFrame.createFrame(
             notificationFrameId, /* frame name */
             this.panel, /* parent */
@@ -49,7 +55,8 @@
               "flex": "1",
               "context": "contentAreaContextMenu",
               "origin": this.getAttribute("origin"),
-              "src": "about:blank"
+              "src": "about:blank",
+              "style": "width: " + width + "px; height: " + height + "px;",
             }
           );
           this._frame.addEventListener("DOMLinkAdded", this);
@@ -150,7 +157,7 @@
           this._loading = false;
           this.content.removeEventListener("DOMContentLoaded", DOMContentLoaded, true);
           // add our resizer after the dom is ready
-          if (!this.inMenuPanel) {
+          if (!this.inMenuPanel && this._useDynamicResizer) {
             let DynamicResizeWatcher = Cu.import("resource:///modules/Social.jsm", {}).DynamicResizeWatcher;
             this._dynamicResizer = new DynamicResizeWatcher();
             this._dynamicResizer.start(this.panel, this.content);
@@ -280,13 +287,13 @@
         if (!this._loading && this.contentDocument &&
             this.contentDocument.readyState == "complete") {
           this.dispatchPanelEvent("socialFrameShow");
-          if (!this.inMenuPanel)
+          if (!this.inMenuPanel && this._useDynamicResizer)
             sizeSocialPanelToContent(this.panel, this.content);
         } else {
           let panelBrowserOnload = (e) => {
             this.content.removeEventListener("load", panelBrowserOnload, true);
             this.dispatchPanelEvent("socialFrameShow");
-            if (!this.inMenuPanel)
+            if (!this.inMenuPanel && this._useDynamicResizer)
               sizeSocialPanelToContent(this.panel, this.content);
           };
           this.content.addEventListener("load", panelBrowserOnload, true);
