@@ -156,6 +156,16 @@ public class SuggestedSites {
      * @param limit maximum number of suggested sites.
      */
     public Cursor get(int limit) {
+        return get(limit, null);
+    }
+
+    /**
+     * Returns a {@code Cursor} with the list of suggested websites.
+     *
+     * @param limit maximum number of suggested sites.
+     * @param excludeUrls list of URLs to be excluded from the list.
+     */
+    public Cursor get(int limit, List<String> excludeUrls) {
         List<Site> sites = cachedSites.get();
         if (sites == null) {
             Log.d(LOGTAG, "No cached sites, refreshing.");
@@ -176,6 +186,10 @@ public class SuggestedSites {
         final int count = Math.min(limit, sitesCount);
         for (int i = 0; i < count; i++) {
             final Site site = sites.get(i);
+
+            if (excludeUrls != null && excludeUrls.contains(site.url)) {
+                continue;
+            }
 
             final RowBuilder row = cursor.newRow();
             row.add(-1);
