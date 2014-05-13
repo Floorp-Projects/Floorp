@@ -1,0 +1,58 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+dialog {
+  -moz-appearance: none;
+  background-image: linear-gradient(rgb(255, 255, 255), rgb(237, 237, 237) 100px);
+  font-family: "Clear Sans", sans-serif;
+  color: #424E5A;
+  overflow-y: scroll;
+}
+
+.header-name {
+  font-size: 1.5rem;
+  font-weight: normal;
+  margin: 15px 0;
+}
+
+richlistbox {
+  -moz-appearance: none;
+  overflow-y: auto;
+  border: 1px solid #424E5A;
+}
+
+richlistitem {
+  padding: 6px 0;
+}
+
+richlistitem:not([selected="true"]):hover {
+  background-color: rgba(0,0,0,0.04);
+}
+
+richlistitem > vbox > label {
+  margin: 0;
+  font-size: 1.1em;
+}
+
+richlistbox > description {
+  margin: 8px;
+}
+
+richlistitem {
+  -moz-box-align: start;
+}
+
+richlistitem:nth-child(odd) {
+  background-color: 
+}
+
+richlistitem > image {
+  height: 24px;
+  width: 24px;
+  margin: 0 6px;
+}
+
+textbox {
+  font-size: 1.2rem;
+}

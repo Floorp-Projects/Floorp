@@ -14,6 +14,11 @@
               name="font.language.group"
               type="wstring"
               onchange="gContentPane._rebuildFonts();"/>
+
+  <!-- Languages -->
+  <preference id="browser.translation.detectLanguage"
+              name="browser.translation.detectLanguage"
+              type="bool"/>
 </preferences>
 
 <script type="application/javascript" 
@@ -125,5 +130,15 @@
             label="&chooseButton.label;"
             accesskey="&chooseButton.accesskey;"
             oncommand="gContentPane.showLanguages();"/>
+  </hbox>
+
+  <hbox id="translationBox" hidden="true">
+    <checkbox id="translate" preference="browser.translation.detectLanguage" flex="1"
+              label="&translateWebPages.label;" accesskey="&translateWebPages.accesskey;"
+              onsyncfrompreference="return gContentPane.updateButtons('translateButton',
+                                    'browser.translation.detectLanguage');"/>
+    <button id="translateButton" label="&translateExceptions.label;"
+            oncommand="gContentPane.showTranslationExceptions();"
+            accesskey="&translateExceptions.accesskey;"/>
   </hbox>
 </groupbox>

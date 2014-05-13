@@ -24,6 +24,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
  */
 const SCHEMA_VERSION = 2;
 
+// The maximum number of items you can attempt to save at once.
+const MAX_SAVE_COUNT = 100;
+
 XPCOMUtils.defineLazyGetter(this, "DB_PATH", function() {
   return OS.Path.join(OS.Constants.Path.profileDir, "home.sqlite");
 });
@@ -281,21 +284,65 @@ function validateItem(datasetId, item) {
   }
 }
 
+var gRefreshTimers = {};
+
+/**
+ * Sends a message to Java to refresh the given dataset. Delays sending
+ * messages to avoid successive refreshes, which can result in flashing views.
+ */
+function refreshDataset(datasetId) {
+  // Bail if there's already a refresh timer waiting to fire
+  if (gRefreshTimers[datasetId]) {
+    return;
+  }
+
+  let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  timer.initWithCallback(function(timer) {
+    delete gRefreshTimers[datasetId];
+
+    sendMessageToJava({
+      type: "HomePanels:RefreshDataset",
+      datasetId: datasetId
+    });
+  }, 100, Ci.nsITimer.TYPE_ONE_SHOT);
+
+  gRefreshTimers[datasetId] = timer;
+}
+
 HomeStorage.prototype = {
   /**
    * Saves data rows to the DB.
    *
    * @param data
-   *        (array) JSON array of row items
+   *        An array of JS objects represnting row items to save.
+   *        Each object may have the following properties:
+   *        - url (string)
+   *        - title (string)
+   *        - description (string)
+   *        - image_url (string)
+   *        - filter (string)
+   * @param options
+   *        A JS object holding additional cofiguration properties.
+   *        The following properties are currently supported:
+   *        - replace (boolean): Whether or not to replace existing items.
    *
    * @return Promise
    * @resolves When the operation has completed.
    */
-  save: function(data) {
+  save: function(data, options) {
+    if (data && data.length > MAX_SAVE_COUNT) {
+      throw "save failed for dataset = " + this.datasetId +
+        ": you cannot save more than " + MAX_SAVE_COUNT + " items at once";
+    }
+
     return Task.spawn(function save_task() {
       let db = yield getDatabaseConnection();
       try {
         yield db.executeTransaction(function save_transaction() {
+          if (options && options.replace) {
+            yield db.executeCached(SQL.deleteFromDataset, { dataset_id: this.datasetId });
+          }
+
           // Insert data into DB.
           for (let item of data) {
             validateItem(this.datasetId, item);
@@ -317,10 +364,7 @@ HomeStorage.prototype = {
         yield db.close();
       }
 
-      sendMessageToJava({
-        type: "HomePanels:RefreshDataset",
-        datasetId: this.datasetId,
-      });
+      refreshDataset(this.datasetId);
     }.bind(this));
   },
 
@@ -340,10 +384,7 @@ HomeStorage.prototype = {
         yield db.close();
       }
 
-      sendMessageToJava({
-        type: "HomePanels:RefreshDataset",
-        datasetId: this.datasetId,
-      });
+      refreshDataset(this.datasetId);
     }.bind(this));
   }
 };

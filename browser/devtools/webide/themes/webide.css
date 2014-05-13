@@ -1,0 +1,279 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#main-toolbar {
+  padding: 0 12px;
+}
+
+#action-buttons-container {
+  -moz-box-pack: center;
+  height: 50px;
+}
+
+#panel-buttons-container {
+  height: 50px;
+  margin-top: -50px;
+  pointer-events: none;
+}
+
+#panel-buttons-container > .panel-button {
+  pointer-events: auto;
+}
+
+#action-busy {
+  height: 24px;
+  width: 24px;
+}
+
+window.busy .action-button,
+window:not(.busy) #action-busy {
+  display: none;
+}
+
+/* Panel buttons */
+
+.panel-button {
+  -moz-box-align: center;
+}
+
+.panel-button-anchor {
+  list-style-image: url('icons.png');
+  -moz-image-region: rect(43px, 563px, 61px, 535px);
+  width: 12;
+  height: 7px;
+  margin-bottom: -5px;
+}
+
+.panel-button:hover > .panel-button-anchor {
+  -moz-image-region: rect(243px, 563px, 261px, 535px);
+}
+
+/* Panel buttons - projects */
+
+#project-panel-button > .panel-button-image {
+  width: 18px;
+  height: 18px;
+}
+
+#project-panel-button.no-project > .panel-button-image {
+  list-style-image: url("icons.png");
+  -moz-image-region: rect(0px, 740px, 40px, 700px);
+}
+
+/* Panel buttons - runtime */
+
+#runtime-panel-button > .panel-button-image {
+  list-style-image: url('icons.png');
+  -moz-image-region: rect(25px, 475px, 75px, 425px);
+  width: 1.2em;
+  height: 1.2em;
+}
+
+#runtime-panel-button[active="true"] > .panel-button-image {
+  -moz-image-region: rect(125px, 475px, 175px, 425px);
+}
+
+/* Action buttons */
+
+.action-button {
+  -moz-appearance: none;
+  border-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style-image: url('icons.png');
+}
+
+.action-button[disabled="true"] {
+  opacity: 0.4;
+}
+
+.action-button > .toolbarbutton-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.action-button > .toolbarbutton-text {
+  display: none;
+}
+
+#action-button-play  { -moz-image-region: rect(0,100px,100px,0) }
+#action-button-stop  { -moz-image-region: rect(0,200px,100px,100px) }
+#action-button-debug { -moz-image-region: rect(0,400px,100px,300px) }
+
+#action-button-play:not([disabled="true"]):hover  { -moz-image-region: rect(200px,100px,300px,0) }
+#action-button-stop:not([disabled="true"]):hover  { -moz-image-region: rect(200px,200px,300px,100px) }
+#action-button-debug:not([disabled="true"]):not([active="true"]):hover { -moz-image-region: rect(200px,400px,300px,300px) }
+
+#action-button-debug[active="true"] { -moz-image-region: rect(100px,400px,200px,300px) }
+
+/* Panels */
+
+panel > vbox {
+  overflow-x: hidden;
+}
+
+panel > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 12px 0;
+  width: 180px;
+}
+
+.panel-item {
+  padding: 3px 12px;
+  margin: 0;
+  -moz-appearance: none;
+}
+
+.panel-item:hover {
+  background: #CBF0FE;
+}
+
+.panel-header {
+  /* We can't use borders or vertical padding here because
+   * panels don't take these into account when calculated the
+   * height of the panel.
+   */
+  background-color: #EEE;
+  outline-width: 1px;
+  outline-color: #D5D5D5;
+  outline-style: solid;
+  color: #ACACAC;
+  text-transform: uppercase;
+  padding: 0 16px;
+  line-height: 200%;
+  margin: 5px 0;
+  font-size: 90%;
+  font-weight: bold;
+}
+
+.panel-item > .toolbarbutton-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.panel-item > .toolbarbutton-text {
+  text-align: start;
+}
+
+/* project panel */
+
+.project-panel-item-newapp,
+.project-panel-item-openpackaged,
+.project-panel-item-openhosted {
+  list-style-image: url("icons.png");
+}
+
+.project-panel-item-newapp       { -moz-image-region: rect(0px, 640px, 40px, 600px) }
+.project-panel-item-openpackaged { -moz-image-region: rect(0px, 740px, 40px, 700px) }
+.project-panel-item-openhosted   { -moz-image-region: rect(0px, 840px, 40px, 800px) }
+
+/* runtime panel */
+
+#runtime-panel .panel-arrowcontent {
+  padding: 12px 0 0;
+}
+
+#runtime-panel-simulators {
+  margin-bottom: 12px;
+}
+
+#runtime-permissions,
+#runtime-screenshot,
+.runtime-panel-item-usbruntime,
+.runtime-panel-item-simulator {
+  list-style-image: url("icons.png");
+}
+
+#runtime-screenshot             { -moz-image-region: rect(200px, 640px, 240px, 600px) }
+#runtime-permissions            { -moz-image-region: rect(100px, 840px, 140px, 800px) }
+.runtime-panel-item-usbruntime  { -moz-image-region: rect(100px, 640px, 140px, 600px) }
+.runtime-panel-item-simulator   { -moz-image-region: rect(100px, 740px, 140px, 700px) }
+
+#runtime-actions {
+  border-top: 1px solid rgba(221,221,221,1);
+}
+
+
+#runtime-actions > toolbarbutton {
+  border-top: 1px solid rgba(221,221,221,1);
+  background-color: rgba(233,233,233,1);
+  color: rgba(87,87,87,1);
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+#runtime-actions > toolbarbutton:hover {
+  background-color: rgba(221,221,221,1);
+}
+
+#runtime-actions > toolbarbutton:last-child {
+  border-radius: 0 0 3px 3px;
+}
+
+/* Main view */
+
+#body {
+  background-color: rgb(225, 225, 225);
+  background-image: url('chrome://browser/skin/devtools/app-manager/rocket.svg'), url('chrome://browser/skin/devtools/app-manager/noise.png');
+  background-repeat: no-repeat, repeat;
+  background-size: 35%, auto;
+  background-position: center center, top left;
+%ifndef XP_MACOSX
+  border-top: 1px solid #AAA;
+%endif
+}
+
+.devtools-horizontal-splitter {
+  -moz-appearance: none;
+  background-image: none;
+  background-color: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(118, 121, 125, .5);
+  min-height: 3px;
+  height: 3px;
+  margin-top: -3px;
+  position: relative;
+  border-bottom: 1px solid #aaa;
+}
+
+/* Logs */
+
+#logs-container {
+  position: relative;
+}
+
+#logs {
+  overflow: auto;
+  padding: 0 6px;
+  margin: 0;
+  line-height: 12px;
+  font-size: 8px;
+  background-color: #1F1F1F;
+  color: #8fa1b2;
+  height: 24px;
+}
+
+#logs.expand {
+  height: 300px;
+}
+
+#logs:not(.expand) > .log {
+  display: none;
+}
+
+#toggle-logs {
+  height: 24px;
+  border-width: 0;
+  background-color: #0881C7;
+  color: white;
+  margin: 0;
+  display: block;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
+#logs > p { margin: 0; }
+#logs > .warning { color: #d99b28; }
+#logs > .error   { color: #eb5368; }
+#logs > .success { color: #70bf53; }

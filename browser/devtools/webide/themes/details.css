@@ -1,0 +1,135 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+body {
+  margin: 0;
+  background-color: white;
+  font-family: Lucida Grande, Helvetica, Helvetica Neue, sans-serif;
+  font-size: 12px;
+}
+
+.hidden {
+  display: none;
+}
+
+h1, h3, p {
+  margin: 0;
+}
+
+#toolbar {
+  background-color: #D8D8D8;
+  border-bottom: 1px solid #AAA;
+}
+
+#toolbar > button {
+  -moz-appearance: none;
+  background-color: transparent;
+  border-width: 0 1px 0 0;
+  border-color: #AAA;
+  border-style: solid;
+  margin: 0;
+  padding: 0 12px;
+  font-weight: bold;
+  height: 24px;
+}
+
+#toolbar > button:hover {
+  background-color: #CCC;
+  cursor: pointer;
+}
+
+#validation_status {
+  float: right;
+  text-transform: uppercase;
+  font-size: 10px;
+  line-height: 24px;
+  padding: 0 12px;
+  color: white;
+}
+
+
+header {
+  padding: 20px 0;
+}
+
+header > div {
+  vertical-align: top;
+  display: inline-block;
+}
+
+#icon {
+  height: 48px;
+  width: 48px;
+  text-align:top;
+  float: left;
+  margin: 0 20px;
+}
+
+h1, #type {
+  line-height: 24px;
+  height: 24px; /* avoid collapsing if empty */
+  display: block;
+}
+
+h1 {
+  font-size: 20px;
+}
+
+#type {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #777;
+}
+
+main {
+  padding-left: 88px;
+}
+
+h3 {
+  color: #999;
+  font-size: 10px;
+  font-weight: normal;
+}
+
+main > p {
+  margin-bottom: 20px;
+}
+
+.validation_messages {
+  margin-left: 74px;
+  list-style: none;
+  border-left: 4px solid transparent;
+  padding: 0 10px;;
+}
+
+
+body.valid #validation_status {
+  background-color: #81D135;
+}
+
+body.warning #validation_status {
+  background-color: #FFAC00;
+}
+
+body.error #validation_status {
+  background-color: #ED4C62;
+}
+
+#warningslist {
+  border-color: #FFAC00
+}
+
+#errorslist {
+  border-color: #ED4C62;
+}
+
+#validation_status > span {
+  display: none;
+}
+
+body.valid #validation_status > .valid,
+body.warning #validation_status > .warning,
+body.error #validation_status > .error {
+  display: inline;
+}

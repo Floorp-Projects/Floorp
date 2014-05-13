@@ -82,6 +82,7 @@
     locale/browser/tabview.properties              (%chrome/browser/tabview.properties)
     locale/browser/taskbar.properties              (%chrome/browser/taskbar.properties)
     locale/browser/translation.dtd                 (%chrome/browser/translation.dtd)
+    locale/browser/translation.properties          (%chrome/browser/translation.properties)
     locale/browser/downloads/downloads.dtd         (%chrome/browser/downloads/downloads.dtd)
     locale/browser/downloads/downloads.properties  (%chrome/browser/downloads/downloads.properties)
     locale/browser/places/places.dtd               (%chrome/browser/places/places.dtd)
@@ -120,6 +121,7 @@
     locale/browser/preferences/sync.dtd               (%chrome/browser/preferences/sync.dtd)
 #endif
     locale/browser/preferences/tabs.dtd               (%chrome/browser/preferences/tabs.dtd)
+    locale/browser/preferences/translation.dtd        (%chrome/browser/preferences/translation.dtd)
 #ifdef MOZ_SERVICES_SYNC
     locale/browser/syncBrand.dtd                (%chrome/browser/syncBrand.dtd)
     locale/browser/syncSetup.dtd                (%chrome/browser/syncSetup.dtd)
