@@ -119,8 +119,7 @@ public:
     return nsContainerFrame::WillReflow(aPresContext);
   }
 
-  virtual nsresult
-  DidReflow(nsPresContext*           aPresContext,
+  virtual void DidReflow(nsPresContext*           aPresContext,
             const nsHTMLReflowState*  aReflowState,
             nsDidReflowStatus         aStatus) MOZ_OVERRIDE
 
