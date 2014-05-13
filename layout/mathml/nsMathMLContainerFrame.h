@@ -112,11 +112,11 @@ public:
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
-  virtual nsresult
+  virtual void
   WillReflow(nsPresContext* aPresContext) MOZ_OVERRIDE
   {
     mPresentationData.flags &= ~NS_MATHML_ERROR;
-    return nsContainerFrame::WillReflow(aPresContext);
+    nsContainerFrame::WillReflow(aPresContext);
   }
 
   virtual void DidReflow(nsPresContext*           aPresContext,
