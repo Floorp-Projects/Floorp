@@ -294,6 +294,7 @@ UNIFIED_SOURCES += [
     'LayerScope.cpp',
     'LayersLogging.cpp',
     'LayerSorter.cpp',
+    'LayerUtils.cpp',
     'opengl/CompositingRenderTargetOGL.cpp',
     'opengl/CompositorOGL.cpp',
     'opengl/OGLShaderProgram.cpp',

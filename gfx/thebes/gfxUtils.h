@@ -40,7 +40,10 @@ public:
      * If the source is not gfxImageFormat::ARGB32, no operation is performed.  If
      * aDestSurface is given, the data is copied over.
      */
-    static void PremultiplyDataSurface(DataSourceSurface *aSurface);
+    static void PremultiplyImageSurface(gfxImageSurface *aSourceSurface,
+                                        gfxImageSurface *aDestSurface = nullptr);
+    static void UnpremultiplyImageSurface(gfxImageSurface *aSurface,
+                                          gfxImageSurface *aDestSurface = nullptr);
     static mozilla::TemporaryRef<DataSourceSurface> UnpremultiplyDataSurface(DataSourceSurface* aSurface);
 
     static void ConvertBGRAtoRGBA(gfxImageSurface *aSourceSurface,
