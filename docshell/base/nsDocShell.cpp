@@ -8673,7 +8673,7 @@ nsDocShell::CheckLoadingPermissions()
             return NS_ERROR_UNEXPECTED;
         }
 
-        if (nsContentUtils::GetSubjectPrincipal()->Subsumes(p)) {
+        if (nsContentUtils::SubjectPrincipal()->Subsumes(p)) {
             // Same origin, permit load
             return NS_OK;
         }

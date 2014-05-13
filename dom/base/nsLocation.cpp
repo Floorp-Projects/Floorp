@@ -160,7 +160,7 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
       }
     }
 
-    owner = nsContentUtils::GetSubjectPrincipal();
+    owner = nsContentUtils::SubjectPrincipal();
   }
 
   // Create load info
@@ -921,7 +921,7 @@ nsLocation::CallerSubsumes()
     return false;
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(outer);
   bool subsumes = false;
-  nsresult rv = nsContentUtils::GetSubjectPrincipal()->SubsumesConsideringDomain(sop->GetPrincipal(), &subsumes);
+  nsresult rv = nsContentUtils::SubjectPrincipal()->SubsumesConsideringDomain(sop->GetPrincipal(), &subsumes);
   NS_ENSURE_SUCCESS(rv, false);
   return subsumes;
 }

@@ -594,7 +594,7 @@ DataTransfer::MozGetDataAt(const nsAString& aFormat, uint32_t aIndex,
       (mEventType != NS_DRAGDROP_DROP && mEventType != NS_DRAGDROP_DRAGDROP &&
        mEventType != NS_PASTE &&
        !nsContentUtils::IsCallerChrome())) {
-    principal = nsContentUtils::GetSubjectPrincipal();
+    principal = nsContentUtils::SubjectPrincipal();
   }
 
   uint32_t count = item.Length();
@@ -624,7 +624,7 @@ DataTransfer::MozGetDataAt(const nsAString& aFormat, uint32_t aIndex,
           nsIPrincipal* dataPrincipal = sp->GetPrincipal();
           NS_ENSURE_TRUE(dataPrincipal, NS_ERROR_DOM_SECURITY_ERR);
           if (!principal) {
-            principal = nsContentUtils::GetSubjectPrincipal();
+            principal = nsContentUtils::SubjectPrincipal();
           }
           bool equals = false;
           NS_ENSURE_TRUE(NS_SUCCEEDED(principal->Equals(dataPrincipal, &equals)) && equals,
@@ -696,7 +696,7 @@ DataTransfer::MozSetDataAt(const nsAString& aFormat, nsIVariant* aData,
   }
 
   return SetDataWithPrincipal(aFormat, aData, aIndex,
-                              nsContentUtils::GetSubjectPrincipal());
+                              nsContentUtils::SubjectPrincipal());
 }
 
 void
@@ -749,7 +749,7 @@ DataTransfer::MozClearDataAtHelper(const nsAString& aFormat, uint32_t aIndex,
   nsAutoString format;
   GetRealFormat(aFormat, format);
 
-  nsIPrincipal* principal = nsContentUtils::GetSubjectPrincipal();
+  nsIPrincipal* principal = nsContentUtils::SubjectPrincipal();
 
   // if the format is empty, clear all formats
   bool clearall = format.IsEmpty();
