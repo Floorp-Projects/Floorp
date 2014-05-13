@@ -337,7 +337,7 @@ bool
 nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
 {
     MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
-    nsCOMPtr<nsIPrincipal> subjectPrincipal = nsContentUtils::GetSubjectPrincipal();
+    nsCOMPtr<nsIPrincipal> subjectPrincipal = nsContentUtils::SubjectPrincipal();
     nsCOMPtr<nsIContentSecurityPolicy> csp;
     nsresult rv = subjectPrincipal->GetCsp(getter_AddRefs(csp));
     NS_ASSERTION(NS_SUCCEEDED(rv), "CSP: Failed to get CSP from principal.");
@@ -393,7 +393,7 @@ nsScriptSecurityManager::CheckSameOrigin(JSContext* cx,
     MOZ_ASSERT_IF(cx, cx == nsContentUtils::GetCurrentJSContext());
 
     // Get a principal from the context
-    nsIPrincipal* sourcePrincipal = nsContentUtils::GetSubjectPrincipal();
+    nsIPrincipal* sourcePrincipal = nsContentUtils::SubjectPrincipal();
     if (sourcePrincipal == mSystemPrincipal)
     {
         // This is a system (chrome) script, so allow access
@@ -470,7 +470,7 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
 {
     // Get principal of currently executing script.
     MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
-    nsIPrincipal* principal = nsContentUtils::GetSubjectPrincipal();
+    nsIPrincipal* principal = nsContentUtils::SubjectPrincipal();
     nsresult rv = CheckLoadURIWithPrincipal(principal, aURI,
                                             nsIScriptSecurityManager::STANDARD);
     if (NS_SUCCEEDED(rv)) {
@@ -1046,7 +1046,7 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
     //-- Access denied, report an error
     NS_ConvertUTF8toUTF16 strName("CreateWrapperDenied");
     nsAutoCString origin;
-    nsIPrincipal* subjectPrincipal = nsContentUtils::GetSubjectPrincipal();
+    nsIPrincipal* subjectPrincipal = nsContentUtils::SubjectPrincipal();
     GetPrincipalDomainOrigin(subjectPrincipal, origin);
     NS_ConvertUTF8toUTF16 originUnicode(origin);
     NS_ConvertUTF8toUTF16 classInfoName(objClassInfo.GetName());
