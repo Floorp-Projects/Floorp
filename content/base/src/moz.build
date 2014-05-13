@@ -243,7 +243,3 @@ LOCAL_INCLUDES += [
     '/netwerk/base/src',
     '/xpcom/ds',
 ]
-
-if CONFIG['GNU_CC'] and CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    # Work around bug 986928
-    CXXFLAGS += ['-Wno-error=format']

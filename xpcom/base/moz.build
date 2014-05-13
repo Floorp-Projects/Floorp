@@ -156,7 +156,3 @@ LOCAL_INCLUDES += [
 
 if CONFIG['MOZ_OPTIMIZE']:
     DEFINES['MOZ_OPTIMIZE'] = True
-
-if CONFIG['GNU_CC'] and CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    # Work around bug 986928
-    CXXFLAGS += ['-Wno-error=format']
