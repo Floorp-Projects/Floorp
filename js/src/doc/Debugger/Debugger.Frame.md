@@ -63,7 +63,7 @@ JavaScript stack, frames pushed for SpiderMonkey's calls to handler methods
 to report events in the debuggee are never considered visible frames.)
 
 
-## Invocation Functions and "debugger" Frames
+## <span id='invf'>Invocation</span> Functions and "debugger" Frames
 
 An <i>invocation function</i> is any function in this interface that allows
 the debugger to invoke code in the debuggee:
