@@ -23,6 +23,10 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
+#ifdef MOZ_NUWA_PROCESS
+# include "ipc/Nuwa.h"
+#endif
+
 using namespace js;
 
 using mozilla::ArrayLength;
@@ -724,6 +728,14 @@ void
 WorkerThread::ThreadMain(void *arg)
 {
     PR_SetCurrentThreadName("Analysis Helper");
+
+#ifdef MOZ_NUWA_PROCESS
+    if (IsNuwaProcess()) {
+        JS_ASSERT(NuwaMarkCurrentThread != nullptr);
+        NuwaMarkCurrentThread(nullptr, nullptr);
+    }
+#endif
+
     static_cast<WorkerThread *>(arg)->threadLoop();
 }
 
