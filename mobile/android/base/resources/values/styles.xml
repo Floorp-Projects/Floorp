@@ -364,7 +364,7 @@
     <style name="TextAppearance.Widget.Home.ItemTitle" parent="TextAppearance.Medium"/>
 
     <style name="TextAppearance.Widget.Home.ItemDescription" parent="TextAppearance.Micro">
-        <item name="android:textColor">?android:attr/textColorSecondary</item>
+        <item name="android:textColor">#AFB1B3</item>
     </style>
 
     <style name="TextAppearance.Widget.HomeBanner" parent="TextAppearance.Small">
