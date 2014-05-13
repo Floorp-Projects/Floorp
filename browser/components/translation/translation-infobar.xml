@@ -73,7 +73,7 @@
           </xul:deck>
           <xul:spacer flex="1"/>
 
-          <xul:button type="menu" label="&translation.options.menu;">
+          <xul:button type="menu" anonid="options" label="&translation.options.menu;">
             <xul:menupopup onpopupshowing="document.getBindingParent(this).optionsShowing();">
               <xul:menuitem anonid="neverForLanguage"
                             oncommand="document.getBindingParent(this).neverForLanguage();"/>
