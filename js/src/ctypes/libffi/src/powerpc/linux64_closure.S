@@ -30,7 +30,7 @@
 
 	.file	"linux64_closure.S"
 
-#ifdef __powerpc64__
+#ifdef POWERPC64
 	FFI_HIDDEN (ffi_closure_LINUX64)
 	.globl  ffi_closure_LINUX64
 # if _CALL_ELF == 2
@@ -100,6 +100,10 @@ ffi_closure_LINUX64:
 	# load up the pointer to the parm save area
 	mr	%r5, %r12
 # else
+	# copy r2 to r11 and load TOC into r2
+	mr	%r11, %r2
+	ld	%r2, 16(%r11)
+
 	mflr	%r0
 	# Save general regs into parm save area
 	# This is the parameter save area set up by our caller.
