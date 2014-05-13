@@ -2782,7 +2782,6 @@ sctp_userspace_ip_output(int *result, struct mbuf *o_pak,
 	int use_udp_tunneling;
 
 	*result = 0;
-	send_count = 0;
 
 	m = SCTP_HEADER_TO_CHAIN(o_pak);
 	m_orig = m;
@@ -2938,7 +2937,6 @@ void sctp_userspace_ip6_output(int *result, struct mbuf *o_pak,
 	int use_udp_tunneling;
 
 	*result = 0;
-	send_count = 0;
 
 	m = SCTP_HEADER_TO_CHAIN(o_pak);
 	m_orig = m;

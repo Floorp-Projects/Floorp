@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>Scrolling the horizontal bar away shouldn't invalidate the green rectangle</title>
+
+<style>
+
+.wrapper {
+  transform: translateY(1px);
+}
+
+.content {
+  box-sizing: border-box;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.first {
+  height: 20px;
+}
+
+.second {
+  margin-left: auto;
+  width: 20px;
+  height: 200px;
+}
+
+.reftest-no-paint {
+  margin: -150px 100px 0;
+  height: 100px;
+  border-color: lime;
+}
+
+body {
+  margin: 0;
+  padding: 50px;
+  height: 3000px;
+}
+
+</style>
+
+<div class="wrapper">
+  <div class="first content"></div>
+  <div class="second content"></div>
+</div>
+
+<div class="reftest-no-paint content"></div>
+
+<script>
+
+function doTest() {
+  document.documentElement.scrollTop = 100;
+  document.documentElement.removeAttribute("class");
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+
+</script>

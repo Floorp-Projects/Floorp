@@ -249,8 +249,8 @@ static void CopyDataSourceSurface(DataSourceSurface* aSource,
                                   DataSourceSurface* aDest)
 {
   MOZ_ASSERT(aSource->GetSize() == aDest->GetSize());
-  MOZ_ASSERT(aSource->GetFormat() == SurfaceFormat::R8G8B8A8 ||
-             aSource->GetFormat() == SurfaceFormat::R8G8B8X8);
+  MOZ_ASSERT(aSource->GetFormat() == SurfaceFormat::B8G8R8A8 ||
+             aSource->GetFormat() == SurfaceFormat::B8G8R8X8);
 
   uint8_t *srcRow = aSource->GetData();
   size_t srcRowBytes = aSource->GetSize().width * BytesPerPixel(aSource->GetFormat());
@@ -328,44 +328,40 @@ GuessAlignment(int width, int pixelSize, int rowStride)
 }
 
 void
-ReadPixelsIntoImageSurface(GLContext* gl, gfxImageSurface* dest) {
+ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest) {
     gl->MakeCurrent();
-    MOZ_ASSERT(dest->GetSize() != gfxIntSize(0, 0));
+    MOZ_ASSERT(dest->GetSize().width != 0);
+    MOZ_ASSERT(dest->GetSize().height != 0);
 
-    /* gfxImageFormat::ARGB32:
-     * RGBA+UByte:   be[RGBA], le[ABGR]
-     * RGBA+UInt:    be[ABGR], le[RGBA]
-     * BGRA+UInt:    be[ARGB], le[BGRA]
-     * BGRA+UIntRev: be[BGRA], le[ARGB]
-     *
-     * gfxImageFormat::RGB16_565:
-     * RGB+UShort: le[rrrrrggg,gggbbbbb]
-     */
-    bool hasAlpha = dest->Format() == gfxImageFormat::ARGB32;
+    bool hasAlpha = dest->GetFormat() == SurfaceFormat::B8G8R8A8 ||
+                    dest->GetFormat() == SurfaceFormat::R8G8B8A8;
 
     int destPixelSize;
     GLenum destFormat;
     GLenum destType;
 
-    switch (dest->Format()) {
-        case gfxImageFormat::RGB24: // XRGB
-        case gfxImageFormat::ARGB32:
-            destPixelSize = 4;
+    switch (dest->GetFormat()) {
+        case SurfaceFormat::B8G8R8A8:
+        case SurfaceFormat::B8G8R8X8:
             // Needs host (little) endian ARGB.
             destFormat = LOCAL_GL_BGRA;
             destType = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
             break;
-
-        case gfxImageFormat::RGB16_565:
-            destPixelSize = 2;
+        case SurfaceFormat::R8G8B8A8:
+        case SurfaceFormat::R8G8B8X8:
+            // Needs host (little) endian ABGR.
+            destFormat = LOCAL_GL_RGBA;
+            destType = LOCAL_GL_UNSIGNED_BYTE;
+            break;
+        case SurfaceFormat::R5G6B5:
             destFormat = LOCAL_GL_RGB;
             destType = LOCAL_GL_UNSIGNED_SHORT_5_6_5_REV;
             break;
-
         default:
             MOZ_CRASH("Bad format.");
     }
-    MOZ_ASSERT(dest->Width() * destPixelSize <= dest->Stride());
+    destPixelSize = BytesPerPixel(dest->GetFormat());
+    MOZ_ASSERT(dest->GetSize().width * destPixelSize <= dest->Stride());
 
     GLenum readFormat = destFormat;
     GLenum readType = destType;
@@ -373,20 +369,15 @@ ReadPixelsIntoImageSurface(GLContext* gl, gfxImageSurface* dest) {
                                                destFormat, destType,
                                                readFormat, readType);
 
-    nsAutoPtr<gfxImageSurface> tempSurf;
-    gfxImageSurface* readSurf = nullptr;
-
-    // Figure out alignment. We don't need to know why, we just need it
-    // to be valid.
-    int readAlignment = GuessAlignment(dest->Width(),
+    RefPtr<DataSourceSurface> tempSurf;
+    DataSourceSurface* readSurf = dest;
+    int readAlignment = GuessAlignment(dest->GetSize().width,
                                        destPixelSize,
                                        dest->Stride());
-    if (!readAlignment) // Couldn't calculate a valid alignment.
+    if (!readAlignment) {
         needsTempSurf = true;
-
-    if (!needsTempSurf) {
-        readSurf = dest;
-    } else {
+    }
+    if (needsTempSurf) {
         if (gl->DebugMode()) {
             NS_WARNING("Needing intermediary surface for ReadPixels. This will be slow!");
         }
@@ -431,154 +422,11 @@ ReadPixelsIntoImageSurface(GLContext* gl, gfxImageSurface* dest) {
             }
         }
 
-        tempSurf = new gfxImageSurface(dest->GetSize(),
-                                       SurfaceFormatToImageFormat(readFormatGFX),
-                                       false);
-        readSurf = tempSurf;
-    }
-    MOZ_ASSERT(readAlignment);
-
-    GLint currentPackAlignment = 0;
-    gl->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, &currentPackAlignment);
-
-    if (currentPackAlignment != readAlignment)
-        gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, readAlignment);
-
-    GLsizei width = dest->Width();
-    GLsizei height = dest->Height();
-
-    readSurf->Flush();
-    gl->fReadPixels(0, 0,
-                    width, height,
-                    readFormat, readType,
-                    readSurf->Data());
-    readSurf->MarkDirty();
-
-    if (currentPackAlignment != readAlignment)
-        gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, currentPackAlignment);
-
-    if (readSurf != dest) {
-        MOZ_ASSERT(readFormat == LOCAL_GL_RGBA);
-        MOZ_ASSERT(readType == LOCAL_GL_UNSIGNED_BYTE);
-        // So we just copied in RGBA in big endian, or le: 0xAABBGGRR.
-        // We want 0xAARRGGBB, so swap R and B:
-        dest->Flush();
-        RefPtr<DataSourceSurface> readDSurf =
-            Factory::CreateWrappingDataSourceSurface(readSurf->Data(),
-                                                     readSurf->Stride(),
-                                                     ToIntSize(readSurf->GetSize()),
-                                                     ImageFormatToSurfaceFormat(readSurf->Format()));
-        SwapRAndBComponents(readDSurf);
-        dest->MarkDirty();
-
-        gfxContext ctx(dest);
-        ctx.SetOperator(gfxContext::OPERATOR_SOURCE);
-        ctx.SetSource(readSurf);
-        ctx.Paint();
-    }
-
-    // Check if GL is giving back 1.0 alpha for
-    // RGBA reads to RGBA images from no-alpha buffers.
-#ifdef XP_MACOSX
-    if (gl->WorkAroundDriverBugs() &&
-        gl->Vendor() == gl::GLVendor::NVIDIA &&
-        dest->Format() == gfxImageFormat::ARGB32 &&
-        width && height)
-    {
-        GLint alphaBits = 0;
-        gl->fGetIntegerv(LOCAL_GL_ALPHA_BITS, &alphaBits);
-        if (!alphaBits) {
-            const uint32_t alphaMask = gfxPackedPixelNoPreMultiply(0xff,0,0,0);
-
-            MOZ_ASSERT(dest->Width() * destPixelSize == dest->Stride());
-
-            dest->Flush();
-            uint32_t* itr = (uint32_t*)dest->Data();
-            uint32_t testPixel = *itr;
-            if ((testPixel & alphaMask) != alphaMask) {
-                // We need to set the alpha channel to 1.0 manually.
-                uint32_t* itrEnd = itr + width*height;  // Stride is guaranteed to be width*4.
-
-                for (; itr != itrEnd; itr++) {
-                    *itr |= alphaMask;
-                }
-            }
-            dest->MarkDirty();
-        }
-    }
-#endif
-}
-
-void
-ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest) {
-    gl->MakeCurrent();
-    MOZ_ASSERT(dest->GetSize().width != 0);
-    MOZ_ASSERT(dest->GetSize().height != 0);
-
-    bool hasAlpha = dest->GetFormat() == SurfaceFormat::B8G8R8A8 ||
-                    dest->GetFormat() == SurfaceFormat::R8G8B8A8;
-
-    int destPixelSize;
-    GLenum destFormat;
-    GLenum destType;
-
-    switch (dest->GetFormat()) {
-        case SurfaceFormat::B8G8R8A8:
-        case SurfaceFormat::B8G8R8X8:
-            // Needs host (little) endian ARGB.
-            destFormat = LOCAL_GL_BGRA;
-            destType = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
-            break;
-        case SurfaceFormat::R8G8B8A8:
-        case SurfaceFormat::R8G8B8X8:
-            // Needs host (little) endian ABGR.
-            destFormat = LOCAL_GL_RGBA;
-            destType = LOCAL_GL_UNSIGNED_BYTE;
-            break;
-        case SurfaceFormat::R5G6B5:
-            destFormat = LOCAL_GL_RGB;
-            destType = LOCAL_GL_UNSIGNED_SHORT_5_6_5_REV;
-            break;
-        default:
-            MOZ_CRASH("Bad format.");
-    }
-    destPixelSize = BytesPerPixel(dest->GetFormat());
-    MOZ_ASSERT(dest->GetSize().width * destPixelSize <= dest->Stride());
-
-    GLenum readFormat = destFormat;
-    GLenum readType = destType;
-    bool needsTempSurf = !GetActualReadFormats(gl,
-                                               destFormat, destType,
-                                               readFormat, readType);
-
-    RefPtr<DataSourceSurface> tempSurf;
-    DataSourceSurface* readSurf = nullptr;
-    int readAlignment = 0;
-    if (needsTempSurf) {
-        if (gl->DebugMode()) {
-            NS_WARNING("Needing intermediary surface for ReadPixels. This will be slow!");
-        }
-        SurfaceFormat readFormatGFX;
-
-        // If needs temp surface, readFormat is always LOCAL_GL_RGBA
-        // and readType is always LOCAL_GL_UNSIGNED_BYTE
-        MOZ_ASSERT(readFormat == LOCAL_GL_RGBA);
-        MOZ_ASSERT(readType == LOCAL_GL_UNSIGNED_BYTE);
-        readFormatGFX = hasAlpha ? SurfaceFormat::R8G8B8A8
-                                 : SurfaceFormat::R8G8B8X8;
-        readAlignment = 1;
         int32_t stride = dest->GetSize().width * BytesPerPixel(readFormatGFX);
         tempSurf = Factory::CreateDataSourceSurfaceWithStride(dest->GetSize(),
                                                               readFormatGFX,
                                                               stride);
         readSurf = tempSurf;
-    } else {
-        // Figure out alignment. We don't need to know why, we just need it
-        // to be valid.
-        readAlignment = GuessAlignment(dest->GetSize().width,
-                                       destPixelSize,
-                                       dest->Stride());
-        readSurf = dest;
     }
     MOZ_ASSERT(readAlignment);
     MOZ_ASSERT(reinterpret_cast<uintptr_t>(readSurf->GetData()) % readAlignment == 0);
@@ -704,14 +552,6 @@ ReadBackSurface(GLContext* gl, GLuint aTexture, bool aYInvert, SurfaceFormat aFo
 
     return surf.forget();
 }
-
-void
-ReadScreenIntoImageSurface(GLContext* gl, gfxImageSurface* dest)
-{
-    ScopedBindFramebuffer autoFB(gl, 0);
-    ReadPixelsIntoImageSurface(gl, dest);
-}
-
 
 #define CLEANUP_IF_GLERROR_OCCURRED(x)                                      \
     if (DidGLErrorOccur(x)) {                                               \
