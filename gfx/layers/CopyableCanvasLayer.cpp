@@ -17,12 +17,11 @@
 #include "gfxUtils.h"                   // for gfxUtils
 #include "gfx2DGlue.h"                  // for thebes --> moz2d transition
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
-#include "mozilla/gfx/Tools.h"
 #include "nsDebug.h"                    // for NS_ASSERTION, NS_WARNING, etc
 #include "nsISupportsImpl.h"            // for gfxContext::AddRef, etc
 #include "nsRect.h"                     // for nsIntRect
 #include "nsSize.h"                     // for nsIntSize
-#include "gfxUtils.h"
+#include "LayerUtils.h"
 
 using namespace mozilla::gfx;
 using namespace mozilla::gl;
@@ -127,7 +126,7 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
             Factory::CreateWrappingDataSourceSurface(destData, destStride, destSize, destFormat);
           mGLContext->Screen()->Readback(sharedSurf, data);
           if (needsPremult) {
-              gfxUtils::PremultiplyDataSurface(data);
+            PremultiplySurface(data);
           }
           aDestTarget->ReleaseBits(destData);
           return;
@@ -145,7 +144,7 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
       // Readback handles Flush/MarkDirty.
       mGLContext->Screen()->Readback(sharedSurf, data);
       if (needsPremult) {
-        gfxUtils::PremultiplyDataSurface(data);
+        PremultiplySurface(data);
       }
       resultSurf = data;
     }
@@ -171,9 +170,7 @@ CopyableCanvasLayer::GetTempSurface(const IntSize& aSize,
       aSize != mCachedTempSurface->GetSize() ||
       aFormat != mCachedTempSurface->GetFormat())
   {
-    // Create a surface aligned to 8 bytes since that's the highest alignment WebGL can handle.
-    uint32_t stride = GetAlignedStride<8>(aSize.width * BytesPerPixel(aFormat));
-    mCachedTempSurface = Factory::CreateDataSourceSurfaceWithStride(aSize, aFormat, stride);
+    mCachedTempSurface = Factory::CreateDataSourceSurface(aSize, aFormat);
   }
 
   return mCachedTempSurface;
