@@ -242,6 +242,8 @@ class DeviceManagerSUT(DeviceManager):
                                 errStr = 'connection closed'
                         timer += select_timeout
                         if timer > timeout:
+                            self._sock.close()
+                            self._sock = None
                             raise DMError("Automation Error: Timeout in command %s" % cmd['cmd'], fatal=True)
                     except socket.error, err:
                         socketClosed = True
