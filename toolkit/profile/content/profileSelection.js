@@ -133,6 +133,9 @@ function onProfilesKey(aEvent)
   switch( aEvent.keyCode ) 
   {
   case KeyEvent.DOM_VK_DELETE:
+#ifdef XP_MACOSX
+  case KeyEvent.DOM_VK_BACK_SPACE:
+#endif
     ConfirmDelete();
     break;
   case KeyEvent.DOM_VK_F2:
