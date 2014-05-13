@@ -31,14 +31,14 @@ parent:
     async ClientRecycle();
 
     /**
+     * Synchronously tell the TextureChild to clear TextureHost.
+     */
+    sync ClearTextureHostSync();
+
+    /**
      * Asynchronously tell the Compositor side to remove the texture.
      */
     async RemoveTexture();
-
-    /**
-     * Synchronously tell the compositor side to remove the texture.
-     */
-    sync RemoveTextureSync();
 };
 
 } // layers
