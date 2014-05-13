@@ -10,6 +10,7 @@
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
+#include "nsICrashService.h"
 #endif
 
 using namespace base;
@@ -133,7 +134,36 @@ CrashReporterParent::GenerateChildData(const AnnotationTable* processNotes)
         ret = CrashReporter::AppendExtraData(mChildDumpID, *processNotes);
     if (!ret)
         NS_WARNING("problem appending child data to .extra");
+
+    NotifyCrashService();
+
     return ret;
+}
+
+void
+CrashReporterParent::NotifyCrashService()
+{
+    nsCOMPtr<nsICrashService> crashService =
+        do_GetService("@mozilla.org/crashservice;1");
+    if (!crashService) {
+        return;
+    }
+
+    if (mProcessType == GeckoProcessType_Content) {
+        crashService->AddCrash(nsICrashService::PROCESS_TYPE_CONTENT,
+                               nsICrashService::CRASH_TYPE_CRASH,
+                               mChildDumpID);
+    }
+    else if (mProcessType == GeckoProcessType_Plugin) {
+        nsAutoCString val;
+        int32_t crashType = nsICrashService::CRASH_TYPE_CRASH;
+        if (mNotes.Get(NS_LITERAL_CSTRING("PluginHang"), &val) &&
+            val.Equals(NS_LITERAL_CSTRING("1"))) {
+            crashType = nsICrashService::CRASH_TYPE_HANG;
+        }
+        crashService->AddCrash(nsICrashService::PROCESS_TYPE_PLUGIN, crashType,
+                               mChildDumpID);
+    }
 }
 #endif
 

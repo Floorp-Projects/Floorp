@@ -597,6 +597,7 @@ var qrcode = function() {
 		Q : 3,
 		H : 2
 	};
+        // mozilla: Add module support
         exports.QRErrorCorrectLevel = QRErrorCorrectLevel;
 
 	//---------------------------------------------------------------------
@@ -1133,7 +1134,7 @@ var qrcode = function() {
 		return _this;
 	}();
 
-        // jryans: Add module support
+        // mozilla: Add module support
         exports.QRRSBlock = QRRSBlock;
 
 	//---------------------------------------------------------------------
@@ -1669,5 +1670,5 @@ var qrcode = function() {
 	return qrcode;
 }();
 
-// jryans: Add module support
+// mozilla: Add module support
 exports.Encoder = qrcode;

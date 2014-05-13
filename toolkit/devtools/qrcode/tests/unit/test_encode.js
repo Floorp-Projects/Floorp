@@ -10,7 +10,7 @@ const { utils: Cu } = Components;
 const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const { require } = devtools;
 
-const QR = require("devtools/toolkit/qrcode/qrcode");
+const QR = require("devtools/toolkit/qrcode/index");
 
 function run_test() {
   let imgData = QR.encodeToDataURI("HELLO", "L");

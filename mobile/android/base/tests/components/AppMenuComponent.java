@@ -29,7 +29,8 @@ import com.jayway.android.robotium.solo.Solo;
 public class AppMenuComponent extends BaseComponent {
     public enum MenuItem {
         FORWARD(R.string.forward),
-        NEW_TAB(R.string.new_tab);
+        NEW_TAB(R.string.new_tab),
+        RELOAD(R.string.reload);
 
         private final int resourceID;
         private String stringResource;

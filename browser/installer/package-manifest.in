@@ -773,6 +773,7 @@ bin/libfreebl_32int64_3.so
 #ifdef MOZ_CRASHREPORTER
 @BINPATH@/components/CrashService.manifest
 @BINPATH@/components/CrashService.js
+@BINPATH@/components/toolkit_crashservice.xpt
 #ifdef XP_MACOSX
 @BINPATH@/crashreporter.app/
 #else

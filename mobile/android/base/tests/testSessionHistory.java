@@ -28,10 +28,7 @@ public class testSessionHistory extends UITest {
         NavigationHelper.goForward();
         mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE);
 
-        // TODO: Implement this functionality and uncomment.
-        /*
         NavigationHelper.reload();
         mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE);
-        */
     }
 }
