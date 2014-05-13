@@ -34,6 +34,8 @@ public:
   nsISupports* GetParentObject() const { return mDocument; }
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
+  Nullable<double> GetCurrentTime() const;
+
 protected:
   nsCOMPtr<nsIDocument> mDocument;
 };
