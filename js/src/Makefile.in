@@ -39,6 +39,11 @@ SHARED_LIBRARY_LIBS += \
     $(NULL)
 endif
 
+# Windows needs this to be linked with a static library.
+ifndef MOZ_NATIVE_FFI
+DEFINES += -DFFI_BUILDING
+endif
+
 endif # JS_HAS_CTYPES
 
 DASH_R		= -r
