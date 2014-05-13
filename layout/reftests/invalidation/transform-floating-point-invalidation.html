@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>Scrolling shouldn't invalidate the rect</title>
+
+<body>
+
+<svg width="824" height="1375" viewBox="0 0 660 1100">
+  <rect x="100" y="600" width="120" height="120" fill="#EEE"
+        transform="matrix(0,0.969665,-2.0321494,0,1828.58132,65.718239)"
+        class="reftest-no-paint"/>
+</svg>
+
+<script>
+
+var scrollPositions = [81, 82];
+if (location.search.contains("reverse")) {
+  scrollPositions.reverse();
+}
+document.documentElement.scrollTop = scrollPositions[0];
+
+function doTest() {
+  document.documentElement.scrollTop = scrollPositions[1];
+  document.documentElement.removeAttribute("class");
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+
+</script>

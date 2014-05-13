@@ -42,5 +42,7 @@ pref(layout.animated-image-layers.enabled,true) == test-animated-image-layers-ba
 == scroll-inactive-layers-2.html scroll-inactive-layers-2.html
 != inactive-layertree-visible-region-1.html about:blank
 != inactive-layertree-visible-region-2.html about:blank
+!= transform-floating-point-invalidation.html about:blank
+!= transform-floating-point-invalidation.html?reverse about:blank
 != nudge-to-integer-invalidation.html about:blank
 != nudge-to-integer-invalidation.html?reverse about:blank
