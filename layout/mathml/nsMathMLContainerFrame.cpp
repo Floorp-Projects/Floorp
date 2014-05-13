@@ -827,7 +827,7 @@ nsMathMLContainerFrame::UpdateOverflow()
   return false;
 }
 
-nsresult 
+void
 nsMathMLContainerFrame::ReflowChild(nsIFrame*                aChildFrame,
                                     nsPresContext*           aPresContext,
                                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -875,7 +875,6 @@ nsMathMLContainerFrame::ReflowChild(nsIFrame*                aChildFrame,
     aDesiredSize.mBoundingMetrics.descent = r.YMost() - aDesiredSize.TopAscent();
     aDesiredSize.mBoundingMetrics.width = aDesiredSize.Width();
   }
-  return NS_OK;
 }
 
 void
