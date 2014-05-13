@@ -249,8 +249,8 @@ static void CopyDataSourceSurface(DataSourceSurface* aSource,
                                   DataSourceSurface* aDest)
 {
   MOZ_ASSERT(aSource->GetSize() == aDest->GetSize());
-  MOZ_ASSERT(aSource->GetFormat() == SurfaceFormat::R8G8B8A8 ||
-             aSource->GetFormat() == SurfaceFormat::R8G8B8X8);
+  MOZ_ASSERT(aSource->GetFormat() == SurfaceFormat::B8G8R8A8 ||
+             aSource->GetFormat() == SurfaceFormat::B8G8R8X8);
 
   uint8_t *srcRow = aSource->GetData();
   size_t srcRowBytes = aSource->GetSize().width * BytesPerPixel(aSource->GetFormat());
@@ -552,33 +552,63 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest) {
                                                readFormat, readType);
 
     RefPtr<DataSourceSurface> tempSurf;
-    DataSourceSurface* readSurf = nullptr;
-    int readAlignment = 0;
+    DataSourceSurface* readSurf = dest;
+    int readAlignment = GuessAlignment(dest->GetSize().width,
+                                       destPixelSize,
+                                       dest->Stride());
+    if (!readAlignment) {
+        needsTempSurf = true;
+    }
     if (needsTempSurf) {
         if (gl->DebugMode()) {
             NS_WARNING("Needing intermediary surface for ReadPixels. This will be slow!");
         }
         SurfaceFormat readFormatGFX;
 
-        // If needs temp surface, readFormat is always LOCAL_GL_RGBA
-        // and readType is always LOCAL_GL_UNSIGNED_BYTE
-        MOZ_ASSERT(readFormat == LOCAL_GL_RGBA);
-        MOZ_ASSERT(readType == LOCAL_GL_UNSIGNED_BYTE);
-        readFormatGFX = hasAlpha ? SurfaceFormat::R8G8B8A8
-                                 : SurfaceFormat::R8G8B8X8;
-        readAlignment = 1;
+        switch (readFormat) {
+            case LOCAL_GL_RGBA:
+            case LOCAL_GL_BGRA: {
+                readFormatGFX = hasAlpha ? SurfaceFormat::B8G8R8A8
+                                         : SurfaceFormat::B8G8R8X8;
+                break;
+            }
+            case LOCAL_GL_RGB: {
+                MOZ_ASSERT(destPixelSize == 2);
+                MOZ_ASSERT(readType == LOCAL_GL_UNSIGNED_SHORT_5_6_5_REV);
+                readFormatGFX = SurfaceFormat::R5G6B5;
+                break;
+            }
+            default: {
+                MOZ_CRASH("Bad read format.");
+            }
+        }
+
+        switch (readType) {
+            case LOCAL_GL_UNSIGNED_BYTE: {
+                MOZ_ASSERT(readFormat == LOCAL_GL_RGBA);
+                readAlignment = 1;
+                break;
+            }
+            case LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV: {
+                MOZ_ASSERT(readFormat == LOCAL_GL_BGRA);
+                readAlignment = 4;
+                break;
+            }
+            case LOCAL_GL_UNSIGNED_SHORT_5_6_5_REV: {
+                MOZ_ASSERT(readFormat == LOCAL_GL_RGB);
+                readAlignment = 2;
+                break;
+            }
+            default: {
+                MOZ_CRASH("Bad read type.");
+            }
+        }
+
         int32_t stride = dest->GetSize().width * BytesPerPixel(readFormatGFX);
         tempSurf = Factory::CreateDataSourceSurfaceWithStride(dest->GetSize(),
                                                               readFormatGFX,
                                                               stride);
         readSurf = tempSurf;
-    } else {
-        // Figure out alignment. We don't need to know why, we just need it
-        // to be valid.
-        readAlignment = GuessAlignment(dest->GetSize().width,
-                                       destPixelSize,
-                                       dest->Stride());
-        readSurf = dest;
     }
     MOZ_ASSERT(readAlignment);
     MOZ_ASSERT(reinterpret_cast<uintptr_t>(readSurf->GetData()) % readAlignment == 0);
