@@ -1647,7 +1647,7 @@ WebGLContext::InitAndValidateGL()
     mStencilWriteMaskFront = 0xffffffff;
     mStencilWriteMaskBack  = 0xffffffff;
 
-    mDitherEnabled = true;
+    mDitherEnabled = false;
     mRasterizerDiscardEnabled = false;
     mScissorTestEnabled = false;
 
