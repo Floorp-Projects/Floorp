@@ -452,11 +452,10 @@ void TextureClient::ForceRemove()
 {
   if (mValid && mActor) {
     if (GetFlags() & TextureFlags::DEALLOCATE_CLIENT) {
-      mActor->SetTextureData(DropTextureData());
       if (mActor->IPCOpen()) {
-        mActor->SendRemoveTextureSync();
+        mActor->SendClearTextureHostSync();
+        mActor->SendRemoveTexture();
       }
-      mActor->DeleteTextureData();
     } else {
       if (mActor->IPCOpen()) {
         mActor->SendRemoveTexture();
