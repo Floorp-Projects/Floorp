@@ -251,8 +251,9 @@ public:
   }
   ThisClass& operator=(const ThisClass& aRefToCopy)
   {
-    if (this == &aRefToCopy)
+    if (this == &aRefToCopy) {
       return *this;
+    }
 
     this->SafeRelease();
     SimpleRef::operator=(aRefToCopy);
@@ -291,8 +292,9 @@ protected:
   // Increase the reference count if there is a resource.
   void SafeAddRef()
   {
-    if (this->HaveResource())
+    if (this->HaveResource()) {
       this->AddRef(this->get());
+    }
   }
 };
 
@@ -467,7 +469,10 @@ public:
   // The handle is a pointer to T.
   typedef T* RawRef;
   // A nullptr does not have a resource.
-  static RawRef Void() { return nullptr; }
+  static RawRef Void()
+  {
+    return nullptr;
+  }
 };
 
 /**
@@ -658,8 +663,9 @@ protected:
   // Release a resource if there is one.
   void SafeRelease()
   {
-    if (this->HaveResource())
+    if (this->HaveResource()) {
       this->Release(this->get());
+    }
   }
 };
 

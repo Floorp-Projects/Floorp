@@ -51,8 +51,9 @@ uint32_t nsSystemInfo::gUserUmask = 0;
 
 #if defined(XP_WIN)
 namespace {
-nsresult GetHDDInfo(const char* aSpecialDirName, nsAutoCString& aModel,
-                    nsAutoCString& aRevision)
+nsresult
+GetHDDInfo(const char* aSpecialDirName, nsAutoCString& aModel,
+           nsAutoCString& aRevision)
 {
   aModel.Truncate();
   aRevision.Truncate();
@@ -84,8 +85,9 @@ nsresult GetHDDInfo(const char* aSpecialDirName, nsAutoCString& aModel,
   if (!handle.IsValid()) {
     return NS_ERROR_UNEXPECTED;
   }
-  STORAGE_PROPERTY_QUERY queryParameters = {StorageDeviceProperty,
-                                            PropertyStandardQuery};
+  STORAGE_PROPERTY_QUERY queryParameters = {
+    StorageDeviceProperty, PropertyStandardQuery
+  };
   STORAGE_DEVICE_DESCRIPTOR outputHeader = {sizeof(STORAGE_DEVICE_DESCRIPTOR)};
   DWORD bytesRead = 0;
   if (!::DeviceIoControl(handle, IOCTL_STORAGE_QUERY_PROPERTY,
@@ -137,8 +139,9 @@ nsSystemInfo::~nsSystemInfo()
 }
 
 // CPU-specific information.
-static const struct PropItems {
-  const char *name;
+static const struct PropItems
+{
+  const char* name;
   bool (*propfun)(void);
 } cpuPropItems[] = {
   // x86-specific bits.
@@ -162,9 +165,10 @@ nsSystemInfo::Init()
 {
   nsresult rv;
 
-  static const struct {
+  static const struct
+  {
     PRSysInfo cmd;
-    const char *name;
+    const char* name;
   } items[] = {
     { PR_SI_SYSNAME, "name" },
     { PR_SI_HOSTNAME, "host" },
@@ -177,10 +181,10 @@ nsSystemInfo::Init()
     if (PR_GetSystemInfo(items[i].cmd, buf, sizeof(buf)) == PR_SUCCESS) {
       rv = SetPropertyAsACString(NS_ConvertASCIItoUTF16(items[i].name),
                                  nsDependentCString(buf));
-      if (NS_WARN_IF(NS_FAILED(rv)))
+      if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
-    }
-    else {
+      }
+    } else {
       NS_WARNING("PR_GetSystemInfo failed");
     }
   }
@@ -212,8 +216,9 @@ nsSystemInfo::Init()
   for (uint32_t i = 0; i < ArrayLength(cpuPropItems); i++) {
     rv = SetPropertyAsBool(NS_ConvertASCIItoUTF16(cpuPropItems[i].name),
                            cpuPropItems[i].propfun());
-    if (NS_WARN_IF(NS_FAILED(rv)))
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
   }
 
 #ifdef XP_WIN
@@ -222,8 +227,9 @@ nsSystemInfo::Init()
   NS_WARN_IF_FALSE(gotWow64Value, "IsWow64Process failed");
   if (gotWow64Value) {
     rv = SetPropertyAsBool(NS_LITERAL_STRING("isWow64"), !!isWow64);
-    if (NS_WARN_IF(NS_FAILED(rv)))
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
   }
   nsAutoCString hddModel, hddRevision;
   if (NS_SUCCEEDED(GetHDDInfo(NS_APP_USER_PROFILE_50_DIR, hddModel,
@@ -257,26 +263,38 @@ nsSystemInfo::Init()
     rv = SetPropertyAsACString(NS_LITERAL_STRING("secondaryLibrary"),
                                nsDependentCString(gtkver));
     PR_smprintf_free(gtkver);
-    if (NS_WARN_IF(NS_FAILED(rv)))
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
   }
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
   if (mozilla::AndroidBridge::Bridge()) {
     nsAutoString str;
-    if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "MODEL", str))
+    if (mozilla::AndroidBridge::Bridge()->GetStaticStringField(
+          "android/os/Build", "MODEL", str)) {
       SetPropertyAsAString(NS_LITERAL_STRING("device"), str);
-    if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "MANUFACTURER", str))
+    }
+    if (mozilla::AndroidBridge::Bridge()->GetStaticStringField(
+          "android/os/Build", "MANUFACTURER", str)) {
       SetPropertyAsAString(NS_LITERAL_STRING("manufacturer"), str);
-    if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build$VERSION", "RELEASE", str))
+    }
+    if (mozilla::AndroidBridge::Bridge()->GetStaticStringField(
+          "android/os/Build$VERSION", "RELEASE", str)) {
       SetPropertyAsAString(NS_LITERAL_STRING("release_version"), str);
+    }
     int32_t version;
-    if (!mozilla::AndroidBridge::Bridge()->GetStaticIntField("android/os/Build$VERSION", "SDK_INT", &version))
+    if (!mozilla::AndroidBridge::Bridge()->GetStaticIntField(
+          "android/os/Build$VERSION", "SDK_INT", &version)) {
       version = 0;
+    }
     android_sdk_version = version;
-    if (version >= 8 && mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", str))
+    if (version >= 8 &&
+        mozilla::AndroidBridge::Bridge()->GetStaticStringField(
+          "android/os/Build", "HARDWARE", str)) {
       SetPropertyAsAString(NS_LITERAL_STRING("hardware"), str);
+    }
     bool isTablet = mozilla::widget::android::GeckoAppShell::IsTablet();
     SetPropertyAsBool(NS_LITERAL_STRING("tablet"), isTablet);
     // NSPR "version" is the kernel version. For Android we want the Android version.
@@ -298,8 +316,9 @@ nsSystemInfo::Init()
 
   char characteristics[PROP_VALUE_MAX];
   if (__system_property_get("ro.build.characteristics", characteristics)) {
-    if (!strcmp(characteristics, "tablet"))
+    if (!strcmp(characteristics, "tablet")) {
       SetPropertyAsBool(NS_LITERAL_STRING("tablet"), true);
+    }
   }
 
   nsAutoString str;
@@ -325,7 +344,7 @@ nsSystemInfo::Init()
 }
 
 void
-nsSystemInfo::SetInt32Property(const nsAString &aPropertyName,
+nsSystemInfo::SetInt32Property(const nsAString& aPropertyName,
                                const int32_t aValue)
 {
   NS_WARN_IF_FALSE(aValue > 0, "Unable to read system value");
@@ -339,7 +358,7 @@ nsSystemInfo::SetInt32Property(const nsAString &aPropertyName,
 }
 
 void
-nsSystemInfo::SetUint32Property(const nsAString &aPropertyName,
+nsSystemInfo::SetUint32Property(const nsAString& aPropertyName,
                                 const uint32_t aValue)
 {
   // Only one property is currently set via this function.
@@ -352,7 +371,7 @@ nsSystemInfo::SetUint32Property(const nsAString &aPropertyName,
 }
 
 void
-nsSystemInfo::SetUint64Property(const nsAString &aPropertyName,
+nsSystemInfo::SetUint64Property(const nsAString& aPropertyName,
                                 const uint64_t aValue)
 {
   NS_WARN_IF_FALSE(aValue > 0, "Unable to read system value");

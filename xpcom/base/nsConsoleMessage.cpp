@@ -14,27 +14,27 @@
 NS_IMPL_ISUPPORTS(nsConsoleMessage, nsIConsoleMessage)
 
 nsConsoleMessage::nsConsoleMessage()
-  : mTimeStamp(0),
-    mMessage()
+  : mTimeStamp(0)
+  , mMessage()
 {
 }
 
-nsConsoleMessage::nsConsoleMessage(const char16_t *message)
+nsConsoleMessage::nsConsoleMessage(const char16_t* aMessage)
 {
   mTimeStamp = JS_Now() / 1000;
-  mMessage.Assign(message);
+  mMessage.Assign(aMessage);
 }
 
 NS_IMETHODIMP
-nsConsoleMessage::GetMessageMoz(char16_t **result)
+nsConsoleMessage::GetMessageMoz(char16_t** aResult)
 {
-  *result = ToNewUnicode(mMessage);
+  *aResult = ToNewUnicode(mMessage);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsConsoleMessage::GetTimeStamp(int64_t *aTimeStamp)
+nsConsoleMessage::GetTimeStamp(int64_t* aTimeStamp)
 {
   *aTimeStamp = mTimeStamp;
   return NS_OK;

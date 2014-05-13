@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+  /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -16,12 +16,16 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMACUTILS
 
-  nsMacUtilsImpl() {}
+  nsMacUtilsImpl()
+  {
+  }
 
 private:
-  ~nsMacUtilsImpl() {}
+  ~nsMacUtilsImpl()
+  {
+  }
 
-  nsresult GetArchString(nsAString& archString);
+  nsresult GetArchString(nsAString& aArchString);
 
   // A string containing a "-" delimited list of architectures
   // in our binary.

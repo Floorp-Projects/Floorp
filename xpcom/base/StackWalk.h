@@ -15,8 +15,8 @@ namespace mozilla {
 
 nsresult
 FramePointerStackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
-                      uint32_t aMaxFrames, void *aClosure, void **bp,
-                      void *stackEnd);
+                      uint32_t aMaxFrames, void* aClosure, void** aBp,
+                      void* aStackEnd);
 
 }
 
