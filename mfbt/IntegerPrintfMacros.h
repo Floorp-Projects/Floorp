@@ -37,4 +37,25 @@
 #  include <inttypes.h>
 #endif
 
+/*
+ * Fix up Android's broken [u]intptr_t inttype macros. Android's PRI*PTR
+ * macros are defined as "ld", but sizeof(long) is 8 and sizeof(intptr_t)
+ * is 4 on 32-bit Android. TestTypeTraits.cpp asserts that these new macro
+ * definitions match the actual type sizes seen at compile time.
+ */
+#if defined(ANDROID) && !defined(__LP64__)
+#  undef  PRIdPTR      /* intptr_t  */
+#  define PRIdPTR "d"  /* intptr_t  */
+#  undef  PRIiPTR      /* intptr_t  */
+#  define PRIiPTR "i"  /* intptr_t  */
+#  undef  PRIoPTR      /* uintptr_t */
+#  define PRIoPTR "o"  /* uintptr_t */
+#  undef  PRIuPTR      /* uintptr_t */
+#  define PRIuPTR "u"  /* uintptr_t */
+#  undef  PRIxPTR      /* uintptr_t */
+#  define PRIxPTR "x"  /* uintptr_t */
+#  undef  PRIXPTR      /* uintptr_t */
+#  define PRIXPTR "X"  /* uintptr_t */
+#endif
+
 #endif  /* mozilla_IntegerPrintfMacros_h_ */
