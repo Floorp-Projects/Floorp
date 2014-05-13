@@ -97,12 +97,14 @@ from its prototype:
     Scripts' static level be useful in deciding where to set breakpoints.
     For example, a breakpoint set on line 3 in this code:
 
-        function f() {
-          x = function g() {  // line 2
-                              // line 3; no code here
-            ...;
-          }
-        }
+    ```language-js
+    function f() {
+      x = function g() {  // line 2
+                          // line 3; no code here
+        ...;
+      }
+    }
+    ```
 
     should be set in `g`'s script, not in `f`'s, even though neither script
     contains code at that line. In such a case, the most deeply nested
@@ -151,14 +153,18 @@ methods of other kinds of objects.
 
     For example, suppose we have a script for the following source code:
 
-        a=[]
-        for (i=1; i < 10; i++)
-            // It's hip to be square.
-            a[i] = i*i;
+    ```language-js
+    a=[]
+    for (i=1; i < 10; i++)
+        // It's hip to be square.
+        a[i] = i*i;
+    ```
 
     Calling `getAllOffsets()` on that code might yield an array like this:
 
-        [[0], [5, 20], , [10]]
+    ```language-js
+    [[0], [5, 20], , [10]]
+    ```
 
     This array indicates that:
 
@@ -193,10 +199,10 @@ methods of other kinds of objects.
     <i>offset</i> is not a valid offset in this script, throw an error.
 
     When execution reaches the given instruction, SpiderMonkey calls the
-    `hit<code> method of <i>handler</i>, passing a [</code>Debugger.Frame`][frame] instance
-    representing the currently executing stack frame. The `hit` method's
-    return value should be a [resumption value][rv], determining how execution should
-    continue.
+    `hit` method of <i>handler</i>, passing a [`Debugger.Frame`][frame]
+    instance representing the currently executing stack frame. The `hit`
+    method's return value should be a [resumption value][rv], determining
+    how execution should continue.
 
     Any number of breakpoints may be set at a single location; when control
     reaches that point, SpiderMonkey calls their handlers in an unspecified
