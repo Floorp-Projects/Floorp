@@ -20,14 +20,7 @@
 #include <utils/RefBase.h>
 
 #include <utils/Atomic.h>
-#ifdef _MSC_VER
-class CallStack {
-public:
-    CallStack(int x) {}
-};
-#else
 #include <utils/CallStack.h>
-#endif
 #include <utils/Log.h>
 #include <utils/threads.h>
 
@@ -47,7 +40,7 @@ public:
 #define DEBUG_REFS_ENABLED_BY_DEFAULT   0
 
 // whether callstack are collected (significantly slows things down)
-#define DEBUG_REFS_CALLSTACK_ENABLED    0
+#define DEBUG_REFS_CALLSTACK_ENABLED    1
 
 // folder where stack traces are saved when DEBUG_REFS is enabled
 // this folder needs to exist and be writable

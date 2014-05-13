@@ -201,7 +201,7 @@ void move_backward_type(TYPE* d, const TYPE* s, size_t n = 1) {
     if ((traits<TYPE>::has_trivial_dtor && traits<TYPE>::has_trivial_copy) 
             || traits<TYPE>::has_trivial_move) 
     {
-        memmove((void*)d,(void*)s,n*sizeof(TYPE));
+        memmove(d,s,n*sizeof(TYPE));
     } else {
         while (n--) {
             if (!traits<TYPE>::has_trivial_copy) {

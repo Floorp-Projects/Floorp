@@ -46,6 +46,7 @@ private:
 
   static int AllocateBufferCb(AVCodecContext* aCodecContext, AVFrame* aFrame);
 
+  mp4_demuxer::VideoDecoderConfig mConfig;
   MediaDataDecoderCallback* mCallback;
   nsRefPtr<ImageContainer> mImageContainer;
 
