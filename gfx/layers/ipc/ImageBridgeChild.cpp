@@ -363,13 +363,13 @@ void ImageBridgeChild::FlushAllImages(ImageClient* aClient, ImageContainer* aCon
     NS_ERROR("ImageBridgeChild::FlushAllImages() is called on ImageBridge thread.");
      return;
    }
- 
+
   RefPtr<AsyncTransactionTracker> status = aClient->PrepareFlushAllImages();
- 
+
   sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
     FROM_HERE,
     NewRunnableFunction(&FlushAllImagesSync, aClient, aContainer, aExceptFront, status));
- 
+
   status->WaitComplete();
 }
 
