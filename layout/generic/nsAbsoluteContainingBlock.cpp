@@ -343,7 +343,7 @@ nsAbsoluteContainingBlock::DoMarkFramesDirty(bool aMarkAllDirty)
 // mChildListID == kFixedList, the height is unconstrained.
 // since we don't allow replicated frames to split.
 
-nsresult
+void
 nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegatingFrame,
                                                nsPresContext*           aPresContext,
                                                const nsHTMLReflowState& aReflowState,
@@ -412,7 +412,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   }
 
   // Do the reflow
-  nsresult rv = aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
+  aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
 
   // If we're solving for 'left' or 'top', then compute it now that we know the
   // width/height
@@ -497,6 +497,4 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   if (aOverflowAreas) {
     aOverflowAreas->UnionWith(kidDesiredSize.mOverflowAreas + rect.TopLeft());
   }
-
-  return rv;
 }

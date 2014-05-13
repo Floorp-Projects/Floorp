@@ -34,7 +34,7 @@ public:
   NS_IMETHOD
   TransmitAutomaticData() MOZ_OVERRIDE;
 
-  virtual nsresult
+  virtual void
   Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,

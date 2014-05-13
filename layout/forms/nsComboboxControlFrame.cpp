@@ -398,7 +398,7 @@ public:
   nsWeakFrame mFrame;
 };
 
-nsresult
+void
 nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
                                        const nsHTMLReflowState& aReflowState)
 {
@@ -407,7 +407,7 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
   // need to reflow it, just bail out here.
   if (!aReflowState.ShouldReflowAllKids() &&
       !NS_SUBTREE_DIRTY(mDropdownFrame)) {
-    return NS_OK;
+    return;
   }
 
   // XXXbz this will, for small-height dropdowns, have extra space on the right
@@ -444,14 +444,12 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
   nsRect rect = mDropdownFrame->GetRect();
   nsHTMLReflowMetrics desiredSize(aReflowState);
   nsReflowStatus ignoredStatus;
-  nsresult rv = ReflowChild(mDropdownFrame, aPresContext, desiredSize,
-                            kidReflowState, rect.x, rect.y, flags,
-                            ignoredStatus);
+  ReflowChild(mDropdownFrame, aPresContext, desiredSize,
+              kidReflowState, rect.x, rect.y, flags, ignoredStatus);
 
    // Set the child's width and height to its desired size
   FinishReflowChild(mDropdownFrame, aPresContext, desiredSize,
                     &kidReflowState, rect.x, rect.y, flags);
-  return rv;
 }
 
 nsPoint
@@ -759,7 +757,7 @@ nsComboboxControlFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
   return prefWidth;
 }
 
-nsresult
+void
 nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
@@ -778,7 +776,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
 
   if (!mDisplayFrame || !mButtonFrame || !mDropdownFrame) {
     NS_ERROR("Why did the frame constructor allow this to happen?  Fix it!!");
-    return NS_ERROR_UNEXPECTED;
+    return;
   }
 
   // Make sure the displayed text is the same as the selected option, bug 297389.
@@ -828,9 +826,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
 
   mDisplayWidth = aReflowState.ComputedWidth() - buttonWidth;
 
-  nsresult rv = nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState,
-                                    aStatus);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   // The button should occupy the same space as a scrollbar
   nsRect buttonRect = mButtonFrame->GetRect();
@@ -859,7 +855,6 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
     // a nsComboboxControlFrame makes no sense, so we override the status here.
     aStatus = NS_FRAME_COMPLETE;
   }
-  return rv;
 }
 
 //--------------------------------------------------------------
@@ -1213,7 +1208,7 @@ public:
       ~(nsIFrame::eReplacedContainsBlock));
   }
 
-  virtual nsresult Reflow(nsPresContext*           aPresContext,
+  virtual void Reflow(nsPresContext*           aPresContext,
                           nsHTMLReflowMetrics&     aDesiredSize,
                           const nsHTMLReflowState& aReflowState,
                           nsReflowStatus&          aStatus) MOZ_OVERRIDE;
@@ -1234,7 +1229,7 @@ nsComboboxDisplayFrame::GetType() const
   return nsGkAtoms::comboboxDisplayFrame;
 }
 
-nsresult
+void
 nsComboboxDisplayFrame::Reflow(nsPresContext*           aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,

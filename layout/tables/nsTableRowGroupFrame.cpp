@@ -1285,7 +1285,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
   * This method stacks rows vertically according to HTML 4.0 rules.
   * Rows are responsible for layout of their children.
   */
-nsresult
+void
 nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
                              nsHTMLReflowMetrics&     aDesiredSize,
                              const nsHTMLReflowState& aReflowState,
@@ -1294,7 +1294,6 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsTableRowGroupFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
-  nsresult rv = NS_OK;
   aStatus     = NS_FRAME_COMPLETE;
 
   // Row geometry may be going to change so we need to invalidate any row cursor.
@@ -1316,8 +1315,8 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
 
   // Reflow the existing frames. 
   bool splitDueToPageBreak = false;
-  rv = ReflowChildren(aPresContext, aDesiredSize, state, aStatus,
-                      &splitDueToPageBreak);
+  ReflowChildren(aPresContext, aDesiredSize, state, aStatus,
+                 &splitDueToPageBreak);
 
   // See if all the frames fit. Do not try to split anything if we're
   // not paginated ... we can't split across columns yet.
@@ -1359,7 +1358,6 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
   
   FinishAndStoreOverflow(&aDesiredSize);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return rv;
 }
 
 bool

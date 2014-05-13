@@ -265,7 +265,7 @@ nsRangeFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     new (aBuilder) nsDisplayRangeFocusRing(aBuilder, this));
 }
 
-nsresult
+void
 nsRangeFrame::Reflow(nsPresContext*           aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
@@ -294,9 +294,7 @@ nsRangeFrame::Reflow(nsPresContext*           aPresContext,
   aDesiredSize.Height() = computedHeight +
                         aReflowState.ComputedPhysicalBorderPadding().TopBottom();
 
-  nsresult rv =
-    ReflowAnonymousContent(aPresContext, aDesiredSize, aReflowState);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ReflowAnonymousContent(aPresContext, aDesiredSize, aReflowState);
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();
 
@@ -320,11 +318,9 @@ nsRangeFrame::Reflow(nsPresContext*           aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-
-  return NS_OK;
 }
 
-nsresult
+void
 nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
                                      nsHTMLReflowMetrics&     aDesiredSize,
                                      const nsHTMLReflowState& aReflowState)
@@ -370,14 +366,12 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
 
     nsReflowStatus frameStatus;
     nsHTMLReflowMetrics trackDesiredSize(aReflowState);
-    nsresult rv = ReflowChild(trackFrame, aPresContext, trackDesiredSize,
-                              trackReflowState, trackX, trackY, 0, frameStatus);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ReflowChild(trackFrame, aPresContext, trackDesiredSize,
+                trackReflowState, trackX, trackY, 0, frameStatus);
     MOZ_ASSERT(NS_FRAME_IS_FULLY_COMPLETE(frameStatus),
                "We gave our child unconstrained height, so it should be complete");
-    rv = FinishReflowChild(trackFrame, aPresContext, trackDesiredSize,
-                           &trackReflowState, trackX, trackY, 0);
-    NS_ENSURE_SUCCESS(rv, rv);
+    FinishReflowChild(trackFrame, aPresContext, trackDesiredSize,
+                      &trackReflowState, trackX, trackY, 0);
   }
 
   nsIFrame* thumbFrame = mThumbDiv->GetPrimaryFrame();
@@ -392,15 +386,12 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
 
     nsReflowStatus frameStatus;
     nsHTMLReflowMetrics thumbDesiredSize(aReflowState);
-    nsresult rv = ReflowChild(thumbFrame, aPresContext, thumbDesiredSize,
-                              thumbReflowState, 0, 0, 0, frameStatus);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ReflowChild(thumbFrame, aPresContext, thumbDesiredSize,
+                thumbReflowState, 0, 0, 0, frameStatus);
     MOZ_ASSERT(NS_FRAME_IS_FULLY_COMPLETE(frameStatus),
                "We gave our child unconstrained height, so it should be complete");
-    rv = FinishReflowChild(thumbFrame, aPresContext, thumbDesiredSize,
-                           &thumbReflowState, 0, 0, 0);
-    NS_ENSURE_SUCCESS(rv, rv);
-
+    FinishReflowChild(thumbFrame, aPresContext, thumbDesiredSize,
+                      &thumbReflowState, 0, 0, 0);
     DoUpdateThumbPosition(thumbFrame, nsSize(aDesiredSize.Width(),
                                              aDesiredSize.Height()));
   }
@@ -419,21 +410,16 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
 
     nsReflowStatus frameStatus;
     nsHTMLReflowMetrics progressDesiredSize(aReflowState);
-    nsresult rv = ReflowChild(rangeProgressFrame, aPresContext,
-                              progressDesiredSize, progressReflowState, 0, 0,
-                              0, frameStatus);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ReflowChild(rangeProgressFrame, aPresContext,
+                progressDesiredSize, progressReflowState, 0, 0,
+                0, frameStatus);
     MOZ_ASSERT(NS_FRAME_IS_FULLY_COMPLETE(frameStatus),
                "We gave our child unconstrained height, so it should be complete");
-    rv = FinishReflowChild(rangeProgressFrame, aPresContext,
-                           progressDesiredSize, &progressReflowState, 0, 0, 0);
-    NS_ENSURE_SUCCESS(rv, rv);
-
+    FinishReflowChild(rangeProgressFrame, aPresContext,
+                      progressDesiredSize, &progressReflowState, 0, 0, 0);
     DoUpdateRangeProgressFrame(rangeProgressFrame, nsSize(aDesiredSize.Width(),
                                                           aDesiredSize.Height()));
   }
-
-  return NS_OK;
 }
 
 #ifdef ACCESSIBILITY

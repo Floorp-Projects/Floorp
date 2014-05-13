@@ -117,14 +117,14 @@ protected:
   bool FrameDependsOnContainer(nsIFrame* aFrame, bool aCBWidthChanged,
                                bool aCBHeightChanged);
 
-  nsresult ReflowAbsoluteFrame(nsIFrame*                aDelegatingFrame,
-                               nsPresContext*           aPresContext,
-                               const nsHTMLReflowState& aReflowState,
-                               const nsRect&            aContainingBlockRect,
-                               bool                     aConstrainHeight,
-                               nsIFrame*                aKidFrame,
-                               nsReflowStatus&          aStatus,
-                               nsOverflowAreas*         aOverflowAreas);
+  void ReflowAbsoluteFrame(nsIFrame*                aDelegatingFrame,
+                           nsPresContext*           aPresContext,
+                           const nsHTMLReflowState& aReflowState,
+                           const nsRect&            aContainingBlockRect,
+                           bool                     aConstrainHeight,
+                           nsIFrame*                aKidFrame,
+                           nsReflowStatus&          aStatus,
+                           nsOverflowAreas*         aOverflowAreas);
 
   /**
    * Mark our absolute frames dirty.

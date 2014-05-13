@@ -1865,10 +1865,10 @@ public:
    * @param aStatus a return value indicating whether the frame is complete
    *          and whether the next-in-flow is dirty and needs to be reflowed
    */
-  virtual nsresult Reflow(nsPresContext*          aPresContext,
-                          nsHTMLReflowMetrics&     aReflowMetrics,
-                          const nsHTMLReflowState& aReflowState,
-                          nsReflowStatus&          aStatus) = 0;
+  virtual void Reflow(nsPresContext*           aPresContext,
+                      nsHTMLReflowMetrics&     aReflowMetrics,
+                      const nsHTMLReflowState& aReflowState,
+                      nsReflowStatus&          aStatus) = 0;
 
   /**
    * Post-reflow hook. After a frame is reflowed this method will be called

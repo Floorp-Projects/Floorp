@@ -68,10 +68,10 @@ public:
   virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
 
-  virtual nsresult Reflow(nsPresContext*           aCX,
-                          nsHTMLReflowMetrics&     aDesiredSize,
-                          const nsHTMLReflowState& aReflowState,
-                          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+  virtual void Reflow(nsPresContext*           aCX,
+                      nsHTMLReflowMetrics&     aDesiredSize,
+                      const nsHTMLReflowState& aReflowState,
+                      nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   virtual void Init(nsIContent*      aContent,
                     nsIFrame*        aParent,
@@ -343,10 +343,10 @@ protected:
    * reflow as a listbox because the criteria for needing a second
    * pass are different.  This will be called from Reflow() as needed.
    */
-  nsresult ReflowAsDropdown(nsPresContext*           aPresContext,
-                            nsHTMLReflowMetrics&     aDesiredSize,
-                            const nsHTMLReflowState& aReflowState,
-                            nsReflowStatus&          aStatus);
+  void ReflowAsDropdown(nsPresContext*           aPresContext,
+                        nsHTMLReflowMetrics&     aDesiredSize,
+                        const nsHTMLReflowState& aReflowState,
+                        nsReflowStatus&          aStatus);
 
   // Selection
   bool     SetOptionsSelectedFromFrame(int32_t aStartIndex,

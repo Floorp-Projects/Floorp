@@ -1035,7 +1035,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
 /** Layout the entire row.
   * This method stacks cells horizontally according to HTML 4.0 rules.
   */
-nsresult
+void
 nsTableRowFrame::Reflow(nsPresContext*          aPresContext,
                         nsHTMLReflowMetrics&     aDesiredSize,
                         const nsHTMLReflowState& aReflowState,
@@ -1043,7 +1043,6 @@ nsTableRowFrame::Reflow(nsPresContext*          aPresContext,
 {
   DO_GLOBAL_REFLOW_COUNT("nsTableRowFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
-  nsresult rv = NS_OK;
 
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   const nsStyleVisibility* rowVis = StyleVisibility();
@@ -1058,8 +1057,7 @@ nsTableRowFrame::Reflow(nsPresContext*          aPresContext,
   // See if we have a cell with specified/pct height
   InitHasCellWithStyleHeight(tableFrame);
 
-  rv = ReflowChildren(aPresContext, aDesiredSize, aReflowState, *tableFrame,
-                      aStatus);
+  ReflowChildren(aPresContext, aDesiredSize, aReflowState, *tableFrame, aStatus);
 
   if (aPresContext->IsPaginated() && !NS_FRAME_IS_FULLY_COMPLETE(aStatus) &&
       ShouldAvoidBreakInside(aReflowState)) {
@@ -1077,7 +1075,6 @@ nsTableRowFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return rv;
 }
 
 /**
