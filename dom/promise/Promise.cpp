@@ -908,7 +908,7 @@ Promise::MaybeReportRejected()
   if (MOZ_LIKELY(NS_IsMainThread())) {
     win =
       do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(obj));
-    nsIPrincipal* principal = nsContentUtils::GetObjectPrincipal(obj);
+    nsIPrincipal* principal = nsContentUtils::ObjectPrincipal(obj);
     isChromeError = nsContentUtils::IsSystemPrincipal(principal);
   } else {
     WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();

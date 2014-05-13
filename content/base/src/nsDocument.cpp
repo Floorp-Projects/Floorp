@@ -6358,7 +6358,7 @@ nsIDocument::LoadBindingDocument(const nsAString& aURI, ErrorResult& rv)
   // It's just designed to preserve the old semantics during a mass-conversion
   // patch.
   nsCOMPtr<nsIPrincipal> subjectPrincipal =
-    nsContentUtils::GetCurrentJSContext() ? nsContentUtils::GetSubjectPrincipal()
+    nsContentUtils::GetCurrentJSContext() ? nsContentUtils::SubjectPrincipal()
                                           : NodePrincipal();
   BindingManager()->LoadBindingDocument(this, uri, subjectPrincipal);
 }

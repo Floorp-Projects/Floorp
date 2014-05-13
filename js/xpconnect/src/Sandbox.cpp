@@ -208,7 +208,7 @@ CreateXMLHttpRequest(JSContext *cx, unsigned argc, jsval *vp)
     nsCOMPtr<nsIGlobalObject> iglobal = do_QueryInterface(sop);
 
     nsCOMPtr<nsIXMLHttpRequest> xhr = new nsXMLHttpRequest();
-    nsresult rv = xhr->Init(nsContentUtils::GetSubjectPrincipal(), nullptr,
+    nsresult rv = xhr->Init(nsContentUtils::SubjectPrincipal(), nullptr,
                             iglobal, nullptr);
     if (NS_FAILED(rv))
         return false;

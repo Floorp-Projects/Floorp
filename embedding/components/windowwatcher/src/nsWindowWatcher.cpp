@@ -791,7 +791,7 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
   // It's just designed to preserve old semantics during a mass-conversion
   // patch.
   nsCOMPtr<nsIPrincipal> subjectPrincipal =
-    nsContentUtils::GetCurrentJSContext() ? nsContentUtils::GetSubjectPrincipal()
+    nsContentUtils::GetCurrentJSContext() ? nsContentUtils::SubjectPrincipal()
                                           : nullptr;
 
   if (windowIsNew) {

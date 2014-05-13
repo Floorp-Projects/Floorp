@@ -14,5 +14,5 @@ nsIGlobalObject::PrincipalOrNull()
   if (NS_WARN_IF(!global))
     return nullptr;
 
-  return nsContentUtils::GetObjectPrincipal(global);
+  return nsContentUtils::ObjectPrincipal(global);
 }
