@@ -27,6 +27,7 @@
   <MozParam name="channel" condition="purpose" purpose="keyword" value="fflb"/>
   <MozParam name="channel" condition="purpose" purpose="searchbar" value="sb"/>
   <MozParam name="channel" condition="purpose" purpose="homepage" value="np"/>
+  <MozParam name="channel" condition="purpose" purpose="newtab" value="nts"/>
   <MozParam name="source" condition="purpose" purpose="homepage" value="hp"/>
 </Url>
 <Url type="text/html" method="GET" template="https://www.google.com/" rel="searchform"/>
