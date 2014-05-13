@@ -19,6 +19,18 @@ nsIFrame::IsFlexItem() const
 }
 
 bool
+nsIFrame::IsFlexOrGridItem() const
+{
+  if (mParent) {
+    nsIAtom* t = mParent->GetType();
+    return (t == nsGkAtoms::flexContainerFrame ||
+            t == nsGkAtoms::gridContainerFrame) &&
+      !(GetStateBits() & NS_FRAME_OUT_OF_FLOW);
+  }
+  return false;
+}
+
+bool
 nsIFrame::IsFloating() const
 {
   return StyleDisplay()->IsFloating(this);

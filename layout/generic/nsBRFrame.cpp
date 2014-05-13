@@ -35,7 +35,7 @@ public:
                               bool aIsKeyboardSelect, int32_t* aOffset,
                               PeekWordState* aState) MOZ_OVERRIDE;
 
-  virtual nsresult Reflow(nsPresContext* aPresContext,
+  virtual void Reflow(nsPresContext* aPresContext,
                           nsHTMLReflowMetrics& aDesiredSize,
                           const nsHTMLReflowState& aReflowState,
                           nsReflowStatus& aStatus) MOZ_OVERRIDE;
@@ -77,7 +77,7 @@ BRFrame::~BRFrame()
 {
 }
 
-nsresult
+void
 BRFrame::Reflow(nsPresContext* aPresContext,
                 nsHTMLReflowMetrics& aMetrics,
                 const nsHTMLReflowState& aReflowState,
@@ -154,7 +154,6 @@ BRFrame::Reflow(nsPresContext* aPresContext,
   mAscent = aMetrics.TopAscent();
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
-  return NS_OK;
 }
 
 /* virtual */ void

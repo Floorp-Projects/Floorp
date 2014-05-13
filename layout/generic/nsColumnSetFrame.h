@@ -17,10 +17,10 @@ public:
   virtual nsresult SetInitialChildList(ChildListID     aListID,
                                        nsFrameList&    aChildList) MOZ_OVERRIDE;
 
-  virtual nsresult Reflow(nsPresContext* aPresContext,
-                          nsHTMLReflowMetrics& aDesiredSize,
-                          const nsHTMLReflowState& aReflowState,
-                          nsReflowStatus& aStatus) MOZ_OVERRIDE;
+  virtual void Reflow(nsPresContext* aPresContext,
+                      nsHTMLReflowMetrics& aDesiredSize,
+                      const nsHTMLReflowState& aReflowState,
+                      nsReflowStatus& aStatus) MOZ_OVERRIDE;
 
   virtual nsresult  AppendFrames(ChildListID     aListID,
                                  nsFrameList&    aFrameList) MOZ_OVERRIDE;

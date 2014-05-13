@@ -7,7 +7,7 @@
 #include "BluetoothRilListener.h"
 
 #include "BluetoothHfpManager.h"
-#include "nsIDOMMobileConnection.h"
+#include "nsIMobileConnectionInfo.h"
 #include "nsIRadioInterfaceLayer.h"
 #include "nsRadioInterfaceLayer.h"
 #include "nsServiceManagerUtils.h"
@@ -350,7 +350,7 @@ BluetoothRilListener::SelectClient()
   NS_ENSURE_TRUE_VOID(connection);
 
   for (uint32_t i = 0; i < mMobileConnListeners.Length(); i++) {
-    nsCOMPtr<nsIDOMMozMobileConnectionInfo> voiceInfo;
+    nsCOMPtr<nsIMobileConnectionInfo> voiceInfo;
     connection->GetVoiceConnectionInfo(i, getter_AddRefs(voiceInfo));
     if (!voiceInfo) {
       BT_WARNING("%s: Failed to get voice connection info", __FUNCTION__);

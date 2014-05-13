@@ -24,6 +24,7 @@ class nsIFile;
 class nsIJSRuntimeService;
 class nsIPrincipal;
 class nsIXPConnectJSObjectHolder;
+class ComponentLoaderInfo;
 
 /* 6bd13476-1dd2-11b2-bbef-f0ccb5fa64b6 (thanks, mozbot) */
 
@@ -71,8 +72,8 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
                                        bool aReuseLoaderGlobal,
                                        bool *aRealFile);
 
-    nsresult ObjectForLocation(nsIFile* aComponentFile,
-                               nsIURI *aComponent,
+    nsresult ObjectForLocation(ComponentLoaderInfo& aInfo,
+                               nsIFile* aComponentFile,
                                JS::MutableHandleObject aObject,
                                JS::MutableHandleScript aTableScript,
                                char **location,

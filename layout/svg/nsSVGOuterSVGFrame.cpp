@@ -305,7 +305,7 @@ nsSVGOuterSVGFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                             aMargin, aBorder, aPadding);
 }
 
-nsresult
+void
 nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
@@ -449,21 +449,18 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
                   ("exit nsSVGOuterSVGFrame::Reflow: size=%d,%d",
                   aDesiredSize.Width(), aDesiredSize.Height()));
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return NS_OK;
 }
 
-nsresult
+void
 nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
                               const nsHTMLReflowState*  aReflowState,
                               nsDidReflowStatus aStatus)
 {
-  nsresult rv = nsSVGOuterSVGFrameBase::DidReflow(aPresContext,aReflowState,aStatus);
+  nsSVGOuterSVGFrameBase::DidReflow(aPresContext,aReflowState,aStatus);
 
   // Make sure elements styled by :hover get updated if script/animation moves
   // them under or out from under the pointer:
   PresContext()->PresShell()->SynthesizeMouseMove(false);
-
-  return rv;
 }
 
 /* virtual */ bool

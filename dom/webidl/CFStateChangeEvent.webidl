@@ -19,7 +19,7 @@ interface CFStateChangeEvent : Event
    * One of the CALL_FORWARD_ACTION_* constants. It will be either disable (0),
    * enable (1), query status (2), registration (3), or erasure (4).
    *
-   * @see 3GPP nsIDOMMozMobileCFInfo.CALL_FORWARD_ACTION_* values.
+   * @see 3GPP MozMobileConnection.CALL_FORWARD_ACTION_* values.
    * @see 3GPP TS 27.007 7.11 "mode".
    */
   readonly attribute unsigned short action;
@@ -31,7 +31,7 @@ interface CFStateChangeEvent : Event
    * unconditional (0), mobile busy (1), no reply (2), not reachable (3),
    * all call forwarding (4), or all conditional call forwarding (5).
    *
-   * @see 3GPP nsIDOMMozMobileCFInfo.CALL_FORWARD_REASON_* values.
+   * @see 3GPP MozMobileConnection.CALL_FORWARD_REASON_* values.
    * @see 3GPP TS 27.007 7.11 "reason".
    */
   readonly attribute unsigned short reason;
@@ -49,7 +49,7 @@ interface CFStateChangeEvent : Event
 
   /**
    * Service for which the call forward is set up. It should be one of the
-   * nsIDOMMozMobileConnectionInfo.ICC_SERVICE_CLASS_* values.
+   * MozMobileConnection.ICC_SERVICE_CLASS_* values.
    */
   readonly attribute unsigned short serviceClass;
 };

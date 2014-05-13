@@ -134,14 +134,12 @@ nsMathMLTokenFrame::InsertFrames(ChildListID aListID,
   return rv;
 }
 
-nsresult
+void
 nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
 {
-  nsresult rv = NS_OK;
-
   // initializations needed for empty markup like <mtag></mtag>
   aDesiredSize.Width() = aDesiredSize.Height() = 0;
   aDesiredSize.SetTopAscent(0);
@@ -156,28 +154,20 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
                                          | NS_REFLOW_CALC_BOUNDING_METRICS);
     nsHTMLReflowState childReflowState(aPresContext, aReflowState,
                                        childFrame, availSize);
-    rv = ReflowChild(childFrame, aPresContext, childDesiredSize,
-                     childReflowState, aStatus);
+    ReflowChild(childFrame, aPresContext, childDesiredSize,
+                childReflowState, aStatus);
     //NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
-    if (NS_FAILED(rv)) {
-      // Call DidReflow() for the child frames we successfully did reflow.
-      DidReflowChildren(GetFirstPrincipalChild(), childFrame);
-      return rv;
-    }
-
     SaveReflowAndBoundingMetricsFor(childFrame, childDesiredSize,
                                     childDesiredSize.mBoundingMetrics);
 
     childFrame = childFrame->GetNextSibling();
   }
 
-
   // place and size children
   FinalizeReflow(*aReflowState.rendContext, aDesiredSize);
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return NS_OK;
 }
 
 // For token elements, mBoundingMetrics is computed at the ReflowToken
