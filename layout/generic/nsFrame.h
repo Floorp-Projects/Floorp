@@ -636,15 +636,15 @@ protected:
   void FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent = nullptr);
 
 private:
-  nsresult BoxReflow(nsBoxLayoutState& aState,
-                     nsPresContext*    aPresContext,
-                     nsHTMLReflowMetrics&     aDesiredSize,
-                     nsRenderingContext* aRenderingContext,
-                     nscoord aX,
-                     nscoord aY,
-                     nscoord aWidth,
-                     nscoord aHeight,
-                     bool aMoveFrame = true);
+  void BoxReflow(nsBoxLayoutState& aState,
+                 nsPresContext*    aPresContext,
+                 nsHTMLReflowMetrics&     aDesiredSize,
+                 nsRenderingContext* aRenderingContext,
+                 nscoord aX,
+                 nscoord aY,
+                 nscoord aWidth,
+                 nscoord aHeight,
+                 bool aMoveFrame = true);
 
   NS_IMETHODIMP RefreshSizeCache(nsBoxLayoutState& aState);
 
