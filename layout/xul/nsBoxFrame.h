@@ -129,9 +129,9 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif
 
-  virtual nsresult DidReflow(nsPresContext*           aPresContext,
-                             const nsHTMLReflowState*  aReflowState,
-                             nsDidReflowStatus         aStatus) MOZ_OVERRIDE;
+  virtual void DidReflow(nsPresContext*           aPresContext,
+                         const nsHTMLReflowState* aReflowState,
+                         nsDidReflowStatus        aStatus) MOZ_OVERRIDE;
 
   virtual bool HonorPrintBackgroundSettings() MOZ_OVERRIDE;
 
