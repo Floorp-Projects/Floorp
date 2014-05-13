@@ -9,7 +9,7 @@ assertEq(desc.writable, true);
 
 assertEq(typeof Set, 'function');
 assertEq(Object.keys(Set).length, 0);
-assertEq(Set.length, 0);
+assertEq(Set.length, 1);
 assertEq(Set.name, "Set");
 
 assertEq(Object.getPrototypeOf(Set.prototype), Object.prototype);
