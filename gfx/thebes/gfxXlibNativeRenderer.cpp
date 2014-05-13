@@ -626,7 +626,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
             NativeSurface native;
             native.mFormat = moz2DFormat;
             native.mType = NativeSurfaceType::CAIRO_SURFACE;
-            native.mSurface = tempXlibSurface;
+            native.mSurface = paintSurface->CairoSurface();
             native.mSize = ToIntSize(size);
             RefPtr<SourceSurface> sourceSurface =
                 drawTarget->CreateSourceSurfaceFromNativeSurface(native);
