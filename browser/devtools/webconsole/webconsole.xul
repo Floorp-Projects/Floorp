@@ -104,7 +104,7 @@ function goUpdateConsoleCommands() {
         </toolbarbutton>
         <toolbarbutton label="&btnPageCSS.label;" type="menu-button"
                        category="css" class="devtools-toolbarbutton webconsole-filter-button"
-                       tooltiptext="&btnPageCSS.tooltip;"
+                       tooltiptext="&btnPageCSS.tooltip2;"
                        accesskey="&btnPageCSS.accesskey;"
                        tabindex="4">
           <menupopup>
