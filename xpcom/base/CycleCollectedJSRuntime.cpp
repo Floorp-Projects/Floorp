@@ -250,9 +250,6 @@ private:
                          void* aKey, JSGCTraceKind aKeyKind,
                          void* aValue, JSGCTraceKind aValueKind)
   {
-    MOZ_ASSERT(!JS::IsIncrementalGCInProgress(aTrc->runtime),
-               "Don't call FixWeakMappingGrayBits during a GC.");
-
     FixWeakMappingGrayBitsTracer* tracer =
       static_cast<FixWeakMappingGrayBitsTracer*>(aTrc);
 
@@ -968,6 +965,8 @@ CycleCollectedJSRuntime::UsefulToMergeZones() const
 void
 CycleCollectedJSRuntime::FixWeakMappingGrayBits() const
 {
+  MOZ_ASSERT(!JS::IsIncrementalGCInProgress(mJSRuntime),
+             "Don't call FixWeakMappingGrayBits during a GC.");
   FixWeakMappingGrayBitsTracer fixer(mJSRuntime);
   fixer.FixAll();
 }
