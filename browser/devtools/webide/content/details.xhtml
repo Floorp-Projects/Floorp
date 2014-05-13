@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html [
+  <!ENTITY % webideDTD SYSTEM "chrome://webide/locale/webide.dtd" >
+  %webideDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf8"/>
+    <link rel="stylesheet" href="chrome://webide/skin/details.css" type="text/css"/>
+    <script type="application/javascript;version=1.8" src="chrome://webide/content/details.js"></script>
+  </head>
+  <body>
+
+    <div id="toolbar">
+      <button onclick="removeProject()">&details_removeProject_button;</button>
+      <p id="validation_status">
+        <span class="valid">&details_valid_header;</span>
+        <span class="warning">&details_warning_header;</span>
+        <span class="error">&details_error_header;</span>
+      </p>
+    </div>
+
+    <header>
+      <img id="icon"></img>
+      <div>
+        <h1></h1>
+        <p id="type"></p>
+      </div>
+    </header>
+
+    <main>
+      <h3 id="descriptionHeader">&details_description;</h3>
+      <p id="description"></p>
+
+      <h3 id="locationHeader">&details_location;</h3>
+      <p id="location"></p>
+
+      <h3 id="manifestURLHeader">&details_manifestURL;</h3>
+      <p id="manifestURL"></p>
+    </main>
+
+    <ul class="validation_messages" id="errorslist"></ul>
+    <ul class="validation_messages" id="warningslist"></ul>
+
+  </body>
+</html>

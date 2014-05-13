@@ -1,0 +1,164 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE window [
+  <!ENTITY % webideDTD SYSTEM "chrome://webide/locale/webide.dtd" >
+  %webideDTD;
+]>
+
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://webide/skin/webide.css"?>
+
+<window id="webide"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="&windowTitle;"
+        windowtype="devtools:webide"
+        macanimationtype="document"
+        fullscreenbutton="true"
+        screenX="4" screenY="4"
+        width="640" height="480"
+        persist="screenX screenY width height">
+
+  <script type="application/javascript" src="webide.js"></script>
+
+  <commandset id="mainCommandSet">
+    <commandset id="editMenuCommands"/>
+    <commandset id="webideCommands">
+      <command id="cmd_quit" oncommand="Cmds.quit()"/>
+      <command id="cmd_newApp" oncommand="Cmds.newApp()" label="&projectMenu_newApp_label;"/>
+      <command id="cmd_importPackagedApp" oncommand="Cmds.importPackagedApp()" label="&projectMenu_importPackagedApp_label;"/>
+      <command id="cmd_importHostedApp" oncommand="Cmds.importHostedApp()" label="&projectMenu_importHostedApp_label;"/>
+      <command id="cmd_removeProject" oncommand="Cmds.removeProject()" label="&projectMenu_remove_label;"/>
+      <command id="cmd_showProjectPanel" oncommand="Cmds.showProjectPanel()"/>
+      <command id="cmd_showRuntimePanel" oncommand="Cmds.showRuntimePanel()"/>
+      <command id="cmd_disconnectRuntime" oncommand="Cmds.disconnectRuntime()" label="&runtimeMenu_disconnect_label;"/>
+      <command id="cmd_showPermissionsTable" oncommand="Cmds.showPermissionsTable()" label="&runtimeMenu_showPermissionTable_label;"/>
+      <command id="cmd_showRuntimeDetails" oncommand="Cmds.showRuntimeDetails()" label="&runtimeMenu_showDetails_label;"/>
+      <command id="cmd_takeScreenshot" oncommand="Cmds.takeScreenshot()" label="&runtimeMenu_takeScreenshot_label;"/>
+      <command id="cmd_toggleEditor" oncommand="Cmds.toggleEditors()" label="&viewMenu_toggleEditor_label;"/>
+      <command id="cmd_play" oncommand="Cmds.play()"/>
+      <command id="cmd_stop" oncommand="Cmds.stop()"/>
+      <command id="cmd_toggleToolbox" oncommand="Cmds.toggleToolbox()"/>
+    </commandset>
+  </commandset>
+
+  <menubar id="main-menubar">
+    <menu id="menu-project" label="&projectMenu_label;" accesskey="&projectMenu_accesskey;">
+      <menupopup id="menu-project-popup">
+        <menuitem command="cmd_newApp" accesskey="&projectMenu_newApp_accesskey;"/>
+        <menuitem command="cmd_importPackagedApp" accesskey="&projectMenu_importPackagedApp_accesskey;"/>
+        <menuitem command="cmd_importHostedApp" accesskey="&projectMenu_importHostedApp_accesskey;"/>
+        <menuitem command="cmd_showProjectPanel" key="key_showProjectPanel" label="&projectMenu_selectApp_label;" accesskey="&projectMenu_selectApp_accessley;"/>
+        <menuseparator/>
+        <menuitem command="cmd_play" key="key_play" label="&projectMenu_play_label;" accesskey="&projectMenu_play_accesskey;"/>
+        <menuitem command="cmd_stop" key="key_stop" label="&projectMenu_stop_label;" accesskey="&projectMenu_stop_accesskey;"/>
+        <menuitem command="cmd_toggleToolbox" key="key_toggleToolbox" label="&projectMenu_debug_label;" accesskey="&projectMenu_debug_accesskey;"/>
+        <menuseparator/>
+        <menuitem command="cmd_removeProject" accesskey="&projectMenu_remove_accesskey;"/>
+      </menupopup>
+    </menu>
+
+    <menu id="menu-runtime" label="&runtimeMenu_label;" accesskey="&runtimeMenu_accesskey;">
+      <menupopup id="menu-runtime-popup">
+        <menuitem command="cmd_takeScreenshot" accesskey="&runtimeMenu_takeScreenshot_accesskey;"/>
+        <menuitem command="cmd_showPermissionsTable" accesskey="&runtimeMenu_showPermissionTable_accesskey;"/>
+        <menuitem command="cmd_showRuntimeDetails" accesskey="&runtimeMenu_showDetails_accesskey;"/>
+        <menuseparator/>
+        <menuitem command="cmd_disconnectRuntime" accesskey="&runtimeMenu_disconnect_accesskey;"/>
+      </menupopup>
+    </menu>
+
+    <menu id="menu-view" label="&viewMenu_label;" accesskey="&viewMenu_accesskey;">
+      <menupopup id="menu-ViewPopup">
+        <menuitem command="cmd_toggleEditor" key="key_toggleEditor" accesskey="&viewMenu_toggleEditor_accesskey;"/>
+      </menupopup>
+    </menu>
+
+  </menubar>
+
+  <keyset id="mainKeyset">
+    <key key="&key_quit;" id="key_quit" command="cmd_quit" modifiers="accel"/>
+    <key key="&key_showProjectPanel;" id="key_showProjectPanel" command="cmd_showProjectPanel" modifiers="accel"/>
+    <key key="&key_play;" id="key_play" command="cmd_play" modifiers="accel"/>
+    <key key="&key_stop;" id="key_stop" command="cmd_stop" modifiers="accel"/>
+    <key key="&key_toggleEditor;" id="key_toggleEditor" command="cmd_toggleEditor" modifiers="accel"/>
+    <key keycode="&key_toggleToolbox;" id="key_toggleToolbox" command="cmd_toggleToolbox"/>
+  </keyset>
+
+  <toolbar id="main-toolbar">
+
+    <vbox flex="1">
+      <hbox id="action-buttons-container" class="busy">
+        <toolbarbutton id="action-button-play"  class="action-button" command="cmd_play" tooltiptext="&projectMenu_play_label;"/>
+        <toolbarbutton id="action-button-stop"  class="action-button" command="cmd_stop" tooltiptext="&projectMenu_stop_label;"/>
+        <toolbarbutton id="action-button-debug" class="action-button" command="cmd_toggleToolbox" tooltiptext="&projectMenu_debug_label;"/>
+        <html:img id="action-busy" src="chrome://webide/skin/throbber.svg"/>
+      </hbox>
+
+      <hbox id="panel-buttons-container">
+        <toolbarbutton id="project-panel-button" class="panel-button no-project" command="cmd_showProjectPanel">
+          <image class="panel-button-image"/>
+          <label class="panel-button-label" value="&projectButton_label;"/>
+          <image class="panel-button-anchor"/>
+        </toolbarbutton>
+        <spacer flex="1"/>
+        <toolbarbutton id="runtime-panel-button" class="panel-button" command="cmd_showRuntimePanel">
+          <image class="panel-button-image"/>
+          <label class="panel-button-label" value="&runtimeButton_label;"/>
+          <image class="panel-button-anchor"/>
+        </toolbarbutton>
+      </hbox>
+
+    </vbox>
+  </toolbar>
+
+  <popupset>
+
+    <!-- App panel -->
+    <panel id="project-panel" type="arrow" position="bottomcenter topleft" consumeoutsideclicks="true">
+      <vbox flex="1">
+        <toolbarbutton class="panel-item project-panel-item-newapp" command="cmd_newApp"/>
+        <toolbarbutton class="panel-item project-panel-item-openpackaged" command="cmd_importPackagedApp"/>
+        <toolbarbutton class="panel-item project-panel-item-openhosted" command="cmd_importHostedApp"/>
+        <label class="panel-header">&projectPanel_myProjects;</label>
+        <vbox id="project-panel-projects"></vbox>
+        <label class="panel-header" id="panel-header-runtimeapps" hidden="true">&projectPanel_runtimeApps;</label>
+        <vbox flex="1" id="project-panel-runtimeapps"/>
+      </vbox>
+    </panel>
+
+    <!-- Runtime panel -->
+    <panel id="runtime-panel" type="arrow" position="bottomcenter topright" consumeoutsideclicks="true">
+      <vbox flex="1">
+        <label class="panel-header">&runtimePanel_USBDevices;</label>
+        <vbox id="runtime-panel-usbruntime"></vbox>
+        <label class="panel-header">&runtimePanel_simulators;</label>
+        <vbox id="runtime-panel-simulators"></vbox>
+        <vbox flex="1" id="runtime-actions" hidden="true">
+          <toolbarbutton class="panel-item" id="runtime-details" command="cmd_showRuntimeDetails"/>
+          <toolbarbutton class="panel-item" id="runtime-permissions" command="cmd_showPermissionsTable"/>
+          <toolbarbutton class="panel-item" id="runtime-screenshot"  command="cmd_takeScreenshot"/>
+        </vbox>
+      </vbox>
+    </panel>
+
+  </popupset>
+
+  <vbox flex="1" id="body">
+    <iframe id="details" flex="1" hidden="true" src="details.xhtml"/>
+  </vbox>
+
+  <splitter hidden="true" class="devtools-horizontal-splitter" orient="vertical"/>
+
+  <!-- toolbox iframe will be inserted here -->
+
+  <html:div id="logs-container">
+    <html:pre id="logs"></html:pre>
+    <html:button id="toggle-logs">&logs;</html:button>
+  </html:div>
+
+</window>

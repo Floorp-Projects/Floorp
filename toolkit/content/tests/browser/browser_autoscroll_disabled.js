@@ -3,8 +3,6 @@ function test()
   const kPrefName_AutoScroll = "general.autoScroll";
   Services.prefs.setBoolPref(kPrefName_AutoScroll, false);
 
-  gBrowser.selectedTab = gBrowser.addTab();
-
   var doc;
 
   function startLoad(dataUri) {
@@ -26,9 +24,6 @@ function test()
     // restore the changed prefs
     if (Services.prefs.prefHasUserValue(kPrefName_AutoScroll))
       Services.prefs.clearUserPref(kPrefName_AutoScroll);
-
-    // cleaning-up
-    gBrowser.removeCurrentTab();
 
     // waitForFocus() fixes a failure in the next test if the latter runs too soon.
     waitForFocus(finish);

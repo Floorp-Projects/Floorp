@@ -73,8 +73,19 @@
           </xul:deck>
           <xul:spacer flex="1"/>
 
-          <xul:button type="menu" label="&translation.options.menu;">
-            <xul:menupopup/>
+          <xul:button type="menu" anonid="options" label="&translation.options.menu;">
+            <xul:menupopup onpopupshowing="document.getBindingParent(this).optionsShowing();">
+              <xul:menuitem anonid="neverForLanguage"
+                            oncommand="document.getBindingParent(this).neverForLanguage();"/>
+              <xul:menuitem anonid="neverForSite"
+                            oncommand="document.getBindingParent(this).neverForSite();"
+                            label="&translation.options.neverForSite.label;"
+                            accesskey="&translation.options.neverForSite.accesskey;"/>
+              <xul:menuseparator/>
+              <xul:menuitem oncommand="openPreferences('paneContent');"
+                            label="&translation.options.preferences.label;"
+                            accesskey="&translation.options.preferences.accesskey;"/>
+            </xul:menupopup>
           </xul:button>
 
         </xul:hbox>
@@ -177,6 +188,80 @@
           <![CDATA[
             this._handleButtonHiding(false);
             this.translation.showTranslatedContent();
+          ]]>
+        </body>
+      </method>
+
+      <method name="optionsShowing">
+        <body>
+          <![CDATA[
+            // Get the source language name.
+            let lang;
+            if (this.state == this.translation.STATE_OFFER)
+              lang = this._getAnonElt("detectedLanguage").value;
+            else
+              lang = this._getAnonElt("fromLanguage").value;
+            let langBundle =
+              Cc["@mozilla.org/intl/stringbundle;1"]
+                .getService(Ci.nsIStringBundleService)
+                .createBundle("chrome://global/locale/languageNames.properties");
+            let langName = langBundle.GetStringFromName(lang);
+
+            // Set the label and accesskey on the menuitem.
+            let bundle =
+              Cc["@mozilla.org/intl/stringbundle;1"]
+                .getService(Ci.nsIStringBundleService)
+                .createBundle("chrome://browser/locale/translation.properties");
+            let item = this._getAnonElt("neverForLanguage");
+            const kStrId = "translation.options.neverForLanguage";
+            item.setAttribute("label",
+                              bundle.formatStringFromName(kStrId + ".label",
+                                                          [langName], 1));
+            item.setAttribute("accesskey",
+                              bundle.GetStringFromName(kStrId + ".accesskey"));
+            item.langCode = lang;
+
+            // We may need to disable the menuitems if they have already been used.
+            // Check if translation is already disabled for this language:
+            let neverForLangs =
+              Services.prefs.getCharPref("browser.translation.neverForLanguages");
+            item.disabled = neverForLangs.split(",").indexOf(lang) != -1;
+
+            // Check if translation is disabled for the domain:
+            let uri = this.translation.browser.currentURI;
+            let perms = Services.perms;
+            item = this._getAnonElt("neverForSite");
+            item.disabled =
+              perms.testExactPermission(uri, "translate") == perms.DENY_ACTION;
+          ]]>
+        </body>
+      </method>
+
+      <method name="neverForLanguage">
+        <body>
+          <![CDATA[
+            const kPrefName = "browser.translation.neverForLanguages";
+
+            let val = Services.prefs.getCharPref(kPrefName);
+            if (val)
+              val += ",";
+            val += this._getAnonElt("neverForLanguage").langCode;
+
+            Services.prefs.setCharPref(kPrefName, val);
+
+            this.close();
+          ]]>
+        </body>
+      </method>
+
+      <method name="neverForSite">
+        <body>
+          <![CDATA[
+            let uri = this.translation.browser.currentURI;
+            let perms = Services.perms;
+            perms.add(uri, "translate", perms.DENY_ACTION);
+
+            this.close();
           ]]>
         </body>
       </method>

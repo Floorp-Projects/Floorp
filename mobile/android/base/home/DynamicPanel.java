@@ -63,6 +63,9 @@ public class DynamicPanel extends HomeFragment {
     // Dataset ID to be used by the loader
     private static final String DATASET_REQUEST = "dataset_request";
 
+    // Max number of items to display in the panel
+    private static final int RESULT_LIMIT = 100;
+
     // The main view for this fragment. This contains the PanelLayout and PanelAuthLayout.
     private FrameLayout mView;
 
@@ -381,6 +384,8 @@ public class DynamicPanel extends HomeFragment {
             final Uri queryUri = HomeItems.CONTENT_URI.buildUpon()
                                                       .appendQueryParameter(BrowserContract.PARAM_DATASET_ID,
                                                                             mRequest.getDatasetId())
+                                                      .appendQueryParameter(BrowserContract.PARAM_LIMIT,
+                                                                            String.valueOf(RESULT_LIMIT))
                                                       .build();
 
             // XXX: You can use HomeItems.CONTENT_FAKE_URI for development

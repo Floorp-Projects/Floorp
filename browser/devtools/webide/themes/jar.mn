@@ -1,0 +1,11 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+webide.jar:
+% skin webide classic/1.0 %skin/
+* skin/webide.css         (webide.css)
+  skin/icons.png          (icons.png)
+  skin/details.css        (details.css)
+  skin/newapp.css         (newapp.css)
+  skin/throbber.svg       (throbber.svg)
