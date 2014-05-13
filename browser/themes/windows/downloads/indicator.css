@@ -44,6 +44,10 @@
 @media (-moz-os-version: windows-vista),
        (-moz-os-version: windows-win7) {
 %endif
+  #downloads-button[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
+    background-image: url("chrome://browser/skin/downloads/download-glow-XPVista7.png");
+  }
+
   #downloads-button[cui-areatype="menu-panel"][attention] {
     list-style-image: url("chrome://browser/skin/downloads/download-glow-menuPanel-XPVista7.png");
   }
