@@ -254,12 +254,6 @@ RilObject.prototype = {
   _pendingSentSmsMap: null,
 
   /**
-   * Index of the RIL_PREFERRED_NETWORK_TYPE_TO_GECKO. Its value should be
-   * preserved over rild reset.
-   */
-  preferredNetworkType: null,
-
-  /**
    * Marker object.
    */
   pendingNetworkType: null,
@@ -1153,23 +1147,21 @@ RilObject.prototype = {
   /**
    * Set the preferred network type.
    *
-   * @param options An object contains a valid index of
-   *                RIL_PREFERRED_NETWORK_TYPE_TO_GECKO as its `networkType`
-   *                attribute, or undefined to set current preferred network
-   *                type.
+   * @param options An object contains a valid value of
+   *                RIL_PREFERRED_NETWORK_TYPE_TO_GECKO as its `type` attribute.
    */
   setPreferredNetworkType: function(options) {
-    if (options) {
-      this.preferredNetworkType = options.networkType;
-    }
-    if (this.preferredNetworkType == null) {
+    let networkType = RIL_PREFERRED_NETWORK_TYPE_TO_GECKO.indexOf(options.type);
+    if (networkType < 0) {
+      options.errorMsg = GECKO_ERROR_INVALID_PARAMETER;
+      this.sendChromeMessage(options);
       return;
     }
 
     let Buf = this.context.Buf;
     Buf.newParcel(REQUEST_SET_PREFERRED_NETWORK_TYPE, options);
     Buf.writeInt32(1);
-    Buf.writeInt32(this.preferredNetworkType);
+    Buf.writeInt32(networkType);
     Buf.sendParcel();
   },
 
@@ -6216,31 +6208,20 @@ RilObject.prototype[REQUEST_STK_SEND_TERMINAL_RESPONSE] = null;
 RilObject.prototype[REQUEST_STK_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM] = null;
 RilObject.prototype[REQUEST_EXPLICIT_CALL_TRANSFER] = null;
 RilObject.prototype[REQUEST_SET_PREFERRED_NETWORK_TYPE] = function REQUEST_SET_PREFERRED_NETWORK_TYPE(length, options) {
-  if (options.networkType == null) {
-    // The request was made by ril_worker itself automatically. Don't report.
-    return;
-  }
-
   if (options.rilRequestError) {
-    options.success = false;
     options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-  } else {
-    options.success = true;
   }
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_GET_PREFERRED_NETWORK_TYPE] = function REQUEST_GET_PREFERRED_NETWORK_TYPE(length, options) {
   if (options.rilRequestError) {
-    options.success = false;
     options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
     this.sendChromeMessage(options);
     return;
   }
 
-  let results = this.context.Buf.readInt32List();
-  options.networkType = this.preferredNetworkType = results[0];
-  options.success = true;
-
+  let networkType = this.context.Buf.readInt32List()[0];
+  options.type = RIL_PREFERRED_NETWORK_TYPE_TO_GECKO[networkType];
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_GET_NEIGHBORING_CELL_IDS] = null;
@@ -6479,7 +6460,6 @@ RilObject.prototype[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLIC
     }
     this.getBasebandVersion();
     this.updateCellBroadcastConfig();
-    this.setPreferredNetworkType();
     if ((RILQUIRKS_DATA_REGISTRATION_ON_DEMAND ||
          RILQUIRKS_SUBSCRIPTION_CONTROL) &&
         this._attachDataRegistration) {

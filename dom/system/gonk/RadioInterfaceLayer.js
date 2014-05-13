@@ -2456,10 +2456,6 @@ RadioInterface.prototype = {
 
   getPreferredNetworkType: function(target, message) {
     this.workerMessenger.send("getPreferredNetworkType", message, (function(response) {
-      if (response.success) {
-        response.type = RIL.RIL_PREFERRED_NETWORK_TYPE_TO_GECKO[response.networkType];
-      }
-
       target.sendAsyncMessage("RIL:GetPreferredNetworkType", {
         clientId: this.clientId,
         data: response
@@ -2469,17 +2465,6 @@ RadioInterface.prototype = {
   },
 
   setPreferredNetworkType: function(target, message) {
-    let networkType = RIL.RIL_PREFERRED_NETWORK_TYPE_TO_GECKO.indexOf(message.type);
-    if (networkType < 0) {
-      message.errorMsg = RIL.GECKO_ERROR_INVALID_PARAMETER;
-      target.sendAsyncMessage("RIL:SetPreferredNetworkType", {
-        clientId: this.clientId,
-        data: message
-      });
-      return false;
-    }
-    message.networkType = networkType;
-
     this.workerMessenger.send("setPreferredNetworkType", message, (function(response) {
       target.sendAsyncMessage("RIL:SetPreferredNetworkType", {
         clientId: this.clientId,
