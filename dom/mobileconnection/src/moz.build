@@ -6,14 +6,20 @@
 
 EXPORTS.mozilla.dom += [
     'DOMMMIError.h',
+    'MobileCellInfo.h',
     'MobileConnection.h',
     'MobileConnectionArray.h',
+    'MobileConnectionInfo.h',
+    'MobileNetworkInfo.h',
 ]
 
 SOURCES += [
     'DOMMMIError.cpp',
+    'MobileCellInfo.cpp',
     'MobileConnection.cpp',
     'MobileConnectionArray.cpp',
+    'MobileConnectionInfo.cpp',
+    'MobileNetworkInfo.cpp',
 ]
 
 FAIL_ON_WARNINGS = True
