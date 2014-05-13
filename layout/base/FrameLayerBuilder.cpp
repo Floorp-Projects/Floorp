@@ -3853,7 +3853,8 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
                              entry->mCommonClipCount);
   }
 
-  if (presContext->GetPaintFlashing()) {
+  if (aLayer->Manager()->IsWidgetLayerManager() &&
+      presContext->GetPaintFlashing()) {
     FlashPaint(aContext);
   }
 
