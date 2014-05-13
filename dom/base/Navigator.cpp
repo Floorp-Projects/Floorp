@@ -34,7 +34,6 @@
 #include "mozilla/dom/WakeLock.h"
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/MobileMessageManager.h"
-#include "mozilla/dom/ServiceWorkerContainer.h"
 #include "mozilla/dom/Telephony.h"
 #include "mozilla/Hal.h"
 #include "nsISiteSpecificUserAgent.h"
@@ -178,7 +177,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMessagesManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDeviceStorageStores)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTimeManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mServiceWorkerContainer)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCachedResolveResults)
@@ -288,8 +286,6 @@ Navigator::Invalidate()
   if (mTimeManager) {
     mTimeManager = nullptr;
   }
-
-  mServiceWorkerContainer = nullptr;
 }
 
 //*****************************************************************************
@@ -1814,19 +1810,6 @@ Navigator::GetMozCameras(ErrorResult& aRv)
   }
 
   return mCameraManager;
-}
-
-already_AddRefed<ServiceWorkerContainer>
-Navigator::ServiceWorker()
-{
-  MOZ_ASSERT(mWindow);
-
-  if (!mServiceWorkerContainer) {
-    mServiceWorkerContainer = new workers::ServiceWorkerContainer(mWindow);
-  }
-
-  nsRefPtr<ServiceWorkerContainer> ref = mServiceWorkerContainer;
-  return ref.forget();
 }
 
 size_t

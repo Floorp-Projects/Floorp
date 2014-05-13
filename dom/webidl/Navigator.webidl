@@ -355,12 +355,6 @@ partial interface Navigator {
 };
 #endif // MOZ_MEDIA_NAVIGATOR
 
-// Service Workers/Navigation Controllers
-partial interface Navigator {
-  [Pref="dom.serviceWorkers.enabled"]
-  readonly attribute ServiceWorkerContainer serviceWorker;
-};
-
 partial interface Navigator {
   [Throws, Pref="beacon.enabled"]
   boolean sendBeacon(DOMString url,
