@@ -124,10 +124,6 @@ ImageHost::Composite(EffectChain& aEffectChain,
       } else {
         effect->mTextureCoords = Rect(0, 0, 1, 1);
       }
-      if (mFrontBuffer->GetFlags() & TextureFlags::NEEDS_Y_FLIP) {
-        effect->mTextureCoords.y = effect->mTextureCoords.YMost();
-        effect->mTextureCoords.height = -effect->mTextureCoords.height;
-      }
       GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain,
                                 aOpacity, aTransform);
       GetCompositor()->DrawDiagnostics(DiagnosticFlags::IMAGE | DiagnosticFlags::BIGIMAGE,
