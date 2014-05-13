@@ -126,3 +126,18 @@ text {
   }
 }
 
+#inspector-pane-toggle {
+  background: none;
+  box-shadow: none;
+  border: none;
+  list-style-image: url(debugger-collapse.png);
+  -moz-image-region: rect(0px,16px,16px,0px);
+}
+
+#inspector-pane-toggle[pane-collapsed] {
+  list-style-image: url(debugger-expand.png);
+}
+
+#inspector-pane-toggle:active {
+  -moz-image-region: rect(0px,32px,16px,16px);
+}
