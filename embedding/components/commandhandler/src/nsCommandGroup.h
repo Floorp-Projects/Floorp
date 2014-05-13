@@ -9,8 +9,9 @@
 #define nsCommandGroup_h__
 
 #include "nsIController.h"
-
 #include "nsHashtable.h"
+#include "nsClassHashtable.h"
+#include "nsHashKeys.h"
 
 
 // {ecd55a01-2780-11d5-a73c-ca641a6813bc}
@@ -24,30 +25,23 @@
 class nsControllerCommandGroup : public nsIControllerCommandGroup
 {
 public:
-
-                    nsControllerCommandGroup();
-  virtual           ~nsControllerCommandGroup();
+  nsControllerCommandGroup();
+  virtual ~nsControllerCommandGroup();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTROLLERCOMMANDGROUP
 
+public:
+  typedef nsClassHashtable<nsCStringHashKey, nsTArray<char*>> GroupsHashtable;
 
 protected:
-
-  void              ClearGroupsHash();
-
-protected:
-
-  static bool ClearEnumerator(nsHashKey *aKey, void *aData, void* closure);
+  void ClearGroupsHash();
+  static PLDHashOperator ClearEnumerator(const nsACString &aKey, nsTArray<char*> *aData, void *closure);
 
 protected:
+	nsClassHashtable<nsCStringHashKey, nsTArray<char*>> mGroupsHash; // hash keyed on command group.
+	                                                                 // This could be made more space-efficient, maybe with atoms
 
-  nsHashtable       mGroupsHash;    // hash keyed on command group.
-                                    // Entries are nsTArray<char*>
-                                    // This could be made more space-efficient, maybe with atoms
-  
 };
 
-
 #endif // nsCommandGroup_h__
-
