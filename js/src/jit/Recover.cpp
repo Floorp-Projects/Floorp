@@ -18,6 +18,7 @@
 #include "jit/VMFunctions.h"
 
 #include "vm/Interpreter.h"
+#include "vm/Interpreter-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -168,6 +169,31 @@ RAdd::recover(JSContext *cx, SnapshotIterator &iter) const
         return false;
 
     iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
+MBitNot::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_BitNot));
+    return true;
+}
+
+RBitNot::RBitNot(CompactBufferReader &reader)
+{ }
+
+bool
+RBitNot::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue operand(cx, iter.read());
+
+    int32_t result;
+    if (!js::BitNot(cx, operand, &result))
+        return false;
+
+    RootedValue rootedResult(cx, js::Int32Value(result));
+    iter.storeInstructionResult(rootedResult);
     return true;
 }
 
