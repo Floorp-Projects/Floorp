@@ -3345,12 +3345,15 @@ public:
    *        for the frame's bounding rectangle. Otherwise, it will use the
    *        value of aBoundsOverride.  This is mostly for internal use and in
    *        most cases you will not need to specify a value.
+   * @param aOffsetByOrigin If true, the resulting matrix will be translated
+   *        by aOrigin. This translation is applied *before* the CSS transform.
    */
   static gfx3DMatrix GetResultingTransformMatrix(const nsIFrame* aFrame,
                                                  const nsPoint& aOrigin,
                                                  float aAppUnitsPerPixel,
                                                  const nsRect* aBoundsOverride = nullptr,
-                                                 nsIFrame** aOutAncestor = nullptr);
+                                                 nsIFrame** aOutAncestor = nullptr,
+                                                 bool aOffsetByOrigin = false);
   static gfx3DMatrix GetResultingTransformMatrix(const FrameTransformProperties& aProperties,
                                                  const nsPoint& aOrigin,
                                                  float aAppUnitsPerPixel,
@@ -3372,7 +3375,8 @@ private:
                                                          const nsPoint& aOrigin,
                                                          float aAppUnitsPerPixel,
                                                          const nsRect* aBoundsOverride,
-                                                         nsIFrame** aOutAncestor);
+                                                         nsIFrame** aOutAncestor,
+                                                         bool aOffsetByOrigin);
 
   nsDisplayWrapList mStoredList;
   gfx3DMatrix mTransform;

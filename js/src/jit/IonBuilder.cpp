@@ -4193,6 +4193,11 @@ IonBuilder::selectInliningTargets(ObjectVector &targets, CallInfo &callInfo, Boo
     if (!choiceSet.reserve(targets.length()))
         return false;
 
+    // Don't inline polymorphic sites during the definite properties analysis.
+    // AddClearDefiniteFunctionUsesInScript depends on this for correctness.
+    if (info().executionMode() == DefinitePropertiesAnalysis && targets.length() > 1)
+        return true;
+
     for (size_t i = 0; i < targets.length(); i++) {
         JSFunction *target = &targets[i]->as<JSFunction>();
         bool inlineable;

@@ -770,6 +770,8 @@ public:
 
   virtual already_AddRefed<mozilla::dom::UndoManager> GetUndoManager() MOZ_OVERRIDE;
 
+  virtual mozilla::dom::AnimationTimeline* Timeline() MOZ_OVERRIDE;
+
   virtual nsresult SetSubDocumentFor(Element* aContent,
                                      nsIDocument* aSubDoc) MOZ_OVERRIDE;
   virtual nsIDocument* GetSubDocumentFor(nsIContent* aContent) const MOZ_OVERRIDE;
@@ -1634,6 +1636,8 @@ private:
   nsTHashtable< nsPtrHashKey<nsIObjectLoadingContent> > mPlugins;
 
   nsRefPtr<mozilla::dom::UndoManager> mUndoManager;
+
+  nsRefPtr<mozilla::dom::AnimationTimeline> mAnimationTimeline;
 
   enum ViewportType {
     DisplayWidthHeight,
