@@ -707,11 +707,7 @@ nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
                "Shouldn't happen");
 
   // XUL <iframe> or <browser>, or HTML <iframe>, <object> or <embed>
-  nsresult rv = nsLeafFrame::DoReflow(aPresContext, aDesiredSize, aReflowState,
-                                      aStatus);
-  if (NS_FAILED(rv)) {
-    return;
-  }
+  nsLeafFrame::DoReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   // "offset" is the offset of our content area from our frame's
   // top-left corner.
