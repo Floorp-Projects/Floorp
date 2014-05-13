@@ -49,6 +49,7 @@ SOURCES += [
     'ScriptLoader.cpp',
     'ServiceWorker.cpp',
     'ServiceWorkerContainer.cpp',
+    'ServiceWorkerEvents.cpp',
     'SharedWorker.cpp',
     'URL.cpp',
     'WorkerPrivate.cpp',
