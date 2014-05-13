@@ -166,7 +166,6 @@ srtp_stream_init_from_ekt(srtp_stream_t stream,
   err_status_t err;
   const uint8_t *master_key;
   srtp_policy_t srtp_policy;
-  unsigned master_key_len;
   uint32_t roc;
 
   /*
@@ -178,7 +177,6 @@ srtp_stream_init_from_ekt(srtp_stream_t stream,
 
   if (stream->ekt->data->ekt_cipher_type != EKT_CIPHER_AES_128_ECB)
     return err_status_bad_param;
-  master_key_len = 16;
 
   /* decrypt the Encrypted Master Key field */
   master_key = srtcp_packet_get_emk_location(srtcp_hdr, pkt_octet_len);
