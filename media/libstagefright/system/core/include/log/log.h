@@ -25,6 +25,16 @@
 // supports O_APPEND.  These calls have mutex-protected data structures
 // and so are NOT reentrant.  Do not use LOG in a signal handler.
 //
+
+/*
+ * This is the local tag used for the following simplified
+ * logging macros.  You can change this preprocessor definition
+ * before using the other macros to change the tag.
+ */
+#ifndef LOG_TAG
+#define LOG_TAG NULL
+#endif
+
 #ifndef _LIBS_LOG_LOG_H
 #define _LIBS_LOG_LOG_H
 
@@ -39,6 +49,10 @@
 
 #include <log/uio.h>
 #include <log/logd.h>
+
+#ifdef _MSC_VER
+#define __builtin_expect(X, Y) (X)
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -57,15 +71,6 @@ extern "C" {
 #else
 #define LOG_NDEBUG 0
 #endif
-#endif
-
-/*
- * This is the local tag used for the following simplified
- * logging macros.  You can change this preprocessor definition
- * before using the other macros to change the tag.
- */
-#ifndef LOG_TAG
-#define LOG_TAG NULL
 #endif
 
 // ---------------------------------------------------------------------
@@ -498,11 +503,11 @@ typedef enum {
  * The stuff in the rest of this file should not be used directly.
  */
 
-#define android_printLog(prio, tag, fmt...) \
-    __android_log_print(prio, tag, fmt)
+#define android_printLog(prio, tag, ...) \
+    __android_log_print(prio, tag, __VA_ARGS__)
 
-#define android_vprintLog(prio, cond, tag, fmt...) \
-    __android_log_vprint(prio, tag, fmt)
+#define android_vprintLog(prio, cond, tag, ...) \
+    __android_log_vprint(prio, tag, __VA_ARGS__)
 
 /* XXX Macros to work around syntax errors in places where format string
  * arg is not passed to ALOG_ASSERT, LOG_ALWAYS_FATAL or LOG_ALWAYS_FATAL_IF
@@ -519,9 +524,9 @@ typedef enum {
  */
 #define __android_rest(first, ...)               , ## __VA_ARGS__
 
-#define android_printAssert(cond, tag, fmt...) \
+#define android_printAssert(cond, tag, ...) \
     __android_log_assert(cond, tag, \
-        __android_second(0, ## fmt, NULL) __android_rest(fmt))
+        __android_second(0, ## __VA_ARGS__, NULL) __android_rest(__VA_ARGS__))
 
 #define android_writeLog(prio, tag, text) \
     __android_log_write(prio, tag, text)
