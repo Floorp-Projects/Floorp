@@ -760,6 +760,8 @@ pref("dom.webapps.useCurrentProfile", false);
 
 pref("dom.cycle_collector.incremental", true);
 
+pref("dom.window_experimental_bindings", false);
+
 // Parsing perf prefs. For now just mimic what the old code did.
 #ifndef XP_WIN
 pref("content.sink.pending_event_mode", 0);
@@ -1939,6 +1941,13 @@ pref("layout.display-list.dump", false);
 // but provides more time for other operations when the browser is
 // heavily loaded.
 pref("layout.frame_rate.precise", false);
+
+// Is support for the Web Animations API enabled?
+#ifdef RELEASE_BUILD
+pref("dom.animations-api.core.enabled", false);
+#else
+pref("dom.animations-api.core.enabled", true);
+#endif
 
 // pref to permit users to make verified SOAP calls by default
 pref("capability.policy.default.SOAPCall.invokeVerifySourceHeader", "allAccess");

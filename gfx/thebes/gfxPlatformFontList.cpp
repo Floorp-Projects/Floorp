@@ -423,22 +423,6 @@ gfxPlatformFontList::PreloadNamesList()
 
 }
 
-void 
-gfxPlatformFontList::SetFixedPitch(const nsAString& aFamilyName)
-{
-    gfxFontFamily *family = FindFamily(aFamilyName);
-    if (!family) return;
-
-    family->FindStyleVariations();
-    nsTArray<nsRefPtr<gfxFontEntry> >& fontlist = family->GetFontList();
-
-    uint32_t i, numFonts = fontlist.Length();
-
-    for (i = 0; i < numFonts; i++) {
-        fontlist[i]->mFixedPitch = 1;
-    }
-}
-
 void
 gfxPlatformFontList::LoadBadUnderlineList()
 {
