@@ -195,7 +195,7 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
   return dirtiedLine;
 }
 
-nsresult
+void
 nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
                                   bool                aApplyTopMargin,
                                   nsCollapsingMargin& aPrevMargin,
@@ -206,7 +206,6 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
                                   nsReflowStatus&     aFrameReflowStatus,
                                   nsBlockReflowState& aState)
 {
-  nsresult rv = NS_OK;
   mFrame = aFrameRS.frame;
   mSpace = aSpace;
 
@@ -258,7 +257,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
 #endif
 
   mOuterReflowState.mFloatManager->Translate(tx, ty);
-  rv = mFrame->Reflow(mPresContext, mMetrics, aFrameRS, aFrameReflowStatus);
+  mFrame->Reflow(mPresContext, mMetrics, aFrameRS, aFrameReflowStatus);
   mOuterReflowState.mFloatManager->Translate(-tx, -ty);
 
 #ifdef DEBUG
@@ -301,8 +300,6 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
       }
     }
   }
-
-  return rv;
 }
 
 /**

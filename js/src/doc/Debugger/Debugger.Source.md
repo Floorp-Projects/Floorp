@@ -208,5 +208,3 @@ from its prototype:
     instance. Aside from the restriction to scripts produced from this
     source, <i>query</i> is interpreted as for
     `Debugger.prototype.findScripts`.
-
-

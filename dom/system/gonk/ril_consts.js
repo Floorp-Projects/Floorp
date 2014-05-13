@@ -2665,14 +2665,14 @@ this.GECKO_RADIO_TECH = [
 
 this.GECKO_VOICEMAIL_MESSAGE_COUNT_UNKNOWN = -1;
 
-// Call forwarding action. Must be in sync with nsIDOMMozMobileCFInfo interface
+// Call forwarding action. Must be in sync with nsIMobileConnectionProvider interface
 this.CALL_FORWARD_ACTION_DISABLE = 0;
 this.CALL_FORWARD_ACTION_ENABLE = 1;
 this.CALL_FORWARD_ACTION_QUERY_STATUS = 2;
 this.CALL_FORWARD_ACTION_REGISTRATION = 3;
 this.CALL_FORWARD_ACTION_ERASURE = 4;
 
-// Call forwarding reason. Must be in sync with nsIDOMMozMobileCFInfo interface
+// Call forwarding reason. Must be in sync with nsIMobileConnectionProvider interface
 this.CALL_FORWARD_REASON_UNCONDITIONAL = 0;
 this.CALL_FORWARD_REASON_MOBILE_BUSY = 1;
 this.CALL_FORWARD_REASON_NO_REPLY = 2;
@@ -2680,7 +2680,7 @@ this.CALL_FORWARD_REASON_NOT_REACHABLE = 3;
 this.CALL_FORWARD_REASON_ALL_CALL_FORWARDING = 4;
 this.CALL_FORWARD_REASON_ALL_CONDITIONAL_CALL_FORWARDING = 5;
 
-// Call barring program. Must be in sync with nsIDOMMozMobileConnection interface
+// Call barring program. Must be in sync with nsIMobileConnectionProvider interface
 this.CALL_BARRING_PROGRAM_ALL_OUTGOING = 0;
 this.CALL_BARRING_PROGRAM_OUTGOING_INTERNATIONAL = 1;
 this.CALL_BARRING_PROGRAM_OUTGOING_INTERNATIONAL_EXCEPT_HOME = 2;
@@ -2694,7 +2694,7 @@ CALL_BARRING_PROGRAM_TO_FACILITY[CALL_BARRING_PROGRAM_OUTGOING_INTERNATIONAL_EXC
 CALL_BARRING_PROGRAM_TO_FACILITY[CALL_BARRING_PROGRAM_ALL_INCOMING] = ICC_CB_FACILITY_BAIC;
 CALL_BARRING_PROGRAM_TO_FACILITY[CALL_BARRING_PROGRAM_INCOMING_ROAMING] = ICC_CB_FACILITY_BAICr;
 
-// CLIR constants. Must be in sync with nsIDOMMozMobileConnection interface
+// CLIR constants. Must be in sync with nsIMobileConnectionProvider interface
 this.CLIR_DEFAULT = 0;
 this.CLIR_INVOCATION  = 1;
 this.CLIR_SUPPRESSION = 2;

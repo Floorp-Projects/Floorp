@@ -19,10 +19,10 @@ public:
 
   friend nsIFrame* NS_NewPageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  virtual nsresult  Reflow(nsPresContext*      aPresContext,
-                           nsHTMLReflowMetrics& aDesiredSize,
-                           const nsHTMLReflowState& aMaxSize,
-                           nsReflowStatus&      aStatus) MOZ_OVERRIDE;
+  virtual void Reflow(nsPresContext*      aPresContext,
+                      nsHTMLReflowMetrics& aDesiredSize,
+                      const nsHTMLReflowState& aMaxSize,
+                      nsReflowStatus&      aStatus) MOZ_OVERRIDE;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
@@ -103,7 +103,7 @@ class nsPageBreakFrame : public nsLeafFrame
   nsPageBreakFrame(nsStyleContext* aContext);
   ~nsPageBreakFrame();
 
-  virtual nsresult Reflow(nsPresContext*          aPresContext,
+  virtual void Reflow(nsPresContext*          aPresContext,
                           nsHTMLReflowMetrics&     aDesiredSize,
                           const nsHTMLReflowState& aReflowState,
                           nsReflowStatus&          aStatus) MOZ_OVERRIDE;

@@ -99,13 +99,12 @@ nsMathMLSelectedFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 // Only reflow the selected child ...
-nsresult
+void
 nsMathMLSelectedFrame::Reflow(nsPresContext*          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus&          aStatus)
 {
-  nsresult rv = NS_OK;
   aStatus = NS_FRAME_COMPLETE;
   aDesiredSize.Width() = aDesiredSize.Height() = 0;
   aDesiredSize.SetTopAscent(0);
@@ -115,15 +114,14 @@ nsMathMLSelectedFrame::Reflow(nsPresContext*          aPresContext,
     nsSize availSize(aReflowState.ComputedWidth(), NS_UNCONSTRAINEDSIZE);
     nsHTMLReflowState childReflowState(aPresContext, aReflowState,
                                        childFrame, availSize);
-    rv = ReflowChild(childFrame, aPresContext, aDesiredSize,
-                     childReflowState, aStatus);
+    ReflowChild(childFrame, aPresContext, aDesiredSize,
+                childReflowState, aStatus);
     SaveReflowAndBoundingMetricsFor(childFrame, aDesiredSize,
                                     aDesiredSize.mBoundingMetrics);
     mBoundingMetrics = aDesiredSize.mBoundingMetrics;
   }
   FinalizeReflow(*aReflowState.rendContext, aDesiredSize);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return rv;
 }
 
 // Only place the selected child ...

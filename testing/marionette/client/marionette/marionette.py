@@ -9,6 +9,7 @@ import socket
 import sys
 import time
 import traceback
+import base64
 
 from application_cache import ApplicationCache
 from decorators import do_crash_check
@@ -1382,11 +1383,11 @@ class Marionette(object):
     def application_cache(self):
         return ApplicationCache(self)
 
-    def screenshot(self, element=None, highlights=None):
+    def screenshot(self, element=None, highlights=None, format="base64"):
         """Takes a screenshot of a web element or the current frame.
 
         The screen capture is returned as a lossless PNG image encoded
-        as a base 64 string.  If the `element` argument is defined the
+        as a base 64 string by default. If the `element` argument is defined the
         capture area will be limited to the bounding box of that
         element.  Otherwise, the capture area will be the bounding box
         of the current frame.
@@ -1396,6 +1397,10 @@ class Marionette(object):
 
         :param highlights: A list of HTMLElement objects to draw a red
             box around in the returned screenshot.
+        
+        :param format: if "base64" (the default), returns the screenshot
+            as a base64-string. If "binary", the data is decoded and
+            returned as raw binary.
 
         """
 
@@ -1404,8 +1409,15 @@ class Marionette(object):
         lights = None
         if highlights:
             lights = [highlight.id for highlight in highlights]
-        return self._send_message("takeScreenshot", "value",
+        screenshot_data = self._send_message("takeScreenshot", "value",
                                   id=element, highlights=lights)
+        if format == 'base64':
+            return screenshot_data
+        elif format == 'binary':
+            return base64.b64decode(screenshot_data.encode('ascii'))
+        else:
+            raise ValueError("format parameter must be either 'base64'"
+                             " or 'binary', not {0}".format(repr(format)))
 
     @property
     def orientation(self):

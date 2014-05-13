@@ -792,7 +792,7 @@ nscoord CalcHeightFromUnpaginatedHeight(nsPresContext*   aPresContext,
   return std::max(height, 0);
 }
 
-nsresult
+void
 nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
                                 nsHTMLReflowMetrics&     aDesiredSize,
                                 const nsHTMLReflowState& aReflowState,
@@ -804,7 +804,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
   // XXXldb Should we be checking constrained height instead?
   const bool isPaginated = aPresContext->IsPaginated();
   const bool borderCollapse = aTableFrame.IsBorderCollapse();
-  nsresult rv = NS_OK;
+
   nscoord cellSpacingX = aTableFrame.GetCellSpacingX();
   int32_t cellColSpan = 1;  // must be defined here so it's set properly for non-cell kids
   
@@ -912,8 +912,8 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
                              kidReflowState);
 
         nsReflowStatus status;
-        rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState,
-                         x, 0, 0, status);
+        ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState,
+                    x, 0, 0, status);
 
         // allow the table to determine if/how the table needs to be rebalanced
         // If any of the cells are not complete, then we're not complete
@@ -1029,13 +1029,12 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
   }
   aDesiredSize.UnionOverflowAreasWithDesiredBounds();
   FinishAndStoreOverflow(&aDesiredSize);
-  return rv;
 }
 
 /** Layout the entire row.
   * This method stacks cells horizontally according to HTML 4.0 rules.
   */
-nsresult
+void
 nsTableRowFrame::Reflow(nsPresContext*          aPresContext,
                         nsHTMLReflowMetrics&     aDesiredSize,
                         const nsHTMLReflowState& aReflowState,
@@ -1043,7 +1042,6 @@ nsTableRowFrame::Reflow(nsPresContext*          aPresContext,
 {
   DO_GLOBAL_REFLOW_COUNT("nsTableRowFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
-  nsresult rv = NS_OK;
 
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   const nsStyleVisibility* rowVis = StyleVisibility();
@@ -1058,8 +1056,7 @@ nsTableRowFrame::Reflow(nsPresContext*          aPresContext,
   // See if we have a cell with specified/pct height
   InitHasCellWithStyleHeight(tableFrame);
 
-  rv = ReflowChildren(aPresContext, aDesiredSize, aReflowState, *tableFrame,
-                      aStatus);
+  ReflowChildren(aPresContext, aDesiredSize, aReflowState, *tableFrame, aStatus);
 
   if (aPresContext->IsPaginated() && !NS_FRAME_IS_FULLY_COMPLETE(aStatus) &&
       ShouldAvoidBreakInside(aReflowState)) {
@@ -1077,7 +1074,6 @@ nsTableRowFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return rv;
 }
 
 /**

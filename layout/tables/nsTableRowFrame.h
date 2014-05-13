@@ -80,10 +80,10 @@ public:
     * @see nsTableFrame::BalanceColumnWidths
     * @see nsTableFrame::ShrinkWrapChildren
     */
-  virtual nsresult Reflow(nsPresContext*          aPresContext,
-                          nsHTMLReflowMetrics&     aDesiredSize,
-                          const nsHTMLReflowState& aReflowState,
-                          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+  virtual void Reflow(nsPresContext*           aPresContext,
+                      nsHTMLReflowMetrics&     aDesiredSize,
+                      const nsHTMLReflowState& aReflowState,
+                      nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   void DidResize();
 
@@ -254,11 +254,11 @@ protected:
    * Called for incremental/dirty and resize reflows. If aDirtyOnly is true then
    * only reflow dirty cells.
    */
-  nsresult ReflowChildren(nsPresContext*           aPresContext,
-                          nsHTMLReflowMetrics&     aDesiredSize,
-                          const nsHTMLReflowState& aReflowState,
-                          nsTableFrame&            aTableFrame,
-                          nsReflowStatus&          aStatus);
+  void ReflowChildren(nsPresContext*           aPresContext,
+                      nsHTMLReflowMetrics&     aDesiredSize,
+                      const nsHTMLReflowState& aReflowState,
+                      nsTableFrame&            aTableFrame,
+                      nsReflowStatus&          aStatus);
 
 private:
   struct RowBits {

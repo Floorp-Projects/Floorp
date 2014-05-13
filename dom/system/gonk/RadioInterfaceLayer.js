@@ -1798,10 +1798,10 @@ function RadioInterface(aClientId, aWorkerMessenger) {
     iccInfo:        null,
     imsi:           null,
 
-    // These objects implement the nsIDOMMozMobileConnectionInfo interface,
+    // These objects implement the nsIMobileConnectionInfo interface,
     // although the actual implementation lives in the content process. So are
     // the child attributes `network` and `cell`, which implement
-    // nsIDOMMozMobileNetworkInfo and nsIDOMMozMobileCellInfo respectively.
+    // nsIMobileNetworkInfo and nsIMobileCellInfo respectively.
     voice:          {connected: false,
                      emergencyCallsOnly: false,
                      roaming: false,

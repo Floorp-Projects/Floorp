@@ -21,61 +21,69 @@
 //   include_subdomains: (optional bool) whether subdomains of |name| are also covered
 //   pins: (string) the |name| member of an object in |pinsets|
 
-
 // equifax -> aus3
 // Geotrust Primary -> www.mozilla.org
 // Geotrust Global -> *. addons.mozilla.org
 {
   "pinsets": [
     {
-      // From bug 772756, mozilla uses GeoTrust, Digicert and Thawte
-      // geotrust ca info: http://www.geotrust.com/resources/root-certificates/index.html
-      // In that same bug we also notice that our cdn sites use Verisign and
-      // Baltimore
-      // This list does not contain any 1024 bit roots for those providers
+      // From bug 772756, mozilla uses GeoTrust, Digicert and Thawte.  Our
+      // cdn sites use Verisign and Baltimore. We exclude 1024-bit root certs
+      // from all providers. geotrust ca info:
+      // http://www.geotrust.com/resources/root-certificates/index.html
       "name": "mozilla",
-      "static_spki_hashes": [
-        "Verisign Class 1 Public Primary Certification Authority - G3",
-        "Verisign Class 2 Public Primary Certification Authority - G3",
-        "Verisign Class 3 Public Primary Certification Authority - G3",
-        "Verisign Class 4 Public Primary Certification Authority - G3",
-        "VeriSign Class 3 Public Primary Certification Authority - G5",
-        "VeriSign Universal Root Certification Authority",
-        "VeriSign Class 3 Public Primary Certification Authority - G4",
-        "GeoTrust Primary Certification Authority",
-        "GeoTrust Global CA",
-        "GeoTrust Global CA 2",
-        "GeoTrust Universal CA",
-        "GeoTrust Universal CA 2",
-        "GeoTrust Primary Certification Authority - G2",
-        "GeoTrust Primary Certification Authority - G3",
-        "DigiCert High Assurance EV Root CA",
+      "sha256_hashes": [
+        "Baltimore CyberTrust Root",
         "DigiCert Assured ID Root CA",
         "DigiCert Global Root CA",
+        "DigiCert High Assurance EV Root CA",
+        "GeoTrust Global CA",
+        "GeoTrust Global CA 2",
+        "GeoTrust Primary Certification Authority",
+        "GeoTrust Primary Certification Authority - G2",
+        "GeoTrust Primary Certification Authority - G3",
+        "GeoTrust Universal CA",
+        "GeoTrust Universal CA 2",
         "thawte Primary Root CA",
         "thawte Primary Root CA - G2",
         "thawte Primary Root CA - G3",
-        "Baltimore CyberTrust Root"
+        "Verisign Class 1 Public Primary Certification Authority - G3",
+        "Verisign Class 2 Public Primary Certification Authority - G3",
+        "Verisign Class 3 Public Primary Certification Authority - G3",
+        "VeriSign Class 3 Public Primary Certification Authority - G4",
+        "VeriSign Class 3 Public Primary Certification Authority - G5",
+        "Verisign Class 4 Public Primary Certification Authority - G3",
+        "VeriSign Universal Root Certification Authority"
       ]
     },
     // For pinning tests on pinning.example.com, the certificate must be 'End
     // Entity Test Cert'
     {
       "name": "mozilla_test",
-      "static_spki_hashes": [
+      "sha256_hashes": [
         "End Entity Test Cert"
       ]
     }
   ],
 
   "entries": [
-    // from bug 1005653 we learned that addon subdomains include cdn sites
-    { "name": "addons.mozilla.org", "include_subdomains": true, "pins": "mozilla" },
-    { "name": "addons.mozilla.net", "include_subdomains": true, "pins": "mozilla" },
-    { "name": "cdn.mozilla.net", "include_subdomains": true, "pins": "mozilla" },
-    { "name": "cdn.mozilla.org", "include_subdomains": true, "pins": "mozilla" },
-    { "name": "media.mozilla.com", "include_subdomains": true, "pins": "mozilla" },
-    { "name": "include-subdomains.pinning.example.com", "include_subdomains": true, "pins": "mozilla_test" },
-    { "name": "exclude-subdomains.pinning.example.com", "include_subdomains": false, "pins": "mozilla_test" }
+    { "name": "addons.mozilla.org", "include_subdomains": true,
+      "pins": "mozilla", "test_mode": true },
+    { "name": "addons.mozilla.net", "include_subdomains": true,
+      "pins": "mozilla", "test_mode": true },
+    { "name": "cdn.mozilla.net", "include_subdomains": true,
+      "pins": "mozilla", "test_mode": true},
+    { "name": "cdn.mozilla.org", "include_subdomains": true,
+      "pins": "mozilla", "test_mode": true },
+    { "name": "media.mozilla.com", "include_subdomains": true,
+      "pins": "mozilla", "test_mode": true },
+    { "name": "include-subdomains.pinning.example.com",
+      "include_subdomains": true, "pins": "mozilla_test",
+      "test_mode": false },
+    { "name": "exclude-subdomains.pinning.example.com",
+      "include_subdomains": false, "pins": "mozilla_test",
+      "test_mode": false },
+    { "name": "test-mode.pinning.example.com", "include_subdomains": true,
+      "pins": "mozilla_test", "test_mode": true }
   ]
 }
