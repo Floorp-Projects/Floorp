@@ -6,8 +6,6 @@
 
 #include "MP4Reader.h"
 #include "MediaResource.h"
-#include "mp4_demuxer/mp4_demuxer.h"
-#include "mp4_demuxer/Streams.h"
 #include "nsSize.h"
 #include "VideoUtils.h"
 #include "mozilla/dom/HTMLMediaElement.h"
@@ -53,14 +51,13 @@ public:
     MOZ_COUNT_DTOR(MP4Stream);
   }
 
-  virtual bool ReadAt(int64_t aOffset,
-                      uint8_t* aBuffer,
-                      uint32_t aCount,
-                      uint32_t* aBytesRead) MOZ_OVERRIDE {
+  virtual bool ReadAt(int64_t aOffset, void* aBuffer, size_t aCount,
+                      size_t* aBytesRead) MOZ_OVERRIDE
+  {
     uint32_t sum = 0;
     do {
       uint32_t offset = aOffset + sum;
-      char* buffer = reinterpret_cast<char*>(aBuffer + sum);
+      char* buffer = reinterpret_cast<char*>(aBuffer) + sum;
       uint32_t toRead = aCount - sum;
       uint32_t bytesRead = 0;
       nsresult rv = mResource->ReadAt(offset, buffer, toRead, &bytesRead);
@@ -73,8 +70,12 @@ public:
     return true;
   }
 
-  virtual int64_t Length() const MOZ_OVERRIDE {
-    return mResource->GetLength();
+  virtual bool Length(int64_t* aSize) MOZ_OVERRIDE
+  {
+    if (mResource->GetLength() < 0)
+      return false;
+    *aSize = mResource->GetLength();
+    return true;
   }
 
 private:
@@ -120,6 +121,8 @@ MP4Reader::Shutdown()
     mVideo.mTaskQueue->Shutdown();
     mVideo.mTaskQueue = nullptr;
   }
+  // Dispose of the queued sample before shutting down the demuxer
+  mQueuedVideoSample = nullptr;
 }
 
 void
@@ -153,8 +156,7 @@ MP4Reader::Init(MediaDecoderReader* aCloneDonor)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
   PlatformDecoderModule::Init();
-  mMP4Stream = new MP4Stream(mDecoder->GetResource());
-  mDemuxer = new MP4Demuxer(mMP4Stream);
+  mDemuxer = new MP4Demuxer(new MP4Stream(mDecoder->GetResource()));
 
   InitLayersBackendType();
 
@@ -176,19 +178,17 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
   bool ok = mDemuxer->Init();
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
+  mInfo.mAudio.mHasAudio = mAudio.mActive = mDemuxer->HasValidAudio();
   const AudioDecoderConfig& audio = mDemuxer->AudioConfig();
-  mInfo.mAudio.mHasAudio = mAudio.mActive = mDemuxer->HasAudio() &&
-                                            audio.IsValidConfig();
   // If we have audio, we *only* allow AAC to be decoded.
-  if (HasAudio() && audio.codec() != kCodecAAC) {
+  if (mInfo.mAudio.mHasAudio && strcmp(audio.mime_type, "audio/mp4a-latm")) {
     return NS_ERROR_FAILURE;
   }
 
+  mInfo.mVideo.mHasVideo = mVideo.mActive = mDemuxer->HasValidVideo();
   const VideoDecoderConfig& video = mDemuxer->VideoConfig();
-  mInfo.mVideo.mHasVideo = mVideo.mActive = mDemuxer->HasVideo() &&
-                                            video.IsValidConfig();
   // If we have video, we *only* allow H.264 to be decoded.
-  if (HasVideo() && video.codec() != kCodecH264) {
+  if (mInfo.mVideo.mHasVideo && strcmp(video.mime_type, "video/avc")) {
     return NS_ERROR_FAILURE;
   }
 
@@ -196,8 +196,8 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
   NS_ENSURE_TRUE(mPlatform, NS_ERROR_FAILURE);
 
   if (HasAudio()) {
-    mInfo.mAudio.mRate = audio.samples_per_second();
-    mInfo.mAudio.mChannels = ChannelLayoutToChannelCount(audio.channel_layout());
+    mInfo.mAudio.mRate = audio.samples_per_second;
+    mInfo.mAudio.mChannels = audio.channel_count;
     mAudio.mCallback = new DecoderCallback(this, kAudio);
     mAudio.mDecoder = mPlatform->CreateAACDecoder(audio,
                                                   mAudio.mTaskQueue,
@@ -208,8 +208,8 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
   }
 
   if (HasVideo()) {
-    IntSize sz = video.natural_size();
-    mInfo.mVideo.mDisplay = nsIntSize(sz.width(), sz.height());
+    mInfo.mVideo.mDisplay =
+      nsIntSize(video.display_width, video.display_height);
     mVideo.mCallback = new  DecoderCallback(this, kVideo);
     mVideo.mDecoder = mPlatform->CreateH264Decoder(video,
                                                    mLayersBackendType,
@@ -229,7 +229,7 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
   }
   // We can seek if we get a duration *and* the reader reports that it's
   // seekable.
-  if (!mDemuxer->CanSeek()) {
+  if (!mDecoder->GetResource()->IsTransportSeekable() || !mDemuxer->CanSeek()) {
     mDecoder->SetMediaSeekable(false);
   }
 
@@ -258,12 +258,6 @@ MP4Reader::GetDecoderData(TrackType aTrack)
   return (aTrack == kAudio) ? mAudio : mVideo;
 }
 
-MP4SampleQueue&
-MP4Reader::SampleQueue(TrackType aTrack)
-{
-  return GetDecoderData(aTrack).mDemuxedSamples;
-}
-
 MediaDataDecoder*
 MP4Reader::Decoder(TrackType aTrack)
 {
@@ -273,26 +267,19 @@ MP4Reader::Decoder(TrackType aTrack)
 MP4Sample*
 MP4Reader::PopSample(TrackType aTrack)
 {
-  // Unfortunately the demuxer outputs in the order samples appear in the
-  // media, not on a per stream basis. We cache the samples we get from
-  // streams other than the one we want.
-  MP4SampleQueue& sampleQueue = SampleQueue(aTrack);
-  while (sampleQueue.empty()) {
-    nsAutoPtr<MP4Sample> sample;
-    bool eos = false;
-    bool ok = mDemuxer->Demux(&sample, &eos);
-    if (!ok || eos) {
-      MOZ_ASSERT(!sample);
+  switch (aTrack) {
+    case kAudio:
+      return mDemuxer->DemuxAudioSample();
+
+    case kVideo:
+      if (mQueuedVideoSample)
+        return mQueuedVideoSample.forget();
+
+      return mDemuxer->DemuxVideoSample();
+
+    default:
       return nullptr;
-    }
-    MOZ_ASSERT(sample);
-    MP4Sample* s = sample.forget();
-    SampleQueue(s->type).push_back(s);
   }
-  MOZ_ASSERT(!sampleQueue.empty());
-  MP4Sample* sample = sampleQueue.front();
-  sampleQueue.pop_front();
-  return sample;
 }
 
 // How async decoding works:
@@ -484,7 +471,7 @@ MP4Reader::SkipVideoDemuxToNextKeyFrame(int64_t aTimeThreshold, uint32_t& parsed
         compressed->composition_timestamp < aTimeThreshold) {
       continue;
     }
-    mVideo.mDemuxedSamples.push_front(compressed.forget());
+    mQueuedVideoSample = compressed;
     break;
   }
 
@@ -531,10 +518,24 @@ MP4Reader::Seek(int64_t aTime,
                 int64_t aEndTime,
                 int64_t aCurrentTime)
 {
-  if (!mDemuxer->CanSeek()) {
+  if (!mDecoder->GetResource()->IsTransportSeekable() || !mDemuxer->CanSeek()) {
     return NS_ERROR_FAILURE;
   }
-  return NS_ERROR_NOT_IMPLEMENTED;
+  Flush(kVideo);
+  Flush(kAudio);
+  ResetDecode();
+
+  mQueuedVideoSample = nullptr;
+  if (mDemuxer->HasValidVideo()) {
+    mDemuxer->SeekVideo(aTime);
+    mQueuedVideoSample = PopSample(kVideo);
+  }
+  if (mDemuxer->HasValidAudio()) {
+    mDemuxer->SeekAudio(
+      mQueuedVideoSample ? mQueuedVideoSample->composition_timestamp : aTime);
+  }
+
+  return NS_OK;
 }
 
 } // namespace mozilla

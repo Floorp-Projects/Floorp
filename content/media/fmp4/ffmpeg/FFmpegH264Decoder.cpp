@@ -29,11 +29,15 @@ FFmpegH264Decoder::FFmpegH264Decoder(
   const mp4_demuxer::VideoDecoderConfig &aConfig,
   ImageContainer* aImageContainer)
   : FFmpegDataDecoder(aTaskQueue, AV_CODEC_ID_H264)
-  , mConfig(aConfig)
   , mCallback(aCallback)
   , mImageContainer(aImageContainer)
 {
   MOZ_COUNT_CTOR(FFmpegH264Decoder);
+
+  mExtraDataSize = aConfig.extra_data_size;
+  mExtraData = new uint8_t[mExtraDataSize + FF_INPUT_BUFFER_PADDING_SIZE];
+  memset(mExtraData, 0, mExtraDataSize + FF_INPUT_BUFFER_PADDING_SIZE);
+  memcpy(mExtraData, aConfig.extra_data, mExtraDataSize);
 }
 
 nsresult
@@ -53,9 +57,8 @@ FFmpegH264Decoder::DecodeFrame(mp4_demuxer::MP4Sample* aSample)
   AVPacket packet;
   av_init_packet(&packet);
 
-  packet.data = &(*aSample->data)[0];
-  packet.size = aSample->data->size();
-  packet.dts = aSample->decode_timestamp;
+  packet.data = aSample->data;
+  packet.size = aSample->size;
   packet.pts = aSample->composition_timestamp;
   packet.flags = aSample->is_sync_point ? AV_PKT_FLAG_KEY : 0;
   packet.pos = aSample->byte_offset;
@@ -238,11 +241,7 @@ FFmpegH264Decoder::Drain()
   for (int32_t i = 0; i <= mCodecContext.max_b_frames; i++) {
     // An empty frame tells FFmpeg to decode the next delayed frame it has in
     // its queue, if it has any.
-    nsAutoPtr<MP4Sample> empty(new MP4Sample(0 /* dts */, 0 /* cts */,
-                                              0 /* duration */, 0 /* offset */,
-                                              new std::vector<uint8_t>(),
-                                              mp4_demuxer::kVideo, nullptr,
-                                              false));
+    nsAutoPtr<MP4Sample> empty(new MP4Sample());
 
     nsresult rv = Input(empty.forget());
     NS_ENSURE_SUCCESS(rv, rv);

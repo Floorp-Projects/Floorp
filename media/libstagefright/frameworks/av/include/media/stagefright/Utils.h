@@ -28,7 +28,7 @@
 namespace android {
 
 #define FOURCC(c1, c2, c3, c4) \
-    (c1 << 24 | c2 << 16 | c3 << 8 | c4)
+    ((uint32_t) c1 << 24 | c2 << 16 | c3 << 8 | c4)
 
 uint16_t U16_AT(const uint8_t *ptr);
 uint32_t U32_AT(const uint8_t *ptr);
@@ -49,15 +49,6 @@ void convertMessageToMetaData(
         const sp<AMessage> &format, sp<MetaData> &meta);
 
 AString MakeUserAgent();
-
-// Convert a MIME type to a AudioSystem::audio_format
-status_t mapMimeToAudioFormat(audio_format_t& format, const char* mime);
-
-// Send information from MetaData to the HAL via AudioSink
-status_t sendMetaDataToHal(sp<MediaPlayerBase::AudioSink>& sink, const sp<MetaData>& meta);
-
-// Check whether the stream defined by meta can be offloaded to hardware
-bool canOffloadStream(const sp<MetaData>& meta, bool hasVideo, bool isStreaming);
 
 }  // namespace android
 

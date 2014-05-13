@@ -27,6 +27,10 @@
 #include <utils/StrongPointer.h>
 #include <utils/TypeHelpers.h>
 
+#ifdef _MSC_VER
+#define __attribute__(X)
+#endif
+
 // ---------------------------------------------------------------------------
 namespace android {
 
@@ -540,6 +544,10 @@ void move_backward_type(wp<TYPE>* d, wp<TYPE> const* s, size_t n) {
 
 
 }; // namespace android
+
+#ifdef _MSC_VER
+#undef __attribute__
+#endif
 
 // ---------------------------------------------------------------------------
 

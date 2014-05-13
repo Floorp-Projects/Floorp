@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#ifndef SAMPLE_ITERATOR_H_
+#define SAMPLE_ITERATOR_H_
+
 #include <utils/Vector.h>
 
 namespace android {
@@ -73,3 +76,4 @@ private:
 
 }  // namespace android
 
+#endif

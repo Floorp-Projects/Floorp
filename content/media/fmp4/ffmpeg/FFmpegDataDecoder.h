@@ -7,8 +7,6 @@
 #ifndef __FFmpegDataDecoder_h__
 #define __FFmpegDataDecoder_h__
 
-#include "mp4_demuxer/mp4_demuxer.h"
-
 #include "FFmpegDecoderModule.h"
 #include "FFmpegRuntimeLinker.h"
 #include "FFmpegCompat.h"
@@ -31,6 +29,8 @@ public:
   virtual nsresult Shutdown() MOZ_OVERRIDE;
 
 protected:
+  nsAutoArrayPtr<uint8_t> mExtraData;
+  size_t mExtraDataSize;
   MediaTaskQueue* mTaskQueue;
   AVCodecContext mCodecContext;
 
