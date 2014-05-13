@@ -11,6 +11,7 @@
 #include "nsAutoPtr.h"
 #include "PlatformDecoderModule.h"
 #include "mp4_demuxer/mp4_demuxer.h"
+#include "mp4_demuxer/box_definitions.h"
 #include "MediaTaskQueue.h"
 
 #include <deque>
@@ -70,6 +71,7 @@ private:
   void Flush(mp4_demuxer::TrackType aTrack);
 
   nsAutoPtr<mp4_demuxer::MP4Demuxer> mDemuxer;
+  nsAutoPtr<MP4Stream> mMP4Stream;
   nsAutoPtr<PlatformDecoderModule> mPlatform;
 
   class DecoderCallback : public MediaDataDecoderCallback {
@@ -110,6 +112,9 @@ private:
 
     // The platform decoder.
     RefPtr<MediaDataDecoder> mDecoder;
+    // Queue of input extracted by the demuxer, but not yet sent to the
+    // platform decoder.
+    MP4SampleQueue mDemuxedSamples;
     // TaskQueue on which decoder can choose to decode.
     // Only non-null up until the decoder is created.
     RefPtr<MediaTaskQueue> mTaskQueue;
@@ -129,9 +134,6 @@ private:
   };
   DecoderData mAudio;
   DecoderData mVideo;
-  // Queued frame extracted by the demuxer, but not yet sent to the platform
-  // decoder.
-  nsAutoPtr<mp4_demuxer::MP4Sample> mQueuedVideoSample;
 
   // The last number of decoded output frames that we've reported to
   // MediaDecoder::NotifyDecoded(). We diff the number of output video

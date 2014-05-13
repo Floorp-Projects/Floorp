@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#undef LOG_TAG
 #define LOG_TAG "SampleIterator"
 //#define LOG_NDEBUG 0
 #include <utils/Log.h>
@@ -315,4 +314,3 @@ status_t SampleIterator::findSampleTime(
 
 }  // namespace android
 
-#undef LOG_TAG
