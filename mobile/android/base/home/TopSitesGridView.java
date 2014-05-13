@@ -119,7 +119,7 @@ public class TopSitesGridView extends GridView {
                         } else {
                             method = TelemetryContract.Method.GRID_ITEM;
                         }
-                        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, method);
+                        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, method, Integer.toString(position));
 
                         mUrlOpenListener.onUrlOpen(url, EnumSet.noneOf(OnUrlOpenListener.Flags.class));
                     }

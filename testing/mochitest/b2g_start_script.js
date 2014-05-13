@@ -22,7 +22,7 @@ let container = homescreen.contentWindow.document.getElementById('test-container
 
 function openWindow(aEvent) {
   var popupIframe = aEvent.detail.frameElement;
-  popupIframe.setAttribute('style', 'position: absolute; left: 0; top: 0px; background: white;');
+  popupIframe.style = 'position: absolute; left: 0; top: 0px; background: white;';
 
   // This is to size the iframe to what is requested in the window.open call,
   // e.g. window.open("", "", "width=600,height=600");
