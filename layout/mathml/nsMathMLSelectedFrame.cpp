@@ -99,7 +99,7 @@ nsMathMLSelectedFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 // Only reflow the selected child ...
-nsresult
+void
 nsMathMLSelectedFrame::Reflow(nsPresContext*          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
@@ -122,7 +122,6 @@ nsMathMLSelectedFrame::Reflow(nsPresContext*          aPresContext,
   }
   FinalizeReflow(*aReflowState.rendContext, aDesiredSize);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return NS_OK;
 }
 
 // Only place the selected child ...

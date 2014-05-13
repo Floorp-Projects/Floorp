@@ -51,10 +51,10 @@ public:
    * borderpadding for the desired height.  Ascent will be set to the height,
    * and descent will be set to 0.
    */
-  virtual nsresult Reflow(nsPresContext*      aPresContext,
-                          nsHTMLReflowMetrics& aDesiredSize,
-                          const nsHTMLReflowState& aReflowState,
-                          nsReflowStatus&      aStatus) MOZ_OVERRIDE;
+  virtual void Reflow(nsPresContext*      aPresContext,
+                      nsHTMLReflowMetrics& aDesiredSize,
+                      const nsHTMLReflowState& aReflowState,
+                      nsReflowStatus&      aStatus) MOZ_OVERRIDE;
   
   /**
    * This method does most of the work that Reflow() above need done.
