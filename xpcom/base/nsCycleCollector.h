@@ -7,7 +7,9 @@
 #define nsCycleCollector_h__
 
 class nsICycleCollectorListener;
+class nsICycleCollectorLogSink;
 class nsISupports;
+template<class T> struct already_AddRefed;
 
 #include "nsError.h"
 #include "nsID.h"
@@ -42,6 +44,8 @@ void nsCycleCollector_finishAnyCurrentCollection();
 
 void nsCycleCollector_dispatchDeferredDeletion(bool aContinuation = false);
 bool nsCycleCollector_doDeferredDeletion();
+
+already_AddRefed<nsICycleCollectorLogSink> nsCycleCollector_createLogSink();
 
 void nsCycleCollector_collect(nsICycleCollectorListener* aManualListener);
 
