@@ -101,6 +101,9 @@ public:
   // Run a cycle collector slice, using a heuristic to decide how long to run it.
   static void RunCycleCollectorSlice();
 
+  // Run a cycle collector slice, using the given work budget.
+  static void RunCycleCollectorWorkSlice(int64_t aWorkBudget);
+
   static void BeginCycleCollectionCallback();
   static void EndCycleCollectionCallback(mozilla::CycleCollectorResults &aResults);
 
