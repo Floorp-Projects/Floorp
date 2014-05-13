@@ -39,7 +39,7 @@ Inline documentation about TextureClient and TextureHost can be found in:
 
 TextureClient is the client-side handle on a MozSurface, while TextureHost is the equivalent host-side representation. There can only be one TextureClient for a given TextureHost, and one TextureHost for a given TextureClient. Likewise, there can only be one shared object for a given TextureClient/TextureHost pair.
 
-A MozSurface containing data that is shared between a client process and a host process exists in the foolowing form:
+A MozSurface containing data that is shared between a client process and a host process exists in the following form:
 
 ```
                                  .
@@ -88,7 +88,7 @@ A surface lets you *borrow* a DrawTarget that is only valid between Lock and Unl
 
 It is invalid to hold a reference to the DrawTarget after Unlock, and a different DrawTarget may be obtained during the next Lock/Unlock interval.
 
-In some cases we want to use MozSurface without Drawing into it. For instance to share video frames accross processes. Some surface types may also not be accessible through a DrawTarget (for example YCbCr surfaces).
+In some cases we want to use MozSurface without drawing into it. For instance to share video frames accross processes. Some surface types may also not be accessible through a DrawTarget (for example YCbCr surfaces).
 
     bool CanExposeDrawTarget();
 
