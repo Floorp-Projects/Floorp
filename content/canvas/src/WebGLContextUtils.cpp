@@ -3,26 +3,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WebGLContext.h"
-
 #include <stdarg.h>
 
+#include "WebGLContext.h"
 #include "GLContext.h"
-#include "jsapi.h"
-#include "mozilla/Preferences.h"
-#include "nsCxPusher.h"
-#include "nsIDOMDataContainerEvent.h"
-#include "nsIDOMEvent.h"
-#include "nsIScriptSecurityManager.h"
-#include "nsIVariant.h"
-#include "nsServiceManagerUtils.h"
+
 #include "prprf.h"
-#include "WebGLBuffer.h"
-#include "WebGLExtensions.h"
-#include "WebGLFramebuffer.h"
-#include "WebGLProgram.h"
-#include "WebGLTexture.h"
-#include "WebGLVertexArray.h"
+
+#include "jsapi.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsServiceManagerUtils.h"
+#include "nsIVariant.h"
+#include "nsCxPusher.h"
+
+#include "nsIDOMEvent.h"
+#include "nsIDOMDataContainerEvent.h"
+
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 namespace mozilla {
 
@@ -193,6 +192,8 @@ DriverTypeFromType(GLContext* gl, GLenum webGLType)
 
     return webGLType;
 }
+
+} // namespace mozilla
 
 void
 WebGLContext::GenerateWarning(const char *fmt, ...)
@@ -397,142 +398,3 @@ WebGLContext::GetAndFlushUnderlyingGLErrors()
 
     return error;
 }
-
-#ifdef DEBUG
-// For NaNs, etc.
-static bool
-IsCacheCorrect(float cached, float actual)
-{
-    if (IsNaN(cached)) {
-        // GL is allowed to do anything it wants for NaNs, so if we're shadowing
-        // a NaN, then whatever `actual` is might be correct.
-        return true;
-    }
-
-    return cached == actual;
-}
-
-static void
-AssertUintParamCorrect(gl::GLContext* gl, GLenum pname, GLuint shadow)
-{
-    GLuint val = 0;
-    gl->GetUIntegerv(pname, &val);
-    MOZ_ASSERT(val == shadow);
-}
-#endif
-
-void
-WebGLContext::AssertCachedBindings()
-{
-#ifdef DEBUG
-    MakeContextCurrent();
-
-    GetAndFlushUnderlyingGLErrors();
-
-    if (IsExtensionEnabled(WebGLExtensionID::OES_vertex_array_object)) {
-        GLuint bound = mBoundVertexArray ? mBoundVertexArray->GLName() : 0;
-        AssertUintParamCorrect(gl, LOCAL_GL_VERTEX_ARRAY_BINDING, bound);
-    }
-
-    // Bound object state
-    GLuint bound = mBoundFramebuffer ? mBoundFramebuffer->GLName() : 0;
-    AssertUintParamCorrect(gl, LOCAL_GL_FRAMEBUFFER_BINDING, bound);
-
-    bound = mCurrentProgram ? mCurrentProgram->GLName() : 0;
-    AssertUintParamCorrect(gl, LOCAL_GL_CURRENT_PROGRAM, bound);
-
-    // Textures
-    GLenum activeTexture = mActiveTexture + LOCAL_GL_TEXTURE0;
-    AssertUintParamCorrect(gl, LOCAL_GL_ACTIVE_TEXTURE, activeTexture);
-
-    WebGLTexture* curTex = activeBoundTextureForTarget(LOCAL_GL_TEXTURE_2D);
-    bound = curTex ? curTex->GLName() : 0;
-    AssertUintParamCorrect(gl, LOCAL_GL_TEXTURE_BINDING_2D, bound);
-
-    curTex = activeBoundTextureForTarget(LOCAL_GL_TEXTURE_CUBE_MAP);
-    bound = curTex ? curTex->GLName() : 0;
-    AssertUintParamCorrect(gl, LOCAL_GL_TEXTURE_BINDING_CUBE_MAP, bound);
-
-    // Buffers
-    bound = mBoundArrayBuffer ? mBoundArrayBuffer->GLName() : 0;
-    AssertUintParamCorrect(gl, LOCAL_GL_ARRAY_BUFFER_BINDING, bound);
-
-    MOZ_ASSERT(mBoundVertexArray);
-    WebGLBuffer* curBuff = mBoundVertexArray->mBoundElementArrayBuffer;
-    bound = curBuff ? curBuff->GLName() : 0;
-    AssertUintParamCorrect(gl, LOCAL_GL_ELEMENT_ARRAY_BUFFER_BINDING, bound);
-
-    MOZ_ASSERT(!GetAndFlushUnderlyingGLErrors());
-#endif
-}
-
-void
-WebGLContext::AssertCachedState()
-{
-#ifdef DEBUG
-    MakeContextCurrent();
-
-    GetAndFlushUnderlyingGLErrors();
-
-    // extensions
-    if (IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers)) {
-        AssertUintParamCorrect(gl, LOCAL_GL_MAX_COLOR_ATTACHMENTS, mGLMaxColorAttachments);
-        AssertUintParamCorrect(gl, LOCAL_GL_MAX_DRAW_BUFFERS, mGLMaxDrawBuffers);
-    }
-
-    // Draw state
-    MOZ_ASSERT(gl->fIsEnabled(LOCAL_GL_SCISSOR_TEST) == mScissorTestEnabled);
-    MOZ_ASSERT(gl->fIsEnabled(LOCAL_GL_DITHER) == mDitherEnabled);
-    MOZ_ASSERT_IF(IsWebGL2(),
-                  gl->fIsEnabled(LOCAL_GL_RASTERIZER_DISCARD) == mRasterizerDiscardEnabled);
-
-
-    realGLboolean colorWriteMask[4] = {0, 0, 0, 0};
-    gl->fGetBooleanv(LOCAL_GL_COLOR_WRITEMASK, colorWriteMask);
-    MOZ_ASSERT(colorWriteMask[0] == mColorWriteMask[0] &&
-               colorWriteMask[1] == mColorWriteMask[1] &&
-               colorWriteMask[2] == mColorWriteMask[2] &&
-               colorWriteMask[3] == mColorWriteMask[3]);
-
-    GLfloat colorClearValue[4] = {0.0f, 0.0f, 0.0f, 0.0f};
-    gl->fGetFloatv(LOCAL_GL_COLOR_CLEAR_VALUE, colorClearValue);
-    MOZ_ASSERT(IsCacheCorrect(mColorClearValue[0], colorClearValue[0]) &&
-               IsCacheCorrect(mColorClearValue[1], colorClearValue[1]) &&
-               IsCacheCorrect(mColorClearValue[2], colorClearValue[2]) &&
-               IsCacheCorrect(mColorClearValue[3], colorClearValue[3]));
-
-    realGLboolean depthWriteMask = 0;
-    gl->fGetBooleanv(LOCAL_GL_DEPTH_WRITEMASK, &depthWriteMask);
-    MOZ_ASSERT(depthWriteMask == mDepthWriteMask);
-
-    GLfloat depthClearValue = 0.0f;
-    gl->fGetFloatv(LOCAL_GL_DEPTH_CLEAR_VALUE, &depthClearValue);
-    MOZ_ASSERT(IsCacheCorrect(mDepthClearValue, depthClearValue));
-
-    AssertUintParamCorrect(gl, LOCAL_GL_STENCIL_CLEAR_VALUE, mStencilClearValue);
-
-    AssertUintParamCorrect(gl, LOCAL_GL_STENCIL_REF,      mStencilRefFront);
-    AssertUintParamCorrect(gl, LOCAL_GL_STENCIL_BACK_REF, mStencilRefBack);
-
-    AssertUintParamCorrect(gl, LOCAL_GL_STENCIL_VALUE_MASK,      mStencilValueMaskFront);
-    AssertUintParamCorrect(gl, LOCAL_GL_STENCIL_BACK_VALUE_MASK, mStencilValueMaskBack);
-
-    AssertUintParamCorrect(gl, LOCAL_GL_STENCIL_WRITEMASK,      mStencilWriteMaskFront);
-    AssertUintParamCorrect(gl, LOCAL_GL_STENCIL_BACK_WRITEMASK, mStencilWriteMaskBack);
-
-    // Viewport
-    GLint int4[4] = {0, 0, 0, 0};
-    gl->fGetIntegerv(LOCAL_GL_VIEWPORT, int4);
-    MOZ_ASSERT(int4[0] == mViewportX &&
-               int4[1] == mViewportY &&
-               int4[2] == mViewportWidth &&
-               int4[3] == mViewportHeight);
-
-    AssertUintParamCorrect(gl, LOCAL_GL_PACK_ALIGNMENT, mPixelStorePackAlignment);
-    AssertUintParamCorrect(gl, LOCAL_GL_UNPACK_ALIGNMENT, mPixelStoreUnpackAlignment);
-
-    MOZ_ASSERT(!GetAndFlushUnderlyingGLErrors());
-#endif
-}
-
-} // namespace mozilla
