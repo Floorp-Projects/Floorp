@@ -789,6 +789,13 @@ RILContentHelper.prototype = {
     let request = Services.DOMRequest.createRequest(window);
     let requestId = this.getRequestId(request);
 
+    let radioState = this.rilContexts[clientId].radioState;
+    if (radioState !== RIL.GECKO_DETAILED_RADIOSTATE_ENABLED) {
+      this.dispatchFireRequestError(requestId,
+                                    RIL.GECKO_ERROR_RADIO_NOT_AVAILABLE);
+      return request;
+    }
+
     cpmm.sendAsyncMessage("RIL:SetPreferredNetworkType", {
       clientId: clientId,
       data: {
@@ -807,6 +814,13 @@ RILContentHelper.prototype = {
 
     let request = Services.DOMRequest.createRequest(window);
     let requestId = this.getRequestId(request);
+
+    let radioState = this.rilContexts[clientId].radioState;
+    if (radioState !== RIL.GECKO_DETAILED_RADIOSTATE_ENABLED) {
+      this.dispatchFireRequestError(requestId,
+                                    RIL.GECKO_ERROR_RADIO_NOT_AVAILABLE);
+      return request;
+    }
 
     cpmm.sendAsyncMessage("RIL:GetPreferredNetworkType", {
       clientId: clientId,
