@@ -3018,6 +3018,7 @@ let stringifiers = {
  */
 function ObjectActor(aObj, aThreadActor)
 {
+  dbg_assert(!aObj.optimizedOut, "Should not create object actors for optimized out values!");
   this.obj = aObj;
   this.threadActor = aThreadActor;
 }
@@ -4527,10 +4528,16 @@ EnvironmentActor.prototype = {
     }
     for each (let name in parameterNames) {
       let arg = {};
+
+      let value = this.obj.getVariable(name);
+      if (value && value.optimizedOut) {
+        continue;
+      }
+
       // TODO: this part should be removed in favor of the commented-out part
       // below when getVariableDescriptor lands (bug 725815).
       let desc = {
-        value: this.obj.getVariable(name),
+        value: value,
         configurable: false,
         writable: true,
         enumerable: true
@@ -4559,15 +4566,12 @@ EnvironmentActor.prototype = {
         continue;
       }
 
-      // TODO: this part should be removed in favor of the commented-out part
-      // below when getVariableDescriptor lands.
-      let desc = {
-        configurable: false,
-        writable: true,
-        enumerable: true
-      };
+      let value;
       try {
-        desc.value = this.obj.getVariable(name);
+        value = this.obj.getVariable(name);
+        if (value && value.optimizedOut) {
+          continue;
+        }
       } catch (e) {
         // Avoid "Debugger scope is not live" errors for |arguments|, introduced
         // in bug 746601.
@@ -4575,6 +4579,16 @@ EnvironmentActor.prototype = {
           throw e;
         }
       }
+
+      // TODO: this part should be removed in favor of the commented-out part
+      // below when getVariableDescriptor lands.
+      let desc = {
+        value: value,
+        configurable: false,
+        writable: true,
+        enumerable: true
+      };
+
       //let desc = this.obj.getVariableDescriptor(name);
       let descForm = {
         enumerable: true,
