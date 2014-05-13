@@ -10,26 +10,18 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.gfx.BitmapUtils;
-import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.NativeEventListener;
+import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
-import android.util.Log;
-import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -37,12 +29,11 @@ import android.widget.LinearLayout;
 import java.util.UUID;
 import java.util.ArrayList;
 
-public class PageActionLayout extends LinearLayout implements GeckoEventListener,
+public class PageActionLayout extends LinearLayout implements NativeEventListener,
                                                               View.OnClickListener,
                                                               View.OnLongClickListener {
-    private final String LOGTAG = "GeckoPageActionLayout";
-    private final String MENU_BUTTON_KEY = "MENU_BUTTON_KEY";
-    private final int DEFAULT_PAGE_ACTIONS_SHOWN = 2;
+    private static final String MENU_BUTTON_KEY = "MENU_BUTTON_KEY";
+    private static final int DEFAULT_PAGE_ACTIONS_SHOWN = 2;
 
     private ArrayList<PageAction> mPageActionList;
     private GeckoPopupMenu mPageActionsMenu;
@@ -83,33 +74,29 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
     }
 
     @Override
-    public void handleMessage(String event, JSONObject message) {
-        try {
-            if (event.equals("PageActions:Add")) {
-                final String id = message.getString("id");
-                final String title = message.getString("title");
-                final String imageURL = message.optString("icon");
-                final boolean mImportant = message.getBoolean("important");
+    public void handleMessage(String event, NativeJSObject message, EventCallback callback) {
+        if (event.equals("PageActions:Add")) {
+            final String id = message.getString("id");
+            final String title = message.getString("title");
+            final String imageURL = message.optString("icon", null);
+            final boolean mImportant = message.getBoolean("important");
 
-                addPageAction(id, title, imageURL, new OnPageActionClickListeners() {
-                    @Override
-                    public void onClick(String id) {
-                        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("PageActions:Clicked", id));
-                    }
+            addPageAction(id, title, imageURL, new OnPageActionClickListeners() {
+                @Override
+                public void onClick(String id) {
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("PageActions:Clicked", id));
+                }
 
-                    @Override
-                    public boolean onLongClick(String id) {
-                        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("PageActions:LongClicked", id));
-                        return true;
-                    }
-                }, mImportant);
-            } else if (event.equals("PageActions:Remove")) {
-                final String id = message.getString("id");
+                @Override
+                public boolean onLongClick(String id) {
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("PageActions:LongClicked", id));
+                    return true;
+                }
+            }, mImportant);
+        } else if (event.equals("PageActions:Remove")) {
+            final String id = message.getString("id");
 
-                removePageAction(id);
-            }
-        } catch(JSONException ex) {
-            Log.e(LOGTAG, "Error deocding", ex);
+            removePageAction(id);
         }
     }
 

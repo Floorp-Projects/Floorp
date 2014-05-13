@@ -64,8 +64,6 @@ TranslationUI.prototype = {
   STATE_TRANSLATED: 2,
   STATE_ERROR: 3,
 
-  get doc() this.browser.contentDocument,
-
   translate: function(aFrom, aTo) {
     this.state = this.STATE_TRANSLATING;
     this.translatedFrom = aFrom;
@@ -125,6 +123,18 @@ TranslationUI.prototype = {
     return notif;
   },
 
+  shouldShowInfoBar: function(aURI, aDetectedLanguage) {
+    // Check if we should never show the infobar for this language.
+    let neverForLangs =
+      Services.prefs.getCharPref("browser.translation.neverForLanguages");
+    if (neverForLangs.split(",").indexOf(aDetectedLanguage) != -1)
+      return false;
+
+    // or if we should never show the infobar for this domain.
+    let perms = Services.perms;
+    return perms.testExactPermission(aURI, "translate") != perms.DENY_ACTION;
+  },
+
   showTranslationUI: function(aDetectedLanguage) {
     this.detectedLanguage = aDetectedLanguage;
 
@@ -135,6 +145,10 @@ TranslationUI.prototype = {
     this.originalShown = true;
 
     this.showURLBarIcon();
+
+    if (!this.shouldShowInfoBar(this.browser.currentURI, aDetectedLanguage))
+      return null;
+
     return this.showTranslationInfoBar();
   }
 };

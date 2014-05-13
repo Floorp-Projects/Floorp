@@ -880,3 +880,24 @@ void gfx3DMatrix::NudgeToIntegers(void)
   NudgeToInteger(&_43);
   NudgeToInteger(&_44);
 }
+
+void gfx3DMatrix::NudgeToIntegersFixedEpsilon(void)
+{
+  static const float error = 1e-5;
+  NudgeToInteger(&_11, error);
+  NudgeToInteger(&_12, error);
+  NudgeToInteger(&_13, error);
+  NudgeToInteger(&_14, error);
+  NudgeToInteger(&_21, error);
+  NudgeToInteger(&_22, error);
+  NudgeToInteger(&_23, error);
+  NudgeToInteger(&_24, error);
+  NudgeToInteger(&_31, error);
+  NudgeToInteger(&_32, error);
+  NudgeToInteger(&_33, error);
+  NudgeToInteger(&_34, error);
+  NudgeToInteger(&_41, error);
+  NudgeToInteger(&_42, error);
+  NudgeToInteger(&_43, error);
+  NudgeToInteger(&_44, error);
+}

@@ -206,7 +206,6 @@ sctp_sha1_update(struct sctp_sha1_context *ctx, const unsigned char *ptr, unsign
 			    ptr, number_left);
 			ctx->how_many_in_block += number_left;
 			ctx->running_total += number_left;
-			number_left = 0;
 			break;
 		} else {
 			/* block is now full, process it */

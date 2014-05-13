@@ -45,3 +45,5 @@ browser.jar:
 #endif
 *   content/browser/preferences/tabs.xul
 *   content/browser/preferences/tabs.js
+*   content/browser/preferences/translation.xul
+    content/browser/preferences/translation.js

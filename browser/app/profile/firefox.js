@@ -1239,6 +1239,13 @@ pref("devtools.appmanager.enabled", true);
 pref("devtools.appmanager.lastTab", "help");
 pref("devtools.appmanager.manifestEditor.enabled", true);
 
+// Enable devtools webide
+#ifdef MOZ_DEVTOOLS_WEBIDE
+pref("devtools.webide.enabled", true);
+#else
+pref("devtools.webide.enabled", false);
+#endif
+
 // Toolbox preferences
 pref("devtools.toolbox.footer.height", 250);
 pref("devtools.toolbox.sidebar.width", 500);
@@ -1556,6 +1563,7 @@ pref("browser.cache.auto_delete_cache_version", 1);
 pref("browser.cache.frecency_experiment", 0);
 
 pref("browser.translation.detectLanguage", false);
+pref("browser.translation.neverForLanguages", "");
 
 // Telemetry experiments settings.
 pref("experiments.enabled", true);

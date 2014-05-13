@@ -244,6 +244,14 @@ public:
 
   void SetTrackEnabled(mozilla::TrackID aTrackID, bool aEnabled) {}
 
+  class PrincipalChangeObserver
+  {
+  public:
+    virtual void PrincipalChanged(Fake_DOMMediaStream* aMediaStream) = 0;
+  };
+  void AddPrincipalChangeObserver(void* ignoredObserver) {}
+  void RemovePrincipalChangeObserver(void* ignoredObserver) {}
+
 private:
   nsRefPtr<Fake_MediaStream> mMediaStream;
 

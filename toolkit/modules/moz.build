@@ -9,6 +9,8 @@ BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
 MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
 MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
 
+SPHINX_TREES['toolkit_modules'] = 'docs'
+
 EXTRA_JS_MODULES += [
     'AsyncShutdown.jsm',
     'BinarySearch.jsm',
