@@ -96,6 +96,9 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
     if CONFIG['ENABLE_TESTS']:
         DIRS += ['tests/gtest']
 
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['ANDROID_VERSION'] <= '17':
+        DEFINES['ELFSIZE'] = 32
+
     FINAL_LIBRARY = 'xul'
 
 EXPORTS += [
