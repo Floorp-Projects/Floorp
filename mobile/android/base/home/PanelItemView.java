@@ -74,9 +74,6 @@ class PanelItemView extends LinearLayout {
         private ArticleItemView(Context context) {
             super(context, R.layout.panel_article_item);
             setOrientation(LinearLayout.HORIZONTAL);
-
-            final int padding = getResources().getDimensionPixelSize(R.dimen.article_item_view_padding);
-            setPadding(0, padding, 0, padding);
         }
     }
 
