@@ -14,11 +14,6 @@ function test() {
 
   gBrowser.loadURI("http://mochi.test:8888/browser/browser/base/content/test/general/bug564387.html");
 
-  registerCleanupFunction(function () {
-    gBrowser.addTab();
-    gBrowser.removeCurrentTab();
-  });
-
   gBrowser.addEventListener("pageshow", function pageShown(event) {
     if (event.target.location == "about:blank")
       return;
