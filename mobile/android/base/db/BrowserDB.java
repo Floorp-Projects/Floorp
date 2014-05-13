@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.db;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
@@ -160,6 +161,13 @@ public class BrowserDB {
         return sDb.filter(cr, constraint, limit);
     }
 
+    private static void appendUrlsFromCursor(List<String> urls, Cursor c) {
+        c.moveToPosition(-1);
+        while (c.moveToNext()) {
+            urls.add(c.getString(c.getColumnIndex(URLColumns.URL)));
+        };
+    }
+
     public static Cursor getTopSites(ContentResolver cr, int minLimit, int maxLimit) {
         // Note this is not a single query anymore, but actually returns a mixture
         // of two queries, one for topSites and one for pinned sites.
@@ -167,12 +175,17 @@ public class BrowserDB {
 
         int pinnedCount = pinnedSites.getCount();
         Cursor topSites = sDb.getTopSites(cr, maxLimit - pinnedCount);
+        int topCount = topSites.getCount();
 
         Cursor suggestedSites = null;
         if (sSuggestedSites != null) {
-            final int count = minLimit - pinnedCount - topSites.getCount();
+            final int count = minLimit - pinnedCount - topCount;
             if (count > 0) {
-                suggestedSites = sSuggestedSites.get(count);
+                final List<String> excludeUrls = new ArrayList<String>(pinnedCount + topCount);
+                appendUrlsFromCursor(excludeUrls, pinnedSites);
+                appendUrlsFromCursor(excludeUrls, topSites);
+
+                suggestedSites = sSuggestedSites.get(count, excludeUrls);
             }
         }
 
