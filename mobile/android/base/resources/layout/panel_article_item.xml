@@ -8,6 +8,7 @@
     <ImageView android:id="@+id/image"
                android:layout_width="54dp"
                android:layout_height="44dp"
+               android:layout_marginLeft="10dip"
                android:scaleType="centerCrop"/>
 
     <LinearLayout android:id="@+id/title_desc_container"
