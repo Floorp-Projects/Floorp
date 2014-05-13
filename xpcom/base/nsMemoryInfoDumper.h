@@ -31,7 +31,7 @@ public:
   static void Initialize();
 
 #ifdef MOZ_DMD
-  static nsresult DumpDMD(const nsAString &aIdentifier);
+  static nsresult DumpDMD(const nsAString& aIdentifier);
 #endif
 };
 

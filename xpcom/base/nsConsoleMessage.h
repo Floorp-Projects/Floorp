@@ -12,16 +12,19 @@
 #include "nsIConsoleMessage.h"
 #include "nsString.h"
 
-class nsConsoleMessage MOZ_FINAL : public nsIConsoleMessage {
+class nsConsoleMessage MOZ_FINAL : public nsIConsoleMessage
+{
 public:
   nsConsoleMessage();
-  nsConsoleMessage(const char16_t *message);
+  nsConsoleMessage(const char16_t* aMessage);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICONSOLEMESSAGE
 
 private:
-  ~nsConsoleMessage() {}
+  ~nsConsoleMessage()
+  {
+  }
 
   int64_t mTimeStamp;
   nsString mMessage;

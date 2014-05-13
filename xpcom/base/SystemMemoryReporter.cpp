@@ -84,14 +84,14 @@ GetBasename(const nsCString& aPath, nsACString& aOut)
 }
 
 static bool
-IsNumeric(const char* s)
+IsNumeric(const char* aStr)
 {
-  MOZ_ASSERT(*s);   // shouldn't see empty strings
-  while (*s) {
-    if (!isdigit(*s)) {
+  MOZ_ASSERT(*aStr);  // shouldn't see empty strings
+  while (*aStr) {
+    if (!isdigit(*aStr)) {
       return false;
     }
-    s++;
+    ++aStr;
   }
   return true;
 }
@@ -190,7 +190,10 @@ private:
   // These are the cross-cutting measurements across all processes.
   struct ProcessSizes
   {
-    ProcessSizes() { memset(this, 0, sizeof(*this)); }
+    ProcessSizes()
+    {
+      memset(this, 0, sizeof(*this));
+    }
 
     size_t mSizes[ProcessSizeKindLimit];
   };
@@ -271,8 +274,9 @@ private:
         while (true) {
           nsresult rv = ParseMapping(f, processName, aHandleReport, aData,
                                      &processSizes, aTotalPss);
-          if (NS_FAILED(rv))
+          if (NS_FAILED(rv)) {
             break;
+          }
         }
         fclose(f);
 
@@ -361,8 +365,9 @@ private:
       size_t pss = 0;
       nsresult rv = ParseMapBody(aFile, aProcessName, name, description,
                                  aHandleReport, aData, &pss);
-      if (NS_FAILED(rv))
+      if (NS_FAILED(rv)) {
         break;
+      }
 
       // Increment the appropriate aProcessSizes values, and the total.
       aProcessSizes->mSizes[kind] += pss;
@@ -827,7 +832,8 @@ const char* SystemReporter::kindPathSuffixes[] = {
   "vdso"
 };
 
-void Init()
+void
+Init()
 {
   RegisterStrongMemoryReporter(new SystemReporter());
 }
