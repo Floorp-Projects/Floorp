@@ -3,15 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
- * The origin of this IDL file is:
- * http://dom.spec.whatwg.org/#interface-document
- * http://www.whatwg.org/specs/web-apps/current-work/#the-document-object
- * http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html#api
- * http://dvcs.w3.org/hg/pointerlock/raw-file/default/index.html#extensions-to-the-document-interface
- * http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/PageVisibility/Overview.html#sec-document-interface
- * http://dev.w3.org/csswg/cssom/#extensions-to-the-document-interface
- * http://dev.w3.org/csswg/cssom-view/#extensions-to-the-document-interface
- *
  * http://mxr.mozilla.org/mozilla-central/source/dom/interfaces/core/nsIDOMDocument.idl
  */
 
@@ -292,6 +283,12 @@ partial interface Document {
 
   //(Not implemented)Element?  find(DOMString selectors, optional (Element or sequence<Node>)? refNodes);
   //(Not implemented)NodeList  findAll(DOMString selectors, optional (Element or sequence<Node>)? refNodes);
+};
+
+// http://dev.w3.org/fxtf/web-animations/#extensions-to-the-document-interface
+partial interface Document {
+  [Pref="dom.animations-api.core.enabled"]
+  readonly attribute AnimationTimeline timeline;
 };
 
 //  Mozilla extensions of various sorts

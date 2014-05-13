@@ -132,16 +132,10 @@ index_guess(const xtd_seq_num_t *local,
   uint32_t local_roc = (uint32_t)(*local >> 16);
   uint16_t local_seq = (uint16_t) *local;
 #endif
-#ifdef NO_64BIT_MATH
-  uint32_t guess_roc = ((high32(*guess) << 16) |
-						(low32(*guess) >> 16));
-  uint16_t guess_seq = (uint16_t) (low32(*guess));
-#else
-  uint32_t guess_roc = (uint32_t)(*guess >> 16);
-  uint16_t guess_seq = (uint16_t) *guess;  
-#endif
+  uint32_t guess_roc;
+  uint16_t guess_seq;
   int difference;
-  
+
   if (local_seq < seq_num_median) {
     if (s - local_seq > seq_num_median) {
       guess_roc = local_roc - 1;
@@ -160,7 +154,7 @@ index_guess(const xtd_seq_num_t *local,
     }
   }
   guess_seq = s;
-  
+
   /* Note: guess_roc is 32 bits, so this generates a 48-bit result! */
 #ifdef NO_64BIT_MATH
   *guess = make64(guess_roc >> 16,

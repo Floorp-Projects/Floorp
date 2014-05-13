@@ -36,34 +36,24 @@ static const uint8_t UnpremultiplyValue(uint8_t a, uint8_t v) {
 }
 
 void
-gfxUtils::PremultiplyImageSurface(gfxImageSurface *aSourceSurface,
-                                  gfxImageSurface *aDestSurface)
+gfxUtils::PremultiplyDataSurface(DataSourceSurface *aSurface)
 {
-    if (!aDestSurface)
-        aDestSurface = aSourceSurface;
-
-    MOZ_ASSERT(aSourceSurface->Format() == aDestSurface->Format() &&
-               aSourceSurface->Width()  == aDestSurface->Width() &&
-               aSourceSurface->Height() == aDestSurface->Height() &&
-               aSourceSurface->Stride() == aDestSurface->Stride(),
-               "Source and destination surfaces don't have identical characteristics");
-
-    MOZ_ASSERT(aSourceSurface->Stride() == aSourceSurface->Width() * 4,
-               "Source surface stride isn't tightly packed");
-
     // Only premultiply ARGB32
-    if (aSourceSurface->Format() != gfxImageFormat::ARGB32) {
-        if (aDestSurface != aSourceSurface) {
-            memcpy(aDestSurface->Data(), aSourceSurface->Data(),
-                   aSourceSurface->Stride() * aSourceSurface->Height());
-        }
+    if (aSurface->GetFormat() != SurfaceFormat::B8G8R8A8) {
         return;
     }
 
-    uint8_t *src = aSourceSurface->Data();
-    uint8_t *dst = aDestSurface->Data();
+    DataSourceSurface::MappedSurface map;
+    if (!aSurface->Map(DataSourceSurface::MapType::READ_WRITE, &map)) {
+        return;
+    }
+    MOZ_ASSERT(map.mStride == aSurface->GetSize().width * 4,
+               "Source surface stride isn't tightly packed");
 
-    uint32_t dim = aSourceSurface->Width() * aSourceSurface->Height();
+    uint8_t *src = map.mData;
+    uint8_t *dst = map.mData;
+
+    uint32_t dim = aSurface->GetSize().width * aSurface->GetSize().height;
     for (uint32_t i = 0; i < dim; ++i) {
 #ifdef IS_LITTLE_ENDIAN
         uint8_t b = *src++;
@@ -87,59 +77,8 @@ gfxUtils::PremultiplyImageSurface(gfxImageSurface *aSourceSurface,
         *dst++ = PremultiplyValue(a, b);
 #endif
     }
-}
 
-void
-gfxUtils::UnpremultiplyImageSurface(gfxImageSurface *aSourceSurface,
-                                    gfxImageSurface *aDestSurface)
-{
-    if (!aDestSurface)
-        aDestSurface = aSourceSurface;
-
-    MOZ_ASSERT(aSourceSurface->Format() == aDestSurface->Format() &&
-               aSourceSurface->Width()  == aDestSurface->Width() &&
-               aSourceSurface->Height() == aDestSurface->Height(),
-               "Source and destination surfaces don't have identical characteristics");
-
-    // Only premultiply ARGB32
-    if (aSourceSurface->Format() != gfxImageFormat::ARGB32) {
-        if (aDestSurface != aSourceSurface) {
-            aDestSurface->CopyFrom(aSourceSurface);
-        }
-        return;
-    }
-
-    uint8_t *src = aSourceSurface->Data();
-    uint8_t *dst = aDestSurface->Data();
-
-    for (int32_t i = 0; i < aSourceSurface->Height(); ++i) {
-        uint8_t *srcRow = src + (i * aSourceSurface->Stride());
-        uint8_t *dstRow = dst + (i * aDestSurface->Stride());
-
-        for (int32_t j = 0; j < aSourceSurface->Width(); ++j) {
-#ifdef IS_LITTLE_ENDIAN
-          uint8_t b = *srcRow++;
-          uint8_t g = *srcRow++;
-          uint8_t r = *srcRow++;
-          uint8_t a = *srcRow++;
-
-          *dstRow++ = UnpremultiplyValue(a, b);
-          *dstRow++ = UnpremultiplyValue(a, g);
-          *dstRow++ = UnpremultiplyValue(a, r);
-          *dstRow++ = a;
-#else
-          uint8_t a = *srcRow++;
-          uint8_t r = *srcRow++;
-          uint8_t g = *srcRow++;
-          uint8_t b = *srcRow++;
-
-          *dstRow++ = a;
-          *dstRow++ = UnpremultiplyValue(a, r);
-          *dstRow++ = UnpremultiplyValue(a, g);
-          *dstRow++ = UnpremultiplyValue(a, b);
-#endif
-        }
-    }
+    aSurface->Unmap();
 }
 
 TemporaryRef<DataSourceSurface>
