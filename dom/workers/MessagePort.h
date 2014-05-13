@@ -6,7 +6,7 @@
 #ifndef mozilla_dom_workers_messageport_h_
 #define mozilla_dom_workers_messageport_h_
 
-#include "mozilla/dom/workers/Workers.h"
+#include "Workers.h"
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/BindingDeclarations.h"

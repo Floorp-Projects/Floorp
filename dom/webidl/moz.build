@@ -299,8 +299,6 @@ WEBIDL_FILES = [
     'ScriptProcessorNode.webidl',
     'ScrollAreaEvent.webidl',
     'Selection.webidl',
-    'ServiceWorker.webidl',
-    'ServiceWorkerContainer.webidl',
     'SettingsManager.webidl',
     'ShadowRoot.webidl',
     'SharedWorker.webidl',
