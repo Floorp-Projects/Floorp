@@ -190,7 +190,6 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsReflowStatus&          aStatus)
 {
-  nsresult rv;
   aDesiredSize.Width() = aDesiredSize.Height() = 0;
   aDesiredSize.SetTopAscent(0);
   aDesiredSize.mBoundingMetrics = nsBoundingMetrics();
@@ -236,15 +235,9 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
                                          | NS_REFLOW_CALC_BOUNDING_METRICS);
     nsHTMLReflowState childReflowState(aPresContext, aReflowState,
                                        childFrame, availSize);
-    rv = ReflowChild(childFrame, aPresContext, childDesiredSize,
-                     childReflowState, childStatus);
+    ReflowChild(childFrame, aPresContext, childDesiredSize,
+                childReflowState, childStatus);
     //NS_ASSERTION(NS_FRAME_IS_COMPLETE(childStatus), "bad status");
-    if (NS_FAILED(rv)) {
-      // Call DidReflow() for the child frames we successfully did reflow.
-      DidReflowChildren(firstChild, childFrame);
-      return rv;
-    }
-
     SaveReflowAndBoundingMetricsFor(childFrame, childDesiredSize,
                                     childDesiredSize.mBoundingMetrics);
 
