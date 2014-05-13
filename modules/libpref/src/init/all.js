@@ -1940,6 +1940,13 @@ pref("layout.display-list.dump", false);
 // heavily loaded.
 pref("layout.frame_rate.precise", false);
 
+// Is support for the Web Animations API enabled?
+#ifdef RELEASE_BUILD
+pref("dom.animations-api.core.enabled", false);
+#else
+pref("dom.animations-api.core.enabled", true);
+#endif
+
 // pref to permit users to make verified SOAP calls by default
 pref("capability.policy.default.SOAPCall.invokeVerifySourceHeader", "allAccess");
 
