@@ -2088,6 +2088,13 @@ pref("svg.svg-iframe.enabled", false);
 pref("svg.svg-iframe.enabled", false);
 #endif
 
+// Is support for the new getBBox method from SVG 2 enabled?  
+// See https://svgwg.org/svg2-draft/single-page.html#types-SVGBoundingBoxOptions
+#ifdef RELEASE_BUILD
+pref("svg.new-getBBox.enabled", false);
+#else
+pref("svg.new-getBBox.enabled", true);
+#endif
 
 // Default font types and sizes by locale
 pref("font.default.ar", "sans-serif");
