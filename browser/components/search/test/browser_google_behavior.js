@@ -97,7 +97,7 @@ function test() {
     },
     {
       name: "new tab search",
-      searchURL: base,
+      searchURL: base + "&channel=nts",
       run: function () {
         function doSearch(doc) {
           // Re-add the listener, and perform a search
