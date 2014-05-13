@@ -3827,27 +3827,34 @@ WebGLContext::TexSubImage2D(GLenum target, GLint level,
                               WebGLTexelFormat::RGBA8, false);
 }
 
-bool
+void
 WebGLContext::LoseContext()
 {
     if (IsContextLost())
-        return false;
+        return ErrorInvalidOperation("loseContext: Context is already lost.");
 
     ForceLoseContext();
-
-    return true;
+    mLastLossWasSimulated = true;
 }
 
-bool
+void
 WebGLContext::RestoreContext()
 {
-    if (!IsContextLost() || !mAllowRestore) {
-        return false;
+    if (!IsContextLost())
+        return ErrorInvalidOperation("restoreContext: Context is not lost.");
+
+    if (!mLastLossWasSimulated) {
+        return ErrorInvalidOperation("restoreContext: Context loss was not simulated."
+                                     " Cannot simulate restore.");
     }
+    // If we're currently lost, and the last loss was simulated, then
+    // we're currently only simulated-lost, allowing us to call
+    // restoreContext().
+
+    if (!mAllowContextRestore)
+        return ErrorInvalidOperation("restoreContext: Context cannot be restored.");
 
     ForceRestoreContext();
-
-    return true;
 }
 
 bool
