@@ -23,7 +23,7 @@ function test()
   let hud = HUDService.getBrowserConsole();
   ok(!hud, "browser console is not open");
   info("wait for the browser console to open with ctrl-shift-j");
-  EventUtils.synthesizeKey("j", { accelKey: true, shiftKey: true }, content);
+  EventUtils.synthesizeKey("j", { accelKey: true, shiftKey: true }, window);
 }
 
 function consoleOpened(hud)
