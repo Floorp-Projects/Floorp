@@ -715,7 +715,9 @@ DataChannelConnection::SctpDtlsOutput(void *addr, void *buffer, size_t length,
   } else {
     unsigned char *data = new unsigned char[length];
     memcpy(data, buffer, length);
-    res = -1;
+    // Commented out since we have to Dispatch SendPacket to avoid deadlock"
+    // res = -1;
+
     // XXX It might be worthwhile to add an assertion against the thread
     // somehow getting into the DataChannel/SCTP code again, as
     // DISPATCH_SYNC is not fully blocking.  This may be tricky, as it

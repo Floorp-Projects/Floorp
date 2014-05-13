@@ -3171,7 +3171,6 @@ sctp_inpcb_bind(struct socket *so, struct sockaddr *addr,
 	uint32_t vrf_id;
 
 	lport = 0;
-	error = 0;
 	bindall = 1;
 	inp = (struct sctp_inpcb *)so->so_pcb;
 #if defined(INET) || (defined(INET6) && defined(__APPLE__)) || defined(__FreeBSD__) || defined(__APPLE__)
