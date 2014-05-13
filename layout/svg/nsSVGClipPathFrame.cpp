@@ -325,3 +325,45 @@ nsSVGClipPathFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
                                           &content->mEnumAttributes[SVGClipPathElement::CLIPPATHUNITS],
                                           mClipParent);
 }
+
+SVGBBox
+nsSVGClipPathFrame::GetBBoxForClipPathFrame(const SVGBBox &aBBox, 
+                                            const gfxMatrix &aMatrix)
+{
+  nsIContent* node = GetContent()->GetFirstChild();
+  SVGBBox unionBBox, tmpBBox;
+  for (; node; node = node->GetNextSibling()) {
+    nsIFrame *frame = 
+      static_cast<nsSVGElement*>(node)->GetPrimaryFrame();
+    if (frame) {
+      nsISVGChildFrame *svg = do_QueryFrame(frame);
+      if (svg) {
+        tmpBBox = svg->GetBBoxContribution(mozilla::gfx::ToMatrix(aMatrix), 
+                                         nsSVGUtils::eBBoxIncludeFill);
+        nsSVGEffects::EffectProperties effectProperties =
+                              nsSVGEffects::GetEffectProperties(frame);
+        bool isOK = true;
+        nsSVGClipPathFrame *clipPathFrame = 
+                              effectProperties.GetClipPathFrame(&isOK);
+        if (clipPathFrame && isOK) {
+          tmpBBox = clipPathFrame->GetBBoxForClipPathFrame(tmpBBox, aMatrix);
+        } 
+        tmpBBox.Intersect(aBBox);
+        unionBBox.UnionEdges(tmpBBox);
+      }
+    }
+  }
+  nsSVGEffects::EffectProperties props = 
+    nsSVGEffects::GetEffectProperties(this);    
+  if (props.mClipPath) {
+    bool isOK = true;
+    nsSVGClipPathFrame *clipPathFrame = props.GetClipPathFrame(&isOK);
+    if (clipPathFrame && isOK) {
+      tmpBBox = clipPathFrame->GetBBoxForClipPathFrame(aBBox, aMatrix);                                                       
+      unionBBox.Intersect(tmpBBox);
+    } else if (!isOK) {
+      unionBBox = SVGBBox();
+    }
+  }
+  return unionBBox;
+}
