@@ -15,6 +15,7 @@
  */
 
 //#define LOG_NDEBUG 0
+#undef LOG_TAG
 #define LOG_TAG "MetaData"
 #include <utils/Log.h>
 
@@ -352,3 +353,4 @@ void MetaData::dumpToLog() const {
 
 }  // namespace android
 
+#undef LOG_TAG

@@ -27,6 +27,10 @@
 
 // ---------------------------------------------------------------------------
 
+#ifdef _MSC_VER
+#define __attribute__(X)
+#endif
+
 namespace android {
 
 class String16;
@@ -389,6 +393,10 @@ inline String8::operator const char*() const
 }
 
 }  // namespace android
+
+#ifdef _MSC_VER
+#undef __attribute__
+#endif
 
 // ---------------------------------------------------------------------------
 

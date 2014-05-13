@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#undef LOG_TAG
 #define LOG_TAG "MediaBufferGroup"
 #include <utils/Log.h>
 
@@ -84,3 +85,5 @@ void MediaBufferGroup::signalBufferReturned(MediaBuffer *) {
 }
 
 }  // namespace android
+
+#undef LOG_TAG
