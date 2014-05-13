@@ -42,6 +42,7 @@ public:
      */
     static void PremultiplyImageSurface(gfxImageSurface *aSourceSurface,
                                         gfxImageSurface *aDestSurface = nullptr);
+    static void PremultiplyDataSurface(DataSourceSurface *aSurface);
     static void UnpremultiplyImageSurface(gfxImageSurface *aSurface,
                                           gfxImageSurface *aDestSurface = nullptr);
     static mozilla::TemporaryRef<DataSourceSurface> UnpremultiplyDataSurface(DataSourceSurface* aSurface);
