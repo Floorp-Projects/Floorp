@@ -693,6 +693,7 @@ public final class ElementName
     public static final ElementName NOEMBED = new ElementName("noembed", "noembed", TreeBuilder.NOEMBED | SPECIAL);
     public static final ElementName POLYGON = new ElementName("polygon", "polygon", TreeBuilder.OTHER);
     public static final ElementName PATTERN = new ElementName("pattern", "pattern", TreeBuilder.OTHER);
+    public static final ElementName PICTURE = new ElementName("picture", "picture", TreeBuilder.OTHER);
     public static final ElementName PRODUCT = new ElementName("product", "product", TreeBuilder.OTHER);
     public static final ElementName SETDIFF = new ElementName("setdiff", "setdiff", TreeBuilder.OTHER);
     public static final ElementName SECTION = new ElementName("section", "section", TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | SPECIAL);
@@ -1090,6 +1091,7 @@ public final class ElementName
     NOEMBED,
     POLYGON,
     PATTERN,
+    PICTURE,
     PRODUCT,
     SETDIFF,
     SECTION,
@@ -1488,6 +1490,7 @@ public final class ElementName
     249697357,
     252132601,
     252135604,
+    251841204,
     252317348,
     255007012,
     255278388,
