@@ -90,6 +90,52 @@ gfxUtils::PremultiplyImageSurface(gfxImageSurface *aSourceSurface,
 }
 
 void
+gfxUtils::PremultiplyDataSurface(DataSourceSurface *aSurface)
+{
+    // Only premultiply ARGB32
+    if (aSurface->GetFormat() != SurfaceFormat::B8G8R8A8) {
+        return;
+    }
+
+    DataSourceSurface::MappedSurface map;
+    if (!aSurface->Map(DataSourceSurface::MapType::READ_WRITE, &map)) {
+        return;
+    }
+    MOZ_ASSERT(map.mStride == aSurface->GetSize().width * 4,
+               "Source surface stride isn't tightly packed");
+
+    uint8_t *src = map.mData;
+    uint8_t *dst = map.mData;
+
+    uint32_t dim = aSurface->GetSize().width * aSurface->GetSize().height;
+    for (uint32_t i = 0; i < dim; ++i) {
+#ifdef IS_LITTLE_ENDIAN
+        uint8_t b = *src++;
+        uint8_t g = *src++;
+        uint8_t r = *src++;
+        uint8_t a = *src++;
+
+        *dst++ = PremultiplyValue(a, b);
+        *dst++ = PremultiplyValue(a, g);
+        *dst++ = PremultiplyValue(a, r);
+        *dst++ = a;
+#else
+        uint8_t a = *src++;
+        uint8_t r = *src++;
+        uint8_t g = *src++;
+        uint8_t b = *src++;
+
+        *dst++ = a;
+        *dst++ = PremultiplyValue(a, r);
+        *dst++ = PremultiplyValue(a, g);
+        *dst++ = PremultiplyValue(a, b);
+#endif
+    }
+
+    aSurface->Unmap();
+}
+
+void
 gfxUtils::UnpremultiplyImageSurface(gfxImageSurface *aSourceSurface,
                                     gfxImageSurface *aDestSurface)
 {
