@@ -26,8 +26,6 @@ namespace gl {
 
 void ReadPixelsIntoDataSurface(GLContext* aGL,
                                gfx::DataSourceSurface* aSurface);
-void ReadPixelsIntoImageSurface(GLContext* aGL, gfxImageSurface* aSurface);
-void ReadScreenIntoImageSurface(GLContext* aGL, gfxImageSurface* aSurface);
 
 TemporaryRef<gfx::DataSourceSurface>
 ReadBackSurface(GLContext* gl, GLuint aTexture, bool aYInvert, gfx::SurfaceFormat aFormat);
