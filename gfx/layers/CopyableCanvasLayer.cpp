@@ -21,7 +21,7 @@
 #include "nsISupportsImpl.h"            // for gfxContext::AddRef, etc
 #include "nsRect.h"                     // for nsIntRect
 #include "nsSize.h"                     // for nsIntSize
-#include "LayerUtils.h"
+#include "gfxUtils.h"
 
 using namespace mozilla::gfx;
 using namespace mozilla::gl;
@@ -126,7 +126,7 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
             Factory::CreateWrappingDataSourceSurface(destData, destStride, destSize, destFormat);
           mGLContext->Screen()->Readback(sharedSurf, data);
           if (needsPremult) {
-            PremultiplySurface(data);
+              gfxUtils::PremultiplyDataSurface(data);
           }
           aDestTarget->ReleaseBits(destData);
           return;
@@ -144,7 +144,7 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
       // Readback handles Flush/MarkDirty.
       mGLContext->Screen()->Readback(sharedSurf, data);
       if (needsPremult) {
-        PremultiplySurface(data);
+        gfxUtils::PremultiplyDataSurface(data);
       }
       resultSurf = data;
     }
