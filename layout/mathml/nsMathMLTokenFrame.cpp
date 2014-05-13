@@ -134,7 +134,7 @@ nsMathMLTokenFrame::InsertFrames(ChildListID aListID,
   return rv;
 }
 
-nsresult
+void
 nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
@@ -168,7 +168,6 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return NS_OK;
 }
 
 // For token elements, mBoundingMetrics is computed at the ReflowToken

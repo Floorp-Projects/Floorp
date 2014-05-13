@@ -85,7 +85,8 @@ void nsTableColFrame::SetContinuousBCBorderWidth(uint8_t     aForSide,
   }
 }
 
-nsresult nsTableColFrame::Reflow(nsPresContext*          aPresContext,
+void
+nsTableColFrame::Reflow(nsPresContext*          aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredSize,
                                   const nsHTMLReflowState& aReflowState,
                                   nsReflowStatus&          aStatus)
@@ -102,7 +103,6 @@ nsresult nsTableColFrame::Reflow(nsPresContext*          aPresContext,
   }
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return NS_OK;
 }
 
 int32_t nsTableColFrame::GetSpan()

@@ -73,7 +73,7 @@ nsFormControlFrame::GetBaseline() const
   return mRect.height - GetUsedBorderAndPadding().bottom;
 }
 
-nsresult
+void
 nsFormControlFrame::Reflow(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
@@ -86,11 +86,7 @@ nsFormControlFrame::Reflow(nsPresContext*          aPresContext,
     RegUnRegAccessKey(static_cast<nsIFrame*>(this), true);
   }
 
-  nsresult rv = nsLeafFrame::Reflow(aPresContext, aDesiredSize, aReflowState,
-                                    aStatus);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  nsLeafFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   if (nsLayoutUtils::FontSizeInflationEnabled(aPresContext)) {
     float inflation = nsLayoutUtils::FontSizeInflationFor(this);
@@ -99,7 +95,6 @@ nsFormControlFrame::Reflow(nsPresContext*          aPresContext,
     aDesiredSize.UnionOverflowAreasWithDesiredBounds();
     FinishAndStoreOverflow(&aDesiredSize);
   }
-  return NS_OK;
 }
 
 nsresult
