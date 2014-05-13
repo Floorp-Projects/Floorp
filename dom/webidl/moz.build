@@ -301,6 +301,7 @@ WEBIDL_FILES = [
     'Selection.webidl',
     'ServiceWorker.webidl',
     'ServiceWorkerContainer.webidl',
+    'ServiceWorkerGlobalScope.webidl',
     'SettingsManager.webidl',
     'ShadowRoot.webidl',
     'SharedWorker.webidl',
