@@ -60,7 +60,7 @@ nsLeafFrame::Reflow(nsPresContext* aPresContext,
   FinishAndStoreOverflow(&aMetrics);
 }
 
-nsresult
+void
 nsLeafFrame::DoReflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aMetrics,
                       const nsHTMLReflowState& aReflowState,
@@ -85,8 +85,6 @@ nsLeafFrame::DoReflow(nsPresContext* aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
 
   aMetrics.SetOverflowAreasToDesiredBounds();
-
-  return NS_OK;
 }
 
 nscoord
