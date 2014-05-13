@@ -792,6 +792,13 @@ SocialProvider.prototype = {
     return SocialService.getManifestByOrigin(this.origin);
   },
 
+  getPageSize: function(name) {
+    let manifest = this.manifest;
+    if (manifest && manifest.pageSize)
+      return manifest.pageSize[name];
+    return undefined;
+  },
+
   // Reference to a workerAPI object for this provider. Null if the provider has
   // no FrameWorker, or is disabled.
   workerAPI: null,
