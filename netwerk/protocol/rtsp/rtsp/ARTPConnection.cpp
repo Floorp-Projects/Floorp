@@ -35,6 +35,9 @@
 #include "prnetdb.h"
 #include "prerr.h"
 #include "prerror.h"
+#include "NetworkActivityMonitor.h"
+
+using namespace mozilla::net;
 
 namespace android {
 
@@ -132,6 +135,9 @@ void ARTPConnection::MakePortPair(
     }
 
     bumpSocketBufferSize(*rtcpSocket);
+
+    NetworkActivityMonitor::AttachIOLayer(*rtpSocket);
+    NetworkActivityMonitor::AttachIOLayer(*rtcpSocket);
 
     // Reduce the chance of using duplicate port numbers.
     srand(time(NULL));
