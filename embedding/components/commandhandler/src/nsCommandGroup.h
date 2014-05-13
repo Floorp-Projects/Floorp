@@ -3,16 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-
 #ifndef nsCommandGroup_h__
 #define nsCommandGroup_h__
 
 #include "nsIController.h"
-#include "nsHashtable.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
-
 
 // {ecd55a01-2780-11d5-a73c-ca641a6813bc}
 #define NS_CONTROLLER_COMMAND_GROUP_CID \
@@ -20,7 +16,6 @@
 
 #define NS_CONTROLLER_COMMAND_GROUP_CONTRACTID \
  "@mozilla.org/embedcomp/controller-command-group;1"
-
 
 class nsControllerCommandGroup : public nsIControllerCommandGroup
 {
@@ -32,16 +27,14 @@ public:
   NS_DECL_NSICONTROLLERCOMMANDGROUP
 
 public:
-  typedef nsClassHashtable<nsCStringHashKey, nsTArray<char*>> GroupsHashtable;
+  typedef nsClassHashtable<nsCStringHashKey, nsTArray<nsCString>> GroupsHashtable;
 
 protected:
   void ClearGroupsHash();
-  static PLDHashOperator ClearEnumerator(const nsACString &aKey, nsTArray<char*> *aData, void *closure);
 
 protected:
-	nsClassHashtable<nsCStringHashKey, nsTArray<char*>> mGroupsHash; // hash keyed on command group.
-	                                                                 // This could be made more space-efficient, maybe with atoms
-
+  GroupsHashtable mGroupsHash; // hash keyed on command group.
+                               // This could be made more space-efficient, maybe with atoms
 };
 
 #endif // nsCommandGroup_h__
