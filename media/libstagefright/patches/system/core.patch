@@ -714,7 +714,7 @@ index f398a82..be0306f 100644
  // folder where stack traces are saved when DEBUG_REFS is enabled
  // this folder needs to exist and be writable
 diff --git a/libutils/String8.cpp b/libutils/String8.cpp
-index e852d77..255dd23 100644
+index e852d77..edb6270 100644
 --- a/libutils/String8.cpp
 +++ b/libutils/String8.cpp
 @@ -138,17 +138,8 @@ static char* allocFromUTF32(const char32_t* in, size_t len)
@@ -763,6 +763,22 @@ index e852d77..255dd23 100644
      return result;
  }
  
+@@ -465,6 +467,8 @@ void String8::getUtf32(char32_t* dst) const
+ // ---------------------------------------------------------------------------
+ // Path functions
+ 
++#if 0
++
+ void String8::setPathName(const char* name)
+ {
+     setPathName(name, strlen(name));
+@@ -637,4 +641,6 @@ String8& String8::convertToResPath()
+     return *this;
+ }
+ 
++#endif
++
+ }; // namespace android
 diff --git a/libutils/Unicode.cpp b/libutils/Unicode.cpp
 index a66e3bb..b8aae5e 100644
 --- a/libutils/Unicode.cpp
