@@ -113,6 +113,9 @@ public interface TelemetryContract {
 
         // Awesomescreen frecency search is active.
         public static final String FRECENCY = "frecency.1";
+
+        // Started the very first time we believe the application has been launched.
+        public static final String FIRSTRUN = "firstrun.1";
     }
 
     /**

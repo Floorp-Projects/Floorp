@@ -106,21 +106,20 @@ public:
   GetIntrinsicWidthMetrics(nsRenderingContext* aRenderingContext,
                            nsHTMLReflowMetrics& aDesiredSize);
 
-  virtual nsresult
+  virtual void
   Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
-  virtual nsresult
+  virtual void
   WillReflow(nsPresContext* aPresContext) MOZ_OVERRIDE
   {
     mPresentationData.flags &= ~NS_MATHML_ERROR;
-    return nsContainerFrame::WillReflow(aPresContext);
+    nsContainerFrame::WillReflow(aPresContext);
   }
 
-  virtual nsresult
-  DidReflow(nsPresContext*           aPresContext,
+  virtual void DidReflow(nsPresContext*           aPresContext,
             const nsHTMLReflowState*  aReflowState,
             nsDidReflowStatus         aStatus) MOZ_OVERRIDE
 
@@ -277,7 +276,7 @@ public:
   // helper method to reflow a child frame. We are inline frames, and we don't
   // know our positions until reflow is finished. That's why we ask the
   // base method not to worry about our position.
-  nsresult 
+  void
   ReflowChild(nsIFrame*                aKidFrame,
               nsPresContext*          aPresContext,
               nsHTMLReflowMetrics&     aDesiredSize,

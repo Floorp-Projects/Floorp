@@ -497,7 +497,7 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
   // call the superclass in all cases.
 }
 
-nsresult
+void
 nsObjectFrame::Reflow(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aMetrics,
                       const nsHTMLReflowState& aReflowState,
@@ -516,13 +516,13 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
   // plugin needs to see that haven't arrived yet.
   if (!GetContent()->IsDoneAddingChildren()) {
     aStatus = NS_FRAME_COMPLETE;
-    return NS_OK;
+    return;
   }
 
   // if we are printing or print previewing, bail for now
   if (aPresContext->Medium() == nsGkAtoms::print) {
     aStatus = NS_FRAME_COMPLETE;
-    return NS_OK;
+    return;
   }
 
   nsRect r(0, 0, aMetrics.Width(), aMetrics.Height());
@@ -543,7 +543,6 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
-  return NS_OK;
 }
 
 ///////////// nsIReflowCallback ///////////////
@@ -801,7 +800,7 @@ nsIntPoint nsObjectFrame::GetWindowOriginInPixels(bool aWindowless)
                     PresContext()->AppUnitsToDevPixels(origin.y));
 }
 
-nsresult
+void
 nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
                          const nsHTMLReflowState*  aReflowState,
                          nsDidReflowStatus         aStatus)
@@ -815,12 +814,12 @@ nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
     objContent->HasNewFrame(this);
   }
 
-  nsresult rv = nsObjectFrameSuper::DidReflow(aPresContext, aReflowState, aStatus);
+  nsObjectFrameSuper::DidReflow(aPresContext, aReflowState, aStatus);
 
   // The view is created hidden; once we have reflowed it and it has been
   // positioned then we show it.
   if (aStatus != nsDidReflowStatus::FINISHED)
-    return rv;
+    return;
 
   if (HasView()) {
     nsView* view = GetView();
@@ -828,8 +827,6 @@ nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
     if (vm)
       vm->SetViewVisibility(view, IsHidden() ? nsViewVisibility_kHide : nsViewVisibility_kShow);
   }
-
-  return rv;
 }
 
 /* static */ void

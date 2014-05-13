@@ -242,7 +242,7 @@ private:
                       RestyleTracker& aRestyleTracker,
                       bool            aRestyleDescendants);
 
-  nsresult StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint);
+  void StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint);
 
   // Returns true if this function managed to successfully move a frame, and
   // false if it could not process the position change, and a reflow should

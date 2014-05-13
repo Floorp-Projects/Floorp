@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Ensures that content crashes are reported to the crash service
+(nsICrashService and CrashManager.jsm).
+-->
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.7">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.addPermission("browser", true, document);
+SpecialPowers.pushPrefEnv({'set':[
+  ["dom.mozBrowserFramesEnabled", true],
+  ["dom.ipc.tabs.disabled", false]
+]}, function () {
+
+  var iframe =  document.createElementNS('http://www.w3.org/1999/xhtml', 'iframe');
+  iframe.setAttribute("remote", "true");
+  SpecialPowers.wrap(iframe).mozbrowser = true;
+  document.documentElement.appendChild(iframe);
+
+  SimpleTest.expectChildProcessCrash();
+
+  var crashMan =
+    SpecialPowers.Cu.import("resource://gre/modules/Services.jsm").
+    Services.crashmanager;
+
+  // First, clear the crash record store.
+  info("Waiting for pruneOldCrashes");
+  var future = new Date(Date.now() + 1000 * 60 * 60 * 24);
+  crashMan.pruneOldCrashes(future).then(function () {
+
+    var crashDateMS = Date.now();
+
+    // Inject a frame script that crashes the content process.
+    var mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
+    mm.loadFrameScript('data:,new ' + function ContentScriptScope() {
+      let Cu = Components.utils;
+      Cu.import("resource://gre/modules/ctypes.jsm");
+      let crash = function() {
+        let zero = new ctypes.intptr_t(8);
+        let badptr = ctypes.cast(zero, ctypes.PointerType(ctypes.int32_t));
+        badptr.contents;
+      };
+      privateNoteIntentionalCrash();
+      crash();
+    }, false);
+
+    // Finally, poll for the new crash record.
+    function tryGetCrash() {
+      info("Waiting for getCrashes");
+      crashMan.getCrashes().then(function (crashes) {
+        if (crashes.length) {
+          is(crashes.length, 1, "There should be only one record");
+          var crash = SpecialPowers.wrap(crashes[0]);
+          ok(crash.isOfType(crashMan.PROCESS_TYPE_CONTENT,
+                            crashMan.CRASH_TYPE_CRASH),
+             "Record should be a content crash");
+          ok(!!crash.id, "Record should have an ID");
+          ok(!!crash.crashDate, "Record should have a crash date");
+          var dateMS = crash.crashDate.valueOf();
+          var twoMin = 1000 * 60 * 2;
+          ok(crashDateMS - twoMin <= dateMS &&
+             dateMS <= crashDateMS + twoMin,
+             "Record's crash date should be nowish: " +
+             "now=" + crashDateMS + " recordDate=" + dateMS);
+          SimpleTest.finish();
+        }
+        else {
+          setTimeout(tryGetCrash, 1000);
+        }
+      }, function (err) {
+        ok(false, "Error getting crashes: " + err);
+        SimpleTest.finish();
+      });
+    }
+    setTimeout(tryGetCrash, 1000);
+
+  }, function () {
+    ok(false, "pruneOldCrashes error");
+    SimpleTest.finish();
+  });
+});
+
+</script>
+</body>
+</html>
