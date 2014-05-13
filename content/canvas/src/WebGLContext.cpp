@@ -1337,10 +1337,10 @@ WebGLContext::GetSurfaceSnapshot(bool* aPremultAlpha)
     if (!gl)
         return nullptr;
 
-    nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(gfxIntSize(mWidth, mHeight),
-                                                         gfxImageFormat::ARGB32,
-                                                         mWidth * 4, 0, false);
-    if (surf->CairoStatus() != 0) {
+    RefPtr<DataSourceSurface> surf = Factory::CreateDataSourceSurfaceWithStride(IntSize(mWidth, mHeight),
+                                                                                SurfaceFormat::B8G8R8A8,
+                                                                                mWidth * 4);
+    if (!surf) {
         return nullptr;
     }
 
@@ -1348,7 +1348,7 @@ WebGLContext::GetSurfaceSnapshot(bool* aPremultAlpha)
     {
         ScopedBindFramebuffer autoFB(gl, 0);
         ClearBackbufferIfNeeded();
-        ReadPixelsIntoImageSurface(gl, surf);
+        ReadPixelsIntoDataSurface(gl, surf);
     }
 
     if (aPremultAlpha) {
@@ -1359,8 +1359,7 @@ WebGLContext::GetSurfaceSnapshot(bool* aPremultAlpha)
         if (aPremultAlpha) {
             *aPremultAlpha = false;
         } else {
-            gfxUtils::PremultiplyImageSurface(surf);
-            surf->MarkDirty();
+            gfxUtils::PremultiplyDataSurface(surf);
         }
     }
 
@@ -1373,14 +1372,12 @@ WebGLContext::GetSurfaceSnapshot(bool* aPremultAlpha)
         return nullptr;
     }
 
-    RefPtr<SourceSurface> source = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, surf);
-
     Matrix m;
     m.Translate(0.0, mHeight);
     m.Scale(1.0, -1.0);
     dt->SetTransform(m);
 
-    dt->DrawSurface(source,
+    dt->DrawSurface(surf,
                     Rect(0, 0, mWidth, mHeight),
                     Rect(0, 0, mWidth, mHeight),
                     DrawSurfaceOptions(),
