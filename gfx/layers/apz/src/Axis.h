@@ -225,6 +225,10 @@ protected:
   nsTArray<float> mVelocityQueue;
 
   const FrameMetrics& GetFrameMetrics() const;
+
+  // Adjust a requested overscroll amount for resistance, yielding a smaller
+  // actual overscroll amount.
+  float ApplyResistance(float aOverscroll) const;
 };
 
 class AxisX : public Axis {
