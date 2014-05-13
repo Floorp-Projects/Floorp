@@ -493,24 +493,70 @@ function PeerConnectionTest(options) {
 PeerConnectionTest.prototype.close = function PCT_close(onSuccess) {
   info("Closing peer connections. Connection state=" + this.connected);
 
-  function signalingstatechangeClose(state) {
+  var self = this;
+  var closeTimeout = null;
+  var waitingForLocal = false;
+  var waitingForRemote = false;
+  var everythingClosed = false;
+
+  function verifyClosed() {
+    if ((self.waitingForLocal || self.waitingForRemote) ||
+      (self.pcLocal && (self.pcLocal.signalingState !== "closed")) ||
+      (self.pcRemote && (self.pcRemote.signalingState !== "closed"))) {
+      info("still waiting for closure");
+    }
+    else if (!everythingClosed) {
+      info("No closure pending");
+      if (self.pcLocal) {
+        is(self.pcLocal.signalingState, "closed", "pcLocal is in 'closed' state");
+      }
+      if (self.pcRemote) {
+        is(self.pcRemote.signalingState, "closed", "pcRemote is in 'closed' state");
+      }
+      clearTimeout(closeTimeout);
+      self.connected = false;
+      everythingClosed = true;
+      onSuccess();
+    }
+  }
+
+  function signalingstatechangeLocalClose(state) {
     info("'onsignalingstatechange' event '" + state + "' received");
     is(state, "closed", "onsignalingstatechange event is closed");
+    self.waitingForLocal = false;
+    verifyClosed();
   }
 
-  // There is no onclose event for the remote peer existent yet. So close it
-  // side-by-side with the local peer.
-  if (this.pcLocal) {
-    this.pcLocal.onsignalingstatechange = signalingstatechangeClose;
-    this.pcLocal.close();
+  function signalingstatechangeRemoteClose(state) {
+    info("'onsignalingstatechange' event '" + state + "' received");
+    is(state, "closed", "onsignalingstatechange event is closed");
+    self.waitingForRemote = false;
+    verifyClosed();
   }
-  if (this.pcRemote) {
-    this.pcRemote.onsignalingstatechange = signalingstatechangeClose;
-    this.pcRemote.close();
-  }
-  this.connected = false;
 
-  onSuccess();
+  function closeEverything() {
+    if ((self.pcLocal) && (self.pcLocal.signalingState !== "closed")) {
+      info("Closing pcLocal");
+      self.pcLocal.onsignalingstatechange = signalingstatechangeLocalClose;
+      self.waitingForLocal = true;
+      self.pcLocal.close();
+    }
+    if ((self.pcRemote) && (self.pcRemote.signalingState !== "closed")) {
+      info("Closing pcRemote");
+      self.pcRemote.onsignalingstatechange = signalingstatechangeRemoteClose;
+      self.waitingForRemote = true;
+      self.pcRemote.close();
+    }
+    verifyClosed();
+  }
+
+  closeTimeout = setTimeout(function() {
+    ok(false, "Closing PeerConnections timed out!");
+    // it is not a success, but the show must go on
+    onSuccess();
+  }, 60000);
+
+  closeEverything();
 };
 
 /**
@@ -595,7 +641,6 @@ function PCT_setLocalDescription(peer, desc, stateExpected, onSuccess) {
   }
 
   peer.onsignalingstatechange = function (state) {
-    //info(peer + ": 'onsignalingstatechange' event registered, signalingState: " + peer.signalingState);
     info(peer + ": 'onsignalingstatechange' event '" + state + "' received");
     if(stateExpected === state && eventFired == false) {
       eventFired = true;

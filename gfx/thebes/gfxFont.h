@@ -3489,11 +3489,6 @@ public:
         return mFonts.Length();
     }
 
-    bool Equals(const gfxFontGroup& other) const {
-        return mFamilies.Equals(other.mFamilies) &&
-            mStyle.Equals(other.mStyle);
-    }
-
     const gfxFontStyle *GetStyle() const { return &mStyle; }
 
     virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle);

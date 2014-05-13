@@ -35,6 +35,7 @@ interfaces = [
 PARALLEL_DIRS += ['interfaces/' + i for i in interfaces]
 
 PARALLEL_DIRS += [
+    'animation',
     'apps',
     'base',
     'activities',
