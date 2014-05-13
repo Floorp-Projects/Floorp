@@ -284,6 +284,31 @@ function validateItem(datasetId, item) {
   }
 }
 
+var gRefreshTimers = {};
+
+/**
+ * Sends a message to Java to refresh the given dataset. Delays sending
+ * messages to avoid successive refreshes, which can result in flashing views.
+ */
+function refreshDataset(datasetId) {
+  // Bail if there's already a refresh timer waiting to fire
+  if (gRefreshTimers[datasetId]) {
+    return;
+  }
+
+  let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  timer.initWithCallback(function(timer) {
+    delete gRefreshTimers[datasetId];
+
+    sendMessageToJava({
+      type: "HomePanels:RefreshDataset",
+      datasetId: datasetId
+    });
+  }, 100, Ci.nsITimer.TYPE_ONE_SHOT);
+
+  gRefreshTimers[datasetId] = timer;
+}
+
 HomeStorage.prototype = {
   /**
    * Saves data rows to the DB.
@@ -325,10 +350,7 @@ HomeStorage.prototype = {
         yield db.close();
       }
 
-      sendMessageToJava({
-        type: "HomePanels:RefreshDataset",
-        datasetId: this.datasetId,
-      });
+      refreshDataset(this.datasetId);
     }.bind(this));
   },
 
@@ -348,10 +370,7 @@ HomeStorage.prototype = {
         yield db.close();
       }
 
-      sendMessageToJava({
-        type: "HomePanels:RefreshDataset",
-        datasetId: this.datasetId,
-      });
+      refreshDataset(this.datasetId);
     }.bind(this));
   }
 };
