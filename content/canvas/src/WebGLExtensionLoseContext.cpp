@@ -21,15 +21,13 @@ WebGLExtensionLoseContext::~WebGLExtensionLoseContext()
 void
 WebGLExtensionLoseContext::LoseContext()
 {
-    if (!mContext->LoseContext())
-        mContext->mWebGLError = LOCAL_GL_INVALID_OPERATION;
+    mContext->LoseContext();
 }
 
-void 
+void
 WebGLExtensionLoseContext::RestoreContext()
 {
-    if (!mContext->RestoreContext())
-        mContext->mWebGLError = LOCAL_GL_INVALID_OPERATION;
+    mContext->RestoreContext();
 }
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionLoseContext)
