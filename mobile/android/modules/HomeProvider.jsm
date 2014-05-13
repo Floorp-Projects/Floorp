@@ -24,6 +24,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
  */
 const SCHEMA_VERSION = 2;
 
+// The maximum number of items you can attempt to save at once.
+const MAX_SAVE_COUNT = 100;
+
 XPCOMUtils.defineLazyGetter(this, "DB_PATH", function() {
   return OS.Path.join(OS.Constants.Path.profileDir, "home.sqlite");
 });
@@ -292,6 +295,11 @@ HomeStorage.prototype = {
    * @resolves When the operation has completed.
    */
   save: function(data) {
+    if (data && data.length > MAX_SAVE_COUNT) {
+      throw "save failed for dataset = " + this.datasetId +
+        ": you cannot save more than " + MAX_SAVE_COUNT + " items at once";
+    }
+
     return Task.spawn(function save_task() {
       let db = yield getDatabaseConnection();
       try {
