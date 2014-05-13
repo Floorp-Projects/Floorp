@@ -4267,7 +4267,7 @@ nsFrame::ShrinkWidthToFit(nsRenderingContext *aRenderingContext,
   return result;
 }
 
-nsresult
+void
 nsFrame::WillReflow(nsPresContext* aPresContext)
 {
 #ifdef DEBUG_dbaron_off
@@ -4279,10 +4279,9 @@ nsFrame::WillReflow(nsPresContext* aPresContext)
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
                      ("WillReflow: oldState=%x", mState));
   mState |= NS_FRAME_IN_REFLOW;
-  return NS_OK;
 }
 
-nsresult
+void
 nsFrame::DidReflow(nsPresContext*           aPresContext,
                    const nsHTMLReflowState*  aReflowState,
                    nsDidReflowStatus         aStatus)
@@ -4308,8 +4307,6 @@ nsFrame::DidReflow(nsPresContext*           aPresContext,
       aReflowState->mPercentHeightObserver->NotifyPercentHeight(*aReflowState);
     }
   }
-
-  return NS_OK;
 }
 
 void
@@ -4364,7 +4361,7 @@ nsFrame::CanContinueTextRun() const
   return false;
 }
 
-nsresult
+void
 nsFrame::Reflow(nsPresContext*          aPresContext,
                 nsHTMLReflowMetrics&     aDesiredSize,
                 const nsHTMLReflowState& aReflowState,
@@ -4375,7 +4372,6 @@ nsFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.Height() = 0;
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return NS_OK;
 }
 
 nsresult
@@ -7847,7 +7843,6 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
   //    line height. This can be done with the line iterator.
 
   // if we do have a rendering context
-  nsresult rv = NS_OK;
   nsRenderingContext* rendContext = aState.GetRenderingContext();
   if (rendContext) {
     nsPresContext* presContext = aState.PresContext();
@@ -7879,9 +7874,9 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
     const WritingMode wm = aState.OuterReflowState() ?
       aState.OuterReflowState()->GetWritingMode() : GetWritingMode();
     nsHTMLReflowMetrics desiredSize(wm);
-    rv = BoxReflow(aState, presContext, desiredSize, rendContext,
-                   rect.x, rect.y,
-                   metrics->mBlockPrefSize.width, NS_UNCONSTRAINEDSIZE);
+    BoxReflow(aState, presContext, desiredSize, rendContext,
+              rect.x, rect.y,
+              metrics->mBlockPrefSize.width, NS_UNCONSTRAINEDSIZE);
 
     metrics->mBlockMinSize.height = 0;
     // ok we need the max ascent of the items on the line. So to do this
@@ -7926,7 +7921,7 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
 #endif
   }
 
-  return rv;
+  return NS_OK;
 }
 
 /* virtual */ nsILineIterator*
@@ -8067,12 +8062,11 @@ nsFrame::DoLayout(nsBoxLayoutState& aState)
   const WritingMode wm = aState.OuterReflowState() ?
     aState.OuterReflowState()->GetWritingMode() : GetWritingMode();
   nsHTMLReflowMetrics desiredSize(wm);
-  nsresult rv = NS_OK;
  
   if (rendContext) {
 
-    rv = BoxReflow(aState, presContext, desiredSize, rendContext,
-                   ourRect.x, ourRect.y, ourRect.width, ourRect.height);
+    BoxReflow(aState, presContext, desiredSize, rendContext,
+              ourRect.x, ourRect.y, ourRect.width, ourRect.height);
 
     if (IsCollapsed()) {
       SetSize(nsSize(0, 0));
@@ -8131,10 +8125,10 @@ nsFrame::DoLayout(nsBoxLayoutState& aState)
 
   SyncLayout(aState);
 
-  return rv;
+  return NS_OK;
 }
 
-nsresult
+void
 nsFrame::BoxReflow(nsBoxLayoutState&        aState,
                    nsPresContext*           aPresContext,
                    nsHTMLReflowMetrics&     aDesiredSize,
@@ -8379,8 +8373,6 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
 #ifdef DEBUG_REFLOW
   gIndent2--;
 #endif
-
-  return NS_OK;
 }
 
 static void

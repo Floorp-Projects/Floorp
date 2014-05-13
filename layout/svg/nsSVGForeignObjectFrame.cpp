@@ -116,7 +116,7 @@ nsSVGForeignObjectFrame::AttributeChanged(int32_t  aNameSpaceID,
   return NS_OK;
 }
 
-nsresult
+void
 nsSVGForeignObjectFrame::Reflow(nsPresContext*           aPresContext,
                                 nsHTMLReflowMetrics&     aDesiredSize,
                                 const nsHTMLReflowState& aReflowState,
@@ -148,8 +148,6 @@ nsSVGForeignObjectFrame::Reflow(nsPresContext*           aPresContext,
   aDesiredSize.Height() = aReflowState.ComputedHeight();
   aDesiredSize.SetOverflowAreasToDesiredBounds();
   aStatus = NS_FRAME_COMPLETE;
-
-  return NS_OK;
 }
 
 void

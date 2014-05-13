@@ -935,7 +935,7 @@ nsMathMLmoFrame::SetInitialChildList(ChildListID     aListID,
   return rv;
 }
 
-nsresult
+void
 nsMathMLmoFrame::Reflow(nsPresContext*          aPresContext,
                         nsHTMLReflowMetrics&     aDesiredSize,
                         const nsHTMLReflowState& aReflowState,
@@ -945,8 +945,8 @@ nsMathMLmoFrame::Reflow(nsPresContext*          aPresContext,
   // it is safer to just process the whole lot here
   ProcessOperatorData();
 
-  return nsMathMLTokenFrame::Reflow(aPresContext, aDesiredSize,
-                                    aReflowState, aStatus);
+  nsMathMLTokenFrame::Reflow(aPresContext, aDesiredSize,
+                             aReflowState, aStatus);
 }
 
 /* virtual */ void
