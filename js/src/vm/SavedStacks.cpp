@@ -520,12 +520,6 @@ SavedStacks::createFrameFromLookup(JSContext *cx, SavedFrame::Lookup &lookup)
 bool
 SavedStacksMetadataCallback(JSContext *cx, JSObject **pmetadata)
 {
-    // Do not save the stack if the metadata callback was triggered in response
-    // to a too-much-recursion error. Don't report because it has already been
-    // reported since we are being asked to create metadata for the
-    // too-much-recursion Error object.
-    JS_CHECK_RECURSION_DONT_REPORT(cx, return true);
-
     Rooted<SavedFrame *> frame(cx);
     if (!cx->compartment()->savedStacks().saveCurrentStack(cx, &frame))
         return false;
