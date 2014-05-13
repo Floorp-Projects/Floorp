@@ -4,18 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# We don't import all modules at the top for performance reasons. See Bug 1008943
+
 from contextlib import contextmanager
 import errno
 import os
-import shutil
 import stat
-import tarfile
-import tempfile
 import time
-import urlparse
-import urllib2
 import warnings
-import zipfile
 
 __all__ = ['extract_tarball',
            'extract_zip',
@@ -28,11 +24,12 @@ __all__ = ['extract_tarball',
            'NamedTemporaryFile',
            'TemporaryDirectory']
 
-
 ### utilities for extracting archives
 
 def extract_tarball(src, dest):
     """extract a .tar file"""
+
+    import tarfile
 
     bundle = tarfile.open(src)
     namelist = bundle.getnames()
@@ -45,6 +42,8 @@ def extract_tarball(src, dest):
 
 def extract_zip(src, dest):
     """extract a zip file"""
+
+    import zipfile
 
     if isinstance(src, zipfile.ZipFile):
         bundle = src
@@ -83,6 +82,9 @@ def extract(src, dest=None):
 
     Returns the list of top level files that were extracted
     """
+
+    import zipfile
+    import tarfile
 
     assert os.path.exists(src), "'%s' does not exist" % src
 
@@ -138,6 +140,8 @@ def remove(path):
 
     :param path: path to be removed
     """
+
+    import shutil
 
     def _call_with_windows_retry(func, args=(), retry_max=5, retry_delay=0.5):
         """
@@ -322,6 +326,7 @@ class NamedTemporaryFile(object):
     def __init__(self, mode='w+b', bufsize=-1, suffix='', prefix='tmp',
                  dir=None, delete=True):
 
+        import tempfile
         fd, path = tempfile.mkstemp(suffix, prefix, dir, 't' in mode)
         os.close(fd)
 
@@ -364,6 +369,10 @@ def TemporaryDirectory():
        open(os.path.join(tmp, "a_temp_file"), "w").write("data")
 
     """
+
+    import tempfile
+    import shutil
+
     tempdir = tempfile.mkdtemp()
     try:
         yield tempdir
@@ -378,6 +387,8 @@ def is_url(thing):
     Return True if thing looks like a URL.
     """
 
+    import urlparse
+
     parsed = urlparse.urlparse(thing)
     if 'scheme' in parsed:
         return len(parsed.scheme) >= 2
@@ -390,6 +401,8 @@ def load(resource):
     or begins with 'file://', return a ``file``.  Otherwise, return the
     result of urllib2.urlopen()
     """
+
+    import urllib2
 
     # handle file URLs separately due to python stdlib limitations
     if resource.startswith('file://'):
