@@ -99,6 +99,26 @@ HTMLImageElement::IsSrcsetEnabled()
   return Preferences::GetBool(kPrefSrcsetEnabled, false);
 }
 
+nsresult
+HTMLImageElement::GetCurrentSrc(nsAString& aValue)
+{
+  if (!IsSrcsetEnabled()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIURI> currentURI;
+  GetCurrentURI(getter_AddRefs(currentURI));
+  if (currentURI) {
+    nsAutoCString spec;
+    currentURI->GetSpec(spec);
+    CopyUTF8toUTF16(spec, aValue);
+  } else {
+    SetDOMStringToNull(aValue);
+  }
+
+  return NS_OK;
+}
+
 void
 HTMLImageElement::GetItemValueText(nsAString& aValue)
 {

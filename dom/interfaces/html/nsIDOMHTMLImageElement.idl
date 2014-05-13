@@ -16,7 +16,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[uuid(cb5140c8-1df7-41eb-a70e-927283ac0990)]
+[uuid(939f4ea1-cb8d-49d0-a4e1-23bce758f4af)]
 interface nsIDOMHTMLImageElement : nsISupports
 {
            attribute DOMString        alt;
@@ -39,6 +39,8 @@ interface nsIDOMHTMLImageElement : nsISupports
            attribute DOMString        longDesc;
            attribute long             vspace;
            attribute DOMString        lowsrc;
+
+  readonly attribute DOMString        currentSrc;
 
   // These attributes are offsets from the closest view (to mimic
   // NS4's "offset-from-layer" behavior).
