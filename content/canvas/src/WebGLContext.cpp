@@ -1311,6 +1311,7 @@ WebGLContext::UpdateContextLossStatus()
 void
 WebGLContext::ForceLoseContext()
 {
+    printf_stderr("WebGL(%p)::ForceLoseContext\n", this);
     MOZ_ASSERT(!IsContextLost());
     mContextStatus = ContextLostAwaitingEvent;
     mContextLostErrorSet = false;
@@ -1326,6 +1327,7 @@ WebGLContext::ForceLoseContext()
 void
 WebGLContext::ForceRestoreContext()
 {
+    printf_stderr("WebGL(%p)::ForceRestoreContext\n", this);
     mContextStatus = ContextLostAwaitingRestore;
     mAllowContextRestore = true; // Hey, you did say 'force'.
 
