@@ -11,6 +11,8 @@ import android.test.mock.MockResources;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -136,6 +138,31 @@ public class TestSuggestedSites extends BrowserTestCase {
 
             String bgColor = c.getString(c.getColumnIndexOrThrow(BrowserContract.SuggestedSites.BG_COLOR));
             assertEquals("bgColor" + position, bgColor);
+        }
+
+        c.close();
+    }
+
+    public void testExcludeUrls() {
+        resources.setSuggestedSitesResource(generateSites(6));
+
+        List<String> excludedUrls = new ArrayList<String>(3);
+        excludedUrls.add("url1");
+        excludedUrls.add("url3");
+        excludedUrls.add("url5");
+
+        List<String> includedUrls = new ArrayList<String>(3);
+        includedUrls.add("url0");
+        includedUrls.add("url2");
+        includedUrls.add("url4");
+
+        Cursor c = new SuggestedSites(context).get(DEFAULT_LIMIT, excludedUrls);
+
+        c.moveToPosition(-1);
+        while (c.moveToNext()) {
+            String url = c.getString(c.getColumnIndexOrThrow(BrowserContract.SuggestedSites.URL));
+            assertFalse(excludedUrls.contains(url));
+            assertTrue(includedUrls.contains(url));
         }
 
         c.close();

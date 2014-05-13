@@ -62,6 +62,15 @@ NudgeToInteger(float *aVal)
   }
 }
 
+static inline void
+NudgeToInteger(float *aVal, float aErr)
+{
+  float r = floorf(*aVal + 0.5f);
+  if (FuzzyEqual(r, *aVal, aErr)) {
+    *aVal = r;
+  }
+}
+
 static inline Float
 Distance(Point aA, Point aB)
 {
