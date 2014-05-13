@@ -945,8 +945,9 @@ nsMathMLmoFrame::Reflow(nsPresContext*          aPresContext,
   // it is safer to just process the whole lot here
   ProcessOperatorData();
 
-  return nsMathMLTokenFrame::Reflow(aPresContext, aDesiredSize,
-                                    aReflowState, aStatus);
+  nsMathMLTokenFrame::Reflow(aPresContext, aDesiredSize,
+                             aReflowState, aStatus);
+  return NS_OK;
 }
 
 /* virtual */ void
