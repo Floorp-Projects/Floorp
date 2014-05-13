@@ -30,6 +30,11 @@
                   name="font.language.group"
                   type="wstring"
                   onchange="gContentPane._rebuildFonts();"/>
+
+      <!-- LANGUAGES -->
+      <preference id="browser.translation.detectLanguage"
+                  name="browser.translation.detectLanguage"
+                  type="bool"/>
     </preferences>
     
     <script type="application/javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
@@ -125,13 +130,31 @@
     <groupbox id="languagesGroup">
       <caption label="&languages.label;"/>
 
-      <hbox id="languagesBox" align="center">
-        <description flex="1" control="chooseLanguage">&chooseLanguage.label;</description>
-        <button id="chooseLanguage"
-                label="&chooseButton.label;"
-                accesskey="&chooseButton.accesskey;"
-                oncommand="gContentPane.showLanguages();"/>
-      </hbox>
+      <grid id="languagesGrid">
+        <columns>
+          <column flex="1"/>
+          <column/>
+        </columns>
+        <rows id="languagesRows">
+          <row id="preferredLanguageRow">
+            <label flex="1" control="chooseLanguage">&chooseLanguage.label;</label>
+            <button id="chooseLanguage"
+                    label="&chooseButton.label;"
+                    accesskey="&chooseButton.accesskey;"
+                    oncommand="gContentPane.showLanguages();"/>
+          </row>
+          <row hidden="true">
+            <checkbox id="translate" preference="browser.translation.detectLanguage" flex="1"
+                      label="&translateWebPages.label;" accesskey="&translateWebPages.accesskey;"
+                      onsyncfrompreference="return gContentPane.updateButtons('translateButton',
+                                            'browser.translation.detectLanguage');"/>
+            <button id="translateButton" label="&translateExceptions.label;"
+                    oncommand="gContentPane.showTranslationExceptions();"
+                    accesskey="&translateExceptions.accesskey;"/>
+          </row>
+        </rows>
+      </grid>
+
     </groupbox>
 
   </prefpane>
