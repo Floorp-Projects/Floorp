@@ -4282,7 +4282,7 @@ nsFrame::WillReflow(nsPresContext* aPresContext)
   return NS_OK;
 }
 
-nsresult
+void
 nsFrame::DidReflow(nsPresContext*           aPresContext,
                    const nsHTMLReflowState*  aReflowState,
                    nsDidReflowStatus         aStatus)
@@ -4308,8 +4308,6 @@ nsFrame::DidReflow(nsPresContext*           aPresContext,
       aReflowState->mPercentHeightObserver->NotifyPercentHeight(*aReflowState);
     }
   }
-
-  return NS_OK;
 }
 
 void
