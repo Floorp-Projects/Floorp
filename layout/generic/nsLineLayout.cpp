@@ -711,7 +711,7 @@ IsPercentageAware(const nsIFrame* aFrame)
   return false;
 }
 
-nsresult
+void
 nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                           nsReflowStatus& aReflowStatus,
                           nsHTMLReflowMetrics* aMetrics,
@@ -839,12 +839,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                                  &savedOptionalBreakPriority);
 
   if (!isText) {
-    nsresult rv = aFrame->Reflow(mPresContext, metrics, reflowStateHolder.ref(),
-                                 aReflowStatus);
-    if (NS_FAILED(rv)) {
-      NS_WARNING( "Reflow of frame failed in nsLineLayout" );
-      return rv;
-    }
+    aFrame->Reflow(mPresContext, metrics, reflowStateHolder.ref(),
+                   aReflowStatus);
   } else {
     static_cast<nsTextFrame*>(aFrame)->
       ReflowText(*this, availableSpaceOnLine, psd->mReflowState->rendContext,
@@ -1056,8 +1052,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   nsFrame::ListTag(stdout, aFrame);
   printf(" status=%x\n", aReflowStatus);
 #endif
-
-  return NS_OK;
 }
 
 void

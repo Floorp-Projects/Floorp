@@ -17,10 +17,10 @@ public:
 
   nsLegendFrame(nsStyleContext* aContext) : nsBlockFrame(aContext) {}
 
-  virtual nsresult Reflow(nsPresContext*           aPresContext,
-                          nsHTMLReflowMetrics&     aDesiredSize,
-                          const nsHTMLReflowState& aReflowState,
-                          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+  virtual void Reflow(nsPresContext*           aPresContext,
+                      nsHTMLReflowMetrics&     aDesiredSize,
+                      const nsHTMLReflowState& aReflowState,
+                      nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 

@@ -4,7 +4,23 @@
 
 "use strict";
 
-let { Encoder, QRRSBlock, QRErrorCorrectLevel } = require("./encoder/index");
+const { Cu } = require("chrome");
+const { Promise: promise } =
+  Cu.import("resource://gre/modules/Promise.jsm", {});
+
+// Lazily require encoder and decoder in case only one is needed
+Object.defineProperty(this, "Encoder", {
+  get: () => require("./encoder/index").Encoder
+});
+Object.defineProperty(this, "QRRSBlock", {
+  get: () => require("./encoder/index").QRRSBlock
+});
+Object.defineProperty(this, "QRErrorCorrectLevel", {
+  get: () => require("./encoder/index").QRErrorCorrectLevel
+});
+Object.defineProperty(this, "decoder", {
+  get: () => require("./decoder/index")
+});
 
 /**
  * There are many "versions" of QR codes, which describes how many dots appear
@@ -59,4 +75,29 @@ exports.encodeToDataURI = function(message, quality, version) {
   encoder.addData(message);
   encoder.make();
   return encoder.createImgData();
+};
+
+/**
+ * Simple wrapper around the underlying decoder's API.
+ * @param string URI
+ *        URI of an image of a QR code
+ * @return Promise
+ *         The promise will be resolved with a string, which is the data inside
+ *         the QR code.
+ */
+exports.decodeFromURI = function(URI) {
+  let deferred = promise.defer();
+  decoder.decodeFromURI(URI, deferred.resolve, deferred.reject);
+  return deferred.promise;
+};
+
+/**
+ * Decode a QR code that has been drawn to a canvas element.
+ * @param Canvas canvas
+ *        <canvas> element to read from
+ * @return string
+ *         The data inside the QR code
+ */
+exports.decodeFromCanvas = function(canvas) {
+  return decoder.decodeFromCanvas(canvas);
 };

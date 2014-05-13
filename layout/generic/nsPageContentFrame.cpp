@@ -17,7 +17,7 @@ NS_NewPageContentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsPageContentFrame)
 
-nsresult
+void
 nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
@@ -26,12 +26,13 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsPageContentFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
-  nsresult rv = NS_OK;
 
   if (GetPrevInFlow() && (GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
     nsresult rv = aPresContext->PresShell()->FrameConstructor()
                     ->ReplicateFixedFrames(this);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      return;
+    }
   }
 
   // Set our size up front, since some parts of reflow depend on it
@@ -50,8 +51,7 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
     kidReflowState.SetComputedHeight(maxSize.height);
 
     // Reflow the page content area
-    rv = ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, 0, 0, 0, aStatus);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, 0, 0, 0, aStatus);
 
     // The document element's background should cover the entire canvas, so
     // take into account the combined area and any space taken up by
@@ -100,7 +100,6 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
   FinishAndStoreOverflow(&aDesiredSize);
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return NS_OK;
 }
 
 nsIAtom*

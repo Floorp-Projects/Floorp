@@ -338,16 +338,16 @@ public:
     *
     * @see nsIFrame::Reflow
     */
-  virtual nsresult Reflow(nsPresContext*          aPresContext,
-                          nsHTMLReflowMetrics&     aDesiredSize,
-                          const nsHTMLReflowState& aReflowState,
-                          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+  virtual void Reflow(nsPresContext*           aPresContext,
+                      nsHTMLReflowMetrics&     aDesiredSize,
+                      const nsHTMLReflowState& aReflowState,
+                      nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
-  nsresult ReflowTable(nsHTMLReflowMetrics&     aDesiredSize,
-                       const nsHTMLReflowState& aReflowState,
-                       nscoord                  aAvailHeight,
-                       nsIFrame*&               aLastChildReflowed,
-                       nsReflowStatus&          aStatus);
+  void ReflowTable(nsHTMLReflowMetrics&     aDesiredSize,
+                   const nsHTMLReflowState& aReflowState,
+                   nscoord                  aAvailHeight,
+                   nsIFrame*&               aLastChildReflowed,
+                   nsReflowStatus&          aStatus);
 
   nsFrameList& GetColGroups();
 
@@ -542,10 +542,10 @@ protected:
                                   nsTableRowGroupFrame* aFrame,
                                   nscoord* aDesiredHeight);
 
-  nsresult ReflowChildren(nsTableReflowState&  aReflowState,
-                          nsReflowStatus&      aStatus,
-                          nsIFrame*&           aLastChildReflowed,
-                          nsOverflowAreas&     aOverflowAreas);
+  void ReflowChildren(nsTableReflowState&  aReflowState,
+                      nsReflowStatus&      aStatus,
+                      nsIFrame*&           aLastChildReflowed,
+                      nsOverflowAreas&     aOverflowAreas);
 
   // This calls the col group and column reflow methods, which do two things:
   //  (1) set all the dimensions to 0

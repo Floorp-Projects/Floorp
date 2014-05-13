@@ -16,3 +16,9 @@ EXTRA_JS_MODULES += [
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
+
+XPIDL_MODULE = 'toolkit_crashservice'
+
+XPIDL_SOURCES += [
+    'nsICrashService.idl',
+]

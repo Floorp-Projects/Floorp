@@ -33,6 +33,8 @@
   "content/canvas/test/test_2d.composite.uncovered.image.destination-in.html": "x86 only bug 913662",
   "content/canvas/test/test_2d.composite.canvas.hard-light.html": "x86 only bug 913662",
   "content/html/content/test/forms/test_input_textarea_set_value_no_scroll.html": "x86 only",
+  "content/media/test/test_clone_media_element.html": "x86 only bug 914439",
+  "content/media/test/test_fastSeek.html": "x86 only bug 914439",
   "content/media/test/test_media_selection.html": "x86 only bug 914439",
   "content/media/test/test_bug495300.html": "x86 only bug 914439",
   "content/media/test/test_new_audio.html": "x86 only bug 914439",

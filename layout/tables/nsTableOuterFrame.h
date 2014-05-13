@@ -114,10 +114,10 @@ public:
   /** process a reflow command for the table.
     * This involves reflowing the caption and the inner table.
     * @see nsIFrame::Reflow */
-  virtual nsresult Reflow(nsPresContext*          aPresContext,
-                          nsHTMLReflowMetrics&     aDesiredSize,
-                          const nsHTMLReflowState& aReflowState,
-                          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+  virtual void Reflow(nsPresContext*           aPresContext,
+                      nsHTMLReflowMetrics&     aDesiredSize,
+                      const nsHTMLReflowState& aReflowState,
+                      nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   /**
    * Get the "type" of the frame
@@ -257,11 +257,11 @@ protected:
                              void*                    aChildRSSpace,
                              nscoord                  aAvailWidth);
 
-  nsresult OuterDoReflowChild(nsPresContext*           aPresContext,
-                              nsIFrame*                aChildFrame,
-                              const nsHTMLReflowState& aChildRS,
-                              nsHTMLReflowMetrics&     aMetrics,
-                              nsReflowStatus&          aStatus);
+  void OuterDoReflowChild(nsPresContext*           aPresContext,
+                          nsIFrame*                aChildFrame,
+                          const nsHTMLReflowState& aChildRS,
+                          nsHTMLReflowMetrics&     aMetrics,
+                          nsReflowStatus&          aStatus);
 
   // Set the reflow metrics
   void UpdateReflowMetrics(uint8_t              aCaptionSide,
