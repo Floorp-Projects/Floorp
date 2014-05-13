@@ -711,7 +711,7 @@ IsPercentageAware(const nsIFrame* aFrame)
   return false;
 }
 
-nsresult
+void
 nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                           nsReflowStatus& aReflowStatus,
                           nsHTMLReflowMetrics* aMetrics,
@@ -1052,8 +1052,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   nsFrame::ListTag(stdout, aFrame);
   printf(" status=%x\n", aReflowStatus);
 #endif
-
-  return NS_OK;
 }
 
 void

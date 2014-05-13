@@ -580,7 +580,7 @@ protected:
   void PrepareResizeReflow(nsBlockReflowState& aState);
 
   /** reflow all lines that have been marked dirty */
-  nsresult ReflowDirtyLines(nsBlockReflowState& aState);
+  void ReflowDirtyLines(nsBlockReflowState& aState);
 
   /** Mark a given line dirty due to reflow being interrupted on or before it */
   void MarkLineDirtyForInterrupt(nsLineBox* aLine);
