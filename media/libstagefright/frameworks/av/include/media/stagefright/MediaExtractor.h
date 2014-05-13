@@ -42,7 +42,7 @@ public:
 
     // Return container specific meta-data. The default implementation
     // returns an empty metadata object.
-    virtual sp<MetaData> getMetaData() = 0;
+    virtual sp<MetaData> getMetaData();
 
     enum Flags {
         CAN_SEEK_BACKWARD  = 1,  // the "seek 10secs back button"
@@ -53,7 +53,7 @@ public:
 
     // If subclasses do _not_ override this, the default is
     // CAN_SEEK_BACKWARD | CAN_SEEK_FORWARD | CAN_SEEK | CAN_PAUSE
-    virtual uint32_t flags() const = 0;
+    virtual uint32_t flags() const;
 
     // for DRM
     void setDrmFlag(bool flag) {

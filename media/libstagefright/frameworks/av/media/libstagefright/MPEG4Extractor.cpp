@@ -15,7 +15,6 @@
  */
 
 //#define LOG_NDEBUG 0
-#undef LOG_TAG
 #define LOG_TAG "MPEG4Extractor"
 #include <utils/Log.h>
 
@@ -1249,7 +1248,6 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             ALOGV("*** coding='%s' %d channels, size %d, rate %d\n",
                    chunk, num_channels, sample_size, sample_rate);
             mLastTrack->meta->setInt32(kKeyChannelCount, num_channels);
-            mLastTrack->meta->setInt32(kKeySampleSize, sample_size);
             mLastTrack->meta->setInt32(kKeySampleRate, sample_rate);
 
             off64_t stop_offset = *offset + chunk_size;
@@ -2280,10 +2278,6 @@ status_t MPEG4Extractor::updateAudioTrackInfoFromESDS_MPEG4Audio(
         objectType = 32 + br.getBits(6);
     }
 
-    if (objectType >= 1 && objectType <= 4) {
-      mLastTrack->meta->setInt32(kKeyAACProfile, objectType);
-    }
-
     uint32_t freqIndex = br.getBits(4);
 
     int32_t sampleRate = 0;
@@ -3160,7 +3154,6 @@ status_t MPEG4Source::read(
             CHECK(mBuffer != NULL);
             mBuffer->set_range(0, size);
             mBuffer->meta_data()->clear();
-            mBuffer->meta_data()->setInt64(kKey64BitFileOffset, offset);
             mBuffer->meta_data()->setInt64(
                     kKeyTime, ((int64_t)cts * 1000000) / mTimescale);
 
@@ -3283,7 +3276,6 @@ status_t MPEG4Source::read(
         }
 
         mBuffer->meta_data()->clear();
-        mBuffer->meta_data()->setInt64(kKey64BitFileOffset, offset);
         mBuffer->meta_data()->setInt64(
                 kKeyTime, ((int64_t)cts * 1000000) / mTimescale);
 
@@ -3634,7 +3626,6 @@ static bool isCompatibleBrand(uint32_t fourcc) {
     return false;
 }
 
-#if 0
 // Attempt to actually parse the 'ftyp' atom and determine if a suitable
 // compatible brand is present.
 // Also try to identify where this file's metadata ends
@@ -3765,8 +3756,5 @@ bool SniffMPEG4(
 
     return false;
 }
-#endif
 
 }  // namespace android
-
-#undef LOG_TAG

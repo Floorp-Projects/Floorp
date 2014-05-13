@@ -73,9 +73,10 @@ FFmpegAACDecoder::DecodePacket(MP4Sample* aSample)
   AVPacket packet;
   av_init_packet(&packet);
 
-  packet.data = aSample->data;
-  packet.size = aSample->size;
+  packet.data = &(*aSample->data)[0];
+  packet.size = aSample->data->size();
   packet.pos = aSample->byte_offset;
+  packet.dts = aSample->decode_timestamp;
 
   int decoded;
   int bytesConsumed =
@@ -87,7 +88,7 @@ FFmpegAACDecoder::DecodePacket(MP4Sample* aSample)
     return;
   }
 
-  NS_ASSERTION(bytesConsumed == (int)aSample->size,
+  NS_ASSERTION(bytesConsumed == (int)aSample->data->size(),
                "Only one audio packet should be received at a time.");
 
   uint32_t numChannels = mCodecContext.channels;
@@ -95,9 +96,9 @@ FFmpegAACDecoder::DecodePacket(MP4Sample* aSample)
   nsAutoArrayPtr<AudioDataValue> audio(
     CopyAndPackAudio(frame.get(), numChannels, frame->nb_samples));
 
-  nsAutoPtr<AudioData> data(
-    new AudioData(packet.pos, aSample->composition_timestamp, aSample->duration,
-                  frame->nb_samples, audio.forget(), numChannels));
+  nsAutoPtr<AudioData> data(new AudioData(packet.pos, aSample->decode_timestamp,
+                                          aSample->duration, frame->nb_samples,
+                                          audio.forget(), numChannels));
 
   mCallback->Output(data.forget());
 
