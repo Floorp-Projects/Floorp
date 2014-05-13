@@ -88,9 +88,17 @@ final public class NavigationHelper {
     }
 
     public static void reload() {
-        // TODO: On tablets, press reload in TOOLBAR. Note that this is technically
-        // an app menu item so tread carefully.
-        //       On phones, press reload in APPMENU.
-        throw new UnsupportedOperationException("Not yet implemented.");
+        if (DeviceHelper.isTablet()) {
+            sToolbar.pressReloadButton(); // Waits for page load & asserts isNotEditing.
+            return;
+        }
+
+        sToolbar.assertIsNotEditing();
+        WaitHelper.waitForPageLoad(new Runnable() {
+            @Override
+            public void run() {
+                sAppMenu.pressMenuItem(AppMenuComponent.MenuItem.RELOAD);
+            }
+        });
     }
 }

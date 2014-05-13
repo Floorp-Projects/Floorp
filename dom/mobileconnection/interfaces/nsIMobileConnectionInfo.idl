@@ -1,0 +1,73 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIMobileCellInfo;
+interface nsIMobileNetworkInfo;
+
+[scriptable, uuid(d5208e13-42dc-4dce-9427-2572fa252751)]
+interface nsIMobileConnectionInfo : nsISupports
+{
+  /**
+   * State of the connection.
+   *
+   * Possible values: 'notSearching', 'searching', 'denied', 'registered' or
+   *                  null (unknown).
+   */
+  readonly attribute DOMString state;
+
+  /**
+   * Indicates whether the connection is ready.
+   *
+   * Note: The meaning of "connection ready" for data and voice are different.
+   *       - Data: the "default" data connection is established or not.
+   *       - Voice: voice is registered to network or not.
+   */
+  readonly attribute bool connected;
+
+  /**
+   * Indicates whether only emergency calls are possible.
+   *
+   * This flag is only relevant to voice connections and when 'connected' is
+   * false.
+   */
+  readonly attribute bool emergencyCallsOnly;
+
+  /**
+   * Indicates whether the connection is going through a foreign operator
+   * (roaming) or not.
+   */
+  readonly attribute bool roaming;
+
+  /**
+   * Network operator information.
+   */
+  readonly attribute nsIMobileNetworkInfo network;
+
+  /**
+   * Type of connection.
+   *
+   * Possible values: 'gsm', 'gprs', 'edge', 'umts', 'hsdpa', 'hsupa', 'hspa',
+   *                  'hspa+', 'is95a', 'is95b', '1xrtt', 'evdo0', 'evdoa',
+   *                  'evdob', 'ehrpd', 'lte' or null (unknown).
+   */
+  readonly attribute DOMString type;
+
+  /**
+   * Signal strength in dBm, or null if no service is available.
+   */
+  readonly attribute jsval signalStrength;
+
+  /**
+   * Signal strength, represented linearly as a number between 0 (weakest
+   * signal) and 100 (full signal).
+   */
+  readonly attribute jsval relSignalStrength;
+
+  /**
+   * Cell location information.
+   */
+  readonly attribute nsIMobileCellInfo cell;
+};

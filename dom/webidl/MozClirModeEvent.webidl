@@ -11,7 +11,7 @@ interface MozClirModeEvent : Event
   /**
    * Indicates the mode of the calling line id restriction (CLIR).
    *
-   * @see nsIDOMMozMobileConnection.CLIR_* values.
+   * @see MozMobileConnection.CLIR_* values.
    */
   readonly attribute unsigned long mode;
 };

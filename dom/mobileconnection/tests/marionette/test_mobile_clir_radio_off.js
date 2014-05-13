@@ -10,8 +10,8 @@ function testSetClirOnRadioOff(aMode) {
     .then(() => setClir(aMode))
     .then(() => {
       ok(false, "shouldn't resolve");
-    }, (evt) => {
-      is(evt.target.error.name, "RadioNotAvailable");
+    }, (aError) => {
+      is(aError.name, "RadioNotAvailable");
     });
 }
 
@@ -21,8 +21,8 @@ function testGetClirOnRadioOff() {
     .then(() => getClir())
     .then(() => {
       ok(false, "shouldn't resolve");
-    }, (evt) => {
-      is(evt.target.error.name, "RadioNotAvailable");
+    }, (aError) => {
+      is(aError.name, "RadioNotAvailable");
     });
 }
 
