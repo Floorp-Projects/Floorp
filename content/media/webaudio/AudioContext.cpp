@@ -35,6 +35,7 @@
 #include "OscillatorNode.h"
 #include "nsNetUtil.h"
 #include "AudioStream.h"
+#include "js/RootingAPI.h"
 
 namespace mozilla {
 namespace dom {
@@ -210,7 +211,7 @@ AudioContext::CreateBuffer(JSContext* aJSContext, const ArrayBuffer& aBuffer,
                   contentType);
 
   nsRefPtr<WebAudioDecodeJob> job =
-    new WebAudioDecodeJob(contentType, this, aBuffer);
+    new WebAudioDecodeJob(contentType, this);
 
   if (mDecoder.SyncDecodeMedia(contentType.get(),
                                aBuffer.Data(), aBuffer.Length(), *job) &&
@@ -442,22 +443,33 @@ AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
                               DecodeSuccessCallback& aSuccessCallback,
                               const Optional<OwningNonNull<DecodeErrorCallback> >& aFailureCallback)
 {
+  // Neuter the array buffer
+  AutoPushJSContext cx(GetJSContext());
+
+  size_t length = aBuffer.Length();
+  void* dummy;
+  uint8_t* data;
+  bool rv;
+  JS::RootedObject obj(cx, aBuffer.Obj());
+  rv = JS_StealArrayBufferContents(cx, obj, &dummy, &data);
+
+  if (!rv) {
+    return;
+  }
+
   // Sniff the content of the media.
   // Failed type sniffing will be handled by AsyncDecodeMedia.
   nsAutoCString contentType;
-  NS_SniffContent(NS_DATA_SNIFFER_CATEGORY, nullptr,
-                  aBuffer.Data(), aBuffer.Length(),
-                  contentType);
+  NS_SniffContent(NS_DATA_SNIFFER_CATEGORY, nullptr, data, length, contentType);
 
   nsCOMPtr<DecodeErrorCallback> failureCallback;
   if (aFailureCallback.WasPassed()) {
     failureCallback = &aFailureCallback.Value();
   }
   nsRefPtr<WebAudioDecodeJob> job(
-    new WebAudioDecodeJob(contentType, this, aBuffer,
+    new WebAudioDecodeJob(contentType, this,
                           &aSuccessCallback, failureCallback));
-  mDecoder.AsyncDecodeMedia(contentType.get(),
-                            aBuffer.Data(), aBuffer.Length(), *job);
+  mDecoder.AsyncDecodeMedia(contentType.get(), data, length, *job);
   // Transfer the ownership to mDecodeJobs
   mDecodeJobs.AppendElement(job);
 }
