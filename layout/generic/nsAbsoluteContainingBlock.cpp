@@ -108,7 +108,7 @@ nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
   mAbsoluteFrames.DestroyFrame(aOldFrame);
 }
 
-nsresult
+void
 nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
                                   nsPresContext*           aPresContext,
                                   const nsHTMLReflowState& aReflowState,
@@ -193,7 +193,6 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
     NS_FRAME_SET_OVERFLOW_INCOMPLETE(reflowStatus);
 
   NS_MergeReflowStatusInto(&aReflowStatus, reflowStatus);
-  return NS_OK;
 }
 
 static inline bool IsFixedPaddingSize(const nsStyleCoord& aCoord)
