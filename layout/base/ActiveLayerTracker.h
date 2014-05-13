@@ -8,6 +8,7 @@
 #include "nsCSSProperty.h"
 
 class nsIFrame;
+class nsIContent;
 
 namespace mozilla {
 
@@ -64,6 +65,18 @@ public:
    * as being animated for constructing active layers.
    */
   static bool IsOffsetOrMarginStyleAnimated(nsIFrame* aFrame);
+  /**
+   * Transfer the LayerActivity property to the frame's content node when the
+   * frame is about to be destroyed so that layer activity can be tracked
+   * throughout reframes of an element. Only call this when aFrame is the
+   * primary frame of aContent.
+   */
+  static void TransferActivityToContent(nsIFrame* aFrame, nsIContent* aContent);
+  /**
+   * Transfer the LayerActivity property back to the content node's primary
+   * frame after the frame has been created.
+   */
+  static void TransferActivityToFrame(nsIContent* aContent, nsIFrame* aFrame);
 
   /*
    * We track modifications to the content of certain frames (i.e. canvas frames)
