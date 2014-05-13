@@ -31,6 +31,15 @@ add_task(function test_AndroidLog() {
   do_check_eq(48, AndroidLog.w.bind(null, "AndroidLogTest")("This is a warning message."));
   do_check_eq(47, AndroidLog.e.bind(null, "AndroidLogTest")("This is an error message."));
 
+  // Ensure the functions work when the tag length is greater than the maximum
+  // tag length.
+  let tag = "X".repeat(AndroidLog.MAX_TAG_LENGTH + 1);
+  do_check_eq(AndroidLog.MAX_TAG_LENGTH + 54, AndroidLog.v(tag, "This is a verbose message with a too-long tag."));
+  do_check_eq(AndroidLog.MAX_TAG_LENGTH + 52, AndroidLog.d(tag, "This is a debug message with a too-long tag."));
+  do_check_eq(AndroidLog.MAX_TAG_LENGTH + 52, AndroidLog.i(tag, "This is an info message with a too-long tag."));
+  do_check_eq(AndroidLog.MAX_TAG_LENGTH + 54, AndroidLog.w(tag, "This is a warning message with a too-long tag."));
+  do_check_eq(AndroidLog.MAX_TAG_LENGTH + 53, AndroidLog.e(tag, "This is an error message with a too-long tag."));
+
   // We should also ensure that the module is accessible from a ChromeWorker,
   // but there doesn't seem to be a way to load a ChromeWorker from this test.
 });
