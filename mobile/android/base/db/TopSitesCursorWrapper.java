@@ -157,25 +157,6 @@ public class TopSitesCursorWrapper implements Cursor {
         return (c != null && !c.isBeforeFirst() && !c.isAfterLast());
     }
 
-    private void updateRowState() {
-        if (cursorHasValidPosition(pinnedCursor)) {
-            currentRowType = RowType.PINNED;
-            currentCursor = pinnedCursor;
-        } else if (cursorHasValidPosition(topCursor)) {
-            currentRowType = RowType.TOP;
-            currentCursor = topCursor;
-        } else if (cursorHasValidPosition(suggestedCursor)) {
-            currentRowType = RowType.SUGGESTED;
-            currentCursor = suggestedCursor;
-        } else if (currentPosition >= 0 && currentPosition < minSize) {
-            currentRowType = RowType.BLANK;
-            currentCursor = null;
-        } else {
-            currentRowType = RowType.UNKNOWN;
-            currentCursor = null;
-        }
-    }
-
     private void updatePinnedBefore(int position) {
         pinnedBefore = 0;
         for (int i = 0; i < position; i++) {
@@ -185,40 +166,51 @@ public class TopSitesCursorWrapper implements Cursor {
         }
     }
 
-    private void updateTopCursorPosition(int position) {
-        // Move the real cursor as if we were stepping through it to this position.
-        // Account for pinned sites, and be careful to update its position to the
-        // minimum or maximum position, even if we're moving beyond its bounds.
-        final int actualPosition = position - pinnedBefore;
-
-        if (actualPosition <= -1) {
-            topCursor.moveToPosition(-1);
-        } else if (actualPosition >= topCursor.getCount()) {
-            topCursor.moveToPosition(topCursor.getCount());
-        } else {
-            topCursor.moveToPosition(actualPosition);
-        }
+    private void setCurrentCursor(Cursor cursor, int position, RowType rowType) {
+        cursor.moveToPosition(position);
+        currentRowType = rowType;
+        currentCursor = cursor;
     }
 
-    private void updatePinnedCursorPosition(int position) {
+    private boolean updateTopCursorPosition(int position) {
+        final int index = position - pinnedBefore;
+        if (index >= 0 && index < topCursor.getCount()) {
+            setCurrentCursor(topCursor, index, RowType.TOP);
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean updatePinnedCursorPosition(int position) {
+        if (position >= minSize) {
+            return false;
+        }
+
         if (pinnedPositions.get(position)) {
-            pinnedCursor.moveToPosition(pinnedPositions.indexOfKey(position));
-        } else {
-            pinnedCursor.moveToPosition(-1);
+            setCurrentCursor(pinnedCursor, pinnedPositions.indexOfKey(position), RowType.PINNED);
+            return true;
         }
+
+        return false;
     }
 
-    private void updateSuggestedCursorPosition(int position) {
+    private boolean updateSuggestedCursorPosition(int position) {
         if (suggestedCursor == null) {
-            return;
+            return false;
         }
 
-        final int index = Math.max(-1, position - pinnedBefore - topCursor.getCount());
-        if (index < suggestedCursor.getCount()) {
-            suggestedCursor.moveToPosition(index);
-        } else {
-            suggestedCursor.moveToPosition(-1);
+        if (position >= minSize) {
+            return false;
         }
+
+        final int index = position - pinnedBefore - topCursor.getCount();
+        if (index >= 0 && index < suggestedCursor.getCount()) {
+            setCurrentCursor(suggestedCursor, index, RowType.SUGGESTED);
+            return true;
+        }
+
+        return false;
     }
 
     private void assertValidColumnIndex(int columnIndex) {
@@ -318,12 +310,19 @@ public class TopSitesCursorWrapper implements Cursor {
     @Override
     public boolean moveToPosition(int position) {
         currentPosition = position;
-
         updatePinnedBefore(position);
-        updatePinnedCursorPosition(position);
-        updateTopCursorPosition(position);
-        updateSuggestedCursorPosition(position);
-        updateRowState();
+
+        if (!updatePinnedCursorPosition(position) &&
+            !updateTopCursorPosition(position) &&
+            !updateSuggestedCursorPosition(position)) {
+
+            if (position >= 0 && position < minSize) {
+                currentRowType = RowType.BLANK;
+            } else {
+                currentRowType = RowType.UNKNOWN;
+            }
+            currentCursor = null;
+        }
 
         return cursorHasValidPosition(this);
     }
