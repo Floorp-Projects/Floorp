@@ -179,22 +179,22 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
   // the style recalculation if we find any.
   if (aIsThrottled) {
     for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-      StyleAnimation &anim = mAnimations[animIdx];
+      StyleAnimation* anim = mAnimations[animIdx];
 
-      if (anim.mProperties.Length() == 0 ||
-          anim.mIterationDuration.ToMilliseconds() <= 0.0) {
+      if (anim->mProperties.Length() == 0 ||
+          anim->mIterationDuration.ToMilliseconds() <= 0.0) {
         continue;
       }
 
-      uint32_t oldLastNotification = anim.mLastNotification;
+      uint32_t oldLastNotification = anim->mLastNotification;
 
       // We need to call GetPositionInIteration here to populate
       // aEventsToDispatch.
       // The ElapsedDurationAt() call here handles pausing.  But:
       // FIXME: avoid recalculating every time when paused.
-      GetPositionInIteration(anim.ElapsedDurationAt(aRefreshTime),
-                             anim.mIterationDuration, anim.mIterationCount,
-                             anim.mDirection, &anim, this, &aEventsToDispatch);
+      GetPositionInIteration(anim->ElapsedDurationAt(aRefreshTime),
+                             anim->mIterationDuration, anim->mIterationCount,
+                             anim->mDirection, anim, this, &aEventsToDispatch);
 
       // GetPositionInIteration just adjusted mLastNotification; check
       // its new value against the value before we called
@@ -203,9 +203,9 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
       // indicator that the animation has finished, it should be reserved for
       // events. If we use it differently in the future this use might need
       // changing.
-      if (!anim.mIsRunningOnCompositor ||
-          (anim.mLastNotification != oldLastNotification &&
-           anim.mLastNotification == StyleAnimation::LAST_NOTIFICATION_END)) {
+      if (!anim->mIsRunningOnCompositor ||
+          (anim->mLastNotification != oldLastNotification &&
+           anim->mLastNotification == StyleAnimation::LAST_NOTIFICATION_END)) {
         aIsThrottled = false;
         break;
       }
@@ -230,10 +230,10 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
     nsCSSPropertySet properties;
 
     for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-      StyleAnimation &anim = mAnimations[animIdx];
+      StyleAnimation* anim = mAnimations[animIdx];
 
-      if (anim.mProperties.Length() == 0 ||
-          anim.mIterationDuration.ToMilliseconds() <= 0.0) {
+      if (anim->mProperties.Length() == 0 ||
+          anim->mIterationDuration.ToMilliseconds() <= 0.0) {
         // No animation data.
         continue;
       }
@@ -241,9 +241,9 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
       // The ElapsedDurationAt() call here handles pausing.  But:
       // FIXME: avoid recalculating every time when paused.
       double positionInIteration =
-        GetPositionInIteration(anim.ElapsedDurationAt(aRefreshTime),
-                               anim.mIterationDuration, anim.mIterationCount,
-                               anim.mDirection, &anim, this,
+        GetPositionInIteration(anim->ElapsedDurationAt(aRefreshTime),
+                               anim->mIterationDuration, anim->mIterationCount,
+                               anim->mDirection, anim, this,
                                &aEventsToDispatch);
 
       // The position is -1 when we don't have fill data for the current time,
@@ -255,10 +255,10 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
                           positionInIteration <= 1.0,
                         "position should be in [0-1]");
 
-      for (uint32_t propIdx = 0, propEnd = anim.mProperties.Length();
+      for (uint32_t propIdx = 0, propEnd = anim->mProperties.Length();
            propIdx != propEnd; ++propIdx)
       {
-        const AnimationProperty &prop = anim.mProperties[propIdx];
+        const AnimationProperty &prop = anim->mProperties[propIdx];
 
         NS_ABORT_IF_FALSE(prop.mSegments[0].mFromKey == 0.0,
                           "incorrect first from key");
@@ -330,8 +330,8 @@ bool
 ElementAnimations::HasAnimationOfProperty(nsCSSProperty aProperty) const
 {
   for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    const StyleAnimation &anim = mAnimations[animIdx];
-    if (anim.HasAnimationOfProperty(aProperty)) {
+    const StyleAnimation* anim = mAnimations[animIdx];
+    if (anim->HasAnimationOfProperty(aProperty)) {
       return true;
     }
   }
@@ -360,11 +360,11 @@ ElementAnimations::CanPerformOnCompositorThread(CanAnimateFlags aFlags) const
   TimeStamp now = frame->PresContext()->RefreshDriver()->MostRecentRefresh();
 
   for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    const StyleAnimation& anim = mAnimations[animIdx];
-    for (uint32_t propIdx = 0, propEnd = anim.mProperties.Length();
+    const StyleAnimation* anim = mAnimations[animIdx];
+    for (uint32_t propIdx = 0, propEnd = anim->mProperties.Length();
          propIdx != propEnd; ++propIdx) {
-      if (IsGeometricProperty(anim.mProperties[propIdx].mProperty) &&
-          anim.IsRunningAt(now)) {
+      if (IsGeometricProperty(anim->mProperties[propIdx].mProperty) &&
+          anim->IsRunningAt(now)) {
         aFlags = CanAnimateFlags(aFlags | CanAnimate_HasGeometricProperty);
         break;
       }
@@ -374,14 +374,14 @@ ElementAnimations::CanPerformOnCompositorThread(CanAnimateFlags aFlags) const
   bool hasOpacity = false;
   bool hasTransform = false;
   for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    const StyleAnimation& anim = mAnimations[animIdx];
-    if (!anim.IsRunningAt(now)) {
+    const StyleAnimation* anim = mAnimations[animIdx];
+    if (!anim->IsRunningAt(now)) {
       continue;
     }
 
-    for (uint32_t propIdx = 0, propEnd = anim.mProperties.Length();
+    for (uint32_t propIdx = 0, propEnd = anim->mProperties.Length();
          propIdx != propEnd; ++propIdx) {
-      const AnimationProperty& prop = anim.mProperties[propIdx];
+      const AnimationProperty& prop = anim->mProperties[propIdx];
       if (!CanAnimatePropertyOnCompositor(mElement,
                                           prop.mProperty,
                                           aFlags) ||
@@ -547,7 +547,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     }
 
     // build the animations list
-    InfallibleTArray<StyleAnimation> newAnimations;
+    StyleAnimationPtrArray newAnimations;
     BuildAnimations(aStyleContext, newAnimations);
 
     if (newAnimations.IsEmpty()) {
@@ -577,7 +577,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
       if (!ea->mAnimations.IsEmpty()) {
         for (uint32_t newIdx = 0, newEnd = newAnimations.Length();
              newIdx != newEnd; ++newIdx) {
-          StyleAnimation *newAnim = &newAnimations[newIdx];
+          nsRefPtr<StyleAnimation> newAnim = newAnimations[newIdx];
 
           // Find the matching animation with this name in the old list
           // of animations.  Because of this code, they must all have
@@ -587,9 +587,9 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           // different pause states, they, well, get what they deserve.
           // We'll use the last one since it's more likely to be the one
           // doing something.
-          const StyleAnimation *oldAnim = nullptr;
+          const StyleAnimation* oldAnim = nullptr;
           for (uint32_t oldIdx = ea->mAnimations.Length(); oldIdx-- != 0; ) {
-            const StyleAnimation *a = &ea->mAnimations[oldIdx];
+            const StyleAnimation* a = ea->mAnimations[oldIdx];
             if (a->mName == newAnim->mName) {
               oldAnim = a;
               break;
@@ -717,8 +717,7 @@ ResolvedStyleCache::Get(nsPresContext *aPresContext,
 
 void
 nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
-                                    InfallibleTArray<StyleAnimation>&
-                                      aAnimations)
+                                    StyleAnimationPtrArray& aAnimations)
 {
   NS_ABORT_IF_FALSE(aAnimations.IsEmpty(), "expect empty array");
 
@@ -728,27 +727,30 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
   TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
   for (uint32_t animIdx = 0, animEnd = disp->mAnimationNameCount;
        animIdx != animEnd; ++animIdx) {
-    const nsAnimation& aSrc = disp->mAnimations[animIdx];
-    StyleAnimation& aDest = *aAnimations.AppendElement();
+    const nsAnimation& src = disp->mAnimations[animIdx];
+    nsRefPtr<StyleAnimation> dest =
+      *aAnimations.AppendElement(new StyleAnimation());
 
-    aDest.mName = aSrc.GetName();
-    aDest.mIterationCount = aSrc.GetIterationCount();
-    aDest.mDirection = aSrc.GetDirection();
-    aDest.mFillMode = aSrc.GetFillMode();
-    aDest.mPlayState = aSrc.GetPlayState();
+    dest->mName = src.GetName();
+    dest->mIterationCount = src.GetIterationCount();
+    dest->mDirection = src.GetDirection();
+    dest->mFillMode = src.GetFillMode();
+    dest->mPlayState = src.GetPlayState();
 
-    aDest.mDelay = TimeDuration::FromMilliseconds(aSrc.GetDelay());
-    aDest.mStartTime = now;
-    if (aDest.IsPaused()) {
-      aDest.mPauseStart = now;
+    dest->mDelay = TimeDuration::FromMilliseconds(src.GetDelay());
+    dest->mStartTime = now;
+    if (dest->IsPaused()) {
+      dest->mPauseStart = now;
     } else {
-      aDest.mPauseStart = TimeStamp();
+      dest->mPauseStart = TimeStamp();
     }
 
-    aDest.mIterationDuration = TimeDuration::FromMilliseconds(aSrc.GetDuration());
+    dest->mIterationDuration =
+      TimeDuration::FromMilliseconds(src.GetDuration());
 
     nsCSSKeyframesRule* rule =
-      mPresContext->StyleSet()->KeyframesRuleForName(mPresContext, aDest.mName);
+      mPresContext->StyleSet()->KeyframesRuleForName(mPresContext,
+                                                     dest->mName);
     if (!rule) {
       // no segments
       continue;
@@ -841,7 +843,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
         lastKey = kf.mKey;
       }
 
-      AnimationProperty &propData = *aDest.mProperties.AppendElement();
+      AnimationProperty &propData = *dest->mProperties.AppendElement();
       propData.mProperty = prop;
 
       KeyframeData *fromKeyframe = nullptr;
@@ -857,7 +859,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
 
         if (fromKeyframe) {
           interpolated = interpolated &&
-            BuildSegment(propData.mSegments, prop, aSrc,
+            BuildSegment(propData.mSegments, prop, src,
                          fromKeyframe->mKey, fromContext,
                          fromKeyframe->mRule->Declaration(),
                          toKeyframe.mKey, toContext);
@@ -866,7 +868,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
             // There's no data for this property at 0%, so use the
             // cascaded value above us.
             interpolated = interpolated &&
-              BuildSegment(propData.mSegments, prop, aSrc,
+              BuildSegment(propData.mSegments, prop, src,
                            0.0f, aStyleContext, nullptr,
                            toKeyframe.mKey, toContext);
           }
@@ -880,7 +882,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
         // There's no data for this property at 100%, so use the
         // cascaded value above us.
         interpolated = interpolated &&
-          BuildSegment(propData.mSegments, prop, aSrc,
+          BuildSegment(propData.mSegments, prop, src,
                        fromKeyframe->mKey, fromContext,
                        fromKeyframe->mRule->Declaration(),
                        1.0f, aStyleContext);
@@ -893,9 +895,11 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
       // values (which?) or skip segments, so best to skip the whole
       // thing for now.)
       if (!interpolated) {
-        aDest.mProperties.RemoveElementAt(aDest.mProperties.Length() - 1);
+        dest->mProperties.RemoveElementAt(dest->mProperties.Length() - 1);
       }
     }
+
+    aAnimations.AppendElement(dest);
   }
 }
 
