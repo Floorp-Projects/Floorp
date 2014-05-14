@@ -6,6 +6,7 @@
 
 #include "BluetoothSocket.h"
 
+#include <fcntl.h>
 #include <hardware/bluetooth.h>
 #include <hardware/bt_sock.h>
 #include <sys/socket.h>
@@ -81,15 +82,13 @@ ReadBdAddress(const uint8_t* aData, size_t* aOffset, nsAString& aDeviceAddress)
   *aOffset += 6;
 }
 
-class mozilla::dom::bluetooth::DroidSocketImpl
-    : public MessageLoopForIO::Watcher
+class mozilla::dom::bluetooth::DroidSocketImpl : public ipc::UnixFdWatcher
 {
 public:
-  DroidSocketImpl(BluetoothSocket* aConsumer, int aFd)
-    : mConsumer(aConsumer)
+  DroidSocketImpl(MessageLoop* aIOLoop, BluetoothSocket* aConsumer, int aFd)
+    : ipc::UnixFdWatcher(aIOLoop, aFd)
+    , mConsumer(aConsumer)
     , mReadMsgForClientFd(false)
-    , mIOLoop(nullptr)
-    , mFd(aFd)
     , mShuttingDownOnIOThread(false)
     , mChannel(0)
     , mAuth(false)
@@ -97,24 +96,23 @@ public:
   {
   }
 
-  DroidSocketImpl(BluetoothSocket* aConsumer,
+  DroidSocketImpl(MessageLoop* aIOLoop, BluetoothSocket* aConsumer,
                   int aChannel, bool aAuth, bool aEncrypt)
-    : mConsumer(aConsumer)
+    : ipc::UnixFdWatcher(aIOLoop)
+    , mConsumer(aConsumer)
     , mReadMsgForClientFd(false)
-    , mIOLoop(nullptr)
-    , mFd(-1)
     , mShuttingDownOnIOThread(false)
     , mChannel(aChannel)
     , mAuth(aAuth)
     , mEncrypt(aEncrypt)
   { }
 
-  DroidSocketImpl(BluetoothSocket* aConsumer, const nsAString& aDeviceAddress,
+  DroidSocketImpl(MessageLoop* aIOLoop, BluetoothSocket* aConsumer,
+                  const nsAString& aDeviceAddress,
                   int aChannel, bool aAuth, bool aEncrypt)
-    : mConsumer(aConsumer)
+    : ipc::UnixFdWatcher(aIOLoop)
+    , mConsumer(aConsumer)
     , mReadMsgForClientFd(false)
-    , mIOLoop(nullptr)
-    , mFd(-1)
     , mShuttingDownOnIOThread(false)
     , mDeviceAddress(aDeviceAddress)
     , mChannel(aChannel)
@@ -132,7 +130,7 @@ public:
   void QueueWriteData(UnixSocketRawData* aData)
   {
     mOutgoingQ.AppendElement(aData);
-    OnFileCanWriteWithoutBlocking(mFd);
+    OnFileCanWriteWithoutBlocking(GetFd());
   }
 
   bool IsShutdownOnMainThread()
@@ -158,8 +156,7 @@ public:
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(!mShuttingDownOnIOThread);
 
-    mReadWatcher.StopWatchingFileDescriptor();
-    mWriteWatcher.StopWatchingFileDescriptor();
+    RemoveWatchers(READ_WATCHER | WRITE_WATCHER);
 
     mShuttingDownOnIOThread = true;
   }
@@ -169,32 +166,16 @@ public:
 
   void SetUpIO(bool aWrite)
   {
-    MOZ_ASSERT(!mIOLoop);
-    MOZ_ASSERT(mFd >= 0);
-    mIOLoop = MessageLoopForIO::current();
-
-    // Set up a read watch
-    mIOLoop->WatchFileDescriptor(mFd,
-                                 true,
-                                 MessageLoopForIO::WATCH_READ,
-                                 &mReadWatcher,
-                                 this);
-
+    AddWatchers(READ_WATCHER, true);
     if (aWrite) {
-      // Set up a write watch
-      mIOLoop->WatchFileDescriptor(mFd.get(),
-                                   false,
-                                   MessageLoopForIO::WATCH_WRITE,
-                                   &mWriteWatcher,
-                                   this);
+        AddWatchers(WRITE_WATCHER, false);
     }
   }
 
   void ConnectClientFd()
   {
     // Stop current read watch
-    mReadWatcher.StopWatchingFileDescriptor();
-    mIOLoop = nullptr;
+    RemoveWatchers(READ_WATCHER);
 
     // Restart read & write watch on client fd
     SetUpIO(true);
@@ -239,31 +220,10 @@ private:
   ssize_t ReadMsg(int aFd, void *aBuffer, size_t aLength);
 
   /**
-   * IO Loop pointer. Must be initalized and called from IO thread only.
-   */
-  MessageLoopForIO* mIOLoop;
-
-  /**
    * Raw data queue. Must be pushed/popped from IO thread only.
    */
   typedef nsTArray<UnixSocketRawData* > UnixSocketRawDataQueue;
   UnixSocketRawDataQueue mOutgoingQ;
-
-  /**
-   * Read watcher for libevent. Only to be accessed on IO Thread.
-   */
-  MessageLoopForIO::FileDescriptorWatcher mReadWatcher;
-
-  /**
-   * Write watcher for libevent. Only to be accessed on IO Thread.
-   */
-  MessageLoopForIO::FileDescriptorWatcher mWriteWatcher;
-
-  /**
-   * File descriptor to read from/write to. Connection happens on user provided
-   * thread. Read/write/close happens on IO thread.
-   */
-  mozilla::ScopedClose mFd;
 
   /**
    * If true, do not requeue whatever task we're running
@@ -496,23 +456,18 @@ DroidSocketImpl::Connect()
   NS_ENSURE_TRUE_VOID(status == BT_STATUS_SUCCESS);
   NS_ENSURE_TRUE_VOID(fd >= 0);
 
-  mFd = fd;
+  int flags = TEMP_FAILURE_RETRY(fcntl(fd, F_GETFL));
+  NS_ENSURE_TRUE_VOID(flags >= 0);
 
-  MOZ_ASSERT(!mIOLoop);
-  mIOLoop = MessageLoopForIO::current();
+  if (!(flags & O_NONBLOCK)) {
+    int res = TEMP_FAILURE_RETRY(fcntl(fd, F_SETFL, flags | O_NONBLOCK));
+    NS_ENSURE_TRUE_VOID(!res);
+  }
 
-  // Set up a read watch
-  mIOLoop->WatchFileDescriptor(mFd.get(),
-                               true,
-                               MessageLoopForIO::WATCH_READ,
-                               &mReadWatcher,
-                               this);
-  // Set up a write watch
-  mIOLoop->WatchFileDescriptor(mFd.get(),
-                               false,
-                               MessageLoopForIO::WATCH_WRITE,
-                               &mWriteWatcher,
-                               this);
+  SetFd(fd);
+
+  AddWatchers(READ_WATCHER, true);
+  AddWatchers(WRITE_WATCHER, false);
 }
 
 void
@@ -534,17 +489,16 @@ DroidSocketImpl::Listen()
   NS_ENSURE_TRUE_VOID(status == BT_STATUS_SUCCESS);
   NS_ENSURE_TRUE_VOID(fd >= 0);
 
-  mFd = fd;
+  int flags = TEMP_FAILURE_RETRY(fcntl(fd, F_GETFL));
+  NS_ENSURE_TRUE_VOID(flags >= 0);
 
-  MOZ_ASSERT(!mIOLoop);
-  mIOLoop = MessageLoopForIO::current();
+  if (!(flags & O_NONBLOCK)) {
+    int res = TEMP_FAILURE_RETRY(fcntl(fd, F_SETFL, flags | O_NONBLOCK));
+    NS_ENSURE_TRUE_VOID(!res);
+  }
 
-  // Set up a read watch
-  mIOLoop->WatchFileDescriptor(mFd.get(),
-                               true,
-                               MessageLoopForIO::WATCH_READ,
-                               &mReadWatcher,
-                               this);
+  SetFd(fd);
+  AddWatchers(READ_WATCHER, true);
 }
 
 ssize_t
@@ -566,7 +520,7 @@ DroidSocketImpl::ReadMsg(int aFd, void *aBuffer, size_t aLength)
   msg.msg_control = cmsgbuf;
   msg.msg_controllen = sizeof(cmsgbuf);
 
-  ret = recvmsg(mFd.get(), &msg, MSG_NOSIGNAL);
+  ret = recvmsg(GetFd(), &msg, MSG_NOSIGNAL);
   if (ret < 0 && errno == EPIPE) {
     // Treat this as an end of stream
     return 0;
@@ -583,8 +537,17 @@ DroidSocketImpl::ReadMsg(int aFd, void *aBuffer, size_t aLength)
     }
     if (cmsgptr->cmsg_type == SCM_RIGHTS) {
       int *pDescriptors = (int *)CMSG_DATA(cmsgptr);
+
       // Overwrite fd with client fd
-      mFd.reset(pDescriptors[0]);
+      int fd = pDescriptors[0];
+      int flags = TEMP_FAILURE_RETRY(fcntl(fd, F_GETFL));
+      NS_ENSURE_TRUE(flags >= 0, 0);
+      if (!(flags & O_NONBLOCK)) {
+        int res = TEMP_FAILURE_RETRY(fcntl(fd, F_SETFL, flags | O_NONBLOCK));
+        NS_ENSURE_TRUE(!res, 0);
+      }
+      Close();
+      SetFd(fd);
       break;
     }
   }
@@ -624,8 +587,7 @@ DroidSocketImpl::OnFileCanReadWithoutBlocking(int aFd)
 
       // We're done with our descriptors. Ensure that spurious events don't
       // cause us to end up back here.
-      mReadWatcher.StopWatchingFileDescriptor();
-      mWriteWatcher.StopWatchingFileDescriptor();
+      RemoveWatchers(READ_WATCHER | WRITE_WATCHER);
       nsRefPtr<RequestClosingSocketTask> t = new RequestClosingSocketTask(this);
       NS_DispatchToMainThread(t);
       return;
@@ -682,13 +644,7 @@ DroidSocketImpl::OnFileCanWriteWithoutBlocking(int aFd)
     }
 
     if (data->mCurrentWriteOffset != data->mSize) {
-      MessageLoopForIO::current()->WatchFileDescriptor(
-        aFd,
-        false,
-        MessageLoopForIO::WATCH_WRITE,
-        &mWriteWatcher,
-        this);
-      return;
+      AddWatchers(WRITE_WATCHER, false);
     }
     mOutgoingQ.RemoveElementAt(0);
     delete data;
@@ -737,7 +693,8 @@ BluetoothSocket::Connect(const nsAString& aDeviceAddress, int aChannel)
   NS_ENSURE_FALSE(mImpl, false);
 
   mIsServer = false;
-  mImpl = new DroidSocketImpl(this, aDeviceAddress, aChannel, mAuth, mEncrypt);
+  mImpl = new DroidSocketImpl(XRE_GetIOMessageLoop(), this, aDeviceAddress,
+                              aChannel, mAuth, mEncrypt);
   XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
                                    new SocketConnectTask(mImpl));
 
@@ -751,7 +708,8 @@ BluetoothSocket::Listen(int aChannel)
   NS_ENSURE_FALSE(mImpl, false);
 
   mIsServer = true;
-  mImpl = new DroidSocketImpl(this, aChannel, mAuth, mEncrypt);
+  mImpl = new DroidSocketImpl(XRE_GetIOMessageLoop(), this, aChannel, mAuth,
+                              mEncrypt);
   XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
                                    new SocketListenTask(mImpl));
   return true;
