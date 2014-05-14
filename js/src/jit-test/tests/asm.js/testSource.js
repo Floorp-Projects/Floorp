@@ -237,7 +237,7 @@ if (isAsmJSCompilationAvailable() && isCachingEnabled()) {
 
 })();
 
-/* Implicit "use strict" context */
+/* Implicit "use strict" context in modules */
 (function() {
 
 var funcHeader =  'function (glob, ffi, heap) {',
@@ -333,6 +333,36 @@ if (isAsmJSCompilationAvailable() && isCachingEnabled()) {
     m = g3();
     assertEq(isAsmJSModuleLoadedFromCache(g3), true);
     checkFuncSrc(m);
+}
+
+})();
+
+/* Implicit "use strict" context in functions */
+(function () {
+
+var funcCode = 'function g(x) {\n\
+    x=x|0;\n\
+    return x + 1 | 0;}';
+var moduleCode = 'function () {\n\
+    "use asm";\n' + funcCode + '\n\
+    return g;\n\
+    }',
+    useStrict = '"use strict";';
+
+var f5 = eval(useStrict + ";\n(" + moduleCode + "())");
+
+var expectedToString = funcCode.replace('{', '{\n' + useStrict + '\n')
+var expectedToSource = expectedToString
+
+assertEq(f5.toString(), expectedToString);
+assertEq(f5.toSource(), expectedToSource);
+
+if (isAsmJSCompilationAvailable() && isCachingEnabled()) {
+    var mf5 = eval("\"use strict\";\n(" + moduleCode + ")");
+    assertEq(isAsmJSModuleLoadedFromCache(mf5), true);
+    var f5 = mf5();
+    assertEq(f5.toString(), expectedToString);
+    assertEq(f5.toSource(), expectedToSource);
 }
 
 })();

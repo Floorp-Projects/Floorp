@@ -426,7 +426,7 @@ protected:
 
     NS_IMETHOD Run() MOZ_OVERRIDE
     {
-      static_cast<HTMLFormElement*>(mEventNode.get())->EventHandled();
+      static_cast<HTMLFormElement*>(mTarget.get())->EventHandled();
       return AsyncEventDispatcher::Run();
     }
   };

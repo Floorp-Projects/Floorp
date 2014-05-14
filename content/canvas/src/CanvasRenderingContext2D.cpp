@@ -4286,16 +4286,18 @@ CanvasRenderingContext2D::ShouldForceInactiveLayer(LayerManager *aManager)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(CanvasPath, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(CanvasPath, Release)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(CanvasPath)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CanvasPath, mParent)
 
-CanvasPath::CanvasPath(nsCOMPtr<nsISupports> aParent) : mParent(aParent)
+CanvasPath::CanvasPath(nsISupports* aParent)
+  : mParent(aParent)
 {
   SetIsDOMBinding();
 
   mPathBuilder = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget()->CreatePathBuilder();
 }
 
-CanvasPath::CanvasPath(nsCOMPtr<nsISupports> aParent, RefPtr<PathBuilder> aPathBuilder): mParent(aParent), mPathBuilder(aPathBuilder)
+CanvasPath::CanvasPath(nsISupports* aParent, RefPtr<PathBuilder> aPathBuilder)
+  : mParent(aParent), mPathBuilder(aPathBuilder)
 {
   SetIsDOMBinding();
 
