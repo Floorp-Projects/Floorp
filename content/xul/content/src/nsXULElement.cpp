@@ -2637,7 +2637,7 @@ nsXULPrototypeScript::Compile(const char16_t* aText,
     // our script object would reference the first document, and the
     // first document would indirectly reference the prototype document
     // because it keeps the prototype cache alive. Circularity!
-    MOZ_ASSERT(aProtoDoc);
+    NS_ENSURE_STATE(aProtoDoc);
     NS_ENSURE_TRUE(aProtoDoc->GetCompilationGlobal(), NS_ERROR_UNEXPECTED);
     AutoSafeJSContext cx;
     JSAutoCompartment ac(cx, aProtoDoc->GetCompilationGlobal());
