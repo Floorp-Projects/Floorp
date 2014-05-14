@@ -36,11 +36,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
     }
   };
 
+  // Start an incremental GC, to make sure that calling ccSlice
+  // when an IGC is running finishes the GC.
+  SpecialPowers.Cu.getJSTestingFunctions().gcslice(1);
+
   // Make sure that we call the observer even if we're in the middle
   // of an ICC when we add the observer. See bug 981033.
-  // XXX This will assert if we try to start an ICC during a IGC.
-  //SpecialPowers.finishCC();
-  //SpecialPowers.ccSlice(1);
+  SpecialPowers.finishCC();
+  SpecialPowers.ccSlice(1);
 
   obs.addObserver(observer, "cycle-collector-begin", false);
 

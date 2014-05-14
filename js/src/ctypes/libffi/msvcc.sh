@@ -1,14 +1,48 @@
 #!/bin/sh
 
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the MSVC wrappificator.
+#
+# The Initial Developer of the Original Code is
+# Timothy Wall <twalljava@dev.java.net>.
+# Portions created by the Initial Developer are Copyright (C) 2009
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Daniel Witte <dwitte@mozilla.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
 
 #
 # GCC-compatible wrapper for cl.exe and ml.exe. Arguments are given in GCC
 # format and translated into something sensible for cl or ml.
 #
 
+args_orig=$@
 args="-nologo -W3"
 md=-MD
 cl="cl"
@@ -39,14 +73,35 @@ do
       shift 1
     ;;
     -O*)
-      # If we're optimizing, make sure we explicitly turn on some optimizations
-      # that are implicitly disabled by debug symbols (-Zi).
-      args="$args $1 -OPT:REF -OPT:ICF -INCREMENTAL:NO"
+      # Runtime error checks (enabled by setting -RTC1 in the -DFFI_DEBUG
+      # case below) are not compatible with optimization flags and will
+      # cause the build to fail. Therefore, drop the optimization flag if
+      # -DFFI_DEBUG is also set.
+      case $args_orig in
+        *-DFFI_DEBUG*)
+          args="$args"
+        ;;
+        *)
+          # The ax_cc_maxopt.m4 macro from the upstream autoconf-archive
+          # project doesn't support MSVC and therefore ends up trying to
+          # use -O3. Use the equivalent "max optimization" flag for MSVC
+          # instead of erroring out.
+          case $1 in
+            -O3)
+              args="$args -O2"
+            ;;
+            *)
+              args="$args $1"
+            ;;
+          esac
+          opt="true"
+        ;;
+      esac
       shift 1
     ;;
     -g)
       # Enable debug symbol generation.
-      args="$args -Zi -DEBUG"
+      args="$args -Zi"
       shift 1
     ;;
     -DFFI_DEBUG)
@@ -93,6 +148,10 @@ do
       # to do here.
       shift 1
     ;;
+    -pedantic)
+      # libffi tests -pedantic with -Wall, so drop it also.
+      shift 1
+    ;;
     -Werror)
       args="$args -WX"
       shift 1
@@ -137,6 +196,13 @@ do
   esac
 done
 
+# If -Zi is specified, certain optimizations are implicitly disabled
+# by MSVC. Add back those optimizations if this is an optimized build.
+# NOTE: These arguments must come after all others.
+if [ -n "$opt" ]; then
+    args="$args -link -OPT:REF -OPT:ICF -INCREMENTAL:NO"
+fi
+
 if [ -n "$assembly" ]; then
     if [ -z "$outdir" ]; then
       outdir="."
@@ -156,7 +222,10 @@ if [ -n "$assembly" ]; then
 else
     args="$md $args"
     echo "$cl $args"
-    eval "\"$cl\" $args"
+    # Return an error code of 1 if an invalid command line parameter is passed
+    # instead of just ignoring it.
+    eval "(\"$cl\" $args 2>&1 1>&3 | \
+          awk '{print \$0} /D9002/ {error=1} END{exit error}' >&2) 3>&1"
     result=$?
 fi
 

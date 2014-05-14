@@ -19,7 +19,7 @@
 This manual is for Libffi, a portable foreign-function interface
 library.
 
-Copyright @copyright{} 2008, 2010 Red Hat, Inc.
+Copyright @copyright{} 2008, 2010, 2011 Red Hat, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -133,8 +133,6 @@ This initializes @var{cif} according to the given parameters.
 you want.  @ref{Multiple ABIs} for more information.
 
 @var{nargs} is the number of arguments that this function accepts.
-@samp{libffi} does not yet handle varargs functions; see @ref{Missing
-Features} for more information.
 
 @var{rtype} is a pointer to an @code{ffi_type} structure that
 describes the return type of the function.  @xref{Types}.
@@ -150,6 +148,30 @@ objects is incorrect; or @code{FFI_BAD_ABI} if the @var{abi} parameter
 is invalid.
 @end defun
 
+If the function being called is variadic (varargs) then
+@code{ffi_prep_cif_var} must be used instead of @code{ffi_prep_cif}.
+
+@findex ffi_prep_cif_var
+@defun ffi_status ffi_prep_cif_var (ffi_cif *@var{cif}, ffi_abi var{abi}, unsigned int @var{nfixedargs}, unsigned int var{ntotalargs}, ffi_type *@var{rtype}, ffi_type **@var{argtypes})
+This initializes @var{cif} according to the given parameters for
+a call to a variadic function.  In general it's operation is the
+same as for @code{ffi_prep_cif} except that:
+
+@var{nfixedargs} is the number of fixed arguments, prior to any
+variadic arguments.  It must be greater than zero.
+
+@var{ntotalargs} the total number of arguments, including variadic
+and fixed arguments.
+
+Note that, different cif's must be prepped for calls to the same
+function when different numbers of arguments are passed.
+
+Also note that a call to @code{ffi_prep_cif_var} with
+@var{nfixedargs}=@var{nototalargs} is NOT equivalent to a call to
+@code{ffi_prep_cif}.
+
+@end defun
+
 
 To call a function using an initialized @code{ffi_cif}, use the
 @code{ffi_call} function:
@@ -162,11 +184,11 @@ This calls the function @var{fn} according to the description given in
 
 @var{rvalue} is a pointer to a chunk of memory that will hold the
 result of the function call.  This must be large enough to hold the
-result and must be suitably aligned; it is the caller's responsibility
+result, no smaller than the system register size (generally 32 or 64
+bits), and must be suitably aligned; it is the caller's responsibility
 to ensure this.  If @var{cif} declares that the function returns
 @code{void} (using @code{ffi_type_void}), then @var{rvalue} is
-ignored.  If @var{rvalue} is @samp{NULL}, then the return value is
-discarded.
+ignored.
 
 @var{avalues} is a vector of @code{void *} pointers that point to the
 memory locations holding the argument values for a call.  If @var{cif}
@@ -192,7 +214,7 @@ int main()
   ffi_type *args[1];
   void *values[1];
   char *s;
-  int rc;
+  ffi_arg rc;
   
   /* Initialize the argument info vectors */    
   args[0] = &ffi_type_pointer;
@@ -200,7 +222,7 @@ int main()
   
   /* Initialize the cif */
   if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 1, 
-		       &ffi_type_uint, args) == FFI_OK)
+		       &ffi_type_sint, args) == FFI_OK)
     @{
       s = "Hello World!";
       ffi_call(&cif, puts, &rc, values);
@@ -338,7 +360,7 @@ You must first describe the structure to @samp{libffi} by creating a
 new @code{ffi_type} object for it.
 
 @tindex ffi_type
-@deftp ffi_type
+@deftp {Data type} ffi_type
 The @code{ffi_type} has the following members:
 @table @code
 @item size_t size
@@ -392,6 +414,7 @@ Here is the corresponding code to describe this struct to
       int i;
 
       tm_type.size = tm_type.alignment = 0;
+      tm_type.type = FFI_TYPE_STRUCT;
       tm_type.elements = &tm_type_elements;
     
       for (i = 0; i < 9; i++)
@@ -511,18 +534,20 @@ writable and executable addresses.
 @section Closure Example
 
 A trivial example that creates a new @code{puts} by binding 
-@code{fputs} with @code{stdin}.
+@code{fputs} with @code{stdout}.
 
 @example
 #include <stdio.h>
 #include <ffi.h>
 
 /* Acts like puts with the file given at time of enclosure. */
-void puts_binding(ffi_cif *cif, unsigned int *ret, void* args[], 
-                  FILE *stream)
+void puts_binding(ffi_cif *cif, void *ret, void* args[],
+                  void *stream)
 @{
-  *ret = fputs(*(char **)args[0], stream);
+  *(ffi_arg *)ret = fputs(*(char **)args[0], (FILE *)stream);
 @}
+
+typedef int (*puts_t)(char *);
 
 int main()
 @{
@@ -530,9 +555,9 @@ int main()
   ffi_type *args[1];
   ffi_closure *closure;
 
-  int (*bound_puts)(char *);
+  void *bound_puts;
   int rc;
-  
+
   /* Allocate closure and bound_puts */
   closure = ffi_closure_alloc(sizeof(ffi_closure), &bound_puts);
 
@@ -543,13 +568,13 @@ int main()
 
       /* Initialize the cif */
       if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 1,
-                       &ffi_type_uint, args) == FFI_OK)
+                       &ffi_type_sint, args) == FFI_OK)
         @{
           /* Initialize the closure, setting stream to stdout */
-          if (ffi_prep_closure_loc(closure, &cif, puts_binding, 
+          if (ffi_prep_closure_loc(closure, &cif, puts_binding,
                                    stdout, bound_puts) == FFI_OK)
             @{
-              rc = bound_puts("Hello World!");
+              rc = ((puts_t)bound_puts)("Hello World!");
               /* rc now holds the result of the call to fputs */
             @}
         @}
@@ -572,9 +597,7 @@ support for these.
 
 @itemize @bullet
 @item
-There is no support for calling varargs functions.  This may work on
-some platforms, depending on how the ABI is defined, but it is not
-reliable.
+Variadic closures.
 
 @item
 There is no support for bit fields in structures.
@@ -591,6 +614,8 @@ The ``raw'' API is undocumented.
 @c anything else?
 @end itemize
 
+Note that variadic support is very new and tested on a relatively
+small number of platforms.
 
 @node Index
 @unnumbered Index

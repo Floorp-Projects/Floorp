@@ -2796,11 +2796,11 @@ nsXPCComponents_Utils::FinishCC()
     return NS_OK;
 }
 
-/* void ccSlice(long long budget); */
+/* void ccSlice(in long long budget); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::CcSlice(int64_t budget)
 {
-    nsCycleCollector_collectSliceWork(budget);
+    nsJSContext::RunCycleCollectorWorkSlice(budget);
     return NS_OK;
 }
 
