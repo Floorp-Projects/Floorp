@@ -74,9 +74,12 @@ public:
   GLuint GetTexture();
   void DeleteTextureIfPresent();
   gl::GLContext* gl() const;
+  void BindEGLImage(GLuint aTarget, EGLImage aImage);
+  void ClearBoundEGLImage(EGLImage aImage);
 protected:
   RefPtr<CompositorOGL> mCompositor;
   GLuint mTexture;
+  EGLImage mBoundEGLImage;
 };
 
 inline void ApplyFilterToBoundTexture(gl::GLContext* aGL,
