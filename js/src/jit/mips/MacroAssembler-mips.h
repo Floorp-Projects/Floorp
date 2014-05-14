@@ -330,6 +330,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     // The actual number of arguments that were passed, used to assert that
     // the initial number of arguments declared was correct.
     uint32_t passedArgs_;
+    uint32_t passedArgTypes_;
 
     uint32_t usedArgSlots_;
     MoveOp::Type firstArgType;

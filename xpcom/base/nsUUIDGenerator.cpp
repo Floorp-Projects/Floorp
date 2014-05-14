@@ -41,8 +41,8 @@ nsUUIDGenerator::Init()
 
   size_t bytes = 0;
   while (bytes < sizeof(seed)) {
-    size_t nbytes = PR_GetRandomNoise(((unsigned char *)&seed)+bytes,
-                                      sizeof(seed)-bytes);
+    size_t nbytes = PR_GetRandomNoise(((unsigned char*)&seed) + bytes,
+                                      sizeof(seed) - bytes);
     if (nbytes == 0) {
       return NS_ERROR_FAILURE;
     }
@@ -58,14 +58,18 @@ nsUUIDGenerator::Init()
 
   mRBytes = 4;
 #ifdef RAND_MAX
-  if ((unsigned long) RAND_MAX < (unsigned long)0xffffffff)
+  if ((unsigned long)RAND_MAX < 0xffffffffUL) {
     mRBytes = 3;
-  if ((unsigned long) RAND_MAX < (unsigned long)0x00ffffff)
+  }
+  if ((unsigned long)RAND_MAX < 0x00ffffffUL) {
     mRBytes = 2;
-  if ((unsigned long) RAND_MAX < (unsigned long)0x0000ffff)
+  }
+  if ((unsigned long)RAND_MAX < 0x0000ffffUL) {
     mRBytes = 1;
-  if ((unsigned long) RAND_MAX < (unsigned long)0x000000ff)
+  }
+  if ((unsigned long)RAND_MAX < 0x000000ffUL) {
     return NS_ERROR_FAILURE;
+  }
 #endif
 
 #endif /* non XP_WIN and non XP_MACOSX */
@@ -74,11 +78,12 @@ nsUUIDGenerator::Init()
 }
 
 NS_IMETHODIMP
-nsUUIDGenerator::GenerateUUID(nsID** ret)
+nsUUIDGenerator::GenerateUUID(nsID** aRet)
 {
-  nsID *id = static_cast<nsID*>(NS_Alloc(sizeof(nsID)));
-  if (id == nullptr)
+  nsID* id = static_cast<nsID*>(NS_Alloc(sizeof(nsID)));
+  if (!id) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   nsresult rv = GenerateUUIDInPlace(id);
   if (NS_FAILED(rv)) {
@@ -86,28 +91,30 @@ nsUUIDGenerator::GenerateUUID(nsID** ret)
     return rv;
   }
 
-  *ret = id;
+  *aRet = id;
   return rv;
 }
 
 NS_IMETHODIMP
-nsUUIDGenerator::GenerateUUIDInPlace(nsID* id)
+nsUUIDGenerator::GenerateUUIDInPlace(nsID* aId)
 {
   // The various code in this method is probably not threadsafe, so lock
   // across the whole method.
   MutexAutoLock lock(mLock);
 
 #if defined(XP_WIN)
-  HRESULT hr = CoCreateGuid((GUID*)id);
-  if (FAILED(hr))
+  HRESULT hr = CoCreateGuid((GUID*)aId);
+  if (FAILED(hr)) {
     return NS_ERROR_FAILURE;
+  }
 #elif defined(XP_MACOSX)
   CFUUIDRef uuid = CFUUIDCreate(kCFAllocatorDefault);
-  if (!uuid)
+  if (!uuid) {
     return NS_ERROR_FAILURE;
+  }
 
   CFUUIDBytes bytes = CFUUIDGetUUIDBytes(uuid);
-  memcpy(id, &bytes, sizeof(nsID));
+  memcpy(aId, &bytes, sizeof(nsID));
 
   CFRelease(uuid);
 #else /* not windows or OS X; generate randomness using random(). */
@@ -129,27 +136,28 @@ nsUUIDGenerator::GenerateUUIDInPlace(nsID* id)
 #endif
 
 
-    uint8_t *src = (uint8_t*)&rval;
+    uint8_t* src = (uint8_t*)&rval;
     // We want to grab the mRBytes least significant bytes of rval, since
     // mRBytes less than sizeof(rval) means the high bytes are 0.
 #ifdef IS_BIG_ENDIAN
     src += sizeof(rval) - mRBytes;
 #endif
-    uint8_t *dst = ((uint8_t*) id) + (sizeof(nsID) - bytesLeft);
+    uint8_t* dst = ((uint8_t*)aId) + (sizeof(nsID) - bytesLeft);
     size_t toWrite = (bytesLeft < mRBytes ? bytesLeft : mRBytes);
-    for (size_t i = 0; i < toWrite; i++)
+    for (size_t i = 0; i < toWrite; i++) {
       dst[i] = src[i];
+    }
 
     bytesLeft -= toWrite;
   }
 
   /* Put in the version */
-  id->m2 &= 0x0fff;
-  id->m2 |= 0x4000;
+  aId->m2 &= 0x0fff;
+  aId->m2 |= 0x4000;
 
   /* Put in the variant */
-  id->m3[0] &= 0x3f;
-  id->m3[0] |= 0x80;
+  aId->m3[0] &= 0x3f;
+  aId->m3[0] |= 0x80;
 
 #ifndef ANDROID
   /* Restore the previous RNG state */

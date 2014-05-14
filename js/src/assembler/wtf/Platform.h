@@ -157,6 +157,16 @@
 #define WTF_USE_ARENA_ALLOC_ALIGNMENT_INTEGER 1
 #endif /* MIPS */
 
+#if defined(JS_MIPS_SIMULATOR)
+#define WTF_MIPS_ARCH 32
+#define WTF_MIPS_ISA(v) (defined WTF_MIPS_ARCH && WTF_MIPS_ARCH == v)
+#define WTF_MIPS_ISA_AT_LEAST(v) (defined WTF_MIPS_ARCH && WTF_MIPS_ARCH >= v)
+#define WTF_MIPS_ARCH_REV 2
+#define WTF_MIPS_ISA_REV(v) (defined WTF_MIPS_ARCH_REV && WTF_MIPS_ARCH_REV == v)
+#define WTF_MIPS_DOUBLE_FLOAT 1
+#undef WTF_MIPS_FP64
+#endif
+
 /* WTF_CPU_PPC - PowerPC 32-bit */
 #if   defined(__ppc__)     \
     || defined(__PPC__)     \
@@ -377,6 +387,12 @@
 #  undef WTF_CPU_X64
 #  define WTF_CPU_ARM_TRADITIONAL 1
 #  define WTF_CPU_ARM 1
+#endif
+
+#if defined(JS_MIPS_SIMULATOR)
+#  undef WTF_CPU_X86
+#  undef WTF_CPU_X64
+#  define WTF_CPU_MIPS 1
 #endif
 
 #if WTF_CPU_ARM || WTF_CPU_MIPS

@@ -179,6 +179,20 @@ static const uint32_t Imm26Bits = 26;
 static const uint32_t Imm28Shift = 0;
 static const uint32_t Imm28Bits = 28;
 static const uint32_t ImmFieldShift = 2;
+static const uint32_t FRBits = 5;
+static const uint32_t FRShift = 21;
+static const uint32_t FSShift = 11;
+static const uint32_t FSBits = 5;
+static const uint32_t FTShift = 16;
+static const uint32_t FTBits = 5;
+static const uint32_t FDShift = 6;
+static const uint32_t FDBits = 5;
+static const uint32_t FCccShift = 8;
+static const uint32_t FCccBits = 3;
+static const uint32_t FBccShift = 18;
+static const uint32_t FBccBits = 3;
+static const uint32_t FBtrueShift = 16;
+static const uint32_t FBtrueBits = 1;
 static const uint32_t FccMask = 0x7;
 static const uint32_t FccShift = 2;
 
@@ -285,6 +299,7 @@ enum RSField {
     rs_s     = 16 << RSShift,
     rs_d     = 17 << RSShift,
     rs_w     = 20 << RSShift,
+    rs_l     = 21 << RSShift,
     rs_ps    = 22 << RSShift
 };
 
@@ -333,6 +348,13 @@ enum FunctionField {
     ff_slt         = 42,
     ff_sltu        = 43,
 
+    ff_tge         = 48,
+    ff_tgeu        = 49,
+    ff_tlt         = 50,
+    ff_tltu        = 51,
+    ff_teq         = 52,
+    ff_tne         = 54,
+
     // special2 encoding of function field.
     ff_mul         = 2,
     ff_clz         = 32,
@@ -352,6 +374,11 @@ enum FunctionField {
     ff_mov_fmt     = 6,
     ff_neg_fmt     = 7,
 
+    ff_round_l_fmt = 8,
+    ff_trunc_l_fmt = 9,
+    ff_ceil_l_fmt  = 10,
+    ff_floor_l_fmt = 11,
+
     ff_round_w_fmt = 12,
     ff_trunc_w_fmt = 13,
     ff_ceil_w_fmt  = 14,
@@ -360,6 +387,8 @@ enum FunctionField {
     ff_cvt_s_fmt   = 32,
     ff_cvt_d_fmt   = 33,
     ff_cvt_w_fmt   = 36,
+    ff_cvt_l_fmt   = 37,
+    ff_cvt_ps_s    = 38,
 
     ff_c_f_fmt     = 48,
     ff_c_un_fmt    = 49,
@@ -369,6 +398,11 @@ enum FunctionField {
     ff_c_ult_fmt   = 53,
     ff_c_ole_fmt   = 54,
     ff_c_ule_fmt   = 55,
+
+    ff_madd_s      = 32,
+    ff_madd_d      = 33,
+
+    ff_null        = 0
 };
 
 class MacroAssemblerMIPS;
@@ -1002,14 +1036,14 @@ class Assembler : public AssemblerShared
     }
 }; // Assembler
 
+// sll zero, zero, 0
+const uint32_t NopInst = 0x00000000;
+
 // An Instruction is a structure for both encoding and decoding any and all
 // MIPS instructions.
 class Instruction
 {
   protected:
-    // sll zero, zero, 0
-    static const uint32_t NopInst = 0x00000000;
-
     uint32_t data;
 
     // Standard constructor

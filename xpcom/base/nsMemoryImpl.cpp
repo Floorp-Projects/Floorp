@@ -29,21 +29,21 @@ static nsMemoryImpl sGlobalMemory;
 NS_IMPL_QUERY_INTERFACE(nsMemoryImpl, nsIMemory)
 
 NS_IMETHODIMP_(void*)
-nsMemoryImpl::Alloc(size_t size)
+nsMemoryImpl::Alloc(size_t aSize)
 {
-  return NS_Alloc(size);
+  return NS_Alloc(aSize);
 }
 
 NS_IMETHODIMP_(void*)
-nsMemoryImpl::Realloc(void* ptr, size_t size)
+nsMemoryImpl::Realloc(void* aPtr, size_t aSize)
 {
-  return NS_Realloc(ptr, size);
+  return NS_Realloc(aPtr, aSize);
 }
 
 NS_IMETHODIMP_(void)
-nsMemoryImpl::Free(void* ptr)
+nsMemoryImpl::Free(void* aPtr)
 {
-  NS_Free(ptr);
+  NS_Free(aPtr);
 }
 
 NS_IMETHODIMP
@@ -53,21 +53,21 @@ nsMemoryImpl::HeapMinimize(bool aImmediate)
 }
 
 NS_IMETHODIMP
-nsMemoryImpl::IsLowMemory(bool *result)
+nsMemoryImpl::IsLowMemory(bool* aResult)
 {
   NS_ERROR("IsLowMemory is deprecated.  See bug 592308.");
-  *result = false;
+  *aResult = false;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMemoryImpl::IsLowMemoryPlatform(bool *result)
+nsMemoryImpl::IsLowMemoryPlatform(bool* aResult)
 {
 #ifdef ANDROID
   static int sLowMemory = -1; // initialize to unknown, lazily evaluate to 0 or 1
   if (sLowMemory == -1) {
     sLowMemory = 0; // assume "not low memory" in case file operations fail
-    *result = false;
+    *aResult = false;
 
     // check if MemTotal from /proc/meminfo is less than LOW_MEMORY_THRESHOLD_KB
     FILE* fd = fopen("/proc/meminfo", "r");
@@ -84,18 +84,19 @@ nsMemoryImpl::IsLowMemoryPlatform(bool *result)
     }
     sLowMemory = (mem < LOW_MEMORY_THRESHOLD_KB) ? 1 : 0;
   }
-  *result = (sLowMemory == 1);
+  *aResult = (sLowMemory == 1);
 #else
-  *result = false;
+  *aResult = false;
 #endif
   return NS_OK;
 }
 
 /*static*/ nsresult
-nsMemoryImpl::Create(nsISupports* outer, const nsIID& aIID, void **aResult)
+nsMemoryImpl::Create(nsISupports* aOuter, const nsIID& aIID, void** aResult)
 {
-  if (NS_WARN_IF(outer))
+  if (NS_WARN_IF(aOuter)) {
     return NS_ERROR_NO_AGGREGATION;
+  }
   return sGlobalMemory.QueryInterface(aIID, aResult);
 }
 
@@ -115,8 +116,9 @@ nsMemoryImpl::FlushMemory(const char16_t* aReason, bool aImmediate)
   }
 
   bool lastVal = sIsFlushing.exchange(true);
-  if (lastVal)
+  if (lastVal) {
     return NS_OK;
+  }
 
   PRIntervalTime now = PR_IntervalNow();
 
@@ -124,8 +126,7 @@ nsMemoryImpl::FlushMemory(const char16_t* aReason, bool aImmediate)
   // UI thread an run 'em asynchronously.
   if (aImmediate) {
     rv = RunFlushers(aReason);
-  }
-  else {
+  } else {
     // Don't broadcast more than once every 1000ms to avoid being noisy
     if (PR_IntervalToMicroseconds(now - sLastFlushTime) > 1000) {
       sFlushEvent.mReason = aReason;
@@ -151,17 +152,17 @@ nsMemoryImpl::RunFlushers(const char16_t* aReason)
     nsCOMPtr<nsISimpleEnumerator> e;
     os->EnumerateObservers("memory-pressure", getter_AddRefs(e));
 
-    if ( e ) {
+    if (e) {
       nsCOMPtr<nsIObserver> observer;
       bool loop = true;
 
-      while (NS_SUCCEEDED(e->HasMoreElements(&loop)) && loop)
-      {
+      while (NS_SUCCEEDED(e->HasMoreElements(&loop)) && loop) {
         nsCOMPtr<nsISupports> supports;
         e->GetNext(getter_AddRefs(supports));
 
-        if (!supports)
+        if (!supports) {
           continue;
+        }
 
         observer = do_QueryInterface(supports);
         observer->Observe(observer, "memory-pressure", aReason);
@@ -174,8 +175,16 @@ nsMemoryImpl::RunFlushers(const char16_t* aReason)
 }
 
 // XXX need NS_IMPL_STATIC_ADDREF/RELEASE
-NS_IMETHODIMP_(MozExternalRefCountType) nsMemoryImpl::FlushEvent::AddRef() { return 2; }
-NS_IMETHODIMP_(MozExternalRefCountType) nsMemoryImpl::FlushEvent::Release() { return 1; }
+NS_IMETHODIMP_(MozExternalRefCountType)
+nsMemoryImpl::FlushEvent::AddRef()
+{
+  return 2;
+}
+NS_IMETHODIMP_(MozExternalRefCountType)
+nsMemoryImpl::FlushEvent::Release()
+{
+  return 1;
+}
 NS_IMPL_QUERY_INTERFACE(nsMemoryImpl::FlushEvent, nsIRunnable)
 
 NS_IMETHODIMP
@@ -195,25 +204,25 @@ nsMemoryImpl::FlushEvent
 nsMemoryImpl::sFlushEvent;
 
 XPCOM_API(void*)
-NS_Alloc(size_t size)
+NS_Alloc(size_t aSize)
 {
-  return moz_xmalloc(size);
+  return moz_xmalloc(aSize);
 }
 
 XPCOM_API(void*)
-NS_Realloc(void* ptr, size_t size)
+NS_Realloc(void* aPtr, size_t aSize)
 {
-  return moz_xrealloc(ptr, size);
+  return moz_xrealloc(aPtr, aSize);
 }
 
 XPCOM_API(void)
-NS_Free(void* ptr)
+NS_Free(void* aPtr)
 {
-  moz_free(ptr);
+  moz_free(aPtr);
 }
 
 nsresult
-NS_GetMemoryManager(nsIMemory* *result)
+NS_GetMemoryManager(nsIMemory** aResult)
 {
-  return sGlobalMemory.QueryInterface(NS_GET_IID(nsIMemory), (void**) result);
+  return sGlobalMemory.QueryInterface(NS_GET_IID(nsIMemory), (void**)aResult);
 }

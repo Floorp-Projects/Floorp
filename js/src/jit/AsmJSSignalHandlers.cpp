@@ -337,7 +337,7 @@ HandleSimulatorInterrupt(JSRuntime *rt, AsmJSActivation *activation, void *fault
     // simulator could be in the middle of an instruction. On ARM, the signal
     // handlers are currently only used for Odin code, see bug 964258.
 
-#ifdef JS_ARM_SIMULATOR
+#if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
     const AsmJSModule &module = activation->module();
     if (module.containsPC((void *)rt->mainThread.simulator()->get_pc()) &&
         module.containsPC(faultingAddress))

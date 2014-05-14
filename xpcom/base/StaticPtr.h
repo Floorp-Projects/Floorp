@@ -48,9 +48,9 @@ public:
   }
 #endif
 
-  StaticAutoPtr<T>& operator=(T* rhs)
+  StaticAutoPtr<T>& operator=(T* aRhs)
   {
-    Assign(rhs);
+    Assign(aRhs);
     return *this;
   }
 
@@ -81,14 +81,14 @@ private:
   // this constructor always, the compiler wouldn't generate a trivial
   // default constructor for us in non-debug mode.
 #ifdef DEBUG
-  StaticAutoPtr(StaticAutoPtr<T> &other);
+  StaticAutoPtr(StaticAutoPtr<T>& other);
 #endif
 
-  void Assign(T* newPtr)
+  void Assign(T* aNewPtr)
   {
-    MOZ_ASSERT(!newPtr || mRawPtr != newPtr);
+    MOZ_ASSERT(!aNewPtr || mRawPtr != aNewPtr);
     T* oldPtr = mRawPtr;
-    mRawPtr = newPtr;
+    mRawPtr = aNewPtr;
     delete oldPtr;
   }
 
@@ -109,15 +109,15 @@ public:
   }
 #endif
 
-  StaticRefPtr<T>& operator=(T* rhs)
+  StaticRefPtr<T>& operator=(T* aRhs)
   {
-    AssignWithAddref(rhs);
+    AssignWithAddref(aRhs);
     return *this;
   }
 
-  StaticRefPtr<T>& operator=(const StaticRefPtr<T>& rhs)
+  StaticRefPtr<T>& operator=(const StaticRefPtr<T>& aRhs)
   {
-    return (this = rhs.mRawPtr);
+    return (this = aRhs.mRawPtr);
   }
 
   T* get() const
@@ -142,18 +142,18 @@ public:
   }
 
 private:
-  void AssignWithAddref(T* newPtr)
+  void AssignWithAddref(T* aNewPtr)
   {
-    if (newPtr) {
-      newPtr->AddRef();
+    if (aNewPtr) {
+      aNewPtr->AddRef();
     }
-    AssignAssumingAddRef(newPtr);
+    AssignAssumingAddRef(aNewPtr);
   }
 
-  void AssignAssumingAddRef(T* newPtr)
+  void AssignAssumingAddRef(T* aNewPtr)
   {
     T* oldPtr = mRawPtr;
-    mRawPtr = newPtr;
+    mRawPtr = aNewPtr;
     if (oldPtr) {
       oldPtr->Release();
     }
@@ -199,16 +199,16 @@ class Zero;
 
 template<class T, class U>
 inline bool
-operator==(const StaticAutoPtr<T>& lhs, const StaticAutoPtr<U>& rhs)
+operator==(const StaticAutoPtr<T>& aLhs, const StaticAutoPtr<U>& aRhs)
 {
-  return lhs.get() == rhs.get();
+  return aLhs.get() == aRhs.get();
 }
 
 template<class T, class U>
 inline bool
-operator!=(const StaticAutoPtr<T>& lhs, const StaticAutoPtr<U>& rhs)
+operator!=(const StaticAutoPtr<T>& aLhs, const StaticAutoPtr<U>& aRhs)
 {
-  return !(lhs == rhs);
+  return !(aLhs == aRhs);
 }
 
 REFLEXIVE_EQUALITY_OPERATORS(const StaticAutoPtr<T>&, const U*,
@@ -225,16 +225,16 @@ REFLEXIVE_EQUALITY_OPERATORS(const StaticAutoPtr<T>&, StaticPtr_internal::Zero*,
 
 template<class T, class U>
 inline bool
-operator==(const StaticRefPtr<T>& lhs, const StaticRefPtr<U>& rhs)
+operator==(const StaticRefPtr<T>& aLhs, const StaticRefPtr<U>& aRhs)
 {
-  return lhs.get() == rhs.get();
+  return aLhs.get() == aRhs.get();
 }
 
 template<class T, class U>
 inline bool
-operator!=(const StaticRefPtr<T>& lhs, const StaticRefPtr<U>& rhs)
+operator!=(const StaticRefPtr<T>& aLhs, const StaticRefPtr<U>& aRhs)
 {
-  return !(lhs == rhs);
+  return !(aLhs == aRhs);
 }
 
 REFLEXIVE_EQUALITY_OPERATORS(const StaticRefPtr<T>&, const U*,

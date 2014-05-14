@@ -6,6 +6,7 @@
 
 DIRS += [
     'extensions',
+    'serviceworkers',
 ]
 
 MOCHITEST_MANIFESTS += ['mochitest.ini']

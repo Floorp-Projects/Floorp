@@ -54,13 +54,13 @@
 #include "mozilla/mozalloc_abort.h"
 
 static void
-Abort(const char *aMsg);
+Abort(const char* aMsg);
 
 static void
 RealBreak();
 
 static void
-Break(const char *aMsg);
+Break(const char* aMsg);
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -72,7 +72,7 @@ Break(const char *aMsg);
 
 using namespace mozilla;
 
-static const char *sMultiprocessDescription = nullptr;
+static const char* sMultiprocessDescription = nullptr;
 
 static Atomic<int32_t> gAssertionCount;
 
@@ -91,29 +91,29 @@ nsDebugImpl::Release()
 }
 
 NS_IMETHODIMP
-nsDebugImpl::Assertion(const char *aStr, const char *aExpr,
-                       const char *aFile, int32_t aLine)
+nsDebugImpl::Assertion(const char* aStr, const char* aExpr,
+                       const char* aFile, int32_t aLine)
 {
   NS_DebugBreak(NS_DEBUG_ASSERTION, aStr, aExpr, aFile, aLine);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDebugImpl::Warning(const char *aStr, const char *aFile, int32_t aLine)
+nsDebugImpl::Warning(const char* aStr, const char* aFile, int32_t aLine)
 {
   NS_DebugBreak(NS_DEBUG_WARNING, aStr, nullptr, aFile, aLine);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDebugImpl::Break(const char *aFile, int32_t aLine)
+nsDebugImpl::Break(const char* aFile, int32_t aLine)
 {
   NS_DebugBreak(NS_DEBUG_BREAK, nullptr, nullptr, aFile, aLine);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDebugImpl::Abort(const char *aFile, int32_t aLine)
+nsDebugImpl::Abort(const char* aFile, int32_t aLine)
 {
   NS_DebugBreak(NS_DEBUG_ABORT, nullptr, nullptr, aFile, aLine);
   return NS_OK;
@@ -172,7 +172,7 @@ nsDebugImpl::GetIsDebuggerAttached(bool* aResult)
 }
 
 /* static */ void
-nsDebugImpl::SetMultiprocessMode(const char *aDesc)
+nsDebugImpl::SetMultiprocessMode(const char* aDesc)
 {
   sMultiprocessDescription = aDesc;
 }
@@ -184,7 +184,8 @@ nsDebugImpl::SetMultiprocessMode(const char *aDesc)
  */
 static PRLogModuleInfo* gDebugLog;
 
-static void InitLog(void)
+static void
+InitLog()
 {
   if (0 == gDebugLog) {
     gDebugLog = PR_NewLogModule("nsDebug");
@@ -201,44 +202,48 @@ enum nsAssertBehavior {
   NS_ASSERT_STACK_AND_ABORT
 };
 
-static nsAssertBehavior GetAssertBehavior()
+static nsAssertBehavior
+GetAssertBehavior()
 {
   static nsAssertBehavior gAssertBehavior = NS_ASSERT_UNINITIALIZED;
-  if (gAssertBehavior != NS_ASSERT_UNINITIALIZED)
+  if (gAssertBehavior != NS_ASSERT_UNINITIALIZED) {
     return gAssertBehavior;
+  }
 
 #if defined(XP_WIN) && defined(MOZ_METRO)
-  if (IsRunningInWindowsMetro())
+  if (IsRunningInWindowsMetro()) {
     gAssertBehavior = NS_ASSERT_WARN;
-  else
+  } else {
     gAssertBehavior = NS_ASSERT_TRAP;
+  }
 #elif defined(XP_WIN)
   gAssertBehavior = NS_ASSERT_TRAP;
 #else
   gAssertBehavior = NS_ASSERT_WARN;
 #endif
 
-  const char *assertString = PR_GetEnv("XPCOM_DEBUG_BREAK");
-  if (!assertString || !*assertString)
+  const char* assertString = PR_GetEnv("XPCOM_DEBUG_BREAK");
+  if (!assertString || !*assertString) {
     return gAssertBehavior;
-
-  if (!strcmp(assertString, "warn"))
+  }
+  if (!strcmp(assertString, "warn")) {
     return gAssertBehavior = NS_ASSERT_WARN;
-
-  if (!strcmp(assertString, "suspend"))
+  }
+  if (!strcmp(assertString, "suspend")) {
     return gAssertBehavior = NS_ASSERT_SUSPEND;
-
-  if (!strcmp(assertString, "stack"))
+  }
+  if (!strcmp(assertString, "stack")) {
     return gAssertBehavior = NS_ASSERT_STACK;
-
-  if (!strcmp(assertString, "abort"))
+  }
+  if (!strcmp(assertString, "abort")) {
     return gAssertBehavior = NS_ASSERT_ABORT;
-
-  if (!strcmp(assertString, "trap") || !strcmp(assertString, "break"))
+  }
+  if (!strcmp(assertString, "trap") || !strcmp(assertString, "break")) {
     return gAssertBehavior = NS_ASSERT_TRAP;
-
-  if (!strcmp(assertString, "stack-and-abort"))
+  }
+  if (!strcmp(assertString, "stack-and-abort")) {
     return gAssertBehavior = NS_ASSERT_STACK_AND_ABORT;
+  }
 
   fprintf(stderr, "Unrecognized value of XPCOM_DEBUG_BREAK\n");
   return gAssertBehavior;
@@ -246,45 +251,51 @@ static nsAssertBehavior GetAssertBehavior()
 
 struct FixedBuffer
 {
-  FixedBuffer() : curlen(0) { buffer[0] = '\0'; }
+  FixedBuffer() : curlen(0)
+  {
+    buffer[0] = '\0';
+  }
 
   char buffer[1000];
   uint32_t curlen;
 };
 
 static int
-StuffFixedBuffer(void *closure, const char *buf, uint32_t len)
+StuffFixedBuffer(void* aClosure, const char* aBuf, uint32_t aLen)
 {
-  if (!len)
+  if (!aLen) {
     return 0;
+  }
 
-  FixedBuffer *fb = (FixedBuffer*) closure;
+  FixedBuffer* fb = (FixedBuffer*)aClosure;
 
   // strip the trailing null, we add it again later
-  if (buf[len - 1] == '\0')
-    --len;
+  if (aBuf[aLen - 1] == '\0') {
+    --aLen;
+  }
 
-  if (fb->curlen + len >= sizeof(fb->buffer))
-    len = sizeof(fb->buffer) - fb->curlen - 1;
+  if (fb->curlen + aLen >= sizeof(fb->buffer)) {
+    aLen = sizeof(fb->buffer) - fb->curlen - 1;
+  }
 
-  if (len) {
-    memcpy(fb->buffer + fb->curlen, buf, len);
-    fb->curlen += len;
+  if (aLen) {
+    memcpy(fb->buffer + fb->curlen, aBuf, aLen);
+    fb->curlen += aLen;
     fb->buffer[fb->curlen] = '\0';
   }
 
-  return len;
+  return aLen;
 }
 
 EXPORT_XPCOM_API(void)
-NS_DebugBreak(uint32_t aSeverity, const char *aStr, const char *aExpr,
-              const char *aFile, int32_t aLine)
+NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
+              const char* aFile, int32_t aLine)
 {
   InitLog();
 
   FixedBuffer buf;
   PRLogModuleLevel ll = PR_LOG_WARNING;
-  const char *sevString = "WARNING";
+  const char* sevString = "WARNING";
 
   switch (aSeverity) {
     case NS_DEBUG_ASSERTION:
@@ -317,17 +328,18 @@ NS_DebugBreak(uint32_t aSeverity, const char *aStr, const char *aExpr,
 
   PrintToBuffer("%s: ", sevString);
 
-  if (aStr)
+  if (aStr) {
     PrintToBuffer("%s: ", aStr);
-
-  if (aExpr)
+  }
+  if (aExpr) {
     PrintToBuffer("'%s', ", aExpr);
-
-  if (aFile)
+  }
+  if (aFile) {
     PrintToBuffer("file %s, ", aFile);
-
-  if (aLine != -1)
+  }
+  if (aLine != -1) {
     PrintToBuffer("line %d", aLine);
+  }
 
 #  undef PrintToBuffer
 
@@ -337,8 +349,9 @@ NS_DebugBreak(uint32_t aSeverity, const char *aStr, const char *aExpr,
 
   // errors on platforms without a debugdlg ring a bell on stderr
 #if !defined(XP_WIN)
-  if (ll != PR_LOG_WARNING)
+  if (ll != PR_LOG_WARNING) {
     fprintf(stderr, "\07");
+  }
 #endif
 
 #ifdef ANDROID
@@ -417,7 +430,7 @@ NS_DebugBreak(uint32_t aSeverity, const char *aStr, const char *aExpr,
 }
 
 static void
-Abort(const char *aMsg)
+Abort(const char* aMsg)
 {
   mozalloc_abort(aMsg);
 }
@@ -455,12 +468,12 @@ RealBreak()
 
 // Abort() calls this function, don't call it!
 static void
-Break(const char *aMsg)
+Break(const char* aMsg)
 {
 #if defined(_WIN32)
   static int ignoreDebugger;
   if (!ignoreDebugger) {
-    const char *shouldIgnoreDebugger = getenv("XPCOM_DEBUG_DLG");
+    const char* shouldIgnoreDebugger = getenv("XPCOM_DEBUG_DLG");
     ignoreDebugger = 1 + (shouldIgnoreDebugger && !strcmp(shouldIgnoreDebugger, "1"));
   }
   if ((ignoreDebugger == 2) || !::IsDebuggerPresent()) {
@@ -483,12 +496,12 @@ Break(const char *aMsg)
     si.wShowWindow = SW_SHOW;
 
     // 2nd arg of CreateProcess is in/out
-    wchar_t *msgCopy = (wchar_t*) _alloca((strlen(aMsg) + 1)*sizeof(wchar_t));
+    wchar_t* msgCopy = (wchar_t*)_alloca((strlen(aMsg) + 1) * sizeof(wchar_t));
     wcscpy(msgCopy, NS_ConvertUTF8toUTF16(aMsg).get());
 
-    if(GetModuleFileNameW(GetModuleHandleW(L"xpcom.dll"), executable, MAX_PATH) &&
-        nullptr != (pName = wcsrchr(executable, '\\')) &&
-        nullptr != wcscpy(pName + 1, L"windbgdlg.exe") &&
+    if (GetModuleFileNameW(GetModuleHandleW(L"xpcom.dll"), executable, MAX_PATH) &&
+        (pName = wcsrchr(executable, '\\')) != nullptr &&
+        wcscpy(pName + 1, L"windbgdlg.exe") &&
         CreateProcessW(executable, msgCopy, nullptr, nullptr,
                        false, DETACHED_PROCESS | NORMAL_PRIORITY_CLASS,
                        nullptr, nullptr, &si, &pi)) {
@@ -498,7 +511,7 @@ Break(const char *aMsg)
       CloseHandle(pi.hThread);
     }
 
-    switch(code) {
+    switch (code) {
       case IDABORT:
         //This should exit us
         raise(SIGABRT);
@@ -531,10 +544,11 @@ Break(const char *aMsg)
 static const nsDebugImpl kImpl;
 
 nsresult
-nsDebugImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
+nsDebugImpl::Create(nsISupports* aOuter, const nsIID& aIID, void** aInstancePtr)
 {
-  if (NS_WARN_IF(outer))
+  if (NS_WARN_IF(aOuter)) {
     return NS_ERROR_NO_AGGREGATION;
+  }
 
   return const_cast<nsDebugImpl*>(&kImpl)->
     QueryInterface(aIID, aInstancePtr);
@@ -566,10 +580,10 @@ NS_ErrorAccordingToNSPR()
 }
 
 void
-NS_ABORT_OOM(size_t size)
+NS_ABORT_OOM(size_t aSize)
 {
 #ifdef MOZ_CRASHREPORTER
-  CrashReporter::AnnotateOOMAllocationSize(size);
+  CrashReporter::AnnotateOOMAllocationSize(aSize);
 #endif
   MOZ_CRASH();
 }

@@ -76,6 +76,9 @@ XPCOMUtils.defineLazyServiceGetter(Services, 'captivePortalDetector',
                                   'nsICaptivePortalDetector');
 #endif
 
+let devtools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
+let { RootActor } = devtools.require("devtools/server/actors/root");
+
 function getContentWindow() {
   return shell.contentBrowser.contentWindow;
 }
@@ -968,7 +971,7 @@ let RemoteDebugger = {
             deviceActor: DebuggerServer.globalActorFactories.deviceActor,
           } : DebuggerServer.globalActorFactories
         };
-        let root = new DebuggerServer.RootActor(connection, parameters);
+        let root = new RootActor(connection, parameters);
         root.applicationType = "operating-system";
         return root;
       };
