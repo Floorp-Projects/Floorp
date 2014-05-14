@@ -22,6 +22,9 @@ public interface TelemetryContract {
         // Generic action, usually for tracking menu and toolbar actions.
         public static final String ACTION = "action.1";
 
+        // Cancel a state, action, etc.
+        public static final String CANCEL = "cancel.1";
+
         // Launching (opening) an external application.
         // Note: Only used in JavaScript for now, but here for completeness.
         public static final String LAUNCH = "launch.1";
@@ -71,6 +74,12 @@ public interface TelemetryContract {
         // Action triggered from a list.
         public static final String LIST = "list";
 
+        // Action triggered from the action bar (including the toolbar).
+        public static final String ACTIONBAR = "actionbar";
+
+        // Action triggered by hitting the Android back button.
+        public static final String BACK = "back";
+
         // Action triggered from a button.
         public static final String BUTTON = "button";
 
@@ -105,6 +114,9 @@ public interface TelemetryContract {
      * Telemetry.startUISession() as the "sessionName" parameter.
      */
     public interface Session {
+        // Awesomescreen (including frecency search) is active.
+        public static final String AWESOMESCREEN = "awesomescreen.1";
+
         // Started when a user enters about:home.
         public static final String HOME = "home.1";
 
@@ -115,9 +127,6 @@ public interface TelemetryContract {
         // Started when a Reader viewer becomes active in the foreground.
         // Note: Only used in JavaScript for now, but here for completeness.
         public static final String READER = "reader.1";
-
-        // URL bar focused.
-        public static final String URLBAR_FOCUSED = "urlbar.1";
 
         // Awesomescreen frecency search is active.
         public static final String FRECENCY = "frecency.1";
@@ -130,5 +139,8 @@ public interface TelemetryContract {
      * Holds reasons for stopping a session. Intended for use in
      * Telemetry.stopUISession() as the "reason" parameter.
      */
-    public interface Reason {}
+    public interface Reason {
+        // Changes were committed.
+        public static final String COMMIT = "commit";
+    }
 }
