@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DownloadPlatform.h"
+#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsIURI.h"
 #include "nsIFile.h"
@@ -14,6 +15,7 @@
 
 #ifdef XP_WIN
 #include <shlobj.h>
+#include <urlmon.h>
 #include "nsILocalFileWin.h"
 #endif
 
@@ -145,4 +147,29 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIFile* aTarget,
 #endif
 
   return NS_OK;
+}
+
+nsresult DownloadPlatform::MapUrlToZone(const nsAString& aURL,
+                                        uint32_t* aZone)
+{
+#ifdef XP_WIN
+  nsRefPtr<IInternetSecurityManager> inetSecMgr;
+  if (FAILED(CoCreateInstance(CLSID_InternetSecurityManager, NULL,
+                              CLSCTX_ALL, IID_IInternetSecurityManager,
+                              getter_AddRefs(inetSecMgr)))) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  DWORD zone;
+  if (inetSecMgr->MapUrlToZone(PromiseFlatString(aURL).get(),
+                               &zone, 0) != S_OK) {
+    return NS_ERROR_UNEXPECTED;
+  } else {
+    *aZone = zone;
+  }
+
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
