@@ -55,11 +55,14 @@ ClientCanvasLayer::Initialize(const Data& aData)
   if (mGLContext) {
     GLScreenBuffer* screen = mGLContext->Screen();
 
-    SurfaceCaps caps = screen->Caps();
+    SurfaceCaps caps;
     if (mStream) {
       // The screen caps are irrelevant if we're using a separate stream
-      caps = GetContentFlags() & CONTENT_OPAQUE ? SurfaceCaps::ForRGB() : SurfaceCaps::ForRGBA();
+      caps = aData.mHasAlpha ? SurfaceCaps::ForRGBA() : SurfaceCaps::ForRGB();
+    } else {
+      caps = screen->Caps();
     }
+    MOZ_ASSERT(caps.alpha == aData.mHasAlpha);
 
     SurfaceStreamType streamType =
         SurfaceStream::ChooseGLStreamType(SurfaceStream::OffMainThread,
