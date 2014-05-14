@@ -46,6 +46,8 @@ public:
 
   virtual bool IsDataValid(const Data& aData);
 
+  bool IsGLLayer() { return !!mGLContext; }
+
 protected:
   void UpdateTarget(gfx::DrawTarget* aDestTarget = nullptr);
 
