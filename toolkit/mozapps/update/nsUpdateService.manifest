@@ -10,3 +10,6 @@ contract @mozilla.org/updates/update-prompt;1 {27ABA825-35B5-4018-9FDD-F99250A0E
 component {e43b0010-04ba-4da6-b523-1f92580bc150} nsUpdateServiceStub.js
 contract @mozilla.org/updates/update-service-stub;1 {e43b0010-04ba-4da6-b523-1f92580bc150}
 category profile-after-change nsUpdateServiceStub @mozilla.org/updates/update-service-stub;1
+#ifdef MOZ_SERVICES_HEALTHREPORT
+category healthreport-js-provider-default UpdateProvider resource://gre/modules/UpdaterHealthProvider.jsm
+#endif
