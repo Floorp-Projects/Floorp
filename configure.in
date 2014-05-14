@@ -2547,7 +2547,7 @@ AC_LANG_C
 dnl Check for .hidden assembler directive and visibility attribute.
 dnl Borrowed from glibc configure.in
 dnl ===============================================================
-if test "$GNU_CC"; then
+if test "$GNU_CC" -a "$OS_TARGET" != WINNT; then
   AC_DEFINE(HAVE_VISIBILITY_HIDDEN_ATTRIBUTE)
   AC_DEFINE(HAVE_VISIBILITY_ATTRIBUTE)
   if test -n "$gonkdir"; then
@@ -5804,6 +5804,11 @@ if test -n "$MOZ_ANGLE_RENDERER"; then
 
   if test -z "$MOZ_D3DCOMPILER_VISTA_DLL_PATH"; then
     MOZ_D3DCOMPILER_VISTA_DLL=
+  fi
+
+  # On mingw, check if headers are provided by toolchain.
+  if test -n "$GNU_CC"; then
+    MOZ_CHECK_HEADER(d3d10.h, MOZ_HAS_WINSDK_WITH_D3D=1)
   fi
 
   ######################################
