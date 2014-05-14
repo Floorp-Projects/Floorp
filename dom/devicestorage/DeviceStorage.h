@@ -256,6 +256,9 @@ public:
   already_AddRefed<DOMRequest> Mount(ErrorResult& aRv);
   already_AddRefed<DOMRequest> Unmount(ErrorResult& aRv);
 
+  bool CanBeMounted();
+  bool CanBeFormatted();
+  bool CanBeShared();
   bool Default();
 
   // Uses XPCOM GetStorageName
@@ -305,6 +308,7 @@ private:
   nsString mStorageType;
   nsCOMPtr<nsIFile> mRootDirectory;
   nsString mStorageName;
+  bool mIsShareable;
 
   already_AddRefed<nsDOMDeviceStorage> GetStorage(const nsAString& aFullPath,
                                                   nsAString& aOutStoragePath);

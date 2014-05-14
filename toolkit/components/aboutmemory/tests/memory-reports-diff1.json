@@ -13,7 +13,7 @@
     {"process": "P", "path": "foobar", "kind": 2, "units": 0, "amount": 100, "description": "Desc."},
     {"process": "P", "path": "zero1", "kind": 2, "units": 0, "amount": 0, "description": "Desc."},
 
-    {"process": "P2 (pid 22)", "path": "z 0x1234", "kind": 2, "units": 0, "amount": 33, "description": "Desc."},
+    {"process": "P2 (pid 22)", "path": "z-moz-nullprincipal:{85e250f3-57ae-46c4-a11e-4176dd39d9c5} 0x1234", "kind": 2, "units": 0, "amount": 33, "description": "Desc."},
 
     {"process": "P3", "path": "p3", "kind": 2, "units": 0, "amount": 55, "description": "Desc."},
 
