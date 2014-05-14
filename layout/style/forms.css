@@ -664,6 +664,7 @@ input[type="submit"]:disabled {
   cursor: inherit; 
 }
 
+button:disabled:active, button:disabled,
 input[type="reset"]:disabled:active,
 input[type="reset"]:disabled,
 input[type="button"]:disabled:active,

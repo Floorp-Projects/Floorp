@@ -19,13 +19,13 @@ using namespace dom;
  * mozilla::AsyncEventDispatcher
  ******************************************************************************/
 
-AsyncEventDispatcher::AsyncEventDispatcher(nsINode* aEventNode,
+AsyncEventDispatcher::AsyncEventDispatcher(EventTarget* aTarget,
                                            WidgetEvent& aEvent)
-  : mEventNode(aEventNode)
+  : mTarget(aTarget)
   , mDispatchChromeOnly(false)
 {
-  MOZ_ASSERT(mEventNode);
-  EventDispatcher::CreateEvent(aEventNode, nullptr, &aEvent, EmptyString(),
+  MOZ_ASSERT(mTarget);
+  EventDispatcher::CreateEvent(aTarget, nullptr, &aEvent, EmptyString(),
                                getter_AddRefs(mEvent));
   NS_ASSERTION(mEvent, "Should never fail to create an event");
   mEvent->DuplicatePrivateData();
@@ -39,8 +39,9 @@ AsyncEventDispatcher::Run()
     if (mDispatchChromeOnly) {
       MOZ_ASSERT(mEvent->InternalDOMEvent()->IsTrusted());
 
-      nsCOMPtr<nsIDocument> ownerDoc = mEventNode->OwnerDoc();
-      nsPIDOMWindow* window = ownerDoc->GetWindow();
+      nsCOMPtr<nsINode> node = do_QueryInterface(mTarget);
+      MOZ_ASSERT(node, "ChromeOnly dispatch supported with Node targets only!");
+      nsPIDOMWindow* window = node->OwnerDoc()->GetWindow();
       if (!window) {
         return NS_ERROR_INVALID_ARG;
       }
@@ -52,18 +53,23 @@ AsyncEventDispatcher::Run()
       EventDispatcher::DispatchDOMEvent(target, nullptr, mEvent,
                                         nullptr, nullptr);
     } else {
-      nsCOMPtr<EventTarget> target = mEventNode.get();
       bool defaultActionEnabled; // This is not used because the caller is async
-      target->DispatchEvent(mEvent, &defaultActionEnabled);
+      mTarget->DispatchEvent(mEvent, &defaultActionEnabled);
     }
   } else {
-    nsIDocument* doc = mEventNode->OwnerDoc();
     if (mDispatchChromeOnly) {
-      nsContentUtils::DispatchChromeEvent(doc, mEventNode, mEventType,
+      nsCOMPtr<nsINode> node = do_QueryInterface(mTarget);
+      MOZ_ASSERT(node, "ChromeOnly dispatch supported with Node targets only!");
+      nsContentUtils::DispatchChromeEvent(node->OwnerDoc(), node, mEventType,
                                           mBubbles, false);
     } else {
-      nsContentUtils::DispatchTrustedEvent(doc, mEventNode, mEventType,
-                                           mBubbles, false);
+      nsCOMPtr<nsIDOMEvent> event;
+      NS_NewDOMEvent(getter_AddRefs(event), mTarget, nullptr, nullptr);
+      nsresult rv = event->InitEvent(mEventType, mBubbles, false);
+      NS_ENSURE_SUCCESS(rv, rv);
+      event->SetTrusted(true);
+      bool dummy;
+      mTarget->DispatchEvent(event, &dummy);
     }
   }
 
@@ -73,12 +79,14 @@ AsyncEventDispatcher::Run()
 nsresult
 AsyncEventDispatcher::PostDOMEvent()
 {
+  nsRefPtr<AsyncEventDispatcher> ensureDeletionWhenFailing = this;
   return NS_DispatchToCurrentThread(this);
 }
 
 void
 AsyncEventDispatcher::RunDOMEventWhenSafe()
 {
+  nsRefPtr<AsyncEventDispatcher> ensureDeletionWhenFailing = this;
   nsContentUtils::AddScriptRunner(this);
 }
 

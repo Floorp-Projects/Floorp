@@ -60,8 +60,6 @@ public:
 
   virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) MOZ_OVERRIDE;
 
-  virtual TextureClientData* DropTextureData() MOZ_OVERRIDE;
-
   virtual void SetReleaseFenceHandle(FenceHandle aReleaseFenceHandle) MOZ_OVERRIDE;
 
   virtual void WaitReleaseFence() MOZ_OVERRIDE;

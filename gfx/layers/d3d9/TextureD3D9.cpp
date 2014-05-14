@@ -304,28 +304,6 @@ TextureSourceD3D9::SurfaceToTexture(DeviceManagerD3D9* aDeviceManager,
   return texture;
 }
 
-class D3D9TextureClientData : public TextureClientData
-{
-public:
-  D3D9TextureClientData(IDirect3DTexture9* aTexture)
-    : mTexture(aTexture)
-  {}
-
-  D3D9TextureClientData(gfxWindowsSurface* aWindowSurface)
-    : mWindowSurface(aWindowSurface)
-  {}
-
-  virtual void DeallocateSharedData(ISurfaceAllocator*) MOZ_OVERRIDE
-  {
-    mWindowSurface = nullptr;
-    mTexture = nullptr;
-  }
-
-private:
-  RefPtr<IDirect3DTexture9> mTexture;
-  nsRefPtr<gfxWindowsSurface> mWindowSurface;
-};
-
 DataTextureSourceD3D9::DataTextureSourceD3D9(gfx::SurfaceFormat aFormat,
                                              CompositorD3D9* aCompositor,
                                              TextureFlags aFlags,
@@ -702,15 +680,6 @@ CairoTextureClientD3D9::AllocateForSurface(gfx::IntSize aSize, TextureAllocation
   return true;
 }
 
-TextureClientData*
-CairoTextureClientD3D9::DropTextureData()
-{
-  TextureClientData* data = new D3D9TextureClientData(mTexture);
-  mTexture = nullptr;
-  MarkInvalid();
-  return data;
-}
-
 DIBTextureClientD3D9::DIBTextureClientD3D9(gfx::SurfaceFormat aFormat, TextureFlags aFlags)
   : TextureClient(aFlags)
   , mFormat(aFormat)
@@ -793,15 +762,6 @@ DIBTextureClientD3D9::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFl
   return true;
 }
 
-TextureClientData*
-DIBTextureClientD3D9::DropTextureData()
-{
-  TextureClientData* data = new D3D9TextureClientData(mSurface);
-  mSurface = nullptr;
-  MarkInvalid();
-  return data;
-}
-
 SharedTextureClientD3D9::SharedTextureClientD3D9(gfx::SurfaceFormat aFormat, TextureFlags aFlags)
   : TextureClient(aFlags)
   , mFormat(aFormat)
@@ -814,15 +774,6 @@ SharedTextureClientD3D9::SharedTextureClientD3D9(gfx::SurfaceFormat aFormat, Tex
 SharedTextureClientD3D9::~SharedTextureClientD3D9()
 {
   MOZ_COUNT_DTOR(SharedTextureClientD3D9);
-}
-
-TextureClientData*
-SharedTextureClientD3D9::DropTextureData()
-{
-  TextureClientData* data = new D3D9TextureClientData(mTexture);
-  mTexture = nullptr;
-  MarkInvalid();
-  return data;
 }
 
 bool

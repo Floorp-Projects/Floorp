@@ -585,6 +585,7 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
 
     CompileOptions options(cx);
     options.setOriginPrincipals(module.scriptSource()->originPrincipals())
+           .setFile(module.scriptSource()->filename())
            .setCompileAndGo(false)
            .setNoScriptRval(false);
 
@@ -860,6 +861,28 @@ js::IsAsmJSModule(HandleFunction fun)
     return fun->isNative() && fun->maybeNative() == LinkAsmJS;
 }
 
+static bool
+AppendUseStrictSource(JSContext *cx, HandleFunction fun, Handle<JSFlatString*> src, StringBuffer &out)
+{
+    // We need to add "use strict" in the body right after the opening
+    // brace.
+    size_t bodyStart = 0, bodyEnd;
+
+    // No need to test for functions created with the Function ctor as
+    // these don't implicitly inherit the "use strict" context. Strict mode is
+    // enabled for functions created with the Function ctor only if they begin with
+    // the "use strict" directive, but these functions won't validate as asm.js
+    // modules.
+
+    ConstTwoByteChars chars(src->chars(), src->length());
+    if (!FindBody(cx, fun, chars, src->length(), &bodyStart, &bodyEnd))
+        return false;
+
+    return out.append(chars, bodyStart) &&
+           out.append("\n\"use strict\";\n") &&
+           out.append(chars + bodyStart, src->length() - bodyStart);
+}
+
 JSString *
 js::AsmJSModuleToString(JSContext *cx, HandleFunction fun, bool addParenToLambda)
 {
@@ -909,26 +932,8 @@ js::AsmJSModuleToString(JSContext *cx, HandleFunction fun, bool addParenToLambda
         return nullptr;
 
     if (module.strict()) {
-        // We need to add "use strict" in the body right after the opening
-        // brace.
-        size_t bodyStart = 0, bodyEnd;
-
-        // No need to test for functions created with the Function ctor as
-        // these doesn't implicitly inherit the "use strict" context. Strict mode is
-        // enabled for functions created with the Function ctor only if they begin with
-        // the "use strict" directive, but these functions won't validate as asm.js
-        // modules.
-
-        ConstTwoByteChars chars(src->chars(), src->length());
-        if (!FindBody(cx, fun, chars, src->length(), &bodyStart, &bodyEnd))
+        if (!AppendUseStrictSource(cx, fun, src, out))
             return nullptr;
-
-        if (!out.append(chars, bodyStart) ||
-            !out.append("\n\"use strict\";\n") ||
-            !out.append(chars + bodyStart, src->length() - bodyStart))
-        {
-            return nullptr;
-        }
     } else {
         if (!out.append(src->chars(), src->length()))
             return nullptr;
@@ -995,12 +1000,27 @@ js::AsmJSFunctionToString(JSContext *cx, HandleFunction fun)
     if (!out.append("function "))
         return nullptr;
 
-    Rooted<JSFlatString*> src(cx, source->substring(cx, begin, end));
-    if (!src)
-        return nullptr;
+    if (module.strict()) {
+        // AppendUseStrictSource expects its input to start right after the
+        // function name, so split the source chars from the src into two parts:
+        // the function name and the rest (arguments + body).
 
-    if (!out.append(src->chars(), src->length()))
-        return nullptr;
+        // asm.js functions can't be anonymous
+        JS_ASSERT(fun->atom());
+        if (!out.append(fun->atom()))
+            return nullptr;
+
+        size_t nameEnd = begin + fun->atom()->length();
+        Rooted<JSFlatString*> src(cx, source->substring(cx, nameEnd, end));
+        if (!AppendUseStrictSource(cx, fun, src, out))
+            return nullptr;
+    } else {
+        Rooted<JSFlatString*> src(cx, source->substring(cx, begin, end));
+        if (!src)
+            return nullptr;
+        if (!out.append(src->chars(), src->length()))
+            return nullptr;
+    }
 
     return out.finishString();
 }
