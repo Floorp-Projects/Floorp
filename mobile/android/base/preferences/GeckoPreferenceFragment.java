@@ -64,8 +64,10 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
      *
      * We only return titles for the preference screens that are in the
      * flow for selecting a locale, and thus might need to be redisplayed.
+     *
+     * This method sets the title that you see on non-multi-pane devices.
      */
-    protected String getTitle() {
+    private String getTitle() {
         final int res = getResource();
         if (res == R.xml.preferences_locale) {
             return getString(R.string.pref_category_language);
@@ -75,21 +77,36 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
             return getString(R.string.settings_title);
         }
 
+        // We need this because we can launch straight into this category
+        // from the Data Reporting notification.
+        if (res == R.xml.preferences_vendor) {
+            return getString(R.string.pref_category_vendor);
+        }
+
         return null;
     }
 
     private void updateTitle() {
         final String newTitle = getTitle();
-        if (newTitle != null) {
-            final Activity activity = getActivity();
+        if (newTitle == null) {
+            Log.d(LOGTAG, "No new title to show.");
+            return;
+        }
 
-            Log.v(LOGTAG, "Setting activity title to " + newTitle);
-            activity.setTitle(newTitle);
+        final PreferenceActivity activity = (PreferenceActivity) getActivity();
+        if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) && activity.isMultiPane()) {
+            // In a multi-pane activity, the title is "Settings", and the action
+            // bar is along the top of the screen. We don't want to change those.
+            activity.showBreadCrumbs(newTitle, newTitle);
+            return;
+        }
 
-            if (Build.VERSION.SDK_INT >= 14) {
-                final ActionBar actionBar = activity.getActionBar();
-                actionBar.setTitle(newTitle);
-            }
+        Log.v(LOGTAG, "Setting activity title to " + newTitle);
+        activity.setTitle(newTitle);
+
+        if (Build.VERSION.SDK_INT >= 14) {
+            final ActionBar actionBar = activity.getActionBar();
+            actionBar.setTitle(newTitle);
         }
     }
 
@@ -138,7 +155,8 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
             // The resource was invalid. Use the default resource.
             Log.e(LOGTAG, "Failed to find resource: " + resourceName + ". Displaying default settings.");
 
-            boolean isMultiPane = ((PreferenceActivity) activity).onIsMultiPane();
+            boolean isMultiPane = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) &&
+                                  ((PreferenceActivity) activity).isMultiPane();
             resid = isMultiPane ? R.xml.preferences_customize_tablet : R.xml.preferences;
         }
 
