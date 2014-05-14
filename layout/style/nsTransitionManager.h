@@ -25,6 +25,9 @@ struct ElementDependentRuleProcessorData;
 
 struct ElementPropertyTransition : public mozilla::ElementAnimation
 {
+  virtual ElementPropertyTransition* AsTransition() { return this; }
+  virtual const ElementPropertyTransition* AsTransition() const { return this; }
+
   // This is the start value to be used for a check for whether a
   // transition is being reversed.  Normally the same as
   // mProperties[0].mSegments[0].mFromValue, except when this transition
