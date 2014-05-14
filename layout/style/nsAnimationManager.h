@@ -126,8 +126,6 @@ struct ElementAnimations MOZ_FINAL
   // indefinitely into the future (because all of our animations are
   // either completed or paused).  May be invalidated by a style change.
   bool mNeedsRefreshes;
-
-  mozilla::ElementAnimationPtrArray mAnimations;
 };
 
 class nsAnimationManager MOZ_FINAL
