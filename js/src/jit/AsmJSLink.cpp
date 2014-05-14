@@ -915,7 +915,7 @@ js::AsmJSModuleToString(JSContext *cx, HandleFunction fun, bool addParenToLambda
         size_t bodyStart = 0, bodyEnd;
 
         // No need to test for functions created with the Function ctor as
-        // these doesn't implicitly inherit the "use strict" context. Strict mode is
+        // these don't implicitly inherit the "use strict" context. Strict mode is
         // enabled for functions created with the Function ctor only if they begin with
         // the "use strict" directive, but these functions won't validate as asm.js
         // modules.
@@ -996,12 +996,36 @@ js::AsmJSFunctionToString(JSContext *cx, HandleFunction fun)
     if (!out.append("function "))
         return nullptr;
 
-    Rooted<JSFlatString*> src(cx, source->substring(cx, begin, end));
-    if (!src)
-        return nullptr;
+    if (module.strict()) {
+        // Functions defined in a strict module inherit the strict context, thus we need to add
+        // "use strict" in the body right after the opening brace.
+        size_t bodyStart = 0, bodyEnd;
 
-    if (!out.append(src->chars(), src->length()))
-        return nullptr;
+        // FindBody expects its input to start right after the function name, so
+        // split the source chars from the src into two parts: the function
+        // name and the rest (arguments + body).
+        JS_ASSERT(fun->atom()); // asm.js functions can't be anonymous
+        size_t nameEnd = begin + fun->atom()->length();
+
+        Rooted<JSFlatString*> src(cx, source->substring(cx, nameEnd, end));
+        ConstTwoByteChars chars(src->chars(), src->length());
+        if (!FindBody(cx, fun, chars, src->length(), &bodyStart, &bodyEnd))
+            return nullptr;
+
+        if (!out.append(fun->atom()) ||
+            !out.append(chars, bodyStart) ||
+            !out.append("\n\"use strict\";\n") ||
+            !out.append(chars + bodyStart, src->length() - bodyStart))
+        {
+            return nullptr;
+        }
+    } else {
+        Rooted<JSFlatString*> src(cx, source->substring(cx, begin, end));
+        if (!src)
+            return nullptr;
+        if (!out.append(src->chars(), src->length()))
+            return nullptr;
+    }
 
     return out.finishString();
 }
