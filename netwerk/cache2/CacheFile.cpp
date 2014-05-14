@@ -1623,6 +1623,9 @@ CacheFile::WriteMetadataIfNeededLocked(bool aFireAndForget)
 void
 CacheFile::PostWriteTimer()
 {
+  if (mMemoryOnly)
+    return;
+
   LOG(("CacheFile::PostWriteTimer() [this=%p]", this));
 
   CacheFileIOManager::ScheduleMetadataWrite(this);
