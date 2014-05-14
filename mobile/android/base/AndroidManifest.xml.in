@@ -302,7 +302,6 @@
 
         <activity android:name="org.mozilla.gecko.preferences.GeckoPreferences"
                   android:theme="@style/Gecko.Preferences"
-                  android:label="@string/settings_title"
                   android:configChanges="orientation|screenSize"
                   android:excludeFromRecents="true"/>
 

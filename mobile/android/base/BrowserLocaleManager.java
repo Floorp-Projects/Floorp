@@ -14,9 +14,18 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.util.Log;
 
+import java.io.File;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.mozilla.gecko.util.GeckoJarReader;
 
 /**
  * This class manages persistence, application, and otherwise handling of
@@ -38,6 +47,8 @@ public class BrowserLocaleManager implements LocaleManager {
 
     private static final String EVENT_LOCALE_CHANGED = "Locale:Changed";
     private static final String PREF_LOCALE = "locale";
+
+    private static final String FALLBACK_LOCALE_TAG = "en-US";
 
     // This is volatile because we don't impose restrictions
     // over which thread calls our methods.
@@ -92,7 +103,7 @@ public class BrowserLocaleManager implements LocaleManager {
         return language + "-" + country;
     }
 
-    private static Locale parseLocaleCode(final String localeCode) {
+    public static Locale parseLocaleCode(final String localeCode) {
         int index;
         if ((index = localeCode.indexOf('-')) != -1 ||
             (index = localeCode.indexOf('_')) != -1) {
@@ -244,7 +255,8 @@ public class BrowserLocaleManager implements LocaleManager {
         settings.edit().putString(PREF_LOCALE, localeCode).commit();
     }
 
-    private Locale getCurrentLocale(Context context) {
+    @Override
+    public Locale getCurrentLocale(Context context) {
         if (currentLocale != null) {
             return currentLocale;
         }
@@ -284,5 +296,68 @@ public class BrowserLocaleManager implements LocaleManager {
         updateConfiguration(context, locale);
 
         return locale.toString();
+    }
+
+    /**
+     * Examines <code>multilocale.json</code>, returning the included list of
+     * locale codes.
+     *
+     * If <code>multilocale.json</code> is not present, returns
+     * <code>null</code>. In that case, consider {@link #getFallbackLocaleTag()}.
+     *
+     * multilocale.json currently looks like this:
+     *
+     * <code>
+     * {"locales": ["en-US", "be", "ca", "cs", "da", "de", "en-GB",
+     *              "en-ZA", "es-AR", "es-ES", "es-MX", "et", "fi",
+     *              "fr", "ga-IE", "hu", "id", "it", "ja", "ko",
+     *              "lt", "lv", "nb-NO", "nl", "pl", "pt-BR",
+     *              "pt-PT", "ro", "ru", "sk", "sl", "sv-SE", "th",
+     *              "tr", "uk", "zh-CN", "zh-TW", "en-US"]}
+     * </code>
+     */
+    public static Collection<String> getPackagedLocaleTags(final Context context) {
+        final String resPath = "res/multilocale.json";
+        final String apkPath = context.getPackageResourcePath();
+
+        final String jarURL = "jar:jar:" + new File(apkPath).toURI() + "!/" +
+                              AppConstants.OMNIJAR_NAME + "!/" +
+                              resPath;
+
+        final String contents = GeckoJarReader.getText(jarURL);
+        if (contents == null) {
+            // GeckoJarReader logs and swallows exceptions.
+            return null;
+        }
+
+        try {
+            final JSONObject multilocale = new JSONObject(contents);
+            final JSONArray locales = multilocale.getJSONArray("locales");
+            if (locales == null) {
+                Log.e(LOG_TAG, "No 'locales' array in multilocales.json!");
+                return null;
+            }
+
+            final Set<String> out = new HashSet<String>(locales.length());
+            for (int i = 0; i < locales.length(); ++i) {
+                // If any item in the array is invalid, this will throw,
+                // and the entire clause will fail, being caught below
+                // and returning null.
+                out.add(locales.getString(i));
+            }
+
+            return out;
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Unable to parse multilocale.json.", e);
+            return null;
+        }
+    }
+
+    /**
+     * @return the single default locale baked into this application.
+     *         Applicable when there is no multilocale.json present.
+     */
+    public static String getFallbackLocaleTag() {
+        return FALLBACK_LOCALE_TAG;
     }
 }
