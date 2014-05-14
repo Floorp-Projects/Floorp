@@ -21,9 +21,7 @@ fuzzy-if(B2G||Android,125,80) == percent-width-child-2.html  percent-width-child
 # Looks like Android and B2G change the text color, but to something slightly
 # different from ColorGray
 fails-if(Android||B2G) == disabled-1.html disabled-1-ref.html
-# While disabled buttons don't look like non-disabled buttons, <button disabled>
-# is different from other disabled buttons for B2G ICS Emulator (see bug 1009714)
-fails-if(B2G) == disabled-2.html disabled-2-ref.html
+== disabled-2.html disabled-2-ref.html
 
 != disabled-3.html disabled-3-notref.html
 != disabled-4.html disabled-4-notref.html
