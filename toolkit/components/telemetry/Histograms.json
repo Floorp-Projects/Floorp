@@ -5947,5 +5947,15 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Certificate pinning evalutation results (0 = failure, 1 = success)"
+  },
+  "CERT_PINNING_MOZ_RESULTS": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Certificate pinning evalutation results (0 = failure, 1 = success)"
+  },
+  "CERT_PINNING_MOZ_TEST_RESULTS": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Certificate pinning evalutation results (0 = failure, 1 = success)"
   }
 }

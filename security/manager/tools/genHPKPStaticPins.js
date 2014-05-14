@@ -54,6 +54,7 @@ const DOMAINHEADER = "/* Domainlist */\n" +
   "  const char* mHost;\n" +
   "  const bool mIncludeSubdomains;\n" +
   "  const bool mTestMode;\n" +
+  "  const bool mIsMoz;\n" +
   "  const StaticPinset *pinset;\n" +
   "};\n\n";
 
@@ -317,6 +318,7 @@ function downloadAndParseChromePins(filename,
         name: entry.name,
         include_subdomains: entry.include_subdomains,
         test_mode: true,
+        is_moz: false,
         pins: entry.pins });
     }
   });
@@ -433,6 +435,11 @@ function writeEntry(entry) {
     testMode = entry.test_mode;
   }
   if (testMode) {
+    printVal += "true, ";
+  } else {
+    printVal += "false, ";
+  }
+  if (entry.is_moz || (entry.pins == "mozilla")) {
     printVal += "true, ";
   } else {
     printVal += "false, ";
