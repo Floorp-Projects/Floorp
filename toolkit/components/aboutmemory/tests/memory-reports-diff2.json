@@ -14,7 +14,7 @@
 
     {"process": "P", "path": "foobaz", "kind": 2, "units": 0, "amount": 0, "description": "Desc."},
 
-    {"process": "P2 (pid 33)", "path": "z 0x5678", "kind": 2, "units": 0, "amount": 44, "description": "Desc."},
+    {"process": "P2 (pid 33)", "path": "z-moz-nullprincipal:{161effaa-c1f7-4010-a08e-e7c9aea01aed} 0x5678", "kind": 2, "units": 0, "amount": 44, "description": "Desc."},
 
     {"process": "P4", "path": "p4", "kind": 2, "units": 0, "amount": 66, "description": "Desc."},
 

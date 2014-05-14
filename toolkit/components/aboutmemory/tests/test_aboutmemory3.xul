@@ -287,7 +287,7 @@ End of P\n\
 P2 (pid NNN)\n\
 Other Measurements\n\
 \n\
-11 B ── z 0xNNN\n\
+11 B ── z-moz-nullprincipal:{NNNNNNNN-NNNN-NNNN-NNNN-NNNNNNNNNNNN} 0xNNN\n\
 \n\
 End of P2 (pid NNN)\n\
 P3\n\
