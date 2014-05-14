@@ -52,6 +52,18 @@ interface DeviceStorage : EventTarget {
   // include any path information.
   readonly attribute DOMString storageName;
 
+  // Indicates if the storage area denoted by storageName is capable of
+  // being mounted and unmounted.
+  readonly attribute boolean canBeMounted;
+
+  // Indicates if the storage area denoted by storageName is capable of
+  // being shared and unshared.
+  readonly attribute boolean canBeShared;
+
+  // Indicates if the storage area denoted by storageName is capable of
+  // being formatted.
+  readonly attribute boolean canBeFormatted;
+
   // Determines if this storage area is the one which will be used by default
   // for storing new files.
   readonly attribute boolean default;
