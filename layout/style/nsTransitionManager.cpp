@@ -105,18 +105,18 @@ ElementTransitions::EnsureStyleRuleFor(TimeStamp aRefreshTime)
 
     for (uint32_t i = 0, i_end = mPropertyTransitions.Length(); i < i_end; ++i)
     {
-      ElementPropertyTransition &pt = mPropertyTransitions[i];
-      if (pt.IsRemovedSentinel()) {
+      ElementPropertyTransition* pt = mPropertyTransitions[i];
+      if (pt->IsRemovedSentinel()) {
         continue;
       }
 
-      MOZ_ASSERT(pt.mProperties.Length() == 1,
+      MOZ_ASSERT(pt->mProperties.Length() == 1,
                  "Should have one animation property for a transition");
-      const AnimationProperty &prop = pt.mProperties[0];
+      const AnimationProperty &prop = pt->mProperties[0];
 
       nsStyleAnimation::Value *val = mStyleRule->AddEmptyValue(prop.mProperty);
 
-      double valuePortion = pt.ValuePortionFor(aRefreshTime);
+      double valuePortion = pt->ValuePortionFor(aRefreshTime);
 
       MOZ_ASSERT(prop.mSegments.Length() == 1,
                  "Animation property should have one segment for a transition");
@@ -136,8 +136,8 @@ bool
 ElementTransitions::HasAnimationOfProperty(nsCSSProperty aProperty) const
 {
   for (uint32_t tranIdx = mPropertyTransitions.Length(); tranIdx-- != 0; ) {
-    const ElementPropertyTransition& pt = mPropertyTransitions[tranIdx];
-    if (pt.HasAnimationOfProperty(aProperty) && !pt.IsRemovedSentinel()) {
+    const ElementPropertyTransition* pt = mPropertyTransitions[tranIdx];
+    if (pt->HasAnimationOfProperty(aProperty) && !pt->IsRemovedSentinel()) {
       return true;
     }
   }
@@ -164,11 +164,11 @@ ElementTransitions::CanPerformOnCompositorThread(CanAnimateFlags aFlags) const
   TimeStamp now = frame->PresContext()->RefreshDriver()->MostRecentRefresh();
 
   for (uint32_t i = 0, i_end = mPropertyTransitions.Length(); i < i_end; ++i) {
-    const ElementPropertyTransition& pt = mPropertyTransitions[i];
-    MOZ_ASSERT(pt.mProperties.Length() == 1,
+    const ElementPropertyTransition* pt = mPropertyTransitions[i];
+    MOZ_ASSERT(pt->mProperties.Length() == 1,
                "Should have one animation property for a transition");
-    if (css::IsGeometricProperty(pt.mProperties[0].mProperty) &&
-        pt.IsRunningAt(now)) {
+    if (css::IsGeometricProperty(pt->mProperties[0].mProperty) &&
+        pt->IsRunningAt(now)) {
       aFlags = CanAnimateFlags(aFlags | CanAnimate_HasGeometricProperty);
       break;
     }
@@ -178,16 +178,16 @@ ElementTransitions::CanPerformOnCompositorThread(CanAnimateFlags aFlags) const
   bool hasTransform = false;
   bool existsProperty = false;
   for (uint32_t i = 0, i_end = mPropertyTransitions.Length(); i < i_end; ++i) {
-    const ElementPropertyTransition& pt = mPropertyTransitions[i];
-    if (!pt.IsRunningAt(now)) {
+    const ElementPropertyTransition* pt = mPropertyTransitions[i];
+    if (!pt->IsRunningAt(now)) {
       continue;
     }
 
     existsProperty = true;
 
-    MOZ_ASSERT(pt.mProperties.Length() == 1,
+    MOZ_ASSERT(pt->mProperties.Length() == 1,
                "Should have one animation property for a transition");
-    const AnimationProperty& prop = pt.mProperties[0];
+    const AnimationProperty& prop = pt->mProperties[0];
 
     if (!css::CommonElementAnimationData::CanAnimatePropertyOnCompositor(
           mElement, prop.mProperty, aFlags) ||
@@ -449,18 +449,18 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
       }
     }
 
-    nsTArray<ElementPropertyTransition> &pts = et->mPropertyTransitions;
+    ElementTransitions::TransitionPtrArray &pts = et->mPropertyTransitions;
     uint32_t i = pts.Length();
     NS_ABORT_IF_FALSE(i != 0, "empty transitions list?");
     nsStyleAnimation::Value currentValue;
     do {
       --i;
-      ElementPropertyTransition &pt = pts[i];
-      MOZ_ASSERT(pt.mProperties.Length() == 1,
+      ElementPropertyTransition* pt = pts[i];
+      MOZ_ASSERT(pt->mProperties.Length() == 1,
                  "Should have one animation property for a transition");
-      MOZ_ASSERT(pt.mProperties[0].mSegments.Length() == 1,
+      MOZ_ASSERT(pt->mProperties[0].mSegments.Length() == 1,
                  "Animation property should have one segment for a transition");
-      const AnimationProperty& prop = pt.mProperties[0];
+      const AnimationProperty& prop = pt->mProperties[0];
       const AnimationPropertySegment& segment = prop.mSegments[0];
           // properties no longer in 'transition-property'
       if ((checkProperties &&
@@ -506,14 +506,14 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
 
   nsRefPtr<css::AnimValuesStyleRule> coverRule = new css::AnimValuesStyleRule;
 
-  nsTArray<ElementPropertyTransition> &pts = et->mPropertyTransitions;
+  ElementTransitions::TransitionPtrArray &pts = et->mPropertyTransitions;
   for (uint32_t i = 0, i_end = pts.Length(); i < i_end; ++i) {
-    ElementPropertyTransition &pt = pts[i];
-    MOZ_ASSERT(pt.mProperties.Length() == 1,
+    ElementPropertyTransition* pt = pts[i];
+    MOZ_ASSERT(pt->mProperties.Length() == 1,
                "Should have one animation property for a transition");
-    MOZ_ASSERT(pt.mProperties[0].mSegments.Length() == 1,
+    MOZ_ASSERT(pt->mProperties[0].mSegments.Length() == 1,
                "Animation property should have one segment for a transition");
-    AnimationProperty& prop = pt.mProperties[0];
+    AnimationProperty& prop = pt->mProperties[0];
     AnimationPropertySegment& segment = prop.mSegments[0];
     if (whichStarted.HasProperty(prop.mProperty)) {
       coverRule->AddValue(prop.mProperty, segment.mFromValue);
@@ -553,7 +553,7 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
     return;
   }
 
-  ElementPropertyTransition pt;
+  nsRefPtr<ElementPropertyTransition> pt = new ElementPropertyTransition();
 
   nsStyleAnimation::Value startValue, endValue, dummyValue;
   bool haveValues =
@@ -577,15 +577,15 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
   size_t currentIndex = nsTArray<ElementPropertyTransition>::NoIndex;
   const ElementPropertyTransition *oldPT = nullptr;
   if (aElementTransitions) {
-    nsTArray<ElementPropertyTransition> &pts =
+    ElementTransitions::TransitionPtrArray &pts =
       aElementTransitions->mPropertyTransitions;
     for (size_t i = 0, i_end = pts.Length(); i < i_end; ++i) {
-      MOZ_ASSERT(pts[i].mProperties.Length() == 1,
+      MOZ_ASSERT(pts[i]->mProperties.Length() == 1,
                  "Should have one animation property for a transition");
-      if (pts[i].mProperties[0].mProperty == aProperty) {
+      if (pts[i]->mProperties[0].mProperty == aProperty) {
         haveCurrentTransition = true;
         currentIndex = i;
-        oldPT = &aElementTransitions->mPropertyTransitions[currentIndex];
+        oldPT = aElementTransitions->mPropertyTransitions[currentIndex];
         break;
       }
     }
@@ -618,7 +618,7 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
       // in-progress value (which is particularly easy to cause when we're
       // currently in the 'transition-delay').  It also might happen because we
       // just got a style change to a value that can't be interpolated.
-      nsTArray<ElementPropertyTransition> &pts =
+      ElementTransitions::TransitionPtrArray &pts =
         aElementTransitions->mPropertyTransitions;
       pts.RemoveElementAt(currentIndex);
       aElementTransitions->UpdateAnimationGeneration(mPresContext);
@@ -643,8 +643,8 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
     // The spec says a negative duration is treated as zero.
     duration = 0.0;
   }
-  pt.mStartForReversingTest = startValue;
-  pt.mReversePortion = 1.0;
+  pt->mStartForReversingTest = startValue;
+  pt->mReversePortion = 1.0;
 
   // If the new transition reverses an existing one, we'll need to
   // handle the timing differently.
@@ -681,11 +681,11 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
 
     duration *= valuePortion;
 
-    pt.mStartForReversingTest = oldPT->mProperties[0].mSegments[0].mToValue;
-    pt.mReversePortion = valuePortion;
+    pt->mStartForReversingTest = oldPT->mProperties[0].mSegments[0].mToValue;
+    pt->mReversePortion = valuePortion;
   }
 
-  AnimationProperty& prop = *pt.mProperties.AppendElement();
+  AnimationProperty& prop = *pt->mProperties.AppendElement();
   prop.mProperty = aProperty;
 
   AnimationPropertySegment& segment = *prop.mSegments.AppendElement();
@@ -695,14 +695,14 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
   segment.mToKey = 1;
   segment.mTimingFunction.Init(tf);
 
-  pt.mStartTime = mostRecentRefresh;
-  pt.mDelay = TimeDuration::FromMilliseconds(delay);
-  pt.mIterationDuration = TimeDuration::FromMilliseconds(duration);
-  pt.mIterationCount = 1;
-  pt.mDirection = NS_STYLE_ANIMATION_DIRECTION_NORMAL;
-  pt.mFillMode = NS_STYLE_ANIMATION_FILL_MODE_BACKWARDS;
-  pt.mPlayState = NS_STYLE_ANIMATION_PLAY_STATE_RUNNING;
-  pt.mPauseStart = TimeStamp();
+  pt->mStartTime = mostRecentRefresh;
+  pt->mDelay = TimeDuration::FromMilliseconds(delay);
+  pt->mIterationDuration = TimeDuration::FromMilliseconds(duration);
+  pt->mIterationCount = 1;
+  pt->mDirection = NS_STYLE_ANIMATION_DIRECTION_NORMAL;
+  pt->mFillMode = NS_STYLE_ANIMATION_FILL_MODE_BACKWARDS;
+  pt->mPlayState = NS_STYLE_ANIMATION_PLAY_STATE_RUNNING;
+  pt->mPauseStart = TimeStamp();
 
   if (!aElementTransitions) {
     aElementTransitions =
@@ -714,14 +714,14 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
     }
   }
 
-  nsTArray<ElementPropertyTransition> &pts =
+  ElementTransitions::TransitionPtrArray &pts =
     aElementTransitions->mPropertyTransitions;
 #ifdef DEBUG
   for (uint32_t i = 0, i_end = pts.Length(); i < i_end; ++i) {
-    NS_ABORT_IF_FALSE(pts[i].mProperties.Length() == 1,
+    NS_ABORT_IF_FALSE(pts[i]->mProperties.Length() == 1,
                       "Should have one animation property for a transition");
     NS_ABORT_IF_FALSE(i == currentIndex ||
-                      pts[i].mProperties[0].mProperty != aProperty,
+                      pts[i]->mProperties[0].mProperty != aProperty,
                       "duplicate transitions for property");
   }
 #endif
@@ -955,8 +955,8 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
       bool transitionStartedOrEnded = false;
       do {
         --i;
-        ElementPropertyTransition &pt = et->mPropertyTransitions[i];
-        if (pt.IsRemovedSentinel()) {
+        ElementPropertyTransition* pt = et->mPropertyTransitions[i];
+        if (pt->IsRemovedSentinel()) {
           // Actually remove transitions one throttle-able cycle after their
           // completion. We only clear on a throttle-able cycle because that
           // means it is a regular restyle tick and thus it is safe to discard
@@ -965,10 +965,11 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
           if (aFlags == Can_Throttle) {
             et->mPropertyTransitions.RemoveElementAt(i);
           }
-        } else if (pt.mStartTime + pt.mDelay + pt.mIterationDuration <= now) {
-          MOZ_ASSERT(pt.mProperties.Length() == 1,
+        } else if (pt->mStartTime + pt->mDelay + pt->mIterationDuration <=
+                   now) {
+          MOZ_ASSERT(pt->mProperties.Length() == 1,
                      "Should have one animation property for a transition");
-          nsCSSProperty prop = pt.mProperties[0].mProperty;
+          nsCSSProperty prop = pt->mProperties[0].mProperty;
           if (nsCSSProps::PropHasFlags(prop, CSS_PROPERTY_REPORT_OTHER_NAME))
           {
             prop = nsCSSProps::OtherNameFor(prop);
@@ -977,7 +978,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
           NS_NAMED_LITERAL_STRING(before, "::before");
           NS_NAMED_LITERAL_STRING(after, "::after");
           events.AppendElement(
-            TransitionEventInfo(et->mElement, prop, pt.mIterationDuration,
+            TransitionEventInfo(et->mElement, prop, pt->mIterationDuration,
                                 ep == nsGkAtoms::transitionsProperty ?
                                   EmptyString() :
                                   ep == nsGkAtoms::transitionsOfBeforeProperty ?
@@ -991,11 +992,11 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
           // a non-animation style change that would affect it, we need
           // to know not to start a new transition for the transition
           // from the almost-completed value to the final value.
-          pt.SetRemovedSentinel();
+          pt->SetRemovedSentinel();
           et->UpdateAnimationGeneration(mPresContext);
           transitionStartedOrEnded = true;
-        } else if (pt.mStartTime + pt.mDelay <= now && canThrottleTick &&
-                   !pt.mIsRunningOnCompositor) {
+        } else if (pt->mStartTime + pt->mDelay <= now && canThrottleTick &&
+                   !pt->mIsRunningOnCompositor) {
           // Start a transition with a delay where we should start the
           // transition proper.
           et->UpdateAnimationGeneration(mPresContext);

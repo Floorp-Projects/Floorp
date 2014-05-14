@@ -391,9 +391,9 @@ nsLayoutUtils::ComputeSuitableScaleForAnimation(nsIContent* aContent)
     (aContent, nsGkAtoms::animationsProperty, eCSSProperty_transform);
   if (animations) {
     for (uint32_t animIdx = animations->mAnimations.Length(); animIdx-- != 0; ) {
-      mozilla::StyleAnimation& anim = animations->mAnimations[animIdx];
-      for (uint32_t propIdx = anim.mProperties.Length(); propIdx-- != 0; ) {
-        AnimationProperty& prop = anim.mProperties[propIdx];
+      mozilla::StyleAnimation* anim = animations->mAnimations[animIdx];
+      for (uint32_t propIdx = anim->mProperties.Length(); propIdx-- != 0; ) {
+        AnimationProperty& prop = anim->mProperties[propIdx];
         if (prop.mProperty == eCSSProperty_transform) {
           for (uint32_t segIdx = prop.mSegments.Length(); segIdx-- != 0; ) {
             AnimationPropertySegment& segment = prop.mSegments[segIdx];
@@ -420,17 +420,17 @@ nsLayoutUtils::ComputeSuitableScaleForAnimation(nsIContent* aContent)
   if (transitions) {
     for (uint32_t i = 0, i_end = transitions->mPropertyTransitions.Length();
          i < i_end; ++i){
-      ElementPropertyTransition &pt = transitions->mPropertyTransitions[i];
-      if (pt.IsRemovedSentinel()) {
+      ElementPropertyTransition* pt = transitions->mPropertyTransitions[i];
+      if (pt->IsRemovedSentinel()) {
         continue;
       }
-      MOZ_ASSERT(pt.mProperties.Length() == 1,
+      MOZ_ASSERT(pt->mProperties.Length() == 1,
         "Should have one animation property for a transition");
-      MOZ_ASSERT(pt.mProperties[0].mSegments.Length() == 1,
+      MOZ_ASSERT(pt->mProperties[0].mSegments.Length() == 1,
         "Animation property should have one segment for a transition");
-      const AnimationPropertySegment& segment = pt.mProperties[0].mSegments[0];
+      const AnimationPropertySegment& segment = pt->mProperties[0].mSegments[0];
 
-      if (pt.mProperties[0].mProperty == eCSSProperty_transform) {
+      if (pt->mProperties[0].mProperty == eCSSProperty_transform) {
         gfxSize start = GetScaleForValue(segment.mFromValue,
                                          aContent->GetPrimaryFrame());
         maxScale.width = std::max<float>(maxScale.width, start.width);

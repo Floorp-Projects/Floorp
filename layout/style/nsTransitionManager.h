@@ -87,8 +87,10 @@ struct ElementTransitions MOZ_FINAL
   // should probably move to the relevant callers.
   virtual bool CanPerformOnCompositorThread(CanAnimateFlags aFlags) const MOZ_OVERRIDE;
 
+  typedef InfallibleTArray<nsRefPtr<ElementPropertyTransition> >
+          TransitionPtrArray;
   // Either zero or one for each CSS property:
-  nsTArray<ElementPropertyTransition> mPropertyTransitions;
+  TransitionPtrArray mPropertyTransitions;
 };
 
 
