@@ -47,6 +47,10 @@ function test() {
         finished.then(() => ok(false, "The popup shouldn't have opened."));
         return waitForTime(1000);
       })
+      .then(() => {
+        // Reset traits back to default value
+        client.mainRoot.traits.conditionalBreakpoints = true;
+      })
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
       .then(null, aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
