@@ -4,19 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-PARALLEL_DIRS += [
-    'server',
-    'client',
-    'gcli',
-    'sourcemap',
-    'webconsole',
-    'apps',
-    'styleinspector',
-    'acorn',
-    'pretty-fast',
-    'qrcode',
-    'transport'
-]
+TEST_DIRS += ['tests']
 
-MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
-XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
+JS_MODULES_PATH = 'modules/devtools/transport'
+
+EXTRA_JS_MODULES += [
+    'packets.js',
+    'stream-utils.js',
+    'transport.js'
+]

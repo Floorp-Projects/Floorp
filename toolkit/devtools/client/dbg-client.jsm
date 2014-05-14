@@ -9,12 +9,14 @@ var Ci = Components.interfaces;
 var Cc = Components.classes;
 var Cu = Components.utils;
 var Cr = Components.results;
+var CC = Components.Constructor;
 // On B2G scope object misbehaves and we have to bind globals to `this`
 // in order to ensure theses variable to be visible in transport.js
 this.Ci = Ci;
 this.Cc = Cc;
 this.Cu = Cu;
 this.Cr = Cr;
+this.CC = CC;
 
 this.EXPORTED_SYMBOLS = ["DebuggerTransport",
                          "DebuggerClient",
@@ -53,18 +55,28 @@ Object.defineProperty(this, "WebConsoleClient", {
 Components.utils.import("resource://gre/modules/devtools/DevToolsUtils.jsm");
 this.makeInfallible = DevToolsUtils.makeInfallible;
 
-let wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
+let LOG_PREF = "devtools.debugger.log";
+let VERBOSE_PREF = "devtools.debugger.log.verbose";
+let wantLogging = Services.prefs.getBoolPref(LOG_PREF);
+let wantVerbose =
+  Services.prefs.getPrefType(VERBOSE_PREF) !== Services.prefs.PREF_INVALID &&
+  Services.prefs.getBoolPref(VERBOSE_PREF);
 
-function dumpn(str)
-{
+function dumpn(str) {
   if (wantLogging) {
     dump("DBG-CLIENT: " + str + "\n");
   }
 }
 
+function dumpv(msg) {
+  if (wantVerbose) {
+    dumpn(msg);
+  }
+}
+
 let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader);
-loader.loadSubScript("resource://gre/modules/devtools/server/transport.js", this);
+loader.loadSubScript("resource://gre/modules/devtools/transport/transport.js", this);
 
 /**
  * Add simple event notification to a prototype object. Any object that has
