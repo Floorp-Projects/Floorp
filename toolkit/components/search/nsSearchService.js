@@ -2843,6 +2843,7 @@ SearchService.prototype = {
     this._initObservers.resolve(this._initRV);
 
     Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "init-complete");
+    Services.telemetry.getHistogramById("SEARCH_SERVICE_INIT_SYNC").add(true);
 
     LOG("_syncInit end");
   },
@@ -2866,6 +2867,8 @@ SearchService.prototype = {
       gInitialized = true;
       this._initObservers.resolve(this._initRV);
       Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "init-complete");
+      Services.telemetry.getHistogramById("SEARCH_SERVICE_INIT_SYNC").add(false);
+
       LOG("_asyncInit: Completed _asyncInit");
     }.bind(this));
   },
