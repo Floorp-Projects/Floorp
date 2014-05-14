@@ -278,7 +278,11 @@ struct StyleAnimation
   uint32_t mLastNotification;
 
   InfallibleTArray<AnimationProperty> mProperties;
+
+  NS_INLINE_DECL_REFCOUNTING(StyleAnimation)
 };
+
+typedef InfallibleTArray<nsRefPtr<StyleAnimation> > StyleAnimationPtrArray;
 
 namespace css {
 
