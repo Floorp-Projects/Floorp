@@ -25,15 +25,18 @@
 
 #include <sys/stat.h>
 
-class nsLocalFile MOZ_FINAL : public nsILocalFileWin,
-                              public nsIHashable
+class nsLocalFile MOZ_FINAL
+  : public nsILocalFileWin
+  , public nsIHashable
 {
 public:
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_LOCAL_FILE_CID)
 
   nsLocalFile();
 
-  static nsresult nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+  static nsresult nsLocalFileConstructor(nsISupports* aOuter,
+                                         const nsIID& aIID,
+                                         void** aInstancePtr);
 
   // nsISupports interface
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -63,8 +66,10 @@ private:
     Rename                  = 1u << 3
   };
 
-  nsLocalFile(const nsLocalFile& other);
-  ~nsLocalFile() {}
+  nsLocalFile(const nsLocalFile& aOther);
+  ~nsLocalFile()
+  {
+  }
 
   bool mDirty;            // cached information can only be used when this is false
   bool mResolveDirty;
@@ -96,16 +101,15 @@ private:
 
   void EnsureShortPath();
 
-  nsresult CopyMove(nsIFile *newParentDir, const nsAString &newName,
-                    uint32_t options);
-  nsresult CopySingleFile(nsIFile *source, nsIFile* dest,
-                          const nsAString &newName,
-                          uint32_t options);
+  nsresult CopyMove(nsIFile* aNewParentDir, const nsAString& aNewName,
+                    uint32_t aOptions);
+  nsresult CopySingleFile(nsIFile* aSource, nsIFile* aDest,
+                          const nsAString& aNewName, uint32_t aOptions);
 
-  nsresult SetModDate(int64_t aLastModifiedTime, const wchar_t *filePath);
-  nsresult HasFileAttribute(DWORD fileAttrib, bool *_retval);
-  nsresult AppendInternal(const nsAFlatString &node,
-                          bool multipleComponents);
+  nsresult SetModDate(int64_t aLastModifiedTime, const wchar_t* aFilePath);
+  nsresult HasFileAttribute(DWORD aFileAttrib, bool* aResult);
+  nsresult AppendInternal(const nsAFlatString& aNode,
+                          bool aMultipleComponents);
 };
 
 #endif

@@ -34,7 +34,7 @@ NtPathToDosPath(const nsAString& aNtPath, nsAString& aDosPath)
   }
   nsAutoString logicalDrives;
   DWORD len = 0;
-  while(true) {
+  while (true) {
     len = GetLogicalDriveStringsW(len, reinterpret_cast<wchar_t*>(logicalDrives.BeginWriting()));
     if (!len) {
       return false;
@@ -56,7 +56,8 @@ NtPathToDosPath(const nsAString& aNtPath, nsAString& aDosPath)
     DWORD targetPathLen = 0;
     SetLastError(ERROR_SUCCESS);
     while (true) {
-      targetPathLen = QueryDosDeviceW(driveTemplate, reinterpret_cast<wchar_t*>(targetPath.BeginWriting()),
+      targetPathLen = QueryDosDeviceW(driveTemplate,
+                                      reinterpret_cast<wchar_t*>(targetPath.BeginWriting()),
                                       targetPath.Length());
       if (targetPathLen || GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
         break;
