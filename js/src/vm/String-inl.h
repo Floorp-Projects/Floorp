@@ -87,7 +87,7 @@ JSString::validateLength(js::ThreadSafeContext *maybecx, size_t length)
 MOZ_ALWAYS_INLINE void
 JSRope::init(js::ThreadSafeContext *cx, JSString *left, JSString *right, size_t length)
 {
-    d.lengthAndFlags = buildLengthAndFlags(length, ROPE_FLAGS);
+    d.u0.lengthAndFlags = buildLengthAndFlags(length, ROPE_FLAGS);
     d.u1.left = left;
     d.s.u2.right = right;
     js::StringWriteBarrierPost(cx, &d.u1.left);
@@ -122,7 +122,7 @@ JSDependentString::init(js::ThreadSafeContext *cx, JSLinearString *base, const j
                         size_t length)
 {
     JS_ASSERT(!js::IsPoisonedPtr(base));
-    d.lengthAndFlags = buildLengthAndFlags(length, DEPENDENT_FLAGS);
+    d.u0.lengthAndFlags = buildLengthAndFlags(length, DEPENDENT_FLAGS);
     d.u1.chars = chars;
     d.s.u2.base = base;
     js::StringWriteBarrierPost(cx, reinterpret_cast<JSString **>(&d.s.u2.base));
@@ -185,7 +185,7 @@ JSString::markBase(JSTracer *trc)
 MOZ_ALWAYS_INLINE void
 JSFlatString::init(const jschar *chars, size_t length)
 {
-    d.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
+    d.u0.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
     d.u1.chars = chars;
 }
 
@@ -229,7 +229,7 @@ JSInlineString::new_(js::ThreadSafeContext *cx)
 MOZ_ALWAYS_INLINE jschar *
 JSInlineString::init(size_t length)
 {
-    d.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
+    d.u0.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
     d.u1.chars = d.inlineStorage;
     JS_ASSERT(lengthFits(length) || (isFatInline() && JSFatInlineString::lengthFits(length)));
     return d.inlineStorage;
@@ -238,7 +238,7 @@ JSInlineString::init(size_t length)
 MOZ_ALWAYS_INLINE void
 JSInlineString::resetLength(size_t length)
 {
-    d.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
+    d.u0.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
     JS_ASSERT(lengthFits(length) || (isFatInline() && JSFatInlineString::lengthFits(length)));
 }
 
@@ -254,7 +254,7 @@ JSExternalString::init(const jschar *chars, size_t length, const JSStringFinaliz
 {
     JS_ASSERT(fin);
     JS_ASSERT(fin->finalize);
-    d.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
+    d.u0.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
     d.u1.chars = chars;
     d.s.u2.externalFinalizer = fin;
 }

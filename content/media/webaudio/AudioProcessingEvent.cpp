@@ -6,6 +6,7 @@
 
 #include "AudioProcessingEvent.h"
 #include "mozilla/dom/AudioProcessingEventBinding.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "AudioContext.h"
 
 namespace mozilla {
@@ -40,7 +41,15 @@ void
 AudioProcessingEvent::LazilyCreateBuffer(nsRefPtr<AudioBuffer>& aBuffer,
                                          uint32_t aNumberOfChannels)
 {
-  AutoPushJSContext cx(mNode->Context()->GetJSContext());
+  // We need the global for the context so that we can enter its compartment.
+  JSObject* global = mNode->Context()->GetGlobalJSObject();
+  if (NS_WARN_IF(!global)) {
+    return;
+  }
+
+  AutoJSAPI jsapi;
+  JSContext* cx = jsapi.cx();
+  JSAutoCompartment ac(cx, global);
 
   aBuffer = new AudioBuffer(mNode->Context(), mNode->BufferSize(),
                             mNode->Context()->SampleRate());

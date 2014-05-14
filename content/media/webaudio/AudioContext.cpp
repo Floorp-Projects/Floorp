@@ -590,21 +590,16 @@ AudioContext::UpdateNodeCount(int32_t aDelta)
   }
 }
 
-JSContext*
-AudioContext::GetJSContext() const
+JSObject*
+AudioContext::GetGlobalJSObject() const
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  nsCOMPtr<nsIGlobalObject> parentObject = do_QueryInterface(GetParentObject());
+  if (!parentObject) {
+    return nullptr;
+  }
 
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobal =
-    do_QueryInterface(GetParentObject());
-  if (!scriptGlobal) {
-    return nullptr;
-  }
-  nsIScriptContext* scriptContext = scriptGlobal->GetContext();
-  if (!scriptContext) {
-    return nullptr;
-  }
-  return scriptContext->GetNativeContext();
+  // This can also return null.
+  return parentObject->GetGlobalJSObject();
 }
 
 void

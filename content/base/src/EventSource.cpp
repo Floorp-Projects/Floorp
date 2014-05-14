@@ -10,6 +10,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/EventSourceBinding.h"
 #include "mozilla/dom/MessageEvent.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 #include "js/OldDebugAPI.h"
 #include "nsNetUtil.h"
@@ -29,7 +30,6 @@
 #include "nsIChannelPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "mozilla/Preferences.h"
 #include "xpcpublic.h"
 #include "nsCrossSiteListenerProxy.h"
@@ -1236,15 +1236,15 @@ EventSource::DispatchAllMessageEvents()
     return;
   }
 
-  // Let's play get the JSContext
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(GetOwner());
-  NS_ENSURE_TRUE_VOID(sgo);
+  // We need a parent object so that we can enter its compartment.
+  nsCOMPtr<nsIGlobalObject> parentObject = do_QueryInterface(GetParentObject());
+  if (NS_WARN_IF(!parentObject)) {
+    return;
+  }
 
-  nsIScriptContext* scriptContext = sgo->GetContext();
-  NS_ENSURE_TRUE_VOID(scriptContext);
-
-  AutoPushJSContext cx(scriptContext->GetNativeContext());
-  NS_ENSURE_TRUE_VOID(cx);
+  AutoJSAPI jsapi;
+  JSContext* cx = jsapi.cx();
+  JSAutoCompartment ac(cx, parentObject->GetGlobalJSObject());
 
   while (mMessagesToDispatch.GetSize() > 0) {
     nsAutoPtr<Message>
