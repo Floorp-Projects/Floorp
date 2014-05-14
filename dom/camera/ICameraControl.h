@@ -132,8 +132,8 @@ public:
 
   struct StartRecordingOptions {
     uint32_t  rotation;
-    uint32_t  maxFileSizeBytes;
-    uint32_t  maxVideoLengthMs;
+    uint64_t  maxFileSizeBytes;
+    uint64_t  maxVideoLengthMs;
     bool      autoEnableLowLightTorch;
   };
 
