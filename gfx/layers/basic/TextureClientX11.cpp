@@ -68,13 +68,6 @@ TextureClientX11::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
   return true;
 }
 
-TextureClientData*
-TextureClientX11::DropTextureData()
-{
-  MOZ_ASSERT(!(mFlags & TextureFlags::DEALLOCATE_CLIENT));
-  return nullptr;
-}
-
 bool
 TextureClientX11::AllocateForSurface(IntSize aSize, TextureAllocationFlags aTextureFlags)
 {
