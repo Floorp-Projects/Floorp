@@ -136,7 +136,10 @@ class JSString : public js::gc::BarrieredCell<JSString>
     /* Fields only apply to string types commented on the right. */
     struct Data
     {
-        size_t                     lengthAndFlags;      /* JSString */
+        union {
+            size_t                 lengthAndFlags;      /* JSString */
+            uintptr_t              flattenData;         /* JSRope (temporary while flattening) */
+        } u0;
         union {
             const jschar           *chars;              /* JSLinearString */
             JSString               *left;               /* JSRope */
@@ -150,10 +153,6 @@ class JSString : public js::gc::BarrieredCell<JSString>
                     size_t         capacity;            /* JSFlatString (extensible) */
                     const JSStringFinalizer *externalFinalizer;/* JSExternalString */
                 } u2;
-                union {
-                    JSString       *parent;             /* JSRope (temporary) */
-                    size_t         reserved;            /* may use for bug 615290 */
-                } u3;
             } s;
         };
     } d;
@@ -252,12 +251,12 @@ class JSString : public js::gc::BarrieredCell<JSString>
 
     MOZ_ALWAYS_INLINE
     size_t length() const {
-        return d.lengthAndFlags >> LENGTH_SHIFT;
+        return d.u0.lengthAndFlags >> LENGTH_SHIFT;
     }
 
     MOZ_ALWAYS_INLINE
     bool empty() const {
-        return d.lengthAndFlags <= FLAGS_MASK;
+        return d.u0.lengthAndFlags <= FLAGS_MASK;
     }
 
     /*
@@ -299,7 +298,7 @@ class JSString : public js::gc::BarrieredCell<JSString>
 
     MOZ_ALWAYS_INLINE
     bool isRope() const {
-        return (d.lengthAndFlags & FLAGS_MASK) == ROPE_FLAGS;
+        return (d.u0.lengthAndFlags & FLAGS_MASK) == ROPE_FLAGS;
     }
 
     MOZ_ALWAYS_INLINE
@@ -321,7 +320,7 @@ class JSString : public js::gc::BarrieredCell<JSString>
 
     MOZ_ALWAYS_INLINE
     bool isDependent() const {
-        return (d.lengthAndFlags & FLAGS_MASK) == DEPENDENT_FLAGS;
+        return (d.u0.lengthAndFlags & FLAGS_MASK) == DEPENDENT_FLAGS;
     }
 
     MOZ_ALWAYS_INLINE
@@ -343,7 +342,7 @@ class JSString : public js::gc::BarrieredCell<JSString>
 
     MOZ_ALWAYS_INLINE
     bool isExtensible() const {
-        return (d.lengthAndFlags & FLAGS_MASK) == EXTENSIBLE_FLAGS;
+        return (d.u0.lengthAndFlags & FLAGS_MASK) == EXTENSIBLE_FLAGS;
     }
 
     MOZ_ALWAYS_INLINE
@@ -376,17 +375,17 @@ class JSString : public js::gc::BarrieredCell<JSString>
 
     MOZ_ALWAYS_INLINE
     bool isUndepended() const {
-        return (d.lengthAndFlags & FLAGS_MASK) == UNDEPENDED_FLAGS;
+        return (d.u0.lengthAndFlags & FLAGS_MASK) == UNDEPENDED_FLAGS;
     }
 
     MOZ_ALWAYS_INLINE
     bool isAtom() const {
-        return d.lengthAndFlags & ATOM_BIT;
+        return d.u0.lengthAndFlags & ATOM_BIT;
     }
 
     MOZ_ALWAYS_INLINE
     bool isPermanentAtom() const {
-        return (d.lengthAndFlags & FLAGS_MASK) == PERMANENT_ATOM_FLAGS;
+        return (d.u0.lengthAndFlags & FLAGS_MASK) == PERMANENT_ATOM_FLAGS;
     }
 
     MOZ_ALWAYS_INLINE
@@ -399,7 +398,7 @@ class JSString : public js::gc::BarrieredCell<JSString>
 
     inline bool hasBase() const {
         JS_STATIC_ASSERT((DEPENDENT_FLAGS | JS_BIT(1)) == UNDEPENDED_FLAGS);
-        return d.lengthAndFlags & HAS_BASE_BIT;
+        return d.u0.lengthAndFlags & HAS_BASE_BIT;
     }
 
     inline JSLinearString *base() const;
@@ -417,7 +416,7 @@ class JSString : public js::gc::BarrieredCell<JSString>
     /* Offsets for direct field from jit code. */
 
     static size_t offsetOfLengthAndFlags() {
-        return offsetof(JSString, d.lengthAndFlags);
+        return offsetof(JSString, d.u0.lengthAndFlags);
     }
 
     static size_t offsetOfChars() {
@@ -594,11 +593,11 @@ class JSFlatString : public JSLinearString
      * operation changes the string to the JSAtom type, in place.
      */
     MOZ_ALWAYS_INLINE JSAtom *morphAtomizedStringIntoAtom() {
-        d.lengthAndFlags = buildLengthAndFlags(length(), ATOM_BIT);
+        d.u0.lengthAndFlags = buildLengthAndFlags(length(), ATOM_BIT);
         return &asAtom();
     }
     MOZ_ALWAYS_INLINE JSAtom *morphAtomizedStringIntoPermanentAtom() {
-        d.lengthAndFlags = buildLengthAndFlags(length(), PERMANENT_ATOM_FLAGS);
+        d.u0.lengthAndFlags = buildLengthAndFlags(length(), PERMANENT_ATOM_FLAGS);
         return &asAtom();
     }
 
@@ -740,13 +739,13 @@ class JSAtom : public JSFlatString
 
     MOZ_ALWAYS_INLINE
     bool isPermanent() const {
-        return d.lengthAndFlags & PERMANENT_BIT;
+        return d.u0.lengthAndFlags & PERMANENT_BIT;
     }
 
     // Transform this atom into a permanent atom. This is only done during
     // initialization of the runtime.
     MOZ_ALWAYS_INLINE void morphIntoPermanentAtom() {
-        d.lengthAndFlags = buildLengthAndFlags(length(), PERMANENT_ATOM_FLAGS);
+        d.u0.lengthAndFlags = buildLengthAndFlags(length(), PERMANENT_ATOM_FLAGS);
     }
 
 #ifdef DEBUG
