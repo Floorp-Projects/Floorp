@@ -651,7 +651,7 @@ function initChromeDebugger(aOnClose) {
   let deferred = promise.defer();
 
   // Wait for the toolbox process to start...
-  BrowserToolboxProcess.init(aOnClose, aProcess => {
+  BrowserToolboxProcess.init(aOnClose, (aEvent, aProcess) => {
     info("Browser toolbox process started successfully.");
 
     prepareDebugger(aProcess);
