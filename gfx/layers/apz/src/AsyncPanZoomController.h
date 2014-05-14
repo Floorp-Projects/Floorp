@@ -746,7 +746,7 @@ private:
   // Stores information about the current touch block.
   TouchBlockState mTouchBlockState;
 
-  RefPtr<AsyncPanZoomAnimation> mAnimation;
+  nsRefPtr<AsyncPanZoomAnimation> mAnimation;
 
   friend class Axis;
 
