@@ -1540,13 +1540,21 @@ CacheFile::IsWriteInProgress()
   // Returns true when there is a potentially unfinished write operation.
   // Not using lock for performance reasons.  mMetadata is never released
   // during life time of CacheFile.
-  return
-    mDataIsDirty ||
-    (mMetadata && mMetadata->IsDirty()) ||
-    mWritingMetadata ||
-    mOpeningFile ||
-    mOutput ||
-    mChunks.Count();
+
+  bool result = false;
+
+  if (!mMemoryOnly) {
+    result = mDataIsDirty ||
+             (mMetadata && mMetadata->IsDirty()) ||
+             mWritingMetadata;
+  }
+
+  result = result ||
+           mOpeningFile ||
+           mOutput ||
+           mChunks.Count();
+
+  return result;
 }
 
 bool
