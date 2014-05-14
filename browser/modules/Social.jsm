@@ -413,11 +413,16 @@ function sizeSocialPanelToContent(panel, iframe) {
     let computedWidth = parseInt(cs.marginLeft) + body.offsetWidth + parseInt(cs.marginRight);
     width = Math.max(computedWidth, width);
   }
-  iframe.style.width = width + "px";
-  iframe.style.height = height + "px";
-  // since we do not use panel.sizeTo, we need to adjust the arrow ourselves
-  if (panel.state == "open")
-    panel.adjustArrowPosition();
+  // add extra space the panel needs if any
+  width += panel.boxObject.width - iframe.boxObject.width;
+  height += panel.boxObject.height - iframe.boxObject.height;
+
+  // when size is computed, we want to be sure changes are "significant" since
+  // some sites will resize when the iframe is resized by a small amount, making
+  // the panel slowely shrink to some minimum.
+  if (Math.abs(panel.boxObject.width - width) > 2 || Math.abs(panel.boxObject.height - height) > 2) {
+    panel.sizeTo(width, height);
+  }
 }
 
 function DynamicResizeWatcher() {
@@ -468,7 +473,10 @@ this.OpenGraphBuilder = {
           // preserve non-template query vars
           query[name] = value;
         } else if (pageData[p[1]]) {
-          query[name] = pageData[p[1]];
+          if (p[1] == "previews")
+            query[name] = pageData[p[1]][0];
+          else
+            query[name] = pageData[p[1]];
         } else if (p[1] == "body") {
           // build a body for emailers
           let body = "";
