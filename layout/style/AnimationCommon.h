@@ -363,6 +363,8 @@ struct CommonElementAnimationData : public PRCList
 
   CommonAnimationManager *mManager;
 
+  mozilla::ElementAnimationPtrArray mAnimations;
+
   // This style rule contains the style data for currently animating
   // values.  It only matches when styling with animation.  When we
   // style without animation, we need to not use it so that we can
