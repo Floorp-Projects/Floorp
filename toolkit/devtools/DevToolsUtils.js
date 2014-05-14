@@ -313,6 +313,19 @@ exports.dumpn = function dumpn(str) {
 // loader, so define it on dumpn instead.
 exports.dumpn.wantLogging = false;
 
+/**
+ * A verbose logger for low-level tracing.
+ */
+exports.dumpv = function(msg) {
+  if (exports.dumpv.wantVerbose) {
+    exports.dumpn(msg);
+  }
+};
+
+// We want wantLogging to be writable. The exports object is frozen by the
+// loader, so define it on dumpn instead.
+exports.dumpv.wantVerbose = false;
+
 exports.dbg_assert = function dbg_assert(cond, e) {
   if (!cond) {
     return e;
