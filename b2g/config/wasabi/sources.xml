@@ -17,10 +17,10 @@
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="70953f779faf6b1a94861c34ffdc3d5fd1c442e5"/>
+  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="3a1d67246a79e3632c3b3f2460a25291e7e2714c"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="abedd83e1ba61cb83e59c723ad6279ad2a7aa1d1"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
-  <project name="librecovery" path="librecovery" remote="b2g" revision="1f6a1fe07f81c5bc5e1d079c9b60f7f78ca2bf4f"/>
+  <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="ce95d372e6d285725b96490afdaaf489ad8f9ca9"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="fd4be2909b788b563435fe0addb1bd98dfa75457"/>
   <project name="gonk-patches" path="patches" remote="b2g" revision="223a2421006e8f5da33f516f6891c87cae86b0f6"/>

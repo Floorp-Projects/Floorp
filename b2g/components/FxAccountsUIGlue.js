@@ -38,7 +38,7 @@ FxAccountsUIGlue.prototype = {
         return;
       }
 
-      log.debug("Got content event " + JSON.stringify(msg));
+      log.debug("UIGlue got content event " + JSON.stringify(msg));
 
       if (msg.error) {
         deferred.reject(msg);
