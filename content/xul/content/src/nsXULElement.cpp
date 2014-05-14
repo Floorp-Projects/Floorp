@@ -2628,7 +2628,7 @@ nsXULPrototypeScript::Compile(JS::SourceBufferHolder& aSrcBuf,
                               nsIOffThreadScriptReceiver *aOffThreadReceiver /* = nullptr */)
 {
     // We'll compile the script in the compilation scope.
-    MOZ_ASSERT(aProtoDoc);
+    NS_ENSURE_STATE(aProtoDoc);
     NS_ENSURE_TRUE(xpc::GetCompilationScope(), NS_ERROR_UNEXPECTED);
     AutoSafeJSContext cx;
     JSAutoCompartment ac(cx, xpc::GetCompilationScope());
