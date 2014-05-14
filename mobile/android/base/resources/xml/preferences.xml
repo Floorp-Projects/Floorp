@@ -45,6 +45,16 @@
         </intent>
     </PreferenceScreen>
 
+    <PreferenceScreen android:title="@string/pref_category_language" >
+        <intent android:action="android.intent.action.VIEW"
+                android:targetPackage="@string/android_package_name"
+                android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
+            <extra
+                android:name="resource"
+                android:value="preferences_locale" />
+        </intent>
+    </PreferenceScreen>
+
     <PreferenceScreen android:title="@string/pref_category_vendor">
         <intent android:action="android.intent.action.VIEW"
                 android:targetPackage="@string/android_package_name"
