@@ -3551,7 +3551,7 @@ XULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
 
             rv = mCurrentScriptProto->Compile(srcBuf,
                                               uri, 1, this,
-                                              mCurrentPrototype,
+                                              mMasterPrototype,
                                               this);
             if (NS_SUCCEEDED(rv) && !mCurrentScriptProto->GetScriptObject()) {
                 // We will be notified via OnOffThreadCompileComplete when the
