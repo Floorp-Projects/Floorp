@@ -538,7 +538,7 @@ window.addEventListener('mozbrowserloadend', function loaded(aEvent) {
                 sock.connect(('localhost', self.marionette_port))
                 data = sock.recv(16)
                 sock.close()
-                if '"from"' in data:
+                if ':' in data:
                     return True
             except:
                 import traceback
