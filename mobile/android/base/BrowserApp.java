@@ -603,12 +603,6 @@ abstract public class BrowserApp extends GeckoApp
                 if (isHomePagerVisible()) {
                     mHomePager.onToolbarFocusChange(hasFocus);
                 }
-
-                if (hasFocus) {
-                    Telemetry.startUISession(TelemetryContract.Session.URLBAR_FOCUSED);
-                } else {
-                    Telemetry.stopUISession(TelemetryContract.Session.URLBAR_FOCUSED);
-                }
             }
         });
 
@@ -1545,12 +1539,16 @@ abstract public class BrowserApp extends GeckoApp
         showHomePagerWithAnimator(panelId, animator);
 
         animator.start();
+        Telemetry.startUISession(TelemetryContract.Session.AWESOMESCREEN);
     }
 
     private void commitEditingMode() {
         if (!mBrowserToolbar.isEditing()) {
             return;
         }
+
+        Telemetry.stopUISession(TelemetryContract.Session.AWESOMESCREEN,
+                                TelemetryContract.Reason.COMMIT);
 
         final String url = mBrowserToolbar.commitEdit();
 
