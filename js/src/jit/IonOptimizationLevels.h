@@ -78,6 +78,9 @@ class OptimizationInfo
     // Toggles whether Range Analysis is used.
     bool rangeAnalysis_;
 
+    // Toggles whether Truncation based on Range Analysis is used.
+    bool autoTruncate_;
+
     // Describes which register allocator to use.
     IonRegisterAllocator registerAllocator_;
 
@@ -141,6 +144,10 @@ class OptimizationInfo
 
     bool rangeAnalysisEnabled() const {
         return rangeAnalysis_ && !js_JitOptions.disableRangeAnalysis;
+    }
+
+    bool autoTruncateEnabled() const {
+        return autoTruncate_ && rangeAnalysisEnabled();
     }
 
     bool eaaEnabled() const {
