@@ -845,7 +845,7 @@ skip-if(B2G&&browserIsRemote) == 401946-1.xul about:blank # bug 974780
 == 402567-1.html 402567-1-ref.html
 == 402567-2.html 402567-2-ref.html
 == 402567-3.html 402567-3-ref.html
-skip-if(B2G) fuzzy-if(gtk2Widget,2,40) == 402567-4.html 402567-4-ref.html
+skip-if(B2G) == 402567-4.html 402567-4-ref.html
 == 402629-1.html 402629-1-ref.html
 == 402629-2.html 402629-2-ref.html
 == 402629-3.html 402629-3-ref.html

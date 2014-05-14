@@ -17,7 +17,7 @@ random-if(d2d) == element-paint-transform-02.html element-paint-transform-02-ref
 == element-paint-background-size-02.html element-paint-background-size-02-ref.html
 == element-paint-transform-repeated.html element-paint-transform-repeated-ref.html
 fuzzy-if(d2d,255,24) == element-paint-transform-03.html element-paint-transform-03-ref.html
-fuzzy-if(gtk2Widget,1,32) == element-paint-native-widget.html element-paint-native-widget-ref.html
+== element-paint-native-widget.html element-paint-native-widget-ref.html
 == element-paint-subimage-sampling-restriction.html about:blank
 == element-paint-clippath.html element-paint-clippath-ref.html
 == element-paint-sharpness-01a.html element-paint-sharpness-01b.html
