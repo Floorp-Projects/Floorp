@@ -149,6 +149,8 @@ ContentClientRemoteBuffer::DestroyBuffers()
 void
 ContentClientRemoteBuffer::BeginPaint()
 {
+  EnsureBackBufferIfFrontBuffer();
+
   // XXX: So we might not have a TextureClient yet.. because it will
   // only be created by CreateBuffer.. which will deliver a locked surface!.
   if (mTextureClient) {
@@ -236,22 +238,31 @@ ContentClientRemoteBuffer::BuildTextureClients(SurfaceFormat aFormat,
   mSize = gfx::IntSize(aRect.width, aRect.height);
   mTextureInfo.mTextureFlags = TextureFlagsForRotatedContentBufferFlags(aFlags);
 
-  if (!CreateAndAllocateTextureClient(mTextureClient, TextureFlags::ON_BLACK) ||
-      !AddTextureClient(mTextureClient)) {
-    AbortTextureClientCreation();
-    return;
-  }
-
   if (aFlags & BUFFER_COMPONENT_ALPHA) {
-    if (!CreateAndAllocateTextureClient(mTextureClientOnWhite, TextureFlags::ON_WHITE) ||
-        !AddTextureClient(mTextureClientOnWhite)) {
-      AbortTextureClientCreation();
-      return;
-    }
     mTextureInfo.mTextureFlags |= TextureFlags::COMPONENT_ALPHA;
   }
 
-  CreateFrontBuffer(aRect);
+  CreateBackBuffer(mBufferRect);
+}
+
+void
+ContentClientRemoteBuffer::CreateBackBuffer(const nsIntRect& aBufferRect)
+{
+  if (!CreateAndAllocateTextureClient(mTextureClient, TextureFlags::ON_BLACK) ||
+    !AddTextureClient(mTextureClient)) {
+    AbortTextureClientCreation();
+    return;
+  }
+  if (mTextureInfo.mTextureFlags & TextureFlags::COMPONENT_ALPHA) {
+    if (!CreateAndAllocateTextureClient(mTextureClientOnWhite, TextureFlags::ON_WHITE) ||
+      !AddTextureClient(mTextureClientOnWhite)) {
+      AbortTextureClientCreation();
+      return;
+    }
+  }
+
+  mBufferRect = aBufferRect;
+  mBufferRotation = nsIntPoint();
 }
 
 void
@@ -332,28 +343,7 @@ ContentClientRemoteBuffer::Updated(const nsIntRegion& aRegionToDraw,
 void
 ContentClientRemoteBuffer::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
 {
-  MOZ_ASSERT(mTextureClient);
   mFrontAndBackBufferDiffer = true;
-}
-
-void
-ContentClientDoubleBuffered::CreateFrontBuffer(const nsIntRect& aBufferRect)
-{
-  if (!CreateAndAllocateTextureClient(mFrontClient, TextureFlags::ON_BLACK) ||
-      !AddTextureClient(mFrontClient)) {
-    AbortTextureClientCreation();
-    return;
-  }
-  if (mTextureInfo.mTextureFlags & TextureFlags::COMPONENT_ALPHA) {
-    if (!CreateAndAllocateTextureClient(mFrontClientOnWhite, TextureFlags::ON_WHITE) ||
-        !AddTextureClient(mFrontClientOnWhite)) {
-      AbortTextureClientCreation();
-      return;
-    }
-  }
-
-  mFrontBufferRect = aBufferRect;
-  mFrontBufferRotation = nsIntPoint();
 }
 
 void
@@ -491,6 +481,14 @@ ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
   mFrontClient->Unlock();
   if (mFrontClientOnWhite) {
     mFrontClientOnWhite->Unlock();
+  }
+}
+
+void
+ContentClientDoubleBuffered::EnsureBackBufferIfFrontBuffer()
+{
+  if (!mTextureClient && mFrontClient) {
+    CreateBackBuffer(mFrontBufferRect);
   }
 }
 
