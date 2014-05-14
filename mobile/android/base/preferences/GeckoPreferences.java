@@ -439,11 +439,23 @@ public class GeckoPreferences
                 // saved when the orientation changes. It uses the
                 // "android.not_a_preference.privacy.clear" key - which doesn't
                 // exist in Gecko - to satisfy this requirement.
-                if (key != null && !key.startsWith(NON_PREF_PREFIX)) {
+                if (isGeckoPref(key)) {
                     prefs.add(key);
                 }
             }
         }
+    }
+
+    private boolean isGeckoPref(String key) {
+        if (TextUtils.isEmpty(key)) {
+            return false;
+        }
+
+        if (key.startsWith(NON_PREF_PREFIX)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -612,7 +624,7 @@ public class GeckoPreferences
         }
 
         // Send Gecko-side pref changes to Gecko
-        if (!TextUtils.isEmpty(prefName) && !prefName.startsWith(NON_PREF_PREFIX)) {
+        if (isGeckoPref(prefName)) {
             PrefsHelper.setPref(prefName, newValue);
         }
 
