@@ -218,6 +218,9 @@ public class BrowserLocaleManager implements LocaleManager {
     public void updateConfiguration(Context context, Locale locale) {
         Resources res = context.getResources();
         Configuration config = res.getConfiguration();
+
+        // We should use setLocale, but it's unexpectedly missing
+        // on real devices.
         config.locale = locale;
         res.updateConfiguration(config, res.getDisplayMetrics());
     }
