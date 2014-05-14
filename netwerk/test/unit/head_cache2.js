@@ -43,6 +43,8 @@ const RECREATE =        1 << 10;
 const NOTWANTED =       1 << 11;
 // Tell the cache to wait for the entry to be completely written first
 const COMPLETE =        1 << 12;
+// Don't write meta/data and don't set valid in the callback, consumer will do it manually
+const DONTFILL =        1 << 13;
 
 var log_c2 = true;
 function LOG_C2(o, m)
@@ -177,6 +179,11 @@ OpenCallback.prototype =
           do_check_true(false);
         }
         catch (ex) {}
+      }
+
+      if (this.behavior & DONTFILL) {
+        do_check_false(this.behavior & WAITFORWRITE);
+        return;
       }
 
       var self = this;
