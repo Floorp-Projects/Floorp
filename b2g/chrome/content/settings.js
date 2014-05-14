@@ -634,60 +634,60 @@ SettingsListener.observe("accessibility.screenreader", false, function(value) {
 
 // =================== Various simple mapping  ======================
 let settingsToObserve = {
-  'ril.mms.retrieval_mode': {
-    prefName: 'dom.mms.retrieval_mode',
-    defaultValue: 'manual'
+  'app.update.channel': {
+    resetToPref: true
   },
-  'ril.sms.strict7BitEncoding.enabled': {
-    prefName: 'dom.sms.strict7BitEncoding',
-    defaultValue: false
+  'app.update.interval': 86400,
+  'app.update.url': {
+    resetToPref: true
   },
-  'ril.sms.requestStatusReport.enabled': {
-    prefName: 'dom.sms.requestStatusReport',
-    defaultValue: false
-  },
-  'ril.mms.requestStatusReport.enabled': {
-    prefName: 'dom.mms.requestStatusReport',
-    defaultValue: false
-  },
-  'ril.mms.requestReadReport.enabled': {
-    prefName: 'dom.mms.requestReadReport',
-    defaultValue: true
-  },
-  'ril.cellbroadcast.disabled': false,
-  'ril.radio.disabled': false,
-  'wap.UAProf.url': '',
-  'wap.UAProf.tagname': 'x-wap-profile',
-  'devtools.eventlooplag.threshold': 100,
-  'privacy.donottrackheader.enabled': false,
   'apz.force-enable': {
     prefName: 'dom.browser_frames.useAsyncPanZoom',
     defaultValue: false
   },
-  'layers.enable-tiles': true,
-  'layers.simple-tiles': false,
-  'layers.draw-tile-borders': false,
-  'layers.dump': false,
   'debug.fps.enabled': {
     prefName: 'layers.acceleration.draw-fps',
+    defaultValue: false
+  },
+  'debug.log-animations.enabled': {
+    prefName: 'layers.offmainthreadcomposition.log-animations',
     defaultValue: false
   },
   'debug.paint-flashing.enabled': {
     prefName: 'nglayout.debug.paint_flashing',
     defaultValue: false
   },
+  'devtools.eventlooplag.threshold': 100,
   'layers.draw-borders': false,
-  'app.update.interval': 86400,
-  'app.update.url': {
-    resetToPref: true
+  'layers.draw-tile-borders': false,
+  'layers.dump': false,
+  'layers.enable-tiles': true,
+  'layers.simple-tiles': false,
+  'privacy.donottrackheader.enabled': false,
+  'ril.cellbroadcast.disabled': false,
+  'ril.radio.disabled': false,
+  'ril.mms.requestReadReport.enabled': {
+    prefName: 'dom.mms.requestReadReport',
+    defaultValue: true
   },
-  'app.update.channel': {
-    resetToPref: true
-  },
-  'debug.log-animations.enabled': {
-    prefName: 'layers.offmainthreadcomposition.log-animations',
+  'ril.mms.requestStatusReport.enabled': {
+    prefName: 'dom.mms.requestStatusReport',
     defaultValue: false
-  }
+  },
+  'ril.mms.retrieval_mode': {
+    prefName: 'dom.mms.retrieval_mode',
+    defaultValue: 'manual'
+  },
+  'ril.sms.requestStatusReport.enabled': {
+    prefName: 'dom.sms.requestStatusReport',
+    defaultValue: false
+  },
+  'ril.sms.strict7BitEncoding.enabled': {
+    prefName: 'dom.sms.strict7BitEncoding',
+    defaultValue: false
+  },
+  'wap.UAProf.tagname': 'x-wap-profile',
+  'wap.UAProf.url': ''
 };
 
 for (let key in settingsToObserve) {
