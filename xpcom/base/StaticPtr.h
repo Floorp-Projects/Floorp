@@ -81,7 +81,7 @@ private:
   // this constructor always, the compiler wouldn't generate a trivial
   // default constructor for us in non-debug mode.
 #ifdef DEBUG
-  StaticAutoPtr(StaticAutoPtr<T>& other);
+  StaticAutoPtr(StaticAutoPtr<T>& aOther);
 #endif
 
   void Assign(T* aNewPtr)
