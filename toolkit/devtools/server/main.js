@@ -501,7 +501,7 @@ var DebuggerServer = {
    *
    * @param aPrefix string [optional]
    *    If given, all actors in this connection will have names starting
-   *    with |aPrefix + ':'|.
+   *    with |aPrefix + '/'|.
    * @returns a client-side DebuggerTransport for communicating with
    *    the newly-created connection.
    */
@@ -541,7 +541,7 @@ var DebuggerServer = {
    *    The prefix we should use in our nsIMessageSender message names and
    *    actor names. This connection will use messages named
    *    "debug:<prefix>:packet", and all its actors will have names
-   *    beginning with "<prefix>:".
+   *    beginning with "<prefix>/".
    */
   connectToParent: function(aPrefix, aMessageManager) {
     this._checkInit();
@@ -691,13 +691,13 @@ var DebuggerServer = {
    *
    * If present, |aForwardingPrefix| is a forwarding prefix that a parent
    * server is using to recognizes messages intended for this server. Ensure
-   * that all our actors have names beginning with |aForwardingPrefix + ':'|.
-   * In particular, the root actor's name will be |aForwardingPrefix + ':root'|.
+   * that all our actors have names beginning with |aForwardingPrefix + '/'|.
+   * In particular, the root actor's name will be |aForwardingPrefix + '/root'|.
    */
   _onConnection: function DS_onConnection(aTransport, aForwardingPrefix, aNoRootActor = false) {
     let connID;
     if (aForwardingPrefix) {
-      connID = aForwardingPrefix + ":";
+      connID = aForwardingPrefix + "/";
     } else {
       connID = "conn" + this._nextConnID++ + '.';
     }
@@ -708,7 +708,7 @@ var DebuggerServer = {
     if (!aNoRootActor) {
       conn.rootActor = this.createRootActor(conn);
       if (aForwardingPrefix)
-        conn.rootActor.actorID = aForwardingPrefix + ":root";
+        conn.rootActor.actorID = aForwardingPrefix + "/root";
       else
         conn.rootActor.actorID = "root";
       conn.addActor(conn.rootActor);
@@ -873,7 +873,7 @@ function DebuggerServerConnection(aPrefix, aTransport)
    * We can forward packets to other servers, if the actors on that server
    * all use a distinct prefix on their names. This is a map from prefixes
    * to transports: it maps a prefix P to a transport T if T conveys
-   * packets to the server whose actors' names all begin with P + ":".
+   * packets to the server whose actors' names all begin with P + "/".
    */
   this._forwardingPrefixes = new Map;
 }
@@ -1019,15 +1019,15 @@ DebuggerServerConnection.prototype = {
    * forward debugging connections to child processes.
    *
    * If we receive a packet for an actor whose name begins with |aPrefix|
-   * followed by ':', then we will forward that packet to |aTransport|.
+   * followed by '/', then we will forward that packet to |aTransport|.
    *
    * This overrides any prior forwarding for |aPrefix|.
    *
    * @param aPrefix string
-   *    The actor name prefix, not including the ':'.
+   *    The actor name prefix, not including the '/'.
    * @param aTransport object
    *    A packet transport to which we should forward packets to actors
-   *    whose names begin with |(aPrefix + ':').|
+   *    whose names begin with |(aPrefix + '/').|
    */
   setForwarding: function(aPrefix, aTransport) {
     this._forwardingPrefixes.set(aPrefix, aTransport);
@@ -1035,7 +1035,7 @@ DebuggerServerConnection.prototype = {
 
   /*
    * Stop forwarding messages to actors whose names begin with
-   * |aPrefix+':'|. Such messages will now elicit 'noSuchActor' errors.
+   * |aPrefix+'/'|. Such messages will now elicit 'noSuchActor' errors.
    */
   cancelForwarding: function(aPrefix) {
     this._forwardingPrefixes.delete(aPrefix);
@@ -1057,9 +1057,9 @@ DebuggerServerConnection.prototype = {
     // forwarding is needed: in DebuggerServerConnection instances in child
     // processes, every actor has a prefixed name.
     if (this._forwardingPrefixes.size > 0) {
-      let colon = aPacket.to.indexOf(':');
-      if (colon >= 0) {
-        let forwardTo = this._forwardingPrefixes.get(aPacket.to.substring(0, colon));
+      let separator = aPacket.to.indexOf('/');
+      if (separator >= 0) {
+        let forwardTo = this._forwardingPrefixes.get(aPacket.to.substring(0, separator));
         if (forwardTo) {
           forwardTo.send(aPacket);
           return;
