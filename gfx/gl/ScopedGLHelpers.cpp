@@ -52,7 +52,12 @@ ScopedGLState::UnwrapImpl()
 void
 ScopedBindFramebuffer::Init()
 {
-    mOldFB = mGL->GetFB();
+    if (mGL->IsSupported(GLFeature::framebuffer_blit)) {
+        mOldReadFB = mGL->GetReadFB();
+        mOldDrawFB = mGL->GetDrawFB();
+    } else {
+        mOldReadFB = mOldDrawFB = mGL->GetFB();
+    }
 }
 
 ScopedBindFramebuffer::ScopedBindFramebuffer(GLContext* aGL)
@@ -74,7 +79,12 @@ ScopedBindFramebuffer::UnwrapImpl()
     // Check that we're not falling out of scope after the current context changed.
     MOZ_ASSERT(mGL->IsCurrent());
 
-    mGL->BindFB(mOldFB);
+    if (mOldReadFB == mOldDrawFB) {
+        mGL->BindFB(mOldDrawFB);
+    } else {
+        mGL->BindDrawFB(mOldDrawFB);
+        mGL->BindReadFB(mOldReadFB);
+    }
 }
 
 
