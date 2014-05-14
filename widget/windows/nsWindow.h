@@ -197,6 +197,7 @@ public:
   virtual void            EndRemoteDrawing() MOZ_OVERRIDE;
 
   virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) MOZ_OVERRIDE;
+  virtual uint32_t        GetMaxTouchPoints() const MOZ_OVERRIDE;
 
   /**
    * Event helpers
