@@ -13,6 +13,7 @@ UNIFIED_SOURCES += [
 
 if CONFIG['MOZ_WEBM_ENCODER']:
     UNIFIED_SOURCES += ['TestVideoTrackEncoder.cpp',
+                        'TestVorbisTrackEncoder.cpp',
 ]
 
 EXPORT_LIBRARY = True
