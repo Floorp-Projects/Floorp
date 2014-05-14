@@ -418,9 +418,10 @@ nsLayoutUtils::ComputeSuitableScaleForAnimation(nsIContent* aContent)
   ElementTransitions* transitions = HasAnimationOrTransitionForCompositor<ElementTransitions>
     (aContent, nsGkAtoms::transitionsProperty, eCSSProperty_transform);
   if (transitions) {
-    for (uint32_t i = 0, i_end = transitions->mPropertyTransitions.Length();
+    for (uint32_t i = 0, i_end = transitions->mAnimations.Length();
          i < i_end; ++i){
-      ElementPropertyTransition* pt = transitions->mPropertyTransitions[i];
+      ElementPropertyTransition* pt =
+        transitions->mAnimations[i]->AsTransition();
       if (pt->IsRemovedSentinel()) {
         continue;
       }

@@ -89,11 +89,6 @@ struct ElementTransitions MOZ_FINAL
   // as a side-effect, notifies the ActiveLayerTracker.  FIXME:  This
   // should probably move to the relevant callers.
   virtual bool CanPerformOnCompositorThread(CanAnimateFlags aFlags) const MOZ_OVERRIDE;
-
-  typedef InfallibleTArray<nsRefPtr<ElementPropertyTransition> >
-          TransitionPtrArray;
-  // Either zero or one for each CSS property:
-  TransitionPtrArray mPropertyTransitions;
 };
 
 

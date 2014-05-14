@@ -368,10 +368,9 @@ AddAnimationForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
   }
 }
 
-template<class T>
 static void
 AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
-                         nsTArray<T>& aAnimations,
+                         ElementAnimationPtrArray& aAnimations,
                          Layer* aLayer, AnimationData& aData,
                          bool aPending) {
   mozilla::TimeStamp currentTime =
@@ -477,7 +476,7 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
   }
 
   if (et) {
-    AddAnimationsForProperty(aFrame, aProperty, et->mPropertyTransitions,
+    AddAnimationsForProperty(aFrame, aProperty, et->mAnimations,
                              aLayer, data, pending);
     aLayer->SetAnimationGeneration(et->mAnimationGeneration);
   }
