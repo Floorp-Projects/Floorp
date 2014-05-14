@@ -34,6 +34,11 @@
                android:value="preferences_privacy" />
     </PreferenceScreen>
 
+    <PreferenceScreen android:title="@string/pref_category_language"
+                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
+        <extra android:name="resource"
+               android:value="preferences_locale" />
+    </PreferenceScreen>
 
     <PreferenceScreen android:title="@string/pref_category_vendor"
                       android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >

@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.URLEncoder;
 import java.util.EnumSet;
+import java.util.Locale;
 import java.util.Vector;
 
 import org.json.JSONArray;
@@ -132,6 +133,10 @@ abstract public class BrowserApp extends GeckoApp
     private static final String STATE_ABOUT_HOME_TOP_PADDING = "abouthome_top_padding";
 
     private static final String BROWSER_SEARCH_TAG = "browser_search";
+
+    // Request ID for startActivityForResult.
+    private static final int ACTIVITY_REQUEST_PREFERENCES = 1001;
+
     private BrowserSearch mBrowserSearch;
     private View mBrowserSearchContainer;
 
@@ -1288,7 +1293,7 @@ abstract public class BrowserApp extends GeckoApp
                 }
                 Intent settingsIntent = new Intent(this, GeckoPreferences.class);
                 GeckoPreferences.setResourceToOpen(settingsIntent, resource);
-                startActivity(settingsIntent);
+                startActivityForResult(settingsIntent, ACTIVITY_REQUEST_PREFERENCES);
             } else if (event.equals("Updater:Launch")) {
                 handleUpdaterLaunch();
             } else if (event.equals("Prompt:ShowTop")) {
@@ -1754,6 +1759,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void onLocaleReady(final String locale) {
+        Log.d(LOGTAG, "onLocaleReady: " + locale);
         super.onLocaleReady(locale);
 
         HomePanelsManager.getInstance().onLocaleReady(locale);
@@ -1761,6 +1767,38 @@ abstract public class BrowserApp extends GeckoApp
         if (mMenu != null) {
             mMenu.clear();
             onCreateOptionsMenu(mMenu);
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(LOGTAG, "onActivityResult: " + requestCode + ", " + resultCode + ", " + data);
+        switch (requestCode) {
+        case ACTIVITY_REQUEST_PREFERENCES:
+            // We just returned from preferences. If our locale changed,
+            // we need to redisplay at this point, and do any other browser-level
+            // bookkeeping that we associate with a locale change.
+            if (resultCode != GeckoPreferences.RESULT_CODE_LOCALE_DID_CHANGE) {
+                Log.d(LOGTAG, "No locale change returning from preferences; nothing to do.");
+                return;
+            }
+
+            ThreadUtils.postToBackgroundThread(new Runnable() {
+                @Override
+                public void run() {
+                    final LocaleManager localeManager = BrowserLocaleManager.getInstance();
+                    final Locale locale = localeManager.getCurrentLocale(getApplicationContext());
+                    Log.d(LOGTAG, "Read persisted locale " + locale);
+                    if (locale == null) {
+                        return;
+                    }
+                    onLocaleChanged(BrowserLocaleManager.getLanguageTag(locale));
+                }
+            });
+
+            return;
+        default:
+            return;
         }
     }
 
@@ -2420,7 +2458,10 @@ abstract public class BrowserApp extends GeckoApp
 
         if (itemId == R.id.settings) {
             intent = new Intent(this, GeckoPreferences.class);
-            startActivity(intent);
+
+            // We want to know when the Settings activity returns, because
+            // we might need to redisplay based on a locale change.
+            startActivityForResult(intent, ACTIVITY_REQUEST_PREFERENCES);
             return true;
         }
 
