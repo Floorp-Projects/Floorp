@@ -87,11 +87,6 @@ class TabsTray extends TwoWayView
     }
 
     @Override
-    public ViewGroup getLayout() {
-        return this;
-    }
-
-    @Override
     public void setTabsPanel(TabsPanel panel) {
         mTabsPanel = panel;
     }
