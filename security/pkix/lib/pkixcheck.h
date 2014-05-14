@@ -25,6 +25,7 @@
 #ifndef mozilla_pkix__pkixcheck_h
 #define mozilla_pkix__pkixcheck_h
 
+#include "pkix/pkixtypes.h"
 #include "pkixutil.h"
 #include "certt.h"
 
@@ -36,7 +37,7 @@ Result CheckIssuerIndependentProperties(
           PRTime time,
           EndEntityOrCA endEntityOrCA,
           KeyUsages requiredKeyUsagesIfPresent,
-          SECOidTag requiredEKUIfPresent,
+          KeyPurposeId requiredEKUIfPresent,
           SECOidTag requiredPolicy,
           unsigned int subCACount,
           /*optional out*/ TrustLevel* trustLevel = nullptr);

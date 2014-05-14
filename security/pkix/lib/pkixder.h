@@ -138,6 +138,19 @@ public:
     return Success;
   }
 
+  template <uint16_t N>
+  bool MatchBytes(const uint8_t (&toMatch)[N])
+  {
+    if (EnsureLength(N) != Success) {
+      return false;
+    }
+    if (memcmp(input, toMatch, N)) {
+      return false;
+    }
+    input += N;
+    return true;
+  }
+
   Result Skip(uint16_t len)
   {
     if (EnsureLength(len) != Success) {

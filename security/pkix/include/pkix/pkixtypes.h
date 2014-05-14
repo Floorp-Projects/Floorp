@@ -41,9 +41,18 @@ typedef ScopedPtr<CERTCertList, CERT_DestroyCertList> ScopedCERTCertList;
 typedef ScopedPtr<SECKEYPublicKey, SECKEY_DestroyPublicKey>
         ScopedSECKEYPublicKey;
 
+MOZILLA_PKIX_ENUM_CLASS EndEntityOrCA { MustBeEndEntity = 0, MustBeCA = 1 };
+
 typedef unsigned int KeyUsages;
 
-MOZILLA_PKIX_ENUM_CLASS EndEntityOrCA { MustBeEndEntity = 0, MustBeCA = 1 };
+MOZILLA_PKIX_ENUM_CLASS KeyPurposeId {
+  anyExtendedKeyUsage = 0,
+  id_kp_serverAuth = 1,           // id-kp-serverAuth
+  id_kp_clientAuth = 2,           // id-kp-clientAuth
+  id_kp_codeSigning = 3,          // id-kp-codeSigning
+  id_kp_emailProtection = 4,      // id-kp-emailProtection
+  id_kp_OCSPSigning = 9,          // id-kp-OCSPSigning
+};
 
 MOZILLA_PKIX_ENUM_CLASS TrustLevel {
   TrustAnchor = 1,        // certificate is a trusted root CA certificate or
