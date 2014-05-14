@@ -207,8 +207,6 @@ public:
 
   virtual gfx::SurfaceFormat GetFormat() const { return mFormat; }
 
-  virtual TextureClientData* DropTextureData() MOZ_OVERRIDE;
-
   virtual bool CanExposeDrawTarget() const MOZ_OVERRIDE { return true; }
 
   virtual TemporaryRef<gfx::DrawTarget> GetAsDrawTarget() MOZ_OVERRIDE;
@@ -257,8 +255,6 @@ public:
   virtual gfx::IntSize GetSize() const { return mSize; }
 
   virtual gfx::SurfaceFormat GetFormat() const { return mFormat; }
-
-  virtual TextureClientData* DropTextureData() MOZ_OVERRIDE;
 
   virtual bool CanExposeDrawTarget() const MOZ_OVERRIDE { return true; }
 
@@ -313,8 +309,6 @@ public:
   {
     return gfx::IntSize(mDesc.Width, mDesc.Height);
   }
-
-  virtual TextureClientData* DropTextureData() MOZ_OVERRIDE;
 
   virtual bool HasInternalBuffer() const MOZ_OVERRIDE { return true; }
 
