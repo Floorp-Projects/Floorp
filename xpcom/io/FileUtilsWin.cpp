@@ -17,8 +17,14 @@ namespace {
 struct ScopedMappedViewTraits
 {
   typedef void* type;
-  static void* empty() { return nullptr; }
-  static void release(void* ptr) { UnmapViewOfFile(ptr); }
+  static void* empty()
+  {
+    return nullptr;
+  }
+  static void release(void* aPtr)
+  {
+    UnmapViewOfFile(aPtr);
+  }
 };
 typedef mozilla::Scoped<ScopedMappedViewTraits> ScopedMappedView;
 

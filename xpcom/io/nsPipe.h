@@ -19,6 +19,6 @@
 
 // Generic factory constructor for the nsPipe class
 nsresult NS_HIDDEN
-nsPipeConstructor(nsISupports *outer, REFNSIID iid, void **result);
+nsPipeConstructor(nsISupports* outer, REFNSIID iid, void** result);
 
 #endif  // !defined(nsPipe_h__)

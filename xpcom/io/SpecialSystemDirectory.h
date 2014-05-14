@@ -22,10 +22,10 @@ extern void StartupSpecialSystemDirectory();
 enum SystemDirectories {
   OS_DriveDirectory         =   1,
   OS_TemporaryDirectory     =   2,
-  OS_CurrentProcessDirectory=   3,
-  OS_CurrentWorkingDirectory=   4,
-  XPCOM_CurrentProcessComponentDirectory=   5,
-  XPCOM_CurrentProcessComponentRegistry=   6,
+  OS_CurrentProcessDirectory =  3,
+  OS_CurrentWorkingDirectory =  4,
+  XPCOM_CurrentProcessComponentDirectory = 5,
+  XPCOM_CurrentProcessComponentRegistry =  6,
 
   Moz_BinDirectory          =   100 ,
   Mac_SystemDirectory       =   101,
@@ -98,7 +98,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                           nsIFile** aFile);
 #ifdef MOZ_WIDGET_COCOA
 nsresult
-GetOSXFolderType(short aDomain, OSType aFolderType, nsIFile **localFile);
+GetOSXFolderType(short aDomain, OSType aFolderType, nsIFile** aLocalFile);
 #endif
 
 #endif
