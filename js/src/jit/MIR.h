@@ -67,6 +67,7 @@ MIRType MIRTypeFromValue(const js::Value &vp)
     _(Movable)       /* Allow LICM and GVN to move this instruction */          \
     _(Lowered)       /* (Debug only) has a virtual register */                  \
     _(Guard)         /* Not removable if uses == 0 */                           \
+    _(Observed)      /* Cannot be optimized out */                              \
                                                                                 \
     /* Keep the flagged instruction in resume points and do not substitute this
      * instruction by an UndefinedValue. This might be used by call inlining
@@ -4665,7 +4666,6 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
 {
     js::Vector<MUse, 2, IonAllocPolicy> inputs_;
 
-    uint32_t slot_;
     bool hasBackedgeType_;
     bool triedToSpecialize_;
     bool isIterator_;
@@ -4685,9 +4685,8 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
   public:
     INSTRUCTION_HEADER(Phi)
 
-    MPhi(TempAllocator &alloc, uint32_t slot, MIRType resultType)
+    MPhi(TempAllocator &alloc, MIRType resultType)
       : inputs_(alloc),
-        slot_(slot),
         hasBackedgeType_(false),
         triedToSpecialize_(false),
         isIterator_(false),
@@ -4701,8 +4700,8 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
         setResultType(resultType);
     }
 
-    static MPhi *New(TempAllocator &alloc, uint32_t slot, MIRType resultType = MIRType_Value) {
-        return new(alloc) MPhi(alloc, slot, resultType);
+    static MPhi *New(TempAllocator &alloc, MIRType resultType = MIRType_Value) {
+        return new(alloc) MPhi(alloc, resultType);
     }
 
     void setOperand(size_t index, MDefinition *operand) {
@@ -4722,9 +4721,6 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
     }
     size_t numOperands() const {
         return inputs_.length();
-    }
-    uint32_t slot() const {
-        return slot_;
     }
     bool hasBackedgeType() const {
         return hasBackedgeType_;
@@ -9661,8 +9657,12 @@ class MResumePoint MOZ_FINAL : public MNode, public InlineForwardListNode<MResum
     // Overwrites an operand without updating its Uses.
     void setOperand(size_t index, MDefinition *operand) {
         JS_ASSERT(index < stackDepth_);
+        // Note: We do not remove the isObserved flag, as this would imply that
+        // we check the list of uses of the removed MDefinition.
         operands_[index].set(operand, this, index);
         operand->addUse(&operands_[index]);
+        if (!operand->isObserved() && isObservableOperand(index))
+            operand->setObserved();
     }
 
     void clearOperand(size_t index) {
@@ -9684,8 +9684,12 @@ class MResumePoint MOZ_FINAL : public MNode, public InlineForwardListNode<MResum
     size_t numOperands() const {
         return stackDepth_;
     }
+
+    bool isObservableOperand(size_t index) const;
+
     MDefinition *getOperand(size_t index) const {
         JS_ASSERT(index < stackDepth_);
+        MOZ_ASSERT_IF(isObservableOperand(index), operands_[index].producer()->isObserved());
         return operands_[index].producer();
     }
     jsbytecode *pc() const {
