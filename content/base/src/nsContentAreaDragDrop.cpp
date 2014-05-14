@@ -85,8 +85,6 @@ private:
   static void GetNodeString(nsIContent* inNode, nsAString & outNodeString);
   static void CreateLinkText(const nsAString& inURL, const nsAString & inText,
                               nsAString& outLinkText);
-  static void GetSelectedLink(nsISelection* inSelection,
-                              nsIContent **outLinkNode);
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsCOMPtr<nsIContent> mTarget;
@@ -465,13 +463,6 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
 
     // either plain text or anchor text is selected
     if (haveSelectedContent) {
-      link = do_QueryInterface(selectedImageOrLinkNode);
-      if (link && mIsAltKeyPressed) {
-        // if alt is pressed, select the link text instead of drag the link
-        *aCanDrag = false;
-        return NS_OK;
-      }
-
       selection.swap(*aSelection);
     } else if (selectedImageOrLinkNode) {
       // an image is selected
@@ -875,127 +866,10 @@ DragDataProducer::GetDraggableSelectionData(nsISelection* inSelection,
         }
       }
 
-      // see if the selection is a link;  if so, its node will be returned
-      GetSelectedLink(inSelection, outImageOrLinkNode);
-
       // indicate that a link or text is selected
       *outDragSelectedText = true;
     }
   }
 
   return NS_OK;
-}
-
-// static
-void
-DragDataProducer::GetSelectedLink(nsISelection* inSelection,
-                                  nsIContent **outLinkNode)
-{
-  *outLinkNode = nullptr;
-
-  nsCOMPtr<nsIDOMNode> selectionStartNode;
-  inSelection->GetAnchorNode(getter_AddRefs(selectionStartNode));
-  nsCOMPtr<nsIDOMNode> selectionEndNode;
-  inSelection->GetFocusNode(getter_AddRefs(selectionEndNode));
-
-  // simple case:  only one node is selected
-  // see if it or its parent is an anchor, then exit
-
-  if (selectionStartNode == selectionEndNode) {
-    nsCOMPtr<nsIContent> selectionStart = do_QueryInterface(selectionStartNode);
-    nsCOMPtr<nsIContent> link = FindParentLinkNode(selectionStart);
-    if (link) {
-      link.swap(*outLinkNode);
-    }
-
-    return;
-  }
-
-  // more complicated case:  multiple nodes are selected
-
-  // Unless you use the Alt key while selecting anchor text, it is
-  // nearly impossible to avoid overlapping into adjacent nodes.
-  // Deal with this by trimming off the leading and/or trailing
-  // nodes of the selection if the strings they produce are empty.
-
-  // first, use a range determine if the selection was marked LTR or RTL;
-  // if the latter, swap endpoints so we trim in the right direction
-
-  int32_t startOffset, endOffset;
-  {
-    nsCOMPtr<nsIDOMRange> range;
-    inSelection->GetRangeAt(0, getter_AddRefs(range));
-    if (!range) {
-      return;
-    }
-
-    nsCOMPtr<nsIDOMNode> tempNode;
-    range->GetStartContainer( getter_AddRefs(tempNode));
-    if (tempNode != selectionStartNode) {
-      selectionEndNode = selectionStartNode;
-      selectionStartNode = tempNode;
-      inSelection->GetAnchorOffset(&endOffset);
-      inSelection->GetFocusOffset(&startOffset);
-    } else {
-      inSelection->GetAnchorOffset(&startOffset);
-      inSelection->GetFocusOffset(&endOffset);
-    }
-  }
-
-  // trim leading node if the string is empty or
-  // the selection starts at the end of the text
-
-  nsAutoString nodeStr;
-  selectionStartNode->GetNodeValue(nodeStr);
-  if (nodeStr.IsEmpty() ||
-      startOffset+1 >= static_cast<int32_t>(nodeStr.Length())) {
-    nsCOMPtr<nsIDOMNode> curr = selectionStartNode;
-    nsIDOMNode* next;
-
-    while (curr) {
-      curr->GetNextSibling(&next);
-
-      if (next) {
-        selectionStartNode = dont_AddRef(next);
-        break;
-      }
-
-      curr->GetParentNode(&next);
-      curr = dont_AddRef(next);
-    }
-  }
-
-  // trim trailing node if the selection ends before its text begins
-
-  if (endOffset == 0) {
-    nsCOMPtr<nsIDOMNode> curr = selectionEndNode;
-    nsIDOMNode* next;
-
-    while (curr) {
-      curr->GetPreviousSibling(&next);
-
-      if (next){
-        selectionEndNode = dont_AddRef(next);
-        break;
-      }
-
-      curr->GetParentNode(&next);
-      curr = dont_AddRef(next);
-    }
-  }
-
-  // see if the leading & trailing nodes are part of the
-  // same anchor - if so, return the anchor node
-  nsCOMPtr<nsIContent> selectionStart = do_QueryInterface(selectionStartNode);
-  nsCOMPtr<nsIContent> link = FindParentLinkNode(selectionStart);
-  if (link) {
-    nsCOMPtr<nsIContent> selectionEnd = do_QueryInterface(selectionEndNode);
-    nsCOMPtr<nsIContent> link2 = FindParentLinkNode(selectionEnd);
-
-    if (link == link2) {
-      NS_IF_ADDREF(*outLinkNode = link);
-    }
-  }
-
-  return;
 }
