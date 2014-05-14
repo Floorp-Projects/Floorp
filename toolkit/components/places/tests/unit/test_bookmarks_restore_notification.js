@@ -91,7 +91,7 @@ var tests = [
     folderId:   null,
     run:        function () {
       this.file = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
-      this.file.append("this file doesn't exist because nobody created it");
+      this.file.append("this file doesn't exist because nobody created it 1");
       Task.spawn(function() {
         try {
           yield BookmarkJSONUtils.importFromFile(this.file, true);
@@ -152,16 +152,15 @@ var tests = [
     finalTopic: NSIOBSERVER_TOPIC_FAILED,
     data:       NSIOBSERVER_DATA_HTML,
     folderId:   null,
-    run:        function () {
+    run:        Task.async(function* () {
       this.file = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
-      this.file.append("this file doesn't exist because nobody created it");
+      this.file.append("this file doesn't exist because nobody created it 2");
       try {
-        BookmarkHTMLUtils.importFromFile(this.file, false)
-                         .then(function onSuccess() do_throw("Should fail!"),
-                               null);
+        yield BookmarkHTMLUtils.importFromFile(this.file, false);
+        do_throw("Should fail!");
       }
       catch (e) {}
-    }
+    }.bind(this))
   },
 
   {
@@ -213,16 +212,15 @@ var tests = [
     finalTopic: NSIOBSERVER_TOPIC_FAILED,
     data:       NSIOBSERVER_DATA_HTML_INIT,
     folderId:   null,
-    run:        function () {
+    run:        Task.async(function* () {
       this.file = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
-      this.file.append("this file doesn't exist because nobody created it");
+      this.file.append("this file doesn't exist because nobody created it 3");
       try {
-        BookmarkHTMLUtils.importFromFile(this.file, true)
-                         .then(function onSuccess() do_throw("Should fail!"),
-                               null);
+        yield BookmarkHTMLUtils.importFromFile(this.file, true);
+        do_throw("Should fail!");
       }
       catch (e) {}
-    }
+    }.bind(this))
   }
 ];
 
