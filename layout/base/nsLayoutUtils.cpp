@@ -1561,10 +1561,12 @@ GetAnimatedGeometryRootForFrame(nsIFrame* aFrame,
     if (!parent)
       break;
     nsIAtom* parentType = parent->GetType();
+#ifdef ANDROID
     // Treat the slider thumb as being as an active scrolled root
-    // so that it can move without repainting.
+    // on mobile so that it can move without repainting.
     if (parentType == nsGkAtoms::sliderFrame)
       break;
+#endif
     // Sticky frames are active if their nearest scrollable frame
     // is also active, just keep a record of sticky frames that we
     // encounter for now.
