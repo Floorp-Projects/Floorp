@@ -82,7 +82,6 @@ public:
 
   TextureChild()
   : mForwarder(nullptr)
-  , mTextureData(nullptr)
   , mTextureClient(nullptr)
   , mIPCOpen(false)
   {
@@ -103,18 +102,6 @@ public:
     RECYCLE_LOG("Wait for recycle %p\n", mWaitForRecycle.get());
     SendClientRecycle();
   }
-
-  /**
-   * Only used during the deallocation phase iff we need synchronization between
-   * the client and host side for deallocation (that is, when the data is going
-   * to be deallocated or recycled on the client side).
-   */
-  void SetTextureData(TextureClientData* aData)
-  {
-    mTextureData = aData;
-  }
-
-  void DeleteTextureData();
 
   CompositableForwarder* GetForwarder() { return mForwarder; }
 
@@ -143,28 +130,15 @@ private:
 
   RefPtr<CompositableForwarder> mForwarder;
   RefPtr<TextureClient> mWaitForRecycle;
-  TextureClientData* mTextureData;
   TextureClient* mTextureClient;
   bool mIPCOpen;
 
   friend class TextureClient;
 };
 
-void
-TextureChild::DeleteTextureData()
-{
-  mWaitForRecycle = nullptr;
-  if (mTextureData) {
-    mTextureData->DeallocateSharedData(GetAllocator());
-    delete mTextureData;
-    mTextureData = nullptr;
-  }
-}
-
 bool
 TextureChild::Recv__delete__()
 {
-  DeleteTextureData();
   return true;
 }
 
@@ -360,80 +334,6 @@ TextureClient::CreateBufferTextureClient(ISurfaceAllocator* aAllocator,
                                                               aMoz2DBackend,
                                                               aTextureFlags);
   return result.forget();
-}
-
-
-class ShmemTextureClientData : public TextureClientData
-{
-public:
-  ShmemTextureClientData(ipc::Shmem& aShmem)
-  : mShmem(aShmem)
-  {
-    MOZ_COUNT_CTOR(ShmemTextureClientData);
-  }
-
-  ~ShmemTextureClientData()
-  {
-    MOZ_COUNT_CTOR(ShmemTextureClientData);
-  }
-
-  virtual void DeallocateSharedData(ISurfaceAllocator* allocator)
-  {
-    allocator->DeallocShmem(mShmem);
-    mShmem = ipc::Shmem();
-  }
-
-private:
-  ipc::Shmem mShmem;
-};
-
-class MemoryTextureClientData : public TextureClientData
-{
-public:
-  MemoryTextureClientData(uint8_t* aBuffer)
-  : mBuffer(aBuffer)
-  {
-    MOZ_COUNT_CTOR(MemoryTextureClientData);
-  }
-
-  ~MemoryTextureClientData()
-  {
-    MOZ_ASSERT(!mBuffer, "Forgot to deallocate the shared texture data?");
-    MOZ_COUNT_DTOR(MemoryTextureClientData);
-  }
-
-  virtual void DeallocateSharedData(ISurfaceAllocator*)
-  {
-    delete[] mBuffer;
-    mBuffer = nullptr;
-  }
-
-private:
-  uint8_t* mBuffer;
-};
-
-TextureClientData*
-MemoryTextureClient::DropTextureData()
-{
-  if (!mBuffer) {
-    return nullptr;
-  }
-  TextureClientData* result = new MemoryTextureClientData(mBuffer);
-  MarkInvalid();
-  mBuffer = nullptr;
-  return result;
-}
-
-TextureClientData*
-ShmemTextureClient::DropTextureData()
-{
-  if (!mShmem.IsReadable()) {
-    return nullptr;
-  }
-  TextureClientData* result = new ShmemTextureClientData(mShmem);
-  MarkInvalid();
-  mShmem = ipc::Shmem();
-  return result;
 }
 
 TextureClient::TextureClient(TextureFlags aFlags)
