@@ -73,7 +73,7 @@ private:
   // this constructor always, the compiler wouldn't generate a trivial
   // default constructor for us in non-debug mode.
 #ifdef DEBUG
-  StaticMutex(StaticMutex& other);
+  StaticMutex(StaticMutex& aOther);
 #endif
 
   // Disallow these operators.
