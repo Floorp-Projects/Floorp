@@ -604,4 +604,57 @@ TEST_F(pkixder_input_tests, NestedOfWithTruncatedData)
   ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
   ASSERT_EQ((size_t) 0, readValues.size());
 }
+
+TEST_F(pkixder_input_tests, MatchBytesAtEnd)
+{
+  Input input;
+  static const uint8_t der[1] = { };
+  ASSERT_EQ(Success, input.Init(der, 0));
+  ASSERT_TRUE(input.AtEnd());
+  static const uint8_t toMatch[] = { 1 };
+  ASSERT_FALSE(input.MatchBytes(toMatch));
+}
+
+TEST_F(pkixder_input_tests, MatchBytes1Match)
+{
+  Input input;
+  static const uint8_t der[] = { 1 };
+  ASSERT_EQ(Success, input.Init(der, sizeof der));
+  ASSERT_FALSE(input.AtEnd());
+  ASSERT_TRUE(input.MatchBytes(der));
+  ASSERT_TRUE(input.AtEnd());
+}
+
+TEST_F(pkixder_input_tests, MatchBytes1Mismatch)
+{
+  Input input;
+  static const uint8_t der[] = { 1 };
+  ASSERT_EQ(Success, input.Init(der, sizeof der));
+  static const uint8_t toMatch[] = { 2 };
+  ASSERT_FALSE(input.MatchBytes(toMatch));
+  ASSERT_FALSE(input.AtEnd());
+}
+
+TEST_F(pkixder_input_tests, MatchBytes2Match)
+{
+  Input input;
+  static const uint8_t der[] = { 1, 2, 3 };
+  ASSERT_EQ(Success, input.Init(der, sizeof der));
+  static const uint8_t toMatch[] = { 1, 2 };
+  ASSERT_TRUE(input.MatchBytes(toMatch));
+  uint8_t followingByte;
+  ASSERT_EQ(Success, input.Read(followingByte));
+  ASSERT_EQ(3, followingByte);
+}
+
+TEST_F(pkixder_input_tests, MatchBytes2Mismatch)
+{
+  Input input;
+  static const uint8_t der[] = { 1, 2, 3 };
+  ASSERT_EQ(Success, input.Init(der, sizeof der));
+  static const uint8_t toMatchMismatch[] = { 1, 3 };
+  ASSERT_FALSE(input.MatchBytes(toMatchMismatch));
+  ASSERT_TRUE(input.MatchBytes(der));
+}
+
 } // unnamed namespace

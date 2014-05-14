@@ -335,15 +335,97 @@ CheckNameConstraints(BackCert& cert)
 }
 
 // 4.2.1.12. Extended Key Usage (id-ce-extKeyUsage)
-// 4.2.1.12. Extended Key Usage (id-ce-extKeyUsage)
-Result
-CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedEKUs,
-                      SECOidTag requiredEKU)
-{
-  // TODO: Either do not allow anyExtendedKeyUsage to be passed as requiredEKU,
-  // or require that callers pass anyExtendedKeyUsage instead of
-  // SEC_OID_UNKNWON and disallow SEC_OID_UNKNWON.
 
+static der::Result
+MatchEKU(der::Input& value, KeyPurposeId requiredEKU,
+         EndEntityOrCA endEntityOrCA, /*in/out*/ bool& found,
+         /*in/out*/ bool& foundOCSPSigning)
+{
+  // See Section 5.9 of "A Layman's Guide to a Subset of ASN.1, BER, and DER"
+  // for a description of ASN.1 DER encoding of OIDs.
+
+  // id-pkix  OBJECT IDENTIFIER  ::=
+  //            { iso(1) identified-organization(3) dod(6) internet(1)
+  //                    security(5) mechanisms(5) pkix(7) }
+  // id-kp OBJECT IDENTIFIER ::= { id-pkix 3 }
+  // id-kp-serverAuth      OBJECT IDENTIFIER ::= { id-kp 1 }
+  // id-kp-clientAuth      OBJECT IDENTIFIER ::= { id-kp 2 }
+  // id-kp-codeSigning     OBJECT IDENTIFIER ::= { id-kp 3 }
+  // id-kp-emailProtection OBJECT IDENTIFIER ::= { id-kp 4 }
+  // id-kp-OCSPSigning     OBJECT IDENTIFIER ::= { id-kp 9 }
+  static const uint8_t server[] = { (40*1)+3, 6, 1, 5, 5, 7, 3, 1 };
+  static const uint8_t client[] = { (40*1)+3, 6, 1, 5, 5, 7, 3, 2 };
+  static const uint8_t code  [] = { (40*1)+3, 6, 1, 5, 5, 7, 3, 3 };
+  static const uint8_t email [] = { (40*1)+3, 6, 1, 5, 5, 7, 3, 4 };
+  static const uint8_t ocsp  [] = { (40*1)+3, 6, 1, 5, 5, 7, 3, 9 };
+
+  // id-Netscape        OBJECT IDENTIFIER ::= { 2 16 840 1 113730 }
+  // id-Netscape-policy OBJECT IDENTIFIER ::= { id-Netscape 4 }
+  // id-Netscape-stepUp OBJECT IDENTIFIER ::= { id-Netscape-policy 1 }
+  static const uint8_t serverStepUp[] =
+    { (40*2)+16, 128+6,72, 1, 128+6,128+120,66, 4, 1 };
+
+  bool match = false;
+
+  if (!found) {
+    switch (requiredEKU) {
+      case KeyPurposeId::id_kp_serverAuth:
+        // Treat CA certs with step-up OID as also having SSL server type.
+        // Comodo has issued certificates that require this behavior that don't
+        // expire until June 2020! TODO(bug 982932): Limit this exception to
+        // old certificates.
+        match = value.MatchBytes(server) ||
+                (endEntityOrCA == EndEntityOrCA::MustBeCA &&
+                 value.MatchBytes(serverStepUp));
+        break;
+
+      case KeyPurposeId::id_kp_clientAuth:
+        match = value.MatchBytes(client);
+        break;
+
+      case KeyPurposeId::id_kp_codeSigning:
+        match = value.MatchBytes(code);
+        break;
+
+      case KeyPurposeId::id_kp_emailProtection:
+        match = value.MatchBytes(email);
+        break;
+
+      case KeyPurposeId::id_kp_OCSPSigning:
+        match = value.MatchBytes(ocsp);
+        break;
+
+      case KeyPurposeId::anyExtendedKeyUsage:
+        PR_NOT_REACHED("anyExtendedKeyUsage should start with found==true");
+        return der::Fail(SEC_ERROR_LIBRARY_FAILURE);
+
+      default:
+        PR_NOT_REACHED("unrecognized EKU");
+        return der::Fail(SEC_ERROR_LIBRARY_FAILURE);
+    }
+  }
+
+  if (match) {
+    if (value.AtEnd()) {
+      found = true;
+      if (requiredEKU == KeyPurposeId::id_kp_OCSPSigning) {
+        foundOCSPSigning = true;
+      }
+    }
+  } else if (value.MatchBytes(ocsp) && value.AtEnd()) {
+    foundOCSPSigning = true;
+  }
+
+  value.SkipToEnd(); // ignore unmatched OIDs.
+
+  return der::Success;
+}
+
+Result
+CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA,
+                      const SECItem* encodedExtendedKeyUsage,
+                      KeyPurposeId requiredEKU)
+{
   // XXX: We're using SEC_ERROR_INADEQUATE_CERT_TYPE here so that callers can
   // distinguish EKU mismatch from KU mismatch from basic constraints mismatch.
   // We should probably add a new error code that is more clear for this type
@@ -351,35 +433,22 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedEKUs,
 
   bool foundOCSPSigning = false;
 
-  if (encodedEKUs) {
-    ScopedPtr<CERTOidSequence, CERT_DestroyOidSequence>
-      seq(CERT_DecodeOidSequence(encodedEKUs));
-    if (!seq) {
-      PR_SetError(SEC_ERROR_INADEQUATE_CERT_TYPE, 0);
-      return RecoverableError;
+  if (encodedExtendedKeyUsage) {
+    bool found = requiredEKU == KeyPurposeId::anyExtendedKeyUsage;
+
+    der::Input input;
+    if (input.Init(encodedExtendedKeyUsage->data,
+                   encodedExtendedKeyUsage->len) != der::Success) {
+      return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);
     }
-
-    bool found = false;
-
-    // XXX: We allow duplicate entries.
-    for (const SECItem* const* oids = seq->oids; oids && *oids; ++oids) {
-      SECOidTag oidTag = SECOID_FindOIDTag(*oids);
-      if (requiredEKU != SEC_OID_UNKNOWN && oidTag == requiredEKU) {
-        found = true;
-      } else {
-        // Treat CA certs with step-up OID as also having SSL server type.
-        // COMODO has issued certificates that require this behavior
-        // that don't expire until June 2020!
-        // TODO 982932: Limit this expection to old certificates
-        if (endEntityOrCA == EndEntityOrCA::MustBeCA &&
-            requiredEKU == SEC_OID_EXT_KEY_USAGE_SERVER_AUTH &&
-            oidTag == SEC_OID_NS_KEY_USAGE_GOVT_APPROVED) {
-          found = true;
-        }
-      }
-      if (oidTag == SEC_OID_OCSP_RESPONDER) {
-        foundOCSPSigning = true;
-      }
+    if (der::NestedOf(input, der::SEQUENCE, der::OIDTag, der::EmptyAllowed::No,
+                      bind(MatchEKU, _1, requiredEKU, endEntityOrCA,
+                           ref(found), ref(foundOCSPSigning)))
+          != der::Success) {
+      return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);
+    }
+    if (der::End(input) != der::Success) {
+      return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);
     }
 
     // If the EKU extension was included, then the required EKU must be in the
@@ -404,9 +473,8 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedEKUs,
     // Allowing this exception does not cause any security issues because we
     // require delegated OCSP response signing certificates to be end-entity
     // certificates.
-    if (foundOCSPSigning && requiredEKU != SEC_OID_OCSP_RESPONDER) {
-      PR_SetError(SEC_ERROR_INADEQUATE_CERT_TYPE, 0);
-      return RecoverableError;
+    if (foundOCSPSigning && requiredEKU != KeyPurposeId::id_kp_OCSPSigning) {
+      return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);
     }
     // http://tools.ietf.org/html/rfc6960#section-4.2.2.2:
     // "OCSP signing delegation SHALL be designated by the inclusion of
@@ -417,9 +485,8 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedEKUs,
     // EKU extension is missing from an end-entity certificate. However, any CA
     // certificate can issue a delegated OCSP response signing certificate, so
     // we can't require the EKU be explicitly included for CA certificates.
-    if (!foundOCSPSigning && requiredEKU == SEC_OID_OCSP_RESPONDER) {
-      PR_SetError(SEC_ERROR_INADEQUATE_CERT_TYPE, 0);
-      return RecoverableError;
+    if (!foundOCSPSigning && requiredEKU == KeyPurposeId::id_kp_OCSPSigning) {
+      return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);
     }
   }
 
@@ -432,7 +499,7 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
                                  PRTime time,
                                  EndEntityOrCA endEntityOrCA,
                                  KeyUsages requiredKeyUsagesIfPresent,
-                                 SECOidTag requiredEKUIfPresent,
+                                 KeyPurposeId requiredEKUIfPresent,
                                  SECOidTag requiredPolicy,
                                  unsigned int subCACount,
                 /*optional out*/ TrustLevel* trustLevelOut)

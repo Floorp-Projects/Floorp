@@ -24,26 +24,35 @@
 
 // Work around missing std::bind, std::ref, std::cref in older compilers. This
 // implementation isn't intended to be complete; rather, it is the minimal
-// implementation needed to make our use of std::bind work.
+// implementation needed to make our use of std::bind work for compilers that
+// lack both C++11 and TR1 support for these features. We cannot even assume
+// that rvalue references work, which means we don't get perfect forwarding
+// and thus we basically have to define a new overload for every distinct call
+// signature.
+//
+// A positive side-effect of this code is improved debugging usability; it is
+// much more convenient to step through code that uses this polyfill than it is
+// to step through the many nested layers of a real std::bind implementation.
+//
+// Build with MOZILLA_PKIX_USE_REAL_FUNCTIONAL defined in order to use the
+// compiler's definitions of these functions. This is helpful in order to
+// ensure that the calling code is actually compatible with the real std::bind
+// and friends.
 
 #ifndef mozilla_pkix__bind_h
 #define mozilla_pkix__bind_h
 
-#ifdef _MSC_VER
-#pragma warning(disable:4275) //Suppress spurious MSVC warning
-#endif
+#ifdef MOZILLA_PKIX_USE_REAL_FUNCTIONAL
 #include <functional>
-#ifdef _MSC_VER
-#pragma warning(default:4275)
 #endif
 
 namespace mozilla { namespace pkix {
 
-#ifdef _MSC_VER
+#ifdef MOZILLA_PKIX_USE_REAL_FUNCTIONAL
 
 using std::bind;
-using std::ref;
 using std::cref;
+using std::ref;
 using std::placeholders::_1;
 
 #else
@@ -66,6 +75,7 @@ public:
 private:
   const F f;
   B1& b1;
+  void operator=(const Bind1&) /*= delete*/;
 };
 
 template <typename R, typename P1, typename B1, typename B2>
@@ -79,6 +89,40 @@ private:
   const F f;
   B1& b1;
   B2& b2;
+  void operator=(const Bind2&) /*= delete*/;
+};
+
+template <typename R, typename P1, typename B1, typename B2, typename B3>
+class Bind3
+{
+public:
+  typedef R (*F)(P1&, B1&, B2&, B3&);
+  Bind3(F f, B1& b1, B2& b2, B3& b3) : f(f), b1(b1), b2(b2), b3(b3) { }
+  R operator()(P1& p1) const { return f(p1, b1, b2, b3); }
+private:
+  const F f;
+  B1& b1;
+  B2& b2;
+  B3& b3;
+  void operator=(const Bind3&) /*= delete*/;
+};
+
+template <typename R, typename P1, typename B1, typename B2, typename B3,
+          typename B4>
+class Bind4
+{
+public:
+  typedef R (*F)(P1&, B1, B2, B3&, B4&);
+  Bind4(F f, B1& b1, B2& b2, B3& b3, B4& b4)
+    : f(f), b1(b1), b2(b2), b3(b3), b4(b4) { }
+  R operator()(P1& p1) const { return f(p1, b1, b2, b3, b4); }
+private:
+  const F f;
+  B1& b1;
+  B2& b2;
+  B3& b3;
+  B4& b4;
+  void operator=(const Bind4&) /*= delete*/;
 };
 
 } // namespace internal
@@ -92,12 +136,28 @@ bind(R (*f)(P1&, B1&), Placeholder1&, B1& b1)
 
 template <typename R, typename P1, typename B1, typename B2>
 inline internal::Bind2<R, P1, B1, B2>
-bind(R (*f)(P1&, B1&, B2&), Placeholder1 &, B1 & b1, B2 & b2)
+bind(R (*f)(P1&, B1&, B2&), Placeholder1&, B1& b1, B2& b2)
 {
   return internal::Bind2<R, P1, B1, B2>(f, b1, b2);
 }
 
-#endif // _MSC_VER
+template <typename R, typename P1, typename B1, typename B2, typename B3>
+inline internal::Bind3<R, P1, B1, B2, B3>
+bind(R (*f)(P1&, B1&, B2&, B3&), Placeholder1&, B1& b1, B2& b2, B3& b3)
+{
+  return internal::Bind3<R, P1, B1, B2, B3>(f, b1, b2, b3);
+}
+
+template <typename R, typename P1, typename B1, typename B2, typename B3,
+          typename B4>
+inline internal::Bind4<R, P1, const B1, const B2, B3, B4>
+bind(R (*f)(P1&, B1, B2, B3&, B4&), Placeholder1&, const B1& b1, const B2& b2,
+     B3& b3, B4& b4)
+{
+  return internal::Bind4<R, P1, const B1, const B2, B3, B4>(f, b1, b2, b3, b4);
+}
+
+#endif
 
 } } // namespace mozilla::pkix
 
