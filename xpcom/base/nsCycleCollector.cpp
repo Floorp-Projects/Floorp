@@ -3529,7 +3529,7 @@ nsCycleCollector::Collect(ccType aCCType,
 
   ++mResults.mNumSlices;
 
-  bool finished = false;
+  bool continueSlice = true;
   do {
     switch (mIncrementalPhase) {
       case IdlePhase:
@@ -3539,6 +3539,14 @@ nsCycleCollector::Collect(ccType aCCType,
       case GraphBuildingPhase:
         PrintPhase("MarkRoots");
         MarkRoots(aBudget);
+
+        // Only continue this slice if we're running synchronously or the
+        // next phase will probably be short, to reduce the max pause for this
+        // collection.
+        // (There's no need to check if we've finished graph building, because
+        // if we haven't, we've already exceeded our budget, and will finish
+        // this slice anyways.)
+        continueSlice = aBudget.isUnlimited() || mResults.mNumSlices < 3;
         break;
       case ScanAndCollectWhitePhase:
         // We do ScanRoots and CollectWhite in a single slice to ensure
@@ -3553,10 +3561,13 @@ nsCycleCollector::Collect(ccType aCCType,
       case CleanupPhase:
         PrintPhase("CleanupAfterCollection");
         CleanupAfterCollection();
-        finished = true;
+        continueSlice = false;
         break;
     }
-  } while (!aBudget.checkOverBudget() && !finished);
+    if (continueSlice) {
+      continueSlice = !aBudget.checkOverBudget();
+    }
+  } while (continueSlice);
 
   // Clear mActivelyCollecting here to ensure that a recursive call to
   // Collect() does something.
