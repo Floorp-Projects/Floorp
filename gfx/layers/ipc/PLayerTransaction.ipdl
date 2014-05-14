@@ -42,7 +42,7 @@ sync protocol PLayerTransaction {
   manages PTexture;
 
 child:
-  async ParentAsyncMessage(AsyncParentMessageData aMessage);
+  async ParentAsyncMessage(AsyncParentMessageData[] aMessages);
 
 parent:
   async PLayer();
