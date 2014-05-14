@@ -14,9 +14,15 @@ import org.mozilla.gecko.R;
 
 import android.content.Context;
 import android.preference.ListPreference;
+import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 
 public class LocaleListPreference extends ListPreference {
+    private static final String LOG_TAG = "GeckoLocaleList";
+
+    private volatile Locale entriesLocale;
+
     public LocaleListPreference(Context context) {
         this(context, null);
     }
@@ -84,9 +90,55 @@ public class LocaleListPreference extends ListPreference {
         return descriptors;
     }
 
+    @Override
+    protected void onDialogClosed(boolean positiveResult) {
+        // The superclass will take care of persistence.
+        super.onDialogClosed(positiveResult);
+
+        // Use this hook to try to fix up the environment ASAP.
+        // Do this so that the redisplayed fragment is inflated
+        // with the right locale.
+        final Locale selectedLocale = getSelectedLocale();
+        final Context context = getContext();
+        BrowserLocaleManager.getInstance().updateConfiguration(context, selectedLocale);
+    }
+
+    private Locale getSelectedLocale() {
+        final String tag = getValue();
+        if (tag == null || tag.equals("")) {
+            return Locale.getDefault();
+        }
+        return BrowserLocaleManager.parseLocaleCode(tag);
+    }
+
+    @Override
+    public CharSequence getSummary() {
+        final String value = getValue();
+
+        if (TextUtils.isEmpty(value)) {
+            return getContext().getString(R.string.locale_system_default);
+        }
+
+        // We can't trust super.getSummary() across locale changes,
+        // apparently, so let's do the same work.
+        final Locale loc = new Locale(value);
+        return loc.getDisplayName(loc);
+    }
+
     private void buildList() {
+        final Locale currentLocale = Locale.getDefault();
+        Log.d(LOG_TAG, "Building locales list. Current locale: " + currentLocale);
+
+        if (currentLocale.equals(this.entriesLocale) &&
+            getEntries() != null) {
+            Log.v(LOG_TAG, "No need to build list.");
+            return;
+        }
+
         final LocaleDescriptor[] descriptors = getShippingLocales();
         final int count = descriptors.length;
+
+        this.entriesLocale = currentLocale;
 
         // We leave room for "System default".
         final String[] entries = new String[count + 1];

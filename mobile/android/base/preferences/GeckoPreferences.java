@@ -38,11 +38,13 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
@@ -70,8 +72,12 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 public class GeckoPreferences
-    extends PreferenceActivity
-    implements OnPreferenceChangeListener, GeckoEventListener, GeckoActivityStatus
+extends PreferenceActivity
+implements
+GeckoActivityStatus,
+GeckoEventListener,
+OnPreferenceChangeListener,
+OnSharedPreferenceChangeListener
 {
     private static final String LOGTAG = "GeckoPreferences";
 
@@ -120,35 +126,70 @@ public class GeckoPreferences
      */
     private Locale lastLocale = Locale.getDefault();
 
-    private void updateTitle(int title) {
-        // Due to locale switching, we need to dynamically impose the title on
-        // the default preferences view.
+    private void updateActionBarTitle(int title) {
+        if (Build.VERSION.SDK_INT >= 14) {
+            final String newTitle = getString(title);
+            if (newTitle != null) {
+                Log.v(LOGTAG, "Setting action bar title to " + newTitle);
 
-        final String newTitle = getString(title);
-        if (newTitle != null) {
-            Log.v(LOGTAG, "Setting activity title to " + newTitle);
-            setTitle(newTitle);
-
-            if (Build.VERSION.SDK_INT >= 14) {
                 final ActionBar actionBar = getActionBar();
                 actionBar.setTitle(newTitle);
             }
         }
     }
 
+    private void updateTitle(String newTitle) {
+        if (newTitle != null) {
+            Log.v(LOGTAG, "Setting activity title to " + newTitle);
+            setTitle(newTitle);
+        }
+    }
+
+    private void updateTitle(int title) {
+        updateTitle(getString(title));
+    }
+
+    /**
+     * This updates the title shown above the prefs fragment in
+     * a multi-pane view.
+     */
+    private void updateBreadcrumbTitle(int title) {
+        final String newTitle = getString(title);
+        showBreadCrumbs(newTitle, newTitle);
+    }
+
     private void updateTitleForPrefsResource(int res) {
-        // At present we only need to do this for the top-level prefs view
-        // and the locale switcher itself.
-        // The others don't allow you to change locales, and have their
-        // titles set in their fragment descriptors.
-        if (res == R.xml.preferences) {
-            updateTitle(R.string.settings_title);
+        // If we're a multi-pane view, the activity title is really
+        // the header bar above the fragment.
+        // Find out which fragment we're showing, and use that.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB && isMultiPane()) {
+            int title = getIntent().getIntExtra(EXTRA_SHOW_FRAGMENT_TITLE, -1);
+            if (res == R.xml.preferences) {
+                // This should only occur when res == R.xml.preferences,
+                // but showing "Settings" is better than crashing or showing
+                // "Fennec".
+                updateActionBarTitle(R.string.settings_title);
+            }
+
+            updateTitle(title);
+            updateBreadcrumbTitle(title);
             return;
         }
 
-        if (res == R.xml.preferences_locale) {
-            updateTitle(R.string.pref_category_language);
-            return;
+        // At present we only need to do this for non-leaf prefs views
+        // and the locale switcher itself.
+        int title = -1;
+        if (res == R.xml.preferences) {
+            title = R.string.settings_title;
+        } else if (res == R.xml.preferences_locale) {
+            title = R.string.pref_category_language;
+        } else if (res == R.xml.preferences_vendor) {
+            title = R.string.pref_category_vendor;
+        } else if (res == R.xml.preferences_customize) {
+            title = R.string.pref_category_customize;
+        }
+        if (title != -1) {
+            updateTitle(title);
         }
     }
 
@@ -157,6 +198,42 @@ public class GeckoPreferences
 
         BrowserLocaleManager.getInstance().updateConfiguration(getApplicationContext(), newLocale);
         this.lastLocale = newLocale;
+
+        if (Build.VERSION.SDK_INT >= 11 && isMultiPane()) {
+            // This takes care of the left pane.
+            invalidateHeaders();
+
+            // Detach and reattach the current prefs pane so that it
+            // reflects the new locale.
+            final FragmentManager fragmentManager = getFragmentManager();
+            int id = getResources().getIdentifier("android:id/prefs", null, null);
+            final Fragment current = fragmentManager.findFragmentById(id);
+            if (current != null) {
+                fragmentManager.beginTransaction()
+                               .disallowAddToBackStack()
+                               .detach(current)
+                               .attach(current)
+                               .commitAllowingStateLoss();
+            } else {
+                Log.e(LOGTAG, "No prefs fragment to reattach!");
+            }
+
+            // Because Android just rebuilt the activity itself with the
+            // old language, we need to update the top title and other
+            // wording again.
+            if (onIsMultiPane()) {
+                updateActionBarTitle(R.string.settings_title);
+            }
+
+            updateTitle(R.string.pref_header_language);
+            updateBreadcrumbTitle(R.string.pref_header_language);
+
+            // Don't finish the activity -- we just reloaded all of the
+            // individual parts! -- but when it returns, make sure that the
+            // caller knows the locale changed.
+            setResult(RESULT_CODE_LOCALE_DID_CHANGE);
+            return;
+        }
 
         // Cause the current fragment to redisplay, the hard way.
         // This avoids nonsense with trying to reach inside fragments and force them
@@ -172,6 +249,7 @@ public class GeckoPreferences
 
     private void checkLocale() {
         final Locale currentLocale = Locale.getDefault();
+        Log.v(LOGTAG, "Checking locale: " + currentLocale + " vs " + lastLocale);
         if (currentLocale.equals(lastLocale)) {
             return;
         }
@@ -189,10 +267,21 @@ public class GeckoPreferences
         // (or set it) before super.onCreate() is called so Android can display
         // the correct Fragment resource.
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB &&
-            !getIntent().hasExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT)) {
-            // Set up the default fragment if there is no explicit fragment to show.
-            setupTopLevelFragmentIntent();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            if (!getIntent().hasExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT)) {
+                // Set up the default fragment if there is no explicit fragment to show.
+                setupTopLevelFragmentIntent();
+
+                // This is the default header, because it's the first one.
+                // I know, this is an affront to all human decency. And yet.
+                updateTitle(getString(R.string.pref_header_customize));
+            }
+
+            // So that Android doesn't put the fragment title (or nothing at
+            // all) in the action bar.
+            if (onIsMultiPane()) {
+                updateActionBarTitle(R.string.settings_title);
+            }
         }
 
         super.onCreate(savedInstanceState);
@@ -292,15 +381,13 @@ public class GeckoPreferences
         // Build fragment intent.
         intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT, GeckoPreferenceFragment.class.getName());
         intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT_ARGUMENTS, fragmentArgs);
-
-        // Show the title for the top level.
-        updateTitle(R.string.settings_title);
     }
 
     @Override
     public void onBuildHeaders(List<Header> target) {
-        if (onIsMultiPane())
+        if (onIsMultiPane()) {
             loadHeadersFromResource(R.xml.preference_headers, target);
+        }
     }
 
     @Override
@@ -327,6 +414,14 @@ public class GeckoPreferences
 
     @Override
     public void onPause() {
+        // Symmetric with onResume.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            if (isMultiPane()) {
+                SharedPreferences prefs = GeckoSharedPrefs.forApp(this);
+                prefs.unregisterOnSharedPreferenceChangeListener(this);
+            }
+        }
+
         super.onPause();
 
         if (getApplication() instanceof GeckoApplication) {
@@ -340,6 +435,16 @@ public class GeckoPreferences
 
         if (getApplication() instanceof GeckoApplication) {
             ((GeckoApplication) getApplication()).onActivityResume(this);
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            // Watch prefs, otherwise we don't reliably get told when they change.
+            // See documentation for onSharedPreferenceChange for more.
+            // Inexplicably only needed on tablet.
+            if (isMultiPane()) {
+                SharedPreferences prefs = GeckoSharedPrefs.forApp(this);
+                prefs.registerOnSharedPreferenceChangeListener(this);
+            }
         }
     }
 
@@ -376,10 +481,14 @@ public class GeckoPreferences
 
         switch (requestCode) {
           case REQUEST_CODE_PREF_SCREEN:
-              if (resultCode == RESULT_CODE_EXIT_SETTINGS) {
+              switch (resultCode) {
+              case RESULT_CODE_EXIT_SETTINGS:
+                  updateActionBarTitle(R.string.settings_title);
+
                   // Pass this result up to the parent activity.
                   setResult(RESULT_CODE_EXIT_SETTINGS);
                   finish();
+                  break;
               }
               break;
 
@@ -729,7 +838,7 @@ public class GeckoPreferences
             public void run() {
                 final LocaleManager localeManager = BrowserLocaleManager.getInstance();
 
-                if (newValue.equals("")) {
+                if (TextUtils.isEmpty(newValue)) {
                     BrowserLocaleManager.getInstance().resetToSystemLocale(context);
                     Telemetry.sendUIEvent(TelemetryContract.Event.LOCALE_BROWSER_RESET);
                 } else {
@@ -751,6 +860,25 @@ public class GeckoPreferences
         });
 
         return true;
+    }
+
+    /**
+     * Implementation for the {@link OnSharedPreferenceChangeListener} interface,
+     * which we use to watch changes in our prefs file.
+     *
+     * This is reliably called whenever the pref changes, which is not the case
+     * for multiple consecutive changes in the case of onPreferenceChange.
+     *
+     * Note that this listener is not always registered: we use it only on
+     * tablets, Honeycomb and up, where we'll have a multi-pane view and prefs
+     * changing multiple times.
+     */
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (PREFS_BROWSER_LOCALE.equals(key)) {
+            onLocaleSelected(BrowserLocaleManager.getLanguageTag(lastLocale),
+                             sharedPreferences.getString(key, null));
+        }
     }
 
     @Override
@@ -888,7 +1016,7 @@ public class GeckoPreferences
 
                 builder.setTitle(R.string.masterpassword_create_title)
                        .setView((View) linearLayout)
-                       .setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {  
+                       .setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 JSONObject jsonPref = new JSONObject();
@@ -896,7 +1024,7 @@ public class GeckoPreferences
                                     jsonPref.put("name", PREFS_MP_ENABLED);
                                     jsonPref.put("type", "string");
                                     jsonPref.put("value", input1.getText().toString());
-                    
+
                                     GeckoEvent event = GeckoEvent.createBroadcastEvent("Preferences:Set", jsonPref.toString());
                                     GeckoAppShell.sendEventToGecko(event);
                                 } catch(Exception ex) {
@@ -905,7 +1033,7 @@ public class GeckoPreferences
                                 return;
                             }
                         })
-                        .setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {  
+                        .setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 return;
@@ -932,13 +1060,13 @@ public class GeckoPreferences
 
                 builder.setTitle(R.string.masterpassword_remove_title)
                        .setView((View) linearLayout)
-                       .setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {  
+                       .setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 PrefsHelper.setPref(PREFS_MP_ENABLED, input.getText().toString());
                             }
                         })
-                        .setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {  
+                        .setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 return;
