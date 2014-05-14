@@ -49,6 +49,9 @@ XPCOMUtils.defineLazyGetter(this, "CreateSocialMarkWidget", function() {
   return tmp.CreateSocialMarkWidget;
 });
 
+XPCOMUtils.defineLazyModuleGetter(this, "UITour",
+  "resource:///modules/UITour.jsm");
+
 SocialUI = {
   _initialized: false,
 
@@ -180,6 +183,37 @@ SocialUI = {
 
   // This handles "ActivateSocialFeature" events fired against content documents
   // in this window.
+  _highlight: function(elId) {
+    let node = document.getElementById(elId);
+    if (node._highlightTarget)
+      return;
+
+    function _hide(aEvent, aNode) {
+      if (!aNode) {
+        aNode = aEvent.target;
+      }
+      clearTimeout(aNode._highlightTarget.timeout);
+      aNode.removeEventListener("click", aNode._highlightTarget.fnHide);
+      UITour.hideHighlight(window);
+      delete aNode._highlightTarget;
+    }
+
+    let target = {
+      targetName: elId,
+      node: node,
+    };
+
+    // hookup two events that remove highlight.  one is a timeout of 5s,
+    // the other is clicking on the button.
+    let _highlightTarget = {
+      timeout: setTimeout(_hide, 5000, null, node),
+      fnHide: _hide
+    };
+    node.addEventListener("click", _highlightTarget.fnHide);
+    node._highlightTarget = _highlightTarget;
+
+    UITour.showHighlight(target, "wobble");
+  },
   _activationEventHandler: function SocialUI_activationHandler(e) {
     let targetDoc;
     let node;
@@ -226,13 +260,33 @@ SocialUI = {
         return;
       }
     }
-    Social.installProvider(targetDoc, data, function(manifest) {
-      Social.activateFromOrigin(manifest.origin, function(provider) {
+
+    Social.installProvider(targetDoc, data, (manifest) => {
+      Social.activateFromOrigin(manifest.origin, (provider) => {
         if (provider.sidebarURL) {
           SocialSidebar.show(provider.origin);
         }
         if (provider.postActivationURL) {
           openUILinkIn(provider.postActivationURL, "tab");
+        }
+        // toggle the ui indicators.  The UITour indicator only works with one
+        // button at a time, so we only use one of these in cases where the
+        // provider has more than one. This is rare at this time.
+        if (provider.shareURL) {
+          this._highlight("social-share-button");
+          // make this new provider the selected provider. If the panel hasn't
+          // been opened, we need to make the frame first.
+          SocialShare._createFrame();
+          SocialShare.iframe.setAttribute('src', 'about:blank');
+          SocialShare.iframe.setAttribute('origin', provider.origin);
+          // get the right button selected
+          SocialShare.populateProviderMenu();
+        } else if (provider.statusURL) {
+          let targetName = SocialStatus._toolbarHelper.idFromOrigin(provider.origin);
+          this._highlight(targetName);
+        } else if (provider.markURL) {
+          let targetName = SocialMarks._toolbarHelper.idFromOrigin(provider.origin);
+          this._highlight(targetName);
         }
       });
     });
