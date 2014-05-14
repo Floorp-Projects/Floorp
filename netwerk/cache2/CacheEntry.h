@@ -210,7 +210,7 @@ private:
   bool Load(bool aTruncate, bool aPriority);
   void OnLoaded();
 
-  void RememberCallback(Callback const & aCallback);
+  void RememberCallback(Callback & aCallback, bool aBypassIfBusy);
   void InvokeCallbacksLock();
   void InvokeCallbacks();
   bool InvokeCallbacks(bool aReadOnly);
