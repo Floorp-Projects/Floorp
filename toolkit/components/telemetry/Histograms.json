@@ -4283,6 +4283,11 @@
     "extended_statistics_ok": true,
     "description": "Time (ms) it takes to initialize the search service"
   },
+  "SEARCH_SERVICE_INIT_SYNC": {
+    "expires_in_version": "35",
+    "kind": "boolean",
+    "description": "search service has been initialized synchronously"
+  },
   "SEARCH_SERVICE_BUILD_CACHE_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
