@@ -1935,16 +1935,14 @@ SliceBudget::WorkBudget(int64_t work)
 }
 
 SliceBudget::SliceBudget()
-  : deadline(INT64_MAX),
-    counter(INTPTR_MAX)
 {
+    reset();
 }
 
 SliceBudget::SliceBudget(int64_t budget)
 {
     if (budget == Unlimited) {
-        deadline = INT64_MAX;
-        counter = INTPTR_MAX;
+        reset();
     } else if (budget > 0) {
         deadline = PRMJ_Now() + budget;
         counter = CounterReset;
