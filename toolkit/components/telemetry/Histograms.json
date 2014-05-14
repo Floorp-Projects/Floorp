@@ -5917,10 +5917,14 @@
     "n_buckets": 10,
     "extended_statistics_ok": true
   },
-  "CERT_PINNING_EVALUATION_RESULTS": {
+  "CERT_PINNING_RESULTS": {
     "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 4,
-    "description": "Certificate pinning evalutation results(pinned host)(0 = failure, 1 = success)"
+    "kind": "boolean",
+    "description": "Certificate pinning evalutation results (0 = failure, 1 = success)"
+  },
+  "CERT_PINNING_TEST_RESULTS": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Certificate pinning evalutation results (0 = failure, 1 = success)"
   }
 }

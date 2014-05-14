@@ -194,16 +194,18 @@ CheckPinsForHostname(const CERTCertList *certList, const char *hostname,
 
   if (foundEntry && foundEntry->pinset) {
     bool result = EvalChainWithPinset(certList, foundEntry->pinset);
+    bool retval = result;
+    Telemetry::ID histogram = Telemetry::CERT_PINNING_RESULTS;
     if (foundEntry->mTestMode) {
-      // TODO: Accumulate telemetry in test mode.
-      PR_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
-             ("pkpin: Skipping test mode evaluation for host: '%s'\n",
-              evalHost));
-      return true;
+      histogram = Telemetry::CERT_PINNING_TEST_RESULTS;
+      retval = true;
     }
-    Telemetry::Accumulate(Telemetry::CERT_PINNING_EVALUATION_RESULTS,
-                          result ? 1 : 0);
-    return result;
+    Telemetry::Accumulate(histogram, result ? 1 : 0);
+    PR_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
+           ("pkpin: Pin check %s for host '%s' (mode=%s)\n",
+            result ? "passed" : "failed", evalHost,
+            foundEntry->mTestMode ? "test" : "production"));
+    return retval;
   }
   return true; // No pinning information for this hostname
 }

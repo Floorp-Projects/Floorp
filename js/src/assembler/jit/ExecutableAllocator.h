@@ -33,6 +33,7 @@
 
 #include "assembler/wtf/Platform.h"
 #include "jit/arm/Simulator-arm.h"
+#include "jit/mips/Simulator-mips.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
 
@@ -61,7 +62,7 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
 #include <e32std.h>
 #endif
 
-#if WTF_CPU_MIPS && WTF_OS_LINUX
+#if WTF_CPU_MIPS && WTF_OS_LINUX && !JS_MIPS_SIMULATOR
 #include <sys/cachectl.h>
 #endif
 
@@ -418,7 +419,7 @@ public:
     static void cacheFlush(void*, size_t)
     {
     }
-#elif defined(JS_ARM_SIMULATOR)
+#elif defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
     static void cacheFlush(void *code, size_t size)
     {
         js::jit::Simulator::FlushICache(code, size);
