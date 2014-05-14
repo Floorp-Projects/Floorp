@@ -46,9 +46,7 @@ Object.defineProperty(this, "Components", {
 const DBG_STRINGS_URI = "chrome://global/locale/devtools/debugger.properties";
 
 const nsFile = CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
-Cu.import("resource://gre/modules/reflect.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
 dumpn.wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 
 Cu.import("resource://gre/modules/devtools/deprecated-sync-thenables.js");
@@ -108,6 +106,11 @@ function ModuleAPI() {
   let activeGlobalActors = new Set();
 
   return {
+    // See DebuggerServer.setRootActor for a description.
+    setRootActor: function(factory) {
+      DebuggerServer.setRootActor(factory);
+    },
+
     // See DebuggerServer.addGlobalActor for a description.
     addGlobalActor: function(factory, name) {
       DebuggerServer.addGlobalActor(factory, name);
@@ -341,7 +344,7 @@ var DebuggerServer = {
    */
   addBrowserActors: function(aWindowType = "navigator:browser", restrictPrivileges = false) {
     this.chromeWindowType = aWindowType;
-    this.addActors("resource://gre/modules/devtools/server/actors/webbrowser.js");
+    this.registerModule("devtools/server/actors/webbrowser");
 
     if (!restrictPrivileges) {
       this.addTabActors();
@@ -365,8 +368,8 @@ var DebuggerServer = {
       this.addTabActors();
     }
     // But webbrowser.js and childtab.js aren't loaded from shell.js.
-    if (!("BrowserTabActor" in this)) {
-      this.addActors("resource://gre/modules/devtools/server/actors/webbrowser.js");
+    if (!this.isModuleRegistered("devtools/server/actors/webbrowser")) {
+      this.registerModule("devtools/server/actors/webbrowser");
     }
     if (!("ContentActor" in this)) {
       this.addActors("resource://gre/modules/devtools/server/actors/childtab.js");
@@ -726,6 +729,10 @@ var DebuggerServer = {
   },
 
   // DebuggerServer extension API.
+
+  setRootActor: function DS_setRootActor(aFunction) {
+    this.createRootActor = aFunction;
+  },
 
   /**
    * Registers handlers for new tab-scoped request types defined dynamically.

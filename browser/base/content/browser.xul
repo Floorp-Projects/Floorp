@@ -244,7 +244,7 @@
            onpopuphidden="SocialShare.onHidden()"
            hidden="true">
       <vbox class="social-share-toolbar">
-        <vbox id="social-share-provider-buttons" flex="1"/>
+        <arrowscrollbox id="social-share-provider-buttons" orient="vertical" flex="1"/>
       </vbox>
     </panel>
 
