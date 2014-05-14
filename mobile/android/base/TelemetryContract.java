@@ -7,31 +7,37 @@ package org.mozilla.gecko;
 
 /**
  * Holds data definitions for our UI Telemetry implementation.
+ *
+ * See mobile/android/base/docs/index.rst for a full dictionary.
  */
 public interface TelemetryContract {
 
     /**
      * Holds event names. Intended for use with
      * Telemetry.sendUIEvent() as the "action" parameter.
+     *
+     * Please keep this list sorted.
      */
     public interface Event {
-        // Outcome of data policy notification: can be true or false.
-        public static final String POLICY_NOTIFICATION_SUCCESS = "policynotification.success.1:";
+        // Generic action, usually for tracking menu and toolbar actions.
+        public static final String ACTION = "action.1";
 
-        // Top site pinned.
-        public static final String TOP_SITES_PIN = "pin.1";
+        // Launching (opening) an external application.
+        // Note: Only used in JavaScript for now, but here for completeness.
+        public static final String LAUNCH = "launch.1";
 
-        // Top site un-pinned.
-        public static final String TOP_SITES_UNPIN = "unpin.1";
+        // Loading a URL.
+        public static final String LOAD_URL = "loadurl.1";
 
-        // Top site edited.
-        public static final String TOP_SITES_EDIT = "edit.1";
+        public static final String LOCALE_BROWSER_RESET = "locale.browser.reset.1";
+        public static final String LOCALE_BROWSER_SELECTED = "locale.browser.selected.1";
+        public static final String LOCALE_BROWSER_UNSELECTED = "locale.browser.unselected.1";
 
         // Set default panel.
         public static final String PANEL_SET_DEFAULT = "setdefault.1";
 
-        // Sharing content.
-        public static final String SHARE = "share.1";
+        // Outcome of data policy notification: can be true or false.
+        public static final String POLICY_NOTIFICATION_SUCCESS = "policynotification.success.1:";
 
         // Sanitizing private data.
         public static final String SANITIZE = "sanitize.1";
@@ -40,19 +46,21 @@ public interface TelemetryContract {
         // Note: Only used in JavaScript for now, but here for completeness.
         public static final String SAVE = "save.1";
 
+        // Sharing content.
+        public static final String SHARE = "share.1";
+
+        // Top site edited.
+        public static final String TOP_SITES_EDIT = "edit.1";
+
+        // Top site pinned.
+        public static final String TOP_SITES_PIN = "pin.1";
+
+        // Top site un-pinned.
+        public static final String TOP_SITES_UNPIN = "unpin.1";
+
         // Stop holding a resource (reader, bookmark, etc) for viewing later.
         // Note: Only used in JavaScript for now, but here for completeness.
         public static final String UNSAVE = "unsave.1";
-
-        // Loading a URL.
-        public static final String LOAD_URL = "loadurl.1";
-
-        // Generic action, usually for tracking menu and toolbar actions.
-        public static final String ACTION = "action.1";
-
-        // Launching (opening) an external application
-        // Note: Only used in JavaScript for now, but here for completeness.
-        public static final String LAUNCH = "launch.1";
     }
 
     /**

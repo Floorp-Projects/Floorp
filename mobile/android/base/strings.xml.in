@@ -108,6 +108,10 @@
   <string name="pref_search_restore_defaults_summary">&pref_search_restore_defaults_summary;</string>
   <string name="pref_search_hint">&pref_search_hint;</string>
 
+  <string name="pref_category_language">&pref_category_language;</string>
+  <string name="pref_browser_locale">&pref_browser_locale;</string>
+  <string name="locale_system_default">&locale_system_default;</string>
+
   <string name="pref_category_devtools">&pref_category_devtools;</string>
   <string name="pref_developer_remotedebugging">&pref_developer_remotedebugging;</string>
 
@@ -126,6 +130,7 @@
   <string name="pref_header_customize">&pref_header_customize;</string>
   <string name="pref_header_display">&pref_header_display;</string>
   <string name="pref_header_privacy_short">&pref_header_privacy_short;</string>
+  <string name="pref_header_language">&pref_header_language;</string>
   <string name="pref_header_vendor">&pref_header_vendor;</string>
   <string name="pref_header_devtools">&pref_header_devtools;</string>
 

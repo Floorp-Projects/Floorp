@@ -3100,6 +3100,7 @@ NS_IMPL_RELEASE_INHERITED(nsDOMDeviceStorage, DOMEventTargetHelper)
 
 nsDOMDeviceStorage::nsDOMDeviceStorage(nsPIDOMWindow* aWindow)
   : DOMEventTargetHelper(aWindow)
+  , mIsShareable(false)
   , mIsWatchingFile(false)
   , mAllowedToWatchFile(false)
 {
@@ -3127,6 +3128,27 @@ nsDOMDeviceStorage::Init(nsPIDOMWindow* aWindow, const nsAString &aType,
   }
   if (!mStorageName.IsEmpty()) {
     RegisterForSDCardChanges(this);
+
+#ifdef MOZ_WIDGET_GONK
+    if (DeviceStorageTypeChecker::IsVolumeBased(mStorageType)) {
+      nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID);
+      if (NS_WARN_IF(!vs)) {
+        return NS_ERROR_FAILURE;
+      }
+      nsresult rv;
+      nsCOMPtr<nsIVolume> vol;
+      rv = vs->GetVolumeByName(mStorageName, getter_AddRefs(vol));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      bool isFake;
+      rv = vol->GetIsFake(&isFake);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      mIsShareable = !isFake;
+    }
+#endif
   }
 
   // Grab the principal of the document
@@ -3911,6 +3933,26 @@ nsDOMDeviceStorage::Default()
   nsString defaultStorageName;
   GetDefaultStorageName(mStorageType, defaultStorageName);
   return mStorageName.Equals(defaultStorageName);
+}
+
+bool
+nsDOMDeviceStorage::CanBeFormatted()
+{
+  // Currently, any volume which can be shared can also be formatted.
+  return mIsShareable;
+}
+
+bool
+nsDOMDeviceStorage::CanBeMounted()
+{
+  // Currently, any volume which can be shared can also be mounted/unmounted.
+  return mIsShareable;
+}
+
+bool
+nsDOMDeviceStorage::CanBeShared()
+{
+  return mIsShareable;
 }
 
 already_AddRefed<Promise>
