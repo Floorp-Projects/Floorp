@@ -29,7 +29,7 @@ intr protocol PImageBridge
   manages PTexture;
 
 child:
-  async ParentAsyncMessage(AsyncParentMessageData aMessage);
+  async ParentAsyncMessage(AsyncParentMessageData[] aMessages);
 
 parent:
 

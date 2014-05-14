@@ -66,31 +66,35 @@ LayerTransactionChild::DeallocPCompositableChild(PCompositableChild* actor)
 }
 
 bool
-LayerTransactionChild::RecvParentAsyncMessage(const mozilla::layers::AsyncParentMessageData& aMessage)
+LayerTransactionChild::RecvParentAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessages)
 {
-  switch (aMessage.type()) {
-    case AsyncParentMessageData::TOpDeliverFence: {
-      const OpDeliverFence& op = aMessage.get_OpDeliverFence();
-      FenceHandle fence = op.fence();
-      PTextureChild* child = op.textureChild();
+  for (AsyncParentMessageArray::index_type i = 0; i < aMessages.Length(); ++i) {
+    const AsyncParentMessageData& message = aMessages[i];
 
-      RefPtr<TextureClient> texture = TextureClient::AsTextureClient(child);
-      if (texture) {
-        texture->SetReleaseFenceHandle(fence);
+    switch (message.type()) {
+      case AsyncParentMessageData::TOpDeliverFence: {
+        const OpDeliverFence& op = message.get_OpDeliverFence();
+        FenceHandle fence = op.fence();
+        PTextureChild* child = op.textureChild();
+
+        RefPtr<TextureClient> texture = TextureClient::AsTextureClient(child);
+        if (texture) {
+          texture->SetReleaseFenceHandle(fence);
+        }
+        if (mForwarder) {
+          mForwarder->HoldTransactionsToRespond(op.transactionId());
+        } else {
+          // Send back a response.
+          InfallibleTArray<AsyncChildMessageData> replies;
+          replies.AppendElement(OpReplyDeliverFence(op.transactionId()));
+          SendChildAsyncMessages(replies);
+        }
+        break;
       }
-      if (mForwarder) {
-        mForwarder->HoldTransactionsToRespond(op.transactionId());
-      } else {
-        // Send back a response.
-        InfallibleTArray<AsyncChildMessageData> replies;
-        replies.AppendElement(OpReplyDeliverFence(op.transactionId()));
-        SendChildAsyncMessages(replies);
-      }
-      break;
+      default:
+        NS_ERROR("unknown AsyncParentMessageData type");
+        return false;
     }
-    default:
-      NS_ERROR("unknown AsyncParentMessageData type");
-      return false;
   }
   return true;
 }
