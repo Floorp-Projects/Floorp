@@ -7,20 +7,25 @@ package org.mozilla.gecko.preferences;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.BrowserApp;
+import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.DataReportingNotification;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoActivityStatus;
-import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.LocaleManager;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.background.announcements.AnnouncementsConstants;
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.healthreport.HealthReportConstants;
@@ -28,15 +33,18 @@ import org.mozilla.gecko.home.HomePanelPicker;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
@@ -64,8 +72,12 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 public class GeckoPreferences
-    extends PreferenceActivity
-    implements OnPreferenceChangeListener, GeckoEventListener, GeckoActivityStatus
+extends PreferenceActivity
+implements
+GeckoActivityStatus,
+GeckoEventListener,
+OnPreferenceChangeListener,
+OnSharedPreferenceChangeListener
 {
     private static final String LOGTAG = "GeckoPreferences";
 
@@ -95,24 +107,181 @@ public class GeckoPreferences
     private static final String PREFS_DISPLAY_REFLOW_ON_ZOOM = "browser.zoom.reflowOnZoom";
     private static final String PREFS_SYNC = NON_PREF_PREFIX + "sync";
 
+    // This isn't a Gecko pref, even if it looks like one.
+    private static final String PREFS_BROWSER_LOCALE = "locale";
+
     public static final String PREFS_RESTORE_SESSION = NON_PREF_PREFIX + "restoreSession3";
 
     // These values are chosen to be distinct from other Activity constants.
     private static final int REQUEST_CODE_PREF_SCREEN = 5;
     private static final int RESULT_CODE_EXIT_SETTINGS = 6;
 
+    // Result code used when a locale preference changes.
+    // Callers can recognize this code to refresh themselves to
+    // accommodate a locale change.
+    public static final int RESULT_CODE_LOCALE_DID_CHANGE = 7;
+
+    /**
+     * Track the last locale so we know whether to redisplay.
+     */
+    private Locale lastLocale = Locale.getDefault();
+
+    private void updateActionBarTitle(int title) {
+        if (Build.VERSION.SDK_INT >= 14) {
+            final String newTitle = getString(title);
+            if (newTitle != null) {
+                Log.v(LOGTAG, "Setting action bar title to " + newTitle);
+
+                final ActionBar actionBar = getActionBar();
+                actionBar.setTitle(newTitle);
+            }
+        }
+    }
+
+    private void updateTitle(String newTitle) {
+        if (newTitle != null) {
+            Log.v(LOGTAG, "Setting activity title to " + newTitle);
+            setTitle(newTitle);
+        }
+    }
+
+    private void updateTitle(int title) {
+        updateTitle(getString(title));
+    }
+
+    /**
+     * This updates the title shown above the prefs fragment in
+     * a multi-pane view.
+     */
+    private void updateBreadcrumbTitle(int title) {
+        final String newTitle = getString(title);
+        showBreadCrumbs(newTitle, newTitle);
+    }
+
+    private void updateTitleForPrefsResource(int res) {
+        // If we're a multi-pane view, the activity title is really
+        // the header bar above the fragment.
+        // Find out which fragment we're showing, and use that.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB && isMultiPane()) {
+            int title = getIntent().getIntExtra(EXTRA_SHOW_FRAGMENT_TITLE, -1);
+            if (res == R.xml.preferences) {
+                // This should only occur when res == R.xml.preferences,
+                // but showing "Settings" is better than crashing or showing
+                // "Fennec".
+                updateActionBarTitle(R.string.settings_title);
+            }
+
+            updateTitle(title);
+            updateBreadcrumbTitle(title);
+            return;
+        }
+
+        // At present we only need to do this for non-leaf prefs views
+        // and the locale switcher itself.
+        int title = -1;
+        if (res == R.xml.preferences) {
+            title = R.string.settings_title;
+        } else if (res == R.xml.preferences_locale) {
+            title = R.string.pref_category_language;
+        } else if (res == R.xml.preferences_vendor) {
+            title = R.string.pref_category_vendor;
+        } else if (res == R.xml.preferences_customize) {
+            title = R.string.pref_category_customize;
+        }
+        if (title != -1) {
+            updateTitle(title);
+        }
+    }
+
+    private void onLocaleChanged(Locale newLocale) {
+        Log.d(LOGTAG, "onLocaleChanged: " + newLocale);
+
+        BrowserLocaleManager.getInstance().updateConfiguration(getApplicationContext(), newLocale);
+        this.lastLocale = newLocale;
+
+        if (Build.VERSION.SDK_INT >= 11 && isMultiPane()) {
+            // This takes care of the left pane.
+            invalidateHeaders();
+
+            // Detach and reattach the current prefs pane so that it
+            // reflects the new locale.
+            final FragmentManager fragmentManager = getFragmentManager();
+            int id = getResources().getIdentifier("android:id/prefs", null, null);
+            final Fragment current = fragmentManager.findFragmentById(id);
+            if (current != null) {
+                fragmentManager.beginTransaction()
+                               .disallowAddToBackStack()
+                               .detach(current)
+                               .attach(current)
+                               .commitAllowingStateLoss();
+            } else {
+                Log.e(LOGTAG, "No prefs fragment to reattach!");
+            }
+
+            // Because Android just rebuilt the activity itself with the
+            // old language, we need to update the top title and other
+            // wording again.
+            if (onIsMultiPane()) {
+                updateActionBarTitle(R.string.settings_title);
+            }
+
+            updateTitle(R.string.pref_header_language);
+            updateBreadcrumbTitle(R.string.pref_header_language);
+
+            // Don't finish the activity -- we just reloaded all of the
+            // individual parts! -- but when it returns, make sure that the
+            // caller knows the locale changed.
+            setResult(RESULT_CODE_LOCALE_DID_CHANGE);
+            return;
+        }
+
+        // Cause the current fragment to redisplay, the hard way.
+        // This avoids nonsense with trying to reach inside fragments and force them
+        // to redisplay themselves.
+        // We also don't need to update the title.
+        final Intent intent = (Intent) getIntent().clone();
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        startActivityForResult(intent, REQUEST_CODE_PREF_SCREEN);
+
+        setResult(RESULT_CODE_LOCALE_DID_CHANGE);
+        finish();
+    }
+
+    private void checkLocale() {
+        final Locale currentLocale = Locale.getDefault();
+        Log.v(LOGTAG, "Checking locale: " + currentLocale + " vs " + lastLocale);
+        if (currentLocale.equals(lastLocale)) {
+            return;
+        }
+
+        onLocaleChanged(currentLocale);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Apply the current user-selected locale, if necessary.
+        checkLocale();
 
         // For Android v11+ where we use Fragments (v11+ only due to bug 866352),
         // check that PreferenceActivity.EXTRA_SHOW_FRAGMENT has been set
         // (or set it) before super.onCreate() is called so Android can display
         // the correct Fragment resource.
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB &&
-            !getIntent().hasExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT)) {
-            // Set up the default fragment if there is no explicit fragment to show.
-            setupTopLevelFragmentIntent();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            if (!getIntent().hasExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT)) {
+                // Set up the default fragment if there is no explicit fragment to show.
+                setupTopLevelFragmentIntent();
+
+                // This is the default header, because it's the first one.
+                // I know, this is an affront to all human decency. And yet.
+                updateTitle(getString(R.string.pref_header_customize));
+            }
+
+            // So that Android doesn't put the fragment title (or nothing at
+            // all) in the action bar.
+            if (onIsMultiPane()) {
+                updateActionBarTitle(R.string.settings_title);
+            }
         }
 
         super.onCreate(savedInstanceState);
@@ -143,6 +312,9 @@ public class GeckoPreferences
                 Log.e(LOGTAG, "Displaying default settings.");
                 res = R.xml.preferences;
             }
+
+            // We don't include a title in the XML, so set it here, in a locale-aware fashion.
+            updateTitleForPrefsResource(res);
             addPreferencesFromResource(res);
         }
 
@@ -168,8 +340,14 @@ public class GeckoPreferences
             }
         });
 
-        if (Build.VERSION.SDK_INT >= 14)
-            getActionBar().setHomeButtonEnabled(true);
+        if (Build.VERSION.SDK_INT >= 14) {
+            final ActionBar actionBar = getActionBar();
+            actionBar.setHomeButtonEnabled(true);
+        }
+
+        // N.B., if we ever need to redisplay the locale selection UI without
+        // just finishing and recreating the activity, right here we'll need to
+        // capture EXTRA_SHOW_FRAGMENT_TITLE from the intent and store the title ID.
 
         // If launched from notification, explicitly cancel the notification.
         if (intentExtras != null && intentExtras.containsKey(DataReportingNotification.ALERT_NAME_DATAREPORTING_NOTIFICATION)) {
@@ -179,7 +357,8 @@ public class GeckoPreferences
     }
 
     /**
-     * Set intent to display top-level settings fragment.
+     * Set intent to display top-level settings fragment,
+     * and show the correct title.
      */
     private void setupTopLevelFragmentIntent() {
         Intent intent = getIntent();
@@ -206,8 +385,9 @@ public class GeckoPreferences
 
     @Override
     public void onBuildHeaders(List<Header> target) {
-        if (onIsMultiPane())
+        if (onIsMultiPane()) {
             loadHeadersFromResource(R.xml.preference_headers, target);
+        }
     }
 
     @Override
@@ -234,6 +414,14 @@ public class GeckoPreferences
 
     @Override
     public void onPause() {
+        // Symmetric with onResume.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            if (isMultiPane()) {
+                SharedPreferences prefs = GeckoSharedPrefs.forApp(this);
+                prefs.unregisterOnSharedPreferenceChangeListener(this);
+            }
+        }
+
         super.onPause();
 
         if (getApplication() instanceof GeckoApplication) {
@@ -247,6 +435,16 @@ public class GeckoPreferences
 
         if (getApplication() instanceof GeckoApplication) {
             ((GeckoApplication) getApplication()).onActivityResume(this);
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            // Watch prefs, otherwise we don't reliably get told when they change.
+            // See documentation for onSharedPreferenceChange for more.
+            // Inexplicably only needed on tablet.
+            if (isMultiPane()) {
+                SharedPreferences prefs = GeckoSharedPrefs.forApp(this);
+                prefs.registerOnSharedPreferenceChangeListener(this);
+            }
         }
     }
 
@@ -264,6 +462,8 @@ public class GeckoPreferences
     @Override
     public void startWithFragment(String fragmentName, Bundle args,
             Fragment resultTo, int resultRequestCode, int titleRes, int shortTitleRes) {
+        Log.v(LOGTAG, "Starting with fragment: " + fragmentName + ", title " + titleRes);
+
         // Overriding because we want to use startActivityForResult for Fragment intents.
         Intent intent = onBuildStartFragmentIntent(fragmentName, args, titleRes, shortTitleRes);
         if (resultTo == null) {
@@ -275,20 +475,28 @@ public class GeckoPreferences
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // We might have just returned from a settings activity that allows us
+        // to switch locales, so reflect any change that occurred.
+        checkLocale();
+
         switch (requestCode) {
           case REQUEST_CODE_PREF_SCREEN:
-              if (resultCode == RESULT_CODE_EXIT_SETTINGS) {
+              switch (resultCode) {
+              case RESULT_CODE_EXIT_SETTINGS:
+                  updateActionBarTitle(R.string.settings_title);
+
                   // Pass this result up to the parent activity.
                   setResult(RESULT_CODE_EXIT_SETTINGS);
                   finish();
+                  break;
               }
               break;
 
           case HomePanelPicker.REQUEST_CODE_ADD_PANEL:
               switch (resultCode) {
                   case Activity.RESULT_OK:
-                     // Panel installed, refresh panels list.
-                     mPanelsPreferenceCategory.refresh();
+                      // Panel installed, refresh panels list.
+                      mPanelsPreferenceCategory.refresh();
                       break;
                   case Activity.RESULT_CANCELED:
                       // Dialog was cancelled, do nothing.
@@ -400,7 +608,8 @@ public class GeckoPreferences
                             return true;
                         }
                     });
-                } else if (PREFS_RESTORE_SESSION.equals(key)) {
+                } else if (PREFS_RESTORE_SESSION.equals(key) ||
+                           PREFS_BROWSER_LOCALE.equals(key)) {
                     // Set the summary string to the current entry. The summary
                     // for other list prefs will be set in the PrefsHelper
                     // callback, but since this pref doesn't live in Gecko, we
@@ -439,11 +648,27 @@ public class GeckoPreferences
                 // saved when the orientation changes. It uses the
                 // "android.not_a_preference.privacy.clear" key - which doesn't
                 // exist in Gecko - to satisfy this requirement.
-                if (key != null && !key.startsWith(NON_PREF_PREFIX)) {
+                if (isGeckoPref(key)) {
                     prefs.add(key);
                 }
             }
         }
+    }
+
+    private boolean isGeckoPref(String key) {
+        if (TextUtils.isEmpty(key)) {
+            return false;
+        }
+
+        if (key.startsWith(NON_PREF_PREFIX)) {
+            return false;
+        }
+
+        if (key.equals(PREFS_BROWSER_LOCALE)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -583,16 +808,97 @@ public class GeckoPreferences
         return prefs.getBoolean(name, def);
     }
 
+    /**
+     * Immediately handle the user's selection of a browser locale.
+     *
+     * Earlier locale-handling code did this with centralized logic in
+     * GeckoApp, delegating to LocaleManager for persistence and refreshing
+     * the activity as necessary.
+     *
+     * We no longer handle this by sending a message to GeckoApp, for
+     * several reasons:
+     *
+     * * GeckoApp might not be running. Activities don't always stick around.
+     *   A Java bridge message might not be handled.
+     * * We need to adapt the preferences UI to the locale ourselves.
+     * * The user might not hit Back (or Up) -- they might hit Home and never
+     *   come back.
+     *
+     * We handle the case of the user returning to the browser via the
+     * onActivityResult mechanism: see {@link BrowserApp#onActivityResult(int, int, Intent)}.
+     */
+    private boolean onLocaleSelected(final String currentLocale, final String newValue) {
+        final Context context = getApplicationContext();
+
+        // LocaleManager operations need to occur on the background thread.
+        // ... but activity operations need to occur on the UI thread. So we
+        // have nested runnables.
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                final LocaleManager localeManager = BrowserLocaleManager.getInstance();
+
+                if (TextUtils.isEmpty(newValue)) {
+                    BrowserLocaleManager.getInstance().resetToSystemLocale(context);
+                    Telemetry.sendUIEvent(TelemetryContract.Event.LOCALE_BROWSER_RESET);
+                } else {
+                    if (null == localeManager.setSelectedLocale(context, newValue)) {
+                        localeManager.updateConfiguration(context, Locale.getDefault());
+                    }
+                    Telemetry.sendUIEvent(TelemetryContract.Event.LOCALE_BROWSER_UNSELECTED, null,
+                                          currentLocale == null ? "unknown" : currentLocale);
+                    Telemetry.sendUIEvent(TelemetryContract.Event.LOCALE_BROWSER_SELECTED, null, newValue);
+                }
+
+                ThreadUtils.postToUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        onLocaleChanged(Locale.getDefault());
+                    }
+                });
+            }
+        });
+
+        return true;
+    }
+
+    /**
+     * Implementation for the {@link OnSharedPreferenceChangeListener} interface,
+     * which we use to watch changes in our prefs file.
+     *
+     * This is reliably called whenever the pref changes, which is not the case
+     * for multiple consecutive changes in the case of onPreferenceChange.
+     *
+     * Note that this listener is not always registered: we use it only on
+     * tablets, Honeycomb and up, where we'll have a multi-pane view and prefs
+     * changing multiple times.
+     */
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (PREFS_BROWSER_LOCALE.equals(key)) {
+            onLocaleSelected(BrowserLocaleManager.getLanguageTag(lastLocale),
+                             sharedPreferences.getString(key, null));
+        }
+    }
+
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
-        String prefName = preference.getKey();
+        final String prefName = preference.getKey();
         if (PREFS_MP_ENABLED.equals(prefName)) {
             showDialog((Boolean) newValue ? DIALOG_CREATE_MASTER_PASSWORD : DIALOG_REMOVE_MASTER_PASSWORD);
 
             // We don't want the "use master password" pref to change until the
             // user has gone through the dialog.
             return false;
-        } else if (PREFS_MENU_CHAR_ENCODING.equals(prefName)) {
+        }
+
+        if (PREFS_BROWSER_LOCALE.equals(prefName)) {
+            // Even though this is a list preference, we don't want to handle it
+            // below, so we return here.
+            return onLocaleSelected(BrowserLocaleManager.getLanguageTag(lastLocale), (String) newValue);
+        }
+
+        if (PREFS_MENU_CHAR_ENCODING.equals(prefName)) {
             setCharEncodingState(((String) newValue).equals("true"));
         } else if (PREFS_ANNOUNCEMENTS_ENABLED.equals(prefName)) {
             // Send a broadcast intent to the product announcements service, either to start or
@@ -612,7 +918,7 @@ public class GeckoPreferences
         }
 
         // Send Gecko-side pref changes to Gecko
-        if (!TextUtils.isEmpty(prefName) && !prefName.startsWith(NON_PREF_PREFIX)) {
+        if (isGeckoPref(prefName)) {
             PrefsHelper.setPref(prefName, newValue);
         }
 
@@ -710,7 +1016,7 @@ public class GeckoPreferences
 
                 builder.setTitle(R.string.masterpassword_create_title)
                        .setView((View) linearLayout)
-                       .setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {  
+                       .setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 JSONObject jsonPref = new JSONObject();
@@ -718,7 +1024,7 @@ public class GeckoPreferences
                                     jsonPref.put("name", PREFS_MP_ENABLED);
                                     jsonPref.put("type", "string");
                                     jsonPref.put("value", input1.getText().toString());
-                    
+
                                     GeckoEvent event = GeckoEvent.createBroadcastEvent("Preferences:Set", jsonPref.toString());
                                     GeckoAppShell.sendEventToGecko(event);
                                 } catch(Exception ex) {
@@ -727,7 +1033,7 @@ public class GeckoPreferences
                                 return;
                             }
                         })
-                        .setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {  
+                        .setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 return;
@@ -754,13 +1060,13 @@ public class GeckoPreferences
 
                 builder.setTitle(R.string.masterpassword_remove_title)
                        .setView((View) linearLayout)
-                       .setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {  
+                       .setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 PrefsHelper.setPref(PREFS_MP_ENABLED, input.getText().toString());
                             }
                         })
-                        .setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {  
+                        .setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 return;
