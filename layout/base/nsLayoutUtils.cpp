@@ -391,7 +391,7 @@ nsLayoutUtils::ComputeSuitableScaleForAnimation(nsIContent* aContent)
     (aContent, nsGkAtoms::animationsProperty, eCSSProperty_transform);
   if (animations) {
     for (uint32_t animIdx = animations->mAnimations.Length(); animIdx-- != 0; ) {
-      mozilla::StyleAnimation* anim = animations->mAnimations[animIdx];
+      mozilla::ElementAnimation* anim = animations->mAnimations[animIdx];
       for (uint32_t propIdx = anim->mProperties.Length(); propIdx-- != 0; ) {
         AnimationProperty& prop = anim->mProperties[propIdx];
         if (prop.mProperty == eCSSProperty_transform) {
