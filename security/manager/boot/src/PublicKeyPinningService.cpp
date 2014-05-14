@@ -72,13 +72,10 @@ EvalCertWithHashType(const CERTCertificate* cert, SECOidTag hashType,
     return false;
   }
 
-  PR_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
-         ("pkpin: base_64(hash(key)='%s'\n", base64Out.get()));
-
   for (size_t i = 0; i < fingerprints->size; i++) {
     if (base64Out.Equals(fingerprints->data[i])) {
       PR_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
-             ("pkpin: found pin base_64(hash(key)='%s'\n", base64Out.get()));
+             ("pkpin: found pin base_64 ='%s'\n", base64Out.get()));
       return true;
     }
   }
@@ -110,7 +107,7 @@ EvalChainWithHashType(const CERTCertList* certList, SECOidTag hashType,
        node = CERT_LIST_NEXT(node)) {
     currentCert = node->cert;
     PR_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
-           ("pkpin: certArray subject:     '%s'\n",
+           ("pkpin: certArray subject: '%s'\n",
             currentCert->subjectName));
     PR_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
            ("pkpin: certArray common_name: '%s'\n",
@@ -195,16 +192,21 @@ CheckPinsForHostname(const CERTCertList *certList, const char *hostname,
   if (foundEntry && foundEntry->pinset) {
     bool result = EvalChainWithPinset(certList, foundEntry->pinset);
     bool retval = result;
-    Telemetry::ID histogram = Telemetry::CERT_PINNING_RESULTS;
+    Telemetry::ID histogram = foundEntry->mIsMoz
+      ? Telemetry::CERT_PINNING_MOZ_RESULTS
+      : Telemetry::CERT_PINNING_RESULTS;
     if (foundEntry->mTestMode) {
-      histogram = Telemetry::CERT_PINNING_TEST_RESULTS;
+      histogram = foundEntry->mIsMoz
+        ? Telemetry::CERT_PINNING_MOZ_TEST_RESULTS
+        : Telemetry::CERT_PINNING_TEST_RESULTS;
       retval = true;
     }
     Telemetry::Accumulate(histogram, result ? 1 : 0);
     PR_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
-           ("pkpin: Pin check %s for host '%s' (mode=%s)\n",
-            result ? "passed" : "failed", evalHost,
-            foundEntry->mTestMode ? "test" : "production"));
+           ("pkpin: Pin check %s for %s host '%s' (mode=%s)\n",
+            result ? "passed" : "failed",
+            foundEntry->mIsMoz ? "mozilla" : "non-mozilla",
+            hostname, foundEntry->mTestMode ? "test" : "production"));
     return retval;
   }
   return true; // No pinning information for this hostname
