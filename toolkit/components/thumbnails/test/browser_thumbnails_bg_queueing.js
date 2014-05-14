@@ -9,6 +9,7 @@ function runTests() {
     bgTestPageURL({ wait: 2002 }),
     "http://www.example.com/2",
   ];
+  dontExpireThumbnailURLs(urls);
   urls.forEach(url => {
     ok(!thumbnailExists(url), "Thumbnail should not exist yet: " + url);
     let isTimeoutTest = url.indexOf("wait") >= 0;
