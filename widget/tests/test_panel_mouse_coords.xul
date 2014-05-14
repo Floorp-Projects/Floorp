@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=835044
+-->
+<window title="Mozilla Bug 835044"
+        onload="startTest()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+<panel id="thepanel" level="parent"
+       onpopupshown="sendMouseEvent();"
+       onmousemove="checkCoords(event);"
+       width="80" height="80">
+</panel>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=835044"
+     id="anchor"
+     target="_blank">Mozilla Bug 835044</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+let Cc = Components.classes;
+let Ci = Components.interfaces;
+let utils = window.QueryInterface(Ci.nsIInterfaceRequestor).
+          getInterface(Ci.nsIDOMWindowUtils);
+let panel = document.getElementById('thepanel');
+let nativeMouseMove;
+let rect;
+
+function startTest() {
+    let widgetToolkit = Cc["@mozilla.org/xre/app-info;1"].
+        getService(Ci.nsIXULRuntime).widgetToolkit;
+
+    if (widgetToolkit == "cocoa") {
+        nativeMouseMove = 5; // NSMouseMoved
+    } else if (widgetToolkit == "windows") {
+        nativeMouseMove = 1; // MOUSEEVENTF_MOVE
+    } else if (/^gtk/.test(widgetToolkit)) {
+        nativeMouseMove = 3; // GDK_MOTION_NOTIFY
+    } else {
+        todo_is("widgetToolkit", widgetToolkit, "Platform not supported");
+        done();
+    }
+
+    // This first event is to ensure that the next event will have different
+    // coordinates to the previous mouse position, and so actually generates
+    // mouse events.  The mouse is not moved off the window, as that might
+    // move focus to another application.
+    utils.sendNativeMouseEvent(window.mozInnerScreenX, window.mozInnerScreenY,
+                               nativeMouseMove, 0, window.documentElement);
+
+    panel.openPopup(document.getElementById("anchor"), "after_start");
+}
+
+function sendMouseEvent() {
+    rect = panel.getBoundingClientRect();
+    let x = window.mozInnerScreenX + rect.left + 1;
+    let y = window.mozInnerScreenY + rect.top + 2;
+    utils.sendNativeMouseEvent(x, y, nativeMouseMove, 0,
+                               window.documentElement);
+}
+
+function checkCoords(event) {
+    is(event.clientX, rect.left + 1, "Motion x coordinate");
+    is(event.clientY, rect.top + 2, "Motion y coordinate");
+    done();
+}
+
+function done() {
+  SimpleTest.finish();
+}
+  ]]>
+  </script>
+</window>

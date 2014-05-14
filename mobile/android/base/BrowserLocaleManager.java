@@ -14,9 +14,18 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.util.Log;
 
+import java.io.File;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.mozilla.gecko.util.GeckoJarReader;
 
 /**
  * This class manages persistence, application, and otherwise handling of
@@ -39,9 +48,12 @@ public class BrowserLocaleManager implements LocaleManager {
     private static final String EVENT_LOCALE_CHANGED = "Locale:Changed";
     private static final String PREF_LOCALE = "locale";
 
-    // This is volatile because we don't impose restrictions
+    private static final String FALLBACK_LOCALE_TAG = "en-US";
+
+    // These are volatile because we don't impose restrictions
     // over which thread calls our methods.
     private volatile Locale currentLocale = null;
+    private volatile Locale systemLocale = Locale.getDefault();
 
     private AtomicBoolean inited = new AtomicBoolean(false);
     private boolean systemLocaleDidChange = false;
@@ -92,7 +104,7 @@ public class BrowserLocaleManager implements LocaleManager {
         return language + "-" + country;
     }
 
-    private static Locale parseLocaleCode(final String localeCode) {
+    public static Locale parseLocaleCode(final String localeCode) {
         int index;
         if ((index = localeCode.indexOf('-')) != -1 ||
             (index = localeCode.indexOf('_')) != -1) {
@@ -120,6 +132,12 @@ public class BrowserLocaleManager implements LocaleManager {
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
+                // We don't trust Locale.getDefault() here, because we make a
+                // habit of mutating it! Use the one Android supplies, because
+                // that gets regularly reset.
+                // The default value of systemLocale is fine, because we haven't
+                // yet swizzled Locale during static initialization.
+                systemLocale = context.getResources().getConfiguration().locale;
                 systemLocaleDidChange = true;
             }
         };
@@ -209,6 +227,20 @@ public class BrowserLocaleManager implements LocaleManager {
         return resultant;
     }
 
+    @Override
+    public void resetToSystemLocale(Context context) {
+        // Wipe the pref.
+        final SharedPreferences settings = getSharedPreferences(context);
+        settings.edit().remove(PREF_LOCALE).commit();
+
+        // Apply the system locale.
+        updateLocale(context, systemLocale);
+
+        // Tell Gecko.
+        GeckoEvent ev = GeckoEvent.createBroadcastEvent(EVENT_LOCALE_CHANGED, "");
+        GeckoAppShell.sendEventToGecko(ev);
+    }
+
     /**
      * This is public to allow for an activity to force the
      * current locale to be applied if necessary (e.g., when
@@ -218,6 +250,9 @@ public class BrowserLocaleManager implements LocaleManager {
     public void updateConfiguration(Context context, Locale locale) {
         Resources res = context.getResources();
         Configuration config = res.getConfiguration();
+
+        // We should use setLocale, but it's unexpectedly missing
+        // on real devices.
         config.locale = locale;
         res.updateConfiguration(config, res.getDisplayMetrics());
     }
@@ -241,7 +276,8 @@ public class BrowserLocaleManager implements LocaleManager {
         settings.edit().putString(PREF_LOCALE, localeCode).commit();
     }
 
-    private Locale getCurrentLocale(Context context) {
+    @Override
+    public Locale getCurrentLocale(Context context) {
         if (currentLocale != null) {
             return currentLocale;
         }
@@ -269,8 +305,12 @@ public class BrowserLocaleManager implements LocaleManager {
 
         final Locale locale = parseLocaleCode(localeCode);
 
+        return updateLocale(context, locale);
+    }
+
+    private String updateLocale(Context context, final Locale locale) {
         // Fast path.
-        if (defaultLocale.equals(locale)) {
+        if (Locale.getDefault().equals(locale)) {
             return null;
         }
 
@@ -281,5 +321,68 @@ public class BrowserLocaleManager implements LocaleManager {
         updateConfiguration(context, locale);
 
         return locale.toString();
+    }
+
+    /**
+     * Examines <code>multilocale.json</code>, returning the included list of
+     * locale codes.
+     *
+     * If <code>multilocale.json</code> is not present, returns
+     * <code>null</code>. In that case, consider {@link #getFallbackLocaleTag()}.
+     *
+     * multilocale.json currently looks like this:
+     *
+     * <code>
+     * {"locales": ["en-US", "be", "ca", "cs", "da", "de", "en-GB",
+     *              "en-ZA", "es-AR", "es-ES", "es-MX", "et", "fi",
+     *              "fr", "ga-IE", "hu", "id", "it", "ja", "ko",
+     *              "lt", "lv", "nb-NO", "nl", "pl", "pt-BR",
+     *              "pt-PT", "ro", "ru", "sk", "sl", "sv-SE", "th",
+     *              "tr", "uk", "zh-CN", "zh-TW", "en-US"]}
+     * </code>
+     */
+    public static Collection<String> getPackagedLocaleTags(final Context context) {
+        final String resPath = "res/multilocale.json";
+        final String apkPath = context.getPackageResourcePath();
+
+        final String jarURL = "jar:jar:" + new File(apkPath).toURI() + "!/" +
+                              AppConstants.OMNIJAR_NAME + "!/" +
+                              resPath;
+
+        final String contents = GeckoJarReader.getText(jarURL);
+        if (contents == null) {
+            // GeckoJarReader logs and swallows exceptions.
+            return null;
+        }
+
+        try {
+            final JSONObject multilocale = new JSONObject(contents);
+            final JSONArray locales = multilocale.getJSONArray("locales");
+            if (locales == null) {
+                Log.e(LOG_TAG, "No 'locales' array in multilocales.json!");
+                return null;
+            }
+
+            final Set<String> out = new HashSet<String>(locales.length());
+            for (int i = 0; i < locales.length(); ++i) {
+                // If any item in the array is invalid, this will throw,
+                // and the entire clause will fail, being caught below
+                // and returning null.
+                out.add(locales.getString(i));
+            }
+
+            return out;
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Unable to parse multilocale.json.", e);
+            return null;
+        }
+    }
+
+    /**
+     * @return the single default locale baked into this application.
+     *         Applicable when there is no multilocale.json present.
+     */
+    public static String getFallbackLocaleTag() {
+        return FALLBACK_LOCALE_TAG;
     }
 }
