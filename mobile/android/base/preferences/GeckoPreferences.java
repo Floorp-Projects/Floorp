@@ -24,6 +24,8 @@ import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.LocaleManager;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.background.announcements.AnnouncementsConstants;
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.healthreport.HealthReportConstants;
@@ -716,7 +718,7 @@ public class GeckoPreferences
      * We handle the case of the user returning to the browser via the
      * onActivityResult mechanism: see {@link BrowserApp#onActivityResult(int, int, Intent)}.
      */
-    private boolean onLocaleSelected(final String newValue) {
+    private boolean onLocaleSelected(final String currentLocale, final String newValue) {
         final Context context = getApplicationContext();
 
         // LocaleManager operations need to occur on the background thread.
@@ -729,10 +731,14 @@ public class GeckoPreferences
 
                 if (newValue.equals("")) {
                     BrowserLocaleManager.getInstance().resetToSystemLocale(context);
+                    Telemetry.sendUIEvent(TelemetryContract.Event.LOCALE_BROWSER_RESET);
                 } else {
                     if (null == localeManager.setSelectedLocale(context, newValue)) {
                         localeManager.updateConfiguration(context, Locale.getDefault());
                     }
+                    Telemetry.sendUIEvent(TelemetryContract.Event.LOCALE_BROWSER_UNSELECTED, null,
+                                          currentLocale == null ? "unknown" : currentLocale);
+                    Telemetry.sendUIEvent(TelemetryContract.Event.LOCALE_BROWSER_SELECTED, null, newValue);
                 }
 
                 ThreadUtils.postToUiThread(new Runnable() {
@@ -761,7 +767,7 @@ public class GeckoPreferences
         if (PREFS_BROWSER_LOCALE.equals(prefName)) {
             // Even though this is a list preference, we don't want to handle it
             // below, so we return here.
-            return onLocaleSelected((String) newValue);
+            return onLocaleSelected(BrowserLocaleManager.getLanguageTag(lastLocale), (String) newValue);
         }
 
         if (PREFS_MENU_CHAR_ENCODING.equals(prefName)) {
