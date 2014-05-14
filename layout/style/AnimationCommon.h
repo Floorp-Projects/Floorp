@@ -222,9 +222,9 @@ struct AnimationProperty
  * Data about one animation (i.e., one of the values of
  * 'animation-name') running on an element.
  */
-struct StyleAnimation
+struct ElementAnimation
 {
-  StyleAnimation()
+  ElementAnimation()
     : mIsRunningOnCompositor(false)
     , mLastNotification(LAST_NOTIFICATION_NONE)
   {
@@ -279,10 +279,10 @@ struct StyleAnimation
 
   InfallibleTArray<AnimationProperty> mProperties;
 
-  NS_INLINE_DECL_REFCOUNTING(StyleAnimation)
+  NS_INLINE_DECL_REFCOUNTING(ElementAnimation)
 };
 
-typedef InfallibleTArray<nsRefPtr<StyleAnimation> > StyleAnimationPtrArray;
+typedef InfallibleTArray<nsRefPtr<ElementAnimation> > ElementAnimationPtrArray;
 
 namespace css {
 

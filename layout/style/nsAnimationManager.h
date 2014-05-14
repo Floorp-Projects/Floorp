@@ -66,7 +66,7 @@ struct ElementAnimations MOZ_FINAL
   // This way of calling the function can be used from the compositor.  Note
   // that if the animation has not started yet, has already ended, or is paused,
   // it should not be run from the compositor.  When this function is called
-  // from the main thread, we need the actual StyleAnimation* in order to
+  // from the main thread, we need the actual ElementAnimation* in order to
   // get correct animation-fill behavior and to fire animation events.
   // This function returns -1 for the position if the animation should not be
   // run (because it is not currently active and has no fill behavior), but
@@ -78,7 +78,7 @@ struct ElementAnimations MOZ_FINAL
                                        TimeDuration aIterationDuration,
                                        double aIterationCount,
                                        uint32_t aDirection,
-                                       mozilla::StyleAnimation* aAnimation =
+                                       mozilla::ElementAnimation* aAnimation =
                                          nullptr,
                                        ElementAnimations* aEa = nullptr,
                                        EventArray* aEventsToDispatch = nullptr);
@@ -127,7 +127,7 @@ struct ElementAnimations MOZ_FINAL
   // either completed or paused).  May be invalidated by a style change.
   bool mNeedsRefreshes;
 
-  mozilla::StyleAnimationPtrArray mAnimations;
+  mozilla::ElementAnimationPtrArray mAnimations;
 };
 
 class nsAnimationManager MOZ_FINAL
@@ -236,7 +236,7 @@ protected:
 
 private:
   void BuildAnimations(nsStyleContext* aStyleContext,
-                       mozilla::StyleAnimationPtrArray& aAnimations);
+                       mozilla::ElementAnimationPtrArray& aAnimations);
   bool BuildSegment(InfallibleTArray<mozilla::AnimationPropertySegment>&
                       aSegments,
                     nsCSSProperty aProperty, const nsAnimation& aAnimation,

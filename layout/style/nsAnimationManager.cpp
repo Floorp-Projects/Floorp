@@ -54,7 +54,7 @@ ElementAnimations::GetPositionInIteration(TimeDuration aElapsedDuration,
                                           TimeDuration aIterationDuration,
                                           double aIterationCount,
                                           uint32_t aDirection,
-                                          StyleAnimation* aAnimation,
+                                          ElementAnimation* aAnimation,
                                           ElementAnimations* aEa,
                                           EventArray* aEventsToDispatch)
 {
@@ -68,8 +68,8 @@ ElementAnimations::GetPositionInIteration(TimeDuration aElapsedDuration,
     if (aAnimation) {
       // Dispatch 'animationend' when needed.
       if (aAnimation->mLastNotification !=
-          StyleAnimation::LAST_NOTIFICATION_END) {
-        aAnimation->mLastNotification = StyleAnimation::LAST_NOTIFICATION_END;
+          ElementAnimation::LAST_NOTIFICATION_END) {
+        aAnimation->mLastNotification = ElementAnimation::LAST_NOTIFICATION_END;
         AnimationEventInfo ei(aEa->mElement, aAnimation->mName, NS_ANIMATION_END,
                               aElapsedDuration, aEa->PseudoElement());
         aEventsToDispatch->AppendElement(ei);
@@ -149,7 +149,7 @@ ElementAnimations::GetPositionInIteration(TimeDuration aElapsedDuration,
     // immediately in many cases.  It's not clear to me if that's the
     // right thing to do.
     uint32_t message =
-      aAnimation->mLastNotification == StyleAnimation::LAST_NOTIFICATION_NONE
+      aAnimation->mLastNotification == ElementAnimation::LAST_NOTIFICATION_NONE
         ? NS_ANIMATION_START : NS_ANIMATION_ITERATION;
 
     aAnimation->mLastNotification = whichIteration;
@@ -179,7 +179,7 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
   // the style recalculation if we find any.
   if (aIsThrottled) {
     for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-      StyleAnimation* anim = mAnimations[animIdx];
+      ElementAnimation* anim = mAnimations[animIdx];
 
       if (anim->mProperties.Length() == 0 ||
           anim->mIterationDuration.ToMilliseconds() <= 0.0) {
@@ -205,7 +205,8 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
       // changing.
       if (!anim->mIsRunningOnCompositor ||
           (anim->mLastNotification != oldLastNotification &&
-           anim->mLastNotification == StyleAnimation::LAST_NOTIFICATION_END)) {
+           anim->mLastNotification ==
+           ElementAnimation::LAST_NOTIFICATION_END)) {
         aIsThrottled = false;
         break;
       }
@@ -230,7 +231,7 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
     nsCSSPropertySet properties;
 
     for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-      StyleAnimation* anim = mAnimations[animIdx];
+      ElementAnimation* anim = mAnimations[animIdx];
 
       if (anim->mProperties.Length() == 0 ||
           anim->mIterationDuration.ToMilliseconds() <= 0.0) {
@@ -330,7 +331,7 @@ bool
 ElementAnimations::HasAnimationOfProperty(nsCSSProperty aProperty) const
 {
   for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    const StyleAnimation* anim = mAnimations[animIdx];
+    const ElementAnimation* anim = mAnimations[animIdx];
     if (anim->HasAnimationOfProperty(aProperty)) {
       return true;
     }
@@ -360,7 +361,7 @@ ElementAnimations::CanPerformOnCompositorThread(CanAnimateFlags aFlags) const
   TimeStamp now = frame->PresContext()->RefreshDriver()->MostRecentRefresh();
 
   for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    const StyleAnimation* anim = mAnimations[animIdx];
+    const ElementAnimation* anim = mAnimations[animIdx];
     for (uint32_t propIdx = 0, propEnd = anim->mProperties.Length();
          propIdx != propEnd; ++propIdx) {
       if (IsGeometricProperty(anim->mProperties[propIdx].mProperty) &&
@@ -374,7 +375,7 @@ ElementAnimations::CanPerformOnCompositorThread(CanAnimateFlags aFlags) const
   bool hasOpacity = false;
   bool hasTransform = false;
   for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    const StyleAnimation* anim = mAnimations[animIdx];
+    const ElementAnimation* anim = mAnimations[animIdx];
     if (!anim->IsRunningAt(now)) {
       continue;
     }
@@ -547,7 +548,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     }
 
     // build the animations list
-    StyleAnimationPtrArray newAnimations;
+    ElementAnimationPtrArray newAnimations;
     BuildAnimations(aStyleContext, newAnimations);
 
     if (newAnimations.IsEmpty()) {
@@ -577,7 +578,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
       if (!ea->mAnimations.IsEmpty()) {
         for (uint32_t newIdx = 0, newEnd = newAnimations.Length();
              newIdx != newEnd; ++newIdx) {
-          nsRefPtr<StyleAnimation> newAnim = newAnimations[newIdx];
+          nsRefPtr<ElementAnimation> newAnim = newAnimations[newIdx];
 
           // Find the matching animation with this name in the old list
           // of animations.  Because of this code, they must all have
@@ -587,9 +588,9 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           // different pause states, they, well, get what they deserve.
           // We'll use the last one since it's more likely to be the one
           // doing something.
-          const StyleAnimation* oldAnim = nullptr;
+          const ElementAnimation* oldAnim = nullptr;
           for (uint32_t oldIdx = ea->mAnimations.Length(); oldIdx-- != 0; ) {
-            const StyleAnimation* a = ea->mAnimations[oldIdx];
+            const ElementAnimation* a = ea->mAnimations[oldIdx];
             if (a->mName == newAnim->mName) {
               oldAnim = a;
               break;
@@ -717,7 +718,7 @@ ResolvedStyleCache::Get(nsPresContext *aPresContext,
 
 void
 nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
-                                    StyleAnimationPtrArray& aAnimations)
+                                    ElementAnimationPtrArray& aAnimations)
 {
   NS_ABORT_IF_FALSE(aAnimations.IsEmpty(), "expect empty array");
 
@@ -728,8 +729,8 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
   for (uint32_t animIdx = 0, animEnd = disp->mAnimationNameCount;
        animIdx != animEnd; ++animIdx) {
     const nsAnimation& src = disp->mAnimations[animIdx];
-    nsRefPtr<StyleAnimation> dest =
-      *aAnimations.AppendElement(new StyleAnimation());
+    nsRefPtr<ElementAnimation> dest =
+      *aAnimations.AppendElement(new ElementAnimation());
 
     dest->mName = src.GetName();
     dest->mIterationCount = src.GetIterationCount();
