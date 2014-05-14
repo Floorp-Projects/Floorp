@@ -2530,6 +2530,12 @@ RangeAnalysis::truncate()
 {
     IonSpew(IonSpew_Range, "Do range-base truncation (backward loop)");
 
+    // Automatic truncation is disabled for AsmJS because the truncation logic
+    // is based on IonMonkey which assumes that we can bailout if the truncation
+    // logic fails. As AsmJS code has no bailout mechanism, it is safer to avoid
+    // any automatic truncations.
+    MOZ_ASSERT(!mir->compilingAsmJS());
+
     Vector<MInstruction *, 16, SystemAllocPolicy> worklist;
     Vector<MBinaryBitwiseInstruction *, 16, SystemAllocPolicy> bitops;
 
