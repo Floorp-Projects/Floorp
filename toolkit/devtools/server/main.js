@@ -13,9 +13,10 @@ let { Ci, Cc, CC, Cu, Cr } = require("chrome");
 let Debugger = require("Debugger");
 let Services = require("Services");
 let { ActorPool } = require("devtools/server/actors/common");
-let { DebuggerTransport, LocalDebuggerTransport, ChildDebuggerTransport } = require("devtools/server/transport");
+let { DebuggerTransport, LocalDebuggerTransport, ChildDebuggerTransport } =
+  require("devtools/toolkit/transport/transport");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-let { dumpn, dbg_assert } = DevToolsUtils;
+let { dumpn, dumpv, dbg_assert } = DevToolsUtils;
 let Services = require("Services");
 let EventEmitter = require("devtools/toolkit/event-emitter");
 
@@ -35,6 +36,7 @@ this.Services = Services;
 this.ActorPool = ActorPool;
 this.DevToolsUtils = DevToolsUtils;
 this.dumpn = dumpn;
+this.dumpv = dumpv;
 this.dbg_assert = dbg_assert;
 
 // Overload `Components` to prevent SDK loader exception on Components
@@ -47,7 +49,13 @@ const DBG_STRINGS_URI = "chrome://global/locale/devtools/debugger.properties";
 
 const nsFile = CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-dumpn.wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
+
+const LOG_PREF = "devtools.debugger.log";
+const VERBOSE_PREF = "devtools.debugger.log.verbose";
+dumpn.wantLogging = Services.prefs.getBoolPref(LOG_PREF);
+dumpv.wantVerbose =
+  Services.prefs.getPrefType(VERBOSE_PREF) !== Services.prefs.PREF_INVALID &&
+  Services.prefs.getBoolPref(VERBOSE_PREF);
 
 Cu.import("resource://gre/modules/devtools/deprecated-sync-thenables.js");
 
