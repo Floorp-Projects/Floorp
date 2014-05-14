@@ -36,6 +36,7 @@ const OBSERVING = [
   "quit-application", "browser:purge-session-history",
   "browser:purge-domain-data",
   "gather-telemetry",
+  "idle-daily",
 ];
 
 // XUL Window properties to (re)store
@@ -569,6 +570,9 @@ let SessionStoreInternal = {
         break;
       case "gather-telemetry":
         this.onGatherTelemetry();
+        break;
+      case "idle-daily":
+        this.onIdleDaily();
         break;
     }
   },
@@ -1428,6 +1432,39 @@ let SessionStoreInternal = {
     return SessionFile.gatherTelemetry(stateString);
   },
 
+  // Clean up data that has been closed a long time ago.
+  // Do not reschedule a save. This will wait for the next regular
+  // save.
+  onIdleDaily: function() {
+    // Remove old closed windows
+    this._cleanupOldData([this._closedWindows]);
+
+    // Remove closed tabs of closed windows
+    this._cleanupOldData([winData._closedTabs for (winData of this._closedWindows)]);
+
+    // Remove closed tabs of open windows
+    this._cleanupOldData([this._windows[key]._closedTabs for (key of Object.keys(this._windows))]);
+  },
+
+  // Remove "old" data from an array
+  _cleanupOldData: function(targets) {
+    const TIME_TO_LIVE = this._prefBranch.getIntPref("sessionstore.cleanup.forget_closed_after");
+    const now = Date.now();
+
+    for (let array of targets) {
+      for (let i = array.length - 1; i >= 0; --i)  {
+        let data = array[i];
+        // Make sure that we have a timestamp to tell us when the target
+        // has been closed. If we don't have a timestamp, default to a
+        // safe timestamp: just now.
+        data.closedAt = data.closedAt || now;
+        if (now - data.closedAt > TIME_TO_LIVE) {
+          array.splice(i, 1);
+        }
+      }
+    }
+  },
+
   /* ........ nsISessionStore API .............. */
 
   getBrowserState: function ssi_getBrowserState() {
@@ -1671,6 +1708,8 @@ let SessionStoreInternal = {
 
     // reopen the window
     let state = { windows: this._closedWindows.splice(aIndex, 1) };
+    delete state.windows[0].closedAt; // Window is now open.
+
     let window = this._openWindowWithState(state);
     this.windowToFocus = window;
     return window;
@@ -2472,6 +2511,7 @@ let SessionStoreInternal = {
       } else {
         delete tab.__SS_extdata;
       }
+      delete tabData.closedAt; // Tab is now open.
 
       // Flush all data from the content script synchronously. This is done so
       // that all async messages that are still on their way to chrome will
