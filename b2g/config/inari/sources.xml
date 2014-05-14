@@ -22,7 +22,7 @@
   <project name="gaia.git" path="gaia" remote="mozillaorg" revision="45b983c5e27e1007f356276914ad116d20992dcd"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="abedd83e1ba61cb83e59c723ad6279ad2a7aa1d1"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
-  <project name="librecovery" path="librecovery" remote="b2g" revision="c77de3d366b903a753e129e18e94ee43980b79d1"/>
+  <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="ce95d372e6d285725b96490afdaaf489ad8f9ca9"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="fd4be2909b788b563435fe0addb1bd98dfa75457"/>
   <!-- Stock Android things -->
