@@ -566,11 +566,12 @@ public:
       mRefCount(UINT32_MAX - 1),
       mFirstChild()
   {
+    MOZ_ASSERT(aParticipant);
+
     // We initialize mRefCount to a large non-zero value so
     // that it doesn't look like a JS object to the cycle collector
     // in the case where the object dies before being traversed.
-
-    MOZ_ASSERT(aParticipant);
+    MOZ_ASSERT(!IsGrayJS() && !IsBlackJS());
   }
 
   // Allow NodePool::Block's constructor to compile.
@@ -579,14 +580,24 @@ public:
     NS_NOTREACHED("should never be called");
   }
 
-  EdgePool::Iterator FirstChild()
+  bool IsGrayJS() const
+  {
+    return mRefCount == 0;
+  }
+
+  bool IsBlackJS() const
+  {
+    return mRefCount == UINT32_MAX;
+  }
+
+  EdgePool::Iterator FirstChild() const
   {
     CC_GRAPH_ASSERT(mFirstChild.Initialized());
     return mFirstChild;
   }
 
   // this PtrInfo must be part of a NodePool
-  EdgePool::Iterator LastChild()
+  EdgePool::Iterator LastChild() const
   {
     CC_GRAPH_ASSERT((this + 1)->mFirstChild.Initialized());
     return (this + 1)->mFirstChild;
@@ -3001,8 +3012,7 @@ nsCycleCollector::ScanIncrementalRoots()
     while (!etor.IsDone()) {
       PtrInfo* pi = etor.GetNext();
 
-      // If the refcount is non-zero, pi can't have been a gray JS object.
-      if (pi->mRefCount != 0) {
+      if (!pi->IsGrayJS()) {
         continue;
       }
 
@@ -3074,7 +3084,7 @@ nsCycleCollector::ScanWhiteNodes(bool aFullySynchGraphBuild)
       continue;
     }
 
-    if (pi->mInternalRefs == pi->mRefCount || pi->mRefCount == 0) {
+    if (pi->mInternalRefs == pi->mRefCount || pi->IsGrayJS()) {
       pi->mColor = white;
       ++mWhiteNodeCount;
       continue;
@@ -3146,7 +3156,7 @@ nsCycleCollector::ScanRoots(bool aFullySynchGraphBuild)
       }
       switch (pi->mColor) {
         case black:
-          if (pi->mRefCount > 0 && pi->mRefCount < UINT32_MAX &&
+          if (!pi->IsGrayJS() && !pi->IsBlackJS() &&
               pi->mInternalRefs != pi->mRefCount) {
             mListener->DescribeRoot((uint64_t)pi->mPointer,
                                     pi->mInternalRefs);
@@ -3204,8 +3214,7 @@ nsCycleCollector::CollectWhite()
     if (pinfo->mColor == white && pinfo->mParticipant) {
       whiteNodes.AppendElement(pinfo);
       pinfo->mParticipant->Root(pinfo->mPointer);
-      if (pinfo->mRefCount == 0) {
-        // only JS objects have a refcount of 0
+      if (pinfo->IsGrayJS()) {
         ++numWhiteGCed;
       }
     }
