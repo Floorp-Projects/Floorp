@@ -8,7 +8,6 @@ LIBRARY_NAME = 'mozillapkix_gtest'
 
 SOURCES += [
     'nssgtest.cpp',
-    'pkix_ocsp_request_tests.cpp',
     'pkixder_input_tests.cpp',
     'pkixder_pki_types_tests.cpp',
     'pkixder_universal_types_tests.cpp',
@@ -17,9 +16,8 @@ SOURCES += [
 LOCAL_INCLUDES += [
     '../../include',
     '../../lib',
-    '../lib',
 ]
 
-FINAL_LIBRARY = 'xul-gtest'
+FINAL_LIBRARY='xul-gtest'
 
 include('/ipc/chromium/chromium-config.mozbuild')

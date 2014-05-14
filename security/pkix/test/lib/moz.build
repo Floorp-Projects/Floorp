@@ -31,6 +31,4 @@ LOCAL_INCLUDES += [
     '../../lib',
 ]
 
-FINAL_LIBRARY = 'xul-gtest'
-
 FAIL_ON_WARNINGS = True

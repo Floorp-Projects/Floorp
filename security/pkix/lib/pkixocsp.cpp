@@ -958,7 +958,7 @@ CreateEncodedOCSPRequest(PLArenaPool* arena,
   // we allow for some amount of non-conformance with that requirement while
   // still ensuring we can encode the length values in the ASN.1 TLV structures
   // in a single byte.
-  if (cert->serialNumber.len > 127u - totalLenWithoutSerialNumberData) {
+  if (issuerCert->serialNumber.len > 127u - totalLenWithoutSerialNumberData) {
     PR_SetError(SEC_ERROR_BAD_DATA, 0);
     return nullptr;
   }
