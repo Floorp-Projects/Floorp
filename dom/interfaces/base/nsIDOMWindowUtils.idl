@@ -48,7 +48,7 @@ interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 interface nsITranslationNodeList;
 
-[scriptable, uuid(8489681a-7407-457e-b889-53d1ae999b30)]
+[scriptable, uuid(aae2d993-366f-43e6-aa51-f2eb83935e7d)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -231,13 +231,13 @@ interface nsIDOMWindowUtils : nsISupports {
   void getResolution(out float aXResolution, out float aYResolution);
 
   /**
-   * Whether the current window has been restored from session history.
-   * This gives a way to check whether the provided resolution and scroll
-   * position are default values or restored from a previous session.
+   * Whether the resolution has been set by the user.
+   * This gives a way to check whether the provided resolution is the default
+   * value or restored from a previous session.
    *
    * Can only be accessed with chrome privileges.
    */
-  readonly attribute boolean isHistoryRestored;
+  readonly attribute boolean isResolutionSet;
 
   /**
    * Whether the next paint should be flagged as the first paint for a document.

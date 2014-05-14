@@ -12,7 +12,7 @@
 #include "AudioNodeStream.h"
 #include "AudioProcessingEvent.h"
 #include "WebAudioUtils.h"
-#include "nsCxPusher.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/PodOperations.h"
 #include <deque>
@@ -402,44 +402,51 @@ private:
           return NS_OK;
         }
 
-        AutoPushJSContext cx(node->Context()->GetJSContext());
-        if (cx) {
-
-          // Create the input buffer
-          nsRefPtr<AudioBuffer> inputBuffer;
-          if (!mNullInput) {
-            inputBuffer = new AudioBuffer(node->Context(),
-                                          node->BufferSize(),
-                                          node->Context()->SampleRate());
-            if (!inputBuffer->InitializeBuffers(mInputChannels.Length(), cx)) {
-              return NS_OK;
-            }
-            // Put the channel data inside it
-            for (uint32_t i = 0; i < mInputChannels.Length(); ++i) {
-              inputBuffer->SetRawChannelContents(cx, i, mInputChannels[i]);
-            }
-          }
-
-          // Ask content to produce data in the output buffer
-          // Note that we always avoid creating the output buffer here, and we try to
-          // avoid creating the input buffer as well.  The AudioProcessingEvent class
-          // knows how to lazily create them if needed once the script tries to access
-          // them.  Otherwise, we may be able to get away without creating them!
-          nsRefPtr<AudioProcessingEvent> event = new AudioProcessingEvent(node, nullptr, nullptr);
-          event->InitEvent(inputBuffer,
-                           mInputChannels.Length(),
-                           mPlaybackTime);
-          node->DispatchTrustedEvent(event);
-
-          // Steal the output buffers
-          nsRefPtr<ThreadSharedFloatArrayBufferList> output;
-          if (event->HasOutputBuffer()) {
-            output = event->OutputBuffer()->GetThreadSharedChannelsForRate(cx);
-          }
-
-          // Append it to our output buffer queue
-          node->GetSharedBuffers()->FinishProducingOutputBuffer(output, node->BufferSize());
+        // Get the global for the context so that we can enter its compartment.
+        JSObject* global = node->Context()->GetGlobalJSObject();
+        if (NS_WARN_IF(!global)) {
+          return NS_OK;
         }
+
+        AutoJSAPI jsapi;
+        JSContext* cx = jsapi.cx();
+        JSAutoCompartment ac(cx, global);
+
+        // Create the input buffer
+        nsRefPtr<AudioBuffer> inputBuffer;
+        if (!mNullInput) {
+          inputBuffer = new AudioBuffer(node->Context(),
+                                        node->BufferSize(),
+                                        node->Context()->SampleRate());
+          if (!inputBuffer->InitializeBuffers(mInputChannels.Length(), cx)) {
+            return NS_OK;
+          }
+          // Put the channel data inside it
+          for (uint32_t i = 0; i < mInputChannels.Length(); ++i) {
+            inputBuffer->SetRawChannelContents(i, mInputChannels[i]);
+          }
+        }
+
+        // Ask content to produce data in the output buffer
+        // Note that we always avoid creating the output buffer here, and we try to
+        // avoid creating the input buffer as well.  The AudioProcessingEvent class
+        // knows how to lazily create them if needed once the script tries to access
+        // them.  Otherwise, we may be able to get away without creating them!
+        nsRefPtr<AudioProcessingEvent> event = new AudioProcessingEvent(node, nullptr, nullptr);
+        event->InitEvent(inputBuffer,
+                         mInputChannels.Length(),
+                         mPlaybackTime);
+        node->DispatchTrustedEvent(event);
+
+        // Steal the output buffers
+        nsRefPtr<ThreadSharedFloatArrayBufferList> output;
+        if (event->HasOutputBuffer()) {
+          output = event->OutputBuffer()->GetThreadSharedChannelsForRate(cx);
+        }
+
+        // Append it to our output buffer queue
+        node->GetSharedBuffers()->FinishProducingOutputBuffer(output, node->BufferSize());
+
         return NS_OK;
       }
     private:
