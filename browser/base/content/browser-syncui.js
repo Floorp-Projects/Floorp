@@ -14,6 +14,7 @@ let gSyncUI = {
          "weave:service:login:finish",
          "weave:service:logout:finish",
          "weave:service:start-over",
+         "weave:service:start-over:finish",
          "weave:ui:login:error",
          "weave:ui:sync:error",
          "weave:ui:sync:finish",
@@ -542,6 +543,9 @@ let gSyncUI = {
         break;
       case "weave:service:start-over":
         this.onStartOver();
+        break;
+      case "weave:service:start-over:finish":
+        this.updateUI();
         break;
       case "weave:service:ready":
         this.initUI();
