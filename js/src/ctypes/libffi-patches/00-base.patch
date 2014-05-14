@@ -2,7 +2,7 @@ Modifications to upstream libffi needed for the Mozilla build:
 * Clear INFO_DEPS so that builds don't fail when makeinfo isn't present.
   - This can be removed if https://github.com/atgreen/libffi/issues/111 is fixed.
 * Various workarounds for pymake bugs.
-  - Once pymake support is fully deprecated, hunks 2 & 3 be safely removed.
+  - Once pymake support is fully deprecated, hunks 2-4 be safely removed.
 
 diff --git a/js/src/ctypes/libffi/Makefile.in b/js/src/ctypes/libffi/Makefile.in
 --- a/js/src/ctypes/libffi/Makefile.in
@@ -26,7 +26,30 @@ diff --git a/js/src/ctypes/libffi/Makefile.in b/js/src/ctypes/libffi/Makefile.in
  TEXINFOS = doc/libffi.texi
  TEXI2DVI = texi2dvi
  TEXI2PDF = $(TEXI2DVI) --pdf --batch
-@@ -1292,57 +1292,57 @@ distclean-compile:
+@@ -758,18 +758,20 @@ Makefile: $(srcdir)/Makefile.in $(top_bu
+ 
+ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
+ 	$(am__cd) $(srcdir) && $(AUTOCONF)
+ $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
+ 	$(am__cd) $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
+ $(am__aclocal_m4_deps):
+ 
+ fficonfig.h: stamp-h1
+-	@test -f $@ || rm -f stamp-h1
+-	@test -f $@ || $(MAKE) $(AM_MAKEFLAGS) stamp-h1
++	@if test ! -f $@; then \
++	  rm -f stamp-h1; \
++	  $(MAKE) $(AM_MAKEFLAGS) stamp-h1; \
++	else :; fi
+ 
+ stamp-h1: $(srcdir)/fficonfig.h.in $(top_builddir)/config.status
+ 	@rm -f stamp-h1
+ 	cd $(top_builddir) && $(SHELL) ./config.status fficonfig.h
+ $(srcdir)/fficonfig.h.in: @MAINTAINER_MODE_TRUE@ $(am__configure_deps) 
+ 	($(am__cd) $(top_srcdir) && $(AUTOHEADER))
+ 	rm -f stamp-h1
+ 	touch $@
+@@ -1292,57 +1294,57 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@src/x86/$(DEPDIR)/freebsd.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@src/x86/$(DEPDIR)/sysv.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@src/x86/$(DEPDIR)/unix64.Plo@am__quote@
@@ -90,7 +113,7 @@ diff --git a/js/src/ctypes/libffi/Makefile.in b/js/src/ctypes/libffi/Makefile.in
  @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
  
  mostlyclean-libtool:
-@@ -1443,17 +1443,17 @@ doc/libffi.html: doc/libffi.texi $(srcdi
+@@ -1443,17 +1445,17 @@ doc/libffi.html: doc/libffi.texi $(srcdi
  	-@rm -f vti.tmp
  	@cp $(srcdir)/doc/version.texi $@
  

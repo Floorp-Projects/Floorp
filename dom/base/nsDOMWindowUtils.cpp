@@ -578,7 +578,7 @@ nsDOMWindowUtils::GetResolution(float* aXResolution, float* aYResolution)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetIsHistoryRestored(bool* aIsHistoryRestored) {
+nsDOMWindowUtils::GetIsResolutionSet(bool* aIsResolutionSet) {
   if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
@@ -589,7 +589,7 @@ nsDOMWindowUtils::GetIsHistoryRestored(bool* aIsHistoryRestored) {
   }
 
   const nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
-  *aIsHistoryRestored = sf && sf->DidHistoryRestore();
+  *aIsResolutionSet = sf && sf->IsResolutionSet();
 
   return NS_OK;
 }
