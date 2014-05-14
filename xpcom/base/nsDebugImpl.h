@@ -13,12 +13,15 @@
 class nsDebugImpl : public nsIDebug2
 {
 public:
-  nsDebugImpl() {}
+  nsDebugImpl()
+  {
+  }
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDEBUG
   NS_DECL_NSIDEBUG2
 
-  static nsresult Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+  static nsresult Create(nsISupports* aOuter, const nsIID& aIID,
+                         void** aInstancePtr);
 
   /*
    * Inform nsDebugImpl that we're in multiprocess mode.
@@ -26,7 +29,7 @@ public:
    * If aDesc is not nullptr, the string it points to must be
    * statically-allocated (i.e., it must be a string literal).
    */
-  static void SetMultiprocessMode(const char *aDesc);
+  static void SetMultiprocessMode(const char* aDesc);
 };
 
 

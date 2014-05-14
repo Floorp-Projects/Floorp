@@ -84,13 +84,15 @@ namespace {
 
 #endif
 
-void safe_write(const char *a)
+void
+safe_write(const char* aStr)
 {
   // Well, puts isn't exactly "safe", but at least it doesn't call malloc...
-  fputs(a, stdout);
+  fputs(aStr, stdout);
 }
 
-void safe_write(uint64_t x)
+void
+safe_write(uint64_t aNum)
 {
   // 2^64 is 20 decimal digits.
   const unsigned int max_len = 21;
@@ -98,10 +100,9 @@ void safe_write(uint64_t x)
   buf[max_len - 1] = '\0';
 
   uint32_t i;
-  for (i = max_len - 2; i < max_len && x > 0; i--)
-  {
-    buf[i] = "0123456789"[x % 10];
-    x /= 10;
+  for (i = max_len - 2; i < max_len && aNum > 0; i--) {
+    buf[i] = "0123456789"[aNum % 10];
+    aNum /= 10;
   }
 
   safe_write(&buf[i + 1]);
@@ -148,24 +149,25 @@ volatile PRIntervalTime sLastLowMemoryNotificationTime;
 
 // These are function pointers to the functions we wrap in Init().
 
-void* (WINAPI *sVirtualAllocOrig)
+void* (WINAPI* sVirtualAllocOrig)
   (LPVOID aAddress, SIZE_T aSize, DWORD aAllocationType, DWORD aProtect);
 
-void* (WINAPI *sMapViewOfFileOrig)
+void* (WINAPI* sMapViewOfFileOrig)
   (HANDLE aFileMappingObject, DWORD aDesiredAccess,
    DWORD aFileOffsetHigh, DWORD aFileOffsetLow,
    SIZE_T aNumBytesToMap);
 
-HBITMAP (WINAPI *sCreateDIBSectionOrig)
-  (HDC aDC, const BITMAPINFO *aBitmapInfo,
-   UINT aUsage, VOID **aBits,
+HBITMAP (WINAPI* sCreateDIBSectionOrig)
+  (HDC aDC, const BITMAPINFO* aBitmapInfo,
+   UINT aUsage, VOID** aBits,
    HANDLE aSection, DWORD aOffset);
 
 /**
  * Fire a memory pressure event if it's been long enough since the last one we
  * fired.
  */
-bool MaybeScheduleMemoryPressureEvent()
+bool
+MaybeScheduleMemoryPressureEvent()
 {
   // If this interval rolls over, we may fire an extra memory pressure
   // event, but that's not a big deal.
@@ -192,7 +194,8 @@ bool MaybeScheduleMemoryPressureEvent()
   return true;
 }
 
-void CheckMemAvailable()
+void
+CheckMemAvailable()
 {
   if (!sHooksActive) {
     return;
@@ -204,8 +207,7 @@ void CheckMemAvailable()
 
   DEBUG_WARN_IF_FALSE(success, "GlobalMemoryStatusEx failed.");
 
-  if (success)
-  {
+  if (success) {
     // sLowVirtualMemoryThreshold is in MB, but ullAvailVirtual is in bytes.
     if (stat.ullAvailVirtual < sLowVirtualMemoryThreshold * 1024 * 1024) {
       // If we're running low on virtual memory, unconditionally schedule the
@@ -214,14 +216,12 @@ void CheckMemAvailable()
       LOG("Detected low virtual memory.");
       ++sNumLowVirtualMemEvents;
       NS_DispatchEventualMemoryPressure(MemPressure_New);
-    }
-    else if (stat.ullAvailPageFile < sLowCommitSpaceThreshold * 1024 * 1024) {
+    } else if (stat.ullAvailPageFile < sLowCommitSpaceThreshold * 1024 * 1024) {
       LOG("Detected low available page file space.");
       if (MaybeScheduleMemoryPressureEvent()) {
         ++sNumLowCommitSpaceEvents;
       }
-    }
-    else if (stat.ullAvailPhys < sLowPhysicalMemoryThreshold * 1024 * 1024) {
+    } else if (stat.ullAvailPhys < sLowPhysicalMemoryThreshold * 1024 * 1024) {
       LOG("Detected low physical memory.");
       if (MaybeScheduleMemoryPressureEvent()) {
         ++sNumLowPhysicalMemEvents;
@@ -278,9 +278,9 @@ MapViewOfFileHook(HANDLE aFileMappingObject,
 
 HBITMAP WINAPI
 CreateDIBSectionHook(HDC aDC,
-                     const BITMAPINFO *aBitmapInfo,
+                     const BITMAPINFO* aBitmapInfo,
                      UINT aUsage,
-                     VOID **aBits,
+                     VOID** aBits,
                      HANDLE aSection,
                      DWORD aOffset)
 {
@@ -304,8 +304,9 @@ CreateDIBSectionHook(HDC aDC,
     // absolute value.
     int64_t size = bitCount * aBitmapInfo->bmiHeader.biWidth *
                               aBitmapInfo->bmiHeader.biHeight;
-    if (size < 0)
+    if (size < 0) {
       size *= -1;
+    }
 
     // If we're allocating more than 1MB, check how much memory is left after
     // the allocation.
@@ -458,10 +459,10 @@ nsMemoryPressureWatcher::Init()
  * free dirty pages held by jemalloc.
  */
 NS_IMETHODIMP
-nsMemoryPressureWatcher::Observe(nsISupports *subject, const char *topic,
-                                 const char16_t *data)
+nsMemoryPressureWatcher::Observe(nsISupports* aSubject, const char* aTopic,
+                                 const char16_t* aData)
 {
-  MOZ_ASSERT(!strcmp(topic, "memory-pressure"), "Unknown topic");
+  MOZ_ASSERT(!strcmp(aTopic, "memory-pressure"), "Unknown topic");
 
   if (sFreeDirtyPages) {
     nsRefPtr<nsIRunnable> runnable = new nsJemallocFreeDirtyPagesRunnable();
@@ -477,7 +478,8 @@ nsMemoryPressureWatcher::Observe(nsISupports *subject, const char *topic,
 namespace mozilla {
 namespace AvailableMemoryTracker {
 
-void Activate()
+void
+Activate()
 {
 #if defined(_M_IX86) && defined(XP_WIN)
   MOZ_ASSERT(sInitialized);
@@ -487,8 +489,7 @@ void Activate()
   // we're not going to run out of virtual memory!
   if (sizeof(void*) > 4) {
     sLowVirtualMemoryThreshold = 0;
-  }
-  else {
+  } else {
     Preferences::AddUintVarCache(&sLowVirtualMemoryThreshold,
                                  "memory.low_virtual_mem_threshold_mb", 128);
   }
@@ -501,8 +502,10 @@ void Activate()
                                "memory.low_memory_notification_interval_ms", 10000);
 
   RegisterStrongMemoryReporter(new LowEventsReporter());
-  RegisterLowMemoryEventsVirtualDistinguishedAmount(LowMemoryEventsVirtualDistinguishedAmount);
-  RegisterLowMemoryEventsPhysicalDistinguishedAmount(LowMemoryEventsPhysicalDistinguishedAmount);
+  RegisterLowMemoryEventsVirtualDistinguishedAmount(
+    LowMemoryEventsVirtualDistinguishedAmount);
+  RegisterLowMemoryEventsPhysicalDistinguishedAmount(
+    LowMemoryEventsPhysicalDistinguishedAmount);
   sHooksActive = true;
 #endif
 
@@ -511,7 +514,8 @@ void Activate()
   watcher->Init();
 }
 
-void Init()
+void
+Init()
 {
   // Do nothing on x86-64, because nsWindowsDllInterceptor is not thread-safe
   // on 64-bit.  (On 32-bit, it's probably thread-safe.)  Even if we run Init()
@@ -531,15 +535,15 @@ void Init()
     sKernel32Intercept.Init("Kernel32.dll");
     sKernel32Intercept.AddHook("VirtualAlloc",
                                reinterpret_cast<intptr_t>(VirtualAllocHook),
-                               (void**) &sVirtualAllocOrig);
+                               reinterpret_cast<void**>(&sVirtualAllocOrig));
     sKernel32Intercept.AddHook("MapViewOfFile",
                                reinterpret_cast<intptr_t>(MapViewOfFileHook),
-                               (void**) &sMapViewOfFileOrig);
+                               reinterpret_cast<void**>(&sMapViewOfFileOrig));
 
     sGdi32Intercept.Init("Gdi32.dll");
     sGdi32Intercept.AddHook("CreateDIBSection",
                             reinterpret_cast<intptr_t>(CreateDIBSectionHook),
-                            (void**) &sCreateDIBSectionOrig);
+                            reinterpret_cast<void**>(&sCreateDIBSectionOrig));
   }
 
   sInitialized = true;

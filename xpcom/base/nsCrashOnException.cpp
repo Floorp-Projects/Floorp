@@ -14,23 +14,25 @@
 
 namespace mozilla {
 
-static int ReportException(EXCEPTION_POINTERS *aExceptionInfo)
+static int
+ReportException(EXCEPTION_POINTERS* aExceptionInfo)
 {
 #ifdef MOZ_CRASHREPORTER
   nsCOMPtr<nsICrashReporter> cr =
     do_GetService("@mozilla.org/toolkit/crash-reporter;1");
-  if (cr)
+  if (cr) {
     cr->WriteMinidumpForException(aExceptionInfo);
+  }
 #endif
   return EXCEPTION_EXECUTE_HANDLER;
 }
 
 XPCOM_API(LRESULT)
-CallWindowProcCrashProtected(WNDPROC wndProc, HWND hWnd, UINT msg,
-                             WPARAM wParam, LPARAM lParam)
+CallWindowProcCrashProtected(WNDPROC aWndProc, HWND aHWnd, UINT aMsg,
+                             WPARAM aWParam, LPARAM aLParam)
 {
   MOZ_SEH_TRY {
-    return wndProc(hWnd, msg, wParam, lParam);
+    return aWndProc(aHWnd, aMsg, aWParam, aLParam);
   }
   MOZ_SEH_EXCEPT(ReportException(GetExceptionInformation())) {
     ::TerminateProcess(::GetCurrentProcess(), 253);

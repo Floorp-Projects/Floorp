@@ -543,17 +543,18 @@ function resizeAndCheckWidths(first, second, third, checks, cb) {
         }
         ok(true, count + ": " + "correct number of chats visible");
         info(">> Check " + count);
-        resizeAndCheckWidths(first, second, third, checks, cb);
-        return true;
+        executeSoon(function() {
+          resizeAndCheckWidths(first, second, third, checks, cb);
+        });
       }
-      return false;
     }
-    if (!collapsedObserver()) {
-      let m = new MutationObserver(collapsedObserver);
-      m.observe(first, {attributes: true });
-      m.observe(second, {attributes: true });
-      m.observe(third, {attributes: true });
-    }
+    let m = new MutationObserver(collapsedObserver);
+    m.observe(first, {attributes: true });
+    m.observe(second, {attributes: true });
+    m.observe(third, {attributes: true });
+    // and just in case we are already at the right size, explicitly call the
+    // observer.
+    collapsedObserver(undefined, m);
   }, count);
 }
 

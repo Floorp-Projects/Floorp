@@ -22,7 +22,7 @@ extern "C" {
 // pointing to when the execution returns to executing that at that PC.
 // If no approximation can be made it will be nullptr.
 typedef void
-(* NS_WalkStackCallback)(void *aPC, void *aSP, void *aClosure);
+(*NS_WalkStackCallback)(void* aPC, void* aSP, void* aClosure);
 
 /**
  * Call aCallback for the C/C++ stack frames on the current thread, from
@@ -62,10 +62,11 @@ typedef void
  */
 XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
-             uint32_t aMaxFrames, void *aClosure, uintptr_t aThread,
-             void *aPlatformData);
+             uint32_t aMaxFrames, void* aClosure, uintptr_t aThread,
+             void* aPlatformData);
 
-typedef struct {
+typedef struct
+{
   /*
    * The name of the shared library or executable containing an
    * address and the address's offset within that library, or empty
@@ -96,7 +97,7 @@ typedef struct {
  * @param aDetails    A structure to be filled in with the result.
  */
 XPCOM_API(nsresult)
-NS_DescribeCodeAddress(void *aPC, nsCodeAddressDetails *aDetails);
+NS_DescribeCodeAddress(void* aPC, nsCodeAddressDetails* aDetails);
 
 /**
  * Format the information about a code address in a format suitable for
@@ -116,8 +117,8 @@ NS_DescribeCodeAddress(void *aPC, nsCodeAddressDetails *aDetails);
  *                    is the terminating null.
  */
 XPCOM_API(nsresult)
-NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
-                            char *aBuffer, uint32_t aBufferSize);
+NS_FormatCodeAddressDetails(void* aPC, const nsCodeAddressDetails* aDetails,
+                            char* aBuffer, uint32_t aBufferSize);
 
 #ifdef __cplusplus
 }

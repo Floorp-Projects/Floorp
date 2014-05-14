@@ -14,7 +14,9 @@ class nsMessageLoop : public nsIMessageLoop
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMESSAGELOOP
 
-  virtual ~nsMessageLoop() {}
+  virtual ~nsMessageLoop()
+  {
+  }
 };
 
 #define NS_MESSAGE_LOOP_CID \
@@ -22,6 +24,6 @@ class nsMessageLoop : public nsIMessageLoop
 {0x93, 0x9e, 0x6a, 0x81, 0x9e, 0x6c, 0x24, 0x8f}}
 
 extern nsresult
-nsMessageLoopConstructor(nsISupports* outer,
+nsMessageLoopConstructor(nsISupports* aOuter,
                          const nsIID& aIID,
-                         void* *aInstancePtr);
+                         void** aInstancePtr);

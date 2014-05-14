@@ -214,6 +214,7 @@ class MarionetteTestResult(unittest._TextTestResult, TestResultCollection):
                 self.stream.writeln('END LOG:')
 
     def printErrorList(self, flavour, errors):
+        TIMEOUT_MESSAGE = "ScriptTimeoutException: ScriptTimeoutException: timed out"
         for error in errors:
             err = error.output
             self.stream.writeln(self.separator1)
@@ -228,7 +229,8 @@ class MarionetteTestResult(unittest._TextTestResult, TestResultCollection):
                     fail_present = True
             for line in err:
                 if line != lastline or fail_present:
-                    self.stream.writeln("%s" % line)
+                    if error.reason != TIMEOUT_MESSAGE:
+                        self.stream.writeln("%s" % line)
                 else:
                     self.stream.writeln("TEST-UNEXPECTED-FAIL | %s | %s" %
                                         (self.getInfo(error), error.reason))

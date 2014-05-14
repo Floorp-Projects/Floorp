@@ -14,7 +14,7 @@ typedef struct
   float f4;
 } test_structure_8;
 
-static test_structure_8 struct8 (test_structure_8 ts)
+static test_structure_8 ABI_ATTR struct8 (test_structure_8 ts)
 {
   ts.f1 += 1;
   ts.f2 += 1;
@@ -31,6 +31,13 @@ int main (void)
   void *values[MAX_ARGS];
   ffi_type ts8_type;
   ffi_type *ts8_type_elements[5];
+
+  test_structure_8 ts8_arg;
+
+  /* This is a hack to get a properly aligned result buffer */
+  test_structure_8 *ts8_result =
+    (test_structure_8 *) malloc (sizeof(test_structure_8));
+
   ts8_type.size = 0;
   ts8_type.alignment = 0;
   ts8_type.type = FFI_TYPE_STRUCT;
@@ -41,17 +48,11 @@ int main (void)
   ts8_type_elements[3] = &ffi_type_float;
   ts8_type_elements[4] = NULL;
 
-  test_structure_8 ts8_arg;
-  
-  /* This is a hack to get a properly aligned result buffer */
-  test_structure_8 *ts8_result = 
-    (test_structure_8 *) malloc (sizeof(test_structure_8));
-  
   args[0] = &ts8_type;
   values[0] = &ts8_arg;
   
   /* Initialize the cif */
-  CHECK(ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 1, &ts8_type, args) == FFI_OK);
+  CHECK(ffi_prep_cif(&cif, ABI_NUM, 1, &ts8_type, args) == FFI_OK);
   
   ts8_arg.f1 = 5.55f;
   ts8_arg.f2 = 55.5f;

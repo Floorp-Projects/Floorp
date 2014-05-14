@@ -5610,7 +5610,7 @@ class ICCall_Native : public ICMonitoredStub
     HeapPtrObject templateObject_;
     uint32_t pcOffset_;
 
-#ifdef JS_ARM_SIMULATOR
+#if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
     void *native_;
 #endif
 
@@ -5646,7 +5646,7 @@ class ICCall_Native : public ICMonitoredStub
         return offsetof(ICCall_Native, pcOffset_);
     }
 
-#ifdef JS_ARM_SIMULATOR
+#if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
     static size_t offsetOfNative() {
         return offsetof(ICCall_Native, native_);
     }
