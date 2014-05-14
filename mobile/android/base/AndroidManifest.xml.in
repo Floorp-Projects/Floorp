@@ -72,13 +72,13 @@
     <uses-feature android:glEsVersion="0x00020000" android:required="true" />
 
     <application android:label="@string/moz_app_displayname"
-		 android:icon="@drawable/icon"
+                 android:icon="@drawable/icon"
                  android:name="org.mozilla.gecko.GeckoApplication"
-		 android:hardwareAccelerated="true"
+                 android:hardwareAccelerated="true"
 #ifdef MOZILLA_OFFICIAL
-		 android:debuggable="false">
+                 android:debuggable="false">
 #else
-		 android:debuggable="true">
+                 android:debuggable="true">
 #endif
 
         <meta-data android:name="com.sec.android.support.multiwindow" android:value="true"/>
@@ -89,7 +89,7 @@
                   android:label="@string/moz_app_displayname"
                   android:taskAffinity="@ANDROID_PACKAGE_NAME@.BROWSER"
                   android:alwaysRetainTaskState="true"
-                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection"
                   android:windowSoftInputMode="stateUnspecified|adjustResize"
                   android:launchMode="singleTask"
                   android:theme="@style/Gecko.App">
@@ -289,11 +289,11 @@
           <intent-filter>
             <action android:name="org.mozilla.gecko.reportCrash" />
           </intent-filter>
-	</activity>
+  </activity>
 #endif
 
         <activity android:name="org.mozilla.gecko.VideoPlayer"
-                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|locale|layoutDirection"
                   android:theme="@android:style/Theme.NoTitleBar">
             <intent-filter>
                 <action android:name="org.mozilla.gecko.PLAY_VIDEO" />
@@ -302,7 +302,7 @@
 
         <activity android:name="org.mozilla.gecko.preferences.GeckoPreferences"
                   android:theme="@style/Gecko.Preferences"
-                  android:configChanges="orientation|screenSize"
+                  android:configChanges="orientation|screenSize|locale|layoutDirection"
                   android:excludeFromRecents="true"/>
 
         <activity android:name="org.mozilla.gecko.home.HomePanelPicker"
