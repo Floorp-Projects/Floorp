@@ -1322,7 +1322,7 @@ JSContext::mark(JSTracer *trc)
 void *
 ThreadSafeContext::stackLimitAddressForJitCode(StackKind kind)
 {
-#ifdef JS_ARM_SIMULATOR
+#if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
     return runtime_->mainThread.addressOfSimulatorStackLimit();
 #endif
     return stackLimitAddress(kind);

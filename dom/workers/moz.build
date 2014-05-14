@@ -8,6 +8,7 @@ TEST_DIRS += ['test']
 
 # Public stuff.
 EXPORTS.mozilla.dom += [
+    'ServiceWorkerContainer.h',
     'WorkerPrivate.h',
     'WorkerRunnable.h',
     'WorkerScope.h',
@@ -25,6 +26,7 @@ EXPORTS.mozilla.dom.workers.bindings += [
     'Location.h',
     'MessagePort.h',
     'Navigator.h',
+    'ServiceWorker.h',
     'SharedWorker.h',
     'URL.h',
     'WorkerFeature.h',
@@ -45,6 +47,9 @@ SOURCES += [
     'RegisterBindings.cpp',
     'RuntimeService.cpp',
     'ScriptLoader.cpp',
+    'ServiceWorker.cpp',
+    'ServiceWorkerContainer.cpp',
+    'ServiceWorkerEvents.cpp',
     'SharedWorker.cpp',
     'URL.cpp',
     'WorkerPrivate.cpp',

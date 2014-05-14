@@ -1712,7 +1712,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
     if (tmp->mDoc && tmp->mDoc->GetDocumentURI()) {
       tmp->mDoc->GetDocumentURI()->GetSpec(uri);
     }
-    PR_snprintf(name, sizeof(name), "nsGlobalWindow #%ld %s %s",
+    PR_snprintf(name, sizeof(name), "nsGlobalWindow #%llu %s %s",
                 tmp->mWindowID, tmp->IsInnerWindow() ? "inner" : "outer",
                 uri.get());
     cb.DescribeRefCountedNode(tmp->mRefCnt.get(), name);

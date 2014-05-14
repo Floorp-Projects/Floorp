@@ -240,8 +240,8 @@ struct nsCycleCollectorParams
   bool mLogThisThread;
 
   nsCycleCollectorParams() :
-    mLogAll      (PR_GetEnv("MOZ_CC_LOG_ALL") != nullptr),
-    mLogShutdown (PR_GetEnv("MOZ_CC_LOG_SHUTDOWN") != nullptr),
+    mLogAll(PR_GetEnv("MOZ_CC_LOG_ALL") != nullptr),
+    mLogShutdown(PR_GetEnv("MOZ_CC_LOG_SHUTDOWN") != nullptr),
     mAllTracesAll(false),
     mAllTracesShutdown(false)
   {
@@ -300,7 +300,9 @@ struct nsCycleCollectorParams
 class TimeLog
 {
 public:
-  TimeLog() : mLastCheckpoint(TimeStamp::Now()) {}
+  TimeLog() : mLastCheckpoint(TimeStamp::Now())
+  {
+  }
 
   void
   Checkpoint(const char* aEvent)
@@ -320,8 +322,12 @@ private:
 class TimeLog
 {
 public:
-  TimeLog() {}
-  void Checkpoint(const char* aEvent) {}
+  TimeLog()
+  {
+  }
+  void Checkpoint(const char* aEvent)
+  {
+  }
 };
 #endif
 
@@ -356,9 +362,9 @@ public:
 
   void Clear()
   {
-    Block *b = Blocks();
+    Block* b = Blocks();
     while (b) {
-      Block *next = b->Next();
+      Block* next = b->Next();
       delete b;
       b = next;
     }
@@ -380,40 +386,63 @@ private:
   union PtrInfoOrBlock {
     // Use a union to avoid reinterpret_cast and the ensuing
     // potential aliasing bugs.
-    PtrInfo *ptrInfo;
-    Block *block;
+    PtrInfo* ptrInfo;
+    Block* block;
   };
-  struct Block {
+  struct Block
+  {
     enum { BlockSize = 16 * 1024 };
 
     PtrInfoOrBlock mPointers[BlockSize];
-    Block() {
+    Block()
+    {
       mPointers[BlockSize - 2].block = nullptr; // sentinel
       mPointers[BlockSize - 1].block = nullptr; // next block pointer
     }
-    Block*& Next()          { return mPointers[BlockSize - 1].block; }
-    PtrInfoOrBlock* Start() { return &mPointers[0]; }
-    PtrInfoOrBlock* End()   { return &mPointers[BlockSize - 2]; }
+    Block*& Next()
+    {
+      return mPointers[BlockSize - 1].block;
+    }
+    PtrInfoOrBlock* Start()
+    {
+      return &mPointers[0];
+    }
+    PtrInfoOrBlock* End()
+    {
+      return &mPointers[BlockSize - 2];
+    }
   };
 
   // Store the null sentinel so that we can have valid iterators
   // before adding any edges and without adding any blocks.
   PtrInfoOrBlock mSentinelAndBlocks[2];
 
-  Block*& Blocks()       { return mSentinelAndBlocks[1].block; }
-  Block*  Blocks() const { return mSentinelAndBlocks[1].block; }
+  Block*& Blocks()
+  {
+    return mSentinelAndBlocks[1].block;
+  }
+  Block* Blocks() const
+  {
+    return mSentinelAndBlocks[1].block;
+  }
 
 public:
   class Iterator
   {
   public:
-    Iterator() : mPointer(nullptr) {}
-    Iterator(PtrInfoOrBlock *aPointer) : mPointer(aPointer) {}
-    Iterator(const Iterator& aOther) : mPointer(aOther.mPointer) {}
+    Iterator() : mPointer(nullptr)
+  {
+  }
+    Iterator(PtrInfoOrBlock* aPointer) : mPointer(aPointer)
+  {
+  }
+    Iterator(const Iterator& aOther) : mPointer(aOther.mPointer)
+  {
+  }
 
     Iterator& operator++()
     {
-      if (mPointer->ptrInfo == nullptr) {
+      if (!mPointer->ptrInfo) {
         // Null pointer is a sentinel for link to the next block.
         mPointer = (mPointer + 1)->block->mPointers;
       }
@@ -423,16 +452,20 @@ public:
 
     PtrInfo* operator*() const
     {
-      if (mPointer->ptrInfo == nullptr) {
+      if (!mPointer->ptrInfo) {
         // Null pointer is a sentinel for link to the next block.
         return (mPointer + 1)->block->mPointers->ptrInfo;
       }
       return mPointer->ptrInfo;
     }
     bool operator==(const Iterator& aOther) const
-    { return mPointer == aOther.mPointer; }
+    {
+      return mPointer == aOther.mPointer;
+    }
     bool operator!=(const Iterator& aOther) const
-    { return mPointer != aOther.mPointer; }
+    {
+      return mPointer != aOther.mPointer;
+    }
 
 #ifdef DEBUG_CC_GRAPH
     bool Initialized() const
@@ -442,25 +475,30 @@ public:
 #endif
 
   private:
-    PtrInfoOrBlock *mPointer;
+    PtrInfoOrBlock* mPointer;
   };
 
   class Builder;
   friend class Builder;
-  class Builder {
+  class Builder
+  {
   public:
-    Builder(EdgePool &aPool)
-      : mCurrent(&aPool.mSentinelAndBlocks[0]),
-        mBlockEnd(&aPool.mSentinelAndBlocks[0]),
-        mNextBlockPtr(&aPool.Blocks())
+    Builder(EdgePool& aPool)
+      : mCurrent(&aPool.mSentinelAndBlocks[0])
+      , mBlockEnd(&aPool.mSentinelAndBlocks[0])
+      , mNextBlockPtr(&aPool.Blocks())
     {
     }
 
-    Iterator Mark() { return Iterator(mCurrent); }
+    Iterator Mark()
+    {
+      return Iterator(mCurrent);
+    }
 
-    void Add(PtrInfo* aEdge) {
+    void Add(PtrInfo* aEdge)
+    {
       if (mCurrent == mBlockEnd) {
-        Block *b = new Block();
+        Block* b = new Block();
         *mNextBlockPtr = b;
         mCurrent = b->Start();
         mBlockEnd = b->End();
@@ -470,13 +508,15 @@ public:
     }
   private:
     // mBlockEnd points to space for null sentinel
-    PtrInfoOrBlock *mCurrent, *mBlockEnd;
-    Block **mNextBlockPtr;
+    PtrInfoOrBlock* mCurrent;
+    PtrInfoOrBlock* mBlockEnd;
+    Block** mNextBlockPtr;
   };
 
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+  {
     size_t n = 0;
-    Block *b = Blocks();
+    Block* b = Blocks();
     while (b) {
       n += aMallocSizeOf(b);
       b = b->Next();
@@ -508,8 +548,8 @@ enum NodeColor { black, white, grey };
 
 struct PtrInfo
 {
-  void *mPointer;
-  nsCycleCollectionParticipant *mParticipant;
+  void* mPointer;
+  nsCycleCollectionParticipant* mParticipant;
   uint32_t mColor : 2;
   uint32_t mInternalRefs : 30;
   uint32_t mRefCount;
@@ -518,7 +558,7 @@ private:
 
 public:
 
-  PtrInfo(void *aPointer, nsCycleCollectionParticipant *aParticipant)
+  PtrInfo(void* aPointer, nsCycleCollectionParticipant* aParticipant)
     : mPointer(aPointer),
       mParticipant(aParticipant),
       mColor(grey),
@@ -534,7 +574,8 @@ public:
   }
 
   // Allow NodePool::Block's constructor to compile.
-  PtrInfo() {
+  PtrInfo()
+  {
     NS_NOTREACHED("should never be called");
   }
 
@@ -574,12 +615,19 @@ class NodePool
 private:
   enum { BlockSize = 8 * 1024 }; // could be int template parameter
 
-  struct Block {
+  struct Block
+  {
     // We create and destroy Block using NS_Alloc/NS_Free rather
     // than new and delete to avoid calling its constructor and
     // destructor.
-    Block()  { NS_NOTREACHED("should never be called"); }
-    ~Block() { NS_NOTREACHED("should never be called"); }
+    Block()
+    {
+      NS_NOTREACHED("should never be called");
+    }
+    ~Block()
+    {
+      NS_NOTREACHED("should never be called");
+    }
 
     Block* mNext;
     PtrInfo mEntries[BlockSize + 1]; // +1 to store last child of last node
@@ -587,8 +635,8 @@ private:
 
 public:
   NodePool()
-    : mBlocks(nullptr),
-      mLast(nullptr)
+    : mBlocks(nullptr)
+    , mLast(nullptr)
   {
   }
 
@@ -599,9 +647,9 @@ public:
 
   void Clear()
   {
-    Block *b = mBlocks;
+    Block* b = mBlocks;
     while (b) {
-      Block *n = b->mNext;
+      Block* n = b->mNext;
       NS_Free(b);
       b = n;
     }
@@ -619,20 +667,20 @@ public:
 
   class Builder;
   friend class Builder;
-  class Builder {
+  class Builder
+  {
   public:
     Builder(NodePool& aPool)
-      : mNextBlock(&aPool.mBlocks),
-        mNext(aPool.mLast),
-        mBlockEnd(nullptr)
+      : mNextBlock(&aPool.mBlocks)
+      , mNext(aPool.mLast)
+      , mBlockEnd(nullptr)
     {
-      MOZ_ASSERT(aPool.mBlocks == nullptr && aPool.mLast == nullptr,
-                 "pool not empty");
+      MOZ_ASSERT(!aPool.mBlocks && !aPool.mLast, "pool not empty");
     }
-    PtrInfo *Add(void *aPointer, nsCycleCollectionParticipant *aParticipant)
+    PtrInfo* Add(void* aPointer, nsCycleCollectionParticipant* aParticipant)
     {
       if (mNext == mBlockEnd) {
-        Block *block = static_cast<Block*>(NS_Alloc(sizeof(Block)));
+        Block* block = static_cast<Block*>(NS_Alloc(sizeof(Block)));
         *mNextBlock = block;
         mNext = block->mEntries;
         mBlockEnd = block->mEntries + BlockSize;
@@ -642,21 +690,22 @@ public:
       return new (mNext++) PtrInfo(aPointer, aParticipant);
     }
   private:
-    Block **mNextBlock;
-    PtrInfo *&mNext;
-    PtrInfo *mBlockEnd;
+    Block** mNextBlock;
+    PtrInfo*& mNext;
+    PtrInfo* mBlockEnd;
   };
 
   class Enumerator;
   friend class Enumerator;
-  class Enumerator {
+  class Enumerator
+  {
   public:
     Enumerator(NodePool& aPool)
-      : mFirstBlock(aPool.mBlocks),
-        mCurBlock(nullptr),
-        mNext(nullptr),
-        mBlockEnd(nullptr),
-        mLast(aPool.mLast)
+      : mFirstBlock(aPool.mBlocks)
+      , mCurBlock(nullptr)
+      , mNext(nullptr)
+      , mBlockEnd(nullptr)
+      , mLast(aPool.mLast)
     {
     }
 
@@ -674,7 +723,7 @@ public:
     {
       MOZ_ASSERT(!IsDone(), "calling GetNext when done");
       if (mNext == mBlockEnd) {
-        Block *nextBlock = mCurBlock ? mCurBlock->mNext : mFirstBlock;
+        Block* nextBlock = mCurBlock ? mCurBlock->mNext : mFirstBlock;
         mNext = nextBlock->mEntries;
         mBlockEnd = mNext + BlockSize;
         mCurBlock = nextBlock;
@@ -684,18 +733,21 @@ public:
   private:
     // mFirstBlock is a reference to allow an Enumerator to be constructed
     // for an empty graph.
-    Block *&mFirstBlock;
-    Block *mCurBlock;
+    Block*& mFirstBlock;
+    Block* mCurBlock;
     // mNext is the next value we want to return, unless mNext == mBlockEnd
     // NB: mLast is a reference to allow enumerating while building!
-    PtrInfo *mNext, *mBlockEnd, *&mLast;
+    PtrInfo* mNext;
+    PtrInfo* mBlockEnd;
+    PtrInfo*& mLast;
   };
 
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+  {
     // We don't measure the things pointed to by mEntries[] because those
     // pointers are non-owning.
     size_t n = 0;
-    Block *b = mBlocks;
+    Block* b = mBlocks;
     while (b) {
       n += aMallocSizeOf(b);
       b = b->mNext;
@@ -704,8 +756,8 @@ public:
   }
 
 private:
-  Block *mBlocks;
-  PtrInfo *mLast;
+  Block* mBlocks;
+  PtrInfo* mLast;
 };
 
 
@@ -714,16 +766,16 @@ private:
 struct PtrToNodeEntry : public PLDHashEntryHdr
 {
   // The key is mNode->mPointer
-  PtrInfo *mNode;
+  PtrInfo* mNode;
 };
 
 static bool
-PtrToNodeMatchEntry(PLDHashTable *table,
-                    const PLDHashEntryHdr *entry,
-                    const void *key)
+PtrToNodeMatchEntry(PLDHashTable* aTable,
+                    const PLDHashEntryHdr* aEntry,
+                    const void* aKey)
 {
-  const PtrToNodeEntry *n = static_cast<const PtrToNodeEntry*>(entry);
-  return n->mNode->mPointer == key;
+  const PtrToNodeEntry* n = static_cast<const PtrToNodeEntry*>(aEntry);
+  return n->mNode->mPointer == aKey;
 }
 
 static PLDHashTableOps PtrNodeOps = {
@@ -741,10 +793,10 @@ static PLDHashTableOps PtrNodeOps = {
 struct WeakMapping
 {
   // map and key will be null if the corresponding objects are GC marked
-  PtrInfo *mMap;
-  PtrInfo *mKey;
-  PtrInfo *mKeyDelegate;
-  PtrInfo *mVal;
+  PtrInfo* mMap;
+  PtrInfo* mKey;
+  PtrInfo* mKeyDelegate;
+  PtrInfo* mVal;
 };
 
 class GCGraphBuilder;
@@ -798,9 +850,9 @@ public:
   }
 #endif
 
-  PtrInfo* FindNode(void *aPtr);
-  PtrToNodeEntry* AddNodeToMap(void *aPtr);
-  void RemoveNodeFromMap(void *aPtr);
+  PtrInfo* FindNode(void* aPtr);
+  PtrToNodeEntry* AddNodeToMap(void* aPtr);
+  void RemoveNodeFromMap(void* aPtr);
 
   uint32_t MapCount() const
   {
@@ -808,8 +860,9 @@ public:
   }
 
   void SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
-                           size_t *aNodesSize, size_t *aEdgesSize,
-                           size_t *aWeakMapsSize) const {
+                           size_t* aNodesSize, size_t* aEdgesSize,
+                           size_t* aWeakMapsSize) const
+  {
     *aNodesSize = mNodes.SizeOfExcludingThis(aMallocSizeOf);
     *aEdgesSize = mEdges.SizeOfExcludingThis(aMallocSizeOf);
 
@@ -820,9 +873,11 @@ public:
 };
 
 PtrInfo*
-GCGraph::FindNode(void *aPtr)
+GCGraph::FindNode(void* aPtr)
 {
-  PtrToNodeEntry *e = static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, aPtr, PL_DHASH_LOOKUP));
+  PtrToNodeEntry* e =
+    static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, aPtr,
+                                                      PL_DHASH_LOOKUP));
   if (!PL_DHASH_ENTRY_IS_BUSY(e)) {
     return nullptr;
   }
@@ -830,9 +885,11 @@ GCGraph::FindNode(void *aPtr)
 }
 
 PtrToNodeEntry*
-GCGraph::AddNodeToMap(void *aPtr)
+GCGraph::AddNodeToMap(void* aPtr)
 {
-  PtrToNodeEntry *e = static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, aPtr, PL_DHASH_ADD));
+  PtrToNodeEntry* e =
+    static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, aPtr,
+                                                      PL_DHASH_ADD));
   if (!e) {
     // Caller should track OOMs
     return nullptr;
@@ -841,51 +898,52 @@ GCGraph::AddNodeToMap(void *aPtr)
 }
 
 void
-GCGraph::RemoveNodeFromMap(void *aPtr)
+GCGraph::RemoveNodeFromMap(void* aPtr)
 {
   PL_DHashTableOperate(&mPtrToNodeMap, aPtr, PL_DHASH_REMOVE);
 }
 
 
-static nsISupports *
-CanonicalizeXPCOMParticipant(nsISupports *in)
+static nsISupports*
+CanonicalizeXPCOMParticipant(nsISupports* aIn)
 {
   nsISupports* out;
-  in->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
-                     reinterpret_cast<void**>(&out));
+  aIn->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
+                      reinterpret_cast<void**>(&out));
   return out;
 }
 
 static inline void
-ToParticipant(nsISupports *s, nsXPCOMCycleCollectionParticipant **cp);
+ToParticipant(nsISupports* aPtr, nsXPCOMCycleCollectionParticipant** aCp);
 
 static void
-CanonicalizeParticipant(void **parti, nsCycleCollectionParticipant **cp)
+CanonicalizeParticipant(void** aParti, nsCycleCollectionParticipant** aCp)
 {
   // If the participant is null, this is an nsISupports participant,
   // so we must QI to get the real participant.
 
-  if (!*cp) {
-    nsISupports *nsparti = static_cast<nsISupports*>(*parti);
+  if (!*aCp) {
+    nsISupports* nsparti = static_cast<nsISupports*>(*aParti);
     nsparti = CanonicalizeXPCOMParticipant(nsparti);
     NS_ASSERTION(nsparti,
                  "Don't add objects that don't participate in collection!");
-    nsXPCOMCycleCollectionParticipant *xcp;
+    nsXPCOMCycleCollectionParticipant* xcp;
     ToParticipant(nsparti, &xcp);
-    *parti = nsparti;
-    *cp = xcp;
+    *aParti = nsparti;
+    *aCp = xcp;
   }
 }
 
-struct nsPurpleBufferEntry {
+struct nsPurpleBufferEntry
+{
   union {
-    void *mObject;                        // when low bit unset
-    nsPurpleBufferEntry *mNextInFreeList; // when low bit set
+    void* mObject;                        // when low bit unset
+    nsPurpleBufferEntry* mNextInFreeList; // when low bit set
   };
 
-  nsCycleCollectingAutoRefCnt *mRefCnt;
+  nsCycleCollectingAutoRefCnt* mRefCnt;
 
-  nsCycleCollectionParticipant *mParticipant; // nullptr for nsISupports
+  nsCycleCollectionParticipant* mParticipant; // nullptr for nsISupports
 };
 
 class nsCycleCollector;
@@ -893,8 +951,9 @@ class nsCycleCollector;
 struct nsPurpleBuffer
 {
 private:
-  struct Block {
-    Block *mNext;
+  struct Block
+  {
+    Block* mNext;
     // Try to match the size of a jemalloc bucket, to minimize slop bytes.
     // - On 32-bit platforms sizeof(nsPurpleBufferEntry) is 12, so mEntries
     //   is 16,380 bytes, which leaves 4 bytes for mNext.
@@ -902,7 +961,8 @@ private:
     //   is 32,544 bytes, which leaves 8 bytes for mNext.
     nsPurpleBufferEntry mEntries[1365];
 
-    Block() : mNext(nullptr) {
+    Block() : mNext(nullptr)
+    {
       // Ensure Block is the right size (see above).
       static_assert(
         sizeof(Block) == 16384 ||       // 32-bit
@@ -912,10 +972,10 @@ private:
     }
 
     template <class PurpleVisitor>
-    void VisitEntries(nsPurpleBuffer &aBuffer, PurpleVisitor &aVisitor)
+    void VisitEntries(nsPurpleBuffer& aBuffer, PurpleVisitor& aVisitor)
     {
-      nsPurpleBufferEntry *eEnd = ArrayEnd(mEntries);
-      for (nsPurpleBufferEntry *e = mEntries; e != eEnd; ++e) {
+      nsPurpleBufferEntry* eEnd = ArrayEnd(mEntries);
+      for (nsPurpleBufferEntry* e = mEntries; e != eEnd; ++e) {
         if (!(uintptr_t(e->mObject) & uintptr_t(1))) {
           aVisitor.Visit(aBuffer, e);
         }
@@ -927,7 +987,7 @@ private:
 
   uint32_t mCount;
   Block mFirstBlock;
-  nsPurpleBufferEntry *mFreeList;
+  nsPurpleBufferEntry* mFreeList;
 
 public:
   nsPurpleBuffer()
@@ -941,9 +1001,9 @@ public:
   }
 
   template <class PurpleVisitor>
-  void VisitEntries(PurpleVisitor &aVisitor)
+  void VisitEntries(PurpleVisitor& aVisitor)
   {
-    for (Block *b = &mFirstBlock; b; b = b->mNext) {
+    for (Block* b = &mFirstBlock; b; b = b->mNext) {
       b->VisitEntries(*this, aVisitor);
     }
   }
@@ -955,12 +1015,12 @@ public:
     StartBlock(&mFirstBlock);
   }
 
-  void StartBlock(Block *aBlock)
+  void StartBlock(Block* aBlock)
   {
     NS_ABORT_IF_FALSE(!mFreeList, "should not have free list");
 
     // Put all the entries in the block on the free list.
-    nsPurpleBufferEntry *entries = aBlock->mEntries;
+    nsPurpleBufferEntry* entries = aBlock->mEntries;
     mFreeList = entries;
     for (uint32_t i = 1; i < ArrayLength(aBlock->mEntries); ++i) {
       entries[i - 1].mNextInFreeList =
@@ -972,13 +1032,15 @@ public:
 
   void FreeBlocks()
   {
-    if (mCount > 0)
+    if (mCount > 0) {
       UnmarkRemainingPurple(&mFirstBlock);
-    Block *b = mFirstBlock.mNext;
+    }
+    Block* b = mFirstBlock.mNext;
     while (b) {
-      if (mCount > 0)
+      if (mCount > 0) {
         UnmarkRemainingPurple(b);
-      Block *next = b->mNext;
+      }
+      Block* next = b->mNext;
       delete b;
       b = next;
     }
@@ -988,7 +1050,7 @@ public:
   struct UnmarkRemainingPurpleVisitor
   {
     void
-    Visit(nsPurpleBuffer &aBuffer, nsPurpleBufferEntry *aEntry)
+    Visit(nsPurpleBuffer& aBuffer, nsPurpleBufferEntry* aEntry)
     {
       if (aEntry->mRefCnt) {
         aEntry->mRefCnt->RemoveFromPurpleBuffer();
@@ -999,13 +1061,13 @@ public:
     }
   };
 
-  void UnmarkRemainingPurple(Block *b)
+  void UnmarkRemainingPurple(Block* aBlock)
   {
     UnmarkRemainingPurpleVisitor visitor;
-    b->VisitEntries(*this, visitor);
+    aBlock->VisitEntries(*this, visitor);
   }
 
-  void SelectPointers(GCGraphBuilder &builder);
+  void SelectPointers(GCGraphBuilder& aBuilder);
 
   // RemoveSkippable removes entries from the purple buffer synchronously
   // (1) if aAsyncSnowWhiteFreeing is false and nsPurpleBufferEntry::mRefCnt is 0 or
@@ -1015,14 +1077,14 @@ public:
   //     that will have no children in the cycle collector graph will also be
   //     removed. CanSkip() may be run on these children.
   void RemoveSkippable(nsCycleCollector* aCollector,
-                       bool removeChildlessNodes,
+                       bool aRemoveChildlessNodes,
                        bool aAsyncSnowWhiteFreeing,
                        CC_ForgetSkippableCallback aCb);
 
   MOZ_ALWAYS_INLINE nsPurpleBufferEntry* NewEntry()
   {
     if (MOZ_UNLIKELY(!mFreeList)) {
-      Block *b = new Block;
+      Block* b = new Block;
       StartBlock(b);
 
       // Add the new block as the second block in the list.
@@ -1030,35 +1092,35 @@ public:
       mFirstBlock.mNext = b;
     }
 
-    nsPurpleBufferEntry *e = mFreeList;
+    nsPurpleBufferEntry* e = mFreeList;
     mFreeList = (nsPurpleBufferEntry*)
       (uintptr_t(mFreeList->mNextInFreeList) & ~uintptr_t(1));
     return e;
   }
 
-  MOZ_ALWAYS_INLINE void Put(void *p, nsCycleCollectionParticipant *cp,
-                             nsCycleCollectingAutoRefCnt *aRefCnt)
+  MOZ_ALWAYS_INLINE void Put(void* aObject, nsCycleCollectionParticipant* aCp,
+                             nsCycleCollectingAutoRefCnt* aRefCnt)
   {
-    nsPurpleBufferEntry *e = NewEntry();
+    nsPurpleBufferEntry* e = NewEntry();
 
     ++mCount;
 
-    e->mObject = p;
+    e->mObject = aObject;
     e->mRefCnt = aRefCnt;
-    e->mParticipant = cp;
+    e->mParticipant = aCp;
   }
 
-  void Remove(nsPurpleBufferEntry *e)
+  void Remove(nsPurpleBufferEntry* aEntry)
   {
     MOZ_ASSERT(mCount != 0, "must have entries");
 
-    if (e->mRefCnt) {
-      e->mRefCnt->RemoveFromPurpleBuffer();
-      e->mRefCnt = nullptr;
+    if (aEntry->mRefCnt) {
+      aEntry->mRefCnt->RemoveFromPurpleBuffer();
+      aEntry->mRefCnt = nullptr;
     }
-    e->mNextInFreeList =
+    aEntry->mNextInFreeList =
       (nsPurpleBufferEntry*)(uintptr_t(mFreeList) | uintptr_t(1));
-    mFreeList = e;
+    mFreeList = aEntry;
 
     --mCount;
   }
@@ -1073,7 +1135,7 @@ public:
     size_t n = 0;
 
     // Don't measure mFirstBlock because it's within |this|.
-    const Block *block = mFirstBlock.mNext;
+    const Block* block = mFirstBlock.mNext;
     while (block) {
       n += aMallocSizeOf(block);
       block = block->mNext;
@@ -1090,16 +1152,19 @@ public:
 };
 
 static bool
-AddPurpleRoot(GCGraphBuilder &aBuilder, void *aRoot, nsCycleCollectionParticipant *aParti);
+AddPurpleRoot(GCGraphBuilder& aBuilder, void* aRoot,
+              nsCycleCollectionParticipant* aParti);
 
 struct SelectPointersVisitor
 {
-  SelectPointersVisitor(GCGraphBuilder &aBuilder)
+  SelectPointersVisitor(GCGraphBuilder& aBuilder)
     : mBuilder(aBuilder)
-  {}
+  
+  {
+  }
 
   void
-  Visit(nsPurpleBuffer &aBuffer, nsPurpleBufferEntry *aEntry)
+  Visit(nsPurpleBuffer& aBuffer, nsPurpleBufferEntry* aEntry)
   {
     MOZ_ASSERT(aEntry->mObject, "Null object in purple buffer");
     MOZ_ASSERT(aEntry->mRefCnt->get() != 0,
@@ -1111,11 +1176,11 @@ struct SelectPointersVisitor
   }
 
 private:
-  GCGraphBuilder &mBuilder;
+  GCGraphBuilder& mBuilder;
 };
 
 void
-nsPurpleBuffer::SelectPointers(GCGraphBuilder &aBuilder)
+nsPurpleBuffer::SelectPointers(GCGraphBuilder& aBuilder)
 {
   SelectPointersVisitor visitor(aBuilder);
   VisitEntries(visitor);
@@ -1164,7 +1229,7 @@ class nsCycleCollector : public nsIMemoryReporter
   CycleCollectorResults mResults;
   TimeStamp mCollectionStart;
 
-  CycleCollectedJSRuntime *mJSRuntime;
+  CycleCollectedJSRuntime* mJSRuntime;
 
   ccPhase mIncrementalPhase;
   GCGraph mGraph;
@@ -1192,7 +1257,7 @@ public:
   nsCycleCollector();
   virtual ~nsCycleCollector();
 
-  void RegisterJSRuntime(CycleCollectedJSRuntime *aJSRuntime);
+  void RegisterJSRuntime(CycleCollectedJSRuntime* aJSRuntime);
   void ForgetJSRuntime();
 
   void SetBeforeUnlinkCallback(CC_BeforeUnlinkCallback aBeforeUnlinkCB)
@@ -1207,29 +1272,29 @@ public:
     mForgetSkippableCB = aForgetSkippableCB;
   }
 
-  void Suspect(void *n, nsCycleCollectionParticipant *cp,
-               nsCycleCollectingAutoRefCnt *aRefCnt);
+  void Suspect(void* aPtr, nsCycleCollectionParticipant* aCp,
+               nsCycleCollectingAutoRefCnt* aRefCnt);
   uint32_t SuspectedCount();
   void ForgetSkippable(bool aRemoveChildlessNodes, bool aAsyncSnowWhiteFreeing);
   bool FreeSnowWhite(bool aUntilNoSWInPurpleBuffer);
 
   // This method assumes its argument is already canonicalized.
-  void RemoveObjectFromGraph(void *aPtr);
+  void RemoveObjectFromGraph(void* aPtr);
 
   void PrepareForGarbageCollection();
   void FinishAnyCurrentCollection();
 
   bool Collect(ccType aCCType,
-               SliceBudget &aBudget,
-               nsICycleCollectorListener *aManualListener);
+               SliceBudget& aBudget,
+               nsICycleCollectorListener* aManualListener);
   void Shutdown();
 
   void SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                           size_t *aObjectSize,
-                           size_t *aGraphNodesSize,
-                           size_t *aGraphEdgesSize,
-                           size_t *aWeakMapsSize,
-                           size_t *aPurpleBufferSize) const;
+                           size_t* aObjectSize,
+                           size_t* aGraphNodesSize,
+                           size_t* aGraphEdgesSize,
+                           size_t* aWeakMapsSize,
+                           size_t* aPurpleBufferSize) const;
 
   JSPurpleBuffer* GetJSPurpleBuffer();
 private:
@@ -1239,8 +1304,8 @@ private:
   void FixGrayBits(bool aForceGC);
   bool ShouldMergeZones(ccType aCCType);
 
-  void BeginCollection(ccType aCCType, nsICycleCollectorListener *aManualListener);
-  void MarkRoots(SliceBudget &aBudget);
+  void BeginCollection(ccType aCCType, nsICycleCollectorListener* aManualListener);
+  void MarkRoots(SliceBudget& aBudget);
   void ScanRoots(bool aFullySynchGraphBuild);
   void ScanIncrementalRoots();
   void ScanWhiteNodes(bool aFullySynchGraphBuild);
@@ -1268,24 +1333,26 @@ class GraphWalker
 private:
   Visitor mVisitor;
 
-  void DoWalk(nsDeque &aQueue);
+  void DoWalk(nsDeque& aQueue);
 
-  void CheckedPush(nsDeque &aQueue, PtrInfo *pi)
+  void CheckedPush(nsDeque& aQueue, PtrInfo* aPi)
   {
-    if (!pi) {
+    if (!aPi) {
       MOZ_CRASH();
     }
-    if (!aQueue.Push(pi, fallible_t())) {
+    if (!aQueue.Push(aPi, fallible_t())) {
       mVisitor.Failed();
     }
   }
 
 public:
-  void Walk(PtrInfo *s0);
-  void WalkFromRoots(GCGraph &aGraph);
+  void Walk(PtrInfo* aPi);
+  void WalkFromRoots(GCGraph& aGraph);
   // copy-constructing the visitor should be cheap, and less
   // indirection than using a reference
-  GraphWalker(const Visitor aVisitor) : mVisitor(aVisitor) {}
+  GraphWalker(const Visitor aVisitor) : mVisitor(aVisitor)
+  {
+  }
 };
 
 
@@ -1293,7 +1360,8 @@ public:
 // The static collector struct
 ////////////////////////////////////////////////////////////////////////
 
-struct CollectorData {
+struct CollectorData
+{
   nsRefPtr<nsCycleCollector> mCollector;
   CycleCollectedJSRuntime* mRuntime;
 };
@@ -1305,38 +1373,39 @@ static mozilla::ThreadLocal<CollectorData*> sCollectorData;
 ////////////////////////////////////////////////////////////////////////
 
 MOZ_NEVER_INLINE static void
-Fault(const char *msg, const void *ptr=nullptr)
+Fault(const char* aMsg, const void* aPtr = nullptr)
 {
-  if (ptr)
-    printf("Fault in cycle collector: %s (ptr: %p)\n", msg, ptr);
-  else
-    printf("Fault in cycle collector: %s\n", msg);
+  if (aPtr) {
+    printf("Fault in cycle collector: %s (ptr: %p)\n", aMsg, aPtr);
+  } else {
+    printf("Fault in cycle collector: %s\n", aMsg);
+  }
 
   NS_RUNTIMEABORT("cycle collector fault");
 }
 
 static void
-Fault(const char *msg, PtrInfo *pi)
+Fault(const char* aMsg, PtrInfo* aPi)
 {
-  Fault(msg, pi->mPointer);
+  Fault(aMsg, aPi->mPointer);
 }
 
 static inline void
-ToParticipant(nsISupports *s, nsXPCOMCycleCollectionParticipant **cp)
+ToParticipant(nsISupports* aPtr, nsXPCOMCycleCollectionParticipant** aCp)
 {
   // We use QI to move from an nsISupports to an
   // nsXPCOMCycleCollectionParticipant, which is a per-class singleton helper
   // object that implements traversal and unlinking logic for the nsISupports
   // in question.
-  CallQueryInterface(s, cp);
+  CallQueryInterface(aPtr, aCp);
 }
 
 template <class Visitor>
 MOZ_NEVER_INLINE void
-GraphWalker<Visitor>::Walk(PtrInfo *s0)
+GraphWalker<Visitor>::Walk(PtrInfo* aPi)
 {
   nsDeque queue;
-  CheckedPush(queue, s0);
+  CheckedPush(queue, aPi);
   DoWalk(queue);
 }
 
@@ -1354,12 +1423,12 @@ GraphWalker<Visitor>::WalkFromRoots(GCGraph& aGraph)
 
 template <class Visitor>
 MOZ_NEVER_INLINE void
-GraphWalker<Visitor>::DoWalk(nsDeque &aQueue)
+GraphWalker<Visitor>::DoWalk(nsDeque& aQueue)
 {
   // Use a aQueue to match the breadth-first traversal used when we
   // built the graph, for hopefully-better locality.
   while (aQueue.GetSize() > 0) {
-    PtrInfo *pi = static_cast<PtrInfo*>(aQueue.PopFront());
+    PtrInfo* pi = static_cast<PtrInfo*>(aQueue.PopFront());
 
     if (pi->mParticipant && mVisitor.ShouldVisitNode(pi)) {
       mVisitor.VisitNode(pi);
@@ -1375,10 +1444,11 @@ GraphWalker<Visitor>::DoWalk(nsDeque &aQueue)
 struct CCGraphDescriber : public LinkedListElement<CCGraphDescriber>
 {
   CCGraphDescriber()
-    : mAddress("0x"), mCnt(0), mType(eUnknown) {}
-
-  enum Type
+    : mAddress("0x"), mCnt(0), mType(eUnknown)
   {
+  }
+
+  enum Type {
     eRefCountedObject,
     eGCedObject,
     eGCMarkedObject,
@@ -1395,22 +1465,241 @@ struct CCGraphDescriber : public LinkedListElement<CCGraphDescriber>
   Type mType;
 };
 
+class nsCycleCollectorLogSinkToFile MOZ_FINAL : public nsICycleCollectorLogSink
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  nsCycleCollectorLogSinkToFile() :
+    mProcessIdentifier(base::GetCurrentProcId()),
+    mGCLog("gc-edges"), mCCLog("cc-edges")
+  {
+  }
+
+  NS_IMETHOD GetFilenameIdentifier(nsAString& aIdentifier) MOZ_OVERRIDE
+  {
+    aIdentifier = mFilenameIdentifier;
+    return NS_OK;
+  }
+
+  NS_IMETHOD SetFilenameIdentifier(const nsAString& aIdentifier) MOZ_OVERRIDE
+  {
+    mFilenameIdentifier = aIdentifier;
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetProcessIdentifier(int32_t* aIdentifier) MOZ_OVERRIDE
+  {
+    *aIdentifier = mProcessIdentifier;
+    return NS_OK;
+  }
+
+  NS_IMETHOD SetProcessIdentifier(int32_t aIdentifier) MOZ_OVERRIDE
+  {
+    mProcessIdentifier = aIdentifier;
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetGcLog(nsIFile** aPath) MOZ_OVERRIDE
+  {
+    NS_IF_ADDREF(*aPath = mGCLog.mFile);
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetCcLog(nsIFile** aPath) MOZ_OVERRIDE
+  {
+    NS_IF_ADDREF(*aPath = mCCLog.mFile);
+    return NS_OK;
+  }
+
+  NS_IMETHOD Open(FILE** aGCLog, FILE** aCCLog) MOZ_OVERRIDE
+  {
+    nsresult rv;
+
+    if (mGCLog.mStream || mCCLog.mStream) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    rv = OpenLog(&mGCLog);
+    NS_ENSURE_SUCCESS(rv, rv);
+    *aGCLog = mGCLog.mStream;
+
+    rv = OpenLog(&mCCLog);
+    NS_ENSURE_SUCCESS(rv, rv);
+    *aCCLog = mCCLog.mStream;
+
+    return NS_OK;
+  }
+
+  NS_IMETHOD CloseGCLog() MOZ_OVERRIDE
+  {
+    if (!mGCLog.mStream) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    CloseLog(&mGCLog, NS_LITERAL_STRING("Garbage"));
+    return NS_OK;
+  }
+
+  NS_IMETHOD CloseCCLog() MOZ_OVERRIDE
+  {
+    if (!mCCLog.mStream) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    CloseLog(&mCCLog, NS_LITERAL_STRING("Cycle"));
+    return NS_OK;
+  }
+
+private:
+  ~nsCycleCollectorLogSinkToFile()
+  {
+    if (mGCLog.mStream) {
+      MozillaUnRegisterDebugFILE(mGCLog.mStream);
+      fclose(mGCLog.mStream);
+    }
+    if (mCCLog.mStream) {
+      MozillaUnRegisterDebugFILE(mCCLog.mStream);
+      fclose(mCCLog.mStream);
+    }
+  }
+
+  struct FileInfo {
+    const char* const mPrefix;
+    nsCOMPtr<nsIFile> mFile;
+    FILE* mStream;
+
+    FileInfo(const char* aPrefix) : mPrefix(aPrefix), mStream(nullptr) { }
+  };
+
+  /**
+   * Create a new file named something like aPrefix.$PID.$IDENTIFIER.log in
+   * $MOZ_CC_LOG_DIRECTORY or in the system's temp directory.  No existing
+   * file will be overwritten; if aPrefix.$PID.$IDENTIFIER.log exists, we'll
+   * try a file named something like aPrefix.$PID.$IDENTIFIER-1.log, and so
+   * on.
+   */
+  already_AddRefed<nsIFile> CreateTempFile(const char* aPrefix)
+  {
+    nsPrintfCString filename("%s.%d%s%s.log",
+                             aPrefix,
+                             mProcessIdentifier,
+                             mFilenameIdentifier.IsEmpty() ? "" : ".",
+                             NS_ConvertUTF16toUTF8(mFilenameIdentifier).get());
+
+    // Get the log directory either from $MOZ_CC_LOG_DIRECTORY or from
+    // the fallback directories in OpenTempFile.  We don't use an nsCOMPtr
+    // here because OpenTempFile uses an in/out param and getter_AddRefs
+    // wouldn't work.
+    nsIFile* logFile = nullptr;
+    if (char* env = PR_GetEnv("MOZ_CC_LOG_DIRECTORY")) {
+      NS_NewNativeLocalFile(nsCString(env), /* followLinks = */ true,
+                            &logFile);
+    }
+
+    // On Android or B2G, this function will open a file named
+    // aFilename under a memory-reporting-specific folder
+    // (/data/local/tmp/memory-reports). Otherwise, it will open a
+    // file named aFilename under "NS_OS_TEMP_DIR".
+    nsresult rv = nsDumpUtils::OpenTempFile(
+                                            filename,
+                                            &logFile,
+                                            NS_LITERAL_CSTRING("memory-reports"));
+    if (NS_FAILED(rv)) {
+      NS_IF_RELEASE(logFile);
+      return nullptr;
+    }
+
+    return dont_AddRef(logFile);
+  }
+
+  nsresult OpenLog(FileInfo* aLog)
+  {
+    // Initially create the log in a file starting with "incomplete-".
+    // We'll move the file and strip off the "incomplete-" once the dump
+    // completes.  (We do this because we don't want scripts which poll
+    // the filesystem looking for GC/CC dumps to grab a file before we're
+    // finished writing to it.)
+    nsAutoCString incomplete;
+    incomplete += "incomplete-";
+    incomplete += aLog->mPrefix;
+    MOZ_ASSERT(!aLog->mFile);
+    aLog->mFile = CreateTempFile(incomplete.get());
+    if (NS_WARN_IF(!aLog->mFile))
+      return NS_ERROR_UNEXPECTED;
+
+    MOZ_ASSERT(!aLog->mStream);
+    aLog->mFile->OpenANSIFileDesc("w", &aLog->mStream);
+    if (NS_WARN_IF(!aLog->mStream))
+      return NS_ERROR_UNEXPECTED;
+    MozillaRegisterDebugFILE(aLog->mStream);
+    return NS_OK;
+  }
+
+  nsresult CloseLog(FileInfo* aLog, const nsAString& aCollectorKind)
+  {
+    MOZ_ASSERT(aLog->mStream);
+    MOZ_ASSERT(aLog->mFile);
+
+    MozillaUnRegisterDebugFILE(aLog->mStream);
+    fclose(aLog->mStream);
+    aLog->mStream = nullptr;
+
+    // Strip off "incomplete-".
+    nsCOMPtr<nsIFile> logFileFinalDestination =
+      CreateTempFile(aLog->mPrefix);
+    if (NS_WARN_IF(!logFileFinalDestination))
+      return NS_ERROR_UNEXPECTED;
+
+    nsAutoString logFileFinalDestinationName;
+    logFileFinalDestination->GetLeafName(logFileFinalDestinationName);
+    if (NS_WARN_IF(logFileFinalDestinationName.IsEmpty()))
+      return NS_ERROR_UNEXPECTED;
+
+    aLog->mFile->MoveTo(/* directory */ nullptr, logFileFinalDestinationName);
+
+    // Save the file path.
+    aLog->mFile = logFileFinalDestination;
+
+    // Log to the error console.
+    nsCOMPtr<nsIConsoleService> cs =
+      do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+    if (cs) {
+      // Copy out the path.
+      nsAutoString logPath;
+      logFileFinalDestination->GetPath(logPath);
+
+      nsString msg = aCollectorKind
+        + NS_LITERAL_STRING(" Collector log dumped to ") + logPath;
+      cs->LogStringMessage(msg.get());
+    }
+    return NS_OK;
+  }
+
+  int32_t mProcessIdentifier;
+  nsString mFilenameIdentifier;
+  FileInfo mGCLog;
+  FileInfo mCCLog;
+};
+
+NS_IMPL_ISUPPORTS(nsCycleCollectorLogSinkToFile, nsICycleCollectorLogSink)
+
+
 class nsCycleCollectorLogger MOZ_FINAL : public nsICycleCollectorListener
 {
 public:
-  nsCycleCollectorLogger() :
-    mStream(nullptr), mWantAllTraces(false),
-    mDisableLog(false), mWantAfterProcessing(false)
+  nsCycleCollectorLogger()
+    : mLogSink(nsCycleCollector_createLogSink())
+    , mWantAllTraces(false)
+    , mDisableLog(false)
+    , mWantAfterProcessing(false)
+    , mCCLog(nullptr)
   {
   }
+
   ~nsCycleCollectorLogger()
   {
     ClearDescribers();
-    if (mStream) {
-      MozillaUnRegisterDebugFILE(mStream);
-      fclose(mStream);
-    }
   }
+
   NS_DECL_ISUPPORTS
 
   void SetAllTraces()
@@ -1455,106 +1744,50 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD GetFilenameIdentifier(nsAString& aIdentifier)
+  NS_IMETHOD GetLogSink(nsICycleCollectorLogSink** aLogSink)
   {
-    aIdentifier = mFilenameIdentifier;
+    NS_ADDREF(*aLogSink = mLogSink);
     return NS_OK;
   }
 
-  NS_IMETHOD SetFilenameIdentifier(const nsAString& aIdentifier)
+  NS_IMETHOD SetLogSink(nsICycleCollectorLogSink* aLogSink)
   {
-    mFilenameIdentifier = aIdentifier;
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetGcLogPath(nsAString &aPath)
-  {
-    aPath = mGCLogPath;
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetCcLogPath(nsAString &aPath)
-  {
-    aPath = mCCLogPath;
+    if (!aLogSink) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    mLogSink = aLogSink;
     return NS_OK;
   }
 
   NS_IMETHOD Begin()
   {
+    nsresult rv;
+
     mCurrentAddress.AssignLiteral("0x");
     ClearDescribers();
     if (mDisableLog) {
       return NS_OK;
     }
 
-    // Initially create the log in a file starting with
-    // "incomplete-gc-edges".  We'll move the file and strip off the
-    // "incomplete-" once the dump completes.  (We do this because we don't
-    // want scripts which poll the filesystem looking for gc/cc dumps to
-    // grab a file before we're finished writing to it.)
-    nsCOMPtr<nsIFile> gcLogFile = CreateTempFile("incomplete-gc-edges");
-    if (NS_WARN_IF(!gcLogFile))
-      return NS_ERROR_UNEXPECTED;
-
+    FILE* gcLog;
+    rv = mLogSink->Open(&gcLog, &mCCLog);
+    NS_ENSURE_SUCCESS(rv, rv);
     // Dump the JS heap.
-    FILE* gcLogANSIFile = nullptr;
-    gcLogFile->OpenANSIFileDesc("w", &gcLogANSIFile);
-    if (NS_WARN_IF(!gcLogANSIFile))
-      return NS_ERROR_UNEXPECTED;
-    MozillaRegisterDebugFILE(gcLogANSIFile);
-    CollectorData *data = sCollectorData.get();
-    if (data && data->mRuntime)
-      data->mRuntime->DumpJSHeap(gcLogANSIFile);
-    MozillaUnRegisterDebugFILE(gcLogANSIFile);
-    fclose(gcLogANSIFile);
-
-    // Strip off "incomplete-".
-    nsCOMPtr<nsIFile> gcLogFileFinalDestination =
-      CreateTempFile("gc-edges");
-    if (NS_WARN_IF(!gcLogFileFinalDestination))
-      return NS_ERROR_UNEXPECTED;
-
-    nsAutoString gcLogFileFinalDestinationName;
-    gcLogFileFinalDestination->GetLeafName(gcLogFileFinalDestinationName);
-    if (NS_WARN_IF(gcLogFileFinalDestinationName.IsEmpty()))
-      return NS_ERROR_UNEXPECTED;
-
-    gcLogFile->MoveTo(/* directory */ nullptr, gcLogFileFinalDestinationName);
-
-    // Log to the error console.
-    nsCOMPtr<nsIConsoleService> cs =
-      do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-    if (cs) {
-      nsAutoString gcLogPath;
-      gcLogFileFinalDestination->GetPath(gcLogPath);
-
-      nsString msg = NS_LITERAL_STRING("Garbage Collector log dumped to ") +
-                     gcLogPath;
-      cs->LogStringMessage(msg.get());
-
-      mGCLogPath = gcLogPath;
+    CollectorData* data = sCollectorData.get();
+    if (data && data->mRuntime) {
+      data->mRuntime->DumpJSHeap(gcLog);
     }
+    rv = mLogSink->CloseGCLog();
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    // Open a file for dumping the CC graph.  We again prefix with
-    // "incomplete-".
-    mOutFile = CreateTempFile("incomplete-cc-edges");
-    if (NS_WARN_IF(!mOutFile))
-      return NS_ERROR_UNEXPECTED;
-    MOZ_ASSERT(!mStream);
-    mOutFile->OpenANSIFileDesc("w", &mStream);
-    if (NS_WARN_IF(!mStream))
-      return NS_ERROR_UNEXPECTED;
-    MozillaRegisterDebugFILE(mStream);
-
-    fprintf(mStream, "# WantAllTraces=%s\n", mWantAllTraces ? "true" : "false");
-
+    fprintf(mCCLog, "# WantAllTraces=%s\n", mWantAllTraces ? "true" : "false");
     return NS_OK;
   }
-  NS_IMETHOD NoteRefCountedObject(uint64_t aAddress, uint32_t refCount,
-                                  const char *aObjectDescription)
+  NS_IMETHOD NoteRefCountedObject(uint64_t aAddress, uint32_t aRefCount,
+                                  const char* aObjectDescription)
   {
     if (!mDisableLog) {
-      fprintf(mStream, "%p [rc=%u] %s\n", (void*)aAddress, refCount,
+      fprintf(mCCLog, "%p [rc=%u] %s\n", (void*)aAddress, aRefCount,
               aObjectDescription);
     }
     if (mWantAfterProcessing) {
@@ -1564,17 +1797,17 @@ public:
       mCurrentAddress.AppendInt(aAddress, 16);
       d->mType = CCGraphDescriber::eRefCountedObject;
       d->mAddress = mCurrentAddress;
-      d->mCnt = refCount;
+      d->mCnt = aRefCount;
       d->mName.Append(aObjectDescription);
     }
     return NS_OK;
   }
   NS_IMETHOD NoteGCedObject(uint64_t aAddress, bool aMarked,
-                            const char *aObjectDescription,
+                            const char* aObjectDescription,
                             uint64_t aCompartmentAddress)
   {
     if (!mDisableLog) {
-      fprintf(mStream, "%p [gc%s] %s\n", (void*)aAddress,
+      fprintf(mCCLog, "%p [gc%s] %s\n", (void*)aAddress,
               aMarked ? ".marked" : "", aObjectDescription);
     }
     if (mWantAfterProcessing) {
@@ -1583,7 +1816,7 @@ public:
       mCurrentAddress.AssignLiteral("0x");
       mCurrentAddress.AppendInt(aAddress, 16);
       d->mType = aMarked ? CCGraphDescriber::eGCMarkedObject :
-                           CCGraphDescriber::eGCedObject;
+        CCGraphDescriber::eGCedObject;
       d->mAddress = mCurrentAddress;
       d->mName.Append(aObjectDescription);
       if (aCompartmentAddress) {
@@ -1595,10 +1828,10 @@ public:
     }
     return NS_OK;
   }
-  NS_IMETHOD NoteEdge(uint64_t aToAddress, const char *aEdgeName)
+  NS_IMETHOD NoteEdge(uint64_t aToAddress, const char* aEdgeName)
   {
     if (!mDisableLog) {
-      fprintf(mStream, "> %p %s\n", (void*)aToAddress, aEdgeName);
+      fprintf(mCCLog, "> %p %s\n", (void*)aToAddress, aEdgeName);
     }
     if (mWantAfterProcessing) {
       CCGraphDescriber* d =  new CCGraphDescriber();
@@ -1615,7 +1848,7 @@ public:
                               uint64_t aKeyDelegate, uint64_t aValue)
   {
     if (!mDisableLog) {
-      fprintf(mStream, "WeakMapEntry map=%p key=%p keyDelegate=%p value=%p\n",
+      fprintf(mCCLog, "WeakMapEntry map=%p key=%p keyDelegate=%p value=%p\n",
               (void*)aMap, (void*)aKey, (void*)aKeyDelegate, (void*)aValue);
     }
     // We don't support after-processing for weak map entries.
@@ -1624,7 +1857,7 @@ public:
   NS_IMETHOD NoteIncrementalRoot(uint64_t aAddress)
   {
     if (!mDisableLog) {
-      fprintf(mStream, "IncrementalRoot %p\n", (void*)aAddress);
+      fprintf(mCCLog, "IncrementalRoot %p\n", (void*)aAddress);
     }
     // We don't support after-processing for incremental roots.
     return NS_OK;
@@ -1632,14 +1865,14 @@ public:
   NS_IMETHOD BeginResults()
   {
     if (!mDisableLog) {
-      fputs("==========\n", mStream);
+      fputs("==========\n", mCCLog);
     }
     return NS_OK;
   }
   NS_IMETHOD DescribeRoot(uint64_t aAddress, uint32_t aKnownEdges)
   {
     if (!mDisableLog) {
-      fprintf(mStream, "%p [known=%u]\n", (void*)aAddress, aKnownEdges);
+      fprintf(mCCLog, "%p [known=%u]\n", (void*)aAddress, aKnownEdges);
     }
     if (mWantAfterProcessing) {
       CCGraphDescriber* d =  new CCGraphDescriber();
@@ -1653,7 +1886,7 @@ public:
   NS_IMETHOD DescribeGarbage(uint64_t aAddress)
   {
     if (!mDisableLog) {
-      fprintf(mStream, "%p [garbage]\n", (void*)aAddress);
+      fprintf(mCCLog, "%p [garbage]\n", (void*)aAddress);
     }
     if (mWantAfterProcessing) {
       CCGraphDescriber* d =  new CCGraphDescriber();
@@ -1666,49 +1899,18 @@ public:
   NS_IMETHOD End()
   {
     if (!mDisableLog) {
-      MOZ_ASSERT(mStream);
-      MOZ_ASSERT(mOutFile);
-
-      MozillaUnRegisterDebugFILE(mStream);
-      fclose(mStream);
-      mStream = nullptr;
-
-      // Strip off "incomplete-" from the log file's name.
-      nsCOMPtr<nsIFile> logFileFinalDestination =
-        CreateTempFile("cc-edges");
-      if (NS_WARN_IF(!logFileFinalDestination))
-        return NS_ERROR_UNEXPECTED;
-
-      nsAutoString logFileFinalDestinationName;
-      logFileFinalDestination->GetLeafName(logFileFinalDestinationName);
-      if (NS_WARN_IF(logFileFinalDestinationName.IsEmpty()))
-        return NS_ERROR_UNEXPECTED;
-
-      mOutFile->MoveTo(/* directory = */ nullptr,
-                       logFileFinalDestinationName);
-      mOutFile = nullptr;
-
-      // Log to the error console.
-      nsCOMPtr<nsIConsoleService> cs =
-        do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-      if (cs) {
-        nsAutoString ccLogPath;
-        logFileFinalDestination->GetPath(ccLogPath);
-
-        nsString msg = NS_LITERAL_STRING("Cycle Collector log dumped to ") +
-                       ccLogPath;
-        cs->LogStringMessage(msg.get());
-
-        mCCLogPath = ccLogPath;
-      }
+      mCCLog = nullptr;
+      nsresult rv = mLogSink->CloseCCLog();
+      NS_ENSURE_SUCCESS(rv, rv);
     }
     return NS_OK;
   }
   NS_IMETHOD ProcessNext(nsICycleCollectorHandler* aHandler,
                          bool* aCanContinue)
   {
-    if (NS_WARN_IF(!aHandler) || NS_WARN_IF(!mWantAfterProcessing))
+    if (NS_WARN_IF(!aHandler) || NS_WARN_IF(!mWantAfterProcessing)) {
       return NS_ERROR_UNEXPECTED;
+    }
     CCGraphDescriber* d = mDescribers.popFirst();
     if (d) {
       switch (d->mType) {
@@ -1749,65 +1951,21 @@ public:
     return NS_OK;
   }
 private:
-  /**
-   * Create a new file named something like aPrefix.$PID.$IDENTIFIER.log in
-   * $MOZ_CC_LOG_DIRECTORY or in the system's temp directory.  No existing
-   * file will be overwritten; if aPrefix.$PID.$IDENTIFIER.log exists, we'll
-   * try a file named something like aPrefix.$PID.$IDENTIFIER-1.log, and so
-   * on.
-   */
-  already_AddRefed<nsIFile>
-  CreateTempFile(const char* aPrefix)
-  {
-    nsPrintfCString filename("%s.%d%s%s.log",
-                             aPrefix,
-                             base::GetCurrentProcId(),
-                             mFilenameIdentifier.IsEmpty() ? "" : ".",
-                             NS_ConvertUTF16toUTF8(mFilenameIdentifier).get());
-
-    // Get the log directory either from $MOZ_CC_LOG_DIRECTORY or from
-    // the fallback directories in OpenTempFile.  We don't use an nsCOMPtr
-    // here because OpenTempFile uses an in/out param and getter_AddRefs
-    // wouldn't work.
-    nsIFile* logFile = nullptr;
-    if (char* env = PR_GetEnv("MOZ_CC_LOG_DIRECTORY")) {
-      NS_NewNativeLocalFile(nsCString(env), /* followLinks = */ true,
-                            &logFile);
-    }
-
-    // In Android case, this function will open a file named aFilename under
-    // specific folder (/data/local/tmp/memory-reports). Otherwise, it will
-    // open a file named aFilename under "NS_OS_TEMP_DIR".
-    nsresult rv = nsDumpUtils::OpenTempFile(
-      filename,
-      &logFile,
-      NS_LITERAL_CSTRING("memory-reports"));
-    if (NS_FAILED(rv)) {
-      NS_IF_RELEASE(logFile);
-      return nullptr;
-    }
-
-    return dont_AddRef(logFile);
-  }
-
   void ClearDescribers()
   {
     CCGraphDescriber* d;
-    while((d = mDescribers.popFirst())) {
+    while ((d = mDescribers.popFirst())) {
       delete d;
     }
   }
 
-  FILE *mStream;
-  nsCOMPtr<nsIFile> mOutFile;
+  nsCOMPtr<nsICycleCollectorLogSink> mLogSink;
   bool mWantAllTraces;
   bool mDisableLog;
   bool mWantAfterProcessing;
-  nsString mFilenameIdentifier;
-  nsString mGCLogPath;
-  nsString mCCLogPath;
   nsCString mCurrentAddress;
   mozilla::LinkedList<CCGraphDescriber> mDescribers;
+  FILE* mCCLog;
 };
 
 NS_IMPL_ISUPPORTS(nsCycleCollectorLogger, nsICycleCollectorListener)
@@ -1815,12 +1973,13 @@ NS_IMPL_ISUPPORTS(nsCycleCollectorLogger, nsICycleCollectorListener)
 nsresult
 nsCycleCollectorLoggerConstructor(nsISupports* aOuter,
                                   const nsIID& aIID,
-                                  void* *aInstancePtr)
+                                  void** aInstancePtr)
 {
-  if (NS_WARN_IF(aOuter))
+  if (NS_WARN_IF(aOuter)) {
     return NS_ERROR_NO_AGGREGATION;
+  }
 
-  nsISupports *logger = new nsCycleCollectorLogger();
+  nsISupports* logger = new nsCycleCollectorLogger();
 
   return logger->QueryInterface(aIID, aInstancePtr);
 }
@@ -1830,26 +1989,26 @@ nsCycleCollectorLoggerConstructor(nsISupports* aOuter,
 ////////////////////////////////////////////////////////////////////////
 
 class GCGraphBuilder : public nsCycleCollectionTraversalCallback,
-                       public nsCycleCollectionNoteRootCallback
+  public nsCycleCollectionNoteRootCallback
 {
 private:
-  GCGraph &mGraph;
-  CycleCollectorResults &mResults;
+  GCGraph& mGraph;
+  CycleCollectorResults& mResults;
   NodePool::Builder mNodeBuilder;
   EdgePool::Builder mEdgeBuilder;
-  PtrInfo *mCurrPi;
-  nsCycleCollectionParticipant *mJSParticipant;
-  nsCycleCollectionParticipant *mJSZoneParticipant;
+  PtrInfo* mCurrPi;
+  nsCycleCollectionParticipant* mJSParticipant;
+  nsCycleCollectionParticipant* mJSZoneParticipant;
   nsCString mNextEdgeName;
-  nsICycleCollectorListener *mListener;
+  nsICycleCollectorListener* mListener;
   bool mMergeZones;
   bool mRanOutOfMemory;
 
 public:
-  GCGraphBuilder(GCGraph &aGraph,
-                 CycleCollectorResults &aResults,
-                 CycleCollectedJSRuntime *aJSRuntime,
-                 nsICycleCollectorListener *aListener,
+  GCGraphBuilder(GCGraph& aGraph,
+                 CycleCollectorResults& aResults,
+                 CycleCollectedJSRuntime* aJSRuntime,
+                 nsICycleCollectorListener* aListener,
                  bool aMergeZones);
   virtual ~GCGraphBuilder();
 
@@ -1858,68 +2017,75 @@ public:
     return nsCycleCollectionNoteRootCallback::WantAllTraces();
   }
 
-  PtrInfo* AddNode(void *aPtr, nsCycleCollectionParticipant *aParticipant);
-  PtrInfo* AddWeakMapNode(void* node);
+  PtrInfo* AddNode(void* aPtr, nsCycleCollectionParticipant* aParticipant);
+  PtrInfo* AddWeakMapNode(void* aNode);
   void Traverse(PtrInfo* aPtrInfo);
   void SetLastChild();
 
-  bool RanOutOfMemory() const { return mRanOutOfMemory; }
+  bool RanOutOfMemory() const
+  {
+    return mRanOutOfMemory;
+  }
 
 private:
-  void DescribeNode(uint32_t refCount, const char *objName)
+  void DescribeNode(uint32_t aRefCount, const char* aObjName)
   {
-    mCurrPi->mRefCount = refCount;
+    mCurrPi->mRefCount = aRefCount;
   }
 
 public:
   // nsCycleCollectionNoteRootCallback methods.
-  NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root);
-  NS_IMETHOD_(void) NoteJSRoot(void *root);
-  NS_IMETHOD_(void) NoteNativeRoot(void *root, nsCycleCollectionParticipant *participant);
-  NS_IMETHOD_(void) NoteWeakMapping(void *map, void *key, void *kdelegate, void *val);
+  NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports* aRoot);
+  NS_IMETHOD_(void) NoteJSRoot(void* aRoot);
+  NS_IMETHOD_(void) NoteNativeRoot(void* aRoot,
+                                   nsCycleCollectionParticipant* aParticipant);
+  NS_IMETHOD_(void) NoteWeakMapping(void* aMap, void* aKey, void* aKdelegate,
+                                    void* aVal);
 
   // nsCycleCollectionTraversalCallback methods.
-  NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refCount,
-                                           const char *objName);
-  NS_IMETHOD_(void) DescribeGCedNode(bool isMarked, const char *objName,
+  NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt aRefCount,
+                                           const char* aObjName);
+  NS_IMETHOD_(void) DescribeGCedNode(bool aIsMarked, const char* aObjName,
                                      uint64_t aCompartmentAddress);
 
-  NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child);
-  NS_IMETHOD_(void) NoteJSChild(void *child);
-  NS_IMETHOD_(void) NoteNativeChild(void *child,
-                                    nsCycleCollectionParticipant *participant);
-  NS_IMETHOD_(void) NoteNextEdgeName(const char* name);
+  NS_IMETHOD_(void) NoteXPCOMChild(nsISupports* aChild);
+  NS_IMETHOD_(void) NoteJSChild(void* aChild);
+  NS_IMETHOD_(void) NoteNativeChild(void* aChild,
+                                    nsCycleCollectionParticipant* aParticipant);
+  NS_IMETHOD_(void) NoteNextEdgeName(const char* aName);
 
 private:
-  NS_IMETHOD_(void) NoteRoot(void *root,
-                             nsCycleCollectionParticipant *participant)
+  NS_IMETHOD_(void) NoteRoot(void* aRoot,
+                             nsCycleCollectionParticipant* aParticipant)
   {
-    MOZ_ASSERT(root);
-    MOZ_ASSERT(participant);
+    MOZ_ASSERT(aRoot);
+    MOZ_ASSERT(aParticipant);
 
-    if (!participant->CanSkipInCC(root) || MOZ_UNLIKELY(WantAllTraces())) {
-      AddNode(root, participant);
+    if (!aParticipant->CanSkipInCC(aRoot) || MOZ_UNLIKELY(WantAllTraces())) {
+      AddNode(aRoot, aParticipant);
     }
   }
 
-  NS_IMETHOD_(void) NoteChild(void *child, nsCycleCollectionParticipant *cp,
-                              nsCString edgeName)
+  NS_IMETHOD_(void) NoteChild(void* aChild, nsCycleCollectionParticipant* aCp,
+                              nsCString aEdgeName)
   {
-    PtrInfo *childPi = AddNode(child, cp);
-    if (!childPi)
+    PtrInfo* childPi = AddNode(aChild, aCp);
+    if (!childPi) {
       return;
+    }
     mEdgeBuilder.Add(childPi);
     if (mListener) {
-      mListener->NoteEdge((uint64_t)child, edgeName.get());
+      mListener->NoteEdge((uint64_t)aChild, aEdgeName.get());
     }
     ++childPi->mInternalRefs;
   }
 
-  JS::Zone *MergeZone(void *gcthing) {
+  JS::Zone* MergeZone(void* aGcthing)
+  {
     if (!mMergeZones) {
       return nullptr;
     }
-    JS::Zone *zone = JS::GetGCThingZone(gcthing);
+    JS::Zone* zone = JS::GetGCThingZone(aGcthing);
     if (js::IsSystemZone(zone)) {
       return nullptr;
     }
@@ -1927,20 +2093,20 @@ private:
   }
 };
 
-GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
-                               CycleCollectorResults &aResults,
-                               CycleCollectedJSRuntime *aJSRuntime,
-                               nsICycleCollectorListener *aListener,
+GCGraphBuilder::GCGraphBuilder(GCGraph& aGraph,
+                               CycleCollectorResults& aResults,
+                               CycleCollectedJSRuntime* aJSRuntime,
+                               nsICycleCollectorListener* aListener,
                                bool aMergeZones)
-  : mGraph(aGraph),
-    mResults(aResults),
-    mNodeBuilder(aGraph.mNodes),
-    mEdgeBuilder(aGraph.mEdges),
-    mJSParticipant(nullptr),
-    mJSZoneParticipant(nullptr),
-    mListener(aListener),
-    mMergeZones(aMergeZones),
-    mRanOutOfMemory(false)
+  : mGraph(aGraph)
+  , mResults(aResults)
+  , mNodeBuilder(aGraph.mNodes)
+  , mEdgeBuilder(aGraph.mEdges)
+  , mJSParticipant(nullptr)
+  , mJSZoneParticipant(nullptr)
+  , mListener(aListener)
+  , mMergeZones(aMergeZones)
+  , mRanOutOfMemory(false)
 {
   if (aJSRuntime) {
     mJSParticipant = aJSRuntime->GCThingParticipant();
@@ -1971,15 +2137,15 @@ GCGraphBuilder::~GCGraphBuilder()
 }
 
 PtrInfo*
-GCGraphBuilder::AddNode(void *aPtr, nsCycleCollectionParticipant *aParticipant)
+GCGraphBuilder::AddNode(void* aPtr, nsCycleCollectionParticipant* aParticipant)
 {
-  PtrToNodeEntry *e = mGraph.AddNodeToMap(aPtr);
+  PtrToNodeEntry* e = mGraph.AddNodeToMap(aPtr);
   if (!e) {
     mRanOutOfMemory = true;
     return nullptr;
   }
 
-  PtrInfo *result;
+  PtrInfo* result;
   if (!e->mNode) {
     // New entry.
     result = mNodeBuilder.Add(aPtr, aParticipant);
@@ -2017,104 +2183,109 @@ GCGraphBuilder::SetLastChild()
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::NoteXPCOMRoot(nsISupports *root)
+GCGraphBuilder::NoteXPCOMRoot(nsISupports* aRoot)
 {
-  root = CanonicalizeXPCOMParticipant(root);
-  NS_ASSERTION(root,
+  aRoot = CanonicalizeXPCOMParticipant(aRoot);
+  NS_ASSERTION(aRoot,
                "Don't add objects that don't participate in collection!");
 
-  nsXPCOMCycleCollectionParticipant *cp;
-  ToParticipant(root, &cp);
+  nsXPCOMCycleCollectionParticipant* cp;
+  ToParticipant(aRoot, &cp);
 
-  NoteRoot(root, cp);
+  NoteRoot(aRoot, cp);
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::NoteJSRoot(void *root)
+GCGraphBuilder::NoteJSRoot(void* aRoot)
 {
-  if (JS::Zone *zone = MergeZone(root)) {
+  if (JS::Zone* zone = MergeZone(aRoot)) {
     NoteRoot(zone, mJSZoneParticipant);
   } else {
-    NoteRoot(root, mJSParticipant);
+    NoteRoot(aRoot, mJSParticipant);
   }
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::NoteNativeRoot(void *root, nsCycleCollectionParticipant *participant)
+GCGraphBuilder::NoteNativeRoot(void* aRoot,
+                               nsCycleCollectionParticipant* aParticipant)
 {
-  NoteRoot(root, participant);
+  NoteRoot(aRoot, aParticipant);
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::DescribeRefCountedNode(nsrefcnt refCount, const char *objName)
+GCGraphBuilder::DescribeRefCountedNode(nsrefcnt aRefCount, const char* aObjName)
 {
-  if (refCount == 0)
+  if (aRefCount == 0) {
     Fault("zero refcount", mCurrPi);
-  if (refCount == UINT32_MAX)
+  }
+  if (aRefCount == UINT32_MAX) {
     Fault("overflowing refcount", mCurrPi);
+  }
   mResults.mVisitedRefCounted++;
 
   if (mListener) {
-    mListener->NoteRefCountedObject((uint64_t)mCurrPi->mPointer, refCount,
-                                    objName);
+    mListener->NoteRefCountedObject((uint64_t)mCurrPi->mPointer, aRefCount,
+                                    aObjName);
   }
 
-  DescribeNode(refCount, objName);
+  DescribeNode(aRefCount, aObjName);
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::DescribeGCedNode(bool isMarked, const char *objName,
+GCGraphBuilder::DescribeGCedNode(bool aIsMarked, const char* aObjName,
                                  uint64_t aCompartmentAddress)
 {
-  uint32_t refCount = isMarked ? UINT32_MAX : 0;
+  uint32_t refCount = aIsMarked ? UINT32_MAX : 0;
   mResults.mVisitedGCed++;
 
   if (mListener) {
-    mListener->NoteGCedObject((uint64_t)mCurrPi->mPointer, isMarked,
-                              objName, aCompartmentAddress);
+    mListener->NoteGCedObject((uint64_t)mCurrPi->mPointer, aIsMarked,
+                              aObjName, aCompartmentAddress);
   }
 
-  DescribeNode(refCount, objName);
+  DescribeNode(refCount, aObjName);
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::NoteXPCOMChild(nsISupports *child)
+GCGraphBuilder::NoteXPCOMChild(nsISupports* aChild)
 {
   nsCString edgeName;
   if (WantDebugInfo()) {
     edgeName.Assign(mNextEdgeName);
     mNextEdgeName.Truncate();
   }
-  if (!child || !(child = CanonicalizeXPCOMParticipant(child)))
+  if (!aChild || !(aChild = CanonicalizeXPCOMParticipant(aChild))) {
     return;
+  }
 
-  nsXPCOMCycleCollectionParticipant *cp;
-  ToParticipant(child, &cp);
-  if (cp && (!cp->CanSkipThis(child) || WantAllTraces())) {
-    NoteChild(child, cp, edgeName);
+  nsXPCOMCycleCollectionParticipant* cp;
+  ToParticipant(aChild, &cp);
+  if (cp && (!cp->CanSkipThis(aChild) || WantAllTraces())) {
+    NoteChild(aChild, cp, edgeName);
   }
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::NoteNativeChild(void *child,
-                                nsCycleCollectionParticipant *participant)
+GCGraphBuilder::NoteNativeChild(void* aChild,
+                                nsCycleCollectionParticipant* aParticipant)
 {
   nsCString edgeName;
   if (WantDebugInfo()) {
     edgeName.Assign(mNextEdgeName);
     mNextEdgeName.Truncate();
   }
-  if (!child)
+  if (!aChild) {
     return;
+  }
 
-  MOZ_ASSERT(participant, "Need a nsCycleCollectionParticipant!");
-  NoteChild(child, participant, edgeName);
+  MOZ_ASSERT(aParticipant, "Need a nsCycleCollectionParticipant!");
+  NoteChild(aChild, aParticipant, edgeName);
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::NoteJSChild(void *child)
+GCGraphBuilder::NoteJSChild(void* aChild)
 {
-  if (!child) {
+  if (!aChild) {
     return;
   }
 
@@ -2124,62 +2295,63 @@ GCGraphBuilder::NoteJSChild(void *child)
     mNextEdgeName.Truncate();
   }
 
-  if (xpc_GCThingIsGrayCCThing(child) || MOZ_UNLIKELY(WantAllTraces())) {
-    if (JS::Zone *zone = MergeZone(child)) {
+  if (xpc_GCThingIsGrayCCThing(aChild) || MOZ_UNLIKELY(WantAllTraces())) {
+    if (JS::Zone* zone = MergeZone(aChild)) {
       NoteChild(zone, mJSZoneParticipant, edgeName);
     } else {
-      NoteChild(child, mJSParticipant, edgeName);
+      NoteChild(aChild, mJSParticipant, edgeName);
     }
   }
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::NoteNextEdgeName(const char* name)
+GCGraphBuilder::NoteNextEdgeName(const char* aName)
 {
   if (WantDebugInfo()) {
-    mNextEdgeName = name;
+    mNextEdgeName = aName;
   }
 }
 
 PtrInfo*
-GCGraphBuilder::AddWeakMapNode(void *node)
+GCGraphBuilder::AddWeakMapNode(void* aNode)
 {
-  MOZ_ASSERT(node, "Weak map node should be non-null.");
+  MOZ_ASSERT(aNode, "Weak map node should be non-null.");
 
-  if (!xpc_GCThingIsGrayCCThing(node) && !WantAllTraces())
+  if (!xpc_GCThingIsGrayCCThing(aNode) && !WantAllTraces()) {
     return nullptr;
-
-  if (JS::Zone *zone = MergeZone(node)) {
-    return AddNode(zone, mJSZoneParticipant);
-  } else {
-    return AddNode(node, mJSParticipant);
   }
+
+  if (JS::Zone* zone = MergeZone(aNode)) {
+    return AddNode(zone, mJSZoneParticipant);
+  }
+  return AddNode(aNode, mJSParticipant);
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::NoteWeakMapping(void *map, void *key, void *kdelegate, void *val)
+GCGraphBuilder::NoteWeakMapping(void* aMap, void* aKey, void* aKdelegate, void* aVal)
 {
   // Don't try to optimize away the entry here, as we've already attempted to
   // do that in TraceWeakMapping in nsXPConnect.
-  WeakMapping *mapping = mGraph.mWeakMaps.AppendElement();
-  mapping->mMap = map ? AddWeakMapNode(map) : nullptr;
-  mapping->mKey = key ? AddWeakMapNode(key) : nullptr;
-  mapping->mKeyDelegate = kdelegate ? AddWeakMapNode(kdelegate) : mapping->mKey;
-  mapping->mVal = val ? AddWeakMapNode(val) : nullptr;
+  WeakMapping* mapping = mGraph.mWeakMaps.AppendElement();
+  mapping->mMap = aMap ? AddWeakMapNode(aMap) : nullptr;
+  mapping->mKey = aKey ? AddWeakMapNode(aKey) : nullptr;
+  mapping->mKeyDelegate = aKdelegate ? AddWeakMapNode(aKdelegate) : mapping->mKey;
+  mapping->mVal = aVal ? AddWeakMapNode(aVal) : nullptr;
 
   if (mListener) {
-    mListener->NoteWeakMapEntry((uint64_t)map, (uint64_t)key,
-                                (uint64_t)kdelegate, (uint64_t)val);
+    mListener->NoteWeakMapEntry((uint64_t)aMap, (uint64_t)aKey,
+                                (uint64_t)aKdelegate, (uint64_t)aVal);
   }
 }
 
 static bool
-AddPurpleRoot(GCGraphBuilder &aBuilder, void *aRoot, nsCycleCollectionParticipant *aParti)
+AddPurpleRoot(GCGraphBuilder& aBuilder, void* aRoot,
+              nsCycleCollectionParticipant* aParti)
 {
   CanonicalizeParticipant(&aRoot, &aParti);
 
   if (aBuilder.WantAllTraces() || !aParti->CanSkipInCC(aRoot)) {
-    PtrInfo *pinfo = aBuilder.AddNode(aRoot, aParti);
+    PtrInfo* pinfo = aBuilder.AddNode(aRoot, aParti);
     if (!pinfo) {
       return false;
     }
@@ -2193,22 +2365,31 @@ AddPurpleRoot(GCGraphBuilder &aBuilder, void *aRoot, nsCycleCollectionParticipan
 class ChildFinder : public nsCycleCollectionTraversalCallback
 {
 public:
-  ChildFinder() : mMayHaveChild(false) {}
+  ChildFinder() : mMayHaveChild(false)
+  {
+  }
 
   // The logic of the Note*Child functions must mirror that of their
   // respective functions in GCGraphBuilder.
-  NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child);
-  NS_IMETHOD_(void) NoteNativeChild(void *child,
-                                    nsCycleCollectionParticipant *helper);
-  NS_IMETHOD_(void) NoteJSChild(void *child);
+  NS_IMETHOD_(void) NoteXPCOMChild(nsISupports* aChild);
+  NS_IMETHOD_(void) NoteNativeChild(void* aChild,
+                                    nsCycleCollectionParticipant* aHelper);
+  NS_IMETHOD_(void) NoteJSChild(void* aChild);
 
-  NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refcount,
-                                           const char *objname) {}
-  NS_IMETHOD_(void) DescribeGCedNode(bool ismarked,
-                                     const char *objname,
-                                     uint64_t aCompartmentAddress) {}
-  NS_IMETHOD_(void) NoteNextEdgeName(const char* name) {}
-  bool MayHaveChild() {
+  NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt aRefcount,
+                                           const char* aObjname)
+  {
+  }
+  NS_IMETHOD_(void) DescribeGCedNode(bool aIsMarked,
+                                     const char* aObjname,
+                                     uint64_t aCompartmentAddress)
+  {
+  }
+  NS_IMETHOD_(void) NoteNextEdgeName(const char* aName)
+  {
+  }
+  bool MayHaveChild()
+  {
     return mMayHaveChild;
   }
 private:
@@ -2216,43 +2397,47 @@ private:
 };
 
 NS_IMETHODIMP_(void)
-ChildFinder::NoteXPCOMChild(nsISupports *child)
+ChildFinder::NoteXPCOMChild(nsISupports* aChild)
 {
-  if (!child || !(child = CanonicalizeXPCOMParticipant(child)))
+  if (!aChild || !(aChild = CanonicalizeXPCOMParticipant(aChild))) {
     return;
-  nsXPCOMCycleCollectionParticipant *cp;
-  ToParticipant(child, &cp);
-  if (cp && !cp->CanSkip(child, true))
+  }
+  nsXPCOMCycleCollectionParticipant* cp;
+  ToParticipant(aChild, &cp);
+  if (cp && !cp->CanSkip(aChild, true)) {
     mMayHaveChild = true;
+  }
 }
 
 NS_IMETHODIMP_(void)
-ChildFinder::NoteNativeChild(void *child,
-                             nsCycleCollectionParticipant *helper)
+ChildFinder::NoteNativeChild(void* aChild,
+                             nsCycleCollectionParticipant* aHelper)
 {
-  if (child)
+  if (aChild) {
     mMayHaveChild = true;
+  }
 }
 
 NS_IMETHODIMP_(void)
-ChildFinder::NoteJSChild(void *child)
+ChildFinder::NoteJSChild(void* aChild)
 {
-  if (child && xpc_GCThingIsGrayCCThing(child)) {
+  if (aChild && xpc_GCThingIsGrayCCThing(aChild)) {
     mMayHaveChild = true;
   }
 }
 
 static bool
-MayHaveChild(void *o, nsCycleCollectionParticipant* cp)
+MayHaveChild(void* aObj, nsCycleCollectionParticipant* aCp)
 {
   ChildFinder cf;
-  cp->Traverse(o, cf);
+  aCp->Traverse(aObj, cf);
   return cf.MayHaveChild();
 }
 
 template<class T>
-class SegmentedArrayElement : public LinkedListElement<SegmentedArrayElement<T>>
-                            , public AutoFallibleTArray<T, 60>
+class SegmentedArrayElement
+  : public LinkedListElement<SegmentedArrayElement<T>>
+  , public AutoFallibleTArray<T, 60>
 {
 };
 
@@ -2380,7 +2565,7 @@ struct SnowWhiteObject
 class SnowWhiteKiller : public TraceCallbacks
 {
 public:
-  SnowWhiteKiller(nsCycleCollector *aCollector, uint32_t aMaxCount)
+  SnowWhiteKiller(nsCycleCollector* aCollector, uint32_t aMaxCount)
     : mCollector(aCollector)
   {
     MOZ_ASSERT(mCollector, "Calling SnowWhiteKiller after nsCC went away");
@@ -2413,8 +2598,8 @@ public:
   {
     MOZ_ASSERT(aEntry->mObject, "Null object in purple buffer");
     if (!aEntry->mRefCnt->get()) {
-      void *o = aEntry->mObject;
-      nsCycleCollectionParticipant *cp = aEntry->mParticipant;
+      void* o = aEntry->mObject;
+      nsCycleCollectionParticipant* cp = aEntry->mParticipant;
       CanonicalizeParticipant(&o, &cp);
       SnowWhiteObject swo = { o, cp, aEntry->mRefCnt };
       if (mObjects.AppendElement(swo)) {
@@ -2476,7 +2661,7 @@ public:
   }
 
 private:
-  nsCycleCollector *mCollector;
+  nsCycleCollector* mCollector;
   FallibleTArray<SnowWhiteObject> mObjects;
 };
 
@@ -2487,12 +2672,13 @@ public:
                          uint32_t aMaxCount, bool aRemoveChildlessNodes,
                          bool aAsyncSnowWhiteFreeing,
                          CC_ForgetSkippableCallback aCb)
-    : SnowWhiteKiller(aCollector, aAsyncSnowWhiteFreeing ? 0 : aMaxCount),
-      mRemoveChildlessNodes(aRemoveChildlessNodes),
-      mAsyncSnowWhiteFreeing(aAsyncSnowWhiteFreeing),
-      mDispatchedDeferredDeletion(false),
-      mCallback(aCb)
-  {}
+    : SnowWhiteKiller(aCollector, aAsyncSnowWhiteFreeing ? 0 : aMaxCount)
+    , mRemoveChildlessNodes(aRemoveChildlessNodes)
+    , mAsyncSnowWhiteFreeing(aAsyncSnowWhiteFreeing)
+    , mDispatchedDeferredDeletion(false)
+    , mCallback(aCb)
+  {
+  }
 
   ~RemoveSkippableVisitor()
   {
@@ -2508,7 +2694,7 @@ public:
   }
 
   void
-  Visit(nsPurpleBuffer &aBuffer, nsPurpleBufferEntry *aEntry)
+  Visit(nsPurpleBuffer& aBuffer, nsPurpleBufferEntry* aEntry)
   {
     MOZ_ASSERT(aEntry->mObject, "null mObject in purple buffer");
     if (!aEntry->mRefCnt->get()) {
@@ -2520,8 +2706,8 @@ public:
       }
       return;
     }
-    void *o = aEntry->mObject;
-    nsCycleCollectionParticipant *cp = aEntry->mParticipant;
+    void* o = aEntry->mObject;
+    nsCycleCollectionParticipant* cp = aEntry->mParticipant;
     CanonicalizeParticipant(&o, &cp);
     if (aEntry->mRefCnt->IsPurple() && !cp->CanSkip(o, false) &&
         (!mRemoveChildlessNodes || MayHaveChild(o, cp))) {
@@ -2586,13 +2772,14 @@ nsCycleCollector::ForgetSkippable(bool aRemoveChildlessNodes,
   if (mJSRuntime) {
     mJSRuntime->PrepareForForgetSkippable();
   }
-  MOZ_ASSERT(!mScanInProgress, "Don't forget skippable or free snow-white while scan is in progress.");
+  MOZ_ASSERT(!mScanInProgress,
+             "Don't forget skippable or free snow-white while scan is in progress.");
   mPurpleBuf.RemoveSkippable(this, aRemoveChildlessNodes,
                              aAsyncSnowWhiteFreeing, mForgetSkippableCB);
 }
 
 MOZ_NEVER_INLINE void
-nsCycleCollector::MarkRoots(SliceBudget &aBudget)
+nsCycleCollector::MarkRoots(SliceBudget& aBudget)
 {
   const intptr_t kNumNodesBetweenTimeChecks = 1000;
   const intptr_t kStep = SliceBudget::CounterReset / kNumNodesBetweenTimeChecks;
@@ -2605,7 +2792,7 @@ nsCycleCollector::MarkRoots(SliceBudget &aBudget)
   MOZ_ASSERT(mCurrNode);
 
   while (!aBudget.isOverBudget() && !mCurrNode->IsDone()) {
-    PtrInfo *pi = mCurrNode->GetNext();
+    PtrInfo* pi = mCurrNode->GetNext();
     if (!pi) {
       MOZ_CRASH();
     }
@@ -2648,21 +2835,22 @@ nsCycleCollector::MarkRoots(SliceBudget &aBudget)
 
 struct ScanBlackVisitor
 {
-  ScanBlackVisitor(uint32_t &aWhiteNodeCount, bool &aFailed)
+  ScanBlackVisitor(uint32_t& aWhiteNodeCount, bool& aFailed)
     : mWhiteNodeCount(aWhiteNodeCount), mFailed(aFailed)
   {
   }
 
-  bool ShouldVisitNode(PtrInfo const *pi)
+  bool ShouldVisitNode(PtrInfo const* aPi)
   {
-    return pi->mColor != black;
+    return aPi->mColor != black;
   }
 
-  MOZ_NEVER_INLINE void VisitNode(PtrInfo *pi)
+  MOZ_NEVER_INLINE void VisitNode(PtrInfo* aPi)
   {
-    if (pi->mColor == white)
+    if (aPi->mColor == white) {
       --mWhiteNodeCount;
-    pi->mColor = black;
+    }
+    aPi->mColor = black;
   }
 
   void Failed()
@@ -2671,15 +2859,16 @@ struct ScanBlackVisitor
   }
 
 private:
-  uint32_t &mWhiteNodeCount;
-  bool &mFailed;
+  uint32_t& mWhiteNodeCount;
+  bool& mFailed;
 };
 
 static void
 FloodBlackNode(uint32_t& aWhiteNodeCount, bool& aFailed, PtrInfo* aPi)
 {
     GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(aWhiteNodeCount, aFailed)).Walk(aPi);
-    MOZ_ASSERT(aPi->mColor == black || !aPi->mParticipant, "FloodBlackNode should make aPi black");
+    MOZ_ASSERT(aPi->mColor == black || !aPi->mParticipant,
+               "FloodBlackNode should make aPi black");
 }
 
 // Iterate over the WeakMaps.  If we mark anything while iterating
@@ -2692,7 +2881,7 @@ nsCycleCollector::ScanWeakMaps()
   do {
     anyChanged = false;
     for (uint32_t i = 0; i < mGraph.mWeakMaps.Length(); i++) {
-      WeakMapping *wm = &mGraph.mWeakMaps[i];
+      WeakMapping* wm = &mGraph.mWeakMaps[i];
 
       // If any of these are null, the original object was marked black.
       uint32_t mColor = wm->mMap ? wm->mMap->mColor : black;
@@ -2727,25 +2916,27 @@ nsCycleCollector::ScanWeakMaps()
 class PurpleScanBlackVisitor
 {
 public:
-  PurpleScanBlackVisitor(GCGraph &aGraph, nsICycleCollectorListener *aListener,
-                         uint32_t &aCount, bool &aFailed)
+  PurpleScanBlackVisitor(GCGraph& aGraph, nsICycleCollectorListener* aListener,
+                         uint32_t& aCount, bool& aFailed)
     : mGraph(aGraph), mListener(aListener), mCount(aCount), mFailed(aFailed)
   {
   }
 
   void
-  Visit(nsPurpleBuffer &aBuffer, nsPurpleBufferEntry *aEntry)
+  Visit(nsPurpleBuffer& aBuffer, nsPurpleBufferEntry* aEntry)
   {
-    MOZ_ASSERT(aEntry->mObject, "Entries with null mObject shouldn't be in the purple buffer.");
-    MOZ_ASSERT(aEntry->mRefCnt->get() != 0, "Snow-white objects shouldn't be in the purple buffer.");
+    MOZ_ASSERT(aEntry->mObject,
+               "Entries with null mObject shouldn't be in the purple buffer.");
+    MOZ_ASSERT(aEntry->mRefCnt->get() != 0,
+               "Snow-white objects shouldn't be in the purple buffer.");
 
-    void *obj = aEntry->mObject;
+    void* obj = aEntry->mObject;
     if (!aEntry->mParticipant) {
       obj = CanonicalizeXPCOMParticipant(static_cast<nsISupports*>(obj));
       MOZ_ASSERT(obj, "Don't add objects that don't participate in collection!");
     }
 
-    PtrInfo *pi = mGraph.FindNode(obj);
+    PtrInfo* pi = mGraph.FindNode(obj);
     if (!pi) {
       return;
     }
@@ -2760,10 +2951,10 @@ public:
   }
 
 private:
-  GCGraph &mGraph;
-  nsICycleCollectorListener *mListener;
-  uint32_t &mCount;
-  bool &mFailed;
+  GCGraph& mGraph;
+  nsICycleCollectorListener* mListener;
+  uint32_t& mCount;
+  bool& mFailed;
 };
 
 // Objects that have been stored somewhere since the start of incremental graph building must
@@ -2794,12 +2985,12 @@ nsCycleCollector::ScanIncrementalRoots()
   // to active JS, so it may have been stored somewhere, so it needs to be
   // treated as live.
   if (mJSRuntime) {
-    nsCycleCollectionParticipant *jsParticipant = mJSRuntime->GCThingParticipant();
-    nsCycleCollectionParticipant *zoneParticipant = mJSRuntime->ZoneParticipant();
+    nsCycleCollectionParticipant* jsParticipant = mJSRuntime->GCThingParticipant();
+    nsCycleCollectionParticipant* zoneParticipant = mJSRuntime->ZoneParticipant();
     NodePool::Enumerator etor(mGraph.mNodes);
 
     while (!etor.IsDone()) {
-      PtrInfo *pi = etor.GetNext();
+      PtrInfo* pi = etor.GetNext();
 
       // If the refcount is non-zero, pi can't have been a gray JS object.
       if (pi->mRefCount != 0) {
@@ -2820,7 +3011,7 @@ nsCycleCollector::ScanIncrementalRoots()
           continue;
         }
       } else if (pi->mParticipant == zoneParticipant) {
-        JS::Zone *zone = static_cast<JS::Zone*>(pi->mPointer);
+        JS::Zone* zone = static_cast<JS::Zone*>(pi->mPointer);
         if (js::ZoneGlobalsAreAllGray(zone)) {
           continue;
         }
@@ -2940,7 +3131,7 @@ nsCycleCollector::ScanRoots(bool aFullySynchGraphBuild)
 
     NodePool::Enumerator etor(mGraph.mNodes);
     while (!etor.IsDone()) {
-      PtrInfo *pi = etor.GetNext();
+      PtrInfo* pi = etor.GetNext();
       if (!pi->mParticipant) {
         continue;
       }
@@ -2999,9 +3190,8 @@ nsCycleCollector::CollectWhite()
   uint32_t numWhiteGCed = 0;
 
   NodePool::Enumerator etor(mGraph.mNodes);
-  while (!etor.IsDone())
-  {
-    PtrInfo *pinfo = etor.GetNext();
+  while (!etor.IsDone()) {
+    PtrInfo* pinfo = etor.GetNext();
     if (pinfo->mColor == white && pinfo->mParticipant) {
       whiteNodes.AppendElement(pinfo);
       pinfo->mParticipant->Root(pinfo->mPointer);
@@ -3026,7 +3216,7 @@ nsCycleCollector::CollectWhite()
   }
 
   for (uint32_t i = 0; i < count; ++i) {
-    PtrInfo *pinfo = whiteNodes.ElementAt(i);
+    PtrInfo* pinfo = whiteNodes.ElementAt(i);
     MOZ_ASSERT(pinfo->mParticipant, "Unlink shouldn't see objects removed from graph.");
     pinfo->mParticipant->Unlink(pinfo->mPointer);
 #ifdef DEBUG
@@ -3038,7 +3228,7 @@ nsCycleCollector::CollectWhite()
   timeLog.Checkpoint("CollectWhite::Unlink");
 
   for (uint32_t i = 0; i < count; ++i) {
-    PtrInfo *pinfo = whiteNodes.ElementAt(i);
+    PtrInfo* pinfo = whiteNodes.ElementAt(i);
     MOZ_ASSERT(pinfo->mParticipant, "Unroot shouldn't see objects removed from graph.");
     pinfo->mParticipant->Unroot(pinfo->mPointer);
   }
@@ -3137,10 +3327,11 @@ nsCycleCollector::~nsCycleCollector()
 }
 
 void
-nsCycleCollector::RegisterJSRuntime(CycleCollectedJSRuntime *aJSRuntime)
+nsCycleCollector::RegisterJSRuntime(CycleCollectedJSRuntime* aJSRuntime)
 {
-  if (mJSRuntime)
+  if (mJSRuntime) {
     Fault("multiple registrations of cycle collector JS runtime", aJSRuntime);
+  }
 
   mJSRuntime = aJSRuntime;
 
@@ -3157,29 +3348,30 @@ nsCycleCollector::RegisterJSRuntime(CycleCollectedJSRuntime *aJSRuntime)
 void
 nsCycleCollector::ForgetJSRuntime()
 {
-  if (!mJSRuntime)
+  if (!mJSRuntime) {
     Fault("forgetting non-registered cycle collector JS runtime");
+  }
 
   mJSRuntime = nullptr;
 }
 
 #ifdef DEBUG
 static bool
-HasParticipant(void *aPtr, nsCycleCollectionParticipant *aParti)
+HasParticipant(void* aPtr, nsCycleCollectionParticipant* aParti)
 {
   if (aParti) {
     return true;
   }
 
-  nsXPCOMCycleCollectionParticipant *xcp;
+  nsXPCOMCycleCollectionParticipant* xcp;
   ToParticipant(static_cast<nsISupports*>(aPtr), &xcp);
   return xcp != nullptr;
 }
 #endif
 
 MOZ_ALWAYS_INLINE void
-nsCycleCollector::Suspect(void *aPtr, nsCycleCollectionParticipant *aParti,
-                          nsCycleCollectingAutoRefCnt *aRefCnt)
+nsCycleCollector::Suspect(void* aPtr, nsCycleCollectionParticipant* aParti,
+                          nsCycleCollectingAutoRefCnt* aRefCnt)
 {
   CheckThreadSafety();
 
@@ -3221,8 +3413,9 @@ nsCycleCollector::FixGrayBits(bool aForceGC)
 {
   CheckThreadSafety();
 
-  if (!mJSRuntime)
+  if (!mJSRuntime) {
     return;
+  }
 
   if (!aForceGC) {
     mJSRuntime->FixWeakMappingGrayBits();
@@ -3230,13 +3423,15 @@ nsCycleCollector::FixGrayBits(bool aForceGC)
     bool needGC = !mJSRuntime->AreGCGrayBitsValid();
     // Only do a telemetry ping for non-shutdown CCs.
     CC_TELEMETRY(_NEED_GC, needGC);
-    if (!needGC)
+    if (!needGC) {
       return;
+    }
     mResults.mForcedGC = true;
   }
 
   TimeLog timeLog;
-  mJSRuntime->GarbageCollect(aForceGC ? JS::gcreason::SHUTDOWN_CC : JS::gcreason::CC_FORCED);
+  mJSRuntime->GarbageCollect(aForceGC ? JS::gcreason::SHUTDOWN_CC
+                                      : JS::gcreason::CC_FORCED);
   timeLog.Checkpoint("GC()");
 }
 
@@ -3248,9 +3443,11 @@ nsCycleCollector::CleanupAfterCollection()
   mGraph.Clear();
   timeLog.Checkpoint("CleanupAfterCollection::mGraph.Clear()");
 
-  uint32_t interval = (uint32_t) ((TimeStamp::Now() - mCollectionStart).ToMilliseconds());
+  uint32_t interval =
+    (uint32_t)((TimeStamp::Now() - mCollectionStart).ToMilliseconds());
 #ifdef COLLECT_TIME_DEBUG
-  printf("cc: total cycle collector time was %ums in %u slices\n", interval, mResults.mNumSlices);
+  printf("cc: total cycle collector time was %ums in %u slices\n", interval,
+         mResults.mNumSlices);
   printf("cc: visited %u ref counted and %u GCed objects, freed %d ref counted and %d GCed objects",
          mResults.mVisitedRefCounted, mResults.mVisitedGCed,
          mResults.mFreedRefCounted, mResults.mFreedGCed);
@@ -3289,7 +3486,7 @@ nsCycleCollector::ShutdownCollect()
 }
 
 static void
-PrintPhase(const char *aPhase)
+PrintPhase(const char* aPhase)
 {
 #ifdef DEBUG_PHASES
   printf("cc: begin %s on %s\n", aPhase,
@@ -3299,8 +3496,8 @@ PrintPhase(const char *aPhase)
 
 bool
 nsCycleCollector::Collect(ccType aCCType,
-                          SliceBudget &aBudget,
-                          nsICycleCollectorListener *aManualListener)
+                          SliceBudget& aBudget,
+                          nsICycleCollectorListener* aManualListener)
 {
   CheckThreadSafety();
 
@@ -3441,7 +3638,7 @@ nsCycleCollector::ShouldMergeZones(ccType aCCType)
 
 void
 nsCycleCollector::BeginCollection(ccType aCCType,
-                                  nsICycleCollectorListener *aManualListener)
+                                  nsICycleCollectorListener* aManualListener)
 {
   TimeLog timeLog;
   MOZ_ASSERT(mIncrementalPhase == IdlePhase);
@@ -3533,13 +3730,13 @@ nsCycleCollector::Shutdown()
 }
 
 void
-nsCycleCollector::RemoveObjectFromGraph(void *aObj)
+nsCycleCollector::RemoveObjectFromGraph(void* aObj)
 {
   if (mIncrementalPhase == IdlePhase) {
     return;
   }
 
-  if (PtrInfo *pinfo = mGraph.FindNode(aObj)) {
+  if (PtrInfo* pinfo = mGraph.FindNode(aObj)) {
     mGraph.RemoveNodeFromMap(aObj);
 
     pinfo->mPointer = nullptr;
@@ -3549,11 +3746,11 @@ nsCycleCollector::RemoveObjectFromGraph(void *aObj)
 
 void
 nsCycleCollector::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                      size_t *aObjectSize,
-                                      size_t *aGraphNodesSize,
-                                      size_t *aGraphEdgesSize,
-                                      size_t *aWeakMapsSize,
-                                      size_t *aPurpleBufferSize) const
+                                      size_t* aObjectSize,
+                                      size_t* aGraphNodesSize,
+                                      size_t* aGraphEdgesSize,
+                                      size_t* aWeakMapsSize,
+                                      size_t* aPurpleBufferSize) const
 {
   *aObjectSize = aMallocSizeOf(this);
 
@@ -3585,9 +3782,9 @@ nsCycleCollector::GetJSPurpleBuffer()
 ////////////////////////////////////////////////////////////////////////
 
 void
-nsCycleCollector_registerJSRuntime(CycleCollectedJSRuntime *rt)
+nsCycleCollector_registerJSRuntime(CycleCollectedJSRuntime* aRt)
 {
-  CollectorData *data = sCollectorData.get();
+  CollectorData* data = sCollectorData.get();
 
   // We should have started the cycle collector by now.
   MOZ_ASSERT(data);
@@ -3595,14 +3792,14 @@ nsCycleCollector_registerJSRuntime(CycleCollectedJSRuntime *rt)
   // But we shouldn't already have a runtime.
   MOZ_ASSERT(!data->mRuntime);
 
-  data->mRuntime = rt;
-  data->mCollector->RegisterJSRuntime(rt);
+  data->mRuntime = aRt;
+  data->mCollector->RegisterJSRuntime(aRt);
 }
 
 void
 nsCycleCollector_forgetJSRuntime()
 {
-  CollectorData *data = sCollectorData.get();
+  CollectorData* data = sCollectorData.get();
 
   // We should have started the cycle collector by now.
   MOZ_ASSERT(data);
@@ -3691,7 +3888,7 @@ DropJSObjectsImpl(nsISupports* aHolder)
 bool
 IsJSHolder(void* aHolder)
 {
-  CollectorData *data = sCollectorData.get();
+  CollectorData* data = sCollectorData.get();
 
   // We should have started the cycle collector by now, and not completely
   // shut down.
@@ -3706,7 +3903,7 @@ IsJSHolder(void* aHolder)
 void
 DeferredFinalize(nsISupports* aSupports)
 {
-  CollectorData *data = sCollectorData.get();
+  CollectorData* data = sCollectorData.get();
 
   // We should have started the cycle collector by now, and not completely
   // shut down.
@@ -3722,7 +3919,7 @@ DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
                  DeferredFinalizeFunction aFunc,
                  void* aThing)
 {
-  CollectorData *data = sCollectorData.get();
+  CollectorData* data = sCollectorData.get();
 
   // We should have started the cycle collector by now, and not completely
   // shut down.
@@ -3738,16 +3935,16 @@ DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
 
 
 MOZ_NEVER_INLINE static void
-SuspectAfterShutdown(void* n, nsCycleCollectionParticipant* cp,
+SuspectAfterShutdown(void* aPtr, nsCycleCollectionParticipant* aCp,
                      nsCycleCollectingAutoRefCnt* aRefCnt,
                      bool* aShouldDelete)
 {
   if (aRefCnt->get() == 0) {
     if (!aShouldDelete) {
       // The CC is shut down, so we can't be in the middle of an ICC.
-      CanonicalizeParticipant(&n, &cp);
+      CanonicalizeParticipant(&aPtr, &aCp);
       aRefCnt->stabilizeForDeletion();
-      cp->DeleteCycleCollectable(n);
+      aCp->DeleteCycleCollectable(aPtr);
     } else {
       *aShouldDelete = true;
     }
@@ -3758,26 +3955,26 @@ SuspectAfterShutdown(void* n, nsCycleCollectionParticipant* cp,
 }
 
 void
-NS_CycleCollectorSuspect3(void *n, nsCycleCollectionParticipant *cp,
-                          nsCycleCollectingAutoRefCnt *aRefCnt,
+NS_CycleCollectorSuspect3(void* aPtr, nsCycleCollectionParticipant* aCp,
+                          nsCycleCollectingAutoRefCnt* aRefCnt,
                           bool* aShouldDelete)
 {
-  CollectorData *data = sCollectorData.get();
+  CollectorData* data = sCollectorData.get();
 
   // We should have started the cycle collector by now.
   MOZ_ASSERT(data);
 
   if (MOZ_LIKELY(data->mCollector)) {
-    data->mCollector->Suspect(n, cp, aRefCnt);
+    data->mCollector->Suspect(aPtr, aCp, aRefCnt);
     return;
   }
-  SuspectAfterShutdown(n, cp, aRefCnt, aShouldDelete);
+  SuspectAfterShutdown(aPtr, aCp, aRefCnt, aShouldDelete);
 }
 
 uint32_t
 nsCycleCollector_suspectedCount()
 {
-  CollectorData *data = sCollectorData.get();
+  CollectorData* data = sCollectorData.get();
 
   // We should have started the cycle collector by now.
   MOZ_ASSERT(data);
@@ -3817,7 +4014,7 @@ nsCycleCollector_startup()
 void
 nsCycleCollector_setBeforeUnlinkCallback(CC_BeforeUnlinkCallback aCB)
 {
-  CollectorData *data = sCollectorData.get();
+  CollectorData* data = sCollectorData.get();
 
   // We should have started the cycle collector by now.
   MOZ_ASSERT(data);
@@ -3829,7 +4026,7 @@ nsCycleCollector_setBeforeUnlinkCallback(CC_BeforeUnlinkCallback aCB)
 void
 nsCycleCollector_setForgetSkippableCallback(CC_ForgetSkippableCallback aCB)
 {
-  CollectorData *data = sCollectorData.get();
+  CollectorData* data = sCollectorData.get();
 
   // We should have started the cycle collector by now.
   MOZ_ASSERT(data);
@@ -3842,7 +4039,7 @@ void
 nsCycleCollector_forgetSkippable(bool aRemoveChildlessNodes,
                                  bool aAsyncSnowWhiteFreeing)
 {
-  CollectorData *data = sCollectorData.get();
+  CollectorData* data = sCollectorData.get();
 
   // We should have started the cycle collector by now.
   MOZ_ASSERT(data);
@@ -3858,7 +4055,7 @@ nsCycleCollector_forgetSkippable(bool aRemoveChildlessNodes,
 void
 nsCycleCollector_dispatchDeferredDeletion(bool aContinuation)
 {
-  CollectorData *data = sCollectorData.get();
+  CollectorData* data = sCollectorData.get();
 
   if (!data || !data->mRuntime) {
     return;
@@ -3870,7 +4067,7 @@ nsCycleCollector_dispatchDeferredDeletion(bool aContinuation)
 bool
 nsCycleCollector_doDeferredDeletion()
 {
-  CollectorData *data = sCollectorData.get();
+  CollectorData* data = sCollectorData.get();
 
   // We should have started the cycle collector by now.
   MOZ_ASSERT(data);
@@ -3880,10 +4077,17 @@ nsCycleCollector_doDeferredDeletion()
   return data->mCollector->FreeSnowWhite(false);
 }
 
-void
-nsCycleCollector_collect(nsICycleCollectorListener *aManualListener)
+already_AddRefed<nsICycleCollectorLogSink>
+nsCycleCollector_createLogSink()
 {
-  CollectorData *data = sCollectorData.get();
+  nsCOMPtr<nsICycleCollectorLogSink> sink = new nsCycleCollectorLogSinkToFile();
+  return sink.forget();
+}
+
+void
+nsCycleCollector_collect(nsICycleCollectorListener* aManualListener)
+{
+  CollectorData* data = sCollectorData.get();
 
   // We should have started the cycle collector by now.
   MOZ_ASSERT(data);
@@ -3897,7 +4101,7 @@ nsCycleCollector_collect(nsICycleCollectorListener *aManualListener)
 void
 nsCycleCollector_collectSlice(int64_t aSliceTime)
 {
-  CollectorData *data = sCollectorData.get();
+  CollectorData* data = sCollectorData.get();
 
   // We should have started the cycle collector by now.
   MOZ_ASSERT(data);
@@ -3914,7 +4118,7 @@ nsCycleCollector_collectSlice(int64_t aSliceTime)
 void
 nsCycleCollector_collectSliceWork(int64_t aSliceWork)
 {
-  CollectorData *data = sCollectorData.get();
+  CollectorData* data = sCollectorData.get();
 
   // We should have started the cycle collector by now.
   MOZ_ASSERT(data);
@@ -3931,7 +4135,7 @@ nsCycleCollector_collectSliceWork(int64_t aSliceWork)
 void
 nsCycleCollector_prepareForGarbageCollection()
 {
-  CollectorData *data = sCollectorData.get();
+  CollectorData* data = sCollectorData.get();
 
   MOZ_ASSERT(data);
 
@@ -3945,21 +4149,21 @@ nsCycleCollector_prepareForGarbageCollection()
 void
 nsCycleCollector_finishAnyCurrentCollection()
 {
-    CollectorData *data = sCollectorData.get();
+  CollectorData* data = sCollectorData.get();
 
-    MOZ_ASSERT(data);
+  MOZ_ASSERT(data);
 
-    if (!data->mCollector) {
-        return;
-    }
+  if (!data->mCollector) {
+    return;
+  }
 
-    data->mCollector->FinishAnyCurrentCollection();
+  data->mCollector->FinishAnyCurrentCollection();
 }
 
 void
 nsCycleCollector_shutdown()
 {
-  CollectorData *data = sCollectorData.get();
+  CollectorData* data = sCollectorData.get();
 
   if (data) {
     MOZ_ASSERT(data->mCollector);

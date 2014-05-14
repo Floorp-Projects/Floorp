@@ -178,8 +178,10 @@
  */
 
 #ifdef __cplusplus
-inline uint32_t NS_FAILED_impl(nsresult _nsresult) {
-  return static_cast<uint32_t>(_nsresult) & 0x80000000;
+inline uint32_t
+NS_FAILED_impl(nsresult aErr)
+{
+  return static_cast<uint32_t>(aErr) & 0x80000000;
 }
 #define NS_FAILED(_nsresult)    ((bool)MOZ_UNLIKELY(NS_FAILED_impl(_nsresult)))
 #define NS_SUCCEEDED(_nsresult) ((bool)MOZ_LIKELY(!NS_FAILED_impl(_nsresult)))
@@ -227,14 +229,20 @@ NS_ErrorAccordingToNSPR();
  */
 
 #ifdef __cplusplus
-inline uint16_t NS_ERROR_GET_CODE(nsresult err) {
-  return uint32_t(err) & 0xffff;
+inline uint16_t
+NS_ERROR_GET_CODE(nsresult aErr)
+{
+  return uint32_t(aErr) & 0xffff;
 }
-inline uint16_t NS_ERROR_GET_MODULE(nsresult err) {
-  return ((uint32_t(err) >> 16) - NS_ERROR_MODULE_BASE_OFFSET) & 0x1fff;
+inline uint16_t
+NS_ERROR_GET_MODULE(nsresult aErr)
+{
+  return ((uint32_t(aErr) >> 16) - NS_ERROR_MODULE_BASE_OFFSET) & 0x1fff;
 }
-inline bool NS_ERROR_GET_SEVERITY(nsresult err) {
-  return uint32_t(err) >> 31;
+inline bool
+NS_ERROR_GET_SEVERITY(nsresult aErr)
+{
+  return uint32_t(aErr) >> 31;
 }
 #else
 #define NS_ERROR_GET_CODE(err)     ((err) & 0xffff)

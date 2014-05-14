@@ -25,6 +25,7 @@
 #include "mozilla/dom/DOMStorageIPC.h"
 #include "mozilla/hal_sandbox/PHalChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/TestShellChild.h"
 #include "mozilla/layers/CompositorChild.h"
@@ -46,6 +47,7 @@
 #include "mozilla/unused.h"
 
 #include "nsIConsoleListener.h"
+#include "nsICycleCollectorListener.h"
 #include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIMemoryReporter.h"
@@ -78,6 +80,7 @@
 
 #include "nsIGeolocationProvider.h"
 #include "mozilla/dom/PMemoryReportRequestChild.h"
+#include "mozilla/dom/PCycleCollectWithLogsChild.h"
 
 #ifdef MOZ_PERMISSIONS
 #include "nsIScriptSecurityManager.h"
@@ -202,6 +205,108 @@ MemoryReportRequestChild::~MemoryReportRequestChild()
 {
     MOZ_COUNT_DTOR(MemoryReportRequestChild);
 }
+
+// IPC sender for remote GC/CC logging.
+class CycleCollectWithLogsChild MOZ_FINAL
+    : public PCycleCollectWithLogsChild
+    , public nsICycleCollectorLogSink
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    CycleCollectWithLogsChild(const FileDescriptor& aGCLog,
+                              const FileDescriptor& aCCLog)
+    {
+        mGCLog = FileDescriptorToFILE(aGCLog, "w");
+        mCCLog = FileDescriptorToFILE(aCCLog, "w");
+    }
+
+    NS_IMETHOD Open(FILE** aGCLog, FILE** aCCLog) MOZ_OVERRIDE
+    {
+        if (NS_WARN_IF(!mGCLog) || NS_WARN_IF(!mCCLog)) {
+            return NS_ERROR_FAILURE;
+        }
+        *aGCLog = mGCLog;
+        *aCCLog = mCCLog;
+        return NS_OK;
+    }
+
+    NS_IMETHOD CloseGCLog() MOZ_OVERRIDE
+    {
+        MOZ_ASSERT(mGCLog);
+        fclose(mGCLog);
+        mGCLog = nullptr;
+        SendCloseGCLog();
+        return NS_OK;
+    }
+
+    NS_IMETHOD CloseCCLog() MOZ_OVERRIDE
+    {
+        MOZ_ASSERT(mCCLog);
+        fclose(mCCLog);
+        mCCLog = nullptr;
+        SendCloseCCLog();
+        return NS_OK;
+    }
+
+    NS_IMETHOD GetFilenameIdentifier(nsAString& aIdentifier) MOZ_OVERRIDE
+    {
+        return UnimplementedProperty();
+    }
+
+    NS_IMETHOD SetFilenameIdentifier(const nsAString& aIdentifier) MOZ_OVERRIDE
+    {
+        return UnimplementedProperty();
+    }
+
+    NS_IMETHOD GetProcessIdentifier(int32_t *aIdentifier) MOZ_OVERRIDE
+    {
+        return UnimplementedProperty();
+    }
+
+    NS_IMETHOD SetProcessIdentifier(int32_t aIdentifier) MOZ_OVERRIDE
+    {
+        return UnimplementedProperty();
+    }
+
+    NS_IMETHOD GetGcLog(nsIFile** aPath) MOZ_OVERRIDE
+    {
+        return UnimplementedProperty();
+    }
+
+    NS_IMETHOD GetCcLog(nsIFile** aPath) MOZ_OVERRIDE
+    {
+        return UnimplementedProperty();
+    }
+
+private:
+    ~CycleCollectWithLogsChild()
+    {
+        if (mGCLog) {
+            fclose(mGCLog);
+            mGCLog = nullptr;
+        }
+        if (mCCLog) {
+            fclose(mCCLog);
+            mCCLog = nullptr;
+        }
+        // The XPCOM refcount drives the IPC lifecycle; see also
+        // DeallocPCycleCollectWithLogsChild.
+        unused << Send__delete__(this);
+    }
+
+    nsresult UnimplementedProperty()
+    {
+        MOZ_ASSERT(false, "This object is a remote GC/CC logger;"
+                   " this property isn't meaningful.");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    FILE* mGCLog;
+    FILE* mCCLog;
+};
+
+NS_IMPL_ISUPPORTS(CycleCollectWithLogsChild, nsICycleCollectorLogSink);
 
 class AlertObserver
 {
@@ -669,16 +774,39 @@ ContentChild::DeallocPMemoryReportRequestChild(PMemoryReportRequestChild* actor)
     return true;
 }
 
-bool
-ContentChild::RecvDumpGCAndCCLogsToFile(const nsString& aIdentifier,
-                                        const bool& aDumpAllTraces,
-                                        const bool& aDumpChildProcesses)
+PCycleCollectWithLogsChild*
+ContentChild::AllocPCycleCollectWithLogsChild(const bool& aDumpAllTraces,
+                                              const FileDescriptor& aGCLog,
+                                              const FileDescriptor& aCCLog)
 {
+    CycleCollectWithLogsChild* actor = new CycleCollectWithLogsChild(aGCLog, aCCLog);
+    // Return actor with refcount 0, which is safe because it has a non-XPCOM type.
+    return actor;
+}
+
+bool
+ContentChild::RecvPCycleCollectWithLogsConstructor(PCycleCollectWithLogsChild* aActor,
+                                                   const bool& aDumpAllTraces,
+                                                   const FileDescriptor& aGCLog,
+                                                   const FileDescriptor& aCCLog)
+{
+    // Take a reference here, where the XPCOM type is regained.
+    nsRefPtr<CycleCollectWithLogsChild> sink = static_cast<CycleCollectWithLogsChild*>(aActor);
     nsCOMPtr<nsIMemoryInfoDumper> dumper = do_GetService("@mozilla.org/memory-info-dumper;1");
 
-    nsString gcLogPath, ccLogPath;
-    dumper->DumpGCAndCCLogsToFile(aIdentifier, aDumpAllTraces,
-                                  aDumpChildProcesses, gcLogPath, ccLogPath);
+    dumper->DumpGCAndCCLogsToSink(aDumpAllTraces, sink);
+
+    // The actor's destructor is called when the last reference goes away...
+    return true;
+}
+
+bool
+ContentChild::DeallocPCycleCollectWithLogsChild(PCycleCollectWithLogsChild* /* aActor */)
+{
+    // ...so when we get here, there's nothing for us to do.
+    //
+    // Also, we're already in ~CycleCollectWithLogsChild (q.v.) at
+    // this point, so we shouldn't touch the actor in any case.
     return true;
 }
 

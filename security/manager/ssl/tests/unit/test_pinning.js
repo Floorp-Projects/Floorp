@@ -92,14 +92,19 @@ function test_disabled() {
 };
 
 function check_pinning_telemetry() {
-  let histogram = Cc["@mozilla.org/base/telemetry;1"]
-                    .getService(Ci.nsITelemetry)
-                    .getHistogramById("CERT_PINNING_EVALUATION_RESULTS")
-                    .snapshot();
-   // Currently only strict mode gets evaluated
-   do_check_eq(histogram.counts[0], 1); // Failure count
-   do_check_eq(histogram.counts[1], 3); // Success count
-   run_next_test();
+  let service = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
+  let prod_histogram = service.getHistogramById("CERT_PINNING_RESULTS")
+                         .snapshot();
+  let test_histogram = service.getHistogramById("CERT_PINNING_TEST_RESULTS")
+                         .snapshot();
+  // Because all of our test domains are pinned to user-specified trust
+  // anchors, effectively only strict mode gets evaluated
+  do_check_eq(prod_histogram.counts[0], 1); // Failure count
+  do_check_eq(prod_histogram.counts[1], 3); // Success count
+  do_check_eq(test_histogram.counts[0], 1); // Failure count
+  do_check_eq(test_histogram.counts[1], 0); // Success count
+
+  run_next_test();
 }
 
 function run_test() {

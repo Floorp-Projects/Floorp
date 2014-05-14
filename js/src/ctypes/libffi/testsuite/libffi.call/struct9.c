@@ -13,7 +13,7 @@ typedef struct
   int i;
 } test_structure_9;
 
-static test_structure_9 struct9 (test_structure_9 ts)
+static test_structure_9 ABI_ATTR struct9 (test_structure_9 ts)
 {
   ts.f += 1;
   ts.i += 1;
@@ -28,6 +28,13 @@ int main (void)
   void *values[MAX_ARGS];
   ffi_type ts9_type;
   ffi_type *ts9_type_elements[3];
+
+  test_structure_9 ts9_arg;
+
+  /* This is a hack to get a properly aligned result buffer */
+  test_structure_9 *ts9_result =
+    (test_structure_9 *) malloc (sizeof(test_structure_9));
+
   ts9_type.size = 0;
   ts9_type.alignment = 0;
   ts9_type.type = FFI_TYPE_STRUCT;
@@ -36,17 +43,11 @@ int main (void)
   ts9_type_elements[1] = &ffi_type_sint;
   ts9_type_elements[2] = NULL;
 
-  test_structure_9 ts9_arg;
-  
-  /* This is a hack to get a properly aligned result buffer */
-  test_structure_9 *ts9_result = 
-    (test_structure_9 *) malloc (sizeof(test_structure_9));
-  
   args[0] = &ts9_type;
   values[0] = &ts9_arg;
   
   /* Initialize the cif */
-  CHECK(ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 1, &ts9_type, args) == FFI_OK);
+  CHECK(ffi_prep_cif(&cif, ABI_NUM, 1, &ts9_type, args) == FFI_OK);
   
   ts9_arg.f = 5.55f;
   ts9_arg.i = 5;

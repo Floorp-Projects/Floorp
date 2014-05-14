@@ -39,8 +39,8 @@ public:
     return static_cast<nsMemoryReporterManager*>(imgr.get());
   }
 
-  typedef nsTHashtable<nsRefPtrHashKey<nsIMemoryReporter> > StrongReportersTable;
-  typedef nsTHashtable<nsPtrHashKey<nsIMemoryReporter> > WeakReportersTable;
+  typedef nsTHashtable<nsRefPtrHashKey<nsIMemoryReporter>> StrongReportersTable;
+  typedef nsTHashtable<nsPtrHashKey<nsIMemoryReporter>> WeakReportersTable;
 
   void IncrementNumChildProcesses();
   void DecrementNumChildProcesses();
@@ -117,7 +117,7 @@ public:
   // more.
   //
   void HandleChildReports(
-    const uint32_t& generation,
+    const uint32_t& aGeneration,
     const InfallibleTArray<mozilla::dom::MemoryReport>& aChildReports);
   nsresult FinishReporting();
 
@@ -139,7 +139,10 @@ public:
 
     mozilla::InfallibleAmountFn mGhostWindows;
 
-    AmountFns() { mozilla::PodZero(this); }
+    AmountFns()
+    {
+      mozilla::PodZero(this);
+    }
   };
   AmountFns mAmountFns;
 
@@ -202,7 +205,7 @@ private:
                     nsISupports* aHandleReportData,
                     nsIFinishReportingCallback* aFinishReporting,
                     nsISupports* aFinishReportingData,
-                    const nsAString &aDMDDumpIdent)
+                    const nsAString& aDMDDumpIdent)
       : mGeneration(aGeneration)
       , mTimer(aTimer)
       , mNumChildProcesses(aNumChildProcesses)

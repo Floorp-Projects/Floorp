@@ -78,6 +78,7 @@ IPDL_SOURCES += [
     'PContentPermission.ipdlh',
     'PContentPermissionRequest.ipdl',
     'PCrashReporter.ipdl',
+    'PCycleCollectWithLogs.ipdl',
     'PDocumentRenderer.ipdl',
     'PFileDescriptorSet.ipdl',
     'PFilePicker.ipdl',
