@@ -68,6 +68,8 @@ public:
     virtual void Fence() MOZ_OVERRIDE;
     virtual bool WaitSync() MOZ_OVERRIDE;
 
+    virtual void WaitForBufferOwnership() MOZ_OVERRIDE;
+
     virtual void LockProdImpl() MOZ_OVERRIDE {}
     virtual void UnlockProdImpl() MOZ_OVERRIDE {}
 

@@ -34,6 +34,8 @@ public:
                                PTextureParent* aTexture,
                                const FenceHandle& aFence) = 0;
 
+  virtual void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) = 0;
+
 protected:
   /**
    * Handle the IPDL messages that affect PCompositable actors.
@@ -48,10 +50,12 @@ protected:
    */
   virtual bool IsAsync() const { return false; }
 
-  void ReturnTextureDataIfNecessary(CompositableHost* aCompositable,
-                                    EditReplyVector& replyv,
-                                    PCompositableParent* aParent);
-  void ClearPrevFenceHandles();
+  void ReturnTextureDataIfNecessary(CompositableHost* aCompositable);
+
+  void DeprecatedReturnTextureDataIfNecessary(CompositableHost* aCompositable,
+                                              EditReplyVector& replyv,
+                                              PCompositableParent* aParent);
+  void DeprecatedClearPrevFenceHandles();
 
   virtual void ReplyRemoveTexture(const OpReplyRemoveTexture& aReply) {}
 
