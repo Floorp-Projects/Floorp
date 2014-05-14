@@ -121,6 +121,7 @@
 <!ENTITY pref_header_display "Display">
 <!ENTITY pref_header_privacy_short "Privacy">
 <!ENTITY pref_header_help "Help">
+<!ENTITY pref_header_language "Language">
 <!ENTITY pref_header_vendor "&vendorShortName;">
 <!ENTITY pref_header_devtools "Developer tools">
 

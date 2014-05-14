@@ -130,6 +130,7 @@
   <string name="pref_header_customize">&pref_header_customize;</string>
   <string name="pref_header_display">&pref_header_display;</string>
   <string name="pref_header_privacy_short">&pref_header_privacy_short;</string>
+  <string name="pref_header_language">&pref_header_language;</string>
   <string name="pref_header_vendor">&pref_header_vendor;</string>
   <string name="pref_header_devtools">&pref_header_devtools;</string>
 

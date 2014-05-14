@@ -1788,7 +1788,10 @@ abstract public class BrowserApp extends GeckoApp
                 public void run() {
                     final LocaleManager localeManager = BrowserLocaleManager.getInstance();
                     final Locale locale = localeManager.getCurrentLocale(getApplicationContext());
-                    Log.d(LOGTAG, "Persisted locale was " + locale);
+                    Log.d(LOGTAG, "Read persisted locale " + locale);
+                    if (locale == null) {
+                        return;
+                    }
                     onLocaleChanged(BrowserLocaleManager.getLanguageTag(locale));
                 }
             });
