@@ -276,7 +276,11 @@ var gPermissionManager = {
   
   onPermissionKeyPress: function (aEvent)
   {
-    if (aEvent.keyCode == 46)
+    if (aEvent.keyCode == KeyEvent.DOM_VK_DELETE
+#ifdef XP_MACOSX
+        || aEvent.keyCode == KeyEvent.DOM_VK_BACK_SPACE
+#endif
+       )
       this.onPermissionDeleted();
   },
   

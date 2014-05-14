@@ -2,27 +2,25 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests if the shader editor shows the appropriate UI when opened.
+ * Tests more edge rendering for complex graphs.
  */
 
 function spawnTest() {
   let [target, debuggee, panel] = yield initWebAudioEditor(COMPLEX_CONTEXT_URL);
   let { panelWin } = panel;
-  let { gFront, $, $$, EVENTS, WebAudioParamView } = panelWin;
-  let gVars = WebAudioParamView._paramsView;
+  let { gFront, $, $$, EVENTS } = panelWin;
 
   let started = once(gFront, "start-context");
 
   reload(target);
 
-  let [[dest, osc, gain], nodeIDs ]= yield Promise.all([
+  let [actors] = yield Promise.all([
     getN(gFront, "create-node", 8),
-    getNSpread(panelWin, EVENTS.UI_ADD_NODE_LIST, 8),
     waitForGraphRendered(panelWin, 8, 8)
   ]);
 
-  // Map result to only have ID, since we don't need the event name
-  nodeIDs = nodeIDs.map(eventResult => eventResult[1]);
+  let nodeIDs = actors.map(actor => actor.actorID);
+
   let types = ["AudioDestinationNode", "OscillatorNode", "GainNode", "ScriptProcessorNode",
                "OscillatorNode", "GainNode", "AudioBufferSourceNode", "BiquadFilterNode"];
 
