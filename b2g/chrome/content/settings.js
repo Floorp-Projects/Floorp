@@ -686,6 +686,18 @@ let settingsToObserve = {
     prefName: 'dom.sms.strict7BitEncoding',
     defaultValue: false
   },
+  'ui.touch.radius.leftmm': {
+    resetToPref: true
+  },
+  'ui.touch.radius.topmm': {
+    resetToPref: true
+  },
+  'ui.touch.radius.rightmm': {
+    resetToPref: true
+  },
+  'ui.touch.radius.bottommm': {
+    resetToPref: true
+  },
   'wap.UAProf.tagname': 'x-wap-profile',
   'wap.UAProf.url': ''
 };
