@@ -17,7 +17,14 @@ if test -z "$SCCACHE_DISABLE" -a -z "$no_sccache"; then
     try)
         case "${master}" in
         *scl1.mozilla.com*|*.scl3.mozilla.com*)
-            bucket=mozilla-releng-ceph-cache-scl3-try
+            case "$platform" in
+            win*)
+                bucket=mozilla-releng-ceph-cache-scl3-try
+                ;;
+            *)
+                bucket=mozilla-releng-s3-cache-us-west-2-try
+                ;;
+            esac
             mk_add_options "export SCCACHE_NO_HTTPS=1"
             ;;
         *use1.mozilla.com*)
