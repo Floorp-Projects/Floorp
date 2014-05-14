@@ -178,16 +178,6 @@ opus_encoder_ctl
 opus_encode
 opus_encode_float
 #endif
-ShInitialize
-ShFinalize
-ShGetObjectCode
-ShDestruct
-ShGetInfoLog
-ShCompile
-ShGetInfo
-ShConstructCompiler
-ShGetActiveAttrib
-ShGetActiveUniform
 #ifndef MOZ_NATIVE_PNG
 MOZ_APNG_get_first_frame_is_hidden
 MOZ_APNG_get_next_frame_blend_op
