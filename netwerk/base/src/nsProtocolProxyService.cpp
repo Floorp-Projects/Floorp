@@ -663,7 +663,6 @@ const char kProxyType_SOCKS[]   = "socks";
 const char kProxyType_SOCKS4[]  = "socks4";
 const char kProxyType_SOCKS5[]  = "socks5";
 const char kProxyType_DIRECT[]  = "direct";
-const char kProxyType_UNKNOWN[] = "unknown";
 }
 
 const char *
