@@ -92,9 +92,13 @@ ifdef MOZ_DISABLE_PROGUARD
   PROGUARD_PASSES=0
 else
   ifdef MOZ_DEBUG
-  PROGUARD_PASSES=1
+    PROGUARD_PASSES=1
   else
-  PROGUARD_PASSES=6
+    ifndef MOZILLA_OFFICIAL
+      PROGUARD_PASSES=1
+    else
+      PROGUARD_PASSES=6
+    endif
   endif
 endif
 
