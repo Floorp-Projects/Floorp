@@ -7,7 +7,7 @@
 interface nsIURI;
 interface nsIFile;
 
-[scriptable, uuid(314A0972-E6E3-413A-8BD4-2C052BCB2C74)]
+[scriptable, uuid(9f556e4a-d9b3-46c3-9f8f-d0db1ac6c8c1)]
 interface mozIDownloadPlatform : nsISupports
 {
   /**
@@ -36,4 +36,24 @@ interface mozIDownloadPlatform : nsISupports
    */
   void downloadDone(in nsIURI aSource, in nsIFile aTarget,
                     in ACString aContentType, in boolean aIsPrivate);
+
+  /**
+   * Security Zone constants. Used by mapUrlToZone().
+   */
+  const unsigned long ZONE_MY_COMPUTER = 0;
+  const unsigned long ZONE_INTRANET = 1;
+  const unsigned long ZONE_TRUSTED = 2;
+  const unsigned long ZONE_INTERNET = 3;
+  const unsigned long ZONE_RESTRICTED = 4;
+
+  /**
+   * Proxy for IInternetSecurityManager::MapUrlToZone().
+   *
+   *   Windows only.
+   *
+   * @param aURL
+   *        URI of the download
+   * @return Security Zone corresponding to aURL.
+   */
+  unsigned long mapUrlToZone(in AString aURL);
 };
