@@ -5806,6 +5806,11 @@ if test -n "$MOZ_ANGLE_RENDERER"; then
     MOZ_D3DCOMPILER_VISTA_DLL=
   fi
 
+  # On mingw, check if headers are provided by toolchain.
+  if test -n "$GNU_CC"; then
+    MOZ_CHECK_HEADER(d3d10.h, MOZ_HAS_WINSDK_WITH_D3D=1)
+  fi
+
   ######################################
   # Find _43 for use by XP.
 
