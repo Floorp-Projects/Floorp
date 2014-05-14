@@ -10,6 +10,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/DedicatedWorkerGlobalScopeBinding.h"
+#include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/SharedWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/Console.h"
 
@@ -339,6 +340,35 @@ SharedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx)
   return SharedWorkerGlobalScopeBinding_workers::Wrap(aCx, this, this, options,
                                                       GetWorkerPrincipal(),
                                                       true);
+}
+
+ServiceWorkerGlobalScope::ServiceWorkerGlobalScope(WorkerPrivate* aWorkerPrivate,
+                                                   const nsACString& aScope)
+  : WorkerGlobalScope(aWorkerPrivate),
+    mScope(NS_ConvertUTF8toUTF16(aScope))
+{
+}
+
+/* static */ bool
+ServiceWorkerGlobalScope::Visible(JSContext* aCx, JSObject* aObj)
+{
+  ServiceWorkerGlobalScope* self = nullptr;
+  nsresult rv = UNWRAP_WORKER_OBJECT(ServiceWorkerGlobalScope, aObj, self);
+  return NS_SUCCEEDED(rv) && self;
+}
+
+JSObject*
+ServiceWorkerGlobalScope::WrapGlobalObject(JSContext* aCx)
+{
+  mWorkerPrivate->AssertIsOnWorkerThread();
+  MOZ_ASSERT(mWorkerPrivate->IsServiceWorker());
+
+  JS::CompartmentOptions options;
+  mWorkerPrivate->CopyJSCompartmentOptions(options);
+
+  return ServiceWorkerGlobalScopeBinding_workers::Wrap(aCx, this, this, options,
+                                                       GetWorkerPrincipal(),
+                                                       true);
 }
 
 bool

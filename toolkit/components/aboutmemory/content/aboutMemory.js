@@ -147,12 +147,13 @@ function updateMainAndFooter(aMsg, aFooterAction, aClassName)
     gMain.classList.add(gVerbose.checked ? 'verbose' : 'non-verbose');
   }
 
+  let msgElement;
   if (aMsg) {
     let className = "section"
     if (aClassName) {
       className = className + " " + aClassName;
     }
-    appendElementWithText(gMain, 'div', className, aMsg);
+    msgElement = appendElementWithText(gMain, 'div', className, aMsg);
   }
 
   switch (aFooterAction) {
@@ -160,6 +161,7 @@ function updateMainAndFooter(aMsg, aFooterAction, aClassName)
    case SHOW_FOOTER:   gFooter.classList.remove('hidden'); break;
    default: assertInput(false, "bad footer action in updateMainAndFooter");
   }
+  return msgElement;
 }
 
 function appendTextNode(aP, aText)
@@ -413,25 +415,27 @@ function saveGCLogAndVerboseCCLog()
 
 function dumpGCLogAndCCLog(aVerbose)
 {
-  let gcLogPath = {};
-  let ccLogPath = {};
-
   let dumper = Cc["@mozilla.org/memory-info-dumper;1"]
                 .getService(Ci.nsIMemoryInfoDumper);
 
-  updateMainAndFooter("Saving logs...", HIDE_FOOTER);
-
-  dumper.dumpGCAndCCLogsToFile("", aVerbose, /* dumpChildProcesses = */ false,
-                               gcLogPath, ccLogPath);
-
-  updateMainAndFooter("", HIDE_FOOTER);
+  let inProgress = updateMainAndFooter("Saving logs...", HIDE_FOOTER);
   let section = appendElement(gMain, 'div', "section");
-  appendElementWithText(section, 'div', "",
-                        "Saved GC log to " + gcLogPath.value);
 
-  let ccLogType = aVerbose ? "verbose" : "concise";
-  appendElementWithText(section, 'div', "",
-                        "Saved " + ccLogType + " CC log to " + ccLogPath.value);
+  function displayInfo(gcLog, ccLog, isParent) {
+    appendElementWithText(section, 'div', "",
+                          "Saved GC log to " + gcLog.path);
+
+    let ccLogType = aVerbose ? "verbose" : "concise";
+    appendElementWithText(section, 'div', "",
+                          "Saved " + ccLogType + " CC log to " + ccLog.path);
+  }
+
+  dumper.dumpGCAndCCLogsToFile("", aVerbose, /* dumpChildProcesses = */ true,
+                               { onDump: displayInfo,
+                                 onFinish: function() {
+                                   inProgress.remove();
+                                 }
+                               });
 }
 
 /**

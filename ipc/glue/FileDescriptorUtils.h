@@ -9,6 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "nsIRunnable.h"
+#include <stdio.h>
 
 namespace mozilla {
 namespace ipc {
@@ -41,6 +42,17 @@ private:
 
   void CloseFile();
 };
+
+// On failure, FileDescriptorToFILE closes the given descriptor; on
+// success, fclose()ing the returned FILE* will close the handle.
+// This is meant for use with FileDescriptors received over IPC.
+FILE* FileDescriptorToFILE(const FileDescriptor& aDesc,
+                           const char* aOpenMode);
+
+// FILEToFileDescriptor does not consume the given FILE*; it must be
+// fclose()d as normal, and this does not invalidate the returned
+// FileDescriptor.
+FileDescriptor FILEToFileDescriptor(FILE* aStream);
 
 } // namespace ipc
 } // namespace mozilla

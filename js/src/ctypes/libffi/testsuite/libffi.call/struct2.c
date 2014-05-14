@@ -13,7 +13,7 @@ typedef struct
   double d2;
 } test_structure_2;
 
-static test_structure_2 struct2(test_structure_2 ts)
+static test_structure_2 ABI_ATTR struct2(test_structure_2 ts)
 {
   ts.d1--;
   ts.d2--;
@@ -29,6 +29,11 @@ int main (void)
   test_structure_2 ts2_arg;
   ffi_type ts2_type;
   ffi_type *ts2_type_elements[3];
+
+  /* This is a hack to get a properly aligned result buffer */
+  test_structure_2 *ts2_result =
+    (test_structure_2 *) malloc (sizeof(test_structure_2));
+
   ts2_type.size = 0;
   ts2_type.alignment = 0;
   ts2_type.type = FFI_TYPE_STRUCT;
@@ -37,16 +42,11 @@ int main (void)
   ts2_type_elements[1] = &ffi_type_double;
   ts2_type_elements[2] = NULL;
 
-  
-  /* This is a hack to get a properly aligned result buffer */
-  test_structure_2 *ts2_result = 
-    (test_structure_2 *) malloc (sizeof(test_structure_2));
-  
   args[0] = &ts2_type;
   values[0] = &ts2_arg;
   
   /* Initialize the cif */
-  CHECK(ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 1, &ts2_type, args) == FFI_OK);
+  CHECK(ffi_prep_cif(&cif, ABI_NUM, 1, &ts2_type, args) == FFI_OK);
   
   ts2_arg.d1 = 5.55;
   ts2_arg.d2 = 6.66;

@@ -11,7 +11,7 @@ namespace mozilla {
 namespace ClearOnShutdown_Internal {
 
 bool sHasShutDown = false;
-StaticAutoPtr<LinkedList<ShutdownObserver> > sShutdownObservers;
+StaticAutoPtr<LinkedList<ShutdownObserver>> sShutdownObservers;
 
 } // namespace ClearOnShutdown_Internal
 } // namespace mozilla

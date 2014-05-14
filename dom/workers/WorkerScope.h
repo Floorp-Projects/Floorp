@@ -154,11 +154,58 @@ public:
   virtual JSObject*
   WrapGlobalObject(JSContext* aCx) MOZ_OVERRIDE;
 
-  void GetName(DOMString& aName) const {
+  void GetName(DOMString& aName) const
+  {
     aName.AsAString() = NS_ConvertUTF8toUTF16(mName);
   }
 
   IMPL_EVENT_HANDLER(connect)
+};
+
+class ServiceWorkerGlobalScope MOZ_FINAL : public WorkerGlobalScope
+{
+  const nsString mScope;
+  ~ServiceWorkerGlobalScope() { }
+
+public:
+  ServiceWorkerGlobalScope(WorkerPrivate* aWorkerPrivate, const nsACString& aScope);
+
+  static bool
+  Visible(JSContext* aCx, JSObject* aObj);
+
+  virtual JSObject*
+  WrapGlobalObject(JSContext* aCx) MOZ_OVERRIDE;
+
+  void
+  GetScope(DOMString& aScope) const
+  {
+    aScope.AsAString() = mScope;
+  }
+
+  void
+  Close() const
+  {
+    // no-op close.
+  }
+
+  void
+  Update()
+  {
+    // FIXME(nsm): Bug 982728
+  }
+
+  void
+  Unregister()
+  {
+    // FIXME(nsm): Bug 982728
+  }
+
+  IMPL_EVENT_HANDLER(activate)
+  IMPL_EVENT_HANDLER(beforeevicted)
+  IMPL_EVENT_HANDLER(evicted)
+  IMPL_EVENT_HANDLER(fetch)
+  IMPL_EVENT_HANDLER(install)
+  IMPL_EVENT_HANDLER(message)
 };
 
 JSObject*

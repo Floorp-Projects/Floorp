@@ -393,9 +393,7 @@ ClientTiledThebesLayer::RenderLayer()
     // Clear the low precision tiled buffer
     updatedLowPrecision = true;
     mLowPrecisionValidRegion.SetEmpty();
-    mContentClient->mLowPrecisionTiledBuffer.PaintThebes(mLowPrecisionValidRegion,
-                                                         mLowPrecisionValidRegion,
-                                                         callback, data);
+    mContentClient->mLowPrecisionTiledBuffer.ResetPaintedAndValidState();
   }
 
   // We send a Painted callback if we clear the valid region of the low

@@ -5,13 +5,46 @@
 
 #include "nsISupports.idl"
 
+interface nsIFile;
+interface nsICycleCollectorLogSink;
+
 [scriptable, function, uuid(2dea18fc-fbfa-4bf7-ad45-0efaf5495f5e)]
 interface nsIFinishDumpingCallback : nsISupports
 {
   void callback(in nsISupports data);
 };
 
-[scriptable, builtinclass, uuid(815bf31b-f5bd-425d-85c3-4657a7a91dad)]
+/**
+ * Callback interface for |dumpGCAndCCLogsToFile|, below.  Note that
+ * these method calls can occur before |dumpGCAndCCLogsToFile|
+ * returns.
+ */
+[scriptable, uuid(dc1b2b24-65bd-441b-b6bd-cb5825a7ed14)]
+interface nsIDumpGCAndCCLogsCallback : nsISupports
+{
+  /**
+   * Called whenever a process has successfully finished dumping its GC/CC logs.
+   * Incomplete dumps (e.g., if the child crashes or is killed due to memory
+   * exhaustion) are not reported.
+   *
+   * @param aGCLog The file that the GC log was written to.
+   *
+   * @param aCCLog The file that the CC log was written to.
+   *
+   * @param aIsParent indicates whether this log file pair is from the
+   * parent process.
+   */
+  void onDump(in nsIFile aGCLog,
+              in nsIFile aCCLog,
+              in bool aIsParent);
+
+  /**
+   * Called when GC/CC logging has finished, after all calls to |onDump|.
+   */
+  void onFinish();
+};
+
+[scriptable, builtinclass, uuid(a156fda4-aea0-4da2-9daa-9858430fade9)]
 interface nsIMemoryInfoDumper : nsISupports
 {
   /**
@@ -146,13 +179,17 @@ interface nsIMemoryInfoDumper : nsISupports
    *   DumpGCAndCCLogsToFile in our child processes.  If so, the child processes
    *   will dump their children, and so on.
    *
-   * @param aGCLogPath The full path of the file that the GC log was written to.
-   *
-   * @param aCCLogPath The full path of the file that the CC log was written to.
    */
   void dumpGCAndCCLogsToFile(in AString aIdentifier,
                              in bool aDumpAllTraces,
                              in bool aDumpChildProcesses,
-                             out AString aGCLogPath,
-                             out AString aCCLogPath);
+                             in nsIDumpGCAndCCLogsCallback aCallback);
+
+  /**
+   * Like |dumpGCAndCCLogsToFile|, but sends the logs to the given log
+   * sink object instead of accessing the filesystem directly, and
+   * dumps the current process only.
+   */
+  void dumpGCAndCCLogsToSink(in bool aDumpAllTraces,
+                             in nsICycleCollectorLogSink aSink);
 };

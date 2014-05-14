@@ -4,6 +4,13 @@
 
 #include "nsISupports.idl"
 
+%{C++
+#include <stdio.h>
+%}
+
+[ptr] native FILE(FILE);
+interface nsIFile;
+
 /**
  * Interfaces for observing the cycle collector's work, both from C++ and
  * from JavaScript.
@@ -49,6 +56,34 @@ interface nsICycleCollectorHandler : nsISupports
     void describeGarbage(in ACString aAddress);
 };
 
+
+/**
+ * This interface allows replacing the log-writing backend for an
+ * nsICycleCollectorListener.  As this interface is also called while
+ * the cycle collector is running, it cannot be implemented in JS.
+ */
+[scriptable, builtinclass, uuid(3ad9875f-d0e4-4ac2-87e3-f127f6c02ce1)]
+interface nsICycleCollectorLogSink : nsISupports
+{
+  [noscript] void open(out FILE aGCLog, out FILE aCCLog);
+  void closeGCLog();
+  void closeCCLog();
+
+  // This string will appear somewhere in the log's filename.
+  attribute AString filenameIdentifier;
+
+  // This is the process ID; it can be changed if logging is on behalf
+  // of another process.
+  attribute int32_t processIdentifier;
+
+  // The GC log file, if logging to files.
+  readonly attribute nsIFile gcLog;
+
+  // The CC log file, if logging to files.
+  readonly attribute nsIFile ccLog;
+};
+
+
 /**
  * Given an instance of this interface, the cycle collector calls the instance's
  * methods to report the objects it visits, the edges between them, and its
@@ -87,7 +122,7 @@ interface nsICycleCollectorHandler : nsISupports
  *
  *
  * This interface cannot be implemented by JavaScript code, as it is called
- * while the cycle collector works. To analyze cycle collection data in JS:
+ * while the cycle collector is running. To analyze cycle collection data in JS:
  *
  * - Create an instance of @mozilla.org/cycle-collector-logger;1, which
  *   implements this interface.
@@ -109,7 +144,7 @@ interface nsICycleCollectorHandler : nsISupports
  *   on objects however it pleases: the cycle collector has finished its
  *   work, and the JS code is simply consuming recorded data.
  */
-[scriptable, builtinclass, uuid(c46e6947-9076-4a0e-bb27-d4aa3706c54d)]
+[scriptable, builtinclass, uuid(c7d55656-e0d8-4986-88bb-cb28cb55b993)]
 interface nsICycleCollectorListener : nsISupports
 {
     // Return a listener that directs the cycle collector to traverse
@@ -134,18 +169,12 @@ interface nsICycleCollectorListener : nsISupports
     // Initially false.
     attribute boolean disableLog;
 
-    // This string will appear somewhere in the log's filename.
-    attribute AString filenameIdentifier;
+    // If |disableLog| is false, this object will be sent the log text.
+    attribute nsICycleCollectorLogSink logSink;
 
     // If true, record all method calls in memory, to be retrieved later
     // using |processNext|. Initially false.
     attribute boolean wantAfterProcessing;
-
-    // This string will indicate the full path of the GC log if enabled.
-    readonly attribute AString gcLogPath;
-
-    // This string will indicate the full path of the CC log if enabled.
-    readonly attribute AString ccLogPath;
 
     void begin();
     void noteRefCountedObject (in unsigned long long aAddress,

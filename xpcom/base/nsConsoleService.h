@@ -28,13 +28,15 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICONSOLESERVICE
 
-  void SetIsDelivering() {
+  void SetIsDelivering()
+  {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(!mDeliveringMessage);
     mDeliveringMessage = true;
   }
 
-  void SetDoneDelivering() {
+  void SetDoneDelivering()
+  {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mDeliveringMessage);
     mDeliveringMessage = false;
@@ -48,7 +50,8 @@ public:
     SuppressLog,
     OutputToLog
   };
-  virtual nsresult LogMessageWithMode(nsIConsoleMessage *message, OutputMode outputMode);
+  virtual nsresult LogMessageWithMode(nsIConsoleMessage* aMessage,
+                                      OutputMode aOutputMode);
 
   typedef nsInterfaceHashtable<nsISupportsHashKey, nsIConsoleListener> ListenerHash;
   void EnumerateListeners(ListenerHash::EnumReadFunction aFunction, void* aClosure);
@@ -57,7 +60,7 @@ private:
   ~nsConsoleService();
 
   // Circular buffer of saved messages
-  nsIConsoleMessage **mMessages;
+  nsIConsoleMessage** mMessages;
 
   // How big?
   uint32_t mBufferSize;

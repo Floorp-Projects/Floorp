@@ -28,47 +28,49 @@ namespace mozilla {
 class JSGCThingParticipant: public nsCycleCollectionParticipant
 {
 public:
-  NS_IMETHOD_(void) Root(void *n)
+  NS_IMETHOD_(void) Root(void* aPtr)
   {
   }
 
-  NS_IMETHOD_(void) Unlink(void *n)
+  NS_IMETHOD_(void) Unlink(void* aPtr)
   {
   }
 
-  NS_IMETHOD_(void) Unroot(void *n)
+  NS_IMETHOD_(void) Unroot(void* aPtr)
   {
   }
 
-  NS_IMETHOD_(void) DeleteCycleCollectable(void *n)
+  NS_IMETHOD_(void) DeleteCycleCollectable(void* aPtr)
   {
   }
 
-  NS_IMETHOD Traverse(void *n, nsCycleCollectionTraversalCallback &cb);
+  NS_IMETHOD Traverse(void* aPtr, nsCycleCollectionTraversalCallback& aCb);
 };
 
 class JSZoneParticipant : public nsCycleCollectionParticipant
 {
 public:
-  MOZ_CONSTEXPR JSZoneParticipant(): nsCycleCollectionParticipant() {}
-
-  NS_IMETHOD_(void) Root(void *p)
+  MOZ_CONSTEXPR JSZoneParticipant(): nsCycleCollectionParticipant()
   {
   }
 
-  NS_IMETHOD_(void) Unlink(void *p)
+  NS_IMETHOD_(void) Root(void* aPtr)
   {
   }
 
-  NS_IMETHOD_(void) Unroot(void *p)
+  NS_IMETHOD_(void) Unlink(void* aPtr)
   {
   }
 
-  NS_IMETHOD_(void) DeleteCycleCollectable(void *n)
+  NS_IMETHOD_(void) Unroot(void* aPtr)
   {
   }
 
-  NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb);
+  NS_IMETHOD_(void) DeleteCycleCollectable(void* aPtr)
+  {
+  }
+
+  NS_IMETHOD Traverse(void* aPtr, nsCycleCollectionTraversalCallback& aCb);
 };
 
 class IncrementalFinalizeRunnable;
@@ -119,10 +121,16 @@ protected:
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   void UnmarkSkippableJSHolders();
 
-  virtual void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& aCb) {}
-  virtual void TraceAdditionalNativeGrayRoots(JSTracer* aTracer) {}
+  virtual void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& aCb)
+  {
+  }
+  virtual void TraceAdditionalNativeGrayRoots(JSTracer* aTracer)
+  {
+  }
 
-  virtual void CustomGCCallback(JSGCStatus aStatus) {}
+  virtual void CustomGCCallback(JSGCStatus aStatus)
+  {
+  }
   virtual bool CustomContextCallback(JSContext* aCx, unsigned aOperation)
   {
     return true; // Don't block context creation.
@@ -206,11 +214,11 @@ public:
   nsCycleCollectionParticipant* GCThingParticipant();
   nsCycleCollectionParticipant* ZoneParticipant();
 
-  nsresult TraverseRoots(nsCycleCollectionNoteRootCallback &aCb);
+  nsresult TraverseRoots(nsCycleCollectionNoteRootCallback& aCb);
   bool UsefulToMergeZones() const;
   void FixWeakMappingGrayBits() const;
   bool AreGCGrayBitsValid() const;
-  void GarbageCollect(uint32_t reason) const;
+  void GarbageCollect(uint32_t aReason) const;
 
   void DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
                         DeferredFinalizeFunction aFunc,
@@ -221,7 +229,7 @@ public:
 
   virtual void PrepareForForgetSkippable() = 0;
   virtual void BeginCycleCollectionCallback() = 0;
-  virtual void EndCycleCollectionCallback(CycleCollectorResults &aResults) = 0;
+  virtual void EndCycleCollectionCallback(CycleCollectorResults& aResults) = 0;
   virtual void DispatchDeferredDeletion(bool aContinuation) = 0;
 
   JSRuntime* Runtime() const

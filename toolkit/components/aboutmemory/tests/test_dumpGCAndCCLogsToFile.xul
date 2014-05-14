@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="GC/CC logging with child processes"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
+
+  SimpleTest.waitForExplicitFinish();
+
+  let numRemotes = 3;
+  let numReady = 0;
+
+  // Create some remote processes, and set up message-passing so that
+  // we know when each child is fully initialized.
+  let remotes = [];
+  SpecialPowers.pushPrefEnv({"set": [["dom.ipc.processCount", numRemotes]]},
+			    function() {
+    for (let i = 0; i < numRemotes; i++) {
+      let w = remotes[i] = window.open("remote.xul", "", "chrome");
+
+      w.addEventListener("load", function loadHandler() {
+        w.removeEventListener("load", loadHandler);
+        let remoteBrowser = w.document.getElementById("remote");
+        let mm = remoteBrowser.messageManager;
+        mm.addMessageListener("test:ready", function readyHandler() {
+          mm.removeMessageListener("test:ready", readyHandler);
+          numReady++;
+          if (numReady == numRemotes) {
+            // All the remote processes are ready.  Run test.
+            runTest();
+          }
+        });
+        mm.loadFrameScript("data:," + encodeURI("sendAsyncMessage('test:ready');"), true);
+      });
+    }
+  });
+
+  let dumper = Cc["@mozilla.org/memory-info-dumper;1"].
+               getService(Ci.nsIMemoryInfoDumper);
+
+  function runTest()
+  {
+      let numParents = 0;
+      let numChildren = 0;
+      dumper.dumpGCAndCCLogsToFile(
+	  /* identifier: */ "test." + Date.now(),
+	  /* allTraces: */ false,
+	  /* childProcesses: */ true,
+	  {
+	      onDump: function(gcLog, ccLog, isParent) {
+		  if (isParent) {
+		      numParents++;
+		  } else {
+		      numChildren++;
+		  }
+		  checkAndRemoveLog(gcLog);
+		  checkAndRemoveLog(ccLog);
+	      },
+	      onFinish: function() {
+		  is(numParents, 1,
+		     "GC/CC logs for the parent process");
+		  is(numChildren, numRemotes,
+		     "GC/CC logs for each child process");
+		  cleanUpAndFinish();
+	      }
+	  });
+  }
+
+  function cleanUpAndFinish() {
+      // Close the remote processes.
+      for (let i = 0; i < numRemotes; i++) {
+          remotes[i].close();
+      }
+      SimpleTest.finish();
+  }
+
+  function checkAndRemoveLog(logFile) {
+      let name = logFile.path;
+      ok(logFile.exists(), "log file "+name+" exists");
+      ok(logFile.isFile(), "log file "+name+" is a regular file");
+      ok(logFile.fileSize > 0, "log file "+name+" is not empty");
+      logFile.remove(/* recursive: */ false);
+  }
+
+  ]]></script>
+</window>

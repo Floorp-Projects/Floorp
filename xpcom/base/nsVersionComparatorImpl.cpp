@@ -11,11 +11,11 @@
 NS_IMPL_ISUPPORTS(nsVersionComparatorImpl, nsIVersionComparator)
 
 NS_IMETHODIMP
-nsVersionComparatorImpl::Compare(const nsACString& A, const nsACString& B,
-                                 int32_t *aResult)
+nsVersionComparatorImpl::Compare(const nsACString& aStr1, const nsACString& aStr2,
+                                 int32_t* aResult)
 {
-  *aResult = mozilla::CompareVersions(PromiseFlatCString(A).get(),
-                                      PromiseFlatCString(B).get());
+  *aResult = mozilla::CompareVersions(PromiseFlatCString(aStr1).get(),
+                                      PromiseFlatCString(aStr2).get());
 
   return NS_OK;
 }
