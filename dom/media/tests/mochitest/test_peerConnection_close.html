@@ -1,0 +1,127 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "991877",
+    title: "Basic RTCPeerConnection.close() tests"
+  });
+
+  runTest(function () {
+    var pc = new mozRTCPeerConnection();
+    var signalStateChanged = false;
+    var exception = null;
+    var eTimeout = null;
+
+    // everything should be in initial state
+    is(pc.signalingState, "stable", "Initial signalingState is 'stable'");
+    is(pc.iceConnectionState, "new", "Initial iceConnectionState is 'new'");
+    is(pc.iceGatheringState, "new", "Initial iceGatheringState is 'new'");
+
+    pc.onsignalingstatechange = function(aEvent) {
+      clearTimeout(eTimeout);
+      signalStateChanged = true;
+      is(aEvent, "closed", "onsignalingstatechange event is 'closed'");
+      is(pc.signalingState, "closed", "Event callback signalingState is 'closed'");
+      is(pc.iceConnectionState, "closed", "Event callback iceConnectionState is 'closed'");
+
+      try {
+        pc.close();
+      } catch (e) {
+        exception = e;
+      }
+      is(exception, null, "A second close() should not raise an exception");
+      is(pc.signalingState, "closed", "Final signalingState stays at 'closed'");
+      is(pc.iceConnectionState, "closed", "Final iceConnectionState stays at 'closed'");
+
+      // TODO: according to the webrtc spec all of these should throw InvalidStateError's
+      //       instead they seem to throw simple Error's
+      SimpleTest.doesThrow(function() {
+        pc.setLocalDescription(
+          "Invalid Session Description",
+          function() {},
+          function() {})},
+        "setLocalDescription() on closed PC raised expected exception");
+
+      SimpleTest.doesThrow(function() {
+        pc.setRemoteDescription(
+          "Invalid Session Description",
+          function() {},
+          function() {})},
+        "setRemoteDescription() on closed PC raised expected exception");
+
+      SimpleTest.doesThrow(function() {
+        pc.updateIce("Invalid RTC Configuration")},
+        "updateIce() on closed PC raised expected exception");
+
+      SimpleTest.doesThrow(function() {
+        pc.addStream("Invalid Media Stream")},
+        "addStream() on closed PC raised expected exception");
+
+      SimpleTest.doesThrow(function() {
+        pc.removeStream("Invalid Media Stream")},
+        "removeStream() on closed PC raised expected exception");
+
+      SimpleTest.doesThrow(function() {
+        pc.createDataChannel({})},
+        "createDataChannel() on closed PC raised expected exception");
+
+      // The spec says it has to throw, but it seems questionable why...
+      SimpleTest.doesThrow(function() {
+        pc.getStats()},
+        "getStats() on closed PC raised expected exception");
+
+      SimpleTest.doesThrow(function() {
+        pc.setIdentityProvider("Invalid Provider")},
+        "setIdentityProvider() on closed PC raised expected exception");
+
+      // in case we are ending the test from within here
+      if(pc !== null) {
+        pc = null;
+        SimpleTest.finish();
+      }
+    }
+
+    // This is only a shortcut to prevent a mochitest timeout in case the
+    // event does not fire
+    eTimeout = setTimeout(function() {
+      ok(signalStateChanged, "Failed to receive expected onsignalingstatechange event in 60s");
+
+      // in case we are ending the test in this timeout
+      if (pc !== null) {
+        pc = null;
+        SimpleTest.finish();
+      }
+    }, 60000);
+
+    try {
+      pc.close();
+    } catch (e) {
+      exception = e;
+    }
+    is(exception, null, "closing the connection raises no exception");
+    if (pc !== null) {
+      is(pc.signalingState, "closed", "Final signalingState is 'closed'");
+      is(pc.iceConnectionState, "closed", "Final iceConnectionState is 'closed'");
+    }
+
+    if (signalStateChanged) {
+      clearTimeout(eTimeout);
+      // in case we are ending the test outside the even handler
+      if (pc !== null) {
+        pc = null;
+        SimpleTest.finish();
+      }
+    }
+
+  });
+</script>
+</pre>
+</body>
+</html>

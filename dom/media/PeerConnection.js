@@ -835,9 +835,9 @@ RTCPeerConnection.prototype = {
     if (this._closed) {
       return;
     }
+    this.changeIceConnectionState("closed");
     this._queueOrRun({ func: this._close, args: [false], wait: false });
     this._closed = true;
-    this.changeIceConnectionState("closed");
   },
 
   _close: function() {
