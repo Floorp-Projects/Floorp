@@ -5239,6 +5239,7 @@ JitCompartment::generateStringConcatStub(JSContext *cx, ExecutionMode mode)
     masm.ret();
 
     Linker linker(masm);
+    AutoFlushICache afc("StringConcatStub");
     JitCode *code = linker.newCode<CanGC>(cx, JSC::OTHER_CODE);
 
 #ifdef JS_ION_PERF
@@ -5273,6 +5274,7 @@ JitRuntime::generateMallocStub(JSContext *cx)
     masm.ret();
 
     Linker linker(masm);
+    AutoFlushICache afc("MallocStub");
     JitCode *code = linker.newCode<NoGC>(cx, JSC::OTHER_CODE);
 
 #ifdef JS_ION_PERF
@@ -5303,6 +5305,7 @@ JitRuntime::generateFreeStub(JSContext *cx)
     masm.ret();
 
     Linker linker(masm);
+    AutoFlushICache afc("FreeStub");
     JitCode *code = linker.newCode<NoGC>(cx, JSC::OTHER_CODE);
 
 #ifdef JS_ION_PERF
@@ -6572,6 +6575,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
     // use the normal executable allocator so that we cannot segv during
     // execution off the main thread.
     Linker linker(masm);
+    AutoFlushICache afc("IonLink");
     JitCode *code = (executionMode == SequentialExecution)
                     ? linker.newCodeForIonScript(cx)
                     : linker.newCode<CanGC>(cx, JSC::ION_CODE);
