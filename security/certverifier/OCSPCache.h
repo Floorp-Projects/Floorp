@@ -92,9 +92,10 @@ private:
     SHA384Buffer mIDHash;
   };
 
-  int32_t FindInternal(const CERTCertificate* aCert,
-                       const CERTCertificate* aIssuerCert,
-                       const MutexAutoLock& aProofOfLock);
+  bool FindInternal(const CERTCertificate* aCert,
+                    const CERTCertificate* aIssuerCert,
+                    /*out*/ size_t& index,
+                    const MutexAutoLock& aProofOfLock);
   void MakeMostRecentlyUsed(size_t aIndex, const MutexAutoLock& aProofOfLock);
   void LogWithCerts(const char* aMessage, const CERTCertificate* aCert,
                     const CERTCertificate* aIssuerCert);
