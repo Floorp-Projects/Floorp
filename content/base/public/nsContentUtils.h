@@ -478,14 +478,11 @@ public:
 
   // Returns the subject principal. Guaranteed to return non-null. May only
   // be called when nsContentUtils is initialized.
-  static nsIPrincipal* GetSubjectPrincipal();
+  static nsIPrincipal* SubjectPrincipal();
 
-  // Returns the principal of the given JS object. This should never be null
-  // for any object in the XPConnect runtime.
-  //
-  // In general, being interested in the principal of an object is enough to
-  // guarantee that the return value is non-null.
-  static nsIPrincipal* GetObjectPrincipal(JSObject* aObj);
+  // Returns the prinipal of the given JS object. This may only be called on
+  // the main thread for objects from the main thread's JSRuntime.
+  static nsIPrincipal* ObjectPrincipal(JSObject* aObj);
 
   static nsresult GenerateStateKey(nsIContent* aContent,
                                    const nsIDocument* aDocument,

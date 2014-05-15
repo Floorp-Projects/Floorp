@@ -37,7 +37,7 @@ class SearchProvider(object):
     def dxr(self, term):
         import webbrowser
         term = ' '.join(term)
-        uri = 'http://dxr.mozilla.org/search?tree=mozilla-central&q=%s' % term
+        uri = 'http://dxr.mozilla.org/mozilla-central/search?q=%s&redirect=true' % term
         webbrowser.open_new_tab(uri)
 
     @Command('mdn', category='misc',

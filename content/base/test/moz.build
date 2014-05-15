@@ -16,6 +16,7 @@ if CONFIG['OS_ARCH'] != 'Darwin':
     XPCSHELL_TESTS_MANIFESTS += ['unit_ipc/xpcshell.ini']
 
 CPP_UNIT_TESTS += [
+    'TestCSPParser.cpp',
     'TestGetURL.cpp',
     'TestNativeXMLHttpRequest.cpp',
     'TestPlainTextSerializer.cpp',

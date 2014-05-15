@@ -2459,12 +2459,14 @@ CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& options, ErrorRes
     return;
   }
 
+#ifdef ACCESSIBILITY
   // check if the control is a descendant of our canvas
   HTMLCanvasElement* canvas = GetCanvas();
   bool isDescendant = true;
   if (!canvas || !nsContentUtils::ContentIsDescendantOf(options.mControl, canvas)) {
     isDescendant = false;
   }
+#endif
 
   // check if the path is valid
   EnsureUserSpacePath(CanvasWindingRule::Nonzero);
@@ -4255,6 +4257,7 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
   }
 
   data.mSize = nsIntSize(mWidth, mHeight);
+  data.mHasAlpha = !mOpaque;
 
   canvasLayer->Initialize(data);
   uint32_t flags = mOpaque ? Layer::CONTENT_OPAQUE : 0;
@@ -4393,6 +4396,8 @@ CanvasPath::ArcTo(double x1, double y1, double x2, double y2, double radius,
     return;
   }
 
+  EnsurePathBuilder();
+
   // Current point in user space!
   Point p0 = mPathBuilder->CurrentPoint();
   Point p1(x1, y1);
@@ -4467,6 +4472,8 @@ CanvasPath::Arc(double x, double y, double radius,
     error.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
   }
+
+  EnsurePathBuilder();
 
   ArcToBezier(this, Point(x, y), Size(radius, radius), startAngle, endAngle, anticlockwise);
 }

@@ -42,7 +42,7 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void storeViewTypeElement(ArrayBufferView::ViewType vt, const LAllocation *value,
                                         const T &dstAddr);
     void storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
-                           const Register &elements, const LAllocation *index);
+                           Register elements, const LAllocation *index);
 
   public:
     CodeGeneratorX86(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm);

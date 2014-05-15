@@ -140,6 +140,8 @@ private:
   nsresult RemoveChunk(CacheFileChunk *aChunk);
   void     RemoveChunkInternal(CacheFileChunk *aChunk, bool aCacheChunk);
 
+  int64_t  BytesFromChunk(uint32_t aIndex);
+
   nsresult RemoveInput(CacheFileInputStream *aInput);
   nsresult RemoveOutput(CacheFileOutputStream *aOutput);
   nsresult NotifyChunkListener(CacheFileChunkListener *aCallback,

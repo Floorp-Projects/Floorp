@@ -251,7 +251,11 @@ CompositorParent::Destroy()
 
   // Ensure that the layer manager is destructed on the compositor thread.
   mLayerManager = nullptr;
+  if (mCompositor) {
+    mCompositor->Destroy();
+  }
   mCompositor = nullptr;
+
   mCompositionManager = nullptr;
   mApzcTreeManager->ClearTree();
   mApzcTreeManager = nullptr;
@@ -283,7 +287,6 @@ CompositorParent::RecvWillStop()
     }
     mLayerManager->Destroy();
     mLayerManager = nullptr;
-    mCompositor = nullptr;
     mCompositionManager = nullptr;
   }
 
@@ -521,13 +524,15 @@ CompositorParent::ScheduleTask(CancelableTask* task, int time)
 }
 
 void
-CompositorParent::NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstPaint, bool aScheduleComposite)
+CompositorParent::NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstPaint,
+    bool aScheduleComposite, uint32_t aPaintSequenceNumber)
 {
   if (mApzcTreeManager &&
       mLayerManager &&
       mLayerManager->GetRoot()) {
     AutoResolveRefLayers resolve(mCompositionManager);
-    mApzcTreeManager->UpdatePanZoomControllerTree(this, mLayerManager->GetRoot(), aIsFirstPaint, aId);
+    mApzcTreeManager->UpdatePanZoomControllerTree(this, mLayerManager->GetRoot(),
+        aIsFirstPaint, aId, aPaintSequenceNumber);
 
     mLayerManager->NotifyShadowTreeTransaction();
   }
@@ -768,7 +773,8 @@ void
 CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
                                       const TargetConfig& aTargetConfig,
                                       bool aIsFirstPaint,
-                                      bool aScheduleComposite)
+                                      bool aScheduleComposite,
+                                      uint32_t aPaintSequenceNumber)
 {
   ScheduleRotationOnCompositorThread(aTargetConfig, aIsFirstPaint);
 
@@ -784,7 +790,8 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
 
   if (mApzcTreeManager) {
     AutoResolveRefLayers resolve(mCompositionManager);
-    mApzcTreeManager->UpdatePanZoomControllerTree(this, root, aIsFirstPaint, mRootLayerTreeID);
+    mApzcTreeManager->UpdatePanZoomControllerTree(this, root, aIsFirstPaint,
+        mRootLayerTreeID, aPaintSequenceNumber);
   }
 
   if (root) {
@@ -853,6 +860,14 @@ CompositorParent::RecvRequestOverfill()
   unused << SendOverfill(overfillRatio);
   return true;
 }
+
+void
+CompositorParent::GetAPZTestData(const LayerTransactionParent* aLayerTree,
+                                 APZTestData* aOutData)
+{
+  *aOutData = sIndirectLayerTrees[mRootLayerTreeID].mApzTestData;
+}
+
 
 void
 CompositorParent::InitializeLayerManager(const nsTArray<LayersBackend>& aBackendHints)
@@ -1131,11 +1146,14 @@ public:
   virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
                                    const TargetConfig& aTargetConfig,
                                    bool aIsFirstPaint,
-                                   bool aScheduleComposite) MOZ_OVERRIDE;
+                                   bool aScheduleComposite,
+                                   uint32_t aPaintSequenceNumber) MOZ_OVERRIDE;
   virtual void ForceComposite(LayerTransactionParent* aLayerTree) MOZ_OVERRIDE;
   virtual bool SetTestSampleTime(LayerTransactionParent* aLayerTree,
                                  const TimeStamp& aTime) MOZ_OVERRIDE;
   virtual void LeaveTestMode(LayerTransactionParent* aLayerTree) MOZ_OVERRIDE;
+  virtual void GetAPZTestData(const LayerTransactionParent* aLayerTree,
+                              APZTestData* aOutData) MOZ_OVERRIDE;
 
   virtual AsyncCompositionManager* GetCompositionManager(LayerTransactionParent* aParent) MOZ_OVERRIDE;
 
@@ -1207,10 +1225,10 @@ UpdateIndirectTree(uint64_t aId, Layer* aRoot, const TargetConfig& aTargetConfig
   sIndirectLayerTrees[aId].mTargetConfig = aTargetConfig;
 }
 
-/* static */ const CompositorParent::LayerTreeState*
+/* static */ CompositorParent::LayerTreeState*
 CompositorParent::GetIndirectShadowTree(uint64_t aId)
 {
-  LayerTreeMap::const_iterator cit = sIndirectLayerTrees.find(aId);
+  LayerTreeMap::iterator cit = sIndirectLayerTrees.find(aId);
   if (sIndirectLayerTrees.end() == cit) {
     return nullptr;
   }
@@ -1291,7 +1309,8 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
   LayerTransactionParent* aLayerTree,
   const TargetConfig& aTargetConfig,
   bool aIsFirstPaint,
-  bool aScheduleComposite)
+  bool aScheduleComposite,
+  uint32_t aPaintSequenceNumber)
 {
   uint64_t id = aLayerTree->GetId();
 
@@ -1310,7 +1329,8 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
   }
   UpdateIndirectTree(id, shadowRoot, aTargetConfig);
 
-  state->mParent->NotifyShadowTreeTransaction(id, aIsFirstPaint, aScheduleComposite);
+  state->mParent->NotifyShadowTreeTransaction(id, aIsFirstPaint, aScheduleComposite,
+      aPaintSequenceNumber);
 }
 
 void
@@ -1349,6 +1369,16 @@ CrossProcessCompositorParent::LeaveTestMode(LayerTransactionParent* aLayerTree)
   MOZ_ASSERT(state->mParent);
   state->mParent->LeaveTestMode(aLayerTree);
 }
+
+void
+CrossProcessCompositorParent::GetAPZTestData(const LayerTransactionParent* aLayerTree,
+                                             APZTestData* aOutData)
+{
+  uint64_t id = aLayerTree->GetId();
+  MOZ_ASSERT(id != 0);
+  *aOutData = sIndirectLayerTrees[id].mApzTestData;
+}
+
 
 AsyncCompositionManager*
 CrossProcessCompositorParent::GetCompositionManager(LayerTransactionParent* aLayerTree)
