@@ -772,13 +772,12 @@ let CustomizableUIInternal = {
         continue;
       }
 
-      let container = areaNode.customizationTarget;
       let widgetNode = window.document.getElementById(aWidgetId);
-      if (!widgetNode || !container.contains(widgetNode)) {
+      if (!widgetNode) {
         INFO("Widget not found, unable to remove");
         continue;
       }
-
+      let container = areaNode.customizationTarget;
       if (isOverflowable) {
         container = areaNode.overflowable.getContainerFor(widgetNode);
       }
