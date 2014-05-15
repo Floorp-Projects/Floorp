@@ -251,7 +251,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
     if (!useSandbox) {
         //-- Don't outside a sandbox unless the script principal subsumes the
         //   principal of the context.
-        nsIPrincipal* objectPrincipal = nsContentUtils::GetObjectPrincipal(globalJSObject);
+        nsIPrincipal* objectPrincipal = nsContentUtils::ObjectPrincipal(globalJSObject);
 
         bool subsumes;
         rv = principal->Subsumes(objectPrincipal, &subsumes);

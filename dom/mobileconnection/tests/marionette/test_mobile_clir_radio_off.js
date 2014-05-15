@@ -32,5 +32,5 @@ startTestCommon(function() {
     .then(() => testGetClirOnRadioOff())
     // Restore radio state.
     .then(() => setRadioEnabledAndWait(true),
-          () => setRadioEnabledAnWait(true));
+          () => setRadioEnabledAndWait(true));
 });

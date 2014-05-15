@@ -128,7 +128,7 @@ GetValueOutput(LInstruction *ins)
 }
 
 static inline ValueOperand
-GetTempValue(const Register &type, const Register &payload)
+GetTempValue(Register type, Register payload)
 {
 #if defined(JS_NUNBOX32)
     return ValueOperand(type, payload);

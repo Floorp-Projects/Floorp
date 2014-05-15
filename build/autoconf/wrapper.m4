@@ -13,6 +13,18 @@ MOZ_ARG_WITH_STRING(compiler_wrapper,
     COMPILER_WRAPPER=$withval, COMPILER_WRAPPER="no")
 
 if test "$COMPILER_WRAPPER" != "no"; then
+    case "$target" in
+    *-mingw*)
+        dnl When giving a windows path with backslashes, js/src/configure
+        dnl fails because of double wrapping because the test further below
+        dnl doesn't work with backslashes. While fixing that test to work
+        dnl might seem better, a lot of the make build backend actually
+        dnl doesn't like backslashes, so normalize windows paths to use
+        dnl forward slashes.
+        COMPILER_WRAPPER=`echo "$COMPILER_WRAPPER" | tr '\\' '/'`
+        ;;
+    esac
+
     case "$CC" in
     $COMPILER_WRAPPER\ *)
         :

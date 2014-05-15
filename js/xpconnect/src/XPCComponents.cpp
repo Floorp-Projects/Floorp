@@ -3631,7 +3631,7 @@ nsXPCComponents_Utils::GetObjectPrincipal(HandleValue val, JSContext *cx,
     obj = js::CheckedUnwrap(obj);
     MOZ_ASSERT(obj);
 
-    nsCOMPtr<nsIPrincipal> prin = nsContentUtils::GetObjectPrincipal(obj);
+    nsCOMPtr<nsIPrincipal> prin = nsContentUtils::ObjectPrincipal(obj);
     prin.forget(result);
     return NS_OK;
 }
