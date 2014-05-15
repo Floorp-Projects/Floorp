@@ -107,6 +107,7 @@ BaselineCompiler::compile()
         return Method_Error;
 
     Linker linker(masm);
+    AutoFlushICache afc("Baseline");
     JitCode *code = linker.newCode<CanGC>(cx, JSC::BASELINE_CODE);
     if (!code)
         return Method_Error;
