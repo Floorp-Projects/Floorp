@@ -1606,6 +1606,22 @@ DisableTraceLogger(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+#ifdef DEBUG
+static bool
+DumpObject(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject arg0(cx);
+    if (!JS_ConvertArguments(cx, args, "o", arg0.address()))
+        return false;
+
+    js_DumpObject(arg0);
+
+    args.rval().setUndefined();
+    return true;
+}
+#endif
+
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'compartment')",
@@ -1875,6 +1891,13 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("stopTraceLogger", DisableTraceLogger, 0, 0,
 "stopTraceLogger()",
 "  Stop logging the mainThread."),
+
+#ifdef DEBUG
+    JS_FN_HELP("dumpObject", DumpObject, 1, 0,
+"dumpObject()",
+"  Dump an internal representation of an object."),
+#endif
+
     JS_FS_HELP_END
 };
 
