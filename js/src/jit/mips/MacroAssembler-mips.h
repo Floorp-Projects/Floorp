@@ -935,7 +935,7 @@ public:
         framePushed_ += sizeof(word.value);
         return pushWithPatch(word);
     }
-    CodeOffsetLabel PushWithPatch(const ImmPtr &imm) {
+    CodeOffsetLabel PushWithPatch(ImmPtr imm) {
         return PushWithPatch(ImmWord(uintptr_t(imm.value)));
     }
 
@@ -1025,7 +1025,7 @@ public:
 
     void movePtr(Register src, Register dest);
     void movePtr(ImmWord imm, Register dest);
-    void movePtr(const ImmPtr &imm, Register dest);
+    void movePtr(ImmPtr imm, Register dest);
     void movePtr(const AsmJSImmPtr &imm, Register dest);
     void movePtr(const ImmGCPtr &imm, Register dest);
 

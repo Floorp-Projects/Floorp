@@ -214,7 +214,7 @@ class Assembler : public AssemblerX86Shared
         movl(Imm32(word.value), dest);
         return masm.currentOffset();
     }
-    CodeOffsetLabel movWithPatch(const ImmPtr &imm, Register dest) {
+    CodeOffsetLabel movWithPatch(ImmPtr imm, Register dest) {
         return movWithPatch(ImmWord(uintptr_t(imm.value)), dest);
     }
 

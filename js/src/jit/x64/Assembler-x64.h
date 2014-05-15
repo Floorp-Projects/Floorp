@@ -279,7 +279,7 @@ class Assembler : public AssemblerX86Shared
             push(ScratchReg);
         }
     }
-    void push(const ImmPtr &imm) {
+    void push(ImmPtr imm) {
         push(ImmWord(uintptr_t(imm.value)));
     }
     void push(const FloatRegister &src) {
@@ -301,7 +301,7 @@ class Assembler : public AssemblerX86Shared
         masm.movq_i64r(word.value, dest.code());
         return masm.currentOffset();
     }
-    CodeOffsetLabel movWithPatch(const ImmPtr &imm, Register dest) {
+    CodeOffsetLabel movWithPatch(ImmPtr imm, Register dest) {
         return movWithPatch(ImmWord(uintptr_t(imm.value)), dest);
     }
 
