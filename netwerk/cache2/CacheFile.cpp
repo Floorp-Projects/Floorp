@@ -1362,6 +1362,50 @@ CacheFile::RemoveChunkInternal(CacheFileChunk *aChunk, bool aCacheChunk)
   mChunks.Remove(aChunk->Index());
 }
 
+int64_t
+CacheFile::BytesFromChunk(uint32_t aIndex)
+{
+  AssertOwnsLock();
+
+  if (!mDataSize)
+    return 0;
+
+  uint32_t lastChunk = (mDataSize - 1) / kChunkSize;
+  if (aIndex > lastChunk)
+    return 0;
+
+  uint32_t i;
+  for (i = aIndex; i <= lastChunk; ++i) {
+    CacheFileChunk * chunk;
+
+    chunk = mChunks.GetWeak(i);
+    if (chunk) {
+      MOZ_ASSERT(i == lastChunk || chunk->mDataSize == kChunkSize);
+      if (chunk->IsReady()) {
+        continue;
+      }
+
+      // don't search this chunk in cached
+      break;
+    }
+
+    chunk = mCachedChunks.GetWeak(i);
+    if (chunk) {
+      MOZ_ASSERT(i == lastChunk || chunk->mDataSize == kChunkSize);
+      continue;
+    }
+
+    break;
+  }
+
+  // theoretic bytes in advance
+  int64_t advance = int64_t(i - aIndex) * kChunkSize;
+  // real bytes till the end of the file
+  int64_t tail = mDataSize - (aIndex * kChunkSize);
+
+  return std::min(advance, tail);
+}
+
 nsresult
 CacheFile::RemoveInput(CacheFileInputStream *aInput)
 {
