@@ -13,9 +13,10 @@ let { Ci, Cc, CC, Cu, Cr } = require("chrome");
 let Debugger = require("Debugger");
 let Services = require("Services");
 let { ActorPool } = require("devtools/server/actors/common");
-let { DebuggerTransport, LocalDebuggerTransport, ChildDebuggerTransport } = require("devtools/server/transport");
+let { DebuggerTransport, LocalDebuggerTransport, ChildDebuggerTransport } =
+  require("devtools/toolkit/transport/transport");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-let { dumpn, dbg_assert } = DevToolsUtils;
+let { dumpn, dumpv, dbg_assert } = DevToolsUtils;
 let Services = require("Services");
 let EventEmitter = require("devtools/toolkit/event-emitter");
 
@@ -35,6 +36,7 @@ this.Services = Services;
 this.ActorPool = ActorPool;
 this.DevToolsUtils = DevToolsUtils;
 this.dumpn = dumpn;
+this.dumpv = dumpv;
 this.dbg_assert = dbg_assert;
 
 // Overload `Components` to prevent SDK loader exception on Components
@@ -47,7 +49,13 @@ const DBG_STRINGS_URI = "chrome://global/locale/devtools/debugger.properties";
 
 const nsFile = CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-dumpn.wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
+
+const LOG_PREF = "devtools.debugger.log";
+const VERBOSE_PREF = "devtools.debugger.log.verbose";
+dumpn.wantLogging = Services.prefs.getBoolPref(LOG_PREF);
+dumpv.wantVerbose =
+  Services.prefs.getPrefType(VERBOSE_PREF) !== Services.prefs.PREF_INVALID &&
+  Services.prefs.getBoolPref(VERBOSE_PREF);
 
 Cu.import("resource://gre/modules/devtools/deprecated-sync-thenables.js");
 
@@ -501,7 +509,7 @@ var DebuggerServer = {
    *
    * @param aPrefix string [optional]
    *    If given, all actors in this connection will have names starting
-   *    with |aPrefix + ':'|.
+   *    with |aPrefix + '/'|.
    * @returns a client-side DebuggerTransport for communicating with
    *    the newly-created connection.
    */
@@ -541,7 +549,7 @@ var DebuggerServer = {
    *    The prefix we should use in our nsIMessageSender message names and
    *    actor names. This connection will use messages named
    *    "debug:<prefix>:packet", and all its actors will have names
-   *    beginning with "<prefix>:".
+   *    beginning with "<prefix>/".
    */
   connectToParent: function(aPrefix, aMessageManager) {
     this._checkInit();
@@ -691,13 +699,13 @@ var DebuggerServer = {
    *
    * If present, |aForwardingPrefix| is a forwarding prefix that a parent
    * server is using to recognizes messages intended for this server. Ensure
-   * that all our actors have names beginning with |aForwardingPrefix + ':'|.
-   * In particular, the root actor's name will be |aForwardingPrefix + ':root'|.
+   * that all our actors have names beginning with |aForwardingPrefix + '/'|.
+   * In particular, the root actor's name will be |aForwardingPrefix + '/root'|.
    */
   _onConnection: function DS_onConnection(aTransport, aForwardingPrefix, aNoRootActor = false) {
     let connID;
     if (aForwardingPrefix) {
-      connID = aForwardingPrefix + ":";
+      connID = aForwardingPrefix + "/";
     } else {
       connID = "conn" + this._nextConnID++ + '.';
     }
@@ -708,7 +716,7 @@ var DebuggerServer = {
     if (!aNoRootActor) {
       conn.rootActor = this.createRootActor(conn);
       if (aForwardingPrefix)
-        conn.rootActor.actorID = aForwardingPrefix + ":root";
+        conn.rootActor.actorID = aForwardingPrefix + "/root";
       else
         conn.rootActor.actorID = "root";
       conn.addActor(conn.rootActor);
@@ -873,7 +881,7 @@ function DebuggerServerConnection(aPrefix, aTransport)
    * We can forward packets to other servers, if the actors on that server
    * all use a distinct prefix on their names. This is a map from prefixes
    * to transports: it maps a prefix P to a transport T if T conveys
-   * packets to the server whose actors' names all begin with P + ":".
+   * packets to the server whose actors' names all begin with P + "/".
    */
   this._forwardingPrefixes = new Map;
 }
@@ -891,6 +899,14 @@ DebuggerServerConnection.prototype = {
 
   send: function DSC_send(aPacket) {
     this.transport.send(aPacket);
+  },
+
+  /**
+   * Used when sending a bulk reply from an actor.
+   * @see DebuggerTransport.prototype.startBulkSend
+   */
+  startBulkSend: function(header) {
+    return this.transport.startBulkSend(header);
   },
 
   allocID: function DSC_allocID(aPrefix) {
@@ -964,6 +980,37 @@ DebuggerServerConnection.prototype = {
     return null;
   },
 
+  _getOrCreateActor: function(actorID) {
+    let actor = this.getActor(actorID);
+    if (!actor) {
+      this.transport.send({ from: actorID ? actorID : "root",
+                            error: "noSuchActor",
+                            message: "No such actor for ID: " + actorID });
+      return;
+    }
+
+    // Dyamically-loaded actors have to be created lazily.
+    if (typeof actor == "function") {
+      let instance;
+      try {
+        instance = new actor();
+      } catch (e) {
+        this.transport.send(this._unknownError(
+          "Error occurred while creating actor '" + actor.name,
+          e));
+      }
+      instance.parentID = actor.parentID;
+      // We want the newly-constructed actor to completely replace the factory
+      // actor. Reusing the existing actor ID will make sure ActorPool.addActor
+      // does the right thing.
+      instance.actorID = actor.actorID;
+      actor.registeredPool.addActor(instance);
+      actor = instance;
+    }
+
+    return actor;
+  },
+
   poolFor: function DSC_actorPool(aActorID) {
     if (this._actorPool && this._actorPool.has(aActorID)) {
       return this._actorPool;
@@ -985,6 +1032,26 @@ DebuggerServerConnection.prototype = {
       error: "unknownError",
       message: errorString
     };
+  },
+
+  _queueResponse: function(from, type, response) {
+    let pendingResponse = this._actorResponses.get(from) || resolve(null);
+    let responsePromise = pendingResponse.then(() => {
+      return response;
+    }).then(aResponse => {
+      if (!aResponse.from) {
+        aResponse.from = from;
+      }
+      this.transport.send(aResponse);
+    }).then(null, (e) => {
+      let errorPacket = this._unknownError(
+        "error occurred while processing '" + type,
+        e);
+      errorPacket.from = from;
+      this.transport.send(errorPacket);
+    });
+
+    this._actorResponses.set(from, responsePromise);
   },
 
   /**
@@ -1019,15 +1086,15 @@ DebuggerServerConnection.prototype = {
    * forward debugging connections to child processes.
    *
    * If we receive a packet for an actor whose name begins with |aPrefix|
-   * followed by ':', then we will forward that packet to |aTransport|.
+   * followed by '/', then we will forward that packet to |aTransport|.
    *
    * This overrides any prior forwarding for |aPrefix|.
    *
    * @param aPrefix string
-   *    The actor name prefix, not including the ':'.
+   *    The actor name prefix, not including the '/'.
    * @param aTransport object
    *    A packet transport to which we should forward packets to actors
-   *    whose names begin with |(aPrefix + ':').|
+   *    whose names begin with |(aPrefix + '/').|
    */
   setForwarding: function(aPrefix, aTransport) {
     this._forwardingPrefixes.set(aPrefix, aTransport);
@@ -1035,7 +1102,7 @@ DebuggerServerConnection.prototype = {
 
   /*
    * Stop forwarding messages to actors whose names begin with
-   * |aPrefix+':'|. Such messages will now elicit 'noSuchActor' errors.
+   * |aPrefix+'/'|. Such messages will now elicit 'noSuchActor' errors.
    */
   cancelForwarding: function(aPrefix) {
     this._forwardingPrefixes.delete(aPrefix);
@@ -1057,9 +1124,9 @@ DebuggerServerConnection.prototype = {
     // forwarding is needed: in DebuggerServerConnection instances in child
     // processes, every actor has a prefixed name.
     if (this._forwardingPrefixes.size > 0) {
-      let colon = aPacket.to.indexOf(':');
-      if (colon >= 0) {
-        let forwardTo = this._forwardingPrefixes.get(aPacket.to.substring(0, colon));
+      let separator = aPacket.to.indexOf('/');
+      if (separator >= 0) {
+        let forwardTo = this._forwardingPrefixes.get(aPacket.to.substring(0, separator));
         if (forwardTo) {
           forwardTo.send(aPacket);
           return;
@@ -1067,31 +1134,9 @@ DebuggerServerConnection.prototype = {
       }
     }
 
-    let actor = this.getActor(aPacket.to);
+    let actor = this._getOrCreateActor(aPacket.to);
     if (!actor) {
-      this.transport.send({ from: aPacket.to ? aPacket.to : "root",
-                            error: "noSuchActor",
-                            message: "No such actor for ID: " + aPacket.to });
       return;
-    }
-
-    // Dyamically-loaded actors have to be created lazily.
-    if (typeof actor == "function") {
-      let instance;
-      try {
-        instance = new actor();
-      } catch (e) {
-        this.transport.send(this._unknownError(
-          "Error occurred while creating actor '" + actor.name,
-          e));
-      }
-      instance.parentID = actor.parentID;
-      // We want the newly-constructed actor to completely replace the factory
-      // actor. Reusing the existing actor ID will make sure ActorPool.addActor
-      // does the right thing.
-      instance.actorID = actor.actorID;
-      actor.registeredPool.addActor(instance);
-      actor = instance;
     }
 
     var ret = null;
@@ -1113,34 +1158,75 @@ DebuggerServerConnection.prototype = {
       }
     } else {
       ret = { error: "unrecognizedPacketType",
-              message: ('Actor "' + actor.actorID +
-                        '" does not recognize the packet type "' +
-                        aPacket.type + '"') };
+              message: ("Actor " + actor.actorID +
+                        " does not recognize the packet type " +
+                        aPacket.type) };
     }
 
-    if (!ret) {
-      // This should become an error once we've converted every user
-      // of this to promises in bug 794078.
+    // There will not be a return value if a bulk reply is sent.
+    if (ret) {
+      this._queueResponse(aPacket.to, aPacket.type, ret);
+    }
+  },
+
+  /**
+   * Called by the DebuggerTransport to dispatch incoming bulk packets as
+   * appropriate.
+   *
+   * @param packet object
+   *        The incoming packet, which contains:
+   *        * actor:  Name of actor that will receive the packet
+   *        * type:   Name of actor's method that should be called on receipt
+   *        * length: Size of the data to be read
+   *        * stream: This input stream should only be used directly if you can
+   *                  ensure that you will read exactly |length| bytes and will
+   *                  not close the stream when reading is complete
+   *        * done:   If you use the stream directly (instead of |copyTo|
+   *                  below), you must signal completion by resolving /
+   *                  rejecting this deferred.  If it's rejected, the transport
+   *                  will be closed.  If an Error is supplied as a rejection
+   *                  value, it will be logged via |dumpn|.  If you do use
+   *                  |copyTo|, resolving is taken care of for you when copying
+   *                  completes.
+   *        * copyTo: A helper function for getting your data out of the stream
+   *                  that meets the stream handling requirements above, and has
+   *                  the following signature:
+   *          @param  output nsIAsyncOutputStream
+   *                  The stream to copy to.
+   *          @return Promise
+   *                  The promise is resolved when copying completes or rejected
+   *                  if any (unexpected) errors occur.
+   */
+  onBulkPacket: function(packet) {
+    let { actor: actorKey, type, length } = packet;
+
+    let actor = this._getOrCreateActor(actorKey);
+    if (!actor) {
       return;
     }
 
-    let pendingResponse = this._actorResponses.get(actor.actorID) || resolve(null);
-    let response = pendingResponse.then(() => {
-      return ret;
-    }).then(aResponse => {
-      if (!aResponse.from) {
-        aResponse.from = aPacket.to;
+    // Dispatch the request to the actor.
+    let ret;
+    if (actor.requestTypes && actor.requestTypes[type]) {
+      try {
+        ret = actor.requestTypes[type].call(actor, packet);
+      } catch(e) {
+        this.transport.send(this._unknownError(
+          "error occurred while processing bulk packet '" + type, e));
+        packet.done.reject(e);
       }
-      this.transport.send(aResponse);
-    }).then(null, (e) => {
-      let errorPacket = this._unknownError(
-        "error occurred while processing '" + aPacket.type,
-        e);
-      errorPacket.from = aPacket.to;
-      this.transport.send(errorPacket);
-    });
+    } else {
+      let message = "Actor " + actorKey +
+                    " does not recognize the bulk packet type " + type;
+      ret = { error: "unrecognizedPacketType",
+              message: message };
+      packet.done.reject(new Error(message));
+    }
 
-    this._actorResponses.set(actor.actorID, response);
+    // If there is a JSON response, queue it for sending back to the client.
+    if (ret) {
+      this._queueResponse(actorKey, type, ret);
+    }
   },
 
   /**

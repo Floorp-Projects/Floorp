@@ -9,12 +9,14 @@ var Ci = Components.interfaces;
 var Cc = Components.classes;
 var Cu = Components.utils;
 var Cr = Components.results;
+var CC = Components.Constructor;
 // On B2G scope object misbehaves and we have to bind globals to `this`
 // in order to ensure theses variable to be visible in transport.js
 this.Ci = Ci;
 this.Cc = Cc;
 this.Cu = Cu;
 this.Cr = Cr;
+this.CC = CC;
 
 this.EXPORTED_SYMBOLS = ["DebuggerTransport",
                          "DebuggerClient",
@@ -42,6 +44,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
 XPCOMUtils.defineLazyModuleGetter(this, "devtools",
                                   "resource://gre/modules/devtools/Loader.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "events", () => {
+  return devtools.require("sdk/event/core");
+});
+
 Object.defineProperty(this, "WebConsoleClient", {
   get: function () {
     return devtools.require("devtools/toolkit/webconsole/client").WebConsoleClient;
@@ -53,18 +59,28 @@ Object.defineProperty(this, "WebConsoleClient", {
 Components.utils.import("resource://gre/modules/devtools/DevToolsUtils.jsm");
 this.makeInfallible = DevToolsUtils.makeInfallible;
 
-let wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
+let LOG_PREF = "devtools.debugger.log";
+let VERBOSE_PREF = "devtools.debugger.log.verbose";
+let wantLogging = Services.prefs.getBoolPref(LOG_PREF);
+let wantVerbose =
+  Services.prefs.getPrefType(VERBOSE_PREF) !== Services.prefs.PREF_INVALID &&
+  Services.prefs.getBoolPref(VERBOSE_PREF);
 
-function dumpn(str)
-{
+function dumpn(str) {
   if (wantLogging) {
     dump("DBG-CLIENT: " + str + "\n");
   }
 }
 
+function dumpv(msg) {
+  if (wantVerbose) {
+    dumpn(msg);
+  }
+}
+
 let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader);
-loader.loadSubScript("resource://gre/modules/devtools/server/transport.js", this);
+loader.loadSubScript("resource://gre/modules/devtools/transport/transport.js", this);
 
 /**
  * Add simple event notification to a prototype object. Any object that has
@@ -612,8 +628,41 @@ DebuggerClient.prototype = {
    * @param aRequest object
    *        A JSON packet to send to the debugging server.
    * @param aOnResponse function
-   *        If specified, will be called with the response packet when
+   *        If specified, will be called with the JSON response packet when
    *        debugging server responds.
+   * @return Request
+   *         This object emits a number of events to allow you to respond to
+   *         different parts of the request lifecycle.
+   *         Note: This return value can be ignored if you are using JSON alone,
+   *         because the callback provided in |aOnResponse| will be bound to the
+   *         "json-reply" event automatically.
+   *
+   *         Events emitted:
+   *         * json-reply: The server replied with a JSON packet, which is
+   *           passed as event data.
+   *         * bulk-reply: The server replied with bulk data, which you can read
+   *           using the event data object containing:
+   *           * actor:  Name of actor that received the packet
+   *           * type:   Name of actor's method that was called on receipt
+   *           * length: Size of the data to be read
+   *           * stream: This input stream should only be used directly if you
+   *                     can ensure that you will read exactly |length| bytes
+   *                     and will not close the stream when reading is complete
+   *           * done:   If you use the stream directly (instead of |copyTo|
+   *                     below), you must signal completion by resolving /
+   *                     rejecting this deferred.  If it's rejected, the
+   *                     transport will be closed.  If an Error is supplied as a
+   *                     rejection value, it will be logged via |dumpn|.  If you
+   *                     do use |copyTo|, resolving is taken care of for you
+   *                     when copying completes.
+   *           * copyTo: A helper function for getting your data out of the
+   *                     stream that meets the stream handling requirements
+   *                     above, and has the following signature:
+   *             @param  output nsIAsyncOutputStream
+   *                     The stream to copy to.
+   *             @return Promise
+   *                     The promise is resolved when copying completes or
+   *                     rejected if any (unexpected) errors occur.
    */
   request: function (aRequest, aOnResponse) {
     if (!this.mainRoot) {
@@ -624,10 +673,111 @@ DebuggerClient.prototype = {
       throw Error("'" + type + "' request packet has no destination.");
     }
 
-    this._pendingRequests.push({ to: aRequest.to,
-                                 request: aRequest,
-                                 onResponse: aOnResponse });
+    let request = new Request(aRequest);
+    request.format = "json";
+    if (aOnResponse) {
+      request.on("json-reply", aOnResponse);
+    }
+
+    this._pendingRequests.push(request);
     this._sendRequests();
+
+    return request;
+  },
+
+  /**
+   * Transmit streaming data via a bulk request.
+   *
+   * This method initiates the bulk send process by queuing up the header data.
+   * The caller receives eventual access to a stream for writing.
+   *
+   * Since this opens up more options for how the server might respond (it could
+   * send back either JSON or bulk data), and the returned Request object emits
+   * events for different stages of the request process that you may want to
+   * react to.
+   *
+   * @param request Object
+   *        This is modeled after the format of JSON packets above, but does not
+   *        actually contain the data, but is instead just a routing header:
+   *          * actor:  Name of actor that will receive the packet
+   *          * type:   Name of actor's method that should be called on receipt
+   *          * length: Size of the data to be sent
+   * @return Request
+   *         This object emits a number of events to allow you to respond to
+   *         different parts of the request lifecycle.
+   *
+   *         Events emitted:
+   *         * bulk-send-ready: Ready to send bulk data to the server, using the
+   *           event data object containing:
+   *           * stream:   This output stream should only be used directly if
+   *                       you can ensure that you will write exactly |length|
+   *                       bytes and will not close the stream when writing is
+   *                       complete
+   *           * done:     If you use the stream directly (instead of |copyFrom|
+   *                       below), you must signal completion by resolving /
+   *                       rejecting this deferred.  If it's rejected, the
+   *                       transport will be closed.  If an Error is supplied as
+   *                       a rejection value, it will be logged via |dumpn|.  If
+   *                       you do use |copyFrom|, resolving is taken care of for
+   *                       you when copying completes.
+   *           * copyFrom: A helper function for getting your data onto the
+   *                       stream that meets the stream handling requirements
+   *                       above, and has the following signature:
+   *             @param  input nsIAsyncInputStream
+   *                     The stream to copy from.
+   *             @return Promise
+   *                     The promise is resolved when copying completes or
+   *                     rejected if any (unexpected) errors occur.
+   *         * json-reply: The server replied with a JSON packet, which is
+   *           passed as event data.
+   *         * bulk-reply: The server replied with bulk data, which you can read
+   *           using the event data object containing:
+   *           * actor:  Name of actor that received the packet
+   *           * type:   Name of actor's method that was called on receipt
+   *           * length: Size of the data to be read
+   *           * stream: This input stream should only be used directly if you
+   *                     can ensure that you will read exactly |length| bytes
+   *                     and will not close the stream when reading is complete
+   *           * done:   If you use the stream directly (instead of |copyTo|
+   *                     below), you must signal completion by resolving /
+   *                     rejecting this deferred.  If it's rejected, the
+   *                     transport will be closed.  If an Error is supplied as a
+   *                     rejection value, it will be logged via |dumpn|.  If you
+   *                     do use |copyTo|, resolving is taken care of for you
+   *                     when copying completes.
+   *           * copyTo: A helper function for getting your data out of the
+   *                     stream that meets the stream handling requirements
+   *                     above, and has the following signature:
+   *             @param  output nsIAsyncOutputStream
+   *                     The stream to copy to.
+   *             @return Promise
+   *                     The promise is resolved when copying completes or
+   *                     rejected if any (unexpected) errors occur.
+   */
+  startBulkRequest: function(request) {
+    if (!this.traits.bulk) {
+      throw Error("Server doesn't support bulk transfers");
+    }
+    if (!this.mainRoot) {
+      throw Error("Have not yet received a hello packet from the server.");
+    }
+    if (!request.type) {
+      throw Error("Bulk packet is missing the required 'type' field.");
+    }
+    if (!request.actor) {
+      throw Error("'" + request.type + "' bulk packet has no destination.");
+    }
+    if (!request.length) {
+      throw Error("'" + request.type + "' bulk packet has no length.");
+    }
+
+    let request = new Request(request);
+    request.format = "bulk";
+
+    this._pendingRequests.push(request);
+    this._sendRequests();
+
+    return request;
   },
 
   /**
@@ -636,30 +786,50 @@ DebuggerClient.prototype = {
    */
   _sendRequests: function () {
     this._pendingRequests = this._pendingRequests.filter((request) => {
-      if (this._activeRequests.has(request.to)) {
+      let dest = request.actor;
+
+      if (this._activeRequests.has(dest)) {
         return true;
       }
 
-      this.expectReply(request.to, request.onResponse);
-      this._transport.send(request.request);
+      this.expectReply(dest, request);
+
+      if (request.format === "json") {
+        this._transport.send(request.request);
+        return false;
+      }
+
+      this._transport.startBulkSend(request.request).then((...args) => {
+        request.emit("bulk-send-ready", ...args);
+      });
 
       return false;
     });
   },
 
   /**
-   * Arrange to hand the next reply from |aActor| to |aHandler|.
+   * Arrange to hand the next reply from |aActor| to the handler bound to
+   * |aRequest|.
    *
-   * DebuggerClient.prototype.request usually takes care of establishing
-   * the handler for a given request, but in rare cases (well, greetings
-   * from new root actors, is the only case at the moment) we must be
+   * DebuggerClient.prototype.request / startBulkRequest usually takes care of
+   * establishing the handler for a given request, but in rare cases (well,
+   * greetings from new root actors, is the only case at the moment) we must be
    * prepared for a "reply" that doesn't correspond to any request we sent.
    */
-  expectReply: function (aActor, aHandler) {
+  expectReply: function (aActor, aRequest) {
     if (this._activeRequests.has(aActor)) {
       throw Error("clashing handlers for next reply from " + uneval(aActor));
     }
-    this._activeRequests.set(aActor, aHandler);
+
+    // If a handler is passed directly (as it is with the handler for the root
+    // actor greeting), create a dummy request to bind this to.
+    if (typeof aRequest === "function") {
+      let handler = aRequest;
+      aRequest = new Request();
+      aRequest.on("json-reply", handler);
+    }
+
+    this._activeRequests.set(aActor, aRequest);
   },
 
   // Transport hooks.
@@ -694,7 +864,7 @@ DebuggerClient.prototype = {
         return;
       }
 
-      let onResponse;
+      let activeRequest;
       // See if we have a handler function waiting for a reply from this
       // actor. (Don't count unsolicited notifications or pauses as
       // replies.)
@@ -702,7 +872,7 @@ DebuggerClient.prototype = {
           !(aPacket.type in UnsolicitedNotifications) &&
           !(aPacket.type == ThreadStateTypes.paused &&
             aPacket.why.type in UnsolicitedPauses)) {
-        onResponse = this._activeRequests.get(aPacket.from);
+        activeRequest = this._activeRequests.get(aPacket.from);
         this._activeRequests.delete(aPacket.from);
       }
 
@@ -727,12 +897,64 @@ DebuggerClient.prototype = {
         this.notify(aPacket.type, aPacket);
       }
 
-      if (onResponse) {
-        onResponse(aPacket);
+      if (activeRequest) {
+        activeRequest.emit("json-reply", aPacket);
       }
 
       this._sendRequests();
     }, ex => DevToolsUtils.reportException("onPacket handler", ex));
+  },
+
+  /**
+   * Called by the DebuggerTransport to dispatch incoming bulk packets as
+   * appropriate.
+   *
+   * @param packet object
+   *        The incoming packet, which contains:
+   *        * actor:  Name of actor that will receive the packet
+   *        * type:   Name of actor's method that should be called on receipt
+   *        * length: Size of the data to be read
+   *        * stream: This input stream should only be used directly if you can
+   *                  ensure that you will read exactly |length| bytes and will
+   *                  not close the stream when reading is complete
+   *        * done:   If you use the stream directly (instead of |copyTo|
+   *                  below), you must signal completion by resolving /
+   *                  rejecting this deferred.  If it's rejected, the transport
+   *                  will be closed.  If an Error is supplied as a rejection
+   *                  value, it will be logged via |dumpn|.  If you do use
+   *                  |copyTo|, resolving is taken care of for you when copying
+   *                  completes.
+   *        * copyTo: A helper function for getting your data out of the stream
+   *                  that meets the stream handling requirements above, and has
+   *                  the following signature:
+   *          @param  output nsIAsyncOutputStream
+   *                  The stream to copy to.
+   *          @return Promise
+   *                  The promise is resolved when copying completes or rejected
+   *                  if any (unexpected) errors occur.
+   */
+  onBulkPacket: function(packet) {
+    let { actor, type, length } = packet;
+
+    if (!actor) {
+      DevToolsUtils.reportException(
+        "onBulkPacket",
+        new Error("Server did not specify an actor, dropping bulk packet: " +
+                  JSON.stringify(packet)));
+      return;
+    }
+
+    // See if we have a handler function waiting for a reply from this
+    // actor.
+    if (!this._activeRequests.has(actor)) {
+      return;
+    }
+
+    let activeRequest = this._activeRequests.get(actor);
+    this._activeRequests.delete(actor);
+    activeRequest.emit("bulk-reply", packet);
+
+    this._sendRequests();
   },
 
   /**
@@ -783,6 +1005,32 @@ DebuggerClient.prototype = {
 }
 
 eventSource(DebuggerClient.prototype);
+
+function Request(request) {
+  this.request = request;
+}
+
+Request.prototype = {
+
+  on: function(type, listener) {
+    events.on(this, type, listener);
+  },
+
+  off: function(type, listener) {
+    events.off(this, type, listener);
+  },
+
+  once: function(type, listener) {
+    events.once(this, type, listener);
+  },
+
+  emit: function(type, ...args) {
+    events.emit(this, type, ...args);
+  },
+
+  get actor() { return this.request.to || this.request.actor; }
+
+};
 
 // Constants returned by `FeatureCompatibilityShim.onPacketTest`.
 const SUPPORTED = 1;

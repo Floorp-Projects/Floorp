@@ -103,6 +103,8 @@
 
 <!-- Firefox Account strings. -->
 
+<string name="fxaccount_full_label">&fxaccount_full_label;</string>
+
 <!-- Firefox Account links. -->
 <!-- https://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/old-sync -->
 <string name="fxaccount_link_old_firefox">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/old-sync</string>
