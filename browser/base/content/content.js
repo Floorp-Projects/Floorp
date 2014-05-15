@@ -3,9 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let Cc = Components.classes;
-let Ci = Components.interfaces;
-let Cu = Components.utils;
+let {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -453,8 +451,11 @@ let TranslationHandler = {
 
   /* nsIWebProgressListener implementation */
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
+    // Don't bother if we're not a toplevel document, if this isn't the 'stop'
+    // notification, or if the content document has gone away
     if (!aWebProgress.isTopLevel ||
-        !(aStateFlags & Ci.nsIWebProgressListener.STATE_STOP))
+        !(aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) ||
+        !content)
       return;
 
     let url = aRequest.name;
