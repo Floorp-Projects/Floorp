@@ -610,13 +610,27 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
         mathVar == NS_MATHML_MATHVARIANT_BOLD_ITALIC ||
         mathVar == NS_MATHML_MATHVARIANT_ITALIC) {
       if (ch == ch2  && ch != 0x20 && ch != 0xA0) {
-        // Don't perform the transformation if a character cannot be
+        // Don't apply the CSS style if a character cannot be
         // transformed. There is an exception for whitespace as it is both
         // common and innocuous.
         doMathvariantStyling = false;
       }
-      // Undo the change as it will be handled as a font styling.
-      ch2 = ch;
+      if (ch2 != ch) {
+        // Bug 930504. Some platforms do not have fonts for Mathematical
+        // Alphanumeric Symbols. Hence we check whether the transformed
+        // character is actually available.
+        uint8_t matchType;
+        nsRefPtr<gfxFont> mathFont = fontGroup->
+          FindFontForChar(ch2, 0, HB_SCRIPT_COMMON, nullptr, &matchType);
+        if (mathFont) {
+          // Don't apply the CSS style if there is a math font for at least one
+          // of the transformed character in this text run.
+          doMathvariantStyling = false;
+        } else {
+          // We fallback to the original character.
+          ch2 = ch;
+        }
+      }
     }
 
     deletedCharsArray.AppendElement(false);
