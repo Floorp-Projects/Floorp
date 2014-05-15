@@ -55,6 +55,7 @@ const DOMAINHEADER = "/* Domainlist */\n" +
   "  const bool mIncludeSubdomains;\n" +
   "  const bool mTestMode;\n" +
   "  const bool mIsMoz;\n" +
+  "  const int32_t mId;\n" +
   "  const StaticPinset *pinset;\n" +
   "};\n\n";
 
@@ -444,6 +445,14 @@ function writeEntry(entry) {
   } else {
     printVal += "false, ";
   }
+  if (entry.id >= 256) {
+    throw("Not enough buckets in histogram");
+  }
+  if (entry.id >= 0) {
+    printVal += entry.id + ", ";
+  } else {
+    printVal += "-1, ";
+  }
   printVal += "&kPinset_" + entry.pins;
   printVal += " },\n";
   writeString(printVal);
@@ -464,6 +473,7 @@ function writeDomainList(chromeImportedEntries) {
 
   writeString("\nstatic const int kPublicKeyPinningPreloadListLength = " +
           count + ";\n");
+  writeString("\nstatic const int32_t kUnknownId = -1;\n");
 }
 
 function writeFile(certNameToSKD, certSKDToName,
