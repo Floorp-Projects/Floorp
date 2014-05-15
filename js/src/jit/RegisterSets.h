@@ -51,10 +51,10 @@ struct AnyRegister {
         JS_ASSERT(isFloat());
         return FloatRegister::FromCode(code_ - Registers::Total);
     }
-    bool operator ==(const AnyRegister &other) const {
+    bool operator ==(AnyRegister other) const {
         return code_ == other.code_;
     }
-    bool operator !=(const AnyRegister &other) const {
+    bool operator !=(AnyRegister other) const {
         return code_ != other.code_;
     }
     const char *name() const {
@@ -145,7 +145,7 @@ class TypedOrValueRegister
         return *data.value.addr();
     }
 
-    const AnyRegister &dataTyped() const {
+    AnyRegister dataTyped() const {
         JS_ASSERT(hasTyped());
         return *data.typed.addr();
     }
@@ -522,7 +522,7 @@ class RegisterSet {
     void add(FloatRegister reg) {
         fpu_.add(reg);
     }
-    void add(const AnyRegister &any) {
+    void add(AnyRegister any) {
         if (any.isFloat())
             add(any.fpu());
         else
@@ -550,7 +550,7 @@ class RegisterSet {
     void addUnchecked(FloatRegister reg) {
         fpu_.addUnchecked(reg);
     }
-    void addUnchecked(const AnyRegister &any) {
+    void addUnchecked(AnyRegister any) {
         if (any.isFloat())
             addUnchecked(any.fpu());
         else
@@ -574,7 +574,7 @@ class RegisterSet {
 #error "Bad architecture"
 #endif
     }
-    void take(const AnyRegister &reg) {
+    void take(AnyRegister reg) {
         if (reg.isFloat())
             fpu_.take(reg.fpu());
         else
