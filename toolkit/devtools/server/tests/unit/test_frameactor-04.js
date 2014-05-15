@@ -63,7 +63,7 @@ function test_frame_slice() {
       }
 
       for each (let key in ["type", "callee-name"]) {
-        do_check_eq(expected[key], actual[key]);
+        do_check_eq(expected[key] || undefined, actual[key]);
       }
     }
     test_frame_slice();
