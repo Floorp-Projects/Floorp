@@ -20,6 +20,8 @@ import org.mozilla.gecko.LightweightTheme;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.PropertyAnimator.PropertyAnimationListener;
 import org.mozilla.gecko.animation.ViewHelper;
@@ -375,6 +377,9 @@ public class BrowserToolbar extends ThemedRelativeLayout
             editCancel.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    Telemetry.sendUIEvent(TelemetryContract.Event.CANCEL,
+                                          TelemetryContract.Method.ACTIONBAR,
+                                          Integer.toString(editCancel.getId()));
                     cancelEdit();
                 }
             });
@@ -403,6 +408,8 @@ public class BrowserToolbar extends ThemedRelativeLayout
 
     public boolean onBackPressed() {
         if (isEditing()) {
+            Telemetry.sendUIEvent(TelemetryContract.Event.CANCEL,
+                                  TelemetryContract.Method.BACK);
             cancelEdit();
             return true;
         }
@@ -1075,6 +1082,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
      * @return the url that was entered
      */
     public String cancelEdit() {
+        Telemetry.stopUISession(TelemetryContract.Session.AWESOMESCREEN);
         return stopEditing();
     }
 

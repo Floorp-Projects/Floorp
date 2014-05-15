@@ -78,7 +78,9 @@ public:
    * @param aSrcLen: length of the source, in characters. If -1, the source is assumed to be a null-
    *              terminated string.
    */
-  static nsresult ConvertStringLineBreaks(nsString& ioString, ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks);
+  static nsresult ConvertStringLineBreaks(nsString& aIoString,
+                                          ELinebreakType aSrcBreaks,
+                                          ELinebreakType aDestBreaks);
 
 
   /* ConvertLineBreaksInSitu
@@ -96,8 +98,11 @@ public:
    *              terminated string.
    * @param aOutLen: used to return character length of returned buffer, if not null.
    */
-  static nsresult ConvertLineBreaksInSitu(char **ioBuffer, ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks,
-                                          int32_t aSrcLen = kIgnoreLen, int32_t* aOutLen = nullptr);
+  static nsresult ConvertLineBreaksInSitu(char** aIoBuffer,
+                                          ELinebreakType aSrcBreaks,
+                                          ELinebreakType aDestBreaks,
+                                          int32_t aSrcLen = kIgnoreLen,
+                                          int32_t* aOutLen = nullptr);
 
 
   /* ConvertUnicharLineBreaksInSitu
@@ -114,8 +119,11 @@ public:
    *              terminated string.
    * @param aOutLen: used to return character length of returned buffer, if not null.
    */
-  static nsresult ConvertUnicharLineBreaksInSitu(char16_t **ioBuffer, ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks,
-                                                 int32_t aSrcLen = kIgnoreLen, int32_t* aOutLen = nullptr);
+  static nsresult ConvertUnicharLineBreaksInSitu(char16_t** aIoBuffer,
+                                                 ELinebreakType aSrcBreaks,
+                                                 ELinebreakType aDestBreaks,
+                                                 int32_t aSrcLen = kIgnoreLen,
+                                                 int32_t* aOutLen = nullptr);
 
 };
 

@@ -18,6 +18,7 @@ include "mozilla/GfxMessageUtils.h";
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
+using class mozilla::layers::APZTestData from "mozilla/layers/APZTestData.h";
 
 /**
  * The layers protocol is spoken between thread contexts that manage
@@ -51,7 +52,8 @@ parent:
 
   // The isFirstPaint flag can be used to indicate that this is the first update
   // for a particular document.
-  sync Update(Edit[] cset, TargetConfig targetConfig, bool isFirstPaint, bool scheduleComposite)
+  sync Update(Edit[] cset, TargetConfig targetConfig, bool isFirstPaint,
+              bool scheduleComposite, uint32_t paintSequenceNumber)
     returns (EditReply[] reply);
 
   // Testing APIs
@@ -78,7 +80,8 @@ parent:
 
   // We don't need to send a sync transaction if
   // no transaction operate require a swap.
-  async UpdateNoSwap(Edit[] cset, TargetConfig targetConfig, bool isFirstPaint, bool scheduleComposite);
+  async UpdateNoSwap(Edit[] cset, TargetConfig targetConfig, bool isFirstPaint,
+                     bool scheduleComposite, uint32_t paintSequenceNumber);
 
   // Drop any front buffers that might be retained on the compositor
   // side.
@@ -86,6 +89,10 @@ parent:
 
   // Schedule a composite if one isn't already scheduled.
   async ForceComposite();
+
+  // Get a copy of the compositor-side APZ test data instance for this
+  // layers id.
+  sync GetAPZTestData() returns (APZTestData data);
 
   async ChildAsyncMessages(AsyncChildMessageData[] aMessages);
 

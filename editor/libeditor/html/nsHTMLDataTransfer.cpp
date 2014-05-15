@@ -627,7 +627,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
     if (lastInsertNode) 
     {
       // set selection to the end of what we just pasted.
-      nsCOMPtr<nsIDOMNode> selNode, tmp, visNode, highTable;
+      nsCOMPtr<nsIDOMNode> selNode, tmp, highTable;
       int32_t selOffset;
 
       // but don't cross tables
@@ -663,9 +663,11 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
 
       // make sure we don't end up with selection collapsed after an invisible break node
       nsWSRunObject wsRunObj(this, selNode, selOffset);
+      nsCOMPtr<nsINode> visNode;
       int32_t outVisOffset=0;
       WSType visType;
-      wsRunObj.PriorVisibleNode(selNode, selOffset, address_of(visNode),
+      nsCOMPtr<nsINode> selNode_(do_QueryInterface(selNode));
+      wsRunObj.PriorVisibleNode(selNode_, selOffset, address_of(visNode),
                                 &outVisOffset, &visType);
       if (visType == WSType::br) {
         // we are after a break.  Is it visible?  Despite the name, 
@@ -679,10 +681,11 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
           selNode = GetNodeLocation(GetAsDOMNode(wsRunObj.mStartReasonNode), &selOffset);
           // we want to be inside any inline style prior to break
           nsWSRunObject wsRunObj(this, selNode, selOffset);
-          wsRunObj.PriorVisibleNode(selNode, selOffset, address_of(visNode),
+          selNode_ = do_QueryInterface(selNode);
+          wsRunObj.PriorVisibleNode(selNode_, selOffset, address_of(visNode),
                                     &outVisOffset, &visType);
           if (visType == WSType::text || visType == WSType::normalWS) {
-            selNode = visNode;
+            selNode = GetAsDOMNode(visNode);
             selOffset = outVisOffset;  // PriorVisibleNode already set offset to _after_ the text or ws
           } else if (visType == WSType::special) {
             // prior visible thing is an image or some other non-text thingy.  

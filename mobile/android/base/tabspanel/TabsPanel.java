@@ -42,7 +42,6 @@ public class TabsPanel extends LinearLayout
     }
 
     public static interface PanelView {
-        public ViewGroup getLayout();
         public void setTabsPanel(TabsPanel panel);
         public void show();
         public void hide();

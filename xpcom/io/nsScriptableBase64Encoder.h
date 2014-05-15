@@ -21,7 +21,9 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCRIPTABLEBASE64ENCODER
 private:
-  ~nsScriptableBase64Encoder() {}
+  ~nsScriptableBase64Encoder()
+  {
+  }
 };
 
 #endif

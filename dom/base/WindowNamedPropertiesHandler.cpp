@@ -21,7 +21,7 @@ ShouldExposeChildWindow(nsString& aNameBeingResolved, nsIDOMWindow *aChild)
   // If we're same-origin with the child, go ahead and expose it.
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(aChild);
   NS_ENSURE_TRUE(sop, false);
-  if (nsContentUtils::GetSubjectPrincipal()->Equals(sop->GetPrincipal())) {
+  if (nsContentUtils::SubjectPrincipal()->Equals(sop->GetPrincipal())) {
     return true;
   }
 

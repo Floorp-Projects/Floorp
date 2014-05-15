@@ -14,7 +14,7 @@ class nsCString;
 %}
 [ref] native nsCStringTArrayRef(nsTArray<nsCString>);
 
-[scriptable, builtinclass, uuid(4080f700-9c16-4884-8f8d-e28094377084)]
+[scriptable, builtinclass, uuid(ec72446c-8241-457f-ba75-83d214392289)]
 interface nsISSLSocketControl : nsISupports {
     attribute nsIInterfaceRequestor     notificationCallbacks;
 
@@ -53,15 +53,19 @@ interface nsISSLSocketControl : nsISupports {
       in long port);
 
     /* The Key Exchange Algorithm is used when determining whether or
-       not to do false start.
+       not to do false start and whether or not HTTP/2 can be used.
+
        After a handshake is complete it can be read from KEAUsed,
        before a handshake is started it may be set through KEAExpected.
        The values correspond to the SSLKEAType enum in NSS or the
        KEY_EXCHANGE_UNKNOWN constant defined below.
+
+       KEAKeyBits is the size/security-level used for the KEA.
     */
 
     [infallible] readonly attribute short KEAUsed;
     [infallible] attribute short KEAExpected;
+    [infallible] readonly attribute unsigned long KEAKeyBits;
 
     const short KEY_EXCHANGE_UNKNOWN = -1;
 

@@ -505,7 +505,7 @@ MapStack.prototype = {
    *        The key whose associated value is to be returned.
    */
   get: function(aKey) {
-    return this._map[aKey];
+    return this._map[aKey] || undefined;
   },
 
   /**

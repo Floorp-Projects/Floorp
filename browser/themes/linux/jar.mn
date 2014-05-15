@@ -275,6 +275,7 @@ browser.jar:
   skin/classic/browser/devtools/tool-profiler.svg           (../shared/devtools/images/tool-profiler.svg)
   skin/classic/browser/devtools/tool-network.svg            (../shared/devtools/images/tool-network.svg)
   skin/classic/browser/devtools/tool-scratchpad.svg         (../shared/devtools/images/tool-scratchpad.svg)
+  skin/classic/browser/devtools/tool-webaudio.svg           (../shared/devtools/images/tool-webaudio.svg)
   skin/classic/browser/devtools/close.png                   (../shared/devtools/images/close.png)
   skin/classic/browser/devtools/close@2x.png                (../shared/devtools/images/close@2x.png)
   skin/classic/browser/devtools/vview-delete.png            (../shared/devtools/images/vview-delete.png)

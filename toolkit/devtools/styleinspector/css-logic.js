@@ -663,7 +663,7 @@ CssLogic.getShortName = function CssLogic_getShortName(aElement)
   }
   let priorSiblings = 0;
   let temp = aElement;
-  while (temp = temp.previousElementSibling) {
+  while ((temp = temp.previousElementSibling)) {
     priorSiblings++;
   }
   return aElement.tagName + "[" + priorSiblings + "]";
@@ -1157,6 +1157,7 @@ CssSheet.prototype = {
           aDomRule.cssRules && this._cssLogic.mediaMatches(aDomRule)) {
         return Array.prototype.some.call(aDomRule.cssRules, _iterator, this);
       }
+      return false;
     }
     return Array.prototype.some.call(domRules, _iterator, this);
   },

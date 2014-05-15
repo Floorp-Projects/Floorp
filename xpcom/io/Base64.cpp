@@ -14,67 +14,66 @@
 namespace {
 
 // BEGIN base64 encode code copied and modified from NSPR
-const unsigned char *base = (unsigned char *)"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const unsigned char* base =
+  (unsigned char*)"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                  "abcdefghijklmnopqrstuvwxyz"
+                  "0123456789+/";
 
 template <typename T>
 static void
-Encode3to4(const unsigned char *src, T *dest)
+Encode3to4(const unsigned char* aSrc, T* aDest)
 {
   uint32_t b32 = (uint32_t)0;
   int i, j = 18;
 
-  for( i = 0; i < 3; i++ )
-  {
+  for (i = 0; i < 3; ++i) {
     b32 <<= 8;
-    b32 |= (uint32_t)src[i];
+    b32 |= (uint32_t)aSrc[i];
   }
 
-  for( i = 0; i < 4; i++ )
-  {
-    dest[i] = base[ (uint32_t)((b32>>j) & 0x3F) ];
+  for (i = 0; i < 4; ++i) {
+    aDest[i] = base[(uint32_t)((b32 >> j) & 0x3F)];
     j -= 6;
   }
 }
 
 template <typename T>
 static void
-Encode2to4(const unsigned char *src, T *dest)
+Encode2to4(const unsigned char* aSrc, T* aDest)
 {
-  dest[0] = base[ (uint32_t)((src[0]>>2) & 0x3F) ];
-  dest[1] = base[ (uint32_t)(((src[0] & 0x03) << 4) | ((src[1] >> 4) & 0x0F)) ];
-  dest[2] = base[ (uint32_t)((src[1] & 0x0F) << 2) ];
-  dest[3] = (unsigned char)'=';
+  aDest[0] = base[(uint32_t)((aSrc[0] >> 2) & 0x3F)];
+  aDest[1] = base[(uint32_t)(((aSrc[0] & 0x03) << 4) | ((aSrc[1] >> 4) & 0x0F))];
+  aDest[2] = base[(uint32_t)((aSrc[1] & 0x0F) << 2)];
+  aDest[3] = (unsigned char)'=';
 }
 
 template <typename T>
 static void
-Encode1to4(const unsigned char *src, T *dest)
+Encode1to4(const unsigned char* aSrc, T* aDest)
 {
-  dest[0] = base[ (uint32_t)((src[0]>>2) & 0x3F) ];
-  dest[1] = base[ (uint32_t)((src[0] & 0x03) << 4) ];
-  dest[2] = (unsigned char)'=';
-  dest[3] = (unsigned char)'=';
+  aDest[0] = base[(uint32_t)((aSrc[0] >> 2) & 0x3F)];
+  aDest[1] = base[(uint32_t)((aSrc[0] & 0x03) << 4)];
+  aDest[2] = (unsigned char)'=';
+  aDest[3] = (unsigned char)'=';
 }
 
 template <typename T>
 static void
-Encode(const unsigned char *src, uint32_t srclen, T *dest)
+Encode(const unsigned char* aSrc, uint32_t aSrcLen, T* aDest)
 {
-  while( srclen >= 3 )
-  {
-    Encode3to4(src, dest);
-    src += 3;
-    dest += 4;
-    srclen -= 3;
+  while (aSrcLen >= 3) {
+    Encode3to4(aSrc, aDest);
+    aSrc += 3;
+    aDest += 4;
+    aSrcLen -= 3;
   }
 
-  switch( srclen )
-  {
+  switch (aSrcLen) {
     case 2:
-      Encode2to4(src, dest);
+      Encode2to4(aSrc, aDest);
       break;
     case 1:
-      Encode1to4(src, dest);
+      Encode1to4(aSrc, aDest);
       break;
     case 0:
       break;
@@ -86,7 +85,8 @@ Encode(const unsigned char *src, uint32_t srclen, T *dest)
 // END base64 encode code copied and modified from NSPR.
 
 template <typename T>
-struct EncodeInputStream_State {
+struct EncodeInputStream_State
+{
   unsigned char c[3];
   uint8_t charsOnStack;
   typename T::char_type* buffer;
@@ -94,12 +94,12 @@ struct EncodeInputStream_State {
 
 template <typename T>
 NS_METHOD
-EncodeInputStream_Encoder(nsIInputStream *aStream,
-                          void *aClosure,
-                          const char *aFromSegment,
+EncodeInputStream_Encoder(nsIInputStream* aStream,
+                          void* aClosure,
+                          const char* aFromSegment,
                           uint32_t aToOffset,
                           uint32_t aCount,
-                          uint32_t *aWriteCount)
+                          uint32_t* aWriteCount)
 {
   NS_ASSERTION(aCount > 0, "Er, what?");
 
@@ -108,7 +108,7 @@ EncodeInputStream_Encoder(nsIInputStream *aStream,
 
   // If we have any data left from last time, encode it now.
   uint32_t countRemaining = aCount;
-  const unsigned char *src = (const unsigned char*)aFromSegment;
+  const unsigned char* src = (const unsigned char*)aFromSegment;
   if (state->charsOnStack) {
     unsigned char firstSet[4];
     if (state->charsOnStack == 1) {
@@ -154,8 +154,8 @@ EncodeInputStream_Encoder(nsIInputStream *aStream,
 
 template <typename T>
 nsresult
-EncodeInputStream(nsIInputStream *aInputStream,
-                  T &aDest,
+EncodeInputStream(nsIInputStream* aInputStream,
+                  T& aDest,
                   uint32_t aCount,
                   uint32_t aOffset)
 {
@@ -164,8 +164,9 @@ EncodeInputStream(nsIInputStream *aInputStream,
 
   if (!aCount) {
     rv = aInputStream->Available(&count64);
-    if (NS_WARN_IF(NS_FAILED(rv)))
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
     // if count64 is over 4GB, it will be failed at the below condition,
     // then will return NS_ERROR_OUT_OF_MEMORY
     aCount = (uint32_t)count64;
@@ -173,14 +174,16 @@ EncodeInputStream(nsIInputStream *aInputStream,
 
   uint64_t countlong =
     (count64 + 2) / 3 * 4; // +2 due to integer math.
-  if (countlong + aOffset > UINT32_MAX)
+  if (countlong + aOffset > UINT32_MAX) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   uint32_t count = uint32_t(countlong);
 
   aDest.SetLength(count + aOffset);
-  if (aDest.Length() != count + aOffset)
+  if (aDest.Length() != count + aOffset) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   EncodeInputStream_State<T> state;
   state.charsOnStack = 0;
@@ -195,25 +198,30 @@ EncodeInputStream(nsIInputStream *aInputStream,
                                     aCount,
                                     &read);
     if (NS_FAILED(rv)) {
-      if (rv == NS_BASE_STREAM_WOULD_BLOCK)
+      if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
         NS_RUNTIMEABORT("Not implemented for async streams!");
-      if (rv == NS_ERROR_NOT_IMPLEMENTED)
+      }
+      if (rv == NS_ERROR_NOT_IMPLEMENTED) {
         NS_RUNTIMEABORT("Requires a stream that implements ReadSegments!");
+      }
       return rv;
     }
 
-    if (!read)
+    if (!read) {
       break;
+    }
   }
 
   // Finish encoding if anything is left
-  if (state.charsOnStack)
+  if (state.charsOnStack) {
     Encode(state.c, state.charsOnStack, state.buffer);
+  }
 
-  if (aDest.Length())
+  if (aDest.Length()) {
     // May belong to an nsCString with an unallocated buffer, so only null
     // terminate if there is a need to.
     *aDest.EndWriting() = '\0';
+  }
 
   return NS_OK;
 }
@@ -223,8 +231,8 @@ EncodeInputStream(nsIInputStream *aInputStream,
 namespace mozilla {
 
 nsresult
-Base64EncodeInputStream(nsIInputStream *aInputStream,
-                        nsACString &aDest,
+Base64EncodeInputStream(nsIInputStream* aInputStream,
+                        nsACString& aDest,
                         uint32_t aCount,
                         uint32_t aOffset)
 {
@@ -232,8 +240,8 @@ Base64EncodeInputStream(nsIInputStream *aInputStream,
 }
 
 nsresult
-Base64EncodeInputStream(nsIInputStream *aInputStream,
-                        nsAString &aDest,
+Base64EncodeInputStream(nsIInputStream* aInputStream,
+                        nsAString& aDest,
                         uint32_t aCount,
                         uint32_t aOffset)
 {
@@ -241,7 +249,7 @@ Base64EncodeInputStream(nsIInputStream *aInputStream,
 }
 
 nsresult
-Base64Encode(const nsACString &aBinaryData, nsACString &aString)
+Base64Encode(const nsACString& aBinaryData, nsACString& aString)
 {
   // Check for overflow.
   if (aBinaryData.Length() > (UINT32_MAX / 4) * 3) {
@@ -256,7 +264,7 @@ Base64Encode(const nsACString &aBinaryData, nsACString &aString)
 
   uint32_t stringLen = ((aBinaryData.Length() + 2) / 3) * 4;
 
-  char *buffer;
+  char* buffer;
 
   // Add one byte for null termination.
   if (aString.SetCapacity(stringLen + 1, fallible_t()) &&
@@ -275,7 +283,7 @@ Base64Encode(const nsACString &aBinaryData, nsACString &aString)
 }
 
 nsresult
-Base64Encode(const nsAString &aString, nsAString &aBinaryData)
+Base64Encode(const nsAString& aString, nsAString& aBinaryData)
 {
   NS_LossyConvertUTF16toASCII string(aString);
   nsAutoCString binaryData;
@@ -291,7 +299,7 @@ Base64Encode(const nsAString &aString, nsAString &aBinaryData)
 }
 
 nsresult
-Base64Decode(const nsACString &aString, nsACString &aBinaryData)
+Base64Decode(const nsACString& aString, nsACString& aBinaryData)
 {
   // Check for overflow.
   if (aString.Length() > UINT32_MAX / 3) {
@@ -306,7 +314,7 @@ Base64Decode(const nsACString &aString, nsACString &aBinaryData)
 
   uint32_t binaryDataLen = ((aString.Length() * 3) / 4);
 
-  char *buffer;
+  char* buffer;
 
   // Add one byte for null termination.
   if (aBinaryData.SetCapacity(binaryDataLen + 1, fallible_t()) &&
@@ -333,7 +341,7 @@ Base64Decode(const nsACString &aString, nsACString &aBinaryData)
 }
 
 nsresult
-Base64Decode(const nsAString &aBinaryData, nsAString &aString)
+Base64Decode(const nsAString& aBinaryData, nsAString& aString)
 {
   NS_LossyConvertUTF16toASCII binaryData(aBinaryData);
   nsAutoCString string;

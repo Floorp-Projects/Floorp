@@ -1620,7 +1620,7 @@ ScriptSource::setSourceCopy(ExclusiveContext *cx, SourceBufferHolder &srcBuf,
     //    thread (see WorkerThreadState::canStartParseTask) which would cause a
     //    deadlock if there wasn't a second worker thread that could make
     //    progress on our compression task.
-#ifdef JS_THREADSAFE
+#if defined(JS_THREADSAFE) && defined(USE_ZLIB)
     bool canCompressOffThread =
         WorkerThreadState().cpuCount > 1 &&
         WorkerThreadState().threadCount >= 2;

@@ -105,6 +105,7 @@ class MNode;
 class MUse;
 class MIRGraph;
 class MResumePoint;
+class MControlInstruction;
 
 // Represents a use of a node.
 class MUse : public TempObject, public InlineListNode<MUse>
@@ -619,10 +620,6 @@ class MDefinition : public MNode
         return !uses_.empty();
     }
 
-    virtual bool isControlInstruction() const {
-        return false;
-    }
-
     void addUse(MUse *use) {
         uses_.pushFront(use);
     }
@@ -662,6 +659,11 @@ class MDefinition : public MNode
     bool isInstruction() const {
         return !isPhi();
     }
+
+    virtual bool isControlInstruction() const {
+        return false;
+    }
+    inline MControlInstruction *toControlInstruction();
 
     void setResultType(MIRType type) {
         resultType_ = type;
@@ -3387,6 +3389,19 @@ class MTypeOf
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
+
+    bool congruentTo(const MDefinition *ins) const {
+        if (!ins->isTypeOf())
+            return false;
+        if (inputType() != ins->toTypeOf()->inputType())
+            return false;
+        if (inputMaybeCallableOrEmulatesUndefined() !=
+            ins->toTypeOf()->inputMaybeCallableOrEmulatesUndefined())
+        {
+            return false;
+        }
+        return congruentIfOperandsEqual(ins);
+    }
 };
 
 class MToId
@@ -3493,6 +3508,10 @@ class MBitOr : public MBinaryBitwiseInstruction
         return getOperand(0); // x | x => x
     }
     void computeRange(TempAllocator &alloc);
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return specialization_ != MIRType_None;
+    }
 };
 
 class MBitXor : public MBinaryBitwiseInstruction
@@ -4546,6 +4565,9 @@ class MFromCharCode
 
     virtual AliasSet getAliasSet() const {
         return AliasSet::None();
+    }
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
     }
 };
 
@@ -5957,6 +5979,9 @@ class MNot
         return true;
     }
 #endif
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
 };
 
 // Bailout if index + minimum < 0 or index + maximum >= length. The length used
@@ -8658,6 +8683,9 @@ class MFloor
         return true;
     }
 #endif
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
 };
 
 // Inlined version of Math.round().
@@ -8699,6 +8727,9 @@ class MRound
         return true;
     }
 #endif
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
 };
 
 class MIteratorStart
@@ -9815,6 +9846,13 @@ class MHasClass
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
+    bool congruentTo(const MDefinition *ins) const {
+        if (!ins->isHasClass())
+            return false;
+        if (getClass() != ins->toHasClass()->getClass())
+            return false;
+        return congruentIfOperandsEqual(ins);
+    }
 };
 
 // Increase the usecount of the provided script upon execution and test if
@@ -10238,6 +10276,11 @@ const MInstruction *MDefinition::toInstruction() const
 {
     JS_ASSERT(!isPhi());
     return (const MInstruction *)this;
+}
+
+MControlInstruction *MDefinition::toControlInstruction() {
+    JS_ASSERT(isControlInstruction());
+    return (MControlInstruction *)this;
 }
 
 typedef Vector<MDefinition *, 8, IonAllocPolicy> MDefinitionVector;

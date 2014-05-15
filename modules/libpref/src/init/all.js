@@ -318,6 +318,7 @@ pref("media.mediasource.enabled", false);
 
 #ifdef MOZ_WEBSPEECH
 pref("media.webspeech.recognition.enable", false);
+pref("media.webspeech.synth.enabled", false);
 #endif
 #ifdef MOZ_WEBM_ENCODER
 pref("media.encoder.webm.enabled", true);
@@ -1554,6 +1555,7 @@ pref("security.notification_enable_delay", 500);
 pref("security.csp.enable", true);
 pref("security.csp.debug", false);
 pref("security.csp.experimentalEnabled", false);
+pref("security.csp.newbackend.enable", false);
 
 // Mixed content blocking
 pref("security.mixed_content.block_active_content", false);

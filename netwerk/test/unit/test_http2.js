@@ -413,6 +413,7 @@ var spdypref;
 var spdy3pref;
 var spdypush;
 var http2pref;
+var tlspref;
 
 var loadGroup;
 
@@ -421,6 +422,7 @@ function resetPrefs() {
   prefs.setBoolPref("network.http.spdy.enabled.v3", spdy3pref);
   prefs.setBoolPref("network.http.spdy.allow-push", spdypush);
   prefs.setBoolPref("network.http.spdy.enabled.http2draft", http2pref);
+  prefs.setBoolPref("network.http.spdy.enforce-tls-profile", tlspref);
 }
 
 function run_test() {
@@ -442,10 +444,12 @@ function run_test() {
   spdy3pref = prefs.getBoolPref("network.http.spdy.enabled.v3");
   spdypush = prefs.getBoolPref("network.http.spdy.allow-push");
   http2pref = prefs.getBoolPref("network.http.spdy.enabled.http2draft");
+  tlspref = prefs.getBoolPref("network.http.spdy.enforce-tls-profile");
   prefs.setBoolPref("network.http.spdy.enabled", true);
   prefs.setBoolPref("network.http.spdy.enabled.v3", true);
   prefs.setBoolPref("network.http.spdy.allow-push", true);
   prefs.setBoolPref("network.http.spdy.enabled.http2draft", true);
+  prefs.setBoolPref("network.http.spdy.enforce-tls-profile", false);
 
   loadGroup = Cc["@mozilla.org/network/load-group;1"].createInstance(Ci.nsILoadGroup);
 

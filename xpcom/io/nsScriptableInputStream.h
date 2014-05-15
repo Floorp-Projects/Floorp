@@ -17,7 +17,8 @@
 
 #define NS_SCRIPTABLEINPUTSTREAM_CONTRACTID "@mozilla.org/scriptableinputstream;1"
 
-class nsScriptableInputStream MOZ_FINAL : public nsIScriptableInputStream {
+class nsScriptableInputStream MOZ_FINAL : public nsIScriptableInputStream
+{
 public:
   // nsISupports methods
   NS_DECL_ISUPPORTS
@@ -26,13 +27,17 @@ public:
   NS_DECL_NSISCRIPTABLEINPUTSTREAM
 
   // nsScriptableInputStream methods
-  nsScriptableInputStream() {}
+  nsScriptableInputStream()
+  {
+  }
 
   static nsresult
-  Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
 private:
-  ~nsScriptableInputStream() {}
+  ~nsScriptableInputStream()
+  {
+  }
 
   nsresult ReadHelper(char* aBuffer, uint32_t aCount);
 

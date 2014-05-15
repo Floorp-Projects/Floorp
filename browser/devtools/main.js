@@ -237,7 +237,7 @@ Tools.webAudioEditor = {
   id: "webaudioeditor",
   ordinal: 10,
   visibilityswitch: "devtools.webaudioeditor.enabled",
-  icon: "chrome://browser/skin/devtools/tool-styleeditor.svg",
+  icon: "chrome://browser/skin/devtools/tool-webaudio.svg",
   invertIconForLightTheme: true,
   url: "chrome://browser/content/devtools/webaudioeditor.xul",
   label: l10n("ToolboxWebAudioEditor.label", webAudioEditorStrings),

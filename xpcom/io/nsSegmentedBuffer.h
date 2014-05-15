@@ -13,17 +13,22 @@ class nsSegmentedBuffer
 {
 public:
   nsSegmentedBuffer()
-    : mSegmentSize(0), mMaxSize(0),
-      mSegmentArray(nullptr),
-      mSegmentArrayCount(0),
-      mFirstSegmentIndex(0), mLastSegmentIndex(0) {}
+    : mSegmentSize(0)
+    , mMaxSize(0)
+    , mSegmentArray(nullptr)
+    , mSegmentArrayCount(0)
+    , mFirstSegmentIndex(0)
+    , mLastSegmentIndex(0)
+  {
+  }
 
-  ~nsSegmentedBuffer() {
+  ~nsSegmentedBuffer()
+  {
     Empty();
   }
 
 
-  nsresult Init(uint32_t segmentSize, uint32_t maxSize);
+  nsresult Init(uint32_t aSegmentSize, uint32_t aMaxSize);
 
   char* AppendNewSegment();   // pushes at end
 
@@ -35,36 +40,50 @@ public:
 
   // Call Realloc() on last segment.  This is used to reduce memory
   // consumption when data is not an exact multiple of segment size.
-  bool ReallocLastSegment(size_t newSize);
+  bool ReallocLastSegment(size_t aNewSize);
 
   void Empty();               // frees all segments
 
-  inline uint32_t GetSegmentCount() {
-    if (mFirstSegmentIndex <= mLastSegmentIndex)
+  inline uint32_t GetSegmentCount()
+  {
+    if (mFirstSegmentIndex <= mLastSegmentIndex) {
       return mLastSegmentIndex - mFirstSegmentIndex;
-    else
+    } else {
       return mSegmentArrayCount + mLastSegmentIndex - mFirstSegmentIndex;
+    }
   }
 
-  inline uint32_t GetSegmentSize() { return mSegmentSize; }
-  inline uint32_t GetMaxSize() { return mMaxSize; }
-  inline uint32_t GetSize() { return GetSegmentCount() * mSegmentSize; }
+  inline uint32_t GetSegmentSize()
+  {
+    return mSegmentSize;
+  }
+  inline uint32_t GetMaxSize()
+  {
+    return mMaxSize;
+  }
+  inline uint32_t GetSize()
+  {
+    return GetSegmentCount() * mSegmentSize;
+  }
 
-  inline char* GetSegment(uint32_t indx) {
-    NS_ASSERTION(indx < GetSegmentCount(), "index out of bounds");
-    int32_t i = ModSegArraySize(mFirstSegmentIndex + (int32_t)indx);
+  inline char* GetSegment(uint32_t aIndex)
+  {
+    NS_ASSERTION(aIndex < GetSegmentCount(), "index out of bounds");
+    int32_t i = ModSegArraySize(mFirstSegmentIndex + (int32_t)aIndex);
     return mSegmentArray[i];
   }
 
 protected:
-  inline int32_t ModSegArraySize(int32_t n) {
-    uint32_t result = n & (mSegmentArrayCount - 1);
-    NS_ASSERTION(result == n % mSegmentArrayCount,
+  inline int32_t ModSegArraySize(int32_t aIndex)
+  {
+    uint32_t result = aIndex & (mSegmentArrayCount - 1);
+    NS_ASSERTION(result == aIndex % mSegmentArrayCount,
                  "non-power-of-2 mSegmentArrayCount");
     return result;
   }
 
-  inline bool IsFull() {
+  inline bool IsFull()
+  {
     return ModSegArraySize(mLastSegmentIndex + 1) == mFirstSegmentIndex;
   }
 
