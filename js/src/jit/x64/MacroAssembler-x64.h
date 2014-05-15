@@ -600,7 +600,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             branchPtr(cond, Operand(ScratchReg, 0x0), ptr, label);
         }
     }
-    void branchPtr(Condition cond, const AsmJSAbsoluteAddress &addr, Register ptr, Label *label) {
+    void branchPtr(Condition cond, AsmJSAbsoluteAddress addr, Register ptr, Label *label) {
         JS_ASSERT(ptr != ScratchReg);
         mov(AsmJSImmPtr(addr.kind()), ScratchReg);
         branchPtr(cond, Operand(ScratchReg, 0x0), ptr, label);

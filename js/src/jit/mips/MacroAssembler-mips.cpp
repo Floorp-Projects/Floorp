@@ -1772,7 +1772,7 @@ MacroAssemblerMIPSCompat::movePtr(ImmPtr imm, Register dest)
     movePtr(ImmWord(uintptr_t(imm.value)), dest);
 }
 void
-MacroAssemblerMIPSCompat::movePtr(const AsmJSImmPtr &imm, Register dest)
+MacroAssemblerMIPSCompat::movePtr(AsmJSImmPtr imm, Register dest)
 {
     MOZ_ASSUME_UNREACHABLE("NYI");
 }
@@ -1863,7 +1863,7 @@ MacroAssemblerMIPSCompat::loadPtr(AbsoluteAddress address, Register dest)
     as_lw(dest, ScratchRegister, 0);
 }
 void
-MacroAssemblerMIPSCompat::loadPtr(const AsmJSAbsoluteAddress &address, Register dest)
+MacroAssemblerMIPSCompat::loadPtr(AsmJSAbsoluteAddress address, Register dest)
 {
     movePtr(AsmJSImmPtr(address.kind()), ScratchRegister);
     loadPtr(Address(ScratchRegister, 0x0), dest);

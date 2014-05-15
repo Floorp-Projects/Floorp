@@ -2033,7 +2033,7 @@ MacroAssemblerARMCompat::movePtr(ImmPtr imm, Register dest)
     movePtr(ImmWord(uintptr_t(imm.value)), dest);
 }
 void
-MacroAssemblerARMCompat::movePtr(const AsmJSImmPtr &imm, Register dest)
+MacroAssemblerARMCompat::movePtr(AsmJSImmPtr imm, Register dest)
 {
     RelocStyle rs;
     if (hasMOVWT())
@@ -2189,7 +2189,7 @@ MacroAssemblerARMCompat::loadPtr(AbsoluteAddress address, Register dest)
     loadPtr(Address(ScratchRegister, 0x0), dest);
 }
 void
-MacroAssemblerARMCompat::loadPtr(const AsmJSAbsoluteAddress &address, Register dest)
+MacroAssemblerARMCompat::loadPtr(AsmJSAbsoluteAddress address, Register dest)
 {
     movePtr(AsmJSImmPtr(address.kind()), ScratchRegister);
     loadPtr(Address(ScratchRegister, 0x0), dest);
