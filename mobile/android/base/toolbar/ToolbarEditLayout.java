@@ -160,27 +160,6 @@ public class ToolbarEditLayout extends GeckoLinearLayout {
         mEditText.setOnFilterListener(listener);
     }
 
-    boolean onKey(int keyCode, KeyEvent event) {
-        final int prevSelStart = mEditText.getSelectionStart();
-        final int prevSelEnd = mEditText.getSelectionEnd();
-
-        // Manually dispatch the key event to the edit text. If selection changed as
-        // a result of the key event, then give focus back to mEditText
-        mEditText.dispatchKeyEvent(event);
-
-        final int curSelStart = mEditText.getSelectionStart();
-        final int curSelEnd = mEditText.getSelectionEnd();
-
-        if (prevSelStart != curSelStart || prevSelEnd != curSelEnd) {
-            mEditText.requestFocusFromTouch();
-
-            // Restore the selection, which gets lost due to the focus switch
-            mEditText.setSelection(curSelStart, curSelEnd);
-        }
-
-        return true;
-    }
-
     void onEditSuggestion(String suggestion) {
         mEditText.setText(suggestion);
         mEditText.setSelection(mEditText.getText().length());
