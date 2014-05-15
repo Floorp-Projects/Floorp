@@ -282,7 +282,7 @@ class Assembler : public AssemblerX86Shared
     void push(ImmPtr imm) {
         push(ImmWord(uintptr_t(imm.value)));
     }
-    void push(const FloatRegister &src) {
+    void push(FloatRegister src) {
         subq(Imm32(sizeof(double)), StackPointer);
         movsd(src, Address(StackPointer, 0));
     }
@@ -292,7 +292,7 @@ class Assembler : public AssemblerX86Shared
         return label;
     }
 
-    void pop(const FloatRegister &src) {
+    void pop(FloatRegister src) {
         movsd(Address(StackPointer, 0), src);
         addq(Imm32(sizeof(double)), StackPointer);
     }
@@ -384,10 +384,10 @@ class Assembler : public AssemblerX86Shared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void movq(Register src, const FloatRegister &dest) {
+    void movq(Register src, FloatRegister dest) {
         masm.movq_rr(src.code(), dest.code());
     }
-    void movq(const FloatRegister &src, Register dest) {
+    void movq(FloatRegister src, Register dest) {
         masm.movq_rr(src.code(), dest.code());
     }
     void movq(Register src, Register dest) {
@@ -571,13 +571,13 @@ class Assembler : public AssemblerX86Shared
     CodeOffsetLabel loadRipRelativeInt64(Register dest) {
         return CodeOffsetLabel(masm.movq_ripr(dest.code()).offset());
     }
-    CodeOffsetLabel loadRipRelativeDouble(const FloatRegister &dest) {
+    CodeOffsetLabel loadRipRelativeDouble(FloatRegister dest) {
         return CodeOffsetLabel(masm.movsd_ripr(dest.code()).offset());
     }
     CodeOffsetLabel storeRipRelativeInt32(Register dest) {
         return CodeOffsetLabel(masm.movl_rrip(dest.code()).offset());
     }
-    CodeOffsetLabel storeRipRelativeDouble(const FloatRegister &dest) {
+    CodeOffsetLabel storeRipRelativeDouble(FloatRegister dest) {
         return CodeOffsetLabel(masm.movsd_rrip(dest.code()).offset());
     }
     CodeOffsetLabel leaRipRelative(Register dest) {
@@ -695,16 +695,16 @@ class Assembler : public AssemblerX86Shared
     // Do not mask shared implementations.
     using AssemblerX86Shared::call;
 
-    void cvttsd2sq(const FloatRegister &src, Register dest) {
+    void cvttsd2sq(FloatRegister src, Register dest) {
         masm.cvttsd2sq_rr(src.code(), dest.code());
     }
-    void cvttss2sq(const FloatRegister &src, Register dest) {
+    void cvttss2sq(FloatRegister src, Register dest) {
         masm.cvttss2sq_rr(src.code(), dest.code());
     }
-    void cvtsq2sd(Register src, const FloatRegister &dest) {
+    void cvtsq2sd(Register src, FloatRegister dest) {
         masm.cvtsq2sd_rr(src.code(), dest.code());
     }
-    void cvtsq2ss(Register src, const FloatRegister &dest) {
+    void cvtsq2ss(Register src, FloatRegister dest) {
         masm.cvtsq2ss_rr(src.code(), dest.code());
     }
 };

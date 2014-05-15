@@ -36,14 +36,13 @@ class MacroAssemblerX86Shared : public Assembler
       : framePushed_(0)
     { }
 
-    void compareDouble(DoubleCondition cond, const FloatRegister &lhs, const FloatRegister &rhs) {
+    void compareDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs) {
         if (cond & DoubleConditionBitInvert)
             ucomisd(rhs, lhs);
         else
             ucomisd(lhs, rhs);
     }
-    void branchDouble(DoubleCondition cond, const FloatRegister &lhs,
-                      const FloatRegister &rhs, Label *label)
+    void branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs, Label *label)
     {
         compareDouble(cond, lhs, rhs);
 
@@ -64,14 +63,13 @@ class MacroAssemblerX86Shared : public Assembler
         j(ConditionFromDoubleCondition(cond), label);
     }
 
-    void compareFloat(DoubleCondition cond, const FloatRegister &lhs, const FloatRegister &rhs) {
+    void compareFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs) {
         if (cond & DoubleConditionBitInvert)
             ucomiss(rhs, lhs);
         else
             ucomiss(lhs, rhs);
     }
-    void branchFloat(DoubleCondition cond, const FloatRegister &lhs,
-                      const FloatRegister &rhs, Label *label)
+    void branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs, Label *label)
     {
         compareFloat(cond, lhs, rhs);
 
@@ -92,8 +90,8 @@ class MacroAssemblerX86Shared : public Assembler
         j(ConditionFromDoubleCondition(cond), label);
     }
 
-    void branchNegativeZero(const FloatRegister &reg, Register scratch, Label *label);
-    void branchNegativeZeroFloat32(const FloatRegister &reg, Register scratch, Label *label);
+    void branchNegativeZero(FloatRegister reg, Register scratch, Label *label);
+    void branchNegativeZeroFloat32(FloatRegister reg, Register scratch, Label *label);
 
     void move32(Imm32 imm, Register dest) {
         // Use the ImmWord version of mov to register, which has special
@@ -252,7 +250,7 @@ class MacroAssemblerX86Shared : public Assembler
         push(t);
         framePushed_ += sizeof(intptr_t);
     }
-    void Push(const FloatRegister &t) {
+    void Push(FloatRegister t) {
         push(t);
         framePushed_ += sizeof(double);
     }
@@ -269,7 +267,7 @@ class MacroAssemblerX86Shared : public Assembler
         pop(t);
         framePushed_ -= sizeof(intptr_t);
     }
-    void Pop(const FloatRegister &t) {
+    void Pop(FloatRegister t) {
         pop(t);
         framePushed_ -= sizeof(double);
     }
@@ -297,7 +295,7 @@ class MacroAssemblerX86Shared : public Assembler
         jmp(Operand(addr));
     }
 
-    void convertInt32ToDouble(Register src, const FloatRegister &dest) {
+    void convertInt32ToDouble(Register src, FloatRegister dest) {
         // cvtsi2sd and friends write only part of their output register, which
         // causes slowdowns on out-of-order processors. Explicitly break
         // dependencies with xorpd (and xorps elsewhere), which are handled
@@ -315,7 +313,7 @@ class MacroAssemblerX86Shared : public Assembler
         zeroDouble(dest);
         cvtsi2sd(Operand(src), dest);
     }
-    void convertInt32ToFloat32(Register src, const FloatRegister &dest) {
+    void convertInt32ToFloat32(Register src, FloatRegister dest) {
         // Clear the output register first to break dependencies; see above;
         zeroFloat32(dest);
         cvtsi2ss(src, dest);
@@ -328,12 +326,12 @@ class MacroAssemblerX86Shared : public Assembler
         zeroFloat32(dest);
         cvtsi2ss(src, dest);
     }
-    Condition testDoubleTruthy(bool truthy, const FloatRegister &reg) {
+    Condition testDoubleTruthy(bool truthy, FloatRegister reg) {
         zeroDouble(ScratchFloatReg);
         ucomisd(ScratchFloatReg, reg);
         return truthy ? NonZero : Zero;
     }
-    void branchTestDoubleTruthy(bool truthy, const FloatRegister &reg, Label *label) {
+    void branchTestDoubleTruthy(bool truthy, FloatRegister reg, Label *label) {
         Condition cond = testDoubleTruthy(truthy, reg);
         j(cond, label);
     }
@@ -455,10 +453,10 @@ class MacroAssemblerX86Shared : public Assembler
     void divDouble(FloatRegister src, FloatRegister dest) {
         divsd(src, dest);
     }
-    void convertFloat32ToDouble(const FloatRegister &src, const FloatRegister &dest) {
+    void convertFloat32ToDouble(FloatRegister src, FloatRegister dest) {
         cvtss2sd(src, dest);
     }
-    void convertDoubleToFloat32(const FloatRegister &src, const FloatRegister &dest) {
+    void convertDoubleToFloat32(FloatRegister src, FloatRegister dest) {
         cvtsd2ss(src, dest);
     }
     void moveFloatAsDouble(Register src, FloatRegister dest) {
@@ -564,7 +562,7 @@ class MacroAssemblerX86Shared : public Assembler
         bind(&inRange);
     }
 
-    bool maybeInlineDouble(double d, const FloatRegister &dest) {
+    bool maybeInlineDouble(double d, FloatRegister dest) {
         uint64_t u = mozilla::BitwiseCast<uint64_t>(d);
 
         // Loading zero with xor is specially optimized in hardware.
@@ -584,7 +582,7 @@ class MacroAssemblerX86Shared : public Assembler
         return false;
     }
 
-    bool maybeInlineFloat(float f, const FloatRegister &dest) {
+    bool maybeInlineFloat(float f, FloatRegister dest) {
         uint32_t u = mozilla::BitwiseCast<uint32_t>(f);
 
         // See comment above

@@ -43,7 +43,7 @@ MacroAssemblerX86::getDouble(double d)
 }
 
 void
-MacroAssemblerX86::loadConstantDouble(double d, const FloatRegister &dest)
+MacroAssemblerX86::loadConstantDouble(double d, FloatRegister dest)
 {
     if (maybeInlineDouble(d, dest))
         return;
@@ -55,7 +55,7 @@ MacroAssemblerX86::loadConstantDouble(double d, const FloatRegister &dest)
 }
 
 void
-MacroAssemblerX86::addConstantDouble(double d, const FloatRegister &dest)
+MacroAssemblerX86::addConstantDouble(double d, FloatRegister dest)
 {
     Double *dbl = getDouble(d);
     if (!dbl)
@@ -89,7 +89,7 @@ MacroAssemblerX86::getFloat(float f)
 }
 
 void
-MacroAssemblerX86::loadConstantFloat32(float f, const FloatRegister &dest)
+MacroAssemblerX86::loadConstantFloat32(float f, FloatRegister dest)
 {
     if (maybeInlineFloat(f, dest))
         return;
@@ -101,7 +101,7 @@ MacroAssemblerX86::loadConstantFloat32(float f, const FloatRegister &dest)
 }
 
 void
-MacroAssemblerX86::addConstantFloat32(float f, const FloatRegister &dest)
+MacroAssemblerX86::addConstantFloat32(float f, FloatRegister dest)
 {
     Float *flt = getFloat(f);
     if (!flt)
@@ -185,7 +185,7 @@ MacroAssemblerX86::passABIArg(Register reg)
 }
 
 void
-MacroAssemblerX86::passABIArg(const FloatRegister &reg, MoveOp::Type type)
+MacroAssemblerX86::passABIArg(FloatRegister reg, MoveOp::Type type)
 {
     passABIArg(MoveOperand(reg), type);
 }

@@ -1269,7 +1269,7 @@ CodeGeneratorARM::visitRoundF(LRoundF *lir)
 }
 
 void
-CodeGeneratorARM::emitRoundDouble(const FloatRegister &src, Register dest, Label *fail)
+CodeGeneratorARM::emitRoundDouble(FloatRegister src, Register dest, Label *fail)
 {
     masm.ma_vcvt_F64_I32(src, ScratchFloatReg);
     masm.ma_vxfer(ScratchFloatReg, dest);

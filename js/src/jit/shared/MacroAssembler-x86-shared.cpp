@@ -156,7 +156,7 @@ MacroAssemblerX86Shared::buildOOLFakeExitFrame(void *fakeReturnAddr)
 }
 
 void
-MacroAssemblerX86Shared::branchNegativeZero(const FloatRegister &reg,
+MacroAssemblerX86Shared::branchNegativeZero(FloatRegister reg,
                                             Register scratch,
                                             Label *label)
 {
@@ -188,7 +188,7 @@ MacroAssemblerX86Shared::branchNegativeZero(const FloatRegister &reg,
 }
 
 void
-MacroAssemblerX86Shared::branchNegativeZeroFloat32(const FloatRegister &reg,
+MacroAssemblerX86Shared::branchNegativeZeroFloat32(FloatRegister reg,
                                                    Register scratch,
                                                    Label *label)
 {

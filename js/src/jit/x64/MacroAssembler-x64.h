@@ -994,7 +994,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         emitSet(cond, dest);
     }
 
-    void boxDouble(const FloatRegister &src, const ValueOperand &dest) {
+    void boxDouble(FloatRegister src, const ValueOperand &dest) {
         movq(src, dest.valueReg());
     }
     void boxNonDouble(JSValueType type, Register src, const ValueOperand &dest) {
@@ -1013,7 +1013,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void unboxInt32(const Address &src, Register dest) {
         unboxInt32(Operand(src), dest);
     }
-    void unboxDouble(const Address &src, const FloatRegister &dest) {
+    void unboxDouble(const Address &src, FloatRegister dest) {
         loadDouble(Operand(src), dest);
     }
 
@@ -1041,7 +1041,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         movl(src.valueReg(), dest);
     }
 
-    void unboxDouble(const ValueOperand &src, const FloatRegister &dest) {
+    void unboxDouble(const ValueOperand &src, FloatRegister dest) {
         movq(src.valueReg(), dest);
     }
     void unboxPrivate(const ValueOperand &src, const Register dest) {
@@ -1134,24 +1134,24 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     // These two functions use the low 32-bits of the full value register.
-    void boolValueToDouble(const ValueOperand &operand, const FloatRegister &dest) {
+    void boolValueToDouble(const ValueOperand &operand, FloatRegister dest) {
         convertInt32ToDouble(operand.valueReg(), dest);
     }
-    void int32ValueToDouble(const ValueOperand &operand, const FloatRegister &dest) {
+    void int32ValueToDouble(const ValueOperand &operand, FloatRegister dest) {
         convertInt32ToDouble(operand.valueReg(), dest);
     }
 
-    void boolValueToFloat32(const ValueOperand &operand, const FloatRegister &dest) {
+    void boolValueToFloat32(const ValueOperand &operand, FloatRegister dest) {
         convertInt32ToFloat32(operand.valueReg(), dest);
     }
-    void int32ValueToFloat32(const ValueOperand &operand, const FloatRegister &dest) {
+    void int32ValueToFloat32(const ValueOperand &operand, FloatRegister dest) {
         convertInt32ToFloat32(operand.valueReg(), dest);
     }
 
-    void loadConstantDouble(double d, const FloatRegister &dest);
-    void loadConstantFloat32(float f, const FloatRegister &dest);
+    void loadConstantDouble(double d, FloatRegister dest);
+    void loadConstantFloat32(float f, FloatRegister dest);
 
-    void branchTruncateDouble(const FloatRegister &src, Register dest, Label *fail) {
+    void branchTruncateDouble(FloatRegister src, Register dest, Label *fail) {
         cvttsd2sq(src, dest);
 
         // cvttsd2sq returns 0x8000000000000000 on failure. Test for it by
@@ -1162,7 +1162,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
         movl(dest, dest); // Zero upper 32-bits.
     }
-    void branchTruncateFloat32(const FloatRegister &src, Register dest, Label *fail) {
+    void branchTruncateFloat32(FloatRegister src, Register dest, Label *fail) {
         cvttss2sq(src, dest);
 
         // Same trick as for Doubles
@@ -1196,7 +1196,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         j(cond, label);
     }
 
-    void loadInt32OrDouble(const Operand &operand, const FloatRegister &dest) {
+    void loadInt32OrDouble(const Operand &operand, FloatRegister dest) {
         Label notInt32, end;
         branchTestInt32(Assembler::NotEqual, operand, &notInt32);
         convertInt32ToDouble(operand, dest);
@@ -1220,11 +1220,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         loadPtr(Address(StackPointer, 0x0), dest);
     }
 
-    void convertUInt32ToDouble(Register src, const FloatRegister &dest) {
+    void convertUInt32ToDouble(Register src, FloatRegister dest) {
         cvtsq2sd(src, dest);
     }
 
-    void convertUInt32ToFloat32(Register src, const FloatRegister &dest) {
+    void convertUInt32ToFloat32(Register src, FloatRegister dest) {
         cvtsq2ss(src, dest);
     }
 
@@ -1280,7 +1280,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // operations should be emitted while setting arguments.
     void passABIArg(const MoveOperand &from, MoveOp::Type type);
     void passABIArg(Register reg);
-    void passABIArg(const FloatRegister &reg, MoveOp::Type type);
+    void passABIArg(FloatRegister reg, MoveOp::Type type);
 
   private:
     void callWithABIPre(uint32_t *stackAdjust);
