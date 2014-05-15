@@ -53,13 +53,10 @@ AudioProcessingEvent::LazilyCreateBuffer(uint32_t aNumberOfChannels,
   JSAutoCompartment ac(cx, global);
 
   nsRefPtr<AudioBuffer> buffer =
-    new AudioBuffer(mNode->Context(), mNode->BufferSize(),
-                    mNode->Context()->SampleRate());
-  if (!buffer->InitializeBuffers(aNumberOfChannels, cx)) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return nullptr;
-  }
-
+    AudioBuffer::Create(mNode->Context(), aNumberOfChannels,
+                        mNode->BufferSize(),
+                        mNode->Context()->SampleRate(), cx, aRv);
+  MOZ_ASSERT(buffer || aRv.ErrorCode() == NS_ERROR_OUT_OF_MEMORY);
   return buffer.forget();
 }
 

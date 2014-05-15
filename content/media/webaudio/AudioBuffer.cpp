@@ -41,12 +41,13 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AudioBuffer, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AudioBuffer, Release)
 
-AudioBuffer::AudioBuffer(AudioContext* aContext, uint32_t aLength,
-                         float aSampleRate)
+AudioBuffer::AudioBuffer(AudioContext* aContext, uint32_t aNumberOfChannels,
+                         uint32_t aLength, float aSampleRate)
   : mContext(aContext),
     mLength(aLength),
     mSampleRate(aSampleRate)
 {
+  mJSChannels.SetCapacity(aNumberOfChannels);
   SetIsDOMBinding();
   mozilla::HoldJSObjects(this);
 }
@@ -63,22 +64,35 @@ AudioBuffer::ClearJSChannels()
   mozilla::DropJSObjects(this);
 }
 
-bool
-AudioBuffer::InitializeBuffers(uint32_t aNumberOfChannels, JSContext* aJSContext)
+/* static */ already_AddRefed<AudioBuffer>
+AudioBuffer::Create(AudioContext* aContext, uint32_t aNumberOfChannels,
+                    uint32_t aLength, float aSampleRate,
+                    JSContext* aJSContext, ErrorResult& aRv)
 {
-  if (!mJSChannels.SetCapacity(aNumberOfChannels)) {
-    return false;
-  }
-  for (uint32_t i = 0; i < aNumberOfChannels; ++i) {
-    JS::Rooted<JSObject*> array(aJSContext,
-                                JS_NewFloat32Array(aJSContext, mLength));
-    if (!array) {
-      return false;
-    }
-    mJSChannels.AppendElement(array.get());
+  // Note that a buffer with zero channels is permitted here for the sake of
+  // AudioProcessingEvent, where channel counts must match parameters passed
+  // to createScriptProcessor(), one of which may be zero.
+  if (aSampleRate < WebAudioUtils::MinSampleRate ||
+      aSampleRate > WebAudioUtils::MaxSampleRate ||
+      !aLength || aLength > INT32_MAX) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return nullptr;
   }
 
-  return true;
+  nsRefPtr<AudioBuffer> buffer =
+    new AudioBuffer(aContext, aNumberOfChannels, aLength, aSampleRate);
+
+  for (uint32_t i = 0; i < aNumberOfChannels; ++i) {
+    JS::Rooted<JSObject*> array(aJSContext,
+                                JS_NewFloat32Array(aJSContext, aLength));
+    if (!array) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return nullptr;
+    }
+    buffer->mJSChannels.AppendElement(array.get());
+  }
+
+  return buffer.forget();
 }
 
 JSObject*
