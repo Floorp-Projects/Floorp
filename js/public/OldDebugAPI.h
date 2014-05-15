@@ -24,8 +24,7 @@ class JSFreeOp;
 
 namespace js {
 class InterpreterFrame;
-class FrameIter;
-class ScriptSource;
+class ScriptFrameIter;
 }
 
 // Raw JSScript* because this needs to be callable from a signal handler.
@@ -40,20 +39,18 @@ namespace JS {
 class FrameDescription
 {
   public:
-    explicit FrameDescription(const js::FrameIter& iter);
-    FrameDescription(const FrameDescription &rhs);
-    ~FrameDescription();
+    explicit FrameDescription(const js::ScriptFrameIter& iter);
 
     unsigned lineno() {
-        if (!linenoComputed_) {
+        if (!linenoComputed) {
             lineno_ = JS_PCToLineNumber(nullptr, script_, pc_);
-            linenoComputed_ = true;
+            linenoComputed = true;
         }
         return lineno_;
     }
 
     const char *filename() const {
-        return filename_;
+        return JS_GetScriptFilename(script_);
     }
 
     JSFlatString *funDisplayName() const {
@@ -70,22 +67,11 @@ class FrameDescription
     }
 
   private:
-    void operator=(const FrameDescription &) MOZ_DELETE;
-
-    // These fields are always initialized:
-    Heap<JSString*> funDisplayName_;
-    const char *filename_;
-
-    // One of script_ xor scriptSource_ is non-null.
     Heap<JSScript*> script_;
-    js::ScriptSource *scriptSource_;
-
-    // For script_-having frames, lineno_ is lazily computed as an optimization.
-    bool linenoComputed_;
-    unsigned lineno_;
-
-    // pc_ is non-null iff script_ is non-null. If !pc_, linenoComputed_ = true.
+    Heap<JSString*> funDisplayName_;
     jsbytecode *pc_;
+    unsigned lineno_;
+    bool linenoComputed;
 };
 
 struct StackDescription
