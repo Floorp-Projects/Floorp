@@ -75,7 +75,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     bool generateEpilogue();
     bool generateOutOfLineCode();
 
-    void emitRoundDouble(const FloatRegister &src, Register dest, Label *fail);
+    void emitRoundDouble(FloatRegister src, Register dest, Label *fail);
 
     // Emits a branch that directs control flow to the true block if |cond| is
     // true, and the false block if |cond| is false.

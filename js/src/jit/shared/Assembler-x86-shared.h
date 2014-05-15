@@ -397,11 +397,11 @@ class AssemblerX86Shared : public AssemblerShared
 
     // Eventually movapd and movaps should be overloaded to support loads and
     // stores too.
-    void movapd(const FloatRegister &src, const FloatRegister &dest) {
+    void movapd(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.movapd_rr(src.code(), dest.code());
     }
-    void movaps(const FloatRegister &src, const FloatRegister &dest) {
+    void movaps(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.movaps_rr(src.code(), dest.code());
     }
@@ -409,31 +409,31 @@ class AssemblerX86Shared : public AssemblerShared
     // movsd and movss are only provided in load/store form since the
     // register-to-register form has different semantics (it doesn't clobber
     // the whole output register) and isn't needed currently.
-    void movsd(const Address &src, const FloatRegister &dest) {
+    void movsd(const Address &src, FloatRegister dest) {
         masm.movsd_mr(src.offset, src.base.code(), dest.code());
     }
-    void movsd(const BaseIndex &src, const FloatRegister &dest) {
+    void movsd(const BaseIndex &src, FloatRegister dest) {
         masm.movsd_mr(src.offset, src.base.code(), src.index.code(), src.scale, dest.code());
     }
-    void movsd(const FloatRegister &src, const Address &dest) {
+    void movsd(FloatRegister src, const Address &dest) {
         masm.movsd_rm(src.code(), dest.offset, dest.base.code());
     }
-    void movsd(const FloatRegister &src, const BaseIndex &dest) {
+    void movsd(FloatRegister src, const BaseIndex &dest) {
         masm.movsd_rm(src.code(), dest.offset, dest.base.code(), dest.index.code(), dest.scale);
     }
-    void movss(const Address &src, const FloatRegister &dest) {
+    void movss(const Address &src, FloatRegister dest) {
         masm.movss_mr(src.offset, src.base.code(), dest.code());
     }
-    void movss(const BaseIndex &src, const FloatRegister &dest) {
+    void movss(const BaseIndex &src, FloatRegister dest) {
         masm.movss_mr(src.offset, src.base.code(), src.index.code(), src.scale, dest.code());
     }
-    void movss(const FloatRegister &src, const Address &dest) {
+    void movss(FloatRegister src, const Address &dest) {
         masm.movss_rm(src.code(), dest.offset, dest.base.code());
     }
-    void movss(const FloatRegister &src, const BaseIndex &dest) {
+    void movss(FloatRegister src, const BaseIndex &dest) {
         masm.movss_rm(src.code(), dest.offset, dest.base.code(), dest.index.code(), dest.scale);
     }
-    void movdqa(const Operand &src, const FloatRegister &dest) {
+    void movdqa(const Operand &src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::MEM_REG_DISP:
@@ -446,7 +446,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void movdqa(const FloatRegister &src, const Operand &dest) {
+    void movdqa(FloatRegister src, const Operand &dest) {
         JS_ASSERT(HasSSE2());
         switch (dest.kind()) {
           case Operand::MEM_REG_DISP:
@@ -459,11 +459,11 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void cvtss2sd(const FloatRegister &src, const FloatRegister &dest) {
+    void cvtss2sd(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.cvtss2sd_rr(src.code(), dest.code());
     }
-    void cvtsd2ss(const FloatRegister &src, const FloatRegister &dest) {
+    void cvtsd2ss(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.cvtsd2ss_rr(src.code(), dest.code());
     }
@@ -1251,15 +1251,15 @@ class AssemblerX86Shared : public AssemblerShared
         masm.divl_r(divisor.code());
     }
 
-    void unpcklps(const FloatRegister &src, const FloatRegister &dest) {
+    void unpcklps(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.unpcklps_rr(src.code(), dest.code());
     }
-    void pinsrd(Register src, const FloatRegister &dest) {
+    void pinsrd(Register src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.pinsrd_rr(src.code(), dest.code());
     }
-    void pinsrd(const Operand &src, const FloatRegister &dest) {
+    void pinsrd(const Operand &src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::REG:
@@ -1272,20 +1272,20 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void psrldq(Imm32 shift, const FloatRegister &dest) {
+    void psrldq(Imm32 shift, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.psrldq_ir(shift.value, dest.code());
     }
-    void psllq(Imm32 shift, const FloatRegister &dest) {
+    void psllq(Imm32 shift, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.psllq_ir(shift.value, dest.code());
     }
-    void psrlq(Imm32 shift, const FloatRegister &dest) {
+    void psrlq(Imm32 shift, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.psrlq_ir(shift.value, dest.code());
     }
 
-    void cvtsi2sd(const Operand &src, const FloatRegister &dest) {
+    void cvtsi2sd(const Operand &src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::REG:
@@ -1301,15 +1301,15 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void cvttsd2si(const FloatRegister &src, Register dest) {
+    void cvttsd2si(FloatRegister src, Register dest) {
         JS_ASSERT(HasSSE2());
         masm.cvttsd2si_rr(src.code(), dest.code());
     }
-    void cvttss2si(const FloatRegister &src, Register dest) {
+    void cvttss2si(FloatRegister src, Register dest) {
         JS_ASSERT(HasSSE2());
         masm.cvttss2si_rr(src.code(), dest.code());
     }
-    void cvtsi2ss(const Operand &src, const FloatRegister &dest) {
+    void cvtsi2ss(const Operand &src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::REG:
@@ -1325,55 +1325,55 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void cvtsi2ss(Register src, const FloatRegister &dest) {
+    void cvtsi2ss(Register src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.cvtsi2ss_rr(src.code(), dest.code());
     }
-    void cvtsi2sd(Register src, const FloatRegister &dest) {
+    void cvtsi2sd(Register src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.cvtsi2sd_rr(src.code(), dest.code());
     }
-    void movmskpd(const FloatRegister &src, Register dest) {
+    void movmskpd(FloatRegister src, Register dest) {
         JS_ASSERT(HasSSE2());
         masm.movmskpd_rr(src.code(), dest.code());
     }
-    void movmskps(const FloatRegister &src, Register dest) {
+    void movmskps(FloatRegister src, Register dest) {
         JS_ASSERT(HasSSE2());
         masm.movmskps_rr(src.code(), dest.code());
     }
-    void ptest(const FloatRegister &lhs, const FloatRegister &rhs) {
+    void ptest(FloatRegister lhs, FloatRegister rhs) {
         JS_ASSERT(HasSSE41());
         masm.ptest_rr(rhs.code(), lhs.code());
     }
-    void ucomisd(const FloatRegister &lhs, const FloatRegister &rhs) {
+    void ucomisd(FloatRegister lhs, FloatRegister rhs) {
         JS_ASSERT(HasSSE2());
         masm.ucomisd_rr(rhs.code(), lhs.code());
     }
-    void ucomiss(const FloatRegister &lhs, const FloatRegister &rhs) {
+    void ucomiss(FloatRegister lhs, FloatRegister rhs) {
         JS_ASSERT(HasSSE2());
         masm.ucomiss_rr(rhs.code(), lhs.code());
     }
-    void pcmpeqw(const FloatRegister &lhs, const FloatRegister &rhs) {
+    void pcmpeqw(FloatRegister lhs, FloatRegister rhs) {
         JS_ASSERT(HasSSE2());
         masm.pcmpeqw_rr(rhs.code(), lhs.code());
     }
-    void movd(Register src, const FloatRegister &dest) {
+    void movd(Register src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.movd_rr(src.code(), dest.code());
     }
-    void movd(const FloatRegister &src, Register dest) {
+    void movd(FloatRegister src, Register dest) {
         JS_ASSERT(HasSSE2());
         masm.movd_rr(src.code(), dest.code());
     }
-    void addsd(const FloatRegister &src, const FloatRegister &dest) {
+    void addsd(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.addsd_rr(src.code(), dest.code());
     }
-    void addss(const FloatRegister &src, const FloatRegister &dest) {
+    void addss(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.addss_rr(src.code(), dest.code());
     }
-    void addsd(const Operand &src, const FloatRegister &dest) {
+    void addsd(const Operand &src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::FPREG:
@@ -1389,7 +1389,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void addss(const Operand &src, const FloatRegister &dest) {
+    void addss(const Operand &src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::FPREG:
@@ -1405,15 +1405,15 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void subsd(const FloatRegister &src, const FloatRegister &dest) {
+    void subsd(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.subsd_rr(src.code(), dest.code());
     }
-    void subss(const FloatRegister &src, const FloatRegister &dest) {
+    void subss(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.subss_rr(src.code(), dest.code());
     }
-    void subsd(const Operand &src, const FloatRegister &dest) {
+    void subsd(const Operand &src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::FPREG:
@@ -1426,7 +1426,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void subss(const Operand &src, const FloatRegister &dest) {
+    void subss(const Operand &src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::FPREG:
@@ -1439,11 +1439,11 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void mulsd(const FloatRegister &src, const FloatRegister &dest) {
+    void mulsd(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.mulsd_rr(src.code(), dest.code());
     }
-    void mulsd(const Operand &src, const FloatRegister &dest) {
+    void mulsd(const Operand &src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::FPREG:
@@ -1456,7 +1456,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void mulss(const Operand &src, const FloatRegister &dest) {
+    void mulss(const Operand &src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::FPREG:
@@ -1469,19 +1469,19 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void mulss(const FloatRegister &src, const FloatRegister &dest) {
+    void mulss(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.mulss_rr(src.code(), dest.code());
     }
-    void divsd(const FloatRegister &src, const FloatRegister &dest) {
+    void divsd(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.divsd_rr(src.code(), dest.code());
     }
-    void divss(const FloatRegister &src, const FloatRegister &dest) {
+    void divss(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.divss_rr(src.code(), dest.code());
     }
-    void divsd(const Operand &src, const FloatRegister &dest) {
+    void divsd(const Operand &src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::FPREG:
@@ -1494,7 +1494,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void divss(const Operand &src, const FloatRegister &dest) {
+    void divss(const Operand &src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::FPREG:
@@ -1507,51 +1507,51 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void xorpd(const FloatRegister &src, const FloatRegister &dest) {
+    void xorpd(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.xorpd_rr(src.code(), dest.code());
     }
-    void xorps(const FloatRegister &src, const FloatRegister &dest) {
+    void xorps(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.xorps_rr(src.code(), dest.code());
     }
-    void orpd(const FloatRegister &src, const FloatRegister &dest) {
+    void orpd(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.orpd_rr(src.code(), dest.code());
     }
-    void andpd(const FloatRegister &src, const FloatRegister &dest) {
+    void andpd(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.andpd_rr(src.code(), dest.code());
     }
-    void andps(const FloatRegister &src, const FloatRegister &dest) {
+    void andps(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.andps_rr(src.code(), dest.code());
     }
-    void sqrtsd(const FloatRegister &src, const FloatRegister &dest) {
+    void sqrtsd(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.sqrtsd_rr(src.code(), dest.code());
     }
-    void sqrtss(const FloatRegister &src, const FloatRegister &dest) {
+    void sqrtss(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.sqrtss_rr(src.code(), dest.code());
     }
-    void roundsd(const FloatRegister &src, const FloatRegister &dest,
+    void roundsd(FloatRegister src, FloatRegister dest,
                  JSC::X86Assembler::RoundingMode mode)
     {
         JS_ASSERT(HasSSE41());
         masm.roundsd_rr(src.code(), dest.code(), mode);
     }
-    void roundss(const FloatRegister &src, const FloatRegister &dest,
+    void roundss(FloatRegister src, FloatRegister dest,
                  JSC::X86Assembler::RoundingMode mode)
     {
         JS_ASSERT(HasSSE41());
         masm.roundss_rr(src.code(), dest.code(), mode);
     }
-    void minsd(const FloatRegister &src, const FloatRegister &dest) {
+    void minsd(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.minsd_rr(src.code(), dest.code());
     }
-    void minsd(const Operand &src, const FloatRegister &dest) {
+    void minsd(const Operand &src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::FPREG:
@@ -1564,11 +1564,11 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void maxsd(const FloatRegister &src, const FloatRegister &dest) {
+    void maxsd(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.maxsd_rr(src.code(), dest.code());
     }
-    void maxsd(const Operand &src, const FloatRegister &dest) {
+    void maxsd(const Operand &src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::FPREG:

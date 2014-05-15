@@ -294,13 +294,13 @@ StoreToTypedFloatArray(MacroAssembler &masm, int arrayType, const S &value, cons
 }
 
 void
-MacroAssembler::storeToTypedFloatArray(int arrayType, const FloatRegister &value,
+MacroAssembler::storeToTypedFloatArray(int arrayType, FloatRegister value,
                                        const BaseIndex &dest)
 {
     StoreToTypedFloatArray(*this, arrayType, value, dest);
 }
 void
-MacroAssembler::storeToTypedFloatArray(int arrayType, const FloatRegister &value,
+MacroAssembler::storeToTypedFloatArray(int arrayType, FloatRegister value,
                                        const Address &dest)
 {
     StoreToTypedFloatArray(*this, arrayType, value, dest);

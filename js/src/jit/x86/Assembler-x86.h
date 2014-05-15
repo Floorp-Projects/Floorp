@@ -195,7 +195,7 @@ class Assembler : public AssemblerX86Shared
     void push(const ImmPtr imm) {
         push(ImmWord(uintptr_t(imm.value)));
     }
-    void push(const FloatRegister &src) {
+    void push(FloatRegister src) {
         subl(Imm32(sizeof(double)), StackPointer);
         movsd(src, Address(StackPointer, 0));
     }
@@ -205,7 +205,7 @@ class Assembler : public AssemblerX86Shared
         return masm.currentOffset();
     }
 
-    void pop(const FloatRegister &src) {
+    void pop(FloatRegister src) {
         movsd(Address(StackPointer, 0), src);
         addl(Imm32(sizeof(double)), StackPointer);
     }

@@ -81,10 +81,10 @@ struct FloatRegister {
     const char *name() const {
         return FloatRegisters::GetName(code());
     }
-    bool operator ==(const FloatRegister &other) const {
+    bool operator ==(FloatRegister other) const {
         return code_ == other.code_;
     }
-    bool operator !=(const FloatRegister &other) const {
+    bool operator !=(FloatRegister other) const {
         return code_ != other.code_;
     }
     bool volatile_() const {

@@ -60,21 +60,21 @@ class MacroAssemblerARM : public Assembler
     }
 
     void convertBoolToInt32(Register source, Register dest);
-    void convertInt32ToDouble(Register src, const FloatRegister &dest);
+    void convertInt32ToDouble(Register src, FloatRegister dest);
     void convertInt32ToDouble(const Address &src, FloatRegister dest);
-    void convertUInt32ToFloat32(Register src, const FloatRegister &dest);
-    void convertUInt32ToDouble(Register src, const FloatRegister &dest);
-    void convertDoubleToFloat32(const FloatRegister &src, const FloatRegister &dest,
+    void convertUInt32ToFloat32(Register src, FloatRegister dest);
+    void convertUInt32ToDouble(Register src, FloatRegister dest);
+    void convertDoubleToFloat32(FloatRegister src, FloatRegister dest,
                                 Condition c = Always);
-    void branchTruncateDouble(const FloatRegister &src, Register dest, Label *fail);
-    void convertDoubleToInt32(const FloatRegister &src, Register dest, Label *fail,
+    void branchTruncateDouble(FloatRegister src, Register dest, Label *fail);
+    void convertDoubleToInt32(FloatRegister src, Register dest, Label *fail,
                               bool negativeZeroCheck = true);
-    void convertFloat32ToInt32(const FloatRegister &src, Register dest, Label *fail,
+    void convertFloat32ToInt32(FloatRegister src, Register dest, Label *fail,
                                bool negativeZeroCheck = true);
 
-    void convertFloat32ToDouble(const FloatRegister &src, const FloatRegister &dest);
-    void branchTruncateFloat32(const FloatRegister &src, Register dest, Label *fail);
-    void convertInt32ToFloat32(Register src, const FloatRegister &dest);
+    void convertFloat32ToDouble(FloatRegister src, FloatRegister dest);
+    void branchTruncateFloat32(FloatRegister src, Register dest, Label *fail);
+    void convertInt32ToFloat32(Register src, FloatRegister dest);
     void convertInt32ToFloat32(const Address &src, FloatRegister dest);
 
     void addDouble(FloatRegister src, FloatRegister dest);
@@ -651,7 +651,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void push(Register reg) {
         ma_push(reg);
     }
-    void push(const FloatRegister &reg) {
+    void push(FloatRegister reg) {
         ma_vpush(VFPRegister(reg));
     }
     void pushWithPadding(Register reg, const Imm32 extraSpace) {
@@ -669,7 +669,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void pop(Register reg) {
         ma_pop(reg);
     }
-    void pop(const FloatRegister &reg) {
+    void pop(FloatRegister reg) {
         ma_vpop(VFPRegister(reg));
     }
 
@@ -809,8 +809,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void unboxInt32(const Address &src, Register dest);
     void unboxBoolean(const ValueOperand &operand, Register dest);
     void unboxBoolean(const Address &src, Register dest);
-    void unboxDouble(const ValueOperand &operand, const FloatRegister &dest);
-    void unboxDouble(const Address &src, const FloatRegister &dest);
+    void unboxDouble(const ValueOperand &operand, FloatRegister dest);
+    void unboxDouble(const Address &src, FloatRegister dest);
     void unboxString(const ValueOperand &operand, Register dest);
     void unboxString(const Address &src, Register dest);
     void unboxObject(const ValueOperand &src, Register dest);
@@ -822,7 +822,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
 
     // boxing code
-    void boxDouble(const FloatRegister &src, const ValueOperand &dest);
+    void boxDouble(FloatRegister src, const ValueOperand &dest);
     void boxNonDouble(JSValueType type, Register src, const ValueOperand &dest);
 
     // Extended unboxing API. If the payload is already in a register, returns
@@ -844,21 +844,21 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         return value.typeReg();
     }
 
-    void boolValueToDouble(const ValueOperand &operand, const FloatRegister &dest);
-    void int32ValueToDouble(const ValueOperand &operand, const FloatRegister &dest);
-    void loadInt32OrDouble(const Operand &src, const FloatRegister &dest);
+    void boolValueToDouble(const ValueOperand &operand, FloatRegister dest);
+    void int32ValueToDouble(const ValueOperand &operand, FloatRegister dest);
+    void loadInt32OrDouble(const Operand &src, FloatRegister dest);
     void loadInt32OrDouble(Register base, Register index,
-                           const FloatRegister &dest, int32_t shift = defaultShift);
-    void loadConstantDouble(double dp, const FloatRegister &dest);
+                           FloatRegister dest, int32_t shift = defaultShift);
+    void loadConstantDouble(double dp, FloatRegister dest);
     // treat the value as a boolean, and set condition codes accordingly
     Condition testInt32Truthy(bool truthy, const ValueOperand &operand);
     Condition testBooleanTruthy(bool truthy, const ValueOperand &operand);
-    Condition testDoubleTruthy(bool truthy, const FloatRegister &reg);
+    Condition testDoubleTruthy(bool truthy, FloatRegister reg);
     Condition testStringTruthy(bool truthy, const ValueOperand &value);
 
-    void boolValueToFloat32(const ValueOperand &operand, const FloatRegister &dest);
-    void int32ValueToFloat32(const ValueOperand &operand, const FloatRegister &dest);
-    void loadConstantFloat32(float f, const FloatRegister &dest);
+    void boolValueToFloat32(const ValueOperand &operand, FloatRegister dest);
+    void int32ValueToFloat32(const ValueOperand &operand, FloatRegister dest);
+    void loadConstantFloat32(float f, FloatRegister dest);
 
     template<typename T>
     void branchTestInt32(Condition cond, const T & t, Label *label) {
@@ -972,7 +972,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         Condition c = testBooleanTruthy(truthy, operand);
         ma_b(label, c);
     }
-    void branchTestDoubleTruthy(bool truthy, const FloatRegister &reg, Label *label) {
+    void branchTestDoubleTruthy(bool truthy, FloatRegister reg, Label *label) {
         Condition c = testDoubleTruthy(truthy, reg);
         ma_b(label, c);
     }
@@ -1225,7 +1225,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         push(ptr);
         adjustFrame(sizeof(intptr_t));
     }
-    void Push(const FloatRegister &t) {
+    void Push(FloatRegister t) {
         VFPRegister r = VFPRegister(t);
         ma_vpush(VFPRegister(t));
         adjustFrame(r.size());
@@ -1340,15 +1340,15 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void loadPrivate(const Address &address, Register dest);
 
-    void loadDouble(const Address &addr, const FloatRegister &dest);
-    void loadDouble(const BaseIndex &src, const FloatRegister &dest);
+    void loadDouble(const Address &addr, FloatRegister dest);
+    void loadDouble(const BaseIndex &src, FloatRegister dest);
 
     // Load a float value into a register, then expand it to a double.
-    void loadFloatAsDouble(const Address &addr, const FloatRegister &dest);
-    void loadFloatAsDouble(const BaseIndex &src, const FloatRegister &dest);
+    void loadFloatAsDouble(const Address &addr, FloatRegister dest);
+    void loadFloatAsDouble(const BaseIndex &src, FloatRegister dest);
 
-    void loadFloat32(const Address &addr, const FloatRegister &dest);
-    void loadFloat32(const BaseIndex &src, const FloatRegister &dest);
+    void loadFloat32(const Address &addr, FloatRegister dest);
+    void loadFloat32(const BaseIndex &src, FloatRegister dest);
 
     void store8(Register src, const Address &address);
     void store8(Imm32 imm, const Address &address);
@@ -1440,11 +1440,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void breakpoint(Condition cc);
 
     void compareDouble(FloatRegister lhs, FloatRegister rhs);
-    void branchDouble(DoubleCondition cond, const FloatRegister &lhs, const FloatRegister &rhs,
+    void branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
                       Label *label);
 
     void compareFloat(FloatRegister lhs, FloatRegister rhs);
-    void branchFloat(DoubleCondition cond, const FloatRegister &lhs, const FloatRegister &rhs,
+    void branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
                      Label *label);
 
     void checkStackAlignment();
@@ -1509,7 +1509,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // operations should be emitted while setting arguments.
     void passABIArg(const MoveOperand &from, MoveOp::Type type);
     void passABIArg(Register reg);
-    void passABIArg(const FloatRegister &reg, MoveOp::Type type);
+    void passABIArg(FloatRegister reg, MoveOp::Type type);
     void passABIArg(const ValueOperand &regs);
 
   private:

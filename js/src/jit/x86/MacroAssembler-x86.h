@@ -790,7 +790,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
 
     // Note: this function clobbers the source register.
-    void boxDouble(const FloatRegister &src, const ValueOperand &dest) {
+    void boxDouble(FloatRegister src, const ValueOperand &dest) {
         movd(src, dest.payloadReg());
         psrldq(Imm32(4), src);
         movd(src, dest.typeReg());
@@ -806,7 +806,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void unboxInt32(const Address &src, Register dest) {
         movl(payloadOf(src), dest);
     }
-    void unboxDouble(const Address &src, const FloatRegister &dest) {
+    void unboxDouble(const Address &src, FloatRegister dest) {
         loadDouble(Operand(src), dest);
     }
     void unboxBoolean(const ValueOperand &src, Register dest) {
@@ -819,7 +819,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         if (src.payloadReg() != dest)
             movl(src.payloadReg(), dest);
     }
-    void unboxDouble(const ValueOperand &src, const FloatRegister &dest) {
+    void unboxDouble(const ValueOperand &src, FloatRegister dest) {
         JS_ASSERT(dest != ScratchFloatReg);
         if (Assembler::HasSSE41()) {
             movd(src.payloadReg(), dest);
@@ -831,7 +831,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         }
     }
     void unboxDouble(const Operand &payload, const Operand &type,
-                     Register scratch, const FloatRegister &dest) {
+                     Register scratch, FloatRegister dest) {
         JS_ASSERT(dest != ScratchFloatReg);
         if (Assembler::HasSSE41()) {
             movl(payload, scratch);
@@ -899,25 +899,25 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         return value.typeReg();
     }
 
-    void boolValueToDouble(const ValueOperand &operand, const FloatRegister &dest) {
+    void boolValueToDouble(const ValueOperand &operand, FloatRegister dest) {
         convertInt32ToDouble(operand.payloadReg(), dest);
     }
-    void boolValueToFloat32(const ValueOperand &operand, const FloatRegister &dest) {
+    void boolValueToFloat32(const ValueOperand &operand, FloatRegister dest) {
         convertInt32ToFloat32(operand.payloadReg(), dest);
     }
-    void int32ValueToDouble(const ValueOperand &operand, const FloatRegister &dest) {
+    void int32ValueToDouble(const ValueOperand &operand, FloatRegister dest) {
         convertInt32ToDouble(operand.payloadReg(), dest);
     }
-    void int32ValueToFloat32(const ValueOperand &operand, const FloatRegister &dest) {
+    void int32ValueToFloat32(const ValueOperand &operand, FloatRegister dest) {
         convertInt32ToFloat32(operand.payloadReg(), dest);
     }
 
-    void loadConstantDouble(double d, const FloatRegister &dest);
-    void addConstantDouble(double d, const FloatRegister &dest);
-    void loadConstantFloat32(float f, const FloatRegister &dest);
-    void addConstantFloat32(float f, const FloatRegister &dest);
+    void loadConstantDouble(double d, FloatRegister dest);
+    void addConstantDouble(double d, FloatRegister dest);
+    void loadConstantFloat32(float f, FloatRegister dest);
+    void addConstantFloat32(float f, FloatRegister dest);
 
-    void branchTruncateDouble(const FloatRegister &src, Register dest, Label *fail) {
+    void branchTruncateDouble(FloatRegister src, Register dest, Label *fail) {
         cvttsd2si(src, dest);
 
         // cvttsd2si returns 0x80000000 on failure. Test for it by
@@ -926,7 +926,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cmpl(dest, Imm32(1));
         j(Assembler::Overflow, fail);
     }
-    void branchTruncateFloat32(const FloatRegister &src, Register dest, Label *fail) {
+    void branchTruncateFloat32(FloatRegister src, Register dest, Label *fail) {
         cvttss2si(src, dest);
 
         // cvttss2si returns 0x80000000 on failure. Test for it by
@@ -961,7 +961,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         j(cond, label);
     }
 
-    void loadInt32OrDouble(const Operand &operand, const FloatRegister &dest) {
+    void loadInt32OrDouble(const Operand &operand, FloatRegister dest) {
         Label notInt32, end;
         branchTestInt32(Assembler::NotEqual, operand, &notInt32);
         convertInt32ToDouble(ToPayload(operand), dest);
@@ -1009,7 +1009,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
 
     // Note: this function clobbers the source register.
-    void convertUInt32ToDouble(Register src, const FloatRegister &dest) {
+    void convertUInt32ToDouble(Register src, FloatRegister dest) {
         // src is [0, 2^32-1]
         subl(Imm32(0x80000000), src);
 
@@ -1022,7 +1022,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
 
     // Note: this function clobbers the source register.
-    void convertUInt32ToFloat32(Register src, const FloatRegister &dest) {
+    void convertUInt32ToFloat32(Register src, FloatRegister dest) {
         convertUInt32ToDouble(src, dest);
         convertDoubleToFloat32(dest, dest);
     }
@@ -1076,7 +1076,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     // operations should be emitted while setting arguments.
     void passABIArg(const MoveOperand &from, MoveOp::Type type);
     void passABIArg(Register reg);
-    void passABIArg(const FloatRegister &reg, MoveOp::Type type);
+    void passABIArg(FloatRegister reg, MoveOp::Type type);
 
   private:
     void callWithABIPre(uint32_t *stackAdjust);

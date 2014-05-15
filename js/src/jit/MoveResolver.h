@@ -40,7 +40,7 @@ class MoveOperand
     { }
     explicit MoveOperand(Register reg) : kind_(REG), code_(reg.code())
     { }
-    explicit MoveOperand(const FloatRegister &reg) : kind_(FLOAT_REG), code_(reg.code())
+    explicit MoveOperand(FloatRegister reg) : kind_(FLOAT_REG), code_(reg.code())
     { }
     MoveOperand(Register reg, int32_t disp, Kind kind = MEMORY)
         : kind_(kind),

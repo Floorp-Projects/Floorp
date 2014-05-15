@@ -443,7 +443,7 @@ class MacroAssembler : public MacroAssemblerSpecific
             mov(ReturnReg, reg);
     }
 
-    void storeCallFloatResult(const FloatRegister &reg) {
+    void storeCallFloatResult(FloatRegister reg) {
         if (reg != ReturnFloatReg)
             moveDouble(ReturnFloatReg, reg);
     }
@@ -738,8 +738,8 @@ class MacroAssembler : public MacroAssemblerSpecific
         }
     }
 
-    void storeToTypedFloatArray(int arrayType, const FloatRegister &value, const BaseIndex &dest);
-    void storeToTypedFloatArray(int arrayType, const FloatRegister &value, const Address &dest);
+    void storeToTypedFloatArray(int arrayType, FloatRegister value, const BaseIndex &dest);
+    void storeToTypedFloatArray(int arrayType, FloatRegister value, const Address &dest);
 
     Register extractString(const Address &address, Register scratch) {
         return extractObject(address, scratch);

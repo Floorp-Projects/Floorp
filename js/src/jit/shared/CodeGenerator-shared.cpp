@@ -721,7 +721,7 @@ class OutOfLineTruncateSlow : public OutOfLineCodeBase<CodeGeneratorShared>
 };
 
 OutOfLineCode *
-CodeGeneratorShared::oolTruncateDouble(const FloatRegister &src, Register dest)
+CodeGeneratorShared::oolTruncateDouble(FloatRegister src, Register dest)
 {
     OutOfLineTruncateSlow *ool = new(alloc()) OutOfLineTruncateSlow(src, dest);
     if (!addOutOfLineCode(ool))
@@ -730,7 +730,7 @@ CodeGeneratorShared::oolTruncateDouble(const FloatRegister &src, Register dest)
 }
 
 bool
-CodeGeneratorShared::emitTruncateDouble(const FloatRegister &src, Register dest)
+CodeGeneratorShared::emitTruncateDouble(FloatRegister src, Register dest)
 {
     OutOfLineCode *ool = oolTruncateDouble(src, dest);
     if (!ool)
@@ -742,7 +742,7 @@ CodeGeneratorShared::emitTruncateDouble(const FloatRegister &src, Register dest)
 }
 
 bool
-CodeGeneratorShared::emitTruncateFloat32(const FloatRegister &src, Register dest)
+CodeGeneratorShared::emitTruncateFloat32(FloatRegister src, Register dest)
 {
     OutOfLineTruncateSlow *ool = new(alloc()) OutOfLineTruncateSlow(src, dest, true);
     if (!addOutOfLineCode(ool))

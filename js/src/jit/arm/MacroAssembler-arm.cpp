@@ -44,7 +44,7 @@ MacroAssemblerARM::convertBoolToInt32(Register source, Register dest)
 }
 
 void
-MacroAssemblerARM::convertInt32ToDouble(Register src, const FloatRegister &dest_)
+MacroAssemblerARM::convertInt32ToDouble(Register src, FloatRegister dest_)
 {
     // direct conversions aren't possible.
     VFPRegister dest = VFPRegister(dest_);
@@ -61,7 +61,7 @@ MacroAssemblerARM::convertInt32ToDouble(const Address &src, FloatRegister dest)
 }
 
 void
-MacroAssemblerARM::convertUInt32ToDouble(Register src, const FloatRegister &dest_)
+MacroAssemblerARM::convertUInt32ToDouble(Register src, FloatRegister dest_)
 {
     // direct conversions aren't possible.
     VFPRegister dest = VFPRegister(dest_);
@@ -70,7 +70,7 @@ MacroAssemblerARM::convertUInt32ToDouble(Register src, const FloatRegister &dest
 }
 
 void
-MacroAssemblerARM::convertUInt32ToFloat32(Register src, const FloatRegister &dest_)
+MacroAssemblerARM::convertUInt32ToFloat32(Register src, FloatRegister dest_)
 {
     // direct conversions aren't possible.
     VFPRegister dest = VFPRegister(dest_);
@@ -78,7 +78,7 @@ MacroAssemblerARM::convertUInt32ToFloat32(Register src, const FloatRegister &des
     as_vcvt(VFPRegister(dest).singleOverlay(), dest.uintOverlay());
 }
 
-void MacroAssemblerARM::convertDoubleToFloat32(const FloatRegister &src, const FloatRegister &dest,
+void MacroAssemblerARM::convertDoubleToFloat32(FloatRegister src, FloatRegister dest,
                                                Condition c)
 {
     as_vcvt(VFPRegister(dest).singleOverlay(), VFPRegister(src), false, c);
@@ -92,7 +92,7 @@ void MacroAssemblerARM::convertDoubleToFloat32(const FloatRegister &src, const F
 // 2) convert the floating point value to an integer, if it did not fit,
 //        then it set one or two bits in the fpcsr.  Check those.
 void
-MacroAssemblerARM::branchTruncateDouble(const FloatRegister &src, Register dest, Label *fail)
+MacroAssemblerARM::branchTruncateDouble(FloatRegister src, Register dest, Label *fail)
 {
     ma_vcvt_F64_I32(src, ScratchFloatReg);
     ma_vxfer(ScratchFloatReg, dest);
@@ -105,7 +105,7 @@ MacroAssemblerARM::branchTruncateDouble(const FloatRegister &src, Register dest,
 // integer is written to the output register. Otherwise, a bailout is taken to
 // the given snapshot. This function overwrites the scratch float register.
 void
-MacroAssemblerARM::convertDoubleToInt32(const FloatRegister &src, Register dest,
+MacroAssemblerARM::convertDoubleToInt32(FloatRegister src, Register dest,
                                         Label *fail, bool negativeZeroCheck)
 {
     // convert the floating point value to an integer, if it did not fit,
@@ -134,7 +134,7 @@ MacroAssemblerARM::convertDoubleToInt32(const FloatRegister &src, Register dest,
 // integer is written to the output register. Otherwise, a bailout is taken to
 // the given snapshot. This function overwrites the scratch float register.
 void
-MacroAssemblerARM::convertFloat32ToInt32(const FloatRegister &src, Register dest,
+MacroAssemblerARM::convertFloat32ToInt32(FloatRegister src, Register dest,
                                          Label *fail, bool negativeZeroCheck)
 {
     // convert the floating point value to an integer, if it did not fit,
@@ -160,12 +160,12 @@ MacroAssemblerARM::convertFloat32ToInt32(const FloatRegister &src, Register dest
 }
 
 void
-MacroAssemblerARM::convertFloat32ToDouble(const FloatRegister &src, const FloatRegister &dest) {
+MacroAssemblerARM::convertFloat32ToDouble(FloatRegister src, FloatRegister dest) {
     as_vcvt(VFPRegister(dest), VFPRegister(src).singleOverlay());
 }
 
 void
-MacroAssemblerARM::branchTruncateFloat32(const FloatRegister &src, Register dest, Label *fail) {
+MacroAssemblerARM::branchTruncateFloat32(FloatRegister src, Register dest, Label *fail) {
     ma_vcvt_F32_I32(src, ScratchFloatReg);
     ma_vxfer(ScratchFloatReg, dest);
     ma_cmp(dest, Imm32(0x7fffffff));
@@ -174,7 +174,7 @@ MacroAssemblerARM::branchTruncateFloat32(const FloatRegister &src, Register dest
 }
 
 void
-MacroAssemblerARM::convertInt32ToFloat32(Register src, const FloatRegister &dest_) {
+MacroAssemblerARM::convertInt32ToFloat32(Register src, FloatRegister dest_) {
     // direct conversions aren't possible.
     VFPRegister dest = VFPRegister(dest_).singleOverlay();
     as_vxfer(src, InvalidReg, dest.sintOverlay(),
@@ -2209,13 +2209,13 @@ MacroAssemblerARMCompat::loadPrivate(const Address &address, Register dest)
 }
 
 void
-MacroAssemblerARMCompat::loadDouble(const Address &address, const FloatRegister &dest)
+MacroAssemblerARMCompat::loadDouble(const Address &address, FloatRegister dest)
 {
     ma_vldr(Operand(address), dest);
 }
 
 void
-MacroAssemblerARMCompat::loadDouble(const BaseIndex &src, const FloatRegister &dest)
+MacroAssemblerARMCompat::loadDouble(const BaseIndex &src, FloatRegister dest)
 {
     // VFP instructions don't even support register Base + register Index modes, so
     // just add the index, then handle the offset like normal
@@ -2229,7 +2229,7 @@ MacroAssemblerARMCompat::loadDouble(const BaseIndex &src, const FloatRegister &d
 }
 
 void
-MacroAssemblerARMCompat::loadFloatAsDouble(const Address &address, const FloatRegister &dest)
+MacroAssemblerARMCompat::loadFloatAsDouble(const Address &address, FloatRegister dest)
 {
     VFPRegister rt = dest;
     ma_vldr(Operand(address), rt.singleOverlay());
@@ -2237,7 +2237,7 @@ MacroAssemblerARMCompat::loadFloatAsDouble(const Address &address, const FloatRe
 }
 
 void
-MacroAssemblerARMCompat::loadFloatAsDouble(const BaseIndex &src, const FloatRegister &dest)
+MacroAssemblerARMCompat::loadFloatAsDouble(const BaseIndex &src, FloatRegister dest)
 {
     // VFP instructions don't even support register Base + register Index modes, so
     // just add the index, then handle the offset like normal
@@ -2253,13 +2253,13 @@ MacroAssemblerARMCompat::loadFloatAsDouble(const BaseIndex &src, const FloatRegi
 }
 
 void
-MacroAssemblerARMCompat::loadFloat32(const Address &address, const FloatRegister &dest)
+MacroAssemblerARMCompat::loadFloat32(const Address &address, FloatRegister dest)
 {
     ma_vldr(Operand(address), VFPRegister(dest).singleOverlay());
 }
 
 void
-MacroAssemblerARMCompat::loadFloat32(const BaseIndex &src, const FloatRegister &dest)
+MacroAssemblerARMCompat::loadFloat32(const BaseIndex &src, FloatRegister dest)
 {
     // VFP instructions don't even support register Base + register Index modes, so
     // just add the index, then handle the offset like normal
@@ -2606,8 +2606,8 @@ MacroAssemblerARMCompat::compareDouble(FloatRegister lhs, FloatRegister rhs)
 }
 
 void
-MacroAssemblerARMCompat::branchDouble(DoubleCondition cond, const FloatRegister &lhs,
-                                      const FloatRegister &rhs, Label *label)
+MacroAssemblerARMCompat::branchDouble(DoubleCondition cond, FloatRegister lhs,
+                                      FloatRegister rhs, Label *label)
 {
     compareDouble(lhs, rhs);
 
@@ -2643,8 +2643,8 @@ MacroAssemblerARMCompat::compareFloat(FloatRegister lhs, FloatRegister rhs)
 }
 
 void
-MacroAssemblerARMCompat::branchFloat(DoubleCondition cond, const FloatRegister &lhs,
-                                     const FloatRegister &rhs, Label *label)
+MacroAssemblerARMCompat::branchFloat(DoubleCondition cond, FloatRegister lhs,
+                                     FloatRegister rhs, Label *label)
 {
     compareFloat(lhs, rhs);
 
@@ -3053,7 +3053,7 @@ MacroAssemblerARMCompat::unboxBoolean(const Address &src, Register dest)
 }
 
 void
-MacroAssemblerARMCompat::unboxDouble(const ValueOperand &operand, const FloatRegister &dest)
+MacroAssemblerARMCompat::unboxDouble(const ValueOperand &operand, FloatRegister dest)
 {
     JS_ASSERT(dest != ScratchFloatReg);
     as_vxfer(operand.payloadReg(), operand.typeReg(),
@@ -3061,7 +3061,7 @@ MacroAssemblerARMCompat::unboxDouble(const ValueOperand &operand, const FloatReg
 }
 
 void
-MacroAssemblerARMCompat::unboxDouble(const Address &src, const FloatRegister &dest)
+MacroAssemblerARMCompat::unboxDouble(const Address &src, FloatRegister dest)
 {
     ma_vldr(Operand(src), dest);
 }
@@ -3107,7 +3107,7 @@ MacroAssemblerARMCompat::unboxPrivate(const ValueOperand &src, Register dest)
 }
 
 void
-MacroAssemblerARMCompat::boxDouble(const FloatRegister &src, const ValueOperand &dest)
+MacroAssemblerARMCompat::boxDouble(FloatRegister src, const ValueOperand &dest)
 {
     as_vxfer(dest.payloadReg(), dest.typeReg(), VFPRegister(src), FloatToCore);
 }
@@ -3120,7 +3120,7 @@ MacroAssemblerARMCompat::boxNonDouble(JSValueType type, Register src, const Valu
 }
 
 void
-MacroAssemblerARMCompat::boolValueToDouble(const ValueOperand &operand, const FloatRegister &dest)
+MacroAssemblerARMCompat::boolValueToDouble(const ValueOperand &operand, FloatRegister dest)
 {
     VFPRegister d = VFPRegister(dest);
     ma_vimm(1.0, dest);
@@ -3130,7 +3130,7 @@ MacroAssemblerARMCompat::boolValueToDouble(const ValueOperand &operand, const Fl
 }
 
 void
-MacroAssemblerARMCompat::int32ValueToDouble(const ValueOperand &operand, const FloatRegister &dest)
+MacroAssemblerARMCompat::int32ValueToDouble(const ValueOperand &operand, FloatRegister dest)
 {
     // transfer the integral value to a floating point register
     VFPRegister vfpdest = VFPRegister(dest);
@@ -3141,7 +3141,7 @@ MacroAssemblerARMCompat::int32ValueToDouble(const ValueOperand &operand, const F
 }
 
 void
-MacroAssemblerARMCompat::boolValueToFloat32(const ValueOperand &operand, const FloatRegister &dest)
+MacroAssemblerARMCompat::boolValueToFloat32(const ValueOperand &operand, FloatRegister dest)
 {
     VFPRegister d = VFPRegister(dest).singleOverlay();
     ma_vimm_f32(1.0, dest);
@@ -3151,7 +3151,7 @@ MacroAssemblerARMCompat::boolValueToFloat32(const ValueOperand &operand, const F
 }
 
 void
-MacroAssemblerARMCompat::int32ValueToFloat32(const ValueOperand &operand, const FloatRegister &dest)
+MacroAssemblerARMCompat::int32ValueToFloat32(const ValueOperand &operand, FloatRegister dest)
 {
     // transfer the integral value to a floating point register
     VFPRegister vfpdest = VFPRegister(dest).singleOverlay();
@@ -3162,13 +3162,13 @@ MacroAssemblerARMCompat::int32ValueToFloat32(const ValueOperand &operand, const 
 }
 
 void
-MacroAssemblerARMCompat::loadConstantFloat32(float f, const FloatRegister &dest)
+MacroAssemblerARMCompat::loadConstantFloat32(float f, FloatRegister dest)
 {
     ma_vimm_f32(f, dest);
 }
 
 void
-MacroAssemblerARMCompat::loadInt32OrDouble(const Operand &src, const FloatRegister &dest)
+MacroAssemblerARMCompat::loadInt32OrDouble(const Operand &src, FloatRegister dest)
 {
     Label notInt32, end;
     // If it's an int, convert it to double.
@@ -3185,7 +3185,7 @@ MacroAssemblerARMCompat::loadInt32OrDouble(const Operand &src, const FloatRegist
 }
 
 void
-MacroAssemblerARMCompat::loadInt32OrDouble(Register base, Register index, const FloatRegister &dest, int32_t shift)
+MacroAssemblerARMCompat::loadInt32OrDouble(Register base, Register index, FloatRegister dest, int32_t shift)
 {
     Label notInt32, end;
 
@@ -3213,7 +3213,7 @@ MacroAssemblerARMCompat::loadInt32OrDouble(Register base, Register index, const 
 }
 
 void
-MacroAssemblerARMCompat::loadConstantDouble(double dp, const FloatRegister &dest)
+MacroAssemblerARMCompat::loadConstantDouble(double dp, FloatRegister dest)
 {
     as_FImm64Pool(dest, dp);
 }
@@ -3235,7 +3235,7 @@ MacroAssemblerARMCompat::testBooleanTruthy(bool truthy, const ValueOperand &oper
 }
 
 Assembler::Condition
-MacroAssemblerARMCompat::testDoubleTruthy(bool truthy, const FloatRegister &reg)
+MacroAssemblerARMCompat::testDoubleTruthy(bool truthy, FloatRegister reg)
 {
     as_vcmpz(VFPRegister(reg));
     as_vmrs(pc);
@@ -3796,7 +3796,7 @@ MacroAssemblerARMCompat::passABIArg(Register reg)
 }
 
 void
-MacroAssemblerARMCompat::passABIArg(const FloatRegister &freg, MoveOp::Type type)
+MacroAssemblerARMCompat::passABIArg(FloatRegister freg, MoveOp::Type type)
 {
     passABIArg(MoveOperand(freg), type);
 }
