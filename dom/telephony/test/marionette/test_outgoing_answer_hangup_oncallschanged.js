@@ -25,7 +25,7 @@ function dial() {
     if (event.call.state == "dialing") {
       outgoing = event.call;
       ok(outgoing);
-      is(outgoing.number, number);
+      is(outgoing.id.number, number);
 
       is(outgoing, telephony.active);
       is(telephony.calls.length, 1);
