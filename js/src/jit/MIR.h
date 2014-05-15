@@ -3389,6 +3389,19 @@ class MTypeOf
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
+
+    bool congruentTo(const MDefinition *ins) const {
+        if (!ins->isTypeOf())
+            return false;
+        if (inputType() != ins->toTypeOf()->inputType())
+            return false;
+        if (inputMaybeCallableOrEmulatesUndefined() !=
+            ins->toTypeOf()->inputMaybeCallableOrEmulatesUndefined())
+        {
+            return false;
+        }
+        return congruentIfOperandsEqual(ins);
+    }
 };
 
 class MToId
@@ -4548,6 +4561,9 @@ class MFromCharCode
 
     virtual AliasSet getAliasSet() const {
         return AliasSet::None();
+    }
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
     }
 };
 
@@ -5959,6 +5975,9 @@ class MNot
         return true;
     }
 #endif
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
 };
 
 // Bailout if index + minimum < 0 or index + maximum >= length. The length used
@@ -8660,6 +8679,9 @@ class MFloor
         return true;
     }
 #endif
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
 };
 
 // Inlined version of Math.round().
@@ -8701,6 +8723,9 @@ class MRound
         return true;
     }
 #endif
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
 };
 
 class MIteratorStart
@@ -9816,6 +9841,13 @@ class MHasClass
     }
     AliasSet getAliasSet() const {
         return AliasSet::None();
+    }
+    bool congruentTo(const MDefinition *ins) const {
+        if (!ins->isHasClass())
+            return false;
+        if (getClass() != ins->toHasClass()->getClass())
+            return false;
+        return congruentIfOperandsEqual(ins);
     }
 };
 
