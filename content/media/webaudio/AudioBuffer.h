@@ -33,16 +33,12 @@ class AudioContext;
 class AudioBuffer MOZ_FINAL : public nsWrapperCache
 {
 public:
-  AudioBuffer(AudioContext* aContext, uint32_t aLength,
-              float aSampleRate);
-  ~AudioBuffer();
+  static already_AddRefed<AudioBuffer>
+  Create(AudioContext* aContext, uint32_t aNumberOfChannels,
+         uint32_t aLength, float aSampleRate,
+         JSContext* aJSContext, ErrorResult& aRv);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
-  // This function needs to be called in order to allocate
-  // all of the channels.  It is fallible!
-  bool InitializeBuffers(uint32_t aNumberOfChannels,
-                         JSContext* aJSContext);
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AudioBuffer)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(AudioBuffer)
@@ -100,12 +96,16 @@ public:
   void SetRawChannelContents(uint32_t aChannel, float* aContents);
 
 protected:
+  AudioBuffer(AudioContext* aContext, uint32_t aNumberOfChannels,
+              uint32_t aLength, float aSampleRate);
+  ~AudioBuffer();
+
   bool RestoreJSChannelData(JSContext* aJSContext);
   void ClearJSChannels();
 
   nsRefPtr<AudioContext> mContext;
   // Float32Arrays
-  AutoFallibleTArray<JS::Heap<JSObject*>, 2> mJSChannels;
+  nsAutoTArray<JS::Heap<JSObject*>, 2> mJSChannels;
 
   // mSharedChannels aggregates the data from mJSChannels. This is non-null
   // if and only if the mJSChannels are neutered.
