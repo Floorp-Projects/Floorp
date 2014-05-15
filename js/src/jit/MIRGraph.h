@@ -626,7 +626,7 @@ class MIRGraph
         return idGen_;
     }
     MResumePoint *entryResumePoint() {
-        return blocks_.begin()->entryResumePoint();
+        return entryBlock()->entryResumePoint();
     }
 
     void copyIds(const MIRGraph &other) {
