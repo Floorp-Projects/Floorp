@@ -362,31 +362,31 @@ TEST_F(pkixder_input_tests, SkipToSECItemPastEnd)
   ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
 }
 
-TEST_F(pkixder_input_tests, Skip)
+TEST_F(pkixder_input_tests, ExpectTagAndSkipValue)
 {
   Input input;
   ASSERT_EQ(Success,
             input.Init(DER_SEQUENCE_OF_INT8, sizeof DER_SEQUENCE_OF_INT8));
 
-  ASSERT_EQ(Success, Skip(input, SEQUENCE));
+  ASSERT_EQ(Success, ExpectTagAndSkipValue(input, SEQUENCE));
   ASSERT_EQ(Success, End(input));
 }
 
-TEST_F(pkixder_input_tests, SkipWithTruncatedData)
+TEST_F(pkixder_input_tests, ExpectTagAndSkipValueWithTruncatedData)
 {
   Input input;
   ASSERT_EQ(Success, input.Init(DER_TRUNCATED_SEQUENCE_OF_INT8,
                                 sizeof DER_TRUNCATED_SEQUENCE_OF_INT8));
 
-  ASSERT_EQ(Failure, Skip(input, SEQUENCE));
+  ASSERT_EQ(Failure, ExpectTagAndSkipValue(input, SEQUENCE));
 }
 
-TEST_F(pkixder_input_tests, SkipWithOverrunData)
+TEST_F(pkixder_input_tests, ExpectTagAndSkipValueWithOverrunData)
 {
   Input input;
   ASSERT_EQ(Success, input.Init(DER_OVERRUN_SEQUENCE_OF_INT8,
                                 sizeof DER_OVERRUN_SEQUENCE_OF_INT8));
-  ASSERT_EQ(Success, Skip(input, SEQUENCE));
+  ASSERT_EQ(Success, ExpectTagAndSkipValue(input, SEQUENCE));
   ASSERT_EQ(Failure, End(input));
 }
 
@@ -491,7 +491,7 @@ TEST_F(pkixder_input_tests, ExpectTagAndGetLength)
             input.Init(DER_SEQUENCE_OF_INT8, sizeof DER_SEQUENCE_OF_INT8));
 
   uint16_t length = 0;
-  ASSERT_EQ(Success, ExpectTagAndGetLength(input, SEQUENCE, length));
+  ASSERT_EQ(Success, internal::ExpectTagAndGetLength(input, SEQUENCE, length));
   ASSERT_EQ(sizeof DER_SEQUENCE_OF_INT8 - 2, length);
   ASSERT_EQ(Success, input.Skip(length));
   ASSERT_TRUE(input.AtEnd());
@@ -504,7 +504,7 @@ TEST_F(pkixder_input_tests, ExpectTagAndGetLengthWithWrongTag)
             input.Init(DER_SEQUENCE_OF_INT8, sizeof DER_SEQUENCE_OF_INT8));
 
   uint16_t length = 0;
-  ASSERT_EQ(Failure, ExpectTagAndGetLength(input, INTEGER, length));
+  ASSERT_EQ(Failure, internal::ExpectTagAndGetLength(input, INTEGER, length));
   ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
 }
 
@@ -515,23 +515,23 @@ TEST_F(pkixder_input_tests, ExpectTagAndGetLengthWithWrongLength)
                                 sizeof DER_TRUNCATED_SEQUENCE_OF_INT8));
 
   uint16_t length = 0;
-  ASSERT_EQ(Failure, ExpectTagAndGetLength(input, SEQUENCE, length));
+  ASSERT_EQ(Failure, internal::ExpectTagAndGetLength(input, SEQUENCE, length));
   ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
 }
 
-TEST_F(pkixder_input_tests, ExpectTagAndIgnoreLength)
+TEST_F(pkixder_input_tests, ExpectTagAndSkipLength)
 {
   Input input;
   ASSERT_EQ(Success, input.Init(DER_INT16, sizeof DER_INT16));
-  ASSERT_EQ(Success, ExpectTagAndIgnoreLength(input, INTEGER));
+  ASSERT_EQ(Success, ExpectTagAndSkipLength(input, INTEGER));
 }
 
-TEST_F(pkixder_input_tests, ExpectTagAndIgnoreLengthWithWrongTag)
+TEST_F(pkixder_input_tests, ExpectTagAndSkipLengthWithWrongTag)
 {
   Input input;
   ASSERT_EQ(Success, input.Init(DER_INT16, sizeof DER_INT16));
 
-  ASSERT_EQ(Failure, ExpectTagAndIgnoreLength(input, OCTET_STRING));
+  ASSERT_EQ(Failure, ExpectTagAndSkipLength(input, OCTET_STRING));
   ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
 }
 
