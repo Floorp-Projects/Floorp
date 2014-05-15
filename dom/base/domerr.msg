@@ -41,6 +41,11 @@ DOM4_MSG_DEF(EncodingError, "The given encoding is not supported.", NS_ERROR_DOM
 DOM4_MSG_DEF(EncodingError, "The encoding must be utf-8, utf-16, or utf-16be.", NS_ERROR_DOM_ENCODING_NOT_UTF_ERR)
 DOM4_MSG_DEF(EncodingError, "The decoder failed to convert.", NS_ERROR_DOM_ENCODING_DECODE_ERR)
 
+/* WebCrypto API errors from http://www.w3.org/TR/WebCryptoAPI/ */
+DOM4_MSG_DEF(UnknownError, "The operation failed for an unknown transient reason", NS_ERROR_DOM_UNKNOWN_ERR)
+DOM4_MSG_DEF(DataError, "Data provided to an operation does not meet requirements", NS_ERROR_DOM_DATA_ERR)
+DOM4_MSG_DEF(OperationError, "The operation failed for an operation-specific reason", NS_ERROR_DOM_OPERATION_ERR)
+
 /* SVG DOM errors from http://www.w3.org/TR/SVG11/svgdom.html */
 
 DOM4_MSG_DEF(TypeError, "Unknown or invalid type", NS_ERROR_DOM_SVG_WRONG_TYPE_ERR)

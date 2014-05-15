@@ -45,6 +45,7 @@ PARALLEL_DIRS += [
     'bluetooth',
     'browser-element',
     'contacts',
+    'crypto',
     'phonenumberutils',
     'alarm',
     'datastore',

@@ -316,6 +316,7 @@ WEBIDL_FILES = [
     'StorageType.webidl',
     'StyleSheet.webidl',
     'StyleSheetList.webidl',
+    'SubtleCrypto.webidl',
     'SVGAElement.webidl',
     'SVGAltGlyphElement.webidl',
     'SVGAngle.webidl',
