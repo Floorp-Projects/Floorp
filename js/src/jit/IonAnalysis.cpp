@@ -1156,7 +1156,7 @@ static void
 ComputeImmediateDominators(MIRGraph &graph)
 {
     // The default start block is a root and therefore only self-dominates.
-    MBasicBlock *startBlock = *graph.begin();
+    MBasicBlock *startBlock = graph.entryBlock();
     startBlock->setImmediateDominator(startBlock);
 
     // Any OSR block is a root and therefore only self-dominates.
@@ -1240,7 +1240,7 @@ jit::BuildDominatorTree(MIRGraph &graph)
     // If compiling with OSR, many blocks will self-dominate.
     // Without OSR, there is only one root block which dominates all.
     if (!graph.osrBlock())
-        JS_ASSERT(graph.begin()->numDominated() == graph.numBlocks() - 1);
+        JS_ASSERT(graph.entryBlock()->numDominated() == graph.numBlocks() - 1);
 #endif
     // Now, iterate through the dominator tree and annotate every
     // block with its index in the pre-order traversal of the
@@ -2355,7 +2355,7 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
     if (!EliminatePhis(&builder, graph, AggressiveObservability))
         return false;
 
-    MDefinition *thisValue = graph.begin()->getSlot(info.thisSlot());
+    MDefinition *thisValue = graph.entryBlock()->getSlot(info.thisSlot());
 
     // Get a list of instructions using the |this| value in the order they
     // appear in the graph.
@@ -2560,7 +2560,7 @@ jit::AnalyzeArgumentsUsage(JSContext *cx, JSScript *scriptArg)
     if (!EliminatePhis(&builder, graph, AggressiveObservability))
         return false;
 
-    MDefinition *argumentsValue = graph.begin()->getSlot(info.argsObjSlot());
+    MDefinition *argumentsValue = graph.entryBlock()->getSlot(info.argsObjSlot());
 
     bool argumentsContentsObserved = false;
 
