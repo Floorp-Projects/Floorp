@@ -5388,7 +5388,7 @@ js::PurgeJITCaches(Zone *zone)
         JSScript *script = i.get<JSScript>();
 
         /* Discard Ion caches. */
-        jit::PurgeCaches(script, zone);
+        jit::PurgeCaches(script);
     }
 #endif
 }

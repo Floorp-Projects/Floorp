@@ -162,7 +162,6 @@ JitRuntime::JitRuntime()
     baselineDebugModeOSRHandler_(nullptr),
     functionWrappers_(nullptr),
     osrTempData_(nullptr),
-    flusher_(nullptr),
     ionCodeProtected_(false),
     ionReturnOverride_(MagicValue(JS_ARG_POISON))
 {
@@ -187,7 +186,6 @@ JitRuntime::initialize(JSContext *cx)
     AutoCompartment ac(cx, cx->atomsCompartment());
 
     IonContext ictx(cx, nullptr);
-    AutoFlushCache afc("JitRuntime::initialize", this);
 
     execAlloc_ = cx->runtime()->getExecAlloc(cx);
     if (!execAlloc_)
@@ -1176,7 +1174,7 @@ IonScript::toggleBarriers(bool enabled)
 }
 
 void
-IonScript::purgeCaches(Zone *zone)
+IonScript::purgeCaches()
 {
     // Don't reset any ICs if we're invalidated, otherwise, repointing the
     // inline jump could overwrite an invalidation marker. These ICs can
@@ -1186,9 +1184,6 @@ IonScript::purgeCaches(Zone *zone)
     if (invalidated())
         return;
 
-    JSRuntime *rt = zone->runtimeFromMainThread();
-    IonContext ictx(CompileRuntime::get(rt));
-    AutoFlushCache afc("purgeCaches", rt->jitRuntime());
     for (size_t i = 0; i < numCaches(); i++)
         getCacheFromIndex(i).reset();
 }
@@ -1248,8 +1243,6 @@ jit::ToggleBarriers(JS::Zone *zone, bool needs)
     if (!rt->hasJitRuntime())
         return;
 
-    IonContext ictx(CompileRuntime::get(rt));
-    AutoFlushCache afc("ToggleBarriers", rt->jitRuntime());
     for (gc::ZoneCellIterUnderGC i(zone, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->hasIonScript())
@@ -1734,7 +1727,6 @@ AttachFinishedCompilations(JSContext *cx)
                 // Release the worker thread lock and root the compiler for GC.
                 AutoTempAllocatorRooter root(cx, &builder->alloc());
                 AutoUnlockWorkerThreadState unlock;
-                AutoFlushCache afc("AttachFinishedCompilations", cx->runtime()->jitRuntime());
                 success = codegen->link(cx, builder->constraints());
             }
 
@@ -1879,8 +1871,6 @@ IonCompile(JSContext *cx, JSScript *script,
         if (!baselineFrameInspector)
             return AbortReason_Alloc;
     }
-
-    AutoFlushCache afc("IonCompile", cx->runtime()->jitRuntime());
 
     AutoTempAllocatorRooter root(cx, temp);
     types::CompilerConstraintList *constraints = types::NewCompilerConstraintList(*temp);
@@ -2417,7 +2407,6 @@ EnterIon(JSContext *cx, EnterJitData &data)
     {
         AssertCompartmentUnchanged pcc(cx);
         JitActivation activation(cx, data.constructing);
-        AutoFlushInhibitor afi(cx->runtime()->jitRuntime());
 
         CALL_GENERATED_CODE(enter, data.jitcode, data.maxArgc, data.maxArgv, /* osrFrame = */nullptr, data.calleeToken,
                             /* scopeChain = */ nullptr, 0, data.result.address());
@@ -2601,7 +2590,7 @@ InvalidateActivation(FreeOp *fop, uint8_t *jitTop, bool invalidateAll)
         // Purge ICs before we mark this script as invalidated. This will
         // prevent lastJump_ from appearing to be a bogus pointer, just
         // in case anyone tries to read it.
-        ionScript->purgeCaches(script->zone());
+        ionScript->purgeCaches();
 
         // Clean up any pointers from elsewhere in the runtime to this IonScript
         // which is about to become disconnected from its JSScript.
@@ -2682,8 +2671,6 @@ jit::InvalidateAll(FreeOp *fop, Zone *zone)
 
     for (JitActivationIterator iter(fop->runtime()); !iter.done(); ++iter) {
         if (iter->compartment()->zone() == zone) {
-            IonContext ictx(CompileRuntime::get(fop->runtime()));
-            AutoFlushCache afc("InvalidateAll", fop->runtime()->jitRuntime());
             IonSpew(IonSpew_Invalidate, "Invalidating all frames for GC");
             InvalidateActivation(fop, iter.jitTop(), true);
         }
@@ -2697,7 +2684,6 @@ jit::Invalidate(types::TypeZone &types, FreeOp *fop,
                 bool cancelOffThread)
 {
     IonSpew(IonSpew_Invalidate, "Start invalidation.");
-    AutoFlushCache afc ("Invalidate", fop->runtime()->jitRuntime());
 
     // Add an invalidation reference to all invalidated IonScripts to indicate
     // to the traversal which frames have been invalidated.
@@ -2939,66 +2925,149 @@ jit::ForbidCompilation(JSContext *cx, JSScript *script, ExecutionMode mode)
     MOZ_ASSUME_UNREACHABLE("No such execution mode");
 }
 
-void
-AutoFlushCache::updateTop(uintptr_t p, size_t len)
+AutoFlushICache *
+PerThreadData::autoFlushICache() const
 {
-    IonContext *ictx = MaybeGetIonContext();
-    JitRuntime *jrt = (ictx != nullptr) ? const_cast<JitRuntime *>(ictx->runtime->jitRuntime()) : nullptr;
-    if (!jrt || !jrt->flusher())
-        JSC::ExecutableAllocator::cacheFlush((void*)p, len);
-    else
-        jrt->flusher()->update(p, len);
+    return autoFlushICache_;
 }
 
-AutoFlushCache::AutoFlushCache(const char *nonce, JitRuntime *rt)
+void
+PerThreadData::setAutoFlushICache(AutoFlushICache *afc)
+{
+    autoFlushICache_ = afc;
+}
+
+// Set the range for the merging of flushes.  The flushing is deferred until the end of
+// the AutoFlushICache context.  Subsequent flushing within this range will is also
+// deferred.  This is only expected to be defined once for each AutoFlushICache
+// context.  It assumes the range will be flushed is required to be within an
+// AutoFlushICache context.
+void
+AutoFlushICache::setRange(uintptr_t start, size_t len)
+{
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
+    AutoFlushICache *afc = TlsPerThreadData.get()->PerThreadData::autoFlushICache();
+    JS_ASSERT(afc);
+    JS_ASSERT(!afc->start_);
+    IonSpewCont(IonSpew_CacheFlush, "(%x %x):", start, len);
+
+    uintptr_t stop = start + len;
+    afc->start_ = start;
+    afc->stop_ = stop;
+#endif
+}
+
+// Flush the instruction cache.
+//
+// If called within a dynamic AutoFlushICache context and if the range is already pending
+// flushing for this AutoFlushICache context then the request is ignored with the
+// understanding that it will be flushed on exit from the AutoFlushICache context.
+// Otherwise the range is flushed immediately.
+//
+// Updates outside the current code object are typically the exception so they are flushed
+// immediately rather than attempting to merge them.
+//
+// For efficiency it is expected that all large ranges will be flushed within an
+// AutoFlushICache, so check.  If this assertion is hit then it does not necessarily
+// indicate a progam fault but it might indicate a lost opportunity to merge cache
+// flushing.  It can be corrected by wrapping the call in an AutoFlushICache to context.
+void
+AutoFlushICache::flush(uintptr_t start, size_t len)
+{
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
+    AutoFlushICache *afc = TlsPerThreadData.get()->PerThreadData::autoFlushICache();
+    if (!afc) {
+        IonSpewCont(IonSpew_CacheFlush, "#");
+        JSC::ExecutableAllocator::cacheFlush((void*)start, len);
+        JS_ASSERT(len <= 16);
+        return;
+    }
+
+    uintptr_t stop = start + len;
+    if (start >= afc->start_ && stop <= afc->stop_) {
+        // Update is within the pending flush range, so defer to the end of the context.
+        IonSpewCont(IonSpew_CacheFlush, afc->inhibit_ ? "-" : "=");
+        return;
+    }
+
+    IonSpewCont(IonSpew_CacheFlush, afc->inhibit_ ? "x" : "*");
+    JSC::ExecutableAllocator::cacheFlush((void *)start, len);
+#endif
+}
+
+// Flag the current dynamic AutoFlushICache as inhibiting flushing. Useful in error paths
+// where the changes are being abandoned.
+void
+AutoFlushICache::setInhibit()
+{
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
+    AutoFlushICache *afc = TlsPerThreadData.get()->PerThreadData::autoFlushICache();
+    JS_ASSERT(afc);
+    JS_ASSERT(afc->start_);
+    IonSpewCont(IonSpew_CacheFlush, "I");
+    afc->inhibit_ = true;
+#endif
+}
+
+// The common use case is merging cache flushes when preparing a code object.  In this
+// case the entire range of the code object is being flushed and as the code is patched
+// smaller redundant flushes could occur.  The design allows an AutoFlushICache dynamic
+// thread local context to be declared in which the range of the code object can be set
+// which defers flushing until the end of this dynamic context.  The redundant flushing
+// within this code range is also deferred avoiding redundant flushing.  Flushing outside
+// this code range is not affected and proceeds immediately.
+//
+// In some cases flushing is not necessary, such as when compiling an asm.js module which
+// is flushed again when dynamically linked, and also in error paths that abandon the
+// code.  Flushing within the set code range can be inhibited within the AutoFlushICache
+// dynamic context by setting an inhibit flag.
+//
+// The JS compiler can be re-entered while within an AutoFlushICache dynamic context and
+// it is assumed that code being assembled or patched is not executed before the exit of
+// the respective AutoFlushICache dynamic context.
+//
+AutoFlushICache::AutoFlushICache(const char *nonce, bool inhibit)
   : start_(0),
     stop_(0),
     name_(nonce),
-    runtime_(rt),
-    used_(false)
+    inhibit_(inhibit)
 {
-    if (rt->flusher())
-        IonSpew(IonSpew_CacheFlush, "<%s ", nonce);
-    else
-        IonSpewCont(IonSpew_CacheFlush, "<%s ", nonce);
-
-    rt->setFlusher(this);
-}
-
-AutoFlushInhibitor::AutoFlushInhibitor(JitRuntime *rt)
-  : runtime_(rt),
-    afc(nullptr)
-{
-    afc = rt->flusher();
-
-    // Ensure that called functions get a fresh flusher.
-    rt->setFlusher(nullptr);
-
-    // Ensure the current flusher has been flushed.
-    if (afc) {
-        afc->flushAnyway();
-        IonSpewCont(IonSpew_CacheFlush, "}");
-    }
-}
-AutoFlushInhibitor::~AutoFlushInhibitor()
-{
-    JS_ASSERT(runtime_->flusher() == nullptr);
-
-    // Ensure any future modifications are recorded.
-    runtime_->setFlusher(afc);
-
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
+    PerThreadData *pt = TlsPerThreadData.get();
+    AutoFlushICache *afc = pt->PerThreadData::autoFlushICache();
     if (afc)
-        IonSpewCont(IonSpew_CacheFlush, "{");
+        IonSpew(IonSpew_CacheFlush, "<%s,%s%s ", nonce, afc->name_, inhibit ? " I" : "");
+    else
+        IonSpewCont(IonSpew_CacheFlush, "<%s%s ", nonce, inhibit ? " I" : "");
+
+    prev_ = afc;
+    pt->PerThreadData::setAutoFlushICache(this);
+#endif
+}
+
+AutoFlushICache::~AutoFlushICache()
+{
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
+    PerThreadData *pt = TlsPerThreadData.get();
+    JS_ASSERT(pt->PerThreadData::autoFlushICache() == this);
+
+    if (!inhibit_ && start_)
+        JSC::ExecutableAllocator::cacheFlush((void *)start_, size_t(stop_ - start_));
+
+    IonSpewCont(IonSpew_CacheFlush, "%s%s>", name_, start_ ? "" : " U");
+    IonSpewFin(IonSpew_CacheFlush);
+    pt->PerThreadData::setAutoFlushICache(prev_);
+#endif
 }
 
 void
-jit::PurgeCaches(JSScript *script, Zone *zone)
+jit::PurgeCaches(JSScript *script)
 {
     if (script->hasIonScript())
-        script->ionScript()->purgeCaches(zone);
+        script->ionScript()->purgeCaches();
 
     if (script->hasParallelIonScript())
-        script->parallelIonScript()->purgeCaches(zone);
+        script->parallelIonScript()->purgeCaches();
 }
 
 size_t
@@ -3105,7 +3174,6 @@ AutoDebugModeInvalidation::~AutoDebugModeInvalidation()
         JSCompartment *comp = iter->compartment();
         if (comp_ == comp || zone_ == comp->zone()) {
             IonContext ictx(CompileRuntime::get(rt));
-            AutoFlushCache afc("AutoDebugModeInvalidation", rt->jitRuntime());
             IonSpew(IonSpew_Invalidate, "Invalidating frames for debug mode toggle");
             InvalidateActivation(fop, iter.jitTop(), true);
         }
