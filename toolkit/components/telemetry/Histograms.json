@@ -5941,21 +5941,33 @@
   "CERT_PINNING_RESULTS": {
     "expires_in_version": "never",
     "kind": "boolean",
-    "description": "Certificate pinning evalutation results (0 = failure, 1 = success)"
+    "description": "Certificate pinning results (0 = failure, 1 = success)"
   },
   "CERT_PINNING_TEST_RESULTS": {
     "expires_in_version": "never",
     "kind": "boolean",
-    "description": "Certificate pinning evalutation results (0 = failure, 1 = success)"
+    "description": "Certificate pinning test results (0 = failure, 1 = success)"
   },
   "CERT_PINNING_MOZ_RESULTS": {
     "expires_in_version": "never",
     "kind": "boolean",
-    "description": "Certificate pinning evalutation results (0 = failure, 1 = success)"
+    "description": "Certificate pinning results for Mozilla sites (0 = failure, 1 = success)"
   },
   "CERT_PINNING_MOZ_TEST_RESULTS": {
     "expires_in_version": "never",
     "kind": "boolean",
-    "description": "Certificate pinning evalutation results (0 = failure, 1 = success)"
+    "description": "Certificate pinning test results for Mozilla sites (0 = failure, 1 = success)"
+  },
+  "CERT_PINNING_MOZ_RESULTS_BY_HOST": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 512,
+    "description": "Certificate pinning results by host for Mozilla operational sites"
+  },
+  "CERT_PINNING_MOZ_TEST_RESULTS_BY_HOST": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 512,
+    "description": "Certificate pinning test results by host for Mozilla operational sites"
   }
 }

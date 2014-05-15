@@ -201,7 +201,17 @@ CheckPinsForHostname(const CERTCertList *certList, const char *hostname,
         : Telemetry::CERT_PINNING_TEST_RESULTS;
       retval = true;
     }
-    Telemetry::Accumulate(histogram, result ? 1 : 0);
+    // We can collect per-host pinning violations for this host because it is
+    // operationally critical to Firefox.
+    if (foundEntry->mId != kUnknownId) {
+      int32_t bucket = foundEntry->mId * 2 + (result ? 1 : 0);
+      histogram = foundEntry->mTestMode
+        ? Telemetry::CERT_PINNING_MOZ_TEST_RESULTS_BY_HOST
+        : Telemetry::CERT_PINNING_MOZ_RESULTS_BY_HOST;
+      Telemetry::Accumulate(histogram, bucket);
+    } else {
+      Telemetry::Accumulate(histogram, result ? 1 : 0);
+    }
     PR_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
            ("pkpin: Pin check %s for %s host '%s' (mode=%s)\n",
             result ? "passed" : "failed",
