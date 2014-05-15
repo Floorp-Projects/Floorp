@@ -69,7 +69,7 @@ def indent(s, indentLevel=2):
     Indent C++ code.
 
     Weird secret feature: this doesn't indent lines that start with # (such as
-    #include lines).
+    #include lines or #ifdef/#endif).
     """
     if s == "":
         return s
@@ -6682,7 +6682,13 @@ class CGGenericMethod(CGAbstractBindingMethod):
             const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(args.calleev());
             MOZ_ASSERT(info->type() == JSJitInfo::Method);
             JSJitMethodOp method = info->method;
-            return method(cx, obj, self, JSJitMethodCallArgs(args));
+            bool ok = method(cx, obj, self, JSJitMethodCallArgs(args));
+            #ifdef DEBUG
+            if (ok) {
+              AssertReturnTypeMatchesJitinfo(info, args.rval());
+            }
+            #endif
+            return ok;
             """)))
 
 
@@ -6980,7 +6986,13 @@ class CGGenericGetter(CGAbstractBindingMethod):
             const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(args.calleev());
             MOZ_ASSERT(info->type() == JSJitInfo::Getter);
             JSJitGetterOp getter = info->getter;
-            return getter(cx, obj, self, JSJitGetterCallArgs(args));
+            bool ok = getter(cx, obj, self, JSJitGetterCallArgs(args));
+            #ifdef DEBUG
+            if (ok) {
+              AssertReturnTypeMatchesJitinfo(info, args.rval());
+            }
+            #endif
+            return ok;
             """)))
 
 
@@ -7115,6 +7127,9 @@ class CGGenericSetter(CGAbstractBindingMethod):
               return false;
             }
             args.rval().set(JSVAL_VOID);
+            #ifdef DEBUG
+            AssertReturnTypeMatchesJitinfo(info, args.rval());
+            #endif
             return true;
             """,
             name=self.descriptor.interface.identifier.name)))
