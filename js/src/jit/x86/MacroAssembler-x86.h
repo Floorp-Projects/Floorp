@@ -582,11 +582,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         subl(src, Operand(dest));
     }
 
-    void branch32(Condition cond, const AbsoluteAddress &lhs, Imm32 rhs, Label *label) {
+    void branch32(Condition cond, AbsoluteAddress lhs, Imm32 rhs, Label *label) {
         cmpl(Operand(lhs), rhs);
         j(cond, label);
     }
-    void branch32(Condition cond, const AbsoluteAddress &lhs, Register rhs, Label *label) {
+    void branch32(Condition cond, AbsoluteAddress lhs, Register rhs, Label *label) {
         cmpl(Operand(lhs), rhs);
         j(cond, label);
     }
@@ -678,13 +678,13 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void loadPtr(const BaseIndex &src, Register dest) {
         movl(Operand(src), dest);
     }
-    void loadPtr(const AbsoluteAddress &address, Register dest) {
+    void loadPtr(AbsoluteAddress address, Register dest) {
         movl(Operand(address), dest);
     }
     void loadPrivate(const Address &src, Register dest) {
         movl(payloadOf(src), dest);
     }
-    void load32(const AbsoluteAddress &address, Register dest) {
+    void load32(AbsoluteAddress address, Register dest) {
         movl(Operand(address), dest);
     }
     void storePtr(ImmWord imm, const Address &address) {
@@ -702,10 +702,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void storePtr(Register src, const Operand &dest) {
         movl(src, dest);
     }
-    void storePtr(Register src, const AbsoluteAddress &address) {
+    void storePtr(Register src, AbsoluteAddress address) {
         movl(src, Operand(address));
     }
-    void store32(Register src, const AbsoluteAddress &address) {
+    void store32(Register src, AbsoluteAddress address) {
         movl(src, Operand(address));
     }
 

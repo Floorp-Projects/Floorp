@@ -573,7 +573,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         subq(src, Operand(dest));
     }
 
-    void branch32(Condition cond, const AbsoluteAddress &lhs, Imm32 rhs, Label *label) {
+    void branch32(Condition cond, AbsoluteAddress lhs, Imm32 rhs, Label *label) {
         if (JSC::X86Assembler::isAddressImmediate(lhs.addr)) {
             branch32(cond, Operand(lhs), rhs, label);
         } else {
@@ -581,7 +581,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             branch32(cond, Address(ScratchReg, 0), rhs, label);
         }
     }
-    void branch32(Condition cond, const AbsoluteAddress &lhs, Register rhs, Label *label) {
+    void branch32(Condition cond, AbsoluteAddress lhs, Register rhs, Label *label) {
         if (JSC::X86Assembler::isAddressImmediate(lhs.addr)) {
             branch32(cond, Operand(lhs), rhs, label);
         } else {
@@ -591,7 +591,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     // Specialization for AbsoluteAddress.
-    void branchPtr(Condition cond, const AbsoluteAddress &addr, Register ptr, Label *label) {
+    void branchPtr(Condition cond, AbsoluteAddress addr, Register ptr, Label *label) {
         JS_ASSERT(ptr != ScratchReg);
         if (JSC::X86Assembler::isAddressImmediate(addr.addr)) {
             branchPtr(cond, Operand(addr), ptr, label);
@@ -677,7 +677,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void movePtr(ImmGCPtr imm, Register dest) {
         movq(imm, dest);
     }
-    void loadPtr(const AbsoluteAddress &address, Register dest) {
+    void loadPtr(AbsoluteAddress address, Register dest) {
         if (JSC::X86Assembler::isAddressImmediate(address.addr)) {
             movq(Operand(address), dest);
         } else {
@@ -698,7 +698,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         loadPtr(src, dest);
         shlq(Imm32(1), dest);
     }
-    void load32(const AbsoluteAddress &address, Register dest) {
+    void load32(AbsoluteAddress address, Register dest) {
         if (JSC::X86Assembler::isAddressImmediate(address.addr)) {
             movl(Operand(address), dest);
         } else {
@@ -727,7 +727,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void storePtr(Register src, const Operand &dest) {
         movq(src, dest);
     }
-    void storePtr(Register src, const AbsoluteAddress &address) {
+    void storePtr(Register src, AbsoluteAddress address) {
         if (JSC::X86Assembler::isAddressImmediate(address.addr)) {
             movq(src, Operand(address));
         } else {
@@ -735,7 +735,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             storePtr(src, Address(ScratchReg, 0x0));
         }
     }
-    void store32(Register src, const AbsoluteAddress &address) {
+    void store32(Register src, AbsoluteAddress address) {
         if (JSC::X86Assembler::isAddressImmediate(address.addr)) {
             movl(src, Operand(address));
         } else {

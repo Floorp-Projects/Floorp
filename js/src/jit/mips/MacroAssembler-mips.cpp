@@ -1838,7 +1838,7 @@ MacroAssemblerMIPSCompat::load32(const BaseIndex &address, Register dest)
 }
 
 void
-MacroAssemblerMIPSCompat::load32(const AbsoluteAddress &address, Register dest)
+MacroAssemblerMIPSCompat::load32(AbsoluteAddress address, Register dest)
 {
     ma_li(ScratchRegister, Imm32((uint32_t)address.addr));
     as_lw(dest, ScratchRegister, 0);
@@ -1857,7 +1857,7 @@ MacroAssemblerMIPSCompat::loadPtr(const BaseIndex &src, Register dest)
 }
 
 void
-MacroAssemblerMIPSCompat::loadPtr(const AbsoluteAddress &address, Register dest)
+MacroAssemblerMIPSCompat::loadPtr(AbsoluteAddress address, Register dest)
 {
     ma_li(ScratchRegister, Imm32((uint32_t)address.addr));
     as_lw(dest, ScratchRegister, 0);
@@ -1966,7 +1966,7 @@ MacroAssemblerMIPSCompat::store16(Register src, const BaseIndex &address)
 }
 
 void
-MacroAssemblerMIPSCompat::store32(Register src, const AbsoluteAddress &address)
+MacroAssemblerMIPSCompat::store32(Register src, AbsoluteAddress address)
 {
     storePtr(src, address);
 }
@@ -2023,7 +2023,7 @@ MacroAssemblerMIPSCompat::storePtr(Register src, const Address &address)
 }
 
 void
-MacroAssemblerMIPSCompat::storePtr(Register src, const AbsoluteAddress &dest)
+MacroAssemblerMIPSCompat::storePtr(Register src, AbsoluteAddress dest)
 {
     ma_li(ScratchRegister, Imm32((uint32_t)dest.addr));
     as_sw(src, ScratchRegister, 0);
