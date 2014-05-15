@@ -1057,7 +1057,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void branchPtr(Condition cond, Address addr, ImmPtr ptr, Label *label) {
         branchPtr(cond, addr, ImmWord(uintptr_t(ptr.value)), label);
     }
-    void branchPtr(Condition cond, const AbsoluteAddress &addr, Register ptr, Label *label) {
+    void branchPtr(Condition cond, AbsoluteAddress addr, Register ptr, Label *label) {
         loadPtr(addr, ScratchRegister);
         ma_cmp(ScratchRegister, ptr);
         ma_b(label, cond);
@@ -1067,12 +1067,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_cmp(ScratchRegister, ptr);
         ma_b(label, cond);
     }
-    void branch32(Condition cond, const AbsoluteAddress &lhs, Imm32 rhs, Label *label) {
+    void branch32(Condition cond, AbsoluteAddress lhs, Imm32 rhs, Label *label) {
         loadPtr(lhs, secondScratchReg_); // ma_cmp will use the scratch register.
         ma_cmp(secondScratchReg_, rhs);
         ma_b(label, cond);
     }
-    void branch32(Condition cond, const AbsoluteAddress &lhs, Register rhs, Label *label) {
+    void branch32(Condition cond, AbsoluteAddress lhs, Register rhs, Label *label) {
         loadPtr(lhs, secondScratchReg_); // ma_cmp will use the scratch register.
         ma_cmp(secondScratchReg_, rhs);
         ma_b(label, cond);
@@ -1331,11 +1331,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void load32(const Address &address, Register dest);
     void load32(const BaseIndex &address, Register dest);
-    void load32(const AbsoluteAddress &address, Register dest);
+    void load32(AbsoluteAddress address, Register dest);
 
     void loadPtr(const Address &address, Register dest);
     void loadPtr(const BaseIndex &src, Register dest);
-    void loadPtr(const AbsoluteAddress &address, Register dest);
+    void loadPtr(AbsoluteAddress address, Register dest);
     void loadPtr(const AsmJSAbsoluteAddress &address, Register dest);
 
     void loadPrivate(const Address &address, Register dest);
@@ -1360,7 +1360,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void store16(Register src, const BaseIndex &address);
     void store16(Imm32 imm, const BaseIndex &address);
 
-    void store32(Register src, const AbsoluteAddress &address);
+    void store32(Register src, AbsoluteAddress address);
     void store32(Register src, const Address &address);
     void store32(Register src, const BaseIndex &address);
     void store32(Imm32 src, const Address &address);
@@ -1370,7 +1370,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void storePtr(ImmPtr imm, const Address &address);
     void storePtr(ImmGCPtr imm, const Address &address);
     void storePtr(Register src, const Address &address);
-    void storePtr(Register src, const AbsoluteAddress &dest);
+    void storePtr(Register src, AbsoluteAddress dest);
     void storeDouble(FloatRegister src, Address addr) {
         ma_vstr(src, Operand(addr));
     }

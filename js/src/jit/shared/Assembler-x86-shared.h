@@ -66,7 +66,7 @@ class Operand
         base_(reg.code()),
         disp_(disp)
     { }
-    explicit Operand(const AbsoluteAddress &address)
+    explicit Operand(AbsoluteAddress address)
       : kind_(MEM_ADDRESS32),
         disp_(JSC::X86Assembler::addressImmediate(address.addr))
     { }

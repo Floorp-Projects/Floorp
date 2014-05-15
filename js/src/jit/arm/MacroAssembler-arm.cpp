@@ -2159,7 +2159,7 @@ MacroAssemblerARMCompat::load32(const BaseIndex &address, Register dest)
 }
 
 void
-MacroAssemblerARMCompat::load32(const AbsoluteAddress &address, Register dest)
+MacroAssemblerARMCompat::load32(AbsoluteAddress address, Register dest)
 {
     loadPtr(address, dest);
 }
@@ -2183,7 +2183,7 @@ MacroAssemblerARMCompat::loadPtr(const BaseIndex &src, Register dest)
     ma_ldr(DTRAddr(base, DtrRegImmShift(src.index, LSL, scale)), dest);
 }
 void
-MacroAssemblerARMCompat::loadPtr(const AbsoluteAddress &address, Register dest)
+MacroAssemblerARMCompat::loadPtr(AbsoluteAddress address, Register dest)
 {
     movePtr(ImmWord(uintptr_t(address.addr)), ScratchRegister);
     loadPtr(Address(ScratchRegister, 0x0), dest);
@@ -2342,7 +2342,7 @@ MacroAssemblerARMCompat::store16(Register src, const BaseIndex &address)
     ma_strh(src, EDtrAddr(address.base, EDtrOffReg(index)));
 }
 void
-MacroAssemblerARMCompat::store32(Register src, const AbsoluteAddress &address)
+MacroAssemblerARMCompat::store32(Register src, AbsoluteAddress address)
 {
     storePtr(src, address);
 }
@@ -2407,7 +2407,7 @@ MacroAssemblerARMCompat::storePtr(Register src, const Address &address)
 }
 
 void
-MacroAssemblerARMCompat::storePtr(Register src, const AbsoluteAddress &dest)
+MacroAssemblerARMCompat::storePtr(Register src, AbsoluteAddress dest)
 {
     movePtr(ImmWord(uintptr_t(dest.addr)), ScratchRegister);
     storePtr(src, Address(ScratchRegister, 0x0));
