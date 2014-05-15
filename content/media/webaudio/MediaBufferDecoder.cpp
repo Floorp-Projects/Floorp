@@ -413,8 +413,10 @@ WebAudioDecodeJob::AllocateBuffer()
   JSAutoCompartment ac(cx, global);
 
   // Now create the AudioBuffer
-  mOutput = new AudioBuffer(mContext, mWriteIndex, mContext->SampleRate());
-  if (!mOutput->InitializeBuffers(mChannelBuffers.Length(), cx)) {
+  ErrorResult rv;
+  mOutput = AudioBuffer::Create(mContext, mChannelBuffers.Length(),
+                                mWriteIndex, mContext->SampleRate(), cx, rv);
+  if (rv.Failed()) {
     return false;
   }
 

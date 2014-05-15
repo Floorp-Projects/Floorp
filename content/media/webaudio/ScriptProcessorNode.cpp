@@ -415,10 +415,12 @@ private:
         // Create the input buffer
         nsRefPtr<AudioBuffer> inputBuffer;
         if (!mNullInput) {
-          inputBuffer = new AudioBuffer(node->Context(),
-                                        node->BufferSize(),
-                                        node->Context()->SampleRate());
-          if (!inputBuffer->InitializeBuffers(mInputChannels.Length(), cx)) {
+          ErrorResult rv;
+          inputBuffer =
+            AudioBuffer::Create(node->Context(), mInputChannels.Length(),
+                                node->BufferSize(),
+                                node->Context()->SampleRate(), cx, rv);
+          if (rv.Failed()) {
             return NS_OK;
           }
           // Put the channel data inside it
