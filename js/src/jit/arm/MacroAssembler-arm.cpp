@@ -2018,7 +2018,7 @@ MacroAssemblerARMCompat::movePtr(Register src, Register dest)
     ma_mov(src, dest);
 }
 void
-MacroAssemblerARMCompat::movePtr(const ImmWord &imm, Register dest)
+MacroAssemblerARMCompat::movePtr(ImmWord imm, Register dest)
 {
     ma_mov(Imm32(imm.value), dest);
 }
@@ -2494,7 +2494,7 @@ MacroAssemblerARMCompat::cmp32(Register lhs, Register rhs)
 }
 
 void
-MacroAssemblerARMCompat::cmpPtr(Register lhs, const ImmWord &rhs)
+MacroAssemblerARMCompat::cmpPtr(Register lhs, ImmWord rhs)
 {
     JS_ASSERT(lhs != ScratchRegister);
     ma_cmp(lhs, Imm32(rhs.value));
@@ -2532,7 +2532,7 @@ MacroAssemblerARMCompat::cmpPtr(const Address &lhs, Register rhs)
 }
 
 void
-MacroAssemblerARMCompat::cmpPtr(const Address &lhs, const ImmWord &rhs)
+MacroAssemblerARMCompat::cmpPtr(const Address &lhs, ImmWord rhs)
 {
     loadPtr(lhs, secondScratchReg_);
     ma_cmp(secondScratchReg_, Imm32(rhs.value));
