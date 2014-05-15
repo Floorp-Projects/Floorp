@@ -120,7 +120,7 @@ class MacroAssemblerARM : public Assembler
     void ma_mov(ImmWord imm, Register dest,
                 SetCond_ sc = NoSetCond, Condition c = Always);
 
-    void ma_mov(const ImmGCPtr &ptr, Register dest);
+    void ma_mov(ImmGCPtr ptr, Register dest);
 
     // Shifts (just a move with a shifting op2)
     void ma_lsl(Imm32 shift, Register src, Register dst);
@@ -1315,7 +1315,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void movePtr(ImmWord imm, Register dest);
     void movePtr(ImmPtr imm, Register dest);
     void movePtr(const AsmJSImmPtr &imm, Register dest);
-    void movePtr(const ImmGCPtr &imm, Register dest);
+    void movePtr(ImmGCPtr imm, Register dest);
 
     void load8SignExtend(const Address &address, Register dest);
     void load8SignExtend(const BaseIndex &src, Register dest);
@@ -1414,7 +1414,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void cmpPtr(Register lhs, ImmWord rhs);
     void cmpPtr(Register lhs, ImmPtr rhs);
     void cmpPtr(Register lhs, Register rhs);
-    void cmpPtr(Register lhs, const ImmGCPtr &rhs);
+    void cmpPtr(Register lhs, ImmGCPtr rhs);
     void cmpPtr(Register lhs, Imm32 rhs);
     void cmpPtr(const Address &lhs, Register rhs);
     void cmpPtr(const Address &lhs, ImmWord rhs);

@@ -692,9 +692,9 @@ class MacroAssembler : public MacroAssemblerSpecific
         bind(&done);
     }
 
-    void branchNurseryPtr(Condition cond, const Address &ptr1, const ImmMaybeNurseryPtr &ptr2,
+    void branchNurseryPtr(Condition cond, const Address &ptr1, ImmMaybeNurseryPtr ptr2,
                           Label *label);
-    void moveNurseryPtr(const ImmMaybeNurseryPtr &ptr, Register reg);
+    void moveNurseryPtr(ImmMaybeNurseryPtr ptr, Register reg);
 
     void canonicalizeDouble(FloatRegister reg) {
         Label notNaN;

@@ -103,7 +103,7 @@ class MacroAssemblerMIPS : public Assembler
 
     void ma_move(Register rd, Register rs);
 
-    void ma_li(Register dest, const ImmGCPtr &ptr);
+    void ma_li(Register dest, ImmGCPtr ptr);
 
     void ma_li(Register dest, AbsoluteLabel *label);
 
@@ -1027,7 +1027,7 @@ public:
     void movePtr(ImmWord imm, Register dest);
     void movePtr(ImmPtr imm, Register dest);
     void movePtr(const AsmJSImmPtr &imm, Register dest);
-    void movePtr(const ImmGCPtr &imm, Register dest);
+    void movePtr(ImmGCPtr imm, Register dest);
 
     void load8SignExtend(const Address &address, Register dest);
     void load8SignExtend(const BaseIndex &src, Register dest);
