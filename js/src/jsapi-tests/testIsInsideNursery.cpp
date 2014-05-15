@@ -7,31 +7,28 @@
 
 #include "jsapi-tests/tests.h"
 
+#ifdef JSGC_GENERATIONAL
+
 BEGIN_TEST(testIsInsideNursery)
 {
     /* Non-GC things are never inside the nursery. */
-    CHECK(!js::gc::IsInsideNursery(rt, rt));
-    CHECK(!js::gc::IsInsideNursery(rt, nullptr));
-    CHECK(!js::gc::IsInsideNursery(nullptr));
+    CHECK(!rt->gc.nursery.isInside(rt));
+    CHECK(!rt->gc.nursery.isInside((void *)nullptr));
 
     JS_GC(rt);
 
     JS::RootedObject object(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
 
-#ifdef JSGC_GENERATIONAL
     /* Objects are initially allocated in the nursery. */
-    CHECK(js::gc::IsInsideNursery(rt, object));
     CHECK(js::gc::IsInsideNursery(object));
-#else
-    CHECK(!js::gc::IsInsideNursery(rt, object));
-    CHECK(!js::gc::IsInsideNursery(object));
-#endif
 
     JS_GC(rt);
 
-    CHECK(!js::gc::IsInsideNursery(rt, object));
+    /* And are tenured if still live after a GC. */
     CHECK(!js::gc::IsInsideNursery(object));
 
     return true;
 }
 END_TEST(testIsInsideNursery)
+
+#endif

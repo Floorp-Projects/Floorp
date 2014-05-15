@@ -48,8 +48,6 @@ static int64_t GCReportThreshold = INT64_MAX;
 bool
 js::Nursery::init()
 {
-    JS_ASSERT(start() == 0);
-
     if (!hugeSlots.init())
         return false;
 
@@ -57,10 +55,9 @@ js::Nursery::init()
     if (!heap)
         return false;
 
-    JSRuntime *rt = runtime();
-    rt->gcNurseryStart_ = uintptr_t(heap);
+    heapStart_ = uintptr_t(heap);
     currentStart_ = start();
-    rt->gcNurseryEnd_ = chunk(LastNurseryChunk).end();
+    heapEnd_ = chunk(LastNurseryChunk).end();
     numActiveChunks_ = 1;
     JS_POISON(heap, JS_FRESH_NURSERY_PATTERN, NurserySize);
     setCurrentChunk(0);
@@ -195,7 +192,7 @@ js::Nursery::allocateSlots(JSContext *cx, JSObject *obj, uint32_t nslots)
     JS_ASSERT(obj);
     JS_ASSERT(nslots > 0);
 
-    if (!isInside(obj))
+    if (!IsInsideNursery(obj))
         return cx->pod_malloc<HeapSlot>(nslots);
 
     if (nslots > MaxNurserySlots)
@@ -223,7 +220,7 @@ js::Nursery::reallocateSlots(JSContext *cx, JSObject *obj, HeapSlot *oldSlots,
     size_t oldSize = oldCount * sizeof(HeapSlot);
     size_t newSize = newCount * sizeof(HeapSlot);
 
-    if (!isInside(obj))
+    if (!IsInsideNursery(obj))
         return static_cast<HeapSlot *>(cx->realloc_(oldSlots, oldSize, newSize));
 
     if (!isInside(oldSlots)) {
@@ -275,7 +272,7 @@ js::Nursery::allocateHugeSlots(JSContext *cx, size_t nslots)
 void
 js::Nursery::notifyInitialSlots(Cell *cell, HeapSlot *slots)
 {
-    if (isInside(cell) && !isInside(slots)) {
+    if (IsInsideNursery(cell) && !isInside(slots)) {
         /* If this put fails, we will only leak the slots. */
         (void)hugeSlots.put(slots);
     }
@@ -367,7 +364,7 @@ GetObjectAllocKindForCopy(JSRuntime *rt, JSObject *obj)
         JS_ASSERT(obj->numFixedSlots() == 0);
 
         /* Use minimal size object if we are just going to copy the pointer. */
-        if (!IsInsideNursery(rt, (void *)obj->getElementsHeader()))
+        if (!rt->gc.nursery.isInside(obj->getElementsHeader()))
             return FINALIZE_OBJECT0_BACKGROUND;
 
         size_t nelements = obj->getDenseCapacity();
@@ -534,7 +531,7 @@ js::Nursery::markSlot(MinorCollectionTracer *trc, HeapSlot *slotp)
         return;
 
     JSObject *obj = &slotp->toObject();
-    if (!isInside(obj))
+    if (!IsInsideNursery(obj))
         return;
 
     if (getForwardedPointer(&obj)) {
@@ -687,7 +684,7 @@ ShouldMoveToTenured(MinorCollectionTracer *trc, void **thingp)
 {
     Cell *cell = static_cast<Cell *>(*thingp);
     Nursery &nursery = *trc->nursery;
-    return !nursery.isInside(thingp) && nursery.isInside(cell) &&
+    return !nursery.isInside(thingp) && IsInsideNursery(cell) &&
            !nursery.getForwardedPointer(thingp);
 }
 

@@ -7460,7 +7460,12 @@ IonBuilder::getTypedArrayElements(MDefinition *obj)
         void *data = tarr->viewData();
         // Bug 979449 - Optimistically embed the elements and use TI to
         //              invalidate if we move them.
-        if (!gc::IsInsideNursery(tarr->runtimeFromMainThread(), data)) {
+#ifdef JSGC_GENERATIONAL
+        bool isTenured = !tarr->runtimeFromMainThread()->gc.nursery.isInside(data);
+#else
+        bool isTenured = true;
+#endif
+        if (isTenured) {
             // The 'data' pointer can change in rare circumstances
             // (ArrayBufferObject::changeContents).
             types::TypeObjectKey *tarrType = types::TypeObjectKey::get(tarr);
@@ -7767,8 +7772,10 @@ IonBuilder::setElemTryTypedStatic(bool *emitted, MDefinition *object,
 
     TypedArrayObject *tarr = &tarrObj->as<TypedArrayObject>();
 
-    if (gc::IsInsideNursery(tarr->runtimeFromMainThread(), tarr->viewData()))
+#ifdef JSGC_GENERATIONAL
+    if (tarr->runtimeFromMainThread()->gc.nursery.isInside(tarr->viewData()))
         return true;
+#endif
 
     ArrayBufferView::ViewType viewType = (ArrayBufferView::ViewType) tarr->type();
 

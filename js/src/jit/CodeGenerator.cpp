@@ -1946,8 +1946,7 @@ CodeGenerator::visitPostWriteBarrierO(LPostWriteBarrierO *lir)
 
     if (lir->object()->isConstant()) {
 #ifdef DEBUG
-        const Nursery &nursery = GetIonContext()->runtime->gcNursery();
-        JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
+        JS_ASSERT(!IsInsideNursery(&lir->object()->toConstant()->toObject()));
 #endif
     } else {
         masm.branchPtrInNurseryRange(Assembler::Equal, ToRegister(lir->object()), temp,
@@ -1973,8 +1972,7 @@ CodeGenerator::visitPostWriteBarrierV(LPostWriteBarrierV *lir)
 
     if (lir->object()->isConstant()) {
 #ifdef DEBUG
-        const Nursery &nursery = GetIonContext()->runtime->gcNursery();
-        JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
+        JS_ASSERT(!IsInsideNursery(&lir->object()->toConstant()->toObject()));
 #endif
     } else {
         masm.branchPtrInNurseryRange(Assembler::Equal, ToRegister(lir->object()), temp,
