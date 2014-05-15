@@ -2327,8 +2327,7 @@ MResumePoint::inherit(MBasicBlock *block)
     }
 }
 
-void
-MResumePoint::dump(FILE *fp) const
+void MResumePoint::dump(FILE *fp) const
 {
     fprintf(fp, "resumepoint mode=");
 
@@ -2361,12 +2360,6 @@ void
 MResumePoint::dump() const
 {
     dump(stderr);
-}
-
-bool
-MResumePoint::isObservableOperand(size_t index) const
-{
-    return block()->info().isObservableSlot(index);
 }
 
 MDefinition *
