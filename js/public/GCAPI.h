@@ -465,7 +465,7 @@ ExposeGCThingToActiveJS(void *thing, JSGCTraceKind kind)
      * All live objects in the nursery are moved to tenured at the beginning of
      * each GC slice, so the gray marker never sees nursery things.
      */
-    if (js::gc::IsInsideNursery(rt, thing))
+    if (js::gc::IsInsideNursery((js::gc::Cell *)thing))
         return;
 #endif
     if (IsIncrementalBarrierNeededOnGCThing(rt, thing, kind))
@@ -498,7 +498,7 @@ MarkGCThingAsLive(JSRuntime *rt_, void *thing, JSGCTraceKind kind)
     /*
      * Any object in the nursery will not be freed during any GC running at that time.
      */
-    if (js::gc::IsInsideNursery(rt, thing))
+    if (js::gc::IsInsideNursery((js::gc::Cell *)thing))
         return;
 #endif
     if (IsIncrementalBarrierNeededOnGCThing(rt, thing, kind))

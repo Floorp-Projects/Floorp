@@ -186,7 +186,7 @@ class Assembler : public AssemblerX86Shared
     // Actual assembly emitting functions.
 
     void push(ImmGCPtr ptr) {
-        push(Imm32(ptr.value));
+        push(Imm32(uintptr_t(ptr.value)));
         writeDataRelocation(ptr);
     }
     void push(const ImmWord imm) {
@@ -219,21 +219,21 @@ class Assembler : public AssemblerX86Shared
     }
 
     void movl(ImmGCPtr ptr, Register dest) {
-        masm.movl_i32r(ptr.value, dest.code());
+        masm.movl_i32r(uintptr_t(ptr.value), dest.code());
         writeDataRelocation(ptr);
     }
     void movl(ImmGCPtr ptr, const Operand &dest) {
         switch (dest.kind()) {
           case Operand::REG:
-            masm.movl_i32r(ptr.value, dest.reg());
+            masm.movl_i32r(uintptr_t(ptr.value), dest.reg());
             writeDataRelocation(ptr);
             break;
           case Operand::MEM_REG_DISP:
-            masm.movl_i32m(ptr.value, dest.disp(), dest.base());
+            masm.movl_i32m(uintptr_t(ptr.value), dest.disp(), dest.base());
             writeDataRelocation(ptr);
             break;
           case Operand::MEM_SCALE:
-            masm.movl_i32m(ptr.value, dest.disp(), dest.base(), dest.index(), dest.scale());
+            masm.movl_i32m(uintptr_t(ptr.value), dest.disp(), dest.base(), dest.index(), dest.scale());
             writeDataRelocation(ptr);
             break;
           default:
@@ -315,7 +315,7 @@ class Assembler : public AssemblerX86Shared
         cmpl(src, ImmWord(uintptr_t(imm.value)));
     }
     void cmpl(const Register src, ImmGCPtr ptr) {
-        masm.cmpl_ir(ptr.value, src.code());
+        masm.cmpl_ir(uintptr_t(ptr.value), src.code());
         writeDataRelocation(ptr);
     }
     void cmpl(Register lhs, Register rhs) {
@@ -324,15 +324,15 @@ class Assembler : public AssemblerX86Shared
     void cmpl(const Operand &op, ImmGCPtr imm) {
         switch (op.kind()) {
           case Operand::REG:
-            masm.cmpl_ir_force32(imm.value, op.reg());
+            masm.cmpl_ir_force32(uintptr_t(imm.value), op.reg());
             writeDataRelocation(imm);
             break;
           case Operand::MEM_REG_DISP:
-            masm.cmpl_im_force32(imm.value, op.disp(), op.base());
+            masm.cmpl_im_force32(uintptr_t(imm.value), op.disp(), op.base());
             writeDataRelocation(imm);
             break;
           case Operand::MEM_ADDRESS32:
-            masm.cmpl_im(imm.value, op.address());
+            masm.cmpl_im(uintptr_t(imm.value), op.address());
             writeDataRelocation(imm);
             break;
           default:

@@ -656,7 +656,7 @@ ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, void *data /* = nullpt
 
     JS_ASSERT(obj->getClass() == &class_);
 
-    JS_ASSERT(!gc::IsInsideNursery(cx->runtime(), obj));
+    JS_ASSERT(!gc::IsInsideNursery(obj));
 
     if (data) {
         obj->initialize(nbytes, data, OwnsData);
