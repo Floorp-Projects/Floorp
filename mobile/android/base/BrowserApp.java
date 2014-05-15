@@ -348,11 +348,6 @@ abstract public class BrowserApp extends GeckoApp
         if (!mBrowserToolbar.isEditing() && onKey(null, keyCode, event)) {
             return true;
         }
-
-        if (mBrowserToolbar.onKey(keyCode, event)) {
-            return true;
-        }
-
         return super.onKeyDown(keyCode, event);
     }
 
