@@ -269,7 +269,8 @@ nsContextMenu.prototype = {
     // Use "Bookmark This Link" if on a link.
     this.showItem("context-bookmarkpage",
                   !(this.isContentSelected || this.onTextInput || this.onLink ||
-                    this.onImage || this.onVideo || this.onAudio || this.onSocial));
+                    this.onImage || this.onVideo || this.onAudio || this.onSocial ||
+                    this.onCanvas));
     this.showItem("context-bookmarklink", (this.onLink && !this.onMailtoLink &&
                                            !this.onSocial) || this.onPlainTextLink);
     this.showItem("context-keywordfield",
