@@ -539,6 +539,9 @@ ErrorHandler.prototype = {
     let fapp = this._logAppender = new Log.StorageStreamAppender(formatter);
     fapp.level = Log.Level[Svc.Prefs.get("log.appender.file.level")];
     root.addAppender(fapp);
+
+    // Arrange for the FxA logs to also go to our file.
+    Log.repository.getLogger("FirefoxAccounts").addAppender(fapp);
   },
 
   observe: function observe(subject, topic, data) {
