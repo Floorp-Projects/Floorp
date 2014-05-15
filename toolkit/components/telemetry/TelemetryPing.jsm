@@ -532,6 +532,17 @@ let Impl = {
     if (flashVersion)
       ret.flashVersion = flashVersion;
 
+    try {
+      let scope = {};
+      Cu.import("resource:///modules/experiments/Experiments.jsm", scope);
+      let activeExperiment = scope.Experiments.instance().getActiveExperimentID();
+      if (activeExperiment) {
+        ret.activeExperiment = activeExperiment;
+      }
+    } catch(e) {
+      // If this is not Firefox, the import will fail.
+    }
+
     return ret;
   },
 
