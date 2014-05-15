@@ -1977,19 +1977,16 @@ dnl Configure JIT support
 case "$target" in
 i?86-*)
     ENABLE_ION=1
-    ENABLE_YARR_JIT=1
     AC_DEFINE(JS_CPU_X86)
     AC_DEFINE(JS_NUNBOX32)
     ;;
 x86_64*-*)
     ENABLE_ION=1
-    ENABLE_YARR_JIT=1
     AC_DEFINE(JS_CPU_X64)
     AC_DEFINE(JS_PUNBOX64)
     ;;
 arm*-*)
     ENABLE_ION=1
-    ENABLE_YARR_JIT=1
     AC_DEFINE(JS_CPU_ARM)
     AC_DEFINE(JS_NUNBOX32)
     ;;
@@ -2010,22 +2007,12 @@ MOZ_ARG_DISABLE_BOOL(ion,
 [  --disable-ion      Disable use of the IonMonkey JIT],
   ENABLE_ION= )
 
-MOZ_ARG_DISABLE_BOOL(yarr-jit,
-[  --disable-yarr-jit    Disable YARR JIT support],
-  ENABLE_YARR_JIT= )
-
 AC_SUBST(ENABLE_METHODJIT_SPEW)
 
 AC_SUBST(ENABLE_ION)
 
 if test "$ENABLE_ION"; then
     AC_DEFINE(JS_ION)
-fi
-
-AC_SUBST(ENABLE_YARR_JIT)
-
-if test "$ENABLE_YARR_JIT"; then
-    AC_DEFINE(ENABLE_YARR_JIT)
 fi
 
 if test -n "$COMPILE_ENVIRONMENT"; then
@@ -2992,6 +2979,20 @@ AC_SUBST(ENABLE_TRACE_LOGGING)
 
 if test "$ENABLE_TRACE_LOGGING"; then
     AC_DEFINE(JS_TRACE_LOGGING)
+fi
+
+dnl ========================================================
+dnl = Enable yarr regexp engine
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(yarr,
+[  --enable-yarr   Enable yarr regexp engine],
+    ENABLE_YARR=1,
+    ENABLE_YARR= )
+
+AC_SUBST(ENABLE_YARR)
+
+if test "$ENABLE_YARR"; then
+    AC_DEFINE(JS_YARR)
 fi
 
 dnl ========================================================

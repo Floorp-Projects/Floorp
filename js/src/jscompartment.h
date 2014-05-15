@@ -9,6 +9,7 @@
 
 #include "mozilla/MemoryReporting.h"
 
+#include "builtin/RegExp.h"
 #include "builtin/TypedObject.h"
 #include "gc/Zone.h"
 #include "vm/GlobalObject.h"

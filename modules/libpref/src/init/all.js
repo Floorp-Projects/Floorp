@@ -795,6 +795,7 @@ pref("javascript.options.strict.debug",     true);
 pref("javascript.options.baselinejit",      true);
 pref("javascript.options.ion",              true);
 pref("javascript.options.asmjs",            true);
+pref("javascript.options.native_regexp",    true);
 pref("javascript.options.parallel_parsing", true);
 pref("javascript.options.ion.parallel_compilation", true);
 // This preference instructs the JS engine to discard the

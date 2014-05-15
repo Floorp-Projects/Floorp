@@ -16,11 +16,13 @@
 #include "gc/Marking.h"
 #include "gc/Zone.h"
 #include "vm/Shape.h"
-#if ENABLE_YARR_JIT
+
+#ifdef JS_YARR
+#ifdef JS_ION
 #include "yarr/YarrJIT.h"
-#else
-#include "yarr/YarrInterpreter.h"
 #endif
+#include "yarr/YarrInterpreter.h"
+#endif // JS_YARR
 
 /*
  * JavaScript Regular Expressions
@@ -42,7 +44,6 @@
  */
 namespace js {
 
-class MatchConduit;
 class MatchPair;
 class MatchPairs;
 class RegExpShared;
@@ -127,13 +128,16 @@ class RegExpShared
     friend class RegExpGuard;
 
     typedef frontend::TokenStream TokenStream;
+
+#ifdef JS_YARR
     typedef JSC::Yarr::BytecodePattern BytecodePattern;
     typedef JSC::Yarr::ErrorCode ErrorCode;
     typedef JSC::Yarr::YarrPattern YarrPattern;
-#if ENABLE_YARR_JIT
+#ifdef JS_ION
     typedef JSC::Yarr::JSGlobalData JSGlobalData;
     typedef JSC::Yarr::YarrCodeBlock YarrCodeBlock;
     typedef JSC::Yarr::YarrJITCompileMode YarrJITCompileMode;
+#endif
 #endif
 
     /*
@@ -144,40 +148,53 @@ class RegExpShared
     JSAtom *           source;
 
     RegExpFlag         flags;
-    unsigned           parenCount;
+    size_t             parenCount;
     bool               canStringMatch;
 
-#if ENABLE_YARR_JIT
+#ifdef JS_YARR
+
+#ifdef JS_ION
     /* Note: Native code is valid only if |codeBlock.isFallBack() == false|. */
     YarrCodeBlock   codeBlock;
 #endif
     BytecodePattern *bytecode;
+
+#else // JS_YARR
+
+#ifdef JS_ION
+    HeapPtrJitCode     jitCode;
+#endif
+    uint8_t            *byteCode;
+
+#endif // JS_YARR
+
+    // Tables referenced by JIT code.
+    Vector<uint8_t *, 0, SystemAllocPolicy> tables;
 
     /* Lifetime-preserving variables: see class-level comment above. */
     size_t             activeUseCount;
     uint64_t           gcNumberWhenUsed;
 
     /* Internal functions. */
-    bool compile(JSContext *cx, bool matchOnly);
-    bool compile(JSContext *cx, JSLinearString &pattern, bool matchOnly);
+    bool compile(JSContext *cx, bool matchOnly, const jschar *sampleChars, size_t sampleLength);
+    bool compile(JSContext *cx, HandleAtom pattern, bool matchOnly, const jschar *sampleChars, size_t sampleLength);
 
-    bool compileIfNecessary(JSContext *cx);
+    bool compileIfNecessary(JSContext *cx, const jschar *sampleChars, size_t sampleLength);
+
+#ifdef JS_YARR
     bool compileMatchOnlyIfNecessary(JSContext *cx);
+#endif
 
   public:
     RegExpShared(JSAtom *source, RegExpFlag flags, uint64_t gcNumber);
     ~RegExpShared();
 
-    /* Explicit trace function for use by the RegExpStatics and JITs. */
-    void trace(JSTracer *trc) {
-        MarkStringUnbarriered(trc, &source, "regexpshared source");
-    }
-
+#ifdef JS_YARR
     /* Static functions to expose some Yarr logic. */
 
     // This function should be deleted once bad Android platforms phase out. See bug 604774.
     static bool isJITRuntimeEnabled(JSContext *cx) {
-        #if ENABLE_YARR_JIT
+        #ifdef JS_ION
         # if defined(ANDROID)
             return !cx->jitIsBroken;
         # else
@@ -189,24 +206,39 @@ class RegExpShared
     }
     static void reportYarrError(ExclusiveContext *cx, TokenStream *ts, ErrorCode error);
     static bool checkSyntax(ExclusiveContext *cx, TokenStream *tokenStream, JSLinearString *source);
+#endif // JS_YARR
 
     /* Called when a RegExpShared is installed into a RegExpObject. */
     void prepareForUse(ExclusiveContext *cx) {
         gcNumberWhenUsed = cx->zone()->gcNumber();
+        JSString::writeBarrierPre(source);
+#ifndef JS_YARR
+#ifdef JS_ION
+        if (jitCode)
+            jit::JitCode::writeBarrierPre(jitCode);
+#endif
+#endif // !JS_YARR
     }
 
     /* Primary interface: run this regular expression on the given string. */
     RegExpRunStatus execute(JSContext *cx, const jschar *chars, size_t length,
                             size_t *lastIndex, MatchPairs &matches);
 
+#ifdef JS_YARR
     /* Run the regular expression without collecting matches, for test(). */
     RegExpRunStatus executeMatchOnly(JSContext *cx, const jschar *chars, size_t length,
                                      size_t *lastIndex, MatchPair &match);
+#endif
+
+    // Register a table with this RegExpShared, and take ownership.
+    bool addTable(uint8_t *table) {
+        return tables.append(table);
+    }
 
     /* Accessors */
 
     size_t getParenCount() const {
-        JS_ASSERT(isCompiled() || canStringMatch);
+        JS_ASSERT(isCompiled(true) || isCompiled(false) || canStringMatch);
         return parenCount;
     }
 
@@ -222,44 +254,64 @@ class RegExpShared
     bool multiline() const              { return flags & MultilineFlag; }
     bool sticky() const                 { return flags & StickyFlag; }
 
-#ifdef ENABLE_YARR_JIT
-    bool hasCode() const                { return codeBlock.has16BitCode(); }
-    bool hasMatchOnlyCode() const       { return codeBlock.has16BitCodeMatchOnly(); }
+#ifdef JS_YARR
+
+    bool hasCode(bool matchOnly) const {
+#ifdef JS_ION
+        return matchOnly ? codeBlock.has16BitCodeMatchOnly() : codeBlock.has16BitCode();
 #else
-    bool hasCode() const                { return false; }
-    bool hasMatchOnlyCode() const       { return false; }
+        return false;
 #endif
-    bool hasBytecode() const            { return bytecode != nullptr; }
-    bool isCompiled() const             { return hasBytecode() || hasCode() || hasMatchOnlyCode(); }
+    }
+    bool hasBytecode() const {
+        return bytecode != nullptr;
+    }
+    bool isCompiled(bool matchOnly) const {
+        return hasBytecode() || hasCode(matchOnly);
+    }
+
+#else // JS_YARR
+
+    bool hasJitCode() const {
+#ifdef JS_ION
+        return jitCode != nullptr;
+#else
+        return false;
+#endif
+    }
+    bool hasByteCode() const {
+        return byteCode != nullptr;
+    }
+
+    bool isCompiled(bool matchOnly) const {
+        return hasJitCode() || hasByteCode();
+    }
+
+#endif // JS_YARR
+
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 };
 
 /*
  * Extend the lifetime of a given RegExpShared to at least the lifetime of
  * the guard object. See Regular Expression comment at the top.
  */
-class RegExpGuard
+class RegExpGuard : public JS::CustomAutoRooter
 {
     RegExpShared *re_;
-
-    /*
-     * Prevent the RegExp source from being collected:
-     * because RegExpShared objects compile at execution time, the source
-     * must remain rooted for the active lifetime of the RegExpShared.
-     */
-    RootedAtom source_;
 
     RegExpGuard(const RegExpGuard &) MOZ_DELETE;
     void operator=(const RegExpGuard &) MOZ_DELETE;
 
   public:
     RegExpGuard(ExclusiveContext *cx)
-      : re_(nullptr), source_(cx)
+      : CustomAutoRooter(cx), re_(nullptr)
     {}
 
     RegExpGuard(ExclusiveContext *cx, RegExpShared &re)
-      : re_(&re), source_(cx, re.source)
+      : CustomAutoRooter(cx), re_(nullptr)
     {
-        re_->incRef();
+        init(re);
     }
 
     ~RegExpGuard() {
@@ -271,15 +323,30 @@ class RegExpGuard
         JS_ASSERT(!initialized());
         re_ = &re;
         re_->incRef();
-        source_ = re_->source;
     }
 
     void release() {
         if (re_) {
             re_->decRef();
             re_ = nullptr;
-            source_ = nullptr;
         }
+    }
+
+    virtual void trace(JSTracer *trc) {
+        if (!re_)
+            return;
+        if (re_->source) {
+            MarkStringRoot(trc, reinterpret_cast<JSString**>(&re_->source),
+                           "RegExpGuard source");
+        }
+#ifndef JS_YARR
+#ifdef JS_ION
+        if (re_->jitCode) {
+            MarkJitCodeRoot(trc, reinterpret_cast<jit::JitCode**>(&re_->jitCode),
+                            "RegExpGuard code");
+        }
+#endif
+#endif // !JS_YARR
     }
 
     bool initialized() const { return !!re_; }
@@ -376,14 +443,15 @@ class RegExpObject : public JSObject
      */
     static RegExpObject *
     create(ExclusiveContext *cx, RegExpStatics *res, const jschar *chars, size_t length,
-           RegExpFlag flags, frontend::TokenStream *ts);
+           RegExpFlag flags, frontend::TokenStream *ts, LifoAlloc &alloc);
 
     static RegExpObject *
     createNoStatics(ExclusiveContext *cx, const jschar *chars, size_t length, RegExpFlag flags,
-                    frontend::TokenStream *ts);
+                    frontend::TokenStream *ts, LifoAlloc &alloc);
 
     static RegExpObject *
-    createNoStatics(ExclusiveContext *cx, HandleAtom atom, RegExpFlag flags, frontend::TokenStream *ts);
+    createNoStatics(ExclusiveContext *cx, HandleAtom atom, RegExpFlag flags,
+                    frontend::TokenStream *ts, LifoAlloc &alloc);
 
     /* Accessors. */
 

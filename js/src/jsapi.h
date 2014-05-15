@@ -1446,7 +1446,8 @@ class JS_PUBLIC_API(RuntimeOptions) {
     RuntimeOptions()
       : baseline_(false),
         ion_(false),
-        asmJS_(false)
+        asmJS_(false),
+        nativeRegExp_(false)
     {
     }
 
@@ -1480,10 +1481,17 @@ class JS_PUBLIC_API(RuntimeOptions) {
         return *this;
     }
 
+    bool nativeRegExp() const { return nativeRegExp_; }
+    RuntimeOptions &setNativeRegExp(bool flag) {
+        nativeRegExp_ = flag;
+        return *this;
+    }
+
   private:
     bool baseline_ : 1;
     bool ion_ : 1;
     bool asmJS_ : 1;
+    bool nativeRegExp_ : 1;
 };
 
 JS_PUBLIC_API(RuntimeOptions &)
