@@ -153,7 +153,7 @@ MacroAssemblerX86::setupAlignedABICall(uint32_t args)
 }
 
 void
-MacroAssemblerX86::setupUnalignedABICall(uint32_t args, const Register &scratch)
+MacroAssemblerX86::setupUnalignedABICall(uint32_t args, Register scratch)
 {
     setupABICall(args);
     dynamicAlignment_ = true;
@@ -179,7 +179,7 @@ MacroAssemblerX86::passABIArg(const MoveOperand &from, MoveOp::Type type)
 }
 
 void
-MacroAssemblerX86::passABIArg(const Register &reg)
+MacroAssemblerX86::passABIArg(Register reg)
 {
     passABIArg(MoveOperand(reg), MoveOp::GENERAL);
 }

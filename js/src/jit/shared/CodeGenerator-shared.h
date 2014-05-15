@@ -301,9 +301,9 @@ class CodeGeneratorShared : public LInstructionVisitor
     //      an invalidation marker.
     void ensureOsiSpace();
 
-    OutOfLineCode *oolTruncateDouble(const FloatRegister &src, const Register &dest);
-    bool emitTruncateDouble(const FloatRegister &src, const Register &dest);
-    bool emitTruncateFloat32(const FloatRegister &src, const Register &dest);
+    OutOfLineCode *oolTruncateDouble(const FloatRegister &src, Register dest);
+    bool emitTruncateDouble(const FloatRegister &src, Register dest);
+    bool emitTruncateFloat32(const FloatRegister &src, Register dest);
 
     void emitPreBarrier(Register base, const LAllocation *index, MIRType type);
     void emitPreBarrier(Address address, MIRType type);
@@ -375,7 +375,7 @@ class CodeGeneratorShared : public LInstructionVisitor
 #endif
     }
 
-    void storeResultTo(const Register &reg) {
+    void storeResultTo(Register reg) {
         masm.storeCallResult(reg);
     }
 
@@ -627,7 +627,7 @@ class StoreRegisterTo
     Register out_;
 
   public:
-    StoreRegisterTo(const Register &out)
+    StoreRegisterTo(Register out)
       : out_(out)
     { }
 

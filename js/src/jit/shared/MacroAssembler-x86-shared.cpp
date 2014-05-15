@@ -120,7 +120,7 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
 // Builds an exit frame on the stack, with a return address to an internal
 // non-function. Returns offset to be passed to markSafepointAt().
 bool
-MacroAssemblerX86Shared::buildFakeExitFrame(const Register &scratch, uint32_t *offset)
+MacroAssemblerX86Shared::buildFakeExitFrame(Register scratch, uint32_t *offset)
 {
     mozilla::DebugOnly<uint32_t> initialDepth = framePushed();
 
@@ -157,7 +157,7 @@ MacroAssemblerX86Shared::buildOOLFakeExitFrame(void *fakeReturnAddr)
 
 void
 MacroAssemblerX86Shared::branchNegativeZero(const FloatRegister &reg,
-                                            const Register &scratch,
+                                            Register scratch,
                                             Label *label)
 {
     // Determines whether the low double contained in the XMM register reg
@@ -189,7 +189,7 @@ MacroAssemblerX86Shared::branchNegativeZero(const FloatRegister &reg,
 
 void
 MacroAssemblerX86Shared::branchNegativeZeroFloat32(const FloatRegister &reg,
-                                                   const Register &scratch,
+                                                   Register scratch,
                                                    Label *label)
 {
     movd(reg, scratch);

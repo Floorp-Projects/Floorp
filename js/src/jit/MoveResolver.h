@@ -38,11 +38,11 @@ class MoveOperand
   public:
     MoveOperand()
     { }
-    explicit MoveOperand(const Register &reg) : kind_(REG), code_(reg.code())
+    explicit MoveOperand(Register reg) : kind_(REG), code_(reg.code())
     { }
     explicit MoveOperand(const FloatRegister &reg) : kind_(FLOAT_REG), code_(reg.code())
     { }
-    MoveOperand(const Register &reg, int32_t disp, Kind kind = MEMORY)
+    MoveOperand(Register reg, int32_t disp, Kind kind = MEMORY)
         : kind_(kind),
         code_(reg.code()),
         disp_(disp)
