@@ -1540,8 +1540,8 @@ nsGonkCameraControl::OnRecorderEvent(int msg, int ext1, int ext2)
 
 nsresult
 nsGonkCameraControl::SetupRecording(int aFd, int aRotation,
-                                    int64_t aMaxFileSizeBytes,
-                                    int64_t aMaxVideoLengthMs)
+                                    uint64_t aMaxFileSizeBytes,
+                                    uint64_t aMaxVideoLengthMs)
 {
   RETURN_IF_NO_CAMERA_HW();
 
@@ -1550,26 +1550,39 @@ nsGonkCameraControl::SetupRecording(int aFd, int aRotation,
   char buffer[SIZE];
 
   mRecorder = new GonkRecorder();
-  CHECK_SETARG(mRecorder->init());
+  CHECK_SETARG_RETURN(mRecorder->init(), NS_ERROR_FAILURE);
 
   nsresult rv = mRecorderProfile->ConfigureRecorder(mRecorder);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  CHECK_SETARG(mRecorder->setCamera(mCameraHw));
+  CHECK_SETARG_RETURN(mRecorder->setCamera(mCameraHw), NS_ERROR_FAILURE);
 
-  DOM_CAMERA_LOGI("maxVideoLengthMs=%lld\n", aMaxVideoLengthMs);
+  DOM_CAMERA_LOGI("maxVideoLengthMs=%llu\n", aMaxVideoLengthMs);
+  const uint64_t kMaxVideoLengthMs = INT64_MAX / 1000;
   if (aMaxVideoLengthMs == 0) {
     aMaxVideoLengthMs = -1;
+  } else if (aMaxVideoLengthMs > kMaxVideoLengthMs) {
+    // GonkRecorder parameters are internally limited to signed 64-bit values,
+    // and the time length limit is converted from milliseconds to microseconds,
+    // so we limit this value to prevent any unexpected overflow weirdness.
+    DOM_CAMERA_LOGW("maxVideoLengthMs capped to %lld\n", kMaxVideoLengthMs);
+    aMaxVideoLengthMs = kMaxVideoLengthMs;
   }
   snprintf(buffer, SIZE, "max-duration=%lld", aMaxVideoLengthMs);
-  CHECK_SETARG(mRecorder->setParameters(String8(buffer)));
+  CHECK_SETARG_RETURN(mRecorder->setParameters(String8(buffer)),
+                      NS_ERROR_INVALID_ARG);
 
-  DOM_CAMERA_LOGI("maxFileSizeBytes=%lld\n", aMaxFileSizeBytes);
+  DOM_CAMERA_LOGI("maxFileSizeBytes=%llu\n", aMaxFileSizeBytes);
   if (aMaxFileSizeBytes == 0) {
     aMaxFileSizeBytes = -1;
+  } else if (aMaxFileSizeBytes > INT64_MAX) {
+    // GonkRecorder parameters are internally limited to signed 64-bit values
+    DOM_CAMERA_LOGW("maxFileSizeBytes capped to INT64_MAX\n");
+    aMaxFileSizeBytes = INT64_MAX;
   }
   snprintf(buffer, SIZE, "max-filesize=%lld", aMaxFileSizeBytes);
-  CHECK_SETARG(mRecorder->setParameters(String8(buffer)));
+  CHECK_SETARG_RETURN(mRecorder->setParameters(String8(buffer)),
+                      NS_ERROR_INVALID_ARG);
 
   // adjust rotation by camera sensor offset
   int r = aRotation;
@@ -1577,13 +1590,15 @@ nsGonkCameraControl::SetupRecording(int aFd, int aRotation,
   r = RationalizeRotation(r);
   DOM_CAMERA_LOGI("setting video rotation to %d degrees (mapped from %d)\n", r, aRotation);
   snprintf(buffer, SIZE, "video-param-rotation-angle-degrees=%d", r);
-  CHECK_SETARG(mRecorder->setParameters(String8(buffer)));
+  CHECK_SETARG_RETURN(mRecorder->setParameters(String8(buffer)),
+                      NS_ERROR_INVALID_ARG);
 
-  CHECK_SETARG(mRecorder->setListener(new GonkRecorderListener(this)));
+  CHECK_SETARG_RETURN(mRecorder->setListener(new GonkRecorderListener(this)),
+                      NS_ERROR_FAILURE);
 
   // recording API needs file descriptor of output file
-  CHECK_SETARG(mRecorder->setOutputFile(aFd, 0, 0));
-  CHECK_SETARG(mRecorder->prepare());
+  CHECK_SETARG_RETURN(mRecorder->setOutputFile(aFd, 0, 0), NS_ERROR_FAILURE);
+  CHECK_SETARG_RETURN(mRecorder->prepare(), NS_ERROR_FAILURE);
 
   return NS_OK;
 }

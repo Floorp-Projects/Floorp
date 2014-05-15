@@ -8,13 +8,16 @@
 #ifndef mozilla_layers_AsyncTransactionTracker_h
 #define mozilla_layers_AsyncTransactionTracker_h
 
+#include <map>
+
 #include "mozilla/Atomics.h"
-#include "mozilla/layers/TextureClient.h"  // for TextureClient
 #include "mozilla/Monitor.h"      // for Monitor
 #include "mozilla/RefPtr.h"       // for AtomicRefCounted
 
 namespace mozilla {
 namespace layers {
+
+class TextureClient;
 
 /**
  * AsyncTransactionTracker tracks asynchronous transaction.
