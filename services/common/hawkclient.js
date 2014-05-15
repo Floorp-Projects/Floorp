@@ -155,9 +155,11 @@ this.HawkClient.prototype = {
       let restResponse = this.response;
       let status = restResponse.status;
 
-      log.debug("(Response) code: " + status +
-                " - Status text: " + restResponse.statusText,
-                " - Response text: " + restResponse.body);
+      log.debug("(Response) " + path + ": code: " + status +
+                " - Status text: " + restResponse.statusText);
+      if (logPII) {
+        log.debug("Response text: " + restResponse.body);
+      }
 
       // All responses may have backoff headers, which are a server-side safety
       // valve to allow slowing down clients without hurting performance.
