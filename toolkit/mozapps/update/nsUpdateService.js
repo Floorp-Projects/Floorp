@@ -331,6 +331,10 @@ XPCOMUtils.defineLazyGetter(this, "gProductModel", function aus_gProductModel() 
   Cu.import("resource://gre/modules/systemlibs.js");
   return libcutils.property_get("ro.product.model");
 });
+XPCOMUtils.defineLazyGetter(this, "gProductDevice", function aus_gProductDevice() {
+  Cu.import("resource://gre/modules/systemlibs.js");
+  return libcutils.property_get("ro.product.device");
+});
 #endif
 
 XPCOMUtils.defineLazyGetter(this, "gOSVersion", function aus_gOSVersion() {
@@ -3622,6 +3626,7 @@ Checker.prototype = {
 
 #ifdef MOZ_WIDGET_GONK
     url = url.replace(/%PRODUCT_MODEL%/g, gProductModel);
+    url = url.replace(/%PRODUCT_DEVICE%/g, gProductDevice);
     url = url.replace(/%B2G_VERSION%/g, getPref("getCharPref", PREF_APP_B2G_VERSION, null));
 #endif
 

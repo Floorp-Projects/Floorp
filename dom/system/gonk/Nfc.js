@@ -22,11 +22,8 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "NFC", function () {
-  let obj = {};
-  Cu.import("resource://gre/modules/nfc_consts.js", obj);
-  return obj;
-});
+let NFC = {};
+Cu.import("resource://gre/modules/nfc_consts.js", NFC);
 
 Cu.import("resource://gre/modules/systemlibs.js");
 const NFC_ENABLED = libcutils.property_get("ro.moz.nfc.enabled", "false") === "true";
@@ -437,7 +434,7 @@ Nfc.prototype = {
                                     classDescription: "Nfc",
                                     interfaces: [Ci.nsIWorkerHolder]}),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWorkerHolder]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWorkerHolder, Ci.nsIObserver]),
 
   _currentSessionId: null,
 
@@ -634,6 +631,15 @@ Nfc.prototype = {
     }
 
     return null;
+  },
+
+  /**
+   * nsIObserver interface methods.
+   */
+  observe: function(subject, topic, data) {
+    if (topic != "profile-after-change") {
+      debug("Should receive 'profile-after-change' only, received " + topic);
+    }
   },
 
   setConfig: function setConfig(prop) {

@@ -89,14 +89,17 @@ dictionary CameraPictureOptions
    'maxVideoLengthMs' is the maximum length in milliseconds to which the
    recorded video will be allowed to grow.
 
-   if either 'maxFileSizeBytes' or 'maxVideoLengthMs' is missing, zero,
-   or negative, that limit will be disabled.
+   if either 'maxFileSizeBytes' or 'maxVideoLengthMs' is missing or zero,
+   that limit will be disabled; if either value is out of range, it will
+   be clamped from 0 to the upper limit for an 'unsigned long long'.
 */
 dictionary CameraStartRecordingOptions
 {
-  long      rotation = 0;
-  long long maxFileSizeBytes = 0;
-  long long maxVideoLengthMs = 0;
+  long rotation = 0;
+  [Clamp]
+  unsigned long long maxFileSizeBytes = 0;
+  [Clamp]
+  unsigned long long maxVideoLengthMs = 0;
 
   /* If startRecording() is called with flashMode set to "auto" and the
      camera has determined that the scene is poorly lit, the flash mode
