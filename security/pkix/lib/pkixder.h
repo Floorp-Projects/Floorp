@@ -25,6 +25,18 @@
 #ifndef mozilla_pkix__pkixder_h
 #define mozilla_pkix__pkixder_h
 
+// Expect* functions advance the input mark and return Success if the input
+// matches the given criteria; they return Failure with the input mark in an
+// undefined state if the input does not match the criteria.
+//
+// Match* functions advance the input mark and return true if the input matches
+// the given criteria; they return false without changing the input mark if the
+// input does not match the criteria.
+//
+// Skip* functions unconditionally advance the input mark and return Success if
+// they are able to do so; otherwise they return Failure with the input mark in
+// an undefined state.
+
 #include "pkix/enumclass.h"
 #include "pkix/nullptr.h"
 
@@ -252,14 +264,48 @@ ExpectTagAndLength(Input& input, uint8_t expectedTag, uint8_t expectedLength)
   return Success;
 }
 
+namespace internal {
+
 Result
 ExpectTagAndGetLength(Input& input, uint8_t expectedTag, uint16_t& length);
 
+} // namespace internal
+
 inline Result
-ExpectTagAndIgnoreLength(Input& input, uint8_t expectedTag)
+ExpectTagAndSkipLength(Input& input, uint8_t expectedTag)
 {
   uint16_t ignored;
-  return ExpectTagAndGetLength(input, expectedTag, ignored);
+  return internal::ExpectTagAndGetLength(input, expectedTag, ignored);
+}
+
+inline Result
+ExpectTagAndSkipValue(Input& input, uint8_t tag)
+{
+  uint16_t length;
+  if (internal::ExpectTagAndGetLength(input, tag, length) != Success) {
+    return Failure;
+  }
+  return input.Skip(length);
+}
+
+inline Result
+ExpectTagAndGetValue(Input& input, uint8_t tag, /*out*/ SECItem& value)
+{
+  uint16_t length;
+  if (internal::ExpectTagAndGetLength(input, tag, length) != Success) {
+    return Failure;
+  }
+  return input.Skip(length, value);
+}
+
+inline Result
+ExpectTagAndGetValue(Input& input, uint8_t tag, /*out*/ Input& value)
+{
+  uint16_t length;
+  if (internal::ExpectTagAndGetLength(input, tag, length) != Success) {
+    return Failure;
+  }
+  return input.Skip(length, value);
 }
 
 inline Result
@@ -276,20 +322,13 @@ template <typename Decoder>
 inline Result
 Nested(Input& input, uint8_t tag, Decoder decoder)
 {
-  uint16_t length;
-  if (ExpectTagAndGetLength(input, tag, length) != Success) {
-    return Failure;
-  }
-
   Input nested;
-  if (input.Skip(length, nested) != Success) {
+  if (ExpectTagAndGetValue(input, tag, nested) != Success) {
     return Failure;
   }
-
   if (decoder(nested) != Success) {
     return Failure;
   }
-
   return End(nested);
 }
 
@@ -300,18 +339,13 @@ Nested(Input& input, uint8_t outerTag, uint8_t innerTag, Decoder decoder)
   // XXX: This doesn't work (in VS2010):
   // return Nested(input, outerTag, bind(Nested, _1, innerTag, decoder));
 
-  uint16_t length;
-  if (ExpectTagAndGetLength(input, outerTag, length) != Success) {
-    return Failure;
-  }
   Input nestedInput;
-  if (input.Skip(length, nestedInput) != Success) {
+  if (ExpectTagAndGetValue(input, outerTag, nestedInput) != Success) {
     return Failure;
   }
   if (Nested(nestedInput, innerTag, decoder) != Success) {
     return Failure;
   }
-
   return End(nestedInput);
 }
 
@@ -337,13 +371,8 @@ inline Result
 NestedOf(Input& input, uint8_t outerTag, uint8_t innerTag,
          EmptyAllowed mayBeEmpty, Decoder decoder)
 {
-  uint16_t responsesLength;
-  if (ExpectTagAndGetLength(input, outerTag, responsesLength) != Success) {
-    return Failure;
-  }
-
   Input inner;
-  if (input.Skip(responsesLength, inner) != Success) {
+  if (ExpectTagAndGetValue(input, outerTag, inner) != Success) {
     return Failure;
   }
 
@@ -361,26 +390,6 @@ NestedOf(Input& input, uint8_t outerTag, uint8_t innerTag,
   } while (!inner.AtEnd());
 
   return Success;
-}
-
-inline Result
-Skip(Input& input, uint8_t tag)
-{
-  uint16_t length;
-  if (ExpectTagAndGetLength(input, tag, length) != Success) {
-    return Failure;
-  }
-  return input.Skip(length);
-}
-
-inline Result
-Skip(Input& input, uint8_t tag, /*out*/ SECItem& value)
-{
-  uint16_t length;
-  if (ExpectTagAndGetLength(input, tag, length) != Success) {
-    return Failure;
-  }
-  return input.Skip(length, value);
 }
 
 // Universal types
@@ -461,18 +470,13 @@ Enumerated(Input& input, uint8_t& value)
 inline Result
 GeneralizedTime(Input& input, PRTime& time)
 {
-  uint16_t length;
   SECItem encoded;
-  if (ExpectTagAndGetLength(input, GENERALIZED_TIME, length) != Success) {
-    return Failure;
-  }
-  if (input.Skip(length, encoded) != Success) {
+  if (ExpectTagAndGetValue(input, GENERALIZED_TIME, encoded) != Success) {
     return Failure;
   }
   if (DER_GeneralizedTimeToTime(&time, &encoded) != SECSuccess) {
     return Failure;
   }
-
   return Success;
 }
 
@@ -538,7 +542,7 @@ OID(Input& input, const uint8_t (&expectedOid)[Len])
 inline Result
 AlgorithmIdentifier(Input& input, SECAlgorithmID& algorithmID)
 {
-  if (Skip(input, OIDTag, algorithmID.algorithm) != Success) {
+  if (ExpectTagAndGetValue(input, OIDTag, algorithmID.algorithm) != Success) {
     return Failure;
   }
   algorithmID.parameters.data = nullptr;
@@ -563,12 +567,7 @@ CertificateSerialNumber(Input& input, /*out*/ SECItem& value)
   //   that are negative or zero.  Certificate users SHOULD be prepared to
   //   gracefully handle such certificates."
 
-  uint16_t length;
-  if (ExpectTagAndGetLength(input, INTEGER, length) != Success) {
-    return Failure;
-  }
-
-  if (input.Skip(length, value) != Success) {
+  if (ExpectTagAndGetValue(input, INTEGER, value) != Success) {
     return Failure;
   }
 
