@@ -59,7 +59,7 @@ add_task(function() {
   menuButton.remove();
 });
 
-add_task(function() {
+add_task(function*() {
   let searchbar = document.getElementById("searchbar");
   gCustomizeMode.addToPanel(searchbar);
   let placement = CustomizableUI.getPlacementOfWidget("search-container");
@@ -89,6 +89,22 @@ add_task(function() {
   EventUtils.synthesizeKey("VK_ESCAPE", {});
   yield hiddenPanelPromise;
   ok(!isPanelUIOpen(), "Panel should no longer be open");
+});
+
+add_task(function*() {
+  button = document.createElement("toolbarbutton");
+  button.id = "browser_946166_button_disabled";
+  button.setAttribute("disabled", "true");
+  button.setAttribute("label", "Button");
+  PanelUI.contents.appendChild(button);
+  yield PanelUI.show();
+  EventUtils.synthesizeMouseAtCenter(button, {});
+  is(PanelUI.panel.state, "open", "Popup stays open");
+  button.removeAttribute("disabled");
+  let hiddenAgain = promisePanelHidden(window);
+  EventUtils.synthesizeMouseAtCenter(button, {});
+  yield hiddenAgain;
+  button.remove();
 });
 
 registerCleanupFunction(function() {
