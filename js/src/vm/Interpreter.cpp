@@ -3952,6 +3952,15 @@ js::SpreadCallOperation(JSContext *cx, HandleScript script, jsbytecode *pc, Hand
         return false;
     }
 
+#ifdef DEBUG
+    // The object must be an array with dense elements and no holes. Baseline's
+    // optimized spread call stubs rely on this.
+    JS_ASSERT(aobj->getDenseInitializedLength() == length);
+    JS_ASSERT(!aobj->isIndexed());
+    for (uint32_t i = 0; i < length; i++)
+        JS_ASSERT(!aobj->getDenseElement(i).isMagic());
+#endif
+
     InvokeArgs args(cx);
 
     if (!args.init(length))
