@@ -123,7 +123,7 @@ class LAllocation : public TempObject
         JS_ASSERT(!isTagged());
         bits_ |= TAG_MASK;
     }
-    inline explicit LAllocation(const AnyRegister &reg);
+    inline explicit LAllocation(AnyRegister reg);
 
     Kind kind() const {
         if (isTagged())
@@ -1596,7 +1596,7 @@ class LIRGraph
     void removeBlock(size_t i);
 };
 
-LAllocation::LAllocation(const AnyRegister &reg)
+LAllocation::LAllocation(AnyRegister reg)
 {
     if (reg.isFloat())
         *this = LFloatReg(reg.fpu());
