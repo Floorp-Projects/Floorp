@@ -536,7 +536,7 @@ class Assembler : public AssemblerX86Shared
     void mov(Register src, const Operand &dest) {
         movq(src, dest);
     }
-    void mov(const Imm32 &imm32, const Operand &dest) {
+    void mov(Imm32 imm32, const Operand &dest) {
         movq(imm32, dest);
     }
     void mov(Register src, Register dest) {

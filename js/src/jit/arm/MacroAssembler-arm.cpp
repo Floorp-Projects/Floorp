@@ -2002,7 +2002,7 @@ MacroAssemblerARMCompat::andPtr(Register src, Register dest)
 }
 
 void
-MacroAssemblerARMCompat::move32(const Imm32 &imm, Register dest)
+MacroAssemblerARMCompat::move32(Imm32 imm, Register dest)
 {
     ma_mov(imm, dest);
 }
@@ -2273,7 +2273,7 @@ MacroAssemblerARMCompat::loadFloat32(const BaseIndex &src, const FloatRegister &
 }
 
 void
-MacroAssemblerARMCompat::store8(const Imm32 &imm, const Address &address)
+MacroAssemblerARMCompat::store8(Imm32 imm, const Address &address)
 {
     ma_mov(imm, secondScratchReg_);
     store8(secondScratchReg_, address);
@@ -2286,7 +2286,7 @@ MacroAssemblerARMCompat::store8(Register src, const Address &address)
 }
 
 void
-MacroAssemblerARMCompat::store8(const Imm32 &imm, const BaseIndex &dest)
+MacroAssemblerARMCompat::store8(Imm32 imm, const BaseIndex &dest)
 {
     ma_mov(imm, secondScratchReg_);
     store8(secondScratchReg_, dest);
@@ -2306,7 +2306,7 @@ MacroAssemblerARMCompat::store8(Register src, const BaseIndex &dest)
 }
 
 void
-MacroAssemblerARMCompat::store16(const Imm32 &imm, const Address &address)
+MacroAssemblerARMCompat::store16(Imm32 imm, const Address &address)
 {
     ma_mov(imm, secondScratchReg_);
     store16(secondScratchReg_, address);
@@ -2319,7 +2319,7 @@ MacroAssemblerARMCompat::store16(Register src, const Address &address)
 }
 
 void
-MacroAssemblerARMCompat::store16(const Imm32 &imm, const BaseIndex &dest)
+MacroAssemblerARMCompat::store16(Imm32 imm, const BaseIndex &dest)
 {
     ma_mov(imm, secondScratchReg_);
     store16(secondScratchReg_, dest);
@@ -2354,14 +2354,14 @@ MacroAssemblerARMCompat::store32(Register src, const Address &address)
 }
 
 void
-MacroAssemblerARMCompat::store32(const Imm32 &src, const Address &address)
+MacroAssemblerARMCompat::store32(Imm32 src, const Address &address)
 {
     move32(src, secondScratchReg_);
     storePtr(secondScratchReg_, address);
 }
 
 void
-MacroAssemblerARMCompat::store32(const Imm32 &imm, const BaseIndex &dest)
+MacroAssemblerARMCompat::store32(Imm32 imm, const BaseIndex &dest)
 {
     ma_mov(imm, secondScratchReg_);
     store32(secondScratchReg_, dest);
@@ -2468,7 +2468,7 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
 }
 
 void
-MacroAssemblerARMCompat::cmp32(Register lhs, const Imm32 &rhs)
+MacroAssemblerARMCompat::cmp32(Register lhs, Imm32 rhs)
 {
     JS_ASSERT(lhs != ScratchRegister);
     ma_cmp(lhs, rhs);
@@ -2481,7 +2481,7 @@ MacroAssemblerARMCompat::cmp32(const Operand &lhs, Register rhs)
 }
 
 void
-MacroAssemblerARMCompat::cmp32(const Operand &lhs, const Imm32 &rhs)
+MacroAssemblerARMCompat::cmp32(const Operand &lhs, Imm32 rhs)
 {
     JS_ASSERT(lhs.toReg() != ScratchRegister);
     ma_cmp(lhs.toReg(), rhs);
@@ -2519,7 +2519,7 @@ MacroAssemblerARMCompat::cmpPtr(Register lhs, const ImmGCPtr &rhs)
 }
 
 void
-MacroAssemblerARMCompat::cmpPtr(Register lhs, const Imm32 &rhs)
+MacroAssemblerARMCompat::cmpPtr(Register lhs, Imm32 rhs)
 {
     ma_cmp(lhs, rhs);
 }
