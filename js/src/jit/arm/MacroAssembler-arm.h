@@ -1295,6 +1295,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
     void xor32(Imm32 imm, Register dest);
 
+    void and32(Register src, Register dest);
     void and32(Imm32 imm, Register dest);
     void and32(Imm32 imm, const Address &dest);
     void or32(Imm32 imm, const Address &dest);
@@ -1370,6 +1371,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void storePtr(ImmPtr imm, const Address &address);
     void storePtr(ImmGCPtr imm, const Address &address);
     void storePtr(Register src, const Address &address);
+    void storePtr(Register src, const BaseIndex &address);
     void storePtr(Register src, AbsoluteAddress dest);
     void storeDouble(FloatRegister src, Address addr) {
         ma_vstr(src, Operand(addr));
@@ -1451,6 +1453,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void rshiftPtr(Imm32 imm, Register dest) {
         ma_lsr(imm, dest, dest);
+    }
+    void rshiftPtrArithmetic(Imm32 imm, Register dest) {
+        ma_asr(imm, dest, dest);
     }
     void lshiftPtr(Imm32 imm, Register dest) {
         ma_lsl(imm, dest, dest);
