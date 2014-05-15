@@ -21,6 +21,7 @@
 
 class nsPresContext;
 class nsIFrame;
+class ElementPropertyTransition;
 
 
 namespace mozilla {
@@ -222,12 +223,21 @@ struct AnimationProperty
  * Data about one animation (i.e., one of the values of
  * 'animation-name') running on an element.
  */
-struct StyleAnimation
+struct ElementAnimation
 {
-  StyleAnimation()
+  ElementAnimation()
     : mIsRunningOnCompositor(false)
     , mLastNotification(LAST_NOTIFICATION_NONE)
   {
+  }
+
+  // FIXME: If we succeed in moving transition-specific code to a type of
+  // AnimationEffect (as per the Web Animations API) we should remove these
+  // virtual methods.
+  virtual ~ElementAnimation() { }
+  virtual ElementPropertyTransition* AsTransition() { return nullptr; }
+  virtual const ElementPropertyTransition* AsTransition() const {
+    return nullptr;
   }
 
   nsString mName; // empty string for 'none'
@@ -278,7 +288,11 @@ struct StyleAnimation
   uint32_t mLastNotification;
 
   InfallibleTArray<AnimationProperty> mProperties;
+
+  NS_INLINE_DECL_REFCOUNTING(ElementAnimation)
 };
+
+typedef InfallibleTArray<nsRefPtr<ElementAnimation> > ElementAnimationPtrArray;
 
 namespace css {
 
@@ -348,6 +362,8 @@ struct CommonElementAnimationData : public PRCList
   nsIAtom *mElementProperty;
 
   CommonAnimationManager *mManager;
+
+  mozilla::ElementAnimationPtrArray mAnimations;
 
   // This style rule contains the style data for currently animating
   // values.  It only matches when styling with animation.  When we

@@ -56,7 +56,7 @@
                               'select-1-1', 'select-1-2', 'checkbox-1-2',
                               'select-1-3', 'input-1-5', 'button-1-3',
                               'button-2-1', 'button-2-2', 'button-2-3',
-                              'button-2-4']);
+                              'button-2-4', 'checkbox-1-5']);
 
       queueTraversalSequence(gQueue, docAcc, TraversalRules.Button, null,
                              ['button-1-1', 'button-1-2', 'button-1-3',
@@ -67,7 +67,7 @@
                              ['radio-1-1', 'radio-1-2']);
 
       queueTraversalSequence(gQueue, docAcc, TraversalRules.Checkbox, null,
-                             ['checkbox-1-1', 'checkbox-1-2']);
+                             ['checkbox-1-1', 'checkbox-1-2', 'checkbox-1-5']);
 
       queueTraversalSequence(gQueue, docAcc, TraversalRules.Combobox, null,
                              ['select-1-1', 'select-1-2', 'select-1-3']);
@@ -78,13 +78,14 @@
       queueTraversalSequence(gQueue, docAcc, TraversalRules.ListItem, null,
                              ['listitem-1-1', 'listitem-2-1', 'listitem-2-2',
                               'listitem-3-1', 'listitem-3-2', 'listitem-3-3',
+                              'listitem-3-4', 'listitem-3-5', 'listitem-3-6',
                               'listitem-2-3']);
 
       queueTraversalSequence(gQueue, docAcc, TraversalRules.Graphic, null,
                              ['image-2', 'image-3']);
 
       queueTraversalSequence(gQueue, docAcc, TraversalRules.Link, null,
-                             ['link-1', 'link-2', 'link-3']);
+                             ['link-0', 'link-1', 'link-2', 'link-3']);
 
       queueTraversalSequence(gQueue, docAcc, TraversalRules.Anchor, null,
                              ['anchor-1', 'anchor-2']);
@@ -112,7 +113,9 @@
                               'formidable warriors, for its unrelenting strict' +
                               ' power is unfathomable.',
                               '• Lists of Programming Languages', 'Lisp ',
-                              '1. Scheme', '2. Racket', '3. Clojure', '• JavaScript', 'heading-5',
+                              '1. Scheme', '2. Racket', '3. Clojure',
+                              '4. Standard Lisp', 'link-0', ' Lisp', 'checkbox-1-5',
+                              ' LeLisp', '• JavaScript', 'heading-5',
                               'image-2', 'image-3', 'Not actually an image',
                               'link-1', 'anchor-1', 'link-2', 'anchor-2', 'link-3',
                               '3', '1', '4', '1', 'Just an innocuous separator',

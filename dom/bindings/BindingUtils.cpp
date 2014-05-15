@@ -2177,7 +2177,7 @@ IsInPrivilegedApp(JSContext* aCx, JSObject* aObj)
     return GetWorkerPrivateFromContext(aCx)->IsInPrivilegedApp();
   }
 
-  nsIPrincipal* principal = nsContentUtils::GetObjectPrincipal(aObj);
+  nsIPrincipal* principal = nsContentUtils::ObjectPrincipal(aObj);
   uint16_t appStatus = principal->GetAppStatus();
   return (appStatus == nsIPrincipal::APP_STATUS_CERTIFIED ||
           appStatus == nsIPrincipal::APP_STATUS_PRIVILEGED) ||
@@ -2192,7 +2192,7 @@ IsInCertifiedApp(JSContext* aCx, JSObject* aObj)
     return GetWorkerPrivateFromContext(aCx)->IsInCertifiedApp();
   }
 
-  nsIPrincipal* principal = nsContentUtils::GetObjectPrincipal(aObj);
+  nsIPrincipal* principal = nsContentUtils::ObjectPrincipal(aObj);
   return principal->GetAppStatus() == nsIPrincipal::APP_STATUS_CERTIFIED ||
          Preferences::GetBool("dom.ignore_webidl_scope_checks", false);
 }

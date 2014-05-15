@@ -22,7 +22,8 @@
 
 #define STRING_BUFFER_SIZE 8192
 
-class StringUnicharInputStream MOZ_FINAL : public nsIUnicharInputStream {
+class StringUnicharInputStream MOZ_FINAL : public nsIUnicharInputStream
+{
 public:
   StringUnicharInputStream(const nsAString& aString) :
     mString(aString), mPos(0), mLen(aString.Length()) { }
@@ -41,7 +42,7 @@ private:
 NS_IMETHODIMP
 StringUnicharInputStream::Read(char16_t* aBuf,
                                uint32_t aCount,
-                               uint32_t *aReadCount)
+                               uint32_t* aReadCount)
 {
   if (mPos >= mLen) {
     *aReadCount = 0;
@@ -63,7 +64,7 @@ StringUnicharInputStream::Read(char16_t* aBuf,
 NS_IMETHODIMP
 StringUnicharInputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
                                        void* aClosure,
-                                       uint32_t aCount, uint32_t *aReadCount)
+                                       uint32_t aCount, uint32_t* aReadCount)
 {
   uint32_t bytesWritten;
   uint32_t totalBytesWritten = 0;
@@ -111,7 +112,8 @@ StringUnicharInputStream::ReadString(uint32_t aCount, nsAString& aString,
   return NS_OK;
 }
 
-nsresult StringUnicharInputStream::Close()
+nsresult
+StringUnicharInputStream::Close()
 {
   mPos = mLen;
   return NS_OK;
@@ -121,7 +123,8 @@ NS_IMPL_ISUPPORTS(StringUnicharInputStream, nsIUnicharInputStream)
 
 //----------------------------------------------------------------------
 
-class UTF8InputStream MOZ_FINAL : public nsIUnicharInputStream {
+class UTF8InputStream MOZ_FINAL : public nsIUnicharInputStream
+{
 public:
   UTF8InputStream();
   nsresult Init(nsIInputStream* aStream);
@@ -133,9 +136,11 @@ private:
   ~UTF8InputStream();
 
 protected:
-  int32_t Fill(nsresult * aErrorCode);
+  int32_t Fill(nsresult* aErrorCode);
 
-  static void CountValidUTF8Bytes(const char *aBuf, uint32_t aMaxBytes, uint32_t& aValidUTF8bytes, uint32_t& aValidUTF16CodeUnits);
+  static void CountValidUTF8Bytes(const char* aBuf, uint32_t aMaxBytes,
+                                  uint32_t& aValidUTF8bytes,
+                                  uint32_t& aValidUTF16CodeUnits);
 
   nsCOMPtr<nsIInputStream> mInput;
   FallibleTArray<char> mByteData;
@@ -165,14 +170,15 @@ UTF8InputStream::Init(nsIInputStream* aStream)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(UTF8InputStream,nsIUnicharInputStream)
+NS_IMPL_ISUPPORTS(UTF8InputStream, nsIUnicharInputStream)
 
 UTF8InputStream::~UTF8InputStream()
 {
   Close();
 }
 
-nsresult UTF8InputStream::Close()
+nsresult
+UTF8InputStream::Close()
 {
   mInput = nullptr;
   mByteData.Clear();
@@ -180,9 +186,8 @@ nsresult UTF8InputStream::Close()
   return NS_OK;
 }
 
-nsresult UTF8InputStream::Read(char16_t* aBuf,
-                               uint32_t aCount,
-                               uint32_t *aReadCount)
+nsresult
+UTF8InputStream::Read(char16_t* aBuf, uint32_t aCount, uint32_t* aReadCount)
 {
   NS_ASSERTION(mUnicharDataLength >= mUnicharDataOffset, "unsigned madness");
   uint32_t readCount = mUnicharDataLength - mUnicharDataOffset;
@@ -209,7 +214,7 @@ nsresult UTF8InputStream::Read(char16_t* aBuf,
 NS_IMETHODIMP
 UTF8InputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
                               void* aClosure,
-                              uint32_t aCount, uint32_t *aReadCount)
+                              uint32_t aCount, uint32_t* aReadCount)
 {
   NS_ASSERTION(mUnicharDataLength >= mUnicharDataOffset, "unsigned madness");
   uint32_t bytesToWrite = mUnicharDataLength - mUnicharDataOffset;
@@ -224,8 +229,9 @@ UTF8InputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
     bytesToWrite = bytesRead;
   }
 
-  if (bytesToWrite > aCount)
+  if (bytesToWrite > aCount) {
     bytesToWrite = aCount;
+  }
 
   uint32_t bytesWritten;
   uint32_t totalBytesWritten = 0;
@@ -277,9 +283,10 @@ UTF8InputStream::ReadString(uint32_t aCount, nsAString& aString,
   return NS_OK;
 }
 
-int32_t UTF8InputStream::Fill(nsresult * aErrorCode)
+int32_t
+UTF8InputStream::Fill(nsresult* aErrorCode)
 {
-  if (nullptr == mInput) {
+  if (!mInput) {
     // We already closed the stream!
     *aErrorCode = NS_BASE_STREAM_CLOSED;
     return -1;
@@ -302,14 +309,16 @@ int32_t UTF8InputStream::Fill(nsresult * aErrorCode)
 
   // Now convert as much of the byte buffer to unicode as possible
   uint32_t srcLen, dstLen;
-  CountValidUTF8Bytes(mByteData.Elements(),remainder + nb, srcLen, dstLen);
+  CountValidUTF8Bytes(mByteData.Elements(), remainder + nb, srcLen, dstLen);
 
   // the number of UCS2 characters should always be <= the number of
   // UTF8 chars
-  NS_ASSERTION( (remainder+nb >= srcLen), "cannot be longer than out buffer");
+  NS_ASSERTION(remainder + nb >= srcLen, "cannot be longer than out buffer");
   NS_ASSERTION(dstLen <= mUnicharData.Capacity(),
                "Ouch. I would overflow my buffer if I wasn't so careful.");
-  if (dstLen > mUnicharData.Capacity()) return 0;
+  if (dstLen > mUnicharData.Capacity()) {
+    return 0;
+  }
 
   ConvertUTF8toUTF16 converter(mUnicharData.Elements());
 
@@ -330,32 +339,33 @@ int32_t UTF8InputStream::Fill(nsresult * aErrorCode)
 }
 
 void
-UTF8InputStream::CountValidUTF8Bytes(const char* aBuffer, uint32_t aMaxBytes, uint32_t& aValidUTF8bytes, uint32_t& aValidUTF16CodeUnits)
+UTF8InputStream::CountValidUTF8Bytes(const char* aBuffer, uint32_t aMaxBytes,
+                                     uint32_t& aValidUTF8bytes,
+                                     uint32_t& aValidUTF16CodeUnits)
 {
-  const char *c = aBuffer;
-  const char *end = aBuffer + aMaxBytes;
-  const char *lastchar = c;     // pre-initialize in case of 0-length buffer
+  const char* c = aBuffer;
+  const char* end = aBuffer + aMaxBytes;
+  const char* lastchar = c;  // pre-initialize in case of 0-length buffer
   uint32_t utf16length = 0;
   while (c < end && *c) {
     lastchar = c;
     utf16length++;
 
-    if (UTF8traits::isASCII(*c))
+    if (UTF8traits::isASCII(*c)) {
       c++;
-    else if (UTF8traits::is2byte(*c))
+    } else if (UTF8traits::is2byte(*c)) {
       c += 2;
-    else if (UTF8traits::is3byte(*c))
+    } else if (UTF8traits::is3byte(*c)) {
       c += 3;
-    else if (UTF8traits::is4byte(*c)) {
+    } else if (UTF8traits::is4byte(*c)) {
       c += 4;
       utf16length++; // add 1 more because this will be converted to a
-                     // surrogate pair.
-    }
-    else if (UTF8traits::is5byte(*c))
+      // surrogate pair.
+    } else if (UTF8traits::is5byte(*c)) {
       c += 5;
-    else if (UTF8traits::is6byte(*c))
+    } else if (UTF8traits::is6byte(*c)) {
       c += 6;
-    else {
+    } else {
       NS_WARNING("Unrecognized UTF8 string in UTF8InputStream::CountValidUTF8Bytes()");
       break; // Otherwise we go into an infinite loop.  But what happens now?
     }
@@ -373,12 +383,20 @@ NS_IMPL_QUERY_INTERFACE(nsSimpleUnicharStreamFactory,
                         nsIFactory,
                         nsISimpleUnicharStreamFactory)
 
-NS_IMETHODIMP_(MozExternalRefCountType) nsSimpleUnicharStreamFactory::AddRef() { return 2; }
-NS_IMETHODIMP_(MozExternalRefCountType) nsSimpleUnicharStreamFactory::Release() { return 1; }
+NS_IMETHODIMP_(MozExternalRefCountType)
+nsSimpleUnicharStreamFactory::AddRef()
+{
+  return 2;
+}
+NS_IMETHODIMP_(MozExternalRefCountType)
+nsSimpleUnicharStreamFactory::Release()
+{
+  return 1;
+}
 
 NS_IMETHODIMP
 nsSimpleUnicharStreamFactory::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
-                                             void **aResult)
+                                             void** aResult)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -391,7 +409,7 @@ nsSimpleUnicharStreamFactory::LockFactory(bool aLock)
 
 NS_IMETHODIMP
 nsSimpleUnicharStreamFactory::CreateInstanceFromString(const nsAString& aString,
-                                                       nsIUnicharInputStream* *aResult)
+                                                       nsIUnicharInputStream** aResult)
 {
   StringUnicharInputStream* it = new StringUnicharInputStream(aString);
   if (!it) {
@@ -404,18 +422,20 @@ nsSimpleUnicharStreamFactory::CreateInstanceFromString(const nsAString& aString,
 
 NS_IMETHODIMP
 nsSimpleUnicharStreamFactory::CreateInstanceFromUTF8Stream(nsIInputStream* aStreamToWrap,
-                                                           nsIUnicharInputStream* *aResult)
+                                                           nsIUnicharInputStream** aResult)
 {
   *aResult = nullptr;
 
   // Create converter input stream
   nsRefPtr<UTF8InputStream> it = new UTF8InputStream();
-  if (!it)
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   nsresult rv = it->Init(aStreamToWrap);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     return rv;
+  }
 
   NS_ADDREF(*aResult = it);
   return NS_OK;

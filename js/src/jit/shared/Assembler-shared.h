@@ -210,7 +210,8 @@ struct ImmMaybeNurseryPtr : public ImmGCPtr
 
 // Pointer to be embedded as an immediate that is loaded/stored from by an
 // instruction.
-struct AbsoluteAddress {
+struct AbsoluteAddress
+{
     void *addr;
 
     explicit AbsoluteAddress(const void *addr)
@@ -228,7 +229,8 @@ struct AbsoluteAddress {
 // The same as AbsoluteAddress except that the intention is to patch this
 // instruction. The initial value of the immediate is 'addr' and this value is
 // either clobbered or used in the patching process.
-struct PatchedAbsoluteAddress {
+struct PatchedAbsoluteAddress
+{
     void *addr;
 
     explicit PatchedAbsoluteAddress()

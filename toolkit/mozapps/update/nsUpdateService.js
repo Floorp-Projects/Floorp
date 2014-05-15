@@ -12,7 +12,9 @@ Components.utils.import("resource://gre/modules/FileUtils.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/ctypes.jsm");
+#ifdef MOZ_SERVICES_HEALTHREPORT
 Components.utils.import("resource://gre/modules/UpdaterHealthProvider.jsm");
+#endif
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -328,6 +330,10 @@ XPCOMUtils.defineLazyGetter(this, "gABI", function aus_gABI() {
 XPCOMUtils.defineLazyGetter(this, "gProductModel", function aus_gProductModel() {
   Cu.import("resource://gre/modules/systemlibs.js");
   return libcutils.property_get("ro.product.model");
+});
+XPCOMUtils.defineLazyGetter(this, "gProductDevice", function aus_gProductDevice() {
+  Cu.import("resource://gre/modules/systemlibs.js");
+  return libcutils.property_get("ro.product.device");
 });
 #endif
 
@@ -3620,6 +3626,7 @@ Checker.prototype = {
 
 #ifdef MOZ_WIDGET_GONK
     url = url.replace(/%PRODUCT_MODEL%/g, gProductModel);
+    url = url.replace(/%PRODUCT_DEVICE%/g, gProductDevice);
     url = url.replace(/%B2G_VERSION%/g, getPref("getCharPref", PREF_APP_B2G_VERSION, null));
 #endif
 

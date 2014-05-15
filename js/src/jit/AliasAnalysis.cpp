@@ -166,7 +166,7 @@ AliasAnalysis::analyze()
     Vector<MDefinitionVector, AliasSet::NumCategories, IonAllocPolicy> stores(alloc());
 
     // Initialize to the first instruction.
-    MDefinition *firstIns = *graph_.begin()->begin();
+    MDefinition *firstIns = *graph_.entryBlock()->begin();
     for (unsigned i = 0; i < AliasSet::NumCategories; i++) {
         MDefinitionVector defs(alloc());
         if (!defs.append(firstIns))

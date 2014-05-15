@@ -15,9 +15,9 @@
   <project name="platform_build" path="build" remote="b2g" revision="65fba428f8d76336b33ddd9e15900357953600ba">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="3a1d67246a79e3632c3b3f2460a25291e7e2714c"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="7973e06dc278f67b4109ac3c33020ed086f0d042"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="abedd83e1ba61cb83e59c723ad6279ad2a7aa1d1"/>
+  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="03c9b9a68af64b72779bede98759464d3beee863"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="ce95d372e6d285725b96490afdaaf489ad8f9ca9"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
@@ -125,9 +125,9 @@
   <!-- Emulator specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="72ffdf71c68a96309212eb13d63560d66db14c9e"/>
   <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="cf3f83a8ef13597b62fb6de7aa0cfaf5dc5de2b5"/>
-  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="265db49431fed74e1887f8dcf083a3b3f3550031"/>
+  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="6a6f02db3080566372b00108f38be5238a617ebc"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="694cecf256122d0cb3b6a1a4efb4b5c7401db223"/>
-  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="aa430bd055bf7e1003d78e9bf0c0abbe32f33e45"/>
+  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="461d356b81d66d50f87c14bd72dc78f4fecafa47"/>
   <project name="platform/development" path="development" revision="5968ff4e13e0d696ad8d972281fc27ae5a12829b"/>
   <project name="android-sdk" path="sdk" remote="b2g" revision="0951179277915335251c5e11d242e4e1a8c2236f"/>
 </manifest>

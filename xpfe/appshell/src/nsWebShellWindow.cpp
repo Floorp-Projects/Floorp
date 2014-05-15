@@ -210,7 +210,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   // and then blowing it away with a second one, which can cause problems for the
   // top-level chrome window case. See bug 789773.
   if (nsContentUtils::IsInitialized()) { // Sometimes this happens really early  See bug 793370.
-    rv = mDocShell->CreateAboutBlankContentViewer(nsContentUtils::GetSubjectPrincipal());
+    rv = mDocShell->CreateAboutBlankContentViewer(nsContentUtils::SubjectPrincipal());
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIDocument> doc = do_GetInterface(mDocShell);
     NS_ENSURE_TRUE(!!doc, NS_ERROR_FAILURE);

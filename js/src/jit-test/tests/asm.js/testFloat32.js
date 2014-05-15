@@ -1,6 +1,7 @@
 load(libdir + "asm.js");
 const TO_FLOAT32 = "var toF = glob.Math.fround;";
 const HEAP32 = "var f32 = new glob.Float32Array(heap);";
+const HEAP64 = "var f64 = new glob.Float64Array(heap);"
 var heap = new ArrayBuffer(4096);
 
 // Module linking
@@ -58,13 +59,14 @@ assertEq(asmLink(asmCompile('glob', 'ffi', 'heap', USE_ASM + TO_FLOAT32 + HEAP32
 assertEq(asmLink(asmCompile('glob', 'ffi', 'heap', USE_ASM + TO_FLOAT32 + HEAP32 + "function f() { var i = 5.; f32[0] = i; return toF(f32[0]); } return f"), this, null, heap)(), 5);
 assertEq(asmLink(asmCompile('glob', 'ffi', 'heap', USE_ASM + TO_FLOAT32 + HEAP32 + "var f64 = new glob.Float64Array(heap); function f() { var i = toF(5.); f64[0] = i; return +f64[0]; } return f"), this, null, heap)(), 5);
 
-var HEAP64 = "var f64 = new glob.Float64Array(heap);"
 assertEq(asmLink(asmCompile('glob', 'ffi', 'heap', USE_ASM + TO_FLOAT32 + HEAP32 + "function f() { f32[0] = 1.5; return +f32[0]; } return f"), this, null, heap)(), 1.5);
 assertEq(asmLink(asmCompile('glob', 'ffi', 'heap', USE_ASM + TO_FLOAT32 + HEAP32 + HEAP64 + "function f() { f64[0] = 1.5; return toF(f64[0]); } return f"), this, null, heap)(), 1.5);
+assertEq(asmLink(asmCompile('glob', 'ffi', 'heap', USE_ASM + TO_FLOAT32 + HEAP32 + HEAP64 + "function f() { f32[0] = toF(42); f64[0] = f32[0]; return +f64[0]; } return f"), this, null, heap)(), 42);
 
 // Coercions
 // -> from Float32
 assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "function f() { var i = toF(5.); var n = 0; n = i | 0; return n | 0; } return f");
+assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "function f(x) { x = toF(x); var n = 0; n = ~~(x + x) >>> 0; return n | 0; } return f");
 assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "function f(x) { x = toF(x); var n = 0.; n = +x; return +n; } return f"), this)(16.64), Math.fround(16.64));
 assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "function f(x) { x = toF(x); var n = 0; n = ~~x; return n | 0; } return f"), this)(16.64), 16);
 assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "function f(x) { x = toF(x); var n = 0; n = ~~x >>> 0; return n | 0; } return f"), this)(16.64), 16);
