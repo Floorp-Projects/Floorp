@@ -955,7 +955,10 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
     // we're opening a modal content window (the helper classes are
     // no-ops if given no window), for chrome dialogs we don't want to
     // do any of that (it's done elsewhere for us).
-    nsAutoWindowStateHelper windowStateHelper(aParent);
+    // Make sure we maintain the state on an outer window, because
+    // that's where it lives; inner windows assert if you try to
+    // maintain the state on them.
+    nsAutoWindowStateHelper windowStateHelper(parentWindow->GetOuterWindow());
 
     if (!windowStateHelper.DefaultEnabled()) {
       // Default to cancel not opening the modal window.
