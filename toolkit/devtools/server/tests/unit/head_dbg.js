@@ -7,12 +7,14 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { DevToolsLoader, devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const worker = new DevToolsLoader(); // TODO: Replace this with the worker loader
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 const Services = devtools.require("Services");
 const DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils.js");
 const { DebuggerServer } = devtools.require("devtools/server/main");
+const { DebuggerServer: WorkerDebuggerServer } = worker.require("devtools/server/main");
 
 // Always log packets when running tests. runxpcshelltests.py will throw
 // the output away anyway, unless you give it the --verbose flag.
