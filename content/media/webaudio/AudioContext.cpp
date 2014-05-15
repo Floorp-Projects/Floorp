@@ -204,7 +204,9 @@ AudioContext::CreateBuffer(JSContext* aJSContext, uint32_t aNumberOfChannels,
                            uint32_t aLength, float aSampleRate,
                            ErrorResult& aRv)
 {
-  if (aSampleRate < 8000 || aSampleRate > 192000 || !aLength || !aNumberOfChannels) {
+  if (aSampleRate < WebAudioUtils::MinSampleRate ||
+      aSampleRate > WebAudioUtils::MaxSampleRate ||
+      !aLength || !aNumberOfChannels) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return nullptr;
   }
