@@ -100,7 +100,7 @@ function check_pinning_telemetry() {
   // Because all of our test domains are pinned to user-specified trust
   // anchors, effectively only strict mode gets evaluated
   do_check_eq(prod_histogram.counts[0], 1); // Failure count
-  do_check_eq(prod_histogram.counts[1], 3); // Success count
+  do_check_eq(prod_histogram.counts[1], 2); // Success count
   do_check_eq(test_histogram.counts[0], 1); // Failure count
   do_check_eq(test_histogram.counts[1], 0); // Success count
 
@@ -113,6 +113,10 @@ function check_pinning_telemetry() {
   do_check_eq(moz_test_histogram.counts[0], 0); // Failure count
   do_check_eq(moz_test_histogram.counts[1], 0); // Success count
 
+  let per_host_histogram =
+    service.getHistogramById("CERT_PINNING_MOZ_RESULTS_BY_HOST").snapshot();
+  do_check_eq(per_host_histogram.counts[0], 0); // Failure count
+  do_check_eq(per_host_histogram.counts[1], 1); // Success count
   run_next_test();
 }
 
