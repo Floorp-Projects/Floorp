@@ -2510,20 +2510,6 @@ DumpHeap(JSContext *cx, unsigned argc, jsval *vp)
     return ok;
 }
 
-static bool
-DumpObject(JSContext *cx, unsigned argc, jsval *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject arg0(cx);
-    if (!JS_ConvertArguments(cx, args, "o", arg0.address()))
-        return false;
-
-    js_DumpObject(arg0);
-
-    args.rval().setUndefined();
-    return true;
-}
-
 #endif /* DEBUG */
 
 static bool
@@ -4579,10 +4565,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("dissrc", DisassWithSrc, 1, 0,
 "dissrc([fun])",
 "  Disassemble functions with source lines."),
-
-    JS_FN_HELP("dumpObject", DumpObject, 1, 0,
-"dumpObject()",
-"  Dump an internal representation of an object."),
 
     JS_FN_HELP("notes", Notes, 1, 0,
 "notes([fun])",
