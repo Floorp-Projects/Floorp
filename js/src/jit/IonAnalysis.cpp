@@ -1449,6 +1449,50 @@ AssertReversePostOrder(MIRGraph &graph)
 }
 #endif
 
+#ifdef DEBUG
+static void
+AssertDominatorTree(MIRGraph &graph)
+{
+    // Check dominators.
+    size_t i = graph.numBlocks();
+    size_t totalNumDominated = 0;
+    for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++) {
+        MBasicBlock *idom = block->immediateDominator();
+        JS_ASSERT(idom->dominates(*block));
+        JS_ASSERT(idom == *block || idom->id() < block->id());
+
+        if (idom == *block) {
+            totalNumDominated += block->numDominated() + 1;
+        } else {
+            bool foundInParent = false;
+            for (size_t j = 0; j < idom->numImmediatelyDominatedBlocks(); j++) {
+                if (idom->getImmediatelyDominatedBlock(j) == *block) {
+                    foundInParent = true;
+                    break;
+                }
+            }
+            JS_ASSERT(foundInParent);
+        }
+
+        size_t numDominated = 0;
+        for (size_t j = 0; j < block->numImmediatelyDominatedBlocks(); j++) {
+            MBasicBlock *dom = block->getImmediatelyDominatedBlock(j);
+            JS_ASSERT(block->dominates(dom));
+            JS_ASSERT(dom->id() > block->id());
+            JS_ASSERT(dom->immediateDominator() == *block);
+
+            numDominated += dom->numDominated() + 1;
+        }
+        JS_ASSERT(block->numDominated() == numDominated);
+        JS_ASSERT(block->numDominated() + 1 <= i);
+        JS_ASSERT(block->numSuccessors() != 0 || block->numDominated() == 0);
+        i--;
+    }
+    JS_ASSERT(i == 0);
+    JS_ASSERT(totalNumDominated == graph.numBlocks());
+}
+#endif
+
 void
 jit::AssertGraphCoherency(MIRGraph &graph)
 {
@@ -1511,6 +1555,8 @@ jit::AssertExtendedGraphCoherency(MIRGraph &graph)
         //
         // JS_ASSERT_IF(!successorWithPhis, block->successorWithPhis() == nullptr);
     }
+
+    AssertDominatorTree(graph);
 #endif
 }
 
