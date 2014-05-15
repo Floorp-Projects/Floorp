@@ -2258,13 +2258,7 @@ GenericBindingGetter(JSContext* cx, unsigned argc, JS::Value* vp)
 
   MOZ_ASSERT(info->type() == JSJitInfo::Getter);
   JSJitGetterOp getter = info->getter;
-  bool ok = getter(cx, obj, self, JSJitGetterCallArgs(args));
-#ifdef DEBUG
-  if (ok) {
-    AssertReturnTypeMatchesJitinfo(info, args.rval());
-  }
-#endif
-  return ok;
+  return getter(cx, obj, self, JSJitGetterCallArgs(args));
 }
 
 bool
@@ -2297,10 +2291,7 @@ GenericBindingSetter(JSContext* cx, unsigned argc, JS::Value* vp)
   if (!setter(cx, obj, self, JSJitSetterCallArgs(args))) {
     return false;
   }
-  args.rval().setUndefined();
-#ifdef DEBUG
-  AssertReturnTypeMatchesJitinfo(info, args.rval());
-#endif
+  args.rval().set(JSVAL_VOID);
   return true;
 }
 
@@ -2328,13 +2319,7 @@ GenericBindingMethod(JSContext* cx, unsigned argc, JS::Value* vp)
   }
   MOZ_ASSERT(info->type() == JSJitInfo::Method);
   JSJitMethodOp method = info->method;
-  bool ok = method(cx, obj, self, JSJitMethodCallArgs(args));
-#ifdef DEBUG
-  if (ok) {
-    AssertReturnTypeMatchesJitinfo(info, args.rval());
-  }
-#endif
-  return ok;
+  return method(cx, obj, self, JSJitMethodCallArgs(args));
 }
 
 bool
@@ -2372,14 +2357,9 @@ GenericPromiseReturningBindingMethod(JSContext* cx, unsigned argc, JS::Value* vp
   JSJitMethodOp method = info->method;
   bool ok = method(cx, obj, self, JSJitMethodCallArgs(args));
   if (ok) {
-#ifdef DEBUG
-    AssertReturnTypeMatchesJitinfo(info, args.rval());
-#endif
     return true;
   }
 
-  // Promise-returning methods always return objects
-  MOZ_ASSERT(info->returnType() == JSVAL_TYPE_OBJECT);
   return ConvertExceptionToPromise(cx, xpc::XrayAwareCalleeGlobal(callee),
                                    args.rval());
 }
@@ -2448,45 +2428,6 @@ CreateGlobalOptions<nsGlobalWindow>::PostCreateGlobal(JSContext* aCx,
 {
   return XPCWrappedNativeScope::GetNewOrUsed(aCx, aGlobal);
 }
-
-#ifdef DEBUG
-void
-AssertReturnTypeMatchesJitinfo(const JSJitInfo* aJitInfo,
-                               JS::Handle<JS::Value> aValue)
-{
-  switch (aJitInfo->returnType()) {
-  case JSVAL_TYPE_UNKNOWN:
-    // Any value is good.
-    break;
-  case JSVAL_TYPE_DOUBLE:
-    // The value could actually be an int32 value as well.
-    MOZ_ASSERT(aValue.isNumber());
-    break;
-  case JSVAL_TYPE_INT32:
-    MOZ_ASSERT(aValue.isInt32());
-    break;
-  case JSVAL_TYPE_UNDEFINED:
-    MOZ_ASSERT(aValue.isUndefined());
-    break;
-  case JSVAL_TYPE_BOOLEAN:
-    MOZ_ASSERT(aValue.isBoolean());
-    break;
-  case JSVAL_TYPE_STRING:
-    MOZ_ASSERT(aValue.isString());
-    break;
-  case JSVAL_TYPE_NULL:
-    MOZ_ASSERT(aValue.isNull());
-    break;
-  case JSVAL_TYPE_OBJECT:
-    MOZ_ASSERT(aValue.isObject());
-    break;
-  default:
-    // Someone messed up their jitinfo type.
-    MOZ_ASSERT(false, "Unexpected JSValueType stored in jitinfo");
-    break;
-  }
-}
-#endif
 
 } // namespace dom
 } // namespace mozilla
