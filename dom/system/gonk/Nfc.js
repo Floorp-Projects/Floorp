@@ -437,7 +437,7 @@ Nfc.prototype = {
                                     classDescription: "Nfc",
                                     interfaces: [Ci.nsIWorkerHolder]}),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWorkerHolder]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWorkerHolder, Ci.nsIObserver]),
 
   _currentSessionId: null,
 
@@ -634,6 +634,15 @@ Nfc.prototype = {
     }
 
     return null;
+  },
+
+  /**
+   * nsIObserver interface methods.
+   */
+  observe: function(subject, topic, data) {
+    if (topic != "profile-after-change") {
+      debug("Should receive 'profile-after-change' only, received " + topic);
+    }
   },
 
   setConfig: function setConfig(prop) {
