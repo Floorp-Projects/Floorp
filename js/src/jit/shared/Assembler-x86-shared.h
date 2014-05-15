@@ -333,13 +333,13 @@ class AssemblerX86Shared : public AssemblerShared
         label->bind(masm.size());
         masm.floatConstant(f);
     }
-    void movl(const Imm32 &imm32, const Register &dest) {
+    void movl(const Imm32 &imm32, Register dest) {
         masm.movl_i32r(imm32.value, dest.code());
     }
-    void movl(const Register &src, const Register &dest) {
+    void movl(Register src, Register dest) {
         masm.movl_rr(src.code(), dest.code());
     }
-    void movl(const Operand &src, const Register &dest) {
+    void movl(const Operand &src, Register dest) {
         switch (src.kind()) {
           case Operand::REG:
             masm.movl_rr(src.reg(), dest.code());
@@ -357,7 +357,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void movl(const Register &src, const Operand &dest) {
+    void movl(Register src, const Operand &dest) {
         switch (dest.kind()) {
           case Operand::REG:
             masm.movl_rr(src.code(), dest.reg());
@@ -391,7 +391,7 @@ class AssemblerX86Shared : public AssemblerShared
         }
     }
 
-    void xchgl(const Register &src, const Register &dest) {
+    void xchgl(Register src, Register dest) {
         masm.xchgl_rr(src.code(), dest.code());
     }
 
@@ -467,7 +467,7 @@ class AssemblerX86Shared : public AssemblerShared
         JS_ASSERT(HasSSE2());
         masm.cvtsd2ss_rr(src.code(), dest.code());
     }
-    void movzbl(const Operand &src, const Register &dest) {
+    void movzbl(const Operand &src, Register dest) {
         switch (src.kind()) {
           case Operand::MEM_REG_DISP:
             masm.movzbl_mr(src.disp(), src.base(), dest.code());
@@ -479,7 +479,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void movsbl(const Operand &src, const Register &dest) {
+    void movsbl(const Operand &src, Register dest) {
         switch (src.kind()) {
           case Operand::MEM_REG_DISP:
             masm.movsbl_mr(src.disp(), src.base(), dest.code());
@@ -491,7 +491,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void movb(const Register &src, const Operand &dest) {
+    void movb(Register src, const Operand &dest) {
         switch (dest.kind()) {
           case Operand::MEM_REG_DISP:
             masm.movb_rm(src.code(), dest.disp(), dest.base());
@@ -515,7 +515,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void movzwl(const Operand &src, const Register &dest) {
+    void movzwl(const Operand &src, Register dest) {
         switch (src.kind()) {
           case Operand::REG:
             masm.movzwl_rr(src.reg(), dest.code());
@@ -530,10 +530,10 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void movzwl(const Register &src, const Register &dest) {
+    void movzwl(Register src, Register dest) {
         masm.movzwl_rr(src.code(), dest.code());
     }
-    void movw(const Register &src, const Operand &dest) {
+    void movw(Register src, const Operand &dest) {
         switch (dest.kind()) {
           case Operand::MEM_REG_DISP:
             masm.movw_rm(src.code(), dest.disp(), dest.base());
@@ -557,7 +557,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void movswl(const Operand &src, const Register &dest) {
+    void movswl(const Operand &src, Register dest) {
         switch (src.kind()) {
           case Operand::MEM_REG_DISP:
             masm.movswl_mr(src.disp(), src.base(), dest.code());
@@ -569,7 +569,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void leal(const Operand &src, const Register &dest) {
+    void leal(const Operand &src, Register dest) {
         switch (src.kind()) {
           case Operand::MEM_REG_DISP:
             masm.leal_mr(src.disp(), src.base(), dest.code());
@@ -753,7 +753,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.setNextJump(j, prev);
         }
     }
-    void call(const Register &reg) {
+    void call(Register reg) {
         masm.call(reg.code());
     }
     void call(const Operand &op) {
@@ -788,10 +788,10 @@ class AssemblerX86Shared : public AssemblerShared
     // The below cmpl methods switch the lhs and rhs when it invokes the
     // macroassembler to conform with intel standard.  When calling this
     // function put the left operand on the left as you would expect.
-    void cmpl(const Register &lhs, const Register &rhs) {
+    void cmpl(Register lhs, Register rhs) {
         masm.cmpl_rr(rhs.code(), lhs.code());
     }
-    void cmpl(const Register &lhs, const Operand &rhs) {
+    void cmpl(Register lhs, const Operand &rhs) {
         switch (rhs.kind()) {
           case Operand::REG:
             masm.cmpl_rr(rhs.reg(), lhs.code());
@@ -803,7 +803,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void cmpl(const Register &src, Imm32 imm) {
+    void cmpl(Register src, Imm32 imm) {
         masm.cmpl_ir(imm.value, src.code());
     }
     void cmpl(const Operand &op, Imm32 imm) {
@@ -824,7 +824,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void cmpl(const Operand &lhs, const Register &rhs) {
+    void cmpl(const Operand &lhs, Register rhs) {
         switch (lhs.kind()) {
           case Operand::REG:
             masm.cmpl_rr(rhs.code(), lhs.reg());
@@ -857,24 +857,24 @@ class AssemblerX86Shared : public AssemblerShared
     void cmpl(const Operand &op, ImmPtr imm) {
         cmpl(op, ImmWord(uintptr_t(imm.value)));
     }
-    void cmpw(const Register &lhs, const Register &rhs) {
+    void cmpw(Register lhs, Register rhs) {
         masm.cmpw_rr(lhs.code(), rhs.code());
     }
-    void setCC(Condition cond, const Register &r) {
+    void setCC(Condition cond, Register r) {
         masm.setCC_r(static_cast<JSC::X86Assembler::Condition>(cond), r.code());
     }
-    void testb(const Register &lhs, const Register &rhs) {
+    void testb(Register lhs, Register rhs) {
         JS_ASSERT(GeneralRegisterSet(Registers::SingleByteRegs).has(lhs));
         JS_ASSERT(GeneralRegisterSet(Registers::SingleByteRegs).has(rhs));
         masm.testb_rr(rhs.code(), lhs.code());
     }
-    void testw(const Register &lhs, const Register &rhs) {
+    void testw(Register lhs, Register rhs) {
         masm.testw_rr(rhs.code(), lhs.code());
     }
-    void testl(const Register &lhs, const Register &rhs) {
+    void testl(Register lhs, Register rhs) {
         masm.testl_rr(rhs.code(), lhs.code());
     }
-    void testl(const Register &lhs, Imm32 rhs) {
+    void testl(Register lhs, Imm32 rhs) {
         masm.testl_i32r(rhs.value, lhs.code());
     }
     void testl(const Operand &lhs, Imm32 rhs) {
@@ -891,7 +891,7 @@ class AssemblerX86Shared : public AssemblerShared
         }
     }
 
-    void addl(Imm32 imm, const Register &dest) {
+    void addl(Imm32 imm, Register dest) {
         masm.addl_ir(imm.value, dest.code());
     }
     void addl(Imm32 imm, const Operand &op) {
@@ -909,7 +909,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void subl(Imm32 imm, const Register &dest) {
+    void subl(Imm32 imm, Register dest) {
         masm.subl_ir(imm.value, dest.code());
     }
     void subl(Imm32 imm, const Operand &op) {
@@ -924,13 +924,13 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void addl(const Register &src, const Register &dest) {
+    void addl(Register src, Register dest) {
         masm.addl_rr(src.code(), dest.code());
     }
-    void subl(const Register &src, const Register &dest) {
+    void subl(Register src, Register dest) {
         masm.subl_rr(src.code(), dest.code());
     }
-    void subl(const Operand &src, const Register &dest) {
+    void subl(const Operand &src, Register dest) {
         switch (src.kind()) {
           case Operand::REG:
             masm.subl_rr(src.reg(), dest.code());
@@ -942,7 +942,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void subl(const Register &src, const Operand &dest) {
+    void subl(Register src, const Operand &dest) {
         switch (dest.kind()) {
           case Operand::REG:
             masm.subl_rr(src.code(), dest.reg());
@@ -954,10 +954,10 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void orl(const Register &reg, const Register &dest) {
+    void orl(Register reg, Register dest) {
         masm.orl_rr(reg.code(), dest.code());
     }
-    void orl(Imm32 imm, const Register &reg) {
+    void orl(Imm32 imm, Register reg) {
         masm.orl_ir(imm.value, reg.code());
     }
     void orl(Imm32 imm, const Operand &op) {
@@ -972,10 +972,10 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void xorl(const Register &src, const Register &dest) {
+    void xorl(Register src, Register dest) {
         masm.xorl_rr(src.code(), dest.code());
     }
-    void xorl(Imm32 imm, const Register &reg) {
+    void xorl(Imm32 imm, Register reg) {
         masm.xorl_ir(imm.value, reg.code());
     }
     void xorl(Imm32 imm, const Operand &op) {
@@ -990,10 +990,10 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void andl(const Register &src, const Register &dest) {
+    void andl(Register src, Register dest) {
         masm.andl_rr(src.code(), dest.code());
     }
-    void andl(Imm32 imm, const Register &dest) {
+    void andl(Imm32 imm, Register dest) {
         masm.andl_ir(imm.value, dest.code());
     }
     void andl(Imm32 imm, const Operand &op) {
@@ -1008,7 +1008,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void addl(const Operand &src, const Register &dest) {
+    void addl(const Operand &src, Register dest) {
         switch (src.kind()) {
           case Operand::REG:
             masm.addl_rr(src.reg(), dest.code());
@@ -1020,7 +1020,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void orl(const Operand &src, const Register &dest) {
+    void orl(const Operand &src, Register dest) {
         switch (src.kind()) {
           case Operand::REG:
             masm.orl_rr(src.reg(), dest.code());
@@ -1032,7 +1032,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void xorl(const Operand &src, const Register &dest) {
+    void xorl(const Operand &src, Register dest) {
         switch (src.kind()) {
           case Operand::REG:
             masm.xorl_rr(src.reg(), dest.code());
@@ -1044,7 +1044,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void andl(const Operand &src, const Register &dest) {
+    void andl(const Operand &src, Register dest) {
         switch (src.kind()) {
           case Operand::REG:
             masm.andl_rr(src.reg(), dest.code());
@@ -1056,19 +1056,19 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void imull(const Register &multiplier) {
+    void imull(Register multiplier) {
         masm.imull_r(multiplier.code());
     }
-    void imull(Imm32 imm, const Register &dest) {
+    void imull(Imm32 imm, Register dest) {
         masm.imull_i32r(dest.code(), imm.value, dest.code());
     }
-    void imull(const Register &src, const Register &dest) {
+    void imull(Register src, Register dest) {
         masm.imull_rr(src.code(), dest.code());
     }
-    void imull(Imm32 imm, const Register &src, const Register &dest) {
+    void imull(Imm32 imm, Register src, Register dest) {
         masm.imull_i32r(src.code(), imm.value, dest.code());
     }
-    void imull(const Operand &src, const Register &dest) {
+    void imull(const Operand &src, Register dest) {
         switch (src.kind()) {
           case Operand::REG:
             masm.imull_rr(src.reg(), dest.code());
@@ -1092,7 +1092,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void negl(const Register &reg) {
+    void negl(Register reg) {
         masm.negl_r(reg.code());
     }
     void notl(const Operand &src) {
@@ -1107,25 +1107,25 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void notl(const Register &reg) {
+    void notl(Register reg) {
         masm.notl_r(reg.code());
     }
-    void shrl(const Imm32 imm, const Register &dest) {
+    void shrl(const Imm32 imm, Register dest) {
         masm.shrl_i8r(imm.value, dest.code());
     }
-    void shll(const Imm32 imm, const Register &dest) {
+    void shll(const Imm32 imm, Register dest) {
         masm.shll_i8r(imm.value, dest.code());
     }
-    void sarl(const Imm32 imm, const Register &dest) {
+    void sarl(const Imm32 imm, Register dest) {
         masm.sarl_i8r(imm.value, dest.code());
     }
-    void shrl_cl(const Register &dest) {
+    void shrl_cl(Register dest) {
         masm.shrl_CLr(dest.code());
     }
-    void shll_cl(const Register &dest) {
+    void shll_cl(Register dest) {
         masm.shll_CLr(dest.code());
     }
-    void sarl_cl(const Register &dest) {
+    void sarl_cl(Register dest) {
         masm.sarl_CLr(dest.code());
     }
 
@@ -1157,7 +1157,7 @@ class AssemblerX86Shared : public AssemblerShared
         decl(op);
     }
 
-    void lock_cmpxchg32(const Register &src, const Operand &op) {
+    void lock_cmpxchg32(Register src, const Operand &op) {
         masm.prefix_lock();
         switch (op.kind()) {
           case Operand::MEM_REG_DISP:
@@ -1168,7 +1168,7 @@ class AssemblerX86Shared : public AssemblerShared
         }
     }
 
-    void xaddl(const Register &srcdest, const Operand &mem) {
+    void xaddl(Register srcdest, const Operand &mem) {
         switch (mem.kind()) {
           case Operand::MEM_REG_DISP:
             masm.xaddl_rm(srcdest.code(), mem.disp(), mem.base());
@@ -1197,7 +1197,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void push(const Register &src) {
+    void push(Register src) {
         masm.push_r(src.code());
     }
     void push(const Address &src) {
@@ -1216,7 +1216,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void pop(const Register &src) {
+    void pop(Register src) {
         masm.pop_r(src.code());
     }
 
@@ -1237,7 +1237,7 @@ class AssemblerX86Shared : public AssemblerShared
 #endif
 
     // Zero-extend byte to 32-bit integer.
-    void movzbl(const Register &src, const Register &dest) {
+    void movzbl(Register src, Register dest) {
         masm.movzbl_rr(src.code(), dest.code());
     }
 
@@ -1255,7 +1255,7 @@ class AssemblerX86Shared : public AssemblerShared
         JS_ASSERT(HasSSE2());
         masm.unpcklps_rr(src.code(), dest.code());
     }
-    void pinsrd(const Register &src, const FloatRegister &dest) {
+    void pinsrd(Register src, const FloatRegister &dest) {
         JS_ASSERT(HasSSE2());
         masm.pinsrd_rr(src.code(), dest.code());
     }
@@ -1301,11 +1301,11 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void cvttsd2si(const FloatRegister &src, const Register &dest) {
+    void cvttsd2si(const FloatRegister &src, Register dest) {
         JS_ASSERT(HasSSE2());
         masm.cvttsd2si_rr(src.code(), dest.code());
     }
-    void cvttss2si(const FloatRegister &src, const Register &dest) {
+    void cvttss2si(const FloatRegister &src, Register dest) {
         JS_ASSERT(HasSSE2());
         masm.cvttss2si_rr(src.code(), dest.code());
     }
@@ -1325,19 +1325,19 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void cvtsi2ss(const Register &src, const FloatRegister &dest) {
+    void cvtsi2ss(Register src, const FloatRegister &dest) {
         JS_ASSERT(HasSSE2());
         masm.cvtsi2ss_rr(src.code(), dest.code());
     }
-    void cvtsi2sd(const Register &src, const FloatRegister &dest) {
+    void cvtsi2sd(Register src, const FloatRegister &dest) {
         JS_ASSERT(HasSSE2());
         masm.cvtsi2sd_rr(src.code(), dest.code());
     }
-    void movmskpd(const FloatRegister &src, const Register &dest) {
+    void movmskpd(const FloatRegister &src, Register dest) {
         JS_ASSERT(HasSSE2());
         masm.movmskpd_rr(src.code(), dest.code());
     }
-    void movmskps(const FloatRegister &src, const Register &dest) {
+    void movmskps(const FloatRegister &src, Register dest) {
         JS_ASSERT(HasSSE2());
         masm.movmskps_rr(src.code(), dest.code());
     }
@@ -1357,11 +1357,11 @@ class AssemblerX86Shared : public AssemblerShared
         JS_ASSERT(HasSSE2());
         masm.pcmpeqw_rr(rhs.code(), lhs.code());
     }
-    void movd(const Register &src, const FloatRegister &dest) {
+    void movd(Register src, const FloatRegister &dest) {
         JS_ASSERT(HasSSE2());
         masm.movd_rr(src.code(), dest.code());
     }
-    void movd(const FloatRegister &src, const Register &dest) {
+    void movd(const FloatRegister &src, Register dest) {
         JS_ASSERT(HasSSE2());
         masm.movd_rr(src.code(), dest.code());
     }
