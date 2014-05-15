@@ -998,6 +998,17 @@ Experiments.Experiments.prototype = {
     this._dirty = true;
   },
 
+  getActiveExperimentID: function() {
+    if (!this._experiments) {
+      return null;
+    }
+    let e = this._getActiveExperiment();
+    if (!e) {
+      return null;
+    }
+    return e.id;
+  },
+
   _getActiveExperiment: function () {
     let enabled = [experiment for ([,experiment] of this._experiments) if (experiment._enabled)];
 
