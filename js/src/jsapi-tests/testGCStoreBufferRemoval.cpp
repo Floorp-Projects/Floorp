@@ -26,9 +26,9 @@ BEGIN_TEST(testGCStoreBufferRemoval)
     // Sanity check - objects start in the nursery and then become tenured.
     JS_GC(cx->runtime());
     JS::RootedObject obj(cx, NurseryObject());
-    CHECK(js::gc::IsInsideNursery(rt, obj.get()));
+    CHECK(js::gc::IsInsideNursery(obj.get()));
     JS_GC(cx->runtime());
-    CHECK(!js::gc::IsInsideNursery(rt, obj.get()));
+    CHECK(!js::gc::IsInsideNursery(obj.get()));
     JS::RootedObject tenuredObject(cx, obj);
 
     // Hide the horrors herein from the static rooting analysis.

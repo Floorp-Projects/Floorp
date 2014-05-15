@@ -181,9 +181,9 @@ struct PatchedImmPtr {
 // Used for immediates which require relocation.
 struct ImmGCPtr
 {
-    uintptr_t value;
+    const gc::Cell *value;
 
-    explicit ImmGCPtr(const gc::Cell *ptr) : value(reinterpret_cast<uintptr_t>(ptr))
+    explicit ImmGCPtr(const gc::Cell *ptr) : value(ptr)
     {
         JS_ASSERT(!IsPoisonedPtr(ptr));
         JS_ASSERT_IF(ptr, ptr->isTenured());
@@ -201,7 +201,7 @@ struct ImmMaybeNurseryPtr : public ImmGCPtr
 {
     explicit ImmMaybeNurseryPtr(gc::Cell *ptr)
     {
-        this->value = reinterpret_cast<uintptr_t>(ptr);
+        this->value = ptr;
         JS_ASSERT(!IsPoisonedPtr(ptr));
 
         // asm.js shouldn't be creating GC things

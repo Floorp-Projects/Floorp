@@ -703,7 +703,7 @@ FilterArgumentsOrEval(JSContext *cx, JSString *str)
 void
 PostWriteBarrier(JSRuntime *rt, JSObject *obj)
 {
-    JS_ASSERT(!IsInsideNursery(rt, obj));
+    JS_ASSERT(!IsInsideNursery(obj));
     rt->gc.storeBuffer.putWholeCellFromMainThread(obj);
 }
 
