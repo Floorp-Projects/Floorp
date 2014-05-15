@@ -16,7 +16,7 @@ using namespace js;
 using namespace js::jit;
 
 void
-MacroAssemblerX64::loadConstantDouble(double d, const FloatRegister &dest)
+MacroAssemblerX64::loadConstantDouble(double d, FloatRegister dest)
 {
     if (maybeInlineDouble(d, dest))
         return;
@@ -50,7 +50,7 @@ MacroAssemblerX64::loadConstantDouble(double d, const FloatRegister &dest)
 }
 
 void
-MacroAssemblerX64::loadConstantFloat32(float f, const FloatRegister &dest)
+MacroAssemblerX64::loadConstantFloat32(float f, FloatRegister dest)
 {
     if (maybeInlineFloat(f, dest))
         return;
@@ -183,7 +183,7 @@ MacroAssemblerX64::passABIArg(Register reg)
 }
 
 void
-MacroAssemblerX64::passABIArg(const FloatRegister &reg, MoveOp::Type type)
+MacroAssemblerX64::passABIArg(FloatRegister reg, MoveOp::Type type)
 {
     passABIArg(MoveOperand(reg), type);
 }

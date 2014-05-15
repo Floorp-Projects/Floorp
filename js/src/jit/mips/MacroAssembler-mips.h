@@ -74,20 +74,20 @@ class MacroAssemblerMIPS : public Assembler
   public:
 
     void convertBoolToInt32(Register source, Register dest);
-    void convertInt32ToDouble(Register src, const FloatRegister &dest);
+    void convertInt32ToDouble(Register src, FloatRegister dest);
     void convertInt32ToDouble(const Address &src, FloatRegister dest);
-    void convertUInt32ToDouble(Register src, const FloatRegister &dest);
-    void convertUInt32ToFloat32(Register src, const FloatRegister &dest);
-    void convertDoubleToFloat32(const FloatRegister &src, const FloatRegister &dest);
-    void branchTruncateDouble(const FloatRegister &src, Register dest, Label *fail);
-    void convertDoubleToInt32(const FloatRegister &src, Register dest, Label *fail,
+    void convertUInt32ToDouble(Register src, FloatRegister dest);
+    void convertUInt32ToFloat32(Register src, FloatRegister dest);
+    void convertDoubleToFloat32(FloatRegister src, FloatRegister dest);
+    void branchTruncateDouble(FloatRegister src, Register dest, Label *fail);
+    void convertDoubleToInt32(FloatRegister src, Register dest, Label *fail,
                               bool negativeZeroCheck = true);
-    void convertFloat32ToInt32(const FloatRegister &src, Register dest, Label *fail,
+    void convertFloat32ToInt32(FloatRegister src, Register dest, Label *fail,
                                bool negativeZeroCheck = true);
 
-    void convertFloat32ToDouble(const FloatRegister &src, const FloatRegister &dest);
-    void branchTruncateFloat32(const FloatRegister &src, Register dest, Label *fail);
-    void convertInt32ToFloat32(Register src, const FloatRegister &dest);
+    void convertFloat32ToDouble(FloatRegister src, FloatRegister dest);
+    void branchTruncateFloat32(FloatRegister src, Register dest, Label *fail);
+    void convertInt32ToFloat32(Register src, FloatRegister dest);
     void convertInt32ToFloat32(const Address &src, FloatRegister dest);
 
 
@@ -463,13 +463,13 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void push(Register reg) {
         ma_push(reg);
     }
-    void push(const FloatRegister &reg) {
+    void push(FloatRegister reg) {
         ma_push(reg);
     }
     void pop(Register reg) {
         ma_pop(reg);
     }
-    void pop(const FloatRegister &reg) {
+    void pop(FloatRegister reg) {
         ma_pop(reg);
     }
 
@@ -542,8 +542,8 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void unboxInt32(const Address &src, Register dest);
     void unboxBoolean(const ValueOperand &operand, Register dest);
     void unboxBoolean(const Address &src, Register dest);
-    void unboxDouble(const ValueOperand &operand, const FloatRegister &dest);
-    void unboxDouble(const Address &src, const FloatRegister &dest);
+    void unboxDouble(const ValueOperand &operand, FloatRegister dest);
+    void unboxDouble(const Address &src, FloatRegister dest);
     void unboxString(const ValueOperand &operand, Register dest);
     void unboxString(const Address &src, Register dest);
     void unboxObject(const ValueOperand &src, Register dest);
@@ -555,7 +555,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     }
 
     // boxing code
-    void boxDouble(const FloatRegister &src, const ValueOperand &dest);
+    void boxDouble(FloatRegister src, const ValueOperand &dest);
     void boxNonDouble(JSValueType type, Register src, const ValueOperand &dest);
 
     // Extended unboxing API. If the payload is already in a register, returns
@@ -577,16 +577,16 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         return value.typeReg();
     }
 
-    void boolValueToDouble(const ValueOperand &operand, const FloatRegister &dest);
-    void int32ValueToDouble(const ValueOperand &operand, const FloatRegister &dest);
-    void loadInt32OrDouble(const Address &address, const FloatRegister &dest);
+    void boolValueToDouble(const ValueOperand &operand, FloatRegister dest);
+    void int32ValueToDouble(const ValueOperand &operand, FloatRegister dest);
+    void loadInt32OrDouble(const Address &address, FloatRegister dest);
     void loadInt32OrDouble(Register base, Register index,
-                           const FloatRegister &dest, int32_t shift = defaultShift);
-    void loadConstantDouble(double dp, const FloatRegister &dest);
+                           FloatRegister dest, int32_t shift = defaultShift);
+    void loadConstantDouble(double dp, FloatRegister dest);
 
-    void boolValueToFloat32(const ValueOperand &operand, const FloatRegister &dest);
-    void int32ValueToFloat32(const ValueOperand &operand, const FloatRegister &dest);
-    void loadConstantFloat32(float f, const FloatRegister &dest);
+    void boolValueToFloat32(const ValueOperand &operand, FloatRegister dest);
+    void int32ValueToFloat32(const ValueOperand &operand, FloatRegister dest);
+    void loadConstantFloat32(float f, FloatRegister dest);
 
     void branchTestInt32(Condition cond, const ValueOperand &value, Label *label);
     void branchTestInt32(Condition cond, Register tag, Label *label);
@@ -688,7 +688,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
 
     void branchTestStringTruthy(bool b, const ValueOperand &value, Label *label);
 
-    void branchTestDoubleTruthy(bool b, const FloatRegister &value, Label *label);
+    void branchTestDoubleTruthy(bool b, FloatRegister value, Label *label);
 
     void branchTestBooleanTruthy(bool b, const ValueOperand &operand, Label *label);
 
@@ -926,7 +926,7 @@ public:
         ma_push(ScratchRegister);
         adjustFrame(sizeof(intptr_t));
     }
-    void Push(const FloatRegister &f) {
+    void Push(FloatRegister f) {
         ma_push(f);
         adjustFrame(sizeof(double));
     }
@@ -1052,15 +1052,15 @@ public:
 
     void loadPrivate(const Address &address, Register dest);
 
-    void loadDouble(const Address &addr, const FloatRegister &dest);
-    void loadDouble(const BaseIndex &src, const FloatRegister &dest);
+    void loadDouble(const Address &addr, FloatRegister dest);
+    void loadDouble(const BaseIndex &src, FloatRegister dest);
 
     // Load a float value into a register, then expand it to a double.
-    void loadFloatAsDouble(const Address &addr, const FloatRegister &dest);
-    void loadFloatAsDouble(const BaseIndex &src, const FloatRegister &dest);
+    void loadFloatAsDouble(const Address &addr, FloatRegister dest);
+    void loadFloatAsDouble(const BaseIndex &src, FloatRegister dest);
 
-    void loadFloat32(const Address &addr, const FloatRegister &dest);
-    void loadFloat32(const BaseIndex &src, const FloatRegister &dest);
+    void loadFloat32(const Address &addr, FloatRegister dest);
+    void loadFloat32(const BaseIndex &src, FloatRegister dest);
 
     void store8(Register src, const Address &address);
     void store8(Imm32 imm, const Address &address);
@@ -1143,10 +1143,10 @@ public:
 
     void breakpoint();
 
-    void branchDouble(DoubleCondition cond, const FloatRegister &lhs, const FloatRegister &rhs,
+    void branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
                       Label *label);
 
-    void branchFloat(DoubleCondition cond, const FloatRegister &lhs, const FloatRegister &rhs,
+    void branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
                      Label *label);
 
     void checkStackAlignment();
@@ -1196,7 +1196,7 @@ public:
     // operations should be emitted while setting arguments.
     void passABIArg(const MoveOperand &from, MoveOp::Type type);
     void passABIArg(Register reg);
-    void passABIArg(const FloatRegister &reg, MoveOp::Type type);
+    void passABIArg(FloatRegister reg, MoveOp::Type type);
     void passABIArg(const ValueOperand &regs);
 
   protected:

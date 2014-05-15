@@ -35,7 +35,7 @@ MacroAssemblerMIPS::convertBoolToInt32(Register src, Register dest)
 }
 
 void
-MacroAssemblerMIPS::convertInt32ToDouble(Register src, const FloatRegister &dest)
+MacroAssemblerMIPS::convertInt32ToDouble(Register src, FloatRegister dest)
 {
     as_mtc1(src, dest);
     as_cvtdw(dest, dest);
@@ -50,7 +50,7 @@ MacroAssemblerMIPS::convertInt32ToDouble(const Address &src, FloatRegister dest)
 }
 
 void
-MacroAssemblerMIPS::convertUInt32ToDouble(Register src, const FloatRegister &dest)
+MacroAssemblerMIPS::convertUInt32ToDouble(Register src, FloatRegister dest)
 {
     // We use SecondScratchFloatReg because MacroAssembler::loadFromTypedArray
     // calls with ScratchFloatReg as dest.
@@ -69,7 +69,7 @@ MacroAssemblerMIPS::convertUInt32ToDouble(Register src, const FloatRegister &des
 }
 
 void
-MacroAssemblerMIPS::convertUInt32ToFloat32(Register src, const FloatRegister &dest)
+MacroAssemblerMIPS::convertUInt32ToFloat32(Register src, FloatRegister dest)
 {
     Label positive, done;
     ma_b(src, src, &positive, NotSigned, ShortJump);
@@ -87,7 +87,7 @@ MacroAssemblerMIPS::convertUInt32ToFloat32(Register src, const FloatRegister &de
 }
 
 void
-MacroAssemblerMIPS::convertDoubleToFloat32(const FloatRegister &src, const FloatRegister &dest)
+MacroAssemblerMIPS::convertDoubleToFloat32(FloatRegister src, FloatRegister dest)
 {
     as_cvtsd(dest, src);
 }
@@ -97,7 +97,7 @@ MacroAssemblerMIPS::convertDoubleToFloat32(const FloatRegister &src, const Float
 // NOTE: if the value really was supposed to be INT32_MAX / INT32_MIN then it
 // will be wrong.
 void
-MacroAssemblerMIPS::branchTruncateDouble(const FloatRegister &src, Register dest,
+MacroAssemblerMIPS::branchTruncateDouble(FloatRegister src, Register dest,
                                          Label *fail)
 {
     Label test, success;
@@ -111,7 +111,7 @@ MacroAssemblerMIPS::branchTruncateDouble(const FloatRegister &src, Register dest
 // integer is written to the output register. Otherwise, a bailout is taken to
 // the given snapshot. This function overwrites the scratch float register.
 void
-MacroAssemblerMIPS::convertDoubleToInt32(const FloatRegister &src, Register dest,
+MacroAssemblerMIPS::convertDoubleToInt32(FloatRegister src, Register dest,
                                          Label *fail, bool negativeZeroCheck)
 {
     // Convert double to int, then convert back and check if we have the
@@ -137,7 +137,7 @@ MacroAssemblerMIPS::convertDoubleToInt32(const FloatRegister &src, Register dest
 // integer is written to the output register. Otherwise, a bailout is taken to
 // the given snapshot. This function overwrites the scratch float register.
 void
-MacroAssemblerMIPS::convertFloat32ToInt32(const FloatRegister &src, Register dest,
+MacroAssemblerMIPS::convertFloat32ToInt32(FloatRegister src, Register dest,
                                           Label *fail, bool negativeZeroCheck)
 {
     // convert the floating point value to an integer, if it did not fit, then
@@ -161,13 +161,13 @@ MacroAssemblerMIPS::convertFloat32ToInt32(const FloatRegister &src, Register des
 }
 
 void
-MacroAssemblerMIPS::convertFloat32ToDouble(const FloatRegister &src, const FloatRegister &dest)
+MacroAssemblerMIPS::convertFloat32ToDouble(FloatRegister src, FloatRegister dest)
 {
     as_cvtds(dest, src);
 }
 
 void
-MacroAssemblerMIPS::branchTruncateFloat32(const FloatRegister &src, Register dest,
+MacroAssemblerMIPS::branchTruncateFloat32(FloatRegister src, Register dest,
                                           Label *fail)
 {
     Label test, success;
@@ -178,7 +178,7 @@ MacroAssemblerMIPS::branchTruncateFloat32(const FloatRegister &src, Register des
 }
 
 void
-MacroAssemblerMIPS::convertInt32ToFloat32(Register src, const FloatRegister &dest)
+MacroAssemblerMIPS::convertInt32ToFloat32(Register src, FloatRegister dest)
 {
     as_mtc1(src, dest);
     as_cvtsw(dest, dest);
@@ -1876,40 +1876,40 @@ MacroAssemblerMIPSCompat::loadPrivate(const Address &address, Register dest)
 }
 
 void
-MacroAssemblerMIPSCompat::loadDouble(const Address &address, const FloatRegister &dest)
+MacroAssemblerMIPSCompat::loadDouble(const Address &address, FloatRegister dest)
 {
     ma_ld(dest, address);
 }
 
 void
-MacroAssemblerMIPSCompat::loadDouble(const BaseIndex &src, const FloatRegister &dest)
+MacroAssemblerMIPSCompat::loadDouble(const BaseIndex &src, FloatRegister dest)
 {
     computeScaledAddress(src, SecondScratchReg);
     ma_ld(dest, Address(SecondScratchReg, src.offset));
 }
 
 void
-MacroAssemblerMIPSCompat::loadFloatAsDouble(const Address &address, const FloatRegister &dest)
+MacroAssemblerMIPSCompat::loadFloatAsDouble(const Address &address, FloatRegister dest)
 {
     ma_ls(dest, address);
     as_cvtds(dest, dest);
 }
 
 void
-MacroAssemblerMIPSCompat::loadFloatAsDouble(const BaseIndex &src, const FloatRegister &dest)
+MacroAssemblerMIPSCompat::loadFloatAsDouble(const BaseIndex &src, FloatRegister dest)
 {
     loadFloat32(src, dest);
     as_cvtds(dest, dest);
 }
 
 void
-MacroAssemblerMIPSCompat::loadFloat32(const Address &address, const FloatRegister &dest)
+MacroAssemblerMIPSCompat::loadFloat32(const Address &address, FloatRegister dest)
 {
     ma_ls(dest, address);
 }
 
 void
-MacroAssemblerMIPSCompat::loadFloat32(const BaseIndex &src, const FloatRegister &dest)
+MacroAssemblerMIPSCompat::loadFloat32(const BaseIndex &src, FloatRegister dest)
 {
     computeScaledAddress(src, SecondScratchReg);
     ma_ls(dest, Address(SecondScratchReg, src.offset));
@@ -2103,15 +2103,15 @@ MacroAssemblerMIPSCompat::addPtr(Imm32 imm, const Address &dest)
 }
 
 void
-MacroAssemblerMIPSCompat::branchDouble(DoubleCondition cond, const FloatRegister &lhs,
-                                       const FloatRegister &rhs, Label *label)
+MacroAssemblerMIPSCompat::branchDouble(DoubleCondition cond, FloatRegister lhs,
+                                       FloatRegister rhs, Label *label)
 {
     ma_bc1d(lhs, rhs, label, cond);
 }
 
 void
-MacroAssemblerMIPSCompat::branchFloat(DoubleCondition cond, const FloatRegister &lhs,
-                                      const FloatRegister &rhs, Label *label)
+MacroAssemblerMIPSCompat::branchFloat(DoubleCondition cond, FloatRegister lhs,
+                                      FloatRegister rhs, Label *label)
 {
     ma_bc1s(lhs, rhs, label, cond);
 }
@@ -2461,7 +2461,7 @@ MacroAssemblerMIPSCompat::unboxBoolean(const Address &src, Register dest)
 }
 
 void
-MacroAssemblerMIPSCompat::unboxDouble(const ValueOperand &operand, const FloatRegister &dest)
+MacroAssemblerMIPSCompat::unboxDouble(const ValueOperand &operand, FloatRegister dest)
 {
     MOZ_ASSERT(dest != ScratchFloatReg);
     moveToDoubleLo(operand.payloadReg(), dest);
@@ -2469,7 +2469,7 @@ MacroAssemblerMIPSCompat::unboxDouble(const ValueOperand &operand, const FloatRe
 }
 
 void
-MacroAssemblerMIPSCompat::unboxDouble(const Address &src, const FloatRegister &dest)
+MacroAssemblerMIPSCompat::unboxDouble(const Address &src, FloatRegister dest)
 {
     ma_lw(ScratchRegister, Address(src.base, src.offset + PAYLOAD_OFFSET));
     moveToDoubleLo(ScratchRegister, dest);
@@ -2518,7 +2518,7 @@ MacroAssemblerMIPSCompat::unboxPrivate(const ValueOperand &src, Register dest)
 }
 
 void
-MacroAssemblerMIPSCompat::boxDouble(const FloatRegister &src, const ValueOperand &dest)
+MacroAssemblerMIPSCompat::boxDouble(FloatRegister src, const ValueOperand &dest)
 {
     moveFromDoubleLo(src, dest.payloadReg());
     moveFromDoubleHi(src, dest.typeReg());
@@ -2534,7 +2534,7 @@ MacroAssemblerMIPSCompat::boxNonDouble(JSValueType type, Register src,
 }
 
 void
-MacroAssemblerMIPSCompat::boolValueToDouble(const ValueOperand &operand, const FloatRegister &dest)
+MacroAssemblerMIPSCompat::boolValueToDouble(const ValueOperand &operand, FloatRegister dest)
 {
     convertBoolToInt32(ScratchRegister, operand.payloadReg());
     convertInt32ToDouble(ScratchRegister, dest);
@@ -2542,14 +2542,14 @@ MacroAssemblerMIPSCompat::boolValueToDouble(const ValueOperand &operand, const F
 
 void
 MacroAssemblerMIPSCompat::int32ValueToDouble(const ValueOperand &operand,
-                                             const FloatRegister &dest)
+                                             FloatRegister dest)
 {
     convertInt32ToDouble(operand.payloadReg(), dest);
 }
 
 void
 MacroAssemblerMIPSCompat::boolValueToFloat32(const ValueOperand &operand,
-                                             const FloatRegister &dest)
+                                             FloatRegister dest)
 {
 
     convertBoolToInt32(ScratchRegister, operand.payloadReg());
@@ -2558,19 +2558,19 @@ MacroAssemblerMIPSCompat::boolValueToFloat32(const ValueOperand &operand,
 
 void
 MacroAssemblerMIPSCompat::int32ValueToFloat32(const ValueOperand &operand,
-                                              const FloatRegister &dest)
+                                              FloatRegister dest)
 {
     convertInt32ToFloat32(operand.payloadReg(), dest);
 }
 
 void
-MacroAssemblerMIPSCompat::loadConstantFloat32(float f, const FloatRegister &dest)
+MacroAssemblerMIPSCompat::loadConstantFloat32(float f, FloatRegister dest)
 {
     ma_lis(dest, f);
 }
 
 void
-MacroAssemblerMIPSCompat::loadInt32OrDouble(const Address &src, const FloatRegister &dest)
+MacroAssemblerMIPSCompat::loadInt32OrDouble(const Address &src, FloatRegister dest)
 {
     Label notInt32, end;
     // If it's an int, convert it to double.
@@ -2588,7 +2588,7 @@ MacroAssemblerMIPSCompat::loadInt32OrDouble(const Address &src, const FloatRegis
 
 void
 MacroAssemblerMIPSCompat::loadInt32OrDouble(Register base, Register index,
-                                            const FloatRegister &dest, int32_t shift)
+                                            FloatRegister dest, int32_t shift)
 {
     Label notInt32, end;
 
@@ -2614,7 +2614,7 @@ MacroAssemblerMIPSCompat::loadInt32OrDouble(Register base, Register index,
 }
 
 void
-MacroAssemblerMIPSCompat::loadConstantDouble(double dp, const FloatRegister &dest)
+MacroAssemblerMIPSCompat::loadConstantDouble(double dp, FloatRegister dest)
 {
     ma_lid(dest, dp);
 }
@@ -2639,7 +2639,7 @@ MacroAssemblerMIPSCompat::branchTestStringTruthy(bool b, const ValueOperand &val
 }
 
 void
-MacroAssemblerMIPSCompat::branchTestDoubleTruthy(bool b, const FloatRegister &value, Label *label)
+MacroAssemblerMIPSCompat::branchTestDoubleTruthy(bool b, FloatRegister value, Label *label)
 {
     ma_lid(ScratchFloatReg, 0.0);
     DoubleCondition cond = b ? DoubleNotEqual : DoubleEqualOrUnordered;
@@ -3102,7 +3102,7 @@ MacroAssemblerMIPSCompat::passABIArg(Register reg)
 }
 
 void
-MacroAssemblerMIPSCompat::passABIArg(const FloatRegister &freg, MoveOp::Type type)
+MacroAssemblerMIPSCompat::passABIArg(FloatRegister freg, MoveOp::Type type)
 {
     passABIArg(MoveOperand(freg), type);
 }
