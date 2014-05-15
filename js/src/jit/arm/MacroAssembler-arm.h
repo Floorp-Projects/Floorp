@@ -658,7 +658,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         Imm32 totSpace = Imm32(extraSpace.value + 4);
         ma_dtr(IsStore, sp, totSpace, reg, PreIndex);
     }
-    void pushWithPadding(const Imm32 &imm, const Imm32 extraSpace) {
+    void pushWithPadding(Imm32 imm, const Imm32 extraSpace) {
         Imm32 totSpace = Imm32(extraSpace.value + 4);
         // ma_dtr may need the scratch register to adjust the stack, so use the
         // second scratch register.
@@ -1308,7 +1308,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void addPtr(const Address &src, Register dest);
     void not32(Register reg);
 
-    void move32(const Imm32 &imm, Register dest);
+    void move32(Imm32 imm, Register dest);
     void move32(Register src, Register dest);
 
     void movePtr(Register src, Register dest);
@@ -1351,20 +1351,20 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void loadFloat32(const BaseIndex &src, const FloatRegister &dest);
 
     void store8(Register src, const Address &address);
-    void store8(const Imm32 &imm, const Address &address);
+    void store8(Imm32 imm, const Address &address);
     void store8(Register src, const BaseIndex &address);
-    void store8(const Imm32 &imm, const BaseIndex &address);
+    void store8(Imm32 imm, const BaseIndex &address);
 
     void store16(Register src, const Address &address);
-    void store16(const Imm32 &imm, const Address &address);
+    void store16(Imm32 imm, const Address &address);
     void store16(Register src, const BaseIndex &address);
-    void store16(const Imm32 &imm, const BaseIndex &address);
+    void store16(Imm32 imm, const BaseIndex &address);
 
     void store32(Register src, const AbsoluteAddress &address);
     void store32(Register src, const Address &address);
     void store32(Register src, const BaseIndex &address);
-    void store32(const Imm32 &src, const Address &address);
-    void store32(const Imm32 &src, const BaseIndex &address);
+    void store32(Imm32 src, const Address &address);
+    void store32(Imm32 src, const BaseIndex &address);
 
     void storePtr(ImmWord imm, const Address &address);
     void storePtr(ImmPtr imm, const Address &address);
@@ -1406,16 +1406,16 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         add32(Imm32(1), ToPayload(addr));
     }
 
-    void cmp32(Register lhs, const Imm32 &rhs);
+    void cmp32(Register lhs, Imm32 rhs);
     void cmp32(Register lhs, Register rhs);
-    void cmp32(const Operand &lhs, const Imm32 &rhs);
+    void cmp32(const Operand &lhs, Imm32 rhs);
     void cmp32(const Operand &lhs, Register rhs);
 
     void cmpPtr(Register lhs, const ImmWord &rhs);
     void cmpPtr(Register lhs, const ImmPtr &rhs);
     void cmpPtr(Register lhs, Register rhs);
     void cmpPtr(Register lhs, const ImmGCPtr &rhs);
-    void cmpPtr(Register lhs, const Imm32 &rhs);
+    void cmpPtr(Register lhs, Imm32 rhs);
     void cmpPtr(const Address &lhs, Register rhs);
     void cmpPtr(const Address &lhs, const ImmWord &rhs);
     void cmpPtr(const Address &lhs, const ImmPtr &rhs);

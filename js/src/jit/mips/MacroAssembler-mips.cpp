@@ -784,7 +784,7 @@ MacroAssemblerMIPS::ma_store(Register data, const BaseIndex &dest,
 }
 
 void
-MacroAssemblerMIPS::ma_store(const Imm32 &imm, const BaseIndex &dest,
+MacroAssemblerMIPS::ma_store(Imm32 imm, const BaseIndex &dest,
                              LoadStoreSize size, LoadStoreExtension extension)
 {
     // Make sure that SecondScratchReg contains absolute address so that
@@ -1739,7 +1739,7 @@ MacroAssemblerMIPSCompat::andPtr(Register src, Register dest)
 }
 
 void
-MacroAssemblerMIPSCompat::move32(const Imm32 &imm, Register dest)
+MacroAssemblerMIPSCompat::move32(Imm32 imm, Register dest)
 {
     ma_li(dest, imm);
 }
@@ -1916,7 +1916,7 @@ MacroAssemblerMIPSCompat::loadFloat32(const BaseIndex &src, const FloatRegister 
 }
 
 void
-MacroAssemblerMIPSCompat::store8(const Imm32 &imm, const Address &address)
+MacroAssemblerMIPSCompat::store8(Imm32 imm, const Address &address)
 {
     ma_li(SecondScratchReg, imm);
     ma_store(SecondScratchReg, address, SizeByte);
@@ -1929,7 +1929,7 @@ MacroAssemblerMIPSCompat::store8(Register src, const Address &address)
 }
 
 void
-MacroAssemblerMIPSCompat::store8(const Imm32 &imm, const BaseIndex &dest)
+MacroAssemblerMIPSCompat::store8(Imm32 imm, const BaseIndex &dest)
 {
     ma_store(imm, dest, SizeByte);
 }
@@ -1941,7 +1941,7 @@ MacroAssemblerMIPSCompat::store8(Register src, const BaseIndex &dest)
 }
 
 void
-MacroAssemblerMIPSCompat::store16(const Imm32 &imm, const Address &address)
+MacroAssemblerMIPSCompat::store16(Imm32 imm, const Address &address)
 {
     ma_li(SecondScratchReg, imm);
     ma_store(SecondScratchReg, address, SizeHalfWord);
@@ -1954,7 +1954,7 @@ MacroAssemblerMIPSCompat::store16(Register src, const Address &address)
 }
 
 void
-MacroAssemblerMIPSCompat::store16(const Imm32 &imm, const BaseIndex &dest)
+MacroAssemblerMIPSCompat::store16(Imm32 imm, const BaseIndex &dest)
 {
     ma_store(imm, dest, SizeHalfWord);
 }
@@ -1978,14 +1978,14 @@ MacroAssemblerMIPSCompat::store32(Register src, const Address &address)
 }
 
 void
-MacroAssemblerMIPSCompat::store32(const Imm32 &src, const Address &address)
+MacroAssemblerMIPSCompat::store32(Imm32 src, const Address &address)
 {
     move32(src, ScratchRegister);
     storePtr(ScratchRegister, address);
 }
 
 void
-MacroAssemblerMIPSCompat::store32(const Imm32 &imm, const BaseIndex &dest)
+MacroAssemblerMIPSCompat::store32(Imm32 imm, const BaseIndex &dest)
 {
     ma_store(imm, dest, SizeWord);
 }
