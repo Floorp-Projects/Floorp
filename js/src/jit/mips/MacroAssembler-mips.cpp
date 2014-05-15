@@ -1756,7 +1756,7 @@ MacroAssemblerMIPSCompat::movePtr(Register src, Register dest)
     ma_move(dest, src);
 }
 void
-MacroAssemblerMIPSCompat::movePtr(const ImmWord &imm, Register dest)
+MacroAssemblerMIPSCompat::movePtr(ImmWord imm, Register dest)
 {
     ma_li(dest, Imm32(imm.value));
 }

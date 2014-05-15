@@ -200,7 +200,7 @@ class Assembler : public AssemblerX86Shared
         movsd(src, Address(StackPointer, 0));
     }
 
-    CodeOffsetLabel pushWithPatch(const ImmWord &word) {
+    CodeOffsetLabel pushWithPatch(ImmWord word) {
         push(Imm32(word.value));
         return masm.currentOffset();
     }
@@ -210,7 +210,7 @@ class Assembler : public AssemblerX86Shared
         addl(Imm32(sizeof(double)), StackPointer);
     }
 
-    CodeOffsetLabel movWithPatch(const ImmWord &word, Register dest) {
+    CodeOffsetLabel movWithPatch(ImmWord word, Register dest) {
         movl(Imm32(word.value), dest);
         return masm.currentOffset();
     }
