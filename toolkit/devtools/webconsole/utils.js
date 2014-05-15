@@ -974,7 +974,8 @@ function getMatchedProps_impl(aObj, aMatch, {chainIterator, getProperties})
   let iter = chainIterator(aObj);
   for (let obj of iter) {
     let props = getProperties(obj);
-    for (let prop of props) {
+    for (let i = 0; i < props.length; i++) {
+      let prop = props[i];
       if (prop.indexOf(aMatch) != 0) {
         continue;
       }
