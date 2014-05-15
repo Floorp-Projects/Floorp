@@ -1210,6 +1210,27 @@ mozJSComponentLoader::ImportInto(const nsACString &aLocation,
     return NS_OK;
 }
 
+/* boolean isModuleLoaded (in AUTF8String registryLocation); */
+NS_IMETHODIMP
+mozJSComponentLoader::IsModuleLoaded(const nsACString& aLocation,
+                                     bool *retval)
+{
+    MOZ_ASSERT(nsContentUtils::IsCallerChrome());
+
+    nsresult rv;
+    if (!mInitialized) {
+        rv = ReallyInit();
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    ComponentLoaderInfo info(aLocation);
+    rv = info.EnsureKey();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    *retval = !!mImports.Get(info.Key());
+    return NS_OK;
+}
+
 nsresult
 mozJSComponentLoader::ImportInto(const nsACString &aLocation,
                                  HandleObject targetObj,
