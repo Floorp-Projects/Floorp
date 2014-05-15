@@ -236,7 +236,7 @@ richlistitem:not([selected]) * {
 
 .view-pane[type="experiment"] .error,
 .view-pane[type="experiment"] .warning,
-.view-pane[type="experiment"] .pending,
+.view-pane[type="experiment"] .addon:not([pending="uninstall"]) .pending,
 .view-pane[type="experiment"] .disabled-postfix,
 .view-pane[type="experiment"] .update-postfix,
 .view-pane[type="experiment"] .version,
