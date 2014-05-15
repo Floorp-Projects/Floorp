@@ -69,11 +69,10 @@ public interface TelemetryContract {
     /**
      * Holds event methods. Intended for use in
      * Telemetry.sendUIEvent() as the "method" parameter.
+     *
+     * Please keep this list sorted.
      */
     public interface Method {
-        // Action triggered from a list.
-        public static final String LIST = "list";
-
         // Action triggered from the action bar (including the toolbar).
         public static final String ACTIONBAR = "actionbar";
 
@@ -83,39 +82,50 @@ public interface TelemetryContract {
         // Action triggered from a button.
         public static final String BUTTON = "button";
 
-        // Action triggered from a dialog.
-        public static final String DIALOG = "dialog";
-
-        // Action occurred via an intent.
-        public static final String INTENT = "intent";
-
-        // Action occurred via the main menu.
-        public static final String MENU = "menu";
-
         // Action occurred via a context menu.
         public static final String CONTEXT_MENU = "contextmenu";
+
+        // Action triggered from a dialog.
+        public static final String DIALOG = "dialog";
 
         // Action triggered from a view grid item, like a thumbnail.
         public static final String GRID_ITEM = "griditem";
 
+        // Action occurred via an intent.
+        public static final String INTENT = "intent";
+
+        // Action triggered from a list.
+        public static final String LIST = "list";
+
         // Action triggered from a view list item, like a row of a list.
         public static final String LIST_ITEM = "listitem";
 
-        // Action triggered from a suggestion provided to the user.
-        public static final String SUGGESTION = "suggestion";
+        // Action occurred via the main menu.
+        public static final String MENU = "menu";
 
         // Action triggered from a pageaction in the URLBar.
         // Note: Only used in JavaScript for now, but here for completeness.
         public static final String PAGEACTION = "pageaction";
+
+        // Action triggered from a suggestion provided to the user.
+        public static final String SUGGESTION = "suggestion";
     }
 
     /**
      * Holds session names. Intended for use with
      * Telemetry.startUISession() as the "sessionName" parameter.
+     *
+     * Please keep this list sorted.
      */
     public interface Session {
         // Awesomescreen (including frecency search) is active.
         public static final String AWESOMESCREEN = "awesomescreen.1";
+
+        // Started the very first time we believe the application has been launched.
+        public static final String FIRSTRUN = "firstrun.1";
+
+        // Awesomescreen frecency search is active.
+        public static final String FRECENCY = "frecency.1";
 
         // Started when a user enters about:home.
         public static final String HOME = "home.1";
@@ -127,17 +137,13 @@ public interface TelemetryContract {
         // Started when a Reader viewer becomes active in the foreground.
         // Note: Only used in JavaScript for now, but here for completeness.
         public static final String READER = "reader.1";
-
-        // Awesomescreen frecency search is active.
-        public static final String FRECENCY = "frecency.1";
-
-        // Started the very first time we believe the application has been launched.
-        public static final String FIRSTRUN = "firstrun.1";
     }
 
     /**
      * Holds reasons for stopping a session. Intended for use in
      * Telemetry.stopUISession() as the "reason" parameter.
+     *
+     * Please keep this list sorted.
      */
     public interface Reason {
         // Changes were committed.
