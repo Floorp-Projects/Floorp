@@ -99,7 +99,10 @@ function test_multiple_windows() {
     ok(notification2, "2nd window has a global notification box.");
 
     let policy;
+
     let displayCount = 0;
+    let prefPaneClosed = false;
+    let childWindowClosed = false;
 
     function onAlertDisplayed() {
       displayCount++;
@@ -109,6 +112,26 @@ function test_multiple_windows() {
       }
 
       ok(true, "Data reporting info bar displayed on all open windows.");
+
+      // We register two independent observers and we need both to clean up
+      // properly. This handles gating for test completion.
+      function maybeFinish() {
+        if (!prefPaneClosed) {
+          dump("Not finishing test yet because pref pane isn't closed.\n");
+          return;
+        }
+
+        if (!childWindowClosed) {
+          dump("Not finishing test yet because child window isn't closed.\n");
+          return;
+        }
+
+        dump("Finishing multiple window test.\n");
+        rootLogger.removeAppender(dumpAppender);
+        delete dumpAppender;
+        delete rootLogger;
+        finish();
+      }
 
       let closeCount = 0;
       function onAlertClose() {
@@ -127,6 +150,10 @@ function test_multiple_windows() {
            "Policy records reason for acceptance was button press.");
         is(notification1.allNotifications.length, 0, "No notifications remain on main window.");
         is(notification2.allNotifications.length, 0, "No notifications remain on 2nd window.");
+
+        window2.close();
+        childWindowClosed = true;
+        maybeFinish();
       }
 
       waitForNotificationClose(notification1.currentNotification, onAlertClose);
@@ -145,16 +172,10 @@ function test_multiple_windows() {
 
         ok(true, "Pref pane opened on info bar button press.");
         executeSoon(function soon() {
-          window2.close();
-
           dump("Closing pref pane.\n");
           prefWin.close();
-
-          dump("Finishing multiple window test.\n");
-          rootLogger.removeAppender(dumpAppender);
-          delete dumpAppender;
-          delete rootLogger;
-          finish();
+          prefPaneClosed = true;
+          maybeFinish();
         });
       }, "advanced-pane-loaded", false);
 
