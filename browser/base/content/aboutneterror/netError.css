@@ -38,7 +38,7 @@ ul {
   -moz-padding-start: 5em;
 }
 
-#errorTitle:-moz-locale-dir(rtl) {
+#errorTitle:-moz-dir(rtl) {
   background-position: right 0;
 }
 
