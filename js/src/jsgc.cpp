@@ -2011,7 +2011,7 @@ GCRuntime::triggerGC(JS::gcreason::Reason reason)
 bool
 js::TriggerZoneGC(Zone *zone, JS::gcreason::Reason reason)
 {
-    return zone->runtimeFromMainThread()->gc.triggerZoneGC(zone,reason);
+    return zone->runtimeFromAnyThread()->gc.triggerZoneGC(zone,reason);
 }
 
 bool
