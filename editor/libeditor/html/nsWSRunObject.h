@@ -6,10 +6,8 @@
 #ifndef __wsrunobject_h__
 #define __wsrunobject_h__
 
-#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMNode.h"
-#include "nsIEditor.h"
+#include "nsIEditor.h" // for EDirection
 #include "nsINode.h"
 #include "nscore.h"
 #include "mozilla/dom/Text.h"
@@ -165,13 +163,13 @@ class MOZ_STACK_CLASS nsWSRunObject
                                        BlockBoundary aBoundary,
                                        nsINode* aBlock,
                                        int32_t aOffset = -1);
-    
-    // PrepareToJoinBlocks fixes up ws at the end of aLeftParent and the
-    // beginning of aRightParent in preperation for them to be joined.
-    // example of fixup: trailingws in aLeftParent needs to be removed.
-    static nsresult PrepareToJoinBlocks(nsHTMLEditor *aEd, 
-                                        nsIDOMNode *aLeftParent,
-                                        nsIDOMNode *aRightParent);
+ 
+    // PrepareToJoinBlocks fixes up ws at the end of aLeftBlock and the
+    // beginning of aRightBlock in preperation for them to be joined.  Example
+    // of fixup: trailingws in aLeftBlock needs to be removed.
+    static nsresult PrepareToJoinBlocks(nsHTMLEditor* aEd,
+                                        mozilla::dom::Element* aLeftBlock,
+                                        mozilla::dom::Element* aRightBlock);
 
     // PrepareToDeleteRange fixes up ws before {aStartNode,aStartOffset}
     // and after {aEndNode,aEndOffset} in preperation for content
@@ -185,28 +183,21 @@ class MOZ_STACK_CLASS nsWSRunObject
                                          int32_t* aStartOffset,
                                          nsCOMPtr<nsINode>* aEndNode,
                                          int32_t* aEndOffset);
-    static nsresult PrepareToDeleteRange(nsHTMLEditor *aHTMLEd, 
-                                         nsCOMPtr<nsIDOMNode> *aStartNode,
-                                         int32_t *aStartOffset, 
-                                         nsCOMPtr<nsIDOMNode> *aEndNode,
-                                         int32_t *aEndOffset);
 
-    // PrepareToDeleteNode fixes up ws before and after aNode in preperation 
-    // for aNode to be deleted.
-    // example of fixup: trailingws before aNode needs to be removed.
-    static nsresult PrepareToDeleteNode(nsHTMLEditor *aHTMLEd, 
-                                        nsIDOMNode *aNode);
+    // PrepareToDeleteNode fixes up ws before and after aContent in preparation
+    // for aContent to be deleted.  Example of fixup: trailingws before
+    // aContent needs to be removed.
+    static nsresult PrepareToDeleteNode(nsHTMLEditor *aHTMLEd,
+                                        nsIContent* aContent);
 
-    // PrepareToSplitAcrossBlocks fixes up ws before and after 
-    // {aSplitNode,aSplitOffset} in preperation for a block
-    // parent to be split.  Note that the aSplitNode and aSplitOffset
-    // are adjusted in response to any dom changes we make while 
-    // adjusting ws.
-    // example of fixup: normalws before {aSplitNode,aSplitOffset} 
-    //                   needs to end with nbsp.
-    static nsresult PrepareToSplitAcrossBlocks(nsHTMLEditor *aHTMLEd, 
-                                               nsCOMPtr<nsIDOMNode> *aSplitNode, 
-                                               int32_t *aSplitOffset);
+    // PrepareToSplitAcrossBlocks fixes up ws before and after
+    // {aSplitNode,aSplitOffset} in preparation for a block parent to be split.
+    // Note that the aSplitNode and aSplitOffset are adjusted in response to
+    // any DOM changes we make while adjusting ws.  Example of fixup: normalws
+    // before {aSplitNode,aSplitOffset} needs to end with nbsp.
+    static nsresult PrepareToSplitAcrossBlocks(nsHTMLEditor* aHTMLEd,
+                                               nsCOMPtr<nsINode>* aSplitNode,
+                                               int32_t* aSplitOffset);
 
     // InsertBreak inserts a br node at {aInOutParent,aInOutOffset}
     // and makes any needed adjustments to ws around that point.
@@ -216,49 +207,45 @@ class MOZ_STACK_CLASS nsWSRunObject
       InsertBreak(nsCOMPtr<nsINode>* aInOutParent, int32_t* aInOutOffset,
                   nsIEditor::EDirection aSelect);
 
-    // InsertText inserts a string at {aInOutParent,aInOutOffset}
-    // and makes any needed adjustments to ws around that point.
-    // example of fixup: trailingws before {aInOutParent,aInOutOffset}
-    //                   needs to be removed.
-    nsresult InsertText(const nsAString& aStringToInsert, 
-                        nsCOMPtr<nsIDOMNode> *aInOutNode, 
-                        int32_t *aInOutOffset,
-                        nsIDOMDocument *aDoc);
+    // InsertText inserts a string at {aInOutParent,aInOutOffset} and makes any
+    // needed adjustments to ws around that point.  Example of fixup:
+    // trailingws before {aInOutParent,aInOutOffset} needs to be removed.
+    nsresult InsertText(const nsAString& aStringToInsert,
+                        nsCOMPtr<nsINode>* aInOutNode,
+                        int32_t* aInOutOffset,
+                        nsIDocument* aDoc);
 
-    // DeleteWSBackward deletes a single visible piece of ws before
-    // the ws point (the point to create the wsRunObject, passed to 
-    // its constructor).  It makes any needed conversion to adjacent
-    // ws to retain its significance.
+    // DeleteWSBackward deletes a single visible piece of ws before the ws
+    // point (the point to create the wsRunObject, passed to its constructor).
+    // It makes any needed conversion to adjacent ws to retain its
+    // significance.
     nsresult DeleteWSBackward();
 
-    // DeleteWSForward deletes a single visible piece of ws after
-    // the ws point (the point to create the wsRunObject, passed to 
-    // its constructor).  It makes any needed conversion to adjacent
-    // ws to retain its significance.
+    // DeleteWSForward deletes a single visible piece of ws after the ws point
+    // (the point to create the wsRunObject, passed to its constructor).  It
+    // makes any needed conversion to adjacent ws to retain its significance.
     nsresult DeleteWSForward();
 
-    // PriorVisibleNode returns the first piece of visible thing
-    // before {aNode,aOffset}.  If there is no visible ws qualifying
-    // it returns what is before the ws run.  Note that 
-    // {outVisNode,outVisOffset} is set to just AFTER the visible
-    // object.
-    void PriorVisibleNode(nsIDOMNode *aNode,
+    // PriorVisibleNode returns the first piece of visible thing before
+    // {aNode,aOffset}.  If there is no visible ws qualifying it returns what
+    // is before the ws run.  Note that {outVisNode,outVisOffset} is set to
+    // just AFTER the visible object.
+    void PriorVisibleNode(nsINode* aNode,
                           int32_t aOffset,
-                          nsCOMPtr<nsIDOMNode> *outVisNode,
-                          int32_t *outVisOffset,
-                          WSType *outType);
+                          nsCOMPtr<nsINode>* outVisNode,
+                          int32_t* outVisOffset,
+                          WSType* outType);
 
-    // NextVisibleNode returns the first piece of visible thing
-    // after {aNode,aOffset}.  If there is no visible ws qualifying
-    // it returns what is after the ws run.  Note that 
-    // {outVisNode,outVisOffset} is set to just BEFORE the visible
-    // object.
-    void NextVisibleNode(nsIDOMNode *aNode,
+    // NextVisibleNode returns the first piece of visible thing after
+    // {aNode,aOffset}.  If there is no visible ws qualifying it returns what
+    // is after the ws run.  Note that {outVisNode,outVisOffset} is set to just
+    // BEFORE the visible object.
+    void NextVisibleNode(nsINode* aNode,
                          int32_t aOffset,
-                         nsCOMPtr<nsIDOMNode> *outVisNode,
-                         int32_t *outVisOffset,
-                         WSType *outType);
-    
+                         nsCOMPtr<nsINode>* outVisNode,
+                         int32_t* outVisOffset,
+                         WSType* outType);
+
     // AdjustWhitespace examines the ws object for nbsp's that can
     // be safely converted to regular ascii space and converts them.
     nsresult AdjustWhitespace();
@@ -328,8 +315,6 @@ class MOZ_STACK_CLASS nsWSRunObject
     void     GetRuns();
     void     ClearRuns();
     void     MakeSingleWSRun(WSType aType);
-    nsresult PrependNodeToList(nsINode* aNode);
-    nsresult AppendNodeToList(nsINode* aNode);
     nsresult GetPreviousWSNode(::DOMPoint aPoint,
                                nsINode* aBlockParent,
                                nsCOMPtr<nsINode>* aPriorNode);
@@ -338,13 +323,13 @@ class MOZ_STACK_CLASS nsWSRunObject
                            nsCOMPtr<nsINode>* aNextNode);
     nsresult PrepareToDeleteRangePriv(nsWSRunObject* aEndObject);
     nsresult PrepareToSplitAcrossBlocksPriv();
-    nsresult DeleteChars(nsIDOMNode *aStartNode, int32_t aStartOffset, 
-                         nsIDOMNode *aEndNode, int32_t aEndOffset,
+    nsresult DeleteChars(nsINode* aStartNode, int32_t aStartOffset,
+                         nsINode* aEndNode, int32_t aEndOffset,
                          AreaRestriction aAR = eAnywhere);
-    WSPoint  GetCharAfter(nsIDOMNode *aNode, int32_t aOffset);
-    WSPoint  GetCharBefore(nsIDOMNode *aNode, int32_t aOffset);
-    WSPoint  GetCharAfter(const WSPoint &aPoint);
-    WSPoint  GetCharBefore(const WSPoint &aPoint);
+    WSPoint  GetCharAfter(nsINode* aNode, int32_t aOffset);
+    WSPoint  GetCharBefore(nsINode* aNode, int32_t aOffset);
+    WSPoint  GetCharAfter(const WSPoint& aPoint);
+    WSPoint  GetCharBefore(const WSPoint& aPoint);
     nsresult ConvertToNBSP(WSPoint aPoint,
                            AreaRestriction aAR = eAnywhere);
     void     GetAsciiWSBounds(int16_t aDir, nsINode* aNode, int32_t aOffset,
@@ -352,16 +337,16 @@ class MOZ_STACK_CLASS nsWSRunObject
                               int32_t* outStartOffset,
                               nsIContent** outEndNode,
                               int32_t* outEndOffset);
-    void     GetAsciiWSBounds(int16_t aDir, nsIDOMNode *aNode, int32_t aOffset,
-                                nsCOMPtr<nsIDOMNode> *outStartNode, int32_t *outStartOffset,
-                                nsCOMPtr<nsIDOMNode> *outEndNode, int32_t *outEndOffset);
-    void     FindRun(nsIDOMNode *aNode, int32_t aOffset, WSFragment **outRun, bool after);
+    void     FindRun(nsINode* aNode, int32_t aOffset, WSFragment** outRun,
+                     bool after);
     char16_t GetCharAt(nsIContent *aTextNode, int32_t aOffset);
-    WSPoint  GetWSPointAfter(nsIDOMNode *aNode, int32_t aOffset);
-    WSPoint  GetWSPointBefore(nsIDOMNode *aNode, int32_t aOffset);
+    WSPoint  GetWSPointAfter(nsINode* aNode, int32_t aOffset);
+    WSPoint  GetWSPointBefore(nsINode* aNode, int32_t aOffset);
     nsresult CheckTrailingNBSPOfRun(WSFragment *aRun);
-    nsresult CheckTrailingNBSP(WSFragment *aRun, nsIDOMNode *aNode, int32_t aOffset);
-    nsresult CheckLeadingNBSP(WSFragment *aRun, nsIDOMNode *aNode, int32_t aOffset);
+    nsresult CheckTrailingNBSP(WSFragment* aRun, nsINode* aNode,
+                               int32_t aOffset);
+    nsresult CheckLeadingNBSP(WSFragment* aRun, nsINode* aNode,
+                              int32_t aOffset);
     
     nsresult Scrub();
     nsresult GetPreviousWSNodeInner(nsINode* aStartNode, nsINode* aBlockParent,
@@ -392,7 +377,8 @@ class MOZ_STACK_CLASS nsWSRunObject
     nsCOMPtr<nsINode> mLastNBSPNode;   // location of last nbsp in ws run, if any
     int32_t mLastNBSPOffset;           // ...
     
-    nsCOMArray<nsINode> mNodeArray;    //the list of nodes containing ws in this run
+    // the list of nodes containing ws in this run
+    nsTArray<nsRefPtr<mozilla::dom::Text>> mNodeArray;
     
     WSFragment *mStartRun;             // the first WSFragment in the run
     WSFragment *mEndRun;               // the last WSFragment in the run, may be same as first

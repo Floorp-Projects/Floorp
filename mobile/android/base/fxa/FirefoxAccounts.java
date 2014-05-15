@@ -6,8 +6,11 @@ package org.mozilla.gecko.fxa;
 
 import java.io.File;
 import java.util.EnumSet;
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.fxa.authenticator.AccountPickler;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
@@ -20,6 +23,7 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.res.Resources;
 import android.os.Bundle;
 
 /**
@@ -263,5 +267,12 @@ public class FirefoxAccounts {
   public static void removeSyncStatusListener(SyncStatusListener syncStatusListener) {
     // stopObserving null-checks its argument.
     FxAccountSyncStatusHelper.getInstance().stopObserving(syncStatusListener);
+  }
+
+  public static String getOldSyncUpgradeURL(final Resources res, final Locale locale) {
+    final String VERSION = AppConstants.MOZ_APP_VERSION;
+    final String OS = AppConstants.OS_TARGET;
+    final String LOCALE = Utils.getLanguageTag(locale);
+    return res.getString(R.string.fxaccount_link_old_firefox, VERSION, OS, LOCALE);
   }
 }

@@ -12,7 +12,9 @@ Components.utils.import("resource://gre/modules/FileUtils.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/ctypes.jsm");
+#ifdef MOZ_SERVICES_HEALTHREPORT
 Components.utils.import("resource://gre/modules/UpdaterHealthProvider.jsm");
+#endif
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;

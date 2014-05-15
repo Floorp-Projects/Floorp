@@ -48,7 +48,7 @@ interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 interface nsITranslationNodeList;
 
-[scriptable, uuid(aae2d993-366f-43e6-aa51-f2eb83935e7d)]
+[scriptable, uuid(a1d75ae1-d3fc-40cb-97d5-8c81846632f4)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1673,6 +1673,13 @@ interface nsIDOMWindowUtils : nsISupports {
     */
    AString getOMTAOrComputedStyle(in nsIDOMElement aElement,
                                   in AString aProperty);
+
+   /**
+    * Get the content- and compositor-side APZ test data instances.
+    * The return values are of type APZTestData (see APZTestData.webidl).
+    */
+   [implicit_jscontext] jsval getContentAPZTestData();
+   [implicit_jscontext] jsval getCompositorAPZTestData();
 
    /**
     * With this it's possible to mute all the MediaElements in this window.

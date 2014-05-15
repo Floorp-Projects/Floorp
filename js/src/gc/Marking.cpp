@@ -153,7 +153,9 @@ CheckMarkedThing(JSTracer *trc, T **thingp)
     JS_ASSERT(trc);
     JS_ASSERT(thingp);
 
+#if defined(JS_CRASH_DIAGNOSTICS) || defined(DEBUG)
     T *thing = *thingp;
+#endif
 
 #ifdef JS_CRASH_DIAGNOSTICS
     if (uintptr_t(thing) <= ArenaSize || (uintptr_t(thing) & 1) != 0) {

@@ -264,6 +264,7 @@ void CacheEntry::AsyncOpen(nsICacheEntryOpenCallback* aCallback, uint32_t aFlags
     this, StateString(mState), aFlags, aCallback));
 
   bool readonly = aFlags & nsICacheStorage::OPEN_READONLY;
+  bool bypassIfBusy = aFlags & nsICacheStorage::OPEN_BYPASS_IF_BUSY;
   bool truncate = aFlags & nsICacheStorage::OPEN_TRUNCATE;
   bool priority = aFlags & nsICacheStorage::OPEN_PRIORITY;
   bool multithread = aFlags & nsICacheStorage::CHECK_MULTITHREADED;
@@ -275,7 +276,7 @@ void CacheEntry::AsyncOpen(nsICacheEntryOpenCallback* aCallback, uint32_t aFlags
 
   mozilla::MutexAutoLock lock(mLock);
 
-  RememberCallback(callback);
+  RememberCallback(callback, bypassIfBusy);
 
   // Load() opens the lock
   if (Load(truncate, priority)) {
@@ -491,11 +492,19 @@ void CacheEntry::TransferCallbacks(CacheEntry & aFromEntry)
   }
 }
 
-void CacheEntry::RememberCallback(Callback const& aCallback)
+void CacheEntry::RememberCallback(Callback & aCallback, bool aBypassIfBusy)
 {
-  LOG(("CacheEntry::RememberCallback [this=%p, cb=%p]", this, aCallback.mCallback.get()));
-
   mLock.AssertCurrentThreadOwns();
+
+  LOG(("CacheEntry::RememberCallback [this=%p, cb=%p, state=%s]",
+    this, aCallback.mCallback.get(), StateString(mState)));
+
+  if (aBypassIfBusy && (mState == WRITING || mState == REVALIDATING)) {
+    LOG(("  writing or revalidating, callback wants to bypass cache"));
+    aCallback.mNotWanted = true;
+    InvokeAvailableCallback(aCallback);
+    return;
+  }
 
   mCallbacks.AppendElement(aCallback);
 }

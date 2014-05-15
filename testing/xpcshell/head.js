@@ -904,7 +904,7 @@ function pattern_matcher(pattern) {
     var matchers = [[p, pattern_matcher(pattern[p])] for (p in pattern)];
     // Kludge: include 'length', if not enumerable. (If it is enumerable,
     // we picked it up in the array comprehension, above.
-    ld = Object.getOwnPropertyDescriptor(pattern, 'length');
+    var ld = Object.getOwnPropertyDescriptor(pattern, 'length');
     if (ld && !ld.enumerable) {
       matchers.push(['length', pattern_matcher(pattern.length)])
     }

@@ -30,75 +30,90 @@
 
 #include "jsfriendapi.h"
 
-NS_IMPL_ISUPPORTS(nsBinaryOutputStream, nsIObjectOutputStream, nsIBinaryOutputStream, nsIOutputStream)
+NS_IMPL_ISUPPORTS(nsBinaryOutputStream,
+                  nsIObjectOutputStream,
+                  nsIBinaryOutputStream,
+                  nsIOutputStream)
 
 NS_IMETHODIMP
 nsBinaryOutputStream::Flush()
 {
-  if (NS_WARN_IF(!mOutputStream))
+  if (NS_WARN_IF(!mOutputStream)) {
     return NS_ERROR_UNEXPECTED;
+  }
   return mOutputStream->Flush();
 }
 
 NS_IMETHODIMP
 nsBinaryOutputStream::Close()
 {
-  if (NS_WARN_IF(!mOutputStream))
+  if (NS_WARN_IF(!mOutputStream)) {
     return NS_ERROR_UNEXPECTED;
+  }
   return mOutputStream->Close();
 }
 
 NS_IMETHODIMP
-nsBinaryOutputStream::Write(const char *aBuf, uint32_t aCount, uint32_t *aActualBytes)
+nsBinaryOutputStream::Write(const char* aBuf, uint32_t aCount,
+                            uint32_t* aActualBytes)
 {
-  if (NS_WARN_IF(!mOutputStream))
+  if (NS_WARN_IF(!mOutputStream)) {
     return NS_ERROR_UNEXPECTED;
+  }
   return mOutputStream->Write(aBuf, aCount, aActualBytes);
 }
 
 NS_IMETHODIMP
-nsBinaryOutputStream::WriteFrom(nsIInputStream *inStr, uint32_t count, uint32_t *_retval)
+nsBinaryOutputStream::WriteFrom(nsIInputStream* aInStr, uint32_t aCount,
+                                uint32_t* aResult)
 {
   NS_NOTREACHED("WriteFrom");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsBinaryOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, uint32_t count, uint32_t *_retval)
+nsBinaryOutputStream::WriteSegments(nsReadSegmentFun aReader, void* aClosure,
+                                    uint32_t aCount, uint32_t* aResult)
 {
   NS_NOTREACHED("WriteSegments");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsBinaryOutputStream::IsNonBlocking(bool *aNonBlocking)
+nsBinaryOutputStream::IsNonBlocking(bool* aNonBlocking)
 {
-  if (NS_WARN_IF(!mOutputStream))
+  if (NS_WARN_IF(!mOutputStream)) {
     return NS_ERROR_UNEXPECTED;
+  }
   return mOutputStream->IsNonBlocking(aNonBlocking);
 }
 
 nsresult
-nsBinaryOutputStream::WriteFully(const char *aBuf, uint32_t aCount)
+nsBinaryOutputStream::WriteFully(const char* aBuf, uint32_t aCount)
 {
-  if (NS_WARN_IF(!mOutputStream))
+  if (NS_WARN_IF(!mOutputStream)) {
     return NS_ERROR_UNEXPECTED;
+  }
 
   nsresult rv;
   uint32_t bytesWritten;
 
   rv = mOutputStream->Write(aBuf, aCount, &bytesWritten);
-  if (NS_FAILED(rv)) return rv;
-  if (bytesWritten != aCount)
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (bytesWritten != aCount) {
     return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBinaryOutputStream::SetOutputStream(nsIOutputStream *aOutputStream)
+nsBinaryOutputStream::SetOutputStream(nsIOutputStream* aOutputStream)
 {
-  if (NS_WARN_IF(!aOutputStream))
+  if (NS_WARN_IF(!aOutputStream)) {
     return NS_ERROR_INVALID_ARG;
+  }
   mOutputStream = aOutputStream;
   mBufferAccess = do_QueryInterface(aOutputStream);
   return NS_OK;
@@ -113,41 +128,44 @@ nsBinaryOutputStream::WriteBoolean(bool aBoolean)
 NS_IMETHODIMP
 nsBinaryOutputStream::Write8(uint8_t aByte)
 {
-  return WriteFully((const char*)&aByte, sizeof aByte);
+  return WriteFully((const char*)&aByte, sizeof(aByte));
 }
 
 NS_IMETHODIMP
-nsBinaryOutputStream::Write16(uint16_t a16)
+nsBinaryOutputStream::Write16(uint16_t aNum)
 {
-  a16 = mozilla::NativeEndian::swapToBigEndian(a16);
-  return WriteFully((const char*)&a16, sizeof a16);
+  aNum = mozilla::NativeEndian::swapToBigEndian(aNum);
+  return WriteFully((const char*)&aNum, sizeof(aNum));
 }
 
 NS_IMETHODIMP
-nsBinaryOutputStream::Write32(uint32_t a32)
+nsBinaryOutputStream::Write32(uint32_t aNum)
 {
-  a32 = mozilla::NativeEndian::swapToBigEndian(a32);
-  return WriteFully((const char*)&a32, sizeof a32);
+  aNum = mozilla::NativeEndian::swapToBigEndian(aNum);
+  return WriteFully((const char*)&aNum, sizeof(aNum));
 }
 
 NS_IMETHODIMP
-nsBinaryOutputStream::Write64(uint64_t a64)
+nsBinaryOutputStream::Write64(uint64_t aNum)
 {
   nsresult rv;
   uint32_t bytesWritten;
 
-  a64 = mozilla::NativeEndian::swapToBigEndian(a64);
-  rv = Write(reinterpret_cast<char*>(&a64), sizeof a64, &bytesWritten);
-  if (NS_FAILED(rv)) return rv;
-  if (bytesWritten != sizeof a64)
+  aNum = mozilla::NativeEndian::swapToBigEndian(aNum);
+  rv = Write(reinterpret_cast<char*>(&aNum), sizeof(aNum), &bytesWritten);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (bytesWritten != sizeof(aNum)) {
     return NS_ERROR_FAILURE;
+  }
   return rv;
 }
 
 NS_IMETHODIMP
 nsBinaryOutputStream::WriteFloat(float aFloat)
 {
-  NS_ASSERTION(sizeof(float) == sizeof (uint32_t),
+  NS_ASSERTION(sizeof(float) == sizeof(uint32_t),
                "False assumption about sizeof(float)");
   return Write32(*reinterpret_cast<uint32_t*>(&aFloat));
 }
@@ -161,14 +179,16 @@ nsBinaryOutputStream::WriteDouble(double aDouble)
 }
 
 NS_IMETHODIMP
-nsBinaryOutputStream::WriteStringZ(const char *aString)
+nsBinaryOutputStream::WriteStringZ(const char* aString)
 {
   uint32_t length;
   nsresult rv;
 
   length = strlen(aString);
   rv = Write32(length);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   return WriteFully(aString, length);
 }
 
@@ -180,29 +200,35 @@ nsBinaryOutputStream::WriteWStringZ(const char16_t* aString)
 
   length = NS_strlen(aString);
   rv = Write32(length);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-  if (length == 0)
+  if (length == 0) {
     return NS_OK;
+  }
   byteCount = length * sizeof(char16_t);
 
 #ifdef IS_BIG_ENDIAN
   rv = WriteBytes(reinterpret_cast<const char*>(aString), byteCount);
 #else
   // XXX use WriteSegments here to avoid copy!
-  char16_t *copy, temp[64];
+  char16_t* copy;
+  char16_t temp[64];
   if (length <= 64) {
     copy = temp;
   } else {
     copy = reinterpret_cast<char16_t*>(moz_malloc(byteCount));
-    if (!copy)
+    if (!copy) {
       return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
   NS_ASSERTION((uintptr_t(aString) & 0x1) == 0, "aString not properly aligned");
   mozilla::NativeEndian::copyAndSwapToBigEndian(copy, aString, length);
   rv = WriteBytes(reinterpret_cast<const char*>(copy), byteCount);
-  if (copy != temp)
+  if (copy != temp) {
     moz_free(copy);
+  }
 #endif
 
   return rv;
@@ -215,22 +241,25 @@ nsBinaryOutputStream::WriteUtf8Z(const char16_t* aString)
 }
 
 NS_IMETHODIMP
-nsBinaryOutputStream::WriteBytes(const char *aString, uint32_t aLength)
+nsBinaryOutputStream::WriteBytes(const char* aString, uint32_t aLength)
 {
   nsresult rv;
   uint32_t bytesWritten;
 
   rv = Write(aString, aLength, &bytesWritten);
-  if (NS_FAILED(rv)) return rv;
-  if (bytesWritten != aLength)
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (bytesWritten != aLength) {
     return NS_ERROR_FAILURE;
+  }
   return rv;
 }
 
 NS_IMETHODIMP
-nsBinaryOutputStream::WriteByteArray(uint8_t *aBytes, uint32_t aLength)
+nsBinaryOutputStream::WriteByteArray(uint8_t* aBytes, uint32_t aLength)
 {
-  return WriteBytes(reinterpret_cast<char *>(aBytes), aLength);
+  return WriteBytes(reinterpret_cast<char*>(aBytes), aLength);
 }
 
 NS_IMETHODIMP
@@ -256,17 +285,19 @@ nsBinaryOutputStream::WriteCompoundObject(nsISupports* aObject,
   nsCOMPtr<nsISerializable> serializable = do_QueryInterface(aObject);
 
   // Can't deal with weak refs
-  if (NS_WARN_IF(!aIsStrongRef))
+  if (NS_WARN_IF(!aIsStrongRef)) {
     return NS_ERROR_UNEXPECTED;
-  if (NS_WARN_IF(!classInfo) || NS_WARN_IF(!serializable))
+  }
+  if (NS_WARN_IF(!classInfo) || NS_WARN_IF(!serializable)) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
   nsCID cid;
   nsresult rv = classInfo->GetClassIDNoAlloc(&cid);
   if (NS_SUCCEEDED(rv)) {
     rv = WriteID(cid);
   } else {
-    nsCID *cidptr = nullptr;
+    nsCID* cidptr = nullptr;
     rv = classInfo->GetClassID(&cidptr);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -277,12 +308,14 @@ nsBinaryOutputStream::WriteCompoundObject(nsISupports* aObject,
     NS_Free(cidptr);
   }
 
-  if (NS_WARN_IF(NS_FAILED(rv)))
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
 
   rv = WriteID(aIID);
-  if (NS_WARN_IF(NS_FAILED(rv)))
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
 
   return serializable->Write(this);
 }
@@ -291,21 +324,25 @@ NS_IMETHODIMP
 nsBinaryOutputStream::WriteID(const nsIID& aIID)
 {
   nsresult rv = Write32(aIID.m0);
-  if (NS_WARN_IF(NS_FAILED(rv)))
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
 
   rv = Write16(aIID.m1);
-  if (NS_WARN_IF(NS_FAILED(rv)))
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
 
   rv = Write16(aIID.m2);
-  if (NS_WARN_IF(NS_FAILED(rv)))
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
 
   for (int i = 0; i < 8; ++i) {
     rv = Write8(aIID.m3[i]);
-    if (NS_WARN_IF(NS_FAILED(rv)))
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
   }
 
   return NS_OK;
@@ -314,33 +351,40 @@ nsBinaryOutputStream::WriteID(const nsIID& aIID)
 NS_IMETHODIMP_(char*)
 nsBinaryOutputStream::GetBuffer(uint32_t aLength, uint32_t aAlignMask)
 {
-  if (mBufferAccess)
+  if (mBufferAccess) {
     return mBufferAccess->GetBuffer(aLength, aAlignMask);
+  }
   return nullptr;
 }
 
 NS_IMETHODIMP_(void)
 nsBinaryOutputStream::PutBuffer(char* aBuffer, uint32_t aLength)
 {
-  if (mBufferAccess)
+  if (mBufferAccess) {
     mBufferAccess->PutBuffer(aBuffer, aLength);
+  }
 }
 
-NS_IMPL_ISUPPORTS(nsBinaryInputStream, nsIObjectInputStream, nsIBinaryInputStream, nsIInputStream)
+NS_IMPL_ISUPPORTS(nsBinaryInputStream,
+                  nsIObjectInputStream,
+                  nsIBinaryInputStream,
+                  nsIInputStream)
 
 NS_IMETHODIMP
 nsBinaryInputStream::Available(uint64_t* aResult)
 {
-  if (NS_WARN_IF(!mInputStream))
+  if (NS_WARN_IF(!mInputStream)) {
     return NS_ERROR_UNEXPECTED;
+  }
   return mInputStream->Available(aResult);
 }
 
 NS_IMETHODIMP
-nsBinaryInputStream::Read(char* aBuffer, uint32_t aCount, uint32_t *aNumRead)
+nsBinaryInputStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aNumRead)
 {
-  if (NS_WARN_IF(!mInputStream))
+  if (NS_WARN_IF(!mInputStream)) {
     return NS_ERROR_UNEXPECTED;
+  }
 
   // mInputStream might give us short reads, so deal with that.
   uint32_t totalRead = 0;
@@ -373,7 +417,8 @@ nsBinaryInputStream::Read(char* aBuffer, uint32_t aCount, uint32_t *aNumRead)
 // a thunking function which keeps the real input stream around.
 
 // the closure wrapper
-struct ReadSegmentsClosure {
+struct ReadSegmentsClosure
+{
   nsIInputStream* mRealInputStream;
   void* mRealClosure;
   nsWriteSegmentFun mRealWriter;
@@ -384,11 +429,11 @@ struct ReadSegmentsClosure {
 // the thunking function
 static NS_METHOD
 ReadSegmentForwardingThunk(nsIInputStream* aStream,
-                           void *aClosure,
+                           void* aClosure,
                            const char* aFromSegment,
                            uint32_t aToOffset,
                            uint32_t aCount,
-                           uint32_t *aWriteCount)
+                           uint32_t* aWriteCount)
 {
   ReadSegmentsClosure* thunkClosure =
     reinterpret_cast<ReadSegmentsClosure*>(aClosure);
@@ -408,19 +453,21 @@ ReadSegmentForwardingThunk(nsIInputStream* aStream,
 
 
 NS_IMETHODIMP
-nsBinaryInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, uint32_t count, uint32_t *_retval)
+nsBinaryInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
+                                  uint32_t aCount, uint32_t* aResult)
 {
-  if (NS_WARN_IF(!mInputStream))
+  if (NS_WARN_IF(!mInputStream)) {
     return NS_ERROR_UNEXPECTED;
+  }
 
-  ReadSegmentsClosure thunkClosure = { this, closure, writer, NS_OK, 0 };
+  ReadSegmentsClosure thunkClosure = { this, aClosure, aWriter, NS_OK, 0 };
 
   // mInputStream might give us short reads, so deal with that.
   uint32_t bytesRead;
   do {
     nsresult rv = mInputStream->ReadSegments(ReadSegmentForwardingThunk,
                                              &thunkClosure,
-                                             count, &bytesRead);
+                                             aCount, &bytesRead);
 
     if (rv == NS_BASE_STREAM_WOULD_BLOCK && thunkClosure.mBytesRead != 0) {
       // We already read some data.  Return it.
@@ -432,36 +479,39 @@ nsBinaryInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, uint
     }
 
     thunkClosure.mBytesRead += bytesRead;
-    count -= bytesRead;
-  } while (count != 0 && bytesRead != 0 &&
+    aCount -= bytesRead;
+  } while (aCount != 0 && bytesRead != 0 &&
            NS_SUCCEEDED(thunkClosure.mRealResult));
 
-  *_retval = thunkClosure.mBytesRead;
+  *aResult = thunkClosure.mBytesRead;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBinaryInputStream::IsNonBlocking(bool *aNonBlocking)
+nsBinaryInputStream::IsNonBlocking(bool* aNonBlocking)
 {
-  if (NS_WARN_IF(!mInputStream))
+  if (NS_WARN_IF(!mInputStream)) {
     return NS_ERROR_UNEXPECTED;
+  }
   return mInputStream->IsNonBlocking(aNonBlocking);
 }
 
 NS_IMETHODIMP
 nsBinaryInputStream::Close()
 {
-  if (NS_WARN_IF(!mInputStream))
+  if (NS_WARN_IF(!mInputStream)) {
     return NS_ERROR_UNEXPECTED;
+  }
   return mInputStream->Close();
 }
 
 NS_IMETHODIMP
-nsBinaryInputStream::SetInputStream(nsIInputStream *aInputStream)
+nsBinaryInputStream::SetInputStream(nsIInputStream* aInputStream)
 {
-  if (NS_WARN_IF(!aInputStream))
+  if (NS_WARN_IF(!aInputStream)) {
     return NS_ERROR_INVALID_ARG;
+  }
   mInputStream = aInputStream;
   mBufferAccess = do_QueryInterface(aInputStream);
   return NS_OK;
@@ -472,7 +522,9 @@ nsBinaryInputStream::ReadBoolean(bool* aBoolean)
 {
   uint8_t byteResult;
   nsresult rv = Read8(&byteResult);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   *aBoolean = !!byteResult;
   return rv;
 }
@@ -484,58 +536,64 @@ nsBinaryInputStream::Read8(uint8_t* aByte)
   uint32_t bytesRead;
 
   rv = Read(reinterpret_cast<char*>(aByte), sizeof(*aByte), &bytesRead);
-  if (NS_FAILED(rv)) return rv;
-  if (bytesRead != 1)
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (bytesRead != 1) {
     return NS_ERROR_FAILURE;
+  }
   return rv;
 }
 
 NS_IMETHODIMP
-nsBinaryInputStream::Read16(uint16_t* a16)
+nsBinaryInputStream::Read16(uint16_t* aNum)
 {
-  nsresult rv;
   uint32_t bytesRead;
-
-  rv = Read(reinterpret_cast<char*>(a16), sizeof *a16, &bytesRead);
-  if (NS_FAILED(rv)) return rv;
-  if (bytesRead != sizeof *a16)
+  nsresult rv = Read(reinterpret_cast<char*>(aNum), sizeof(*aNum), &bytesRead);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (bytesRead != sizeof(*aNum)) {
     return NS_ERROR_FAILURE;
-  *a16 = mozilla::NativeEndian::swapFromBigEndian(*a16);
+  }
+  *aNum = mozilla::NativeEndian::swapFromBigEndian(*aNum);
   return rv;
 }
 
 NS_IMETHODIMP
-nsBinaryInputStream::Read32(uint32_t* a32)
+nsBinaryInputStream::Read32(uint32_t* aNum)
 {
-  nsresult rv;
   uint32_t bytesRead;
-
-  rv = Read(reinterpret_cast<char*>(a32), sizeof *a32, &bytesRead);
-  if (NS_FAILED(rv)) return rv;
-  if (bytesRead != sizeof *a32)
+  nsresult rv = Read(reinterpret_cast<char*>(aNum), sizeof(*aNum), &bytesRead);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (bytesRead != sizeof(*aNum)) {
     return NS_ERROR_FAILURE;
-  *a32 = mozilla::NativeEndian::swapFromBigEndian(*a32);
+  }
+  *aNum = mozilla::NativeEndian::swapFromBigEndian(*aNum);
   return rv;
 }
 
 NS_IMETHODIMP
-nsBinaryInputStream::Read64(uint64_t* a64)
+nsBinaryInputStream::Read64(uint64_t* aNum)
 {
-  nsresult rv;
   uint32_t bytesRead;
-
-  rv = Read(reinterpret_cast<char*>(a64), sizeof *a64, &bytesRead);
-  if (NS_FAILED(rv)) return rv;
-  if (bytesRead != sizeof *a64)
+  nsresult rv = Read(reinterpret_cast<char*>(aNum), sizeof(*aNum), &bytesRead);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (bytesRead != sizeof(*aNum)) {
     return NS_ERROR_FAILURE;
-  *a64 = mozilla::NativeEndian::swapFromBigEndian(*a64);
+  }
+  *aNum = mozilla::NativeEndian::swapFromBigEndian(*aNum);
   return rv;
 }
 
 NS_IMETHODIMP
 nsBinaryInputStream::ReadFloat(float* aFloat)
 {
-  NS_ASSERTION(sizeof(float) == sizeof (uint32_t),
+  NS_ASSERTION(sizeof(float) == sizeof(uint32_t),
                "False assumption about sizeof(float)");
   return Read32(reinterpret_cast<uint32_t*>(aFloat));
 }
@@ -550,11 +608,11 @@ nsBinaryInputStream::ReadDouble(double* aDouble)
 
 static NS_METHOD
 WriteSegmentToCString(nsIInputStream* aStream,
-                      void *aClosure,
+                      void* aClosure,
                       const char* aFromSegment,
                       uint32_t aToOffset,
                       uint32_t aCount,
-                      uint32_t *aWriteCount)
+                      uint32_t* aWriteCount)
 {
   nsACString* outString = static_cast<nsACString*>(aClosure);
 
@@ -572,14 +630,19 @@ nsBinaryInputStream::ReadCString(nsACString& aString)
   uint32_t length, bytesRead;
 
   rv = Read32(&length);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   aString.Truncate();
   rv = ReadSegments(WriteSegmentToCString, &aString, length, &bytesRead);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-  if (bytesRead != length)
+  if (bytesRead != length) {
     return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
@@ -587,8 +650,9 @@ nsBinaryInputStream::ReadCString(nsACString& aString)
 
 // sometimes, WriteSegmentToString will be handed an odd-number of
 // bytes, which means we only have half of the last char16_t
-struct WriteStringClosure {
-  char16_t *mWriteCursor;
+struct WriteStringClosure
+{
+  char16_t* mWriteCursor;
   bool mHasCarryoverByte;
   char mCarryoverByte;
 };
@@ -611,17 +675,17 @@ struct WriteStringClosure {
 // same version of the above, but with correct casting and endian swapping
 static NS_METHOD
 WriteSegmentToString(nsIInputStream* aStream,
-                     void *aClosure,
+                     void* aClosure,
                      const char* aFromSegment,
                      uint32_t aToOffset,
                      uint32_t aCount,
-                     uint32_t *aWriteCount)
+                     uint32_t* aWriteCount)
 {
   NS_PRECONDITION(aCount > 0, "Why are we being told to write 0 bytes?");
   NS_PRECONDITION(sizeof(char16_t) == 2, "We can't handle other sizes!");
 
   WriteStringClosure* closure = static_cast<WriteStringClosure*>(aClosure);
-  char16_t *cursor = closure->mWriteCursor;
+  char16_t* cursor = closure->mWriteCursor;
 
   // we're always going to consume the whole buffer no matter what
   // happens, so take care of that right now.. that allows us to
@@ -647,7 +711,7 @@ WriteSegmentToString(nsIInputStream* aStream,
   }
 
   // this array is possibly unaligned... be careful how we access it!
-  const char16_t *unicodeSegment =
+  const char16_t* unicodeSegment =
     reinterpret_cast<const char16_t*>(aFromSegment);
 
   // calculate number of full characters in segment (aCount could be odd!)
@@ -656,7 +720,7 @@ WriteSegmentToString(nsIInputStream* aStream,
   // copy all data into our aligned buffer.  byte swap if necessary.
   // cursor may be unaligned, so we cannot use copyAndSwapToBigEndian directly
   memcpy(cursor, unicodeSegment, segmentLength * sizeof(char16_t));
-  char16_t *end = cursor + segmentLength;
+  char16_t* end = cursor + segmentLength;
   mozilla::NativeEndian::swapToBigEndianInPlace(cursor, segmentLength);
   closure->mWriteCursor = end;
 
@@ -681,7 +745,9 @@ nsBinaryInputStream::ReadString(nsAString& aString)
   uint32_t length, bytesRead;
 
   rv = Read32(&length);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   if (length == 0) {
     aString.Truncate();
@@ -689,8 +755,9 @@ nsBinaryInputStream::ReadString(nsAString& aString)
   }
 
   // pre-allocate output buffer, and get direct access to buffer...
-  if (!aString.SetLength(length, mozilla::fallible_t()))
+  if (!aString.SetLength(length, mozilla::fallible_t())) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   nsAString::iterator start;
   aString.BeginWriting(start);
@@ -700,27 +767,31 @@ nsBinaryInputStream::ReadString(nsAString& aString)
   closure.mHasCarryoverByte = false;
 
   rv = ReadSegments(WriteSegmentToString, &closure,
-                    length*sizeof(char16_t), &bytesRead);
-  if (NS_FAILED(rv)) return rv;
+                    length * sizeof(char16_t), &bytesRead);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   NS_ASSERTION(!closure.mHasCarryoverByte, "some strange stream corruption!");
 
-  if (bytesRead != length*sizeof(char16_t))
+  if (bytesRead != length * sizeof(char16_t)) {
     return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBinaryInputStream::ReadBytes(uint32_t aLength, char* *_rval)
+nsBinaryInputStream::ReadBytes(uint32_t aLength, char** aResult)
 {
   nsresult rv;
   uint32_t bytesRead;
   char* s;
 
   s = reinterpret_cast<char*>(moz_malloc(aLength));
-  if (!s)
+  if (!s) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   rv = Read(s, aLength, &bytesRead);
   if (NS_FAILED(rv)) {
@@ -732,36 +803,39 @@ nsBinaryInputStream::ReadBytes(uint32_t aLength, char* *_rval)
     return NS_ERROR_FAILURE;
   }
 
-  *_rval = s;
+  *aResult = s;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBinaryInputStream::ReadByteArray(uint32_t aLength, uint8_t* *_rval)
+nsBinaryInputStream::ReadByteArray(uint32_t aLength, uint8_t** aResult)
 {
-  return ReadBytes(aLength, reinterpret_cast<char **>(_rval));
+  return ReadBytes(aLength, reinterpret_cast<char**>(aResult));
 }
 
 NS_IMETHODIMP
-nsBinaryInputStream::ReadArrayBuffer(uint32_t aLength, JS::Handle<JS::Value> aBuffer, JSContext* cx)
+nsBinaryInputStream::ReadArrayBuffer(uint32_t aLength,
+                                     JS::Handle<JS::Value> aBuffer,
+                                     JSContext* aCx)
 {
   if (!aBuffer.isObject()) {
     return NS_ERROR_FAILURE;
   }
-  JS::RootedObject buffer(cx, &aBuffer.toObject());
+  JS::RootedObject buffer(aCx, &aBuffer.toObject());
   if (!JS_IsArrayBufferObject(buffer) ||
       JS_GetArrayBufferByteLength(buffer) < aLength) {
     return NS_ERROR_FAILURE;
   }
-  uint8_t* data = JS_GetStableArrayBufferData(cx, buffer);
+  uint8_t* data = JS_GetStableArrayBufferData(aCx, buffer);
   if (!data) {
     return NS_ERROR_FAILURE;
   }
 
   uint32_t bytesRead;
   nsresult rv = Read(reinterpret_cast<char*>(data), aLength, &bytesRead);
-  if (NS_WARN_IF(NS_FAILED(rv)))
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
   if (bytesRead != aLength) {
     return NS_ERROR_FAILURE;
   }
@@ -769,35 +843,40 @@ nsBinaryInputStream::ReadArrayBuffer(uint32_t aLength, JS::Handle<JS::Value> aBu
 }
 
 NS_IMETHODIMP
-nsBinaryInputStream::ReadObject(bool aIsStrongRef, nsISupports* *aObject)
+nsBinaryInputStream::ReadObject(bool aIsStrongRef, nsISupports** aObject)
 {
   nsCID cid;
   nsIID iid;
   nsresult rv = ReadID(&cid);
-  if (NS_WARN_IF(NS_FAILED(rv)))
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
 
   rv = ReadID(&iid);
-  if (NS_WARN_IF(NS_FAILED(rv)))
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
 
   // HACK: Intercept old (pre-gecko6) nsIURI IID, and replace with
   // the updated IID, so that we're QI'ing to an actual interface.
   // (As soon as we drop support for upgrading from pre-gecko6, we can
   // remove this chunk.)
-  static const nsIID oldURIiid =
-    { 0x7a22cc0, 0xce5, 0x11d3,
-      { 0x93, 0x31, 0x0, 0x10, 0x4b, 0xa0, 0xfd, 0x40 }};
+  static const nsIID oldURIiid = {
+    0x7a22cc0, 0xce5, 0x11d3,
+    { 0x93, 0x31, 0x0, 0x10, 0x4b, 0xa0, 0xfd, 0x40 }
+  };
 
   // hackaround for bug 670542
-  static const nsIID oldURIiid2 =
-    { 0xd6d04c36, 0x0fa4, 0x4db3,
-      { 0xbe, 0x05, 0x4a, 0x18, 0x39, 0x71, 0x03, 0xe2 }};
+  static const nsIID oldURIiid2 = {
+    0xd6d04c36, 0x0fa4, 0x4db3,
+    { 0xbe, 0x05, 0x4a, 0x18, 0x39, 0x71, 0x03, 0xe2 }
+  };
 
   // hackaround for bug 682031
-  static const nsIID oldURIiid3 =
-    { 0x12120b20, 0x0929, 0x40e9,
-      { 0x88, 0xcf, 0x6e, 0x08, 0x76, 0x6e, 0x8b, 0x23 }};
+  static const nsIID oldURIiid3 = {
+    0x12120b20, 0x0929, 0x40e9,
+    { 0x88, 0xcf, 0x6e, 0x08, 0x76, 0x6e, 0x8b, 0x23 }
+  };
 
   if (iid.Equals(oldURIiid) ||
       iid.Equals(oldURIiid2) ||
@@ -808,39 +887,46 @@ nsBinaryInputStream::ReadObject(bool aIsStrongRef, nsISupports* *aObject)
   // END HACK
 
   nsCOMPtr<nsISupports> object = do_CreateInstance(cid, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv)))
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
 
   nsCOMPtr<nsISerializable> serializable = do_QueryInterface(object);
-  if (NS_WARN_IF(!serializable))
+  if (NS_WARN_IF(!serializable)) {
     return NS_ERROR_UNEXPECTED;
+  }
 
   rv = serializable->Read(this);
-  if (NS_WARN_IF(NS_FAILED(rv)))
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
 
   return object->QueryInterface(iid, reinterpret_cast<void**>(aObject));
 }
 
 NS_IMETHODIMP
-nsBinaryInputStream::ReadID(nsID *aResult)
+nsBinaryInputStream::ReadID(nsID* aResult)
 {
   nsresult rv = Read32(&aResult->m0);
-  if (NS_WARN_IF(NS_FAILED(rv)))
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
 
   rv = Read16(&aResult->m1);
-  if (NS_WARN_IF(NS_FAILED(rv)))
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
 
   rv = Read16(&aResult->m2);
-  if (NS_WARN_IF(NS_FAILED(rv)))
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
 
   for (int i = 0; i < 8; ++i) {
     rv = Read8(&aResult->m3[i]);
-    if (NS_WARN_IF(NS_FAILED(rv)))
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
   }
 
   return NS_OK;
@@ -849,14 +935,16 @@ nsBinaryInputStream::ReadID(nsID *aResult)
 NS_IMETHODIMP_(char*)
 nsBinaryInputStream::GetBuffer(uint32_t aLength, uint32_t aAlignMask)
 {
-  if (mBufferAccess)
+  if (mBufferAccess) {
     return mBufferAccess->GetBuffer(aLength, aAlignMask);
+  }
   return nullptr;
 }
 
 NS_IMETHODIMP_(void)
 nsBinaryInputStream::PutBuffer(char* aBuffer, uint32_t aLength)
 {
-  if (mBufferAccess)
+  if (mBufferAccess) {
     mBufferAccess->PutBuffer(aBuffer, aLength);
+  }
 }

@@ -23,8 +23,8 @@
     {0x8d, 0xa1, 0xb4, 0xce, 0xf1, 0x7e, 0x56, 0x8d} \
   }
 
-extern nsresult nsMultiplexInputStreamConstructor(nsISupports *outer,
-                                                  REFNSIID iid,
-                                                  void **result);
+extern nsresult nsMultiplexInputStreamConstructor(nsISupports* aOuter,
+                                                  REFNSIID aIID,
+                                                  void** aResult);
 
 #endif //  _nsMultiplexInputStream_h_

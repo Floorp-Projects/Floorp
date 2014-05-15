@@ -397,11 +397,32 @@ SafeInstallOperation.prototype = {
    *         The directory to move into, this is expected to be an empty
    *         directory.
    */
-  move: function SIO_move(aFile, aTargetDirectory) {
+  moveUnder: function SIO_move(aFile, aTargetDirectory) {
     try {
       this._installDirEntry(aFile, aTargetDirectory, false);
     }
     catch (e) {
+      this.rollback();
+      throw e;
+    }
+  },
+
+  /**
+   * Renames a file to a new location.  If an error occurs then all
+   * files that have been moved will be moved back to their original location.
+   *
+   * @param  aOldLocation
+   *         The old location of the file.
+   * @param  aNewLocation
+   *         The new location of the file.
+   */
+  moveTo: function(aOldLocation, aNewLocation) {
+    try {
+      let oldFile = aOldLocation.clone(), newFile = aNewLocation.clone();
+      oldFile.moveTo(newFile.parent, newFile.leafName);
+      this._installedFiles.push({ oldFile: oldFile, newFile: newFile, isMoveTo: true});
+    }
+    catch(e) {
       this.rollback();
       throw e;
     }
@@ -435,7 +456,10 @@ SafeInstallOperation.prototype = {
   rollback: function SIO_rollback() {
     while (this._installedFiles.length > 0) {
       let move = this._installedFiles.pop();
-      if (move.newFile.isDirectory()) {
+      if (move.isMoveTo) {
+        move.newFile.moveTo(oldDir.parent, oldDir.leafName);
+      }
+      else if (move.newFile.isDirectory()) {
         let oldDir = move.oldFile.parent.clone();
         oldDir.append(move.oldFile.leafName);
         oldDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
@@ -6150,6 +6174,22 @@ AddonInternal.prototype = {
   },
 
   /**
+   * getDataDirectory tries to execute the callback with two arguments:
+   * 1) the path of the data directory within the profile,
+   * 2) any exception generated from trying to build it.
+   */
+  getDataDirectory: function(callback) {
+    let parentPath = OS.Path.join(OS.Constants.Path.profileDir, "extension-data");
+    let dirPath = OS.Path.join(parentPath, this.id);
+
+    Task.spawn(function*() {
+      yield OS.File.makeDir(parentPath, {ignoreExisting: true});
+      yield OS.File.makeDir(dirPath, {ignoreExisting: true});
+    }).then(() => callback(dirPath, null),
+            e => callback(dirPath, e));
+  },
+
+  /**
    * toJSON is called by JSON.stringify in order to create a filtered version
    * of this object to be serialized to a JSON file. A new object is returned
    * with copies of all non-private properties. Functions, getters and setters
@@ -6251,7 +6291,8 @@ function AddonWrapper(aAddon) {
   ["id", "syncGUID", "version", "type", "isCompatible", "isPlatformCompatible",
    "providesUpdatesSecurely", "blocklistState", "blocklistURL", "appDisabled",
    "softDisabled", "skinnable", "size", "foreignInstall", "hasBinaryComponents",
-   "strictCompatibility", "compatibilityOverrides", "updateURL"].forEach(function(aProp) {
+   "strictCompatibility", "compatibilityOverrides", "updateURL",
+   "getDataDirectory"].forEach(function(aProp) {
      this.__defineGetter__(aProp, function AddonWrapper_propertyGetter() aAddon[aProp]);
   }, this);
 
@@ -7052,13 +7093,13 @@ DirectoryInstallLocation.prototype = {
       file.append(aId);
 
       if (file.exists())
-        transaction.move(file, trashDir);
+        transaction.moveUnder(file, trashDir);
 
       file = self._directory.clone();
       file.append(aId + ".xpi");
       if (file.exists()) {
         flushJarCache(file);
-        transaction.move(file, trashDir);
+        transaction.moveUnder(file, trashDir);
       }
     }
 
@@ -7066,8 +7107,33 @@ DirectoryInstallLocation.prototype = {
     // temporary directory
     try {
       moveOldAddon(aId);
-      if (aExistingAddonID && aExistingAddonID != aId)
+      if (aExistingAddonID && aExistingAddonID != aId) {
         moveOldAddon(aExistingAddonID);
+
+        {
+          // Move the data directories.
+          /* XXX ajvincent We can't use OS.File:  installAddon isn't compatible
+           * with Promises, nor is SafeInstallOperation.  Bug 945540 has been filed
+           * for porting to OS.File.
+           */
+          let oldDataDir = FileUtils.getDir(
+            KEY_PROFILEDIR, ["extension-data", aExistingAddonID], false, true
+          );
+
+          if (oldDataDir.exists()) {
+            let newDataDir = FileUtils.getDir(
+              KEY_PROFILEDIR, ["extension-data", aId], false, true
+            );
+            if (newDataDir.exists()) {
+              let trashData = trashDir.clone();
+              trashData.append("data-directory");
+              transaction.moveUnder(newDataDir, trashData);
+            }
+
+            transaction.moveTo(oldDataDir, newDataDir);
+          }
+        }
+      }
 
       if (aCopy) {
         transaction.copy(aSource, this._directory);
@@ -7076,7 +7142,7 @@ DirectoryInstallLocation.prototype = {
         if (aSource.isFile())
           flushJarCache(aSource);
 
-        transaction.move(aSource, this._directory);
+        transaction.moveUnder(aSource, this._directory);
       }
     }
     finally {
@@ -7149,7 +7215,7 @@ DirectoryInstallLocation.prototype = {
     let transaction = new SafeInstallOperation();
 
     try {
-      transaction.move(file, trashDir);
+      transaction.moveUnder(file, trashDir);
     }
     finally {
       // It isn't ideal if this cleanup fails, but it is probably better than

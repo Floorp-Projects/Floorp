@@ -457,13 +457,7 @@ function promisePopupEvent(aPopup, aEventSuffix) {
   let win = aPopup.ownerDocument.defaultView;
   let eventType = "popup" + aEventSuffix;
 
-  let timeoutId = win.setTimeout(() => {
-    deferred.reject("Context menu (" + aPopup.id + ") did not fire "
-                    + eventType + " within 20 seconds.");
-  }, 20000);
-
   function onPopupEvent(e) {
-    win.clearTimeout(timeoutId);
     aPopup.removeEventListener(eventType, onPopupEvent);
     deferred.resolve();
   };

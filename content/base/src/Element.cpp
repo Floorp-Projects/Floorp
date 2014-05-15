@@ -2550,7 +2550,7 @@ static nsIAtom** sPropertiesToTraverseAndUnlink[] =
 
 // static
 nsIAtom***
-nsGenericHTMLElement::PropertiesToTraverseAndUnlink()
+Element::HTMLSVGPropertiesToTraverseAndUnlink()
 {
   return sPropertiesToTraverseAndUnlink;
 }
@@ -2560,7 +2560,7 @@ Element::GetTokenList(nsIAtom* aAtom)
 {
 #ifdef DEBUG
   nsIAtom*** props =
-    nsGenericHTMLElement::PropertiesToTraverseAndUnlink();
+    HTMLSVGPropertiesToTraverseAndUnlink();
   bool found = false;
   for (uint32_t i = 0; props[i]; ++i) {
     if (*props[i] == aAtom) {
