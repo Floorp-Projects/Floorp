@@ -44,7 +44,6 @@ function selectCategory(name) {
   let categories = document.getElementById("categories");
   let item = categories.querySelector(".category[value=" + name + "]");
   categories.selectedItem = item;
-  gotoPref(name);
 }
 
 function gotoPref(page) {
