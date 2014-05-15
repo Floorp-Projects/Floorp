@@ -258,3 +258,30 @@ RNewDerivedTypedObject::recover(JSContext *cx, SnapshotIterator &iter) const
     iter.storeInstructionResult(result);
     return true;
 }
+
+bool
+MBitOr::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_BitOr));
+    return true;
+}
+
+RBitOr::RBitOr(CompactBufferReader &reader)
+{}
+
+bool
+RBitOr::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue lhs(cx, iter.read());
+    RootedValue rhs(cx, iter.read());
+    int32_t result;
+    MOZ_ASSERT(!lhs.isObject() && !rhs.isObject());
+
+    if (!js::BitOr(cx, lhs, rhs, &result))
+        return false;
+
+    RootedValue asValue(cx, js::Int32Value(result));
+    iter.storeInstructionResult(asValue);
+    return true;
+}
