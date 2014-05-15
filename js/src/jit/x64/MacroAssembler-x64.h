@@ -724,6 +724,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void storePtr(Register src, const Address &address) {
         movq(src, Operand(address));
     }
+    void storePtr(Register src, const BaseIndex &address) {
+        movq(src, Operand(address));
+    }
     void storePtr(Register src, const Operand &dest) {
         movq(src, dest);
     }
@@ -745,6 +748,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void rshiftPtr(Imm32 imm, Register dest) {
         shrq(imm, dest);
+    }
+    void rshiftPtrArithmetic(Imm32 imm, Register dest) {
+        sarq(imm, dest);
     }
     void lshiftPtr(Imm32 imm, Register dest) {
         shlq(imm, dest);

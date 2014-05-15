@@ -108,6 +108,9 @@ class MacroAssemblerX86Shared : public Assembler
     void move32(Register src, const Operand &dest) {
         movl(src, dest);
     }
+    void and32(Register src, Register dest) {
+        andl(src, dest);
+    }
     void and32(Imm32 imm, Register dest) {
         andl(imm, dest);
     }

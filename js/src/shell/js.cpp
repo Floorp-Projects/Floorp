@@ -5846,10 +5846,12 @@ SetRuntimeOptions(JSRuntime *rt, const OptionParser &op)
     bool enableBaseline = !op.getBoolOption("no-baseline");
     bool enableIon = !op.getBoolOption("no-ion");
     bool enableAsmJS = !op.getBoolOption("no-asmjs");
+    bool enableNativeRegExp = !op.getBoolOption("no-native-regexp");
 
     JS::RuntimeOptionsRef(rt).setBaseline(enableBaseline)
                              .setIon(enableIon)
-                             .setAsmJS(enableAsmJS);
+                             .setAsmJS(enableAsmJS)
+                             .setNativeRegExp(enableNativeRegExp);
 
     if (const char *str = op.getStringOption("ion-gvn")) {
         if (strcmp(str, "off") == 0) {
@@ -6138,6 +6140,7 @@ main(int argc, char **argv, char **envp)
         || !op.addBoolOption('\0', "ion", "Enable IonMonkey (default)")
         || !op.addBoolOption('\0', "no-ion", "Disable IonMonkey")
         || !op.addBoolOption('\0', "no-asmjs", "Disable asm.js compilation")
+        || !op.addBoolOption('\0', "no-native-regexp", "Disable native regexp compilation")
         || !op.addStringOption('\0', "ion-gvn", "[mode]",
                                "Specify Ion global value numbering:\n"
                                "  off: disable GVN\n"

@@ -662,7 +662,7 @@ class ABIArgIter
 typedef js::Vector<MIRType, 8> MIRTypeVector;
 typedef ABIArgIter<MIRTypeVector> ABIArgMIRTypeIter;
 
-typedef js::Vector<VarType, 8, LifoAllocPolicy> VarTypeVector;
+typedef js::Vector<VarType, 8, LifoAllocPolicy<Fallible> > VarTypeVector;
 typedef ABIArgIter<VarTypeVector> ABIArgTypeIter;
 
 class Signature

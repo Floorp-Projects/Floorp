@@ -254,7 +254,7 @@ dataLogF(const char *fmt, ...)
     va_end(ap);
 }
 
-#if ENABLE_YARR_JIT
+#if JS_ION
 
 /*
  * Minimal JSGlobalData. This used by Yarr to get the allocator.
