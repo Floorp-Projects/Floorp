@@ -42,18 +42,18 @@ public:
     return mPlaybackTime;
   }
 
-  AudioBuffer* InputBuffer()
+  AudioBuffer* GetInputBuffer(ErrorResult& aRv)
   {
     if (!mInputBuffer) {
-      LazilyCreateBuffer(mInputBuffer, mNumberOfInputChannels);
+      mInputBuffer = LazilyCreateBuffer(mNumberOfInputChannels, aRv);
     }
     return mInputBuffer;
   }
 
-  AudioBuffer* OutputBuffer()
+  AudioBuffer* GetOutputBuffer(ErrorResult& aRv)
   {
     if (!mOutputBuffer) {
-      LazilyCreateBuffer(mOutputBuffer, mNode->NumberOfOutputChannels());
+      mOutputBuffer = LazilyCreateBuffer(mNode->NumberOfOutputChannels(), aRv);
     }
     return mOutputBuffer;
   }
@@ -64,8 +64,8 @@ public:
   }
 
 private:
-  void LazilyCreateBuffer(nsRefPtr<AudioBuffer>& aBuffer,
-                          uint32_t aNumberOfChannels);
+  already_AddRefed<AudioBuffer>
+  LazilyCreateBuffer(uint32_t aNumberOfChannels, ErrorResult& rv);
 
 private:
   double mPlaybackTime;
