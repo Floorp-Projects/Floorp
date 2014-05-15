@@ -23,7 +23,7 @@ function test() {
     is(Prefs.filters[1], "bogus",
       "The second filter type is invalid, but loaded anyway.");
 
-    waitForNetworkEvents(aMonitor, 7).then(() => {
+    waitForNetworkEvents(aMonitor, 8).then(() => {
       testFilterButtons(aMonitor, "js");
       ok(true, "Only the correct filter type was taken into consideration.");
 

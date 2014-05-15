@@ -38,7 +38,7 @@ let appName = Services.appinfo.name;
 let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils.js");
 this.DevToolsUtils = DevToolsUtils;
-loader.loadSubScript("resource://gre/modules/devtools/server/transport.js");
+loader.loadSubScript("resource://gre/modules/devtools/transport/transport.js");
 
 let bypassOffline = false;
 let qemu = "0";
@@ -202,7 +202,7 @@ MarionetteServerConnection.prototype = {
    */
   sendAsync: function MDA_sendAsync(name, values, commandId, ignoreFailure) {
     let success = true;
-    if (values instanceof Object && commandId) {
+    if (commandId) {
       values.command_id = commandId;
     }
     if (this.curBrowser.frameManager.currentRemoteFrame !== null) {

@@ -33,9 +33,8 @@ import android.widget.TextView;
 public class SiteIdentityPopup extends ArrowPopup {
     private static final String LOGTAG = "GeckoSiteIdentityPopup";
 
-    // FIXME: Update this URL for mobile. See bug 885923.
     private static final String MIXED_CONTENT_SUPPORT_URL =
-        "https://support.mozilla.org/kb/how-does-content-isnt-secure-affect-my-safety";
+        "https://support.mozilla.org/kb/how-does-insecure-content-affect-safety-android";
 
     private SiteIdentity mSiteIdentity;
 
