@@ -490,7 +490,7 @@ MacroAssemblerARM::ma_mov(ImmGCPtr ptr, Register dest)
     else
         rs = L_LDR;
 
-    ma_movPatchable(Imm32(ptr.value), dest, Always, rs);
+    ma_movPatchable(Imm32(uintptr_t(ptr.value)), dest, Always, rs);
 }
 
     // Shifts (just a move with a shifting op2)

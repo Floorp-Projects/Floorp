@@ -1683,7 +1683,7 @@ DebugScopes::proxiedScopesPostWriteBarrier(JSRuntime *rt, ObjectWeakMap *map,
     UnbarrieredMap *unbarrieredMap = reinterpret_cast<UnbarrieredMap *>(baseHashMap);
 
     typedef gc::HashKeyRef<UnbarrieredMap, JSObject *> Ref;
-    if (key && IsInsideNursery(rt, key))
+    if (key && IsInsideNursery(key))
         rt->gc.storeBuffer.putGeneric(Ref(unbarrieredMap, key.get()));
 #endif
 }
@@ -1714,7 +1714,7 @@ DebugScopes::missingScopesPostWriteBarrier(JSRuntime *rt, MissingScopeMap *map,
                                            const ScopeIterKey &key)
 {
 #ifdef JSGC_GENERATIONAL
-    if (key.enclosingScope() && IsInsideNursery(rt, key.enclosingScope()))
+    if (key.enclosingScope() && IsInsideNursery(key.enclosingScope()))
         rt->gc.storeBuffer.putGeneric(MissingScopesRef(map, key));
 #endif
 }
@@ -1730,7 +1730,7 @@ DebugScopes::liveScopesPostWriteBarrier(JSRuntime *rt, LiveScopeMap *map, ScopeO
                     DefaultHasher<ScopeObject *>,
                     RuntimeAllocPolicy> UnbarrieredLiveScopeMap;
     typedef gc::HashKeyRef<UnbarrieredLiveScopeMap, ScopeObject *> Ref;
-    if (key && IsInsideNursery(rt, key))
+    if (key && IsInsideNursery(key))
         rt->gc.storeBuffer.putGeneric(Ref(reinterpret_cast<UnbarrieredLiveScopeMap *>(map), key));
 #endif
 }
@@ -1820,20 +1820,19 @@ DebugScopes::checkHashTablesAfterMovingGC(JSRuntime *runtime)
      * postbarriers have worked and that no hashtable keys (or values) are left
      * pointing into the nursery.
      */
-    JS::shadow::Runtime *rt = JS::shadow::Runtime::asShadowRuntime(runtime);
     for (ObjectWeakMap::Range r = proxiedScopes.all(); !r.empty(); r.popFront()) {
-        JS_ASSERT(!IsInsideNursery(rt, r.front().key().get()));
-        JS_ASSERT(!IsInsideNursery(rt, r.front().value().get()));
+        JS_ASSERT(!IsInsideNursery(r.front().key().get()));
+        JS_ASSERT(!IsInsideNursery(r.front().value().get()));
     }
     for (MissingScopeMap::Range r = missingScopes.all(); !r.empty(); r.popFront()) {
-        JS_ASSERT(!IsInsideNursery(rt, r.front().key().cur()));
-        JS_ASSERT(!IsInsideNursery(rt, r.front().key().staticScope()));
-        JS_ASSERT(!IsInsideNursery(rt, r.front().value().get()));
+        JS_ASSERT(!IsInsideNursery(r.front().key().cur()));
+        JS_ASSERT(!IsInsideNursery(r.front().key().staticScope()));
+        JS_ASSERT(!IsInsideNursery(r.front().value().get()));
     }
     for (LiveScopeMap::Range r = liveScopes.all(); !r.empty(); r.popFront()) {
-        JS_ASSERT(!IsInsideNursery(rt, r.front().key()));
-        JS_ASSERT(!IsInsideNursery(rt, r.front().value().cur_.get()));
-        JS_ASSERT(!IsInsideNursery(rt, r.front().value().staticScope_.get()));
+        JS_ASSERT(!IsInsideNursery(r.front().key()));
+        JS_ASSERT(!IsInsideNursery(r.front().value().cur_.get()));
+        JS_ASSERT(!IsInsideNursery(r.front().value().staticScope_.get()));
     }
 }
 #endif

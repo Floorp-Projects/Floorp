@@ -56,7 +56,7 @@ ThreadSafeContext::isThreadLocal(T thing) const
     if (!isForkJoinContext())
         return true;
 
-    if (!IsInsideNursery(runtime_, thing) &&
+    if (!IsInsideNursery(thing) &&
         allocator_->arenas.containsArena(runtime_, thing->arenaHeader()))
     {
         // GC should be suppressed in preparation for mutating thread local
@@ -97,7 +97,7 @@ GetGCThingTraceKind(const void *thing)
     JS_ASSERT(thing);
     const Cell *cell = static_cast<const Cell *>(thing);
 #ifdef JSGC_GENERATIONAL
-    if (IsInsideNursery(cell->runtimeFromAnyThread(), cell))
+    if (IsInsideNursery(cell))
         return JSTRACE_OBJECT;
 #endif
     return MapAllocToTraceKind(cell->tenuredGetAllocKind());

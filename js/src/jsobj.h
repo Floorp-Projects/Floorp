@@ -21,6 +21,7 @@
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "js/GCAPI.h"
+#include "js/HeapAPI.h"
 #include "vm/ObjectImpl.h"
 #include "vm/Shape.h"
 #include "vm/Xdr.h"
@@ -681,12 +682,11 @@ class JSObject : public js::ObjectImpl
          */
         JS_ASSERT(dstStart + count <= getDenseCapacity());
 #if defined(DEBUG) && defined(JSGC_GENERATIONAL)
-        JS::shadow::Runtime *rt = JS::shadow::Runtime::asShadowRuntime(runtimeFromAnyThread());
-        JS_ASSERT(!js::gc::IsInsideNursery(rt, this));
+        JS_ASSERT(!js::gc::IsInsideNursery(this));
         for (uint32_t index = 0; index < count; ++index) {
             const JS::Value& value = src[index];
             if (value.isMarkable())
-                JS_ASSERT(!js::gc::IsInsideNursery(rt, value.toGCThing()));
+                JS_ASSERT(!js::gc::IsInsideNursery(static_cast<js::gc::Cell *>(value.toGCThing())));
         }
 #endif
         memcpy(&elements[dstStart], src, count * sizeof(js::HeapSlot));
