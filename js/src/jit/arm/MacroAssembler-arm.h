@@ -1235,7 +1235,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         framePushed_ += sizeof(word.value);
         return pushWithPatch(word);
     }
-    CodeOffsetLabel PushWithPatch(const ImmPtr &imm) {
+    CodeOffsetLabel PushWithPatch(ImmPtr imm) {
         return PushWithPatch(ImmWord(uintptr_t(imm.value)));
     }
 
@@ -1313,7 +1313,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void movePtr(Register src, Register dest);
     void movePtr(ImmWord imm, Register dest);
-    void movePtr(const ImmPtr &imm, Register dest);
+    void movePtr(ImmPtr imm, Register dest);
     void movePtr(const AsmJSImmPtr &imm, Register dest);
     void movePtr(const ImmGCPtr &imm, Register dest);
 
@@ -1412,13 +1412,13 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void cmp32(const Operand &lhs, Register rhs);
 
     void cmpPtr(Register lhs, ImmWord rhs);
-    void cmpPtr(Register lhs, const ImmPtr &rhs);
+    void cmpPtr(Register lhs, ImmPtr rhs);
     void cmpPtr(Register lhs, Register rhs);
     void cmpPtr(Register lhs, const ImmGCPtr &rhs);
     void cmpPtr(Register lhs, Imm32 rhs);
     void cmpPtr(const Address &lhs, Register rhs);
     void cmpPtr(const Address &lhs, ImmWord rhs);
-    void cmpPtr(const Address &lhs, const ImmPtr &rhs);
+    void cmpPtr(const Address &lhs, ImmPtr rhs);
 
     void subPtr(Imm32 imm, const Register dest);
     void subPtr(const Address &addr, const Register dest);

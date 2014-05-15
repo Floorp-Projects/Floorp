@@ -2028,7 +2028,7 @@ MacroAssemblerARMCompat::movePtr(const ImmGCPtr &imm, Register dest)
     ma_mov(imm, dest);
 }
 void
-MacroAssemblerARMCompat::movePtr(const ImmPtr &imm, Register dest)
+MacroAssemblerARMCompat::movePtr(ImmPtr imm, Register dest)
 {
     movePtr(ImmWord(uintptr_t(imm.value)), dest);
 }
@@ -2501,7 +2501,7 @@ MacroAssemblerARMCompat::cmpPtr(Register lhs, ImmWord rhs)
 }
 
 void
-MacroAssemblerARMCompat::cmpPtr(Register lhs, const ImmPtr &rhs)
+MacroAssemblerARMCompat::cmpPtr(Register lhs, ImmPtr rhs)
 {
     return cmpPtr(lhs, ImmWord(uintptr_t(rhs.value)));
 }
@@ -2539,7 +2539,7 @@ MacroAssemblerARMCompat::cmpPtr(const Address &lhs, ImmWord rhs)
 }
 
 void
-MacroAssemblerARMCompat::cmpPtr(const Address &lhs, const ImmPtr &rhs)
+MacroAssemblerARMCompat::cmpPtr(const Address &lhs, ImmPtr rhs)
 {
     cmpPtr(lhs, ImmWord(uintptr_t(rhs.value)));
 }

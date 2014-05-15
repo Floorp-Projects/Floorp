@@ -1767,7 +1767,7 @@ MacroAssemblerMIPSCompat::movePtr(const ImmGCPtr &imm, Register dest)
     ma_li(dest, imm);
 }
 void
-MacroAssemblerMIPSCompat::movePtr(const ImmPtr &imm, Register dest)
+MacroAssemblerMIPSCompat::movePtr(ImmPtr imm, Register dest)
 {
     movePtr(ImmWord(uintptr_t(imm.value)), dest);
 }
