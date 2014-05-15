@@ -50,23 +50,27 @@ using namespace mozilla;
 static nsresult
 GetTempDir(nsIFile** aTempDir)
 {
-  if (NS_WARN_IF(!aTempDir))
+  if (NS_WARN_IF(!aTempDir)) {
     return NS_ERROR_INVALID_ARG;
+  }
   nsCOMPtr<nsIFile> tmpFile;
   nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpFile));
-  if (NS_WARN_IF(NS_FAILED(rv)))
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
 
 #ifdef XP_WIN
   // On windows DELETE_ON_CLOSE is unreliable, so we store temporary files
   // in a subdir of the temp dir and delete that in an idle service observer
   // to ensure it's been cleared.
   rv = tmpFile->AppendNative(nsDependentCString("mozilla-temp-files"));
-  if (NS_WARN_IF(NS_FAILED(rv)))
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
   rv = tmpFile->Create(nsIFile::DIRECTORY_TYPE, 0700);
-  if (rv != NS_ERROR_FILE_ALREADY_EXISTS && NS_WARN_IF(NS_FAILED(rv)))
+  if (rv != NS_ERROR_FILE_ALREADY_EXISTS && NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
 #endif
 
   tmpFile.forget(aTempDir);
@@ -77,14 +81,16 @@ GetTempDir(nsIFile** aTempDir)
 nsresult
 NS_OpenAnonymousTemporaryFile(PRFileDesc** aOutFileDesc)
 {
-  if (NS_WARN_IF(!aOutFileDesc))
+  if (NS_WARN_IF(!aOutFileDesc)) {
     return NS_ERROR_INVALID_ARG;
+  }
   nsresult rv;
 
   nsCOMPtr<nsIFile> tmpFile;
   rv = GetTempDir(getter_AddRefs(tmpFile));
-  if (NS_WARN_IF(NS_FAILED(rv)))
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
 
   // Give the temp file a name with a random element. CreateUnique will also
   // append a counter to the name if it encounters a name collision. Adding
@@ -96,12 +102,14 @@ NS_OpenAnonymousTemporaryFile(PRFileDesc** aOutFileDesc)
   name.AppendInt(rand());
 
   rv = tmpFile->AppendNative(name);
-  if (NS_WARN_IF(NS_FAILED(rv)))
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
 
   rv = tmpFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0700);
-  if (NS_WARN_IF(NS_FAILED(rv)))
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
 
   rv = tmpFile->OpenNSPRFileDesc(PR_RDWR | nsIFile::DELETE_ON_CLOSE,
                                  PR_IRWXU, aOutFileDesc);
@@ -135,42 +143,50 @@ NS_OpenAnonymousTemporaryFile(PRFileDesc** aOutFileDesc)
 // idle observer and its timer on shutdown. Note: the observer and idle
 // services hold references to instances of this object, and those references
 // are what keep this object alive.
-class nsAnonTempFileRemover MOZ_FINAL : public nsIObserver {
+class nsAnonTempFileRemover MOZ_FINAL : public nsIObserver
+{
 public:
   NS_DECL_ISUPPORTS
 
-  nsAnonTempFileRemover() {
+  nsAnonTempFileRemover()
+  {
     MOZ_COUNT_CTOR(nsAnonTempFileRemover);
   }
 
-  ~nsAnonTempFileRemover() {
+  ~nsAnonTempFileRemover()
+  {
     MOZ_COUNT_DTOR(nsAnonTempFileRemover);
   }
 
-  nsresult Init() {
+  nsresult Init()
+  {
     // We add the idle observer in a timer, so that the app has enough
     // time to start up before we add the idle observer. If we register the
     // idle observer too early, it will be registered before the fake idle
     // service is installed when running in xpcshell, and this interferes with
     // the fake idle service, causing xpcshell-test failures.
     mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    if (NS_WARN_IF(!mTimer))
+    if (NS_WARN_IF(!mTimer)) {
       return NS_ERROR_FAILURE;
+    }
     nsresult rv = mTimer->Init(this,
                                SCHEDULE_TIMEOUT_MS,
                                nsITimer::TYPE_ONE_SHOT);
-    if (NS_WARN_IF(NS_FAILED(rv)))
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
 
     // Register shutdown observer so we can cancel the timer if we shutdown before
     // the timer runs.
     nsCOMPtr<nsIObserverService> obsSrv = services::GetObserverService();
-    if (NS_WARN_IF(!obsSrv))
+    if (NS_WARN_IF(!obsSrv)) {
       return NS_ERROR_FAILURE;
+    }
     return obsSrv->AddObserver(this, XPCOM_SHUTDOWN_TOPIC, false);
   }
 
-  void Cleanup() {
+  void Cleanup()
+  {
     // Cancel timer.
     if (mTimer) {
       mTimer->Cancel();
@@ -189,9 +205,9 @@ public:
     }
   }
 
-  NS_IMETHODIMP Observe(nsISupports *aSubject,
-                        const char *aTopic,
-                        const char16_t *aData)
+  NS_IMETHODIMP Observe(nsISupports* aSubject,
+                        const char* aTopic,
+                        const char16_t* aData)
   {
     if (nsCRT::strcmp(aTopic, NS_TIMER_CALLBACK_TOPIC) == 0 &&
         NS_FAILED(RegisterIdleObserver())) {
@@ -208,22 +224,26 @@ public:
     return NS_OK;
   }
 
-  nsresult RegisterIdleObserver() {
+  nsresult RegisterIdleObserver()
+  {
     // Add this as an idle observer. When we've been idle for
     // TEMP_FILE_IDLE_TIME_S seconds, we'll get a notification, and we'll then
     // try to delete any stray temp files.
     nsCOMPtr<nsIIdleService> idleSvc =
       do_GetService("@mozilla.org/widget/idleservice;1");
-    if (!idleSvc)
+    if (!idleSvc) {
       return NS_ERROR_FAILURE;
+    }
     return idleSvc->AddIdleObserver(this, TEMP_FILE_IDLE_TIME_S);
   }
 
-  void RemoveAnonTempFileFiles() {
+  void RemoveAnonTempFileFiles()
+  {
     nsCOMPtr<nsIFile> tmpDir;
     nsresult rv = GetTempDir(getter_AddRefs(tmpDir));
-    if (NS_WARN_IF(NS_FAILED(rv)))
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return;
+    }
 
     // Remove the directory recursively.
     tmpDir->Remove(true);
@@ -235,7 +255,9 @@ private:
 
 NS_IMPL_ISUPPORTS(nsAnonTempFileRemover, nsIObserver)
 
-nsresult CreateAnonTempFileRemover() {
+nsresult
+CreateAnonTempFileRemover()
+{
   // Create a temp file remover. If Init() succeeds, the temp file remover is kept
   // alive by a reference held by the observer service, since the temp file remover
   // is a shutdown observer. We only create the temp file remover if we're running

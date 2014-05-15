@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=609794
 
 /** Test for Bug 609794 **/
 var obj = Object.create(window);
-is(Object.prototype.toString.call(obj.InstallTrigger), "[object Object]", "can get InstallTrigger through the prototype");
+is(Object.prototype.toString.call(obj.InstallTrigger), "[object InstallTriggerImpl]", "can get InstallTrigger through the prototype");
 
 </script>
 </pre>

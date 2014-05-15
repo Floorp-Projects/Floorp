@@ -47,6 +47,7 @@ ClientLayerManager::ClientLayerManager(nsIWidget* aWidget)
   , mTransactionIncomplete(false)
   , mCompositorMightResample(false)
   , mNeedsComposite(false)
+  , mPaintSequenceNumber(0)
   , mForwarder(new ShadowLayerForwarder)
 {
   MOZ_COUNT_CTOR(ClientLayerManager);
@@ -158,6 +159,12 @@ ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
   // to it. This will happen at the end of the transaction.
   if (aTarget && XRE_GetProcessType() == GeckoProcessType_Default) {
     mShadowTarget = aTarget;
+  }
+
+  // If this is a new paint, increment the paint sequence number.
+  if (!mIsRepeatTransaction) {
+    ++mPaintSequenceNumber;
+    mApzTestData.StartNewPaint(mPaintSequenceNumber);
   }
 }
 
@@ -292,6 +299,16 @@ ClientLayerManager::DidComposite()
   }
 }
 
+void
+ClientLayerManager::GetCompositorSideAPZTestData(APZTestData* aData) const
+{
+  if (mForwarder->HasShadowManager()) {
+    if (!mForwarder->GetShadowManager()->SendGetAPZTestData(aData)) {
+      NS_WARNING("Call to PLayerTransactionChild::SendGetAPZTestData() failed");
+    }
+  }
+}
+
 bool
 ClientLayerManager::RequestOverfill(mozilla::dom::OverfillCallback* aCallback)
 {
@@ -405,7 +422,8 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
   // forward this transaction's changeset to our LayerManagerComposite
   bool sent;
   AutoInfallibleTArray<EditReply, 10> replies;
-  if (HasShadowManager() && mForwarder->EndTransaction(&replies, mRegionToClear, aScheduleComposite, &sent)) {
+  if (HasShadowManager() && mForwarder->EndTransaction(&replies, mRegionToClear,
+        aScheduleComposite, mPaintSequenceNumber, &sent)) {
     for (nsTArray<EditReply>::size_type i = 0; i < replies.Length(); ++i) {
       const EditReply& reply = replies[i];
 

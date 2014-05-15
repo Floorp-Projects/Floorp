@@ -1329,7 +1329,7 @@ class Assembler : public AssemblerShared
 
     // As opposed to x86/x64 version, the data relocation has to be executed
     // before to recover the pointer, and not after.
-    void writeDataRelocation(const ImmGCPtr &ptr) {
+    void writeDataRelocation(ImmGCPtr ptr) {
         if (ptr.value)
             tmpDataRelocations_.append(nextOffset());
     }

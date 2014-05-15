@@ -80,8 +80,12 @@ SurfaceStream::New(SurfaceFactory* factory, const gfx::IntSize& size,
     MOZ_ASSERT(!surf);
     surf = factory->NewSharedSurface(size);
 
-    if (surf)
+    if (surf) {
+        // Before next use, wait until SharedSurface's buffer
+        // is no longer being used.
+        surf->WaitForBufferOwnership();
         mSurfaces.insert(surf);
+    }
 }
 
 void
