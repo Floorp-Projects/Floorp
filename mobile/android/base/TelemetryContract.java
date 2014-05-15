@@ -25,6 +25,9 @@ public interface TelemetryContract {
         // Cancel a state, action, etc.
         public static final String CANCEL = "cancel.1";
 
+        // Editing an item.
+        public static final String EDIT = "edit.1";
+
         // Launching (opening) an external application.
         // Note: Only used in JavaScript for now, but here for completeness.
         public static final String LAUNCH = "launch.1";
@@ -39,6 +42,9 @@ public interface TelemetryContract {
         // Set default panel.
         public static final String PANEL_SET_DEFAULT = "setdefault.1";
 
+        // Pinning an item.
+        public static final String PIN = "pin.1";
+
         // Outcome of data policy notification: can be true or false.
         public static final String POLICY_NOTIFICATION_SUCCESS = "policynotification.success.1:";
 
@@ -52,14 +58,8 @@ public interface TelemetryContract {
         // Sharing content.
         public static final String SHARE = "share.1";
 
-        // Top site edited.
-        public static final String TOP_SITES_EDIT = "edit.1";
-
-        // Top site pinned.
-        public static final String TOP_SITES_PIN = "pin.1";
-
-        // Top site un-pinned.
-        public static final String TOP_SITES_UNPIN = "unpin.1";
+        // Unpinning an item.
+        public static final String UNPIN = "unpin.1";
 
         // Stop holding a resource (reader, bookmark, etc) for viewing later.
         // Note: Only used in JavaScript for now, but here for completeness.
