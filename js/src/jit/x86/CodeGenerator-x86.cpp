@@ -412,7 +412,7 @@ class jit::OutOfLineLoadTypedArrayOutOfBounds : public OutOfLineCodeBase<CodeGen
       : dest_(dest), isFloat32Load_(isFloat32Load)
     {}
 
-    const AnyRegister &dest() const { return dest_; }
+    AnyRegister dest() const { return dest_; }
     bool isFloat32Load() const { return isFloat32Load_; }
     bool accept(CodeGeneratorX86 *codegen) { return codegen->visitOutOfLineLoadTypedArrayOutOfBounds(this); }
 };
