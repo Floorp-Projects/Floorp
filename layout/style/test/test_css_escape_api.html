@@ -66,7 +66,7 @@ is(CSS.escape('-7a'), '-\\37 a', "escapingFailed Char: -7a");
 is(CSS.escape('-8a'), '-\\38 a', "escapingFailed Char: -8a");
 is(CSS.escape('-9a'), '-\\39 a', "escapingFailed Char: -9a");
 
-is(CSS.escape('--a'), '-\\-a', "escapingFailed Char: --a");
+is(CSS.escape('--a'), '--a', 'Should not need to escape leading "--"');
 
 is(CSS.escape('\x80\x2D\x5F\xA9'), '\\80 \x2D\x5F\xA9', "escapingFailed Char: \\x80\\x2D\\x5F\\xA9");
 is(CSS.escape('\xA0\xA1\xA2'), '\xA0\xA1\xA2', "escapingFailed Char: \\xA0\\xA1\\xA2");
