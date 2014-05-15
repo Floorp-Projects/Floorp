@@ -5,7 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <fcntl.h>
+#include <limits.h>
+#include <pwd.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #undef CHROMIUM_LOG
 #if defined(MOZ_WIDGET_GONK)
@@ -30,6 +33,17 @@ namespace ipc {
 
 static const char* KEYSTORE_SOCKET_NAME = "keystore";
 static const char* KEYSTORE_SOCKET_PATH = "/dev/socket/keystore";
+static const char* KEYSTORE_ALLOWED_USERS[] = {
+  "root",
+  "wifi",
+  NULL
+};
+static const char* KEYSTORE_ALLOWED_PREFIXES[] = {
+  "WIFI_SERVERCERT_",
+  "WIFI_USERCERT_",
+  "WIFI_USERKEY_",
+  NULL
+};
 
 int
 KeyStoreConnector::Create()
@@ -73,7 +87,22 @@ KeyStoreConnector::CreateAddr(bool aIsServer,
 bool
 KeyStoreConnector::SetUp(int aFd)
 {
-  return true;
+  // Socket permission check.
+  struct ucred userCred;
+  socklen_t len = sizeof(struct ucred);
+
+  if (getsockopt(aFd, SOL_SOCKET, SO_PEERCRED, &userCred, &len)) {
+    return false;
+  }
+
+  struct passwd *userInfo = getpwuid(userCred.uid);
+  for (const char **user = KEYSTORE_ALLOWED_USERS; *user; user++ ) {
+    if (!strcmp(*user, userInfo->pw_name)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 bool
@@ -143,17 +172,17 @@ KeyStore::CheckSize(UnixSocketRawData *aMessage, size_t aExpectSize)
          true : false;
 }
 
-bool
+ResponseCode
 KeyStore::ReadCommand(UnixSocketRawData *aMessage)
 {
   if (mHandlerInfo.state != STATE_IDLE) {
     NS_WARNING("Wrong state in ReadCommand()!");
-    return false;
+    return SYSTEM_ERROR;
   }
 
   if (!CheckSize(aMessage, 1)) {
     NS_WARNING("Data size error in ReadCommand()!");
-    return false;
+    return PROTOCOL_ERROR;
   }
 
   mHandlerInfo.command = aMessage->mData[aMessage->mCurrentWriteOffset];
@@ -167,7 +196,7 @@ KeyStore::ReadCommand(UnixSocketRawData *aMessage)
 
   if (!command->command) {
     NS_WARNING("Unsupported command!");
-    return false;
+    return PROTOCOL_ERROR;
   }
 
   // Get command pattern.
@@ -179,20 +208,20 @@ KeyStore::ReadCommand(UnixSocketRawData *aMessage)
     mHandlerInfo.state = STATE_PROCESSING;
   }
 
-  return true;
+  return SUCCESS;
 }
 
-bool
+ResponseCode
 KeyStore::ReadLength(UnixSocketRawData *aMessage)
 {
   if (mHandlerInfo.state != STATE_READ_PARAM_LEN) {
     NS_WARNING("Wrong state in ReadLength()!");
-    return false;
+    return SYSTEM_ERROR;
   }
 
   if (!CheckSize(aMessage, 2)) {
     NS_WARNING("Data size error in ReadLength()!");
-    return false;
+    return PROTOCOL_ERROR;
   }
 
   // Read length of command parameter.
@@ -203,20 +232,20 @@ KeyStore::ReadLength(UnixSocketRawData *aMessage)
 
   mHandlerInfo.state = STATE_READ_PARAM_DATA;
 
-  return true;
+  return SUCCESS;
 }
 
-bool
+ResponseCode
 KeyStore::ReadData(UnixSocketRawData *aMessage)
 {
   if (mHandlerInfo.state != STATE_READ_PARAM_DATA) {
     NS_WARNING("Wrong state in ReadData()!");
-    return false;
+    return SYSTEM_ERROR;
   }
 
   if (!CheckSize(aMessage, mHandlerInfo.param[mHandlerInfo.paramCount].length)) {
     NS_WARNING("Data size error in ReadData()!");
-    return false;
+    return PROTOCOL_ERROR;
   }
 
   // Read command parameter.
@@ -232,7 +261,7 @@ KeyStore::ReadData(UnixSocketRawData *aMessage)
     mHandlerInfo.state = STATE_READ_PARAM_LEN;
   }
 
-  return true;
+  return SUCCESS;
 }
 
 // Transform base64 certification data into DER format
@@ -306,36 +335,54 @@ KeyStore::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  bool success = true;
+  // Handle request.
+  ResponseCode result = SUCCESS;
   while (aMessage->mCurrentWriteOffset < aMessage->mSize ||
          mHandlerInfo.state == STATE_PROCESSING) {
     switch (mHandlerInfo.state) {
       case STATE_IDLE:
-        success = ReadCommand(aMessage);
+        result = ReadCommand(aMessage);
         break;
       case STATE_READ_PARAM_LEN:
-        success = ReadLength(aMessage);
+        result = ReadLength(aMessage);
         break;
       case STATE_READ_PARAM_DATA:
-        success = ReadData(aMessage);
+        result = ReadData(aMessage);
         break;
       case STATE_PROCESSING:
-        success = false;
         if (mHandlerInfo.command == 'g') {
           // Get CA
           const uint8_t *certData;
           int certDataLength;
           const char *certName = (const char *)mHandlerInfo.param[0].data;
 
+          // certificate name prefix check.
+          if (!certName) {
+            result = KEY_NOT_FOUND;
+            break;
+          }
+          const char **prefix = KEYSTORE_ALLOWED_PREFIXES;
+          for (; *prefix; prefix++ ) {
+            if (!strncmp(*prefix, certName, strlen(*prefix))) {
+              break;
+            }
+          }
+          if (!(*prefix)) {
+            result = KEY_NOT_FOUND;
+            break;
+          }
+
           // Get cert from NSS by name
           ScopedCERTCertificate cert(CERT_FindCertByNickname(certdb, certName));
           if (!cert) {
+            result = KEY_NOT_FOUND;
             break;
           }
 
           char *certDER = PL_Base64Encode((const char *)cert->derCert.data,
                                           cert->derCert.len, nullptr);
           if (!certDER) {
+            result = SYSTEM_ERROR;
             break;
           }
 
@@ -345,7 +392,6 @@ KeyStore::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage)
 
           SendResponse(SUCCESS);
           SendData(certData, certDataLength);
-          success = true;
 
           free((void *)certData);
         }
@@ -354,8 +400,8 @@ KeyStore::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage)
         break;
     }
 
-    if (!success) {
-      SendResponse(PROTOCOL_ERROR);
+    if (result != SUCCESS) {
+      SendResponse(result);
       ResetHandlerInfo();
       return;
     }
