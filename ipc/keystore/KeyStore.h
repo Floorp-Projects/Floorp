@@ -100,7 +100,6 @@ private:
   virtual void OnConnectError();
   virtual void OnDisconnect();
 
-private:
   struct {
     ProtocolHandlerState          state;
     uint8_t                       command;
@@ -111,13 +110,13 @@ private:
   void ResetHandlerInfo();
   void Listen();
 
-  void FormatCaData(const uint8_t *caData, int caDataLength, const char *name,
-                    const uint8_t **formatData, int &formatDataLength);
+  void FormatCaData(const uint8_t *aCaData, int aCaDataLength, const char *aName,
+                    const uint8_t **aFormatData, int &aFormatDataLength);
 
   bool CheckSize(UnixSocketRawData *aMessage, size_t aExpectSize);
-  bool ReadCommand(UnixSocketRawData *aMessage);
-  bool ReadLength(UnixSocketRawData *aMessage);
-  bool ReadData(UnixSocketRawData *aMessage);
+  ResponseCode ReadCommand(UnixSocketRawData *aMessage);
+  ResponseCode ReadLength(UnixSocketRawData *aMessage);
+  ResponseCode ReadData(UnixSocketRawData *aMessage);
   void SendResponse(ResponseCode response);
   void SendData(const uint8_t *data, int length);
 

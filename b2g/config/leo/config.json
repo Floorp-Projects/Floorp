@@ -10,6 +10,12 @@
         "{objdir}/dist/b2g-*.tar.gz",
         "{workdir}/sources.xml"
     ],
+    "public_upload_files": [
+        "{objdir}/dist/b2g-*.crashreporter-symbols.zip",
+        "{objdir}/dist/b2g-*.tar.gz",
+        "{workdir}/sources.xml",
+        "{objdir}/dist/b2g-update/*.mar"
+    ],
     "zip_files": [
         ["{workdir}/out/target/product/leo/*.img", "out/target/product/leo/"],
         ["{workdir}/boot.img", "out/target/product/leo/"],
