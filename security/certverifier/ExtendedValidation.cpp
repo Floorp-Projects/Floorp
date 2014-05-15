@@ -948,7 +948,8 @@ IdentityInfoInit()
 
     unsigned char certFingerprint[20];
     rv = PK11_HashBuf(SEC_OID_SHA1, certFingerprint,
-                      entry.cert->derCert.data, entry.cert->derCert.len);
+                      entry.cert->derCert.data,
+                      static_cast<int32_t>(entry.cert->derCert.len));
     PR_ASSERT(rv == SECSuccess);
     if (rv == SECSuccess) {
       bool same = !memcmp(certFingerprint, entry.ev_root_sha1_fingerprint, 20);
