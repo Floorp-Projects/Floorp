@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1007200 - Create a framerate actor
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Framerate actor test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script>
+
+window.onload = function() {
+  var Cu = Components.utils;
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+
+  Cu.import("resource://gre/modules/Services.jsm");
+
+  // Always log packets when running tests.
+  Services.prefs.setBoolPref("devtools.debugger.log", true);
+  SimpleTest.registerCleanupFunction(function() {
+    Services.prefs.clearUserPref("devtools.debugger.log");
+  });
+
+  Cu.import("resource://gre/modules/devtools/Loader.jsm");
+  Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
+  Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+
+  SimpleTest.waitForExplicitFinish();
+
+  var {FramerateFront} = devtools.require("devtools/server/actors/framerate");
+
+  DebuggerServer.init(function () { return true; });
+  DebuggerServer.addBrowserActors();
+
+  var client = new DebuggerClient(DebuggerServer.connectPipe());
+  client.connect(function onConnect() {
+    client.listTabs(function onListTabs(aResponse) {
+      var form = aResponse.tabs[aResponse.selected];
+      var front = FramerateFront(client, form);
+
+      window.setTimeout(() => {
+        front.startRecording().then(() => {
+          window.setTimeout(() => {
+            front.stopRecording().then(timeline => {
+              onRecordingStopped(timeline);
+            });
+          }, 1000);
+        });
+      }, 1000);
+    });
+  });
+
+  function onRecordingStopped(timeline) {
+    ok(timeline, "There should be a recording available.");
+
+    var ticks = Object.keys(timeline);
+    var values = ticks.map(e => timeline[e]);
+
+    ok(ticks.length >= 1,
+      "There should be at least one measurement available.");
+    is(ticks[0], 100,
+      "The first measurement should be performed when exactly 100ms passed.");
+
+    for (var tick of ticks) {
+      info("Testing tick: " + tick);
+      is(tick % 100, 0, "All ticks should be divisible by the resolution.");
+    }
+    for (var value of values) {
+      info("Testing value: " + value);
+      is(typeof value, "number", "All values should be integers.");
+    }
+
+    client.close(() => {
+      DebuggerServer.destroy();
+      SimpleTest.finish()
+    });
+  }
+}
+</script>
+</pre>
+</body>
+</html>
