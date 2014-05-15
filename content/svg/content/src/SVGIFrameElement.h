@@ -83,7 +83,7 @@ public:
   void GetName(DOMString& name);
   void GetSrc(DOMString& src);
   void GetSrcdoc(DOMString& srcdoc);
-  already_AddRefed<nsDOMSettableTokenList> Sandbox();
+  nsDOMSettableTokenList* Sandbox();
   using nsElementFrameLoaderOwner::GetContentDocument;
   using nsElementFrameLoaderOwner::GetContentWindow;
 
