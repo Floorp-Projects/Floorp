@@ -41,6 +41,7 @@ function run_test() {
 function MockFxAccountsClient() {
   this._email = "nobody@example.com";
   this._verified = false;
+  this._deletedOnServer = false; // for testing accountStatus
 
   // mock calls up to the auth server to determine whether the
   // user account has been verified
@@ -54,6 +55,12 @@ function MockFxAccountsClient() {
     };
     deferred.resolve(response);
 
+    return deferred.promise;
+  };
+
+  this.accountStatus = function(uid) {
+    let deferred = Promise.defer();
+    deferred.resolve(!!uid && (!this._deletedOnServer));
     return deferred.promise;
   };
 
@@ -503,6 +510,39 @@ add_task(function test_resend_email_not_signed_in() {
     return;
   }
   do_throw("Should not be able to resend email when nobody is signed in");
+});
+
+add_test(function test_accountStatus() {
+  let fxa = new MockFxAccounts();
+  let alice = getTestUser("alice");
+
+  // If we have no user, we have no account server-side
+  fxa.accountStatus().then(
+    (result) => {
+      do_check_false(result);
+    }
+  ).then(
+    () => {
+      fxa.setSignedInUser(alice).then(
+        () => {
+          fxa.accountStatus().then(
+            (result) => {
+               // FxAccounts.accountStatus() should match Client.accountStatus()
+               do_check_true(result);
+               fxa.internal.fxAccountsClient._deletedOnServer = true;
+               fxa.accountStatus().then(
+                 (result) => {
+                   do_check_false(result);
+                   fxa.internal.fxAccountsClient._deletedOnServer = false;
+                   run_next_test();
+                 }
+               );
+            }
+          )
+        }
+      );
+    }
+  );
 });
 
 add_test(function test_resend_email() {
