@@ -12,20 +12,30 @@ var gClient;
 var gThreadClient;
 var gPath = getFilePath('test_breakpoint-12.js');
 var gBpActor;
-var gCount = 1;
+var gCount;
+var gCallback;
 
 function run_test()
 {
-  initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-stack");
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
+  run_test_with_server(DebuggerServer, function () {
+    run_test_with_server(WorkerDebuggerServer, do_test_finished);
+  });
+  do_test_pending();
+};
+
+function run_test_with_server(aServer, aCallback)
+{
+  gCallback = aCallback;
+  gCount = 1;
+  initTestDebuggerServer(aServer);
+  gDebuggee = addTestGlobal("test-stack", aServer);
+  gClient = new DebuggerClient(aServer.connectPipe());
   gClient.connect(function () {
     attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_child_skip_breakpoint();
     });
   });
-  do_test_pending();
 }
 
 function test_child_skip_breakpoint()
@@ -88,7 +98,9 @@ function set_breakpoints(location) {
       });
       gThreadClient.resume(function () {
         // Give any remaining breakpoints a chance to trigger.
-        do_timeout(1000, finishClient.bind(null, gClient));
+        do_timeout(1000, function () {
+          gClient.close(gCallback);
+        });
       });
 
     });

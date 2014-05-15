@@ -92,12 +92,14 @@ protected:
                           const TargetConfig& targetConfig,
                           const bool& isFirstPaint,
                           const bool& scheduleComposite,
+                          const uint32_t& paintSequenceNumber,
                           EditReplyArray* reply) MOZ_OVERRIDE;
 
   virtual bool RecvUpdateNoSwap(const EditArray& cset,
                                 const TargetConfig& targetConfig,
                                 const bool& isFirstPaint,
-                                const bool& scheduleComposite) MOZ_OVERRIDE;
+                                const bool& scheduleComposite,
+                                const uint32_t& paintSequenceNumber) MOZ_OVERRIDE;
 
   virtual bool RecvClearCachedResources() MOZ_OVERRIDE;
   virtual bool RecvForceComposite() MOZ_OVERRIDE;
@@ -110,6 +112,7 @@ protected:
                                          MOZ_OVERRIDE;
   virtual bool RecvSetAsyncScrollOffset(PLayerParent* aLayer,
                                         const int32_t& aX, const int32_t& aY) MOZ_OVERRIDE;
+  virtual bool RecvGetAPZTestData(APZTestData* aOutData);
 
   virtual PLayerParent* AllocPLayerParent() MOZ_OVERRIDE;
   virtual bool DeallocPLayerParent(PLayerParent* actor) MOZ_OVERRIDE;

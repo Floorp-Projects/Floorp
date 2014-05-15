@@ -179,9 +179,11 @@ bool
 LayerTransactionParent::RecvUpdateNoSwap(const InfallibleTArray<Edit>& cset,
                                          const TargetConfig& targetConfig,
                                          const bool& isFirstPaint,
-                                         const bool& scheduleComposite)
+                                         const bool& scheduleComposite,
+                                         const uint32_t& paintSequenceNumber)
 {
-  return RecvUpdate(cset, targetConfig, isFirstPaint, scheduleComposite, nullptr);
+  return RecvUpdate(cset, targetConfig, isFirstPaint, scheduleComposite,
+      paintSequenceNumber, nullptr);
 }
 
 bool
@@ -189,6 +191,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
                                    const TargetConfig& targetConfig,
                                    const bool& isFirstPaint,
                                    const bool& scheduleComposite,
+                                   const uint32_t& paintSequenceNumber,
                                    InfallibleTArray<EditReply>* reply)
 {
   profiler_tracing("Paint", "Composite", TRACING_INTERVAL_START);
@@ -547,7 +550,8 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   // other's buffer contents.
   LayerManagerComposite::PlatformSyncBeforeReplyUpdate();
 
-  mShadowLayersManager->ShadowLayersUpdated(this, targetConfig, isFirstPaint, scheduleComposite);
+  mShadowLayersManager->ShadowLayersUpdated(this, targetConfig, isFirstPaint,
+      scheduleComposite, paintSequenceNumber);
 
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
   int compositeTime = (int)(mozilla::TimeStamp::Now() - updateStart).ToMilliseconds();
@@ -686,6 +690,13 @@ LayerTransactionParent::RecvSetAsyncScrollOffset(PLayerParent* aLayer,
     return false;
   }
   controller->SetTestAsyncScrollOffset(CSSPoint(aX, aY));
+  return true;
+}
+
+bool
+LayerTransactionParent::RecvGetAPZTestData(APZTestData* aOutData)
+{
+  mShadowLayersManager->GetAPZTestData(this, aOutData);
   return true;
 }
 

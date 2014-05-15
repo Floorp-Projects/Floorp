@@ -14,7 +14,8 @@ PARALLEL_DIRS += [
     'styleinspector',
     'acorn',
     'pretty-fast',
-    'qrcode'
+    'qrcode',
+    'transport'
 ]
 
 MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']

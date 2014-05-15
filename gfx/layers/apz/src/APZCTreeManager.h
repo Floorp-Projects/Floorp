@@ -40,6 +40,7 @@ enum AllowedTouchBehavior {
 class Layer;
 class AsyncPanZoomController;
 class CompositorParent;
+class APZPaintLogHelper;
 
 /**
  * ****************** NOTE ON LOCK ORDERING IN APZ **************************
@@ -104,9 +105,16 @@ public:
    *                      to included a first-paint. If this is true, the part of
    *                      the tree that is affected by the first-paint flag is
    *                      indicated by the aFirstPaintLayersId parameter.
+   * @param aPaintSequenceNumber The sequence number of the paint that triggered
+   *                             this layer update. Note that every layer child
+   *                             process' layer subtree has its own sequence
+   *                             numbers.
    */
-  void UpdatePanZoomControllerTree(CompositorParent* aCompositor, Layer* aRoot,
-                                   bool aIsFirstPaint, uint64_t aFirstPaintLayersId);
+  void UpdatePanZoomControllerTree(CompositorParent* aCompositor,
+                                   Layer* aRoot,
+                                   bool aIsFirstPaint,
+                                   uint64_t aOriginatingLayersId,
+                                   uint32_t aPaintSequenceNumber);
 
   /**
    * General handler for incoming input events. Manipulates the frame metrics
@@ -328,7 +336,8 @@ private:
                                                       AsyncPanZoomController* aParent,
                                                       AsyncPanZoomController* aNextSibling,
                                                       bool aIsFirstPaint,
-                                                      uint64_t aFirstPaintLayersId,
+                                                      uint64_t aOriginatingLayersId,
+                                                      const APZPaintLogHelper& aPaintLogger,
                                                       nsTArray< nsRefPtr<AsyncPanZoomController> >* aApzcsToDestroy);
 
 private:

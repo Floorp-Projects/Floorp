@@ -35,8 +35,8 @@ struct JS_PUBLIC_API(SliceBudget)
     SliceBudget(int64_t budget);
 
     void reset() {
-        deadline = INT64_MAX;
-        counter = INTPTR_MAX;
+        deadline = unlimitedDeadline;
+        counter = unlimitedStartCounter;
     }
 
     void step(intptr_t amt = 1) {
@@ -50,6 +50,15 @@ struct JS_PUBLIC_API(SliceBudget)
             return false;
         return checkOverBudget();
     }
+
+    bool isUnlimited() {
+        return deadline == unlimitedDeadline;
+    }
+
+private:
+    static const int64_t unlimitedDeadline = INT64_MAX;
+    static const intptr_t unlimitedStartCounter = INTPTR_MAX;
+
 };
 
 } // namespace js

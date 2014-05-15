@@ -313,7 +313,7 @@ ToTimingFunction(css::ComputedTimingFunction& aCTF)
 
 static void
 AddAnimationForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
-                        mozilla::StyleAnimation* ea, Layer* aLayer,
+                        mozilla::ElementAnimation* ea, Layer* aLayer,
                         AnimationData& aData, bool aPending)
 {
   NS_ASSERTION(aLayer->AsContainerLayer(), "Should only animate ContainerLayer");
@@ -368,16 +368,15 @@ AddAnimationForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
   }
 }
 
-template<class T>
 static void
 AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
-                         nsTArray<T>& aAnimations,
+                         ElementAnimationPtrArray& aAnimations,
                          Layer* aLayer, AnimationData& aData,
                          bool aPending) {
   mozilla::TimeStamp currentTime =
     aFrame->PresContext()->RefreshDriver()->MostRecentRefresh();
   for (uint32_t animIdx = 0; animIdx < aAnimations.Length(); animIdx++) {
-    mozilla::StyleAnimation* anim = &aAnimations[animIdx];
+    mozilla::ElementAnimation* anim = aAnimations[animIdx];
     if (!(anim->HasAnimationOfProperty(aProperty) &&
           anim->IsRunningAt(currentTime))) {
       continue;
@@ -477,7 +476,7 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
   }
 
   if (et) {
-    AddAnimationsForProperty(aFrame, aProperty, et->mPropertyTransitions,
+    AddAnimationsForProperty(aFrame, aProperty, et->mAnimations,
                              aLayer, data, pending);
     aLayer->SetAnimationGeneration(et->mAnimationGeneration);
   }
@@ -645,10 +644,13 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
     resolution.scale, resolution.scale, auPerDevPixel);
   aRoot->SetVisibleRegion(visible);
 
+  nsIPresShell* presShell = presContext->GetPresShell();
   FrameMetrics metrics;
   metrics.mViewport = CSSRect::FromAppUnits(aViewport);
   if (aDisplayPort) {
     metrics.mDisplayPort = CSSRect::FromAppUnits(*aDisplayPort);
+    nsLayoutUtils::LogTestDataForPaint(presShell, aScrollId, "displayport",
+        metrics.mDisplayPort);
     if (aCriticalDisplayPort) {
       metrics.mCriticalDisplayPort = CSSRect::FromAppUnits(*aCriticalDisplayPort);
     }
@@ -679,7 +681,6 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
 
   // Only the root scrollable frame for a given presShell should pick up
   // the presShell's resolution. All the other frames are 1.0.
-  nsIPresShell* presShell = presContext->GetPresShell();
   if (aScrollFrame == presShell->GetRootScrollFrame()) {
     metrics.mResolution = ParentLayerToLayerScale(presShell->GetXResolution(),
                                                   presShell->GetYResolution());

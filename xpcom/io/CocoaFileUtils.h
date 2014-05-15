@@ -15,12 +15,12 @@
 
 namespace CocoaFileUtils {
 
-nsresult RevealFileInFinder(CFURLRef url);
-nsresult OpenURL(CFURLRef url);
-nsresult GetFileCreatorCode(CFURLRef url, OSType *creatorCode);
-nsresult SetFileCreatorCode(CFURLRef url, OSType creatorCode);
-nsresult GetFileTypeCode(CFURLRef url, OSType *typeCode);
-nsresult SetFileTypeCode(CFURLRef url, OSType typeCode);
+nsresult RevealFileInFinder(CFURLRef aUrl);
+nsresult OpenURL(CFURLRef aUrl);
+nsresult GetFileCreatorCode(CFURLRef aUrl, OSType* aCreatorCode);
+nsresult SetFileCreatorCode(CFURLRef aUrl, OSType aCreatorCode);
+nsresult GetFileTypeCode(CFURLRef aUrl, OSType* aTypeCode);
+nsresult SetFileTypeCode(CFURLRef aUrl, OSType aTypeCode);
 
 } // namespace CocoaFileUtils
 

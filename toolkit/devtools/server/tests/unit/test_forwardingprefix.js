@@ -3,6 +3,8 @@
 
 /* Exercise prefix-based forwarding of packets to other transports. */
 
+const { RootActor } = devtools.require("devtools/server/actors/root");
+
 var gMainConnection, gMainTransport;
 var gSubconnection1, gSubconnection2;
 var gClient;
@@ -29,7 +31,7 @@ function run_test()
  * (that is, packets sent on |transport| go to the new connection, and
  * |transport|'s hooks receive replies).
  *
- * |aPrefix| is optional; if present, it's the prefix (minus the ':') for
+ * |aPrefix| is optional; if present, it's the prefix (minus the '/') for
  * actors in the new connection.
  */
 function newConnection(aPrefix)
@@ -56,10 +58,10 @@ function createMainConnection()
 /*
  * Exchange 'echo' messages with five actors:
  * - root
- * - prefix1:root
- * - prefix1:actor
- * - prefix2:root
- * - prefix2:actor
+ * - prefix1/root
+ * - prefix1/actor
+ * - prefix2/root
+ * - prefix2/actor
  *
  * Expect proper echos from those named in |aReachables|, and 'noSuchActor'
  * errors from the others. When we've gotten all our replies (errors or
@@ -72,8 +74,8 @@ function tryActors(aReachables, aCompleted) {
 
   let outerActor;
   for (outerActor of [ 'root',
-                       'prefix1:root', 'prefix1:actor',
-                       'prefix2:root', 'prefix2:actor' ]) {
+                       'prefix1/root', 'prefix1/actor',
+                       'prefix2/root', 'prefix2/actor' ]) {
     /*
      * Let each callback capture its own iteration's value; outerActor is
      * local to the whole loop, not to a single iteration.
@@ -108,7 +110,7 @@ function TestNoForwardingYet()
 /*
  * Create a new pipe connection which forwards its reply packets to
  * gMainConnection's client, and to which gMainConnection forwards packets
- * directed to actors whose names begin with |aPrefix + ':'|, and.
+ * directed to actors whose names begin with |aPrefix + '/'|, and.
  *
  * Return an object { conn, transport }, as for newConnection.
  */
@@ -130,13 +132,13 @@ function createSubconnection1()
   let { conn, transport } = newSubconnection('prefix1');
   gSubconnection1 = conn;
   transport.ready();
-  gClient.expectReply('prefix1:root', (aReply) => run_next_test());
+  gClient.expectReply('prefix1/root', (aReply) => run_next_test());
 }
 
 // Establish forwarding, but don't put any actors in that server.
 function TestForwardPrefix1OnlyRoot()
 {
-  tryActors(Set(['root', 'prefix1:root']), run_next_test);
+  tryActors(Set(['root', 'prefix1/root']), run_next_test);
 }
 
 /* Create a third root actor, to which we can forward things. */
@@ -145,12 +147,12 @@ function createSubconnection2()
   let { conn, transport } = newSubconnection('prefix2');
   gSubconnection2 = conn;
   transport.ready();
-  gClient.expectReply('prefix2:root', (aReply) => run_next_test());
+  gClient.expectReply('prefix2/root', (aReply) => run_next_test());
 }
 
 function TestForwardPrefix12OnlyRoot()
 {
-  tryActors(Set(['root', 'prefix1:root', 'prefix2:root']), run_next_test);
+  tryActors(Set(['root', 'prefix1/root', 'prefix2/root']), run_next_test);
 }
 
 // A dumb actor that implements 'echo'.
@@ -178,17 +180,17 @@ EchoActor.prototype.requestTypes = {
 function TestForwardPrefix12WithActor1()
 {
   let actor = new EchoActor(gSubconnection1)
-  actor.actorID = 'prefix1:actor';
+  actor.actorID = 'prefix1/actor';
   gSubconnection1.addActor(actor);
 
-  tryActors(Set(['root', 'prefix1:root', 'prefix1:actor', 'prefix2:root']), run_next_test);
+  tryActors(Set(['root', 'prefix1/root', 'prefix1/actor', 'prefix2/root']), run_next_test);
 }
 
 function TestForwardPrefix12WithActor12()
 {
   let actor = new EchoActor(gSubconnection2)
-  actor.actorID = 'prefix2:actor';
+  actor.actorID = 'prefix2/actor';
   gSubconnection2.addActor(actor);
 
-  tryActors(Set(['root', 'prefix1:root', 'prefix1:actor', 'prefix2:root', 'prefix2:actor']), run_next_test);
+  tryActors(Set(['root', 'prefix1/root', 'prefix1/actor', 'prefix2/root', 'prefix2/actor']), run_next_test);
 }

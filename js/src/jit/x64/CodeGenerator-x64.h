@@ -29,7 +29,7 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
                            Operand dest, MIRType slotType);
 
     void storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
-                           const Register &elements, const LAllocation *index);
+                           Register elements, const LAllocation *index);
 
   public:
     CodeGeneratorX64(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm);

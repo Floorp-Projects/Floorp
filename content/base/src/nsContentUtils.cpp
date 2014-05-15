@@ -1573,7 +1573,7 @@ nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
 bool
 nsContentUtils::CanCallerAccess(nsINode* aNode)
 {
-  return CanCallerAccess(GetSubjectPrincipal(), aNode->NodePrincipal());
+  return CanCallerAccess(SubjectPrincipal(), aNode->NodePrincipal());
 }
 
 // static
@@ -1585,7 +1585,7 @@ nsContentUtils::CanCallerAccess(nsPIDOMWindow* aWindow)
                       aWindow->GetCurrentInnerWindow() : aWindow);
   NS_ENSURE_TRUE(scriptObject, false);
 
-  return CanCallerAccess(GetSubjectPrincipal(), scriptObject->GetPrincipal());
+  return CanCallerAccess(SubjectPrincipal(), scriptObject->GetPrincipal());
 }
 
 //static
@@ -1687,7 +1687,7 @@ bool
 nsContentUtils::IsCallerChrome()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (GetSubjectPrincipal() == sSystemPrincipal) {
+  if (SubjectPrincipal() == sSystemPrincipal) {
     return true;
   }
 
@@ -2315,7 +2315,7 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
 
 // static
 nsIPrincipal*
-nsContentUtils::GetSubjectPrincipal()
+nsContentUtils::SubjectPrincipal()
 {
   JSContext* cx = GetCurrentJSContext();
   if (!cx) {
@@ -2330,8 +2330,11 @@ nsContentUtils::GetSubjectPrincipal()
 
 // static
 nsIPrincipal*
-nsContentUtils::GetObjectPrincipal(JSObject* aObj)
+nsContentUtils::ObjectPrincipal(JSObject* aObj)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(JS_GetObjectRuntime(aObj) == CycleCollectedJSRuntime::Get()->Runtime());
+
   // This is duplicated from nsScriptSecurityManager. We don't call through there
   // because the API unnecessarily requires a JSContext for historical reasons.
   JSCompartment *compartment = js::GetObjectCompartment(aObj);
@@ -6062,7 +6065,7 @@ nsContentUtils::GetContentSecurityPolicy(JSContext* aCx,
   MOZ_ASSERT(aCx == GetCurrentJSContext());
 
   nsCOMPtr<nsIContentSecurityPolicy> csp;
-  nsresult rv = GetSubjectPrincipal()->GetCsp(getter_AddRefs(csp));
+  nsresult rv = SubjectPrincipal()->GetCsp(getter_AddRefs(csp));
   if (NS_FAILED(rv)) {
     NS_ERROR("CSP: Failed to get CSP from principal.");
     return false;

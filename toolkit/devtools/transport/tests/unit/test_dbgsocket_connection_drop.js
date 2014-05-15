@@ -11,15 +11,17 @@
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 
+const { RawPacket } = devtools.require("devtools/toolkit/transport/packets");
+
 let port = 2929;
 
-function run_test()
-{
+function run_test() {
   do_print("Starting test at " + new Date().toTimeString());
   initTestDebuggerServer();
 
   add_test(test_socket_conn_drops_after_invalid_header);
   add_test(test_socket_conn_drops_after_invalid_header_2);
+  add_test(test_socket_conn_drops_after_too_large_length);
   add_test(test_socket_conn_drops_after_too_long_header);
   run_next_test();
 }
@@ -32,10 +34,19 @@ function test_socket_conn_drops_after_invalid_header_2() {
   return test_helper('27asd:{"to":"root","type":"echo"}');
 }
 
-function test_socket_conn_drops_after_too_long_header() {
-  return test_helper('4305724038957487634549823475894325');
+function test_socket_conn_drops_after_too_large_length() {
+  // Packet length is limited (semi-arbitrarily) to 1 TiB (2^40)
+  return test_helper('4305724038957487634549823475894325:');
 }
 
+function test_socket_conn_drops_after_too_long_header() {
+  // The packet header is currently limited to no more than 200 bytes
+  let rawPacket = '4305724038957487634549823475894325';
+  for (let i = 0; i < 8; i++) {
+    rawPacket += rawPacket;
+  }
+  return test_helper(rawPacket + ':');
+}
 
 function test_helper(payload) {
   try_open_listener();
@@ -49,7 +60,7 @@ function test_helper(payload) {
       }
 
       // Inject the payload directly into the stream.
-      transport._outgoing += payload;
+      transport._outgoing.push(new RawPacket(transport, payload));
       transport._flushOutgoing();
     },
     onClosed: function(aStatus) {
@@ -60,8 +71,7 @@ function test_helper(payload) {
   transport.ready();
 }
 
-function try_open_listener()
-{
+function try_open_listener() {
   try {
     do_check_true(DebuggerServer.openListener(port));
   } catch (e) {
