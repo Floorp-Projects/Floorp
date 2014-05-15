@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Bug 1010470: test that buttons in a disabled fieldset look the same as directly-disabled buttons</title>
+</head>
+<body>
+  <button>Some text</button>
+  <input type="button" value="Some text">
+  <input type="reset">
+  <input type="submit">
+<fieldset style="border:0; padding:0;margin:0" disabled>
+  <button>Some text</button>
+  <input type="button" value="Some text">
+  <input type="reset">
+  <input type="submit">
+</fieldset>
+</body>
+</html>
