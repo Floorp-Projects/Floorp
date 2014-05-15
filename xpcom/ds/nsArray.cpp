@@ -31,7 +31,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsArrayCC)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMutableArray)
 NS_INTERFACE_MAP_END
 
-nsArray::~nsArray()
+nsArrayBase::~nsArrayBase()
 {
     Clear();
 }
@@ -53,16 +53,16 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsArrayCC)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMETHODIMP
-nsArray::GetLength(uint32_t* aLength)
+nsArrayBase::GetLength(uint32_t* aLength)
 {
     *aLength = mArray.Count();
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsArray::QueryElementAt(uint32_t aIndex,
-                        const nsIID& aIID,
-                        void ** aResult)
+nsArrayBase::QueryElementAt(uint32_t aIndex,
+                            const nsIID& aIID,
+                            void** aResult)
 {
     nsISupports * obj = mArray.SafeObjectAt(aIndex);
     if (!obj) return NS_ERROR_ILLEGAL_VALUE;
@@ -73,8 +73,8 @@ nsArray::QueryElementAt(uint32_t aIndex,
 }
 
 NS_IMETHODIMP
-nsArray::IndexOf(uint32_t aStartIndex, nsISupports* aElement,
-                 uint32_t* aResult)
+nsArrayBase::IndexOf(uint32_t aStartIndex, nsISupports* aElement,
+                     uint32_t* aResult)
 {
     // optimize for the common case by forwarding to mArray
     if (aStartIndex == 0) {
@@ -96,7 +96,7 @@ nsArray::IndexOf(uint32_t aStartIndex, nsISupports* aElement,
 }
 
 NS_IMETHODIMP
-nsArray::Enumerate(nsISimpleEnumerator **aResult)
+nsArrayBase::Enumerate(nsISimpleEnumerator** aResult)
 {
     return NS_NewArrayEnumerator(aResult, static_cast<nsIArray*>(this));
 }
@@ -104,7 +104,7 @@ nsArray::Enumerate(nsISimpleEnumerator **aResult)
 // nsIMutableArray implementation
 
 NS_IMETHODIMP
-nsArray::AppendElement(nsISupports* aElement, bool aWeak)
+nsArrayBase::AppendElement(nsISupports* aElement, bool aWeak)
 {
     bool result;
     if (aWeak) {
@@ -123,14 +123,14 @@ nsArray::AppendElement(nsISupports* aElement, bool aWeak)
 }
 
 NS_IMETHODIMP
-nsArray::RemoveElementAt(uint32_t aIndex)
+nsArrayBase::RemoveElementAt(uint32_t aIndex)
 {
     bool result = mArray.RemoveObjectAt(aIndex);
     return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsArray::InsertElementAt(nsISupports* aElement, uint32_t aIndex, bool aWeak)
+nsArrayBase::InsertElementAt(nsISupports* aElement, uint32_t aIndex, bool aWeak)
 {
     nsCOMPtr<nsISupports> elementRef;
     if (aWeak) {
@@ -146,7 +146,7 @@ nsArray::InsertElementAt(nsISupports* aElement, uint32_t aIndex, bool aWeak)
 }
 
 NS_IMETHODIMP
-nsArray::ReplaceElementAt(nsISupports* aElement, uint32_t aIndex, bool aWeak)
+nsArrayBase::ReplaceElementAt(nsISupports* aElement, uint32_t aIndex, bool aWeak)
 {
     nsCOMPtr<nsISupports> elementRef;
     if (aWeak) {
@@ -162,7 +162,7 @@ nsArray::ReplaceElementAt(nsISupports* aElement, uint32_t aIndex, bool aWeak)
 }
 
 NS_IMETHODIMP
-nsArray::Clear()
+nsArrayBase::Clear()
 {
     mArray.Clear();
     return NS_OK;
@@ -191,7 +191,7 @@ FindElementCallback(void *aElement, void* aClosure)
 }
 
 nsresult
-nsArray::XPCOMConstructor(nsISupports *aOuter, const nsIID& aIID, void **aResult)
+nsArrayBase::XPCOMConstructor(nsISupports* aOuter, const nsIID& aIID, void** aResult)
 {
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
@@ -201,8 +201,13 @@ nsArray::XPCOMConstructor(nsISupports *aOuter, const nsIID& aIID, void **aResult
 }
 
 already_AddRefed<nsIMutableArray>
-nsArray::Create()
+nsArrayBase::Create()
 {
-    nsCOMPtr<nsIMutableArray> inst = NS_IsMainThread() ? new nsArrayCC : new nsArray;
+    nsCOMPtr<nsIMutableArray> inst;
+    if (NS_IsMainThread()) {
+        inst = new nsArrayCC;
+    } else {
+        inst = new nsArray;
+    }
     return inst.forget();
 }
