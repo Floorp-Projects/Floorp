@@ -286,7 +286,7 @@ class Assembler : public AssemblerX86Shared
         subq(Imm32(sizeof(double)), StackPointer);
         movsd(src, Address(StackPointer, 0));
     }
-    CodeOffsetLabel pushWithPatch(const ImmWord &word) {
+    CodeOffsetLabel pushWithPatch(ImmWord word) {
         CodeOffsetLabel label = movWithPatch(word, ScratchReg);
         push(ScratchReg);
         return label;
@@ -297,7 +297,7 @@ class Assembler : public AssemblerX86Shared
         addq(Imm32(sizeof(double)), StackPointer);
     }
 
-    CodeOffsetLabel movWithPatch(const ImmWord &word, Register dest) {
+    CodeOffsetLabel movWithPatch(ImmWord word, Register dest) {
         masm.movq_i64r(word.value, dest.code());
         return masm.currentOffset();
     }

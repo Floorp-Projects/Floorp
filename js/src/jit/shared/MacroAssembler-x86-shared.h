@@ -256,7 +256,7 @@ class MacroAssemblerX86Shared : public Assembler
         push(t);
         framePushed_ += sizeof(double);
     }
-    CodeOffsetLabel PushWithPatch(const ImmWord &word) {
+    CodeOffsetLabel PushWithPatch(ImmWord word) {
         framePushed_ += sizeof(word.value);
         return pushWithPatch(word);
     }
