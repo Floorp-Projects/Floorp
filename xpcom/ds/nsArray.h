@@ -17,10 +17,10 @@
 { 0x35c66fd1, 0x95e9, 0x4e0a, \
   { 0x80, 0xc5, 0xc3, 0xbd, 0x2b, 0x37, 0x54, 0x81 } }
 
-class nsArray : public nsIMutableArray
+// nsArray without any refcounting declarations
+class nsArrayBase : public nsIMutableArray
 {
 public:
-    NS_DECL_ISUPPORTS
     NS_DECL_NSIARRAY
     NS_DECL_NSIMUTABLEARRAY
 
@@ -33,29 +33,57 @@ public:
     static nsresult XPCOMConstructor(nsISupports* aOuter, const nsIID& aIID,
                                      void** aResult);
 protected:
-    nsArray() { }
-    nsArray(const nsArray& other);
-    nsArray(const nsCOMArray_base& aBaseArray) : mArray(aBaseArray)
-    { }
-    
-    virtual ~nsArray(); // nsArrayCC inherits from this
+    nsArrayBase()
+    {
+    }
+    nsArrayBase(const nsArrayBase& other);
+    nsArrayBase(const nsCOMArray_base& aBaseArray)
+        : mArray(aBaseArray)
+    {
+    }
+
+    virtual ~nsArrayBase();
 
     nsCOMArray_base mArray;
 };
 
-class nsArrayCC MOZ_FINAL : public nsArray
+class nsArray MOZ_FINAL : public nsArrayBase
 {
-    friend class nsArray;
+    friend class nsArrayBase;
+
+public:
+    NS_DECL_ISUPPORTS
+
+private:
+    nsArray()
+        : nsArrayBase()
+    {
+    }
+    nsArray(const nsArray& other);
+    nsArray(const nsCOMArray_base& aBaseArray)
+        : nsArrayBase(aBaseArray)
+    {
+    }
+};
+
+class nsArrayCC MOZ_FINAL : public nsArrayBase
+{
+    friend class nsArrayBase;
 
 public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(nsArrayCC)
 
 private:
-    nsArrayCC() : nsArray() { }
+    nsArrayCC()
+        : nsArrayBase()
+    {
+    }
     nsArrayCC(const nsArrayCC& other);
-    nsArrayCC(const nsCOMArray_base& aBaseArray) : nsArray(aBaseArray)
-    { }
+    nsArrayCC(const nsCOMArray_base& aBaseArray)
+        : nsArrayBase(aBaseArray)
+    {
+    }
 };
 
 #endif

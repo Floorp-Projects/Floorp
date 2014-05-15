@@ -29,10 +29,11 @@ using namespace mozilla::ipc;
 // nsIStringInputStream implementation
 //-----------------------------------------------------------------------------
 
-class nsStringInputStream MOZ_FINAL : public nsIStringInputStream
-                                    , public nsISeekableStream
-                                    , public nsISupportsCString
-                                    , public nsIIPCSerializableInputStream
+class nsStringInputStream MOZ_FINAL
+  : public nsIStringInputStream
+  , public nsISeekableStream
+  , public nsISupportsCString
+  , public nsIIPCSerializableInputStream
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -50,7 +51,8 @@ public:
 
 private:
   ~nsStringInputStream()
-  {}
+  {
+  }
 
   uint32_t Length() const
   {
@@ -100,35 +102,36 @@ NS_IMPL_CI_INTERFACE_GETTER(nsStringInputStream,
 /////////
 
 NS_IMETHODIMP
-nsStringInputStream::GetType(uint16_t *type)
+nsStringInputStream::GetType(uint16_t* aType)
 {
-  *type = TYPE_CSTRING;
+  *aType = TYPE_CSTRING;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStringInputStream::GetData(nsACString &data)
+nsStringInputStream::GetData(nsACString& data)
 {
   // The stream doesn't have any data when it is closed.  We could fake it
   // and return an empty string here, but it seems better to keep this return
   // value consistent with the behavior of the other 'getter' methods.
-  if (NS_WARN_IF(Closed()))
+  if (NS_WARN_IF(Closed())) {
     return NS_BASE_STREAM_CLOSED;
+  }
 
   data.Assign(mData);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStringInputStream::SetData(const nsACString &data)
+nsStringInputStream::SetData(const nsACString& aData)
 {
-  mData.Assign(data);
+  mData.Assign(aData);
   mOffset = 0;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStringInputStream::ToString(char **result)
+nsStringInputStream::ToString(char** aResult)
 {
   // NOTE: This method may result in data loss, so we do not implement it.
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -139,35 +142,39 @@ nsStringInputStream::ToString(char **result)
 /////////
 
 NS_IMETHODIMP
-nsStringInputStream::SetData(const char *data, int32_t dataLen)
+nsStringInputStream::SetData(const char* aData, int32_t aDataLen)
 {
-  if (NS_WARN_IF(!data))
+  if (NS_WARN_IF(!aData)) {
     return NS_ERROR_INVALID_ARG;
-  mData.Assign(data, dataLen);
+  }
+  mData.Assign(aData, aDataLen);
   mOffset = 0;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStringInputStream::AdoptData(char *data, int32_t dataLen)
+nsStringInputStream::AdoptData(char* aData, int32_t aDataLen)
 {
-  if (NS_WARN_IF(!data))
+  if (NS_WARN_IF(!aData)) {
     return NS_ERROR_INVALID_ARG;
-  mData.Adopt(data, dataLen);
+  }
+  mData.Adopt(aData, aDataLen);
   mOffset = 0;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStringInputStream::ShareData(const char *data, int32_t dataLen)
+nsStringInputStream::ShareData(const char* aData, int32_t aDataLen)
 {
-  if (NS_WARN_IF(!data))
+  if (NS_WARN_IF(!aData)) {
     return NS_ERROR_INVALID_ARG;
+  }
 
-  if (dataLen < 0)
-    dataLen = strlen(data);
+  if (aDataLen < 0) {
+    aDataLen = strlen(aData);
+  }
 
-  mData.Rebind(data, dataLen);
+  mData.Rebind(aData, aDataLen);
   mOffset = 0;
   return NS_OK;
 }
@@ -184,48 +191,51 @@ nsStringInputStream::Close()
 }
 
 NS_IMETHODIMP
-nsStringInputStream::Available(uint64_t *aLength)
+nsStringInputStream::Available(uint64_t* aLength)
 {
   NS_ASSERTION(aLength, "null ptr");
 
-  if (Closed())
+  if (Closed()) {
     return NS_BASE_STREAM_CLOSED;
+  }
 
   *aLength = LengthRemaining();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStringInputStream::Read(char* aBuf, uint32_t aCount, uint32_t *aReadCount)
+nsStringInputStream::Read(char* aBuf, uint32_t aCount, uint32_t* aReadCount)
 {
   NS_ASSERTION(aBuf, "null ptr");
   return ReadSegments(NS_CopySegmentToBuffer, aBuf, aCount, aReadCount);
 }
 
 NS_IMETHODIMP
-nsStringInputStream::ReadSegments(nsWriteSegmentFun writer, void *closure,
-                                  uint32_t aCount, uint32_t *result)
+nsStringInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
+                                  uint32_t aCount, uint32_t* aResult)
 {
-  NS_ASSERTION(result, "null ptr");
+  NS_ASSERTION(aResult, "null ptr");
   NS_ASSERTION(Length() >= mOffset, "bad stream state");
 
-  if (Closed())
+  if (Closed()) {
     return NS_BASE_STREAM_CLOSED;
+  }
 
   // We may be at end-of-file
   uint32_t maxCount = LengthRemaining();
   if (maxCount == 0) {
-    *result = 0;
+    *aResult = 0;
     return NS_OK;
   }
 
-  if (aCount > maxCount)
+  if (aCount > maxCount) {
     aCount = maxCount;
-  nsresult rv = writer(this, closure, mData.BeginReading() + mOffset, 0, aCount, result);
+  }
+  nsresult rv = aWriter(this, aClosure, mData.BeginReading() + mOffset, 0, aCount, aResult);
   if (NS_SUCCEEDED(rv)) {
-    NS_ASSERTION(*result <= aCount,
+    NS_ASSERTION(*aResult <= aCount,
                  "writer should not write more than we asked it to write");
-    mOffset += *result;
+    mOffset += *aResult;
   }
 
   // errors returned from the writer end here!
@@ -233,7 +243,7 @@ nsStringInputStream::ReadSegments(nsWriteSegmentFun writer, void *closure,
 }
 
 NS_IMETHODIMP
-nsStringInputStream::IsNonBlocking(bool *aNonBlocking)
+nsStringInputStream::IsNonBlocking(bool* aNonBlocking)
 {
   *aNonBlocking = true;
   return NS_OK;
@@ -244,15 +254,16 @@ nsStringInputStream::IsNonBlocking(bool *aNonBlocking)
 /////////
 
 NS_IMETHODIMP
-nsStringInputStream::Seek(int32_t whence, int64_t offset)
+nsStringInputStream::Seek(int32_t aWhence, int64_t aOffset)
 {
-  if (Closed())
+  if (Closed()) {
     return NS_BASE_STREAM_CLOSED;
+  }
 
   // Compute new stream position.  The given offset may be a negative value.
 
-  int64_t newPos = offset;
-  switch (whence) {
+  int64_t newPos = aOffset;
+  switch (aWhence) {
     case NS_SEEK_SET:
       break;
     case NS_SEEK_CUR:
@@ -262,32 +273,35 @@ nsStringInputStream::Seek(int32_t whence, int64_t offset)
       newPos += Length();
       break;
     default:
-      NS_ERROR("invalid whence");
+      NS_ERROR("invalid aWhence");
       return NS_ERROR_INVALID_ARG;
   }
 
-  if (NS_WARN_IF(newPos < 0) || NS_WARN_IF(newPos > Length()))
+  if (NS_WARN_IF(newPos < 0) || NS_WARN_IF(newPos > Length())) {
     return NS_ERROR_INVALID_ARG;
+  }
 
   mOffset = (uint32_t)newPos;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStringInputStream::Tell(int64_t* outWhere)
+nsStringInputStream::Tell(int64_t* aOutWhere)
 {
-  if (Closed())
+  if (Closed()) {
     return NS_BASE_STREAM_CLOSED;
+  }
 
-  *outWhere = mOffset;
+  *aOutWhere = mOffset;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsStringInputStream::SetEOF()
 {
-  if (Closed())
+  if (Closed()) {
     return NS_BASE_STREAM_CLOSED;
+  }
 
   mOffset = Length();
   return NS_OK;
@@ -330,8 +344,9 @@ NS_NewByteInputStream(nsIInputStream** aStreamResult,
   NS_PRECONDITION(aStreamResult, "null out ptr");
 
   nsStringInputStream* stream = new nsStringInputStream();
-  if (! stream)
+  if (! stream) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   NS_ADDREF(stream);
 
@@ -375,8 +390,9 @@ NS_NewCStringInputStream(nsIInputStream** aStreamResult,
   NS_PRECONDITION(aStreamResult, "null out ptr");
 
   nsStringInputStream* stream = new nsStringInputStream();
-  if (! stream)
+  if (! stream) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   NS_ADDREF(stream);
 
@@ -388,19 +404,21 @@ NS_NewCStringInputStream(nsIInputStream** aStreamResult,
 
 // factory method for constructing a nsStringInputStream object
 nsresult
-nsStringInputStreamConstructor(nsISupports *outer, REFNSIID iid, void **result)
+nsStringInputStreamConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
-  *result = nullptr;
+  *aResult = nullptr;
 
-  if (NS_WARN_IF(outer))
+  if (NS_WARN_IF(aOuter)) {
     return NS_ERROR_NO_AGGREGATION;
+  }
 
-  nsStringInputStream *inst = new nsStringInputStream();
-  if (!inst)
+  nsStringInputStream* inst = new nsStringInputStream();
+  if (!inst) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   NS_ADDREF(inst);
-  nsresult rv = inst->QueryInterface(iid, result);
+  nsresult rv = inst->QueryInterface(aIID, aResult);
   NS_RELEASE(inst);
 
   return rv;

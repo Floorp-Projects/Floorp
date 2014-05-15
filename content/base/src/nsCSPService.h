@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef nsCSPService_h___
+#define nsCSPService_h___
+
 #include "nsXPCOM.h"
 #include "nsIContentPolicy.h"
 #include "nsIChannel.h"
@@ -23,7 +26,9 @@ public:
   CSPService();
   virtual ~CSPService();
   static bool sCSPEnabled;
+  static bool sNewBackendEnabled;
 private:
   // Maps origins to app status.
   nsDataHashtable<nsCStringHashKey, uint16_t> mAppStatusCache;
 };
+#endif /* nsCSPService_h___ */

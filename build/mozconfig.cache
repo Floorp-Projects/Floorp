@@ -13,22 +13,41 @@ EOF
 
 bucket=
 if test -z "$SCCACHE_DISABLE" -a -z "$no_sccache"; then
-    case "${branch}_${master}" in
-    try_*scl1.mozilla.com*|try_*.scl3.mozilla.com*)
-        bucket=mozilla-releng-ceph-cache-scl3-try
-        mk_add_options "export SCCACHE_NO_HTTPS=1"
+    case "${branch}" in
+    try)
+        case "${master}" in
+        *scl1.mozilla.com*|*.scl3.mozilla.com*)
+            case "$platform" in
+            win*)
+                bucket=mozilla-releng-ceph-cache-scl3-try
+                ;;
+            *)
+                bucket=mozilla-releng-s3-cache-us-west-2-try
+                ;;
+            esac
+            mk_add_options "export SCCACHE_NO_HTTPS=1"
+            ;;
+        *use1.mozilla.com*)
+            bucket=mozilla-releng-s3-cache-us-east-1-try
+            ;;
+        *usw2.mozilla.com*)
+            bucket=mozilla-releng-s3-cache-us-west-2-try
+            ;;
+        esac
         ;;
-    try_*use1.mozilla.com*)
-        bucket=mozilla-releng-s3-cache-us-east-1-try
-        ;;
-    try_*usw2.mozilla.com*)
-        bucket=mozilla-releng-s3-cache-us-west-2-try
-        ;;
-    b2g-inbound_*use1.mozilla.com*)
-        bucket=mozilla-releng-s3-cache-us-east-1-prod
-        ;;
-    b2g-inbound_*usw2.mozilla.com*)
-        bucket=mozilla-releng-s3-cache-us-west-2-prod
+    b2g-inbound|mozilla-inbound|fx-team)
+        case "${master}" in
+        *use1.mozilla.com*)
+            if test -z "$MOZ_PGO"; then
+                bucket=mozilla-releng-s3-cache-us-east-1-prod
+            fi
+            ;;
+        *usw2.mozilla.com*)
+            if test -z "$MOZ_PGO"; then
+                bucket=mozilla-releng-s3-cache-us-west-2-prod
+            fi
+            ;;
+        esac
         ;;
     esac
 fi
@@ -49,7 +68,7 @@ else
     ac_add_options "--with-compiler-wrapper=python2.7 $topsrcdir/sccache/sccache.py"
     mk_add_options MOZ_PREFLIGHT_ALL+=build/sccache.mk
     mk_add_options MOZ_POSTFLIGHT_ALL+=build/sccache.mk
-    UPLOAD_EXTRA_FILES="sccache.log.gz"
+    UPLOAD_EXTRA_FILES="$UPLOAD_EXTRA_FILES sccache.log.gz"
     case "$platform" in
     win*)
         # sccache supports a special flag to create depfiles.

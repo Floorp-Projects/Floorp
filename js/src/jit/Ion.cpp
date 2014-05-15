@@ -1477,13 +1477,15 @@ OptimizeMIR(MIRGenerator *mir)
             }
         }
 
-        if (!r.truncate())
-            return false;
-        IonSpewPass("Truncate Doubles");
-        AssertExtendedGraphCoherency(graph);
+        if (mir->optimizationInfo().autoTruncateEnabled()) {
+            if (!r.truncate())
+                return false;
+            IonSpewPass("Truncate Doubles");
+            AssertExtendedGraphCoherency(graph);
 
-        if (mir->shouldCancel("Truncate Doubles"))
-            return false;
+            if (mir->shouldCancel("Truncate Doubles"))
+                return false;
+        }
     }
 
     if (mir->optimizationInfo().eaaEnabled()) {

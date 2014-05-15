@@ -49,6 +49,7 @@ class SystemPageAllocator
 
   private:
     bool decommitEnabled();
+    void *mapAlignedPagesSlow(size_t size, size_t alignment);
 
     // The GC can only safely decommit memory when the page size of the
     // running process matches the compiled arena size.

@@ -3596,10 +3596,10 @@ CheckStoreArray(FunctionCompiler &f, ParseNode *lhs, ParseNode *rhs, MDefinition
             return f.failf(lhs, "%s is not a subtype of double? or floatish", rhsType.toChars());
         break;
       case ArrayBufferView::TYPE_FLOAT64:
-        if (rhsType.isFloat())
+        if (rhsType.isMaybeFloat())
             rhsDef = f.unary<MToDouble>(rhsDef);
         else if (!rhsType.isMaybeDouble())
-            return f.failf(lhs, "%s is not a subtype of float or double?", rhsType.toChars());
+            return f.failf(lhs, "%s is not a subtype of float? or double?", rhsType.toChars());
         break;
       default:
         MOZ_ASSUME_UNREACHABLE("Unexpected view type");

@@ -526,6 +526,8 @@ public:
     return FindAttributeDependence(aAttribute, aMaps, N);
   }
 
+  static nsIAtom*** HTMLSVGPropertiesToTraverseAndUnlink();
+
 private:
   void DescribeAttribute(uint32_t index, nsAString& aOutDescription) const;
 
