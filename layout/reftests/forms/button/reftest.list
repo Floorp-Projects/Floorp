@@ -21,7 +21,8 @@ fuzzy-if(B2G||Android,125,80) == percent-width-child-2.html  percent-width-child
 # Looks like Android and B2G change the text color, but to something slightly
 # different from ColorGray
 fails-if(Android||B2G) == disabled-1.html disabled-1-ref.html
-== disabled-2.html disabled-2-ref.html
+== disabled-2a.html disabled-2-ref.html
+== disabled-2b.html disabled-2-ref.html
 
 != disabled-3.html disabled-3-notref.html
 != disabled-4.html disabled-4-notref.html
