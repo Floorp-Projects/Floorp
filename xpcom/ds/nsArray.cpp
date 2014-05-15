@@ -67,7 +67,7 @@ nsArray::QueryElementAt(uint32_t aIndex,
     nsISupports * obj = mArray.SafeObjectAt(aIndex);
     if (!obj) return NS_ERROR_ILLEGAL_VALUE;
 
-    // no need to worry about a leak here, because SafeObjectAt() 
+    // no need to worry about a leak here, because SafeObjectAt()
     // doesn't addref its result
     return obj->QueryInterface(aIID, aResult);
 }
@@ -179,7 +179,7 @@ FindElementCallback(void *aElement, void* aClosure)
 
     nsISupports* element =
         static_cast<nsISupports*>(aElement);
-    
+
     // don't start searching until we're past the startIndex
     if (closure->resultIndex >= closure->startIndex &&
         element == closure->targetElement) {
@@ -197,7 +197,7 @@ nsArray::XPCOMConstructor(nsISupports *aOuter, const nsIID& aIID, void **aResult
         return NS_ERROR_NO_AGGREGATION;
 
     nsCOMPtr<nsIMutableArray> inst = Create();
-    return inst->QueryInterface(aIID, aResult); 
+    return inst->QueryInterface(aIID, aResult);
 }
 
 already_AddRefed<nsIMutableArray>
