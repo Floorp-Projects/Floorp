@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+interface nsIPrincipal;
 %{C++
 namespace mozilla {
 class TimeStamp;
@@ -12,7 +13,7 @@ class TimeStamp;
 native TimeStamp(mozilla::TimeStamp);
 
 // All properties return zero if the value is not available
-[scriptable, uuid(E94AB245-B40D-4154-8B7F-B6E0F2461031)]
+[scriptable, uuid(ca63784d-959c-4c3a-9a59-234a2a520de0)]
 interface nsITimedChannel : nsISupports {
   // Set this attribute to true to enable collection of timing data.
   // channelCreationTime will be available even with this attribute set to
@@ -45,6 +46,17 @@ interface nsITimedChannel : nsISupports {
 
   // This flag should be set to false only if a cross-domain redirect occurred
   [noscript] attribute boolean allRedirectsSameOrigin;
+  // This flag is set to false if the timing allow check fails
+  [noscript] attribute boolean allRedirectsPassTimingAllowCheck;
+  // Implements the timing-allow-check to determine if we should report
+  // timing info for the resourceTiming object.
+  [noscript] boolean timingAllowCheck(in nsIPrincipal origin);
+  %{C++
+  inline bool TimingAllowCheck(nsIPrincipal* aOrigin) {
+    bool allowed = false;
+    return NS_SUCCEEDED(TimingAllowCheck(aOrigin, &allowed)) && allowed;
+  }
+  %}
 
   // The following are only set if the document is (partially) read from the
   // cache
