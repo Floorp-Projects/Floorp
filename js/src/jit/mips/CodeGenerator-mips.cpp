@@ -1033,8 +1033,8 @@ CodeGeneratorMIPS::visitOutOfLineTableSwitch(OutOfLineTableSwitch *ool)
 }
 
 bool
-CodeGeneratorMIPS::emitTableSwitchDispatch(MTableSwitch *mir, const Register &index,
-                                           const Register &address)
+CodeGeneratorMIPS::emitTableSwitchDispatch(MTableSwitch *mir, Register index,
+                                           Register address)
 {
     Label *defaultcase = mir->getDefault()->lir()->label();
 
@@ -1839,7 +1839,7 @@ CodeGeneratorMIPS::visitLoadElementT(LLoadElementT *load)
 
 void
 CodeGeneratorMIPS::storeElementTyped(const LAllocation *value, MIRType valueType,
-                                     MIRType elementType, const Register &elements,
+                                     MIRType elementType, Register elements,
                                      const LAllocation *index)
 {
     if (index->isConstant()) {

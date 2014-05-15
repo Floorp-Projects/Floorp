@@ -249,7 +249,7 @@ CodeGeneratorX64::visitLoadElementT(LLoadElementT *load)
 
 void
 CodeGeneratorX64::storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
-                                    const Register &elements, const LAllocation *index)
+                                    Register elements, const LAllocation *index)
 {
     Operand dest = createArrayElementOperand(elements, index);
     storeUnboxedValue(value, valueType, dest, elementType);

@@ -210,15 +210,15 @@ class Assembler : public AssemblerX86Shared
         addl(Imm32(sizeof(double)), StackPointer);
     }
 
-    CodeOffsetLabel movWithPatch(const ImmWord &word, const Register &dest) {
+    CodeOffsetLabel movWithPatch(const ImmWord &word, Register dest) {
         movl(Imm32(word.value), dest);
         return masm.currentOffset();
     }
-    CodeOffsetLabel movWithPatch(const ImmPtr &imm, const Register &dest) {
+    CodeOffsetLabel movWithPatch(const ImmPtr &imm, Register dest) {
         return movWithPatch(ImmWord(uintptr_t(imm.value)), dest);
     }
 
-    void movl(const ImmGCPtr &ptr, const Register &dest) {
+    void movl(const ImmGCPtr &ptr, Register dest) {
         masm.movl_i32r(ptr.value, dest.code());
         writeDataRelocation(ptr);
     }
@@ -262,29 +262,29 @@ class Assembler : public AssemblerX86Shared
         masm.movl_i32r(-1, dest.code());
         enoughMemory_ &= append(AsmJSAbsoluteLink(masm.currentOffset(), imm.kind()));
     }
-    void mov(const Operand &src, const Register &dest) {
+    void mov(const Operand &src, Register dest) {
         movl(src, dest);
     }
-    void mov(const Register &src, const Operand &dest) {
+    void mov(Register src, const Operand &dest) {
         movl(src, dest);
     }
     void mov(Imm32 imm, const Operand &dest) {
         movl(imm, dest);
     }
-    void mov(AbsoluteLabel *label, const Register &dest) {
+    void mov(AbsoluteLabel *label, Register dest) {
         JS_ASSERT(!label->bound());
         // Thread the patch list through the unpatched address word in the
         // instruction stream.
         masm.movl_i32r(label->prev(), dest.code());
         label->setPrev(masm.size());
     }
-    void mov(const Register &src, const Register &dest) {
+    void mov(Register src, Register dest) {
         movl(src, dest);
     }
-    void xchg(const Register &src, const Register &dest) {
+    void xchg(Register src, Register dest) {
         xchgl(src, dest);
     }
-    void lea(const Operand &src, const Register &dest) {
+    void lea(const Operand &src, Register dest) {
         return leal(src, dest);
     }
 
@@ -318,7 +318,7 @@ class Assembler : public AssemblerX86Shared
         masm.cmpl_ir(ptr.value, src.code());
         writeDataRelocation(ptr);
     }
-    void cmpl(const Register &lhs, const Register &rhs) {
+    void cmpl(Register lhs, Register rhs) {
         masm.cmpl_rr(rhs.code(), lhs.code());
     }
     void cmpl(const Operand &op, ImmGCPtr imm) {
@@ -339,11 +339,11 @@ class Assembler : public AssemblerX86Shared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void cmpl(const AsmJSAbsoluteAddress &lhs, const Register &rhs) {
+    void cmpl(const AsmJSAbsoluteAddress &lhs, Register rhs) {
         masm.cmpl_rm_force32(rhs.code(), (void*)-1);
         enoughMemory_ &= append(AsmJSAbsoluteLink(masm.currentOffset(), lhs.kind()));
     }
-    CodeOffsetLabel cmplWithPatch(const Register &lhs, Imm32 rhs) {
+    CodeOffsetLabel cmplWithPatch(Register lhs, Imm32 rhs) {
         masm.cmpl_ir_force32(rhs.value, lhs.code());
         return masm.currentOffset();
     }

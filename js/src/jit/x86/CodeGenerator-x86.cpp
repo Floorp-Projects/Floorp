@@ -221,7 +221,7 @@ CodeGeneratorX86::visitLoadElementT(LLoadElementT *load)
 
 void
 CodeGeneratorX86::storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
-                                    const Register &elements, const LAllocation *index)
+                                    Register elements, const LAllocation *index)
 {
     Operand dest = createArrayElementOperand(elements, index);
 

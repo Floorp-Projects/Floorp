@@ -75,7 +75,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     bool generateEpilogue();
     bool generateOutOfLineCode();
 
-    void emitRoundDouble(const FloatRegister &src, const Register &dest, Label *fail);
+    void emitRoundDouble(const FloatRegister &src, Register dest, Label *fail);
 
     // Emits a branch that directs control flow to the true block if |cond| is
     // true, and the false block if |cond| is false.
@@ -94,7 +94,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
         emitBranch(cond, ifTrue, ifFalse);
     }
 
-    bool emitTableSwitchDispatch(MTableSwitch *mir, const Register &index, const Register &base);
+    bool emitTableSwitchDispatch(MTableSwitch *mir, Register index, Register base);
 
   public:
     // Instruction visitors.
@@ -163,7 +163,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     Register splitTagForTest(const ValueOperand &value);
 
     void storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
-                           const Register &elements, const LAllocation *index);
+                           Register elements, const LAllocation *index);
 
     bool divICommon(MDiv *mir, Register lhs, Register rhs, Register output, LSnapshot *snapshot,
                     Label &done);
