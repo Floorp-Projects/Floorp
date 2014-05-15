@@ -1253,7 +1253,7 @@ txMozillaXSLTProcessor::Initialize(nsISupports* aOwner, JSContext* cx,
                                    JSObject* obj, const JS::CallArgs& args)
 {
     MOZ_ASSERT(nsContentUtils::GetCurrentJSContext());
-    return Init(nsContentUtils::GetSubjectPrincipal());
+    return Init(nsContentUtils::SubjectPrincipal());
 }
 
 NS_IMETHODIMP

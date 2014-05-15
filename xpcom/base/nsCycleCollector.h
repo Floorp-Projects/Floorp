@@ -19,8 +19,8 @@ namespace mozilla {
 class CycleCollectedJSRuntime;
 
 // See the comments in nsContentUtils.h for explanations of these functions.
-typedef void* (*DeferredFinalizeAppendFunction)(void* pointers, void* thing);
-typedef bool (*DeferredFinalizeFunction)(uint32_t slice, void* data);
+typedef void* (*DeferredFinalizeAppendFunction)(void* aPointers, void* aThing);
+typedef bool (*DeferredFinalizeFunction)(uint32_t aSlice, void* aData);
 
 }
 

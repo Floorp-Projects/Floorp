@@ -242,7 +242,7 @@ DOMStorage::CanUseStorage(DOMStorage* aStorage)
 
   // chrome can always use aStorage regardless of permission preferences
   nsCOMPtr<nsIPrincipal> subjectPrincipal =
-    nsContentUtils::GetSubjectPrincipal();
+    nsContentUtils::SubjectPrincipal();
   if (nsContentUtils::IsSystemPrincipal(subjectPrincipal)) {
     return true;
   }

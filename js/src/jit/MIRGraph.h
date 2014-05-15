@@ -582,17 +582,6 @@ class MIRGraph
     MBasicBlock *entryBlock() {
         return *blocks_.begin();
     }
-
-    void clearBlockList() {
-        blocks_.clear();
-        blockIdGen_ = 0;
-        numBlocks_ = 0;
-    }
-    void resetInstructionNumber() {
-        // This intentionally starts above 0. The id 0 is in places used to
-        // indicate a failure to perform an operation on an instruction.
-        idGen_ = 1;
-    }
     MBasicBlockIterator begin() {
         return blocks_.begin();
     }
@@ -637,7 +626,7 @@ class MIRGraph
         return idGen_;
     }
     MResumePoint *entryResumePoint() {
-        return blocks_.begin()->entryResumePoint();
+        return entryBlock()->entryResumePoint();
     }
 
     void copyIds(const MIRGraph &other) {

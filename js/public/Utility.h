@@ -58,13 +58,6 @@ extern MOZ_NORETURN JS_PUBLIC_API(void)
 JS_Assert(const char *s, const char *file, int ln);
 
 /*
- * Abort the process in a non-graceful manner. This will cause a core file,
- * call to the debugger or other moral equivalent as well as causing the
- * entire process to stop.
- */
-extern JS_PUBLIC_API(void) JS_Abort(void);
-
-/*
  * Custom allocator support for SpiderMonkey
  */
 #if defined JS_USE_CUSTOM_ALLOCATOR

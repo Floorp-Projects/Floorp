@@ -60,6 +60,7 @@ EXPORTS.mozilla = [
     'SplayTree.h',
     'TemplateLib.h',
     'ThreadLocal.h',
+    'ToString.h',
     'TypedEnum.h',
     'TypedEnumBits.h',
     'TypedEnumInternal.h',

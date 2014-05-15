@@ -3151,32 +3151,3 @@ js_DateGetMsecSinceEpoch(JSObject *obj)
 {
     return obj->is<DateObject>() ? obj->as<DateObject>().UTCTime().toNumber() : 0;
 }
-
-
-static const NativeImpl sReadOnlyDateMethods[] = {
-    DateObject::getTime_impl,
-    DateObject::getYear_impl,
-    DateObject::getFullYear_impl,
-    DateObject::getUTCFullYear_impl,
-    DateObject::getMonth_impl,
-    DateObject::getUTCMonth_impl,
-    DateObject::getDate_impl,
-    DateObject::getUTCDate_impl,
-    DateObject::getDay_impl,
-    DateObject::getUTCDay_impl,
-    DateObject::getHours_impl,
-    DateObject::getUTCHours_impl,
-    DateObject::getMinutes_impl,
-    DateObject::getUTCMinutes_impl,
-    DateObject::getUTCSeconds_impl,
-    DateObject::getUTCMilliseconds_impl,
-    DateObject::getTimezoneOffset_impl,
-    date_toGMTString_impl,
-    date_toISOString_impl,
-    date_toLocaleFormat_impl,
-    date_toTimeString_impl,
-    date_toDateString_impl,
-    date_toSource_impl,
-    date_toString_impl,
-    date_valueOf_impl
-};

@@ -160,12 +160,12 @@ class RValueAllocation
     { }
 
     // DOUBLE_REG
-    static RValueAllocation Double(const FloatRegister &reg) {
+    static RValueAllocation Double(FloatRegister reg) {
         return RValueAllocation(DOUBLE_REG, payloadOfFloatRegister(reg));
     }
 
     // FLOAT32_REG or FLOAT32_STACK
-    static RValueAllocation Float32(const FloatRegister &reg) {
+    static RValueAllocation Float32(FloatRegister reg) {
         return RValueAllocation(FLOAT32_REG, payloadOfFloatRegister(reg));
     }
     static RValueAllocation Float32(int32_t offset) {
@@ -173,7 +173,7 @@ class RValueAllocation
     }
 
     // TYPED_REG or TYPED_STACK
-    static RValueAllocation Typed(JSValueType type, const Register &reg) {
+    static RValueAllocation Typed(JSValueType type, Register reg) {
         JS_ASSERT(type != JSVAL_TYPE_DOUBLE &&
                   type != JSVAL_TYPE_MAGIC &&
                   type != JSVAL_TYPE_NULL &&
@@ -191,19 +191,19 @@ class RValueAllocation
 
     // UNTYPED
 #if defined(JS_NUNBOX32)
-    static RValueAllocation Untyped(const Register &type, const Register &payload) {
+    static RValueAllocation Untyped(Register type, Register payload) {
         return RValueAllocation(UNTYPED_REG_REG,
                                 payloadOfRegister(type),
                                 payloadOfRegister(payload));
     }
 
-    static RValueAllocation Untyped(const Register &type, int32_t payloadStackOffset) {
+    static RValueAllocation Untyped(Register type, int32_t payloadStackOffset) {
         return RValueAllocation(UNTYPED_REG_STACK,
                                 payloadOfRegister(type),
                                 payloadOfStackOffset(payloadStackOffset));
     }
 
-    static RValueAllocation Untyped(int32_t typeStackOffset, const Register &payload) {
+    static RValueAllocation Untyped(int32_t typeStackOffset, Register payload) {
         return RValueAllocation(UNTYPED_STACK_REG,
                                 payloadOfStackOffset(typeStackOffset),
                                 payloadOfRegister(payload));
@@ -216,7 +216,7 @@ class RValueAllocation
     }
 
 #elif defined(JS_PUNBOX64)
-    static RValueAllocation Untyped(const Register &reg) {
+    static RValueAllocation Untyped(Register reg) {
         return RValueAllocation(UNTYPED_REG, payloadOfRegister(reg));
     }
 

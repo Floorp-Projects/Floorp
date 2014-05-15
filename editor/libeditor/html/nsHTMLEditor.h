@@ -311,6 +311,7 @@ public:
                                  EStripWrappers aStripWrappers);
   nsresult DeleteNode(nsINode* aNode);
   NS_IMETHODIMP DeleteNode(nsIDOMNode * aNode);
+  using nsEditor::DeleteText;
   NS_IMETHODIMP DeleteText(nsIDOMCharacterData *aTextNode,
                            uint32_t             aOffset,
                            uint32_t             aLength);

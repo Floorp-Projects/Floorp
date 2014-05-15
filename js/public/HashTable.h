@@ -182,9 +182,6 @@ class HashMap
     // using the finish() method.
     void clear()                                      { impl.clear(); }
 
-    // Remove all entries without triggering destructors. This method is unsafe.
-    void clearWithoutCallingDestructors()             { impl.clearWithoutCallingDestructors(); }
-
     // Remove all the entries and release all internal buffers. The map must
     // be initialized again before any use.
     void finish()                                     { impl.finish(); }

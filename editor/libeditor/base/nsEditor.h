@@ -8,6 +8,7 @@
 
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
 #include "mozilla/TypedEnum.h"          // for MOZ_BEGIN_ENUM_CLASS, etc.
+#include "mozilla/dom/Text.h"
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMArray.h"                 // for nsCOMArray
 #include "nsCOMPtr.h"                   // for already_AddRefed, nsCOMPtr
@@ -329,6 +330,13 @@ protected:
   NS_IMETHOD DeleteText(nsIDOMCharacterData *aElement,
                         uint32_t             aOffset,
                         uint32_t             aLength);
+
+  inline nsresult DeleteText(mozilla::dom::Text* aText, uint32_t aOffset,
+                             uint32_t aLength)
+  {
+    return DeleteText(static_cast<nsIDOMCharacterData*>(GetAsDOMNode(aText)),
+                      aOffset, aLength);
+  }
 
 //  NS_IMETHOD DeleteRange(nsIDOMRange *aRange);
 

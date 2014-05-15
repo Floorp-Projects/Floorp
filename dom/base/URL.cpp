@@ -148,7 +148,7 @@ URL::CreateObjectURLInternal(const GlobalObject& aGlobal, nsISupports* aObject,
                              const objectURLOptions& aOptions,
                              nsString& aResult, ErrorResult& aError)
 {
-  nsCOMPtr<nsIPrincipal> principal = nsContentUtils::GetObjectPrincipal(aGlobal.Get());
+  nsCOMPtr<nsIPrincipal> principal = nsContentUtils::ObjectPrincipal(aGlobal.Get());
 
   nsCString url;
   nsresult rv = nsHostObjectProtocolHandler::AddDataEntry(aScheme, aObject,
@@ -181,7 +181,7 @@ URL::CreateObjectURLInternal(const GlobalObject& aGlobal, nsISupports* aObject,
 void
 URL::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aURL)
 {
-  nsIPrincipal* principal = nsContentUtils::GetObjectPrincipal(aGlobal.Get());
+  nsIPrincipal* principal = nsContentUtils::ObjectPrincipal(aGlobal.Get());
 
   NS_LossyConvertUTF16toASCII asciiurl(aURL);
 
