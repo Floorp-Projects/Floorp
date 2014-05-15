@@ -1254,8 +1254,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
   // which is dispatched in UnbindFromTree.
 
   if (tmp->HasProperties()) {
-    if (tmp->IsHTML()) {
-      nsIAtom*** props = nsGenericHTMLElement::PropertiesToTraverseAndUnlink();
+    if (tmp->IsHTML() || tmp->IsSVG()) {
+      nsIAtom*** props = Element::HTMLSVGPropertiesToTraverseAndUnlink();
       for (uint32_t i = 0; props[i]; ++i) {
         tmp->DeleteProperty(*props[i]);
       }
@@ -1810,8 +1810,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
   tmp->OwnerDoc()->BindingManager()->Traverse(tmp, cb);
 
   if (tmp->HasProperties()) {
-    if (tmp->IsHTML()) {
-      nsIAtom*** props = nsGenericHTMLElement::PropertiesToTraverseAndUnlink();
+    if (tmp->IsHTML() || tmp->IsSVG()) {
+      nsIAtom*** props = Element::HTMLSVGPropertiesToTraverseAndUnlink();
       for (uint32_t i = 0; props[i]; ++i) {
         nsISupports* property =
           static_cast<nsISupports*>(tmp->GetProperty(*props[i]));
