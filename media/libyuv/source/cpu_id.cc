@@ -97,7 +97,7 @@ int TestOsSaveYmm() {
   uint32 xcr0 = 0u;
 #if defined(_MSC_VER) && defined(_XCR_XFEATURE_ENABLED_MASK)
   xcr0 = (uint32)(_xgetbv(_XCR_XFEATURE_ENABLED_MASK));
-#elif defined(_M_IX86)
+#elif defined(_MSC_VER) && defined(_M_IX86)
   __asm {
     xor        ecx, ecx    // xcr 0
     _asm _emit 0x0f _asm _emit 0x01 _asm _emit 0xd0  // For VS2010 and earlier.
