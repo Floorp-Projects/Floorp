@@ -8,7 +8,6 @@
 
 #include "nsIStreamConverterService.h"
 
-#include "nsHashtable.h"
 #include "nsClassHashtable.h"
 #include "nsCOMArray.h"
 #include "nsTArrayForwardDeclare.h"
