@@ -333,7 +333,7 @@ class AssemblerX86Shared : public AssemblerShared
         label->bind(masm.size());
         masm.floatConstant(f);
     }
-    void movl(const Imm32 &imm32, Register dest) {
+    void movl(Imm32 imm32, Register dest) {
         masm.movl_i32r(imm32.value, dest.code());
     }
     void movl(Register src, Register dest) {
@@ -375,7 +375,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void movl(const Imm32 &imm32, const Operand &dest) {
+    void movl(Imm32 imm32, const Operand &dest) {
         switch (dest.kind()) {
           case Operand::REG:
             masm.movl_i32r(imm32.value, dest.reg());
@@ -503,7 +503,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void movb(const Imm32 &src, const Operand &dest) {
+    void movb(Imm32 src, const Operand &dest) {
         switch (dest.kind()) {
           case Operand::MEM_REG_DISP:
             masm.movb_i8m(src.value, dest.disp(), dest.base());
@@ -545,7 +545,7 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void movw(const Imm32 &src, const Operand &dest) {
+    void movw(Imm32 src, const Operand &dest) {
         switch (dest.kind()) {
           case Operand::MEM_REG_DISP:
             masm.movw_i16m(src.value, dest.disp(), dest.base());

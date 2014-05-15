@@ -158,7 +158,7 @@ class MacroAssemblerMIPS : public Assembler
                   LoadStoreExtension extension = SignExtend);
     void ma_store(Register data, const BaseIndex &dest, LoadStoreSize size = SizeWord,
                   LoadStoreExtension extension = SignExtend);
-    void ma_store(const Imm32 &imm, const BaseIndex &dest, LoadStoreSize size = SizeWord,
+    void ma_store(Imm32 imm, const BaseIndex &dest, LoadStoreSize size = SizeWord,
                   LoadStoreExtension extension = SignExtend);
 
     void computeScaledAddress(const BaseIndex &address, Register dest);
@@ -1020,7 +1020,7 @@ public:
     void addPtr(const Address &src, Register dest);
     void not32(Register reg);
 
-    void move32(const Imm32 &imm, Register dest);
+    void move32(Imm32 imm, Register dest);
     void move32(Register src, Register dest);
 
     void movePtr(Register src, Register dest);
@@ -1063,20 +1063,20 @@ public:
     void loadFloat32(const BaseIndex &src, const FloatRegister &dest);
 
     void store8(Register src, const Address &address);
-    void store8(const Imm32 &imm, const Address &address);
+    void store8(Imm32 imm, const Address &address);
     void store8(Register src, const BaseIndex &address);
-    void store8(const Imm32 &imm, const BaseIndex &address);
+    void store8(Imm32 imm, const BaseIndex &address);
 
     void store16(Register src, const Address &address);
-    void store16(const Imm32 &imm, const Address &address);
+    void store16(Imm32 imm, const Address &address);
     void store16(Register src, const BaseIndex &address);
-    void store16(const Imm32 &imm, const BaseIndex &address);
+    void store16(Imm32 imm, const BaseIndex &address);
 
     void store32(Register src, const AbsoluteAddress &address);
     void store32(Register src, const Address &address);
     void store32(Register src, const BaseIndex &address);
-    void store32(const Imm32 &src, const Address &address);
-    void store32(const Imm32 &src, const BaseIndex &address);
+    void store32(Imm32 src, const Address &address);
+    void store32(Imm32 src, const BaseIndex &address);
 
     void storePtr(ImmWord imm, const Address &address);
     void storePtr(ImmPtr imm, const Address &address);

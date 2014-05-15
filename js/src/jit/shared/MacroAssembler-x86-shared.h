@@ -95,13 +95,13 @@ class MacroAssemblerX86Shared : public Assembler
     void branchNegativeZero(const FloatRegister &reg, Register scratch, Label *label);
     void branchNegativeZeroFloat32(const FloatRegister &reg, Register scratch, Label *label);
 
-    void move32(const Imm32 &imm, Register dest) {
+    void move32(Imm32 imm, Register dest) {
         // Use the ImmWord version of mov to register, which has special
         // optimizations. Casting to uint32_t here ensures that the value
         // is zero-extended.
         mov(ImmWord(uint32_t(imm.value)), dest);
     }
-    void move32(const Imm32 &imm, const Operand &dest) {
+    void move32(Imm32 imm, const Operand &dest) {
         movl(imm, dest);
     }
     void move32(Register src, Register dest) {
@@ -110,19 +110,19 @@ class MacroAssemblerX86Shared : public Assembler
     void move32(Register src, const Operand &dest) {
         movl(src, dest);
     }
-    void and32(const Imm32 &imm, Register dest) {
+    void and32(Imm32 imm, Register dest) {
         andl(imm, dest);
     }
-    void and32(const Imm32 &imm, const Address &dest) {
+    void and32(Imm32 imm, const Address &dest) {
         andl(imm, Operand(dest));
     }
     void or32(Register src, Register dest) {
         orl(src, dest);
     }
-    void or32(const Imm32 &imm, Register dest) {
+    void or32(Imm32 imm, Register dest) {
         orl(imm, dest);
     }
-    void or32(const Imm32 &imm, const Address &dest) {
+    void or32(Imm32 imm, const Address &dest) {
         orl(imm, Operand(dest));
     }
     void neg32(Register reg) {
@@ -134,16 +134,16 @@ class MacroAssemblerX86Shared : public Assembler
     void test32(const Address &addr, Imm32 imm) {
         testl(Operand(addr), imm);
     }
-    void test32(Register lhs, const Imm32 &rhs) {
+    void test32(Register lhs, Imm32 rhs) {
         testl(lhs, rhs);
     }
-    void cmp32(Register lhs, const Imm32 &rhs) {
+    void cmp32(Register lhs, Imm32 rhs) {
         cmpl(lhs, rhs);
     }
     void cmp32(Register a, Register b) {
         cmpl(a, b);
     }
-    void cmp32(const Operand &lhs, const Imm32 &rhs) {
+    void cmp32(const Operand &lhs, Imm32 rhs) {
         cmpl(lhs, rhs);
     }
     void cmp32(const Operand &lhs, Register rhs) {
