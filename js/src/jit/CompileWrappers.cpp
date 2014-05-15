@@ -150,7 +150,7 @@ CompileRuntime::positiveInfinityValue()
 bool
 CompileRuntime::isInsideNursery(gc::Cell *cell)
 {
-    return UninlinedIsInsideNursery(runtime(), cell);
+    return UninlinedIsInsideNursery(cell);
 }
 #endif
 

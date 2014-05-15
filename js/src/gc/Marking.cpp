@@ -172,7 +172,7 @@ CheckMarkedThing(JSTracer *trc, T **thingp)
 
 #ifdef DEBUG
     /* This function uses data that's not available in the nursery. */
-    if (IsInsideNursery(trc->runtime(), thing))
+    if (IsInsideNursery(thing))
         return;
 
     /*
@@ -235,7 +235,7 @@ MarkInternal(JSTracer *trc, T **thingp)
          * not needed in this case because we perform a minor collection before
          * each incremental slice.
          */
-        if (IsInsideNursery(trc->runtime(), thing))
+        if (IsInsideNursery(thing))
             return;
 
         /*
@@ -357,9 +357,10 @@ IsMarked(T **thingp)
     JS_ASSERT(thingp);
     JS_ASSERT(*thingp);
 #ifdef JSGC_GENERATIONAL
-    Nursery &nursery = (*thingp)->runtimeFromMainThread()->gc.nursery;
-    if (nursery.isInside(*thingp))
+    if (IsInsideNursery(*thingp)) {
+        Nursery &nursery = (*thingp)->runtimeFromMainThread()->gc.nursery;
         return nursery.getForwardedPointer(thingp);
+    }
 #endif
     Zone *zone = (*thingp)->tenuredZone();
     if (!zone->isCollecting() || zone->isGCFinished())
@@ -383,9 +384,9 @@ IsAboutToBeFinalized(T **thingp)
 
 #ifdef JSGC_GENERATIONAL
     Nursery &nursery = rt->gc.nursery;
-    JS_ASSERT_IF(!rt->isHeapMinorCollecting(), !nursery.isInside(thing));
+    JS_ASSERT_IF(!rt->isHeapMinorCollecting(), !IsInsideNursery(thing));
     if (rt->isHeapMinorCollecting()) {
-        if (nursery.isInside(thing))
+        if (IsInsideNursery(thing))
             return !nursery.getForwardedPointer(thingp);
         return false;
     }
@@ -412,7 +413,7 @@ UpdateIfRelocated(JSRuntime *rt, T **thingp)
 {
     JS_ASSERT(thingp);
 #ifdef JSGC_GENERATIONAL
-    if (*thingp && rt->isHeapMinorCollecting() && rt->gc.nursery.isInside(*thingp))
+    if (*thingp && rt->isHeapMinorCollecting() && IsInsideNursery(*thingp))
         rt->gc.nursery.getForwardedPointer(thingp);
 #endif
     return *thingp;
@@ -786,7 +787,7 @@ ShouldMarkCrossCompartment(JSTracer *trc, JSObject *src, Cell *cell)
     uint32_t color = AsGCMarker(trc)->getMarkColor();
     JS_ASSERT(color == BLACK || color == GRAY);
 
-    if (IsInsideNursery(trc->runtime(), cell)) {
+    if (IsInsideNursery(cell)) {
         JS_ASSERT(color == BLACK);
         return false;
     }
@@ -876,7 +877,7 @@ static void
 PushMarkStack(GCMarker *gcmarker, ObjectImpl *thing)
 {
     JS_COMPARTMENT_ASSERT(gcmarker->runtime(), thing);
-    JS_ASSERT(!IsInsideNursery(gcmarker->runtime(), thing));
+    JS_ASSERT(!IsInsideNursery(thing));
 
     if (thing->markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushObject(thing);
@@ -892,11 +893,11 @@ PushMarkStack(GCMarker *gcmarker, ObjectImpl *thing)
 static void
 MaybePushMarkStackBetweenSlices(GCMarker *gcmarker, JSObject *thing)
 {
-    JSRuntime *rt = gcmarker->runtime();
+    DebugOnly<JSRuntime *> rt = gcmarker->runtime();
     JS_COMPARTMENT_ASSERT(rt, thing);
-    JS_ASSERT_IF(rt->isHeapBusy(), !IsInsideNursery(rt, thing));
+    JS_ASSERT_IF(rt->isHeapBusy(), !IsInsideNursery(thing));
 
-    if (!IsInsideNursery(rt, thing) && thing->markIfUnmarked(gcmarker->getMarkColor()))
+    if (!IsInsideNursery(thing) && thing->markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushObject(thing);
 }
 
@@ -904,7 +905,7 @@ static void
 PushMarkStack(GCMarker *gcmarker, JSFunction *thing)
 {
     JS_COMPARTMENT_ASSERT(gcmarker->runtime(), thing);
-    JS_ASSERT(!IsInsideNursery(gcmarker->runtime(), thing));
+    JS_ASSERT(!IsInsideNursery(thing));
 
     if (thing->markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushObject(thing);
@@ -914,7 +915,7 @@ static void
 PushMarkStack(GCMarker *gcmarker, types::TypeObject *thing)
 {
     JS_COMPARTMENT_ASSERT(gcmarker->runtime(), thing);
-    JS_ASSERT(!IsInsideNursery(gcmarker->runtime(), thing));
+    JS_ASSERT(!IsInsideNursery(thing));
 
     if (thing->markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushType(thing);
@@ -924,7 +925,7 @@ static void
 PushMarkStack(GCMarker *gcmarker, JSScript *thing)
 {
     JS_COMPARTMENT_ASSERT(gcmarker->runtime(), thing);
-    JS_ASSERT(!IsInsideNursery(gcmarker->runtime(), thing));
+    JS_ASSERT(!IsInsideNursery(thing));
 
     /*
      * We mark scripts directly rather than pushing on the stack as they can
@@ -939,7 +940,7 @@ static void
 PushMarkStack(GCMarker *gcmarker, LazyScript *thing)
 {
     JS_COMPARTMENT_ASSERT(gcmarker->runtime(), thing);
-    JS_ASSERT(!IsInsideNursery(gcmarker->runtime(), thing));
+    JS_ASSERT(!IsInsideNursery(thing));
 
     /*
      * We mark lazy scripts directly rather than pushing on the stack as they
@@ -956,7 +957,7 @@ static void
 PushMarkStack(GCMarker *gcmarker, Shape *thing)
 {
     JS_COMPARTMENT_ASSERT(gcmarker->runtime(), thing);
-    JS_ASSERT(!IsInsideNursery(gcmarker->runtime(), thing));
+    JS_ASSERT(!IsInsideNursery(thing));
 
     /* We mark shapes directly rather than pushing on the stack. */
     if (thing->markIfUnmarked(gcmarker->getMarkColor()))
@@ -967,7 +968,7 @@ static void
 PushMarkStack(GCMarker *gcmarker, jit::JitCode *thing)
 {
     JS_COMPARTMENT_ASSERT(gcmarker->runtime(), thing);
-    JS_ASSERT(!IsInsideNursery(gcmarker->runtime(), thing));
+    JS_ASSERT(!IsInsideNursery(thing));
 
     if (thing->markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushJitCode(thing);
@@ -980,7 +981,7 @@ static void
 PushMarkStack(GCMarker *gcmarker, BaseShape *thing)
 {
     JS_COMPARTMENT_ASSERT(gcmarker->runtime(), thing);
-    JS_ASSERT(!IsInsideNursery(gcmarker->runtime(), thing));
+    JS_ASSERT(!IsInsideNursery(thing));
 
     /* We mark base shapes directly rather than pushing on the stack. */
     if (thing->markIfUnmarked(gcmarker->getMarkColor()))
@@ -1762,7 +1763,7 @@ UnmarkGrayChildren(JSTracer *trc, void **thingp, JSGCTraceKind kind)
     }
 
     UnmarkGrayTracer *tracer = static_cast<UnmarkGrayTracer *>(trc);
-    if (!IsInsideNursery(trc->runtime(), thing)) {
+    if (!IsInsideNursery(static_cast<Cell *>(thing))) {
         if (!JS::GCThingIsMarkedGray(thing))
             return;
 
@@ -1809,7 +1810,7 @@ JS::UnmarkGrayGCThingRecursively(void *thing, JSGCTraceKind kind)
     JSRuntime *rt = static_cast<Cell *>(thing)->runtimeFromMainThread();
 
     bool unmarkedArg = false;
-    if (!IsInsideNursery(rt, thing)) {
+    if (!IsInsideNursery(static_cast<Cell *>(thing))) {
         if (!JS::GCThingIsMarkedGray(thing))
             return false;
 

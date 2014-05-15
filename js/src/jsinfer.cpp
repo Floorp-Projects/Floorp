@@ -2030,7 +2030,7 @@ TypeCompartment::newTypeObject(ExclusiveContext *cx, const Class *clasp, Handle<
     JS_ASSERT_IF(proto.isObject(), cx->isInsideCurrentCompartment(proto.toObject()));
 
     if (cx->isJSContext()) {
-        if (proto.isObject() && IsInsideNursery(cx->asJSContext()->runtime(), proto.toObject()))
+        if (proto.isObject() && IsInsideNursery(proto.toObject()))
             initialFlags |= OBJECT_FLAG_NURSERY_PROTO;
     }
 
@@ -2754,7 +2754,7 @@ TypeObject::setProto(JSContext *cx, TaggedProto proto)
 {
     JS_ASSERT(singleton());
 
-    if (proto.isObject() && IsInsideNursery(cx->runtime(), proto.toObject()))
+    if (proto.isObject() && IsInsideNursery(proto.toObject()))
         addFlags(OBJECT_FLAG_NURSERY_PROTO);
 
     setProtoUnchecked(proto);
@@ -3916,7 +3916,7 @@ ExclusiveContext::getNewType(const Class *clasp, TaggedProto proto, JSFunction *
         return nullptr;
 
 #ifdef JSGC_GENERATIONAL
-    if (proto.isObject() && hasNursery() && nursery().isInside(proto.toObject())) {
+    if (proto.isObject() && hasNursery() && IsInsideNursery(proto.toObject())) {
         asJSContext()->runtime()->gc.storeBuffer.putGeneric(
             NewTypeObjectsSetRef(&newTypeObjects, clasp, proto.toObject(), fun));
     }
@@ -3967,12 +3967,11 @@ JSCompartment::checkNewTypeObjectTableAfterMovingGC()
      * newTypeObjects that points into the nursery, and that the hash table
      * entries are discoverable.
      */
-    JS::shadow::Runtime *rt = JS::shadow::Runtime::asShadowRuntime(runtimeFromMainThread());
     for (TypeObjectWithNewScriptSet::Enum e(newTypeObjects); !e.empty(); e.popFront()) {
         TypeObjectWithNewScriptEntry entry = e.front();
-        JS_ASSERT(!IsInsideNursery(rt, entry.newFunction));
+        JS_ASSERT(!IsInsideNursery(entry.newFunction));
         TaggedProto proto = entry.object->proto();
-        JS_ASSERT_IF(proto.isObject(), !IsInsideNursery(rt, proto.toObject()));
+        JS_ASSERT_IF(proto.isObject(), !IsInsideNursery(proto.toObject()));
         TypeObjectWithNewScriptEntry::Lookup
             lookup(entry.object->clasp(), proto, entry.newFunction);
         TypeObjectWithNewScriptSet::Ptr ptr = newTypeObjects.lookup(lookup);
@@ -4573,7 +4572,7 @@ TypeObject::addTypedObjectAddendum(JSContext *cx, Handle<TypeDescr*> descr)
     // Type descriptors are always pre-tenured. This is both because
     // we expect them to live a long time and so that they can be
     // safely accessed during ion compilation.
-    JS_ASSERT(!IsInsideNursery(cx->runtime(), descr));
+    JS_ASSERT(!IsInsideNursery(descr));
     JS_ASSERT(descr);
 
     if (flags() & OBJECT_FLAG_ADDENDUM_CLEARED)
