@@ -19,7 +19,7 @@
 // work of this class in the XPCOM dll
 class NS_COM_GLUE nsCOMArray_base
 {
-    friend class nsArray;
+    friend class nsArrayBase;
 protected:
     nsCOMArray_base() {}
     nsCOMArray_base(int32_t aCount) : mArray(aCount) {}
