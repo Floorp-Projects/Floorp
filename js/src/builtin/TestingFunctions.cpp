@@ -1611,11 +1611,11 @@ static bool
 DumpObject(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject arg0(cx);
-    if (!JS_ConvertArguments(cx, args, "o", arg0.address()))
+    RootedObject obj(cx);
+    if (!JS_ConvertArguments(cx, args, "o", obj.address()))
         return false;
 
-    js_DumpObject(arg0);
+    js_DumpObject(obj);
 
     args.rval().setUndefined();
     return true;
