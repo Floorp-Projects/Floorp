@@ -25,6 +25,15 @@
 // Geotrust Primary -> www.mozilla.org
 // Geotrust Global -> *. addons.mozilla.org
 {
+  "chromium_data" : {
+    "cert_file_url": "https://src.chromium.org/chrome/trunk/src/net/http/transport_security_state_static.certs",
+    "json_file_url": "https://src.chromium.org/chrome/trunk/src/net/http/transport_security_state_static.json",
+    "excluded_pinsets": [
+    ],
+    "production_domains": [
+      "pinningtest.appspot.com"
+    ]
+   },
   "pinsets": [
     {
       // From bug 772756, mozilla uses GeoTrust, Digicert and Thawte.  Our
