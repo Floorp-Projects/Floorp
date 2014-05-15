@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Context menugroup Tests"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="popup_shared.js"></script>
+
+<menupopup id="context">
+  <menugroup>
+    <menuitem id="a"/>
+    <menuitem id="b"/>
+  </menugroup>
+  <menuitem id="c" label="c"/>
+</menupopup>
+
+<button label="Check"/>
+
+<vbox id="popuparea" popup="context" width="20" height="20"/>
+
+<script type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var gMenuPopup = $("context");
+ok(gMenuPopup, "Got the reference to the context menu");
+
+var popupTests = [
+{
+  testname: "one-down-key",
+  condition: function() { return (navigator.platform.indexOf("Mac") == -1); },
+  events: [ "popupshowing context", "popupshown context", "DOMMenuItemActive a" ],
+  test: function () {
+    synthesizeMouse($("popuparea"), 4, 4, {});
+    synthesizeKey("VK_DOWN", {});
+  },
+  result: function (testname) {
+    checkActive(gMenuPopup, "a", testname);
+  }
+},
+{
+  testname: "two-down-keys",
+  condition: function() { return (navigator.platform.indexOf("Mac") == -1); },
+  events: [ "DOMMenuItemInactive a", "DOMMenuItemActive b" ],
+  test: function () synthesizeKey("VK_DOWN", {}),
+  result: function (testname) {
+    checkActive(gMenuPopup, "b", testname);
+  }
+},
+{
+  testname: "three-down-keys",
+  condition: function() { return (navigator.platform.indexOf("Mac") == -1); },
+  events: [ "DOMMenuItemInactive b", "DOMMenuItemActive c" ],
+  test: function () synthesizeKey("VK_DOWN", {}),
+  result: function (testname) {
+    checkActive(gMenuPopup, "c", testname);
+  }
+},
+{
+  testname: "three-down-keys-one-up-key",
+  condition: function() { return (navigator.platform.indexOf("Mac") == -1); },
+  events: [ "DOMMenuItemInactive c", "DOMMenuItemActive b" ],
+  test: function () synthesizeKey("VK_UP", {}),
+  result: function (testname) {
+    checkActive(gMenuPopup, "b", testname);
+  }
+},
+{
+  testname: "three-down-keys-two-up-keys",
+  condition: function() { return (navigator.platform.indexOf("Mac") == -1); },
+  events: [ "DOMMenuItemInactive b", "DOMMenuItemActive a" ],
+  test: function () synthesizeKey("VK_UP", {}),
+  result: function (testname) {
+    checkActive(gMenuPopup, "a", testname);
+  }
+},
+{
+  testname: "three-down-keys-three-up-key",
+  condition: function() { return (navigator.platform.indexOf("Mac") == -1); },
+  events: [ "DOMMenuItemInactive a", "DOMMenuItemActive c" ],
+  test: function () synthesizeKey("VK_UP", {}),
+  result: function (testname) {
+    checkActive(gMenuPopup, "c", testname);
+  }
+},
+];
+
+SimpleTest.waitForFocus(function runTest() startPopupTests(popupTests));
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml"><p id="display"/></body>
+
+</window>
