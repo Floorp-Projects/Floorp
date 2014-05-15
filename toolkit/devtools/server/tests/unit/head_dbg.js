@@ -122,10 +122,10 @@ function testGlobal(aName) {
   return sandbox;
 }
 
-function addTestGlobal(aName)
+function addTestGlobal(aName, aServer = DebuggerServer)
 {
   let global = testGlobal(aName);
-  DebuggerServer.addTestGlobal(global);
+  aServer.addTestGlobal(global);
   return global;
 }
 
@@ -179,21 +179,21 @@ function attachTestTabAndResume(aClient, aTitle, aCallback) {
 /**
  * Initialize the testing debugger server.
  */
-function initTestDebuggerServer()
+function initTestDebuggerServer(aServer = DebuggerServer)
 {
-  DebuggerServer.registerModule("devtools/server/actors/script");
-  DebuggerServer.registerModule("xpcshell-test/testactors");
+  aServer.registerModule("devtools/server/actors/script");
+  aServer.registerModule("xpcshell-test/testactors");
   // Allow incoming connections.
-  DebuggerServer.init(function () { return true; });
+  aServer.init(function () { return true; });
 }
 
-function initTestTracerServer()
+function initTestTracerServer(aServer = DebuggerServer)
 {
-  DebuggerServer.registerModule("devtools/server/actors/script");
-  DebuggerServer.registerModule("xpcshell-test/testactors");
-  DebuggerServer.registerModule("devtools/server/actors/tracer");
+  aServer.registerModule("devtools/server/actors/script");
+  aServer.registerModule("xpcshell-test/testactors");
+  aServer.registerModule("devtools/server/actors/tracer");
   // Allow incoming connections.
-  DebuggerServer.init(function () { return true; });
+  aServer.init(function () { return true; });
 }
 
 function finishClient(aClient)
