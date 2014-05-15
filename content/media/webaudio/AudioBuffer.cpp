@@ -74,6 +74,7 @@ AudioBuffer::Create(AudioContext* aContext, uint32_t aNumberOfChannels,
   // to createScriptProcessor(), one of which may be zero.
   if (aSampleRate < WebAudioUtils::MinSampleRate ||
       aSampleRate > WebAudioUtils::MaxSampleRate ||
+      aNumberOfChannels > WebAudioUtils::MaxChannelCount ||
       !aLength || aLength > INT32_MAX) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return nullptr;
