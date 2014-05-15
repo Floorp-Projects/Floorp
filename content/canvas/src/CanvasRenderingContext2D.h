@@ -46,7 +46,7 @@ extern const mozilla::gfx::Float SIGMA_MAX;
 
 template<typename T> class Optional;
 
-class CanvasPath MOZ_FINAL :
+class CanvasPath :
   public nsWrapperCache
 {
 public:
@@ -88,8 +88,8 @@ public:
   mozilla::RefPtr<mozilla::gfx::Path> GetPath(const CanvasWindingRule& winding,
                                               const mozilla::RefPtr<mozilla::gfx::DrawTarget>& mTarget) const;
 
-  explicit CanvasPath(nsISupports* aParent);
-  CanvasPath(nsISupports* aParent, RefPtr<gfx::PathBuilder> mPathBuilder);
+  CanvasPath(nsCOMPtr<nsISupports> aParent);
+  CanvasPath(nsCOMPtr<nsISupports> aParent, RefPtr<gfx::PathBuilder> mPathBuilder);
   virtual ~CanvasPath() {}
 
 private:
