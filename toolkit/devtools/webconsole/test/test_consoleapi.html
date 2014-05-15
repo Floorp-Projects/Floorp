@@ -28,6 +28,18 @@ function doConsoleCalls(aState)
   top.console.dir(top.document, top.location);
   top.console.log("foo", longString);
 
+  function fromAsmJS() {
+      top.console.error("foobarBaz-asmjs-error", undefined);
+  }
+
+  (function(global, foreign) {
+    "use asm";
+    var fromAsmJS = foreign.fromAsmJS;
+    function inAsmJS2() { fromAsmJS() }
+    function inAsmJS1() { inAsmJS2() }
+    return inAsmJS1
+  })(null, { fromAsmJS:fromAsmJS })();
+
   expectedConsoleCalls = [
     {
       level: "log",
@@ -104,6 +116,36 @@ function doConsoleCalls(aState)
             DebuggerServer.LONG_STRING_INITIAL_LENGTH),
           length: longString.length,
           actor: /[a-z]/,
+        },
+      ],
+    },
+    {
+      level: "error",
+      filename: /test_consoleapi/,
+      functionName: "fromAsmJS",
+      timeStamp: /^\d+$/,
+      arguments: ["foobarBaz-asmjs-error", { type: "undefined" }],
+
+      stacktrace: [
+        {
+          filename: /test_consoleapi/,
+          functionName: "fromAsmJS",
+        },
+        {
+          filename: /test_consoleapi/,
+          functionName: "inAsmJS2",
+        },
+        {
+          filename: /test_consoleapi/,
+          functionName: "inAsmJS1",
+        },
+        {
+          filename: /test_consoleapi/,
+          functionName: "doConsoleCalls",
+        },
+        {
+          filename: /test_consoleapi/,
+          functionName: "onAttach",
         },
       ],
     },
