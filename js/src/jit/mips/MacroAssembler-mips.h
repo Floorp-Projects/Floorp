@@ -787,7 +787,7 @@ public:
         loadPtr(addr, ScratchRegister);
         ma_b(ScratchRegister, ptr, label, cond);
     }
-    void branchPtr(Condition cond, const AsmJSAbsoluteAddress &addr, Register ptr,
+    void branchPtr(Condition cond, AsmJSAbsoluteAddress addr, Register ptr,
                    Label *label) {
         loadPtr(addr, ScratchRegister);
         ma_b(ScratchRegister, ptr, label, cond);
@@ -1026,7 +1026,7 @@ public:
     void movePtr(Register src, Register dest);
     void movePtr(ImmWord imm, Register dest);
     void movePtr(ImmPtr imm, Register dest);
-    void movePtr(const AsmJSImmPtr &imm, Register dest);
+    void movePtr(AsmJSImmPtr imm, Register dest);
     void movePtr(ImmGCPtr imm, Register dest);
 
     void load8SignExtend(const Address &address, Register dest);
@@ -1048,7 +1048,7 @@ public:
     void loadPtr(const Address &address, Register dest);
     void loadPtr(const BaseIndex &src, Register dest);
     void loadPtr(AbsoluteAddress address, Register dest);
-    void loadPtr(const AsmJSAbsoluteAddress &address, Register dest);
+    void loadPtr(AsmJSAbsoluteAddress address, Register dest);
 
     void loadPrivate(const Address &address, Register dest);
 
