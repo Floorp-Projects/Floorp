@@ -63,7 +63,9 @@ txExecutionState::~txExecutionState()
 
     delete mResultHandler;
     delete mLocalVariables;
-    delete mEvalContext;
+    if (mEvalContext != mInitialEvalContext) {
+        delete mEvalContext;
+    }
     
     txStackIterator varsIter(&mLocalVarsStack);
     while (varsIter.hasNext()) {
@@ -87,6 +89,8 @@ txExecutionState::~txExecutionState()
     while (paramIter.hasNext()) {
         delete (txVariableMap*)paramIter.next();
     }
+
+    delete mInitialEvalContext;
 }
 
 nsresult
