@@ -105,6 +105,7 @@ class MNode;
 class MUse;
 class MIRGraph;
 class MResumePoint;
+class MControlInstruction;
 
 // Represents a use of a node.
 class MUse : public TempObject, public InlineListNode<MUse>
@@ -619,10 +620,6 @@ class MDefinition : public MNode
         return !uses_.empty();
     }
 
-    virtual bool isControlInstruction() const {
-        return false;
-    }
-
     void addUse(MUse *use) {
         uses_.pushFront(use);
     }
@@ -662,6 +659,11 @@ class MDefinition : public MNode
     bool isInstruction() const {
         return !isPhi();
     }
+
+    virtual bool isControlInstruction() const {
+        return false;
+    }
+    inline MControlInstruction *toControlInstruction();
 
     void setResultType(MIRType type) {
         resultType_ = type;
@@ -10238,6 +10240,11 @@ const MInstruction *MDefinition::toInstruction() const
 {
     JS_ASSERT(!isPhi());
     return (const MInstruction *)this;
+}
+
+MControlInstruction *MDefinition::toControlInstruction() {
+    JS_ASSERT(isControlInstruction());
+    return (MControlInstruction *)this;
 }
 
 typedef Vector<MDefinition *, 8, IonAllocPolicy> MDefinitionVector;
