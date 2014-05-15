@@ -72,7 +72,7 @@ MOZ_ALWAYS_INLINE bool
 js::Nursery::getForwardedPointer(T **ref)
 {
     JS_ASSERT(ref);
-    JS_ASSERT(isInside(*ref));
+    JS_ASSERT(isInside((void *)*ref));
     const gc::RelocationOverlay *overlay = reinterpret_cast<const gc::RelocationOverlay *>(*ref);
     if (!overlay->isForwarded())
         return false;

@@ -275,7 +275,7 @@ PostBarrierTypedArrayObject(JSObject *obj)
 #ifdef JSGC_GENERATIONAL
     JS_ASSERT(obj);
     JSRuntime *rt = obj->runtimeFromMainThread();
-    if (!rt->isHeapBusy() && !IsInsideNursery(rt, obj))
+    if (!rt->isHeapBusy() && !IsInsideNursery(JS::AsCell(obj)))
         rt->gc.storeBuffer.putWholeCellFromMainThread(obj);
 #endif
 }

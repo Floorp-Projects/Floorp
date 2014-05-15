@@ -1667,15 +1667,14 @@ JSCompartment::checkInitialShapesTableAfterMovingGC()
      * initialShapes that points into the nursery, and that the hash table
      * entries are discoverable.
      */
-    JS::shadow::Runtime *rt = JS::shadow::Runtime::asShadowRuntime(runtimeFromMainThread());
     for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
         InitialShapeEntry entry = e.front();
         TaggedProto proto = entry.proto;
         Shape *shape = entry.shape.get();
 
-        JS_ASSERT_IF(proto.isObject(), !IsInsideNursery(rt, proto.toObject()));
-        JS_ASSERT(!IsInsideNursery(rt, shape->getObjectParent()));
-        JS_ASSERT(!IsInsideNursery(rt, shape->getObjectMetadata()));
+        JS_ASSERT_IF(proto.isObject(), !IsInsideNursery(proto.toObject()));
+        JS_ASSERT_IF(shape->getObjectParent(), !IsInsideNursery(shape->getObjectParent()));
+        JS_ASSERT_IF(shape->getObjectMetadata(), !IsInsideNursery(shape->getObjectMetadata()));
 
         InitialShapeEntry::Lookup lookup(shape->getObjectClass(),
                                          proto,
@@ -1730,9 +1729,9 @@ EmptyShape::getInitialShape(ExclusiveContext *cx, const Class *clasp, TaggedProt
 
 #ifdef JSGC_GENERATIONAL
     if (cx->hasNursery()) {
-        if ((protoRoot.isObject() && cx->nursery().isInside(protoRoot.toObject())) ||
-            cx->nursery().isInside(parentRoot.get()) ||
-            cx->nursery().isInside(metadataRoot.get()))
+        if ((protoRoot.isObject() && IsInsideNursery(protoRoot.toObject())) ||
+            IsInsideNursery(parentRoot.get()) ||
+            IsInsideNursery(metadataRoot.get()))
         {
             InitialShapeSetRef ref(
                 &table, clasp, protoRoot, parentRoot, metadataRoot, nfixed, objectFlags);
