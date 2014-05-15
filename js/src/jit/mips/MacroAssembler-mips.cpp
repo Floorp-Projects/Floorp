@@ -247,7 +247,7 @@ MacroAssemblerMIPS::ma_move(Register rd, Register rs)
 }
 
 void
-MacroAssemblerMIPS::ma_li(Register dest, const ImmGCPtr &ptr)
+MacroAssemblerMIPS::ma_li(Register dest, ImmGCPtr ptr)
 {
     writeDataRelocation(ptr);
     ma_liPatchable(dest, Imm32(ptr.value));
@@ -1762,7 +1762,7 @@ MacroAssemblerMIPSCompat::movePtr(ImmWord imm, Register dest)
 }
 
 void
-MacroAssemblerMIPSCompat::movePtr(const ImmGCPtr &imm, Register dest)
+MacroAssemblerMIPSCompat::movePtr(ImmGCPtr imm, Register dest)
 {
     ma_li(dest, imm);
 }

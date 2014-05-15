@@ -185,7 +185,7 @@ class Assembler : public AssemblerX86Shared
 
     // Actual assembly emitting functions.
 
-    void push(const ImmGCPtr &ptr) {
+    void push(ImmGCPtr ptr) {
         push(Imm32(ptr.value));
         writeDataRelocation(ptr);
     }
@@ -218,11 +218,11 @@ class Assembler : public AssemblerX86Shared
         return movWithPatch(ImmWord(uintptr_t(imm.value)), dest);
     }
 
-    void movl(const ImmGCPtr &ptr, Register dest) {
+    void movl(ImmGCPtr ptr, Register dest) {
         masm.movl_i32r(ptr.value, dest.code());
         writeDataRelocation(ptr);
     }
-    void movl(const ImmGCPtr &ptr, const Operand &dest) {
+    void movl(ImmGCPtr ptr, const Operand &dest) {
         switch (dest.kind()) {
           case Operand::REG:
             masm.movl_i32r(ptr.value, dest.reg());

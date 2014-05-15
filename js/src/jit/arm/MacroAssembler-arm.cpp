@@ -479,7 +479,7 @@ MacroAssemblerARM::ma_mov(ImmWord imm, Register dest,
 }
 
 void
-MacroAssemblerARM::ma_mov(const ImmGCPtr &ptr, Register dest)
+MacroAssemblerARM::ma_mov(ImmGCPtr ptr, Register dest)
 {
     // As opposed to x86/x64 version, the data relocation has to be executed
     // before to recover the pointer, and not after.
@@ -2023,7 +2023,7 @@ MacroAssemblerARMCompat::movePtr(ImmWord imm, Register dest)
     ma_mov(Imm32(imm.value), dest);
 }
 void
-MacroAssemblerARMCompat::movePtr(const ImmGCPtr &imm, Register dest)
+MacroAssemblerARMCompat::movePtr(ImmGCPtr imm, Register dest)
 {
     ma_mov(imm, dest);
 }
@@ -2513,7 +2513,7 @@ MacroAssemblerARMCompat::cmpPtr(Register lhs, Register rhs)
 }
 
 void
-MacroAssemblerARMCompat::cmpPtr(Register lhs, const ImmGCPtr &rhs)
+MacroAssemblerARMCompat::cmpPtr(Register lhs, ImmGCPtr rhs)
 {
     ma_cmp(lhs, rhs);
 }

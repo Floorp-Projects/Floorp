@@ -142,7 +142,7 @@ class AssemblerX86Shared : public AssemblerShared
             dataRelocations_.writeUnsigned(masm.currentOffset());
         }
     }
-    void writeDataRelocation(const ImmGCPtr &ptr) {
+    void writeDataRelocation(ImmGCPtr ptr) {
         if (ptr.value)
             dataRelocations_.writeUnsigned(masm.currentOffset());
     }
