@@ -12,7 +12,7 @@ function dial() {
   telephony.dial(outNumber).then(call => {
     outgoingCall = call;
     ok(outgoingCall);
-    is(outgoingCall.number, outNumber);
+    is(outgoingCall.id.number, outNumber);
     is(outgoingCall.state, "dialing");
 
     is(outgoingCall, telephony.active);
