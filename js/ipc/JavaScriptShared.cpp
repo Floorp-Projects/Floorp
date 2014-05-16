@@ -195,7 +195,7 @@ JavaScriptShared::toVariant(JSContext *cx, JS::HandleValue from, JSVariant *to)
         }
 
         ObjectId id;
-        if (!makeId(cx, obj, &id))
+        if (!toId(cx, obj, &id))
             return false;
         *to = uint64_t(id);
         return true;
@@ -239,7 +239,7 @@ JavaScriptShared::fromVariant(JSContext *cx, const JSVariant &from, MutableHandl
         {
           ObjectId id = from.get_uint64_t();
           if (id) {
-              JSObject *obj = unwrap(cx, id);
+              JSObject *obj = fromId(cx, id);
               if (!obj)
                   return false;
               to.set(ObjectValue(*obj));
@@ -331,14 +331,14 @@ JavaScriptShared::fromDescriptor(JSContext *cx, Handle<JSPropertyDescriptor> des
     if (!toVariant(cx, desc.value(), &out->value()))
         return false;
 
-    if (!makeId(cx, desc.object(), &out->objId()))
+    if (!toId(cx, desc.object(), &out->objId()))
         return false;
 
     if (!desc.getter()) {
         out->getter() = 0;
     } else if (desc.hasGetterObject()) {
         JSObject *getter = desc.getterObject();
-        if (!makeId(cx, getter, &out->getter()))
+        if (!toId(cx, getter, &out->getter()))
             return false;
     } else {
         if (desc.getter() == JS_PropertyStub)
@@ -351,7 +351,7 @@ JavaScriptShared::fromDescriptor(JSContext *cx, Handle<JSPropertyDescriptor> des
         out->setter() = 0;
     } else if (desc.hasSetterObject()) {
         JSObject *setter = desc.setterObject();
-        if (!makeId(cx, setter, &out->setter()))
+        if (!toId(cx, setter, &out->setter()))
             return false;
     } else {
         if (desc.setter() == JS_StrictPropertyStub)
@@ -387,7 +387,7 @@ JavaScriptShared::toDescriptor(JSContext *cx, const PPropertyDescriptor &in,
     if (!fromVariant(cx, in.value(), out.value()))
         return false;
     Rooted<JSObject*> obj(cx);
-    if (!unwrap(cx, in.objId(), &obj))
+    if (!fromId(cx, in.objId(), &obj))
         return false;
     out.object().set(obj);
 
@@ -395,7 +395,7 @@ JavaScriptShared::toDescriptor(JSContext *cx, const PPropertyDescriptor &in,
         out.setGetter(nullptr);
     } else if (in.attrs() & JSPROP_GETTER) {
         Rooted<JSObject*> getter(cx);
-        if (!unwrap(cx, in.getter(), &getter))
+        if (!fromId(cx, in.getter(), &getter))
             return false;
         out.setGetter(JS_DATA_TO_FUNC_PTR(JSPropertyOp, getter.get()));
     } else {
@@ -409,7 +409,7 @@ JavaScriptShared::toDescriptor(JSContext *cx, const PPropertyDescriptor &in,
         out.setSetter(nullptr);
     } else if (in.attrs() & JSPROP_SETTER) {
         Rooted<JSObject*> setter(cx);
-        if (!unwrap(cx, in.setter(), &setter))
+        if (!fromId(cx, in.setter(), &setter))
             return false;
         out.setSetter(JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, setter.get()));
     } else {
