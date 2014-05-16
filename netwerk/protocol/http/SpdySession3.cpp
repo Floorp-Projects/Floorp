@@ -2538,6 +2538,7 @@ SpdySession3::DispatchOnTunnel(nsAHttpTransaction *aHttpTransaction,
   // requeue it. The connection manager is responsible for actually putting
   // this on the tunnel connection with the specific ci now that it
   // has DontRouteViaWildCard set.
+  trans->EnableKeepAlive();
   gHttpHandler->InitiateTransaction(trans, trans->Priority());
 }
 

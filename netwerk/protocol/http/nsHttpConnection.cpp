@@ -1347,7 +1347,7 @@ nsHttpConnection::ForceSend()
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
     if (mTLSFilter) {
-        return mTLSFilter->NudgeTunnel(this, this, this);
+        return mTLSFilter->NudgeTunnel(this);
     }
 
     return NS_DispatchToCurrentThread(new nsHttpConnectionForceIO(this, false));
@@ -1537,7 +1537,7 @@ nsHttpConnection::OnSocketWritable()
             if (mSocketOutCondition == NS_BASE_STREAM_WOULD_BLOCK) {
                 if (mTLSFilter) {
                     LOG(("  blocked tunnel (handshake?)\n"));
-                    mTLSFilter->NudgeTunnel(this, this, this);
+                    mTLSFilter->NudgeTunnel(this);
                 } else {
                     rv = mSocketOut->AsyncWait(this, 0, 0, nullptr); // continue writing
                 }
@@ -1716,7 +1716,8 @@ nsHttpConnection::SetupSecondaryTLS()
          this, mConnInfo->Host(), mConnInfo->Port()));
     mTLSFilter = new TLSFilterTransaction(mTransaction,
                                           mConnInfo->Host(),
-                                          mConnInfo->Port());
+                                          mConnInfo->Port(),
+                                          this, this);
     if (mTransaction) {
         mTransaction = mTLSFilter;
     }
