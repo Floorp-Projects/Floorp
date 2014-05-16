@@ -812,11 +812,13 @@ struct Property
 };
 
 struct TypeNewScript;
+struct TypeTypedObject;
 
 struct TypeObjectAddendum
 {
     enum Kind {
-        NewScript
+        NewScript,
+        TypedObject
     };
 
     TypeObjectAddendum(Kind kind);
@@ -830,6 +832,15 @@ struct TypeObjectAddendum
     TypeNewScript *asNewScript() {
         JS_ASSERT(isNewScript());
         return (TypeNewScript*) this;
+    }
+
+    bool isTypedObject() {
+        return kind == TypedObject;
+    }
+
+    TypeTypedObject *asTypedObject() {
+        JS_ASSERT(isTypedObject());
+        return (TypeTypedObject*) this;
     }
 
     static inline void writeBarrierPre(TypeObjectAddendum *type);
@@ -886,6 +897,21 @@ struct TypeNewScript : public TypeObjectAddendum
     Initializer *initializerList;
 
     static inline void writeBarrierPre(TypeNewScript *newScript);
+};
+
+struct TypeTypedObject : public TypeObjectAddendum
+{
+  private:
+    HeapPtrObject descr_;
+
+  public:
+    TypeTypedObject(Handle<TypeDescr*> descr);
+
+    HeapPtrObject &descrHeapPtr() {
+        return descr_;
+    }
+
+    TypeDescr &descr();
 };
 
 /*
@@ -1001,7 +1027,24 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
         return addendum->asNewScript();
     }
 
+    bool hasTypedObject() {
+        return addendum && addendum->isTypedObject();
+    }
+
+    TypeTypedObject *typedObject() {
+        return addendum->asTypedObject();
+    }
+
     void setAddendum(TypeObjectAddendum *addendum);
+
+    /*
+     * Tag the type object for a binary data type descriptor, instance,
+     * or handle with the type representation of the data it points at.
+     * If this type object is already tagged with a binary data addendum,
+     * this addendum must already be associated with the same TypeRepresentation,
+     * and the method has no effect.
+     */
+    bool addTypedObjectAddendum(JSContext *cx, Handle<TypeDescr*> descr);
 
   private:
     /*
@@ -1114,9 +1157,10 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
     void markStateChange(ExclusiveContext *cx);
     void setFlags(ExclusiveContext *cx, TypeObjectFlags flags);
     void markUnknown(ExclusiveContext *cx);
-    void maybeClearNewScriptAddendumOnOOM();
     void clearAddendum(ExclusiveContext *cx);
     void clearNewScriptAddendum(ExclusiveContext *cx);
+    void clearTypedObjectAddendum(ExclusiveContext *cx);
+    void maybeClearNewScriptAddendumOnOOM();
     bool isPropertyNonData(jsid id);
     bool isPropertyNonWritable(jsid id);
 

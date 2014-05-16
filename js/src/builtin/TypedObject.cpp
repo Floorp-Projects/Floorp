@@ -822,7 +822,8 @@ js::IsTypedObjectArray(JSObject &obj)
 
 const Class StructTypeDescr::class_ = {
     "StructType",
-    JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS),
+    JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS) |
+    JSCLASS_HAS_PRIVATE, // used to store FieldList
     JS_PropertyStub,
     JS_DeletePropertyStub,
     JS_PropertyStub,
@@ -1483,6 +1484,17 @@ TypedObject::createUnattachedWithClass(JSContext *cx,
     obj->initReservedSlot(JS_TYPEDOBJ_SLOT_OWNER, NullValue());
     obj->initReservedSlot(JS_TYPEDOBJ_SLOT_NEXT_VIEW, PrivateValue(nullptr));
     obj->initReservedSlot(JS_TYPEDOBJ_SLOT_LENGTH, Int32Value(length));
+    obj->initReservedSlot(JS_TYPEDOBJ_SLOT_TYPE_DESCR, ObjectValue(*type));
+
+    // Tag the type object for this instance with the type
+    // representation, if that has not been done already.
+    if (!type->is<SimpleTypeDescr>()) { // FIXME Bug 929651
+        RootedTypeObject typeObj(cx, obj->getType(cx));
+        if (typeObj) {
+            if (!typeObj->addTypedObjectAddendum(cx, type))
+                return nullptr;
+        }
+    }
 
     return static_cast<TypedObject*>(&*obj);
 }
@@ -1626,6 +1638,9 @@ ReportTypedObjTypeError(JSContext *cx,
 /*static*/ void
 TypedObject::obj_trace(JSTracer *trace, JSObject *object)
 {
+    gc::MarkSlot(trace, &object->getReservedSlotRef(JS_TYPEDOBJ_SLOT_TYPE_DESCR),
+                 "TypedObjectTypeDescr");
+
     ArrayBufferViewObject::trace(trace, object);
 
     JS_ASSERT(object->is<TypedObject>());

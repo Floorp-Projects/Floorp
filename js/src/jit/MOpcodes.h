@@ -136,7 +136,6 @@ namespace jit {
     _(SetArrayLength)                                                       \
     _(TypedArrayLength)                                                     \
     _(TypedArrayElements)                                                   \
-    _(TypedObjectProto)                                                     \
     _(TypedObjectElements)                                                  \
     _(SetTypedObjectOffset)                                                 \
     _(InitializedLength)                                                    \

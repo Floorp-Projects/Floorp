@@ -1155,14 +1155,5 @@ AssertValidValue(JSContext *cx, Value *v)
 }
 #endif
 
-// Definition of the MTypedObjectProto MIR.
-JSObject *
-TypedObjectProto(JSObject *obj)
-{
-    JS_ASSERT(obj->is<TypedObject>());
-    TypedObject &typedObj = obj->as<TypedObject>();
-    return &typedObj.typedProto();
-}
-
 } // namespace jit
 } // namespace js

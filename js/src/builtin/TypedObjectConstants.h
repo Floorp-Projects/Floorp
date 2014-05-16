@@ -99,7 +99,7 @@
 #define JS_DATAVIEW_SLOTS              4 // Number of slots for data views
 
 #define JS_TYPEDOBJ_SLOT_LENGTH           4 // Length of array (see (*) below)
-#define JS_TYPEDARR_SLOT_TYPE             5 // For typed arrays only, type code
+#define JS_TYPEDOBJ_SLOT_TYPE_DESCR       5 // For typed objects, type descr
 
 #define JS_TYPEDOBJ_SLOT_DATA             7 // private slot, based on alloc kind
 #define JS_TYPEDOBJ_SLOTS                 6 // Number of slots for typed objs

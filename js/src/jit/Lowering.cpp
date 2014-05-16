@@ -2362,16 +2362,6 @@ LIRGenerator::visitTypedArrayElements(MTypedArrayElements *ins)
 }
 
 bool
-LIRGenerator::visitTypedObjectProto(MTypedObjectProto *ins)
-{
-    JS_ASSERT(ins->type() == MIRType_Object);
-    return defineReturn(new(alloc()) LTypedObjectProto(
-                            useFixed(ins->object(), CallTempReg0),
-                            tempFixed(CallTempReg1)),
-                        ins);
-}
-
-bool
 LIRGenerator::visitTypedObjectElements(MTypedObjectElements *ins)
 {
     JS_ASSERT(ins->type() == MIRType_Elements);
