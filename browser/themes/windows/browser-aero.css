@@ -422,7 +422,11 @@
     background-image: url("chrome://browser/skin/privatebrowsing-mask-tabstrip-XPVista7.png");
   }
 
-  #private-browsing-indicator-titlebar > .private-browsing-indicator {
+  /* We're intentionally using the titlebar asset here for fullscreen mode.
+   * See bug 1008183.
+   */
+  #private-browsing-indicator-titlebar > .private-browsing-indicator,
+  #main-window[inFullscreen] #TabsToolbar > .private-browsing-indicator {
     background-image: url("chrome://browser/skin/privatebrowsing-mask-titlebar-XPVista7.png");
   }
 }
