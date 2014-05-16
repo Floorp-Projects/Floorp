@@ -1489,20 +1489,10 @@ Simulator::setCallResult(int64_t res)
 int
 Simulator::readW(int32_t addr, SimInstruction *instr)
 {
-#ifdef JS_YARR
-    // YARR emits unaligned loads, so we don't check for them here like the
-    // other methods below.
+    // The regexp engines emit unaligned loads, so we don't check for them here
+    // like the other methods below.
     intptr_t *ptr = reinterpret_cast<intptr_t*>(addr);
     return *ptr;
-#else // JS_YARR
-    if ((addr & 3) == 0) {
-        intptr_t *ptr = reinterpret_cast<intptr_t*>(addr);
-        return *ptr;
-    } else {
-        printf("Unaligned write at 0x%08x, pc=%p\n", addr, instr);
-        MOZ_CRASH();
-    }
-#endif // JS_YARR
 }
 
 void
