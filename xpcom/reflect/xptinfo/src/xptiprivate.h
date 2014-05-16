@@ -20,6 +20,7 @@
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
 #include "xptinfo.h"
+#include "ShimInterfaceInfo.h"
 
 #include "nsIServiceManager.h"
 #include "nsIFile.h"
@@ -278,6 +279,9 @@ private:
     nsresult GetInterfaceIndexForParam(uint16_t methodIndex,
                                        const nsXPTParamInfo* param,
                                        uint16_t* interfaceIndex);
+
+    already_AddRefed<ShimInterfaceInfo>
+    GetShimForParam(uint16_t methodIndex, const nsXPTParamInfo* param);
 
 private:
     nsID                    mIID;
