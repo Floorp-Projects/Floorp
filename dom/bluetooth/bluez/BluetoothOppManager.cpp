@@ -35,6 +35,8 @@
 USING_BLUETOOTH_NAMESPACE
 using namespace mozilla;
 using namespace mozilla::ipc;
+using mozilla::TimeDuration;
+using mozilla::TimeStamp;
 
 namespace {
 // Sending system message "bluetooth-opp-update-progress" every 50kb
@@ -52,6 +54,10 @@ static const uint32_t kPutRequestHeaderSize = 6;
  * P.S. Length of name header is 4 since unicode is 2 bytes per char.
  */
 static const uint32_t kPutRequestAppendHeaderSize = 5;
+
+// The default timeout we permit to wait for SDP updating if we can't get
+// service channel.
+static const double kSdpUpdatingTimeoutMs = 3000.0;
 
 StaticRefPtr<BluetoothOppManager> sBluetoothOppManager;
 static bool sInShutdown = false;
@@ -1546,9 +1552,17 @@ BluetoothOppManager::OnGetServiceChannel(const nsAString& aDeviceAddress,
   if (aChannel < 0) {
     if (mNeedsUpdatingSdpRecords) {
       mNeedsUpdatingSdpRecords = false;
+      mLastServiceChannelCheck = TimeStamp::Now();
       bs->UpdateSdpRecords(aDeviceAddress, this);
     } else {
-      OnSocketConnectError(mSocket);
+      TimeDuration duration = TimeStamp::Now() - mLastServiceChannelCheck;
+      // Refresh SDP records until it gets valid service channel
+      // unless timeout is hit.
+      if (duration.ToMilliseconds() < kSdpUpdatingTimeoutMs) {
+        bs->UpdateSdpRecords(aDeviceAddress, this);
+      } else {
+        OnSocketConnectError(mSocket);
+      }
     }
 
     return;
