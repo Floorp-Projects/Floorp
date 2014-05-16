@@ -109,6 +109,7 @@ public:
     // existing tunnel instead of triggering creation of a new one.
     void SetDontRouteViaWildCard(bool var) { mDontRouteViaWildCard = var; }
     bool DontRouteViaWildCard() { return mDontRouteViaWildCard; }
+    void EnableKeepAlive() { mCaps |= NS_HTTP_ALLOW_KEEPALIVE; }
 
     // SetPriority() may only be used by the connection manager.
     void    SetPriority(int32_t priority) { mPriority = priority; }

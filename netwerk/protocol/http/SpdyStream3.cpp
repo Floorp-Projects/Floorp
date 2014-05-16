@@ -483,10 +483,7 @@ SpdyStream3::ParseHttpRequestHeaders(const char *buf,
   if (!mTransaction->RequestHead()->IsConnect()) {
     CompressToFrame(mTransaction->RequestHead()->RequestURI());
   } else {
-#ifdef DEBUG
-    nsRefPtr<SpdyConnectTransaction> qiTrans(do_QueryObject(mTransaction));
-    MOZ_ASSERT(qiTrans);
-#endif
+    MOZ_ASSERT(mTransaction->QuerySpdyConnectTransaction());
     mIsTunnel = true;
     // Connect places host:port in :path. Don't use default port.
     nsHttpConnectionInfo *ci = mTransaction->ConnectionInfo();
@@ -1562,7 +1559,7 @@ SpdyStream3::ClearTransactionsBlockedOnTunnel()
 void
 SpdyStream3::MapStreamToHttpConnection()
 {
-  nsRefPtr<SpdyConnectTransaction> qiTrans(do_QueryObject(mTransaction));
+  nsRefPtr<SpdyConnectTransaction> qiTrans(mTransaction->QuerySpdyConnectTransaction());
   MOZ_ASSERT(qiTrans);
   qiTrans->MapStreamToHttpConnection(mSocketTransport,
                                      mTransaction->ConnectionInfo());
