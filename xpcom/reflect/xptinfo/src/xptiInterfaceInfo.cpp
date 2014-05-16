@@ -304,16 +304,17 @@ xptiInterfaceEntry::GetConstant(uint16_t index, JS::MutableHandleValue constant,
 
 // this is a private helper
 
-nsresult 
-xptiInterfaceEntry::GetEntryForParam(uint16_t methodIndex, 
-                                     const nsXPTParamInfo * param,
-                                     xptiInterfaceEntry** entry)
+nsresult
+xptiInterfaceEntry::GetInterfaceIndexForParam(uint16_t methodIndex,
+                                              const nsXPTParamInfo* param,
+                                              uint16_t* interfaceIndex)
 {
     if(!EnsureResolved())
         return NS_ERROR_UNEXPECTED;
 
     if(methodIndex < mMethodBaseIndex)
-        return mParent->GetEntryForParam(methodIndex, param, entry);
+        return mParent->GetInterfaceIndexForParam(methodIndex, param,
+                                                  interfaceIndex);
 
     if(methodIndex >= mMethodBaseIndex + 
                       mDescriptor->num_methods)
@@ -333,8 +334,29 @@ xptiInterfaceEntry::GetEntryForParam(uint16_t methodIndex,
         return NS_ERROR_INVALID_ARG;
     }
 
-    xptiInterfaceEntry* theEntry = mTypelib->
-        GetEntryAt(td->type.iface - 1);
+    *interfaceIndex = td->type.iface;
+    return NS_OK;
+}
+
+nsresult 
+xptiInterfaceEntry::GetEntryForParam(uint16_t methodIndex, 
+                                     const nsXPTParamInfo * param,
+                                     xptiInterfaceEntry** entry)
+{
+    if(!EnsureResolved())
+        return NS_ERROR_UNEXPECTED;
+
+    if(methodIndex < mMethodBaseIndex)
+        return mParent->GetEntryForParam(methodIndex, param, entry);
+
+    uint16_t interfaceIndex = 0;
+    nsresult rv = GetInterfaceIndexForParam(methodIndex, param,
+                                            &interfaceIndex);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    xptiInterfaceEntry* theEntry = mTypelib->GetEntryAt(interfaceIndex - 1);
     
     // This can happen if a declared interface is not available at runtime.
     if(!theEntry)
