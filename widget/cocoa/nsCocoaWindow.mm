@@ -2090,36 +2090,6 @@ void nsCocoaWindow::SetPopupWindowLevel()
   }
 }
 
-bool nsCocoaWindow::IsChildInFailingLeftClickThrough(NSView *aChild)
-{
-  if ([aChild isKindOfClass:[ChildView class]]) {
-    ChildView* childView = (ChildView*) aChild;
-    if ([childView isInFailingLeftClickThrough])
-      return true;
-  }
-  NSArray* subviews = [aChild subviews];
-  if (subviews) {
-    NSUInteger count = [subviews count];
-    for (NSUInteger i = 0; i < count; ++i) {
-      NSView* aView = (NSView*) [subviews objectAtIndex:i];
-      if (IsChildInFailingLeftClickThrough(aView))
-        return true;
-    }
-  }
-  return false;
-}
-
-// Don't focus a plugin if we're in a left click-through that will
-// fail (see [ChildView isInFailingLeftClickThrough]).  Called from
-// [ChildView shouldFocusPlugin].
-bool nsCocoaWindow::ShouldFocusPlugin()
-{
-  if (!mWindow || IsChildInFailingLeftClickThrough([mWindow contentView]))
-    return false;
-
-  return true;
-}
-
 NS_IMETHODIMP
 nsCocoaWindow::NotifyIME(const IMENotification& aIMENotification)
 {
