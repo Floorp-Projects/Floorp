@@ -228,7 +228,7 @@ JavaScriptShared::toVariant(JSContext *cx, JS::HandleValue from, JSVariant *to)
 }
 
 bool
-JavaScriptShared::toValue(JSContext *cx, const JSVariant &from, MutableHandleValue to)
+JavaScriptShared::fromVariant(JSContext *cx, const JSVariant &from, MutableHandleValue to)
 {
     switch (from.type()) {
         case JSVariant::Tvoid_t:
@@ -384,7 +384,7 @@ JavaScriptShared::toDescriptor(JSContext *cx, const PPropertyDescriptor &in,
                                MutableHandle<JSPropertyDescriptor> out)
 {
     out.setAttributes(in.attrs());
-    if (!toValue(cx, in.value(), out.value()))
+    if (!fromVariant(cx, in.value(), out.value()))
         return false;
     Rooted<JSObject*> obj(cx);
     if (!unwrap(cx, in.objId(), &obj))
@@ -448,7 +448,7 @@ JavaScriptShared::Unwrap(JSContext *cx, const InfallibleTArray<CpowEntry> &aCpow
     for (size_t i = 0; i < aCpows.Length(); i++) {
         const nsString &name = aCpows[i].name();
 
-        if (!toValue(cx, aCpows[i].value(), &v))
+        if (!fromVariant(cx, aCpows[i].value(), &v))
             return false;
 
         if (!JS_DefineUCProperty(cx,

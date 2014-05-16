@@ -93,20 +93,15 @@ class JavaScriptShared
 
   protected:
     bool toVariant(JSContext *cx, JS::HandleValue from, JSVariant *to);
-    bool toValue(JSContext *cx, const JSVariant &from, JS::MutableHandleValue to);
-    bool fromDescriptor(JSContext *cx, JS::Handle<JSPropertyDescriptor> desc, PPropertyDescriptor *out);
+    bool fromVariant(JSContext *cx, const JSVariant &from, JS::MutableHandleValue to);
+
+    bool fromDescriptor(JSContext *cx, JS::Handle<JSPropertyDescriptor> desc,
+                        PPropertyDescriptor *out);
     bool toDescriptor(JSContext *cx, const PPropertyDescriptor &in,
                       JS::MutableHandle<JSPropertyDescriptor> out);
+
     bool convertIdToGeckoString(JSContext *cx, JS::HandleId id, nsString *to);
     bool convertGeckoStringToId(JSContext *cx, const nsString &from, JS::MutableHandleId id);
-
-    bool toValue(JSContext *cx, const JSVariant &from, jsval *to) {
-        JS::RootedValue v(cx);
-        if (!toValue(cx, from, &v))
-            return false;
-        *to = v;
-        return true;
-    }
 
     virtual bool makeId(JSContext *cx, JSObject *obj, ObjectId *idp) = 0;
     virtual JSObject *unwrap(JSContext *cx, ObjectId id) = 0;
