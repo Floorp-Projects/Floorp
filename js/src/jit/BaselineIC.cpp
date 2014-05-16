@@ -1992,26 +1992,11 @@ ICCompare_String::Compiler::generateStubCode(MacroAssembler &masm)
 
     GeneralRegisterSet regs(availableGeneralRegs(2));
     Register scratchReg = regs.takeAny();
-    // x86 doesn't have the luxury of a second scratch.
-    Register scratchReg2;
-    if (regs.empty()) {
-        scratchReg2 = BaselineStubReg;
-        masm.push(BaselineStubReg);
-    } else {
-        scratchReg2 = regs.takeAny();
-    }
-    JS_ASSERT(scratchReg2 != scratchReg);
 
-    Label inlineCompareFailed;
-    masm.compareStrings(op, left, right, scratchReg2, scratchReg, &inlineCompareFailed);
-    masm.tagValue(JSVAL_TYPE_BOOLEAN, scratchReg2, R0);
-    if (scratchReg2 == BaselineStubReg)
-        masm.pop(BaselineStubReg);
+    masm.compareStrings(op, left, right, scratchReg, &failure);
+    masm.tagValue(JSVAL_TYPE_BOOLEAN, scratchReg, R0);
     EmitReturnFromIC(masm);
 
-    masm.bind(&inlineCompareFailed);
-    if (scratchReg2 == BaselineStubReg)
-        masm.pop(BaselineStubReg);
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
     return true;
@@ -4224,10 +4209,10 @@ ICGetElemNativeCompiler::generateStubCode(MacroAssembler &masm)
         Label skipAtomize;
 
         // If string is already an atom, skip the atomize.
-        masm.branchTestPtr(Assembler::NonZero,
-                           Address(strExtract, JSString::offsetOfLengthAndFlags()),
-                           Imm32(JSString::ATOM_BIT),
-                           &skipAtomize);
+        masm.branchTest32(Assembler::NonZero,
+                          Address(strExtract, JSString::offsetOfFlags()),
+                          Imm32(JSString::ATOM_BIT),
+                          &skipAtomize);
 
         // Stow R0.
         EmitStowICValues(masm, 1);
@@ -4429,23 +4414,18 @@ ICGetElem_String::Compiler::generateStubCode(MacroAssembler &masm)
     // Unbox string in R0.
     Register str = masm.extractString(R0, ExtractTemp0);
 
-    // Load string lengthAndFlags
-    Address lengthAndFlagsAddr(str, JSString::offsetOfLengthAndFlags());
-    masm.loadPtr(lengthAndFlagsAddr, scratchReg);
-
     // Check for non-linear strings.
-    masm.branchTest32(Assembler::Zero, scratchReg, Imm32(JSString::FLAGS_MASK), &failure);
+    masm.branchIfRope(str, &failure);
 
     // Unbox key.
     Register key = masm.extractInt32(R1, ExtractTemp1);
 
-    // Extract length and bounds check.
-    masm.rshiftPtr(Imm32(JSString::LENGTH_SHIFT), scratchReg);
-    masm.branch32(Assembler::BelowOrEqual, scratchReg, key, &failure);
+    // Bounds check.
+    masm.branch32(Assembler::BelowOrEqual, Address(str, JSString::offsetOfLength()),
+                  key, &failure);
 
     // Get char code.
-    Address charsAddr(str, JSString::offsetOfChars());
-    masm.loadPtr(charsAddr, scratchReg);
+    masm.loadStringChars(str, scratchReg);
     masm.load16ZeroExtend(BaseIndex(scratchReg, key, TimesTwo, 0), scratchReg);
 
     // Check if char code >= UNIT_STATIC_LIMIT.
