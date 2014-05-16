@@ -21,8 +21,8 @@
   [[21,  9], ["-moz-calc", "auto", "calc", "inherit", "initial","unset"]],
   [[22,  5], ['color', 'color-interpolation', 'color-interpolation-filters']],
   [[25, 26], ['.devtools-toolbarbutton > tab',
-              '.devtools-toolbarbutton > .toolbarbutton-menubutton-button',
-              '.devtools-toolbarbutton > hbox']],
+              '.devtools-toolbarbutton > hbox',
+              '.devtools-toolbarbutton > .toolbarbutton-menubutton-button']],
   [[25, 31], ['.devtools-toolbarbutton > hbox.toolbarbutton-menubutton-button']],
   [[29, 20], ['.devtools-menulist:after', '.devtools-menulist:active']],
   [[30, 10], ['#devtools-anotherone', '#devtools-itjustgoeson', '#devtools-menu',
@@ -31,6 +31,6 @@
   [[43, 51], ['.devtools-toolbarbutton:not([checked=true]):hover:after',
               '.devtools-toolbarbutton:not([checked=true]):hover:active']],
   [[58, 36], ['!important;']],
-  [[73, 42], [':last-child', ':lang(', ':last-of-type', ':link']],
+  [[73, 42], [':lang(', ':last-of-type', ':link', ':last-child']],
   [[77, 25], ['.visible']],
 ]

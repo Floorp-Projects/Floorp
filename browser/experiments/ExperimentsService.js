@@ -72,6 +72,7 @@ ExperimentsService.prototype = {
         if (gExperimentsEnabled) {
           Services.obs.addObserver(this, "quit-application", false);
           Services.obs.addObserver(this, "sessionstore-state-finalized", false);
+          Services.obs.addObserver(this, "EM-loaded", false);
 
           if (gActiveExperiment) {
             this._initialized = true;
@@ -84,9 +85,20 @@ ExperimentsService.prototype = {
           CommonUtils.namedTimer(this._delayedInit, DELAY_INIT_MS, this, "_delayedInitTimer");
         }
         break;
+      case "EM-loaded":
+        if (!this._initialized) {
+          Experiments.instance(); // for side effects
+          this._initialized = true;
+
+          if (this._delayedInitTimer) {
+            this._delayedInitTimer.clear();
+          }
+        }
+        break;
       case "quit-application":
         Services.obs.removeObserver(this, "quit-application");
         Services.obs.removeObserver(this, "sessionstore-state-finalized");
+        Services.obs.removeObserver(this, "EM-loaded");
         if (this._delayedInitTimer) {
           this._delayedInitTimer.clear();
         }

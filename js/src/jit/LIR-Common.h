@@ -1870,15 +1870,13 @@ class LCompareFAndBranch : public LControlInstructionHelper<2, 2, 0>
     }
 };
 
-class LCompareS : public LInstructionHelper<1, 2, 1>
+class LCompareS : public LInstructionHelper<1, 2, 0>
 {
   public:
     LIR_HEADER(CompareS)
-    LCompareS(const LAllocation &left, const LAllocation &right,
-              const LDefinition &temp) {
+    LCompareS(const LAllocation &left, const LAllocation &right) {
         setOperand(0, left);
         setOperand(1, right);
-        setTemp(0, temp);
     }
 
     const LAllocation *left() {
@@ -1887,24 +1885,19 @@ class LCompareS : public LInstructionHelper<1, 2, 1>
     const LAllocation *right() {
         return getOperand(1);
     }
-    const LDefinition *temp() {
-        return getTemp(0);
-    }
     MCompare *mir() {
         return mir_->toCompare();
     }
 };
 
 // strict-equality between value and string.
-class LCompareStrictS : public LInstructionHelper<1, BOX_PIECES + 1, 2>
+class LCompareStrictS : public LInstructionHelper<1, BOX_PIECES + 1, 1>
 {
   public:
     LIR_HEADER(CompareStrictS)
-    LCompareStrictS(const LAllocation &rhs, const LDefinition &temp0,
-                    const LDefinition &temp1) {
+    LCompareStrictS(const LAllocation &rhs, const LDefinition &temp) {
         setOperand(BOX_PIECES, rhs);
-        setTemp(0, temp0);
-        setTemp(1, temp1);
+        setTemp(0, temp);
     }
 
     static const size_t Lhs = 0;
@@ -1912,11 +1905,8 @@ class LCompareStrictS : public LInstructionHelper<1, BOX_PIECES + 1, 2>
     const LAllocation *right() {
         return getOperand(BOX_PIECES);
     }
-    const LDefinition *temp() {
-        return getTemp(0);
-    }
     const LDefinition *tempToUnbox() {
-        return getTemp(1);
+        return getTemp(0);
     }
     MCompare *mir() {
         return mir_->toCompare();

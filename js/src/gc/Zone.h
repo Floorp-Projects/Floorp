@@ -8,6 +8,7 @@
 #define gc_Zone_h
 
 #include "mozilla/Atomics.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 
 #include "jscntxt.h"
@@ -147,6 +148,7 @@ struct Zone : public JS::shadow::Zone,
     bool                         gcScheduled;
     GCState                      gcState;
     bool                         gcPreserveCode;
+    mozilla::DebugOnly<unsigned> gcLastZoneGroupIndex;
 
   public:
     bool isCollecting() const {
@@ -228,6 +230,16 @@ struct Zone : public JS::shadow::Zone,
         return gcState == Finished;
     }
 
+#ifdef DEBUG
+    /*
+     * For testing purposes, return the index of the zone group which this zone
+     * was swept in in the last GC.
+     */
+    unsigned lastZoneGroupIndex() {
+        return gcLastZoneGroupIndex;
+    }
+#endif
+
     /* This is updated by both the main and GC helper threads. */
     mozilla::Atomic<size_t, mozilla::ReleaseAcquire> gcBytes;
 
@@ -272,11 +284,22 @@ struct Zone : public JS::shadow::Zone,
     /* This compartment's gray roots. */
     js::Vector<js::GrayRoot, 0, js::SystemAllocPolicy> gcGrayRoots;
 
+    /*
+     * A set of edges from this zone to other zones.
+     *
+     * This is used during GC while calculating zone groups to record edges that
+     * can't be determined by examining this zone by itself.
+     */
+    typedef js::HashSet<Zone *, js::DefaultHasher<Zone *>, js::SystemAllocPolicy> ZoneSet;
+    ZoneSet gcZoneGroupEdges;
+
     /* Per-zone data for use by an embedder. */
     void *data;
 
     Zone(JSRuntime *rt);
     ~Zone();
+
+    bool init();
 
     void findOutgoingEdges(js::gc::ComponentFinder<JS::Zone> &finder);
 
