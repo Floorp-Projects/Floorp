@@ -113,13 +113,13 @@ if (LINUX) {
         }
       }
 
-      if (profileDir) {
-        yield OS.File.removeDir(profileDir.parent.parent.path, { ignoreAbsent: true });
-      }
-
       let removed = false;
       do {
         try {
+          if (profileDir) {
+            yield OS.File.removeDir(profileDir.parent.parent.path, { ignoreAbsent: true });
+          }
+
           yield OS.File.removeDir(installPath, { ignoreAbsent: true });
 
           yield OS.File.remove(desktopShortcut, { ignoreAbsent: true });

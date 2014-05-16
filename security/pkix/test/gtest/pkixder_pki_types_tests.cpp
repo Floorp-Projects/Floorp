@@ -79,11 +79,8 @@ TEST_F(pkixder_pki_types_tests, AlgorithmIdentifierNullParams)
   ASSERT_EQ(Success, input.Init(DER_ALGORITHM_IDENTIFIER_NULL_PARAMS,
                                 sizeof DER_ALGORITHM_IDENTIFIER_NULL_PARAMS));
 
-  uint16_t length;
-  ASSERT_EQ(Success, ExpectTagAndGetLength(input, SEQUENCE, length));
-
   Input nested;
-  ASSERT_EQ(Success, input.Skip(length, nested));
+  ASSERT_EQ(Success, ExpectTagAndGetValue(input, SEQUENCE, nested));
 
   const uint8_t expectedAlgorithmID[] = {
     0xde, 0xad, 0xbe, 0xef

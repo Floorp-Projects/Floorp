@@ -451,6 +451,13 @@ OMXVideoEncoder::SetBitrate(int32_t aKbps)
 #endif
 
 nsresult
+OMXVideoEncoder::RequestIDRFrame()
+{
+  MOZ_ASSERT(mStarted, "Configure() should be called before RequestIDRFrame().");
+  return mCodec->requestIDRFrame() == OK ? NS_OK : NS_ERROR_FAILURE;
+}
+
+nsresult
 OMXAudioEncoder::Configure(int aChannels, int aInputSampleRate,
                            int aEncodedSampleRate)
 {

@@ -21,7 +21,7 @@ public:
   SECStatus SetTrustedRoot(AppTrustedRoot trustedRoot);
 
   SECStatus GetCertTrust(mozilla::pkix::EndEntityOrCA endEntityOrCA,
-                         SECOidTag policy,
+                         const mozilla::pkix::CertPolicyId& policy,
                          const CERTCertificate* candidateCert,
                  /*out*/ mozilla::pkix::TrustLevel* trustLevel) MOZ_OVERRIDE;
   SECStatus FindPotentialIssuers(const SECItem* encodedIssuerName,

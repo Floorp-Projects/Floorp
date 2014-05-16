@@ -146,8 +146,8 @@ CheckOCSPResponseSignerCert(TrustDomain& trustDomain,
   // are validating for should be passed to CheckIssuerIndependentProperties.
   rv = CheckIssuerIndependentProperties(trustDomain, cert, time,
                                         EndEntityOrCA::MustBeEndEntity, 0,
-                                        SEC_OID_OCSP_RESPONDER,
-                                        SEC_OID_X509_ANY_POLICY, 0);
+                                        KeyPurposeId::id_kp_OCSPSigning,
+                                        CertPolicyId::anyPolicy, 0);
   if (rv != Success) {
     return rv;
   }
@@ -267,7 +267,8 @@ GetOCSPSignerCertificate(TrustDomain& trustDomain,
           return nullptr;
         }
         SECItem keyHash;
-        if (der::Skip(responderID, der::OCTET_STRING, keyHash) != der::Success) {
+        if (der::ExpectTagAndGetValue(responderID, der::OCTET_STRING, keyHash)
+              != der::Success) {
           return nullptr;
         }
         if (MatchKeyHash(keyHash, *potentialSigner.get(), match) != der::Success) {
@@ -448,20 +449,14 @@ BasicResponse(der::Input& input, Context& context)
 {
   der::Input::Mark mark(input.GetMark());
 
-  uint16_t length;
-  if (der::ExpectTagAndGetLength(input, der::SEQUENCE, length)
-        != der::Success) {
-    return der::Failure;
-  }
-
   // The signature covers the entire DER encoding of tbsResponseData, including
   // the beginning tag and length. However, when we're parsing tbsResponseData,
   // we want to strip off the tag and length because we don't need it after
   // we've confirmed it's there and figured out what length it is.
 
   der::Input tbsResponseData;
-
-  if (input.Skip(length, tbsResponseData) != der::Success) {
+  if (der::ExpectTagAndGetValue(input, der::SEQUENCE, tbsResponseData)
+        != der::Success) {
     return der::Failure;
   }
 
@@ -477,7 +472,8 @@ BasicResponse(der::Input& input, Context& context)
     return der::Failure;
   }
 
-  if (der::Skip(input, der::BIT_STRING, signedData.signature) != der::Success) {
+  if (der::ExpectTagAndGetValue(input, der::BIT_STRING, signedData.signature)
+        != der::Success) {
     return der::Failure;
   }
   if (signedData.signature.len == 0) {
@@ -506,14 +502,14 @@ BasicResponse(der::Input& input, Context& context)
     // and too long and we'll have leftover data that won't parse as a cert.
 
     // [0] wrapper
-    if (der::ExpectTagAndIgnoreLength(
+    if (der::ExpectTagAndSkipLength(
           input, der::CONSTRUCTED | der::CONTEXT_SPECIFIC | 0)
         != der::Success) {
       return der::Failure;
     }
 
     // SEQUENCE wrapper
-    if (der::ExpectTagAndIgnoreLength(input, der::SEQUENCE) != der::Success) {
+    if (der::ExpectTagAndSkipLength(input, der::SEQUENCE) != der::Success) {
       return der::Failure;
     }
 
@@ -526,7 +522,7 @@ BasicResponse(der::Input& input, Context& context)
       // Unwrap the SEQUENCE that contains the certificate, which is itself a
       // SEQUENCE.
       der::Input::Mark mark(input.GetMark());
-      if (der::Skip(input, der::SEQUENCE) != der::Success) {
+      if (der::ExpectTagAndSkipValue(input, der::SEQUENCE) != der::Success) {
         return der::Failure;
       }
 
@@ -564,18 +560,12 @@ ResponseData(der::Input& input, Context& context,
   //    byName              [1] Name,
   //    byKey               [2] KeyHash }
   SECItem responderID;
-  uint16_t responderIDLength;
   ResponderIDType responderIDType
     = input.Peek(static_cast<uint8_t>(ResponderIDType::byName))
     ? ResponderIDType::byName
     : ResponderIDType::byKey;
-  if (ExpectTagAndGetLength(input, static_cast<uint8_t>(responderIDType),
-                            responderIDLength) != der::Success) {
-    return der::Failure;
-  }
-  // TODO: responderID probably needs to have another level of ASN1 tag/length
-  // checked and stripped.
-  if (input.Skip(responderIDLength, responderID) != der::Success) {
+  if (ExpectTagAndGetValue(input, static_cast<uint8_t>(responderIDType),
+                           responderID) != der::Success) {
     return der::Failure;
   }
 
@@ -663,7 +653,8 @@ SingleResponse(der::Input& input, Context& context)
     // parse it. TODO: We should mention issues like this in the explanation of
     // why we treat invalid OCSP responses equivalently to revoked for OCSP
     // stapling.
-    if (der::Skip(input, static_cast<uint8_t>(CertStatus::Revoked))
+    if (der::ExpectTagAndSkipValue(input,
+                                   static_cast<uint8_t>(CertStatus::Revoked))
           != der::Success) {
       return der::Failure;
     }
@@ -761,12 +752,14 @@ CertID(der::Input& input, const Context& context, /*out*/ bool& match)
   }
 
   SECItem issuerNameHash;
-  if (der::Skip(input, der::OCTET_STRING, issuerNameHash) != der::Success) {
+  if (der::ExpectTagAndGetValue(input, der::OCTET_STRING, issuerNameHash)
+        != der::Success) {
     return der::Failure;
   }
 
   SECItem issuerKeyHash;
-  if (der::Skip(input, der::OCTET_STRING, issuerKeyHash) != der::Success) {
+  if (der::ExpectTagAndGetValue(input, der::OCTET_STRING, issuerKeyHash)
+        != der::Success) {
     return der::Failure;
   }
 
@@ -851,13 +844,8 @@ MatchKeyHash(const SECItem& keyHash, const CERTCertificate& cert,
 static der::Result
 CheckExtensionForCriticality(der::Input& input)
 {
-  uint16_t toSkip;
-  if (ExpectTagAndGetLength(input, der::OIDTag, toSkip) != der::Success) {
-    return der::Failure;
-  }
-
   // TODO: maybe we should check the syntax of the OID value
-  if (input.Skip(toSkip) != der::Success) {
+  if (ExpectTagAndSkipValue(input, der::OIDTag) != der::Success) {
     return der::Failure;
   }
 
@@ -867,11 +855,9 @@ CheckExtensionForCriticality(der::Input& input)
     return der::Fail(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION);
   }
 
-  if (ExpectTagAndGetLength(input, der::OCTET_STRING, toSkip)
-        != der::Success) {
-    return der::Failure;
-  }
-  return input.Skip(toSkip);
+  input.SkipToEnd();
+
+  return der::Success;
 }
 
 // Extensions ::= SEQUENCE SIZE (1..MAX) OF Extension

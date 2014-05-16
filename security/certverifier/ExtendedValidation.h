@@ -9,17 +9,21 @@
 #include "certt.h"
 #include "prtypes.h"
 
+namespace mozilla { namespace pkix { struct CertPolicyId; } }
+
 namespace mozilla { namespace psm {
 
 #ifndef MOZ_NO_EV_CERTS
 void EnsureIdentityInfoLoaded();
 void CleanupIdentityInfo();
-SECStatus GetFirstEVPolicy(CERTCertificate* cert, SECOidTag& outOidTag);
+SECStatus GetFirstEVPolicy(CERTCertificate* cert,
+                           /*out*/ mozilla::pkix::CertPolicyId& policy,
+                           /*out*/ SECOidTag& policyOidTag);
 
 // CertIsAuthoritativeForEVPolicy does NOT evaluate whether the cert is trusted
 // or distrusted.
 bool CertIsAuthoritativeForEVPolicy(const CERTCertificate* cert,
-                                    SECOidTag policyOidTag);
+                                    const mozilla::pkix::CertPolicyId& policy);
 #endif
 
 #ifndef NSS_NO_LIBPKIX

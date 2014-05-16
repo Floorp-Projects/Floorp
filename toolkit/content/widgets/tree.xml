@@ -430,7 +430,7 @@
         <parameter name="event"/>
         <body>
           <![CDATA[
-            if (this._editingColumn || this.view.rowCount == 0)
+            if (this.view.rowCount == 0)
               return;
 
             if (this._isAccelPressed(event) && this.view.selection.single) {
@@ -472,7 +472,7 @@
         <parameter name="event"/>
         <body>
           <![CDATA[
-            if (this._editingColumn || this.view.rowCount == 0)
+            if (this.view.rowCount == 0)
               return;
 
             if (this.view.selection.single) {
@@ -509,7 +509,7 @@
         <parameter name="event"/>
         <body>
           <![CDATA[
-            if (this._editingColumn || this.view.rowCount == 0)
+            if (this.view.rowCount == 0)
               return;
 
             if (this.pageUpOrDownMovesSelection == this._isAccelPressed(event)) {
@@ -558,7 +558,7 @@
         <parameter name="event"/>
         <body>
           <![CDATA[
-            if (this._editingColumn || this.view.rowCount == 0)
+            if (this.view.rowCount == 0)
               return;
 
             if (this.view.rowCount == 1 && !this.view.selection.isSelected(0) &&
@@ -608,7 +608,7 @@
         <parameter name="event"/>
         <body>
           <![CDATA[
-            if (this._editingColumn || this.view.rowCount == 0)
+            if (this.view.rowCount == 0)
               return;
 
             if (this.view.selection.isSelected(edge) && this.view.selection.count == 1) {
@@ -634,7 +634,7 @@
         <parameter name="event"/>
         <body>
           <![CDATA[
-            if (this._editingColumn || this.view.rowCount == 0)
+            if (this.view.rowCount == 0)
               return;
 
             if (this.view.rowCount == 1 && !this.view.selection.isSelected(0)) {
@@ -863,30 +863,102 @@
           }
         ]]>
       </handler>
-      <handler event="keydown" keycode="VK_UP" preventdefault="true"
-               modifiers="accel any" action="_moveByOffset(-1, 0, event);"/>
-      <handler event="keydown" keycode="VK_DOWN" preventdefault="true"
-               modifiers="accel any" action="_moveByOffset(1, this.view.rowCount - 1, event);"/>
-      <handler event="keydown" keycode="VK_UP" preventdefault="true"
-               modifiers="accel any, shift" action="_moveByOffsetShift(-1, 0, event);"/>
-      <handler event="keydown" keycode="VK_DOWN" preventdefault="true"
-               modifiers="accel any, shift" action="_moveByOffsetShift(1, this.view.rowCount - 1, event);"/>
-      <handler event="keydown" keycode="VK_PAGE_UP" preventdefault="true"
-               modifiers="accel any" action="_moveByPage(-1, 0, event);"/>
-      <handler event="keydown" keycode="VK_PAGE_DOWN" preventdefault="true"
-               modifiers="accel any" action="_moveByPage(1, this.view.rowCount - 1, event);"/>
-      <handler event="keydown" keycode="VK_PAGE_UP" preventdefault="true"
-               modifiers="accel any, shift" action="_moveByPageShift(-1, 0, event);"/>
-      <handler event="keydown" keycode="VK_PAGE_DOWN" preventdefault="true"
-               modifiers="accel any, shift" action="_moveByPageShift(1, this.view.rowCount - 1, event);"/>
-      <handler event="keydown" keycode="VK_HOME" preventdefault="true"
-               modifiers="accel any" action="_moveToEdge(0, event);"/>
-      <handler event="keydown" keycode="VK_END" preventdefault="true"
-               modifiers="accel any" action="_moveToEdge(this.view.rowCount - 1, event);"/>
-      <handler event="keydown" keycode="VK_HOME" preventdefault="true"
-               modifiers="accel any, shift" action="_moveToEdgeShift(0, event);"/>
-      <handler event="keydown" keycode="VK_END" preventdefault="true"
-               modifiers="accel any, shift" action="_moveToEdgeShift(this.view.rowCount - 1, event);"/>
+      <handler event="keydown" keycode="VK_UP" modifiers="accel any">
+        <![CDATA[
+          if (this._editingColumn)
+            return;
+          _moveByOffset(-1, 0, event);
+          event.preventDefault();
+        ]]>
+      </handler>
+      <handler event="keydown" keycode="VK_DOWN" modifiers="accel any">
+        <![CDATA[
+          if (this._editingColumn)
+            return;
+          _moveByOffset(1, this.view.rowCount - 1, event);
+          event.preventDefault();
+        ]]>
+      </handler>
+      <handler event="keydown" keycode="VK_UP" modifiers="accel any, shift">
+        <![CDATA[
+          if (this._editingColumn)
+            return;
+          _moveByOffsetShift(-1, 0, event);
+          event.preventDefault();
+        ]]>
+      </handler>
+      <handler event="keydown" keycode="VK_DOWN" modifiers="accel any, shift">
+        <![CDATA[
+          if (this._editingColumn)
+            return;
+          _moveByOffsetShift(1, this.view.rowCount - 1, event);
+          event.preventDefault();
+        ]]>
+      </handler>
+      <handler event="keydown" keycode="VK_PAGE_UP" modifiers="accel any">
+        <![CDATA[
+          if (this._editingColumn)
+            return;
+          _moveByPage(-1, 0, event);
+          event.preventDefault();
+        ]]>
+      </handler>
+      <handler event="keydown" keycode="VK_PAGE_DOWN" modifiers="accel any">
+        <![CDATA[
+          if (this._editingColumn)
+            return;
+          _moveByPage(1, this.view.rowCount - 1, event);
+          event.preventDefault();
+        ]]>
+      </handler>
+      <handler event="keydown" keycode="VK_PAGE_UP" modifiers="accel any, shift">
+        <![CDATA[
+          if (this._editingColumn)
+            return;
+          _moveByPageShift(-1, 0, event);
+          event.preventDefault();
+        ]]>
+      </handler>
+      <handler event="keydown" keycode="VK_PAGE_DOWN" modifiers="accel any, shift">
+        <![CDATA[
+          if (this._editingColumn)
+            return;
+          _moveByPageShift(1, this.view.rowCount - 1, event);
+          event.preventDefault();
+        ]]>
+      </handler>
+      <handler event="keydown" keycode="VK_HOME" modifiers="accel any">
+        <![CDATA[
+          if (this._editingColumn)
+            return;
+          _moveToEdge(0, event);
+          event.preventDefault();
+        ]]>
+      </handler>
+      <handler event="keydown" keycode="VK_END" modifiers="accel any">
+        <![CDATA[
+          if (this._editingColumn)
+            return;
+          _moveToEdge(this.view.rowCount - 1, event);
+          event.preventDefault();
+        ]]>
+      </handler>
+      <handler event="keydown" keycode="VK_HOME" modifiers="accel any, shift">
+        <![CDATA[
+          if (this._editingColumn)
+            return;
+          _moveToEdgeShift(0, event);
+          event.preventDefault();
+        ]]>
+      </handler>
+      <handler event="keydown" keycode="VK_END" modifiers="accel any, shift">
+        <![CDATA[
+          if (this._editingColumn)
+            return;
+          _moveToEdgeShift(this.view.rowCount - 1, event);
+          event.preventDefault();
+        ]]>
+      </handler>
       <handler event="keypress">
         <![CDATA[
          if (this._editingColumn)
