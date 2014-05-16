@@ -11,14 +11,12 @@ import org.mozilla.gecko.toolbar.BrowserToolbar.OnDismissListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnFilterListener;
 import org.mozilla.gecko.CustomEditText;
 import org.mozilla.gecko.CustomEditText.OnKeyPreImeListener;
-import org.mozilla.gecko.InputMethods;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.StringUtils;
 
 import android.content.Context;
 import android.graphics.Rect;
 import android.text.Editable;
-import android.text.InputType;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -27,13 +25,11 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnKeyListener;
-import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 
 /**
 * {@code ToolbarEditText} is the text entry used when the toolbar
-* is in edit state. It handles all the necessary input method machinery
-* as well as the tracking of different text types (empty, search, or url).
+* is in edit state. It handles all the necessary input method machinery.
 * It's meant to be owned by {@code ToolbarEditLayout}.
 */
 public class ToolbarEditText extends CustomEditText
@@ -41,28 +37,11 @@ public class ToolbarEditText extends CustomEditText
 
     private static final String LOGTAG = "GeckoToolbarEditText";
 
-    // Used to track the current type of content in the
-    // text entry so that ToolbarEditLayout can update its
-    // state accordingly.
-    enum TextType {
-        EMPTY,
-        SEARCH_QUERY,
-        URL
-    }
-
-    interface OnTextTypeChangeListener {
-        public void onTextTypeChange(ToolbarEditText editText, TextType textType);
-    }
-
     private final Context mContext;
-
-    // Type of the URL bar go/search button
-    private TextType mToolbarTextType;
 
     private OnCommitListener mCommitListener;
     private OnDismissListener mDismissListener;
     private OnFilterListener mFilterListener;
-    private OnTextTypeChangeListener mTextTypeListener;
 
     // The previous autocomplete result returned to us
     private String mAutoCompleteResult = "";
@@ -73,8 +52,6 @@ public class ToolbarEditText extends CustomEditText
     public ToolbarEditText(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
-
-        mToolbarTextType = TextType.EMPTY;
     }
 
     void setOnCommitListener(OnCommitListener listener) {
@@ -87,10 +64,6 @@ public class ToolbarEditText extends CustomEditText
 
     void setOnFilterListener(OnFilterListener listener) {
         mFilterListener = listener;
-    }
-
-    void setOnTextTypeChangeListener(OnTextTypeChangeListener listener) {
-        mTextTypeListener = listener;
     }
 
     @Override
@@ -144,12 +117,6 @@ public class ToolbarEditText extends CustomEditText
         setSelection(text.length(), result.length());
     }
 
-    @Override
-    public void setEnabled(boolean enabled) {
-        super.setEnabled(enabled);
-        updateTextTypeFromText(getText().toString());
-    }
-
     private void resetAutocompleteState() {
         mAutoCompleteResult = "";
         mAutoCompletePrefix = null;
@@ -168,29 +135,6 @@ public class ToolbarEditText extends CustomEditText
         }
 
         return false;
-    }
-
-    private void setTextType(TextType textType) {
-        mToolbarTextType = textType;
-
-        if (mTextTypeListener != null) {
-            mTextTypeListener.onTextTypeChange(this, textType);
-        }
-    }
-
-    private void updateTextTypeFromText(String text) {
-        if (text.length() == 0) {
-            setTextType(TextType.EMPTY);
-            return;
-        }
-
-        final TextType newType;
-        if (StringUtils.isSearchQuery(text, mToolbarTextType == TextType.SEARCH_QUERY)) {
-            newType = TextType.SEARCH_QUERY;
-        } else {
-            newType = TextType.URL;
-        }
-        setTextType(newType);
     }
 
     private class TextChangeListener implements TextWatcher {
@@ -232,8 +176,6 @@ public class ToolbarEditText extends CustomEditText
                     onAutocomplete(mAutoCompleteResult);
                 }
             }
-
-            updateTextTypeFromText(text);
         }
 
         @Override
