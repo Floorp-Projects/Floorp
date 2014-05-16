@@ -2021,7 +2021,11 @@ DoMatchGlobal(JSContext *cx, CallArgs args, RegExpStatics *res, Handle<JSLinearS
     // techniques from the spec to implement step 8f's loop.
 
     // Step 8f.
+#ifdef JS_YARR
     MatchPair match;
+#else
+    ScopedMatchPairs matches(&cx->tempLifoAlloc());
+#endif
     size_t charsLen = input->length();
     const jschar *chars = input->chars();
     RegExpShared &re = g.regExp();
@@ -2031,7 +2035,11 @@ DoMatchGlobal(JSContext *cx, CallArgs args, RegExpStatics *res, Handle<JSLinearS
 
         // Steps 8f(i-ii), minus "lastIndex" updates (see above).
         size_t nextSearchIndex = searchIndex;
+#ifdef JS_YARR
         RegExpRunStatus status = re.executeMatchOnly(cx, chars, charsLen, &nextSearchIndex, match);
+#else
+        RegExpRunStatus status = re.execute(cx, chars, charsLen, &nextSearchIndex, matches);
+#endif
         if (status == RegExpRunStatus_Error)
             return false;
 
@@ -2040,6 +2048,10 @@ DoMatchGlobal(JSContext *cx, CallArgs args, RegExpStatics *res, Handle<JSLinearS
             break;
 
         lastSuccessfulStart = searchIndex;
+
+#ifndef JS_YARR
+        MatchPair &match = matches[0];
+#endif
 
         // Steps 8f(iii)(1-3).
         searchIndex = match.isEmpty() ? nextSearchIndex + 1 : nextSearchIndex;
@@ -2178,17 +2190,25 @@ js::str_search(JSContext *cx, unsigned argc, Value *vp)
 
     /* Per ECMAv5 15.5.4.12 (5) The last index property is ignored and left unchanged. */
     size_t i = 0;
+#ifdef JS_YARR
     MatchPair match;
-
     RegExpRunStatus status = g.regExp().executeMatchOnly(cx, chars, length, &i, match);
+#else
+    ScopedMatchPairs matches(&cx->tempLifoAlloc());
+    RegExpRunStatus status = g.regExp().execute(cx, chars, length, &i, matches);
+#endif
     if (status == RegExpRunStatus_Error)
         return false;
 
     if (status == RegExpRunStatus_Success)
         res->updateLazily(cx, linearStr, &g.regExp(), 0);
 
+#ifdef JS_YARR
     JS_ASSERT_IF(status == RegExpRunStatus_Success_NotFound, match.start == -1);
     args.rval().setInt32(match.start);
+#else
+    args.rval().setInt32(status == RegExpRunStatus_Success_NotFound ? -1 : matches[0].start);
+#endif
     return true;
 }
 
@@ -2813,7 +2833,11 @@ StrReplaceRegexpRemove(JSContext *cx, HandleString str, RegExpShared &re, Mutabl
 
     size_t charsLen = flatStr->length();
 
+#ifdef JS_YARR
     MatchPair match;
+#else
+    ScopedMatchPairs matches(&cx->tempLifoAlloc());
+#endif
     size_t startIndex = 0; /* Index used for iterating through the string. */
     size_t lastIndex = 0;  /* Index after last successful match. */
     size_t lazyIndex = 0;  /* Index before last successful match. */
@@ -2823,12 +2847,19 @@ StrReplaceRegexpRemove(JSContext *cx, HandleString str, RegExpShared &re, Mutabl
         if (!CheckForInterrupt(cx))
             return false;
 
-        RegExpRunStatus status =
-            re.executeMatchOnly(cx, flatStr->chars(), charsLen, &startIndex, match);
+#ifdef JS_YARR
+        RegExpRunStatus status = re.executeMatchOnly(cx, flatStr->chars(), charsLen, &startIndex, match);
+#else
+        RegExpRunStatus status = re.execute(cx, flatStr->chars(), charsLen, &startIndex, matches);
+#endif
         if (status == RegExpRunStatus_Error)
             return false;
         if (status == RegExpRunStatus_Success_NotFound)
             break;
+
+#ifndef JS_YARR
+        MatchPair &match = matches[0];
+#endif
 
         /* Include the latest unmatched substring. */
         if (size_t(match.start) > lastIndex) {

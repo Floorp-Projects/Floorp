@@ -1,0 +1,92 @@
+<html>
+<head>
+<script>
+
+  var gData1 = "TEST_DATA_1:ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  var gData2 = "TEST_DATA_2:1234567890";
+  var gPaddingChar = '.';
+  var gPaddingSize = 10000;
+  var gPadding = "";
+
+  for (var i = 0; i < gPaddingSize; i++) {
+    gPadding += gPaddingChar;
+  }
+
+  function sendMessage(msg) {
+    alert(msg);
+  }
+
+  function ok(p, msg) {
+    if (p)
+      sendMessage("OK: " + msg);
+    else
+      sendMessage("KO: " + msg);
+  }
+
+  function testXHR(file, data_head, mapped, cb) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', file);
+    xhr.responseType = 'arraybuffer';
+    xhr.onreadystatechange = function xhrReadystatechange() {
+      if (xhr.readyState !== xhr.DONE) {
+        return;
+      }
+      if (xhr.status && xhr.status == 200) {
+        var ct = xhr.getResponseHeader("Content-Type");
+        if (mapped) {
+          ok(ct.indexOf("mem-mapped") != -1, "Data is memory-mapped");
+        } else {
+          ok(ct.indexOf("mem-mapped") == -1, "Data is not memory-mapped");
+        }
+        var data = xhr.response;
+        ok(data, "Data is non-null");
+        var str = String.fromCharCode.apply(null, Uint8Array(data));
+        ok(str.length == data_head.length + gPaddingSize, "Data size is correct");
+        ok(str.slice(0, data_head.length) == data_head, "Data head is correct");
+        ok(str.slice(data_head.length) == gPadding, "Data padding is correct");
+        cb();
+      } else {
+        ok(false, "XHR error: " + xhr.status + " - " + xhr.statusText + "\n");
+        cb();
+      }
+    }
+    xhr.send();
+  }
+
+  // Memory-mapped array buffer.
+  function test_mapped() {
+    testXHR('data_1.txt', gData1, true, runTests);
+  }
+
+  // Non memory-mapped array buffer.
+  function test_non_mapped() {
+    // Make sure array buffer retrieved from compressed file in package is
+    // handled by memory allocation instead of memory mapping.
+    testXHR('data_2.txt', gData2, false, runTests);
+  }
+
+  var tests = [
+    test_mapped,
+    test_non_mapped
+  ];
+
+  function runTests() {
+    if (!tests.length) {
+      sendMessage("DONE");
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
+  function go() {
+    ok(true, "Launched app");
+    runTests();
+  }
+
+</script>
+</head>
+<body onload="go();">
+</body>
+</html>

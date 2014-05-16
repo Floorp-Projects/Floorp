@@ -21,7 +21,7 @@ interface nsIStackFrame;
 * interface of Components.interfacesByID
 * (interesting stuff only reflected into JavaScript)
 */
-[scriptable, uuid(c99cffac-5aed-4267-ad2f-f4a4c9d4a081)]
+[scriptable, uuid(f235ef76-9919-478b-aa0f-282d994ddf76)]
 interface nsIXPCComponents_InterfacesByID : nsISupports
 {
 };
@@ -216,6 +216,18 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     [implicit_jscontext,optional_argc]
     jsval import(in AUTF8String aResourceURI, [optional] in jsval targetObj);
+
+    /**
+     * Returns true if the js file located at 'registryLocation' location has
+     * been loaded previously via the import method above. Returns false
+     * otherwise.
+     *
+     * @param resourceURI A resource:// URI string representing the location of
+     *        the js file to be checked if it is already loaded or not.
+     * @returns boolean, true if the js file has been loaded via import. false
+     *          otherwise
+     */
+    boolean isModuleLoaded(in AUTF8String aResourceURI);
 
     /*
      * Unloads the JS module at 'registryLocation'. Existing references to the

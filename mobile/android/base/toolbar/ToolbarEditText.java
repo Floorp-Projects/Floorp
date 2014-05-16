@@ -109,8 +109,10 @@ public class ToolbarEditText extends CustomEditText
             return;
         }
 
-        InputMethodManager imm = (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
+        InputMethodManager imm = (InputMethodManager)
+                mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
         try {
+            imm.restartInput(this);
             imm.hideSoftInputFromWindow(getWindowToken(), 0);
         } catch (NullPointerException e) {
             Log.e(LOGTAG, "InputMethodManagerService, why are you throwing"

@@ -16,10 +16,16 @@ fuzzy-if(!contentSameGfxBackendAsCanvas,4,92400) fuzzy-if(azureSkiaGL,2,143400) 
 == linear-diagonal-4a.html linear-diagonal-4-ref.html
 == linear-diagonal-4b.html linear-diagonal-4-ref.html
 == linear-diagonal-4c.html linear-diagonal-4-ref.html
-fuzzy(2,11410) == linear-diagonal-5a.html linear-diagonal-5-ref.html
-fuzzy(2,11568) fuzzy-if(azureQuartz&&OSX==10.6,2,11657) == linear-diagonal-6a.html linear-diagonal-6-ref.html
-fuzzy(2,11605) == linear-diagonal-7a.html linear-diagonal-7-ref.html
-fuzzy(2,11407) fuzzy-if(azureQuartz&&OSX==10.6,2,11443) == linear-diagonal-8a.html linear-diagonal-8-ref.html
+
+# these tests uses a similar gradient over different bounds. It's perfectly
+# reasonable to expect implementations to give slightly different results
+# if the gradients are not being normalized. Skia uses a lookup table for
+# gradients so it will have less precision when drawing a larger gradient
+fuzzy(2,11410) fuzzy-if(skiaContent,4,15271) == linear-diagonal-5a.html linear-diagonal-5-ref.html
+fuzzy(2,11568) fuzzy-if(azureQuartz&&OSX==10.6,2,11657) fuzzy-if(skiaContent,8,19701) == linear-diagonal-6a.html linear-diagonal-6-ref.html
+fuzzy(2,11605) fuzzy-if(skiaContent,8,19701) == linear-diagonal-7a.html linear-diagonal-7-ref.html
+fuzzy(2,11407) fuzzy-if(azureQuartz&&OSX==10.6,2,11443) fuzzy-if(skiaContent,4,15085) == linear-diagonal-8a.html linear-diagonal-8-ref.html
+
 fuzzy-if(azureQuartz,4,29373) == linear-diagonal-9a.html linear-diagonal-9-ref.html
 fuzzy(1,800000) == linear-flipped-1.html linear-flipped-1-ref.html
 == linear-position-1a.html linear-position-1-ref.html

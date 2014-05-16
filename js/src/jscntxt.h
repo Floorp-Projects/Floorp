@@ -107,7 +107,6 @@ TraceCycleDetectionSet(JSTracer *trc, ObjectSet &set);
 struct AutoResolving;
 class DtoaCache;
 class ForkJoinContext;
-class RegExpCompartment;
 class RegExpStatics;
 
 namespace frontend { struct CompileError; }
@@ -1082,9 +1081,6 @@ class AutoLockForExclusiveAccess
 
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
-
-void
-CrashAtUnhandlableOOM(const char *reason);
 
 } /* namespace js */
 

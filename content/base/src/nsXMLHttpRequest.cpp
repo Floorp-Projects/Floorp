@@ -6,6 +6,9 @@
 
 #include "nsXMLHttpRequest.h"
 
+#ifndef XP_WIN
+#include <unistd.h>
+#endif
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 #include "mozilla/EventDispatcher.h"
@@ -15,6 +18,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMProgressEvent.h"
 #include "nsIJARChannel.h"
+#include "nsIJARURI.h"
 #include "nsLayoutCID.h"
 #include "nsReadableUtils.h"
 
@@ -69,8 +73,10 @@
 #include "nsStreamListenerWrapper.h"
 #include "xpcjsid.h"
 #include "nsITimedChannel.h"
-
 #include "nsWrapperCacheInlines.h"
+#include "nsZipArchive.h"
+#include "mozilla/Preferences.h"
+#include "private/pprio.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -296,6 +302,7 @@ nsXMLHttpRequest::nsXMLHttpRequest()
     mInLoadProgressEvent(false),
     mResultJSON(JSVAL_VOID),
     mResultArrayBuffer(nullptr),
+    mIsMappedArrayBuffer(false),
     mXPCOMifier(nullptr)
 {
   SetIsDOMBinding();
@@ -1748,7 +1755,8 @@ nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
     if (xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_MOZ_BLOB) {
       xmlHttpRequest->mResponseBlob = nullptr;
     }
-  } else if (xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER ||
+  } else if ((xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER &&
+              !xmlHttpRequest->mIsMappedArrayBuffer) ||
              xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER) {
     // get the initial capacity to something reasonable to avoid a bunch of reallocs right
     // at the start
@@ -1955,12 +1963,46 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
   // Set up arraybuffer
   if (mResponseType == XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER && NS_SUCCEEDED(status)) {
-    int64_t contentLength;
-    rv = channel->GetContentLength(&contentLength);
-    if (NS_SUCCEEDED(rv) &&
-        contentLength > 0 &&
-        contentLength < XML_HTTP_REQUEST_MAX_CONTENT_LENGTH_PREALLOCATE) {
-      mArrayBufferBuilder.setCapacity(static_cast<int32_t>(contentLength));
+    if (mIsMappedArrayBuffer) {
+      nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(channel);
+      if (jarChannel) {
+        nsCOMPtr<nsIURI> uri;
+        rv = channel->GetURI(getter_AddRefs(uri));
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoCString file;
+          nsAutoCString scheme;
+          uri->GetScheme(scheme);
+          if (scheme.LowerCaseEqualsLiteral("app")) {
+            uri->GetPath(file);
+            // The actual file inside zip package has no leading slash.
+            file.Trim("/", true, false, false);
+          } else if (scheme.LowerCaseEqualsLiteral("jar")) {
+            nsCOMPtr<nsIJARURI> jarURI = do_QueryInterface(uri);
+            if (jarURI) {
+              jarURI->GetJAREntry(file);
+            }
+          }
+          nsCOMPtr<nsIFile> jarFile;
+          jarChannel->GetJarFile(getter_AddRefs(jarFile));
+          rv = mArrayBufferBuilder.mapToFileInPackage(file, jarFile);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            mIsMappedArrayBuffer = false;
+          } else {
+            channel->SetContentType(NS_LITERAL_CSTRING("application/mem-mapped"));
+          }
+        }
+      }
+    }
+    // If memory mapping failed, mIsMappedArrayBuffer would be set to false,
+    // and we want it fallback to the malloc way.
+    if (!mIsMappedArrayBuffer) {
+      int64_t contentLength;
+      rv = channel->GetContentLength(&contentLength);
+      if (NS_SUCCEEDED(rv) &&
+          contentLength > 0 &&
+          contentLength < XML_HTTP_REQUEST_MAX_CONTENT_LENGTH_PREALLOCATE) {
+        mArrayBufferBuilder.setCapacity(static_cast<int32_t>(contentLength));
+      }
     }
   }
 
@@ -2145,7 +2187,8 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
     NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
     NS_ASSERTION(mResponseText.IsEmpty(), "mResponseText should be empty");
   } else if (NS_SUCCEEDED(status) &&
-             (mResponseType == XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER ||
+             ((mResponseType == XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER &&
+               !mIsMappedArrayBuffer) ||
               mResponseType == XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER)) {
     // set the capacity down to the actual length, to realloc back
     // down to the actual size
@@ -2880,6 +2923,21 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
     NS_ENSURE_SUCCESS(rv, rv);
   }
   else {
+    mIsMappedArrayBuffer = false;
+    if (mResponseType == XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER &&
+        Preferences::GetBool("dom.mapped_arraybuffer.enabled", false)) {
+      nsCOMPtr<nsIURI> uri;
+      nsAutoCString scheme;
+
+      rv = mChannel->GetURI(getter_AddRefs(uri));
+      if (NS_SUCCEEDED(rv)) {
+        uri->GetScheme(scheme);
+        if (scheme.LowerCaseEqualsLiteral("app") ||
+            scheme.LowerCaseEqualsLiteral("jar")) {
+          mIsMappedArrayBuffer = true;
+        }
+      }
+    }
     // Start reading from the channel
     rv = mChannel->AsyncOpen(listener, nullptr);
   }
@@ -3844,7 +3902,8 @@ namespace mozilla {
 ArrayBufferBuilder::ArrayBufferBuilder()
   : mDataPtr(nullptr),
     mCapacity(0),
-    mLength(0)
+    mLength(0),
+    mMapPtr(nullptr)
 {
 }
 
@@ -3859,6 +3918,12 @@ ArrayBufferBuilder::reset()
   if (mDataPtr) {
     JS_free(nullptr, mDataPtr);
   }
+
+  if (mMapPtr) {
+    JS_ReleaseMappedArrayBufferContents(mMapPtr, mLength);
+    mMapPtr = nullptr;
+  }
+
   mDataPtr = nullptr;
   mCapacity = mLength = 0;
 }
@@ -3866,6 +3931,8 @@ ArrayBufferBuilder::reset()
 bool
 ArrayBufferBuilder::setCapacity(uint32_t aNewCap)
 {
+  MOZ_ASSERT(!mMapPtr);
+
   uint8_t *newdata = (uint8_t *) JS_ReallocateArrayBufferContents(nullptr, aNewCap, mDataPtr, mCapacity);
   if (!newdata) {
     return false;
@@ -3884,6 +3951,8 @@ bool
 ArrayBufferBuilder::append(const uint8_t *aNewData, uint32_t aDataLen,
                            uint32_t aMaxGrowth)
 {
+  MOZ_ASSERT(!mMapPtr);
+
   if (mLength + aDataLen > mCapacity) {
     uint32_t newcap;
     // Double while under aMaxGrowth or if not specified.
@@ -3921,6 +3990,18 @@ ArrayBufferBuilder::append(const uint8_t *aNewData, uint32_t aDataLen,
 JSObject*
 ArrayBufferBuilder::getArrayBuffer(JSContext* aCx)
 {
+  if (mMapPtr) {
+    JSObject* obj = JS_NewMappedArrayBufferWithContents(aCx, mLength, mMapPtr);
+    if (!obj) {
+      JS_ReleaseMappedArrayBufferContents(mMapPtr, mLength);
+    }
+    mMapPtr = nullptr;
+
+    // The memory-mapped contents will be released when obj been finalized(GCed
+    // or neutered).
+    return obj;
+  }
+
   // we need to check for mLength == 0, because nothing may have been
   // added
   if (mCapacity > mLength || mLength == 0) {
@@ -3937,6 +4018,50 @@ ArrayBufferBuilder::getArrayBuffer(JSContext* aCx)
     return nullptr;
   }
   return obj;
+}
+
+nsresult
+ArrayBufferBuilder::mapToFileInPackage(const nsCString& aFile,
+                                       nsIFile* aJarFile)
+{
+#ifdef XP_WIN
+  // TODO: Bug 988813 - Support memory mapped array buffer for Windows platform.
+  MOZ_CRASH("Not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
+  nsresult rv;
+
+  // Open Jar file to get related attributes of target file.
+  nsRefPtr<nsZipArchive> zip = new nsZipArchive();
+  rv = zip->OpenArchive(aJarFile);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  nsZipItem* zipItem = zip->GetItem(aFile.get());
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // If file was added to the package as stored(uncompressed), map to the
+  // offset of file in zip package.
+  if (!zipItem->Compression()) {
+    uint32_t offset = zip->GetDataOffset(zipItem);
+    uint32_t size = zipItem->RealSize();
+    mozilla::AutoFDClose pr_fd;
+    mozilla::ScopedClose fd;
+    rv = aJarFile->OpenNSPRFileDesc(PR_RDONLY, 0, &pr_fd.rwget());
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    fd.rwget() = PR_FileDesc2NativeHandle(pr_fd);
+    mMapPtr = JS_CreateMappedArrayBufferContents(fd, offset, size);
+    if (mMapPtr) {
+      mLength = size;
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
+#endif
 }
 
 /* static */ bool

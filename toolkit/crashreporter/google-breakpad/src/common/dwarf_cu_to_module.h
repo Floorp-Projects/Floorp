@@ -221,7 +221,6 @@ class DwarfCUToModule: public dwarf2reader::RootDIEHandler {
 
   // Used internally by the handler. Full definitions are in
   // dwarf_cu_to_module.cc.
-  struct FilePrivate;
   struct Specification;
   struct CUContext;
   struct DIEContext;

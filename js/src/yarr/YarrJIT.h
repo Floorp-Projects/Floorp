@@ -30,7 +30,7 @@
 
 #include "assembler/wtf/Platform.h"
 
-#if ENABLE_YARR_JIT
+#if JS_ION
 
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 
