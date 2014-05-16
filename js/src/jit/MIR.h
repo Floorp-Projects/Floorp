@@ -3536,6 +3536,11 @@ class MBitXor : public MBinaryBitwiseInstruction
         return this;
     }
     void computeRange(TempAllocator &alloc);
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return specialization_ < MIRType_Object;
+    }
 };
 
 class MShiftInstruction
