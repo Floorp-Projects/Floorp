@@ -23,7 +23,7 @@
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="3b2aeeb5af3083c2f6f4b44beae0b4802566d482"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="ca283b9db2b151d465cfd2e19346cf58fe89e413"/>
-  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="9c968054e04cf62726af017b9070a2b0c1452603"/>
+  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="e5f4683183a1dec2cfdb21b76509819977e9d09c"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="ce95d372e6d285725b96490afdaaf489ad8f9ca9"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="8a4baf82a131a7853cf7e7f9cf74253927b2f355"/>
   <!-- Stock Android things -->
