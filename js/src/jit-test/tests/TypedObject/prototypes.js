@@ -1,11 +1,8 @@
 // API Surface Test: check that mutating prototypes
-// of type objects has no effect, and that mutating
-// the prototypes of typed objects is an error.
+// of type descriptors has no effect.
 
 if (!this.hasOwnProperty("TypedObject"))
   quit();
-
-load(libdir + "asserts.js");
 
 var {StructType, uint32, Object, Any, storage, objectType} = TypedObject;
 
@@ -14,14 +11,6 @@ function main() { // once a C programmer, always a C programmer.
   var p = Uints.prototype;
   Uints.prototype = {}; // no effect
   assertEq(p, Uints.prototype);
-
-  var uints = new Uints();
-  assertEq(uints.__proto__, p);
-  assertThrowsInstanceOf(function() uints.__proto__ = {},
-                         TypeError);
-  assertThrowsInstanceOf(function() Object.setPrototypeOf(uints, {}),
-                         TypeError);
-  assertEq(uints.__proto__, p);
 
   var Uintss = Uints.array(2);
   var p = Uintss.prototype;
