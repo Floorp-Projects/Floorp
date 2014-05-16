@@ -30,8 +30,7 @@ public class PanelsPreference extends CustomListPreference {
 
     /**
      * Index of the context menu button for controlling display options.
-     * For (removable) Dynamic panels, this button removes the panel.
-     * For built-in panels, this button toggles showing or hiding the panel.
+     * This button toggles showing or hiding the panel.
      */
     private static final int INDEX_DISPLAY_BUTTON = 1;
     private static final int INDEX_REORDER_BUTTON = 2;
@@ -45,7 +44,6 @@ public class PanelsPreference extends CustomListPreference {
 
     private View preferenceView;
     protected boolean mIsHidden = false;
-    private boolean mIsRemovable;
 
     private boolean mAnimate;
     private static final int ANIMATION_DURATION_MS = 400;
@@ -54,9 +52,8 @@ public class PanelsPreference extends CustomListPreference {
     private int mPositionState = -1;
     private final int mIndex;
 
-    public PanelsPreference(Context context, CustomListCategory parentCategory, boolean isRemovable, int index, boolean animate) {
+    public PanelsPreference(Context context, CustomListCategory parentCategory, int index, boolean animate) {
         super(context, parentCategory);
-        mIsRemovable = isRemovable;
         mIndex = index;
         mAnimate = animate;
     }
@@ -98,11 +95,6 @@ public class PanelsPreference extends CustomListPreference {
         final Resources res = getContext().getResources();
         final String labelReorder = res.getString(R.string.pref_panels_reorder);
 
-        if (mIsRemovable) {
-            return new String[] { LABEL_SET_AS_DEFAULT, LABEL_REMOVE, labelReorder };
-        }
-
-        // Built-in panels can't be removed, so use show/hide options.
         LABEL_HIDE = res.getString(R.string.pref_panels_hide);
         LABEL_SHOW = res.getString(R.string.pref_panels_show);
 
@@ -131,14 +123,8 @@ public class PanelsPreference extends CustomListPreference {
                 break;
 
             case INDEX_DISPLAY_BUTTON:
-                // Handle display options for the panel.
-                if (mIsRemovable) {
-                    // For removable panels, the button displays text for removing the panel.
-                    mParentCategory.uninstall(this);
-                } else {
-                    // Otherwise, the button toggles between text for showing or hiding the panel.
-                    ((PanelsPreferenceCategory) mParentCategory).setHidden(this, !mIsHidden);
-                }
+                // The button toggles between text for showing or hiding the panel.
+                ((PanelsPreferenceCategory) mParentCategory).setHidden(this, !mIsHidden);
                 break;
 
             case INDEX_REORDER_BUTTON:
@@ -157,10 +143,8 @@ public class PanelsPreference extends CustomListPreference {
         super.configureShownDialog();
 
         // Handle Show/Hide buttons.
-        if (!mIsRemovable) {
-            final TextView hideButton = (TextView) mDialog.getListView().getChildAt(INDEX_DISPLAY_BUTTON);
-            hideButton.setText(mIsHidden ? LABEL_SHOW : LABEL_HIDE);
-        }
+        final TextView hideButton = (TextView) mDialog.getListView().getChildAt(INDEX_DISPLAY_BUTTON);
+        hideButton.setText(mIsHidden ? LABEL_SHOW : LABEL_HIDE);
     }
 
 
