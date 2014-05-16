@@ -24,11 +24,11 @@
 
 #include <limits>
 
+#include "pkix/bind.h"
 #include "pkix/pkix.h"
 #include "pkixcheck.h"
 #include "pkixder.h"
 #include "pkixutil.h"
-#include "secder.h"
 
 namespace mozilla { namespace pkix {
 
@@ -107,28 +107,80 @@ CheckKeyUsage(EndEntityOrCA endEntityOrCA,
 }
 
 // RFC5820 4.2.1.4. Certificate Policies
-//
+
 // "The user-initial-policy-set contains the special value any-policy if the
 // user is not concerned about certificate policy."
-Result
-CheckCertificatePolicies(BackCert& cert, EndEntityOrCA endEntityOrCA,
-                         bool isTrustAnchor, SECOidTag requiredPolicy)
+//
+// id-ce OBJECT IDENTIFIER  ::=  {joint-iso-ccitt(2) ds(5) 29}
+// id-ce-certificatePolicies OBJECT IDENTIFIER ::=  { id-ce 32 }
+// anyPolicy OBJECT IDENTIFIER ::= { id-ce-certificatePolicies 0 }
+
+/*static*/ const CertPolicyId CertPolicyId::anyPolicy = {
+  4, { (40*2)+5, 29, 32, 0 }
+};
+
+bool CertPolicyId::IsAnyPolicy() const
 {
-  if (requiredPolicy == SEC_OID_X509_ANY_POLICY) {
-    return Success;
+  return this == &anyPolicy ||
+         (numBytes == anyPolicy.numBytes &&
+          !memcmp(bytes, anyPolicy.bytes, anyPolicy.numBytes));
+}
+
+// PolicyInformation ::= SEQUENCE {
+//         policyIdentifier   CertPolicyId,
+//         policyQualifiers   SEQUENCE SIZE (1..MAX) OF
+//                                 PolicyQualifierInfo OPTIONAL }
+inline der::Result
+CheckPolicyInformation(der::Input& input, EndEntityOrCA endEntityOrCA,
+                       const CertPolicyId& requiredPolicy,
+                       /*in/out*/ bool& found)
+{
+  if (input.MatchTLV(der::OIDTag, requiredPolicy.numBytes,
+                     requiredPolicy.bytes)) {
+    found = true;
+  } else if (endEntityOrCA == EndEntityOrCA::MustBeCA &&
+             input.MatchTLV(der::OIDTag, CertPolicyId::anyPolicy.numBytes,
+                            CertPolicyId::anyPolicy.bytes)) {
+    found = true;
   }
 
-  // It is likely some callers will pass SEC_OID_UNKNOWN when they don't care,
-  // instead of passing SEC_OID_X509_ANY_POLICY. Help them out by failing hard.
-  if (requiredPolicy == SEC_OID_UNKNOWN) {
-    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
-    return FatalError;
+  // RFC 5280 Section 4.2.1.4 says "Optional qualifiers, which MAY be present,
+  // are not expected to change the definition of the policy." Also, it seems
+  // that Section 6, which defines validation, does not require any matching of
+  // qualifiers. Thus, doing anything with the policy qualifiers would be a
+  // waste of time and a source of potential incompatibilities, so we just
+  // ignore them.
+
+  // Skip unmatched OID and/or policyQualifiers
+  input.SkipToEnd();
+
+  return der::Success;
+}
+
+// certificatePolicies ::= SEQUENCE SIZE (1..MAX) OF PolicyInformation
+Result
+CheckCertificatePolicies(EndEntityOrCA endEntityOrCA,
+                         const SECItem* encodedCertificatePolicies,
+                         const SECItem* encodedInhibitAnyPolicy,
+                         TrustLevel trustLevel,
+                         const CertPolicyId& requiredPolicy)
+{
+  if (requiredPolicy.numBytes == 0 ||
+      requiredPolicy.numBytes > sizeof requiredPolicy.bytes) {
+    return Fail(FatalError, SEC_ERROR_INVALID_ARGS);
+  }
+
+  // Ignore all policy information if the caller indicates any policy is
+  // acceptable. See TrustDomain::GetCertTrust and the policy part of
+  // BuildCertChain's documentation.
+  if (requiredPolicy.IsAnyPolicy()) {
+    return Success;
   }
 
   // Bug 989051. Until we handle inhibitAnyPolicy we will fail close when
   // inhibitAnyPolicy extension is present and we need to evaluate certificate
   // policies.
-  if (cert.encodedInhibitAnyPolicy) {
+  if (encodedInhibitAnyPolicy) {
     return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
   }
 
@@ -136,62 +188,46 @@ CheckCertificatePolicies(BackCert& cert, EndEntityOrCA endEntityOrCA,
   // trusted for, so we cannot require the policies to be present in those
   // certificates. Instead, the determination of which roots are trusted for
   // which policies is made by the TrustDomain's GetCertTrust method.
-  if (isTrustAnchor && endEntityOrCA == EndEntityOrCA::MustBeCA) {
+  if (trustLevel == TrustLevel::TrustAnchor &&
+      endEntityOrCA == EndEntityOrCA::MustBeCA) {
     return Success;
   }
 
-  if (!cert.encodedCertificatePolicies) {
+  if (!encodedCertificatePolicies) {
     return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
   }
 
-  ScopedPtr<CERTCertificatePolicies, CERT_DestroyCertificatePoliciesExtension>
-    policies(CERT_DecodeCertificatePoliciesExtension(
-                cert.encodedCertificatePolicies));
-  if (!policies) {
-    return MapSECStatus(SECFailure);
+  bool found = false;
+
+  der::Input input;
+  if (input.Init(encodedCertificatePolicies->data,
+                 encodedCertificatePolicies->len) != der::Success) {
+    return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
+  }
+  if (der::NestedOf(input, der::SEQUENCE, der::SEQUENCE, der::EmptyAllowed::No,
+                    bind(CheckPolicyInformation, _1, endEntityOrCA,
+                         requiredPolicy, ref(found))) != der::Success) {
+    return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
+  }
+  if (der::End(input) != der::Success) {
+    return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
+  }
+  if (!found) {
+    return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
   }
 
-  for (const CERTPolicyInfo* const* policyInfos = policies->policyInfos;
-       *policyInfos; ++policyInfos) {
-    if ((*policyInfos)->oid == requiredPolicy) {
-      return Success;
-    }
-    // Intermediate certs are allowed to have the anyPolicy OID
-    if (endEntityOrCA == EndEntityOrCA::MustBeCA &&
-        (*policyInfos)->oid == SEC_OID_X509_ANY_POLICY) {
-      return Success;
-    }
-  }
-
-  return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
+  return Success;
 }
+
+static const long UNLIMITED_PATH_LEN = -1; // must be less than zero
 
 //  BasicConstraints ::= SEQUENCE {
 //          cA                      BOOLEAN DEFAULT FALSE,
 //          pathLenConstraint       INTEGER (0..MAX) OPTIONAL }
-der::Result
-DecodeBasicConstraints(const SECItem* encodedBasicConstraints,
-                       CERTBasicConstraints& basicConstraints)
+static der::Result
+DecodeBasicConstraints(der::Input& input, /*out*/ bool& isCA,
+                       /*out*/ long& pathLenConstraint)
 {
-  PR_ASSERT(encodedBasicConstraints);
-  if (!encodedBasicConstraints) {
-    return der::Fail(SEC_ERROR_INVALID_ARGS);
-  }
-
-  basicConstraints.isCA = false;
-  basicConstraints.pathLenConstraint = 0;
-
-  der::Input input;
-  if (input.Init(encodedBasicConstraints->data, encodedBasicConstraints->len)
-        != der::Success) {
-    return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
-  }
-
-  if (der::ExpectTagAndIgnoreLength(input, der::SEQUENCE) != der::Success) {
-    return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
-  }
-
-  bool isCA = false;
   // TODO(bug 989518): cA is by default false. According to DER, default
   // values must not be explicitly encoded in a SEQUENCE. So, if this
   // value is present and false, it is an encoding error. However, Go Daddy
@@ -201,51 +237,43 @@ DecodeBasicConstraints(const SECItem* encodedBasicConstraints,
   if (der::OptionalBoolean(input, true, isCA) != der::Success) {
     return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
   }
-  basicConstraints.isCA = isCA;
 
-  if (input.Peek(der::INTEGER)) {
-    SECItem pathLenConstraintEncoded;
-    if (der::Integer(input, pathLenConstraintEncoded) != der::Success) {
-      return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
-    }
-    long pathLenConstraint = DER_GetInteger(&pathLenConstraintEncoded);
-    if (pathLenConstraint >= std::numeric_limits<int>::max() ||
-        pathLenConstraint < 0) {
-      return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
-    }
-    basicConstraints.pathLenConstraint = static_cast<int>(pathLenConstraint);
-    // TODO(bug 985025): If isCA is false, pathLenConstraint MUST NOT
-    // be included (as per RFC 5280 section 4.2.1.9), but for compatibility
-    // reasons, we don't check this for now.
-  } else if (basicConstraints.isCA) {
-    // If this is a CA but the path length is omitted, it is unlimited.
-    basicConstraints.pathLenConstraint = CERT_UNLIMITED_PATH_CONSTRAINT;
-  }
-
-  if (der::End(input) != der::Success) {
+  // TODO(bug 985025): If isCA is false, pathLenConstraint MUST NOT
+  // be included (as per RFC 5280 section 4.2.1.9), but for compatibility
+  // reasons, we don't check this for now.
+  if (OptionalInteger(input, UNLIMITED_PATH_LEN, pathLenConstraint)
+        != der::Success) {
     return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
   }
+
   return der::Success;
 }
 
 // RFC5280 4.2.1.9. Basic Constraints (id-ce-basicConstraints)
 Result
-CheckBasicConstraints(const BackCert& cert,
-                      EndEntityOrCA endEntityOrCA,
-                      bool isTrustAnchor,
+CheckBasicConstraints(EndEntityOrCA endEntityOrCA,
+                      const SECItem* encodedBasicConstraints,
+                      const der::Version version, TrustLevel trustLevel,
                       unsigned int subCACount)
 {
-  CERTBasicConstraints basicConstraints;
-  if (cert.encodedBasicConstraints) {
-    if (DecodeBasicConstraints(cert.encodedBasicConstraints,
-                               basicConstraints) != der::Success) {
-      return RecoverableError;
+  bool isCA = false;
+  long pathLenConstraint = UNLIMITED_PATH_LEN;
+
+  if (encodedBasicConstraints) {
+    der::Input input;
+    if (input.Init(encodedBasicConstraints->data,
+                   encodedBasicConstraints->len) != der::Success) {
+      return Fail(RecoverableError, SEC_ERROR_EXTENSION_VALUE_INVALID);
+    }
+    if (der::Nested(input, der::SEQUENCE,
+                    bind(DecodeBasicConstraints, _1, ref(isCA),
+                         ref(pathLenConstraint))) != der::Success) {
+      return Fail(RecoverableError, SEC_ERROR_EXTENSION_VALUE_INVALID);
+    }
+    if (der::End(input) != der::Success) {
+      return Fail(RecoverableError, SEC_ERROR_EXTENSION_VALUE_INVALID);
     }
   } else {
-    // Synthesize a non-CA basic constraints by default
-    basicConstraints.isCA = false;
-    basicConstraints.pathLenConstraint = 0;
-
     // "If the basic constraints extension is not present in a version 3
     //  certificate, or the extension is present but the cA boolean is not
     //  asserted, then the certified public key MUST NOT be used to verify
@@ -255,22 +283,16 @@ CheckBasicConstraints(const BackCert& cert,
     // constraints as CAs.
     //
     // TODO: add check for self-signedness?
-    if (endEntityOrCA == EndEntityOrCA::MustBeCA && isTrustAnchor) {
-      const CERTCertificate* nssCert = cert.GetNSSCert();
-      // We only allow trust anchor CA certs to omit the
-      // basicConstraints extension if they are v1. v1 is encoded
-      // implicitly.
-      if (!nssCert->version.data && !nssCert->version.len) {
-        basicConstraints.isCA = true;
-        basicConstraints.pathLenConstraint = CERT_UNLIMITED_PATH_CONSTRAINT;
-      }
+    if (endEntityOrCA == EndEntityOrCA::MustBeCA &&
+        trustLevel == TrustLevel::TrustAnchor && version == der::Version::v1) {
+      isCA = true;
     }
   }
 
   if (endEntityOrCA == EndEntityOrCA::MustBeEndEntity) {
     // CA certificates are not trusted as EE certs.
 
-    if (basicConstraints.isCA) {
+    if (isCA) {
       // XXX: We use SEC_ERROR_CA_CERT_INVALID here so we can distinguish
       // this error from other errors, given that NSS does not have a "CA cert
       // used as end-entity" error code since it doesn't have such a
@@ -290,15 +312,13 @@ CheckBasicConstraints(const BackCert& cert,
   PORT_Assert(endEntityOrCA == EndEntityOrCA::MustBeCA);
 
   // End-entity certificates are not allowed to act as CA certs.
-  if (!basicConstraints.isCA) {
+  if (!isCA) {
     return Fail(RecoverableError, SEC_ERROR_CA_CERT_INVALID);
   }
 
-  if (basicConstraints.pathLenConstraint >= 0) {
-    if (subCACount >
-           static_cast<unsigned int>(basicConstraints.pathLenConstraint)) {
-      return Fail(RecoverableError, SEC_ERROR_PATH_LEN_CONSTRAINT_INVALID);
-    }
+  if (pathLenConstraint >= 0 &&
+      static_cast<long>(subCACount) > pathLenConstraint) {
+    return Fail(RecoverableError, SEC_ERROR_PATH_LEN_CONSTRAINT_INVALID);
   }
 
   return Success;
@@ -368,15 +388,97 @@ CheckNameConstraints(BackCert& cert)
 }
 
 // 4.2.1.12. Extended Key Usage (id-ce-extKeyUsage)
-// 4.2.1.12. Extended Key Usage (id-ce-extKeyUsage)
-Result
-CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedEKUs,
-                      SECOidTag requiredEKU)
-{
-  // TODO: Either do not allow anyExtendedKeyUsage to be passed as requiredEKU,
-  // or require that callers pass anyExtendedKeyUsage instead of
-  // SEC_OID_UNKNWON and disallow SEC_OID_UNKNWON.
 
+static der::Result
+MatchEKU(der::Input& value, KeyPurposeId requiredEKU,
+         EndEntityOrCA endEntityOrCA, /*in/out*/ bool& found,
+         /*in/out*/ bool& foundOCSPSigning)
+{
+  // See Section 5.9 of "A Layman's Guide to a Subset of ASN.1, BER, and DER"
+  // for a description of ASN.1 DER encoding of OIDs.
+
+  // id-pkix  OBJECT IDENTIFIER  ::=
+  //            { iso(1) identified-organization(3) dod(6) internet(1)
+  //                    security(5) mechanisms(5) pkix(7) }
+  // id-kp OBJECT IDENTIFIER ::= { id-pkix 3 }
+  // id-kp-serverAuth      OBJECT IDENTIFIER ::= { id-kp 1 }
+  // id-kp-clientAuth      OBJECT IDENTIFIER ::= { id-kp 2 }
+  // id-kp-codeSigning     OBJECT IDENTIFIER ::= { id-kp 3 }
+  // id-kp-emailProtection OBJECT IDENTIFIER ::= { id-kp 4 }
+  // id-kp-OCSPSigning     OBJECT IDENTIFIER ::= { id-kp 9 }
+  static const uint8_t server[] = { (40*1)+3, 6, 1, 5, 5, 7, 3, 1 };
+  static const uint8_t client[] = { (40*1)+3, 6, 1, 5, 5, 7, 3, 2 };
+  static const uint8_t code  [] = { (40*1)+3, 6, 1, 5, 5, 7, 3, 3 };
+  static const uint8_t email [] = { (40*1)+3, 6, 1, 5, 5, 7, 3, 4 };
+  static const uint8_t ocsp  [] = { (40*1)+3, 6, 1, 5, 5, 7, 3, 9 };
+
+  // id-Netscape        OBJECT IDENTIFIER ::= { 2 16 840 1 113730 }
+  // id-Netscape-policy OBJECT IDENTIFIER ::= { id-Netscape 4 }
+  // id-Netscape-stepUp OBJECT IDENTIFIER ::= { id-Netscape-policy 1 }
+  static const uint8_t serverStepUp[] =
+    { (40*2)+16, 128+6,72, 1, 128+6,128+120,66, 4, 1 };
+
+  bool match = false;
+
+  if (!found) {
+    switch (requiredEKU) {
+      case KeyPurposeId::id_kp_serverAuth:
+        // Treat CA certs with step-up OID as also having SSL server type.
+        // Comodo has issued certificates that require this behavior that don't
+        // expire until June 2020! TODO(bug 982932): Limit this exception to
+        // old certificates.
+        match = value.MatchBytes(server) ||
+                (endEntityOrCA == EndEntityOrCA::MustBeCA &&
+                 value.MatchBytes(serverStepUp));
+        break;
+
+      case KeyPurposeId::id_kp_clientAuth:
+        match = value.MatchBytes(client);
+        break;
+
+      case KeyPurposeId::id_kp_codeSigning:
+        match = value.MatchBytes(code);
+        break;
+
+      case KeyPurposeId::id_kp_emailProtection:
+        match = value.MatchBytes(email);
+        break;
+
+      case KeyPurposeId::id_kp_OCSPSigning:
+        match = value.MatchBytes(ocsp);
+        break;
+
+      case KeyPurposeId::anyExtendedKeyUsage:
+        PR_NOT_REACHED("anyExtendedKeyUsage should start with found==true");
+        return der::Fail(SEC_ERROR_LIBRARY_FAILURE);
+
+      default:
+        PR_NOT_REACHED("unrecognized EKU");
+        return der::Fail(SEC_ERROR_LIBRARY_FAILURE);
+    }
+  }
+
+  if (match) {
+    if (value.AtEnd()) {
+      found = true;
+      if (requiredEKU == KeyPurposeId::id_kp_OCSPSigning) {
+        foundOCSPSigning = true;
+      }
+    }
+  } else if (value.MatchBytes(ocsp) && value.AtEnd()) {
+    foundOCSPSigning = true;
+  }
+
+  value.SkipToEnd(); // ignore unmatched OIDs.
+
+  return der::Success;
+}
+
+Result
+CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA,
+                      const SECItem* encodedExtendedKeyUsage,
+                      KeyPurposeId requiredEKU)
+{
   // XXX: We're using SEC_ERROR_INADEQUATE_CERT_TYPE here so that callers can
   // distinguish EKU mismatch from KU mismatch from basic constraints mismatch.
   // We should probably add a new error code that is more clear for this type
@@ -384,35 +486,22 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedEKUs,
 
   bool foundOCSPSigning = false;
 
-  if (encodedEKUs) {
-    ScopedPtr<CERTOidSequence, CERT_DestroyOidSequence>
-      seq(CERT_DecodeOidSequence(encodedEKUs));
-    if (!seq) {
-      PR_SetError(SEC_ERROR_INADEQUATE_CERT_TYPE, 0);
-      return RecoverableError;
+  if (encodedExtendedKeyUsage) {
+    bool found = requiredEKU == KeyPurposeId::anyExtendedKeyUsage;
+
+    der::Input input;
+    if (input.Init(encodedExtendedKeyUsage->data,
+                   encodedExtendedKeyUsage->len) != der::Success) {
+      return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);
     }
-
-    bool found = false;
-
-    // XXX: We allow duplicate entries.
-    for (const SECItem* const* oids = seq->oids; oids && *oids; ++oids) {
-      SECOidTag oidTag = SECOID_FindOIDTag(*oids);
-      if (requiredEKU != SEC_OID_UNKNOWN && oidTag == requiredEKU) {
-        found = true;
-      } else {
-        // Treat CA certs with step-up OID as also having SSL server type.
-        // COMODO has issued certificates that require this behavior
-        // that don't expire until June 2020!
-        // TODO 982932: Limit this expection to old certificates
-        if (endEntityOrCA == EndEntityOrCA::MustBeCA &&
-            requiredEKU == SEC_OID_EXT_KEY_USAGE_SERVER_AUTH &&
-            oidTag == SEC_OID_NS_KEY_USAGE_GOVT_APPROVED) {
-          found = true;
-        }
-      }
-      if (oidTag == SEC_OID_OCSP_RESPONDER) {
-        foundOCSPSigning = true;
-      }
+    if (der::NestedOf(input, der::SEQUENCE, der::OIDTag, der::EmptyAllowed::No,
+                      bind(MatchEKU, _1, requiredEKU, endEntityOrCA,
+                           ref(found), ref(foundOCSPSigning)))
+          != der::Success) {
+      return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);
+    }
+    if (der::End(input) != der::Success) {
+      return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);
     }
 
     // If the EKU extension was included, then the required EKU must be in the
@@ -437,9 +526,8 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedEKUs,
     // Allowing this exception does not cause any security issues because we
     // require delegated OCSP response signing certificates to be end-entity
     // certificates.
-    if (foundOCSPSigning && requiredEKU != SEC_OID_OCSP_RESPONDER) {
-      PR_SetError(SEC_ERROR_INADEQUATE_CERT_TYPE, 0);
-      return RecoverableError;
+    if (foundOCSPSigning && requiredEKU != KeyPurposeId::id_kp_OCSPSigning) {
+      return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);
     }
     // http://tools.ietf.org/html/rfc6960#section-4.2.2.2:
     // "OCSP signing delegation SHALL be designated by the inclusion of
@@ -450,9 +538,8 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedEKUs,
     // EKU extension is missing from an end-entity certificate. However, any CA
     // certificate can issue a delegated OCSP response signing certificate, so
     // we can't require the EKU be explicitly included for CA certificates.
-    if (!foundOCSPSigning && requiredEKU == SEC_OID_OCSP_RESPONDER) {
-      PR_SetError(SEC_ERROR_INADEQUATE_CERT_TYPE, 0);
-      return RecoverableError;
+    if (!foundOCSPSigning && requiredEKU == KeyPurposeId::id_kp_OCSPSigning) {
+      return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);
     }
   }
 
@@ -465,8 +552,8 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
                                  PRTime time,
                                  EndEntityOrCA endEntityOrCA,
                                  KeyUsages requiredKeyUsagesIfPresent,
-                                 SECOidTag requiredEKUIfPresent,
-                                 SECOidTag requiredPolicy,
+                                 KeyPurposeId requiredEKUIfPresent,
+                                 const CertPolicyId& requiredPolicy,
                                  unsigned int subCACount,
                 /*optional out*/ TrustLevel* trustLevelOut)
 {
@@ -493,8 +580,13 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
     *trustLevelOut = trustLevel;
   }
 
-  bool isTrustAnchor = endEntityOrCA == EndEntityOrCA::MustBeCA &&
-                       trustLevel == TrustLevel::TrustAnchor;
+  // XXX: Good enough for now. There could be an illegal explicit version
+  // number or one we don't support, but we can safely treat those all as v3
+  // for now since processing of v3 certificates is strictly more strict than
+  // processing of v1 certificates.
+  der::Version version = (!cert.GetNSSCert()->version.data &&
+                          !cert.GetNSSCert()->version.len) ? der::Version::v1
+                                                           : der::Version::v3;
 
   PLArenaPool* arena = cert.GetArena();
   if (!arena) {
@@ -513,7 +605,8 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
   }
 
   // 4.2.1.4. Certificate Policies
-  rv = CheckCertificatePolicies(cert, endEntityOrCA, isTrustAnchor,
+  rv = CheckCertificatePolicies(endEntityOrCA, cert.encodedCertificatePolicies,
+                                cert.encodedInhibitAnyPolicy, trustLevel,
                                 requiredPolicy);
   if (rv != Success) {
     return rv;
@@ -531,7 +624,8 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
   //          checking.
 
   // 4.2.1.9. Basic Constraints.
-  rv = CheckBasicConstraints(cert, endEntityOrCA, isTrustAnchor, subCACount);
+  rv = CheckBasicConstraints(endEntityOrCA, cert.encodedBasicConstraints,
+                             version, trustLevel, subCACount);
   if (rv != Success) {
     return rv;
   }

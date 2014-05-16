@@ -114,8 +114,8 @@ static Result BuildForward(TrustDomain& trustDomain,
                            PRTime time,
                            EndEntityOrCA endEntityOrCA,
                            KeyUsages requiredKeyUsagesIfPresent,
-                           SECOidTag requiredEKUIfPresent,
-                           SECOidTag requiredPolicy,
+                           KeyPurposeId requiredEKUIfPresent,
+                           const CertPolicyId& requiredPolicy,
                            /*optional*/ const SECItem* stapledOCSPResponse,
                            unsigned int subCACount,
                            /*out*/ ScopedCERTCertList& results);
@@ -126,8 +126,8 @@ BuildForwardInner(TrustDomain& trustDomain,
                   BackCert& subject,
                   PRTime time,
                   EndEntityOrCA endEntityOrCA,
-                  SECOidTag requiredEKUIfPresent,
-                  SECOidTag requiredPolicy,
+                  KeyPurposeId requiredEKUIfPresent,
+                  const CertPolicyId& requiredPolicy,
                   CERTCertificate* potentialIssuerCertToDup,
                   unsigned int subCACount,
                   ScopedCERTCertList& results)
@@ -196,8 +196,8 @@ BuildForward(TrustDomain& trustDomain,
              PRTime time,
              EndEntityOrCA endEntityOrCA,
              KeyUsages requiredKeyUsagesIfPresent,
-             SECOidTag requiredEKUIfPresent,
-             SECOidTag requiredPolicy,
+             KeyPurposeId requiredEKUIfPresent,
+             const CertPolicyId& requiredPolicy,
              /*optional*/ const SECItem* stapledOCSPResponse,
              unsigned int subCACount,
              /*out*/ ScopedCERTCertList& results)
@@ -336,8 +336,8 @@ BuildCertChain(TrustDomain& trustDomain,
                PRTime time,
                EndEntityOrCA endEntityOrCA,
                /*optional*/ KeyUsages requiredKeyUsagesIfPresent,
-               /*optional*/ SECOidTag requiredEKUIfPresent,
-               /*optional*/ SECOidTag requiredPolicy,
+               /*optional*/ KeyPurposeId requiredEKUIfPresent,
+               const CertPolicyId& requiredPolicy,
                /*optional*/ const SECItem* stapledOCSPResponse,
                /*out*/ ScopedCERTCertList& results)
 {
@@ -355,7 +355,7 @@ BuildCertChain(TrustDomain& trustDomain,
   // domain name the certificate is valid for.
   BackCert::IncludeCN includeCN
     = endEntityOrCA == EndEntityOrCA::MustBeEndEntity &&
-      requiredEKUIfPresent == SEC_OID_EXT_KEY_USAGE_SERVER_AUTH
+      requiredEKUIfPresent == KeyPurposeId::id_kp_serverAuth
     ? BackCert::IncludeCN::Yes
     : BackCert::IncludeCN::No;
 

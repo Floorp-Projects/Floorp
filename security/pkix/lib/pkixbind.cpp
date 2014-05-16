@@ -22,7 +22,7 @@
  * limitations under the License.
  */
 
-#ifndef _MSC_VER
+#ifndef MOZILLA_PKIX_USE_REAL_FUNCTIONAL
 
 #include "pkix/bind.h"
 
@@ -32,4 +32,4 @@ Placeholder1 _1;
 
 } } // namespace mozilla::pkix
 
-#endif // _MSC_VER
+#endif

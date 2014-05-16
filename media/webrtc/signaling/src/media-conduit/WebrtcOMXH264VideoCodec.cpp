@@ -133,6 +133,8 @@ public:
     lock.NotifyAll(); // In case Run() is waiting.
 
     if (mThread != nullptr) {
+      MonitorAutoUnlock unlock(mMonitor);
+      CODEC_LOGD("OMXOutputDrain thread shutdown");
       mThread->Shutdown();
       mThread = nullptr;
     }
@@ -689,6 +691,11 @@ WebrtcOMXH264VideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
     mOMXConfigured = true;
     CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p start OMX with image size:%ux%u",
                this, mWidth, mHeight);
+  }
+
+  if (aFrameTypes && aFrameTypes->size() &&
+      ((*aFrameTypes)[0] == webrtc::kKeyFrame)) {
+    mOMX->RequestIDRFrame();
   }
 
   // Wrap I420VideoFrame input with PlanarYCbCrImage for OMXVideoEncoder.
