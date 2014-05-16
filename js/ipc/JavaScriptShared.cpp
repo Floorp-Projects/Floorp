@@ -7,6 +7,7 @@
 
 #include "JavaScriptShared.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/TabChild.h"
 #include "jsfriendapi.h"
 #include "xpcprivate.h"
 
@@ -356,10 +357,41 @@ JavaScriptShared::ConvertID(const JSIID &from, nsID *to)
     to->m3[7] = from.m3_7();
 }
 
-void
-JavaScriptShared::ReportNonexistentObject(JSContext *cx)
+JSObject *
+JavaScriptShared::findObjectById(JSContext *cx, uint32_t objId)
 {
-    JS_ReportError(cx, "operation not possible on dead CPOW");
+    RootedObject obj(cx, findObjectById(objId));
+    if (!obj) {
+        JS_ReportError(cx, "operation not possible on dead CPOW");
+        return nullptr;
+    }
+
+    // Objects are stored in objects_ unwrapped. We want to wrap the object
+    // before returning it so that all operations happen on Xray wrappers. If
+    // the object is a DOM element, we try to obtain the corresponding
+    // TabChildGlobal and wrap in that.
+    RootedObject global(cx, GetGlobalForObjectCrossCompartment(obj));
+    nsCOMPtr<nsIGlobalObject> nativeGlobal = xpc::GetNativeForGlobal(global);
+    nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(nativeGlobal);
+    if (window) {
+        dom::TabChild *tabChild = dom::TabChild::GetFrom(window);
+        if (tabChild) {
+            nsCOMPtr<nsIContentFrameMessageManager> mm;
+            tabChild->GetMessageManager(getter_AddRefs(mm));
+            nsCOMPtr<nsIGlobalObject> tabChildNativeGlobal = do_QueryInterface(mm);
+            RootedObject tabChildGlobal(cx, tabChildNativeGlobal->GetGlobalJSObject());
+            JSAutoCompartment ac(cx, tabChildGlobal);
+            if (!JS_WrapObject(cx, &obj))
+                return nullptr;
+            return obj;
+        }
+    }
+
+    // If there's no TabChildGlobal, we use the junk scope.
+    JSAutoCompartment ac(cx, xpc::GetJunkScope());
+    if (!JS_WrapObject(cx, &obj))
+        return nullptr;
+    return obj;
 }
 
 static const uint64_t DefaultPropertyOp = 1;

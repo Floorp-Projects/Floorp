@@ -116,20 +116,13 @@ class JavaScriptShared
     static void ConvertID(const nsID &from, JSIID *to);
     static void ConvertID(const JSIID &from, nsID *to);
 
-    void ReportNonexistentObject(JSContext *cx);
-
     JSObject *findCPOWById(uint32_t objId) {
         return cpows_.find(objId);
     }
     JSObject *findObjectById(uint32_t objId) {
         return objects_.find(objId);
     }
-    JSObject *findObjectById(JSContext *cx, uint32_t objId) {
-        if (JSObject *result = objects_.find(objId))
-            return result;
-        ReportNonexistentObject(cx);
-        return nullptr;
-    }
+    JSObject *findObjectById(JSContext *cx, uint32_t objId);
 
   protected:
     JSRuntime *rt_;

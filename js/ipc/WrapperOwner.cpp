@@ -631,12 +631,18 @@ WrapperOwner::ok(JSContext *cx, const ReturnStatus &status)
 }
 
 bool
-WrapperOwner::toObjectVariant(JSContext *cx, JSObject *obj, ObjectVariant *objVarp)
+WrapperOwner::toObjectVariant(JSContext *cx, JSObject *objArg, ObjectVariant *objVarp)
 {
+    RootedObject obj(cx, objArg);
     JS_ASSERT(obj);
-    JSObject *unwrapped = js::CheckedUnwrap(obj, false);
-    if (unwrapped && IsCPOW(unwrapped) && OwnerOf(unwrapped) == this) {
-        *objVarp = LocalObject(idOf(unwrapped));
+
+    // We always save objects unwrapped in the CPOW table. If we stored
+    // wrappers, then the wrapper might be GCed while the target remained alive.
+    // Whenever operating on an object that comes from the table, we wrap it
+    // in findObjectById.
+    obj = js::CheckedUnwrap(obj, false);
+    if (obj && IsCPOW(obj) && OwnerOf(obj) == this) {
+        *objVarp = LocalObject(idOf(obj));
         return true;
     }
 
@@ -645,6 +651,11 @@ WrapperOwner::toObjectVariant(JSContext *cx, JSObject *obj, ObjectVariant *objVa
         *objVarp = RemoteObject(id);
         return true;
     }
+
+    // Need to call PreserveWrapper on |obj| in case it's a reflector.
+    // FIXME: What if it's an XPCWrappedNative?
+    if (mozilla::dom::IsDOMObject(obj))
+        mozilla::dom::TryPreserveWrapper(obj);
 
     id = ++lastId_;
     if (id > MAX_CPOW_IDS) {
