@@ -23,6 +23,8 @@ IdToObjectMap::IdToObjectMap()
 bool
 IdToObjectMap::init()
 {
+    if (table_.initialized())
+        return true;
     return table_.init(32);
 }
 
@@ -73,7 +75,9 @@ ObjectToIdMap::~ObjectToIdMap()
 bool
 ObjectToIdMap::init()
 {
-    MOZ_ASSERT(!table_);
+    if (table_)
+        return true;
+
     table_ = new Table(SystemAllocPolicy());
     return table_ && table_->init(32);
 }

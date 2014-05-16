@@ -22,6 +22,7 @@ child:
     // The parent process no longer holds any references to the child object.
     async DropObject(uint64_t objId);
 
+both:
     // These roughly map to the ProxyHandler hooks that CPOWs need.
     rpc PreventExtensions(uint64_t objId) returns (ReturnStatus rs);
     rpc GetPropertyDescriptor(uint64_t objId, nsString id) returns (ReturnStatus rs, PPropertyDescriptor result);
