@@ -190,8 +190,8 @@ protected:
 struct AutoRemoveTexture MOZ_STACK_CLASS {
   AutoRemoveTexture(CompositableClient* aCompositable,
                     TextureClient* aTexture = nullptr)
-    : mCompositable(aCompositable)
-    , mTexture(aTexture)
+    : mTexture(aTexture)
+    , mCompositable(aCompositable)
   {}
 
   ~AutoRemoveTexture()
