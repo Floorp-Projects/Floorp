@@ -11,6 +11,7 @@
 #include "js/OldDebugAPI.h"
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
+#include "nsILoadContext.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
@@ -295,11 +296,12 @@ nsScriptSecurityManager::GetChannelPrincipal(nsIChannel* aChannel,
     nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIDocShell> docShell;
-    NS_QueryNotificationCallbacks(aChannel, docShell);
 
-    if (docShell) {
-        return GetDocShellCodebasePrincipal(uri, docShell, aPrincipal);
+    nsCOMPtr<nsILoadContext> loadContext;
+    NS_QueryNotificationCallbacks(aChannel, loadContext);
+
+    if (loadContext) {
+        return GetLoadContextCodebasePrincipal(uri, loadContext, aPrincipal);
     }
 
     return GetCodebasePrincipalInternal(uri, UNKNOWN_APP_ID,
@@ -967,6 +969,22 @@ nsScriptSecurityManager::GetAppCodebasePrincipal(nsIURI* aURI,
                  NS_ERROR_INVALID_ARG);
 
   return GetCodebasePrincipalInternal(aURI, aAppId, aInMozBrowser, aPrincipal);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::
+  GetLoadContextCodebasePrincipal(nsIURI* aURI,
+                                  nsILoadContext* aLoadContext,
+                                  nsIPrincipal** aPrincipal)
+{
+  uint32_t appId;
+  aLoadContext->GetAppId(&appId);
+  bool isInBrowserElement;
+  aLoadContext->GetIsInBrowserElement(&isInBrowserElement);
+  return GetCodebasePrincipalInternal(aURI,
+                                      appId,
+                                      isInBrowserElement,
+                                      aPrincipal);
 }
 
 NS_IMETHODIMP

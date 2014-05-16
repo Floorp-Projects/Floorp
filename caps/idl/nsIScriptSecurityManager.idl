@@ -10,8 +10,9 @@ interface nsIURI;
 interface nsIChannel;
 interface nsIDocShell;
 interface nsIDomainPolicy;
+interface nsILoadContext;
 
-[scriptable, uuid(2565769a-eaec-47a1-a076-605f5294d286)]
+[scriptable, uuid(9875f4b2-f9cd-41d1-a461-fe14956823ac)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     /**
@@ -121,6 +122,14 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     nsIPrincipal getAppCodebasePrincipal(in nsIURI uri,
                                          in unsigned long appId,
                                          in boolean inMozBrowser);
+
+    /**
+     * Returns a principal that has the appId and inMozBrowser of the load
+     * context.
+     * @param loadContext to get appId/inMozBrowser from.
+     */
+    nsIPrincipal getLoadContextCodebasePrincipal(in nsIURI uri,
+                                                 in nsILoadContext loadContext);
 
     /**
      * Returns a principal that has the appId and inMozBrowser of the docshell
