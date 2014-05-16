@@ -10,3 +10,9 @@ webide.jar:
     content/newapp.js                 (newapp.js)
     content/details.xhtml             (details.xhtml)
     content/details.js                (details.js)
+
+# Temporarily include locales in content, until we're ready
+# to localize webide
+
+    content/webide.dtd                (../locales/en-US/webide.dtd)
+    content/webide.properties         (../locales/en-US/webide.properties)

@@ -2855,7 +2855,7 @@ chatbox {
   display: block;
 }
 
-#main-window[privatebrowsingmode=temporary]:not([tabsintitlebar]) #TabsToolbar > .private-browsing-indicator {
+#main-window[privatebrowsingmode=temporary]:-moz-any([inFullscreen],:not([tabsintitlebar])) #TabsToolbar > .private-browsing-indicator {
   display: -moz-box;
 }
 
@@ -2865,7 +2865,12 @@ chatbox {
   width: 48px;
 }
 
-#private-browsing-indicator-titlebar > .private-browsing-indicator {
+/* Bug 1008183: We're intentionally using the titlebar asset here for fullscreen
+ * mode, since the tabstrip "mimics" the titlebar in that case with its own
+ * min/max/close window buttons.
+ */
+#private-browsing-indicator-titlebar > .private-browsing-indicator,
+#main-window[inFullscreen] #TabsToolbar > .private-browsing-indicator {
   background: url("chrome://browser/skin/privatebrowsing-mask-titlebar.png") no-repeat center 0px;
   -moz-margin-end: 4px;
   width: 40px;
@@ -2883,6 +2888,14 @@ chatbox {
     background-image: url("chrome://browser/skin/privatebrowsing-mask-titlebar-XPVista7-tall.png");
     height: 28px;
   }
+
+  /* We're intentionally using the titlebar asset here for fullscreen mode.
+   * See bug 1008183.
+   */
+  #main-window[inFullscreen] #TabsToolbar > .private-browsing-indicator {
+    background-image: url("chrome://browser/skin/privatebrowsing-mask-titlebar-XPVista7.png");
+  }
+
   #main-window[sizemode="maximized"] > #titlebar > #titlebar-content > #titlebar-buttonbox-container > #private-browsing-indicator-titlebar > .private-browsing-indicator {
     top: -5px;
   }
@@ -2893,7 +2906,11 @@ chatbox {
 %endif
 
 @media (-moz-windows-classic) {
-  #private-browsing-indicator-titlebar > .private-browsing-indicator {
+  /* We're intentionally using the titlebar asset here for fullscreen mode.
+   * See bug 1008183.
+   */
+  #private-browsing-indicator-titlebar > .private-browsing-indicator,
+  #main-window[inFullscreen] #TabsToolbar > .private-browsing-indicator {
     background-image: url("chrome://browser/skin/privatebrowsing-mask-titlebar-XPVista7.png");
   }
   /**
