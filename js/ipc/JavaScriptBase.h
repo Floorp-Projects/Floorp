@@ -8,6 +8,7 @@
 #ifndef mozilla_jsipc_JavaScriptBase_h__
 #define mozilla_jsipc_JavaScriptBase_h__
 
+#include "WrapperAnswer.h"
 #include "WrapperOwner.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/jsipc/PJavaScript.h"
@@ -16,11 +17,90 @@ namespace mozilla {
 namespace jsipc {
 
 template<class Base>
-class JavaScriptBase : public WrapperOwner, public Base
+class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
 {
-    typedef WrapperOwner Shared;
+    typedef WrapperAnswer Answer;
 
   public:
+    virtual void ActorDestroy(WrapperOwner::ActorDestroyReason why) {
+        WrapperOwner::ActorDestroy(why);
+    }
+
+    /*** IPC handlers ***/
+
+    bool AnswerPreventExtensions(const ObjectId &objId, ReturnStatus *rs) {
+        return Answer::AnswerPreventExtensions(objId, rs);
+    }
+    bool AnswerGetPropertyDescriptor(const ObjectId &objId, const nsString &id,
+                                     ReturnStatus *rs,
+                                     PPropertyDescriptor *out) {
+        return Answer::AnswerGetPropertyDescriptor(objId, id, rs, out);
+    }
+    bool AnswerGetOwnPropertyDescriptor(const ObjectId &objId,
+                                        const nsString &id,
+                                        ReturnStatus *rs,
+                                        PPropertyDescriptor *out) {
+        return Answer::AnswerGetOwnPropertyDescriptor(objId, id, rs, out);
+    }
+    bool AnswerDefineProperty(const ObjectId &objId, const nsString &id,
+                              const PPropertyDescriptor &flags,
+                              ReturnStatus *rs) {
+        return Answer::AnswerDefineProperty(objId, id, flags, rs);
+    }
+    bool AnswerDelete(const ObjectId &objId, const nsString &id,
+                      ReturnStatus *rs, bool *success) {
+        return Answer::AnswerDelete(objId, id, rs, success);
+    }
+
+    bool AnswerHas(const ObjectId &objId, const nsString &id,
+                   ReturnStatus *rs, bool *bp) {
+        return Answer::AnswerHas(objId, id, rs, bp);
+    }
+    bool AnswerHasOwn(const ObjectId &objId, const nsString &id,
+                      ReturnStatus *rs, bool *bp) {
+        return Answer::AnswerHasOwn(objId, id, rs, bp);
+    }
+    bool AnswerGet(const ObjectId &objId, const ObjectId &receiverId,
+                   const nsString &id,
+                   ReturnStatus *rs, JSVariant *result) {
+        return Answer::AnswerGet(objId, receiverId, id, rs, result);
+    }
+    bool AnswerSet(const ObjectId &objId, const ObjectId &receiverId,
+                   const nsString &id, const bool &strict,
+                   const JSVariant &value, ReturnStatus *rs, JSVariant *result) {
+        return Answer::AnswerSet(objId, receiverId, id, strict, value, rs, result);
+    }
+
+    bool AnswerIsExtensible(const ObjectId &objId, ReturnStatus *rs,
+                            bool *result) {
+        return Answer::AnswerIsExtensible(objId, rs, result);
+    }
+    bool AnswerCall(const ObjectId &objId, const nsTArray<JSParam> &argv,
+                    ReturnStatus *rs, JSVariant *result,
+                    nsTArray<JSParam> *outparams) {
+        return Answer::AnswerCall(objId, argv, rs, result, outparams);
+    }
+    bool AnswerObjectClassIs(const ObjectId &objId, const uint32_t &classValue,
+                             bool *result) {
+        return Answer::AnswerObjectClassIs(objId, classValue, result);
+    }
+    bool AnswerClassName(const ObjectId &objId, nsString *result) {
+        return Answer::AnswerClassName(objId, result);
+    }
+
+    bool AnswerGetPropertyNames(const ObjectId &objId, const uint32_t &flags,
+                                ReturnStatus *rs, nsTArray<nsString> *names) {
+        return Answer::AnswerGetPropertyNames(objId, flags, rs, names);
+    }
+    bool AnswerInstanceOf(const ObjectId &objId, const JSIID &iid,
+                          ReturnStatus *rs, bool *instanceof) {
+        return Answer::AnswerInstanceOf(objId, iid, rs, instanceof);
+    }
+    bool AnswerDOMInstanceOf(const ObjectId &objId, const int &prototypeID, const int &depth,
+                             ReturnStatus *rs, bool *instanceof) {
+        return Answer::AnswerDOMInstanceOf(objId, prototypeID, depth, rs, instanceof);
+    }
+
     /*** Dummy call handlers ***/
 
     bool CallPreventExtensions(const ObjectId &objId, ReturnStatus *rs) {

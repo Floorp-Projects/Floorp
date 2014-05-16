@@ -24,7 +24,7 @@ class BaseProxyHandler;
 namespace mozilla {
 namespace jsipc {
 
-class WrapperOwner : public JavaScriptShared
+class WrapperOwner : public virtual JavaScriptShared
 {
   public:
     typedef mozilla::ipc::IProtocolManager<

@@ -3349,7 +3349,7 @@ ContentParent::DoSendAsyncMessage(JSContext* aCx,
     return false;
   }
   InfallibleTArray<CpowEntry> cpows;
-  if (!GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
+  if (aCpows && !GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
     return false;
   }
   return SendAsyncMessage(nsString(aMessage), data, cpows, aPrincipal);
