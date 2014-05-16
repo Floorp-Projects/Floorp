@@ -377,8 +377,14 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void loadStringLength(Register str, Register dest) {
-        loadPtr(Address(str, JSString::offsetOfLengthAndFlags()), dest);
-        rshiftPtr(Imm32(JSString::LENGTH_SHIFT), dest);
+        load32(Address(str, JSString::offsetOfLength()), dest);
+    }
+
+    void loadStringChars(Register str, Register dest);
+
+    void branchIfRope(Register str, Label *label) {
+        Address flags(str, JSString::offsetOfFlags());
+        branch32(Assembler::Equal, flags, Imm32(JSString::ROPE_FLAGS), label);
     }
 
     void loadSliceBounds(Register worker, Register dest) {
@@ -831,7 +837,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Compares two strings for equality based on the JSOP.
     // This checks for identical pointers, atoms and length and fails for everything else.
     void compareStrings(JSOp op, Register left, Register right, Register result,
-                        Register temp, Label *fail);
+                        Label *fail);
 
     // Checks the flags that signal that parallel code may need to interrupt or
     // abort.  Branches to fail in that case.
