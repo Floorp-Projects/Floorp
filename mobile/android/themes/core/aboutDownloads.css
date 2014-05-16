@@ -51,7 +51,7 @@ li:active div.details,
   display: inline;
 }
 
-.state {
+.displayState {
   color: gray;
   margin-bottom: -3px; /* Prevent overflow that hides bottom border */
 }
@@ -65,7 +65,7 @@ li:active div.details,
   display: none;
 }
 
-#private-downloads-list:empty + #public-downloads-list:empty + #no-downloads-indicator {
+#private-downloads-list:empty + #normal-downloads-list:empty + #no-downloads-indicator {
   display: block;
   text-align: center;
   padding-top: 3.9em;

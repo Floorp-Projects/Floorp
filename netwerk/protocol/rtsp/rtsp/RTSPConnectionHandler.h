@@ -52,7 +52,7 @@ static int64_t kAccessUnitTimeoutUs = 10000000ll;
 
 // If no access units arrive for the first 10 secs after starting the
 // stream, assume none ever will and signal EOS or switch transports.
-static int64_t kStartupTimeoutUs = 10000000ll;
+static int64_t kPlayTimeoutUs = 10000000ll;
 
 static int64_t kDefaultKeepAliveTimeoutUs = 60000000ll;
 
@@ -109,6 +109,7 @@ struct RtspConnectionHandler : public AHandler {
         kWhatEOS                        = 'eos!',
         kWhatSeekDiscontinuity          = 'seeD',
         kWhatNormalPlayTimeMapping      = 'nptM',
+        kWhatTryTCPInterleaving         = 'ttiL',
     };
 
     RtspConnectionHandler(
@@ -140,7 +141,8 @@ struct RtspConnectionHandler : public AHandler {
           mReceivedFirstRTPPacket(false),
           mSeekable(false),
           mKeepAliveTimeoutUs(kDefaultKeepAliveTimeoutUs),
-          mKeepAliveGeneration(0) {
+          mKeepAliveGeneration(0),
+          mNumPlayTimeoutsPending(0) {
         mNetLooper->setName("rtsp net");
         mNetLooper->start(false /* runOnCallingThread */,
                           false /* canCallJava */,
@@ -703,9 +705,17 @@ struct RtspConnectionHandler : public AHandler {
                     } else {
                       msg->setInt32("isSeekable", 0);
                     }
-                    // Notify the Rtsp Controller that we are ready to play.
+                    // Notify RTSPSource that we are ready to play.
                     msg->setInt32("what", kWhatConnected);
                     msg->post();
+
+                    // Notify RTSPSource that we are trying TCP interleaving and
+                    // ready to play again.
+                    if (mTryTCPInterleaving) {
+                      sp<AMessage> msgTryTcp = mNotify->dup();
+                      msgTryTcp->setInt32("what", kWhatTryTCPInterleaving);
+                      msgTryTcp->post();
+                    }
                 } else {
                     sp<AMessage> reply = new AMessage('disc', id());
                     reply->setInt32("result", result);
@@ -748,8 +758,9 @@ struct RtspConnectionHandler : public AHandler {
                         parsePlayResponse(response);
 
                         sp<AMessage> timeout = new AMessage('tiou', id());
-                        timeout->post(kStartupTimeoutUs);
+                        timeout->post(kPlayTimeoutUs);
                         mPausePending = false;
+                        mNumPlayTimeoutsPending++;
                     }
                 }
 
@@ -1133,6 +1144,20 @@ struct RtspConnectionHandler : public AHandler {
 
             case 'tiou':
             {
+                CHECK(mNumPlayTimeoutsPending >= 1);
+                mNumPlayTimeoutsPending--;
+                // If there are more than one pending 'tiou' messages in the
+                // queue, we ignore the preceding ones and only handle the last
+                // one.
+                // This check is necessary when we fail back to using RTP
+                // interleaved in the existing RTSP connection. It prevents from
+                // aboring a connection that is trying to transport RTP over
+                // TCP.
+                if (mNumPlayTimeoutsPending > 0) {
+                  // Do nothing. We only handle the last 'tiou' message.
+                  return;
+                }
+
                 if (!mReceivedFirstRTCPPacket) {
                     if (mReceivedFirstRTPPacket && !mTryFakeRTCP) {
                         LOGW("We received RTP packets but no RTCP packets, "
@@ -1353,6 +1378,7 @@ private:
     bool mSeekable;
     int64_t mKeepAliveTimeoutUs;
     int32_t mKeepAliveGeneration;
+    int32_t mNumPlayTimeoutsPending;
 
     Vector<TrackInfo> mTracks;
 
