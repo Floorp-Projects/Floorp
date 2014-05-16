@@ -282,6 +282,12 @@ public:
    */
   nsresult GetCodecConfig(nsTArray<uint8_t>* aOutputBuf);
 
+  /**
+   * Ask codec to generate an instantaneous decoding refresh (IDR) frame
+   * (defined in ISO/IEC 14496-10).
+   */
+  nsresult RequestIDRFrame();
+
 protected:
   virtual status_t AppendDecoderConfig(nsTArray<uint8_t>* aOutputBuf,
                                        ABuffer* aData) MOZ_OVERRIDE;
