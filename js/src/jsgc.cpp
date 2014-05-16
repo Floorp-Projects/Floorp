@@ -2972,8 +2972,8 @@ GCRuntime::beginMarkPhase()
     }
 
     for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
-        /* Reset weak map list for the compartments being collected. */
-        WeakMapBase::resetCompartmentWeakMapList(c);
+        /* Unmark all weak maps in the compartments being collected. */
+        WeakMapBase::unmarkCompartment(c);
     }
 
     if (isFull)
@@ -3173,14 +3173,17 @@ js::gc::MarkingValidator::nonIncrementalMark()
     }
 
     /*
-     * Temporarily clear the lists of live weakmaps and array buffers for the
-     * compartments we are collecting.
+     * Temporarily clear the weakmaps' mark flags and the lists of live array
+     * buffers for the compartments we are collecting.
      */
 
-    WeakMapVector weakmaps;
+    WeakMapSet markedWeakMaps;
+    if (!markedWeakMaps.init())
+        return;
+
     ArrayBufferVector arrayBuffers;
     for (GCCompartmentsIter c(runtime); !c.done(); c.next()) {
-        if (!WeakMapBase::saveCompartmentWeakMapList(c, weakmaps) ||
+        if (!WeakMapBase::saveCompartmentMarkedWeakMaps(c, markedWeakMaps) ||
             !ArrayBufferObject::saveArrayBufferList(c, arrayBuffers))
         {
             return;
@@ -3194,7 +3197,7 @@ js::gc::MarkingValidator::nonIncrementalMark()
     initialized = true;
 
     for (GCCompartmentsIter c(runtime); !c.done(); c.next()) {
-        WeakMapBase::resetCompartmentWeakMapList(c);
+        WeakMapBase::unmarkCompartment(c);
         ArrayBufferObject::resetArrayBufferList(c);
     }
 
@@ -3250,10 +3253,10 @@ js::gc::MarkingValidator::nonIncrementalMark()
     }
 
     for (GCCompartmentsIter c(runtime); !c.done(); c.next()) {
-        WeakMapBase::resetCompartmentWeakMapList(c);
+        WeakMapBase::unmarkCompartment(c);
         ArrayBufferObject::resetArrayBufferList(c);
     }
-    WeakMapBase::restoreCompartmentWeakMapLists(weakmaps);
+    WeakMapBase::restoreCompartmentMarkedWeakMaps(markedWeakMaps);
     ArrayBufferObject::restoreArrayBufferLists(arrayBuffers);
 
     gc->incrementalState = state;
