@@ -133,6 +133,8 @@ public:
     lock.NotifyAll(); // In case Run() is waiting.
 
     if (mThread != nullptr) {
+      MonitorAutoUnlock unlock(mMonitor);
+      CODEC_LOGD("OMXOutputDrain thread shutdown");
       mThread->Shutdown();
       mThread = nullptr;
     }
