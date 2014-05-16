@@ -84,6 +84,17 @@ public:
             env, jBundle, "putIntArray",
             "(Ljava/lang/String;[I)V");
         MOZ_ASSERT(jBundlePutIntArray);
+        jBundlePutStringArray = AndroidBridge::GetMethodID(
+            env, jBundle, "putStringArray",
+            "(Ljava/lang/String;[Ljava/lang/String;)V");
+        MOZ_ASSERT(jBundlePutStringArray);
+
+        jObject = AndroidBridge::GetClassGlobalRef(
+            env, "java/lang/Object");
+        MOZ_ASSERT(jObject);
+        jString = AndroidBridge::GetClassGlobalRef(
+            env, "java/lang/String");
+        MOZ_ASSERT(jString);
     }
 
     static jobject CreateInstance(JNIEnv* env, JSContext* cx,
@@ -233,6 +244,11 @@ public:
     }
 
     static jclass jBundle;
+    static jclass jNativeJSContainer;
+    static jclass jNativeJSObject;
+    static jclass jObject;
+    static jclass jString;
+
     static jmethodID jBundleConstructor;
     static jmethodID jBundlePutBoolean;
     static jmethodID jBundlePutBundle;
@@ -242,12 +258,11 @@ public:
     static jmethodID jBundlePutBooleanArray;
     static jmethodID jBundlePutDoubleArray;
     static jmethodID jBundlePutIntArray;
+    static jmethodID jBundlePutStringArray;
 
 private:
-    static jclass jNativeJSContainer;
     static jfieldID jContainerNativeObject;
     static jmethodID jContainerConstructor;
-    static jclass jNativeJSObject;
     static jfieldID jObjectContainer;
     static jfieldID jObjectIndex;
     static jmethodID jObjectConstructor;
@@ -317,6 +332,9 @@ jmethodID NativeJSContainer::jBundlePutString = 0;
 jmethodID NativeJSContainer::jBundlePutBooleanArray = 0;
 jmethodID NativeJSContainer::jBundlePutDoubleArray = 0;
 jmethodID NativeJSContainer::jBundlePutIntArray = 0;
+jmethodID NativeJSContainer::jBundlePutStringArray = 0;
+jclass NativeJSContainer::jString = 0;
+jclass NativeJSContainer::jObject = 0;
 
 jobject
 CreateNativeJSContainer(JNIEnv* env, JSContext* cx, JS::HandleObject object)
@@ -464,6 +482,10 @@ struct StringProperty
 {
     typedef jstring Type;
 
+    static jclass Class() {
+        return NativeJSContainer::jString;
+    }
+
     static bool InValue(JSContext* cx, JS::HandleValue val) {
         return val.isString();
     }
@@ -490,11 +512,15 @@ struct StringProperty
     }
 };
 
-template <jobject (*FactoryMethod)
+template <jclass& C, jobject (*FactoryMethod)
     (JNIEnv*, jobject, JSContext*, JS::HandleObject)>
 struct BaseObjectProperty
 {
     typedef jobject Type;
+
+    static jclass Class() {
+        return C;
+    }
 
     static bool InValue(JSContext* cx, JS::HandleValue val) {
         return val.isObjectOrNull();
@@ -513,11 +539,43 @@ struct BaseObjectProperty
 jobject GetBundle(JNIEnv*, jobject, JSContext*, JS::HandleObject);
 
 // Returns a NativeJSObject from a JSObject
-typedef BaseObjectProperty<
+typedef BaseObjectProperty<NativeJSContainer::jNativeJSObject,
     NativeJSContainer::CreateObjectInstance> ObjectProperty;
 
 // Returns a Bundle from a JSObject
-typedef BaseObjectProperty<GetBundle> BundleProperty;
+typedef BaseObjectProperty<NativeJSContainer::jBundle,
+    GetBundle> BundleProperty;
+
+template <class BaseProperty>
+struct ObjectArrayWrapper : public BaseProperty
+{
+    typedef jobjectArray ArrayType;
+
+    static ArrayType NewArray(JNIEnv* env, jobject instance, JSContext* cx,
+                              JS::HandleObject array, size_t length) {
+        AutoLocalJNIFrame frame(env, 2);
+        ArrayType jarray = env->NewObjectArray(
+            length, BaseProperty::Class(), nullptr);
+        if (!jarray) {
+            return nullptr;
+        }
+        for (size_t i = 0; i < length; i++) {
+            JS::RootedValue elem(cx);
+            if (!CheckJSCall(env, JS_GetElement(cx, array, i, &elem)) ||
+                !CheckProperty<BaseProperty::InValue>(env, cx, elem)) {
+                return nullptr;
+            }
+            typename BaseProperty::Type jelem =
+                BaseProperty::FromValue(env, instance, cx, elem);
+            env->SetObjectArrayElement(jarray, i, jelem);
+            env->DeleteLocalRef(jelem);
+            if (env->ExceptionCheck()) {
+                return nullptr;
+            }
+        }
+        return frame.Pop(jarray);
+    }
+};
 
 template <class T>
 struct ArrayProperty
@@ -560,6 +618,9 @@ struct ArrayProperty
 typedef ArrayProperty<BooleanProperty> BooleanArrayProperty;
 typedef ArrayProperty<DoubleProperty> DoubleArrayProperty;
 typedef ArrayProperty<IntProperty> IntArrayProperty;
+typedef ArrayProperty<ObjectArrayWrapper<StringProperty>> StringArrayProperty;
+typedef ArrayProperty<ObjectArrayWrapper<ObjectProperty>> ObjectArrayProperty;
+typedef ArrayProperty<ObjectArrayWrapper<BundleProperty>> BundleArrayProperty;
 
 struct HasProperty
 {
@@ -688,6 +749,9 @@ GetBundle(JNIEnv* env, jobject instance, JSContext* cx, JS::HandleObject obj)
         // a double array can potentially be seen as an int array.
         PUT_IN_BUNDLE_IF_TYPE_IS(IntArray);
         PUT_IN_BUNDLE_IF_TYPE_IS(DoubleArray);
+        PUT_IN_BUNDLE_IF_TYPE_IS(StringArray);
+        // There's no "putObjectArray", so don't check ObjectArrayProperty
+        // There's no "putBundleArray", so don't check BundleArrayProperty
 
         // Use Bundle as the default catch-all for objects
         PUT_IN_BUNDLE_IF_TYPE_IS(Bundle);
@@ -765,14 +829,14 @@ NS_EXPORT jobjectArray JNICALL
 Java_org_mozilla_gecko_util_NativeJSObject_getBundleArray(
     JNIEnv* env, jobject instance, jstring name)
 {
-    return nullptr; // TODO add implementation
+    return GetProperty<BundleArrayProperty>(env, instance, name);
 }
 
 NS_EXPORT jobjectArray JNICALL
 Java_org_mozilla_gecko_util_NativeJSObject_optBundleArray(
     JNIEnv* env, jobject instance, jstring name, jobjectArray fallback)
 {
-    return nullptr; // TODO add implementation
+    return GetProperty<BundleArrayProperty>(env, instance, name, FallbackOption::RETURN, fallback);
 }
 
 NS_EXPORT jdouble JNICALL
@@ -846,14 +910,14 @@ NS_EXPORT jobjectArray JNICALL
 Java_org_mozilla_gecko_util_NativeJSObject_getObjectArray(
     JNIEnv* env, jobject instance, jstring name)
 {
-    return nullptr; // TODO add implementation
+    return GetProperty<ObjectArrayProperty>(env, instance, name);
 }
 
 NS_EXPORT jobjectArray JNICALL
 Java_org_mozilla_gecko_util_NativeJSObject_optObjectArray(
     JNIEnv* env, jobject instance, jstring name, jobjectArray fallback)
 {
-    return nullptr; // TODO add implementation
+    return GetProperty<ObjectArrayProperty>(env, instance, name, FallbackOption::RETURN, fallback);
 }
 
 NS_EXPORT jstring JNICALL
@@ -873,14 +937,14 @@ NS_EXPORT jobjectArray JNICALL
 Java_org_mozilla_gecko_util_NativeJSObject_getStringArray(
     JNIEnv* env, jobject instance, jstring name)
 {
-    return nullptr; // TODO add implementation
+    return GetProperty<StringArrayProperty>(env, instance, name);
 }
 
 NS_EXPORT jobjectArray JNICALL
 Java_org_mozilla_gecko_util_NativeJSObject_optStringArray(
     JNIEnv* env, jobject instance, jstring name, jobjectArray fallback)
 {
-    return nullptr; // TODO add implementation
+    return GetProperty<StringArrayProperty>(env, instance, name, FallbackOption::RETURN, fallback);
 }
 
 NS_EXPORT jboolean JNICALL
