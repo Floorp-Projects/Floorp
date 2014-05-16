@@ -28,8 +28,8 @@ class JavaScriptChild : public JavaScriptBase<PJavaScriptChild>
     virtual void drop(JSObject *obj) { MOZ_CRASH(); }
 
   private:
-    JSObject *fromId(JSContext *cx, ObjectId id);
-    bool toId(JSContext *cx, JSObject *obj, ObjectId *idp);
+    virtual bool toObjectVariant(JSContext *cx, JSObject *obj, ObjectVariant *objVarp);
+    virtual JSObject *fromObjectVariant(JSContext *cx, ObjectVariant objVar);
 
     bool fail(JSContext *cx, ReturnStatus *rs);
     bool ok(ReturnStatus *rs);

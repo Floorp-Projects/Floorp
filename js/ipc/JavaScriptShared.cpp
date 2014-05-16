@@ -194,10 +194,10 @@ JavaScriptShared::toVariant(JSContext *cx, JS::HandleValue from, JSVariant *to)
             return true;
         }
 
-        ObjectId id;
-        if (!toId(cx, obj, &id))
+        ObjectVariant objVar;
+        if (!toObjectVariant(cx, obj, &objVar))
             return false;
-        *to = ObjectVariant(id);
+        *to = objVar;
         return true;
       }
 
@@ -241,8 +241,7 @@ JavaScriptShared::fromVariant(JSContext *cx, const JSVariant &from, MutableHandl
 
         case JSVariant::TObjectVariant:
         {
-          ObjectId id = from.get_ObjectVariant().id();
-          JSObject *obj = fromId(cx, id);
+          JSObject *obj = fromObjectVariant(cx, from.get_ObjectVariant());
           if (!obj)
               return false;
           to.set(ObjectValue(*obj));
@@ -319,9 +318,9 @@ JavaScriptShared::ConvertID(const JSIID &from, nsID *to)
     to->m3[7] = from.m3_7();
 }
 
-static const uint32_t DefaultPropertyOp = 1;
-static const uint32_t GetterOnlyPropertyStub = 2;
-static const uint32_t UnknownPropertyOp = 3;
+static const uint64_t DefaultPropertyOp = 1;
+static const uint64_t GetterOnlyPropertyStub = 2;
+static const uint64_t UnknownPropertyOp = 3;
 
 bool
 JavaScriptShared::fromDescriptor(JSContext *cx, Handle<JSPropertyDescriptor> desc,
@@ -331,15 +330,18 @@ JavaScriptShared::fromDescriptor(JSContext *cx, Handle<JSPropertyDescriptor> des
     if (!toVariant(cx, desc.value(), &out->value()))
         return false;
 
-    if (!toId(cx, desc.object(), &out->objId()))
+    JS_ASSERT(desc.object());
+    if (!toObjectVariant(cx, desc.object(), &out->obj()))
         return false;
 
     if (!desc.getter()) {
         out->getter() = 0;
     } else if (desc.hasGetterObject()) {
         JSObject *getter = desc.getterObject();
-        if (!toId(cx, getter, &out->getter()))
+        ObjectVariant objVar;
+        if (!toObjectVariant(cx, getter, &objVar))
             return false;
+        out->getter() = objVar;
     } else {
         if (desc.getter() == JS_PropertyStub)
             out->getter() = DefaultPropertyOp;
@@ -351,8 +353,10 @@ JavaScriptShared::fromDescriptor(JSContext *cx, Handle<JSPropertyDescriptor> des
         out->setter() = 0;
     } else if (desc.hasSetterObject()) {
         JSObject *setter = desc.setterObject();
-        if (!toId(cx, setter, &out->setter()))
+        ObjectVariant objVar;
+        if (!toObjectVariant(cx, setter, &objVar))
             return false;
+        out->setter() = objVar;
     } else {
         if (desc.setter() == JS_StrictPropertyStub)
             out->setter() = DefaultPropertyOp;
@@ -387,35 +391,38 @@ JavaScriptShared::toDescriptor(JSContext *cx, const PPropertyDescriptor &in,
     if (!fromVariant(cx, in.value(), out.value()))
         return false;
     Rooted<JSObject*> obj(cx);
-    if (!fromId(cx, in.objId(), &obj))
+    obj = fromObjectVariant(cx, in.obj());
+    if (!obj)
         return false;
     out.object().set(obj);
 
-    if (!in.getter()) {
+    if (in.getter().type() == GetterSetter::Tuint64_t && !in.getter().get_uint64_t()) {
         out.setGetter(nullptr);
     } else if (in.attrs() & JSPROP_GETTER) {
         Rooted<JSObject*> getter(cx);
-        if (!fromId(cx, in.getter(), &getter))
+        getter = fromObjectVariant(cx, in.getter().get_ObjectVariant());
+        if (!getter)
             return false;
         out.setGetter(JS_DATA_TO_FUNC_PTR(JSPropertyOp, getter.get()));
     } else {
-        if (in.getter() == DefaultPropertyOp)
+        if (in.getter().get_uint64_t() == DefaultPropertyOp)
             out.setGetter(JS_PropertyStub);
         else
             out.setGetter(UnknownPropertyStub);
     }
 
-    if (!in.setter()) {
+    if (in.setter().type() == GetterSetter::Tuint64_t && !in.setter().get_uint64_t()) {
         out.setSetter(nullptr);
     } else if (in.attrs() & JSPROP_SETTER) {
         Rooted<JSObject*> setter(cx);
-        if (!fromId(cx, in.setter(), &setter))
+        setter = fromObjectVariant(cx, in.setter().get_ObjectVariant());
+        if (!setter)
             return false;
         out.setSetter(JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, setter.get()));
     } else {
-        if (in.setter() == DefaultPropertyOp)
+        if (in.setter().get_uint64_t() == DefaultPropertyOp)
             out.setSetter(JS_StrictPropertyStub);
-        else if (in.setter() == GetterOnlyPropertyStub)
+        else if (in.setter().get_uint64_t() == GetterOnlyPropertyStub)
             out.setSetter(js_GetterOnlyPropertyStub);
         else
             out.setSetter(UnknownStrictPropertyStub);
