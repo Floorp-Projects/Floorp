@@ -1536,6 +1536,18 @@ MobileMessageDB.prototype = {
     }
   },
 
+  createParticipantRecord: function(aParticipantStore, aAddresses, aCallback) {
+    let participantRecord = { addresses: aAddresses };
+    let addRequest = aParticipantStore.add(participantRecord);
+    addRequest.onsuccess = function(event) {
+      participantRecord.id = event.target.result;
+      if (DEBUG) {
+        debug("createParticipantRecord: " + JSON.stringify(participantRecord));
+      }
+      aCallback(participantRecord);
+    };
+  },
+
   findParticipantRecordByAddress: function(aParticipantStore, aAddress,
                                            aCreate, aCallback) {
     if (DEBUG) {
@@ -1596,16 +1608,8 @@ MobileMessageDB.prototype = {
             return;
           }
 
-          let participantRecord = { addresses: [normalizedAddress] };
-          let addRequest = aParticipantStore.add(participantRecord);
-          addRequest.onsuccess = function(event) {
-            participantRecord.id = event.target.result;
-            if (DEBUG) {
-              debug("findParticipantRecordByAddress: created "
-                    + JSON.stringify(participantRecord));
-            }
-            aCallback(participantRecord);
-          };
+          this.createParticipantRecord(aParticipantStore, [normalizedAddress],
+                                       aCallback);
           return;
         }
 
