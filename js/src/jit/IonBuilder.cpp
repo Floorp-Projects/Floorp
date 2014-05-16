@@ -116,7 +116,6 @@ IonBuilder::IonBuilder(JSContext *analysisContext, CompileCompartment *comp,
     backgroundCodegen_(nullptr),
     analysisContext(analysisContext),
     baselineFrame_(baselineFrame),
-    abortReason_(AbortReason_Disable),
     descrSetHash_(nullptr),
     constraints_(constraints),
     analysis_(*temp, info->script()),
@@ -145,6 +144,7 @@ IonBuilder::IonBuilder(JSContext *analysisContext, CompileCompartment *comp,
 {
     script_ = info->script();
     pc = info->startPC();
+    abortReason_ = AbortReason_Disable;
 
     JS_ASSERT(script()->hasBaselineScript() == (info->executionMode() != ArgumentsUsageAnalysis));
     JS_ASSERT(!!analysisContext == (info->executionMode() == DefinitePropertiesAnalysis));
