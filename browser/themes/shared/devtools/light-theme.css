@@ -159,7 +159,8 @@
 
 .theme-toolbar,
 .devtools-toolbar,
-.devtools-sidebar-tabs > tabs { /* General toolbar styling */
+.devtools-sidebar-tabs > tabs,
+.CodeMirror-dialog { /* General toolbar styling */
   color: #585959;
   background-color: #f0f1f2;
   border-color: #aaa;

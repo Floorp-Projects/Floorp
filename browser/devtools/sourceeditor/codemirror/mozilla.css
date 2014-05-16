@@ -85,25 +85,22 @@ selector in floating-scrollbar-light.css across all platforms. */
   min-width: 10px;
 }
 
-/* This is to make CodeMirror's dialogs more DevTool-ey. */
-
-.CodeMirror-dialog {
-  font: message-box;
-  padding: 5px 4px;
-  color: hsl(210,30%,85%);
-  background-image: url("chrome://browser/skin/devtools/background-noise-toolbar.png"),
-    linear-gradient(#3e4750, #3e4750);
-}
-
-.CodeMirror-dialog input {
-  font: message-box;
-}
-
 .cm-trailingspace {
   background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAACCAYAAAB/qH1jAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3QUXCToH00Y1UgAAACFJREFUCNdjPMDBUc/AwNDAAAFMTAwMDA0OP34wQgX/AQBYgwYEx4f9lQAAAABJRU5ErkJggg==");
   opacity: 0.75;
   background-position: left bottom;
   background-repeat: repeat-x;
+}
+
+/* CodeMirror dialogs styling */
+
+.CodeMirror-dialog {
+  padding: 4px 3px;
+}
+
+.CodeMirror-dialog,
+.CodeMirror-dialog input {
+  font: message-box;
 }
 
 /* Fold addon */
