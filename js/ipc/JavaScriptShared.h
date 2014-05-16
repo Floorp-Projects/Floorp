@@ -120,7 +120,7 @@ class JavaScriptShared
     static void ConvertID(const JSIID &from, nsID *to);
 
     JSObject *findCPOWById(uint32_t objId) {
-        return objects_.find(objId);
+        return cpows_.find(objId);
     }
     JSObject *findObjectById(uint32_t objId) {
         return objects_.find(objId);
@@ -128,6 +128,7 @@ class JavaScriptShared
 
   protected:
     IdToObjectMap objects_;
+    IdToObjectMap cpows_;
 };
 
 // Use 47 at most, to be safe, since jsval privates are encoded as doubles.

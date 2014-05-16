@@ -130,6 +130,8 @@ JavaScriptShared::init()
 {
     if (!objects_.init())
         return false;
+    if (!cpows_.init())
+        return false;
     return true;
 }
 

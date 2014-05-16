@@ -40,6 +40,7 @@ void
 JavaScriptChild::trace(JSTracer *trc)
 {
     objects_.trace(trc);
+    cpows_.trace(trc);
     ids_.trace(trc);
 }
 
