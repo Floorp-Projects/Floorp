@@ -8,6 +8,7 @@
 #define gc_Zone_h
 
 #include "mozilla/Atomics.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 
 #include "jscntxt.h"
@@ -147,6 +148,7 @@ struct Zone : public JS::shadow::Zone,
     bool                         gcScheduled;
     GCState                      gcState;
     bool                         gcPreserveCode;
+    mozilla::DebugOnly<unsigned> gcLastZoneGroupIndex;
 
   public:
     bool isCollecting() const {
@@ -227,6 +229,16 @@ struct Zone : public JS::shadow::Zone,
     bool isGCFinished() {
         return gcState == Finished;
     }
+
+#ifdef DEBUG
+    /*
+     * For testing purposes, return the index of the zone group which this zone
+     * was swept in in the last GC.
+     */
+    unsigned lastZoneGroupIndex() {
+        return gcLastZoneGroupIndex;
+    }
+#endif
 
     /* This is updated by both the main and GC helper threads. */
     mozilla::Atomic<size_t, mozilla::ReleaseAcquire> gcBytes;
