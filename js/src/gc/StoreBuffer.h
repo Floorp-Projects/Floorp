@@ -244,7 +244,7 @@ class StoreBuffer
         bool operator!=(const CellPtrEdge &other) const { return edge != other.edge; }
 
         bool maybeInRememberedSet(const Nursery &nursery) const {
-            JS_ASSERT(IsInsideNursery(*edge));
+            JS_ASSERT(nursery.isInside(*edge));
             return !nursery.isInside(edge);
         }
 
@@ -265,10 +265,10 @@ class StoreBuffer
         bool operator==(const ValueEdge &other) const { return edge == other.edge; }
         bool operator!=(const ValueEdge &other) const { return edge != other.edge; }
 
-        Cell *deref() const { return edge->isGCThing() ? static_cast<Cell *>(edge->toGCThing()) : nullptr; }
+        void *deref() const { return edge->isGCThing() ? edge->toGCThing() : nullptr; }
 
         bool maybeInRememberedSet(const Nursery &nursery) const {
-            JS_ASSERT(IsInsideNursery(deref()));
+            JS_ASSERT(nursery.isInside(deref()));
             return !nursery.isInside(edge);
         }
 
@@ -313,8 +313,8 @@ class StoreBuffer
             return !(*this == other);
         }
 
-        bool maybeInRememberedSet(const Nursery &) const {
-            return !IsInsideNursery(JS::AsCell(object()));
+        bool maybeInRememberedSet(const Nursery &nursery) const {
+            return !nursery.isInside(object());
         }
 
         void mark(JSTracer *trc);
@@ -337,7 +337,7 @@ class StoreBuffer
         bool operator==(const WholeCellEdges &other) const { return edge == other.edge; }
         bool operator!=(const WholeCellEdges &other) const { return edge != other.edge; }
 
-        bool maybeInRememberedSet(const Nursery &) const { return true; }
+        bool maybeInRememberedSet(const Nursery &nursery) const { return true; }
 
         static bool supportsDeduplication() { return true; }
         void *deduplicationKey() const { return (void *)edge; }

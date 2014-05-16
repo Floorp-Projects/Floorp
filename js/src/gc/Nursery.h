@@ -77,13 +77,9 @@ class Nursery
     /* Return true if no allocations have been made since the last collection. */
     bool isEmpty() const;
 
-    /*
-     * Check whether an arbitrary pointer is within the nursery. This is
-     * slower than IsInsideNursery(Cell*), but works on all types of pointers.
-     */
-    MOZ_ALWAYS_INLINE bool isInside(gc::Cell *cellp) const MOZ_DELETE;
-    MOZ_ALWAYS_INLINE bool isInside(const void *p) const {
-        return uintptr_t(p) >= heapStart_ && uintptr_t(p) < heapEnd_;
+    template <typename T>
+    MOZ_ALWAYS_INLINE bool isInside(const T *p) const {
+        return gc::IsInsideNursery((JS::shadow::Runtime *)runtime_, p);
     }
 
     /*
@@ -146,11 +142,13 @@ class Nursery
     }
 
     MOZ_ALWAYS_INLINE uintptr_t start() const {
-        return heapStart_;
+        JS_ASSERT(runtime_);
+        return ((JS::shadow::Runtime *)runtime_)->gcNurseryStart_;
     }
 
     MOZ_ALWAYS_INLINE uintptr_t heapEnd() const {
-        return heapEnd_;
+        JS_ASSERT(runtime_);
+        return ((JS::shadow::Runtime *)runtime_)->gcNurseryEnd_;
     }
 
 #ifdef JS_GC_ZEAL
@@ -184,10 +182,6 @@ class Nursery
 
     /* Pointer to the first unallocated byte in the nursery. */
     uintptr_t position_;
-
-    /* Pointer to first and last address of the total nursery allocation. */
-    uintptr_t heapStart_;
-    uintptr_t heapEnd_;
 
     /* Pointer to the logical start of the Nursery. */
     uintptr_t currentStart_;
