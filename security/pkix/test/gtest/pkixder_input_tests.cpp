@@ -362,31 +362,31 @@ TEST_F(pkixder_input_tests, SkipToSECItemPastEnd)
   ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
 }
 
-TEST_F(pkixder_input_tests, Skip)
+TEST_F(pkixder_input_tests, ExpectTagAndSkipValue)
 {
   Input input;
   ASSERT_EQ(Success,
             input.Init(DER_SEQUENCE_OF_INT8, sizeof DER_SEQUENCE_OF_INT8));
 
-  ASSERT_EQ(Success, Skip(input, SEQUENCE));
+  ASSERT_EQ(Success, ExpectTagAndSkipValue(input, SEQUENCE));
   ASSERT_EQ(Success, End(input));
 }
 
-TEST_F(pkixder_input_tests, SkipWithTruncatedData)
+TEST_F(pkixder_input_tests, ExpectTagAndSkipValueWithTruncatedData)
 {
   Input input;
   ASSERT_EQ(Success, input.Init(DER_TRUNCATED_SEQUENCE_OF_INT8,
                                 sizeof DER_TRUNCATED_SEQUENCE_OF_INT8));
 
-  ASSERT_EQ(Failure, Skip(input, SEQUENCE));
+  ASSERT_EQ(Failure, ExpectTagAndSkipValue(input, SEQUENCE));
 }
 
-TEST_F(pkixder_input_tests, SkipWithOverrunData)
+TEST_F(pkixder_input_tests, ExpectTagAndSkipValueWithOverrunData)
 {
   Input input;
   ASSERT_EQ(Success, input.Init(DER_OVERRUN_SEQUENCE_OF_INT8,
                                 sizeof DER_OVERRUN_SEQUENCE_OF_INT8));
-  ASSERT_EQ(Success, Skip(input, SEQUENCE));
+  ASSERT_EQ(Success, ExpectTagAndSkipValue(input, SEQUENCE));
   ASSERT_EQ(Failure, End(input));
 }
 
@@ -491,7 +491,7 @@ TEST_F(pkixder_input_tests, ExpectTagAndGetLength)
             input.Init(DER_SEQUENCE_OF_INT8, sizeof DER_SEQUENCE_OF_INT8));
 
   uint16_t length = 0;
-  ASSERT_EQ(Success, ExpectTagAndGetLength(input, SEQUENCE, length));
+  ASSERT_EQ(Success, internal::ExpectTagAndGetLength(input, SEQUENCE, length));
   ASSERT_EQ(sizeof DER_SEQUENCE_OF_INT8 - 2, length);
   ASSERT_EQ(Success, input.Skip(length));
   ASSERT_TRUE(input.AtEnd());
@@ -504,7 +504,7 @@ TEST_F(pkixder_input_tests, ExpectTagAndGetLengthWithWrongTag)
             input.Init(DER_SEQUENCE_OF_INT8, sizeof DER_SEQUENCE_OF_INT8));
 
   uint16_t length = 0;
-  ASSERT_EQ(Failure, ExpectTagAndGetLength(input, INTEGER, length));
+  ASSERT_EQ(Failure, internal::ExpectTagAndGetLength(input, INTEGER, length));
   ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
 }
 
@@ -515,23 +515,23 @@ TEST_F(pkixder_input_tests, ExpectTagAndGetLengthWithWrongLength)
                                 sizeof DER_TRUNCATED_SEQUENCE_OF_INT8));
 
   uint16_t length = 0;
-  ASSERT_EQ(Failure, ExpectTagAndGetLength(input, SEQUENCE, length));
+  ASSERT_EQ(Failure, internal::ExpectTagAndGetLength(input, SEQUENCE, length));
   ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
 }
 
-TEST_F(pkixder_input_tests, ExpectTagAndIgnoreLength)
+TEST_F(pkixder_input_tests, ExpectTagAndSkipLength)
 {
   Input input;
   ASSERT_EQ(Success, input.Init(DER_INT16, sizeof DER_INT16));
-  ASSERT_EQ(Success, ExpectTagAndIgnoreLength(input, INTEGER));
+  ASSERT_EQ(Success, ExpectTagAndSkipLength(input, INTEGER));
 }
 
-TEST_F(pkixder_input_tests, ExpectTagAndIgnoreLengthWithWrongTag)
+TEST_F(pkixder_input_tests, ExpectTagAndSkipLengthWithWrongTag)
 {
   Input input;
   ASSERT_EQ(Success, input.Init(DER_INT16, sizeof DER_INT16));
 
-  ASSERT_EQ(Failure, ExpectTagAndIgnoreLength(input, OCTET_STRING));
+  ASSERT_EQ(Failure, ExpectTagAndSkipLength(input, OCTET_STRING));
   ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
 }
 
@@ -604,4 +604,57 @@ TEST_F(pkixder_input_tests, NestedOfWithTruncatedData)
   ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
   ASSERT_EQ((size_t) 0, readValues.size());
 }
+
+TEST_F(pkixder_input_tests, MatchBytesAtEnd)
+{
+  Input input;
+  static const uint8_t der[1] = { };
+  ASSERT_EQ(Success, input.Init(der, 0));
+  ASSERT_TRUE(input.AtEnd());
+  static const uint8_t toMatch[] = { 1 };
+  ASSERT_FALSE(input.MatchBytes(toMatch));
+}
+
+TEST_F(pkixder_input_tests, MatchBytes1Match)
+{
+  Input input;
+  static const uint8_t der[] = { 1 };
+  ASSERT_EQ(Success, input.Init(der, sizeof der));
+  ASSERT_FALSE(input.AtEnd());
+  ASSERT_TRUE(input.MatchBytes(der));
+  ASSERT_TRUE(input.AtEnd());
+}
+
+TEST_F(pkixder_input_tests, MatchBytes1Mismatch)
+{
+  Input input;
+  static const uint8_t der[] = { 1 };
+  ASSERT_EQ(Success, input.Init(der, sizeof der));
+  static const uint8_t toMatch[] = { 2 };
+  ASSERT_FALSE(input.MatchBytes(toMatch));
+  ASSERT_FALSE(input.AtEnd());
+}
+
+TEST_F(pkixder_input_tests, MatchBytes2Match)
+{
+  Input input;
+  static const uint8_t der[] = { 1, 2, 3 };
+  ASSERT_EQ(Success, input.Init(der, sizeof der));
+  static const uint8_t toMatch[] = { 1, 2 };
+  ASSERT_TRUE(input.MatchBytes(toMatch));
+  uint8_t followingByte;
+  ASSERT_EQ(Success, input.Read(followingByte));
+  ASSERT_EQ(3, followingByte);
+}
+
+TEST_F(pkixder_input_tests, MatchBytes2Mismatch)
+{
+  Input input;
+  static const uint8_t der[] = { 1, 2, 3 };
+  ASSERT_EQ(Success, input.Init(der, sizeof der));
+  static const uint8_t toMatchMismatch[] = { 1, 3 };
+  ASSERT_FALSE(input.MatchBytes(toMatchMismatch));
+  ASSERT_TRUE(input.MatchBytes(der));
+}
+
 } // unnamed namespace
