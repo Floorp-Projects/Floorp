@@ -68,7 +68,7 @@ NSSCertDBTrustDomain::FindPotentialIssuers(
 
 SECStatus
 NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
-                                   SECOidTag policy,
+                                   const CertPolicyId& policy,
                                    const CERTCertificate* candidateCert,
                                    /*out*/ TrustLevel* trustLevel)
 {
@@ -81,7 +81,7 @@ NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
   }
 
 #ifdef MOZ_NO_EV_CERTS
-  if (policy != SEC_OID_X509_ANY_POLICY) {
+  if (!policy.IsAnyPolicy()) {
     PR_SetError(SEC_ERROR_POLICY_VALIDATION_FAILED, 0);
     return SECFailure;
   }
@@ -114,7 +114,7 @@ NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
     // needed to consider end-entity certs to be their own trust anchors since
     // Gecko implemented nsICertOverrideService.
     if (flags & CERTDB_TRUSTED_CA) {
-      if (policy == SEC_OID_X509_ANY_POLICY) {
+      if (policy.IsAnyPolicy()) {
         *trustLevel = TrustLevel::TrustAnchor;
         return SECSuccess;
       }
@@ -468,7 +468,7 @@ static char*
 nss_addEscape(const char* string, char quote)
 {
   char* newString = 0;
-  int escapes = 0, size = 0;
+  size_t escapes = 0, size = 0;
   const char* src;
   char* dest;
 
@@ -479,7 +479,7 @@ nss_addEscape(const char* string, char quote)
   size++;
   }
 
-  newString = (char*) PORT_ZAlloc(escapes + size + 1);
+  newString = (char*) PORT_ZAlloc(escapes + size + 1u);
   if (!newString) {
     return nullptr;
   }
@@ -599,9 +599,9 @@ SetClassicOCSPBehavior(CertVerifier::ocsp_download_config enabled,
 
   CERT_ForcePostMethodForOCSP(get != CertVerifier::ocsp_get_enabled);
 
-  int OCSPTimeoutSeconds = 3;
+  uint32_t OCSPTimeoutSeconds = 3u;
   if (strict == CertVerifier::ocsp_strict) {
-    OCSPTimeoutSeconds = 10;
+    OCSPTimeoutSeconds = 10u;
   }
   CERT_SetOCSPTimeout(OCSPTimeoutSeconds);
 }

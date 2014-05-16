@@ -571,6 +571,10 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
     uint32_t numFixedSlots() const {
         return reinterpret_cast<const shadow::Object *>(this)->numFixedSlots();
     }
+    uint32_t numUsedFixedSlots() const {
+        uint32_t nslots = lastProperty()->slotSpan(getClass());
+        return Min(nslots, numFixedSlots());
+    }
 
     /*
      * Whether this is the only object which has its specified type. This
