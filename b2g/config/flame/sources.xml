@@ -18,10 +18,10 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="7973e06dc278f67b4109ac3c33020ed086f0d042"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="799b0f8bb71bc1b944f90c117ab5d6be4837ba1f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="03c9b9a68af64b72779bede98759464d3beee863"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="ce95d372e6d285725b96490afdaaf489ad8f9ca9"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="fd4be2909b788b563435fe0addb1bd98dfa75457"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="8a4baf82a131a7853cf7e7f9cf74253927b2f355"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
   <!-- Stock Android things -->
@@ -119,7 +119,7 @@
   <!-- Flame specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="e8a318f7690092e639ba88891606f4183e846d3f"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="34ed8345250bb97262d70a052217a92e83444ede"/>
-  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="b1d23890531de539e47e594e07e06b2dca54a85b"/>
+  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="bbbeb3aeb0ae9f209eb8abe48a71f37e568b63af"/>
   <project name="kernel/msm" path="kernel" revision="7158567fc83e7475f08db3adedc5df1ad6f54abd"/>
   <project name="platform/bootable/recovery" path="bootable/recovery" revision="f2914eacee9120680a41463708bb6ee8291749fc"/>
   <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="4b7ae991637a216d745e154cd49b4db6ca55a19e"/>
