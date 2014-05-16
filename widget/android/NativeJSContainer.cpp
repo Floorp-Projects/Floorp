@@ -72,6 +72,18 @@ public:
             env, jBundle, "putString",
             "(Ljava/lang/String;Ljava/lang/String;)V");
         MOZ_ASSERT(jBundlePutString);
+        jBundlePutBooleanArray = AndroidBridge::GetMethodID(
+            env, jBundle, "putBooleanArray",
+            "(Ljava/lang/String;[Z)V");
+        MOZ_ASSERT(jBundlePutBooleanArray);
+        jBundlePutDoubleArray = AndroidBridge::GetMethodID(
+            env, jBundle, "putDoubleArray",
+            "(Ljava/lang/String;[D)V");
+        MOZ_ASSERT(jBundlePutDoubleArray);
+        jBundlePutIntArray = AndroidBridge::GetMethodID(
+            env, jBundle, "putIntArray",
+            "(Ljava/lang/String;[I)V");
+        MOZ_ASSERT(jBundlePutIntArray);
     }
 
     static jobject CreateInstance(JNIEnv* env, JSContext* cx,
@@ -227,6 +239,9 @@ public:
     static jmethodID jBundlePutDouble;
     static jmethodID jBundlePutInt;
     static jmethodID jBundlePutString;
+    static jmethodID jBundlePutBooleanArray;
+    static jmethodID jBundlePutDoubleArray;
+    static jmethodID jBundlePutIntArray;
 
 private:
     static jclass jNativeJSContainer;
@@ -299,6 +314,9 @@ jmethodID NativeJSContainer::jBundlePutBundle = 0;
 jmethodID NativeJSContainer::jBundlePutDouble = 0;
 jmethodID NativeJSContainer::jBundlePutInt = 0;
 jmethodID NativeJSContainer::jBundlePutString = 0;
+jmethodID NativeJSContainer::jBundlePutBooleanArray = 0;
+jmethodID NativeJSContainer::jBundlePutDoubleArray = 0;
+jmethodID NativeJSContainer::jBundlePutIntArray = 0;
 
 jobject
 CreateNativeJSContainer(JNIEnv* env, JSContext* cx, JS::HandleObject object)
@@ -360,6 +378,17 @@ CheckJNIArgument(JNIEnv* env, jobject arg)
     return true;
 }
 
+template <bool (*InValue)(JSContext*, JS::HandleValue)> bool
+CheckProperty(JNIEnv* env, JSContext* cx, JS::HandleValue val) {
+    if (!(*InValue)(cx, val)) {
+        AndroidBridge::ThrowException(env,
+            "java/lang/IllegalArgumentException",
+            "Property type mismatch");
+        return false;
+    }
+    return true;
+}
+
 bool
 AppendJSON(const jschar* buf, uint32_t len, void* data)
 {
@@ -369,13 +398,17 @@ AppendJSON(const jschar* buf, uint32_t len, void* data)
 
 template <typename U, typename V,
           bool (JS::Value::*IsMethod)() const,
-          V (JS::Value::*ToMethod)() const>
+          V (JS::Value::*ToMethod)() const,
+          typename UA,
+          UA (JNIEnv::*NewArrayMethod)(jsize),
+          void (JNIEnv::*SetArrayRegionMethod)(UA, jsize, jsize, const U*)>
 struct PrimitiveProperty
 {
     typedef U Type; // JNI type
+    typedef UA ArrayType; // JNI array type
     typedef V NativeType; // JSAPI type
 
-    static bool InValue(JS::HandleValue val) {
+    static bool InValue(JSContext* cx, JS::HandleValue val) {
         return (static_cast<const JS::Value&>(val).*IsMethod)();
     }
 
@@ -384,25 +417,54 @@ struct PrimitiveProperty
         return static_cast<Type>(
             (static_cast<const JS::Value&>(val).*ToMethod)());
     }
+
+    static ArrayType NewArray(JNIEnv* env, jobject instance, JSContext* cx,
+                              JS::HandleObject array, size_t length) {
+        ScopedDeleteArray<Type> buffer(new Type[length]);
+        for (size_t i = 0; i < length; i++) {
+            JS::RootedValue elem(cx);
+            if (!CheckJSCall(env, JS_GetElement(cx, array, i, &elem)) ||
+                !CheckProperty<InValue>(env, cx, elem)) {
+                return nullptr;
+            }
+            buffer[i] = FromValue(env, instance, cx, elem);
+        }
+        AutoLocalJNIFrame frame(env, 1);
+        ArrayType jarray = (env->*NewArrayMethod)(length);
+        if (!jarray) {
+            return nullptr;
+        }
+        (env->*SetArrayRegionMethod)(jarray, 0, length, buffer);
+        if (env->ExceptionCheck()) {
+            return nullptr;
+        }
+        return frame.Pop(jarray);
+    }
 };
 
 // Statically cast from bool to jboolean (unsigned char); it works
 // since false and JNI_FALSE have the same value (0), and true and
 // JNI_TRUE have the same value (1).
 typedef PrimitiveProperty<jboolean, bool,
-    &JS::Value::isBoolean, &JS::Value::toBoolean> BooleanProperty;
+    &JS::Value::isBoolean, &JS::Value::toBoolean,
+    jbooleanArray, &JNIEnv::NewBooleanArray,
+    &JNIEnv::SetBooleanArrayRegion> BooleanProperty;
 
 typedef PrimitiveProperty<jdouble, double,
-    &JS::Value::isNumber, &JS::Value::toNumber> DoubleProperty;
+    &JS::Value::isNumber, &JS::Value::toNumber,
+    jdoubleArray, &JNIEnv::NewDoubleArray,
+    &JNIEnv::SetDoubleArrayRegion> DoubleProperty;
 
 typedef PrimitiveProperty<jint, int32_t,
-    &JS::Value::isInt32, &JS::Value::toInt32> IntProperty;
+    &JS::Value::isInt32, &JS::Value::toInt32,
+    jintArray, &JNIEnv::NewIntArray,
+    &JNIEnv::SetIntArrayRegion> IntProperty;
 
 struct StringProperty
 {
     typedef jstring Type;
 
-    static bool InValue(JS::HandleValue val) {
+    static bool InValue(JSContext* cx, JS::HandleValue val) {
         return val.isString();
     }
 
@@ -434,7 +496,7 @@ struct BaseObjectProperty
 {
     typedef jobject Type;
 
-    static bool InValue(JS::HandleValue val) {
+    static bool InValue(JSContext* cx, JS::HandleValue val) {
         return val.isObjectOrNull();
     }
 
@@ -457,11 +519,53 @@ typedef BaseObjectProperty<
 // Returns a Bundle from a JSObject
 typedef BaseObjectProperty<GetBundle> BundleProperty;
 
+template <class T>
+struct ArrayProperty
+{
+    typedef T Base;
+    typedef typename T::ArrayType Type;
+
+    static bool InValue(JSContext* cx, JS::HandleValue val) {
+        if (!val.isObject()) {
+            return false;
+        }
+        JS::RootedObject obj(cx, &val.toObject());
+        uint32_t length = 0;
+        if (!JS_IsArrayObject(cx, obj) ||
+            !JS_GetArrayLength(cx, obj, &length)) {
+            return false;
+        }
+        if (!length) {
+            // Empty arrays are always okay.
+            return true;
+        }
+        // We only check to see the first element is the target type. If the
+        // array has mixed types, we'll throw an error during actual conversion.
+        JS::RootedValue element(cx);
+        return JS_GetElement(cx, obj, 0, &element) &&
+               Base::InValue(cx, element);
+    }
+
+    static Type FromValue(JNIEnv* env, jobject instance,
+                               JSContext* cx, JS::HandleValue val) {
+        JS::RootedObject obj(cx, &val.toObject());
+        uint32_t length = 0;
+        if (!CheckJSCall(env, JS_GetArrayLength(cx, obj, &length))) {
+            return nullptr;
+        }
+        return Base::NewArray(env, instance, cx, obj, length);
+    }
+};
+
+typedef ArrayProperty<BooleanProperty> BooleanArrayProperty;
+typedef ArrayProperty<DoubleProperty> DoubleArrayProperty;
+typedef ArrayProperty<IntProperty> IntArrayProperty;
+
 struct HasProperty
 {
     typedef jboolean Type;
 
-    static bool InValue(JS::HandleValue val) {
+    static bool InValue(JSContext* cx, JS::HandleValue val) {
         return true;
     }
 
@@ -510,10 +614,7 @@ GetProperty(JNIEnv* env, jobject instance, jstring name,
         }
         return fallback;
     }
-    if (!Property::InValue(val)) {
-        AndroidBridge::ThrowException(env,
-            "java/lang/IllegalArgumentException",
-            "Property type mismatch");
+    if (!CheckProperty<Property::InValue>(env, cx, val)) {
         return fallback;
     }
     return Property::FromValue(env, instance, cx, val);
@@ -562,7 +663,7 @@ GetBundle(JNIEnv* env, jobject instance, JSContext* cx, JS::HandleObject obj)
         }
 
 #define PUT_IN_BUNDLE_IF_TYPE_IS(Type)                              \
-        if (Type##Property::InValue(val)) {                         \
+        if (Type##Property::InValue(cx, val)) {                     \
             env->CallVoidMethod(                                    \
                 newBundle,                                          \
                 NativeJSContainer::jBundlePut##Type,                \
@@ -573,11 +674,21 @@ GetBundle(JNIEnv* env, jobject instance, JSContext* cx, JS::HandleObject obj)
         }                                                           \
         ((void) 0) // Accommodate trailing semicolon.
 
+        // Scalar values are faster to check, so check them first.
         PUT_IN_BUNDLE_IF_TYPE_IS(Boolean);
         // Int can be casted to double, so check int first.
         PUT_IN_BUNDLE_IF_TYPE_IS(Int);
         PUT_IN_BUNDLE_IF_TYPE_IS(Double);
         PUT_IN_BUNDLE_IF_TYPE_IS(String);
+        // There's no "putObject", so don't check ObjectProperty
+
+        // Check for array types if scalar checks all failed.
+        PUT_IN_BUNDLE_IF_TYPE_IS(BooleanArray);
+        // XXX because we only check the first element of an array,
+        // a double array can potentially be seen as an int array.
+        PUT_IN_BUNDLE_IF_TYPE_IS(IntArray);
+        PUT_IN_BUNDLE_IF_TYPE_IS(DoubleArray);
+
         // Use Bundle as the default catch-all for objects
         PUT_IN_BUNDLE_IF_TYPE_IS(Bundle);
 
@@ -627,14 +738,14 @@ NS_EXPORT jbooleanArray JNICALL
 Java_org_mozilla_gecko_util_NativeJSObject_getBooleanArray(
     JNIEnv* env, jobject instance, jstring name)
 {
-    return nullptr; // TODO add implementation
+    return GetProperty<BooleanArrayProperty>(env, instance, name);
 }
 
 NS_EXPORT jbooleanArray JNICALL
 Java_org_mozilla_gecko_util_NativeJSObject_optBooleanArray(
     JNIEnv* env, jobject instance, jstring name, jbooleanArray fallback)
 {
-    return nullptr; // TODO add implementation
+    return GetProperty<BooleanArrayProperty>(env, instance, name, FallbackOption::RETURN, fallback);
 }
 
 NS_EXPORT jobject JNICALL
@@ -681,14 +792,14 @@ NS_EXPORT jdoubleArray JNICALL
 Java_org_mozilla_gecko_util_NativeJSObject_getDoubleArray(
     JNIEnv* env, jobject instance, jstring name)
 {
-    return nullptr; // TODO add implementation
+    return GetProperty<DoubleArrayProperty>(env, instance, name);
 }
 
 NS_EXPORT jdoubleArray JNICALL
 Java_org_mozilla_gecko_util_NativeJSObject_optDoubleArray(
     JNIEnv* env, jobject instance, jstring name, jdoubleArray fallback)
 {
-    return nullptr; // TODO add implementation
+    return GetProperty<DoubleArrayProperty>(env, instance, name, FallbackOption::RETURN, fallback);
 }
 
 NS_EXPORT jint JNICALL
@@ -708,14 +819,14 @@ NS_EXPORT jintArray JNICALL
 Java_org_mozilla_gecko_util_NativeJSObject_getIntArray(
     JNIEnv* env, jobject instance, jstring name)
 {
-    return nullptr; // TODO add implementation
+    return GetProperty<IntArrayProperty>(env, instance, name);
 }
 
 NS_EXPORT jintArray JNICALL
 Java_org_mozilla_gecko_util_NativeJSObject_optIntArray(
     JNIEnv* env, jobject instance, jstring name, jintArray fallback)
 {
-    return nullptr; // TODO add implementation
+    return GetProperty<IntArrayProperty>(env, instance, name, FallbackOption::RETURN, fallback);
 }
 
 NS_EXPORT jobject JNICALL
