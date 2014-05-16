@@ -135,6 +135,26 @@ public:
   }
 };
 
+class CleanupTask : public nsRunnable
+{
+public:
+  CleanupTask()
+  { }
+
+  NS_IMETHOD
+  Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    // Cleanup bluetooth interfaces after BT state becomes BT_STATE_OFF.
+    BluetoothHfpManager::DeinitHfpInterface();
+    BluetoothA2dpManager::DeinitA2dpInterface();
+    sBtInterface->cleanup();
+
+    return NS_OK;
+  }
+};
+
 /**
  *  Static callback functions
  */
@@ -268,6 +288,10 @@ AdapterStateChangeCallback(bt_state_t aStatus)
   BT_LOGR("BT_STATE %d", aStatus);
 
   sIsBtEnabled = (aStatus == BT_STATE_ON);
+
+  if (!sIsBtEnabled && NS_FAILED(NS_DispatchToMainThread(new CleanupTask()))) {
+    BT_WARNING("Failed to dispatch to main thread!");
+  }
 
   nsRefPtr<nsRunnable> runnable =
     new BluetoothService::ToggleBtAck(sIsBtEnabled);
@@ -656,15 +680,29 @@ EnsureBluetoothHalLoad()
   }
   module->methods->open(module, BT_HARDWARE_MODULE_ID, &device);
   sBtDevice = (bluetooth_device_t *)device;
+  NS_ENSURE_TRUE(sBtDevice, false);
   sBtInterface = sBtDevice->get_bluetooth_interface();
+  NS_ENSURE_TRUE(sBtInterface, false);
 
+  return true;
+}
+
+static bool
+EnableInternal()
+{
   int ret = sBtInterface->init(&sBluetoothCallbacks);
   if (ret != BT_STATUS_SUCCESS) {
     BT_LOGR("Error while setting the callbacks");
     sBtInterface = nullptr;
+    return false;
   }
 
-  return true;
+  // Register all the bluedroid callbacks before enable() get called
+  // It is required to register a2dp callbacks before a2dp media task starts up.
+  // If any interface cannot be initialized, turn on bluetooth core anyway.
+  BluetoothHfpManager::InitHfpInterface();
+  BluetoothA2dpManager::InitA2dpInterface();
+  return sBtInterface->enable();
 }
 
 static nsresult
@@ -683,7 +721,7 @@ StartStopGonkBluetooth(bool aShouldEnable)
     return NS_OK;
   }
 
-  int ret = aShouldEnable ? sBtInterface->enable() : sBtInterface->disable();
+  int ret = aShouldEnable ? EnableInternal() : sBtInterface->disable();
   NS_ENSURE_TRUE(ret == BT_STATUS_SUCCESS, NS_ERROR_FAILURE);
 
   return NS_OK;
@@ -727,11 +765,6 @@ BluetoothServiceBluedroid::BluetoothServiceBluedroid()
     BT_LOGR("Error! Failed to load bluedroid library.");
     return;
   }
-
-  // Register all the bluedroid callbacks before enable() get called
-  // It is required to register a2dp callbacks before a2dp media task starts up.
-  BluetoothHfpManager::Get();
-  BluetoothA2dpManager::Get();
 }
 
 BluetoothServiceBluedroid::~BluetoothServiceBluedroid()

@@ -1,6 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// Test that the selector-search input proposes ids and classes even when . and
+// # is missing, but that this only occurs when the query is one word (no
+// selector combination)
+
 function test()
 {
   waitForExplicitFinish();
@@ -15,28 +19,30 @@ function test()
   //  ] count can be left to represent 1
   // ]
   let keyStates = [
-    ["d", [["div", 4], ["#d1", 1], ["#d2", 1]]],
-    ["i", [["div", 4]]],
-    ["v", []],
-    [" ", [["div div", 2], ["div span", 2]]],
-    [">", [["div >div", 2], ["div >span", 2]]],
-    ["VK_BACK_SPACE", [["div div", 2], ["div span", 2]]],
-    ["+", [["div +span"]]],
-    ["VK_BACK_SPACE", [["div div", 2], ["div span", 2]]],
-    ["VK_BACK_SPACE", []],
-    ["VK_BACK_SPACE", [["div", 4]]],
-    ["VK_BACK_SPACE", [["div", 4], ["#d1", 1], ["#d2", 1]]],
-    ["VK_BACK_SPACE", []],
-    ["p", []],
-    [" ", [["p strong"]]],
-    ["+", [["p +button"], ["p +p"]]],
-    ["b", [["p +button"]]],
-    ["u", [["p +button"]]],
-    ["t", [["p +button"]]],
-    ["t", [["p +button"]]],
-    ["o", [["p +button"]]],
+    ["s", [["span", 1], [".span", 1], ["#span", 1]]],
+    ["p", [["span", 1], [".span", 1], ["#span", 1]]],
+    ["a", [["span", 1], [".span", 1], ["#span", 1]]],
     ["n", []],
-    ["+", [["p +button+p"]]],
+    [" ", [["span div", 1]]],
+    ["d", [["span div", 1]]], // mixed tag/class/id suggestions only work for the first word
+    ["VK_BACK_SPACE", [["span div", 1]]],
+    ["VK_BACK_SPACE", []],
+    ["VK_BACK_SPACE", [["span", 1], [".span", 1], ["#span", 1]]],
+    ["VK_BACK_SPACE", [["span", 1], [".span", 1], ["#span", 1]]],
+    ["VK_BACK_SPACE", [["span", 1], [".span", 1], ["#span", 1]]],
+    ["VK_BACK_SPACE", []],
+    // Test that mixed tags, classes and ids are grouped by types, sorted by
+    // count and alphabetical order
+    ["b", [
+      ["button", 3],
+      ["body", 1],
+      [".bc", 3],
+      [".ba", 1],
+      [".bb", 1],
+      ["#ba", 1],
+      ["#bb", 1],
+      ["#bc", 1]
+    ]],
   ];
 
   gBrowser.selectedTab = gBrowser.addTab();
@@ -45,7 +51,13 @@ function test()
     waitForFocus(setupTest, content);
   }, true);
 
-  content.location = "http://mochi.test:8888/browser/browser/devtools/inspector/test/browser_inspector_bug_831693_search_suggestions.html";
+  content.location = "data:text/html," +
+                     "<span class='span' id='span'>" +
+                     "  <div class='div' id='div'></div>" +
+                     "</span>" +
+                     "<button class='ba bc' id='bc'></button>" +
+                     "<button class='bb bc' id='bb'></button>" +
+                     "<button class='bc' id='ba'></button>";
 
   function $(id) {
     if (id == null) return null;
@@ -91,7 +103,7 @@ function test()
       let actualSuggestions = popup.getItems();
       is(popup.isOpen ? actualSuggestions.length: 0, suggestions.length,
          "There are expected number of suggestions at " + state + "th step.");
-      actualSuggestions = actualSuggestions.reverse();
+      actualSuggestions.reverse();
       for (let i = 0; i < suggestions.length; i++) {
         is(suggestions[i][0], actualSuggestions[i].label,
            "The suggestion at " + i + "th index for " + state +

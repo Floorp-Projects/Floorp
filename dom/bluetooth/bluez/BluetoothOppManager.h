@@ -215,6 +215,10 @@ private:
   // is called.
   nsRefPtr<BluetoothSocket> mRfcommSocket;
   nsRefPtr<BluetoothSocket> mL2capSocket;
+
+  // This holds the time when OPP manager fail to get service channel and
+  // prepare to refresh SDP records.
+  mozilla::TimeStamp mLastServiceChannelCheck;
 };
 
 END_BLUETOOTH_NAMESPACE

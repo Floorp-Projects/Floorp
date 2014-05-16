@@ -442,9 +442,6 @@
 @BINPATH@/components/TestInterfaceJS.manifest
 #endif
 
-@BINPATH@/components/Downloads.manifest
-@BINPATH@/components/DownloadLegacy.js
-
 ; Modules
 @BINPATH@/modules/*
 

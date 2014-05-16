@@ -598,11 +598,7 @@ public class SUTAgentAndroid extends Activity
             wc.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.IEEE8021X);
             }
 
-        wc.hiddenSSID = false;
         wc.status = WifiConfiguration.Status.ENABLED;
-
-        wc.password.setValue("\"password\"");
-        wc.identity.setValue("\"bmoss@mozilla.com\"");
 
         if (!wifi.isWifiEnabled())
             wifi.setWifiEnabled(true);

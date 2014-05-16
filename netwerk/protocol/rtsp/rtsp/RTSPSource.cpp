@@ -471,6 +471,22 @@ void RTSPSource::onMessageReceived(const sp<AMessage> &msg) {
             break;
         }
 
+        case RtspConnectionHandler::kWhatTryTCPInterleaving:
+        {
+            // By default, we will request to deliver RTP over UDP. If the play
+            // request timed out and we didn't receive any RTP packet, we will
+            // fail back to use RTP interleaved in the existing RTSP/TCP
+            // connection. And in this case, we have to explicitly perform
+            // another play event to request the server to start streaming
+            // again.
+            int64_t playTimeUs;
+            if (!msg->findInt64("timeUs", &playTimeUs)) {
+                playTimeUs = 0;
+            }
+            performPlay(playTimeUs);
+            break;
+        }
+
         default:
             TRESPASS();
     }

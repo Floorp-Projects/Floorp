@@ -56,6 +56,11 @@
     "n_values": 21,
     "description": "Maximum number of concurrent threads reached during a given download session"
   },
+  "BLOCKLIST_SYNC_FILE_LOAD": {
+    "expires_in_version": "35",
+    "kind": "boolean",
+    "description": "blocklist.xml has been loaded synchronously"
+  },
   "COMPARTMENT_DONATED_NODE": {
     "expires_in_version": "never",
     "kind": "boolean",
