@@ -3797,9 +3797,6 @@ Tab.prototype = {
             type: "Link:Favicon",
             tabID: this.id,
             href: resolveGeckoURI(target.href),
-            charset: target.ownerDocument.characterSet,
-            title: target.title,
-            rel: list.join(" "),
             size: maxSize
           };
           sendMessageToJava(json);
