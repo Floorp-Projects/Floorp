@@ -50,6 +50,25 @@ function rbitor_object(i) {
     return i;
 }
 
+var uceFault_bitxor_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_bitxor_number'));
+function rbitxor_number(i) {
+    var x = 1 ^ i;
+    if (uceFault_bitxor_number(i) || uceFault_bitxor_number(i))
+        assertEq(x, 98  /* = 1 XOR 99 */);
+    return i;
+}
+
+var uceFault_bitxor_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_bitxor_object'));
+function rbitxor_object(i) {
+    var t = i;
+    var o = { valueOf: function () { return t; } };
+    var x = 1 ^ o; /* computed with t == i, not 1000 */
+    t = 1000;
+    if (uceFault_bitxor_object(i) || uceFault_bitxor_object(i))
+        assertEq(x, 98  /* = 1 XOR 99 */);
+    return i;
+}
+
 var uceFault_add_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_add_number'));
 function radd_number(i) {
     var x = 1 + i;

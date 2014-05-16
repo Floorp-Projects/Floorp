@@ -281,7 +281,7 @@ int __breakpad_fdnlist(int fd, nlist_type *list, const char **symbolNames,
 
   off_t sa;  /* symbol address */
   off_t ss;  /* start of strings */
-  register register_t n;
+  register_t n;
   if (*((unsigned int *)&buf) == magic) {
     if (lseek(fd, arch_offset, SEEK_SET) == -1) {
       return -1;
@@ -354,7 +354,7 @@ int __breakpad_fdnlist(int fd, nlist_type *list, const char **symbolNames,
   // and look for a match
   while (n) {
     nlist_type space[BUFSIZ/sizeof (nlist_type)];
-    register register_t m = sizeof (space);
+    register_t m = sizeof (space);
 
     if (n < m)
       m = n;

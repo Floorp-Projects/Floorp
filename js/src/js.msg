@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -105,7 +105,7 @@ MSG_DEF(JSMSG_BAD_DESTRUCT_ASS,        51, 0, JSEXN_REFERENCEERR, "invalid destr
 MSG_DEF(JSMSG_PAREN_AFTER_LET,         52, 0, JSEXN_SYNTAXERR, "missing ) after let head")
 MSG_DEF(JSMSG_CURLY_AFTER_LET,         53, 0, JSEXN_SYNTAXERR, "missing } after let block")
 MSG_DEF(JSMSG_MISSING_PAREN,           54, 0, JSEXN_SYNTAXERR, "unterminated parenthetical")
-MSG_DEF(JSMSG_UNTERM_CLASS,            55, 1, JSEXN_SYNTAXERR, "unterminated character class {0}")
+MSG_DEF(JSMSG_UNTERM_CLASS,            55, 0, JSEXN_SYNTAXERR, "unterminated character class")
 MSG_DEF(JSMSG_TRAILING_SLASH,          56, 0, JSEXN_SYNTAXERR, "trailing \\ in regular expression")
 MSG_DEF(JSMSG_BAD_CLASS_RANGE,         57, 0, JSEXN_SYNTAXERR, "invalid range in character class")
 MSG_DEF(JSMSG_BAD_REGEXP_FLAG,         58, 1, JSEXN_SYNTAXERR, "invalid regular expression flag {0}")
@@ -228,10 +228,10 @@ MSG_DEF(JSMSG_BRACKET_AFTER_ARRAY_COMPREHENSION, 174, 0, JSEXN_SYNTAXERR, "missi
 MSG_DEF(JSMSG_NESTING_GENERATOR,      175, 0, JSEXN_TYPEERR, "already executing generator")
 MSG_DEF(JSMSG_PAREN_AFTER_FOR_OF_ITERABLE, 176, 0, JSEXN_SYNTAXERR, "missing ) after for-of iterable")
 MSG_DEF(JSMSG_INVALID_NORMALIZE_FORM, 177, 0, JSEXN_RANGEERR, "form must be one of 'NFC', 'NFD', 'NFKC', or 'NFKD'")
-MSG_DEF(JSMSG_UNUSED178,              178, 0, JSEXN_NONE, "")
-MSG_DEF(JSMSG_UNUSED179,              179, 0, JSEXN_NONE, "")
-MSG_DEF(JSMSG_UNUSED180,              180, 0, JSEXN_NONE, "")
-MSG_DEF(JSMSG_UNUSED181,              181, 0, JSEXN_NONE, "")
+MSG_DEF(JSMSG_NOTHING_TO_REPEAT,      178, 0, JSEXN_SYNTAXERR, "nothing to repeat")
+MSG_DEF(JSMSG_INVALID_GROUP,          179, 0, JSEXN_SYNTAXERR, "invalid regexp group")
+MSG_DEF(JSMSG_ESCAPE_AT_END_OF_REGEXP, 180, 0, JSEXN_SYNTAXERR, "\\ at end of pattern")
+MSG_DEF(JSMSG_NUMBERS_OUT_OF_ORDER,   181, 0, JSEXN_SYNTAXERR, "numbers out of order in {} quantifier.")
 MSG_DEF(JSMSG_BAD_GENERATOR_SEND,     182, 1, JSEXN_TYPEERR, "attempt to send {0} to newborn generator")
 MSG_DEF(JSMSG_SC_NOT_TRANSFERABLE,    183, 0, JSEXN_TYPEERR, "invalid transferable array for structured clone")
 MSG_DEF(JSMSG_SC_DUP_TRANSFERABLE,    184, 0, JSEXN_TYPEERR, "duplicate transferable for structured clone")

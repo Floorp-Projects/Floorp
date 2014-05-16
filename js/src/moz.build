@@ -193,12 +193,7 @@ UNIFIED_SOURCES += [
     'vm/Unicode.cpp',
     'vm/Value.cpp',
     'vm/WeakMapPtr.cpp',
-    'vm/Xdr.cpp',
-    'yarr/PageBlock.cpp',
-    'yarr/YarrCanonicalizeUCS2.cpp',
-    'yarr/YarrInterpreter.cpp',
-    'yarr/YarrPattern.cpp',
-    'yarr/YarrSyntaxChecker.cpp',
+    'vm/Xdr.cpp'
 ]
 
 # jsarray.cpp and jsatom.cpp cannot be built in unified mode because
@@ -234,6 +229,40 @@ if CONFIG['ENABLE_TRACE_LOGGING']:
     SOURCES += [
         'vm/TraceLogging.cpp',
     ]
+
+if CONFIG['ENABLE_YARR']:
+    UNIFIED_SOURCES += [
+        'yarr/PageBlock.cpp',
+        'yarr/YarrCanonicalizeUCS2.cpp',
+        'yarr/YarrInterpreter.cpp',
+        'yarr/YarrPattern.cpp',
+        'yarr/YarrSyntaxChecker.cpp',
+    ]
+    if CONFIG['OS_ARCH'] == 'WINNT':
+        SOURCES += [
+            'yarr/OSAllocatorWin.cpp',
+        ]
+    else:
+        SOURCES += [
+            'yarr/OSAllocatorPosix.cpp',
+        ]
+    if CONFIG['ENABLE_ION']:
+        SOURCES += [
+            'yarr/YarrJIT.cpp'
+        ]
+else:
+    UNIFIED_SOURCES += [
+        'irregexp/RegExpAST.cpp',
+        'irregexp/RegExpEngine.cpp',
+        'irregexp/RegExpInterpreter.cpp',
+        'irregexp/RegExpMacroAssembler.cpp',
+        'irregexp/RegExpParser.cpp',
+        'irregexp/RegExpStack.cpp',
+    ]
+    if CONFIG['ENABLE_ION']:
+        UNIFIED_SOURCES += [
+            'irregexp/NativeRegExpMacroAssembler.cpp',
+        ]
 
 if CONFIG['ENABLE_ION']:
     UNIFIED_SOURCES += [
@@ -350,17 +379,15 @@ if CONFIG['ENABLE_ION']:
 if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         'assembler/jit/ExecutableAllocatorWin.cpp',
-        'yarr/OSAllocatorWin.cpp',
     ]
     # _CRT_RAND_S must be #defined before #including stdlib.h to get rand_s()
     DEFINES['_CRT_RAND_S'] = True
 else:
     SOURCES += [
         'assembler/jit/ExecutableAllocatorPosix.cpp',
-        'yarr/OSAllocatorPosix.cpp',
     ]
 
-if CONFIG['ENABLE_ION'] or CONFIG['ENABLE_YARR_JIT']:
+if CONFIG['ENABLE_ION']:
     if CONFIG['JS_CODEGEN_X86'] or CONFIG['JS_CODEGEN_X64']:
         SOURCES += [
             'assembler/assembler/MacroAssemblerX86Common.cpp',
@@ -370,11 +397,6 @@ if CONFIG['ENABLE_ION'] or CONFIG['ENABLE_YARR_JIT']:
             'assembler/assembler/ARMAssembler.cpp',
             'assembler/assembler/MacroAssemblerARM.cpp',
         ]
-
-if CONFIG['ENABLE_YARR_JIT']:
-    SOURCES += [
-        'yarr/YarrJIT.cpp'
-    ]
 
 if CONFIG['JS_HAS_CTYPES']:
     SOURCES += [
@@ -460,6 +482,3 @@ if CONFIG['_MSC_VER']:
 # the code in js/src/assembler.
 DEFINES['USE_SYSTEM_MALLOC'] = 1
 DEFINES['ENABLE_ASSEMBLER'] = 1
-
-if CONFIG['ENABLE_YARR_JIT']:
-    DEFINES['ENABLE_JIT'] = 1

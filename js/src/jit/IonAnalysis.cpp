@@ -107,6 +107,12 @@ jit::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
             if (ins->isImplicitlyUsed())
                 continue;
 
+            // If the instruction's is captured by one of the resume point, then
+            // it might be observed indirectly while the frame is live on the
+            // stack, so it has to be computed.
+            if (ins->isObserved())
+                continue;
+
             // Check if this instruction's result is only used within the
             // current block, and keep track of its last use in a definition
             // (not resume point). This requires the instructions in the block
@@ -139,14 +145,6 @@ jit::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
                     mrp->instruction() == *ins ||
                     mrp->instruction()->id() <= maxDefinition)
                 {
-                    uses++;
-                    continue;
-                }
-
-                // The operand is an uneliminable slot. This currently
-                // includes argument slots in non-strict scripts (due to being
-                // observable via Function.arguments).
-                if (!block->info().canOptimizeOutSlot(uses->index())) {
                     uses++;
                     continue;
                 }
@@ -232,30 +230,7 @@ IsPhiObservable(MPhi *phi, Observability observe)
         break;
     }
 
-    uint32_t slot = phi->slot();
-    CompileInfo &info = phi->block()->info();
-    JSFunction *fun = info.funMaybeLazy();
-
-    // If the Phi is of the |this| value, it must always be observable.
-    if (fun && slot == info.thisSlot())
-        return true;
-
-    // If the function may need an arguments object, then make sure to
-    // preserve the scope chain, because it may be needed to construct the
-    // arguments object during bailout. If we've already created an arguments
-    // object (or got one via OSR), preserve that as well.
-    if (fun && info.hasArguments() &&
-        (slot == info.scopeChainSlot() || slot == info.argsObjSlot()))
-    {
-        return true;
-    }
-
-    // The Phi is an uneliminable slot. Currently this includes argument slots
-    // in non-strict scripts (due to being observable via Function.arguments).
-    if (fun && !info.canOptimizeOutSlot(slot))
-        return true;
-
-    return false;
+    return phi->isObserved();
 }
 
 // Handles cases like:
