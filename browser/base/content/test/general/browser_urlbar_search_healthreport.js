@@ -42,23 +42,49 @@ function test() {
       let tab = gBrowser.addTab();
       gBrowser.selectedTab = tab;
 
-      gURLBar.value = "firefox health report";
+      let searchStr = "firefox health report";
+      let expectedURL = Services.search.currentEngine.
+                        getSubmission(searchStr, "", "keyword").uri.spec;
+
+      // Expect the search URL to load but stop it as soon as it starts.
+      let loadPromise = waitForDocLoadAndStopIt(expectedURL);
+
+      // Meanwhile, poll for the new measurement.
+      let count = 0;
+      let measurementDeferred = Promise.defer();
+      function getNewMeasurement() {
+        if (count++ >= 10) {
+          ok(false, "Timed out waiting for new measurement");
+          measurementDeferred.resolve();
+          return;
+        }
+        m.getValues().then(function onData(data) {
+          if (data.days.hasDay(now)) {
+            let day = data.days.getDay(now);
+            if (day.has(field)) {
+              let newCount = day.get(field);
+              if (newCount > oldCount) {
+                is(newCount, oldCount + 1,
+                   "Exactly one search has been recorded.");
+                measurementDeferred.resolve();
+                return;
+              }
+            }
+          }
+          executeSoon(getNewMeasurement);
+        });
+      }
+      executeSoon(getNewMeasurement);
+
+      // Trigger the search.
+      gURLBar.value = searchStr;
       gURLBar.handleCommand();
 
-      executeSoon(() => executeSoon(() => {
+      // Wait for the page load and new measurement.
+      Promise.all([loadPromise, measurementDeferred.promise]).then(() => {
         gBrowser.removeTab(tab);
-
-        m.getValues().then(function onData(data) {
-          ok(data.days.hasDay(now), "FHR has data for today.");
-          let day = data.days.getDay(now);
-          ok(day.has(field), "FHR has url bar count for today.");
-
-          let newCount = day.get(field);
-
-          is(newCount, oldCount + 1, "Exactly one search has been recorded.");
-          finish();
-        });
-      }));
+        finish();
+      });
     });
   });
 }
