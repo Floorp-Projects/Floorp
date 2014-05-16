@@ -5,8 +5,10 @@
 
 #include "nsIChannel.idl"
 
-[scriptable, builtinclass, uuid(6e6cc56d-51eb-4299-a795-dcfd1229ab3d)]
-interface nsIJARChannel : nsIChannel 
+interface nsIFile;
+
+[scriptable, builtinclass, uuid(063e9698-ec67-4fe2-aa19-d21505beaa61)]
+interface nsIJARChannel : nsIChannel
 {
     /**
      * Returns TRUE if the JAR file is not safe (if the content type reported
@@ -20,4 +22,9 @@ interface nsIJARChannel : nsIChannel
      * Forces the uri to be a app:// uri.
      */
     void setAppURI(in nsIURI uri);
+
+    /**
+     * Returns the JAR file.
+     */
+    readonly attribute nsIFile jarFile;
 };
