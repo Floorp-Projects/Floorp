@@ -386,23 +386,23 @@ Http2Session::AddStream(nsAHttpTransaction *aHttpTransaction,
     return false;
   }
 
-  // assert that
-  // a] in the case we have a connection, that the new transaction connection
-  //    is either undefined or on the same connection
-  // b] in the case we don't have a connection, that the new transaction
-  //    connection is defined so we can adopt it
-  MOZ_ASSERT((mConnection && (!aHttpTransaction->Connection() ||
-                              mConnection == aHttpTransaction->Connection())) ||
-             (!mConnection && aHttpTransaction->Connection()));
-
   if (!mConnection) {
     mConnection = aHttpTransaction->Connection();
   }
+
   aHttpTransaction->SetConnection(this);
+
+  if (aUseTunnel) {
+    LOG3(("Http2Session::AddStream session=%p trans=%p OnTunnel",
+          this, aHttpTransaction));
+    DispatchOnTunnel(aHttpTransaction, aCallbacks);
+    return true;
+  }
+
   Http2Stream *stream = new Http2Stream(aHttpTransaction, this, aPriority);
 
-  LOG3(("Http2Session::AddStream session=%p stream=%p NextID=0x%X (tentative)",
-        this, stream, mNextStreamID));
+  LOG3(("Http2Session::AddStream session=%p stream=%p serial=%u "
+        "NextID=0x%X (tentative)", this, stream, mSerial, mNextStreamID));
 
   mStreamTransactionHash.Put(aHttpTransaction, stream);
 
@@ -991,6 +991,10 @@ Http2Session::CloseStream(Http2Stream *aStream, nsresult aResult)
 
   RemoveStreamFromQueues(aStream);
 
+  if (aStream->IsTunnel()) {
+    UnRegisterTunnel(aStream);
+  }
+
   // Send the stream the close() indication
   aStream->Close(aResult);
 }
@@ -1138,7 +1142,11 @@ Http2Session::ResponseHeadersComplete()
   // only do this once, afterwards ignore trailers
   if (mInputFrameDataStream->AllHeadersReceived())
     return NS_OK;
-  mInputFrameDataStream->SetAllHeadersReceived(true);
+  nsresult rv = mInputFrameDataStream->SetAllHeadersReceived(true);
+
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // The stream needs to see flattened http headers
   // Uncompressed http/2 format headers currently live in
@@ -1146,11 +1154,23 @@ Http2Session::ResponseHeadersComplete()
   // mFlatHTTPResponseHeaders via ConvertHeaders()
 
   mFlatHTTPResponseHeadersOut = 0;
-  nsresult rv = mInputFrameDataStream->ConvertResponseHeaders(&mDecompressor,
-                                                              mDecompressBuffer,
-                                                              mFlatHTTPResponseHeaders);
-  if (NS_FAILED(rv))
+  rv = mInputFrameDataStream->ConvertResponseHeaders(&mDecompressor,
+                                                     mDecompressBuffer,
+                                                     mFlatHTTPResponseHeaders);
+  if (rv == NS_ERROR_ABORT) {
+    LOG(("Http2Session::ResponseHeadersComplete ConvertResponseHeaders aborted\n"));
+    if (mInputFrameDataStream->IsTunnel()) {
+      gHttpHandler->ConnMgr()->CancelTransactions(
+        mInputFrameDataStream->Transaction()->ConnectionInfo(),
+        NS_ERROR_CONNECTION_REFUSED);
+    }
+    CleanupStream(mInputFrameDataStream, rv, CANCEL_ERROR);
+    ResetDownstreamState();
+    return NS_OK;
+  }
+  else if (NS_FAILED(rv)) {
     return rv;
+  }
 
   ChangeDownstreamState(PROCESSING_COMPLETE_HEADERS);
   return NS_OK;
@@ -2278,6 +2298,7 @@ Http2Session::WriteSegments(nsAHttpSegmentWriter *writer,
     MOZ_ASSERT(!mNeedsCleanup, "cleanup stream set unexpectedly");
     mNeedsCleanup = nullptr;                     /* just in case */
 
+    Http2Stream *stream = mInputFrameDataStream;
     mSegmentWriter = writer;
     rv = mInputFrameDataStream->WriteSegments(this, count, countWritten);
     mSegmentWriter = nullptr;
@@ -2288,7 +2309,6 @@ Http2Session::WriteSegments(nsAHttpSegmentWriter *writer,
       // This will happen when the transaction figures out it is EOF, generally
       // due to a content-length match being made. Return OK from this function
       // otherwise the whole session would be torn down.
-      Http2Stream *stream = mInputFrameDataStream;
 
       // if we were doing PROCESSING_COMPLETE_HEADERS need to pop the state
       // back to PROCESSING_DATA_FRAME where we came from
@@ -2302,8 +2322,8 @@ Http2Session::WriteSegments(nsAHttpSegmentWriter *writer,
             this, stream, stream ? stream->StreamID() : 0,
             mNeedsCleanup, rv));
       CleanupStream(stream, NS_OK, CANCEL_ERROR);
-      MOZ_ASSERT(!mNeedsCleanup, "double cleanup out of data frame");
-      mNeedsCleanup = nullptr;                     /* just in case */
+      MOZ_ASSERT(!mNeedsCleanup || mNeedsCleanup == stream);
+      mNeedsCleanup = nullptr;
       return NS_OK;
     }
 
@@ -2794,6 +2814,80 @@ Http2Session::ConnectPushedStream(Http2Stream *stream)
   ForceRecv();
 }
 
+uint32_t
+Http2Session::FindTunnelCount(nsHttpConnectionInfo *aConnInfo)
+{
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  uint32_t rv = 0;
+  mTunnelHash.Get(aConnInfo->HashKey(), &rv);
+  return rv;
+}
+
+void
+Http2Session::RegisterTunnel(Http2Stream *aTunnel)
+{
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  nsHttpConnectionInfo *ci = aTunnel->Transaction()->ConnectionInfo();
+  uint32_t newcount = FindTunnelCount(ci) + 1;
+  mTunnelHash.Remove(ci->HashKey());
+  mTunnelHash.Put(ci->HashKey(), newcount);
+  LOG3(("Http2Stream::RegisterTunnel %p stream=%p tunnels=%d [%s]",
+        this, aTunnel, newcount, ci->HashKey().get()));
+}
+
+void
+Http2Session::UnRegisterTunnel(Http2Stream *aTunnel)
+{
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  nsHttpConnectionInfo *ci = aTunnel->Transaction()->ConnectionInfo();
+  MOZ_ASSERT(FindTunnelCount(ci));
+  uint32_t newcount = FindTunnelCount(ci) - 1;
+  mTunnelHash.Remove(ci->HashKey());
+  if (newcount) {
+    mTunnelHash.Put(ci->HashKey(), newcount);
+  }
+  LOG3(("Http2Session::UnRegisterTunnel %p stream=%p tunnels=%d [%s]",
+        this, aTunnel, newcount, ci->HashKey().get()));
+}
+
+void
+Http2Session::DispatchOnTunnel(nsAHttpTransaction *aHttpTransaction,
+                               nsIInterfaceRequestor *aCallbacks)
+{
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  nsHttpTransaction *trans = aHttpTransaction->QueryHttpTransaction();
+  nsHttpConnectionInfo *ci = aHttpTransaction->ConnectionInfo();
+  MOZ_ASSERT(trans);
+
+  LOG3(("Http2Session::DispatchOnTunnel %p trans=%p", this, trans));
+
+  aHttpTransaction->SetConnection(nullptr);
+
+  // this transaction has done its work of setting up a tunnel, let
+  // the connection manager queue it if necessary
+  trans->SetDontRouteViaWildCard(true);
+
+  if (FindTunnelCount(ci) < gHttpHandler->MaxConnectionsPerOrigin()) {
+    LOG3(("Http2Session::DispatchOnTunnel %p create on new tunnel %s",
+          this, ci->HashKey().get()));
+    nsRefPtr<SpdyConnectTransaction> connectTrans =
+      new SpdyConnectTransaction(ci, aCallbacks,
+                                 trans->Caps(), trans, this);
+    AddStream(connectTrans, trans->Priority(),
+              false, nullptr);
+    Http2Stream *tunnel = mStreamTransactionHash.Get(connectTrans);
+    MOZ_ASSERT(tunnel);
+    RegisterTunnel(tunnel);
+  }
+
+  // requeue it. The connection manager is responsible for actually putting
+  // this on the tunnel connection with the specific ci now that it
+  // has DontRouteViaWildCard set.
+  trans->EnableKeepAlive();
+  gHttpHandler->InitiateTransaction(trans, trans->Priority());
+}
+
+
 nsresult
 Http2Session::BufferOutput(const char *buf,
                            uint32_t count,
@@ -2894,6 +2988,12 @@ Http2Session::TransactionHasDataToWrite(nsAHttpTransaction *caller)
 
   mReadyForWrite.Push(stream);
   SetWriteCallbacks();
+
+  // NSPR poll will not poll the network if there are non system PR_FileDesc's
+  // that are ready - so we can get into a deadlock waiting for the system IO
+  // to come back here if we don't force the send loop manually.
+  ForceSend();
+
 }
 
 void
@@ -2905,6 +3005,7 @@ Http2Session::TransactionHasDataToWrite(Http2Stream *stream)
 
   mReadyForWrite.Push(stream);
   SetWriteCallbacks();
+  ForceSend();
 }
 
 bool
