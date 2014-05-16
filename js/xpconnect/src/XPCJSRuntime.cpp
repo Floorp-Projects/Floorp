@@ -814,7 +814,10 @@ XPCJSRuntime::CustomGCCallback(JSGCStatus status)
 }
 
 /* static */ void
-XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, bool isCompartmentGC)
+XPCJSRuntime::FinalizeCallback(JSFreeOp *fop,
+                               JSFinalizeStatus status,
+                               bool isCompartmentGC,
+                               void *data)
 {
     XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
     if (!self)
@@ -1581,7 +1584,7 @@ XPCJSRuntime::~XPCJSRuntime()
     // one final GC, which can call back into the runtime with various
     // callback if we aren't careful. Null out the relevant callbacks.
     js::SetActivityCallback(Runtime(), nullptr, nullptr);
-    JS_SetFinalizeCallback(Runtime(), nullptr);
+    JS_RemoveFinalizeCallback(Runtime(), FinalizeCallback);
 
     // Clear any pending exception.  It might be an XPCWrappedJS, and if we try
     // to destroy it later we will crash.
@@ -3160,7 +3163,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     JS_SetDestroyCompartmentCallback(runtime, CompartmentDestroyedCallback);
     JS_SetCompartmentNameCallback(runtime, CompartmentNameCallback);
     mPrevGCSliceCallback = JS::SetGCSliceCallback(runtime, GCSliceCallback);
-    JS_SetFinalizeCallback(runtime, FinalizeCallback);
+    JS_AddFinalizeCallback(runtime, FinalizeCallback, nullptr);
     JS_SetWrapObjectCallbacks(runtime, &WrapObjectCallbacks);
     js::SetPreserveWrapperCallback(runtime, PreserveWrapper);
 #ifdef MOZ_CRASHREPORTER

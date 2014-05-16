@@ -1085,7 +1085,6 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     fullCompartmentChecks(false),
     gcCallback(nullptr),
     sliceCallback(nullptr),
-    finalizeCallback(nullptr),
     mallocBytes(0),
     mallocGCTriggered(false),
     scriptAndCountsVector(nullptr),
@@ -3825,8 +3824,11 @@ GCRuntime::beginSweepingZoneGroup()
 
     {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_FINALIZE_START);
-        if (finalizeCallback)
-            finalizeCallback(&fop, JSFINALIZE_GROUP_START, !isFull /* unused */);
+        for (Callback<JSFinalizeCallback> *p = rt->gc.finalizeCallbacks.begin();
+             p < rt->gc.finalizeCallbacks.end(); p++)
+        {
+            p->op(&fop, JSFINALIZE_GROUP_START, !isFull /* unused */, p->data);
+        }
     }
 
     if (sweepingAtoms) {
@@ -3918,8 +3920,11 @@ GCRuntime::beginSweepingZoneGroup()
 
     {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_FINALIZE_END);
-        if (finalizeCallback)
-            finalizeCallback(&fop, JSFINALIZE_GROUP_END, !isFull /* unused */);
+        for (Callback<JSFinalizeCallback> *p = rt->gc.finalizeCallbacks.begin();
+             p < rt->gc.finalizeCallbacks.end(); p++)
+        {
+            p->op(&fop, JSFINALIZE_GROUP_END, !isFull /* unused */, p->data);
+        }
     }
 }
 
@@ -4136,8 +4141,11 @@ GCRuntime::endSweepPhase(JSGCInvocationKind gckind, bool lastGC)
     {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_FINALIZE_END);
 
-        if (finalizeCallback)
-            finalizeCallback(&fop, JSFINALIZE_COLLECTION_END, !isFull);
+        for (Callback<JSFinalizeCallback> *p = rt->gc.finalizeCallbacks.begin();
+             p < rt->gc.finalizeCallbacks.end(); p++)
+        {
+            p->op(&fop, JSFINALIZE_COLLECTION_END, !isFull, p->data);
+        }
 
         /* If we finished a full GC, then the gray bits are correct. */
         if (isFull)
