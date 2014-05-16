@@ -2044,6 +2044,8 @@ nsJSContext::BeginCycleCollectionCallback()
   }
 }
 
+static_assert(NS_GC_DELAY > kMaxICCDuration, "A max duration ICC shouldn't reduce GC delay to 0");
+
 //static
 void
 nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
@@ -2059,11 +2061,13 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
 
   sCCollectedWaitingForGC += aResults.mFreedRefCounted + aResults.mFreedGCed;
 
-  if (NeedsGCAfterCC()) {
-    PokeGC(JS::gcreason::CC_WAITING);
-  }
-
   TimeStamp endCCTimeStamp = TimeStamp::Now();
+  uint32_t ccNowDuration = TimeBetween(gCCStats.mBeginTime, endCCTimeStamp);
+
+  if (NeedsGCAfterCC()) {
+    PokeGC(JS::gcreason::CC_WAITING,
+           NS_GC_DELAY - std::min(ccNowDuration, kMaxICCDuration));
+  }
 
   PRTime endCCTime;
   if (sPostGCEventsToObserver) {
@@ -2071,7 +2075,6 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
   }
 
   // Log information about the CC via telemetry, JSON and the console.
-  uint32_t ccNowDuration = TimeBetween(gCCStats.mBeginTime, endCCTimeStamp);
   Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_FINISH_IGC, gCCStats.mAnyLockedOut);
   Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_SYNC_SKIPPABLE, gCCStats.mRanSyncForgetSkippable);
   Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_FULL, ccNowDuration);
@@ -2230,17 +2233,6 @@ ShouldTriggerCC(uint32_t aSuspected)
           TimeUntilNow(sLastCCEndTime) > NS_CC_FORCED);
 }
 
-static uint32_t
-TimeToNextCC()
-{
-  if (sIncrementalCC) {
-    return NS_CC_DELAY - kMaxICCDuration;
-  }
-  return NS_CC_DELAY;
-}
-
-static_assert(NS_CC_DELAY > kMaxICCDuration, "ICC shouldn't reduce CC delay to 0");
-
 static void
 CCTimerFired(nsITimer *aTimer, void *aClosure)
 {
@@ -2250,7 +2242,7 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
 
   static uint32_t ccDelay = NS_CC_DELAY;
   if (sCCLockedOut) {
-    ccDelay = TimeToNextCC() / 3;
+    ccDelay = NS_CC_DELAY / 3;
 
     PRTime now = PR_Now();
     if (sCCLockedOutTime == 0) {
@@ -2297,7 +2289,7 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
   }
 
   if (isLateTimerFire) {
-    ccDelay = TimeToNextCC();
+    ccDelay = NS_CC_DELAY;
 
     // We have either just run the CC or decided we don't want to run the CC
     // next time, so kill the timer.
