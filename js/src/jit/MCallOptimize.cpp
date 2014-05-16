@@ -1915,6 +1915,9 @@ IonBuilder::inlineAssertFloat32(CallInfo &callInfo)
 IonBuilder::InliningStatus
 IonBuilder::inlineBoundFunction(CallInfo &nativeCallInfo, JSFunction *target)
 {
+     if (!target->getBoundFunctionTarget()->is<JSFunction>())
+         return InliningStatus_NotInlined;
+
     JSFunction *scriptedTarget = &(target->getBoundFunctionTarget()->as<JSFunction>());
     JSRuntime *runtime = scriptedTarget->runtimeFromMainThread();
 
