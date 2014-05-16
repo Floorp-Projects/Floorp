@@ -28,7 +28,7 @@ TEST_FILES = \
 # Remove this once the test harness uses the APIs built into Firefox
 TEST_FILES += source/lib
 
-PKG_STAGE = $(DIST)/test-package-stage
+PKG_STAGE = $(DIST)/test-stage
 
 stage-tests-package:: $(TEST_FILES)
 	$(INSTALL) $^ $(PKG_STAGE)/jetpack

@@ -163,7 +163,7 @@ TEST_HARNESS_PLUGINS := \
 endif
 
 # Rules for staging the necessary harness bits for a test package
-PKG_STAGE = $(DIST)/test-package-stage
+PKG_STAGE = $(DIST)/test-stage
 DIST_BIN = $(DIST)/bin
 
 $(_DEST_DIR):
