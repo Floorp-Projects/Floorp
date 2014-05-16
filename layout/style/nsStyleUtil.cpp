@@ -81,16 +81,13 @@ void nsStyleUtil::AppendEscapedCSSString(const nsAString& aString,
 nsStyleUtil::AppendEscapedCSSIdent(const nsAString& aIdent, nsAString& aReturn)
 {
   // The relevant parts of the CSS grammar are:
-  //   ident    ([-]?{nmstart}|[-][-]){nmchar}*
+  //   ident    [-]?{nmstart}{nmchar}*
   //   nmstart  [_a-z]|{nonascii}|{escape}
   //   nmchar   [_a-z0-9-]|{nonascii}|{escape}
   //   nonascii [^\0-\177]
   //   escape   {unicode}|\\[^\n\r\f0-9a-f]
   //   unicode  \\[0-9a-f]{1,6}(\r\n|[ \n\r\t\f])?
-  // from http://www.w3.org/TR/CSS21/syndata.html#tokenization but
-  // modified for idents by
-  // http://dev.w3.org/csswg/cssom/#serialize-an-identifier and
-  // http://dev.w3.org/csswg/css-syntax/#would-start-an-identifier
+  // from http://www.w3.org/TR/CSS21/syndata.html#tokenization
 
   const char16_t* in = aIdent.BeginReading();
   const char16_t* const end = aIdent.EndReading();
@@ -100,13 +97,7 @@ nsStyleUtil::AppendEscapedCSSIdent(const nsAString& aIdent, nsAString& aReturn)
 
   // A leading dash does not need to be escaped as long as it is not the
   // *only* character in the identifier.
-  if (*in == '-') {
-    if (in + 1 == end) {
-      aReturn.Append(char16_t('\\'));
-      aReturn.Append(char16_t('-'));
-      return true;
-    }
-
+  if (in + 1 != end && *in == '-') {
     aReturn.Append(char16_t('-'));
     ++in;
   }
@@ -114,8 +105,16 @@ nsStyleUtil::AppendEscapedCSSIdent(const nsAString& aIdent, nsAString& aReturn)
   // Escape a digit at the start (including after a dash),
   // numerically.  If we didn't escape it numerically, it would get
   // interpreted as a numeric escape for the wrong character.
-  if (in != end && ('0' <= *in && *in <= '9')) {
-    aReturn.AppendPrintf("\\%hX ", *in);
+  // A second dash immediately after a leading dash must also be
+  // escaped, but this may be done symbolically.
+  if (in != end && (*in == '-' ||
+                    ('0' <= *in && *in <= '9'))) {
+    if (*in == '-') {
+      aReturn.Append(char16_t('\\'));
+      aReturn.Append(char16_t('-'));
+    } else {
+      aReturn.AppendPrintf("\\%hX ", *in);
+    }
     ++in;
   }
 

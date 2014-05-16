@@ -2744,12 +2744,6 @@ GlobalPropertiesAreOwn()
   return true;
 }
 
-#ifdef DEBUG
-void
-AssertReturnTypeMatchesJitinfo(const JSJitInfo* aJitinfo,
-                               JS::Handle<JS::Value> aValue);
-#endif
-
 } // namespace dom
 } // namespace mozilla
 
