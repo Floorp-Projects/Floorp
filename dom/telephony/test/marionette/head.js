@@ -5,6 +5,8 @@ let Promise = SpecialPowers.Cu.import("resource://gre/modules/Promise.jsm").Prom
 let telephony;
 let conference;
 
+const kPrefRilDebuggingEnabled = "ril.debugging.enabled";
+
 /**
  * Emulator helper.
  */
@@ -1080,9 +1082,18 @@ function _startTest(permissions, test) {
     }
   }
 
+  let debugPref;
+
   function setUp() {
     log("== Test SetUp ==");
+
+    // Turn on debugging pref.
+    debugPref = SpecialPowers.getBoolPref(kPrefRilDebuggingEnabled);
+    SpecialPowers.setBoolPref(kPrefRilDebuggingEnabled, true);
+    log("Set debugging pref: " + debugPref + " => true");
+
     permissionSetUp();
+
     // Make sure that we get the telephony after adding permission.
     telephony = window.navigator.mozTelephony;
     ok(telephony);
@@ -1100,7 +1111,13 @@ function _startTest(permissions, test) {
       log("== Test TearDown ==");
       restoreTelephonyDial();
       emulator.waitFinish()
-        .then(permissionTearDown)
+        .then(() => {
+          permissionTearDown();
+
+          // Restore debugging pref.
+          SpecialPowers.setBoolPref(kPrefRilDebuggingEnabled, debugPref);
+          log("Set debugging pref: true => " + debugPref);
+        })
         .then(function() {
           originalFinish.apply(this, arguments);
         });

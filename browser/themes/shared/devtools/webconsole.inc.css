@@ -34,14 +34,28 @@ a {
 }
 
 .message > .icon {
-  background: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 0, 1, 0, 0) no-repeat;
-  background-position: center;
   flex: 0 0 auto;
   margin: 3px 6px 0 0;
   padding: 0 4px;
-  width: 8px;
   height: 1em;
   align-self: flex-start;
+}
+
+.message > .icon::before {
+  content: "";
+  background-image: url(chrome://browser/skin/devtools/webconsole.png);
+  background-position: 8px 8px;
+  background-repeat: no-repeat;
+  background-size: 48px 40px;
+  width: 8px;
+  height: 8px;
+  display: inline-block;
+}
+
+@media (min-resolution: 2dppx) {
+  .message > .icon::before {
+    background-image: url(chrome://browser/skin/devtools/webconsole@2x.png);
+  }
 }
 
 .message > .message-body-wrapper {
@@ -209,8 +223,8 @@ a {
   -moz-border-end: solid #000 6px;
 }
 
-.message[category=network][severity=error] > .icon {
-  background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 0, 16, 8, 8);
+.message[category=network][severity=error] > .icon::before {
+  background-position: -8px 0;
 }
 
 .message[category=network] > .message-body {
@@ -255,12 +269,12 @@ a {
   -moz-border-end: solid #00b6f0 6px;
 }
 
-.message[category=cssparser][severity=error] > .icon {
-  background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 8, 16, 16, 8);
+.message[category=cssparser][severity=error] > .icon::before {
+  background-position: -8px -8px;
 }
 
-.message[category=cssparser][severity=warn] > .icon {
-  background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 8, 24, 16, 16);
+.message[category=cssparser][severity=warn] > .icon::before {
+  background-position: -16px -8px;
 }
 
 /* JS styles */
@@ -273,12 +287,12 @@ a {
   -moz-border-end: solid #fb9500 6px;
 }
 
-.message[category=exception][severity=error] > .icon {
-  background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 16, 16, 24, 8);
+.message[category=exception][severity=error] > .icon::before {
+  background-position: -8px -16px;
 }
 
-.message[category=exception][severity=warn] > .icon {
-  background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 16, 24, 24, 16);
+.message[category=exception][severity=warn] > .icon::before {
+  background-position: -16px -16px;
 }
 
 /* Web Developer styles */
@@ -291,17 +305,17 @@ a {
   -moz-border-end: solid #cbcbcb 6px;
 }
 
-.message[category=console][severity=error] > .icon,
-.message[category=output][severity=error] > .icon {
-  background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 24, 16, 32, 8);
+.message[category=console][severity=error] > .icon::before,
+.message[category=output][severity=error] > .icon::before {
+  background-position: -8px -24px;
 }
 
-.message[category=console][severity=warn] > .icon {
-  background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 24, 24, 32, 16);
+.message[category=console][severity=warn] > .icon::before {
+  background-position: -16px -24px;
 }
 
-.message[category=console][severity=info] > .icon {
-  background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 24, 32, 32, 24);
+.message[category=console][severity=info] > .icon::before {
+  background-position: -24px -24px;
 }
 
 /* Input and output styles */
@@ -310,12 +324,12 @@ a {
   -moz-border-end: solid #808080 6px;
 }
 
-.message[category=input] > .icon {
-  background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 24, 40, 32, 32);
+.message[category=input] > .icon::before {
+  background-position: -32px -24px;
 }
 
-.message[category=output] > .icon {
-  background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 24, 48, 32, 40);
+.message[category=output] > .icon::before {
+  background-position: -40px -24px;
 }
 
 /* JSTerm Styles */
@@ -328,7 +342,15 @@ a {
 }
 
 .jsterm-input-node {
-  background: -moz-image-rect(url("chrome://browser/skin/devtools/commandline-icon.png"), 0, 32, 16, 16) no-repeat;
+  background-image: -moz-image-rect(url("chrome://browser/skin/devtools/commandline-icon.png"), 0, 32, 16, 16);
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+}
+
+@media (min-resolution: 2dppx) {
+  .jsterm-input-node {
+    background-image: -moz-image-rect(url('chrome://browser/skin/devtools/commandline-icon@2x.png'), 0, 64, 32, 32);
+  }
 }
 
 :-moz-any(.jsterm-input-node,
@@ -370,12 +392,12 @@ a {
   border-color: #D12C2C;
 }
 
-.message[category=security][severity=error] > .icon {
-  background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 32, 16, 40, 8);
+.message[category=security][severity=error] > .icon::before {
+  background-position: -8px -32px;
 }
 
-.message[category=security][severity=warn] > .icon {
-  background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 32, 24, 40, 16);
+.message[category=security][severity=warn] > .icon::before {
+  background-position: -16px -32px;
 }
 
 .navigation-marker {
