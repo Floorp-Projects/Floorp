@@ -45,6 +45,9 @@
 #include "stunserver.cpp"
 #include "PeerConnectionImplEnumsBinding.cpp"
 
+#include "ice_ctx.h"
+#include "ice_peer_ctx.h"
+
 #include "mtransport_test_utils.h"
 #include "gtest_ringbuffer_dumper.h"
 MtransportTestUtils *test_utils;
@@ -2499,6 +2502,44 @@ TEST_F(SignalingTest, AudioOnlyG711Call)
   // Double-check the directionality
   ASSERT_NE(answer.find("\r\na=sendrecv"), std::string::npos);
 
+}
+
+TEST_F(SignalingTest, IncomingOfferIceLite)
+{
+  EnsureInit();
+
+  sipcc::MediaConstraints constraints;
+  std::string offer =
+    "v=0\r\n"
+    "o=- 1936463 1936463 IN IP4 148.147.200.251\r\n"
+    "s=-\r\n"
+    "c=IN IP4 148.147.200.251\r\n"
+    "t=0 0\r\n"
+    "a=ice-lite\r\n"
+    "a=fingerprint:sha-1 "
+      "E7:FA:17:DA:3F:3C:1E:D8:E4:9C:8C:4C:13:B9:2E:D5:C6:78:AB:B3\r\n"
+    "m=audio 40014 RTP/SAVPF 8 0 101\r\n"
+    "a=rtpmap:8 PCMA/8000\r\n"
+    "a=rtpmap:0 PCMU/8000\r\n"
+    "a=rtpmap:101 telephone-event/8000\r\n"
+    "a=fmtp:101 0-15\r\n"
+    "a=ptime:20\r\n"
+    "a=sendrecv\r\n"
+    "a=ice-ufrag:bf2LAgqBZdiWFR2r\r\n"
+    "a=ice-pwd:ScxgaNzdBOYScR0ORleAvt1x\r\n"
+    "a=candidate:1661181211 1 udp 10 148.147.200.251 40014 typ host\r\n"
+    "a=candidate:1661181211 2 udp 9 148.147.200.251 40015 typ host\r\n"
+    "a=setup:actpass\r\n";
+
+  std::cout << "Setting offer to:" << std::endl << indent(offer) << std::endl;
+  a2_->SetRemote(TestObserver::OFFER, offer);
+
+  std::cout << "Creating answer:" << std::endl;
+  a2_->CreateAnswer(constraints, offer, OFFER_AUDIO | ANSWER_AUDIO);
+  a2_->SetLocal(TestObserver::ANSWER, a2_->answer());
+
+  ASSERT_EQ(a2_->pc->media()->ice_ctx()->GetControlling(),
+            NrIceCtx::ICE_CONTROLLING);
 }
 
 // This test comes from Bug814038

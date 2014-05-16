@@ -225,6 +225,8 @@ class NrIceCtx {
   // Set whether we are controlling or not.
   nsresult SetControlling(Controlling controlling);
 
+  Controlling GetControlling();
+
   // Set the STUN servers. Must be called before StartGathering
   // (if at all).
   nsresult SetStunServers(const std::vector<NrIceStunServer>& stun_servers);
