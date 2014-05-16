@@ -6,6 +6,7 @@
 /* Implementation of xptiInterfaceEntry and xptiInterfaceInfo. */
 
 #include "xptiprivate.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/XPTInterfaceInfoManager.h"
 #include "mozilla/PodOperations.h"
 #include "nsCxPusher.h"
@@ -370,6 +371,23 @@ xptiInterfaceEntry::GetEntryForParam(uint16_t methodIndex,
     return NS_OK;
 }
 
+already_AddRefed<ShimInterfaceInfo>
+xptiInterfaceEntry::GetShimForParam(uint16_t methodIndex,
+                                    const nsXPTParamInfo* param)
+{
+    uint16_t interfaceIndex = 0;
+    nsresult rv = GetInterfaceIndexForParam(methodIndex, param,
+                                            &interfaceIndex);
+    if (NS_FAILED(rv)) {
+        return nullptr;
+    }
+
+    const char* shimName = mTypelib->GetEntryNameAt(interfaceIndex - 1);
+    nsRefPtr<ShimInterfaceInfo> shim =
+        ShimInterfaceInfo::MaybeConstruct(shimName, nullptr);
+    return shim.forget();
+}
+
 nsresult
 xptiInterfaceEntry::GetInfoForParam(uint16_t methodIndex,
                                     const nsXPTParamInfo *param,
@@ -377,8 +395,15 @@ xptiInterfaceEntry::GetInfoForParam(uint16_t methodIndex,
 {
     xptiInterfaceEntry* entry;
     nsresult rv = GetEntryForParam(methodIndex, param, &entry);
-    if(NS_FAILED(rv))
-        return rv;
+    if (NS_FAILED(rv)) {
+        nsRefPtr<ShimInterfaceInfo> shim = GetShimForParam(methodIndex, param);
+        if (!shim) {
+            return rv;
+        }
+
+        shim.forget(info);
+        return NS_OK;
+    }
 
     *info = entry->InterfaceInfo().take();
 
@@ -391,8 +416,14 @@ xptiInterfaceEntry::GetIIDForParam(uint16_t methodIndex,
 {
     xptiInterfaceEntry* entry;
     nsresult rv = GetEntryForParam(methodIndex, param, &entry);
-    if(NS_FAILED(rv))
-        return rv;
+    if (NS_FAILED(rv)) {
+        nsRefPtr<ShimInterfaceInfo> shim = GetShimForParam(methodIndex, param);
+        if (!shim) {
+            return rv;
+        }
+
+        return shim->GetInterfaceIID(iid);
+    }
     return entry->GetIID(iid);
 }
 
@@ -403,8 +434,18 @@ xptiInterfaceEntry::GetIIDForParamNoAlloc(uint16_t methodIndex,
 {
     xptiInterfaceEntry* entry;
     nsresult rv = GetEntryForParam(methodIndex, param, &entry);
-    if(NS_FAILED(rv))
-        return rv;
+    if (NS_FAILED(rv)) {
+        nsRefPtr<ShimInterfaceInfo> shim = GetShimForParam(methodIndex, param);
+        if (!shim) {
+            return rv;
+        }
+
+        const nsIID* shimIID;
+        DebugOnly<nsresult> rv2 = shim->GetIIDShared(&shimIID);
+        MOZ_ASSERT(NS_SUCCEEDED(rv2));
+        *iid = *shimIID;
+        return NS_OK;
+    }
     *iid = entry->mIID;    
     return NS_OK;
 }
