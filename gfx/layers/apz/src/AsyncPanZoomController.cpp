@@ -250,6 +250,10 @@ typedef GeckoContentController::APZStateChange APZStateChange;
  * "apz.x_stationary_size_multiplier", "apz.y_stationary_size_multiplier"
  * The multiplier we apply to the displayport size if it is not skating (see
  * documentation for the skate size multipliers above).
+ *
+ * "apz.zoom_animation_duration_ms"
+ * This controls how long the zoom-to-rect animation takes.
+ * Units: ms
  */
 
 /**
@@ -283,11 +287,6 @@ static const double AXIS_BREAKOUT_ANGLE = M_PI / 8.0; // 22.5 degrees
  * added to keep behavior consistent with IE.
  */
 static const double ALLOWED_DIRECT_PAN_ANGLE = M_PI / 3.0; // 60 degrees
-
-/**
- * Duration of a zoom to animation.
- */
-static const TimeDuration ZOOM_TO_DURATION = TimeDuration::FromSeconds(0.25);
 
 /**
  * Computed time function used for sampling frames of a zoom to animation.
@@ -419,7 +418,8 @@ class ZoomAnimation: public AsyncPanZoomAnimation {
 public:
   ZoomAnimation(CSSPoint aStartOffset, CSSToScreenScale aStartZoom,
                 CSSPoint aEndOffset, CSSToScreenScale aEndZoom)
-    : mStartOffset(aStartOffset)
+    : mTotalDuration(TimeDuration::FromMilliseconds(gfxPrefs::APZZoomAnimationDuration()))
+    , mStartOffset(aStartOffset)
     , mStartZoom(aStartZoom)
     , mEndOffset(aEndOffset)
     , mEndZoom(aEndZoom)
@@ -430,6 +430,7 @@ public:
 
 private:
   TimeDuration mDuration;
+  const TimeDuration mTotalDuration;
 
   // Old metrics from before we started a zoom animation. This is only valid
   // when we are in the "ANIMATED_ZOOM" state. This is used so that we can
@@ -1643,7 +1644,7 @@ AsyncPanZoomController::FireAsyncScrollOnTimeout()
 bool ZoomAnimation::Sample(FrameMetrics& aFrameMetrics,
                            const TimeDuration& aDelta) {
   mDuration += aDelta;
-  double animPosition = mDuration / ZOOM_TO_DURATION;
+  double animPosition = mDuration / mTotalDuration;
 
   if (animPosition >= 1.0) {
     aFrameMetrics.SetZoom(mEndZoom);
