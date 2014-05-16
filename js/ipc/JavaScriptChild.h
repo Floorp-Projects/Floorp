@@ -68,11 +68,10 @@ class JavaScriptChild
     bool AnswerDOMInstanceOf(const ObjectId &objId, const int &prototypeID, const int &depth,
                              ReturnStatus *rs, bool *instanceof) MOZ_OVERRIDE;
 
-  protected:
-    JSObject *unwrap(JSContext *cx, ObjectId id);
-
   private:
-    bool makeId(JSContext *cx, JSObject *obj, ObjectId *idp);
+    JSObject *fromId(JSContext *cx, ObjectId id);
+    bool toId(JSContext *cx, JSObject *obj, ObjectId *idp);
+
     bool fail(JSContext *cx, ReturnStatus *rs);
     bool ok(ReturnStatus *rs);
 

@@ -67,7 +67,7 @@ JavaScriptChild::RecvDropObject(const ObjectId &objId)
 }
 
 bool
-JavaScriptChild::makeId(JSContext *cx, JSObject *obj, ObjectId *idp)
+JavaScriptChild::toId(JSContext *cx, JSObject *obj, ObjectId *idp)
 {
     if (!obj) {
         *idp = 0;
@@ -100,7 +100,7 @@ JavaScriptChild::makeId(JSContext *cx, JSObject *obj, ObjectId *idp)
 }
 
 JSObject *
-JavaScriptChild::unwrap(JSContext *cx, ObjectId id)
+JavaScriptChild::fromId(JSContext *cx, ObjectId id)
 {
     JSObject *obj = findObjectById(id);
     MOZ_ASSERT(obj);
