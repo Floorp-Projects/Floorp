@@ -30,8 +30,8 @@ class JavaScriptParent : public JavaScriptBase<PJavaScriptParent>
     CloneProtocol(Channel* aChannel, ProtocolCloneContext* aCtx) MOZ_OVERRIDE;
 
   private:
-    JSObject *fromId(JSContext *cx, ObjectId objId);
-    bool toId(JSContext *cx, JSObject *obj, ObjectId *idp);
+    virtual bool toObjectVariant(JSContext *cx, JSObject *obj, ObjectVariant *objVarp);
+    virtual JSObject *fromObjectVariant(JSContext *cx, ObjectVariant objVar);
 
   private:
     uintptr_t refcount_;

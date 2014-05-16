@@ -71,16 +71,13 @@ JavaScriptChild::RecvDropObject(const ObjectId &objId)
 }
 
 bool
-JavaScriptChild::toId(JSContext *cx, JSObject *obj, ObjectId *idp)
+JavaScriptChild::toObjectVariant(JSContext *cx, JSObject *obj, ObjectVariant *objVarp)
 {
-    if (!obj) {
-        *idp = 0;
-        return true;
-    }
+    JS_ASSERT(obj);
 
     ObjectId id = ids_.find(obj);
     if (id) {
-        *idp = id;
+        *objVarp = RemoteObject(id);
         return true;
     }
 
@@ -99,13 +96,15 @@ JavaScriptChild::toId(JSContext *cx, JSObject *obj, ObjectId *idp)
     if (!ids_.add(cx, obj, id))
         return false;
 
-    *idp = id;
+    *objVarp = RemoteObject(id);
     return true;
 }
 
 JSObject *
-JavaScriptChild::fromId(JSContext *cx, ObjectId id)
+JavaScriptChild::fromObjectVariant(JSContext *cx, ObjectVariant objVar)
 {
+    JS_ASSERT(objVar.type() == ObjectVariant::TLocalObject);
+    ObjectId id = objVar.get_LocalObject().id();
     JSObject *obj = findObjectById(id);
     MOZ_ASSERT(obj);
     return obj;
