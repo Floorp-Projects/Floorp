@@ -658,10 +658,11 @@ js::GCThingTraceKind(void *thing)
 JS_FRIEND_API(void)
 js::VisitGrayWrapperTargets(Zone *zone, GCThingCallback callback, void *closure)
 {
+    JSRuntime *rt = zone->runtimeFromMainThread();
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
         for (JSCompartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
             gc::Cell *thing = e.front().key().wrapped;
-            if (!IsInsideNursery(thing) && thing->isMarked(gc::GRAY))
+            if (!IsInsideNursery(rt, thing) && thing->isMarked(gc::GRAY))
                 callback(closure, thing);
         }
     }
@@ -784,7 +785,7 @@ DumpHeapVisitCell(JSRuntime *rt, void *data, void *thing,
 static void
 DumpHeapVisitChild(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
-    if (gc::IsInsideNursery((js::gc::Cell *)*thingp))
+    if (gc::IsInsideNursery(trc->runtime(), *thingp))
         return;
 
     DumpHeapTracer *dtrc = static_cast<DumpHeapTracer *>(trc);
@@ -796,7 +797,7 @@ DumpHeapVisitChild(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 static void
 DumpHeapVisitRoot(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
-    if (gc::IsInsideNursery((js::gc::Cell *)*thingp))
+    if (gc::IsInsideNursery(trc->runtime(), *thingp))
         return;
 
     DumpHeapTracer *dtrc = static_cast<DumpHeapTracer *>(trc);
@@ -1240,7 +1241,7 @@ JS_StoreObjectPostBarrierCallback(JSContext* cx,
                                   JSObject *key, void *data)
 {
     JSRuntime *rt = cx->runtime();
-    if (IsInsideNursery(key))
+    if (IsInsideNursery(rt, key))
         rt->gc.storeBuffer.putCallback(callback, key, data);
 }
 
@@ -1250,7 +1251,7 @@ JS_StoreStringPostBarrierCallback(JSContext* cx,
                                   JSString *key, void *data)
 {
     JSRuntime *rt = cx->runtime();
-    if (IsInsideNursery(key))
+    if (IsInsideNursery(rt, key))
         rt->gc.storeBuffer.putCallback(callback, key, data);
 }
 #endif /* JSGC_GENERATIONAL */

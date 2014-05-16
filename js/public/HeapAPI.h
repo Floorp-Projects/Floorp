@@ -61,65 +61,14 @@ static const uint32_t GRAY = 1;
 const uintptr_t ChunkLocationNursery = 0;
 const uintptr_t ChunkLocationTenuredHeap = 1;
 
-#ifdef JS_DEBUG
-/* When downcasting, ensure we are actually the right type. */
-extern JS_FRIEND_API(void)
-AssertGCThingHasType(js::gc::Cell *cell, JSGCTraceKind kind);
-#else
-inline void
-AssertGCThingHasType(js::gc::Cell *cell, JSGCTraceKind kind) {}
-#endif
-
 } /* namespace gc */
 } /* namespace js */
 
 namespace JS {
 struct Zone;
+} /* namespace JS */
 
-/*
- * We cannot expose the class hierarchy: the implementation is hidden. Instead
- * we provide cast functions with strong debug-mode assertions.
- */
-static MOZ_ALWAYS_INLINE js::gc::Cell *
-AsCell(JSObject *obj)
-{
-    js::gc::Cell *cell = reinterpret_cast<js::gc::Cell *>(obj);
-    AssertGCThingHasType(cell, JSTRACE_OBJECT);
-    return cell;
-}
-
-static MOZ_ALWAYS_INLINE js::gc::Cell *
-AsCell(JSFunction *fun)
-{
-    js::gc::Cell *cell = reinterpret_cast<js::gc::Cell *>(fun);
-    AssertGCThingHasType(cell, JSTRACE_OBJECT);
-    return cell;
-}
-
-static MOZ_ALWAYS_INLINE js::gc::Cell *
-AsCell(JSString *str)
-{
-    js::gc::Cell *cell = reinterpret_cast<js::gc::Cell *>(str);
-    AssertGCThingHasType(cell, JSTRACE_STRING);
-    return cell;
-}
-
-static MOZ_ALWAYS_INLINE js::gc::Cell *
-AsCell(JSFlatString *flat)
-{
-    js::gc::Cell *cell = reinterpret_cast<js::gc::Cell *>(flat);
-    AssertGCThingHasType(cell, JSTRACE_STRING);
-    return cell;
-}
-
-static MOZ_ALWAYS_INLINE js::gc::Cell *
-AsCell(JSScript *script)
-{
-    js::gc::Cell *cell = reinterpret_cast<js::gc::Cell *>(script);
-    AssertGCThingHasType(cell, JSTRACE_SCRIPT);
-    return cell;
-}
-
+namespace JS {
 namespace shadow {
 
 struct ArenaHeader
@@ -216,6 +165,16 @@ GetGCThingArena(void *thing)
 }
 
 MOZ_ALWAYS_INLINE bool
+IsInsideNursery(const JS::shadow::Runtime *runtime, const void *p)
+{
+#ifdef JSGC_GENERATIONAL
+    return uintptr_t(p) >= runtime->gcNurseryStart_ && uintptr_t(p) < runtime->gcNurseryEnd_;
+#else
+    return false;
+#endif
+}
+
+MOZ_ALWAYS_INLINE bool
 IsInsideNursery(const js::gc::Cell *cell)
 {
 #ifdef JSGC_GENERATIONAL
@@ -261,7 +220,8 @@ GCThingIsMarkedGray(void *thing)
      * All live objects in the nursery are moved to tenured at the beginning of
      * each GC slice, so the gray marker never sees nursery things.
      */
-    if (js::gc::IsInsideNursery((js::gc::Cell *)thing))
+    JS::shadow::Runtime *rt = js::gc::GetGCThingRuntime(thing);
+    if (js::gc::IsInsideNursery(rt, thing))
         return false;
 #endif
     uintptr_t *word, mask;
