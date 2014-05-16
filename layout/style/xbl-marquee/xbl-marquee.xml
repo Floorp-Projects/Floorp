@@ -266,11 +266,7 @@
                   //   call it (since XBL gets opaque non-callable wrappers to content).
                   // * The fact that contentFn is transitively waived, which we need
                   //   in order to be able to invoke it.
-                  // * Using the local |bind| to be sure that it does the right thing.
-                  //   Note that the underlying function still executes in the content
-                  //   scope.
-                  var contentFn = new (XPCNativeWrapper.unwrap(window.Function))("event", aValue);
-                  this["_on" + aName] = Function.prototype.bind.call(contentFn, this);
+                  this["_on" + aName] = new (XPCNativeWrapper.unwrap(window.Function))("event", aValue);
                 }
                 catch(e) {
                   return false;
