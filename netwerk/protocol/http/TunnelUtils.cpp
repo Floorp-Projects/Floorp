@@ -34,16 +34,19 @@ static PRIOMethods *sLayerMethodsPtr = nullptr;
 
 TLSFilterTransaction::TLSFilterTransaction(nsAHttpTransaction *aWrapped,
                                            const char *aTLSHost,
-                                           int32_t aTLSPort)
+                                           int32_t aTLSPort,
+                                           nsAHttpSegmentReader *aReader,
+                                           nsAHttpSegmentWriter *aWriter)
   : mTransaction(aWrapped)
   , mEncryptedTextUsed(0)
   , mEncryptedTextSize(0)
-  , mSegmentReader(nullptr)
-  , mSegmentWriter(nullptr)
+  , mSegmentReader(aReader)
+  , mSegmentWriter(aWriter)
   , mForce(false)
   , mNudgeCounter(0)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  LOG(("TLSFilterTransaction ctor %p\n", this));
 
   nsCOMPtr<nsISocketProvider> provider;
   nsCOMPtr<nsISocketProviderService> spserv =
@@ -91,6 +94,7 @@ TLSFilterTransaction::TLSFilterTransaction(nsAHttpTransaction *aWrapped,
 
 TLSFilterTransaction::~TLSFilterTransaction()
 {
+  LOG(("TLSFilterTransaction dtor %p\n", this));
   Cleanup();
 }
 
@@ -334,7 +338,6 @@ TLSFilterTransaction::WriteSegments(nsAHttpSegmentWriter *aWriter,
 
   mSegmentWriter = aWriter;
   nsresult rv = mTransaction->WriteSegments(this, aCount, outCountWritten);
-  mSegmentWriter = nullptr;
   LOG(("TLSFilterTransaction %p called trans->WriteSegments rv=%x %d\n",
        this, rv, *outCountWritten));
   return rv;
@@ -352,9 +355,7 @@ TLSFilterTransaction::GetTransactionSecurityInfo(nsISupports **outSecInfo)
 }
 
 nsresult
-TLSFilterTransaction::NudgeTunnel(NudgeTunnelCallback *aCallback,
-                                  nsAHttpSegmentReader *aReader,
-                                  nsAHttpSegmentWriter *aWriter)
+TLSFilterTransaction::NudgeTunnel(NudgeTunnelCallback *aCallback)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
   LOG(("TLSFilterTransaction %p NudgeTunnel\n", this));
@@ -362,13 +363,6 @@ TLSFilterTransaction::NudgeTunnel(NudgeTunnelCallback *aCallback,
 
   if (!mSecInfo) {
     return NS_ERROR_FAILURE;
-  }
-
-  if (aReader) {
-    mSegmentReader = aReader;
-  }
-  if (aWriter) {
-    mSegmentWriter = aWriter;
   }
 
   uint32_t notUsed;
@@ -765,7 +759,7 @@ SpdyConnectTransaction::SpdyConnectTransaction(nsHttpConnectionInfo *ci,
                                                nsIInterfaceRequestor *callbacks,
                                                uint32_t caps,
                                                nsAHttpTransaction *trans,
-                                               ASpdySession *session)
+                                               nsAHttpConnection *session)
   : NullHttpTransaction(ci, callbacks, caps | NS_HTTP_ALLOW_KEEPALIVE)
   , mConnectStringOffset(0)
   , mSession(session)
@@ -1006,16 +1000,18 @@ OutputStreamShim::AsyncWait(nsIOutputStreamCallback *callback,
 
   LOG(("OutputStreamShim::AsyncWait %p callback %p\n", this, callback));
   mCallback = callback;
-  nsRefPtr<SpdyConnectTransaction> trans = do_QueryReferent(mWeakTrans);
-  if (!trans) {
+
+  nsRefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
+  if (!baseTrans) {
     return NS_ERROR_FAILURE;
   }
-
-  nsRefPtr<nsAHttpConnection> spdySession(do_QueryObject(trans->mSession));
-  if (!spdySession) {
+  SpdyConnectTransaction *trans = baseTrans->QuerySpdyConnectTransaction();
+  MOZ_ASSERT(trans);
+  if (!trans) {
     return NS_ERROR_UNEXPECTED;
   }
-  spdySession->TransactionHasDataToWrite(trans);
+
+  trans->mSession->TransactionHasDataToWrite(trans);
 
   return NS_OK;
 }
@@ -1023,17 +1019,17 @@ OutputStreamShim::AsyncWait(nsIOutputStreamCallback *callback,
 NS_IMETHODIMP
 OutputStreamShim::CloseWithStatus(nsresult reason)
 {
-  nsRefPtr<SpdyConnectTransaction> trans = do_QueryReferent(mWeakTrans);
-  if (!trans) {
+  nsRefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
+  if (!baseTrans) {
     return NS_ERROR_FAILURE;
   }
-
-  nsRefPtr<nsAHttpConnection> spdySession(do_QueryObject(trans->mSession));
-  if (!spdySession) {
+  SpdyConnectTransaction *trans = baseTrans->QuerySpdyConnectTransaction();
+  MOZ_ASSERT(trans);
+  if (!trans) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  spdySession->CloseTransaction(trans, reason);
+  trans->mSession->CloseTransaction(trans, reason);
   return NS_OK;
 }
 
@@ -1046,9 +1042,14 @@ OutputStreamShim::Close()
 NS_IMETHODIMP
 OutputStreamShim::Flush()
 {
-  nsRefPtr<SpdyConnectTransaction> trans = do_QueryReferent(mWeakTrans);
-  if (!trans) {
+  nsRefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
+  if (!baseTrans) {
     return NS_ERROR_FAILURE;
+  }
+  SpdyConnectTransaction *trans = baseTrans->QuerySpdyConnectTransaction();
+  MOZ_ASSERT(trans);
+  if (!trans) {
+    return NS_ERROR_UNEXPECTED;
   }
 
   uint32_t count = trans->mOutputDataUsed - trans->mOutputDataOffset;
@@ -1072,9 +1073,14 @@ OutputStreamShim::Write(const char * aBuf, uint32_t aCount, uint32_t *_retval)
     return mStatus;
   }
 
-  nsRefPtr<SpdyConnectTransaction> trans = do_QueryReferent(mWeakTrans);
-  if (!trans) {
+  nsRefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
+  if (!baseTrans) {
     return NS_ERROR_FAILURE;
+  }
+  SpdyConnectTransaction *trans = baseTrans->QuerySpdyConnectTransaction();
+  MOZ_ASSERT(trans);
+  if (!trans) {
+    return NS_ERROR_UNEXPECTED;
   }
 
   if ((trans->mOutputDataUsed + aCount) >= 512000) {
@@ -1091,11 +1097,7 @@ OutputStreamShim::Write(const char * aBuf, uint32_t aCount, uint32_t *_retval)
   *_retval = aCount;
   LOG(("OutputStreamShim::Write %p new %d total %d\n", this, aCount, trans->mOutputDataUsed));
 
-  nsRefPtr<nsAHttpConnection> spdySession(do_QueryObject(trans->mSession));
-  if (!spdySession) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  spdySession->TransactionHasDataToWrite(trans);
+  trans->mSession->TransactionHasDataToWrite(trans);
 
   return NS_OK;
 }
@@ -1139,17 +1141,17 @@ InputStreamShim::AsyncWait(nsIInputStreamCallback *callback,
 NS_IMETHODIMP
 InputStreamShim::CloseWithStatus(nsresult reason)
 {
-  nsRefPtr<SpdyConnectTransaction> trans = do_QueryReferent(mWeakTrans);
-  if (!trans) {
+  nsRefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
+  if (!baseTrans) {
     return NS_ERROR_FAILURE;
   }
-
-  nsRefPtr<nsAHttpConnection> spdySession(do_QueryObject(trans->mSession));
-  if (!spdySession) {
+  SpdyConnectTransaction *trans = baseTrans->QuerySpdyConnectTransaction();
+  MOZ_ASSERT(trans);
+  if (!trans) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  spdySession->CloseTransaction(trans, reason);
+  trans->mSession->CloseTransaction(trans, reason);
   return NS_OK;
 }
 
@@ -1162,9 +1164,14 @@ InputStreamShim::Close()
 NS_IMETHODIMP
 InputStreamShim::Available(uint64_t *_retval)
 {
-  nsRefPtr<SpdyConnectTransaction> trans = do_QueryReferent(mWeakTrans);
-  if (!trans) {
+  nsRefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
+  if (!baseTrans) {
     return NS_ERROR_FAILURE;
+  }
+  SpdyConnectTransaction *trans = baseTrans->QuerySpdyConnectTransaction();
+  MOZ_ASSERT(trans);
+  if (!trans) {
+    return NS_ERROR_UNEXPECTED;
   }
 
   *_retval = trans->mInputDataUsed - trans->mInputDataOffset;
@@ -1180,9 +1187,14 @@ InputStreamShim::Read(char *aBuf, uint32_t aCount, uint32_t *_retval)
     return mStatus;
   }
 
-  nsRefPtr<SpdyConnectTransaction> trans = do_QueryReferent(mWeakTrans);
-  if (!trans) {
+  nsRefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
+  if (!baseTrans) {
     return NS_ERROR_FAILURE;
+  }
+  SpdyConnectTransaction *trans = baseTrans->QuerySpdyConnectTransaction();
+  MOZ_ASSERT(trans);
+  if (!trans) {
+    return NS_ERROR_UNEXPECTED;
   }
 
   uint32_t avail = trans->mInputDataUsed - trans->mInputDataOffset;

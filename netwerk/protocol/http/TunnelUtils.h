@@ -108,15 +108,15 @@ public:
   NS_DECL_NSITIMERCALLBACK
 
   TLSFilterTransaction(nsAHttpTransaction *aWrappedTransaction,
-                       const char *tlsHost, int32_t tlsPort);
+                       const char *tlsHost, int32_t tlsPort,
+                       nsAHttpSegmentReader *reader,
+                       nsAHttpSegmentWriter *writer);
   ~TLSFilterTransaction();
 
   const nsAHttpTransaction *Transaction() const { return mTransaction.get(); }
   nsresult CommitToSegmentSize(uint32_t size, bool forceCommitment);
   nsresult GetTransactionSecurityInfo(nsISupports **);
-  nsresult NudgeTunnel(NudgeTunnelCallback *callback,
-                       nsAHttpSegmentReader *reader,
-                       nsAHttpSegmentWriter *writer);
+  nsresult NudgeTunnel(NudgeTunnelCallback *callback);
 
 private:
   nsresult StartTimerCallback();
@@ -169,8 +169,10 @@ public:
                          nsIInterfaceRequestor *callbacks,
                          uint32_t caps,
                          nsAHttpTransaction *trans,
-                         ASpdySession *session);
+                         nsAHttpConnection *session);
   ~SpdyConnectTransaction();
+
+  SpdyConnectTransaction *QuerySpdyConnectTransaction() { return this; }
 
   void MapStreamToHttpConnection(nsISocketTransport *aTransport,
                                  nsHttpConnectionInfo *aConnInfo);
@@ -193,7 +195,7 @@ private:
   uint32_t              mConnectStringOffset;
   nsHttpRequestHead     *mRequestHead;
 
-  ASpdySession         *mSession;
+  nsAHttpConnection    *mSession;
   nsAHttpSegmentReader *mSegmentReader;
 
   nsAutoArrayPtr<char> mInputData;

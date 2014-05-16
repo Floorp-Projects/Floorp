@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS(NullHttpTransaction, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(NullHttpTransaction, NullHttpTransaction, nsISupportsWeakReference)
 
 NullHttpTransaction::NullHttpTransaction(nsHttpConnectionInfo *ci,
                                          nsIInterfaceRequestor *callbacks,
