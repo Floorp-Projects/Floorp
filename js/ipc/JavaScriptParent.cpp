@@ -526,7 +526,7 @@ JavaScriptParent::init()
 }
 
 bool
-JavaScriptParent::makeId(JSContext *cx, JSObject *obj, ObjectId *idp)
+JavaScriptParent::toId(JSContext *cx, JSObject *obj, ObjectId *idp)
 {
     obj = js::CheckedUnwrap(obj, false);
     if (!obj || !IsProxy(obj) || GetProxyHandler(obj) != &CPOWProxyHandler::singleton) {
@@ -562,7 +562,7 @@ JavaScriptParent::getPropertyNames(JSContext *cx, HandleObject proxy, uint32_t f
 }
 
 JSObject *
-JavaScriptParent::unwrap(JSContext *cx, ObjectId objId)
+JavaScriptParent::fromId(JSContext *cx, ObjectId objId)
 {
     RootedObject obj(cx, findCPOWById(objId));
     if (obj) {

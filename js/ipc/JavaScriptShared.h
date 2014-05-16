@@ -103,16 +103,16 @@ class JavaScriptShared
     bool convertIdToGeckoString(JSContext *cx, JS::HandleId id, nsString *to);
     bool convertGeckoStringToId(JSContext *cx, const nsString &from, JS::MutableHandleId id);
 
-    virtual bool makeId(JSContext *cx, JSObject *obj, ObjectId *idp) = 0;
-    virtual JSObject *unwrap(JSContext *cx, ObjectId id) = 0;
+    virtual bool toId(JSContext *cx, JSObject *obj, ObjectId *idp) = 0;
+    virtual JSObject *fromId(JSContext *cx, ObjectId id) = 0;
 
-    bool unwrap(JSContext *cx, ObjectId id, JS::MutableHandle<JSObject*> objp) {
+    bool fromId(JSContext *cx, ObjectId id, JS::MutableHandle<JSObject*> objp) {
         if (!id) {
             objp.set(nullptr);
             return true;
         }
 
-        objp.set(unwrap(cx, id));
+        objp.set(fromId(cx, id));
         return bool(objp.get());
     }
 

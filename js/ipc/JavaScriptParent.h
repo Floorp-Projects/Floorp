@@ -79,11 +79,10 @@ class JavaScriptParent
     mozilla::ipc::IProtocol*
     CloneProtocol(Channel* aChannel, ProtocolCloneContext* aCtx) MOZ_OVERRIDE;
 
-  protected:
-    JSObject *unwrap(JSContext *cx, ObjectId objId);
-
   private:
-    bool makeId(JSContext *cx, JSObject *obj, ObjectId *idp);
+    JSObject *fromId(JSContext *cx, ObjectId objId);
+    bool toId(JSContext *cx, JSObject *obj, ObjectId *idp);
+
     bool getPropertyNames(JSContext *cx, JS::HandleObject proxy, uint32_t flags,
                           JS::AutoIdVector &props);
     ObjectId idOf(JSObject *obj);
