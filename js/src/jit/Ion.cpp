@@ -1515,6 +1515,19 @@ OptimizeMIR(MIRGenerator *mir)
             return false;
     }
 
+    // Make loops contiguious. We do this after GVN/UCE and range analysis,
+    // which can remove CFG edges, exposing more blocks that can be moved.
+    {
+        AutoTraceLog log(logger, TraceLogger::MakeLoopsContiguous);
+        if (!MakeLoopsContiguous(graph))
+            return false;
+        IonSpewPass("Make loops contiguous");
+        AssertExtendedGraphCoherency(graph);
+
+        if (mir->shouldCancel("Make loops contiguous"))
+            return false;
+    }
+
     // Passes after this point must not move instructions; these analyses
     // depend on knowing the final order in which instructions will execute.
 
