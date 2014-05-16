@@ -127,6 +127,40 @@ nsTokenEventRunnable::Run()
 
 bool nsPSMInitPanic::isPanic = false;
 
+// This function can be called from chrome or content processes
+// to ensure that NSS is initialized.
+bool EnsureNSSInitializedChromeOrContent()
+{
+  nsresult rv;
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    nsCOMPtr<nsISupports> nss = do_GetService(PSM_COMPONENT_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  if (!NS_IsMainThread()) {
+    return false;
+  }
+
+  if (NSS_IsInitialized()) {
+    return true;
+  }
+
+  if (NSS_NoDB_Init(nullptr) != SECSuccess) {
+    return false;
+  }
+
+  if (NS_FAILED(mozilla::psm::InitializeCipherSuite())) {
+    return false;
+  }
+
+  mozilla::psm::DisableMD5();
+  return true;
+}
+
 // We must ensure that the nsNSSComponent has been loaded before
 // creating any other components.
 bool EnsureNSSInitialized(EnsureNSSOperator op)
