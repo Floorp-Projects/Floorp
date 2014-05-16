@@ -31,7 +31,7 @@ public:
     MOZ_ASSERT(aInput.Length() >= 1, "Should have one or more input ports");
 
     // Get the number of output channels, and allocate it
-    uint32_t channelCount = 0;
+    size_t channelCount = 0;
     for (uint16_t i = 0; i < InputCount(); ++i) {
       channelCount += aInput[i].mChannelData.Length();
     }
@@ -39,17 +39,22 @@ public:
       aOutput[0].SetNull(WEBAUDIO_BLOCK_SIZE);
       return;
     }
+    channelCount = std::min(channelCount, WebAudioUtils::MaxChannelCount);
     AllocateAudioBlock(channelCount, &aOutput[0]);
 
     // Append each channel in each input to the output
-    uint32_t channelIndex = 0;
-    for (uint16_t i = 0; i < InputCount(); ++i) {
-      for (uint32_t j = 0; j < aInput[i].mChannelData.Length(); ++j) {
+    size_t channelIndex = 0;
+    for (uint16_t i = 0; true; ++i) {
+      MOZ_ASSERT(i < InputCount());
+      for (size_t j = 0; j < aInput[i].mChannelData.Length(); ++j) {
         AudioBlockCopyChannelWithScale(
             static_cast<const float*>(aInput[i].mChannelData[j]),
             aInput[i].mVolume,
             static_cast<float*>(const_cast<void*>(aOutput[0].mChannelData[channelIndex])));
         ++channelIndex;
+        if (channelIndex >= channelCount) {
+          return;
+        }
       }
     }
   }

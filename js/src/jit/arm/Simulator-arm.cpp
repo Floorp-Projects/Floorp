@@ -1489,10 +1489,20 @@ Simulator::setCallResult(int64_t res)
 int
 Simulator::readW(int32_t addr, SimInstruction *instr)
 {
+#ifdef JS_YARR
     // YARR emits unaligned loads, so we don't check for them here like the
     // other methods below.
     intptr_t *ptr = reinterpret_cast<intptr_t*>(addr);
     return *ptr;
+#else // JS_YARR
+    if ((addr & 3) == 0) {
+        intptr_t *ptr = reinterpret_cast<intptr_t*>(addr);
+        return *ptr;
+    } else {
+        printf("Unaligned write at 0x%08x, pc=%p\n", addr, instr);
+        MOZ_CRASH();
+    }
+#endif // JS_YARR
 }
 
 void
@@ -4204,9 +4214,10 @@ Simulator::call(uint8_t* entry, int argument_count, ...)
     va_start(parameters, argument_count);
 
     // First four arguments passed in registers.
-    MOZ_ASSERT(argument_count >= 2);
+    MOZ_ASSERT(argument_count >= 1);
     set_register(r0, va_arg(parameters, int32_t));
-    set_register(r1, va_arg(parameters, int32_t));
+    if (argument_count >= 2)
+        set_register(r1, va_arg(parameters, int32_t));
     if (argument_count >= 3)
         set_register(r2, va_arg(parameters, int32_t));
     if (argument_count >= 4)

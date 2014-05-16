@@ -148,15 +148,14 @@ const size_t ArenaBitmapWords = ArenaBitmapBits / JS_BITS_PER_WORD;
  */
 class FreeSpan
 {
-    friend class FreeList;
     friend class ArenaCellIterImpl;
+    friend class CompactFreeSpan;
+    friend class FreeList;
 
     uintptr_t   first;
     uintptr_t   last;
 
   public:
-    FreeSpan() {}
-
     // This inits just |first| and |last|; if the span is non-empty it doesn't
     // do anything with the next span stored at |last|.
     void initBoundsUnchecked(uintptr_t first, uintptr_t last) {
@@ -188,37 +187,6 @@ class FreeSpan
         checkSpan(thingSize);
     }
 
-    /*
-     * To minimize the size of the arena header the first span is encoded
-     * there as offsets from the arena start.
-     */
-    static size_t encodeOffsets(size_t firstOffset, size_t lastOffset) {
-        static_assert(ArenaShift < 16, "Check that we can pack offsets into uint16_t.");
-        JS_ASSERT(firstOffset <= lastOffset);
-        JS_ASSERT(lastOffset < ArenaSize);
-        return firstOffset | (lastOffset << 16);
-    }
-
-    /*
-     * Encoded offsets for a full arena, i.e. one with an empty FreeSpan.
-     */
-    static const size_t FullArenaOffsets = 0;
-
-    static FreeSpan decodeOffsets(uintptr_t arenaAddr, size_t offsets) {
-        JS_ASSERT(!(arenaAddr & ArenaMask));
-        FreeSpan decodedSpan;
-        if (offsets == FullArenaOffsets) {
-            decodedSpan.initAsEmpty();
-        } else {
-            size_t firstOffset = offsets & 0xFFFF;
-            size_t lastOffset = offsets >> 16;
-            JS_ASSERT(firstOffset <= lastOffset);
-            JS_ASSERT(lastOffset < ArenaSize);
-            decodedSpan.initBounds(arenaAddr + firstOffset, arenaAddr + lastOffset);
-        }
-        return decodedSpan;
-    }
-
     bool isEmpty() const {
         checkSpan();
         return !first;
@@ -247,10 +215,6 @@ class FreeSpan
     }
 #endif
 
-    size_t encodeAsOffsets() const {
-        return encodeOffsets(first & ArenaMask, last & ArenaMask);
-    }
-
     size_t length(size_t thingSize) const {
         checkSpan();
         JS_ASSERT((last - first) % thingSize == 0);
@@ -270,6 +234,7 @@ class FreeSpan
         return false;
     }
 
+  private:
     // Some callers can pass in |thingSize| easily, and we can do stronger
     // checking in that case.
     void checkSpan(size_t thingSize = 0) const {
@@ -297,6 +262,57 @@ class FreeSpan
                       : last < next->first);
         }
 #endif
+    }
+};
+
+class CompactFreeSpan
+{
+    uint16_t firstOffset_;
+    uint16_t lastOffset_;
+
+  public:
+    CompactFreeSpan(size_t firstOffset, size_t lastOffset)
+      : firstOffset_(firstOffset)
+      , lastOffset_(lastOffset)
+    {}
+
+    void initAsEmpty() {
+        firstOffset_ = 0;
+        lastOffset_ = 0;
+    }
+
+    bool operator==(const CompactFreeSpan &other) const {
+        return firstOffset_ == other.firstOffset_ &&
+               lastOffset_  == other.lastOffset_;
+    }
+
+    void compact(FreeSpan span) {
+        if (span.isEmpty()) {
+            initAsEmpty();
+        } else {
+            static_assert(ArenaShift < 16, "Check that we can pack offsets into uint16_t.");
+            uintptr_t arenaAddr = span.arenaAddress();
+            firstOffset_ = span.first - arenaAddr;
+            lastOffset_  = span.last  - arenaAddr;
+        }
+    }
+
+    bool isEmpty() const {
+        JS_ASSERT(!!firstOffset_ == !!lastOffset_);
+        return !firstOffset_;
+    }
+
+    FreeSpan decompact(uintptr_t arenaAddr) const {
+        JS_ASSERT(!(arenaAddr & ArenaMask));
+        FreeSpan decodedSpan;
+        if (isEmpty()) {
+            decodedSpan.initAsEmpty();
+        } else {
+            JS_ASSERT(firstOffset_ <= lastOffset_);
+            JS_ASSERT(lastOffset_ < ArenaSize);
+            decodedSpan.initBounds(arenaAddr + firstOffset_, arenaAddr + lastOffset_);
+        }
+        return decodedSpan;
     }
 };
 
@@ -379,22 +395,6 @@ class FreeList
         JS_EXTRA_POISON(reinterpret_cast<void *>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
         return reinterpret_cast<void *>(thing);
     }
-
-    /*
-     * Allocate from a newly allocated arena. The arena will have been set up
-     * as fully used during the initialization so to allocate we simply return
-     * the first thing in the arena and set the free list to point to the
-     * second.
-     */
-    MOZ_ALWAYS_INLINE void *allocateFromNewArena(uintptr_t arenaAddr, size_t firstThingOffset,
-                                                 size_t thingSize) {
-        JS_ASSERT(isEmpty());
-        JS_ASSERT(!(arenaAddr & ArenaMask));
-        uintptr_t thing = arenaAddr + firstThingOffset;
-        head.initFinal(thing + thingSize, arenaAddr + ArenaSize - thingSize, thingSize);
-        JS_EXTRA_POISON(reinterpret_cast<void *>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
-        return reinterpret_cast<void *>(thing);
-    }
 };
 
 /* Every arena has a header. */
@@ -411,11 +411,10 @@ struct ArenaHeader : public JS::shadow::ArenaHeader
 
   private:
     /*
-     * The first span of free things in the arena. We encode it as the start
-     * and end offsets within the arena, not as FreeSpan structure, to
-     * minimize the header size.
+     * The first span of free things in the arena. We encode it as a
+     * CompactFreeSpan rather than a FreeSpan to minimize the header size.
      */
-    size_t          firstFreeSpanOffsets;
+    CompactFreeSpan firstFreeSpan;
 
     /*
      * One of AllocKind constants or FINALIZE_LIMIT when the arena does not
@@ -479,8 +478,11 @@ struct ArenaHeader : public JS::shadow::ArenaHeader
         static_assert(FINALIZE_LIMIT <= 255, "We must be able to fit the allockind into uint8_t.");
         allocKind = size_t(kind);
 
-        /* See comments in FreeSpan::allocateFromNewArena. */
-        firstFreeSpanOffsets = FreeSpan::FullArenaOffsets;
+        /*
+         * The firstFreeSpan is initially marked as empty (and thus the arena
+         * is marked as full). See allocateFromArenaInline().
+         */
+        firstFreeSpan.initAsEmpty();
     }
 
     void setAsNotAllocated() {
@@ -502,13 +504,13 @@ struct ArenaHeader : public JS::shadow::ArenaHeader
     inline size_t getThingSize() const;
 
     bool hasFreeThings() const {
-        return firstFreeSpanOffsets != FreeSpan::FullArenaOffsets;
+        return !firstFreeSpan.isEmpty();
     }
 
     inline bool isEmpty() const;
 
     void setAsFullyUsed() {
-        firstFreeSpanOffsets = FreeSpan::FullArenaOffsets;
+        firstFreeSpan.initAsEmpty();
     }
 
     inline FreeSpan getFirstFreeSpan() const;
@@ -916,7 +918,8 @@ ArenaHeader::isEmpty() const
     JS_ASSERT(allocated());
     size_t firstThingOffset = Arena::firstThingOffset(getAllocKind());
     size_t lastThingOffset = ArenaSize - getThingSize();
-    return firstFreeSpanOffsets == FreeSpan::encodeOffsets(firstThingOffset, lastThingOffset);
+    const CompactFreeSpan emptyCompactSpan(firstThingOffset, lastThingOffset);
+    return firstFreeSpan == emptyCompactSpan;
 }
 
 FreeSpan
@@ -925,14 +928,14 @@ ArenaHeader::getFirstFreeSpan() const
 #ifdef DEBUG
     checkSynchronizedWithFreeList();
 #endif
-    return FreeSpan::decodeOffsets(arenaAddress(), firstFreeSpanOffsets);
+    return firstFreeSpan.decompact(arenaAddress());
 }
 
 void
 ArenaHeader::setFirstFreeSpan(const FreeSpan *span)
 {
     JS_ASSERT_IF(!span->isEmpty(), span->isWithinArena(arenaAddress()));
-    firstFreeSpanOffsets = span->encodeAsOffsets();
+    firstFreeSpan.compact(*span);
 }
 
 inline ArenaHeader *

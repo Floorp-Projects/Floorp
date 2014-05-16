@@ -415,10 +415,12 @@ private:
         // Create the input buffer
         nsRefPtr<AudioBuffer> inputBuffer;
         if (!mNullInput) {
-          inputBuffer = new AudioBuffer(node->Context(),
-                                        node->BufferSize(),
-                                        node->Context()->SampleRate());
-          if (!inputBuffer->InitializeBuffers(mInputChannels.Length(), cx)) {
+          ErrorResult rv;
+          inputBuffer =
+            AudioBuffer::Create(node->Context(), mInputChannels.Length(),
+                                node->BufferSize(),
+                                node->Context()->SampleRate(), cx, rv);
+          if (rv.Failed()) {
             return NS_OK;
           }
           // Put the channel data inside it
@@ -438,10 +440,18 @@ private:
                          mPlaybackTime);
         node->DispatchTrustedEvent(event);
 
-        // Steal the output buffers
+        // Steal the output buffers if they have been set.
+        // Don't create a buffer if it hasn't been used to return output;
+        // FinishProducingOutputBuffer() will optimize output = null.
+        // GetThreadSharedChannelsForRate() may also return null after OOM.
         nsRefPtr<ThreadSharedFloatArrayBufferList> output;
         if (event->HasOutputBuffer()) {
-          output = event->OutputBuffer()->GetThreadSharedChannelsForRate(cx);
+          ErrorResult rv;
+          AudioBuffer* buffer = event->GetOutputBuffer(rv);
+          // HasOutputBuffer() returning true means that GetOutputBuffer()
+          // will not fail.
+          MOZ_ASSERT(!rv.Failed());
+          output = buffer->GetThreadSharedChannelsForRate(cx);
         }
 
         // Append it to our output buffer queue

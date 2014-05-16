@@ -46,7 +46,6 @@
 #include "js/CharacterEncoding.h"
 #include "js/OldDebugAPI.h"
 #include "vm/Shape.h"
-#include "yarr/BumpPointerAllocator.h"
 
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"

@@ -62,10 +62,8 @@ bool Tokenize(char *line,
   }
 
   // If there's anything left, just add it as a single token.
-  if (!remaining > 0) {
-    if ((token = strtok_r(NULL, "\r\n", &save_ptr))) {
-      tokens->push_back(token);
-    }
+  if (remaining == 0 && (token = strtok_r(NULL, "\r\n", &save_ptr))) {
+    tokens->push_back(token);
   }
 
   return tokens->size() == static_cast<unsigned int>(max_tokens);
