@@ -107,28 +107,80 @@ CheckKeyUsage(EndEntityOrCA endEntityOrCA,
 }
 
 // RFC5820 4.2.1.4. Certificate Policies
-//
+
 // "The user-initial-policy-set contains the special value any-policy if the
 // user is not concerned about certificate policy."
-Result
-CheckCertificatePolicies(BackCert& cert, EndEntityOrCA endEntityOrCA,
-                         bool isTrustAnchor, SECOidTag requiredPolicy)
+//
+// id-ce OBJECT IDENTIFIER  ::=  {joint-iso-ccitt(2) ds(5) 29}
+// id-ce-certificatePolicies OBJECT IDENTIFIER ::=  { id-ce 32 }
+// anyPolicy OBJECT IDENTIFIER ::= { id-ce-certificatePolicies 0 }
+
+/*static*/ const CertPolicyId CertPolicyId::anyPolicy = {
+  4, { (40*2)+5, 29, 32, 0 }
+};
+
+bool CertPolicyId::IsAnyPolicy() const
 {
-  if (requiredPolicy == SEC_OID_X509_ANY_POLICY) {
-    return Success;
+  return this == &anyPolicy ||
+         (numBytes == anyPolicy.numBytes &&
+          !memcmp(bytes, anyPolicy.bytes, anyPolicy.numBytes));
+}
+
+// PolicyInformation ::= SEQUENCE {
+//         policyIdentifier   CertPolicyId,
+//         policyQualifiers   SEQUENCE SIZE (1..MAX) OF
+//                                 PolicyQualifierInfo OPTIONAL }
+inline der::Result
+CheckPolicyInformation(der::Input& input, EndEntityOrCA endEntityOrCA,
+                       const CertPolicyId& requiredPolicy,
+                       /*in/out*/ bool& found)
+{
+  if (input.MatchTLV(der::OIDTag, requiredPolicy.numBytes,
+                     requiredPolicy.bytes)) {
+    found = true;
+  } else if (endEntityOrCA == EndEntityOrCA::MustBeCA &&
+             input.MatchTLV(der::OIDTag, CertPolicyId::anyPolicy.numBytes,
+                            CertPolicyId::anyPolicy.bytes)) {
+    found = true;
   }
 
-  // It is likely some callers will pass SEC_OID_UNKNOWN when they don't care,
-  // instead of passing SEC_OID_X509_ANY_POLICY. Help them out by failing hard.
-  if (requiredPolicy == SEC_OID_UNKNOWN) {
-    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
-    return FatalError;
+  // RFC 5280 Section 4.2.1.4 says "Optional qualifiers, which MAY be present,
+  // are not expected to change the definition of the policy." Also, it seems
+  // that Section 6, which defines validation, does not require any matching of
+  // qualifiers. Thus, doing anything with the policy qualifiers would be a
+  // waste of time and a source of potential incompatibilities, so we just
+  // ignore them.
+
+  // Skip unmatched OID and/or policyQualifiers
+  input.SkipToEnd();
+
+  return der::Success;
+}
+
+// certificatePolicies ::= SEQUENCE SIZE (1..MAX) OF PolicyInformation
+Result
+CheckCertificatePolicies(EndEntityOrCA endEntityOrCA,
+                         const SECItem* encodedCertificatePolicies,
+                         const SECItem* encodedInhibitAnyPolicy,
+                         TrustLevel trustLevel,
+                         const CertPolicyId& requiredPolicy)
+{
+  if (requiredPolicy.numBytes == 0 ||
+      requiredPolicy.numBytes > sizeof requiredPolicy.bytes) {
+    return Fail(FatalError, SEC_ERROR_INVALID_ARGS);
+  }
+
+  // Ignore all policy information if the caller indicates any policy is
+  // acceptable. See TrustDomain::GetCertTrust and the policy part of
+  // BuildCertChain's documentation.
+  if (requiredPolicy.IsAnyPolicy()) {
+    return Success;
   }
 
   // Bug 989051. Until we handle inhibitAnyPolicy we will fail close when
   // inhibitAnyPolicy extension is present and we need to evaluate certificate
   // policies.
-  if (cert.encodedInhibitAnyPolicy) {
+  if (encodedInhibitAnyPolicy) {
     return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
   }
 
@@ -136,34 +188,35 @@ CheckCertificatePolicies(BackCert& cert, EndEntityOrCA endEntityOrCA,
   // trusted for, so we cannot require the policies to be present in those
   // certificates. Instead, the determination of which roots are trusted for
   // which policies is made by the TrustDomain's GetCertTrust method.
-  if (isTrustAnchor && endEntityOrCA == EndEntityOrCA::MustBeCA) {
+  if (trustLevel == TrustLevel::TrustAnchor &&
+      endEntityOrCA == EndEntityOrCA::MustBeCA) {
     return Success;
   }
 
-  if (!cert.encodedCertificatePolicies) {
+  if (!encodedCertificatePolicies) {
     return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
   }
 
-  ScopedPtr<CERTCertificatePolicies, CERT_DestroyCertificatePoliciesExtension>
-    policies(CERT_DecodeCertificatePoliciesExtension(
-                cert.encodedCertificatePolicies));
-  if (!policies) {
-    return MapSECStatus(SECFailure);
+  bool found = false;
+
+  der::Input input;
+  if (input.Init(encodedCertificatePolicies->data,
+                 encodedCertificatePolicies->len) != der::Success) {
+    return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
+  }
+  if (der::NestedOf(input, der::SEQUENCE, der::SEQUENCE, der::EmptyAllowed::No,
+                    bind(CheckPolicyInformation, _1, endEntityOrCA,
+                         requiredPolicy, ref(found))) != der::Success) {
+    return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
+  }
+  if (der::End(input) != der::Success) {
+    return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
+  }
+  if (!found) {
+    return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
   }
 
-  for (const CERTPolicyInfo* const* policyInfos = policies->policyInfos;
-       *policyInfos; ++policyInfos) {
-    if ((*policyInfos)->oid == requiredPolicy) {
-      return Success;
-    }
-    // Intermediate certs are allowed to have the anyPolicy OID
-    if (endEntityOrCA == EndEntityOrCA::MustBeCA &&
-        (*policyInfos)->oid == SEC_OID_X509_ANY_POLICY) {
-      return Success;
-    }
-  }
-
-  return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
+  return Success;
 }
 
 static const long UNLIMITED_PATH_LEN = -1; // must be less than zero
@@ -500,7 +553,7 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
                                  EndEntityOrCA endEntityOrCA,
                                  KeyUsages requiredKeyUsagesIfPresent,
                                  KeyPurposeId requiredEKUIfPresent,
-                                 SECOidTag requiredPolicy,
+                                 const CertPolicyId& requiredPolicy,
                                  unsigned int subCACount,
                 /*optional out*/ TrustLevel* trustLevelOut)
 {
@@ -527,9 +580,6 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
     *trustLevelOut = trustLevel;
   }
 
-  bool isTrustAnchor = endEntityOrCA == EndEntityOrCA::MustBeCA &&
-                       trustLevel == TrustLevel::TrustAnchor;
-
   // XXX: Good enough for now. There could be an illegal explicit version
   // number or one we don't support, but we can safely treat those all as v3
   // for now since processing of v3 certificates is strictly more strict than
@@ -555,7 +605,8 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
   }
 
   // 4.2.1.4. Certificate Policies
-  rv = CheckCertificatePolicies(cert, endEntityOrCA, isTrustAnchor,
+  rv = CheckCertificatePolicies(endEntityOrCA, cert.encodedCertificatePolicies,
+                                cert.encodedInhibitAnyPolicy, trustLevel,
                                 requiredPolicy);
   if (rv != Success) {
     return rv;

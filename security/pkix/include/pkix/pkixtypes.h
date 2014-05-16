@@ -30,6 +30,7 @@
 #include "plarena.h"
 #include "cert.h"
 #include "keyhi.h"
+#include "stdint.h"
 
 namespace mozilla { namespace pkix {
 
@@ -54,6 +55,16 @@ MOZILLA_PKIX_ENUM_CLASS KeyPurposeId {
   id_kp_OCSPSigning = 9,          // id-kp-OCSPSigning
 };
 
+struct CertPolicyId {
+  uint16_t numBytes;
+  static const uint16_t MAX_BYTES = 24;
+  uint8_t bytes[MAX_BYTES];
+
+  bool IsAnyPolicy() const;
+
+  static const CertPolicyId anyPolicy;
+};
+
 MOZILLA_PKIX_ENUM_CLASS TrustLevel {
   TrustAnchor = 1,        // certificate is a trusted root CA certificate or
                           // equivalent *for the given policy*.
@@ -74,16 +85,16 @@ public:
   // This will be called for every certificate encountered during path
   // building.
   //
-  // When policy == SEC_OID_X509_ANY_POLICY, then no policy-related checking
-  // should be done. When policy != SEC_OID_X509_ANY_POLICY, then GetCertTrust
-  // MUST NOT return with *trustLevel == TrustAnchor unless the given cert is
-  // considered a trust anchor *for that policy*. In particular, if the user
-  // has marked an intermediate certificate as trusted, but that intermediate
-  // isn't in the list of EV roots, then GetCertTrust must result in
+  // When policy.IsAnyPolicy(), then no policy-related checking should be done.
+  // When !policy.IsAnyPolicy(), then GetCertTrust MUST NOT return with
+  // *trustLevel == TrustAnchor unless the given cert is considered a trust
+  // anchor *for that policy*. In particular, if the user has marked an
+  // intermediate certificate as trusted, but that intermediate isn't in the
+  // list of EV roots, then GetCertTrust must result in
   // *trustLevel == InheritsTrust instead of *trustLevel == TrustAnchor
   // (assuming the candidate cert is not actively distrusted).
   virtual SECStatus GetCertTrust(EndEntityOrCA endEntityOrCA,
-                                 SECOidTag policy,
+                                 const CertPolicyId& policy,
                                  const CERTCertificate* candidateCert,
                          /*out*/ TrustLevel* trustLevel) = 0;
 

@@ -68,7 +68,7 @@ NSSCertDBTrustDomain::FindPotentialIssuers(
 
 SECStatus
 NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
-                                   SECOidTag policy,
+                                   const CertPolicyId& policy,
                                    const CERTCertificate* candidateCert,
                                    /*out*/ TrustLevel* trustLevel)
 {
@@ -81,7 +81,7 @@ NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
   }
 
 #ifdef MOZ_NO_EV_CERTS
-  if (policy != SEC_OID_X509_ANY_POLICY) {
+  if (!policy.IsAnyPolicy()) {
     PR_SetError(SEC_ERROR_POLICY_VALIDATION_FAILED, 0);
     return SECFailure;
   }
@@ -114,7 +114,7 @@ NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
     // needed to consider end-entity certs to be their own trust anchors since
     // Gecko implemented nsICertOverrideService.
     if (flags & CERTDB_TRUSTED_CA) {
-      if (policy == SEC_OID_X509_ANY_POLICY) {
+      if (policy.IsAnyPolicy()) {
         *trustLevel = TrustLevel::TrustAnchor;
         return SECSuccess;
       }

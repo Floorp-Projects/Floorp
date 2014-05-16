@@ -147,7 +147,7 @@ CheckOCSPResponseSignerCert(TrustDomain& trustDomain,
   rv = CheckIssuerIndependentProperties(trustDomain, cert, time,
                                         EndEntityOrCA::MustBeEndEntity, 0,
                                         KeyPurposeId::id_kp_OCSPSigning,
-                                        SEC_OID_X509_ANY_POLICY, 0);
+                                        CertPolicyId::anyPolicy, 0);
   if (rv != Success) {
     return rv;
   }
