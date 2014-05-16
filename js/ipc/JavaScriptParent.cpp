@@ -510,7 +510,7 @@ JavaScriptParent::drop(JSObject *obj)
 {
     ObjectId objId = idOf(obj);
 
-    objects_.remove(objId);
+    cpows_.remove(objId);
     if (!inactive_ && !SendDropObject(objId))
         (void)0;
     decref();
@@ -592,7 +592,7 @@ JavaScriptParent::fromId(JSContext *cx, ObjectId objId)
     if (!obj)
         return nullptr;
 
-    if (!objects_.add(objId, obj))
+    if (!cpows_.add(objId, obj))
         return nullptr;
 
     // Incref once we know the decref will be called.
