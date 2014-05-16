@@ -21,8 +21,7 @@
   min-width: 30px;
   min-height: 28px;
   margin: 0;
-  list-style-image: url(profiler-stopwatch.png);
-  -moz-image-region: rect(0px,16px,16px,0px);
+  list-style-image: url(profiler-stopwatch.svg);
 }
 
 #requests-menu-perf-notice-button .button-text {
@@ -613,8 +612,7 @@ label.requests-menu-status-code {
   background: none;
   box-shadow: none;
   border-color: transparent;
-  list-style-image: url(profiler-stopwatch.png);
-  -moz-image-region: rect(0px,16px,16px,0px);
+  list-style-image: url(profiler-stopwatch.svg);
   -moz-padding-end: 0;
   cursor: pointer;
 }
