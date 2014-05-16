@@ -3008,12 +3008,12 @@ GetElementIC::attachGetProp(JSContext *cx, HandleScript outerScript, IonScript *
 
     // The pointers are not equal, so if the input string is also an atom it
     // must be a different string.
-    masm.loadPtr(Address(scratch, JSString::offsetOfLengthAndFlags()), scratch);
-    masm.branchTest32(Assembler::NonZero, scratch, Imm32(JSString::ATOM_BIT), &failures);
+    masm.branchTest32(Assembler::NonZero, Address(scratch, JSString::offsetOfFlags()),
+                      Imm32(JSString::ATOM_BIT), &failures);
 
     // Check the length.
-    masm.rshiftPtr(Imm32(JSString::LENGTH_SHIFT), scratch);
-    masm.branch32(Assembler::NotEqual, scratch, Imm32(name->length()), &failures);
+    masm.branch32(Assembler::NotEqual, Address(scratch, JSString::offsetOfLength()),
+                  Imm32(name->length()), &failures);
 
     // We have a non-atomized string with the same length. For now call a helper
     // function to do the comparison.

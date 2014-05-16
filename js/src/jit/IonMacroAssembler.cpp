@@ -591,14 +591,14 @@ MacroAssembler::newGCThing(Register result, Register temp, JSObject *templateObj
 
 void
 MacroAssembler::createGCObject(Register obj, Register temp, JSObject *templateObj,
-                               gc::InitialHeap initialHeap, Label *fail)
+                               gc::InitialHeap initialHeap, Label *fail, bool initFixedSlots)
 {
     uint32_t nDynamicSlots = templateObj->numDynamicSlots();
     gc::AllocKind allocKind = templateObj->tenuredGetAllocKind();
     JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
 
     allocateObject(obj, temp, allocKind, nDynamicSlots, initialHeap, fail);
-    initGCThing(obj, temp, templateObj);
+    initGCThing(obj, temp, templateObj, initFixedSlots);
 }
 
 
@@ -742,7 +742,8 @@ FindStartOfUndefinedSlots(JSObject *templateObj, uint32_t nslots)
 }
 
 void
-MacroAssembler::initGCSlots(Register obj, Register slots, JSObject *templateObj)
+MacroAssembler::initGCSlots(Register obj, Register slots, JSObject *templateObj,
+                            bool initFixedSlots)
 {
     // Slots of non-array objects are required to be initialized.
     // Use the values currently in the template object.
@@ -750,7 +751,7 @@ MacroAssembler::initGCSlots(Register obj, Register slots, JSObject *templateObj)
     if (nslots == 0)
         return;
 
-    uint32_t nfixed = Min(templateObj->numFixedSlots(), nslots);
+    uint32_t nfixed = templateObj->numUsedFixedSlots();
     uint32_t ndynamic = templateObj->numDynamicSlots();
 
     // Attempt to group slot writes such that we minimize the amount of
@@ -767,8 +768,10 @@ MacroAssembler::initGCSlots(Register obj, Register slots, JSObject *templateObj)
     copySlotsFromTemplate(obj, templateObj, 0, startOfUndefined);
 
     // Fill the rest of the fixed slots with undefined.
-    fillSlotsWithUndefined(Address(obj, JSObject::getFixedSlotOffset(startOfUndefined)), slots,
-                           startOfUndefined, nfixed);
+    if (initFixedSlots) {
+        fillSlotsWithUndefined(Address(obj, JSObject::getFixedSlotOffset(startOfUndefined)), slots,
+                               startOfUndefined, nfixed);
+    }
 
     if (ndynamic) {
         // We are short one register to do this elegantly. Borrow the obj
@@ -781,7 +784,8 @@ MacroAssembler::initGCSlots(Register obj, Register slots, JSObject *templateObj)
 }
 
 void
-MacroAssembler::initGCThing(Register obj, Register slots, JSObject *templateObj)
+MacroAssembler::initGCThing(Register obj, Register slots, JSObject *templateObj,
+                            bool initFixedSlots)
 {
     // Fast initialization of an empty object returned by allocateObject().
 
@@ -818,7 +822,7 @@ MacroAssembler::initGCThing(Register obj, Register slots, JSObject *templateObj)
     } else {
         storePtr(ImmPtr(emptyObjectElements), Address(obj, JSObject::offsetOfElements()));
 
-        initGCSlots(obj, slots, templateObj);
+        initGCSlots(obj, slots, templateObj, initFixedSlots);
 
         if (templateObj->hasPrivate()) {
             uint32_t nfixed = templateObj->numFixedSlots();
@@ -830,7 +834,7 @@ MacroAssembler::initGCThing(Register obj, Register slots, JSObject *templateObj)
 
 void
 MacroAssembler::compareStrings(JSOp op, Register left, Register right, Register result,
-                               Register temp, Label *fail)
+                               Label *fail)
 {
     JS_ASSERT(IsEqualityOp(op));
 
@@ -842,24 +846,37 @@ MacroAssembler::compareStrings(JSOp op, Register left, Register right, Register 
     jump(&done);
 
     bind(&notPointerEqual);
-    loadPtr(Address(left, JSString::offsetOfLengthAndFlags()), result);
-    loadPtr(Address(right, JSString::offsetOfLengthAndFlags()), temp);
 
     Label notAtom;
     // Optimize the equality operation to a pointer compare for two atoms.
     Imm32 atomBit(JSString::ATOM_BIT);
-    branchTest32(Assembler::Zero, result, atomBit, &notAtom);
-    branchTest32(Assembler::Zero, temp, atomBit, &notAtom);
+    branchTest32(Assembler::Zero, Address(left, JSString::offsetOfFlags()), atomBit, &notAtom);
+    branchTest32(Assembler::Zero, Address(right, JSString::offsetOfFlags()), atomBit, &notAtom);
 
     cmpPtrSet(JSOpToCondition(MCompare::Compare_String, op), left, right, result);
     jump(&done);
 
     bind(&notAtom);
     // Strings of different length can never be equal.
-    rshiftPtr(Imm32(JSString::LENGTH_SHIFT), result);
-    rshiftPtr(Imm32(JSString::LENGTH_SHIFT), temp);
-    branchPtr(Assembler::Equal, result, temp, fail);
+    loadStringLength(left, result);
+    branch32(Assembler::Equal, Address(right, JSString::offsetOfLength()), result, fail);
     move32(Imm32(op == JSOP_NE || op == JSOP_STRICTNE), result);
+
+    bind(&done);
+}
+
+void
+MacroAssembler::loadStringChars(Register str, Register dest)
+{
+    Label isInline, done;
+    branchTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
+                 Imm32(JSString::INLINE_CHARS_BIT), &isInline);
+
+    loadPtr(Address(str, JSString::offsetOfNonInlineChars()), dest);
+    jump(&done);
+
+    bind(&isInline);
+    computeEffectiveAddress(Address(str, JSInlineString::offsetOfInlineStorage()), dest);
 
     bind(&done);
 }

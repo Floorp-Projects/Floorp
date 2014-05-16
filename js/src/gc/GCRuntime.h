@@ -139,6 +139,7 @@ class GCRuntime
     void markGrayReferencesInCurrentGroup();
     void beginSweepPhase(bool lastGC);
     void findZoneGroups();
+    bool findZoneEdgesForWeakMaps();
     void getNextZoneGroup();
     void endMarkingZoneGroup();
     void beginSweepingZoneGroup();
