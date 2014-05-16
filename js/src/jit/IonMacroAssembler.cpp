@@ -834,7 +834,7 @@ MacroAssembler::initGCThing(Register obj, Register slots, JSObject *templateObj,
 
 void
 MacroAssembler::compareStrings(JSOp op, Register left, Register right, Register result,
-                               Register temp, Label *fail)
+                               Label *fail)
 {
     JS_ASSERT(IsEqualityOp(op));
 
@@ -846,24 +846,37 @@ MacroAssembler::compareStrings(JSOp op, Register left, Register right, Register 
     jump(&done);
 
     bind(&notPointerEqual);
-    loadPtr(Address(left, JSString::offsetOfLengthAndFlags()), result);
-    loadPtr(Address(right, JSString::offsetOfLengthAndFlags()), temp);
 
     Label notAtom;
     // Optimize the equality operation to a pointer compare for two atoms.
     Imm32 atomBit(JSString::ATOM_BIT);
-    branchTest32(Assembler::Zero, result, atomBit, &notAtom);
-    branchTest32(Assembler::Zero, temp, atomBit, &notAtom);
+    branchTest32(Assembler::Zero, Address(left, JSString::offsetOfFlags()), atomBit, &notAtom);
+    branchTest32(Assembler::Zero, Address(right, JSString::offsetOfFlags()), atomBit, &notAtom);
 
     cmpPtrSet(JSOpToCondition(MCompare::Compare_String, op), left, right, result);
     jump(&done);
 
     bind(&notAtom);
     // Strings of different length can never be equal.
-    rshiftPtr(Imm32(JSString::LENGTH_SHIFT), result);
-    rshiftPtr(Imm32(JSString::LENGTH_SHIFT), temp);
-    branchPtr(Assembler::Equal, result, temp, fail);
+    loadStringLength(left, result);
+    branch32(Assembler::Equal, Address(right, JSString::offsetOfLength()), result, fail);
     move32(Imm32(op == JSOP_NE || op == JSOP_STRICTNE), result);
+
+    bind(&done);
+}
+
+void
+MacroAssembler::loadStringChars(Register str, Register dest)
+{
+    Label isInline, done;
+    branchTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
+                 Imm32(JSString::INLINE_CHARS_BIT), &isInline);
+
+    loadPtr(Address(str, JSString::offsetOfNonInlineChars()), dest);
+    jump(&done);
+
+    bind(&isInline);
+    computeEffectiveAddress(Address(str, JSInlineString::offsetOfInlineStorage()), dest);
 
     bind(&done);
 }

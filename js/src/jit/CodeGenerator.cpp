@@ -4673,7 +4673,7 @@ static const VMFunctionsModal StringsNotEqualInfo = VMFunctionsModal(
 
 bool
 CodeGenerator::emitCompareS(LInstruction *lir, JSOp op, Register left, Register right,
-                            Register output, Register temp)
+                            Register output)
 {
     JS_ASSERT(lir->isCompareS() || lir->isCompareStrictS());
 
@@ -4688,7 +4688,7 @@ CodeGenerator::emitCompareS(LInstruction *lir, JSOp op, Register left, Register 
     if (!ool)
         return false;
 
-    masm.compareStrings(op, left, right, output, temp, ool->entry());
+    masm.compareStrings(op, left, right, output, ool->entry());
 
     masm.bind(ool->rejoin());
     return true;
@@ -4703,7 +4703,6 @@ CodeGenerator::visitCompareStrictS(LCompareStrictS *lir)
     const ValueOperand leftV = ToValue(lir, LCompareStrictS::Lhs);
     Register right = ToRegister(lir->right());
     Register output = ToRegister(lir->output());
-    Register temp = ToRegister(lir->temp());
     Register tempToUnbox = ToTempUnboxRegister(lir->tempToUnbox());
 
     Label string, done;
@@ -4714,7 +4713,7 @@ CodeGenerator::visitCompareStrictS(LCompareStrictS *lir)
 
     masm.bind(&string);
     Register left = masm.extractString(leftV, tempToUnbox);
-    if (!emitCompareS(lir, op, left, right, output, temp))
+    if (!emitCompareS(lir, op, left, right, output))
         return false;
 
     masm.bind(&done);
@@ -4729,9 +4728,8 @@ CodeGenerator::visitCompareS(LCompareS *lir)
     Register left = ToRegister(lir->left());
     Register right = ToRegister(lir->right());
     Register output = ToRegister(lir->output());
-    Register temp = ToRegister(lir->temp());
 
-    return emitCompareS(lir, op, left, right, output, temp);
+    return emitCompareS(lir, op, left, right, output);
 }
 
 typedef bool (*CompareFn)(JSContext *, MutableHandleValue, MutableHandleValue, bool *);
@@ -5159,9 +5157,8 @@ JitCompartment::generateStringConcatStub(JSContext *cx, ExecutionMode mode)
     }
 
     // Store lengthAndFlags.
-    JS_STATIC_ASSERT(JSString::ROPE_FLAGS == 0);
-    masm.lshiftPtr(Imm32(JSString::LENGTH_SHIFT), temp2);
-    masm.storePtr(temp2, Address(output, JSString::offsetOfLengthAndFlags()));
+    masm.store32(Imm32(JSString::ROPE_FLAGS), Address(output, JSString::offsetOfFlags()));
+    masm.store32(temp2, Address(output, JSString::offsetOfLength()));
 
     // Store left and right nodes.
     masm.storePtr(lhs, Address(output, JSRope::offsetOfLeft()));
@@ -5180,12 +5177,9 @@ JitCompartment::generateStringConcatStub(JSContext *cx, ExecutionMode mode)
 
     // State: lhs length in temp1, result length in temp2.
 
-    // Ensure both strings are linear (flags != 0).
-    JS_STATIC_ASSERT(JSString::ROPE_FLAGS == 0);
-    masm.branchTestPtr(Assembler::Zero, Address(lhs, JSString::offsetOfLengthAndFlags()),
-                       Imm32(JSString::FLAGS_MASK), &failure);
-    masm.branchTestPtr(Assembler::Zero, Address(rhs, JSString::offsetOfLengthAndFlags()),
-                       Imm32(JSString::FLAGS_MASK), &failure);
+    // Ensure both strings are linear.
+    masm.branchIfRope(lhs, &failure);
+    masm.branchIfRope(rhs, &failure);
 
     // Allocate a JSFatInlineString.
     switch (mode) {
@@ -5203,14 +5197,12 @@ JitCompartment::generateStringConcatStub(JSContext *cx, ExecutionMode mode)
         MOZ_ASSUME_UNREACHABLE("No such execution mode");
     }
 
-    // Set lengthAndFlags.
-    masm.lshiftPtr(Imm32(JSString::LENGTH_SHIFT), temp2);
-    masm.orPtr(Imm32(JSString::FIXED_FLAGS), temp2);
-    masm.storePtr(temp2, Address(output, JSString::offsetOfLengthAndFlags()));
+    // Set length and flags.
+    masm.store32(Imm32(JSString::INIT_FAT_INLINE_FLAGS), Address(output, JSString::offsetOfFlags()));
+    masm.store32(temp2, Address(output, JSString::offsetOfLength()));
 
-    // Set chars pointer, keep in temp2 for copy loop below.
-    masm.computeEffectiveAddress(Address(output, JSFatInlineString::offsetOfInlineStorage()), temp2);
-    masm.storePtr(temp2, Address(output, JSFatInlineString::offsetOfChars()));
+    // Load chars pointer in temp2.
+    masm.computeEffectiveAddress(Address(output, JSInlineString::offsetOfInlineStorage()), temp2);
 
     {
         // We use temp3 in this block, which in parallel execution also holds
@@ -5222,12 +5214,12 @@ JitCompartment::generateStringConcatStub(JSContext *cx, ExecutionMode mode)
         // Copy lhs chars. Temp1 still holds the lhs length. Note that this
         // advances temp2 to point to the next char. Note that this also
         // repurposes the lhs register.
-        masm.loadPtr(Address(lhs, JSString::offsetOfChars()), lhs);
+        masm.loadStringChars(lhs, lhs);
         CopyStringChars(masm, temp2, lhs, temp1, temp3);
 
         // Copy rhs chars.
         masm.loadStringLength(rhs, temp1);
-        masm.loadPtr(Address(rhs, JSString::offsetOfChars()), rhs);
+        masm.loadStringChars(rhs, rhs);
         CopyStringChars(masm, temp2, rhs, temp1, temp3);
 
         if (mode == ParallelExecution)
@@ -5334,12 +5326,9 @@ CodeGenerator::visitCharCodeAt(LCharCodeAt *lir)
     if (!ool)
         return false;
 
-    Address lengthAndFlagsAddr(str, JSString::offsetOfLengthAndFlags());
-    masm.branchTest32(Assembler::Zero, lengthAndFlagsAddr, Imm32(JSString::FLAGS_MASK), ool->entry());
+    masm.branchIfRope(str, ool->entry());
 
-    // getChars
-    Address charsAddr(str, JSString::offsetOfChars());
-    masm.loadPtr(charsAddr, output);
+    masm.loadStringChars(str, output);
     masm.load16ZeroExtend(BaseIndex(output, index, TimesTwo, 0), output);
 
     masm.bind(ool->rejoin());
