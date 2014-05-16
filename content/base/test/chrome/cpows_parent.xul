@@ -13,9 +13,18 @@
     var test_state = "remote";
     var test_node = null;
     var reentered = false;
+    var savedMM = null;
+
+    function info(message) {
+      return opener.wrappedJSObject.info(message);
+    }
 
     function ok(condition, message) {
       return opener.wrappedJSObject.ok(condition, message);
+    }
+
+    function is(v1, v2, message) {
+      return opener.wrappedJSObject.is(v1, v2, message);
     }
 
     // Make sure that an error in this file actually causes the test to fail.
@@ -145,13 +154,72 @@
       finish();
     }
 
+    function recvParentTest(message) {
+      let func = message.objects.func;
+      let result = func(n => 2*n);
+      ok(result == 20, "result == 20");
+      let obj = {a:1};
+      savedMM.sendAsyncMessage("cpows:from_parent", {}, {obj: obj});
+    }
+
+    let savedElement = null;
+    function recvDomTest(message) {
+      savedElement = message.objects.element;
+    }
+
+    function recvDomTestAfterGC(message) {
+      let id;
+      try {
+        id = savedElement.id;
+      } catch (e) {
+        ok(false, "Got exception using DOM element");
+      }
+      is(id, "it_works", "DOM element has expected ID");
+    }
+
+    function recvXrayTest(message) {
+      let element = message.objects.element;
+      is(element.foo, undefined, "DOM element does not expose content properties");
+    }
+
+    let savedWilldieObj;
+    let wontDie = {f:2};
+    function recvLifetimeTest1(message) {
+      let obj = message.objects.obj;
+      savedWilldieObj = obj.will_die;
+      ok(savedWilldieObj.f == 1, "limited-lifetime CPOW works at first");
+      obj.wont_die = wontDie;
+      obj = null;
+      return 10;
+    }
+    function recvLifetimeTest2(message) {
+      let threw = false;
+      try {
+        savedWilldieObj.f;
+      } catch (e) {
+        threw = true;
+      }
+      ok(threw, "limited-lifetime CPOW stopped working");
+      wontDie = null;
+      Components.utils.schedulePreciseGC(function() {
+        savedMM.sendAsyncMessage("cpows:lifetime_test_3");
+      });
+    }
+
     function run_tests(type) {
+      info("Running tests: " + type);
       var node = document.getElementById('cpowbrowser_' + type);
 
       test_state = type;
       test_node = node;
 
+      function recvIsRemote(message) {
+        return type == "remote";
+      }
+
       var mm = node.messageManager;
+      savedMM = mm;
+      mm.addMessageListener("cpows:is_remote", recvIsRemote);
       mm.addMessageListener("cpows:async", recvAsyncMessage);
       mm.addMessageListener("cpows:sync", recvSyncMessage);
       mm.addMessageListener("cpows:rpc", recvRpcMessage);
@@ -161,6 +229,12 @@
       mm.addMessageListener("cpows:reenter_sync", recvReenterSyncMessage);
       mm.addMessageListener("cpows:done", recvDoneMessage);
       mm.addMessageListener("cpows:fail", recvFailMessage);
+      mm.addMessageListener("cpows:parent_test", recvParentTest);
+      mm.addMessageListener("cpows:dom_test", recvDomTest);
+      mm.addMessageListener("cpows:dom_test_after_gc", recvDomTestAfterGC);
+      mm.addMessageListener("cpows:xray_test", recvXrayTest);
+      mm.addMessageListener("cpows:lifetime_test_1", recvLifetimeTest1);
+      mm.addMessageListener("cpows:lifetime_test_2", recvLifetimeTest2);
       mm.loadFrameScript("chrome://mochitests/content/chrome/content/base/test/chrome/cpows_child.js", true);
     }
 
