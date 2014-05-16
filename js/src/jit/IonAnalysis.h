@@ -32,9 +32,6 @@ bool
 EliminatePhis(MIRGenerator *mir, MIRGraph &graph, Observability observe);
 
 bool
-MakeLoopsContiguous(MIRGraph &graph);
-
-bool
 EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph);
 
 bool
