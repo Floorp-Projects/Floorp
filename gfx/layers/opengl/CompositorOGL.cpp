@@ -920,7 +920,8 @@ static bool SetBlendMode(GLContext* aGL, gfx::CompositionOp aBlendMode, bool aIs
       dstBlend = LOCAL_GL_ONE_MINUS_SRC_ALPHA;
       break;
     default:
-      MOZ_ASSERT(0, "Unsupported blend mode!");
+      MOZ_ASSERT_UNREACHABLE("Unsupported blend mode!");
+      return false;
   }
 
   aGL->fBlendFuncSeparate(srcBlend, dstBlend,
