@@ -156,8 +156,6 @@ class FreeSpan
     uintptr_t   last;
 
   public:
-    FreeSpan() {}
-
     // This inits just |first| and |last|; if the span is non-empty it doesn't
     // do anything with the next span stored at |last|.
     void initBoundsUnchecked(uintptr_t first, uintptr_t last) {
@@ -236,6 +234,7 @@ class FreeSpan
         return false;
     }
 
+  private:
     // Some callers can pass in |thingSize| easily, and we can do stronger
     // checking in that case.
     void checkSpan(size_t thingSize = 0) const {
