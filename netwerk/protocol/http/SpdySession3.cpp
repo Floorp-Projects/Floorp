@@ -44,9 +44,7 @@ NS_INTERFACE_MAP_BEGIN(SpdySession3)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsAHttpConnection)
 NS_INTERFACE_MAP_END
 
-SpdySession3::SpdySession3(nsAHttpTransaction *aHttpTransaction,
-                           nsISocketTransport *aSocketTransport,
-                           int32_t firstPriority)
+SpdySession3::SpdySession3(nsISocketTransport *aSocketTransport)
   : mSocketTransport(aSocketTransport)
   , mSegmentReader(nullptr)
   , mSegmentWriter(nullptr)
@@ -79,10 +77,8 @@ SpdySession3::SpdySession3(nsAHttpTransaction *aHttpTransaction,
   static uint64_t sSerial;
   mSerial = ++sSerial;
 
-  LOG3(("SpdySession3::SpdySession3 %p transaction 1 = %p serial=0x%X\n",
-        this, aHttpTransaction, mSerial));
+  LOG3(("SpdySession3::SpdySession3 %p serial=0x%X\n", this, mSerial));
 
-  mConnection = aHttpTransaction->Connection();
   mInputFrameBuffer = new char[mInputFrameBufferSize];
   mOutputQueueBuffer = new char[mOutputQueueSize];
   zlibInit();
@@ -91,8 +87,6 @@ SpdySession3::SpdySession3(nsAHttpTransaction *aHttpTransaction,
   mSendingChunkSize = gHttpHandler->SpdySendingChunkSize();
   GenerateSettings();
 
-  if (!aHttpTransaction->IsNullTransaction())
-    AddStream(aHttpTransaction, firstPriority);
   mLastDataReadEpoch = mLastReadEpoch;
 
   mPingThreshold = gHttpHandler->SpdyPingThreshold();
@@ -351,6 +345,18 @@ SpdySession3::AddStream(nsAHttpTransaction *aHttpTransaction,
     return false;
   }
 
+  // assert that
+  // a] in the case we have a connection, that the new transaction connection
+  //    is either undefined or on the same connection
+  // b] in the case we don't have a connection, that the new transaction
+  //    connection is defined so we can adopt it
+  MOZ_ASSERT((mConnection && (!aHttpTransaction->Connection() ||
+                              mConnection == aHttpTransaction->Connection())) ||
+             (!mConnection && aHttpTransaction->Connection()));
+
+  if (!mConnection) {
+    mConnection = aHttpTransaction->Connection();
+  }
   aHttpTransaction->SetConnection(this);
   SpdyStream3 *stream = new SpdyStream3(aHttpTransaction, this, aPriority);
 
