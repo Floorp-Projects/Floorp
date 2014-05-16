@@ -9,6 +9,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/MathAlgorithms.h"
 
 #include "jslibmath.h"
 #include "jsmath.h"
@@ -3612,6 +3613,90 @@ CodeGenerator::visitNewObjectVMCall(LNewObject *lir)
     return true;
 }
 
+static bool
+ShouldInitFixedSlots(LInstruction *lir, JSObject *templateObj)
+{
+    // Look for StoreFixedSlot instructions following an object allocation
+    // that write to this object before a GC is triggered or this object is
+    // passed to a VM call. If all fixed slots will be initialized, the
+    // allocation code doesn't need to set the slots to |undefined|.
+
+    uint32_t nfixed = templateObj->numUsedFixedSlots();
+    if (nfixed == 0)
+        return false;
+
+    // Only optimize if all fixed slots are initially |undefined|, so that we
+    // can assume incremental pre-barriers are not necessary. See also the
+    // comment below.
+    for (uint32_t slot = 0; slot < nfixed; slot++) {
+        if (!templateObj->getSlot(slot).isUndefined())
+            return true;
+    }
+
+    // Keep track of the fixed slots that are initialized. initializedSlots is
+    // a bit mask with a bit for each slot.
+    MOZ_ASSERT(nfixed <= JSObject::MAX_FIXED_SLOTS);
+    static_assert(JSObject::MAX_FIXED_SLOTS <= 32, "Slot bits must fit in 32 bits");
+    uint32_t initializedSlots = 0;
+    uint32_t numInitialized = 0;
+
+    MInstruction *allocMir = lir->mirRaw()->toInstruction();
+    MBasicBlock *block = allocMir->block();
+
+    // Skip the allocation instruction.
+    MInstructionIterator iter = block->begin(allocMir);
+    MOZ_ASSERT(*iter == allocMir);
+    iter++;
+
+    while (true) {
+        for (; iter != block->end(); iter++) {
+            if (iter->isNop() || iter->isConstant() || iter->isPostWriteBarrier()) {
+                // These instructions won't trigger a GC or read object slots.
+                continue;
+            }
+
+            if (iter->isStoreFixedSlot()) {
+                MStoreFixedSlot *store = iter->toStoreFixedSlot();
+                if (store->object() != allocMir)
+                    return true;
+
+                // We may not initialize this object slot on allocation, so the
+                // pre-barrier could read uninitialized memory. Simply disable
+                // the barrier for this store: the object was just initialized
+                // so the barrier is not necessary.
+                store->setNeedsBarrier(false);
+
+                uint32_t slot = store->slot();
+                MOZ_ASSERT(slot < nfixed);
+                if ((initializedSlots & (1 << slot)) == 0) {
+                    numInitialized++;
+                    initializedSlots |= (1 << slot);
+
+                    if (numInitialized == nfixed) {
+                        // All fixed slots will be initialized.
+                        MOZ_ASSERT(mozilla::CountPopulation32(initializedSlots) == nfixed);
+                        return false;
+                    }
+                }
+                continue;
+            }
+
+            if (iter->isGoto()) {
+                block = iter->toGoto()->target();
+                if (block->numPredecessors() != 1)
+                    return true;
+                break;
+            }
+
+            // Unhandled instruction, assume it bails or reads object slots.
+            return true;
+        }
+        iter = block->begin();
+    }
+
+    MOZ_ASSUME_UNREACHABLE("Shouldn't get here");
+}
+
 bool
 CodeGenerator::visitNewObject(LNewObject *lir)
 {
@@ -3627,7 +3712,9 @@ CodeGenerator::visitNewObject(LNewObject *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    masm.createGCObject(objReg, tempReg, templateObject, lir->mir()->initialHeap(), ool->entry());
+    bool initFixedSlots = ShouldInitFixedSlots(lir, templateObject);
+    masm.createGCObject(objReg, tempReg, templateObject, lir->mir()->initialHeap(), ool->entry(),
+                        initFixedSlots);
 
     masm.bind(ool->rejoin());
     return true;
@@ -3662,7 +3749,9 @@ CodeGenerator::visitNewDeclEnvObject(LNewDeclEnvObject *lir)
     if (!ool)
         return false;
 
-    masm.createGCObject(objReg, tempReg, templateObj, gc::DefaultHeap, ool->entry());
+    bool initFixedSlots = ShouldInitFixedSlots(lir, templateObj);
+    masm.createGCObject(objReg, tempReg, templateObj, gc::DefaultHeap, ool->entry(),
+                        initFixedSlots);
 
     masm.bind(ool->rejoin());
     return true;
@@ -3688,7 +3777,9 @@ CodeGenerator::visitNewCallObject(LNewCallObject *lir)
         return false;
 
     // Inline call object creation, using the OOL path only for tricky cases.
-    masm.createGCObject(objReg, tempReg, templateObj, gc::DefaultHeap, ool->entry());
+    bool initFixedSlots = ShouldInitFixedSlots(lir, templateObj);
+    masm.createGCObject(objReg, tempReg, templateObj, gc::DefaultHeap, ool->entry(),
+                        initFixedSlots);
 
     masm.bind(ool->rejoin());
     return true;
@@ -4038,7 +4129,9 @@ CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate *lir)
 
     // Initialize based on the templateObject.
     masm.bind(ool->rejoin());
-    masm.initGCThing(objReg, tempReg, templateObject);
+
+    bool initFixedSlots = ShouldInitFixedSlots(lir, templateObject);
+    masm.initGCThing(objReg, tempReg, templateObject, initFixedSlots);
 
     return true;
 }
