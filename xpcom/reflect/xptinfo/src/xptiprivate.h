@@ -275,6 +275,10 @@ private:
                             uint16_t dimension,
                             const XPTTypeDescriptor** type);
 
+    nsresult GetInterfaceIndexForParam(uint16_t methodIndex,
+                                       const nsXPTParamInfo* param,
+                                       uint16_t* interfaceIndex);
+
 private:
     nsID                    mIID;
     XPTInterfaceDescriptor* mDescriptor;
