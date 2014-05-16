@@ -20,6 +20,7 @@
 #include "jsobjinlines.h"
 
 using namespace js;
+using namespace js::gc;
 
 WeakMapBase::WeakMapBase(JSObject *memOf, JSCompartment *c)
   : memberOf(memOf),
@@ -76,6 +77,16 @@ WeakMapBase::markCompartmentIteratively(JSCompartment *c, JSTracer *tracer)
             markedAny = true;
     }
     return markedAny;
+}
+
+bool
+WeakMapBase::findZoneEdgesForCompartment(JSCompartment *c)
+{
+    for (WeakMapBase *m = c->gcWeakMapList; m; m = m->next) {
+        if (!m->findZoneEdges())
+            return false;
+    }
+    return true;
 }
 
 void
@@ -144,6 +155,34 @@ WeakMapBase::removeWeakMapFromList(WeakMapBase *weakmap)
             break;
         }
     }
+}
+
+bool
+ObjectValueMap::findZoneEdges()
+{
+    /*
+     * For unmarked weakmap keys with delegates in a different zone, add a zone
+     * edge to ensure that the delegate zone does finish marking after the key
+     * zone.
+     */
+    Zone *mapZone = compartment->zone();
+    for (Range r = all(); !r.empty(); r.popFront()) {
+        JSObject *key = r.front().key();
+        if (key->isMarked(BLACK) && !key->isMarked(GRAY))
+            continue;
+        JSWeakmapKeyDelegateOp op = key->getClass()->ext.weakmapKeyDelegateOp;
+        if (!op)
+            continue;
+        JSObject *delegate = op(key);
+        if (!delegate)
+            continue;
+        Zone *delegateZone = delegate->zone();
+        if (delegateZone == mapZone)
+            continue;
+        if (!delegateZone->gcZoneGroupEdges.put(key->zone()))
+            return false;
+    }
+    return true;
 }
 
 static JSObject *
@@ -319,7 +358,7 @@ WeakMapPostWriteBarrier(JSRuntime *rt, ObjectValueMap *weakMap, JSObject *key)
     typedef HashMap<JSObject *, Value> UnbarrieredMap;
     UnbarrieredMap *unbarrieredMap = reinterpret_cast<UnbarrieredMap *>(baseHashMap);
 
-    typedef gc::HashKeyRef<UnbarrieredMap, JSObject *> Ref;
+    typedef HashKeyRef<UnbarrieredMap, JSObject *> Ref;
     if (key && IsInsideNursery(rt, key))
         rt->gc.storeBuffer.putGeneric(Ref((unbarrieredMap), key));
 #endif
@@ -406,7 +445,7 @@ JS_NondeterministicGetWeakMapKeys(JSContext *cx, HandleObject objArg, MutableHan
     ObjectValueMap *map = obj->as<WeakMapObject>().getMap();
     if (map) {
         // Prevent GC from mutating the weakmap while iterating.
-        gc::AutoSuppressGC suppress(cx);
+        AutoSuppressGC suppress(cx);
         for (ObjectValueMap::Base::Range r = map->all(); !r.empty(); r.popFront()) {
             RootedObject key(cx, r.front().key());
             if (!cx->compartment()->wrap(cx, &key))
