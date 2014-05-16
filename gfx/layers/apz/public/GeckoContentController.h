@@ -66,9 +66,7 @@ public:
   /**
    * Requests handling of releasing a long tap. |aPoint| is in CSS pixels,
    * relative to the current scroll offset. HandleLongTapUp will always be
-   * preceeded by HandleLongTap. However not all calls to HandleLongTap will
-   * be followed by a HandleLongTapUp (for example, if the user drags
-   * around between the long-tap and lifting their finger).
+   * preceeded by HandleLongTap
    */
   virtual void HandleLongTapUp(const CSSPoint& aPoint,
                                int32_t aModifiers,

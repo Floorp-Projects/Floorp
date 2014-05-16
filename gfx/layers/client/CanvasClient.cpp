@@ -52,10 +52,9 @@ CanvasClient::CreateCanvasClient(CanvasClientType aType,
 void
 CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 {
-  AutoRemoveTexture autoRemove(this);
   if (mBuffer &&
       (mBuffer->IsImmutable() || mBuffer->GetSize() != aSize)) {
-    autoRemove.mTexture = mBuffer;
+    GetForwarder()->RemoveTextureFromCompositable(this, mBuffer);
     mBuffer = nullptr;
   }
 

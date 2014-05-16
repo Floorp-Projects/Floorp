@@ -145,15 +145,6 @@ public:
    */
   virtual void ClearCachedResources() {}
 
-  /**
-   * Should be called when deataching a TextureClient from a Compositable, because
-   * some platforms need to do some extra book keeping when this happens (for
-   * example to properly keep track of fences on Gonk).
-   *
-   * See AutoRemoveTexture to automatically invoke this at the end of a scope.
-   */
-  virtual void RemoveTexture(TextureClient* aTexture);
-
   static CompositableClient* FromIPDLActor(PCompositableChild* aActor);
 
   /**
@@ -182,28 +173,6 @@ protected:
   TextureFlags mTextureFlags;
 
   friend class CompositableChild;
-};
-
-/**
- * Helper to call RemoveTexture at the end of a scope.
- */
-struct AutoRemoveTexture MOZ_STACK_CLASS {
-  AutoRemoveTexture(CompositableClient* aCompositable,
-                    TextureClient* aTexture = nullptr)
-    : mTexture(aTexture)
-    , mCompositable(aCompositable)
-  {}
-
-  ~AutoRemoveTexture()
-  {
-    if (mCompositable && mTexture) {
-      mCompositable->RemoveTexture(mTexture);
-    }
-  }
-
-  RefPtr<TextureClient> mTexture;
-private:
-  CompositableClient* mCompositable;
 };
 
 } // namespace

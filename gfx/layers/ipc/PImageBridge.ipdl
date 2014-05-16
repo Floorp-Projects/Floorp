@@ -36,16 +36,13 @@ parent:
   sync Update(CompositableOperation[] ops) returns (EditReply[] reply);
   async UpdateNoSwap(CompositableOperation[] ops);
 
-  // First step of the destruction sequence. This puts ImageBridge
-  // in a state in which it can't send asynchronous messages
-  // so as to not race with the upcomming Stop message and destruction.
-  // In the child side, the Stop message is not sent right after WillStop,
-  // it is scheduled in the ImageBridgeChild's message queue in order to ensure
-  // that all of the messages from the parent side have been received and processed
-  // before sending Stop, and that after Stop returns, there is no message in
-  // flight on any side and we can safely destroy the channel and threads.
-  sync WillStop();
-  // Second step
+  // First step of the destruction sequence. This puts all the ImageContainerParents
+  // in a state in which they can't send asynchronous messages to their child
+  // counterpart so as to not race with the upcomming __delete__ message.
+  // In the child side, the __delete__ messages are not sent right after Stop,
+  // they are scheduled in the ImageBridgeChild's message queue in order to ensure
+  // that all the messages from the parent side have been received and processed
+  // before sending __delete__.
   sync Stop();
 
   sync PCompositable(TextureInfo aInfo) returns (uint64_t id);

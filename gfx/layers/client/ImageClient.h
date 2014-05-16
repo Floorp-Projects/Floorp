@@ -75,10 +75,8 @@ public:
   virtual void FlushAllImages(bool aExceptFront,
                               AsyncTransactionTracker* aAsyncTransactionTracker) {}
 
-  virtual void RemoveTexture(TextureClient* aTexture) MOZ_OVERRIDE;
-
-  void RemoveTextureWithTracker(TextureClient* aTexture,
-                                AsyncTransactionTracker* aAsyncTransactionTracker = nullptr);
+  virtual void RemoveTextureFromCompositable(TextureClient* aTexture,
+                                             AsyncTransactionTracker* aAsyncTransactionTracker = nullptr);
 
 protected:
   ImageClient(CompositableForwarder* aFwd, TextureFlags aFlags,

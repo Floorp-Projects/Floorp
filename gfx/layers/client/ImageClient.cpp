@@ -111,14 +111,8 @@ ImageClient::CreateImageClient(CompositableType aCompositableHostType,
 }
 
 void
-ImageClient::RemoveTexture(TextureClient* aTexture)
-{
-  RemoveTextureWithTracker(aTexture, nullptr);
-}
-
-void
-ImageClient::RemoveTextureWithTracker(TextureClient* aTexture,
-                                      AsyncTransactionTracker* aAsyncTransactionTracker)
+ImageClient::RemoveTextureFromCompositable(TextureClient* aTexture,
+                                           AsyncTransactionTracker* aAsyncTransactionTracker)
 {
 #ifdef MOZ_WIDGET_GONK
   // AsyncTransactionTracker is supported only on ImageBridge.
@@ -177,7 +171,7 @@ ImageClientSingle::FlushAllImages(bool aExceptFront,
                                   AsyncTransactionTracker* aAsyncTransactionTracker)
 {
   if (!aExceptFront && mFrontBuffer) {
-    RemoveTextureWithTracker(mFrontBuffer, aAsyncTransactionTracker);
+    RemoveTextureFromCompositable(mFrontBuffer, aAsyncTransactionTracker);
     mFrontBuffer = nullptr;
   } else if(aAsyncTransactionTracker) {
     // already flushed
@@ -190,11 +184,11 @@ ImageClientBuffered::FlushAllImages(bool aExceptFront,
                                     AsyncTransactionTracker* aAsyncTransactionTracker)
 {
   if (!aExceptFront && mFrontBuffer) {
-    RemoveTexture(mFrontBuffer);
+    RemoveTextureFromCompositable(mFrontBuffer);
     mFrontBuffer = nullptr;
   }
   if (mBackBuffer) {
-    RemoveTextureWithTracker(mBackBuffer, aAsyncTransactionTracker);
+    RemoveTextureFromCompositable(mBackBuffer, aAsyncTransactionTracker);
     mBackBuffer = nullptr;
   }
 }
@@ -223,13 +217,13 @@ ImageClientSingle::UpdateImageInternal(ImageContainer* aContainer,
     return true;
   }
 
-  AutoRemoveTexture autoRemoveTexture(this);
-
   if (image->AsSharedImage() && image->AsSharedImage()->GetTextureClient(this)) {
     // fast path: no need to allocate and/or copy image data
     RefPtr<TextureClient> texture = image->AsSharedImage()->GetTextureClient(this);
 
-    autoRemoveTexture.mTexture = mFrontBuffer;
+    if (mFrontBuffer) {
+      RemoveTextureFromCompositable(mFrontBuffer);
+    }
     mFrontBuffer = texture;
     if (!AddTextureClient(texture)) {
       mFrontBuffer = nullptr;
@@ -245,7 +239,7 @@ ImageClientSingle::UpdateImageInternal(ImageContainer* aContainer,
     }
 
     if (mFrontBuffer && mFrontBuffer->IsImmutable()) {
-      autoRemoveTexture.mTexture = mFrontBuffer;
+      RemoveTextureFromCompositable(mFrontBuffer);
       mFrontBuffer = nullptr;
     }
 
@@ -289,7 +283,7 @@ ImageClientSingle::UpdateImageInternal(ImageContainer* aContainer,
     gfx::IntSize size = gfx::IntSize(image->GetSize().width, image->GetSize().height);
 
     if (mFrontBuffer) {
-      autoRemoveTexture.mTexture = mFrontBuffer;
+      RemoveTextureFromCompositable(mFrontBuffer);
       mFrontBuffer = nullptr;
     }
 
@@ -310,7 +304,7 @@ ImageClientSingle::UpdateImageInternal(ImageContainer* aContainer,
 
     if (mFrontBuffer &&
         (mFrontBuffer->IsImmutable() || mFrontBuffer->GetSize() != size)) {
-      autoRemoveTexture.mTexture = mFrontBuffer;
+      RemoveTextureFromCompositable(mFrontBuffer);
       mFrontBuffer = nullptr;
     }
 
