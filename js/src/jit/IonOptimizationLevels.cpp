@@ -42,6 +42,7 @@ OptimizationInfo::initNormalOptimizationInfo()
     smallFunctionMaxInlineDepth_ = 10;
     compilerWarmUpThreshold_ = 1000;
     inliningWarmUpThresholdFactor_ = 0.125;
+    inliningRecompileThresholdFactor_ = 4;
 }
 
 void
