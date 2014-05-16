@@ -36,7 +36,7 @@ public:
   NS_DECL_NSAHTTPSEGMENTREADER
   NS_DECL_NSAHTTPSEGMENTWRITER
 
-  SpdySession31(nsAHttpTransaction *, nsISocketTransport *, int32_t);
+  SpdySession31(nsISocketTransport *);
   ~SpdySession31();
 
   bool AddStream(nsAHttpTransaction *, int32_t);

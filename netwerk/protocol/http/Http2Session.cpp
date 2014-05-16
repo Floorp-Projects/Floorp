@@ -63,9 +63,7 @@ do {                             \
   return NS_ERROR_ILLEGAL_VALUE; \
   } while (0)
 
-Http2Session::Http2Session(nsAHttpTransaction *aHttpTransaction,
-                           nsISocketTransport *aSocketTransport,
-                           int32_t firstPriority)
+Http2Session::Http2Session(nsISocketTransport *aSocketTransport)
   : mSocketTransport(aSocketTransport)
   , mSegmentReader(nullptr)
   , mSegmentWriter(nullptr)
@@ -100,30 +98,26 @@ Http2Session::Http2Session(nsAHttpTransaction *aHttpTransaction,
   , mLastReadEpoch(PR_IntervalNow())
   , mPingSentEpoch(0)
 {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
-    static uint64_t sSerial;
-    mSerial = ++sSerial;
+  static uint64_t sSerial;
+  mSerial = ++sSerial;
 
-    LOG3(("Http2Session::Http2Session %p transaction 1 = %p serial=0x%X\n",
-          this, aHttpTransaction, mSerial));
+  LOG3(("Http2Session::Http2Session %p serial=0x%X\n", this, mSerial));
 
-    mConnection = aHttpTransaction->Connection();
-    mInputFrameBuffer = new char[mInputFrameBufferSize];
-    mOutputQueueBuffer = new char[mOutputQueueSize];
-    mDecompressBuffer.SetCapacity(kDefaultBufferSize);
-    mDecompressor.SetCompressor(&mCompressor);
+  mInputFrameBuffer = new char[mInputFrameBufferSize];
+  mOutputQueueBuffer = new char[mOutputQueueSize];
+  mDecompressBuffer.SetCapacity(kDefaultBufferSize);
+  mDecompressor.SetCompressor(&mCompressor);
 
-    mPushAllowance = gHttpHandler->SpdyPushAllowance();
+  mPushAllowance = gHttpHandler->SpdyPushAllowance();
 
-    mSendingChunkSize = gHttpHandler->SpdySendingChunkSize();
-    SendHello();
+  mSendingChunkSize = gHttpHandler->SpdySendingChunkSize();
+  SendHello();
 
-    if (!aHttpTransaction->IsNullTransaction())
-      AddStream(aHttpTransaction, firstPriority);
-    mLastDataReadEpoch = mLastReadEpoch;
+  mLastDataReadEpoch = mLastReadEpoch;
 
-    mPingThreshold = gHttpHandler->SpdyPingThreshold();
+  mPingThreshold = gHttpHandler->SpdyPingThreshold();
 }
 
 // Copy the 32 bit number into the destination, using network byte order
@@ -390,6 +384,18 @@ Http2Session::AddStream(nsAHttpTransaction *aHttpTransaction,
     return false;
   }
 
+  // assert that
+  // a] in the case we have a connection, that the new transaction connection
+  //    is either undefined or on the same connection
+  // b] in the case we don't have a connection, that the new transaction
+  //    connection is defined so we can adopt it
+  MOZ_ASSERT((mConnection && (!aHttpTransaction->Connection() ||
+                              mConnection == aHttpTransaction->Connection())) ||
+             (!mConnection && aHttpTransaction->Connection()));
+
+  if (!mConnection) {
+    mConnection = aHttpTransaction->Connection();
+  }
   aHttpTransaction->SetConnection(this);
   Http2Stream *stream = new Http2Stream(aHttpTransaction, this, aPriority);
 
