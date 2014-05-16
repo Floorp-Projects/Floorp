@@ -122,8 +122,8 @@ add_task(function* test_disableExperiments() {
   defineNow(gPolicy, now);
 
   yield experiments.updateManifest();
-  Assert.equal(observerFireCount, 0,
-               "Experiments observer should not have been called yet.");
+  Assert.equal(observerFireCount, ++expectedObserverFireCount,
+               "Experiments observer should have been called.");
   let list = yield experiments.getExperiments();
   Assert.equal(list.length, 0, "Experiment list should be empty.");
   let addons = yield getExperimentAddons();
