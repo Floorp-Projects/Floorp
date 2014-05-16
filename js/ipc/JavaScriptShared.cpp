@@ -173,14 +173,8 @@ JavaScriptShared::toVariant(JSContext *cx, JS::HandleValue from, JSVariant *to)
 {
     switch (JS_TypeOfValue(cx, from)) {
       case JSTYPE_VOID:
-        *to = void_t();
+        *to = UndefinedVariant();
         return true;
-
-      case JSTYPE_NULL:
-      {
-        *to = uint64_t(0);
-        return true;
-      }
 
       case JSTYPE_OBJECT:
       case JSTYPE_FUNCTION:
@@ -188,7 +182,7 @@ JavaScriptShared::toVariant(JSContext *cx, JS::HandleValue from, JSVariant *to)
         RootedObject obj(cx, from.toObjectOrNull());
         if (!obj) {
             MOZ_ASSERT(from == JSVAL_NULL);
-            *to = uint64_t(0);
+            *to = NullVariant();
             return true;
         }
 
@@ -203,7 +197,7 @@ JavaScriptShared::toVariant(JSContext *cx, JS::HandleValue from, JSVariant *to)
         ObjectId id;
         if (!toId(cx, obj, &id))
             return false;
-        *to = uint64_t(id);
+        *to = ObjectVariant(id);
         return true;
       }
 
@@ -237,21 +231,21 @@ bool
 JavaScriptShared::fromVariant(JSContext *cx, const JSVariant &from, MutableHandleValue to)
 {
     switch (from.type()) {
-        case JSVariant::Tvoid_t:
+        case JSVariant::TUndefinedVariant:
           to.set(UndefinedValue());
           return true;
 
-        case JSVariant::Tuint64_t:
+        case JSVariant::TNullVariant:
+          to.set(NullValue());
+          return true;
+
+        case JSVariant::TObjectVariant:
         {
-          ObjectId id = from.get_uint64_t();
-          if (id) {
-              JSObject *obj = fromId(cx, id);
-              if (!obj)
-                  return false;
-              to.set(ObjectValue(*obj));
-          } else {
-              to.set(JSVAL_NULL);
-          }
+          ObjectId id = from.get_ObjectVariant().id();
+          JSObject *obj = fromId(cx, id);
+          if (!obj)
+              return false;
+          to.set(ObjectValue(*obj));
           return true;
         }
 

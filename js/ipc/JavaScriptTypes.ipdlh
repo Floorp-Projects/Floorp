@@ -27,11 +27,20 @@ struct JSIID
     uint8_t m3_7;
 };
 
+struct ObjectVariant
+{
+    uint64_t id;
+};
+
+struct UndefinedVariant {};
+struct NullVariant {};
+
 union JSVariant
 {
-    void_t;     /* |undefined| */
+    UndefinedVariant;
+    NullVariant;
+    ObjectVariant;
     nsString;   /* StringValue(x) */
-    uint64_t;   /* ID that maps to a JSObject (cpow on parent, original on child). */
     double;     /* NumberValue(x) */
     bool;       /* BooleanValue(x) */
     JSIID;      /* XPC nsIID */
