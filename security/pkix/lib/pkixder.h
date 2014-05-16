@@ -163,6 +163,31 @@ public:
     return true;
   }
 
+  template <uint16_t N>
+  bool MatchTLV(uint8_t tag, uint16_t len, const uint8_t (&value)[N])
+  {
+    static_assert(N <= 127, "buffer larger than largest length supported");
+    if (len > N) {
+      PR_NOT_REACHED("overflow prevented dynamically instead of statically");
+      return false;
+    }
+    uint16_t totalLen = 2u + len;
+    if (EnsureLength(totalLen) != Success) {
+      return false;
+    }
+    if (*input != tag) {
+      return false;
+    }
+    if (*(input + 1) != len) {
+      return false;
+    }
+    if (memcmp(input + 2, value, len)) {
+      return false;
+    }
+    input += totalLen;
+    return true;
+  }
+
   Result Skip(uint16_t len)
   {
     if (EnsureLength(len) != Success) {
