@@ -179,9 +179,9 @@ this.BookmarkHTMLUtils = Object.freeze({
     return Task.spawn(function* () {
       notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_BEGIN, aInitialImport);
       try {
-        if (!(yield OS.File.exists(aFilePath)))
-          throw new Error("Cannot import from nonexisting html file");
-
+        if (!(yield OS.File.exists(aFilePath))) {
+          throw new Error("Cannot import from nonexisting html file: " + aFilePath);
+        }
         let importer = new BookmarkImporter(aInitialImport);
         yield importer.importFromURL(OS.Path.toFileURI(aFilePath));
 

@@ -398,7 +398,6 @@ html|a.inline-link {
 
 checkbox {
   -moz-margin-start: 0;
-  position: relative;
 }
 
 .checkbox-check {
@@ -409,13 +408,27 @@ checkbox {
   border: 1px solid rgba(23,50,77,0.40);
   -moz-margin-end: 10px;
   background-color: #f1f1f1;
-  background-image: linear-gradient(#ffffff 0%, rgba(255,255,255,0.80) 100%);
+  background-image: linear-gradient(#ffffff, rgba(255,255,255,0.8));
+  background-position: center center;
+  background-repeat: no-repeat;
   box-shadow: 0 1px 1px 0 #ffffff, inset 0 2px 0 0 rgba(0,0,0,0.03);
+}
+
+checkbox:not([disabled="true"]):not([checked]):hover .checkbox-check {
+  background-image: -moz-image-rect(url("chrome://browser/skin/preferences/in-content/check.png"), 0, 15, 10, 0),
+                    linear-gradient(#ffffff, rgba(255,255,255,0.8));
 }
 
 .checkbox-check[checked] {
   border-color: #0096dc;
+  background-image: -moz-image-rect(url("chrome://browser/skin/preferences/in-content/check.png"), 0, 30, 10, 15),
+                    /* !important needed to override toolkit !important rule */
+                    linear-gradient(#ffffff, rgba(255,255,255,0.8)) !important;
   box-shadow: 0 0 2px 2px rgba(0,150,220,0.35), inset 0 0 2px 0 #0096dc;
+}
+
+checkbox[disabled="true"] .checkbox-check {
+  opacity: 0.5;
 }
 
 .checkbox-label-box {
@@ -423,28 +436,17 @@ checkbox {
   -moz-padding-start: 0;
 }
 
-checkbox:hover::before,
-checkbox[checked]::before {
-  position: absolute;
-  content: "";
-  width: 15px;
-  height: 10px;
-  background-image: url("chrome://browser/skin/preferences/in-content/check.png");
-}
-
-checkbox[checked]::before {
-  background-position: -15px 0;
-}
-
 @media (min-resolution: 2dppx) {
-  checkbox:hover::before {
-    background-size: cover;
-    background-image: -moz-image-rect(url("chrome://browser/skin/preferences/in-content/check@2x.png"), 0, 30, 30, 0);
+  checkbox:not([checked]):hover .checkbox-check {
+    background-size: 15px 10px, auto;
+    background-image: -moz-image-rect(url("chrome://browser/skin/preferences/in-content/check@2x.png"), 0, 30, 20, 0),
+                      linear-gradient(#ffffff, rgba(255,255,255,0.8));
   }
 
-  checkbox[checked]::before {
-    background-size: cover;
-    background-image: -moz-image-rect(url("chrome://browser/skin/preferences/in-content/check@2x.png"), 0, 60, 30, 30);
+  .checkbox-check[checked] {
+    background-size: 15px 10px, auto;
+    background-image: -moz-image-rect(url("chrome://browser/skin/preferences/in-content/check@2x.png"), 0, 60, 20, 30),
+                      linear-gradient(#ffffff, rgba(255,255,255,0.8)) !important;
   }
 }
 
@@ -456,37 +458,34 @@ checkbox[checked]::before {
   border-radius: 50%;
   -moz-margin-end: 10px;
   background-color: #f1f1f1;
-  background-image: linear-gradient(#ffffff 0%, rgba(255,255,255,0.80) 100%);
+  background-image: linear-gradient(#ffffff, rgba(255,255,255,0.80));
   box-shadow: 0 1px 1px 0 #ffffff, inset 0 2px 0 0 rgba(0,0,0,0.03);
+}
+
+radio:not([selected]):hover .radio-check {
+  background-image: radial-gradient(circle, rgba(23,146,229,0.25),
+                    rgba(76,177,255,0.25) 5.5px, rgba(76,177,255,0.05) 6px,
+                    transparent 6px),
+                    linear-gradient(#ffffff, rgba(255,255,255,0.8));
 }
 
 .radio-check[selected] {
   border-color: #0096dc;
+  background-image: radial-gradient(circle, rgb(23,146,229),
+                    rgb(76,177,255) 5.5px, rgba(76,177,255,0.2) 6px,
+                    transparent 6px),
+                    linear-gradient(rgb(255,255,255), rgba(255,255,255,0.8));
   box-shadow: 0 0 2px 2px rgba(0,150,220,0.35), inset 0 0 2px 0 #0096dc;
+}
+
+radio[disabled="true"] .radio-check {
+  opacity: 0.5;
 }
 
 .radio-label-box {
   -moz-margin-start: -1px; /* negative margin for the transparent border */
   -moz-margin-end: 10px;
   -moz-padding-start: 0;
-}
-
-radio {
-  position: relative;
-}
-
-radio:hover::before,
-radio[selected]::before {
-  position: absolute;
-  content: "";
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background-image: linear-gradient(rgba(76,177,255,0.25) 0%, rgba(23,146,229,0.25) 100%);
-}
-
-radio[selected]::before {
-  background-image: linear-gradient(#4cb1ff 0%, #1792e5 100%);
 }
 
 /* Category List */

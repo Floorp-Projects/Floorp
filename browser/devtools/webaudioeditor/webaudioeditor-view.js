@@ -232,7 +232,7 @@ let WebAudioGraphView = {
     if (!node)
       return;
 
-    window.emit(EVENTS.UI_SELECT_NODE, node.getAttribute('data-id'));
+    window.emit(EVENTS.UI_SELECT_NODE, node.getAttribute("data-id"));
   }
 };
 
@@ -256,7 +256,7 @@ let WebAudioInspectorView = {
 
     // Hide inspector view on startup
     this._inspectorPane.setAttribute("width", INSPECTOR_WIDTH);
-    this.toggleInspector(false);
+    this.toggleInspector({ visible: false, delayed: false, animated: false });
 
     this._onEval = this._onEval.bind(this);
     this._onNodeSelect = this._onNodeSelect.bind(this);
@@ -284,19 +284,23 @@ let WebAudioInspectorView = {
   /**
    * Toggles the visibility of the AudioNode Inspector.
    *
-   * @param boolean visible
-   *        A flag indicating whether or not the AudioNode Inspector should be shown.
+   * @param object visible
+   *        - visible: boolean indicating whether the panel should be shown or not
+   *        - animated: boolean indiciating whether the pane should be animated
+   *        - delayed: boolean indicating whether the pane's opening should wait
+   *                   a few cycles or not
+   *        - index: the index of the tab to be selected inside the inspector
    * @param number index
    *        Index of the tab that should be selected when shown.
    */
-  toggleInspector: function (visible, index) {
+  toggleInspector: function ({ visible, animated, delayed, index }) {
     let pane = this._inspectorPane;
     let button = this._inspectorPaneToggleButton;
 
     let flags = {
       visible: visible,
-      animated: true,
-      delayed: true,
+      animated: animated != null ? animated : true,
+      delayed: delayed != null ? delayed : true,
       callback: () => window.emit(EVENTS.UI_INSPECTOR_TOGGLED, visible)
     };
 
@@ -362,6 +366,9 @@ let WebAudioInspectorView = {
     this._propsView.empty();
     // Set current node to empty to load empty view
     this.setCurrentAudioNode();
+
+    // Reset AudioNode inspector and hide
+    this.toggleInspector({ visible: false, animated: false, delayed: false });
   },
 
   /**
@@ -457,14 +464,14 @@ let WebAudioInspectorView = {
     this.setCurrentAudioNode(getViewNodeById(id));
 
     // Ensure inspector is visible when selecting a new node
-    this.toggleInspector(true);
+    this.toggleInspector({ visible: true });
   },
 
   /**
    * Called when clicking on the toggling the inspector into view.
    */
   _onTogglePaneClick: function () {
-    this.toggleInspector(!this.isVisible());
+    this.toggleInspector({ visible: !this.isVisible() });
   },
 
   /**
