@@ -11,6 +11,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript" src="chrome://browser/content/browser.js"/>
+  <script type="application/javascript" src="chrome://browser/content/downloads.js"/>
 
   <deck id="browsers" flex="1"/>
 
