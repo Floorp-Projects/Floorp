@@ -660,6 +660,7 @@ class IonBuilder
     {
         InliningStatus_Error,
         InliningStatus_NotInlined,
+        InliningStatus_WarmUpCountTooLow,
         InliningStatus_Inlined
     };
 
@@ -667,7 +668,8 @@ class IonBuilder
     {
         InliningDecision_Error,
         InliningDecision_Inline,
-        InliningDecision_DontInline
+        InliningDecision_DontInline,
+        InliningDecision_WarmUpCountTooLow
     };
 
     static InliningDecision DontInline(JSScript *targetScript, const char *reason);

@@ -93,7 +93,7 @@ MethodStatus CanEnterInParallel(JSContext *cx, HandleScript script);
 
 MethodStatus
 Recompile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode *osrPc,
-          bool constructing);
+          bool constructing, bool force);
 
 enum IonExecStatus
 {
