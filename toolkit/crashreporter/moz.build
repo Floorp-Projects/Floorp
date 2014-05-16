@@ -103,3 +103,10 @@ LOCAL_INCLUDES += [
     'google-breakpad/src',
 ]
 
+# Suppress warnings in third-party code.
+if CONFIG['_MSC_VER']:
+    CXXFLAGS += [
+        '-wd4005', # macro redefinition
+    ]
+
+FAIL_ON_WARNINGS = True

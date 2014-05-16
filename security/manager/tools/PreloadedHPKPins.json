@@ -67,10 +67,14 @@
   ],
 
   "entries": [
+    // Only domains that are operationally crucial to Firefox can have per-host
+    // telemetry reporting (the "id") field
     { "name": "addons.mozilla.org", "include_subdomains": true,
-      "pins": "mozilla", "test_mode": true },
+      "pins": "mozilla", "test_mode": true, "id": 1 },
     { "name": "addons.mozilla.net", "include_subdomains": true,
-      "pins": "mozilla", "test_mode": true },
+      "pins": "mozilla", "test_mode": true, "id": 2 },
+    { "name": "aus4.mozilla.org", "include_subdomains": true,
+      "pins": "mozilla", "test_mode": true, "id": 3 },
     { "name": "cdn.mozilla.net", "include_subdomains": true,
       "pins": "mozilla", "test_mode": true},
     { "name": "cdn.mozilla.org", "include_subdomains": true,
@@ -80,9 +84,10 @@
     { "name": "include-subdomains.pinning.example.com",
       "include_subdomains": true, "pins": "mozilla_test",
       "test_mode": false },
+    // Example domain to collect per-host stats for telemetry tests.
     { "name": "exclude-subdomains.pinning.example.com",
       "include_subdomains": false, "pins": "mozilla_test",
-      "test_mode": false },
+      "test_mode": false, "id": 0 },
     { "name": "test-mode.pinning.example.com", "include_subdomains": true,
       "pins": "mozilla_test", "test_mode": true }
   ]

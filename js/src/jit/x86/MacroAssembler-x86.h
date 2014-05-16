@@ -699,6 +699,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void storePtr(Register src, const Address &address) {
         movl(src, Operand(address));
     }
+    void storePtr(Register src, const BaseIndex &address) {
+        movl(src, Operand(address));
+    }
     void storePtr(Register src, const Operand &dest) {
         movl(src, dest);
     }
@@ -981,6 +984,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
     void rshiftPtr(Imm32 imm, Register dest) {
         shrl(imm, dest);
+    }
+    void rshiftPtrArithmetic(Imm32 imm, Register dest) {
+        sarl(imm, dest);
     }
     void lshiftPtr(Imm32 imm, Register dest) {
         shll(imm, dest);

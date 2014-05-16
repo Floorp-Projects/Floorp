@@ -69,7 +69,7 @@ const jschar NO_BREAK_SPACE  = 0x00A0;
 
 class CharacterInfo {
     /*
-     * upperCase and loweCase normally store the delta between two
+     * upperCase and lowerCase normally store the delta between two
      * letters. For example the lower case alpha (a) has the char code
      * 97, and the upper case alpha (A) has 65. So for "a" we would
      * store -32 in upperCase (97 + (-32) = 65) and 0 in lowerCase,

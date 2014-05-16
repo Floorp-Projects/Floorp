@@ -31,7 +31,7 @@
 #include "yarr/Yarr.h"
 #include "yarr/YarrCanonicalizeUCS2.h"
 
-#if ENABLE_YARR_JIT
+#if JS_ION
 
 using namespace WTF;
 
