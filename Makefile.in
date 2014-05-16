@@ -132,6 +132,7 @@ install-manifests: install-tests
 install-tests: $(install_manifest_depends)
 	$(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )_tests _build_manifests/install/tests)
 
+include $(topsrcdir)/build/moz-automation.mk
 
 # _tests should be purged during cleaning. However, we don't want it purged
 # during PGO builds because it contains some auto-generated files.
@@ -168,7 +169,7 @@ endif
 endif
 
 default all::
-	$(call BUILDSTATUS,TIERS export $(if $(COMPILE_ENVIRONMENT),$(if $(MOZ_PSEUDO_DERECURSE),compile ))libs tools)
+	$(call BUILDSTATUS,TIERS export $(if $(COMPILE_ENVIRONMENT),$(if $(MOZ_PSEUDO_DERECURSE),compile ))libs tools $(if $(MOZ_AUTOMATION),$(MOZ_AUTOMATION_TIERS)))
 
 include $(topsrcdir)/config/rules.mk
 
@@ -250,6 +251,9 @@ endif
 MOZ_SOURCE_STAMP := $(MOZ_SOURCE_STAMP)
 export MOZ_SOURCE_STAMP
 endif
+
+update-packaging:
+	$(MAKE) -C tools/update-packaging
 
 #XXX: this is a hack, since we don't want to clobber for MSVC
 # PGO support, but we can't do this test in client.mk
