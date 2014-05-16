@@ -69,7 +69,7 @@
            " i=(%ld %lld) cb=(%d %d %d %d) rcs=(%.3f %.3f) dp=(%.3f %.3f %.3f %.3f) dpm=(%.3f %.3f %.3f %.3f) um=%d " \
            "v=(%.3f %.3f %.3f %.3f) s=(%.3f %.3f) sr=(%.3f %.3f %.3f %.3f) z(ld=%.3f r=%.3f cr=%.3f z=%.3f ts=%.3f) u=(%d %lu)\n", \
            __VA_ARGS__, \
-           fm.mPresShellId, fm.GetScrollId(), \
+           fm.GetPresShellId(), fm.GetScrollId(), \
            fm.mCompositionBounds.x, fm.mCompositionBounds.y, fm.mCompositionBounds.width, fm.mCompositionBounds.height, \
            fm.GetRootCompositionSize().width, fm.GetRootCompositionSize().height, \
            fm.mDisplayPort.x, fm.mDisplayPort.y, fm.mDisplayPort.width, fm.mDisplayPort.height, \
@@ -1604,7 +1604,7 @@ void AsyncPanZoomController::RequestContentRepaint(FrameMetrics& aFrameMetrics) 
                       aFrameMetrics),
     GetFrameTime());
 
-  aFrameMetrics.mPresShellId = mLastContentPaintMetrics.mPresShellId;
+  aFrameMetrics.SetPresShellId(mLastContentPaintMetrics.GetPresShellId());
   mLastPaintRequestMetrics = aFrameMetrics;
 }
 
