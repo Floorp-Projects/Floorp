@@ -124,7 +124,10 @@ class JavaScriptShared
     static void ConvertID(const nsID &from, JSIID *to);
     static void ConvertID(const JSIID &from, nsID *to);
 
-    JSObject *findObject(uint32_t objId) {
+    JSObject *findCPOWById(uint32_t objId) {
+        return objects_.find(objId);
+    }
+    JSObject *findObjectById(uint32_t objId) {
         return objects_.find(objId);
     }
 
