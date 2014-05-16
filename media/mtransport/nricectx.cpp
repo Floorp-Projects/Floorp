@@ -520,6 +520,10 @@ nsresult NrIceCtx::SetControlling(Controlling controlling) {
   return NS_OK;
 }
 
+NrIceCtx::Controlling NrIceCtx::GetControlling() {
+  return (peer_->controlling) ? ICE_CONTROLLING : ICE_CONTROLLED;
+}
+
 nsresult NrIceCtx::SetStunServers(const std::vector<NrIceStunServer>&
                                   stun_servers) {
   if (stun_servers.empty())
