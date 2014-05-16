@@ -35,8 +35,7 @@
   min-width: 30px;
   min-height: 28px;
   margin: 0;
-  list-style-image: url(profiler-stopwatch.png);
-  -moz-image-region: rect(0px,16px,16px,0px);
+  list-style-image: url(profiler-stopwatch.svg);
 }
 
 #empty-notice > button .button-text {
@@ -74,12 +73,11 @@
 }
 
 #record-snapshot {
-  list-style-image: url("chrome://browser/skin/devtools/profiler-stopwatch.png");
-  -moz-image-region: rect(0px,16px,16px,0px);
+  list-style-image: url("chrome://browser/skin/devtools/profiler-stopwatch.svg");
 }
 
 #record-snapshot[checked] {
-  -moz-image-region: rect(0px,32px,16px,16px);
+  list-style-image: url("chrome://browser/skin/devtools/profiler-stopwatch-checked.svg");
 }
 
 /* Snapshots items */
