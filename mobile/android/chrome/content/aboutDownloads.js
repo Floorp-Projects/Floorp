@@ -1,354 +1,617 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
 
-const Cu = Components.utils;
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/DownloadUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/PluralForm.jsm");
+Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
-
-XPCOMUtils.defineLazyModuleGetter(this, "Downloads", "resource://gre/modules/Downloads.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "DownloadUtils", "resource://gre/modules/DownloadUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "strings",
-                            () => Services.strings.createBundle("chrome://browser/locale/aboutDownloads.properties"));
+let gStrings = Services.strings.createBundle("chrome://browser/locale/aboutDownloads.properties");
 
-function deleteDownload(download) {
-  download.finalize(true).then(null, Cu.reportError);
-  OS.File.remove(download.target.path).then(null, ex => {
-    if (!(ex instanceof OS.File.Error && ex.becauseNoSuchFile)) {
-      Cu.reportError(ex);
-    }
-  });
-}
+let downloadTemplate =
+"<li downloadGUID='{guid}' class='list-item' role='button' state='{state}' contextmenu='downloadmenu'>" +
+  "<img class='icon' src='{icon}'/>" +
+  "<div class='details'>" +
+     "<div class='row'>" +
+       // This is a hack so that we can crop this label in its center
+       "<xul:label class='title' crop='center' value='{target}'/>" +
+       "<div class='date'>{date}</div>" +
+     "</div>" +
+     "<div class='size'>{size}</div>" +
+     "<div class='domain'>{domain}</div>" +
+     "<div class='displayState'>{displayState}</div>" +
+  "</div>" +
+"</li>";
 
-let contextMenu = {
-  _items: [],
-  _targetDownload: null,
+XPCOMUtils.defineLazyGetter(window, "gChromeWin", function ()
+  window.QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIWebNavigation)
+    .QueryInterface(Ci.nsIDocShellTreeItem)
+    .rootTreeItem
+    .QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIDOMWindow)
+    .QueryInterface(Ci.nsIDOMChromeWindow));
 
-  init: function () {
-    let element = document.getElementById("downloadmenu");
-    element.addEventListener("click",
-                             event => event.download = this._targetDownload,
-                             true);
 
-    this._items = [
-      new ContextMenuItem("open",
-                          download => download.succeeded,
-                          download => download.launch().then(null, Cu.reportError)),
-      new ContextMenuItem("retry",
-                          download => download.error ||
-                                      (download.canceled && !download.hasPartialData),
-                          download => download.start().then(null, Cu.reportError)),
-      new ContextMenuItem("remove",
-                          download => download.stopped,
-                          download => {
-                            Downloads.getList(Downloads.ALL)
-                                     .then(list => list.remove(download))
-                                     .then(null, Cu.reportError);
-                            deleteDownload(download);
-                          }),
-      new ContextMenuItem("pause",
-                          download => !download.stopped,
-                          download => download.cancel().then(null, Cu.reportError)),
-      new ContextMenuItem("resume",
-                          download => download.canceled && download.hasPartialData,
-                          download => download.start().then(null, Cu.reportError)),
-      new ContextMenuItem("cancel",
-                          download => !download.stopped ||
-                                      (download.canceled && download.hasPartialData),
-                          download => {
-                            download.cancel().then(null, Cu.reportError);
-                            download.removePartialData().then(null, Cu.reportError);
-                          }),
-      // following menu item is a global action
-      new ContextMenuItem("removeall",
-                          () => downloadLists.finished.length > 0,
-                          () => downloadLists.removeFinished())
+var ContextMenus = {
+  target: null,
+
+  init: function() {
+    document.addEventListener("contextmenu", this, false);
+    document.getElementById("contextmenu-open").addEventListener("click", this.open.bind(this), false);
+    document.getElementById("contextmenu-retry").addEventListener("click", this.retry.bind(this), false);
+    document.getElementById("contextmenu-remove").addEventListener("click", this.remove.bind(this), false);
+    document.getElementById("contextmenu-pause").addEventListener("click", this.pause.bind(this), false);
+    document.getElementById("contextmenu-resume").addEventListener("click", this.resume.bind(this), false);
+    document.getElementById("contextmenu-cancel").addEventListener("click", this.cancel.bind(this), false);
+    document.getElementById("contextmenu-removeall").addEventListener("click", this.removeAll.bind(this), false);
+    this.items = [
+      { name: "open", states: [Downloads._dlmgr.DOWNLOAD_FINISHED] },
+      { name: "retry", states: [Downloads._dlmgr.DOWNLOAD_FAILED, Downloads._dlmgr.DOWNLOAD_CANCELED] },
+      { name: "remove", states: [Downloads._dlmgr.DOWNLOAD_FINISHED,Downloads._dlmgr.DOWNLOAD_FAILED, Downloads._dlmgr.DOWNLOAD_CANCELED] },
+      { name: "removeall", states: [Downloads._dlmgr.DOWNLOAD_FINISHED,Downloads._dlmgr.DOWNLOAD_FAILED, Downloads._dlmgr.DOWNLOAD_CANCELED] },
+      { name: "pause", states: [Downloads._dlmgr.DOWNLOAD_DOWNLOADING] },
+      { name: "resume", states: [Downloads._dlmgr.DOWNLOAD_PAUSED] },
+      { name: "cancel", states: [Downloads._dlmgr.DOWNLOAD_DOWNLOADING, Downloads._dlmgr.DOWNLOAD_NOTSTARTED, Downloads._dlmgr.DOWNLOAD_QUEUED, Downloads._dlmgr.DOWNLOAD_PAUSED] },
     ];
   },
 
-  addContextMenuEventListener: function (element) {
-    element.addEventListener("contextmenu", this.onContextMenu.bind(this));
+  handleEvent: function(event) {
+    // store the target of context menu events so that we know which app to act on
+    this.target = event.target;
+    while (!this.target.hasAttribute("contextmenu")) {
+      this.target = this.target.parentNode;
+    }
+    if (!this.target)
+      return;
+
+    let state = parseInt(this.target.getAttribute("state"));
+    for (let i = 0; i < this.items.length; i++) {
+      var item = this.items[i];
+      let enabled = (item.states.indexOf(state) > -1);
+      if (enabled)
+        document.getElementById("contextmenu-" + item.name).removeAttribute("hidden");
+      else
+        document.getElementById("contextmenu-" + item.name).setAttribute("hidden", "true");
+    }
   },
 
-  onContextMenu: function (event) {
-    let target = event.target;
-    while (target && !target.download) {
-      target = target.parentNode;
-    }
-    if (!target) {
-      Cu.reportError("No download found for context menu target");
-      event.preventDefault();
-      return;
-    }
+  // Open shown only for downloads that completed successfully
+  open: function(event) {
+    Downloads.openDownload(this.target);
+    this.target = null;
+  },
 
-    // capture the target download for menu items to use in a click event
-    this._targetDownload = target.download;
-    for (let item of this._items) {
-      item.updateVisibility(target.download);
-    }
+  // Retry shown when its failed, canceled, blocked(covered in failed, see _getState())
+  retry: function (event) {
+    Downloads.retryDownload(this.target);
+    this.target = null;
+  },
+
+  // Remove shown when its canceled, finished, failed(failed includes blocked and dirty, see _getState())
+  remove: function (event) {
+    Downloads.removeDownload(this.target);
+    this.target = null;
+  },
+
+  // Pause shown when item is currently downloading
+  pause: function (event) {
+    Downloads.pauseDownload(this.target);
+    this.target = null;
+  },
+
+  // Resume shown for paused items only
+  resume: function (event) {
+    Downloads.resumeDownload(this.target);
+    this.target = null;
+  },
+
+  // Cancel shown when its downloading, notstarted, queued or paused
+  cancel: function (event) {
+    Downloads.cancelDownload(this.target);
+    this.target = null;
+  },
+
+  removeAll: function(event) {
+    Downloads.removeAll();
+    this.target = null;
   }
-};
-
-function ContextMenuItem(name, isVisible, action) {
-  this.element = document.getElementById("contextmenu-" + name);
-  this.isVisible = isVisible;
-
-  this.element.addEventListener("click", event => action(event.download));
 }
 
-ContextMenuItem.prototype = {
-  updateVisibility: function (download) {
-    this.element.hidden = !this.isVisible(download);
+
+let Downloads = {
+  init: function dl_init() {
+    function onClick(evt) {
+      let target = evt.target;
+      while (target.nodeName != "li") {
+        target = target.parentNode;
+        if (!target)
+          return;
+      }
+
+      Downloads.openDownload(target);
+    }
+
+    this._normalList = document.getElementById("normal-downloads-list");
+    this._privateList = document.getElementById("private-downloads-list");
+
+    this._normalList.addEventListener("click", onClick, false);
+    this._privateList.addEventListener("click", onClick, false);
+
+    this._dlmgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
+    this._dlmgr.addPrivacyAwareListener(this);
+
+    Services.obs.addObserver(this, "last-pb-context-exited", false);
+    Services.obs.addObserver(this, "download-manager-remove-download-guid", false);
+
+    // If we have private downloads, show them all immediately. If we were to
+    // add them asynchronously, there's a small chance we could get a
+    // "last-pb-context-exited" notification before downloads are added to the
+    // list, meaning we'd show private downloads without any private tabs open.
+    let privateEntries = this.getDownloads({ isPrivate: true });
+    this._stepAddEntries(privateEntries, this._privateList, privateEntries.length);
+
+    // Add non-private downloads
+    let normalEntries = this.getDownloads({ isPrivate: false });    
+    this._stepAddEntries(normalEntries, this._normalList, 1, this._scrollToSelectedDownload.bind(this));    
+    ContextMenus.init();    
+  },
+
+  uninit: function dl_uninit() {
+    let contextmenus = gChromeWin.NativeWindow.contextmenus;
+    contextmenus.remove(this.openMenuItem);
+    contextmenus.remove(this.removeMenuItem);
+    contextmenus.remove(this.pauseMenuItem);
+    contextmenus.remove(this.resumeMenuItem);
+    contextmenus.remove(this.retryMenuItem);
+    contextmenus.remove(this.cancelMenuItem);
+    contextmenus.remove(this.deleteAllMenuItem);
+
+    this._dlmgr.removeListener(this);
+    Services.obs.removeObserver(this, "last-pb-context-exited");
+    Services.obs.removeObserver(this, "download-manager-remove-download-guid");
+  },
+
+  onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress,
+                             aCurTotalProgress, aMaxTotalProgress, aDownload) { },
+  onDownloadStateChange: function(aState, aDownload) {
+    switch (aDownload.state) {
+      case Ci.nsIDownloadManager.DOWNLOAD_FAILED:
+      case Ci.nsIDownloadManager.DOWNLOAD_CANCELED:
+      case Ci.nsIDownloadManager.DOWNLOAD_BLOCKED_PARENTAL:
+      case Ci.nsIDownloadManager.DOWNLOAD_DIRTY:
+      case Ci.nsIDownloadManager.DOWNLOAD_FINISHED:
+        // For all "completed" states, move them after active downloads
+        this._moveDownloadAfterActive(this._getElementForDownload(aDownload.guid));
+
+      // Fall-through the rest
+      case Ci.nsIDownloadManager.DOWNLOAD_SCANNING:
+      case Ci.nsIDownloadManager.DOWNLOAD_QUEUED:
+      case Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING:
+        let item = this._getElementForDownload(aDownload.guid);
+        if (item)
+          this._updateDownloadRow(item, aDownload);
+        else
+          this._insertDownloadRow(aDownload);
+        break;
+    }
+  },
+  onStateChange: function(aWebProgress, aRequest, aState, aStatus, aDownload) { },
+  onSecurityChange: function(aWebProgress, aRequest, aState, aDownload) { },
+
+  observe: function (aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "last-pb-context-exited":
+        this._privateList.innerHTML = "";
+        break;
+      case "download-manager-remove-download-guid": {
+        let guid = aSubject.QueryInterface(Ci.nsISupportsCString).data;
+        this._removeItem(this._getElementForDownload(guid));
+        break;
+      }
+    }
+  },
+
+  _moveDownloadAfterActive: function dl_moveDownloadAfterActive(aItem) {
+    // Move downloads that just reached a "completed" state below any active
+    try {
+      // Iterate down until we find a non-active download
+      let next = aItem.nextElementSibling;
+      while (next && this._inProgress(next.getAttribute("state")))
+        next = next.nextElementSibling;
+      // Move the item
+      aItem.parentNode.insertBefore(aItem, next);
+    } catch (ex) {
+      this.logError("_moveDownloadAfterActive() " + ex);
+    }
+  },
+
+  _inProgress: function dl_inProgress(aState) {
+    return [
+      this._dlmgr.DOWNLOAD_NOTSTARTED,
+      this._dlmgr.DOWNLOAD_QUEUED,
+      this._dlmgr.DOWNLOAD_DOWNLOADING,
+      this._dlmgr.DOWNLOAD_PAUSED,
+      this._dlmgr.DOWNLOAD_SCANNING,
+    ].indexOf(parseInt(aState)) != -1;
+  },
+
+  _insertDownloadRow: function dl_insertDownloadRow(aDownload) {
+    let updatedState = this._getState(aDownload.state);
+    let item = this._createItem(downloadTemplate, {
+      guid: aDownload.guid,
+      target: aDownload.displayName,
+      icon: "moz-icon://" + aDownload.displayName + "?size=64",
+      date: DownloadUtils.getReadableDates(new Date())[0],
+      domain: DownloadUtils.getURIHost(aDownload.source.spec)[0],
+      size: this._getDownloadSize(aDownload.size),
+      displayState: this._getStateString(updatedState),
+      state: updatedState
+    });
+    list = aDownload.isPrivate ? this._privateList : this._normalList;
+    list.insertAdjacentHTML("afterbegin", item);
+  },
+
+  _getDownloadSize: function dl_getDownloadSize(aSize) {
+    if (aSize > 0) {
+      let displaySize = DownloadUtils.convertByteUnits(aSize);
+      return displaySize.join(""); // [0] is size, [1] is units
+    }
+    return gStrings.GetStringFromName("downloadState.unknownSize");
+  },
+
+  // Not all states are displayed as-is on mobile, some are translated to a generic state
+  _getState: function dl_getState(aState) {
+    let str;
+    switch (aState) {
+      // Downloading and Scanning states show up as "Downloading"
+      case this._dlmgr.DOWNLOAD_DOWNLOADING:
+      case this._dlmgr.DOWNLOAD_SCANNING:
+        str = this._dlmgr.DOWNLOAD_DOWNLOADING;
+        break;
+
+      // Failed, Dirty and Blocked states show up as "Failed"
+      case this._dlmgr.DOWNLOAD_FAILED:
+      case this._dlmgr.DOWNLOAD_DIRTY:
+      case this._dlmgr.DOWNLOAD_BLOCKED_POLICY:
+      case this._dlmgr.DOWNLOAD_BLOCKED_PARENTAL:
+        str = this._dlmgr.DOWNLOAD_FAILED;
+        break;
+
+      /* QUEUED and NOTSTARTED are not translated as they
+         dont fall under a common state but we still need
+         to display a common "status" on the UI */
+
+      default:
+        str = aState;
+    }
+    return str;
+  },
+
+  // Note: This doesn't cover all states as some of the states are translated in _getState()
+  _getStateString: function dl_getStateString(aState) {
+    let str;
+    switch (aState) {
+      case this._dlmgr.DOWNLOAD_DOWNLOADING:
+        str = "downloadState.downloading";
+        break;
+      case this._dlmgr.DOWNLOAD_CANCELED:
+        str = "downloadState.canceled";
+        break;
+      case this._dlmgr.DOWNLOAD_FAILED:
+        str = "downloadState.failed";
+        break;
+      case this._dlmgr.DOWNLOAD_PAUSED:
+        str = "downloadState.paused";
+        break;
+
+      // Queued and Notstarted show up as "Starting..."
+      case this._dlmgr.DOWNLOAD_QUEUED:
+      case this._dlmgr.DOWNLOAD_NOTSTARTED:
+        str = "downloadState.starting";
+        break;
+
+      default:
+        return "";
+    }
+    return gStrings.GetStringFromName(str);
+  },
+
+  _updateItem: function dl_updateItem(aItem, aValues) {
+    for (let i in aValues) {
+      aItem.querySelector("." + i).textContent = aValues[i];
+    }
+  },
+
+  _initStatement: function dv__initStatement(aIsPrivate) {
+    let dbConn = aIsPrivate ? this._dlmgr.privateDBConnection : this._dlmgr.DBConnection;
+    return dbConn.createStatement(
+      "SELECT guid, name, source, state, startTime, endTime, referrer, " +
+             "currBytes, maxBytes, state IN (?1, ?2, ?3, ?4, ?5) isActive " +
+      "FROM moz_downloads " +
+      "ORDER BY isActive DESC, endTime DESC, startTime DESC");
+  },
+
+  _createItem: function _createItem(aTemplate, aValues) {
+    function htmlEscape(s) {
+      s = s.replace(/&/g, "&amp;");
+      s = s.replace(/>/g, "&gt;");
+      s = s.replace(/</g, "&lt;");
+      s = s.replace(/"/g, "&quot;");
+      s = s.replace(/'/g, "&apos;");
+      return s;
+    }
+
+    let t = aTemplate;
+    for (let key in aValues) {
+      if (aValues.hasOwnProperty(key)) {
+        let regEx = new RegExp("{" + key + "}", "g");
+        let value = htmlEscape(aValues[key].toString());
+        t = t.replace(regEx, value);
+      }
+    }
+    return t;
+  },
+
+  _getEntry: function dv__getEntry(aStmt) {
+    try {
+      if (!aStmt.executeStep()) {
+        return null;
+      }
+
+      let updatedState = this._getState(aStmt.row.state);
+      // Try to get the attribute values from the statement
+
+      return {
+        guid: aStmt.row.guid,
+        target: aStmt.row.name,
+        icon: "moz-icon://" + aStmt.row.name + "?size=64",
+        date: DownloadUtils.getReadableDates(new Date(aStmt.row.endTime / 1000))[0],
+        domain: DownloadUtils.getURIHost(aStmt.row.source)[0],
+        size: this._getDownloadSize(aStmt.row.maxBytes),
+        displayState: this._getStateString(updatedState),
+        state: updatedState
+      };
+
+    } catch (e) {
+      // Something went wrong when stepping or getting values, so clear and quit
+      this.logError("_getEntry() " + e);
+      aStmt.reset();
+      return null;
+    }
+  },
+
+  _stepAddEntries: function dv__stepAddEntries(aEntries, aList, aNumItems, aCallback) {
+    
+    if (aEntries.length == 0){
+      if (aCallback)
+        aCallback();
+
+      return;
+    }
+
+    let attrs = aEntries.shift();
+    let item = this._createItem(downloadTemplate, attrs);
+    aList.insertAdjacentHTML("beforeend", item);
+
+    // Add another item to the list if we should; otherwise, let the UI update
+    // and continue later
+    if (aNumItems > 1) {
+      this._stepAddEntries(aEntries, aList, aNumItems - 1, aCallback);
+    } else {
+      // Use a shorter delay for earlier downloads to display them faster
+      let delay = Math.min(aList.itemCount * 10, 300);
+      setTimeout(function () {
+        this._stepAddEntries(aEntries, aList, 5, aCallback);
+      }.bind(this), delay);
+    }
+  },
+
+  getDownloads: function dl_getDownloads(aParams) {
+    aParams = aParams || {};
+    let stmt = this._initStatement(aParams.isPrivate);
+
+    stmt.reset();
+    stmt.bindInt32Parameter(0, Ci.nsIDownloadManager.DOWNLOAD_NOTSTARTED);
+    stmt.bindInt32Parameter(1, Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING);
+    stmt.bindInt32Parameter(2, Ci.nsIDownloadManager.DOWNLOAD_PAUSED);
+    stmt.bindInt32Parameter(3, Ci.nsIDownloadManager.DOWNLOAD_QUEUED);
+    stmt.bindInt32Parameter(4, Ci.nsIDownloadManager.DOWNLOAD_SCANNING);
+
+    let entries = [];
+    while (entry = this._getEntry(stmt)) {
+      entries.push(entry);
+    }
+
+    stmt.finalize();
+
+    return entries;
+  },
+
+  _getElementForDownload: function dl_getElementForDownload(aKey) {
+    return document.body.querySelector("li[downloadGUID='" + aKey + "']");
+  },
+
+  _getDownloadForElement: function dl_getDownloadForElement(aElement, aCallback) {
+    let guid = aElement.getAttribute("downloadGUID");
+    this._dlmgr.getDownloadByGUID(guid, function(status, download) {
+      if (!Components.isSuccessCode(status)) {
+        return;
+      }
+      aCallback(download);
+    });
+  },
+
+  _removeItem: function dl_removeItem(aItem) {
+    // Make sure we have an item to remove
+    if (!aItem)
+      return;
+
+    aItem.parentNode.removeChild(aItem);
+  },
+
+  openDownload: function dl_openDownload(aItem) {
+    this._getDownloadForElement(aItem, function(aDownload) {
+      if (aDownload.state !== Ci.nsIDownloadManager.DOWNLOAD_FINISHED) {
+        // Do not open unfinished downloads.
+        return;
+      }
+      try {
+        let f = aDownload.targetFile;
+        if (f) f.launch();
+      } catch (ex) {
+        this.logError("openDownload() " + ex, aDownload);
+      }
+    }.bind(this));
+  },
+
+  removeDownload: function dl_removeDownload(aItem) {
+    this._getDownloadForElement(aItem, function(aDownload) {
+      if (aDownload.targetFile) {
+        OS.File.remove(aDownload.targetFile.path).then(null, function onError(reason) {
+          if (!(reason instanceof OS.File.Error && reason.becauseNoSuchFile)) {
+            this.logError("removeDownload() " + reason, aDownload);
+          }
+        }.bind(this));
+      }
+
+      aDownload.remove();
+    }.bind(this));
+  },
+
+  removeAll: function dl_removeAll() {
+    let title = gStrings.GetStringFromName("downloadAction.deleteAll");
+    let messageForm = gStrings.GetStringFromName("downloadMessage.deleteAll");
+    let elements = document.body.querySelectorAll("li[state='" + this._dlmgr.DOWNLOAD_FINISHED + "']," +
+                                               "li[state='" + this._dlmgr.DOWNLOAD_CANCELED + "']," +
+                                               "li[state='" + this._dlmgr.DOWNLOAD_FAILED + "']");
+    let message = PluralForm.get(elements.length, messageForm)
+                            .replace("#1", elements.length);
+    let flags = Services.prompt.BUTTON_POS_0 * Services.prompt.BUTTON_TITLE_OK +
+                Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_CANCEL;
+    let choice = Services.prompt.confirmEx(null, title, message, flags,
+                                           null, null, null, null, {});
+    if (choice == 0) {
+      for (let i = 0; i < elements.length; i++) {
+        this.removeDownload(elements[i]);
+      }
+    }
+  },
+
+  pauseDownload: function dl_pauseDownload(aItem) {
+    this._getDownloadForElement(aItem, function(aDownload) {
+      try {
+        aDownload.pause();
+        this._updateDownloadRow(aItem, aDownload);
+      } catch (ex) {
+        this.logError("Error: pauseDownload() " + ex, aDownload);
+      }
+    }.bind(this));
+  },
+
+  resumeDownload: function dl_resumeDownload(aItem) {
+    this._getDownloadForElement(aItem, function(aDownload) {
+      try {
+        aDownload.resume();
+        this._updateDownloadRow(aItem, aDownload);
+      } catch (ex) {
+        this.logError("resumeDownload() " + ex, aDownload);
+      }
+    }.bind(this));
+  },
+
+  retryDownload: function dl_retryDownload(aItem) {
+    this._getDownloadForElement(aItem, function(aDownload) {
+      try {
+        this._removeItem(aItem);
+        aDownload.retry();
+      } catch (ex) {
+        this.logError("retryDownload() " + ex, aDownload);
+      }
+    }.bind(this));
+  },
+
+  cancelDownload: function dl_cancelDownload(aItem) {
+    this._getDownloadForElement(aItem, function(aDownload) {
+      OS.File.remove(aDownload.targetFile.path).then(null, function onError(reason) {
+        if (!(reason instanceof OS.File.Error && reason.becauseNoSuchFile)) {
+          this.logError("cancelDownload() " + reason, aDownload);
+        }
+      }.bind(this));
+
+      aDownload.cancel();
+
+      this._updateDownloadRow(aItem, aDownload);
+    }.bind(this));
+  },
+
+  _updateDownloadRow: function dl_updateDownloadRow(aItem, aDownload) {
+    try {
+      let updatedState = this._getState(aDownload.state);
+      aItem.setAttribute("state", updatedState);
+      this._updateItem(aItem, {
+        size: this._getDownloadSize(aDownload.size),
+        displayState: this._getStateString(updatedState),
+        date: DownloadUtils.getReadableDates(new Date())[0]
+      });
+    } catch (ex) {
+      this.logError("_updateDownloadRow() " + ex, aDownload);
+    }
+  },
+  
+  /**
+   * In case a specific downloadId was passed while opening, scrolls the list to 
+   * the given elemenet
+   */
+
+  _scrollToSelectedDownload : function dl_scrollToSelected() {
+    let spec = document.location.href;
+    let pos = spec.indexOf("?");
+    let query = "";
+    if (pos >= 0)
+      query = spec.substring(pos + 1);
+
+    // Just assume the query is "id=<id>"
+    let id = query.substring(3);
+    if (!id) {
+      return;
+    }    
+    downloadElement = this._getElementForDownload(id);
+    if (!downloadElement) {
+      return;
+    }
+
+    downloadElement.scrollIntoView();
+  },
+
+  /**
+   * Logs the error to the console.
+   *
+   * @param aMessage  error message to log
+   * @param aDownload (optional) if given, and if the download is private, the
+   *                  log message is suppressed
+   */
+  logError: function dl_logError(aMessage, aDownload) {
+    if (!aDownload || !aDownload.isPrivate) {
+      console.log("Error: " + aMessage);
+    }
+  },
+
+  QueryInterface: function (aIID) {
+    if (!aIID.equals(Ci.nsIDownloadProgressListener) &&
+        !aIID.equals(Ci.nsISupports))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
   }
-};
-
-function DownloadListView(type, listElementId) {
-  this.listElement = document.getElementById(listElementId);
-  contextMenu.addContextMenuEventListener(this.listElement);
-
-  this.items = new Map();
-
-  Downloads.getList(type)
-           .then(list => list.addView(this))
-           .then(null, Cu.reportError);
-
-  window.addEventListener("unload", event => {
-    Downloads.getList(type)
-             .then(list => list.removeView(this))
-             .then(null, Cu.reportError);
-  });
 }
 
-DownloadListView.prototype = {
-  get finished() {
-    let finished = [];
-    for (let download of this.items.keys()) {
-      if (download.stopped && (!download.hasPartialData || download.error)) {
-        finished.push(download);
-      }
-    }
+document.addEventListener("DOMContentLoaded", Downloads.init.bind(Downloads), true);
+window.addEventListener("unload", Downloads.uninit.bind(Downloads), false);
 
-    return finished;
-  },
 
-  insertOrMoveItem: function (item) {
-    var compare = (a, b) => {
-      // active downloads always before stopped downloads
-      if (a.stopped != b.stopped) {
-        return b.stopped ? -1 : 1
-      }
-      // most recent downloads first
-      return b.startTime - a.startTime;
-    };
-
-    let insertLocation = this.listElement.firstChild;
-    while (insertLocation && compare(item.download, insertLocation.download) > 0) {
-      insertLocation = insertLocation.nextElementSibling;
-    }
-    this.listElement.insertBefore(item.element, insertLocation);
-  },
-
-  onDownloadAdded: function (download) {
-    let item = new DownloadItem(download);
-    this.items.set(download, item);
-    this.insertOrMoveItem(item);
-  },
-
-  onDownloadChanged: function (download) {
-    let item = this.items.get(download);
-    if (!item) {
-      Cu.reportError("No DownloadItem found for download");
-      return;
-    }
-
-    if (item.stateChanged) {
-      this.insertOrMoveItem(item);
-    }
-
-    item.onDownloadChanged();
-  },
-
-  onDownloadRemoved: function (download) {
-    let item = this.items.get(download);
-    if (!item) {
-      Cu.reportError("No DownloadItem found for download");
-      return;
-    }
-
-    this.items.delete(download);
-    this.listElement.removeChild(item.element);
-  }
-};
-
-let downloadLists = {
-  init: function () {
-    this.publicDownloads = new DownloadListView(Downloads.PUBLIC, "public-downloads-list");
-    this.privateDownloads = new DownloadListView(Downloads.PRIVATE, "private-downloads-list");
-  },
-
-  get finished() {
-    return this.publicDownloads.finished.concat(this.privateDownloads.finished);
-  },
-
-  removeFinished: function () {
-    let finished = this.finished;
-    if (finished.length == 0) {
-      return;
-    }
-
-    let title = strings.GetStringFromName("downloadAction.deleteAll");
-    let messageForm = strings.GetStringFromName("downloadMessage.deleteAll");
-    let message = PluralForm.get(finished.length, messageForm).replace("#1", finished.length);
-
-    if (Services.prompt.confirm(null, title, message)) {
-      Downloads.getList(Downloads.ALL)
-               .then(list => {
-                 for (let download of finished) {
-                   list.remove(download).then(null, Cu.reportError);
-                   deleteDownload(download);
-                 }
-               }, Cu.reportError);
-    }
-  }
-};
-
-function DownloadItem(download) {
-  this._download = download;
-  this._updateFromDownload();
-
-  this._domain = DownloadUtils.getURIHost(download.source.url)[0];
-  this._fileName = this._htmlEscape(OS.Path.basename(download.target.path));
-  this._iconUrl = "moz-icon://" + this._fileName + "?size=64";
-  this._startDate = this._htmlEscape(DownloadUtils.getReadableDates(download.startTime)[0]);
-
-  this._element = this.createElement();
-}
-
-const kDownloadStatePropertyNames = [
-  "stopped",
-  "succeeded",
-  "canceled",
-  "error",
-  "startTime"
-];
-
-DownloadItem.prototype = {
-  _htmlEscape : function (s) {
-    s = s.replace(/&/g, "&amp;");
-    s = s.replace(/>/g, "&gt;");
-    s = s.replace(/</g, "&lt;");
-    s = s.replace(/"/g, "&quot;");
-    s = s.replace(/'/g, "&apos;");
-    return s;
-  },
-
-  _updateFromDownload: function () {
-    this._state = {};
-    kDownloadStatePropertyNames.forEach(
-      name => this._state[name] = this._download[name],
-      this);
-  },
-
-  get stateChanged() {
-    return kDownloadStatePropertyNames.some(
-      name => this._state[name] != this._download[name],
-      this);
-  },
-
-  get download() this._download,
-  get element() this._element,
-
-  createElement: function() {
-    let template = document.getElementById("download-item");
-    // TODO: use this once <template> is working
-    // let element = document.importNode(template.content, true);
-
-    // simulate a <template> node...
-    let element = template.cloneNode(true);
-    element.removeAttribute("id");
-    element.removeAttribute("style");
-
-    // launch the download if clicked
-    element.addEventListener("click", this.onClick.bind(this));
-
-    // set download as an expando property for the context menu
-    element.download = this.download;
-
-    // fill in template placeholders
-    this.updateElement(element);
-
-    return element;
-  },
-
-  updateElement: function (element) {
-    element.querySelector(".date").textContent = this.startDate;
-    element.querySelector(".domain").textContent = this.domain;
-    element.querySelector(".icon").src = this.iconUrl;
-    element.querySelector(".size").textContent = this.size;
-    element.querySelector(".state").textContent = this.stateDescription;
-    element.querySelector(".title").setAttribute("value", this.fileName);
-  },
-
-  onClick: function (event) {
-    if (this.download.succeeded) {
-      this.download.launch().then(null, Cu.reportError);
-    }
-  },
-
-  onDownloadChanged: function () {
-    this._updateFromDownload();
-    this.updateElement(this.element);
-  },
-
-  // template properties below
-  get domain() this._domain,
-  get fileName() this._fileName,
-  get id() this._id,
-  get iconUrl() this._iconUrl,
-
-  get size() {
-    if (this.download.hasProgress) {
-      return DownloadUtils.convertByteUnits(this.download.totalBytes).join("");
-    }
-    return strings.GetStringFromName("downloadState.unknownSize");
-  },
-
-  get startDate() {
-    return this._startDate;
-  },
-
-  get stateDescription() {
-    let name;
-    if (this.download.error) {
-      name = "downloadState.failed";
-    } else if (this.download.canceled) {
-      if (this.download.hasPartialData) {
-        name = "downloadState.paused";
-      } else {
-        name = "downloadState.canceled";
-      }
-    } else if (!this.download.stopped) {
-      if (this.download.currentBytes > 0) {
-        name = "downloadState.downloading";
-      } else {
-        name = "downloadState.starting";
-      }
-    }
-
-    if (name) {
-      return strings.GetStringFromName(name);
-    }
-    return "";
-  }
-};
-
-window.addEventListener("DOMContentLoaded", event => {
-    contextMenu.init();
-    downloadLists.init()
-});
