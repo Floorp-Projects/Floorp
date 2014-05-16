@@ -701,8 +701,8 @@ MobileMessageDB.prototype = {
       // retrieve the records out and insert its "senderOrReceiver" column as a
       // new record in participantStore.
       let number = mostRecentRecord.senderOrReceiver;
-      self.findParticipantRecordByAddress(participantStore, number, true,
-                                          function(participantRecord) {
+      self.findParticipantRecordByPlmnAddress(participantStore, number, true,
+                                              function(participantRecord) {
         // Also create a new record in threadStore.
         let threadRecord = {
           participantIds: [participantRecord.id],
@@ -1548,10 +1548,10 @@ MobileMessageDB.prototype = {
     };
   },
 
-  findParticipantRecordByAddress: function(aParticipantStore, aAddress,
-                                           aCreate, aCallback) {
+  findParticipantRecordByPlmnAddress: function(aParticipantStore, aAddress,
+                                               aCreate, aCallback) {
     if (DEBUG) {
-      debug("findParticipantRecordByAddress("
+      debug("findParticipantRecordByPlmnAddress("
             + JSON.stringify(aAddress) + ", " + aCreate + ")");
     }
 
@@ -1571,7 +1571,7 @@ MobileMessageDB.prototype = {
       allPossibleAddresses.push(parsedAddress.internationalNumber);
     }
     if (DEBUG) {
-      debug("findParticipantRecordByAddress: allPossibleAddresses = " +
+      debug("findParticipantRecordByPlmnAddress: allPossibleAddresses = " +
             JSON.stringify(allPossibleAddresses));
     }
 
@@ -1584,7 +1584,7 @@ MobileMessageDB.prototype = {
       //    If we're lucky, return the fetched participant record.
       if (participantRecord) {
         if (DEBUG) {
-          debug("findParticipantRecordByAddress: got "
+          debug("findParticipantRecordByPlmnAddress: got "
                 + JSON.stringify(participantRecord));
         }
         aCallback(participantRecord);
@@ -1632,7 +1632,7 @@ MobileMessageDB.prototype = {
           }
 
           if (DEBUG) {
-            debug("findParticipantRecordByAddress: match "
+            debug("findParticipantRecordByPlmnAddress: match "
                   + JSON.stringify(cursor.value));
           }
           aCallback(participantRecord);
@@ -1671,9 +1671,9 @@ MobileMessageDB.prototype = {
         return;
       }
 
-      self.findParticipantRecordByAddress(aParticipantStore,
-                                          aAddresses[index++], aCreate,
-                                          function(participantRecord) {
+      self.findParticipantRecordByPlmnAddress(aParticipantStore,
+                                              aAddresses[index++], aCreate,
+                                              function(participantRecord) {
         if (!participantRecord) {
           if (!aSkipNonexistent) {
             if (DEBUG) debug("findParticipantIdsByAddresses: returning null");
@@ -1809,9 +1809,9 @@ MobileMessageDB.prototype = {
     //   shall store the message in the normal way. ... it is recommended
     //   that the SC address should not be checked by the MS."
     let self = this;
-    this.findParticipantRecordByAddress(aParticipantStore,
-                                        aMessageRecord.sender, false,
-                                        function(participantRecord) {
+    this.findParticipantRecordByPlmnAddress(aParticipantStore,
+                                            aMessageRecord.sender, false,
+                                            function(participantRecord) {
       if (!participantRecord) {
         self.realSaveRecord(aTransaction, aMessageStore, aParticipantStore,
                             aThreadStore, aMessageRecord, aAddresses);
