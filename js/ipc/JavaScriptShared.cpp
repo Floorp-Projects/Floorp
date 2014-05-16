@@ -15,21 +15,21 @@ using namespace JS;
 using namespace mozilla;
 using namespace mozilla::jsipc;
 
-ObjectStore::ObjectStore()
+IdToObjectMap::IdToObjectMap()
   : table_(SystemAllocPolicy())
 {
 }
 
 bool
-ObjectStore::init()
+IdToObjectMap::init()
 {
     return table_.init(32);
 }
 
 void
-ObjectStore::trace(JSTracer *trc)
+IdToObjectMap::trace(JSTracer *trc)
 {
-    for (ObjectTable::Range r(table_.all()); !r.empty(); r.popFront()) {
+    for (Table::Range r(table_.all()); !r.empty(); r.popFront()) {
         DebugOnly<JSObject *> prior = r.front().value().get();
         JS_CallHeapObjectTracer(trc, &r.front().value(), "ipc-object");
         MOZ_ASSERT(r.front().value() == prior);
@@ -37,51 +37,51 @@ ObjectStore::trace(JSTracer *trc)
 }
 
 JSObject *
-ObjectStore::find(ObjectId id)
+IdToObjectMap::find(ObjectId id)
 {
-    ObjectTable::Ptr p = table_.lookup(id);
+    Table::Ptr p = table_.lookup(id);
     if (!p)
         return nullptr;
     return p->value();
 }
 
 bool
-ObjectStore::add(ObjectId id, JSObject *obj)
+IdToObjectMap::add(ObjectId id, JSObject *obj)
 {
     return table_.put(id, obj);
 }
 
 void
-ObjectStore::remove(ObjectId id)
+IdToObjectMap::remove(ObjectId id)
 {
     table_.remove(id);
 }
 
-ObjectIdCache::ObjectIdCache()
+ObjectToIdMap::ObjectToIdMap()
   : table_(nullptr)
 {
 }
 
-ObjectIdCache::~ObjectIdCache()
+ObjectToIdMap::~ObjectToIdMap()
 {
     if (table_) {
-        dom::AddForDeferredFinalization<ObjectIdTable, nsAutoPtr>(table_);
+        dom::AddForDeferredFinalization<Table, nsAutoPtr>(table_);
         table_ = nullptr;
     }
 }
 
 bool
-ObjectIdCache::init()
+ObjectToIdMap::init()
 {
     MOZ_ASSERT(!table_);
-    table_ = new ObjectIdTable(SystemAllocPolicy());
+    table_ = new Table(SystemAllocPolicy());
     return table_ && table_->init(32);
 }
 
 void
-ObjectIdCache::trace(JSTracer *trc)
+ObjectToIdMap::trace(JSTracer *trc)
 {
-    for (ObjectIdTable::Range r(table_->all()); !r.empty(); r.popFront()) {
+    for (Table::Range r(table_->all()); !r.empty(); r.popFront()) {
         JSObject *obj = r.front().key();
         JS_CallObjectTracer(trc, &obj, "ipc-id");
         MOZ_ASSERT(obj == r.front().key());
@@ -89,16 +89,16 @@ ObjectIdCache::trace(JSTracer *trc)
 }
 
 ObjectId
-ObjectIdCache::find(JSObject *obj)
+ObjectToIdMap::find(JSObject *obj)
 {
-    ObjectIdTable::Ptr p = table_->lookup(obj);
+    Table::Ptr p = table_->lookup(obj);
     if (!p)
         return 0;
     return p->value();
 }
 
 bool
-ObjectIdCache::add(JSContext *cx, JSObject *obj, ObjectId id)
+ObjectToIdMap::add(JSContext *cx, JSObject *obj, ObjectId id)
 {
     if (!table_->put(obj, id))
         return false;
@@ -111,15 +111,16 @@ ObjectIdCache::add(JSContext *cx, JSObject *obj, ObjectId id)
  * been moved.
  */
 /* static */ void
-ObjectIdCache::keyMarkCallback(JSTracer *trc, JSObject *key, void *data) {
-    ObjectIdTable* table = static_cast<ObjectIdTable*>(data);
+ObjectToIdMap::keyMarkCallback(JSTracer *trc, JSObject *key, void *data)
+{
+    Table *table = static_cast<Table*>(data);
     JSObject *prior = key;
     JS_CallObjectTracer(trc, &key, "ObjectIdCache::table_ key");
     table->rekeyIfMoved(prior, key);
 }
 
 void
-ObjectIdCache::remove(JSObject *obj)
+ObjectToIdMap::remove(JSObject *obj)
 {
     table_->remove(obj);
 }
