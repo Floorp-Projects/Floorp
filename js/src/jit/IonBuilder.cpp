@@ -444,14 +444,21 @@ IonBuilder::analyzeNewLoopTypes(MBasicBlock *entry, jsbytecode *start, jsbytecod
     for (size_t i = 0; i < loopHeaders_.length(); i++) {
         if (loopHeaders_[i].pc == start) {
             MBasicBlock *oldEntry = loopHeaders_[i].header;
-            for (MPhiIterator oldPhi = oldEntry->phisBegin();
-                 oldPhi != oldEntry->phisEnd();
-                 oldPhi++)
-            {
-                MPhi *newPhi = entry->getSlot(oldPhi->slot())->toPhi();
+            MResumePoint *oldEntryRp = oldEntry->entryResumePoint();
+            size_t stackDepth = oldEntryRp->numOperands();
+            for (size_t slot = 0; slot < stackDepth; slot++) {
+                MDefinition *oldDef = oldEntryRp->getOperand(slot);
+                if (!oldDef->isPhi()) {
+                    MOZ_ASSERT(oldDef->block()->id() < oldEntry->id());
+                    MOZ_ASSERT(oldDef == entry->getSlot(slot));
+                    continue;
+                }
+                MPhi *oldPhi = oldDef->toPhi();
+                MPhi *newPhi = entry->getSlot(slot)->toPhi();
                 if (!newPhi->addBackedgeType(oldPhi->type(), oldPhi->resultTypeSet()))
                     return false;
             }
+
             // Update the most recent header for this loop encountered, in case
             // new types flow to the phis and the loop is processed at least
             // three times.
@@ -1150,26 +1157,24 @@ IonBuilder::maybeAddOsrTypeBarriers()
     static const size_t OSR_PHI_POSITION = 1;
     JS_ASSERT(preheader->getPredecessor(OSR_PHI_POSITION) == osrBlock);
 
-    MPhiIterator headerPhi = header->phisBegin();
-    while (headerPhi != header->phisEnd() && headerPhi->slot() < info().startArgSlot())
-        headerPhi++;
-
-    for (uint32_t i = info().startArgSlot(); i < osrBlock->stackDepth(); i++, headerPhi++) {
+    MResumePoint *headerRp = header->entryResumePoint();
+    size_t stackDepth = headerRp->numOperands();
+    MOZ_ASSERT(stackDepth == osrBlock->stackDepth());
+    for (uint32_t slot = info().startArgSlot(); slot < stackDepth; slot++) {
         // Aliased slots are never accessed, since they need to go through
         // the callobject. The typebarriers are added there and can be
         // discarded here.
-        if (info().isSlotAliasedAtOsr(i))
+        if (info().isSlotAliasedAtOsr(slot))
             continue;
 
-        MInstruction *def = osrBlock->getSlot(i)->toInstruction();
-
-        JS_ASSERT(headerPhi->slot() == i);
-        MPhi *preheaderPhi = preheader->getSlot(i)->toPhi();
+        MInstruction *def = osrBlock->getSlot(slot)->toInstruction();
+        MPhi *preheaderPhi = preheader->getSlot(slot)->toPhi();
+        MPhi *headerPhi = headerRp->getOperand(slot)->toPhi();
 
         MIRType type = headerPhi->type();
         types::TemporaryTypeSet *typeSet = headerPhi->resultTypeSet();
 
-        if (!addOsrValueTypeBarrier(i, &def, type, typeSet))
+        if (!addOsrValueTypeBarrier(slot, &def, type, typeSet))
             return false;
 
         preheaderPhi->replaceOperand(OSR_PHI_POSITION, def);
@@ -4104,7 +4109,7 @@ IonBuilder::patchInlinedReturns(CallInfo &callInfo, MIRGraphReturns &returns, MB
         return patchInlinedReturn(callInfo, returns[0], bottom);
 
     // Accumulate multiple returns with a phi.
-    MPhi *phi = MPhi::New(alloc(), bottom->stackDepth());
+    MPhi *phi = MPhi::New(alloc());
     if (!phi->reserveLength(returns.length()))
         return nullptr;
 
@@ -4533,7 +4538,7 @@ IonBuilder::inlineCalls(CallInfo &callInfo, ObjectVector &targets,
     returnBlock->inheritSlots(dispatchBlock);
     callInfo.popFormals(returnBlock);
 
-    MPhi *retPhi = MPhi::New(alloc(), returnBlock->stackDepth());
+    MPhi *retPhi = MPhi::New(alloc());
     returnBlock->addPhi(retPhi);
     returnBlock->push(retPhi);
 

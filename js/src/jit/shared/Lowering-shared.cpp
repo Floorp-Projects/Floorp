@@ -82,7 +82,7 @@ LRecoverInfo::OperandIter::canOptimizeOutIfUnused()
     if ((ins->isUnused() || ins->type() == MIRType_MagicOptimizedOut) &&
         (*it_)->isResumePoint())
     {
-        return (*it_)->block()->info().canOptimizeOutSlot(op_);
+        return !(*it_)->toResumePoint()->isObservableOperand(op_);
     }
 
     return true;
