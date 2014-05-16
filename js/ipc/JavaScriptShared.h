@@ -37,14 +37,14 @@ class CpowIdHolder : public CpowHolder
 };
 
 // Map ids -> JSObjects
-class ObjectStore
+class IdToObjectMap
 {
     typedef js::DefaultHasher<ObjectId> TableKeyHasher;
 
-    typedef js::HashMap<ObjectId, JS::Heap<JSObject *>, TableKeyHasher, js::SystemAllocPolicy> ObjectTable;
+    typedef js::HashMap<ObjectId, JS::Heap<JSObject *>, TableKeyHasher, js::SystemAllocPolicy> Table;
 
   public:
-    ObjectStore();
+    IdToObjectMap();
 
     bool init();
     void trace(JSTracer *trc);
@@ -54,18 +54,18 @@ class ObjectStore
     void remove(ObjectId id);
 
   private:
-    ObjectTable table_;
+    Table table_;
 };
 
 // Map JSObjects -> ids
-class ObjectIdCache
+class ObjectToIdMap
 {
     typedef js::PointerHasher<JSObject *, 3> Hasher;
-    typedef js::HashMap<JSObject *, ObjectId, Hasher, js::SystemAllocPolicy> ObjectIdTable;
+    typedef js::HashMap<JSObject *, ObjectId, Hasher, js::SystemAllocPolicy> Table;
 
   public:
-    ObjectIdCache();
-    ~ObjectIdCache();
+    ObjectToIdMap();
+    ~ObjectToIdMap();
 
     bool init();
     void trace(JSTracer *trc);
@@ -77,7 +77,7 @@ class ObjectIdCache
   private:
     static void keyMarkCallback(JSTracer *trc, JSObject *key, void *data);
 
-    ObjectIdTable *table_;
+    Table *table_;
 };
 
 class JavaScriptShared
@@ -129,7 +129,7 @@ class JavaScriptShared
     }
 
   protected:
-    ObjectStore objects_;
+    IdToObjectMap objects_;
 };
 
 // Use 47 at most, to be safe, since jsval privates are encoded as doubles.

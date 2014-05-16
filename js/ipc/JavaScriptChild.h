@@ -79,7 +79,7 @@ class JavaScriptChild
   private:
     ObjectId lastId_;
     JSRuntime *rt_;
-    ObjectIdCache ids_;
+    ObjectToIdMap ids_;
 };
 
 } // mozilla
