@@ -272,11 +272,22 @@ struct Zone : public JS::shadow::Zone,
     /* This compartment's gray roots. */
     js::Vector<js::GrayRoot, 0, js::SystemAllocPolicy> gcGrayRoots;
 
+    /*
+     * A set of edges from this zone to other zones.
+     *
+     * This is used during GC while calculating zone groups to record edges that
+     * can't be determined by examining this zone by itself.
+     */
+    typedef js::HashSet<Zone *, js::DefaultHasher<Zone *>, js::SystemAllocPolicy> ZoneSet;
+    ZoneSet gcZoneGroupEdges;
+
     /* Per-zone data for use by an embedder. */
     void *data;
 
     Zone(JSRuntime *rt);
     ~Zone();
+
+    bool init();
 
     void findOutgoingEdges(js::gc::ComponentFinder<JS::Zone> &finder);
 
