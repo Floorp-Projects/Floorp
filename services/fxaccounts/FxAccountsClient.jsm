@@ -289,6 +289,24 @@ this.FxAccountsClient.prototype = {
   },
 
   /**
+   * Given the uid of an existing account (not an arbitrary email), ask
+   * the server if it still exists via /account/status.
+   *
+   * Used for differentiating between password change and account deletion.
+   */
+  accountStatus: function(uid) {
+    return this._request("/account/status?uid="+uid, "GET").then(
+      (result) => {
+        return result.exists;
+      },
+      (error) => {
+        log.error("accountStatus failed with: " + error);
+        return Promise.reject(error);
+      }
+    );
+  },
+
+  /**
    * The FxA auth server expects requests to certain endpoints to be authorized using Hawk.
    * Hawk credentials are derived using shared secrets, which depend on the context
    * (e.g. sessionToken vs. keyFetchToken).

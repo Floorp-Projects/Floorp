@@ -1123,7 +1123,7 @@ CloneObject(JSContext *cx, HandleObject selfHostedObject)
         RegExpObject &reobj = selfHostedObject->as<RegExpObject>();
         RootedAtom source(cx, reobj.getSource());
         JS_ASSERT(source->isPermanentAtom());
-        clone = RegExpObject::createNoStatics(cx, source, reobj.getFlags(), nullptr);
+        clone = RegExpObject::createNoStatics(cx, source, reobj.getFlags(), nullptr, cx->tempLifoAlloc());
     } else if (selfHostedObject->is<DateObject>()) {
         clone = JS_NewDateObjectMsec(cx, selfHostedObject->as<DateObject>().UTCTime().toNumber());
     } else if (selfHostedObject->is<BooleanObject>()) {

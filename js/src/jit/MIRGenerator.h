@@ -87,6 +87,13 @@ class MIRGenerator
         cancelBuild_ = true;
     }
 
+    void disable() {
+        abortReason_ = AbortReason_Disable;
+    }
+    AbortReason abortReason() {
+        return abortReason_;
+    }
+
     bool compilingAsmJS() const {
         return info_->compilingAsmJS();
     }
@@ -141,6 +148,7 @@ class MIRGenerator
     JSFunction *fun_;
     uint32_t nslots_;
     MIRGraph *graph_;
+    AbortReason abortReason_;
     bool error_;
     mozilla::Atomic<bool, mozilla::Relaxed> cancelBuild_;
 
