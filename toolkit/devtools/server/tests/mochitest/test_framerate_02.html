@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1007200 - Create a framerate actor
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Framerate actor test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script>
+
+window.onload = function() {
+  var Cu = Components.utils;
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+
+  Cu.import("resource://gre/modules/Services.jsm");
+
+  // Always log packets when running tests.
+  Services.prefs.setBoolPref("devtools.debugger.log", true);
+  SimpleTest.registerCleanupFunction(function() {
+    Services.prefs.clearUserPref("devtools.debugger.log");
+  });
+
+  Cu.import("resource://gre/modules/devtools/Loader.jsm");
+  Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
+  Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+
+  SimpleTest.waitForExplicitFinish();
+
+  var {FramerateFront} = devtools.require("devtools/server/actors/framerate");
+
+  DebuggerServer.init(function () { return true; });
+  DebuggerServer.addBrowserActors();
+
+  var client = new DebuggerClient(DebuggerServer.connectPipe());
+  client.connect(function onConnect() {
+    client.listTabs(function onListTabs(aResponse) {
+      var form = aResponse.tabs[aResponse.selected];
+      var front = FramerateFront(client, form);
+
+      front.stopRecording().then(timeline => {
+        ok(timeline, "There should be a recording available.");
+        is(Object.keys(timeline).length, 0, "...but it should be empty.");
+
+        client.close(() => {
+          DebuggerServer.destroy();
+          SimpleTest.finish()
+        });
+      });
+    });
+  });
+}
+</script>
+</pre>
+</body>
+</html>

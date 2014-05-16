@@ -28,13 +28,6 @@ checkbox {
   -moz-box-align: center;
 }
 
-checkbox:hover::before,
-checkbox[checked]::before {
-  -moz-margin-end: -19px;
-  -moz-margin-start: 4px;
-  background-repeat: no-repeat;
-}
-
 radio {
   -moz-binding: url("chrome://global/content/bindings/radio.xml#radio");
   -moz-box-align: center;
@@ -43,12 +36,6 @@ radio {
 
 .radio-label-box {
   -moz-appearance: none;
-}
-
-radio:hover::before,
-radio[selected]::before {
-  -moz-margin-end: -17px;
-  -moz-margin-start: 6px;
 }
 
 .numberbox-input-box {
