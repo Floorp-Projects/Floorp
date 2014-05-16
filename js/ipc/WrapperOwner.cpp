@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WrapperOwner.h"
+#include "mozilla/unused.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "jsfriendapi.h"
 #include "xpcprivate.h"
@@ -15,8 +16,9 @@ using namespace JS;
 using namespace mozilla;
 using namespace mozilla::jsipc;
 
-WrapperOwner::WrapperOwner()
-  : inactive_(false)
+WrapperOwner::WrapperOwner(JSRuntime *rt)
+  : JavaScriptShared(rt),
+    inactive_(false)
 {
 }
 
@@ -85,12 +87,6 @@ class CPOWProxyHandler : public BaseProxyHandler
 };
 
 CPOWProxyHandler CPOWProxyHandler::singleton;
-
-/* static */ BaseProxyHandler *
-WrapperOwner::ProxyHandler()
-{
-    return &CPOWProxyHandler::singleton;
-}
 
 #define FORWARD(call, args)                                             \
     WrapperOwner *owner = OwnerOf(proxy);                               \
@@ -504,6 +500,17 @@ CPOWProxyHandler::finalize(JSFreeOp *fop, JSObject *proxy)
     OwnerOf(proxy)->drop(proxy);
 }
 
+void
+WrapperOwner::drop(JSObject *obj)
+{
+    ObjectId objId = idOf(obj);
+
+    cpows_.remove(objId);
+    if (active())
+        unused << SendDropObject(objId);
+    decref();
+}
+
 bool
 WrapperOwner::init()
 {
@@ -621,4 +628,105 @@ WrapperOwner::ok(JSContext *cx, const ReturnStatus &status)
 
     JS_SetPendingException(cx, exn);
     return false;
+}
+
+bool
+WrapperOwner::toObjectVariant(JSContext *cx, JSObject *obj, ObjectVariant *objVarp)
+{
+    JS_ASSERT(obj);
+    JSObject *unwrapped = js::CheckedUnwrap(obj, false);
+    if (unwrapped && IsCPOW(unwrapped) && OwnerOf(unwrapped) == this) {
+        *objVarp = LocalObject(idOf(unwrapped));
+        return true;
+    }
+
+    ObjectId id = objectIds_.find(obj);
+    if (id) {
+        *objVarp = RemoteObject(id);
+        return true;
+    }
+
+    id = ++lastId_;
+    if (id > MAX_CPOW_IDS) {
+        JS_ReportError(cx, "CPOW id limit reached");
+        return false;
+    }
+
+    id <<= OBJECT_EXTRA_BITS;
+    if (JS_ObjectIsCallable(cx, obj))
+        id |= OBJECT_IS_CALLABLE;
+
+    if (!objects_.add(id, obj))
+        return false;
+    if (!objectIds_.add(cx, obj, id))
+        return false;
+
+    *objVarp = RemoteObject(id);
+    return true;
+}
+
+JSObject *
+WrapperOwner::fromObjectVariant(JSContext *cx, ObjectVariant objVar)
+{
+    if (objVar.type() == ObjectVariant::TRemoteObject) {
+        return fromRemoteObjectVariant(cx, objVar.get_RemoteObject());
+    } else {
+        return fromLocalObjectVariant(cx, objVar.get_LocalObject());
+    }
+}
+
+JSObject *
+WrapperOwner::fromRemoteObjectVariant(JSContext *cx, RemoteObject objVar)
+{
+    ObjectId objId = objVar.id();
+
+    RootedObject obj(cx, findCPOWById(objId));
+    if (obj) {
+        if (!JS_WrapObject(cx, &obj))
+            return nullptr;
+        return obj;
+    }
+
+    if (objId > MAX_CPOW_IDS) {
+        JS_ReportError(cx, "unusable CPOW id");
+        return nullptr;
+    }
+
+    bool callable = !!(objId & OBJECT_IS_CALLABLE);
+
+    RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
+
+    RootedValue v(cx, UndefinedValue());
+    ProxyOptions options;
+    options.selectDefaultClass(callable);
+    obj = NewProxyObject(cx,
+                         &CPOWProxyHandler::singleton,
+                         v,
+                         nullptr,
+                         global,
+                         options);
+    if (!obj)
+        return nullptr;
+
+    if (!cpows_.add(objId, obj))
+        return nullptr;
+
+    // Incref once we know the decref will be called.
+    incref();
+
+    SetProxyExtra(obj, 0, PrivateValue(this));
+    SetProxyExtra(obj, 1, DoubleValue(BitwiseCast<double>(objId)));
+    return obj;
+}
+
+JSObject *
+WrapperOwner::fromLocalObjectVariant(JSContext *cx, LocalObject objVar)
+{
+    ObjectId id = objVar.id();
+    Rooted<JSObject*> obj(cx, findObjectById(cx, id));
+    if (!obj)
+        return nullptr;
+    if (!JS_WrapObject(cx, &obj))
+        return nullptr;
+    return obj;
 }

@@ -38,6 +38,18 @@ IdToObjectMap::trace(JSTracer *trc)
     }
 }
 
+void
+IdToObjectMap::finalize(JSFreeOp *fop)
+{
+    for (Table::Enum e(table_); !e.empty(); e.popFront()) {
+        DebugOnly<JSObject *> prior = e.front().value().get();
+        if (JS_IsAboutToBeFinalized(&e.front().value()))
+            e.removeFront();
+        else
+            MOZ_ASSERT(e.front().value() == prior);
+    }
+}
+
 JSObject *
 IdToObjectMap::find(ObjectId id)
 {
@@ -83,12 +95,14 @@ ObjectToIdMap::init()
 }
 
 void
-ObjectToIdMap::trace(JSTracer *trc)
+ObjectToIdMap::finalize(JSFreeOp *fop)
 {
-    for (Table::Range r(table_->all()); !r.empty(); r.popFront()) {
-        JSObject *obj = r.front().key();
-        JS_CallObjectTracer(trc, &obj, "ipc-id");
-        MOZ_ASSERT(obj == r.front().key());
+    for (Table::Enum e(*table_); !e.empty(); e.popFront()) {
+        JSObject *obj = e.front().key();
+        if (JS_IsAboutToBeFinalizedUnbarriered(&obj))
+            e.removeFront();
+        else
+            MOZ_ASSERT(obj == e.front().key());
     }
 }
 
@@ -129,6 +143,13 @@ ObjectToIdMap::remove(JSObject *obj)
     table_->remove(obj);
 }
 
+JavaScriptShared::JavaScriptShared(JSRuntime *rt)
+  : rt_(rt),
+    refcount_(1),
+    lastId_(0)
+{
+}
+
 bool
 JavaScriptShared::init()
 {
@@ -136,7 +157,24 @@ JavaScriptShared::init()
         return false;
     if (!cpows_.init())
         return false;
+    if (!objectIds_.init())
+        return false;
+
     return true;
+}
+
+void
+JavaScriptShared::decref()
+{
+    refcount_--;
+    if (!refcount_)
+        delete this;
+}
+
+void
+JavaScriptShared::incref()
+{
+    refcount_++;
 }
 
 bool
@@ -316,6 +354,12 @@ JavaScriptShared::ConvertID(const JSIID &from, nsID *to)
     to->m3[5] = from.m3_5();
     to->m3[6] = from.m3_6();
     to->m3[7] = from.m3_7();
+}
+
+void
+JavaScriptShared::ReportNonexistentObject(JSContext *cx)
+{
+    JS_ReportError(cx, "operation not possible on dead CPOW");
 }
 
 static const uint64_t DefaultPropertyOp = 1;

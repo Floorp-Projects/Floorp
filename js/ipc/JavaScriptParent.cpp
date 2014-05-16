@@ -21,20 +21,21 @@ using namespace mozilla;
 using namespace mozilla::jsipc;
 using namespace mozilla::dom;
 
-JavaScriptParent::JavaScriptParent()
-  : refcount_(1)
+static void
+TraceParent(JSTracer *trc, void *data)
+{
+    static_cast<JavaScriptParent *>(data)->trace(trc);
+}
+
+JavaScriptParent::JavaScriptParent(JSRuntime *rt)
+  : JavaScriptShared(rt),
+    JavaScriptBase<PJavaScriptParent>(rt)
 {
 }
 
-void
-JavaScriptParent::drop(JSObject *obj)
+JavaScriptParent::~JavaScriptParent()
 {
-    ObjectId objId = idOf(obj);
-
-    cpows_.remove(objId);
-    if (active() && !SendDropObject(objId))
-        (void)0;
-    decref();
+    JS_RemoveExtraGCRootsTracer(rt_, TraceParent, this);
 }
 
 bool
@@ -43,80 +44,15 @@ JavaScriptParent::init()
     if (!WrapperOwner::init())
         return false;
 
+    JS_AddExtraGCRootsTracer(rt_, TraceParent, this);
     return true;
 }
 
-bool
-JavaScriptParent::toObjectVariant(JSContext *cx, JSObject *obj, ObjectVariant *objVarp)
-{
-    JS_ASSERT(obj);
-    obj = js::CheckedUnwrap(obj, false);
-    if (!obj || !IsCPOW(obj)) {
-        JS_ReportError(cx, "cannot ipc non-cpow object");
-        return false;
-    }
-
-    *objVarp = LocalObject(idOf(obj));
-    return true;
-}
-
-JSObject *
-JavaScriptParent::fromObjectVariant(JSContext *cx, ObjectVariant objVar)
-{
-    JS_ASSERT(objVar.type() == ObjectVariant::TRemoteObject);
-    ObjectId objId = objVar.get_RemoteObject().id();
-
-    RootedObject obj(cx, findCPOWById(objId));
-    if (obj) {
-        if (!JS_WrapObject(cx, &obj))
-            return nullptr;
-        return obj;
-    }
-
-    if (objId > MAX_CPOW_IDS) {
-        JS_ReportError(cx, "unusable CPOW id");
-        return nullptr;
-    }
-
-    bool callable = !!(objId & OBJECT_IS_CALLABLE);
-
-    RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
-
-    RootedValue v(cx, UndefinedValue());
-    ProxyOptions options;
-    options.selectDefaultClass(callable);
-    obj = NewProxyObject(cx,
-                         ProxyHandler(),
-                         v,
-                         nullptr,
-                         global,
-                         options);
-    if (!obj)
-        return nullptr;
-
-    if (!cpows_.add(objId, obj))
-        return nullptr;
-
-    // Incref once we know the decref will be called.
-    incref();
-
-    SetProxyExtra(obj, 0, PrivateValue(this));
-    SetProxyExtra(obj, 1, DoubleValue(BitwiseCast<double>(objId)));
-    return obj;
-}
-
 void
-JavaScriptParent::decref()
+JavaScriptParent::trace(JSTracer *trc)
 {
-    refcount_--;
-    if (!refcount_)
-        delete this;
-}
-
-void
-JavaScriptParent::incref()
-{
-    refcount_++;
+    if (active())
+        objects_.trace(trc);
 }
 
 mozilla::ipc::IProtocol*

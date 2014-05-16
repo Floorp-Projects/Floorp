@@ -63,9 +63,9 @@ WrapperAnswer::AnswerPreventExtensions(const ObjectId &objId, ReturnStatus *rs)
     AutoSafeJSContext cx;
     JSAutoRequest request(cx);
 
-    RootedObject obj(cx, findObjectById(objId));
+    RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
-        return false;
+        return fail(cx, rs);
 
     JSAutoCompartment comp(cx, obj);
     if (!JS_PreventExtensions(cx, obj))
@@ -93,9 +93,9 @@ WrapperAnswer::AnswerGetPropertyDescriptor(const ObjectId &objId, const nsString
 
     EmptyDesc(out);
 
-    RootedObject obj(cx, findObjectById(objId));
+    RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
-        return false;
+        return fail(cx, rs);
 
     JSAutoCompartment comp(cx, obj);
 
@@ -125,9 +125,9 @@ WrapperAnswer::AnswerGetOwnPropertyDescriptor(const ObjectId &objId, const nsStr
 
     EmptyDesc(out);
 
-    RootedObject obj(cx, findObjectById(objId));
+    RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
-        return false;
+        return fail(cx, rs);
 
     JSAutoCompartment comp(cx, obj);
 
@@ -155,9 +155,9 @@ WrapperAnswer::AnswerDefineProperty(const ObjectId &objId, const nsString &id,
     AutoSafeJSContext cx;
     JSAutoRequest request(cx);
 
-    RootedObject obj(cx, findObjectById(objId));
+    RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
-        return false;
+        return fail(cx, rs);
 
     JSAutoCompartment comp(cx, obj);
 
@@ -167,7 +167,7 @@ WrapperAnswer::AnswerDefineProperty(const ObjectId &objId, const nsString &id,
 
     Rooted<JSPropertyDescriptor> desc(cx);
     if (!toDescriptor(cx, descriptor, &desc))
-        return false;
+        return fail(cx, rs);
 
     if (!js::CheckDefineProperty(cx, obj, internedId, desc.value(), desc.attributes(),
                                  desc.getter(), desc.setter()))
@@ -193,9 +193,9 @@ WrapperAnswer::AnswerDelete(const ObjectId &objId, const nsString &id, ReturnSta
 
     *success = false;
 
-    RootedObject obj(cx, findObjectById(objId));
+    RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
-        return false;
+        return fail(cx, rs);
 
     JSAutoCompartment comp(cx, obj);
 
@@ -217,9 +217,9 @@ WrapperAnswer::AnswerHas(const ObjectId &objId, const nsString &id, ReturnStatus
 
     *bp = false;
 
-    RootedObject obj(cx, findObjectById(objId));
+    RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
-        return false;
+        return fail(cx, rs);
 
     JSAutoCompartment comp(cx, obj);
 
@@ -243,9 +243,9 @@ WrapperAnswer::AnswerHasOwn(const ObjectId &objId, const nsString &id, ReturnSta
 
     *bp = false;
 
-    RootedObject obj(cx, findObjectById(objId));
+    RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
-        return false;
+        return fail(cx, rs);
 
     JSAutoCompartment comp(cx, obj);
 
@@ -272,13 +272,13 @@ WrapperAnswer::AnswerGet(const ObjectId &objId, const ObjectId &receiverId, cons
     // the parent won't read it.
     *result = UndefinedVariant();
 
-    RootedObject obj(cx, findObjectById(objId));
+    RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
-        return false;
+        return fail(cx, rs);
 
-    RootedObject receiver(cx, findObjectById(receiverId));
+    RootedObject receiver(cx, findObjectById(cx, receiverId));
     if (!receiver)
-        return false;
+        return fail(cx, rs);
 
     JSAutoCompartment comp(cx, obj);
 
@@ -308,13 +308,13 @@ WrapperAnswer::AnswerSet(const ObjectId &objId, const ObjectId &receiverId, cons
     // the parent won't read it.
     *result = UndefinedVariant();
 
-    RootedObject obj(cx, findObjectById(objId));
+    RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
-        return false;
+        return fail(cx, rs);
 
-    RootedObject receiver(cx, findObjectById(receiverId));
+    RootedObject receiver(cx, findObjectById(cx, receiverId));
     if (!receiver)
-        return false;
+        return fail(cx, rs);
 
     JSAutoCompartment comp(cx, obj);
 
@@ -345,9 +345,9 @@ WrapperAnswer::AnswerIsExtensible(const ObjectId &objId, ReturnStatus *rs, bool 
 
     *result = false;
 
-    RootedObject obj(cx, findObjectById(objId));
+    RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
-        return false;
+        return fail(cx, rs);
 
     JSAutoCompartment comp(cx, obj);
 
@@ -370,9 +370,9 @@ WrapperAnswer::AnswerCall(const ObjectId &objId, const nsTArray<JSParam> &argv, 
     // the parent won't read it.
     *result = UndefinedVariant();
 
-    RootedObject obj(cx, findObjectById(objId));
+    RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
-        return false;
+        return fail(cx, rs);
 
     JSAutoCompartment comp(cx, obj);
 
@@ -463,9 +463,12 @@ WrapperAnswer::AnswerObjectClassIs(const ObjectId &objId, const uint32_t &classV
     AutoSafeJSContext cx;
     JSAutoRequest request(cx);
 
-    RootedObject obj(cx, findObjectById(objId));
-    if (!obj)
-        return false;
+    RootedObject obj(cx, findObjectById(cx, objId));
+    if (!obj) {
+        // This is very unfortunate, but we have no choice.
+        *result = false;
+        return true;
+    }
 
     JSAutoCompartment comp(cx, obj);
 
@@ -479,9 +482,11 @@ WrapperAnswer::AnswerClassName(const ObjectId &objId, nsString *name)
     AutoSafeJSContext cx;
     JSAutoRequest request(cx);
 
-    RootedObject obj(cx, findObjectById(objId));
-    if (!obj)
-        return false;
+    RootedObject obj(cx, findObjectById(cx, objId));
+    if (!obj) {
+        // This is very unfortunate, but we have no choice.
+        return "<dead CPOW>";
+    }
 
     JSAutoCompartment comp(cx, obj);
 
@@ -496,9 +501,9 @@ WrapperAnswer::AnswerGetPropertyNames(const ObjectId &objId, const uint32_t &fla
     AutoSafeJSContext cx;
     JSAutoRequest request(cx);
 
-    RootedObject obj(cx, findObjectById(objId));
+    RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
-        return false;
+        return fail(cx, rs);
 
     JSAutoCompartment comp(cx, obj);
 
@@ -526,9 +531,9 @@ WrapperAnswer::AnswerInstanceOf(const ObjectId &objId, const JSIID &iid, ReturnS
 
     *instanceof = false;
 
-    RootedObject obj(cx, findObjectById(objId));
+    RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
-        return false;
+        return fail(cx, rs);
 
     JSAutoCompartment comp(cx, obj);
 
@@ -552,9 +557,9 @@ WrapperAnswer::AnswerDOMInstanceOf(const ObjectId &objId, const int &prototypeID
 
     *instanceof = false;
 
-    RootedObject obj(cx, findObjectById(objId));
+    RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
-        return false;
+        return fail(cx, rs);
 
     JSAutoCompartment comp(cx, obj);
 

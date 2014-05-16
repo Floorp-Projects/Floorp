@@ -19,29 +19,23 @@ using namespace mozilla::jsipc;
 
 using mozilla::AutoSafeJSContext;
 
-JavaScriptChild::JavaScriptChild(JSRuntime *rt)
-  : lastId_(0),
-    rt_(rt)
+static void
+FinalizeChild(JSFreeOp *fop, JSFinalizeStatus status, bool isCompartment, void *data)
 {
+    if (status == JSFINALIZE_GROUP_START) {
+        static_cast<JavaScriptChild *>(data)->finalize(fop);
+    }
 }
 
-static void
-Trace(JSTracer *trc, void *data)
+JavaScriptChild::JavaScriptChild(JSRuntime *rt)
+  : JavaScriptShared(rt),
+    JavaScriptBase<PJavaScriptChild>(rt)
 {
-    reinterpret_cast<JavaScriptChild *>(data)->trace(trc);
 }
 
 JavaScriptChild::~JavaScriptChild()
 {
-    JS_RemoveExtraGCRootsTracer(rt_, Trace, this);
-}
-
-void
-JavaScriptChild::trace(JSTracer *trc)
-{
-    objects_.trace(trc);
-    cpows_.trace(trc);
-    ids_.trace(trc);
+    JS_RemoveFinalizeCallback(rt_, FinalizeChild);
 }
 
 bool
@@ -52,61 +46,13 @@ JavaScriptChild::init()
     if (!WrapperAnswer::init())
         return false;
 
-    if (!ids_.init())
-        return false;
-
-    JS_AddExtraGCRootsTracer(rt_, Trace, this);
+    JS_AddFinalizeCallback(rt_, FinalizeChild, this);
     return true;
 }
 
-bool
-JavaScriptChild::RecvDropObject(const ObjectId &objId)
+void
+JavaScriptChild::finalize(JSFreeOp *fop)
 {
-    JSObject *obj = findObjectById(objId);
-    if (obj) {
-        ids_.remove(obj);
-        objects_.remove(objId);
-    }
-    return true;
+    objects_.finalize(fop);
+    objectIds_.finalize(fop);
 }
-
-bool
-JavaScriptChild::toObjectVariant(JSContext *cx, JSObject *obj, ObjectVariant *objVarp)
-{
-    JS_ASSERT(obj);
-
-    ObjectId id = ids_.find(obj);
-    if (id) {
-        *objVarp = RemoteObject(id);
-        return true;
-    }
-
-    id = ++lastId_;
-    if (id > MAX_CPOW_IDS) {
-        JS_ReportError(cx, "CPOW id limit reached");
-        return false;
-    }
-
-    id <<= OBJECT_EXTRA_BITS;
-    if (JS_ObjectIsCallable(cx, obj))
-        id |= OBJECT_IS_CALLABLE;
-
-    if (!objects_.add(id, obj))
-        return false;
-    if (!ids_.add(cx, obj, id))
-        return false;
-
-    *objVarp = RemoteObject(id);
-    return true;
-}
-
-JSObject *
-JavaScriptChild::fromObjectVariant(JSContext *cx, ObjectVariant objVar)
-{
-    JS_ASSERT(objVar.type() == ObjectVariant::TLocalObject);
-    ObjectId id = objVar.get_LocalObject().id();
-    JSObject *obj = findObjectById(id);
-    MOZ_ASSERT(obj);
-    return obj;
-}
-

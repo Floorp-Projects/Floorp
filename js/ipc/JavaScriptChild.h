@@ -18,26 +18,16 @@ class JavaScriptChild : public JavaScriptBase<PJavaScriptChild>
 {
   public:
     JavaScriptChild(JSRuntime *rt);
-    ~JavaScriptChild();
+    virtual ~JavaScriptChild();
 
     bool init();
-    void trace(JSTracer *trc);
+    void finalize(JSFreeOp *fop);
 
-    bool RecvDropObject(const ObjectId &objId) MOZ_OVERRIDE;
-
-    virtual void drop(JSObject *obj) { MOZ_CRASH(); }
+    void drop(JSObject *obj);
 
   private:
-    virtual bool toObjectVariant(JSContext *cx, JSObject *obj, ObjectVariant *objVarp);
-    virtual JSObject *fromObjectVariant(JSContext *cx, ObjectVariant objVar);
-
     bool fail(JSContext *cx, ReturnStatus *rs);
     bool ok(ReturnStatus *rs);
-
-  private:
-    ObjectId lastId_;
-    JSRuntime *rt_;
-    ObjectToIdMap ids_;
 };
 
 } // mozilla

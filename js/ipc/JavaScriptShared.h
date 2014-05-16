@@ -48,6 +48,7 @@ class IdToObjectMap
 
     bool init();
     void trace(JSTracer *trc);
+    void finalize(JSFreeOp *fop);
 
     bool add(ObjectId id, JSObject *obj);
     JSObject *find(ObjectId id);
@@ -68,7 +69,7 @@ class ObjectToIdMap
     ~ObjectToIdMap();
 
     bool init();
-    void trace(JSTracer *trc);
+    void finalize(JSFreeOp *fop);
 
     bool add(JSContext *cx, JSObject *obj, ObjectId id);
     ObjectId find(JSObject *obj);
@@ -83,7 +84,13 @@ class ObjectToIdMap
 class JavaScriptShared
 {
   public:
+    JavaScriptShared(JSRuntime *rt);
+    virtual ~JavaScriptShared() {}
+
     bool init();
+
+    void decref();
+    void incref();
 
     static const uint32_t OBJECT_EXTRA_BITS  = 1;
     static const uint32_t OBJECT_IS_CALLABLE = (1 << 0);
@@ -109,16 +116,30 @@ class JavaScriptShared
     static void ConvertID(const nsID &from, JSIID *to);
     static void ConvertID(const JSIID &from, nsID *to);
 
+    void ReportNonexistentObject(JSContext *cx);
+
     JSObject *findCPOWById(uint32_t objId) {
         return cpows_.find(objId);
     }
     JSObject *findObjectById(uint32_t objId) {
         return objects_.find(objId);
     }
+    JSObject *findObjectById(JSContext *cx, uint32_t objId) {
+        if (JSObject *result = objects_.find(objId))
+            return result;
+        ReportNonexistentObject(cx);
+        return nullptr;
+    }
 
   protected:
+    JSRuntime *rt_;
+    uintptr_t refcount_;
+
     IdToObjectMap objects_;
     IdToObjectMap cpows_;
+
+    ObjectId lastId_;
+    ObjectToIdMap objectIds_;
 };
 
 // Use 47 at most, to be safe, since jsval privates are encoded as doubles.

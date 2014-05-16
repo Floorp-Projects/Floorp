@@ -17,10 +17,6 @@
 #undef GetClassInfo
 #endif
 
-namespace js {
-class BaseProxyHandler;
-} // js
-
 namespace mozilla {
 namespace jsipc {
 
@@ -31,7 +27,7 @@ class WrapperOwner : public virtual JavaScriptShared
                        mozilla::ipc::IProtocol>::ActorDestroyReason
            ActorDestroyReason;
 
-    WrapperOwner();
+    WrapperOwner(JSRuntime *rt);
     bool init();
 
     // Fundamental proxy traps. These are required.
@@ -73,14 +69,17 @@ class WrapperOwner : public virtual JavaScriptShared
 
     bool active() { return !inactive_; }
 
-    virtual void drop(JSObject *obj) = 0;
+    void drop(JSObject *obj);
 
     virtual void ActorDestroy(ActorDestroyReason why);
 
+    virtual bool toObjectVariant(JSContext *cx, JSObject *obj, ObjectVariant *objVarp);
+    virtual JSObject *fromObjectVariant(JSContext *cx, ObjectVariant objVar);
+    JSObject *fromRemoteObjectVariant(JSContext *cx, RemoteObject objVar);
+    JSObject *fromLocalObjectVariant(JSContext *cx, LocalObject objVar);
+
   protected:
     ObjectId idOf(JSObject *obj);
-
-    static js::BaseProxyHandler *ProxyHandler();
 
   private:
     bool getPropertyNames(JSContext *cx, JS::HandleObject proxy, uint32_t flags,
@@ -96,6 +95,7 @@ class WrapperOwner : public virtual JavaScriptShared
 
     /*** Dummy call handlers ***/
   public:
+    virtual bool SendDropObject(const ObjectId &objId) = 0;
     virtual bool CallPreventExtensions(const ObjectId &objId, ReturnStatus *rs) = 0;
     virtual bool CallGetPropertyDescriptor(const ObjectId &objId, const nsString &id,
                                            ReturnStatus *rs,
