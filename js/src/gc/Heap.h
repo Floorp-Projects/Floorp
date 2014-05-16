@@ -1089,7 +1089,8 @@ bool
 Cell::isTenured() const
 {
 #ifdef JSGC_GENERATIONAL
-    return !IsInsideNursery(this);
+    JS::shadow::Runtime *rt = js::gc::GetGCThingRuntime(this);
+    return !IsInsideNursery(rt, this);
 #endif
     return true;
 }
