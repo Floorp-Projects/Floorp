@@ -106,6 +106,11 @@ CompositorD3D11::~CompositorD3D11()
 bool
 CompositorD3D11::Initialize()
 {
+  if (!gfxPlatform::CanUseDirect3D11()) {
+    NS_WARNING("Direct3D 11-accelerated layers are not supported on this system.");
+    return false;
+  }
+
   HRESULT hr;
 
   mDevice = gfxWindowsPlatform::GetPlatform()->GetD3D11Device();
