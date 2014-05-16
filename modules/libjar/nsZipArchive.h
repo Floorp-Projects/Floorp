@@ -179,6 +179,13 @@ public:
   nsZipHandle* GetFD();
 
   /**
+   * Gets the data offset.
+   * @param   aItem       Pointer to nsZipItem
+   * returns 0 on failure.
+   */
+  uint32_t GetDataOffset(nsZipItem* aItem);
+
+  /**
    * Get pointer to the data of the item.
    * @param   aItem       Pointer to nsZipItem
    * reutrns null when zip file is corrupt.
