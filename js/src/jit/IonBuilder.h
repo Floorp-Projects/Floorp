@@ -633,6 +633,7 @@ class IonBuilder : public MIRGenerator
     {
         InliningStatus_Error,
         InliningStatus_NotInlined,
+        InliningStatus_UseCountTooLow,
         InliningStatus_Inlined
     };
 
@@ -640,7 +641,8 @@ class IonBuilder : public MIRGenerator
     {
         InliningDecision_Error,
         InliningDecision_Inline,
-        InliningDecision_DontInline
+        InliningDecision_DontInline,
+        InliningDecision_UseCountTooLow
     };
 
     static InliningDecision DontInline(JSScript *targetScript, const char *reason);
