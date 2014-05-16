@@ -47,21 +47,25 @@ JavaScriptParent::init()
 }
 
 bool
-JavaScriptParent::toId(JSContext *cx, JSObject *obj, ObjectId *idp)
+JavaScriptParent::toObjectVariant(JSContext *cx, JSObject *obj, ObjectVariant *objVarp)
 {
+    JS_ASSERT(obj);
     obj = js::CheckedUnwrap(obj, false);
     if (!obj || !IsCPOW(obj)) {
         JS_ReportError(cx, "cannot ipc non-cpow object");
         return false;
     }
 
-    *idp = idOf(obj);
+    *objVarp = LocalObject(idOf(obj));
     return true;
 }
 
 JSObject *
-JavaScriptParent::fromId(JSContext *cx, ObjectId objId)
+JavaScriptParent::fromObjectVariant(JSContext *cx, ObjectVariant objVar)
 {
+    JS_ASSERT(objVar.type() == ObjectVariant::TRemoteObject);
+    ObjectId objId = objVar.get_RemoteObject().id();
+
     RootedObject obj(cx, findCPOWById(objId));
     if (obj) {
         if (!JS_WrapObject(cx, &obj))
