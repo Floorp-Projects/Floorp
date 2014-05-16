@@ -73,14 +73,7 @@ public class PanelsPreferenceCategory extends CustomListCategory {
      * Reload the Home Panels list from HomeConfig.
      */
     public void refresh() {
-        // Clear all the existing home panels, but leave the
-        // first item (Add panels).
-        int prefCount = getPreferenceCount();
-        while (prefCount > 1) {
-            removePreference(getPreference(1));
-            prefCount--;
-        }
-
+        removeAll();
         loadHomeConfig();
     }
 
@@ -112,8 +105,7 @@ public class PanelsPreferenceCategory extends CustomListCategory {
 
         final int prefCount = getPreferenceCount();
 
-        // First preference (index 0) is Preference to add panels.
-        for (int i = 1; i < prefCount; i++) {
+        for (int i = 0; i < prefCount; i++) {
             final PanelsPreference pref = (PanelsPreference) getPreference(i);
 
             if (defaultPanelId.equals(pref.getKey())) {
