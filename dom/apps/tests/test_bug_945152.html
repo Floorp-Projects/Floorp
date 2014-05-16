@@ -1,0 +1,164 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=945152
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 945152</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.7">
+
+  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+  SimpleTest.waitForExplicitFinish();
+
+  const gBaseURL = 'http://test/chrome/dom/apps/tests/';
+  const gSJS = gBaseURL + 'file_bug_945152.sjs';
+  var gGenerator = runTest();
+
+  // When using SpecialPowers.autoConfirmAppInstall, it skips the local
+  // installation, and we need this mock to get correct package path.
+  Cu.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/WebappOSUtils.jsm");
+  var oldWebappOSUtils = WebappOSUtils;
+  WebappOSUtils.getPackagePath = function(aApp) {
+    return aApp.basePath + "/" + aApp.id;
+  }
+
+  SimpleTest.registerCleanupFunction(() => {
+    WebappOSUtils = oldWebappOSUtils;
+  });
+
+  function go() {
+     gGenerator.next();
+  }
+
+  function continueTest() {
+    try { gGenerator.next(); }
+    catch (e) { dump("Got exception: " + e + "\n"); }
+  }
+
+  function mozAppsError() {
+    ok(false, "mozApps error: " + this.error.name);
+    finish();
+  }
+
+  function xhrError(event, url) {
+    var xhr = event.target;
+    ok(false, "XHR error loading " + url + ": " + xhr.status + " - " +
+              xhr.statusText);
+    finish();
+  }
+
+  function xhrAbort(url) {
+    ok(false, "XHR abort loading " + url);
+    finish();
+  }
+
+  function runTest() {
+    // Set up.
+    SpecialPowers.setAllAppsLaunchable(true);
+    SpecialPowers.pushPrefEnv({
+      "set": [
+        ["dom.mozBrowserFramesEnabled", true],
+        ["dom.mapped_arraybuffer.enabled", true]
+      ]
+    }, continueTest);
+    yield undefined;
+
+    SpecialPowers.autoConfirmAppInstall(continueTest);
+    yield undefined;
+
+    // Create app on server side.
+    createApp(continueTest);
+    yield undefined;
+
+    // Install app.
+    var app;
+    navigator.mozApps.mgmt.oninstall = function(e) {
+      ok(true, "Got oninstall event");
+      app = e.application;
+      app.ondownloaderror = mozAppsError;
+      app.ondownloadsuccess = continueTest;
+    };
+
+    var req = navigator.mozApps.installPackage(gSJS + '?getManifest=1');
+    req.onerror = mozAppsError;
+    req.onsuccess = function() {
+      ok(true, "Application installed");
+    };
+    yield undefined;
+
+    // Launch app.
+    launchApp(app, continueTest);
+    yield undefined;
+
+    // Uninstall app.
+    var req = navigator.mozApps.mgmt.uninstall(app);
+    req.onerror = mozAppsError;
+    req.onsuccess = continueTest;
+    yield undefined;
+
+    // All done.
+    ok(true, "All done");
+    finish();
+  }
+
+  function createApp(cb) {
+    var xhr = new XMLHttpRequest();
+    var url = gSJS + '?createApp=1';
+    xhr.addEventListener("load", function() { is(xhr.responseText, "OK", "createApp OK"); cb(); });
+    xhr.addEventListener("error", event => xhrError(event, url));
+    xhr.addEventListener("abort", event => xhrAbort(url));
+    xhr.open('GET', url, true);
+    xhr.send();
+  }
+
+  function launchApp(app, cb) {
+    // Set up the app.
+    var ifr = document.createElement('iframe');
+    ifr.setAttribute('mozbrowser', 'true');
+    ifr.setAttribute('mozapp', app.manifestURL);
+    ifr.setAttribute('src', app.origin + app.manifest.launch_path);
+    var domParent = document.getElementById('container');
+
+    // Set us up to listen for messages from the app.
+    var listener = function(e) {
+      var message = e.detail.message;
+      if (/OK/.exec(message)) {
+        ok(true, "Message from app: " + message);
+      } else if (/KO/.exec(message)) {
+        ok(false, "Message from app: " + message);
+      } else if (/DONE/.exec(message)) {
+        ok(true, "Messaging from app complete");
+        ifr.removeEventListener('mozbrowsershowmodalprompt', listener);
+        domParent.removeChild(ifr);
+        cb();
+      }
+    }
+
+    // This event is triggered when the app calls "alert".
+    ifr.addEventListener('mozbrowsershowmodalprompt', listener, false);
+
+    // Add the iframe to the DOM, triggering the launch.
+    domParent.appendChild(ifr);
+  }
+
+  function finish() {
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body onload="go()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=945152">Mozilla Bug 945152</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+<div id="container"></div>
+</body>
+</html>
