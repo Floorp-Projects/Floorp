@@ -556,7 +556,6 @@ ContentChild::InitProcessAttributes()
 {
     SendGetProcessAttributes(&mID, &mIsForApp, &mIsForBrowser);
 
-#ifdef MOZ_WIDGET_GONK
 #ifdef MOZ_NUWA_PROCESS
     if (IsNuwaProcess()) {
         SetProcessName(NS_LITERAL_STRING("(Nuwa)"), false);
@@ -568,9 +567,6 @@ ContentChild::InitProcessAttributes()
     } else {
         SetProcessName(NS_LITERAL_STRING("Browser"), false);
     }
-#else
-    SetProcessName(NS_LITERAL_STRING("Content Process"), true);
-#endif
 
 }
 
