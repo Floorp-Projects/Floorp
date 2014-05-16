@@ -43,7 +43,7 @@ JavaScriptParent::idOf(JSObject *obj)
     MOZ_ASSERT(v.isDouble());
 
     ObjectId objId = BitwiseCast<uint64_t>(v.toDouble());
-    MOZ_ASSERT(findObject(objId) == obj);
+    MOZ_ASSERT(findCPOWById(objId) == obj);
     MOZ_ASSERT(objId);
 
     return objId;
@@ -564,7 +564,7 @@ JavaScriptParent::getPropertyNames(JSContext *cx, HandleObject proxy, uint32_t f
 JSObject *
 JavaScriptParent::unwrap(JSContext *cx, ObjectId objId)
 {
-    RootedObject obj(cx, findObject(objId));
+    RootedObject obj(cx, findCPOWById(objId));
     if (obj) {
         if (!JS_WrapObject(cx, &obj))
             return nullptr;

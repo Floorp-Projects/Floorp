@@ -58,7 +58,7 @@ JavaScriptChild::init()
 bool
 JavaScriptChild::RecvDropObject(const ObjectId &objId)
 {
-    JSObject *obj = findObject(objId);
+    JSObject *obj = findObjectById(objId);
     if (obj) {
         ids_.remove(obj);
         objects_.remove(objId);
@@ -102,7 +102,7 @@ JavaScriptChild::makeId(JSContext *cx, JSObject *obj, ObjectId *idp)
 JSObject *
 JavaScriptChild::unwrap(JSContext *cx, ObjectId id)
 {
-    JSObject *obj = findObject(id);
+    JSObject *obj = findObjectById(id);
     MOZ_ASSERT(obj);
     return obj;
 }
@@ -151,7 +151,7 @@ JavaScriptChild::AnswerPreventExtensions(const ObjectId &objId, ReturnStatus *rs
     AutoSafeJSContext cx;
     JSAutoRequest request(cx);
 
-    RootedObject obj(cx, findObject(objId));
+    RootedObject obj(cx, findObjectById(objId));
     if (!obj)
         return false;
 
@@ -181,7 +181,7 @@ JavaScriptChild::AnswerGetPropertyDescriptor(const ObjectId &objId, const nsStri
 
     EmptyDesc(out);
 
-    RootedObject obj(cx, findObject(objId));
+    RootedObject obj(cx, findObjectById(objId));
     if (!obj)
         return false;
 
@@ -213,7 +213,7 @@ JavaScriptChild::AnswerGetOwnPropertyDescriptor(const ObjectId &objId, const nsS
 
     EmptyDesc(out);
 
-    RootedObject obj(cx, findObject(objId));
+    RootedObject obj(cx, findObjectById(objId));
     if (!obj)
         return false;
 
@@ -243,7 +243,7 @@ JavaScriptChild::AnswerDefineProperty(const ObjectId &objId, const nsString &id,
     AutoSafeJSContext cx;
     JSAutoRequest request(cx);
 
-    RootedObject obj(cx, findObject(objId));
+    RootedObject obj(cx, findObjectById(objId));
     if (!obj)
         return false;
 
@@ -281,7 +281,7 @@ JavaScriptChild::AnswerDelete(const ObjectId &objId, const nsString &id, ReturnS
 
     *success = false;
 
-    RootedObject obj(cx, findObject(objId));
+    RootedObject obj(cx, findObjectById(objId));
     if (!obj)
         return false;
 
@@ -305,7 +305,7 @@ JavaScriptChild::AnswerHas(const ObjectId &objId, const nsString &id, ReturnStat
 
     *bp = false;
 
-    RootedObject obj(cx, findObject(objId));
+    RootedObject obj(cx, findObjectById(objId));
     if (!obj)
         return false;
 
@@ -331,7 +331,7 @@ JavaScriptChild::AnswerHasOwn(const ObjectId &objId, const nsString &id, ReturnS
 
     *bp = false;
 
-    RootedObject obj(cx, findObject(objId));
+    RootedObject obj(cx, findObjectById(objId));
     if (!obj)
         return false;
 
@@ -360,11 +360,11 @@ JavaScriptChild::AnswerGet(const ObjectId &objId, const ObjectId &receiverId, co
     // the parent won't read it.
     *result = void_t();
 
-    RootedObject obj(cx, findObject(objId));
+    RootedObject obj(cx, findObjectById(objId));
     if (!obj)
         return false;
 
-    RootedObject receiver(cx, findObject(receiverId));
+    RootedObject receiver(cx, findObjectById(receiverId));
     if (!receiver)
         return false;
 
@@ -396,11 +396,11 @@ JavaScriptChild::AnswerSet(const ObjectId &objId, const ObjectId &receiverId, co
     // the parent won't read it.
     *result = void_t();
 
-    RootedObject obj(cx, findObject(objId));
+    RootedObject obj(cx, findObjectById(objId));
     if (!obj)
         return false;
 
-    RootedObject receiver(cx, findObject(receiverId));
+    RootedObject receiver(cx, findObjectById(receiverId));
     if (!receiver)
         return false;
 
@@ -433,7 +433,7 @@ JavaScriptChild::AnswerIsExtensible(const ObjectId &objId, ReturnStatus *rs, boo
 
     *result = false;
 
-    RootedObject obj(cx, findObject(objId));
+    RootedObject obj(cx, findObjectById(objId));
     if (!obj)
         return false;
 
@@ -458,7 +458,7 @@ JavaScriptChild::AnswerCall(const ObjectId &objId, const nsTArray<JSParam> &argv
     // the parent won't read it.
     *result = void_t();
 
-    RootedObject obj(cx, findObject(objId));
+    RootedObject obj(cx, findObjectById(objId));
     if (!obj)
         return false;
 
@@ -551,7 +551,7 @@ JavaScriptChild::AnswerObjectClassIs(const ObjectId &objId, const uint32_t &clas
     AutoSafeJSContext cx;
     JSAutoRequest request(cx);
 
-    RootedObject obj(cx, findObject(objId));
+    RootedObject obj(cx, findObjectById(objId));
     if (!obj)
         return false;
 
@@ -567,7 +567,7 @@ JavaScriptChild::AnswerClassName(const ObjectId &objId, nsString *name)
     AutoSafeJSContext cx;
     JSAutoRequest request(cx);
 
-    RootedObject obj(cx, findObject(objId));
+    RootedObject obj(cx, findObjectById(objId));
     if (!obj)
         return false;
 
@@ -584,7 +584,7 @@ JavaScriptChild::AnswerGetPropertyNames(const ObjectId &objId, const uint32_t &f
     AutoSafeJSContext cx;
     JSAutoRequest request(cx);
 
-    RootedObject obj(cx, findObject(objId));
+    RootedObject obj(cx, findObjectById(objId));
     if (!obj)
         return false;
 
@@ -614,7 +614,7 @@ JavaScriptChild::AnswerInstanceOf(const ObjectId &objId, const JSIID &iid, Retur
 
     *instanceof = false;
 
-    RootedObject obj(cx, findObject(objId));
+    RootedObject obj(cx, findObjectById(objId));
     if (!obj)
         return false;
 
@@ -640,7 +640,7 @@ JavaScriptChild::AnswerDOMInstanceOf(const ObjectId &objId, const int &prototype
 
     *instanceof = false;
 
-    RootedObject obj(cx, findObject(objId));
+    RootedObject obj(cx, findObjectById(objId));
     if (!obj)
         return false;
 
