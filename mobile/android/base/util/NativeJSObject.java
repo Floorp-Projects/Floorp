@@ -64,6 +64,40 @@ public class NativeJSObject
     public native boolean optBoolean(String name, boolean fallback);
 
     /**
+     * Returns the value of a boolean array property.
+     *
+     * @param name
+     *        Property name
+     * @throws IllegalArgumentException
+     *         If the property does not exist or if its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native boolean[] getBooleanArray(String name);
+
+    /**
+     * Returns the value of a boolean array property.
+     *
+     * @param name
+     *        Property name
+     * @param fallback
+     *        Value to return if property does not exist
+     * @throws IllegalArgumentException
+     *         If the property exists and its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native boolean[] optBooleanArray(String name, boolean[] fallback);
+
+    /**
      * Returns the value of an object property as a Bundle.
      *
      * @param name
@@ -96,6 +130,40 @@ public class NativeJSObject
      *         If an internal JSAPI call failed
      */
     public native Bundle optBundle(String name, Bundle fallback);
+
+    /**
+     * Returns the value of an object array property as a Bundle array.
+     *
+     * @param name
+     *        Property name
+     * @throws IllegalArgumentException
+     *         If the property does not exist or if its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native Bundle[] getBundleArray(String name);
+
+    /**
+     * Returns the value of an object array property as a Bundle array.
+     *
+     * @param name
+     *        Property name
+     * @param fallback
+     *        Value to return if property does not exist
+     * @throws IllegalArgumentException
+     *         If the property exists and its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native Bundle[] optBundleArray(String name, Bundle[] fallback);
 
     /**
      * Returns the value of a double property.
@@ -132,6 +200,40 @@ public class NativeJSObject
     public native double optDouble(String name, double fallback);
 
     /**
+     * Returns the value of a double array property.
+     *
+     * @param name
+     *        Property name
+     * @throws IllegalArgumentException
+     *         If the property does not exist or if its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native double[] getDoubleArray(String name);
+
+    /**
+     * Returns the value of a double array property.
+     *
+     * @param name
+     *        Property name
+     * @param fallback
+     *        Value to return if property does not exist
+     * @throws IllegalArgumentException
+     *         If the property exists and its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native double[] optDoubleArray(String name, double[] fallback);
+
+    /**
      * Returns the value of an int property.
      *
      * @param name
@@ -164,6 +266,40 @@ public class NativeJSObject
      *         If an internal JSAPI call failed
      */
     public native int optInt(String name, int fallback);
+
+    /**
+     * Returns the value of an int array property.
+     *
+     * @param name
+     *        Property name
+     * @throws IllegalArgumentException
+     *         If the property does not exist or if its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native int[] getIntArray(String name);
+
+    /**
+     * Returns the value of an int array property.
+     *
+     * @param name
+     *        Property name
+     * @param fallback
+     *        Value to return if property does not exist
+     * @throws IllegalArgumentException
+     *         If the property exists and its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native int[] optIntArray(String name, int[] fallback);
 
     /**
      * Returns the value of an object property.
@@ -200,6 +336,40 @@ public class NativeJSObject
     public native NativeJSObject optObject(String name, NativeJSObject fallback);
 
     /**
+     * Returns the value of an object array property.
+     *
+     * @param name
+     *        Property name
+     * @throws IllegalArgumentException
+     *         If the property does not exist or if its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native NativeJSObject[] getObjectArray(String name);
+
+    /**
+     * Returns the value of an object array property.
+     *
+     * @param name
+     *        Property name
+     * @param fallback
+     *        Value to return if property does not exist
+     * @throws IllegalArgumentException
+     *         If the property exists and its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native NativeJSObject[] optObjectArray(String name, NativeJSObject[] fallback);
+
+    /**
      * Returns the value of a string property.
      *
      * @param name
@@ -232,6 +402,40 @@ public class NativeJSObject
      *         If an internal JSAPI call failed
      */
     public native String optString(String name, String fallback);
+
+    /**
+     * Returns the value of a string array property.
+     *
+     * @param name
+     *        Property name
+     * @throws IllegalArgumentException
+     *         If the property does not exist or if its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native String[] getStringArray(String name);
+
+    /**
+     * Returns the value of a string array property.
+     *
+     * @param name
+     *        Property name
+     * @param fallback
+     *        Value to return if property does not exist
+     * @throws IllegalArgumentException
+     *         If the property exists and its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native String[] optStringArray(String name, String[] fallback);
 
     /**
      * Returns whether a property exists in this object
