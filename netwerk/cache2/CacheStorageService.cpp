@@ -179,14 +179,6 @@ protected:
     , mNotifyStorage(true)
     , mVisitEntries(aVisitEntries)
   {
-    MOZ_ASSERT(NS_IsMainThread());
-  }
-
-  virtual ~WalkCacheRunnable()
-  {
-    if (mCallback) {
-      ProxyReleaseMainThread(mCallback);
-    }
   }
 
   nsRefPtr<CacheStorageService> mService;
