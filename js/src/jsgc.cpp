@@ -1591,12 +1591,18 @@ ArenaLists::allocateFromArenaInline(Zone *zone, AllocKind thingKind)
     }
     al->insertAtStart(aheader);
 
-    /* See comments before allocateFromNewArena about this assert. */
+    /*
+     * Allocate from a newly allocated arena. The arena will have been set up
+     * as fully used during the initialization so we have to re-mark it as
+     * empty before allocating.
+     */
     JS_ASSERT(!aheader->hasFreeThings());
-    uintptr_t arenaAddr = aheader->arenaAddress();
-    return freeLists[thingKind].allocateFromNewArena(arenaAddr,
-                                                     Arena::firstThingOffset(thingKind),
-                                                     Arena::thingSize(thingKind));
+    Arena *arena = aheader->getArena();
+    size_t thingSize = Arena::thingSize(thingKind);
+    FreeSpan fullSpan;
+    fullSpan.initFinal(arena->thingsStart(thingKind), arena->thingsEnd() - thingSize, thingSize);
+    freeLists[thingKind].setHead(&fullSpan);
+    return freeLists[thingKind].allocate(thingSize);
 }
 
 void *

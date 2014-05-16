@@ -379,22 +379,6 @@ class FreeList
         JS_EXTRA_POISON(reinterpret_cast<void *>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
         return reinterpret_cast<void *>(thing);
     }
-
-    /*
-     * Allocate from a newly allocated arena. The arena will have been set up
-     * as fully used during the initialization so to allocate we simply return
-     * the first thing in the arena and set the free list to point to the
-     * second.
-     */
-    MOZ_ALWAYS_INLINE void *allocateFromNewArena(uintptr_t arenaAddr, size_t firstThingOffset,
-                                                 size_t thingSize) {
-        JS_ASSERT(isEmpty());
-        JS_ASSERT(!(arenaAddr & ArenaMask));
-        uintptr_t thing = arenaAddr + firstThingOffset;
-        head.initFinal(thing + thingSize, arenaAddr + ArenaSize - thingSize, thingSize);
-        JS_EXTRA_POISON(reinterpret_cast<void *>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
-        return reinterpret_cast<void *>(thing);
-    }
 };
 
 /* Every arena has a header. */
@@ -479,7 +463,7 @@ struct ArenaHeader : public JS::shadow::ArenaHeader
         static_assert(FINALIZE_LIMIT <= 255, "We must be able to fit the allockind into uint8_t.");
         allocKind = size_t(kind);
 
-        /* See comments in FreeSpan::allocateFromNewArena. */
+        /* The arena is initially marked as full; see allocateFromArenaInline(). */
         firstFreeSpanOffsets = FreeSpan::FullArenaOffsets;
     }
 
