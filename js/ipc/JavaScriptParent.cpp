@@ -30,14 +30,14 @@ JavaScriptParent::JavaScriptParent()
 static inline JavaScriptParent *
 ParentOf(JSObject *obj)
 {
-    MOZ_ASSERT(JavaScriptParent::IsCPOW(obj));
+    MOZ_ASSERT(IsCPOW(obj));
     return reinterpret_cast<JavaScriptParent *>(GetProxyExtra(obj, 0).toPrivate());
 }
 
 ObjectId
 JavaScriptParent::idOf(JSObject *obj)
 {
-    MOZ_ASSERT(JavaScriptParent::IsCPOW(obj));
+    MOZ_ASSERT(IsCPOW(obj));
 
     Value v = GetProxyExtra(obj, 1);
     MOZ_ASSERT(v.isDouble());
@@ -647,20 +647,32 @@ JavaScriptParent::ActorDestroy(ActorDestroyReason why)
     inactive_ = true;
 }
 
-/* static */ bool
-JavaScriptParent::IsCPOW(JSObject *obj)
+namespace mozilla {
+namespace jsipc {
+
+bool
+IsCPOW(JSObject *obj)
 {
     return IsProxy(obj) && GetProxyHandler(obj) == &CPOWProxyHandler::singleton;
 }
 
-/* static */ nsresult
-JavaScriptParent::InstanceOf(JSObject *proxy, const nsID *id, bool *bp)
+nsresult
+InstanceOf(JSObject *proxy, const nsID *id, bool *bp)
 {
     JavaScriptParent *parent = ParentOf(proxy);
     if (!parent->active())
         return NS_ERROR_UNEXPECTED;
     return parent->instanceOf(proxy, id, bp);
 }
+
+bool
+DOMInstanceOf(JSContext *cx, JSObject *proxy, int prototypeID, int depth, bool *bp)
+{
+    FORWARD(domInstanceOf, (cx, proxy, prototypeID, depth, bp));
+}
+
+} /* namespace jsipc */
+} /* namespace mozilla */
 
 nsresult
 JavaScriptParent::instanceOf(JSObject *obj, const nsID *id, bool *bp)
@@ -678,12 +690,6 @@ JavaScriptParent::instanceOf(JSObject *obj, const nsID *id, bool *bp)
         return NS_ERROR_UNEXPECTED;
 
     return NS_OK;
-}
-
-/* static */ bool
-JavaScriptParent::DOMInstanceOf(JSContext *cx, JSObject *proxy, int prototypeID, int depth, bool *bp)
-{
-    FORWARD(domInstanceOf, (cx, proxy, prototypeID, depth, bp));
 }
 
 bool

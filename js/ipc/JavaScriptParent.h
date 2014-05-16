@@ -68,16 +68,12 @@ class JavaScriptParent
 
     void drop(JSObject *obj);
 
-    static bool IsCPOW(JSObject *obj);
-
-    static nsresult InstanceOf(JSObject *obj, const nsID *id, bool *bp);
     nsresult instanceOf(JSObject *obj, const nsID *id, bool *bp);
 
     /*
      * Check that |obj| is a DOM wrapper whose prototype chain contains
      * |prototypeID| at depth |depth|.
      */
-    static bool DOMInstanceOf(JSContext *cx, JSObject *obj, int prototypeID, int depth, bool *bp);
     bool domInstanceOf(JSContext *cx, JSObject *obj, int prototypeID, int depth, bool *bp);
 
     mozilla::ipc::IProtocol*
@@ -102,6 +98,15 @@ class JavaScriptParent
     uintptr_t refcount_;
     bool inactive_;
 };
+
+bool
+IsCPOW(JSObject *obj);
+
+nsresult
+InstanceOf(JSObject *obj, const nsID *id, bool *bp);
+
+bool
+DOMInstanceOf(JSContext *cx, JSObject *obj, int prototypeID, int depth, bool *bp);
 
 } // jsipc
 } // mozilla
