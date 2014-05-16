@@ -412,7 +412,7 @@ ArenaHeader::checkSynchronizedWithFreeList() const
     if (IsBackgroundFinalized(getAllocKind()) && zone->runtimeFromAnyThread()->gc.helperThread.onBackgroundThread())
         return;
 
-    FreeSpan firstSpan = FreeSpan::decodeOffsets(arenaAddress(), firstFreeSpanOffsets);
+    FreeSpan firstSpan = firstFreeSpan.decompact(arenaAddress());
     if (firstSpan.isEmpty())
         return;
     const FreeList *freeList = zone->allocator.arenas.getFreeList(getAllocKind());
