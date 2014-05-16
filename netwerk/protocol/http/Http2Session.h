@@ -25,6 +25,7 @@ namespace net {
 
 class Http2PushedStream;
 class Http2Stream;
+class nsHttpTransaction;
 
 class Http2Session MOZ_FINAL : public ASpdySession
   , public nsAHttpConnection
@@ -445,6 +446,15 @@ private:
   // by the load group and the serial number can be used as part of the cache key
   // to make sure streams aren't shared across sessions.
   uint64_t        mSerial;
+
+private:
+/// connect tunnels
+  void DispatchOnTunnel(nsAHttpTransaction *, nsIInterfaceRequestor *);
+  void RegisterTunnel(Http2Stream *);
+  void UnRegisterTunnel(Http2Stream *);
+  uint32_t FindTunnelCount(nsHttpConnectionInfo *);
+
+  nsDataHashtable<nsCStringHashKey, uint32_t> mTunnelHash;
 };
 
 } // namespace mozilla::net
