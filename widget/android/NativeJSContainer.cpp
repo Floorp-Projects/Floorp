@@ -623,6 +623,20 @@ Java_org_mozilla_gecko_util_NativeJSObject_optBoolean(JNIEnv* env, jobject insta
     return GetProperty<BooleanProperty>(env, instance, name, FallbackOption::RETURN, fallback);
 }
 
+NS_EXPORT jbooleanArray JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_getBooleanArray(
+    JNIEnv* env, jobject instance, jstring name)
+{
+    return nullptr; // TODO add implementation
+}
+
+NS_EXPORT jbooleanArray JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_optBooleanArray(
+    JNIEnv* env, jobject instance, jstring name, jbooleanArray fallback)
+{
+    return nullptr; // TODO add implementation
+}
+
 NS_EXPORT jobject JNICALL
 Java_org_mozilla_gecko_util_NativeJSObject_getBundle(JNIEnv* env, jobject instance, jstring name)
 {
@@ -634,6 +648,20 @@ Java_org_mozilla_gecko_util_NativeJSObject_optBundle(JNIEnv* env, jobject instan
                                                      jstring name, jobject fallback)
 {
     return GetProperty<BundleProperty>(env, instance, name, FallbackOption::RETURN, fallback);
+}
+
+NS_EXPORT jobjectArray JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_getBundleArray(
+    JNIEnv* env, jobject instance, jstring name)
+{
+    return nullptr; // TODO add implementation
+}
+
+NS_EXPORT jobjectArray JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_optBundleArray(
+    JNIEnv* env, jobject instance, jstring name, jobjectArray fallback)
+{
+    return nullptr; // TODO add implementation
 }
 
 NS_EXPORT jdouble JNICALL
@@ -649,6 +677,20 @@ Java_org_mozilla_gecko_util_NativeJSObject_optDouble(JNIEnv* env, jobject instan
     return GetProperty<DoubleProperty>(env, instance, name, FallbackOption::RETURN, fallback);
 }
 
+NS_EXPORT jdoubleArray JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_getDoubleArray(
+    JNIEnv* env, jobject instance, jstring name)
+{
+    return nullptr; // TODO add implementation
+}
+
+NS_EXPORT jdoubleArray JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_optDoubleArray(
+    JNIEnv* env, jobject instance, jstring name, jdoubleArray fallback)
+{
+    return nullptr; // TODO add implementation
+}
+
 NS_EXPORT jint JNICALL
 Java_org_mozilla_gecko_util_NativeJSObject_getInt(JNIEnv* env, jobject instance, jstring name)
 {
@@ -660,6 +702,20 @@ Java_org_mozilla_gecko_util_NativeJSObject_optInt(JNIEnv* env, jobject instance,
                                                   jstring name, jint fallback)
 {
     return GetProperty<IntProperty>(env, instance, name, FallbackOption::RETURN, fallback);
+}
+
+NS_EXPORT jintArray JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_getIntArray(
+    JNIEnv* env, jobject instance, jstring name)
+{
+    return nullptr; // TODO add implementation
+}
+
+NS_EXPORT jintArray JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_optIntArray(
+    JNIEnv* env, jobject instance, jstring name, jintArray fallback)
+{
+    return nullptr; // TODO add implementation
 }
 
 NS_EXPORT jobject JNICALL
@@ -675,6 +731,20 @@ Java_org_mozilla_gecko_util_NativeJSObject_optObject(JNIEnv* env, jobject instan
     return GetProperty<ObjectProperty>(env, instance, name, FallbackOption::RETURN, fallback);
 }
 
+NS_EXPORT jobjectArray JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_getObjectArray(
+    JNIEnv* env, jobject instance, jstring name)
+{
+    return nullptr; // TODO add implementation
+}
+
+NS_EXPORT jobjectArray JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_optObjectArray(
+    JNIEnv* env, jobject instance, jstring name, jobjectArray fallback)
+{
+    return nullptr; // TODO add implementation
+}
+
 NS_EXPORT jstring JNICALL
 Java_org_mozilla_gecko_util_NativeJSObject_getString(JNIEnv* env, jobject instance, jstring name)
 {
@@ -686,6 +756,20 @@ Java_org_mozilla_gecko_util_NativeJSObject_optString(JNIEnv* env, jobject instan
                                                      jstring name, jstring fallback)
 {
     return GetProperty<StringProperty>(env, instance, name, FallbackOption::RETURN, fallback);
+}
+
+NS_EXPORT jobjectArray JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_getStringArray(
+    JNIEnv* env, jobject instance, jstring name)
+{
+    return nullptr; // TODO add implementation
+}
+
+NS_EXPORT jobjectArray JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_optStringArray(
+    JNIEnv* env, jobject instance, jstring name, jobjectArray fallback)
+{
+    return nullptr; // TODO add implementation
 }
 
 NS_EXPORT jboolean JNICALL
