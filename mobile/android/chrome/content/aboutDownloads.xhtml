@@ -35,27 +35,11 @@
     <menuitem id="contextmenu-removeall" label="&aboutDownloads.removeAll;"></menuitem>
   </menu>
 
-  <!--template id="download-item"-->
-    <li id="download-item" class="list-item" role="button" contextmenu="downloadmenu" style="display: none">
-      <img class="icon" src=""/>
-      <div class="details">
-        <div class="row">
-          <!-- This is a hack so that we can crop this label in its center -->
-          <xul:label class="title" crop="center" value=""/>
-          <div class="date"></div>
-        </div>
-        <div class="size"></div>
-        <div class="domain"></div>
-        <div class="state"></div>
-      </div>
-    </li>
-  <!--/template-->
-
   <div class="header">
     <div>&aboutDownloads.header;</div>
   </div>
   <ul id="private-downloads-list" class="list"></ul>
-  <ul id="public-downloads-list" class="list"></ul>
+  <ul id="normal-downloads-list" class="list"></ul>
   <span id="no-downloads-indicator">&aboutDownloads.empty;</span>
   <script type="application/javascript;version=1.8" src="chrome://browser/content/aboutDownloads.js"/>
 </body>
