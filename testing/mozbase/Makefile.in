@@ -39,7 +39,7 @@ libs:: $(MOZBASE_PACKAGES)
 libs:: $(MOZBASE_EXTRAS)
 	$(PYTHON) $(topsrcdir)/config/nsinstall.py $^ $(_DEST_DIR)
 
-stage-package: PKG_STAGE = $(DIST)/test-package-stage
+stage-package: PKG_STAGE = $(DIST)/test-stage
 stage-package:
 	$(NSINSTALL) -D $(PKG_STAGE)/mozbase
 	@(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - $(MOZBASE_PACKAGES)) | (cd $(PKG_STAGE)/mozbase && tar -xf -)
