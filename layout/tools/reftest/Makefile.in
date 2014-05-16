@@ -76,7 +76,7 @@ copy-harness: $(_HARNESS_FILES) $(addprefix $(_DEST_DIR)/,$(_HARNESS_PP_FILES))
 	$(INSTALL) $(_HARNESS_FILES) $(_DEST_DIR)
 	(cd $(DIST)/xpi-stage && tar $(TAR_CREATE_FLAGS) - reftest) | (cd $(_DEST_DIR) && tar -xf -)
 
-PKG_STAGE = $(DIST)/test-package-stage
+PKG_STAGE = $(DIST)/test-stage
 
 # stage harness and tests for packaging
 stage-package:
