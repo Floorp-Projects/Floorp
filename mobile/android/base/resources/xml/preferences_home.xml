@@ -9,13 +9,7 @@
                   android:enabled="false">
 
     <org.mozilla.gecko.preferences.PanelsPreferenceCategory
-        android:title="@string/pref_category_home_panels">
-
-        <Preference android:key="android.not_a_preference.home.add_panel"
-                    android:title="@string/pref_home_add_panel"
-                    android:icon="@drawable/icon_new_home_panel" />
-
-    </org.mozilla.gecko.preferences.PanelsPreferenceCategory>
+        android:title="@string/pref_category_home_panels"/>
 
     <PreferenceCategory android:title="@string/pref_category_home_content_settings">
 
