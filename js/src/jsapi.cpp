@@ -1625,7 +1625,6 @@ JS_AddExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 JS_PUBLIC_API(void)
 JS_RemoveExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 {
-    AssertHeapIsIdle(rt);
     for (size_t i = 0; i < rt->gc.blackRootTracers.length(); i++) {
         Callback<JSTraceDataOp> *e = &rt->gc.blackRootTracers[i];
         if (e->op == traceOp && e->data == data) {

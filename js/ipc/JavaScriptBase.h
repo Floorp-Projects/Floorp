@@ -22,6 +22,13 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
     typedef WrapperAnswer Answer;
 
   public:
+    JavaScriptBase(JSRuntime *rt)
+      : JavaScriptShared(rt),
+        WrapperOwner(rt),
+        WrapperAnswer(rt)
+    {}
+    virtual ~JavaScriptBase() {}
+
     virtual void ActorDestroy(WrapperOwner::ActorDestroyReason why) {
         WrapperOwner::ActorDestroy(why);
     }
@@ -101,8 +108,15 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
         return Answer::AnswerDOMInstanceOf(objId, prototypeID, depth, rs, instanceof);
     }
 
+    bool RecvDropObject(const ObjectId &objId) {
+        return Answer::RecvDropObject(objId);
+    }
+
     /*** Dummy call handlers ***/
 
+    bool SendDropObject(const ObjectId &objId) {
+        return Base::SendDropObject(objId);
+    }
     bool CallPreventExtensions(const ObjectId &objId, ReturnStatus *rs) {
         return Base::CallPreventExtensions(objId, rs);
     }
@@ -174,6 +188,15 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
     bool CallDOMInstanceOf(const ObjectId &objId, const int &prototypeID, const int &depth,
                            ReturnStatus *rs, bool *instanceof) {
         return Base::CallDOMInstanceOf(objId, prototypeID, depth, rs, instanceof);
+    }
+
+    /* The following code is needed to suppress a bogus MSVC warning (C4250). */
+
+    virtual bool toObjectVariant(JSContext *cx, JSObject *obj, ObjectVariant *objVarp) {
+        return WrapperOwner::toObjectVariant(cx, obj, objVarp);
+    }
+    virtual JSObject *fromObjectVariant(JSContext *cx, ObjectVariant objVar) {
+        return WrapperOwner::fromObjectVariant(cx, objVar);
     }
 };
 
