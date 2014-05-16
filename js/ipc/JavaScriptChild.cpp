@@ -413,7 +413,7 @@ JavaScriptChild::AnswerSet(const ObjectId &objId, const ObjectId &receiverId, co
     MOZ_ASSERT(obj == receiver);
 
     RootedValue val(cx);
-    if (!toValue(cx, value, &val))
+    if (!fromVariant(cx, value, &val))
         return fail(cx, rs);
 
     if (!JS_SetPropertyById(cx, obj, internedId, val))
@@ -465,7 +465,7 @@ JavaScriptChild::AnswerCall(const ObjectId &objId, const nsTArray<JSParam> &argv
     MOZ_ASSERT(argv.Length() >= 2);
 
     RootedValue objv(cx);
-    if (!toValue(cx, argv[0], &objv))
+    if (!fromVariant(cx, argv[0], &objv))
         return fail(cx, rs);
 
     JSAutoCompartment comp(cx, &objv.toObject());
@@ -488,7 +488,7 @@ JavaScriptChild::AnswerCall(const ObjectId &objId, const nsTArray<JSParam> &argv
                 return fail(cx, rs);
         } else {
             RootedValue v(cx);
-            if (!toValue(cx, argv[i].get_JSVariant(), &v))
+            if (!fromVariant(cx, argv[i].get_JSVariant(), &v))
                 return fail(cx, rs);
             if (!vals.append(v))
                 return fail(cx, rs);

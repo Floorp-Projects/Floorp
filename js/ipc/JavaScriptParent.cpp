@@ -317,7 +317,7 @@ JavaScriptParent::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
     if (!ok(cx, status))
         return false;
 
-    return toValue(cx, val, vp);
+    return fromVariant(cx, val, vp);
 }
 
 bool
@@ -350,7 +350,7 @@ JavaScriptParent::set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject re
     if (!ok(cx, status))
         return false;
 
-    return toValue(cx, result, vp);
+    return fromVariant(cx, result, vp);
 }
 
 bool
@@ -443,7 +443,7 @@ JavaScriptParent::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
 
         // Take the value the child process returned, and set it on the XPC
         // object.
-        if (!toValue(cx, outparams[i], &v))
+        if (!fromVariant(cx, outparams[i], &v))
             return false;
 
         obj = &outobjects[i].toObject();
@@ -451,7 +451,7 @@ JavaScriptParent::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
             return false;
     }
 
-    if (!toValue(cx, result, args.rval()))
+    if (!fromVariant(cx, result, args.rval()))
         return false;
 
     return true;
@@ -620,7 +620,7 @@ JavaScriptParent::ok(JSContext *cx, const ReturnStatus &status)
         return JS_ThrowStopIteration(cx);
 
     RootedValue exn(cx);
-    if (!toValue(cx, status.get_ReturnException().exn(), &exn))
+    if (!fromVariant(cx, status.get_ReturnException().exn(), &exn))
         return false;
 
     JS_SetPendingException(cx, exn);
