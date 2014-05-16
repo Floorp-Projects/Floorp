@@ -825,9 +825,14 @@ TraceLogging::lazyInit()
         enabledTextIds[TraceLogger::ParserCompileFunction] = true;
         enabledTextIds[TraceLogger::ParserCompileLazy] = true;
         enabledTextIds[TraceLogger::ParserCompileScript] = true;
+#ifdef JS_YARR
         enabledTextIds[TraceLogger::YarrCompile] = true;
         enabledTextIds[TraceLogger::YarrInterpret] = true;
         enabledTextIds[TraceLogger::YarrJIT] = true;
+#else
+        enabledTextIds[TraceLogger::IrregexpCompile] = true;
+        enabledTextIds[TraceLogger::IrregexpExecute] = true;
+#endif
     }
 
     if (ContainsFlag(env, "IonCompiler") || strlen(env) == 0) {

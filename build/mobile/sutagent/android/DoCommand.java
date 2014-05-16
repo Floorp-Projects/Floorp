@@ -1464,9 +1464,6 @@ private void CancelNotification()
                 Log.e("SUTAgentAndroid", "Cannot access world writeable test root");
             }
         }
-        if (!success) {
-            SUTAgentAndroid.sTestRoot = sErrorPrefix + " unable to determine test root";
-        }
         }
 
     public String GetTestRoot()

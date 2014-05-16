@@ -236,11 +236,18 @@ let DebuggerView = {
       this._onEditorLoad(aCallback);
     });
 
-    this.editor.on("gutterClick", (ev, line) => {
-      if (this.editor.hasBreakpoint(line)) {
-        this.editor.removeBreakpoint(line);
-      } else {
-        this.editor.addBreakpoint(line);
+    this.editor.on("gutterClick", (ev, line, button) => {
+      // A right-click shouldn't do anything but keep track of where
+      // it was clicked.
+      if(button == 2) {
+        this.clickedLine = line;
+      }
+      else {
+        if (this.editor.hasBreakpoint(line)) {
+          this.editor.removeBreakpoint(line);
+        } else {
+          this.editor.addBreakpoint(line);
+        }
       }
     });
   },

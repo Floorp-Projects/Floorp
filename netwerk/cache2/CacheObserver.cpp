@@ -22,7 +22,7 @@ namespace net {
 
 CacheObserver* CacheObserver::sSelf = nullptr;
 
-static uint32_t const kDefaultUseNewCache = 0; // Don't use the new cache by default
+static uint32_t const kDefaultUseNewCache = 1; // Use the new cache by default
 uint32_t CacheObserver::sUseNewCache = kDefaultUseNewCache;
 
 static bool sUseNewCacheTemp = false; // Temp trigger to not lose early adopters
