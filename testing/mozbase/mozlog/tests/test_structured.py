@@ -190,7 +190,7 @@ class TestCommandline(unittest.TestCase):
     def test_setup_logging(self):
         parser = argparse.ArgumentParser()
         commandline.add_logging_group(parser)
-        args = parser.parse_args(["--log-raw=/tmp/foo"])
+        args = parser.parse_args(["--log-raw=-"])
         logger = commandline.setup_logging("test", args, {})
         self.assertEqual(len(logger.handlers), 1)
 
