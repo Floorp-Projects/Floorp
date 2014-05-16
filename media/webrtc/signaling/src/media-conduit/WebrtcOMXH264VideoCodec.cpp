@@ -693,6 +693,11 @@ WebrtcOMXH264VideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
                this, mWidth, mHeight);
   }
 
+  if (aFrameTypes && aFrameTypes->size() &&
+      ((*aFrameTypes)[0] == webrtc::kKeyFrame)) {
+    mOMX->RequestIDRFrame();
+  }
+
   // Wrap I420VideoFrame input with PlanarYCbCrImage for OMXVideoEncoder.
   layers::PlanarYCbCrData yuvData;
   yuvData.mYChannel = const_cast<uint8_t*>(aInputImage.buffer(webrtc::kYPlane));
