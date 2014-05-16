@@ -3,6 +3,7 @@
 Unit-Tests for moznetwork
 """
 
+import os
 import mock
 import mozinfo
 import moznetwork
@@ -29,7 +30,13 @@ def verify_ip_in_list(ip):
                               "(25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)")
 
     if mozinfo.isLinux or mozinfo.isMac or mozinfo.isBsd:
-        args = ["ifconfig"]
+        # if "/sbin/ifconfig" exist, use it because it may not be in the
+        # PATH (at least on some linux platforms)
+        if os.path.isfile('/sbin/ifconfig') and os.access('/sbin/ifconfig',
+                                                           os.X_OK):
+            args = ['/sbin/ifconfig']
+        else:
+            args = ["ifconfig"]
 
     if mozinfo.isWin:
         args = ["ipconfig"]
