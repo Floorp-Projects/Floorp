@@ -4750,6 +4750,27 @@ sdp_result_e sdp_parse_attr_ice_attr (sdp_t *sdp_p, sdp_attr_t *attr_p, const ch
 }
 
 
+sdp_result_e sdp_build_attr_simple_flag (sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                         flex_string *fs) {
+    flex_string_sprintf(fs, "a=%s\r\n", sdp_get_attr_name(attr_p->type));
+
+    return SDP_SUCCESS;
+}
+
+
+sdp_result_e sdp_parse_attr_simple_flag (sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                      const char *ptr) {
+    /* No parameters to parse. */
+
+    if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
+        SDP_PRINT("%s Parsed a=%s", sdp_p->debug_str,
+                  sdp_get_attr_name(attr_p->type));
+    }
+
+    return (SDP_SUCCESS);
+}
+
+
 sdp_result_e sdp_parse_attr_fingerprint_attr (sdp_t *sdp_p, sdp_attr_t *attr_p,
                                            const char *ptr)
 {
