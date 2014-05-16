@@ -142,8 +142,12 @@ MobileMessageDB.prototype = {
       let currentVersion = event.oldVersion;
 
       function update(currentVersion) {
-        let next = update.bind(self, currentVersion + 1);
+        if (currentVersion >= self.dbVersion) {
+          if (DEBUG) debug("Upgrade finished.");
+          return;
+        }
 
+        let next = update.bind(self, currentVersion + 1);
         switch (currentVersion) {
           case 0:
             if (DEBUG) debug("New database");
@@ -247,10 +251,6 @@ MobileMessageDB.prototype = {
           case 22:
             if (DEBUG) debug("Upgrade to version 23. Add type information to receivers and to");
             self.upgradeSchema22(event.target.transaction, next);
-            break;
-          case 23:
-            // This will need to be moved for each new version
-            if (DEBUG) debug("Upgrade finished.");
             break;
           default:
             event.target.transaction.abort();
