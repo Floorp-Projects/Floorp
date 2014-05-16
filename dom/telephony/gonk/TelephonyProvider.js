@@ -748,7 +748,6 @@ TelephonyProvider.prototype = {
     gSystemMessenger.broadcastMessage("telephony-call-ended", data);
 
     aCall.clientId = aClientId;
-    this._updateActiveCall(aCall, null);
 
     let manualConfStateChange = false;
     let childId = this._currentCalls[aClientId][aCall.callIndex].childId;
@@ -774,6 +773,8 @@ TelephonyProvider.prototype = {
         }
       }
     }
+
+    this._updateActiveCall(aCall, null);
 
     if (!aCall.failCause ||
         aCall.failCause === RIL.GECKO_CALL_ERROR_NORMAL_CALL_CLEARING) {
