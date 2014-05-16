@@ -404,13 +404,31 @@ class CompileInfo
         return executionMode_ == ParallelExecution;
     }
 
-    bool canOptimizeOutSlot(uint32_t i) const {
-        if (script()->strict())
+    // Returns true if a slot can be observed out-side the current frame while
+    // the frame is active on the stack.  This implies that these definitions
+    // would have to be executed and that they cannot be removed even if they
+    // are unused.
+    bool isObservableSlot(uint32_t slot) const {
+        if (!funMaybeLazy())
+            return false;
+
+        // The |this| value must always be observable.
+        if (slot == thisSlot())
             return true;
 
-        // Function.arguments can be used to access all arguments in
-        // non-strict scripts, so we can't optimize out any arguments.
-        return !(firstArgSlot() <= i && i - firstArgSlot() < nargs());
+        // If the function may need an arguments object, then make sure to
+        // preserve the scope chain, because it may be needed to construct the
+        // arguments object during bailout. If we've already created an
+        // arguments object (or got one via OSR), preserve that as well.
+        if (hasArguments() && (slot == scopeChainSlot() || slot == argsObjSlot()))
+            return true;
+
+        // Function.arguments can be used to access all arguments in non-strict
+        // scripts, so we can't optimize out any arguments.
+        if (!script()->strict() && firstArgSlot() <= slot && slot - firstArgSlot() < nargs())
+            return true;
+
+        return false;
     }
 
   private:
