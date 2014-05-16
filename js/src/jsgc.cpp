@@ -3815,6 +3815,8 @@ GCRuntime::beginSweepingZoneGroup()
 
         if (rt->sweepZoneCallback)
             rt->sweepZoneCallback(zone);
+
+        zone->gcLastZoneGroupIndex = zoneGroupIndex;
     }
 
     validateIncrementalMarking();
