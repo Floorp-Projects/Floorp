@@ -655,12 +655,8 @@ class TypedObject : public ArrayBufferViewObject
         return getReservedSlot(JS_TYPEDOBJ_SLOT_OWNER).toObject().as<ArrayBufferObject>();
     }
 
-    TypedProto &typedProto() const {
-        return getProto()->as<TypedProto>();
-    }
-
     TypeDescr &typeDescr() const {
-        return typedProto().typeDescr();
+        return getReservedSlot(JS_TYPEDOBJ_SLOT_TYPE_DESCR).toObject().as<TypeDescr>();
     }
 
     uint8_t *typedMem() const {

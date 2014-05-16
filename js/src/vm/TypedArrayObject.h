@@ -32,7 +32,7 @@ class TypedArrayObject : public ArrayBufferViewObject
     // Typed array properties stored in slots, beyond those shared by all
     // ArrayBufferViews.
     static const size_t LENGTH_SLOT    = JS_TYPEDOBJ_SLOT_LENGTH;
-    static const size_t TYPE_SLOT      = JS_TYPEDARR_SLOT_TYPE;
+    static const size_t TYPE_SLOT      = JS_TYPEDOBJ_SLOT_TYPE_DESCR;
     static const size_t RESERVED_SLOTS = JS_TYPEDOBJ_SLOTS;
     static const size_t DATA_SLOT      = JS_TYPEDOBJ_SLOT_DATA;
 
