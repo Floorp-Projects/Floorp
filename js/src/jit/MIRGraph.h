@@ -616,11 +616,6 @@ class MIRGraph
         blocks_.remove(block);
         blocks_.pushBack(block);
     }
-    void moveBlockBefore(MBasicBlock *at, MBasicBlock *block) {
-        JS_ASSERT(block->id());
-        blocks_.remove(block);
-        blocks_.insertBefore(at, block);
-    }
     size_t numBlocks() const {
         return numBlocks_;
     }
