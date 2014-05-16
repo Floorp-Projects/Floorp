@@ -111,6 +111,11 @@ class OptimizationInfo
     // are inlined, as a fraction of compilerWarmUpThreshold.
     double inliningWarmUpThresholdFactor_;
 
+    // How many invocations or loop iterations are needed before a function
+    // is hot enough to recompile the outerScript to inline that function,
+    // as a multiplication of inliningWarmUpThreshold.
+    uint32_t inliningRecompileThresholdFactor_;
+
     OptimizationInfo()
     { }
 
@@ -200,6 +205,10 @@ class OptimizationInfo
         if (js_JitOptions.forceDefaultIonWarmUpThreshold)
             compilerWarmUpThreshold = js_JitOptions.forcedDefaultIonWarmUpThreshold;
         return compilerWarmUpThreshold * inliningWarmUpThresholdFactor_;
+    }
+
+    uint32_t inliningRecompileThreshold() const {
+        return inliningWarmUpThreshold() * inliningRecompileThresholdFactor_;
     }
 };
 
