@@ -24,14 +24,47 @@ using namespace js;
 WeakMapBase::WeakMapBase(JSObject *memOf, JSCompartment *c)
   : memberOf(memOf),
     compartment(c),
-    next(WeakMapNotInList)
+    next(WeakMapNotInList),
+    marked(false)
 {
     JS_ASSERT_IF(memberOf, memberOf->compartment() == c);
 }
 
 WeakMapBase::~WeakMapBase()
 {
-    JS_ASSERT(next == WeakMapNotInList);
+    JS_ASSERT(!isInList());
+}
+
+void
+WeakMapBase::trace(JSTracer *tracer)
+{
+    JS_ASSERT(isInList());
+    if (IS_GC_MARKING_TRACER(tracer)) {
+        // We don't trace any of the WeakMap entries at this time, just record
+        // record the fact that the WeakMap has been marked. Enties are marked
+        // in the iterative marking phase by markAllIteratively(), which happens
+        // when many keys as possible have been marked already.
+        JS_ASSERT(tracer->eagerlyTraceWeakMaps() == DoNotTraceWeakMaps);
+        marked = true;
+    } else {
+        // If we're not actually doing garbage collection, the keys won't be marked
+        // nicely as needed by the true ephemeral marking algorithm --- custom tracers
+        // such as the cycle collector must use their own means for cycle detection.
+        // So here we do a conservative approximation: pretend all keys are live.
+        if (tracer->eagerlyTraceWeakMaps() == DoNotTraceWeakMaps)
+            return;
+
+        nonMarkingTraceValues(tracer);
+        if (tracer->eagerlyTraceWeakMaps() == TraceWeakMapKeysValues)
+            nonMarkingTraceKeys(tracer);
+    }
+}
+
+void
+WeakMapBase::unmarkCompartment(JSCompartment *c)
+{
+    for (WeakMapBase *m = c->gcWeakMapList; m; m = m->next)
+        m->marked = false;
 }
 
 bool
@@ -39,7 +72,7 @@ WeakMapBase::markCompartmentIteratively(JSCompartment *c, JSTracer *tracer)
 {
     bool markedAny = false;
     for (WeakMapBase *m = c->gcWeakMapList; m; m = m->next) {
-        if (m->markIteratively(tracer))
+        if (m->marked && m->markIteratively(tracer))
             markedAny = true;
     }
     return markedAny;
@@ -48,8 +81,25 @@ WeakMapBase::markCompartmentIteratively(JSCompartment *c, JSTracer *tracer)
 void
 WeakMapBase::sweepCompartment(JSCompartment *c)
 {
+    WeakMapBase **tailPtr = &c->gcWeakMapList;
+    for (WeakMapBase *m = c->gcWeakMapList, *next; m; m = next) {
+        next = m->next;
+        if (m->marked) {
+            m->sweep();
+            *tailPtr = m;
+            tailPtr = &m->next;
+        } else {
+            /* Destroy the hash map now to catch any use after this point. */
+            m->finish();
+            m->next = WeakMapNotInList;
+        }
+    }
+    *tailPtr = nullptr;
+
+#ifdef DEBUG
     for (WeakMapBase *m = c->gcWeakMapList; m; m = m->next)
-        m->sweep();
+        JS_ASSERT(m->isInList() && m->marked);
+#endif
 }
 
 void
@@ -62,41 +112,24 @@ WeakMapBase::traceAllMappings(WeakMapTracer *tracer)
     }
 }
 
-void
-WeakMapBase::resetCompartmentWeakMapList(JSCompartment *c)
-{
-    JS_ASSERT(WeakMapNotInList != nullptr);
-
-    WeakMapBase *m = c->gcWeakMapList;
-    c->gcWeakMapList = nullptr;
-    while (m) {
-        WeakMapBase *n = m->next;
-        m->next = WeakMapNotInList;
-        m = n;
-    }
-}
-
 bool
-WeakMapBase::saveCompartmentWeakMapList(JSCompartment *c, WeakMapVector &vector)
+WeakMapBase::saveCompartmentMarkedWeakMaps(JSCompartment *c, WeakMapSet &markedWeakMaps)
 {
-    WeakMapBase *m = c->gcWeakMapList;
-    while (m) {
-        if (!vector.append(m))
+    for (WeakMapBase *m = c->gcWeakMapList; m; m = m->next) {
+        if (m->marked && !markedWeakMaps.put(m))
             return false;
-        m = m->next;
     }
     return true;
 }
 
 void
-WeakMapBase::restoreCompartmentWeakMapLists(WeakMapVector &vector)
+WeakMapBase::restoreCompartmentMarkedWeakMaps(WeakMapSet &markedWeakMaps)
 {
-    for (WeakMapBase **p = vector.begin(); p != vector.end(); p++) {
-        WeakMapBase *m = *p;
-        JS_ASSERT(m->next == WeakMapNotInList);
-        JSCompartment *c = m->compartment;
-        m->next = c->gcWeakMapList;
-        c->gcWeakMapList = m;
+    for (WeakMapSet::Range r = markedWeakMaps.all(); !r.empty(); r.popFront()) {
+        WeakMapBase *map = r.front();
+        JS_ASSERT(map->compartment->zone()->isGCMarking());
+        JS_ASSERT(!map->marked);
+        map->marked = true;
     }
 }
 
@@ -166,8 +199,8 @@ WeakMap_clear_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsWeakMap(args.thisv()));
 
-    // We can't js_delete the weakmap because the data gathered during GC
-    // is used by the Cycle Collector
+    // We can't js_delete the weakmap because the data gathered during GC is
+    // used by the Cycle Collector.
     if (ObjectValueMap *map = args.thisv().toObject().as<WeakMapObject>().getMap())
         map->clear();
 
@@ -397,7 +430,6 @@ static void
 WeakMap_finalize(FreeOp *fop, JSObject *obj)
 {
     if (ObjectValueMap *map = obj->as<WeakMapObject>().getMap()) {
-        map->check();
 #ifdef DEBUG
         map->~ObjectValueMap();
         memset(static_cast<void *>(map), 0xdc, sizeof(*map));
