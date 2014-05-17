@@ -763,8 +763,8 @@ class IonBuilder : public MIRGenerator
                                     bool isGetter, JSObject *foundProto);
     void freezePropertiesForCommonPrototype(types::TemporaryTypeSet *types, PropertyName *name,
                                             JSObject *foundProto);
-    MDefinition *testCommonGetterSetter(types::TemporaryTypeSet *types, PropertyName *name,
-                                        bool isGetter, JSObject *foundProto, Shape *lastProperty);
+    bool testCommonGetterSetter(types::TemporaryTypeSet *types, PropertyName *name,
+                                bool isGetter, JSObject *foundProto, JSFunction *function);
     bool testShouldDOMCall(types::TypeSet *inTypes,
                            JSFunction *func, JSJitInfo::OpType opType);
 
