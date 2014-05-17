@@ -6,7 +6,6 @@
 
 PARALLEL_DIRS += [
     'content',
-    'locales',
     'themes',
 ]
 
