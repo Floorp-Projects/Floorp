@@ -8489,22 +8489,17 @@ class MSetDOMProperty
 };
 
 class MGetDOMProperty
-  : public MAryInstruction<2>,
+  : public MUnaryInstruction,
     public ObjectPolicy<0>
 {
     const JSJitInfo *info_;
 
   protected:
-    MGetDOMProperty(const JSJitInfo *jitinfo, MDefinition *obj, MDefinition *guard)
-      : info_(jitinfo)
+    MGetDOMProperty(const JSJitInfo *jitinfo, MDefinition *obj)
+      : MUnaryInstruction(obj), info_(jitinfo)
     {
         JS_ASSERT(jitinfo);
         JS_ASSERT(jitinfo->type() == JSJitInfo::Getter);
-
-        setOperand(0, obj);
-
-        // Pin the guard as an operand if we want to hoist later
-        setOperand(1, guard);
 
         // We are movable iff the jitinfo says we can be.
         if (isDomMovable()) {
@@ -8527,10 +8522,9 @@ class MGetDOMProperty
   public:
     INSTRUCTION_HEADER(GetDOMProperty)
 
-    static MGetDOMProperty *New(TempAllocator &alloc, const JSJitInfo *info, MDefinition *obj,
-                                MDefinition *guard)
+    static MGetDOMProperty *New(TempAllocator &alloc, const JSJitInfo *info, MDefinition *obj)
     {
-        return new(alloc) MGetDOMProperty(info, obj, guard);
+        return new(alloc) MGetDOMProperty(info, obj);
     }
 
     const JSJitGetterOp fun() {
@@ -8589,18 +8583,17 @@ class MGetDOMProperty
 class MGetDOMMember : public MGetDOMProperty
 {
     // We inherit everything from MGetDOMProperty except our possiblyCalls value
-    MGetDOMMember(const JSJitInfo *jitinfo, MDefinition *obj, MDefinition *guard)
-        : MGetDOMProperty(jitinfo, obj, guard)
+    MGetDOMMember(const JSJitInfo *jitinfo, MDefinition *obj)
+        : MGetDOMProperty(jitinfo, obj)
     {
     }
 
   public:
     INSTRUCTION_HEADER(GetDOMMember)
 
-    static MGetDOMMember *New(TempAllocator &alloc, const JSJitInfo *info, MDefinition *obj,
-                              MDefinition *guard)
+    static MGetDOMMember *New(TempAllocator &alloc, const JSJitInfo *info, MDefinition *obj)
     {
-        return new(alloc) MGetDOMMember(info, obj, guard);
+        return new(alloc) MGetDOMMember(info, obj);
     }
 
     bool possiblyCalls() const {
