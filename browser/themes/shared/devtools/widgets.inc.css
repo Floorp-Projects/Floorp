@@ -478,11 +478,11 @@
 }
 
 .theme-dark .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(ltr) {
-  background-image: url(itemArrow-dark-ltr.png), linear-gradient(to right, @smw_marginDark@, @smw_marginDark@);
+  background-image: url(itemArrow-dark-ltr.svg), linear-gradient(to right, @smw_marginDark@, @smw_marginDark@);
 }
 
 .theme-dark .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(rtl) {
-  background-image: url(itemArrow-dark-rtl.png), linear-gradient(to right, @smw_marginDark@, @smw_marginDark@);
+  background-image: url(itemArrow-dark-rtl.svg), linear-gradient(to right, @smw_marginDark@, @smw_marginDark@);
 }
 
 .theme-light .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(ltr) {
