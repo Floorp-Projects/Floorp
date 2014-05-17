@@ -2007,9 +2007,10 @@ MmsService.prototype = {
 
     // |aMessage.headers|
     let headers = aMessage["headers"] = {};
+
     let receivers = aParams.receivers;
+    let headersTo = headers["to"] = [];
     if (receivers.length != 0) {
-      let headersTo = headers["to"] = [];
       for (let i = 0; i < receivers.length; i++) {
         let receiver = receivers[i];
         let type = MMS.Address.resolveType(receiver);
@@ -2023,8 +2024,10 @@ MmsService.prototype = {
                            "from " + receiver + " to " + address);
         } else {
           address = receiver;
-          isAddrValid = false;
-          if (DEBUG) debug("Error! Address is invalid to send MMS: " + address);
+          if (type == "Others") {
+            isAddrValid = false;
+            if (DEBUG) debug("Error! Address is invalid to send MMS: " + address);
+          }
         }
         headersTo.push({"address": address, "type": type});
       }
