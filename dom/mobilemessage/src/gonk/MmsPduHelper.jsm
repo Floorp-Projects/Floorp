@@ -144,7 +144,10 @@ this.Address = {
     if (((result = str.match(this.REGEXP_DECODE_PLMN)) != null)
         || ((result = str.match(this.REGEXP_DECODE_IPV4)) != null)
         || ((result = str.match(this.REGEXP_DECODE_IPV6)) != null)
-        || ((result = str.match(this.REGEXP_DECODE_CUSTOM)) != null)) {
+        || (((result = str.match(this.REGEXP_DECODE_CUSTOM)) != null)
+            && (result[2] != "PLMN")
+            && (result[2] != "IPv4")
+            && (result[2] != "IPv6"))) {
       return {address: result[1], type: result[2]};
     }
 
@@ -153,10 +156,7 @@ this.Address = {
       type = "num";
     } else if (str.match(this.REGEXP_ALPHANUM)) {
       type = "alphanum";
-    } else if (str.indexOf("@") > 0) {
-      // E-mail should match the definition of `mailbox` as described in section
-      // 3.4 of RFC2822, but excluding the obsolete definitions as indicated by
-      // the "obs-" prefix. Here we match only a `@` character.
+    } else if (str.match(this.REGEXP_EMAIL)) {
       type = "email";
     } else {
       throw new WSP.CodeError("Address: invalid address");
@@ -179,7 +179,7 @@ this.Address = {
     let str;
     switch (value.type) {
       case "email":
-        if (value.address.indexOf("@") > 0) {
+        if (value.address.match(this.REGEXP_EMAIL)) {
           str = value.address;
         }
         break;
@@ -212,7 +212,7 @@ this.Address = {
         if (value.type.match(this.REGEXP_ENCODE_CUSTOM_TYPE)
             && value.address.match(this.REGEXP_ENCODE_CUSTOM_ADDR)) {
           str = value.address + "/TYPE=" + value.type;
-	}
+        }
         break;
     }
 
@@ -234,11 +234,11 @@ this.Address = {
       return "email";
     }
 
-    if (address.match(this.REGEXP_IPV4)) {
+    if (address.match(this.REGEXP_ENCODE_IPV4)) {
       return "IPv4";
     }
 
-    if (address.match(this.REGEXP_IPV6)) {
+    if (address.match(this.REGEXP_ENCODE_IPV6)) {
       return "IPv6";
     }
 
@@ -252,20 +252,53 @@ this.Address = {
 };
 
 defineLazyRegExp(Address, "REGEXP_DECODE_PLMN",        "^(\\+?[\\d.-]+)\\/TYPE=(PLMN)$");
-defineLazyRegExp(Address, "REGEXP_DECODE_IPV4",        "^(\\d{1,3}(?:\\.\\d{1,3}){3})\\/TYPE=(IPv4)$");
-defineLazyRegExp(Address, "REGEXP_DECODE_IPV6",        "^([\\da-fA-F]{4}(?::[\\da-fA-F]{4}){7})\\/TYPE=(IPv6)$");
+defineLazyRegExp(Address, "REGEXP_DECODE_IPV4",        "^((?:(?:25[0-5]|(?:2[0-4]|1[0-9]|[1-9]){0,1}[0-9])\\.){3,3}(?:25[0-5]|(?:2[0-4]|1[0-9]|[1-9]){0,1}[0-9]))\\/TYPE=(IPv4)$");
+defineLazyRegExp(Address, "REGEXP_DECODE_IPV6",        "^(" +
+                                                       "(?:[0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|" +
+                                                       "(?:[0-9a-fA-F]{1,4}:){1,7}:|" +
+                                                       "(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|" +
+                                                       "(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}|" +
+                                                       "(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}|" +
+                                                       "(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}|" +
+                                                       "(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}|" +
+                                                       "[0-9a-fA-F]{1,4}:(?:(?::[0-9a-fA-F]{1,4}){1,6})|" +
+                                                       ":(?:(?::[0-9a-fA-F]{1,4}){1,7}|:)|" +
+                                                       "(?:[0-9a-fA-F]{1,4}:){1,4}:(?:(?:25[0-5]|(?:2[0-4]|1[0-9]|[1-9]){0,1}[0-9])\\.){3,3}(?:25[0-5]|(?:2[0-4]|1[0-9]|[1-9]){0,1}[0-9])" +
+                                                       ")\\/TYPE=(IPv6)$");
 defineLazyRegExp(Address, "REGEXP_DECODE_CUSTOM",      "^([\\w\\+\\-.%]+)\\/TYPE=(\\w+)$");
 defineLazyRegExp(Address, "REGEXP_ENCODE_PLMN",        "^\\+?[\\d.-]+$");
-defineLazyRegExp(Address, "REGEXP_ENCODE_IPV4",        "^\\d{1,3}(?:\\.\\d{1,3}){3}$");
-defineLazyRegExp(Address, "REGEXP_ENCODE_IPV6",        "^[\\da-fA-F]{4}(?::[\\da-fA-F]{4}){7}$");
+defineLazyRegExp(Address, "REGEXP_ENCODE_IPV4",        "^(?:(?:25[0-5]|(?:2[0-4]|1[0-9]|[1-9]){0,1}[0-9])\\.){3,3}(?:25[0-5]|(?:2[0-4]|1[0-9]|[1-9]){0,1}[0-9])$");
+defineLazyRegExp(Address, "REGEXP_ENCODE_IPV6",        "^(?:" +
+                                                       "(?:[0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|" +
+                                                       "(?:[0-9a-fA-F]{1,4}:){1,7}:|" +
+                                                       "(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|" +
+                                                       "(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}|" +
+                                                       "(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}|" +
+                                                       "(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}|" +
+                                                       "(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}|" +
+                                                       "[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}|" +
+                                                       ":(?:(?::[0-9a-fA-F]{1,4}){1,7}|:)" +
+                                                       ")$");
 defineLazyRegExp(Address, "REGEXP_ENCODE_CUSTOM_TYPE", "^\\w+$");
 defineLazyRegExp(Address, "REGEXP_ENCODE_CUSTOM_ADDR", "^[\\w\\+\\-.%]+$");
-defineLazyRegExp(Address, "REGEXP_NUM",                "^[\\+*#]\\d+$");
+defineLazyRegExp(Address, "REGEXP_NUM",                "^[\\+*#]?\\d+$");
 defineLazyRegExp(Address, "REGEXP_ALPHANUM",           "^\\w+$");
-defineLazyRegExp(Address, "REGEXP_PLMN",               "^\\?[\\d.-]$");
-defineLazyRegExp(Address, "REGEXP_IPV4",               "^\\d{1,3}(?:\\.\\d{1,3}){3}$");
-defineLazyRegExp(Address, "REGEXP_IPV6",               "^[\\da-fA-F]{4}(?::[\\da-fA-F]{4}){7}$");
-defineLazyRegExp(Address, "REGEXP_EMAIL",              "@");
+// OMA-TS-MMS_ENC-V1_3-20110913-A chapter 8:
+//
+//   E-mail should match the definition of `mailbox` as described in section
+//   3.4 of RFC2822, but excluding the obsolete definitions as indicated by
+//   the "obs-" prefix.
+//
+// Here we try to match addr-spec only.
+defineLazyRegExp(Address, "REGEXP_EMAIL",              "(?:" +
+                                                       "[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*|" +
+                                                       "\"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\"" +
+                                                       ")@(?:" +
+                                                       "[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*|" +
+                                                       "\\[(?:" +
+                                                       "[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\\\[\x01-\x09\x0b\x0c\x0e-\x7f]" +
+                                                       ")*\\]" +
+                                                       ")");
 
 /**
  * Header-field = MMS-header | Application-header
