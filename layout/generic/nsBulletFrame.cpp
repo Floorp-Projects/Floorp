@@ -416,8 +416,11 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
     aRenderingContext.SetFont(fm);
     nscoord ascent = fm->MaxAscent();
     aRenderingContext.SetTextRunRTL(mTextIsRTL);
-    aRenderingContext.DrawString(text, mPadding.left + aPt.x,
-                                 mPadding.top + aPt.y + ascent);
+    aRenderingContext.DrawString(
+        text, mPadding.left + aPt.x,
+        NSToCoordRound(nsLayoutUtils::GetSnappedBaselineY(
+                this, aRenderingContext.ThebesContext(),
+                mPadding.top + aPt.y, ascent)));
     break;
   }
 }
