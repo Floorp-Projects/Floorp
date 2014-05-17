@@ -29,6 +29,7 @@ public:
   struct StateData
   {
     nsString mResponseText;
+    nsString mResponseURL;
     uint32_t mStatus;
     nsCString mStatusText;
     uint16_t mReadyState;
@@ -173,6 +174,12 @@ public:
 
   void
   Abort(ErrorResult& aRv);
+
+  void
+  GetResponseURL(nsAString& aUrl) const
+  {
+    aUrl = mStateData.mResponseURL;
+  }
 
   uint16_t
   GetStatus(ErrorResult& aRv) const
