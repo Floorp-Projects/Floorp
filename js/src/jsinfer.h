@@ -1424,6 +1424,8 @@ struct TypeObjectKey
     void watchStateChangeForInlinedCall(CompilerConstraintList *constraints);
     void watchStateChangeForNewScriptTemplate(CompilerConstraintList *constraints);
     void watchStateChangeForTypedArrayBuffer(CompilerConstraintList *constraints);
+    void watchStateChangeForRedefinedProperty(CompilerConstraintList *constraints,
+                                              PropertyName *name, bool isGetter, JSFunction *function);
     HeapTypeSetKey property(jsid id);
     void ensureTrackedProperty(JSContext *cx, jsid id);
 

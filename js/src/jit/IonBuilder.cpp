@@ -8366,25 +8366,33 @@ IonBuilder::freezePropertiesForCommonPrototype(types::TemporaryTypeSet *types, P
     }
 }
 
-inline MDefinition *
+inline bool
 IonBuilder::testCommonGetterSetter(types::TemporaryTypeSet *types, PropertyName *name,
-                                   bool isGetter, JSObject *foundProto, Shape *lastProperty)
+                                   bool isGetter, JSObject *foundProto, JSFunction *function)
 {
+    types::TypeObjectKey *protoType = types::TypeObjectKey::get(foundProto);
+
+    // The state change done below needs to be done on an object with singleton
+    // type, as otherwise we won't be able to tell whether it already has the
+    // correct getter/setter.
+    if (!protoType->isSingleObject() || protoType->unknownProperties())
+        return false;
+
     // Check if all objects being accessed will lookup the name through foundProto.
     if (!objectsHaveCommonPrototype(types, name, isGetter, foundProto))
-        return nullptr;
+        return false;
 
     // We can optimize the getter/setter, so freeze all involved properties to
     // ensure there isn't a lower shadowing getter or setter installed in the
     // future.
     freezePropertiesForCommonPrototype(types, name, foundProto);
 
-    // Add a shape guard on the prototype we found the property on. The rest of
-    // the prototype chain is guarded by TI freezes. Note that a shape guard is
-    // good enough here, even in the proxy case, because we have ensured there
-    // are no lookup hooks for this property.
-    MInstruction *wrapper = constant(ObjectValue(*foundProto));
-    return addShapeGuard(wrapper, lastProperty, Bailout_ShapeGuard);
+    // TI doesn't have accurate type information for properties with getters or
+    // setters, but we can use the state change machinery to watch out for the
+    // property being redefined on the prototype.
+    protoType->watchStateChangeForRedefinedProperty(constraints(), name, isGetter, function);
+
+    return true;
 }
 
 bool
@@ -8804,16 +8812,13 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, MDefinition *obj, PropertyName
 {
     JS_ASSERT(*emitted == false);
 
-    Shape *lastProperty = nullptr;
     JSFunction *commonGetter = nullptr;
-    JSObject *foundProto = inspector->commonGetPropFunction(pc, &lastProperty, &commonGetter);
+    JSObject *foundProto = inspector->commonGetPropFunction(pc, &commonGetter);
     if (!foundProto)
         return true;
 
     types::TemporaryTypeSet *objTypes = obj->resultTypeSet();
-    MDefinition *guard = testCommonGetterSetter(objTypes, name, /* isGetter = */ true,
-                                                foundProto, lastProperty);
-    if (!guard)
+    if (!testCommonGetterSetter(objTypes, name, /* isGetter = */ true, foundProto, commonGetter))
         return true;
 
     bool isDOM = objTypes->isDOMClass();
@@ -8824,9 +8829,9 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, MDefinition *obj, PropertyName
         if (jitinfo->isInSlot) {
             // We can't use MLoadFixedSlot here because it might not have the
             // right aliasing behavior; we want to alias DOM setters.
-            get = MGetDOMMember::New(alloc(), jitinfo, obj, guard);
+            get = MGetDOMMember::New(alloc(), jitinfo, obj);
         } else {
-            get = MGetDOMProperty::New(alloc(), jitinfo, obj, guard);
+            get = MGetDOMProperty::New(alloc(), jitinfo, obj);
         }
         current->add(get);
         current->push(get);
@@ -9225,16 +9230,13 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
 {
     JS_ASSERT(*emitted == false);
 
-    Shape *lastProperty = nullptr;
     JSFunction *commonSetter = nullptr;
-    JSObject *foundProto = inspector->commonSetPropFunction(pc, &lastProperty, &commonSetter);
+    JSObject *foundProto = inspector->commonSetPropFunction(pc, &commonSetter);
     if (!foundProto)
         return true;
 
     types::TemporaryTypeSet *objTypes = obj->resultTypeSet();
-    MDefinition *guard = testCommonGetterSetter(objTypes, name, /* isGetter = */ false,
-                                                foundProto, lastProperty);
-    if (!guard)
+    if (!testCommonGetterSetter(objTypes, name, /* isGetter = */ false, foundProto, commonSetter))
         return true;
 
     bool isDOM = objTypes->isDOMClass();
