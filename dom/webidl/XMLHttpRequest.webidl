@@ -107,6 +107,8 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   void abort();
 
   // response
+  readonly attribute DOMString responseURL;
+
   [Throws=Workers]
   readonly attribute unsigned short status;
 
