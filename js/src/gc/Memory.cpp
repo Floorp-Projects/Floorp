@@ -30,6 +30,18 @@ SystemPageAllocator::SystemPageAllocator()
     allocGranularity = sysinfo.dwAllocationGranularity;
 }
 
+static inline void *
+MapMemoryAt(void *desired, size_t length, int flags, int prot = PAGE_READWRITE)
+{
+    return VirtualAlloc(desired, length, flags, prot);
+}
+
+static inline void *
+MapMemory(size_t length, int flags, int prot = PAGE_READWRITE)
+{
+    return VirtualAlloc(nullptr, length, flags, prot);
+}
+
 void *
 SystemPageAllocator::mapAlignedPages(size_t size, size_t alignment)
 {
@@ -38,7 +50,7 @@ SystemPageAllocator::mapAlignedPages(size_t size, size_t alignment)
     JS_ASSERT(size % pageSize == 0);
     JS_ASSERT(alignment % allocGranularity == 0);
 
-    void *p = VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    void *p = MapMemory(size, MEM_COMMIT | MEM_RESERVE);
 
     /* Special case: If we want allocation alignment, no further work is needed. */
     if (alignment == allocGranularity)
@@ -73,12 +85,12 @@ SystemPageAllocator::mapAlignedPagesSlow(size_t size, size_t alignment)
          * mapping doesn't have to commit pages.
          */
         size_t reserveSize = size + alignment - pageSize;
-        p = VirtualAlloc(nullptr, reserveSize, MEM_RESERVE, PAGE_READWRITE);
+        p = MapMemory(reserveSize, MEM_RESERVE);
         if (!p)
             return nullptr;
         void *chunkStart = (void *)AlignBytes(uintptr_t(p), alignment);
         unmapPages(p, reserveSize);
-        p = VirtualAlloc(chunkStart, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+        p = MapMemoryAt(chunkStart, size, MEM_COMMIT | MEM_RESERVE);
 
         /* Failure here indicates a race with another thread, so try again. */
     } while (!p);
@@ -99,7 +111,7 @@ SystemPageAllocator::markPagesUnused(void *p, size_t size)
         return true;
 
     JS_ASSERT(uintptr_t(p) % pageSize == 0);
-    LPVOID p2 = VirtualAlloc(p, size, MEM_RESET, PAGE_READWRITE);
+    LPVOID p2 = MapMemoryAt(p, size, MEM_RESET);
     return p2 == p;
 }
 
@@ -219,7 +231,30 @@ SystemPageAllocator::SystemPageAllocator()
 }
 
 static inline void *
-MapMemory(size_t length, int prot, int flags, int fd, off_t offset)
+MapMemoryAt(void *desired, size_t length, int prot = PROT_READ | PROT_WRITE,
+            int flags = MAP_PRIVATE | MAP_ANON, int fd = -1, off_t offset = 0)
+{
+#if defined(__ia64__)
+    JS_ASSERT(0xffff800000000000ULL & (uintptr_t(desired) + length - 1) == 0);
+#endif
+    void *region = mmap(desired, length, prot, flags, fd, offset);
+    if (region == MAP_FAILED)
+        return nullptr;
+    /*
+     * mmap treats the given address as a hint unless the MAP_FIXED flag is
+     * used (which isn't usually what you want, as this overrides existing
+     * mappings), so check that the address we got is the address we wanted.
+     */
+    if (region != desired) {
+        JS_ALWAYS_TRUE(0 == munmap(region, length));
+        return nullptr;
+    }
+    return region;
+}
+
+static inline void *
+MapMemory(size_t length, int prot = PROT_READ | PROT_WRITE,
+          int flags = MAP_PRIVATE | MAP_ANON, int fd = -1, off_t offset = 0)
 {
 #if defined(__ia64__)
     /*
@@ -237,18 +272,21 @@ MapMemory(size_t length, int prot, int flags, int fd, off_t offset)
      */
     void *region = mmap((void*)0x0000070000000000, length, prot, flags, fd, offset);
     if (region == MAP_FAILED)
-        return MAP_FAILED;
+        return nullptr;
     /*
      * If the allocated memory doesn't have its upper 17 bits clear, consider it
      * as out of memory.
      */
     if ((uintptr_t(region) + (length - 1)) & 0xffff800000000000) {
         JS_ALWAYS_TRUE(0 == munmap(region, length));
-        return MAP_FAILED;
+        return nullptr;
     }
     return region;
 #else
-    return mmap(nullptr, length, prot, flags, fd, offset);
+    void *region = mmap(nullptr, length, prot, flags, fd, offset);
+    if (region == MAP_FAILED)
+        return nullptr;
+    return region;
 #endif
 }
 
@@ -260,12 +298,7 @@ SystemPageAllocator::mapAlignedPages(size_t size, size_t alignment)
     JS_ASSERT(size % pageSize == 0);
     JS_ASSERT(alignment % allocGranularity == 0);
 
-    int prot = PROT_READ | PROT_WRITE;
-    int flags = MAP_PRIVATE | MAP_ANON;
-
-    void *p = MapMemory(size, prot, flags, -1, 0);
-    if (p == MAP_FAILED)
-        return nullptr;
+    void *p = MapMemory(size);
 
     /* Special case: If we want page alignment, no further work is needed. */
     if (alignment == allocGranularity)
@@ -283,13 +316,10 @@ SystemPageAllocator::mapAlignedPages(size_t size, size_t alignment)
 void *
 SystemPageAllocator::mapAlignedPagesSlow(size_t size, size_t alignment)
 {
-    int prot = PROT_READ | PROT_WRITE;
-    int flags = MAP_PRIVATE | MAP_ANON;
-
     /* Overallocate and unmap the region's edges. */
     size_t reqSize = Min(size + 2 * alignment, 2 * size);
-    void *region = MapMemory(reqSize, prot, flags, -1, 0);
-    if (region == MAP_FAILED)
+    void *region = MapMemory(reqSize);
+    if (!region)
         return nullptr;
 
     uintptr_t regionEnd = uintptr_t(region) + reqSize;
@@ -371,13 +401,13 @@ SystemPageAllocator::AllocateMappedContent(int fd, size_t offset, size_t length,
     pa_size = pa_end - pa_start;
 
     // Ask for a continuous memory location.
-    buf = (uint8_t *) MapMemory(pa_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
-    if (buf == MAP_FAILED)
+    buf = (uint8_t *) MapMemory(pa_size);
+    if (!buf)
         return nullptr;
 
-    buf = (uint8_t *) mmap(buf, pa_size, PROT_READ | PROT_WRITE,
-                           MAP_PRIVATE | MAP_FIXED, fd, pa_start);
-    if (buf == MAP_FAILED)
+    buf = (uint8_t *) MapMemoryAt(buf, pa_size, PROT_READ | PROT_WRITE,
+                                  MAP_PRIVATE | MAP_FIXED, fd, pa_start);
+    if (!buf)
         return nullptr;
 
     // Reset the data before target file, which we don't need to see.
