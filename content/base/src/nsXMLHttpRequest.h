@@ -416,6 +416,8 @@ private:
     return Send(Nullable<RequestBody>(aBody));
   }
 
+  bool IsDeniedCrossSiteRequest();
+
 public:
   void Send(ErrorResult& aRv)
   {
@@ -462,6 +464,7 @@ public:
   void Abort();
 
   // response
+  void GetResponseURL(nsAString& aUrl);
   uint32_t Status();
   void GetStatusText(nsCString& aStatusText);
   void GetResponseHeader(const nsACString& aHeader, nsACString& aResult,
