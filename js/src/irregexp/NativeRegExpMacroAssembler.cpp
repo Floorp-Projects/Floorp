@@ -32,6 +32,9 @@
 
 #include "irregexp/RegExpStack.h"
 #include "jit/IonLinker.h"
+#ifdef JS_ION_PERF
+# include "jit/PerfSpewer.h"
+#endif
 #include "vm/MatchPairs.h"
 
 using namespace js;
@@ -433,9 +436,14 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx)
     }
 
     Linker linker(masm);
+    AutoFlushICache afc("RegExp");
     JitCode *code = linker.newCode<NoGC>(cx, JSC::REGEXP_CODE);
     if (!code)
         return RegExpCode();
+
+#ifdef JS_ION_PERF
+    writePerfSpewerJitCodeProfile(code, "RegExp");
+#endif
 
     for (size_t i = 0; i < labelPatches.length(); i++) {
         const LabelPatch &v = labelPatches[i];
