@@ -474,7 +474,7 @@ BaselineInspector::templateCallObject()
 }
 
 JSObject *
-BaselineInspector::commonGetPropFunction(jsbytecode *pc, JSFunction **commonGetter)
+BaselineInspector::commonGetPropFunction(jsbytecode *pc, Shape **lastProperty, JSFunction **commonGetter)
 {
     if (!hasBaselineScript())
         return nullptr;
@@ -486,6 +486,7 @@ BaselineInspector::commonGetPropFunction(jsbytecode *pc, JSFunction **commonGett
             stub->isGetProp_CallNativePrototype())
         {
             ICGetPropCallGetter *nstub = static_cast<ICGetPropCallGetter *>(stub);
+            *lastProperty = nstub->holderShape();
             *commonGetter = nstub->getter();
             return nstub->holder();
         }
@@ -494,7 +495,7 @@ BaselineInspector::commonGetPropFunction(jsbytecode *pc, JSFunction **commonGett
 }
 
 JSObject *
-BaselineInspector::commonSetPropFunction(jsbytecode *pc, JSFunction **commonSetter)
+BaselineInspector::commonSetPropFunction(jsbytecode *pc, Shape **lastProperty, JSFunction **commonSetter)
 {
     if (!hasBaselineScript())
         return nullptr;
@@ -503,6 +504,7 @@ BaselineInspector::commonSetPropFunction(jsbytecode *pc, JSFunction **commonSett
     for (ICStub *stub = entry.firstStub(); stub; stub = stub->next()) {
         if (stub->isSetProp_CallScripted() || stub->isSetProp_CallNative()) {
             ICSetPropCallSetter *nstub = static_cast<ICSetPropCallSetter *>(stub);
+            *lastProperty = nstub->holderShape();
             *commonSetter = nstub->setter();
             return nstub->holder();
         }
