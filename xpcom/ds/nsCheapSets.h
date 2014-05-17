@@ -25,6 +25,14 @@ public:
   }
   ~nsCheapSet()
   {
+    Clear();
+  }
+
+  /**
+   * Remove all entries.
+   */
+  void Clear()
+  {
     switch (mState) {
     case ZERO:
       break;
@@ -38,6 +46,7 @@ public:
       NS_NOTREACHED("bogus state");
       break;
     }
+    mState = ZERO;
   }
 
   nsresult Put(const KeyType aVal);
