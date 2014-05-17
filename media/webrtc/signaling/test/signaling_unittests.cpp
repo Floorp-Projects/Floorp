@@ -383,7 +383,6 @@ NS_IMETHODIMP
 TestObserver::OnStateChange(PCObserverStateType state_type, ER&, void*)
 {
   nsresult rv;
-  PCImplReadyState gotready;
   PCImplIceConnectionState gotice;
   PCImplIceGatheringState goticegathering;
   PCImplSipccState gotsipcc;
@@ -393,14 +392,6 @@ TestObserver::OnStateChange(PCObserverStateType state_type, ER&, void*)
 
   switch (state_type)
   {
-  case PCObserverStateType::ReadyState:
-    MOZ_ASSERT(NS_IsMainThread());
-    rv = pc->ReadyState(&gotready);
-    NS_ENSURE_SUCCESS(rv, rv);
-    std::cout << "Ready State: "
-              << PCImplReadyStateValues::strings[int(gotready)].value
-              << std::endl;
-    break;
   case PCObserverStateType::IceConnectionState:
     MOZ_ASSERT(NS_IsMainThread());
     rv = pc->IceConnectionState(&gotice);
