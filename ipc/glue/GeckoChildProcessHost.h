@@ -135,6 +135,8 @@ public:
     mSandboxEnabled = aSandboxEnabled;
   }
 
+  static void CacheGreDir();
+
 protected:
   GeckoProcessType mProcessType;
   bool mSandboxEnabled;
@@ -192,7 +194,6 @@ private:
 			     base::ProcessArchitecture aArch=base::GetCurrentProcessArchitecture());
 
   static void GetPathToBinary(FilePath& exePath);
-  static void CacheGreDir();
 
   // In between launching the subprocess and handing off its IPC
   // channel, there's a small window of time in which *we* might still
