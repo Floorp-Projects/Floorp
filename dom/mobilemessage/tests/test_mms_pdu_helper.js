@@ -50,30 +50,155 @@ add_test(function test_Address_decode() {
                       {address: "+123.456-789", type: "PLMN"});
   wsp_decode_test(MMS.Address, strToCharCodeArray("123456789/TYPE=PLMN"),
                       {address: "123456789", type: "PLMN"});
+
+  wsp_decode_test(MMS.Address, strToCharCodeArray("a23456789/TYPE=PLMN"),
+                      null, "CodeError");
+  wsp_decode_test(MMS.Address, strToCharCodeArray("++123456789/TYPE=PLMN"),
+                      null, "CodeError");
+
   // Test for IPv4
   wsp_decode_test(MMS.Address, strToCharCodeArray("1.2.3.4/TYPE=IPv4"),
                       {address: "1.2.3.4", type: "IPv4"});
+
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1.2.3.256/TYPE=IPv4"),
+                      null, "CodeError");
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1.2.3.00/TYPE=IPv4"),
+                      null, "CodeError");
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1.2.3.a/TYPE=IPv4"),
+                      null, "CodeError");
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1.2.3/TYPE=IPv4"),
+                      null, "CodeError");
+
   // Test for IPv6
   wsp_decode_test(MMS.Address,
     strToCharCodeArray("1111:AAAA:bbbb:CdEf:1ABC:2cde:3Def:0000/TYPE=IPv6"),
     {address: "1111:AAAA:bbbb:CdEf:1ABC:2cde:3Def:0000", type: "IPv6"}
   );
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:2:3:4:5:6:7:8/TYPE=IPv6"),
+                      {address: "1:2:3:4:5:6:7:8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:2:3:4:5:6:7::/TYPE=IPv6"),
+                      {address: "1:2:3:4:5:6:7::", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:2:3:4:5:6::/TYPE=IPv6"),
+                      {address: "1:2:3:4:5:6::", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:2:3:4:5::/TYPE=IPv6"),
+                      {address: "1:2:3:4:5::", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:2:3:4::/TYPE=IPv6"),
+                      {address: "1:2:3:4::", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:2:3::/TYPE=IPv6"),
+                      {address: "1:2:3::", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:2::/TYPE=IPv6"),
+                      {address: "1:2::", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1::/TYPE=IPv6"),
+                      {address: "1::", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("::/TYPE=IPv6"),
+                      {address: "::", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:2:3:4:5:6::8/TYPE=IPv6"),
+                      {address: "1:2:3:4:5:6::8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:2:3:4:5::8/TYPE=IPv6"),
+                      {address: "1:2:3:4:5::8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:2:3:4::8/TYPE=IPv6"),
+                      {address: "1:2:3:4::8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:2:3::8/TYPE=IPv6"),
+                      {address: "1:2:3::8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:2::8/TYPE=IPv6"),
+                      {address: "1:2::8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1::8/TYPE=IPv6"),
+                      {address: "1::8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("::8/TYPE=IPv6"),
+                      {address: "::8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:2:3:4:5::7:8/TYPE=IPv6"),
+                      {address: "1:2:3:4:5::7:8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:2:3:4::7:8/TYPE=IPv6"),
+                      {address: "1:2:3:4::7:8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:2:3::7:8/TYPE=IPv6"),
+                      {address: "1:2:3::7:8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:2::7:8/TYPE=IPv6"),
+                      {address: "1:2::7:8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1::7:8/TYPE=IPv6"),
+                      {address: "1::7:8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("::7:8/TYPE=IPv6"),
+                      {address: "::7:8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:2:3:4::6:7:8/TYPE=IPv6"),
+                      {address: "1:2:3:4::6:7:8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:2:3::6:7:8/TYPE=IPv6"),
+                      {address: "1:2:3::6:7:8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:2::6:7:8/TYPE=IPv6"),
+                      {address: "1:2::6:7:8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1::6:7:8/TYPE=IPv6"),
+                      {address: "1::6:7:8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("::6:7:8/TYPE=IPv6"),
+                      {address: "::6:7:8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:2:3::5:6:7:8/TYPE=IPv6"),
+                      {address: "1:2:3::5:6:7:8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:2::5:6:7:8/TYPE=IPv6"),
+                      {address: "1:2::5:6:7:8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1::5:6:7:8/TYPE=IPv6"),
+                      {address: "1::5:6:7:8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("::5:6:7:8/TYPE=IPv6"),
+                      {address: "::5:6:7:8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:2::4:5:6:7:8/TYPE=IPv6"),
+                      {address: "1:2::4:5:6:7:8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1::4:5:6:7:8/TYPE=IPv6"),
+                      {address: "1::4:5:6:7:8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("::4:5:6:7:8/TYPE=IPv6"),
+                      {address: "::4:5:6:7:8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1::3:4:5:6:7:8/TYPE=IPv6"),
+                      {address: "1::3:4:5:6:7:8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("::3:4:5:6:7:8/TYPE=IPv6"),
+                      {address: "::3:4:5:6:7:8", type: "IPv6"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("::2:3:4:5:6:7:8/TYPE=IPv6"),
+                      {address: "::2:3:4:5:6:7:8", type: "IPv6"});
+
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1:g:3:4:5:6:7:8/TYPE=IPv6"),
+                      null, "CodeError");
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1::3:4::6:7:8/TYPE=IPv6"),
+                      null, "CodeError");
+
   // Test for other device-address
-  wsp_decode_test(MMS.Address, strToCharCodeArray("+H-e.l%l_o/TYPE=W0r1d_"),
-                      {address: "+H-e.l%l_o", type: "W0r1d_"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("+H-e.1%l_o/TYPE=W0r1d_"),
+                      {address: "+H-e.1%l_o", type: "W0r1d_"});
+
+  wsp_decode_test(MMS.Address, strToCharCodeArray("addr/TYPE=type!"),
+                      null, "CodeError");
+  wsp_decode_test(MMS.Address, strToCharCodeArray("addr!/TYPE=type"),
+                      null, "CodeError");
+
   // Test for num-shortcode
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1"),
+                      {address: "1", type: "num"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("123"),
+                      {address: "123", type: "num"});
   wsp_decode_test(MMS.Address, strToCharCodeArray("+123"),
                       {address: "+123", type: "num"});
   wsp_decode_test(MMS.Address, strToCharCodeArray("*123"),
                       {address: "*123", type: "num"});
   wsp_decode_test(MMS.Address, strToCharCodeArray("#123"),
                       {address: "#123", type: "num"});
+
+  wsp_decode_test(MMS.Address, strToCharCodeArray("++123"),
+                      null, "CodeError");
+  wsp_decode_test(MMS.Address, strToCharCodeArray("!123"),
+                      null, "CodeError");
+  wsp_decode_test(MMS.Address, strToCharCodeArray("1*23"),
+                      null, "CodeError");
+
   // Test for alphanum-shortcode
-  wsp_decode_test(MMS.Address, strToCharCodeArray("H0wD0Y0uTurnTh1s0n"),
-                      {address: "H0wD0Y0uTurnTh1s0n", type: "alphanum"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("a"),
+                      {address: "a", type: "alphanum"});
+  wsp_decode_test(MMS.Address, strToCharCodeArray("H0w_D0_Y0u_Turn_Th1s_0n"),
+                      {address: "H0w_D0_Y0u_Turn_Th1s_0n", type: "alphanum"});
+
+  wsp_decode_test(MMS.Address, strToCharCodeArray("abc#"),
+                      null, "CodeError");
+
   // Test for email address
   wsp_decode_test(MMS.Address, strToCharCodeArray("Joe User <joe@user.org>"),
                       {address: "Joe User <joe@user.org>", type: "email"});
+  wsp_decode_test(MMS.Address,
+    strToCharCodeArray("a-z.A-.Z.0-9!#$.%&.'*+./=?^._`{|}~-@a-.zA-Z.0-9!.#$%&'.*+/=?.^_`.{|}~-"),
+    {address: "a-z.A-.Z.0-9!#$.%&.'*+./=?^._`{|}~-@a-.zA-Z.0-9!.#$%&'.*+/=?.^_`.{|}~-", type: "email"}
+  );
+
   // Test for invalid address
   wsp_decode_test(MMS.Address, strToCharCodeArray("@@@@@"),
                   null, "CodeError");
@@ -89,30 +214,182 @@ add_test(function test_Address_encode() {
                   strToCharCodeArray("+123.456-789/TYPE=PLMN"));
   wsp_encode_test(MMS.Address, {address: "123456789", type: "PLMN"},
                   strToCharCodeArray("123456789/TYPE=PLMN"));
+
+  wsp_encode_test(MMS.Address, {address: "a23456789", type: "PLMN"},
+                  null, "CodeError");
+  wsp_encode_test(MMS.Address, {address: "++123456789", type: "PLMN"},
+                  null, "CodeError");
+
   // Test for IPv4
   wsp_encode_test(MMS.Address, {address: "1.2.3.4", type: "IPv4"},
                   strToCharCodeArray("1.2.3.4/TYPE=IPv4"));
+
+  wsp_encode_test(MMS.Address, {address: "1.2.3.256", type: "IPv4"},
+                  null, "CodeError");
+  wsp_encode_test(MMS.Address, {address: "1.2.3.00", type: "IPv4"},
+                  null, "CodeError");
+  wsp_encode_test(MMS.Address, {address: "1.2.3.a", type: "IPv4"},
+                  null, "CodeError");
+  wsp_encode_test(MMS.Address, {address: "1.2.3", type: "IPv4"},
+                  null, "CodeError");
+
   // Test for IPv6
   wsp_encode_test(MMS.Address,
     {address: "1111:AAAA:bbbb:CdEf:1ABC:2cde:3Def:0000", type: "IPv6"},
     strToCharCodeArray("1111:AAAA:bbbb:CdEf:1ABC:2cde:3Def:0000/TYPE=IPv6")
   );
+  wsp_encode_test(MMS.Address, {address: "1:2:3:4:5:6:7:8", type: "IPv6"},
+                  strToCharCodeArray("1:2:3:4:5:6:7:8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1:2:3:4:5:6:7::", type: "IPv6"},
+                  strToCharCodeArray("1:2:3:4:5:6:7::/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1:2:3:4:5:6::", type: "IPv6"},
+                  strToCharCodeArray("1:2:3:4:5:6::/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1:2:3:4:5::", type: "IPv6"},
+                  strToCharCodeArray("1:2:3:4:5::/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1:2:3:4::", type: "IPv6"},
+                  strToCharCodeArray("1:2:3:4::/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1:2:3::", type: "IPv6"},
+                  strToCharCodeArray("1:2:3::/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1:2::", type: "IPv6"},
+                  strToCharCodeArray("1:2::/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1::", type: "IPv6"},
+                  strToCharCodeArray("1::/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "::", type: "IPv6"},
+                  strToCharCodeArray("::/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1:2:3:4:5:6::8", type: "IPv6"},
+                  strToCharCodeArray("1:2:3:4:5:6::8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1:2:3:4:5::8", type: "IPv6"},
+                  strToCharCodeArray("1:2:3:4:5::8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1:2:3:4::8", type: "IPv6"},
+                  strToCharCodeArray("1:2:3:4::8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1:2:3::8", type: "IPv6"},
+                  strToCharCodeArray("1:2:3::8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1:2::8", type: "IPv6"},
+                  strToCharCodeArray("1:2::8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1::8", type: "IPv6"},
+                  strToCharCodeArray("1::8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "::8", type: "IPv6"},
+                  strToCharCodeArray("::8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1:2:3:4:5::7:8", type: "IPv6"},
+                  strToCharCodeArray("1:2:3:4:5::7:8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1:2:3:4::7:8", type: "IPv6"},
+                  strToCharCodeArray("1:2:3:4::7:8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1:2:3::7:8", type: "IPv6"},
+                  strToCharCodeArray("1:2:3::7:8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1:2::7:8", type: "IPv6"},
+                  strToCharCodeArray("1:2::7:8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1::7:8", type: "IPv6"},
+                  strToCharCodeArray("1::7:8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "::7:8", type: "IPv6"},
+                  strToCharCodeArray("::7:8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1:2:3:4::6:7:8", type: "IPv6"},
+                  strToCharCodeArray("1:2:3:4::6:7:8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1:2:3::6:7:8", type: "IPv6"},
+                  strToCharCodeArray("1:2:3::6:7:8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1:2::6:7:8", type: "IPv6"},
+                  strToCharCodeArray("1:2::6:7:8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1::6:7:8", type: "IPv6"},
+                  strToCharCodeArray("1::6:7:8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "::6:7:8", type: "IPv6"},
+                  strToCharCodeArray("::6:7:8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1:2:3::5:6:7:8", type: "IPv6"},
+                  strToCharCodeArray("1:2:3::5:6:7:8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1:2::5:6:7:8", type: "IPv6"},
+                  strToCharCodeArray("1:2::5:6:7:8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1::5:6:7:8", type: "IPv6"},
+                  strToCharCodeArray("1::5:6:7:8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "::5:6:7:8", type: "IPv6"},
+                  strToCharCodeArray("::5:6:7:8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1:2::4:5:6:7:8", type: "IPv6"},
+                  strToCharCodeArray("1:2::4:5:6:7:8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1::4:5:6:7:8", type: "IPv6"},
+                  strToCharCodeArray("1::4:5:6:7:8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "::4:5:6:7:8", type: "IPv6"},
+                  strToCharCodeArray("::4:5:6:7:8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "1::3:4:5:6:7:8", type: "IPv6"},
+                  strToCharCodeArray("1::3:4:5:6:7:8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "::3:4:5:6:7:8", type: "IPv6"},
+                  strToCharCodeArray("::3:4:5:6:7:8/TYPE=IPv6"));
+  wsp_encode_test(MMS.Address, {address: "::2:3:4:5:6:7:8", type: "IPv6"},
+                  strToCharCodeArray("::2:3:4:5:6:7:8/TYPE=IPv6"));
+
+  wsp_encode_test(MMS.Address, {address: "1:g:3:4:5:6:7:8", type: "IPv6"},
+                  null, "CodeError");
+  wsp_encode_test(MMS.Address, {address: "1::3:4:5:6::8", type: "IPv6"},
+                  null, "CodeError");
+
   // Test for other device-address
-  wsp_encode_test(MMS.Address, {address: "+H-e.l%l_o", type: "W0r1d_"},
-                  strToCharCodeArray("+H-e.l%l_o/TYPE=W0r1d_"));
+  wsp_encode_test(MMS.Address, {address: "+H-e.1%l_o", type: "W0r1d_"},
+                  strToCharCodeArray("+H-e.1%l_o/TYPE=W0r1d_"));
+
+  wsp_encode_test(MMS.Address, {address: "addr!", type: "type"},
+                  null, "CodeError");
+  wsp_encode_test(MMS.Address, {address: "addr", type: "type!"},
+                  null, "CodeError");
+
   // Test for num-shortcode
+  wsp_encode_test(MMS.Address, {address: "1", type: "num"},
+                  strToCharCodeArray("1"));
+  wsp_encode_test(MMS.Address, {address: "123", type: "num"},
+                  strToCharCodeArray("123"));
   wsp_encode_test(MMS.Address, {address: "+123", type: "num"},
                   strToCharCodeArray("+123"));
   wsp_encode_test(MMS.Address, {address: "*123", type: "num"},
                   strToCharCodeArray("*123"));
   wsp_encode_test(MMS.Address, {address: "#123", type: "num"},
                   strToCharCodeArray("#123"));
+
+  wsp_encode_test(MMS.Address, {address: "++123", type: "num"},
+                  null, "CodeError");
+  wsp_encode_test(MMS.Address, {address: "!123", type: "num"},
+                  null, "CodeError");
+  wsp_encode_test(MMS.Address, {address: "1#23", type: "num"},
+                  null, "CodeError");
+
   // Test for alphanum-shortcode
-  wsp_encode_test(MMS.Address, {address: "H0wD0Y0uTurnTh1s0n", type: "alphanum"},
-                  strToCharCodeArray("H0wD0Y0uTurnTh1s0n"));
+  wsp_encode_test(MMS.Address, {address: "a", type: "alphanum"},
+                  strToCharCodeArray("a"));
+  wsp_encode_test(MMS.Address, {address: "1", type: "alphanum"},
+                  strToCharCodeArray("1"));
+  wsp_encode_test(MMS.Address, {address: "H0w_D0_Y0u_Turn_Th1s_0n", type: "alphanum"},
+                  strToCharCodeArray("H0w_D0_Y0u_Turn_Th1s_0n"));
+
+  wsp_encode_test(MMS.Address, {address: "abc#", type: "alphanum"},
+                  null, "CodeError");
+
   // Test for email address
   wsp_encode_test(MMS.Address, {address: "Joe User <joe@user.org>", type: "email"},
                   strToCharCodeArray("Joe User <joe@user.org>"));
+  wsp_encode_test(MMS.Address,
+    {address: "a-z.A-.Z.0-9!#$.%&.'*+./=?^._`{|}~-@a-.zA-Z.0-9!.#$%&'.*+/=?.^_`.{|}~-", type: "email"},
+    strToCharCodeArray("a-z.A-.Z.0-9!#$.%&.'*+./=?^._`{|}~-@a-.zA-Z.0-9!.#$%&'.*+/=?.^_`.{|}~-")
+  );
+
+  // Test for invalid address
+  wsp_encode_test(MMS.Address, {address: "a"}, null, "CodeError");
+  wsp_encode_test(MMS.Address, {type: "alphanum"}, null, "CodeError");
+
+  run_next_test();
+});
+
+//// Address.resolveType ////
+
+add_test(function test_Address_encode() {
+  function test(address, type) {
+    do_check_eq(MMS.Address.resolveType(address), type);
+  }
+
+  // Test ambiguous addresses.
+  test("+15525225554",      "PLMN");
+  test("5525225554",        "PLMN");
+  test("jkalbcjklg",        "PLMN");
+  test("jk.alb.cjk.lg",     "PLMN");
+  test("j:k:a:l:b:c:jk:lg", "PLMN");
+  test("55.252.255.54",     "IPv4");
+  test("5:5:2:5:2:2:55:54", "IPv6");
+  test("jk@alb.cjk.lg",     "email");
+  // Test empty address.  This is for received anonymous MMS messages.
+  test("",                  "Others");
 
   run_next_test();
 });
