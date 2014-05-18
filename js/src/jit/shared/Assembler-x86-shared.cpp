@@ -131,22 +131,3 @@ AssemblerX86Shared::InvertCondition(Condition cond)
         MOZ_ASSUME_UNREACHABLE("unexpected condition");
     }
 }
-
-void
-AutoFlushCache::update(uintptr_t newStart, size_t len)
-{
-}
-
-void
-AutoFlushCache::flushAnyway()
-{
-}
-
-AutoFlushCache::~AutoFlushCache()
-{
-    if (!runtime_)
-        return;
-
-    if (runtime_->flusher() == this)
-        runtime_->setFlusher(nullptr);
-}

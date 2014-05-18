@@ -74,6 +74,7 @@ PerThreadData::PerThreadData(JSRuntime *runtime)
     jitStackLimit(0),
     activation_(nullptr),
     asmJSActivationStack_(nullptr),
+    autoFlushICache_(nullptr),
 #ifdef JS_ARM_SIMULATOR
     simulator_(nullptr),
     simulatorStackLimit_(0),
