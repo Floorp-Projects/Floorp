@@ -737,8 +737,7 @@ public:
   /**
    * Indicate that this stream should enter the "finished" state. All tracks
    * must have been ended via EndTrack. The finish time of the stream is
-   * when all tracks have ended and when latest time sent to
-   * AdvanceKnownTracksTime() has been reached.
+   * when all tracks have ended.
    */
   void FinishWithLockHeld();
   void Finish()
