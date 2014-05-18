@@ -1,0 +1,39 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PGMP;
+include GMPTypes;
+
+using GMPVideoCodec from "gmp-video-codec.h";
+using GMPCodecSpecificInfo from "gmp-video-codec.h";
+
+include "GMPMessageUtils.h";
+
+namespace mozilla {
+namespace gmp {
+
+async protocol PGMPVideoDecoder
+{
+  manager PGMP;
+child:
+  InitDecode(GMPVideoCodec aCodecSettings,
+             int32_t aCoreCount);
+  Decode(GMPVideoEncodedFrameData aInputFrame,
+         bool aMissingFrames,
+         GMPCodecSpecificInfo aCodecSpecificInfo,
+         int64_t aRenderTimeMs);
+  Reset();
+  Drain();
+  DecodingComplete();
+parent:
+  __delete__();
+  Decoded(GMPVideoi420FrameData aDecodedFrame);
+  ReceivedDecodedReferenceFrame(uint64_t aPictureId);
+  ReceivedDecodedFrame(uint64_t aPictureId);
+  InputDataExhausted();
+};
+
+} // namespace gmp
+} // namespace mozilla
