@@ -53,7 +53,7 @@ function LOG_C2(o, m)
   if (!m)
     dump("TEST-INFO | CACHE2: " + o + "\n");
   else
-    dump("TEST-INFO | CACHE2: callback #" + o.order + "(" + (o.workingData || "---") + ") " + m + "\n");
+    dump("TEST-INFO | CACHE2: callback #" + o.order + "(" + (o.workingData ? o.workingData.substr(0, 10) : "---") + ") " + m + "\n");
 }
 
 function pumpReadStream(inputStream, goon)
