@@ -73,6 +73,7 @@
 #include "nsIChannel.h"
 #include "IHistory.h"
 #include "nsViewSourceHandler.h"
+#include "nsWhitespaceTokenizer.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -366,28 +367,15 @@ ForEachPing(nsIContent *content, ForEachPingCallback callback, void *closure)
 
   nsIDocument *doc = content->OwnerDoc();
 
-  // value contains relative URIs split on spaces (U+0020)
-  const char16_t *start = value.BeginReading();
-  const char16_t *end   = value.EndReading();
-  const char16_t *iter  = start;
-  for (;;) {
-    if (iter < end && *iter != ' ') {
-      ++iter;
-    } else {  // iter is pointing at either end or a space
-      while (*start == ' ' && start < iter)
-        ++start;
-      if (iter != start) {
-        nsCOMPtr<nsIURI> uri, baseURI = content->GetBaseURI();
-        ios->NewURI(NS_ConvertUTF16toUTF8(Substring(start, iter)),
-                    doc->GetDocumentCharacterSet().get(),
-                    baseURI, getter_AddRefs(uri));
-        if (CheckPingURI(uri, content)) {
-          callback(closure, content, uri, ios);
-        }
-      }
-      start = iter = iter + 1;
-      if (iter >= end)
-        break;
+  nsWhitespaceTokenizer tokenizer(value);
+
+  while (tokenizer.hasMoreTokens()) {
+    nsCOMPtr<nsIURI> uri, baseURI = content->GetBaseURI();
+    ios->NewURI(NS_ConvertUTF16toUTF8(tokenizer.nextToken()),
+                doc->GetDocumentCharacterSet().get(),
+                baseURI, getter_AddRefs(uri));
+    if (CheckPingURI(uri, content)) {
+      callback(closure, content, uri, ios);
     }
   }
 }
