@@ -1759,14 +1759,16 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
     PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
            (" available free space = %d\n", availableFreeSpace));
 
-    // If sign of free space matches the type of flexing that we're doing, give
-    // each flexible item a portion of availableFreeSpace.
-    // XXXdholbert I think FreezeItemsThatAreObviouslyClamped might remove
-    // the need for this check. We can just check if availableFreeSpace is
-    // nonzero, and initialize origAvailableFreeSpace before we do that.
-    if ((availableFreeSpace > 0 && isUsingFlexGrow) ||
-        (availableFreeSpace < 0 && !isUsingFlexGrow)) {
+    MOZ_ASSERT((isUsingFlexGrow && availableFreeSpace >= 0) ||
+               (!isUsingFlexGrow && availableFreeSpace <= 0),
+               "The sign of our free space should never disagree with the "
+               "type of flexing (grow/shrink) that we're doing. Any potential "
+               "disagreement should've made us use the other type of flexing, "
+               "or should've been resolved in FreezeItemsEarly");
 
+    // If we have any free space available, give each flexible item a portion
+    // of availableFreeSpace.
+    if (availableFreeSpace != 0) {
       // The first time we do this, we initialize origAvailableFreeSpace.
       if (!isOrigAvailFreeSpaceInitialized) {
         origAvailableFreeSpace = availableFreeSpace;
