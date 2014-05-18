@@ -137,7 +137,6 @@ namespace jit {
     _(RenumberBlocks)                                 \
     _(DominatorTree)                                  \
     _(PhiAnalysis)                                    \
-    _(MakeLoopsContiguous)                            \
     _(ApplyTypes)                                     \
     _(ParallelSafetyAnalysis)                         \
     _(AliasAnalysis)                                  \

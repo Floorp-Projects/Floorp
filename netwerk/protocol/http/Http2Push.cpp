@@ -191,6 +191,19 @@ Http2PushTransactionBuffer::OnTransportStatus(nsITransport* transport,
 {
 }
 
+nsHttpConnectionInfo *
+Http2PushTransactionBuffer::ConnectionInfo()
+{
+  if (!mPushStream) {
+    return nullptr;
+  }
+  if (!mPushStream->Transaction()) {
+    return nullptr;
+  }
+  MOZ_ASSERT(mPushStream->Transaction() != this);
+  return mPushStream->Transaction()->ConnectionInfo();
+}
+
 bool
 Http2PushTransactionBuffer::IsDone()
 {
@@ -233,10 +246,8 @@ Http2PushTransactionBuffer::WriteSegments(nsAHttpSegmentWriter *writer,
                                           uint32_t count, uint32_t *countWritten)
 {
   if ((mBufferedHTTP1Size - mBufferedHTTP1Used) < 20480) {
-    Http2Session::EnsureBuffer(mBufferedHTTP1,
-                                mBufferedHTTP1Size + kDefaultBufferSize,
-                                mBufferedHTTP1Used,
-                                mBufferedHTTP1Size);
+    EnsureBuffer(mBufferedHTTP1,mBufferedHTTP1Size + kDefaultBufferSize,
+                 mBufferedHTTP1Used, mBufferedHTTP1Size);
   }
 
   count = std::min(count, mBufferedHTTP1Size - mBufferedHTTP1Used);

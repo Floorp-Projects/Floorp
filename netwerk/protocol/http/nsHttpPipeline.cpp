@@ -408,7 +408,7 @@ nsHttpPipeline::SetConnection(nsAHttpConnection *conn)
     LOG(("nsHttpPipeline::SetConnection [this=%p conn=%x]\n", this, conn));
 
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
-    MOZ_ASSERT(!mConnection, "already have a connection");
+    MOZ_ASSERT(!conn || !mConnection, "already have a connection");
 
     NS_IF_ADDREF(mConnection = conn);
 }
@@ -527,6 +527,16 @@ nsHttpPipeline::OnTransportStatus(nsITransport* transport,
             Request(i)->OnTransportStatus(transport, status, progress);
         break;
     }
+}
+
+nsHttpConnectionInfo *
+nsHttpPipeline::ConnectionInfo()
+{
+    nsAHttpTransaction *trans = Request(0) ? Request(0) : Response(0);
+    if (!trans) {
+        return nullptr;
+    }
+    return trans->ConnectionInfo();
 }
 
 bool

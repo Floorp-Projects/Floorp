@@ -23,18 +23,19 @@ namespace net {
 nsHttpConnectionInfo::nsHttpConnectionInfo(const nsACString &host, int32_t port,
                                            const nsACString &username,
                                            nsProxyInfo* proxyInfo,
-                                           bool usingSSL)
+                                           bool endToEndSSL)
     : mUsername(username)
     , mProxyInfo(proxyInfo)
-    , mUsingSSL(usingSSL)
+    , mEndToEndSSL(endToEndSSL)
     , mUsingConnect(false)
 {
     LOG(("Creating nsHttpConnectionInfo @%x\n", this));
 
-    mUsingHttpProxy = (proxyInfo && proxyInfo->IsHTTP());
+    mUsingHttpsProxy = (proxyInfo && proxyInfo->IsHTTPS());
+    mUsingHttpProxy = mUsingHttpsProxy || (proxyInfo && proxyInfo->IsHTTP());
 
     if (mUsingHttpProxy) {
-        mUsingConnect = mUsingSSL;  // SSL always uses CONNECT
+        mUsingConnect = mEndToEndSSL;  // SSL always uses CONNECT
         uint32_t resolveFlags = 0;
         if (NS_SUCCEEDED(mProxyInfo->GetResolveFlags(&resolveFlags)) &&
             resolveFlags & nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL) {
@@ -67,13 +68,18 @@ nsHttpConnectionInfo::SetOriginServer(const nsACString &host, int32_t port)
     if (mUsingHttpProxy && !mUsingConnect) {
         keyHost = ProxyHost();
         keyPort = ProxyPort();
-    }
-    else {
+    } else {
         keyHost = Host();
         keyPort = Port();
     }
 
+    // The hashkey has 4 fields followed by host connection info
+    // byte 0 is P/T/. {P,T} for Plaintext/TLS Proxy over HTTP
+    // byte 1 is S/. S is for end to end ssl such as https:// uris
+    // byte 2 is A/. A is for an anonymous channel (no cookies, etc..)
+    // byte 3 is P/. P is for a private browising channel
     mHashKey.AssignLiteral("....");
+
     mHashKey.Append(keyHost);
     mHashKey.Append(':');
     mHashKey.AppendInt(keyPort);
@@ -83,10 +89,14 @@ nsHttpConnectionInfo::SetOriginServer(const nsACString &host, int32_t port)
         mHashKey.Append(']');
     }
 
-    if (mUsingHttpProxy)
+    if (mUsingHttpsProxy) {
+        mHashKey.SetCharAt('T', 0);
+    } else if (mUsingHttpProxy) {
         mHashKey.SetCharAt('P', 0);
-    if (mUsingSSL)
+    }
+    if (mEndToEndSSL) {
         mHashKey.SetCharAt('S', 1);
+    }
 
     // NOTE: for transparent proxies (e.g., SOCKS) we need to encode the proxy
     // info in the hash key (this ensures that we will continue to speak the
@@ -113,13 +123,34 @@ nsHttpConnectionInfo::SetOriginServer(const nsACString &host, int32_t port)
 nsHttpConnectionInfo*
 nsHttpConnectionInfo::Clone() const
 {
-    nsHttpConnectionInfo* clone = new nsHttpConnectionInfo(mHost, mPort, mUsername, mProxyInfo, mUsingSSL);
+    nsHttpConnectionInfo* clone = new nsHttpConnectionInfo(mHost, mPort, mUsername, mProxyInfo, mEndToEndSSL);
 
     // Make sure the anonymous and private flags are transferred!
     clone->SetAnonymous(GetAnonymous());
     clone->SetPrivate(GetPrivate());
-
+    MOZ_ASSERT(clone->Equals(this));
     return clone;
+}
+
+nsresult
+nsHttpConnectionInfo::CreateWildCard(nsHttpConnectionInfo **outParam)
+{
+    // T???mozilla.org:443 (https:proxy.ducksong.com:3128) [specifc form]
+    // TS??*:0 (https:proxy.ducksong.com:3128)   [wildcard form]
+
+    if (!mUsingHttpsProxy) {
+        MOZ_ASSERT(false);
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    nsRefPtr<nsHttpConnectionInfo> clone;
+    clone = new nsHttpConnectionInfo(NS_LITERAL_CSTRING("*"), 0,
+                                     mUsername, mProxyInfo, true);
+    // Make sure the anonymous and private flags are transferred!
+    clone->SetAnonymous(GetAnonymous());
+    clone->SetPrivate(GetPrivate());
+    clone.forget(outParam);
+    return NS_OK;
 }
 
 bool

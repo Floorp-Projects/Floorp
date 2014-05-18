@@ -27,11 +27,31 @@ struct JSIID
     uint8_t m3_7;
 };
 
+struct LocalObject
+{
+    uint64_t id;
+};
+
+struct RemoteObject
+{
+    uint64_t id;
+};
+
+union ObjectVariant
+{
+    LocalObject;
+    RemoteObject;
+};
+
+struct UndefinedVariant {};
+struct NullVariant {};
+
 union JSVariant
 {
-    void_t;     /* |undefined| */
+    UndefinedVariant;
+    NullVariant;
+    ObjectVariant;
     nsString;   /* StringValue(x) */
-    uint64_t;   /* ID that maps to a JSObject (cpow on parent, original on child). */
     double;     /* NumberValue(x) */
     bool;       /* BooleanValue(x) */
     JSIID;      /* XPC nsIID */
@@ -63,11 +83,17 @@ union JSParam
     JSVariant;  /* actual value to pass through */
 };
 
+union GetterSetter
+{
+    uint64_t;
+    ObjectVariant;
+};
+
 struct PPropertyDescriptor
 {
-    uint64_t    objId;
-    uint32_t    attrs;
-    JSVariant   value;
+    ObjectVariant obj;
+    uint32_t attrs;
+    JSVariant value;
 
     // How to interpret these values depends on whether JSPROP_GETTER/SETTER
     // are set. If set, the corresponding value is a CPOW or 0 for NULL.
@@ -77,8 +103,8 @@ struct PPropertyDescriptor
     //  1 - Default getter or setter.
     //  2 - js_GetterOnlyPropertyStub (setter only)
     //  3 - Unknown
-    uint64_t    getter;
-    uint64_t    setter;
+    GetterSetter getter;
+    GetterSetter setter;
 };
 
 struct CpowEntry

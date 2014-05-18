@@ -12,7 +12,7 @@ static bool IsCompartmentGCBuffer[BufferSize];
 BEGIN_TEST(testGCFinalizeCallback)
 {
     JS_SetGCParameter(rt, JSGC_MODE, JSGC_MODE_INCREMENTAL);
-    JS_SetFinalizeCallback(rt, FinalizeCallback);
+    JS_AddFinalizeCallback(rt, FinalizeCallback, nullptr);
 
     /* Full GC, non-incremental. */
     FinalizeCalls = 0;
@@ -116,7 +116,7 @@ BEGIN_TEST(testGCFinalizeCallback)
     CHECK(JS_IsGlobalObject(global2));
     CHECK(JS_IsGlobalObject(global3));
 
-    JS_SetFinalizeCallback(rt, nullptr);
+    JS_RemoveFinalizeCallback(rt, FinalizeCallback);
     return true;
 }
 
@@ -162,7 +162,7 @@ bool checkFinalizeIsCompartmentGC(bool isCompartmentGC)
 }
 
 static void
-FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, bool isCompartmentGC)
+FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, bool isCompartmentGC, void *data)
 {
     if (FinalizeCalls < BufferSize) {
         StatusBuffer[FinalizeCalls] = status;
