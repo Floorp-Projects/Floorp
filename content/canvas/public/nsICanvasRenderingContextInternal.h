@@ -112,6 +112,9 @@ public:
 
   NS_IMETHOD SetContextOptions(JSContext* aCx, JS::Handle<JS::Value> aOptions) { return NS_OK; }
 
+  // return true and fills in the bounding rect if elementis a child and has a hit region.
+  virtual bool GetHitRegionRect(mozilla::dom::Element* aElement, nsRect& aRect) { return false; }
+
   //
   // shmem support
   //
