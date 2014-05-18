@@ -11,6 +11,7 @@
 #include "mozilla/unused.h"
 #include "GMPMessageUtils.h"
 #include "nsAutoRef.h"
+#include "nsThreadUtils.h"
 
 template <>
 class nsAutoRefTraits<GMPVideoEncodedFrame> : public nsPointerRefTraits<GMPVideoEncodedFrame>
