@@ -92,7 +92,7 @@ TEST_F(pkixder_universal_types_tests, BooleanTrueFF)
 
   bool value = false;
   ASSERT_EQ(Success, Boolean(input, value));
-  ASSERT_EQ(true, value);
+  ASSERT_TRUE(value);
 }
 
 TEST_F(pkixder_universal_types_tests, BooleanFalse)
@@ -108,7 +108,7 @@ TEST_F(pkixder_universal_types_tests, BooleanFalse)
 
   bool value = true;
   ASSERT_EQ(Success, Boolean(input, value));
-  ASSERT_EQ(false, value);
+  ASSERT_FALSE(value);
 }
 
 TEST_F(pkixder_universal_types_tests, BooleanInvalidLength)

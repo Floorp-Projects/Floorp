@@ -63,7 +63,7 @@ TEST_F(pkixder_pki_types_tests, AlgorithmIdentifierNoParams)
   ASSERT_EQ(0, memcmp(algorithmID.algorithm.data, expectedAlgorithmID,
                       sizeof expectedAlgorithmID));
 
-  ASSERT_EQ(0, algorithmID.parameters.len);
+  ASSERT_EQ(0u, algorithmID.parameters.len);
   ASSERT_FALSE(algorithmID.parameters.data);
 }
 
