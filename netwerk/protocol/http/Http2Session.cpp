@@ -63,67 +63,61 @@ do {                             \
   return NS_ERROR_ILLEGAL_VALUE; \
   } while (0)
 
-Http2Session::Http2Session(nsAHttpTransaction *aHttpTransaction,
-                           nsISocketTransport *aSocketTransport,
-                           int32_t firstPriority)
-  : mSocketTransport(aSocketTransport),
-  mSegmentReader(nullptr),
-  mSegmentWriter(nullptr),
-  mNextStreamID(3), // 1 is reserved for Updgrade handshakes
-  mConcurrentHighWater(0),
-  mDownstreamState(BUFFERING_OPENING_SETTINGS),
-  mInputFrameBufferSize(kDefaultBufferSize),
-  mInputFrameBufferUsed(0),
-  mInputFrameFinal(false),
-  mInputFrameDataStream(nullptr),
-  mNeedsCleanup(nullptr),
-  mDownstreamRstReason(NO_HTTP_ERROR),
-  mExpectedHeaderID(0),
-  mExpectedPushPromiseID(0),
-  mContinuedPromiseStream(0),
-  mShouldGoAway(false),
-  mClosed(false),
-  mCleanShutdown(false),
-  mTLSProfileConfirmed(false),
-  mGoAwayReason(NO_HTTP_ERROR),
-  mGoAwayID(0),
-  mOutgoingGoAwayID(0),
-  mMaxConcurrent(kDefaultMaxConcurrent),
-  mConcurrent(0),
-  mServerPushedResources(0),
-  mServerInitialStreamWindow(kDefaultRwin),
-  mLocalSessionWindow(kDefaultRwin),
-  mServerSessionWindow(kDefaultRwin),
-  mOutputQueueSize(kDefaultQueueSize),
-  mOutputQueueUsed(0),
-  mOutputQueueSent(0),
-  mLastReadEpoch(PR_IntervalNow()),
-  mPingSentEpoch(0)
+Http2Session::Http2Session(nsISocketTransport *aSocketTransport)
+  : mSocketTransport(aSocketTransport)
+  , mSegmentReader(nullptr)
+  , mSegmentWriter(nullptr)
+  , mNextStreamID(3) // 1 is reserved for Updgrade handshakes
+  , mConcurrentHighWater(0)
+  , mDownstreamState(BUFFERING_OPENING_SETTINGS)
+  , mInputFrameBufferSize(kDefaultBufferSize)
+  , mInputFrameBufferUsed(0)
+  , mInputFrameFinal(false)
+  , mInputFrameDataStream(nullptr)
+  , mNeedsCleanup(nullptr)
+  , mDownstreamRstReason(NO_HTTP_ERROR)
+  , mExpectedHeaderID(0)
+  , mExpectedPushPromiseID(0)
+  , mContinuedPromiseStream(0)
+  , mShouldGoAway(false)
+  , mClosed(false)
+  , mCleanShutdown(false)
+  , mTLSProfileConfirmed(false)
+  , mGoAwayReason(NO_HTTP_ERROR)
+  , mGoAwayID(0)
+  , mOutgoingGoAwayID(0)
+  , mMaxConcurrent(kDefaultMaxConcurrent)
+  , mConcurrent(0)
+  , mServerPushedResources(0)
+  , mServerInitialStreamWindow(kDefaultRwin)
+  , mLocalSessionWindow(kDefaultRwin)
+  , mServerSessionWindow(kDefaultRwin)
+  , mOutputQueueSize(kDefaultQueueSize)
+  , mOutputQueueUsed(0)
+  , mOutputQueueSent(0)
+  , mLastReadEpoch(PR_IntervalNow())
+  , mPingSentEpoch(0)
 {
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
-    static uint64_t sSerial;
-    mSerial = ++sSerial;
+  static uint64_t sSerial;
+  mSerial = ++sSerial;
 
-    LOG3(("Http2Session::Http2Session %p transaction 1 = %p serial=0x%X\n",
-          this, aHttpTransaction, mSerial));
+  LOG3(("Http2Session::Http2Session %p serial=0x%X\n", this, mSerial));
 
-    mConnection = aHttpTransaction->Connection();
-    mInputFrameBuffer = new char[mInputFrameBufferSize];
-    mOutputQueueBuffer = new char[mOutputQueueSize];
-    mDecompressBuffer.SetCapacity(kDefaultBufferSize);
-    mDecompressor.SetCompressor(&mCompressor);
+  mInputFrameBuffer = new char[mInputFrameBufferSize];
+  mOutputQueueBuffer = new char[mOutputQueueSize];
+  mDecompressBuffer.SetCapacity(kDefaultBufferSize);
+  mDecompressor.SetCompressor(&mCompressor);
 
-    mPushAllowance = gHttpHandler->SpdyPushAllowance();
+  mPushAllowance = gHttpHandler->SpdyPushAllowance();
 
-    mSendingChunkSize = gHttpHandler->SpdySendingChunkSize();
-    SendHello();
+  mSendingChunkSize = gHttpHandler->SpdySendingChunkSize();
+  SendHello();
 
-    if (!aHttpTransaction->IsNullTransaction())
-      AddStream(aHttpTransaction, firstPriority);
-    mLastDataReadEpoch = mLastReadEpoch;
+  mLastDataReadEpoch = mLastReadEpoch;
 
-    mPingThreshold = gHttpHandler->SpdyPingThreshold();
+  mPingThreshold = gHttpHandler->SpdyPingThreshold();
 }
 
 // Copy the 32 bit number into the destination, using network byte order
@@ -379,7 +373,9 @@ Http2Session::RegisterStreamID(Http2Stream *stream, uint32_t aNewID)
 
 bool
 Http2Session::AddStream(nsAHttpTransaction *aHttpTransaction,
-                        int32_t aPriority)
+                        int32_t aPriority,
+                        bool aUseTunnel,
+                        nsIInterfaceRequestor *aCallbacks)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -390,11 +386,23 @@ Http2Session::AddStream(nsAHttpTransaction *aHttpTransaction,
     return false;
   }
 
+  if (!mConnection) {
+    mConnection = aHttpTransaction->Connection();
+  }
+
   aHttpTransaction->SetConnection(this);
+
+  if (aUseTunnel) {
+    LOG3(("Http2Session::AddStream session=%p trans=%p OnTunnel",
+          this, aHttpTransaction));
+    DispatchOnTunnel(aHttpTransaction, aCallbacks);
+    return true;
+  }
+
   Http2Stream *stream = new Http2Stream(aHttpTransaction, this, aPriority);
 
-  LOG3(("Http2Session::AddStream session=%p stream=%p NextID=0x%X (tentative)",
-        this, stream, mNextStreamID));
+  LOG3(("Http2Session::AddStream session=%p stream=%p serial=%u "
+        "NextID=0x%X (tentative)", this, stream, mSerial, mNextStreamID));
 
   mStreamTransactionHash.Put(aHttpTransaction, stream);
 
@@ -552,7 +560,7 @@ Http2Session::ChangeDownstreamState(enum internalStateType newState)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
-  LOG3(("Http2Stream::ChangeDownstreamState() %p from %X to %X",
+  LOG3(("Http2Session::ChangeDownstreamState() %p from %X to %X",
         this, mDownstreamState, newState));
   mDownstreamState = newState;
 }
@@ -562,7 +570,7 @@ Http2Session::ResetDownstreamState()
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
-  LOG3(("Http2Stream::ResetDownstreamState() %p", this));
+  LOG3(("Http2Session::ResetDownstreamState() %p", this));
   ChangeDownstreamState(BUFFERING_FRAME_HEADER);
 
   if (mInputFrameFinal && mInputFrameDataStream) {
@@ -574,34 +582,6 @@ Http2Session::ResetDownstreamState()
   mInputFrameBufferUsed = 0;
   mInputFrameDataStream = nullptr;
 }
-
-template<typename T> void
-Http2Session::EnsureBuffer(nsAutoArrayPtr<T> &buf, uint32_t newSize,
-                           uint32_t preserve, uint32_t &objSize)
-{
-  if (objSize >= newSize)
-    return;
-
-  // Leave a little slop on the new allocation - add 2KB to
-  // what we need and then round the result up to a 4KB (page)
-  // boundary.
-
-  objSize = (newSize + 2048 + 4095) & ~4095;
-
-  static_assert(sizeof(T) == 1, "sizeof(T) must be 1");
-  nsAutoArrayPtr<T> tmp(new T[objSize]);
-  memcpy(tmp, buf, preserve);
-  buf = tmp;
-}
-
-// Instantiate supported templates explicitly.
-template void
-Http2Session::EnsureBuffer(nsAutoArrayPtr<char> &buf, uint32_t newSize,
-                                  uint32_t preserve, uint32_t &objSize);
-
-template void
-Http2Session::EnsureBuffer(nsAutoArrayPtr<uint8_t> &buf, uint32_t newSize,
-                                  uint32_t preserve, uint32_t &objSize);
 
 // call with data length (i.e. 0 for 0 data bytes - ignore 8 byte header)
 // dest must have 8 bytes of allocated space
@@ -1011,6 +991,10 @@ Http2Session::CloseStream(Http2Stream *aStream, nsresult aResult)
 
   RemoveStreamFromQueues(aStream);
 
+  if (aStream->IsTunnel()) {
+    UnRegisterTunnel(aStream);
+  }
+
   // Send the stream the close() indication
   aStream->Close(aResult);
 }
@@ -1158,7 +1142,11 @@ Http2Session::ResponseHeadersComplete()
   // only do this once, afterwards ignore trailers
   if (mInputFrameDataStream->AllHeadersReceived())
     return NS_OK;
-  mInputFrameDataStream->SetAllHeadersReceived(true);
+  nsresult rv = mInputFrameDataStream->SetAllHeadersReceived(true);
+
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // The stream needs to see flattened http headers
   // Uncompressed http/2 format headers currently live in
@@ -1166,11 +1154,23 @@ Http2Session::ResponseHeadersComplete()
   // mFlatHTTPResponseHeaders via ConvertHeaders()
 
   mFlatHTTPResponseHeadersOut = 0;
-  nsresult rv = mInputFrameDataStream->ConvertResponseHeaders(&mDecompressor,
-                                                              mDecompressBuffer,
-                                                              mFlatHTTPResponseHeaders);
-  if (NS_FAILED(rv))
+  rv = mInputFrameDataStream->ConvertResponseHeaders(&mDecompressor,
+                                                     mDecompressBuffer,
+                                                     mFlatHTTPResponseHeaders);
+  if (rv == NS_ERROR_ABORT) {
+    LOG(("Http2Session::ResponseHeadersComplete ConvertResponseHeaders aborted\n"));
+    if (mInputFrameDataStream->IsTunnel()) {
+      gHttpHandler->ConnMgr()->CancelTransactions(
+        mInputFrameDataStream->Transaction()->ConnectionInfo(),
+        NS_ERROR_CONNECTION_REFUSED);
+    }
+    CleanupStream(mInputFrameDataStream, rv, CANCEL_ERROR);
+    ResetDownstreamState();
+    return NS_OK;
+  }
+  else if (NS_FAILED(rv)) {
     return rv;
+  }
 
   ChangeDownstreamState(PROCESSING_COMPLETE_HEADERS);
   return NS_OK;
@@ -2298,6 +2298,7 @@ Http2Session::WriteSegments(nsAHttpSegmentWriter *writer,
     MOZ_ASSERT(!mNeedsCleanup, "cleanup stream set unexpectedly");
     mNeedsCleanup = nullptr;                     /* just in case */
 
+    Http2Stream *stream = mInputFrameDataStream;
     mSegmentWriter = writer;
     rv = mInputFrameDataStream->WriteSegments(this, count, countWritten);
     mSegmentWriter = nullptr;
@@ -2308,7 +2309,6 @@ Http2Session::WriteSegments(nsAHttpSegmentWriter *writer,
       // This will happen when the transaction figures out it is EOF, generally
       // due to a content-length match being made. Return OK from this function
       // otherwise the whole session would be torn down.
-      Http2Stream *stream = mInputFrameDataStream;
 
       // if we were doing PROCESSING_COMPLETE_HEADERS need to pop the state
       // back to PROCESSING_DATA_FRAME where we came from
@@ -2322,8 +2322,8 @@ Http2Session::WriteSegments(nsAHttpSegmentWriter *writer,
             this, stream, stream ? stream->StreamID() : 0,
             mNeedsCleanup, rv));
       CleanupStream(stream, NS_OK, CANCEL_ERROR);
-      MOZ_ASSERT(!mNeedsCleanup, "double cleanup out of data frame");
-      mNeedsCleanup = nullptr;                     /* just in case */
+      MOZ_ASSERT(!mNeedsCleanup || mNeedsCleanup == stream);
+      mNeedsCleanup = nullptr;
       return NS_OK;
     }
 
@@ -2575,6 +2575,14 @@ Http2Session::Close(nsresult aReason)
   mSegmentWriter = nullptr;
 }
 
+nsHttpConnectionInfo *
+Http2Session::ConnectionInfo()
+{
+  nsRefPtr<nsHttpConnectionInfo> ci;
+  GetConnectionInfo(getter_AddRefs(ci));
+  return ci.get();
+}
+
 void
 Http2Session::CloseTransaction(nsAHttpTransaction *aTransaction,
                                nsresult aResult)
@@ -2806,6 +2814,80 @@ Http2Session::ConnectPushedStream(Http2Stream *stream)
   ForceRecv();
 }
 
+uint32_t
+Http2Session::FindTunnelCount(nsHttpConnectionInfo *aConnInfo)
+{
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  uint32_t rv = 0;
+  mTunnelHash.Get(aConnInfo->HashKey(), &rv);
+  return rv;
+}
+
+void
+Http2Session::RegisterTunnel(Http2Stream *aTunnel)
+{
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  nsHttpConnectionInfo *ci = aTunnel->Transaction()->ConnectionInfo();
+  uint32_t newcount = FindTunnelCount(ci) + 1;
+  mTunnelHash.Remove(ci->HashKey());
+  mTunnelHash.Put(ci->HashKey(), newcount);
+  LOG3(("Http2Stream::RegisterTunnel %p stream=%p tunnels=%d [%s]",
+        this, aTunnel, newcount, ci->HashKey().get()));
+}
+
+void
+Http2Session::UnRegisterTunnel(Http2Stream *aTunnel)
+{
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  nsHttpConnectionInfo *ci = aTunnel->Transaction()->ConnectionInfo();
+  MOZ_ASSERT(FindTunnelCount(ci));
+  uint32_t newcount = FindTunnelCount(ci) - 1;
+  mTunnelHash.Remove(ci->HashKey());
+  if (newcount) {
+    mTunnelHash.Put(ci->HashKey(), newcount);
+  }
+  LOG3(("Http2Session::UnRegisterTunnel %p stream=%p tunnels=%d [%s]",
+        this, aTunnel, newcount, ci->HashKey().get()));
+}
+
+void
+Http2Session::DispatchOnTunnel(nsAHttpTransaction *aHttpTransaction,
+                               nsIInterfaceRequestor *aCallbacks)
+{
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  nsHttpTransaction *trans = aHttpTransaction->QueryHttpTransaction();
+  nsHttpConnectionInfo *ci = aHttpTransaction->ConnectionInfo();
+  MOZ_ASSERT(trans);
+
+  LOG3(("Http2Session::DispatchOnTunnel %p trans=%p", this, trans));
+
+  aHttpTransaction->SetConnection(nullptr);
+
+  // this transaction has done its work of setting up a tunnel, let
+  // the connection manager queue it if necessary
+  trans->SetDontRouteViaWildCard(true);
+
+  if (FindTunnelCount(ci) < gHttpHandler->MaxConnectionsPerOrigin()) {
+    LOG3(("Http2Session::DispatchOnTunnel %p create on new tunnel %s",
+          this, ci->HashKey().get()));
+    nsRefPtr<SpdyConnectTransaction> connectTrans =
+      new SpdyConnectTransaction(ci, aCallbacks,
+                                 trans->Caps(), trans, this);
+    AddStream(connectTrans, trans->Priority(),
+              false, nullptr);
+    Http2Stream *tunnel = mStreamTransactionHash.Get(connectTrans);
+    MOZ_ASSERT(tunnel);
+    RegisterTunnel(tunnel);
+  }
+
+  // requeue it. The connection manager is responsible for actually putting
+  // this on the tunnel connection with the specific ci now that it
+  // has DontRouteViaWildCard set.
+  trans->EnableKeepAlive();
+  gHttpHandler->InitiateTransaction(trans, trans->Priority());
+}
+
+
 nsresult
 Http2Session::BufferOutput(const char *buf,
                            uint32_t count,
@@ -2905,6 +2987,13 @@ Http2Session::TransactionHasDataToWrite(nsAHttpTransaction *caller)
         this, stream->StreamID()));
 
   mReadyForWrite.Push(stream);
+  SetWriteCallbacks();
+
+  // NSPR poll will not poll the network if there are non system PR_FileDesc's
+  // that are ready - so we can get into a deadlock waiting for the system IO
+  // to come back here if we don't force the send loop manually.
+  ForceSend();
+
 }
 
 void
@@ -2916,6 +3005,7 @@ Http2Session::TransactionHasDataToWrite(Http2Stream *stream)
 
   mReadyForWrite.Push(stream);
   SetWriteCallbacks();
+  ForceSend();
 }
 
 bool
@@ -2954,10 +3044,17 @@ Http2Session::Classification()
   return mConnection->Classification();
 }
 
+void
+Http2Session::GetSecurityCallbacks(nsIInterfaceRequestor **aOut)
+{
+  *aOut = nullptr;
+}
+
 //-----------------------------------------------------------------------------
 // unused methods of nsAHttpTransaction
 // We can be sure of this because Http2Session is only constructed in
-// nsHttpConnection and is never passed out of that object
+// nsHttpConnection and is never passed out of that object or a TLSFilterTransaction
+// TLS tunnel
 //-----------------------------------------------------------------------------
 
 void
@@ -2965,13 +3062,6 @@ Http2Session::SetConnection(nsAHttpConnection *)
 {
   // This is unexpected
   MOZ_ASSERT(false, "Http2Session::SetConnection()");
-}
-
-void
-Http2Session::GetSecurityCallbacks(nsIInterfaceRequestor **)
-{
-  // This is unexpected
-  MOZ_ASSERT(false, "Http2Session::GetSecurityCallbacks()");
 }
 
 void

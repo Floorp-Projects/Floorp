@@ -296,7 +296,11 @@ public:
    * system.
    */
   nsIntRect CharBounds(int32_t aOffset, uint32_t aCoordType)
-    { return TextBounds(aOffset, aOffset + 1, aCoordType); }
+  {
+    int32_t endOffset = aOffset == static_cast<int32_t>(CharacterCount()) ?
+      aOffset : aOffset + 1;
+    return TextBounds(aOffset, endOffset, aCoordType);
+  }
 
   /**
    * Get/set caret offset, if no caret then -1.
@@ -421,7 +425,7 @@ protected:
   /**
    * Transform magic offset into text offset.
    */
-  uint32_t ConvertMagicOffset(int32_t aOffset) const;
+  index_t ConvertMagicOffset(int32_t aOffset) const;
 
   /**
    * Adjust an offset the caret stays at to get a text by line boundary.

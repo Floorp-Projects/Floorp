@@ -3351,7 +3351,6 @@ CodeGenerator::emitDebugResultChecks(LInstruction *ins)
       default:
         return true;
     }
-    return true;
 }
 #endif
 
@@ -5240,6 +5239,7 @@ JitCompartment::generateStringConcatStub(JSContext *cx, ExecutionMode mode)
     masm.ret();
 
     Linker linker(masm);
+    AutoFlushICache afc("StringConcatStub");
     JitCode *code = linker.newCode<CanGC>(cx, JSC::OTHER_CODE);
 
 #ifdef JS_ION_PERF
@@ -5274,6 +5274,7 @@ JitRuntime::generateMallocStub(JSContext *cx)
     masm.ret();
 
     Linker linker(masm);
+    AutoFlushICache afc("MallocStub");
     JitCode *code = linker.newCode<NoGC>(cx, JSC::OTHER_CODE);
 
 #ifdef JS_ION_PERF
@@ -5304,6 +5305,7 @@ JitRuntime::generateFreeStub(JSContext *cx)
     masm.ret();
 
     Linker linker(masm);
+    AutoFlushICache afc("FreeStub");
     JitCode *code = linker.newCode<NoGC>(cx, JSC::OTHER_CODE);
 
 #ifdef JS_ION_PERF
@@ -6528,17 +6530,9 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
 
     // Check to make sure we didn't have a mid-build invalidation. If so, we
     // will trickle to jit::Compile() and return Method_Skipped.
-    uint32_t useCount = script->getUseCount();
     types::RecompileInfo recompileInfo;
     if (!types::FinishCompilation(cx, script, executionMode, constraints, &recompileInfo))
         return true;
-
-    // IonMonkey could have inferred better type information during
-    // compilation. Since adding the new information to the actual type
-    // information can reset the usecount, increase it back to what it was
-    // before.
-    if (useCount > script->getUseCount())
-        script->incUseCount(useCount - script->getUseCount());
 
     uint32_t scriptFrameSize = frameClass_ == FrameSizeClass::None()
                            ? frameDepth_
@@ -6581,6 +6575,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
     // use the normal executable allocator so that we cannot segv during
     // execution off the main thread.
     Linker linker(masm);
+    AutoFlushICache afc("IonLink");
     JitCode *code = (executionMode == SequentialExecution)
                     ? linker.newCodeForIonScript(cx)
                     : linker.newCode<CanGC>(cx, JSC::ION_CODE);
@@ -8670,31 +8665,18 @@ CodeGenerator::visitAssertRangeV(LAssertRangeV *ins)
 typedef bool (*RecompileFn)(JSContext *);
 static const VMFunction RecompileFnInfo = FunctionInfo<RecompileFn>(Recompile);
 
-typedef bool (*ForcedRecompileFn)(JSContext *);
-static const VMFunction ForcedRecompileFnInfo = FunctionInfo<ForcedRecompileFn>(ForcedRecompile);
-
 bool
 CodeGenerator::visitRecompileCheck(LRecompileCheck *ins)
 {
     Label done;
     Register tmp = ToRegister(ins->scratch());
-    OutOfLineCode *ool;
-    if (ins->mir()->forceRecompilation())
-        ool = oolCallVM(ForcedRecompileFnInfo, ins, (ArgList()), StoreRegisterTo(tmp));
-    else
-        ool = oolCallVM(RecompileFnInfo, ins, (ArgList()), StoreRegisterTo(tmp));
+    OutOfLineCode *ool = oolCallVM(RecompileFnInfo, ins, (ArgList()), StoreRegisterTo(tmp));
 
     // Check if usecount is high enough.
-    AbsoluteAddress useCount = AbsoluteAddress(ins->mir()->script()->addressOfUseCount());
-    if (ins->mir()->increaseUseCount()) {
-        masm.load32(useCount, tmp);
-        masm.add32(Imm32(1), tmp);
-        masm.store32(tmp, useCount);
-        masm.branch32(Assembler::BelowOrEqual, tmp, Imm32(ins->mir()->recompileThreshold()), &done);
-    } else {
-        masm.branch32(Assembler::BelowOrEqual, useCount, Imm32(ins->mir()->recompileThreshold()),
-                      &done);
-    }
+    masm.movePtr(ImmPtr(ins->mir()->script()->addressOfUseCount()), tmp);
+    Address ptr(tmp, 0);
+    masm.add32(Imm32(1), tmp);
+    masm.branch32(Assembler::BelowOrEqual, ptr, Imm32(ins->mir()->recompileThreshold()), &done);
 
     // Check if not yet recompiling.
     CodeOffsetLabel label = masm.movWithPatch(ImmWord(uintptr_t(-1)), tmp);

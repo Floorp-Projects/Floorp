@@ -18,8 +18,8 @@ intr protocol PJavaScript
 {
     manager PContent;
 
-child:
-    // The parent process no longer holds any references to the child object.
+both:
+    // Sent when a CPOW has been finalized and table entries can be freed up.
     async DropObject(uint64_t objId);
 
     // These roughly map to the ProxyHandler hooks that CPOWs need.

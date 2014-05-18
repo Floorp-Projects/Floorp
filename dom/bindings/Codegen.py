@@ -7582,7 +7582,12 @@ def getEnumValueName(value):
         raise SyntaxError('"_empty" is not an IDL enum value we support yet')
     if value == "":
         return "_empty"
-    return MakeNativeName(value)
+    nativeName = MakeNativeName(value)
+    if nativeName == "EndGuard_":
+        raise SyntaxError('Enum value "' + value + '" cannot be used because it'
+                          ' collides with our internal EndGuard_ value.  Please'
+                          ' rename our internal EndGuard_ to something else')
+    return nativeName
 
 
 class CGEnum(CGThing):
@@ -7602,10 +7607,11 @@ class CGEnum(CGThing):
 
             MOZ_BEGIN_ENUM_CLASS(${name}, uint32_t)
               $*{enums}
+              EndGuard_
             MOZ_END_ENUM_CLASS(${name})
             """,
             name=self.enum.identifier.name,
-            enums=",\n".join(map(getEnumValueName, self.enum.values())) + "\n")
+            enums=",\n".join(map(getEnumValueName, self.enum.values())) + ",\n")
         strings = CGNamespace(self.stringsNamespace(),
                               CGGeneric(declare="extern const EnumEntry %s[%d];\n"
                                         % (ENUM_ENTRY_VARIABLE_NAME, self.nEnumStrings())))
