@@ -28,6 +28,7 @@
 
 #ifdef XP_WIN
 #include <process.h>
+#include "mozilla/ipc/WindowsMessageLoop.h"
 #endif
 
 #include "nsAppDirectoryServiceDefs.h"
@@ -472,6 +473,10 @@ XRE_InitChildProcess(int aArgc,
     MessageLoop uiMessageLoop(uiLoopType);
     {
       nsAutoPtr<ProcessChild> process;
+
+#ifdef XP_WIN
+      mozilla::ipc::windows::InitUIThread();
+#endif
 
       switch (aProcess) {
       case GeckoProcessType_Default:
