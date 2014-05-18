@@ -1190,7 +1190,7 @@ CacheFile::PreloadChunks(uint32_t aIndex)
 {
   AssertOwnsLock();
 
-  uint32_t limit = aIndex + CacheObserver::PreloadChunkCount();
+  uint32_t limit = aIndex + mPreloadChunkCount;
 
   for (uint32_t i = aIndex; i < limit; ++i) {
     int64_t off = i * kChunkSize;
