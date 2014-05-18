@@ -606,15 +606,6 @@ CanvasRenderingContext2D::ParseColor(const nsAString& aString,
   return true;
 }
 
-#ifdef ACCESSIBILITY
-PLDHashOperator
-CanvasRenderingContext2D::RemoveHitRegionProperty(RegionInfo* aEntry, void*)
-{
-  aEntry->mElement->DeleteProperty(nsGkAtoms::hitregion);
-  return PL_DHASH_NEXT;
-}
-#endif
-
 nsresult
 CanvasRenderingContext2D::Reset()
 {
@@ -632,10 +623,7 @@ CanvasRenderingContext2D::Reset()
   mStream = nullptr;
 
   // reset hit regions
-#ifdef ACCESSIBILITY
-  mHitRegionsOptions.EnumerateEntries(RemoveHitRegionProperty, nullptr);
-#endif
-  mHitRegionsOptions.Clear();
+  mHitRegionsOptions.ClearAndRetainStorage();
 
   // Since the target changes the backing texture will change, and this will
   // no longer be valid.
@@ -2450,24 +2438,6 @@ CanvasRenderingContext2D::MeasureText(const nsAString& rawText,
 void
 CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& options, ErrorResult& error)
 {
-  // remove old hit region first
-  RemoveHitRegion(options.mId);
-
-  // for now, we require a fallback element
-  if (options.mControl == NULL) {
-    error.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return;
-  }
-
-#ifdef ACCESSIBILITY
-  // check if the control is a descendant of our canvas
-  HTMLCanvasElement* canvas = GetCanvas();
-  bool isDescendant = true;
-  if (!canvas || !nsContentUtils::ContentIsDescendantOf(options.mControl, canvas)) {
-    isDescendant = false;
-  }
-#endif
-
   // check if the path is valid
   EnsureUserSpacePath(CanvasWindingRule::Nonzero);
   if(!mPath) {
@@ -2483,35 +2453,66 @@ CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& options, ErrorRes
     return;
   }
 
-#ifdef ACCESSIBILITY
-  if (isDescendant) {
-    nsRect* nsBounds = new nsRect();
-    gfxRect rect(bounds.x, bounds.y, bounds.width, bounds.height);
-    *nsBounds = nsLayoutUtils::RoundGfxRectToAppRect(rect, AppUnitsPerCSSPixel());
-    options.mControl->DeleteProperty(nsGkAtoms::hitregion);
-    options.mControl->SetProperty(nsGkAtoms::hitregion, nsBounds,
-                                  nsINode::DeleteProperty<nsRect>);
-  }
-#endif
+  // remove old hit region first
+  RemoveHitRegion(options.mId);
 
-  // finally, add the region to the list if it has an ID
-  if (options.mId.Length() != 0) {
-    mHitRegionsOptions.PutEntry(options.mId)->mElement = options.mControl;
+  if (options.mControl) {
+    // also remove regions with this control
+    for (unsigned int x = 0; x < mHitRegionsOptions.Length(); x++) {
+      RegionInfo& info = mHitRegionsOptions[x];
+      if (info.mElement == options.mControl) {
+        mHitRegionsOptions.RemoveElementAt(x);
+        break;
+      }
+    }
+#ifdef ACCESSIBILITY
+  options.mControl->SetProperty(nsGkAtoms::hitregion, new bool(true),
+                                nsINode::DeleteProperty<bool>);
+#endif
   }
+  
+  // finally, add the region to the list
+  RegionInfo info;
+  info.mId = options.mId;
+  info.mElement = options.mControl;
+  RefPtr<PathBuilder> pathBuilder = mPath->TransformedCopyToBuilder(mTarget->GetTransform());
+  info.mPath = pathBuilder->Finish();
+
+  mHitRegionsOptions.InsertElementAt(0, info);
 }
 
 void
 CanvasRenderingContext2D::RemoveHitRegion(const nsAString& id)
 {
-  RegionInfo* info = mHitRegionsOptions.GetEntry(id);
-  if (!info) {
-    return;
+  if (id.Length() == 0) {
+     return;
+   }
+
+  for (unsigned int x = 0; x < mHitRegionsOptions.Length(); x++) {
+    RegionInfo& info = mHitRegionsOptions[x];
+    if (info.mId == id) {
+      mHitRegionsOptions.RemoveElementAt(x);
+
+      return;
+    }
+  }
+}
+
+bool
+CanvasRenderingContext2D::GetHitRegionRect(Element* aElement, nsRect& aRect)
+{
+  for (unsigned int x = 0; x < mHitRegionsOptions.Length(); x++) {
+    RegionInfo& info = mHitRegionsOptions[x];
+    if (info.mElement == aElement) {
+      mgfx::Rect bounds(info.mPath->GetBounds());
+      gfxRect rect(bounds.x, bounds.y, bounds.width, bounds.height);
+      aRect = nsLayoutUtils::RoundGfxRectToAppRect(rect, AppUnitsPerCSSPixel());
+
+      return true;
+    }
   }
 
-#ifdef ACCESSIBILITY
-  info->mElement->DeleteProperty(nsGkAtoms::hitregion);
-#endif
-  mHitRegionsOptions.RemoveEntry(id);
+  return false;
 }
 
 /**
