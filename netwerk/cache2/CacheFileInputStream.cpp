@@ -107,72 +107,8 @@ CacheFileInputStream::Available(uint64_t *_retval)
 NS_IMETHODIMP
 CacheFileInputStream::Read(char *aBuf, uint32_t aCount, uint32_t *_retval)
 {
-  CacheFileAutoLock lock(mFile);
-  MOZ_ASSERT(!mInReadSegments);
-
   LOG(("CacheFileInputStream::Read() [this=%p, count=%d]", this, aCount));
-
-  nsresult rv;
-
-  if (mClosed) {
-    LOG(("CacheFileInputStream::Read() - Stream is closed. [this=%p, "
-         "status=0x%08x]", this, mStatus));
-
-    if NS_FAILED(mStatus)
-      return mStatus;
-
-    *_retval = 0;
-    return NS_OK;
-  }
-
-  EnsureCorrectChunk(false);
-  if (NS_FAILED(mStatus))
-    return mStatus;
-
-  if (!mChunk) {
-    if (mListeningForChunk == -1) {
-      LOG(("  no chunk, returning 0 read and NS_OK"));
-      *_retval = 0;
-      return NS_OK;
-    }
-    else {
-      LOG(("  waiting for chuck, returning WOULD_BLOCK"));
-      return NS_BASE_STREAM_WOULD_BLOCK;
-    }
-  }
-
-  int64_t canRead;
-  const char *buf;
-  CanRead(&canRead, &buf);
-
-  if (canRead < 0) {
-    // file was truncated ???
-    MOZ_ASSERT(false, "SetEOF is currenty not implemented?!");
-    *_retval = 0;
-    rv = NS_OK;
-  }
-  else if (canRead > 0) {
-    *_retval = std::min(static_cast<uint32_t>(canRead), aCount);
-    memcpy(aBuf, buf, *_retval);
-    mPos += *_retval;
-
-    EnsureCorrectChunk(!(canRead < aCount && mPos % kChunkSize == 0));
-
-    rv = NS_OK;
-  }
-  else {
-    if (mFile->mOutput)
-      rv = NS_BASE_STREAM_WOULD_BLOCK;
-    else {
-      *_retval = 0;
-      rv = NS_OK;
-    }
-  }
-
-  LOG(("CacheFileInputStream::Read() [this=%p, rv=0x%08x, retval=%d",
-       this, rv, *_retval));
-
-  return rv;
+  return ReadSegments(NS_CopySegmentToBuffer, aBuf, aCount, _retval);
 }
 
 NS_IMETHODIMP
@@ -226,15 +162,20 @@ CacheFileInputStream::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
     else if (canRead > 0) {
       uint32_t toRead = std::min(static_cast<uint32_t>(canRead), aCount);
 
-      // We need to release the lock to avoid lock re-entering
+      // We need to release the lock to avoid lock re-entering unless the
+      // caller is Read() method.
 #ifdef DEBUG
       int64_t oldPos = mPos;
 #endif
       mInReadSegments = true;
-      lock.Unlock();
+      if (aWriter != (nsWriteSegmentFun)NS_CopySegmentToBuffer) {
+        lock.Unlock();
+      }
       uint32_t read;
-      rv = aWriter(this, aClosure, buf, 0, toRead, &read);
-      lock.Lock();
+      rv = aWriter(this, aClosure, buf, *_retval, toRead, &read);
+      if (aWriter != (nsWriteSegmentFun)NS_CopySegmentToBuffer) {
+        lock.Lock();
+      }
       mInReadSegments = false;
 #ifdef DEBUG
       MOZ_ASSERT(oldPos == mPos);
@@ -270,7 +211,7 @@ CacheFileInputStream::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
     break;
   }
 
-  LOG(("CacheFileInputStream::ReadSegments() [this=%p, rv=0x%08x, retval=%d",
+  LOG(("CacheFileInputStream::ReadSegments() [this=%p, rv=0x%08x, retval=%d]",
        this, rv, *_retval));
 
   return rv;
