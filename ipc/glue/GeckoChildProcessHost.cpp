@@ -65,7 +65,6 @@ static const bool kLowRightsSubprocesses =
   ;
 
 mozilla::StaticRefPtr<nsIFile> GeckoChildProcessHost::sGreDir;
-mozilla::DebugOnly<bool> GeckoChildProcessHost::sGreDirCached;
 
 static bool
 ShouldHaveDirectoryService()
@@ -130,7 +129,7 @@ void
 GeckoChildProcessHost::GetPathToBinary(FilePath& exePath)
 {
   if (ShouldHaveDirectoryService()) {
-    MOZ_ASSERT(sGreDirCached);
+    MOZ_ASSERT(sGreDir);
     if (sGreDir) {
 #ifdef OS_WIN
       nsString path;
@@ -267,19 +266,11 @@ GeckoChildProcessHost::PrepareLaunch()
 void
 GeckoChildProcessHost::CacheGreDir()
 {
-  // PerformAysncLaunchInternal/GetPathToBinary may be called on the IO thread,
-  // and they want to use the directory service, which needs to happen on the
-  // main thread (in the event that its implemented in JS). So we grab
-  // NS_GRE_DIR here and stash it.
+  if (sGreDir) {
+    return;
+  }
 
-#ifdef MOZ_WIDGET_GONK
-  // Apparently, this ASSERT should be present on all platforms. Currently,
-  // this assert causes mochitest failures on the Mac platform if its left in.
-
-  // B2G overrides the directory service in JS, so this needs to be called
-  // on the main thread.
   MOZ_ASSERT(NS_IsMainThread());
-#endif
 
   if (ShouldHaveDirectoryService()) {
     nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
@@ -295,7 +286,6 @@ GeckoChildProcessHost::CacheGreDir()
       }
     }
   }
-  sGreDirCached = true;
 }
 
 #ifdef XP_WIN
@@ -559,7 +549,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   // since LD_LIBRARY_PATH is already set correctly in subprocesses
   // (meaning that we don't need to set that up in the environment).
   if (ShouldHaveDirectoryService()) {
-    MOZ_ASSERT(sGreDirCached);
+    MOZ_ASSERT(sGreDir);
     if (sGreDir) {
       nsCString path;
       MOZ_ALWAYS_TRUE(NS_SUCCEEDED(sGreDir->GetNativePath(path)));
