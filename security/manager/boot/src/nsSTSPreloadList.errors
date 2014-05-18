@@ -1,4 +1,5 @@
 admin.google.com: did not receive HSTS header (error ignored - included regardless)
+airbnb.com: did not receive HSTS header
 alpha.irccloud.com: could not connect to host
 anycoin.me: did not receive HSTS header
 api.mega.co.nz: could not connect to host
@@ -21,6 +22,7 @@ checkout.google.com: did not receive HSTS header (error ignored - included regar
 chrome-devtools-frontend.appspot.com: did not receive HSTS header (error ignored - included regardless)
 chrome.google.com: did not receive HSTS header (error ignored - included regardless)
 cloud.google.com: did not receive HSTS header (error ignored - included regardless)
+cloudns.com.au: could not connect to host
 code.google.com: did not receive HSTS header (error ignored - included regardless)
 codereview.chromium.org: did not receive HSTS header (error ignored - included regardless)
 crate.io: did not receive HSTS header
@@ -109,6 +111,7 @@ talk.google.com: did not receive HSTS header (error ignored - included regardles
 talkgadget.google.com: did not receive HSTS header (error ignored - included regardless)
 translate.googleapis.com: did not receive HSTS header (error ignored - included regardless)
 uprotect.it: could not connect to host
+usaa.com: did not receive HSTS header
 wallet.google.com: did not receive HSTS header (error ignored - included regardless)
 webmail.mayfirst.org: did not receive HSTS header
 wepay.com: max-age too low: 2592000
