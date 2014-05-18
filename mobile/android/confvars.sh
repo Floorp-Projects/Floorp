@@ -64,9 +64,6 @@ MOZ_SERVICES_FXACCOUNTS=1
 # Enable Wifi-AP/cell tower data reporting
 MOZ_DATA_REPORTING=1
 
-# Enable the production cert for verifying signed packaged apps.
-MOZ_B2G_CERTDATA=1
-
 # Enable the "synthetic APKs" implementation of Open Web Apps.
 MOZ_ANDROID_SYNTHAPKS=1
 
