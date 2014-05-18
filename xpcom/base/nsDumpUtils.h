@@ -26,8 +26,6 @@
 #define LOG(...)
 #endif
 
-using namespace mozilla;
-
 #if defined(XP_LINUX) || defined(__FreeBSD__) || defined(XP_MACOSX) // {
 
 /**
@@ -130,7 +128,7 @@ public:
 private:
   nsAutoCString mDirPath;
 
-  static StaticRefPtr<FifoWatcher> sSingleton;
+  static mozilla::StaticRefPtr<FifoWatcher> sSingleton;
 
   FifoWatcher(nsCString aPath)
     : mDirPath(aPath)
@@ -168,7 +166,7 @@ public:
   virtual void OnFileCanReadWithoutBlocking(int aFd);
 
 private:
-  static StaticRefPtr<SignalPipeWatcher> sSingleton;
+  static mozilla::StaticRefPtr<SignalPipeWatcher> sSingleton;
 
   SignalPipeWatcher()
     : mSignalInfoLock("SignalPipeWatcher.mSignalInfoLock")
