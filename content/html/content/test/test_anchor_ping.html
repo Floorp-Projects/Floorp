@@ -37,11 +37,13 @@ addLoadEvent(function () {
 let tests = [
 
   // Ensure that sending pings is enabled.
-  function setup() {
+  function* setup() {
     Services.prefs.setBoolPref("browser.send_pings", true);
+    Services.prefs.setIntPref("browser.send_pings.max_per_link", 4);
 
     SimpleTest.registerCleanupFunction(() => {
       Services.prefs.clearUserPref("browser.send_pings");
+      Services.prefs.clearUserPref("browser.send_pings.max_per_link");
     });
   },
 
@@ -50,7 +52,7 @@ let tests = [
   // HTTP header with, as its value, the address of the document containing the
   // hyperlink, and a Ping-To HTTP header with, as its value, the target URL.
   // The request must not include a Referer (sic) HTTP header.
-  function same_origin() {
+  function* same_origin() {
     let from = "/ping-from/" + Math.random();
     let to = "/ping-to/" + Math.random();
     let ping = "/ping/" + Math.random();
@@ -87,7 +89,7 @@ let tests = [
   // address of the document containing the hyperlink, a Ping-From HTTP header
   // with the same value, and a Ping-To HTTP header with, as its value, target
   // URL.
-  function diff_origin() {
+  function* diff_origin() {
     let from = "/ping-from/" + Math.random();
     let to = "/ping-to/" + Math.random();
     let ping = "/ping/" + Math.random();
@@ -130,7 +132,7 @@ let tests = [
   // must include a Ping-To HTTP header with, as its value, target URL. The
   // request must neither include a Referer (sic) HTTP header nor include a
   // Ping-From HTTP header.
-  function diff_origin_secure_referrer() {
+  function* diff_origin_secure_referrer() {
     let ping = "/ping/" + Math.random();
     let server = new HttpServer();
 
@@ -154,6 +156,47 @@ let tests = [
     yield stopServer(server);
   },
 
+  // Test that the <a ping> attribute is properly tokenized using ASCII white
+  // space characters as separators.
+  function* tokenize_white_space() {
+    let from = "/ping-from/" + Math.random();
+    let to = "/ping-to/" + Math.random();
+
+    let base;
+    let server = new HttpServer();
+
+    let pings = [
+      "/ping1/" + Math.random(),
+      "/ping2/" + Math.random(),
+      "/ping3/" + Math.random(),
+      "/ping4/" + Math.random()
+    ];
+
+    // The page that contains the link.
+    createFromPathHandler(server, from, to, () => {
+      return " " + pings[0] + " \r " + pings[1] + " \t " +
+                   pings[2] + " \n " + pings[3] + "   ";
+    });
+
+    // The page that the link's href points to.
+    let promiseHref = createToPathHandler(server, to);
+
+    // The pings we want to receive.
+    let pingPathHandlers = createPingPathHandlers(server, pings, () => {
+      return {from: base + from, to: base + to};
+    });
+
+    // Start the server, get its base URL and run the test.
+    server.start(-1);
+    base = "http://localhost:" + server.identity.primaryPort;
+    navigate(base + from);
+
+    // Wait until the target and ping url have loaded.
+    yield Promise.all([promiseHref, ...pingPathHandlers]);
+
+    // Cleanup.
+    yield stopServer(server);
+  }
 ];
 
 // Navigate the iframe used for testing to a new URL.
@@ -192,6 +235,16 @@ function createToPathHandler(server, path) {
   });
 
   return deferred.promise;
+}
+
+// Register multiple path handlers for the given server that will receive
+// pings as sent when an <a ping> element is clicked. This method uses
+// createPingPathHandler() defined below to ensure all headers are sent
+// and received as expected.
+function createPingPathHandlers(server, paths, lazyHeaders) {
+  return [
+    createPingPathHandler(server, path, lazyHeaders) for (path of paths)
+  ]
 }
 
 // Registers a path handler for the given server that will receive pings as
