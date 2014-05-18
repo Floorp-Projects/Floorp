@@ -87,14 +87,10 @@ gyp_vars['OS'] = flavors[os]
 
 arches = {
     'x86_64': 'x64',
-    'arm': 'arm',
     'x86': 'ia32',
-    'ppc': 'ppc',
-    'ppc64': 'ppc',
-    'ia64': 'ia64',
 }
 
-gyp_vars['target_arch'] = arches[CONFIG['CPU_ARCH']]
+gyp_vars['target_arch'] = arches.get(CONFIG['CPU_ARCH'], CONFIG['CPU_ARCH'])
 
 if CONFIG['ARM_ARCH']:
     if int(CONFIG['ARM_ARCH']) < 7:
