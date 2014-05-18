@@ -253,10 +253,6 @@ DEFAULT_GMAKE_FLAGS += MAKE_OBJDIR='$$(INSTALL) -D $$(OBJDIR)'
 # it, creating race conditions. See bug #836220
 DEFAULT_GMAKE_FLAGS += TARGETS='$$(LIBRARY) $$(SHARED_LIBRARY) $$(PROGRAM)'
 
-ifdef MOZ_B2G_CERTDATA
-include $(srcdir)/b2g-certdata.mk
-endif
-
 ifdef MOZ_NSS_PATCH
 # If we're applying a patch, we'll copy the NSS source to the objdir
 # and build it from there.
