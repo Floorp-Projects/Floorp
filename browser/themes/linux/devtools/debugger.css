@@ -3,7 +3,3 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 %include ../../shared/devtools/debugger.inc.css
-
-.devtools-sidebar-tabs > tabs > tab {
-  min-height: 24px !important;
-}
