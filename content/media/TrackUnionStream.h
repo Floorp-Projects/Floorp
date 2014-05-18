@@ -106,8 +106,9 @@ public:
       // all our tracks have actually finished and been removed from our map,
       // so we're finished now.
       FinishOnGraphThread();
+    } else {
+      mBuffer.AdvanceKnownTracksTime(GraphTimeToStreamTime(aTo));
     }
-    mBuffer.AdvanceKnownTracksTime(GraphTimeToStreamTime(aTo));
     if (allHaveCurrentData) {
       // We can make progress if we're not blocked
       mHasCurrentData = true;
