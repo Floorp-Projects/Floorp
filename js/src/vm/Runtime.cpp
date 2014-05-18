@@ -80,6 +80,7 @@ PerThreadData::PerThreadData(JSRuntime *runtime)
 #endif
     activation_(nullptr),
     asmJSActivationStack_(nullptr),
+    autoFlushICache_(nullptr),
 #if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
     simulator_(nullptr),
     simulatorStackLimit_(0),

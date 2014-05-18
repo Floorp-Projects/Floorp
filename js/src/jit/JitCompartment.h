@@ -209,9 +209,6 @@ class JitRuntime
     // (after returning from JIT code).
     uint8_t *osrTempData_;
 
-    // Keep track of memoryregions that are going to be flushed.
-    AutoFlushCache *flusher_;
-
     // Whether all Ion code in the runtime is protected, and will fault if it
     // is accessed.
     bool ionCodeProtected_;
@@ -261,14 +258,6 @@ class JitRuntime
     void freeOsrTempData();
 
     static void Mark(JSTracer *trc);
-
-    AutoFlushCache *flusher() {
-        return flusher_;
-    }
-    void setFlusher(AutoFlushCache *fl) {
-        if (!flusher_ || !fl)
-            flusher_ = fl;
-    }
 
     JSC::ExecutableAllocator *execAlloc() const {
         return execAlloc_;

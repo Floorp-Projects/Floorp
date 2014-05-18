@@ -86,7 +86,6 @@ public:
                   nsIAsyncInputStream  **responseBody);
 
     // attributes
-    nsHttpConnectionInfo  *ConnectionInfo() { return mConnInfo; }
     nsHttpResponseHead    *ResponseHead()   { return mHaveAllHeaders ? mResponseHead : nullptr; }
     nsISupports           *SecurityInfo()   { return mSecurityInfo; }
 
@@ -102,6 +101,15 @@ public:
     bool ResponseIsComplete() { return mResponseIsComplete; }
 
     bool      ProxyConnectFailed() { return mProxyConnectFailed; }
+
+    // setting mDontRouteViaWildCard to true means the transaction should only
+    // be dispatched on a specific ConnectionInfo Hash Key (as opposed to a
+    // generic wild card one). That means in the specific case of carrying this
+    // transaction on an HTTP/2 tunnel it will only be dispatched onto an
+    // existing tunnel instead of triggering creation of a new one.
+    void SetDontRouteViaWildCard(bool var) { mDontRouteViaWildCard = var; }
+    bool DontRouteViaWildCard() { return mDontRouteViaWildCard; }
+    void EnableKeepAlive() { mCaps |= NS_HTTP_ALLOW_KEEPALIVE; }
 
     // SetPriority() may only be used by the connection manager.
     void    SetPriority(int32_t priority) { mPriority = priority; }
@@ -122,6 +130,8 @@ public:
     void SetLoadGroupConnectionInfo(nsILoadGroupConnectionInfo *aLoadGroupCI) { mLoadGroupCI = aLoadGroupCI; }
     void DispatchedAsBlocking();
     void RemoveDispatchedAsBlocking();
+
+    nsHttpTransaction *QueryHttpTransaction() MOZ_OVERRIDE { return this; }
 
 private:
     nsresult Restart();
@@ -246,6 +256,7 @@ private:
     bool                            mPreserveStream;
     bool                            mDispatchedAsBlocking;
     bool                            mResponseTimeoutEnabled;
+    bool                            mDontRouteViaWildCard;
 
     // mClosed           := transaction has been explicitly closed
     // mTransactionDone  := transaction ran to completion or was interrupted

@@ -898,7 +898,7 @@ nsresult
 Http2Compressor::EncodeHeaderBlock(const nsCString &nvInput,
                                    const nsACString &method, const nsACString &path,
                                    const nsACString &host, const nsACString &scheme,
-                                   nsACString &output)
+                                   bool connectForm, nsACString &output)
 {
   mAlternateReferenceSet.Clear();
   mImpliedReferenceSet.Clear();
@@ -917,10 +917,15 @@ Http2Compressor::EncodeHeaderBlock(const nsCString &nvInput,
   }
 
   // colon headers first
-  ProcessHeader(nvPair(NS_LITERAL_CSTRING(":method"), method), false);
-  ProcessHeader(nvPair(NS_LITERAL_CSTRING(":path"), path), false);
-  ProcessHeader(nvPair(NS_LITERAL_CSTRING(":authority"), host), false);
-  ProcessHeader(nvPair(NS_LITERAL_CSTRING(":scheme"), scheme), false);
+  if (!connectForm) {
+    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":method"), method), false);
+    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":path"), path), false);
+    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":authority"), host), false);
+    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":scheme"), scheme), false);
+  } else {
+    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":method"), method), false);
+    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":authority"), host), false);
+  }
 
   // now the non colon headers
   const char *beginBuffer = nvInput.BeginReading();

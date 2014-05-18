@@ -516,7 +516,10 @@ public:
     static void GCSliceCallback(JSRuntime *rt,
                                 JS::GCProgress progress,
                                 const JS::GCDescription &desc);
-    static void FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, bool isCompartmentGC);
+    static void FinalizeCallback(JSFreeOp *fop,
+                                 JSFinalizeStatus status,
+                                 bool isCompartmentGC,
+                                 void *data);
 
     inline void AddVariantRoot(XPCTraceableVariant* variant);
     inline void AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS);

@@ -150,6 +150,7 @@ public:
 protected:
 
     virtual ~nsSocketTransport();
+    void     CleanupTypes();
 
 private:
 
@@ -269,6 +270,7 @@ private:
     uint16_t     mProxyPort;
     bool mProxyTransparent;
     bool mProxyTransparentResolvesHost;
+    bool mHttpsProxy;
     uint32_t     mConnectionFlags;
     
     uint16_t         SocketPort() { return (!mProxyHost.IsEmpty() && !mProxyTransparent) ? mProxyPort : mPort; }
