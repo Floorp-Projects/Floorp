@@ -99,10 +99,9 @@ function test_multiple_windows() {
     ok(notification2, "2nd window has a global notification box.");
 
     let policy;
-
     let displayCount = 0;
-    let prefPaneClosed = false;
-    let childWindowClosed = false;
+    let prefWindowClosed = false;
+    let mutationObserversRemoved = false;
 
     function onAlertDisplayed() {
       displayCount++;
@@ -116,15 +115,17 @@ function test_multiple_windows() {
       // We register two independent observers and we need both to clean up
       // properly. This handles gating for test completion.
       function maybeFinish() {
-        if (!prefPaneClosed) {
+        if (!prefWindowClosed) {
           dump("Not finishing test yet because pref pane isn't closed.\n");
           return;
         }
 
-        if (!childWindowClosed) {
-          dump("Not finishing test yet because child window isn't closed.\n");
+        if (!mutationObserversRemoved) {
+          dump("Not finishing test yet because mutation observers haven't been removed yet.\n");
           return;
         }
+
+        window2.close();
 
         dump("Finishing multiple window test.\n");
         rootLogger.removeAppender(dumpAppender);
@@ -132,8 +133,8 @@ function test_multiple_windows() {
         delete rootLogger;
         finish();
       }
-
       let closeCount = 0;
+
       function onAlertClose() {
         closeCount++;
 
@@ -151,8 +152,7 @@ function test_multiple_windows() {
         is(notification1.allNotifications.length, 0, "No notifications remain on main window.");
         is(notification2.allNotifications.length, 0, "No notifications remain on 2nd window.");
 
-        window2.close();
-        childWindowClosed = true;
+        mutationObserversRemoved = true;
         maybeFinish();
       }
 
@@ -170,11 +170,11 @@ function test_multiple_windows() {
       Services.obs.addObserver(function observer(prefWin, topic, data) {
         Services.obs.removeObserver(observer, "advanced-pane-loaded");
 
-        ok(true, "Pref pane opened on info bar button press.");
+        ok(true, "Advanced preferences opened on info bar button press.");
         executeSoon(function soon() {
-          dump("Closing pref pane.\n");
+          dump("Closing preferences.\n");
           prefWin.close();
-          prefPaneClosed = true;
+          prefWindowClosed = true;
           maybeFinish();
         });
       }, "advanced-pane-loaded", false);
