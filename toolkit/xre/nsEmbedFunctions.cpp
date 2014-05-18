@@ -68,8 +68,6 @@
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
 
-#include "GMPProcessChild.h"
-
 #include "GeckoProfiler.h"
 
 #ifdef MOZ_IPDL_TESTS
@@ -502,10 +500,6 @@ XRE_InitChildProcess(int aArgc,
 #else 
         NS_RUNTIMEABORT("rebuild with --enable-ipdl-tests");
 #endif
-        break;
-
-      case GeckoProcessType_GMPlugin:
-        process = new gmp::GMPProcessChild(parentHandle);
         break;
 
       default:
