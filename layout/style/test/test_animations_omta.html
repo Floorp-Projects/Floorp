@@ -70,6 +70,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=964646
     @keyframes kf_cascade2 { from, to { opacity: 0.3 } }
     @keyframes kf_cascade2 { from, to { transform: translate(50px) } }
     @keyframes kf_cascade2 { from, to { transform: translate(100px) } }
+    @keyframes kf_tf1 {
+      0%   { transform: translate(20px); animation-timing-function: ease }
+      25%  { transform: translate(60px); }
+      50%  { transform: translate(160px); animation-timing-function: steps(5) }
+      75%  { transform: translate(120px); animation-timing-function: linear }
+      100% { transform: translate(20px); animation-timing-function: ease-out }
+    }
 
     .target {
       /* The animation target needs geometry in order to qualify for OMTA */
@@ -643,6 +650,121 @@ addAsyncTest(function *() {
           "last @keyframes rule with transform should win");
   omta_is("transform", { tx: 100 }, RunningOn.Compositor,
           "last @keyframes rule with transform should win");
+  done_div();
+});
+
+/*
+ * css3-animations:  3.1. Timing functions for keyframes
+ * http://dev.w3.org/csswg/css3-animations/#timing-functions-for-keyframes-
+ */
+
+addAsyncTest(function *() {
+  new_div("animation: kf_tf1 ease-in 10s alternate infinite");
+  yield waitForPaints();
+  omta_is("transform", { tx: 20 }, RunningOn.Compositor,
+          "keyframe timing functions test at 0s (test needed for flush)");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 20 + 40 * gTF.ease(0.4) },
+                 RunningOn.Compositor, 0.01,
+                 "keyframe timing functions test at 1s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 20 + 40 * gTF.ease(0.8) },
+                 RunningOn.Compositor, 0.01,
+                 "keyframe timing functions test at 2s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 60 + 100 * gTF.ease_in(0.2) },
+                 RunningOn.Compositor, 0.01,
+                 "keyframe timing functions test at 3s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 60 + 100 * gTF.ease_in(0.6) },
+                 RunningOn.Compositor, 0.01,
+                 "keyframe timing functions test at 4s");
+  advance_clock(1000);
+  omta_is("transform", { tx: 160 }, RunningOn.Compositor,
+          "keyframe timing functions test at 5s");
+  advance_clock(1010); // avoid floating point error
+  omta_is_approx("transform", { tx: 160 - 40 * step_end(5)(0.4) },
+                 RunningOn.Compositor, 0.01,
+                 "keyframe timing functions test at 6s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 160 - 40 * step_end(5)(0.8) },
+                 RunningOn.Compositor, 0.01,
+                 "keyframe timing functions test at 7s");
+  advance_clock(990);
+  omta_is_approx("transform", { tx: 120 - 100 * gTF.linear(0.2) },
+                 RunningOn.Compositor, 0.01,
+                 "keyframe timing functions test at 8s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 120 - 100 * gTF.linear(0.6) },
+                 RunningOn.Compositor, 0.01,
+                 "keyframe timing functions test at 9s");
+  advance_clock(1000);
+  omta_is("transform", { tx: 20 }, RunningOn.Compositor,
+          "keyframe timing functions test at 10s");
+  advance_clock(20000);
+  omta_is("transform", { tx: 20 }, RunningOn.Compositor,
+          "keyframe timing functions test at 30s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 120 - 100 * gTF.linear(0.6) },
+                 RunningOn.Compositor, 0.01,
+                 "keyframe timing functions test at 31s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 120 - 100 * gTF.linear(0.2) },
+                 RunningOn.Compositor, 0.01,
+                 "keyframe timing functions test at 32s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 160 - 40 * step_end(5)(0.8) },
+                 RunningOn.Compositor, 0.01,
+                 "keyframe timing functions test at 33s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 160 - 40 * step_end(5)(0.4) },
+                 RunningOn.Compositor, 0.01,
+                 "keyframe timing functions test at 34s");
+  advance_clock(1000);
+  omta_is("transform", { tx: 160 }, RunningOn.Compositor,
+          "keyframe timing functions test at 35s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 60 + 100 * gTF.ease_in(0.6) },
+                 RunningOn.Compositor, 0.01,
+                 "keyframe timing functions test at 36s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 60 + 100 * gTF.ease_in(0.2) },
+                 RunningOn.Compositor, 0.01,
+                 "keyframe timing functions test at 37s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 20 + 40 * gTF.ease(0.8) },
+                 RunningOn.Compositor, 0.01,
+                 "keyframe timing functions test at 38s");
+  advance_clock(1000);
+  omta_is_approx("transform", { tx: 20 + 40 * gTF.ease(0.4) },
+                 RunningOn.Compositor, 0.01,
+                 "keyframe timing functions test at 39s");
+  advance_clock(1000);
+  omta_is("transform", { tx: 20 }, RunningOn.Compositor,
+          "keyframe timing functions test at 40s");
+  done_div();
+
+  // spot-check the same thing without alternate
+  new_div("animation: kf_tf1 ease-in 10s infinite");
+  yield waitForPaints();
+  omta_is("transform", { tx: 20 }, RunningOn.Compositor,
+          "keyframe timing functions test at 0s (test needed for flush)");
+  advance_clock(11000);
+  omta_is_approx("transform", { tx: 20 + 40 * gTF.ease(0.4) },
+                 RunningOn.Compositor, 0.01,
+                 "keyframe timing functions test at 11s");
+  advance_clock(3000);
+  omta_is_approx("transform", { tx: 60 + 100 * gTF.ease_in(0.6) },
+                 RunningOn.Compositor, 0.01,
+                 "keyframe timing functions test at 14s");
+  advance_clock(2000);
+  omta_is_approx("transform", { tx: 160 - 40 * step_end(5)(0.4) },
+                 RunningOn.Compositor, 0.01,
+                 "keyframe timing functions test at 16s");
+  advance_clock(2000);
+  omta_is_approx("transform", { tx: 120 - 100 * gTF.linear(0.2) },
+                 RunningOn.Compositor, 0.01,
+                 "keyframe timing functions test at 18s");
   done_div();
 });
 
