@@ -15,7 +15,6 @@ let gSearch = {
     }
 
     window.addEventListener("ContentSearchService", this);
-    this.setUpInitialState();
   },
 
   setUpInitialState: function () {

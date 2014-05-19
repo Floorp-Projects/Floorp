@@ -144,7 +144,7 @@ Site.prototype = {
    * existing thumbnail and the page allows background captures.
    */
   captureIfMissing: function Site_captureIfMissing() {
-    if (gPage.allowBackgroundCaptures && !this.link.imageURI) {
+    if (!document.hidden && !this.link.imageURI) {
       BackgroundPageThumbs.captureIfMissing(this.url);
     }
   },
