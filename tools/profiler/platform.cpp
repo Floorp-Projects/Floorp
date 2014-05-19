@@ -654,6 +654,8 @@ const char** mozilla_sampler_get_features()
     "privacy",
     // Add main thread I/O to the profile
     "mainthreadio",
+    // Add RSS collection
+    "memory",
 #if defined(XP_WIN)
     // Add power collection
     "power",
