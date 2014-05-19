@@ -1747,6 +1747,104 @@ addAsyncTest(function *() {
   done_div();
 });
 
+addAsyncTest(function *() {
+  // Test that it's the length of the 'animation-name' list that's used to
+  // start animations.
+  // note: anim2 animates opacity from 0 to 1
+  // note: anim4 animates transform's y translation component from 0 to 100px
+  new_div("animation-name: anim2, anim4; " +
+          "animation-duration: 1s; " +
+          "animation-timing-function: linear; " +
+          "animation-delay: -250ms, -250ms, -750ms, -500ms;");
+  yield waitForPaints();
+  omta_is("opacity", 0.25, RunningOn.Compositor,
+          "animation-name list length is the length that matters");
+  omta_is("transform", { ty: 25 }, RunningOn.Compositor,
+          "animation-name list length is the length that matters");
+  done_div();
+  new_div("animation-name: anim2, anim4, anim2; " +
+          "animation-duration: 1s; " +
+          "animation-timing-function: linear; " +
+          "animation-delay: -250ms, -250ms, -750ms, -500ms;");
+  yield waitForPaints();
+  // Bug 980769 -  off main thread animations incorrectly handle multiple
+  // animations of the same property and element
+  omta_todo_is("opacity", 0.75, RunningOn.Compositor,
+               "animation-name list length is the length that matters, " +
+               "and the last occurrence of a name wins");
+  omta_is("transform", { ty: 25 }, RunningOn.Compositor,
+          "animation-name list length is the length that matters");
+  done_div();
+});
+
+addAsyncTest(function *() {
+  var dyn_sheet_elt = document.createElement("style");
+  document.head.appendChild(dyn_sheet_elt);
+  var dyn_sheet = dyn_sheet_elt.sheet;
+  dyn_sheet.insertRule(
+    "@keyframes dyn1 { from { transform: translate(0px) } " +
+    "50% { transform: translate(50px) } " +
+    "to { transform: translate(100px) } }", 0);
+  dyn_sheet.insertRule(
+    "@keyframes dyn2 { from { transform: translate(100px) } " +
+    "to { transform: translate(200px) } }", 1);
+  var dyn1 = dyn_sheet.cssRules[0];
+  var dyn2 = dyn_sheet.cssRules[1];
+  new_div("animation: dyn1 1s linear");
+  yield waitForPaints();
+  omta_is("transform", { tx: 0 }, RunningOn.Compositor,
+          "dynamic rule change test, initial state");
+  advance_clock(250);
+  omta_is("transform", { tx: 25 }, RunningOn.Compositor,
+          "dynamic rule change test, 250ms");
+  dyn2.name = "dyn1";
+  yield waitForPaintsFlushed();
+  omta_is("transform", { tx: 125 }, RunningOn.Compositor,
+          "dynamic rule change test, change in @keyframes name applies");
+  dyn2.appendRule("50% { transform: translate(0px) }");
+  yield waitForPaintsFlushed();
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "dynamic rule change test, @keyframes appendRule");
+  // currently 0% { transform: translate(100px) }
+  var dyn2_kf1 = dyn2.cssRules[0];
+  dyn2_kf1.style.transform = "translate(-100px)";
+  yield waitForPaintsFlushed();
+  // FIXME: Bug 978833 (keyframe rules used as nsIStyleRule but doesn't follow
+  // immutability contract)
+  var csTransform = window.getComputedStyle(gDiv).transform;
+  // omta_todo_is asserts that the OMTA style does NOT match the computed style
+  // but in this case we have a bug in the computed style so we assert it is
+  // broken and that the OMTA style is likewise broken. When bug 978833 is fixed
+  // we should replace the following two tests with:
+  //
+  //   omta_is("transform", { tx: -50 }, RunningOn.Compositor,
+  //           "dynamic rule change test, keyframe style set");
+  todo_is(csTransform, "matrix(1, 0, 0, 1, -50, 0)",
+          "dynamic rule change test, keyframe style set");
+  is(SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, "transform"), csTransform,
+     "dynamic rule change test, keyframe style set" +
+     " - OMTA style is equally as broken as computed style");
+  dyn2.name = "dyn2";
+  yield waitForPaintsFlushed();
+  omta_is("transform", { tx: 25 }, RunningOn.Compositor,
+          "dynamic rule change test, " +
+          "change in @keyframes name applies (second time)");
+  // currently 50% { transform: translate(50px) }
+  var dyn1_kf2 = dyn1.cssRules[1];
+  dyn1_kf2.keyText = "25%";
+  yield waitForPaintsFlushed();
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "dynamic rule change test, change in keyframe keyText");
+  dyn1.deleteRule("25%");
+  yield waitForPaintsFlushed();
+  omta_is("transform", { tx: 25 }, RunningOn.Compositor,
+          "dynamic rule change test, @keyframes deleteRule");
+  done_div();
+  dyn_sheet_elt.parentNode.removeChild(dyn_sheet_elt);
+  dyn_sheet_elt = null;
+  dyn_sheet = null;
+});
+
 //----------------------------------------------------------------------
 //
 // Helper functions from test_animations.html
