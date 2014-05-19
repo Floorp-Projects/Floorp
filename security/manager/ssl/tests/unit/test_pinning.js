@@ -30,7 +30,8 @@ const certdb = Cc["@mozilla.org/security/x509certdb;1"]
 
 function test_strict() {
   // In strict mode, we always evaluate pinning data, regardless of whether the
-  // issuer is a built-in trust anchor.
+  // issuer is a built-in trust anchor. We only enforce pins that are not in
+  // test mode.
   add_test(function() {
     Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 2);
     run_next_test();
