@@ -755,7 +755,7 @@ WebrtcOMXH264VideoEncoder::Release()
     mOutputDrain->Stop();
     mOutputDrain = nullptr;
   }
-
+  mOMXConfigured = false;
   mOMX = nullptr;
 
   return WEBRTC_VIDEO_CODEC_OK;

@@ -8,6 +8,8 @@ UNIFIED_SOURCES += [
     'JavaScriptChild.cpp',
     'JavaScriptParent.cpp',
     'JavaScriptShared.cpp',
+    'WrapperAnswer.cpp',
+    'WrapperOwner.cpp',
 ]
 
 IPDL_SOURCES += [

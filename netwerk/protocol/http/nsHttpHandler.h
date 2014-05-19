@@ -110,6 +110,7 @@ public:
     bool           CriticalRequestPrioritization() { return mCriticalRequestPrioritization; }
     double         BypassCacheLockThreshold() { return mBypassCacheLockThreshold; }
 
+    uint32_t       MaxConnectionsPerOrigin() { return mMaxPersistentConnectionsPerServer; }
     bool           UseRequestTokenBucket() { return mRequestTokenBucketEnabled; }
     uint16_t       RequestTokenBucketMinParallelism() { return mRequestTokenBucketMinParallelism; }
     uint32_t       RequestTokenBucketHz() { return mRequestTokenBucketHz; }
@@ -267,7 +268,7 @@ public:
     // Generates the host:port string for use in the Host: header as well as the
     // CONNECT line for proxies. This handles IPv6 literals correctly.
     static nsresult GenerateHostPort(const nsCString& host, int32_t port,
-                                     nsCString& hostLine);
+                                     nsACString& hostLine);
 
     bool GetPipelineAggressive()     { return mPipelineAggressive; }
     void GetMaxPipelineObjectSize(int64_t *outVal)

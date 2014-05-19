@@ -84,6 +84,7 @@ public:
 
     // cancels a transaction w/ the given reason.
     nsresult CancelTransaction(nsHttpTransaction *, nsresult reason);
+    nsresult CancelTransactions(nsHttpConnectionInfo *, nsresult reason);
 
     // called to force the connection manager to prune its list of idle
     // connections.
@@ -202,6 +203,12 @@ public:
     // NOTE: functions below may be called only on the socket thread.
     //-------------------------------------------------------------------------
 
+    // called to change the connection entry associated with conn from specific into
+    // a wildcard (i.e. http2 proxy friendy) mapping
+    void MoveToWildCardConnEntry(nsHttpConnectionInfo *specificCI,
+                                 nsHttpConnectionInfo *wildcardCI,
+                                 nsHttpConnection *conn);
+
     // called to force the transaction queue to be processed once more, giving
     // preference to the specified connection.
     nsresult ProcessPendingQ(nsHttpConnectionInfo *);
@@ -230,6 +237,8 @@ public:
     bool GetConnectionData(nsTArray<HttpRetParams> *);
 
     void ResetIPFamilyPreference(nsHttpConnectionInfo *);
+
+    uint16_t MaxRequestDelay() { return mMaxRequestDelay; }
 
 private:
     virtual ~nsHttpConnectionMgr();
@@ -265,11 +274,13 @@ private:
         nsConnectionEntry(nsHttpConnectionInfo *ci);
         ~nsConnectionEntry();
 
-        nsHttpConnectionInfo        *mConnInfo;
+        nsRefPtr<nsHttpConnectionInfo> mConnInfo;
         nsTArray<nsHttpTransaction*> mPendingQ;    // pending transaction queue
         nsTArray<nsHttpConnection*>  mActiveConns; // active connections
         nsTArray<nsHttpConnection*>  mIdleConns;   // idle persistent connections
         nsTArray<nsHalfOpenSocket*>  mHalfOpens;   // half open connections
+
+        bool AvailableForDispatchNow();
 
         // calculate the number of half open sockets that have not had at least 1
         // connection complete
@@ -458,7 +469,12 @@ private:
         nsCOMPtr<nsIAsyncOutputStream> mBackupStreamOut;
         nsCOMPtr<nsIAsyncInputStream>  mBackupStreamIn;
 
+        // mHasConnected tracks whether one of the sockets has completed the
+        // connection process. It may have completed unsuccessfully.
         bool                           mHasConnected;
+
+        bool                           mPrimaryConnectedOK;
+        bool                           mBackupConnectedOK;
     };
     friend class nsHalfOpenSocket;
 
@@ -520,7 +536,8 @@ private:
     void     StartedConnect();
     void     RecvdConnect();
 
-    nsConnectionEntry *GetOrCreateConnectionEntry(nsHttpConnectionInfo *);
+    nsConnectionEntry *GetOrCreateConnectionEntry(nsHttpConnectionInfo *,
+                                                  bool allowWildCard);
 
     nsresult MakeNewConnection(nsConnectionEntry *ent,
                                nsHttpTransaction *trans);
@@ -596,6 +613,7 @@ private:
     void OnMsgNewTransaction       (int32_t, void *);
     void OnMsgReschedTransaction   (int32_t, void *);
     void OnMsgCancelTransaction    (int32_t, void *);
+    void OnMsgCancelTransactions   (int32_t, void *);
     void OnMsgProcessPendingQ      (int32_t, void *);
     void OnMsgPruneDeadConnections (int32_t, void *);
     void OnMsgSpeculativeConnect   (int32_t, void *);

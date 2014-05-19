@@ -94,6 +94,7 @@ class JitActivation;
 struct PcScriptCache;
 class Simulator;
 class SimulatorRuntime;
+class AutoFlushICache;
 }
 
 /*
@@ -533,6 +534,9 @@ class PerThreadData : public PerThreadDataFriendFields
     /* See AsmJSActivation comment. Protected by rt->interruptLock. */
     js::AsmJSActivation *asmJSActivationStack_;
 
+    /* Pointer to the current AutoFlushICache. */
+    js::jit::AutoFlushICache *autoFlushICache_;
+
 #if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
     js::jit::Simulator *simulator_;
     uintptr_t simulatorStackLimit_;
@@ -607,6 +611,9 @@ class PerThreadData : public PerThreadDataFriendFields
             pt->runtime_ = nullptr;
         }
     };
+
+    js::jit::AutoFlushICache *autoFlushICache() const;
+    void setAutoFlushICache(js::jit::AutoFlushICache *afc);
 
 #if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
     js::jit::Simulator *simulator() const;
@@ -973,22 +980,12 @@ struct JSRuntime : public JS::shadow::Runtime,
 #endif
 
     void lockGC() {
-#ifdef JS_THREADSAFE
         assertCanLock(js::GCLock);
-        PR_Lock(gc.lock);
-        JS_ASSERT(!gc.lockOwner);
-#ifdef DEBUG
-        gc.lockOwner = PR_GetCurrentThread();
-#endif
-#endif
+        gc.lockGC();
     }
 
     void unlockGC() {
-#ifdef JS_THREADSAFE
-        JS_ASSERT(gc.lockOwner == PR_GetCurrentThread());
-        gc.lockOwner = nullptr;
-        PR_Unlock(gc.lock);
-#endif
+        gc.unlockGC();
     }
 
 #if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
@@ -1487,7 +1484,7 @@ inline void
 FreeOp::free_(void *p)
 {
     if (shouldFreeLater()) {
-        runtime()->gc.helperThread.freeLater(p);
+        runtime()->gc.freeLater(p);
         return;
     }
     js_free(p);

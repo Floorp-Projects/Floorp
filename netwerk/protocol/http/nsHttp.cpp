@@ -295,5 +295,39 @@ nsHttp::IsPermanentRedirect(uint32_t httpStatus)
   return httpStatus == 301 || httpStatus == 308;
 }
 
+
+template<typename T> void
+localEnsureBuffer(nsAutoArrayPtr<T> &buf, uint32_t newSize,
+             uint32_t preserve, uint32_t &objSize)
+{
+  if (objSize >= newSize)
+    return;
+
+  // Leave a little slop on the new allocation - add 2KB to
+  // what we need and then round the result up to a 4KB (page)
+  // boundary.
+
+  objSize = (newSize + 2048 + 4095) & ~4095;
+
+  static_assert(sizeof(T) == 1, "sizeof(T) must be 1");
+  nsAutoArrayPtr<T> tmp(new T[objSize]);
+  if (preserve) {
+    memcpy(tmp, buf, preserve);
+  }
+  buf = tmp;
+}
+
+void EnsureBuffer(nsAutoArrayPtr<char> &buf, uint32_t newSize,
+                  uint32_t preserve, uint32_t &objSize)
+{
+    localEnsureBuffer<char> (buf, newSize, preserve, objSize);
+}
+
+void EnsureBuffer(nsAutoArrayPtr<uint8_t> &buf, uint32_t newSize,
+                  uint32_t preserve, uint32_t &objSize)
+{
+    localEnsureBuffer<uint8_t> (buf, newSize, preserve, objSize);
+}
+
 } // namespace mozilla::net
 } // namespace mozilla

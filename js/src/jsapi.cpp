@@ -716,7 +716,7 @@ StopRequest(JSContext *cx)
     if (rt->requestDepth != 1) {
         rt->requestDepth--;
     } else {
-        rt->gc.conservativeGC.updateForRequestEnd();
+        rt->gc.notifyRequestEnd();
         rt->requestDepth = 0;
         rt->triggerActivityCallback(false);
     }
@@ -1619,15 +1619,14 @@ JS_PUBLIC_API(bool)
 JS_AddExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 {
     AssertHeapIsIdle(rt);
-    return !!rt->gc.blackRootTracers.append(ExtraTracer(traceOp, data));
+    return !!rt->gc.blackRootTracers.append(Callback<JSTraceDataOp>(traceOp, data));
 }
 
 JS_PUBLIC_API(void)
 JS_RemoveExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 {
-    AssertHeapIsIdle(rt);
     for (size_t i = 0; i < rt->gc.blackRootTracers.length(); i++) {
-        ExtraTracer *e = &rt->gc.blackRootTracers[i];
+        Callback<JSTraceDataOp> *e = &rt->gc.blackRootTracers[i];
         if (e->op == traceOp && e->data == data) {
             rt->gc.blackRootTracers.erase(e);
             break;
@@ -1907,11 +1906,24 @@ JS_SetGCCallback(JSRuntime *rt, JSGCCallback cb, void *data)
     rt->gc.gcCallbackData = data;
 }
 
-JS_PUBLIC_API(void)
-JS_SetFinalizeCallback(JSRuntime *rt, JSFinalizeCallback cb)
+JS_PUBLIC_API(bool)
+JS_AddFinalizeCallback(JSRuntime *rt, JSFinalizeCallback cb, void *data)
 {
     AssertHeapIsIdle(rt);
-    rt->gc.finalizeCallback = cb;
+    return rt->gc.finalizeCallbacks.append(Callback<JSFinalizeCallback>(cb, data));
+}
+
+JS_PUBLIC_API(void)
+JS_RemoveFinalizeCallback(JSRuntime *rt, JSFinalizeCallback cb)
+{
+    for (Callback<JSFinalizeCallback> *p = rt->gc.finalizeCallbacks.begin();
+         p < rt->gc.finalizeCallbacks.end(); p++)
+    {
+        if (p->op == cb) {
+            rt->gc.finalizeCallbacks.erase(p);
+            break;
+        }
+    }
 }
 
 JS_PUBLIC_API(bool)

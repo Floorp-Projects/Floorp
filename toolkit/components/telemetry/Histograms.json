@@ -313,6 +313,12 @@
     "kind": "flag",
     "description": "Has seen location error"
   },
+  "JS_MINOR_VERSION": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "JavaScript version in web content (1.x)"
+  },
   "TELEMETRY_PING": {
     "expires_in_version": "never",
     "kind": "exponential",

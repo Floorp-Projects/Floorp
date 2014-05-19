@@ -44,6 +44,7 @@ public:
 private:
   virtual ~CacheFileOutputStream();
 
+  nsresult CloseWithStatusLocked(nsresult aStatus);
   void ReleaseChunk();
   void EnsureCorrectChunk(bool aReleaseOnly);
   void FillHole();

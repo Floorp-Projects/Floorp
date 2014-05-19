@@ -112,6 +112,9 @@ GetPrefNameForFeature(int32_t aFeature)
     case nsIGfxInfo::FEATURE_DIRECT3D_10_1_LAYERS:
       name = BLACKLIST_PREF_BRANCH "layers.direct3d10-1";
       break;
+    case nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS:
+      name = BLACKLIST_PREF_BRANCH "layers.direct3d11";
+      break;
     case nsIGfxInfo::FEATURE_OPENGL_LAYERS:
       name = BLACKLIST_PREF_BRANCH "layers.opengl";
       break;
@@ -270,6 +273,8 @@ BlacklistFeatureToGfxFeature(const nsAString& aFeature)
     return nsIGfxInfo::FEATURE_DIRECT3D_10_LAYERS;
   else if (aFeature == NS_LITERAL_STRING("DIRECT3D_10_1_LAYERS"))
     return nsIGfxInfo::FEATURE_DIRECT3D_10_1_LAYERS;
+  else if (aFeature == NS_LITERAL_STRING("DIRECT3D_11_LAYERS"))
+    return nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS;
   else if (aFeature == NS_LITERAL_STRING("OPENGL_LAYERS"))
     return nsIGfxInfo::FEATURE_OPENGL_LAYERS;
   else if (aFeature == NS_LITERAL_STRING("WEBGL_OPENGL"))
@@ -804,6 +809,7 @@ GfxInfoBase::EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo)
     nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS,
     nsIGfxInfo::FEATURE_DIRECT3D_10_LAYERS,
     nsIGfxInfo::FEATURE_DIRECT3D_10_1_LAYERS,
+    nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS,
     nsIGfxInfo::FEATURE_OPENGL_LAYERS,
     nsIGfxInfo::FEATURE_WEBGL_OPENGL,
     nsIGfxInfo::FEATURE_WEBGL_ANGLE,

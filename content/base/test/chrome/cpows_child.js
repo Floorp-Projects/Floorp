@@ -2,7 +2,14 @@ dump('loaded child cpow test\n');
 
 content.document.title = "Hello, Kitty";
 
+var done_count = 0;
+var is_remote;
+
 (function start() {
+    [is_remote] = sendSyncMessage("cpows:is_remote");
+    parent_test();
+    dom_test();
+    xray_test();
     sync_test();
     async_test();
     rpc_test();
@@ -10,7 +17,12 @@ content.document.title = "Hello, Kitty";
     // The sync-ness of this call is important, because otherwise
     // we tear down the child's document while we are
     // still in the async test in the parent.
-    sendSyncMessage("cpows:done", {});
+    // This test races with itself to be the final test.
+    lifetime_test(function() {
+      done_count++;
+      if (done_count == 2)
+        sendSyncMessage("cpows:done", {});
+    });
   }
 )();
 
@@ -54,6 +66,44 @@ function make_object()
 function make_json()
 {
   return { check: "ok" };
+}
+
+function parent_test()
+{
+  function f(check_func) {
+    let result = check_func(10);
+    ok(result == 20, "calling function in parent worked");
+    return result;
+  }
+
+  addMessageListener("cpows:from_parent", (msg) => {
+    let obj = msg.objects.obj;
+    ok(obj.a == 1, "correct value from parent");
+    done_count++;
+    if (done_count == 2)
+      sendSyncMessage("cpows:done", {});
+  });
+  sendSyncMessage("cpows:parent_test", {}, {func: f});
+}
+
+function dom_test()
+{
+  let element = content.document.createElement("div");
+  element.id = "it_works";
+  content.document.body.appendChild(element);
+
+  sendAsyncMessage("cpows:dom_test", {}, {element: element});
+  Components.utils.schedulePreciseGC(function() {
+    sendSyncMessage("cpows:dom_test_after_gc");
+  });
+}
+
+function xray_test()
+{
+  let element = content.document.createElement("div");
+  element.wrappedJSObject.foo = "hello";
+
+  sendSyncMessage("cpows:xray_test", {}, {element: element});
 }
 
 function sync_test()
@@ -105,4 +155,29 @@ function nested_sync_test()
   sendSyncMessage("cpows:nested_sync",
     make_json(),
     rpc_obj);
+}
+
+function lifetime_test(finish)
+{
+  if (!is_remote) {
+    // Only run this test when running out-of-process. Otherwise it
+    // will fail, since local CPOWs don't follow the same ownership
+    // rules.
+    finish();
+    return;
+  }
+
+  dump("beginning lifetime test\n");
+  var obj = {"will_die": {"f": 1}};
+  let [result] = sendSyncMessage("cpows:lifetime_test_1", {}, {obj: obj});
+  ok(result == 10, "got sync result");
+  ok(obj.wont_die.f == 2, "got reverse CPOW");
+  obj.will_die = null;
+  Components.utils.schedulePreciseGC(function() {
+    addMessageListener("cpows:lifetime_test_3", (msg) => {
+      ok(obj.wont_die.f == 2, "reverse CPOW still works");
+      finish();
+    });
+    sendSyncMessage("cpows:lifetime_test_2");
+  });
 }

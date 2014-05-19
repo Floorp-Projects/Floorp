@@ -126,6 +126,8 @@ private:
 
   void TriggerSingleTapConfirmedEvent();
 
+  bool MoveDistanceIsLarge();
+
   /**
    * Do actual state transition and reset substates.
    */

@@ -708,7 +708,7 @@ typedef enum JSFinalizeStatus {
 } JSFinalizeStatus;
 
 typedef void
-(* JSFinalizeCallback)(JSFreeOp *fop, JSFinalizeStatus status, bool isCompartment);
+(* JSFinalizeCallback)(JSFreeOp *fop, JSFinalizeStatus status, bool isCompartment, void *data);
 
 typedef bool
 (* JSInterruptCallback)(JSContext *cx);
@@ -2074,8 +2074,11 @@ JS_MaybeGC(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_SetGCCallback(JSRuntime *rt, JSGCCallback cb, void *data);
 
+extern JS_PUBLIC_API(bool)
+JS_AddFinalizeCallback(JSRuntime *rt, JSFinalizeCallback cb, void *data);
+
 extern JS_PUBLIC_API(void)
-JS_SetFinalizeCallback(JSRuntime *rt, JSFinalizeCallback cb);
+JS_RemoveFinalizeCallback(JSRuntime *rt, JSFinalizeCallback cb);
 
 extern JS_PUBLIC_API(bool)
 JS_IsGCMarkingTracer(JSTracer *trc);

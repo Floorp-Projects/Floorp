@@ -61,6 +61,12 @@
   list-style-image: url(debugger-blackbox.png);
 }
 
+@media (min-resolution: 2dppx) {
+  #black-box {
+    list-style-image: url(debugger-blackbox@2x.png);
+  }
+}
+
 #pretty-print {
   font-weight: bold;
 }
@@ -69,12 +75,28 @@
   list-style-image: url(debugger-toggleBreakpoints.png);
 }
 
+@media (min-resolution: 2dppx) {
+  #toggle-breakpoints {
+    list-style-image: url(debugger-toggleBreakpoints@2x.png);
+  }
+}
+
 #sources-toolbar .devtools-toolbarbutton:not([label]) {
   -moz-image-region: rect(0px,16px,16px,0px);
 }
 
 #sources-toolbar .devtools-toolbarbutton:not([label])[checked] {
   -moz-image-region: rect(0px,32px,16px,16px);
+}
+
+@media (min-resolution: 2dppx) {
+  #sources-toolbar .devtools-toolbarbutton:not([label]) {
+    -moz-image-region: rect(0px,32px,32px,0px);
+  }
+
+  #sources-toolbar .devtools-toolbarbutton:not([label])[checked] {
+    -moz-image-region: rect(0px,64px,32px,32px);
+  }
 }
 
 #sources .black-boxed {
@@ -93,7 +115,6 @@
 
 #black-boxed-message,
 #source-progress-container {
-  background: url(background-noise-toolbar.png);
   /* Prevent the container deck from aquiring the size from this message. */
   min-width: 1px;
   min-height: 1px;
@@ -182,6 +203,17 @@
 
 #trace[checked] {
   -moz-image-region: rect(0px,32px,16px,16px);
+}
+
+@media (min-resolution: 2dppx) {
+  #trace {
+    list-style-image: url(tracer-icon@2x.png);
+    -moz-image-region: rect(0px,32px,32px,0px);
+  }
+
+  #trace[checked] {
+    -moz-image-region: rect(0px,64px,32px,32px);
+  }
 }
 
 #clear-tracer {
@@ -280,11 +312,19 @@
 }
 
 .dbg-expression-arrow {
-  background: url(commandline-icon.png);
+  background-image: url(commandline-icon.png);
   background-position: 16px;
+  background-repeat: no-repeat;
+  background-size: 32px 16px;
   width: 16px;
   height: 16px;
   margin: 2px;
+}
+
+@media (min-resolution: 2dppx) {
+  .dbg-expression-arrow {
+    background-image: url(commandline-icon@2x.png);
+  }
 }
 
 .dbg-expression-input {
@@ -542,8 +582,14 @@
 /* Toolbar controls */
 
 .devtools-sidebar-tabs > tabs > tab {
-  min-height: 1em !important;
+  min-height: 24px !important;
   padding: 0 !important;
+}
+
+#debugger-toolbar .devtools-toolbarbutton:not([label]) > .toolbarbutton-icon,
+#sources-toolbar .devtools-toolbarbutton:not([label]) > .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
 }
 
 #resume {
@@ -556,6 +602,18 @@
   background: none;
   list-style-image: url(debugger-play.png);
   -moz-image-region: rect(0px,32px,16px,16px);
+}
+
+@media (min-resolution: 2dppx) {
+  #resume {
+    list-style-image: url(debugger-pause@2x.png);
+    -moz-image-region: rect(0px,32px,32px,0px);
+  }
+
+  #resume[checked] {
+    list-style-image: url(debugger-play@2x.png);
+    -moz-image-region: rect(0px,64px,32px,32px);
+  }
 }
 
 #resume ~ toolbarbutton {
@@ -578,6 +636,20 @@
   list-style-image: url(debugger-step-out.png);
 }
 
+@media (min-resolution: 2dppx) {
+  #step-over {
+    list-style-image: url(debugger-step-over@2x.png);
+  }
+
+  #step-in {
+    list-style-image: url(debugger-step-in@2x.png);
+  }
+
+  #step-out {
+    list-style-image: url(debugger-step-out@2x.png);
+  }
+}
+
 #instruments-pane-toggle {
   background: none;
   box-shadow: none;
@@ -590,8 +662,23 @@
   list-style-image: url(debugger-expand.png);
 }
 
-#instruments-pane-toggle:active {
+#instruments-pane-toggle:hover {
   -moz-image-region: rect(0px,32px,16px,16px);
+}
+
+@media (min-resolution: 2dppx) {
+  #instruments-pane-toggle {
+    list-style-image: url(debugger-collapse@2x.png);
+    -moz-image-region: rect(0px,32px,32px,0px);
+  }
+
+  #instruments-pane-toggle[pane-collapsed] {
+    list-style-image: url(debugger-expand@2x.png);
+  }
+
+  #instruments-pane-toggle:hover {
+    -moz-image-region: rect(0px,64px,32px,32px);
+  }
 }
 
 /* Horizontal vs. vertical layout */

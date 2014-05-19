@@ -28,11 +28,17 @@
 namespace mozilla {
 namespace net {
 
+ASpdySession::ASpdySession()
+{
+}
+
+ASpdySession::~ASpdySession()
+{
+}
+
 ASpdySession *
 ASpdySession::NewSpdySession(uint32_t version,
-                             nsAHttpTransaction *aTransaction,
-                             nsISocketTransport *aTransport,
-                             int32_t aPriority)
+                             nsISocketTransport *aTransport)
 {
   // This is a necko only interface, so we can enforce version
   // requests as a precondition
@@ -48,14 +54,13 @@ ASpdySession::NewSpdySession(uint32_t version,
 
   Telemetry::Accumulate(Telemetry::SPDY_VERSION2, version);
 
-  if (version == SPDY_VERSION_3)
-    return new SpdySession3(aTransaction, aTransport, aPriority);
-
-  if (version == SPDY_VERSION_31)
-    return new SpdySession31(aTransaction, aTransport, aPriority);
-
-  if (version == NS_HTTP2_DRAFT_VERSION)
-    return new Http2Session(aTransaction, aTransport, aPriority);
+  if (version == SPDY_VERSION_3) {
+    return new SpdySession3(aTransport);
+  } else  if (version == SPDY_VERSION_31) {
+    return new SpdySession31(aTransport);
+  } else  if (version == NS_HTTP2_DRAFT_VERSION) {
+    return new Http2Session(aTransport);
+  }
 
   return nullptr;
 }
@@ -188,7 +193,6 @@ SpdyPushCache::RemovePushedStreamHttp2(nsCString key)
     mHashHttp2.Remove(key);
   return rv;
 }
-
 } // namespace mozilla::net
 } // namespace mozilla
 

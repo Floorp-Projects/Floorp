@@ -94,9 +94,9 @@ function asyncOpenCacheEntry(key, where, flags, lci, callback, appcache)
   (new CacheListener()).run();
 }
 
-function syncWithCacheIOThread(callback)
+function syncWithCacheIOThread(callback, force)
 {
-  if (!newCacheBackEndUsed()) {
+  if (!newCacheBackEndUsed() || force) {
     asyncOpenCacheEntry(
       "http://nonexistententry/", "disk", Ci.nsICacheStorage.OPEN_READONLY, null,
       function(status, entry) {

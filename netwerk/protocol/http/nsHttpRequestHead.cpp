@@ -19,7 +19,14 @@ nsHttpRequestHead::nsHttpRequestHead()
     : mMethod(NS_LITERAL_CSTRING("GET"))
     , mVersion(NS_HTTP_VERSION_1_1)
     , mParsedMethod(kMethod_Get)
+    , mHTTPS(false)
 {
+    MOZ_COUNT_CTOR(nsHttpRequestHead);
+}
+
+nsHttpRequestHead::~nsHttpRequestHead()
+{
+    MOZ_COUNT_DTOR(nsHttpRequestHead);
 }
 
 void

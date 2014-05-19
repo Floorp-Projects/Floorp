@@ -6,6 +6,7 @@
 
 PARALLEL_DIRS += [
   'encoder',
+  'gmp',
   'mediasource',
   'ogg',
   'webaudio',

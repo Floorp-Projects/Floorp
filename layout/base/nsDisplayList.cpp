@@ -804,7 +804,7 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
     }
   }
 
-  metrics.mPresShellId = presShell->GetPresShellId();
+  metrics.SetPresShellId(presShell->GetPresShellId());
 
   // If the scroll frame's content is marked 'scrollgrab', record this
   // in the FrameMetrics so APZ knows to provide the scroll grabbing

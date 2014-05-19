@@ -1,12 +1,18 @@
 <!DOCTYPE HTML>
 <html class="reftest-wait">
 <body style="background:white;">
-<!-- Test that if we seek to the end of a video we get the last frame displayed -->
+<!--
+    Test that if we seek to the end of a video we get the last frame displayed
+
+    The 15ms timeout is here to work around the screenshot racing with
+    video frames being asynchronously delivered to the screen. If the test fails
+    intermittently again, we may need to tweak the timeout value.
+-->
 <video src="frames.webm"
        preload="auto"
        id="v"
        onloadedmetadata="document.getElementById('v').currentTime=document.getElementById('v').duration"
-       onseeked="setTimeout(function(){document.documentElement.className = '';}, 0);"
+       onseeked="setTimeout(function(){document.documentElement.className = '';}, 1000);"
 </video>
 </body>
 </html>
