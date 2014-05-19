@@ -311,13 +311,40 @@ class ZoneCellIterUnderGC : public ZoneCellIterImpl
     }
 };
 
+/* In debug builds, assert that no allocation occurs. */
+class AutoAssertNoAlloc
+{
+#ifdef JS_DEBUG
+    GCRuntime *gc;
+
+  public:
+    AutoAssertNoAlloc() : gc(nullptr) {}
+    AutoAssertNoAlloc(JSRuntime *rt) : gc(nullptr) {
+        disallowAlloc(rt);
+    }
+    void disallowAlloc(JSRuntime *rt) {
+        JS_ASSERT(!gc);
+        gc = &rt->gc;
+        gc->disallowAlloc();
+    }
+    ~AutoAssertNoAlloc() {
+        if (gc)
+            gc->allowAlloc();
+    }
+#else
+  public:
+    AutoAssertNoAlloc() {}
+    AutoAssertNoAlloc(JSRuntime *) {}
+    void disallowAlloc(JSRuntime *rt) {}
+#endif
+};
+
 class ZoneCellIter : public ZoneCellIterImpl
 {
+    AutoAssertNoAlloc noAlloc;
     ArenaLists *lists;
     AllocKind kind;
-#ifdef DEBUG
-    size_t *counter;
-#endif
+
   public:
     ZoneCellIter(JS::Zone *zone, AllocKind kind)
       : lists(&zone->allocator.arenas),
@@ -349,20 +376,13 @@ class ZoneCellIter : public ZoneCellIterImpl
             lists->copyFreeListToArena(kind);
         }
 
-#ifdef DEBUG
         /* Assert that no GCs can occur while a ZoneCellIter is live. */
-        counter = &zone->runtimeFromAnyThread()->gc.noGCOrAllocationCheck;
-        ++*counter;
-#endif
+        noAlloc.disallowAlloc(zone->runtimeFromMainThread());
 
         init(zone, kind);
     }
 
     ~ZoneCellIter() {
-#ifdef DEBUG
-        JS_ASSERT(*counter > 0);
-        --*counter;
-#endif
         if (lists)
             lists->clearFreeListInArena(kind);
     }
@@ -481,7 +501,7 @@ CheckAllocatorState(ThreadSafeContext *cx, AllocKind kind)
                  kind == FINALIZE_FAT_INLINE_STRING ||
                  kind == FINALIZE_JITCODE);
     JS_ASSERT(!rt->isHeapBusy());
-    JS_ASSERT(!rt->gc.noGCOrAllocationCheck);
+    JS_ASSERT(rt->gc.isAllocAllowed());
 #endif
 
     // For testing out of memory conditions

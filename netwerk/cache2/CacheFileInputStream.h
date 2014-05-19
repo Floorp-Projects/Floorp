@@ -43,6 +43,7 @@ public:
 private:
   virtual ~CacheFileInputStream();
 
+  nsresult CloseWithStatusLocked(nsresult aStatus);
   void ReleaseChunk();
   void EnsureCorrectChunk(bool aReleaseOnly);
   void CanRead(int64_t *aCanRead, const char **aBuf);

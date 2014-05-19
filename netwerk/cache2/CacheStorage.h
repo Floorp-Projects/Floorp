@@ -64,7 +64,6 @@ protected:
   bool mLookupAppCache : 1;
 
 public:
-  nsIApplicationCache* AppCache() const { return nullptr; }
   nsILoadContextInfo* LoadInfo() const { return mLoadContextInfo; }
   bool WriteToDisk() const { return mWriteToDisk && !mLoadContextInfo->IsPrivate(); }
   bool LookupAppCache() const { return mLookupAppCache; }
