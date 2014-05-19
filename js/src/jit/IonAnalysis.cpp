@@ -2358,6 +2358,9 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
             return false;
     }
 
+    // id of the last block which added a new property.
+    size_t lastAddedBlock = 0;
+
     for (size_t i = 0; i < instructions.length(); i++) {
         MInstruction *ins = instructions[i];
 
@@ -2384,6 +2387,7 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
             definitelyExecuted = false;
 
         bool handled = false;
+        size_t slotSpan = baseobj->slotSpan();
         if (!AnalyzePoppedThis(cx, type, thisValue, ins, definitelyExecuted,
                                baseobj, initializerList, &accessedProperties, &handled))
         {
@@ -2391,6 +2395,11 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
         }
         if (!handled)
             break;
+
+        if (slotSpan != baseobj->slotSpan()) {
+            JS_ASSERT(ins->block()->id() >= lastAddedBlock);
+            lastAddedBlock = ins->block()->id();
+        }
     }
 
     if (baseobj->slotSpan() != 0) {
@@ -2400,6 +2409,10 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
         // called at the inline frame sites.
         Vector<MBasicBlock *> exitBlocks(cx);
         for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++) {
+            // Inlining decisions made after the last new property was added to
+            // the object don't need to be frozen.
+            if (block->id() > lastAddedBlock)
+                break;
             if (MResumePoint *rp = block->callerResumePoint()) {
                 if (block->numPredecessors() == 1 && block->getPredecessor(0) == rp->block()) {
                     JSScript *script = rp->block()->info().script();
