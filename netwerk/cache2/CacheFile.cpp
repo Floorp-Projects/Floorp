@@ -732,11 +732,19 @@ CacheFile::SetMemoryOnly()
 nsresult
 CacheFile::Doom(CacheFileListener *aCallback)
 {
+  LOG(("CacheFile::Doom() [this=%p, listener=%p]", this, aCallback));
+
   CacheFileAutoLock lock(this);
 
+  return DoomLocked(aCallback);
+}
+
+nsresult
+CacheFile::DoomLocked(CacheFileListener *aCallback)
+{
   MOZ_ASSERT(mHandle || mMemoryOnly || mOpeningFile);
 
-  LOG(("CacheFile::Doom() [this=%p, listener=%p]", this, aCallback));
+  LOG(("CacheFile::DoomLocked() [this=%p, listener=%p]", this, aCallback));
 
   nsresult rv = NS_OK;
 
