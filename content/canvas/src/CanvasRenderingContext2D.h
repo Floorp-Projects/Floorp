@@ -537,9 +537,6 @@ public:
 
   virtual void GetImageBuffer(uint8_t** aImageBuffer, int32_t* aFormat);
 
-  // return true and fills in the bound rect if element has a hit region.
-  bool GetHitRegionRect(Element* aElement, nsRect& aRect);
-
 protected:
   nsresult GetImageDataArray(JSContext* aCx, int32_t aX, int32_t aY,
                              uint32_t aWidth, uint32_t aHeight,
@@ -756,16 +753,25 @@ protected:
   /**
     * State information for hit regions
     */
-  struct RegionInfo
+
+  struct RegionInfo : public nsStringHashKey
   {
-    nsString          mId;
-    // fallback element for a11y
+    RegionInfo(const nsAString& aKey) :
+      nsStringHashKey(&aKey)
+    {
+    }
+    RegionInfo(const nsAString *aKey) :
+      nsStringHashKey(aKey)
+    {
+    }
+
     nsRefPtr<Element> mElement;
-    // Path of the hit region in the 2d context coordinate space (not user space)
-    RefPtr<gfx::Path> mPath;
   };
 
-  nsTArray<RegionInfo> mHitRegionsOptions;
+#ifdef ACCESSIBILITY
+  static PLDHashOperator RemoveHitRegionProperty(RegionInfo* aEntry, void* aData);
+#endif
+  nsTHashtable<RegionInfo> mHitRegionsOptions;
 
   /**
     * Returns true if a shadow should be drawn along with a
