@@ -553,7 +553,7 @@ addAsyncTest(function *() {
   omta_is_approx("transform", { tx: 50 + 50 * gTF.ease_out(0.6) },
                  RunningOn.Compositor, 0.01, "no-0%-no-100% at 0.15s");
   advance_clock(100);
-  omta_is("transform", { tx: "100px" }, RunningOn.Compositor,
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor,
           "no-0%-no-100% at 0.25s");
   advance_clock(300);
   omta_is_approx("transform", { tx: 100 - 50 * gTF.ease_out(0.4) },
@@ -958,7 +958,8 @@ function matricesRoughlyEqual(a, b, tolerance) {
   tolerance = tolerance || 0.0001;
   for (var i = 0; i < 4; i++) {
     for (var j = 0; j < 4; j++) {
-      if (Math.abs(a[i][j] - b[i][j]) > tolerance)
+      var diff = Math.abs(a[i][j] - b[i][j]);
+      if (diff > tolerance || isNaN(diff))
         return false;
     }
   }
