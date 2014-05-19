@@ -1110,8 +1110,17 @@ OomVictimLogger::Observe(
   const char* const regexes_raw[] = {
     ".*select.*to kill.*",
     ".*send sigkill to.*",
-    ".*lowmem_shrink.*, return",
-    ".*lowmem_shrink.*, ofree.*"};
+    ".*lowmem_shrink.*",
+    ".*[Oo]ut of [Mm]emory.*",
+    ".*[Kk]ill [Pp]rocess.*",
+    ".*[Kk]illed [Pp]rocess.*",
+    ".*oom-killer.*",
+    // The regexes below are for the output of dump_task from oom_kill.c
+    // 1st - title 2nd - body lines (8 ints and a string)
+    // oom_adj and oom_score_adj can be negative
+    "\\[ pid \\]   uid  tgid total_vm      rss cpu oom_adj oom_score_adj name",
+    "\\[.*[0-9][0-9]*\\][ ]*[0-9][0-9]*[ ]*[0-9][0-9]*[ ]*[0-9][0-9]*[ ]*[0-9][0-9]*[ ]*[0-9][0-9]*[ ]*.[0-9][0-9]*[ ]*.[0-9][0-9]*.*"
+  };
   const size_t regex_count = ArrayLength(regexes_raw);
 
   // Compile our regex just in time

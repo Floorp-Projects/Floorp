@@ -445,7 +445,7 @@ GCPreserveCode(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    cx->runtime()->gc.alwaysPreserveCode = true;
+    cx->runtime()->gc.setAlwaysPreserveCode();
 
     args.rval().setUndefined();
     return true;

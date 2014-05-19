@@ -160,6 +160,8 @@ class MessageChannel : HasResultCodes
     // The deepest sync stack frame for this channel.
     SyncStackFrame* mTopFrame;
 
+    bool mIsSyncWaitingOnNonMainThread;
+
     // The deepest sync stack frame on any channel.
     static SyncStackFrame* sStaticTopFrame;
 

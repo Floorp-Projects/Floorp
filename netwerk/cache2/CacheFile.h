@@ -127,6 +127,8 @@ private:
     PRELOADER = 2
   };
 
+  nsresult DoomLocked(CacheFileListener *aCallback);
+
   nsresult GetChunk(uint32_t aIndex, ECallerType aCaller,
                     CacheFileChunkListener *aCallback,
                     CacheFileChunk **_retval);
@@ -135,7 +137,8 @@ private:
                           CacheFileChunk **_retval);
 
   void     PreloadChunks(uint32_t aIndex);
-  bool     ShouldKeepChunk(uint32_t aIndex);
+  bool     ShouldCacheChunk(uint32_t aIndex);
+  bool     MustKeepCachedChunk(uint32_t aIndex);
 
   nsresult RemoveChunk(CacheFileChunk *aChunk);
   void     RemoveChunkInternal(CacheFileChunk *aChunk, bool aCacheChunk);
@@ -174,10 +177,9 @@ private:
                                              nsRefPtr<CacheFileChunk>& aChunk,
                                              void* aClosure);
 
-  static PLDHashOperator CleanUpPreloadedChunks(
-                           const uint32_t& aIdx,
-                           nsRefPtr<CacheFileChunk>& aChunk,
-                           void* aClosure);
+  static PLDHashOperator CleanUpCachedChunks(const uint32_t& aIdx,
+                                             nsRefPtr<CacheFileChunk>& aChunk,
+                                             void* aClosure);
 
   nsresult PadChunkWithZeroes(uint32_t aChunkIdx);
 
@@ -194,6 +196,7 @@ private:
   bool           mDataIsDirty;
   bool           mWritingMetadata;
   bool           mPreloadWithoutInputStreams;
+  uint32_t       mPreloadChunkCount;
   nsresult       mStatus;
   int64_t        mDataSize;
   nsCString      mKey;

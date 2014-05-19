@@ -196,5 +196,11 @@ CompositableClient::OnTransaction()
 {
 }
 
+void
+CompositableClient::RemoveTexture(TextureClient* aTexture)
+{
+  mForwarder->RemoveTextureFromCompositable(this, aTexture);
+}
+
 } // namespace layers
 } // namespace mozilla
