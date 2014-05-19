@@ -96,6 +96,7 @@ class JitActivation;
 struct PcScriptCache;
 class Simulator;
 class SimulatorRuntime;
+class AutoFlushICache;
 }
 
 /*
@@ -572,6 +573,9 @@ class PerThreadData : public PerThreadDataFriendFields
     /* See AsmJSActivation comment. Protected by rt->interruptLock. */
     js::AsmJSActivation *asmJSActivationStack_;
 
+    /* Pointer to the current AutoFlushICache. */
+    js::jit::AutoFlushICache *autoFlushICache_;
+
 #ifdef JS_ARM_SIMULATOR
     js::jit::Simulator *simulator_;
     uintptr_t simulatorStackLimit_;
@@ -646,6 +650,9 @@ class PerThreadData : public PerThreadDataFriendFields
             pt->runtime_ = nullptr;
         }
     };
+
+    js::jit::AutoFlushICache *autoFlushICache() const;
+    void setAutoFlushICache(js::jit::AutoFlushICache *afc);
 
 #ifdef JS_ARM_SIMULATOR
     js::jit::Simulator *simulator() const;
