@@ -379,7 +379,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
                 public void onClick(View v) {
                     Telemetry.sendUIEvent(TelemetryContract.Event.CANCEL,
                                           TelemetryContract.Method.ACTIONBAR,
-                                          Integer.toString(editCancel.getId()));
+                                          getResources().getResourceEntryName(editCancel.getId()));
                     cancelEdit();
                 }
             });
