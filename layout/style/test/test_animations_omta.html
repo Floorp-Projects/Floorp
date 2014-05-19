@@ -1538,6 +1538,64 @@ addAsyncTest(function *() {
   done_div();
 });
 
+// Test interaction of animations and restyling (Bug 686656).
+// This test depends on kf3 getting its 0% and 100% values from the
+// rules below it in the cascade; we're checking that the animation
+// isn't rebuilt when the restyles happen.
+addAsyncTest(function *() {
+  new_div("animation: kf3 1s linear forwards");
+  yield waitForPaints();
+  omta_is("transform", { tx: 0 }, RunningOn.Compositor,
+          "bug 686656 test 1 at 0ms");
+  advance_clock(250);
+  gDisplay.style.color = "blue";
+  yield waitForPaintsFlushed();
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor,
+          "bug 686656 test 1 at 250ms");
+  advance_clock(375);
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "bug 686656 test 1 at 625ms");
+  advance_clock(375);
+  yield waitForPaints();
+  omta_is("transform", { tx: 0 }, RunningOn.MainThread,
+          "bug 686656 test 1 at 1000ms");
+  done_div();
+  gDisplay.style.color = "";
+});
+
+// Test interaction of animations and restyling (Bug 686656),
+// with reframing.
+// This test depends on kf3 getting its 0% and 100% values from the
+// rules below it in the cascade; we're checking that the animation
+// isn't rebuilt when the restyles happen.
+addAsyncTest(function *() {
+  // Bug 1012527 - ASSERTION: Why did this not get handled while processing
+  // mRestyleRoots? on B2G emulator builds
+  // (Note that we don't expect assertions anywhere else in this file so the
+  // following usage is safe)
+  if (navigator.platform === '') {
+    SimpleTest.expectAssertions(2);
+  }
+  new_div("animation: kf3 1s linear forwards");
+  yield waitForPaints();
+  omta_is("transform", { tx: 0 }, RunningOn.Compositor,
+          "bug 686656 test 2 at 0ms");
+  advance_clock(250);
+  gDisplay.style.overflow = "scroll";
+  yield waitForPaintsFlushed();
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor,
+          "bug 686656 test 2 at 250ms");
+  advance_clock(375);
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "bug 686656 test 2 at 625ms");
+  advance_clock(375);
+  yield waitForPaints();
+  omta_is("transform", { tx: 0 }, RunningOn.MainThread,
+          "bug 686656 test 2 at 1000ms");
+  done_div();
+  gDisplay.style.overflow = "";
+});
+
 //----------------------------------------------------------------------
 //
 // Helper functions from test_animations.html
