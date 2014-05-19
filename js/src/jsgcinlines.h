@@ -311,7 +311,7 @@ class ZoneCellIterUnderGC : public ZoneCellIterImpl
     }
 };
 
-/* In debug builds, assert that no allocation occurs while it is live. */
+/* In debug builds, assert that no allocation occurs. */
 class AutoAssertNoAlloc
 {
 #ifdef JS_DEBUG
@@ -335,6 +335,7 @@ class AutoAssertNoAlloc
   public:
     AutoAssertNoAlloc() {}
     AutoAssertNoAlloc(JSRuntime *) {}
+    void disallowAlloc(JSRuntime *rt) {}
 #endif
 };
 
