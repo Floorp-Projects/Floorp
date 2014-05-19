@@ -211,6 +211,7 @@ MessageChannel::MessageChannel(MessageListener *aListener)
 
 #ifdef OS_WIN
     mTopFrame = nullptr;
+    mIsSyncWaitingOnNonMainThread = false;
 #endif
 
     mDequeueOneTask = new RefCountedTask(NewRunnableMethod(

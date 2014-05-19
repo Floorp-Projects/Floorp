@@ -2775,7 +2775,13 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
   
   bool windowless = false;
   mInstance->IsWindowless(&windowless);
-  if (!windowless && !nsIWidget::UsePuppetWidgets()) {
+  if (!windowless
+// Mac plugins use the widget for setting up the plugin window and event handling.
+// We want to use the puppet widgets there with e10s
+#ifndef XP_MACOSX
+      && !nsIWidget::UsePuppetWidgets()
+#endif
+      ) {
     // Try to get a parent widget, on some platforms widget creation will fail without
     // a parent.
     nsCOMPtr<nsIWidget> parentWidget;
@@ -2890,13 +2896,19 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(int32_t inPaintState)
   if (!widget)
     return nullptr;
   void *cocoaTopLevelWindow = widget->GetNativeData(NS_NATIVE_WINDOW);
-  if (!cocoaTopLevelWindow)
+  // We don't expect to have a top level window in a content process
+  if (!cocoaTopLevelWindow && XRE_GetProcessType() == GeckoProcessType_Default) {
     return nullptr;
+  }
 
   nsIntPoint pluginOrigin;
   nsIntRect widgetClip;
   bool widgetVisible;
   pluginWidget->GetPluginClipRect(widgetClip, pluginOrigin, widgetVisible);
+  // TODO: Detect visibility for e10s mac plugins
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    widgetVisible = true;
+  }
   mWidgetVisible = widgetVisible;
 
   // printf("GetPluginClipRect returning visible %d\n", widgetVisible);
@@ -2909,7 +2921,9 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(int32_t inPaintState)
   nsIntPoint geckoScreenCoords = mWidget->WidgetToScreenOffset();
 
   nsRect windowRect;
-  NS_NPAPI_CocoaWindowFrame(cocoaTopLevelWindow, windowRect);
+  if (cocoaTopLevelWindow) {
+    NS_NPAPI_CocoaWindowFrame(cocoaTopLevelWindow, windowRect);
+  }
 
   double scaleFactor = 1.0;
   GetContentsScaleFactor(&scaleFactor);
@@ -2921,7 +2935,7 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(int32_t inPaintState)
   mPluginWindow->y = geckoScreenCoords.y/intScaleFactor - windowRect.y;
 
   NPRect oldClipRect = mPluginWindow->clipRect;
-  
+
   // fix up the clipping region
   mPluginWindow->clipRect.top    = widgetClip.y;
   mPluginWindow->clipRect.left   = widgetClip.x;
@@ -2930,10 +2944,19 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(int32_t inPaintState)
     mPluginWindow->clipRect.bottom = mPluginWindow->clipRect.top;
     mPluginWindow->clipRect.right  = mPluginWindow->clipRect.left;
   }
+  else if (XRE_GetProcessType() != GeckoProcessType_Default)
+  {
+    // For e10s we only support async windowless plugin. This means that
+    // we're always going to allocate a full window for the plugin to draw
+    // for even if the plugin is mostly outside of the scroll port. Thus
+    // we never trim the window to the bounds of the widget.
+    mPluginWindow->clipRect.bottom = mPluginWindow->clipRect.top + mPluginWindow->height;
+    mPluginWindow->clipRect.right  = mPluginWindow->clipRect.left + mPluginWindow->width;
+  }
   else if (inPaintState == ePluginPaintEnable)
   {
     mPluginWindow->clipRect.bottom = mPluginWindow->clipRect.top + widgetClip.height;
-    mPluginWindow->clipRect.right  = mPluginWindow->clipRect.left + widgetClip.width; 
+    mPluginWindow->clipRect.right  = mPluginWindow->clipRect.left + widgetClip.width;
   }
 
   // if the clip rect changed, call SetWindow()
@@ -2963,7 +2986,7 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(int32_t inPaintState)
     NPCocoaEvent cocoaEvent;
     InitializeNPCocoaEvent(&cocoaEvent);
     cocoaEvent.type = NPCocoaEventWindowFocusChanged;
-    cocoaEvent.data.focus.hasFocus = NS_NPAPI_CocoaWindowIsMain(cocoaTopLevelWindow);
+    cocoaEvent.data.focus.hasFocus = cocoaTopLevelWindow ? NS_NPAPI_CocoaWindowIsMain(cocoaTopLevelWindow) : true;
     pluginEvent.pluginEvent = &cocoaEvent;
     ProcessEvent(pluginEvent);
   }

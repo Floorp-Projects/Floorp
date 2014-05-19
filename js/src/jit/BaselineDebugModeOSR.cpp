@@ -790,6 +790,7 @@ JitRuntime::generateBaselineDebugModeOSRHandler(JSContext *cx, uint32_t *noFrame
     masm.jump(target);
 
     Linker linker(masm);
+    AutoFlushICache afc("BaselineDebugModeOSRHandler");
     JitCode *code = linker.newCode<NoGC>(cx, JSC::OTHER_CODE);
     if (!code)
         return nullptr;

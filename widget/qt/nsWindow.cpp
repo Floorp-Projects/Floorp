@@ -224,7 +224,11 @@ nsWindow::createQWidget(MozQWidget* parent,
 
     widget->setObjectName(QString(windowName));
     if (mWindowType == eWindowType_invisible) {
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 1, 0))
         widget->setVisibility(QWindow::Hidden);
+#else
+        widget->hide();
+#endif
     }
     if (mWindowType == eWindowType_dialog) {
         widget->setModality(Qt::WindowModal);

@@ -81,6 +81,8 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_STAGEFRIGHT = 9;
   /* Whether Webrtc Hardware acceleration is supported */
   const long FEATURE_WEBRTC_HW_ACCELERATION = 10;
+  /* Whether Direct3D 11 is supported for layers. */
+  const long FEATURE_DIRECT3D_11_LAYERS = 11;
 
   /*
    * A set of return values from GetFeatureStatus

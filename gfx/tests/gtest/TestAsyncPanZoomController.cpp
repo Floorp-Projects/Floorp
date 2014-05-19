@@ -999,7 +999,7 @@ DoLongPressPreventDefaultTest(bool aShouldUseTouchAction, uint32_t aBehavior) {
   status = apzc->ReceiveInputEvent(mti);
   EXPECT_EQ(nsEventStatus_eIgnore, status);
 
-  EXPECT_CALL(*mcc, HandleLongTapUp(CSSPoint(touchX, touchEndY), 0, apzc->GetGuid())).Times(1);
+  EXPECT_CALL(*mcc, HandleLongTapUp(CSSPoint(touchX, touchEndY), 0, apzc->GetGuid())).Times(0);
   status = ApzcUp(apzc, touchX, touchEndY, time);
   EXPECT_EQ(nsEventStatus_eIgnore, status);
 

@@ -568,7 +568,7 @@ Assembler::executableCopy(uint8_t *buffer)
 {
     JS_ASSERT(isFinished);
     m_buffer.executableCopy(buffer);
-    AutoFlushCache::updateTop((uintptr_t)buffer, m_buffer.size());
+    AutoFlushICache::setRange(uintptr_t(buffer), m_buffer.size());
 }
 
 void
@@ -2415,7 +2415,7 @@ Assembler::retargetNearBranch(Instruction *i, int offset, Condition cond, bool f
 
     // Flush the cache, since an instruction was overwritten
     if (final)
-        AutoFlushCache::updateTop(uintptr_t(i), 4);
+        AutoFlushICache::flush(uintptr_t(i), 4);
 }
 
 void
@@ -2424,7 +2424,7 @@ Assembler::retargetFarBranch(Instruction *i, uint8_t **slot, uint8_t *dest, Cond
     int32_t offset = reinterpret_cast<uint8_t*>(slot) - reinterpret_cast<uint8_t*>(i);
     if (!i->is<InstLDR>()) {
         new (i) InstLDR(Offset, pc, DTRAddr(pc, DtrOffImm(offset - 8)), cond);
-        AutoFlushCache::updateTop(uintptr_t(i), 4);
+        AutoFlushICache::flush(uintptr_t(i), 4);
     }
     *slot = dest;
 
@@ -2526,7 +2526,7 @@ Assembler::patchWrite_NearCall(CodeLocationLabel start, CodeLocationLabel toCall
     new (inst) InstBLImm(BOffImm(dest - (uint8_t*)inst) , Always);
     // Ensure everyone sees the code that was just written into memory.
 
-    AutoFlushCache::updateTop(uintptr_t(inst), 4);
+    AutoFlushICache::flush(uintptr_t(inst), 4);
 
 }
 void
@@ -2543,8 +2543,8 @@ Assembler::patchDataWithValueCheck(CodeLocationLabel label, PatchedImmPtr newVal
                                                                  dest, Always, rs, ptr);
     // L_LDR won't cause any instructions to be updated.
     if (rs != L_LDR) {
-        AutoFlushCache::updateTop(uintptr_t(ptr), 4);
-        AutoFlushCache::updateTop(uintptr_t(ptr->next()), 4);
+        AutoFlushICache::flush(uintptr_t(ptr), 4);
+        AutoFlushICache::flush(uintptr_t(ptr->next()), 4);
     }
 }
 
@@ -2676,7 +2676,7 @@ Assembler::ToggleToJmp(CodeLocationLabel inst_)
     // Zero bits 20-27, then set 24-27 to be correct for a branch.
     // 20-23 will be party of the B's immediate, and should be 0.
     *ptr = (*ptr & ~(0xff << 20)) | (0xa0 << 20);
-    AutoFlushCache::updateTop((uintptr_t)ptr, 4);
+    AutoFlushICache::flush(uintptr_t(ptr), 4);
 }
 
 void
@@ -2699,7 +2699,7 @@ Assembler::ToggleToCmp(CodeLocationLabel inst_)
     // Zero out bits 20-27, then set them to be correct for a compare.
     *ptr = (*ptr & ~(0xff << 20)) | (0x35 << 20);
 
-    AutoFlushCache::updateTop((uintptr_t)ptr, 4);
+    AutoFlushICache::flush(uintptr_t(ptr), 4);
 }
 
 void
@@ -2729,7 +2729,7 @@ Assembler::ToggleCall(CodeLocationLabel inst_, bool enabled)
     else
         *inst = InstNOP();
 
-    AutoFlushCache::updateTop(uintptr_t(inst), 4);
+    AutoFlushICache::flush(uintptr_t(inst), 4);
 }
 
 void Assembler::updateBoundsCheck(uint32_t heapSize, Instruction *inst)
@@ -2751,78 +2751,6 @@ void Assembler::updateBoundsCheck(uint32_t heapSize, Instruction *inst)
     // within AsmJSModule::patchHeapAccesses, which does that for us.  Don't call this!
 }
 
-static uintptr_t
-PageStart(uintptr_t p)
-{
-    static const size_t PageSize = 4096;
-    return p & ~(PageSize - 1);
-}
-
-static bool
-OnSamePage(uintptr_t start1, uintptr_t stop1, uintptr_t start2, uintptr_t stop2)
-{
-    // Return true if (parts of) the two ranges are on the same memory page.
-    return PageStart(stop1) == PageStart(start2) || PageStart(stop2) == PageStart(start1);
-}
-
-void
-AutoFlushCache::update(uintptr_t newStart, size_t len)
-{
-    uintptr_t newStop = newStart + len;
-    used_ = true;
-    if (!start_) {
-        IonSpewCont(IonSpew_CacheFlush,  ".");
-        start_ = newStart;
-        stop_ = newStop;
-        return;
-    }
-
-    if (!OnSamePage(start_, stop_, newStart, newStop)) {
-        // Flush now if the two ranges have no memory page in common, to avoid
-        // problems on Linux where the kernel only flushes the first VMA that
-        // covers the range. This also ensures we don't add too many pages to
-        // the range.
-        IonSpewCont(IonSpew_CacheFlush, "*");
-        JSC::ExecutableAllocator::cacheFlush((void*)newStart, len);
-        return;
-    }
-
-    start_ = Min(start_, newStart);
-    stop_ = Max(stop_, newStop);
-    IonSpewCont(IonSpew_CacheFlush, ".");
-}
-
-AutoFlushCache::~AutoFlushCache()
-{
-   if (!runtime_)
-        return;
-
-    flushAnyway();
-    IonSpewCont(IonSpew_CacheFlush, ">", name_);
-    if (runtime_->flusher() == this) {
-        IonSpewFin(IonSpew_CacheFlush);
-        runtime_->setFlusher(nullptr);
-    }
-}
-
-void
-AutoFlushCache::flushAnyway()
-{
-    if (!runtime_)
-        return;
-
-    IonSpewCont(IonSpew_CacheFlush, "|", name_);
-
-    if (!used_)
-        return;
-
-    if (start_) {
-        JSC::ExecutableAllocator::cacheFlush((void *)start_, size_t(stop_ - start_ + sizeof(Instruction)));
-    } else {
-        JSC::ExecutableAllocator::cacheFlush(nullptr, 0xff000000);
-    }
-    used_ = false;
-}
 InstructionIterator::InstructionIterator(Instruction *i_) : i(i_) {
     const PoolHeader *ph;
     // If this is a guard, and the next instruction is a header, always work around the pool

@@ -90,6 +90,26 @@ struct GroupPos
   int32_t setSize;
 };
 
+/**
+ * An index type. Assert if out of range value was attempted to be used.
+ */
+class index_t
+{
+public:
+  index_t(int32_t aVal) : mVal(aVal) {}
+
+  operator uint32_t() const
+  {
+    MOZ_ASSERT(mVal >= 0, "Attempt to use wrong index!");
+    return mVal;
+  }
+
+  bool IsValid() const { return mVal >= 0; }
+
+private:
+  int32_t mVal;
+};
+
 typedef nsRefPtrHashtable<nsPtrHashKey<const void>, Accessible>
   AccessibleHashtable;
 

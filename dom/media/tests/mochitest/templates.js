@@ -7,6 +7,15 @@ var HAVE_LOCAL_OFFER = "have-local-offer";
 var HAVE_REMOTE_OFFER = "have-remote-offer";
 var CLOSED = "closed";
 
+function dumpSdp(test) {
+  if (typeof test._local_offer !== 'undefined') {
+    dump("ERROR: SDP offer: " + test._local_offer.sdp.replace(/[\r]/g, ''));
+  }
+  if (typeof test._remote_answer !== 'undefined') {
+    dump("ERROR: SDP answer: " + test._remote_answer.sdp.replace(/[\r]/g, ''));
+  }
+}
+
 var commandsPeerConnection = [
   [
     'PC_LOCAL_GUM',
@@ -153,8 +162,7 @@ var commandsPeerConnection = [
         myTest.next();
       };
       function onIceConnectedFailed () {
-        dump("ERROR: pc_local: SDP offer: " + myTest._local_offer.sdp.replace(/[\r]/g, ''));
-        dump("ERROR: pc_local: SDP answer: " + myTest._remote_answer.sdp.replace(/[\r]/g, ''));
+        dumpSdp(myTest);
         ok(false, "pc_local: ICE failed to switch to 'connected' state: " + myPc.iceConnectionState);
         myTest.next();
       };
@@ -165,8 +173,7 @@ var commandsPeerConnection = [
       } else if (myPc.isIceConnectionPending()) {
         myPc.waitForIceConnected(onIceConnectedSuccess, onIceConnectedFailed);
       } else {
-        dump("ERROR: pc_local: SDP offer: " + myTest._local_offer.sdp.replace(/[\r]/g, ''));
-        dump("ERROR: pc_local: SDP answer: " + myTest._remote_answer.sdp.replace(/[\r]/g, ''));
+        dumpSdp(myTest);
         ok(false, "pc_local: ICE is already in bad state: " + myPc.iceConnectionState);
         myTest.next();
       }
@@ -183,8 +190,7 @@ var commandsPeerConnection = [
         myTest.next();
       };
       function onIceConnectedFailed () {
-        dump("ERROR: pc_remote: SDP offer: " + myTest._local_offer.sdp.replace(/[\r]/g, ''));
-        dump("ERROR: pc_remote: SDP answer: " + myTest._remote_answer.sdp.replace(/[\r]/g, ''));
+        dumpSdp(myTest);
         ok(false, "pc_remote: ICE failed to switch to 'connected' state: " + myPc.iceConnectionState);
         myTest.next();
       };
@@ -195,8 +201,7 @@ var commandsPeerConnection = [
       } else if (myPc.isIceConnectionPending()) {
         myPc.waitForIceConnected(onIceConnectedSuccess, onIceConnectedFailed);
       } else {
-        dump("ERROR: pc_remote: SDP offer: " + myTest._local_offer.sdp.replace(/[\r]/g, ''));
-        dump("ERROR: pc_remote: SDP answer: " + myTest._remote_answer.sdp.replace(/[\r]/g, ''));
+        dumpSdp(myTest);
         ok(false, "pc_remote: ICE is already in bad state: " + myPc.iceConnectionState);
         myTest.next();
       }

@@ -95,7 +95,7 @@ MethodStatus CanEnterInParallel(JSContext *cx, HandleScript script);
 
 MethodStatus
 Recompile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode *osrPc,
-          bool constructing, bool force);
+          bool constructing);
 
 enum IonExecStatus
 {
@@ -190,7 +190,7 @@ NumLocalsAndArgs(JSScript *script)
 void ForbidCompilation(JSContext *cx, JSScript *script);
 void ForbidCompilation(JSContext *cx, JSScript *script, ExecutionMode mode);
 
-void PurgeCaches(JSScript *script, JS::Zone *zone);
+void PurgeCaches(JSScript *script);
 size_t SizeOfIonData(JSScript *script, mozilla::MallocSizeOf mallocSizeOf);
 void DestroyIonScripts(FreeOp *fop, JSScript *script);
 void TraceIonScripts(JSTracer* trc, JSScript *script);

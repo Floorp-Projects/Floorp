@@ -138,20 +138,6 @@ AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
       *trustLevel = TrustLevel::ActivelyDistrusted;
       return SECSuccess;
     }
-
-#ifdef MOZ_B2G_CERTDATA
-    // XXX(Bug 972201): We have to allow the old way of supporting additional
-    // roots until we fix bug 889744. Remove this along with the rest of the
-    // MOZ_B2G_CERTDATA stuff.
-
-    // For TRUST, we only use the CERTDB_TRUSTED_CA bit, because Gecko hasn't
-    // needed to consider end-entity certs to be their own trust anchors since
-    // Gecko implemented nsICertOverrideService.
-    if (flags & CERTDB_TRUSTED_CA) {
-      *trustLevel = TrustLevel::TrustAnchor;
-      return SECSuccess;
-    }
-#endif
   }
 
   // mTrustedRoot is the only trust anchor for this validation.

@@ -84,6 +84,7 @@
 #include "nsIExternalProtocolService.h"
 #include "nsIGfxInfo.h"
 #include "nsIIdleService.h"
+#include "nsIJSRuntimeService.h"
 #include "nsIMemoryInfoDumper.h"
 #include "nsIMemoryReporter.h"
 #include "nsIMozBrowserFrame.h"
@@ -1693,7 +1694,7 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
             DebugOnly<bool> opened = PCompositor::Open(this);
             MOZ_ASSERT(opened);
 
-            if (gfxPrefs::AsyncVideoEnabled()) {
+            if (gfxPrefs::AsyncVideoOOPEnabled()) {
                 opened = PImageBridge::Open(this);
                 MOZ_ASSERT(opened);
             }
@@ -2355,7 +2356,15 @@ mozilla::jsipc::PJavaScriptParent *
 ContentParent::AllocPJavaScriptParent()
 {
     MOZ_ASSERT(!ManagedPJavaScriptParent().Length());
-    mozilla::jsipc::JavaScriptParent *parent = new mozilla::jsipc::JavaScriptParent();
+
+    nsCOMPtr<nsIJSRuntimeService> svc = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
+    NS_ENSURE_TRUE(svc, nullptr);
+
+    JSRuntime *rt;
+    svc->GetRuntime(&rt);
+    NS_ENSURE_TRUE(svc, nullptr);
+
+    mozilla::jsipc::JavaScriptParent *parent = new mozilla::jsipc::JavaScriptParent(rt);
     if (!parent->init()) {
         delete parent;
         return nullptr;
@@ -3349,7 +3358,7 @@ ContentParent::DoSendAsyncMessage(JSContext* aCx,
     return false;
   }
   InfallibleTArray<CpowEntry> cpows;
-  if (!GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
+  if (aCpows && !GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
     return false;
   }
   return SendAsyncMessage(nsString(aMessage), data, cpows, aPrincipal);

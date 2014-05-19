@@ -28,6 +28,7 @@
 #include "mozilla/Telemetry.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsILoadContext.h"
 #include "nsUnicharUtils.h"
 #include "nsContentList.h"
 #include "nsIObserver.h"
@@ -2337,21 +2338,21 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
     nsIScriptSecurityManager *securityManager =
       nsContentUtils::GetSecurityManager();
     if (securityManager) {
-      nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
+      nsCOMPtr<nsILoadContext> loadContext(mDocumentContainer);
 
-      if (!docShell && aLoadGroup) {
+      if (!loadContext && aLoadGroup) {
         nsCOMPtr<nsIInterfaceRequestor> cbs;
         aLoadGroup->GetNotificationCallbacks(getter_AddRefs(cbs));
-        docShell = do_GetInterface(cbs);
+        loadContext = do_GetInterface(cbs);
       }
 
-      MOZ_ASSERT(docShell,
-                 "must be in a docshell or pass in an explicit principal");
+      MOZ_ASSERT(loadContext,
+                 "must have a load context or pass in an explicit principal");
 
       nsCOMPtr<nsIPrincipal> principal;
       nsresult rv = securityManager->
-        GetDocShellCodebasePrincipal(mDocumentURI, docShell,
-                                     getter_AddRefs(principal));
+        GetLoadContextCodebasePrincipal(mDocumentURI, loadContext,
+                                        getter_AddRefs(principal));
       if (NS_SUCCEEDED(rv)) {
         SetPrincipal(principal);
       }

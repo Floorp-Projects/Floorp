@@ -823,6 +823,7 @@ class AsmJSModule
     }
 
     void restoreToInitialState(ArrayBufferObject *maybePrevBuffer, ExclusiveContext *cx);
+    void setAutoFlushICacheRange();
     void staticallyLink(ExclusiveContext *cx);
 
     uint8_t *codeBase() const {

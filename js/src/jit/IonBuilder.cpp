@@ -4176,9 +4176,7 @@ IonBuilder::makeInliningDecision(JSFunction *target, CallInfo &callInfo)
         if (targetScript->getUseCount() < optimizationInfo().usesBeforeInlining() &&
             info().executionMode() != DefinitePropertiesAnalysis)
         {
-            IonSpew(IonSpew_Inlining, "Cannot inline %s:%u: callee is insufficiently hot.",
-                    targetScript->filename(), targetScript->lineno());
-            return InliningDecision_UseCountTooLow;
+            return DontInline(targetScript, "Vetoed: callee is insufficiently hot.");
         }
     }
 
@@ -4213,7 +4211,6 @@ IonBuilder::selectInliningTargets(ObjectVector &targets, CallInfo &callInfo, Boo
           case InliningDecision_Error:
             return false;
           case InliningDecision_DontInline:
-          case InliningDecision_UseCountTooLow:
             inlineable = false;
             break;
           case InliningDecision_Inline:
@@ -4334,8 +4331,6 @@ IonBuilder::inlineCallsite(ObjectVector &targets, ObjectVector &originals,
             return InliningStatus_Error;
           case InliningDecision_DontInline:
             return InliningStatus_NotInlined;
-          case InliningDecision_UseCountTooLow:
-            return InliningStatus_UseCountTooLow;
           case InliningDecision_Inline:
             break;
         }
@@ -4960,7 +4955,6 @@ IonBuilder::jsop_funcall(uint32_t argc)
           case InliningDecision_Error:
             return false;
           case InliningDecision_DontInline:
-          case InliningDecision_UseCountTooLow:
             break;
           case InliningDecision_Inline:
             if (target->isInterpreted())
@@ -5101,7 +5095,6 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
       case InliningDecision_Error:
         return false;
       case InliningDecision_DontInline:
-      case InliningDecision_UseCountTooLow:
         break;
       case InliningDecision_Inline:
         if (target->isInterpreted())
@@ -5171,13 +5164,6 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
     JSFunction *target = nullptr;
     if (targets.length() == 1)
         target = &targets[0]->as<JSFunction>();
-
-    if (target && status == InliningStatus_UseCountTooLow) {
-        MRecompileCheck *check = MRecompileCheck::New(alloc(), target->nonLazyScript(),
-                                                      optimizationInfo().usesBeforeInlining(),
-                                                      MRecompileCheck::RecompileCheck_Inlining);
-        current->add(check);
-    }
 
     return makeCall(target, callInfo, hasClones);
 }
@@ -6151,10 +6137,7 @@ IonBuilder::insertRecompileCheck()
     OptimizationLevel nextLevel = js_IonOptimizations.nextLevel(curLevel);
     const OptimizationInfo *info = js_IonOptimizations.get(nextLevel);
     uint32_t useCount = info->usesBeforeCompile(topBuilder->script());
-
-    MRecompileCheck *check = MRecompileCheck::New(alloc(), topBuilder->script(), useCount,
-                                MRecompileCheck::RecompileCheck_OptimizationLevel);
-    current->add(check);
+    current->add(MRecompileCheck::New(alloc(), topBuilder->script(), useCount));
 }
 
 JSObject *
@@ -8886,7 +8869,6 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, MDefinition *obj, PropertyName
           case InliningDecision_Error:
             return false;
           case InliningDecision_DontInline:
-          case InliningDecision_UseCountTooLow:
             break;
           case InliningDecision_Inline:
             inlineable = true;
@@ -9303,7 +9285,6 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
           case InliningDecision_Error:
             return false;
           case InliningDecision_DontInline:
-          case InliningDecision_UseCountTooLow:
             break;
           case InliningDecision_Inline:
             if (!inlineScriptedCall(callInfo, commonSetter))

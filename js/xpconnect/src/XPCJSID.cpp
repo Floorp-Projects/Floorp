@@ -465,7 +465,7 @@ FindObjectForHasInstance(JSContext *cx, HandleObject objArg)
     RootedObject obj(cx, objArg), proto(cx);
 
     while (obj && !IS_WN_REFLECTOR(obj) &&
-           !IsDOMObject(obj) && !mozilla::jsipc::JavaScriptParent::IsCPOW(obj))
+           !IsDOMObject(obj) && !mozilla::jsipc::IsCPOW(obj))
     {
         if (js::IsWrapper(obj)) {
             obj = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
@@ -487,8 +487,8 @@ xpc::HasInstance(JSContext *cx, HandleObject objArg, const nsID *iid, bool *bp)
     if (!obj)
         return NS_OK;
 
-    if (mozilla::jsipc::JavaScriptParent::IsCPOW(obj))
-        return mozilla::jsipc::JavaScriptParent::InstanceOf(obj, iid, bp);
+    if (mozilla::jsipc::IsCPOW(obj))
+        return mozilla::jsipc::InstanceOf(obj, iid, bp);
 
     nsISupports *identity = UnwrapReflectorToISupports(obj);
     if (!identity)
