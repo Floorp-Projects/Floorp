@@ -82,6 +82,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=964646
       100% { transform: translate(20px); animation-timing-function: ease-out }
     }
 
+    @keyframes always_fifty {
+      from, to { transform: translate(50px) }
+    }
+
     @keyframes multiprop {
       0% {
         transform: translate(10px); opacity: 0.3;
@@ -1507,6 +1511,33 @@ addAsyncTest(function *() {
   omta_is("opacity", 0.1, RunningOn.Compositor, "bug 651456 at 100ms (2)");
   advance_clock(100);
   omta_is("opacity", 0.2, RunningOn.Compositor, "bug 651456 at 200ms");
+  done_div();
+});
+
+// test_animations.html includes a test that UA !important rules override
+// animations. Unfortunately, there do not appear to be any UA !important rules
+// for opacity or transform except for one targetting a pseudo-element and
+// pseudo elements are not animated on the compositor. As a result we cannot
+// currently test this behavior.
+
+// Test that author !important rules override animations, but
+// that animations override regular author rules.
+addAsyncTest(function *() {
+  new_div("animation: always_fifty 1s linear infinite; " +
+          "transform: translate(200px)");
+  yield waitForPaints();
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "animations override regular author rules");
+  done_div();
+  new_div("animation: always_fifty 1s linear infinite; " +
+          "transform: translate(200px) ! important;");
+  yield waitForPaints();
+  // Bug 847287 - off main thread animations don't cascade correctly
+  // (todo_is added in subsequent patch)
+  /*
+  omta_is("transform", { tx: 200 }, RunningOn.Either,
+          "important author rules override animations");
+          */
   done_div();
 });
 
