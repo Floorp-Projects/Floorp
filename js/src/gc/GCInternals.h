@@ -19,12 +19,6 @@ namespace gc {
 void
 MarkPersistentRootedChains(JSTracer *trc);
 
-void
-MarkRuntime(JSTracer *trc, bool useSavedRoots = false);
-
-void
-BufferGrayRoots(GCMarker *gcmarker);
-
 class AutoCopyFreeListToArenas
 {
     JSRuntime *runtime;
