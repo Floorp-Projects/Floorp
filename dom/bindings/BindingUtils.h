@@ -573,8 +573,6 @@ struct NamedConstructor
  * constructorCache a pointer to a JSObject pointer where we should cache the
  *                  interface object. This must be null if both constructorClass
  *                  and constructor are null, and non-null otherwise.
- * domClass is the DOMClass of instance objects for this class.  This can be
- *          null if this is not a concrete proto.
  * properties contains the methods, attributes and constants to be defined on
  *            objects in any compartment.
  * chromeProperties contains the methods, attributes and constants to be defined
@@ -600,7 +598,7 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                        JS::Handle<JSObject*> interfaceProto,
                        const JSClass* constructorClass, const JSNativeHolder* constructor,
                        unsigned ctorNargs, const NamedConstructor* namedConstructors,
-                       JS::Heap<JSObject*>* constructorCache, const DOMClass* domClass,
+                       JS::Heap<JSObject*>* constructorCache,
                        const NativeProperties* regularProperties,
                        const NativeProperties* chromeOnlyProperties,
                        const char* name, bool defineOnGlobal);
