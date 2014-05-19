@@ -13,8 +13,8 @@ const SHOW_TEXT = Ci.nsIDOMNodeFilter.SHOW_TEXT;
 const TEXT_NODE = Ci.nsIDOMNode.TEXT_NODE;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
-
+Cu.import("resource://services-common/utils.js");
+Cu.import("resource://gre/modules/Task.jsm");
 
 /**
  * This class represents a document that is being translated,
@@ -160,6 +160,46 @@ this.TranslationDocument.prototype = {
 
     str += '</' + localName + '>';
     return str;
+  },
+
+  /**
+   * Changes the document to display its translated
+   * content.
+   */
+  showTranslation: function() {
+    this._swapDocumentContent("translation");
+  },
+
+  /**
+   * Changes the document to display its original
+   * content.
+   */
+  showOriginal: function() {
+    this._swapDocumentContent("original");
+  },
+
+  /**
+   * Swap the document with the resulting translation,
+   * or back with the original content.
+   *
+   * @param target   A string that is either "translation"
+   *                 or "original".
+   */
+  _swapDocumentContent: function(target) {
+    Task.spawn(function *() {
+      // Let the event loop breath on every 100 nodes
+      // that are replaced.
+      const YIELD_INTERVAL = 100;
+      let count = YIELD_INTERVAL;
+
+      for (let root of this.roots) {
+        root.swapText(target);
+        if (count-- == 0) {
+          count = YIELD_INTERVAL;
+          yield CommonUtils.laterTickResolvingPromise();
+        }
+      }
+    }.bind(this));
   }
 };
 
@@ -257,14 +297,23 @@ TranslationItem.prototype = {
    *                  it was not found.
    */
   getChildById: function(id) {
-    let foundChild = null;
-    for (let child of item.children) {
+    for (let child of this.children) {
       if (("n" + child.id) == id) {
-        foundChild = child;
-        break;
+        return child;
       }
     }
-    return foundChild;
+    return null;
+  },
+
+  /**
+   * Swap the text of this TranslationItem between
+   * its original and translated states.
+   *
+   * @param target   A string that is either "translation"
+   *                 or "original".
+   */
+  swapText: function(target) {
+    swapTextForItem(this, target);
   }
 };
 
@@ -293,6 +342,98 @@ function parseResultNode(item, node) {
       if (translationItemChild) {
         item.translation.push(translationItemChild);
         parseResultNode(translationItemChild, child);
+      }
+    }
+  }
+}
+
+/**
+ * Helper function to swap the text of a TranslationItem
+ * between its original and translated states.
+ *
+ * @param item     A TranslationItem object
+ * @param target   A string that is either "translation"
+ *                 or "original".
+ */
+function swapTextForItem(item, target) {
+  // visitStack is the stack of items that we still need to visit.
+  // Let's start the process by adding the root item.
+  let visitStack = [ item ];
+  let source = target == "translation" ? "original" : "translation";
+
+  while (visitStack.length > 0) {
+    let curItem = visitStack.shift();
+
+    let domNode = curItem.nodeRef;
+    if (!domNode) {
+      // Skipping this item due to a missing node.
+      continue;
+    }
+
+    let sourceNodeCount = 0;
+
+    if (!curItem[target]) {
+      // Translation not found for this item. This could be due to
+      // an error in the server response. For example, if a translation
+      // was broken in various chunks, and one of the chunks failed,
+      // the items from that chunk will be missing its "translation"
+      // field.
+      continue;
+    }
+
+    // Now let's walk through all items in the `target` array of the
+    // TranslationItem. This means either the TranslationItem.original or
+    // TranslationItem.translation array.
+    for (let child of curItem[target]) {
+      // If the array element is another TranslationItem object, let's
+      // add it to the stack to be visited
+      if (child instanceof TranslationItem) {
+        // Adding this child to the stack.
+        visitStack.push(child);
+        continue;
+      }
+
+      // If it's a string, say, the Nth string of the `target` array, let's
+      // replace the Nth child TextNode of this element with this string.
+      // During our translation process we skipped all empty text nodes, so we
+      // must also skip them here. If there are not enough text nodes to be used,
+      // a new text node will be created and appended to the end of the element.
+      let targetTextNode = getNthNonEmptyTextNodeFromElement(sourceNodeCount++, domNode);
+
+      // A trailing and a leading space must be preserved because they are meaningful in HTML.
+      let preSpace = targetTextNode.nodeValue.startsWith(" ") ? " " : "";
+      let endSpace = targetTextNode.nodeValue.endsWith(" ") ? " " : "";
+      targetTextNode.nodeValue = preSpace + child + endSpace;
+    }
+
+    // The translated version of a node might have less text nodes than its original
+    // version. If that's the case, let's clear the remaining nodes.
+    if (sourceNodeCount > 0) {
+      clearRemainingNonEmptyTextNodesFromElement(sourceNodeCount, domNode);
+    }
+  }
+}
+
+function getNthNonEmptyTextNodeFromElement(n, element) {
+  for (let childNode of element.childNodes) {
+    if (childNode.nodeType == Ci.nsIDOMNode.TEXT_NODE &&
+        childNode.nodeValue.trim() != "") {
+      if (n-- == 0)
+        return childNode;
+    }
+  }
+
+  // If there are not enough DOM nodes, let's create a new one.
+  return element.appendChild(element.ownerDocument.createTextNode(""));
+}
+
+function clearRemainingNonEmptyTextNodesFromElement(start, element) {
+  let count = 0;
+  for (let childNode of element.childNodes) {
+    if (childNode.nodeType == Ci.nsIDOMNode.TEXT_NODE &&
+        childNode.nodeValue.trim() != "") {
+      if (count++ >= start) {
+        childNode.nodeValue = "";
       }
     }
   }
