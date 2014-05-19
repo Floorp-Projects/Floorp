@@ -990,7 +990,7 @@ nsGenericHTMLElement::ParseAttribute(int32_t aNamespaceID,
     }
   
     if (aAttribute == nsGkAtoms::tabindex) {
-      return aResult.ParseIntWithBounds(aValue, -32768, 32767);
+      return aResult.ParseIntValue(aValue);
     }
 
     if (aAttribute == nsGkAtoms::name) {
