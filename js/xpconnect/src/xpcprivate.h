@@ -107,7 +107,6 @@
 #include "nsIXPConnect.h"
 #include "nsIInterfaceInfo.h"
 #include "nsIXPCScriptable.h"
-#include "nsIXPCSecurityManager.h"
 #include "nsIJSRuntimeService.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
