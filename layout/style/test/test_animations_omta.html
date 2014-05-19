@@ -1274,6 +1274,152 @@ addAsyncTest(function *() {
   done_div();
 });
 
+/*
+ * css3-animations:  3.8. The 'animation-delay' Property
+ * http://dev.w3.org/csswg/css3-animations/#the-animation-delay-property-
+ */
+
+addAsyncTest(function *() {
+  // test positive delay
+  new_div("animation: anim2 1s 0.5s ease-out");
+  yield waitForPaints();
+  omta_is("opacity", 1, RunningOn.Either, "positive delay test at 0ms");
+  advance_clock(400);
+  omta_is("opacity", 1, RunningOn.Either, "positive delay test at 400ms");
+  advance_clock(100);
+  yield waitForPaints();
+  omta_is("opacity", 0, RunningOn.Compositor, "positive delay test at 500ms");
+  advance_clock(100);
+  omta_is_approx("opacity", gTF.ease_out(0.1), RunningOn.Compositor, 0.01,
+                 "positive delay test at 500ms");
+  done_div();
+
+  // test dynamic changes to delay (i.e., that we preserve the start time
+  // that's before the delay)
+  new_div("animation: anim2 1s 0.5s ease-out both");
+  yield waitForPaints();
+  omta_is("opacity", 0, RunningOn.Either, "dynamic delay delay test at 0ms");
+  advance_clock(400);
+  omta_is("opacity", 0, RunningOn.Either, 
+          "dynamic delay delay test at 400ms (1)");
+  gDiv.style.animationDelay = "0.2s";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_out(0.2), RunningOn.Compositor, 0.01,
+                 "dynamic delay delay test at 400ms (2)");
+  gDiv.style.animationDelay = "0.6s";
+  yield waitForPaintsFlushed();
+  advance_clock(200);
+  omta_is("opacity", 0, RunningOn.Either, "dynamic delay delay test at 600ms");
+  advance_clock(200);
+  yield waitForPaints();
+  omta_is_approx("opacity", gTF.ease_out(0.2), RunningOn.Compositor, 0.01,
+                 "dynamic delay delay test at 800ms");
+  advance_clock(1000);
+  yield waitForPaints();
+  omta_is("opacity", 1, RunningOn.Either,
+          "dynamic delay delay test at 1800ms (1)");
+  gDiv.style.animationDelay = "1.5s";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_out(0.3), RunningOn.Compositor, 0.01,
+                 "dynamic delay delay test at 1800ms (2)");
+  gDiv.style.animationDelay = "2s";
+  yield waitForPaintsFlushed();
+  omta_is("opacity", 0, RunningOn.Either,
+          "dynamic delay delay test at 1800ms (3)");
+  done_div();
+
+  // test delay and play-state interaction
+  new_div("animation: anim2 1s 0.5s ease-out");
+  yield waitForPaints();
+  omta_is("opacity", 1, RunningOn.Either,
+          "delay and play-state delay test at 0ms");
+  advance_clock(400);
+  omta_is("opacity", 1, RunningOn.Either,
+          "delay and play-state delay test at 400ms");
+  gDiv.style.animationPlayState = "paused";
+  yield waitForPaintsFlushed();
+  advance_clock(100);
+  omta_is("opacity", 1, RunningOn.Either,
+          "delay and play-state delay test at 500ms");
+  advance_clock(500);
+  omta_is("opacity", 1, RunningOn.Either,
+          "delay and play-state delay test at 1000ms");
+  gDiv.style.animationPlayState = "running";
+  yield waitForPaintsFlushed();
+  advance_clock(100);
+  yield waitForPaints();
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "delay and play-state delay test at 1100ms");
+  advance_clock(100);
+  omta_is_approx("opacity", gTF.ease_out(0.1), RunningOn.Compositor, 0.01,
+                 "delay and play-state delay test at 1200ms");
+  gDiv.style.animationPlayState = "paused";
+  yield waitForPaintsFlushed();
+  advance_clock(100);
+  omta_is_approx("opacity", gTF.ease_out(0.1), RunningOn.Either, 0.01,
+                 "delay and play-state delay test at 1300ms");
+  done_div();
+
+  // test negative delay and implicit starting values
+  new_div("transform: translate(1000px)");
+  advance_clock(300);
+  gDiv.style.transform = "translate(100px)";
+  gDiv.style.animation = "kf1 1s -0.1s ease-in";
+  yield waitForPaintsFlushed();
+  omta_is_approx("transform", { tx: 100 - 50 * gTF.ease_in(0.2) },
+                 RunningOn.Compositor, 0.01,
+                 "delay and implicit starting values test");
+  done_div();
+
+  // test large negative delay that causes the animation to start
+  // in the fourth iteration
+  new_div("");
+  listen();
+  gDiv.style.animation = "anim2 1s -3.6s ease-in 5 alternate forwards";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.4), RunningOn.Compositor, 0.01,
+                 "large negative delay test at 0ms");
+  check_events([{ type: 'animationstart', target: gDiv,
+                  animationName: 'anim2', elapsedTime: 3.6,
+                  pseudoElement: "" }],
+               "right after start in large negative delay test");
+  advance_clock(380);
+  omta_is_approx("opacity", gTF.ease_in(0.02), RunningOn.Compositor, 0.01,
+                 "large negative delay test at 380ms");
+  check_events([]);
+  advance_clock(20);
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "large negative delay test at 400ms");
+  check_events([{ type: 'animationiteration', target: gDiv,
+                  animationName: 'anim2', elapsedTime: 4.0,
+                  pseudoElement: "" }],
+               "right after start in large negative delay test");
+  advance_clock(800);
+  omta_is_approx("opacity", gTF.ease_in(0.8), RunningOn.Compositor, 0.01,
+                 "large negative delay test at 1200ms");
+  check_events([]);
+  advance_clock(200);
+  omta_is("opacity", 1, RunningOn.Either,
+          "large negative delay test at 1400ms");
+  check_events([{ type: 'animationend', target: gDiv,
+                  animationName: 'anim2', elapsedTime: 5.0,
+                  pseudoElement: "" }],
+               "right after start in large negative delay test");
+  done_div();
+});
+
+/*
+ * css3-animations:  3.9. The 'animation-fill-mode' Property
+ * http://dev.w3.org/csswg/css3-animations/#the-animation-fill-mode-property-
+ */
+
+// animation-fill-mode is tested in the tests for section (2).
+
+/*
+ * css3-animations:  3.10. The 'animation' Shorthand Property
+ * http://dev.w3.org/csswg/css3-animations/#the-animation-shorthand-property-
+ */
+
 //----------------------------------------------------------------------
 //
 // Helper functions from test_animations.html
