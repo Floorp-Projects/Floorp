@@ -193,14 +193,7 @@ function finishTest1(subject, topic, data) {
   let bis = Cc["@mozilla.org/binaryinputstream;1"].createInstance(Ci.nsIBinaryInputStream);
   bis.setInputStream(fis);
   let str = bis.readByteArray(bis.available());
-  do_check_true(str.length == responseBody.length);
-
-  let cmp = 0;
-  for (i = 0; i < str.length; i++) {
-    cmp += str[i] - responseBody[i];
-    if (cmp != 0) break;
-  }
-  do_check_true(cmp == 0);
+  do_check_matches(str, responseBody);
 }
 
 /*
@@ -226,14 +219,7 @@ function finishTest2(subject, topic, data) {
   let bis = Cc["@mozilla.org/binaryinputstream;1"].createInstance(Ci.nsIBinaryInputStream);
   bis.setInputStream(fis);
   let str = bis.readByteArray(bis.available());
-  do_check_true(str.length == responseBody.length);
-
-  let cmp = 0;
-  for (i = 0; i < str.length; i++) {
-    cmp += str[i] - responseBody[i];
-    if (cmp != 0) break;
-  }
-  do_check_true(cmp == 0);
+  do_check_matches(str, responseBody);
 }
 
 function testResponse3(metadata, response) {
@@ -255,14 +241,7 @@ function finishTest3(subject, topic, data) {
   bis.setInputStream(fis);
   let str = bis.readByteArray(bis.available());
   let decodedBody = [ 116, 101, 115, 116, 10 ]; // 't','e','s','t','\n'
-  do_check_true(str.length == decodedBody.length);
-
-  let cmp = 0;
-  for (i = 0; i < str.length; i++) {
-    cmp += str[i] - decodedBody[i];
-    if (cmp != 0) break;
-  }
-  do_check_true(cmp == 0);
+  do_check_matches(str, decodedBody);
 }
 
 let tests = [
