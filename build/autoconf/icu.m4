@@ -98,7 +98,7 @@ if test -n "$ENABLE_INTL_API"; then
                    MOZ_ICU_LIBS='$(foreach lib,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/target/lib/$(DLL_PREFIX)$(lib).$(MOZ_ICU_VERSION)$(DLL_SUFFIX))'
                 fi
                 ;;
-            Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
+            Linux|DragonFly|FreeBSD|NetBSD|OpenBSD|GNU/kFreeBSD)
                 ICU_LIB_NAMES="icui18n icuuc icudata"
                 if test -n "$MOZ_SHARED_ICU"; then
                    MOZ_ICU_LIBS='$(foreach lib,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/target/lib/$(DLL_PREFIX)$(lib)$(DLL_SUFFIX).$(MOZ_ICU_VERSION))'
