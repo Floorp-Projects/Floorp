@@ -7,6 +7,8 @@
 import os
 import random
 import pexpect
+import time
+import sys
 
 def init_dsa(db_dir):
     """
@@ -174,4 +176,136 @@ def generate_pkcs12(db_dir, dest_dir, der_cert_filename, key_pem_filename,
     child.sendline('')
     child.expect(pexpect.EOF)
     return pk12_filename
+
+def init_nss_db(db_dir):
+    """
+    Remove the current nss database in the specified directory and create a new
+    nss database with the sql format.
+    Arguments
+      db_dir -- the desired location of the new database
+    output
+     noise_file -- the path to a noise file suitable to generate TEST
+                   certificates. This does not have enough entropy for a real
+                   secret
+     pwd_file   -- the patch to the secret file used for the database.
+                   this file should be empty.
+    """
+    nss_db_files = ["cert9.db", "key4.db", "pkcs11.txt"]
+    for file in nss_db_files:
+        if os.path.isfile(file):
+            os.remove(file)
+    # create noise file
+    noise_file = db_dir + "/noise"
+    nf = open(noise_file, 'w')
+    nf.write(str(time.time()))
+    nf.close()
+    # create pwd file
+    pwd_file = db_dir + "/pwfile"
+    pf = open(pwd_file, 'w')
+    pf.write("\n")
+    pf.close()
+    # create nss db
+    os.system("certutil -d sql:" + db_dir + " -N -f " + pwd_file);
+    return [noise_file, pwd_file]
+
+def generate_ca_cert(db_dir, dest_dir, noise_file, name, version, do_bc):
+    """
+    Creates a new CA certificate in an sql NSS database and as a der file
+    Arguments:
+      db_dir     -- the location of the nss database (in sql format)
+      dest_dir   -- the location of for the output file
+      noise_file -- the location of a noise file.
+      name       -- the nickname of the new certificate in the database and the
+                    common name of the certificate
+      version    -- the version number of the certificate (valid certs must use
+                    3)
+      do_bc      -- if the certificate should include the basic constraints
+                    (valid ca's should be true)
+    output:
+      outname    -- the location of the der file.
+    """
+    out_name = dest_dir + "/" + name + ".der"
+    base_exec_string = ("certutil -S -z " + noise_file + " -g 2048 -d sql:" +
+                        db_dir + "/ -n " + name + " -v 120 -s 'CN=" + name +
+                        ",O=PSM Testing,L=Mountain View,ST=California,C=US'" +
+                        " -t C,C,C -x --certVersion=" + str(int(version)))
+    if (do_bc):
+        child = pexpect.spawn(base_exec_string + " -2")
+        child.logfile = sys.stdout
+        child.expect('Is this a CA certificate \[y/N\]?')
+        child.sendline('y')
+        child.expect('Enter the path length constraint, enter to skip \[<0 for unlimited path\]: >')
+        child.sendline('')
+        child.expect('Is this a critical extension \[y/N\]?')
+        child.sendline('')
+        child.expect(pexpect.EOF)
+    else:
+        os.system(base_exec_string)
+    os.system("certutil -d sql:" + db_dir + "/ -L -n " + name + " -r > " +
+              out_name)
+    return out_name
+
+def generate_child_cert(db_dir, dest_dir, noise_file, name, ca_nick, version,
+                        do_bc, is_ee, ocsp_url):
+    """
+    Creates a new child certificate in an sql NSS database and as a der file
+    Arguments:
+      db_dir     -- the location of the nss database (in sql format)
+      dest_dir   -- the location of for the output file
+      noise_file -- the location of a noise file.
+      name       -- the nickname of the new certificate in the database and the
+                    common name of the certificate
+      ca_nick    -- the nickname of the isser of the new certificate
+      version    -- the version number of the certificate (valid certs must use
+                    3)
+      do_bc      -- if the certificate should include the basic constraints
+                    (valid ca's should be true)
+      is_ee      -- is this and End Entity cert? false means intermediate
+      ocsp_url   -- optional location of the ocsp responder for this certificate
+                    this is included only if do_bc is set to True
+    output:
+      outname    -- the location of the der file.
+    """
+
+    out_name = dest_dir + "/" + name + ".der"
+    base_exec_string = ("certutil -S -z " + noise_file + " -g 2048 -d sql:" +
+                        db_dir + "/ -n " + name + " -v 120 -m " +
+                        str(random.randint(100, 40000000)) + " -s 'CN=" + name +
+                        ",O=PSM Testing,L=Mountain View,ST=California,C=US'" +
+                        " -t C,C,C -c " + ca_nick + " --certVersion=" +
+                        str(int(version)))
+    if (do_bc):
+        extra_arguments = " -2"
+        if (ocsp_url):
+            extra_arguments += " --extAIA"
+        child = pexpect.spawn(base_exec_string + extra_arguments)
+        child.logfile = sys.stdout
+        child.expect('Is this a CA certificate \[y/N\]?')
+        if (is_ee):
+            child.sendline('N')
+        else:
+            child.sendline('y')
+        child.expect('Enter the path length constraint, enter to skip \[<0 for unlimited path\]: >')
+        child.sendline('')
+        child.expect('Is this a critical extension \[y/N\]?')
+        child.sendline('')
+        if (ocsp_url):
+            child.expect('\s+Choice >')
+            child.sendline('2')
+            child.expect('\s+Choice: >')
+            child.sendline('7')
+            child.expect('Enter data:')
+            child.sendline(ocsp_url)
+            child.expect('\s+Choice: >')
+            child.sendline('0')
+            child.expect('Add another location to the Authority Information Access extension \[y/N\]')
+            child.sendline('')
+            child.expect('Is this a critical extension \[y/N\]?')
+            child.sendline('')
+        child.expect(pexpect.EOF)
+    else:
+        os.system(base_exec_string)
+    os.system("certutil -d sql:" + db_dir + "/ -L -n " + name + " -r > " +
+              out_name)
+    return out_name
 
