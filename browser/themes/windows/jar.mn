@@ -660,6 +660,7 @@ browser.jar:
 *       skin/classic/aero/browser/devtools/shadereditor.css          (devtools/shadereditor.css)
 *       skin/classic/aero/browser/devtools/splitview.css             (../shared/devtools/splitview.css)
         skin/classic/aero/browser/devtools/styleeditor.css           (../shared/devtools/styleeditor.css)
+*       skin/classic/aero/browser/devtools/webaudioeditor.css        (devtools/webaudioeditor.css)
         skin/classic/aero/browser/devtools/magnifying-glass.png      (../shared/devtools/images/magnifying-glass.png)
         skin/classic/aero/browser/devtools/magnifying-glass@2x.png   (../shared/devtools/images/magnifying-glass@2x.png)
         skin/classic/aero/browser/devtools/magnifying-glass-light.png (../shared/devtools/images/magnifying-glass-light.png)
