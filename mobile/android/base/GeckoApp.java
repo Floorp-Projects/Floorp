@@ -213,6 +213,7 @@ public abstract class GeckoApp
     private int mSignalStrenth;
     private PhoneStateListener mPhoneStateListener = null;
     private boolean mShouldReportGeoData;
+    private EventListener mWebappEventListener;
 
     abstract public int getLayout();
     abstract public boolean hasTabsSideBar();
@@ -1547,7 +1548,11 @@ public abstract class GeckoApp
             "Update:Download",
             "Update:Install");
 
-        EventListener.registerEvents();
+        if (mWebappEventListener == null) {
+            mWebappEventListener = new EventListener();
+            mWebappEventListener.registerEvents();
+        }
+
 
         if (SmsManager.getInstance() != null) {
           SmsManager.getInstance().start();
@@ -2081,7 +2086,10 @@ public abstract class GeckoApp
             "Update:Download",
             "Update:Install");
 
-        EventListener.unregisterEvents();
+        if (mWebappEventListener != null) {
+            mWebappEventListener.unregisterEvents();
+            mWebappEventListener = null;
+        }
 
         deleteTempFiles();
 
