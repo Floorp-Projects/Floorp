@@ -39,50 +39,14 @@ function load_ca(ca_name) {
 const SERVER_PORT = 8888;
 
 function failingOCSPResponder() {
-  let httpServer = new HttpServer();
-  httpServer.registerPrefixHandler("/", function(request, response) {
-    do_check_true(false);
-  });
-  httpServer.identity.setPrimary("http", "www.example.com", SERVER_PORT);
-  httpServer.identity.add("http", "crl.example.com", SERVER_PORT);
-  httpServer.start(SERVER_PORT);
-  return httpServer;
+  return getFailingHttpServer(SERVER_PORT,
+                              ["www.example.com", "crl.example.com"]);
 }
 
 function start_ocsp_responder(expectedCertNames) {
-  let httpServer = new HttpServer();
-  httpServer.registerPrefixHandler("/",
-      function handleServerCallback(aRequest, aResponse) {
-        do_check_neq(aRequest.host, "crl.example.com"); // No CRL checks
-        let cert_nick = aRequest.path.slice(1, aRequest.path.length - 1);
-
-        do_check_true(expectedCertNames.length >= 1);
-        let expected_nick = expectedCertNames.shift();
-        do_check_eq(cert_nick, expected_nick);
-
-        do_print("Generating ocsp response for '" + cert_nick + "'");
-        aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
-        aResponse.setHeader("Content-Type", "application/ocsp-response");
-        // now we generate the response
-        let ocsp_request_desc = new Array();
-        ocsp_request_desc.push("good");
-        ocsp_request_desc.push(cert_nick);
-        ocsp_request_desc.push("unused_arg");
-        let arg_array = new Array();
-        arg_array.push(ocsp_request_desc);
-        let retArray = generateOCSPResponses(arg_array, "test_ev_certs");
-        let responseBody = retArray[0];
-        aResponse.bodyOutputStream.write(responseBody, responseBody.length);
-      });
-  httpServer.identity.setPrimary("http", "www.example.com", SERVER_PORT);
-  httpServer.identity.add("http", "crl.example.com", SERVER_PORT);
-  httpServer.start(SERVER_PORT);
-  return {
-    stop: function(callback) {
-      do_check_eq(expectedCertNames.length, 0);
-      httpServer.stop(callback);
-    }
-  };
+  let expectedPaths = expectedCertNames.slice();
+  return startOCSPResponder(SERVER_PORT, "www.example.com", ["crl.example.com"],
+                            "test_ev_certs", expectedCertNames, expectedPaths);
 }
 
 function check_cert_err(cert_name, expected_error) {
