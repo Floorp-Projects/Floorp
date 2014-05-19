@@ -3734,12 +3734,8 @@ pref("layers.offmainthreadcomposition.frame-rate", -1);
 #ifndef XP_WIN
 // Asynchonous video compositing using the ImageBridge IPDL protocol.
 // requires off-main-thread compositing.
+// Never works on Windows, so no point pref'ing it on.
 pref("layers.async-video.enabled",false);
-#endif
-
-#ifdef XP_WIN
-pref("layers.offmainthreadcomposition.enabled", true);
-pref("layers.async-video.enabled", true);
 #endif
 
 #ifdef MOZ_X11
