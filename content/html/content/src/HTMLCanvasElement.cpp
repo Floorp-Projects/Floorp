@@ -1,4 +1,4 @@
-   /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,10 +14,7 @@
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/dom/HTMLCanvasElementBinding.h"
 #include "mozilla/dom/UnionTypes.h"
-#include "mozilla/dom/MouseEvent.h"
-#include "mozilla/EventDispatcher.h"
 #include "mozilla/gfx/Rect.h"
-#include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "nsAttrValueInlines.h"
@@ -31,7 +28,6 @@
 #include "nsIWritablePropertyBag2.h"
 #include "nsIXPConnect.h"
 #include "nsJSUtils.h"
-#include "nsLayoutUtils.h"
 #include "nsMathUtils.h"
 #include "nsNetUtil.h"
 #include "nsStreamUtils.h"
@@ -290,34 +286,6 @@ HTMLCanvasElement::CopyInnerTo(Element* aDest)
     }
   }
   return rv;
-}
-
-nsresult HTMLCanvasElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
-{
-  if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT) {
-    WidgetMouseEventBase* evt = (WidgetMouseEventBase*)aVisitor.mEvent;
-    if (evt) {
-      nsCOMPtr<nsISupports> cxt;
-      GetContext(NS_LITERAL_STRING("2d"), getter_AddRefs(cxt));
-      nsRefPtr<CanvasRenderingContext2D> context2d =
-        static_cast<CanvasRenderingContext2D*>(cxt.get());
-
-      if (context2d) {
-        nsIFrame *frame = GetPrimaryFrame();
-        if (!frame)
-          return NS_OK;
-        nsPoint ptInRoot = nsLayoutUtils::GetEventCoordinatesRelativeTo(evt, frame);
-        nsRect paddingRect = frame->GetContentRectRelativeToSelf();
-        Point hitpoint;
-        hitpoint.x = (ptInRoot.x - paddingRect.x) / AppUnitsPerCSSPixel();
-        hitpoint.y = (ptInRoot.y - paddingRect.y) / AppUnitsPerCSSPixel();
-
-        evt->region = context2d->GetHitRegion(hitpoint);
-        aVisitor.mCanHandle = true;
-      }
-    }
-  }
-  return nsGenericHTMLElement::PreHandleEvent(aVisitor);
 }
 
 nsChangeHint

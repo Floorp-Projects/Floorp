@@ -537,11 +537,6 @@ public:
 
   virtual void GetImageBuffer(uint8_t** aImageBuffer, int32_t* aFormat);
 
-
-  // Given a point, return hit region ID if it exists
-  nsString GetHitRegion(const mozilla::gfx::Point& aPoint);
-
-
   // return true and fills in the bound rect if element has a hit region.
   bool GetHitRegionRect(Element* aElement, nsRect& aRect);
 
