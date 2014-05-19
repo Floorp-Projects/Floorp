@@ -597,20 +597,36 @@ GenerateKeyPair(/*out*/ ScopedSECKEYPublicKey& publicKey,
   if (!slot) {
     return SECFailure;
   }
-  PK11RSAGenParams params;
-  params.keySizeInBits = 2048;
-  params.pe = 3;
-  SECKEYPublicKey* publicKeyTemp = nullptr;
-  privateKey = PK11_GenerateKeyPair(slot.get(), CKM_RSA_PKCS_KEY_PAIR_GEN,
-  				    &params, &publicKeyTemp, false, true,
-                                    nullptr);
-  if (!privateKey) {
+
+  // Bug 1012786: PK11_GenerateKeyPair can fail if there is insufficient
+  // entropy to generate a random key. Attempting to add some entropy and
+  // retrying appears to solve this issue.
+  for (uint32_t retries = 0; retries < 10; retries++) {
+    PK11RSAGenParams params;
+    params.keySizeInBits = 2048;
+    params.pe = 3;
+    SECKEYPublicKey* publicKeyTemp = nullptr;
+    privateKey = PK11_GenerateKeyPair(slot.get(), CKM_RSA_PKCS_KEY_PAIR_GEN,
+                                      &params, &publicKeyTemp, false, true,
+                                      nullptr);
+    if (privateKey) {
+      publicKey = publicKeyTemp;
+      PR_ASSERT(publicKey);
+      return SECSuccess;
+    }
+
     PR_ASSERT(!publicKeyTemp);
-    return SECFailure;
+
+    if (PR_GetError() != SEC_ERROR_PKCS11_FUNCTION_FAILED) {
+      return SECFailure;
+    }
+
+    PRTime now = PR_Now();
+    if (PK11_RandomUpdate(&now, sizeof(PRTime)) != SECSuccess) {
+      return SECFailure;
+    }
   }
-  publicKey = publicKeyTemp;
-  PR_ASSERT(publicKey);
-  return SECSuccess;
+  return SECFailure;
 }
 
 
