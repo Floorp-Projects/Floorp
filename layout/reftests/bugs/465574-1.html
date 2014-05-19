@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Testcase</title>
+    <style>
+      table[dir="rtl"] {background-color: #CCF}
+      table[dir="ltr"] {background-color: #FCC}
+    </style>
+  </head>
+  <body>
+    1<table dir="ltr"><tr><td><span>lorem ipsum<br></span></td></tr></table>
+    2<table dir="rtl"><tr><td><span>lorem ipsum<br></span></td></tr></table>
+    3<table dir="ltr"><tr><td><span>לורם איפסום<br></span></td></tr></table>
+    4<table dir="rtl"><tr><td><span>לורם איפסום<br></span></td></tr></table>
+    5<table dir="ltr"><tr><td>lorem ipsum<span><br></span></td></tr></table>
+    6<table dir="rtl"><tr><td>לורם איפסום<span><br></span></td></tr></table>
+  </body>
+</html>
