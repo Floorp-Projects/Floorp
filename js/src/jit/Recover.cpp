@@ -311,3 +311,29 @@ RBitOr::recover(JSContext *cx, SnapshotIterator &iter) const
     iter.storeInstructionResult(asValue);
     return true;
 }
+
+bool
+MUrsh::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_Ursh));
+    return true;
+}
+
+RUrsh::RUrsh(CompactBufferReader &reader)
+{ }
+
+bool
+RUrsh::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue lhs(cx, iter.read());
+    RootedValue rhs(cx, iter.read());
+    MOZ_ASSERT(!lhs.isObject() && !rhs.isObject());
+
+    RootedValue result(cx);
+    if (!js::UrshOperation(cx, lhs, rhs, &result))
+        return false;
+
+    iter.storeInstructionResult(result);
+    return true;
+}
