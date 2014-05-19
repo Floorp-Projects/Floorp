@@ -104,6 +104,40 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=964646
       }
     }
 
+    @keyframes cascade {
+      0%, 25%, 100% { transform: translate(0px) }
+      50%, 75% { transform: translate(100px) }
+      0%, 75%, 100% { opacity: 0 }
+      25%, 50% { opacity: 1 }
+    }
+    @keyframes cascade2 {
+      0% { transform: translate(0px) }
+      25% { transform: translate(30px);
+            animation-timing-function: ease-in } /* beaten by rule below */
+      50% { transform: translate(0px) }
+      25% { transform: translate(50px) }
+      100% { transform: translate(100px) }
+    }
+
+    @keyframes primitives1 {
+      from { transform: rotate(0deg) translateX(0px) scaleX(1)
+        translate(0px) scale3d(1, 1, 1); }
+      to { transform: rotate(270deg) translate3d(0px, 0px, 0px) scale(1)
+        translateY(0px) scaleY(1); }
+    }
+
+    @keyframes important1 {
+      from { opacity: 0.5; }
+      50%  { opacity: 1 !important; } /* ignored */
+      to   { opacity: 0.8; }
+    }
+    @keyframes important2 {
+      from { opacity: 0.5;
+             transform: translate(100px); }
+      to   { opacity: 0.2 !important; /* ignored */
+             transform: translate(50px); }
+    }
+
     .target {
       /* The animation target needs geometry in order to qualify for OMTA */
       width: 100px;
@@ -1594,6 +1628,123 @@ addAsyncTest(function *() {
           "bug 686656 test 2 at 1000ms");
   done_div();
   gDisplay.style.overflow = "";
+});
+
+// Test that cascading between keyframes rules is per-property rather
+// than per-rule (bug ), and that the timing function isn't taken from a
+// rule that's skipped.  (Bug 738003)
+addAsyncTest(function *() {
+  new_div("animation: cascade 1s linear forwards; position: relative");
+  yield waitForPaints();
+  omta_is("transform", { tx: 0 }, RunningOn.Compositor,
+          "cascade test (transform) at 0ms");
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "cascade test (opacity) at 0ms");
+  advance_clock(125);
+  omta_is("transform", { tx: 0 }, RunningOn.Compositor,
+          "cascade test (transform) at 125ms");
+  omta_is("opacity", 0.5, RunningOn.Compositor,
+          "cascade test (opacity) at 125ms");
+  advance_clock(125);
+  omta_is("transform", { tx: 0 }, RunningOn.Compositor,
+          "cascade test (transform) at 250ms");
+  omta_is("opacity", 1, RunningOn.Compositor,
+          "cascade test (opacity) at 250ms");
+  advance_clock(125);
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "cascade test (transform) at 375ms");
+  omta_is("opacity", 1, RunningOn.Compositor,
+          "cascade test (opacity) at 375ms");
+  advance_clock(125);
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor,
+          "cascade test (transform) at 500ms");
+  omta_is("opacity", 1, RunningOn.Compositor,
+          "cascade test (opacity) at 500ms");
+  advance_clock(125);
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor,
+          "cascade test (transform) at 625ms");
+  omta_is("opacity", 0.5, RunningOn.Compositor,
+          "cascade test (opacity) at 625ms");
+  advance_clock(125);
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor,
+          "cascade test (transform) at 750ms");
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "cascade test (opacity) at 750ms");
+  advance_clock(125);
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "cascade test (transform) at 875ms");
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "cascade test (opacity) at 875ms");
+  advance_clock(125);
+  yield waitForPaints();
+  omta_is("transform", { tx: 0 }, RunningOn.MainThread,
+          "cascade test (transform) at 1000ms");
+  omta_is("opacity", 0, RunningOn.Either,
+          "cascade test (opacity) at 1000ms");
+  done_div();
+});
+
+addAsyncTest(function *() {
+  new_div("animation: cascade2 8s linear forwards");
+  yield waitForPaints();
+  omta_is("transform", { tx: 0 }, RunningOn.Compositor, "cascade2 test at 0s");
+  advance_clock(1000);
+  omta_is("transform", { tx: 25 }, RunningOn.Compositor, "cascade2 test at 1s");
+  advance_clock(1000);
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor, "cascade2 test at 2s");
+  advance_clock(1000);
+  omta_is("transform", { tx: 25 }, RunningOn.Compositor, "cascade2 test at 3s");
+  advance_clock(1000);
+  omta_is("transform", { tx: 0 }, RunningOn.Compositor, "cascade2 test at 4s");
+  advance_clock(3000);
+  omta_is("transform", { tx: 75 }, RunningOn.Compositor, "cascade2 test at 7s");
+  advance_clock(1000);
+  yield waitForPaints();
+  omta_is("transform", { tx: 100 }, RunningOn.MainThread,
+          "cascade2 test at 8s");
+  done_div();
+});
+
+addAsyncTest(function *() {
+  new_div("animation: primitives1 2s linear forwards");
+  yield waitForPaints();
+  omta_is("transform", { }, RunningOn.Compositor, "primitives1 at 0s");
+  advance_clock(1000);
+  omta_is("transform", [ -0.707107, 0.707107, -0.707107, -0.707107, 0, 0 ],
+          RunningOn.Compositor, "primitives1 at 1s");
+  advance_clock(1000);
+  yield waitForPaints();
+  omta_is("transform", [ 0, -1, 1, 0, 0, 0 ], RunningOn.MainThread,
+          "primitives1 at 0s");
+  done_div();
+});
+
+addAsyncTest(function *() {
+  new_div("animation: important1 1s linear forwards");
+  yield waitForPaints();
+  omta_is("opacity", 0.5, RunningOn.Compositor, "important1 test at 0s");
+  advance_clock(500);
+  omta_is("opacity", 0.65, RunningOn.Compositor, "important1 test at 0.5s");
+  advance_clock(500);
+  yield waitForPaints();
+  omta_is("opacity", 0.8, RunningOn.Either, "important1 test at 1s");
+  done_div();
+});
+
+addAsyncTest(function *() {
+  new_div("animation: important2 1s linear forwards");
+  yield waitForPaints();
+  omta_is("opacity", 0.5, RunningOn.Compositor,
+          "important2 (opacity) test at 0s");
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor,
+          "important2 (transform) test at 0s");
+  advance_clock(1000);
+  yield waitForPaints();
+  omta_is("opacity", 1, RunningOn.Either,
+          "important2 (opacity) test at 1s");
+  omta_is("transform", { tx: 50 }, RunningOn.MainThread,
+          "important2 (transform) test at 1s");
+  done_div();
 });
 
 //----------------------------------------------------------------------
