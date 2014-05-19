@@ -18,6 +18,12 @@ extern "C" {
 // The following are available on Mips platforms:
 #if !defined(LIBYUV_DISABLE_MIPS) && defined(__mips__)
 
+#include <sgidefs.h>
+
+#if (_MIPS_ISA == _MIPS_ISA_MIPS4) || (_MIPS_ISA == _MIPS_ISA_MIPS5)
+#define HAS_MIPS_PREFETCH 1
+#endif
+
 #ifdef HAS_COPYROW_MIPS
 void CopyRow_MIPS(const uint8* src, uint8* dst, int count) {
   __asm__ __volatile__ (
@@ -60,23 +66,31 @@ void CopyRow_MIPS(const uint8* src, uint8* dst, int count) {
     // Alternatively, for x=64 the last "safe" a1 address is "t0-96"
     // we will use "pref 30,128(a1)", so "t0-160" is the limit
     "subu      $t9, $t0, 160                     \n"
+#ifdef HAS_MIPS_PREFETCH
     // t9 is the "last safe pref 30,128(a1)" address
     "pref      0, 0(%[src])                      \n"  // first line of src
     "pref      0, 32(%[src])                     \n"  // second line of src
     "pref      0, 64(%[src])                     \n"
     "pref      30, 32(%[dst])                    \n"
+#endif
     // In case the a1 > t9 don't use "pref 30" at all
     "sgtu      $v1, %[dst], $t9                  \n"
     "bgtz      $v1, $loop16w                     \n"
     "nop                                         \n"
     // otherwise, start with using pref30
+#ifdef HAS_MIPS_PREFETCH
     "pref      30, 64(%[dst])                    \n"
+#endif
     "$loop16w:                                    \n"
+#ifdef HAS_MIPS_PREFETCH
     "pref      0, 96(%[src])                     \n"
+#endif
     "lw        $t0, 0(%[src])                    \n"
     "bgtz      $v1, $skip_pref30_96              \n"  // skip
     "lw        $t1, 4(%[src])                    \n"
+#ifdef HAS_MIPS_PREFETCH
     "pref      30, 96(%[dst])                    \n"  // continue
+#endif
     "$skip_pref30_96:                            \n"
     "lw        $t2, 8(%[src])                    \n"
     "lw        $t3, 12(%[src])                   \n"
@@ -84,7 +98,9 @@ void CopyRow_MIPS(const uint8* src, uint8* dst, int count) {
     "lw        $t5, 20(%[src])                   \n"
     "lw        $t6, 24(%[src])                   \n"
     "lw        $t7, 28(%[src])                   \n"
+#ifdef HAS_MIPS_PREFETCH
     "pref      0, 128(%[src])                    \n"
+#endif
     //  bring the next lines of src, addr 128
     "sw        $t0, 0(%[dst])                    \n"
     "sw        $t1, 4(%[dst])                    \n"
@@ -97,7 +113,9 @@ void CopyRow_MIPS(const uint8* src, uint8* dst, int count) {
     "lw        $t0, 32(%[src])                   \n"
     "bgtz      $v1, $skip_pref30_128             \n"  // skip pref 30,128(a1)
     "lw        $t1, 36(%[src])                   \n"
+#ifdef HAS_MIPS_PREFETCH
     "pref      30, 128(%[dst])                   \n"  // set dest, addr 128
+#endif
     "$skip_pref30_128:                           \n"
     "lw        $t2, 40(%[src])                   \n"
     "lw        $t3, 44(%[src])                   \n"
@@ -105,7 +123,9 @@ void CopyRow_MIPS(const uint8* src, uint8* dst, int count) {
     "lw        $t5, 52(%[src])                   \n"
     "lw        $t6, 56(%[src])                   \n"
     "lw        $t7, 60(%[src])                   \n"
+#ifdef HAS_MIPS_PREFETCH
     "pref      0, 160(%[src])                    \n"
+#endif
     // bring the next lines of src, addr 160
     "sw        $t0, 32(%[dst])                   \n"
     "sw        $t1, 36(%[dst])                   \n"
@@ -125,7 +145,9 @@ void CopyRow_MIPS(const uint8* src, uint8* dst, int count) {
     // Here we have src and dest word-aligned but less than 64-bytes to go
 
     "chk8w:                                      \n"
+#ifdef HAS_MIPS_PREFETCH
     "pref      0, 0x0(%[src])                    \n"
+#endif
     "andi      $t8, %[count], 0x1f               \n"  // 32-byte chunk?
     // the t8 is the reminder count past 32-bytes
     "beq       %[count], $t8, chk1w              \n"
@@ -213,10 +235,12 @@ void CopyRow_MIPS(const uint8* src, uint8* dst, int count) {
     "addu      $t0, %[dst], %[count]             \n"  // t0 "past the end"
     "subu      $t9, $t0, 160                     \n"
     // t9 is the "last safe pref 30,128(a1)" address
+#ifdef HAS_MIPS_PREFETCH
     "pref      0, 0(%[src])                      \n"  // first line of src
     "pref      0, 32(%[src])                     \n"  // second line  addr 32
     "pref      0, 64(%[src])                     \n"
     "pref      30, 32(%[dst])                    \n"
+#endif
     // safe, as we have at least 64 bytes ahead
     // In case the a1 > t9 don't use "pref 30" at all
     "sgtu      $v1, %[dst], $t9                  \n"
@@ -224,15 +248,21 @@ void CopyRow_MIPS(const uint8* src, uint8* dst, int count) {
     // skip "pref 30,64(a1)" for too short arrays
     " nop                                        \n"
     // otherwise, start with using pref30
+#ifdef HAS_MIPS_PREFETCH
     "pref      30, 64(%[dst])                    \n"
+#endif
     "$ua_loop16w:                                \n"
+#ifdef HAS_MIPS_PREFETCH
     "pref      0, 96(%[src])                     \n"
+#endif
     "lwr       $t0, 0(%[src])                    \n"
     "lwl       $t0, 3(%[src])                    \n"
     "lwr       $t1, 4(%[src])                    \n"
     "bgtz      $v1, $ua_skip_pref30_96           \n"
     " lwl      $t1, 7(%[src])                    \n"
+#ifdef HAS_MIPS_PREFETCH
     "pref      30, 96(%[dst])                    \n"
+#endif
     // continue setting up the dest, addr 96
     "$ua_skip_pref30_96:                         \n"
     "lwr       $t2, 8(%[src])                    \n"
@@ -247,7 +277,9 @@ void CopyRow_MIPS(const uint8* src, uint8* dst, int count) {
     "lwl       $t6, 27(%[src])                   \n"
     "lwr       $t7, 28(%[src])                   \n"
     "lwl       $t7, 31(%[src])                   \n"
+#ifdef HAS_MIPS_PREFETCH
     "pref      0, 128(%[src])                    \n"
+#endif
     // bring the next lines of src, addr 128
     "sw        $t0, 0(%[dst])                    \n"
     "sw        $t1, 4(%[dst])                    \n"
@@ -262,7 +294,9 @@ void CopyRow_MIPS(const uint8* src, uint8* dst, int count) {
     "lwr       $t1, 36(%[src])                   \n"
     "bgtz      $v1, ua_skip_pref30_128           \n"
     " lwl      $t1, 39(%[src])                   \n"
+#ifdef HAS_MIPS_PREFETCH
     "pref      30, 128(%[dst])                   \n"
+#endif
     // continue setting up the dest, addr 128
     "ua_skip_pref30_128:                         \n"
 
@@ -278,7 +312,9 @@ void CopyRow_MIPS(const uint8* src, uint8* dst, int count) {
     "lwl       $t6, 59(%[src])                   \n"
     "lwr       $t7, 60(%[src])                   \n"
     "lwl       $t7, 63(%[src])                   \n"
+#ifdef HAS_MIPS_PREFETCH
     "pref      0, 160(%[src])                    \n"
+#endif
     // bring the next lines of src, addr 160
     "sw        $t0, 32(%[dst])                   \n"
     "sw        $t1, 36(%[dst])                   \n"
@@ -298,7 +334,9 @@ void CopyRow_MIPS(const uint8* src, uint8* dst, int count) {
     // Here we have src and dest word-aligned but less than 64-bytes to go
 
     "ua_chk8w:                                   \n"
+#ifdef HAS_MIPS_PREFETCH
     "pref      0, 0x0(%[src])                    \n"
+#endif
     "andi      $t8, %[count], 0x1f               \n"  // 32-byte chunk?
     // the t8 is the reminder count
     "beq       %[count], $t8, $ua_chk1w          \n"
