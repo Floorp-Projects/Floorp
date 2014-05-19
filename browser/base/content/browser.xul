@@ -899,10 +899,10 @@
         <toolbarbutton id="social-share-button"
                        class="toolbarbutton-1 chromeclass-toolbar-additional"
                        hidden="true"
-                       overflows="false"
                        label="&sharePageCmd.label;"
                        tooltiptext="&sharePageCmd.label;"
                        cui-areatype="toolbar"
+                       removable="true"
                        command="Social:SharePage"/>
       </hbox>
 
