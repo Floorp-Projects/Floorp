@@ -47,7 +47,7 @@ protected:
 TEST_F(pkixder_universal_types_tests, BooleanTrue01)
 {
   const uint8_t DER_BOOLEAN_TRUE_01[] = {
-    0x01,                       // INTEGER
+    0x01,                       // BOOLEAN
     0x01,                       // length
     0x01                        // invalid
   };
@@ -64,7 +64,7 @@ TEST_F(pkixder_universal_types_tests, BooleanTrue01)
 TEST_F(pkixder_universal_types_tests, BooleanTrue42)
 {
   const uint8_t DER_BOOLEAN_TRUE_42[] = {
-    0x01,                       // INTEGER
+    0x01,                       // BOOLEAN
     0x01,                       // length
     0x42                        // invalid
   };
@@ -79,7 +79,7 @@ TEST_F(pkixder_universal_types_tests, BooleanTrue42)
 }
 
 static const uint8_t DER_BOOLEAN_TRUE[] = {
-  0x01,                       // INTEGER
+  0x01,                       // BOOLEAN
   0x01,                       // length
   0xff                        // true
 };
@@ -98,7 +98,7 @@ TEST_F(pkixder_universal_types_tests, BooleanTrueFF)
 TEST_F(pkixder_universal_types_tests, BooleanFalse)
 {
   const uint8_t DER_BOOLEAN_FALSE[] = {
-    0x01,                       // INTEGER
+    0x01,                       // BOOLEAN
     0x01,                       // length
     0x00                        // false
   };
@@ -114,7 +114,7 @@ TEST_F(pkixder_universal_types_tests, BooleanFalse)
 TEST_F(pkixder_universal_types_tests, BooleanInvalidLength)
 {
   const uint8_t DER_BOOLEAN_INVALID_LENGTH[] = {
-    0x01,                       // INTEGER
+    0x01,                       // BOOLEAN
     0x02,                       // length
     0x42, 0x42                  // invalid
   };
@@ -131,7 +131,7 @@ TEST_F(pkixder_universal_types_tests, BooleanInvalidLength)
 TEST_F(pkixder_universal_types_tests, BooleanInvalidZeroLength)
 {
   const uint8_t DER_BOOLEAN_INVALID_ZERO_LENGTH[] = {
-    0x01,                       // INTEGER
+    0x01,                       // BOOLEAN
     0x00                        // length
   };
 
@@ -241,7 +241,7 @@ TEST_F(pkixder_universal_types_tests, OptionalBooleanInvalidEncodings)
 TEST_F(pkixder_universal_types_tests, Enumerated)
 {
   const uint8_t DER_ENUMERATED[] = {
-    0x0a,                       // INTEGER
+    0x0a,                       // ENUMERATED
     0x01,                       // length
     0x42                        // value
   };
@@ -257,7 +257,7 @@ TEST_F(pkixder_universal_types_tests, Enumerated)
 TEST_F(pkixder_universal_types_tests, EnumeratedNotShortestPossibleDER)
 {
   const uint8_t DER_ENUMERATED[] = {
-    0x0a,                       // INTEGER
+    0x0a,                       // ENUMERATED
     0x02,                       // length
     0x00, 0x01                  // value
   };
@@ -275,7 +275,7 @@ TEST_F(pkixder_universal_types_tests, EnumeratedOutOfAcceptedRange)
   // ENUMERATED values in X.509 certs or OCSP this large, and we're trying to
   // keep the parser simple and fast.
   const uint8_t DER_ENUMERATED_INVALID_LENGTH[] = {
-    0x0a,                       // INTEGER
+    0x0a,                       // ENUMERATED
     0x02,                       // length
     0x12, 0x34                  // value
   };
@@ -292,7 +292,7 @@ TEST_F(pkixder_universal_types_tests, EnumeratedOutOfAcceptedRange)
 TEST_F(pkixder_universal_types_tests, EnumeratedInvalidZeroLength)
 {
   const uint8_t DER_ENUMERATED_INVALID_ZERO_LENGTH[] = {
-    0x0a,                       // INTEGER
+    0x0a,                       // ENUMERATED
     0x00                        // length
   };
 
