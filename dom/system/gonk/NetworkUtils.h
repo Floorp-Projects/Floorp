@@ -72,6 +72,7 @@ public:
     mCurInternalIfname = aOther.mCurInternalIfname;
     mCurExternalIfname = aOther.mCurExternalIfname;
     mThreshold = aOther.mThreshold;
+    mIsBlocking = aOther.mIsBlocking;
   }
 
   NetworkParams(const mozilla::dom::NetworkCommandOptions& aOther) {
@@ -148,6 +149,7 @@ public:
     COPY_OPT_STRING_FIELD(mCurInternalIfname, EmptyString())
     COPY_OPT_STRING_FIELD(mCurExternalIfname, EmptyString())
     COPY_OPT_FIELD(mThreshold, -1)
+    COPY_OPT_FIELD(mIsBlocking, false)
 
 #undef COPY_SEQUENCE_FIELD
 #undef COPY_OPT_STRING_FIELD
@@ -198,6 +200,7 @@ public:
   nsString mCurInternalIfname;
   nsString mCurExternalIfname;
   long mThreshold;
+  bool mIsBlocking;
 };
 
 // CommandChain store the necessary information to execute command one by one.
@@ -281,6 +284,10 @@ private:
   bool setUSBTethering(NetworkParams& aOptions);
   bool enableUsbRndis(NetworkParams& aOptions);
   bool updateUpStream(NetworkParams& aOptions);
+  bool getInterfaces(NetworkParams& aOptions);
+  bool stopDhcp(NetworkParams& aOptions);
+  bool setInterfaceConfig(NetworkParams& aOptions);
+  bool getInterfaceConfig(NetworkParams& aOptions);
 
   /**
    * function pointer array holds all netd commands should be executed
@@ -302,6 +309,9 @@ private:
   static CommandFunc sNetworkInterfaceDisableAlarmChain[];
   static CommandFunc sNetworkInterfaceSetAlarmChain[];
   static CommandFunc sSetDnsChain[];
+  static CommandFunc sGetInterfacesChain[];
+  static CommandFunc sSetInterfaceConfigChain[];
+  static CommandFunc sGetInterfaceConfigChain[];
 
   /**
    * Individual netd command stored in command chain.
@@ -338,6 +348,9 @@ private:
   static void disableNat(PARAMS);
   static void setDefaultInterface(PARAMS);
   static void setInterfaceDns(PARAMS);
+  static void getInterfaceList(PARAMS);
+  static void setConfig(PARAMS);
+  static void getConfig(PARAMS);
   static void wifiTetheringSuccess(PARAMS);
   static void usbTetheringSuccess(PARAMS);
   static void networkInterfaceStatsSuccess(PARAMS);
@@ -345,6 +358,9 @@ private:
   static void updateUpStreamSuccess(PARAMS);
   static void setDhcpServerSuccess(PARAMS);
   static void wifiOperationModeSuccess(PARAMS);
+  static void getInterfacesSuccess(PARAMS);
+  static void setInterfaceConfigSuccess(PARAMS);
+  static void getInterfaceConfigSuccess(PARAMS);
 #undef PARAMS
 
   /**
@@ -360,6 +376,9 @@ private:
   static void networkInterfaceStatsFail(PARAMS);
   static void networkInterfaceAlarmFail(PARAMS);
   static void setDnsFail(PARAMS);
+  static void getInterfacesFail(PARAMS);
+  static void setInterfaceConfigFail(PARAMS);
+  static void getInterfaceConfigFail(PARAMS);
 #undef PARAMS
 
   /**
