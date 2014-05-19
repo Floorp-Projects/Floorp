@@ -34,10 +34,6 @@
   cursor: none;
 }
 
-.controlsOverlay[scaled] {
-  -moz-box-align: center;
-}
-
 /* CSS Transitions
  *
  * These are overriden by the default theme; the rules here just 
