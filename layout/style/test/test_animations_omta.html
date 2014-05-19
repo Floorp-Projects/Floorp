@@ -1533,11 +1533,8 @@ addAsyncTest(function *() {
           "transform: translate(200px) ! important;");
   yield waitForPaints();
   // Bug 847287 - off main thread animations don't cascade correctly
-  // (todo_is added in subsequent patch)
-  /*
-  omta_is("transform", { tx: 200 }, RunningOn.TodoMainThread,
-          "important author rules override animations");
-          */
+  omta_todo_is("transform", { tx: 200 }, RunningOn.TodoMainThread,
+               "important author rules override animations");
   done_div();
 });
 
@@ -1644,11 +1641,24 @@ const RunningOn = {
   TodoMainThread: 3
 };
 
+const ExpectComparisonTo = {
+  Pass: 1,
+  Fail: 2
+};
+
+function omta_todo_is(property, expected, runningOn, desc) {
+  return omta_is_approx(property, expected, runningOn, 0, desc,
+                        ExpectComparisonTo.Fail);
+}
+
 function omta_is(property, expected, runningOn, desc) {
   return omta_is_approx(property, expected, runningOn, 0, desc);
 }
 
-function omta_is_approx(property, expected, runningOn, tolerance, desc) {
+// Many callers of this method will pass 'undefined' for
+// expectedComparisonResult.
+function omta_is_approx(property, expected, runningOn, tolerance, desc,
+                        expectedComparisonResult) {
   // Check input
   const omtaProperties = [ "transform", "opacity" ];
   if (omtaProperties.indexOf(property) === -1) {
@@ -1709,15 +1719,19 @@ function omta_is_approx(property, expected, runningOn, tolerance, desc) {
       break;
   }
 
+  var okOrTodo = expectedComparisonResult == ExpectComparisonTo.Fail ?
+                 todo :
+                 ok;
+
   // Compare animated value with expected
   var actualValue = normalize(actualStr);
   if (actualValue === null) {
     ok(false, desc + ": should return a valid result - got " + actualStr);
     return;
   }
-  ok(compare(expectedValue, actualValue, tolerance),
-     desc + " - got " + actualStr + ", expected " +
-     normalizedToString(expectedValue));
+  okOrTodo(compare(expectedValue, actualValue, tolerance),
+           desc + " - got " + actualStr + ", expected " +
+           normalizedToString(expectedValue));
 
   // For compositor animations do an additional check that they match
   // the value calculated on the main thread
@@ -1728,9 +1742,9 @@ function omta_is_approx(property, expected, runningOn, tolerance, desc) {
                 " - got " + computedStr);
       return;
     }
-    ok(compare(computedValue, actualValue, 0),
-       desc + ": OMTA style and computed style should be equal" +
-       " - OMTA " + actualStr + ", computed " + computedStr);
+    okOrTodo(compare(computedValue, actualValue, 0),
+             desc + ": OMTA style and computed style should be equal" +
+             " - OMTA " + actualStr + ", computed " + computedStr);
   }
 }
 
