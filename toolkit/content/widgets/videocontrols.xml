@@ -325,7 +325,6 @@
                 controlsSpacer : null,
                 clickToPlay    : null,
                 stats          : {},
-                controlsOverlay : null,
                 fullscreenButton : null,
 
                 randomID : 0,
@@ -1391,26 +1390,6 @@
                     let videoHeight = isAudioOnly ? minHeightForControlBar : this.video.clientHeight;
                     let videoWidth = isAudioOnly ? minWidthAllControls : this.video.clientWidth;
 
-                    // Adapt the size of the controls to the size of the video
-                    if (this.video.readyState >= this.video.HAVE_METADATA) {
-                      if (!this.isAudioOnly && this.video.videoWidth && this.video.videoHeight) {
-                        var rect = this.video.getBoundingClientRect();
-                        var widthRatio = rect.width / this.video.videoWidth;
-                        var heightRatio = rect.height / this.video.videoHeight;
-                        var width = this.video.videoWidth * Math.min(widthRatio, heightRatio);
-
-                        this.controlsOverlay.setAttribute("scaled", true);
-                        this.controlsOverlay.style.width = width + "px";
-                        this.controlsSpacer.style.width = width + "px";
-                        this.controlBar.style.width = width + "px";
-                      } else {
-                        this.controlsOverlay.removeAttribute("scaled");
-                        this.controlsOverlay.style.width = "";
-                        this.controlsSpacer.style.width = "";
-                        this.controlBar.style.width = "";
-                      }
-                    }
-
                     if ((this._overlayPlayButtonHeight + this._controlBarHeight) > videoHeight ||
                         this._overlayPlayButtonWidth > videoWidth) {
                         this.clickToPlay.hidden = true;
@@ -1449,7 +1428,6 @@
                     this.positionLabel = document.getAnonymousElementByAttribute(binding, "class", "positionLabel");
                     this.statusOverlay = document.getAnonymousElementByAttribute(binding, "class", "statusOverlay");
                     this.statsOverlay  = document.getAnonymousElementByAttribute(binding, "class", "statsOverlay");
-                    this.controlsOverlay = document.getAnonymousElementByAttribute(binding, "class", "controlsOverlay");
                     this.controlsSpacer     = document.getAnonymousElementByAttribute(binding, "class", "controlsSpacer");
                     this.clickToPlay        = document.getAnonymousElementByAttribute(binding, "class", "clickToPlay");
                     this.fullscreenButton   = document.getAnonymousElementByAttribute(binding, "class", "fullscreenButton");
