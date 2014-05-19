@@ -965,6 +965,119 @@ addAsyncTest(function *() {
   done_div();
 });
 
+/*
+ * css3-animations:  3.6. The 'animation-direction' Property
+ * http://dev.w3.org/csswg/css3-animations/#the-animation-direction-property-
+ */
+
+// Tested in tests for sections 3.1 and 3.5.
+
+addAsyncTest(function *() {
+  new_div("animation: anim2 ease-in 10s infinite");
+  gDiv.style.animationDirection = "normal";
+  yield waitForPaintsFlushed();
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "animation-direction test 1 (normal) at 0s");
+  gDiv.style.animationDirection = "reverse";
+  yield waitForPaintsFlushed();
+  omta_is("opacity", 1, RunningOn.Compositor,
+          "animation-direction test 1 (reverse) at 0s");
+  gDiv.style.animationDirection = "alternate";
+  yield waitForPaintsFlushed();
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "animation-direction test 1 (alternate) at 0s");
+  gDiv.style.animationDirection = "alternate-reverse";
+  yield waitForPaintsFlushed();
+  omta_is("opacity", 1, RunningOn.Compositor,
+          "animation-direction test 1 (alternate-reverse) at 0s");
+  advance_clock(2000);
+  gDiv.style.animationDirection = "normal";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.2), RunningOn.Compositor, 0.01,
+                 "animation-direction test 1 (normal) at 2s");
+  gDiv.style.animationDirection = "reverse";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.8), RunningOn.Compositor, 0.01,
+                 "animation-direction test 1 (reverse) at 2s");
+  gDiv.style.animationDirection = "alternate";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.2), RunningOn.Compositor, 0.01,
+                 "animation-direction test 1 (alternate) at 2s");
+  gDiv.style.animationDirection = "alternate-reverse";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.8), RunningOn.Compositor, 0.01,
+                 "animation-direction test 1 (alternate-reverse) at 2s");
+  advance_clock(5000);
+  gDiv.style.animationDirection = "normal";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.7), RunningOn.Compositor, 0.01,
+                 "animation-direction test 1 (normal) at 7s");
+  gDiv.style.animationDirection = "reverse";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.3), RunningOn.Compositor, 0.01,
+                 "animation-direction test 1 (reverse) at 7s");
+  gDiv.style.animationDirection = "alternate";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.7), RunningOn.Compositor, 0.01,
+                 "animation-direction test 1 (alternate) at 7s");
+  gDiv.style.animationDirection = "alternate-reverse";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.3), RunningOn.Compositor, 0.01,
+                 "animation-direction test 1 (alternate-reverse) at 7s");
+  advance_clock(5000);
+  gDiv.style.animationDirection = "normal";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.2), RunningOn.Compositor, 0.01,
+                 "animation-direction test 1 (normal) at 12s");
+  gDiv.style.animationDirection = "reverse";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.8), RunningOn.Compositor, 0.01,
+                 "animation-direction test 1 (reverse) at 12s");
+  gDiv.style.animationDirection = "alternate";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.8), RunningOn.Compositor, 0.01,
+                 "animation-direction test 1 (alternate) at 12s");
+  gDiv.style.animationDirection = "alternate-reverse";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.2), RunningOn.Compositor, 0.01,
+                 "animation-direction test 1 (alternate-reverse) at 12s");
+  advance_clock(10000);
+  gDiv.style.animationDirection = "normal";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.2), RunningOn.Compositor, 0.01,
+                 "animation-direction test 1 (normal) at 22s");
+  gDiv.style.animationDirection = "reverse";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.8), RunningOn.Compositor, 0.01,
+                 "animation-direction test 1 (reverse) at 22s");
+  gDiv.style.animationDirection = "alternate";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.2), RunningOn.Compositor, 0.01,
+                 "animation-direction test 1 (alternate) at 22s");
+  gDiv.style.animationDirection = "alternate-reverse";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.8), RunningOn.Compositor, 0.01,
+                 "animation-direction test 1 (alternate-reverse) at 22s");
+  advance_clock(30000);
+  gDiv.style.animationDirection = "normal";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.2), RunningOn.Compositor, 0.01,
+                 "animation-direction test 1 (normal) at 52s");
+  gDiv.style.animationDirection = "reverse";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.8), RunningOn.Compositor, 0.01,
+                 "animation-direction test 1 (reverse) at 52s");
+  gDiv.style.animationDirection = "alternate";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.8), RunningOn.Compositor, 0.01,
+                 "animation-direction test 1 (alternate) at 52s");
+  gDiv.style.animationDirection = "alternate-reverse";
+  yield waitForPaintsFlushed();
+  omta_is_approx("opacity", gTF.ease_in(0.2), RunningOn.Compositor, 0.01,
+                 "animation-direction test 1 (alternate-reverse) at 52s");
+  done_div();
+});
+
 //----------------------------------------------------------------------
 //
 // Helper functions from test_animations.html
