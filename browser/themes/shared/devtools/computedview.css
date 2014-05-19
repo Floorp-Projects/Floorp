@@ -168,7 +168,7 @@ body {
 
 .link:hover {
   text-decoration: underline;
-} 
+}
 
 .computedview-colorswatch {
   border-radius: 50%;
@@ -177,6 +177,7 @@ body {
   vertical-align: text-top;
   -moz-margin-end: 5px;
   display: inline-block;
+  position: relative;
 }
 
 .computedview-colorswatch::before {
@@ -188,7 +189,9 @@ body {
   background-position: 0 0, 6px 6px;
   position: absolute;
   border-radius: 50%;
-  width: 1em;
-  height: 1em;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: -1;
 }
