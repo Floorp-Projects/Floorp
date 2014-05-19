@@ -106,8 +106,6 @@ private:
     nsScriptSecurityManager();
     virtual ~nsScriptSecurityManager();
 
-    bool SubjectIsPrivileged();
-
     // Decides, based on CSP, whether or not eval() and stuff can be executed.
     static bool
     ContentSecurityPolicyPermitsJSAction(JSContext *cx);
