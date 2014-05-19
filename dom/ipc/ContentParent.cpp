@@ -1694,7 +1694,7 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
             DebugOnly<bool> opened = PCompositor::Open(this);
             MOZ_ASSERT(opened);
 
-            if (gfxPrefs::AsyncVideoEnabled()) {
+            if (gfxPrefs::AsyncVideoOOPEnabled()) {
                 opened = PImageBridge::Open(this);
                 MOZ_ASSERT(opened);
             }

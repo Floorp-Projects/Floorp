@@ -2570,7 +2570,6 @@ nsLineLayout::InlineDirAlignFrames(nsLineBox* aLine,
           // width to account for it.
           aLine->ExpandBy(ApplyFrameJustification(psd, &state),
                           mContainerWidth);
-          remainingISize = availISize - aLine->ISize();
           break;
         }
         // Fall through to the default case if we could not justify to fill
@@ -2597,7 +2596,6 @@ nsLineLayout::InlineDirAlignFrames(nsLineBox* aLine,
       case NS_STYLE_TEXT_ALIGN_END:
         dx = remainingISize;
         break;
-
 
       case NS_STYLE_TEXT_ALIGN_CENTER:
       case NS_STYLE_TEXT_ALIGN_MOZ_CENTER:

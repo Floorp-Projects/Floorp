@@ -418,9 +418,9 @@ function getNetworkUtils() {
  *        true if this test should run the tests for the "local" side.
  * @param {bool}   [options.is_remote=true]
  *        true if this test should run the tests for the "remote" side.
- * @param {object} [options.config_pc1=undefined]
+ * @param {object} [options.config_local=undefined]
  *        Configuration for the local peer connection instance
- * @param {object} [options.config_pc2=undefined]
+ * @param {object} [options.config_remote=undefined]
  *        Configuration for the remote peer connection instance. If not defined
  *        the configuration from the local instance will be used
  */
@@ -430,6 +430,25 @@ function PeerConnectionTest(options) {
   options.commands = options.commands || commandsPeerConnection;
   options.is_local = "is_local" in options ? options.is_local : true;
   options.is_remote = "is_remote" in options ? options.is_remote : true;
+
+  if (typeof turnServers !== "undefined") {
+    if ((!options.turn_disabled_local) && (turnServers.local)) {
+      if (!options.hasOwnProperty("config_local")) {
+        options.config_local = {};
+      }
+      if (!options.config_local.hasOwnProperty("iceServers")) {
+        options.config_local.iceServers = turnServers.local.iceServers;
+      }
+    }
+    if ((!options.turn_disabled_remote) && (turnServers.remote)) {
+      if (!options.hasOwnProperty("config_remote")) {
+        options.config_remote = {};
+      }
+      if (!options.config_remote.hasOwnProperty("iceServers")) {
+        options.config_remote.iceServers = turnServers.remote.iceServers;
+      }
+    }
+  }
 
   var netTeardownCommand = null;
   if (!isNetworkReady()) {
@@ -453,12 +472,12 @@ function PeerConnectionTest(options) {
   }
 
   if (options.is_local)
-    this.pcLocal = new PeerConnectionWrapper('pcLocal', options.config_pc1);
+    this.pcLocal = new PeerConnectionWrapper('pcLocal', options.config_local);
   else
     this.pcLocal = null;
 
   if (options.is_remote)
-    this.pcRemote = new PeerConnectionWrapper('pcRemote', options.config_pc2 || options.config_pc1);
+    this.pcRemote = new PeerConnectionWrapper('pcRemote', options.config_remote || options.config_local);
   else
     this.pcRemote = null;
 
@@ -752,9 +771,9 @@ PeerConnectionTest.prototype.teardown = function PCT_teardown() {
  *        Optional options for the peer connection test
  * @param {object} [options.commands=commandsDataChannel]
  *        Commands to run for the test
- * @param {object} [options.config_pc1=undefined]
+ * @param {object} [options.config_local=undefined]
  *        Configuration for the local peer connection instance
- * @param {object} [options.config_pc2=undefined]
+ * @param {object} [options.config_remote=undefined]
  *        Configuration for the remote peer connection instance. If not defined
  *        the configuration from the local instance will be used
  */

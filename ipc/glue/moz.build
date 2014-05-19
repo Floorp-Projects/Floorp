@@ -31,6 +31,7 @@ EXPORTS.mozilla.ipc += [
     'Shmem.h',
     'Transport.h',
     'URIUtils.h',
+    'WindowsMessageLoop.h',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

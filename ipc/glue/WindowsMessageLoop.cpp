@@ -540,19 +540,6 @@ UnhookNeuteredWindows()
   gNeuteredWindows->Clear();
 }
 
-void
-Init()
-{
-  // If we aren't setup before a call to NotifyWorkerThread, we'll hang
-  // on startup.
-  if (!gUIThreadId) {
-    gUIThreadId = GetCurrentThreadId();
-  }
-  NS_ASSERTION(gUIThreadId, "ThreadId should not be 0!");
-  NS_ASSERTION(gUIThreadId == GetCurrentThreadId(),
-               "Running on different threads!");
-}
-
 // This timeout stuff assumes a sane value of mTimeoutMs (less than the overflow
 // value for GetTickCount(), which is something like 50 days). It uses the
 // cheapest (and least accurate) method supported by Windows 2000.
@@ -593,6 +580,27 @@ TimeoutHasExpired(const TimeoutData& aData)
 }
 
 } // anonymous namespace
+
+namespace mozilla {
+namespace ipc {
+namespace windows {
+
+void
+InitUIThread()
+{
+  // If we aren't setup before a call to NotifyWorkerThread, we'll hang
+  // on startup.
+  if (!gUIThreadId) {
+    gUIThreadId = GetCurrentThreadId();
+  }
+  MOZ_ASSERT(gUIThreadId);
+  MOZ_ASSERT(gUIThreadId == GetCurrentThreadId(),
+             "Called InitUIThread multiple times on different threads!");
+}
+
+} // namespace windows
+} // namespace ipc
+} // namespace mozilla
 
 MessageChannel::SyncStackFrame::SyncStackFrame(MessageChannel* channel, bool interrupt)
   : mInterrupt(interrupt)
@@ -721,13 +729,42 @@ MessageChannel::SpinInternalEventLoop()
   } while (true);
 }
 
+static inline bool
+IsTimeoutExpired(PRIntervalTime aStart, PRIntervalTime aTimeout)
+{
+  return (aTimeout != PR_INTERVAL_NO_TIMEOUT) &&
+    (aTimeout <= (PR_IntervalNow() - aStart));
+}
+
 bool
 MessageChannel::WaitForSyncNotify()
 {
   mMonitor->AssertCurrentThreadOwns();
 
-  // Initialize global objects used in deferred messaging.
-  Init();
+  MOZ_ASSERT(gUIThreadId, "InitUIThread was not called!");
+
+  if (GetCurrentThreadId() != gUIThreadId) {
+    PRIntervalTime timeout = (kNoTimeout == mTimeoutMs) ?
+                             PR_INTERVAL_NO_TIMEOUT :
+                             PR_MillisecondsToInterval(mTimeoutMs);
+    PRIntervalTime waitStart = 0;
+
+    if (timeout != PR_INTERVAL_NO_TIMEOUT) {
+      waitStart = PR_IntervalNow();
+    }
+
+    MOZ_ASSERT(!mIsSyncWaitingOnNonMainThread);
+    mIsSyncWaitingOnNonMainThread = true;
+
+    mMonitor->Wait(timeout);
+
+    MOZ_ASSERT(mIsSyncWaitingOnNonMainThread);
+    mIsSyncWaitingOnNonMainThread = false;
+
+    // If the timeout didn't expire, we know we received an event. The
+    // converse is not true.
+    return WaitResponse(timeout == PR_INTERVAL_NO_TIMEOUT ? false : IsTimeoutExpired(waitStart, timeout));
+  }
 
   NS_ASSERTION(mTopFrame && !mTopFrame->mInterrupt,
                "Top frame is not a sync frame!");
@@ -848,13 +885,16 @@ MessageChannel::WaitForInterruptNotify()
 {
   mMonitor->AssertCurrentThreadOwns();
 
+  MOZ_ASSERT(gUIThreadId, "InitUIThread was not called!");
+
+  if (GetCurrentThreadId() != gUIThreadId) {
+    return WaitForSyncNotify();
+  }
+
   if (!InterruptStackDepth()) {
     // There is currently no way to recover from this condition.
     NS_RUNTIMEABORT("StackDepth() is 0 in call to MessageChannel::WaitForNotify!");
   }
-
-  // Initialize global objects used in deferred messaging.
-  Init();
 
   NS_ASSERTION(mTopFrame && mTopFrame->mInterrupt,
                "Top frame is not a sync frame!");
@@ -987,6 +1027,12 @@ void
 MessageChannel::NotifyWorkerThread()
 {
   mMonitor->AssertCurrentThreadOwns();
+
+  if (mIsSyncWaitingOnNonMainThread) {
+    mMonitor->Notify();
+    return;
+  }
+
   NS_ASSERTION(mEvent, "No signal event to set, this is really bad!");
   if (!SetEvent(mEvent)) {
     NS_WARNING("Failed to set NotifyWorkerThread event!");
