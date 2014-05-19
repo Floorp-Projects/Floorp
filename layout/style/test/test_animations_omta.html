@@ -1535,7 +1535,7 @@ addAsyncTest(function *() {
   // Bug 847287 - off main thread animations don't cascade correctly
   // (todo_is added in subsequent patch)
   /*
-  omta_is("transform", { tx: 200 }, RunningOn.Either,
+  omta_is("transform", { tx: 200 }, RunningOn.TodoMainThread,
           "important author rules override animations");
           */
   done_div();
@@ -1640,7 +1640,8 @@ function waitForPaintsFlushed() {
 const RunningOn = {
   MainThread: 0,
   Compositor: 1,
-  Either: 2
+  Either: 2,
+  TodoMainThread: 3
 };
 
 function omta_is(property, expected, runningOn, desc) {
@@ -1693,6 +1694,12 @@ function omta_is_approx(property, expected, runningOn, tolerance, desc) {
       actualStr = compositorStr;
       break;
 
+    case RunningOn.TodoMainThread:
+      todo(compositorStr === "",
+           desc + ": should NOT be animating on compositor");
+      actualStr = compositorStr === "" ? computedStr : compositorStr;
+      break;
+
     default:
       if (compositorStr !== "") {
         ok(false, desc + ": should NOT be animating on compositor");
@@ -1714,7 +1721,7 @@ function omta_is_approx(property, expected, runningOn, tolerance, desc) {
 
   // For compositor animations do an additional check that they match
   // the value calculated on the main thread
-  if (runningOn === RunningOn.Compositor) {
+  if (actualStr === compositorStr) {
     var computedValue = normalize(computedStr);
     if (computedValue === null) {
       ok(false, desc + ": test framework should parse computed style" +
