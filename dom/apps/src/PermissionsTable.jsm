@@ -262,7 +262,7 @@ this.PermissionsTable =  { geolocation: {
                            },
                            "audio-channel-telephony": {
                              app: DENY_ACTION,
-                             privileged: DENY_ACTION,
+                             privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "audio-channel-ringer": {
