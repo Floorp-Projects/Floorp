@@ -11,15 +11,25 @@
 #include <AudioUnit/AudioUnit.h>
 #include <CoreAudio/AudioHardware.h>
 #include <CoreAudio/HostTime.h>
+#include <CoreFoundation/CoreFoundation.h>
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
 
+#if !defined(kCFCoreFoundationVersionNumber10_7)
+/* From CoreFoundation CFBase.h */
+#define kCFCoreFoundationVersionNumber10_7 635.00
+#endif
+
+#define CUBEB_STREAM_MAX 16
 #define NBUFS 4
 
 static struct cubeb_ops const audiounit_ops;
 
 struct cubeb {
   struct cubeb_ops const * ops;
+  pthread_mutex_t mutex;
+  int active_streams;
+  int limit_streams;
 };
 
 struct cubeb_stream {
@@ -110,6 +120,7 @@ audiounit_output_callback(void * user_ptr, AudioUnitRenderActionFlags * flags,
 audiounit_init(cubeb ** context, char const * context_name)
 {
   cubeb * ctx;
+  int r;
 
   *context = NULL;
 
@@ -117,6 +128,13 @@ audiounit_init(cubeb ** context, char const * context_name)
   assert(ctx);
 
   ctx->ops = &audiounit_ops;
+
+  r = pthread_mutex_init(&ctx->mutex, NULL);
+  assert(r == 0);
+
+  ctx->active_streams = 0;
+
+  ctx->limit_streams = kCFCoreFoundationVersionNumber < kCFCoreFoundationVersionNumber10_7;
 
   *context = ctx;
 
@@ -275,6 +293,13 @@ audiounit_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
 static void
 audiounit_destroy(cubeb * ctx)
 {
+  int r;
+
+  assert(ctx->active_streams == 0);
+
+  r = pthread_mutex_destroy(&ctx->mutex);
+  assert(r == 0);
+
   free(ctx);
 }
 
@@ -339,6 +364,14 @@ audiounit_stream_init(cubeb * context, cubeb_stream ** stream, char const * stre
   ss.mBytesPerFrame = (ss.mBitsPerChannel / 8) * ss.mChannelsPerFrame;
   ss.mFramesPerPacket = 1;
   ss.mBytesPerPacket = ss.mBytesPerFrame * ss.mFramesPerPacket;
+
+  pthread_mutex_lock(&context->mutex);
+  if (context->limit_streams && context->active_streams >= CUBEB_STREAM_MAX) {
+    pthread_mutex_unlock(&context->mutex);
+    return CUBEB_ERROR;
+  }
+  context->active_streams += 1;
+  pthread_mutex_unlock(&context->mutex);
 
   desc.componentType = kAudioUnitType_Output;
   desc.componentSubType = kAudioUnitSubType_DefaultOutput;
@@ -469,6 +502,11 @@ audiounit_stream_destroy(cubeb_stream * stm)
 
   r = pthread_mutex_destroy(&stm->mutex);
   assert(r == 0);
+
+  pthread_mutex_lock(&stm->context->mutex);
+  assert(stm->context->active_streams >= 1);
+  stm->context->active_streams -= 1;
+  pthread_mutex_unlock(&stm->context->mutex);
 
   free(stm);
 }
