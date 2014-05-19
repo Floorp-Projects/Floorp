@@ -479,7 +479,7 @@ ForkJoinActivation::ForkJoinActivation(JSContext *cx)
 
     MinorGC(cx->runtime(), JS::gcreason::API);
 
-    cx->runtime()->gc.helperThread.waitBackgroundSweepEnd();
+    cx->runtime()->gc.waitBackgroundSweepEnd();
 
     JS_ASSERT(!cx->runtime()->needsBarrier());
     JS_ASSERT(!cx->zone()->needsBarrier());
