@@ -527,7 +527,7 @@ TileClient::GetBackBuffer(const nsIntRegion& aDirtyRegion, TextureClientPool *aP
     }
     mBackBuffer = aPool->GetTextureClient();
     // Create a lock for our newly created back-buffer.
-    if (mManager->AsShadowForwarder()->IsSameProcess()) {
+    if (gfxPlatform::GetPlatform()->PreferMemoryOverShmem()) {
       // If our compositor is in the same process, we can save some cycles by not
       // using shared memory.
       mBackLock = new gfxMemorySharedReadLock();

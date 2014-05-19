@@ -272,6 +272,8 @@ gfxPlatform::gfxPlatform()
     mOpenTypeSVGEnabled = UNINITIALIZED_VALUE;
     mBidiNumeralOption = UNINITIALIZED_VALUE;
 
+    mLayersPreferMemoryOverShmem = XRE_GetProcessType() == GeckoProcessType_Default;
+
     mSkiaGlue = nullptr;
 
     uint32_t canvasMask = BackendTypeBit(BackendType::CAIRO) | BackendTypeBit(BackendType::SKIA);
@@ -539,6 +541,12 @@ gfxPlatform::~gfxPlatform()
     cairo_debug_reset_static_data();
 #endif
 #endif
+}
+
+bool
+gfxPlatform::PreferMemoryOverShmem() const {
+  MOZ_ASSERT(!CompositorParent::IsInCompositorThread());
+  return mLayersPreferMemoryOverShmem;
 }
 
 already_AddRefed<gfxASurface>
