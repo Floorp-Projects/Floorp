@@ -932,7 +932,7 @@ SpdyConnectTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
   LOG(("SpdyConnectTransaction::WriteSegments %p max=%d cb=%p\n",
-       this, count, mTunnelStreamIn->mCallback));
+       this, count, mTunneledConn ? mTunnelStreamIn->mCallback : nullptr));
 
   // first call into the tunnel stream to get the demux'd data out of the
   // spdy session.
@@ -950,7 +950,7 @@ SpdyConnectTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
   LOG(("SpdyConnectTransaction %p %d new bytes [%d total] of ciphered data buffered\n",
        this, *countWritten, mInputDataUsed - mInputDataOffset));
 
-  if (!mTunnelStreamIn->mCallback) {
+  if (!mTunneledConn || !mTunnelStreamIn->mCallback) {
     return NS_BASE_STREAM_WOULD_BLOCK;
   }
 
