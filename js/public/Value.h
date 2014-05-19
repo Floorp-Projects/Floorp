@@ -1369,7 +1369,7 @@ static MOZ_ALWAYS_INLINE void
 ExposeValueToActiveJS(const Value &v)
 {
     if (v.isMarkable())
-        js::gc::ExposeGCThingToActiveJS(v.toGCThing(), v.gcKind());
+        js::gc::ExposeGCThingToActiveJS(GCCellPtr(v));
 }
 
 /************************************************************************/
