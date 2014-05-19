@@ -792,7 +792,9 @@
 .theme-light .command-button-invertable[checked=true]:not(:active) > image,
 .theme-light .devtools-tab[icon-invertable][selected] > image,
 .theme-light .devtools-tab[icon-invertable][highlighted] > image,
-.theme-light #resume[checked] > image {
+.theme-light #resume[checked] > image,
+.theme-light #record-snapshot[checked] > image,
+.theme-light #profiler-start[checked] > image {
   filter: none !important;
 }
 
