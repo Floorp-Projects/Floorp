@@ -479,9 +479,9 @@ namespace js {
 namespace gc {
 
 static MOZ_ALWAYS_INLINE void
-ExposeGCThingToActiveJS(void *thing, JSGCTraceKind kind)
+ExposeGCThingToActiveJS(JS::GCCellPtr thing)
 {
-    MOZ_ASSERT(kind != JSTRACE_SHAPE);
+    MOZ_ASSERT(thing.kind() != JSTRACE_SHAPE);
 
     JS::shadow::Runtime *rt = GetGCThingRuntime(thing);
 #ifdef JSGC_GENERATIONAL
@@ -490,13 +490,13 @@ ExposeGCThingToActiveJS(void *thing, JSGCTraceKind kind)
      * All live objects in the nursery are moved to tenured at the beginning of
      * each GC slice, so the gray marker never sees nursery things.
      */
-    if (IsInsideNursery((Cell *)thing))
+    if (IsInsideNursery(thing))
         return;
 #endif
-    if (JS::IsIncrementalBarrierNeededOnTenuredGCThing(rt, thing, kind))
-        JS::IncrementalReferenceBarrier(thing, kind);
+    if (JS::IsIncrementalBarrierNeededOnTenuredGCThing(rt, thing, thing.kind()))
+        JS::IncrementalReferenceBarrier(thing, thing.kind());
     else if (JS::GCThingIsMarkedGray(thing))
-        JS::UnmarkGrayGCThingRecursively(thing, kind);
+        JS::UnmarkGrayGCThingRecursively(thing, thing.kind());
 }
 
 } /* namespace gc */
@@ -513,13 +513,13 @@ namespace JS {
 static MOZ_ALWAYS_INLINE void
 ExposeObjectToActiveJS(JSObject *obj)
 {
-    js::gc::ExposeGCThingToActiveJS(obj, JSTRACE_OBJECT);
+    js::gc::ExposeGCThingToActiveJS(GCCellPtr(obj));
 }
 
 static MOZ_ALWAYS_INLINE void
 ExposeScriptToActiveJS(JSScript *script)
 {
-    js::gc::ExposeGCThingToActiveJS(script, JSTRACE_SCRIPT);
+    js::gc::ExposeGCThingToActiveJS(GCCellPtr(script));
 }
 
 /*
