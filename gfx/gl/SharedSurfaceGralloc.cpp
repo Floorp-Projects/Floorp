@@ -132,11 +132,46 @@ SharedSurface_Gralloc::~SharedSurface_Gralloc()
 
     mGL->MakeCurrent();
     mGL->fDeleteTextures(1, &mProdTex);
+
+    if (mSync) {
+        MOZ_ALWAYS_TRUE( mEGL->fDestroySync(mEGL->Display(), mSync) );
+        mSync = 0;
+    }
 }
 
 void
 SharedSurface_Gralloc::Fence()
 {
+    if (mSync) {
+        MOZ_ALWAYS_TRUE( mEGL->fDestroySync(mEGL->Display(), mSync) );
+        mSync = 0;
+    }
+
+    // When Android native fences are available, try
+    // them first since they're more likely to work.
+    // Android native fences are also likely to perform better.
+    if (mEGL->IsExtensionSupported(GLLibraryEGL::ANDROID_native_fence_sync)) {
+        mGL->MakeCurrent();
+        mSync = mEGL->fCreateSync(mEGL->Display(),
+                                  LOCAL_EGL_SYNC_NATIVE_FENCE_ANDROID,
+                                  nullptr);
+        if (mSync) {
+            mGL->fFlush();
+            return;
+        }
+    }
+
+    if (mEGL->IsExtensionSupported(GLLibraryEGL::KHR_fence_sync)) {
+        mGL->MakeCurrent();
+        mSync = mEGL->fCreateSync(mEGL->Display(),
+                                  LOCAL_EGL_SYNC_FENCE,
+                                  nullptr);
+        if (mSync) {
+            mGL->fFlush();
+            return;
+        }
+    }
+
     // We should be able to rely on genlock write locks/read locks.
     // But they're broken on some configs, and even a glFinish doesn't
     // work.  glReadPixels seems to, though.
@@ -150,6 +185,24 @@ SharedSurface_Gralloc::Fence()
 bool
 SharedSurface_Gralloc::WaitSync()
 {
+    if (!mSync) {
+        // We must not be needed.
+        return true;
+    }
+    MOZ_ASSERT(mEGL->IsExtensionSupported(GLLibraryEGL::KHR_fence_sync));
+
+    EGLint status = mEGL->fClientWaitSync(mEGL->Display(),
+                                          mSync,
+                                          0,
+                                          LOCAL_EGL_FOREVER);
+
+    if (status != LOCAL_EGL_CONDITION_SATISFIED) {
+        return false;
+    }
+
+    MOZ_ALWAYS_TRUE( mEGL->fDestroySync(mEGL->Display(), mSync) );
+    mSync = 0;
+
     return true;
 }
 
