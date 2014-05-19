@@ -1,4 +1,12 @@
 /* Override default style */
+textarea {
+  border: 0px;
+}
+
+textarea.ref {
+  background-color: green;
+}
+
 textarea:invalid {
   box-shadow: none;
 }
