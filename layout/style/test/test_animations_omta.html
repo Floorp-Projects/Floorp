@@ -44,6 +44,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=964646
     @keyframes anim3 {
       from { opacity: 0 } to { opacity: 1 }
     }
+    @keyframes anim4 {
+      from { transform: translate(0px, 0px) }
+      to { transform: translate(0px, 100px) }
+    }
 
     @keyframes kf1 {
       50% { transform: translate(50px) }
@@ -812,6 +816,155 @@ addAsyncTest(function *() {
   advance_clock(1000);
   omta_is("opacity", 1, RunningOn.MainThread,
           "after changing animation-name to none plus 1s");
+  done_div();
+});
+
+/*
+ * css3-animations:  3.3. The 'animation-duration' Property
+ * http://dev.w3.org/csswg/css3-animations/#the-animation-duration-property-
+ */
+
+// FIXME: test animation-duration of 0 (quite a bit, including interaction
+// with fill-mode, count, and reversing), once I know what the right
+// behavior is.
+
+/*
+ * css3-animations:  3.4. The 'animation-timing-function' Property
+ * http://dev.w3.org/csswg/css3-animations/#animation-timing-function_tag
+ */
+
+// tested in tests for section 3.1
+
+/*
+ * css3-animations:  3.5. The 'animation-iteration-count' Property
+ * http://dev.w3.org/csswg/css3-animations/#the-animation-iteration-count-property-
+ */
+addAsyncTest(function *() {
+  new_div("animation: anim2 ease-in 10s 0.3 forwards");
+  yield waitForPaints();
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "animation-iteration-count test 1 at 0s");
+  advance_clock(2000);
+  omta_is_approx("opacity", gTF.ease_in(0.2),
+                 RunningOn.Compositor, 0.01,
+                 "animation-iteration-count test 1 at 2s");
+  advance_clock(900);
+  omta_is_approx("opacity", gTF.ease_in(0.29),
+                 RunningOn.Compositor, 0.01,
+                 "animation-iteration-count test 1 at 2.9s");
+  advance_clock(100);
+  // Animation has reached the end so allow it to be cleared from the compositor
+  yield waitForPaints();
+  // For transform animations we can tell whether a transform on the compositor
+  // thread was set by animation or not since there is a special flag for it.
+  //
+  // For opacity animations, however, there is no such flag so we'll get an
+  // "OMTA" opacity even when it wasn't set by animation. When we pause an
+  // opacity animation we don't worry about where it is reported to be running
+  // (main thread or compositor) so long as the result is correct, hence we
+  // check for "either" below.
+  omta_is_approx("opacity", gTF.ease_in(0.3),
+                 RunningOn.Either, 0.01,
+                 "animation-iteration-count test 1 at 3s");
+  advance_clock(100);
+  omta_is_approx("opacity", gTF.ease_in(0.3),
+                 RunningOn.Either, 0.01,
+                 "animation-iteration-count test 1 at 3.1s");
+  advance_clock(5000);
+  omta_is_approx("opacity", gTF.ease_in(0.3),
+                 RunningOn.Either, 0.01,
+                 "animation-iteration-count test 1 at 8.1s");
+  done_div();
+
+  // The corresponding test in test_animations.html runs three animations in
+  // parallel but since we only have two properties that are OMTA-enabled at
+  // this time and no additive animation we split this test into two parts.
+  new_div("animation: anim2 ease-in 10s 0.3, " +
+          "anim4 ease-out 20s 1.2 alternate forwards");
+  yield waitForPaints();
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "animation-iteration-count test 2 at 0s");
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          "animation-iteration-count test 3 at 0s");
+  advance_clock(2000);
+  omta_is_approx("opacity", gTF.ease_in(0.2), RunningOn.Compositor, 0.01,
+                 "animation-iteration-count test 2 at 2s");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_out(0.1) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-iteration-count test 3 at 2s");
+  advance_clock(900);
+  omta_is_approx("opacity", gTF.ease_in(0.29), RunningOn.Compositor, 0.01,
+                 "animation-iteration-count test 2 at 2.9s");
+  advance_clock(200);
+  yield waitForPaints();
+  omta_is("opacity", 1, RunningOn.Either,
+          "animation-iteration-count test 2 at 3.1s");
+  advance_clock(2000);
+  omta_is("opacity", 1, RunningOn.Either,
+          "animation-iteration-count test 2 at 5.1s");
+  advance_clock(14700);
+  omta_is_approx("transform", { ty: 100 * gTF.ease_out(0.99) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-iteration-count test 3 at 19.8s");
+  advance_clock(200);
+  omta_is("transform", { ty: 100 }, RunningOn.Compositor,
+          "animation-iteration-count test 3 at 20s");
+  advance_clock(200);
+  omta_is_approx("transform", { ty: 100 * gTF.ease_out(0.99) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-iteration-count test 3 at 20.2s");
+  advance_clock(3600);
+  // XXX OMTA style and computed style fail here -- fixed in follow-up patch
+  /*
+  omta_is_approx("transform", { ty: 100 * gTF.ease_out(0.81) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-iteration-count test 3 at 23.8s");
+                 */
+  advance_clock(200);
+  omta_is_approx("transform", { ty: 100 * gTF.ease_out(0.8) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-iteration-count test 3 at 24s");
+  advance_clock(200);
+  omta_is("opacity", 1, RunningOn.Compositor,
+          "animation-iteration-count test 2 at 25s");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_out(0.8) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-iteration-count test 3 at 25s");
+  done_div();
+
+  new_div("animation: anim4 ease-in-out 5s 1.6 forwards");
+  yield waitForPaints();
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          "animation-iteration-count test 4 at 0s");
+  advance_clock(2000);
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in_out(0.4) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-iteration-count test 4 at 2s");
+  advance_clock(2900);
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in_out(0.98) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-iteration-count test 4 at 4.9s");
+  advance_clock(200);
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in_out(0.02) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-iteration-count test 4 at 5.1s");
+  advance_clock(2800);
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in_out(0.58) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-iteration-count test 4 at 7.9s");
+  advance_clock(100);
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in_out(0.6) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-iteration-count test 4 at 8s");
+  advance_clock(100);
+  yield waitForPaints();
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in_out(0.6) },
+                 RunningOn.Either, 0.01,
+                 "animation-iteration-count test 4 at 8.1s");
+  advance_clock(16100);
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in_out(0.6) },
+                 RunningOn.Either, 0.01,
+                 "animation-iteration-count test 4 at 25s");
   done_div();
 });
 
