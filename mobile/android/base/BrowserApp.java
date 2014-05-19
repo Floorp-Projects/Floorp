@@ -362,11 +362,6 @@ abstract public class BrowserApp extends GeckoApp
         if (!mBrowserToolbar.isEditing() && onKey(null, keyCode, event)) {
             return true;
         }
-
-        if (mBrowserToolbar.onKey(keyCode, event)) {
-            return true;
-        }
-
         return super.onKeyDown(keyCode, event);
     }
 
@@ -432,7 +427,7 @@ abstract public class BrowserApp extends GeckoApp
             @Override
             public void run() {
                 BrowserDB.removeReadingListItemWithURL(getContentResolver(), url);
-                showToast(R.string.reading_list_removed, Toast.LENGTH_SHORT);
+                showToast(R.string.page_removed, Toast.LENGTH_SHORT);
 
                 final int count = BrowserDB.getReadingListCount(getContentResolver());
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:ListCountUpdated", Integer.toString(count)));

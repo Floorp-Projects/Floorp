@@ -70,10 +70,9 @@
 }
 
 #profiler-start {
-  list-style-image: url("chrome://browser/skin/devtools/profiler-stopwatch.png");
-  -moz-image-region: rect(0px,16px,16px,0px);
+  list-style-image: url("chrome://browser/skin/devtools/profiler-stopwatch.svg");
 }
 
 #profiler-start[checked] {
-  -moz-image-region: rect(0px,32px,16px,16px);
+  list-style-image: url("chrome://browser/skin/devtools/profiler-stopwatch-checked.svg");
 }

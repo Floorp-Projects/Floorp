@@ -1,0 +1,83 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+XPIDL_MODULE = 'content_geckomediaplugins'
+
+XPIDL_SOURCES += [
+    'mozIGeckoMediaPluginService.idl',
+]
+
+EXPORTS += [
+    'gmp-api/gmp-entrypoints.h',
+    'gmp-api/gmp-errors.h',
+    'gmp-api/gmp-platform.h',
+    'gmp-api/gmp-video-codec.h',
+    'gmp-api/gmp-video-decode.h',
+    'gmp-api/gmp-video-encode.h',
+    'gmp-api/gmp-video-errors.h',
+    'gmp-api/gmp-video-frame-encoded.h',
+    'gmp-api/gmp-video-frame-i420.h',
+    'gmp-api/gmp-video-frame.h',
+    'gmp-api/gmp-video-host.h',
+    'gmp-api/gmp-video-plane.h',
+    'GMPChild.h',
+    'GMPMessageUtils.h',
+    'GMPParent.h',
+    'GMPPlatform.h',
+    'GMPProcessChild.h',
+    'GMPProcessParent.h',
+    'GMPService.h',
+    'GMPSharedMemManager.h',
+    'GMPVideoDecoderChild.h',
+    'GMPVideoDecoderParent.h',
+    'GMPVideoEncodedFrameImpl.h',
+    'GMPVideoEncoderChild.h',
+    'GMPVideoEncoderParent.h',
+    'GMPVideoHost.h',
+    'GMPVideoi420FrameImpl.h',
+    'GMPVideoPlaneImpl.h',
+]
+
+UNIFIED_SOURCES += [
+    'GMPChild.cpp',
+    'GMPParent.cpp',
+    'GMPPlatform.cpp',
+    'GMPProcessChild.cpp',
+    'GMPProcessParent.cpp',
+    'GMPService.cpp',
+    'GMPVideoDecoderChild.cpp',
+    'GMPVideoDecoderParent.cpp',
+    'GMPVideoEncodedFrameImpl.cpp',
+    'GMPVideoEncoderChild.cpp',
+    'GMPVideoEncoderParent.cpp',
+    'GMPVideoHost.cpp',
+    'GMPVideoi420FrameImpl.cpp',
+    'GMPVideoPlaneImpl.cpp',
+]
+
+IPDL_SOURCES += [
+  'GMPTypes.ipdlh',
+  'PGMP.ipdl',
+  'PGMPVideoDecoder.ipdl',
+  'PGMPVideoEncoder.ipdl',
+]
+
+LIBRARY_NAME = 'mozgmp'
+
+if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
+    NO_VISIBILITY_FLAGS = True
+
+FAIL_ON_WARNINGS = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'
+LOCAL_INCLUDES += [
+    '../base',
+    '/xpcom/base',
+    '/xpcom/build',
+    '/xpcom/threads',
+]

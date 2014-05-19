@@ -3,15 +3,3 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 %include ../../shared/devtools/debugger.inc.css
-
-.devtools-sidebar-tabs > tabs > tab {
-  min-height: 22px !important;
-}
-
-#instruments-pane-toggle:hover {
-  -moz-image-region: rect(0px,32px,16px,16px);
-}
-
-#instruments-pane-toggle:hover:active {
-  -moz-image-region: rect(0px,48px,16px,32px);
-}

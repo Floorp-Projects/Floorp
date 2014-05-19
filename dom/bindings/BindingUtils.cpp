@@ -1907,9 +1907,9 @@ InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj,
   }
 
   JS::Rooted<JSObject*> unwrapped(cx, js::CheckedUnwrap(instance, true));
-  if (unwrapped && jsipc::JavaScriptParent::IsCPOW(unwrapped)) {
+  if (unwrapped && jsipc::IsCPOW(unwrapped)) {
     bool boolp = false;
-    if (!jsipc::JavaScriptParent::DOMInstanceOf(cx, unwrapped, clasp->mPrototypeID,
+    if (!jsipc::DOMInstanceOf(cx, unwrapped, clasp->mPrototypeID,
                                                 clasp->mDepth, &boolp)) {
       return false;
     }

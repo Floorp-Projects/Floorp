@@ -28,6 +28,7 @@
 
 #ifdef XP_WIN
 #include <process.h>
+#include "mozilla/ipc/WindowsMessageLoop.h"
 #endif
 
 #include "nsAppDirectoryServiceDefs.h"
@@ -67,6 +68,8 @@
 
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
+
+#include "GMPProcessChild.h"
 
 #include "GeckoProfiler.h"
 
@@ -471,6 +474,10 @@ XRE_InitChildProcess(int aArgc,
     {
       nsAutoPtr<ProcessChild> process;
 
+#ifdef XP_WIN
+      mozilla::ipc::windows::InitUIThread();
+#endif
+
       switch (aProcess) {
       case GeckoProcessType_Default:
         NS_RUNTIMEABORT("This makes no sense");
@@ -500,6 +507,10 @@ XRE_InitChildProcess(int aArgc,
 #else 
         NS_RUNTIMEABORT("rebuild with --enable-ipdl-tests");
 #endif
+        break;
+
+      case GeckoProcessType_GMPlugin:
+        process = new gmp::GMPProcessChild(parentHandle);
         break;
 
       default:

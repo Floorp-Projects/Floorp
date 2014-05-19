@@ -78,6 +78,7 @@ SOURCES += [
     'SpdyStream3.cpp',
     'SpdyStream31.cpp',
     'SpdyZlibReporter.cpp',
+    'TunnelUtils.cpp',
 ]
 
 # These files cannot be built in unified mode because of OS X headers.

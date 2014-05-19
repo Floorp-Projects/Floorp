@@ -5,7 +5,6 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.mozglue.RobocopTarget;
-import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -19,7 +18,6 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * {@code GeckoSharedPrefs} provides scoped SharedPreferences instances.
@@ -58,9 +56,6 @@ public final class GeckoSharedPrefs {
 
     // For disabling migration when getting a SharedPreferences instance
     private static final EnumSet<Flags> disableMigrations = EnumSet.of(Flags.DISABLE_MIGRATIONS);
-
-    // Timeout for migration commits to be done (10 seconds)
-    private static final int MIGRATION_COMMIT_TIMEOUT_MSEC = 10000;
 
     // The keys that have to be moved from ProfileManager's default
     // shared prefs to the profile from version 0 to 1.
@@ -254,7 +249,6 @@ public final class GeckoSharedPrefs {
         return pmPrefs.edit().clear();
     }
 
-    @SuppressWarnings("unchecked")
     private static void putEntry(Editor to, String key, Object value) {
         Log.d(LOGTAG, "Migrating key = " + key + " with value = " + value);
 

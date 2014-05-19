@@ -1,0 +1,40 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+namespace mozilla {
+namespace gmp {
+
+struct GMPVideoEncodedFrameData
+{
+  int64_t mCaptureTime_ms;
+  uint32_t mEncodedWidth;
+  uint32_t mEncodedHeight;
+  uint32_t mTimeStamp;
+  uint32_t mFrameType;
+  uint32_t mSize;
+  Shmem mBuffer;
+  bool mCompleteFrame;
+};
+
+struct GMPPlaneData
+{
+  int32_t mSize;
+  int32_t mStride;
+  Shmem mBuffer;
+};
+
+struct GMPVideoi420FrameData
+{
+  GMPPlaneData mYPlane;
+  GMPPlaneData mUPlane;
+  GMPPlaneData mVPlane;
+  int32_t mWidth;
+  int32_t mHeight;
+  uint32_t mTimestamp;
+  int64_t mRenderTime_ms;
+};
+
+}
+}

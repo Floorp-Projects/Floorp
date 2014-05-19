@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1009529
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1009529</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1009529 **/
+  SimpleTest.waitForExplicitFinish();
+
+  var win1 = open("about:blank", "_blank", null);
+  var win2 = open("about:blank", "_blank", "");
+  for (var k in win1) {
+    var v;
+    try {
+      v = win1[k];
+    } catch (ex) {}
+    if (v instanceof win1.BarProp) {
+      is(v.visible, win2[k] && win2[k].visible, "Both windows should have the same value for " + k);
+    }
+  }
+
+  var closeCount = 0;
+  var closeInc = function(e) {
+    this.removeEventListener("unload", closeInc, true);
+    closeCount++;
+    if (closeCount == 2) {
+      SimpleTest.finish();
+    }
+  };
+  win1.addEventListener("unload", closeInc, true);
+  win2.addEventListener("unload", closeInc, true);
+  win1.close();
+  win2.close();
+  
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1009529">Mozilla Bug 1009529</a>
+<p id="display">
+</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
+

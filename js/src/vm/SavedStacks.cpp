@@ -9,6 +9,7 @@
 
 #include "jsapi.h"
 #include "jscompartment.h"
+#include "jsfriendapi.h"
 #include "jsnum.h"
 
 #include "vm/GlobalObject.h"
@@ -424,6 +425,14 @@ SavedStacks::insertFrames(JSContext *cx, ScriptFrameIter &iter, MutableHandle<Sa
         frame.set(nullptr);
         return true;
     }
+
+    // Don't report the over-recursion error because if we are blowing the stack
+    // here, we already blew the stack in JS, reported it, and we are creating
+    // the saved stack for the over-recursion error object. We do this check
+    // here, rather than inside saveCurrentStack, because in some cases we will
+    // pass the check there, despite later failing the check here (for example,
+    // in js/src/jit-test/tests/saved-stacks/bug-1006876-too-much-recursion.js).
+    JS_CHECK_RECURSION_DONT_REPORT(cx, return false);
 
     ScriptFrameIter thisFrame(iter);
     Rooted<SavedFrame*> parentFrame(cx);

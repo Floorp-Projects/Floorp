@@ -80,6 +80,7 @@ PerThreadData::PerThreadData(JSRuntime *runtime)
 #endif
     activation_(nullptr),
     asmJSActivationStack_(nullptr),
+    autoFlushICache_(nullptr),
 #if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
     simulator_(nullptr),
     simulatorStackLimit_(0),
@@ -272,10 +273,6 @@ JSRuntime::init(uint32_t maxbytes)
     if (!interruptLock)
         return false;
 
-    gc.lock = PR_NewLock();
-    if (!gc.lock)
-        return false;
-
     exclusiveAccessLock = PR_NewLock();
     if (!exclusiveAccessLock)
         return false;
@@ -438,11 +435,6 @@ JSRuntime::~JSRuntime()
 
     gc.finish();
     atomsCompartment_ = nullptr;
-
-#ifdef JS_THREADSAFE
-    if (gc.lock)
-        PR_DestroyLock(gc.lock);
-#endif
 
     js_free(defaultLocale);
 #ifdef JS_YARR
@@ -759,7 +751,7 @@ JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
      * all the allocations and released the empty GC chunks.
      */
     JS::ShrinkGCBuffers(this);
-    gc.helperThread.waitBackgroundSweepOrAllocEnd();
+    gc.waitBackgroundSweepOrAllocEnd();
     if (!p)
         p = js_malloc(nbytes);
     else if (p == reinterpret_cast<void *>(1))
@@ -854,7 +846,7 @@ JSRuntime::assertCanLock(RuntimeLock which)
       case InterruptLock:
         JS_ASSERT(!currentThreadOwnsInterruptLock());
       case GCLock:
-        JS_ASSERT(gc.lockOwner != PR_GetCurrentThread());
+        gc.assertCanLock();
         break;
       default:
         MOZ_CRASH();

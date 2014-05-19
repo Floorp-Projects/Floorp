@@ -85,6 +85,22 @@ struct ConservativeGCData
     }
 };
 
+template<typename F>
+struct Callback {
+    F op;
+    void *data;
+
+    Callback()
+      : op(nullptr), data(nullptr)
+    {}
+    Callback(F op, void *data)
+      : op(op), data(data)
+    {}
+};
+
+template<typename F>
+class CallbackVector : public Vector<Callback<F>, 4, SystemAllocPolicy> {};
+
 class GCRuntime
 {
   public:
@@ -113,6 +129,75 @@ class GCRuntime
     void gcSlice(JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64_t millis);
     void runDebugGC();
 
+    void markRuntime(JSTracer *trc, bool useSavedRoots = false);
+
+#ifdef JS_GC_ZEAL
+    void verifyPreBarriers();
+    void verifyPostBarriers();
+    void maybeVerifyPreBarriers(bool always);
+    void maybeVerifyPostBarriers(bool always);
+#endif
+
+  public:
+    // Internal public interface
+    void recordNativeStackTop();
+    void notifyRequestEnd() { conservativeGC.updateForRequestEnd(); }
+    bool isBackgroundSweeping() { return helperThread.sweeping(); }
+    void waitBackgroundSweepEnd() { helperThread.waitBackgroundSweepEnd(); }
+    void waitBackgroundSweepOrAllocEnd() { helperThread.waitBackgroundSweepOrAllocEnd(); }
+    void startBackgroundShrink() { helperThread.startBackgroundShrink(); }
+    void freeLater(void *p) { helperThread.freeLater(p); }
+#ifdef DEBUG
+    bool onBackgroundThread() { return helperThread.onBackgroundThread(); }
+#endif
+
+#ifdef JS_THREADSAFE
+    void assertCanLock() {
+        JS_ASSERT(lockOwner != PR_GetCurrentThread());
+    }
+#endif
+
+    void lockGC() {
+#ifdef JS_THREADSAFE
+        PR_Lock(lock);
+        JS_ASSERT(!lockOwner);
+#ifdef DEBUG
+        lockOwner = PR_GetCurrentThread();
+#endif
+#endif
+    }
+
+    void unlockGC() {
+#ifdef JS_THREADSAFE
+        JS_ASSERT(lockOwner == PR_GetCurrentThread());
+        lockOwner = nullptr;
+        PR_Unlock(lock);
+#endif
+    }
+
+#ifdef DEBUG
+    bool isAllocAllowed() { return noGCOrAllocationCheck == 0; }
+    void disallowAlloc() { ++noGCOrAllocationCheck; }
+    void allowAlloc() {
+        JS_ASSERT(!isAllocAllowed());
+        --noGCOrAllocationCheck;
+    }
+#endif
+
+    void setAlwaysPreserveCode() { alwaysPreserveCode = true; }
+
+    bool isGenerationalGCEnabled() { return generationalDisabled == 0; }
+    void disableGenerationalGC();
+    void enableGenerationalGC();
+
+#ifdef JS_GC_ZEAL
+    void startVerifyPreBarriers();
+    bool endVerifyPreBarriers();
+    void startVerifyPostBarriers();
+    bool endVerifyPostBarriers();
+    void finishVerifier();
+#endif
+
   private:
     // For ArenaLists::allocateFromArenaInline()
     friend class ArenaLists;
@@ -121,7 +206,6 @@ class GCRuntime
     inline bool wantBackgroundAllocation() const;
 
     bool initGCZeal();
-    void recordNativeStackTopForGC();
     void requestInterrupt(JS::gcreason::Reason reason);
     bool gcCycle(bool incremental, int64_t budget, JSGCInvocationKind gckind,
                  JS::gcreason::Reason reason);
@@ -132,6 +216,7 @@ class GCRuntime
     void pushZealSelectedObjects();
     bool beginMarkPhase();
     bool shouldPreserveJITCode(JSCompartment *comp, int64_t currentTime);
+    void bufferGrayRoots();
     bool drainMarkStack(SliceBudget &sliceBudget, gcstats::Phase phase);
     template <class CompartmentIterT> void markWeakReferences(gcstats::Phase phase);
     void markWeakReferencesInCurrentGroup(gcstats::Phase phase);
@@ -152,6 +237,8 @@ class GCRuntime
     void computeNonIncrementalMarkingForValidation();
     void validateIncrementalMarking();
     void finishMarkingValidation();
+
+    void markConservativeStackRoots(JSTracer *trc, bool useSavedRoots);
 
 #ifdef DEBUG
     void checkForCompartmentMismatches();
@@ -398,10 +485,10 @@ class GCRuntime
     bool                  fullCompartmentChecks;
 
     JSGCCallback          gcCallback;
-    JS::GCSliceCallback   sliceCallback;
-    JSFinalizeCallback    finalizeCallback;
-
     void                  *gcCallbackData;
+
+    JS::GCSliceCallback   sliceCallback;
+    CallbackVector<JSFinalizeCallback> finalizeCallbacks;
 
     /*
      * Malloc counter to measure memory pressure for GC scheduling. It runs
@@ -421,9 +508,8 @@ class GCRuntime
      * roots. The black/gray distinction is only relevant to the cycle
      * collector.
      */
-    typedef js::Vector<ExtraTracer, 4, js::SystemAllocPolicy> ExtraTracerVector;
-    ExtraTracerVector     blackRootTracers;
-    ExtraTracer           grayRootTracer;
+    CallbackVector<JSTraceDataOp> blackRootTracers;
+    Callback<JSTraceDataOp> grayRootTracer;
 
     /*
      * The GC can only safely decommit memory when the page size of the
@@ -437,6 +523,7 @@ class GCRuntime
     /* Strong references on scripts held for PCCount profiling API. */
     js::ScriptAndCountsVector *scriptAndCountsVector;
 
+  private:
     /* Always preserve JIT code during GCs, for testing. */
     bool                  alwaysPreserveCode;
 
@@ -445,15 +532,15 @@ class GCRuntime
 #endif
 
     /* Synchronize GC heap access between main thread and GCHelperThread. */
-    PRLock   *lock;
+    PRLock                *lock;
     mozilla::DebugOnly<PRThread *>   lockOwner;
 
     js::GCHelperThread helperThread;
 
     ConservativeGCData conservativeGC;
 
+    //friend class js::gc::Chunk; // todo: remove
     friend class js::GCHelperThread;
-    friend class js::gc::AutoPrepareForTracing; /* For recordNativeStackTopForGC(). */
     friend class js::gc::MarkingValidator;
 };
 
