@@ -455,7 +455,7 @@ SysInfoProvider.prototype = Object.freeze({
     name: "name",
     version: "version",
     arch: "architecture",
-    isWOW64: "isWow64",
+    isWow64: "isWow64",
   },
 
   collectConstantData: function () {
@@ -498,6 +498,7 @@ SysInfoProvider.prototype = Object.freeze({
             // Property is only present on Windows. hasKey() skipping from
             // above ensures undefined or null doesn't creep in here.
             value = value ? 1 : 0;
+            method = "setLastNumeric";
             break;
         }
 
