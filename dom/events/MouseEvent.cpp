@@ -299,10 +299,6 @@ void
 MouseEvent::GetRegion(nsAString& aRegion)
 {
   SetDOMStringToNull(aRegion);
-  WidgetMouseEventBase* mouseEventBase = mEvent->AsMouseEventBase();
-  if (mouseEventBase) {
-    aRegion = mouseEventBase->region;
-  }
 }
 
 NS_IMETHODIMP

@@ -1110,17 +1110,6 @@ CanvasRenderingContext2D::GetImageBuffer(uint8_t** aImageBuffer,
   *aFormat = imgIEncoder::INPUT_FORMAT_HOSTARGB;
 }
 
-nsString CanvasRenderingContext2D::GetHitRegion(const mozilla::gfx::Point& aPoint)
-{
-  for (unsigned int x = 0 ; x < mHitRegionsOptions.Length(); x++) {
-    RegionInfo& info = mHitRegionsOptions[x];
-    if (info.mPath->ContainsPoint(aPoint, Matrix())) {
-      return info.mId;
-    }
-  }
-  return nsString();
-}
-
 NS_IMETHODIMP
 CanvasRenderingContext2D::GetInputStream(const char *aMimeType,
                                          const char16_t *aEncoderOptions,
