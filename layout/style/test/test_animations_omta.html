@@ -914,12 +914,9 @@ addAsyncTest(function *() {
                  RunningOn.Compositor, 0.01,
                  "animation-iteration-count test 3 at 20.2s");
   advance_clock(3600);
-  // XXX OMTA style and computed style fail here -- fixed in follow-up patch
-  /*
   omta_is_approx("transform", { ty: 100 * gTF.ease_out(0.81) },
                  RunningOn.Compositor, 0.01,
                  "animation-iteration-count test 3 at 23.8s");
-                 */
   advance_clock(200);
   omta_is_approx("transform", { ty: 100 * gTF.ease_out(0.8) },
                  RunningOn.Compositor, 0.01,
@@ -1155,7 +1152,7 @@ function omta_is_approx(property, expected, runningOn, tolerance, desc) {
 }
 
 function matricesRoughlyEqual(a, b, tolerance) {
-  tolerance = tolerance || 0.0001;
+  tolerance = tolerance || 0.00011;
   for (var i = 0; i < 4; i++) {
     for (var j = 0; j < 4; j++) {
       var diff = Math.abs(a[i][j] - b[i][j]);
