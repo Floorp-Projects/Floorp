@@ -122,8 +122,47 @@ this.BingTranslation.prototype = {
     }
   },
 
-  _parseChunkResult() {
-    // note: this function is implemented in the patch from bug 976556
+  /**
+   * This function parses the result returned by Bing's Http.svc API,
+   * which is a XML file that contains a number of elements. To our
+   * particular interest, the only part of the response that matters
+   * are the <TranslatedText> nodes, which contains the resulting
+   * items that were sent to be translated.
+   *
+   * @param   request      The request sent to the server.
+   * @returns boolean      True if parsing of this chunk was successful.
+   */
+  _parseChunkResult: function(bingRequest) {
+    let domParser = Cc["@mozilla.org/xmlextras/domparser;1"]
+                      .createInstance(Ci.nsIDOMParser);
+
+    let results;
+    try {
+      let doc = domParser.parseFromString(bingRequest.networkRequest
+                                                     .response.body, "text/xml");
+      results = doc.querySelectorAll("TranslatedText");
+    } catch (e) {
+      return false;
+    }
+
+    let len = results.length;
+    if (len != bingRequest.translationData.length) {
+      // This should never happen, but if the service returns a different number
+      // of items (from the number of items submitted), we can't use this chunk
+      // because all items would be paired incorrectly.
+      return false;
+    }
+
+    let error = false;
+    for (let i = 0; i < len; i++) {
+      try {
+        bingRequest.translationData[i][0].parseResult(
+          results[i].firstChild.nodeValue
+        );
+      } catch (e) { error = true; }
+    }
+
+    return !error;
   },
 
   /**
