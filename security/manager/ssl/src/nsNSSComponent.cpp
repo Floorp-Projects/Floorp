@@ -1000,6 +1000,9 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting,
       static_cast<CertVerifier::pinning_enforcement_config>
         (Preferences::GetInt("security.cert_pinning.enforcement_level",
                              CertVerifier::pinningDisabled));
+  if (pinningEnforcementLevel > CertVerifier::pinningEnforceTestMode) {
+    pinningEnforcementLevel = CertVerifier::pinningDisabled;
+  }
 
   CertVerifier::ocsp_download_config odc;
   CertVerifier::ocsp_strict_config osc;
