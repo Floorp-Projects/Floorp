@@ -441,6 +441,9 @@ this.BrowserIDManager.prototype = {
   // Refresh the sync token for our user.
   _fetchTokenForUser: function() {
     let tokenServerURI = Svc.Prefs.get("tokenServerURI");
+    if (tokenServerURI.endsWith("/")) { // trailing slashes cause problems...
+      tokenServerURI = tokenServerURI.slice(0, -1);
+    }
     let log = this._log;
     let client = this._tokenServerClient;
     let fxa = this._fxaService;
