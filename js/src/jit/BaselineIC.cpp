@@ -591,10 +591,10 @@ ICStubCompiler::getStubCode()
     masm.setSecondScratchReg(BaselineSecondScratchReg);
 #endif
 
-    AutoFlushCache afc("ICStubCompiler::getStubCode", cx->runtime()->jitRuntime());
     if (!generateStubCode(masm))
         return nullptr;
     Linker linker(masm);
+    AutoFlushICache afc("getStubCode");
     Rooted<JitCode *> newStubCode(cx, linker.newCode<CanGC>(cx, JSC::BASELINE_CODE));
     if (!newStubCode)
         return nullptr;

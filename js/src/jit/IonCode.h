@@ -540,7 +540,7 @@ struct IonScript
         return (CacheLocation *) &runtimeData()[locIndex];
     }
     void toggleBarriers(bool enabled);
-    void purgeCaches(JS::Zone *zone);
+    void purgeCaches();
     void destroyCaches();
     void unlinkFromRuntime(FreeOp *fop);
     void copySnapshots(const SnapshotWriter *writer);
@@ -774,40 +774,23 @@ struct VMFunction;
 class JitCompartment;
 class JitRuntime;
 
-struct AutoFlushCache
+struct AutoFlushICache
 {
   private:
     uintptr_t start_;
     uintptr_t stop_;
     const char *name_;
-    JitRuntime *runtime_;
-    bool used_;
+    bool inhibit_;
+    AutoFlushICache *prev_;
 
   public:
-    void update(uintptr_t p, size_t len);
-    static void updateTop(uintptr_t p, size_t len);
-    ~AutoFlushCache();
-    AutoFlushCache(const char *nonce, JitRuntime *rt);
-    void flushAnyway();
+    static void setRange(uintptr_t p, size_t len);
+    static void flush(uintptr_t p, size_t len);
+    static void setInhibit();
+    ~AutoFlushICache();
+    AutoFlushICache(const char *nonce, bool inhibit=false);
 };
 
-// If you are currently in the middle of modifing Ion-compiled code, which
-// is going to be flushed at *some* point, but determine that you *must*
-// call a function *right* *now*, two things can go wrong:
-//   1)  The flusher that you were using is still active, but you are about to
-//       enter jitted code, so it needs to be flushed
-//   2) the called function can re-enter a compilation/modification path which
-//       will use your AFC, and thus not flush when his compilation is done
-
-struct AutoFlushInhibitor
-{
-  private:
-    JitRuntime *runtime_;
-    AutoFlushCache *afc;
-  public:
-    AutoFlushInhibitor(JitRuntime *rt);
-    ~AutoFlushInhibitor();
-};
 } // namespace jit
 
 namespace gc {
