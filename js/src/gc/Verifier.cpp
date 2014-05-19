@@ -222,7 +222,7 @@ gc::StartVerifyPreBarriers(JSRuntime *rt)
     rt->gc.incrementalState = MARK_ROOTS;
 
     /* Make all the roots be edges emanating from the root node. */
-    MarkRuntime(trc);
+    rt->gc.markRuntime(trc);
 
     VerifyNode *node;
     node = trc->curnode;
