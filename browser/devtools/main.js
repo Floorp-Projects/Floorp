@@ -240,8 +240,8 @@ Tools.webAudioEditor = {
   icon: "chrome://browser/skin/devtools/tool-webaudio.svg",
   invertIconForLightTheme: true,
   url: "chrome://browser/content/devtools/webaudioeditor.xul",
-  label: l10n("ToolboxWebAudioEditor.label", webAudioEditorStrings),
-  tooltip: l10n("ToolboxWebAudioEditor.tooltip", webAudioEditorStrings),
+  label: l10n("ToolboxWebAudioEditor1.label", webAudioEditorStrings),
+  tooltip: l10n("ToolboxWebAudioEditor1.tooltip", webAudioEditorStrings),
   isTargetSupported: function(target) {
     return !target.isAddon;
   },
