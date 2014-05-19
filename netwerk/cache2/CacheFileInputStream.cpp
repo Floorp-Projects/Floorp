@@ -229,10 +229,20 @@ NS_IMETHODIMP
 CacheFileInputStream::CloseWithStatus(nsresult aStatus)
 {
   CacheFileAutoLock lock(mFile);
-  MOZ_ASSERT(!mInReadSegments);
 
   LOG(("CacheFileInputStream::CloseWithStatus() [this=%p, aStatus=0x%08x]",
        this, aStatus));
+
+  return CloseWithStatusLocked(aStatus);
+}
+
+nsresult
+CacheFileInputStream::CloseWithStatusLocked(nsresult aStatus)
+{
+  LOG(("CacheFileInputStream::CloseWithStatusLocked() [this=%p, "
+       "aStatus=0x%08x]", this, aStatus));
+
+  MOZ_ASSERT(!mInReadSegments);
 
   if (mClosed) {
     MOZ_ASSERT(!mCallback);
@@ -242,8 +252,9 @@ CacheFileInputStream::CloseWithStatus(nsresult aStatus)
   mClosed = true;
   mStatus = NS_FAILED(aStatus) ? aStatus : NS_BASE_STREAM_CLOSED;
 
-  if (mChunk)
+  if (mChunk) {
     ReleaseChunk();
+  }
 
   // TODO propagate error from input stream to other streams ???
 
@@ -400,12 +411,14 @@ CacheFileInputStream::OnChunkAvailable(nsresult aResult, uint32_t aChunkIdx,
   if (NS_SUCCEEDED(aResult)) {
     mChunk = aChunk;
   } else if (aResult != NS_ERROR_NOT_AVAILABLE) {
-    // We store the error in mStatus, so we can propagate it later to consumer
+    // Close the stream with error. The consumer will receive this error later
     // in Read(), Available() etc. We need to handle NS_ERROR_NOT_AVAILABLE
     // differently since it is returned when the requested chunk is not
     // available and there is no writer that could create it, i.e. it means that
     // we've reached the end of the file.
-    mStatus = aResult;
+    CloseWithStatusLocked(aResult);
+
+    return NS_OK;
   }
 
   MaybeNotifyListener();
@@ -502,15 +515,16 @@ CacheFileInputStream::EnsureCorrectChunk(bool aReleaseOnly)
     LOG(("CacheFileInputStream::EnsureCorrectChunk() - GetChunkLocked failed. "
          "[this=%p, idx=%d, rv=0x%08x]", this, chunkIdx, rv));
     if (rv != NS_ERROR_NOT_AVAILABLE) {
-      // We store the error in mStatus, so we can propagate it later to consumer
+      // Close the stream with error. The consumer will receive this error later
       // in Read(), Available() etc. We need to handle NS_ERROR_NOT_AVAILABLE
       // differently since it is returned when the requested chunk is not
       // available and there is no writer that could create it, i.e. it means
       // that we've reached the end of the file.
-      mStatus = rv;
+      CloseWithStatusLocked(rv);
+
+      return;
     }
-  }
-  else if (!mChunk) {
+  } else if (!mChunk) {
     mListeningForChunk = static_cast<int64_t>(chunkIdx);
   }
 
