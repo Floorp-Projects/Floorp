@@ -126,9 +126,6 @@ public:
   // Possible values at nsIDOMMouseEvent
   uint16_t inputSource;
 
-  // ID of the canvas HitRegion
-  nsString region;
-
   void AssignMouseEventBaseData(const WidgetMouseEventBase& aEvent,
                                 bool aCopyTargets)
   {
