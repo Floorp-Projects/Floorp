@@ -117,6 +117,7 @@ public:
         EXT_create_context_robustness,
         KHR_image,
         KHR_fence_sync,
+        ANDROID_native_fence_sync,
         Extensions_Max
     };
 
@@ -296,7 +297,12 @@ public:
     const GLubyte* fQueryString(EGLDisplay dpy, EGLint name)
     {
         BEFORE_GL_CALL;
-        const GLubyte* b = mSymbols.fQueryString(dpy, name);
+        const GLubyte* b;
+        if (mSymbols.fQueryStringImplementationANDROID) {
+          b = mSymbols.fQueryStringImplementationANDROID(dpy, name);
+        } else {
+          b = mSymbols.fQueryString(dpy, name);
+        }
         AFTER_GL_CALL;
         return b;
     }
@@ -484,6 +490,7 @@ public:
         pfnCopyBuffers fCopyBuffers;
         typedef const GLubyte* (GLAPIENTRY * pfnQueryString)(EGLDisplay, EGLint name);
         pfnQueryString fQueryString;
+        pfnQueryString fQueryStringImplementationANDROID;
         typedef EGLBoolean (GLAPIENTRY * pfnQueryContext)(EGLDisplay dpy, EGLContext ctx,
                                                           EGLint attribute, EGLint *value);
         pfnQueryContext fQueryContext;
