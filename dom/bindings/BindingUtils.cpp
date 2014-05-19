@@ -773,15 +773,13 @@ TryPreserveWrapper(JSObject* obj)
   return domClass && !domClass->mParticipant;
 }
 
-// Can only be called with the immediate prototype of the instance object. Can
-// only be called on the prototype of an object known to be a DOM instance.
+// Can only be called with a DOM JSClass.
 bool
-InstanceClassHasProtoAtDepth(JSObject* protoObject, uint32_t protoID,
-                             uint32_t depth)
+InstanceClassHasProtoAtDepth(const js::Class* clasp,
+                             uint32_t protoID, uint32_t depth)
 {
-  const DOMClass* domClass = static_cast<const DOMClass*>(
-    js::GetReservedSlot(protoObject, DOM_PROTO_INSTANCE_CLASS_SLOT).toPrivate());
-  return (uint32_t)domClass->mInterfaceChain[depth] == protoID;
+  const DOMClass& domClass = DOMJSClass::FromJSClass(clasp)->mClass;
+  return static_cast<uint32_t>(domClass.mInterfaceChain[depth]) == protoID;
 }
 
 // Only set allowNativeWrapper to false if you really know you need it, if in
