@@ -2476,11 +2476,6 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             interfaceClass = "nullptr"
             interfaceCache = "nullptr"
 
-        if self.descriptor.concrete:
-            domClass = "&Class.mClass"
-        else:
-            domClass = "nullptr"
-
         isGlobal = self.descriptor.interface.getExtendedAttribute("Global") is not None
         if not isGlobal and self.properties.hasNonChromeOnly():
             properties = "&sNativeProperties"
@@ -2501,7 +2496,6 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                                         ${protoClass}, ${protoCache},
                                         constructorProto, ${interfaceClass}, ${constructHookHolder}, ${constructArgs}, ${namedConstructors},
                                         ${interfaceCache},
-                                        ${domClass},
                                         ${properties},
                                         ${chromeProperties},
                                         ${name}, aDefineOnGlobal);
@@ -2513,7 +2507,6 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             constructArgs=constructArgs,
             namedConstructors=namedConstructors,
             interfaceCache=interfaceCache,
-            domClass=domClass,
             properties=properties,
             chromeProperties=chromeProperties,
             name='"' + self.descriptor.interface.identifier.name + '"' if needInterfaceObject else "nullptr")
