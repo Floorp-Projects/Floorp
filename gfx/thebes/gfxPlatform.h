@@ -565,6 +565,14 @@ public:
       return nsIntRect(0, 0, bits * sizeOfBit, sizeOfBit);
     }
 
+    /**
+     * Returns true if we should use raw memory to send data to the compositor
+     * rather than using shmems.
+     *
+     * This method should not be called from the compositor thread.
+     */
+    bool PreferMemoryOverShmem() const;
+
     mozilla::gl::SkiaGLGlue* GetSkiaGLGlue();
     void PurgeSkiaCache();
 
@@ -677,6 +685,7 @@ private:
     mozilla::widget::GfxInfoCollector<gfxPlatform> mAzureCanvasBackendCollector;
 
     mozilla::RefPtr<mozilla::gfx::DrawEventRecorder> mRecorder;
+    bool mLayersPreferMemoryOverShmem;
     mozilla::RefPtr<mozilla::gl::SkiaGLGlue> mSkiaGlue;
 };
 
