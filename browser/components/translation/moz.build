@@ -10,6 +10,7 @@ EXTRA_JS_MODULES = [
     'cld2/cld-worker.js.mem',
     'LanguageDetector.jsm',
     'Translation.jsm',
+    'TranslationContentHandler.jsm',
     'TranslationDocument.jsm'
 ]
 
