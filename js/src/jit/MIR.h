@@ -3632,6 +3632,11 @@ class MUrsh : public MShiftInstruction
 
     void computeRange(TempAllocator &alloc);
     void collectRangeInfoPreTrunc();
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return specialization_ < MIRType_Object;
+    }
 };
 
 class MBinaryArithInstruction
