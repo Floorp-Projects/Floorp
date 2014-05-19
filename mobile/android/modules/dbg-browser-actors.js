@@ -8,6 +8,11 @@
  * Fennec-specific actors.
  */
 
+const { RootActor } = require("devtools/server/actors/root");
+const { DebuggerServer } = require("devtools/server/main");
+const { BrowserTabList, BrowserAddonList, sendShutdownEvent } =
+  require("devtools/server/actors/webbrowser");
+
 /**
  * Construct a root actor appropriate for use in a server running in a
  * browser on Android. The returned root actor:
@@ -61,4 +66,12 @@ MobileTabList.prototype._getSelectedBrowser = function(aWindow) {
 
 MobileTabList.prototype._getChildren = function(aWindow) {
   return aWindow.BrowserApp.tabs.map(tab => tab.browser);
+};
+
+exports.register = function(handle) {
+  handle.setRootActor(createRootActor);
+};
+
+exports.unregister = function(handle) {
+  handle.setRootActor(null);
 };
