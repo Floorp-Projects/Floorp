@@ -872,11 +872,16 @@ SpdyConnectTransaction::ReadSegments(nsAHttpSegmentReader *reader,
       nsresult rv = mSegmentReader->
         OnReadSegment(mConnectString.BeginReading() + mConnectStringOffset,
                       toWrite, countRead);
-      mConnectStringOffset += toWrite;
       if (NS_FAILED(rv) && (rv != NS_BASE_STREAM_WOULD_BLOCK)) {
         LOG(("SpdyConnectTransaction::ReadSegments %p OnReadSegmentError %x\n",
              this, rv));
         CreateShimError(rv);
+      } else {
+        mConnectStringOffset += toWrite;
+        if (mConnectString.Length() == mConnectStringOffset) {
+          mConnectString.Truncate();
+          mConnectStringOffset = 0;
+        }
       }
       return rv;
     }
