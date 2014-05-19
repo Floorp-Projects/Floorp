@@ -1044,8 +1044,23 @@ nsGonkCameraControl::StopRecordingImpl()
   mRecorder = nullptr;
   OnRecorderStateChange(CameraControlListener::kRecorderStopped);
 
-  if (mAutoFlashModeOverridden) {
-    SetAndPush(CAMERA_PARAM_FLASHMODE, NS_LITERAL_STRING("auto"));
+  {
+    ICameraControlParameterSetAutoEnter set(this);
+
+    // clear the recording hint once stopped because some drivers will solely
+    // check this flag to determine the mode, despite its actual internal state,
+    // thus causing problems when taking pictures
+    nsresult rv = mParams.Set(CAMERA_PARAM_RECORDINGHINT, false);
+    if (NS_FAILED(rv)) {
+      DOM_CAMERA_LOGE("Failed to set recording hint (0x%x)\n", rv);
+    }
+
+    if (mAutoFlashModeOverridden) {
+      rv = mParams.Set(CAMERA_PARAM_FLASHMODE, NS_LITERAL_STRING("auto"));
+      if (NS_FAILED(rv)) {
+        DOM_CAMERA_LOGE("Failed to set flash mode (0x%x)\n", rv);
+      }
+    }
   }
 
   // notify DeviceStorage that the new video file is closed and ready
