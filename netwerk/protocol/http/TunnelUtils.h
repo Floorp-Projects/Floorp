@@ -209,8 +209,13 @@ private:
   uint32_t             mOutputDataOffset;
 
   TimeStamp                      mTimestampSyn;
-  nsRefPtr<nsHttpConnection>     mTunneledConn;
   nsRefPtr<nsHttpConnectionInfo> mConnInfo;
+
+  // mTunneledConn, mTunnelTransport, mTunnelStreamIn, mTunnelStreamOut
+  // are the connectors to the "real" http connection. They are created
+  // together when the tunnel setup is complete and a static reference is held
+  // for the lifetime of the tunnel.
+  nsRefPtr<nsHttpConnection>     mTunneledConn;
   nsRefPtr<SocketTransportShim>  mTunnelTransport;
   nsRefPtr<InputStreamShim>      mTunnelStreamIn;
   nsRefPtr<OutputStreamShim>     mTunnelStreamOut;
