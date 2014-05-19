@@ -82,6 +82,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=964646
       100% { transform: translate(20px); animation-timing-function: ease-out }
     }
 
+    @keyframes multiprop {
+      0% {
+        transform: translate(10px); opacity: 0.3;
+        animation-timing-function: ease;
+      }
+      25% {
+        opacity: 0.5;
+        animation-timing-function: ease-out;
+      }
+      50% {
+        transform: translate(40px);
+      }
+      75% {
+        transform: translate(80px); opacity: 0.6;
+        animation-timing-function: ease-in;
+      }
+    }
+
     .target {
       /* The animation target needs geometry in order to qualify for OMTA */
       width: 100px;
@@ -1419,6 +1437,62 @@ addAsyncTest(function *() {
  * css3-animations:  3.10. The 'animation' Shorthand Property
  * http://dev.w3.org/csswg/css3-animations/#the-animation-shorthand-property-
  */
+
+// (Unlike test_animations.html, pseudo-elements are not tested here since they
+//  are currently not run on the compositor thread.)
+
+/**
+ * Test handling of properties that are present in only some of the
+ * keyframes.
+ */
+addAsyncTest(function *() {
+  new_div("animation: multiprop 1s ease-in-out alternate infinite");
+  yield waitForPaints();
+  omta_is("transform", { tx: 10 }, RunningOn.Compositor,
+          "multiprop transform at 0ms");
+  omta_is("opacity", 0.3, RunningOn.Compositor, "multiprop opacity at 0ms");
+  advance_clock(100);
+  omta_is_approx("transform", { tx: 10 + 30 * gTF.ease(0.2) },
+                 RunningOn.Compositor, 0.01, "multiprop transform at 100ms");
+  omta_is_approx("opacity", 0.3 + 0.2 * gTF.ease(0.4),
+                 RunningOn.Compositor, 0.01, "multiprop opacity at 100ms");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 10 + 30 * gTF.ease(0.6) },
+                 RunningOn.Compositor, 0.01, "multiprop transform at 300ms");
+  omta_is_approx("opacity", 0.5 + 0.1 * gTF.ease_out(0.1),
+                 RunningOn.Compositor, 0.01, "multiprop opacity at 300ms");
+  advance_clock(300);
+  omta_is_approx("transform", { tx: 40 + 40 * gTF.ease_in_out(0.4) },
+                 RunningOn.Compositor, 0.01, "multiprop transform at 600ms");
+  omta_is_approx("opacity", 0.5 + 0.1 * gTF.ease_out(0.7),
+                 RunningOn.Compositor, 0.01, "multiprop opacity at 600ms");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 80 - 80 * gTF.ease_in(0.2) },
+                 RunningOn.Compositor, 0.01, "multiprop transform at 800ms");
+  omta_is_approx("opacity", 0.6 + 0.4 * gTF.ease_in(0.2),
+                 RunningOn.Compositor, 0.01, "multiprop opacity at 800ms");
+  advance_clock(400);
+  omta_is_approx("transform", { tx: 80 - 80 * gTF.ease_in(0.2) },
+                 RunningOn.Compositor, 0.01, "multiprop transform at 1200ms");
+  omta_is_approx("opacity", 0.6 + 0.4 * gTF.ease_in(0.2),
+                 RunningOn.Compositor, 0.01, "multiprop opacity at 1200ms");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 40 + 40 * gTF.ease_in_out(0.4) },
+                 RunningOn.Compositor, 0.01, "multiprop transform at 1400ms");
+  omta_is_approx("opacity", 0.5 + 0.1 * gTF.ease_out(0.7),
+                 RunningOn.Compositor, 0.01, "multiprop opacity at 1400ms");
+  advance_clock(300);
+  omta_is_approx("transform", { tx: 10 + 30 * gTF.ease(0.6) },
+                 RunningOn.Compositor, 0.01, "multiprop transform at 1700ms");
+  omta_is_approx("opacity", 0.5 + 0.1 * gTF.ease_out(0.1),
+                 RunningOn.Compositor, 0.01, "multiprop opacity at 1700ms");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 10 + 30 * gTF.ease(0.2) },
+                 RunningOn.Compositor, 0.01, "multiprop transform at 1900ms");
+  omta_is_approx("opacity", 0.3 + 0.2 * gTF.ease(0.4),
+                 RunningOn.Compositor, 0.01, "multiprop opacity at 1900ms");
+  done_div();
+});
 
 //----------------------------------------------------------------------
 //
