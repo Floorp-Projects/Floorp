@@ -1078,6 +1078,202 @@ addAsyncTest(function *() {
   done_div();
 });
 
+/*
+ * css3-animations:  3.7. The 'animation-play-state' Property
+ * http://dev.w3.org/csswg/css3-animations/#the-animation-play-state-property-
+ */
+
+addAsyncTest(function *() {
+  // simple test with just one animation
+  new_div("");
+  gDiv.style.animationTimingFunction = "ease";
+  gDiv.style.animationName = "anim1";
+  gDiv.style.animationDuration = "1s";
+  gDiv.style.animationDirection = "alternate";
+  gDiv.style.animationIterationCount = "2";
+  yield waitForPaintsFlushed();
+  omta_is("transform", { tx: 0 }, RunningOn.Compositor,
+          "animation-play-state test 1, at 0s");
+  advance_clock(250);
+  omta_is_approx("transform", { tx: 80 * gTF.ease(0.5) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-play-state test 1 at 250ms");
+  gDiv.style.animationPlayState = "paused";
+  yield waitForPaintsFlushed();
+  omta_is_approx("transform", { tx: 80 * gTF.ease(0.5) },
+                 RunningOn.MainThread, 0.01,
+                 "animation-play-state test 1 at 250ms");
+  advance_clock(250);
+  omta_is_approx("transform", { tx: 80 * gTF.ease(0.5) },
+                 RunningOn.MainThread, 0.01,
+                 "animation-play-state test 1 still at 500ms");
+  gDiv.style.animationPlayState = "running";
+  yield waitForPaintsFlushed();
+  omta_is_approx("transform", { tx: 80 * gTF.ease(0.5) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-play-state test 1 still at 500ms");
+  advance_clock(500);
+  omta_is_approx("transform", { tx: 80 + 20 * gTF.ease(0.5) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-play-state test 1 at 1000ms");
+  advance_clock(250);
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor,
+          "animation-play-state test 1 at 1250ms");
+  advance_clock(250);
+  omta_is_approx("transform", { tx: 80 + 20 * gTF.ease(0.5) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-play-state test 1 at 1500ms");
+  gDiv.style.animationPlayState = "paused";
+  yield waitForPaintsFlushed();
+  omta_is_approx("transform", { tx: 80 + 20 * gTF.ease(0.5) },
+                 RunningOn.MainThread, 0.01,
+                 "animation-play-state test 1 at 1500ms");
+  advance_clock(2000);
+  omta_is_approx("transform", { tx: 80 + 20 * gTF.ease(0.5) },
+                 RunningOn.MainThread, 0.01,
+                 "animation-play-state test 1 at 3500ms");
+  advance_clock(500);
+  omta_is_approx("transform", { tx: 80 + 20 * gTF.ease(0.5) },
+                 RunningOn.MainThread, 0.01,
+                 "animation-play-state test 1 at 4000ms");
+  gDiv.style.animationPlayState = "";
+  yield waitForPaintsFlushed();
+  omta_is_approx("transform", { tx: 80 + 20 * gTF.ease(0.5) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-play-state test 1 at 4000ms");
+  advance_clock(500);
+  omta_is_approx("transform", { tx: 80 * gTF.ease(0.5) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-play-state test 1 at 4500ms");
+  advance_clock(250);
+  yield waitForPaintsFlushed();
+  omta_is("transform", { tx: 0 }, RunningOn.MainThread,
+          "animation-play-state test 1, at 4750ms");
+  advance_clock(250);
+  omta_is("transform", { tx: 0 }, RunningOn.MainThread,
+          "animation-play-state test 1, at 5000ms");
+  done_div();
+
+  // The corresponding test in test_animations.html tests various cases of
+  // pausing individual animations in a list of three different animations 
+  // but since there are only two OMTA properties we can animate
+  // independently this test is substantially simpler.
+  new_div("");
+  gDiv.style.animationTimingFunction = "ease-out, ease-in";
+  gDiv.style.animationName = "anim2, anim4";
+  gDiv.style.animationDuration = "1s, 2s";
+  gDiv.style.animationDirection = "alternate, normal";
+  gDiv.style.animationIterationCount = "4, 2";
+  yield waitForPaintsFlushed();
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "animation-play-state test 2, at 0s");
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          "animation-play-state test 3, at 0s");
+  advance_clock(250);
+  gDiv.style.animationPlayState = "paused, running"; // pause 1
+  yield waitForPaintsFlushed();
+  // As noted with the tests for animation-iteration-count, for opacity
+  // animations we don't strictly check the finished animation is being animated
+  // on the main thread, but simply that it is producing the correct result.
+  omta_is_approx("opacity", gTF.ease_out(0.25),
+                 RunningOn.Either, 0.01,
+                 "animation-play-state test 2 at 250ms");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.125) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-play-state test 3 at 250ms");
+  advance_clock(250);
+  omta_is_approx("opacity", gTF.ease_out(0.25),
+                 RunningOn.Either, 0.01,
+                 "animation-play-state test 2 at 500ms");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.25) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-play-state test 3 at 500ms");
+  advance_clock(250);
+  gDiv.style.animationPlayState = "running, paused"; // unpause 1, pause 2
+  yield waitForPaintsFlushed();
+  advance_clock(250);
+  omta_is_approx("opacity", gTF.ease_out(0.5),
+                 RunningOn.Compositor, 0.01,
+                 "animation-play-state test 2 at 1000ms");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.375) },
+                 RunningOn.MainThread, 0.01,
+                 "animation-play-state test 3 at 1000ms");
+  gDiv.style.animationPlayState = "paused"; // pause all
+  yield waitForPaintsFlushed();
+  advance_clock(3000);
+  omta_is_approx("opacity", gTF.ease_out(0.5),
+                 RunningOn.Either, 0.01,
+                 "animation-play-state test 2 at 4000ms");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.375) },
+                 RunningOn.MainThread, 0.01,
+                 "animation-play-state test 3 at 4000ms");
+  gDiv.style.animationPlayState = "running, paused"; // pause 2
+  yield waitForPaintsFlushed();
+  advance_clock(850);
+  omta_is_approx("opacity", gTF.ease_out(0.65),
+                 RunningOn.Compositor, 0.01,
+                 "animation-play-state test 2 at 4850ms");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.375) },
+                 RunningOn.MainThread, 0.01,
+                 "animation-play-state test 3 at 4850ms");
+  advance_clock(300);
+  omta_is_approx("opacity", gTF.ease_out(0.35),
+                 RunningOn.Compositor, 0.01,
+                 "animation-play-state test 2 at 5150ms");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.375) },
+                 RunningOn.MainThread, 0.01,
+                 "animation-play-state test 3 at 5150ms");
+  advance_clock(2300);
+  omta_is_approx("opacity", gTF.ease_out(0.05),
+                 RunningOn.Compositor, 0.01,
+                 "animation-play-state test 2 at 7450ms");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.375) },
+                 RunningOn.MainThread, 0.01,
+                 "animation-play-state test 3 at 7450ms");
+  advance_clock(100);
+  // test 2 has finished so wait for it to be removed from the
+  // compositor (otherwise it will fill forwards)
+  yield waitForPaints();
+  omta_is("opacity", 1, RunningOn.Either,
+          "animation-play-state test 2 at 7550ms");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.375) },
+                 RunningOn.MainThread, 0.01,
+                 "animation-play-state test 3 at 7550ms");
+  gDiv.style.animationPlayState = "running"; // unpause 2
+  yield waitForPaintsFlushed();
+  advance_clock(1000);
+  omta_is("opacity", 1, RunningOn.Either,
+          "animation-play-state test 2 at 7550ms");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.875) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-play-state test 3 at 7550ms");
+  advance_clock(500);
+  omta_is("opacity", 1, RunningOn.Either,
+          "animation-play-state test 2 at 8050ms");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.125) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-play-state test 3 at 8050ms");
+  advance_clock(1000);
+  omta_is("opacity", 1, RunningOn.Either,
+          "animation-play-state test 2 at 9050ms");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.625) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-play-state test 3 at 9050ms");
+  advance_clock(500);
+  omta_is("opacity", 1, RunningOn.Either,
+          "animation-play-state test 2 at 9550ms");
+  omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.875) },
+                 RunningOn.Compositor, 0.01,
+                 "animation-play-state test 3 at 9550ms");
+  advance_clock(500);
+  yield waitForPaints();
+  omta_is("opacity", 1, RunningOn.Either,
+          "animation-play-state test 2 at 10050ms");
+  omta_is("transform", { ty: 0 }, RunningOn.MainThread,
+          "animation-play-state test 3 at 10050ms");
+  done_div();
+});
+
 //----------------------------------------------------------------------
 //
 // Helper functions from test_animations.html
