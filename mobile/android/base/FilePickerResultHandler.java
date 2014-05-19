@@ -32,7 +32,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
-import java.util.Queue;
 
 class FilePickerResultHandler implements ActivityResultHandler {
     private static final String LOGTAG = "GeckoFilePickerResultHandler";
@@ -144,8 +143,24 @@ class FilePickerResultHandler implements ActivityResultHandler {
         public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
             if (cursor.moveToFirst()) {
                 String res = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA));
+
+                // Some pickers (the KitKat Documents one for instance) won't return a temporary file here.
+                // Fall back to the normal FileLoader if we didn't find anything.
+                if (TextUtils.isEmpty(res)) {
+                    tryFileLoaderCallback();
+                    return;
+                }
+
                 sendResult(res);
+            } else {
+                tryFileLoaderCallback();
             }
+        }
+
+        private void tryFileLoaderCallback() {
+            final FragmentActivity fa = (FragmentActivity) GeckoAppShell.getGeckoInterface().getActivity();
+            final LoaderManager lm = fa.getSupportLoaderManager();
+            lm.initLoader(uri.hashCode(), null, new FileLoaderCallbacks(uri));
         }
 
         @Override
