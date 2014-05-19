@@ -16,7 +16,8 @@
 
     function runTests() {
       netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-      var utils = SpecialPowers.DOMWindowUtils;
+      var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                                        getInterface(Components.interfaces.nsIDOMWindowUtils);
 
       var plugin1 = document.getElementById("plugin1"); // What we're testing.
       var plugin2 = document.getElementById("plugin2"); // Dummy.
