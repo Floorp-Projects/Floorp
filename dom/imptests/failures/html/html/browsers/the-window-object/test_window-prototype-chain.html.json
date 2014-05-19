@@ -1,0 +1,5 @@
+{
+  "Window.prototype": true,
+  "EventTarget.prototype": true,
+  "Object.prototype": true
+}
