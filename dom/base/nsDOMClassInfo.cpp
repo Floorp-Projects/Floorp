@@ -35,7 +35,6 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIXPConnect.h"
-#include "nsIXPCSecurityManager.h"
 #include "xptcall.h"
 #include "nsTArray.h"
 #include "nsDocument.h" // nsDOMStyleSheetList
