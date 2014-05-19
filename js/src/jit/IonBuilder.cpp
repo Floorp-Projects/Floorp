@@ -8902,7 +8902,7 @@ CanInlinePropertyOpShapes(const BaselineInspector::ShapeVector &shapes)
 {
     for (size_t i = 0; i < shapes.length(); i++) {
         // We inline the property access as long as the shape is not in
-        // dictionary made. We cannot be sure that the shape is still a
+        // dictionary mode. We cannot be sure that the shape is still a
         // lastProperty, and calling Shape::search() on dictionary mode
         // shapes that aren't lastProperty is invalid.
         if (shapes[i]->inDictionary())
