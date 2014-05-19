@@ -768,6 +768,53 @@ addAsyncTest(function *() {
   done_div();
 });
 
+/*
+ * css3-animations:  3.2. The 'animation-name' Property
+ * http://dev.w3.org/csswg/css3-animations/#the-animation-name-property-
+ */
+
+// animation-name is reasonably well-tested up in the tests for Section
+// 2, particularly the tests that "Test that animations continue running
+// when the animation name list is changed."
+
+// Test that 'animation-name: none' steps the animation, and setting
+// it again starts a new one.
+
+addAsyncTest(function *() {
+  new_div("");
+  gDiv.style.animation = "anim2 ease-in-out 10s";
+  yield waitForPaintsFlushed();
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "after setting animation-name to anim2");
+  advance_clock(1000);
+  omta_is_approx("opacity", gTF.ease_in_out(0.1),
+                 RunningOn.Compositor, 0.01,
+                 "before changing animation-name to none");
+  gDiv.style.animationName = "none";
+  yield waitForPaintsFlushed();
+  omta_is("opacity", 1, RunningOn.MainThread,
+          "after changing animation-name to none");
+  advance_clock(1000);
+  omta_is("opacity", 1, RunningOn.MainThread,
+          "after changing animation-name to none plus 1s");
+  gDiv.style.animationName = "anim2";
+  yield waitForPaintsFlushed();
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "after changing animation-name to anim2");
+  advance_clock(1000);
+  omta_is_approx("opacity", gTF.ease_in_out(0.1),
+                 RunningOn.Compositor, 0.01,
+                 "at 1s in animation when animation-name no longer none again");
+  gDiv.style.animationName = "none";
+  yield waitForPaintsFlushed();
+  omta_is("opacity", 1, RunningOn.MainThread,
+          "after changing animation-name to none");
+  advance_clock(1000);
+  omta_is("opacity", 1, RunningOn.MainThread,
+          "after changing animation-name to none plus 1s");
+  done_div();
+});
+
 //----------------------------------------------------------------------
 //
 // Helper functions from test_animations.html
