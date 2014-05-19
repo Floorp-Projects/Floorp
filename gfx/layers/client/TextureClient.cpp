@@ -324,7 +324,7 @@ TextureClient::CreateBufferTextureClient(ISurfaceAllocator* aAllocator,
                                          TextureFlags aTextureFlags,
                                          gfx::BackendType aMoz2DBackend)
 {
-  if (aAllocator->IsSameProcess()) {
+  if (gfxPlatform::GetPlatform()->PreferMemoryOverShmem()) {
     RefPtr<BufferTextureClient> result = new MemoryTextureClient(aAllocator, aFormat,
                                                                  aMoz2DBackend,
                                                                  aTextureFlags);
