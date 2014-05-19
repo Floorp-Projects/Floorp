@@ -239,7 +239,7 @@ interface MozIccManager : EventTarget
    *
    * @return see MozIcc.webidl for the detail.
    */
-  nsISupports getIccById(DOMString iccId);
+  MozIcc? getIccById(DOMString iccId);
 
   /**
    * 'oniccdetected' event is notified whenever a new ICC is detected.
