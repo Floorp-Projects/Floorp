@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+/*
+user_pref("dom.window_experimental_bindings", true);
+*/
+
+function boom()
+{
+    window.__proto__ = function(){};
+    for (var i = 0; i < 10000; ++i) {
+        self.document;
+    }
+}
+
+</script></head>
+
+<body onload="boom();"></body>
+</html>
