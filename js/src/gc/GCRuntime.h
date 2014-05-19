@@ -131,6 +131,13 @@ class GCRuntime
 
     void markRuntime(JSTracer *trc, bool useSavedRoots = false);
 
+#ifdef JS_GC_ZEAL
+    void verifyPreBarriers();
+    void verifyPostBarriers();
+    void maybeVerifyPreBarriers(bool always);
+    void maybeVerifyPostBarriers(bool always);
+#endif
+
   public:
     // Internal public interface
     void recordNativeStackTop();
@@ -178,6 +185,18 @@ class GCRuntime
 #endif
 
     void setAlwaysPreserveCode() { alwaysPreserveCode = true; }
+
+    bool isGenerationalGCEnabled() { return generationalDisabled == 0; }
+    void disableGenerationalGC();
+    void enableGenerationalGC();
+
+#ifdef JS_GC_ZEAL
+    void startVerifyPreBarriers();
+    bool endVerifyPreBarriers();
+    void startVerifyPostBarriers();
+    bool endVerifyPostBarriers();
+    void finishVerifier();
+#endif
 
   private:
     // For ArenaLists::allocateFromArenaInline()

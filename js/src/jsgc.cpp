@@ -1244,7 +1244,7 @@ GCRuntime::finish()
 
 #ifdef JS_GC_ZEAL
     /* Free memory associated with GC verification. */
-    FinishVerifier(rt);
+    finishVerifier();
 #endif
 
     /* Delete all remaining zones. */
@@ -5004,6 +5004,32 @@ GCRuntime::minorGC(JSContext *cx, JS::gcreason::Reason reason)
             pretenureTypes[i]->setShouldPreTenure(cx);
     }
     JS_ASSERT_IF(!rt->mainThread.suppressGC, nursery.isEmpty());
+#endif
+}
+
+void
+GCRuntime::disableGenerationalGC()
+{
+#ifdef JSGC_GENERATIONAL
+    if (isGenerationalGCEnabled()) {
+        minorGC(JS::gcreason::API);
+        nursery.disable();
+        storeBuffer.disable();
+    }
+#endif
+    ++rt->gc.generationalDisabled;
+}
+
+void
+GCRuntime::enableGenerationalGC()
+{
+    JS_ASSERT(generationalDisabled > 0);
+    --generationalDisabled;
+#ifdef JSGC_GENERATIONAL
+    if (generationalDisabled == 0) {
+        nursery.enable();
+        storeBuffer.enable();
+    }
 #endif
 }
 
