@@ -619,6 +619,12 @@ private:
   bool IsTransformingState(PanZoomState aState);
   bool IsPanningState(PanZoomState mState);
 
+  /**
+   * Apply to |aTransform| a visual effect that reflects this apzc's
+   * overscrolled state, if any.
+   */
+  void ApplyOverscrollEffect(ViewTransform* aTransform) const;
+
   enum AxisLockMode {
     FREE,     /* No locking at all */
     STANDARD, /* Default axis locking mode that remains locked until pan ends*/
