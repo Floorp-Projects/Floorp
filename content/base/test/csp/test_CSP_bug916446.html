@@ -35,7 +35,7 @@ examiner.prototype  = {
       var testid = testpat.exec(uri)[1];
       if (testid === "img_bad") {
         // img_bad should be *allowed* because the policy is report-only
-        ok(true, "Inline scripts should execute (because the policy is report-only)");
+        ok(true, "External loads should be allowed because the policy is report-only");
         this.completedTests++;
       }
     }
