@@ -387,7 +387,7 @@ GonkCameraParameters::SetTranslated(uint32_t aKey, const nsTArray<ICameraControl
 
   for (uint32_t i = 0; i < length; ++i) {
     const ICameraControl::Region* r = &aRegions[i];
-    s.AppendPrintf("(%d,%d,%d,%d,%d),", r->top, r->left, r->bottom, r->right, r->weight);
+    s.AppendPrintf("(%d,%d,%d,%d,%d),", r->left, r->top, r->right, r->bottom, r->weight);
   }
 
   // remove the trailing comma
@@ -427,7 +427,7 @@ GonkCameraParameters::GetTranslated(uint32_t aKey, nsTArray<ICameraControl::Regi
   uint32_t i;
   for (i = 0, p = value; p && i < count; ++i, p = strchr(p + 1, '(')) {
     r = aRegions.AppendElement();
-    if (sscanf(p, "(%d,%d,%d,%d,%u)", &r->top, &r->left, &r->bottom, &r->right, &r->weight) != 5) {
+    if (sscanf(p, "(%d,%d,%d,%d,%u)", &r->left, &r->top, &r->right, &r->bottom, &r->weight) != 5) {
       DOM_CAMERA_LOGE("Camera parameter aKey=%d region tuple has bad format: '%s'\n", aKey, p);
       aRegions.Clear();
       return NS_ERROR_NOT_AVAILABLE;
