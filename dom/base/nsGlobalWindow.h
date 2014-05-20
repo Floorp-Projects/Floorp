@@ -470,8 +470,9 @@ public:
   virtual NS_HIDDEN_(void) EnterModalState();
   virtual NS_HIDDEN_(void) LeaveModalState();
 
+  // Outer windows only.
   virtual NS_HIDDEN_(bool) CanClose();
-  virtual NS_HIDDEN_(nsresult) ForceClose();
+  virtual NS_HIDDEN_(void) ForceClose();
 
   virtual NS_HIDDEN_(void) MaybeUpdateTouchState();
   virtual NS_HIDDEN_(void) UpdateTouchState();
@@ -1045,7 +1046,8 @@ protected:
   void DropOuterWindowDocs();
   void CleanUp();
   void ClearControllers();
-  nsresult FinalClose();
+  // Outer windows only.
+  void FinalClose();
 
   inline void MaybeClearInnerWindow(nsGlobalWindow* aExpectedInner)
   {

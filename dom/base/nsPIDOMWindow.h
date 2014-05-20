@@ -424,8 +424,9 @@ public:
   virtual void EnterModalState() = 0;
   virtual void LeaveModalState() = 0;
 
+  // Outer windows only.
   virtual bool CanClose() = 0;
-  virtual nsresult ForceClose() = 0;
+  virtual void ForceClose() = 0;
 
   bool IsModalContentWindow() const
   {
