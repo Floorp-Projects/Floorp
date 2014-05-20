@@ -772,14 +772,13 @@ void
 Notification::CloseInternal()
 {
   if (!mIsClosed) {
-    nsresult rv;
     // Don't bail out if notification storage fails, since we still
     // want to send the close event through the alert service.
     nsCOMPtr<nsINotificationStorage> notificationStorage =
       do_GetService(NS_NOTIFICATION_STORAGE_CONTRACTID);
     if (notificationStorage) {
       nsString origin;
-      rv = GetOrigin(GetOwner(), origin);
+      nsresult rv = GetOrigin(GetOwner(), origin);
       if (NS_SUCCEEDED(rv)) {
         notificationStorage->Delete(origin, mID);
       }
@@ -788,9 +787,7 @@ Notification::CloseInternal()
     nsCOMPtr<nsIAlertsService> alertService =
       do_GetService(NS_ALERTSERVICE_CONTRACTID);
     if (alertService) {
-      if (NS_SUCCEEDED(rv)) {
-        alertService->CloseAlert(mAlertName, GetPrincipal());
-      }
+      alertService->CloseAlert(mAlertName, GetPrincipal());
     }
   }
 }
