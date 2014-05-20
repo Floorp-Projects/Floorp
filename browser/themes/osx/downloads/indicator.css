@@ -29,11 +29,11 @@
                               0, 198, 18, 180) center no-repeat;
 }
 
-#downloads-indicator-icon:-moz-lwtheme-brighttext {
+toolbar[brighttext] #downloads-indicator-icon {
   background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"), 0, 198, 18, 180);
 }
 
-#downloads-button[attention] #downloads-indicator-icon {
+#downloads-button[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
   background-image: url("chrome://browser/skin/downloads/download-glow.png");
 }
 
@@ -45,17 +45,17 @@
 /* In the next few rules, we use :not([counter]) as a shortcut that is
    equivalent to -moz-any([progress], [paused]). */
 
-#downloads-button:not([counter]) #downloads-indicator-counter {
+#downloads-button:not([counter]) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
   background: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"),
                               0, 198, 18, 180) center no-repeat;
   background-size: 12px;
 }
 
-#downloads-button:not([counter]) #downloads-indicator-counter:-moz-lwtheme-brighttext {
+toolbar[brighttext] #downloads-button:not([counter]):not([attention]) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
   background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"), 0, 198, 18, 180);
 }
 
-#downloads-button:not([counter])[attention] #downloads-indicator-counter {
+#downloads-button:not([counter])[attention] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
   background-image: url("chrome://browser/skin/downloads/download-glow.png");
 }
 
@@ -65,7 +65,7 @@
     background-size: 18px;
   }
 
-  #downloads-indicator-icon:-moz-lwtheme-brighttext {
+  toolbar[brighttext] #downloads-indicator-icon {
     background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted@2x.png"), 0, 396, 36, 360);
   }
 
@@ -73,7 +73,7 @@
     background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar@2x.png"), 0, 396, 36, 360);
   }
 
-  #downloads-button:not([counter]) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter:-moz-lwtheme-brighttext {
+  toolbar[brighttext] #downloads-button:not([counter]) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
     background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted@2x.png"),
                                       0, 396, 36, 360);
   }
