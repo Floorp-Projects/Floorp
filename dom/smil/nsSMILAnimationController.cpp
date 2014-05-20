@@ -90,8 +90,8 @@ nsSMILAnimationController::Resume(uint32_t aType)
   nsSMILTimeContainer::Resume(aType);
 
   if (wasPaused && !mPauseState && mChildContainerTable.Count()) {
-    Sample(); // Run the first sample manually
     MaybeStartSampling(GetRefreshDriver());
+    Sample(); // Run the first sample manually
   }
 }
 
