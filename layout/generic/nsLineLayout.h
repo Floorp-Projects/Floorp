@@ -528,8 +528,8 @@ protected:
 
   void PushFrame(nsIFrame* aFrame);
 
-  void ApplyStartMargin(PerFrameData* pfd,
-                        nsHTMLReflowState& aReflowState);
+  void AllowForStartMargin(PerFrameData* pfd,
+                           nsHTMLReflowState& aReflowState);
 
   bool CanPlaceFrame(PerFrameData* pfd,
                        bool aNotSafeToBreak,
