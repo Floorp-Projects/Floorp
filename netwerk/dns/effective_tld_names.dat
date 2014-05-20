@@ -293,6 +293,7 @@ rs.ba
 // bb : http://en.wikipedia.org/wiki/.bb
 bb
 biz.bb
+co.bb
 com.bb
 edu.bb
 gov.bb
@@ -300,6 +301,7 @@ info.bb
 net.bb
 org.bb
 store.bb
+tv.bb
 
 // bd : http://en.wikipedia.org/wiki/.bd
 *.bd
