@@ -154,15 +154,6 @@ fuzzy(1,65536) random-if(gtk2Widget) fails-if(B2G) fuzzy-if(Android,9,65536) fai
 # random-if(B2G) from bug 983650
 fuzzy(1,65536) random-if(B2G) fuzzy-if(Android,9,65536)                                random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha&premult  wrapper.html?colors-half-alpha.png
 
-# Test over-bright premult:
-# random-if(B2G) from bug 983650
-# This test assumes that the compositor is able to correctly handle superluminant
-# pixels in a WebGL canvas with premultiplied alpha. This is not handled by
-# Skia's software blending code. Consequently, this test is random on
-# basic-layers when using skia. See bug 1004483.
-fuzzy(1,65536) random-if(B2G) fuzzy-if(Android,9,65536) random-if(Android&&AndroidVersion<15) random-if(skiaContent&&!layersGPUAccelerated) == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha&premult  wrapper.html?colors-half-alpha.png
-
-
 # Check for hanging framebuffer bindings:
                                        random-if(Android&&AndroidVersion<15)  == webgl-hanging-fb-test.html?__&________  wrapper.html?green.png
                                        random-if(Android&&AndroidVersion<15)  == webgl-hanging-fb-test.html?aa&________  wrapper.html?green.png
