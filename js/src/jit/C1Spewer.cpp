@@ -31,7 +31,6 @@ C1Spewer::beginFunction(MIRGraph *graph, HandleScript script)
         return;
 
     this->graph  = graph;
-    this->script.repoint(script);
 
     fprintf(spewout_, "begin_compilation\n");
     if (script) {

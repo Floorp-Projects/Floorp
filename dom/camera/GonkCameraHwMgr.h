@@ -83,6 +83,15 @@ public:
   };
   virtual int      GetSensorOrientation(uint32_t aType = RAW_SENSOR_ORIENTATION);
 
+  /**
+   * MIN_UNDEQUEUED_BUFFERS has increased to 4 since Android JB. For FFOS, more
+   * than 3 gralloc buffers are necessary between ImageHost and GonkBufferQueue
+   * for consuming preview stream. To keep the stability for older platform, we
+   * set MIN_UNDEQUEUED_BUFFERS to 4 only in Android KK base.
+   * See also bug 988704.
+   */
+  enum { MIN_UNDEQUEUED_BUFFERS = 4};
+
   virtual int      AutoFocus();
   virtual int      CancelAutoFocus();
   virtual int      StartFaceDetection();

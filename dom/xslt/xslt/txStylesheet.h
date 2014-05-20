@@ -65,7 +65,7 @@ public:
      * Add a decimal-format to the stylesheet
      */
     nsresult addDecimalFormat(const txExpandedName& aName,
-                              nsAutoPtr<txDecimalFormat> aFormat);
+                              nsAutoPtr<txDecimalFormat>&& aFormat);
 
     struct MatchableTemplate {
         txInstruction* mFirstInstruction;
@@ -96,8 +96,8 @@ public:
 
     class GlobalVariable : public txObject {
     public:
-        GlobalVariable(nsAutoPtr<Expr> aExpr,
-                       nsAutoPtr<txInstruction> aFirstInstruction,
+        GlobalVariable(nsAutoPtr<Expr>&& aExpr,
+                       nsAutoPtr<txInstruction>&& aFirstInstruction,
                        bool aIsParam);
 
         nsAutoPtr<Expr> mExpr;

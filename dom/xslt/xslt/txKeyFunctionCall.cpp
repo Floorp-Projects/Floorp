@@ -12,6 +12,7 @@
 #include "txXSLTPatterns.h"
 #include "txNamespaceMap.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/Move.h"
 
 using namespace mozilla;
 
@@ -251,7 +252,7 @@ txKeyHash::init()
  * @param aUse    use-expression
  * @return false if an error occurred, true otherwise
  */
-bool txXSLKey::addKey(nsAutoPtr<txPattern> aMatch, nsAutoPtr<Expr> aUse)
+bool txXSLKey::addKey(nsAutoPtr<txPattern>&& aMatch, nsAutoPtr<Expr>&& aUse)
 {
     if (!aMatch || !aUse)
         return false;
@@ -260,8 +261,8 @@ bool txXSLKey::addKey(nsAutoPtr<txPattern> aMatch, nsAutoPtr<Expr> aUse)
     if (!key)
         return false;
 
-    key->matchPattern = aMatch;
-    key->useExpr = aUse;
+    key->matchPattern = Move(aMatch);
+    key->useExpr = Move(aUse);
 
     return true;
 }
