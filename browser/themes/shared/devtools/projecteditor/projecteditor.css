@@ -27,7 +27,7 @@
 
 .sources-tree {
   overflow:auto;
-  -moz-user-focus: true;
+  -moz-user-focus: normal;
 }
 
 .sources-tree input {
