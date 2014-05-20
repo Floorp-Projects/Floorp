@@ -1988,8 +1988,10 @@ nsGlobalWindow::OuterObject(JSContext* aCx, JS::Handle<JSObject*> aObj)
 }
 
 bool
-nsGlobalWindow::WouldReuseInnerWindow(nsIDocument *aNewDocument)
+nsGlobalWindow::WouldReuseInnerWindow(nsIDocument* aNewDocument)
 {
+  MOZ_ASSERT(IsOuterWindow());
+
   // We reuse the inner window when:
   // a. We are currently at our original document.
   // b. At least one of the following conditions are true:
