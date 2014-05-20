@@ -277,13 +277,11 @@ nsJSEnvironmentObserver::Observe(nsISupports* aSubject, const char* aTopic,
     }
     nsJSContext::GarbageCollectNow(JS::gcreason::MEM_PRESSURE,
                                    nsJSContext::NonIncrementalGC,
-                                   nsJSContext::NonCompartmentGC,
                                    nsJSContext::ShrinkingGC);
     nsJSContext::CycleCollectNow();
     if (NeedsGCAfterCC()) {
       nsJSContext::GarbageCollectNow(JS::gcreason::MEM_PRESSURE,
                                      nsJSContext::NonIncrementalGC,
-                                     nsJSContext::NonCompartmentGC,
                                      nsJSContext::ShrinkingGC);
     }
   } else if (!nsCRT::strcmp(aTopic, "quit-application")) {
@@ -1708,7 +1706,6 @@ FullGCTimerFired(nsITimer* aTimer, void* aClosure)
 void
 nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
                                IsIncremental aIncremental,
-                               IsCompartment aCompartment,
                                IsShrinking aShrinking,
                                int64_t aSliceMillis)
 {
@@ -2201,7 +2198,6 @@ InterSliceGCTimerFired(nsITimer *aTimer, void *aClosure)
   nsJSContext::KillInterSliceGCTimer();
   nsJSContext::GarbageCollectNow(JS::gcreason::INTER_SLICE_GC,
                                  nsJSContext::IncrementalGC,
-                                 nsJSContext::CompartmentGC,
                                  nsJSContext::NonShrinkingGC,
                                  NS_INTERSLICE_GC_BUDGET);
 }
@@ -2213,8 +2209,7 @@ GCTimerFired(nsITimer *aTimer, void *aClosure)
   nsJSContext::KillGCTimer();
   uintptr_t reason = reinterpret_cast<uintptr_t>(aClosure);
   nsJSContext::GarbageCollectNow(static_cast<JS::gcreason::Reason>(reason),
-                                 nsJSContext::IncrementalGC,
-                                 nsJSContext::CompartmentGC);
+                                 nsJSContext::IncrementalGC);
 }
 
 void
