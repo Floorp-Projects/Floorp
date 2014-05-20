@@ -16,7 +16,6 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserContract.TopSites;
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.db.TopSitesCursorWrapper;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.gfx.BitmapUtils;
@@ -314,7 +313,6 @@ public class TopSitesPanel extends HomeFragment {
         }
 
         TopSitesGridContextMenuInfo info = (TopSitesGridContextMenuInfo) menuInfo;
-        final Activity activity = getActivity();
 
         final int itemId = item.getItemId();
 
