@@ -1133,6 +1133,14 @@ NS_METHOD nsBaseWidget::GetScreenBounds(nsIntRect &aRect)
   return GetBounds(aRect);
 }
 
+NS_METHOD nsBaseWidget::GetRestoredBounds(nsIntRect &aRect)
+{
+  if (SizeMode() != nsSizeMode_Normal) {
+    return NS_ERROR_FAILURE;
+  }
+  return GetScreenBounds(aRect);
+}
+
 nsIntPoint nsBaseWidget::GetClientOffset()
 {
   return nsIntPoint(0, 0);
