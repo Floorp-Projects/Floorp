@@ -129,6 +129,7 @@ RegExpObjectBuilder::clone(Handle<RegExpObject *> other)
     RegExpGuard g(cx);
     if (!other->getShared(cx, &g))
         return nullptr;
+    g.re()->prepareForUse(cx);
 
     Rooted<JSAtom *> source(cx, other->getSource());
     return build(source, *g);
