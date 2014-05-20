@@ -38,8 +38,7 @@ inDeepTreeWalker::~inDeepTreeWalker()
 }
 
 NS_IMPL_ISUPPORTS(inDeepTreeWalker,
-                  inIDeepTreeWalker,
-                  nsIDOMTreeWalker)
+                  inIDeepTreeWalker)
 
 ////////////////////////////////////////////////////
 // inIDeepTreeWalker
