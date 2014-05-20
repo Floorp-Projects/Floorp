@@ -502,7 +502,7 @@ this.PlacesBackups = {
             // Since children may be added before parents, we should merge with
             // the existing object.
             let original = itemsMap.get(id);
-            for (prop in bookmark) {
+            for (let prop of Object.getOwnPropertyNames(bookmark)) {
               original[prop] = bookmark[prop];
             }
             bookmark = original;
