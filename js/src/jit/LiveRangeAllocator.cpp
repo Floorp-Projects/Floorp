@@ -119,7 +119,7 @@ LiveInterval::addRange(CodePosition from, CodePosition to)
         }
     }
     // Perform coalescing on overlapping ranges
-    Range *j = i;
+    Range *coalesceEnd = i;
     for (; i > ranges_.begin(); i--) {
         if (newRange.to < i[-1].from)
             break;
@@ -127,11 +127,11 @@ LiveInterval::addRange(CodePosition from, CodePosition to)
             newRange.to = i[-1].to;
     }
 
-    if (i == j)
+    if (i == coalesceEnd)
         return ranges_.insert(i, newRange);
 
     i[0] = newRange;
-    ranges_.erase(i + 1, j);
+    ranges_.erase(i + 1, coalesceEnd);
     return true;
 }
 
