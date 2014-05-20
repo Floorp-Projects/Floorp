@@ -71,6 +71,7 @@ class ActionModeCompatView extends LinearLayout implements GeckoMenu.ActionItemB
     public void initForMode(final ActionModeCompat mode) {
         mTitleView.setOnClickListener(mode);
         mPopupMenu.setOnMenuItemClickListener(mode);
+        mPopupMenu.setOnMenuItemLongClickListener(mode);
     }
 
     public CharSequence getTitle() {
