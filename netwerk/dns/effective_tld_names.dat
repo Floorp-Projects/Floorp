@@ -6483,8 +6483,12 @@ pro.vn
 health.vn
 
 // vu : http://en.wikipedia.org/wiki/.vu
-// list of 2nd level tlds ?
+// http://www.vunic.vu/
 vu
+com.vu
+edu.vu
+net.vu
+org.vu
 
 // wf : http://www.afnic.fr/medias/documents/AFNIC-naming-policy2012.pdf
 wf
