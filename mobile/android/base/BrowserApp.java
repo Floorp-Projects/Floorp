@@ -59,6 +59,7 @@ import org.mozilla.gecko.toolbar.BrowserToolbar;
 import org.mozilla.gecko.toolbar.ToolbarProgressView;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.GamepadUtils;
+import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.MenuUtils;
 import org.mozilla.gecko.util.StringUtils;
@@ -531,7 +532,7 @@ abstract public class BrowserApp extends GeckoApp
         mFindInPageBar = (FindInPageBar) findViewById(R.id.find_in_page);
         mMediaCastingBar = (MediaCastingBar) findViewById(R.id.media_casting);
 
-        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+        EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener)this,
             "CharEncoding:Data",
             "CharEncoding:State",
             "Feedback:LastUrl",
@@ -612,14 +613,16 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void onResume() {
         super.onResume();
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "Prompt:ShowTop");
+        EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener)this,
+            "Prompt:ShowTop");
     }
 
     @Override
     public void onPause() {
         super.onPause();
         // Register for Prompt:ShowTop so we can foreground this activity even if it's hidden.
-        EventDispatcher.getInstance().registerGeckoThreadListener(this, "Prompt:ShowTop");
+        EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener)this,
+            "Prompt:ShowTop");
     }
 
     private void setBrowserToolbarListeners() {
@@ -885,7 +888,7 @@ abstract public class BrowserApp extends GeckoApp
             mBrowserHealthReporter = null;
         }
 
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+        EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener)this,
             "CharEncoding:Data",
             "CharEncoding:State",
             "Feedback:LastUrl",
