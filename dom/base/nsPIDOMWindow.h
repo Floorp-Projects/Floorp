@@ -278,6 +278,7 @@ public:
 
   // Set the window up with an about:blank document with the current subject
   // principal.
+  // Outer windows only.
   virtual void SetInitialPrincipalToSubject() = 0;
 
   virtual PopupControlState PushPopupControlState(PopupControlState aState,

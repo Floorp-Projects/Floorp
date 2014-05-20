@@ -434,6 +434,7 @@ public:
   virtual NS_HIDDEN_(void) SetIsBackground(bool aIsBackground);
   virtual NS_HIDDEN_(void) SetChromeEventHandler(mozilla::dom::EventTarget* aChromeEventHandler);
 
+  // Outer windows only.
   virtual NS_HIDDEN_(void) SetInitialPrincipalToSubject();
 
   virtual NS_HIDDEN_(PopupControlState) PushPopupControlState(PopupControlState state, bool aForce) const;
