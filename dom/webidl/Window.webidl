@@ -294,9 +294,9 @@ partial interface Window {
 
   [Throws] attribute boolean                            fullScreen;
 
-  [Throws] void             back();
-  [Throws] void             forward();
-  [Throws] void             home();
+  [Throws, ChromeOnly] void             back();
+  [Throws, ChromeOnly] void             forward();
+  [Throws, ChromeOnly] void             home();
 
   // XXX Should this be in nsIDOMChromeWindow?
   void                      updateCommands(DOMString action);
