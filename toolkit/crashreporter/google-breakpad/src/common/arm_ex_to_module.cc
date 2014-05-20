@@ -162,6 +162,21 @@ int ARMExToModule::TranslateCmd(const struct extab_data* edata,
   return ret;
 }
 
+bool ARMExToModule::HasStackFrame(uintptr_t addr, size_t size) {
+  // Invariant: the range [addr,covered) is covered by existing stack
+  // frame entries.
+  uintptr_t covered = addr;
+  while (covered < addr + size) {
+    const Module::StackFrameEntry *old_entry =
+      module_->FindStackFrameEntryByAddress(covered);
+    if (!old_entry) {
+      return false;
+    }
+    covered = old_entry->address + old_entry->size;
+  }
+  return true;
+}
+
 void ARMExToModule::AddStackFrame(uintptr_t addr, size_t size) {
   stack_frame_entry_ = new Module::StackFrameEntry;
   stack_frame_entry_->address = addr;

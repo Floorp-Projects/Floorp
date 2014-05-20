@@ -893,14 +893,9 @@ FileAppender.prototype = {
   _getFile: function() {
     if (!this._fileReadyPromise) {
       this._fileReadyPromise = this._openFile();
-      return this._fileReadyPromise;
     }
 
-    return this._fileReadyPromise.then(_ => {
-      if (!this._file) {
-        return this._openFile();
-      }
-    });
+    return this._fileReadyPromise;
   },
 
   doAppend: function (formatted) {
