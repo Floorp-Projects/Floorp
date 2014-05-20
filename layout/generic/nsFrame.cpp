@@ -1953,7 +1953,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
   nsDisplayListCollection set;
   {    
-    nsDisplayListBuilder::AutoBuildingDisplayList rootSetter(aBuilder, true);
+    nsDisplayListBuilder::AutoBuildingDisplayList rootSetter(aBuilder, this, true);
     DisplayListClipState::AutoSaveRestore nestedClipState(aBuilder);
     nsDisplayListBuilder::AutoInTransformSetter
       inTransformSetter(aBuilder, inTransform);
