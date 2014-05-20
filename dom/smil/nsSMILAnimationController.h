@@ -214,6 +214,9 @@ protected:
   bool                       mDeferredStartSampling;
   bool                       mRunningSample;
 
+  // Are we registered with our document's refresh driver?
+  bool                       mRegisteredWithRefreshDriver;
+
   // Store raw ptr to mDocument.  It owns the controller, so controller
   // shouldn't outlive it
   nsIDocument* mDocument;
