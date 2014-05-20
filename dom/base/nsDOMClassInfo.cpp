@@ -485,10 +485,6 @@ bool nsDOMClassInfo::sIsInitialized = false;
 
 jsid nsDOMClassInfo::sLocation_id        = JSID_VOID;
 jsid nsDOMClassInfo::sConstructor_id     = JSID_VOID;
-jsid nsDOMClassInfo::sLength_id          = JSID_VOID;
-jsid nsDOMClassInfo::sItem_id            = JSID_VOID;
-jsid nsDOMClassInfo::sNamedItem_id       = JSID_VOID;
-jsid nsDOMClassInfo::sEnumerate_id       = JSID_VOID;
 jsid nsDOMClassInfo::sTop_id             = JSID_VOID;
 jsid nsDOMClassInfo::sDocument_id        = JSID_VOID;
 jsid nsDOMClassInfo::sWrappedJSObject_id = JSID_VOID;
@@ -595,10 +591,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
 
   SET_JSID_TO_STRING(sLocation_id,        cx, "location");
   SET_JSID_TO_STRING(sConstructor_id,     cx, "constructor");
-  SET_JSID_TO_STRING(sLength_id,          cx, "length");
-  SET_JSID_TO_STRING(sItem_id,            cx, "item");
-  SET_JSID_TO_STRING(sNamedItem_id,       cx, "namedItem");
-  SET_JSID_TO_STRING(sEnumerate_id,       cx, "enumerateProperties");
   SET_JSID_TO_STRING(sTop_id,             cx, "top");
   SET_JSID_TO_STRING(sDocument_id,        cx, "document");
   SET_JSID_TO_STRING(sWrappedJSObject_id, cx, "wrappedJSObject");
@@ -1717,9 +1709,6 @@ nsDOMClassInfo::ShutDown()
 
   sLocation_id        = JSID_VOID;
   sConstructor_id     = JSID_VOID;
-  sLength_id          = JSID_VOID;
-  sItem_id            = JSID_VOID;
-  sEnumerate_id       = JSID_VOID;
   sTop_id             = JSID_VOID;
   sDocument_id        = JSID_VOID;
   sWrappedJSObject_id = JSID_VOID;
