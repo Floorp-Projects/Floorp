@@ -177,7 +177,7 @@ public class BrowserLocaleManager implements LocaleManager {
 
         // This seems to be a no-op, but every piece of documentation under the
         // sun suggests that it's necessary, and it certainly makes sense.
-        res.updateConfiguration(config, res.getDisplayMetrics());
+        res.updateConfiguration(config, null);
     }
 
     @Override
@@ -254,7 +254,7 @@ public class BrowserLocaleManager implements LocaleManager {
         // We should use setLocale, but it's unexpectedly missing
         // on real devices.
         config.locale = locale;
-        res.updateConfiguration(config, res.getDisplayMetrics());
+        res.updateConfiguration(config, null);
     }
 
     private SharedPreferences getSharedPreferences(Context context) {
