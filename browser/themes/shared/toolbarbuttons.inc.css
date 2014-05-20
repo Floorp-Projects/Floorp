@@ -5,8 +5,8 @@
   list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
 
-:-moz-any(@primaryToolbarButtons@):not(@inAnyPanel@):-moz-lwtheme-brighttext,
-#bookmarks-menu-button:not(@inAnyPanel@):-moz-lwtheme-brighttext > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+toolbar[brighttext] :-moz-any(@primaryToolbarButtons@),
+toolbar[brighttext] #bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   list-style-image: url(chrome://browser/skin/Toolbar-inverted.png);
 }
 
@@ -64,8 +64,8 @@
   -moz-image-region: rect(0, 18px, 18px, 0px);
 }
 
-#sync-button[cui-areatype="toolbar"][status="active"]:-moz-lwtheme-brighttext,
-#sync-button[cui-areatype="toolbar"][status="active"]:-moz-lwtheme-brighttext:hover:active:not([disabled="true"]) {
+toolbar[brighttext] #sync-button[status="active"],
+toolbar[brighttext] #sync-button[status="active"]:hover:active:not([disabled="true"]) {
   list-style-image: url("chrome://browser/skin/syncProgress-toolbar-inverted.png");
 }
 
