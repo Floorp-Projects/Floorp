@@ -67,7 +67,7 @@ class GonkNativeWindow: public GonkConsumerBase
     // access at the same time.
     // controlledByApp tells whether this consumer is controlled by the
     // application.
-    GonkNativeWindow();
+    GonkNativeWindow(int bufferCount = GonkBufferQueue::MIN_UNDEQUEUED_BUFFERS);
     GonkNativeWindow(const sp<GonkBufferQueue>& bq, uint32_t consumerUsage,
             int bufferCount = GonkBufferQueue::MIN_UNDEQUEUED_BUFFERS,
             bool controlledByApp = false);
