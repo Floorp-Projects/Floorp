@@ -127,6 +127,14 @@ private:
   int            mGeneration;
   int            mPendingGenerationFlush;
   void* const    mStackTop;
+
+  // Only Linux is using a signal sender, instead of stopping the thread, so we
+  // need some space to store the data which cannot be collected in the signal
+  // handler code.
+#ifdef XP_LINUX
+public:
+  int64_t        mRssMemory;
+#endif
 };
 
 std::ostream& operator<<(std::ostream& stream, const ThreadProfile& profile);

@@ -32,7 +32,7 @@ TEST_FILES = \
   test262/ \
   $(NULL)
 
-PKG_STAGE = $(DIST)/test-package-stage
+PKG_STAGE = $(DIST)/test-stage
 
 # stage tests for packaging
 stage-package:

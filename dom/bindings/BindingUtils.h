@@ -573,8 +573,6 @@ struct NamedConstructor
  * constructorCache a pointer to a JSObject pointer where we should cache the
  *                  interface object. This must be null if both constructorClass
  *                  and constructor are null, and non-null otherwise.
- * domClass is the DOMClass of instance objects for this class.  This can be
- *          null if this is not a concrete proto.
  * properties contains the methods, attributes and constants to be defined on
  *            objects in any compartment.
  * chromeProperties contains the methods, attributes and constants to be defined
@@ -600,7 +598,7 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                        JS::Handle<JSObject*> interfaceProto,
                        const JSClass* constructorClass, const JSNativeHolder* constructor,
                        unsigned ctorNargs, const NamedConstructor* namedConstructors,
-                       JS::Heap<JSObject*>* constructorCache, const DOMClass* domClass,
+                       JS::Heap<JSObject*>* constructorCache,
                        const NativeProperties* regularProperties,
                        const NativeProperties* chromeOnlyProperties,
                        const char* name, bool defineOnGlobal);
@@ -1185,11 +1183,10 @@ ClearWrapper(T* p, void*)
 bool
 TryPreserveWrapper(JSObject* obj);
 
-// Can only be called with the immediate prototype of the instance object. Can
-// only be called on the prototype of an object known to be a DOM instance.
+// Can only be called with a DOM JSClass.
 bool
-InstanceClassHasProtoAtDepth(JSObject* protoObject, uint32_t protoID,
-                             uint32_t depth);
+InstanceClassHasProtoAtDepth(const js::Class* clasp,
+                             uint32_t protoID, uint32_t depth);
 
 // Only set allowNativeWrapper to false if you really know you need it, if in
 // doubt use true. Setting it to false disables security wrappers.
@@ -2743,6 +2740,12 @@ GlobalPropertiesAreOwn()
 {
   return true;
 }
+
+#ifdef DEBUG
+void
+AssertReturnTypeMatchesJitinfo(const JSJitInfo* aJitinfo,
+                               JS::Handle<JS::Value> aValue);
+#endif
 
 } // namespace dom
 } // namespace mozilla

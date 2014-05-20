@@ -100,8 +100,8 @@ typedef void* nsNativeWidget;
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0x87d80888, 0x9917, 0x4bfb, \
-  { 0x81, 0xa9, 0x1c, 0x5e, 0x30, 0x9c, 0x78, 0xb4 } }
+{ 0x91944a4b, 0xbc29, 0x44aa, \
+  { 0x99, 0x21, 0x42, 0xeb, 0x1f, 0xbb, 0xa6, 0x89 } }
 
 /*
  * Window shadow styles
@@ -1086,6 +1086,20 @@ class nsIWidget : public nsISupports {
      *                this widget.
      */
     NS_IMETHOD GetScreenBounds(nsIntRect &aRect) = 0;
+
+    /**
+     * Similar to GetScreenBounds except that this function will always
+     * get the size when the widget is in the nsSizeMode_Normal size mode
+     * even if the current size mode is not nsSizeMode_Normal.
+     * This method will fail if the size mode is not nsSizeMode_Normal and
+     * the platform doesn't have the ability.
+     * This method will always succeed if the current size mode is
+     * nsSizeMode_Normal.
+     *
+     * @param aRect   On return it holds the  x, y, width and height of
+     *                this widget.
+     */
+    NS_IMETHOD GetRestoredBounds(nsIntRect &aRect) = 0;
 
     /**
      * Get this widget's client area bounds, if the window has a 3D border

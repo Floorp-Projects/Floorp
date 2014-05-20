@@ -139,6 +139,9 @@ namespace jit {
     _(JSOP_FUNAPPLY)           \
     _(JSOP_NEW)                \
     _(JSOP_EVAL)               \
+    _(JSOP_SPREADCALL)         \
+    _(JSOP_SPREADNEW)          \
+    _(JSOP_SPREADEVAL)         \
     _(JSOP_IMPLICITTHIS)       \
     _(JSOP_INSTANCEOF)         \
     _(JSOP_TYPEOF)             \
@@ -256,6 +259,7 @@ class BaselineCompiler : public BaselineCompilerSpecific
     bool emitTest(bool branchIfTrue);
     bool emitAndOr(bool branchIfTrue);
     bool emitCall();
+    bool emitSpreadCall();
 
     bool emitInitPropGetterSetter();
     bool emitInitElemGetterSetter();

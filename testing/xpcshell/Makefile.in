@@ -46,7 +46,7 @@ MOZINFO_FILES := \
   mozinfo.py
 
 # Rules for staging the necessary harness bits for a test package
-PKG_STAGE = $(DIST)/test-package-stage
+PKG_STAGE = $(DIST)/test-stage
 
 libs::
 	$(INSTALL) $(srcdir)/xpcshell_b2g.ini $(DEPTH)/_tests/xpcshell

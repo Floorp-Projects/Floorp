@@ -410,6 +410,7 @@ class EventRunnable MOZ_FINAL : public MainThreadProxyRunnable
   nsTArray<nsCOMPtr<nsISupports> > mClonedObjects;
   JS::Heap<JS::Value> mResponse;
   nsString mResponseText;
+  nsString mResponseURL;
   nsCString mStatusText;
   uint64_t mLoaded;
   uint64_t mTotal;
@@ -1189,6 +1190,8 @@ EventRunnable::PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
   mReadyState = xhr->ReadyState();
 
+  xhr->GetResponseURL(mResponseURL);
+
   return true;
 }
 
@@ -1296,6 +1299,8 @@ EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   state->mStatusText = mStatusText;
 
   state->mReadyState = mReadyState;
+
+  state->mResponseURL = mResponseURL;
 
   XMLHttpRequest* xhr = mProxy->mXMLHttpRequestPrivate;
   xhr->UpdateState(*state);

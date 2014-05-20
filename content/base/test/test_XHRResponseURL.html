@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=998076
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 998076</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="file_XHRResponseURL.js"></script>
+  <script type="application/javascript">
+
+/** Test for Bug 998076 **/
+"use strict";
+
+window.addEventListener("message", function (aEvent) {
+  var data = aEvent.data;
+  if (data === "done") {
+    SimpleTest.finish();
+    return;
+  }
+  if (data === "start") {
+    return;
+  }
+  if (data.type === "is") {
+    SimpleTest.is(data.actual, data.expected, data.message);
+    window.postMessage("pong", "*");
+    return;
+  }
+  if (data.type === "ok") {
+    SimpleTest.ok(data.bool, data.message);
+    window.postMessage("pong", "*");
+    return;
+  }
+  if (data.type === "info") {
+    SimpleTest.info(data.message);
+    window.postMessage("pong", "*");
+    return;
+  }
+  if (data.type === "todo") {
+    SimpleTest.todo(data.bool, data.message);
+    window.postMessage("pong", "*");
+    return;
+  }
+  if (data.type === "todo_is") {
+    SimpleTest.todo_is(data.actual, data.expected, data.message);
+    window.postMessage("pong", "*");
+    return;
+  }
+});
+
+function runTests() {
+  SimpleTest.waitForExplicitFinish();
+  window.postMessage("start", "*");
+}
+
+  </script>
+</head>
+<body onload="runTests()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=998076">Mozilla Bug 998076</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
