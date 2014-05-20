@@ -75,9 +75,7 @@ let tests = [
 
   /* Observer tests */
   function() {
-    const XPCOM_SHUTDOWN        = "xpcom-shutdown";
     const MOZSETTINGS_CHANGED   = "mozsettings-changed";
-
     const TEST_OBSERVER_KEY     = "test.observer.key";
     const TEST_OBSERVER_VALUE   = true;
     const TEST_OBSERVER_MESSAGE = "test.observer.message";
@@ -85,11 +83,6 @@ let tests = [
     let observerCount = 2;
 
     function observer(subject, topic, data) {
-      if (topic === XPCOM_SHUTDOWN) {
-        Services.obs.removeObserver(this, XPCOM_SHUTDOWN);
-        Services.obs.removeObserver(this, MOZSETTINGS_CHANGED);
-        return;
-      }
 
       if (topic !== MOZSETTINGS_CHANGED) {
         ok(false, "Event is not mozsettings-changed.");
@@ -114,11 +107,11 @@ let tests = [
       --observerCount;
 
       if (observerCount === 0) {
+        Services.obs.removeObserver(this, MOZSETTINGS_CHANGED);
         next();
       }
     }
 
-    Services.obs.addObserver(observer, XPCOM_SHUTDOWN, false);
     Services.obs.addObserver(observer, MOZSETTINGS_CHANGED, false);
 
     let lock = SettingsService.createLock();
