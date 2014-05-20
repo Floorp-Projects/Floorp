@@ -6,6 +6,7 @@
 #ifndef NS_SMILCOMPOSITOR_H_
 #define NS_SMILCOMPOSITOR_H_
 
+#include "mozilla/Move.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
 #include "nsSMILAnimationFunction.h"
@@ -65,7 +66,7 @@ public:
 
   // Transfers |aOther|'s mCachedBaseValue to |this|
   void StealCachedBaseValue(nsSMILCompositor* aOther) {
-    mCachedBaseValue = aOther->mCachedBaseValue;
+    mCachedBaseValue = mozilla::Move(aOther->mCachedBaseValue);
   }
 
  private:

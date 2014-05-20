@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Move.h"
 
 #include "txStylesheetCompiler.h"
 #include "txStylesheetCompileHandlers.h"
@@ -336,7 +337,7 @@ txStylesheetCompiler::endElement()
             nsAutoPtr<txInstruction> instr(new txRemoveVariable(var->mName));
             NS_ENSURE_TRUE(instr, NS_ERROR_OUT_OF_MEMORY);
 
-            rv = addInstruction(instr);
+            rv = addInstruction(Move(instr));
             NS_ENSURE_SUCCESS(rv, rv);
             
             mInScopeVariables.RemoveElementAt(i);
@@ -484,7 +485,7 @@ txStylesheetCompiler::ensureNewElementContext()
     NS_ENSURE_SUCCESS(rv, rv);
 
     mElementContext.forget();
-    mElementContext = context;
+    mElementContext = Move(context);
 
     return NS_OK;
 }
@@ -723,7 +724,7 @@ txStylesheetCompilerState::closeInstructionContainer()
 }
 
 nsresult
-txStylesheetCompilerState::addInstruction(nsAutoPtr<txInstruction> aInstruction)
+txStylesheetCompilerState::addInstruction(nsAutoPtr<txInstruction>&& aInstruction)
 {
     NS_PRECONDITION(mNextInstrPtr, "adding instruction outside container");
 
