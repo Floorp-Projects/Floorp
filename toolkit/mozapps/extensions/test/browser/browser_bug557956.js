@@ -2,8 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// Test that the compatibility dialog that normally displays during startup
-// appears to work correctly.
+// Test the compatibility dialog that displays during startup when the browser
+// version changes.
 
 const URI_EXTENSION_UPDATE_DIALOG = "chrome://mozapps/content/extensions/update.xul";
 
@@ -11,6 +11,10 @@ const PREF_GETADDONS_BYIDS            = "extensions.getAddons.get.url";
 const PREF_MIN_PLATFORM_COMPAT        = "extensions.minCompatiblePlatformVersion";
 
 Services.prefs.setBoolPref(PREF_STRICT_COMPAT, true);
+// avoid the 'leaked window property' check
+let scope = {};
+Components.utils.import("resource://gre/modules/TelemetryPing.jsm", scope);
+let TelemetryPing = scope.TelemetryPing;
 
 /**
  * Test add-ons:
@@ -169,6 +173,24 @@ function get_list_names(aList) {
   return items;
 }
 
+function check_telemetry({disabled, metaenabled, metadisabled, upgraded, failed, declined}) {
+  let ping = TelemetryPing.getPayload();
+  // info(JSON.stringify(ping));
+  let am = ping.simpleMeasurements.addonManager;
+  if (disabled !== undefined)
+    is(am.appUpdate_disabled, disabled, disabled + " add-ons disabled by version change");
+  if (metaenabled !== undefined)
+    is(am.appUpdate_metadata_enabled, metaenabled, metaenabled + " add-ons enabled by metadata");
+  if (metadisabled !== undefined)
+    is(am.appUpdate_metadata_disabled, metadisabled, metadisabled + " add-ons disabled by metadata");
+  if (upgraded !== undefined)
+    is(am.appUpdate_upgraded, upgraded, upgraded + " add-ons upgraded");
+  if (failed !== undefined)
+    is(am.appUpdate_upgradeFailed, failed, failed + " upgrades failed");
+  if (declined !== undefined)
+    is(am.appUpdate_upgradeDeclined, declined, declined + " upgrades declined");
+}
+
 // Tests that the right add-ons show up in the mismatch dialog and updates can
 // be installed
 add_test(function() {
@@ -181,10 +203,10 @@ add_test(function() {
       "addon10@tests.mozilla.org"
     ];
 
-    // Check that compatibility updates were applied.
     AddonManager.getAddonsByIDs(["addon5@tests.mozilla.org",
                                  "addon6@tests.mozilla.org"],
                                  function([a5, a6]) {
+      // Check starting (pre-update) conditions
       ok(!a5.isCompatible, "addon5 should not be compatible");
       ok(!a6.isCompatible, "addon6 should not be compatible");
 
@@ -192,6 +214,7 @@ add_test(function() {
         var doc = aWindow.document;
         wait_for_page(aWindow, "mismatch", function(aWindow) {
           var items = get_list_names(doc.getElementById("mismatch.incompatible"));
+          // Check that compatibility updates from individual add-on update checks were applied.
           is(items.length, 4, "Should have seen 4 still incompatible items");
           is(items[0], "Addon3 1.0", "Should have seen addon3 still incompatible");
           is(items[1], "Addon7 1.0", "Should have seen addon7 still incompatible");
@@ -199,7 +222,7 @@ add_test(function() {
           is(items[3], "Addon9 1.0", "Should have seen addon9 still incompatible");
 
           ok(a5.isCompatible, "addon5 should be compatible");
-          ok(a6.isCompatible, "addon5 should be compatible");
+          ok(a6.isCompatible, "addon6 should be compatible");
 
           var button = doc.documentElement.getButton("next");
           EventUtils.synthesizeMouse(button, 2, 2, { }, aWindow);
@@ -247,6 +270,9 @@ add_test(function() {
                   is(a8.version, "2.0", "addon8 should have updated");
                   is(a9.version, "2.0", "addon9 should have updated");
   
+                  check_telemetry({disabled: 4, metaenabled: 2, metadisabled: 0,
+                                   upgraded: 2, failed: 0, declined: 1});
+
                   uninstall_test_addons(run_next_test);
                 });
               });
@@ -287,7 +313,7 @@ add_test(function() {
                                      "addon6@tests.mozilla.org"],
                                      function([a5, a6]) {
           ok(a5.isCompatible, "addon5 should be compatible");
-          ok(a6.isCompatible, "addon5 should be compatible");
+          ok(a6.isCompatible, "addon6 should be compatible");
 
           var button = doc.documentElement.getButton("next");
           EventUtils.synthesizeMouse(button, 2, 2, { }, aWindow);
@@ -329,6 +355,9 @@ add_test(function() {
               wait_for_window_close(aWindow, function() {
                 uninstall_test_addons(run_next_test);
               });
+
+              check_telemetry({disabled: 4, metaenabled: 2, metadisabled: 0,
+                               upgraded: 0, failed: 1, declined: 2});
 
               EventUtils.synthesizeMouse(button, 2, 2, { }, aWindow);
             });
@@ -477,6 +506,9 @@ add_test(function() {
             wait_for_window_close(aWindow, function() {
               uninstall_test_addons(run_next_test);
             });
+
+            check_telemetry({disabled: 0, metaenabled: 0, metadisabled: 1,
+                             upgraded: 0, failed: 0, declined: 0});
 
             EventUtils.synthesizeMouse(button, 2, 2, { }, aWindow);
           });
