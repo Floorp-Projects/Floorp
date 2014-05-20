@@ -113,6 +113,14 @@ function escapeHtmlEntities(aText) {
                       .replace("'", "&#39;", "g");
 }
 
+/**
+ * Provides URL escaping for use in HTML attributes of the bookmarks file,
+ * compatible with the old bookmarks system.
+ */
+function escapeUrl(aText) {
+  return (aText || "").replace("\"", "%22", "g");
+}
+
 function notifyObservers(aTopic, aInitialImport) {
   Services.obs.notifyObservers(null, aTopic, aInitialImport ? "html-initial"
                                                             : "html");
@@ -1087,10 +1095,10 @@ BookmarkExporter.prototype = {
   _writeLivemark: function (aItem, aIndent) {
     this._write(aIndent + "<DT><A");
     let feedSpec = aItem.annos.find(anno => anno.name == PlacesUtils.LMANNO_FEEDURI).value;
-    this._writeAttribute("FEEDURL", encodeURI(feedSpec));
+    this._writeAttribute("FEEDURL", escapeUrl(feedSpec));
     let siteSpecAnno = aItem.annos.find(anno => anno.name == PlacesUtils.LMANNO_SITEURI);
     if (siteSpecAnno)
-      this._writeAttribute("HREF", encodeURI(siteSpecAnno.value));
+      this._writeAttribute("HREF", escapeUrl(siteSpecAnno.value));
     this._writeLine(">" + escapeHtmlEntities(aItem.title) + "</A>");
     this._writeDescription(aItem, aIndent);
   },
@@ -1109,7 +1117,7 @@ BookmarkExporter.prototype = {
     }
 
     this._write(aIndent + "<DT><A");
-    this._writeAttribute("HREF", encodeURI(aItem.uri));
+    this._writeAttribute("HREF", escapeUrl(aItem.uri));
     this._writeDateAttributes(aItem);
     yield this._writeFaviconAttribute(aItem);
 
@@ -1152,7 +1160,7 @@ BookmarkExporter.prototype = {
       return;
     }
 
-    this._writeAttribute("ICON_URI", encodeURI(favicon.uri.spec));
+    this._writeAttribute("ICON_URI", escapeUrl(favicon.uri.spec));
 
     if (!favicon.uri.schemeIs("chrome") && favicon.dataLen > 0) {
       let faviconContents = "data:image/png;base64," +
