@@ -517,9 +517,9 @@ Promise::ThenableResolverCommon(JSContext* aCx, uint32_t aTask,
   MOZ_ASSERT(promise);
 
   if (aTask == PromiseCallback::Resolve) {
-    promise->ResolveInternal(aCx, args.get(0), SyncTask);
+    promise->ResolveInternal(aCx, args.get(0));
   } else {
-    promise->RejectInternal(aCx, args.get(0), SyncTask);
+    promise->RejectInternal(aCx, args.get(0));
   }
   return true;
 }
