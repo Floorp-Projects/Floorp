@@ -150,10 +150,25 @@ ThreadPoolWorker::start()
 #endif
 }
 
+#ifdef MOZ_NUWA_PROCESS
+extern "C" {
+MFBT_API bool IsNuwaProcess();
+MFBT_API void NuwaMarkCurrentThread(void (*recreate)(void *), void *arg);
+}
+#endif
+
 void
 ThreadPoolWorker::HelperThreadMain(void *arg)
 {
     ThreadPoolWorker *worker = (ThreadPoolWorker*) arg;
+
+#ifdef MOZ_NUWA_PROCESS
+    if (IsNuwaProcess()) {
+        JS_ASSERT(NuwaMarkCurrentThread != nullptr);
+        NuwaMarkCurrentThread(nullptr, nullptr);
+    }
+#endif
+
     worker->helperLoop();
 }
 
