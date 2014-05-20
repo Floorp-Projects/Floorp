@@ -17,8 +17,6 @@
 #ifndef ANDROID_AUDIOSYSTEM_H_
 #define ANDROID_AUDIOSYSTEM_H_
 
-#pragma GCC visibility push(default)
-
 #include <utils/RefBase.h>
 #include <utils/threads.h>
 #include "IAudioFlinger.h"
@@ -962,7 +960,5 @@ private:
 };
 
 };  // namespace android
-
-#pragma GCC visibility pop
 
 #endif  /*ANDROID_AUDIOSYSTEM_H_*/
