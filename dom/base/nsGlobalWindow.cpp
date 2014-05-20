@@ -3071,6 +3071,8 @@ nsGlobalWindow::ShouldPromptToBlockDialogs()
 bool
 nsGlobalWindow::AreDialogsEnabled()
 {
+  MOZ_ASSERT(IsOuterWindow());
+
   nsGlobalWindow *topWindow = GetScriptableTop();
   if (!topWindow) {
     NS_ERROR("AreDialogsEnabled() called without a top window?");
