@@ -50,6 +50,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef nricectx_h__
 #define nricectx_h__
 
+#include <string>
 #include <vector>
 
 #include "sigslot.h"
@@ -58,6 +59,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/Scoped.h"
+#include "mozilla/TimeStamp.h"
 #include "nsAutoPtr.h"
 #include "nsIEventTarget.h"
 #include "nsITimer.h"
@@ -78,6 +80,11 @@ typedef struct nr_resolver_ nr_resolver;
 typedef void* NR_SOCKET;
 
 namespace mozilla {
+
+// Timestamps set whenever a packet is dropped due to global rate limiting
+// (see nr_socket_prsock.cpp)
+TimeStamp nr_socket_short_term_violation_time();
+TimeStamp nr_socket_long_term_violation_time();
 
 class NrIceMediaStream;
 

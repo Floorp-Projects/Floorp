@@ -120,6 +120,17 @@ extern "C" {
 // Implement the nsISupports ref counting
 namespace mozilla {
 
+static TimeStamp nr_socket_short_term_violation_time;
+static TimeStamp nr_socket_long_term_violation_time;
+
+TimeStamp NrSocketBase::short_term_violation_time() {
+  return nr_socket_short_term_violation_time;
+}
+
+TimeStamp NrSocketBase::long_term_violation_time() {
+  return nr_socket_long_term_violation_time;
+}
+
 // NrSocketBase implementation
 // async_event APIs
 int NrSocketBase::async_wait(int how, NR_async_cb cb, void *cb_arg,
@@ -512,15 +523,34 @@ int NrSocket::sendto(const void *msg, size_t len,
     static SimpleTokenBucket sustained(3686*20, 3686);
 
     // Check number of tokens in each bucket.
-    if (burst.getTokens(UINT32_MAX) < len ||
-        sustained.getTokens(UINT32_MAX) < len) {
+    if (burst.getTokens(UINT32_MAX) < len) {
       r_log(LOG_GENERIC, LOG_ERR,
-                 "Global rate limit for STUN requests exceeded.");
+                 "Short term global rate limit for STUN requests exceeded.");
       MOZ_ASSERT(false,
-                 "Global rate limit for STUN requests exceeded. Go bug "
-                 "bcampen@mozilla.com if you weren't intentionally spamming "
-                 "ICE candidates, or don't know what that means.");
-      ABORT(R_WOULDBLOCK);
+                 "Short term global rate limit for STUN requests exceeded. Go "
+                 "bug bcampen@mozilla.com if you weren't intentionally "
+                 "spamming ICE candidates, or don't know what that means.");
+#ifdef MOZILLA_INTERNAL_API
+      nr_socket_short_term_violation_time = TimeStamp::Now();
+#endif
+      // TODO(bcampen@mozilla.com): Bug 1013007 Once we have better data on
+      // normal usage, re-enable this.
+      // ABORT(R_WOULDBLOCK);
+    }
+
+    if (sustained.getTokens(UINT32_MAX) < len) {
+      r_log(LOG_GENERIC, LOG_ERR,
+                 "Long term global rate limit for STUN requests exceeded.");
+      MOZ_ASSERT(false,
+                 "Long term global rate limit for STUN requests exceeded. Go "
+                 "bug bcampen@mozilla.com if you weren't intentionally "
+                 "spamming ICE candidates, or don't know what that means.");
+#ifdef MOZILLA_INTERNAL_API
+      nr_socket_long_term_violation_time = TimeStamp::Now();
+#endif
+      // TODO(bcampen@mozilla.com): Bug 1013007 Once we have better data on
+      // normal usage, re-enable this.
+      // ABORT(R_WOULDBLOCK);
     }
 
     // Take len tokens from both buckets.
