@@ -2690,6 +2690,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 void
 nsGlobalWindow::PreloadLocalStorage()
 {
+  MOZ_ASSERT(IsOuterWindow());
+
   if (!Preferences::GetBool(kStorageEnabled)) {
     return;
   }
