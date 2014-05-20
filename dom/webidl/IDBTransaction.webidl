@@ -19,7 +19,6 @@ interface IDBTransaction : EventTarget {
     readonly    attribute IDBTransactionMode mode;
     readonly    attribute IDBDatabase        db;
 
-    [Throws]
     readonly    attribute DOMError?          error;
 
     [Throws]

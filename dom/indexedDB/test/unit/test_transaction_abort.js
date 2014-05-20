@@ -34,13 +34,7 @@ function testSteps()
 
   transaction = event.target.transaction;
 
-  try {
-    let error = transaction.error;
-    ok(false, "Expect an exception");
-  } catch(e) {
-    ok(true, "Got an exception.");
-    is(e.name, "InvalidStateError", "Got the right exception");
-  }
+  is(transaction.error, null, "Expect a null error");
 
   objectStore = db.createObjectStore("foo", { autoIncrement: true });
   index = objectStore.createIndex("fooindex", "indexKey", { unique: true });
@@ -334,7 +328,7 @@ function testSteps()
     });
   };
   yield undefined;
-  
+
   // During COMMITTING
   transaction = db.transaction("foo", "readwrite");
   transaction.objectStore("foo").put({hello: "world"}, 1).onsuccess = function(event) {
