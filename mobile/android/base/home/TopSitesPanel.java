@@ -280,7 +280,6 @@ public class TopSitesPanel extends HomeFragment {
         // Hide ununsed menu items.
         menu.findItem(R.id.home_open_in_reader).setVisible(false);
         menu.findItem(R.id.home_edit_bookmark).setVisible(false);
-        menu.findItem(R.id.home_remove).setVisible(false);
 
         TopSitesGridContextMenuInfo info = (TopSitesGridContextMenuInfo) menuInfo;
         menu.setHeaderTitle(info.getDisplayTitle());
