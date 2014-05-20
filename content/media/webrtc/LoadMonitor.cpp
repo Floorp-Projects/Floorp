@@ -29,6 +29,19 @@
 #include <unistd.h>
 #endif
 
+#ifdef XP_MACOSX
+#include <sys/time.h>
+#include <mach/mach_host.h>
+#include <mach/mach_init.h>
+#include <mach/host_info.h>
+#endif
+
+#ifdef XP_WIN
+#include <pdh.h>
+#include <tchar.h>
+#pragma comment(lib, "pdh.lib")
+#endif
+
 // NSPR_LOG_MODULES=LoadManager:5
 #undef LOG
 #undef LOG_ENABLED
@@ -141,6 +154,109 @@ void LoadMonitor::Shutdown()
   }
 }
 
+#ifdef XP_WIN
+static LPCTSTR TotalCounterPath = _T("\\Processor(_Total)\\% Processor Time");
+
+class WinProcMon
+{
+public:
+  WinProcMon():
+    mQuery(0), mCounter(0) {};
+  ~WinProcMon();
+  nsresult Init();
+  nsresult QuerySystemLoad(float* load_percent);
+  static const uint64_t TicksPerSec = 10000000; //100nsec tick (10MHz)
+private:
+  PDH_HQUERY mQuery;
+  PDH_HCOUNTER mCounter;
+};
+
+WinProcMon::~WinProcMon()
+{
+  if (mQuery != 0) {
+    PdhCloseQuery(mQuery);
+    mQuery = 0;
+  }
+}
+
+nsresult
+WinProcMon::Init()
+{
+  PDH_HQUERY query;
+  PDH_HCOUNTER counter;
+
+  // Get a query handle to the Performance Data Helper
+  PDH_STATUS status = PdhOpenQuery(
+                        NULL,      // No log file name: use real-time source
+                        0,         // zero out user data token: unsued
+                        &query);
+
+  if (status != ERROR_SUCCESS) {
+    LOG(("PdhOpenQuery error = %X", status));
+    return NS_ERROR_FAILURE;
+  }
+
+  // Add a pre-defined high performance counter to the query.
+  // This one is for the total CPU usage.
+  status = PdhAddCounter(query, TotalCounterPath, 0, &counter);
+
+  if (status != ERROR_SUCCESS) {
+    PdhCloseQuery(query);
+    LOG(("PdhAddCounter (_Total) error = %X", status));
+    return NS_ERROR_FAILURE;
+  }
+
+  // Need to make an initial query call to set up data capture.
+  status = PdhCollectQueryData(query);
+
+  if (status != ERROR_SUCCESS) {
+    PdhCloseQuery(query);
+    LOG(("PdhCollectQueryData (init) error = %X", status));
+    return NS_ERROR_FAILURE;
+  }
+
+  mQuery = query;
+  mCounter = counter;
+  return NS_OK;
+}
+
+nsresult WinProcMon::QuerySystemLoad(float* load_percent)
+{
+  *load_percent = 0;
+
+  if (mQuery == 0) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Update all counters associated with this query object.
+  PDH_STATUS status = PdhCollectQueryData(mQuery);
+
+  if (status != ERROR_SUCCESS) {
+    LOG(("PdhCollectQueryData error = %X", status));
+    return NS_ERROR_FAILURE;
+  }
+
+  PDH_FMT_COUNTERVALUE counter;
+  // maximum is 100% regardless of CPU core count.
+  status = PdhGetFormattedCounterValue(
+               mCounter,
+               PDH_FMT_DOUBLE,
+               (LPDWORD)NULL,
+               &counter);
+
+  if (ERROR_SUCCESS != status ||
+      // There are multiple success return values.
+      !IsSuccessSeverity(counter.CStatus)) {
+    LOG(("PdhGetFormattedCounterValue error"));
+    return NS_ERROR_FAILURE;
+  }
+
+  // The result is a percent value, reduce to match expected scale.
+  *load_percent = (float)(counter.doubleValue / 100.0f);
+  return NS_OK;
+}
+#endif
+
 class LoadStats
 {
 public:
@@ -160,7 +276,8 @@ class LoadInfo : public mozilla::RefCounted<LoadInfo>
 {
 public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(LoadInfo)
-  LoadInfo(int aLoadUpdateInterval);
+  LoadInfo(): mLoadUpdateInterval(0) {};
+  nsresult Init(int aLoadUpdateInterval);
   double GetSystemLoad() { return mSystemLoad.GetLoad(); };
   double GetProcessLoad() { return mProcessLoad.GetLoad(); };
   nsresult UpdateSystemLoad();
@@ -171,17 +288,29 @@ private:
                      uint64_t current_total_times,
                      uint64_t current_cpu_times,
                      LoadStats* loadStat);
+#ifdef XP_WIN
+  WinProcMon mSysMon;
+  HANDLE mProcHandle;
+  int mNumProcessors;
+#endif
   LoadStats mSystemLoad;
   LoadStats mProcessLoad;
   uint64_t mTicksPerInterval;
   int mLoadUpdateInterval;
 };
 
-LoadInfo::LoadInfo(int aLoadUpdateInterval)
-  : mLoadUpdateInterval(aLoadUpdateInterval)
+nsresult LoadInfo::Init(int aLoadUpdateInterval)
 {
-#if defined(ANDROID) || defined(LINUX)
+  mLoadUpdateInterval = aLoadUpdateInterval;
+#ifdef XP_WIN
+  mTicksPerInterval = (WinProcMon::TicksPerSec /*Hz*/
+                       * mLoadUpdateInterval /*msec*/) / 1000 ;
+  mNumProcessors = PR_GetNumberOfProcessors();
+  mProcHandle = GetCurrentProcess();
+  return mSysMon.Init();
+#else
   mTicksPerInterval = (sysconf(_SC_CLK_TCK) * mLoadUpdateInterval) / 1000;
+  return NS_OK;
 #endif
 }
 
@@ -189,10 +318,9 @@ void LoadInfo::UpdateCpuLoad(uint64_t ticks_per_interval,
                              uint64_t current_total_times,
                              uint64_t current_cpu_times,
                              LoadStats *loadStat) {
-
   // Check if we get an inconsistent number of ticks.
   if (((current_total_times - loadStat->mPrevTotalTimes)
-      > (ticks_per_interval * 10))
+       > (ticks_per_interval * 10))
       || current_total_times < loadStat->mPrevTotalTimes
       || current_cpu_times < loadStat->mPrevCpuTimes) {
     // Bug at least on the Nexus 4 and Galaxy S4
@@ -210,7 +338,11 @@ void LoadInfo::UpdateCpuLoad(uint64_t ticks_per_interval,
   const uint64_t cpu_diff = current_cpu_times - loadStat->mPrevCpuTimes;
   const uint64_t total_diff = current_total_times - loadStat->mPrevTotalTimes;
   if (total_diff > 0) {
+#ifdef XP_WIN
+    float result =  (float)cpu_diff / (float)total_diff/ (float)mNumProcessors;
+#else
     float result =  (float)cpu_diff / (float)total_diff;
+#endif
     loadStat->mPrevLoad = result;
   }
   loadStat->mPrevTotalTimes = current_total_times;
@@ -254,6 +386,36 @@ nsresult LoadInfo::UpdateSystemLoad()
                 cpu_times,
                 &mSystemLoad);
   return NS_OK;
+#elif defined(XP_MACOSX)
+  mach_msg_type_number_t info_cnt = HOST_CPU_LOAD_INFO_COUNT;
+  host_cpu_load_info_data_t load_info;
+  kern_return_t rv = host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO,
+                                     (host_info_t)(&load_info), &info_cnt);
+
+  if (rv != KERN_SUCCESS || info_cnt != HOST_CPU_LOAD_INFO_COUNT) {
+    LOG(("Error from mach/host_statistics call"));
+    return NS_ERROR_FAILURE;
+  }
+
+  const uint64_t cpu_times = load_info.cpu_ticks[CPU_STATE_NICE]
+                           + load_info.cpu_ticks[CPU_STATE_SYSTEM]
+                           + load_info.cpu_ticks[CPU_STATE_USER];
+  const uint64_t total_times = cpu_times + load_info.cpu_ticks[CPU_STATE_IDLE];
+
+  UpdateCpuLoad(mTicksPerInterval,
+                total_times,
+                cpu_times,
+                &mSystemLoad);
+  return NS_OK;
+#elif defined(XP_WIN)
+  float load;
+  nsresult rv = mSysMon.QuerySystemLoad(&load);
+
+  if (rv == NS_OK) {
+    mSystemLoad.mPrevLoad = load;
+  }
+
+  return rv;
 #else
   // Not implemented
   return NS_OK;
@@ -261,7 +423,7 @@ nsresult LoadInfo::UpdateSystemLoad()
 }
 
 nsresult LoadInfo::UpdateProcessLoad() {
-#if defined(LINUX) || defined(ANDROID)
+#if defined(LINUX) || defined(ANDROID) || defined(XP_MACOSX)
   struct timeval tv;
   gettimeofday(&tv, nullptr);
   const uint64_t total_times = tv.tv_sec * PR_USEC_PER_SEC + tv.tv_usec;
@@ -280,7 +442,29 @@ nsresult LoadInfo::UpdateProcessLoad() {
                 total_times,
                 cpu_times,
                 &mProcessLoad);
-#endif // defined(LINUX) || defined(ANDROID)
+#elif defined(XP_WIN)
+  FILETIME clk_time, sys_time, user_time;
+  uint64_t total_times, cpu_times;
+
+  GetSystemTimeAsFileTime(&clk_time);
+  total_times = (((uint64_t)clk_time.dwHighDateTime) << 32)
+                + (uint64_t)clk_time.dwLowDateTime;
+  BOOL ok = GetProcessTimes(mProcHandle, &clk_time, &clk_time, &sys_time, &user_time);
+
+  if (ok == 0) {
+    return NS_ERROR_FAILURE;
+  }
+
+  cpu_times = (((uint64_t)sys_time.dwHighDateTime
+                + (uint64_t)user_time.dwHighDateTime) << 32)
+              + (uint64_t)sys_time.dwLowDateTime
+              + (uint64_t)user_time.dwLowDateTime;
+
+  UpdateCpuLoad(mTicksPerInterval,
+                total_times,
+                cpu_times,
+                &mProcessLoad);
+#endif
   return NS_OK;
 }
 
@@ -288,12 +472,12 @@ class LoadInfoCollectRunner : public nsRunnable
 {
 public:
   LoadInfoCollectRunner(nsRefPtr<LoadMonitor> loadMonitor,
-                        int aLoadUpdateInterval)
-    : mLoadUpdateInterval(aLoadUpdateInterval),
+                        RefPtr<LoadInfo> loadInfo)
+    : mLoadUpdateInterval(loadMonitor->mLoadUpdateInterval),
       mLoadNoiseCounter(0)
   {
     mLoadMonitor = loadMonitor;
-    mLoadInfo = new LoadInfo(mLoadUpdateInterval);
+    mLoadInfo = loadInfo;
   }
 
   NS_IMETHOD Run()
@@ -304,6 +488,7 @@ public:
       mLoadInfo->UpdateProcessLoad();
       float sysLoad = mLoadInfo->GetSystemLoad();
       float procLoad = mLoadInfo->GetProcessLoad();
+
       if ((++mLoadNoiseCounter % (LOG_MANY_ENABLED() ? 1 : 10)) == 0) {
         LOG(("System Load: %f Process Load: %f", sysLoad, procLoad));
         mLoadNoiseCounter = 0;
@@ -362,16 +547,22 @@ LoadMonitor::Init(nsRefPtr<LoadMonitor> &self)
 {
   LOG(("Initializing LoadMonitor"));
 
-#if defined(ANDROID) || defined(LINUX)
+  RefPtr<LoadInfo> load_info = new LoadInfo();
+  nsresult rv = load_info->Init(mLoadUpdateInterval);
+
+  if (NS_FAILED(rv)) {
+    LOG(("LoadInfo::Init error"));
+    return rv;
+  }
+
   nsRefPtr<LoadMonitorAddObserver> addObsRunner = new LoadMonitorAddObserver(self);
   NS_DispatchToMainThread(addObsRunner, NS_DISPATCH_NORMAL);
 
   NS_NewNamedThread("Sys Load Info", getter_AddRefs(mLoadInfoThread));
 
   nsRefPtr<LoadInfoCollectRunner> runner =
-    new LoadInfoCollectRunner(self, mLoadUpdateInterval);
+    new LoadInfoCollectRunner(self, load_info);
   mLoadInfoThread->Dispatch(runner, NS_DISPATCH_NORMAL);
-#endif
 
   return NS_OK;
 }

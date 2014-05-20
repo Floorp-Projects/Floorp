@@ -798,9 +798,11 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         reflowState.ComputedLogicalOffsets().ConvertTo(frameWM, stateWM);
     }
 
-    // Apply start margins (as appropriate) to the frame computing the
-    // new starting x,y coordinates for the frame.
-    ApplyStartMargin(pfd, reflowState);
+    // Calculate whether the the frame should have a start margin and
+    // subtract the margin from the available width if necessary.
+    // The margin will be applied to the starting inline coordinates of
+    // the frame in CanPlaceFrame() after reflowing the frame.
+    AllowForStartMargin(pfd, reflowState);
   }
   // if isText(), no need to propagate NS_FRAME_IS_DIRTY from the parent,
   // because reflow doesn't look at the dirty bits on the frame being reflowed.
@@ -1055,15 +1057,14 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 }
 
 void
-nsLineLayout::ApplyStartMargin(PerFrameData* pfd,
-                               nsHTMLReflowState& aReflowState)
+nsLineLayout::AllowForStartMargin(PerFrameData* pfd,
+                                  nsHTMLReflowState& aReflowState)
 {
   NS_ASSERTION(!aReflowState.IsFloating(),
                "How'd we get a floated inline frame? "
                "The frame ctor should've dealt with this.");
 
   WritingMode frameWM = pfd->mFrame->GetWritingMode();
-  WritingMode lineWM = mRootSpan->mWritingMode;
 
   // Only apply start-margin on the first-in flow for inline frames,
   // and make sure to not apply it to any inline other than the first
@@ -1079,21 +1080,7 @@ nsLineLayout::ApplyStartMargin(PerFrameData* pfd,
     // Zero this out so that when we compute the max-element-width of
     // the frame we will properly avoid adding in the starting margin.
     pfd->mMargin.IStart(frameWM) = 0;
-  }
-  if ((pfd->mFrame->LastInFlow()->GetNextContinuation() ||
-      pfd->mFrame->FrameIsNonLastInIBSplit())
-    && !pfd->GetFlag(PFD_ISLETTERFRAME)) {
-    pfd->mMargin.IEnd(frameWM) = 0;
-  }
-  nscoord startMargin = pfd->mMargin.ConvertTo(lineWM, frameWM).IStart(lineWM);
-  if (startMargin) {
-    // In RTL mode, we will only apply the start margin to the frame bounds
-    // after we finish flowing the frame and know more accurately whether we
-    // want to skip the margins.
-    if (lineWM.IsBidiLTR() && frameWM.IsBidiLTR()) {
-      pfd->mBounds.IStart(lineWM) += startMargin;
-    }
-
+  } else {
     NS_WARN_IF_FALSE(NS_UNCONSTRAINEDSIZE != aReflowState.AvailableWidth(),
                      "have unconstrained width; this should only result from "
                      "very large sizes, not attempts at intrinsic width "
@@ -1103,7 +1090,7 @@ nsLineLayout::ApplyStartMargin(PerFrameData* pfd,
       // in the reflow state), adjust available width to account for the
       // start margin. The end margin will be accounted for when we
       // finish flowing the frame.
-      aReflowState.AvailableWidth() -= startMargin;
+      aReflowState.AvailableWidth() -= pfd->mMargin.IStart(frameWM);
     }
   }
 }
@@ -1161,10 +1148,6 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
    * For box-decoration-break:clone we apply the end margin on all
    * continuations (that are not letter frames).
    */
-  if (pfd->mFrame->GetPrevContinuation() ||
-      pfd->mFrame->FrameIsNonFirstInIBSplit()) {
-    pfd->mMargin.IStart(frameWM) = 0;
-  }
   if ((NS_FRAME_IS_NOT_COMPLETE(aStatus) ||
        pfd->mFrame->LastInFlow()->GetNextContinuation() ||
        pfd->mFrame->FrameIsNonLastInIBSplit()) &&
@@ -1173,13 +1156,14 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
         NS_STYLE_BOX_DECORATION_BREAK_SLICE) {
     pfd->mMargin.IEnd(frameWM) = 0;
   }
+
+  // Convert the frame's margins to the line's writing mode and apply
+  // the start margin to the frame bounds.
   LogicalMargin usedMargins = pfd->mMargin.ConvertTo(lineWM, frameWM);
   nscoord startMargin = usedMargins.IStart(lineWM);
   nscoord endMargin = usedMargins.IEnd(lineWM);
 
-  if (!(lineWM.IsBidiLTR() && frameWM.IsBidiLTR())) {
-    pfd->mBounds.IStart(lineWM) += startMargin;
-  }
+  pfd->mBounds.IStart(lineWM) += startMargin;
 
   PerSpanData* psd = mCurrentSpan;
   if (psd->mNoWrap) {

@@ -4,9 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "txToplevelItems.h"
+
+#include "mozilla/Move.h"
 #include "txStylesheet.h"
 #include "txInstructions.h"
 #include "txXSLTPatterns.h"
+
+using mozilla::Move;
 
 TX_IMPL_GETTYPE(txAttributeSetItem, txToplevelItem::attributeSet)
 TX_IMPL_GETTYPE(txImportItem, txToplevelItem::import)
@@ -35,18 +39,20 @@ txStripSpaceItem::addStripSpaceTest(txStripSpaceTest* aStripSpaceTest)
 
 TX_IMPL_GETTYPE(txTemplateItem, txToplevelItem::templ)
 
-txTemplateItem::txTemplateItem(nsAutoPtr<txPattern> aMatch,
+txTemplateItem::txTemplateItem(nsAutoPtr<txPattern>&& aMatch,
                                const txExpandedName& aName,
                                const txExpandedName& aMode, double aPrio)
-    : mMatch(aMatch), mName(aName), mMode(aMode), mPrio(aPrio)
+    : mMatch(Move(aMatch)), mName(aName),
+      mMode(aMode), mPrio(aPrio)
 {
 }
 
 TX_IMPL_GETTYPE(txVariableItem, txToplevelItem::variable)
 
 txVariableItem::txVariableItem(const txExpandedName& aName,
-                               nsAutoPtr<Expr> aValue,
+                               nsAutoPtr<Expr>&& aValue,
                                bool aIsParam)
-    : mName(aName), mValue(aValue), mIsParam(aIsParam)
+    : mName(aName), mValue(Move(aValue)),
+      mIsParam(aIsParam)
 {
 }
