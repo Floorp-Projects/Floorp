@@ -48,23 +48,7 @@ function exitprintpreview() {
    .getInterface(Components.interfaces.nsIWebBrowserPrint).exitPrintPreview(); 
 }
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-
-let webProgress = Components.classes["@mozilla.org/docloaderservice;1"]
-                            .getService(Components.interfaces.nsIWebProgress);
-let webProgressListener = {
-  QueryInterface   : XPCOMUtils.generateQI(
-                          [Components.interfaces.nsIWebProgressListener,
-                           Components.interfaces.nsISupportsWeakReference]),
-  onStateChange    : function() { /* NOP */ },
-  onProgressChange : function() { throw "Unexpected onProgressChange"; },
-  onLocationChange : function() { throw "Unexpected onLocationChange"; },
-  onStatusChange   : function() { throw "Unexpected onStatusChange";   },
-  onSecurityChange : function() { throw "Unexpected onSecurityChange"; }
-};
-
 function finish() {
-  webProgress.removeProgressListener(webProgressListener);
   SimpleTest.finish();
   window.close();
 }
@@ -72,12 +56,6 @@ function finish() {
 function run()
 {
 /** Test for Bug 396024 **/
-
-  // Gross hacky workaround for bug 881996. The WPL does nothing.
-  webProgress.addProgressListener(
-                 webProgressListener,
-                 Components.interfaces.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
-
   var printService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
                                .getService(Components.interfaces.nsIPrintSettingsService);
 

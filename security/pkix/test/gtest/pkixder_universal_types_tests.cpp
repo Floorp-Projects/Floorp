@@ -47,7 +47,7 @@ protected:
 TEST_F(pkixder_universal_types_tests, BooleanTrue01)
 {
   const uint8_t DER_BOOLEAN_TRUE_01[] = {
-    0x01,                       // INTEGER
+    0x01,                       // BOOLEAN
     0x01,                       // length
     0x01                        // invalid
   };
@@ -64,7 +64,7 @@ TEST_F(pkixder_universal_types_tests, BooleanTrue01)
 TEST_F(pkixder_universal_types_tests, BooleanTrue42)
 {
   const uint8_t DER_BOOLEAN_TRUE_42[] = {
-    0x01,                       // INTEGER
+    0x01,                       // BOOLEAN
     0x01,                       // length
     0x42                        // invalid
   };
@@ -79,7 +79,7 @@ TEST_F(pkixder_universal_types_tests, BooleanTrue42)
 }
 
 static const uint8_t DER_BOOLEAN_TRUE[] = {
-  0x01,                       // INTEGER
+  0x01,                       // BOOLEAN
   0x01,                       // length
   0xff                        // true
 };
@@ -92,13 +92,13 @@ TEST_F(pkixder_universal_types_tests, BooleanTrueFF)
 
   bool value = false;
   ASSERT_EQ(Success, Boolean(input, value));
-  ASSERT_EQ(true, value);
+  ASSERT_TRUE(value);
 }
 
 TEST_F(pkixder_universal_types_tests, BooleanFalse)
 {
   const uint8_t DER_BOOLEAN_FALSE[] = {
-    0x01,                       // INTEGER
+    0x01,                       // BOOLEAN
     0x01,                       // length
     0x00                        // false
   };
@@ -108,13 +108,13 @@ TEST_F(pkixder_universal_types_tests, BooleanFalse)
 
   bool value = true;
   ASSERT_EQ(Success, Boolean(input, value));
-  ASSERT_EQ(false, value);
+  ASSERT_FALSE(value);
 }
 
 TEST_F(pkixder_universal_types_tests, BooleanInvalidLength)
 {
   const uint8_t DER_BOOLEAN_INVALID_LENGTH[] = {
-    0x01,                       // INTEGER
+    0x01,                       // BOOLEAN
     0x02,                       // length
     0x42, 0x42                  // invalid
   };
@@ -131,7 +131,7 @@ TEST_F(pkixder_universal_types_tests, BooleanInvalidLength)
 TEST_F(pkixder_universal_types_tests, BooleanInvalidZeroLength)
 {
   const uint8_t DER_BOOLEAN_INVALID_ZERO_LENGTH[] = {
-    0x01,                       // INTEGER
+    0x01,                       // BOOLEAN
     0x00                        // length
   };
 
@@ -144,10 +144,104 @@ TEST_F(pkixder_universal_types_tests, BooleanInvalidZeroLength)
   ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
 }
 
+// OptionalBoolean implements decoding of OPTIONAL BOOLEAN DEFAULT FALSE.
+// If the field is present, it must be a valid encoding of a BOOLEAN with
+// value TRUE. If the field is not present, it defaults to FALSE. For
+// compatibility reasons, OptionalBoolean can be told to accept an encoding
+// where the field is present with value FALSE (this is technically not a
+// valid DER encoding).
+TEST_F(pkixder_universal_types_tests, OptionalBooleanValidEncodings)
+{
+  const uint8_t DER_OPTIONAL_BOOLEAN_PRESENT_TRUE[] = {
+    0x01,                       // BOOLEAN
+    0x01,                       // length
+    0xff                        // true
+  };
+
+  Input input1;
+  ASSERT_EQ(Success, input1.Init(DER_OPTIONAL_BOOLEAN_PRESENT_TRUE,
+                                 sizeof DER_OPTIONAL_BOOLEAN_PRESENT_TRUE));
+  bool value = false;
+  ASSERT_EQ(Success, OptionalBoolean(input1, false, value)) <<
+    "Should accept the only valid encoding of a present OPTIONAL BOOLEAN";
+  ASSERT_TRUE(value);
+  ASSERT_TRUE(input1.AtEnd());
+
+  // The OPTIONAL BOOLEAN is omitted in this data.
+  const uint8_t DER_INTEGER_05[] = {
+    0x02,                       // INTEGER
+    0x01,                       // length
+    0x05
+  };
+
+  Input input2;
+  ASSERT_EQ(Success, input2.Init(DER_INTEGER_05, sizeof DER_INTEGER_05));
+  value = true;
+  ASSERT_EQ(Success, OptionalBoolean(input2, false, value)) <<
+    "Should accept a valid encoding of an omitted OPTIONAL BOOLEAN";
+  ASSERT_FALSE(value);
+  ASSERT_FALSE(input2.AtEnd());
+
+  Input input3;
+  ASSERT_EQ(Success, input3.Init(reinterpret_cast<const uint8_t*>(""), 0));
+  value = true;
+  ASSERT_EQ(Success, OptionalBoolean(input3, false, value)) <<
+    "Should accept another valid encoding of an omitted OPTIONAL BOOLEAN";
+  ASSERT_FALSE(value);
+  ASSERT_TRUE(input3.AtEnd());
+}
+
+TEST_F(pkixder_universal_types_tests, OptionalBooleanInvalidEncodings)
+{
+  const uint8_t DER_OPTIONAL_BOOLEAN_PRESENT_FALSE[] = {
+    0x01,                       // BOOLEAN
+    0x01,                       // length
+    0x00                        // false
+  };
+
+  Input input1;
+  ASSERT_EQ(Success, input1.Init(DER_OPTIONAL_BOOLEAN_PRESENT_FALSE,
+                                 sizeof DER_OPTIONAL_BOOLEAN_PRESENT_FALSE));
+  bool value;
+  // If the second parameter to OptionalBoolean is false, invalid encodings
+  // that include the field even when it is the DEFAULT FALSE are rejected.
+  bool allowInvalidEncodings = false;
+  ASSERT_EQ(Failure, OptionalBoolean(input1, allowInvalidEncodings, value)) <<
+    "Should reject an invalid encoding of present OPTIONAL BOOLEAN";
+  ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
+
+  Input input2;
+  ASSERT_EQ(Success, input2.Init(DER_OPTIONAL_BOOLEAN_PRESENT_FALSE,
+                                 sizeof DER_OPTIONAL_BOOLEAN_PRESENT_FALSE));
+  value = true;
+  // If the second parameter to OptionalBoolean is true, invalid encodings
+  // that include the field even when it is the DEFAULT FALSE are accepted.
+  allowInvalidEncodings = true;
+  ASSERT_EQ(Success, OptionalBoolean(input2, allowInvalidEncodings, value)) <<
+    "Should now accept an invalid encoding of present OPTIONAL BOOLEAN";
+  ASSERT_FALSE(value);
+  ASSERT_TRUE(input2.AtEnd());
+
+  const uint8_t DER_OPTIONAL_BOOLEAN_PRESENT_42[] = {
+    0x01,                       // BOOLEAN
+    0x01,                       // length
+    0x42                        // (invalid value for a BOOLEAN)
+  };
+
+  Input input3;
+  ASSERT_EQ(Success, input3.Init(DER_OPTIONAL_BOOLEAN_PRESENT_42,
+                                 sizeof DER_OPTIONAL_BOOLEAN_PRESENT_42));
+  // Even with the second parameter to OptionalBoolean as true, encodings
+  // of BOOLEAN that are invalid altogether are rejected.
+  ASSERT_EQ(Failure, OptionalBoolean(input3, allowInvalidEncodings, value)) <<
+    "Should reject another invalid encoding of present OPTIONAL BOOLEAN";
+  ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
+}
+
 TEST_F(pkixder_universal_types_tests, Enumerated)
 {
   const uint8_t DER_ENUMERATED[] = {
-    0x0a,                       // INTEGER
+    0x0a,                       // ENUMERATED
     0x01,                       // length
     0x42                        // value
   };
@@ -163,7 +257,7 @@ TEST_F(pkixder_universal_types_tests, Enumerated)
 TEST_F(pkixder_universal_types_tests, EnumeratedNotShortestPossibleDER)
 {
   const uint8_t DER_ENUMERATED[] = {
-    0x0a,                       // INTEGER
+    0x0a,                       // ENUMERATED
     0x02,                       // length
     0x00, 0x01                  // value
   };
@@ -181,7 +275,7 @@ TEST_F(pkixder_universal_types_tests, EnumeratedOutOfAcceptedRange)
   // ENUMERATED values in X.509 certs or OCSP this large, and we're trying to
   // keep the parser simple and fast.
   const uint8_t DER_ENUMERATED_INVALID_LENGTH[] = {
-    0x0a,                       // INTEGER
+    0x0a,                       // ENUMERATED
     0x02,                       // length
     0x12, 0x34                  // value
   };
@@ -198,7 +292,7 @@ TEST_F(pkixder_universal_types_tests, EnumeratedOutOfAcceptedRange)
 TEST_F(pkixder_universal_types_tests, EnumeratedInvalidZeroLength)
 {
   const uint8_t DER_ENUMERATED_INVALID_ZERO_LENGTH[] = {
-    0x0a,                       // INTEGER
+    0x0a,                       // ENUMERATED
     0x00                        // length
   };
 

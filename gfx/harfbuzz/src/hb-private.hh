@@ -219,7 +219,7 @@ _hb_popcount32 (uint32_t mask)
   return __builtin_popcount (mask);
 #else
   /* "HACKMEM 169" */
-  register uint32_t y;
+  uint32_t y;
   y = (mask >> 1) &033333333333;
   y = mask - y - ((y >>1) & 033333333333);
   return (((y + (y >> 3)) & 030707070707) % 077);
@@ -233,7 +233,7 @@ _hb_bit_storage (unsigned int number)
 #if defined(__GNUC__) && (__GNUC__ >= 4) && defined(__OPTIMIZE__)
   return likely (number) ? (sizeof (unsigned int) * 8 - __builtin_clz (number)) : 0;
 #else
-  register unsigned int n_bits = 0;
+  unsigned int n_bits = 0;
   while (number) {
     n_bits++;
     number >>= 1;
@@ -249,7 +249,7 @@ _hb_ctz (unsigned int number)
 #if defined(__GNUC__) && (__GNUC__ >= 4) && defined(__OPTIMIZE__)
   return likely (number) ? __builtin_ctz (number) : 0;
 #else
-  register unsigned int n_bits = 0;
+  unsigned int n_bits = 0;
   if (unlikely (!number)) return 0;
   while (!(number & 1)) {
     n_bits++;

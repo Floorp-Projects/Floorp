@@ -8,6 +8,7 @@ LIBRARY_NAME = 'mozillapkix_gtest'
 
 SOURCES += [
     'nssgtest.cpp',
+    'pkix_ocsp_request_tests.cpp',
     'pkixder_input_tests.cpp',
     'pkixder_pki_types_tests.cpp',
     'pkixder_universal_types_tests.cpp',
@@ -16,8 +17,16 @@ SOURCES += [
 LOCAL_INCLUDES += [
     '../../include',
     '../../lib',
+    '../lib',
 ]
 
-FINAL_LIBRARY='xul-gtest'
+FINAL_LIBRARY = 'xul-gtest'
 
 include('/ipc/chromium/chromium-config.mozbuild')
+
+if CONFIG['_MSC_VER']:
+  CXXFLAGS += [
+    '-wd4275', # non dll-interface class used as base for dll-interface class
+  ]
+
+FAIL_ON_WARNINGS = True

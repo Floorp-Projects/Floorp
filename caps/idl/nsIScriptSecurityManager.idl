@@ -5,16 +5,41 @@
 
 #include "nsISupports.idl"
 #include "nsIPrincipal.idl"
-#include "nsIXPCSecurityManager.idl"
 interface nsIURI;
 interface nsIChannel;
+interface nsIClassInfo;
 interface nsIDocShell;
 interface nsIDomainPolicy;
 interface nsILoadContext;
 
-[scriptable, uuid(9875f4b2-f9cd-41d1-a461-fe14956823ac)]
-interface nsIScriptSecurityManager : nsIXPCSecurityManager
+%{ C++
+#include "jspubtd.h"
+%}
+
+[ptr] native JSContextPtr(JSContext);
+[ptr] native JSObjectPtr(JSObject);
+
+[scriptable, uuid(f6e1e37e-14d0-44fa-a9bb-712bfad6c5f7)]
+interface nsIScriptSecurityManager : nsISupports
 {
+    /**
+     * For each of these hooks returning NS_OK means 'let the action continue'.
+     * Returning an error code means 'veto the action'. XPConnect will return
+     * false to the js engine if the action is vetoed. The implementor of this
+     * interface is responsible for setting a JS exception into the JSContext
+     * if that is appropriate.
+     */
+    [noscript] void canCreateWrapper(in JSContextPtr aJSContext,
+                                     in nsIIDRef aIID,
+                                     in nsISupports aObj,
+                                     in nsIClassInfo aClassInfo);
+
+    [noscript] void canCreateInstance(in JSContextPtr aJSContext,
+                                      in nsCIDRef aCID);
+
+    [noscript] void canGetService(in JSContextPtr aJSContext,
+                                  in nsCIDRef aCID);
+
     /**
      * Check that the script currently running in context "cx" can load "uri".
      *
