@@ -16,20 +16,24 @@ import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.StringUtils;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.Rect;
+import android.os.Build;
 import android.text.Editable;
 import android.text.NoCopySpan;
 import android.text.Selection;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.text.style.ForegroundColorSpan;
+import android.text.style.BackgroundColorSpan;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnKeyListener;
+import android.view.inputmethod.BaseInputConnection;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputConnectionWrapper;
 import android.view.inputmethod.InputMethodManager;
 
 /**
@@ -125,14 +129,11 @@ public class ToolbarEditText extends CustomEditText
      * Reset autocomplete states to their initial values
      */
     private void resetAutocompleteState() {
-        final int textColor = getCurrentTextColor();
-
         mAutoCompleteSpans = new Object[] {
             // Span to mark the autocomplete text
             AUTOCOMPLETE_SPAN,
             // Span to change the autocomplete text color
-            new ForegroundColorSpan(Color.argb(
-                0x80, Color.red(textColor), Color.green(textColor), Color.blue(textColor)))
+            new BackgroundColorSpan(getHighlightColor())
         };
 
         mAutoCompleteResult = "";
@@ -160,11 +161,11 @@ public class ToolbarEditText extends CustomEditText
      *
      * @param text Current text content that may include autocomplete text
      */
-    private void removeAutocomplete(final Editable text) {
+    private boolean removeAutocomplete(final Editable text) {
         final int start = text.getSpanStart(AUTOCOMPLETE_SPAN);
         if (start < 0) {
             // No autocomplete text
-            return;
+            return false;
         }
 
         beginSettingAutocomplete();
@@ -176,7 +177,11 @@ public class ToolbarEditText extends CustomEditText
         // Clear mAutoCompleteResult to make sure we get fresh autocomplete text next time.
         mAutoCompleteResult = "";
 
+        // Reshow the cursor.
+        setCursorVisible(true);
+
         endSettingAutocomplete();
+        return true;
     }
 
     /**
@@ -184,7 +189,13 @@ public class ToolbarEditText extends CustomEditText
      *
      * @param text Current text content that may include autocomplete text
      */
-    private void commitAutocomplete(final Editable text) {
+    private boolean commitAutocomplete(final Editable text) {
+        final int start = text.getSpanStart(AUTOCOMPLETE_SPAN);
+        if (start < 0) {
+            // No autocomplete text
+            return false;
+        }
+
         beginSettingAutocomplete();
 
         // Remove all spans here to convert from autocomplete text to regular text
@@ -196,12 +207,16 @@ public class ToolbarEditText extends CustomEditText
         // Reset mAutoCompletePrefixLength because the prefix now includes the autocomplete text.
         mAutoCompletePrefixLength = text.length();
 
+        // Reshow the cursor.
+        setCursorVisible(true);
+
         endSettingAutocomplete();
 
         // Filter on the new text
         if (mFilterListener != null) {
             mFilterListener.onFilter(text.toString(), null);
         }
+        return true;
     }
 
     /**
@@ -282,6 +297,9 @@ public class ToolbarEditText extends CustomEditText
                 text.setSpan(span, textLength, resultLength, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             }
 
+            // Hide the cursor.
+            setCursorVisible(false);
+
             // Make sure the autocomplete text is visible. If the autocomplete text is too
             // long, it would appear the cursor will be scrolled out of view. However, this
             // is not the case in practice, because EditText still makes sure the cursor is
@@ -315,6 +333,63 @@ public class ToolbarEditText extends CustomEditText
         }
 
         return false;
+    }
+
+    /**
+     * Code to handle deleting autocomplete first when backspacing.
+     * If there is no autocomplete text, both removeAutocomplete() and commitAutocomplete()
+     * are no-ops and return false. Therefore we can use them here without checking explicitly
+     * if we have autocomplete text or not.
+     */
+    @Override
+    public InputConnection onCreateInputConnection(final EditorInfo outAttrs) {
+        final InputConnection ic = super.onCreateInputConnection(outAttrs);
+        if (ic == null) {
+            return null;
+        }
+
+        return new InputConnectionWrapper(ic, false) {
+            @Override
+            public boolean deleteSurroundingText(final int beforeLength, final int afterLength) {
+                if (removeAutocomplete(getText())) {
+                    // If we have autocomplete text, the cursor is at the boundary between
+                    // regular and autocomplete text. So regardless of which direction we
+                    // are deleting, we should delete the autocomplete text first.
+                    return false;
+                }
+                return super.deleteSurroundingText(beforeLength, afterLength);
+            }
+
+            @Override
+            public boolean setComposingText(final CharSequence text, final int newCursorPosition) {
+                final Editable editable = getText();
+                final int composingStart = BaseInputConnection.getComposingSpanStart(editable);
+                final int composingEnd = BaseInputConnection.getComposingSpanEnd(editable);
+                // We only delete the autocomplete text when the user is backspacing,
+                // i.e. when the composing text is getting shorter.
+                if (composingStart >= 0 &&
+                    composingEnd >= 0 &&
+                    (composingEnd - composingStart) > text.length() &&
+                    removeAutocomplete(editable)) {
+                    // Make the IME aware that we interrupted the setComposingText call,
+                    // by having finishComposingText() send change notifications to the IME.
+                    return super.finishComposingText();
+                }
+                return super.setComposingText(text, newCursorPosition);
+            }
+
+            @Override
+            public boolean sendKeyEvent(final KeyEvent event) {
+                if ((event.getKeyCode() == KeyEvent.KEYCODE_DEL ||
+                    (Build.VERSION.SDK_INT >= 11 &&
+                        event.getKeyCode() == KeyEvent.KEYCODE_FORWARD_DEL)) &&
+                    removeAutocomplete(getText())) {
+                    // Delete autocomplete text when backspacing or forward deleting.
+                    return false;
+                }
+                return super.sendKeyEvent(event);
+            }
+        };
     }
 
     private class SelectionChangeListener implements OnSelectionChangedListener {
