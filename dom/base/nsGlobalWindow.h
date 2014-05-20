@@ -1348,6 +1348,7 @@ protected:
                                   bool aDefaultStylesOnly,
                                   nsIDOMCSSStyleDeclaration** aReturn);
 
+  // Outer windows only.
   void PreloadLocalStorage();
 
   // Returns device pixels.  Outer windows only.
