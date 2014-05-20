@@ -463,8 +463,8 @@ nsTransferable::RemoveDataFlavor(const char *aDataFlavor)
 {
   MOZ_ASSERT(mInitialized);
 
-  uint32_t idx;
-  if ((idx = GetDataForFlavor(mDataArray, aDataFlavor)) != mDataArray.NoIndex) {
+  size_t idx = GetDataForFlavor(mDataArray, aDataFlavor);
+  if (idx != mDataArray.NoIndex) {
     mDataArray.RemoveElementAt (idx);
     return NS_OK;
   }
