@@ -25,7 +25,7 @@
           <xul:deck anonid="translationStates" selectedIndex="0">
 
             <!-- offer to translate -->
-            <xul:hbox class="translate-offer-box" align="center">
+            <xul:hbox class="translate-offer-box" align="baseline">
               <xul:label value="&translation.thisPageIsIn.label;"/>
               <xul:menulist anonid="detectedLanguage">
                 <xul:menupopup/>
@@ -43,7 +43,7 @@
             </xul:vbox>
 
             <!-- translated -->
-            <xul:hbox class="translated-box" align="center">
+            <xul:hbox class="translated-box" align="baseline">
               <xul:label value="&translation.translatedFrom.label;"/>
               <xul:menulist anonid="fromLanguage"
                             oncommand="document.getBindingParent(this).translate()">
@@ -64,7 +64,7 @@
             </xul:hbox>
 
             <!-- error -->
-            <xul:hbox class="translation-error" align="center">
+            <xul:hbox class="translation-error" align="baseline">
               <xul:label value="&translation.errorTranslating.label;"/>
               <xul:button label="&translation.tryAgain.button;" anonid="tryAgain"
                           oncommand="document.getBindingParent(this).translate();"/>
