@@ -33,6 +33,11 @@ public class GeckoPopupMenu implements GeckoMenu.Callback,
         public boolean onMenuItemClick(MenuItem item);
     }
 
+    // An interface for listeners for menu item long click events.
+    public static interface OnMenuItemLongClickListener {
+        public boolean onMenuItemLongClick(MenuItem item);
+    }
+
     private View mAnchor;
 
     private MenuPopup mMenuPopup;
@@ -43,6 +48,7 @@ public class GeckoPopupMenu implements GeckoMenu.Callback,
 
     private OnDismissListener mDismissListener;
     private OnMenuItemClickListener mClickListener;
+    private OnMenuItemLongClickListener mLongClickListener;
 
     public GeckoPopupMenu(Context context) {
         initialize(context, null);
@@ -117,6 +123,10 @@ public class GeckoPopupMenu implements GeckoMenu.Callback,
         mClickListener = listener;
     }
 
+    public void setOnMenuItemLongClickListener(OnMenuItemLongClickListener listener) {
+        mLongClickListener = listener;
+    }
+
     /**
      * Show the inflated menu.
      */
@@ -138,10 +148,18 @@ public class GeckoPopupMenu implements GeckoMenu.Callback,
     }
 
     @Override
-    public boolean onMenuItemSelected(MenuItem item) {
-        if (mClickListener != null)
+    public boolean onMenuItemClick(MenuItem item) {
+        if (mClickListener != null) {
             return mClickListener.onMenuItemClick(item);
+        }
+        return false;
+    }
 
+    @Override
+    public boolean onMenuItemLongClick(MenuItem item) {
+        if (mLongClickListener != null) {
+            return mLongClickListener.onMenuItemLongClick(item);
+        }
         return false;
     }
 

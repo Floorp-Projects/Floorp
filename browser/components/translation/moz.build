@@ -5,10 +5,13 @@
 JS_MODULES_PATH = 'modules/translation'
 
 EXTRA_JS_MODULES = [
+    'BingTranslator.jsm',
     'cld2/cld-worker.js',
     'cld2/cld-worker.js.mem',
     'LanguageDetector.jsm',
-    'Translation.jsm'
+    'Translation.jsm',
+    'TranslationContentHandler.jsm',
+    'TranslationDocument.jsm'
 ]
 
 JAR_MANIFESTS += ['jar.mn']

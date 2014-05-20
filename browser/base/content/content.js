@@ -10,8 +10,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ContentLinkHandler",
   "resource:///modules/ContentLinkHandler.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "LanguageDetector",
-  "resource:///modules/translation/LanguageDetector.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerContent",
   "resource://gre/modules/LoginManagerContent.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "InsecurePasswordUtils",
@@ -442,51 +440,9 @@ let PageStyleHandler = {
 };
 PageStyleHandler.init();
 
-let TranslationHandler = {
-  init: function() {
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIWebProgress);
-    webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
-  },
-
-  /* nsIWebProgressListener implementation */
-  onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
-    // Don't bother if we're not a toplevel document, if this isn't the 'stop'
-    // notification, or if the content document has gone away
-    if (!aWebProgress.isTopLevel ||
-        !(aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) ||
-        !content)
-      return;
-
-    let url = aRequest.name;
-    if (!url.startsWith("http://") && !url.startsWith("https://"))
-      return;
-
-    // Grab a 60k sample of text from the page.
-    let encoder = Cc["@mozilla.org/layout/documentEncoder;1?type=text/plain"]
-                    .createInstance(Ci.nsIDocumentEncoder);
-    encoder.init(content.document, "text/plain", encoder.SkipInvisibleContent);
-    let string = encoder.encodeToStringWithMaxLength(60 * 1024);
-
-    // Language detection isn't reliable on very short strings.
-    if (string.length < 100)
-      return;
-
-    LanguageDetector.detectLanguage(string).then(result => {
-      if (result.confident)
-        sendAsyncMessage("LanguageDetection:Result", result.language);
-    });
-  },
-
-  // Unused methods.
-  onProgressChange: function() {},
-  onLocationChange: function() {},
-  onStatusChange:   function() {},
-  onSecurityChange: function() {},
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                         Ci.nsISupportsWeakReference])
-};
-
-if (Services.prefs.getBoolPref("browser.translation.detectLanguage"))
-  TranslationHandler.init();
+// Keep a reference to the translation content handler to avoid it it being GC'ed.
+let trHandler = null;
+if (Services.prefs.getBoolPref("browser.translation.detectLanguage")) {
+  Cu.import("resource:///modules/translation/TranslationContentHandler.jsm");
+  trHandler = new TranslationContentHandler(global, docShell);
+}

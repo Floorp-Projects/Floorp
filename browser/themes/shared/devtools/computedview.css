@@ -3,22 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Take away these two :visited rules to get a core dumper     */
-/* See https://bugzilla.mozilla.org/show_bug.cgi?id=575675#c30 */
-.link,
-.link:visited {
-  color: #0091ff;
-}
-.link,
-.helplink,
-.link:visited,
-.helplink:visited {
-  text-decoration: none;
-}
-.link:hover {
-  text-decoration: underline;
-}
-
 /* From content */
 
 * {
@@ -167,6 +151,25 @@ body {
   float: right;
 }
 
+/* Take away these two :visited rules to get a core dumper     */
+/* See https://bugzilla.mozilla.org/show_bug.cgi?id=575675#c30 */
+
+.link,
+.link:visited {
+  color: #0091ff;
+}
+
+.link,
+.helplink,
+.link:visited,
+.helplink:visited {
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
 .computedview-colorswatch {
   border-radius: 50%;
   width: 1em;
@@ -174,6 +177,7 @@ body {
   vertical-align: text-top;
   -moz-margin-end: 5px;
   display: inline-block;
+  position: relative;
 }
 
 .computedview-colorswatch::before {
@@ -185,7 +189,9 @@ body {
   background-position: 0 0, 6px 6px;
   position: absolute;
   border-radius: 50%;
-  width: 1em;
-  height: 1em;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: -1;
 }
