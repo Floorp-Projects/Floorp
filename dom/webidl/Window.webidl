@@ -72,7 +72,8 @@ typedef any Transferable;
   [Throws] readonly attribute ApplicationCache applicationCache;
 
   // user prompts
-  [Throws] void alert(optional DOMString message = "");
+  [Throws] void alert();
+  [Throws] void alert(DOMString message);
   [Throws] boolean confirm(optional DOMString message = "");
   [Throws] DOMString? prompt(optional DOMString message = "", optional DOMString default = "");
   [Throws] void print();

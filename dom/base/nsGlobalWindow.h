@@ -856,6 +856,7 @@ protected:
                       mozilla::ErrorResult& aError);
 
 public:
+  void Alert(mozilla::ErrorResult& aError);
   void Alert(const nsAString& aMessage, mozilla::ErrorResult& aError);
   bool Confirm(const nsAString& aMessage, mozilla::ErrorResult& aError);
   void Prompt(const nsAString& aMessage, const nsAString& aInitial,

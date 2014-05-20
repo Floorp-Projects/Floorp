@@ -6274,6 +6274,12 @@ nsGlobalWindow::AlertOrConfirm(bool aAlert,
 }
 
 void
+nsGlobalWindow::Alert(mozilla::ErrorResult& aError)
+{
+  Alert(EmptyString(), aError);
+}
+
+void
 nsGlobalWindow::Alert(const nsAString& aMessage, mozilla::ErrorResult& aError)
 {
   FORWARD_TO_OUTER_OR_THROW(Alert, (aMessage, aError), aError, );
