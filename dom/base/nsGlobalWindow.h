@@ -563,6 +563,7 @@ public:
   // (alert, prompt, confirm) are currently allowed in this window.
   void EnableDialogs();
   void DisableDialogs();
+  // Outer windows only.
   bool AreDialogsEnabled();
 
   nsIScriptContext *GetContextInternal()
