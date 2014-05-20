@@ -25,7 +25,8 @@
   background-color: rgba(0,0,0,0.5);
 }
 
-.theme-selected {
+.theme-selected,
+.CodeMirror-hint-active {
   background-color: #1d4f73;
   color: #f5f7fa; /* Light foreground text */
 }
@@ -45,7 +46,8 @@
  * failures in debug builds.
  */
 .theme-link:visited,
-.cm-s-mozilla .cm-link:visited { /* blue */
+.cm-s-mozilla .cm-link:visited,
+.CodeMirror-Tern-type { /* blue */
   color: #3689b2;
 }
 
@@ -57,6 +59,10 @@
 .variable-or-property .token-undefined,
 .variable-or-property .token-null { /* grey */
   color: #5c6773;
+}
+
+.CodeMirror-Tern-completion-unknown:before {
+  background-color: #5c6773;
 }
 
 .theme-gutter {
@@ -77,6 +83,10 @@
   color: #5c9966;
 }
 
+.CodeMirror-Tern-completion-number:before {
+  background-color: #5c9966;
+}
+
 .theme-fg-color2,
 .cm-s-mozilla .cm-attribute,
 .cm-s-mozilla .cm-variable,
@@ -87,12 +97,20 @@
   color: #3689b2;
 }
 
+.CodeMirror-Tern-completion-object:before {
+  background-color: #3689b2;
+}
+
 .theme-fg-color3,
 .cm-s-mozilla .cm-builtin,
 .cm-s-mozilla .cm-tag,
 .cm-s-mozilla .cm-header,
 .variables-view-property > .title > .name { /* pink/lavender */
   color: #a673bf;
+}
+
+.CodeMirror-Tern-completion-array:before {
+  background-color: #a673bf;
 }
 
 .theme-fg-color4 { /* purple/violet */
@@ -108,8 +126,14 @@
 .theme-fg-color6,
 .cm-s-mozilla .cm-string,
 .cm-s-mozilla .cm-string-2,
-.variable-or-property .token-string { /* Orange */
+.variable-or-property .token-string,
+.CodeMirror-Tern-farg { /* Orange */
   color: #b26b47;
+}
+
+.CodeMirror-Tern-completion-string:before,
+.CodeMirror-Tern-completion-fn:before {
+  background-color: #b26b47;
 }
 
 .theme-fg-color7,
@@ -120,6 +144,10 @@
 .variable-or-property .token-domnode,
 .variable-or-property[exception] > .title > .name { /* Red */
   color: #bf5656;
+}
+
+.CodeMirror-Tern-completion-bool:before {
+  background-color: #bf5656;
 }
 
 .variable-or-property .token-domnode {
@@ -333,5 +361,17 @@ div.CodeMirror span.eval-text {
   background-color: rgba(24, 29, 32, 1);
   color: rgba(184, 200, 217, 1);
 }
+
+.CodeMirror-Tern-fname {
+  color: #f7f7f7;
+}
+
+.CodeMirror-hints,
+.CodeMirror-Tern-tooltip {
+  box-shadow: 0 0 4px rgba(255, 255, 255, .3);
+  background-color: #0f171f;
+  color: #8fa1b2;
+}
+
 
 %include toolbars.inc.css

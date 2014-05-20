@@ -69,7 +69,7 @@ SocialUI = {
     Services.prefs.addObserver("social.toast-notifications.enabled", this, false);
 
     gBrowser.addEventListener("ActivateSocialFeature", this._activationEventHandler.bind(this), true, true);
-    document.getElementById("PanelUI-popup").addEventListener("popupshown", SocialMarks.updatePanelButtons, true);
+    PanelUI.panel.addEventListener("popupshown", SocialUI.updateState, true);
 
     // menupopups that list social providers. we only populate them when shown,
     // and if it has not been done already.
@@ -102,7 +102,7 @@ SocialUI = {
 
     Services.prefs.removeObserver("social.toast-notifications.enabled", this);
 
-    document.getElementById("PanelUI-popup").removeEventListener("popupshown", SocialMarks.updatePanelButtons, true);
+    PanelUI.panel.removeEventListener("popupshown", SocialUI.updateState, true);
     document.getElementById("viewSidebarMenu").removeEventListener("popupshowing", SocialSidebar.populateSidebarMenu, true);
     document.getElementById("social-statusarea-popup").removeEventListener("popupshowing", SocialSidebar.populateSidebarMenu, true);
 
@@ -288,7 +288,7 @@ SocialUI = {
   // called on tab/urlbar/location changes and after customization. Update
   // anything that is tab specific.
   updateState: function() {
-    if (!this.enabled)
+    if (!SocialUI.enabled)
       return;
     SocialMarks.update();
     SocialShare.update();
@@ -432,6 +432,12 @@ SocialFlyout = {
 }
 
 SocialShare = {
+  // Share panel may be attached to the overflow or menu button depending on
+  // customization, we need to manage open state of the anchor.
+  get anchor() {
+    let widget = CustomizableUI.getWidget("social-share-button");
+    return widget.forWindow(window).anchor;
+  },
   get panel() {
     return document.getElementById("social-share-panel");
   },
@@ -523,7 +529,15 @@ SocialShare = {
   },
 
   get shareButton() {
-    return document.getElementById("social-share-button");
+    // web-panels (bookmark/sidebar) don't include customizableui, so
+    // nsContextMenu fails when accessing shareButton, breaking
+    // browser_bug409481.js.
+    if (!window.CustomizableUI)
+      return null;
+    let widget = CustomizableUI.getWidget("social-share-button");
+    if (!widget || !widget.areaType)
+      return null;
+    return widget.forWindow(window).node;
   },
 
   canSharePage: function(aURI) {
@@ -540,23 +554,29 @@ SocialShare = {
     let shareButton = this.shareButton;
     shareButton.hidden = !SocialUI.enabled ||
                          [p for (p of Social.providers) if (p.shareURL)].length == 0;
-    shareButton.disabled = shareButton.hidden || !this.canSharePage(gBrowser.currentURI);
+    let disabled = shareButton.hidden || !this.canSharePage(gBrowser.currentURI);
 
-    // also update the relevent command's disabled state so the keyboard
+    // 1. update the relevent command's disabled state so the keyboard
     // shortcut only works when available.
+    // 2. If the button has been relocated to a place that is not visible by
+    // default (e.g. menu panel) then the disabled attribute will not update
+    // correctly based on the command, so we update the attribute directly as.
     let cmd = document.getElementById("Social:SharePage");
-    if (shareButton.disabled)
+    if (disabled) {
       cmd.setAttribute("disabled", "true");
-    else
+      shareButton.setAttribute("disabled", "true");
+    } else {
       cmd.removeAttribute("disabled");
+      shareButton.removeAttribute("disabled");
+    }
   },
 
   onShowing: function() {
-    this.shareButton.setAttribute("open", "true");
+    this.anchor.setAttribute("open", "true");
   },
 
   onHidden: function() {
-    this.shareButton.removeAttribute("open");
+    this.anchor.removeAttribute("open");
     this.iframe.setAttribute("src", "data:text/plain;charset=utf8,");
     this.currentShare = null;
   },
@@ -670,8 +690,7 @@ SocialShare = {
     iframe.setAttribute("origin", provider.origin);
     iframe.setAttribute("src", shareEndpoint);
 
-    let navBar = document.getElementById("nav-bar");
-    let anchor = document.getAnonymousElementByAttribute(this.shareButton, "class", "toolbarbutton-icon");
+    let anchor = document.getAnonymousElementByAttribute(this.anchor, "class", "toolbarbutton-icon");
     this.panel.openPopup(anchor, "bottomcenter topright", 0, 0, false, false);
     Social.setErrorListener(iframe, this.setErrorMessage.bind(this));
   }
@@ -1357,7 +1376,6 @@ SocialMarks = {
     // querySelectorAll does not work on the menu panel the panel, so we have to
     // do this the hard way.
     let providers = SocialMarks.getProviders();
-    let panel =  document.getElementById("PanelUI-popup");
     for (let p of providers) {
       let widgetId = SocialMarks._toolbarHelper.idFromOrigin(p.origin);
       let widget = CustomizableUI.getWidget(widgetId);

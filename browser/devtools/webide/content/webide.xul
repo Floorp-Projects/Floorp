@@ -119,7 +119,7 @@
   <popupset>
 
     <!-- App panel -->
-    <panel id="project-panel" type="arrow" position="bottomcenter topleft" consumeoutsideclicks="true">
+    <panel id="project-panel" type="arrow" position="bottomcenter topleft" consumeoutsideclicks="true" animate="false">
       <vbox flex="1">
         <toolbarbutton class="panel-item project-panel-item-newapp" command="cmd_newApp"/>
         <toolbarbutton class="panel-item project-panel-item-openpackaged" command="cmd_importPackagedApp"/>
@@ -132,7 +132,7 @@
     </panel>
 
     <!-- Runtime panel -->
-    <panel id="runtime-panel" type="arrow" position="bottomcenter topright" consumeoutsideclicks="true">
+    <panel id="runtime-panel" type="arrow" position="bottomcenter topright" consumeoutsideclicks="true" animate="false">
       <vbox flex="1">
         <label class="panel-header">&runtimePanel_USBDevices;</label>
         <vbox id="runtime-panel-usbruntime"></vbox>

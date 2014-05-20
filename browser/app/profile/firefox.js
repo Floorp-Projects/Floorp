@@ -1330,9 +1330,11 @@ pref("devtools.tilt.outro_transition", true);
 //                  'Open Recent'-menu.
 // - showTrailingSpace: Whether to highlight trailing space or not.
 // - enableCodeFolding: Whether to enable code folding or not.
+// - enableAutocompletion: Whether to enable JavaScript autocompletion.
 pref("devtools.scratchpad.recentFilesMax", 10);
 pref("devtools.scratchpad.showTrailingSpace", false);
 pref("devtools.scratchpad.enableCodeFolding", true);
+pref("devtools.scratchpad.enableAutocompletion", true);
 
 // Enable the Style Editor.
 pref("devtools.styleeditor.enabled", true);

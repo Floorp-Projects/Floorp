@@ -169,8 +169,10 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         String args = addCustomProfileArg(mArgs);
         String type = getTypeFromAction(mAction);
 
+        if (!AppConstants.MOZILLA_OFFICIAL) {
+            Log.i(LOGTAG, "RunGecko - args = " + args);
+        }
         // and then fire us up
-        Log.i(LOGTAG, "RunGecko - args = " + args);
         GeckoAppShell.runGecko(path, args, mUri, type);
     }
 

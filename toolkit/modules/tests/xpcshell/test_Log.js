@@ -288,6 +288,11 @@ add_task(function test_FileAppender() {
 
 add_task(function test_BoundedFileAppender() {
   let dir = OS.Path.join(do_get_profile().path, "test_Log");
+
+  if (!(yield OS.File.exists(dir))) {
+    yield OS.File.makeDir(dir);
+  }
+
   let path = OS.Path.join(dir, "test_BoundedFileAppender");
   // This appender will hold about two lines at a time.
   let appender = new Log.BoundedFileAppender(path, testFormatter, 40);

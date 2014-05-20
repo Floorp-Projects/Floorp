@@ -100,6 +100,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame, isPendingFrame) {
   debug("Creating new BrowserElementParent object for " + frameLoader);
   this._domRequestCounter = 0;
   this._pendingDOMRequests = {};
+  this._pendingSetInputMethodActive = [];
   this._hasRemoteFrame = hasRemoteFrame;
   this._nextPaintListeners = [];
 
@@ -370,6 +371,11 @@ BrowserElementParent.prototype = {
     debug("recvHello");
 
     this._ready = true;
+
+    // Handle pending SetInputMethodActive request.
+    while (this._pendingSetInputMethodActive.length > 0) {
+      this._setInputMethodActive(this._pendingSetInputMethodActive.shift());
+    }
 
     // Inform our child if our owner element's document is invisible.  Note
     // that we must do so here, rather than in the BrowserElementParent
@@ -724,6 +730,12 @@ BrowserElementParent.prototype = {
                                  Cr.NS_ERROR_INVALID_ARG);
     }
 
+    // Wait until browserElementChild is initialized.
+    if (!this._ready) {
+      this._pendingSetInputMethodActive.push(isActive);
+      return;
+    }
+
     let req = Services.DOMRequest.createRequest(this._window);
 
     // Deactivate the old input method if needed.
@@ -733,35 +745,17 @@ BrowserElementParent.prototype = {
         // we should simply set it to null directly.
         activeInputFrame = null;
         this._sendSetInputMethodActiveDOMRequest(req, isActive);
-      } else {
-        let reqOld = XPCNativeWrapper.unwrap(activeInputFrame)
-                                     .setInputMethodActive(false);
-
-        // We wan't to continue regardless whether this req succeeded
-        reqOld.onsuccess = reqOld.onerror = function() {
-          let setActive = function() {
-            activeInputFrame = null;
-            this._sendSetInputMethodActiveDOMRequest(req, isActive);
-          }.bind(this);
-
-          if (this._ready) {
-            setActive();
-            return;
-          }
-
-          // Wait for the hello event from BrowserElementChild
-          let onReady = function(aMsg) {
-            if (this._isAlive() && (aMsg.data.msg_name === 'hello')) {
-              setActive();
-
-              this._mm.removeMessageListener('browser-element-api:call',
-                onReady);
-            }
-          }.bind(this);
-
-          this._mm.addMessageListener('browser-element-api:call', onReady);
-        }.bind(this);
+        return req;
       }
+
+      let reqOld = XPCNativeWrapper.unwrap(activeInputFrame)
+                                   .setInputMethodActive(false);
+
+      // We wan't to continue regardless whether this req succeeded
+      reqOld.onsuccess = reqOld.onerror = function() {
+        activeInputFrame = null;
+        this._sendSetInputMethodActiveDOMRequest(req, isActive);
+      }.bind(this);
     } else {
       this._sendSetInputMethodActiveDOMRequest(req, isActive);
     }

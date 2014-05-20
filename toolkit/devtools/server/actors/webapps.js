@@ -12,6 +12,7 @@ let CC = Components.Constructor;
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 
 let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
@@ -23,87 +24,157 @@ function debug(aMsg) {
   */
 }
 
-function PackageUploadActor(aPath, aFile) {
-  this._path = aPath;
-  this._file = aFile;
-  this.size = 0;
+function PackageUploadActor(file) {
+  this._file = file;
+  this._path = file.path;
 }
 
+PackageUploadActor.fromRequest = function(request, file) {
+  if (request.bulk) {
+    return new PackageUploadBulkActor(file);
+  }
+  return new PackageUploadJSONActor(file);
+};
+
 PackageUploadActor.prototype = {
-  actorPrefix: "packageUploadActor",
 
   /**
    * This method isn't exposed to the client.
    * It is meant to be called by server code, in order to get
    * access to the temporary file out of the actor ID.
    */
-  getFilePath: function () {
+  get filePath() {
     return this._path;
   },
 
-  /**
-   * This method allows you to upload a piece of file.
-   * It expects a chunk argument that is the a string to write to the file.
-   */
-  chunk: function (aRequest) {
-    let chunk = aRequest.chunk;
-    if (!chunk || chunk.length <= 0) {
-      return {error: "parameterError",
-              message: "Missing or invalid chunk argument"};
+  get openedFile() {
+    if (this._openedFile) {
+      return this._openedFile;
     }
-    // Translate the string used to transfer the chunk over JSON
-    // back to a typed array
-    let data = new Uint8Array(chunk.length);
-    for (let i = 0, l = chunk.length; i < l ; i++) {
-      data[i] = chunk.charCodeAt(i);
-    }
-    return this._file.write(data)
-               .then((written) => {
-                 this.size += written;
-                 return {
-                   written: written,
-                   size: this.size
-                 };
-               });
-  },
-
-  /**
-   * This method needs to be called, when you are done uploading
-   * chunks, before trying to access/use the temporary file.
-   * Otherwise, the file may be partially written
-   * and also be locked.
-   */
-  done: function (aRequest) {
-    this._file.close();
-    return {};
+    this._openedFile = this._openFile();
+    return this._openedFile;
   },
 
   /**
    * This method allows you to delete the temporary file,
    * when you are done using it.
    */
-  remove: function (aRequest) {
+  remove: function () {
     this._cleanupFile();
     return {};
   },
 
   _cleanupFile: function () {
     try {
-      this._file.close();
+      this._closeFile();
     } catch(e) {}
     try {
       OS.File.remove(this._path);
     } catch(e) {}
   }
+
+};
+
+/**
+ * Create a new JSON package upload actor.
+ * @param file nsIFile temporary file to write to
+ */
+function PackageUploadJSONActor(file) {
+  PackageUploadActor.call(this, file);
+  this._size = 0;
+}
+
+PackageUploadJSONActor.prototype = Object.create(PackageUploadActor.prototype);
+
+PackageUploadJSONActor.prototype.actorPrefix = "packageUploadJSONActor";
+
+PackageUploadJSONActor.prototype._openFile = function() {
+  return OS.File.open(this._path, { write: true, truncate: true });
+};
+
+PackageUploadJSONActor.prototype._closeFile = function() {
+  this.openedFile.then(file => file.close());
+};
+
+/**
+ * This method allows you to upload a piece of file.
+ * It expects a chunk argument that is the a string to write to the file.
+ */
+PackageUploadJSONActor.prototype.chunk = function(aRequest) {
+  let chunk = aRequest.chunk;
+  if (!chunk || chunk.length <= 0) {
+    return {error: "parameterError",
+            message: "Missing or invalid chunk argument"};
+  }
+  // Translate the string used to transfer the chunk over JSON
+  // back to a typed array
+  let data = new Uint8Array(chunk.length);
+  for (let i = 0, l = chunk.length; i < l ; i++) {
+    data[i] = chunk.charCodeAt(i);
+  }
+  return this.openedFile
+             .then(file => file.write(data))
+             .then((written) => {
+               this._size += written;
+               return {
+                 written: written,
+                 _size: this._size
+               };
+             });
+};
+
+/**
+ * This method needs to be called, when you are done uploading
+ * chunks, before trying to access/use the temporary file.
+ * Otherwise, the file may be partially written
+ * and also be locked.
+ */
+PackageUploadJSONActor.prototype.done = function() {
+  this._closeFile();
+  return {};
 };
 
 /**
  * The request types this actor can handle.
  */
-PackageUploadActor.prototype.requestTypes = {
-  "chunk": PackageUploadActor.prototype.chunk,
-  "done": PackageUploadActor.prototype.done,
-  "remove": PackageUploadActor.prototype.remove
+PackageUploadJSONActor.prototype.requestTypes = {
+  "chunk": PackageUploadJSONActor.prototype.chunk,
+  "done": PackageUploadJSONActor.prototype.done,
+  "remove": PackageUploadJSONActor.prototype.remove
+};
+
+/**
+ * Create a new bulk package upload actor.
+ * @param file nsIFile temporary file to write to
+ */
+function PackageUploadBulkActor(file) {
+  PackageUploadActor.call(this, file);
+}
+
+PackageUploadBulkActor.prototype = Object.create(PackageUploadActor.prototype);
+
+PackageUploadBulkActor.prototype.actorPrefix = "packageUploadBulkActor";
+
+PackageUploadBulkActor.prototype._openFile = function() {
+  return FileUtils.openSafeFileOutputStream(this._file);
+};
+
+PackageUploadBulkActor.prototype._closeFile = function() {
+  FileUtils.closeSafeFileOutputStream(this.openedFile);
+};
+
+PackageUploadBulkActor.prototype.stream = function({copyTo}) {
+  copyTo(this.openedFile).then(() => {
+    this._closeFile();
+  });
+};
+
+/**
+ * The request types this actor can handle.
+ */
+PackageUploadBulkActor.prototype.requestTypes = {
+  "stream": PackageUploadBulkActor.prototype.stream,
+  "remove": PackageUploadBulkActor.prototype.remove
 };
 
 /**
@@ -230,28 +301,38 @@ WebappsActor.prototype = {
     return type;
   },
 
-  uploadPackage: function () {
-    debug("uploadPackage\n");
+  _createTmpPackage: function() {
     let tmpDir = FileUtils.getDir("TmpD", ["file-upload"], true, false);
     if (!tmpDir.exists() || !tmpDir.isDirectory()) {
-      return {error: "fileAccessError",
-              message: "Unable to create temporary folder"};
+      return {
+        error: "fileAccessError",
+        message: "Unable to create temporary folder"
+      };
     }
     let tmpFile = tmpDir;
     tmpFile.append("package.zip");
     tmpFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("0666", 8));
     if (!tmpFile.exists() || !tmpDir.isFile()) {
-      return {error: "fileAccessError",
-              message: "Unable to create temporary file"};
+      return {
+        error: "fileAccessError",
+        message: "Unable to create temporary file"
+      };
+    }
+    return tmpFile;
+  },
+
+  uploadPackage: function (request) {
+    debug("uploadPackage");
+
+    let tmpFile = this._createTmpPackage();
+    if ("error" in tmpFile) {
+      return tmpFile;
     }
 
-    return OS.File.open(tmpFile.path, { write: true, truncate: true })
-             .then((file) => {
-                let actor = new PackageUploadActor(tmpFile.path, file);
-                this._actorPool.addActor(actor);
-                this._uploads.push(actor);
-                return { actor: actor.actorID };
-             });
+    let actor = PackageUploadActor.fromRequest(request, tmpFile);
+    this._actorPool.addActor(actor);
+    this._uploads.push(actor);
+    return { actor: actor.actorID };
   },
 
   installHostedApp: function wa_actorInstallHosted(aDir, aId, aReceipts,
@@ -486,7 +567,7 @@ WebappsActor.prototype = {
                  message: "Unable to find upload actor '" + aRequest.upload
                           + "'" };
       }
-      let appFile = FileUtils.File(actor.getFilePath());
+      let appFile = FileUtils.File(actor.filePath);
       if (!appFile.exists()) {
         return { error: "badParameter",
                  message: "The uploaded file doesn't exist on device" };
