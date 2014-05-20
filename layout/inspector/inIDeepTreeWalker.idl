@@ -2,16 +2,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMTreeWalker.idl"
+#include "nsISupports.idl"
 
 interface nsIDOMNode;
+interface nsIDOMNodeFilter;
 
-[scriptable, uuid(91FCA0E9-99D6-406b-9D78-4C96F11E9EE4)]
-interface inIDeepTreeWalker : nsIDOMTreeWalker
+[scriptable, uuid(5ba1ec15-e18f-46df-9558-c618429f3db3)]
+interface inIDeepTreeWalker : nsISupports
 {
   attribute boolean showAnonymousContent;
   attribute boolean showSubDocuments;
   
   void init(in nsIDOMNode aRoot, in unsigned long aWhatToShow);
+
+  // Methods and attributes from nsIDOMTreeWalker, which is not scriptable.
+  readonly attribute nsIDOMNode       root;
+  readonly attribute unsigned long    whatToShow;
+  readonly attribute nsIDOMNodeFilter filter;
+           attribute nsIDOMNode       currentNode;
+                                        // raises(DOMException) on setting
+
+  nsIDOMNode         parentNode();
+  nsIDOMNode         firstChild();
+  nsIDOMNode         lastChild();
+  nsIDOMNode         previousSibling();
+  nsIDOMNode         nextSibling();
+  nsIDOMNode         previousNode();
+  nsIDOMNode         nextNode();
 };
 
