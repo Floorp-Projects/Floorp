@@ -131,10 +131,11 @@ public:
     JSAutoRequest ar(cx);
 
     // Create the input buffer
-    nsRefPtr<AudioBuffer> renderedBuffer = new AudioBuffer(context,
-                                                           mLength,
-                                                           mSampleRate);
-    if (!renderedBuffer->InitializeBuffers(mInputChannels.Length(), cx)) {
+    ErrorResult rv;
+    nsRefPtr<AudioBuffer> renderedBuffer =
+      AudioBuffer::Create(context, mInputChannels.Length(),
+                          mLength, mSampleRate, cx, rv);
+    if (rv.Failed()) {
       return;
     }
     for (uint32_t i = 0; i < mInputChannels.Length(); ++i) {
