@@ -25,7 +25,8 @@
   background: #EFEFEF;
 }
 
-.theme-selected {
+.theme-selected,
+.CodeMirror-hint-active {
   background-color: #4c9ed9;
   color: #f5f7fa; /* Light foreground text */
 }
@@ -36,7 +37,8 @@
 }
 
 .theme-link,
-.cm-s-mozilla .cm-link { /* blue */
+.cm-s-mozilla .cm-link,
+.CodeMirror-Tern-type { /* blue */
   color: hsl(208,56%,40%);
 }
 
@@ -58,6 +60,10 @@
   color: hsl(90,2%,46%);
 }
 
+.CodeMirror-Tern-completion-unknown:before {
+  background-color: hsl(90,2%,46%);
+}
+
 .theme-gutter {
   background-color: hsl(0,0%,90%);
   color: #667380;
@@ -76,6 +82,10 @@
   color: hsl(72,100%,27%);
 }
 
+.CodeMirror-Tern-completion-number:before {
+  background-color: hsl(72,100%,27%);
+}
+
 .theme-fg-color2,
 .cm-s-mozilla .cm-attribute,
 .cm-s-mozilla .cm-builtin,
@@ -86,12 +96,20 @@
   color: hsl(208,56%,40%);
 }
 
+.CodeMirror-Tern-completion-object:before {
+  background-color: hsl(208,56%,40%);
+}
+
 .theme-fg-color3,
 .cm-s-mozilla .cm-variable,
 .cm-s-mozilla .cm-tag,
 .cm-s-mozilla .cm-header,
 .variables-view-property > .title > .name { /* dark blue */
-  color: hsl(208,81%,21%)
+  color: hsl(208,81%,21%);
+}
+
+.CodeMirror-Tern-completion-array:before { /* dark blue */
+  background-color: hsl(208,81%,21%);
 }
 
 .theme-fg-color4 { /* Orange */
@@ -107,8 +125,14 @@
 .theme-fg-color6,
 .cm-s-mozilla .cm-string,
 .cm-s-mozilla .cm-string-2,
-.variable-or-property .token-string { /* Orange */
+.variable-or-property .token-string,
+.CodeMirror-Tern-farg { /* Orange */
   color: hsl(24,85%,39%);
+}
+
+.CodeMirror-Tern-completion-string:before,
+.CodeMirror-Tern-completion-fn:before {
+  background-color: hsl(24,85%,39%);
 }
 
 .theme-fg-color7,
@@ -119,6 +143,10 @@
 .variable-or-property .token-domnode,
 .variable-or-property[exception] > .title > .name { /* Red */
   color: #bf5656;
+}
+
+.CodeMirror-Tern-completion-bool:before {
+  background-color: #bf5656;
 }
 
 .variable-or-property .token-domnode {
@@ -336,5 +364,12 @@ div.CodeMirror span.eval-text {
   -moz-border-end: 1px solid #aaa;
   border-color: #aaa; /* Needed for responsive container at low width. */
 }
+
+.CodeMirror-hints,
+.CodeMirror-Tern-tooltip {
+  box-shadow: 0 0 4px rgba(128, 128, 128, .5);
+  background-color: #f7f7f7;
+}
+
 
 %include toolbars.inc.css

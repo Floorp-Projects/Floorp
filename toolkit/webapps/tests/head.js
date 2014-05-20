@@ -6,6 +6,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/WebappOSUtils.jsm");
 
 const LINUX = navigator.platform.startsWith("Linux");
 const MAC = navigator.platform.startsWith("Mac");
@@ -76,6 +77,214 @@ function setDryRunPref() {
       Services.prefs.setBoolPref("browser.mozApps.installer.dry_run", old_dry_run);
     }
   });
+}
+
+function TestAppInfo(aApp) {
+  this.appProcess = Cc["@mozilla.org/process/util;1"].
+                    createInstance(Ci.nsIProcess);
+
+  this.isPackaged = !!aApp.updateManifest;
+
+  if (LINUX) {
+    this.installPath = OS.Path.join(OS.Constants.Path.homeDir,
+                                    "." + WebappOSUtils.getUniqueName(aApp));
+    this.exePath = OS.Path.join(this.installPath, "webapprt-stub");
+
+    let xdg_data_home = Cc["@mozilla.org/process/environment;1"].
+                        getService(Ci.nsIEnvironment).
+                        get("XDG_DATA_HOME");
+    if (!xdg_data_home) {
+      xdg_data_home = OS.Path.join(OS.Constants.Path.homeDir, ".local", "share");
+    }
+
+    let desktopINI = OS.Path.join(xdg_data_home, "applications",
+                                  "owa-" + WebappOSUtils.getUniqueName(aApp) + ".desktop");
+
+    this.installedFiles = [
+      OS.Path.join(this.installPath, "icon.png"),
+      OS.Path.join(this.installPath, "webapp.json"),
+      OS.Path.join(this.installPath, "webapp.ini"),
+      this.exePath,
+      desktopINI,
+    ];
+    this.tempUpdatedFiles = [
+      OS.Path.join(this.installPath, "update", "icon.png"),
+      OS.Path.join(this.installPath, "update", "webapp.json"),
+      OS.Path.join(this.installPath, "update", "webapp.ini"),
+    ];
+    this.updatedFiles = [
+      OS.Path.join(this.installPath, "icon.png"),
+      OS.Path.join(this.installPath, "webapp.json"),
+      OS.Path.join(this.installPath, "webapp.ini"),
+      desktopINI,
+    ];
+
+    if (this.isPackaged) {
+      let appZipPath = OS.Path.join(this.installPath, "application.zip");
+      this.installedFiles.push(appZipPath);
+      this.tempUpdatedFiles.push(appZipPath);
+      this.updatedFiles.push(appZipPath);
+    }
+
+    this.profilesIni = OS.Path.join(this.installPath, "profiles.ini");
+
+    this.cleanup = Task.async(function*() {
+      if (this.appProcess && this.appProcess.isRunning) {
+        this.appProcess.kill();
+      }
+
+      if (this.profileDir) {
+        yield OS.File.removeDir(this.profileDir.parent.path, { ignoreAbsent: true });
+      }
+
+      yield OS.File.removeDir(this.installPath, { ignoreAbsent: true });
+
+      yield OS.File.remove(desktopINI, { ignoreAbsent: true });
+    });
+  } else if (WIN) {
+    this.installPath = OS.Path.join(OS.Constants.Path.winAppDataDir,
+                                    WebappOSUtils.getUniqueName(aApp));
+    this.exePath = OS.Path.join(this.installPath, aApp.name + ".exe");
+
+    let desktopShortcut = OS.Path.join(OS.Constants.Path.desktopDir,
+                                       aApp.name + ".lnk");
+    let startMenuShortcut = OS.Path.join(OS.Constants.Path.winStartMenuProgsDir,
+                                         aApp.name + ".lnk");
+
+    this.installedFiles = [
+      OS.Path.join(this.installPath, "chrome", "icons", "default", "default.ico"),
+      OS.Path.join(this.installPath, "webapp.json"),
+      OS.Path.join(this.installPath, "webapp.ini"),
+      OS.Path.join(this.installPath, "uninstall", "shortcuts_log.ini"),
+      OS.Path.join(this.installPath, "uninstall", "uninstall.log"),
+      OS.Path.join(this.installPath, "uninstall", "webapp-uninstaller.exe"),
+      this.exePath,
+      desktopShortcut,
+      startMenuShortcut,
+    ];
+    this.tempUpdatedFiles = [
+      OS.Path.join(this.installPath, "update", "chrome", "icons", "default", "default.ico"),
+      OS.Path.join(this.installPath, "update", "webapp.json"),
+      OS.Path.join(this.installPath, "update", "webapp.ini"),
+      OS.Path.join(this.installPath, "update", "uninstall", "shortcuts_log.ini"),
+      OS.Path.join(this.installPath, "update", "uninstall", "uninstall.log"),
+      OS.Path.join(this.installPath, "update", "uninstall", "webapp-uninstaller.exe"),
+    ];
+    this.updatedFiles = [
+      OS.Path.join(this.installPath, "chrome", "icons", "default", "default.ico"),
+      OS.Path.join(this.installPath, "webapp.json"),
+      OS.Path.join(this.installPath, "webapp.ini"),
+      OS.Path.join(this.installPath, "uninstall", "shortcuts_log.ini"),
+      OS.Path.join(this.installPath, "uninstall", "uninstall.log"),
+      desktopShortcut,
+      startMenuShortcut,
+    ];
+
+    if (this.isPackaged) {
+      let appZipPath = OS.Path.join(this.installPath, "application.zip");
+      this.installedFiles.push(appZipPath);
+      this.tempUpdatedFiles.push(appZipPath);
+      this.updatedFiles.push(appZipPath);
+    }
+
+    this.profilesIni = OS.Path.join(this.installPath, "profiles.ini");
+
+    this.cleanup = Task.async(function*() {
+      if (this.appProcess && this.appProcess.isRunning) {
+        this.appProcess.kill();
+      }
+
+      let uninstallKey;
+      try {
+        uninstallKey = Cc["@mozilla.org/windows-registry-key;1"].
+                       createInstance(Ci.nsIWindowsRegKey);
+        uninstallKey.open(uninstallKey.ROOT_KEY_CURRENT_USER,
+                          "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+                          uninstallKey.ACCESS_WRITE);
+        if (uninstallKey.hasChild(WebappOSUtils.getUniqueName(aApp))) {
+          uninstallKey.removeChild(WebappOSUtils.getUniqueName(aApp));
+        }
+      } catch (e) {
+      } finally {
+        if (uninstallKey) {
+          uninstallKey.close();
+        }
+      }
+
+      let removed = false;
+      do {
+        try {
+          if (this.profileDir) {
+            yield OS.File.removeDir(this.profileDir.parent.parent.path, { ignoreAbsent: true });
+          }
+
+          yield OS.File.removeDir(this.installPath, { ignoreAbsent: true });
+
+          yield OS.File.remove(desktopShortcut, { ignoreAbsent: true });
+          yield OS.File.remove(startMenuShortcut, { ignoreAbsent: true });
+
+          removed = true;
+        } catch (ex if ex instanceof OS.File.Error &&
+                 (ex.winLastError == OS.Constants.Win.ERROR_ACCESS_DENIED ||
+                  ex.winLastError == OS.Constants.Win.ERROR_SHARING_VIOLATION)) {
+          // Wait 100 ms before attempting to remove again.
+          yield wait(100);
+        }
+      } while (!removed);
+    });
+  } else if (MAC) {
+    this.installPath = OS.Path.join(OS.Constants.Path.homeDir,
+                                    "Applications",
+                                    aApp.name + ".app");
+    this.exePath = OS.Path.join(this.installPath, "Contents", "MacOS", "webapprt");
+
+    let appProfileDir = OS.Path.join(OS.Constants.Path.macUserLibDir,
+                                     "Application Support",
+                                     WebappOSUtils.getUniqueName(aApp));
+
+    this.installedFiles = [
+      OS.Path.join(this.installPath, "Contents", "Info.plist"),
+      OS.Path.join(this.installPath, "Contents", "MacOS", "webapp.ini"),
+      OS.Path.join(this.installPath, "Contents", "Resources", "appicon.icns"),
+      OS.Path.join(appProfileDir, "webapp.json"),
+      this.exePath,
+    ];
+    this.tempUpdatedFiles = [
+      OS.Path.join(this.installPath, "update", "Contents", "Info.plist"),
+      OS.Path.join(this.installPath, "update", "Contents", "MacOS", "webapp.ini"),
+      OS.Path.join(this.installPath, "update", "Contents", "Resources", "appicon.icns"),
+      OS.Path.join(this.installPath, "update", "webapp.json")
+    ];
+    this.updatedFiles = [
+      OS.Path.join(this.installPath, "Contents", "Info.plist"),
+      OS.Path.join(this.installPath, "Contents", "MacOS", "webapp.ini"),
+      OS.Path.join(this.installPath, "Contents", "Resources", "appicon.icns"),
+      OS.Path.join(appProfileDir, "webapp.json"),
+    ];
+
+    if (this.isPackaged) {
+      let appZipPath = OS.Path.join(this.installPath, "Contents", "Resources", "application.zip");
+      this.installedFiles.push(appZipPath);
+      this.tempUpdatedFiles.push(appZipPath);
+      this.updatedFiles.push(appZipPath);
+    }
+
+    this.profilesIni = OS.Path.join(appProfileDir, "profiles.ini");
+
+    this.cleanup = Task.async(function*() {
+      if (this.appProcess && this.appProcess.isRunning) {
+        this.appProcess.kill();
+      }
+
+      if (this.profileDir) {
+        yield OS.File.removeDir(this.profileDir.parent.path, { ignoreAbsent: true });
+      }
+
+      yield OS.File.removeDir(this.installPath, { ignoreAbsent: true });
+
+      yield OS.File.removeDir(appProfileDir, { ignoreAbsent: true });
+    });
+  }
 }
 
 function buildAppPackage(aManifest) {

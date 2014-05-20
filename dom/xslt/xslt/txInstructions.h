@@ -71,7 +71,7 @@ public:
 class txAttribute : public txInstruction
 {
 public:
-    txAttribute(nsAutoPtr<Expr> aName, nsAutoPtr<Expr> aNamespace,
+    txAttribute(nsAutoPtr<Expr>&& aName, nsAutoPtr<Expr>&& aNamespace,
                 txNamespaceMap* aMappings);
 
     TX_DECL_TXINSTRUCTION
@@ -105,7 +105,7 @@ public:
 class txConditionalGoto : public txInstruction
 {
 public:
-    txConditionalGoto(nsAutoPtr<Expr> aCondition, txInstruction* aTarget);
+    txConditionalGoto(nsAutoPtr<Expr>&& aCondition, txInstruction* aTarget);
 
     TX_DECL_TXINSTRUCTION
     
@@ -138,7 +138,7 @@ public:
 class txCopyOf : public txCopyBase
 {
 public:
-    txCopyOf(nsAutoPtr<Expr> aSelect);
+    txCopyOf(nsAutoPtr<Expr>&& aSelect);
 
     TX_DECL_TXINSTRUCTION
     
@@ -191,7 +191,7 @@ class txLREAttribute : public txInstruction
 {
 public:
     txLREAttribute(int32_t aNamespaceID, nsIAtom* aLocalName,
-                   nsIAtom* aPrefix, nsAutoPtr<Expr> aValue);
+                   nsIAtom* aPrefix, nsAutoPtr<Expr>&& aValue);
 
     TX_DECL_TXINSTRUCTION
 
@@ -215,10 +215,10 @@ public:
 class txNumber : public txInstruction
 {
 public:
-    txNumber(txXSLTNumber::LevelType aLevel, nsAutoPtr<txPattern> aCount,
-             nsAutoPtr<txPattern> aFrom, nsAutoPtr<Expr> aValue,
-             nsAutoPtr<Expr> aFormat, nsAutoPtr<Expr> aGroupingSeparator,
-             nsAutoPtr<Expr> aGroupingSize);
+    txNumber(txXSLTNumber::LevelType aLevel, nsAutoPtr<txPattern>&& aCount,
+             nsAutoPtr<txPattern>&& aFrom, nsAutoPtr<Expr>&& aValue,
+             nsAutoPtr<Expr>&& aFormat, nsAutoPtr<Expr>&& aGroupingSeparator,
+             nsAutoPtr<Expr>&& aGroupingSize);
 
     TX_DECL_TXINSTRUCTION
 
@@ -240,7 +240,7 @@ public:
 class txProcessingInstruction : public txInstruction
 {
 public:
-    txProcessingInstruction(nsAutoPtr<Expr> aName);
+    txProcessingInstruction(nsAutoPtr<Expr>&& aName);
 
     TX_DECL_TXINSTRUCTION
 
@@ -250,15 +250,17 @@ public:
 class txPushNewContext : public txInstruction
 {
 public:
-    txPushNewContext(nsAutoPtr<Expr> aSelect);
+    txPushNewContext(nsAutoPtr<Expr>&& aSelect);
     ~txPushNewContext();
 
     TX_DECL_TXINSTRUCTION
     
     
-    nsresult addSort(nsAutoPtr<Expr> aSelectExpr, nsAutoPtr<Expr> aLangExpr,
-                     nsAutoPtr<Expr> aDataTypeExpr, nsAutoPtr<Expr> aOrderExpr,
-                     nsAutoPtr<Expr> aCaseOrderExpr);
+    nsresult addSort(nsAutoPtr<Expr>&& aSelectExpr,
+                     nsAutoPtr<Expr>&& aLangExpr,
+                     nsAutoPtr<Expr>&& aDataTypeExpr,
+                     nsAutoPtr<Expr>&& aOrderExpr,
+                     nsAutoPtr<Expr>&& aCaseOrderExpr);
 
     struct SortKey {
         nsAutoPtr<Expr> mSelectExpr;
@@ -320,7 +322,7 @@ public:
 class txSetParam : public txInstruction
 {
 public:
-    txSetParam(const txExpandedName& aName, nsAutoPtr<Expr> aValue);
+    txSetParam(const txExpandedName& aName, nsAutoPtr<Expr>&& aValue);
 
     TX_DECL_TXINSTRUCTION
 
@@ -331,7 +333,7 @@ public:
 class txSetVariable : public txInstruction
 {
 public:
-    txSetVariable(const txExpandedName& aName, nsAutoPtr<Expr> aValue);
+    txSetVariable(const txExpandedName& aName, nsAutoPtr<Expr>&& aValue);
 
     TX_DECL_TXINSTRUCTION
 
@@ -342,7 +344,7 @@ public:
 class txStartElement : public txInstruction
 {
 public:
-    txStartElement(nsAutoPtr<Expr> aName, nsAutoPtr<Expr> aNamespace,
+    txStartElement(nsAutoPtr<Expr>&& aName, nsAutoPtr<Expr>&& aNamespace,
                    txNamespaceMap* aMappings);
 
     TX_DECL_TXINSTRUCTION
@@ -380,7 +382,7 @@ public:
 class txValueOf : public txInstruction
 {
 public:
-    txValueOf(nsAutoPtr<Expr> aExpr, bool aDOE);
+    txValueOf(nsAutoPtr<Expr>&& aExpr, bool aDOE);
 
     TX_DECL_TXINSTRUCTION
 

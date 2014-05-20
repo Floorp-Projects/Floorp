@@ -32,7 +32,7 @@ let WindowMap = {
     if (!this._map || !win) {
       return false;
     }
-    return this._map.get(win, false);
+    return this._map.get(win) || false;
   },
 
   /*

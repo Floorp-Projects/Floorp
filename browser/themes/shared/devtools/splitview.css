@@ -90,13 +90,13 @@
 }
 
 .theme-dark .splitview-nav > li.splitview-active {
-  background-image: url(itemArrow-dark-ltr.png),
+  background-image: url(itemArrow-dark-ltr.svg),
                     linear-gradient(@smw_marginDark@, @smw_marginDark@),
                     linear-gradient(#1d4f73, #1d4f73);
 }
 
 .theme-dark .splitview-nav > li.splitview-active:-moz-locale-dir(rtl) {
-  background-image: url(itemArrow-dark-rtl.png),
+  background-image: url(itemArrow-dark-rtl.svg),
                     linear-gradient(@smw_marginDark@, @smw_marginDark@),
                     linear-gradient(#1d4f73, #1d4f73);
 }

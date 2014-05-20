@@ -4,10 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "txUnknownHandler.h"
+
+#include "mozilla/Move.h"
 #include "txExecutionState.h"
 #include "txStringUtils.h"
 #include "txStylesheet.h"
 #include "nsGkAtoms.h"
+
+using mozilla::Move;
 
 txUnknownHandler::txUnknownHandler(txExecutionState* aEs)
     : mEs(aEs),
@@ -192,6 +196,6 @@ nsresult txUnknownHandler::createHandlerAndFlush(bool aHTMLRoot,
     // Let go of out buffer as soon as we're done flushing it, we're not going
     // to need it anymore from this point on (all hooks get forwarded to
     // mEs->mResultHandler.
-    nsAutoPtr<txResultBuffer> buffer(mBuffer);
+    nsAutoPtr<txResultBuffer> buffer(Move(mBuffer));
     return buffer->flushToHandler(mEs->mResultHandler);
 }
