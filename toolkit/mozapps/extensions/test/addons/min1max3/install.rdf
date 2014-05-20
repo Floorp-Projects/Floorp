@@ -4,19 +4,19 @@
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 
   <Description about="urn:mozilla:install-manifest">
-    <em:id>bug542391_2@tests.mozilla.org</em:id>
+    <em:id>min1max3@tests.mozilla.org</em:id>
     <em:version>1.0</em:version>
-    
+
     <em:targetApplication>
       <Description>
         <em:id>xpcshell@tests.mozilla.org</em:id>
         <em:minVersion>1</em:minVersion>
-        <em:maxVersion>2</em:maxVersion>
+        <em:maxVersion>3</em:maxVersion>
       </Description>
     </em:targetApplication>
 
     <!-- Front End MetaData -->
-    <em:name>Bug 542391 Test 2</em:name>
+    <em:name>Test minVersion 1 maxVersion 3</em:name>
 
   </Description>
 </RDF>

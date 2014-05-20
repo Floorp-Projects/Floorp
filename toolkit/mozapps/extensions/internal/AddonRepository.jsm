@@ -41,6 +41,10 @@ const PREF_GETADDONS_BROWSESEARCHRESULTS = "extensions.getAddons.search.browseUR
 const PREF_GETADDONS_GETSEARCHRESULTS    = "extensions.getAddons.search.url";
 const PREF_GETADDONS_DB_SCHEMA           = "extensions.getAddons.databaseSchema"
 
+const PREF_METADATA_LASTUPDATE           = "extensions.getAddons.cache.lastUpdate";
+const PREF_METADATA_UPDATETHRESHOLD_SEC  = "extensions.getAddons.cache.updateThreshold";
+const DEFAULT_METADATA_UPDATETHRESHOLD_SEC = 172800;  // two days
+
 const XMLURI_PARSE_ERROR  = "http://www.mozilla.org/newlayout/xml/parsererror.xml";
 
 const API_VERSION = "1.5";
@@ -535,6 +539,29 @@ this.AddonRepository = {
     this._addons = null;
     this._pendingCallbacks = null;
     return AddonDatabase.shutdown(false);
+  },
+
+  metadataAge: function() {
+    let now = Math.round(Date.now() / 1000);
+
+    let lastUpdate = 0;
+    try {
+      lastUpdate = Services.prefs.getIntPref(PREF_METADATA_LASTUPDATE);
+    } catch (e) {}
+
+    // Handle clock jumps
+    if (now < lastUpdate) {
+      return now;
+    }
+    return now - lastUpdate;
+  },
+
+  isMetadataStale: function AddonRepo_isMetadataStale() {
+    let threshold = DEFAULT_METADATA_UPDATETHRESHOLD_SEC;
+    try {
+      threshold = Services.prefs.getIntPref(PREF_METADATA_UPDATETHRESHOLD_SEC);
+    } catch (e) {}
+    return (this.metadataAge() > threshold);
   },
 
   /**
@@ -1748,7 +1775,13 @@ var AddonDatabase = {
    */
   repopulate: function AD_repopulate(aAddons, aCallback) {
     this.DB.addons.clear();
-    this.insertAddons(aAddons, aCallback);
+    this.insertAddons(aAddons, function repopulate_insertAddons() {
+      let now = Math.round(Date.now() / 1000);
+      logger.debug("Cache repopulated, setting " + PREF_METADATA_LASTUPDATE + " to " + now);
+      Services.prefs.setIntPref(PREF_METADATA_LASTUPDATE, now);
+      if (aCallback)
+        aCallback();
+    });
   },
 
   /**
