@@ -165,27 +165,6 @@
     color: white;
   }
 
-  #main-window[darkwindowframe="true"] :-moz-any(#toolbar-menubar, #TabsToolbar) :-moz-any(@primaryToolbarButtons@):not(:-moz-lwtheme):not(:-moz-window-inactive),
-  #main-window[darkwindowframe="true"] :-moz-any(#toolbar-menubar, #TabsToolbar) #bookmarks-menu-button:not(:-moz-lwtheme) > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon:not(:-moz-window-inactive) {
-    list-style-image: url(chrome://browser/skin/Toolbar-inverted.png);
-  }
-
-  #main-window[darkwindowframe="true"] .tabs-newtab-button:not(:-moz-lwtheme):not(:-moz-window-inactive),
-  #main-window[darkwindowframe="true"] :-moz-any(#toolbar-menubar, #TabsToolbar) > #new-tab-button:not(:-moz-lwtheme):not(:-moz-window-inactive),
-  #main-window[darkwindowframe="true"] :-moz-any(#toolbar-menubar, #TabsToolbar) > toolbarpaletteitem > #new-tab-button:not(:-moz-lwtheme):not(:-moz-window-inactive) {
-    list-style-image: url(chrome://browser/skin/tabbrowser/newtab-inverted.png);
-  }
-
-  #main-window[darkwindowframe="true"] .tab-close-button:not(:-moz-any(:hover, [selected="true"], :-moz-lwtheme, :-moz-window-inactive)) {
-    -moz-image-region: rect(0, 64px, 16px, 48px);
-  }
-
-  #main-window[darkwindowframe="true"] :-moz-any(#toolbar-menubar, #TabsToolbar) > #sync-button[status="active"]:not(:-moz-lwtheme),
-  #main-window[darkwindowframe="true"] :-moz-any(#toolbar-menubar, #TabsToolbar) > toolbarpaletteitem > #sync-button[status="active"]:not(:-moz-lwtheme) {
-    list-style-image: url("chrome://browser/skin/syncProgress-toolbar-inverted.png");
-  }
-
-
   #toolbar-menubar:not(:-moz-lwtheme) {
     text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
   }
@@ -281,21 +260,6 @@
   #main-window[sizemode=fullscreen]:not(:-moz-lwtheme) {
     -moz-appearance: none;
     background-color: #556;
-  }
-
-  /* Use inverted icons for non-fogged glassed toolbars */
-  #toolbar-menubar > toolbarpaletteitem > #bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon:not(:-moz-lwtheme),
-  #toolbar-menubar > #bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon:not(:-moz-lwtheme),
-  #toolbar-menubar > toolbarpaletteitem > toolbaritem > :-moz-any(@nestedButtons@):not(:-moz-lwtheme),
-  #toolbar-menubar > toolbaritem > :-moz-any(@nestedButtons@):not(:-moz-lwtheme),
-  #toolbar-menubar > toolbarpaletteitem > :-moz-any(@primaryToolbarButtons@):not(:-moz-lwtheme),
-  #toolbar-menubar > :-moz-any(@primaryToolbarButtons@):not(:-moz-lwtheme) {
-    list-style-image: url("chrome://browser/skin/Toolbar-inverted.png");
-  }
-
-  #toolbar-menubar > #sync-button[status="active"]:not(:-moz-lwtheme),
-  #toolbar-menubar > toolbarpaletteitem > #sync-button[status="active"]:not(:-moz-lwtheme) {
-    list-style-image: url("chrome://browser/skin/syncProgress-toolbar-inverted.png");
   }
 
   /* Glass Fog */
