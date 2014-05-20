@@ -4,7 +4,7 @@
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 
   <Description about="urn:mozilla:install-manifest">
-    <em:id>bug542391_5@tests.mozilla.org</em:id>
+    <em:id>min1max3b@tests.mozilla.org</em:id>
     <em:version>1.0</em:version>
     
     <em:targetApplication>
@@ -16,7 +16,7 @@
     </em:targetApplication>
 
     <!-- Front End MetaData -->
-    <em:name>Bug 542391 Test 5</em:name>
+    <em:name>Another Test minVersion 1 maxVersion 3</em:name>
 
   </Description>
 </RDF>

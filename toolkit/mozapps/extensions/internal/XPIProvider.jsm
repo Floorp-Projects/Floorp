@@ -40,6 +40,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserToolboxProcess",
 XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPI",
                                   "resource://gre/modules/devtools/Console.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "Blocklist",
+                                   "@mozilla.org/extensions/blocklist;1",
+                                   Ci.nsIBlocklistService);
 XPCOMUtils.defineLazyServiceGetter(this,
                                    "ChromeRegistry",
                                    "@mozilla.org/chrome/chrome-registry;1",
@@ -147,10 +150,10 @@ const PENDING_INSTALL_METADATA =
 // DB schema version to ensure changes are picked up ASAP.
 const STATIC_BLOCKLIST_PATTERNS = [
   { creator: "Mozilla Corp.",
-    level: Ci.nsIBlocklistService.STATE_BLOCKED,
+    level: Blocklist.STATE_BLOCKED,
     blockID: "i162" },
   { creator: "Mozilla.org",
-    level: Ci.nsIBlocklistService.STATE_BLOCKED,
+    level: Blocklist.STATE_BLOCKED,
     blockID: "i162" }
 ];
 
@@ -579,20 +582,17 @@ function applyBlocklistChanges(aOldAddon, aNewAddon, aOldAppVersion,
   aNewAddon.userDisabled = aOldAddon.userDisabled;
   aNewAddon.softDisabled = aOldAddon.softDisabled;
 
-  let bs = Cc["@mozilla.org/extensions/blocklist;1"].
-           getService(Ci.nsIBlocklistService);
-
-  let oldBlocklistState = bs.getAddonBlocklistState(createWrapper(aOldAddon),
-                                                    aOldAppVersion,
-                                                    aOldPlatformVersion);
-  let newBlocklistState = bs.getAddonBlocklistState(createWrapper(aNewAddon));
+  let oldBlocklistState = Blocklist.getAddonBlocklistState(createWrapper(aOldAddon),
+                                                           aOldAppVersion,
+                                                           aOldPlatformVersion);
+  let newBlocklistState = Blocklist.getAddonBlocklistState(createWrapper(aNewAddon));
 
   // If the blocklist state hasn't changed then the properties don't need to
   // change
   if (newBlocklistState == oldBlocklistState)
     return;
 
-  if (newBlocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED) {
+  if (newBlocklistState == Blocklist.STATE_SOFTBLOCKED) {
     if (aNewAddon.type != "theme") {
       // The add-on has become softblocked, set softDisabled if it isn't already
       // userDisabled
@@ -621,7 +621,7 @@ function isUsableAddon(aAddon) {
   if (aAddon.type == "theme" && aAddon.internalName == XPIProvider.defaultSkin)
     return true;
 
-  if (aAddon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED)
+  if (aAddon.blocklistState == Blocklist.STATE_BLOCKED)
     return false;
 
   if (AddonManager.checkUpdateSecurity && !aAddon.providesUpdatesSecurely)
@@ -943,7 +943,7 @@ function loadManifestFromRDF(aUri, aStream) {
   }
   else {
     addon.userDisabled = false;
-    addon.softDisabled = addon.blocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED;
+    addon.softDisabled = addon.blocklistState == Blocklist.STATE_SOFTBLOCKED;
   }
 
   addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
@@ -1573,6 +1573,20 @@ function makeSafe(aFunction) {
   }
 }
 
+/**
+ * Record a bit of per-addon telemetry
+ * @param aAddon the addon to record
+ */
+function recordAddonTelemetry(aAddon) {
+  let loc = aAddon.defaultLocale;
+  if (loc) {
+    if (loc.name)
+      XPIProvider.setTelemetry(aAddon.id, "name", loc.name);
+    if (loc.creator)
+      XPIProvider.setTelemetry(aAddon.id, "creator", loc.creator);
+  }
+}
+
 this.XPIProvider = {
   // An array of known install locations
   installLocations: null,
@@ -1605,8 +1619,6 @@ this.XPIProvider = {
   allAppGlobal: true,
   // A string listing the enabled add-ons for annotating crash reports
   enabledAddons: null,
-  // An array of add-on IDs of add-ons that were inactive during startup
-  inactiveAddonIDs: [],
   // Keep track of startup phases for telemetry
   runPhase: XPI_STARTING,
   // Keep track of the newest file in each add-on, in case we want to
@@ -1629,27 +1641,30 @@ this.XPIProvider = {
   },
 
   // Keep track of in-progress operations that support cancel()
-  _inProgress: new Set(),
+  _inProgress: [],
 
   doing: function XPI_doing(aCancellable) {
-    this._inProgress.add(aCancellable);
+    this._inProgress.push(aCancellable);
   },
 
   done: function XPI_done(aCancellable) {
-    return this._inProgress.delete(aCancellable);
+    let i = this._inProgress.indexOf(aCancellable);
+    if (i != -1) {
+      this._inProgress.splice(i, 1);
+      return true;
+    }
+    return false;
   },
 
   cancelAll: function XPI_cancelAll() {
-    // Cancelling one may alter _inProgress, so restart the iterator after each
-    while (this._inProgress.size > 0) {
-      for (let c of this._inProgress) {
-        try {
-          c.cancel();
-        }
-        catch (e) {
-          logger.warn("Cancel failed", e);
-        }
-        this._inProgress.delete(c);
+    // Cancelling one may alter _inProgress, so don't use a simple iterator
+    while (this._inProgress.length > 0) {
+      let c = this._inProgress.shift();
+      try {
+        c.cancel();
+      }
+      catch (e) {
+        logger.warn("Cancel failed", e);
       }
     }
   },
@@ -1867,22 +1882,34 @@ this.XPIProvider = {
       // Changes to installed extensions may have changed which theme is selected
       this.applyThemeChange();
 
-      // If the application has been upgraded and there are add-ons outside the
-      // application directory then we may need to synchronize compatibility
-      // information but only if the mismatch UI isn't disabled
-      if (aAppChanged && !this.allAppGlobal &&
-          Prefs.getBoolPref(PREF_EM_SHOW_MISMATCH_UI, true)) {
-        this.showUpgradeUI();
-        flushCaches = true;
-      }
-      else if (aAppChanged === undefined) {
+      if (aAppChanged === undefined) {
         // For new profiles we will never need to show the add-on selection UI
         Services.prefs.setBoolPref(PREF_SHOWN_SELECTION_UI, true);
+      }
+      else if (aAppChanged && !this.allAppGlobal &&
+               Prefs.getBoolPref(PREF_EM_SHOW_MISMATCH_UI, true)) {
+        if (!Prefs.getBoolPref(PREF_SHOWN_SELECTION_UI, false)) {
+          // Flip a flag to indicate that we interrupted startup with an interactive prompt
+          Services.startup.interrupted = true;
+          // This *must* be modal as it has to block startup.
+          var features = "chrome,centerscreen,dialog,titlebar,modal";
+          Services.ww.openWindow(null, URI_EXTENSION_SELECT_DIALOG, "", features, null);
+          Services.prefs.setBoolPref(PREF_SHOWN_SELECTION_UI, true);
+          // Ensure any changes to the add-ons list are flushed to disk
+          Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS,
+                                     !XPIDatabase.writeAddonsList());
+        }
+        else {
+          let addonsToUpdate = this.shouldForceUpdateCheck(aAppChanged);
+          if (addonsToUpdate) {
+            this.showUpgradeUI(addonsToUpdate);
+            flushCaches = true;
+          }
+        }
       }
 
       if (flushCaches) {
         flushStartupCache();
-
         // UI displayed early in startup (like the compatibility UI) may have
         // caused us to cache parts of the skin or locale in memory. These must
         // be flushed to allow extension provided skins and locales to take full
@@ -1986,8 +2013,6 @@ this.XPIProvider = {
     this.enabledAddons = null;
     this.allAppGlobal = true;
 
-    this.inactiveAddonIDs = [];
-
     // If there are pending operations then we must update the list of active
     // add-ons
     if (Prefs.getBoolPref(PREF_PENDING_OPERATIONS, false)) {
@@ -2048,29 +2073,65 @@ this.XPIProvider = {
   },
 
   /**
-   * Shows the "Compatibility Updates" UI
+   * If the application has been upgraded and there are add-ons outside the
+   * application directory then we may need to synchronize compatibility
+   * information but only if the mismatch UI isn't disabled.
+   *
+   * @returns False if no update check is needed, otherwise an array of add-on
+   *          IDs to check for updates. Array may be empty if no add-ons can be/need
+   *           to be updated, but the metadata check needs to be performed.
    */
-  showUpgradeUI: function XPI_showUpgradeUI() {
+  shouldForceUpdateCheck: function XPI_shouldForceUpdateCheck(aAppChanged) {
+    AddonManagerPrivate.recordSimpleMeasure("XPIDB_metadata_age", AddonRepository.metadataAge());
+
+    let startupChanges = AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_DISABLED);
+    logger.debug("shouldForceUpdateCheck startupChanges: " + startupChanges.toSource());
+    AddonManagerPrivate.recordSimpleMeasure("XPIDB_startup_disabled", startupChanges.length);
+
+    let forceUpdate = [];
+    if (startupChanges.length > 0) {
+    let addons = XPIDatabase.getAddons();
+      for (let addon of addons) {
+        if ((startupChanges.indexOf(addon.id) != -1) &&
+            (addon.permissions() & AddonManager.PERM_CAN_UPGRADE)) {
+          logger.debug("shouldForceUpdateCheck: can upgrade disabled add-on " + addon.id);
+          forceUpdate.push(addon.id);
+        }
+      }
+    }
+
+    if (AddonRepository.isMetadataStale()) {
+      logger.debug("shouldForceUpdateCheck: metadata is stale");
+      return forceUpdate;
+    }
+    if (forceUpdate.length > 0) {
+      return forceUpdate;
+    }
+
+    return false;
+  },
+
+  /**
+   * Shows the "Compatibility Updates" UI.
+   *
+   * @param  aAddonIDs
+   *         Array opf addon IDs that were disabled by the application update, and
+   *         should therefore be checked for updates.
+   */
+  showUpgradeUI: function XPI_showUpgradeUI(aAddonIDs) {
+    logger.debug("XPI_showUpgradeUI: " + aAddonIDs.toSource());
     // Flip a flag to indicate that we interrupted startup with an interactive prompt
     Services.startup.interrupted = true;
 
-    if (!Prefs.getBoolPref(PREF_SHOWN_SELECTION_UI, false)) {
-      // This *must* be modal as it has to block startup.
-      var features = "chrome,centerscreen,dialog,titlebar,modal";
-      Services.ww.openWindow(null, URI_EXTENSION_SELECT_DIALOG, "", features, null);
-      Services.prefs.setBoolPref(PREF_SHOWN_SELECTION_UI, true);
-    }
-    else {
-      var variant = Cc["@mozilla.org/variant;1"].
-                    createInstance(Ci.nsIWritableVariant);
-      variant.setFromVariant(this.inactiveAddonIDs);
+    var variant = Cc["@mozilla.org/variant;1"].
+                  createInstance(Ci.nsIWritableVariant);
+    variant.setFromVariant(aAddonIDs);
 
-      // This *must* be modal as it has to block startup.
-      var features = "chrome,centerscreen,dialog,titlebar,modal";
-      var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-               getService(Ci.nsIWindowWatcher);
-      ww.openWindow(null, URI_EXTENSION_UPDATE_DIALOG, "", features, variant);
-    }
+    // This *must* be modal as it has to block startup.
+    var features = "chrome,centerscreen,dialog,titlebar,modal";
+    var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+             getService(Ci.nsIWindowWatcher);
+    ww.openWindow(null, URI_EXTENSION_UPDATE_DIALOG, "", features, variant);
 
     // Ensure any changes to the add-ons list are flushed to disk
     Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS,
@@ -2670,10 +2731,10 @@ this.XPIProvider = {
         // The ID in the manifest that was loaded must match the ID of the old
         // add-on.
         if (newAddon.id != aOldAddon.id)
-          throw new Error("Incorrect id in install manifest");
+          throw new Error("Incorrect id in install manifest for existing add-on " + aOldAddon.id);
       }
       catch (e) {
-        logger.warn("Add-on is invalid", e);
+        logger.warn("updateMetadata: Add-on " + aOldAddon.id + " is invalid", e);
         XPIDatabase.removeAddonMetadata(aOldAddon);
         if (!aInstallLocation.locked)
           aInstallLocation.uninstallAddon(aOldAddon.id);
@@ -2962,7 +3023,7 @@ this.XPIProvider = {
         }
       }
       catch (e) {
-        logger.warn("Add-on is invalid", e);
+        logger.warn("addMetadata: Add-on " + aId + " is invalid", e);
 
         // Remove the invalid add-on from the install location if the install
         // location isn't locked, no restart will be necessary
@@ -3038,7 +3099,7 @@ this.XPIProvider = {
         // then it was probably either softDisabled or userDisabled
         if (!newAddon.active && newAddon.visible && !isAddonDisabled(newAddon)) {
           // If the add-on is softblocked then assume it is softDisabled
-          if (newAddon.blocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED)
+          if (newAddon.blocklistState == Blocklist.STATE_SOFTBLOCKED)
             newAddon.softDisabled = true;
           else
             newAddon.userDisabled = true;
@@ -3154,16 +3215,7 @@ this.XPIProvider = {
             let addonState = addonStates[aOldAddon.id];
             delete addonStates[aOldAddon.id];
 
-            // Remember add-ons that were inactive during startup
-            if (aOldAddon.visible && !aOldAddon.active)
-              XPIProvider.inactiveAddonIDs.push(aOldAddon.id);
-
-            // record a bit more per-addon telemetry
-            let loc = aOldAddon.defaultLocale;
-            if (loc) {
-              XPIProvider.setTelemetry(aOldAddon.id, "name", loc.name);
-              XPIProvider.setTelemetry(aOldAddon.id, "creator", loc.creator);
-            }
+            recordAddonTelemetry(aOldAddon);
 
             // Check if the add-on has been changed outside the XPI provider
             if (aOldAddon.updateDate != addonState.mtime) {
@@ -4355,10 +4407,11 @@ this.XPIProvider = {
    */
   uninstallAddon: function XPI_uninstallAddon(aAddon) {
     if (!(aAddon.inDatabase))
-      throw new Error("Can only uninstall installed addons.");
+      throw new Error("Cannot uninstall addon " + aAddon.id + " because it is not installed");
 
     if (aAddon._installLocation.locked)
-      throw new Error("Cannot uninstall addons from locked install locations");
+      throw new Error("Cannot uninstall addon " + aAddon.id
+          + " from locked install location " + aAddon._installLocation.name);
 
     if ("_hasResourceCache" in aAddon)
       aAddon._hasResourceCache = new Map();
@@ -5598,11 +5651,7 @@ AddonInstall.prototype = {
         XPIProvider.setTelemetry(this.addon.id, "location", this.installLocation.name);
         XPIProvider.setTelemetry(this.addon.id, "scan_MS", scanTime);
         XPIProvider.setTelemetry(this.addon.id, "scan_items", scanItems);
-        let loc = this.addon.defaultLocale;
-        if (loc) {
-          XPIProvider.setTelemetry(this.addon.id, "name", loc.name);
-          XPIProvider.setTelemetry(this.addon.id, "creator", loc.creator);
-        }
+        recordAddonTelemetry(this.addon);
       }
     }).bind(this)).then(null, (e) => {
       logger.warn("Failed to install " + this.file.path + " from " + this.sourceURI.spec, e);
@@ -6143,9 +6192,7 @@ AddonInternal.prototype = {
     if (staticItem)
       return staticItem.level;
 
-    let bs = Cc["@mozilla.org/extensions/blocklist;1"].
-             getService(Ci.nsIBlocklistService);
-    return bs.getAddonBlocklistState(createWrapper(this));
+    return Blocklist.getAddonBlocklistState(createWrapper(this));
   },
 
   get blocklistURL() {
@@ -6155,9 +6202,7 @@ AddonInternal.prototype = {
       return url.replace(/%blockID%/g, staticItem.blockID);
     }
 
-    let bs = Cc["@mozilla.org/extensions/blocklist;1"].
-             getService(Ci.nsIBlocklistService);
-    return bs.getAddonBlocklistURL(createWrapper(this));
+    return Blocklist.getAddonBlocklistURL(createWrapper(this));
   },
 
   applyCompatibilityUpdate: function AddonInternal_applyCompatibilityUpdate(aUpdate, aSyncCompatibility) {
@@ -6245,7 +6290,44 @@ AddonInternal.prototype = {
 
     // Compatibility info may have changed so update appDisabled
     this.appDisabled = !isUsableAddon(this);
-  }
+  },
+
+  permissions: function AddonInternal_permissions() {
+    let permissions = 0;
+
+    // Add-ons that aren't installed cannot be modified in any way
+    if (!(this.inDatabase))
+      return permissions;
+
+    // Experiments can only be uninstalled. An uninstall reflects the user
+    // intent of "disable this experiment." This is partially managed by the
+    // experiments manager.
+    if (this.type == "experiment") {
+      return AddonManager.PERM_CAN_UNINSTALL;
+    }
+
+    if (!this.appDisabled) {
+      if (this.userDisabled || this.softDisabled) {
+        permissions |= AddonManager.PERM_CAN_ENABLE;
+      }
+      else if (this.type != "theme") {
+        permissions |= AddonManager.PERM_CAN_DISABLE;
+      }
+    }
+
+    // Add-ons that are in locked install locations, or are pending uninstall
+    // cannot be upgraded or uninstalled
+    if (!this._installLocation.locked && !this.pendingUninstall) {
+      // Add-ons that are installed by a file link cannot be upgraded
+      if (!this._installLocation.isLinkedAddon(this.id)) {
+        permissions |= AddonManager.PERM_CAN_UPGRADE;
+      }
+
+      permissions |= AddonManager.PERM_CAN_UNINSTALL;
+    }
+
+    return permissions;
+  },
 };
 
 /**
@@ -6579,40 +6661,7 @@ function AddonWrapper(aAddon) {
   });
 
   this.__defineGetter__("permissions", function AddonWrapper_permisionsGetter() {
-    let permissions = 0;
-
-    // Add-ons that aren't installed cannot be modified in any way
-    if (!(aAddon.inDatabase))
-      return permissions;
-
-    // Experiments can only be uninstalled. An uninstall reflects the user
-    // intent of "disable this experiment." This is partially managed by the
-    // experiments manager.
-    if (aAddon.type == "experiment") {
-      return AddonManager.PERM_CAN_UNINSTALL;
-    }
-
-    if (!aAddon.appDisabled) {
-      if (this.userDisabled) {
-        permissions |= AddonManager.PERM_CAN_ENABLE;
-      }
-      else if (aAddon.type != "theme") {
-        permissions |= AddonManager.PERM_CAN_DISABLE;
-      }
-    }
-
-    // Add-ons that are in locked install locations, or are pending uninstall
-    // cannot be upgraded or uninstalled
-    if (!aAddon._installLocation.locked && !aAddon.pendingUninstall) {
-      // Add-ons that are installed by a file link cannot be upgraded
-      if (!aAddon._installLocation.isLinkedAddon(aAddon.id)) {
-        permissions |= AddonManager.PERM_CAN_UPGRADE;
-      }
-
-      permissions |= AddonManager.PERM_CAN_UNINSTALL;
-    }
-
-    return permissions;
+    return aAddon.permissions();
   });
 
   this.__defineGetter__("isActive", function AddonWrapper_isActiveGetter() {

@@ -1260,7 +1260,7 @@ var AddonManagerInternal = {
                 }
                 catch (e) {
                   logger.warn("The hotfix add-on was not signed by the expected " +
-                       "certificate and so will not be installed.");
+                       "certificate and so will not be installed.", e);
                   aInstall.cancel();
                 }
               },
