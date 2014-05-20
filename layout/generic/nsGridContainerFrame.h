@@ -40,10 +40,6 @@ protected:
   friend nsIFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
                                             nsStyleContext* aContext);
   nsGridContainerFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
-
-#ifdef DEBUG
-  void SanityCheckAnonymousGridItems() const;
-#endif // DEBUG
 };
 
 #endif /* nsGridContainerFrame_h___ */
