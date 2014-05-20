@@ -159,11 +159,18 @@ function add_test(test) {
 }
 
 function run_next_test() {
+  // Make sure we're not calling run_next_test from inside an add_task() test
+  // We're inside the browser_test.js 'testScope' here
+  if (this.__tasks) {
+    throw new Error("run_next_test() called from an add_task() test function. " +
+                    "run_next_test() should not be called from inside add_task() " +
+                    "under any circumstances!");
+  }
   if (gTestsRun > 0)
     info("Test " + gTestsRun + " took " + (Date.now() - gTestStart) + "ms");
 
   if (gPendingTests.length == 0) {
-    end_test();
+    executeSoon(end_test);
     return;
   }
 
@@ -175,7 +182,7 @@ function run_next_test() {
     info("Running test " + gTestsRun);
 
   gTestStart = Date.now();
-  log_exceptions(test);
+  executeSoon(() => log_exceptions(test));
 }
 
 function get_addon_file_url(aFilename) {
