@@ -279,10 +279,7 @@ public:
   }
 
   uint64_t
-  GetGroupLimit() const
-  {
-    return mTemporaryStorageLimit / 5;
-  }
+  GetGroupLimit() const;
 
   static uint32_t
   GetStorageQuotaMB();
