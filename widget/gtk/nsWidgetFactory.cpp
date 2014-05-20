@@ -26,7 +26,6 @@
 #include "nsBidiKeyboard.h"
 #include "nsScreenManagerGtk.h"
 #include "nsGTKToolkit.h"
-#include "WakeLockListener.h"
 
 #ifdef NS_PRINTING
 #include "nsPrintOptionsGTK.h"
@@ -281,9 +280,6 @@ nsWidgetGtk2ModuleDtor()
   nsWindow::ReleaseGlobals();
   nsGTKToolkit::Shutdown();
   nsAppShellShutdown();
-#ifdef MOZ_ENABLE_DBUS
-  WakeLockListener::Shutdown();
-#endif
 }
 
 static const mozilla::Module kWidgetModule = {
