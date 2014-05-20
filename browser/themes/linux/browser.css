@@ -1415,6 +1415,53 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   margin: 0px;
 }
 
+/* Translation infobar */
+
+%include ../shared/translation/infobar.inc.css
+
+notification[value="translation"],
+notification[value="translation"] button,
+notification[value="translation"] menulist {
+  color: #5A5959;
+}
+
+notification[value="translation"] {
+  background-color: #F2F1F0;
+}
+
+notification[value="translation"] menulist {
+  border: 1px solid #C1C1C1;
+  background-color: #FFF;
+}
+
+notification[value="translation"] button {
+  border: 1px solid #C1C1C1;
+  background-color: #F2F1F0;
+}
+
+notification[value="translation"] button:hover,
+notification[value="translation"] button:active,
+notification[value="translation"] menulist:hover,
+notification[value="translation"] menulist:active {
+  background-color: #E2E1E0;
+}
+
+notification[value="translation"] button[anonid="translate"] {
+  color: #FFF;
+  background-image: linear-gradient(#9FB938, #8DA726);
+  box-shadow: none;
+  border: 1px solid #829C1C;
+}
+
+notification[value="translation"] button[anonid="translate"]:hover,
+notification[value="translation"] button[anonid="translate"]:active {
+  background-image: linear-gradient(#8DA726, #8DA726);
+}
+
+notification[value="translation"] menulist > .menulist-dropmarker {
+  display: block;
+}
+
 .translate-notification-icon,
 #translate-notification-icon {
   list-style-image: url(chrome://browser/skin/translation-16.png);
