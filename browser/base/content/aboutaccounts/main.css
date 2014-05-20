@@ -11,7 +11,7 @@ html {
 
 body {
   color: #424f59;
-  font-family: "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font: message-box;
   font-size: 14px;
   height: 100%;
 }
@@ -49,7 +49,6 @@ a.no-underline {
 
 header h1
 {
-  font-family: "Fira Sans", Helvetica, Arial, sans-serif;
   font-size: 24px;
   font-weight: 200;
   line-height: 1em;
@@ -72,7 +71,6 @@ header h1
   border-radius: 5px;
   color: #FFFFFF;
   cursor: pointer;
-  font-family: "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 24px;
   padding: 15px 0;
   transition-duration: 150ms;
