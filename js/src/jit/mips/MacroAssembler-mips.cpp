@@ -2630,12 +2630,8 @@ void
 MacroAssemblerMIPSCompat::branchTestStringTruthy(bool b, const ValueOperand &value, Label *label)
 {
     Register string = value.payloadReg();
-    size_t mask = (0xFFFFFFFF << JSString::LENGTH_SHIFT);
-    ma_lw(SecondScratchReg, Address(string, JSString::offsetOfLengthAndFlags()));
-
-    // Use SecondScratchReg because ma_and will clobber ScratchRegister
-    ma_and(ScratchRegister, SecondScratchReg, Imm32(mask));
-    ma_b(ScratchRegister, ScratchRegister, label, b ? NonZero : Zero);
+    ma_lw(SecondScratchReg, Address(string, JSString::offsetOfLength()));
+    ma_b(SecondScratchReg, Imm32(0), label, b ? NotEqual : Equal);
 }
 
 void
