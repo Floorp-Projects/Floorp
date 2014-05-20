@@ -25,9 +25,9 @@ function test() {
     gDebugger.DebuggerView.toggleInstrumentsPane({ visible: true, animated: false });
 
     waitForSourceShown(gPanel, ".html", 1)
-      .then(() => addExpressions())
-      .then(() => performTest())
-      .then(() => finishTest())
+      .then(addExpressions)
+      .then(performTest)
+      .then(finishTest)
       .then(() => closeDebuggerAndFinish(gPanel))
       .then(null, aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
