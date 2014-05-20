@@ -2120,12 +2120,9 @@ types::UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc)
      * Sub2 lets us continue to distinguish the two subclasses and any extra
      * properties added to those prototype objects.
      */
-    if (JSOp(*pc) == JSOP_NEW)
-        pc += JSOP_NEW_LENGTH;
-    else if (JSOp(*pc) == JSOP_SPREADNEW)
-        pc += JSOP_SPREADNEW_LENGTH;
-    else
+    if (JSOp(*pc) != JSOP_NEW)
         return false;
+    pc += JSOP_NEW_LENGTH;
     if (JSOp(*pc) == JSOP_SETPROP) {
         jsid id = GetAtomId(cx, script, pc, 0);
         if (id == id_prototype(cx))

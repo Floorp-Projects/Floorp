@@ -808,7 +808,7 @@ nsIContentHandle*
 nsHtml5TreeBuilder::AllocateContentHandle()
 {
   if (MOZ_UNLIKELY(mBuilder)) {
-    MOZ_ASSUME_UNREACHABLE("Must never allocate a handle with builder.");
+    MOZ_ASSERT_UNREACHABLE("Must never allocate a handle with builder.");
     return nullptr;
   }
   if (mHandlesUsed == NS_HTML5_TREE_BUILDER_HANDLE_ARRAY_LENGTH) {
@@ -836,7 +836,7 @@ bool
 nsHtml5TreeBuilder::Flush(bool aDiscretionary)
 {
   if (MOZ_UNLIKELY(mBuilder)) {
-    MOZ_ASSUME_UNREACHABLE("Must never flush with builder.");
+    MOZ_ASSERT_UNREACHABLE("Must never flush with builder.");
     return false;
   }
   if (!aDiscretionary ||
@@ -866,7 +866,7 @@ void
 nsHtml5TreeBuilder::FlushLoads()
 {
   if (MOZ_UNLIKELY(mBuilder)) {
-    MOZ_ASSUME_UNREACHABLE("Must never flush loads with builder.");
+    MOZ_ASSERT_UNREACHABLE("Must never flush loads with builder.");
     return;
   }
   if (!mSpeculativeLoadQueue.IsEmpty()) {
@@ -905,7 +905,7 @@ nsHtml5TreeBuilder::NeedsCharsetSwitchTo(const nsACString& aCharset,
                                          int32_t aLineNumber)
 {
   if (MOZ_UNLIKELY(mBuilder)) {
-    MOZ_ASSUME_UNREACHABLE("Must never switch charset with builder.");
+    MOZ_ASSERT_UNREACHABLE("Must never switch charset with builder.");
     return;
   }
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
@@ -922,7 +922,7 @@ nsHtml5TreeBuilder::MaybeComplainAboutCharset(const char* aMsgId,
                                               int32_t aLineNumber)
 {
   if (MOZ_UNLIKELY(mBuilder)) {
-    MOZ_ASSUME_UNREACHABLE("Must never complain about charset with builder.");
+    MOZ_ASSERT_UNREACHABLE("Must never complain about charset with builder.");
     return;
   }
   mOpQueue.AppendElement()->Init(aMsgId, aError, aLineNumber);
@@ -932,7 +932,7 @@ void
 nsHtml5TreeBuilder::AddSnapshotToScript(nsAHtml5TreeBuilderState* aSnapshot, int32_t aLine)
 {
   if (MOZ_UNLIKELY(mBuilder)) {
-    MOZ_ASSUME_UNREACHABLE("Must never use snapshots with builder.");
+    MOZ_ASSERT_UNREACHABLE("Must never use snapshots with builder.");
     return;
   }
   NS_PRECONDITION(HasScript(), "No script to add a snapshot to!");
@@ -952,7 +952,7 @@ void
 nsHtml5TreeBuilder::MarkAsBroken()
 {
   if (MOZ_UNLIKELY(mBuilder)) {
-    MOZ_ASSUME_UNREACHABLE("Must not call this with builder.");
+    MOZ_ASSERT_UNREACHABLE("Must not call this with builder.");
     return;
   }
   mOpQueue.Clear(); // Previous ops don't matter anymore
