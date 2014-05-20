@@ -364,7 +364,8 @@ public:
     return !IsInnerWindow();
   }
 
-  virtual bool WouldReuseInnerWindow(nsIDocument *aNewDocument) = 0;
+  // Outer windows only.
+  virtual bool WouldReuseInnerWindow(nsIDocument* aNewDocument) = 0;
 
   /**
    * Get the docshell in this window.

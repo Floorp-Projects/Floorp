@@ -453,7 +453,8 @@ public:
   }
   virtual NS_HIDDEN_(bool) IsRunningTimeout() { return mTimeoutFiringDepth > 0; }
 
-  virtual NS_HIDDEN_(bool) WouldReuseInnerWindow(nsIDocument *aNewDocument);
+  // Outer windows only.
+  virtual NS_HIDDEN_(bool) WouldReuseInnerWindow(nsIDocument* aNewDocument);
 
   virtual NS_HIDDEN_(void) SetDocShell(nsIDocShell* aDocShell);
   virtual void DetachFromDocShell();
