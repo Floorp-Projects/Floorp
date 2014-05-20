@@ -33,25 +33,25 @@ ifdef ENABLE_TESTS
 # Now, repeat the process for the test package.
 	$(MAKE) -C $(OBJDIR_ARCH_1) UNIVERSAL_BINARY= CHROME_JAR= package-tests
 	$(MAKE) -C $(OBJDIR_ARCH_2) UNIVERSAL_BINARY= CHROME_JAR= package-tests
-	rm -rf $(DIST_UNI)/test-package-stage
+	rm -rf $(DIST_UNI)/test-stage
 # automation.py differs because it hardcodes a path to
 # dist/bin. It doesn't matter which one we use.
-	if test -d $(DIST_ARCH_1)/test-package-stage -a                 \
-                -d $(DIST_ARCH_2)/test-package-stage; then              \
-           cp $(DIST_ARCH_1)/test-package-stage/mochitest/automation.py \
-             $(DIST_ARCH_2)/test-package-stage/mochitest/;              \
-           cp -RL $(DIST_ARCH_1)/test-package-stage/mochitest/extensions/specialpowers \
-             $(DIST_ARCH_2)/test-package-stage/mochitest/extensions/;              \
-           cp $(DIST_ARCH_1)/test-package-stage/xpcshell/automation.py  \
-             $(DIST_ARCH_2)/test-package-stage/xpcshell/;               \
-           cp $(DIST_ARCH_1)/test-package-stage/reftest/automation.py   \
-             $(DIST_ARCH_2)/test-package-stage/reftest/;                \
-           cp -RL $(DIST_ARCH_1)/test-package-stage/reftest/specialpowers \
-             $(DIST_ARCH_2)/test-package-stage/reftest/;              \
+	if test -d $(DIST_ARCH_1)/test-stage -a                 \
+                -d $(DIST_ARCH_2)/test-stage; then              \
+           cp $(DIST_ARCH_1)/test-stage/mochitest/automation.py \
+             $(DIST_ARCH_2)/test-stage/mochitest/;              \
+           cp -RL $(DIST_ARCH_1)/test-stage/mochitest/extensions/specialpowers \
+             $(DIST_ARCH_2)/test-stage/mochitest/extensions/;              \
+           cp $(DIST_ARCH_1)/test-stage/xpcshell/automation.py  \
+             $(DIST_ARCH_2)/test-stage/xpcshell/;               \
+           cp $(DIST_ARCH_1)/test-stage/reftest/automation.py   \
+             $(DIST_ARCH_2)/test-stage/reftest/;                \
+           cp -RL $(DIST_ARCH_1)/test-stage/reftest/specialpowers \
+             $(DIST_ARCH_2)/test-stage/reftest/;              \
            $(TOPSRCDIR)/build/macosx/universal/unify                 \
              --unify-with-sort "\.manifest$$" \
              --unify-with-sort "all-test-dirs\.list$$"               \
-             $(DIST_ARCH_1)/test-package-stage                          \
-             $(DIST_ARCH_2)/test-package-stage                          \
-             $(DIST_UNI)/test-package-stage; fi
+             $(DIST_ARCH_1)/test-stage                          \
+             $(DIST_ARCH_2)/test-stage                          \
+             $(DIST_UNI)/test-stage; fi
 endif

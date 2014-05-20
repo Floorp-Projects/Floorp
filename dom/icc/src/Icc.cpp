@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/MozIccBinding.h"
 #include "mozilla/dom/MozStkCommandEvent.h"
-#include "nsIDOMDOMRequest.h"
+#include "mozilla/dom/DOMRequest.h"
 #include "nsIDOMIccInfo.h"
 #include "nsJSON.h"
 #include "nsRadioInterfaceLayer.h"
@@ -179,7 +179,7 @@ Icc::SendStkEventDownload(const JSContext* aCx, JS::Handle<JS::Value> aEvent,
   }
 }
 
-already_AddRefed<nsISupports>
+already_AddRefed<DOMRequest>
 Icc::GetCardLock(const nsAString& aLockType, ErrorResult& aRv)
 {
   if (!mProvider) {
@@ -195,10 +195,10 @@ Icc::GetCardLock(const nsAString& aLockType, ErrorResult& aRv)
     return nullptr;
   }
 
-  return request.forget();
+  return request.forget().downcast<DOMRequest>();
 }
 
-already_AddRefed<nsISupports>
+already_AddRefed<DOMRequest>
 Icc::UnlockCardLock(const JSContext* aCx, JS::Handle<JS::Value> aInfo,
                     ErrorResult& aRv)
 {
@@ -215,10 +215,10 @@ Icc::UnlockCardLock(const JSContext* aCx, JS::Handle<JS::Value> aInfo,
     return nullptr;
   }
 
-  return request.forget();
+  return request.forget().downcast<DOMRequest>();
 }
 
-already_AddRefed<nsISupports>
+already_AddRefed<DOMRequest>
 Icc::SetCardLock(const JSContext* aCx, JS::Handle<JS::Value> aInfo,
                  ErrorResult& aRv)
 {
@@ -235,10 +235,10 @@ Icc::SetCardLock(const JSContext* aCx, JS::Handle<JS::Value> aInfo,
     return nullptr;
   }
 
-  return request.forget();
+  return request.forget().downcast<DOMRequest>();
 }
 
-already_AddRefed<nsISupports>
+already_AddRefed<DOMRequest>
 Icc::GetCardLockRetryCount(const nsAString& aLockType, ErrorResult& aRv)
 {
   if (!mProvider) {
@@ -256,10 +256,10 @@ Icc::GetCardLockRetryCount(const nsAString& aLockType, ErrorResult& aRv)
     return nullptr;
   }
 
-  return request.forget();
+  return request.forget().downcast<DOMRequest>();
 }
 
-already_AddRefed<nsISupports>
+already_AddRefed<DOMRequest>
 Icc::ReadContacts(const nsAString& aContactType, ErrorResult& aRv)
 {
   if (!mProvider) {
@@ -275,10 +275,10 @@ Icc::ReadContacts(const nsAString& aContactType, ErrorResult& aRv)
     return nullptr;
   }
 
-  return request.forget();
+  return request.forget().downcast<DOMRequest>();
 }
 
-already_AddRefed<nsISupports>
+already_AddRefed<DOMRequest>
 Icc::UpdateContact(const JSContext* aCx, const nsAString& aContactType,
                    JS::Handle<JS::Value> aContact, const nsAString& aPin2,
                    ErrorResult& aRv)
@@ -297,10 +297,10 @@ Icc::UpdateContact(const JSContext* aCx, const nsAString& aContactType,
     return nullptr;
   }
 
-  return request.forget();
+  return request.forget().downcast<DOMRequest>();
 }
 
-already_AddRefed<nsISupports>
+already_AddRefed<DOMRequest>
 Icc::IccOpenChannel(const nsAString& aAid, ErrorResult& aRv)
 {
   if (!mProvider) {
@@ -316,10 +316,10 @@ Icc::IccOpenChannel(const nsAString& aAid, ErrorResult& aRv)
     return nullptr;
   }
 
-  return request.forget();
+  return request.forget().downcast<DOMRequest>();
 }
 
-already_AddRefed<nsISupports>
+already_AddRefed<DOMRequest>
 Icc::IccExchangeAPDU(const JSContext* aCx, int32_t aChannel,
                      JS::Handle<JS::Value> aApdu, ErrorResult& aRv)
 {
@@ -336,10 +336,10 @@ Icc::IccExchangeAPDU(const JSContext* aCx, int32_t aChannel,
     return nullptr;
   }
 
-  return request.forget();
+  return request.forget().downcast<DOMRequest>();
 }
 
-already_AddRefed<nsISupports>
+already_AddRefed<DOMRequest>
 Icc::IccCloseChannel(int32_t aChannel, ErrorResult& aRv)
 {
   if (!mProvider) {
@@ -355,10 +355,10 @@ Icc::IccCloseChannel(int32_t aChannel, ErrorResult& aRv)
     return nullptr;
   }
 
-  return request.forget();
+  return request.forget().downcast<DOMRequest>();
 }
 
-already_AddRefed<nsISupports>
+already_AddRefed<DOMRequest>
 Icc::MatchMvno(const nsAString& aMvnoType,
                const nsAString& aMvnoData,
                ErrorResult& aRv)
@@ -377,5 +377,5 @@ Icc::MatchMvno(const nsAString& aMvnoType,
     return nullptr;
   }
 
-  return request.forget();
+  return request.forget().downcast<DOMRequest>();
 }

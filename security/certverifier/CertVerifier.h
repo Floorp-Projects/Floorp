@@ -58,7 +58,8 @@ public:
   enum pinning_enforcement_config {
     pinningDisabled = 0,
     pinningAllowUserCAMITM = 1,
-    pinningStrict = 2
+    pinningStrict = 2,
+    pinningEnforceTestMode = 3
   };
 
   enum missing_cert_download_config { missing_cert_download_off = 0, missing_cert_download_on };

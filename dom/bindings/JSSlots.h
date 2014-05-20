@@ -12,16 +12,14 @@
 
 // We use slot 0 for holding the raw object.  This is safe for both
 // globals and non-globals.
+// NOTE: This is baked into the Ion JIT as 0 in codegen for LGetDOMProperty and
+// LSetDOMProperty. Those constants need to be changed accordingly if this value
+// changes.
 #define DOM_OBJECT_SLOT 0
 
 // The total number of slots non-proxy DOM objects use by default.
 // Specific objects may have more for storing cached values.
 #define DOM_INSTANCE_RESERVED_SLOTS 1
-
-// NOTE: This is baked into the Ion JIT as 0 in codegen for LGetDOMProperty and
-// LSetDOMProperty. Those constants need to be changed accordingly if this value
-// changes.
-#define DOM_PROTO_INSTANCE_CLASS_SLOT 0
 
 // Interface objects store a number of reserved slots equal to
 // DOM_INTERFACE_SLOTS_BASE + number of named constructors.
@@ -30,6 +28,6 @@
 // Interface prototype objects store a number of reserved slots equal to
 // DOM_INTERFACE_PROTO_SLOTS_BASE or DOM_INTERFACE_PROTO_SLOTS_BASE + 1 if a
 // slot for the unforgeable holder is needed.
-#define DOM_INTERFACE_PROTO_SLOTS_BASE (DOM_PROTO_INSTANCE_CLASS_SLOT + 1)
+#define DOM_INTERFACE_PROTO_SLOTS_BASE 0
 
 #endif /* mozilla_dom_DOMSlots_h */
