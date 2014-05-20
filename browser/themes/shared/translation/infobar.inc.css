@@ -1,0 +1,58 @@
+%if 0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+notification[value="translation"] .messageImage {
+  list-style-image: url(chrome://browser/skin/translation-16.png);
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+@media (min-resolution: 1.25dppx) {
+  list-style-image: url(chrome://browser/skin/translation-16@2x.png);
+  -moz-image-region: rect(0px, 64px, 32px, 32px);
+}
+
+notification[value="translation"] {
+  min-height: 40px;
+}
+
+notification[value="translation"] button,
+notification[value="translation"] menulist {
+  -moz-appearance: none;
+  border-width: 1px;
+  -moz-border-top-colors: none;
+  -moz-border-right-colors: none;
+  -moz-border-bottom-colors: none;
+  -moz-border-left-colors: none;
+  border-radius: 2px;
+  min-width: 0;
+  min-height: 30px;
+  -moz-padding-end: 1ch;
+  box-shadow: 0px 1px rgba(255, 255, 255, 0.5), 0px 1px rgba(255, 255, 255, 0.5) inset;
+}
+
+notification[value="translation"] button > .button-box,
+notification[value="translation"] button[type="menu"] > .button-box > .button-menu-dropmarker {
+  padding: 0;
+  -moz-margin-start: 3ch;
+}
+
+notification[value="translation"] button:not([type="menu"]) > .button-box {
+  -moz-margin-end: 3ch;
+}
+
+notification[value="translation"] button,
+notification[value="translation"] menulist,
+notification[value="translation"] menulist > .menulist-label-box {
+  -moz-margin-start: 1ch;
+  -moz-margin-end: 1ch;
+}
+
+notification[value="translation"] menulist > .menulist-dropmarker {
+  -moz-appearance: toolbarbutton-dropdown;
+  border: none;
+  background-color: transparent;
+  margin: auto;
+  padding: 5px 0;
+}
