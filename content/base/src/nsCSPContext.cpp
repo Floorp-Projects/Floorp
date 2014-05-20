@@ -45,6 +45,47 @@ GetCspContextLog()
 
 #define CSPCONTEXTLOG(args) PR_LOG(GetCspContextLog(), 4, args)
 
+static const uint32_t CSP_CACHE_URI_CUTOFF_SIZE = 512;
+
+/**
+ * Creates a key for use in the ShouldLoad cache.
+ * Looks like: <uri>!<nsIContentPolicy::LOAD_TYPE>
+ */
+nsresult
+CreateCacheKey_Internal(nsIURI* aContentLocation,
+                        nsContentPolicyType aContentType,
+                        nsACString& outCacheKey)
+{
+  if (!aContentLocation) {
+    return NS_ERROR_FAILURE;
+  }
+
+  bool isDataScheme = false;
+  nsresult rv = aContentLocation->SchemeIs("data", &isDataScheme);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  outCacheKey.Truncate();
+  if (aContentType != nsIContentPolicy::TYPE_SCRIPT && isDataScheme) {
+    // For non-script data: URI, use ("data:", aContentType) as the cache key.
+    outCacheKey.Append(NS_LITERAL_CSTRING("data:"));
+    outCacheKey.AppendInt(aContentType);
+    return NS_OK;
+  }
+
+  nsAutoCString spec;
+  rv = aContentLocation->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Don't cache for a URI longer than the cutoff size.
+  if (spec.Length() <= CSP_CACHE_URI_CUTOFF_SIZE) {
+    outCacheKey.Append(spec);
+    outCacheKey.Append(NS_LITERAL_CSTRING("!"));
+    outCacheKey.AppendInt(aContentType);
+  }
+
+  return NS_OK;
+}
+
 /* =====  nsIContentSecurityPolicy impl ====== */
 
 NS_IMETHODIMP
@@ -73,6 +114,16 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
   // * CSP is enabled
   // * Content Type is not whitelisted (CSP Reports, TYPE_DOCUMENT, etc).
   // * Fast Path for Apps
+
+  nsAutoCString cacheKey;
+  rv = CreateCacheKey_Internal(aContentLocation, aContentType, cacheKey);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool isCached = mShouldLoadCache.Get(cacheKey, outDecision);
+  if (isCached && cacheKey.Length() > 0) {
+    // this is cached, use the cached value.
+    return NS_OK;
+  }
 
   // Default decision, CSP can revise it if there's a policy to enforce
   *outDecision = nsIContentPolicy::ACCEPT;
@@ -137,6 +188,11 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
       // * Console error reporting, bug 994322
     }
   }
+  // Done looping, cache any relevant result
+  if (cacheKey.Length() > 0 && !isPreload) {
+    mShouldLoadCache.Put(cacheKey, *outDecision);
+  }
+
 #ifdef PR_LOGGING
   {
   nsAutoCString spec;
@@ -183,6 +239,7 @@ nsCSPContext::~nsCSPContext()
   for (uint32_t i = 0; i < mPolicies.Length(); i++) {
     delete mPolicies[i];
   }
+  mShouldLoadCache.Clear();
 }
 
 NS_IMETHODIMP
@@ -215,6 +272,8 @@ nsCSPContext::RemovePolicy(uint32_t aIndex)
     return NS_ERROR_ILLEGAL_VALUE;
   }
   mPolicies.RemoveElementAt(aIndex);
+  // reset cache since effective policy changes
+  mShouldLoadCache.Clear();
   return NS_OK;
 }
 
@@ -237,6 +296,8 @@ nsCSPContext::AppendPolicy(const nsAString& aPolicyString,
   nsCSPPolicy* policy = nsCSPParser::parseContentSecurityPolicy(aPolicyString, mSelfURI, aReportOnly, 0);
   if (policy) {
     mPolicies.AppendElement(policy);
+    // reset cache since effective policy changes
+    mShouldLoadCache.Clear();
   }
   return NS_OK;
 }
