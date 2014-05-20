@@ -1344,12 +1344,14 @@ nsGlobalWindow::~nsGlobalWindow()
 void
 nsGlobalWindow::AddEventTargetObject(DOMEventTargetHelper* aObject)
 {
+  MOZ_ASSERT(IsInnerWindow());
   mEventTargetObjects.PutEntry(aObject);
 }
 
 void
 nsGlobalWindow::RemoveEventTargetObject(DOMEventTargetHelper* aObject)
 {
+  MOZ_ASSERT(IsInnerWindow());
   mEventTargetObjects.RemoveEntry(aObject);
 }
 

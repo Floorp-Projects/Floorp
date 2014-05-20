@@ -696,6 +696,7 @@ public:
 
   void UnmarkGrayTimers();
 
+  // Inner windows only.
   void AddEventTargetObject(mozilla::DOMEventTargetHelper* aObject);
   void RemoveEventTargetObject(mozilla::DOMEventTargetHelper* aObject);
 
