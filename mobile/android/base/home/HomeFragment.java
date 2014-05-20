@@ -17,6 +17,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
+import org.mozilla.gecko.home.TopSitesGridView.TopSitesGridContextMenuInfo;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 
@@ -191,34 +192,15 @@ abstract class HomeFragment extends Fragment {
         }
 
         if (itemId == R.id.home_remove) {
-            // Track notification queuing of removal so we don't notify multiple times.
-            boolean notifyQueued = false;
-            final String url = info.url;
-
-            // This might be a reading list item. Try removing it by url.
-            (new RemoveReadingListItemTask(context, url)).execute();
-
-            if (info.isInReadingList()) {
-                // For reading list, this may still double-notify because reading list is in Gecko.
-                notifyQueued = true;
+            if (info instanceof TopSitesGridContextMenuInfo) {
+                (new RemoveItemByUrlTask(context, info.url, info.position)).execute();
+                return true;
             }
 
-            if (info.hasBookmarkId()) {
-                new RemoveBookmarkTask(context, info.bookmarkId, !notifyQueued).execute();
-                notifyQueued = true;
-            } else {
-                new RemoveBookmarkTask(context, url, false).execute();
+            if (info.isInReadingList() || info.hasBookmarkId() || info.hasHistoryId()) {
+                (new RemoveItemByUrlTask(context, info.url)).execute();
+                return true;
             }
-
-            if (info.hasHistoryId()) {
-                new RemoveHistoryTask(context, info.historyId, !notifyQueued).execute();
-                notifyQueued = true;
-            } else {
-                // We can't know for sure if there is also a history item, but try anyways.
-                new RemoveHistoryTask(context, url, false).execute();
-            }
-
-            return notifyQueued;
         }
 
         return false;
@@ -284,110 +266,51 @@ abstract class HomeFragment extends Fragment {
         mIsLoaded = true;
     }
 
-    private static class RemoveBookmarkTask extends UiAsyncTask<Void, Void, Void> {
+    private static class RemoveItemByUrlTask extends UiAsyncTask<Void, Void, Void> {
         private final Context mContext;
-        private final int mId;
         private final String mUrl;
-        private final boolean mNotify;
+        private final int mPosition;
 
-        public RemoveBookmarkTask(Context context, int id, String url, boolean notify) {
+        /**
+         * Remove bookmark/history/reading list item by url.
+         */
+        public RemoveItemByUrlTask(Context context, String url) {
+            this(context, url, -1);
+        }
+
+        /**
+         * Remove bookmark/history/reading list item by url, and also unpin the
+         * Top Sites grid item at index <code>position</code>.
+         */
+        public RemoveItemByUrlTask(Context context, String url, int position) {
             super(ThreadUtils.getBackgroundHandler());
 
             mContext = context;
-            mId = id;
             mUrl = url;
-            mNotify = notify;
-        }
-
-        public RemoveBookmarkTask(Context context, int id, boolean notify) {
-            this(context, id, null, notify);
-        }
-
-        public RemoveBookmarkTask(Context context, String url, boolean notify) {
-            this(context, -1, url, notify);
+            mPosition = position;
         }
 
         @Override
         public Void doInBackground(Void... params) {
             ContentResolver cr = mContext.getContentResolver();
-            if (mId > 0) {
-                BrowserDB.removeBookmark(cr, mId);
-            } else {
-                BrowserDB.removeBookmarksWithURL(cr, mUrl);
+
+            if (mPosition > -1) {
+                BrowserDB.unpinSite(cr, mPosition);
             }
 
-            return null;
-        }
+            BrowserDB.removeBookmarksWithURL(cr, mUrl);
+            BrowserDB.removeHistoryEntry(cr, mUrl);
 
-        @Override
-        public void onPostExecute(Void result) {
-            if (mNotify) {
-                Toast.makeText(mContext, R.string.page_removed, Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-
-    private static class RemoveReadingListItemTask extends UiAsyncTask<Void, Void, Void> {
-        private final String mUrl;
-        private final Context mContext;
-
-        public RemoveReadingListItemTask(Context context, String url) {
-            super(ThreadUtils.getBackgroundHandler());
-            mUrl = url;
-            mContext = context;
-        }
-
-        @Override
-        public Void doInBackground(Void... params) {
-            ContentResolver cr = mContext.getContentResolver();
             BrowserDB.removeReadingListItemWithURL(cr, mUrl);
-
             GeckoEvent e = GeckoEvent.createBroadcastEvent("Reader:Remove", mUrl);
             GeckoAppShell.sendEventToGecko(e);
 
             return null;
         }
-    }
-
-    private static class RemoveHistoryTask extends UiAsyncTask<Void, Void, Void> {
-        private final Context mContext;
-        private final int mId;
-        private final String mUrl;
-        private final boolean mNotify;
-
-        public RemoveHistoryTask(Context context, int id, boolean notify) {
-            this(context, id, null, notify);
-        }
-
-        public RemoveHistoryTask(Context context, String url, boolean notify) {
-            this(context, -1, url, notify);
-        }
-
-        public RemoveHistoryTask(Context context, int id, String url, boolean notify) {
-            super(ThreadUtils.getBackgroundHandler());
-
-            mContext = context;
-            mId = id;
-            mUrl = url;
-            mNotify = notify;
-        }
-
-        @Override
-        public Void doInBackground(Void... params) {
-            if (mId > 0) {
-                BrowserDB.removeHistoryEntry(mContext.getContentResolver(), mId);
-            } else {
-                BrowserDB.removeHistoryEntry(mContext.getContentResolver(), mUrl);
-            }
-            return null;
-        }
 
         @Override
         public void onPostExecute(Void result) {
-            if (mNotify) {
-                Toast.makeText(mContext, R.string.page_removed, Toast.LENGTH_SHORT).show();
-            }
+            Toast.makeText(mContext, R.string.page_removed, Toast.LENGTH_SHORT).show();
         }
     }
 }
