@@ -14,10 +14,6 @@
 #include "vm/Monitor.h"
 #include "vm/Runtime.h"
 
-#ifdef MOZ_NUWA_PROCESS
-# include "ipc/Nuwa.h"
-#endif
-
 using namespace js;
 
 const size_t WORKER_THREAD_STACK_SIZE = 1*1024*1024;
@@ -158,14 +154,6 @@ void
 ThreadPoolWorker::HelperThreadMain(void *arg)
 {
     ThreadPoolWorker *worker = (ThreadPoolWorker*) arg;
-
-#ifdef MOZ_NUWA_PROCESS
-    if (IsNuwaProcess()) {
-        JS_ASSERT(NuwaMarkCurrentThread != nullptr);
-        NuwaMarkCurrentThread(nullptr, nullptr);
-    }
-#endif
-
     worker->helperLoop();
 }
 
