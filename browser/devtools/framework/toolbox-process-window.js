@@ -49,7 +49,15 @@ function connect() {
   });
 }
 
-window.addEventListener("load", connect);
+window.addEventListener("load", function() {
+  let cmdClose = document.getElementById("toolbox-cmd-close");
+  cmdClose.addEventListener("command", onCloseCommand);
+  connect();
+});
+
+function onCloseCommand(event) {
+  window.close();
+}
 
 function openToolbox(form) {
   let options = {
@@ -82,6 +90,8 @@ function bindToolboxHandlers() {
 function onUnload() {
   window.removeEventListener("unload", onUnload);
   window.removeEventListener("message", onMessage);
+  let cmdClose = document.getElementById("toolbox-cmd-close");
+  cmdClose.removeEventListener("command", onCloseCommand);
   gToolbox.destroy();
 }
 
