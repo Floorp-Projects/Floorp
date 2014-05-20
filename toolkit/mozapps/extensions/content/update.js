@@ -10,7 +10,6 @@
 
 const PREF_UPDATE_EXTENSIONS_ENABLED            = "extensions.update.enabled";
 const PREF_XPINSTALL_ENABLED                    = "xpinstall.enabled";
-const PREF_EM_HOTFIX_ID                         = "extensions.hotfix.id";
 
 // timeout (in milliseconds) to wait for response to the metadata ping
 const METADATA_TIMEOUT    = 30000;
@@ -181,19 +180,14 @@ var gVersionInfoPage = {
                                   "nextButtonText", true,
                                   "cancelButtonText", false);
 
-    try {
-      var hotfixID = Services.prefs.getCharPref(PREF_EM_HOTFIX_ID);
-    }
-    catch (e) { }
-
     // Retrieve all add-ons in order to sync their app compatibility information
-    AddonManager.getAllAddons(function gVersionInfoPage_getAllAddons(aAddons) {
+    AddonManager.getAllAddons(aAddons => {
       if (gUpdateWizard.shuttingDown) {
         logger.debug("getAllAddons completed after dialog closed");
       }
 
       gUpdateWizard.addons = [a for (a of aAddons)
-                               if (a.type != "plugin" && a.id != hotfixID)];
+                               if (a.type != "plugin" && a.id != AddonManager.hotfixID)];
 
       gVersionInfoPage._totalCount = gUpdateWizard.addons.length;
 
@@ -206,12 +200,8 @@ var gVersionInfoPage = {
 
       // Ensure compatibility overrides are up to date before checking for
       // individual addon updates.
-      let ids = [addon.id for (addon of gUpdateWizard.addons)];
-
-      // Do the metadata ping, listening for any newly enabled/disabled add-ons.
       AddonManager.addAddonListener(listener);
-      AddonRepository.repopulateCache(ids, function gVersionInfoPage_repopulateCache() {
-
+      AddonRepository.repopulateCache(METADATA_TIMEOUT).then(() => {
         if (gUpdateWizard.shuttingDown) {
           logger.debug("repopulateCache completed after dialog closed");
         }
@@ -220,7 +210,7 @@ var gVersionInfoPage = {
           logger.debug("VersionInfo Finding updates for " + addon.id);
           addon.findUpdates(gVersionInfoPage, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
         }
-      }, METADATA_TIMEOUT);
+      });
     });
   },
 
