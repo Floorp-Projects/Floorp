@@ -239,7 +239,6 @@ browser.jar:
   skin/classic/browser/devtools/magnifying-glass-light.png  (../shared/devtools/images/magnifying-glass-light.png)
   skin/classic/browser/devtools/magnifying-glass-light@2x.png (../shared/devtools/images/magnifying-glass-light@2x.png)
   skin/classic/browser/devtools/itemToggle.png        (../shared/devtools/images/itemToggle.png)
-  skin/classic/browser/devtools/itemToggle-light.png  (../shared/devtools/images/itemToggle-light.png)
   skin/classic/browser/devtools/itemArrow-dark-rtl.svg (../shared/devtools/images/itemArrow-dark-rtl.svg)
   skin/classic/browser/devtools/itemArrow-dark-ltr.svg (../shared/devtools/images/itemArrow-dark-ltr.svg)
   skin/classic/browser/devtools/itemArrow-rtl.svg      (../shared/devtools/images/itemArrow-rtl.svg)
