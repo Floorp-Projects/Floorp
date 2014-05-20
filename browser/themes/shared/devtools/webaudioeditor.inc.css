@@ -46,39 +46,40 @@ svg {
 
 /* Edges in graph */
 .edgePath path {
-  stroke-width: 1.5px;
+  stroke-width: 1px;
   fill: none;
 }
 
-.theme-dark .edgePath path { stroke: #f5f7fa; }
-.theme-light .edgePath path { stroke: #585959; }
+.theme-dark .edgePath path {
+  stroke: #b6babf; /* Grey foreground text */
+}
+.theme-light .edgePath path {
+  stroke: #aaaaaa; /* Splitters */
+}
 
 /* Audio Nodes */
 .nodes rect {
-  stroke-width: 2px;
+  stroke-width: 1px;
   cursor: pointer;
 }
 
 .theme-dark .nodes rect {
-  stroke: #585959;
-  fill: #f5f7fa;
+  stroke: #252c33; /* Tab toolbar */
+  fill: #343c45; /* Toolbars */
 }
 
 .theme-light .nodes rect {
-  fill: #585959;
-  stroke: #f5f7fa;
+  stroke: #ebeced; /* Tab toolbar */
+  fill: #f0f1f2; /* Toolbar */
 }
 
-.nodes g.selected rect {
-  stroke-width: 1.5px;
-  animation-duration: 1s;
-  animation-iteration-count: infinite;
-  animation-timing-function: ease-in-out;
-  animation-direction: alternate;
+.theme-dark .nodes g.selected rect {
+  fill: #1d4f73; /* Select Highlight Blue */
 }
 
-.theme-dark .nodes g.selected rect { animation-name: dark-selected-glow; }
-.theme-light .nodes g.selected rect { animation-name: light-selected-glow; }
+.theme-light .nodes g.selected rect {
+  fill: #4c9ed9; /* Select Highlight Blue */
+}
 
 /* Text in nodes */
 text {
@@ -89,23 +90,13 @@ text {
 }
 
 .theme-dark text {
-  fill: #333;
-  /* text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff; */
+  fill: #b6babf; /* Grey foreground text */
 }
 .theme-light text {
-  fill: #111;
+  fill: #585959; /* Grey foreground text */
 }
-
-/**
- * Animations for graphs
- */
-@keyframes dark-selected-glow {
-  0% { fill: #1d4f73; }
-  100% { fill: #3CA3ED; }
-}
-@keyframes light-selected-glow {
-  0% { fill: #4c9ed9; }
-  100% { fill: #59BAFF; }
+.theme-light g.selected text {
+  fill: #f0f1f2; /* Toolbars */
 }
 
 /**
