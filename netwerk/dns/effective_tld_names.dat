@@ -6443,16 +6443,24 @@ edu.vc
 
 // ve : https://registro.nic.ve/
 // Confirmed by registry 2012-10-04
+// Updated 2014-05-20 - Bug 940478
 ve
+arts.ve
 co.ve
 com.ve
 e12.ve
 edu.ve
+firm.ve
+gob.ve
 gov.ve
 info.ve
+int.ve
 mil.ve
 net.ve
 org.ve
+rec.ve
+store.ve
+tec.ve
 web.ve
 
 // vg : http://en.wikipedia.org/wiki/.vg
