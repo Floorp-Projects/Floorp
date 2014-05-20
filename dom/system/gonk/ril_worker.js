@@ -14914,6 +14914,10 @@ let ContextPool = {
     RILQUIRKS_SUBSCRIPTION_CONTROL = quirks.subscriptionControl;
   },
 
+  setDebugFlag: function(aOptions) {
+    DEBUG = DEBUG_WORKER || aOptions.debug;
+  },
+
   registerClient: function(aOptions) {
     let clientId = aOptions.clientId;
     this._contexts[clientId] = new Context(clientId);
