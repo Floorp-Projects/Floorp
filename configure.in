@@ -2550,19 +2550,17 @@ dnl ===============================================================
 if test "$GNU_CC" -a "$OS_TARGET" != WINNT; then
   AC_DEFINE(HAVE_VISIBILITY_HIDDEN_ATTRIBUTE)
   AC_DEFINE(HAVE_VISIBILITY_ATTRIBUTE)
-  case "$OS_TARGET" in
-  Darwin)
+  if test -n "$gonkdir"; then
+    visibility_target=Gonk
+  else
+    visibility_target=$OS_TARGET
+  fi
+  case "$visibility_target" in
+  Darwin|Gonk)
     VISIBILITY_FLAGS='-fvisibility=hidden'
     ;;
   *)
-    case $GCC_VERSION in
-    4.4*)
-      VISIBILITY_FLAGS='-I$(DIST)/system_wrappers -include $(topsrcdir)/config/gcc_hidden_dso_handle.h'
-      ;;
-    *)
-      VISIBILITY_FLAGS='-I$(DIST)/system_wrappers -include $(topsrcdir)/config/gcc_hidden.h'
-      ;;
-    esac
+    VISIBILITY_FLAGS='-I$(DIST)/system_wrappers -include $(topsrcdir)/config/gcc_hidden.h'
     WRAP_SYSTEM_INCLUDES=1
     ;;
   esac
