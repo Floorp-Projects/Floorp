@@ -35,6 +35,12 @@
                           label="New Non-e10s Window"
                           hidden="true"
                           command="Tools:NonRemoteWindow"/>
+#ifdef MAC_NON_BROWSER_WINDOW
+                <menuitem id="menu_openLocation"
+                          label="&openLocationCmd.label;"
+                          command="Browser:OpenLocation"
+                          key="focusURLBar"/>
+#endif
                 <menuitem id="menu_openFile"
                           label="&openFileCmd.label;"
                           command="Browser:OpenFile"
