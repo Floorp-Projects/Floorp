@@ -160,7 +160,6 @@ browser.jar:
   skin/classic/browser/social/gear_clicked.png        (../shared/social/gear_clicked.png)
   skin/classic/browser/tabbrowser/connecting.png      (tabbrowser/connecting.png)
   skin/classic/browser/tabbrowser/loading.png         (tabbrowser/loading.png)
-  skin/classic/browser/tabbrowser/tab.png             (tabbrowser/tab.png)
   skin/classic/browser/tabbrowser/tab-active-middle.png     (tabbrowser/tab-active-middle.png)
   skin/classic/browser/tabbrowser/tab-background-end.png    (tabbrowser/tab-background-end.png)
   skin/classic/browser/tabbrowser/tab-background-middle.png (tabbrowser/tab-background-middle.png)
