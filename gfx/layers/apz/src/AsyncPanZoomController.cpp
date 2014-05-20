@@ -1815,6 +1815,91 @@ bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
   return false;
 }
 
+void AsyncPanZoomController::ApplyOverscrollEffect(ViewTransform* aTransform) const {
+  // The overscroll effect applied here is a combination of a translation in
+  // the direction of overscroll, and shrinking in both directions. For
+  // example, when overscrolling past the top of the page, the rectangle of
+  // content that filled the composition bounds will now fill a smaller
+  // rectangle at the bottom of the composition bounds, centred horizontally.
+  // The magnitude of the translation and the shrinking depends on the amount
+  // of the overscroll.
+  // With the effect applied, we can think of the composited region as being
+  // made up of the following subregions.
+  //  (1) The shrunk content that used to fill the composited region.
+  //  (2) The space created along the axis that has overscroll. This space is
+  //      blank, filled by the background color of the overscrolled content.
+  //      TODO(botond): Implement handling of background color.
+  //  (3) The space created along the other axis. There may or may not be
+  //      content available to fill this space, depending on our scroll
+  //      position along this axis. If there is content, it's shown from the
+  //      displayport. (TODO: Currently we don't take any measures to ensure
+  //      that the displayport is large enough to have this content. Perhaps
+  //      we should.) Otherwise, these spaces are also blank like (2).
+  // To illustrate, for the case where we are overscrolling past the top of
+  // the page, these regions are (1) the bottom-centre region, (2) the top
+  // regions, and (3) the bottom-left and bottom-right regions of the
+  // composited area, respectively.
+
+  // The maximum proportion of the composition length which can become blank
+  // space along an axis as we overscroll along that axis.
+  const float CLAMPING = 0.5;
+
+  // The proportion of the composition length which will become blank space
+  // along each axis as a result of overscroll along that axis. Since
+  // Axis::ApplyResistance() keeps the magnitude of the overscroll in the range
+  // [0, GetCompositionLength()], these scale factors should be in the range
+  // [0, CLAMPING].
+  float spacePropX = CLAMPING * fabsf(mX.GetOverscroll()) / mX.GetCompositionLength();
+  float spacePropY = CLAMPING * fabsf(mY.GetOverscroll()) / mY.GetCompositionLength();
+
+  // The translation to apply for overscroll along the x axis.
+  CSSPoint translationX;
+  if (mX.GetOverscroll() < 0) {
+    // Overscroll on left.
+    // Keep content at the midpoint of the screen's right edge fixed.
+    translationX.x = spacePropX * mX.GetCompositionLength();
+    translationX.y = (spacePropX * mY.GetCompositionLength()) / 2;
+  } else if (mX.GetOverscroll() > 0) {
+    // Overscroll on right.
+    // Keep content at the midpoint of the screen's left edge fixed.
+    translationX.y = (spacePropX * mY.GetCompositionLength()) / 2;
+  }
+
+  // The translation to apply for overscroll along the y axis.
+  CSSPoint translationY;
+  if (mY.GetOverscroll() < 0) {
+    // Overscroll at top.
+    // Keep content at the midpoint of the screen's bottom edge fixed.
+    translationY.x = (spacePropY * mX.GetCompositionLength()) / 2;
+    translationY.y = spacePropY * mY.GetCompositionLength();
+  } else if (mY.GetOverscroll() > 0) {
+    // Overscroll at bottom.
+    // Keep content at the midpoint of the screen's top edge fixed.
+    translationY.x = (spacePropY * mX.GetCompositionLength()) / 2;
+  }
+
+  // Combine the transformations along the two axes.
+  // TODO(botond): This method of combination is imperfect, and results in a
+  // funny-looking snap-back animation when we have overscroll along both axes.
+  // We should fine-tune this.
+  float spaceProp = std::max(spacePropX, spacePropY);
+  CSSPoint translation(std::max(translationX.x, translationY.x),
+                       std::max(translationX.y, translationY.y));
+
+  // The prpoportion of the composition length which will be taken up by the
+  // original content; this is the scale we will apply to the content.
+  float contentProp = 1 - spaceProp;
+
+  // In a ViewTransform, the translation is applied before the scale. We want
+  // to apply our translation after our scale, so we compensate for that here.
+  translation.x /= contentProp;
+  translation.y /= contentProp;
+
+  // Finally, apply the transformations.
+  aTransform->mScale.scale *= contentProp;
+  aTransform->mTranslation += translation * mFrameMetrics.LayersPixelsPerCSSPixel();
+}
+
 bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSampleTime,
                                                             ViewTransform* aNewTransform,
                                                             ScreenPoint& aScrollOffset) {
@@ -1833,6 +1918,10 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
 
     aScrollOffset = mFrameMetrics.GetScrollOffset() * mFrameMetrics.GetZoom();
     *aNewTransform = GetCurrentAsyncTransform();
+
+    // GetCurrentAsyncTransform() does not consider any overscroll we may have.
+    // Adjust the transform to account for that.
+    ApplyOverscrollEffect(aNewTransform);
 
     LogRendertraceRect(GetGuid(), "viewport", "red",
       CSSRect(mFrameMetrics.GetScrollOffset(),
