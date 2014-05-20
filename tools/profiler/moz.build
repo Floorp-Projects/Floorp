@@ -82,6 +82,7 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
         '/ipc/chromium/src',
         '/mozglue/linker',
         '/toolkit/crashreporter/google-breakpad/src',
+        '/xpcom/base',
     ]
 
     # We need access to Breakpad's getcontext(3) which is suitable for Android

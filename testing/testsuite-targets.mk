@@ -280,11 +280,11 @@ crashtest-ipc-gpu:
 	$(call RUN_REFTEST,'$(topsrcdir)/$(TEST_PATH)' $(OOP_CONTENT) $(GPU_RENDERING))
 	$(CHECK_TEST_ERROR)
 
-jstestbrowser: TESTS_PATH?=test-package-stage/jsreftest/tests/
+jstestbrowser: TESTS_PATH?=test-stage/jsreftest/tests/
 jstestbrowser:
 	$(MAKE) -C $(DEPTH)/config
 	$(MAKE) stage-jstests
-	$(call RUN_REFTEST,'$(DIST)/$(TESTS_PATH)/jstests.list' --extra-profile-file=$(DIST)/test-package-stage/jsreftest/tests/user.js)
+	$(call RUN_REFTEST,'$(DIST)/$(TESTS_PATH)/jstests.list' --extra-profile-file=$(DIST)/test-stage/jsreftest/tests/user.js)
 	$(CHECK_TEST_ERROR)
 
 GARBAGE += $(addsuffix .log,$(MOCHITESTS) reftest crashtest jstestbrowser)
@@ -393,7 +393,7 @@ pgo-profile-run:
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 
 ifndef UNIVERSAL_BINARY
-PKG_STAGE = $(DIST)/test-package-stage
+PKG_STAGE = $(DIST)/test-stage
 package-tests: \
   stage-config \
   stage-mochitest \
@@ -411,7 +411,7 @@ package-tests: \
   $(NULL)
 else
 # This staging area has been built for us by universal/flight.mk
-PKG_STAGE = $(DIST)/universal/test-package-stage
+PKG_STAGE = $(DIST)/universal/test-stage
 endif
 
 package-tests:

@@ -66,9 +66,6 @@ def main():
     # we leave behind is a "DMD.cpp" entry if we see one or more frames that
     # have DMD.cpp in them.  There is simply too much variation to do anything
     # better than that.
-    #
-    # As for stack frame records, alas, we filter them out entirely because
-    # they have even more variation.
 
     print("filtering output to", filtered_name)
 
@@ -96,15 +93,6 @@ def main():
                             print("   ... DMD.cpp", file=fout)
                         print(frame, end='', file=fout)
                         break
-
-            elif re.search("in stack frame record", line):
-                # Stack frame record.  Get the whole thing (we know how many
-                # lines it has).
-                line2 = fin.next()
-                line3 = fin.next()
-                line4 = fin.next()
-                line5 = fin.next()
-                line6 = fin.next()
 
             else:
                 # A line that needs no special handling.  Copy it through.

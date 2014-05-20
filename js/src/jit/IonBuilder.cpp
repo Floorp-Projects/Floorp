@@ -5198,7 +5198,7 @@ IonBuilder::testShouldDOMCall(types::TypeSet *inTypes,
     // If all the DOM objects flowing through are legal with this
     // property, we can bake in a call to the bottom half of the DOM
     // accessor
-    DOMInstanceClassMatchesProto instanceChecker =
+    DOMInstanceClassHasProtoAtDepth instanceChecker =
         compartment->runtime()->DOMcallbacks()->instanceClassMatchesProto;
 
     const JSJitInfo *jinfo = func->jitInfo();
@@ -5210,10 +5210,7 @@ IonBuilder::testShouldDOMCall(types::TypeSet *inTypes,
         if (!curType)
             continue;
 
-        if (!curType->hasTenuredProto())
-            return false;
-        JSObject *proto = curType->proto().toObjectOrNull();
-        if (!instanceChecker(proto, jinfo->protoID, jinfo->depth))
+        if (!instanceChecker(curType->clasp(), jinfo->protoID, jinfo->depth))
             return false;
     }
 

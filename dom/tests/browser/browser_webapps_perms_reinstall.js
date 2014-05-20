@@ -131,8 +131,8 @@ function writeUpdatesToWebappManifest(aRestore)
   let devPath = ["_tests", "testing", "mochitest",
                  "browser", "dom" , "tests", "browser"];
   // make package-tests moves tests to:
-  // dist/test-package-stage/mochitest/browser/dom/tests/browser
-  let slavePath = ["dist", "test-package-stage", "mochitest",
+  // dist/test-stage/mochitest/browser/dom/tests/browser
+  let slavePath = ["dist", "test-stage", "mochitest",
                    "browser", "dom", "tests", "browser"];
 
   newfile = newfile.parent; // up to dist/

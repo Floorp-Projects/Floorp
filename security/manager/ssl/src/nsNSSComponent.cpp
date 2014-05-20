@@ -994,22 +994,14 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting,
     }
   }
 
+  // Default pinning enforcement level is disabled.
   CertVerifier::pinning_enforcement_config
+    pinningEnforcementLevel =
+      static_cast<CertVerifier::pinning_enforcement_config>
+        (Preferences::GetInt("security.cert_pinning.enforcement_level",
+                             CertVerifier::pinningDisabled));
+  if (pinningEnforcementLevel > CertVerifier::pinningEnforceTestMode) {
     pinningEnforcementLevel = CertVerifier::pinningDisabled;
-  int prefPinningEnforcementLevel = Preferences::GetInt("security.cert_pinning.enforcement_level",
-                                                         pinningEnforcementLevel);
-  switch (prefPinningEnforcementLevel) {
-    case 0:
-      pinningEnforcementLevel = CertVerifier::pinningDisabled;
-      break;
-    case 1:
-      pinningEnforcementLevel = CertVerifier::pinningAllowUserCAMITM;
-      break;
-    case 2:
-      pinningEnforcementLevel = CertVerifier::pinningStrict;
-      break;
-    default:
-      pinningEnforcementLevel = CertVerifier::pinningDisabled;
   }
 
   CertVerifier::ocsp_download_config odc;
