@@ -10,7 +10,12 @@ this.EXPORTED_SYMBOLS = [
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+  "resource://gre/modules/Promise.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+  "resource://gre/modules/Services.jsm");
 
 const INBOUND_MESSAGE = "ContentSearch";
 const OUTBOUND_MESSAGE = INBOUND_MESSAGE;
@@ -59,7 +64,9 @@ this.ContentSearch = {
   receiveMessage: function (msg) {
     let methodName = "on" + msg.data.type;
     if (methodName in this) {
-      this[methodName](msg, msg.data.data);
+      this._initService().then(() => {
+        this[methodName](msg, msg.data.data);
+      });
     }
   },
 
@@ -96,18 +103,20 @@ this.ContentSearch = {
   },
 
   observe: function (subj, topic, data) {
-    switch (topic) {
-    case "browser-search-engine-modified":
-      if (data == "engine-current") {
-        this._broadcast("CurrentEngine", this._currentEngineObj());
+    this._initService().then(() => {
+      switch (topic) {
+      case "browser-search-engine-modified":
+        if (data == "engine-current") {
+          this._broadcast("CurrentEngine", this._currentEngineObj());
+        }
+        else if (data != "engine-default") {
+          // engine-default is always sent with engine-current and isn't
+          // otherwise relevant to content searches.
+          this._broadcast("State", this._currentStateObj());
+        }
+        break;
       }
-      else if (data != "engine-default") {
-        // engine-default is always sent with engine-current and isn't otherwise
-        // relevant to content searches.
-        this._broadcast("State", this._currentStateObj());
-      }
-      break;
-    }
+    });
   },
 
   _reply: function (msg, type, data) {
@@ -145,5 +154,14 @@ this.ContentSearch = {
       logoURI: Services.search.currentEngine.getIconURLBySize(65, 26),
       logo2xURI: Services.search.currentEngine.getIconURLBySize(130, 52),
     };
+  },
+
+  _initService: function () {
+    if (!this._initServicePromise) {
+      let deferred = Promise.defer();
+      this._initServicePromise = deferred.promise;
+      Services.search.init(() => deferred.resolve());
+    }
+    return this._initServicePromise;
   },
 };
