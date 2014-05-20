@@ -344,6 +344,7 @@ public class TopSitesPanel extends HomeFragment {
             });
 
             Telemetry.sendUIEvent(TelemetryContract.Event.TOP_SITES_UNPIN);
+
             return true;
         }
 
