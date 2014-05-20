@@ -545,21 +545,19 @@ bool
 DefineWebIDLBindingPropertiesOnXPCObject(JSContext* cx,
                                          JS::Handle<JSObject*> obj,
                                          const NativeProperties* properties,
-                                         bool defineOnlyUnforgeableAttributes)
+                                         bool defineUnforgeableAttributes)
 {
-  if (!defineOnlyUnforgeableAttributes &&
-      properties->methods &&
+  if (properties->methods &&
       !DefinePrefable(cx, obj, properties->methods)) {
     return false;
   }
 
-  if (!defineOnlyUnforgeableAttributes &&
-      properties->attributes &&
+  if (properties->attributes &&
       !DefinePrefable(cx, obj, properties->attributes)) {
     return false;
   }
 
-  if (defineOnlyUnforgeableAttributes && properties->unforgeableAttributes &&
+  if (defineUnforgeableAttributes && properties->unforgeableAttributes &&
       !DefinePrefable(cx, obj, properties->unforgeableAttributes)) {
     return false;
   }
