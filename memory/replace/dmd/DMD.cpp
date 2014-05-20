@@ -269,7 +269,6 @@ static const size_t kBufLen = 64;
 static char gBuf1[kBufLen];
 static char gBuf2[kBufLen];
 static char gBuf3[kBufLen];
-static char gBuf4[kBufLen];
 
 //---------------------------------------------------------------------------
 // Options (Part 1)
@@ -1465,10 +1464,6 @@ public:
     mRecordSize.Add(aB);
   }
 
-  // For PrintSortedRecords.
-  static const char* const kRecordKind;
-  static bool recordsOverlap() { return false; }
-
   void Print(const Writer& aWriter, LocationService* aLocService,
              uint32_t aM, uint32_t aN, const char* aStr, const char* astr,
              size_t aCategoryUsableSize, size_t aCumulativeUsableSize,
@@ -1482,8 +1477,6 @@ public:
     return RecordSize::Cmp(a->mRecordSize, b->mRecordSize);
   }
 };
-
-const char* const TraceRecord::kRecordKind = "trace";
 
 typedef js::HashSet<TraceRecord, TraceRecord, InfallibleAllocPolicy>
         TraceRecordTable;
@@ -1527,108 +1520,6 @@ TraceRecord::Print(const Writer& aWriter, LocationService* aLocService,
     mReportStackTrace2->Print(aWriter, aLocService);
   }
 
-  W("\n");
-}
-
-//---------------------------------------------------------------------------
-// Stack frame records
-//---------------------------------------------------------------------------
-
-// A collection of one or more stack frames (from heap block allocation stack
-// traces) with a common PC.
-class FrameRecord
-{
-  // mPc is used as the key in FrameRecordTable, and the other members
-  // constitute the value, so it's ok for them to be |mutable|.
-  const void* const  mPc;
-  mutable size_t     mNumBlocks;
-  mutable size_t     mNumTraceRecords;
-  mutable RecordSize mRecordSize;
-
-public:
-  explicit FrameRecord(const void* aPc)
-    : mPc(aPc),
-      mNumBlocks(0),
-      mNumTraceRecords(0),
-      mRecordSize()
-  {}
-
-  const RecordSize& GetRecordSize() const { return mRecordSize; }
-
-  // This is |const| thanks to the |mutable| fields above.
-  void Add(const TraceRecord& aTr) const
-  {
-    mNumBlocks += aTr.NumBlocks();
-    mNumTraceRecords++;
-    mRecordSize.Add(aTr.GetRecordSize());
-  }
-
-  void Print(const Writer& aWriter, LocationService* aLocService,
-             uint32_t aM, uint32_t aN, const char* aStr, const char* astr,
-             size_t aCategoryUsableSize, size_t aCumulativeUsableSize,
-             size_t aTotalUsableSize) const;
-
-  static int QsortCmp(const void* aA, const void* aB)
-  {
-    const FrameRecord* const a = *static_cast<const FrameRecord* const*>(aA);
-    const FrameRecord* const b = *static_cast<const FrameRecord* const*>(aB);
-
-    return RecordSize::Cmp(a->mRecordSize, b->mRecordSize);
-  }
-
-  // For PrintSortedRecords.
-  static const char* const kRecordKind;
-  static bool recordsOverlap() { return true; }
-
-  // Hash policy.
-
-  typedef const void* Lookup;
-
-  static uint32_t hash(const void* const& aPc)
-  {
-    return mozilla::HashGeneric(aPc);
-  }
-
-  static bool match(const FrameRecord& aFr, const void* const& aPc)
-  {
-    return aFr.mPc == aPc;
-  }
-};
-
-const char* const FrameRecord::kRecordKind = "frame";
-
-typedef js::HashSet<FrameRecord, FrameRecord, InfallibleAllocPolicy>
-        FrameRecordTable;
-
-void
-FrameRecord::Print(const Writer& aWriter, LocationService* aLocService,
-                   uint32_t aM, uint32_t aN, const char* aStr, const char* astr,
-                   size_t aCategoryUsableSize, size_t aCumulativeUsableSize,
-                   size_t aTotalUsableSize) const
-{
-  (void)aCumulativeUsableSize;
-
-  bool showTilde = mRecordSize.IsSampled();
-
-  W("%s: %s block%s from %s stack trace record%s in stack frame record %s of %s\n",
-    aStr,
-    Show(mNumBlocks, gBuf1, kBufLen, showTilde), Plural(mNumBlocks),
-    Show(mNumTraceRecords, gBuf2, kBufLen, showTilde), Plural(mNumTraceRecords),
-    Show(aM, gBuf3, kBufLen),
-    Show(aN, gBuf4, kBufLen));
-
-  W(" %s bytes (%s requested / %s slop)\n",
-    Show(mRecordSize.Usable(), gBuf1, kBufLen, showTilde),
-    Show(mRecordSize.Req(),    gBuf2, kBufLen, showTilde),
-    Show(mRecordSize.Slop(),   gBuf3, kBufLen, showTilde));
-
-  W(" %4.2f%% of the heap;  %4.2f%% of %s\n",
-    Percent(mRecordSize.Usable(), aTotalUsableSize),
-    Percent(mRecordSize.Usable(), aCategoryUsableSize),
-    astr);
-
-  W(" PC is\n");
-  aLocService->WriteLocation(aWriter, mPc);
   W("\n");
 }
 
@@ -1915,38 +1806,33 @@ ReportOnAlloc(const void* aPtr)
 // DMD output
 //---------------------------------------------------------------------------
 
-// This works for both TraceRecords and StackFrameRecords.
-template <class Record>
 static void
-PrintSortedRecords(const Writer& aWriter, LocationService* aLocService,
-                   const char* aStr, const char* astr,
-                   const js::HashSet<Record, Record, InfallibleAllocPolicy>&
-                         aRecordTable,
-                   size_t aCategoryUsableSize, size_t aTotalUsableSize)
+PrintSortedTraceRecords(const Writer& aWriter, LocationService* aLocService,
+                        const char* aStr, const char* astr,
+                        const TraceRecordTable& aRecordTable,
+                        size_t aCategoryUsableSize, size_t aTotalUsableSize)
 {
-  const char* kind = Record::kRecordKind;
-  StatusMsg("  creating and sorting %s stack %s record array...\n", astr, kind);
+  StatusMsg("  creating and sorting %s stack trace record array...\n", astr);
 
   // Convert the table into a sorted array.
-  js::Vector<const Record*, 0, InfallibleAllocPolicy> recordArray;
+  js::Vector<const TraceRecord*, 0, InfallibleAllocPolicy> recordArray;
   recordArray.reserve(aRecordTable.count());
-  typedef js::HashSet<Record, Record, InfallibleAllocPolicy> RecordTable;
-  for (typename RecordTable::Range r = aRecordTable.all();
+  for (TraceRecordTable::Range r = aRecordTable.all();
        !r.empty();
        r.popFront()) {
     recordArray.infallibleAppend(&r.front());
   }
   qsort(recordArray.begin(), recordArray.length(), sizeof(recordArray[0]),
-        Record::QsortCmp);
+        TraceRecord::QsortCmp);
 
-  WriteTitle("%s stack %s records\n", aStr, kind);
+  WriteTitle("%s stack trace records\n", aStr);
 
   if (recordArray.length() == 0) {
     W("(none)\n\n");
     return;
   }
 
-  StatusMsg("  printing %s stack %s record array...\n", astr, kind);
+  StatusMsg("  printing %s stack trace record array...\n", astr);
   size_t cumulativeUsableSize = 0;
 
   // Limit the number of records printed, because fix-linux-stack.pl is too
@@ -1955,64 +1841,17 @@ PrintSortedRecords(const Writer& aWriter, LocationService* aLocService,
   uint32_t numRecords = recordArray.length();
   uint32_t maxRecords = gOptions->MaxRecords();
   for (uint32_t i = 0; i < numRecords; i++) {
-    const Record* r = recordArray[i];
+    const TraceRecord* r = recordArray[i];
     cumulativeUsableSize += r->GetRecordSize().Usable();
     if (i < maxRecords) {
       r->Print(aWriter, aLocService, i+1, numRecords, aStr, astr,
                aCategoryUsableSize, cumulativeUsableSize, aTotalUsableSize);
     } else if (i == maxRecords) {
-      W("%s: stopping after %s stack %s records\n\n", aStr,
-        Show(maxRecords, gBuf1, kBufLen), kind);
+      W("%s: stopping after %s stack trace records\n\n", aStr,
+        Show(maxRecords, gBuf1, kBufLen));
     }
   }
-
-  // This holds for TraceRecords, but not for FrameRecords.
-  MOZ_ASSERT_IF(!Record::recordsOverlap(),
-                aCategoryUsableSize == cumulativeUsableSize);
-}
-
-static void
-PrintSortedTraceAndFrameRecords(const Writer& aWriter,
-                                LocationService* aLocService,
-                                const char* aStr, const char* astr,
-                                const TraceRecordTable& aTraceRecordTable,
-                                size_t aCategoryUsableSize,
-                                size_t aTotalUsableSize)
-{
-  PrintSortedRecords(aWriter, aLocService, aStr, astr, aTraceRecordTable,
-                     aCategoryUsableSize, aTotalUsableSize);
-
-  FrameRecordTable frameRecordTable;
-  (void)frameRecordTable.init(2048);
-  for (TraceRecordTable::Range r = aTraceRecordTable.all();
-       !r.empty();
-       r.popFront()) {
-    const TraceRecord& tr = r.front();
-    const StackTrace* st = tr.mAllocStackTrace;
-
-    // A single PC can appear multiple times in a stack trace.  We ignore
-    // duplicates by first sorting and then ignoring adjacent duplicates.
-    StackTrace sorted(*st);
-    sorted.Sort();              // sorts the copy, not the original
-    void* prevPc = (void*)intptr_t(-1);
-    for (uint32_t i = 0; i < sorted.Length(); i++) {
-      void* pc = sorted.Pc(i);
-      if (pc == prevPc) {
-        continue;               // ignore duplicate
-      }
-      prevPc = pc;
-
-      FrameRecordTable::AddPtr p = frameRecordTable.lookupForAdd(pc);
-      if (!p) {
-        FrameRecord fr(pc);
-        (void)frameRecordTable.add(p, fr);
-      }
-      p->Add(tr);
-    }
-  }
-
-  PrintSortedRecords(aWriter, aLocService, aStr, astr, frameRecordTable,
-                     aCategoryUsableSize, aTotalUsableSize);
+  MOZ_ASSERT(aCategoryUsableSize == cumulativeUsableSize);
 }
 
 // Note that, unlike most SizeOf* functions, this function does not take a
@@ -2178,19 +2017,20 @@ Dump(Writer aWriter)
   // Allocate this on the heap instead of the stack because it's fairly large.
   LocationService* locService = InfallibleAllocPolicy::new_<LocationService>();
 
-  PrintSortedRecords(aWriter, locService, "Twice-reported", "twice-reported",
-                     twiceReportedTraceRecordTable, twiceReportedUsableSize,
-                     totalUsableSize);
+  PrintSortedTraceRecords(aWriter, locService,
+                          "Twice-reported", "twice-reported",
+                          twiceReportedTraceRecordTable,
+                          twiceReportedUsableSize, totalUsableSize);
 
-  PrintSortedTraceAndFrameRecords(aWriter, locService,
-                                  "Unreported", "unreported",
-                                  unreportedTraceRecordTable,
-                                  unreportedUsableSize, totalUsableSize);
+  PrintSortedTraceRecords(aWriter, locService,
+                          "Unreported", "unreported",
+                          unreportedTraceRecordTable,
+                          unreportedUsableSize, totalUsableSize);
 
-  PrintSortedTraceAndFrameRecords(aWriter, locService,
-                                 "Once-reported", "once-reported",
-                                 onceReportedTraceRecordTable,
-                                 onceReportedUsableSize, totalUsableSize);
+  PrintSortedTraceRecords(aWriter, locService,
+                          "Once-reported", "once-reported",
+                          onceReportedTraceRecordTable,
+                          onceReportedUsableSize, totalUsableSize);
 
   bool showTilde = anyBlocksSampled;
   WriteTitle("Summary\n");
