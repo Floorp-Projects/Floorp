@@ -46,132 +46,21 @@ let app = {
   installTime: Date.now(),
 };
 
-let profileDir;
-let installPath;
-let exePath;
-let appProcess = Cc["@mozilla.org/process/util;1"].
-                 createInstance(Ci.nsIProcess);
-
-let cleanup;
-
-if (LINUX) {
-  installPath = OS.Path.join(OS.Constants.Path.homeDir, "." + WebappOSUtils.getUniqueName(app));
-  exePath = OS.Path.join(installPath, "webapprt-stub");
-
-  let xdg_data_home = Cc["@mozilla.org/process/environment;1"].
-                      getService(Ci.nsIEnvironment).
-                      get("XDG_DATA_HOME");
-  if (!xdg_data_home) {
-    xdg_data_home = OS.Path.join(OS.Constants.Path.homeDir, ".local", "share");
-  }
-
-  let desktopINI = OS.Path.join(xdg_data_home, "applications",
-                                "owa-" + WebappOSUtils.getUniqueName(app) + ".desktop");
-
-  cleanup = function() {
-    return Task.spawn(function*() {
-      if (appProcess.isRunning) {
-        appProcess.kill();
-      }
-
-      if (profileDir) {
-        yield OS.File.removeDir(profileDir.parent.path, { ignoreAbsent: true });
-      }
-
-      yield OS.File.removeDir(installPath, { ignoreAbsent: true });
-
-      yield OS.File.remove(desktopINI, { ignoreAbsent: true });
-    });
-  };
-} else if (WIN) {
-  installPath = OS.Path.join(OS.Constants.Path.winAppDataDir, WebappOSUtils.getUniqueName(app));
-  exePath = OS.Path.join(installPath, "test_desktop_hosted_launch_no_registry.exe");
-
-  let desktopShortcut = OS.Path.join(OS.Constants.Path.desktopDir, "test_desktop_hosted_launch_no_registry.lnk");
-  let startMenuShortcut = OS.Path.join(OS.Constants.Path.winStartMenuProgsDir, "test_desktop_hosted_launch_no_registry.lnk");
-
-  cleanup = function() {
-    return Task.spawn(function*() {
-      if (appProcess.isRunning) {
-        appProcess.kill();
-      }
-
-      let uninstallKey;
-      try {
-        uninstallKey = Cc["@mozilla.org/windows-registry-key;1"].
-                       createInstance(Ci.nsIWindowsRegKey);
-        uninstallKey.open(uninstallKey.ROOT_KEY_CURRENT_USER,
-                          "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
-                          uninstallKey.ACCESS_WRITE);
-        if (uninstallKey.hasChild(WebappOSUtils.getUniqueName(app))) {
-          uninstallKey.removeChild(WebappOSUtils.getUniqueName(app));
-        }
-      } catch (e) {
-      } finally {
-        if (uninstallKey) {
-          uninstallKey.close();
-        }
-      }
-
-      let removed = false;
-      do {
-        try {
-          if (profileDir) {
-            yield OS.File.removeDir(profileDir.parent.parent.path, { ignoreAbsent: true });
-          }
-
-          yield OS.File.removeDir(installPath, { ignoreAbsent: true });
-
-          yield OS.File.remove(desktopShortcut, { ignoreAbsent: true });
-          yield OS.File.remove(startMenuShortcut, { ignoreAbsent: true });
-
-          removed = true;
-        } catch (ex if ex instanceof OS.File.Error &&
-                 (ex.winLastError == OS.Constants.Win.ERROR_ACCESS_DENIED ||
-                  ex.winLastError == OS.Constants.Win.ERROR_SHARING_VIOLATION)) {
-          // Wait 100 ms before attempting to remove again.
-          yield wait(100);
-        }
-      } while (!removed);
-    });
-  };
-} else if (MAC) {
-  installPath = OS.Path.join(OS.Constants.Path.homeDir, "Applications", "test_desktop_hosted_launch_no_registry.app");
-  exePath = OS.Path.join(installPath, "Contents", "MacOS", "webapprt");
-
-  let appProfileDir = OS.Path.join(OS.Constants.Path.macUserLibDir, "Application Support",
-                                   WebappOSUtils.getUniqueName(app));
-
-  cleanup = function() {
-    return Task.spawn(function*() {
-      if (appProcess.isRunning) {
-        appProcess.kill();
-      }
-
-      if (profileDir) {
-        yield OS.File.removeDir(profileDir.parent.path, { ignoreAbsent: true });
-      }
-
-      yield OS.File.removeDir(installPath, { ignoreAbsent: true });
-
-      yield OS.File.removeDir(appProfileDir, { ignoreAbsent: true });
-    });
-  };
-}
+let testAppInfo = new TestAppInfo(app);
 
 let runTest = Task.async(function*() {
   // Get to a clean state before the test
-  yield cleanup();
+  yield testAppInfo.cleanup();
 
-  SimpleTest.registerCleanupFunction(cleanup);
+  SimpleTest.registerCleanupFunction(() => testAppInfo.cleanup());
 
   setDryRunPref();
 
   let nativeApp = new NativeApp(app, manifest, app.categories);
   ok(nativeApp, "NativeApp object created");
 
-  profileDir = nativeApp.createProfile();
-  ok(profileDir && profileDir.exists(), "Profile directory created");
+  testAppInfo.profileDir = nativeApp.createProfile();
+  ok(testAppInfo.profileDir && testAppInfo.profileDir.exists(), "Profile directory created");
 
   // On Mac build servers, we don't have enough privileges to write to /Applications,
   // so we install apps in a user-owned directory.
@@ -188,14 +77,14 @@ let runTest = Task.async(function*() {
   }
   ok(true, "App launchable");
 
-  let exeFile = getFile(exePath);
+  let exeFile = getFile(testAppInfo.exePath);
 
   ok(exeFile.isExecutable(), "webapprt executable is executable");
 
   let appClosed = false;
 
-  appProcess.init(exeFile)
-  appProcess.runAsync([], 0, () => appClosed = true);
+  testAppInfo.appProcess.init(exeFile)
+  testAppInfo.appProcess.runAsync([], 0, () => appClosed = true);
 
   while (!(yield wasAppSJSAccessed()) && !appClosed) {
     yield wait(1000);
