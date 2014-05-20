@@ -118,6 +118,12 @@ public:
     return *this;
   }
 
+  nsAutoPtr<T>& operator=(nsAutoPtr<T>&& aRhs)
+  {
+    assign(aRhs.forget());
+    return *this;
+  }
+
   // Other pointer operators
 
   T*

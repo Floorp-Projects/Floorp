@@ -6,6 +6,7 @@
 <body>
   <script class="testbody" type="application/javascript">
   SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestCompleteLog();
   setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
   window.frameLoaded = function frameLoaded_toCrash() {

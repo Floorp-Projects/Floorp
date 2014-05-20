@@ -695,10 +695,12 @@ bool LoadSymbols(const string& obj_file,
       FindElfSectionByName<ElfClass>(".ARM.extab", SHT_PROGBITS,
                                      sections, names, names_end,
                                      elf_header->e_shnum);
-  // Only load information from this section if there isn't a .debug_info
-  // section.
-  if (!found_debug_info_section
-      && arm_exidx_section && arm_extab_section && symbol_data != NO_CFI) {
+  // Load information from these sections even if there is
+  // .debug_info, because some functions (e.g., hand-written or
+  // script-generated assembly) could have exidx entries but no DWARF.
+  // (For functions with both, the DWARF info that has already been
+  // parsed will take precedence.)
+  if (arm_exidx_section && arm_extab_section && symbol_data != NO_CFI) {
     info->LoadedSection(".ARM.exidx");
     info->LoadedSection(".ARM.extab");
     bool result = LoadARMexidx<ElfClass>(elf_header,

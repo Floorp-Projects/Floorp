@@ -15,7 +15,6 @@ LoadManager* LoadManagerBuild(void)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-#if defined(ANDROID) || defined(LINUX)
   int loadMeasurementInterval =
     mozilla::Preferences::GetInt("media.navigator.load_adapt.measure_interval", 1000);
   int averagingSeconds =
@@ -29,10 +28,6 @@ LoadManager* LoadManagerBuild(void)
                          averagingSeconds,
                          highLoadThreshold,
                          lowLoadThreshold);
-#else
-  // LoadManager not implemented on this platform.
-  return nullptr;
-#endif
 }
 
 void LoadManagerDestroy(mozilla::LoadManager* aLoadManager)

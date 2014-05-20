@@ -120,7 +120,7 @@ public:
      * @param aUse    use-expression
      * @return false if an error occurred, true otherwise
      */
-    bool addKey(nsAutoPtr<txPattern> aMatch, nsAutoPtr<Expr> aUse);
+    bool addKey(nsAutoPtr<txPattern>&& aMatch, nsAutoPtr<Expr>&& aUse);
 
     /**
      * Indexes a subtree and adds it to the hash of key values

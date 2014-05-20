@@ -118,6 +118,12 @@ exports.AppManager = AppManager = {
       this._runningApps.delete(manifestURL);
       this.checkIfProjectIsRunning();
     });
+
+    client.addListener("appUninstall", (type, { manifestURL }) => {
+      AppManager.console.log("App uninstall: " + manifestURL);
+      this._runningApps.delete(manifestURL);
+      this.checkIfProjectIsRunning();
+    });
   },
   _unlistenToApps: function() {
     // Is that even possible?

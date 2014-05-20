@@ -12,7 +12,6 @@ import org.mozilla.gecko.R;
 
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -101,6 +100,11 @@ public class MenuItemActionView extends LinearLayout
     public void setMenuItemClickListener(View.OnClickListener listener) {
         mMenuItem.setOnClickListener(listener);
         mMenuButton.setOnClickListener(listener);
+    }
+
+    public void setMenuItemLongClickListener(View.OnLongClickListener listener) {
+        mMenuItem.setOnLongClickListener(listener);
+        mMenuButton.setOnLongClickListener(listener);
     }
 
     public void setActionButtonClickListener(View.OnClickListener listener) {

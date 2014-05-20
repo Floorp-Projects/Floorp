@@ -10,6 +10,7 @@
 #define nsCSSRules_h_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Move.h"
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/css/GroupRule.h"
@@ -421,8 +422,8 @@ class nsCSSKeyframeRule MOZ_FINAL : public mozilla::css::Rule,
 public:
   // WARNING: Steals the contents of aKeys *and* aDeclaration
   nsCSSKeyframeRule(InfallibleTArray<float>& aKeys,
-                    nsAutoPtr<mozilla::css::Declaration> aDeclaration)
-    : mDeclaration(aDeclaration)
+                    nsAutoPtr<mozilla::css::Declaration>&& aDeclaration)
+    : mDeclaration(mozilla::Move(aDeclaration))
   {
     mKeys.SwapElements(aKeys);
   }
@@ -548,8 +549,8 @@ class nsCSSPageRule MOZ_FINAL : public mozilla::css::Rule,
 {
 public:
   // WARNING: Steals the contents of aDeclaration
-  nsCSSPageRule(nsAutoPtr<mozilla::css::Declaration> aDeclaration)
-    : mDeclaration(aDeclaration),
+  nsCSSPageRule(nsAutoPtr<mozilla::css::Declaration>&& aDeclaration)
+    : mDeclaration(mozilla::Move(aDeclaration)),
       mImportantRule(nullptr)
   {
   }
