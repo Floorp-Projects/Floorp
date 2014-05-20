@@ -56,26 +56,5 @@
         <video id="video-player" src="/simple.mp4"></video>
       </div>
     </div>
-
-    <!-- PASS: opt-in and src uses a mp4 extension -->
-    <video id="opt-in-simple-mp4" poster="/simple.png" src="/simple.mp4" x-webkit-airplay="allow"></video>
-
-    <!-- FAIL: opt-out and src uses a mp4 extension -->
-    <video id="opt-out-simple-mp4" poster="/simple.png" src="/simple.mp4" x-webkit-airplay="deny"></video>
-
-    <!-- FAIL: opt-in and src uses a ogg extension -->
-    <video id="opt-in-simple-fail" src="/simple.ogg" x-webkit-airplay="allow"></video>
-
-    <!-- PASS: video with opt-in and source list uses a mp4 extension -->
-    <video id="opt-in-with-sources-mp4" x-webkit-airplay="allow">
-      <source src="/simple.ogg">
-      <source src="/simple.mp4">
-    </video>
-
-    <!-- FAIL: video with opt-out and source list uses a mp4 extension -->
-    <video id="opt-out-with-sources-mp4" x-webkit-airplay="deny">
-      <source src="/simple.ogg">
-      <source src="/simple.mp4">
-    </video>
   </body>
 </html>
