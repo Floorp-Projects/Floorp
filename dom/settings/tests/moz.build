@@ -7,5 +7,5 @@
 MOCHITEST_MANIFESTS += ['mochitest.ini']
 
 if CONFIG['MOZ_B2G']:
-  MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
+    MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
 
