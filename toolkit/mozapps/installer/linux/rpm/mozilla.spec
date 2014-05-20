@@ -81,7 +81,7 @@ rm icons.list #cleanup
 make package-tests
 testdir=$RPM_BUILD_ROOT/%{_datadir}/%{_testsinstalldir}/tests
 mkdir -p $testdir
-cp -a dist/test-package-stage/* $testdir/
+cp -a dist/test-stage/* $testdir/
 %endif
 
 %clean

@@ -70,6 +70,7 @@ class TableTicker: public Sampler {
     mAddLeafAddresses = hasFeature(aFeatures, aFeatureCount, "leaf");
     mPrivacyMode = hasFeature(aFeatures, aFeatureCount, "privacy");
     mAddMainThreadIO = hasFeature(aFeatures, aFeatureCount, "mainthreadio");
+    mProfileMemory = hasFeature(aFeatures, aFeatureCount, "memory");
 
 #if defined(XP_WIN)
     if (mProfilePower) {
@@ -184,6 +185,7 @@ class TableTicker: public Sampler {
   bool ProfileThreads() const { return mProfileThreads; }
   bool InPrivacyMode() const { return mPrivacyMode; }
   bool AddMainThreadIO() const { return mAddMainThreadIO; }
+  bool ProfileMemory() const { return mProfileMemory; }
 
 protected:
   // Called within a signal. This function must be reentrant
@@ -215,6 +217,7 @@ protected:
   uint32_t mFilterCount;
   bool mPrivacyMode;
   bool mAddMainThreadIO;
+  bool mProfileMemory;
 #if defined(XP_WIN)
   IntelPowerGadget* mIntelPowerGadget;
 #endif

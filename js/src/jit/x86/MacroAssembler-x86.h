@@ -822,6 +822,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         if (src.payloadReg() != dest)
             movl(src.payloadReg(), dest);
     }
+    void unboxObject(const Address &src, Register dest) {
+        movl(payloadOf(src), dest);
+    }
     void unboxDouble(const ValueOperand &src, FloatRegister dest) {
         JS_ASSERT(dest != ScratchFloatReg);
         if (Assembler::HasSSE41()) {

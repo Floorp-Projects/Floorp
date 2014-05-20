@@ -1,27 +1,70 @@
-
 var config = getBuildConfiguration();
 
-// FIXME: ASAN and debug builds run this too slowly for now.  Re-enable
-// after bug 919948 lands.
+// FIXME: ASAN and debug builds run this too slowly for now.
 if (!config.debug && !config.asan) {
-    let a = [];
-    a.length = getMaxArgs() + 1;
+    let longArray = [];
+    longArray.length = getMaxArgs() + 1;
+    let shortArray = [];
+    let a;
 
     let f = function() {
     };
 
-    try {
-        f(...a);
-    } catch (e) {
-        assertEq(e.message, "too many function arguments");
+    // Call_Scripted
+    //   Optimized stub is used after some calls.
+    a = shortArray;
+    for (let i = 0; i < 4; i++) {
+        if (i == 3) {
+            a = longArray;
+        }
+        try {
+            f(...a);
+        } catch (e) {
+            assertEq(e.message, "too many function arguments");
+        }
     }
 
-    try {
-        new f(...a);
-    } catch (e) {
-        assertEq(e.message, "too many constructor arguments");
+    // Call_Scripted (constructing)
+    a = shortArray;
+    for (let i = 0; i < 4; i++) {
+        if (i == 3) {
+            a = longArray;
+        }
+        try {
+            new f(...a);
+        } catch (e) {
+            assertEq(e.message, "too many constructor arguments");
+        }
     }
 
+    // Call_Native
+    a = shortArray;
+    for (let i = 0; i < 4; i++) {
+        if (i == 3) {
+            a = longArray;
+        }
+        try {
+            Math.max(...a);
+        } catch (e) {
+            assertEq(e.message, "too many function arguments");
+        }
+    }
+
+    // Call_Native (constructing)
+    a = shortArray;
+    for (let i = 0; i < 4; i++) {
+        if (i == 3) {
+            a = longArray;
+        }
+        try {
+            new Date(...a);
+        } catch (e) {
+            assertEq(e.message, "too many constructor arguments");
+        }
+    }
+
+    // No optimized stub for eval.
+    a = longArray;
     try {
         eval(...a);
     } catch (e) {

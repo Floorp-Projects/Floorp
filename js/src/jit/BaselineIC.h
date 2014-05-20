@@ -5393,6 +5393,9 @@ class ICSetProp_CallNative : public ICSetPropCallSetter
 //      JSOP_FUNAPPLY
 //      JSOP_FUNCALL
 //      JSOP_NEW
+//      JSOP_SPREADCALL
+//      JSOP_SPREADNEW
+//      JSOP_SPREADEVAL
 
 class ICCallStubCompiler : public ICStubCompiler
 {
@@ -5407,6 +5410,8 @@ class ICCallStubCompiler : public ICStubCompiler
     };
 
     void pushCallArguments(MacroAssembler &masm, GeneralRegisterSet regs, Register argcReg);
+    void pushSpreadCallArguments(MacroAssembler &masm, GeneralRegisterSet regs, Register argcReg);
+    void guardSpreadCall(MacroAssembler &masm, Register argcReg, Label *failure);
     Register guardFunApply(MacroAssembler &masm, GeneralRegisterSet regs, Register argcReg,
                            bool checkNative, FunApplyThing applyThing, Label *failure);
     void pushCallerArguments(MacroAssembler &masm, GeneralRegisterSet regs);
@@ -5464,14 +5469,20 @@ class ICCall_Fallback : public ICMonitoredFallbackStub
     class Compiler : public ICCallStubCompiler {
       protected:
         bool isConstructing_;
+        bool isSpread_;
         uint32_t returnOffset_;
         bool generateStubCode(MacroAssembler &masm);
         bool postGenerateStubCode(MacroAssembler &masm, Handle<JitCode *> code);
 
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(isSpread_) << 16);
+        }
+
       public:
-        Compiler(JSContext *cx, bool isConstructing)
+        Compiler(JSContext *cx, bool isConstructing, bool isSpread)
           : ICCallStubCompiler(cx, ICStub::Call_Fallback),
-            isConstructing_(isConstructing)
+            isConstructing_(isConstructing),
+            isSpread_(isSpread)
         { }
 
         ICStub *getStub(ICStubSpace *space) {
@@ -5560,32 +5571,36 @@ class ICCallScriptedCompiler : public ICCallStubCompiler {
   protected:
     ICStub *firstMonitorStub_;
     bool isConstructing_;
+    bool isSpread_;
     RootedScript calleeScript_;
     RootedObject templateObject_;
     uint32_t pcOffset_;
     bool generateStubCode(MacroAssembler &masm);
 
     virtual int32_t getKey() const {
-        return static_cast<int32_t>(kind) | (static_cast<int32_t>(isConstructing_) << 16);
+        return static_cast<int32_t>(kind) | (static_cast<int32_t>(isConstructing_) << 16) |
+               (static_cast<int32_t>(isSpread_) << 17);
     }
 
   public:
     ICCallScriptedCompiler(JSContext *cx, ICStub *firstMonitorStub,
                            HandleScript calleeScript, HandleObject templateObject,
-                           bool isConstructing, uint32_t pcOffset)
+                           bool isConstructing, bool isSpread, uint32_t pcOffset)
       : ICCallStubCompiler(cx, ICStub::Call_Scripted),
         firstMonitorStub_(firstMonitorStub),
         isConstructing_(isConstructing),
+        isSpread_(isSpread),
         calleeScript_(cx, calleeScript),
         templateObject_(cx, templateObject),
         pcOffset_(pcOffset)
     { }
 
     ICCallScriptedCompiler(JSContext *cx, ICStub *firstMonitorStub, bool isConstructing,
-                           uint32_t pcOffset)
+                           bool isSpread, uint32_t pcOffset)
       : ICCallStubCompiler(cx, ICStub::Call_AnyScripted),
         firstMonitorStub_(firstMonitorStub),
         isConstructing_(isConstructing),
+        isSpread_(isSpread),
         calleeScript_(cx, nullptr),
         templateObject_(cx, nullptr),
         pcOffset_(pcOffset)
@@ -5657,22 +5672,25 @@ class ICCall_Native : public ICMonitoredStub
       protected:
         ICStub *firstMonitorStub_;
         bool isConstructing_;
+        bool isSpread_;
         RootedFunction callee_;
         RootedObject templateObject_;
         uint32_t pcOffset_;
         bool generateStubCode(MacroAssembler &masm);
 
         virtual int32_t getKey() const {
-            return static_cast<int32_t>(kind) | (static_cast<int32_t>(isConstructing_) << 16);
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(isConstructing_) << 16) |
+                   (static_cast<int32_t>(isSpread_) << 17);
         }
 
       public:
         Compiler(JSContext *cx, ICStub *firstMonitorStub,
                  HandleFunction callee, HandleObject templateObject,
-                 bool isConstructing, uint32_t pcOffset)
+                 bool isConstructing, bool isSpread, uint32_t pcOffset)
           : ICCallStubCompiler(cx, ICStub::Call_Native),
             firstMonitorStub_(firstMonitorStub),
             isConstructing_(isConstructing),
+            isSpread_(isSpread),
             callee_(cx, callee),
             templateObject_(cx, templateObject),
             pcOffset_(pcOffset)
