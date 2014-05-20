@@ -462,7 +462,10 @@ public:
   virtual NS_HIDDEN_(nsresult) SetNewDocument(nsIDocument *aDocument,
                                               nsISupports *aState,
                                               bool aForceReuseInnerWindow);
+
+  // Outer windows only.
   void DispatchDOMWindowCreated();
+
   virtual NS_HIDDEN_(void) SetOpenerWindow(nsIDOMWindow* aOpener,
                                            bool aOriginalOpener);
 
