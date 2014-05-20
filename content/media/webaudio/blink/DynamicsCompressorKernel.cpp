@@ -37,7 +37,7 @@
 
 using namespace std;
 
-using mozilla::dom::WebAudioUtils;
+using namespace mozilla::dom; // for WebAudioUtils
 using mozilla::IsInfinite;
 using mozilla::IsNaN;
 
