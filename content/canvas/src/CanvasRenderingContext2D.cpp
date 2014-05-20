@@ -483,6 +483,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CanvasRenderingContext2D)
     ImplCycleCollectionUnlink(tmp->mStyleStack[i].gradientStyles[Style::STROKE]);
     ImplCycleCollectionUnlink(tmp->mStyleStack[i].gradientStyles[Style::FILL]);
   }
+  for (size_t x = 0 ; x < tmp->mHitRegionsOptions.Length(); x++) {
+    RegionInfo& info = tmp->mHitRegionsOptions[x];
+    if (info.mElement) {
+      ImplCycleCollectionUnlink(info.mElement);
+    }
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -493,6 +499,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CanvasRenderingContext2D)
     ImplCycleCollectionTraverse(cb, tmp->mStyleStack[i].patternStyles[Style::FILL], "Fill CanvasPattern");
     ImplCycleCollectionTraverse(cb, tmp->mStyleStack[i].gradientStyles[Style::STROKE], "Stroke CanvasGradient");
     ImplCycleCollectionTraverse(cb, tmp->mStyleStack[i].gradientStyles[Style::FILL], "Fill CanvasGradient");
+  }
+  for (size_t x = 0 ; x < tmp->mHitRegionsOptions.Length(); x++) {
+    RegionInfo& info = tmp->mHitRegionsOptions[x];
+    if (info.mElement) {
+      ImplCycleCollectionTraverse(cb, info.mElement, "Hit region fallback element");
+    }
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -1108,6 +1120,17 @@ CanvasRenderingContext2D::GetImageBuffer(uint8_t** aImageBuffer,
 
   *aImageBuffer = SurfaceToPackedBGRA(data);
   *aFormat = imgIEncoder::INPUT_FORMAT_HOSTARGB;
+}
+
+nsString CanvasRenderingContext2D::GetHitRegion(const mozilla::gfx::Point& aPoint)
+{
+  for (size_t x = 0 ; x < mHitRegionsOptions.Length(); x++) {
+    RegionInfo& info = mHitRegionsOptions[x];
+    if (info.mPath->ContainsPoint(aPoint, Matrix())) {
+      return info.mId;
+    }
+  }
+  return nsString();
 }
 
 NS_IMETHODIMP
@@ -2458,7 +2481,7 @@ CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& options, ErrorRes
 
   if (options.mControl) {
     // also remove regions with this control
-    for (unsigned int x = 0; x < mHitRegionsOptions.Length(); x++) {
+    for (size_t x = 0; x < mHitRegionsOptions.Length(); x++) {
       RegionInfo& info = mHitRegionsOptions[x];
       if (info.mElement == options.mControl) {
         mHitRegionsOptions.RemoveElementAt(x);
@@ -2488,7 +2511,7 @@ CanvasRenderingContext2D::RemoveHitRegion(const nsAString& id)
      return;
    }
 
-  for (unsigned int x = 0; x < mHitRegionsOptions.Length(); x++) {
+  for (size_t x = 0; x < mHitRegionsOptions.Length(); x++) {
     RegionInfo& info = mHitRegionsOptions[x];
     if (info.mId == id) {
       mHitRegionsOptions.RemoveElementAt(x);

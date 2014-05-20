@@ -115,6 +115,9 @@ public:
   // return true and fills in the bounding rect if elementis a child and has a hit region.
   virtual bool GetHitRegionRect(mozilla::dom::Element* aElement, nsRect& aRect) { return false; }
 
+  // Given a point, return hit region ID if it exists or an empty string if it doesn't
+  virtual nsString GetHitRegion(const mozilla::gfx::Point& aPoint) { return nsString(); }
+
   //
   // shmem support
   //
