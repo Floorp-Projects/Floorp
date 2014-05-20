@@ -5149,7 +5149,24 @@ com.nr
 nu
 
 // nz : http://en.wikipedia.org/wiki/.nz
-*.nz
+// Confirmed by registry <jay@nzrs.net.nz> 2014-05-19
+nz
+ac.nz
+co.nz
+cri.nz
+geek.nz
+gen.nz
+govt.nz
+health.nz
+iwi.nz
+kiwi.nz
+maori.nz
+mil.nz
+māori.nz
+net.nz
+org.nz
+parliament.nz
+school.nz
 
 // om : http://en.wikipedia.org/wiki/.om
 om
