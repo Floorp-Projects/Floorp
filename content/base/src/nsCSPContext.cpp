@@ -26,6 +26,7 @@
 #include "nsIPrincipal.h"
 #include "nsIPropertyBag2.h"
 #include "nsIScriptError.h"
+#include "nsIWebNavigation.h"
 #include "nsIWritablePropertyBag2.h"
 #include "nsString.h"
 #include "prlog.h"
@@ -439,11 +440,118 @@ nsCSPContext::SetRequestContext(nsIURI* aSelfURI,
   return NS_OK;
 }
 
+/**
+ * Based on the given docshell, determines if this CSP context allows the
+ * ancestry.
+ *
+ * In order to determine the URI of the parent document (one causing the load
+ * of this protected document), this function obtains the docShellTreeItem,
+ * then walks up the hierarchy until it finds a privileged (chrome) tree item.
+ * Getting the parent's URI looks like this in pseudocode:
+ *
+ * nsIDocShell->QI(nsIInterfaceRequestor)
+ *            ->GI(nsIDocShellTreeItem)
+ *            ->QI(nsIInterfaceRequestor)
+ *            ->GI(nsIWebNavigation)
+ *            ->GetCurrentURI();
+ *
+ * aDocShell is the docShell for the protected document.
+ */
 NS_IMETHODIMP
 nsCSPContext::PermitsAncestry(nsIDocShell* aDocShell, bool* outPermitsAncestry)
 {
-  // For now, we allows permitsAncestry, this will be fixed in Bug 994320
+  nsresult rv;
+
+  // Can't check ancestry without a docShell.
+  if (aDocShell == nullptr) {
+    return NS_ERROR_FAILURE;
+  }
+
   *outPermitsAncestry = true;
+
+  // extract the ancestry as an array
+  nsCOMArray<nsIURI> ancestorsArray;
+
+  nsCOMPtr<nsIInterfaceRequestor> ir(do_QueryInterface(aDocShell));
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_GetInterface(ir));
+  nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
+  nsCOMPtr<nsIWebNavigation> webNav;
+  nsCOMPtr<nsIURI> currentURI;
+  nsCOMPtr<nsIURI> uriClone;
+
+  // iterate through each docShell parent item
+  while (NS_SUCCEEDED(treeItem->GetParent(getter_AddRefs(parentTreeItem))) &&
+         parentTreeItem != nullptr) {
+    ir     = do_QueryInterface(parentTreeItem);
+    NS_ASSERTION(ir, "Could not QI docShellTreeItem to nsIInterfaceRequestor");
+
+    webNav = do_GetInterface(ir);
+    NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
+
+    rv = webNav->GetCurrentURI(getter_AddRefs(currentURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (currentURI) {
+      // stop when reaching chrome
+      bool isChrome = false;
+      rv = currentURI->SchemeIs("chrome", &isChrome);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (isChrome) { break; }
+
+      // delete the userpass from the URI.
+      rv = currentURI->CloneIgnoringRef(getter_AddRefs(uriClone));
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = uriClone->SetUserPass(EmptyCString());
+      NS_ENSURE_SUCCESS(rv, rv);
+#ifdef PR_LOGGING
+      {
+      nsAutoCString spec;
+      uriClone->GetSpec(spec);
+      CSPCONTEXTLOG(("nsCSPContext::PermitsAncestry, found ancestor: %s", spec.get()));
+      }
+#endif
+      ancestorsArray.AppendElement(uriClone);
+    }
+
+    // next ancestor
+    treeItem = parentTreeItem;
+  }
+
+  nsAutoString violatedDirective;
+
+  // Now that we've got the ancestry chain in ancestorsArray, time to check
+  // them against any CSP.
+  for (uint32_t i = 0; i < mPolicies.Length(); i++) {
+    for (uint32_t a = 0; a < ancestorsArray.Length(); a++) {
+      // TODO(sid) the mapping from frame-ancestors context to TYPE_DOCUMENT is
+      // forced. while this works for now, we will implement something in
+      // bug 999656.
+#ifdef PR_LOGGING
+      {
+      nsAutoCString spec;
+      ancestorsArray[a]->GetSpec(spec);
+      CSPCONTEXTLOG(("nsCSPContext::PermitsAncestry, checking ancestor: %s", spec.get()));
+      }
+#endif
+      if (!mPolicies[i]->permits(nsIContentPolicy::TYPE_DOCUMENT,
+                                 ancestorsArray[a],
+                                 EmptyString(), // no nonce
+                                 violatedDirective)) {
+        // Policy is violated
+        nsCOMPtr<nsIObserverService> observerService =
+          mozilla::services::GetObserverService();
+        NS_ENSURE_TRUE(observerService, NS_ERROR_NOT_AVAILABLE);
+
+        observerService->NotifyObservers(ancestorsArray[a],
+                                         CSP_VIOLATION_TOPIC,
+                                         violatedDirective.get());
+        // TODO(sid) generate violation reports and remove NotifyObservers
+        //           call. (in bug 994322)
+        // TODO(sid) implement logic for report-only (in bug 994322)
+        *outPermitsAncestry = false;
+      }
+    }
+  }
   return NS_OK;
 }
 

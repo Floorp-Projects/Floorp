@@ -636,6 +636,8 @@ CSP_DirectiveToContentType(enum CSPDirective aDir)
     case CSP_MEDIA_SRC:  return nsIContentPolicy::TYPE_MEDIA;
     case CSP_OBJECT_SRC: return nsIContentPolicy::TYPE_OBJECT;
     case CSP_FRAME_SRC:  return nsIContentPolicy::TYPE_SUBDOCUMENT;
+    // TODO(sid): fix this mapping to be more precise (bug 999656)
+    case CSP_FRAME_ANCESTORS: return nsIContentPolicy::TYPE_DOCUMENT;
 
     // Fall through to error for the following Directives:
     case CSP_DEFAULT_SRC:
