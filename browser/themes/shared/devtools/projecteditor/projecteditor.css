@@ -1,0 +1,172 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+ :root {
+  color: #18191a;
+}
+
+.plugin-hidden {
+  display: none;
+}
+
+#projecteditor-menubar {
+  /* XXX: Hide menu bar until we have option to add menu items
+     to an existing one. */
+  display: none;
+}
+
+#projecteditor-toolbar,
+#projecteditor-toolbar-bottom {
+  display: none; /* For now don't show the status bars */
+  min-height: 22px;
+  height: 22px;
+  background: rgb(237, 237, 237);
+}
+
+.sources-tree {
+  overflow:auto;
+  -moz-user-focus: true;
+}
+
+.sources-tree input {
+  margin: 2px;
+  border: 1px solid gray;
+}
+
+#main-deck .sources-tree {
+  background: rgb(225, 225, 225);
+  min-width: 50px;
+}
+
+#main-deck .sources-tree .side-menu-widget-item {
+  color: #18191A;
+}
+
+#main-deck .sources-tree .side-menu-widget-item .file-label {
+  vertical-align: middle;
+  display: inline-block;
+}
+
+#main-deck .sources-tree .side-menu-widget-item .file-icon {
+  display: inline-block;
+  background: url(file-icons-sheet@2x.png);
+  background-size: 140px 15px;
+  background-repeat: no-repeat;
+  width: 20px;
+  height: 15px;
+  vertical-align: middle;
+  background-position: -40px 0;
+}
+
+#main-deck .sources-tree .side-menu-widget-item .file-icon.icon-none {
+  display: none;
+}
+
+#main-deck .sources-tree .side-menu-widget-item .icon-css {
+  background-position: 0 0;
+}
+
+#main-deck .sources-tree .side-menu-widget-item .icon-js {
+  background-position: -20px 0;
+}
+
+#main-deck .sources-tree .side-menu-widget-item .icon-html {
+  background-position: -40px 0;
+}
+
+#main-deck .sources-tree .side-menu-widget-item .icon-file {
+  background-position: -60px 0;
+}
+
+#main-deck .sources-tree .side-menu-widget-item .icon-folder {
+  background-position: -80px 0;
+}
+
+#main-deck .sources-tree .side-menu-widget-item .icon-img {
+  background-position: -100px 0;
+}
+
+#main-deck .sources-tree .side-menu-widget-item .icon-manifest {
+  background-position: -120px 0;
+}
+
+#main-deck .sources-tree .side-menu-widget-item:hover {
+  background: rgba(0, 0, 0, .05);
+  cursor: pointer;
+}
+
+#main-deck .sources-tree .side-menu-widget-item {
+  border: none;
+  box-shadow: none;
+  line-height: 20px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+#main-deck .sources-tree .side-menu-widget-item.selected {
+  background: #3875D7;
+  color: #F5F7FA;
+  outline: none;
+}
+
+#main-deck .sources-tree .side-menu-widget-group-title,
+#main-deck .sources-tree .side-menu-widget-group-title:hover:not(.selected) {
+  background: #B4D7EB;
+  color: #222;
+  font-weight: bold;
+  font-size: 1.05em;
+  cursor: default;
+  line-height: 35px;
+}
+
+#main-deck .sources-tree li.child:only-child .side-menu-widget-group-title .expander {
+  display: none;
+}
+#main-deck .sources-tree .side-menu-widget-item .expander {
+  width: 16px;
+  padding: 0;
+}
+
+.tree-collapsed .children {
+  display: none;
+}
+
+/* Plugins */
+
+#projecteditor-toolbar textbox {
+  margin: 0;
+}
+
+.projecteditor-basic-display {
+  padding: 0 3px;
+}
+
+.project-name-label {
+  font-weight: bold;
+  padding-left: 10px;
+}
+
+.project-version-label {
+  color: #666;
+  padding-left: 5px;
+  font-size: .9em;
+}
+
+.project-image {
+  max-height: 28px;
+  margin-left: -.5em;
+  vertical-align: middle;
+}
+
+.editor-image {
+  padding: 10px;
+}
+
+.projecteditor-file-label {
+  font-weight: bold;
+  padding-left: 29px;
+  vertical-align: middle;
+}
+
