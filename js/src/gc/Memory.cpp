@@ -45,10 +45,10 @@ MapMemory(size_t length, int flags, int prot = PAGE_READWRITE)
 void *
 SystemPageAllocator::mapAlignedPages(size_t size, size_t alignment)
 {
-    JS_ASSERT(size >= alignment);
-    JS_ASSERT(size % alignment == 0);
-    JS_ASSERT(size % pageSize == 0);
-    JS_ASSERT(alignment % allocGranularity == 0);
+    MOZ_ASSERT(size >= alignment);
+    MOZ_ASSERT(size % alignment == 0);
+    MOZ_ASSERT(size % pageSize == 0);
+    MOZ_ASSERT(alignment % allocGranularity == 0);
 
     void *p = MapMemory(size, MEM_COMMIT | MEM_RESERVE);
 
@@ -61,7 +61,7 @@ SystemPageAllocator::mapAlignedPages(size_t size, size_t alignment)
         p = mapAlignedPagesSlow(size, alignment);
     }
 
-    JS_ASSERT(uintptr_t(p) % alignment == 0);
+    MOZ_ASSERT(uintptr_t(p) % alignment == 0);
     return p;
 }
 
@@ -101,7 +101,7 @@ SystemPageAllocator::mapAlignedPagesSlow(size_t size, size_t alignment)
 void
 SystemPageAllocator::unmapPages(void *p, size_t size)
 {
-    JS_ALWAYS_TRUE(VirtualFree(p, 0, MEM_RELEASE));
+    MOZ_ALWAYS_TRUE(VirtualFree(p, 0, MEM_RELEASE));
 }
 
 bool
@@ -110,7 +110,7 @@ SystemPageAllocator::markPagesUnused(void *p, size_t size)
     if (!decommitEnabled())
         return true;
 
-    JS_ASSERT(uintptr_t(p) % pageSize == 0);
+    MOZ_ASSERT(uintptr_t(p) % pageSize == 0);
     LPVOID p2 = MapMemoryAt(p, size, MEM_RESET);
     return p2 == p;
 }
@@ -118,7 +118,7 @@ SystemPageAllocator::markPagesUnused(void *p, size_t size)
 bool
 SystemPageAllocator::markPagesInUse(void *p, size_t size)
 {
-    JS_ASSERT(uintptr_t(p) % pageSize == 0);
+    MOZ_ASSERT(uintptr_t(p) % pageSize == 0);
     return true;
 }
 
@@ -162,10 +162,10 @@ SystemPageAllocator::SystemPageAllocator()
 void *
 SystemPageAllocator::mapAlignedPages(size_t size, size_t alignment)
 {
-    JS_ASSERT(size >= alignment);
-    JS_ASSERT(size % alignment == 0);
-    JS_ASSERT(size % pageSize == 0);
-    JS_ASSERT(alignment % allocGranularity == 0);
+    MOZ_ASSERT(size >= alignment);
+    MOZ_ASSERT(size % alignment == 0);
+    MOZ_ASSERT(size % pageSize == 0);
+    MOZ_ASSERT(alignment % allocGranularity == 0);
 
     int prot = PROT_READ | PROT_WRITE;
     int flags = MAP_PRIVATE | MAP_ANON | MAP_ALIGN | MAP_NOSYNC;
@@ -179,20 +179,20 @@ SystemPageAllocator::mapAlignedPages(size_t size, size_t alignment)
 void
 SystemPageAllocator::unmapPages(void *p, size_t size)
 {
-    JS_ALWAYS_TRUE(0 == munmap((caddr_t)p, size));
+    MOZ_ALWAYS_TRUE(0 == munmap((caddr_t)p, size));
 }
 
 bool
 SystemPageAllocator::markPagesUnused(void *p, size_t size)
 {
-    JS_ASSERT(uintptr_t(p) % pageSize == 0);
+    MOZ_ASSERT(uintptr_t(p) % pageSize == 0);
     return true;
 }
 
 bool
 SystemPageAllocator::markPagesInUse(void *p, size_t size)
 {
-    JS_ASSERT(uintptr_t(p) % pageSize == 0);
+    MOZ_ASSERT(uintptr_t(p) % pageSize == 0);
     return true;
 }
 
@@ -219,6 +219,7 @@ SystemPageAllocator::DeallocateMappedContent(void *p, size_t length)
 #elif defined(XP_UNIX)
 
 #include <algorithm>
+#include <errno.h>
 #include <sys/mman.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
@@ -235,7 +236,7 @@ MapMemoryAt(void *desired, size_t length, int prot = PROT_READ | PROT_WRITE,
             int flags = MAP_PRIVATE | MAP_ANON, int fd = -1, off_t offset = 0)
 {
 #if defined(__ia64__)
-    JS_ASSERT(0xffff800000000000ULL & (uintptr_t(desired) + length - 1) == 0);
+    MOZ_ASSERT(0xffff800000000000ULL & (uintptr_t(desired) + length - 1) == 0);
 #endif
     void *region = mmap(desired, length, prot, flags, fd, offset);
     if (region == MAP_FAILED)
@@ -246,7 +247,8 @@ MapMemoryAt(void *desired, size_t length, int prot = PROT_READ | PROT_WRITE,
      * mappings), so check that the address we got is the address we wanted.
      */
     if (region != desired) {
-        JS_ALWAYS_TRUE(0 == munmap(region, length));
+        if (munmap(region, length))
+            MOZ_ASSERT(errno == ENOMEM);
         return nullptr;
     }
     return region;
@@ -278,7 +280,8 @@ MapMemory(size_t length, int prot = PROT_READ | PROT_WRITE,
      * as out of memory.
      */
     if ((uintptr_t(region) + (length - 1)) & 0xffff800000000000) {
-        JS_ALWAYS_TRUE(0 == munmap(region, length));
+        if (munmap(region, length))
+            MOZ_ASSERT(errno == ENOMEM);
         return nullptr;
     }
     return region;
@@ -293,10 +296,10 @@ MapMemory(size_t length, int prot = PROT_READ | PROT_WRITE,
 void *
 SystemPageAllocator::mapAlignedPages(size_t size, size_t alignment)
 {
-    JS_ASSERT(size >= alignment);
-    JS_ASSERT(size % alignment == 0);
-    JS_ASSERT(size % pageSize == 0);
-    JS_ASSERT(alignment % allocGranularity == 0);
+    MOZ_ASSERT(size >= alignment);
+    MOZ_ASSERT(size % alignment == 0);
+    MOZ_ASSERT(size % pageSize == 0);
+    MOZ_ASSERT(alignment % allocGranularity == 0);
 
     void *p = MapMemory(size);
 
@@ -309,7 +312,7 @@ SystemPageAllocator::mapAlignedPages(size_t size, size_t alignment)
         p = mapAlignedPagesSlow(size, alignment);
     }
 
-    JS_ASSERT(uintptr_t(p) % alignment == 0);
+    MOZ_ASSERT(uintptr_t(p) % alignment == 0);
     return p;
 }
 
@@ -324,14 +327,14 @@ SystemPageAllocator::mapAlignedPagesSlow(size_t size, size_t alignment)
 
     uintptr_t regionEnd = uintptr_t(region) + reqSize;
     uintptr_t offset = uintptr_t(region) % alignment;
-    JS_ASSERT(offset < reqSize - size);
+    MOZ_ASSERT(offset < reqSize - size);
 
     void *front = (void *)AlignBytes(uintptr_t(region), alignment);
     void *end = (void *)(uintptr_t(front) + size);
     if (front != region)
-        JS_ALWAYS_TRUE(0 == munmap(region, alignment - offset));
+        unmapPages(region, alignment - offset);
     if (uintptr_t(end) != regionEnd)
-        JS_ALWAYS_TRUE(0 == munmap(end, regionEnd - uintptr_t(end)));
+        unmapPages(end, regionEnd - uintptr_t(end));
 
     return front;
 }
@@ -339,7 +342,8 @@ SystemPageAllocator::mapAlignedPagesSlow(size_t size, size_t alignment)
 void
 SystemPageAllocator::unmapPages(void *p, size_t size)
 {
-    JS_ALWAYS_TRUE(0 == munmap(p, size));
+    if (munmap(p, size))
+        MOZ_ASSERT(errno == ENOMEM);
 }
 
 bool
@@ -348,7 +352,7 @@ SystemPageAllocator::markPagesUnused(void *p, size_t size)
     if (!decommitEnabled())
         return false;
 
-    JS_ASSERT(uintptr_t(p) % pageSize == 0);
+    MOZ_ASSERT(uintptr_t(p) % pageSize == 0);
     int result = madvise(p, size, MADV_DONTNEED);
     return result != -1;
 }
@@ -356,7 +360,7 @@ SystemPageAllocator::markPagesUnused(void *p, size_t size)
 bool
 SystemPageAllocator::markPagesInUse(void *p, size_t size)
 {
-    JS_ASSERT(uintptr_t(p) % pageSize == 0);
+    MOZ_ASSERT(uintptr_t(p) % pageSize == 0);
     return true;
 }
 
@@ -428,7 +432,8 @@ SystemPageAllocator::DeallocateMappedContent(void *p, size_t length)
 
     pa_start = (void *)(uintptr_t(p) & ~(page_size - 1));
     total_size = ((uintptr_t(p) + length) & ~(page_size - 1)) + page_size - uintptr_t(pa_start);
-    munmap(pa_start, total_size);
+    if (munmap(pa_start, total_size))
+        MOZ_ASSERT(errno == ENOMEM);
 }
 
 #else
