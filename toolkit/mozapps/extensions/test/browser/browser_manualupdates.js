@@ -184,7 +184,7 @@ add_test(function() {
       is_element_hidden(item._installStatus, "Install progress widget should be hidden");
 
       if (badgeUpdated)
-        executeSoon(run_next_test);
+        run_next_test();
       else
         installCompleted = true;
     }
