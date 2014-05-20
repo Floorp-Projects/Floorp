@@ -89,6 +89,7 @@ BuiltinProvider.prototype = {
         "gcli": "resource://gre/modules/devtools/gcli",
         "acorn": "resource://gre/modules/devtools/acorn",
         "acorn/util/walk": "resource://gre/modules/devtools/acorn/walk.js",
+        "tern": "resource://gre/modules/devtools/tern",
 
         // Allow access to xpcshell test items from the loader.
         "xpcshell-test": "resource://test"
@@ -139,6 +140,7 @@ SrcdirProvider.prototype = {
     let gcliURI = this.fileURI(OS.Path.join(toolkitDir, "gcli", "source", "lib", "gcli"));
     let acornURI = this.fileURI(OS.Path.join(toolkitDir, "acorn"));
     let acornWalkURI = OS.Path.join(acornURI, "walk.js");
+    let ternURI = OS.Path.join(toolkitDir, "tern");
     this.loader = new loader.Loader({
       modules: {
         "Debugger": Debugger,
@@ -165,7 +167,8 @@ SrcdirProvider.prototype = {
         "devtools/content-observer": contentObserverURI,
         "gcli": gcliURI,
         "acorn": acornURI,
-        "acorn/util/walk": acornWalkURI
+        "acorn/util/walk": acornWalkURI,
+        "tern": ternURI
       },
       globals: loaderGlobals,
       invisibleToDebugger: this.invisibleToDebugger

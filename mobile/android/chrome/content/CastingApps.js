@@ -176,12 +176,6 @@ var CastingApps = {
       return null;
     }
 
-    // Allow websites to opt-out using the Apple airplay attribute
-    // https://developer.apple.com/library/safari/documentation/AudioVideo/Conceptual/AirPlayGuide/OptingInorOutofAirPlay/OptingInorOutofAirPlay.html
-    if (aElement.getAttribute("x-webkit-airplay") === "deny") {
-      return null;
-    }
-
     // Given the hardware support for H264, let's only look for 'mp4' sources
     function allowableExtension(aURI) {
       if (aURI && aURI instanceof Ci.nsIURL) {

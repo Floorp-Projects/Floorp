@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/Move.h"
 
 #include "txStylesheet.h"
 #include "txExpr.h"
@@ -14,6 +15,8 @@
 #include "txLog.h"
 #include "txKey.h"
 #include "txXPathTreeWalker.h"
+
+using mozilla::Move;
 
 txStylesheet::txStylesheet()
     : mRootFrame(nullptr)
@@ -39,7 +42,7 @@ txStylesheet::init()
 
     nt.forget();
 
-    txPushNewContext* pushContext = new txPushNewContext(nodeExpr);
+    txPushNewContext* pushContext = new txPushNewContext(Move(nodeExpr));
     mContainerTemplate->mNext = pushContext;
     NS_ENSURE_TRUE(pushContext, NS_ERROR_OUT_OF_MEMORY);
 
@@ -68,7 +71,7 @@ txStylesheet::init()
 
     nt.forget();
 
-    mCharactersTemplate = new txValueOf(nodeExpr, false);
+    mCharactersTemplate = new txValueOf(Move(nodeExpr), false);
     NS_ENSURE_TRUE(mCharactersTemplate, NS_ERROR_OUT_OF_MEMORY);
 
     mCharactersTemplate->mNext = new txReturn();
@@ -400,10 +403,10 @@ txStylesheet::addTemplate(txTemplateItem* aTemplate,
 
     // Add the simple patterns to the list of matchable templates, according
     // to default priority
-    nsAutoPtr<txPattern> simple = aTemplate->mMatch;
+    nsAutoPtr<txPattern> simple = Move(aTemplate->mMatch);
     nsAutoPtr<txPattern> unionPattern;
     if (simple->getType() == txPattern::UNION_PATTERN) {
-        unionPattern = simple;
+        unionPattern = Move(simple);
         simple = unionPattern->getSubPatternAt(0);
         unionPattern->setSubPatternAt(0, nullptr);
     }
@@ -428,7 +431,7 @@ txStylesheet::addTemplate(txTemplateItem* aTemplate,
         NS_ENSURE_TRUE(nt, NS_ERROR_OUT_OF_MEMORY);
 
         nt->mFirstInstruction = instr;
-        nt->mMatch = simple;
+        nt->mMatch = Move(simple);
         nt->mPriority = priority;
 
         if (unionPattern) {
@@ -539,7 +542,8 @@ txStylesheet::addGlobalVariable(txVariableItem* aVariable)
         return NS_OK;
     }
     nsAutoPtr<GlobalVariable> var(
-        new GlobalVariable(aVariable->mValue, aVariable->mFirstInstruction,
+        new GlobalVariable(Move(aVariable->mValue),
+                           Move(aVariable->mFirstInstruction),
                            aVariable->mIsParam));
     NS_ENSURE_TRUE(var, NS_ERROR_OUT_OF_MEMORY);
     
@@ -569,7 +573,7 @@ txStylesheet::addKey(const txExpandedName& aName,
             return rv;
         }
     }
-    if (!xslKey->addKey(aMatch, aUse)) {
+    if (!xslKey->addKey(Move(aMatch), Move(aUse))) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
     return NS_OK;
@@ -577,7 +581,7 @@ txStylesheet::addKey(const txExpandedName& aName,
 
 nsresult
 txStylesheet::addDecimalFormat(const txExpandedName& aName,
-                               nsAutoPtr<txDecimalFormat> aFormat)
+                               nsAutoPtr<txDecimalFormat>&& aFormat)
 {
     txDecimalFormat* existing = mDecimalFormats.get(aName);
     if (existing) {
@@ -603,9 +607,11 @@ txStylesheet::ImportFrame::~ImportFrame()
     }
 }
 
-txStylesheet::GlobalVariable::GlobalVariable(nsAutoPtr<Expr> aExpr,
-                                             nsAutoPtr<txInstruction> aFirstInstruction,
+txStylesheet::GlobalVariable::GlobalVariable(nsAutoPtr<Expr>&& aExpr,
+                                             nsAutoPtr<txInstruction>&& aInstr,
                                              bool aIsParam)
-    : mExpr(aExpr), mFirstInstruction(aFirstInstruction), mIsParam(aIsParam)
+    : mExpr(Move(aExpr)),
+    mFirstInstruction(Move(aInstr)),
+    mIsParam(aIsParam)
 {
 }

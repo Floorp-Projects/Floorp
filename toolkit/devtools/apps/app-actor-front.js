@@ -2,6 +2,7 @@ const {Ci, Cc, Cu, Cr} = require("chrome");
 Cu.import("resource://gre/modules/osfile.jsm");
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm");
+const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm");
 const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
@@ -83,6 +84,14 @@ function zipDirectory(zipFile, dirToArchive) {
 }
 
 function uploadPackage(client, webappsActor, packageFile) {
+  if (client.traits.bulk) {
+    return uploadPackageBulk(client, webappsActor, packageFile);
+  } else {
+    return uploadPackageJSON(client, webappsActor, packageFile);
+  }
+}
+
+function uploadPackageJSON(client, webappsActor, packageFile) {
   let deferred = promise.defer();
 
   let request = {
@@ -131,6 +140,43 @@ function uploadPackage(client, webappsActor, packageFile) {
       deferred.resolve(actor);
     });
   }
+  return deferred.promise;
+}
+
+function uploadPackageBulk(client, webappsActor, packageFile) {
+  let deferred = promise.defer();
+
+  let request = {
+    to: webappsActor,
+    type: "uploadPackage",
+    bulk: true
+  };
+  client.request(request, (res) => {
+    startBulkUpload(res.actor);
+  });
+
+  function startBulkUpload(actor) {
+    console.log("Starting bulk upload");
+    let fileSize = packageFile.fileSize;
+    console.log("File size: " + fileSize);
+
+    let request = client.startBulkRequest({
+      actor: actor,
+      type: "stream",
+      length: fileSize
+    });
+
+    request.on("bulk-send-ready", ({copyFrom}) => {
+      NetUtil.asyncFetch(packageFile, function(inputStream) {
+        copyFrom(inputStream).then(() => {
+          console.log("Bulk upload done");
+          inputStream.close();
+          deferred.resolve(actor);
+        });
+      });
+    });
+  }
+
   return deferred.promise;
 }
 
