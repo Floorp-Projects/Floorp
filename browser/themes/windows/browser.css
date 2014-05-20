@@ -2405,63 +2405,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   margin: 0px;
 }
 
-/* Translation infobar */
-
-%include ../shared/translation/infobar.inc.css
-
-@media (-moz-windows-default-theme) {
-  notification[value="translation"],
-  notification[value="translation"] button,
-  notification[value="translation"] menulist {
-    color: #545454;
-  }
-
-  notification[value="translation"] {
-    background-color: #EEE;
-  }
-
-  notification[value="translation"] menulist {
-    border: 1px solid #C1C1C1;
-    background-color: #FFF;
-  }
-
-  notification[value="translation"] button {
-    border: 1px solid #C1C1C1;
-    background-color: #FBFBFB;
-  }
-
-  notification[value="translation"] button:hover,
-  notification[value="translation"] button:active,
-  notification[value="translation"] menulist:hover,
-  notification[value="translation"] menulist:active {
-    background-color: #EBEBEB;
-  }
-
-  notification[value="translation"] button[anonid="translate"] {
-    color: #FFF;
-    background-color: #0095DD;
-    box-shadow: none;
-    border: 1px solid #006B9D;
-  }
-
-  notification[value="translation"] button[anonid="translate"]:hover,
-  notification[value="translation"] button[anonid="translate"]:active {
-    background-color: #008ACB;
-  }
-
-  notification[value="translation"] button[type="menu"] > .button-box > .button-menu-dropmarker,
-  notification[value="translation"] menulist > .menulist-dropmarker {
-    list-style-image: url("chrome://browser/skin/toolbarbutton-dropdown-arrow.png");
-  }
-
-  @media (min-resolution: 1.25dppx) {
-    notification[value="translation"] button[type="menu"] > .button-box > .button-menu-dropmarker,
-    notification[value="translation"] menulist > .menulist-dropmarker {
-      list-style-image: url("chrome://browser/skin/toolbarbutton-dropdown-arrow@2x.png");
-    }
-  }
-}
-
 .translate-notification-icon,
 #translate-notification-icon {
   list-style-image: url(chrome://browser/skin/translation-16.png);
