@@ -2807,24 +2807,15 @@ nsDocument::InitCSP(nsIChannel* aChannel)
     }
   }
 
-  // Create new CSP object - if we're using the new CSP implementation and backend,
-  // use the new contract ID (same interface, but use C++ implementation).
-  if (CSPService::sNewBackendEnabled) {
-    if (oldHeaderIsPresent && !newHeaderIsPresent) {
-      // New CSP implementation doesn't support old header!  ABORT CSP INIT!
-      // (Not a problem if newHeaderIsPresent because the old header will be
-      // ignored).  This check will get removed when x- header support is
-      // removed (see bug 949533)
-#ifdef PR_LOGGING
-      PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("%s %s %s",
-           "This document has an old, x-content-security-policy",
-           "header and the new CSP implementation doesn't support the non-standard",
-           "CSP.  Skipping CSP initialization."));
-#endif
-      return NS_OK;
-    }
+  // Create new CSP object:
+  //   * by default we are trying to use the new C++ implmentation
+  //   * however, we still support XCSP headers during the transition phase
+  //     and fall back to the JS implementation if we find an XCSP header.
+
+  if (newHeaderIsPresent && CSPService::sNewBackendEnabled) {
     csp = do_CreateInstance("@mozilla.org/cspcontext;1", &rv);
-  } else {
+  }
+  else {
     csp = do_CreateInstance("@mozilla.org/contentsecuritypolicy;1", &rv);
   }
 
