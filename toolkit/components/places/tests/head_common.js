@@ -34,6 +34,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BookmarkJSONUtils",
                                   "resource://gre/modules/BookmarkJSONUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "BookmarkHTMLUtils",
+                                  "resource://gre/modules/BookmarkHTMLUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesBackups",
                                   "resource://gre/modules/PlacesBackups.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesTransactions",
