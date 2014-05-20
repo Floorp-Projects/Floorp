@@ -3208,7 +3208,6 @@ if test "$ac_cv_cpp_dynamic_cast_void_ptr" = yes ; then
    AC_DEFINE(HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR)
 fi
 
-
 dnl note that this one is reversed - if the test fails, then
 dnl we require implementations of unused virtual methods. Which
 dnl really blows because it means we'll have useless vtable
