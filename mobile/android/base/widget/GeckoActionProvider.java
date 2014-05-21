@@ -9,6 +9,7 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.menu.MenuItemActionView;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
 import android.content.Intent;
@@ -182,17 +183,23 @@ public class GeckoActionProvider {
     private class Callbacks implements OnMenuItemClickListener,
                                        OnClickListener {
         private void chooseActivity(int index) { 
-            ActivityChooserModel dataModel = ActivityChooserModel.get(mContext, mHistoryFileName);
-            Intent launchIntent = dataModel.chooseActivity(index);
+            final ActivityChooserModel dataModel = ActivityChooserModel.get(mContext, mHistoryFileName);
+            final Intent launchIntent = dataModel.chooseActivity(index);
             if (launchIntent != null) {
-                // Share image syncrhonously downloads the image before sharing it.
-                String type = launchIntent.getType();
-                if (Intent.ACTION_SEND.equals(launchIntent.getAction()) && type != null && type.startsWith("image/")) {
-                    GeckoAppShell.downloadImageForIntent(launchIntent);
-                }
+                // This may cause a download to happen. Make sure we're on the background thread.
+                ThreadUtils.postToBackgroundThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Share image downloads the image before sharing it.
+                        String type = launchIntent.getType();
+                        if (Intent.ACTION_SEND.equals(launchIntent.getAction()) && type != null && type.startsWith("image/")) {
+                            GeckoAppShell.downloadImageForIntent(launchIntent);
+                        }
 
-                launchIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
-                mContext.startActivity(launchIntent);
+                        launchIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+                        mContext.startActivity(launchIntent);
+                    }
+                });
             }
 
             if (mOnTargetListener != null) {
