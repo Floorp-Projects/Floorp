@@ -100,7 +100,7 @@ AppValidator.prototype._getManifest = function () {
     try {
       Services.io.newURI(manifestURL, null, null);
     } catch(e) {
-      this.error(strings.formatStringFromName("validator.invalidHostedManifestURL", [manifestURL, e.message]));
+      this.error(strings.formatStringFromName("validator.invalidHostedManifestURL", [manifestURL, e.message], 2));
       return promise.resolve(null);
     }
   } else {

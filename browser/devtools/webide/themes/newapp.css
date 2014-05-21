@@ -43,10 +43,6 @@ richlistitem {
   -moz-box-align: start;
 }
 
-richlistitem:nth-child(odd) {
-  background-color: 
-}
-
 richlistitem > image {
   height: 24px;
   width: 24px;

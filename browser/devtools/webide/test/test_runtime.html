@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+
+<html>
+
+  <head>
+    <meta charset="utf8">
+    <title></title>
+
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+    <script type="application/javascript;version=1.8" src="head.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  </head>
+
+  <body>
+
+    <script type="application/javascript;version=1.8">
+      window.onload = function() {
+        SimpleTest.waitForExplicitFinish();
+
+        Task.spawn(function* () {
+
+          function isPlayActive() {
+            return !win.document.querySelector("#cmd_play").hasAttribute("disabled");
+          }
+
+          function isStopActive() {
+            return !win.document.querySelector("#cmd_stop").hasAttribute("disabled");
+          }
+
+          Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+          DebuggerServer.init(function () { return true; });
+          DebuggerServer.addBrowserActors();
+
+          let win = yield openWebIDE();
+
+          win.AppManager.runtimeList.usb.push({
+            connect: function(connection) {
+              ok(connection, win.AppManager.connection, "connection is valid");
+              connection.host = null; // force connectPipe
+              connection.connect();
+              return promise.resolve();
+            },
+
+            getName: function() {
+              return "fakeRuntime";
+            }
+          });
+
+          win.AppManager.update("runtimelist");
+
+          let hostedAppManifest = TEST_BASE + "hosted_app.manifest";
+          yield win.Cmds.importHostedApp(hostedAppManifest);
+
+          yield win.Cmds.showRuntimePanel();
+
+          let panelNode = win.document.querySelector("#runtime-panel");
+          let items = panelNode.querySelectorAll(".runtime-panel-item-usbruntime");
+          is(items.length, 1, "Found one runtime button");
+
+          let deferred = promise.defer();
+          win.AppManager.connection.once(
+              win.Connection.Events.CONNECTED,
+              () => deferred.resolve());
+
+          items[0].click();
+
+          yield deferred.promise;
+
+          yield nextTick();
+
+          ok(!isPlayActive(), "play button is disabled 2");
+          ok(!isStopActive(), "stop button is disabled 2");
+
+          win.AppManager.selectedProject.errorsCount = 0;
+          win.UI.updateCommands();
+
+          yield nextTick();
+
+          ok(isPlayActive(), "play button is enabled 3");
+          ok(!isStopActive(), "stop button is disabled 3");
+          let oldProject = win.AppManager.selectedProject;
+          win.AppManager.selectedProject = null;
+
+          yield nextTick();
+
+          ok(!isPlayActive(), "play button is disabled 4");
+          ok(!isStopActive(), "stop button is disabled 4");
+          win.AppManager._selectedProject = oldProject;
+          win.UI.updateCommands();
+
+          yield nextTick();
+
+          ok(isPlayActive(), "play button is enabled 5");
+          ok(!isStopActive(), "stop button is disabled 5");
+
+
+          yield win.Cmds.disconnectRuntime();
+
+
+          ok(win.AppManager.selectedProject, "A project is still selected");
+          ok(!isPlayActive(), "play button is disabled 6");
+          ok(!isStopActive(), "stop button is disabled 6");
+
+
+          yield closeWebIDE(win);
+
+          DebuggerServer.destroy();
+
+          SimpleTest.finish();
+
+        });
+      }
+
+
+    </script>
+  </body>
+</html>
