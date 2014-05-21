@@ -977,6 +977,9 @@ CodeGeneratorShared::labelForBackedgeWithImplicitCheck(MBasicBlock *mir)
 void
 CodeGeneratorShared::jumpToBlock(MBasicBlock *mir)
 {
+    // Skip past trivial blocks.
+    mir = skipTrivialBlocks(mir);
+
     // No jump necessary if we can fall through to the next block.
     if (isNextBlock(mir->lir()))
         return;
@@ -999,6 +1002,9 @@ CodeGeneratorShared::jumpToBlock(MBasicBlock *mir)
 void
 CodeGeneratorShared::jumpToBlock(MBasicBlock *mir, Assembler::Condition cond)
 {
+    // Skip past trivial blocks.
+    mir = skipTrivialBlocks(mir);
+
     if (Label *oolEntry = labelForBackedgeWithImplicitCheck(mir)) {
         // Note: the backedge is initially a jump to the next instruction.
         // It will be patched to the target block's label during link().

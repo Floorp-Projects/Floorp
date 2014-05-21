@@ -797,11 +797,24 @@ class LBlock : public TempObject
     }
     uint32_t firstId();
     uint32_t lastId();
+
+    // Return the label to branch to when branching to this block.
     Label *label() {
+        JS_ASSERT(!isTrivial());
         return &label_;
     }
+
     LMoveGroup *getEntryMoveGroup(TempAllocator &alloc);
     LMoveGroup *getExitMoveGroup(TempAllocator &alloc);
+
+    // Test whether this basic block is empty except for a simple goto, and
+    // which is not forming a loop. No code will be emitted for such blocks.
+    bool isTrivial() {
+        LInstructionIterator ins(begin());
+        while (ins->isLabel())
+            ++ins;
+        return ins->isGoto() && !mir()->isLoopHeader();
+    }
 
     void dump(FILE *fp);
     void dump();
