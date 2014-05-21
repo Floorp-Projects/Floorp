@@ -130,10 +130,9 @@ RangeAnalysis::replaceDominatedUsesWith(MDefinition *orig, MDefinition *dom,
                                             MBasicBlock *block)
 {
     for (MUseIterator i(orig->usesBegin()); i != orig->usesEnd(); ) {
-        if (i->consumer() != dom && IsDominatedUse(block, *i))
-            i = i->consumer()->replaceOperand(i, dom);
-        else
-            i++;
+        MUse *use = *i++;
+        if (use->consumer() != dom && IsDominatedUse(block, use))
+            use->replaceProducer(dom);
     }
 }
 
