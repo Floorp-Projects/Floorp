@@ -3133,7 +3133,10 @@ JSTerm.prototype = {
       inputContainer.style.display = "none";
     }
     else {
+      this._onPaste = WebConsoleUtils.pasteHandlerGen(this.inputNode, doc.getElementById("webconsole-notificationbox"));
       this.inputNode.addEventListener("keypress", this._keyPress, false);
+      this.inputNode.addEventListener("paste", this._onPaste);
+      this.inputNode.addEventListener("drop", this._onPaste);
       this.inputNode.addEventListener("input", this._inputEventHandler, false);
       this.inputNode.addEventListener("keyup", this._inputEventHandler, false);
       this.inputNode.addEventListener("focus", this._focusEventHandler, false);
@@ -3272,6 +3275,7 @@ JSTerm.prototype = {
     // value that was not evaluated yet.
     this.history[this.historyIndex++] = aExecuteString;
     this.historyPlaceHolder = this.history.length;
+    WebConsoleUtils.usageCount++;
     this.setInputValue("");
     this.clearCompletion();
   },
@@ -4522,6 +4526,12 @@ JSTerm.prototype = {
                 .getElementById("webConsole_autocompletePopup");
     if (popup) {
       popup.parentNode.removeChild(popup);
+    }
+
+    if (this._onPaste) {
+      this.inputNode.removeEventListener("paste", this._onPaste, false);
+      this.inputNode.removeEventListener("drop", this._onPaste, false);
+      this._onPaste = null;
     }
 
     this.inputNode.removeEventListener("keypress", this._keyPress, false);
