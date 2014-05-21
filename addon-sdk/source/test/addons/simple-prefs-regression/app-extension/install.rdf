@@ -28,6 +28,7 @@
     <em:creator>Mozilla Corporation</em:creator>
     <em:homepageURL></em:homepageURL>
     <em:optionsType></em:optionsType>
+    <em:optionsURL></em:optionsURL>
     <em:updateURL></em:updateURL>
   </Description>
 </RDF>
