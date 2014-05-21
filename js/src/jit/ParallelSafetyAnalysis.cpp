@@ -194,6 +194,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(Start)
     UNSAFE_OP(OsrEntry)
     SAFE_OP(Nop)
+    SAFE_OP(LimitedTruncate)
     UNSAFE_OP(RegExp)
     CUSTOM_OP(Lambda)
     UNSAFE_OP(LambdaArrow)

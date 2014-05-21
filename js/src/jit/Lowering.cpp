@@ -1639,6 +1639,12 @@ LIRGenerator::visitNop(MNop *nop)
 }
 
 bool
+LIRGenerator::visitLimitedTruncate(MLimitedTruncate *nop)
+{
+    return redefine(nop, nop->input());
+}
+
+bool
 LIRGenerator::visitOsrEntry(MOsrEntry *entry)
 {
     LOsrEntry *lir = new(alloc()) LOsrEntry;
