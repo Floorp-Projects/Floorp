@@ -419,6 +419,7 @@ CompositorOGL::Initialize()
 // larger than the rectangle given by |aTexCoordRect|.
 void
 CompositorOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
+                                              const Rect& aRect,
                                               const gfx3DMatrix& aTextureTransform,
                                               const Rect& aTexCoordRect,
                                               TextureSource *aTexture)
@@ -481,11 +482,12 @@ CompositorOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
     Matrix4x4 transform;
     ToMatrix4x4(aTextureTransform * textureTransform, transform);
     aProg->SetTextureTransform(transform);
-    BindAndDrawQuad(aProg);
+    BindAndDrawQuad(aProg, aRect);
   } else {
     Matrix4x4 transform;
     ToMatrix4x4(aTextureTransform, transform);
     aProg->SetTextureTransform(transform);
+    aProg->SetLayerQuadRect(aRect);
     DrawQuads(mGLContext, mVBOs, aProg, LOCAL_GL_TRIANGLES, rects);
   }
 }
@@ -998,7 +1000,6 @@ CompositorOGL::DrawQuad(const Rect& aRect,
   ShaderProgramOGL *program = GetShaderProgramFor(config);
   program->Activate();
   program->SetProjectionMatrix(mProjMatrix);
-  program->SetLayerQuadRect(aRect);
   program->SetLayerTransform(aTransform);
   IntPoint offset = mCurrentRenderTarget->GetOrigin();
   program->SetRenderOffset(offset.x, offset.y);
@@ -1024,7 +1025,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
 
       didSetBlendMode = SetBlendMode(gl(), blendMode);
 
-      BindAndDrawQuad(program);
+      BindAndDrawQuad(program, aRect);
     }
     break;
 
@@ -1059,7 +1060,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
         BindMaskForProgram(program, sourceMask, LOCAL_GL_TEXTURE1, maskQuadTransform);
       }
 
-      BindAndDrawQuadWithTextureRect(program, textureTransform,
+      BindAndDrawQuadWithTextureRect(program, aRect, textureTransform,
                                      texturedEffect->mTextureCoords, source);
     }
     break;
@@ -1088,6 +1089,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
       }
       didSetBlendMode = SetBlendMode(gl(), blendMode);
       BindAndDrawQuadWithTextureRect(program,
+                                     aRect,
                                      gfx3DMatrix(),
                                      effectYCbCr->mTextureCoords,
                                      sourceYCbCr->GetSubSource(Y));
@@ -1124,7 +1126,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
       // this. Pass true for the flip parameter to introduce a second flip
       // that cancels the other one out.
       didSetBlendMode = SetBlendMode(gl(), blendMode);
-      BindAndDrawQuad(program);
+      BindAndDrawQuad(program, aRect);
     }
     break;
   case EffectTypes::COMPONENT_ALPHA: {
@@ -1156,6 +1158,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
                                LOCAL_GL_ONE, LOCAL_GL_ONE);
       program->SetTexturePass2(false);
       BindAndDrawQuadWithTextureRect(program,
+                                     aRect,
                                      gfx3DMatrix(),
                                      effectComponentAlpha->mTextureCoords,
                                      effectComponentAlpha->mOnBlack);
@@ -1165,6 +1168,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
                                LOCAL_GL_ONE, LOCAL_GL_ONE);
       program->SetTexturePass2(true);
       BindAndDrawQuadWithTextureRect(program,
+                                     aRect,
                                      gfx3DMatrix(),
                                      effectComponentAlpha->mTextureCoords,
                                      effectComponentAlpha->mOnBlack);
@@ -1462,9 +1466,11 @@ CompositorOGL::QuadVBOTexCoordsAttrib(GLuint aAttribIndex) {
 }
 
 void
-CompositorOGL::BindAndDrawQuad(ShaderProgramOGL *aProg)
+CompositorOGL::BindAndDrawQuad(ShaderProgramOGL *aProg, const Rect& aRect)
 {
   NS_ASSERTION(aProg->HasInitialized(), "Shader program not correctly initialized");
+
+  aProg->SetLayerQuadRect(aRect);
 
   GLuint vertAttribIndex = aProg->AttribLocation(ShaderProgramOGL::VertexCoordAttrib);
   GLuint texCoordAttribIndex = aProg->AttribLocation(ShaderProgramOGL::TexCoordAttrib);

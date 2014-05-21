@@ -345,7 +345,7 @@ public:
   {
     return mProjMatrix;
   }
-  virtual void BindAndDrawQuad(ShaderProgramOGL *aProg) MOZ_OVERRIDE;
+  virtual void BindAndDrawQuad(ShaderProgramOGL *aProg, const gfx::Rect& aRect) MOZ_OVERRIDE;
 
   void BeginFrame(nsIntSize aRenderSize);
   void EndFrame();
@@ -2752,7 +2752,6 @@ RectTextureImage::Draw(GLManager* aManager,
 
   program->Activate();
   program->SetProjectionMatrix(aManager->GetProjMatrix());
-  program->SetLayerQuadRect(nsIntRect(nsIntPoint(0, 0), mUsedSize));
   gfx::Matrix4x4 transform;
   gfx::ToMatrix4x4(aTransform, transform);
   program->SetLayerTransform(transform * gfx::Matrix4x4().Translate(aLocation.x, aLocation.y, 0));
@@ -2761,7 +2760,7 @@ RectTextureImage::Draw(GLManager* aManager,
   program->SetTexCoordMultiplier(mUsedSize.width, mUsedSize.height);
   program->SetTextureUnit(0);
 
-  aManager->BindAndDrawQuad(program);
+  aManager->BindAndDrawQuad(program, gfx::Rect(0, 0, mUsedSize.width, mUsedSize.height));
 
   aManager->gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
 }
@@ -2801,9 +2800,11 @@ GLPresenter::~GLPresenter()
 }
 
 void
-GLPresenter::BindAndDrawQuad(ShaderProgramOGL *aProgram)
+GLPresenter::BindAndDrawQuad(ShaderProgramOGL *aProgram, const gfx::Rect& aRect)
 {
   mGLContext->MakeCurrent();
+
+  aProgram->SetLayerQuadRect(aRect);
 
   GLuint vertAttribIndex = aProgram->AttribLocation(ShaderProgramOGL::VertexCoordAttrib);
   GLuint texCoordAttribIndex = aProgram->AttribLocation(ShaderProgramOGL::TexCoordAttrib);
