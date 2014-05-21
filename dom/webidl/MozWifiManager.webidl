@@ -285,6 +285,11 @@ interface MozWifiManager : EventTarget {
   readonly attribute MozWifiConnectionInfo? connectionInformation;
 
   /**
+   * Capabilities of Wifi.
+   */
+  readonly attribute MozWifiCapabilities? capabilities;
+
+  /**
    * State notification listeners. These all take an
    * nsIDOMMozWifiStatusChangeEvent with the new status and a network (which
    * may be null).
