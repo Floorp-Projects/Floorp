@@ -59,7 +59,6 @@ class nsCSPContext : public nsIContentSecurityPolicy
                                     bool* outIsAllowed) const;
 
     nsCOMPtr<nsIURI>                           mReferrer;
-    nsCOMPtr<nsIPrincipal>                     mPrincipal;
     uint64_t                                   mInnerWindowID; // used for web console logging
     nsTArray<nsCSPPolicy*>                     mPolicies;
     nsCOMPtr<nsIURI>                           mSelfURI;
