@@ -313,7 +313,7 @@
 
 .dbg-expression-arrow {
   background-image: url(commandline-icon.png);
-  background-position: 16px;
+  background-position: -16px 0;
   background-repeat: no-repeat;
   background-size: 32px 16px;
   width: 16px;

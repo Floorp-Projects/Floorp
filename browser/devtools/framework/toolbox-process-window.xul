@@ -23,7 +23,7 @@
   <script type="text/javascript" src="chrome://browser/content/utilityOverlay.js"/>
 
   <commandset id="toolbox-commandset">
-    <command id="toolbox-cmd-close" oncommand="window.close();"/>
+    <command id="toolbox-cmd-close"/>
   </commandset>
 
   <keyset id="toolbox-keyset">

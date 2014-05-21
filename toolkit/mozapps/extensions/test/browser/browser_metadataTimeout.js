@@ -9,12 +9,12 @@ const URI_EXTENSION_UPDATE_DIALOG = "chrome://mozapps/content/extensions/update.
 
 const PREF_GETADDONS_BYIDS            = "extensions.getAddons.get.url";
 const PREF_MIN_PLATFORM_COMPAT        = "extensions.minCompatiblePlatformVersion";
+const PREF_METADATA_LASTUPDATE        = "extensions.getAddons.cache.lastUpdate";
 
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
 let repo = {};
 let ARContext = Components.utils.import("resource://gre/modules/addons/AddonRepository.jsm", repo);
-info("ARContext: " + Object.keys(ARContext).join(", "));
 
 // Mock out the XMLHttpRequest factory for AddonRepository so
 // we can reply with a timeout
@@ -50,7 +50,7 @@ function promise_open_compatibility_window(aInactiveAddonIds) {
   // This will reset the longer timeout multiplier to 2 which will give each
   // test that calls open_compatibility_window a minimum of 60 seconds to
   // complete.
-  requestLongerTimeout(100 /* XXX was 2 */);
+  requestLongerTimeout(2);
 
   var variant = Cc["@mozilla.org/variant;1"].
                 createInstance(Ci.nsIWritableVariant);
@@ -98,6 +98,7 @@ function promise_window_close(aWindow) {
 // a timeout
 add_task(function* amo_ping_timeout() {
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
+  Services.prefs.clearUserPref(PREF_METADATA_LASTUPDATE);
   let compatWindow = yield promise_open_compatibility_window([]);
 
   let xhr = yield pXHRStarted.promise;

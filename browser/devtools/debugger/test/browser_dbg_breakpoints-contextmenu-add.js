@@ -59,7 +59,7 @@ function test() {
       is(gBreakpointsAdded.size, 0, "no breakpoints added");
 
       let cmd = gContextMenu.querySelector('menuitem[command=addBreakpointCommand]');
-      let bpShown = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.BREAKPOINT_SHOWN);
+      let bpShown = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.BREAKPOINT_SHOWN_IN_EDITOR);
       EventUtils.synthesizeMouseAtCenter(cmd, {}, gDebugger);
       return bpShown;
     }).then(() => {

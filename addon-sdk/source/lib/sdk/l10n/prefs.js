@@ -5,13 +5,22 @@
 
 const { on } = require("../system/events");
 const core = require("./core");
-const { id: jetpackId} = require('../self');
+const { id: jetpackId } = require('../self');
 
 const OPTIONS_DISPLAYED = "addon-options-displayed";
+
+function enable() {
+  on(OPTIONS_DISPLAYED, onOptionsDisplayed);  
+}
+exports.enable = enable;
 
 function onOptionsDisplayed({ subject: document, data: addonId }) {
   if (addonId !== jetpackId)
     return;
+  localizeInlineOptions(document);
+}
+
+function localizeInlineOptions(document) {
   let query = 'setting[data-jetpack-id="' + jetpackId + '"][pref-name], ' +
               'button[data-jetpack-id="' + jetpackId + '"][pref-name]';
   let nodes = document.querySelectorAll(query);
@@ -39,4 +48,4 @@ function onOptionsDisplayed({ subject: document, data: addonId }) {
     }
   }
 }
-on(OPTIONS_DISPLAYED, onOptionsDisplayed);
+exports.localizeInlineOptions = localizeInlineOptions;

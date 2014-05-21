@@ -1179,9 +1179,11 @@ static const int64_t JIT_SCRIPT_RELEASE_TYPES_INTERVAL = 60 * 1000 * 1000;
 bool
 GCRuntime::init(uint32_t maxbytes)
 {
+#ifdef JS_THREADSAFE
     lock = PR_NewLock();
     if (!lock)
         return false;
+#endif
 
     if (!chunkSet.init(INITIAL_CHUNK_CAPACITY))
         return false;

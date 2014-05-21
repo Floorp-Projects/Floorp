@@ -1,0 +1,295 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBlob;
+include protocol PBluetoothRequest;
+include protocol PContent;
+
+include BluetoothTypes;
+
+include "mozilla/dom/bluetooth/ipc/BluetoothMessageUtils.h";
+
+using mozilla::dom::bluetooth::BluetoothObjectType from "mozilla/dom/bluetooth/BluetoothCommon.h";
+
+namespace mozilla {
+namespace dom {
+namespace bluetooth {
+
+/**
+ * Bluetooth request types.
+ */
+
+struct DefaultAdapterPathRequest
+{ };
+
+struct SetPropertyRequest
+{
+  BluetoothObjectType type;
+  BluetoothNamedValue value;
+};
+
+struct GetPropertyRequest
+{
+  BluetoothObjectType type;
+  nsString path;
+};
+
+struct StartDiscoveryRequest
+{
+};
+
+struct StopDiscoveryRequest
+{
+};
+
+struct PairRequest
+{
+  nsString address;
+  uint32_t timeoutMS;
+};
+
+struct UnpairRequest
+{
+  nsString address;
+};
+
+struct SetPinCodeRequest
+{
+  nsString path;
+  nsString pincode;
+};
+
+struct SetPasskeyRequest
+{
+  nsString path;
+  uint32_t passkey;
+};
+
+struct ConfirmPairingConfirmationRequest
+{
+  nsString path;
+};
+
+struct DenyPairingConfirmationRequest
+{
+  nsString path;
+};
+
+struct PairedDevicePropertiesRequest
+{
+  nsString[] addresses;
+};
+
+struct ConnectedDevicePropertiesRequest
+{
+  uint16_t serviceUuid;
+};
+
+struct ConnectRequest
+{
+  nsString address;
+  uint32_t cod;
+  uint16_t serviceUuid;
+};
+
+struct DisconnectRequest
+{
+  nsString address;
+  uint16_t serviceUuid;
+};
+
+struct SendFileRequest
+{
+  nsString devicePath;
+  PBlob blob;
+};
+
+struct StopSendingFileRequest
+{
+  nsString devicePath;
+};
+
+struct ConfirmReceivingFileRequest
+{
+  nsString devicePath;
+};
+
+struct DenyReceivingFileRequest
+{
+  nsString devicePath;
+};
+
+struct ConnectScoRequest
+{
+};
+
+struct DisconnectScoRequest
+{
+};
+
+struct IsScoConnectedRequest
+{
+};
+
+struct AnswerWaitingCallRequest
+{
+};
+
+struct IgnoreWaitingCallRequest
+{
+};
+
+struct ToggleCallsRequest
+{
+};
+
+struct SendMetaDataRequest
+{
+  nsString title;
+  nsString artist;
+  nsString album;
+  int64_t mediaNumber;
+  int64_t totalMediaCount;
+  int64_t duration;
+};
+
+struct SendPlayStatusRequest
+{
+  int64_t duration;
+  int64_t position;
+  nsString playStatus;
+};
+
+union Request
+{
+  DefaultAdapterPathRequest;
+  SetPropertyRequest;
+  GetPropertyRequest;
+  StartDiscoveryRequest;
+  StopDiscoveryRequest;
+  PairRequest;
+  UnpairRequest;
+  SetPinCodeRequest;
+  SetPasskeyRequest;
+  ConfirmPairingConfirmationRequest;
+  DenyPairingConfirmationRequest;
+  ConnectedDevicePropertiesRequest;
+  PairedDevicePropertiesRequest;
+  ConnectRequest;
+  DisconnectRequest;
+  SendFileRequest;
+  StopSendingFileRequest;
+  ConfirmReceivingFileRequest;
+  DenyReceivingFileRequest;
+  ConnectScoRequest;
+  DisconnectScoRequest;
+  IsScoConnectedRequest;
+  AnswerWaitingCallRequest;
+  IgnoreWaitingCallRequest;
+  ToggleCallsRequest;
+  SendMetaDataRequest;
+  SendPlayStatusRequest;
+};
+
+protocol PBluetooth
+{
+  manager PContent;
+  manages PBluetoothRequest;
+
+  /**
+   * The potential exists for a racy shutdown so the following sequence of
+   * messages is used to shutdown safely:
+   *
+   *   1. [BeginShutdown]       (Parent -> Child [Optional])
+   *   2. StopNotifying         (Child  -> Parent)
+   *   3. NotificationsStopped  (Parent -> Child)
+   *   4. __delete__()          (Child  -> Parent)
+   */
+
+child:
+  /**
+   * Sent when a settings change has enabled or disabled the bluetooth firmware.
+   */
+  Enabled(bool enabled);
+
+  /**
+   * Sent when a bluetooth signal is broadcasted to child processes.
+   */
+  Notify(BluetoothSignal signal);
+
+  /**
+   * Sent when the parent process is about to be shut down. See shutdown note
+   * above.
+   */
+  BeginShutdown();
+
+  /**
+   * Sent to inform the child process that it will no longer receive any
+   * messages from the parent. See shutdown note above.
+   */
+  NotificationsStopped();
+
+parent:
+  /**
+   * Sent when the child no longer needs to use bluetooth. See shutdown note
+   * above.
+   */
+  __delete__();
+
+  /**
+   * Sent when the child needs to receive signals related to the given node.
+   */
+  RegisterSignalHandler(nsString node);
+
+  /**
+   * Sent when the child no longer needs to receive signals related to the given
+   * node.
+   */
+  UnregisterSignalHandler(nsString node);
+
+  /**
+   * Sent when the child no longer needs to receive any messages from the
+   * parent. See shutdown note above.
+   */
+  StopNotifying();
+
+  /**
+   * Sent when the child makes an asynchronous request to the parent.
+   */
+  PBluetoothRequest(Request request);
+
+  /**
+   * FIXME: Bug 547703.
+   *
+   * This is the state machine we want:
+   *
+   * start state NOTIFYING:
+   *   send Enabled goto NOTIFYING;
+   *   send Notify goto NOTIFYING;
+   *   recv RegisterSignalHandler goto NOTIFYING;
+   *   recv UnregisterSignalHandler goto NOTIFYING;
+   *   send BeginShutdown goto PARENT_DONE;
+   *   recv StopNotifying goto CHILD_DONE;
+   *
+   * state PARENT_DONE:
+   *   recv RegisterSignalHandler goto PARENT_DONE;
+   *   recv UnregisterSignalHandler goto PARENT_DONE;
+   *   recv StopNotifying goto CHILD_DONE;
+   *
+   * state CHILD_DONE:
+   *   send Enabled goto CHILD_DONE;
+   *   send Notify goto CHILD_DONE;
+   *   send BeginShutdown goto CHILD_DONE;
+   *   send NotificationsStopped goto DONE;
+   *
+   * state DONE:
+   *   recv __delete__;
+   */
+};
+
+} // namespace bluetooth
+} // namespace dom
+} // namespace mozilla
