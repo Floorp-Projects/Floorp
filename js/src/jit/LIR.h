@@ -802,6 +802,9 @@ class LBlock : public TempObject
     }
     LMoveGroup *getEntryMoveGroup(TempAllocator &alloc);
     LMoveGroup *getExitMoveGroup(TempAllocator &alloc);
+
+    void dump(FILE *fp);
+    void dump();
 };
 
 template <size_t Defs, size_t Operands, size_t Temps>
@@ -1594,6 +1597,9 @@ class LIRGraph
         return safepoints_[i];
     }
     void removeBlock(size_t i);
+
+    void dump(FILE *fp) const;
+    void dump() const;
 };
 
 LAllocation::LAllocation(AnyRegister reg)
