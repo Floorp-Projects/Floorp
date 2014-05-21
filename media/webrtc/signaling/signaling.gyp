@@ -67,6 +67,8 @@
         '../../../netwerk/srtp/src/crypto/include',
         '../../../ipc/chromium/src',
         '../../mtransport/third_party/nrappkit/src/util/libekr',
+        '../../../media/omx-plugin/include/kk',
+        '../../../media/omx-plugin/include/kk/media',
       ],
 
       #
@@ -84,6 +86,10 @@
       #
       'sources': [
         # Media Conduit
+        './src/media-conduit/ExtVideoCodec.h',
+        './src/media-conduit/ExtVideoCodec.cpp',
+        './src/media-conduit/WebrtcExtVideoCodec.h',
+        './src/media-conduit/WebrtcExtVideoCodec.cpp',
         './src/media-conduit/AudioConduit.h',
         './src/media-conduit/AudioConduit.cpp',
         './src/media-conduit/VideoConduit.h',
@@ -174,7 +180,7 @@
         'USE_SSLEAY',
         '_CPR_USE_EXTERNAL_LOGGER',
         'WEBRTC_RELATIVE_PATH',
-      	'HAVE_WEBRTC_VIDEO',
+        'HAVE_WEBRTC_VIDEO',
         'HAVE_WEBRTC_VOICE',
         'HAVE_STDINT_H=1',
         'HAVE_STDLIB_H=1',
@@ -245,7 +251,11 @@
             'SECLIB_OPENSSL',
           ],
 
+          # This flag used for ignore harmless "-Wmultichar" compilation warning which
+          # is reported during compiling VP8 HW accleration related code(see signaling/src/media-conduit/WebrtcExtVideoCodec.h .cpp)
+          # where some android mediacodec relevant header files are refered.
           'cflags_mozilla': [
+            '-Wno-multichar',
           ],
         }],
         ['OS=="win"', {
