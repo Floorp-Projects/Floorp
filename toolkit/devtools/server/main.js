@@ -222,7 +222,7 @@ var DebuggerServer = {
       return;
     }
 
-    this.xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
+    this.xpcInspector = require("xpcInspector");
     this.initTransport(aAllowConnectionCallback);
 
     this._initialized = true;
