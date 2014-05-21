@@ -645,8 +645,6 @@ JSCompartment::clearTables()
 {
     global_ = nullptr;
 
-    regExps.clearTables();
-
     // No scripts should have run in this compartment. This is used when
     // merging a compartment that has been used off thread into another
     // compartment and zone.
@@ -658,6 +656,7 @@ JSCompartment::clearTables()
     JS_ASSERT(!debugScopes);
     JS_ASSERT(!gcWeakMapList);
     JS_ASSERT(enumerators->next() == enumerators);
+    JS_ASSERT(regExps.empty());
 
     types.clearTables();
     if (baseShapes.initialized())
