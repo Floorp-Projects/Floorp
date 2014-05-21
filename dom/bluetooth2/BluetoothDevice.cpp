@@ -14,7 +14,7 @@
 #include "nsTArrayHelpers.h"
 
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
-#include "mozilla/dom/BluetoothDeviceBinding.h"
+#include "mozilla/dom/BluetoothDevice2Binding.h"
 
 USING_BLUETOOTH_NAMESPACE
 
