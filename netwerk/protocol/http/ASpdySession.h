@@ -52,7 +52,7 @@ public:
   {
     return (code == NS_BASE_STREAM_CLOSED || code == NS_BINDING_FAILED ||
             code == NS_BINDING_ABORTED || code == NS_BINDING_REDIRECTED ||
-            code == NS_BINDING_RETARGETED);
+            code == NS_BINDING_RETARGETED || code == NS_ERROR_CORRUPTED_CONTENT);
   }
 };
 
