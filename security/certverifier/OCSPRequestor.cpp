@@ -6,12 +6,17 @@
 
 #include "OCSPRequestor.h"
 
+#include "mozilla/Base64.h"
 #include "nsIURLParser.h"
 #include "nsNSSCallbacks.h"
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
 #include "pkix/ScopedPtr.h"
 #include "secerr.h"
+
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* gCertVerifierLog;
+#endif
 
 namespace mozilla { namespace psm {
 
@@ -33,8 +38,36 @@ ReleaseHttpRequestSession(nsNSSHttpRequestSession* httpRequestSession)
 typedef ScopedPtr<nsNSSHttpRequestSession, ReleaseHttpRequestSession>
   ScopedHTTPRequestSession;
 
-SECItem* DoOCSPRequest(PLArenaPool* arena, const char* url,
-                       const SECItem* encodedRequest, PRIntervalTime timeout)
+static nsresult
+AppendEscapedBase64Item(const SECItem* encodedRequest, nsACString& path)
+{
+  nsresult rv;
+  nsDependentCSubstring requestAsSubstring(
+    reinterpret_cast<const char*>(encodedRequest->data), encodedRequest->len);
+  nsCString base64Request;
+  rv = Base64Encode(requestAsSubstring, base64Request);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+         ("Setting up OCSP GET path, pre path =%s\n",
+          PromiseFlatCString(path).get()));
+
+  // The path transformation is not a direct url encoding. Three characters
+  // need change '+' -> "%2B", '/' -> "%2F", and '=' -> '%3D'.
+  // http://tools.ietf.org/html/rfc5019#section-5
+  base64Request.ReplaceSubstring("+", "%2B");
+  base64Request.ReplaceSubstring("/", "%2F");
+  base64Request.ReplaceSubstring("=", "%3D");
+  path.Append(base64Request);
+  return NS_OK;
+}
+
+SECItem*
+DoOCSPRequest(PLArenaPool* arena, const char* url,
+              const SECItem* encodedRequest, PRIntervalTime timeout,
+              bool useGET)
 {
   nsCOMPtr<nsIURLParser> urlParser = do_GetService(NS_STDURLPARSER_CONTRACTID);
   if (!urlParser) {
@@ -86,39 +119,56 @@ SECItem* DoOCSPRequest(PLArenaPool* arena, const char* url,
   if (port == -1) {
     port = 80;
   }
-
   nsAutoCString hostname(url + authorityPos + hostnamePos, hostnameLen);
+
   SEC_HTTP_SERVER_SESSION serverSessionPtr = nullptr;
   if (nsNSSHttpInterface::createSessionFcn(hostname.BeginReading(), port,
                                            &serverSessionPtr) != SECSuccess) {
     PR_SetError(SEC_ERROR_NO_MEMORY, 0);
     return nullptr;
   }
-
   ScopedHTTPServerSession serverSession(
     reinterpret_cast<nsNSSHttpServerSession*>(serverSessionPtr));
+
   nsAutoCString path;
   if (pathLen > 0) {
     path.Assign(url + pathPos, pathLen);
   } else {
     path.Assign("/");
   }
-  SEC_HTTP_REQUEST_SESSION requestSessionPtr;
+  PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+         ("Setting up OCSP request: pre all path =%s  pathlen=%d\n", path.get(),
+          pathLen));
+  nsAutoCString method("POST");
+  if (useGET) {
+    method.Assign("GET");
+    if (!StringEndsWith(path, NS_LITERAL_CSTRING("/"))) {
+      path.Append("/");
+    }
+    nsresult rv = AppendEscapedBase64Item(encodedRequest, path);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
+  }
+
+  SEC_HTTP_REQUEST_SESSION requestSessionPtr = nullptr;
   if (nsNSSHttpInterface::createFcn(serverSession.get(), "http",
-                                    path.BeginReading(), "POST",
+                                    path.get(), method.get(),
                                     timeout, &requestSessionPtr)
         != SECSuccess) {
     PR_SetError(SEC_ERROR_NO_MEMORY, 0);
     return nullptr;
   }
-
   ScopedHTTPRequestSession requestSession(
     reinterpret_cast<nsNSSHttpRequestSession*>(requestSessionPtr));
-  if (nsNSSHttpInterface::setPostDataFcn(requestSession.get(),
-        reinterpret_cast<char*>(encodedRequest->data), encodedRequest->len,
-        "application/ocsp-request") != SECSuccess) {
-    PR_SetError(SEC_ERROR_NO_MEMORY, 0);
-    return nullptr;
+
+  if (!useGET) {
+    if (nsNSSHttpInterface::setPostDataFcn(requestSession.get(),
+          reinterpret_cast<char*>(encodedRequest->data), encodedRequest->len,
+          "application/ocsp-request") != SECSuccess) {
+      PR_SetError(SEC_ERROR_NO_MEMORY, 0);
+      return nullptr;
+    }
   }
 
   uint16_t httpResponseCode;
