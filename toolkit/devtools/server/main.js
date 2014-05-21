@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
+
 /**
  * Toolkit glue for the remote debugging protocol, loaded into the
  * debugging global.
