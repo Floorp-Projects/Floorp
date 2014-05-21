@@ -2040,7 +2040,6 @@ GK_ATOM(RemoteId, "_remote_id")
 GK_ATOM(DisplayPort, "_displayport")
 GK_ATOM(DisplayPortMargins, "_displayportmargins")
 GK_ATOM(DisplayPortBase, "_displayportbase")
-GK_ATOM(CriticalDisplayPort, "_critical_displayport")
 
 // Names for system metrics
 GK_ATOM(color_picker_available, "color-picker-available")

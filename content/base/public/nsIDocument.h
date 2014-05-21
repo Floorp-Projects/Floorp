@@ -106,6 +106,7 @@ struct ElementRegistrationOptions;
 class Event;
 class EventTarget;
 class FrameRequestCallback;
+class ImportManager;
 class OverfillCallback;
 class HTMLBodyElement;
 struct LifecycleCallbackArgs;
@@ -129,8 +130,8 @@ typedef CallbackObjectHolder<NodeFilter, nsIDOMNodeFilter> NodeFilterHolder;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x906d05e7, 0x39af, 0x4ff0, \
-  { 0xbc, 0xcd, 0x30, 0x0c, 0x7f, 0xeb, 0x86, 0x21 } }
+{ 0x0300e2e0, 0x24c9, 0x4ecf, \
+  { 0x81, 0xec, 0x64, 0x26, 0x9a, 0x4b, 0xef, 0x18 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -2254,6 +2255,13 @@ public:
   virtual nsHTMLDocument* AsHTMLDocument() { return nullptr; }
 
   virtual JSObject* WrapObject(JSContext *aCx) MOZ_OVERRIDE;
+
+  // Each import tree has exactly one master document which is
+  // the root of the tree, and owns the browser context.
+  virtual already_AddRefed<nsIDocument> MasterDocument() = 0;
+  virtual void SetMasterDocument(nsIDocument* master) = 0;
+  virtual bool IsMasterDocument() = 0;
+  virtual already_AddRefed<mozilla::dom::ImportManager> ImportManager() = 0;
 
 private:
   uint64_t mWarnedAbout;

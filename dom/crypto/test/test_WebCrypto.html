@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>WebCrypto Test Suite</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link rel="stylesheet" href="./test_WebCrypto.css"/>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+<!-- Utilities for manipulating ABVs -->
+<script src="util.js"></script>
+
+<!-- A simple wrapper around IndexedDB -->
+<script src="simpledb.js"></script>
+
+<!-- Test vectors drawn from the literature -->
+<script src="./test-vectors.js"></script>
+
+<!-- General testing framework -->
+<script src="./test-array.js"></script>
+
+<!-- Specific test definitions (ADD YOUR TEST HERE) -->
+<script src="./tests.js"></script>
+</head>
+
+<body>
+
+<div id="content">
+	<div id="head">
+		<b>Web</b>Crypto<br>
+	</div>
+
+    <div id="start" onclick="start();">RUN ALL</div>
+
+    <div id="resultDiv" class="content">
+    Summary:
+    <span class="pass"><span id="passN">0</span> passed, </span>
+    <span class="fail"><span id="failN">0</span> failed, </span>
+    <span class="pending"><span id="pendingN">0</span> pending.</span>
+    <br/>
+    <br/>
+
+    <table id="results">
+        <tr>
+            <th>Test</th>
+            <th>Result</th>
+            <th>Time</th>
+        </tr>
+    </table>
+
+    </div>
+
+    <div id="foot"></div>
+</div>
+
+</body>
+</html>
