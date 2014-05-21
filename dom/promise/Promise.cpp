@@ -168,6 +168,209 @@ public:
   }
 };
 
+enum {
+  SLOT_PROMISE = 0,
+  SLOT_DATA
+};
+
+/*
+ * Utilities for thenable callbacks.
+ *
+ * A thenable is a { then: function(resolve, reject) { } }.
+ * `then` is called with a resolve and reject callback pair.
+ * Since only one of these should be called at most once (first call wins), the
+ * two keep a reference to each other in SLOT_DATA. When either of them is
+ * called, the references are cleared. Further calls are ignored.
+ */
+namespace {
+void
+LinkThenableCallables(JSContext* aCx, JS::Handle<JSObject*> aResolveFunc,
+                      JS::Handle<JSObject*> aRejectFunc)
+{
+  js::SetFunctionNativeReserved(aResolveFunc, SLOT_DATA,
+                                JS::ObjectValue(*aRejectFunc));
+  js::SetFunctionNativeReserved(aRejectFunc, SLOT_DATA,
+                                JS::ObjectValue(*aResolveFunc));
+}
+
+/*
+ * Returns false if callback was already called before, otherwise breaks the
+ * links and returns true.
+ */
+bool
+MarkAsCalledIfNotCalledBefore(JSContext* aCx, JS::Handle<JSObject*> aFunc)
+{
+  JS::Value otherFuncVal = js::GetFunctionNativeReserved(aFunc, SLOT_DATA);
+
+  if (!otherFuncVal.isObject()) {
+    return false;
+  }
+
+  JSObject* otherFuncObj = &otherFuncVal.toObject();
+  MOZ_ASSERT(js::GetFunctionNativeReserved(otherFuncObj, SLOT_DATA).isObject());
+
+  // Break both references.
+  js::SetFunctionNativeReserved(aFunc, SLOT_DATA, JS::UndefinedValue());
+  js::SetFunctionNativeReserved(otherFuncObj, SLOT_DATA, JS::UndefinedValue());
+
+  return true;
+}
+
+Promise*
+GetPromise(JSContext* aCx, JS::Handle<JSObject*> aFunc)
+{
+  JS::Value promiseVal = js::GetFunctionNativeReserved(aFunc, SLOT_PROMISE);
+
+  MOZ_ASSERT(promiseVal.isObject());
+
+  Promise* promise;
+  UNWRAP_OBJECT(Promise, &promiseVal.toObject(), promise);
+  return promise;
+}
+};
+
+// Equivalent to the specification's ResolvePromiseViaThenableTask.
+class ThenableResolverMixin
+{
+public:
+  ThenableResolverMixin(Promise* aPromise,
+                        JS::Handle<JSObject*> aThenable,
+                        PromiseInit* aThen)
+    : mPromise(aPromise)
+    , mThenable(CycleCollectedJSRuntime::Get()->Runtime(), aThenable)
+    , mThen(aThen)
+  {
+    MOZ_ASSERT(aPromise);
+    MOZ_COUNT_CTOR(ThenableResolverMixin);
+  }
+
+  virtual ~ThenableResolverMixin()
+  {
+    NS_ASSERT_OWNINGTHREAD(ThenableResolverMixin);
+    MOZ_COUNT_DTOR(ThenableResolverMixin);
+  }
+
+protected:
+  void
+  RunInternal()
+  {
+    NS_ASSERT_OWNINGTHREAD(ThenableResolverMixin);
+    ThreadsafeAutoJSContext cx;
+    JS::Rooted<JSObject*> wrapper(cx, mPromise->GetOrCreateWrapper(cx));
+    if (!wrapper) {
+      return;
+    }
+    JSAutoCompartment ac(cx, wrapper);
+
+    JS::Rooted<JSObject*> resolveFunc(cx,
+      mPromise->CreateThenableFunction(cx, mPromise, PromiseCallback::Resolve));
+
+    if (!resolveFunc) {
+      mPromise->HandleException(cx);
+      return;
+    }
+
+    JS::Rooted<JSObject*> rejectFunc(cx,
+      mPromise->CreateThenableFunction(cx, mPromise, PromiseCallback::Reject));
+    if (!rejectFunc) {
+      mPromise->HandleException(cx);
+      return;
+    }
+
+    LinkThenableCallables(cx, resolveFunc, rejectFunc);
+
+    ErrorResult rv;
+
+    JS::Rooted<JSObject*> rootedThenable(cx, mThenable);
+
+    mThen->Call(rootedThenable, resolveFunc, rejectFunc, rv,
+                CallbackObject::eRethrowExceptions);
+
+    rv.WouldReportJSException();
+    if (rv.IsJSException()) {
+      JS::Rooted<JS::Value> exn(cx);
+      rv.StealJSException(cx, &exn);
+
+      bool couldMarkAsCalled = MarkAsCalledIfNotCalledBefore(cx, resolveFunc);
+
+      // If we could mark as called, neither of the callbacks had been called
+      // when the exception was thrown. So we can reject the Promise.
+      if (couldMarkAsCalled) {
+        bool ok = JS_WrapValue(cx, &exn);
+        MOZ_ASSERT(ok);
+        if (!ok) {
+          NS_WARNING("Failed to wrap value into the right compartment.");
+        }
+
+        mPromise->RejectInternal(cx, exn, Promise::SyncTask);
+      }
+      // At least one of resolveFunc or rejectFunc have been called, so ignore
+      // the exception. FIXME(nsm): This should be reported to the error
+      // console though, for debugging.
+    }
+  }
+
+private:
+  nsRefPtr<Promise> mPromise;
+  JS::PersistentRooted<JSObject*> mThenable;
+  nsRefPtr<PromiseInit> mThen;
+  NS_DECL_OWNINGTHREAD;
+};
+
+// Main thread runnable to resolve thenables.
+class ThenableResolverTask MOZ_FINAL : public nsRunnable,
+                                       public ThenableResolverMixin
+{
+public:
+  ThenableResolverTask(Promise* aPromise,
+                       JS::Handle<JSObject*> aThenable,
+                       PromiseInit* aThen)
+    : ThenableResolverMixin(aPromise, aThenable, aThen)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  ~ThenableResolverTask()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  NS_IMETHOD Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    RunInternal();
+    return NS_OK;
+  }
+};
+
+// Worker thread runnable to resolve thenables.
+class WorkerThenableResolverTask MOZ_FINAL : public WorkerSameThreadRunnable,
+                                             public ThenableResolverMixin
+{
+public:
+  WorkerThenableResolverTask(WorkerPrivate* aWorkerPrivate,
+                             Promise* aPromise,
+                             JS::Handle<JSObject*> aThenable,
+                             PromiseInit* aThen)
+    : WorkerSameThreadRunnable(aWorkerPrivate),
+      ThenableResolverMixin(aPromise, aThenable, aThen)
+  {
+    MOZ_ASSERT(aWorkerPrivate);
+    aWorkerPrivate->AssertIsOnWorkerThread();
+  }
+
+  ~WorkerThenableResolverTask()
+  {}
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+  {
+    aWorkerPrivate->AssertIsOnWorkerThread();
+    RunInternal();
+    return true;
+  }
+};
+
 // Promise
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(Promise)
@@ -267,11 +470,6 @@ Promise::MaybeReject(JSContext* aCx,
   MaybeRejectInternal(aCx, aValue);
 }
 
-enum {
-  SLOT_PROMISE = 0,
-  SLOT_DATA
-};
-
 /* static */ bool
 Promise::JSCallback(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
 {
@@ -300,62 +498,6 @@ Promise::JSCallback(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
 }
 
 /*
- * Utilities for thenable callbacks.
- *
- * A thenable is a { then: function(resolve, reject) { } }.
- * `then` is called with a resolve and reject callback pair.
- * Since only one of these should be called at most once (first call wins), the
- * two keep a reference to each other in SLOT_DATA. When either of them is
- * called, the references are cleared. Further calls are ignored.
- */
-namespace {
-void
-LinkThenableCallables(JSContext* aCx, JS::Handle<JSObject*> aResolveFunc,
-                      JS::Handle<JSObject*> aRejectFunc)
-{
-  js::SetFunctionNativeReserved(aResolveFunc, SLOT_DATA,
-                                JS::ObjectValue(*aRejectFunc));
-  js::SetFunctionNativeReserved(aRejectFunc, SLOT_DATA,
-                                JS::ObjectValue(*aResolveFunc));
-}
-
-/*
- * Returns false if callback was already called before, otherwise breaks the
- * links and returns true.
- */
-bool
-MarkAsCalledIfNotCalledBefore(JSContext* aCx, JS::Handle<JSObject*> aFunc)
-{
-  JS::Value otherFuncVal = js::GetFunctionNativeReserved(aFunc, SLOT_DATA);
-
-  if (!otherFuncVal.isObject()) {
-    return false;
-  }
-
-  JSObject* otherFuncObj = &otherFuncVal.toObject();
-  MOZ_ASSERT(js::GetFunctionNativeReserved(otherFuncObj, SLOT_DATA).isObject());
-
-  // Break both references.
-  js::SetFunctionNativeReserved(aFunc, SLOT_DATA, JS::UndefinedValue());
-  js::SetFunctionNativeReserved(otherFuncObj, SLOT_DATA, JS::UndefinedValue());
-
-  return true;
-}
-
-Promise*
-GetPromise(JSContext* aCx, JS::Handle<JSObject*> aFunc)
-{
-  JS::Value promiseVal = js::GetFunctionNativeReserved(aFunc, SLOT_PROMISE);
-
-  MOZ_ASSERT(promiseVal.isObject());
-
-  Promise* promise;
-  UNWRAP_OBJECT(Promise, &promiseVal.toObject(), promise);
-  return promise;
-}
-};
-
-/*
  * Common bits of (JSCallbackThenableResolver/JSCallbackThenableRejecter).
  * Resolves/rejects the Promise if it is ok to do so, based on whether either of
  * the callbacks have been called before or not.
@@ -375,9 +517,9 @@ Promise::ThenableResolverCommon(JSContext* aCx, uint32_t aTask,
   MOZ_ASSERT(promise);
 
   if (aTask == PromiseCallback::Resolve) {
-    promise->ResolveInternal(aCx, args.get(0), SyncTask);
+    promise->ResolveInternal(aCx, args.get(0));
   } else {
-    promise->RejectInternal(aCx, args.get(0), SyncTask);
+    promise->RejectInternal(aCx, args.get(0));
   }
   return true;
 }
@@ -982,52 +1124,20 @@ Promise::ResolveInternal(JSContext* aCx,
     }
 
     if (then.isObject() && JS_ObjectIsCallable(aCx, &then.toObject())) {
-      JS::Rooted<JSObject*> resolveFunc(aCx,
-        CreateThenableFunction(aCx, this, PromiseCallback::Resolve));
-
-      if (!resolveFunc) {
-        HandleException(aCx);
-        return;
-      }
-
-      JS::Rooted<JSObject*> rejectFunc(aCx,
-        CreateThenableFunction(aCx, this, PromiseCallback::Reject));
-      if (!rejectFunc) {
-        HandleException(aCx);
-        return;
-      }
-
-      LinkThenableCallables(aCx, resolveFunc, rejectFunc);
-
+      // This is the then() function of the thenable aValueObj.
       JS::Rooted<JSObject*> thenObj(aCx, &then.toObject());
       nsRefPtr<PromiseInit> thenCallback =
         new PromiseInit(thenObj, mozilla::dom::GetIncumbentGlobal());
-
-      ErrorResult rv;
-      thenCallback->Call(valueObj, resolveFunc, rejectFunc,
-                         rv, CallbackObject::eRethrowExceptions);
-      rv.WouldReportJSException();
-
-      if (rv.IsJSException()) {
-        JS::Rooted<JS::Value> exn(aCx);
-        rv.StealJSException(aCx, &exn);
-
-        bool couldMarkAsCalled = MarkAsCalledIfNotCalledBefore(aCx, resolveFunc);
-
-        // If we could mark as called, neither of the callbacks had been called
-        // when the exception was thrown. So we can reject the Promise.
-        if (couldMarkAsCalled) {
-          bool ok = JS_WrapValue(aCx, &exn);
-          MOZ_ASSERT(ok);
-          if (!ok) {
-            NS_WARNING("Failed to wrap value into the right compartment.");
-          }
-
-          RejectInternal(aCx, exn, Promise::SyncTask);
-        }
-        // At least one of resolveFunc or rejectFunc have been called, so ignore
-        // the exception. FIXME(nsm): This should be reported to the error
-        // console though, for debugging.
+      if (NS_IsMainThread()) {
+        nsRefPtr<ThenableResolverTask> task =
+          new ThenableResolverTask(this, valueObj, thenCallback);
+        NS_DispatchToCurrentThread(task);
+      } else {
+        WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+        MOZ_ASSERT(worker);
+        nsRefPtr<WorkerThenableResolverTask> task =
+          new WorkerThenableResolverTask(worker, this, valueObj, thenCallback);
+        task->Dispatch(worker->GetJSContext());
       }
 
       return;

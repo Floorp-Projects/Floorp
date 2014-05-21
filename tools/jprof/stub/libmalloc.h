@@ -31,41 +31,12 @@ struct malloc_log_entry {
   char* pcs[MAX_STACK_CRAWL];
 };
 
-// type's
-#define malloc_log_stack   7
-
 // Format of a malloc map entry; after this struct is nameLen+1 bytes of
 // name data.
 struct malloc_map_entry {
   u_long nameLen;
   u_long address;		// base address
 };
-
-// A method that can be called if you want to programmatically control
-// the malloc logging. Note that you must link with the library to do
-// this (or use dlsym after dynamically loading the library...)
-extern u_long SetMallocFlags(u_long flags);
-
-// The environment variable LIBMALLOC_LOG should be set to an integer
-// value whose meaning is as follows:
-
-// Enable logging
-#define LIBMALLOC_LOG    0x1
-
-// Don't free memory when set
-#define LIBMALLOC_NOFREE 0x2
-
-// Check heap for corruption after every malloc/free/realloc
-#define LIBMALLOC_CHECK  0x4
-
-// Log reference count calls (addref/release)
-#define LIBMALLOC_LOG_RC 0x8
-
-// Log a stack trace
-#define LIBMALLOC_LOG_TRACE 0x10
-
-void __log_addref(void* p, int oldrc, int newrc);
-void __log_release(void* p, int oldrc, int newrc);
 
 #ifdef __cplusplus
 } /* end of extern "C" */

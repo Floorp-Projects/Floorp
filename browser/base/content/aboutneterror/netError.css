@@ -32,13 +32,14 @@ ul {
   max-width: 512px;
 }
 
-#errorTitle {
+#errorTitleText {
   background: url("info.svg") left 0 no-repeat;
-  -moz-margin-start: -5em;
-  -moz-padding-start: 5em;
+  background-size: 1.2em;
+  -moz-margin-start: -2em;
+  -moz-padding-start: 2em;
 }
 
-#errorTitle:-moz-locale-dir(rtl) {
+#errorTitleText:-moz-locale-dir(rtl) {
   background-position: right 0;
 }
 

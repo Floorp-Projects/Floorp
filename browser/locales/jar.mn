@@ -57,6 +57,7 @@
     locale/browser/devtools/toolbox.dtd            (%chrome/browser/devtools/toolbox.dtd)
     locale/browser/devtools/toolbox.properties     (%chrome/browser/devtools/toolbox.properties)
     locale/browser/devtools/inspector.dtd          (%chrome/browser/devtools/inspector.dtd)
+    locale/browser/devtools/projecteditor.properties     (%chrome/browser/devtools/projecteditor.properties)
     locale/browser/devtools/eyedropper.properties     (%chrome/browser/devtools/eyedropper.properties)
     locale/browser/devtools/connection-screen.dtd  (%chrome/browser/devtools/connection-screen.dtd)
     locale/browser/devtools/connection-screen.properties (%chrome/browser/devtools/connection-screen.properties)

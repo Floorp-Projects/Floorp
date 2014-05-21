@@ -19,7 +19,7 @@ const { EventTarget } = require('./event/target');
 const { on, emit, once, setListeners } = require('./event/core');
 const { on: domOn, removeListener: domOff } = require('./dom/events');
 const { pipe } = require('./event/utils');
-const { isRegExp } = require('./lang/type');
+const { isRegExp, isUndefined } = require('./lang/type');
 const { merge } = require('./util/object');
 const { windowIterator } = require('./deprecated/window-utils');
 const { isBrowser, getFrames } = require('./window/utils');
@@ -48,7 +48,9 @@ let styleFor = (mod) => styles.get(mod);
 observers.on('document-element-inserted', onContentWindow);
 unload(() => observers.off('document-element-inserted', onContentWindow));
 
+// Helper functions
 let isRegExpOrString = (v) => isRegExp(v) || typeof v === 'string';
+let modMatchesURI = (mod, uri) => mod.include.matchesAny(uri) && !mod.exclude.matchesAny(uri);
 
 // Validation Contracts
 const modOptions = {
@@ -70,6 +72,19 @@ const modOptions = {
       return false;
     },
     msg: 'The `include` option must always contain atleast one rule as a string, regular expression, or an array of strings and regular expressions.'
+  },
+  exclude: {
+    is: ['string', 'array', 'regexp', 'undefined'],
+    ok: (rule) => {
+      if (isRegExpOrString(rule) || isUndefined(rule))
+        return true;
+      if (Array.isArray(rule) && rule.length > 0)
+        return rule.every(isRegExpOrString);
+      return false;
+    },
+    msg: 'If set, the `exclude` option must always contain at least one ' +
+      'rule as a string, regular expression, or an array of strings and ' +
+      'regular expressions.'
   },
   attachTo: {
     is: ['string', 'array', 'undefined'],
@@ -114,6 +129,10 @@ const PageMod = Class({
     let include = model.include;
     model.include = Rules();
     model.include.add.apply(model.include, [].concat(include));
+
+    let exclude = isUndefined(model.exclude) ? [] : model.exclude;
+    model.exclude = Rules();
+    model.exclude.add.apply(model.exclude, [].concat(exclude));
 
     if (model.contentStyle || model.contentStyleFile) {
       styles.set(mod, Style({
@@ -162,7 +181,7 @@ function onContentWindow({ subject: document }) {
     return;
 
   for (let pagemod of pagemods) {
-    if (pagemod.include.matchesAny(document.URL))
+    if (modMatchesURI(pagemod, document.URL))
       onContent(pagemod, window);
   }
 }
@@ -171,13 +190,13 @@ function applyOnExistingDocuments (mod) {
   getTabs().forEach(tab => {
     // Fake a newly created document
     let window = getTabContentWindow(tab);
-    if (has(mod.attachTo, "top") && mod.include.matchesAny(getTabURI(tab)))
+    let uri = getTabURI(tab);
+    if (has(mod.attachTo, "top") && modMatchesURI(mod, uri))
       onContent(mod, window);
-    if (has(mod.attachTo, "frame")) {
+    if (has(mod.attachTo, "frame"))
       getFrames(window).
-        filter((iframe) => mod.include.matchesAny(iframe.location.href)).
-        forEach((frame) => onContent(mod, frame));
-    }
+        filter(iframe => modMatchesURI(mod, iframe.location.href)).
+        forEach(frame => onContent(mod, frame));
   });
 }
 

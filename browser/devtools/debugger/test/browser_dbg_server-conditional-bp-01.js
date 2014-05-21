@@ -38,7 +38,12 @@ function test() {
       .then(() => resumeAndTestBreakpoint(28))
       .then(() => resumeAndTestBreakpoint(29))
       .then(() => resumeAndTestNoBreakpoint())
-      .then(() => reloadActiveTab(gPanel, gDebugger.EVENTS.BREAKPOINT_SHOWN, 13))
+      .then(() => {
+        return promise.all([
+          reloadActiveTab(gPanel, gDebugger.EVENTS.BREAKPOINT_SHOWN_IN_EDITOR, 13),
+          waitForDebuggerEvents(gPanel, gDebugger.EVENTS.BREAKPOINT_SHOWN_IN_PANE, 13)
+        ]);
+      })
       .then(() => testAfterReload())
       .then(() => closeDebuggerAndFinish(gPanel))
       .then(null, aError => {

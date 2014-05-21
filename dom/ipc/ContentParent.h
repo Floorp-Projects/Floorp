@@ -523,7 +523,7 @@ private:
 
     virtual bool RecvAudioChannelChangeDefVolChannel(const int32_t& aChannel,
                                                      const bool& aHidden) MOZ_OVERRIDE;
-
+    virtual bool RecvGetSystemMemory(const uint64_t& getterId) MOZ_OVERRIDE;
     virtual bool RecvBroadcastVolume(const nsString& aVolumeName) MOZ_OVERRIDE;
 
     virtual bool RecvSpeakerManagerGetSpeakerStatus(bool* aValue) MOZ_OVERRIDE;

@@ -11,6 +11,12 @@ Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import("resource://gre/modules/RemoteAddonsChild.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 
+#ifdef MOZ_CRASHREPORTER
+XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
+                                   "@mozilla.org/xre/app-info;1",
+                                   "nsICrashReporter");
+#endif
+
 let FocusSyncHandler = {
   init: function() {
     sendAsyncMessage("SetSyncHandler", {}, {handler: this});
@@ -178,6 +184,10 @@ let WebNavigation =  {
   },
 
   loadURI: function(uri, flags) {
+#ifdef MOZ_CRASHREPORTER
+    if (CrashReporter.enabled)
+      CrashReporter.annotateCrashReport("URL", uri);
+#endif
     this._webNavigation.loadURI(uri, flags, null, null, null);
   },
 

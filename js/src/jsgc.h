@@ -1280,7 +1280,7 @@ PurgeJITCaches(JS::Zone *zone);
 
 // This is the same as IsInsideNursery, but not inlined.
 bool
-UninlinedIsInsideNursery(JSRuntime *rt, const void *thing);
+UninlinedIsInsideNursery(const gc::Cell *cell);
 
 } /* namespace js */
 

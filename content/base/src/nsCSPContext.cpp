@@ -18,6 +18,7 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIHttpChannel.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
@@ -26,6 +27,7 @@
 #include "nsIPrincipal.h"
 #include "nsIPropertyBag2.h"
 #include "nsIScriptError.h"
+#include "nsIWebNavigation.h"
 #include "nsIWritablePropertyBag2.h"
 #include "nsString.h"
 #include "prlog.h"
@@ -44,6 +46,47 @@ GetCspContextLog()
 #endif
 
 #define CSPCONTEXTLOG(args) PR_LOG(GetCspContextLog(), 4, args)
+
+static const uint32_t CSP_CACHE_URI_CUTOFF_SIZE = 512;
+
+/**
+ * Creates a key for use in the ShouldLoad cache.
+ * Looks like: <uri>!<nsIContentPolicy::LOAD_TYPE>
+ */
+nsresult
+CreateCacheKey_Internal(nsIURI* aContentLocation,
+                        nsContentPolicyType aContentType,
+                        nsACString& outCacheKey)
+{
+  if (!aContentLocation) {
+    return NS_ERROR_FAILURE;
+  }
+
+  bool isDataScheme = false;
+  nsresult rv = aContentLocation->SchemeIs("data", &isDataScheme);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  outCacheKey.Truncate();
+  if (aContentType != nsIContentPolicy::TYPE_SCRIPT && isDataScheme) {
+    // For non-script data: URI, use ("data:", aContentType) as the cache key.
+    outCacheKey.Append(NS_LITERAL_CSTRING("data:"));
+    outCacheKey.AppendInt(aContentType);
+    return NS_OK;
+  }
+
+  nsAutoCString spec;
+  rv = aContentLocation->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Don't cache for a URI longer than the cutoff size.
+  if (spec.Length() <= CSP_CACHE_URI_CUTOFF_SIZE) {
+    outCacheKey.Append(spec);
+    outCacheKey.Append(NS_LITERAL_CSTRING("!"));
+    outCacheKey.AppendInt(aContentType);
+  }
+
+  return NS_OK;
+}
 
 /* =====  nsIContentSecurityPolicy impl ====== */
 
@@ -73,6 +116,16 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
   // * CSP is enabled
   // * Content Type is not whitelisted (CSP Reports, TYPE_DOCUMENT, etc).
   // * Fast Path for Apps
+
+  nsAutoCString cacheKey;
+  rv = CreateCacheKey_Internal(aContentLocation, aContentType, cacheKey);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool isCached = mShouldLoadCache.Get(cacheKey, outDecision);
+  if (isCached && cacheKey.Length() > 0) {
+    // this is cached, use the cached value.
+    return NS_OK;
+  }
 
   // Default decision, CSP can revise it if there's a policy to enforce
   *outDecision = nsIContentPolicy::ACCEPT;
@@ -137,6 +190,11 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
       // * Console error reporting, bug 994322
     }
   }
+  // Done looping, cache any relevant result
+  if (cacheKey.Length() > 0 && !isPreload) {
+    mShouldLoadCache.Put(cacheKey, *outDecision);
+  }
+
 #ifdef PR_LOGGING
   {
   nsAutoCString spec;
@@ -183,6 +241,7 @@ nsCSPContext::~nsCSPContext()
   for (uint32_t i = 0; i < mPolicies.Length(); i++) {
     delete mPolicies[i];
   }
+  mShouldLoadCache.Clear();
 }
 
 NS_IMETHODIMP
@@ -215,6 +274,8 @@ nsCSPContext::RemovePolicy(uint32_t aIndex)
     return NS_ERROR_ILLEGAL_VALUE;
   }
   mPolicies.RemoveElementAt(aIndex);
+  // reset cache since effective policy changes
+  mShouldLoadCache.Clear();
   return NS_OK;
 }
 
@@ -237,6 +298,8 @@ nsCSPContext::AppendPolicy(const nsAString& aPolicyString,
   nsCSPPolicy* policy = nsCSPParser::parseContentSecurityPolicy(aPolicyString, mSelfURI, aReportOnly, 0);
   if (policy) {
     mPolicies.AppendElement(policy);
+    // reset cache since effective policy changes
+    mShouldLoadCache.Clear();
   }
   return NS_OK;
 }
@@ -378,11 +441,118 @@ nsCSPContext::SetRequestContext(nsIURI* aSelfURI,
   return NS_OK;
 }
 
+/**
+ * Based on the given docshell, determines if this CSP context allows the
+ * ancestry.
+ *
+ * In order to determine the URI of the parent document (one causing the load
+ * of this protected document), this function obtains the docShellTreeItem,
+ * then walks up the hierarchy until it finds a privileged (chrome) tree item.
+ * Getting the parent's URI looks like this in pseudocode:
+ *
+ * nsIDocShell->QI(nsIInterfaceRequestor)
+ *            ->GI(nsIDocShellTreeItem)
+ *            ->QI(nsIInterfaceRequestor)
+ *            ->GI(nsIWebNavigation)
+ *            ->GetCurrentURI();
+ *
+ * aDocShell is the docShell for the protected document.
+ */
 NS_IMETHODIMP
 nsCSPContext::PermitsAncestry(nsIDocShell* aDocShell, bool* outPermitsAncestry)
 {
-  // For now, we allows permitsAncestry, this will be fixed in Bug 994320
+  nsresult rv;
+
+  // Can't check ancestry without a docShell.
+  if (aDocShell == nullptr) {
+    return NS_ERROR_FAILURE;
+  }
+
   *outPermitsAncestry = true;
+
+  // extract the ancestry as an array
+  nsCOMArray<nsIURI> ancestorsArray;
+
+  nsCOMPtr<nsIInterfaceRequestor> ir(do_QueryInterface(aDocShell));
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_GetInterface(ir));
+  nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
+  nsCOMPtr<nsIWebNavigation> webNav;
+  nsCOMPtr<nsIURI> currentURI;
+  nsCOMPtr<nsIURI> uriClone;
+
+  // iterate through each docShell parent item
+  while (NS_SUCCEEDED(treeItem->GetParent(getter_AddRefs(parentTreeItem))) &&
+         parentTreeItem != nullptr) {
+    ir     = do_QueryInterface(parentTreeItem);
+    NS_ASSERTION(ir, "Could not QI docShellTreeItem to nsIInterfaceRequestor");
+
+    webNav = do_GetInterface(ir);
+    NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
+
+    rv = webNav->GetCurrentURI(getter_AddRefs(currentURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (currentURI) {
+      // stop when reaching chrome
+      bool isChrome = false;
+      rv = currentURI->SchemeIs("chrome", &isChrome);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (isChrome) { break; }
+
+      // delete the userpass from the URI.
+      rv = currentURI->CloneIgnoringRef(getter_AddRefs(uriClone));
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = uriClone->SetUserPass(EmptyCString());
+      NS_ENSURE_SUCCESS(rv, rv);
+#ifdef PR_LOGGING
+      {
+      nsAutoCString spec;
+      uriClone->GetSpec(spec);
+      CSPCONTEXTLOG(("nsCSPContext::PermitsAncestry, found ancestor: %s", spec.get()));
+      }
+#endif
+      ancestorsArray.AppendElement(uriClone);
+    }
+
+    // next ancestor
+    treeItem = parentTreeItem;
+  }
+
+  nsAutoString violatedDirective;
+
+  // Now that we've got the ancestry chain in ancestorsArray, time to check
+  // them against any CSP.
+  for (uint32_t i = 0; i < mPolicies.Length(); i++) {
+    for (uint32_t a = 0; a < ancestorsArray.Length(); a++) {
+      // TODO(sid) the mapping from frame-ancestors context to TYPE_DOCUMENT is
+      // forced. while this works for now, we will implement something in
+      // bug 999656.
+#ifdef PR_LOGGING
+      {
+      nsAutoCString spec;
+      ancestorsArray[a]->GetSpec(spec);
+      CSPCONTEXTLOG(("nsCSPContext::PermitsAncestry, checking ancestor: %s", spec.get()));
+      }
+#endif
+      if (!mPolicies[i]->permits(nsIContentPolicy::TYPE_DOCUMENT,
+                                 ancestorsArray[a],
+                                 EmptyString(), // no nonce
+                                 violatedDirective)) {
+        // Policy is violated
+        nsCOMPtr<nsIObserverService> observerService =
+          mozilla::services::GetObserverService();
+        NS_ENSURE_TRUE(observerService, NS_ERROR_NOT_AVAILABLE);
+
+        observerService->NotifyObservers(ancestorsArray[a],
+                                         CSP_VIOLATION_TOPIC,
+                                         violatedDirective.get());
+        // TODO(sid) generate violation reports and remove NotifyObservers
+        //           call. (in bug 994322)
+        // TODO(sid) implement logic for report-only (in bug 994322)
+        *outPermitsAncestry = false;
+      }
+    }
+  }
   return NS_OK;
 }
 

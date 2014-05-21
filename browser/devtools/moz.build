@@ -13,6 +13,7 @@ DIRS += [
     'fontinspector',
     'framework',
     'inspector',
+    'projecteditor',
     'layoutview',
     'markupview',
     'netmonitor',
