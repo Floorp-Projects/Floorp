@@ -39,7 +39,7 @@ ul {
   -moz-padding-start: 2em;
 }
 
-#errorTitleText:-moz-locale-dir(rtl) {
+#errorTitleText:-moz-dir(rtl) {
   background-position: right 0;
 }
 

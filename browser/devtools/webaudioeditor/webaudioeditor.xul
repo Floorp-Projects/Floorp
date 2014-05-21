@@ -47,16 +47,16 @@
              value="&webAudioEditorUI.emptyNotice;"/>
     </hbox>
 
-    <hbox id="content"
-         class="devtools-responsive-container"
+    <vbox id="content"
          flex="1"
          hidden="true">
-      <vbox id="web-audio-content-pane" flex="1">
-        <toolbar id="web-audio-toolbar" class="devtools-toolbar">
-          <spacer flex="1"></spacer>
-          <toolbarbutton id="inspector-pane-toggle" class="devtools-toolbarbutton"
-                         tabindex="0"/>
-        </toolbar>
+      <toolbar id="web-audio-toolbar" class="devtools-toolbar">
+        <spacer flex="1"></spacer>
+        <toolbarbutton id="inspector-pane-toggle" class="devtools-toolbarbutton"
+                       tabindex="0"/>
+      </toolbar>
+      <splitter class="devtools-horizontal-splitter"/>
+      <box id="web-audio-content-pane" flex="1">
         <hbox flex="1">
           <box id="web-audio-graph" class="devtools-responsive-container" flex="1">
             <vbox flex="1">
@@ -68,37 +68,37 @@
             </vbox>
           </box>
         </hbox>
-      </vbox>
-      <splitter class="devtools-side-splitter"/>
-      <vbox id="web-audio-inspector" hidden="true">
-        <hbox class="devtools-toolbar">
-          <label id="web-audio-inspector-title" value="&webAudioEditorUI.inspectorTitle;"></label>
-        </hbox>
-        <deck id="web-audio-editor-details-pane" flex="1">
-          <vbox id="web-audio-editor-details-pane-empty" flex="1">
-            <label value="&webAudioEditorUI.inspectorEmpty;"></label>
-          </vbox>
-          <tabbox id="web-audio-editor-tabs"
-                  class="devtools-sidebar-tabs"
-                  handleCtrlTab="false">
-            <tabs>
-              <tab id="properties-tab"
-                   label="&webAudioEditorUI.tab.properties;"/>
-            </tabs>
-            <tabpanels flex="1">
-              <tabpanel id="properties-tabpanel"
-                        class="tabpanel-content">
-                <vbox id="properties-tabpanel-content" flex="1">
-                </vbox>
-                <vbox id="properties-tabpanel-content-empty" flex="1" hidden="true">
-                  <label value="&webAudioEditorUI.propertiesEmpty;"></label>
-                </vbox>
-              </tabpanel>
-            </tabpanels>
-          </tabbox>
-        </deck>
-      </vbox>
-    </hbox>
+        <splitter class="devtools-side-splitter"/>
+        <vbox id="web-audio-inspector" hidden="true">
+          <hbox class="devtools-toolbar">
+            <label id="web-audio-inspector-title" value="&webAudioEditorUI.inspectorTitle;"></label>
+          </hbox>
+          <deck id="web-audio-editor-details-pane" flex="1">
+            <vbox id="web-audio-editor-details-pane-empty" flex="1">
+              <label value="&webAudioEditorUI.inspectorEmpty;"></label>
+            </vbox>
+            <tabbox id="web-audio-editor-tabs"
+                    class="devtools-sidebar-tabs"
+                    handleCtrlTab="false">
+              <tabs>
+                <tab id="properties-tab"
+                     label="&webAudioEditorUI.tab.properties;"/>
+              </tabs>
+              <tabpanels flex="1">
+                <tabpanel id="properties-tabpanel"
+                          class="tabpanel-content">
+                  <vbox id="properties-tabpanel-content" flex="1">
+                  </vbox>
+                  <vbox id="properties-tabpanel-content-empty" flex="1" hidden="true">
+                    <label value="&webAudioEditorUI.propertiesEmpty;"></label>
+                  </vbox>
+                </tabpanel>
+              </tabpanels>
+            </tabbox>
+          </deck>
+        </vbox>
+      </box>
+    </vbox>
   </vbox>
 
 </window>

@@ -67,6 +67,8 @@ function sendShutdownEvent() {
   }
 }
 
+exports.sendShutdownEvent = sendShutdownEvent;
+
 /**
  * Construct a root actor appropriate for use in a server running in a
  * browser. The returned root actor:
@@ -1155,6 +1157,8 @@ BrowserTabActor.prototype.exit = function() {
   this._tabbrowser = null;
 };
 
+exports.BrowserTabActor = BrowserTabActor;
+
 /**
  * This actor is a shim that connects to a ContentActor in a remote
  * browser process. All RDP packets get forwarded using the message
@@ -1230,6 +1234,8 @@ BrowserAddonList.prototype.onUninstalled = function (aAddon) {
   this._actorByAddonId.delete(aAddon.id);
   this._onListChanged();
 };
+
+exports.BrowserAddonList = BrowserAddonList;
 
 function BrowserAddonActor(aConnection, aAddon) {
   this.conn = aConnection;

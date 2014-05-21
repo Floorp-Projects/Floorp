@@ -44,19 +44,6 @@ let gPage = {
   },
 
   /**
-   * True if the page is allowed to capture thumbnails using the background
-   * thumbnail service.
-   */
-  get allowBackgroundCaptures() {
-    // The preloader is bypassed altogether for private browsing windows, and
-    // therefore allow-background-captures will not be set.  In that case, the
-    // page is not preloaded and so it's visible, so allow background captures.
-    return inPrivateBrowsingMode() ||
-           document.documentElement.getAttribute("allow-background-captures") ==
-           "true";
-  },
-
-  /**
    * Listens for notifications specific to this page.
    */
   observe: function Page_observe(aSubject, aTopic, aData) {
@@ -85,7 +72,7 @@ let gPage = {
    *                      the preloader.
    */
   update: function Page_update(aOnlyIfHidden=false) {
-    let skipUpdate = aOnlyIfHidden && this.allowBackgroundCaptures;
+    let skipUpdate = aOnlyIfHidden && !document.hidden;
     // The grid might not be ready yet as we initialize it asynchronously.
     if (gGrid.ready && !skipUpdate) {
       gGrid.refresh();
@@ -117,45 +104,14 @@ let gPage = {
 
     this._initialized = true;
 
+    // Initialize search.
     gSearch.init();
 
-    this._mutationObserver = new MutationObserver(() => {
-      if (this.allowBackgroundCaptures) {
-        Services.telemetry.getHistogramById("NEWTAB_PAGE_SHOWN").add(true);
-
-        // Initialize type counting with the types we want to count
-        let directoryCount = {};
-        for (let type of DirectoryLinksProvider.linkTypes) {
-          directoryCount[type] = 0;
-        }
-
-        for (let site of gGrid.sites) {
-          if (site) {
-            site.captureIfMissing();
-            let {type} = site.link;
-            if (type in directoryCount) {
-              directoryCount[type]++;
-            }
-          }
-        }
-
-        // Record how many directory sites were shown, but place counts over the
-        // default 9 in the same bucket
-        for (let [type, count] of Iterator(directoryCount)) {
-          let shownId = "NEWTAB_PAGE_DIRECTORY_" + type.toUpperCase() + "_SHOWN";
-          let shownCount = Math.min(10, count);
-          Services.telemetry.getHistogramById(shownId).add(shownCount);
-        }
-
-        // content.js isn't loaded for the page while it's in the preloader,
-        // which is why this is necessary.
-        gSearch.setUpInitialState();
-      }
-    });
-    this._mutationObserver.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["allow-background-captures"],
-    });
+    if (document.hidden) {
+      addEventListener("visibilitychange", this);
+    } else {
+      this.onPageFirstVisible();
+    }
 
     // Initialize and render the grid.
     gGrid.init();
@@ -204,8 +160,6 @@ let gPage = {
   handleEvent: function Page_handleEvent(aEvent) {
     switch (aEvent.type) {
       case "unload":
-        if (this._mutationObserver)
-          this._mutationObserver.disconnect();
         gAllPages.unregister(this);
         break;
       case "click":
@@ -236,6 +190,43 @@ let gPage = {
           aEvent.stopPropagation();
         }
         break;
+      case "visibilitychange":
+        setTimeout(() => this.onPageFirstVisible());
+        removeEventListener("visibilitychange", this);
+        break;
     }
+  },
+
+  onPageFirstVisible: function () {
+    // Record another page impression.
+    Services.telemetry.getHistogramById("NEWTAB_PAGE_SHOWN").add(true);
+
+    // Initialize type counting with the types we want to count
+    let directoryCount = {};
+    for (let type of DirectoryLinksProvider.linkTypes) {
+      directoryCount[type] = 0;
+    }
+
+    for (let site of gGrid.sites) {
+      if (site) {
+        site.captureIfMissing();
+        let {type} = site.link;
+        if (type in directoryCount) {
+          directoryCount[type]++;
+        }
+      }
+    }
+
+    // Record how many directory sites were shown, but place counts over the
+    // default 9 in the same bucket
+    for (let type of Object.keys(directoryCount)) {
+      let count = directoryCount[type];
+      let shownId = "NEWTAB_PAGE_DIRECTORY_" + type.toUpperCase() + "_SHOWN";
+      let shownCount = Math.min(10, count);
+      Services.telemetry.getHistogramById(shownId).add(shownCount);
+    }
+
+    // Set up initial search state.
+    gSearch.setUpInitialState();
   }
 };

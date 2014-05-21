@@ -7299,7 +7299,7 @@ var RemoteDebugger = {
       if (!DebuggerServer.initialized) {
         DebuggerServer.init(this._showConnectionPrompt.bind(this));
         DebuggerServer.addBrowserActors();
-        DebuggerServer.addActors("chrome://browser/content/dbg-browser-actors.js");
+        DebuggerServer.registerModule("resource://gre/modules/dbg-browser-actors.js");
       }
 
       let port = this._getPort();
