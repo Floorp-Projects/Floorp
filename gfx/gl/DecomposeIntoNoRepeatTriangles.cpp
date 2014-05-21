@@ -37,25 +37,6 @@ RectTriangles::addRect(GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1,
     AppendRectToCoordArray(mTexCoords, tx0, ty0, tx1, ty1);
 }
 
-bool
-RectTriangles::isSimpleQuad(gfx3DMatrix& aOutTextureTransform) const
-{
-    if (mVertexCoords.Length() == 6 &&
-        mVertexCoords[0].x == 0.0f &&
-        mVertexCoords[0].y == 0.0f &&
-        mVertexCoords[5].x == 1.0f &&
-        mVertexCoords[5].y == 1.0f)
-    {
-        GLfloat tx0 = mTexCoords[0].x;
-        GLfloat ty0 = mTexCoords[0].y;
-        GLfloat tx1 = mTexCoords[5].x;
-        GLfloat ty1 = mTexCoords[5].y;
-        aOutTextureTransform = gfx3DMatrix::From2D(gfxMatrix(tx1 - tx0, 0, 0, ty1 - ty0, tx0, ty0));
-        return true;
-    }
-    return false;
-}
-
 static GLfloat
 WrapTexCoord(GLfloat v)
 {
