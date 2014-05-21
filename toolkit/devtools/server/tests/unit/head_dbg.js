@@ -96,7 +96,17 @@ let listener = {
     while (DebuggerServer.xpcInspector.eventLoopNestLevel > 0) {
       DebuggerServer.xpcInspector.exitNestedEventLoop();
     }
-    do_throw("head_dbg.js got console message: " + string + "\n");
+
+    // In the world before bug 997440, exceptions were getting lost because of
+    // the arbitrary JSContext being used in nsXPCWrappedJSClass::CallMethod.
+    // In the new world, the wanderers have returned. However, because of the,
+    // currently very-broken, exception reporting machinery in XPCWrappedJSClass
+    // these get reported as errors to the console, even if there's actually JS
+    // on the stack above that will catch them.
+    // If we throw an error here because of them our tests start failing.
+    // So, we'll just dump the message to the logs instead, to make sure the
+    // information isn't lost.
+    dump("head_dbg.js observed a console message: " + string + "\n");
   }
 };
 
