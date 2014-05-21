@@ -139,6 +139,110 @@ RResumePoint::recover(JSContext *cx, SnapshotIterator &iter) const
 }
 
 bool
+MBitNot::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_BitNot));
+    return true;
+}
+
+RBitNot::RBitNot(CompactBufferReader &reader)
+{ }
+
+bool
+RBitNot::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue operand(cx, iter.read());
+
+    int32_t result;
+    if (!js::BitNot(cx, operand, &result))
+        return false;
+
+    RootedValue rootedResult(cx, js::Int32Value(result));
+    iter.storeInstructionResult(rootedResult);
+    return true;
+}
+
+bool
+MBitOr::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_BitOr));
+    return true;
+}
+
+RBitOr::RBitOr(CompactBufferReader &reader)
+{}
+
+bool
+RBitOr::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue lhs(cx, iter.read());
+    RootedValue rhs(cx, iter.read());
+    int32_t result;
+    MOZ_ASSERT(!lhs.isObject() && !rhs.isObject());
+
+    if (!js::BitOr(cx, lhs, rhs, &result))
+        return false;
+
+    RootedValue asValue(cx, js::Int32Value(result));
+    iter.storeInstructionResult(asValue);
+    return true;
+}
+
+bool
+MBitXor::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_BitXor));
+    return true;
+}
+
+RBitXor::RBitXor(CompactBufferReader &reader)
+{ }
+
+bool
+RBitXor::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue lhs(cx, iter.read());
+    RootedValue rhs(cx, iter.read());
+
+    int32_t result;
+    if (!js::BitXor(cx, lhs, rhs, &result))
+        return false;
+
+    RootedValue rootedResult(cx, js::Int32Value(result));
+    iter.storeInstructionResult(rootedResult);
+    return true;
+}
+
+bool
+MUrsh::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_Ursh));
+    return true;
+}
+
+RUrsh::RUrsh(CompactBufferReader &reader)
+{ }
+
+bool
+RUrsh::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue lhs(cx, iter.read());
+    RootedValue rhs(cx, iter.read());
+    MOZ_ASSERT(!lhs.isObject() && !rhs.isObject());
+
+    RootedValue result(cx);
+    if (!js::UrshOperation(cx, lhs, rhs, &result))
+        return false;
+
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MAdd::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
@@ -169,57 +273,6 @@ RAdd::recover(JSContext *cx, SnapshotIterator &iter) const
         return false;
 
     iter.storeInstructionResult(result);
-    return true;
-}
-
-bool
-MBitNot::writeRecoverData(CompactBufferWriter &writer) const
-{
-    MOZ_ASSERT(canRecoverOnBailout());
-    writer.writeUnsigned(uint32_t(RInstruction::Recover_BitNot));
-    return true;
-}
-
-RBitNot::RBitNot(CompactBufferReader &reader)
-{ }
-
-bool
-RBitNot::recover(JSContext *cx, SnapshotIterator &iter) const
-{
-    RootedValue operand(cx, iter.read());
-
-    int32_t result;
-    if (!js::BitNot(cx, operand, &result))
-        return false;
-
-    RootedValue rootedResult(cx, js::Int32Value(result));
-    iter.storeInstructionResult(rootedResult);
-    return true;
-}
-
-bool
-MBitXor::writeRecoverData(CompactBufferWriter &writer) const
-{
-    MOZ_ASSERT(canRecoverOnBailout());
-    writer.writeUnsigned(uint32_t(RInstruction::Recover_BitXor));
-    return true;
-}
-
-RBitXor::RBitXor(CompactBufferReader &reader)
-{ }
-
-bool
-RBitXor::recover(JSContext *cx, SnapshotIterator &iter) const
-{
-    RootedValue lhs(cx, iter.read());
-    RootedValue rhs(cx, iter.read());
-
-    int32_t result;
-    if (!js::BitXor(cx, lhs, rhs, &result))
-        return false;
-
-    RootedValue rootedResult(cx, js::Int32Value(result));
-    iter.storeInstructionResult(rootedResult);
     return true;
 }
 
@@ -281,59 +334,6 @@ RNewDerivedTypedObject::recover(JSContext *cx, SnapshotIterator &iter) const
         return false;
 
     RootedValue result(cx, ObjectValue(*obj));
-    iter.storeInstructionResult(result);
-    return true;
-}
-
-bool
-MBitOr::writeRecoverData(CompactBufferWriter &writer) const
-{
-    MOZ_ASSERT(canRecoverOnBailout());
-    writer.writeUnsigned(uint32_t(RInstruction::Recover_BitOr));
-    return true;
-}
-
-RBitOr::RBitOr(CompactBufferReader &reader)
-{}
-
-bool
-RBitOr::recover(JSContext *cx, SnapshotIterator &iter) const
-{
-    RootedValue lhs(cx, iter.read());
-    RootedValue rhs(cx, iter.read());
-    int32_t result;
-    MOZ_ASSERT(!lhs.isObject() && !rhs.isObject());
-
-    if (!js::BitOr(cx, lhs, rhs, &result))
-        return false;
-
-    RootedValue asValue(cx, js::Int32Value(result));
-    iter.storeInstructionResult(asValue);
-    return true;
-}
-
-bool
-MUrsh::writeRecoverData(CompactBufferWriter &writer) const
-{
-    MOZ_ASSERT(canRecoverOnBailout());
-    writer.writeUnsigned(uint32_t(RInstruction::Recover_Ursh));
-    return true;
-}
-
-RUrsh::RUrsh(CompactBufferReader &reader)
-{ }
-
-bool
-RUrsh::recover(JSContext *cx, SnapshotIterator &iter) const
-{
-    RootedValue lhs(cx, iter.read());
-    RootedValue rhs(cx, iter.read());
-    MOZ_ASSERT(!lhs.isObject() && !rhs.isObject());
-
-    RootedValue result(cx);
-    if (!js::UrshOperation(cx, lhs, rhs, &result))
-        return false;
-
     iter.storeInstructionResult(result);
     return true;
 }
