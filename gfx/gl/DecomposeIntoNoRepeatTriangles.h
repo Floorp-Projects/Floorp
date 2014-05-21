@@ -28,13 +28,6 @@ public:
                  GLfloat tx0, GLfloat ty0, GLfloat tx1, GLfloat ty1,
                  bool flip_y = false);
 
-    // Returns whether this object is made of only one rect that can be drawn
-    // with a pre-buffered unity quad which has 0,0,1,1 as both vertex
-    // positions and texture coordinates.
-    // aOutTextureTransform returns the transform that maps 0,0,1,1 texture
-    // coordinates to the correct ones.
-    bool isSimpleQuad(gfx3DMatrix& aOutTextureTransform) const;
-
     /**
       * these return a float pointer to the start of each array respectively.
       * Use it for glVertexAttribPointer calls.
