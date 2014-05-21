@@ -948,6 +948,7 @@ pref("apz.axis_lock_mode", 2);
 pref("apz.subframe.enabled", true);
 
 // Overscroll-related settings
+pref("apz.overscroll.enabled", false);
 pref("apz.overscroll.snap_back_accel", "0.003");
 pref("apz.overscroll.snap_back_init_vel", "1");
 

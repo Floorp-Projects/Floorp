@@ -212,6 +212,10 @@ typedef GeckoContentController::APZStateChange APZStateChange;
  * "apz.num_paint_duration_samples"
  * Number of samples to store of how long it took to paint after the previous
  *
+ * "apz.overscroll.enabled"
+ * Pref that enables overscrolling. If this is disabled, excess scroll that
+ * cannot be handed off is discarded.
+ *
  * "apz.overscroll.snap_back_accel"
  * Amount of acceleration applied during the snap-back animation.
  *
@@ -1328,6 +1332,10 @@ bool AsyncPanZoomController::AttemptScroll(const ScreenPoint& aStartPoint,
 }
 
 bool AsyncPanZoomController::OverscrollBy(const CSSPoint& aOverscroll) {
+  if (!gfxPrefs::APZOverscrollEnabled()) {
+    return false;
+  }
+
   ReentrantMonitorAutoEnter lock(mMonitor);
   // Do not go into overscroll in a direction in which we have no room to
   // scroll to begin with.
