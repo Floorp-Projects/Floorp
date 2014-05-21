@@ -58,6 +58,10 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
   // Set an alternate Desktop within a new window station
   mPolicy->SetAlternateDesktop(false);
 
+  // Set stdout and stderr, to allow inheritance for logging.
+  mPolicy->SetStdoutHandle(::GetStdHandle(STD_OUTPUT_HANDLE));
+  mPolicy->SetStderrHandle(::GetStdHandle(STD_ERROR_HANDLE));
+
   // Ceate the sandboxed process
   PROCESS_INFORMATION targetInfo;
   sandbox::ResultCode result;

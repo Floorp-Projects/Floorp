@@ -487,6 +487,10 @@
   ERROR(NS_ERROR_DOM_ENCODING_NOT_UTF_ERR,         FAILURE(29)),
   ERROR(NS_ERROR_DOM_ENCODING_DECODE_ERR,          FAILURE(30)),
   ERROR(NS_ERROR_DOM_INVALID_POINTER_ERR,          FAILURE(31)),
+  /* WebCrypto API errors from http://www.w3.org/TR/WebCryptoAPI/ */
+  ERROR(NS_ERROR_DOM_UNKNOWN_ERR,                  FAILURE(32)),
+  ERROR(NS_ERROR_DOM_DATA_ERR,                     FAILURE(33)),
+  ERROR(NS_ERROR_DOM_OPERATION_ERR,                FAILURE(34)),
   /* DOM error codes defined by us */
   ERROR(NS_ERROR_DOM_SECMAN_ERR,                   FAILURE(1001)),
   ERROR(NS_ERROR_DOM_WRONG_TYPE_ERR,               FAILURE(1002)),

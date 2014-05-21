@@ -1942,6 +1942,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMStyleSheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheetSetList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScriptLoader)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMasterDocument)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mImportManager)
 
   tmp->mRadioGroups.EnumerateRead(RadioGroupsTraverser, &cb);
 
@@ -2037,6 +2039,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTemplateContentsOwner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChildrenCollection)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRegistry)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mMasterDocument)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mImportManager)
 
   tmp->mParentDocument = nullptr;
 
@@ -4617,6 +4621,10 @@ nsDocument::GetWindowInternal() const
     if (win) {
       // mScriptGlobalObject is always the inner window, let's get the outer.
       win = win->GetOuterWindow();
+    } else if (mMasterDocument) {
+      // For script execution in the imported document we need the window of
+      // the master document.
+      win = mMasterDocument->GetWindow();
     }
   }
 
@@ -7959,6 +7967,9 @@ nsDocument::IsScriptEnabled()
   NS_ENSURE_TRUE(sm, false);
 
   nsCOMPtr<nsIScriptGlobalObject> globalObject = do_QueryInterface(GetInnerWindow());
+  if (!globalObject && mMasterDocument) {
+    globalObject = do_QueryInterface(mMasterDocument->GetInnerWindow());
+  }
   NS_ENSURE_TRUE(globalObject && globalObject->GetGlobalJSObject(), false);
 
   return sm->ScriptAllowed(globalObject->GetGlobalJSObject());

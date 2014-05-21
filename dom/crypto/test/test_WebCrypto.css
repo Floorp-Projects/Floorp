@@ -1,0 +1,86 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+body {
+	font-family: Helvetica Neue, Helvetica, Trebuchet MS, Sans-serif;
+	font-size: 12pt;
+	text-align: center;
+}
+
+a {
+	color: #FF9500;
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+#content {
+	width: 50em;
+	margin-left: auto;
+	margin-right: auto;
+	text-align: left;
+}
+
+#head {
+	font-family: Helvetica Neue, Helvetica, Trebuchet MS, Sans-serif;
+	font-size: 300%;
+	font-weight: lighter;
+	padding: .2ex;
+	padding-bottom: 0ex;
+	margin-bottom: .5ex;
+	border-bottom: 10px solid #FF9500;
+}
+#head b {
+	font-weight: bold;
+	color: #FF9500;
+}
+
+div.content {
+	font-family: Helvetica Neue, Helvetica, Trebuchet MS, Sans-serif;
+	color: #000;
+	margin: 2ex;
+}
+
+#foot {
+	border-bottom: 1ex solid #FF9500;
+	margin-top: 2ex;
+}
+
+/*------------------------------------------*/
+
+#start {
+    background: #FF9500;
+    color: #fff;
+    text-align: center;
+    font-weight: bold;
+    padding: 1em 0 1em 0;
+    width: 50em;
+    cursor: pointer;
+}
+
+
+#results {
+    text-align: left;
+    width: 48em;
+    border: 1px solid black;
+}
+
+.pass {
+    font-weight: bold;
+    color: #00539F;
+}
+
+.fail {
+    font-weight: bold;
+    color: #FF9500;
+}
+
+.pending {
+    font-weight: bold;
+    color: #666;
+}
+
+

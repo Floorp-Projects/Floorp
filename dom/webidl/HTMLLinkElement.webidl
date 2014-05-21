@@ -31,6 +31,7 @@ interface HTMLLinkElement : HTMLElement {
   [PutForwards=value] readonly attribute DOMSettableTokenList sizes;
 };
 HTMLLinkElement implements LinkStyle;
+HTMLLinkElement implements LinkImport;
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
 partial interface HTMLLinkElement {

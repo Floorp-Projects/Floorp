@@ -32,10 +32,6 @@ Cu.import("resource://gre/modules/NativeApp.jsm");
 Cu.import("resource://gre/modules/WebappOSUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
-const PR_RDWR        = 0x04;
-const PR_CREATE_FILE = 0x08;
-const PR_TRUNCATE    = 0x20;
-
 let manifest = {
   name: "test_desktop_packaged_launch",
   version: "0.1a",
