@@ -385,18 +385,6 @@ public class ToolbarEditText extends CustomEditText
                 }
                 return super.setComposingText(text, newCursorPosition);
             }
-
-            @Override
-            public boolean sendKeyEvent(final KeyEvent event) {
-                if ((event.getKeyCode() == KeyEvent.KEYCODE_DEL ||
-                    (Build.VERSION.SDK_INT >= 11 &&
-                        event.getKeyCode() == KeyEvent.KEYCODE_FORWARD_DEL)) &&
-                    removeAutocomplete(getText())) {
-                    // Delete autocomplete text when backspacing or forward deleting.
-                    return false;
-                }
-                return super.sendKeyEvent(event);
-            }
         };
     }
 
@@ -527,6 +515,14 @@ public class ToolbarEditText extends CustomEditText
                     mDismissListener.onDismiss();
                 }
 
+                return true;
+            }
+
+            if ((keyCode == KeyEvent.KEYCODE_DEL ||
+                (Build.VERSION.SDK_INT >= 11 &&
+                    keyCode == KeyEvent.KEYCODE_FORWARD_DEL)) &&
+                removeAutocomplete(getText())) {
+                // Delete autocomplete text when backspacing or forward deleting.
                 return true;
             }
 
