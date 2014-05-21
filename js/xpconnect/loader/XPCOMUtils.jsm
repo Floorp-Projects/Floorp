@@ -226,7 +226,7 @@ this.XPCOMUtils = {
       try {
         Cu.import(aResource, temp);
       } catch (ex) {
-        Cu.reportError("Failed to load module " + aResource + " : " + ex);
+        Cu.reportError("Failed to load module " + aResource + ".");
         throw ex;
       }
       return temp[aSymbol || aName];
