@@ -5551,9 +5551,9 @@ AutoSuppressGC::AutoSuppressGC(JSRuntime *rt)
 }
 
 bool
-js::UninlinedIsInsideNursery(JSRuntime *rt, const void *thing)
+js::UninlinedIsInsideNursery(const gc::Cell *cell)
 {
-    return IsInsideNursery(rt, thing);
+    return IsInsideNursery(cell);
 }
 
 #ifdef DEBUG
@@ -5570,6 +5570,18 @@ JS::AssertGCThingMustBeTenured(JSObject *obj)
 {
     JS_ASSERT((!IsNurseryAllocable(obj->tenuredGetAllocKind()) || obj->getClass()->finalize) &&
               obj->isTenured());
+}
+
+JS_FRIEND_API(void)
+js::gc::AssertGCThingHasType(js::gc::Cell *cell, JSGCTraceKind kind)
+{
+#ifdef DEBUG
+    JS_ASSERT(cell);
+    if (IsInsideNursery(cell))
+        JS_ASSERT(kind == JSTRACE_OBJECT);
+    else
+        JS_ASSERT(MapAllocToTraceKind(cell->tenuredGetAllocKind()) == kind);
+#endif
 }
 
 JS_FRIEND_API(size_t)

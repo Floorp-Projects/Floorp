@@ -42,11 +42,20 @@ function runAsyncTests(tests) {
       }
     },
     consoleError: function (scriptErr) {
-      // As much as possible make sure the error is related to the test.  On the
-      // other hand if this fails to catch a test-related error, we'll hang.
-      let filename = scriptErr.sourceName || scriptErr.toString() || "";
-      if (/contentpref/i.test(filename))
-        do_throw(scriptErr);
+      // Previously, this code checked for console errors related to the test,
+      // and treated them as failures. This was problematic, because our current
+      // very-broken exception reporting machinery in XPCWrappedJSClass reports
+      // errors to the console even if there's actually JS on the stack above
+      // that will catch them. And a lot of the tests here intentionally trigger
+      // error conditions on the JS-implemented XPCOM component (see erroneous()
+      // in test_getSubdomains.js, for example). In the old world, we got lucky,
+      // and the errors were never reported to the console due to happenstantial
+      // JSContext reasons that aren't really worth going into.
+      //
+      // So. We make sure to dump this stuff so that it shows up in the logs, but
+      // don't turn them into duplicate failures of the exception that was already
+      // propagated to the caller.
+      dump("AsyncRunner.jsm observed console error: " +  scriptErr + "\n");
     }
   });
 

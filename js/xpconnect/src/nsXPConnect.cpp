@@ -344,6 +344,9 @@ CreateGlobalObject(JSContext *cx, const JSClass *clasp, nsIPrincipal *principal,
     MOZ_ASSERT(NS_IsMainThread(), "using a principal off the main thread?");
     MOZ_ASSERT(principal);
 
+    MOZ_RELEASE_ASSERT(principal != nsContentUtils::GetNullSubjectPrincipal(),
+                       "The null subject principal is getting inherited - fix that!");
+
     RootedObject global(cx,
                         JS_NewGlobalObject(cx, clasp, nsJSPrincipals::get(principal),
                                            JS::DontFireOnNewGlobalHook, aOptions));

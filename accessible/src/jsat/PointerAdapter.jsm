@@ -110,36 +110,14 @@ let PointerRelay = { // jshint ignore:line
     }
   },
 
-  _suppressPointerMove: function PointerRelay__suppressPointerMove(aChangedTouches) {
-    if (!this.lastPointerMove) {
-      return false;
-    }
-    for (let i = 0; i < aChangedTouches.length; ++i) {
-      let touch = aChangedTouches[i];
-      let lastTouch;
-      try {
-        lastTouch = this.lastPointerMove.identifiedTouch ?
-          this.lastPointerMove.identifiedTouch(touch.identifier) :
-          this.lastPointerMove[i];
-      } catch (x) {
-        // Sometimes touch object can't be accessed after page navigation.
-      }
-      if (!lastTouch || lastTouch.target !== touch.target ||
-        Math.hypot(touch.screenX - lastTouch.screenX, touch.screenY -
-          lastTouch.screenY) / Utils.dpi >= GestureSettings.travelThreshold) {
-        return false;
-      }
-    }
-    return true;
-  },
-
   handleEvent: function PointerRelay_handleEvent(aEvent) {
     // Don't bother with chrome mouse events.
     if (Utils.MozBuildApp === 'browser' &&
       aEvent.view.top instanceof Ci.nsIDOMChromeWindow) {
       return;
     }
-    if (aEvent.mozInputSource === Ci.nsIDOMMouseEvent.MOZ_SOURCE_UNKNOWN) {
+    if (aEvent.mozInputSource === Ci.nsIDOMMouseEvent.MOZ_SOURCE_UNKNOWN ||
+        aEvent.isSynthesized) {
       // Ignore events that are scripted or clicks from the a11y API.
       return;
     }
@@ -164,13 +142,6 @@ let PointerRelay = { // jshint ignore:line
       return;
     }
     let pointerType = this._eventMap[type];
-    if (pointerType === 'pointermove') {
-      if (this._suppressPointerMove(changedTouches)) {
-        // Do not fire pointermove more than every POINTERMOVE_THROTTLE.
-        return;
-      }
-      this.lastPointerMove = changedTouches;
-    }
     this.onPointerEvent({
       type: pointerType,
       points: Array.prototype.map.call(changedTouches,

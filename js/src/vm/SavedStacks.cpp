@@ -442,6 +442,8 @@ SavedStacks::insertFrames(JSContext *cx, ScriptFrameIter &iter, MutableHandle<Sa
     RootedScript script(cx, thisFrame.script());
     RootedFunction callee(cx, thisFrame.maybeCallee());
     const char *filename = script->filename();
+    if (!filename)
+        filename = "";
     RootedAtom source(cx, Atomize(cx, filename, strlen(filename)));
     if (!source)
         return false;
