@@ -5,3 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+
+JS_MODULES_PATH = 'modules/sdk'
+
+EXTRA_JS_MODULES += [
+    'source/app-extension/bootstrap.js',
+]

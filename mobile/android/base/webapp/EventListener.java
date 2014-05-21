@@ -42,20 +42,8 @@ public class EventListener implements GeckoEventListener {
 
     private static final String LOGTAG = "GeckoWebappEventListener";
 
-    private EventListener() { }
-
-    private static EventListener mEventListener;
-
-    private static EventListener getEventListener() {
-        if (mEventListener == null) {
-            mEventListener = new EventListener();
-        }
-        return mEventListener;
-    }
-
-    public static void registerEvents() {
-        EventDispatcher.getInstance().registerGeckoThreadListener(
-            EventListener.getEventListener(),
+    public void registerEvents() {
+        EventDispatcher.getInstance().registerGeckoThreadListener(this,
             "Webapps:Preinstall",
             "Webapps:InstallApk",
             "Webapps:Postinstall",
@@ -64,9 +52,8 @@ public class EventListener implements GeckoEventListener {
             "Webapps:GetApkVersions");
     }
 
-    public static void unregisterEvents() {
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(
-            EventListener.getEventListener(),
+    public void unregisterEvents() {
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
             "Webapps:Preinstall",
             "Webapps:InstallApk",
             "Webapps:Postinstall",
