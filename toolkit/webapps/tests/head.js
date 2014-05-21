@@ -13,6 +13,10 @@ const MAC = navigator.platform.startsWith("Mac");
 const WIN = navigator.platform.startsWith("Win");
 const MAC_106 = navigator.userAgent.contains("Mac OS X 10.6");
 
+const PR_RDWR        = 0x04;
+const PR_CREATE_FILE = 0x08;
+const PR_TRUNCATE    = 0x20;
+
 function checkFiles(files) {
   return Task.spawn(function*() {
     for (let file of files) {
@@ -90,6 +94,8 @@ function TestAppInfo(aApp) {
                                     "." + WebappOSUtils.getUniqueName(aApp));
     this.exePath = OS.Path.join(this.installPath, "webapprt-stub");
 
+    this.iconFile = OS.Path.join(this.installPath, "icon.png");
+
     let xdg_data_home = Cc["@mozilla.org/process/environment;1"].
                         getService(Ci.nsIEnvironment).
                         get("XDG_DATA_HOME");
@@ -101,9 +107,9 @@ function TestAppInfo(aApp) {
                                   "owa-" + WebappOSUtils.getUniqueName(aApp) + ".desktop");
 
     this.installedFiles = [
-      OS.Path.join(this.installPath, "icon.png"),
       OS.Path.join(this.installPath, "webapp.json"),
       OS.Path.join(this.installPath, "webapp.ini"),
+      this.iconFile,
       this.exePath,
       desktopINI,
     ];
@@ -113,9 +119,9 @@ function TestAppInfo(aApp) {
       OS.Path.join(this.installPath, "update", "webapp.ini"),
     ];
     this.updatedFiles = [
-      OS.Path.join(this.installPath, "icon.png"),
       OS.Path.join(this.installPath, "webapp.json"),
       OS.Path.join(this.installPath, "webapp.ini"),
+      this.iconFile,
       desktopINI,
     ];
 
@@ -146,18 +152,20 @@ function TestAppInfo(aApp) {
                                     WebappOSUtils.getUniqueName(aApp));
     this.exePath = OS.Path.join(this.installPath, aApp.name + ".exe");
 
+    this.iconFile = OS.Path.join(this.installPath, "chrome", "icons", "default", "default.ico");
+
     let desktopShortcut = OS.Path.join(OS.Constants.Path.desktopDir,
                                        aApp.name + ".lnk");
     let startMenuShortcut = OS.Path.join(OS.Constants.Path.winStartMenuProgsDir,
                                          aApp.name + ".lnk");
 
     this.installedFiles = [
-      OS.Path.join(this.installPath, "chrome", "icons", "default", "default.ico"),
       OS.Path.join(this.installPath, "webapp.json"),
       OS.Path.join(this.installPath, "webapp.ini"),
       OS.Path.join(this.installPath, "uninstall", "shortcuts_log.ini"),
       OS.Path.join(this.installPath, "uninstall", "uninstall.log"),
       OS.Path.join(this.installPath, "uninstall", "webapp-uninstaller.exe"),
+      this.iconFile,
       this.exePath,
       desktopShortcut,
       startMenuShortcut,
@@ -171,11 +179,11 @@ function TestAppInfo(aApp) {
       OS.Path.join(this.installPath, "update", "uninstall", "webapp-uninstaller.exe"),
     ];
     this.updatedFiles = [
-      OS.Path.join(this.installPath, "chrome", "icons", "default", "default.ico"),
       OS.Path.join(this.installPath, "webapp.json"),
       OS.Path.join(this.installPath, "webapp.ini"),
       OS.Path.join(this.installPath, "uninstall", "shortcuts_log.ini"),
       OS.Path.join(this.installPath, "uninstall", "uninstall.log"),
+      this.iconFile,
       desktopShortcut,
       startMenuShortcut,
     ];
@@ -238,6 +246,8 @@ function TestAppInfo(aApp) {
                                     aApp.name + ".app");
     this.exePath = OS.Path.join(this.installPath, "Contents", "MacOS", "webapprt");
 
+    this.iconFile = OS.Path.join(this.installPath, "Contents", "Resources", "appicon.icns");
+
     let appProfileDir = OS.Path.join(OS.Constants.Path.macUserLibDir,
                                      "Application Support",
                                      WebappOSUtils.getUniqueName(aApp));
@@ -245,8 +255,8 @@ function TestAppInfo(aApp) {
     this.installedFiles = [
       OS.Path.join(this.installPath, "Contents", "Info.plist"),
       OS.Path.join(this.installPath, "Contents", "MacOS", "webapp.ini"),
-      OS.Path.join(this.installPath, "Contents", "Resources", "appicon.icns"),
       OS.Path.join(appProfileDir, "webapp.json"),
+      this.iconFile,
       this.exePath,
     ];
     this.tempUpdatedFiles = [
@@ -258,8 +268,8 @@ function TestAppInfo(aApp) {
     this.updatedFiles = [
       OS.Path.join(this.installPath, "Contents", "Info.plist"),
       OS.Path.join(this.installPath, "Contents", "MacOS", "webapp.ini"),
-      OS.Path.join(this.installPath, "Contents", "Resources", "appicon.icns"),
       OS.Path.join(appProfileDir, "webapp.json"),
+      this.iconFile,
     ];
 
     if (this.isPackaged) {
@@ -287,7 +297,7 @@ function TestAppInfo(aApp) {
   }
 }
 
-function buildAppPackage(aManifest) {
+function buildAppPackage(aManifest, aIconFile) {
   let zipFile = getFile(OS.Constants.Path.profileDir, "sample.zip");
 
   let zipWriter = Cc["@mozilla.org/zipwriter;1"].createInstance(Ci.nsIZipWriter);
@@ -303,6 +313,14 @@ function buildAppPackage(aManifest) {
   zipWriter.addEntryStream("manifest.webapp", Date.now(),
                            Ci.nsIZipWriter.COMPRESSION_NONE,
                            manStream, false);
+
+  if (aIconFile) {
+    zipWriter.addEntryFile(aIconFile.leafName,
+                           Ci.nsIZipWriter.COMPRESSION_NONE,
+                           aIconFile,
+                           false);
+  }
+
   zipWriter.close();
 
   return zipFile.path;
@@ -325,4 +343,21 @@ function wasAppSJSAccessed() {
   xhr.send();
 
   return deferred.promise;
+}
+
+function generateDataURI(aFile) {
+  var contentType = Cc["@mozilla.org/mime;1"].
+                    getService(Ci.nsIMIMEService).
+                    getTypeFromFile(aFile);
+
+  var inputStream = Cc["@mozilla.org/network/file-input-stream;1"].
+                    createInstance(Ci.nsIFileInputStream);
+  inputStream.init(aFile, -1, -1, Ci.nsIFileInputStream.CLOSE_ON_EOF);
+
+  var stream = Cc["@mozilla.org/binaryinputstream;1"].
+               createInstance(Ci.nsIBinaryInputStream);
+  stream.setInputStream(inputStream);
+
+  return "data:" + contentType + ";base64," +
+         btoa(stream.readBytes(stream.available()));
 }
