@@ -75,6 +75,9 @@ public:
   }
 #endif
 
+  SVGBBox 
+  GetBBoxForClipPathFrame(const SVGBBox &aBBox, const gfxMatrix &aMatrix);
+
  private:
   // A helper class to allow us to paint clip paths safely. The helper
   // automatically sets and clears the mInUse flag on the clip path frame

@@ -468,16 +468,18 @@ JSRuntime::~JSRuntime()
 void
 NewObjectCache::clearNurseryObjects(JSRuntime *rt)
 {
+#ifdef JSGC_GENERATIONAL
     for (unsigned i = 0; i < mozilla::ArrayLength(entries); ++i) {
         Entry &e = entries[i];
         JSObject *obj = reinterpret_cast<JSObject *>(&e.templateObject);
-        if (IsInsideNursery(rt, e.key) ||
-            IsInsideNursery(rt, obj->slots) ||
-            IsInsideNursery(rt, obj->elements))
+        if (IsInsideNursery(e.key) ||
+            rt->gc.nursery.isInside(obj->slots) ||
+            rt->gc.nursery.isInside(obj->elements))
         {
             PodZero(&e);
         }
     }
+#endif
 }
 
 void

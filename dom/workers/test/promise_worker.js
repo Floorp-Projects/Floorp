@@ -654,6 +654,32 @@ function promiseResolvePromise() {
   });
 }
 
+// Bug 1009569.
+// Ensure that thenables are run on a clean stack asynchronously.
+// Test case adopted from
+// https://gist.github.com/getify/d64bb01751b50ed6b281#file-bug1-js.
+function promiseResolveThenableCleanStack() {
+  function immed(s) { x++; s(); }
+  function incX(){ x++; }
+
+  var x = 0;
+  var thenable = { then: immed };
+  var results = [];
+
+  Promise.resolve(thenable).then(incX);
+  results.push(x);
+
+  // check what happens after all "next cycle" steps
+  // have had a chance to complete
+  setTimeout(function(){
+    results.push(x);
+    // Result should be [0, 2] since `thenable` will be called async.
+    is(results[0], 0, "Expected thenable to be called asynchronously");
+    is(results[1], 2, "Expected thenable to be called asynchronously");
+    runTest();
+  },1000);
+}
+
 var tests = [
     promiseResolve,
     promiseReject,
@@ -698,6 +724,8 @@ var tests = [
     promiseResolveArray,
     promiseResolveThenable,
     promiseResolvePromise,
+
+    promiseResolveThenableCleanStack,
 ];
 
 function runTest() {

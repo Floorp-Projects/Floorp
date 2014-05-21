@@ -45,6 +45,7 @@ this.ContentControl.prototype = {
     for (let message of this.messagesOfInterest) {
       cs.addMessageListener(message, this);
     }
+    cs.addEventListener('mousemove', this);
   },
 
   stop: function cc_stop() {
@@ -52,6 +53,7 @@ this.ContentControl.prototype = {
     for (let message of this.messagesOfInterest) {
       cs.removeMessageListener(message, this);
     }
+    cs.removeEventListener('mousemove', this);
   },
 
   get document() {
@@ -124,18 +126,22 @@ this.ContentControl.prototype = {
     }
   },
 
+  handleEvent: function cc_handleEvent(aEvent) {
+    if (aEvent.type === 'mousemove') {
+      this.handleMoveToPoint(
+        { json: { x: aEvent.screenX, y: aEvent.screenY, rule: 'Simple' } });
+    }
+    if (!Utils.getMessageManager(aEvent.target)) {
+      aEvent.preventDefault();
+    }
+  },
+
   handleMoveToPoint: function cc_handleMoveToPoint(aMessage) {
     let [x, y] = [aMessage.json.x, aMessage.json.y];
     let rule = TraversalRules[aMessage.json.rule];
-    let vc = this.vc;
-    let win = this.window;
 
-    let dpr = win.devicePixelRatio;
+    let dpr = this.window.devicePixelRatio;
     this.vc.moveToPoint(rule, x * dpr, y * dpr, true);
-
-    let delta = Utils.isContentProcess ?
-      { x: x - win.mozInnerScreenX, y: y - win.mozInnerScreenY } : {};
-    this.sendToChild(vc, aMessage, delta);
   },
 
   handleClearCursor: function cc_handleClearCursor(aMessage) {
