@@ -221,7 +221,6 @@ exports.show = show
 function setupPanelFrame(frame) {
   frame.setAttribute("flex", 1);
   frame.setAttribute("transparent", "transparent");
-  frame.setAttribute("showcaret", true);
   frame.setAttribute("autocompleteenabled", true);
   if (platform === "darwin") {
     frame.style.borderRadius = "6px";
