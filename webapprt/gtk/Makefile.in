@@ -4,7 +4,7 @@
 
 LIBS = \
   $(XPCOM_STANDALONE_GLUE_LDOPTS) \
-  $(MOZ_GTK2_LIBS) \
+  $(TK_LIBS) \
   $(NULL)
 
 NSDISTMODE = copy
@@ -14,7 +14,7 @@ PROGRAMS_DEST = $(DIST)/bin
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += \
-	$(MOZ_GTK2_CFLAGS) \
+	$(TK_CFLAGS) \
 	$(NULL)
 
 GRE_BUILDID := $(shell cat $(DEPTH)/config/buildid)
