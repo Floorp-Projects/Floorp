@@ -121,8 +121,14 @@ var WifiManager = (function() {
        driverDelay, p2pSupported, eapSimSupported, ifname} = getStartupPrefs();
 
   let capabilities = {
-    eapSim: eapSimSupported
+    security: ["OPEN", "WEP", "WPA-PSK", "WPA-EAP"],
+    eapMethod: ["PEAP", "TTLS"],
+    eapPhase2: ["MSCHAPV2"],
+    certificate: ["SERVER"]
   };
+  if (eapSimSupported) {
+    capabilities.eapMethod.unshift("SIM");
+  }
 
   let wifiListener = {
     onWaitEvent: function(event, iface) {
@@ -1930,7 +1936,7 @@ function WifiWorker() {
     });
 
     try {
-      self._allowWpaEap = WifiManager.getCapabilities().eapSim;
+      self._allowWpaEap = (WifiManager.getCapabilities().eapMethod.indexOf("SIM") != -1);
     } catch (e) {
       self._allowWpaEap = false;
     }
@@ -2707,7 +2713,8 @@ WifiWorker.prototype = {
                  connectionInfo: this._lastConnectionInfo,
                  enabled: WifiManager.enabled,
                  status: translateState(WifiManager.state),
-                 macAddress: this.macAddress };
+                 macAddress: this.macAddress,
+                 capabilities: WifiManager.getCapabilities()};
       }
     }
   },
