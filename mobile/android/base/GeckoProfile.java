@@ -470,8 +470,9 @@ public final class GeckoProfile {
                 } else {
                     // this really shouldn't be the case, but handle it anyway
                     parser.removeSection(mName);
-                    return true;
                 }
+
+                break;
             }
 
             parser.write();
