@@ -1951,14 +1951,18 @@ MustCloneRegExp(MRegExp *regexp)
             return true;
 
         MDefinition *def = node->toDefinition();
-        if (def->isRegExpTest() && iter->index() == 1) {
-            // Optimized RegExp.prototype.test.
-            JS_ASSERT(def->toRegExpTest()->regexp() == regexp);
-            continue;
+        if (def->isRegExpTest()) {
+            MRegExpTest *test = def->toRegExpTest();
+            if (test->indexOf(*iter) == 1) {
+                // Optimized RegExp.prototype.test.
+                JS_ASSERT(test->regexp() == regexp);
+                continue;
+            }
+        } else if (def->isCall()) {
+            MCall *call = def->toCall();
+            if (!MustCloneRegExpForCall(call, call->indexOf(*iter)))
+                continue;
         }
-
-        if (def->isCall() && !MustCloneRegExpForCall(def->toCall(), iter->index()))
-            continue;
 
         return true;
     }
