@@ -142,8 +142,6 @@ private:
 
     void onTrackDataAvailable(size_t trackIndex);
 
-    void onTrackEndOfStream(size_t trackIndex);
-
     nsMainThreadPtrHandle<nsIStreamingProtocolListener> mListener;
     int mPrintCount;
 
