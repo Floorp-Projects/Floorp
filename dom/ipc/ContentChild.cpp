@@ -23,6 +23,7 @@
 #include "mozilla/dom/ExternalHelperAppChild.h"
 #include "mozilla/dom/PCrashReporterChild.h"
 #include "mozilla/dom/DOMStorageIPC.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/hal_sandbox/PHalChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
@@ -1435,6 +1436,22 @@ ContentChild::AddRemoteAlertObserver(const nsString& aData,
     NS_ASSERTION(aObserver, "Adding a null observer?");
     mAlertObservers.AppendElement(new AlertObserver(aObserver, aData));
     return NS_OK;
+}
+
+
+bool
+ContentChild::RecvSystemMemoryAvailable(const uint64_t& aGetterId,
+                                        const uint32_t& aMemoryAvailable)
+{
+  nsRefPtr<Promise> p = dont_AddRef(reinterpret_cast<Promise*>(aGetterId));
+
+  if (!aMemoryAvailable) {
+    p->MaybeReject(NS_LITERAL_STRING("Abnormal"));
+    return true;
+  }
+
+  p->MaybeResolve((int)aMemoryAvailable);
+  return true;
 }
 
 bool
