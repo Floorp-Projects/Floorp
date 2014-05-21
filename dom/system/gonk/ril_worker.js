@@ -11775,6 +11775,7 @@ ICCFileHelperObject.prototype = {
       case ICC_EF_ICCID:
         return EF_PATH_MF_SIM;
       case ICC_EF_ADN:
+      case ICC_EF_SDN: // Fall through.
         return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM;
       case ICC_EF_PBR:
         return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK;
@@ -14239,6 +14240,9 @@ ICCContactHelperObject.prototype = {
         break;
       case "fdn":
         ICCRecordHelper.readADNLike(ICC_EF_FDN, onsuccess, onerror);
+        break;
+      case "sdn":
+        ICCRecordHelper.readADNLike(ICC_EF_SDN, onsuccess, onerror);
         break;
       default:
         if (DEBUG) {
