@@ -815,9 +815,6 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
         mydir = os.path.dirname(os.path.abspath(__file__))
         app_extension_dir = os.path.join(mydir, "../../app-extension")
 
-    if target_cfg.get('preferences'):
-        harness_options['preferences'] = target_cfg.get('preferences')
-
     # Do not add entries for SDK modules
     harness_options['manifest'] = manifest.get_harness_options_manifest(False)
 
