@@ -126,11 +126,16 @@ class MUse : public TempObject, public InlineListNode<MUse>
       : producer_(nullptr), consumer_(nullptr)
     { }
 
-    // Set data inside the MUse.
-    void set(MDefinition *producer, MNode *consumer) {
-        producer_ = producer;
-        consumer_ = consumer;
-    }
+    // Set this use, which was previously clear.
+    inline void init(MDefinition *producer, MNode *consumer);
+    // Like init, but works even when the use contains uninitialized data.
+    inline void initUnchecked(MDefinition *producer, MNode *consumer);
+    // Like initUnchecked, but set the producer to nullptr.
+    inline void initUncheckedWithoutProducer(MNode *consumer);
+    // Set this use, which was not previously clear.
+    inline void replaceProducer(MDefinition *producer);
+    // Clear this use.
+    inline void discardProducer();
 
     MDefinition *producer() const {
         JS_ASSERT(producer_ != nullptr);
@@ -144,10 +149,12 @@ class MUse : public TempObject, public InlineListNode<MUse>
         return consumer_;
     }
 
-    // Return the operand index of this MUse in its consumer. In general,
-    // code should prefer to call indexOf on the casted consumer directly,
-    // to allow it to be devirtualized and inlined.
+#ifdef DEBUG
+    // Return the operand index of this MUse in its consumer. This is DEBUG-only
+    // as normal code should instead to call indexOf on the casted consumer
+    // directly, to allow it to be devirtualized and inlined.
     size_t index() const;
+#endif
 };
 
 typedef InlineList<MUse>::iterator MUseIterator;
@@ -203,15 +210,15 @@ class MNode : public TempObject
         return nullptr;
     }
 
-    // Replaces an already-set operand during iteration over a use chain.
-    MUseIterator replaceOperand(MUseIterator use, MDefinition *ins);
-
-    // Replaces an already-set operand, updating use information.
-    void replaceOperand(size_t index, MDefinition *ins);
+    // Sets an already set operand, updating use information. If you're looking
+    // for setOperand, this is probably what you want.
+    virtual void replaceOperand(size_t index, MDefinition *operand) = 0;
 
     // Resets the operand to an uninitialized state, breaking the link
     // with the previous operand's producer.
-    void discardOperand(size_t index);
+    void discardOperand(size_t index) {
+        getUseFor(index)->discardProducer();
+    }
 
     inline MDefinition *toDefinition();
     inline MResumePoint *toResumePoint();
@@ -222,9 +229,6 @@ class MNode : public TempObject
     virtual void dump() const = 0;
 
   protected:
-    // Sets an unset operand, updating use information.
-    virtual void setOperand(size_t index, MDefinition *operand) = 0;
-
     // Gets the MUse corresponding to given operand.
     virtual MUse *getUseFor(size_t index) = 0;
     virtual const MUse *getUseFor(size_t index) const = 0;
@@ -584,7 +588,6 @@ class MDefinition : public MNode
     }
 
     // Removes a use at the given position
-    MUseIterator removeUse(MUseIterator use);
     void removeUse(MUse *use) {
         uses_.remove(use);
     }
@@ -622,6 +625,9 @@ class MDefinition : public MNode
     }
 
     void addUse(MUse *use) {
+        // The use can't be in the list at all, but we only check the first
+        // element for now, as that's where it's most likely to be.
+        MOZ_ASSERT(uses_.empty() || use != *uses_.begin());
         uses_.pushFront(use);
     }
     void replaceAllUsesWith(MDefinition *dom);
@@ -779,20 +785,17 @@ class MInstruction
 template <size_t Arity>
 class MAryInstruction : public MInstruction
 {
-  protected:
     mozilla::Array<MUse, Arity> operands_;
 
-    void setOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
-        operands_[index].set(operand, this);
-        operand->addUse(&operands_[index]);
-    }
-
+  protected:
     MUse *getUseFor(size_t index) MOZ_FINAL MOZ_OVERRIDE {
         return &operands_[index];
     }
-
     const MUse *getUseFor(size_t index) const MOZ_FINAL MOZ_OVERRIDE {
         return &operands_[index];
+    }
+    void initOperand(size_t index, MDefinition *operand) {
+        operands_[index].init(operand, this);
     }
 
   public:
@@ -807,6 +810,9 @@ class MAryInstruction : public MInstruction
         MOZ_ASSERT(u <= &operands_[numOperands() - 1]);
         return u - &operands_[0];
     }
+    void replaceOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
+        operands_[index].replaceProducer(operand);
+    }
 };
 
 class MNullaryInstruction : public MAryInstruction<0>
@@ -817,7 +823,7 @@ class MUnaryInstruction : public MAryInstruction<1>
   protected:
     MUnaryInstruction(MDefinition *ins)
     {
-        setOperand(0, ins);
+        initOperand(0, ins);
     }
 
   public:
@@ -831,8 +837,8 @@ class MBinaryInstruction : public MAryInstruction<2>
   protected:
     MBinaryInstruction(MDefinition *left, MDefinition *right)
     {
-        setOperand(0, left);
-        setOperand(1, right);
+        initOperand(0, left);
+        initOperand(1, right);
     }
 
   public:
@@ -902,9 +908,9 @@ class MTernaryInstruction : public MAryInstruction<3>
   protected:
     MTernaryInstruction(MDefinition *first, MDefinition *second, MDefinition *third)
     {
-        setOperand(0, first);
-        setOperand(1, second);
-        setOperand(2, third);
+        initOperand(0, first);
+        initOperand(1, second);
+        initOperand(2, third);
     }
 
   protected:
@@ -924,10 +930,10 @@ class MQuaternaryInstruction : public MAryInstruction<4>
     MQuaternaryInstruction(MDefinition *first, MDefinition *second,
                            MDefinition *third, MDefinition *fourth)
     {
-        setOperand(0, first);
-        setOperand(1, second);
-        setOperand(2, third);
-        setOperand(3, fourth);
+        initOperand(0, first);
+        initOperand(1, second);
+        initOperand(2, third);
+        initOperand(3, fourth);
     }
 
   protected:
@@ -1166,6 +1172,11 @@ class MTableSwitch MOZ_FINAL
     int32_t low_;
     int32_t high_;
 
+    void initOperand(size_t index, MDefinition *operand) {
+        JS_ASSERT(index == 0);
+        operand_.init(operand, this);
+    }
+
     MTableSwitch(TempAllocator &alloc, MDefinition *ins,
                  int32_t low, int32_t high)
       : successors_(alloc),
@@ -1174,16 +1185,10 @@ class MTableSwitch MOZ_FINAL
         low_(low),
         high_(high)
     {
-        setOperand(0, ins);
+        initOperand(0, ins);
     }
 
   protected:
-    void setOperand(size_t index, MDefinition *operand) {
-        JS_ASSERT(index == 0);
-        operand_.set(operand, this);
-        operand->addUse(&operand_);
-    }
-
     MUse *getUseFor(size_t index) {
         JS_ASSERT(index == 0);
         return &operand_;
@@ -1280,6 +1285,11 @@ class MTableSwitch MOZ_FINAL
         return 0;
     }
 
+    void replaceOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
+        JS_ASSERT(index == 0);
+        operand_.replaceProducer(operand);
+    }
+
     TypePolicy *typePolicy() {
         return this;
     }
@@ -1292,10 +1302,6 @@ class MAryControlInstruction : public MControlInstruction
     mozilla::Array<MBasicBlock *, Successors> successors_;
 
   protected:
-    void setOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
-        operands_[index].set(operand, this);
-        operand->addUse(&operands_[index]);
-    }
     void setSuccessor(size_t index, MBasicBlock *successor) {
         successors_[index] = successor;
     }
@@ -1303,9 +1309,11 @@ class MAryControlInstruction : public MControlInstruction
     MUse *getUseFor(size_t index) MOZ_FINAL MOZ_OVERRIDE {
         return &operands_[index];
     }
-
     const MUse *getUseFor(size_t index) const MOZ_FINAL MOZ_OVERRIDE {
         return &operands_[index];
+    }
+    void initOperand(size_t index, MDefinition *operand) {
+        operands_[index].init(operand, this);
     }
 
   public:
@@ -1319,6 +1327,9 @@ class MAryControlInstruction : public MControlInstruction
         MOZ_ASSERT(u >= &operands_[0]);
         MOZ_ASSERT(u <= &operands_[numOperands() - 1]);
         return u - &operands_[0];
+    }
+    void replaceOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
+        operands_[index].replaceProducer(operand);
     }
     size_t numSuccessors() const MOZ_FINAL MOZ_OVERRIDE {
         return Successors;
@@ -1372,7 +1383,7 @@ class MTest
     MTest(MDefinition *ins, MBasicBlock *if_true, MBasicBlock *if_false)
       : operandMightEmulateUndefined_(true)
     {
-        setOperand(0, ins);
+        initOperand(0, ins);
         setSuccessor(0, if_true);
         setSuccessor(1, if_false);
     }
@@ -1431,7 +1442,7 @@ class MReturn
     public BoxInputsPolicy
 {
     MReturn(MDefinition *ins) {
-        setOperand(0, ins);
+        initOperand(0, ins);
     }
 
   public:
@@ -1456,7 +1467,7 @@ class MThrow
     public BoxInputsPolicy
 {
     MThrow(MDefinition *ins) {
-        setOperand(0, ins);
+        initOperand(0, ins);
     }
 
   public:
@@ -1739,8 +1750,8 @@ class MMutateProto
   protected:
     MMutateProto(MDefinition *obj, MDefinition *value)
     {
-        setOperand(0, obj);
-        setOperand(1, value);
+        initOperand(0, obj);
+        initOperand(1, value);
         setResultType(MIRType_None);
     }
 
@@ -1779,8 +1790,8 @@ class MInitProp
     MInitProp(MDefinition *obj, PropertyName *name, MDefinition *value)
       : name_(name)
     {
-        setOperand(0, obj);
-        setOperand(1, value);
+        initOperand(0, obj);
+        initOperand(1, value);
         setResultType(MIRType_None);
     }
 
@@ -1851,9 +1862,9 @@ class MInitElem
 {
     MInitElem(MDefinition *obj, MDefinition *id, MDefinition *value)
     {
-        setOperand(0, obj);
-        setOperand(1, id);
-        setOperand(2, value);
+        initOperand(0, obj);
+        initOperand(1, id);
+        initOperand(2, value);
         setResultType(MIRType_None);
     }
 
@@ -1922,6 +1933,16 @@ class MVariadicInstruction : public MInstruction
     bool init(TempAllocator &alloc, size_t length) {
         return operands_.init(alloc, length);
     }
+    void initOperand(size_t index, MDefinition *operand) {
+        // FixedList doesn't initialize its elements, so do an unchecked init.
+        operands_[index].initUnchecked(operand, this);
+    }
+    MUse *getUseFor(size_t index) MOZ_FINAL MOZ_OVERRIDE {
+        return &operands_[index];
+    }
+    const MUse *getUseFor(size_t index) const MOZ_FINAL MOZ_OVERRIDE {
+        return &operands_[index];
+    }
 
   public:
     // Will assert if called before initialization.
@@ -1936,17 +1957,8 @@ class MVariadicInstruction : public MInstruction
         MOZ_ASSERT(u <= &operands_[numOperands() - 1]);
         return u - &operands_[0];
     }
-    void setOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
-        operands_[index].set(operand, this);
-        operand->addUse(&operands_[index]);
-    }
-
-    MUse *getUseFor(size_t index) MOZ_FINAL MOZ_OVERRIDE {
-        return &operands_[index];
-    }
-
-    const MUse *getUseFor(size_t index) const MOZ_FINAL MOZ_OVERRIDE {
-        return &operands_[index];
+    void replaceOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
+        operands_[index].replaceProducer(operand);
     }
 };
 
@@ -1985,7 +1997,7 @@ class MCall
                       bool construct, bool isDOMCall);
 
     void initFunction(MDefinition *func) {
-        return setOperand(FunctionOperandIndex, func);
+        initOperand(FunctionOperandIndex, func);
     }
 
     bool needsArgCheck() const {
@@ -2148,9 +2160,9 @@ class MApplyArgs
     MApplyArgs(JSFunction *target, MDefinition *fun, MDefinition *argc, MDefinition *self)
       : target_(target)
     {
-        setOperand(0, fun);
-        setOperand(1, argc);
-        setOperand(2, self);
+        initOperand(0, fun);
+        initOperand(1, argc);
+        initOperand(2, self);
         setResultType(MIRType_Value);
     }
 
@@ -2233,8 +2245,8 @@ class MGetDynamicName
   protected:
     MGetDynamicName(MDefinition *scopeChain, MDefinition *name)
     {
-        setOperand(0, scopeChain);
-        setOperand(1, name);
+        initOperand(0, scopeChain);
+        initOperand(1, name);
         setResultType(MIRType_Value);
     }
 
@@ -2269,7 +2281,7 @@ class MFilterArgumentsOrEval
   protected:
     MFilterArgumentsOrEval(MDefinition *string)
     {
-        setOperand(0, string);
+        initOperand(0, string);
         setGuard();
         setResultType(MIRType_None);
     }
@@ -2303,9 +2315,9 @@ class MCallDirectEval
                     jsbytecode *pc)
         : pc_(pc)
     {
-        setOperand(0, scopeChain);
-        setOperand(1, string);
-        setOperand(2, thisValue);
+        initOperand(0, scopeChain);
+        initOperand(1, string);
+        initOperand(2, thisValue);
         setResultType(MIRType_Value);
     }
 
@@ -2981,8 +2993,8 @@ class MReturnFromCtor
     public MixPolicy<BoxPolicy<0>, ObjectPolicy<1> >
 {
     MReturnFromCtor(MDefinition *value, MDefinition *object) {
-        setOperand(0, value);
-        setOperand(1, object);
+        initOperand(0, value);
+        initOperand(1, object);
         setResultType(MIRType_Object);
     }
 
@@ -4745,6 +4757,11 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
 
   protected:
     MUse *getUseFor(size_t index) {
+        // Note: after the initial IonBuilder pass, it is OK to change phi
+        // operands such that they do not include the type sets of their
+        // operands. This can arise during e.g. value numbering, where
+        // definitions producing the same value may have different type sets.
+        JS_ASSERT(index < numOperands());
         return &inputs_[index];
     }
     const MUse *getUseFor(size_t index) const {
@@ -4773,17 +4790,8 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
         return new(alloc) MPhi(alloc, resultType);
     }
 
-    void setOperand(size_t index, MDefinition *operand) {
-        // Note: after the initial IonBuilder pass, it is OK to change phi
-        // operands such that they do not include the type sets of their
-        // operands. This can arise during e.g. value numbering, where
-        // definitions producing the same value may have different type sets.
-        JS_ASSERT(index < numOperands());
-        inputs_[index].set(operand, this);
-        operand->addUse(&inputs_[index]);
-    }
-
     void removeOperand(size_t index);
+    void removeAllOperands();
 
     MDefinition *getOperand(size_t index) const {
         return inputs_[index].producer();
@@ -4795,6 +4803,9 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
         MOZ_ASSERT(u >= &inputs_[0]);
         MOZ_ASSERT(u <= &inputs_[numOperands() - 1]);
         return u - &inputs_[0];
+    }
+    void replaceOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
+        inputs_[index].replaceProducer(operand);
     }
     bool hasBackedgeType() const {
         return hasBackedgeType_;
@@ -5706,8 +5717,8 @@ class MSetInitializedLength
   : public MAryInstruction<2>
 {
     MSetInitializedLength(MDefinition *elements, MDefinition *index) {
-        setOperand(0, elements);
-        setOperand(1, index);
+        initOperand(0, elements);
+        initOperand(1, index);
     }
 
   public:
@@ -5765,8 +5776,8 @@ class MSetArrayLength
   : public MAryInstruction<2>
 {
     MSetArrayLength(MDefinition *elements, MDefinition *index) {
-        setOperand(0, elements);
-        setOperand(1, index);
+        initOperand(0, elements);
+        initOperand(1, index);
     }
 
   public:
@@ -6307,9 +6318,9 @@ class MStoreElement
     bool needsHoleCheck_;
 
     MStoreElement(MDefinition *elements, MDefinition *index, MDefinition *value, bool needsHoleCheck) {
-        setOperand(0, elements);
-        setOperand(1, index);
-        setOperand(2, value);
+        initOperand(0, elements);
+        initOperand(1, index);
+        initOperand(2, value);
         needsHoleCheck_ = needsHoleCheck;
         JS_ASSERT(elements->type() == MIRType_Elements);
         JS_ASSERT(index->type() == MIRType_Int32);
@@ -6356,10 +6367,10 @@ class MStoreElementHole
 {
     MStoreElementHole(MDefinition *object, MDefinition *elements,
                       MDefinition *index, MDefinition *value) {
-        setOperand(0, object);
-        setOperand(1, elements);
-        setOperand(2, index);
-        setOperand(3, value);
+        initOperand(0, object);
+        initOperand(1, elements);
+        initOperand(2, index);
+        initOperand(3, value);
         JS_ASSERT(elements->type() == MIRType_Elements);
         JS_ASSERT(index->type() == MIRType_Int32);
     }
@@ -6778,10 +6789,10 @@ class MStoreTypedArrayElementHole
                                 MDefinition *value, int arrayType)
       : MAryInstruction<4>(), arrayType_(arrayType)
     {
-        setOperand(0, elements);
-        setOperand(1, length);
-        setOperand(2, index);
-        setOperand(3, value);
+        initOperand(0, elements);
+        initOperand(1, length);
+        initOperand(2, index);
+        initOperand(3, value);
         setMovable();
         JS_ASSERT(elements->type() == MIRType_Elements);
         JS_ASSERT(length->type() == MIRType_Int32);
@@ -7380,19 +7391,19 @@ class MDispatchInstruction
     MBasicBlock *fallback_;
     MUse operand_;
 
+    void initOperand(size_t index, MDefinition *operand) {
+        JS_ASSERT(index == 0);
+        operand_.init(operand, this);
+    }
+
   public:
     MDispatchInstruction(TempAllocator &alloc, MDefinition *input)
       : map_(alloc), fallback_(nullptr)
     {
-        setOperand(0, input);
+        initOperand(0, input);
     }
 
   protected:
-    void setOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
-        JS_ASSERT(index == 0);
-        operand_.set(operand, this);
-        operand->addUse(&operand_);
-    }
     MUse *getUseFor(size_t index) MOZ_FINAL MOZ_OVERRIDE {
         JS_ASSERT(index == 0);
         return &operand_;
@@ -7411,6 +7422,10 @@ class MDispatchInstruction
     size_t indexOf(const MUse *u) const MOZ_FINAL MOZ_OVERRIDE {
         JS_ASSERT(u == getUseFor(0));
         return 0;
+    }
+    void replaceOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
+        JS_ASSERT(index == 0);
+        operand_.replaceProducer(operand);
     }
 
   public:
@@ -8466,8 +8481,8 @@ class MCallInitElementArray
     MCallInitElementArray(MDefinition *obj, uint32_t index, MDefinition *val)
       : index_(index)
     {
-        setOperand(0, obj);
-        setOperand(1, val);
+        initOperand(0, obj);
+        initOperand(1, val);
     }
 
   public:
@@ -8508,8 +8523,8 @@ class MSetDOMProperty
     MSetDOMProperty(const JSJitSetterOp func, MDefinition *obj, MDefinition *val)
       : func_(func)
     {
-        setOperand(0, obj);
-        setOperand(1, val);
+        initOperand(0, obj);
+        initOperand(1, val);
     }
 
   public:
@@ -8556,10 +8571,10 @@ class MGetDOMProperty
         JS_ASSERT(jitinfo);
         JS_ASSERT(jitinfo->type() == JSJitInfo::Getter);
 
-        setOperand(0, obj);
+        initOperand(0, obj);
 
         // Pin the guard as an operand if we want to hoist later
-        setOperand(1, guard);
+        initOperand(1, guard);
 
         // We are movable iff the jitinfo says we can be.
         if (isDomMovable()) {
@@ -9729,7 +9744,6 @@ class MResumePoint MOZ_FINAL : public MNode, public InlineForwardListNode<MResum
     friend void AssertBasicGraphCoherency(MIRGraph &graph);
 
     FixedList<MUse> operands_;
-    uint32_t stackDepth_;
     jsbytecode *pc_;
     MResumePoint *caller_;
     MInstruction *instruction_;
@@ -9741,20 +9755,11 @@ class MResumePoint MOZ_FINAL : public MNode, public InlineForwardListNode<MResum
   protected:
     // Initializes operands_ to an empty array of a fixed length.
     // The array may then be filled in by inherit().
-    bool init(TempAllocator &alloc) {
-        return operands_.init(alloc, stackDepth_);
-    }
-
-    // Overwrites an operand without updating its Uses.
-    void setOperand(size_t index, MDefinition *operand) {
-        JS_ASSERT(index < stackDepth_);
-        operands_[index].set(operand, this);
-        operand->addUse(&operands_[index]);
-    }
+    bool init(TempAllocator &alloc);
 
     void clearOperand(size_t index) {
-        JS_ASSERT(index < stackDepth_);
-        operands_[index].set(nullptr, this);
+        // FixedList doesn't initialize its elements, so do an unchecked init.
+        operands_[index].initUncheckedWithoutProducer(this);
     }
 
     MUse *getUseFor(size_t index) {
@@ -9772,26 +9777,32 @@ class MResumePoint MOZ_FINAL : public MNode, public InlineForwardListNode<MResum
         return MNode::ResumePoint;
     }
     size_t numOperands() const {
-        return stackDepth_;
+        return operands_.length();
     }
     size_t indexOf(const MUse *u) const MOZ_FINAL MOZ_OVERRIDE {
         MOZ_ASSERT(u >= &operands_[0]);
         MOZ_ASSERT(u <= &operands_[numOperands() - 1]);
         return u - &operands_[0];
     }
+    void initOperand(size_t index, MDefinition *operand) {
+        // FixedList doesn't initialize its elements, so do an unchecked init.
+        operands_[index].initUnchecked(operand, this);
+    }
+    void replaceOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
+        operands_[index].replaceProducer(operand);
+    }
 
     bool isObservableOperand(MUse *u) const;
     bool isObservableOperand(size_t index) const;
 
     MDefinition *getOperand(size_t index) const {
-        JS_ASSERT(index < stackDepth_);
         return operands_[index].producer();
     }
     jsbytecode *pc() const {
         return pc_;
     }
     uint32_t stackDepth() const {
-        return stackDepth_;
+        return operands_.length();
     }
     MResumePoint *caller() const {
         return caller_;
@@ -9816,9 +9827,9 @@ class MResumePoint MOZ_FINAL : public MNode, public InlineForwardListNode<MResum
     }
 
     void discardUses() {
-        for (size_t i = 0; i < stackDepth_; i++) {
+        for (size_t i = 0; i < operands_.length(); i++) {
             if (operands_[i].hasProducer())
-                operands_[i].producer()->removeUse(&operands_[i]);
+                operands_[i].discardProducer();
         }
     }
 
@@ -10165,7 +10176,7 @@ class MAsmJSParameter : public MNullaryInstruction
 class MAsmJSReturn : public MAryControlInstruction<1, 0>
 {
     MAsmJSReturn(MDefinition *ins) {
-        setOperand(0, ins);
+        initOperand(0, ins);
     }
 
   public:
@@ -10245,15 +10256,16 @@ class MAsmJSCall MOZ_FINAL : public MInstruction
     FixedList<AnyRegister> argRegs_;
     size_t spIncrement_;
 
+    void initOperand(size_t index, MDefinition *operand) {
+        // FixedList doesn't initialize its elements, so do an unchecked init.
+        operands_[index].initUnchecked(operand, this);
+    }
+
     MAsmJSCall(const CallSiteDesc &desc, Callee callee, size_t spIncrement)
      : desc_(desc), callee_(callee), spIncrement_(spIncrement)
     { }
 
   protected:
-    void setOperand(size_t index, MDefinition *operand) {
-        operands_[index].set(operand, this);
-        operand->addUse(&operands_[index]);
-    }
     MUse *getUseFor(size_t index) {
         return &operands_[index];
     }
@@ -10281,6 +10293,9 @@ class MAsmJSCall MOZ_FINAL : public MInstruction
         MOZ_ASSERT(u >= &operands_[0]);
         MOZ_ASSERT(u <= &operands_[numOperands() - 1]);
         return u - &operands_[0];
+    }
+    void replaceOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
+        operands_[index].replaceProducer(operand);
     }
     MDefinition *getOperand(size_t index) const {
         JS_ASSERT(index < numOperands());
@@ -10312,6 +10327,43 @@ class MAsmJSCall MOZ_FINAL : public MInstruction
         return true;
     }
 };
+
+void MUse::init(MDefinition *producer, MNode *consumer)
+{
+    MOZ_ASSERT(!consumer_, "Initializing MUse that already has a consumer");
+    MOZ_ASSERT(!producer_, "Initializing MUse that already has a producer");
+    initUnchecked(producer, consumer);
+}
+
+void MUse::initUnchecked(MDefinition *producer, MNode *consumer)
+{
+    MOZ_ASSERT(consumer, "Initializing to null consumer");
+    consumer_ = consumer;
+    producer_ = producer;
+    producer_->addUse(this);
+}
+
+void MUse::initUncheckedWithoutProducer(MNode *consumer)
+{
+    MOZ_ASSERT(consumer, "Initializing to null consumer");
+    consumer_ = consumer;
+    producer_ = nullptr;
+}
+
+void MUse::replaceProducer(MDefinition *producer)
+{
+    MOZ_ASSERT(consumer_, "Resetting MUse without a consumer");
+    producer_->removeUse(this);
+    producer_ = producer;
+    producer_->addUse(this);
+}
+
+void MUse::discardProducer()
+{
+    MOZ_ASSERT(consumer_, "Clearing MUse without a consumer");
+    producer_->removeUse(this);
+    producer_ = nullptr;
+}
 
 #undef INSTRUCTION_HEADER
 
