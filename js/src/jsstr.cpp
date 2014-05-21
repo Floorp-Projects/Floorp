@@ -2251,8 +2251,8 @@ struct ReplaceData
         repstr = string;
 
         /* We're about to store pointers into the middle of our string. */
-        dollarEnd = repstr->chars() + repstr->length();
-        dollar = js_strchr_limit(repstr->chars(), '$', dollarEnd);
+        const jschar *chars = repstr->chars();
+        dollar = js_strchr_limit(chars, '$', chars + repstr->length());
     }
 
     inline void setReplacementFunction(JSObject *func) {
@@ -2260,7 +2260,7 @@ struct ReplaceData
         lambda = func;
         elembase = nullptr;
         repstr = nullptr;
-        dollar = dollarEnd = nullptr;
+        dollar = nullptr;
     }
 
     RootedString       str;            /* 'this' parameter object as a string */
@@ -2269,7 +2269,6 @@ struct ReplaceData
     RootedObject       elembase;       /* object for function(a){return b[a]} replace */
     Rooted<JSLinearString*> repstr; /* replacement string */
     const jschar       *dollar;        /* null or pointer to first $ in repstr */
-    const jschar       *dollarEnd;     /* limit pointer for js_strchr_limit */
     int                leftIndex;      /* left context index in str->chars */
     JSSubString        dollarStr;      /* for "$$" InterpretDollar result */
     bool               calledBack;     /* record whether callback has been called */
@@ -2484,9 +2483,10 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         return true;
     }
 
-    JSString *repstr = rdata.repstr;
+    JSLinearString *repstr = rdata.repstr;
     CheckedInt<uint32_t> replen = repstr->length();
-    for (const jschar *dp = rdata.dollar, *ep = rdata.dollarEnd; dp;
+    const jschar *ep = repstr->chars() + repstr->length();
+    for (const jschar *dp = rdata.dollar; dp;
          dp = js_strchr_limit(dp, '$', ep)) {
         JSSubString sub;
         size_t skip;
@@ -2518,11 +2518,11 @@ static void
 DoReplace(RegExpStatics *res, ReplaceData &rdata)
 {
     JSLinearString *repstr = rdata.repstr;
-    const jschar *cp;
-    const jschar *bp = cp = repstr->chars();
+    const jschar *bp = repstr->chars();
+    const jschar *cp = bp;
 
     const jschar *dp = rdata.dollar;
-    const jschar *ep = rdata.dollarEnd;
+    const jschar *ep = bp + repstr->length();
     for (; dp; dp = js_strchr_limit(dp, '$', ep)) {
         /* Move one of the constant portions of the replacement value. */
         size_t len = dp - cp;
