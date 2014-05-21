@@ -2485,20 +2485,24 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
 
     JSLinearString *repstr = rdata.repstr;
     CheckedInt<uint32_t> replen = repstr->length();
-    const jschar *ep = repstr->chars() + repstr->length();
-    for (const jschar *dp = rdata.dollar; dp;
-         dp = js_strchr_limit(dp, '$', ep)) {
-        JSSubString sub;
-        size_t skip;
-        if (InterpretDollar(res, dp, ep, rdata, &sub, &skip)) {
-            if (sub.length > skip)
-                replen += sub.length - skip;
-            else
-                replen -= skip - sub.length;
-            dp += skip;
-        } else {
-            dp++;
-        }
+    if (rdata.dollar) {
+        const jschar *dp = rdata.dollar;
+        const jschar *ep = repstr->chars() + repstr->length();
+        do {
+            JSSubString sub;
+            size_t skip;
+            if (InterpretDollar(res, dp, ep, rdata, &sub, &skip)) {
+                if (sub.length > skip)
+                    replen += sub.length - skip;
+                else
+                    replen -= skip - sub.length;
+                dp += skip;
+            } else {
+                dp++;
+            }
+
+            dp = js_strchr_limit(dp, '$', ep);
+        } while (dp);
     }
 
     if (!replen.isValid()) {
@@ -2521,24 +2525,28 @@ DoReplace(RegExpStatics *res, ReplaceData &rdata)
     const jschar *bp = repstr->chars();
     const jschar *cp = bp;
 
-    const jschar *dp = rdata.dollar;
-    const jschar *ep = bp + repstr->length();
-    for (; dp; dp = js_strchr_limit(dp, '$', ep)) {
-        /* Move one of the constant portions of the replacement value. */
-        size_t len = dp - cp;
-        rdata.sb.infallibleAppend(cp, len);
-        cp = dp;
+    if (rdata.dollar) {
+        const jschar *dp = rdata.dollar;
+        const jschar *ep = bp + repstr->length();
+        do {
+            /* Move one of the constant portions of the replacement value. */
+            size_t len = dp - cp;
+            rdata.sb.infallibleAppend(cp, len);
+            cp = dp;
 
-        JSSubString sub;
-        size_t skip;
-        if (InterpretDollar(res, dp, ep, rdata, &sub, &skip)) {
-            len = sub.length;
-            rdata.sb.infallibleAppend(sub.chars, len);
-            cp += skip;
-            dp += skip;
-        } else {
-            dp++;
-        }
+            JSSubString sub;
+            size_t skip;
+            if (InterpretDollar(res, dp, ep, rdata, &sub, &skip)) {
+                len = sub.length;
+                rdata.sb.infallibleAppend(sub.chars, len);
+                cp += skip;
+                dp += skip;
+            } else {
+                dp++;
+            }
+
+            dp = js_strchr_limit(dp, '$', ep);
+        } while (dp);
     }
     rdata.sb.infallibleAppend(cp, repstr->length() - (cp - bp));
 }
