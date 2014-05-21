@@ -7,8 +7,8 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-const { DevToolsLoader, devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const worker = new DevToolsLoader(); // TODO: Replace this with the worker loader
+const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { worker } = Cu.import("resource://gre/modules/devtools/worker-loader.js", {})
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 const Services = devtools.require("Services");
