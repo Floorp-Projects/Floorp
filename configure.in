@@ -2634,7 +2634,7 @@ MOZ_CHECK_HEADERS([linux/quota.h],,,[#include <sys/socket.h>])
 dnl SCTP support - needs various network include headers
 MOZ_CHECK_HEADERS([linux/if_addr.h linux/rtnetlink.h],,,[#include <sys/socket.h>])
 
-MOZ_CHECK_HEADERS(sys/types.h netinet/in.h byteswap.h)
+MOZ_CHECK_HEADERS(sys/types.h netinet/in.h byteswap.h sys/uio.h)
 
 dnl Check for sin_len and sin6_len - used by SCTP; only appears in Mac/*BSD generally
 AC_CACHE_CHECK(for sockaddr_in.sin_len,
