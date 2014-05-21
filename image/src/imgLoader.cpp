@@ -56,7 +56,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIMemoryReporterCallback *aHandleReport,
-                            nsISupports *aData)
+                            nsISupports *aData, bool aAnonymize)
   {
     nsresult rv;
     ImageSizes chrome;
@@ -66,6 +66,8 @@ public:
       mKnownLoaders[i]->mChromeCache.EnumerateRead(EntryImageSizes, &chrome);
       mKnownLoaders[i]->mCache.EnumerateRead(EntryImageSizes, &content);
     }
+
+    // Note that we only need to anonymize content image URIs.
 
     rv = ReportInfoArray(aHandleReport, aData, chrome.mRasterUsedImageInfo,
                          "images/chrome/raster/used");
@@ -84,19 +86,19 @@ public:
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = ReportInfoArray(aHandleReport, aData, content.mRasterUsedImageInfo,
-                         "images/content/raster/used");
+                         "images/content/raster/used", aAnonymize);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = ReportInfoArray(aHandleReport, aData, content.mRasterUnusedImageInfo,
-                         "images/content/raster/unused");
+                         "images/content/raster/unused", aAnonymize);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = ReportInfoArray(aHandleReport, aData, content.mVectorUsedImageDocInfo,
-                         "images/content/vector/used/documents");
+                         "images/content/vector/used/documents", aAnonymize);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = ReportInfoArray(aHandleReport, aData, content.mVectorUnusedImageDocInfo,
-                         "images/content/vector/unused/documents");
+                         "images/content/vector/unused/documents", aAnonymize);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
@@ -201,7 +203,7 @@ private:
   nsresult ReportInfoArray(nsIMemoryReporterCallback *aHandleReport,
                            nsISupports *aData,
                            const nsTArray<ImageInfo<Sizes> > &aInfoArray,
-                           const char *aPathPartStr)
+                           const char *aPathPartStr, bool aAnonymize = false)
   {
     nsresult rv;
     Sizes totalSizes;
@@ -214,14 +216,20 @@ private:
     // Report notable images, and compute total and non-notable aggregate sizes.
     for (uint32_t i = 0; i < aInfoArray.Length(); i++) {
       ImageInfo<Sizes> info = aInfoArray[i];
-      // info.mURI can be a data: URI, and thus extremely long. Truncate if
-      // necessary.
-      static const size_t max = 256;
-      if (info.mURI.Length() > max) {
-        info.mURI.Truncate(max);
-        info.mURI.AppendLiteral(" (truncated)");
+
+      if (aAnonymize) {
+        info.mURI.Truncate();
+        info.mURI.AppendPrintf("<anonymized-%u>", i);
+      } else {
+        // info.mURI can be a data: URI, and thus extremely long. Truncate if
+        // necessary.
+        static const size_t max = 256;
+        if (info.mURI.Length() > max) {
+          info.mURI.Truncate(max);
+          info.mURI.AppendLiteral(" (truncated)");
+        }
+        info.mURI.ReplaceChar('/', '\\');
       }
-      info.mURI.ReplaceChar('/', '\\');
 
       totalSizes.add(info.mSizes);
 

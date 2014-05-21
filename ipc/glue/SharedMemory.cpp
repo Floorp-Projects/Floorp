@@ -23,7 +23,8 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   NS_IMETHOD
-  CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData)
+  CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
+                 bool aAnonymize)
   {
     nsresult rv;
     rv = MOZ_COLLECT_REPORT(

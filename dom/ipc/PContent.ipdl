@@ -350,7 +350,8 @@ child:
      */
     async SetProcessSandbox();
 
-    PMemoryReportRequest(uint32_t generation, bool minimizeMemoryUsage, nsString DMDDumpIdent);
+    PMemoryReportRequest(uint32_t generation, bool anonymize,
+                         bool minimizeMemoryUsage, nsString DMDDumpIdent);
 
     /**
      * Notify the AudioChannelService in the child processes.

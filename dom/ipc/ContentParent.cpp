@@ -454,7 +454,8 @@ NS_IMPL_ISUPPORTS(ContentParentsMemoryReporter, nsIMemoryReporter)
 
 NS_IMETHODIMP
 ContentParentsMemoryReporter::CollectReports(nsIMemoryReporterCallback* cb,
-                                             nsISupports* aClosure)
+                                             nsISupports* aClosure,
+                                             bool aAnonymize)
 {
     nsAutoTArray<ContentParent*, 16> cps;
     ContentParent::GetAllEvenIfDead(cps);
@@ -464,7 +465,7 @@ ContentParentsMemoryReporter::CollectReports(nsIMemoryReporterCallback* cb,
         MessageChannel* channel = cp->GetIPCChannel();
 
         nsString friendlyName;
-        cp->FriendlyName(friendlyName);
+        cp->FriendlyName(friendlyName, aAnonymize);
 
         cp->AddRef();
         nsrefcnt refcnt = cp->Release();
@@ -2423,13 +2424,13 @@ ContentParent::Observe(nsISupports* aSubject,
 #endif
         if (!isNuwa) {
             unsigned generation;
-            int minimize, identOffset = -1;
+            int anonymize, minimize, identOffset = -1;
             nsDependentString msg(aData);
             NS_ConvertUTF16toUTF8 cmsg(msg);
 
             if (sscanf(cmsg.get(),
-                       "generation=%x minimize=%d DMDident=%n",
-                       &generation, &minimize, &identOffset) < 2
+                       "generation=%x anonymize=%d minimize=%d DMDident=%n",
+                       &generation, &anonymize, &minimize, &identOffset) < 3
                 || identOffset < 0) {
                 return NS_ERROR_INVALID_ARG;
             }
@@ -2437,7 +2438,8 @@ ContentParent::Observe(nsISupports* aSubject,
             // offset in identOffset should be correct as a char offset.
             MOZ_ASSERT(cmsg[identOffset - 1] == '=');
             unused << SendPMemoryReportRequestConstructor(
-              generation, minimize, nsString(Substring(msg, identOffset)));
+              generation, anonymize, minimize,
+              nsString(Substring(msg, identOffset)));
         }
     }
     else if (!strcmp(aTopic, "child-gc-request")){
@@ -2678,7 +2680,7 @@ ContentParent::IsPreallocated()
 }
 
 void
-ContentParent::FriendlyName(nsAString& aName)
+ContentParent::FriendlyName(nsAString& aName, bool aAnonymize)
 {
     aName.Truncate();
 #ifdef MOZ_NUWA_PROCESS
@@ -2690,6 +2692,8 @@ ContentParent::FriendlyName(nsAString& aName)
         aName.AssignLiteral("(Preallocated)");
     } else if (mIsForBrowser) {
         aName.AssignLiteral("Browser");
+    } else if (aAnonymize) {
+        aName.AssignLiteral("<anonymized-name>");
     } else if (!mAppName.IsEmpty()) {
         aName = mAppName;
     } else if (!mAppManifestURL.IsEmpty()) {
@@ -2777,8 +2781,9 @@ ContentParent::RecvPIndexedDBConstructor(PIndexedDBParent* aActor)
 }
 
 PMemoryReportRequestParent*
-ContentParent::AllocPMemoryReportRequestParent(const uint32_t& generation,
-                                               const bool &minimizeMemoryUsage,
+ContentParent::AllocPMemoryReportRequestParent(const uint32_t& aGeneration,
+                                               const bool &aAnonymize,
+                                               const bool &aMinimizeMemoryUsage,
                                                const nsString &aDMDDumpIdent)
 {
     MemoryReportRequestParent* parent = new MemoryReportRequestParent();

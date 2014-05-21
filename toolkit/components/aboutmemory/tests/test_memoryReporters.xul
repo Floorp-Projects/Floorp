@@ -16,6 +16,10 @@
   <marquee>Marquee</marquee>
   </body>
 
+  <!-- some URIs that should be anonymized in anonymous mode -->
+  <iframe id="amFrame"  height="200" src="http://example.org:80"></iframe>
+  <iframe id="amFrame"  height="200" src="https://example.com:443"></iframe>
+
   <!-- test code goes here -->
   <script type="application/javascript">
   <![CDATA[
@@ -67,7 +71,8 @@
   let mySandbox = Components.utils.Sandbox(document.nodePrincipal,
                     { sandboxName: "this-is-a-sandbox-name" });
 
-  function handleReport(aProcess, aPath, aKind, aUnits, aAmount, aDescription)
+  function handleReportNormal(aProcess, aPath, aKind, aUnits, aAmount,
+                              aDescription)
   {
     // Record the values of some notable reporters.
     if (aPath === "vsize") {
@@ -104,6 +109,25 @@
       present.smallString1 = true;
     } else if (aPath.contains("@)(*&")) {
       present.smallString2 = true;
+    }
+
+    // Shouldn't get any anonymized paths.
+    if (aPath.contains('<anonymized')) {
+        present.anonymizedWhenUnnecessary = true;
+    }
+  }
+
+  function handleReportAnonymized(aProcess, aPath, aKind, aUnits, aAmount,
+                                  aDescription)
+  {
+    // Shouldn't get http: or https: in any paths.
+    if (aPath.contains('http:')) {
+        present.httpWhenAnonymized = true;
+    }
+
+    // file: URLs should have their path anonymized.
+    if (aPath.search('file:..[^<]') !== -1) {
+        present.unanonymizedFilePathWhenAnonymized = true;
     }
   }
 
@@ -171,7 +195,11 @@
                 domSize, styleSize, otherSize, totalSize,
                 jsMilliseconds, nonJSMilliseconds);
 
-  mgr.getReportsForThisProcess(handleReport, null);
+  mgr.getReportsForThisProcess(handleReportNormal, null,
+                               /* anonymize = */ false);
+
+  mgr.getReportsForThisProcess(handleReportAnonymized, null,
+                               /* anonymize = */ true);
 
   function checkSpecialReport(aName, aAmounts, aCanBeUnreasonable)
   {
@@ -202,6 +230,10 @@
   ok(present.smallString1,                "small string 1 is present");
   ok(present.smallString2,                "small string 2 is present");
 
+  ok(!present.anonymizedWhenUnnecessary,  "anonymized paths are not present when unnecessary");
+  ok(!present.httpWhenAnonymized,         "http URLs are anonymized when necessary");
+  ok(!present.unanonymizedFilePathWhenAnonymized,
+                                          "file URLs are anonymized when necessary");
 
   // Reporter registration tests
 
@@ -245,7 +277,7 @@
       }
     },
     // nsIMemoryReporter
-    collectReports: function(callback, data) {
+    collectReports: function(callback, data, anonymize) {
       for (let path of Object.keys(this.tests)) {
         try {
           let test = this.tests[path];
@@ -294,7 +326,8 @@
     mgr.registerStrongReporter(reporterAndCallback);
 
     // Check the generated reports.
-    mgr.getReportsForThisProcess(reporterAndCallback, null);
+    mgr.getReportsForThisProcess(reporterAndCallback, null,
+                                 /* anonymize = */ false);
     reporterAndCallback.finish();
 
     // Unregistration works.
@@ -302,7 +335,8 @@
 
     // The reporter was unregistered, hence there shouldn't be any reports from
     // the test reporter.
-    mgr.getReportsForThisProcess(reporterAndCallback, null);
+    mgr.getReportsForThisProcess(reporterAndCallback, null,
+                                 /* anonymize = */ false);
     reporterAndCallback.finish(0);
   }
 
