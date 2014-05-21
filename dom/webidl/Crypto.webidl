@@ -16,6 +16,8 @@ interface RandomSource {
 Crypto implements RandomSource;
 
 interface Crypto {
+  [Pref="dom.webcrypto.enabled"]
+  readonly attribute SubtleCrypto subtle;
 };
 
 #ifndef MOZ_DISABLE_CRYPTOLEGACY

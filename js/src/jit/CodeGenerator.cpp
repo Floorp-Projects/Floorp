@@ -2807,7 +2807,19 @@ CodeGenerator::generateArgumentsChecks(bool bailout)
     // Reserve the amount of stack the actual frame will use. We have to undo
     // this before falling through to the method proper though, because the
     // monomorphic call case will bypass this entire path.
-    masm.reserveStack(frameSize());
+
+    // On windows, we cannot skip very far down the stack without touching the
+    // memory pages in-between.  This is a corner-case code for situations where the
+    // Ion frame data for a piece of code is very large.  To handle this special case,
+    // for frames over 1k in size we allocate memory on the stack incrementally, touching
+    // it as we go.
+    uint32_t frameSizeLeft = frameSize();
+    while (frameSizeLeft > 4096) {
+        masm.reserveStack(4096);
+        masm.store32(Imm32(0), Address(StackPointer, 0));
+        frameSizeLeft -= 4096;
+    }
+    masm.reserveStack(frameSizeLeft);
 
     // No registers are allocated yet, so it's safe to grab anything.
     Register temp = GeneralRegisterSet(EntryTempMask).getAny();

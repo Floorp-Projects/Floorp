@@ -651,7 +651,14 @@ IonBuilder::inlineMathFloor(CallInfo &callInfo)
     // Math.floor(int(x)) == int(x)
     if (argType == MIRType_Int32 && returnType == MIRType_Int32) {
         callInfo.setImplicitlyUsedUnchecked();
-        current->push(callInfo.getArg(0));
+        // The int operand may be something which bails out if the actual value
+        // is not in the range of the result type of the MIR. We need to tell
+        // the optimizer to preserve this bailout even if the final result is
+        // fully truncated.
+        MLimitedTruncate *ins = MLimitedTruncate::New(alloc(), callInfo.getArg(0),
+                                                      MDefinition::IndirectTruncate);
+        current->add(ins);
+        current->push(ins);
         return InliningStatus_Inlined;
     }
 
@@ -689,22 +696,14 @@ IonBuilder::inlineMathCeil(CallInfo &callInfo)
     // Math.ceil(int(x)) == int(x)
     if (argType == MIRType_Int32 && returnType == MIRType_Int32) {
         callInfo.setImplicitlyUsedUnchecked();
-        current->push(callInfo.getArg(0));
-        return InliningStatus_Inlined;
-    }
-
-    if (IsFloatingPointType(argType) && returnType == MIRType_Int32) {
-        // Math.ceil(x) == -Math.floor(-x)
-        callInfo.setImplicitlyUsedUnchecked();
-        MConstant *minusOne = MConstant::New(alloc(), DoubleValue(-1.0));
-        current->add(minusOne);
-        MMul *mul = MMul::New(alloc(), callInfo.getArg(0), minusOne, argType);
-        current->add(mul);
-        MFloor *floor = MFloor::New(alloc(), mul);
-        current->add(floor);
-        MMul *result = MMul::New(alloc(), floor, minusOne, MIRType_Int32);
-        current->add(result);
-        current->push(result);
+        // The int operand may be something which bails out if the actual value
+        // is not in the range of the result type of the MIR. We need to tell
+        // the optimizer to preserve this bailout even if the final result is
+        // fully truncated.
+        MLimitedTruncate *ins = MLimitedTruncate::New(alloc(), callInfo.getArg(0),
+                                                      MDefinition::IndirectTruncate);
+        current->add(ins);
+        current->push(ins);
         return InliningStatus_Inlined;
     }
 
@@ -734,7 +733,14 @@ IonBuilder::inlineMathRound(CallInfo &callInfo)
     // Math.round(int(x)) == int(x)
     if (argType == MIRType_Int32 && returnType == MIRType_Int32) {
         callInfo.setImplicitlyUsedUnchecked();
-        current->push(callInfo.getArg(0));
+        // The int operand may be something which bails out if the actual value
+        // is not in the range of the result type of the MIR. We need to tell
+        // the optimizer to preserve this bailout even if the final result is
+        // fully truncated.
+        MLimitedTruncate *ins = MLimitedTruncate::New(alloc(), callInfo.getArg(0),
+                                                      MDefinition::IndirectTruncate);
+        current->add(ins);
+        current->push(ins);
         return InliningStatus_Inlined;
     }
 
