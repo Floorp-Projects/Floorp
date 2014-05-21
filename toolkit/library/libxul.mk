@@ -96,17 +96,6 @@ endif
 EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,gkmedias,$(DIST)/lib)
 
 ifdef MOZ_WEBRTC
-ifeq (Android,$(OS_TARGET))
-OS_LIBS += \
-  -L$(DEPTH)/media/omx-plugin/lib/kk/libutils \
-  -lutils \
-  -L$(DEPTH)/media/omx-plugin/lib/kk/libstagefright_foundation \
-  -lstagefright_foundation \
-  -L$(DEPTH)/media/omx-plugin/lib/kk/libstagefright \
-  -lstagefright \
-  $(NULL)
-endif
-
 ifeq (WINNT,$(OS_TARGET))
 ifndef MOZ_HAS_WINSDK_WITH_D3D
 EXTRA_DSO_LDOPTS += \

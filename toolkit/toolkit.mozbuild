@@ -71,9 +71,6 @@ if CONFIG['MOZ_WEBRTC']:
 
 if CONFIG['MOZ_OMX_PLUGIN']:
     add_tier_dir('platform', [
-        'media/omx-plugin/lib/kk/libutils',
-        'media/omx-plugin/lib/kk/libstagefright_foundation',
-        'media/omx-plugin/lib/kk/libstagefright',
         'media/omx-plugin/lib/ics/libutils',
         'media/omx-plugin/lib/ics/libstagefright',
         'media/omx-plugin/lib/ics/libvideoeditorplayer',
