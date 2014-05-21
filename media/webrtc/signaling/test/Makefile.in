@@ -36,6 +36,12 @@ ifeq ($(OS_TARGET),Android)
 LIBS += \
   $(STLPORT_LDFLAGS) \
   $(STLPORT_LIBS) \
+  -L$(DEPTH)/media/omx-plugin/lib/kk/libutils \
+  -lutils \
+  -L$(DEPTH)/media/omx-plugin/lib/kk/libstagefright_foundation \
+  -lstagefright_foundation \
+  -L$(DEPTH)/media/omx-plugin/lib/kk/libstagefright \
+  -lstagefright \
   $(NULL)
 CPPFLAGS += \
   $(STLPORT_CPPFLAGS) \
