@@ -284,16 +284,16 @@ HTTP(../..) == inline--position-relative--01.xhtml    inline--position-relative-
 # tests do not have any width or height on the <object> element so they should
 # be sized purely by the embedded SVG's intrinsic size.
 
-random-if(Android||(B2G&&browserIsRemote)) == object--auto-auto--0-0.html          pass-empty.svg # XXX add border
-random-if(Android||(B2G&&browserIsRemote)) == object--auto-auto--0-pct.html        object--auto-auto--0-pct--ref.html
-random-if(Android||(B2G&&browserIsRemote)) == object--auto-auto--0-px.html         object--auto-auto--0-px--ref.html
-random-if(Android||(B2G&&browserIsRemote)) == object--auto-auto--pct-0.html        object--auto-auto--pct-0--ref.html
+random-if(Android) == object--auto-auto--0-0.html          pass-empty.svg # XXX add border
+random-if(Android) == object--auto-auto--0-pct.html        object--auto-auto--0-pct--ref.html
+random-if(Android) == object--auto-auto--0-px.html         object--auto-auto--0-px--ref.html
+random-if(Android) == object--auto-auto--pct-0.html        object--auto-auto--pct-0--ref.html
 # The following four commented out tests fail post bug 428023:
 #== object--auto-auto--pct-pct.html      object--auto-auto--pct-pct--ref.html
 #== object--auto-auto--pct-px.html       object--auto-auto--pct-px--ref.html
-random-if(Android||(B2G&&browserIsRemote)) == object--auto-auto--px-0.html         object--auto-auto--px-0--ref.html
+random-if(Android) == object--auto-auto--px-0.html         object--auto-auto--px-0--ref.html
 #== object--auto-auto--px-pct.html       object--auto-auto--px-pct--ref.html
-random-if(Android||(B2G&&browserIsRemote)) == object--auto-auto--px-px.html        object--auto-auto--px-px--ref.html
+random-if(Android) == object--auto-auto--px-px.html        object--auto-auto--px-px--ref.html
 #== object--pct-pct--0-0.html            pass.svg
 
 

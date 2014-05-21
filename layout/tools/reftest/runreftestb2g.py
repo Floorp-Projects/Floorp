@@ -421,14 +421,13 @@ class B2GRemoteReftest(RefTest):
         prefs["browser.firstrun.show.localepicker"] = False
         prefs["browser.homescreenURL"] = "app://test-container.gaiamobile.org/index.html"
         prefs["browser.manifestURL"] = "app://test-container.gaiamobile.org/manifest.webapp"
-        prefs["browser.tabs.remote"] = True
-        prefs["browser.tabs.remote.autostart"] = True
+        prefs["browser.tabs.remote"] = False
         prefs["dom.ipc.tabs.disabled"] = False
         prefs["dom.mozBrowserFramesEnabled"] = True
         prefs["font.size.inflation.emPerLine"] = 0
         prefs["font.size.inflation.minTwips"] = 0
         prefs["network.dns.localDomains"] = "app://test-container.gaiamobile.org"
-        prefs["reftest.browser.iframe.enabled"] = True
+        prefs["reftest.browser.iframe.enabled"] = False
         prefs["reftest.remote"] = True
         prefs["reftest.uri"] = "%s" % reftestlist
         # Set a future policy version to avoid the telemetry prompt.
