@@ -13,6 +13,7 @@ XPIDL_SOURCES += [
     'nsIEntropyCollector.idl',
     'nsIScriptChannel.idl',
     'nsISiteSpecificUserAgent.idl',
+    'nsISlowScriptDebug.idl',
 ]
 
 XPIDL_MODULE = 'dom'
@@ -128,6 +129,8 @@ EXTRA_COMPONENTS += [
     'ConsoleAPIStorage.js',
     'SiteSpecificUserAgent.js',
     'SiteSpecificUserAgent.manifest',
+    'SlowScriptDebug.js',
+    'SlowScriptDebug.manifest',
 ]
 
 EXTRA_JS_MODULES += [
