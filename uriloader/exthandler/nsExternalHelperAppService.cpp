@@ -114,11 +114,6 @@
 #include "nsDeviceStorage.h"
 #endif
 
-#ifdef NECKO_PROTOCOL_rtsp
-#include "nsIScriptSecurityManager.h"
-#include "nsIMessageManager.h"
-#endif
-
 using namespace mozilla;
 using namespace mozilla::ipc;
 
@@ -614,81 +609,6 @@ nsExternalHelperAppService::~nsExternalHelperAppService()
 {
 }
 
-#ifdef NECKO_PROTOCOL_rtsp
-namespace {
-/**
- * A stack helper to clear the currently pending exception in a JS context.
- */
-class AutoClearPendingException {
-public:
-  AutoClearPendingException(JSContext* aCx) :
-    mCx(aCx) {
-  }
-  ~AutoClearPendingException() {
-    JS_ClearPendingException(mCx);
-  }
-private:
-  JSContext *mCx;
-};
-} // anonymous namespace
-
-/**
- * This function sends a message. This 'content-handler' message is handled in
- * b2g/chrome/content/shell.js where it starts an activity request that will
- * open the video app.
- */
-void nsExternalHelperAppService::LaunchVideoAppForRtsp(nsIURI* aURI)
-{
-  bool rv;
-
-  // Get a system principal.
-  nsCOMPtr<nsIScriptSecurityManager> securityManager =
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-  NS_ENSURE_TRUE_VOID(securityManager);
-
-  nsCOMPtr<nsIPrincipal> principal;
-  securityManager->GetSystemPrincipal(getter_AddRefs(principal));
-  NS_ENSURE_TRUE_VOID(principal);
-
-  // Construct the message in jsVal format.
-  AutoSafeJSContext cx;
-  AutoClearPendingException helper(cx);
-  JS::Rooted<JSObject*> msgObj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
-  NS_ENSURE_TRUE_VOID(msgObj);
-  JS::Rooted<JS::Value> jsVal(cx);
-
-  // Set the "type" property of the message. This is a fake MIME type.
-  {
-    NS_NAMED_LITERAL_CSTRING(mimeType, "video/rtsp");
-    JSString *typeStr = JS_NewStringCopyN(cx, mimeType.get(), mimeType.Length());
-    NS_ENSURE_TRUE_VOID(typeStr);
-    jsVal.setString(typeStr);
-    rv = JS_SetProperty(cx, msgObj, "type", jsVal);
-    NS_ENSURE_TRUE_VOID(rv);
-  }
-  // Set the "url" and "title" properties of the message.
-  // They are the same in the case of RTSP streaming.
-  {
-    nsAutoCString spec;
-    aURI->GetSpec(spec);
-    JSString *urlStr = JS_NewStringCopyN(cx, spec.get(), spec.Length());
-    NS_ENSURE_TRUE_VOID(urlStr);
-    jsVal.setString(urlStr);
-    rv = JS_SetProperty(cx, msgObj, "url", jsVal);
-    NS_ENSURE_TRUE_VOID(rv);
-    rv = JS_SetProperty(cx, msgObj, "title", jsVal);
-  }
-  jsVal.setObject(*msgObj);
-
-  // Send the message.
-  nsCOMPtr<nsIMessageSender> cpmm =
-    do_GetService("@mozilla.org/childprocessmessagemanager;1");
-  NS_ENSURE_TRUE_VOID(cpmm);
-  cpmm->SendAsyncMessage(NS_LITERAL_STRING("content-handler"),
-                         jsVal, JS::NullHandleValue, principal, cx, 2);
-}
-#endif
-
 NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeContentType,
                                                     nsIRequest *aRequest,
                                                     nsIInterfaceRequestor *aWindowContext,
@@ -1035,18 +955,6 @@ nsExternalHelperAppService::LoadURI(nsIURI *aURI,
   if (!allowLoad) {
     return NS_OK; // explicitly denied
   }
-
-#ifdef NECKO_PROTOCOL_rtsp
-  // Handle rtsp protocol.
-  {
-    bool isRTSP = false;
-    rv = aURI->SchemeIs("rtsp", &isRTSP);
-    if (NS_SUCCEEDED(rv) && isRTSP) {
-      LaunchVideoAppForRtsp(aURI);
-      return NS_OK;
-    }
-  }
-#endif
 
   nsCOMPtr<nsIHandlerInfo> handler;
   rv = GetProtocolHandlerInfo(scheme, getter_AddRefs(handler));

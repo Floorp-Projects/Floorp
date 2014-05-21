@@ -61,6 +61,8 @@ enum EnsureNSSOperator
   nssEnsureOnChromeOnly = 101
 };
 
+extern bool EnsureNSSInitializedChromeOrContent();
+
 extern bool EnsureNSSInitialized(EnsureNSSOperator op);
 
 class nsNSSComponent;

@@ -1343,6 +1343,10 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
     if (!snapIter.initIntructionResults(instructionResults))
         return BAILOUT_RETURN_FATAL_ERROR;
 
+#ifdef TRACK_SNAPSHOTS
+    snapIter.spewBailingFrom();
+#endif
+
     RootedFunction callee(cx, iter.maybeCallee());
     RootedScript scr(cx, iter.script());
     if (callee) {

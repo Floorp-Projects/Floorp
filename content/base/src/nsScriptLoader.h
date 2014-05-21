@@ -31,7 +31,28 @@ namespace JS {
 
 class nsScriptLoader : public nsIStreamLoaderObserver
 {
+  class MOZ_STACK_CLASS AutoCurrentScriptUpdater
+  {
+  public:
+    AutoCurrentScriptUpdater(nsScriptLoader* aScriptLoader,
+                             nsIScriptElement* aCurrentScript)
+      : mOldScript(aScriptLoader->mCurrentScript)
+      , mScriptLoader(aScriptLoader)
+    {
+      mScriptLoader->mCurrentScript = aCurrentScript;
+    }
+    ~AutoCurrentScriptUpdater()
+    {
+      mScriptLoader->mCurrentScript.swap(mOldScript);
+    }
+  private:
+    nsCOMPtr<nsIScriptElement> mOldScript;
+    nsScriptLoader* mScriptLoader;
+  };
+
   friend class nsScriptRequestProcessor;
+  friend class AutoCurrentScriptUpdater;
+
 public:
   nsScriptLoader(nsIDocument* aDocument);
   virtual ~nsScriptLoader();

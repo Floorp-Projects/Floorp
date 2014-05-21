@@ -291,12 +291,23 @@ NativeApp.prototype = {
   _processIcon: function(aMimeType, aIcon, aDir) {
     let deferred = Promise.defer();
 
+    let tmpIconPath = OS.Path.join(aDir, this.iconFile);
+
     function conversionDone(aSubject, aTopic) {
-      if (aTopic == "process-finished") {
-        deferred.resolve();
-      } else {
+      if (aTopic != "process-finished") {
         deferred.reject("Failure converting icon, exit code: " + aSubject.exitValue);
+        return;
       }
+
+      // SIPS silently fails to convert the icon, so we need to verify if the
+      // icon was successfully converted.
+      OS.File.exists(tmpIconPath).then((aExists) => {
+        if (aExists) {
+          deferred.resolve();
+        } else {
+          deferred.reject("Failure converting icon, unrecognized image format");
+        }
+      });
     }
 
     let process = Cc["@mozilla.org/process/util;1"].
@@ -306,7 +317,7 @@ NativeApp.prototype = {
     process.init(sipsFile);
     process.runAsync(["-s", "format", "icns",
                       aIcon.path,
-                      "--out", OS.Path.join(aDir, this.iconFile),
+                      "--out", tmpIconPath,
                       "-z", "128", "128"],
                       9, conversionDone);
 

@@ -629,6 +629,11 @@ public:
         }
     }
 
+    void load8(BaseIndex address, RegisterID dest)
+    {
+        load8ZeroExtend(address, dest);
+    }
+
     void load8SignExtend(ImplicitAddress address, RegisterID dest)
     {
         if (address.offset >= -32768 && address.offset <= 32767
@@ -719,6 +724,11 @@ public:
                              immTempRegister);
             m_assembler.lbu(dest, addrTempRegister, address.offset);
         }
+    }
+
+    void load16Unaligned(BaseIndex address, RegisterID dest)
+    {
+        load16(address, dest);
     }
 
     void negDouble(FPRegisterID src, FPRegisterID dest)
