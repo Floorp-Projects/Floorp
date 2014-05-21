@@ -40,6 +40,12 @@
    useable.  See jscpucfg.h.  */
 #undef JS_HAVE_SYS_ISA_DEFS_H
 
+/* Define to 1 if SpiderMonkey is in NUNBOX32 mode. */
+#undef JS_NUNBOX32
+
+/* Define to 1 if SpiderMonkey is in PUNBOX64 mode. */
+#undef JS_PUNBOX64
+
 /* MOZILLA JSAPI version number components */
 #undef MOZJS_MAJOR_VERSION
 #undef MOZJS_MINOR_VERSION

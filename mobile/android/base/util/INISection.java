@@ -18,6 +18,7 @@ public class INISection {
     // default file to read and write to
     private String mName = null;
     public String getName() { return mName; }
+    public void setName(String name) { mName = name; }
 
     // show or hide debug logging
     private  boolean mDebug = false;

@@ -18,6 +18,8 @@ Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
+const DEFAULT_ICON_URL = "chrome://global/skin/icons/webapps-64.png";
+
 const ERR_NOT_INSTALLED = "The application isn't installed";
 const ERR_UPDATES_UNSUPPORTED_OLD_NAMING_SCHEME =
   "Updates for apps installed with the old naming scheme unsupported";
@@ -100,20 +102,8 @@ CommonNativeApp.prototype = {
     let manifest = new ManifestHelper(aManifest, this.app.origin);
     let origin = Services.io.newURI(this.app.origin, null, null);
 
-    let biggestIcon = getBiggestIconURL(manifest.icons);
-    try {
-      let iconURI = Services.io.newURI(biggestIcon, null, null);
-      if (iconURI.scheme == "data") {
-        this.iconURI = iconURI;
-      }
-    } catch (ex) {}
-
-    if (!this.iconURI) {
-      try {
-        this.iconURI = Services.io.newURI(origin.resolve(biggestIcon), null, null);
-      }
-      catch (ex) {}
-    }
+    this.iconURI = Services.io.newURI(manifest.biggestIconURL || DEFAULT_ICON_URL,
+                                      null, null);
 
     if (manifest.developer) {
       if (manifest.developer.name) {
@@ -406,5 +396,72 @@ function getFile() {
   return file;
 }
 
-/* More helpers for handling the app icon */
-#include WebappsIconHelpers.js
+// Download an icon using either a temp file or a pipe.
+function downloadIcon(aIconURI) {
+  let deferred = Promise.defer();
+
+  let mimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+  let mimeType;
+  try {
+    let tIndex = aIconURI.path.indexOf(";");
+    if("data" == aIconURI.scheme && tIndex != -1) {
+      mimeType = aIconURI.path.substring(0, tIndex);
+    } else {
+      mimeType = mimeService.getTypeFromURI(aIconURI);
+     }
+  } catch(e) {
+    deferred.reject("Failed to determine icon MIME type: " + e);
+    return deferred.promise;
+  }
+
+  function onIconDownloaded(aStatusCode, aIcon) {
+    if (Components.isSuccessCode(aStatusCode)) {
+      deferred.resolve([ mimeType, aIcon ]);
+    } else {
+      deferred.reject("Failure downloading icon: " + aStatusCode);
+    }
+  }
+
+  try {
+#ifdef XP_MACOSX
+    let downloadObserver = {
+      onDownloadComplete: function(downloader, request, cx, aStatus, file) {
+        onIconDownloaded(aStatus, file);
+      }
+    };
+
+    let tmpIcon = Services.dirsvc.get("TmpD", Ci.nsIFile);
+    tmpIcon.append("tmpicon." + mimeService.getPrimaryExtension(mimeType, ""));
+    tmpIcon.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
+
+    let listener = Cc["@mozilla.org/network/downloader;1"]
+                     .createInstance(Ci.nsIDownloader);
+    listener.init(downloadObserver, tmpIcon);
+#else
+    let pipe = Cc["@mozilla.org/pipe;1"]
+                 .createInstance(Ci.nsIPipe);
+    pipe.init(true, true, 0, 0xffffffff, null);
+
+    let listener = Cc["@mozilla.org/network/simple-stream-listener;1"]
+                     .createInstance(Ci.nsISimpleStreamListener);
+    listener.init(pipe.outputStream, {
+        onStartRequest: function() {},
+        onStopRequest: function(aRequest, aContext, aStatusCode) {
+          pipe.outputStream.close();
+          onIconDownloaded(aStatusCode, pipe.inputStream);
+       }
+    });
+#endif
+
+    let channel = NetUtil.newChannel(aIconURI);
+    let { BadCertHandler } = Cu.import("resource://gre/modules/CertUtils.jsm", {});
+    // Pass true to avoid optional redirect-cert-checking behavior.
+    channel.notificationCallbacks = new BadCertHandler(true);
+
+    channel.asyncOpen(listener, null);
+  } catch(e) {
+    deferred.reject("Failure initiating download of icon: " + e);
+  }
+
+  return deferred.promise;
+}

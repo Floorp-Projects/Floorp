@@ -443,6 +443,12 @@ class SnapshotIterator
 
         return s;
     }
+
+#ifdef TRACK_SNAPSHOTS
+    void spewBailingFrom() const {
+        snapshot_.spewBailingFrom();
+    }
+#endif
 };
 
 // Reads frame information in callstack order (that is, innermost frame to
