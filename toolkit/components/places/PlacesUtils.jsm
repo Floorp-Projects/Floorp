@@ -2205,10 +2205,10 @@ PlacesCreateLivemarkTransaction.prototype = {
 
   undoTransaction: function CLTXN_undoTransaction()
   {
-    // The getLivemark callback is expected to receive a failure status but it
-    // is used just to serialize, so doesn't matter.
+    // The getLivemark callback may fail, but it is used just to serialize,
+    // so it doesn't matter.
     PlacesUtils.livemarks.getLivemark({ id: this.item.id })
-      .then(null, () => {
+      .then(null, null).then( () => {
         PlacesUtils.bookmarks.removeItem(this.item.id);
       });
   }
