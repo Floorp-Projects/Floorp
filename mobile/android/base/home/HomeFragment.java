@@ -18,6 +18,7 @@ import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.home.TopSitesGridView.TopSitesGridContextMenuInfo;
+import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 
@@ -132,6 +133,16 @@ abstract class HomeFragment extends Fragment {
         // Track the menu action. We don't know much about the context, but we can use this to determine
         // the frequency of use for various actions.
         Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.CONTEXT_MENU, getResources().getResourceEntryName(itemId));
+
+        if (itemId == R.id.home_copyurl) {
+            if (info.url == null) {
+                Log.e(LOGTAG, "Can't copy address because URL is null");
+                return false;
+            }
+
+            Clipboard.setText(info.url);
+            return true;
+        }
 
         if (itemId == R.id.home_share) {
             if (info.url == null) {
