@@ -98,8 +98,10 @@ IsDominatedUse(MBasicBlock *block, MUse *use)
     MNode *n = use->consumer();
     bool isPhi = n->isDefinition() && n->toDefinition()->isPhi();
 
-    if (isPhi)
-        return block->dominates(n->block()->getPredecessor(use->index()));
+    if (isPhi) {
+        MPhi *phi = n->toDefinition()->toPhi();
+        return block->dominates(phi->block()->getPredecessor(phi->indexOf(use)));
+    }
 
     return block->dominates(n->block());
 }
@@ -2426,7 +2428,7 @@ ComputeRequestedTruncateKind(MInstruction *candidate)
         }
 
         MDefinition *consumer = use->consumer()->toDefinition();
-        MDefinition::TruncateKind consumerKind = consumer->operandTruncateKind(use->index());
+        MDefinition::TruncateKind consumerKind = consumer->operandTruncateKind(consumer->indexOf(*use));
         kind = Min(kind, consumerKind);
         if (kind == MDefinition::NoTruncate)
             break;

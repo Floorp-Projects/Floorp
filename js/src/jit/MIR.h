@@ -115,25 +115,22 @@ class MUse : public TempObject, public InlineListNode<MUse>
 
     MDefinition *producer_; // MDefinition that is being used.
     MNode *consumer_;       // The node that is using this operand.
-    uint32_t index_;        // The index of this operand in its consumer.
 
-    MUse(MDefinition *producer, MNode *consumer, uint32_t index)
+    MUse(MDefinition *producer, MNode *consumer)
       : producer_(producer),
-        consumer_(consumer),
-        index_(index)
+        consumer_(consumer)
     { }
 
   public:
     // Default constructor for use in vectors.
     MUse()
-      : producer_(nullptr), consumer_(nullptr), index_(0)
+      : producer_(nullptr), consumer_(nullptr)
     { }
 
     // Set data inside the MUse.
-    void set(MDefinition *producer, MNode *consumer, uint32_t index) {
+    void set(MDefinition *producer, MNode *consumer) {
         producer_ = producer;
         consumer_ = consumer;
-        index_ = index;
     }
 
     MDefinition *producer() const {
@@ -147,9 +144,11 @@ class MUse : public TempObject, public InlineListNode<MUse>
         JS_ASSERT(consumer_ != nullptr);
         return consumer_;
     }
-    uint32_t index() const {
-        return index_;
-    }
+
+    // Return the operand index of this MUse in its consumer. In general,
+    // code should prefer to call indexOf on the casted consumer directly,
+    // to allow it to be devirtualized and inlined.
+    size_t index() const;
 };
 
 typedef InlineList<MUse>::iterator MUseIterator;
@@ -187,6 +186,7 @@ class MNode : public TempObject
     // Returns the definition at a given operand.
     virtual MDefinition *getOperand(size_t index) const = 0;
     virtual size_t numOperands() const = 0;
+    virtual size_t indexOf(const MUse *u) const = 0;
 
     bool isDefinition() const {
         return kind() == Definition;
@@ -228,6 +228,7 @@ class MNode : public TempObject
 
     // Gets the MUse corresponding to given operand.
     virtual MUse *getUseFor(size_t index) = 0;
+    virtual const MUse *getUseFor(size_t index) const = 0;
 };
 
 class AliasSet {
@@ -739,9 +740,6 @@ class MUseDefIterator
     MDefinition *def() const {
         return current_->consumer()->toDefinition();
     }
-    size_t index() const {
-        return current_->index();
-    }
 };
 
 // An instruction is an SSA name that is inserted into a basic block's IR
@@ -786,11 +784,15 @@ class MAryInstruction : public MInstruction
     mozilla::Array<MUse, Arity> operands_;
 
     void setOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
-        operands_[index].set(operand, this, index);
+        operands_[index].set(operand, this);
         operand->addUse(&operands_[index]);
     }
 
     MUse *getUseFor(size_t index) MOZ_FINAL MOZ_OVERRIDE {
+        return &operands_[index];
+    }
+
+    const MUse *getUseFor(size_t index) const MOZ_FINAL MOZ_OVERRIDE {
         return &operands_[index];
     }
 
@@ -800,6 +802,11 @@ class MAryInstruction : public MInstruction
     }
     size_t numOperands() const MOZ_FINAL MOZ_OVERRIDE {
         return Arity;
+    }
+    size_t indexOf(const MUse *u) const MOZ_FINAL MOZ_OVERRIDE {
+        MOZ_ASSERT(u >= &operands_[0]);
+        MOZ_ASSERT(u <= &operands_[numOperands() - 1]);
+        return u - &operands_[0];
     }
 };
 
@@ -1174,11 +1181,16 @@ class MTableSwitch MOZ_FINAL
   protected:
     void setOperand(size_t index, MDefinition *operand) {
         JS_ASSERT(index == 0);
-        operand_.set(operand, this, index);
+        operand_.set(operand, this);
         operand->addUse(&operand_);
     }
 
     MUse *getUseFor(size_t index) {
+        JS_ASSERT(index == 0);
+        return &operand_;
+    }
+
+    const MUse *getUseFor(size_t index) const {
         JS_ASSERT(index == 0);
         return &operand_;
     }
@@ -1264,6 +1276,11 @@ class MTableSwitch MOZ_FINAL
         return 1;
     }
 
+    size_t indexOf(const MUse *u) const MOZ_FINAL MOZ_OVERRIDE {
+        MOZ_ASSERT(u == getUseFor(0));
+        return 0;
+    }
+
     TypePolicy *typePolicy() {
         return this;
     }
@@ -1277,7 +1294,7 @@ class MAryControlInstruction : public MControlInstruction
 
   protected:
     void setOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
-        operands_[index].set(operand, this, index);
+        operands_[index].set(operand, this);
         operand->addUse(&operands_[index]);
     }
     void setSuccessor(size_t index, MBasicBlock *successor) {
@@ -1288,12 +1305,21 @@ class MAryControlInstruction : public MControlInstruction
         return &operands_[index];
     }
 
+    const MUse *getUseFor(size_t index) const MOZ_FINAL MOZ_OVERRIDE {
+        return &operands_[index];
+    }
+
   public:
     MDefinition *getOperand(size_t index) const MOZ_FINAL MOZ_OVERRIDE {
         return operands_[index].producer();
     }
     size_t numOperands() const MOZ_FINAL MOZ_OVERRIDE {
         return Arity;
+    }
+    size_t indexOf(const MUse *u) const MOZ_FINAL MOZ_OVERRIDE {
+        MOZ_ASSERT(u >= &operands_[0]);
+        MOZ_ASSERT(u <= &operands_[numOperands() - 1]);
+        return u - &operands_[0];
     }
     size_t numSuccessors() const MOZ_FINAL MOZ_OVERRIDE {
         return Successors;
@@ -1906,12 +1932,21 @@ class MVariadicInstruction : public MInstruction
     size_t numOperands() const MOZ_FINAL MOZ_OVERRIDE {
         return operands_.length();
     }
+    size_t indexOf(const MUse *u) const MOZ_FINAL MOZ_OVERRIDE {
+        MOZ_ASSERT(u >= &operands_[0]);
+        MOZ_ASSERT(u <= &operands_[numOperands() - 1]);
+        return u - &operands_[0];
+    }
     void setOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
-        operands_[index].set(operand, this, index);
+        operands_[index].set(operand, this);
         operand->addUse(&operands_[index]);
     }
 
     MUse *getUseFor(size_t index) MOZ_FINAL MOZ_OVERRIDE {
+        return &operands_[index];
+    }
+
+    const MUse *getUseFor(size_t index) const MOZ_FINAL MOZ_OVERRIDE {
         return &operands_[index];
     }
 };
@@ -4713,6 +4748,9 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
     MUse *getUseFor(size_t index) {
         return &inputs_[index];
     }
+    const MUse *getUseFor(size_t index) const {
+        return &inputs_[index];
+    }
 
   public:
     INSTRUCTION_HEADER(Phi)
@@ -4742,7 +4780,7 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
         // operands. This can arise during e.g. value numbering, where
         // definitions producing the same value may have different type sets.
         JS_ASSERT(index < numOperands());
-        inputs_[index].set(operand, this, index);
+        inputs_[index].set(operand, this);
         operand->addUse(&inputs_[index]);
     }
 
@@ -4753,6 +4791,11 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
     }
     size_t numOperands() const {
         return inputs_.length();
+    }
+    size_t indexOf(const MUse *u) const MOZ_FINAL MOZ_OVERRIDE {
+        MOZ_ASSERT(u >= &inputs_[0]);
+        MOZ_ASSERT(u <= &inputs_[numOperands() - 1]);
+        return u - &inputs_[0];
     }
     bool hasBackedgeType() const {
         return hasBackedgeType_;
@@ -6722,7 +6765,7 @@ class MStoreTypedArrayElement
     TruncateKind operandTruncateKind(size_t index) const;
 
     bool canConsumeFloat32(MUse *use) const {
-        return use->index() == 2 && arrayType_ == ScalarTypeDescr::TYPE_FLOAT32;
+        return use == getUseFor(2) && arrayType_ == ScalarTypeDescr::TYPE_FLOAT32;
     }
 };
 
@@ -6790,7 +6833,7 @@ class MStoreTypedArrayElementHole
     TruncateKind operandTruncateKind(size_t index) const;
 
     bool canConsumeFloat32(MUse *use) const {
-        return use->index() == 3 && arrayType_ == ScalarTypeDescr::TYPE_FLOAT32;
+        return use == getUseFor(3) && arrayType_ == ScalarTypeDescr::TYPE_FLOAT32;
     }
 };
 
@@ -6837,7 +6880,7 @@ class MStoreTypedArrayElementStatic :
     TruncateKind operandTruncateKind(size_t index) const;
 
     bool canConsumeFloat32(MUse *use) const {
-        return use->index() == 1 && typedArray_->type() == ScalarTypeDescr::TYPE_FLOAT32;
+        return use == getUseFor(1) && typedArray_->type() == ScalarTypeDescr::TYPE_FLOAT32;
     }
 };
 
@@ -7348,10 +7391,14 @@ class MDispatchInstruction
   protected:
     void setOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
         JS_ASSERT(index == 0);
-        operand_.set(operand, this, 0);
+        operand_.set(operand, this);
         operand->addUse(&operand_);
     }
     MUse *getUseFor(size_t index) MOZ_FINAL MOZ_OVERRIDE {
+        JS_ASSERT(index == 0);
+        return &operand_;
+    }
+    const MUse *getUseFor(size_t index) const MOZ_FINAL MOZ_OVERRIDE {
         JS_ASSERT(index == 0);
         return &operand_;
     }
@@ -7361,6 +7408,10 @@ class MDispatchInstruction
     }
     size_t numOperands() const MOZ_FINAL MOZ_OVERRIDE {
         return 1;
+    }
+    size_t indexOf(const MUse *u) const MOZ_FINAL MOZ_OVERRIDE {
+        JS_ASSERT(u == getUseFor(0));
+        return 0;
     }
 
   public:
@@ -8299,7 +8350,7 @@ class MSetElementCache
         return this;
     }
 
-    bool canConsumeFloat32(MUse *use) const { return use->index() == 2; }
+    bool canConsumeFloat32(MUse *use) const { return use == getUseFor(2); }
 };
 
 class MCallGetProperty
@@ -9406,7 +9457,7 @@ class MPostWriteBarrier : public MBinaryInstruction, public ObjectPolicy<0>
     bool isConsistentFloat32Use(MUse *use) const {
         // During lowering, values that neither have object nor value MIR type
         // are ignored, thus Float32 can show up at this point without any issue.
-        return use->index() == 1;
+        return use == getUseFor(1);
     }
 #endif
 };
@@ -9700,7 +9751,7 @@ class MResumePoint MOZ_FINAL : public MNode, public InlineForwardListNode<MResum
         JS_ASSERT(index < stackDepth_);
         // Note: We do not remove the isObserved flag, as this would imply that
         // we check the list of uses of the removed MDefinition.
-        operands_[index].set(operand, this, index);
+        operands_[index].set(operand, this);
         operand->addUse(&operands_[index]);
         if (!operand->isObserved() && isObservableOperand(index))
             operand->setObserved();
@@ -9708,10 +9759,13 @@ class MResumePoint MOZ_FINAL : public MNode, public InlineForwardListNode<MResum
 
     void clearOperand(size_t index) {
         JS_ASSERT(index < stackDepth_);
-        operands_[index].set(nullptr, this, index);
+        operands_[index].set(nullptr, this);
     }
 
     MUse *getUseFor(size_t index) {
+        return &operands_[index];
+    }
+    const MUse *getUseFor(size_t index) const {
         return &operands_[index];
     }
 
@@ -9724,6 +9778,11 @@ class MResumePoint MOZ_FINAL : public MNode, public InlineForwardListNode<MResum
     }
     size_t numOperands() const {
         return stackDepth_;
+    }
+    size_t indexOf(const MUse *u) const MOZ_FINAL MOZ_OVERRIDE {
+        MOZ_ASSERT(u >= &operands_[0]);
+        MOZ_ASSERT(u <= &operands_[numOperands() - 1]);
+        return u - &operands_[0];
     }
 
     bool isObservableOperand(size_t index) const;
@@ -10197,10 +10256,13 @@ class MAsmJSCall MOZ_FINAL : public MInstruction
 
   protected:
     void setOperand(size_t index, MDefinition *operand) {
-        operands_[index].set(operand, this, index);
+        operands_[index].set(operand, this);
         operand->addUse(&operands_[index]);
     }
     MUse *getUseFor(size_t index) {
+        return &operands_[index];
+    }
+    const MUse *getUseFor(size_t index) const {
         return &operands_[index];
     }
 
@@ -10219,6 +10281,11 @@ class MAsmJSCall MOZ_FINAL : public MInstruction
 
     size_t numOperands() const {
         return operands_.length();
+    }
+    size_t indexOf(const MUse *u) const MOZ_FINAL MOZ_OVERRIDE {
+        MOZ_ASSERT(u >= &operands_[0]);
+        MOZ_ASSERT(u <= &operands_[numOperands() - 1]);
+        return u - &operands_[0];
     }
     MDefinition *getOperand(size_t index) const {
         JS_ASSERT(index < numOperands());
