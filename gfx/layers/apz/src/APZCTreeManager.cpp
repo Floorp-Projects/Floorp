@@ -707,7 +707,7 @@ TransformDisplacement(APZCTreeManager* aTreeManager,
   ApplyTransform(&aEndPoint, transformToApzc);
 }
 
-void
+bool
 APZCTreeManager::DispatchScroll(AsyncPanZoomController* aPrev, ScreenPoint aStartPoint, ScreenPoint aEndPoint,
                                 uint32_t aOverscrollHandoffChainIndex)
 {
@@ -723,14 +723,15 @@ APZCTreeManager::DispatchScroll(AsyncPanZoomController* aPrev, ScreenPoint aStar
     // nothing more to scroll, so we ignore the rest of the pan gesture.
     if (aOverscrollHandoffChainIndex >= mOverscrollHandoffChain.length()) {
       // Nothing more to scroll - ignore the rest of the pan gesture.
-      return;
+      return false;
     }
 
     next = mOverscrollHandoffChain[aOverscrollHandoffChainIndex];
   }
 
-  if (next == nullptr)
-    return;
+  if (next == nullptr) {
+    return false;
+  }
 
   // Convert the start and end points from |aPrev|'s coordinate space to
   // |next|'s coordinate space. Since |aPrev| may be the same as |next|
@@ -743,7 +744,7 @@ APZCTreeManager::DispatchScroll(AsyncPanZoomController* aPrev, ScreenPoint aStar
 
   // Scroll |next|. If this causes overscroll, it will call DispatchScroll()
   // again with an incremented index.
-  next->AttemptScroll(aStartPoint, aEndPoint, aOverscrollHandoffChainIndex);
+  return next->AttemptScroll(aStartPoint, aEndPoint, aOverscrollHandoffChainIndex);
 }
 
 void
