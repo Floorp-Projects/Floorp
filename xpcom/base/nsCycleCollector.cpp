@@ -3269,7 +3269,7 @@ MOZ_DEFINE_MALLOC_SIZE_OF(CycleCollectorMallocSizeOf)
 
 NS_IMETHODIMP
 nsCycleCollector::CollectReports(nsIHandleReportCallback* aHandleReport,
-                                 nsISupports* aData)
+                                 nsISupports* aData, bool aAnonymize)
 {
   size_t objectSize, graphNodesSize, graphEdgesSize, weakMapsSize,
          purpleBufferSize;

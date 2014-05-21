@@ -1740,9 +1740,8 @@ MOZ_DEFINE_MALLOC_SIZE_OF(FontCacheMallocSizeOf)
 NS_IMPL_ISUPPORTS(gfxFontCache::MemoryReporter, nsIMemoryReporter)
 
 NS_IMETHODIMP
-gfxFontCache::MemoryReporter::CollectReports
-    (nsIMemoryReporterCallback* aCb,
-     nsISupports* aClosure)
+gfxFontCache::MemoryReporter::CollectReports(
+    nsIMemoryReporterCallback* aCb, nsISupports* aClosure, bool aAnonymize)
 {
     FontCacheSizes sizes;
 

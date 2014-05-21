@@ -43,7 +43,7 @@
   const PERCENTAGE = Ci.nsIMemoryReporter.UNITS_PERCENTAGE;
 
   let fakeReporters = [
-    { collectReports: function(aCbObj, aClosure) {
+    { collectReports: function(aCbObj, aClosure, aAnonymize) {
         function f(aP, aK, aU, aA) {
           aCbObj.callback("", aP, aK, aU, aA, "Desc.", aClosure);
         }
@@ -80,7 +80,7 @@
         f("compartments/system/foo", OTHER, COUNT, 1);
       }
     },
-    { collectReports: function(aCbObj, aClosure) {
+    { collectReports: function(aCbObj, aClosure, aAnonymize) {
         function f(aP, aK, aU, aA) {
           aCbObj.callback("", aP, aK, aU, aA, "Desc.", aClosure);
         }
@@ -95,7 +95,7 @@
         f("explicit/f/g/h/j", HEAP,    BYTES,  10 * MB);
       }
     },
-    { collectReports: function(aCbObj, aClosure) {
+    { collectReports: function(aCbObj, aClosure, aAnonymize) {
         function f(aP, aK, aU, aA) {
           aCbObj.callback("", aP, aK, aU, aA, "Desc.", aClosure);
         }
@@ -106,7 +106,7 @@
         f("compartments/user/https:\\\\very-long-url.com\\very-long\\oh-so-long\\really-quite-long.html?a=2&b=3&c=4&d=5&e=abcdefghijklmnopqrstuvwxyz&f=123456789123456789123456789", OTHER, COUNT, 1);
       }
     },
-    { collectReports: function(aCbObj, aClosure) {
+    { collectReports: function(aCbObj, aClosure, aAnonymize) {
         function f(aP) {
           aCbObj.callback("", aP, OTHER, COUNT, 1, "Desc.", aClosure);
         }
@@ -139,7 +139,7 @@
   // the largest).  Processes without a |resident| memory reporter are saved
   // for the end.
   let fakeReporters2 = [
-    { collectReports: function(aCbObj, aClosure) {
+    { collectReports: function(aCbObj, aClosure, aAnonymize) {
         function f(aP1, aP2, aK, aU, aA) {
           aCbObj.callback(aP1, aP2, aK, aU, aA, "Desc.", aClosure);
         }

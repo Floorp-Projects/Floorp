@@ -33,7 +33,7 @@
   const BYTES = Ci.nsIMemoryReporter.UNITS_BYTES;
 
   let fakeReporters = [
-    { collectReports: function(aCbObj, aClosure) {
+    { collectReports: function(aCbObj, aClosure, aAnonymize) {
         function f(aP, aK, aA, aD) {
           aCbObj.callback("", aP, aK, BYTES, aA, aD, aClosure);
         }
@@ -140,7 +140,8 @@
       if (aDumpFirst) {
         let dumper = Cc["@mozilla.org/memory-info-dumper;1"].
                         getService(Ci.nsIMemoryInfoDumper);
-        dumper.dumpMemoryReportsToNamedFile(filePath, loadAndCheck, null);
+        dumper.dumpMemoryReportsToNamedFile(filePath, loadAndCheck, null,
+                                            /* anonymize = */ false);
       } else {
         loadAndCheck();
       }

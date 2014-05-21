@@ -664,7 +664,7 @@ MOZ_DEFINE_MALLOC_SIZE_OF(TelemetryMallocSizeOf)
 
 NS_IMETHODIMP
 TelemetryImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
-                              nsISupports* aData)
+                              nsISupports* aData, bool aAnonymize)
 {
   return MOZ_COLLECT_REPORT(
     "explicit/telemetry", KIND_HEAP, UNITS_BYTES,

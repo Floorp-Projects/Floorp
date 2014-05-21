@@ -26,6 +26,7 @@ const CC = Components.Constructor;
 const KIND_NONHEAP           = Ci.nsIMemoryReporter.KIND_NONHEAP;
 const KIND_HEAP              = Ci.nsIMemoryReporter.KIND_HEAP;
 const KIND_OTHER             = Ci.nsIMemoryReporter.KIND_OTHER;
+
 const UNITS_BYTES            = Ci.nsIMemoryReporter.UNITS_BYTES;
 const UNITS_COUNT            = Ci.nsIMemoryReporter.UNITS_COUNT;
 const UNITS_COUNT_CUMULATIVE = Ci.nsIMemoryReporter.UNITS_COUNT_CUMULATIVE;
@@ -130,6 +131,9 @@ let gFooter;
 
 // The "verbose" checkbox.
 let gVerbose;
+
+// The "anonymize" checkbox.
+let gAnonymize;
 
 // Values for the second argument to updateMainAndFooter.
 let HIDE_FOOTER = 0;
@@ -303,14 +307,13 @@ function onLoad()
 
   let row1 = appendElement(ops, "div", "opsRow");
 
-  let labelDiv =
+  let labelDiv1 =
    appendElementWithText(row1, "div", "opsRowLabel", "Show memory reports");
-  let label = appendElementWithText(labelDiv, "label", "");
-  gVerbose = appendElement(label, "input", "");
+  let label1 = appendElementWithText(labelDiv1, "label", "");
+  gVerbose = appendElement(label1, "input", "");
   gVerbose.type = "checkbox";
   gVerbose.id = "verbose";   // used for testing
-
-  appendTextNode(label, "verbose");
+  appendTextNode(label1, "verbose");
 
   const kEllipsis = "\u2026";
 
@@ -324,8 +327,15 @@ function onLoad()
 
   let row2 = appendElement(ops, "div", "opsRow");
 
-  appendElementWithText(row2, "div", "opsRowLabel", "Save memory reports");
+  let labelDiv2 =
+    appendElementWithText(row2, "div", "opsRowLabel", "Save memory reports");
   appendButton(row2, SvDesc, saveReportsToFile, "Measure and save" + kEllipsis);
+
+  // XXX njn: still not happy with the placement of this checkbox
+  let label2 = appendElementWithText(labelDiv2, "label", "");
+  gAnonymize = appendElement(label2, "input", "");
+  gAnonymize.type = "checkbox";
+  appendTextNode(label2, "anonymize");
 
   let row3 = appendElement(ops, "div", "opsRow");
 
@@ -493,8 +503,8 @@ function updateAboutMemoryFromReporters()
         aDisplayReports();
       }
 
-      gMgr.getReports(handleReport, null,
-                      displayReportsAndFooter, null);
+      gMgr.getReports(handleReport, null, displayReportsAndFooter, null,
+                      gAnonymize.checked);
     }
 
     // Process the reports from the live memory reporters.
@@ -1962,7 +1972,8 @@ function saveReportsToFile()
       updateMainAndFooter("Saved reports to " + file.path, HIDE_FOOTER);
     }
 
-    dumper.dumpMemoryReportsToNamedFile(file.path, finishDumping, null);
+    dumper.dumpMemoryReportsToNamedFile(file.path, finishDumping, null,
+                                        gAnonymize.checked);
   }
 
   let fpCallback = function(aResult) {

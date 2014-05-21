@@ -1743,7 +1743,7 @@ MediaDecoder::IsAppleMP3Enabled()
 
 NS_IMETHODIMP
 MediaMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
-                                   nsISupports* aData)
+                                   nsISupports* aData, bool aAnonymize)
 {
   int64_t video = 0, audio = 0;
   size_t resources = 0;

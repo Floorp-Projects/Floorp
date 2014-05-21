@@ -24,7 +24,8 @@ public:
     static nsresult CollectReports(WindowPaths *windowPaths,
                                    WindowPaths *topWindowPaths,
                                    nsIMemoryReporterCallback *cb,
-                                   nsISupports *closure);
+                                   nsISupports *closure,
+                                   bool anonymize);
 };
 
 }
