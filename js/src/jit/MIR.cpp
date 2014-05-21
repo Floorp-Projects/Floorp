@@ -2382,6 +2382,12 @@ MResumePoint::dump() const
 }
 
 bool
+MResumePoint::isObservableOperand(MUse *u) const
+{
+    return isObservableOperand(indexOf(u));
+}
+
+bool
 MResumePoint::isObservableOperand(size_t index) const
 {
     return block()->info().isObservableSlot(index);

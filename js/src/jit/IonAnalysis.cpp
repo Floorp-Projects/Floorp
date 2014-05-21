@@ -107,27 +107,32 @@ jit::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
             if (ins->isImplicitlyUsed())
                 continue;
 
-            // If the instruction's is captured by one of the resume point, then
-            // it might be observed indirectly while the frame is live on the
-            // stack, so it has to be computed.
-            if (ins->isObserved())
-                continue;
-
             // Check if this instruction's result is only used within the
             // current block, and keep track of its last use in a definition
             // (not resume point). This requires the instructions in the block
             // to be numbered, ensured by running this immediately after alias
             // analysis.
             uint32_t maxDefinition = 0;
-            for (MUseDefIterator uses(*ins); uses; uses++) {
-                if (uses.def()->block() != *block ||
-                    uses.def()->isBox() ||
-                    uses.def()->isPhi())
-                {
+            for (MUseIterator uses(ins->usesBegin()); uses != ins->usesEnd(); uses++) {
+                MNode *consumer = uses->consumer();
+                if (consumer->isResumePoint()) {
+                    // If the instruction's is captured by one of the resume point, then
+                    // it might be observed indirectly while the frame is live on the
+                    // stack, so it has to be computed.
+                    MResumePoint *resume = consumer->toResumePoint();
+                    if (resume->isObservableOperand(*uses)) {
+                        maxDefinition = UINT32_MAX;
+                        break;
+                    }
+                    continue;
+                }
+
+                MDefinition *def = consumer->toDefinition();
+                if (def->block() != *block || def->isBox() || def->isPhi()) {
                     maxDefinition = UINT32_MAX;
                     break;
                 }
-                maxDefinition = Max(maxDefinition, uses.def()->id());
+                maxDefinition = Max(maxDefinition, def->id());
             }
             if (maxDefinition == UINT32_MAX)
                 continue;
@@ -213,24 +218,22 @@ IsPhiObservable(MPhi *phi, Observability observe)
     // actual uses in the program have been (incorrectly) optimized
     // away, so we must be more conservative and consider resume
     // points as well.
-    switch (observe) {
-      case AggressiveObservability:
-        for (MUseDefIterator iter(phi); iter; iter++) {
-            if (!iter.def()->isPhi())
+    for (MUseIterator iter(phi->usesBegin()); iter != phi->usesEnd(); iter++) {
+        MNode *consumer = iter->consumer();
+        if (consumer->isResumePoint()) {
+            MResumePoint *resume = consumer->toResumePoint();
+            if (observe == ConservativeObservability)
+                return true;
+            if (resume->isObservableOperand(*iter))
+                return true;
+        } else {
+            MDefinition *def = consumer->toDefinition();
+            if (!def->isPhi())
                 return true;
         }
-        break;
-
-      case ConservativeObservability:
-        for (MUseIterator iter(phi->usesBegin()); iter != phi->usesEnd(); iter++) {
-            if (!iter->consumer()->isDefinition() ||
-                !iter->consumer()->toDefinition()->isPhi())
-                return true;
-        }
-        break;
     }
 
-    return phi->isObserved();
+    return false;
 }
 
 // Handles cases like:
