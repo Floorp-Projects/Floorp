@@ -130,6 +130,8 @@ for (i = 0; i < 100; i++) {
     rbitnot_object(i);
     rbitor_number(i);
     rbitor_object(i);
+    rbitxor_number(i);
+    rbitxor_object(i);
     rursh_number(i);
     rursh_object(i);
     radd_number(i);
