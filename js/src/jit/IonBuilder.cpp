@@ -444,19 +444,24 @@ IonBuilder::analyzeNewLoopTypes(MBasicBlock *entry, jsbytecode *start, jsbytecod
     for (size_t i = 0; i < loopHeaders_.length(); i++) {
         if (loopHeaders_[i].pc == start) {
             MBasicBlock *oldEntry = loopHeaders_[i].header;
-            MResumePoint *oldEntryRp = oldEntry->entryResumePoint();
-            size_t stackDepth = oldEntryRp->numOperands();
-            for (size_t slot = 0; slot < stackDepth; slot++) {
-                MDefinition *oldDef = oldEntryRp->getOperand(slot);
-                if (!oldDef->isPhi()) {
-                    MOZ_ASSERT(oldDef->block()->id() < oldEntry->id());
-                    MOZ_ASSERT(oldDef == entry->getSlot(slot));
-                    continue;
+
+            // If this block has been discarded, its resume points will have
+            // already discarded their operands.
+            if (!oldEntry->isDead()) {
+                MResumePoint *oldEntryRp = oldEntry->entryResumePoint();
+                size_t stackDepth = oldEntryRp->numOperands();
+                for (size_t slot = 0; slot < stackDepth; slot++) {
+                    MDefinition *oldDef = oldEntryRp->getOperand(slot);
+                    if (!oldDef->isPhi()) {
+                        MOZ_ASSERT(oldDef->block()->id() < oldEntry->id());
+                        MOZ_ASSERT(oldDef == entry->getSlot(slot));
+                        continue;
+                    }
+                    MPhi *oldPhi = oldDef->toPhi();
+                    MPhi *newPhi = entry->getSlot(slot)->toPhi();
+                    if (!newPhi->addBackedgeType(oldPhi->type(), oldPhi->resultTypeSet()))
+                        return false;
                 }
-                MPhi *oldPhi = oldDef->toPhi();
-                MPhi *newPhi = entry->getSlot(slot)->toPhi();
-                if (!newPhi->addBackedgeType(oldPhi->type(), oldPhi->resultTypeSet()))
-                    return false;
             }
 
             // Update the most recent header for this loop encountered, in case
