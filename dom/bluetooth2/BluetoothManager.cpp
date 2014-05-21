@@ -17,7 +17,7 @@
 #include "nsIPermissionManager.h"
 #include "nsThreadUtils.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
-#include "mozilla/dom/BluetoothManagerBinding.h"
+#include "mozilla/dom/BluetoothManager2Binding.h"
 #include "mozilla/Services.h"
 
 using namespace mozilla;

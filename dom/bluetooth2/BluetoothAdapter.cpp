@@ -12,7 +12,7 @@
 #include "nsThreadUtils.h"
 
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
-#include "mozilla/dom/BluetoothAdapterBinding.h"
+#include "mozilla/dom/BluetoothAdapter2Binding.h"
 #include "mozilla/dom/BluetoothDeviceEvent.h"
 #include "mozilla/dom/BluetoothStatusChangedEvent.h"
 #include "mozilla/dom/ContentChild.h"
