@@ -2559,7 +2559,7 @@ jit::AnalyzeArgumentsUsage(JSContext *cx, JSScript *scriptArg)
         if (!use->isInstruction())
             return true;
 
-        if (!ArgumentsUseCanBeLazy(cx, script, use->toInstruction(), uses.index(),
+        if (!ArgumentsUseCanBeLazy(cx, script, use->toInstruction(), use->indexOf(uses.use()),
                                    &argumentsContentsObserved))
         {
             return true;

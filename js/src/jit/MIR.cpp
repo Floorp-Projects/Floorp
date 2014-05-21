@@ -30,6 +30,11 @@ using mozilla::NumbersAreIdentical;
 using mozilla::IsFloat32Representable;
 using mozilla::Maybe;
 
+size_t MUse::index() const
+{
+    return consumer()->indexOf(this);
+}
+
 template<size_t Op> static void
 ConvertDefinitionToDouble(TempAllocator &alloc, MDefinition *def, MInstruction *consumer)
 {
@@ -393,7 +398,6 @@ MNode::replaceOperand(MUseIterator use, MDefinition *def)
     uint32_t index = use->index();
     MDefinition *prev = use->producer();
 
-    JS_ASSERT(use->index() < numOperands());
     JS_ASSERT(use->producer() == getOperand(index));
     JS_ASSERT(use->consumer() == this);
 
@@ -413,7 +417,6 @@ MNode::replaceOperand(size_t index, MDefinition *def)
     MDefinition *prev = use->producer();
 
     JS_ASSERT(use->index() == index);
-    JS_ASSERT(use->index() < numOperands());
     JS_ASSERT(use->producer() == getOperand(index));
     JS_ASSERT(use->consumer() == this);
 
@@ -437,7 +440,7 @@ MNode::discardOperand(size_t index)
 
 #ifdef DEBUG
     // Causes any producer/consumer lookups to trip asserts.
-    use->set(nullptr, nullptr, index);
+    use->set(nullptr, nullptr);
 #endif
 }
 
