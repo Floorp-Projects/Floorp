@@ -69,9 +69,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "EnvironmentClient",
 XPCOMUtils.defineLazyModuleGetter(this, "ObjectClient",
   "resource://gre/modules/devtools/dbg-client.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
-  "resource://gre/modules/devtools/WebConsoleUtils.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "DebuggerServer",
   "resource://gre/modules/devtools/dbg-server.jsm");
 
@@ -91,6 +88,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Reflect",
 // to do so here.
 let telemetry = new Telemetry();
 telemetry.toolOpened("scratchpad");
+
+let WebConsoleUtils = require("devtools/toolkit/webconsole/utils").Utils;
 
 /**
  * The scratchpad object handles the Scratchpad window functionality.
@@ -494,6 +493,7 @@ var Scratchpad = {
    */
   execute: function SP_execute()
   {
+    WebConsoleUtils.usageCount++;
     let selection = this.editor.getSelection() || this.getText();
     return this.evaluate(selection);
   },
@@ -1613,11 +1613,16 @@ var Scratchpad = {
     };
 
     this.editor = new Editor(config);
-    this.editor.appendTo(document.querySelector("#scratchpad-editor")).then(() => {
+    let editorElement = document.querySelector("#scratchpad-editor");
+    this.editor.appendTo(editorElement).then(() => {
       var lines = initialText.split("\n");
 
       this.editor.setupAutoCompletion();
       this.editor.on("change", this._onChanged);
+      this._onPaste = WebConsoleUtils.pasteHandlerGen(this.editor.container.contentDocument.body,
+                                                      document.querySelector('#scratchpad-notificationbox'));
+      editorElement.addEventListener("paste", this._onPaste);
+      editorElement.addEventListener("drop", this._onPaste);
       this.editor.on("save", () => this.saveFile());
       this.editor.focus();
       this.editor.setCursor({ line: lines.length, ch: lines.pop().length });
@@ -1689,7 +1694,12 @@ var Scratchpad = {
 
     PreferenceObserver.uninit();
     CloseObserver.uninit();
-
+    if (this._onPaste) {
+      let editorElement = document.querySelector("#scratchpad-editor");
+      editorElement.removeEventListener("paste", this._onPaste);
+      editorElement.removeEventListener("drop", this._onPaste);
+      this._onPaste = null;
+    }
     this.editor.off("change", this._onChanged);
     this.editor.destroy();
     this.editor = null;
