@@ -150,7 +150,6 @@ namespace jit {
     _(EliminateRedundantChecks)                       \
     _(GenerateLIR)                                    \
     _(RegisterAllocation)                             \
-    _(UnsplitEdges)                                   \
     _(GenerateCode)                                   \
 
 class AutoTraceLog;

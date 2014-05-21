@@ -278,6 +278,7 @@ public:
 
   // Set the window up with an about:blank document with the current subject
   // principal.
+  // Outer windows only.
   virtual void SetInitialPrincipalToSubject() = 0;
 
   virtual PopupControlState PushPopupControlState(PopupControlState aState,
@@ -364,7 +365,8 @@ public:
     return !IsInnerWindow();
   }
 
-  virtual bool WouldReuseInnerWindow(nsIDocument *aNewDocument) = 0;
+  // Outer windows only.
+  virtual bool WouldReuseInnerWindow(nsIDocument* aNewDocument) = 0;
 
   /**
    * Get the docshell in this window.
@@ -424,8 +426,9 @@ public:
   virtual void EnterModalState() = 0;
   virtual void LeaveModalState() = 0;
 
+  // Outer windows only.
   virtual bool CanClose() = 0;
-  virtual nsresult ForceClose() = 0;
+  virtual void ForceClose() = 0;
 
   bool IsModalContentWindow() const
   {

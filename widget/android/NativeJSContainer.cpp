@@ -441,7 +441,7 @@ struct PrimitiveProperty
         for (size_t i = 0; i < length; i++) {
             JS::RootedValue elem(cx);
             if (!CheckJSCall(env, JS_GetElement(cx, array, i, &elem)) ||
-                !CheckProperty<InValue>(env, cx, elem)) {
+                !CheckProperty<PrimitiveProperty::InValue>(env, cx, elem)) {
                 return nullptr;
             }
             buffer[i] = FromValue(env, instance, cx, elem);

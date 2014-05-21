@@ -618,6 +618,59 @@ function promiseResolvePromise() {
   });
 }
 
+// Bug 1009569.
+// Ensure that thenables are run on a clean stack asynchronously.
+// Test case adopted from
+// https://gist.github.com/getify/d64bb01751b50ed6b281#file-bug1-js.
+function promiseResolveThenableCleanStack() {
+  function immed(s) { x++; s(); }
+  function incX(){ x++; }
+
+  var x = 0;
+  var thenable = { then: immed };
+  var results = [];
+
+  Promise.resolve(thenable).then(incX);
+  results.push(x);
+
+  // check what happens after all "next cycle" steps
+  // have had a chance to complete
+  setTimeout(function(){
+    results.push(x);
+    // Result should be [0, 2] since `thenable` will be called async.
+    is(results[0], 0, "Expected thenable to be called asynchronously");
+    is(results[1], 2, "Expected thenable to be called asynchronously");
+    runTest();
+  },1000);
+}
+
+// Bug 1008467 - Promise fails with "too much recursion".
+// The bug was that the callbacks passed to a thenable would resolve the
+// promise synchronously when the fulfill handler returned a non-thenable.
+//
+// For example:
+// var p = new Promise(function(resolve) {
+//   resolve(5);
+// });
+// var m = Promise.resolve(p);
+//
+// At this point `m` is a Promise that is resolved with a thenable `p`, so it
+// calls `p.then()` with two callbacks, both of which would synchronously resolve
+// `m` when `p` invoked them (on account of itself being resolved, possibly
+// synchronously. A chain of these 'Promise resolved by a Promise' would lead to
+// stack overflow.
+function promiseTestAsyncThenableResolution()
+{
+  var k = 3000;
+  Promise.resolve().then(function next() {
+    k--;
+    if (k > 0) return Promise.resolve().then(next);
+  }).then(function () {
+    ok(true, "Resolution of a chain of thenables should not be synchronous.");
+    runTest();
+  });
+}
+
 var tests = [ promiseResolve, promiseReject,
               promiseException, promiseGC, promiseAsync,
               promiseDoubleThen, promiseThenException,
@@ -648,6 +701,8 @@ var tests = [ promiseResolve, promiseReject,
               promiseResolveArray,
               promiseResolveThenable,
               promiseResolvePromise,
+              promiseResolveThenableCleanStack,
+              promiseTestAsyncThenableResolution,
             ];
 
 function runTest() {

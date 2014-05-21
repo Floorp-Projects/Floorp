@@ -660,14 +660,9 @@ IDBTransaction::GetMode(ErrorResult& aRv) const
 }
 
 DOMError*
-IDBTransaction::GetError(ErrorResult& aRv)
+IDBTransaction::GetError() const
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  if (IsOpen()) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
 
   return mError;
 }
