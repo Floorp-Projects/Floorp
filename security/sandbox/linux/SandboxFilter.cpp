@@ -209,7 +209,7 @@ SandboxFilterImpl::Build() {
 
   // Used by profiler.  Also used for raise(), which causes problems
   // with Android KitKat abort(); see bug 1004832.
-  Allow(SYSCALL(tgkill));
+  Allow(SYSCALL_WITH_ARG(tgkill, 0, getpid()));
 
   /* B2G specific low-frequency syscalls */
 #ifdef MOZ_WIDGET_GONK
