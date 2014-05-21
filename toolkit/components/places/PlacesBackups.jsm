@@ -256,19 +256,15 @@ this.PlacesBackups = {
   /**
    * Get the most recent backup file.
    *
-   * @param [optional] aFileExt
-   *                   Force file extension.  Either "html" or "json".
-   *                   Will check for both if not defined.
    * @returns nsIFile backup file
    */
-  getMostRecent: function PB_getMostRecent(aFileExt) {
+  getMostRecent: function PB_getMostRecent() {
     Deprecated.warning(
       "PlacesBackups.getMostRecent is deprecated and will be removed in a future version",
       "https://bugzilla.mozilla.org/show_bug.cgi?id=859695");
 
-    let fileExt = aFileExt || "(json|html)";
     for (let i = 0; i < this._entries.length; i++) {
-      let rx = new RegExp("\." + fileExt + "$");
+      let rx = new RegExp("\.json$");
       if (this._entries[i].leafName.match(rx))
         return this._entries[i];
     }
@@ -278,18 +274,14 @@ this.PlacesBackups = {
    /**
     * Get the most recent backup file.
     *
-    * @param [optional] aFileExt
-    *                   Force file extension.  Either "html" or "json".
-    *                   Will check for both if not defined.
     * @return {Promise}
     * @result the path to the file.
     */
-   getMostRecentBackup: function PB_getMostRecentBackup(aFileExt) {
+   getMostRecentBackup: function PB_getMostRecentBackup() {
      return Task.spawn(function* () {
-       let fileExt = aFileExt || "(json|html)";
        let entries = yield this.getBackupFiles();
        for (let entry of entries) {
-         let rx = new RegExp("\." + fileExt + "$");
+         let rx = new RegExp("\.json$");
          if (OS.Path.basename(entry).match(rx)) {
            return entry;
          }
@@ -334,7 +326,7 @@ this.PlacesBackups = {
         // we also want to copy this new backup to it.
         // This way we ensure the latest valid backup is the same saved by the
         // user.  See bug 424389.
-        let mostRecentBackupFile = yield this.getMostRecentBackup("json");
+        let mostRecentBackupFile = yield this.getMostRecentBackup();
         if (!mostRecentBackupFile ||
             hash != getHashFromFilename(OS.Path.basename(mostRecentBackupFile))) {
           let name = this.getFilenameForDate();
