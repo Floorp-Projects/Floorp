@@ -321,11 +321,6 @@ public:
     SetMatrixUniform(KnownUniform::MaskQuadTransform, aMatrix);
   }
 
-  void SetLayerQuadRect(const nsIntRect& aRect) {
-    float vals[4] = { float(aRect.x), float(aRect.y), float(aRect.width), float(aRect.height) };
-    SetUniform(KnownUniform::LayerQuadRect, 4, vals);
-  }
-
   void SetLayerQuadRect(const gfx::Rect& aRect) {
     float vals[4] = { float(aRect.x), float(aRect.y), float(aRect.width), float(aRect.height) };
     SetUniform(KnownUniform::LayerQuadRect, 4, vals);
