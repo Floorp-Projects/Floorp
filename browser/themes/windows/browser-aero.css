@@ -188,24 +188,6 @@
     background-clip: padding-box;
   }
 
-  /* Toolbar shadow behind tabs */
-  #nav-bar {
-    border-top: 1px solid @toolbarShadowColor@ !important;
-    background-clip: padding-box;
-  }
-
-  /* This code is only needed for restored windows (i.e. sizemode=normal)
-     because of the border radius on the toolbar below the tab bar. */
-  #main-window[sizemode=normal] #nav-bar {
-    border-top: 1px solid @toolbarShadowColor@;
-    background-clip: padding-box;
-  }
-
-  /* Cover the top border of the adjacent toolbar */
-  #TabsToolbar {
-    margin-bottom: -1px;
-  }
-
   #main-window[sizemode=normal] #TabsToolbar {
     padding-left: 1px;
     padding-right: 1px;
@@ -229,11 +211,6 @@
 
   @media (-moz-os-version: windows-vista),
          (-moz-os-version: windows-win7) {
-    #main-window[sizemode=normal] #nav-bar {
-      border-top-left-radius: 2.5px;
-      border-top-right-radius: 2.5px;
-    }
-
     #main-menubar:not(:-moz-lwtheme):not(:-moz-window-inactive) {
       border-radius: 4px;
     }
@@ -257,6 +234,11 @@
 }
 
 @media (-moz-windows-glass) {
+  #main-window[sizemode=normal] #nav-bar {
+    border-top-left-radius: 2.5px;
+    border-top-right-radius: 2.5px;
+  }
+
   #main-window[sizemode=fullscreen]:not(:-moz-lwtheme) {
     -moz-appearance: none;
     background-color: #556;
@@ -265,7 +247,6 @@
   /* Glass Fog */
 
   #TabsToolbar:not(:-moz-lwtheme) {
-    background-image: none;
     position: relative;
   }
 
