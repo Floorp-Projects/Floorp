@@ -144,9 +144,6 @@ this.UITour = {
       return Services.urlFormatter.formatURLPref("browser.uitour.url");
     });
 
-    UITelemetry.addSimpleMeasureFunction("UITour",
-                                         this.getTelemetry.bind(this));
-
     // Clear the availableTargetsCache on widget changes.
     let listenerMethods = [
       "onWidgetAdded",
@@ -541,6 +538,8 @@ this.UITour = {
                                          BUCKET_TIMESTEPS);
   },
 
+  // This is registered with UITelemetry by BrowserUITelemetry, so that UITour
+  // can remain lazy-loaded on-demand.
   getTelemetry: function() {
     return {
       seenPageIDs: [...this.seenPageIDs.keys()],
