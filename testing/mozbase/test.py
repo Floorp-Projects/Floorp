@@ -23,6 +23,23 @@ from moztest.results import TestResultCollection
 
 here = os.path.dirname(os.path.abspath(__file__))
 
+
+class TBPLTextTestResult(unittest.TextTestResult):
+    """
+    Format the failure outputs according to TBPL. See:
+    https://wiki.mozilla.org/Sheriffing/Job_Visibility_Policy#6.29_Outputs_failures_in_a_TBPL-starrable_format
+    """
+    
+    def addFailure(self, test, err):
+        super(unittest.TextTestResult, self).addFailure(test, err)
+        self.stream.writeln()
+        self.stream.writeln('TEST-UNEXPECTED-FAIL | %s | %s' % (test.id(), err[1]))
+    
+    def addUnexpectedSuccess(self, test):
+        super(unittest.TextTestResult, self).addUnexpectedSuccess(test)
+        self.stream.writeln()
+        self.stream.writeln('TEST-UNEXPECTED-PASS | %s | Unexpected pass' % test.id())
+
 def unittests(path):
     """return the unittests in a .py file"""
 
@@ -85,7 +102,8 @@ def main(args=sys.argv[1:]):
 
     # run the tests
     suite = unittest.TestSuite(unittestlist)
-    runner = unittest.TextTestRunner(verbosity=2) # default=1 does not show success of unittests
+    runner = unittest.TextTestRunner(verbosity=2, # default=1 does not show success of unittests
+                                     resultclass=TBPLTextTestResult)
     unittest_results = runner.run(suite)
     results = TestResultCollection.from_unittest_results(None, unittest_results)
 
