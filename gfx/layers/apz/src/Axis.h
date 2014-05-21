@@ -17,6 +17,7 @@ namespace layers {
 
 const float EPSILON = 0.0001f;
 
+class FrameMetrics;
 class AsyncPanZoomController;
 
 /**
@@ -180,6 +181,8 @@ protected:
   bool mAxisLocked;     // Whether movement on this axis is locked.
   AsyncPanZoomController* mAsyncPanZoomController;
   nsTArray<float> mVelocityQueue;
+
+  const FrameMetrics& GetFrameMetrics() const;
 };
 
 class AxisX : public Axis {

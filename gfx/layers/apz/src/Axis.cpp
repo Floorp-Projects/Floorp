@@ -187,27 +187,26 @@ float Axis::GetPageEnd() const {
 }
 
 float Axis::GetOrigin() const {
-  CSSPoint origin = mAsyncPanZoomController->GetFrameMetrics().GetScrollOffset();
+  CSSPoint origin = GetFrameMetrics().GetScrollOffset();
   return GetPointOffset(origin);
 }
 
 float Axis::GetCompositionLength() const {
-  const FrameMetrics& metrics = mAsyncPanZoomController->GetFrameMetrics();
-  return GetRectLength(metrics.CalculateCompositedRectInCssPixels());
+  return GetRectLength(GetFrameMetrics().CalculateCompositedRectInCssPixels());
 }
 
 float Axis::GetPageStart() const {
-  CSSRect pageRect = mAsyncPanZoomController->GetFrameMetrics().GetExpandedScrollableRect();
+  CSSRect pageRect = GetFrameMetrics().GetExpandedScrollableRect();
   return GetRectOffset(pageRect);
 }
 
 float Axis::GetPageLength() const {
-  CSSRect pageRect = mAsyncPanZoomController->GetFrameMetrics().GetExpandedScrollableRect();
+  CSSRect pageRect = GetFrameMetrics().GetExpandedScrollableRect();
   return GetRectLength(pageRect);
 }
 
 bool Axis::ScaleWillOverscrollBothSides(float aScale) {
-  const FrameMetrics& metrics = mAsyncPanZoomController->GetFrameMetrics();
+  const FrameMetrics& metrics = GetFrameMetrics();
 
   CSSToParentLayerScale scale(metrics.GetZoomToParent().scale * aScale);
   CSSRect cssCompositionBounds = metrics.mCompositionBounds / scale;
@@ -218,6 +217,10 @@ bool Axis::ScaleWillOverscrollBothSides(float aScale) {
 bool Axis::HasRoomToPan() const {
   return GetOrigin() > GetPageStart()
       || GetCompositionEnd() < GetPageEnd();
+}
+
+const FrameMetrics& Axis::GetFrameMetrics() const {
+  return mAsyncPanZoomController->GetFrameMetrics();
 }
 
 
