@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+
+<html>
+
+  <head>
+    <meta charset="utf8">
+    <title></title>
+
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+    <script type="application/javascript;version=1.8" src="head.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  </head>
+
+  <body>
+
+    <script type="application/javascript;version=1.8">
+      window.onload = function() {
+        SimpleTest.waitForExplicitFinish();
+
+        Services.prefs.setCharPref("devtools.webide.templatesURL", TEST_BASE + "templates.json");
+
+        Task.spawn(function* () {
+            let win = yield openWebIDE();
+            let tmpDir = FileUtils.getDir("TmpD", []);
+            yield win.Cmds.newApp({
+              index: 0,
+              name: "webideTmpApp",
+              folder: tmpDir
+            });
+
+            let project = win.AppManager.selectedProject;
+            let tmpDir = FileUtils.getDir("TmpD", ["webidetmpapp"]);
+            ok(tmpDir.isDirectory(), "Directory created");
+            is(project.location, tmpDir.path, "Location is valid (and lowercase)");
+            is(project.name, "webideTmpApp", "name field has been updated");
+
+            // Clean up
+            tmpDir.remove(true);
+            Services.prefs.clearUserPref("devtools.webide.templatesURL");
+            yield closeWebIDE(win);
+            yield removeAllProjects();
+            SimpleTest.finish();
+        });
+      }
+    </script>
+  </body>
+</html>

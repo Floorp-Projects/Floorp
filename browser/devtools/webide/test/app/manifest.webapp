@@ -1,0 +1,5 @@
+{
+  "name": "A name (in app directory)",
+  "description": "desc",
+  "launch_path": "/index.html"
+}

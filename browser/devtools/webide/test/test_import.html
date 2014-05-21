@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+
+<html>
+
+  <head>
+    <meta charset="utf8">
+    <title></title>
+
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+    <script type="application/javascript;version=1.8" src="head.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  </head>
+
+  <body>
+
+    <script type="application/javascript;version=1.8">
+      window.onload = function() {
+        SimpleTest.waitForExplicitFinish();
+
+        Task.spawn(function* () {
+            let win = yield openWebIDE();
+            let packagedAppLocation = getTestFilePath("app");
+
+            yield win.Cmds.importPackagedApp(packagedAppLocation);
+
+            let project = win.AppManager.selectedProject;
+            is(project.location, packagedAppLocation, "Location is valid");
+            is(project.name, "A name (in app directory)", "name field has been updated");
+            is(project.manifest.launch_path, "/index.html", "manifest found. launch_path valid.");
+            is(project.manifest.description, "desc", "manifest found. description valid");
+
+            yield nextTick();
+
+            let hostedAppManifest = TEST_BASE + "hosted_app.manifest";
+            yield win.Cmds.importHostedApp(hostedAppManifest);
+
+            project = win.AppManager.selectedProject;
+            is(project.location, hostedAppManifest, "Location is valid");
+            is(project.name, "hosted manifest name property", "name field has been updated");
+
+            info("opening panel");
+            yield win.Cmds.showProjectPanel();
+            info("panel open");
+
+            let panelNode = win.document.querySelector("#project-panel");
+            let items = panelNode.querySelectorAll(".panel-item");
+            // 3 controls, + 2 projects
+            is(items.length, 5, "5 projects in panel");
+            is(items[3].getAttribute("label"), "A name (in app directory)", "Panel label is correct");
+            is(items[4].getAttribute("label"), "hosted manifest name property", "Panel label is correct");
+
+            yield closeWebIDE(win);
+
+            yield removeAllProjects();
+
+            SimpleTest.finish();
+        });
+      }
+
+
+    </script>
+  </body>
+</html>
+
