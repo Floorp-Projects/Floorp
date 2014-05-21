@@ -118,7 +118,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
 
         Configuration config = res.getConfiguration();
         config.locale = locale;
-        res.updateConfiguration(config, res.getDisplayMetrics());
+        res.updateConfiguration(config, null);
 
         return resourcePath;
     }

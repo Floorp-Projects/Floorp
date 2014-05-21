@@ -57,7 +57,7 @@
     <command id="globalSearchCommand"
              oncommand="DebuggerView.Filtering._doGlobalSearch()"/>
     <command id="functionSearchCommand"
-             oncommand="DepbuggerView.Filtering._doFunctionSearch()"/>
+             oncommand="DebuggerView.Filtering._doFunctionSearch()"/>
     <command id="tokenSearchCommand"
              oncommand="DebuggerView.Filtering._doTokenSearch()"/>
     <command id="lineSearchCommand"

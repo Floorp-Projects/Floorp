@@ -73,6 +73,7 @@ if (app.is('Firefox')) {
                                  'unsafeWindow.gViewController.viewObjects.detail.node.removeEventListener("ViewChanged", whenViewChanges, false);\n' +
                                  'setTimeout(function() {\n' + // TODO: figure out why this is necessary..
                                      'self.postMessage({\n' +
+                                       'someCount: unsafeWindow.document.querySelectorAll("setting[title=\'some-title\']").length,\n' +
                                        'somePreference: getAttributes(unsafeWindow.document.querySelector("setting[title=\'some-title\']")),\n' +
                                        'myInteger: getAttributes(unsafeWindow.document.querySelector("setting[title=\'my-int\']")),\n' +
                                        'myHiddenInt: getAttributes(unsafeWindow.document.querySelector("setting[title=\'hidden-int\']")),\n' +
@@ -100,6 +101,9 @@ if (app.is('Firefox')) {
                              'unsafeWindow.addEventListener("load", onLoad, false);\n' +
                            '}\n',
             onMessage: function(msg) {
+              // test against doc caching
+              assert.equal(msg.someCount, 1, 'there is exactly one <setting> node for somePreference');
+
               // test somePreference
               assert.equal(msg.somePreference.type, 'string', 'some pref is a string');
               assert.equal(msg.somePreference.pref, 'extensions.'+self.id+'.somePreference', 'somePreference path is correct');
@@ -129,6 +133,11 @@ if (app.is('Firefox')) {
       	}
       });
   }
+
+  // run it again, to test against inline options document caching 
+  // and duplication of <setting> nodes upon re-entry to about:addons
+  exports.testAgainstDocCaching = exports.testAOM;
+
 }
 
 exports.testDefaultPreferencesBranch = function(assert) {

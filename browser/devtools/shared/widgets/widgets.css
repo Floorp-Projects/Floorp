@@ -102,3 +102,8 @@
 .variables-view-container[aligned-values] [optional-visibility] {
   display: none;
 }
+
+/* Table Widget */
+.table-widget-body > .devtools-side-splitter:last-child {
+  display: none;
+}

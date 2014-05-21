@@ -22,8 +22,7 @@
 
 using namespace mozilla::ipc;
 #ifdef MOZ_WIDGET_GONK
-using android::sp;
-using android::GraphicBuffer;
+using namespace android;
 #endif
 using std::map;
 
@@ -147,7 +146,28 @@ PSharedBufferManagerParent* SharedBufferManagerParent::Create(Transport* aTransp
 bool SharedBufferManagerParent::RecvAllocateGrallocBuffer(const IntSize& aSize, const uint32_t& aFormat, const uint32_t& aUsage, mozilla::layers::MaybeMagicGrallocBufferHandle* aHandle)
 {
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
+
+  *aHandle = null_t();
+
+  if (aFormat == 0 || aUsage == 0) {
+    printf_stderr("SharedBufferManagerParent::RecvAllocateGrallocBuffer -- format and usage must be non-zero");
+    return true;
+  }
+
+  // If the requested size is too big (i.e. exceeds the commonly used max GL texture size)
+  // then we risk OOMing the parent process. It's better to just deny the allocation and
+  // kill the child process, which is what the following code does.
+  // TODO: actually use GL_MAX_TEXTURE_SIZE instead of hardcoding 4096
+  if (aSize.width > 4096 || aSize.height > 4096) {
+    printf_stderr("SharedBufferManagerParent::RecvAllocateGrallocBuffer -- requested gralloc buffer is too big.");
+    return false;
+  }
+
   sp<GraphicBuffer> outgoingBuffer = new GraphicBuffer(aSize.width, aSize.height, aFormat, aUsage);
+  if (!outgoingBuffer.get() || outgoingBuffer->initCheck() != NO_ERROR) {
+    printf_stderr("SharedBufferManagerParent::RecvAllocateGrallocBuffer -- gralloc buffer allocation failed");
+    return true;
+  }
 
   GrallocBufferRef ref;
   ref.mOwner = mOwner;
@@ -175,9 +195,15 @@ bool SharedBufferManagerParent::RecvDropGrallocBuffer(const mozilla::layers::May
   NS_ASSERTION(handle.type() == MaybeMagicGrallocBufferHandle::TGrallocBufferRef, "We shouldn't interact with the real buffer!");
   int bufferKey = handle.get_GrallocBufferRef().mKey;
   sp<GraphicBuffer> buf = GetGraphicBuffer(bufferKey);
+  MOZ_ASSERT(buf.get());
   MutexAutoLock lock(mBuffersMutex);
   NS_ASSERTION(mBuffers.count(bufferKey) == 1, "How can you drop others buffer");
   mBuffers.erase(bufferKey);
+
+  if(!buf.get()) {
+    printf_stderr("SharedBufferManagerParent::RecvDropGrallocBuffer -- invalid buffer key.");
+    return true;
+  }
 
   int bpp = 0;
   bpp = android::bytesPerPixel(buf->getPixelFormat());

@@ -84,6 +84,11 @@
   background-position: 0 0;
 }
 
+/* Invert all toggle icons but the one in the active row for light theme */
+.theme-light .side-menu-widget-item:not(.selected) .checkbox-check {
+  filter: url(filters.svg#invert);
+}
+
 /* Shader source editors */
 
 .editor-label {

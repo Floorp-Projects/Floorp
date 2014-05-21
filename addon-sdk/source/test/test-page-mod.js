@@ -132,16 +132,61 @@ exports.testPageModIncludes = function(assert, done) {
       createPageModTest(testPageURI, true)
     ],
     function (win, done) {
-      waitUntil(function () win.localStorage[testPageURI],
-                     testPageURI + " page-mod to be executed")
-          .then(function () {
-            asserts.forEach(function(fn) {
-              fn(assert, win);
-            });
-            done();
-          });
-    }
-    );
+      waitUntil(() => win.localStorage[testPageURI],
+          testPageURI + " page-mod to be executed")
+        .then(() => {
+          asserts.forEach(fn => fn(assert, win));
+          win.localStorage.clear();
+          done();
+        });
+    });
+};
+
+exports.testPageModExcludes = function(assert, done) {
+  var asserts = [];
+  function createPageModTest(include, exclude, expectedMatch) {
+    // Create an 'onload' test function...
+    asserts.push(function(test, win) {
+      var matches = JSON.stringify([include, exclude]) in win.localStorage;
+      assert.ok(expectedMatch ? matches : !matches,
+          "[include, exclude] = [" + include + ", " + exclude +
+          "] match test, expected: " + expectedMatch);
+    });
+    // ...and corresponding PageMod options
+    return {
+      include: include,
+      exclude: exclude,
+      contentScript: 'new ' + function() {
+        self.on("message", function(msg) {
+          // The key in localStorage is "[<include>, <exclude>]".
+          window.localStorage[JSON.stringify(msg)] = true;
+        });
+      },
+      // The testPageMod callback with test assertions is called on 'end',
+      // and we want this page mod to be attached before it gets called,
+      // so we attach it on 'start'.
+      contentScriptWhen: 'start',
+      onAttach: function(worker) {
+        worker.postMessage([this.include[0], this.exclude[0]]);
+      }
+    };
+  }
+
+  testPageMod(assert, done, testPageURI, [
+      createPageModTest("*", testPageURI, false),
+      createPageModTest(testPageURI, testPageURI, false),
+      createPageModTest(testPageURI, "resource://*", false),
+      createPageModTest(testPageURI, "*.google.com", true)
+    ],
+    function (win, done) {
+      waitUntil(() => win.localStorage[JSON.stringify([testPageURI, "*.google.com"])],
+          testPageURI + " page-mod to be executed")
+        .then(() => {
+          asserts.forEach(fn => fn(assert, win));
+          win.localStorage.clear();
+          done();
+        });
+    });
 };
 
 exports.testPageModValidationAttachTo = function(assert) {
@@ -184,6 +229,27 @@ exports.testPageModValidationInclude = function(assert) {
    { val: ['*.validation111'], type: 'array with length > 0'}].forEach((include) => {
     new PageMod({ include: include.val });
     assert.pass("PageMod() does not throw when include option is " + include.type);
+  });
+};
+
+exports.testPageModValidationExclude = function(assert) {
+  let includeVal = '*.validation111';
+
+  [{ val: {}, type: 'object' },
+   { val: [], type: 'empty array'},
+   { val: [/regexp/, 1], type: 'array with non string/regexp' },
+   { val: 1, type: 'number' }].forEach((exclude) => {
+    assert.throws(() => new PageMod({ include: includeVal, exclude: exclude.val }),
+      /If set, the `exclude` option must always contain at least one rule as a string, regular expression, or an array of strings and regular expressions./,
+      "PageMod() throws when 'exclude' option is " + exclude.type + ".");
+  });
+
+  [{ val: undefined, type: 'undefined' },
+   { val: '*.validation111', type: 'string' },
+   { val: /validation111/, type: 'regexp' },
+   { val: ['*.validation111'], type: 'array with length > 0'}].forEach((exclude) => {
+    new PageMod({ include: includeVal, exclude: exclude.val });
+    assert.pass("PageMod() does not throw when exclude option is " + exclude.type);
   });
 };
 

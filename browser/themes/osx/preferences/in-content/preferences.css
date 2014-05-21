@@ -4,6 +4,11 @@
 
 %include ../../../shared/incontentprefs/preferences.css
 
+menulist:not([editable="true"]) > menupopup > menuitem[checked="true"]::before,
+menulist:not([editable="true"]) > menupopup > menuitem[selected="true"]::before {
+  display: none;
+}
+
 menulist:not([editable="true"]) > .menulist-dropmarker {
   display: -moz-box;
   margin-top: 1px;
