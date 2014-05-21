@@ -308,8 +308,30 @@ class CodeGeneratorShared : public LInstructionVisitor
     void emitPreBarrier(Register base, const LAllocation *index, MIRType type);
     void emitPreBarrier(Address address, MIRType type);
 
+    // We don't emit code for trivial blocks, so if we want to branch to the
+    // given block, and it's trivial, return the ultimate block we should
+    // actually branch directly to.
+    MBasicBlock *skipTrivialBlocks(MBasicBlock *block) {
+        while (block->lir()->isTrivial()) {
+            JS_ASSERT(block->lir()->rbegin()->numSuccessors() == 1);
+            block = block->lir()->rbegin()->getSuccessor(0);
+        }
+        return block;
+    }
+
+    // Test whether the given block can be reached via fallthrough from the
+    // current block.
     inline bool isNextBlock(LBlock *block) {
-        return current->mir()->id() + 1 == block->mir()->id();
+        uint32_t target = skipTrivialBlocks(block->mir())->id();
+        uint32_t i = current->mir()->id() + 1;
+        if (target < i)
+            return false;
+        // Trivial blocks can be crossed via fallthrough.
+        for (; i != target; ++i) {
+            if (!graph.getBlock(i)->isTrivial())
+                return false;
+        }
+        return true;
     }
 
   public:
