@@ -671,13 +671,29 @@ nsLayoutUtils::FindScrollableFrameFor(ViewID aId)
   return scrolledFrame ? scrolledFrame->GetScrollTargetFrame() : nullptr;
 }
 
-bool
-nsLayoutUtils::GetDisplayPort(nsIContent* aContent, nsRect *aResult)
+static nsRect
+ApplyRectMultiplier(nsRect aRect, float aMultiplier)
+{
+  if (aMultiplier == 1.0f) {
+    return aRect;
+  }
+  float newWidth = aRect.width * aMultiplier;
+  float newHeight = aRect.height * aMultiplier;
+  float newX = aRect.x - ((newWidth - aRect.width) / 2.0f);
+  float newY = aRect.y - ((newHeight - aRect.height) / 2.0f);
+  // Rounding doesn't matter too much here, do a round-in
+  return nsRect(ceil(newX), ceil(newY), floor(newWidth), floor(newHeight));
+}
+
+static bool
+GetDisplayPortImpl(nsIContent* aContent, nsRect *aResult, float aMultiplier = 1.0f)
 {
   DisplayPortPropertyData* rectData =
     static_cast<DisplayPortPropertyData*>(aContent->GetProperty(nsGkAtoms::DisplayPort));
   DisplayPortMarginsPropertyData* marginsData =
     static_cast<DisplayPortMarginsPropertyData*>(aContent->GetProperty(nsGkAtoms::DisplayPortMargins));
+  nsRect* baseData =
+    static_cast<nsRect*>(aContent->GetProperty(nsGkAtoms::DisplayPortBase));
   if (!rectData && !marginsData) {
     return false;
   }
@@ -697,33 +713,43 @@ nsLayoutUtils::GetDisplayPort(nsIContent* aContent, nsRect *aResult)
     }
   }
 
-  if (rectData) {
-    // We have it as a straight-up rect
-    *aResult = rectData->mRect;
-  } else {
-    // We need to compute it from the margins + base rect
-    nsRect* baseData =
-      static_cast<nsRect*>(aContent->GetProperty(nsGkAtoms::DisplayPortBase));
-    nsRect base;
-    if (baseData) {
-      base = *baseData;
-    }
-
-    nsIFrame* frame = aContent->GetPrimaryFrame();
-    if (!frame) {
+  nsIFrame* frame = aContent->GetPrimaryFrame();
+  if (!frame) {
+    if (rectData) {
+      *aResult = rectData->mRect;
+    } else {
       // Turns out we can't really compute it. Oops. We still should
       // return true and set aResult to something sane.
       NS_WARNING("Attempting to get a displayport from a content with no primary frame!");
-      *aResult = base;
-      return true;
+      if (baseData) {
+        *aResult = *baseData;
+      } else {
+        *aResult = nsRect();
+      }
     }
+    *aResult = ApplyRectMultiplier(*aResult, aMultiplier);
+    return true;
+  }
 
-    bool isRoot = false;
-    if (aContent->OwnerDoc()->GetRootElement() == aContent) {
-      // We want the scroll frame, the root scroll frame differs from all
-      // others in that the primary frame is not the scroll frame.
-      frame = frame->PresContext()->PresShell()->GetRootScrollFrame();
-      isRoot = true;
+  bool isRoot = false;
+  if (aContent->OwnerDoc()->GetRootElement() == aContent) {
+    // We want the scroll frame, the root scroll frame differs from all
+    // others in that the primary frame is not the scroll frame.
+    frame = frame->PresContext()->PresShell()->GetRootScrollFrame();
+    isRoot = true;
+  }
+  nsIScrollableFrame* scrollableFrame = frame->GetScrollTargetFrame();
+  nsPoint scrollPos(scrollableFrame ? scrollableFrame->GetScrollPosition() : nsPoint(0,0));
+
+  nsRect result;
+  if (rectData) {
+    // We have it as a straight-up rect
+    result = rectData->mRect;
+  } else {
+    // We need to compute it from the margins + base rect
+    nsRect base;
+    if (baseData) {
+      base = *baseData;
     }
 
     // first convert the base rect to layer pixels
@@ -746,8 +772,6 @@ nsLayoutUtils::GetDisplayPort(nsIContent* aContent, nsRect *aResult)
 
     rect.Inflate(marginsData->mMargins);
 
-    nsIScrollableFrame* scrollableFrame = frame->GetScrollTargetFrame();
-    nsPoint scrollPos(scrollableFrame ? scrollableFrame->GetScrollPosition() : nsPoint(0,0));
     if (marginsData->mAlignmentX > 0 || marginsData->mAlignmentY > 0) {
       // Avoid division by zero.
       if (marginsData->mAlignmentX == 0) {
@@ -776,19 +800,31 @@ nsLayoutUtils::GetDisplayPort(nsIContent* aContent, nsRect *aResult)
       rect -= scrollPosLayer;
     }
 
-    nsRect result;
     result.x = NSFloatPixelsToAppUnits(rect.x / res.width, auPerDevPixel);
     result.y = NSFloatPixelsToAppUnits(rect.y / res.height, auPerDevPixel);
     result.width = NSFloatPixelsToAppUnits(rect.width / res.width, auPerDevPixel);
     result.height = NSFloatPixelsToAppUnits(rect.height / res.height, auPerDevPixel);
-
-    // Finally, clamp the display port to the expanded scrollable rect.
-    nsRect expandedScrollableRect = CalculateExpandedScrollableRect(frame);
-    result = expandedScrollableRect.Intersect(result + scrollPos) - scrollPos;
-
-    *aResult = result;
   }
+
+  result = ApplyRectMultiplier(result, aMultiplier);
+
+  if (marginsData) {
+    // Finally, if the displayport was set via margins, clamp it to the expanded scrollable rect.
+    nsRect expandedScrollableRect = nsLayoutUtils::CalculateExpandedScrollableRect(frame);
+    result = expandedScrollableRect.Intersect(result + scrollPos) - scrollPos;
+  }
+
+  *aResult = result;
   return true;
+}
+
+bool
+nsLayoutUtils::GetDisplayPort(nsIContent* aContent, nsRect *aResult)
+{
+  if (gfxPrefs::UseLowPrecisionBuffer()) {
+    return GetDisplayPortImpl(aContent, aResult, 1.0f / gfxPrefs::LowPrecisionResolution());
+  }
+  return GetDisplayPortImpl(aContent, aResult);
 }
 
 void
@@ -844,15 +880,10 @@ nsLayoutUtils::SetDisplayPortBaseIfNotSet(nsIContent* aContent, const nsRect& aB
 bool
 nsLayoutUtils::GetCriticalDisplayPort(nsIContent* aContent, nsRect* aResult)
 {
-  void* property = aContent->GetProperty(nsGkAtoms::CriticalDisplayPort);
-  if (!property) {
-    return false;
+  if (gfxPrefs::UseLowPrecisionBuffer()) {
+    return GetDisplayPortImpl(aContent, aResult);
   }
-
-  if (aResult) {
-    *aResult = *static_cast<nsRect*>(property);
-  }
-  return true;
+  return false;
 }
 
 nsIFrame*
