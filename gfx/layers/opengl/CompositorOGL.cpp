@@ -911,11 +911,11 @@ static bool SetBlendMode(GLContext* aGL, gfx::CompositionOp aBlendMode, bool aIs
 }
 
 void
-CompositorOGL::DrawQuadInternal(const Rect& aRect,
-                                const Rect& aClipRect,
-                                const EffectChain &aEffectChain,
-                                Float aOpacity,
-                                const gfx::Matrix4x4 &aTransform)
+CompositorOGL::DrawQuad(const Rect& aRect,
+                        const Rect& aClipRect,
+                        const EffectChain &aEffectChain,
+                        Float aOpacity,
+                        const gfx::Matrix4x4 &aTransform)
 {
   PROFILER_LABEL("CompositorOGL", "DrawQuad");
   MOZ_ASSERT(mFrameInProgress, "frame not started");
@@ -1462,27 +1462,23 @@ CompositorOGL::QuadVBOTexCoordsAttrib(GLuint aAttribIndex) {
 }
 
 void
-CompositorOGL::BindAndDrawQuad(GLuint aVertAttribIndex,
-                               GLuint aTexCoordAttribIndex)
-{
-  BindQuadVBO();
-  QuadVBOVerticesAttrib(aVertAttribIndex);
-
-  if (aTexCoordAttribIndex != GLuint(-1)) {
-    QuadVBOTexCoordsAttrib(aTexCoordAttribIndex);
-    mGLContext->fEnableVertexAttribArray(aTexCoordAttribIndex);
-  }
-
-  mGLContext->fEnableVertexAttribArray(aVertAttribIndex);
-  mGLContext->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
-}
-
-void
 CompositorOGL::BindAndDrawQuad(ShaderProgramOGL *aProg)
 {
   NS_ASSERTION(aProg->HasInitialized(), "Shader program not correctly initialized");
-  BindAndDrawQuad(aProg->AttribLocation(ShaderProgramOGL::VertexCoordAttrib),
-                  aProg->AttribLocation(ShaderProgramOGL::TexCoordAttrib));
+
+  GLuint vertAttribIndex = aProg->AttribLocation(ShaderProgramOGL::VertexCoordAttrib);
+  GLuint texCoordAttribIndex = aProg->AttribLocation(ShaderProgramOGL::TexCoordAttrib);
+
+  BindQuadVBO();
+  QuadVBOVerticesAttrib(vertAttribIndex);
+
+  if (texCoordAttribIndex != GLuint(-1)) {
+    QuadVBOTexCoordsAttrib(texCoordAttribIndex);
+    mGLContext->fEnableVertexAttribArray(texCoordAttribIndex);
+  }
+
+  mGLContext->fEnableVertexAttribArray(vertAttribIndex);
+  mGLContext->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
 }
 
 GLuint

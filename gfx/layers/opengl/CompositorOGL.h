@@ -204,10 +204,7 @@ public:
                         const gfx::Rect& aClipRect,
                         const EffectChain &aEffectChain,
                         gfx::Float aOpacity,
-                        const gfx::Matrix4x4 &aTransform) MOZ_OVERRIDE
-  {
-    DrawQuadInternal(aRect, aClipRect, aEffectChain, aOpacity, aTransform);
-  }
+                        const gfx::Matrix4x4 &aTransform) MOZ_OVERRIDE;
 
   virtual void EndFrame() MOZ_OVERRIDE;
   virtual void SetFBAcquireFence(Layer* aLayer) MOZ_OVERRIDE;
@@ -277,12 +274,6 @@ public:
     return mProjMatrix;
   }
 private:
-  virtual void DrawQuadInternal(const gfx::Rect& aRect,
-                                const gfx::Rect& aClipRect,
-                                const EffectChain &aEffectChain,
-                                gfx::Float aOpacity,
-                                const gfx::Matrix4x4 &aTransform);
-
   virtual gfx::IntSize GetWidgetSize() const MOZ_OVERRIDE
   {
     return gfx::ToIntSize(mWidgetSize);
@@ -377,8 +368,6 @@ private:
   void BindQuadVBO();
   void QuadVBOVerticesAttrib(GLuint aAttribIndex);
   void QuadVBOTexCoordsAttrib(GLuint aAttribIndex);
-  void BindAndDrawQuad(GLuint aVertAttribIndex,
-                       GLuint aTexCoordAttribIndex);
   void BindAndDrawQuad(ShaderProgramOGL *aProg);
   void BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
                                       const gfx3DMatrix& aTextureTransform,
