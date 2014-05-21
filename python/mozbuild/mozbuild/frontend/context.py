@@ -1161,7 +1161,7 @@ VARIABLES = {
         Files from topsrcdir and the objdir can also be installed by prefixing
         the path(s) with a '/' character and a '!' character, respectively::
            TEST_HARNESS_FILES.path += ['/build/bar.py', '!quux.py']
-        """, None),
+        """, 'libs'),
 }
 
 # Sanity check: we don't want any variable above to have a list as storage type.

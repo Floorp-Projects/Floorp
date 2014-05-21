@@ -39,7 +39,7 @@ class XPIDLManager(object):
         self.idls = {}
         self.modules = {}
 
-    def register_idl(self, source, module, allow_existing=False):
+    def register_idl(self, source, module, install_target, allow_existing=False):
         """Registers an IDL file with this instance.
 
         The IDL file will be built, installed, etc.
@@ -58,7 +58,8 @@ class XPIDLManager(object):
             raise Exception('IDL already registered: %' % entry['basename'])
 
         self.idls[entry['basename']] = entry
-        self.modules.setdefault(entry['module'], set()).add(entry['root'])
+        t = self.modules.setdefault(entry['module'], (install_target, set()))
+        t[1].add(entry['root'])
 
 
 class WebIDLCollection(object):
@@ -181,7 +182,8 @@ class CommonBackend(BuildBackend):
                     topsrcdir=obj.topsrcdir)
 
         elif isinstance(obj, XPIDLFile):
-            self._idl_manager.register_idl(obj.source_path, obj.module)
+            self._idl_manager.register_idl(obj.source_path, obj.module,
+                obj.install_target)
 
         elif isinstance(obj, ConfigFileSubstitution):
             # Do not handle ConfigFileSubstitution for Makefiles. Leave that

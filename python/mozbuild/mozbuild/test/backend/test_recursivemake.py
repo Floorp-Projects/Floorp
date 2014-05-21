@@ -443,7 +443,9 @@ class TestRecursiveMakeBackend(BackendTester):
 
         m = InstallManifest(path=mozpath.join(install_dir, 'xpidl'))
         self.assertIn('.deps/my_module.pp', m)
-        self.assertIn('xpt/my_module.xpt', m)
+
+        m = InstallManifest(path=os.path.join(install_dir, 'dist_bin'))
+        self.assertIn('components/my_module.xpt', m)
 
         m = InstallManifest(path=mozpath.join(install_dir, 'dist_include'))
         self.assertIn('foo.h', m)
