@@ -45,6 +45,30 @@
                 "label": "bleu"
             }
         ]
+    },
+    {
+        "name": "test5",
+        "type": "boolint",
+        "title": "part part, particle",
+        "value": 7
+    },
+    {
+        "name": "test6",
+        "type": "color",
+        "title": "pop pop, popscicle",
+        "value": "#ff5e99"
+    },
+    {
+        "name": "test7",
+        "type": "file",
+        "title": "bike bike",
+        "value": "bicycle"
+    },
+    {
+        "name": "test8",
+        "type": "directory",
+        "title": "test test",
+        "value": "1-2-3"
     }],
     "loader": "lib/main.js"
 }
