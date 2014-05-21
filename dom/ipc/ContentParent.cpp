@@ -119,6 +119,10 @@
 #include "nsSystemInfo.h"
 #endif
 
+#if defined(XP_LINUX)
+#include "mozilla/Hal.h"
+#endif
+
 #ifdef ANDROID
 # include "gfxAndroidPlatform.h"
 #endif
@@ -3055,6 +3059,21 @@ ContentParent::RecvGetRandomValues(const uint32_t& length,
 
     return true;
 }
+
+bool
+ContentParent::RecvGetSystemMemory(const uint64_t& aGetterId)
+{
+  uint32_t memoryTotal = 0;
+
+#if defined(XP_LINUX)
+  memoryTotal = mozilla::hal::GetTotalSystemMemoryLevel();
+#endif
+
+  unused << SendSystemMemoryAvailable(aGetterId, memoryTotal);
+
+  return true;
+}
+
 
 bool
 ContentParent::RecvLoadURIExternal(const URIParams& uri)
