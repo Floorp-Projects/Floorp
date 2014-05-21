@@ -342,6 +342,8 @@ if (typeof Components === "object") {
     const chrome = { CC: Function.bind.call(CC, Components), Cc: Cc,
                      ChromeWorker: ChromeWorker, Cm: Cm, Ci: Ci, Cu: Cu,
                      Cr: Cr, components: Components };
+    const xpcInspector = Cc["@mozilla.org/jsinspector;1"].
+                         getService(Ci.nsIJSInspector);
 
     this.worker = new WorkerDebuggerLoader({
       createSandbox: createSandbox,
@@ -355,6 +357,7 @@ if (typeof Components === "object") {
         "Timer": Object.create(Timer),
         "chrome": chrome,
         "source-map": SourceMap,
+        "xpcInspector": xpcInspector,
       },
       paths: {
         "": "resource://gre/modules/commonjs/",

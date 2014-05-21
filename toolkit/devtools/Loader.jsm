@@ -30,6 +30,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils", "resource://gre/modules/Fil
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "console", "resource://gre/modules/devtools/Console.jsm");
 
+let xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
+
 let loader = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {}).Loader;
 let promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 
@@ -64,6 +66,7 @@ BuiltinProvider.prototype = {
         "Services": Object.create(Services),
         "Timer": Object.create(Timer),
         "toolkit/loader": loader,
+        "xpcInspector": xpcInspector,
       },
       paths: {
         // When you add a line to this mapping, don't forget to make a
@@ -149,6 +152,7 @@ SrcdirProvider.prototype = {
         "Services": Object.create(Services),
         "Timer": Object.create(Timer),
         "toolkit/loader": loader,
+        "xpcInspector": xpcInspector,
       },
       paths: {
         "": "resource://gre/modules/commonjs/",
