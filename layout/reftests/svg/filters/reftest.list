@@ -3,7 +3,7 @@
 # the automatic optimal surface-size computation a bit more).
 
 skip-if(B2G) == dynamic-filtered-foreignObject-01.svg pass.svg # bug 773482
-== dynamic-filter-invalidation-01.svg pass.svg
+fails-if(B2G&&browserIsRemote) == dynamic-filter-invalidation-01.svg pass.svg
 == dynamic-filter-invalidation-02.svg pass.svg
 
 == feBlend-1.svg feBlend-1-ref.svg
