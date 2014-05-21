@@ -36,6 +36,8 @@
 namespace mozilla {
 namespace layers {
 
+using namespace gfx;
+
 /**
  * Returns a rectangle of content painted opaquely by aLayer. Very consertative;
  * bails by returning an empty rect in any tricky situations.
@@ -204,35 +206,46 @@ static void DrawVelGraph(const nsIntRect& aClipRect,
 
   aManager->SetDebugOverlayWantsNextFrame(true);
 
-  const gfx::Matrix4x4& transform = aLayer->GetEffectiveTransform();
+  const Matrix4x4& transform = aLayer->GetEffectiveTransform();
   nsIntRect bounds = aLayer->GetEffectiveVisibleRegion().GetBounds();
-  gfx::Rect graphBounds = gfx::Rect(bounds.x, bounds.y,
-                                    bounds.width, bounds.height);
-  gfx::Rect graphRect = gfx::Rect(bounds.x, bounds.y, 200, 100);
+  IntSize graphSize = IntSize(200, 100);
+  Rect graphRect = Rect(bounds.x, bounds.y, graphSize.width, graphSize.height);
 
-  float opacity = 1.0;
-  EffectChain effects;
-  effects.mPrimaryEffect = new EffectSolidColor(gfx::Color(0.2f,0,0,1));
-  compositor->DrawQuad(graphRect,
-                       clipRect,
-                       effects,
-                       opacity,
-                       transform);
+  RefPtr<DrawTarget> dt = aManager->CreateDrawTarget(graphSize, SurfaceFormat::B8G8R8A8);
+  dt->FillRect(Rect(0, 0, graphSize.width, graphSize.height),
+               ColorPattern(Color(0.2f,0,0,1)));
 
-  std::vector<gfx::Point> graph;
   int yScaleFactor = 3;
+  Point prev = Point(0,0);
+  bool first = true;
   for (int32_t i = (int32_t)velocityData->mData.size() - 2; i >= 0; i--) {
     const gfx::Point& p1 = velocityData->mData[i+1].mPoint;
     const gfx::Point& p2 = velocityData->mData[i].mPoint;
     int vel = sqrt((p1.x - p2.x) * (p1.x - p2.x) +
                    (p1.y - p2.y) * (p1.y - p2.y));
-    graph.push_back(
-      gfx::Point(bounds.x + graphRect.width / circularBufferSize * i,
-                 graphBounds.y + graphRect.height - vel/yScaleFactor));
+    Point next = Point(graphRect.width / circularBufferSize * i,
+                       graphRect.height - vel/yScaleFactor);
+    if (first) {
+      first = false;
+    } else {
+      dt->StrokeLine(prev, next, ColorPattern(Color(0,1,0,1)));
+    }
+    prev = next;
   }
 
-  compositor->DrawLines(graph, clipRect, gfx::Color(0,1,0,1),
-                        opacity, transform);
+  RefPtr<DataTextureSource> textureSource = compositor->CreateDataTextureSource();
+  RefPtr<SourceSurface> snapshot = dt->Snapshot();
+  RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
+  textureSource->Update(data);
+
+  EffectChain effectChain;
+  effectChain.mPrimaryEffect = CreateTexturedEffect(SurfaceFormat::B8G8R8A8, textureSource, Filter::POINT);
+
+  compositor->DrawQuad(graphRect,
+                       clipRect,
+                       effectChain,
+                       1.0f,
+                       transform);
 }
 
 // ContainerRender is shared between RefLayer and ContainerLayer
