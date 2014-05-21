@@ -61,6 +61,8 @@ public class ToolbarEditText extends CustomEditText
     private boolean mSettingAutoComplete;
     // Spans used for marking the autocomplete text
     private Object[] mAutoCompleteSpans;
+    // Do not process autocomplete result
+    private boolean mDiscardAutoCompleteResult;
 
     public ToolbarEditText(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -226,6 +228,12 @@ public class ToolbarEditText extends CustomEditText
      */
     @Override
     public final void onAutocomplete(final String result) {
+        // If mDiscardAutoCompleteResult is true, we temporarily disabled
+        // autocomplete (due to backspacing, etc.) and we should bail early.
+        if (mDiscardAutoCompleteResult) {
+            return;
+        }
+
         if (!isEnabled() || result == null) {
             mAutoCompleteResult = "";
             return;
@@ -436,6 +444,10 @@ public class ToolbarEditText extends CustomEditText
             }
 
             mAutoCompletePrefixLength = textLength;
+
+            // If we are not autocompleting, we set mDiscardAutoCompleteResult to true
+            // to discard any autocomplete results that are in-flight, and vice versa.
+            mDiscardAutoCompleteResult = !doAutocomplete;
 
             if (doAutocomplete && mAutoCompleteResult.startsWith(text)) {
                 // If this text already matches our autocomplete text, autocomplete likely
