@@ -5,6 +5,7 @@
 
 #include "gfx2DGlue.h"
 #include "mozilla/dom/SVGAnimatedTransformList.h"
+#include "mozilla/dom/SVGGraphicsElementBinding.h"
 #include "mozilla/dom/SVGTransformableElement.h"
 #include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/SVGSVGElement.h"
@@ -182,7 +183,8 @@ SVGTransformableElement::GetFarthestViewportElement()
 }
 
 already_AddRefed<SVGIRect>
-SVGTransformableElement::GetBBox(ErrorResult& rv)
+SVGTransformableElement::GetBBox(const SVGBoundingBoxOptions& aOptions, 
+                                 ErrorResult& rv)
 {
   nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
 
@@ -190,14 +192,37 @@ SVGTransformableElement::GetBBox(ErrorResult& rv)
     rv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-
   nsISVGChildFrame* svgframe = do_QueryFrame(frame);
   if (!svgframe) {
     rv.Throw(NS_ERROR_NOT_IMPLEMENTED); // XXX: outer svg
     return nullptr;
   }
 
-  return NS_NewSVGRect(this, ToRect(nsSVGUtils::GetBBox(frame)));
+  if (!NS_SVGNewGetBBoxEnabled()) {
+    return NS_NewSVGRect(this, ToRect(nsSVGUtils::GetBBox(frame)));
+  } else {
+    uint32_t aFlags = 0;
+    if (aOptions.mFill) {
+      aFlags |= nsSVGUtils::eBBoxIncludeFill;
+    }
+    if (aOptions.mStroke) {
+      aFlags |= nsSVGUtils::eBBoxIncludeStroke;
+    }
+    if (aOptions.mMarkers) {
+      aFlags |= nsSVGUtils::eBBoxIncludeMarkers;
+    }
+    if (aOptions.mClipped) {
+      aFlags |= nsSVGUtils::eBBoxIncludeClipped;
+    }
+    if (aFlags == 0) {
+      return NS_NewSVGRect(this,0,0,0,0);
+    }
+    if (aFlags == nsSVGUtils::eBBoxIncludeMarkers || 
+        aFlags == nsSVGUtils::eBBoxIncludeClipped) {
+      aFlags |= nsSVGUtils::eBBoxIncludeFill;
+    }
+    return NS_NewSVGRect(this, ToRect(nsSVGUtils::GetBBox(frame, aFlags)));
+  }
 }
 
 already_AddRefed<SVGMatrix>

@@ -89,6 +89,14 @@ extern "C" {
 
 namespace mozilla {
 
+TimeStamp nr_socket_short_term_violation_time() {
+  return NrSocketBase::short_term_violation_time();
+}
+
+TimeStamp nr_socket_long_term_violation_time() {
+  return NrSocketBase::long_term_violation_time();
+}
+
 MOZ_MTLOG_MODULE("mtransport")
 
 const char kNrIceTransportUdp[] = "udp";

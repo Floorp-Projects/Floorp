@@ -205,7 +205,6 @@ public:
         const jobject newObject =
             env->NewObject(jNativeJSObject, jObjectConstructor,
                            instance, newIndex);
-        AndroidBridge::HandleUncaughtException(env);
         MOZ_ASSERT(newObject);
         return frame.Pop(newObject);
     }
@@ -442,7 +441,7 @@ struct PrimitiveProperty
         for (size_t i = 0; i < length; i++) {
             JS::RootedValue elem(cx);
             if (!CheckJSCall(env, JS_GetElement(cx, array, i, &elem)) ||
-                !CheckProperty<InValue>(env, cx, elem)) {
+                !CheckProperty<PrimitiveProperty::InValue>(env, cx, elem)) {
                 return nullptr;
             }
             buffer[i] = FromValue(env, instance, cx, elem);
@@ -506,7 +505,6 @@ struct StringProperty
         }
         jstring ret = env->NewString(
             reinterpret_cast<const jchar*>(strChars), strLen);
-        AndroidBridge::HandleUncaughtException(env);
         MOZ_ASSERT(ret);
         return ret;
     }
@@ -567,6 +565,9 @@ struct ObjectArrayWrapper : public BaseProperty
             }
             typename BaseProperty::Type jelem =
                 BaseProperty::FromValue(env, instance, cx, elem);
+            if (env->ExceptionCheck()) {
+                return nullptr;
+            }
             env->SetObjectArrayElement(jarray, i, jelem);
             env->DeleteLocalRef(jelem);
             if (env->ExceptionCheck()) {
@@ -696,7 +697,6 @@ GetBundle(JNIEnv* env, jobject instance, JSContext* cx, JS::HandleObject obj)
         NativeJSContainer::jBundle,
         NativeJSContainer::jBundleConstructor,
         static_cast<jint>(length));
-    AndroidBridge::HandleUncaughtException(env);
     if (!newBundle) {
         return nullptr;
     }
@@ -723,14 +723,18 @@ GetBundle(JNIEnv* env, jobject instance, JSContext* cx, JS::HandleObject obj)
             return nullptr;
         }
 
-#define PUT_IN_BUNDLE_IF_TYPE_IS(Type)                              \
-        if (Type##Property::InValue(cx, val)) {                     \
-            env->CallVoidMethod(                                    \
-                newBundle,                                          \
-                NativeJSContainer::jBundlePut##Type,                \
-                name,                                               \
-                Type##Property::FromValue(env, instance, cx, val)); \
-            AndroidBridge::HandleUncaughtException(env);            \
+#define PUT_IN_BUNDLE_IF_TYPE_IS(TYPE)                              \
+        if (TYPE##Property::InValue(cx, val)) {                     \
+            const TYPE##Property::Type jval =                       \
+                TYPE##Property::FromValue(env, instance, cx, val);  \
+            if (env->ExceptionCheck()) {                            \
+                return nullptr;                                     \
+            }                                                       \
+            env->CallVoidMethod(newBundle,                          \
+                NativeJSContainer::jBundlePut##TYPE, name, jval);   \
+            if (env->ExceptionCheck()) {                            \
+                return nullptr;                                     \
+            }                                                       \
             continue;                                               \
         }                                                           \
         ((void) 0) // Accommodate trailing semicolon.
@@ -992,7 +996,6 @@ Java_org_mozilla_gecko_util_NativeJSObject_toString(JNIEnv* env, jobject instanc
         return nullptr;
     }
     jstring ret = env->NewString(reinterpret_cast<const jchar*>(json.get()), json.Length());
-    AndroidBridge::HandleUncaughtException(env);
     MOZ_ASSERT(ret);
     return ret;
 }

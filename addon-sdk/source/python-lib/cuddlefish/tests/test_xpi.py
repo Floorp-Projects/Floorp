@@ -20,128 +20,6 @@ xpi_template_path = os.path.join(test_packaging.static_files_path,
 
 fake_manifest = '<RDF><!-- Extension metadata is here. --></RDF>'
 
-class PrefsTests(unittest.TestCase):
-    def makexpi(self, pkg_name):
-        self.xpiname = "%s.xpi" % pkg_name
-        create_xpi(self.xpiname, pkg_name, 'preferences-files')
-        self.xpi = zipfile.ZipFile(self.xpiname, 'r')
-        options = self.xpi.read('harness-options.json')
-        self.xpi_harness_options = json.loads(options)
-
-    def setUp(self):
-        self.xpiname = None
-        self.xpi = None
-
-    def tearDown(self):
-        if self.xpi:
-            self.xpi.close()
-        if self.xpiname and os.path.exists(self.xpiname):
-            os.remove(self.xpiname)
-
-    def testPackageWithSimplePrefs(self):
-        self.makexpi('simple-prefs')
-        packageName = 'jid1-fZHqN9JfrDBa8A@jetpack'
-        self.failUnless('options.xul' in self.xpi.namelist())
-        optsxul = self.xpi.read('options.xul').decode("utf-8")
-        self.failUnlessEqual(self.xpi_harness_options["jetpackID"], packageName)
-        self.failUnlessEqual(self.xpi_harness_options["preferencesBranch"], packageName)
-
-        root = ElementTree.XML(optsxul.encode('utf-8'))
-
-        xulNamespacePrefix = \
-            "{http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul}"
-
-        settings = root.findall(xulNamespacePrefix + 'setting')
-
-        def assertPref(setting, name, prefType, title):
-            self.failUnlessEqual(setting.get('data-jetpack-id'), packageName)
-            self.failUnlessEqual(setting.get('pref'),
-                                 'extensions.' + packageName + '.' + name)
-            self.failUnlessEqual(setting.get('pref-name'), name)
-            self.failUnlessEqual(setting.get('type'), prefType)
-            self.failUnlessEqual(setting.get('title'), title)
-
-        assertPref(settings[0], 'test', 'bool', u't\u00EBst')
-        assertPref(settings[1], 'test2', 'string', u't\u00EBst')
-        assertPref(settings[2], 'test3', 'menulist', '"><test')
-        assertPref(settings[3], 'test4', 'radio', u't\u00EBst')
-
-        menuItems = settings[2].findall(
-            '%(0)smenulist/%(0)smenupopup/%(0)smenuitem' % { "0": xulNamespacePrefix })
-        radios = settings[3].findall(
-            '%(0)sradiogroup/%(0)sradio' % { "0": xulNamespacePrefix })
-
-        def assertOption(option, value, label):
-            self.failUnlessEqual(option.get('value'), value)
-            self.failUnlessEqual(option.get('label'), label)
-
-        assertOption(menuItems[0], "0", "label1")
-        assertOption(menuItems[1], "1", "label2")
-        assertOption(radios[0], "red", "rouge")
-        assertOption(radios[1], "blue", "bleu")
-
-        prefsjs = self.xpi.read('defaults/preferences/prefs.js').decode("utf-8")
-        exp = [u'pref("extensions.jid1-fZHqN9JfrDBa8A@jetpack.test", false);',
-               u'pref("extensions.jid1-fZHqN9JfrDBa8A@jetpack.test2", "\u00FCnic\u00F8d\u00E9");',
-               u'pref("extensions.jid1-fZHqN9JfrDBa8A@jetpack.test3", "1");',
-               u'pref("extensions.jid1-fZHqN9JfrDBa8A@jetpack.test4", "red");',
-               ]
-        self.failUnlessEqual(prefsjs, "\n".join(exp)+"\n")
-
-    def testPackageWithPreferencesBranch(self):
-        self.makexpi('preferences-branch')
-        self.failUnless('options.xul' in self.xpi.namelist())
-        optsxul = self.xpi.read('options.xul').decode("utf-8")
-        self.failUnlessEqual(self.xpi_harness_options["preferencesBranch"], 
-                             "human-readable")
-
-        root = ElementTree.XML(optsxul.encode('utf-8'))
-        xulNamespacePrefix = \
-            "{http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul}"
-        
-        setting = root.find(xulNamespacePrefix + 'setting')
-        self.failUnlessEqual(setting.get('pref'),
-                             'extensions.human-readable.test42')
-
-        prefsjs = self.xpi.read('defaults/preferences/prefs.js').decode("utf-8")
-        self.failUnlessEqual(prefsjs, 
-                            'pref("extensions.human-readable.test42", true);\n')
-
-    def testPackageWithNoPrefs(self):
-        self.makexpi('no-prefs')
-        self.failIf('options.xul' in self.xpi.namelist())
-        self.failUnlessEqual(self.xpi_harness_options["jetpackID"],
-                             "jid1-fZHqN9JfrDBa8A@jetpack")
-        prefsjs = self.xpi.read('defaults/preferences/prefs.js').decode("utf-8")
-        self.failUnlessEqual(prefsjs, "")
-
-    def testPackageWithInvalidPreferencesBranch(self):
-        self.makexpi('curly-id')
-        self.failIfEqual(self.xpi_harness_options["preferencesBranch"], 
-                         "invalid^branch*name")
-        self.failUnlessEqual(self.xpi_harness_options["preferencesBranch"], 
-                             "{34a1eae1-c20a-464f-9b0e-000000000000}")
-
-    def testPackageWithCurlyID(self):
-        self.makexpi('curly-id')
-        self.failUnlessEqual(self.xpi_harness_options["jetpackID"], 
-                             "{34a1eae1-c20a-464f-9b0e-000000000000}")
-
-        self.failUnless('options.xul' in self.xpi.namelist())
-        optsxul = self.xpi.read('options.xul').decode("utf-8")
-
-        root = ElementTree.XML(optsxul.encode('utf-8'))
-        xulNamespacePrefix = \
-            "{http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul}"
-        
-        setting = root.find(xulNamespacePrefix + 'setting')
-        self.failUnlessEqual(setting.get('pref'),
-                             'extensions.{34a1eae1-c20a-464f-9b0e-000000000000}.test13')
-
-        prefsjs = self.xpi.read('defaults/preferences/prefs.js').decode("utf-8")
-        self.failUnlessEqual(prefsjs, 
-                            'pref("extensions.{34a1eae1-c20a-464f-9b0e-000000000000}.test13", 26);\n')
-
 
 class Bug588119Tests(unittest.TestCase):
     def makexpi(self, pkg_name):
@@ -300,7 +178,6 @@ class SmallXPI(unittest.TestCase):
                     # one in tests/static-files/xpi-template doesn't
                     "harness-options.json",
                     "install.rdf",
-                    "defaults/preferences/prefs.js",
                     "resources/",
                     "resources/addon-sdk/",
                     "resources/addon-sdk/lib/",

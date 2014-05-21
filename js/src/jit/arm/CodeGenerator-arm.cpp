@@ -1092,7 +1092,7 @@ CodeGeneratorARM::visitOutOfLineTableSwitch(OutOfLineTableSwitch *ool)
 
     size_t numCases = mir->numCases();
     for (size_t i = 0; i < numCases; i++) {
-        LBlock *caseblock = mir->getCase(numCases - 1 - i)->lir();
+        LBlock *caseblock = skipTrivialBlocks(mir->getCase(numCases - 1 - i))->lir();
         Label *caseheader = caseblock->label();
         uint32_t caseoffset = caseheader->offset();
 
@@ -1136,7 +1136,7 @@ CodeGeneratorARM::emitTableSwitchDispatch(MTableSwitch *mir, Register index, Reg
     // unhandled case is the default case (both out of range high and out of range low)
     // I then insert a branch to default case into the extra slot, which ensures
     // we don't attempt to execute the address table.
-    Label *defaultcase = mir->getDefault()->lir()->label();
+    Label *defaultcase = skipTrivialBlocks(mir->getDefault())->lir()->label();
 
     int32_t cases = mir->numCases();
     // Lower value with low value

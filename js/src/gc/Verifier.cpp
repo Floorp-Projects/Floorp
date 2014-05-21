@@ -120,7 +120,7 @@ AccumulateEdge(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
 {
     VerifyPreTracer *trc = (VerifyPreTracer *)jstrc;
 
-    JS_ASSERT(!IsInsideNursery(trc->runtime(), *(uintptr_t **)thingp));
+    JS_ASSERT(!IsInsideNursery(*reinterpret_cast<Cell **>(thingp)));
 
     trc->edgeptr += sizeof(EdgeValue);
     if (trc->edgeptr >= trc->term) {
@@ -433,7 +433,7 @@ PostVerifierCollectStoreBufferEdges(JSTracer *jstrc, void **thingp, JSGCTraceKin
 
     /* The store buffer may store extra, non-cross-generational edges. */
     JSObject *dst = *reinterpret_cast<JSObject **>(thingp);
-    if (trc->runtime()->gc.nursery.isInside(thingp) || !trc->runtime()->gc.nursery.isInside(dst))
+    if (trc->runtime()->gc.nursery.isInside(thingp) || !IsInsideNursery(dst))
         return;
 
     /*
@@ -471,7 +471,7 @@ PostVerifierVisitEdge(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
     /* Filter out non cross-generational edges. */
     JS_ASSERT(!trc->runtime()->gc.nursery.isInside(thingp));
     JSObject *dst = *reinterpret_cast<JSObject **>(thingp);
-    if (!trc->runtime()->gc.nursery.isInside(dst))
+    if (!IsInsideNursery(dst))
         return;
 
     /*

@@ -248,7 +248,7 @@ MacroAssembler::branchNurseryPtr(Condition cond, const Address &ptr1, ImmMaybeNu
                                  Label *label)
 {
 #ifdef JSGC_GENERATIONAL
-    if (ptr2.value && gc::IsInsideNursery(GetIonContext()->cx->runtime(), (void *)ptr2.value))
+    if (ptr2.value && gc::IsInsideNursery(ptr2.value))
         embedsNurseryPointers_ = true;
 #endif
     branchPtr(cond, ptr1, ptr2, label);
@@ -258,7 +258,7 @@ void
 MacroAssembler::moveNurseryPtr(ImmMaybeNurseryPtr ptr, Register reg)
 {
 #ifdef JSGC_GENERATIONAL
-    if (ptr.value && gc::IsInsideNursery(GetIonContext()->cx->runtime(), (void *)ptr.value))
+    if (ptr.value && gc::IsInsideNursery(ptr.value))
         embedsNurseryPointers_ = true;
 #endif
     movePtr(ptr, reg);
@@ -1924,10 +1924,10 @@ MacroAssembler::spsMarkJit(SPSProfiler *p, Register framePtr, Register temp)
     // and won't be regenerated when SPS state changes.
     spsProfileEntryAddressSafe(p, 0, temp, &stackFull);
 
-    storePtr(ImmPtr(enterJitLabel), Address(temp, ProfileEntry::offsetOfString()));
-    storePtr(framePtr,              Address(temp, ProfileEntry::offsetOfStackAddress()));
-    storePtr(ImmWord(uintptr_t(0)), Address(temp, ProfileEntry::offsetOfScript()));
-    store32(Imm32(ProfileEntry::NullPCIndex), Address(temp, ProfileEntry::offsetOfPCIdx()));
+    storePtr(ImmPtr(enterJitLabel), Address(temp, ProfileEntry::offsetOfLabel()));
+    storePtr(framePtr,              Address(temp, ProfileEntry::offsetOfSpOrScript()));
+    store32(Imm32(ProfileEntry::NullPCOffset), Address(temp, ProfileEntry::offsetOfLineOrPc()));
+    store32(Imm32(ProfileEntry::IS_CPP_ENTRY), Address(temp, ProfileEntry::offsetOfFlags()));
 
     /* Always increment the stack size, whether or not we actually pushed. */
     bind(&stackFull);

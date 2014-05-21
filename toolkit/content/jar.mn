@@ -27,7 +27,7 @@ toolkit.jar:
    content/global/directionDetector.html
    content/global/plugins.html
    content/global/plugins.css
-   content/global/browser-child.js            (browser-child.js)
+*  content/global/browser-child.js            (browser-child.js)
    content/global/browser-content.js          (browser-content.js)
 *+  content/global/buildconfig.html            (buildconfig.html)
 *  content/global/contentAreaUtils.js         (contentAreaUtils.js)
