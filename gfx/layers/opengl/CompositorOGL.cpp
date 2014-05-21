@@ -477,19 +477,12 @@ CompositorOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
                                    rects, flipped);
   }
 
-  gfx3DMatrix textureTransform;
-  if (rects.isSimpleQuad(textureTransform)) {
-    Matrix4x4 transform;
-    ToMatrix4x4(aTextureTransform * textureTransform, transform);
-    aProg->SetTextureTransform(transform);
-    BindAndDrawQuad(aProg, aRect);
-  } else {
-    Matrix4x4 transform;
-    ToMatrix4x4(aTextureTransform, transform);
-    aProg->SetTextureTransform(transform);
-    aProg->SetLayerQuadRect(aRect);
-    DrawQuads(mGLContext, mVBOs, aProg, LOCAL_GL_TRIANGLES, rects);
-  }
+  Matrix4x4 transform;
+  aProg->SetLayerRect(aRect);
+  ToMatrix4x4(aTextureTransform, transform);
+  aProg->SetTextureTransform(transform);
+  aProg->SetTextureRect(Rect(0.0f, 0.0f, 1.0f, 1.0f));
+  DrawQuads(mGLContext, mVBOs, aProg, LOCAL_GL_TRIANGLES, rects);
 }
 
 void
@@ -1466,11 +1459,13 @@ CompositorOGL::QuadVBOTexCoordsAttrib(GLuint aAttribIndex) {
 }
 
 void
-CompositorOGL::BindAndDrawQuad(ShaderProgramOGL *aProg, const Rect& aRect)
+CompositorOGL::BindAndDrawQuad(ShaderProgramOGL *aProg,
+                               const Rect& aLayerRect,
+                               const Rect& aTextureRect)
 {
   NS_ASSERTION(aProg->HasInitialized(), "Shader program not correctly initialized");
 
-  aProg->SetLayerQuadRect(aRect);
+  aProg->SetLayerRect(aLayerRect);
 
   GLuint vertAttribIndex = aProg->AttribLocation(ShaderProgramOGL::VertexCoordAttrib);
   GLuint texCoordAttribIndex = aProg->AttribLocation(ShaderProgramOGL::TexCoordAttrib);
@@ -1481,6 +1476,8 @@ CompositorOGL::BindAndDrawQuad(ShaderProgramOGL *aProg, const Rect& aRect)
   if (texCoordAttribIndex != GLuint(-1)) {
     QuadVBOTexCoordsAttrib(texCoordAttribIndex);
     mGLContext->fEnableVertexAttribArray(texCoordAttribIndex);
+
+    aProg->SetTextureRect(aTextureRect);
   }
 
   mGLContext->fEnableVertexAttribArray(vertAttribIndex);
