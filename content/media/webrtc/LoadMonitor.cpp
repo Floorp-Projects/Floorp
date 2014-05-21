@@ -23,14 +23,13 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Services.h"
 
-#if defined(ANDROID) || defined(LINUX)
+#ifdef XP_UNIX
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
 #endif
 
 #ifdef XP_MACOSX
-#include <sys/time.h>
 #include <mach/mach_host.h>
 #include <mach/mach_init.h>
 #include <mach/host_info.h>
@@ -423,7 +422,7 @@ nsresult LoadInfo::UpdateSystemLoad()
 }
 
 nsresult LoadInfo::UpdateProcessLoad() {
-#if defined(LINUX) || defined(ANDROID) || defined(XP_MACOSX)
+#if defined(XP_UNIX)
   struct timeval tv;
   gettimeofday(&tv, nullptr);
   const uint64_t total_times = tv.tv_sec * PR_USEC_PER_SEC + tv.tv_usec;
