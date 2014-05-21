@@ -132,6 +132,8 @@ static uint32_t ToLinkMask(const nsAString& aLink)
     return nsStyleLinkElement::eNEXT;
   else if (aLink.EqualsLiteral("alternate"))
     return nsStyleLinkElement::eALTERNATE;
+  else if (aLink.EqualsLiteral("import"))
+    return nsStyleLinkElement::eHTMLIMPORT;
   else 
     return 0;
 }

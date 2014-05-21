@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+  </head>
+  <body>
+    <div id="foo">bar</div>
+    <script>
+      counter++;
+      var importDone = true;
+      is(document.currentScript.ownerDocument.getElementById("foo").textContent, "bar",
+         "currentScript.ownerDocument works in imported document,");
+      try{
+        document.currentScript.ownerDocument.open();
+        document.currentScript.ownerDocument.write("<h1>This should not show up!</h1>");
+        document.currentScript.ownerDocument.close();
+        ok(false, "document.write should have thrown (import)")
+      } catch (e) {
+        ok(true, "document.write has thrown (import)")
+      }
+    </script>
+  </body>
+</html>
