@@ -15,6 +15,7 @@
 
 #include <errno.h>
 #include <unistd.h>
+#include <linux/net.h>
 
 namespace mozilla {
 
@@ -77,6 +78,14 @@ SandboxFilterImpl::Build() {
 #define SYSCALL_LARGEFILE(plain, versioned) SYSCALL(plain)
 #endif
 
+  // i386 multiplexes all the socket-related interfaces into a single
+  // syscall.
+#if SYSCALL_EXISTS(socketcall)
+#define SOCKETCALL(name, NAME) SYSCALL_WITH_ARG(socketcall, 0, SYS_##NAME)
+#else
+#define SOCKETCALL(name, NAME) SYSCALL(name)
+#endif
+
   /* Most used system calls should be at the top of the whitelist
    * for performance reasons. The whitelist BPF filter exits after
    * processing any ALLOW_SYSCALL macro.
@@ -95,14 +104,8 @@ SandboxFilterImpl::Build() {
    */
 
   Allow(SYSCALL(futex));
-  // FIXME, bug 920372: i386 multiplexes all the socket-related
-  // interfaces into a single syscall.  We should check the selector.
-#if SYSCALL_EXISTS(socketcall)
-  Allow(SYSCALL(socketcall));
-#else
-  Allow(SYSCALL(recvmsg));
-  Allow(SYSCALL(sendmsg));
-#endif
+  Allow(SOCKETCALL(recvmsg, RECVMSG));
+  Allow(SOCKETCALL(sendmsg, SENDMSG));
 
   // mmap2 is a little different from most off_t users, because it's
   // passed in a register (so it's a problem for even a "new" 32-bit
@@ -182,11 +185,8 @@ SandboxFilterImpl::Build() {
   Allow(SYSCALL_LARGEFILE(fstat, fstat64));
   Allow(SYSCALL_LARGEFILE(stat, stat64));
   Allow(SYSCALL_LARGEFILE(lstat, lstat64));
-  // FIXME, bug 920372: see above.
-#if !SYSCALL_EXISTS(socketcall)
-  Allow(SYSCALL(socketpair));
-  Deny(EACCES, SYSCALL(socket));
-#endif
+  Allow(SOCKETCALL(socketpair, SOCKETPAIR));
+  Deny(EACCES, SOCKETCALL(socket, SOCKET));
   Allow(SYSCALL(open));
   Allow(SYSCALL(readlink)); /* Workaround for bug 964455 */
   Allow(SYSCALL(prctl));
@@ -213,10 +213,8 @@ SandboxFilterImpl::Build() {
 
   /* B2G specific low-frequency syscalls */
 #ifdef MOZ_WIDGET_GONK
-#if !SYSCALL_EXISTS(socketcall)
-  Allow(SYSCALL(sendto));
-  Allow(SYSCALL(recvfrom));
-#endif
+  Allow(SOCKETCALL(sendto, SENDTO));
+  Allow(SOCKETCALL(recvfrom, RECVFROM));
   Allow(SYSCALL_LARGEFILE(getdents, getdents64));
   Allow(SYSCALL(epoll_ctl));
   Allow(SYSCALL(sched_yield));
