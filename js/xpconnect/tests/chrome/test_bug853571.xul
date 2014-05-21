@@ -33,6 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=853571
     yield;
 
     SimpleTest.finish();
+    yield; // Prevent StopIteration from being thrown.
   }
 
   var gen;

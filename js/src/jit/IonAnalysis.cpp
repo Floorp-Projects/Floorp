@@ -107,27 +107,32 @@ jit::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
             if (ins->isImplicitlyUsed())
                 continue;
 
-            // If the instruction's is captured by one of the resume point, then
-            // it might be observed indirectly while the frame is live on the
-            // stack, so it has to be computed.
-            if (ins->isObserved())
-                continue;
-
             // Check if this instruction's result is only used within the
             // current block, and keep track of its last use in a definition
             // (not resume point). This requires the instructions in the block
             // to be numbered, ensured by running this immediately after alias
             // analysis.
             uint32_t maxDefinition = 0;
-            for (MUseDefIterator uses(*ins); uses; uses++) {
-                if (uses.def()->block() != *block ||
-                    uses.def()->isBox() ||
-                    uses.def()->isPhi())
-                {
+            for (MUseIterator uses(ins->usesBegin()); uses != ins->usesEnd(); uses++) {
+                MNode *consumer = uses->consumer();
+                if (consumer->isResumePoint()) {
+                    // If the instruction's is captured by one of the resume point, then
+                    // it might be observed indirectly while the frame is live on the
+                    // stack, so it has to be computed.
+                    MResumePoint *resume = consumer->toResumePoint();
+                    if (resume->isObservableOperand(*uses)) {
+                        maxDefinition = UINT32_MAX;
+                        break;
+                    }
+                    continue;
+                }
+
+                MDefinition *def = consumer->toDefinition();
+                if (def->block() != *block || def->isBox() || def->isPhi()) {
                     maxDefinition = UINT32_MAX;
                     break;
                 }
-                maxDefinition = Max(maxDefinition, uses.def()->id());
+                maxDefinition = Max(maxDefinition, def->id());
             }
             if (maxDefinition == UINT32_MAX)
                 continue;
@@ -135,17 +140,15 @@ jit::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
             // Walk the uses a second time, removing any in resume points after
             // the last use in a definition.
             for (MUseIterator uses(ins->usesBegin()); uses != ins->usesEnd(); ) {
-                if (uses->consumer()->isDefinition()) {
-                    uses++;
+                MUse *use = *uses++;
+                if (use->consumer()->isDefinition())
                     continue;
-                }
-                MResumePoint *mrp = uses->consumer()->toResumePoint();
+                MResumePoint *mrp = use->consumer()->toResumePoint();
                 if (mrp->block() != *block ||
                     !mrp->instruction() ||
                     mrp->instruction() == *ins ||
                     mrp->instruction()->id() <= maxDefinition)
                 {
-                    uses++;
                     continue;
                 }
 
@@ -159,7 +162,7 @@ jit::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
                 // by removing dead operands before removing dead code.
                 MConstant *constant = MConstant::New(graph.alloc(), MagicValue(JS_OPTIMIZED_OUT));
                 block->insertBefore(*(block->begin()), constant);
-                uses = mrp->replaceOperand(uses, constant);
+                use->replaceProducer(constant);
             }
         }
     }
@@ -213,24 +216,22 @@ IsPhiObservable(MPhi *phi, Observability observe)
     // actual uses in the program have been (incorrectly) optimized
     // away, so we must be more conservative and consider resume
     // points as well.
-    switch (observe) {
-      case AggressiveObservability:
-        for (MUseDefIterator iter(phi); iter; iter++) {
-            if (!iter.def()->isPhi())
+    for (MUseIterator iter(phi->usesBegin()); iter != phi->usesEnd(); iter++) {
+        MNode *consumer = iter->consumer();
+        if (consumer->isResumePoint()) {
+            MResumePoint *resume = consumer->toResumePoint();
+            if (observe == ConservativeObservability)
+                return true;
+            if (resume->isObservableOperand(*iter))
+                return true;
+        } else {
+            MDefinition *def = consumer->toDefinition();
+            if (!def->isPhi())
                 return true;
         }
-        break;
-
-      case ConservativeObservability:
-        for (MUseIterator iter(phi->usesBegin()); iter != phi->usesEnd(); iter++) {
-            if (!iter->consumer()->isDefinition() ||
-                !iter->consumer()->toDefinition()->isPhi())
-                return true;
-        }
-        break;
     }
 
-    return phi->isObserved();
+    return false;
 }
 
 // Handles cases like:
@@ -1913,97 +1914,6 @@ jit::EliminateRedundantChecks(MIRGraph &graph)
     return true;
 }
 
-// If the given block contains a goto and nothing interesting before that,
-// return the goto. Return nullptr otherwise.
-static LGoto *
-FindLeadingGoto(LBlock *bb)
-{
-    for (LInstructionIterator ins(bb->begin()); ins != bb->end(); ins++) {
-        // Ignore labels.
-        if (ins->isLabel())
-            continue;
-        // If we have a goto, we're good to go.
-        if (ins->isGoto())
-            return ins->toGoto();
-        break;
-    }
-    return nullptr;
-}
-
-// Eliminate blocks containing nothing interesting besides gotos. These are
-// often created by optimizer, which splits all critical edges. If these
-// splits end up being unused after optimization and register allocation,
-// fold them back away to avoid unnecessary branching.
-bool
-jit::UnsplitEdges(LIRGraph *lir)
-{
-    for (size_t i = 0; i < lir->numBlocks(); i++) {
-        LBlock *bb = lir->getBlock(i);
-        MBasicBlock *mirBlock = bb->mir();
-
-        // Renumber the MIR blocks as we go, since we may remove some.
-        mirBlock->setId(i);
-
-        // Register allocation is done by this point, so we don't need the phis
-        // anymore. Clear them to avoid needed to keep them current as we edit
-        // the CFG.
-        bb->clearPhis();
-        mirBlock->discardAllPhis();
-
-        // First make sure the MIR block looks sane. Some of these checks may be
-        // over-conservative, but we're attempting to keep everything in MIR
-        // current as we modify the LIR, so only proceed if the MIR is simple.
-        if (mirBlock->numPredecessors() == 0 || mirBlock->numSuccessors() != 1 ||
-            !mirBlock->begin()->isGoto())
-        {
-            continue;
-        }
-
-        // The MIR block is empty, but check the LIR block too (in case the
-        // register allocator inserted spill code there, or whatever).
-        LGoto *theGoto = FindLeadingGoto(bb);
-        if (!theGoto)
-            continue;
-        MBasicBlock *target = theGoto->target();
-        if (target == mirBlock || target != mirBlock->getSuccessor(0))
-            continue;
-
-        // If we haven't yet cleared the phis for the successor, do so now so
-        // that the CFG manipulation routines don't trip over them.
-        if (!target->phisEmpty()) {
-            target->discardAllPhis();
-            target->lir()->clearPhis();
-        }
-
-        // Edit the CFG to remove lir/mirBlock and reconnect all its edges.
-        for (size_t j = 0; j < mirBlock->numPredecessors(); j++) {
-            MBasicBlock *mirPred = mirBlock->getPredecessor(j);
-
-            for (size_t k = 0; k < mirPred->numSuccessors(); k++) {
-                if (mirPred->getSuccessor(k) == mirBlock) {
-                    mirPred->replaceSuccessor(k, target);
-                    if (!target->addPredecessorWithoutPhis(mirPred))
-                        return false;
-                }
-            }
-
-            LInstruction *predTerm = *mirPred->lir()->rbegin();
-            for (size_t k = 0; k < predTerm->numSuccessors(); k++) {
-                if (predTerm->getSuccessor(k) == mirBlock)
-                    predTerm->setSuccessor(k, target);
-            }
-        }
-        target->removePredecessor(mirBlock);
-
-        // Zap the block.
-        lir->removeBlock(i);
-        lir->mir().removeBlock(mirBlock);
-        --i;
-    }
-
-    return true;
-}
-
 bool
 LinearSum::multiply(int32_t scale)
 {
@@ -2559,7 +2469,7 @@ jit::AnalyzeArgumentsUsage(JSContext *cx, JSScript *scriptArg)
         if (!use->isInstruction())
             return true;
 
-        if (!ArgumentsUseCanBeLazy(cx, script, use->toInstruction(), uses.index(),
+        if (!ArgumentsUseCanBeLazy(cx, script, use->toInstruction(), use->indexOf(uses.use()),
                                    &argumentsContentsObserved))
         {
             return true;

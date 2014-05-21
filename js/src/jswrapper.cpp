@@ -193,7 +193,7 @@ bool Wrapper::finalizeInBackground(Value priv)
      * If the wrapped object is in the nursery then we know it doesn't have a
      * finalizer, and so background finalization is ok.
      */
-    if (IsInsideNursery(priv.toObject().runtimeFromMainThread(), &priv.toObject()))
+    if (IsInsideNursery(&priv.toObject()))
         return true;
     return IsBackgroundFinalized(priv.toObject().tenuredGetAllocKind());
 }
