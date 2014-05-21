@@ -25,5 +25,9 @@ setup(name=PACKAGE_NAME,
                    'License :: OSI Approved :: Mozilla Public License 1.1 (MPL 1.1)',
                    'Operating System :: OS Independent',
                    'Topic :: Software Development :: Libraries :: Python Modules',
-                  ]
+                  ],
+      entry_points={
+          "console_scripts": [
+              "structlog = mozlog.structured.scripts:main"
+          ]}
      )
