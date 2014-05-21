@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+
+<html>
+
+  <head>
+    <meta charset="utf8">
+    <title></title>
+
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+    <script type="application/javascript;version=1.8" src="head.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  </head>
+
+  <body>
+
+    <script type="application/javascript;version=1.8">
+      window.onload = function() {
+        SimpleTest.waitForExplicitFinish();
+
+        openWebIDE().then((win) => {
+            ok(win, "Found a window");
+            ok(win.AppManager, "App Manager accessible");
+            let appmgr = win.AppManager;
+            ok(appmgr.connection, "App Manager connection ready");
+            ok(appmgr.runtimeList, "Runtime list ready");
+            ok(appmgr.webAppsStore, "WebApps store ready");
+            closeWebIDE(win).then(() => {
+              ok(!appmgr.connection, "App Manager connection destroyed");
+              ok(!appmgr.runtimeList, "Runtime list destroyed");
+              ok(!appmgr.webAppsStore, "WebApps store destroyed");
+              SimpleTest.finish();
+            });
+        });
+
+      }
+    </script>
+  </body>
+</html>

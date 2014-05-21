@@ -8,6 +8,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+Cu.import("resource:///modules/devtools/gDevTools.jsm");
 
 // Override DOM promises with Promise.jsm helpers
 const { defer, all } = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
@@ -36,6 +37,9 @@ const EVENTS = {
 
   // On a node parameter's change.
   CHANGE_PARAM: "WebAudioEditor:ChangeParam",
+
+  // When the devtools theme changes.
+  THEME_CHANGE: "WebAudioEditor:ThemeChange",
 
   // When the UI is reset from tab navigation.
   UI_RESET: "WebAudioEditor:UIReset",
@@ -141,6 +145,7 @@ let WebAudioEditorController = {
    */
   initialize: function() {
     this._onTabNavigated = this._onTabNavigated.bind(this);
+    this._onThemeChange = this._onThemeChange.bind(this);
     gTarget.on("will-navigate", this._onTabNavigated);
     gTarget.on("navigate", this._onTabNavigated);
     gFront.on("start-context", this._onStartContext);
@@ -148,6 +153,11 @@ let WebAudioEditorController = {
     gFront.on("connect-node", this._onConnectNode);
     gFront.on("disconnect-node", this._onDisconnectNode);
     gFront.on("change-param", this._onChangeParam);
+
+    // Hook into theme change so we can change
+    // the graph's marker styling, since we can't do this
+    // with CSS
+    gDevTools.on("pref-changed", this._onThemeChange);
 
     // Set up events to refresh the Graph view
     window.on(EVENTS.CREATE_NODE, this._onUpdatedContext);
@@ -169,6 +179,7 @@ let WebAudioEditorController = {
     window.off(EVENTS.CREATE_NODE, this._onUpdatedContext);
     window.off(EVENTS.CONNECT_NODE, this._onUpdatedContext);
     window.off(EVENTS.DISCONNECT_NODE, this._onUpdatedContext);
+    gDevTools.off("pref-changed", this._onThemeChange);
   },
 
   /**
@@ -177,6 +188,15 @@ let WebAudioEditorController = {
    */
   _onUpdatedContext: function () {
     WebAudioGraphView.draw();
+  },
+
+  /**
+   * Fired when the devtools theme changes (light, dark, etc.)
+   * so that the graph can update marker styling, as that
+   * cannot currently be done with CSS.
+   */
+  _onThemeChange: function (event, data) {
+    window.emit(EVENTS.THEME_CHANGE, data.newValue);
   },
 
   /**
@@ -318,4 +338,3 @@ function getViewNodeByActor (actor) {
 function getViewNodeById (id) {
   return getViewNodeByActor({ actorID: id });
 }
-

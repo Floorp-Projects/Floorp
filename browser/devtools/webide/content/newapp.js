@@ -63,6 +63,14 @@ function getJSON() {
       templatelistNode.appendChild(richlistitemNode);
     }
     templatelistNode.selectedIndex = 0;
+
+    /* Chrome mochitest support */
+    let testOptions = window.arguments[0].testOptions;
+    if (testOptions) {
+      templatelistNode.selectedIndex = testOptions.index;
+      document.querySelector("#project-name").value = testOptions.name;
+      doOK();
+    }
   };
   xhr.onerror = function() {
     failAndBail("Can't download app templates");
@@ -107,14 +115,22 @@ function doOK() {
     return false;
   }
 
-  let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-  fp.init(window, "Select directory where to create app directory", Ci.nsIFilePicker.modeGetFolder);
-  let res = fp.show();
-  if (res == Ci.nsIFilePicker.returnCancel) {
-    AppManager.console.error("No directory selected");
-    return false;
+  let folder;
+
+  /* Chrome mochitest support */
+  let testOptions = window.arguments[0].testOptions;
+  if (testOptions) {
+    folder = testOptions.folder;
+  } else {
+    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    fp.init(window, "Select directory where to create app directory", Ci.nsIFilePicker.modeGetFolder);
+    let res = fp.show();
+    if (res == Ci.nsIFilePicker.returnCancel) {
+      AppManager.console.error("No directory selected");
+      return false;
+    }
+    folder = fp.file;
   }
-  let folder = fp.file;
 
   // Create subfolder with fs-friendly name of project
   let subfolder = projectName.replace(/\W/g, '').toLowerCase();
