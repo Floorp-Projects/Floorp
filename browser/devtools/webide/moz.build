@@ -9,3 +9,4 @@ PARALLEL_DIRS += [
     'themes',
 ]
 
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
