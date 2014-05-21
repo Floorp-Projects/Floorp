@@ -1,4 +1,5 @@
 ac_add_options --enable-debug
+ac_add_options --enable-trace-malloc
 ac_add_options --enable-signmar
 
 ac_add_options --disable-unified-compilation
