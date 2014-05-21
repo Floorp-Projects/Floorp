@@ -117,7 +117,7 @@ FillRectWithMask(DrawTarget* aDT,
 
     Matrix transform = oldTransform * inverseMask;
     if (aSurfaceTransform) {
-      transform = transform * (*aSurfaceTransform);
+      transform = (*aSurfaceTransform) * transform;
     }
 
     SurfacePattern source(aSurface, aExtendMode, transform, aFilter);
