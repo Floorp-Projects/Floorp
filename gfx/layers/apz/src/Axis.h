@@ -17,6 +17,14 @@ namespace layers {
 
 const float EPSILON = 0.0001f;
 
+// Epsilon to be used when comparing 'float' coordinate values
+// with FuzzyEqualsAdditive. The rationale is that 'float' has 7 decimal
+// digits of precision, and coordinate values should be no larger than in the
+// ten thousands. Note also that the smallest legitimate difference in page
+// coordinates is 1 app unit, which is 1/60 of a (CSS pixel), so this epsilon
+// isn't too large.
+const float COORDINATE_EPSILON = 0.01f;
+
 class FrameMetrics;
 class AsyncPanZoomController;
 
@@ -79,6 +87,17 @@ public:
    * The adjusted displacement is returned.
    */
   float AdjustDisplacement(float aDisplacement, float& aOverscrollAmountOut);
+
+  /**
+   * Overscrolls this axis by the requested amount in the requested direction.
+   * The axis must be at the end of its scroll range in this direction.
+   */
+  void OverscrollBy(float aOverscroll);
+
+  /**
+   * Return the amount of overscroll on this axis, in CSS pixels.
+   */
+  float GetOverscroll() const;
 
   /**
    * Gets the distance between the starting position of the touch supplied in
@@ -180,6 +199,13 @@ protected:
   float mVelocity;
   bool mAxisLocked;     // Whether movement on this axis is locked.
   AsyncPanZoomController* mAsyncPanZoomController;
+  // The amount by which this axis is in overscroll, in CSS coordinates.
+  // If this amount is nonzero, the relevant component of
+  // mAsyncPanZoomController->mFrameMetrics.mScrollOffset must be at its
+  // extreme allowed value in the relevant direction (that is, it must be at
+  // its maximum value if mOverscroll is positive, and at its minimum value
+  // if mOverscroll is negative).
+  float mOverscroll;
   nsTArray<float> mVelocityQueue;
 
   const FrameMetrics& GetFrameMetrics() const;

@@ -1235,7 +1235,7 @@ void AsyncPanZoomController::UpdateWithTouchAtDevicePoint(const MultiTouchInput&
   mY.UpdateWithTouchAtDevicePoint(point.y, timeDelta);
 }
 
-void AsyncPanZoomController::AttemptScroll(const ScreenPoint& aStartPoint,
+bool AsyncPanZoomController::AttemptScroll(const ScreenPoint& aStartPoint,
                                            const ScreenPoint& aEndPoint,
                                            uint32_t aOverscrollHandoffChainIndex) {
 
@@ -1245,6 +1245,7 @@ void AsyncPanZoomController::AttemptScroll(const ScreenPoint& aStartPoint,
   ScreenPoint displacement = aStartPoint - aEndPoint;
 
   ScreenPoint overscroll;  // will be used outside monitor block
+  CSSPoint cssOverscroll;  // ditto
   {
     ReentrantMonitorAutoEnter lock(mMonitor);
 
@@ -1254,7 +1255,6 @@ void AsyncPanZoomController::AttemptScroll(const ScreenPoint& aStartPoint,
     // the same swipe should move you a shorter distance).
     CSSPoint cssDisplacement = displacement / zoom;
 
-    CSSPoint cssOverscroll;
     CSSPoint allowedDisplacement(mX.AdjustDisplacement(cssDisplacement.x,
                                                        cssOverscroll.x),
                                  mY.AdjustDisplacement(cssDisplacement.y,
@@ -1263,21 +1263,50 @@ void AsyncPanZoomController::AttemptScroll(const ScreenPoint& aStartPoint,
 
     if (!IsZero(allowedDisplacement)) {
       ScrollBy(allowedDisplacement);
-      ScheduleComposite();
-
-      TimeDuration timePaintDelta = mPaintThrottler.TimeSinceLastRequest(GetFrameTime());
-      if (timePaintDelta.ToMilliseconds() > gfxPrefs::APZPanRepaintInterval()) {
-        RequestContentRepaint();
-      }
+      ScheduleCompositeAndMaybeRepaint();
       UpdateSharedCompositorFrameMetrics();
     }
   }
 
-  if (!IsZero(overscroll)) {
-    // "+ overscroll" rather than "- overscroll" because "overscroll" is what's
-    // left of "displacement", and "displacement" is "start - end".
-    CallDispatchScroll(aEndPoint + overscroll, aEndPoint, aOverscrollHandoffChainIndex + 1);
+  // If we consumed the entire displacement as a normal scroll, great.
+  if (IsZero(overscroll)) {
+    return true;
   }
+
+  // If there is overscroll, first try to hand it off to an APZC later
+  // in the handoff chain to consume (either as a normal scroll or as
+  // overscroll).
+  // Note: "+ overscroll" rather than "- overscroll" because "overscroll"
+  // is what's left of "displacement", and "displacement" is "start - end".
+  if (CallDispatchScroll(aEndPoint + overscroll, aEndPoint, aOverscrollHandoffChainIndex + 1)) {
+    return true;
+  }
+
+  // If there is no APZC later in the handoff chain that accepted the
+  // overscroll, try to accept it ourselves. We only accept it if we
+  // are pannable.
+  return OverscrollBy(cssOverscroll);
+}
+
+bool AsyncPanZoomController::OverscrollBy(const CSSPoint& aOverscroll) {
+  ReentrantMonitorAutoEnter lock(mMonitor);
+  // Do not go into overscroll in a direction in which we have no room to
+  // scroll to begin with.
+  bool xCanScroll = mX.CanScroll();
+  bool yCanScroll = mY.CanScroll();
+  if (xCanScroll) {
+    mX.OverscrollBy(aOverscroll.x);
+  }
+  if (yCanScroll) {
+    mY.OverscrollBy(aOverscroll.y);
+  }
+  if (xCanScroll || yCanScroll) {
+    ScheduleComposite();
+    return true;
+  }
+  // TODO(botond): If one of the x- or y-overscroll was not accepted, we
+  // may want to propagate that one to an APZC earlier in the handoff chain.
+  return false;
 }
 
 void AsyncPanZoomController::TakeOverFling(ScreenPoint aVelocity) {
@@ -1289,16 +1318,15 @@ void AsyncPanZoomController::TakeOverFling(ScreenPoint aVelocity) {
   StartAnimation(new FlingAnimation(*this, false));
 }
 
-void AsyncPanZoomController::CallDispatchScroll(const ScreenPoint& aStartPoint, const ScreenPoint& aEndPoint,
+bool AsyncPanZoomController::CallDispatchScroll(const ScreenPoint& aStartPoint, const ScreenPoint& aEndPoint,
                                                 uint32_t aOverscrollHandoffChainIndex) {
   // Make a local copy of the tree manager pointer and check if it's not
   // null before calling DispatchScroll(). This is necessary because
   // Destroy(), which nulls out mTreeManager, could be called concurrently.
   APZCTreeManager* treeManagerLocal = mTreeManager;
-  if (treeManagerLocal) {
-    treeManagerLocal->DispatchScroll(this, aStartPoint, aEndPoint,
-                                     aOverscrollHandoffChainIndex);
-  }
+  return treeManagerLocal
+      && treeManagerLocal->DispatchScroll(this, aStartPoint, aEndPoint,
+                                          aOverscrollHandoffChainIndex);
 }
 
 void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
@@ -1551,6 +1579,15 @@ const LayerMargin AsyncPanZoomController::CalculatePendingDisplayPort(
 void AsyncPanZoomController::ScheduleComposite() {
   if (mCompositorParent) {
     mCompositorParent->ScheduleRenderOnCompositorThread();
+  }
+}
+
+void AsyncPanZoomController::ScheduleCompositeAndMaybeRepaint() {
+  ScheduleComposite();
+
+  TimeDuration timePaintDelta = mPaintThrottler.TimeSinceLastRequest(GetFrameTime());
+  if (timePaintDelta.ToMilliseconds() > gfxPrefs::APZPanRepaintInterval()) {
+    RequestContentRepaint();
   }
 }
 
