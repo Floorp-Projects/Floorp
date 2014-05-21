@@ -2301,11 +2301,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
   nsCOMPtr<nsIDocument> oldDoc = mDoc;
 
-  nsIScriptContext *scx = GetContextInternal();
-  NS_ENSURE_TRUE(scx, NS_ERROR_NOT_INITIALIZED);
-
-  JSContext *cx = scx->GetNativeContext();
-
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
   // clear smartcard events, our document has gone away.
   if (mCrypto && XRE_GetProcessType() != GeckoProcessType_Content) {
@@ -2313,6 +2308,9 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 #endif
+
+  AutoJSAPI jsapi;
+  JSContext *cx = jsapi.cx();
 
   if (!mDoc) {
     // First document load.
@@ -2369,9 +2367,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   bool createdInnerWindow = false;
 
   bool thisChrome = IsChromeWindow();
-
-  nsCxPusher cxPusher;
-  cxPusher.Push(cx);
 
   // Check if we're near the stack limit before we get anywhere near the
   // transplanting code.
@@ -2665,8 +2660,11 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   // We wait to fire the debugger hook until the window is all set up and hooked
   // up with the outer. See bug 969156.
   if (createdInnerWindow) {
-    JS::Rooted<JSObject*> global(cx, newInnerWindow->GetWrapper());
-    JS_FireOnNewGlobalObject(cx, global);
+    // AutoEntryScript required to invoke debugger hook, which is a
+    // Gecko-specific concept at present.
+    AutoEntryScript aes(newInnerWindow);
+    JS::Rooted<JSObject*> global(aes.cx(), newInnerWindow->GetWrapper());
+    JS_FireOnNewGlobalObject(aes.cx(), global);
   }
 
   if (newInnerWindow && !newInnerWindow->mHasNotifiedGlobalCreated && mDoc) {
