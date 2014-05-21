@@ -54,13 +54,12 @@ RunTest(JSRuntime* rt, JSContext* cx, ArrayT* array)
    */
   RootedValue value(cx);
   const char* property = "foo";
-  JS::shadow::Runtime* srt = reinterpret_cast<JS::shadow::Runtime*>(rt);
   for (size_t i = 0; i < ElementCount; ++i) {
     RootedObject obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
 #ifdef JSGC_GENERATIONAL
-    ASSERT_TRUE(js::gc::IsInsideNursery(srt, obj));
+    ASSERT_TRUE(js::gc::IsInsideNursery(AsCell(obj)));
 #else
-    ASSERT_FALSE(js::gc::IsInsideNursery(srt, obj));
+    ASSERT_FALSE(js::gc::IsInsideNursery(AsCell(obj)));
 #endif
     value = Int32Value(i);
     ASSERT_TRUE(JS_SetProperty(cx, obj, property, value));
@@ -78,7 +77,7 @@ RunTest(JSRuntime* rt, JSContext* cx, ArrayT* array)
    */
   for (size_t i = 0; i < ElementCount; ++i) {
     RootedObject obj(cx, array->ElementAt(i));
-    ASSERT_FALSE(js::gc::IsInsideNursery(srt, obj));
+    ASSERT_FALSE(js::gc::IsInsideNursery(AsCell(obj)));
     ASSERT_TRUE(JS_GetProperty(cx, obj, property, &value));
     ASSERT_TRUE(value.isInt32());
     ASSERT_EQ(static_cast<int32_t>(i), value.toInt32());

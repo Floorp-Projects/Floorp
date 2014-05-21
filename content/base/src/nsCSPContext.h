@@ -7,6 +7,7 @@
 #define nsCSPContext_h___
 
 #include "nsCSPUtils.h"
+#include "nsDataHashtable.h"
 #include "nsIChannel.h"
 #include "nsIClassInfo.h"
 #include "nsIContentSecurityPolicy.h"
@@ -36,8 +37,9 @@ class nsCSPContext : public nsIContentSecurityPolicy
                                     bool* outShouldReportViolations,
                                     bool* outIsAllowed) const;
 
-    nsTArray<nsCSPPolicy*> mPolicies;
-    nsCOMPtr<nsIURI>       mSelfURI;
+    nsTArray<nsCSPPolicy*>                     mPolicies;
+    nsCOMPtr<nsIURI>                           mSelfURI;
+    nsDataHashtable<nsCStringHashKey, int16_t> mShouldLoadCache;
 };
 
 #endif /* nsCSPContext_h___ */

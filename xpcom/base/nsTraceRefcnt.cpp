@@ -90,11 +90,7 @@ static PLHashTable* gSerialNumbers;
 static intptr_t gNextSerialNumber;
 
 static bool gLogging;
-static bool gLogToLeaky;
 static bool gLogLeaksOnly;
-
-static void (*leakyLogAddRef)(void* p, int oldrc, int newrc);
-static void (*leakyLogRelease)(void* p, int oldrc, int newrc);
 
 #define BAD_TLS_INDEX ((unsigned)-1)
 
@@ -743,34 +739,6 @@ InitTraceLog()
 
   InitLog("XPCOM_MEM_ALLOC_LOG", "new/delete", &gAllocLog);
 
-  defined = InitLog("XPCOM_MEM_LEAKY_LOG", "for leaky", &gLeakyLog);
-  if (defined) {
-    gLogToLeaky = true;
-    PRFuncPtr p = nullptr, q = nullptr;
-#ifdef HAVE_DLOPEN
-    {
-      PRLibrary* lib = nullptr;
-      p = PR_FindFunctionSymbolAndLibrary("__log_addref", &lib);
-      if (lib) {
-        PR_UnloadLibrary(lib);
-        lib = nullptr;
-      }
-      q = PR_FindFunctionSymbolAndLibrary("__log_release", &lib);
-      if (lib) {
-        PR_UnloadLibrary(lib);
-      }
-    }
-#endif
-    if (p && q) {
-      leakyLogAddRef = (void (*)(void*, int, int)) p;
-      leakyLogRelease = (void (*)(void*, int, int)) q;
-    } else {
-      gLogToLeaky = false;
-      fprintf(stdout, "### ERROR: XPCOM_MEM_LEAKY_LOG defined, but can't locate __log_addref and __log_release symbols\n");
-      fflush(stdout);
-    }
-  }
-
   const char* classes = getenv("XPCOM_MEM_LOG_CLASSES");
 
 #ifdef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
@@ -1058,15 +1026,11 @@ NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt,
     }
 
     if (gRefcntsLog && loggingThisType && loggingThisObject) {
-      if (gLogToLeaky) {
-        (*leakyLogAddRef)(aPtr, aRefcnt - 1, aRefcnt);
-      } else {
-        // Can't use PR_LOG(), b/c it truncates the line
-        fprintf(gRefcntsLog,
-                "\n<%s> 0x%08X %" PRIuPTR " AddRef %" PRIuPTR "\n", aClazz, NS_PTR_TO_INT32(aPtr), serialno, aRefcnt);
-        nsTraceRefcnt::WalkTheStack(gRefcntsLog);
-        fflush(gRefcntsLog);
-      }
+      // Can't use PR_LOG(), b/c it truncates the line
+      fprintf(gRefcntsLog,
+              "\n<%s> 0x%08X %" PRIuPTR " AddRef %" PRIuPTR "\n", aClazz, NS_PTR_TO_INT32(aPtr), serialno, aRefcnt);
+      nsTraceRefcnt::WalkTheStack(gRefcntsLog);
+      fflush(gRefcntsLog);
     }
     UNLOCK_TRACELOG();
   }
@@ -1107,15 +1071,11 @@ NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClazz)
 
     bool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
     if (gRefcntsLog && loggingThisType && loggingThisObject) {
-      if (gLogToLeaky) {
-        (*leakyLogRelease)(aPtr, aRefcnt + 1, aRefcnt);
-      } else {
-        // Can't use PR_LOG(), b/c it truncates the line
-        fprintf(gRefcntsLog,
-                "\n<%s> 0x%08X %" PRIuPTR " Release %" PRIuPTR "\n", aClazz, NS_PTR_TO_INT32(aPtr), serialno, aRefcnt);
-        nsTraceRefcnt::WalkTheStack(gRefcntsLog);
-        fflush(gRefcntsLog);
-      }
+      // Can't use PR_LOG(), b/c it truncates the line
+      fprintf(gRefcntsLog,
+              "\n<%s> 0x%08X %" PRIuPTR " Release %" PRIuPTR "\n", aClazz, NS_PTR_TO_INT32(aPtr), serialno, aRefcnt);
+      nsTraceRefcnt::WalkTheStack(gRefcntsLog);
+      fflush(gRefcntsLog);
     }
 
     // Here's the case where MOZ_COUNT_DTOR was not used,

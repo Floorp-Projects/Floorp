@@ -1232,6 +1232,11 @@ GetTotalSystemMemory()
   return hal_impl::GetTotalSystemMemory();
 }
 
+uint32_t
+GetTotalSystemMemoryLevel()
+{
+  return hal_impl::GetTotalSystemMemoryLevel();
+}
 
 } // namespace hal
 } // namespace mozilla

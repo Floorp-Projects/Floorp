@@ -7,49 +7,84 @@
 #ifndef mozilla_dom_HTMLAllCollection_h
 #define mozilla_dom_HTMLAllCollection_h
 
-#include "js/RootingAPI.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
 #include "nsRefPtrHashtable.h"
+#include "nsWrapperCache.h"
 
 #include <stdint.h>
 
 class nsContentList;
 class nsHTMLDocument;
 class nsIContent;
-class nsWrapperCache;
+class nsINode;
 
 namespace mozilla {
+
 class ErrorResult;
 
 namespace dom {
 
-class HTMLAllCollection
+class OwningNodeOrHTMLCollection;
+template<typename> class Nullable;
+
+class HTMLAllCollection MOZ_FINAL : public nsISupports
+                                  , public nsWrapperCache
 {
 public:
   HTMLAllCollection(nsHTMLDocument* aDocument);
   ~HTMLAllCollection();
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(HTMLAllCollection)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(HTMLAllCollection)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(HTMLAllCollection)
+
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  nsINode* GetParentObject() const;
 
   uint32_t Length();
   nsIContent* Item(uint32_t aIndex);
+  void Item(const nsAString& aName, Nullable<OwningNodeOrHTMLCollection>& aResult)
+  {
+    NamedItem(aName, aResult);
+  }
+  nsIContent* IndexedGetter(uint32_t aIndex, bool& aFound)
+  {
+    nsIContent* result = Item(aIndex);
+    aFound = !!result;
+    return result;
+  }
 
-  JSObject* GetObject(JSContext* aCx, ErrorResult& aRv);
-
-  nsISupports* GetNamedItem(const nsAString& aID, nsWrapperCache** aCache);
+  void NamedItem(const nsAString& aName,
+                 Nullable<OwningNodeOrHTMLCollection>& aResult)
+  {
+    bool found = false;
+    NamedGetter(aName, found, aResult);
+  }
+  void NamedGetter(const nsAString& aName,
+                   bool& aFound,
+                   Nullable<OwningNodeOrHTMLCollection>& aResult);
+  void GetSupportedNames(unsigned flags, nsTArray<nsString>& aNames)
+  {
+  }
+  bool NameIsEnumerable(const nsAString& aName)
+  {
+    return false;
+  }
+  void LegacyCall(JS::Handle<JS::Value>, const nsAString& aName,
+                  Nullable<OwningNodeOrHTMLCollection>& aResult)
+  {
+    NamedItem(aName, aResult);
+  }
 
 private:
   nsContentList* Collection();
 
   /**
-   * Returns the NodeList for document.all[aID], or null if there isn't one.
+   * Returns the HTMLCollection for document.all[aID], or null if there isn't one.
    */
   nsContentList* GetDocumentAllList(const nsAString& aID);
 
-  JS::Heap<JSObject*> mObject;
   nsRefPtr<nsHTMLDocument> mDocument;
   nsRefPtr<nsContentList> mCollection;
   nsRefPtrHashtable<nsStringHashKey, nsContentList> mNamedMap;
