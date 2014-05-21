@@ -196,6 +196,7 @@ const char kLoadAsData[] = "loadAsData";
 nsIXPConnect *nsContentUtils::sXPConnect;
 nsIScriptSecurityManager *nsContentUtils::sSecurityManager;
 nsIPrincipal *nsContentUtils::sSystemPrincipal;
+nsIPrincipal *nsContentUtils::sNullSubjectPrincipal;
 nsIParserService *nsContentUtils::sParserService = nullptr;
 nsNameSpaceManager *nsContentUtils::sNameSpaceManager;
 nsIIOService *nsContentUtils::sIOService;
@@ -379,6 +380,7 @@ nsContentUtils::Init()
 
   sSecurityManager->GetSystemPrincipal(&sSystemPrincipal);
   MOZ_ASSERT(sSystemPrincipal);
+  NS_ADDREF(sNullSubjectPrincipal = new nsNullPrincipal());
 
   nsresult rv = CallGetService(NS_IOSERVICE_CONTRACTID, &sIOService);
   if (NS_FAILED(rv)) {
@@ -1436,6 +1438,7 @@ nsContentUtils::Shutdown()
   sXPConnect = nullptr;
   NS_IF_RELEASE(sSecurityManager);
   NS_IF_RELEASE(sSystemPrincipal);
+  NS_IF_RELEASE(sNullSubjectPrincipal);
   NS_IF_RELEASE(sParserService);
   NS_IF_RELEASE(sIOService);
   NS_IF_RELEASE(sLineBreaker);
@@ -2322,9 +2325,33 @@ nsContentUtils::SubjectPrincipal()
     return GetSystemPrincipal();
   }
 
-  JSCompartment* compartment = js::GetContextCompartment(cx);
-  MOZ_ASSERT(compartment);
-  JSPrincipals* principals = JS_GetCompartmentPrincipals(compartment);
+  JSCompartment *compartment = js::GetContextCompartment(cx);
+
+  // When an AutoJSAPI is instantiated, we are in a null compartment until the
+  // first JSAutoCompartment, which is kind of a purgatory as far as permissions
+  // go. It would be nice to just hard-abort if somebody does a security check
+  // in this purgatory zone, but that would be too fragile, since it could be
+  // triggered by random IsCallerChrome() checks 20-levels deep.
+  //
+  // So we want to return _something_ here - and definitely not the System
+  // Principal, since that would make an AutoJSAPI a very dangerous thing to
+  // instantiate.
+  //
+  // The natural thing to return is a null principal. Ideally, we'd return a
+  // different null principal each time, to avoid any unexpected interactions
+  // when the principal accidentally gets inherited somewhere. But
+  // GetSubjectPrincipal doesn't return strong references, so there's no way to
+  // sanely manage the lifetime of multiple null principals.
+  //
+  // So we use a singleton null principal. To avoid it being accidentally
+  // inherited and becoming a "real" subject or object principal, we do a
+  // release-mode assert during compartment creation against using this
+  // principal on an actual global.
+  if (!compartment) {
+    return sNullSubjectPrincipal;
+  }
+
+  JSPrincipals *principals = JS_GetCompartmentPrincipals(compartment);
   return nsJSPrincipals::get(principals);
 }
 
