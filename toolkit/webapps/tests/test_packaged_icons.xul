@@ -1,0 +1,172 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=898647
+-->
+<window title="Mozilla Bug 898647"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js"></script>
+  <script type="application/javascript" src="head.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=898647"
+     target="_blank">Mozilla Bug 898647</a>
+  </body>
+
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 898647 **/
+
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NativeApp.jsm");
+Cu.import("resource://gre/modules/WebappOSUtils.jsm");
+
+let zipPath = OS.Path.join(OS.Constants.Path.profileDir, "sample.zip");
+
+let manifest = {
+  name: "Sample packaged app",
+  version: "0.1a",
+  size: 777,
+  package_path: "/sample.zip",
+};
+
+let app = {
+  name: "Sample packaged app",
+  manifestURL: "http://example.com/sample.manifest",
+  manifest: manifest,
+  updateManifest: manifest,
+  origin: "app://test_desktop_packaged_launch/",
+  categories: [],
+  installOrigin: "http://example.com/",
+  receipts: [],
+  installTime: Date.now(),
+};
+
+let testIconFile = getFile(getTestFilePath("data/icon.png"));
+
+let iconTests = [
+  // No icon specified
+  {},
+  // Absolute URI
+  {"32": "http://example.com/chrome/toolkit/webapps/tests/data/icon.png"},
+  // Relative URI
+  {"32": "/icon.png"},
+  // Data URI icon
+  {"32": generateDataURI(testIconFile) },
+  // URI to a file that isn't an image
+  {"32": "/index.html"},
+];
+
+// This is an array of the icon sizes associated with the elements of
+// iconTests. Each element in the iconSizes array is an array of two values:
+//  - The expected size of the icon
+//  - An epsilon value that defines an accepted range around the icon size.
+// On each platform the size is different (because the format of the file is
+// different: ICO on Windows, PNG on Linux, ICNS on Mac).
+// The epsilon value is 0 on Windows and Linux, where the size of the file
+// is precise (because we convert the icons with our own code). It is ~0 on
+// Mac because we use SIPS to convert the icon, and its output isn't
+// the same across Mac versions.
+
+let iconSizes;
+
+if (LINUX) {
+  iconSizes = [
+    [4009, 0],
+    [2787, 0],
+    [2787, 0],
+    [2787, 0],
+    [4009, 0],
+  ];
+} else if (WIN) {
+  iconSizes = [
+    [16958, 0],
+    [4286, 0],
+    [4286, 0],
+    [4286, 0],
+    [16958, 0],
+  ];
+} else if (MAC) {
+  iconSizes = [
+    [14000, 2000],
+    [27000, 2000],
+    [27000, 2000],
+    [27000, 2000],
+    [14000, 2000],
+  ];
+}
+
+let testAppInfo = new TestAppInfo(app);
+
+let runTest = Task.async(function*() {
+  SimpleTest.registerCleanupFunction(() => testAppInfo.cleanup());
+
+  setDryRunPref();
+
+  for (let curTest = 0; curTest < iconTests.length; curTest++) {
+    // Get to a clean state before the test
+    yield testAppInfo.cleanup();
+
+    manifest.icons = iconTests[curTest];
+    info("Test icon: " + JSON.stringify(manifest.icons));
+
+    let zipPath = buildAppPackage(manifest, testIconFile);
+
+    let nativeApp = new NativeApp(app, manifest, app.categories);
+    ok(nativeApp, "NativeApp object created");
+
+    testAppInfo.profileDir = nativeApp.createProfile();
+    ok(testAppInfo.profileDir && testAppInfo.profileDir.exists(), "Profile directory created");
+    ok((yield OS.File.exists(testAppInfo.profilesIni)), "profiles.ini file created");
+
+    // On Mac build servers, we don't have enough privileges to write to /Applications,
+    // so we install apps in a user-owned directory.
+    if (MAC) {
+      nativeApp._rootInstallDir = OS.Path.join(OS.Constants.Path.homeDir, "Applications");
+      yield OS.File.makeDir(nativeApp._rootInstallDir, { ignoreExisting: true });
+    }
+
+    // Install application
+    info("Test installation");
+    yield nativeApp.install(manifest, zipPath);
+    while (!WebappOSUtils.isLaunchable(app)) {
+      yield wait(1000);
+    }
+    ok(true, "App launchable");
+
+    let stat = yield OS.File.stat(testAppInfo.iconFile);
+    isfuzzy(stat.size, iconSizes[curTest][0], iconSizes[curTest][1],
+            "Icon size correct");
+
+    // Flush the ZipReaderCache (so that the application.zip file gets closed)
+    Services.obs.notifyObservers(null, "chrome-flush-caches", null);
+  }
+
+  SimpleTest.finish();
+});
+
+// The test doesn't work yet on Mac OS X 10.6 machines.
+// See bug 993690.
+if (MAC_106) {
+  todo(false, "The test doesn't work on Mac OS X 10.6 machines");
+  SimpleTest.finish();
+} else {
+  runTest().then(null, function(e) {
+    ok(false, "Error during test: " + e);
+    SimpleTest.finish();
+  });
+}
+
+]]>
+</script>
+</window>
