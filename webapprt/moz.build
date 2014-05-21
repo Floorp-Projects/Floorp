@@ -9,7 +9,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 elif CONFIG['OS_ARCH'] == 'Darwin':
     DIRS += ['mac']
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
-    DIRS += ['gtk2']
+    DIRS += ['gtk']
 
 DIRS += ['locales']
 
