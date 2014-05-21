@@ -150,7 +150,6 @@
 
   <vbox flex="1" id="body">
     <iframe id="details" flex="1" hidden="true" src="details.xhtml"/>
-    <iframe id="projecteditor" flex="1" hidden="true"/>
   </vbox>
 
   <splitter hidden="true" class="devtools-horizontal-splitter" orient="vertical"/>
