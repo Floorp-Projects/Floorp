@@ -70,6 +70,7 @@ public class TabsPanel extends LinearLayout
     private Panel mCurrentPanel;
     private boolean mIsSideBar;
     private boolean mVisible;
+    private boolean mHeaderVisible;
 
     public TabsPanel(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -83,6 +84,7 @@ public class TabsPanel extends LinearLayout
 
         mCurrentPanel = Panel.NORMAL_TABS;
         mVisible = false;
+        mHeaderVisible = false;
 
         mIsSideBar = false;
 
@@ -137,12 +139,13 @@ public class TabsPanel extends LinearLayout
 
     @Override
     public void onTabChanged(int index) {
-        if (index == 0)
-            show(Panel.NORMAL_TABS, false);
-        else if (index == 1)
-            show(Panel.PRIVATE_TABS, false);
-        else
-            show(Panel.REMOTE_TABS, false);
+        if (index == 0) {
+            show(Panel.NORMAL_TABS);
+        } else if (index == 1) {
+            show(Panel.PRIVATE_TABS);
+        } else {
+            show(Panel.REMOTE_TABS);
+        }
     }
 
     private static int getTabContainerHeight(TabsListContainer listContainer) {
@@ -284,11 +287,7 @@ public class TabsPanel extends LinearLayout
         }
     }
 
-    public void show(Panel panel) {
-        show(panel, true);
-    }
-
-    public void show(Panel panelToShow, boolean shouldResize) {
+    public void show(Panel panelToShow) {
         if (!isShown())
             setVisibility(View.VISIBLE);
 
@@ -333,19 +332,20 @@ public class TabsPanel extends LinearLayout
             mAddTab.setImageLevel(index);
         }
 
-        if (shouldResize) {
-            if (isSideBar()) {
-                if (showAnimation)
-                    dispatchLayoutChange(getWidth(), getHeight());
-            } else {
-                int actionBarHeight = mContext.getResources().getDimensionPixelSize(R.dimen.browser_toolbar_height);
-                int height = actionBarHeight + getTabContainerHeight(mTabsContainer);
-                dispatchLayoutChange(getWidth(), height);
-            }
+        if (isSideBar()) {
+            if (showAnimation)
+                dispatchLayoutChange(getWidth(), getHeight());
+        } else {
+            int actionBarHeight = mContext.getResources().getDimensionPixelSize(R.dimen.browser_toolbar_height);
+            int height = actionBarHeight + getTabContainerHeight(mTabsContainer);
+            dispatchLayoutChange(getWidth(), height);
         }
+        mHeaderVisible = true;
     }
 
     public void hide() {
+        mHeaderVisible = false;
+
         if (mVisible) {
             mVisible = false;
             dispatchLayoutChange(0, 0);
@@ -390,54 +390,26 @@ public class TabsPanel extends LinearLayout
             return;
         }
 
-        final Resources resources = getContext().getResources();
-        final int toolbarHeight = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height);
-        final int tabsPanelWidth = getWidth();
-
-        if (mVisible) {
-            if (mIsSideBar) {
+        if (mIsSideBar) {
+            final int tabsPanelWidth = getWidth();
+            if (mVisible) {
                 ViewHelper.setTranslationX(mHeader, -tabsPanelWidth);
-            } else {
-                ViewHelper.setTranslationY(mHeader, -toolbarHeight);
-            }
-
-            if (mIsSideBar) {
                 ViewHelper.setTranslationX(mTabsContainer, -tabsPanelWidth);
-            } else {
-                ViewHelper.setTranslationY(mTabsContainer, -toolbarHeight);
-                ViewHelper.setAlpha(mTabsContainer, 0);
-            }
-
-            // The footer view is only present on the sidebar
-            if (mIsSideBar) {
+                // The footer view is only present on the sidebar
                 ViewHelper.setTranslationX(mFooter, -tabsPanelWidth);
             }
-        }
-
-        if (mIsSideBar) {
             final int translationX = (mVisible ? 0 : -tabsPanelWidth);
+            animator.attach(mTabsContainer, PropertyAnimator.Property.TRANSLATION_X, translationX);
+            animator.attach(mHeader, PropertyAnimator.Property.TRANSLATION_X, translationX);
+            animator.attach(mFooter, PropertyAnimator.Property.TRANSLATION_X, translationX);
 
-            animator.attach(mTabsContainer,
-                            PropertyAnimator.Property.TRANSLATION_X,
-                            translationX);
-            animator.attach(mHeader,
-                            PropertyAnimator.Property.TRANSLATION_X,
-                            translationX);
-            animator.attach(mFooter,
-                            PropertyAnimator.Property.TRANSLATION_X,
-                            translationX);
-        } else {
+        } else if (!mHeaderVisible) {
+            final Resources resources = getContext().getResources();
+            final int toolbarHeight = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height);
             final int translationY = (mVisible ? 0 : -toolbarHeight);
-
-            animator.attach(mTabsContainer,
-                            PropertyAnimator.Property.ALPHA,
-                            mVisible ? 1.0f : 0.0f);
-            animator.attach(mTabsContainer,
-                            PropertyAnimator.Property.TRANSLATION_Y,
-                            translationY);
-            animator.attach(mHeader,
-                            PropertyAnimator.Property.TRANSLATION_Y,
-                            translationY);
+            animator.attach(mTabsContainer, PropertyAnimator.Property.ALPHA, 1.0f);
+            animator.attach(mTabsContainer, PropertyAnimator.Property.TRANSLATION_Y, translationY);
+            animator.attach(mHeader, PropertyAnimator.Property.TRANSLATION_Y, translationY);
         }
 
         mHeader.setLayerType(View.LAYER_TYPE_HARDWARE, null);
