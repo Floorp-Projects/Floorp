@@ -691,6 +691,12 @@ CacheFile::OpenOutputStream(CacheOutputCloseListener *aCloseListener, nsIOutputS
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  // Once we open output stream we no longer allow preloading of chunks without
+  // input stream. There is no reason to believe that some input stream will be
+  // opened soon. Otherwise we would cache unused chunks of all newly created
+  // entries until the CacheFile is destroyed.
+  mPreloadWithoutInputStreams = false;
+
   mOutput = new CacheFileOutputStream(this, aCloseListener);
 
   LOG(("CacheFile::OpenOutputStream() - Creating new output stream %p "
