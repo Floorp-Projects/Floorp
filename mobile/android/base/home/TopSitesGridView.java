@@ -250,6 +250,7 @@ public class TopSitesGridView extends GridView {
         info.url = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.URL));
         info.title = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.TITLE));
         info.type = cursor.getInt(cursor.getColumnIndexOrThrow(TopSites.TYPE));
+        info.historyId = cursor.getInt(cursor.getColumnIndexOrThrow(TopSites.HISTORY_ID));
     }
     /**
      * Set an url open listener to be used by this view.
