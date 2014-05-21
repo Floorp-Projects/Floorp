@@ -23,7 +23,7 @@ DEFAULT_ICON64 = 'icon64.png'
 
 METADATA_PROPS = ['name', 'description', 'keywords', 'author', 'version',
                   'translators', 'contributors', 'license', 'homepage', 'icon',
-                  'icon64', 'main', 'directories', 'permissions']
+                  'icon64', 'main', 'directories', 'permissions', 'preferences']
 
 RESOURCE_HOSTNAME_RE = re.compile(r'^[a-z0-9_\-]+$')
 
@@ -392,9 +392,6 @@ def generate_build_for_target(pkg_cfg, target, deps,
     if 'icon64' in target_cfg:
         build['icon64'] = os.path.join(target_cfg.root_dir, target_cfg.icon64)
         del target_cfg['icon64']
-
-    if ('preferences' in target_cfg):
-        build['preferences'] = target_cfg.preferences
 
     if 'id' in target_cfg:
         # NOTE: logic duplicated from buildJID()
