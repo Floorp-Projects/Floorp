@@ -610,6 +610,7 @@ Fold(ExclusiveContext *cx, ParseNode **pnp,
             // ("s" + x + 1 + 2 === "s" + x + "12").
             //
             bool isStringConcat = false;
+            RootedString foldedStr(cx);
 
             // (number + string) is definitely concatenation, but only at the
             // front of the list: (x + 1 + "2" !== x + "12") when x is a
@@ -629,13 +630,11 @@ Fold(ExclusiveContext *cx, ParseNode **pnp,
                         return false;
                     if (pn2->isKind(PNK_NUMBER) && !FoldType(cx, pn2, PNK_STRING))
                         return false;
-                    RootedString left(cx, pn1->pn_atom);
+                    if (!foldedStr)
+                        foldedStr = pn1->pn_atom;
                     RootedString right(cx, pn2->pn_atom);
-                    RootedString str(cx, ConcatStrings<CanGC>(cx, left, right));
-                    if (!str)
-                        return false;
-                    pn1->pn_atom = AtomizeString(cx, str);
-                    if (!pn1->pn_atom)
+                    foldedStr = ConcatStrings<CanGC>(cx, foldedStr, right);
+                    if (!foldedStr)
                         return false;
                     pn1->pn_next = pn2->pn_next;
                     handler.freeTree(pn2);
@@ -643,9 +642,23 @@ Fold(ExclusiveContext *cx, ParseNode **pnp,
                     pn->pn_count--;
                     folded = true;
                 } else {
+                    if (foldedStr) {
+                        // Convert the rope of folded strings into an Atom.
+                        pn1->pn_atom = AtomizeString(cx, foldedStr);
+                        if (!pn1->pn_atom)
+                            return false;
+                        foldedStr = nullptr;
+                    }
                     pn1 = pn2;
                     pn2 = pn2->pn_next;
                 }
+            }
+
+            if (foldedStr) {
+                // Convert the rope of folded strings into an Atom.
+                pn1->pn_atom = AtomizeString(cx, foldedStr);
+                if (!pn1->pn_atom)
+                    return false;
             }
 
             if (folded) {
