@@ -384,6 +384,11 @@ OnSharedPreferenceChangeListener
     }
 
     @Override
+    public boolean isValidFragment(String fragmentName) {
+        return GeckoPreferenceFragment.class.getName().equals(fragmentName);
+    }
+
+    @Override
     public void onBuildHeaders(List<Header> target) {
         if (onIsMultiPane()) {
             loadHeadersFromResource(R.xml.preference_headers, target);
