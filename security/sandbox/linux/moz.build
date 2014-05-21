@@ -11,9 +11,14 @@ EXPORTS.mozilla += [
 ]
 
 SOURCES += [
+    '../chromium/sandbox/linux/seccomp-bpf/basicblock.cc',
+    '../chromium/sandbox/linux/seccomp-bpf/codegen.cc',
     'Sandbox.cpp',
+    'SandboxAssembler.cpp',
     'SandboxFilter.cpp',
 ]
+
+LOCAL_INCLUDES += ['/security/sandbox/chromium']
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
