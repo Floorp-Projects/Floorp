@@ -1494,6 +1494,16 @@ ThreadClient.prototype = {
   },
 
   /**
+   * Resume then pause without stepping.
+   *
+   * @param function aOnResponse
+   *        Called with the response packet.
+   */
+  breakOnNext: function (aOnResponse) {
+    this._doResume({ type: "break" }, aOnResponse);
+  },
+
+  /**
    * Step over a function call.
    *
    * @param function aOnResponse
