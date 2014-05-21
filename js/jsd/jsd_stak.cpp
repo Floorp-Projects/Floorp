@@ -270,7 +270,8 @@ jsd_GetCallObjectForStackFrame(JSDContext* jsdc,
 
     if( jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe) )
     {
-        obj = jsdframe->frame.callObject(jsdthreadstate->context);
+        AutoPushJSContext cx(jsdthreadstate->context);
+        obj = jsdframe->frame.callObject(cx);
         if(obj)                                                             
             jsdval = JSD_NewValue(jsdc, OBJECT_TO_JSVAL(obj));              
     }
@@ -292,9 +293,8 @@ jsd_GetScopeChainForStackFrame(JSDContext* jsdc,
 
     if( jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe) )
     {
-        JS_BeginRequest(jsdthreadstate->context);
-        obj = jsdframe->frame.scopeChain(jsdthreadstate->context);
-        JS_EndRequest(jsdthreadstate->context);
+        AutoPushJSContext cx(jsdthreadstate->context);
+        obj = jsdframe->frame.scopeChain(cx);
         if(obj)
             jsdval = JSD_NewValue(jsdc, OBJECT_TO_JSVAL(obj));
     }
@@ -316,9 +316,8 @@ jsd_GetThisForStackFrame(JSDContext* jsdc,
     {
         bool ok;
         JS::RootedValue thisval(jsdthreadstate->context);
-        JS_BeginRequest(jsdthreadstate->context);
-        ok = jsdframe->frame.getThisValue(jsdthreadstate->context, &thisval);
-        JS_EndRequest(jsdthreadstate->context);
+        AutoPushJSContext cx(jsdthreadstate->context);
+        ok = jsdframe->frame.getThisValue(cx, &thisval);
         if(ok)
             jsdval = JSD_NewValue(jsdc, thisval);
     }
@@ -473,7 +472,6 @@ jsd_ValToStringInStackFrame(JSDContext* jsdc,
     bool valid;
     JSString* retval;
     JSExceptionState* exceptionState;
-    JSContext* cx;
 
     JSD_LOCK_THREADSTATES(jsdc);
     valid = jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe);
@@ -482,8 +480,7 @@ jsd_ValToStringInStackFrame(JSDContext* jsdc,
     if( ! valid )
         return nullptr;
 
-    cx = jsdthreadstate->context;
-    MOZ_ASSERT(cx);
+    AutoPushJSContext cx(jsdthreadstate->context);
 
     JS::RootedValue v(cx, val);
     exceptionState = JS_SaveExceptionState(cx);
