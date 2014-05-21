@@ -1634,6 +1634,18 @@ var BrowserApp = {
     return this.defaultBrowserWidth = width;
   },
 
+  get layersTileWidth() {
+    delete this.layersTileWidth;
+    let width = Services.prefs.getIntPref("layers.tile-width");
+    return this.layersTileWidth = width;
+  },
+
+  get layersTileHeight() {
+    delete this.layersTileHeight;
+    let height = Services.prefs.getIntPref("layers.tile-height");
+    return this.layersTileHeight = height;
+  },
+
   // nsIAndroidBrowserApp
   getBrowserTab: function(tabId) {
     return this.getTabForId(tabId);
@@ -3269,151 +3281,30 @@ Tab.prototype = {
       dump("Warning: setDisplayPort resolution did not match zoom for background tab! (" + resolution + " != " + zoom + ")");
     }
 
-    // Finally, we set the display port, taking care to convert everything into the CSS-pixel
-    // coordinate space, because that is what the function accepts. Also we have to fudge the
-    // displayport somewhat to make sure it gets through all the conversions gecko will do on it
-    // without deforming too much. See https://bugzilla.mozilla.org/show_bug.cgi?id=737510#c10
-    // for details on what these operations are.
-    let geckoScrollX = this.browser.contentWindow.scrollX;
-    let geckoScrollY = this.browser.contentWindow.scrollY;
-    aDisplayPort = this._dirtiestHackEverToWorkAroundGeckoRounding(aDisplayPort, geckoScrollX, geckoScrollY);
+    // Finally, we set the display port as a set of margins around the visible viewport.
 
-    let displayPort = {
-      x: (aDisplayPort.left / resolution) - geckoScrollX,
-      y: (aDisplayPort.top / resolution) - geckoScrollY,
-      width: (aDisplayPort.right - aDisplayPort.left) / resolution,
-      height: (aDisplayPort.bottom - aDisplayPort.top) / resolution
+    let scrollx = this.browser.contentWindow.scrollX * zoom;
+    let scrolly = this.browser.contentWindow.scrollY * zoom;
+    let displayPortMargins = {
+      left: scrollx - aDisplayPort.left,
+      top: scrolly - aDisplayPort.top,
+      right: aDisplayPort.right - (scrollx + gScreenWidth),
+      bottom: aDisplayPort.bottom - (scrolly + gScreenHeight)
     };
 
-    if (this._oldDisplayPort == null ||
-        !fuzzyEquals(displayPort.x, this._oldDisplayPort.x) ||
-        !fuzzyEquals(displayPort.y, this._oldDisplayPort.y) ||
-        !fuzzyEquals(displayPort.width, this._oldDisplayPort.width) ||
-        !fuzzyEquals(displayPort.height, this._oldDisplayPort.height)) {
-      cwu.setDisplayPortForElement(displayPort.x, displayPort.y,
-                                   displayPort.width, displayPort.height,
-                                   element, 0);
+    if (this._oldDisplayPortMargins == null ||
+        !fuzzyEquals(displayPortMargins.left, this._oldDisplayPortMargins.left) ||
+        !fuzzyEquals(displayPortMargins.top, this._oldDisplayPortMargins.top) ||
+        !fuzzyEquals(displayPortMargins.right, this._oldDisplayPortMargins.right) ||
+        !fuzzyEquals(displayPortMargins.bottom, this._oldDisplayPortMargins.bottom)) {
+      cwu.setDisplayPortMarginsForElement(displayPortMargins.left,
+                                          displayPortMargins.top,
+                                          displayPortMargins.right,
+                                          displayPortMargins.bottom,
+                                          BrowserApp.layersTileWidth, BrowserApp.layersTileHeight,
+                                          element, 0);
     }
-
-    this._oldDisplayPort = displayPort;
-  },
-
-  /*
-   * Yes, this is ugly. But it's currently the safest way to account for the rounding errors that occur
-   * when we pump the displayport coordinates through gecko and they pop out in the compositor.
-   *
-   * In general, the values are converted from page-relative device pixels to viewport-relative app units,
-   * and then back to page-relative device pixels (now as ints). The first half of this is only slightly
-   * lossy, but it's enough to throw off the numbers a little. Because of this, when gecko calls
-   * ScaleToOutsidePixels to generate the final rect, the rect may get expanded more than it should,
-   * ending up a pixel larger than it started off. This is undesirable in general, but specifically
-   * bad for tiling, because it means we means we end up painting one line of pixels from a tile,
-   * causing an otherwise unnecessary upload of the whole tile.
-   *
-   * In order to counteract the rounding error, this code simulates the conversions that will happen
-   * to the display port, and calculates whether or not that final ScaleToOutsidePixels is actually
-   * expanding the rect more than it should. If so, it determines how much rounding error was introduced
-   * up until that point, and adjusts the original values to compensate for that rounding error.
-   */
-  _dirtiestHackEverToWorkAroundGeckoRounding: function(aDisplayPort, aGeckoScrollX, aGeckoScrollY) {
-    const APP_UNITS_PER_CSS_PIXEL = 60.0;
-    const EXTRA_FUDGE = 0.04;
-
-    let resolution = aDisplayPort.resolution;
-
-    // Some helper functions that simulate conversion processes in gecko
-
-    function cssPixelsToAppUnits(aVal) {
-      return Math.floor((aVal * APP_UNITS_PER_CSS_PIXEL) + 0.5);
-    }
-
-    function appUnitsToDevicePixels(aVal) {
-      return aVal / APP_UNITS_PER_CSS_PIXEL * resolution;
-    }
-
-    function devicePixelsToAppUnits(aVal) {
-      return cssPixelsToAppUnits(aVal / resolution);
-    }
-
-    // Stash our original (desired) displayport width and height away, we need it
-    // later and we might modify the displayport in between.
-    let originalWidth = aDisplayPort.right - aDisplayPort.left;
-    let originalHeight = aDisplayPort.bottom - aDisplayPort.top;
-
-    // This is the first conversion the displayport goes through, going from page-relative
-    // device pixels to viewport-relative app units.
-    let appUnitDisplayPort = {
-      x: cssPixelsToAppUnits((aDisplayPort.left / resolution) - aGeckoScrollX),
-      y: cssPixelsToAppUnits((aDisplayPort.top / resolution) - aGeckoScrollY),
-      w: cssPixelsToAppUnits((aDisplayPort.right - aDisplayPort.left) / resolution),
-      h: cssPixelsToAppUnits((aDisplayPort.bottom - aDisplayPort.top) / resolution)
-    };
-
-    // This is the translation gecko applies when converting back from viewport-relative
-    // device pixels to page-relative device pixels.
-    let geckoTransformX = -Math.floor((-aGeckoScrollX * resolution) + 0.5);
-    let geckoTransformY = -Math.floor((-aGeckoScrollY * resolution) + 0.5);
-
-    // The final "left" value as calculated in gecko is:
-    //    left = geckoTransformX + Math.floor(appUnitsToDevicePixels(appUnitDisplayPort.x))
-    // In a perfect world, this value would be identical to aDisplayPort.left, which is what
-    // we started with. However, this may not be the case if the value being floored has accumulated
-    // enough error to drop below what it should be.
-    // For example, assume geckoTransformX is 0, and aDisplayPort.left is 4, but
-    // appUnitsToDevicePixels(appUnitsToDevicePixels.x) comes out as 3.9 because of rounding error.
-    // That's bad, because the -0.1 error has caused it to floor to 3 instead of 4. (If it had errored
-    // the other way and come out as 4.1, there's no problem). In this example, we need to increase the
-    // "left" value by some amount so that the 3.9 actually comes out as >= 4, and it gets floored into
-    // the expected value of 4. The delta values calculated below calculate that error amount (e.g. -0.1).
-    let errorLeft = (geckoTransformX + appUnitsToDevicePixels(appUnitDisplayPort.x)) - aDisplayPort.left;
-    let errorTop = (geckoTransformY + appUnitsToDevicePixels(appUnitDisplayPort.y)) - aDisplayPort.top;
-
-    // If the error was negative, that means it will floor incorrectly, so we need to bump up the
-    // original aDisplayPort.left and/or aDisplayPort.top values. The amount we bump it up by is
-    // the error amount (increased by a small fudge factor to ensure it's sufficient), converted
-    // backwards through the conversion process.
-    if (errorLeft < 0) {
-      aDisplayPort.left += appUnitsToDevicePixels(devicePixelsToAppUnits(EXTRA_FUDGE - errorLeft));
-      // After we modify the left value, we need to re-simulate some values to take that into account
-      appUnitDisplayPort.x = cssPixelsToAppUnits((aDisplayPort.left / resolution) - aGeckoScrollX);
-      appUnitDisplayPort.w = cssPixelsToAppUnits((aDisplayPort.right - aDisplayPort.left) / resolution);
-    }
-    if (errorTop < 0) {
-      aDisplayPort.top += appUnitsToDevicePixels(devicePixelsToAppUnits(EXTRA_FUDGE - errorTop));
-      // After we modify the top value, we need to re-simulate some values to take that into account
-      appUnitDisplayPort.y = cssPixelsToAppUnits((aDisplayPort.top / resolution) - aGeckoScrollY);
-      appUnitDisplayPort.h = cssPixelsToAppUnits((aDisplayPort.bottom - aDisplayPort.top) / resolution);
-    }
-
-    // At this point, the aDisplayPort.left and aDisplayPort.top values have been corrected to account
-    // for the error in conversion such that they end up where we want them. Now we need to also do the
-    // same for the right/bottom values so that the width/height end up where we want them.
-
-    // This is the final conversion that the displayport goes through before gecko spits it back to
-    // us. Note that the width/height calculates are of the form "ceil(transform(right)) - floor(transform(left))"
-    let scaledOutDevicePixels = {
-      x: Math.floor(appUnitsToDevicePixels(appUnitDisplayPort.x)),
-      y: Math.floor(appUnitsToDevicePixels(appUnitDisplayPort.y)),
-      w: Math.ceil(appUnitsToDevicePixels(appUnitDisplayPort.x + appUnitDisplayPort.w)) - Math.floor(appUnitsToDevicePixels(appUnitDisplayPort.x)),
-      h: Math.ceil(appUnitsToDevicePixels(appUnitDisplayPort.y + appUnitDisplayPort.h)) - Math.floor(appUnitsToDevicePixels(appUnitDisplayPort.y))
-    };
-
-    // The final "width" value as calculated in gecko is scaledOutDevicePixels.w.
-    // In a perfect world, this would equal originalWidth. However, things are not perfect, and as before,
-    // we need to calculate how much rounding error has been introduced. In this case the rounding error is causing
-    // the Math.ceil call above to ceiling to the wrong final value. For example, 4 gets converted 4.1 and gets
-    // ceiling'd to 5; in this case the error is 0.1.
-    let errorRight = (appUnitsToDevicePixels(appUnitDisplayPort.x + appUnitDisplayPort.w) - scaledOutDevicePixels.x) - originalWidth;
-    let errorBottom = (appUnitsToDevicePixels(appUnitDisplayPort.y + appUnitDisplayPort.h) - scaledOutDevicePixels.y) - originalHeight;
-
-    // If the error was positive, that means it will ceiling incorrectly, so we need to bump down the
-    // original aDisplayPort.right and/or aDisplayPort.bottom. Again, we back-convert the error amount
-    // with a small fudge factor to figure out how much to adjust the original values.
-    if (errorRight > 0) aDisplayPort.right -= appUnitsToDevicePixels(devicePixelsToAppUnits(errorRight + EXTRA_FUDGE));
-    if (errorBottom > 0) aDisplayPort.bottom -= appUnitsToDevicePixels(devicePixelsToAppUnits(errorBottom + EXTRA_FUDGE));
-
-    // Et voila!
-    return aDisplayPort;
+    this._oldDisplayPortMargins = displayPortMargins;
   },
 
   setScrollClampingSize: function(zoom) {
