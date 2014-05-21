@@ -584,16 +584,6 @@ nsCSPContext::SetRequestContext(nsIURI* aSelfURI,
     NS_WARNING("Channel needed (but null) in SetRequestContext.  Cannot query loadgroup, which means report sending may fail.");
   }
 
-  // store the principal so we can later use it for shouldLoad
-  // (will be removed in bug 994466)
-  if (aDocumentPrincipal) {
-    mPrincipal = aDocumentPrincipal;
-  }
-  else if (aChannel) {
-    nsContentUtils::GetSecurityManager()->
-      GetChannelPrincipal(aChannel, getter_AddRefs(mPrincipal));
-  }
-
   mReferrer = aReferrer;
   if (!mReferrer) {
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
@@ -759,13 +749,19 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
 
     // check content policy
     int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_CSP_REPORT,
-                                   reportURI,
-                                   mPrincipal,
-                                   nullptr,        // Context
-                                   EmptyCString(), // mime type
-                                   nullptr,        // Extra parameter
-                                   &shouldLoad);
+    nsCOMPtr<nsIContentPolicy> cp = do_GetService(NS_CONTENTPOLICY_CONTRACTID);
+    if (!cp) {
+      return NS_ERROR_FAILURE;
+    }
+
+    rv = cp->ShouldLoad(nsIContentPolicy::TYPE_CSP_REPORT,
+                        reportURI,
+                        aOriginalURI,
+                        nullptr,        // Context
+                        EmptyCString(), // mime type
+                        nullptr,        // Extra parameter
+                        nullptr,        // optional request principal
+                        &shouldLoad);
 
     // refuse to load if we can't do a security check
     NS_ENSURE_SUCCESS(rv, rv);
