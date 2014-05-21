@@ -141,7 +141,9 @@ class GCRuntime
   public:
     // Internal public interface
     void recordNativeStackTop();
+#ifdef JS_THREADSAFE
     void notifyRequestEnd() { conservativeGC.updateForRequestEnd(); }
+#endif
     bool isBackgroundSweeping() { return helperThread.sweeping(); }
     void waitBackgroundSweepEnd() { helperThread.waitBackgroundSweepEnd(); }
     void waitBackgroundSweepOrAllocEnd() { helperThread.waitBackgroundSweepOrAllocEnd(); }
