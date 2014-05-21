@@ -1297,7 +1297,6 @@ MIRGraph::dump(FILE *fp)
 {
 #ifdef DEBUG
     for (MBasicBlockIterator iter(begin()); iter != end(); iter++) {
-        fprintf(fp, "block%d:\n", iter->id());
         iter->dump(fp);
         fprintf(fp, "\n");
     }
@@ -1314,6 +1313,7 @@ void
 MBasicBlock::dump(FILE *fp)
 {
 #ifdef DEBUG
+    fprintf(fp, "block%u:\n", id());
     if (MResumePoint *resume = entryResumePoint()) {
         resume->dump();
     }

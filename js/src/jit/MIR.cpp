@@ -571,7 +571,7 @@ MControlInstruction::printOpcode(FILE *fp) const
 {
     MDefinition::printOpcode(fp);
     for (size_t j = 0; j < numSuccessors(); j++)
-        fprintf(fp, " block%d", getSuccessor(j)->id());
+        fprintf(fp, " block%u", getSuccessor(j)->id());
 }
 
 void
