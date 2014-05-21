@@ -27,22 +27,6 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
 var RIL = {};
 Cu.import("resource://gre/modules/ril_consts.js", RIL);
 
-// set to true in ril_consts.js to see debug messages
-var DEBUG = RIL.DEBUG_RIL;
-
-// Read debug setting from pref
-let debugPref = false;
-try {
-  debugPref = Services.prefs.getBoolPref("ril.debugging.enabled");
-} catch(e) {
-  debugPref = false;
-}
-DEBUG = RIL.DEBUG_RIL || debugPref;
-
-function debug(s) {
-  dump("-*- RadioInterfaceLayer: " + s + "\n");
-}
-
 // Ril quirk to attach data registration on demand.
 let RILQUIRKS_DATA_REGISTRATION_ON_DEMAND =
   libcutils.property_get("ro.moz.ril.data_reg_on_demand", "false") == "true";
@@ -97,6 +81,7 @@ const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 
 const kPrefCellBroadcastDisabled = "ril.cellbroadcast.disabled";
 const kPrefRilNumRadioInterfaces = "ril.numRadioInterfaces";
+const kPrefRilDebuggingEnabled = "ril.debugging.enabled";
 
 const DOM_MOBILE_MESSAGE_DELIVERY_RECEIVED = "received";
 const DOM_MOBILE_MESSAGE_DELIVERY_SENDING  = "sending";
@@ -166,6 +151,25 @@ const RIL_IPC_VOICEMAIL_MSG_NAMES = [
 const RIL_IPC_CELLBROADCAST_MSG_NAMES = [
   "RIL:RegisterCellBroadcastMsg"
 ];
+
+// set to true in ril_consts.js to see debug messages
+var DEBUG = RIL.DEBUG_RIL;
+
+function updateDebugFlag() {
+  // Read debug setting from pref
+  let debugPref;
+  try {
+    debugPref = Services.prefs.getBoolPref(kPrefRilDebuggingEnabled);
+  } catch (e) {
+    debugPref = false;
+  }
+  DEBUG = RIL.DEBUG_RIL || debugPref;
+}
+updateDebugFlag();
+
+function debug(s) {
+  dump("-*- RadioInterfaceLayer: " + s + "\n");
+}
 
 XPCOMUtils.defineLazyServiceGetter(this, "gPowerManagerService",
                                    "@mozilla.org/power/powermanagerservice;1",
@@ -1534,6 +1538,7 @@ DataConnectionHandler.prototype = {
 function RadioInterfaceLayer() {
   let workerMessenger = new WorkerMessenger();
   workerMessenger.init();
+  this.setWorkerDebugFlag = workerMessenger.setDebugFlag.bind(workerMessenger);
 
   let numIfaces = this.numRadioInterfaces;
   if (DEBUG) debug(numIfaces + " interfaces");
@@ -1543,6 +1548,7 @@ function RadioInterfaceLayer() {
   }
 
   Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  Services.prefs.addObserver(kPrefRilDebuggingEnabled, this, false);
 
   gMessageManager.init(this);
   gRadioEnabledController.init(this);
@@ -1571,7 +1577,14 @@ RadioInterfaceLayer.prototype = {
         this.radioInterfaces = null;
         Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
         break;
-     }
+
+      case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID:
+        if (data === kPrefRilDebuggingEnabled) {
+          updateDebugFlag();
+          this.setWorkerDebugFlag(DEBUG);
+        }
+        break;
+    }
   },
 
   /**
@@ -1650,6 +1663,11 @@ WorkerMessenger.prototype = {
     } catch(e) {}
 
     this.send(null, "setInitialOptions", options);
+  },
+
+  setDebugFlag: function(aDebug) {
+    let options = { debug: aDebug };
+    this.send(null, "setDebugFlag", options);
   },
 
   debug: function(aClientId, aMessage) {
