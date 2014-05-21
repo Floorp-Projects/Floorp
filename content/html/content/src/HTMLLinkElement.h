@@ -8,6 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Link.h"
+#include "ImportManager.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsStyleLinkElement.h"
@@ -41,6 +42,8 @@ public:
 
   void LinkAdded();
   void LinkRemoved();
+
+  void UpdateImport();
 
   // nsIDOMEventTarget
   virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
@@ -134,6 +137,12 @@ public:
     SetHTMLAttr(nsGkAtoms::target, aTarget, aRv);
   }
 
+  already_AddRefed<nsIDocument> GetImport();
+  already_AddRefed<ImportLoader> GetImportLoader()
+  {
+    return nsRefPtr<ImportLoader>(mImportLoader).forget();
+  }
+
 protected:
   // nsStyleLinkElement
   virtual already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline) MOZ_OVERRIDE;
@@ -148,6 +157,8 @@ protected:
   virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
   virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
   nsRefPtr<nsDOMTokenList > mRelList;
+private:
+  nsRefPtr<ImportLoader> mImportLoader;
 };
 
 } // namespace dom
