@@ -420,7 +420,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData)
+                            nsISupports* aData, bool aAnonymize)
   {
     // We don't measure the |EventListenerManager| objects pointed to by the
     // entries because those references are non-owning.

@@ -1457,6 +1457,7 @@ XPCJSRuntime::CustomOutOfMemoryCallback()
 
     // If this fails, it fails silently.
     dumper->DumpMemoryInfoToTempDir(NS_LITERAL_STRING("due-to-JS-OOM"),
+                                    /* anonymize = */ false,
                                     /* minimizeMemoryUsage = */ false);
 }
 
@@ -1681,11 +1682,17 @@ XPCJSRuntime::~XPCJSRuntime()
     Preferences::UnregisterCallback(ReloadPrefsCallback, JS_OPTIONS_DOT_STR, this);
 }
 
+// If |*anonymizeID| is non-zero and this is a user compartment, the name will
+// be anonymized.
 static void
-GetCompartmentName(JSCompartment *c, nsCString &name, bool replaceSlashes)
+GetCompartmentName(JSCompartment *c, nsCString &name, int *anonymizeID,
+                   bool replaceSlashes)
 {
     if (js::IsAtomsCompartment(c)) {
         name.AssignLiteral("atoms");
+    } else if (*anonymizeID && !js::IsSystemCompartment(c)) {
+        name.AppendPrintf("<anonymized-%d>", *anonymizeID);
+        *anonymizeID += 1;
     } else if (JSPrincipals *principals = JS_GetCompartmentPrincipals(c)) {
         nsJSPrincipals::get(principals)->GetScriptLocation(name);
 
@@ -1699,6 +1706,31 @@ GetCompartmentName(JSCompartment *c, nsCString &name, bool replaceSlashes)
             if (!location.IsEmpty() && !location.Equals(name)) {
                 name.AppendLiteral(", ");
                 name.Append(location);
+            }
+        }
+
+        // We might have a file:// URL that includes paths from the local
+        // filesystem, which should be omitted if we're anonymizing.
+        if (*anonymizeID) {
+            static const char *filePrefix = "file://";
+            int filePos = name.Find(filePrefix);
+            if (filePos >= 0) {
+                int pathPos = filePos + strlen(filePrefix);
+                int lastSlashPos = -1;
+                for (int i = pathPos; i < int(name.Length()); i++) {
+                    if (name[i] == '/' || name[i] == '\\') {
+                        lastSlashPos = i;
+                    }
+                }
+                if (lastSlashPos != -1) {
+                    name.ReplaceASCII(pathPos, lastSlashPos - pathPos,
+                                      "<anonymized>");
+                } else {
+                    // Something went wrong. Anonymize the entire path to be
+                    // safe.
+                    name.Truncate(pathPos);
+                    name += "<anonymized?!>";
+                }
             }
         }
 
@@ -1747,7 +1779,7 @@ class JSMainRuntimeTemporaryPeakReporter MOZ_FINAL : public nsIMemoryReporter
     NS_DECL_ISUPPORTS
 
     NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                              nsISupports* aData)
+                              nsISupports* aData, bool aAnonymize)
     {
         return MOZ_COLLECT_REPORT("js-main-runtime-temporary-peak",
             KIND_OTHER, UNITS_BYTES,
@@ -1850,7 +1882,9 @@ static nsresult
 ReportZoneStats(const JS::ZoneStats &zStats,
                 const xpc::ZoneStatsExtras &extras,
                 nsIMemoryReporterCallback *cb,
-                nsISupports *closure, size_t *gcTotalOut = nullptr)
+                nsISupports *closure,
+                bool anonymize,
+                size_t *gcTotalOut = nullptr)
 {
     const nsAutoCString& pathPrefix = extras.pathPrefix;
     size_t gcTotal = 0, sundriesGCHeap = 0, sundriesMallocHeap = 0;
@@ -1906,6 +1940,11 @@ ReportZoneStats(const JS::ZoneStats &zStats,
 
         MOZ_ASSERT(!zStats.isTotals);
 
+        // We don't do notable string detection when anonymizing, because
+        // there's a good chance its for crash submission, and the memory
+        // required for notable string detection is high.
+        MOZ_ASSERT(!anonymize);
+
         nsDependentCString notableString(info.buffer);
 
         // Viewing about:memory generates many notable strings which contain
@@ -1949,7 +1988,7 @@ ReportZoneStats(const JS::ZoneStats &zStats,
     }
 
     nsCString nonNotablePath = pathPrefix;
-    nonNotablePath += zStats.isTotals
+    nonNotablePath += (zStats.isTotals || anonymize)
                     ? NS_LITERAL_CSTRING("strings/")
                     : NS_LITERAL_CSTRING("strings/string(<non-notable strings>)/");
 
@@ -2273,7 +2312,9 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                                  const nsACString &rtPath,
                                  amIAddonManager* addonManager,
                                  nsIMemoryReporterCallback *cb,
-                                 nsISupports *closure, size_t *rtTotalOut)
+                                 nsISupports *closure,
+                                 bool anonymize,
+                                 size_t *rtTotalOut)
 {
     nsresult rv;
 
@@ -2283,7 +2324,7 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
         const JS::ZoneStats &zStats = rtStats.zoneStatsVector[i];
         const xpc::ZoneStatsExtras *extras =
           static_cast<const xpc::ZoneStatsExtras*>(zStats.extra);
-        rv = ReportZoneStats(zStats, *extras, cb, closure, &gcTotal);
+        rv = ReportZoneStats(zStats, *extras, cb, closure, anonymize, &gcTotal);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -2356,9 +2397,14 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
         // count as path separators. Consumers of memory reporters (e.g.
         // about:memory) will convert them back to / after doing path
         // splitting.
-        nsDependentCString filename(scriptSourceInfo.filename_);
-        nsCString escapedFilename(filename);
-        escapedFilename.ReplaceSubstring("/", "\\");
+        nsCString escapedFilename;
+        if (anonymize) {
+            escapedFilename.AppendPrintf("<anonymized-source-%d>", int(i));
+        } else {
+            nsDependentCString filename(scriptSourceInfo.filename_);
+            escapedFilename.Append(filename);
+            escapedFilename.ReplaceSubstring("/", "\\");
+        }
 
         nsCString notablePath = rtPath +
             nsPrintfCString("runtime/script-sources/source(scripts=%d, %s)/",
@@ -2474,15 +2520,17 @@ nsresult
 ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                                  const nsACString &rtPath,
                                  nsIMemoryReporterCallback *cb,
-                                 nsISupports *closure, size_t *rtTotalOut)
+                                 nsISupports *closure,
+                                 bool anonymize,
+                                 size_t *rtTotalOut)
 {
     nsCOMPtr<amIAddonManager> am;
     if (XRE_GetProcessType() == GeckoProcessType_Default) {
         // Only try to access the service from the main process.
         am = do_GetService("@mozilla.org/addons/integration;1");
     }
-    return ReportJSRuntimeExplicitTreeStats(rtStats, rtPath, am.get(), cb,
-                                            closure, rtTotalOut);
+    return ReportJSRuntimeExplicitTreeStats(rtStats, rtPath, am.get(),
+                                            cb, closure, anonymize, rtTotalOut);
 }
 
 
@@ -2493,37 +2541,37 @@ class JSMainRuntimeCompartmentsReporter MOZ_FINAL : public nsIMemoryReporter
   public:
     NS_DECL_ISUPPORTS
 
-    typedef js::Vector<nsCString, 0, js::SystemAllocPolicy> Paths;
+    struct Data {
+        int anonymizeID;
+        js::Vector<nsCString, 0, js::SystemAllocPolicy> paths;
+    };
 
-    static void CompartmentCallback(JSRuntime *rt, void* data, JSCompartment *c) {
+    static void CompartmentCallback(JSRuntime *rt, void* vdata, JSCompartment *c) {
         // silently ignore OOM errors
-        Paths *paths = static_cast<Paths *>(data);
+        Data *data = static_cast<Data *>(vdata);
         nsCString path;
-        GetCompartmentName(c, path, true);
+        GetCompartmentName(c, path, &data->anonymizeID, /* replaceSlashes = */ true);
         path.Insert(js::IsSystemCompartment(c)
                     ? NS_LITERAL_CSTRING("js-main-runtime-compartments/system/")
                     : NS_LITERAL_CSTRING("js-main-runtime-compartments/user/"),
                     0);
-        paths->append(path);
+        data->paths.append(path);
     }
 
     NS_IMETHOD CollectReports(nsIMemoryReporterCallback *cb,
-                              nsISupports *closure)
+                              nsISupports *closure, bool anonymize)
     {
         // First we collect the compartment paths.  Then we report them.  Doing
         // the two steps interleaved is a bad idea, because calling |cb|
         // from within CompartmentCallback() leads to all manner of assertions.
 
-        // Collect.
-
-        Paths paths;
+        Data data;
+        data.anonymizeID = anonymize ? 1 : 0;
         JS_IterateCompartments(nsXPConnect::GetRuntimeInstance()->Runtime(),
-                               &paths, CompartmentCallback);
+                               &data, CompartmentCallback);
 
-        // Report.
-        for (size_t i = 0; i < paths.length(); i++)
-            // These ones don't need a description, hence the "".
-            REPORT(nsCString(paths[i]), KIND_OTHER, UNITS_COUNT, 1,
+        for (size_t i = 0; i < data.paths.length(); i++)
+            REPORT(nsCString(data.paths[i]), KIND_OTHER, UNITS_COUNT, 1,
                 "A live compartment in the main JSRuntime.");
 
         return NS_OK;
@@ -2593,14 +2641,16 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
     WindowPaths *mWindowPaths;
     WindowPaths *mTopWindowPaths;
     bool mGetLocations;
+    int mAnonymizeID;
 
   public:
     XPCJSRuntimeStats(WindowPaths *windowPaths, WindowPaths *topWindowPaths,
-                      bool getLocations)
+                      bool getLocations, bool anonymize)
       : JS::RuntimeStats(JSMallocSizeOf),
         mWindowPaths(windowPaths),
         mTopWindowPaths(topWindowPaths),
-        mGetLocations(getLocations)
+        mGetLocations(getLocations),
+        mAnonymizeID(anonymize ? 1 : 0)
     {}
 
     ~XPCJSRuntimeStats() {
@@ -2646,7 +2696,7 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
     {
         xpc::CompartmentStatsExtras *extras = new xpc::CompartmentStatsExtras;
         nsCString cName;
-        GetCompartmentName(c, cName, true);
+        GetCompartmentName(c, cName, &mAnonymizeID, /* replaceSlashes = */ true);
         if (mGetLocations) {
             CompartmentPrivate *cp = GetCompartmentPrivate(c);
             if (cp)
@@ -2717,7 +2767,8 @@ nsresult
 JSReporter::CollectReports(WindowPaths *windowPaths,
                            WindowPaths *topWindowPaths,
                            nsIMemoryReporterCallback *cb,
-                           nsISupports *closure)
+                           nsISupports *closure,
+                           bool anonymize)
 {
     XPCJSRuntime *xpcrt = nsXPConnect::GetRuntimeInstance();
 
@@ -2733,10 +2784,14 @@ JSReporter::CollectReports(WindowPaths *windowPaths,
         addonManager = do_GetService("@mozilla.org/addons/integration;1");
     }
     bool getLocations = !!addonManager;
-    XPCJSRuntimeStats rtStats(windowPaths, topWindowPaths, getLocations);
+    XPCJSRuntimeStats rtStats(windowPaths, topWindowPaths, getLocations,
+                              anonymize);
     OrphanReporter orphanReporter(XPCConvert::GetISupportsFromJSObject);
-    if (!JS::CollectRuntimeStats(xpcrt->Runtime(), &rtStats, &orphanReporter))
+    if (!JS::CollectRuntimeStats(xpcrt->Runtime(), &rtStats, &orphanReporter,
+                                 anonymize))
+    {
         return NS_ERROR_FAILURE;
+    }
 
     size_t xpconnect = xpcrt->SizeOfIncludingThis(JSMallocSizeOf);
 
@@ -2754,7 +2809,7 @@ JSReporter::CollectReports(WindowPaths *windowPaths,
     rv = xpc::ReportJSRuntimeExplicitTreeStats(rtStats,
                                                NS_LITERAL_CSTRING("explicit/js-non-window/"),
                                                addonManager, cb, closure,
-                                               &rtTotal);
+                                               anonymize, &rtTotal);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Report the sums of the compartment numbers.
@@ -2767,7 +2822,7 @@ JSReporter::CollectReports(WindowPaths *windowPaths,
 
     xpc::ZoneStatsExtras zExtrasTotal;
     zExtrasTotal.pathPrefix.AssignLiteral("js-main-runtime/zones/");
-    rv = ReportZoneStats(rtStats.zTotals, zExtrasTotal, cb, closure);
+    rv = ReportZoneStats(rtStats.zTotals, zExtrasTotal, cb, closure, anonymize);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Report the sum of the runtime/ numbers.
@@ -2923,7 +2978,10 @@ CompartmentNameCallback(JSRuntime *rt, JSCompartment *comp,
                         char *buf, size_t bufsize)
 {
     nsCString name;
-    GetCompartmentName(comp, name, false);
+    // This is called via the JSAPI and isn't involved in memory reporting, so
+    // we don't need to anonymize compartment names.
+    int anonymizeID = 0;
+    GetCompartmentName(comp, name, &anonymizeID, /* replaceSlashes = */ false);
     if (name.Length() >= bufsize)
         name.Truncate(bufsize - 1);
     memcpy(buf, name.get(), name.Length() + 1);

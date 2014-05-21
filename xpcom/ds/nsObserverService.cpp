@@ -108,11 +108,12 @@ nsObserverService::CountReferents(nsObserverList* aObserverList,
 
 NS_IMETHODIMP
 nsObserverService::CollectReports(nsIHandleReportCallback* aHandleReport,
-                                  nsISupports* aData)
+                                  nsISupports* aData, bool aAnonymize)
 {
     ObserverServiceReferentCount referentCount;
     mObserverTopicTable.EnumerateEntries(CountReferents, &referentCount);
 
+    // These aren't privacy-sensitive and so don't need anonymizing.
     nsresult rv;
     for (uint32_t i = 0; i < referentCount.suspectObservers.Length(); i++) {
         SuspectObserver& suspect = referentCount.suspectObservers[i];

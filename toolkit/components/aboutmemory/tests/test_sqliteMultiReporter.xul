@@ -40,7 +40,7 @@
   // them.  It shouldn't crash.
   let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
             getService(Ci.nsIMemoryReporterManager);
-  mgr.getReportsForThisProcess(function(){}, null);
+  mgr.getReportsForThisProcess(function(){}, null, /* anonymize = */ false);
 
   // If we haven't crashed, we've passed, but the test harness requires that
   // we explicitly check something.

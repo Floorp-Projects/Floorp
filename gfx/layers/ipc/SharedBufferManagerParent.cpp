@@ -41,7 +41,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData)
+                            nsISupports* aData, bool aAnonymize)
   {
     map<base::ProcessId, SharedBufferManagerParent*>::iterator it;
     for (it = SharedBufferManagerParent::sManagers.begin(); it != SharedBufferManagerParent::sManagers.end(); it++) {
