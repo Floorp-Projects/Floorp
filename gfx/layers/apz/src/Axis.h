@@ -100,6 +100,22 @@ public:
   float GetOverscroll() const;
 
   /**
+   * Start a snap-back animation to relieve overscroll.
+   */
+  void StartSnapBack();
+
+  /**
+   * Sample the snap-back animation to relieve overscroll.
+   * |aDelta| is the time since the last sample.
+   */
+  bool SampleSnapBack(const TimeDuration& aDelta);
+
+  /**
+   * Return whether this axis is overscrolled in either direction.
+   */
+  bool IsOverscrolled() const;
+
+  /**
    * Gets the distance between the starting position of the touch supplied in
    * startTouch() and the current touch from the last
    * updateWithTouchAtDevicePoint().

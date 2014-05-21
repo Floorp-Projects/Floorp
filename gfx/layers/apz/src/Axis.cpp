@@ -101,6 +101,56 @@ float Axis::GetOverscroll() const {
   return mOverscroll;
 }
 
+void Axis::StartSnapBack() {
+  float initialSnapBackVelocity = gfxPrefs::APZSnapBackInitialVelocity();
+  if (mOverscroll > 0) {
+    mVelocity = -initialSnapBackVelocity;
+  } else {
+    mVelocity = initialSnapBackVelocity;
+  }
+}
+
+bool Axis::SampleSnapBack(const TimeDuration& aDelta) {
+  // Accelerate the snap-back as time goes on.
+  // Note: this method of acceleration isn't perfectly smooth, as it assumes
+  // a constant velocity over 'aDelta', instead of an accelerating velocity.
+  // (The way we applying friction to flings has the same issue.)
+  mVelocity *= pow(1.0f + gfxPrefs::APZSnapBackAcceleration(), float(aDelta.ToMilliseconds()));
+  float screenDisplacement = mVelocity * aDelta.ToMilliseconds();
+  float cssDisplacement = screenDisplacement / GetFrameMetrics().GetZoom().scale;
+  if (mOverscroll > 0) {
+    if (cssDisplacement > 0) {
+      NS_WARNING("Overscroll snap-back animation is moving in the wrong direction!");
+      return false;
+    }
+    mOverscroll = std::max(mOverscroll + cssDisplacement, 0.0f);
+    // Overscroll relieved, do not continue animation.
+    if (mOverscroll == 0) {
+      mVelocity = 0;
+      return false;
+    }
+    return true;
+  } else if (mOverscroll < 0) {
+    if (cssDisplacement < 0) {
+      NS_WARNING("Overscroll snap-back animation is moving in the wrong direction!");
+      return false;
+    }
+    mOverscroll = std::min(mOverscroll + cssDisplacement, 0.0f);
+    // Overscroll relieved, do not continue animation.
+    if (mOverscroll == 0) {
+      mVelocity = 0;
+      return false;
+    }
+    return true;
+  }
+  // No overscroll on this axis, do not continue animation.
+  return false;
+}
+
+bool Axis::IsOverscrolled() const {
+  return mOverscroll != 0;
+}
+
 float Axis::PanDistance() {
   return fabsf(mPos - mStartPos);
 }
