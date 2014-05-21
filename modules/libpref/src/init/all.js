@@ -3714,6 +3714,9 @@ pref("network.tcp.keepalive.probe_count", 4);
 
 // Whether to disable acceleration for all widgets.
 pref("layers.acceleration.disabled", false);
+// Preference that when switched at runtime will run a series of benchmarks
+// and output the result to stderr.
+pref("layers.bench.enabled", false);
 
 // Whether to force acceleration on, ignoring blacklists.
 #ifdef ANDROID
