@@ -1676,7 +1676,12 @@ let CustomizableUIInternal = {
     }
     try {
       gSavedState = JSON.parse(state);
+      if (typeof gSavedState != "object" || gSavedState === null) {
+        throw "Invalid saved state";
+      }
     } catch(e) {
+      Services.prefs.clearUserPref(kPrefCustomizationState);
+      gSavedState = {};
       LOG("Error loading saved UI customization state, falling back to defaults.");
     }
 
