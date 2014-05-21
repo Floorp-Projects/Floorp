@@ -141,8 +141,8 @@ NSSDialogs.prototype = {
                           ["certmgr.begins", aCert.validity.notBeforeLocalDay,
                            "certmgr.expires", aCert.validity.notAfterLocalDay])})
      .addLabel({ label: this.certInfoSection("certmgr.fingerprints.label",
-                          ["certmgr.certdetail.sha1fingerprint", aCert.sha1Fingerprint,
-                           "certmgr.certdetail.md5fingerprint", aCert.md5Fingerprint], false) });
+                          ["certmgr.certdetail.sha256fingerprint", aCert.sha256Fingerprint,
+                           "certmgr.certdetail.sha1fingerprint", aCert.sha1Fingerprint], false) });
     this.showPrompt(p);
   },
 
