@@ -1955,7 +1955,8 @@ MmsService.prototype = {
       .setMessageReadStatusByEnvelopeId(envelopeId, address, readStatus,
                                         (function(aRv, aDomMessage) {
       if (!Components.isSuccessCode(aRv)) {
-        if (DEBUG) debug("Failed to update read status: " + aRv);
+        // Notifying observers the read status is error.
+        Services.obs.notifyObservers(aDomMessage, kSmsReadSuccessObserverTopic, null);
         return;
       }
 
@@ -2170,7 +2171,7 @@ MmsService.prototype = {
       // If the messsage has been deleted (because the sending process is
       // cancelled), we don't need to reset the its delievery state/status.
       if (aErrorCode == Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR) {
-        aRequest.notifySendMessageFailed(aErrorCode, aDomMessage);
+        aRequest.notifySendMessageFailed(aErrorCode);
         Services.obs.notifyObservers(aDomMessage, kSmsFailedObserverTopic, null);
         return;
       }
@@ -2187,7 +2188,7 @@ MmsService.prototype = {
         // TODO bug 832140 handle !Components.isSuccessCode(aRv)
         if (!isSentSuccess) {
           if (DEBUG) debug("Sending MMS failed.");
-          aRequest.notifySendMessageFailed(aErrorCode, aDomMessage);
+          aRequest.notifySendMessageFailed(aErrorCode);
           Services.obs.notifyObservers(aDomMessage, kSmsFailedObserverTopic, null);
           return;
         }
@@ -2213,8 +2214,7 @@ MmsService.prototype = {
       if (!Components.isSuccessCode(aRv)) {
         if (DEBUG) debug("Error! Fail to save sending message! rv = " + aRv);
         aRequest.notifySendMessageFailed(
-          gMobileMessageDatabaseService.translateCrErrorToMessageCallbackError(aRv),
-          aDomMessage);
+          gMobileMessageDatabaseService.translateCrErrorToMessageCallbackError(aRv));
         Services.obs.notifyObservers(aDomMessage, kSmsFailedObserverTopic, null);
         return;
       }
