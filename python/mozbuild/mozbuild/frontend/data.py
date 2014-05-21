@@ -157,6 +157,7 @@ class XPIDLFile(ContextDerived):
 
     __slots__ = (
         'basename',
+        'install_target',
         'source_path',
     )
 
@@ -166,6 +167,8 @@ class XPIDLFile(ContextDerived):
         self.source_path = source
         self.basename = mozpath.basename(source)
         self.module = module
+
+        self.install_target = context['FINAL_TARGET']
 
 class Defines(ContextDerived):
     """Context derived container object for DEFINES, which is an OrderedDict.
