@@ -4,15 +4,9 @@
 
 #include "CSFLog.h"
 #include "nspr.h"
-#include "nsIGfxInfo.h"
-#include "nsServiceManagerUtils.h"
 
 // For rtcp-fb constants
 #include "ccsdp.h"
-
-#ifdef MOZILLA_INTERNAL_API
-#include "mozilla/Preferences.h"
-#endif
 
 #include "VideoConduit.h"
 #include "AudioConduit.h"
@@ -29,8 +23,6 @@
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidJNIWrapper.h"
 #endif
-
-#include "ExtVideoCodec.h"
 
 #include <algorithm>
 #include <math.h>
@@ -285,14 +277,6 @@ MediaConduitErrorCode WebrtcVideoConduit::Init(WebrtcVideoConduit *other)
     return kMediaConduitSessionNotInited;
   }
 
-  mPtrExtCodec = webrtc::ViEExternalCodec::GetInterface(mVideoEngine);
-
-  if (!mPtrExtCodec) {
-    CSFLogError(logTag, "%s Unable to get external codec interface: %d ",
-                __FUNCTION__, mPtrViEBase->LastError());
-    return kMediaConduitSessionNotInited;
-  }
-
   if( !(mPtrRTP = webrtc::ViERTP_RTCP::GetInterface(mVideoEngine)))
   {
     CSFLogError(logTag, "%s Unable to get video RTCP interface ", __FUNCTION__);
@@ -525,37 +509,6 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
     return kMediaConduitInvalidSendCodec;
   }
 
-  CSFLogDebug(logTag, "%s, Before ExtVideoCodec codec %s(%d)", __FUNCTION__,
-                        video_codec.plName, video_codec.plType);
-
-#ifdef MOZILLA_INTERNAL_API
-  CSFLogError(logTag, "%s Start to check hardware acceleration 1", __FUNCTION__);
-  bool enabled = Preferences::GetBool("media.navigator.hardware.vp8_encode.acceleration_enabled", false);
-#else
-  bool enabled = false;
-#endif
-
-  if (enabled) {
-    CSFLogError(logTag, "%s Start to check hardware acceleration", __FUNCTION__);
-
-    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
-    if (gfxInfo) {
-      int32_t status;
-      if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION, &status))) {
-        if (status != nsIGfxInfo::FEATURE_NO_INFO) {
-          NS_WARNING("XXX webrtc hardware acceleration blacklisted\n");
-          CSFLogError(logTag, "%s XXX webrtc hardware acceleration blacklisted", __FUNCTION__);
-        } else {
-          CSFLogError(logTag, "%s Start to registr hardware acceleration", __FUNCTION__);
-          CSFLogDebug(logTag, "%s, in ExtVideoCodec codec %s(%d)", __FUNCTION__,
-                      payloadName.c_str(), video_codec.plType);
-          VideoEncoder* extEncoder = ExtVideoCodec::CreateEncoder();
-          SetExternalSendCodec(video_codec.plType, extEncoder);
-        }
-      }
-    }
-  }
-
   if(mPtrViECodec->SetSendCodec(mChannel, video_codec) == -1)
   {
     error = mPtrViEBase->LastError();
@@ -702,35 +655,6 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
       }
     }//end for codeclist
 
-    CSFLogDebug(logTag, "%s, Before ExtVideoCodec codec %s(%d)", __FUNCTION__,
-                        video_codec.plName, video_codec.plType);
-#ifdef MOZILLA_INTERNAL_API
-    CSFLogError(logTag, "%s Start to check hardware acceleration 1", __FUNCTION__);
-    bool enabled = Preferences::GetBool("media.navigator.hardware.vp8_decode.acceleration_enabled", false);
-#else
-    bool enabled = false;
-#endif
-
-    if (enabled) {
-      CSFLogError(logTag, "%s Start to check hardware acceleration", __FUNCTION__);
-
-      nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
-      if (gfxInfo) {
-        int32_t status;
-        if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION, &status))) {
-          if (status != nsIGfxInfo::FEATURE_NO_INFO) {
-            NS_WARNING("XXX webrtc hardware acceleration blacklisted\n");
-            CSFLogError(logTag, "%s XXX webrtc hardware acceleration blacklisted", __FUNCTION__);
-          } else {
-            CSFLogError(logTag, "%s Start to registr hardware acceleration", __FUNCTION__);
-            CSFLogDebug(logTag, "%s, in ExtVideoCodec codec %s(%d)", __FUNCTION__,
-                        video_codec.plName, video_codec.plType);
-            VideoDecoder* extDecoder = ExtVideoCodec::CreateDecoder();
-            SetExternalRecvCodec(video_codec.plType, extDecoder);
-          }
-        }
-      }
-    }
   }//end for
 
   if(!success)
