@@ -63,6 +63,21 @@ LIRGraph::removeBlock(size_t i)
     blocks_.erase(blocks_.begin() + i);
 }
 
+void
+LIRGraph::dump(FILE *fp) const
+{
+    for (size_t i = 0; i < numBlocks(); i++) {
+        getBlock(i)->dump(fp);
+        fprintf(fp, "\n");
+    }
+}
+
+void
+LIRGraph::dump() const
+{
+    dump(stderr);
+}
+
 uint32_t
 LBlock::firstId()
 {
@@ -108,6 +123,22 @@ LBlock::getExitMoveGroup(TempAllocator &alloc)
     exitMoveGroup_ = LMoveGroup::New(alloc);
     insertBefore(*rbegin(), exitMoveGroup_);
     return exitMoveGroup_;
+}
+
+void
+LBlock::dump(FILE *fp)
+{
+    fprintf(fp, "block%u:\n", mir()->id());
+    for (LInstructionIterator iter = begin(); iter != end(); iter++) {
+        iter->dump(fp);
+        fprintf(fp, "\n");
+    }
+}
+
+void
+LBlock::dump()
+{
+    dump(stderr);
 }
 
 static size_t
@@ -423,6 +454,16 @@ LInstruction::dump(FILE *fp)
         for (size_t i = 0; i < numTemps(); i++) {
             PrintDefinition(fp, *getTemp(i));
             if (i != numTemps() - 1)
+                fprintf(fp, ", ");
+        }
+        fprintf(fp, ")");
+    }
+
+    if (numSuccessors()) {
+        fprintf(fp, " s=(");
+        for (size_t i = 0; i < numSuccessors(); i++) {
+            fprintf(fp, "block%u", getSuccessor(i)->id());
+            if (i != numSuccessors() - 1)
                 fprintf(fp, ", ");
         }
         fprintf(fp, ")");

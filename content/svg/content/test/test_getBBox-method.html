@@ -1,0 +1,249 @@
+<!DOCTYPE HTML>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=999964
+-->
+<head>
+  <meta charset="utf-8"/>
+  <title>Test case for Bug 999964</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=999964">Mozilla Bug 999964</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe id="svg" src="getBBox-method-helper.svg"></iframe>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+  /** Test case for Bug 999964 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function run()
+{
+  var flag = SpecialPowers.getBoolPref("svg.new-getBBox.enabled");
+  if (!flag) {
+    ok(!flag, "skip test for bug999964.");
+    SimpleTest.finish();
+    return;
+  }
+
+  var doc = $("svg").contentDocument;
+
+  function isFuzzy(a, b, error, name)
+  {
+    ok(!(Math.abs(a - b) > error), name, "got " + a + ", expected " + b + " (within " + error + ")");
+  }
+
+  function getBBox(id, opt) {
+    return doc.getElementById(id).getBBox(opt);
+  }
+
+  function checkBBox(id, opt, x, y, width, height, error) {
+    var bbox = getBBox(id, opt);
+    isFuzzy(bbox.x, x, error, id + ".getBBox().x");
+    isFuzzy(bbox.y, y, error, id + ".getBBox().y");
+    isFuzzy(bbox.width, width, error, id + ".getBBox().width");
+    isFuzzy(bbox.height, height, error, id + ".getBBox().height");
+  }
+
+  function compareBBox1(id1, id2) {
+    var bbox1 = getBBox(id1);
+    var bbox2 = getBBox(id2);
+    is(bbox1.x, bbox2.x, id1 + ".getBBox().x");
+    is(bbox1.y, bbox2.y, id1 + ".getBBox().y");
+    isFuzzy(bbox1.width, bbox2.width, 0.0002, id1 + ".getBBox().width");
+    isFuzzy(bbox1.height, bbox2.height, 0.0001, id1 + ".getBBox().height");
+  }
+
+  function compareBBox2(id1, id2) {
+    // without 'x'
+    var bbox1 = getBBox(id1);
+    var bbox2 = getBBox(id2);
+    is(bbox1.y, bbox2.y, id1 + ".getBBox().y");
+    isFuzzy(bbox1.width, bbox2.width, 0.0002, id1 + ".getBBox().width");
+    isFuzzy(bbox1.height, bbox2.height, 0.0001, id1 + ".getBBox().height");
+  }
+
+  var opt = { fill: true, stroke: true, markers: true, clipped: true };
+
+  // <text>
+  // fill
+  opt = { fill: true, stroke: false, markers: false, clipped: false };
+  compareBBox1("text1","text3");
+  compareBBox1("text2","text4");
+  compareBBox1("text5","text6");
+  // all
+  opt = { fill: true, stroke: true, markers: true, clipped: true };
+  compareBBox2("text1","text3");
+  compareBBox2("text2","text4");
+  compareBBox2("text5","text6");
+  // clipped
+  opt = { fill: false, stroke: false, markers: false, clipped: true };
+  compareBBox2("text1","text3");
+  compareBBox2("text2","text4");
+  compareBBox2("text5","text6");
+
+  // <image>
+  opt = { fill: true, stroke: true, markers: true, clipped: true };
+  checkBBox("image1", opt, 250, 250, 100, 100);
+  checkBBox("image2", opt, 53, 53, 149, 149);
+  checkBBox("image3", opt, 205, 53, 148, 149);
+  checkBBox("image4", opt, 53, 205, 149, 148);
+  checkBBox("image5", opt, 205, 205, 148, 148);
+  checkBBox("image6", opt, 52, 52, 100, 100);
+  checkBBox("image7", opt, 255, 52, 100, 100);
+  checkBBox("image8", opt, 52, 255, 100, 100);
+  checkBBox("image9", opt, 255, 255, 100, 100);
+  checkBBox("image10", opt, 200, 200, 200, 200);
+  checkBBox("image11", opt, 0, 0, 0, 0);
+  checkBBox("image12", opt, 43, 43, 714, 660);
+  checkBBox("image13", opt, 50, 50, 300, 300);
+  checkBBox("image14", opt, 0, 0, 0, 0);
+
+  opt = { fill: true, stroke: false, markers: false, clipped: false };
+  checkBBox("image1", opt, 150,150,200,200, 0);
+  checkBBox("image2", opt, 2,2,200,200, 0);
+  checkBBox("image3", opt, 205,2,200,200, 0);
+  checkBBox("image4", opt, 2,205,200,200, 0);
+  checkBBox("image5", opt, 205,205,200,200, 0);
+  checkBBox("image6", opt, 2,2,200,200, 0);
+  checkBBox("image7", opt, 205,2,200,200, 0);
+  checkBBox("image8", opt, 2,205,200,200, 0);
+  checkBBox("image9", opt, 205,205,200,200, 0);
+  checkBBox("image10", opt, 0,0,400,400, 0);
+  checkBBox("image11", opt, 0,0,400,400, 0);
+  checkBBox("image12", opt, 25,43,768,768, 0);
+  checkBBox("image13", opt, 0,0,400,400, 0);
+  
+  // <path>
+  opt = { fill: true, stroke: true, markers: true, clipped: true };
+  checkBBox("path1", opt, 2,17,120,95, 0);
+  checkBBox("path2", opt, 156,21,116,91, 0);
+  checkBBox("path3", opt, 6,121,116,91, 0);
+  checkBBox("path4", opt, 2,17,98,83, 0);
+  checkBBox("path5", opt, 156,21,44,79, 0);
+  checkBBox("path6", opt, 6,150,94,62, 0);
+  checkBBox("path7", opt, 2,17,98,83, 0);
+  checkBBox("path8", opt, 156,21,94,79, 0);
+  checkBBox("path9", opt, 6,121,94,79, 0);
+  checkBBox("path10", opt, 10,25,100,75, 0);
+  checkBBox("path11", opt, 160,25,100,75, 0);
+  checkBBox("path12", opt, 10,125,100,75, 0);
+
+  opt = { fill: true, stroke: false, markers: false, clipped: true };
+  checkBBox("path1", opt, 10,25,100,75, 0);
+  checkBBox("path2", opt, 160,25,100,75, 0);
+  checkBBox("path3", opt, 10,125,100,75, 0);
+  checkBBox("path4", opt, 10,25,90,75, 0);
+  checkBBox("path5", opt, 160,25,40,75, 0);
+  checkBBox("path6", opt, 10,150,90,50, 0);
+  checkBBox("path7", opt, 10,25,90,75, 0);
+  checkBBox("path8", opt, 160,25,90,75, 0);
+  checkBBox("path9", opt, 10,125,90,75, 0);
+  checkBBox("path10", opt, 10,25,100,75, 0);
+  checkBBox("path11", opt, 160,25,100,75, 0);
+  checkBBox("path12", opt, 10,125,100,75, 0);
+
+  opt = { fill: true, stroke: false, markers: false, clipped: false };
+  checkBBox("path1", opt, 10,25,100,75, 0);
+  checkBBox("path2", opt, 160,25,100,75, 0);
+  checkBBox("path3", opt, 10,125,100,75, 0);
+  checkBBox("path4", opt, 10,25,100,75, 0);
+  checkBBox("path5", opt, 160,25,100,75, 0);
+  checkBBox("path6", opt, 10,125,100,75, 0);
+  checkBBox("path7", opt, 10,25,100,75, 0);
+  checkBBox("path8", opt, 160,25,100,75, 0);
+  checkBBox("path9", opt, 10,125,100,75, 0);
+  checkBBox("path10", opt, 10,25,100,75, 0);
+  checkBBox("path11", opt, 160,25,100,75, 0);
+  checkBBox("path12", opt, 10,125,100,75, 0);
+
+  opt = { fill: false, stroke: true, markers: false, clipped: false };
+  checkBBox("path1", opt, 2,17,116,91, 0);
+  checkBBox("path2", opt, 156,21,108,83, 0);
+  checkBBox("path3", opt, 6,121,108,83, 0);
+  checkBBox("path4", opt, 2,17,116,91, 0);
+  checkBBox("path5", opt, 156,21,108,83, 0);
+  checkBBox("path6", opt, 6,121,108,83, 0);
+  checkBBox("path7", opt, 2,17,116,91, 0);
+  checkBBox("path8", opt, 156,21,108,83, 0);
+  checkBBox("path9", opt, 6,121,108,83, 0);
+  checkBBox("path10", opt, 2,17,116,91, 0);
+  checkBBox("path11", opt, 156,21,108,83, 0);
+  checkBBox("path12", opt, 6,121,108,83, 0);
+
+  opt = { fill: false, stroke: false, markers: true, clipped: false };
+  checkBBox("path1", opt, 10,25,112,87, 0);
+  checkBBox("path2", opt, 160,25,112,87, 0);
+  checkBBox("path3", opt, 10,125,112,87, 0);
+  checkBBox("path4", opt, 10,25,112,87, 0);
+  checkBBox("path5", opt, 160,25,112,87, 0);
+  checkBBox("path6", opt, 10,125,112,87, 0);
+  checkBBox("path7", opt, 10,25,112,87, 0);
+  checkBBox("path8", opt, 160,25,112,87, 0);
+  checkBBox("path9", opt, 10,125,112,87, 0);
+  checkBBox("path10", opt, 10,25,112,87, 0);
+  checkBBox("path11", opt, 160,25,112,87, 0);
+  checkBBox("path12", opt, 10,125,112,87, 0);
+
+  // <use>
+  opt = { fill: true, stroke: false, markers: false, clipped: false };
+  checkBBox("use1", opt, 70,70,180,180, 0);
+  checkBBox("use2", opt, 250,70,180,180, 0);
+  checkBBox("use3", opt, 70,250,180,180, 0);
+  checkBBox("use4", opt, 22,22,180,180, 0);
+  checkBBox("use5", opt, 225,22,180,180, 0);
+  checkBBox("use6", opt, 22,225,180,180, 0);
+  checkBBox("use7", opt, 225,225,180,180, 0);
+
+  opt = { fill: true, stroke: true, markers: true, clipped: true };
+  checkBBox("use1", opt, 70,66,180,94, 0);
+  checkBBox("use2", opt, 250,70,180,90, 0);
+  checkBBox("use3", opt, 70,250,180,90, 0);
+  checkBBox("use4", opt, 18,18,134,134, 0);
+  checkBBox("use5", opt, 221,18,134,134, 0);
+  checkBBox("use6", opt, 18,221,134,134, 0);
+  checkBBox("use7", opt, 221,221,134,134, 0);
+  checkBBox("use8", opt, 0,0,0,0, 0);
+
+  // <foreignObject>
+  opt = { fill: true, stroke: false, markers: false, clipped: false };
+  checkBBox("fo1", opt, 2,2,200,200, 0);
+  checkBBox("fo2", opt, 205,2,200,200, 0);
+  checkBBox("fo3", opt, 2,205,200,200, 0);
+  checkBBox("fo4", opt, 205,205,200,200, 0);
+  checkBBox("fo5", opt, 250,250,200,200, 0);
+  checkBBox("fo6", opt, 0,0,200,200, 0);
+  checkBBox("fo7", opt, 0,0,200,200, 0);
+
+  opt = { fill: true, stroke: true, markers: true, clipped: true };
+  checkBBox("fo1", opt, 53,53,51,51, 0);
+  checkBBox("fo2", opt, 205,53,148,149, 0);
+  checkBBox("fo3", opt, 53,205,149,148, 0);
+  checkBBox("fo4", opt, 207,207,100,100, 0);
+  checkBBox("fo5", opt, 0,0,0,0, 0);
+  checkBBox("fo6", opt, 100,100,100,100, 0);
+  checkBBox("fo7", opt, 10,10,180,180, 0);
+  checkBBox("fo8", opt, 0,0,0,0, 0);
+
+  // from http://www.w3.org/Graphics/SVG/Test/20110816/harness/htmlObjectApproved/masking-path-07-b.html
+  opt = { fill: true, stroke: true, markers: true, clipped: true };
+  checkBBox("rect-1", opt, 10,10,140,140, 0);
+  checkBBox("rect-2", opt, 50,30,25,100, 0);
+  checkBBox("rect-3", opt, 50,50,100,100, 0);
+  checkBBox("g1", opt, 50,50,100,100, 0);
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", run, false);
+
+</script>
+</pre>
+</body>
+</html>

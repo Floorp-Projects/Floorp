@@ -81,9 +81,7 @@ public:
   void SetCountAsActive(bool aStatus) { mCountAsActive = aStatus ? 1 : 0; }
   bool CountAsActive() { return mCountAsActive; }
 
- // returns failure if stream cannot be made ready and stream
- // should be canceled
-  nsresult SetAllHeadersReceived(bool aStatus);
+  void SetAllHeadersReceived();
   bool AllHeadersReceived() { return mAllHeadersReceived; }
 
   void UpdateTransportSendEvents(uint32_t count);

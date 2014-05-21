@@ -23,7 +23,7 @@ var inner = document.getElementById("inner");
 var outer = document.getElementById("outer");
 
 is(inner.getBoundingClientRect().left, outer.getBoundingClientRect().left, "left edges equal");
-todo_is(inner.getBoundingClientRect().right, outer.getBoundingClientRect().right, "right edges equal");
+is(inner.getBoundingClientRect().right, outer.getBoundingClientRect().right, "right edges equal");
 
 </script>
 </pre>
