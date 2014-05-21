@@ -12,7 +12,6 @@ const SHOW_ELEMENT = Ci.nsIDOMNodeFilter.SHOW_ELEMENT;
 const SHOW_TEXT = Ci.nsIDOMNodeFilter.SHOW_TEXT;
 const TEXT_NODE = Ci.nsIDOMNode.TEXT_NODE;
 
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/Task.jsm");
 
