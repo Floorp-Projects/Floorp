@@ -19,8 +19,10 @@
     <item android:state_focused="true"
           android:state_pressed="true"
           android:drawable="@drawable/grid_icon_bg_focused" />
+
     <item android:state_activated="true"
           android:drawable="@drawable/grid_icon_bg_activated" />
+
     <item android:drawable="@android:color/transparent" />
 
 </selector>
