@@ -6067,9 +6067,13 @@ EmitArray(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, uint32_t co
 
     ParseNode *pn2 = pn;
     jsatomid atomIndex;
-    if (nspread && !EmitNumberOp(cx, 0, bce))
-        return false;
+    bool afterSpread = false;
     for (atomIndex = 0; pn2; atomIndex++, pn2 = pn2->pn_next) {
+        if (!afterSpread && pn2->isKind(PNK_SPREAD)) {
+            afterSpread = true;
+            if (!EmitNumberOp(cx, atomIndex, bce))
+                return false;
+        }
         if (!UpdateSourceCoordNotes(cx, bce, pn2->pn_pos.begin))
             return false;
         if (pn2->isKind(PNK_ELISION)) {
@@ -6083,7 +6087,7 @@ EmitArray(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, uint32_t co
         if (pn2->isKind(PNK_SPREAD)) {
             if (Emit1(cx, bce, JSOP_SPREAD) < 0)
                 return false;
-        } else if (nspread) {
+        } else if (afterSpread) {
             if (Emit1(cx, bce, JSOP_INITELEM_INC) < 0)
                 return false;
         } else {
@@ -6094,7 +6098,7 @@ EmitArray(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, uint32_t co
         }
     }
     JS_ASSERT(atomIndex == count);
-    if (nspread) {
+    if (afterSpread) {
         if (Emit1(cx, bce, JSOP_POP) < 0)
             return false;
     }
