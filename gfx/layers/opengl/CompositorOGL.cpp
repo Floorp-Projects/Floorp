@@ -40,7 +40,6 @@
 #include "nsRect.h"                     // for nsIntRect
 #include "nsServiceManagerUtils.h"      // for do_GetService
 #include "nsString.h"                   // for nsString, nsAutoCString, etc
-#include "DecomposeIntoNoRepeatTriangles.h"
 #include "ScopedGLHelpers.h"
 #include "GLReadTexImageHelper.h"
 #include "TiledLayerBuffer.h"           // for TiledLayerComposer
@@ -80,65 +79,6 @@ BindMaskForProgram(ShaderProgramOGL* aProgram, TextureSourceOGL* aSourceMask,
   aSourceMask->BindTexture(aTexUnit, gfx::Filter::LINEAR);
   aProgram->SetMaskTextureUnit(aTexUnit - LOCAL_GL_TEXTURE0);
   aProgram->SetMaskLayerTransform(aTransform);
-}
-
-// Draw the given quads with the already selected shader. Texture coordinates
-// are supplied if the shader requires them.
-static void
-DrawQuads(GLContext *aGLContext,
-          VBOArena &aVBOs,
-          ShaderProgramOGL *aProg,
-          GLenum aMode,
-          RectTriangles &aRects)
-{
-  NS_ASSERTION(aProg->HasInitialized(), "Shader program not correctly initialized");
-  GLuint vertAttribIndex =
-    aProg->AttribLocation(ShaderProgramOGL::VertexCoordAttrib);
-  GLuint texCoordAttribIndex =
-    aProg->AttribLocation(ShaderProgramOGL::TexCoordAttrib);
-  bool texCoords = (texCoordAttribIndex != GLuint(-1));
-
-  GLsizei bytes = aRects.elements() * 2 * sizeof(GLfloat);
-
-  GLsizei total = bytes;
-  if (texCoords) {
-    total *= 2;
-  }
-
-  aGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER,
-                          aVBOs.Allocate(aGLContext));
-  aGLContext->fBufferData(LOCAL_GL_ARRAY_BUFFER,
-                          total,
-                          nullptr,
-                          LOCAL_GL_STREAM_DRAW);
-
-  aGLContext->fBufferSubData(LOCAL_GL_ARRAY_BUFFER,
-                             0,
-                             bytes,
-                             aRects.vertCoords().Elements());
-  aGLContext->fEnableVertexAttribArray(vertAttribIndex);
-  aGLContext->fVertexAttribPointer(vertAttribIndex,
-                                   2, LOCAL_GL_FLOAT,
-                                   LOCAL_GL_FALSE,
-                                   0, BUFFER_OFFSET(0));
-
-  if (texCoords) {
-    aGLContext->fBufferSubData(LOCAL_GL_ARRAY_BUFFER,
-                               bytes,
-                               bytes,
-                               aRects.texCoords().Elements());
-    aGLContext->fEnableVertexAttribArray(texCoordAttribIndex);
-    aGLContext->fVertexAttribPointer(texCoordAttribIndex,
-                                     2, LOCAL_GL_FLOAT,
-                                     LOCAL_GL_FALSE,
-                                     0, BUFFER_OFFSET(bytes));
-  } else {
-    aGLContext->fDisableVertexAttribArray(texCoordAttribIndex);
-  }
-
-  aGLContext->fDrawArrays(aMode, 0, aRects.elements());
-
-  aGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
 }
 
 CompositorOGL::CompositorOGL(nsIWidget *aWidget, int aSurfaceWidth,
@@ -407,52 +347,45 @@ CompositorOGL::Initialize()
   return true;
 }
 
-// |aTextureTransform| is the texture transform that will be set on
-// aProg, possibly multiplied with another texture transform of our
-// own.
-// |aTexCoordRect| is the rectangle from the texture that we want to
-// draw using the given program.  The program already has a necessary
-// offset and scale, so the geometry that needs to be drawn is a unit
-// square from 0,0 to 1,1.
-//
-// |aTexture| is the texture we are drawing. Its actual size can be
-// larger than the rectangle given by |aTexCoordRect|.
-void
-CompositorOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
-                                              const Rect& aRect,
-                                              const gfx3DMatrix& aTextureTransform,
-                                              const Rect& aTexCoordRect,
-                                              TextureSource *aTexture)
+static GLfloat
+WrapTexCoord(GLfloat v)
 {
-  // Given what we know about these textures and coordinates, we can
-  // compute fmod(t, 1.0f) to get the same texture coordinate out.  If
-  // the texCoordRect dimension is < 0 or > width/height, then we have
-  // wraparound that we need to deal with by drawing multiple quads,
-  // because we can't rely on full non-power-of-two texture support
-  // (which is required for the REPEAT wrap mode).
+    // fmodf gives negative results for negative numbers;
+    // that is, fmodf(0.75, 1.0) == 0.75, but
+    // fmodf(-0.75, 1.0) == -0.75.  For the negative case,
+    // the result we need is 0.25, so we add 1.0f.
+    if (v < 0.0f) {
+        return 1.0f + fmodf(v, 1.0f);
+    }
 
-  RectTriangles rects;
+    return fmodf(v, 1.0f);
+}
 
-  GLenum wrapMode = aTexture->AsSourceOGL()->GetWrapMode();
-
-  IntSize realTexSize = aTexture->GetSize();
-  if (!CanUploadNonPowerOfTwo(mGLContext)) {
-    realTexSize = IntSize(NextPowerOfTwo(realTexSize.width),
-                          NextPowerOfTwo(realTexSize.height));
+static void
+SetRects(int n,
+         Rect* aLayerRects,
+         Rect* aTextureRects,
+         GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1,
+         GLfloat tx0, GLfloat ty0, GLfloat tx1, GLfloat ty1,
+         bool flip_y /* = false */)
+{
+  if (flip_y) {
+    std::swap(ty0, ty1);
   }
+  aLayerRects[n] = Rect(x0, y0, x1 - x0, y1 - y0);
+  aTextureRects[n] = Rect(tx0, ty0, tx1 - tx0, ty1 - ty0);
+}
 
-  // We need to convert back to actual texels here to get proper behaviour with
-  // our GL helper functions. Should fix this sometime.
-  // I want to vomit.
-  IntRect texCoordRect = IntRect(NS_roundf(aTexCoordRect.x * aTexture->GetSize().width),
-                                 NS_roundf(aTexCoordRect.y * aTexture->GetSize().height),
-                                 NS_roundf(aTexCoordRect.width * aTexture->GetSize().width),
-                                 NS_roundf(aTexCoordRect.height * aTexture->GetSize().height));
+static int
+DecomposeIntoNoRepeatRects(const Rect& aRect,
+                           const Rect& aTexCoordRect,
+                           Rect* aLayerRects,
+                           Rect* aTextureRects)
+{
+  Rect texCoordRect = aTexCoordRect;
 
-  // This is fairly disgusting - if the texture should be flipped it will have a
-  // negative height, in which case we un-invert the texture coords and pass the
-  // flipped 'flag' to the functions below. We can't just use the inverted coords
-  // because our GL funtions use an explicit flag.
+  // If the texture should be flipped, it will have negative height. Detect that
+  // here and compensate for it. We will flip each rect as we emit it.
   bool flipped = false;
   if (texCoordRect.height < 0) {
     flipped = true;
@@ -460,29 +393,132 @@ CompositorOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
     texCoordRect.height = -texCoordRect.height;
   }
 
-  if (wrapMode == LOCAL_GL_REPEAT) {
-    rects.addRect(/* dest rectangle */
-                  0.0f, 0.0f, 1.0f, 1.0f,
-                  /* tex coords */
-                  texCoordRect.x / GLfloat(realTexSize.width),
-                  texCoordRect.y / GLfloat(realTexSize.height),
-                  texCoordRect.XMost() / GLfloat(realTexSize.width),
-                  texCoordRect.YMost() / GLfloat(realTexSize.height),
-                  flipped);
-  } else {
-    nsIntRect tcRect(texCoordRect.x, texCoordRect.y,
-                     texCoordRect.width, texCoordRect.height);
-    DecomposeIntoNoRepeatTriangles(tcRect,
-                                   nsIntSize(realTexSize.width, realTexSize.height),
-                                   rects, flipped);
+  Point tl = texCoordRect.TopLeft();
+  Point br = texCoordRect.BottomRight();
+
+  // Chen check if we wrap in either the x or y axis; if we do,
+  // then also use fmod to figure out the "true" non-wrapping
+  // texture coordinates.
+  bool xwrap = false, ywrap = false;
+
+  if (texCoordRect.x < 0 ||
+      texCoordRect.x > 1.0f ||
+      texCoordRect.XMost() < 0 ||
+      texCoordRect.XMost() > 1.0f) {
+    xwrap = true;
+    tl = Point(WrapTexCoord(tl.x), tl.y);
+    br = Point(WrapTexCoord(br.x), br.y);
   }
 
-  Matrix4x4 transform;
-  aProg->SetLayerRect(aRect);
-  ToMatrix4x4(aTextureTransform, transform);
-  aProg->SetTextureTransform(transform);
-  aProg->SetTextureRect(Rect(0.0f, 0.0f, 1.0f, 1.0f));
-  DrawQuads(mGLContext, mVBOs, aProg, LOCAL_GL_TRIANGLES, rects);
+  if (texCoordRect.y < 0 ||
+      texCoordRect.y > 1.0f ||
+      texCoordRect.YMost() < 0 ||
+      texCoordRect.YMost() > 1.0f) {
+    ywrap = true;
+    tl = Point(tl.x, WrapTexCoord(tl.y));
+    br = Point(br.x, WrapTexCoord(br.y));
+  }
+
+  NS_ASSERTION(tl.x >= 0.0f && tl.x <= 1.0f &&
+               tl.y >= 0.0f && tl.y <= 1.0f &&
+               br.x >= 0.0f && br.x <= 1.0f &&
+               br.y >= 0.0f && br.y <= 1.0f,
+               "Somehow generated invalid texture coordinates");
+
+  // If xwrap is false, the texture will be sampled from tl.x
+  // .. br.x.  If xwrap is true, then it will be split into tl.x
+  // .. 1.0, and 0.0 .. br.x.  Same for the Y axis.  The
+  // destination rectangle is also split appropriately, according
+  // to the calculated xmid/ymid values.
+
+  // There isn't a 1:1 mapping between tex coords and destination coords;
+  // when computing midpoints, we have to take that into account.  We
+  // need to map the texture coords, which are (in the wrap case):
+  // |tl->1| and |0->br| to the |0->1| range of the vertex coords.  So
+  // we have the length (1-tl)+(br) that needs to map into 0->1.
+  // These are only valid if there is wrap involved, they won't be used
+  // otherwise.
+  GLfloat xlen = (1.0f - tl.x) + br.x;
+  GLfloat ylen = (1.0f - tl.y) + br.y;
+
+  NS_ASSERTION(!xwrap || xlen > 0.0f, "xlen isn't > 0, what's going on?");
+  NS_ASSERTION(!ywrap || ylen > 0.0f, "ylen isn't > 0, what's going on?");
+
+  if (!xwrap && !ywrap) {
+    SetRects(0, aLayerRects, aTextureRects,
+             aRect.x, aRect.y, aRect.XMost(), aRect.YMost(),
+             tl.x, tl.y, br.x, br.y,
+             flipped);
+    return 1;
+  }
+
+  GLfloat xmid = aRect.x + (1.0f - tl.x) / xlen * aRect.width;
+  GLfloat ymid = aRect.y + (1.0f - tl.y) / ylen * aRect.height;
+
+  if (!xwrap && ywrap) {
+    SetRects(0, aLayerRects, aTextureRects,
+             aRect.x, aRect.y, aRect.XMost(), ymid,
+             tl.x, tl.y, br.x, 1.0f,
+             flipped);
+    SetRects(1, aLayerRects, aTextureRects,
+             aRect.x, ymid, aRect.XMost(), aRect.YMost(),
+             tl.x, 0.0f, br.x, br.y,
+             flipped);
+    return 2;
+  }
+
+  if (xwrap && !ywrap) {
+    SetRects(0, aLayerRects, aTextureRects,
+             aRect.x, aRect.y, xmid, aRect.YMost(),
+             tl.x, tl.y, 1.0f, br.y,
+             flipped);
+    SetRects(1, aLayerRects, aTextureRects,
+             xmid, aRect.y, aRect.XMost(), aRect.YMost(),
+             0.0f, tl.y, br.x, br.y,
+             flipped);
+    return 2;
+  }
+
+  SetRects(0, aLayerRects, aTextureRects,
+           aRect.x, aRect.y, xmid, ymid,
+           tl.x, tl.y, 1.0f, 1.0f,
+           flipped);
+  SetRects(1, aLayerRects, aTextureRects,
+           xmid, aRect.y, aRect.XMost(), ymid,
+           0.0f, tl.y, br.x, 1.0f,
+           flipped);
+  SetRects(2, aLayerRects, aTextureRects,
+           aRect.x, ymid, xmid, aRect.YMost(),
+           tl.x, 0.0f, 1.0f, br.y,
+           flipped);
+  SetRects(3, aLayerRects, aTextureRects,
+           xmid, ymid, aRect.XMost(), aRect.YMost(),
+           0.0f, 0.0f, br.x, br.y,
+           flipped);
+  return 4;
+}
+
+// |aRect| is the rectangle we want to draw to. We will draw it with
+// up to 4 draw commands if necessary to avoid wrapping.
+// |aTexCoordRect| is the rectangle from the texture that we want to
+// draw using the given program.
+// |aTexture| is the texture we are drawing. Its actual size can be
+// larger than the rectangle given by |texCoordRect|.
+void
+CompositorOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
+                                              const Rect& aRect,
+                                              const Rect& aTexCoordRect,
+                                              TextureSource *aTexture)
+{
+  Rect layerRects[4];
+  Rect textureRects[4];
+  int rects = DecomposeIntoNoRepeatRects(aRect,
+                                         aTexCoordRect,
+                                         layerRects,
+                                         textureRects);
+  for (int n = 0; n < rects; ++n) {
+    BindAndDrawQuad(aProg, layerRects[n], textureRects[n]);
+  }
 }
 
 void
@@ -1048,13 +1084,15 @@ CompositorOGL::DrawQuad(const Rect& aRect,
       source->AsSourceOGL()->BindTexture(LOCAL_GL_TEXTURE0, filter);
 
       program->SetTextureUnit(0);
+      Matrix4x4 transform;
+      ToMatrix4x4(textureTransform, transform);
+      program->SetTextureTransform(transform);
 
       if (maskType != MaskType::MaskNone) {
         BindMaskForProgram(program, sourceMask, LOCAL_GL_TEXTURE1, maskQuadTransform);
       }
 
-      BindAndDrawQuadWithTextureRect(program, aRect, textureTransform,
-                                     texturedEffect->mTextureCoords, source);
+      BindAndDrawQuadWithTextureRect(program, aRect, texturedEffect->mTextureCoords, source);
     }
     break;
   case EffectTypes::YCBCR: {
@@ -1076,6 +1114,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
       sourceCr->BindTexture(LOCAL_GL_TEXTURE2, effectYCbCr->mFilter);
 
       program->SetYCbCrTextureUnits(Y, Cb, Cr);
+      program->SetTextureTransform(Matrix4x4());
 
       if (maskType != MaskType::MaskNone) {
         BindMaskForProgram(program, sourceMask, LOCAL_GL_TEXTURE3, maskQuadTransform);
@@ -1083,7 +1122,6 @@ CompositorOGL::DrawQuad(const Rect& aRect,
       didSetBlendMode = SetBlendMode(gl(), blendMode);
       BindAndDrawQuadWithTextureRect(program,
                                      aRect,
-                                     gfx3DMatrix(),
                                      effectYCbCr->mTextureCoords,
                                      sourceYCbCr->GetSubSource(Y));
     }
@@ -1141,7 +1179,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
 
       program->SetBlackTextureUnit(0);
       program->SetWhiteTextureUnit(1);
-      program->SetTextureTransform(gfx::Matrix4x4());
+      program->SetTextureTransform(Matrix4x4());
 
       if (maskType != MaskType::MaskNone) {
         BindMaskForProgram(program, sourceMask, LOCAL_GL_TEXTURE2, maskQuadTransform);
@@ -1152,7 +1190,6 @@ CompositorOGL::DrawQuad(const Rect& aRect,
       program->SetTexturePass2(false);
       BindAndDrawQuadWithTextureRect(program,
                                      aRect,
-                                     gfx3DMatrix(),
                                      effectComponentAlpha->mTextureCoords,
                                      effectComponentAlpha->mOnBlack);
 
@@ -1162,7 +1199,6 @@ CompositorOGL::DrawQuad(const Rect& aRect,
       program->SetTexturePass2(true);
       BindAndDrawQuadWithTextureRect(program,
                                      aRect,
-                                     gfx3DMatrix(),
                                      effectComponentAlpha->mTextureCoords,
                                      effectComponentAlpha->mOnBlack);
 
