@@ -19,6 +19,7 @@ class SVGAnimatedTransformList;
 class SVGGraphicsElement;
 class SVGMatrix;
 class SVGIRect;
+class SVGBoundingBoxOptions;
 
 class SVGTransformableElement : public nsSVGElement
 {
@@ -33,7 +34,8 @@ public:
   already_AddRefed<SVGAnimatedTransformList> Transform();
   nsSVGElement* GetNearestViewportElement();
   nsSVGElement* GetFarthestViewportElement();
-  already_AddRefed<SVGIRect> GetBBox(ErrorResult& rv);
+  already_AddRefed<SVGIRect> GetBBox(const SVGBoundingBoxOptions& aOptions, 
+                                     ErrorResult& rv);
   already_AddRefed<SVGMatrix> GetCTM();
   already_AddRefed<SVGMatrix> GetScreenCTM();
   already_AddRefed<SVGMatrix> GetTransformToElement(SVGGraphicsElement& aElement,

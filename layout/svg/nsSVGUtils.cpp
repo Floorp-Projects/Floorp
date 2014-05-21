@@ -42,6 +42,7 @@
 #include "nsSVGLength2.h"
 #include "nsSVGMaskFrame.h"
 #include "nsSVGOuterSVGFrame.h"
+#include "mozilla/dom/SVGClipPathElement.h"
 #include "mozilla/dom/SVGPathElement.h"
 #include "nsSVGPathGeometryElement.h"
 #include "nsSVGPathGeometryFrame.h"
@@ -57,6 +58,7 @@ using namespace mozilla::gfx;
 
 static bool sSVGDisplayListHitTestingEnabled;
 static bool sSVGDisplayListPaintingEnabled;
+static bool sSVGNewGetBBoxEnabled;
 
 bool
 NS_SVGDisplayListHitTestingEnabled()
@@ -69,6 +71,13 @@ NS_SVGDisplayListPaintingEnabled()
 {
   return sSVGDisplayListPaintingEnabled;
 }
+
+bool
+NS_SVGNewGetBBoxEnabled()
+{
+  return sSVGNewGetBBoxEnabled;
+}
+
 
 // we only take the address of this:
 static mozilla::gfx::UserDataKey sSVGAutoRenderStateKey;
@@ -130,6 +139,9 @@ nsSVGUtils::Init()
 
   Preferences::AddBoolVarCache(&sSVGDisplayListPaintingEnabled,
                                "svg.display-lists.painting.enabled");
+
+  Preferences::AddBoolVarCache(&sSVGNewGetBBoxEnabled,
+                               "svg.new-getBBox.enabled");
 }
 
 nsSVGDisplayContainerFrame*
@@ -885,7 +897,8 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
       return bbox;
     }
     gfxMatrix matrix;
-    if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
+    if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame ||
+        aFrame->GetType() == nsGkAtoms::svgUseFrame) {
       // The spec says getBBox "Returns the tight bounding box in *current user
       // space*". So we should really be doing this for all elements, but that
       // needs investigation to check that we won't break too much content.
@@ -896,7 +909,63 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
       matrix = element->PrependLocalTransformsTo(matrix,
                           nsSVGElement::eChildToUserSpace);
     }
-    return svg->GetBBoxContribution(ToMatrix(matrix), aFlags).ToThebesRect();
+    bbox = svg->GetBBoxContribution(ToMatrix(matrix), aFlags).ToThebesRect();
+    // Account for 'clipped'.
+    if (aFlags & nsSVGUtils::eBBoxIncludeClipped) {
+      gfxRect clipRect(0, 0, 0, 0);
+      float x, y, width, height;
+      gfxMatrix tm;
+      gfxRect fillBBox = 
+        svg->GetBBoxContribution(ToMatrix(tm), 
+                                 nsSVGUtils::eBBoxIncludeFill).ToThebesRect();
+      x = fillBBox.x;
+      y = fillBBox.y;
+      width = fillBBox.width;
+      height = fillBBox.height;
+      bool hasClip = aFrame->StyleDisplay()->IsScrollableOverflow();
+      if (hasClip) {
+        clipRect = 
+          nsSVGUtils::GetClipRectForFrame(aFrame, x, y, width, height);
+          if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame ||
+              aFrame->GetType() == nsGkAtoms::svgUseFrame) {
+            clipRect = matrix.TransformBounds(clipRect);
+          }
+      }
+      nsSVGEffects::EffectProperties effectProperties =
+        nsSVGEffects::GetEffectProperties(aFrame);
+      bool isOK = true;
+      nsSVGClipPathFrame *clipPathFrame = 
+        effectProperties.GetClipPathFrame(&isOK);
+      if (clipPathFrame && isOK) {
+        SVGClipPathElement *clipContent = 
+          static_cast<SVGClipPathElement*>(clipPathFrame->GetContent());
+        nsRefPtr<SVGAnimatedEnumeration> units = clipContent->ClipPathUnits();
+        if (units->AnimVal() == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
+          matrix = gfxMatrix().Scale(width, height) *
+                      gfxMatrix().Translate(gfxPoint(x, y)) *
+                      matrix;
+        } else if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
+          matrix.Reset();
+        }
+        bbox = 
+          clipPathFrame->GetBBoxForClipPathFrame(bbox, matrix).ToThebesRect();
+        if (hasClip) {
+          bbox = bbox.Intersect(clipRect);
+        }
+      } else {
+        if (!isOK) {
+          bbox = gfxRect(0, 0, 0, 0);
+        } else {
+          if (hasClip) {
+            bbox = bbox.Intersect(clipRect);
+          }
+        }
+      }
+      if (bbox.IsEmpty()) {
+        bbox = gfxRect(0, 0, 0, 0);
+      }
+    }
+    return bbox;
   }
   return nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(aFrame);
 }
@@ -919,7 +988,8 @@ nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset(nsIFrame *aFrame)
 
   // For foreignObject frames, nsSVGUtils::GetBBox applies their local
   // transform, so we need to do the same here.
-  if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
+  if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame ||
+      aFrame->GetType() == nsGkAtoms::svgUseFrame) {
     gfxMatrix transform = static_cast<nsSVGElement*>(aFrame->GetContent())->
         PrependLocalTransformsTo(gfxMatrix(),
                                  nsSVGElement::eChildToUserSpace);

@@ -327,7 +327,7 @@ class Assembler : public AssemblerX86Shared
         movq(ImmWord(uintptr_t(imm.value)), dest);
     }
     void movq(ImmGCPtr ptr, Register dest) {
-        masm.movq_i64r(ptr.value, dest.code());
+        masm.movq_i64r(uintptr_t(ptr.value), dest.code());
         writeDataRelocation(ptr);
     }
     void movq(const Operand &src, Register dest) {

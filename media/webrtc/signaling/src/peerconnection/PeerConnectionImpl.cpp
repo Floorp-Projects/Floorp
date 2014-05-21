@@ -158,7 +158,9 @@ const nsIID nsISupportsWeakReference::COMTypeInfo<nsSupportsWeakReference, void>
 namespace sipcc {
 
 #ifdef MOZILLA_INTERNAL_API
-RTCStatsQuery::RTCStatsQuery(bool internal) : internalStats(internal) {
+RTCStatsQuery::RTCStatsQuery(bool internal) :
+  failed(false),
+  internalStats(internal) {
 }
 
 RTCStatsQuery::~RTCStatsQuery() {
@@ -2152,6 +2154,9 @@ PeerConnectionImpl::BuildStatsQuery_m(
   query->report = RTCStatsReportInternalConstruct(
       NS_ConvertASCIItoUTF16(mName.c_str()),
       query->now);
+
+  query->iceStartTime = mIceStartTime;
+  query->failed = isFailed(mIceConnectionState);
 
   // Populate SDP on main
   if (query->internalStats) {

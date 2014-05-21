@@ -76,6 +76,7 @@ bool
 LiveInterval::addRangeAtHead(CodePosition from, CodePosition to)
 {
     JS_ASSERT(from < to);
+    JS_ASSERT(ranges_.empty() || from <= ranges_.back().from);
 
     Range newRange(from, to);
 
@@ -110,23 +111,28 @@ LiveInterval::addRange(CodePosition from, CodePosition to)
 
     Range *i;
     // Find the location to insert the new range
-    for (i = ranges_.end() - 1; i >= ranges_.begin(); i--) {
-        if (newRange.from <= i->to) {
-            if (i->from < newRange.from)
-                newRange.from = i->from;
+    for (i = ranges_.end(); i > ranges_.begin(); i--) {
+        if (newRange.from <= i[-1].to) {
+            if (i[-1].from < newRange.from)
+                newRange.from = i[-1].from;
             break;
         }
     }
     // Perform coalescing on overlapping ranges
-    for (; i >= ranges_.begin(); i--) {
-        if (newRange.to < i->from)
+    Range *coalesceEnd = i;
+    for (; i > ranges_.begin(); i--) {
+        if (newRange.to < i[-1].from)
             break;
-        if (newRange.to < i->to)
-            newRange.to = i->to;
-        ranges_.erase(i);
+        if (newRange.to < i[-1].to)
+            newRange.to = i[-1].to;
     }
 
-    return ranges_.insert(i + 1, newRange);
+    if (i == coalesceEnd)
+        return ranges_.insert(i, newRange);
+
+    i[0] = newRange;
+    ranges_.erase(i + 1, coalesceEnd);
+    return true;
 }
 
 void
@@ -134,10 +140,10 @@ LiveInterval::setFrom(CodePosition from)
 {
     while (!ranges_.empty()) {
         if (ranges_.back().to < from) {
-            ranges_.erase(&ranges_.back());
+            ranges_.popBack();
         } else {
             if (from == ranges_.back().to)
-                ranges_.erase(&ranges_.back());
+                ranges_.popBack();
             else
                 ranges_.back().from = from;
             break;

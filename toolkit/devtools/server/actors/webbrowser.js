@@ -670,6 +670,12 @@ TabActor.prototype = {
       return;
     }
 
+    // Tell the thread actor that the tab is closed, so that it may terminate
+    // instead of resuming the debuggee script.
+    if (this._attached) {
+      this.threadActor._tabClosed = true;
+    }
+
     if (this._detach()) {
       this.conn.send({ from: this.actorID,
                        type: "tabDetached" });
