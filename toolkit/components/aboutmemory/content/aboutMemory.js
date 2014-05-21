@@ -48,9 +48,11 @@ XPCOMUtils.defineLazyGetter(this, "nsGzipConverter",
 let gMgr = Cc["@mozilla.org/memory-reporter-manager;1"]
              .getService(Ci.nsIMemoryReporterManager);
 
-let gUnnamedProcessStr = "Main Process";
+const gUnnamedProcessStr = "Main Process";
 
 let gIsDiff = false;
+
+const DMDFile = "out.dmd";
 
 //---------------------------------------------------------------------------
 
@@ -292,6 +294,10 @@ function onLoad()
                             "collection log.\n" +
                             "WARNING: These logs may be large (>1GB).";
 
+  const DMDEnabledDesc = "Run DMD analysis and save it to '" + DMDFile + "'.\n";
+  const DMDDisabledDesc = "DMD is not enabled. Please re-run with $DMD set " +
+                          "appropriately\n";
+
   let ops = appendElement(header, "div", "");
 
   let row1 = appendElement(ops, "div", "opsRow");
@@ -334,6 +340,24 @@ function onLoad()
                saveGCLogAndConciseCCLog, "Save concise", 'saveLogsConcise');
   appendButton(row4, GCAndCCAllLogDesc,
                saveGCLogAndVerboseCCLog, "Save verbose", 'saveLogsVerbose');
+
+  // This only succeeds in --enable-dmd builds.
+  if (typeof DMDReportAndDump == 'function') {
+    let env = Components.classes["@mozilla.org/process/environment;1"]
+                        .getService(Components.interfaces.nsIEnvironment);
+
+    // Gray the button out if DMD isn't enabled at start-up.
+    let dmd = env.get('DMD');
+    let disabled = dmd === '' || dmd === '0';
+
+    let row5 = appendElement(ops, "div", "opsRow");
+
+    appendElementWithText(row5, "div", "opsRowLabel", "Save DMD output");
+    let dmdButton =
+      appendButton(row5, disabled ? DMDDisabledDesc : DMDEnabledDesc, doDMD,
+                   "Save", "dmdButton");
+    dmdButton.disabled = disabled;
+  }
 
   // Generate the main div, where content ("section" divs) will go.  It's
   // hidden at first.
@@ -411,6 +435,13 @@ function saveGCLogAndConciseCCLog()
 function saveGCLogAndVerboseCCLog()
 {
   dumpGCLogAndCCLog(true);
+}
+
+function doDMD()
+{
+  updateMainAndFooter('Saving DMD output...', HIDE_FOOTER);
+  DMDReportAndDump('out.dmd');
+  updateMainAndFooter('Saved DMD output to ' + DMDFile, HIDE_FOOTER);
 }
 
 function dumpGCLogAndCCLog(aVerbose)
