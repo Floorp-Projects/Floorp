@@ -177,7 +177,9 @@
                     label="&cookieExceptions.label;" accesskey="&cookieExceptions.accesskey;"
                     preference="pref.privacy.disable_button.cookie_exceptions"/>
           </hbox>
-          <hbox id="acceptThirdPartyRow" class="indent">
+          <hbox id="acceptThirdPartyRow"
+                class="indent"
+                align="center">
             <label id="acceptThirdPartyLabel" control="acceptThirdPartyMenu"
                    accesskey="&acceptThirdParty.pre.accesskey;">&acceptThirdParty.pre.label;</label>
             <menulist id="acceptThirdPartyMenu" preference="network.cookie.cookieBehavior"
@@ -190,7 +192,9 @@
               </menupopup>
             </menulist>
           </hbox>
-          <hbox id="keepRow" class="indent">
+          <hbox id="keepRow"
+                class="indent"
+                align="center">
             <label id="keepUntil"
                    control="keepCookiesUntil"
                    accesskey="&keepUntil.accesskey;">&keepUntil.label;</label>
@@ -202,14 +206,14 @@
                 <menuitem label="&askEachTime.label;" value="1"/>
               </menupopup>
             </menulist>
-          </hbox>
-          <hbox flex="1">
+            <spacer flex="1"/>
             <button id="showCookiesButton"
                     label="&showCookies.label;" accesskey="&showCookies.accesskey;"
                     oncommand="gPrivacyPane.showCookies();"
                     preference="pref.privacy.disable_button.view_cookies"/>
           </hbox>
-          <hbox id="clearDataBox" align="center">
+          <hbox id="clearDataBox"
+                align="center">
             <checkbox id="alwaysClear" flex="1"
                       preference="privacy.sanitize.sanitizeOnShutdown"
                       label="&clearOnClose.label;"
