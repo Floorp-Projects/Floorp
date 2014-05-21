@@ -48,7 +48,7 @@ interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 interface nsITranslationNodeList;
 
-[scriptable, uuid(a1d75ae1-d3fc-40cb-97d5-8c81846632f4)]
+[scriptable, uuid(8435ca79-517f-40ba-acd9-55201a2a119d)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -190,18 +190,6 @@ interface nsIDOMWindowUtils : nsISupports {
                                     in int32_t aWidth,
                                     in int32_t aHeight,
                                     in nsIDOMElement aElement);
-
-  /**
-   * When a display port is set, this allows a sub-section of that
-   * display port to be marked as 'critical'. In this scenario, the
-   * area outside of this rectangle may be rendered at a lower
-   * detail (for example, by reducing its resolution), or not rendered
-   * at all under some circumstances.
-   * This call will have no effect if a display port has not been set.
-   */
-  void setCriticalDisplayPortForElement(in float aXPx, in float aYPx,
-                                        in float aWidthPx, in float aHeightPx,
-                                        in nsIDOMElement aElement);
 
   /**
    * Get/set the resolution at which rescalable web content is drawn.

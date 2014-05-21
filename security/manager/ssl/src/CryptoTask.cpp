@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CryptoTask.h"
+#include "nsNSSComponent.h"
 
 namespace mozilla {
 
@@ -16,6 +17,29 @@ CryptoTask::~CryptoTask()
   if (!isAlreadyShutDown()) {
     shutdown(calledFromObject);
   }
+}
+
+nsresult
+CryptoTask::Dispatch(const nsACString& taskThreadName)
+{
+  MOZ_ASSERT(taskThreadName.Length() <= 15);
+
+  // Ensure that NSS is initialized, since presumably CalculateResult
+  // will use NSS functions
+  if (!EnsureNSSInitializedChromeOrContent()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Can't add 'this' as the event to run, since mThread may not be set yet
+  nsresult rv = NS_NewThread(getter_AddRefs(mThread), nullptr,
+                             nsIThreadManager::DEFAULT_STACK_SIZE);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  NS_SetThreadName(mThread, taskThreadName);
+  // Note: event must not null out mThread!
+  return mThread->Dispatch(this, NS_DISPATCH_NORMAL);
 }
 
 NS_IMETHODIMP

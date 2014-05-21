@@ -79,6 +79,7 @@ nsHtml5Parser::SetCommand(const char* aCommand)
   NS_ASSERTION(!strcmp(aCommand, "view") ||
                !strcmp(aCommand, "view-source") ||
                !strcmp(aCommand, "external-resource") ||
+               !strcmp(aCommand, "import") ||
                !strcmp(aCommand, kLoadAsData),
                "Unsupported parser command");
 }
@@ -577,7 +578,8 @@ nsHtml5Parser::MarkAsNotScriptCreated(const char* aCommand)
 #ifdef DEBUG
   else {
     NS_ASSERTION(!nsCRT::strcmp(aCommand, "view") ||
-                 !nsCRT::strcmp(aCommand, "external-resource"),
+                 !nsCRT::strcmp(aCommand, "external-resource") ||
+                 !nsCRT::strcmp(aCommand, "import"),
                  "Unsupported parser command!");
   }
 #endif

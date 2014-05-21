@@ -13,3 +13,6 @@ contract @mozilla.org/mozwificonnectioninfo;1 {83670352-6ed4-4c35-8de9-402296a19
 
 component {ad5c5295-85fb-4460-8e0c-e130d3f029ab} DOMWifiManager.js
 contract @mozilla.org/mozwificertificateinfo;1 {ad5c5295-85fb-4460-8e0c-e130d3f029ab}
+
+component {08c88ece-8092-481b-863b-5515a52e411a} DOMWifiManager.js
+contract @mozilla.org/mozwificapabilities;1 {08c88ece-8092-481b-863b-5515a52e411a}

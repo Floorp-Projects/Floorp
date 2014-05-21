@@ -8,8 +8,8 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += ['win']
 elif CONFIG['OS_ARCH'] == 'Darwin':
     DIRS += ['mac']
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
-    DIRS += ['gtk2']
+elif CONFIG['MOZ_ENABLE_GTK']:
+    DIRS += ['gtk']
 
 DIRS += ['locales']
 
