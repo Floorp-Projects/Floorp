@@ -66,12 +66,6 @@ pref("network.protocol-handler.warn-external.tel", false);
 pref("network.protocol-handler.warn-external.mailto", false);
 pref("network.protocol-handler.warn-external.vnd.youtube", false);
 
-/* protocol expose prefs */
-// By default, all protocol handlers are exposed. This means that the browser
-// will response to openURL commands for all URL types. It will also try to open
-// link clicks inside the browser before failing over to the system handlers.
-pref("network.protocol-handler.expose.rtsp", true);
-
 /* http prefs */
 pref("network.http.pipelining", true);
 pref("network.http.pipelining.ssl", true);
@@ -292,14 +286,13 @@ pref("ui.dragThresholdY", 25);
 // Layers Acceleration.  We can only have nice things on gonk, because
 // they're not maintained anywhere else.
 pref("layers.offmainthreadcomposition.enabled", true);
+pref("layers.offmainthreadcomposition.async-animations", true);
 #ifndef MOZ_WIDGET_GONK
 pref("dom.ipc.tabs.disabled", true);
-pref("layers.offmainthreadcomposition.async-animations", false);
 pref("layers.async-video.enabled", false);
 #else
 pref("dom.ipc.tabs.disabled", false);
 pref("layers.acceleration.disabled", false);
-pref("layers.offmainthreadcomposition.async-animations", true);
 pref("layers.async-video.enabled", true);
 pref("layers.async-video-oop.enabled",true);
 pref("layers.async-pan-zoom.enabled", true);

@@ -156,7 +156,8 @@
 
 .theme-toolbar,
 .devtools-toolbar,
-.devtools-sidebar-tabs > tabs { /* General toolbar styling */
+.devtools-sidebar-tabs > tabs,
+.CodeMirror-dialog { /* General toolbar styling */
   color: #b6babf;
   background-color: #343c45;
   border-color: hsla(210,8%,5%,.6);

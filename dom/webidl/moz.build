@@ -591,6 +591,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'MozNetworkStatsData.webidl',
         'MozNetworkStatsInterface.webidl',
         'MozSpeakerManager.webidl',
+        'MozWifiCapabilities.webidl',
         'MozWifiConnectionInfoEvent.webidl',
         'MozWifiManager.webidl',
         'MozWifiP2pManager.webidl',

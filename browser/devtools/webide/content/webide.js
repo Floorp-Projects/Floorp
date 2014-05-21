@@ -7,6 +7,8 @@ const Cu = Components.utils;
 const Ci = Components.interfaces;
 
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 
 const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {require} = devtools;
@@ -14,7 +16,7 @@ const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const {AppProjects} = require("devtools/app-manager/app-projects");
 const {Connection} = require("devtools/client/connection-manager");
 const {AppManager} = require("devtools/app-manager");
-const ProjectEditor = require("projecteditor/projecteditor");
+const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 const Strings = Services.strings.createBundle("chrome://webide/content/webide.properties");
 
@@ -166,6 +168,7 @@ let UI = {
     // Freeze the UI until the promise is resolved. A 30s timeout
     // will unfreeze the UI, just in case the promise never gets
     // resolved.
+    this.hidePanels();
     let timeout = setTimeout(() => {
       this.unbusy();
       this.console.error("Operation timeout: " + operationDescription);
@@ -174,10 +177,12 @@ let UI = {
     promise.then(() => {
       clearTimeout(timeout);
       this.unbusy();
-    }, () => {
+    }, (e) => {
       clearTimeout(timeout);
+      this.console.error("Error while processing: " + operationDescription + ": " + e);
       this.unbusy();
     });
+    return promise;
   },
 
   /********** RUNTIME **********/
@@ -190,7 +195,7 @@ let UI = {
     }
 
     this.console.log("Found " + AppManager.runtimeList.usb.length + " USB devices.");
-    this.console.log("Found " + AppManager.runtimeList.simulators.length + " simulators.");
+    this.console.log("Found " + AppManager.runtimeList.simulator.length + " simulators.");
     for (let runtime of AppManager.runtimeList.usb) {
       let panelItemNode = document.createElement("toolbarbutton");
       panelItemNode.className = "panel-item runtime-panel-item-usbruntime";
@@ -206,7 +211,7 @@ let UI = {
     while (simulatorListNode.hasChildNodes()) {
       simulatorListNode.firstChild.remove();
     }
-    for (let runtime of AppManager.runtimeList.simulators) {
+    for (let runtime of AppManager.runtimeList.simulator) {
       let panelItemNode = document.createElement("toolbarbutton");
       panelItemNode.className = "panel-item runtime-panel-item-simulator";
       panelItemNode.setAttribute("label", runtime.getName());
@@ -227,6 +232,7 @@ let UI = {
     promise.then(
       () => {this.console.success("Connected to " + name)},
       () => {this.console.error("Can't connect to " + name)});
+    return promise;
   },
 
   updateRuntimeButton: function() {
@@ -262,65 +268,22 @@ let UI = {
     }
   },
 
-  // ProjectEditor & details screen
-
-  getProjectEditor: function() {
-    if (this.projecteditor) {
-      return this.projecteditor.loaded;
-    }
-
-    let projecteditorIframe = document.querySelector("#projecteditor");
-    this.projecteditor = ProjectEditor.ProjectEditor(projecteditorIframe);
-    this.projecteditor.on("onEditorSave", (editor, resource) => {
-      AppManager.validateProject(AppManager.selectedProject);
-    });
-    return this.projecteditor.loaded;
-  },
-
-  isProjectEditorEnabled: function() {
-    return Services.prefs.getBoolPref("devtools.webide.showProjectEditor");
-  },
+  // details.xhtml
 
   openProject: function() {
-    let detailsIframe = document.querySelector("#details");
-    let projecteditorIframe = document.querySelector("#projecteditor");
-
+    let details = document.querySelector("#details");
     let project = AppManager.selectedProject;
 
-    // Nothing to show
-
     if (!project) {
-      detailsIframe.setAttribute("hidden", "true");
-      projecteditorIframe.setAttribute("hidden", "true");
-      document.commandDispatcher.focusedElement = document.documentElement;
+      details.setAttribute("hidden", "true");
       return;
     }
-
-    // Show only the details screen
-
-    if (project.type != "packaged" || !this.isProjectEditorEnabled()) {
-      detailsIframe.removeAttribute("hidden");
-      projecteditorIframe.setAttribute("hidden", "true");
-      document.commandDispatcher.focusedElement = document.documentElement;
-      return;
-    }
-
-    // Show ProjectEditor
-
-    detailsIframe.setAttribute("hidden", "true");
-    projecteditorIframe.removeAttribute("hidden");
-
-    this.getProjectEditor().then((projecteditor) => {
-      projecteditor.setProjectToAppPath(project.location, {
-        name: project.name,
-        iconUrl: project.icon,
-        projectOverviewURL: "chrome://webide/content/details.xhtml"
-      });
-    }, UI.console.error);
 
     if (project.location) {
       Services.prefs.setCharPref("devtools.webide.lastprojectlocation", project.location);
     }
+
+    details.removeAttribute("hidden");
   },
 
   /********** COMMANDS **********/
@@ -515,56 +478,95 @@ let Cmds = {
     window.close();
   },
 
-  newApp: function() {
-    UI.hidePanels();
-    let ret = {location:null};
-    window.openDialog("chrome://webide/content/newapp.xul", "newapp", "chrome,modal", ret);
-    if (!ret.location)
-      return;
-    let project = AppProjects.get(ret.location);
-    UI.busyUntil(AppManager.validateProject(project).then(() => {
-      UI.console.success("New project created at " + ret.location);
+  /**
+   * testOptions: {       chrome mochitest support
+   *   folder: nsIFile,   where to store the app
+   *   index: Number,     index of the app in the template list
+   *   name: String       name of the app
+   * }
+   */
+  newApp: function(testOptions) {
+    return UI.busyUntil(Task.spawn(function* () {
+
+      // Open newapp.xul, which will feed ret.location
+      let ret = {location: null, testOptions: testOptions};
+      window.openDialog("chrome://webide/content/newapp.xul", "newapp", "chrome,modal", ret);
+      if (!ret.location)
+        return;
+
+      // Retrieve added project
+      let project = AppProjects.get(ret.location);
+
+      // Validate project
+      yield AppManager.validateProject(project);
+
+      // Select project
       AppManager.selectedProject = project;
-    }, (e) => UI.console.error("Error while create new app: " + e)), "creating new app");;
+
+    }), "creating new app");
   },
 
-  importPackagedApp: function() {
-    UI.hidePanels();
-    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-    fp.init(window, Strings.GetStringFromName("importPackagedApp_title"), Ci.nsIFilePicker.modeGetFolder);
-    let res = fp.show();
-    if (res == Ci.nsIFilePicker.returnCancel)
-      return;
-    UI.busyUntil(AppProjects.addPackaged(fp.file)
-                            .then(project => AppManager.validateProject(project))
-                            .then(project => AppManager.selectedProject = project)
-                            .then(( ) => { UI.console.log("New project successfuly added") },
-                                  (e) => { UI.console.error("Error while importing project: " + e) }),
-                            "importing packaged app");
+  importPackagedApp: function(location) {
+    return UI.busyUntil(Task.spawn(function* () {
+
+      let directory;
+
+      if (!location) {
+        let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+        fp.init(window, Strings.GetStringFromName("importPackagedApp_title"), Ci.nsIFilePicker.modeGetFolder);
+        let res = fp.show();
+        if (res == Ci.nsIFilePicker.returnCancel) {
+          return promise.resolve();
+        }
+        directory = fp.file;
+      } else {
+        directory = new FileUtils.File(location);
+      }
+
+      // Add project
+      let project = yield AppProjects.addPackaged(directory);
+
+      // Validate project
+      yield AppManager.validateProject(project);
+
+      // Select project
+      AppManager.selectedProject = project;
+    }), "importing packaged app");
   },
 
 
-  importHostedApp: function() {
-    UI.hidePanels();
-    let promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
-    let ret = {value:null};
-    promptService.prompt(window,
-                         Strings.GetStringFromName("importHostedApp_title"),
-                         Strings.GetStringFromName("importHostedApp_header"),
-                         ret, null, {});
-    let url = ret.value;
-    if (!url)
-      return;
-    UI.busyUntil(AppProjects.addHosted(url)
-                            .then(project => AppManager.validateProject(project))
-                            .then(project => AppManager.selectedProject = project)
-                            .then(( ) => { UI.console.log("New project successfuly added") },
-                                  (e) => { UI.console.error("Error while importing project: " + e) }),
-                            "importing hosted app");
+  importHostedApp: function(location) {
+    return UI.busyUntil(Task.spawn(function* () {
+      let ret = {value: null};
+
+      let url;
+      if (!location) {
+        Services.prompt.prompt(window,
+                               Strings.GetStringFromName("importHostedApp_title"),
+                               Strings.GetStringFromName("importHostedApp_header"),
+                               ret, null, {});
+        location = ret.value;
+      }
+
+      if (!location) {
+        return;
+      }
+
+      // Add project
+      let project = yield AppProjects.addHosted(location)
+
+      // Validate project
+      yield AppManager.validateProject(project);
+
+      // Select project
+      AppManager.selectedProject = project;
+    }), "importing hosted app");
   },
 
 
   showProjectPanel: function() {
+    let deferred = promise.defer();
+
     let panelNode = document.querySelector("#project-panel");
     let panelVboxNode = document.querySelector("#project-panel > vbox");
     let anchorNode = document.querySelector("#project-panel-button > .panel-button-anchor");
@@ -603,10 +605,15 @@ let Cmds = {
         // Open the popup only when the projects are added.
         // Not doing it in the next tick can cause mis-calculations
         // of the size of the panel.
+        function onPopupShown() {
+          panelNode.removeEventListener("popupshown", onPopupShown);
+          deferred.resolve();
+        }
+        panelNode.addEventListener("popupshown", onPopupShown);
         panelNode.openPopup(anchorNode);
         panelVboxNode.scrollTop = 0;
       }, 0);
-    }, UI.console.error);
+    }, deferred.reject);
 
 
     let runtimeappsHeaderNode = document.querySelector("#panel-header-runtimeapps");
@@ -640,31 +647,40 @@ let Cmds = {
         };
       }, true);
     }
+
+    return deferred.promise;
   },
 
   showRuntimePanel: function() {
     let panel = document.querySelector("#runtime-panel");
     let anchor = document.querySelector("#runtime-panel-button > .panel-button-anchor");
+
+    let deferred = promise.defer();
+    function onPopupShown() {
+      panel.removeEventListener("popupshown", onPopupShown);
+      deferred.resolve();
+    }
+    panel.addEventListener("popupshown", onPopupShown);
+
     panel.openPopup(anchor);
+    return deferred.promise;
   },
 
   disconnectRuntime: function() {
-    UI.busyUntil(AppManager.disconnectRuntime());
+    return UI.busyUntil(AppManager.disconnectRuntime(), "disconnecting from runtime");
   },
 
   takeScreenshot: function() {
-    UI.hidePanels();
-    UI.busyUntil(AppManager.deviceFront.screenshotToDataURL().then(longstr => {
+    return UI.busyUntil(AppManager.deviceFront.screenshotToDataURL().then(longstr => {
        return longstr.string().then(dataURL => {
          longstr.release().then(null, UI.console.error);
          UI.openInBrowser(dataURL);
        });
-    }));
+    }), "taking screenshot");
   },
 
   showPermissionsTable: function() {
-    UI.hidePanels();
-    UI.busyUntil(AppManager.deviceFront.getRawPermissionsTable().then(json => {
+    return UI.busyUntil(AppManager.deviceFront.getRawPermissionsTable().then(json => {
       let styleContent = "";
       styleContent += "body {background:white; font-family: monospace}";
       styleContent += "table {border-collapse: collapse}";
@@ -713,8 +729,7 @@ let Cmds = {
   },
 
   showRuntimeDetails: function() {
-    UI.hidePanels();
-    UI.busyUntil(AppManager.deviceFront.getDescription().then(json => {
+    return UI.busyUntil(AppManager.deviceFront.getDescription().then(json => {
       let styleContent = "";
       styleContent += "body {background:white; font-family: monospace}";
       styleContent += "table {border-collapse: collapse}";
@@ -746,35 +761,37 @@ let Cmds = {
     switch(AppManager.selectedProject.type) {
       case "packaged":
       case "hosted":
-        UI.busyUntil(AppManager.installAndRunProject(), "installing and running app");
+        return UI.busyUntil(AppManager.installAndRunProject(), "installing and running app");
         break;
       case "runtimeApp":
-        UI.busyUntil(AppManager.runRuntimeApp(), "running app");
+        return UI.busyUntil(AppManager.runRuntimeApp(), "running app");
         break;
     }
+    return promise.reject();
   },
 
   stop: function() {
-    UI.busyUntil(AppManager.stopRunningApp(), "stopping app");
+    return UI.busyUntil(AppManager.stopRunningApp(), "stopping app");
   },
 
   toggleToolbox: function() {
     if (UI.toolboxIframe) {
       UI.closeToolbox();
+      return promise.resolve();
     } else {
       UI.toolboxPromise = AppManager.getTarget().then((target) => {
         return UI.showToolbox(target);
       }, UI.console.error);
       UI.busyUntil(UI.toolboxPromise, "opening toolbox");
+      return UI.toolboxPromise;
     }
   },
 
   removeProject: function() {
-    AppManager.removeSelectedProject();
+    return AppManager.removeSelectedProject();
   },
 
   toggleEditors: function() {
-    Services.prefs.setBoolPref("devtools.webide.showProjectEditor", !UI.isProjectEditorEnabled());
-    UI.openProject();
+    // Toggle Itchpad
   },
 }
