@@ -526,7 +526,7 @@ nsHTMLEditUtils::SupportsAlignAttr(nsIDOMNode* aNode)
 #define GROUP_NONE             0
 
 // body, head, html
-#define GROUP_TOPLEVEL         (1 << 1)  
+#define GROUP_TOPLEVEL         (1 << 1)
 
 // base, link, meta, script, style, title
 #define GROUP_HEAD_CONTENT     (1 << 2)
@@ -539,7 +539,7 @@ nsHTMLEditUtils::SupportsAlignAttr(nsIDOMNode* aNode)
 #define GROUP_PHRASE           (1 << 4)
 
 // a, applet, basefont, bdo, br, font, iframe, img, map, meter, object, output,
-// progress, q, script, span, sub, sup
+// picture, progress, q, script, span, sub, sup
 #define GROUP_SPECIAL          (1 << 5)
 
 // button, form, input, label, select, textarea
@@ -590,7 +590,7 @@ nsHTMLEditUtils::SupportsAlignAttr(nsIDOMNode* aNode)
 // text, whitespace, newline, comment
 #define GROUP_LEAF             (1 << 20)
 
-// XXX This is because the editor does sublists illegally. 
+// XXX This is because the editor does sublists illegally.
 // ol, ul
 #define GROUP_OL_UL            (1 << 21)
 
@@ -599,6 +599,9 @@ nsHTMLEditUtils::SupportsAlignAttr(nsIDOMNode* aNode)
 
 // figcaption
 #define GROUP_FIGCAPTION       (1 << 23)
+
+// picture members (img, source)
+#define GROUP_PICTURE_CONTENT  (1 << 24)
 
 #define GROUP_INLINE_ELEMENT \
   (GROUP_FONTSTYLE | GROUP_PHRASE | GROUP_SPECIAL | GROUP_FORMCONTROL | \
@@ -699,7 +702,7 @@ static const nsElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(iframe, true, true, GROUP_SPECIAL | GROUP_BLOCK,
        GROUP_FLOW_ELEMENT),
   ELEM(image, false, false, GROUP_NONE, GROUP_NONE),
-  ELEM(img, false, false, GROUP_SPECIAL, GROUP_NONE),
+  ELEM(img, false, false, GROUP_SPECIAL | GROUP_PICTURE_CONTENT, GROUP_NONE),
   ELEM(input, false, false, GROUP_FORMCONTROL, GROUP_NONE),
   ELEM(ins, true, true, GROUP_PHRASE | GROUP_BLOCK, GROUP_FLOW_ELEMENT),
   ELEM(kbd, true, true, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
@@ -735,6 +738,7 @@ static const nsElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(output, true, true, GROUP_SPECIAL, GROUP_INLINE_ELEMENT),
   ELEM(p, true, false, GROUP_BLOCK | GROUP_P, GROUP_INLINE_ELEMENT),
   ELEM(param, false, false, GROUP_OBJECT_CONTENT, GROUP_NONE),
+  ELEM(picture, true, false, GROUP_SPECIAL, GROUP_PICTURE_CONTENT),
   ELEM(plaintext, false, false, GROUP_NONE, GROUP_NONE),
   ELEM(pre, true, true, GROUP_BLOCK, GROUP_INLINE_ELEMENT),
   ELEM(progress, true, false, GROUP_SPECIAL, GROUP_FLOW_ELEMENT),
@@ -752,7 +756,7 @@ static const nsElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(select, true, false, GROUP_FORMCONTROL, GROUP_SELECT_CONTENT),
   ELEM(shadow, true, false, GROUP_NONE, GROUP_INLINE_ELEMENT),
   ELEM(small, true, true, GROUP_FONTSTYLE, GROUP_INLINE_ELEMENT),
-  ELEM(source, false, false, GROUP_NONE, GROUP_NONE),
+  ELEM(source, false, false, GROUP_PICTURE_CONTENT, GROUP_NONE),
   ELEM(span, true, true, GROUP_SPECIAL, GROUP_INLINE_ELEMENT),
   ELEM(strike, true, true, GROUP_FONTSTYLE, GROUP_INLINE_ELEMENT),
   ELEM(strong, true, true, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
