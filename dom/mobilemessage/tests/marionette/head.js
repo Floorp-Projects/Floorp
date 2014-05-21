@@ -71,33 +71,6 @@ function waitForManagerEvent(aEventName) {
 }
 
 /**
- * Wrap DOMRequest onsuccess/onerror events to Promise resolve/reject.
- *
- * Fulfill params: A DOMEvent.
- * Reject params: A DOMEvent.
- *
- * @param aRequest
- *        A DOMRequest instance.
- *
- * @return A deferred promise.
- */
-function wrapDomRequestAsPromise(aRequest) {
-  let deferred = Promise.defer();
-
-  ok(aRequest instanceof DOMRequest,
-     "aRequest is instanceof " + aRequest.constructor);
-
-  aRequest.addEventListener("success", function(aEvent) {
-    deferred.resolve(aEvent);
-  });
-  aRequest.addEventListener("error", function(aEvent) {
-    deferred.reject(aEvent);
-  });
-
-  return deferred.promise;
-}
-
-/**
  * Send a SMS message to a single receiver.  Resolve if it succeeds, reject
  * otherwise.
  *
@@ -113,42 +86,17 @@ function wrapDomRequestAsPromise(aRequest) {
  * @return A deferred promise.
  */
 function sendSmsWithSuccess(aReceiver, aText) {
-  let request = manager.send(aReceiver, aText);
-  return wrapDomRequestAsPromise(request)
-    .then((aEvent) => { return aEvent.target.result; },
-          (aEvent) => { throw aEvent.target.error; });
-}
-
-/**
- * Send a SMS message to a single receiver.
- * Resolve if it fails, reject otherwise.
- *
- * Fulfill params:
- *   {
- *     message,  -- the failed MmsMessage
- *     error,    -- error of the send request
- *   }
- *
- * Reject params: (none)
- *
- * @param aReceiver the address of the receiver.
- * @param aText the text body of the message.
- *
- * @return A deferred promise.
- */
-function sendSmsWithFailure(aReceiver, aText) {
-  let promises = [];
-  promises.push(waitForManagerEvent("failed")
-    .then((aEvent) => { return aEvent.message; }));
+  let deferred = Promise.defer();
 
   let request = manager.send(aReceiver, aText);
-  promises.push(wrapDomRequestAsPromise(request)
-    .then((aEvent) => { throw aEvent; },
-          (aEvent) => { return aEvent.target.error; }));
+  request.onsuccess = function(event) {
+    deferred.resolve(event.target.result);
+  };
+  request.onerror = function(event) {
+    deferred.reject(event.target.error);
+  };
 
-  return Promise.all(promises)
-    .then((aResults) => { return { message: aResults[0],
-                                   error: aResults[1] }; });
+  return deferred.promise;
 }
 
 /**
@@ -170,18 +118,30 @@ function sendSmsWithFailure(aReceiver, aText) {
  * @return A deferred promise.
  */
 function sendMmsWithFailure(aMmsParameters, aSendParameters) {
-  let promises = [];
-  promises.push(waitForManagerEvent("failed")
-    .then((aEvent) => { return aEvent.message; }));
+  let deferred = Promise.defer();
+
+  let result = { message: null, error: null };
+  function got(which, value) {
+    result[which] = value;
+    if (result.message != null && result.error != null) {
+      deferred.resolve(result);
+    }
+  }
+
+  manager.addEventListener("failed", function onfailed(event) {
+    manager.removeEventListener("failed", onfailed);
+    got("message", event.message);
+  });
 
   let request = manager.sendMMS(aMmsParameters, aSendParameters);
-  promises.push(wrapDomRequestAsPromise(request)
-    .then((aEvent) => { throw aEvent; },
-          (aEvent) => { return aEvent.target.error; }));
+  request.onsuccess = function(event) {
+    deferred.reject();
+  };
+  request.onerror = function(event) {
+    got("error", event.target.error);
+  }
 
-  return Promise.all(promises)
-    .then((aResults) => { return { message: aResults[0],
-                                   error: aResults[1] }; });
+  return deferred.promise;
 }
 
 /**
@@ -312,9 +272,15 @@ function deleteMessagesById(aMessageIds) {
     return [];
   }
 
+  let deferred = Promise.defer();
+
   let request = manager.delete(aMessageIds);
-  return wrapDomRequestAsPromise(request)
-      .then((aEvent) => { return aEvent.target.result; });
+  request.onsuccess = function(event) {
+    deferred.resolve(event.target.result);
+  };
+  request.onerror = deferred.reject.bind(deferred);
+
+  return deferred.promise;
 }
 
 /**
