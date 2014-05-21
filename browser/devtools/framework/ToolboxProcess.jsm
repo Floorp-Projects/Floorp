@@ -11,12 +11,19 @@ const DBG_XUL = "chrome://browser/content/devtools/framework/toolbox-process-win
 const CHROME_DEBUGGER_PROFILE_NAME = "-chrome-debugger";
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm")
 
-Cu.import("resource://gre/modules/devtools/Loader.jsm");
-let require = devtools.require;
-let Telemetry = require("devtools/shared/telemetry");
-let EventEmitter = require("devtools/toolkit/event-emitter");
+XPCOMUtils.defineLazyModuleGetter(this, "DevToolsLoader",
+  "resource://gre/modules/devtools/Loader.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "devtools",
+  "resource://gre/modules/devtools/Loader.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "Telemetry", function () {
+  return devtools.require("devtools/shared/telemetry");
+});
+XPCOMUtils.defineLazyGetter(this, "EventEmitter", function () {
+  return devtools.require("devtools/toolkit/event-emitter");
+});
 const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 this.EXPORTED_SYMBOLS = ["BrowserToolboxProcess"];
@@ -133,10 +140,12 @@ BrowserToolboxProcess.prototype = {
       dumpn("initialized and added the browser actors for the DebuggerServer.");
     }
 
-    this.debuggerServer.openListener(Prefs.chromeDebuggingPort);
+    let chromeDebuggingPort =
+      Services.prefs.getIntPref("devtools.debugger.chrome-debugging-port");
+    this.debuggerServer.openListener(chromeDebuggingPort);
 
     dumpn("Finished initializing the chrome toolbox server.");
-    dumpn("Started listening on port: " + Prefs.chromeDebuggingPort);
+    dumpn("Started listening on port: " + chromeDebuggingPort);
   },
 
   /**
@@ -248,14 +257,6 @@ BrowserToolboxProcess.prototype = {
 };
 
 /**
- * Shortcuts for accessing various debugger preferences.
- */
-let Prefs = new ViewHelpers.Prefs("devtools.debugger", {
-  chromeDebuggingHost: ["Char", "chrome-debugging-host"],
-  chromeDebuggingPort: ["Int", "chrome-debugging-port"]
-});
-
-/**
  * Helper method for debugging.
  * @param string
  */
@@ -270,3 +271,5 @@ let wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 Services.prefs.addObserver("devtools.debugger.log", {
   observe: (...args) => wantLogging = Services.prefs.getBoolPref(args.pop())
 }, false);
+
+Services.obs.notifyObservers(null, "ToolboxProcessLoaded", null);

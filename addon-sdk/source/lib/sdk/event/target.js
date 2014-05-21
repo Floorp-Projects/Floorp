@@ -9,7 +9,7 @@ module.metadata = {
 };
 
 const { on, once, off, setListeners } = require('./core');
-const { method, chainable } = require('../lang/functional');
+const { method, chainable } = require('../lang/functional/core');
 const { Class } = require('../core/heritage');
 
 /**

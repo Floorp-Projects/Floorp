@@ -52,9 +52,12 @@ import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.updater.UpdateService;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.ActivityResultHandler;
+import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.NativeEventListener;
+import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 import org.mozilla.gecko.webapp.EventListener;
@@ -132,6 +135,7 @@ public abstract class GeckoApp
     GeckoMenu.Callback,
     GeckoMenu.MenuPresenter,
     LocationListener,
+    NativeEventListener,
     SensorEventListener,
     Tabs.OnTabsChangedListener
 {
@@ -209,6 +213,7 @@ public abstract class GeckoApp
     private int mSignalStrenth;
     private PhoneStateListener mPhoneStateListener = null;
     private boolean mShouldReportGeoData;
+    private EventListener mWebappEventListener;
 
     abstract public int getLayout();
     abstract public boolean hasTabsSideBar();
@@ -528,25 +533,137 @@ public abstract class GeckoApp
     public boolean areTabsShown() { return false; }
 
     @Override
+    public void handleMessage(final String event, final NativeJSObject message,
+                              final EventCallback callback) {
+        if ("Accessibility:Ready".equals(event)) {
+            GeckoAccessibility.updateAccessibilitySettings(this);
+
+        } else if ("Bookmark:Insert".equals(event)) {
+            final String url = message.getString("url");
+            final String title = message.getString("title");
+            final Context context = this;
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(context, R.string.bookmark_added, Toast.LENGTH_SHORT).show();
+                    ThreadUtils.postToBackgroundThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            BrowserDB.addBookmark(getContentResolver(), title, url);
+                        }
+                    });
+                }
+            });
+
+        } else if ("Contact:Add".equals(event)) {
+            final String email = message.optString("email", null);
+            final String phone = message.optString("phone", null);
+            if (email != null) {
+                Uri contactUri = Uri.parse(email);
+                Intent i = new Intent(ContactsContract.Intents.SHOW_OR_CREATE_CONTACT, contactUri);
+                startActivity(i);
+            } else if (phone != null) {
+                Uri contactUri = Uri.parse(phone);
+                Intent i = new Intent(ContactsContract.Intents.SHOW_OR_CREATE_CONTACT, contactUri);
+                startActivity(i);
+            } else {
+                // something went wrong.
+                Log.e(LOGTAG, "Received Contact:Add message with no email nor phone number");
+            }
+
+        } else if ("DOMFullScreen:Start".equals(event)) {
+            // Local ref to layerView for thread safety
+            LayerView layerView = mLayerView;
+            if (layerView != null) {
+                layerView.setFullScreenState(message.getBoolean("rootElement")
+                        ? FullScreenState.ROOT_ELEMENT : FullScreenState.NON_ROOT_ELEMENT);
+            }
+
+        } else if ("DOMFullScreen:Stop".equals(event)) {
+            // Local ref to layerView for thread safety
+            LayerView layerView = mLayerView;
+            if (layerView != null) {
+                layerView.setFullScreenState(FullScreenState.NONE);
+            }
+
+        } else if ("Image:SetAs".equals(event)) {
+            String src = message.getString("url");
+            setImageAs(src);
+
+        } else if ("Locale:Set".equals(event)) {
+            setLocale(message.getString("locale"));
+
+        } else if ("Permissions:Data".equals(event)) {
+            String host = message.getString("host");
+            final NativeJSObject[] permissions = message.getObjectArray("permissions");
+            showSiteSettingsDialog(host, permissions);
+
+        } else if ("PrivateBrowsing:Data".equals(event)) {
+            mPrivateBrowsingSession = message.optString("session", null);
+
+        } else if ("Sanitize:ClearHistory".equals(event)) {
+            handleClearHistory();
+
+        } else if ("Session:StatePurged".equals(event)) {
+            onStatePurged();
+
+        } else if ("Share:Text".equals(event)) {
+            String text = message.getString("text");
+            GeckoAppShell.openUriExternal(text, "text/plain", "", "", Intent.ACTION_SEND, "");
+
+            // Context: Sharing via chrome list (no explicit session is active)
+            Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST);
+
+        } else if ("Shortcut:Remove".equals(event)) {
+            final String url = message.getString("url");
+            final String origin = message.getString("origin");
+            final String title = message.getString("title");
+            final String type = message.getString("shortcutType");
+            GeckoAppShell.removeShortcut(title, url, origin, type);
+
+        } else if ("SystemUI:Visibility".equals(event)) {
+            setSystemUiVisible(message.getBoolean("visible"));
+
+        } else if ("Toast:Show".equals(event)) {
+            final String msg = message.getString("message");
+            final NativeJSObject button = message.optObject("button", null);
+            if (button != null) {
+                final String label = button.optString("label", "");
+                final String icon = button.optString("icon", "");
+                final String id = button.optString("id", "");
+                showButtonToast(msg, label, icon, id);
+            } else {
+                final String duration = message.getString("duration");
+                showNormalToast(msg, duration);
+            }
+
+        } else if ("ToggleChrome:Focus".equals(event)) {
+            focusChrome();
+
+        } else if ("ToggleChrome:Hide".equals(event)) {
+            toggleChrome(false);
+
+        } else if ("ToggleChrome:Show".equals(event)) {
+            toggleChrome(true);
+
+        } else if ("Update:Check".equals(event)) {
+            startService(new Intent(
+                    UpdateServiceHelper.ACTION_CHECK_FOR_UPDATE, null, this, UpdateService.class));
+
+        } else if ("Update:Download".equals(event)) {
+            startService(new Intent(
+                    UpdateServiceHelper.ACTION_DOWNLOAD_UPDATE, null, this, UpdateService.class));
+
+        } else if ("Update:Install".equals(event)) {
+            startService(new Intent(
+                    UpdateServiceHelper.ACTION_APPLY_UPDATE, null, this, UpdateService.class));
+        }
+    }
+
+    @Override
     public void handleMessage(String event, JSONObject message) {
         try {
-            if (event.equals("Toast:Show")) {
-                final String msg = message.getString("message");
-                final JSONObject button = message.optJSONObject("button");
-                if (button != null) {
-                    final String label = button.optString("label");
-                    final String icon = button.optString("icon");
-                    final String id = button.optString("id");
-                    showButtonToast(msg, label, icon, id);
-                } else {
-                    final String duration = message.getString("duration");
-                    showNormalToast(msg, duration);
-                }
-            } else if (event.equals("log")) {
-                // generic log listener
-                final String msg = message.getString("msg");
-                Log.d(LOGTAG, "Log: " + msg);
-            } else if (event.equals("Gecko:DelayedStartup")) {
+            if (event.equals("Gecko:DelayedStartup")) {
                 ThreadUtils.postToBackgroundThread(new UninstallListener.DelayedStartupTask(this));
             } else if (event.equals("Gecko:Ready")) {
                 mGeckoReadyStartupTimer.stop();
@@ -560,102 +677,12 @@ public abstract class GeckoApp
                 if (rec != null) {
                   rec.recordGeckoStartupTime(mGeckoReadyStartupTimer.getElapsed());
                 }
-            } else if (event.equals("ToggleChrome:Hide")) {
-                toggleChrome(false);
-            } else if (event.equals("ToggleChrome:Show")) {
-                toggleChrome(true);
-            } else if (event.equals("ToggleChrome:Focus")) {
-                focusChrome();
-            } else if (event.equals("DOMFullScreen:Start")) {
-                // Local ref to layerView for thread safety
-                LayerView layerView = mLayerView;
-                if (layerView != null) {
-                    layerView.setFullScreenState(message.getBoolean("rootElement")
-                            ? FullScreenState.ROOT_ELEMENT : FullScreenState.NON_ROOT_ELEMENT);
-                }
-            } else if (event.equals("DOMFullScreen:Stop")) {
-                // Local ref to layerView for thread safety
-                LayerView layerView = mLayerView;
-                if (layerView != null) {
-                    layerView.setFullScreenState(FullScreenState.NONE);
-                }
-            } else if (event.equals("Permissions:Data")) {
-                String host = message.getString("host");
-                JSONArray permissions = message.getJSONArray("permissions");
-                showSiteSettingsDialog(host, permissions);
-            } else if (event.equals("Session:StatePurged")) {
-                onStatePurged();
-            } else if (event.equals("Bookmark:Insert")) {
-                final String url = message.getString("url");
-                final String title = message.getString("title");
-                final Context context = this;
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(context, R.string.bookmark_added, Toast.LENGTH_SHORT).show();
-                        ThreadUtils.postToBackgroundThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                BrowserDB.addBookmark(getContentResolver(), title, url);
-                            }
-                        });
-                    }
-                });
-            } else if (event.equals("Accessibility:Event")) {
-                GeckoAccessibility.sendAccessibilityEvent(message);
-            } else if (event.equals("Accessibility:Ready")) {
-                GeckoAccessibility.updateAccessibilitySettings(this);
-            } else if (event.equals("Shortcut:Remove")) {
-                final String url = message.getString("url");
-                final String origin = message.getString("origin");
-                final String title = message.getString("title");
-                final String type = message.getString("shortcutType");
-                GeckoAppShell.removeShortcut(title, url, origin, type);
-            } else if (event.equals("Share:Text")) {
-                String text = message.getString("text");
-                GeckoAppShell.openUriExternal(text, "text/plain", "", "", Intent.ACTION_SEND, "");
-
-                // Context: Sharing via chrome list (no explicit session is active)
-                Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST);
-            } else if (event.equals("Image:SetAs")) {
-                String src = message.getString("url");
-                setImageAs(src);
-            } else if (event.equals("Sanitize:ClearHistory")) {
-                handleClearHistory();
-            } else if (event.equals("Update:Check")) {
-                startService(new Intent(UpdateServiceHelper.ACTION_CHECK_FOR_UPDATE, null, this, UpdateService.class));
-            } else if (event.equals("Update:Download")) {
-                startService(new Intent(UpdateServiceHelper.ACTION_DOWNLOAD_UPDATE, null, this, UpdateService.class));
-            } else if (event.equals("Update:Install")) {
-                startService(new Intent(UpdateServiceHelper.ACTION_APPLY_UPDATE, null, this, UpdateService.class));
-            } else if (event.equals("PrivateBrowsing:Data")) {
-                // null strings return "null" (http://code.google.com/p/android/issues/detail?id=13830)
-                if (message.isNull("session")) {
-                    mPrivateBrowsingSession = null;
-                } else {
-                    mPrivateBrowsingSession = message.getString("session");
-                }
-            } else if (event.equals("Contact:Add")) {                
-                if (!message.isNull("email")) {
-                    Uri contactUri = Uri.parse(message.getString("email"));       
-                    Intent i = new Intent(ContactsContract.Intents.SHOW_OR_CREATE_CONTACT, contactUri);
-                    startActivity(i);
-                } else if (!message.isNull("phone")) {
-                    Uri contactUri = Uri.parse(message.getString("phone"));       
-                    Intent i = new Intent(ContactsContract.Intents.SHOW_OR_CREATE_CONTACT, contactUri);
-                    startActivity(i);
-                } else {
-                    // something went wrong.
-                    Log.e(LOGTAG, "Received Contact:Add message with no email nor phone number");
-                }
-            } else if (event.equals("Locale:Set")) {
-                setLocale(message.getString("locale"));
-            } else if (event.equals("NativeApp:IsDebuggable")) {
+            } else if ("NativeApp:IsDebuggable".equals(event)) {
                 JSONObject ret = new JSONObject();
                 ret.put("isDebuggable", getIsDebuggable());
                 EventDispatcher.sendResponse(message, ret);
-            } else if (event.equals("SystemUI:Visibility")) {
-                setSystemUiVisible(message.getBoolean("visible"));
+            } else if (event.equals("Accessibility:Event")) {
+                GeckoAccessibility.sendAccessibilityEvent(message);
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
@@ -665,35 +692,31 @@ public abstract class GeckoApp
     void onStatePurged() { }
 
     /**
-     * @param aPermissions
+     * @param permissions
      *        Array of JSON objects to represent site permissions.
      *        Example: { type: "offline-app", setting: "Store Offline Data", value: "Allow" }
      */
-    private void showSiteSettingsDialog(String aHost, JSONArray aPermissions) {
+    private void showSiteSettingsDialog(final String host, final NativeJSObject[] permissions) {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         View customTitleView = getLayoutInflater().inflate(R.layout.site_setting_title, null);
         ((TextView) customTitleView.findViewById(R.id.title)).setText(R.string.site_settings_title);
-        ((TextView) customTitleView.findViewById(R.id.host)).setText(aHost);
+        ((TextView) customTitleView.findViewById(R.id.host)).setText(host);
         builder.setCustomTitle(customTitleView);
 
         // If there are no permissions to clear, show the user a message about that.
         // In the future, we want to disable the menu item if there are no permissions to clear.
-        if (aPermissions.length() == 0) {
+        if (permissions.length == 0) {
             builder.setMessage(R.string.site_settings_no_settings);
         } else {
 
-            ArrayList <HashMap<String, String>> itemList = new ArrayList <HashMap<String, String>>();
-            for (int i = 0; i < aPermissions.length(); i++) {
-                try {
-                    JSONObject permObj = aPermissions.getJSONObject(i);
-                    HashMap<String, String> map = new HashMap<String, String>();
-                    map.put("setting", permObj.getString("setting"));
-                    map.put("value", permObj.getString("value"));
-                    itemList.add(map);
-                } catch (JSONException e) {
-                    Log.w(LOGTAG, "Exception populating settings items.", e);
-                }
+            final ArrayList<HashMap<String, String>> itemList =
+                    new ArrayList<HashMap<String, String>>();
+            for (final NativeJSObject permObj : permissions) {
+                final HashMap<String, String> map = new HashMap<String, String>();
+                map.put("setting", permObj.getString("setting"));
+                map.put("value", permObj.getString("value"));
+                itemList.add(map);
             }
 
             // setMultiChoiceItems doesn't support using an adapter, so we're creating a hack with
@@ -1496,36 +1519,40 @@ public abstract class GeckoApp
         mAppStateListeners = new LinkedList<GeckoAppShell.AppStateListener>();
 
         //register for events
-        EventDispatcher.getInstance().registerGeckoThreadListener(this,
-            "log",
-            "onCameraCapture",
+        EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener)this,
             "Gecko:Ready",
             "Gecko:DelayedStartup",
-            "Toast:Show",
+            "Accessibility:Event",
+            "NativeApp:IsDebuggable");
+
+        EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener)this,
+            "Accessibility:Ready",
+            "Bookmark:Insert",
+            "Contact:Add",
             "DOMFullScreen:Start",
             "DOMFullScreen:Stop",
+            "Image:SetAs",
+            "Locale:Set",
+            "Permissions:Data",
+            "PrivateBrowsing:Data",
+            "Sanitize:ClearHistory",
+            "Session:StatePurged",
+            "Share:Text",
+            "Shortcut:Remove",
+            "SystemUI:Visibility",
+            "Toast:Show",
+            "ToggleChrome:Focus",
             "ToggleChrome:Hide",
             "ToggleChrome:Show",
-            "ToggleChrome:Focus",
-            "Permissions:Data",
-            "Session:StatePurged",
-            "Bookmark:Insert",
-            "Accessibility:Event",
-            "Accessibility:Ready",
-            "Shortcut:Remove",
-            "Share:Text",
-            "Image:SetAs",
-            "Sanitize:ClearHistory",
             "Update:Check",
             "Update:Download",
-            "Update:Install",
-            "PrivateBrowsing:Data",
-            "Contact:Add",
-            "Locale:Set",
-            "NativeApp:IsDebuggable",
-            "SystemUI:Visibility");
+            "Update:Install");
 
-        EventListener.registerEvents();
+        if (mWebappEventListener == null) {
+            mWebappEventListener = new EventListener();
+            mWebappEventListener.registerEvents();
+        }
+
 
         if (SmsManager.getInstance() != null) {
           SmsManager.getInstance().start();
@@ -2030,36 +2057,39 @@ public abstract class GeckoApp
     @Override
     public void onDestroy()
     {
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
-            "log",
-            "onCameraCapture",
+        EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener)this,
             "Gecko:Ready",
             "Gecko:DelayedStartup",
-            "Toast:Show",
+            "Accessibility:Event",
+            "NativeApp:IsDebuggable");
+
+        EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener)this,
+            "Accessibility:Ready",
+            "Bookmark:Insert",
+            "Contact:Add",
             "DOMFullScreen:Start",
             "DOMFullScreen:Stop",
+            "Image:SetAs",
+            "Locale:Set",
+            "Permissions:Data",
+            "PrivateBrowsing:Data",
+            "Sanitize:ClearHistory",
+            "Session:StatePurged",
+            "Share:Text",
+            "Shortcut:Remove",
+            "SystemUI:Visibility",
+            "Toast:Show",
+            "ToggleChrome:Focus",
             "ToggleChrome:Hide",
             "ToggleChrome:Show",
-            "ToggleChrome:Focus",
-            "Permissions:Data",
-            "Session:StatePurged",
-            "Bookmark:Insert",
-            "Accessibility:Event",
-            "Accessibility:Ready",
-            "Shortcut:Remove",
-            "Share:Text",
-            "Image:SetAs",
-            "Sanitize:ClearHistory",
             "Update:Check",
             "Update:Download",
-            "Update:Install",
-            "PrivateBrowsing:Data",
-            "Contact:Add",
-            "Locale:Set",
-            "NativeApp:IsDebuggable",
-            "SystemUI:Visibility");
+            "Update:Install");
 
-        EventListener.unregisterEvents();
+        if (mWebappEventListener != null) {
+            mWebappEventListener.unregisterEvents();
+            mWebappEventListener = null;
+        }
 
         deleteTempFiles();
 

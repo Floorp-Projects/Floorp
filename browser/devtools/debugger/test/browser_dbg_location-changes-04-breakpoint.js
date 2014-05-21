@@ -103,7 +103,8 @@ function afterDebuggerStatementHit() {
     waitForDebuggerEvents(gPanel, gDebugger.EVENTS.NEW_SOURCE),
     waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCES_ADDED),
     waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN),
-    reloadActiveTab(gPanel, gDebugger.EVENTS.BREAKPOINT_SHOWN)
+    reloadActiveTab(gPanel, gDebugger.EVENTS.BREAKPOINT_SHOWN_IN_EDITOR),
+    waitForDebuggerEvents(gPanel, gDebugger.EVENTS.BREAKPOINT_SHOWN_IN_PANE)
   ]).then(testClickAgain);
 }
 

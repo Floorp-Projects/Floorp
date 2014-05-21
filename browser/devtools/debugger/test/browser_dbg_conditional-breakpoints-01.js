@@ -51,7 +51,12 @@ function test() {
         return resumeAndTestBreakpoint(30);
       })
       .then(() => resumeAndTestNoBreakpoint())
-      .then(() => reloadActiveTab(gPanel, gDebugger.EVENTS.BREAKPOINT_SHOWN, 13))
+      .then(() => {
+        return promise.all([
+          reloadActiveTab(gPanel, gDebugger.EVENTS.BREAKPOINT_SHOWN_IN_EDITOR, 13),
+          waitForDebuggerEvents(gPanel, gDebugger.EVENTS.BREAKPOINT_SHOWN_IN_PANE, 13)
+        ]);
+      })
       .then(() => testAfterReload())
       .then(() => {
         // Reset traits back to default value

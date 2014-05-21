@@ -779,6 +779,7 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
   if (aDoSeek) {
     {
       Mutex::Autolock autoLock(mSeekLock);
+      ReleaseAllPendingVideoBuffersLocked();
       mIsVideoSeeking = true;
     }
     MediaSource::ReadOptions options;
