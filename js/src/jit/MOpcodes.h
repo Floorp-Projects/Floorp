@@ -101,6 +101,7 @@ namespace jit {
     _(Start)                                                                \
     _(OsrEntry)                                                             \
     _(Nop)                                                                  \
+    _(LimitedTruncate)                                                      \
     _(RegExp)                                                               \
     _(RegExpExec)                                                           \
     _(RegExpTest)                                                           \

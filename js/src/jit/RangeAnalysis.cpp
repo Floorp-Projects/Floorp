@@ -1384,6 +1384,13 @@ MToInt32::computeRange(TempAllocator &alloc)
     setRange(output);
 }
 
+void
+MLimitedTruncate::computeRange(TempAllocator &alloc)
+{
+    Range *output = new(alloc) Range(input());
+    setRange(output);
+}
+
 static Range *GetTypedArrayRange(TempAllocator &alloc, int type)
 {
     switch (type) {
@@ -2283,6 +2290,16 @@ MLoadTypedArrayElementStatic::truncate(TruncateKind kind)
     return false;
 }
 
+bool
+MLimitedTruncate::truncate(TruncateKind kind)
+{
+    setTruncateKind(kind);
+    setResultType(MIRType_Int32);
+    if (kind >= IndirectTruncate && range())
+        range()->wrapAroundToInt32();
+    return false;
+}
+
 MDefinition::TruncateKind
 MDefinition::operandTruncateKind(size_t index) const
 {
@@ -2302,6 +2319,12 @@ MBinaryBitwiseInstruction::operandTruncateKind(size_t index) const
 {
     // The bitwise operators truncate to int32.
     return Truncate;
+}
+
+MDefinition::TruncateKind
+MLimitedTruncate::operandTruncateKind(size_t index) const
+{
+    return Min(truncateKind(), truncateLimit_);
 }
 
 MDefinition::TruncateKind
