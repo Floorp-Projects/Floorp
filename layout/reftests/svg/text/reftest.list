@@ -24,7 +24,7 @@
 == simple-dx-rtl.svg simple-dx-rtl-ref.svg
 == simple-dx-rtl-2.svg simple-dx-rtl-2-ref.svg
 
-== simple-fill-color-dynamic.svg simple-fill-color-dynamic-ref.svg
+fails-if(B2G&&browserIsRemote) == simple-fill-color-dynamic.svg simple-fill-color-dynamic-ref.svg
 == simple-fill-color.svg simple-fill-color-ref.html
 HTTP(../..) == simple-fill-gradient.svg simple-fill-gradient-ref.svg
 == simple-fill-none.svg simple.svg
@@ -71,7 +71,7 @@ HTTP(../..) == simple-transform-rotate.svg simple-transform-rotate-ref.svg
 == multiple-x-multiple-dx-anchor-end-rtl.svg multiple-x-multiple-dx-anchor-end-rtl-ref.svg
 == multiple-x-multiple-dx-anchor-end.svg multiple-x-multiple-dx-anchor-end-ref.svg
 
-== multiple-x-percentages.svg multiple-x-percentages-ref.svg
+fails-if(B2G&&browserIsRemote) == multiple-x-percentages.svg multiple-x-percentages-ref.svg
 == multiple-x-percentages-2.html multiple-x-percentages-2-ref.html
 == multiple-x-percentages-3.html multiple-x-percentages-3-ref.html
 
@@ -165,7 +165,7 @@ fuzzy-if(/^Windows\x20NT\x206\.[12]/.test(http.oscpu),4,15) == textLength-3.svg 
 == dynamic-dominant-baseline.svg dynamic-dominant-baseline-ref.svg
 == dynamic-multiple-x.svg dynamic-multiple-x-ref.svg
 fuzzy-if(!d2d,14,2) fuzzy-if(azureQuartz,1,6) == dynamic-non-scaling-stroke.svg dynamic-non-scaling-stroke-ref.svg #Bug 885316
-== dynamic-text-shadow.svg text-shadow-ref.svg
+fails-if(B2G&&browserIsRemote) == dynamic-text-shadow.svg text-shadow-ref.svg
 
 # text and masks
 HTTP(../..) == mask-applied.svg mask-applied-ref.svg
