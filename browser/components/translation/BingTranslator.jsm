@@ -8,7 +8,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 this.EXPORTED_SYMBOLS = [ "BingTranslation" ];
 
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
