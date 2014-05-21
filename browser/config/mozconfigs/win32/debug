@@ -1,6 +1,7 @@
 . "$topsrcdir/browser/config/mozconfigs/common"
 
 ac_add_options --enable-debug
+ac_add_options --enable-trace-malloc
 ac_add_options --enable-signmar
 ac_add_options --enable-require-all-d3dc-versions
 
