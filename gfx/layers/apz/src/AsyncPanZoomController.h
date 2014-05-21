@@ -539,6 +539,7 @@ private:
                                  put a finger down, but we don't yet know if a touch listener has
                                  prevented the default actions yet and the allowed touch behavior
                                  was not set yet. we still need to abort animations. */
+    SNAP_BACK,                /* snap-back animation to relieve overscroll */
   };
 
   // State related to a single touch block. Does not persist across touch blocks.
@@ -774,6 +775,7 @@ public:
 
 private:
   friend class FlingAnimation;
+  friend class OverscrollSnapBackAnimation;
   // The initial velocity of the most recent fling.
   ScreenPoint mLastFlingVelocity;
   // The time at which the most recent fling started.
@@ -788,6 +790,9 @@ private:
 
   // Helper function used by TakeOverFling() and HandleFlingOverscroll().
   void AcceptFling(const ScreenPoint& aVelocity, bool aAllowOverscroll);
+
+  // Start a snap-back animation to relieve overscroll.
+  void StartSnapBack();
 
 
   /* ===================================================================
@@ -922,6 +927,10 @@ public:
 
   bool VisibleRegionContains(const ParentLayerPoint& aPoint) const {
     return mVisibleRect.Contains(aPoint);
+  }
+
+  bool IsOverscrolled() const {
+    return mX.IsOverscrolled() || mY.IsOverscrolled();
   }
 
 private:

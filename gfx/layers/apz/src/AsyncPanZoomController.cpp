@@ -211,6 +211,13 @@ typedef GeckoContentController::APZStateChange APZStateChange;
  *
  * "apz.num_paint_duration_samples"
  * Number of samples to store of how long it took to paint after the previous
+ *
+ * "apz.overscroll.snap_back_accel"
+ * Amount of acceleration applied during the snap-back animation.
+ *
+ * "apz.overscroll.snap_back_init_vel"
+ * Initial velocity of a snap-back animation along one axis.
+ * Units: screen pixels per millisecond
  * requests.
  *
  * "apz.pan_repaint_interval"
@@ -396,7 +403,7 @@ public:
    * or false if there is no fling or the fling has ended.
    */
   virtual bool Sample(FrameMetrics& aFrameMetrics,
-                      const TimeDuration& aDelta);
+                      const TimeDuration& aDelta) MOZ_OVERRIDE;
 
 private:
   static bool SameDirection(float aVelocity1, float aVelocity2)
@@ -428,7 +435,7 @@ public:
   {}
 
   virtual bool Sample(FrameMetrics& aFrameMetrics,
-                      const TimeDuration& aDelta);
+                      const TimeDuration& aDelta) MOZ_OVERRIDE;
 
 private:
   TimeDuration mDuration;
@@ -446,6 +453,26 @@ private:
   // |mResolution| fields on this.
   CSSPoint mEndOffset;
   CSSToScreenScale mEndZoom;
+};
+
+class OverscrollSnapBackAnimation: public AsyncPanZoomAnimation {
+public:
+  OverscrollSnapBackAnimation(AsyncPanZoomController& aApzc)
+    : mApzc(aApzc)
+  {
+    mApzc.mX.StartSnapBack();
+    mApzc.mY.StartSnapBack();
+  }
+
+  virtual bool Sample(FrameMetrics& aFrameMetrics,
+                      const TimeDuration& aDelta) MOZ_OVERRIDE
+  {
+    return mApzc.mX.SampleSnapBack(aDelta)
+        || mApzc.mY.SampleSnapBack(aDelta);
+  }
+
+private:
+  AsyncPanZoomController& mApzc;
 };
 
 void
@@ -794,6 +821,9 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent)
       return nsEventStatus_eIgnore;
 
     case WAITING_CONTENT_RESPONSE:
+    case SNAP_BACK:  // Should not receive a touch-move in the SNAP_BACK state
+                     // as touch blocks that begin in an overscrolled state
+                     // are ignored.
       NS_WARNING("Received impossible touch in OnTouchMove");
       break;
   }
@@ -865,6 +895,9 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
     return nsEventStatus_eIgnore;
 
   case WAITING_CONTENT_RESPONSE:
+  case SNAP_BACK:  // Should not receive a touch-move in the SNAP_BACK state
+                   // as touch blocks that begin in an overscrolled state
+                   // are ignored.
     NS_WARNING("Received impossible touch in OnTouchEnd");
     break;
   }
@@ -1353,6 +1386,11 @@ void AsyncPanZoomController::HandleFlingOverscroll(const ScreenPoint& aVelocity)
   }
 }
 
+void AsyncPanZoomController::StartSnapBack() {
+  SetState(SNAP_BACK);
+  StartAnimation(new OverscrollSnapBackAnimation(*this));
+}
+
 bool AsyncPanZoomController::CallDispatchScroll(const ScreenPoint& aStartPoint, const ScreenPoint& aEndPoint,
                                                 uint32_t aOverscrollHandoffChainIndex) {
   // Make a local copy of the tree manager pointer and check if it's not
@@ -1428,6 +1466,10 @@ bool FlingAnimation::Sample(FrameMetrics& aFrameMetrics,
        shouldContinueFlingY = mApzc.mY.FlingApplyFrictionOrCancel(aDelta);
   // If we shouldn't continue the fling, let's just stop and repaint.
   if (!shouldContinueFlingX && !shouldContinueFlingY) {
+    // If we are in overscroll, schedule the snap-back animation that relieves it.
+    if (mApzc.IsOverscrolled()) {
+      mDeferredTasks.append(NewRunnableMethod(&mApzc, &AsyncPanZoomController::StartSnapBack));
+    }
     return false;
   }
 
