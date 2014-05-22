@@ -501,12 +501,12 @@ nsCString nsPluginTag::GetNiceFileName() {
   }
 
   if (mIsFlashPlugin) {
-    mNiceFileName.Assign(NS_LITERAL_CSTRING("flash"));
+    mNiceFileName.AssignLiteral("flash");
     return mNiceFileName;
   }
 
   if (mIsJavaPlugin) {
-    mNiceFileName.Assign(NS_LITERAL_CSTRING("java"));
+    mNiceFileName.AssignLiteral("java");
     return mNiceFileName;
   }
 

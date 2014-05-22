@@ -238,8 +238,8 @@ private:
     // "what do you want to do" dialog
     if (r == SE_ERR_NOASSOC) {
       nsAutoString shellArg;
-      shellArg.Assign(NS_LITERAL_STRING("shell32.dll,OpenAs_RunDLL ") +
-                      mResolvedPath);
+      shellArg.AssignLiteral("shell32.dll,OpenAs_RunDLL ");
+      shellArg.Append(mResolvedPath);
       seinfo.lpFile = L"RUNDLL32.EXE";
       seinfo.lpParameters = shellArg.get();
       if (ShellExecuteExW(&seinfo)) {

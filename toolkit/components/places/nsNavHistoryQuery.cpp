@@ -575,7 +575,8 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     queryString += NS_LITERAL_CSTRING(QUERYKEY_ASYNC_ENABLED "=1");
   }
 
-  aQueryString.Assign(NS_LITERAL_CSTRING("place:") + queryString);
+  aQueryString.AssignLiteral("place:");
+  aQueryString.Append(queryString);
   return NS_OK;
 }
 

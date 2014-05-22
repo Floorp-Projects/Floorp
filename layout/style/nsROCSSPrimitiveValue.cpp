@@ -113,7 +113,7 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
           // 'about:invalid' as the default value for url attributes,
           // so let's also use it here as the default computed value
           // for invalid URLs.
-          tmpStr.Assign(NS_LITERAL_STRING("url(about:invalid)"));
+          tmpStr.AssignLiteral("url(about:invalid)");
         }
         break;
       }
