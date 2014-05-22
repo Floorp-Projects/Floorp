@@ -14,7 +14,6 @@ MOCHITEST_MANIFESTS += [
 MOCHITEST_MANIFESTS += [
     'failures/editing/conformancetest/mochitest.ini',
     'failures/editing/selecttest/mochitest.ini',
-    'failures/html/dom/collections/mochitest.ini',
     'failures/html/dom/errors/mochitest.ini',
     'failures/html/dom/lists/mochitest.ini',
     'failures/html/dom/mochitest.ini',
