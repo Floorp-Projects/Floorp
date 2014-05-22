@@ -76,6 +76,7 @@
 #endif
 
 #include "mozilla/Assertions.h"
+#include "mozilla/BasicEvents.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MouseEvents.h"
@@ -3263,6 +3264,25 @@ Accessible::StaticAsserts() const
 
 ////////////////////////////////////////////////////////////////////////////////
 // KeyBinding class
+
+// static
+uint32_t
+KeyBinding::AccelModifier()
+{
+  switch (WidgetInputEvent::AccelModifier()) {
+    case MODIFIER_ALT:
+      return kAlt;
+    case MODIFIER_CONTROL:
+      return kControl;
+    case MODIFIER_META:
+      return kMeta;
+    case MODIFIER_OS:
+      return kOS;
+    default:
+      MOZ_CRASH("Handle the new result of WidgetInputEvent::AccelModifier()");
+      return 0;
+  }
+}
 
 void
 KeyBinding::ToPlatformFormat(nsAString& aValue) const
