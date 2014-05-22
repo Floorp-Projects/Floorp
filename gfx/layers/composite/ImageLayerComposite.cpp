@@ -25,10 +25,10 @@
 #include "nsRect.h"                     // for nsIntRect
 #include "nsString.h"                   // for nsAutoCString
 
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace layers {
+
+using namespace mozilla::gfx;
 
 ImageLayerComposite::ImageLayerComposite(LayerManagerComposite* aManager)
   : ImageLayer(aManager, nullptr)

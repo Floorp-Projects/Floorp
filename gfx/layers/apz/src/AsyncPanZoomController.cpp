@@ -126,10 +126,10 @@ WidgetModifiersToDOMModifiers(mozilla::Modifiers aModifiers)
 
 }
 
-using namespace mozilla::css;
-
 namespace mozilla {
 namespace layers {
+
+using namespace mozilla::css;
 
 typedef mozilla::layers::AllowedTouchBehavior AllowedTouchBehavior;
 typedef GeckoContentController::APZStateChange APZStateChange;

@@ -36,10 +36,10 @@
 #include "GrallocImages.h"
 #endif
 
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace layers {
+
+using namespace mozilla::gfx;
 
 /**
  * Handle RemoveTextureFromCompositableAsync() transaction.

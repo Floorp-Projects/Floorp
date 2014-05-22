@@ -26,10 +26,10 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/gfx/2D.h"
 
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace layers {
+
+using namespace mozilla::gfx;
 
 ThebesLayerD3D10::ThebesLayerD3D10(LayerManagerD3D10 *aManager)
   : ThebesLayer(aManager, nullptr)
