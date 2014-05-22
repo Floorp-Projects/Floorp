@@ -261,7 +261,7 @@ private:
         }
         processName.AppendLiteral("pid=");
         processName.Append(pidStr);
-        processName.Append(")");
+        processName.Append(')');
 
         // Read the PSS values from the smaps file.
         nsPrintfCString smapsPath("/proc/%s/smaps", pidStr);
@@ -464,14 +464,14 @@ private:
 
     aName.AppendLiteral("/[");
     aName.Append(aPerms);
-    aName.Append("]");
+    aName.Append(']');
 
     // Append the permissions.  This is useful for non-verbose mode in
     // about:memory when the filename is long and goes of the right side of the
     // window.
     aDesc.AppendLiteral(" [");
     aDesc.Append(aPerms);
-    aDesc.Append("]");
+    aDesc.Append(']');
   }
 
   nsresult ParseMapBody(
@@ -518,7 +518,7 @@ private:
 
       nsAutoCString path("mem/processes/");
       path.Append(aProcessName);
-      path.Append("/");
+      path.Append('/');
       path.Append(aName);
 
       REPORT(path, *aPss, aDescription);

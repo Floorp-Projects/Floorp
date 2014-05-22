@@ -232,14 +232,14 @@ PathifyURI(nsIURI *in, nsACString &out)
             nsAutoCString path;
             rv = jarURI->GetJAREntry(path);
             NS_ENSURE_SUCCESS(rv, rv);
-            out.Append("/");
+            out.Append('/');
             out.Append(path);
         } else { // Very unlikely
             nsAutoCString spec;
             rv = uri->GetSpec(spec);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            out.Append("/");
+            out.Append('/');
             out.Append(spec);
         }
     }
