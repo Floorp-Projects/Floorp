@@ -1306,8 +1306,10 @@ abstract public class BrowserApp extends GeckoApp
                 ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if (menu != null)
+                        if (menu != null) {
                             menu.findItem(R.id.settings).setEnabled(true);
+                            menu.findItem(R.id.help).setEnabled(true);
+                        }
                     }
                 });
 
@@ -2282,8 +2284,10 @@ abstract public class BrowserApp extends GeckoApp
         if (aMenu == null)
             return false;
 
-        if (!GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning))
+        if (!GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
             aMenu.findItem(R.id.settings).setEnabled(false);
+            aMenu.findItem(R.id.help).setEnabled(false);
+        }
 
         Tab tab = Tabs.getInstance().getSelectedTab();
         MenuItem bookmark = aMenu.findItem(R.id.bookmark);
@@ -2493,6 +2497,16 @@ abstract public class BrowserApp extends GeckoApp
             // We want to know when the Settings activity returns, because
             // we might need to redisplay based on a locale change.
             startActivityForResult(intent, ACTIVITY_REQUEST_PREFERENCES);
+            return true;
+        }
+
+        if (itemId == R.id.help) {
+            final String VERSION = AppConstants.MOZ_APP_VERSION;
+            final String OS = AppConstants.OS_TARGET;
+            final String LOCALE = BrowserLocaleManager.getLanguageTag(Locale.getDefault());
+
+            final String URL = getResources().getString(R.string.help_link, VERSION, OS, LOCALE);
+            Tabs.getInstance().loadUrlInTab(URL);
             return true;
         }
 
