@@ -722,8 +722,9 @@ bool TabParent::SendRealMouseEvent(WidgetMouseEvent& event)
   if (mIsDestroyed) {
     return false;
   }
-  MaybeForwardEventToRenderFrame(event, nullptr);
-  if (!MapEventCoordinatesForChildProcess(&event)) {
+  nsEventStatus status = MaybeForwardEventToRenderFrame(event, nullptr);
+  if (status == nsEventStatus_eConsumeNoDefault ||
+      !MapEventCoordinatesForChildProcess(&event)) {
     return false;
   }
   return PBrowserParent::SendRealMouseEvent(event);
@@ -789,8 +790,9 @@ bool TabParent::SendMouseWheelEvent(WidgetWheelEvent& event)
   if (mIsDestroyed) {
     return false;
   }
-  MaybeForwardEventToRenderFrame(event, nullptr);
-  if (!MapEventCoordinatesForChildProcess(&event)) {
+  nsEventStatus status = MaybeForwardEventToRenderFrame(event, nullptr);
+  if (status == nsEventStatus_eConsumeNoDefault ||
+      !MapEventCoordinatesForChildProcess(&event)) {
     return false;
   }
   return PBrowserParent::SendMouseWheelEvent(event);
@@ -910,9 +912,9 @@ bool TabParent::SendRealTouchEvent(WidgetTouchEvent& event)
   }
 
   ScrollableLayerGuid guid;
-  MaybeForwardEventToRenderFrame(event, &guid);
+  nsEventStatus status = MaybeForwardEventToRenderFrame(event, &guid);
 
-  if (mIsDestroyed) {
+  if (status == nsEventStatus_eConsumeNoDefault || mIsDestroyed) {
     return false;
   }
 
@@ -1889,13 +1891,14 @@ TabParent::UseAsyncPanZoom()
           GetScrollingBehavior() == ASYNC_PAN_ZOOM);
 }
 
-void
+nsEventStatus
 TabParent::MaybeForwardEventToRenderFrame(WidgetInputEvent& aEvent,
                                           ScrollableLayerGuid* aOutTargetGuid)
 {
   if (RenderFrameParent* rfp = GetRenderFrame()) {
-    rfp->NotifyInputEvent(aEvent, aOutTargetGuid);
+    return rfp->NotifyInputEvent(aEvent, aOutTargetGuid);
   }
+  return nsEventStatus_eIgnore;
 }
 
 bool
