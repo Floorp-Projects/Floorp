@@ -42,6 +42,7 @@ external_dirs += [
     'media/libogg',
     'media/libtheora',
     'media/libspeex_resampler',
+    'media/libstagefright',
     'media/libsoundtouch',
 ]
 

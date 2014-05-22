@@ -1415,7 +1415,7 @@ nsPluginHost::RegisterPlayPreviewMimeType(const nsACString& mimeType,
   nsAutoCString url(redirectURL);
   if (url.Length() == 0) {
     // using default play preview iframe URL, if redirectURL is not specified
-    url.Assign("data:application/x-moz-playpreview;,");
+    url.AssignLiteral("data:application/x-moz-playpreview;,");
     url.Append(mimeType);
   }
 
@@ -2281,7 +2281,7 @@ nsPluginHost::WritePluginInfo()
     return rv;
 
   nsAutoCString filename(kPluginRegistryFilename);
-  filename.Append(".tmp");
+  filename.AppendLiteral(".tmp");
   rv = pluginReg->AppendNative(filename);
   if (NS_FAILED(rv))
     return rv;

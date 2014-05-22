@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=999456
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 999456</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 999456 **/
+
+  SimpleTest.waitForExplicitFinish();
+  addEventListener("load", function (e) {
+    ise(e.cancelable, false, "Load events should not be cancelable");
+    SimpleTest.finish();
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=999456">Mozilla Bug 999456</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

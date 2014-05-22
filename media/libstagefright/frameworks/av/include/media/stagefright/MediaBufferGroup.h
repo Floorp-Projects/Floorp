@@ -22,7 +22,7 @@
 #include <utils/Errors.h>
 #include <utils/threads.h>
 
-namespace android {
+namespace stagefright {
 
 class MediaBuffer;
 class MetaData;
@@ -53,6 +53,6 @@ private:
     MediaBufferGroup &operator=(const MediaBufferGroup &);
 };
 
-}  // namespace android
+}  // namespace stagefright
 
 #endif  // MEDIA_BUFFER_GROUP_H_

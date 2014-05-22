@@ -1181,7 +1181,7 @@ ParticularProcessPriorityManager::FireTestOnlyObserverNotification(
 
   nsAutoCString data(nsPrintfCString("%lld", ChildID()));
   if (!aData.IsEmpty()) {
-    data.AppendLiteral(":");
+    data.Append(':');
     data.Append(aData);
   }
 

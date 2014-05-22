@@ -372,7 +372,7 @@ InterfaceObjectToString(JSContext* cx, unsigned argc, JS::Value *vp)
   str.Append('\n');
   str.AppendLiteral("    [native code]");
   str.Append('\n');
-  str.AppendLiteral("}");
+  str.Append('}');
 
   return xpc::NonVoidStringToJsval(cx, str, args.rval());
 }

@@ -172,7 +172,7 @@ AsyncBindingParams::iterateOverNamedParameters(const nsACString &aName,
 
   if (oneIdx == 0) {
     nsAutoCString errMsg(aName);
-    errMsg.Append(NS_LITERAL_CSTRING(" is not a valid named parameter."));
+    errMsg.AppendLiteral(" is not a valid named parameter.");
     closureThunk->err = new Error(SQLITE_RANGE, errMsg.get());
     return PL_DHASH_STOP;
   }

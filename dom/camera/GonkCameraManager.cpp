@@ -54,15 +54,15 @@ ICameraControl::GetCameraName(uint32_t aDeviceNum, nsCString& aDeviceName)
 
   switch (info.facing) {
     case CAMERA_FACING_BACK:
-      aDeviceName.Assign("back");
+      aDeviceName.AssignLiteral("back");
       break;
 
     case CAMERA_FACING_FRONT:
-      aDeviceName.Assign("front");
+      aDeviceName.AssignLiteral("front");
       break;
 
     default:
-      aDeviceName.Assign("extra-camera-");
+      aDeviceName.AssignLiteral("extra-camera-");
       aDeviceName.AppendInt(deviceNum);
       break;
   }

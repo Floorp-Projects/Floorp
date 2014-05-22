@@ -1379,7 +1379,7 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
       nsCString value;
       if (NS_SUCCEEDED(mChannel->GetContentCharset(value)) &&
           !value.IsEmpty()) {
-        _retval.Append(";charset=");
+        _retval.AppendLiteral(";charset=");
         _retval.Append(value);
       }
     }
@@ -1602,17 +1602,17 @@ nsXMLHttpRequest::Open(const nsACString& inMethod, const nsACString& url,
   nsAutoCString method;
   // GET, POST, DELETE, HEAD, OPTIONS, PUT methods normalized to upper case
   if (inMethod.LowerCaseEqualsLiteral("get")) {
-    method.Assign(NS_LITERAL_CSTRING("GET"));
+    method.AssignLiteral("GET");
   } else if (inMethod.LowerCaseEqualsLiteral("post")) {
-    method.Assign(NS_LITERAL_CSTRING("POST"));
+    method.AssignLiteral("POST");
   } else if (inMethod.LowerCaseEqualsLiteral("delete")) {
-    method.Assign(NS_LITERAL_CSTRING("DELETE"));
+    method.AssignLiteral("DELETE");
   } else if (inMethod.LowerCaseEqualsLiteral("head")) {
-    method.Assign(NS_LITERAL_CSTRING("HEAD"));
+    method.AssignLiteral("HEAD");
   } else if (inMethod.LowerCaseEqualsLiteral("options")) {
-    method.Assign(NS_LITERAL_CSTRING("OPTIONS"));
+    method.AssignLiteral("OPTIONS");
   } else if (inMethod.LowerCaseEqualsLiteral("put")) {
-    method.Assign(NS_LITERAL_CSTRING("PUT"));
+    method.AssignLiteral("PUT");
   } else {
     method = inMethod; // other methods are not normalized
   }
@@ -3877,9 +3877,9 @@ nsHeaderVisitor::VisitHeader(const nsACString &header, const nsACString &value)
 {
   if (mXHR->IsSafeHeader(header, mHttpChannel)) {
     mHeaders.Append(header);
-    mHeaders.Append(": ");
+    mHeaders.AppendLiteral(": ");
     mHeaders.Append(value);
-    mHeaders.Append("\r\n");
+    mHeaders.AppendLiteral("\r\n");
   }
   return NS_OK;
 }

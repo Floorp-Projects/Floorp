@@ -55,11 +55,11 @@ int testWrite() {
          CHECK(begin == s.BeginWriting()) +
          CHECK(end == s.EndWriting());
   begin[4] = char16_t('y');
-  res += CHECK(s.Equals(NS_LITERAL_STRING("xyzzy")));
+  res += CHECK(s.EqualsLiteral("xyzzy"));
   s.SetLength(4);
   res += CHECK(4 == s.Length()) +
-         CHECK(s.Equals(NS_LITERAL_STRING("xyzz"))) +
-         CHECK(!s.Equals(NS_LITERAL_STRING("xyzzy"))) +
+         CHECK(s.EqualsLiteral("xyzz")) +
+         CHECK(!s.EqualsLiteral("xyzzy")) +
          CHECK(!s.IsEmpty());
   s.Truncate();
   res += CHECK(0 == s.Length()) +

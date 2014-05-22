@@ -1201,7 +1201,7 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
           GetNumberOfCalls(nsITelephonyProvider::CALL_STATE_DISCONNECTED)) {
         // In order to let user hear busy tone via connected Bluetooth headset,
         // we postpone the timing of dropping SCO.
-        if (aError.Equals(NS_LITERAL_STRING("BusyError"))) {
+        if (aError.EqualsLiteral("BusyError")) {
           // FIXME: UpdatePhoneCIND later since it causes SCO close but
           // Dialer is still playing busy tone via HF.
           BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::POST_TASK_CLOSE_SCO);

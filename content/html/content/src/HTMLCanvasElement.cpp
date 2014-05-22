@@ -745,7 +745,7 @@ HTMLCanvasElement::MozGetIPCContext(const nsAString& aContextId,
   }
 
   // We only support 2d shmem contexts for now.
-  if (!aContextId.Equals(NS_LITERAL_STRING("2d")))
+  if (!aContextId.EqualsLiteral("2d"))
     return NS_ERROR_INVALID_ARG;
 
   if (mCurrentContextId.IsEmpty()) {

@@ -160,7 +160,7 @@ nsAboutCacheEntry::OpenCacheEntry(nsIURI *uri)
 
     if (!CacheObserver::UseNewCache() &&
         mLoadInfo->IsPrivate() &&
-        mStorageName == NS_LITERAL_CSTRING("disk")) {
+        mStorageName.EqualsLiteral("disk")) {
         // The cache v1 is storing all private entries in the memory-only
         // cache, so it would not be found in the v1 disk cache.
         mStorageName = NS_LITERAL_CSTRING("memory");
@@ -277,7 +277,7 @@ nsAboutCacheEntry::OnCacheEntryAvailable(nsICacheEntry *entry,
         rv = WriteCacheEntryDescription(entry);
     } else if (!CacheObserver::UseNewCache() &&
                !mLoadInfo->IsPrivate() &&
-               mStorageName == NS_LITERAL_CSTRING("memory")) {
+               mStorageName.EqualsLiteral("memory")) {
         // If we were not able to find the entry in the memory storage
         // try again in the disk storage.
         // This is a workaround for cache v1: when an originally disk
@@ -409,7 +409,7 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsICacheEntry *entry)
     if (NS_FAILED(entry->GetStorageDataSize(&dataSize)))
         dataSize = 0;
     s.AppendInt((int32_t)dataSize);     // XXX nsICacheEntryInfo interfaces should be fixed.
-    s.Append(NS_LITERAL_CSTRING(" B"));
+    s.AppendLiteral(" B");
     APPEND_ROW("Data size", s);
 
     // TODO - mayhemer

@@ -716,7 +716,7 @@ BluetoothOppManager::RetrieveSentFileName()
                                      EmptyCString(),
                                      extension);
       if (NS_SUCCEEDED(rv)) {
-        mFileName.AppendLiteral(".");
+        mFileName.Append('.');
         AppendUTF8toUTF16(extension, mFileName);
       }
     }

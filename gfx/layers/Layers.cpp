@@ -1205,7 +1205,7 @@ void WriteSnapshotLinkToDumpFile(T* aObj, FILE* aFile)
     return;
   }
   nsCString string(aObj->Name());
-  string.Append("-");
+  string.Append('-');
   string.AppendInt((uint64_t)aObj);
   fprintf_stderr(aFile, "href=\"javascript:ViewImage('%s')\"", string.BeginReading());
 }
@@ -1219,7 +1219,7 @@ void WriteSnapshotToDumpFile_internal(T* aObj, DataSourceSurface* aSurf)
                         aSurf->Stride(),
                         SurfaceFormatToImageFormat(aSurf->GetFormat()));
   nsCString string(aObj->Name());
-  string.Append("-");
+  string.Append('-');
   string.AppendInt((uint64_t)aObj);
   if (gfxUtils::sDumpPaintFile) {
     fprintf_stderr(gfxUtils::sDumpPaintFile, "array[\"%s\"]=\"", string.BeginReading());

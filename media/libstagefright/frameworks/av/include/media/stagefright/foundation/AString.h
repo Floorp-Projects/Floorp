@@ -20,7 +20,7 @@
 
 #include <sys/types.h>
 
-namespace android {
+namespace stagefright {
 
 struct AString {
     AString();
@@ -89,7 +89,7 @@ private:
 
 AString StringPrintf(const char *format, ...);
 
-}  // namespace android
+}  // namespace stagefright
 
 #endif  // A_STRING_H_
 

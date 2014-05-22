@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=999999
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 999999</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=999999">Mozilla Bug 999999</a>
+<p id="display"></p>
+<div id="content">
+<div id="shadowhost">
+</div>
+</div>
+<pre id="test">
+</pre>
+<script type="application/javascript">
+
+/** Test for Bug 999999 **/
+var host = document.getElementById("shadowhost");
+
+// Test destination insertion points of node distributed to content element.
+var shadowRoot = host.createShadowRoot();
+shadowRoot.innerHTML = '<div id="innerhost"><content id="innercontent" select=".red"></content></div>';
+var innerContent = shadowRoot.getElementById("innercontent");
+
+var span = document.createElement("span");
+span.setAttribute("class", "red blue");
+is(host.getDestinationInsertionPoints().length, 0, "Destination insertion points should be empty when not being distributed.");
+
+host.appendChild(span);
+
+is(span.getDestinationInsertionPoints().length, 1, "Destination insertion points should only contain a single content insertion point.");
+is(span.getDestinationInsertionPoints()[0], innerContent, "Content element should contain destination insertion point.");
+
+// Test destination insertion points of redistributed node.
+var innerHost = shadowRoot.getElementById("innerhost");
+var innerShadowRoot = innerHost.createShadowRoot();
+innerShadowRoot.innerHTML = '<content id="innerinnercontent" select=".blue"></content>';
+
+var innerInnerContent = innerShadowRoot.getElementById("innerinnercontent");
+
+is(span.getDestinationInsertionPoints().length, 2, "Redistributed node should have 2 destination insertion points.");
+is(span.getDestinationInsertionPoints()[1], innerInnerContent, "Nested content insertion point should be in list of destination insertion points.");
+
+// Test destination insertion points after removing reprojection onto second content element.
+span.setAttribute("class", "red");
+is(span.getDestinationInsertionPoints().length, 1, "Destination insertion points should only contain 1 insertion point after removing reprojection.");
+is(span.getDestinationInsertionPoints()[0], innerContent, "First content element should be only insertion point after removing reprojection.");
+
+// Test destination insertion points after removing the projected content from the host.
+host.removeChild(span);
+is(span.getDestinationInsertionPoints().length, 0, "Destination insertion points should be empty after being removed from the shadow host.");
+
+// Test destination insertion points of distributed content after removing insertion point.
+var div = document.createElement("div");
+div.setAttribute("class", "red blue");
+host.appendChild(div);
+
+is(div.getDestinationInsertionPoints().length, 2, "Div should be distributed into 2 insertion points.");
+
+innerShadowRoot.removeChild(innerInnerContent);
+
+is(div.getDestinationInsertionPoints().length, 1, "Div should be distributed into insertion point in one ShadowRoot.");
+is(div.getDestinationInsertionPoints()[0], innerContent, "Destination insertion points should only contain content insertion point in first ShadowRoot.");
+
+</script>
+</body>
+</html>

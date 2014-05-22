@@ -419,7 +419,7 @@ WindowIsDeferredWindow(HWND hWnd)
     if (appInfo) {
       nsAutoCString appName;
       if (NS_SUCCEEDED(appInfo->GetName(appName))) {
-        appName.Append("MessageWindow");
+        appName.AppendLiteral("MessageWindow");
         nsDependentString windowName(gAppMessageWindowName);
         CopyUTF8toUTF16(appName, windowName);
         gAppMessageWindowNameLength = windowName.Length();

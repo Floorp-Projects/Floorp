@@ -186,7 +186,7 @@ namespace {
 void
 doMemoryReport(const nsCString& aInputStr)
 {
-  bool doMMUMemoryReport = aInputStr == NS_LITERAL_CSTRING("minimize memory report");
+  bool doMMUMemoryReport = aInputStr.EqualsLiteral("minimize memory report");
   LOG("FifoWatcher(command:%s) dispatching memory report runnable.", aInputStr.get());
   nsRefPtr<DumpMemoryInfoToTempDirRunnable> runnable =
     new DumpMemoryInfoToTempDirRunnable(/* identifier = */ EmptyString(),
@@ -197,7 +197,7 @@ doMemoryReport(const nsCString& aInputStr)
 void
 doGCCCDump(const nsCString& aInputStr)
 {
-  bool doAllTracesGCCCDump = aInputStr == NS_LITERAL_CSTRING("gc log");
+  bool doAllTracesGCCCDump = aInputStr.EqualsLiteral("gc log");
   LOG("FifoWatcher(command:%s) dispatching GC/CC log runnable.", aInputStr.get());
   nsRefPtr<GCAndCCLogDumpRunnable> runnable =
     new GCAndCCLogDumpRunnable(/* identifier = */ EmptyString(),

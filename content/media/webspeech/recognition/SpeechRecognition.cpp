@@ -955,7 +955,7 @@ SpeechRecognition::GetUserMediaErrorCallback::OnError(const nsAString& aError)
 {
   SpeechRecognitionErrorCode errorCode;
 
-  if (aError.Equals(NS_LITERAL_STRING("PERMISSION_DENIED"))) {
+  if (aError.EqualsLiteral("PERMISSION_DENIED")) {
     errorCode = SpeechRecognitionErrorCode::Not_allowed;
   } else {
     errorCode = SpeechRecognitionErrorCode::Audio_capture;

@@ -302,7 +302,7 @@ XULTreeGridRowAccessible::Name(nsString& aName)
   nsCOMPtr<nsITreeColumn> column = nsCoreUtils::GetFirstSensibleColumn(mTree);
   while (column) {
     if (!aName.IsEmpty())
-      aName.AppendLiteral(" ");
+      aName.Append(' ');
 
     nsAutoString cellName;
     GetCellName(column, cellName);

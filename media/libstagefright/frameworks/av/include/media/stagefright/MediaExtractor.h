@@ -20,7 +20,7 @@
 
 #include <utils/RefBase.h>
 
-namespace android {
+namespace stagefright {
 
 class DataSource;
 class MediaSource;
@@ -42,7 +42,7 @@ public:
 
     // Return container specific meta-data. The default implementation
     // returns an empty metadata object.
-    virtual sp<MetaData> getMetaData();
+    virtual sp<MetaData> getMetaData() = 0;
 
     enum Flags {
         CAN_SEEK_BACKWARD  = 1,  // the "seek 10secs back button"
@@ -53,7 +53,7 @@ public:
 
     // If subclasses do _not_ override this, the default is
     // CAN_SEEK_BACKWARD | CAN_SEEK_FORWARD | CAN_SEEK | CAN_PAUSE
-    virtual uint32_t flags() const;
+    virtual uint32_t flags() const = 0;
 
     // for DRM
     void setDrmFlag(bool flag) {
@@ -77,6 +77,6 @@ private:
     MediaExtractor &operator=(const MediaExtractor &);
 };
 
-}  // namespace android
+}  // namespace stagefright
 
 #endif  // MEDIA_EXTRACTOR_H_

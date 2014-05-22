@@ -23,7 +23,7 @@
 #include "ADebug.h"
 #include "AString.h"
 
-namespace android {
+namespace stagefright {
 
 // static
 const char *AString::kEmptyString = "";
@@ -325,7 +325,13 @@ AString StringPrintf(const char *format, ...) {
     va_start(ap, format);
 
     char *buffer;
+#ifdef _MSC_VER
+    int n = vsnprintf(NULL, 0, format, ap);
+    buffer = new char[n+1];
+    vsnprintf(buffer, n+1, format, ap);
+#else
     vasprintf(&buffer, format, ap);
+#endif
 
     va_end(ap);
 
@@ -337,5 +343,5 @@ AString StringPrintf(const char *format, ...) {
     return result;
 }
 
-}  // namespace android
+}  // namespace stagefright
 

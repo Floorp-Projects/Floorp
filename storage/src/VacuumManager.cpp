@@ -75,7 +75,7 @@ BaseCallback::HandleError(mozIStorageError *aError)
   nsAutoCString warnMsg;
   warnMsg.AppendLiteral("An error occured during async execution: ");
   warnMsg.AppendInt(result);
-  warnMsg.AppendLiteral(" ");
+  warnMsg.Append(' ');
   warnMsg.Append(message);
   NS_WARNING(warnMsg.get());
 #endif
@@ -241,7 +241,7 @@ Vacuumer::HandleError(mozIStorageError *aError)
   warnMsg.Append(mDBFilename);
   warnMsg.AppendLiteral(" - ");
   warnMsg.AppendInt(result);
-  warnMsg.AppendLiteral(" ");
+  warnMsg.Append(' ');
   warnMsg.Append(message);
   NS_WARNING(warnMsg.get());
 #endif

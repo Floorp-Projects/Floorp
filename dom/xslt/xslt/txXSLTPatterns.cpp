@@ -304,7 +304,7 @@ txIdPattern::toString(nsAString& aDest)
     nsAutoString str;
     mIds[count]->ToString(str);
     aDest.Append(str);
-    aDest.Append(NS_LITERAL_STRING("')"));
+    aDest.AppendLiteral("')");
 #ifdef DEBUG
     aDest.Append(char16_t('}'));
 #endif
@@ -360,7 +360,7 @@ txKeyPattern::toString(nsAString& aDest)
     aDest.Append(tmp);
     aDest.AppendLiteral(", ");
     aDest.Append(mValue);
-    aDest.Append(NS_LITERAL_STRING("')"));
+    aDest.AppendLiteral("')");
 #ifdef DEBUG
     aDest.Append(char16_t('}'));
 #endif

@@ -1130,7 +1130,7 @@ gfxWindowsPlatform::GetDLLVersion(char16ptr_t aDLLPath, nsAString& aVersion)
 {
     DWORD versInfoSize, vers[4] = {0};
     // version info not available case
-    aVersion.Assign(NS_LITERAL_STRING("0.0.0.0"));
+    aVersion.AssignLiteral("0.0.0.0");
     versInfoSize = GetFileVersionInfoSizeW(aDLLPath, nullptr);
     nsAutoTArray<BYTE,512> versionInfo;
     

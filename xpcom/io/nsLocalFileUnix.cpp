@@ -288,7 +288,7 @@ nsLocalFile::Clone(nsIFile** aFile)
 NS_IMETHODIMP
 nsLocalFile::InitWithNativePath(const nsACString& aFilePath)
 {
-  if (aFilePath.Equals("~") ||
+  if (aFilePath.EqualsLiteral("~") ||
       Substring(aFilePath, 0, 2).EqualsLiteral("~/")) {
     nsCOMPtr<nsIFile> homeDir;
     nsAutoCString homePath;
@@ -530,11 +530,10 @@ nsLocalFile::AppendRelativeNativePath(const nsACString& aFragment)
     return NS_ERROR_FILE_UNRECOGNIZED_PATH;
   }
 
-  if (mPath.EqualsLiteral("/")) {
-    mPath.Append(aFragment);
-  } else {
-    mPath.Append(NS_LITERAL_CSTRING("/") + aFragment);
+  if (!mPath.EqualsLiteral("/")) {
+    mPath.Append('/');
   }
+  mPath.Append(aFragment);
 
   return NS_OK;
 }
@@ -1446,7 +1445,7 @@ nsLocalFile::GetParent(nsIFile** aParent)
   *aParent = nullptr;
 
   // if '/' we are at the top of the volume, return null
-  if (mPath.Equals("/")) {
+  if (mPath.EqualsLiteral("/")) {
     return  NS_OK;
   }
 

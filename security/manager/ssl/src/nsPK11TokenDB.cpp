@@ -63,11 +63,11 @@ nsPK11Token::refreshTokenInfo()
 
     // Set the Hardware Version field
     mTokenHWVersion.AppendInt(tok_info.hardwareVersion.major);
-    mTokenHWVersion.AppendLiteral(".");
+    mTokenHWVersion.Append('.');
     mTokenHWVersion.AppendInt(tok_info.hardwareVersion.minor);
     // Set the Firmware Version field
     mTokenFWVersion.AppendInt(tok_info.firmwareVersion.major);
-    mTokenFWVersion.AppendLiteral(".");
+    mTokenFWVersion.Append('.');
     mTokenFWVersion.AppendInt(tok_info.firmwareVersion.minor);
     // Set the Serial Number field
     const char *ccSerial = (const char*)tok_info.serialNumber;

@@ -63,7 +63,7 @@ nsNSSErrors::getErrorMessageFromCode(PRErrorCode err,
     if (NS_SUCCEEDED(rv))
     {
       returnedMessage.Append(defMsg);
-      returnedMessage.Append(NS_LITERAL_STRING("\n"));
+      returnedMessage.Append('\n');
     }
   }
   
@@ -71,7 +71,7 @@ nsNSSErrors::getErrorMessageFromCode(PRErrorCode err,
   {
     // no localized string available, use NSS' internal
     returnedMessage.AppendASCII(PR_ErrorToString(err, PR_LANGUAGE_EN));
-    returnedMessage.Append(NS_LITERAL_STRING("\n"));
+    returnedMessage.Append('\n');
   }
   
   if (nss_error_id_str)
@@ -89,14 +89,14 @@ nsNSSErrors::getErrorMessageFromCode(PRErrorCode err,
                                                   params, 1, 
                                                   formattedString);
     if (NS_SUCCEEDED(rv)) {
-      returnedMessage.Append(NS_LITERAL_STRING("\n"));
+      returnedMessage.Append('\n');
       returnedMessage.Append(formattedString);
-      returnedMessage.Append(NS_LITERAL_STRING("\n"));
+      returnedMessage.Append('\n');
     }
     else {
-      returnedMessage.Append(NS_LITERAL_STRING("("));
+      returnedMessage.Append('(');
       returnedMessage.Append(idU);
-      returnedMessage.Append(NS_LITERAL_STRING(")"));
+      returnedMessage.Append(')');
     }
   }
 

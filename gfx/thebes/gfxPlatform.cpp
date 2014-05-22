@@ -1179,7 +1179,7 @@ AppendGenericFontFromPref(nsString& aFonts, nsIAtom *aLangGroup, const char *aGe
         genericDotLang = Preferences::GetCString(prefName.get());
     }
 
-    genericDotLang.AppendLiteral(".");
+    genericDotLang.Append('.');
     genericDotLang.Append(langGroupString);
 
     // fetch font.name.xxx value
@@ -1229,7 +1229,7 @@ bool gfxPlatform::ForEachPrefFont(eFontPrefLang aLangArray[], uint32_t aLangArra
         prefName.Append(langGroup);
         nsAdoptingCString genericDotLang = Preferences::GetCString(prefName.get());
 
-        genericDotLang.AppendLiteral(".");
+        genericDotLang.Append('.');
         genericDotLang.Append(langGroup);
 
         // fetch font.name.xxx value

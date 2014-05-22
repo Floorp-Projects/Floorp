@@ -1730,7 +1730,8 @@ HttpBaseChannel::AddCookiesToRequest()
       cookie = mUserSetCookieHeader;
     }
     else if (!mUserSetCookieHeader.IsEmpty()) {
-      cookie.Append(NS_LITERAL_CSTRING("; ") + mUserSetCookieHeader);
+      cookie.AppendLiteral("; ");
+      cookie.Append(mUserSetCookieHeader);
     }
   }
   else {

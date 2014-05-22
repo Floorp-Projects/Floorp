@@ -97,9 +97,9 @@ public:
   {
     // TODO: more efficient way to generate hash?
     nsAutoCString temp(aKey->mBaseDomain);
-    temp.Append("#");
+    temp.Append('#');
     temp.Append(aKey->mAppId);
-    temp.Append("#");
+    temp.Append('#');
     temp.Append(aKey->mInBrowserElement ? 1 : 0);
     return mozilla::HashString(temp);
   }

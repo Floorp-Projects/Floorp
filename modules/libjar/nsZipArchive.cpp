@@ -119,7 +119,7 @@ public:
       fd = file;
     }
     nsCString buf(zip);
-    buf.Append(" ");
+    buf.Append(' ');
     buf.Append(entry);
     buf.Append('\n');
     PR_Write(fd, buf.get(), buf.Length());

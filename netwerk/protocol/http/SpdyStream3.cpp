@@ -236,13 +236,13 @@ SpdyStream3::CreatePushHashKey(const nsCString &scheme,
                                nsCString &outKey)
 {
   outOrigin = scheme;
-  outOrigin.Append(NS_LITERAL_CSTRING("://"));
+  outOrigin.AppendLiteral("://");
   outOrigin.Append(hostHeader);
 
   outKey = outOrigin;
-  outKey.Append(NS_LITERAL_CSTRING("/[spdy3."));
+  outKey.AppendLiteral("/[spdy3.");
   outKey.AppendInt(serial);
-  outKey.Append(NS_LITERAL_CSTRING("]"));
+  outKey.Append(']');
   outKey.Append(pathInfo);
 }
 
@@ -425,12 +425,12 @@ SpdyStream3::ParseHttpRequestHeaders(const char *buf,
     ToLowerCase(name);
 
     // exclusions.. mostly from 3.2.1
-    if (name.Equals("connection") ||
-        name.Equals("keep-alive") ||
-        name.Equals("host") ||
-        name.Equals("accept-encoding") ||
-        name.Equals("te") ||
-        name.Equals("transfer-encoding"))
+    if (name.EqualsLiteral("connection") ||
+        name.EqualsLiteral("keep-alive") ||
+        name.EqualsLiteral("host") ||
+        name.EqualsLiteral("accept-encoding") ||
+        name.EqualsLiteral("te") ||
+        name.EqualsLiteral("transfer-encoding"))
       continue;
 
     nsCString *val = hdrHash.Get(name);
@@ -449,7 +449,7 @@ SpdyStream3::ParseHttpRequestHeaders(const char *buf,
       val->Append(static_cast<char>(0));
     val->Append(v);
 
-    if (name.Equals("content-length")) {
+    if (name.EqualsLiteral("content-length")) {
       int64_t len;
       if (nsHttp::ParseInt64(val->get(), nullptr, &len))
         mRequestBodyLenRemaining = len;
@@ -1163,9 +1163,9 @@ SpdyStream3::ConvertHeaders(nsACString &aHeadersOut)
   // create UI feedback.
 
   aHeadersOut.Append(version);
-  aHeadersOut.Append(NS_LITERAL_CSTRING(" "));
+  aHeadersOut.Append(' ');
   aHeadersOut.Append(status);
-  aHeadersOut.Append(NS_LITERAL_CSTRING("\r\n"));
+  aHeadersOut.AppendLiteral("\r\n");
 
   const unsigned char *nvpair = reinterpret_cast<unsigned char *>
     (mDecompressBuffer.get()) + 4;
@@ -1219,7 +1219,7 @@ SpdyStream3::ConvertHeaders(nsACString &aHeadersOut)
       // to look for chunked specifically because it is the only HTTP
       // allowed default encoding and we did not negotiate further encodings
       // via TE
-      if (nameString.Equals(NS_LITERAL_CSTRING("transfer-encoding"))) {
+      if (nameString.EqualsLiteral("transfer-encoding")) {
         LOG3(("SpdyStream3::ConvertHeaders session=%p stream=%p "
               "transfer-encoding found. Chunked is invalid and no TE sent.",
               mSession, this));
@@ -1236,15 +1236,15 @@ SpdyStream3::ConvertHeaders(nsACString &aHeadersOut)
 
       // spdy transport level headers shouldn't be gatewayed into http/1
       if (!nameString.IsEmpty() && nameString[0] != ':' &&
-          !nameString.Equals(NS_LITERAL_CSTRING("connection")) &&
-          !nameString.Equals(NS_LITERAL_CSTRING("keep-alive"))) {
+          !nameString.EqualsLiteral("connection") &&
+          !nameString.EqualsLiteral("keep-alive")) {
         nsDependentCSubstring valueString =
           Substring(reinterpret_cast<const char *>(nvpair) + 8 + nameLen,
                     reinterpret_cast<const char *>(nvpair) + 8 + nameLen +
                     valueLen);
 
         aHeadersOut.Append(nameString);
-        aHeadersOut.Append(NS_LITERAL_CSTRING(": "));
+        aHeadersOut.AppendLiteral(": ");
 
         // expand nullptr bytes in the value string
         for (char *cPtr = valueString.BeginWriting();
@@ -1256,12 +1256,12 @@ SpdyStream3::ConvertHeaders(nsACString &aHeadersOut)
           }
 
           // NULLs are really "\r\nhdr: "
-          aHeadersOut.Append(NS_LITERAL_CSTRING("\r\n"));
+          aHeadersOut.AppendLiteral("\r\n");
           aHeadersOut.Append(nameString);
-          aHeadersOut.Append(NS_LITERAL_CSTRING(": "));
+          aHeadersOut.AppendLiteral(": ");
         }
 
-        aHeadersOut.Append(NS_LITERAL_CSTRING("\r\n"));
+        aHeadersOut.AppendLiteral("\r\n");
       }
       // move to the next name/value pair in this block
       nvpair += 8 + nameLen + valueLen;
@@ -1272,7 +1272,7 @@ SpdyStream3::ConvertHeaders(nsACString &aHeadersOut)
     nvpair += 4;
   } while (lastHeaderByte >= nvpair);
 
-  aHeadersOut.Append(NS_LITERAL_CSTRING("X-Firefox-Spdy: 3\r\n\r\n"));
+  aHeadersOut.AppendLiteral("X-Firefox-Spdy: 3\r\n\r\n");
   LOG (("decoded response headers are:\n%s",
         aHeadersOut.BeginReading()));
 
