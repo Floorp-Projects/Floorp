@@ -5016,7 +5016,7 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 }
 
 static void
-my_OOMCallback(JSContext *cx)
+my_OOMCallback(JSContext *cx, void *data)
 {
     // If a script is running, the engine is about to throw the string "out of
     // memory", which may or may not be caught. Otherwise the engine will just
@@ -6263,7 +6263,7 @@ main(int argc, char **argv, char **envp)
     if (!rt)
         return 1;
 
-    JS::SetOutOfMemoryCallback(rt, my_OOMCallback);
+    JS::SetOutOfMemoryCallback(rt, my_OOMCallback, nullptr);
     if (!SetRuntimeOptions(rt, op))
         return 1;
 

@@ -2913,7 +2913,7 @@ AsmJSCacheOpenEntryForWrite(JS::Handle<JSObject*> aGlobal,
 }
 
 static void
-OnLargeAllocationFailure()
+OnLargeAllocationFailure(void* data)
 {
   nsCOMPtr<nsIObserverService> os =
     mozilla::services::GetObserverService();
@@ -2981,7 +2981,7 @@ nsJSContext::EnsureStatics()
   };
   JS::SetAsmJSCacheOps(sRuntime, &asmJSCacheOps);
 
-  JS::SetLargeAllocationFailureCallback(sRuntime, OnLargeAllocationFailure);
+  JS::SetLargeAllocationFailureCallback(sRuntime, OnLargeAllocationFailure, nullptr);
 
   // Set these global xpconnect options...
   Preferences::RegisterCallbackAndCall(ReportAllJSExceptionsPrefChangedCallback,
