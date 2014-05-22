@@ -1539,8 +1539,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
     void floor(FloatRegister input, Register output, Label *handleNotAnInt);
     void floorf(FloatRegister input, Register output, Label *handleNotAnInt);
-    void ceil(FloatRegister input, Register output, Label *handleNotAnInt);
-    void ceilf(FloatRegister input, Register output, Label *handleNotAnInt);
     void round(FloatRegister input, Register output, Label *handleNotAnInt, FloatRegister tmp);
     void roundf(FloatRegister input, Register output, Label *handleNotAnInt, FloatRegister tmp);
 

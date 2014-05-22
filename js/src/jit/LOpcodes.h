@@ -234,7 +234,7 @@
     _(CallInitElementArray)         \
     _(CallSetProperty)              \
     _(CallDeleteProperty)           \
-    _(CallDeleteElement)            \
+    _(CallDeleteElement)           \
     _(SetPropertyCacheV)            \
     _(SetPropertyCacheT)            \
     _(SetElementCacheV)             \
@@ -265,8 +265,6 @@
     _(ToIdV)                        \
     _(Floor)                        \
     _(FloorF)                       \
-    _(Ceil)                         \
-    _(CeilF)                        \
     _(Round)                        \
     _(RoundF)                       \
     _(In)                           \
@@ -283,7 +281,7 @@
     _(CallDOMNative)                \
     _(IsCallable)                   \
     _(HaveSameClass)                \
-    _(HasClass)                     \
+    _(HasClass)                      \
     _(AsmJSLoadHeap)                \
     _(AsmJSStoreHeap)               \
     _(AsmJSLoadGlobalVar)           \
