@@ -592,6 +592,9 @@ class JSLinearString : public JSString
         JS_ASSERT(JSString::isLinear());
         return JS::TwoByteChars(chars(), length());
     }
+
+    /* Temporary, unsafe helper function for bug 998392. Don't use for anything else. */
+    void debugUnsafeConvertToLatin1();
 };
 
 JS_STATIC_ASSERT(sizeof(JSLinearString) == sizeof(JSString));
