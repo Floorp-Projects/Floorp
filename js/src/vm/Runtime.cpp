@@ -759,12 +759,21 @@ JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
     else if (p == reinterpret_cast<void *>(1))
         p = js_calloc(nbytes);
     else
-      p = js_realloc(p, nbytes);
+        p = js_realloc(p, nbytes);
     if (p)
         return p;
     if (cx)
         js_ReportOutOfMemory(cx);
     return nullptr;
+}
+
+void *
+JSRuntime::onOutOfMemoryCanGC(void *p, size_t bytes)
+{
+    if (!largeAllocationFailureCallback || bytes < LARGE_ALLOCATION)
+        return nullptr;
+    largeAllocationFailureCallback();
+    return onOutOfMemory(p, bytes);
 }
 
 bool
