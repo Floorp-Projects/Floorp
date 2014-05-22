@@ -503,6 +503,12 @@ child:
      */
     SetIsDocShellActive(bool aIsActive);
 
+    /**
+     * Tell the child that the UI resolution changed for the containing
+     * window.
+     */
+    UIResolutionChanged();
+
 /*
  * FIXME: write protocol!
 
