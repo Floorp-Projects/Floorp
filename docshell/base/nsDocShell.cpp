@@ -10931,12 +10931,12 @@ nsDocShell::ShouldAddToSessionHistory(nsIURI * aURI)
     if (NS_FAILED(rv))
         return false;
 
-    if (buf.Equals("about")) {
+    if (buf.EqualsLiteral("about")) {
         rv = aURI->GetPath(buf);
         if (NS_FAILED(rv))
             return false;
 
-        if (buf.Equals("blank")) {
+        if (buf.EqualsLiteral("blank")) {
             return false;
         }
     }
@@ -11678,7 +11678,7 @@ nsDocShell::ChannelIsPost(nsIChannel* aChannel)
 
     nsAutoCString method;
     httpChannel->GetRequestMethod(method);
-    return method.Equals("POST");
+    return method.EqualsLiteral("POST");
 }
 
 void

@@ -314,7 +314,7 @@ CreateRoot(nsCOMPtr<mozIStorageConnection>& aDBConn,
 
   // The 'places' root is a folder containing the other roots.
   // The first bookmark in a folder has position 0.
-  if (!aRootName.Equals("places"))
+  if (!aRootName.EqualsLiteral("places"))
     ++itemPosition;
 
   return NS_OK;

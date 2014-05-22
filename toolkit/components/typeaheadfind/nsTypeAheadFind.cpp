@@ -269,13 +269,13 @@ nsTypeAheadFind::PlayNotFoundSound()
   if (mSoundInterface) {
     mIsSoundInitialized = true;
 
-    if (mNotFoundSoundURL.Equals("beep")) {
+    if (mNotFoundSoundURL.EqualsLiteral("beep")) {
       mSoundInterface->Beep();
       return;
     }
 
     nsCOMPtr<nsIURI> soundURI;
-    if (mNotFoundSoundURL.Equals("default"))
+    if (mNotFoundSoundURL.EqualsLiteral("default"))
       NS_NewURI(getter_AddRefs(soundURI), NS_LITERAL_CSTRING(TYPEAHEADFIND_NOTFOUND_WAV_URL));
     else
       NS_NewURI(getter_AddRefs(soundURI), mNotFoundSoundURL);

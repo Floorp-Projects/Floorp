@@ -223,7 +223,7 @@ private:
             return false;
         }
 
-        if (!(version.Equals("7") || version.Equals("8") || version.Equals("13"))) {
+        if (!(version.EqualsLiteral("7") || version.EqualsLiteral("8") || version.EqualsLiteral("13"))) {
             return false;
         }
 
