@@ -1161,7 +1161,7 @@ static nsresult pref_LoadPrefsInDirList(const char *listId)
     path->GetNativeLeafName(leaf);
 
     // Do we care if a file provided by this process fails to load?
-    if (Substring(leaf, leaf.Length() - 4).Equals(NS_LITERAL_CSTRING(".xpi")))
+    if (Substring(leaf, leaf.Length() - 4).EqualsLiteral(".xpi"))
       ReadExtensionPrefs(path);
     else
       pref_LoadPrefsInDir(path, nullptr, 0);

@@ -125,6 +125,7 @@
 
 #include "mozilla/CORSMode.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/dom/NodeListBinding.h"
 
 #include "nsStyledElement.h"
 #include "nsXBLService.h"
@@ -824,6 +825,83 @@ Element::CreateShadowRoot(ErrorResult& aError)
   }
 
   return shadowRoot.forget();
+}
+
+NS_IMPL_CYCLE_COLLECTION(DestinationInsertionPointList, mParent, mDestinationPoints)
+
+NS_INTERFACE_TABLE_HEAD(DestinationInsertionPointList)
+  NS_INTERFACE_TABLE(DestinationInsertionPointList, nsINodeList)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(DestinationInsertionPointList)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(DestinationInsertionPointList)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(DestinationInsertionPointList)
+
+DestinationInsertionPointList::DestinationInsertionPointList(Element* aElement)
+  : mParent(aElement)
+{
+  SetIsDOMBinding();
+
+  nsTArray<nsIContent*>* destPoints = aElement->GetExistingDestInsertionPoints();
+  if (destPoints) {
+    for (uint32_t i = 0; i < destPoints->Length(); i++) {
+      mDestinationPoints.AppendElement(destPoints->ElementAt(i));
+    }
+  }
+}
+
+DestinationInsertionPointList::~DestinationInsertionPointList()
+{
+}
+
+nsIContent*
+DestinationInsertionPointList::Item(uint32_t aIndex)
+{
+  return mDestinationPoints.SafeElementAt(aIndex);
+}
+
+NS_IMETHODIMP
+DestinationInsertionPointList::Item(uint32_t aIndex, nsIDOMNode** aReturn)
+{
+  nsIContent* item = Item(aIndex);
+  if (!item) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return CallQueryInterface(item, aReturn);
+}
+
+uint32_t
+DestinationInsertionPointList::Length() const
+{
+  return mDestinationPoints.Length();
+}
+
+NS_IMETHODIMP
+DestinationInsertionPointList::GetLength(uint32_t* aLength)
+{
+  *aLength = Length();
+  return NS_OK;
+}
+
+int32_t
+DestinationInsertionPointList::IndexOf(nsIContent* aContent)
+{
+  return mDestinationPoints.IndexOf(aContent);
+}
+
+JSObject*
+DestinationInsertionPointList::WrapObject(JSContext* aCx)
+{
+  return NodeListBinding::Wrap(aCx, this);
+}
+
+already_AddRefed<DestinationInsertionPointList>
+Element::GetDestinationInsertionPoints()
+{
+  nsRefPtr<DestinationInsertionPointList> list =
+    new DestinationInsertionPointList(this);
+  return list.forget();
 }
 
 void

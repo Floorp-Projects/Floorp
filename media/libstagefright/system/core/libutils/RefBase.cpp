@@ -20,7 +20,14 @@
 #include <utils/RefBase.h>
 
 #include <utils/Atomic.h>
+#ifdef _MSC_VER
+class CallStack {
+public:
+    CallStack(int x) {}
+};
+#else
 #include <utils/CallStack.h>
+#endif
 #include <utils/Log.h>
 #include <utils/threads.h>
 
@@ -40,7 +47,7 @@
 #define DEBUG_REFS_ENABLED_BY_DEFAULT   0
 
 // whether callstack are collected (significantly slows things down)
-#define DEBUG_REFS_CALLSTACK_ENABLED    1
+#define DEBUG_REFS_CALLSTACK_ENABLED    0
 
 // folder where stack traces are saved when DEBUG_REFS is enabled
 // this folder needs to exist and be writable
@@ -51,7 +58,7 @@
 
 // ---------------------------------------------------------------------------
 
-namespace android {
+namespace stagefright {
 
 #define INITIAL_STRONG_VALUE (1<<28)
 
@@ -647,4 +654,4 @@ void RefBase::renameRefId(RefBase* ref,
     ref->mRefs->renameWeakRefId(old_id, new_id);
 }
 
-}; // namespace android
+}; // namespace stagefright

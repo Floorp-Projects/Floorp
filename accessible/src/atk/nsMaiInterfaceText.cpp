@@ -70,7 +70,7 @@ ConvertToAtkTextAttributeSet(nsIPersistentProperties* aAttributes)
     } else if (name.EqualsLiteral("font-family")) {
       atkValue = value;
       atkName = sAtkTextAttrNames[ATK_TEXT_ATTR_FAMILY_NAME];
-    } else if (name.Equals("font-size")) {
+    } else if (name.EqualsLiteral("font-size")) {
       // ATK wants the number of pixels without px at the end.
       atkValue = StringHead(value, value.Length() - 2);
       atkName = sAtkTextAttrNames[ATK_TEXT_ATTR_SIZE];

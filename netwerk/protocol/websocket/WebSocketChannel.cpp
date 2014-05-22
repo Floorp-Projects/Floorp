@@ -1600,7 +1600,7 @@ void
 WebSocketChannel::GeneratePing()
 {
   nsCString *buf = new nsCString();
-  buf->Assign("PING");
+  buf->AssignLiteral("PING");
   EnqueueOutgoingMessage(mOutgoingPingMessages,
                          new OutboundMessage(kMsgTypePing, buf));
 }
@@ -2116,7 +2116,7 @@ WebSocketChannel::HandleExtensions()
     NS_LITERAL_CSTRING("Sec-WebSocket-Extensions"), extensions);
   if (NS_SUCCEEDED(rv)) {
     if (!extensions.IsEmpty()) {
-      if (!extensions.Equals(NS_LITERAL_CSTRING("deflate-stream"))) {
+      if (!extensions.EqualsLiteral("deflate-stream")) {
         LOG(("WebSocketChannel::OnStartRequest: "
              "HTTP Sec-WebSocket-Exensions negotiated unknown value %s\n",
              extensions.get()));
@@ -2354,7 +2354,7 @@ WebSocketChannel::ReportConnectionTelemetry()
     nsAutoCString proxyType;
     pi->GetType(proxyType);
     if (!proxyType.IsEmpty() &&
-        !proxyType.Equals(NS_LITERAL_CSTRING("direct")))
+        !proxyType.EqualsLiteral("direct"))
       didProxy = true;
   }
 

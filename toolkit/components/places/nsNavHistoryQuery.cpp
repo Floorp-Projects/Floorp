@@ -386,14 +386,14 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     int32_t minVisits;
     if (NS_SUCCEEDED(query->GetMinVisits(&minVisits)) && minVisits >= 0) {
       AppendAmpersandIfNonempty(queryString);
-      queryString.Append(NS_LITERAL_CSTRING(QUERYKEY_MIN_VISITS "="));
+      queryString.AppendLiteral(QUERYKEY_MIN_VISITS "=");
       AppendInt32(queryString, minVisits);
     }
 
     int32_t maxVisits;
     if (NS_SUCCEEDED(query->GetMaxVisits(&maxVisits)) && maxVisits >= 0) {
       AppendAmpersandIfNonempty(queryString);
-      queryString.Append(NS_LITERAL_CSTRING(QUERYKEY_MAX_VISITS "="));
+      queryString.AppendLiteral(QUERYKEY_MAX_VISITS "=");
       AppendInt32(queryString, maxVisits);
     }
 
@@ -418,7 +418,7 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
       NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
 
       AppendAmpersandIfNonempty(queryString);
-      queryString.Append(NS_LITERAL_CSTRING(QUERYKEY_DOMAIN "="));
+      queryString.AppendLiteral(QUERYKEY_DOMAIN "=");
       queryString.Append(escapedDomain);
     }
 
@@ -439,7 +439,7 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
       NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
 
       AppendAmpersandIfNonempty(queryString);
-      queryString.Append(NS_LITERAL_CSTRING(QUERYKEY_URI "="));
+      queryString.AppendLiteral(QUERYKEY_URI "=");
       queryString.Append(escaped);
     }
 
@@ -575,7 +575,8 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     queryString += NS_LITERAL_CSTRING(QUERYKEY_ASYNC_ENABLED "=1");
   }
 
-  aQueryString.Assign(NS_LITERAL_CSTRING("place:") + queryString);
+  aQueryString.AssignLiteral("place:");
+  aQueryString.Append(queryString);
   return NS_OK;
 }
 

@@ -20,7 +20,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-namespace android {
+namespace stagefright {
 // ---------------------------------------------------------------------------
 
 #ifdef __cplusplus
@@ -43,6 +43,6 @@ struct CompileTimeIfElse<false, LHS, RHS> { typedef RHS TYPE; };
 #endif
 
 // ---------------------------------------------------------------------------
-}; // namespace android
+}; // namespace stagefright
 
 #endif // ANDROID_UTILS_DEBUG_H

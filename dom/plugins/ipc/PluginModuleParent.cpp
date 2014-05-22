@@ -474,11 +474,11 @@ PluginModuleParent::TerminateChildProcess(MessageLoop* aMsgLoop)
 
           if (CreateFlashMinidump(mFlashProcess1, 0, pluginDumpFile,
                                   NS_LITERAL_CSTRING("flash1"))) {
-            additionalDumps.Append(",flash1");
+            additionalDumps.AppendLiteral(",flash1");
           }
           if (CreateFlashMinidump(mFlashProcess2, 0, pluginDumpFile,
                                   NS_LITERAL_CSTRING("flash2"))) {
-            additionalDumps.Append(",flash2");
+            additionalDumps.AppendLiteral(",flash2");
           }
         }
 #endif

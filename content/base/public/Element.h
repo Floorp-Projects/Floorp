@@ -114,11 +114,12 @@ class Link;
 class UndoManager;
 class DOMRect;
 class DOMRectList;
+class DestinationInsertionPointList;
 
 // IID for the dom::Element interface
 #define NS_ELEMENT_IID \
-{ 0xf7c18f0f, 0xa8fd, 0x4a95, \
-  { 0x91, 0x72, 0xd3, 0xa7, 0x4a, 0xb8, 0xc4, 0xbe } }
+{ 0xd123f791, 0x124a, 0x43f3, \
+  { 0x84, 0xe3, 0x55, 0x81, 0x0b, 0x6c, 0xf3, 0x08 } }
 
 class Element : public FragmentOrElement
 {
@@ -693,6 +694,7 @@ public:
   already_AddRefed<DOMRect> GetBoundingClientRect();
 
   already_AddRefed<ShadowRoot> CreateShadowRoot(ErrorResult& aError);
+  already_AddRefed<DestinationInsertionPointList> GetDestinationInsertionPoints();
 
   void ScrollIntoView()
   {
@@ -1183,6 +1185,29 @@ private:
 
   // Data members
   EventStates mState;
+};
+
+class DestinationInsertionPointList : public nsINodeList
+{
+public:
+  DestinationInsertionPointList(Element* aElement);
+  virtual ~DestinationInsertionPointList();
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(DestinationInsertionPointList)
+
+  // nsIDOMNodeList
+  NS_DECL_NSIDOMNODELIST
+
+  // nsINodeList
+  virtual nsIContent* Item(uint32_t aIndex);
+  virtual int32_t IndexOf(nsIContent* aContent);
+  virtual nsINode* GetParentObject() { return mParent; }
+  virtual uint32_t Length() const;
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+protected:
+  nsRefPtr<Element> mParent;
+  nsCOMArray<nsIContent> mDestinationPoints;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Element, NS_ELEMENT_IID)
