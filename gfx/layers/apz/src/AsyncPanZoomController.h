@@ -150,7 +150,8 @@ public:
   // These methods must only be called on the compositor thread.
   //
 
-  bool UpdateAnimation(const TimeStamp& aSampleTime);
+  bool UpdateAnimation(const TimeStamp& aSampleTime,
+                       Vector<Task*>* aOutDeferredTasks);
 
   /**
    * The compositor calls this when it's about to draw pannable/zoomable content
