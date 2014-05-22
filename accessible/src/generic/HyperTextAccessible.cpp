@@ -1551,9 +1551,9 @@ HyperTextAccessible::EnclosingRange(a11y::TextRange& aRange) const
 {
   if (IsTextField()) {
     aRange.Set(mDoc, const_cast<HyperTextAccessible*>(this), 0,
-               const_cast<HyperTextAccessible*>(this), CharacterCount());
+               const_cast<HyperTextAccessible*>(this), ChildCount());
   } else {
-    aRange.Set(mDoc, mDoc, 0, mDoc, mDoc->CharacterCount());
+    aRange.Set(mDoc, mDoc, 0, mDoc, mDoc->ChildCount());
   }
 }
 
@@ -1599,26 +1599,7 @@ void
 HyperTextAccessible::RangeByChild(Accessible* aChild,
                                   a11y::TextRange& aRange) const
 {
-  HyperTextAccessible* ht = aChild->AsHyperText();
-  if (ht) {
-    aRange.Set(mDoc, ht, 0, ht, ht->CharacterCount());
-    return;
-  }
-
-  Accessible* child = aChild;
-  Accessible* parent = nullptr;
-  while ((parent = child->Parent()) && !(ht = parent->AsHyperText()))
-    child = parent;
-
-  // If no text then return collapsed text range, otherwise return a range
-  // containing the text enclosed by the given child.
-  if (ht) {
-    int32_t childIdx = child->IndexInParent();
-    int32_t startOffset = ht->GetChildOffset(childIdx);
-    int32_t endOffset = child->IsTextLeaf() ?
-      ht->GetChildOffset(childIdx + 1) : startOffset;
-    aRange.Set(mDoc, ht, startOffset, ht, endOffset);
-  }
+  aRange.Set(mDoc, aChild, 0, aChild, aChild->ChildCount());
 }
 
 void
@@ -1626,19 +1607,8 @@ HyperTextAccessible::RangeAtPoint(int32_t aX, int32_t aY,
                                   a11y::TextRange& aRange) const
 {
   Accessible* child = mDoc->ChildAtPoint(aX, aY, eDeepestChild);
-  if (!child)
-    return;
-
-  Accessible* parent = nullptr;
-  while ((parent = child->Parent()) && !parent->IsHyperText())
-    child = parent;
-
-  // Return collapsed text range for the point.
-  if (parent) {
-    HyperTextAccessible* ht = parent->AsHyperText();
-    int32_t offset = ht->GetChildOffset(child);
-    aRange.Set(mDoc, ht, offset, ht, offset);
-  }
+  if (child)
+    aRange.Set(mDoc, child, 0, child, child->ChildCount());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
