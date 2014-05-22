@@ -101,6 +101,15 @@
   background-color: #3689b2;
 }
 
+.cm-s-mozilla .cm-unused-line {
+  text-decoration: line-through;
+  -moz-text-decoration-color: red;
+}
+
+.cm-s-mozilla .cm-executed-line {
+  background-color: #133c26;
+}
+
 .theme-fg-color3,
 .cm-s-mozilla .cm-builtin,
 .cm-s-mozilla .cm-tag,
