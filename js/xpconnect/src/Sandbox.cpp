@@ -507,7 +507,7 @@ EvalInWindow(JSContext *cx, const nsAString &source, HandleObject scope, Mutable
     unsigned lineNo;
     if (!GetFilenameAndLineNumber(cx, filename, lineNo)) {
         // Default values for non-scripted callers.
-        filename.Assign("Unknown");
+        filename.AssignLiteral("Unknown");
         lineNo = 0;
     }
 

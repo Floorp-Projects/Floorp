@@ -394,13 +394,13 @@ WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, int3
 
     if(!(strcmp(operation, "back")))
     {
-        status.Assign("Going back to url: ");
+        status.AssignLiteral("Going back to url: ");
         status.Append(uriSpec);
     }
     else if (!(strcmp(operation, "forward")))
     {
         // Going forward. XXX Get string from a resource file
-        status.Assign("Going forward to url: ");
+        status.AssignLiteral("Going forward to url: ");
         status.Append(uriSpec);
     }
     else if (!(strcmp(operation, "reload")))
@@ -409,19 +409,19 @@ WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, int3
         if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY && 
             aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE)
         {
-            status.Assign("Reloading url, (bypassing proxy and cache): ");
+            status.AssignLiteral("Reloading url, (bypassing proxy and cache): ");
         }
         else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY)
         {
-            status.Assign("Reloading url, (bypassing proxy): ");
+            status.AssignLiteral("Reloading url, (bypassing proxy): ");
         }
         else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE)
         {
-            status.Assign("Reloading url, (bypassing cache): ");
+            status.AssignLiteral("Reloading url, (bypassing cache): ");
         }
         else
         {
-            status.Assign("Reloading url, (normal): ");
+            status.AssignLiteral("Reloading url, (normal): ");
         }
         status.Append(uriSpec);
     }
@@ -432,7 +432,7 @@ WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, int3
     }
     else if (!(strcmp(operation, "goto")))
     {
-        status.Assign("Going to HistoryIndex: ");
+        status.AssignLiteral("Going to HistoryIndex: ");
 
 	AppendIntToCString(info1, status);
 
@@ -446,7 +446,7 @@ WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, int3
     }
     else if (!(strcmp(operation, "replace")))
     {
-        status.Assign("Replacing HistoryIndex: ");
+        status.AssignLiteral("Replacing HistoryIndex: ");
         AppendIntToCString(info1, status);
     }
 
