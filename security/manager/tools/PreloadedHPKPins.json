@@ -33,7 +33,18 @@
       "google": "google_root_pems"
     },
     "production_domains": [
-      "pinningtest.appspot.com"
+      // Chrome's test domain.
+      "pinningtest.appspot.com",
+      // Twitter
+      "api.twitter.com",
+      "business.twitter.com",
+      "dev.twitter.com",
+      "mobile.twitter.com",
+      "oauth.twitter.com",
+      "platform.twitter.com",
+      "twimg.com",
+      "twitter.com",
+      "www.twitter.com"
     ]
    },
   "pinsets": [
