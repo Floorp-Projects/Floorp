@@ -1934,6 +1934,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     if (mUploadTransferred < mUploadTotal) {
       mUploadTransferred = mUploadTotal;
       mProgressSinceLastProgressEvent = true;
+      mUploadLengthComputable = true;
       MaybeDispatchProgressEvents(true);
     }
     mUploadComplete = true;
