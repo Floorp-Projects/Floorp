@@ -356,7 +356,7 @@ DOMStorageManager::GetStorageInternal(bool aCreate,
           return NS_OK;
         }
       } else {
-        if (scope.Equals(NS_LITERAL_CSTRING("knalb.:about"))) {
+        if (scope.EqualsLiteral("knalb.:about")) {
           return NS_OK;
         }
       }

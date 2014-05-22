@@ -383,13 +383,13 @@ nsresult
 Http2Decompressor::OutputHeader(const nsACString &name, const nsACString &value)
 {
     // exclusions
-  if (name.Equals(NS_LITERAL_CSTRING("connection")) ||
-      name.Equals(NS_LITERAL_CSTRING("host")) ||
-      name.Equals(NS_LITERAL_CSTRING("keep-alive")) ||
-      name.Equals(NS_LITERAL_CSTRING("proxy-connection")) ||
-      name.Equals(NS_LITERAL_CSTRING("te")) ||
-      name.Equals(NS_LITERAL_CSTRING("transfer-encoding")) ||
-      name.Equals(NS_LITERAL_CSTRING("upgrade")) ||
+  if (name.EqualsLiteral("connection") ||
+      name.EqualsLiteral("host") ||
+      name.EqualsLiteral("keep-alive") ||
+      name.EqualsLiteral("proxy-connection") ||
+      name.EqualsLiteral("te") ||
+      name.EqualsLiteral("transfer-encoding") ||
+      name.EqualsLiteral("upgrade") ||
       name.Equals(("accept-encoding"))) {
     nsCString toLog(name);
     LOG3(("HTTP Decompressor illegal response header found : %s",
@@ -421,19 +421,19 @@ Http2Decompressor::OutputHeader(const nsACString &name, const nsACString &value)
   }
 
   // Status comes first
-  if (name.Equals(NS_LITERAL_CSTRING(":status"))) {
+  if (name.EqualsLiteral(":status")) {
     nsAutoCString status(NS_LITERAL_CSTRING("HTTP/2.0 "));
     status.Append(value);
     status.AppendLiteral("\r\n");
     mOutput->Insert(status, 0);
     mHeaderStatus = value;
-  } else if (name.Equals(NS_LITERAL_CSTRING(":authority"))) {
+  } else if (name.EqualsLiteral(":authority")) {
     mHeaderHost = value;
-  } else if (name.Equals(NS_LITERAL_CSTRING(":scheme"))) {
+  } else if (name.EqualsLiteral(":scheme")) {
     mHeaderScheme = value;
-  } else if (name.Equals(NS_LITERAL_CSTRING(":path"))) {
+  } else if (name.EqualsLiteral(":path")) {
     mHeaderPath = value;
-  } else if (name.Equals(NS_LITERAL_CSTRING(":method"))) {
+  } else if (name.EqualsLiteral(":method")) {
     mHeaderMethod = value;
   }
 
@@ -447,7 +447,7 @@ Http2Decompressor::OutputHeader(const nsACString &name, const nsACString &value)
   mOutput->Append(name);
   mOutput->AppendLiteral(": ");
   // Special handling for set-cookie according to the spec
-  bool isSetCookie = name.Equals(NS_LITERAL_CSTRING("set-cookie"));
+  bool isSetCookie = name.EqualsLiteral("set-cookie");
   int32_t valueLen = value.Length();
   for (int32_t i = 0; i < valueLen; ++i) {
     if (value[i] == '\0') {

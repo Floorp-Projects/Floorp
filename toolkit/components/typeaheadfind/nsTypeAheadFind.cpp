@@ -997,7 +997,7 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
     // by waiting for the first keystroke, we still get the startup time benefits.
     mIsSoundInitialized = true;
     mSoundInterface = do_CreateInstance("@mozilla.org/sound;1");
-    if (mSoundInterface && !mNotFoundSoundURL.Equals(NS_LITERAL_CSTRING("beep"))) {
+    if (mSoundInterface && !mNotFoundSoundURL.EqualsLiteral("beep")) {
       mSoundInterface->Init();
     }
   }
