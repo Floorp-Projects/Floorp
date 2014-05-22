@@ -58,7 +58,7 @@ IntelPowerGadget::Init()
     nsCString ipg_library;
     if (path && *path) {
         ipg_library.Append(path);
-        ipg_library.AppendLiteral("/");
+        ipg_library.Append('/');
         ipg_library.AppendLiteral(PG_LIBRARY_NAME);
         libpowergadget = PR_LoadLibrary(ipg_library.get());
     }

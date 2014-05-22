@@ -472,11 +472,11 @@ CommonElementAnimationData::LogAsyncAnimationFailure(nsCString& aMessage,
     if (id) {
       aMessage.AppendLiteral(" with id '");
       aMessage.Append(nsAtomCString(aContent->GetID()));
-      aMessage.AppendLiteral("'");
+      aMessage.Append('\'');
     }
-    aMessage.AppendLiteral("]");
+    aMessage.Append(']');
   }
-  aMessage.AppendLiteral("\n");
+  aMessage.Append('\n');
   printf_stderr(aMessage.get());
 }
 

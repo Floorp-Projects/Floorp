@@ -219,7 +219,7 @@ nsStyleUtil::AppendPaintOrderValue(uint8_t aValue,
 
   for (uint32_t position = 0; position <= lastPositionToSerialize; position++) {
     if (position > 0) {
-      aResult.AppendLiteral(" ");
+      aResult.Append(' ');
     }
     uint8_t component = aValue & MASK;
     switch (component) {
@@ -269,7 +269,7 @@ nsStyleUtil::AppendFontFeatureSettings(const nsTArray<gfxFontFeature>& aFeatures
       // 0 ==> off
       aResult.AppendLiteral(" off");
     } else if (feat.mValue > 1) {
-      aResult.AppendLiteral(" ");
+      aResult.Append(' ');
       aResult.AppendInt(feat.mValue);
     }
     // else, omit value if 1, implied by default

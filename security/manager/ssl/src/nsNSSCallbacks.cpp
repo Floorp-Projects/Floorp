@@ -225,7 +225,7 @@ SECStatus nsNSSHttpRequestSession::createFcn(SEC_HTTP_SERVER_SESSION session,
   rs->mURL.Assign(http_protocol_variant);
   rs->mURL.AppendLiteral("://");
   rs->mURL.Append(hss->mHost);
-  rs->mURL.AppendLiteral(":");
+  rs->mURL.Append(':');
   rs->mURL.AppendInt(hss->mPort);
   rs->mURL.Append(path_and_query_string);
 

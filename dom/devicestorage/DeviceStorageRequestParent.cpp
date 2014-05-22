@@ -359,7 +359,7 @@ DeviceStorageRequestParent::EnsureRequiredPermissions(
     return false;
   }
 
-  permissionName.AppendLiteral("-");
+  permissionName.Append('-');
   permissionName.Append(access);
 
   if (!AssertAppProcessPermission(aParent, permissionName.get())) {

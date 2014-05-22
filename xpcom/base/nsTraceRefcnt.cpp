@@ -683,7 +683,7 @@ InitLog(const char* aEnvVar, const char* aMsg, FILE** aResult)
         if (hasLogExtension) {
           fname.Cut(fname.Length() - 4, 4);
         }
-        fname.AppendLiteral("_");
+        fname.Append('_');
         fname.Append((char*)XRE_ChildProcessTypeToString(XRE_GetProcessType()));
         fname.AppendLiteral("_pid");
         fname.AppendInt((uint32_t)getpid());

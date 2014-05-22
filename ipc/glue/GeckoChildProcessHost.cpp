@@ -568,7 +568,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
       nsCString new_ld_lib_path;
       if (ld_library_path && *ld_library_path) {
           new_ld_lib_path.Assign(path.get());
-          new_ld_lib_path.AppendLiteral(":");
+          new_ld_lib_path.Append(':');
           new_ld_lib_path.Append(ld_library_path);
           newEnvVars["LD_LIBRARY_PATH"] = new_ld_lib_path.get();
       } else {
@@ -590,7 +590,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
       nsCString interpose;
       if (prevInterpose) {
         interpose.Assign(prevInterpose);
-        interpose.AppendLiteral(":");
+        interpose.Append(':');
       }
       interpose.Append(path.get());
       interpose.AppendLiteral("/libplugin_child_interpose.dylib");

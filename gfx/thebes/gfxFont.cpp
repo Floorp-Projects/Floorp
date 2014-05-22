@@ -4864,7 +4864,7 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
 
                 nsAutoCString prefName("font.name.");
                 prefName.Append(lcFamily);
-                prefName.AppendLiteral(".");
+                prefName.Append('.');
                 prefName.Append(groupString);
 
                 nsAdoptingString value = Preferences::GetString(prefName.get());
@@ -4924,7 +4924,7 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
         if (generic && aResolveGeneric) {
             nsAutoCString prefName("font.name-list.");
             prefName.Append(lcFamily);
-            prefName.AppendLiteral(".");
+            prefName.Append('.');
             prefName.Append(groupString);
             nsAdoptingString value = Preferences::GetString(prefName.get());
             if (value) {

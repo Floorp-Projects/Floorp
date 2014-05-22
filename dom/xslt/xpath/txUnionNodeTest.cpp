@@ -48,13 +48,13 @@ txUnionNodeTest::isSensitiveTo(Expr::ContextSensitivity aContext)
 void
 txUnionNodeTest::toString(nsAString& aDest)
 {
-    aDest.AppendLiteral("(");
+    aDest.Append('(');
     for (uint32_t i = 0; i < mNodeTests.Length(); ++i) {
         if (i != 0) {
             aDest.AppendLiteral(" | ");
         }
         mNodeTests[i]->toString(aDest);
     }
-    aDest.AppendLiteral(")");
+    aDest.Append(')');
 }
 #endif

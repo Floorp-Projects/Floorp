@@ -194,7 +194,7 @@ nsOfflineCacheEvictionFunction::OnFunctionCall(mozIStorageValueArray *values, ns
   const char *clientID = values->AsSharedUTF8String(0, &valueLen);
   const char *key = values->AsSharedUTF8String(1, &valueLen);
   nsAutoCString fullKey(clientID);
-  fullKey.AppendLiteral(":");
+  fullKey.Append(':');
   fullKey.Append(key);
   int generation  = values->AsInt32(2);
 

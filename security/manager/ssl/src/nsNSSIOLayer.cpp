@@ -2083,14 +2083,14 @@ ClientAuthDataRunnable::RunOnTargetThread()
       nsString cn_host_port;
       if (ccn && strcmp(ccn, hostname) == 0) {
         cn_host_port.Append(cn);
-        cn_host_port.AppendLiteral(":");
+        cn_host_port.Append(':');
         cn_host_port.AppendInt(port);
       } else {
         cn_host_port.Append(cn);
         cn_host_port.AppendLiteral(" (");
-        cn_host_port.AppendLiteral(":");
+        cn_host_port.Append(':');
         cn_host_port.AppendInt(port);
-        cn_host_port.AppendLiteral(")");
+        cn_host_port.Append(')');
       }
 
       char* corg = CERT_GetOrgName(&mServerCert->subject);
