@@ -17,6 +17,7 @@ import org.mozilla.gecko.gfx.BitmapUtils;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
+import android.os.Build;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,7 +39,7 @@ public class IconGridInput extends PromptInput implements OnItemClickListener {
     private static int mColumnWidth = -1;  // The maximum width of columns
     private static int mMaxColumns = -1;  // The maximum number of columns to show
     private static int mIconSize = -1;    // Size of icons in the grid
-    private int mSelected = -1;           // Current selection
+    private int mSelected = 0;           // Current selection
     private JSONArray mArray;
 
     public IconGridInput(JSONObject obj) {
@@ -76,12 +77,17 @@ public class IconGridInput extends PromptInput implements OnItemClickListener {
             items.add(item);
             if (item.selected) {
                 mSelected = i;
-                view.setSelection(i);
             }
         }
 
         view.setNumColumns(Math.min(items.size(), maxColumns));
         view.setOnItemClickListener(this);
+        // Despite what the docs say, setItemChecked was not moved into the AbsListView class until sometime between
+        // Android 2.3.7 and Android 4.0.3. For other versions the item won't be visually highlighted, BUT we really only
+        // mSelected will still be set so that we default to its behavior.
+        if (Build.VERSION.SDK_INT >= 11 && mSelected > -1) {
+            view.setItemChecked(mSelected, true);
+        }
 
         mAdapter = new IconGridAdapter(context, -1, items);
         view.setAdapter(mAdapter);

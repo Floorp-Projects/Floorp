@@ -96,10 +96,6 @@
   #main-window[tabsintitlebar] #main-menubar > menu:not(:-moz-lwtheme) {
     color: inherit;
   }
-
-  #TabsToolbar:-moz-lwtheme {
-    background: linear-gradient(to top, @toolbarShadowColor@ 2px, transparent 2px);
-  }
 %ifdef WINDOWS_AERO
 }
 %endif
@@ -272,16 +268,28 @@
 }
 
 #TabsToolbar:not([collapsed="true"]) + #nav-bar {
-  margin-top: -@tabToolbarNavbarOverlap@; /* Move up into the TabsToolbar */
+  margin-top: -1px; /* Move up into the TabsToolbar for the inner highlight at the top of the nav-bar */
   /* Position the toolbar above the bottom of background tabs */
   position: relative;
   z-index: 1;
 }
 
 #nav-bar {
+  border-top: 1px solid @toolbarShadowColor@ !important;
+  background-clip: padding-box;
   background-image: linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
   box-shadow: 0 1px 0 @toolbarHighlight@ inset;
 }
+
+%ifdef WINDOWS_AERO
+@media not all and (-moz-windows-compositor) {
+%endif
+  #TabsToolbar[collapsed="true"] + #nav-bar {
+    border-top-style: none !important;
+  }
+%ifdef WINDOWS_AERO
+}
+%endif
 
 #personal-bookmarks {
   min-height: 24px;
@@ -1746,10 +1754,7 @@ toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
 #TabsToolbar {
   min-height: 0;
   padding: 0;
-}
-
-#main-window:not([customizing]) #TabsToolbar:not(:-moz-lwtheme) {
-  background-image: linear-gradient(to top, @toolbarShadowColor@ 2px, rgba(0,0,0,.05) 2px, transparent 50%);
+  margin-bottom: -@tabToolbarNavbarOverlap@; /* overlap the nav-bar's top border */
 }
 
 #main-window[tabsintitlebar] #TabsToolbar {
