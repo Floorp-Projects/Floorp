@@ -530,11 +530,10 @@ nsLocalFile::AppendRelativeNativePath(const nsACString& aFragment)
     return NS_ERROR_FILE_UNRECOGNIZED_PATH;
   }
 
-  if (mPath.EqualsLiteral("/")) {
-    mPath.Append(aFragment);
-  } else {
-    mPath.Append(NS_LITERAL_CSTRING("/") + aFragment);
+  if (!mPath.EqualsLiteral("/")) {
+    mPath.Append('/');
   }
+  mPath.Append(aFragment);
 
   return NS_OK;
 }

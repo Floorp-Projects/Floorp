@@ -428,7 +428,7 @@ ImportRule::GetCssText(nsAString& aCssText)
 {
   aCssText.AssignLiteral("@import url(");
   nsStyleUtil::AppendEscapedCSSString(mURLSpec, aCssText);
-  aCssText.Append(NS_LITERAL_STRING(")"));
+  aCssText.Append(')');
   if (mMedia) {
     nsAutoString mediaText;
     mMedia->GetText(mediaText);
@@ -687,9 +687,9 @@ GroupRule::AppendRulesToCssText(nsAString& aCssText)
     if (domRule) {
       nsAutoString cssText;
       domRule->GetCssText(cssText);
-      aCssText.Append(NS_LITERAL_STRING("  ") +
-                      cssText +
-                      NS_LITERAL_STRING("\n"));
+      aCssText.AppendLiteral("  ");
+      aCssText.Append(cssText);
+      aCssText.Append('\n');
     }
   }
 
@@ -1311,7 +1311,7 @@ NameSpaceRule::GetCssText(nsAString& aCssText)
   }
   aCssText.AppendLiteral("url(");
   nsStyleUtil::AppendEscapedCSSString(mURLSpec, aCssText);
-  aCssText.Append(NS_LITERAL_STRING(");"));
+  aCssText.AppendLiteral(");");
   return NS_OK;
 }
 

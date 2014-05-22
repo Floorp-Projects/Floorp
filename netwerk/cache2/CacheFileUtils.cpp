@@ -232,11 +232,11 @@ AppendKeyPrefix(nsILoadContextInfo* aInfo, nsACString &_retval)
    */
 
   if (aInfo->IsAnonymous()) {
-    _retval.Append(NS_LITERAL_CSTRING("a,"));
+    _retval.AppendLiteral("a,");
   }
 
   if (aInfo->IsInBrowserElement()) {
-    _retval.Append(NS_LITERAL_CSTRING("b,"));
+    _retval.AppendLiteral("b,");
   }
 
   if (aInfo->AppId() != nsILoadContextInfo::NO_APP_ID) {
@@ -246,7 +246,7 @@ AppendKeyPrefix(nsILoadContextInfo* aInfo, nsACString &_retval)
   }
 
   if (aInfo->IsPrivate()) {
-    _retval.Append(NS_LITERAL_CSTRING("p,"));
+    _retval.AppendLiteral("p,");
   }
 }
 

@@ -1774,10 +1774,10 @@ PlacesSQLQueryBuilder::SelectAsDay()
     mQueryString.Append(dayRange);
 
     if (i < HISTORY_DATE_CONT_NUM(daysOfHistory))
-      mQueryString.Append(NS_LITERAL_CSTRING(" UNION ALL "));
+      mQueryString.AppendLiteral(" UNION ALL ");
   }
 
-  mQueryString.Append(NS_LITERAL_CSTRING(") ")); // TOUTER END
+  mQueryString.AppendLiteral(") "); // TOUTER END
 
   return NS_OK;
 }
@@ -2108,13 +2108,13 @@ nsNavHistory::ConstructQueryString(
           "{QUERY_OPTIONS} "
         );
 
-    queryString.Append(NS_LITERAL_CSTRING("ORDER BY "));
+    queryString.AppendLiteral("ORDER BY ");
     if (sortingMode == nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING)
-      queryString.Append(NS_LITERAL_CSTRING("last_visit_date DESC "));
+      queryString.AppendLiteral("last_visit_date DESC ");
     else
-      queryString.Append(NS_LITERAL_CSTRING("visit_count DESC "));
+      queryString.AppendLiteral("visit_count DESC ");
 
-    queryString.Append(NS_LITERAL_CSTRING("LIMIT "));
+    queryString.AppendLiteral("LIMIT ");
     queryString.AppendInt(aOptions->MaxResults());
 
     nsAutoCString additionalQueryOptions;
@@ -2562,7 +2562,7 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, bool aEntireDomain)
   NS_ASSERTION(revHostDot[revHostDot.Length() - 1] == '.', "Invalid rev. host");
   nsAutoString revHostSlash(revHostDot);
   revHostSlash.Truncate(revHostSlash.Length() - 1);
-  revHostSlash.Append(NS_LITERAL_STRING("/"));
+  revHostSlash.Append('/');
 
   // build condition string based on host selection type
   nsAutoCString conditionString;
@@ -3663,11 +3663,11 @@ CreatePlacesPersistURN(nsNavHistoryQueryResultNode *aResultNode,
   aURN.Assign(NS_LITERAL_CSTRING("urn:places-persist:"));
   aURN.Append(uri);
 
-  aURN.Append(NS_LITERAL_CSTRING(","));
+  aURN.Append(',');
   if (aValue != UNDEFINED_URN_VALUE)
     aURN.AppendInt(aValue);
 
-  aURN.Append(NS_LITERAL_CSTRING(","));
+  aURN.Append(',');
   if (!aTitle.IsEmpty()) {
     nsAutoCString escapedTitle;
     bool success = NS_Escape(aTitle, escapedTitle, url_XAlphas);

@@ -249,13 +249,13 @@ Http2Stream::CreatePushHashKey(const nsCString &scheme,
                                nsCString &outKey)
 {
   outOrigin = scheme;
-  outOrigin.Append(NS_LITERAL_CSTRING("://"));
+  outOrigin.AppendLiteral("://");
   outOrigin.Append(hostHeader);
 
   outKey = outOrigin;
-  outKey.Append(NS_LITERAL_CSTRING("/[http2."));
+  outKey.AppendLiteral("/[http2.");
   outKey.AppendInt(serial);
-  outKey.Append(NS_LITERAL_CSTRING("]"));
+  outKey.Append(']');
   outKey.Append(pathInfo);
 }
 
@@ -876,7 +876,7 @@ Http2Stream::ConvertResponseHeaders(Http2Decompressor *decompressor,
   }
 
   aHeadersIn.Truncate();
-  aHeadersOut.Append(NS_LITERAL_CSTRING("X-Firefox-Spdy: " NS_HTTP2_DRAFT_TOKEN "\r\n\r\n"));
+  aHeadersOut.Append("X-Firefox-Spdy: " NS_HTTP2_DRAFT_TOKEN "\r\n\r\n");
   LOG (("decoded response headers are:\n%s", aHeadersOut.BeginReading()));
   if (mIsTunnel) {
     aHeadersOut.Truncate();

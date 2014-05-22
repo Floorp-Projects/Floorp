@@ -3323,16 +3323,16 @@ KeyBinding::ToAtkFormat(nsAString& aValue) const
 {
   nsAutoString modifierName;
   if (mModifierMask & kControl)
-    aValue.Append(NS_LITERAL_STRING("<Control>"));
+    aValue.AppendLiteral("<Control>");
 
   if (mModifierMask & kAlt)
-    aValue.Append(NS_LITERAL_STRING("<Alt>"));
+    aValue.AppendLiteral("<Alt>");
 
   if (mModifierMask & kShift)
-    aValue.Append(NS_LITERAL_STRING("<Shift>"));
+    aValue.AppendLiteral("<Shift>");
 
   if (mModifierMask & kMeta)
-      aValue.Append(NS_LITERAL_STRING("<Meta>"));
+      aValue.AppendLiteral("<Meta>");
 
   aValue.Append(mKey);
 }
