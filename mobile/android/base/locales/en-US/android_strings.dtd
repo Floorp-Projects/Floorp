@@ -229,6 +229,9 @@ size. -->
 <!ENTITY pref_update_autodownload_never "Never">
 <!ENTITY pref_update_autodownload_always "Always">
 
+<!-- Localization note (help_menu) : This string is used in the main menu-->
+<!ENTITY help_menu "Help">
+
 <!ENTITY quit "Quit">
 
 <!ENTITY addons "Add-ons">
