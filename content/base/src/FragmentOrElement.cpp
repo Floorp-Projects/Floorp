@@ -1011,6 +1011,23 @@ FragmentOrElement::SetShadowRoot(ShadowRoot* aShadowRoot)
   slots->mShadowRoot = aShadowRoot;
 }
 
+nsTArray<nsIContent*>&
+FragmentOrElement::DestInsertionPoints()
+{
+  nsDOMSlots *slots = DOMSlots();
+  return slots->mDestInsertionPoints;
+}
+
+nsTArray<nsIContent*>*
+FragmentOrElement::GetExistingDestInsertionPoints() const
+{
+  nsDOMSlots *slots = GetExistingDOMSlots();
+  if (slots) {
+    return &slots->mDestInsertionPoints;
+  }
+  return nullptr;
+}
+
 void
 FragmentOrElement::SetXBLInsertionParent(nsIContent* aContent)
 {
