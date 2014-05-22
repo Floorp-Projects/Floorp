@@ -19,6 +19,7 @@ const nsIAccessibleScrollType = Components.interfaces.nsIAccessibleScrollType;
 const nsIAccessibleCoordinateType = Components.interfaces.nsIAccessibleCoordinateType;
 
 const nsIAccessibleRelation = Components.interfaces.nsIAccessibleRelation;
+const nsIAccessibleTextRange = Components.interfaces.nsIAccessibleTextRange;
 
 const nsIAccessible = Components.interfaces.nsIAccessible;
 
@@ -434,7 +435,7 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree, aFlags)
       }
 
       break;
-    } 
+    }
 
     default:
       if (prop.indexOf("todo_") == 0)

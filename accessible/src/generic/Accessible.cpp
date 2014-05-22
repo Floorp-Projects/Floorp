@@ -120,7 +120,7 @@ Accessible::Accessible(nsIContent* aContent, DocAccessible* aDoc) :
 #ifdef NS_DEBUG_X
    {
      nsCOMPtr<nsIPresShell> shell(do_QueryReferent(aShell));
-     printf(">>> %p Created Acc - DOM: %p  PS: %p", 
+     printf(">>> %p Created Acc - DOM: %p  PS: %p",
             (void*)static_cast<nsIAccessible*>(this), (void*)aNode,
             (void*)shell.get());
     nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
@@ -267,7 +267,7 @@ Accessible::Description(nsString& aDescription)
   // 1. it's a text node; or
   // 2. It has no DHTML describedby property
   // 3. it doesn't have an accName; or
-  // 4. its title attribute already equals to its accName nsAutoString name; 
+  // 4. its title attribute already equals to its accName nsAutoString name;
 
   if (!HasOwnContent() || mContent->IsNodeOfType(nsINode::eTEXT))
     return;
@@ -550,7 +550,7 @@ Accessible::GetIndexInParent(int32_t* aIndexInParent)
   return *aIndexInParent != -1 ? NS_OK : NS_ERROR_FAILURE;
 }
 
-void 
+void
 Accessible::TranslateString(const nsString& aKey, nsAString& aStringOut)
 {
   nsCOMPtr<nsIStringBundleService> stringBundleService =
@@ -560,7 +560,7 @@ Accessible::TranslateString(const nsString& aKey, nsAString& aStringOut)
 
   nsCOMPtr<nsIStringBundle> stringBundle;
   stringBundleService->CreateBundle(
-    "chrome://global-platform/locale/accessible.properties", 
+    "chrome://global-platform/locale/accessible.properties",
     getter_AddRefs(stringBundle));
   if (!stringBundle)
     return;
@@ -1104,7 +1104,7 @@ Accessible::XULElmName(DocAccessible* aDocument,
       itemEl->GetLabel(aName);
     } else {
       nsCOMPtr<nsIDOMXULSelectControlElement> select = do_QueryInterface(aElm);
-      // Use label if this is not a select control element which 
+      // Use label if this is not a select control element which
       // uses label attribute to indicate which option is selected
       if (!select) {
         nsCOMPtr<nsIDOMXULElement> xulEl(do_QueryInterface(aElm));
@@ -1578,7 +1578,7 @@ Accessible::ApplyARIAState(uint64_t* aState) const
         *aState |= states::UNAVAILABLE;
         break;
       }
-    }    
+    }
   }
 
   // special case: A native button element whose role got transformed by ARIA to a toggle button
@@ -2451,7 +2451,7 @@ Accessible::AppendTextTo(nsAString& aText, uint32_t aStartOffset,
 void
 Accessible::Shutdown()
 {
-  // Mark the accessible as defunct, invalidate the child count and pointers to 
+  // Mark the accessible as defunct, invalidate the child count and pointers to
   // other accessibles, also make sure none of its children point to this parent
   mStateFlags |= eIsDefunct;
 
@@ -3058,7 +3058,7 @@ Accessible::TestChildCache(Accessible* aCachedChild) const
   }
 
   NS_ASSERTION(child == aCachedChild,
-               "[TestChildCache] cached accessible wasn't found. Wrong accessible tree!");  
+               "[TestChildCache] cached accessible wasn't found. Wrong accessible tree!");
 #endif
 }
 
@@ -3135,7 +3135,7 @@ Accessible::GetActionRule()
 
   if (isOnclick)
     return eClickAction;
-  
+
   // Get an action based on ARIA role.
   if (mRoleMapEntry &&
       mRoleMapEntry->actionRule != eNoAction)
