@@ -53,7 +53,6 @@
 #include "nsContentUtils.h"
 #include "nsPrintfCString.h"
 #include "UnitTransforms.h"
-#include "LayersLogging.h"
 
 #include <stdint.h>
 #include <algorithm>
@@ -5205,16 +5204,6 @@ bool nsDisplayTransform::UntransformVisibleRect(nsDisplayListBuilder* aBuilder,
 
   return true;
 }
-
-#ifdef MOZ_DUMP_PAINTING
-void
-nsDisplayTransform::WriteDebugInfo(nsACString& aTo)
-{
-  Matrix4x4 transform;
-  ToMatrix4x4(GetTransform(), transform);
-  AppendToString(aTo, transform);
-}
-#endif
 
 nsDisplaySVGEffects::nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder,
                                          nsIFrame* aFrame, nsDisplayList* aList)
