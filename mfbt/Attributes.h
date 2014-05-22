@@ -482,11 +482,16 @@
  * MOZ_HEAP_ALLOCATOR: Applies to any function. This indicates that the return
  *   value is allocated on the heap, and will as a result check such allocations
  *   during MOZ_STACK_CLASS and MOZ_NONHEAP_CLASS annotation checking.
+ * MOZ_IMPLICIT: Applies to constructors. Implicit conversion constructors
+ *   are disallowed by default unless they are marked as MOZ_IMPLICIT. This
+ *   attribute must be used for constructors which intent to provide implicit
+ *   conversions.
  */
 #ifdef MOZ_CLANG_PLUGIN
 #  define MOZ_MUST_OVERRIDE __attribute__((annotate("moz_must_override")))
 #  define MOZ_STACK_CLASS __attribute__((annotate("moz_stack_class")))
 #  define MOZ_NONHEAP_CLASS __attribute__((annotate("moz_nonheap_class")))
+#  define MOZ_IMPLICIT __attribute__((annotate("moz_implicit")))
 /*
  * It turns out that clang doesn't like void func() __attribute__ {} without a
  * warning, so use pragmas to disable the warning. This code won't work on GCC
@@ -501,6 +506,7 @@
 #  define MOZ_MUST_OVERRIDE /* nothing */
 #  define MOZ_STACK_CLASS /* nothing */
 #  define MOZ_NONHEAP_CLASS /* nothing */
+#  define MOZ_IMPLICIT /* nothing */
 #  define MOZ_HEAP_ALLOCATOR /* nothing */
 #endif /* MOZ_CLANG_PLUGIN */
 
