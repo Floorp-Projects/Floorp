@@ -530,10 +530,6 @@ nsContentList::Item(uint32_t aIndex, bool aDoFlush)
 Element*
 nsContentList::NamedItem(const nsAString& aName, bool aDoFlush)
 {
-  if (aName.IsEmpty()) {
-    return nullptr;
-  }
-
   BringSelfUpToDate(aDoFlush);
 
   uint32_t i, count = mElements.Length();
@@ -578,8 +574,6 @@ nsContentList::GetSupportedNames(unsigned aFlags, nsTArray<nsString>& aNames)
       const nsAttrValue* val = el->GetParsedAttr(nsGkAtoms::name);
       if (val && val->Type() == nsAttrValue::eAtom) {
         nsIAtom* name = val->GetAtomValue();
-        MOZ_ASSERT(name != nsGkAtoms::_empty,
-                   "Empty names don't get atomized");
         if (!atoms.Contains(name)) {
           atoms.AppendElement(name);
         }
@@ -587,8 +581,6 @@ nsContentList::GetSupportedNames(unsigned aFlags, nsTArray<nsString>& aNames)
     }
     if (content->HasID()) {
       nsIAtom* id = content->GetID();
-      MOZ_ASSERT(id != nsGkAtoms::_empty,
-                 "Empty ids don't get atomized");
       if (!atoms.Contains(id)) {
         atoms.AppendElement(id);
       }
