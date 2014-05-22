@@ -125,6 +125,14 @@ BRFrame::Reflow(nsPresContext* aPresContext,
       else {
         aMetrics.SetTopAscent(aMetrics.Height() = 0);
       }
+
+      // XXX temporary until I figure out a better solution; see the
+      // code in nsLineLayout::VerticalAlignFrames that zaps minY/maxY
+      // if the width is zero.
+      // XXX This also fixes bug 10036!
+      // Warning: nsTextControlFrame::CalculateSizeStandard depends on
+      // the following line, see bug 228752.
+      aMetrics.Width() = 1;
     }
 
     // Return our reflow status
