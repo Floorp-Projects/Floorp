@@ -108,7 +108,6 @@ let chromeWhitelist = [
   "devtools/toolkit/transport/packets",
   "devtools/toolkit/DevToolsUtils",
   "devtools/toolkit/event-emitter",
-  "devtools/server/protocol",
   "devtools/server/actors/script",
   "devtools/styleinspector/css-logic",
 ];
