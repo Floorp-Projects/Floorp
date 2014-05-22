@@ -179,6 +179,7 @@ namespace jit {
     _(RunOncePrologue)                                                      \
     _(Rest)                                                                 \
     _(Floor)                                                                \
+    _(Ceil)                                                                 \
     _(Round)                                                                \
     _(In)                                                                   \
     _(InstanceOf)                                                           \
