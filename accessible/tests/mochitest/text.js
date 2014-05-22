@@ -10,9 +10,6 @@ const BOUNDARY_LINE_END = nsIAccessibleText.BOUNDARY_LINE_END;
 const kTextEndOffset = nsIAccessibleText.TEXT_OFFSET_END_OF_TEXT;
 const kCaretOffset = nsIAccessibleText.TEXT_OFFSET_CARET;
 
-const EndPoint_Start = nsIAccessibleTextRange.EndPoint_Start;
-const EndPoint_End = nsIAccessibleTextRange.EndPoint_End;
-
 const kTodo = 1; // a test is expected to fail
 const kOk = 2; // a test doesn't fail
 
@@ -396,8 +393,8 @@ function testTextRemoveSelection(aID, aSelectionIndex, aSelectionsCount)
 
   acc.removeSelection(aSelectionIndex);
 
-  ok(acc.selectionCount, aSelectionsCount,
-     text + ": failed to remove selection at index '" +
+  ok(acc.selectionCount, aSelectionsCount, 
+     text + ": failed to remove selection at index '" + 
      aSelectionIndex + "': selectionCount after");
 }
 
@@ -419,8 +416,8 @@ function testTextSetSelection(aID, aStartOffset, aEndOffset,
 
   acc.setSelectionBounds(aSelectionIndex, aStartOffset, aEndOffset);
 
-  is(acc.selectionCount, aSelectionsCount,
-     text + ": failed to set selection at index '" +
+  is(acc.selectionCount, aSelectionsCount, 
+     text + ": failed to set selection at index '" + 
      aSelectionIndex + "': selectionCount after");
 }
 
@@ -460,36 +457,17 @@ function testTextGetSelection(aID, aStartOffset, aEndOffset, aSelectionIndex)
      aSelectionIndex + "'");
 }
 
-function testTextRange(aRange, aRangeDescr, aStartContainer, aStartOffset,
-                       aEndContainer, aEndOffset, aText,
-                       aCommonContainer, aChildren)
+function testTextRange(aRange, aStartContainer, aStartOffset,
+                       aEndContainer, aEndOffset)
 {
-  isObject(aRange.startContainer, getAccessible(aStartContainer),
-           "Wrong start container of " + aRangeDescr);
+  is(aRange.startContainer, getAccessible(aStartContainer),
+     "Wrong start container");
   is(aRange.startOffset, aStartOffset,
-     "Wrong start offset of " + aRangeDescr);
-  isObject(aRange.endContainer, getAccessible(aEndContainer),
-           "Wrong end container of " + aRangeDescr);
+     "Wrong start offset");
+  is(aRange.endContainer, getAccessible(aEndContainer),
+     "Wrong end container");
   is(aRange.endOffset, aEndOffset,
-     "Wrong end offset of " + aRangeDescr);
-
-  is(aRange.text, aText, "Wrong text of " + aRangeDescr);
-
-  var children = aRange.embeddedChildren;
-  is(children ? children.length : 0, aChildren ? aChildren.length : 0,
-     "Wrong embedded children count of " + aRangeDescr);
-
-  isObject(aRange.container, getAccessible(aCommonContainer),
-           "Wrong container of " + aRangeDescr);
-
-  if (aChildren) {
-    for (var i = 0; i < aChildren.length; i++) {
-      var expectedChild = getAccessible(aChildren[i]);
-      var actualChild = children.queryElementAt(i, nsIAccessible);
-      isObject(actualChild, expectedChild,
-               "Wrong child at index '" + i + "' of " + aRangeDescr);
-    }
-  }
+     "Wrong end offset");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
