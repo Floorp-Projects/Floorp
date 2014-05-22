@@ -135,6 +135,7 @@ browser.jar:
 #endif
 * skin/classic/browser/preferences/preferences.css    (preferences/preferences.css)
 * skin/classic/browser/preferences/in-content/preferences.css (preferences/in-content/preferences.css)
+  skin/classic/browser/preferences/in-content/favicon.ico     (../shared/incontentprefs/favicon.ico)
   skin/classic/browser/preferences/in-content/check.png       (../shared/incontentprefs/check.png)
   skin/classic/browser/preferences/in-content/check@2x.png    (../shared/incontentprefs/check@2x.png)
   skin/classic/browser/preferences/in-content/icons.png       (../shared/incontentprefs/icons.png)
