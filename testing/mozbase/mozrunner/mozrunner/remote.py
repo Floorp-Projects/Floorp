@@ -147,7 +147,6 @@ class B2GRunner(RemoteRunner):
         self.test_script_args = test_script_args
         self.remote_profiles_ini = '/data/b2g/mozilla/profiles.ini'
         self.bundles_dir = '/system/b2g/distribution/bundles'
-        self.user_js = '/data/local/user.js'
 
     @property
     def command(self):
@@ -173,6 +172,11 @@ class B2GRunner(RemoteRunner):
                                 " prior to running before running the automation framework")
 
         self.dm.shellCheckOutput(['stop', 'b2g'])
+
+        # For some reason user.js in the profile doesn't get picked up.
+        # Manually copy it over to prefs.js. See bug 1009730 for more details.
+        self.dm.moveTree(posixpath.join(self.remote_profile, 'user.js'),
+                         posixpath.join(self.remote_profile, 'prefs.js'))
 
         self.kp_kwargs.update({'stream': sys.stdout,
                                'processOutputLine': self.on_output,
@@ -220,6 +224,12 @@ class B2GRunner(RemoteRunner):
 
 
     def start_tests(self):
+        #self.marionette.execute_script("""
+        #    var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+        #    var homeUrl = prefs.getCharPref("browser.homescreenURL");
+        #    dump(homeURL + "\n");
+        #""")
+
         # run the script that starts the tests
         if os.path.isfile(self.test_script):
             script = open(self.test_script, 'r')
@@ -328,11 +338,6 @@ class B2GRunner(RemoteRunner):
 
         self.backup_file(self.remote_profiles_ini)
         self.dm.pushFile(new_profiles_ini.name, self.remote_profiles_ini)
-
-        # In B2G, user.js is always read from /data/local, not the profile
-        # directory.  Backup the original user.js first so we can restore it.
-        self.backup_file(self.user_js)
-        self.dm.pushFile(os.path.join(self.profile.profile, "user.js"), self.user_js)
 
     def cleanup(self):
         RemoteRunner.cleanup(self)
