@@ -1437,7 +1437,7 @@ XPCJSRuntime::InterruptCallback(JSContext *cx)
 }
 
 /* static */ void
-XPCJSRuntime::OutOfMemoryCallback(JSContext *cx)
+XPCJSRuntime::OutOfMemoryCallback(JSContext *cx, void *data)
 {
     if (!Preferences::GetBool("memory.dump_reports_on_oom")) {
         return;
@@ -3178,7 +3178,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     js::SetActivityCallback(runtime, ActivityCallback, this);
     js::SetCTypesActivityCallback(runtime, CTypesActivityCallback);
     JS_SetInterruptCallback(runtime, InterruptCallback);
-    JS::SetOutOfMemoryCallback(runtime, OutOfMemoryCallback);
+    JS::SetOutOfMemoryCallback(runtime, OutOfMemoryCallback, nullptr);
 
     // The JS engine needs to keep the source code around in order to implement
     // Function.prototype.toSource(). It'd be nice to not have to do this for

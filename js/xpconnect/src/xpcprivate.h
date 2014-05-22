@@ -547,7 +547,7 @@ public:
     static void CTypesActivityCallback(JSContext *cx,
                                        js::CTypesActivityType type);
     static bool InterruptCallback(JSContext *cx);
-    static void OutOfMemoryCallback(JSContext *cx);
+    static void OutOfMemoryCallback(JSContext *cx, void *data);
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 

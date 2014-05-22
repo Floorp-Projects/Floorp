@@ -1395,8 +1395,11 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     /* See comment for JS::SetLargeAllocationFailureCallback in jsapi.h. */
     JS::LargeAllocationFailureCallback largeAllocationFailureCallback;
+    void *largeAllocationFailureCallbackData;
+
     /* See comment for JS::SetOutOfMemoryCallback in jsapi.h. */
     JS::OutOfMemoryCallback oomCallback;
+    void *oomCallbackData;
 
     /*
      * These variations of malloc/calloc/realloc will call the
