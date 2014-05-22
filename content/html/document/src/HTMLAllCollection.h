@@ -64,7 +64,9 @@ public:
   void NamedGetter(const nsAString& aName,
                    bool& aFound,
                    Nullable<OwningNodeOrHTMLCollection>& aResult);
-  void GetSupportedNames(unsigned aFlags, nsTArray<nsString>& aNames);
+  void GetSupportedNames(unsigned flags, nsTArray<nsString>& aNames)
+  {
+  }
   bool NameIsEnumerable(const nsAString& aName)
   {
     return false;
