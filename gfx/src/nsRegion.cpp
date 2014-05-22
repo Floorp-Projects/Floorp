@@ -313,6 +313,11 @@ void nsRegion::SimplifyOutwardByArea(uint32_t aThreshold)
   pixman_box32_t *boxes;
   int n;
   boxes = pixman_region32_rectangles(&mImpl, &n);
+
+  // if we have no rectangles then we're done
+  if (!n)
+    return;
+
   pixman_box32_t *end = boxes + n;
   pixman_box32_t *topRectsEnd = boxes+1;
   pixman_box32_t *topRects = boxes;
