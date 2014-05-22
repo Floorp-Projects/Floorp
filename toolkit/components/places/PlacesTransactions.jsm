@@ -558,6 +558,7 @@ function DefineTransaction(aRequiredProps = [], aOptionalProps = []) {
 }
 
 DefineTransaction.isStr = v => typeof(v) == "string";
+DefineTransaction.isStrOrNull = v => typeof(v) == "string" || v === null;
 DefineTransaction.isURI = v => v instanceof Components.interfaces.nsIURI;
 DefineTransaction.isIndex = v => Number.isInteger(v) &&
                                  v >= PlacesUtils.bookmarks.DEFAULT_INDEX;
@@ -691,7 +692,9 @@ DefineTransaction.defineInputProps(["uri", "feedURI", "siteURI"],
                                    DefineTransaction.isURI, null);
 DefineTransaction.defineInputProps(["GUID", "parentGUID", "newParentGUID"],
                                    DefineTransaction.isGUID);
-DefineTransaction.defineInputProps(["title", "keyword", "postData"],
+DefineTransaction.defineInputProps(["title"],
+                                   DefineTransaction.isStrOrNull, null);
+DefineTransaction.defineInputProps(["keyword", "postData"],
                                    DefineTransaction.isStr, "");
 DefineTransaction.defineInputProps(["index", "newIndex"],
                                    DefineTransaction.isIndex,
