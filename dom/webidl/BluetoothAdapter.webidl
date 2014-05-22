@@ -51,9 +51,6 @@ interface BluetoothAdapter : EventTarget {
 
            attribute EventHandler   ondevicefound;
 
-  // Fired when discovery process has been done or has started
-           attribute EventHandler   ondiscoverystatechanged;
-
   // Fired when pairing process is completed
            attribute EventHandler   onpairedstatuschanged;
 
