@@ -800,33 +800,26 @@ Options(JSContext *cx, unsigned argc, jsval *vp)
         else if (strcmp(opt.ptr(), "strict_mode") == 0)
             JS::ContextOptionsRef(cx).toggleStrictMode();
         else {
-            char* msg = JS_sprintf_append(nullptr,
-                                          "unknown option name '%s'."
-                                          " The valid names are strict,"
-                                          " werror, and strict_mode.",
-                                          opt.ptr());
-            if (!msg) {
-                JS_ReportOutOfMemory(cx);
-                return false;
-            }
-
-            JS_ReportError(cx, msg);
-            free(msg);
+            JS_ReportError(cx,
+                           "unknown option name '%s'."
+                           " The valid names are strict,"
+                           " werror, and strict_mode.",
+                           opt.ptr());
             return false;
         }
     }
 
     char *names = strdup("");
     bool found = false;
-    if (!names && oldContextOptions.extraWarnings()) {
+    if (names && oldContextOptions.extraWarnings()) {
         names = JS_sprintf_append(names, "%s%s", found ? "," : "", "strict");
         found = true;
     }
-    if (!names && oldContextOptions.werror()) {
+    if (names && oldContextOptions.werror()) {
         names = JS_sprintf_append(names, "%s%s", found ? "," : "", "werror");
         found = true;
     }
-    if (!names && oldContextOptions.strictMode()) {
+    if (names && oldContextOptions.strictMode()) {
         names = JS_sprintf_append(names, "%s%s", found ? "," : "", "strict_mode");
         found = true;
     }
