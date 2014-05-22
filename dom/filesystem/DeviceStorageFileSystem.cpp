@@ -33,7 +33,7 @@ DeviceStorageFileSystem::DeviceStorageFileSystem(
   // Generate the string representation of the file system.
   mString.AppendLiteral("devicestorage-");
   mString.Append(mStorageType);
-  mString.AppendLiteral("-");
+  mString.Append('-');
   mString.Append(mStorageName);
 
   mIsTesting =

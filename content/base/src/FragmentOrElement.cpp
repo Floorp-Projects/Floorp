@@ -1763,7 +1763,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
     if (idAtom) {
       id.AppendLiteral(" id='");
       id.Append(nsDependentAtomString(idAtom));
-      id.AppendLiteral("'");
+      id.Append('\'');
     }
 
     nsAutoString classes;
@@ -1774,7 +1774,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
       classAttrValue->ToString(classString);
       classString.ReplaceChar(char16_t('\n'), char16_t(' '));
       classes.Append(classString);
-      classes.AppendLiteral("'");
+      classes.Append('\'');
     }
 
     nsAutoCString orphan;

@@ -4712,7 +4712,7 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
     message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.width));
     message.AppendLiteral(", ");
     message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.height));
-    message.AppendLiteral(")");
+    message.Append(')');
     CommonElementAnimationData::LogAsyncAnimationFailure(message,
                                                          aFrame->GetContent());
   }

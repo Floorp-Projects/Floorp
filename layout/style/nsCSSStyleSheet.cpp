@@ -353,7 +353,7 @@ nsMediaQuery::AppendToString(nsAString& aString) const
   for (uint32_t i = 0, i_end = mExpressions.Length(); i < i_end; ++i) {
     if (i > 0 || !mTypeOmitted)
       aString.AppendLiteral(" and ");
-    aString.AppendLiteral("(");
+    aString.Append('(');
 
     const nsMediaExpression &expr = mExpressions[i];
     if (expr.mRange == nsMediaExpression::eMin) {
@@ -406,7 +406,7 @@ nsMediaQuery::AppendToString(nsAString& aString) const
                          "bad unit");
             array->Item(0).AppendToString(eCSSProperty_z_index, aString,
                                           nsCSSValue::eNormalized);
-            aString.AppendLiteral("/");
+            aString.Append('/');
             array->Item(1).AppendToString(eCSSProperty_z_index, aString,
                                           nsCSSValue::eNormalized);
           }
@@ -441,7 +441,7 @@ nsMediaQuery::AppendToString(nsAString& aString) const
       }
     }
 
-    aString.AppendLiteral(")");
+    aString.Append(')');
   }
 }
 

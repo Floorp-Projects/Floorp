@@ -1066,7 +1066,7 @@ gfxFontUtils::GetFullNameFromTable(hb_blob_t *aNameTable,
                                              gfxFontUtils::NAME_ID_STYLE,
                                              styleName);
         if (NS_SUCCEEDED(rv) && !styleName.IsEmpty()) {
-            name.AppendLiteral(" ");
+            name.Append(' ');
             name.Append(styleName);
             aFullName = name;
         }

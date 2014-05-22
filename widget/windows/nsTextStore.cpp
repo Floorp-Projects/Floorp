@@ -202,7 +202,7 @@ GetFindFlagName(DWORD aFindFlag)
   if (description.IsEmpty()) {
     description.AppendLiteral("Unknown (");
     description.AppendInt(static_cast<uint32_t>(aFindFlag));
-    description.AppendLiteral(")");
+    description.Append(')');
   }
   return description;
 }

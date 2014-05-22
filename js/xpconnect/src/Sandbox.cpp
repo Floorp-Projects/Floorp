@@ -1539,9 +1539,9 @@ AssembleSandboxMemoryReporterName(JSContext *cx, nsCString &sandboxName)
 
         sandboxName.AppendLiteral(" (from: ");
         sandboxName.Append(NS_ConvertUTF16toUTF8(location));
-        sandboxName.AppendLiteral(":");
+        sandboxName.Append(':');
         sandboxName.AppendInt(lineNumber);
-        sandboxName.AppendLiteral(")");
+        sandboxName.Append(')');
     }
 
     return NS_OK;

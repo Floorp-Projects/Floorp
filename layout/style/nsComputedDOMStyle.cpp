@@ -1796,7 +1796,7 @@ SetValueToCalc(const nsStyleCoord::Calc *aCalc, nsROCSSPrimitiveValue *aValue)
     result.Append(tmp);
   }
 
-  result.AppendLiteral(")");
+  result.Append(')');
 
   aValue->SetString(result); // not really SetString
 }
@@ -1883,7 +1883,7 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
       }
       if (aGradient->mSize != NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER) {
         if (needSep) {
-          aString.AppendLiteral(" ");
+          aString.Append(' ');
         }
         AppendASCIItoUTF16(nsCSSProps::
                            ValueToKeyword(aGradient->mSize,
@@ -1894,7 +1894,7 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
     } else {
       AppendCSSGradientLength(aGradient->mRadiusX, tmpVal, aString);
       if (aGradient->mShape != NS_STYLE_GRADIENT_SHAPE_CIRCULAR) {
-        aString.AppendLiteral(" ");
+        aString.Append(' ');
         AppendCSSGradientLength(aGradient->mRadiusY, tmpVal, aString);
       }
       needSep = true;
@@ -1910,14 +1910,14 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
                aGradient->mBgPosY.GetPercentValue() != (isRadial ? 0.5f : 1.0f)) {
       if (isRadial && !aGradient->mLegacySyntax) {
         if (needSep) {
-          aString.AppendLiteral(" ");
+          aString.Append(' ');
         }
         aString.AppendLiteral("at ");
         needSep = false;
       }
       AppendCSSGradientLength(aGradient->mBgPosX, tmpVal, aString);
       if (aGradient->mBgPosY.GetUnit() != eStyleUnit_None) {
-        aString.AppendLiteral(" ");
+        aString.Append(' ');
         AppendCSSGradientLength(aGradient->mBgPosY, tmpVal, aString);
       }
       needSep = true;
@@ -1926,7 +1926,7 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
   if (aGradient->mAngle.GetUnit() != eStyleUnit_None) {
     MOZ_ASSERT(!isRadial || aGradient->mLegacySyntax);
     if (needSep) {
-      aString.AppendLiteral(" ");
+      aString.Append(' ');
     }
     nsStyleUtil::AppendAngleValue(aGradient->mAngle, aString);
     needSep = true;
@@ -1946,7 +1946,7 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
     }
     if (aGradient->mSize != NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER) {
       if (needSep) {
-        aString.AppendLiteral(" ");
+        aString.Append(' ');
       }
       AppendASCIItoUTF16(nsCSSProps::
                          ValueToKeyword(aGradient->mSize,
@@ -1967,14 +1967,14 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
     aString.Append(tokenString);
 
     if (aGradient->mStops[i].mLocation.GetUnit() != eStyleUnit_None) {
-      aString.AppendLiteral(" ");
+      aString.Append(' ');
       AppendCSSGradientLength(aGradient->mStops[i].mLocation, tmpVal, aString);
     }
     needSep = true;
   }
 
   delete tmpVal;
-  aString.AppendLiteral(")");
+  aString.Append(')');
 }
 
 // -moz-image-rect(<uri>, <top>, <right>, <bottom>, <left>)
@@ -2299,10 +2299,10 @@ nsComputedDOMStyle::GetGridLineNames(const nsTArray<nsString>& aLineNames)
       if (++i == i_end) {
         break;
       }
-      lineNamesString.AppendLiteral(" ");
+      lineNamesString.Append(' ');
     }
   }
-  lineNamesString.AppendLiteral(")");
+  lineNamesString.Append(')');
   val->SetString(lineNamesString);
   return val;
 }
@@ -5167,7 +5167,7 @@ nsComputedDOMStyle::CreatePrimitiveValueForStyleFilter(
     nsCSSProps::ValueToKeyword(aStyleFilter.GetType(),
                                nsCSSProps::kFilterFunctionKTable),
                                filterFunctionString);
-  filterFunctionString.AppendLiteral("(");
+  filterFunctionString.Append('(');
 
   nsAutoString argumentString;
   if (aStyleFilter.GetType() == NS_STYLE_FILTER_DROP_SHADOW) {
@@ -5185,7 +5185,7 @@ nsComputedDOMStyle::CreatePrimitiveValueForStyleFilter(
   filterFunctionString.Append(argumentString);
 
   // Filter function closing parenthesis.
-  filterFunctionString.AppendLiteral(")");
+  filterFunctionString.Append(')');
 
   value->SetString(filterFunctionString);
   return value;
@@ -5340,7 +5340,7 @@ nsComputedDOMStyle::AppendTimingFunction(nsDOMCSSValueList *aValueList,
     tmp.AppendFloat(aTimingFunction.mFunc.mX2);
     tmp.AppendLiteral(", ");
     tmp.AppendFloat(aTimingFunction.mFunc.mY2);
-    tmp.AppendLiteral(")");
+    tmp.Append(')');
   } else {
     tmp.AppendLiteral("steps(");
     tmp.AppendInt(aTimingFunction.mSteps);

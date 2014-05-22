@@ -578,7 +578,7 @@ formatPlainErrorMessage(const nsXPIDLCString &host, int32_t port,
 
     hostWithPort.AssignASCII(host);
     if (!suppressPort443 || port != 443) {
-      hostWithPort.AppendLiteral(":");
+      hostWithPort.Append(':');
       hostWithPort.AppendInt(port);
     }
     params[0] = hostWithPort.get();

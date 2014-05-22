@@ -151,7 +151,7 @@ nsStatusReporterManager::DumpReports()
 
   nsCString filename("status-reports-");
   filename.AppendInt(getpid());
-  filename.AppendLiteral("-");
+  filename.Append('-');
   filename.AppendInt(number++);
   filename.AppendLiteral(".json");
 
