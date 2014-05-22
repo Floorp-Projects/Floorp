@@ -29,6 +29,7 @@ using mozilla::dom::GamepadService;
 using mozilla::Mutex;
 using mozilla::MutexAutoLock;
 
+const unsigned kMaxAxes = 32;
 const LONG kMaxAxisValue = 65535;
 const DWORD BUTTON_DOWN_MASK = 0x80;
 // Multiple devices-changed notifications can be sent when a device
@@ -56,6 +57,7 @@ struct Gamepad {
   int vendorID;
   int productID;
   // Information about the physical device.
+  DWORD axes[kMaxAxes];
   int numAxes;
   int numHats;
   int numButtons;
@@ -392,6 +394,16 @@ WindowsGamepadService::EnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi,
   dp.lMin = 0;
   dp.lMax = kMaxAxisValue;
   gamepad->device->SetProperty(DIPROP_RANGE, &dp.diph);
+  // Find what the dwOfs of this object in the c_dfDIJoystick data format is.
+  for (DWORD i = 0; i < c_dfDIJoystick.dwNumObjs; i++) {
+    if (c_dfDIJoystick.rgodf[i].pguid &&
+        IsEqualGUID(*c_dfDIJoystick.rgodf[i].pguid, lpddoi->guidType) &&
+        gamepad->numAxes < kMaxAxes) {
+      gamepad->axes[gamepad->numAxes] = c_dfDIJoystick.rgodf[i].dwOfs;
+      gamepad->numAxes++;
+      break;
+    }
+  }
   return DIENUM_CONTINUE;
 }
 
@@ -413,8 +425,7 @@ WindowsGamepadService::EnumCallback(LPCDIDEVICEINSTANCE lpddi,
     }
   }
 
-  Gamepad gamepad;
-  memset(&gamepad, 0, sizeof(Gamepad));
+  Gamepad gamepad = {};
   if (self->dinput->CreateDevice(lpddi->guidInstance,
                                  getter_AddRefs(gamepad.device),
                                  nullptr)
@@ -441,13 +452,14 @@ WindowsGamepadService::EnumCallback(LPCDIDEVICEINSTANCE lpddi,
     DIDEVCAPS caps;
     caps.dwSize = sizeof(DIDEVCAPS);
     if (gamepad.device->GetCapabilities(&caps) == DI_OK) {
-      gamepad.numAxes = caps.dwAxes;
       gamepad.numHats = caps.dwPOVs;
       gamepad.numButtons = caps.dwButtons;
       //XXX: handle polled devices?
       // (caps.dwFlags & DIDC_POLLEDDATAFORMAT || caps.dwFlags & DIDC_POLLEDDEVICE)
     }
     // Set min/max range for all axes on the device.
+    // Axes will be gathered in EnumObjectsCallback.
+    gamepad.numAxes = 0;
     gamepad.device->EnumObjects(EnumObjectsCallback, &gamepad, DIDFT_AXIS);
     // Set up structure for setting buffer size for buffered data
     dp.diph.dwHeaderSize = sizeof(DIPROPHEADER);
@@ -578,7 +590,7 @@ WindowsGamepadService::DInputThread(LPVOID arg) {
                                     &data, &readCount, 0) == DI_OK) {
             //TODO: data.dwTimeStamp
             GamepadEvent::Type type = GamepadEvent::Unknown;
-            int which;
+            int which = -1;
             if (data.dwOfs >= DIJOFS_BUTTON0 && data.dwOfs < DIJOFS_BUTTON(32)) {
               type = GamepadEvent::Button;
               which = data.dwOfs - DIJOFS_BUTTON0;
@@ -586,7 +598,12 @@ WindowsGamepadService::DInputThread(LPVOID arg) {
             else if(data.dwOfs >= DIJOFS_X  && data.dwOfs < DIJOFS_SLIDER(2)) {
               // axis/slider
               type = GamepadEvent::Axis;
-              which = (data.dwOfs - DIJOFS_X) / sizeof(LONG);
+              for (int a = 0; a < self->mGamepads[i].numAxes; a++) {
+                if (self->mGamepads[i].axes[a] == data.dwOfs) {
+                  which = a;
+                  break;
+                }
+              }
             }
             else if (data.dwOfs >= DIJOFS_POV(0) && data.dwOfs < DIJOFS_POV(4)) {
               HatState hatState;
@@ -609,7 +626,7 @@ WindowsGamepadService::DInputThread(LPVOID arg) {
               self->mGamepads[i].hatState[which].y = hatState.y;
             }
 
-            if (type != GamepadEvent::Unknown) {
+            if (type != GamepadEvent::Unknown && which != -1) {
               nsRefPtr<GamepadEvent> event =
                 new GamepadEvent(self->mGamepads[i], type, which, data.dwData);
               NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
