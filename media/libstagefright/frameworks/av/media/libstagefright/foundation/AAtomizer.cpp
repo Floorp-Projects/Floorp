@@ -18,7 +18,7 @@
 
 #include "AAtomizer.h"
 
-namespace android {
+namespace stagefright {
 
 // static
 AAtomizer AAtomizer::gAtomizer;
@@ -64,4 +64,4 @@ uint32_t AAtomizer::Hash(const char *s) {
     return sum;
 }
 
-}  // namespace android
+}  // namespace stagefright

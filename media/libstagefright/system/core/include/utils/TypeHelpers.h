@@ -24,7 +24,7 @@
 
 // ---------------------------------------------------------------------------
 
-namespace android {
+namespace stagefright {
 
 /*
  * Types traits
@@ -201,7 +201,7 @@ void move_backward_type(TYPE* d, const TYPE* s, size_t n = 1) {
     if ((traits<TYPE>::has_trivial_dtor && traits<TYPE>::has_trivial_copy) 
             || traits<TYPE>::has_trivial_move) 
     {
-        memmove(d,s,n*sizeof(TYPE));
+        memmove((void*)d,(void*)s,n*sizeof(TYPE));
     } else {
         while (n--) {
             if (!traits<TYPE>::has_trivial_copy) {
@@ -295,7 +295,7 @@ template <typename T> inline hash_t hash_type(T* const & value) {
     return hash_type(uintptr_t(value));
 }
 
-}; // namespace android
+}; // namespace stagefright
 
 // ---------------------------------------------------------------------------
 

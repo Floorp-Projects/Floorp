@@ -25,7 +25,7 @@
 // No user serviceable parts in here...
 // ---------------------------------------------------------------------------
 
-namespace android {
+namespace stagefright {
 namespace tinyutils {
 
 /*!
@@ -187,7 +187,7 @@ private:
 };
 
 } // namespace tinyutils
-} // namespace android
+} // namespace stagefright
 
 
 // ---------------------------------------------------------------------------

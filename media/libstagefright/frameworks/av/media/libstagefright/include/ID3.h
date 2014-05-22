@@ -20,7 +20,7 @@
 
 #include <utils/RefBase.h>
 
-namespace android {
+namespace stagefright {
 
 struct DataSource;
 struct String8;
@@ -96,7 +96,7 @@ private:
     ID3 &operator=(const ID3 &);
 };
 
-}  // namespace android
+}  // namespace stagefright
 
 #endif  // ID3_H_
 

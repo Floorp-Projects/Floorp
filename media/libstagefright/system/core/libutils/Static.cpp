@@ -17,7 +17,7 @@
 // All static variables go here, to control initialization and
 // destruction order in the library.
 
-namespace android {
+namespace stagefright {
 
 // For String8.cpp
 extern void initialize_string8();
@@ -46,4 +46,4 @@ public:
 static LibUtilsFirstStatics gFirstStatics;
 int gDarwinCantLoadAllObjects = 1;
 
-}   // namespace android
+}   // namespace stagefright
