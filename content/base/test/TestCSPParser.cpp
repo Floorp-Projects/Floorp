@@ -90,6 +90,13 @@ nsresult runTest(uint32_t aExpectedPolicyCount, // this should be 0 for policies
   // we init the csp with http://www.selfuri.com
   nsCOMPtr<nsIURI> selfURI;
   nsresult rv = NS_NewURI(getter_AddRefs(selfURI), "http://www.selfuri.com");
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // we also init the csp with a dummyChannel, which is unused
+  // for the parser tests but surpresses assertions in SetRequestContext.
+  nsCOMPtr<nsIChannel> dummyChannel;
+  rv = NS_NewChannel(getter_AddRefs(dummyChannel), selfURI);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // create a CSP object
   nsCOMPtr<nsIContentSecurityPolicy> csp =
@@ -102,7 +109,7 @@ nsresult runTest(uint32_t aExpectedPolicyCount, // this should be 0 for policies
   csp->SetRequestContext(selfURI,
                          nullptr,  // nsIURI* aReferrer
                          nullptr,  // nsIPrincipal* aDocumentPrincipal
-                         nullptr); // nsIChannel* aChannel
+                         dummyChannel);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // append a policy
