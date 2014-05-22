@@ -120,7 +120,12 @@ this.ContentSearch = {
   },
 
   _reply: function (msg, type, data) {
-    msg.target.messageManager.sendAsyncMessage(...this._msgArgs(type, data));
+    // Due to _initService, we reply asyncly to messages, and by the time we
+    // reply the browser we're responding to may have been destroyed.  In that
+    // case messageManager is null.
+    if (msg.target.messageManager) {
+      msg.target.messageManager.sendAsyncMessage(...this._msgArgs(type, data));
+    }
   },
 
   _broadcast: function (type, data) {
