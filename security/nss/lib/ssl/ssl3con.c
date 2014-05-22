@@ -5171,7 +5171,7 @@ ssl3_SendClientHello(sslSocket *ss, PRBool resending)
 	rv = ssl3_AppendHandshakeVariable(
 	    ss, sid->u.ssl3.sessionID, sid->u.ssl3.sessionIDLength, 1);
     else
-	rv = ssl3_AppendHandshakeVariable(ss, NULL, 0, 1);
+	rv = ssl3_AppendHandshakeNumber(ss, 0, 1);
     if (rv != SECSuccess) {
 	if (sid->u.ssl3.lock) { PR_RWLock_Unlock(sid->u.ssl3.lock); }
 	return rv;	/* err set by ssl3_AppendHandshake* */
@@ -8614,7 +8614,7 @@ ssl3_SendServerHello(sslSocket *ss)
 	rv = ssl3_AppendHandshakeVariable(
 	    ss, sid->u.ssl3.sessionID, sid->u.ssl3.sessionIDLength, 1);
     else
-	rv = ssl3_AppendHandshakeVariable(ss, NULL, 0, 1);
+	rv = ssl3_AppendHandshakeNumber(ss, 0, 1);
     if (rv != SECSuccess) {
 	return rv;	/* err set by AppendHandshake. */
     }
