@@ -111,12 +111,12 @@ pref("layout.reflow.synthMouseMove", false);
 pref("layers.enable-tiles", true);
 /*
    Cross Process Mutex is not supported on Mac OS X so progressive
-   paint can not be enabled for B2G on Mac OS X desktop
+   paint cannot be enabled for B2G on Mac OS X desktop
 */
 #ifdef MOZ_WIDGET_COCOA
 pref("layers.progressive-paint", false);
 #else
-pref("layers.progressive-paint", false);
+pref("layers.progressive-paint", true);
 #endif
 
 /* download manager (don't show the window or alert) */
