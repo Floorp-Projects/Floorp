@@ -59,6 +59,9 @@
       title="&prefWindow.titleGNOME;">
 #endif
 
+  <html:link rel="shortcut icon"
+              href="chrome://browser/skin/preferences/in-content/favicon.ico"/>
+
   <script type="application/javascript"
           src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/javascript"
