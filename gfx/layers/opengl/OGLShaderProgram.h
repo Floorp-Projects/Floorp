@@ -51,11 +51,10 @@ public:
     NotAKnownUniform = -1,
 
     LayerTransform = 0,
-    MaskTransform,
-    LayerRects,
+    MaskQuadTransform,
+    LayerQuadRect,
     MatrixProj,
     TextureTransform,
-    TextureRects,
     RenderTargetOffset,
     LayerOpacity,
     Texture,
@@ -319,15 +318,12 @@ public:
   }
 
   void SetMaskLayerTransform(const gfx::Matrix4x4& aMatrix) {
-    SetMatrixUniform(KnownUniform::MaskTransform, aMatrix);
+    SetMatrixUniform(KnownUniform::MaskQuadTransform, aMatrix);
   }
 
-  void SetLayerRects(const gfx::Rect* aRects) {
-    float vals[16] = { aRects[0].x, aRects[0].y, aRects[0].width, aRects[0].height,
-                       aRects[1].x, aRects[1].y, aRects[1].width, aRects[1].height,
-                       aRects[2].x, aRects[2].y, aRects[2].width, aRects[2].height,
-                       aRects[3].x, aRects[3].y, aRects[3].width, aRects[3].height };
-    SetUniform(KnownUniform::LayerRects, 16, vals);
+  void SetLayerQuadRect(const gfx::Rect& aRect) {
+    float vals[4] = { float(aRect.x), float(aRect.y), float(aRect.width), float(aRect.height) };
+    SetUniform(KnownUniform::LayerQuadRect, 4, vals);
   }
 
   void SetProjectionMatrix(const gfx::Matrix4x4& aMatrix) {
@@ -337,14 +333,6 @@ public:
   // sets this program's texture transform, if it uses one
   void SetTextureTransform(const gfx::Matrix4x4& aMatrix) {
     SetMatrixUniform(KnownUniform::TextureTransform, aMatrix);
-  }
-
-  void SetTextureRects(const gfx::Rect* aRects) {
-    float vals[16] = { aRects[0].x, aRects[0].y, aRects[0].width, aRects[0].height,
-                       aRects[1].x, aRects[1].y, aRects[1].width, aRects[1].height,
-                       aRects[2].x, aRects[2].y, aRects[2].width, aRects[2].height,
-                       aRects[3].x, aRects[3].y, aRects[3].width, aRects[3].height };
-    SetUniform(KnownUniform::TextureRects, 16, vals);
   }
 
   void SetRenderOffset(const nsIntPoint& aOffset) {
@@ -477,7 +465,6 @@ protected:
       case 2: mGL->fUniform2fv(ku.mLocation, 1, ku.mValue.f16v); break;
       case 3: mGL->fUniform3fv(ku.mLocation, 1, ku.mValue.f16v); break;
       case 4: mGL->fUniform4fv(ku.mLocation, 1, ku.mValue.f16v); break;
-      case 16: mGL->fUniform4fv(ku.mLocation, 4, ku.mValue.f16v); break;
       default:
         NS_NOTREACHED("Bogus aLength param");
       }
