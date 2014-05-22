@@ -949,8 +949,11 @@ js::StartOffThreadCompression(ExclusiveContext *cx, SourceCompressionTask *task)
 
     AutoLockWorkerThreadState lock;
 
-    if (!WorkerThreadState().compressionWorklist().append(task))
+    if (!WorkerThreadState().compressionWorklist().append(task)) {
+        if (JSContext *maybecx = cx->maybeJSContext())
+            js_ReportOutOfMemory(maybecx);
         return false;
+    }
 
     WorkerThreadState().notifyOne(GlobalWorkerThreadState::PRODUCER);
     return true;
