@@ -434,6 +434,7 @@ void RTSPSource::onMessageReceived(const sp<AMessage> &msg) {
                 source->signalEOS(finalResult);
             }
 
+            onTrackEndOfStream(trackIndex);
             break;
         }
 
@@ -619,7 +620,9 @@ void RTSPSource::onDisconnected(const sp<AMessage> &msg) {
 
 void RTSPSource::finishDisconnectIfPossible() {
     if (mState != DISCONNECTED) {
-        mHandler->disconnect();
+        if (!mHandler.get()) {
+            mHandler->disconnect();
+        }
     }
 
     (new AMessage)->postReply(mDisconnectReplyID);
@@ -669,5 +672,22 @@ void RTSPSource::onTrackDataAvailable(size_t trackIndex)
     if (mListener) {
         mListener->OnMediaDataAvailable(trackIndex, data, data.Length(), 0, meta.get());
     }
+}
+
+void RTSPSource::onTrackEndOfStream(size_t trackIndex)
+{
+    mState = CONNECTED;
+    if (!mListener) {
+        return;
+    }
+
+    nsRefPtr<nsIStreamingProtocolMetaData> meta;
+    meta = new mozilla::net::RtspMetaData();
+    meta->SetFrameType(MEDIASTREAM_FRAMETYPE_END_OF_STREAM);
+
+    nsCString data;
+    data.AssignLiteral("END_OF_STREAM");
+
+    mListener->OnMediaDataAvailable(trackIndex, data, data.Length(), 0, meta.get());
 }
 }  // namespace android
