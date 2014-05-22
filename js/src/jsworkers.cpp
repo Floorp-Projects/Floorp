@@ -578,12 +578,6 @@ GlobalWorkerThreadState::canStartCompressionTask()
     return !compressionWorklist().empty();
 }
 
-bool
-GlobalWorkerThreadState::canStartGCHelperTask()
-{
-    return !gcHelperWorklist().empty();
-}
-
 static void
 CallNewScriptHookForAllScripts(JSContext *cx, HandleScript script)
 {
@@ -1024,24 +1018,6 @@ GlobalWorkerThreadState::compressionTaskForSource(ScriptSource *ss)
 }
 
 void
-WorkerThread::handleGCHelperWorkload()
-{
-    JS_ASSERT(WorkerThreadState().isLocked());
-    JS_ASSERT(WorkerThreadState().canStartGCHelperTask());
-    JS_ASSERT(idle());
-
-    JS_ASSERT(!gcHelperState);
-    gcHelperState = WorkerThreadState().gcHelperWorklist().popCopy();
-
-    {
-        AutoUnlockWorkerThreadState unlock;
-        gcHelperState->work();
-    }
-
-    gcHelperState = nullptr;
-}
-
-void
 WorkerThread::threadLoop()
 {
     JS::AutoAssertNoGC nogc;
@@ -1069,8 +1045,7 @@ WorkerThread::threadLoop()
             if (WorkerThreadState().canStartIonCompile() ||
                 WorkerThreadState().canStartAsmJSCompile() ||
                 WorkerThreadState().canStartParseTask() ||
-                WorkerThreadState().canStartCompressionTask() ||
-                WorkerThreadState().canStartGCHelperTask())
+                WorkerThreadState().canStartCompressionTask())
             {
                 break;
             }
@@ -1086,8 +1061,6 @@ WorkerThread::threadLoop()
             handleParseWorkload();
         else if (WorkerThreadState().canStartCompressionTask())
             handleCompressionWorkload();
-        else if (WorkerThreadState().canStartGCHelperTask())
-            handleGCHelperWorkload();
         else
             MOZ_ASSUME_UNREACHABLE("No task to perform");
     }
