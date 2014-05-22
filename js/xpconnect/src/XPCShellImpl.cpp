@@ -196,7 +196,7 @@ GetLocationProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleV
 static bool
 GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
     {
-        char line[256] = { '\0' };
+        char line[4096] = { '\0' };
         fputs(prompt, gOutFile);
         fflush(gOutFile);
         if ((!fgets(line, sizeof line, file) && errno != EINTR) || feof(file))

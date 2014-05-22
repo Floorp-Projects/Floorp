@@ -52,7 +52,7 @@ public:
 
     LayerTransform = 0,
     MaskQuadTransform,
-    LayerQuadTransform,
+    LayerQuadRect,
     MatrixProj,
     TextureTransform,
     RenderTargetOffset,
@@ -321,22 +321,9 @@ public:
     SetMatrixUniform(KnownUniform::MaskQuadTransform, aMatrix);
   }
 
-  void SetLayerQuadRect(const nsIntRect& aRect) {
-    gfx3DMatrix m;
-    m._11 = float(aRect.width);
-    m._22 = float(aRect.height);
-    m._41 = float(aRect.x);
-    m._42 = float(aRect.y);
-    SetMatrixUniform(KnownUniform::LayerQuadTransform, m);
-  }
-
   void SetLayerQuadRect(const gfx::Rect& aRect) {
-    gfx3DMatrix m;
-    m._11 = aRect.width;
-    m._22 = aRect.height;
-    m._41 = aRect.x;
-    m._42 = aRect.y;
-    SetMatrixUniform(KnownUniform::LayerQuadTransform, m);
+    float vals[4] = { float(aRect.x), float(aRect.y), float(aRect.width), float(aRect.height) };
+    SetUniform(KnownUniform::LayerQuadRect, 4, vals);
   }
 
   void SetProjectionMatrix(const gfx::Matrix4x4& aMatrix) {
