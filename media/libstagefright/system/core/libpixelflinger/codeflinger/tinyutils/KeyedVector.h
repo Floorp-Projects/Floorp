@@ -27,7 +27,7 @@
 
 // ---------------------------------------------------------------------------
 
-namespace android {
+namespace stagefright {
 namespace tinyutils {
 
 template <typename KEY, typename VALUE>
@@ -196,7 +196,7 @@ const VALUE& DefaultKeyedVector<KEY,VALUE>::valueFor(const KEY& key) const {
 }
 
 } // namespace tinyutils
-} // namespace android
+} // namespace stagefright
 
 // ---------------------------------------------------------------------------
 

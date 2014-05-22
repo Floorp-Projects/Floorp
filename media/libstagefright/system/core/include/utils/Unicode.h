@@ -22,9 +22,6 @@
 
 extern "C" {
 
-typedef uint32_t char32_t;
-typedef uint16_t char16_t;
-
 // Standard string functions on char16_t strings.
 int strcmp16(const char16_t *, const char16_t *);
 int strncmp16(const char16_t *s1, const char16_t *s2, size_t n);

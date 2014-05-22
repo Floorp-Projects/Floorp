@@ -21,7 +21,7 @@
 #include <utils/Errors.h>
 #include <media/stagefright/MediaExtractor.h>
 
-namespace android {
+namespace stagefright {
 
 struct AMessage;
 class String8;
@@ -57,6 +57,6 @@ bool SniffAMR(
         const sp<DataSource> &source, String8 *mimeType, float *confidence,
         sp<AMessage> *);
 
-}  // namespace android
+}  // namespace stagefright
 
 #endif  // AMR_EXTRACTOR_H_
