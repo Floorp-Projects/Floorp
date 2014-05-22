@@ -206,6 +206,39 @@ private:
 
   void FinalizeDeferredThings(DeferredFinalizeType aType);
 
+  // Two conditions, JSOutOfMemory and JSLargeAllocationFailure, are noted in
+  // crash reports. Here are the values that can appear in the reports:
+  MOZ_BEGIN_NESTED_ENUM_CLASS(OOMState, uint32_t)
+    // The condition has never happened. No entry appears in the crash report.
+    OK,
+
+    // We are currently reporting the given condition.
+    // 
+    // Suppose a crash report contains "JSLargeAllocationFailure:
+    // Reporting". This means we crashed while executing memory-pressure
+    // observers, trying to shake loose some memory. The large allocation in
+    // question did not return null: it is still on the stack. Had we not
+    // crashed, it would have been retried.
+    Reporting,
+
+    // The condition has been reported since the last GC.
+    //
+    // If a crash report contains "JSOutOfMemory: Reported", that means a small
+    // allocation failed, and then we crashed, probably due to buggy
+    // error-handling code that ran after allocation returned null.
+    //
+    // This contrasts with "Reporting" which means that no error-handling code
+    // had executed yet.
+    Reported,
+
+    // The condition has happened, but a GC cycle ended since then.
+    //
+    // GC is taken as a proxy for "we've been banging on the heap a good bit
+    // now and haven't crashed; the OOM was probably handled correctly".
+    Recovered
+  MOZ_END_NESTED_ENUM_CLASS(OOMState)
+
+  void AnnotateAndSetOutOfMemory(OOMState *aStatePtr, OOMState aNewState);
   void OnGC(JSGCStatus aStatus);
   void OnOutOfMemory();
   void OnLargeAllocationFailure();
@@ -269,7 +302,12 @@ private:
   nsRefPtr<IncrementalFinalizeRunnable> mFinalizeRunnable;
 
   nsCOMPtr<nsIException> mPendingException;
+
+  OOMState mOutOfMemoryState;
+  OOMState mLargeAllocationFailureState;
 };
+
+MOZ_FINISH_NESTED_ENUM_CLASS(CycleCollectedJSRuntime::OOMState)
 
 } // namespace mozilla
 
