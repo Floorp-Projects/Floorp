@@ -1600,7 +1600,7 @@ void
 WebSocketChannel::GeneratePing()
 {
   nsCString *buf = new nsCString();
-  buf->Assign("PING");
+  buf->AssignLiteral("PING");
   EnqueueOutgoingMessage(mOutgoingPingMessages,
                          new OutboundMessage(kMsgTypePing, buf));
 }
