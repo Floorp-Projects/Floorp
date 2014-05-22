@@ -204,18 +204,7 @@ public:
                         const gfx::Rect& aClipRect,
                         const EffectChain &aEffectChain,
                         gfx::Float aOpacity,
-                        const gfx::Matrix4x4 &aTransform) MOZ_OVERRIDE
-  {
-    DrawQuadInternal(aRect, aClipRect, aEffectChain,
-                     aOpacity, aTransform, LOCAL_GL_TRIANGLE_STRIP);
-  }
-
-  virtual void DrawLines(const std::vector<gfx::Point>& aLines,
-                         const gfx::Rect& aClipRect,
-                         const gfx::Color& aColor,
-                         gfx::Float aOpacity,
-                         const gfx::Matrix4x4 &aTransform) MOZ_OVERRIDE;
-
+                        const gfx::Matrix4x4 &aTransform) MOZ_OVERRIDE;
 
   virtual void EndFrame() MOZ_OVERRIDE;
   virtual void SetFBAcquireFence(Layer* aLayer) MOZ_OVERRIDE;
@@ -285,13 +274,6 @@ public:
     return mProjMatrix;
   }
 private:
-  virtual void DrawQuadInternal(const gfx::Rect& aRect,
-                                const gfx::Rect& aClipRect,
-                                const EffectChain &aEffectChain,
-                                gfx::Float aOpacity,
-                                const gfx::Matrix4x4 &aTransformi,
-                                GLuint aDrawMode);
-
   virtual gfx::IntSize GetWidgetSize() const MOZ_OVERRIDE
   {
     return gfx::ToIntSize(mWidgetSize);
@@ -386,12 +368,10 @@ private:
   void BindQuadVBO();
   void QuadVBOVerticesAttrib(GLuint aAttribIndex);
   void QuadVBOTexCoordsAttrib(GLuint aAttribIndex);
-  void BindAndDrawQuad(GLuint aVertAttribIndex,
-                       GLuint aTexCoordAttribIndex,
-                       GLuint aDrawMode = LOCAL_GL_TRIANGLE_STRIP);
   void BindAndDrawQuad(ShaderProgramOGL *aProg,
-                       GLuint aDrawMode = LOCAL_GL_TRIANGLE_STRIP);
+                       const gfx::Rect& aRect);
   void BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
+                                      const gfx::Rect& aRect,
                                       const gfx3DMatrix& aTextureTransform,
                                       const gfx::Rect& aTexCoordRect,
                                       TextureSource *aTexture);

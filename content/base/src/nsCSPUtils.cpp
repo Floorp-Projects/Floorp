@@ -104,6 +104,28 @@ CSP_LogMessage(const nsAString& aMessage,
   console->LogMessage(error);
 }
 
+/**
+ * Combines CSP_LogMessage and CSP_GetLocalizedStr into one call.
+ */
+void
+CSP_LogLocalizedStr(const char16_t* aName,
+                    const char16_t** aParams,
+                    uint32_t aLength,
+                    const nsAString& aSourceName,
+                    const nsAString& aSourceLine,
+                    uint32_t aLineNumber,
+                    uint32_t aColumnNumber,
+                    uint32_t aFlags,
+                    const char* aCategory,
+                    uint32_t aInnerWindowID)
+{
+  nsXPIDLString logMsg;
+  CSP_GetLocalizedStr(aName, aParams, aLength, getter_Copies(logMsg));
+  CSP_LogMessage(logMsg, aSourceName, aSourceLine,
+                 aLineNumber, aColumnNumber, aFlags,
+                 aCategory, aInnerWindowID);
+}
+
 /* ===== Helpers ============================ */
 
 nsCSPHostSrc*
@@ -636,13 +658,14 @@ CSP_DirectiveToContentType(enum CSPDirective aDir)
     case CSP_MEDIA_SRC:  return nsIContentPolicy::TYPE_MEDIA;
     case CSP_OBJECT_SRC: return nsIContentPolicy::TYPE_OBJECT;
     case CSP_FRAME_SRC:  return nsIContentPolicy::TYPE_SUBDOCUMENT;
+    case CSP_REPORT_URI: return nsIContentPolicy::TYPE_CSP_REPORT;
+
     // TODO(sid): fix this mapping to be more precise (bug 999656)
     case CSP_FRAME_ANCESTORS: return nsIContentPolicy::TYPE_DOCUMENT;
 
     // Fall through to error for the following Directives:
     case CSP_DEFAULT_SRC:
     case CSP_CONNECT_SRC:
-    case CSP_REPORT_URI:
     case CSP_LAST_DIRECTIVE_VALUE:
     default:
       NS_ASSERTION(false, "Can not convert CSPDirective into nsContentPolicyType");
@@ -663,6 +686,20 @@ nsCSPDirective::directiveNameEqualsContentType(nsContentPolicyType aContentType)
     aContentType = nsIContentPolicy::TYPE_SCRIPT;
   }
   return aContentType == CSP_DirectiveToContentType(mDirective);
+}
+
+void
+nsCSPDirective::getReportURIs(nsTArray<nsString> &outReportURIs) const
+{
+  NS_ASSERTION((mDirective == CSP_REPORT_URI), "not a report-uri directive");
+
+  // append uris
+  nsString tmpReportURI;
+  for (uint32_t i = 0; i < mSrcs.Length(); i++) {
+    tmpReportURI.Truncate();
+    mSrcs[i]->toString(tmpReportURI);
+    outReportURIs.AppendElement(tmpReportURI);
+  }
 }
 
 /* ===== nsCSPPolicy ========================= */
@@ -808,4 +845,27 @@ nsCSPPolicy::directiveExists(enum CSPDirective aDir) const
     }
   }
   return false;
+}
+
+void
+nsCSPPolicy::getDirectiveStringForContentType(nsContentPolicyType aContentType,
+                                              nsAString& outDirective) const
+{
+  for (uint32_t i = 0; i < mDirectives.Length(); i++) {
+    if (mDirectives[i]->directiveNameEqualsContentType(aContentType)) {
+      mDirectives[i]->toString(outDirective);
+      return;
+    }
+  }
+}
+
+void
+nsCSPPolicy::getReportURIs(nsTArray<nsString>& outReportURIs) const
+{
+  for (uint32_t i = 0; i < mDirectives.Length(); i++) {
+    if (mDirectives[i]->equals(CSP_REPORT_URI)) {
+      mDirectives[i]->getReportURIs(outReportURIs);
+      return;
+    }
+  }
 }

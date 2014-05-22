@@ -32,7 +32,7 @@ AddUniforms(ProgramProfileOGL& aProfile)
     static const char *sKnownUniformNames[] = {
         "uLayerTransform",
         "uMaskQuadTransform",
-        "uLayerQuadTransform",
+        "uLayerQuadRect",
         "uMatrixProj",
         "uTextureTransform",
         "uRenderTargetOffset",
@@ -145,7 +145,7 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   AddUniforms(result);
 
   vs << "uniform mat4 uMatrixProj;" << endl;
-  vs << "uniform mat4 uLayerQuadTransform;" << endl;
+  vs << "uniform vec4 uLayerQuadRect;" << endl;
   vs << "uniform mat4 uLayerTransform;" << endl;
   vs << "uniform vec4 uRenderTargetOffset;" << endl;
 
@@ -164,8 +164,7 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   }
 
   vs << "void main() {" << endl;
-  vs << "  vec4 finalPosition = aVertexCoord;" << endl;
-  vs << "  finalPosition = uLayerQuadTransform * finalPosition;" << endl;
+  vs << "  vec4 finalPosition = vec4(aVertexCoord.xy * uLayerQuadRect.zw + uLayerQuadRect.xy, 0.0, 1.0);" << endl;
   vs << "  finalPosition = uLayerTransform * finalPosition;" << endl;
   vs << "  finalPosition.xyz /= finalPosition.w;" << endl;
 

@@ -35,6 +35,18 @@
 #include <mach/host_info.h>
 #endif
 
+#if defined(__DragonFly__) || defined(__FreeBSD__) \
+ || defined(__NetBSD__) || defined(__OpenBSD__)
+#include <sys/sysctl.h>
+# if defined(__OpenBSD__)
+#define KERN_CP_TIME KERN_CPTIME
+# endif
+#endif
+
+#if defined(__NetBSD__) || defined(__OpenBSD__)
+#include <sys/sched.h>
+#endif
+
 #ifdef XP_WIN
 #include <pdh.h>
 #include <tchar.h>
@@ -400,6 +412,35 @@ nsresult LoadInfo::UpdateSystemLoad()
                            + load_info.cpu_ticks[CPU_STATE_SYSTEM]
                            + load_info.cpu_ticks[CPU_STATE_USER];
   const uint64_t total_times = cpu_times + load_info.cpu_ticks[CPU_STATE_IDLE];
+
+  UpdateCpuLoad(mTicksPerInterval,
+                total_times,
+                cpu_times,
+                &mSystemLoad);
+  return NS_OK;
+#elif defined(__DragonFly__) || defined(__FreeBSD__) \
+   || defined(__NetBSD__) || defined(__OpenBSD__)
+  long cp_time[CPUSTATES];
+  size_t sz = sizeof(cp_time);
+#ifdef KERN_CP_TIME
+  int mib[] = {
+    CTL_KERN,
+    KERN_CP_TIME,
+  };
+  size_t miblen = sizeof(mib) / sizeof(mib[0]);
+  if (sysctl(mib, miblen, &cp_time, &sz, NULL, 0)) {
+#else
+  if (sysctlbyname("kern.cp_time", &cp_time, &sz, NULL, 0)) {
+#endif
+    LOG(("sysctl kern.cp_time failed"));
+    return NS_ERROR_FAILURE;
+  }
+
+  const uint64_t cpu_times = cp_time[CP_NICE]
+                           + cp_time[CP_SYS]
+                           + cp_time[CP_INTR]
+                           + cp_time[CP_USER];
+  const uint64_t total_times = cpu_times + cp_time[CP_IDLE];
 
   UpdateCpuLoad(mTicksPerInterval,
                 total_times,
