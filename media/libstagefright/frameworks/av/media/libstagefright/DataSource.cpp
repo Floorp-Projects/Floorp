@@ -20,30 +20,12 @@
 #include "include/chromium_http_stub.h"
 #endif
 
-#include "include/AACExtractor.h"
-#include "include/DRMExtractor.h"
-#include "include/FLACExtractor.h"
-#include "include/HTTPBase.h"
-#include "include/MP3Extractor.h"
-#include "include/MPEG2PSExtractor.h"
-#include "include/MPEG2TSExtractor.h"
 #include "include/MPEG4Extractor.h"
-#include "include/NuCachedSource2.h"
-#include "include/OggExtractor.h"
-#include "include/WAVExtractor.h"
-#include "include/WVMExtractor.h"
 
-#include "matroska/MatroskaExtractor.h"
-
-#include <media/stagefright/foundation/AMessage.h>
 #include <media/stagefright/DataSource.h>
-#include <media/stagefright/FileSource.h>
 #include <media/stagefright/MediaErrors.h>
-#include <utils/String8.h>
 
-#include <cutils/properties.h>
-
-namespace android {
+namespace stagefright {
 
 bool DataSource::getUInt16(off64_t offset, uint16_t *x) {
     *x = 0;
@@ -104,6 +86,8 @@ status_t DataSource::getSize(off64_t *size) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#if 0
 
 Mutex DataSource::gSnifferMutex;
 List<DataSource::SnifferFunc> DataSource::gSniffers;
@@ -226,8 +210,10 @@ sp<DataSource> DataSource::CreateFromURI(
     return source;
 }
 
+#endif
+
 String8 DataSource::getMIMEType() const {
     return String8("application/octet-stream");
 }
 
-}  // namespace android
+}  // namespace stagefright

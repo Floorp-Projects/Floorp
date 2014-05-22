@@ -635,7 +635,7 @@ ProcessRawBytes(nsINSSComponent *nssComponent, SECItem *data,
     nsAutoString value;
     value.AppendInt(i_pv);
     text.Append(value);
-    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+    text.AppendLiteral(SEPARATOR);
     return NS_OK;
   }
 
@@ -652,7 +652,7 @@ ProcessRawBytes(nsINSSComponent *nssComponent, SECItem *data,
     if (NS_FAILED(rv))
       return rv;
 
-    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+    text.AppendLiteral(SEPARATOR);
   }
 
   // This prints the value of the byte out into a 
@@ -666,7 +666,7 @@ ProcessRawBytes(nsINSSComponent *nssComponent, SECItem *data,
     PR_snprintf(buffer, 5, "%02x ", data->data[i]);
     AppendASCIItoUTF16(buffer, text);
     if ((i+1)%16 == 0) {
-      text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+      text.AppendLiteral(SEPARATOR);
     }
   }
   return NS_OK;
@@ -692,37 +692,37 @@ ProcessNSCertTypeExtensions(SECItem  *extData,
   if (nsCertType & NS_CERT_TYPE_SSL_CLIENT) {
     nssComponent->GetPIPNSSBundleString("VerifySSLClient", local);
     text.Append(local.get());
-    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+    text.AppendLiteral(SEPARATOR);
   }
   if (nsCertType & NS_CERT_TYPE_SSL_SERVER) {
     nssComponent->GetPIPNSSBundleString("VerifySSLServer", local);
     text.Append(local.get());
-    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+    text.AppendLiteral(SEPARATOR);
   }
   if (nsCertType & NS_CERT_TYPE_EMAIL) {
     nssComponent->GetPIPNSSBundleString("CertDumpCertTypeEmail", local);
     text.Append(local.get());
-    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+    text.AppendLiteral(SEPARATOR);
   }
   if (nsCertType & NS_CERT_TYPE_OBJECT_SIGNING) {
     nssComponent->GetPIPNSSBundleString("VerifyObjSign", local);
     text.Append(local.get());
-    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+    text.AppendLiteral(SEPARATOR);
   }
   if (nsCertType & NS_CERT_TYPE_SSL_CA) {
     nssComponent->GetPIPNSSBundleString("VerifySSLCA", local);
     text.Append(local.get());
-    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+    text.AppendLiteral(SEPARATOR);
   }
   if (nsCertType & NS_CERT_TYPE_EMAIL_CA) {
     nssComponent->GetPIPNSSBundleString("CertDumpEmailCA", local);
     text.Append(local.get());
-    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+    text.AppendLiteral(SEPARATOR);
   }
   if (nsCertType & NS_CERT_TYPE_OBJECT_SIGNING_CA) {
     nssComponent->GetPIPNSSBundleString("VerifyObjSign", local);
     text.Append(local.get());
-    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+    text.AppendLiteral(SEPARATOR);
   }
   return NS_OK;
 }
@@ -746,37 +746,37 @@ ProcessKeyUsageExtension(SECItem *extData, nsAString &text,
   if (keyUsage & KU_DIGITAL_SIGNATURE) {
     nssComponent->GetPIPNSSBundleString("CertDumpKUSign", local);
     text.Append(local.get());
-    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+    text.AppendLiteral(SEPARATOR);
   }
   if (keyUsage & KU_NON_REPUDIATION) {
     nssComponent->GetPIPNSSBundleString("CertDumpKUNonRep", local);
     text.Append(local.get());
-    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+    text.AppendLiteral(SEPARATOR);
   }
   if (keyUsage & KU_KEY_ENCIPHERMENT) {
     nssComponent->GetPIPNSSBundleString("CertDumpKUEnc", local);
     text.Append(local.get());
-    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+    text.AppendLiteral(SEPARATOR);
   }
   if (keyUsage & KU_DATA_ENCIPHERMENT) {
     nssComponent->GetPIPNSSBundleString("CertDumpKUDEnc", local);
     text.Append(local.get());
-    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+    text.AppendLiteral(SEPARATOR);
   }
   if (keyUsage & KU_KEY_AGREEMENT) {
     nssComponent->GetPIPNSSBundleString("CertDumpKUKA", local);
     text.Append(local.get());
-    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+    text.AppendLiteral(SEPARATOR);
   }
   if (keyUsage & KU_KEY_CERT_SIGN) {
     nssComponent->GetPIPNSSBundleString("CertDumpKUCertSign", local);
     text.Append(local.get());
-    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+    text.AppendLiteral(SEPARATOR);
   }
   if (keyUsage & KU_CRL_SIGN) {
     nssComponent->GetPIPNSSBundleString("CertDumpKUCRLSigner", local);
     text.Append(local.get());
-    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+    text.AppendLiteral(SEPARATOR);
   }
 
   return NS_OK;
@@ -816,7 +816,7 @@ ProcessBasicConstraints(SECItem  *extData,
                                                       params, 1, local);
     if (NS_FAILED(rv2))
       return rv2;
-    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+    text.AppendLiteral(SEPARATOR);
     text.Append(local.get());
   }
   return NS_OK;
@@ -856,14 +856,14 @@ ProcessExtKeyUsage(SECItem  *extData,
     if (NS_SUCCEEDED(rv)) {
       // display name and OID in parentheses
       text.Append(local);
-      text.Append(NS_LITERAL_STRING(" ("));
+      text.AppendLiteral(" (");
       text.Append(oidname);
-      text.Append(NS_LITERAL_STRING(")"));
+      text.Append(')');
     } else
       // If there is no bundle string, just display the OID itself
       text.Append(oidname);
 
-    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+    text.AppendLiteral(SEPARATOR);
     oids++;
   }
 
@@ -1140,9 +1140,9 @@ ProcessGeneralName(PLArenaPool *arena,
     break;
   }
   text.Append(key);
-  text.Append(NS_LITERAL_STRING(": "));
+  text.AppendLiteral(": ");
   text.Append(value);
-  text.Append(NS_LITERAL_STRING(SEPARATOR));
+  text.AppendLiteral(SEPARATOR);
  finish:
     return rv;
 }
@@ -1212,7 +1212,7 @@ ProcessSubjectKeyId(SECItem  *extData,
   
   nssComponent->GetPIPNSSBundleString("CertDumpKeyID", local);
   text.Append(local);
-  text.Append(NS_LITERAL_STRING(": "));
+  text.AppendLiteral(": ");
   ProcessRawBytes(nssComponent, &decoded, text);
 
  finish:
@@ -1243,15 +1243,15 @@ ProcessAuthKeyId(SECItem  *extData,
   if (ret->keyID.len > 0) {
     nssComponent->GetPIPNSSBundleString("CertDumpKeyID", local);
     text.Append(local);
-    text.Append(NS_LITERAL_STRING(": "));
+    text.AppendLiteral(": ");
     ProcessRawBytes(nssComponent, &ret->keyID, text);
-    text.Append(NS_LITERAL_STRING(SEPARATOR));
+    text.AppendLiteral(SEPARATOR);
   }
 
   if (ret->authCertIssuer) {
     nssComponent->GetPIPNSSBundleString("CertDumpIssuer", local);
     text.Append(local);
-    text.Append(NS_LITERAL_STRING(": "));
+    text.AppendLiteral(": ");
     rv = ProcessGeneralNames(arena, ret->authCertIssuer, text, nssComponent);
     if (NS_FAILED(rv))
       goto finish;
@@ -1260,7 +1260,7 @@ ProcessAuthKeyId(SECItem  *extData,
   if (ret->authCertSerialNumber.len > 0) {
     nssComponent->GetPIPNSSBundleString("CertDumpSerialNo", local);
     text.Append(local);
-    text.Append(NS_LITERAL_STRING(": "));
+    text.AppendLiteral(": ");
     ProcessRawBytes(nssComponent, &ret->authCertSerialNumber, text);
   }
 
@@ -1304,7 +1304,7 @@ ProcessUserNotice(SECItem *der_notice,
     default:
       break;
     }
-    text.Append(NS_LITERAL_STRING(" - "));
+    text.AppendLiteral(" - ");
     itemList = notice->noticeReference.noticeNumbers;
     while (*itemList) {
       unsigned long number;
@@ -1312,15 +1312,15 @@ ProcessUserNotice(SECItem *der_notice,
       if (SEC_ASN1DecodeInteger(*itemList, &number) == SECSuccess) {
         PR_snprintf(buffer, sizeof(buffer), "#%d", number);
         if (itemList != notice->noticeReference.noticeNumbers)
-          text.Append(NS_LITERAL_STRING(", "));
+          text.AppendLiteral(", ");
         AppendASCIItoUTF16(buffer, text);
       }
       itemList++;
     }
   }
   if (notice->displayText.len != 0) {
-    text.Append(NS_LITERAL_STRING(SEPARATOR));
-    text.Append(NS_LITERAL_STRING("    "));
+    text.AppendLiteral(SEPARATOR);
+    text.AppendLiteral("    ");
     switch (notice->displayText.type) {
     case siAsciiString:
     case siVisibleString:
@@ -1379,8 +1379,8 @@ ProcessCertificatePolicies(SECItem  *extData,
       // next to the correct OID.
 
       if (policyInfo->oid == ev_oid_tag) {
-        text.Append(NS_LITERAL_STRING(":"));
-        text.Append(NS_LITERAL_STRING(SEPARATOR));
+        text.Append(':');
+        text.AppendLiteral(SEPARATOR);
         needColon = false;
         nssComponent->GetPIPNSSBundleString("CertDumpPolicyOidEV", local);
         text.Append(local);
@@ -1391,18 +1391,18 @@ ProcessCertificatePolicies(SECItem  *extData,
       /* Add all qualifiers on separate lines, indented */
       policyQualifiers = policyInfo->policyQualifiers;
       if (needColon)
-        text.Append(NS_LITERAL_STRING(":"));
-      text.Append(NS_LITERAL_STRING(SEPARATOR));
+        text.Append(':');
+      text.AppendLiteral(SEPARATOR);
       while (*policyQualifiers) {
-	text.Append(NS_LITERAL_STRING("  "));
+	text.AppendLiteral("  ");
 	policyQualifier = *policyQualifiers++;
 	switch(policyQualifier->oid) {
 	case SEC_OID_PKIX_CPS_POINTER_QUALIFIER:
 	  nssComponent->GetPIPNSSBundleString("CertDumpCPSPointer", local);
 	  text.Append(local);
-	  text.Append(NS_LITERAL_STRING(":"));
-	  text.Append(NS_LITERAL_STRING(SEPARATOR));
-	  text.Append(NS_LITERAL_STRING("    "));
+	  text.Append(':');
+	  text.AppendLiteral(SEPARATOR);
+	  text.AppendLiteral("    ");
 	  /* The CPS pointer ought to be the cPSuri alternative
 	     of the Qualifier choice. */
 	  rv = ProcessIA5String(&policyQualifier->qualifierValue,
@@ -1413,20 +1413,20 @@ ProcessCertificatePolicies(SECItem  *extData,
 	case SEC_OID_PKIX_USER_NOTICE_QUALIFIER:
 	  nssComponent->GetPIPNSSBundleString("CertDumpUserNotice", local);
 	  text.Append(local);
-	  text.Append(NS_LITERAL_STRING(": "));
+	  text.AppendLiteral(": ");
 	  rv = ProcessUserNotice(&policyQualifier->qualifierValue,
 				 text, nssComponent);
 	  break;
 	default:
 	  GetDefaultOIDFormat(&policyQualifier->qualifierID, nssComponent, local, '.');
 	  text.Append(local);
-	  text.Append(NS_LITERAL_STRING(": "));
+	  text.AppendLiteral(": ");
 	  ProcessRawBytes(nssComponent, &policyQualifier->qualifierValue, text);
 	}
-	text.Append(NS_LITERAL_STRING(SEPARATOR));
+	text.AppendLiteral(SEPARATOR);
       } /* while policyQualifiers */
     } /* if policyQualifiers */
-    text.Append(NS_LITERAL_STRING(SEPARATOR));
+    text.AppendLiteral(SEPARATOR);
   }
 
  finish:
@@ -1474,48 +1474,48 @@ ProcessCrlDistPoints(SECItem  *extData,
     }
     if (point->reasons.len) { 
       reasons = point->reasons.data[0];
-      text.Append(NS_LITERAL_STRING(" "));
+      text.Append(' ');
       comma = 0;
       if (reasons & RF_UNUSED) {
 	nssComponent->GetPIPNSSBundleString("CertDumpUnused", local);
 	text.Append(local); comma = 1;
       }
       if (reasons & RF_KEY_COMPROMISE) {
-	if (comma) text.Append(NS_LITERAL_STRING(", "));
+	if (comma) text.AppendLiteral(", ");
 	nssComponent->GetPIPNSSBundleString("CertDumpKeyCompromise", local);
 	text.Append(local); comma = 1;
       }
       if (reasons & RF_CA_COMPROMISE) {
-	if (comma) text.Append(NS_LITERAL_STRING(", "));
+	if (comma) text.AppendLiteral(", ");
 	nssComponent->GetPIPNSSBundleString("CertDumpCACompromise", local);
 	text.Append(local); comma = 1;
       }
       if (reasons & RF_AFFILIATION_CHANGED) {
-	if (comma) text.Append(NS_LITERAL_STRING(", "));
+	if (comma) text.AppendLiteral(", ");
 	nssComponent->GetPIPNSSBundleString("CertDumpAffiliationChanged", local);
 	text.Append(local); comma = 1;
       }
       if (reasons & RF_SUPERSEDED) {
-	if (comma) text.Append(NS_LITERAL_STRING(", "));
+	if (comma) text.AppendLiteral(", ");
 	nssComponent->GetPIPNSSBundleString("CertDumpSuperseded", local);
 	text.Append(local); comma = 1;
       }
       if (reasons & RF_CESSATION_OF_OPERATION) {
-	if (comma) text.Append(NS_LITERAL_STRING(", "));
+	if (comma) text.AppendLiteral(", ");
 	nssComponent->GetPIPNSSBundleString("CertDumpCessation", local);
 	text.Append(local); comma = 1;
       }
       if (reasons & RF_CERTIFICATE_HOLD) {
-	if (comma) text.Append(NS_LITERAL_STRING(", "));
+	if (comma) text.AppendLiteral(", ");
 	nssComponent->GetPIPNSSBundleString("CertDumpHold", local);
 	text.Append(local); comma = 1;
       }
-      text.Append(NS_LITERAL_STRING(SEPARATOR));
+      text.AppendLiteral(SEPARATOR);
     }
     if (point->crlIssuer) {
       nssComponent->GetPIPNSSBundleString("CertDumpIssuer", local);
       text.Append(local);
-      text.Append(NS_LITERAL_STRING(": "));
+      text.AppendLiteral(": ");
       rv = ProcessGeneralNames(arena, point->crlIssuer,
 			       text, nssComponent);
       if (NS_FAILED(rv))
@@ -1561,7 +1561,7 @@ ProcessAuthInfoAccess(SECItem  *extData,
 	goto finish;
     }
     text.Append(local);
-    text.Append(NS_LITERAL_STRING(": "));
+    text.AppendLiteral(": ");
     rv = ProcessGeneralName(arena, desc->location, text, nssComponent);
     if (NS_FAILED(rv))
       goto finish;
@@ -1690,7 +1690,7 @@ ProcessSingleExtension(CERTCertExtension *extension,
   } else {
     nssComponent->GetPIPNSSBundleString("CertDumpNonCritical", text);
   }
-  text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+  text.AppendLiteral(SEPARATOR);
   nsresult rv = ProcessExtensionData(oidTag, &extension->value, extvalue, 
                                      ev_oid_tag, nssComponent);
   if (NS_FAILED(rv)) {
@@ -1780,7 +1780,7 @@ ProcessTime(PRTime dispTime, const char16_t *displayName,
                               &explodedTimeGMT, tempString);
 
   text.Append(tempString);
-  text.Append(NS_LITERAL_STRING(" GMT)"));
+  text.AppendLiteral(" GMT)");
 
   nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
 
@@ -2202,10 +2202,10 @@ getNSSCertNicknamesFromCertList(CERTCertList *certList)
   nssComponent->GetPIPNSSBundleString("NicknameExpired", expiredString);
   nssComponent->GetPIPNSSBundleString("NicknameNotYetValid", notYetValidString);
 
-  expiredStringLeadingSpace.Append(NS_LITERAL_STRING(" "));
+  expiredStringLeadingSpace.Append(' ');
   expiredStringLeadingSpace.Append(expiredString);
 
-  notYetValidStringLeadingSpace.Append(NS_LITERAL_STRING(" "));
+  notYetValidStringLeadingSpace.Append(' ');
   notYetValidStringLeadingSpace.Append(notYetValidString);
 
   NS_ConvertUTF16toUTF8 aUtf8ExpiredString(expiredStringLeadingSpace);

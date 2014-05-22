@@ -1292,21 +1292,21 @@ DetectByteOrderMark(const unsigned char* aBytes, int32_t aLen, nsCString& oChars
     if (aLen >= 3 && 0xBB == aBytes[1] && 0xBF == aBytes[2]) {
       // EF BB BF
       // Win2K UTF-8 BOM
-      oCharset.Assign("UTF-8");
+      oCharset.AssignLiteral("UTF-8");
     }
     break;
   case 0xFE:
     if (0xFF == aBytes[1]) {
       // FE FF
       // UTF-16, big-endian
-      oCharset.Assign("UTF-16BE");
+      oCharset.AssignLiteral("UTF-16BE");
     }
     break;
   case 0xFF:
     if (0xFE == aBytes[1]) {
       // FF FE
       // UTF-16, little-endian
-      oCharset.Assign("UTF-16LE");
+      oCharset.AssignLiteral("UTF-16LE");
     }
     break;
   }

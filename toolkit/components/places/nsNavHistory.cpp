@@ -1038,7 +1038,7 @@ nsNavHistory::invalidateFrecencies(const nsCString& aPlaceIdsQueryString)
   if (!aPlaceIdsQueryString.IsEmpty()) {
     invalidFrecenciesSQLFragment.AppendLiteral("AND id IN(");
     invalidFrecenciesSQLFragment.Append(aPlaceIdsQueryString);
-    invalidFrecenciesSQLFragment.AppendLiteral(")");
+    invalidFrecenciesSQLFragment.Append(')');
   }
   nsRefPtr<InvalidateAllFrecenciesCallback> cb =
     aPlaceIdsQueryString.IsEmpty() ? new InvalidateAllFrecenciesCallback()
@@ -1774,10 +1774,10 @@ PlacesSQLQueryBuilder::SelectAsDay()
     mQueryString.Append(dayRange);
 
     if (i < HISTORY_DATE_CONT_NUM(daysOfHistory))
-      mQueryString.Append(NS_LITERAL_CSTRING(" UNION ALL "));
+      mQueryString.AppendLiteral(" UNION ALL ");
   }
 
-  mQueryString.Append(NS_LITERAL_CSTRING(") ")); // TOUTER END
+  mQueryString.AppendLiteral(") "); // TOUTER END
 
   return NS_OK;
 }
@@ -1898,7 +1898,7 @@ PlacesSQLQueryBuilder::Where()
     nsAutoCString tmp = additionalVisitsConditions;
     additionalVisitsConditions = "AND EXISTS (SELECT 1 FROM moz_historyvisits WHERE place_id = h.id ";
     additionalVisitsConditions.Append(tmp);
-    additionalVisitsConditions.Append("LIMIT 1)");
+    additionalVisitsConditions.AppendLiteral("LIMIT 1)");
   }
 
   mQueryString.ReplaceSubstring("{QUERY_OPTIONS_VISITS}",
@@ -2049,7 +2049,7 @@ PlacesSQLQueryBuilder::Limit()
   if (mUseLimit && mMaxResults > 0) {
     mQueryString += NS_LITERAL_CSTRING(" LIMIT ");
     mQueryString.AppendInt(mMaxResults);
-    mQueryString.AppendLiteral(" ");
+    mQueryString.Append(' ');
   }
   return NS_OK;
 }
@@ -2108,13 +2108,13 @@ nsNavHistory::ConstructQueryString(
           "{QUERY_OPTIONS} "
         );
 
-    queryString.Append(NS_LITERAL_CSTRING("ORDER BY "));
+    queryString.AppendLiteral("ORDER BY ");
     if (sortingMode == nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING)
-      queryString.Append(NS_LITERAL_CSTRING("last_visit_date DESC "));
+      queryString.AppendLiteral("last_visit_date DESC ");
     else
-      queryString.Append(NS_LITERAL_CSTRING("visit_count DESC "));
+      queryString.AppendLiteral("visit_count DESC ");
 
-    queryString.Append(NS_LITERAL_CSTRING("LIMIT "));
+    queryString.AppendLiteral("LIMIT ");
     queryString.AppendInt(aOptions->MaxResults());
 
     nsAutoCString additionalQueryOptions;
@@ -2404,7 +2404,7 @@ nsNavHistory::CleanupPlacesOnVisitsDelete(const nsCString& aPlaceIdsQueryString)
     NS_ENSURE_SUCCESS(rv, rv);
     if (wholeEntry) {
       if (!filteredPlaceIds.IsEmpty()) {
-        filteredPlaceIds.AppendLiteral(",");
+        filteredPlaceIds.Append(',');
       }
       filteredPlaceIds.AppendInt(placeId);
       URIs.AppendObject(uri);
@@ -2469,7 +2469,7 @@ nsNavHistory::RemovePages(nsIURI **aURIs, uint32_t aLength)
     NS_ENSURE_SUCCESS(rv, rv);
     if (placeId != 0) {
       if (!deletePlaceIdsQueryString.IsEmpty())
-        deletePlaceIdsQueryString.AppendLiteral(",");
+        deletePlaceIdsQueryString.Append(',');
       deletePlaceIdsQueryString.AppendInt(placeId);
     }
   }
@@ -2562,7 +2562,7 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, bool aEntireDomain)
   NS_ASSERTION(revHostDot[revHostDot.Length() - 1] == '.', "Invalid rev. host");
   nsAutoString revHostSlash(revHostDot);
   revHostSlash.Truncate(revHostSlash.Length() - 1);
-  revHostSlash.Append(NS_LITERAL_STRING("/"));
+  revHostSlash.Append('/');
 
   // build condition string based on host selection type
   nsAutoCString conditionString;
@@ -2589,7 +2589,7 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, bool aEntireDomain)
   bool hasMore = false;
   while (NS_SUCCEEDED(statement->ExecuteStep(&hasMore)) && hasMore) {
     if (!hostPlaceIds.IsEmpty())
-      hostPlaceIds.AppendLiteral(",");
+      hostPlaceIds.Append(',');
     int64_t placeId;
     rv = statement->GetInt64(0, &placeId);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2649,7 +2649,7 @@ nsNavHistory::RemovePagesByTimeframe(PRTime aBeginTime, PRTime aEndTime)
     NS_ENSURE_SUCCESS(rv, rv);
     if (placeId != 0) {
       if (!deletePlaceIdsQueryString.IsEmpty())
-        deletePlaceIdsQueryString.AppendLiteral(",");
+        deletePlaceIdsQueryString.Append(',');
       deletePlaceIdsQueryString.AppendInt(placeId);
     }
   }
@@ -2717,7 +2717,7 @@ nsNavHistory::RemoveVisitsByTimeframe(PRTime aBeginTime, PRTime aEndTime)
       // placeId should not be <= 0, but be defensive.
       if (placeId > 0) {
         if (!deletePlaceIdsQueryString.IsEmpty())
-          deletePlaceIdsQueryString.AppendLiteral(",");
+          deletePlaceIdsQueryString.Append(',');
         deletePlaceIdsQueryString.AppendInt(placeId);
       }
     }
@@ -3660,14 +3660,14 @@ CreatePlacesPersistURN(nsNavHistoryQueryResultNode *aResultNode,
   nsresult rv = aResultNode->GetUri(uri);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aURN.Assign(NS_LITERAL_CSTRING("urn:places-persist:"));
+  aURN.AssignLiteral("urn:places-persist:");
   aURN.Append(uri);
 
-  aURN.Append(NS_LITERAL_CSTRING(","));
+  aURN.Append(',');
   if (aValue != UNDEFINED_URN_VALUE)
     aURN.AppendInt(aValue);
 
-  aURN.Append(NS_LITERAL_CSTRING(","));
+  aURN.Append(',');
   if (!aTitle.IsEmpty()) {
     nsAutoCString escapedTitle;
     bool success = NS_Escape(aTitle, escapedTitle, url_XAlphas);

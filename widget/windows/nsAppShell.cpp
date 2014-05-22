@@ -36,7 +36,7 @@ public:
 private:
   NS_IMETHOD Callback(const nsAString& aTopic, const nsAString& aState) {
     bool isLocked = mLockedTopics.Contains(aTopic);
-    bool shouldLock = aState.Equals(NS_LITERAL_STRING("locked-foreground"));
+    bool shouldLock = aState.EqualsLiteral("locked-foreground");
     if (isLocked == shouldLock) {
       return NS_OK;
     }

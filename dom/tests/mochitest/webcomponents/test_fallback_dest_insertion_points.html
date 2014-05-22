@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=999999
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 999999</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=999999">Mozilla Bug 999999</a>
+<p id="display"></p>
+<div id="content">
+<div id="shadowhost"></div>
+</div>
+<pre id="test">
+</pre>
+<script type="application/javascript">
+
+/** Test for Bug 999999 **/
+var host = document.getElementById("shadowhost");
+
+// Test destination insertion points of node distributed to content element.
+var shadowRoot = host.createShadowRoot();
+shadowRoot.innerHTML = '<div id="innerhost"><content id="innercontent"></content></div>';
+
+var fallback = document.createElement("span");
+var innerContent = shadowRoot.getElementById("innercontent");
+
+innerContent.appendChild(fallback);
+
+is(fallback.getDestinationInsertionPoints().length, 1, "Active fallback content should be distributed to insertion point.");
+is(fallback.getDestinationInsertionPoints()[0], innerContent, "Insertion point should be in list of destination insertion points.");
+
+// Test destination insertion points of reprojected fallback content.
+var innerHost = shadowRoot.getElementById("innerhost");
+var innerShadowRoot = innerHost.createShadowRoot();
+innerShadowRoot.innerHTML = '<content id="innerinnercontent"></content>';
+
+var innerInnerContent = innerShadowRoot.getElementById("innerinnercontent");
+
+is(fallback.getDestinationInsertionPoints().length, 2, "Fallback content should have been distributed into parent and reprojected into another insertion point.");
+is(fallback.getDestinationInsertionPoints()[1], innerInnerContent, "Destination insertion points should contain content element to which the node was reprojected.");
+
+// Test destination insertion points of fallback content that was dropped due to content element matching a node in the host.
+var span = document.createElement("span");
+host.appendChild(span);
+
+is(fallback.getDestinationInsertionPoints().length, 0, "After dropping insertion points, fallback content should not have any nodes in destination insertion points list.");
+
+// Test destination insertion points of fallback content after reactivating by dropping matched content on host.
+host.removeChild(span);
+is(fallback.getDestinationInsertionPoints().length, 2, "Fallback content should have 2 destination insertion points after being reactivated.");
+is(fallback.getDestinationInsertionPoints()[0], innerContent, "First destination insertion point should be the parent content");
+is(fallback.getDestinationInsertionPoints()[1], innerInnerContent, "Second destination insertion point should be the content to which the node is reprojected.");
+
+// Test destination insertion points of fallback content after removed from the tree.
+innerContent.removeChild(fallback);
+is(fallback.getDestinationInsertionPoints().length, 0, "Fallback content is no longer fallback content, destination insertion points should be empty.");
+
+// Test destination insertion points of child of non-insertion point content element.
+var notInsertionPointContent = document.createElement("content");
+var notFallback = document.createElement("span");
+notInsertionPointContent.appendChild(notFallback);
+is(notFallback.getDestinationInsertionPoints().length, 0, "Child of non-insertion point content should not be distributed to any nodes.");
+
+</script>
+</body>
+</html>

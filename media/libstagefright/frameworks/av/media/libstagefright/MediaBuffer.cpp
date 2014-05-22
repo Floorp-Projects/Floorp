@@ -29,7 +29,7 @@
 #include <ui/GraphicBuffer.h>
 #include <sys/atomics.h>
 
-namespace android {
+namespace stagefright {
 
 MediaBuffer::MediaBuffer(void *data, size_t size)
     : mObserver(NULL),
@@ -200,4 +200,4 @@ MediaBuffer *MediaBuffer::clone() {
     return buffer;
 }
 
-}  // namespace android
+}  // namespace stagefright

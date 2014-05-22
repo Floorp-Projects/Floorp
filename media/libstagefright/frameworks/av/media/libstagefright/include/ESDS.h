@@ -22,7 +22,7 @@
 
 #include <media/stagefright/MediaErrors.h>
 
-namespace android {
+namespace stagefright {
 
 class ESDS {
 public:
@@ -68,5 +68,5 @@ private:
     ESDS &operator=(const ESDS &);
 };
 
-}  // namespace android
+}  // namespace stagefright
 #endif  // ESDS_H_

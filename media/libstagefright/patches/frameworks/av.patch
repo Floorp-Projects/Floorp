@@ -1,0 +1,1168 @@
+diff --git a/include/media/stagefright/DataSource.h b/include/media/stagefright/DataSource.h
+index 742bc0e..f6b30b0 100644
+--- a/include/media/stagefright/DataSource.h
++++ b/include/media/stagefright/DataSource.h
+@@ -21,16 +21,10 @@
+ #include <sys/types.h>
+ 
+ #include <media/stagefright/MediaErrors.h>
+-#include <utils/Errors.h>
+-#include <utils/KeyedVector.h>
+-#include <utils/List.h>
+ #include <utils/RefBase.h>
+-#include <utils/threads.h>
+-#include <drm/DrmManagerClient.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+-struct AMessage;
+ class String8;
+ 
+ class DataSource : public RefBase {
+@@ -42,10 +36,6 @@ public:
+         kIsHTTPBasedSource     = 8,
+     };
+ 
+-    static sp<DataSource> CreateFromURI(
+-            const char *uri,
+-            const KeyedVector<String8, String8> *headers = NULL);
+-
+     DataSource() {}
+ 
+     virtual status_t initCheck() const = 0;
+@@ -69,6 +59,7 @@ public:
+         return ERROR_UNSUPPORTED;
+     }
+ 
++#if 0
+     ////////////////////////////////////////////////////////////////////////////
+ 
+     bool sniff(String8 *mimeType, float *confidence, sp<AMessage> *meta);
+@@ -92,6 +83,7 @@ public:
+     virtual String8 getUri() {
+         return String8();
+     }
++#endif
+ 
+     virtual String8 getMIMEType() const;
+ 
+@@ -99,13 +91,10 @@ protected:
+     virtual ~DataSource() {}
+ 
+ private:
+-    static Mutex gSnifferMutex;
+-    static List<SnifferFunc> gSniffers;
+-
+     DataSource(const DataSource &);
+     DataSource &operator=(const DataSource &);
+ };
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
+ #endif  // DATA_SOURCE_H_
+diff --git a/include/media/stagefright/MediaBuffer.h b/include/media/stagefright/MediaBuffer.h
+index 3d79596..4172739 100644
+--- a/include/media/stagefright/MediaBuffer.h
++++ b/include/media/stagefright/MediaBuffer.h
+@@ -23,7 +23,7 @@
+ #include <utils/Errors.h>
+ #include <utils/RefBase.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ struct ABuffer;
+ class GraphicBuffer;
+@@ -118,6 +118,6 @@ private:
+     MediaBuffer &operator=(const MediaBuffer &);
+ };
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
+ #endif  // MEDIA_BUFFER_H_
+diff --git a/include/media/stagefright/MediaBufferGroup.h b/include/media/stagefright/MediaBufferGroup.h
+index 0488292..4a51351 100644
+--- a/include/media/stagefright/MediaBufferGroup.h
++++ b/include/media/stagefright/MediaBufferGroup.h
+@@ -22,7 +22,7 @@
+ #include <utils/Errors.h>
+ #include <utils/threads.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ class MediaBuffer;
+ class MetaData;
+@@ -53,6 +53,6 @@ private:
+     MediaBufferGroup &operator=(const MediaBufferGroup &);
+ };
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
+ #endif  // MEDIA_BUFFER_GROUP_H_
+diff --git a/include/media/stagefright/MediaDefs.h b/include/media/stagefright/MediaDefs.h
+index 85693d4..9897caf 100644
+--- a/include/media/stagefright/MediaDefs.h
++++ b/include/media/stagefright/MediaDefs.h
+@@ -18,7 +18,7 @@
+ 
+ #define MEDIA_DEFS_H_
+ 
+-namespace android {
++namespace stagefright {
+ 
+ extern const char *MEDIA_MIMETYPE_IMAGE_JPEG;
+ 
+@@ -58,6 +58,6 @@ extern const char *MEDIA_MIMETYPE_CONTAINER_WVM;
+ extern const char *MEDIA_MIMETYPE_TEXT_3GPP;
+ extern const char *MEDIA_MIMETYPE_TEXT_SUBRIP;
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
+ #endif  // MEDIA_DEFS_H_
+diff --git a/include/media/stagefright/MediaErrors.h b/include/media/stagefright/MediaErrors.h
+index 686f286..df2c1a5 100644
+--- a/include/media/stagefright/MediaErrors.h
++++ b/include/media/stagefright/MediaErrors.h
+@@ -20,52 +20,50 @@
+ 
+ #include <utils/Errors.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+-enum {
+-    MEDIA_ERROR_BASE        = -1000,
++#define MEDIA_ERROR_BASE (-1000)
+ 
+-    ERROR_ALREADY_CONNECTED = MEDIA_ERROR_BASE,
+-    ERROR_NOT_CONNECTED     = MEDIA_ERROR_BASE - 1,
+-    ERROR_UNKNOWN_HOST      = MEDIA_ERROR_BASE - 2,
+-    ERROR_CANNOT_CONNECT    = MEDIA_ERROR_BASE - 3,
+-    ERROR_IO                = MEDIA_ERROR_BASE - 4,
+-    ERROR_CONNECTION_LOST   = MEDIA_ERROR_BASE - 5,
+-    ERROR_MALFORMED         = MEDIA_ERROR_BASE - 7,
+-    ERROR_OUT_OF_RANGE      = MEDIA_ERROR_BASE - 8,
+-    ERROR_BUFFER_TOO_SMALL  = MEDIA_ERROR_BASE - 9,
+-    ERROR_UNSUPPORTED       = MEDIA_ERROR_BASE - 10,
+-    ERROR_END_OF_STREAM     = MEDIA_ERROR_BASE - 11,
++#define ERROR_ALREADY_CONNECTED (MEDIA_ERROR_BASE)
++#define ERROR_NOT_CONNECTED     (MEDIA_ERROR_BASE - 1)
++#define ERROR_UNKNOWN_HOST      (MEDIA_ERROR_BASE - 2)
++#define ERROR_CANNOT_CONNECT    (MEDIA_ERROR_BASE - 3)
++#define ERROR_IO                (MEDIA_ERROR_BASE - 4)
++#define ERROR_CONNECTION_LOST   (MEDIA_ERROR_BASE - 5)
++#define ERROR_MALFORMED         (MEDIA_ERROR_BASE - 7)
++#define ERROR_OUT_OF_RANGE      (MEDIA_ERROR_BASE - 8)
++#define ERROR_BUFFER_TOO_SMALL  (MEDIA_ERROR_BASE - 9)
++#define ERROR_UNSUPPORTED       (MEDIA_ERROR_BASE - 10)
++#define ERROR_END_OF_STREAM     (MEDIA_ERROR_BASE - 11)
+ 
+-    // Not technically an error.
+-    INFO_FORMAT_CHANGED    = MEDIA_ERROR_BASE - 12,
+-    INFO_DISCONTINUITY     = MEDIA_ERROR_BASE - 13,
+-    INFO_OUTPUT_BUFFERS_CHANGED = MEDIA_ERROR_BASE - 14,
++// Not technically an error.
++#define INFO_FORMAT_CHANGED    (MEDIA_ERROR_BASE - 12)
++#define INFO_DISCONTINUITY     (MEDIA_ERROR_BASE - 13)
++#define INFO_OUTPUT_BUFFERS_CHANGED (MEDIA_ERROR_BASE - 14)
+ 
+-    // The following constant values should be in sync with
+-    // drm/drm_framework_common.h
+-    DRM_ERROR_BASE = -2000,
++// The following constant values should be in sync with
++// drm/drm_framework_common.h
++#define DRM_ERROR_BASE (-2000)
+ 
+-    ERROR_DRM_UNKNOWN                       = DRM_ERROR_BASE,
+-    ERROR_DRM_NO_LICENSE                    = DRM_ERROR_BASE - 1,
+-    ERROR_DRM_LICENSE_EXPIRED               = DRM_ERROR_BASE - 2,
+-    ERROR_DRM_SESSION_NOT_OPENED            = DRM_ERROR_BASE - 3,
+-    ERROR_DRM_DECRYPT_UNIT_NOT_INITIALIZED  = DRM_ERROR_BASE - 4,
+-    ERROR_DRM_DECRYPT                       = DRM_ERROR_BASE - 5,
+-    ERROR_DRM_CANNOT_HANDLE                 = DRM_ERROR_BASE - 6,
+-    ERROR_DRM_TAMPER_DETECTED               = DRM_ERROR_BASE - 7,
+-    ERROR_DRM_NOT_PROVISIONED               = DRM_ERROR_BASE - 8,
+-    ERROR_DRM_DEVICE_REVOKED                = DRM_ERROR_BASE - 9,
+-    ERROR_DRM_RESOURCE_BUSY                 = DRM_ERROR_BASE - 10,
++#define ERROR_DRM_UNKNOWN                       (DRM_ERROR_BASE)
++#define ERROR_DRM_NO_LICENSE                    (DRM_ERROR_BASE - 1)
++#define ERROR_DRM_LICENSE_EXPIRED               (DRM_ERROR_BASE - 2)
++#define ERROR_DRM_SESSION_NOT_OPENED            (DRM_ERROR_BASE - 3)
++#define ERROR_DRM_DECRYPT_UNIT_NOT_INITIALIZED  (DRM_ERROR_BASE - 4)
++#define ERROR_DRM_DECRYPT                       (DRM_ERROR_BASE - 5)
++#define ERROR_DRM_CANNOT_HANDLE                 (DRM_ERROR_BASE - 6)
++#define ERROR_DRM_TAMPER_DETECTED               (DRM_ERROR_BASE - 7)
++#define ERROR_DRM_NOT_PROVISIONED               (DRM_ERROR_BASE - 8)
++#define ERROR_DRM_DEVICE_REVOKED                (DRM_ERROR_BASE - 9)
++#define ERROR_DRM_RESOURCE_BUSY                 (DRM_ERROR_BASE - 10)
+ 
+-    ERROR_DRM_VENDOR_MAX                    = DRM_ERROR_BASE - 500,
+-    ERROR_DRM_VENDOR_MIN                    = DRM_ERROR_BASE - 999,
++#define ERROR_DRM_VENDOR_MAX                    (DRM_ERROR_BASE - 500)
++#define ERROR_DRM_VENDOR_MIN                    (DRM_ERROR_BASE - 999)
+ 
+-    // Heartbeat Error Codes
+-    HEARTBEAT_ERROR_BASE = -3000,
+-    ERROR_HEARTBEAT_TERMINATE_REQUESTED                     = HEARTBEAT_ERROR_BASE,
+-};
++// Heartbeat Error Codes
++#define HEARTBEAT_ERROR_BASE (-3000)
++#define ERROR_HEARTBEAT_TERMINATE_REQUESTED     (HEARTBEAT_ERROR_BASE)
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
+ #endif  // MEDIA_ERRORS_H_
+diff --git a/include/media/stagefright/MediaExtractor.h b/include/media/stagefright/MediaExtractor.h
+index 3076a96..96d9ee1 100644
+--- a/include/media/stagefright/MediaExtractor.h
++++ b/include/media/stagefright/MediaExtractor.h
+@@ -20,7 +20,7 @@
+ 
+ #include <utils/RefBase.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ class DataSource;
+ class MediaSource;
+@@ -42,7 +42,7 @@ public:
+ 
+     // Return container specific meta-data. The default implementation
+     // returns an empty metadata object.
+-    virtual sp<MetaData> getMetaData();
++    virtual sp<MetaData> getMetaData() = 0;
+ 
+     enum Flags {
+         CAN_SEEK_BACKWARD  = 1,  // the "seek 10secs back button"
+@@ -53,7 +53,7 @@ public:
+ 
+     // If subclasses do _not_ override this, the default is
+     // CAN_SEEK_BACKWARD | CAN_SEEK_FORWARD | CAN_SEEK | CAN_PAUSE
+-    virtual uint32_t flags() const;
++    virtual uint32_t flags() const = 0;
+ 
+     // for DRM
+     void setDrmFlag(bool flag) {
+@@ -77,6 +77,6 @@ private:
+     MediaExtractor &operator=(const MediaExtractor &);
+ };
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
+ #endif  // MEDIA_EXTRACTOR_H_
+diff --git a/include/media/stagefright/MediaSource.h b/include/media/stagefright/MediaSource.h
+index 3818e63..9aa6669 100644
+--- a/include/media/stagefright/MediaSource.h
++++ b/include/media/stagefright/MediaSource.h
+@@ -24,7 +24,7 @@
+ #include <utils/RefBase.h>
+ #include <utils/Vector.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ class MediaBuffer;
+ class MetaData;
+@@ -117,6 +117,6 @@ private:
+     MediaSource &operator=(const MediaSource &);
+ };
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
+ #endif  // MEDIA_SOURCE_H_
+diff --git a/include/media/stagefright/MetaData.h b/include/media/stagefright/MetaData.h
+index de3fc36..30b40c8 100644
+--- a/include/media/stagefright/MetaData.h
++++ b/include/media/stagefright/MetaData.h
+@@ -26,7 +26,7 @@
+ #include <utils/KeyedVector.h>
+ #include <utils/String8.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ // The following keys map to int32_t data unless indicated otherwise.
+ enum {
+@@ -48,6 +48,7 @@ enum {
+     kKeyChannelCount      = '#chn',  // int32_t
+     kKeyChannelMask       = 'chnm',  // int32_t
+     kKeySampleRate        = 'srte',  // int32_t (audio sampling rate Hz)
++    kKeySampleSize        = 'ssiz',  // int32_t (sample size in bits)
+     kKeyFrameRate         = 'frmR',  // int32_t (video frame rate fps)
+     kKeyBitRate           = 'brte',  // int32_t (bps)
+     kKeyESDS              = 'esds',  // raw data
+@@ -266,6 +267,6 @@ private:
+     // MetaData &operator=(const MetaData &);
+ };
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
+ #endif  // META_DATA_H_
+diff --git a/include/media/stagefright/Utils.h b/include/media/stagefright/Utils.h
+index c24f612..bd70252 100644
+--- a/include/media/stagefright/Utils.h
++++ b/include/media/stagefright/Utils.h
+@@ -25,10 +25,10 @@
+ #include <system/audio.h>
+ #include <media/MediaPlayerInterface.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ #define FOURCC(c1, c2, c3, c4) \
+-    (c1 << 24 | c2 << 16 | c3 << 8 | c4)
++    ((uint32_t) c1 << 24 | c2 << 16 | c3 << 8 | c4)
+ 
+ uint16_t U16_AT(const uint8_t *ptr);
+ uint32_t U32_AT(const uint8_t *ptr);
+@@ -50,15 +50,6 @@ void convertMessageToMetaData(
+ 
+ AString MakeUserAgent();
+ 
+-// Convert a MIME type to a AudioSystem::audio_format
+-status_t mapMimeToAudioFormat(audio_format_t& format, const char* mime);
+-
+-// Send information from MetaData to the HAL via AudioSink
+-status_t sendMetaDataToHal(sp<MediaPlayerBase::AudioSink>& sink, const sp<MetaData>& meta);
+-
+-// Check whether the stream defined by meta can be offloaded to hardware
+-bool canOffloadStream(const sp<MetaData>& meta, bool hasVideo, bool isStreaming);
+-
+-}  // namespace android
++}  // namespace stagefright
+ 
+ #endif  // UTILS_H_
+diff --git a/include/media/stagefright/foundation/AAtomizer.h b/include/media/stagefright/foundation/AAtomizer.h
+index 5f3a678..c20ea07 100644
+--- a/include/media/stagefright/foundation/AAtomizer.h
++++ b/include/media/stagefright/foundation/AAtomizer.h
+@@ -26,7 +26,7 @@
+ #include <utils/Vector.h>
+ #include <utils/threads.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ struct AAtomizer {
+     static const char *Atomize(const char *name);
+@@ -46,6 +46,6 @@ private:
+     DISALLOW_EVIL_CONSTRUCTORS(AAtomizer);
+ };
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
+ #endif  // A_ATOMIZER_H_
+diff --git a/include/media/stagefright/foundation/ABitReader.h b/include/media/stagefright/foundation/ABitReader.h
+index 5510b12..589e5fe 100644
+--- a/include/media/stagefright/foundation/ABitReader.h
++++ b/include/media/stagefright/foundation/ABitReader.h
+@@ -23,7 +23,7 @@
+ #include <sys/types.h>
+ #include <stdint.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ struct ABitReader {
+     ABitReader(const uint8_t *data, size_t size);
+@@ -49,6 +49,6 @@ private:
+     DISALLOW_EVIL_CONSTRUCTORS(ABitReader);
+ };
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
+ #endif  // A_BIT_READER_H_
+diff --git a/include/media/stagefright/foundation/ABuffer.h b/include/media/stagefright/foundation/ABuffer.h
+index 28f0aed..4fa908e 100644
+--- a/include/media/stagefright/foundation/ABuffer.h
++++ b/include/media/stagefright/foundation/ABuffer.h
+@@ -24,7 +24,7 @@
+ #include <media/stagefright/foundation/ABase.h>
+ #include <utils/RefBase.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ struct AMessage;
+ 
+@@ -66,6 +66,6 @@ private:
+     DISALLOW_EVIL_CONSTRUCTORS(ABuffer);
+ };
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
+ #endif  // A_BUFFER_H_
+diff --git a/include/media/stagefright/foundation/ADebug.h b/include/media/stagefright/foundation/ADebug.h
+index 450dcfe..a58d951 100644
+--- a/include/media/stagefright/foundation/ADebug.h
++++ b/include/media/stagefright/foundation/ADebug.h
+@@ -24,7 +24,7 @@
+ #include <media/stagefright/foundation/AString.h>
+ #include <utils/Log.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ #define LITERAL_TO_STRING_INTERNAL(x)    #x
+ #define LITERAL_TO_STRING(x) LITERAL_TO_STRING_INTERNAL(x)
+@@ -80,7 +80,7 @@ MAKE_COMPARATOR(GT,>)
+             __FILE__ ":" LITERAL_TO_STRING(__LINE__)            \
+                 " Should not be here.");
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
+ #endif  // A_DEBUG_H_
+ 
+diff --git a/include/media/stagefright/foundation/AHandler.h b/include/media/stagefright/foundation/AHandler.h
+index b008b54..5a5ecc2 100644
+--- a/include/media/stagefright/foundation/AHandler.h
++++ b/include/media/stagefright/foundation/AHandler.h
+@@ -21,7 +21,7 @@
+ #include <media/stagefright/foundation/ALooper.h>
+ #include <utils/RefBase.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ struct AMessage;
+ 
+@@ -51,6 +51,6 @@ private:
+     DISALLOW_EVIL_CONSTRUCTORS(AHandler);
+ };
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
+ #endif  // A_HANDLER_H_
+diff --git a/include/media/stagefright/foundation/AString.h b/include/media/stagefright/foundation/AString.h
+index 0f8f1e1..8f97ed4 100644
+--- a/include/media/stagefright/foundation/AString.h
++++ b/include/media/stagefright/foundation/AString.h
+@@ -20,7 +20,7 @@
+ 
+ #include <sys/types.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ struct AString {
+     AString();
+@@ -89,7 +89,7 @@ private:
+ 
+ AString StringPrintf(const char *format, ...);
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
+ #endif  // A_STRING_H_
+ 
+diff --git a/include/media/stagefright/foundation/hexdump.h b/include/media/stagefright/foundation/hexdump.h
+index 8360c5a..18172f7 100644
+--- a/include/media/stagefright/foundation/hexdump.h
++++ b/include/media/stagefright/foundation/hexdump.h
+@@ -20,7 +20,7 @@
+ 
+ #include <sys/types.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ struct AString;
+ 
+@@ -28,6 +28,6 @@ void hexdump(
+         const void *_data, size_t size,
+         size_t indent = 0, AString *appendTo = NULL);
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
+ #endif  // HEXDUMP_H_
+diff --git a/media/libstagefright/DataSource.cpp b/media/libstagefright/DataSource.cpp
+index fc6fd9c..c65a69e 100644
+--- a/media/libstagefright/DataSource.cpp
++++ b/media/libstagefright/DataSource.cpp
+@@ -20,30 +20,12 @@
+ #include "include/chromium_http_stub.h"
+ #endif
+ 
+-#include "include/AACExtractor.h"
+-#include "include/DRMExtractor.h"
+-#include "include/FLACExtractor.h"
+-#include "include/HTTPBase.h"
+-#include "include/MP3Extractor.h"
+-#include "include/MPEG2PSExtractor.h"
+-#include "include/MPEG2TSExtractor.h"
+ #include "include/MPEG4Extractor.h"
+-#include "include/NuCachedSource2.h"
+-#include "include/OggExtractor.h"
+-#include "include/WAVExtractor.h"
+-#include "include/WVMExtractor.h"
+ 
+-#include "matroska/MatroskaExtractor.h"
+-
+-#include <media/stagefright/foundation/AMessage.h>
+ #include <media/stagefright/DataSource.h>
+-#include <media/stagefright/FileSource.h>
+ #include <media/stagefright/MediaErrors.h>
+-#include <utils/String8.h>
+-
+-#include <cutils/properties.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ bool DataSource::getUInt16(off64_t offset, uint16_t *x) {
+     *x = 0;
+@@ -105,6 +87,8 @@ status_t DataSource::getSize(off64_t *size) {
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+ 
++#if 0
++
+ Mutex DataSource::gSnifferMutex;
+ List<DataSource::SnifferFunc> DataSource::gSniffers;
+ 
+@@ -226,8 +210,10 @@ sp<DataSource> DataSource::CreateFromURI(
+     return source;
+ }
+ 
++#endif
++
+ String8 DataSource::getMIMEType() const {
+     return String8("application/octet-stream");
+ }
+ 
+-}  // namespace android
++}  // namespace stagefright
+diff --git a/media/libstagefright/ESDS.cpp b/media/libstagefright/ESDS.cpp
+index 4a0c35c..ccf60e3 100644
+--- a/media/libstagefright/ESDS.cpp
++++ b/media/libstagefright/ESDS.cpp
+@@ -15,6 +15,7 @@
+  */
+ 
+ //#define LOG_NDEBUG 0
++#undef LOG_TAG
+ #define LOG_TAG "ESDS"
+ #include <utils/Log.h>
+ 
+@@ -22,7 +23,7 @@
+ 
+ #include <string.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ ESDS::ESDS(const void *data, size_t size)
+     : mData(new uint8_t[size]),
+@@ -223,5 +224,6 @@ status_t ESDS::parseDecoderConfigDescriptor(size_t offset, size_t size) {
+     return OK;
+ }
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
++#undef LOG_TAG
+diff --git a/media/libstagefright/MPEG4Extractor.cpp b/media/libstagefright/MPEG4Extractor.cpp
+index ad985ee..f0165e5 100644
+--- a/media/libstagefright/MPEG4Extractor.cpp
++++ b/media/libstagefright/MPEG4Extractor.cpp
+@@ -15,6 +15,7 @@
+  */
+ 
+ //#define LOG_NDEBUG 0
++#undef LOG_TAG
+ #define LOG_TAG "MPEG4Extractor"
+ #include <utils/Log.h>
+ 
+@@ -38,7 +39,7 @@
+ #include <media/stagefright/MetaData.h>
+ #include <utils/String8.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ class MPEG4Source : public MediaSource {
+ public:
+@@ -1248,6 +1249,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
+             ALOGV("*** coding='%s' %d channels, size %d, rate %d\n",
+                    chunk, num_channels, sample_size, sample_rate);
+             mLastTrack->meta->setInt32(kKeyChannelCount, num_channels);
++            mLastTrack->meta->setInt32(kKeySampleSize, sample_size);
+             mLastTrack->meta->setInt32(kKeySampleRate, sample_rate);
+ 
+             off64_t stop_offset = *offset + chunk_size;
+@@ -2278,6 +2280,10 @@ status_t MPEG4Extractor::updateAudioTrackInfoFromESDS_MPEG4Audio(
+         objectType = 32 + br.getBits(6);
+     }
+ 
++    if (objectType >= 1 && objectType <= 4) {
++      mLastTrack->meta->setInt32(kKeyAACProfile, objectType);
++    }
++
+     uint32_t freqIndex = br.getBits(4);
+ 
+     int32_t sampleRate = 0;
+@@ -3154,6 +3160,7 @@ status_t MPEG4Source::read(
+             CHECK(mBuffer != NULL);
+             mBuffer->set_range(0, size);
+             mBuffer->meta_data()->clear();
++            mBuffer->meta_data()->setInt64(kKey64BitFileOffset, offset);
+             mBuffer->meta_data()->setInt64(
+                     kKeyTime, ((int64_t)cts * 1000000) / mTimescale);
+ 
+@@ -3276,6 +3283,7 @@ status_t MPEG4Source::read(
+         }
+ 
+         mBuffer->meta_data()->clear();
++        mBuffer->meta_data()->setInt64(kKey64BitFileOffset, offset);
+         mBuffer->meta_data()->setInt64(
+                 kKeyTime, ((int64_t)cts * 1000000) / mTimescale);
+ 
+@@ -3360,6 +3368,18 @@ status_t MPEG4Source::fragmentedRead(
+             // move to next fragment
+             Sample lastSample = mCurrentSamples[mCurrentSamples.size() - 1];
+             off64_t nextMoof = mNextMoofOffset; // lastSample.offset + lastSample.size;
++
++            // If we're pointing to a sidx box then we skip it.
++            uint32_t hdr[2];
++            if (mDataSource->readAt(nextMoof, hdr, 8) < 8) {
++                return ERROR_END_OF_STREAM;
++            }
++            uint64_t chunk_size = ntohl(hdr[0]);
++            uint32_t chunk_type = ntohl(hdr[1]);
++            if (chunk_type == FOURCC('s', 'i', 'd', 'x')) {
++                nextMoof += chunk_size;
++            }
++
+             mCurrentMoofOffset = nextMoof;
+             mCurrentSamples.clear();
+             mCurrentSampleIndex = 0;
+@@ -3626,6 +3646,7 @@ static bool isCompatibleBrand(uint32_t fourcc) {
+     return false;
+ }
+ 
++#if 0
+ // Attempt to actually parse the 'ftyp' atom and determine if a suitable
+ // compatible brand is present.
+ // Also try to identify where this file's metadata ends
+@@ -3756,5 +3777,8 @@ bool SniffMPEG4(
+ 
+     return false;
+ }
++#endif
++
++}  // namespace stagefright
+ 
+-}  // namespace android
++#undef LOG_TAG
+diff --git a/media/libstagefright/MediaBuffer.cpp b/media/libstagefright/MediaBuffer.cpp
+index 11b80bf..72a7174 100644
+--- a/media/libstagefright/MediaBuffer.cpp
++++ b/media/libstagefright/MediaBuffer.cpp
+@@ -29,7 +29,7 @@
+ #include <ui/GraphicBuffer.h>
+ #include <sys/atomics.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ MediaBuffer::MediaBuffer(void *data, size_t size)
+     : mObserver(NULL),
+@@ -200,4 +200,4 @@ MediaBuffer *MediaBuffer::clone() {
+     return buffer;
+ }
+ 
+-}  // namespace android
++}  // namespace stagefright
+diff --git a/media/libstagefright/MediaBufferGroup.cpp b/media/libstagefright/MediaBufferGroup.cpp
+index 80aae51..17dc08a 100644
+--- a/media/libstagefright/MediaBufferGroup.cpp
++++ b/media/libstagefright/MediaBufferGroup.cpp
+@@ -14,6 +14,7 @@
+  * limitations under the License.
+  */
+ 
++#undef LOG_TAG
+ #define LOG_TAG "MediaBufferGroup"
+ #include <utils/Log.h>
+ 
+@@ -21,7 +22,7 @@
+ #include <media/stagefright/MediaBuffer.h>
+ #include <media/stagefright/MediaBufferGroup.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ MediaBufferGroup::MediaBufferGroup()
+     : mFirstBuffer(NULL),
+@@ -83,4 +84,6 @@ void MediaBufferGroup::signalBufferReturned(MediaBuffer *) {
+     mCondition.signal();
+ }
+ 
+-}  // namespace android
++}  // namespace stagefright
++
++#undef LOG_TAG
+diff --git a/media/libstagefright/MediaDefs.cpp b/media/libstagefright/MediaDefs.cpp
+index b5d4e44..1f17bc0 100644
+--- a/media/libstagefright/MediaDefs.cpp
++++ b/media/libstagefright/MediaDefs.cpp
+@@ -16,7 +16,7 @@
+ 
+ #include <media/stagefright/MediaDefs.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ const char *MEDIA_MIMETYPE_IMAGE_JPEG = "image/jpeg";
+ 
+@@ -56,4 +56,4 @@ const char *MEDIA_MIMETYPE_CONTAINER_WVM = "video/wvm";
+ const char *MEDIA_MIMETYPE_TEXT_3GPP = "text/3gpp-tt";
+ const char *MEDIA_MIMETYPE_TEXT_SUBRIP = "application/x-subrip";
+ 
+-}  // namespace android
++}  // namespace stagefright
+diff --git a/media/libstagefright/MediaSource.cpp b/media/libstagefright/MediaSource.cpp
+index fd0e79c..faafe59 100644
+--- a/media/libstagefright/MediaSource.cpp
++++ b/media/libstagefright/MediaSource.cpp
+@@ -16,7 +16,7 @@
+ 
+ #include <media/stagefright/MediaSource.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ MediaSource::MediaSource() {}
+ 
+@@ -61,4 +61,4 @@ int64_t MediaSource::ReadOptions::getLateBy() const {
+     return mLatenessUs;
+ }
+ 
+-}  // namespace android
++}  // namespace stagefright
+diff --git a/media/libstagefright/MetaData.cpp b/media/libstagefright/MetaData.cpp
+index ae6ae2d..c832c96 100644
+--- a/media/libstagefright/MetaData.cpp
++++ b/media/libstagefright/MetaData.cpp
+@@ -15,6 +15,7 @@
+  */
+ 
+ //#define LOG_NDEBUG 0
++#undef LOG_TAG
+ #define LOG_TAG "MetaData"
+ #include <utils/Log.h>
+ 
+@@ -26,7 +27,7 @@
+ #include <media/stagefright/foundation/hexdump.h>
+ #include <media/stagefright/MetaData.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ MetaData::MetaData() {
+ }
+@@ -350,5 +351,6 @@ void MetaData::dumpToLog() const {
+     }
+ }
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
++#undef LOG_TAG
+diff --git a/media/libstagefright/SampleIterator.cpp b/media/libstagefright/SampleIterator.cpp
+index eae721b..767393a 100644
+--- a/media/libstagefright/SampleIterator.cpp
++++ b/media/libstagefright/SampleIterator.cpp
+@@ -14,6 +14,7 @@
+  * limitations under the License.
+  */
+ 
++#undef LOG_TAG
+ #define LOG_TAG "SampleIterator"
+ //#define LOG_NDEBUG 0
+ #include <utils/Log.h>
+@@ -28,7 +29,7 @@
+ 
+ #include "include/SampleTable.h"
+ 
+-namespace android {
++namespace stagefright {
+ 
+ SampleIterator::SampleIterator(SampleTable *table)
+     : mTable(table),
+@@ -312,5 +313,6 @@ status_t SampleIterator::findSampleTime(
+     return OK;
+ }
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
++#undef LOG_TAG
+diff --git a/media/libstagefright/SampleTable.cpp b/media/libstagefright/SampleTable.cpp
+index d9858d7..d2099df 100644
+--- a/media/libstagefright/SampleTable.cpp
++++ b/media/libstagefright/SampleTable.cpp
+@@ -14,6 +14,7 @@
+  * limitations under the License.
+  */
+ 
++#undef LOG_TAG
+ #define LOG_TAG "SampleTable"
+ //#define LOG_NDEBUG 0
+ #include <utils/Log.h>
+@@ -27,7 +28,7 @@
+ #include <media/stagefright/DataSource.h>
+ #include <media/stagefright/Utils.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ // static
+ const uint32_t SampleTable::kChunkOffsetType32 = FOURCC('s', 't', 'c', 'o');
+@@ -827,5 +828,6 @@ uint32_t SampleTable::getCompositionTimeOffset(uint32_t sampleIndex) {
+     return mCompositionDeltaLookup->getCompositionTimeOffset(sampleIndex);
+ }
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
++#undef LOG_TAG
+diff --git a/media/libstagefright/Utils.cpp b/media/libstagefright/Utils.cpp
+index 4db8e80..7b7c17a 100644
+--- a/media/libstagefright/Utils.cpp
++++ b/media/libstagefright/Utils.cpp
+@@ -15,6 +15,7 @@
+  */
+ 
+ //#define LOG_NDEBUG 0
++#undef LOG_TAG
+ #define LOG_TAG "Utils"
+ #include <utils/Log.h>
+ 
+@@ -33,7 +34,7 @@
+ #include <media/stagefright/Utils.h>
+ #include <media/AudioParameter.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ uint16_t U16_AT(const uint8_t *ptr) {
+     return ptr[0] << 8 | ptr[1];
+@@ -68,6 +69,7 @@ uint64_t hton64(uint64_t x) {
+     return ((uint64_t)htonl(x & 0xffffffff) << 32) | htonl(x >> 32);
+ }
+ 
++#if 0
+ status_t convertMetaDataToMessage(
+         const sp<MetaData> &meta, sp<AMessage> *format) {
+     format->clear();
+@@ -603,5 +605,8 @@ bool canOffloadStream(const sp<MetaData>& meta, bool hasVideo, bool isStreaming)
+     return AudioSystem::isOffloadSupported(info);
+ }
+ 
+-}  // namespace android
++#endif
++
++}  // namespace stagefright
+ 
++#undef LOG_TAG
+diff --git a/media/libstagefright/foundation/AAtomizer.cpp b/media/libstagefright/foundation/AAtomizer.cpp
+index b7b9e9f..4210cda 100644
+--- a/media/libstagefright/foundation/AAtomizer.cpp
++++ b/media/libstagefright/foundation/AAtomizer.cpp
+@@ -18,7 +18,7 @@
+ 
+ #include "AAtomizer.h"
+ 
+-namespace android {
++namespace stagefright {
+ 
+ // static
+ AAtomizer AAtomizer::gAtomizer;
+@@ -64,4 +64,4 @@ uint32_t AAtomizer::Hash(const char *s) {
+     return sum;
+ }
+ 
+-}  // namespace android
++}  // namespace stagefright
+diff --git a/media/libstagefright/foundation/ABitReader.cpp b/media/libstagefright/foundation/ABitReader.cpp
+index 5499c32..22850ef 100644
+--- a/media/libstagefright/foundation/ABitReader.cpp
++++ b/media/libstagefright/foundation/ABitReader.cpp
+@@ -16,9 +16,10 @@
+ 
+ #include "ABitReader.h"
+ 
++#include <log/log.h>
+ #include <media/stagefright/foundation/ADebug.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ ABitReader::ABitReader(const uint8_t *data, size_t size)
+     : mData(data),
+@@ -99,4 +100,4 @@ const uint8_t *ABitReader::data() const {
+     return mData - (mNumBitsLeft + 7) / 8;
+ }
+ 
+-}  // namespace android
++}  // namespace stagefright
+diff --git a/media/libstagefright/foundation/ABuffer.cpp b/media/libstagefright/foundation/ABuffer.cpp
+index 6173db4..53f5ebc 100644
+--- a/media/libstagefright/foundation/ABuffer.cpp
++++ b/media/libstagefright/foundation/ABuffer.cpp
+@@ -20,7 +20,7 @@
+ #include "ALooper.h"
+ #include "AMessage.h"
+ 
+-namespace android {
++namespace stagefright {
+ 
+ ABuffer::ABuffer(size_t capacity)
+     : mData(malloc(capacity)),
+@@ -72,5 +72,5 @@ sp<AMessage> ABuffer::meta() {
+     return mMeta;
+ }
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
+diff --git a/media/libstagefright/foundation/AString.cpp b/media/libstagefright/foundation/AString.cpp
+index dee786d..d06110a 100644
+--- a/media/libstagefright/foundation/AString.cpp
++++ b/media/libstagefright/foundation/AString.cpp
+@@ -23,7 +23,7 @@
+ #include "ADebug.h"
+ #include "AString.h"
+ 
+-namespace android {
++namespace stagefright {
+ 
+ // static
+ const char *AString::kEmptyString = "";
+@@ -325,7 +325,13 @@ AString StringPrintf(const char *format, ...) {
+     va_start(ap, format);
+ 
+     char *buffer;
++#ifdef _MSC_VER
++    int n = vsnprintf(NULL, 0, format, ap);
++    buffer = new char[n+1];
++    vsnprintf(buffer, n+1, format, ap);
++#else
+     vasprintf(&buffer, format, ap);
++#endif
+ 
+     va_end(ap);
+ 
+@@ -337,5 +343,5 @@ AString StringPrintf(const char *format, ...) {
+     return result;
+ }
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
+diff --git a/media/libstagefright/foundation/hexdump.cpp b/media/libstagefright/foundation/hexdump.cpp
+index a44d832..7b566eb 100644
+--- a/media/libstagefright/foundation/hexdump.cpp
++++ b/media/libstagefright/foundation/hexdump.cpp
+@@ -15,6 +15,7 @@
+  */
+ 
+ //#define LOG_NDEBUG 0
++#undef LOG_TAG
+ #define LOG_TAG "hexdump"
+ #include <utils/Log.h>
+ 
+@@ -27,7 +28,7 @@
+ #include <stdint.h>
+ #include <stdio.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ static void appendIndent(AString *s, int32_t indent) {
+     static const char kWhitespace[] =
+@@ -90,5 +91,6 @@ void hexdump(const void *_data, size_t size, size_t indent, AString *appendTo) {
+     }
+ }
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
++#undef LOG_TAG
+diff --git a/media/libstagefright/id3/ID3.cpp b/media/libstagefright/id3/ID3.cpp
+index 34d671a..3aa395c 100644
+--- a/media/libstagefright/id3/ID3.cpp
++++ b/media/libstagefright/id3/ID3.cpp
+@@ -15,6 +15,7 @@
+  */
+ 
+ //#define LOG_NDEBUG 0
++#undef LOG_TAG
+ #define LOG_TAG "ID3"
+ #include <utils/Log.h>
+ 
+@@ -26,7 +27,7 @@
+ #include <utils/String8.h>
+ #include <byteswap.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ static const size_t kMaxMetadataSize = 3 * 1024 * 1024;
+ 
+@@ -897,4 +898,6 @@ bool ID3::parseV1(const sp<DataSource> &source) {
+     return true;
+ }
+ 
+-}  // namespace android
++}  // namespace stagefright
++
++#undef LOG_TAG
+diff --git a/media/libstagefright/include/AMRExtractor.h b/media/libstagefright/include/AMRExtractor.h
+index 4a1c827..cdfc98e 100644
+--- a/media/libstagefright/include/AMRExtractor.h
++++ b/media/libstagefright/include/AMRExtractor.h
+@@ -21,7 +21,7 @@
+ #include <utils/Errors.h>
+ #include <media/stagefright/MediaExtractor.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ struct AMessage;
+ class String8;
+@@ -57,6 +57,6 @@ bool SniffAMR(
+         const sp<DataSource> &source, String8 *mimeType, float *confidence,
+         sp<AMessage> *);
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
+ #endif  // AMR_EXTRACTOR_H_
+diff --git a/media/libstagefright/include/ESDS.h b/media/libstagefright/include/ESDS.h
+index 2f40dae..bc4c5a6 100644
+--- a/media/libstagefright/include/ESDS.h
++++ b/media/libstagefright/include/ESDS.h
+@@ -22,7 +22,7 @@
+ 
+ #include <media/stagefright/MediaErrors.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ class ESDS {
+ public:
+@@ -68,5 +68,5 @@ private:
+     ESDS &operator=(const ESDS &);
+ };
+ 
+-}  // namespace android
++}  // namespace stagefright
+ #endif  // ESDS_H_
+diff --git a/media/libstagefright/include/ID3.h b/media/libstagefright/include/ID3.h
+index cca83ab..cbb3bbf 100644
+--- a/media/libstagefright/include/ID3.h
++++ b/media/libstagefright/include/ID3.h
+@@ -20,7 +20,7 @@
+ 
+ #include <utils/RefBase.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ struct DataSource;
+ struct String8;
+@@ -96,7 +96,7 @@ private:
+     ID3 &operator=(const ID3 &);
+ };
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
+ #endif  // ID3_H_
+ 
+diff --git a/media/libstagefright/include/MPEG4Extractor.h b/media/libstagefright/include/MPEG4Extractor.h
+index bbec1c4..98818b8 100644
+--- a/media/libstagefright/include/MPEG4Extractor.h
++++ b/media/libstagefright/include/MPEG4Extractor.h
+@@ -27,7 +27,7 @@
+ #include <utils/Vector.h>
+ #include <utils/String8.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ struct AMessage;
+ class DataSource;
+@@ -129,6 +129,6 @@ bool SniffMPEG4(
+         const sp<DataSource> &source, String8 *mimeType, float *confidence,
+         sp<AMessage> *);
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
+ #endif  // MPEG4_EXTRACTOR_H_
+diff --git a/media/libstagefright/include/SampleIterator.h b/media/libstagefright/include/SampleIterator.h
+index b5a043c..a4d52fe 100644
+--- a/media/libstagefright/include/SampleIterator.h
++++ b/media/libstagefright/include/SampleIterator.h
+@@ -14,9 +14,12 @@
+  * limitations under the License.
+  */
+ 
++#ifndef SAMPLE_ITERATOR_H_
++#define SAMPLE_ITERATOR_H_
++
+ #include <utils/Vector.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ struct SampleTable;
+ 
+@@ -71,5 +74,6 @@ private:
+     SampleIterator &operator=(const SampleIterator &);
+ };
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
++#endif
+diff --git a/media/libstagefright/include/SampleTable.h b/media/libstagefright/include/SampleTable.h
+index 847dff7..2a82077 100644
+--- a/media/libstagefright/include/SampleTable.h
++++ b/media/libstagefright/include/SampleTable.h
+@@ -25,7 +25,7 @@
+ #include <utils/RefBase.h>
+ #include <utils/threads.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ class DataSource;
+ struct SampleIterator;
+@@ -148,6 +148,6 @@ private:
+     SampleTable &operator=(const SampleTable &);
+ };
+ 
+-}  // namespace android
++}  // namespace stagefright
+ 
+ #endif  // SAMPLE_TABLE_H_

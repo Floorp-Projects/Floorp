@@ -52,7 +52,6 @@ using namespace mozilla::dom;
 uint32_t nsXBLPrototypeHandler::gRefCnt = 0;
 
 int32_t nsXBLPrototypeHandler::kMenuAccessKey = -1;
-int32_t nsXBLPrototypeHandler::kAccelKey = -1;
 
 const int32_t nsXBLPrototypeHandler::cShift = (1<<0);
 const int32_t nsXBLPrototypeHandler::cAlt = (1<<1);
@@ -160,23 +159,21 @@ nsXBLPrototypeHandler::AppendHandlerText(const nsAString& aText)
 void
 nsXBLPrototypeHandler::InitAccessKeys()
 {
-  if (kAccelKey >= 0 && kMenuAccessKey >= 0)
+  if (kMenuAccessKey >= 0) {
     return;
+  }
 
   // Compiled-in defaults, in case we can't get the pref --
   // mac doesn't have menu shortcuts, other platforms use alt.
 #ifdef XP_MACOSX
   kMenuAccessKey = 0;
-  kAccelKey = nsIDOMKeyEvent::DOM_VK_META;
 #else
   kMenuAccessKey = nsIDOMKeyEvent::DOM_VK_ALT;
-  kAccelKey = nsIDOMKeyEvent::DOM_VK_CONTROL;
 #endif
 
   // Get the menu access key value from prefs, overriding the default:
   kMenuAccessKey =
     Preferences::GetInt("ui.key.menuAccessKey", kMenuAccessKey);
-  kAccelKey = Preferences::GetInt("ui.key.accelKey", kAccelKey);
 }
 
 nsresult
@@ -708,6 +705,25 @@ int32_t nsXBLPrototypeHandler::KeyToMask(int32_t key)
   return cControl | cControlMask;  // for warning avoidance
 }
 
+// static
+int32_t
+nsXBLPrototypeHandler::AccelKeyMask()
+{
+  switch (WidgetInputEvent::AccelModifier()) {
+    case MODIFIER_ALT:
+      return KeyToMask(nsIDOMKeyEvent::DOM_VK_ALT);
+    case MODIFIER_CONTROL:
+      return KeyToMask(nsIDOMKeyEvent::DOM_VK_CONTROL);
+    case MODIFIER_META:
+      return KeyToMask(nsIDOMKeyEvent::DOM_VK_META);
+    case MODIFIER_OS:
+      return KeyToMask(nsIDOMKeyEvent::DOM_VK_WIN);
+    default:
+      MOZ_CRASH("Handle the new result of WidgetInputEvent::AccelModifier()");
+      return 0;
+  }
+}
+
 void
 nsXBLPrototypeHandler::GetEventType(nsAString& aEvent)
 {
@@ -811,7 +827,7 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
       else if (PL_strcmp(token, "control") == 0)
         mKeyMask |= cControl | cControlMask;
       else if (PL_strcmp(token, "accel") == 0)
-        mKeyMask |= KeyToMask(kAccelKey);
+        mKeyMask |= AccelKeyMask();
       else if (PL_strcmp(token, "access") == 0)
         mKeyMask |= KeyToMask(kMenuAccessKey);
       else if (PL_strcmp(token, "any") == 0)

@@ -327,11 +327,11 @@ URLSearchParams::SerializeEnumerator(const nsAString& aName,
     if (data->mFirst) {
       data->mFirst = false;
     } else {
-      data->mValue.Append(NS_LITERAL_STRING("&"));
+      data->mValue.Append('&');
     }
 
     data->Serialize(NS_ConvertUTF16toUTF8(aName));
-    data->mValue.Append(NS_LITERAL_STRING("="));
+    data->mValue.Append('=');
     data->Serialize(NS_ConvertUTF16toUTF8(aArray->ElementAt(i)));
   }
 
