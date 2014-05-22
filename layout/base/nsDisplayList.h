@@ -3370,9 +3370,6 @@ public:
 
   virtual bool SetVisibleRegionOnLayer() MOZ_OVERRIDE { return false; }
 
-#ifdef MOZ_DUMP_PAINTING
-  virtual void WriteDebugInfo(nsACString& aTo) MOZ_OVERRIDE;
-#endif
 private:
   static gfx3DMatrix GetResultingTransformMatrixInternal(const FrameTransformProperties& aProperties,
                                                          const nsPoint& aOrigin,
