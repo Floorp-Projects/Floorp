@@ -2733,17 +2733,6 @@ TabChild::OnHideTooltip()
     return NS_OK;
 }
 
-bool
-TabChild::RecvUIResolutionChanged()
-{
-  static_cast<PuppetWidget*>(mWidget.get())->ClearBackingScaleCache();
-  nsCOMPtr<nsIDocument> document(GetDocument());
-  nsCOMPtr<nsIPresShell> presShell = document->GetShell();
-  nsRefPtr<nsPresContext> presContext = presShell->GetPresContext();
-  presContext->UIResolutionChanged();
-  return true;
-}
-
 TabChildGlobal::TabChildGlobal(TabChildBase* aTabChild)
 : mTabChild(aTabChild)
 {
