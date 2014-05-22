@@ -757,54 +757,39 @@ CSSCompleter.prototype = {
     result = result.suggestions;
     let query = this.selector;
     let completion = [];
-    for (let [value, count, state] of result) {
+    for (let value of result) {
       switch(this.selectorState) {
         case SELECTOR_STATES.id:
         case SELECTOR_STATES.class:
         case SELECTOR_STATES.pseudo:
           if (/^[.:#]$/.test(this.completing)) {
-            value = query.slice(0, query.length - this.completing.length) +
-                       value;
+            value[0] = query.slice(0, query.length - this.completing.length) +
+                       value[0];
           } else {
-            value = query.slice(0, query.length - this.completing.length - 1) +
-                       value;
+            value[0] = query.slice(0, query.length - this.completing.length - 1) +
+                       value[0];
           }
           break;
 
         case SELECTOR_STATES.tag:
-          value = query.slice(0, query.length - this.completing.length) +
-                     value;
+          value[0] = query.slice(0, query.length - this.completing.length) +
+                     value[0];
           break;
 
         case SELECTOR_STATES.null:
-          value = query + value;
+          value[0] = query + value[0];
           break;
 
         default:
-         value = query.slice(0, query.length - this.completing.length) +
-                    value;
+         value[0] = query.slice(0, query.length - this.completing.length) +
+                    value[0];
       }
-
-      let item = {
-        label: value,
+      completion.push({
+        label: value[0],
         preLabel: query,
-        text: value,
-        score: count
-      };
-
-      // In case the query's state is tag and the item's state is id or class
-      // adjust the preLabel
-      if (this.selectorState === SELECTOR_STATES.tag &&
-          state === SELECTOR_STATES.class) {
-        item.preLabel = "." + item.preLabel;
-      }
-      if (this.selectorState === SELECTOR_STATES.tag &&
-          state === SELECTOR_STATES.id) {
-        item.preLabel = "#" + item.preLabel;
-      }
-
-      completion.push(item);
-
+        text: value[0],
+        score: value[1]
+      });
       if (completion.length > this.maxEntries - 1)
         break;
     }
