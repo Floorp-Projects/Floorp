@@ -125,6 +125,10 @@ class B2GOptions(ReftestOptions):
                         dest="desktop",
                         help="Run the tests on a B2G desktop build")
         defaults["desktop"] = False
+        self.add_option("--enable-oop", action="store_true",
+                        dest="oop",
+                        help="Run the tests out of process")
+        defaults["oop"] = False
         defaults["remoteTestRoot"] = "/data/local/tests"
         defaults["logFile"] = "reftest.log"
         defaults["autorun"] = True
@@ -417,6 +421,7 @@ class B2GRemoteReftest(RefTest):
         profileDir = profile.profile
 
         prefs = {}
+
         # Turn off the locale picker screen
         prefs["browser.firstrun.show.localepicker"] = False
         prefs["browser.homescreenURL"] = "app://test-container.gaiamobile.org/index.html"
@@ -433,6 +438,11 @@ class B2GRemoteReftest(RefTest):
         # Set a future policy version to avoid the telemetry prompt.
         prefs["toolkit.telemetry.prompted"] = 999
         prefs["toolkit.telemetry.notifiedOptOut"] = 999
+
+        if options.oop:
+            prefs['browser.tabs.remote'] = True
+            prefs['browser.tabs.remote.autostart'] = True
+            prefs['reftest.browser.iframe.enabled'] = True
 
         # Set the extra prefs.
         profile.set_preferences(prefs)
