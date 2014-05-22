@@ -60,6 +60,7 @@ function BuiltinProvider() {}
 BuiltinProvider.prototype = {
   load: function() {
     this.loader = new loader.Loader({
+      id: "fx-devtools",
       modules: {
         "Debugger": Debugger,
         "Services": Object.create(Services),
@@ -86,6 +87,7 @@ BuiltinProvider.prototype = {
         "devtools/async-utils": "resource://gre/modules/devtools/async-utils",
         "devtools/content-observer": "resource://gre/modules/devtools/content-observer",
         "gcli": "resource://gre/modules/devtools/gcli",
+        "projecteditor": "resource:///modules/devtools/projecteditor",
         "acorn": "resource://gre/modules/devtools/acorn",
         "acorn/util/walk": "resource://gre/modules/devtools/acorn/walk.js",
         "tern": "resource://gre/modules/devtools/tern",
@@ -138,11 +140,13 @@ SrcdirProvider.prototype = {
     let asyncUtilsURI = this.fileURI(OS.Path.join(toolkitDir), "async-utils.js");
     let contentObserverURI = this.fileURI(OS.Path.join(toolkitDir), "content-observer.js");
     let gcliURI = this.fileURI(OS.Path.join(toolkitDir, "gcli", "source", "lib", "gcli"));
+    let projecteditorURI = this.fileURI(OS.Path.join(devtoolsDir, "projecteditor"));
     let acornURI = this.fileURI(OS.Path.join(toolkitDir, "acorn"));
     let acornWalkURI = OS.Path.join(acornURI, "walk.js");
     let ternURI = OS.Path.join(toolkitDir, "tern");
     let sourceMapURI = this.fileURI(OS.Path.join(toolkitDir), "SourceMap.jsm");
     this.loader = new loader.Loader({
+      id: "fx-devtools",
       modules: {
         "Debugger": Debugger,
         "Services": Object.create(Services),
@@ -167,6 +171,7 @@ SrcdirProvider.prototype = {
         "devtools/async-utils": asyncUtilsURI,
         "devtools/content-observer": contentObserverURI,
         "gcli": gcliURI,
+        "projecteditor": projecteditorURI,
         "acorn": acornURI,
         "acorn/util/walk": acornWalkURI,
         "tern": ternURI,
