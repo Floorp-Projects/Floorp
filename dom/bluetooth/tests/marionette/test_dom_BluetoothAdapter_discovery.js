@@ -7,7 +7,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Test Purpose:
 //   To verify that discovery process of BluetoothAdapter is correct.
-//   Use B2G emulator commands to add/remote remote devices to simulate
+//   Use B2G emulator commands to add/remove remote devices to simulate
 //   discovering behavior.
 //
 // Test Coverage:
@@ -24,15 +24,9 @@ MARIONETTE_HEAD_JS = 'head.js';
 startBluetoothTest(true, function testCaseMain(aAdapter) {
   log("Testing the discovery process of BluetoothAdapter ...");
 
-  // The properties of remote device.
-  let theProperties = {
-    "name": REMOTE_DEVICE_NAME,
-    "discoverable": true
-  };
-
   return Promise.resolve()
     .then(() => removeEmulatorRemoteDevice(BDADDR_ALL))
-    .then(() => addEmulatorRemoteDevice(/*theProperties*/ null))
+    .then(() => addEmulatorRemoteDevice(null))
     .then(function(aRemoteAddress) {
       let promises = [];
       promises.push(waitForAdapterEvent(aAdapter, "devicefound"));
