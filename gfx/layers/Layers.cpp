@@ -33,13 +33,10 @@
 #include "nsStyleStruct.h"              // for nsTimingFunction, etc
 #include "gfxPrefs.h"
 
-using namespace mozilla::layers;
-using namespace mozilla::gfx;
-
-typedef FrameMetrics::ViewID ViewID;
-const ViewID FrameMetrics::NULL_SCROLL_ID = 0;
-
 uint8_t gLayerManagerLayerBuilder;
+
+namespace mozilla {
+namespace layers {
 
 FILE*
 FILEOrDefault(FILE* aFile)
@@ -47,8 +44,10 @@ FILEOrDefault(FILE* aFile)
   return aFile ? aFile : stderr;
 }
 
-namespace mozilla {
-namespace layers {
+typedef FrameMetrics::ViewID ViewID;
+const ViewID FrameMetrics::NULL_SCROLL_ID = 0;
+
+using namespace mozilla::gfx;
 
 //--------------------------------------------------
 // LayerManager
@@ -1347,7 +1346,7 @@ Layer::PrintInfo(nsACString& aTo, const char* aPrefix)
   aTo += aPrefix;
   aTo += nsPrintfCString("%s%s (0x%p)", mManager->Name(), Name(), this);
 
-  ::PrintInfo(aTo, AsLayerComposite());
+  layers::PrintInfo(aTo, AsLayerComposite());
 
   if (mUseClipRect) {
     AppendToString(aTo, mClipRect, " [clip=", "]");
