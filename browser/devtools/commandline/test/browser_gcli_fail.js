@@ -63,7 +63,7 @@ exports.testBasic = function(options) {
     {
       setup: 'tsfail throwerror',
       exec: {
-        output: 'thrown error',
+        output: /thrown error$/,
         type: 'error',
         error: true
       }
