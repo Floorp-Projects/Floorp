@@ -66,7 +66,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollector.h"
 #include "nsDOMJSUtils.h"
-#include "nsExceptionHandler.h"
 #include "nsIException.h"
 #include "nsThreadUtils.h"
 #include "xpcpublic.h"
@@ -468,8 +467,6 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(JSRuntime* aParentRuntime,
   , mJSZoneCycleCollectorGlobal(sJSZoneCycleCollectorGlobal)
   , mJSRuntime(nullptr)
   , mJSHolders(512)
-  , mOutOfMemoryState(OOMState::OK)
-  , mLargeAllocationFailureState(OOMState::OK)
 {
   mozilla::dom::InitScriptSettings();
 
@@ -1179,22 +1176,6 @@ CycleCollectedJSRuntime::FinalizeDeferredThings(DeferredFinalizeType aType)
   }
 }
 
-void 
-CycleCollectedJSRuntime::AnnotateAndSetOutOfMemory(OOMState *aStatePtr, OOMState aNewState)
-{
-  *aStatePtr = aNewState;
-#ifdef MOZ_CRASHREPORTER
-  CrashReporter::AnnotateCrashReport(aStatePtr == &mOutOfMemoryState
-                                     ? NS_LITERAL_CSTRING("JSOutOfMemory")
-                                     : NS_LITERAL_CSTRING("JSLargeAllocationFailure"),
-                                     aNewState == OOMState::Reporting
-                                     ? NS_LITERAL_CSTRING("Reporting")
-                                     : aNewState == OOMState::Reported
-                                     ? NS_LITERAL_CSTRING("Reported")
-                                     : NS_LITERAL_CSTRING("Recovered"));
-#endif
-}
-
 void
 CycleCollectedJSRuntime::OnGC(JSGCStatus aStatus)
 {
@@ -1203,15 +1184,6 @@ CycleCollectedJSRuntime::OnGC(JSGCStatus aStatus)
       nsCycleCollector_prepareForGarbageCollection();
       break;
     case JSGC_END: {
-#ifdef MOZ_CRASHREPORTER
-      if (mOutOfMemoryState == OOMState::Reported) {
-        AnnotateAndSetOutOfMemory(&mOutOfMemoryState, OOMState::Recovered);
-      }
-      if (mLargeAllocationFailureState == OOMState::Reported) {
-        AnnotateAndSetOutOfMemory(&mLargeAllocationFailureState, OOMState::Recovered);
-      }
-#endif
-
       /*
        * If the previous GC created a runnable to finalize objects
        * incrementally, and if it hasn't finished yet, finish it now. We
@@ -1238,15 +1210,11 @@ CycleCollectedJSRuntime::OnGC(JSGCStatus aStatus)
 void
 CycleCollectedJSRuntime::OnOutOfMemory()
 {
-  AnnotateAndSetOutOfMemory(&mOutOfMemoryState, OOMState::Reporting);
   CustomOutOfMemoryCallback();
-  AnnotateAndSetOutOfMemory(&mOutOfMemoryState, OOMState::Reported);
 }
 
 void
 CycleCollectedJSRuntime::OnLargeAllocationFailure()
 {
-  AnnotateAndSetOutOfMemory(&mLargeAllocationFailureState, OOMState::Reporting);
   CustomLargeAllocationFailureCallback();
-  AnnotateAndSetOutOfMemory(&mLargeAllocationFailureState, OOMState::Reported);
 }
