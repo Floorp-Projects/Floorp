@@ -8796,6 +8796,7 @@ class MFloor
     bool congruentTo(const MDefinition *ins) const {
         return congruentIfOperandsEqual(ins);
     }
+    void computeRange(TempAllocator &alloc);
 };
 
 // Inlined version of Math.ceil().
