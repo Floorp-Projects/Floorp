@@ -98,8 +98,19 @@
     </content>
     <implementation>
       <property name="state"
-                onget="return this._getAnonElt('translationStates').selectedIndex;"
-                onset="this._getAnonElt('translationStates').selectedIndex = val;"/>
+                onget="return this._getAnonElt('translationStates').selectedIndex;">
+        <setter>
+          <![CDATA[
+          let deck = this._getAnonElt('translationStates');
+
+          let activeElt = document.activeElement;
+          if (activeElt && deck.contains(activeElt))
+            activeElt.blur();
+
+          deck.selectedIndex = val;
+          ]]>
+        </setter>
+      </property>
 
       <method name="init">
         <parameter name="aTranslation"/>
