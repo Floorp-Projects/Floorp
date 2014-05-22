@@ -513,7 +513,7 @@ WyciwygChannelChild::SetContentType(const nsACString & aContentType)
 NS_IMETHODIMP
 WyciwygChannelChild::GetContentCharset(nsACString & aContentCharset)
 {
-  aContentCharset.Assign("UTF-16");
+  aContentCharset.AssignLiteral("UTF-16");
   return NS_OK;
 }
 NS_IMETHODIMP

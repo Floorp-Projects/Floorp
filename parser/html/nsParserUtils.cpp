@@ -169,8 +169,8 @@ nsParserUtils::ParseFragment(const nsAString& aFragment,
   if (aIsXML) {
     // XHTML
     if (aBaseURI) {
-      base.Append(NS_LITERAL_CSTRING(XHTML_DIV_TAG));
-      base.Append(NS_LITERAL_CSTRING(" xml:base=\""));
+      base.AppendLiteral(XHTML_DIV_TAG);
+      base.AppendLiteral(" xml:base=\"");
       aBaseURI->GetSpec(spec);
       // nsEscapeHTML is good enough, because we only need to get
       // quotes, ampersands, and angle brackets
@@ -178,7 +178,7 @@ nsParserUtils::ParseFragment(const nsAString& aFragment,
       if (escapedSpec)
         base += escapedSpec;
       NS_Free(escapedSpec);
-      base.Append(NS_LITERAL_CSTRING("\""));
+      base.Append('"');
       tagStack.AppendElement(NS_ConvertUTF8toUTF16(base));
     }  else {
       tagStack.AppendElement(NS_LITERAL_STRING(XHTML_DIV_TAG));

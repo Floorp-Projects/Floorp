@@ -27,7 +27,7 @@
 
 // ---------------------------------------------------------------------------
 
-namespace android {
+namespace stagefright {
 namespace tinyutils {
 
 template <class TYPE>
@@ -276,7 +276,7 @@ int SortedVector<TYPE>::do_compare(const void* lhs, const void* rhs) const {
 }
 
 } // namespace tinyutils
-} // namespace android
+} // namespace stagefright
 
 
 // ---------------------------------------------------------------------------

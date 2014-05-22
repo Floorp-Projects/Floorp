@@ -39,8 +39,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID \
-{ 0x1329e5b7, 0x4bcd, 0x450c, \
-  { 0xa2, 0x3a, 0x98, 0xc5, 0x85, 0xcd, 0x73, 0xf9 } }
+{ 0xc534a378, 0x7b5f, 0x43a4, \
+  { 0xaf, 0x65, 0x5f, 0xfe, 0xea, 0xd6, 0x00, 0xfb } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -667,6 +667,20 @@ public:
    * @return The ShadowRoot that is the root of the node tree.
    */
   virtual mozilla::dom::ShadowRoot *GetContainingShadow() const = 0;
+
+  /**
+   * Gets an array of destination insertion points where this content
+   * is distributed by web component distribution algorithms.
+   * The array is created if it does not already exist.
+   */
+  virtual nsTArray<nsIContent*> &DestInsertionPoints() = 0;
+
+  /**
+   * Same as DestInsertionPoints except that this method will return
+   * null if the array of destination insertion points does not already
+   * exist.
+   */
+  virtual nsTArray<nsIContent*> *GetExistingDestInsertionPoints() const = 0;
 
   /**
    * Gets the insertion parent element of the XBL binding.

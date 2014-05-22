@@ -694,7 +694,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
     if (httpChan) {
       nsAutoCString requestMethod;
       httpChan->GetRequestMethod(requestMethod);
-      allowURLExt = !requestMethod.Equals("POST");
+      allowURLExt = !requestMethod.EqualsLiteral("POST");
     }
 
     // Check if we had a query string - we don't want to check the URL
@@ -1408,7 +1408,7 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
 
   // Add an additional .part to prevent the OS from running this file in the
   // default application.
-  tempLeafName.Append(NS_LITERAL_CSTRING(".part"));
+  tempLeafName.AppendLiteral(".part");
 
   rv = mTempFile->Append(NS_ConvertUTF8toUTF16(tempLeafName));
   // make this file unique!!!
@@ -2597,7 +2597,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const nsACStri
     if (NS_FAILED(rv) && !aFileExt.IsEmpty()) {
       // XXXzpao This should probably be localized
       nsAutoCString desc(aFileExt);
-      desc.Append(" File");
+      desc.AppendLiteral(" File");
       (*_retval)->SetDescription(NS_ConvertASCIItoUTF16(desc));
       LOG(("Falling back to 'File' file description\n"));
     }

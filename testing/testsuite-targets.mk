@@ -381,11 +381,6 @@ cppunittests-remote:
 jetpack-tests:
 	$(PYTHON) $(topsrcdir)/addon-sdk/source/bin/cfx -b $(browser_path) --parseable testpkgs
 
-# -- -register
-# -- --trace-malloc malloc.log --shutdown-leaks=sdleak.log
-leaktest:
-	$(PYTHON) _leaktest/leaktest.py $(LEAKTEST_ARGS)
-
 pgo-profile-run:
 	$(PYTHON) $(topsrcdir)/build/pgo/profileserver.py $(EXTRA_TEST_ARGS)
 

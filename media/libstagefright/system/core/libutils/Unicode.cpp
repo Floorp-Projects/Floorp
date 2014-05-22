@@ -576,8 +576,8 @@ void utf8_to_utf16(const uint8_t* u8str, size_t u8len, char16_t* u16str) {
 char16_t* utf8_to_utf16_n(const uint8_t* src, size_t srcLen, char16_t* dst, size_t dstLen) {
     const uint8_t* const u8end = src + srcLen;
     const uint8_t* u8cur = src;
-    const uint16_t* const u16end = dst + dstLen;
-    char16_t* u16cur = dst;
+    const uint16_t* const u16end = (const uint16_t* const) dst + dstLen;
+    uint16_t* u16cur = (uint16_t*) dst;
 
     while (u8cur < u8end && u16cur < u16end) {
         size_t u8len = utf8_codepoint_len(*u8cur);
@@ -593,14 +593,14 @@ char16_t* utf8_to_utf16_n(const uint8_t* src, size_t srcLen, char16_t* dst, size
             *u16cur++ = (char16_t) ((codepoint >> 10) + 0xD800);
             if (u16cur >= u16end) {
                 // Ooops...  not enough room for this surrogate pair.
-                return u16cur-1;
+                return (char16_t*) u16cur-1;
             }
             *u16cur++ = (char16_t) ((codepoint & 0x3FF) + 0xDC00);
         }
 
         u8cur += u8len;
     }
-    return u16cur;
+    return (char16_t*) u16cur;
 }
 
 }

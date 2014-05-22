@@ -937,7 +937,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsAutoString klass;
       node->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, klass);
       if (!klass.IsEmpty()) {
-        klass.Append(NS_LITERAL_STRING(" error"));
+        klass.AppendLiteral(" error");
         node->SetAttr(kNameSpaceID_None, nsGkAtoms::_class, klass, true);
       } else {
         node->SetAttr(kNameSpaceID_None,

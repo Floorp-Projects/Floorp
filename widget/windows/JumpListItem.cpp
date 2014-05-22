@@ -359,7 +359,7 @@ nsresult JumpListShortcut::GetShellLink(nsCOMPtr<nsIJumpListItem>& item,
   handlerApp->GetParameterCount(&count);
   for (uint32_t idx = 0; idx < count; idx++) {
     if (idx > 0)
-      appArgs.Append(NS_LITERAL_STRING(" "));
+      appArgs.Append(' ');
     nsAutoString param;
     rv = handlerApp->GetParameter(idx, param);
     if (NS_FAILED(rv))

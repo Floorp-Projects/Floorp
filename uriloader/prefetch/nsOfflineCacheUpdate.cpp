@@ -108,7 +108,7 @@ LogToConsole(const char * message, nsOfflineCacheUpdateItem * item = nullptr)
             nsAutoCString uriSpec;
             item->mURI->GetSpec(uriSpec);
 
-            messageUTF16.Append(NS_LITERAL_STRING(", URL="));
+            messageUTF16.AppendLiteral(", URL=");
             messageUTF16.Append(NS_ConvertUTF8toUTF16(uriSpec));
         }
         consoleService->LogStringMessage(messageUTF16.get());

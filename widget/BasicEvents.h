@@ -890,6 +890,7 @@ public:
 
 enum Modifier
 {
+  MODIFIER_NONE       = 0x0000,
   MODIFIER_ALT        = 0x0001,
   MODIFIER_ALTGRAPH   = 0x0002,
   MODIFIER_CAPSLOCK   = 0x0004,
@@ -961,6 +962,19 @@ public:
     result->AssignInputEventData(*this, true);
     result->mFlags = mFlags;
     return result;
+  }
+
+
+  /**
+   * Returns a modifier of "Accel" virtual modifier which is used for shortcut
+   * key.
+   */
+  static Modifier AccelModifier();
+
+  // true indicates the accel key on the environment is down
+  bool IsAccel() const
+  {
+    return ((modifiers & AccelModifier()) != 0);
   }
 
   // true indicates the shift key is down

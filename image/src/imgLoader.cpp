@@ -128,9 +128,9 @@ public:
 #define REPORT_VECTOR(_path, _uri, _amount, _desc)                            \
     do {                                                                      \
       nsAutoCString path(NS_LITERAL_CSTRING(_path));                          \
-      path.Append("/(");                                                      \
+      path.AppendLiteral("/(");                                               \
       path.Append(_uri);                                                      \
-      path.Append(")");                                                       \
+      path.Append(')');                                                       \
       nsresult rv;                                                            \
       rv = callback->Callback(EmptyCString(), path,                           \
                               KIND_HEAP, UNITS_BYTES, _amount,                \

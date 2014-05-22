@@ -795,7 +795,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     pushBuffer.AppendLiteral("</a></td></tr></tbody></table></td>\n <td");
 
     if (type == nsIDirIndex::TYPE_DIRECTORY || type == nsIDirIndex::TYPE_SYMLINK) {
-        pushBuffer.AppendLiteral(">");
+        pushBuffer.Append('>');
     } else {
         int64_t size;
         aIndex->GetSize(&size);
@@ -808,7 +808,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
             FormatSizeString(size, sizeString);
             pushBuffer.Append(sizeString);
         } else {
-            pushBuffer.AppendLiteral(">");
+            pushBuffer.Append('>');
         }
     }
     pushBuffer.AppendLiteral("</td>\n <td");

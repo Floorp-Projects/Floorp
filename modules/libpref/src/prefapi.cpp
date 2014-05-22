@@ -217,19 +217,19 @@ static void str_escape(const char * original, nsAFlatCString& aResult)
         switch (*p)
         {
             case '\n':
-                aResult.Append("\\n");
+                aResult.AppendLiteral("\\n");
                 break;
 
             case '\r':
-                aResult.Append("\\r");
+                aResult.AppendLiteral("\\r");
                 break;
 
             case '\\':
-                aResult.Append("\\\\");
+                aResult.AppendLiteral("\\\\");
                 break;
 
             case '\"':
-                aResult.Append("\\\"");
+                aResult.AppendLiteral("\\\"");
                 break;
 
             default:
@@ -333,7 +333,7 @@ pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, uint32_t i, void *arg)
 
     nsAutoCString prefValue;
     nsAutoCString prefPrefix;
-    prefPrefix.Assign(NS_LITERAL_CSTRING("user_pref(\""));
+    prefPrefix.AssignLiteral("user_pref(\"");
 
     // where we're getting our pref from
     PrefValue* sourcePref;
@@ -346,7 +346,7 @@ pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, uint32_t i, void *arg)
         sourcePref = &pref->userPref;
     } else {
         if (argData->saveTypes == SAVE_ALL_AND_DEFAULTS) {
-            prefPrefix.Assign(NS_LITERAL_CSTRING("pref(\""));
+            prefPrefix.AssignLiteral("pref(\"");
             sourcePref = &pref->defaultPref;
         }
         else

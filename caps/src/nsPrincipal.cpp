@@ -199,7 +199,7 @@ nsPrincipal::GetOriginForURI(nsIURI* aURI, char **aOrigin)
 
   if (NS_SUCCEEDED(rv) && !isChrome) {
     if (port != -1) {
-      hostPort.AppendLiteral(":");
+      hostPort.Append(':');
       hostPort.AppendInt(port, 10);
     }
 

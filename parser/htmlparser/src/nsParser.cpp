@@ -259,9 +259,9 @@ NS_IMETHODIMP_(void)
 nsParser::SetCommand(const char* aCommand)
 {
   mCommandStr.Assign(aCommand);
-  if (mCommandStr.Equals("view-source")) {
+  if (mCommandStr.EqualsLiteral("view-source")) {
     mCommand = eViewSource;
-  } else if (mCommandStr.Equals("view-fragment")) {
+  } else if (mCommandStr.EqualsLiteral("view-fragment")) {
     mCommand = eViewFragment;
   } else {
     mCommand = eViewNormal;
@@ -662,7 +662,7 @@ DetermineHTMLParseMode(const nsString& aBuffer,
 
       // Special hack for IBM's custom DOCTYPE.
       if (!(resultFlags & PARSE_DTD_HAVE_INTERNAL_SUBSET) &&
-          sysIDUCS2 == NS_LITERAL_STRING(
+          sysIDUCS2.EqualsLiteral(
                "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd")) {
         aParseMode = eDTDMode_quirks;
         aDocType = eHTML_Quirks;
@@ -1328,9 +1328,9 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
   mFlags &= ~NS_PARSER_FLAG_OBSERVERS_ENABLED;
 
   for (theIndex = 0; theIndex < theCount; theIndex++) {
-    theContext.AppendLiteral("<");
+    theContext.Append('<');
     theContext.Append(aTagStack[theCount - theIndex - 1]);
-    theContext.AppendLiteral(">");
+    theContext.Append('>');
   }
 
   if (theCount == 0) {
@@ -1392,7 +1392,7 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
           endContext.Append(Substring(thisTag,0,endOfTag));
         }
 
-        endContext.AppendLiteral(">");
+        endContext.Append('>');
       }
 
       result = Parse(endContext,

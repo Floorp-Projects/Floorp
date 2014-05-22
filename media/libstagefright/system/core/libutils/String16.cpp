@@ -27,7 +27,7 @@
 #include <ctype.h>
 
 
-namespace android {
+namespace stagefright {
 
 static SharedBuffer* gEmptyStringBuf = NULL;
 static char16_t* gEmptyString = NULL;
@@ -419,4 +419,4 @@ status_t String16::remove(size_t len, size_t begin)
     return NO_MEMORY;
 }
 
-}; // namespace android
+}; // namespace stagefright

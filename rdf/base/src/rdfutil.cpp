@@ -67,7 +67,7 @@ rdf_FormatDate(PRTime aTime, nsACString &aResult)
     aResult.Append(buf);
 
     // usecs
-    aResult.Append(" +");
+    aResult.AppendLiteral(" +");
     int32_t usec = t.tm_usec;
     for (int32_t digit = 100000; digit > 1; digit /= 10) {
         aResult.Append(char('0' + (usec / digit)));

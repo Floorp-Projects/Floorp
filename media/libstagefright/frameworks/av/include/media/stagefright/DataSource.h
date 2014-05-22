@@ -21,16 +21,10 @@
 #include <sys/types.h>
 
 #include <media/stagefright/MediaErrors.h>
-#include <utils/Errors.h>
-#include <utils/KeyedVector.h>
-#include <utils/List.h>
 #include <utils/RefBase.h>
-#include <utils/threads.h>
-#include <drm/DrmManagerClient.h>
 
-namespace android {
+namespace stagefright {
 
-struct AMessage;
 class String8;
 
 class DataSource : public RefBase {
@@ -41,10 +35,6 @@ public:
         kIsCachingDataSource   = 4,
         kIsHTTPBasedSource     = 8,
     };
-
-    static sp<DataSource> CreateFromURI(
-            const char *uri,
-            const KeyedVector<String8, String8> *headers = NULL);
 
     DataSource() {}
 
@@ -69,6 +59,7 @@ public:
         return ERROR_UNSUPPORTED;
     }
 
+#if 0
     ////////////////////////////////////////////////////////////////////////////
 
     bool sniff(String8 *mimeType, float *confidence, sp<AMessage> *meta);
@@ -92,6 +83,7 @@ public:
     virtual String8 getUri() {
         return String8();
     }
+#endif
 
     virtual String8 getMIMEType() const;
 
@@ -99,13 +91,10 @@ protected:
     virtual ~DataSource() {}
 
 private:
-    static Mutex gSnifferMutex;
-    static List<SnifferFunc> gSniffers;
-
     DataSource(const DataSource &);
     DataSource &operator=(const DataSource &);
 };
 
-}  // namespace android
+}  // namespace stagefright
 
 #endif  // DATA_SOURCE_H_

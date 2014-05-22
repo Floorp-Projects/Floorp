@@ -76,7 +76,7 @@ CreateReversedDomain(const nsACString& aAsciiDomain,
 
   ReverseString(aAsciiDomain, aKey);
 
-  aKey.AppendLiteral(".");
+  aKey.Append('.');
   return NS_OK;
 }
 
@@ -157,7 +157,8 @@ CreateScopeKey(nsIPrincipal* aPrincipal,
   rv = uri->GetScheme(scheme);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  key.Append(NS_LITERAL_CSTRING(":") + scheme);
+  key.Append(':');
+  key.Append(scheme);
 
   int32_t port = NS_GetRealPort(uri);
   if (port != -1) {
@@ -184,9 +185,10 @@ CreateScopeKey(nsIPrincipal* aPrincipal,
 
     aKey.Truncate();
     aKey.AppendInt(appId);
-    aKey.Append(NS_LITERAL_CSTRING(":") + (isInBrowserElement ?
-                NS_LITERAL_CSTRING("t") : NS_LITERAL_CSTRING("f")) +
-                NS_LITERAL_CSTRING(":") + key);
+    aKey.Append(':');
+    aKey.Append(isInBrowserElement ? 't' : 'f');
+    aKey.Append(':');
+    aKey.Append(key);
   }
 
   return NS_OK;
@@ -238,9 +240,10 @@ CreateQuotaDBKey(nsIPrincipal* aPrincipal,
 
     aKey.Truncate();
     aKey.AppendInt(appId);
-    aKey.Append(NS_LITERAL_CSTRING(":") + (isInBrowserElement ?
-                NS_LITERAL_CSTRING("t") : NS_LITERAL_CSTRING("f")) +
-                NS_LITERAL_CSTRING(":") + subdomainsDBKey);
+    aKey.Append(':');
+    aKey.Append(isInBrowserElement ? 't' : 'f');
+    aKey.Append(':');
+    aKey.Append(subdomainsDBKey);
   }
 
   return NS_OK;
@@ -353,7 +356,7 @@ DOMStorageManager::GetStorageInternal(bool aCreate,
           return NS_OK;
         }
       } else {
-        if (scope.Equals(NS_LITERAL_CSTRING("knalb.:about"))) {
+        if (scope.EqualsLiteral("knalb.:about")) {
           return NS_OK;
         }
       }

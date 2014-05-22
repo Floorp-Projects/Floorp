@@ -16,7 +16,7 @@
 
 #include <media/stagefright/MediaSource.h>
 
-namespace android {
+namespace stagefright {
 
 MediaSource::MediaSource() {}
 
@@ -61,4 +61,4 @@ int64_t MediaSource::ReadOptions::getLateBy() const {
     return mLatenessUs;
 }
 
-}  // namespace android
+}  // namespace stagefright

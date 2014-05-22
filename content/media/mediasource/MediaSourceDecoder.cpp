@@ -128,14 +128,14 @@ public:
   already_AddRefed<SubBufferDecoder> CreateSubDecoder(const nsACString& aType,
                                                       MediaSourceDecoder* aParentDecoder);
 
-  void CallDecoderInitialization();
+  void InitializePendingDecoders();
 
 private:
   bool MaybeSwitchVideoReaders(int64_t aTimeThreshold) {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     MOZ_ASSERT(mActiveVideoDecoder != -1);
 
-    WaitForPendingDecoders();
+    InitializePendingDecoders();
 
     for (uint32_t i = mActiveVideoDecoder + 1; i < mDecoders.Length(); ++i) {
       if (!mDecoders[i]->GetReader()->GetMediaInfo().HasVideo()) {
@@ -167,8 +167,6 @@ private:
     }
     return mDecoders[mActiveVideoDecoder]->GetReader();
   }
-
-  void WaitForPendingDecoders();
 
   nsTArray<nsRefPtr<SubBufferDecoder>> mPendingDecoders;
   nsTArray<nsRefPtr<SubBufferDecoder>> mDecoders;
@@ -202,15 +200,15 @@ public:
       return NS_ERROR_FAILURE;
     }
     return mDecodeTaskQueue->Dispatch(NS_NewRunnableMethod(this,
-                                                           &MediaSourceStateMachine::CallDecoderInitialization));
+                                                           &MediaSourceStateMachine::InitializePendingDecoders));
   }
 
 private:
-  void CallDecoderInitialization() {
+  void InitializePendingDecoders() {
     if (!mReader) {
       return;
     }
-    static_cast<MediaSourceReader*>(mReader.get())->CallDecoderInitialization();
+    static_cast<MediaSourceReader*>(mReader.get())->InitializePendingDecoders();
   }
 };
 
@@ -317,7 +315,7 @@ private:
 };
 
 void
-MediaSourceReader::CallDecoderInitialization()
+MediaSourceReader::InitializePendingDecoders()
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   for (uint32_t i = 0; i < mPendingDecoders.Length(); ++i) {
@@ -360,16 +358,6 @@ MediaSourceReader::CallDecoderInitialization()
   NS_DispatchToMainThread(new ReleaseDecodersTask(mPendingDecoders));
   MOZ_ASSERT(mPendingDecoders.IsEmpty());
   mDecoder->NotifyWaitingForResourcesStatusChanged();
-  mon.NotifyAll();
-}
-
-void
-MediaSourceReader::WaitForPendingDecoders()
-{
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  while (!mPendingDecoders.IsEmpty()) {
-    mon.Wait();
-  }
 }
 
 already_AddRefed<SubBufferDecoder>
@@ -439,7 +427,7 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
 
   MSE_DEBUG("%p: MSR::ReadMetadata pending=%u", this, mPendingDecoders.Length());
 
-  WaitForPendingDecoders();
+  InitializePendingDecoders();
 
   MSE_DEBUG("%p: MSR::ReadMetadata decoders=%u", this, mDecoders.Length());
 

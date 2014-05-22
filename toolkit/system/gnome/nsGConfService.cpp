@@ -237,7 +237,7 @@ nsGConfService::GetAppForProtocol(const nsACString &aScheme, bool *aEnabled,
 {
   nsAutoCString key("/desktop/gnome/url-handlers/");
   key.Append(aScheme);
-  key.Append("/command");
+  key.AppendLiteral("/command");
 
   GError *err = nullptr;
   gchar *command = gconf_client_get_string(mClient, key.get(), &err);
@@ -265,7 +265,7 @@ nsGConfService::HandlerRequiresTerminal(const nsACString &aScheme,
 {
   nsAutoCString key("/desktop/gnome/url-handlers/");
   key.Append(aScheme);
-  key.Append("/requires_terminal");
+  key.AppendLiteral("/requires_terminal");
 
   GError *err = nullptr;
   *aResult = gconf_client_get_bool(mClient, key.get(), &err);
@@ -283,7 +283,7 @@ nsGConfService::SetAppForProtocol(const nsACString &aScheme,
 {
   nsAutoCString key("/desktop/gnome/url-handlers/");
   key.Append(aScheme);
-  key.Append("/command");
+  key.AppendLiteral("/command");
 
   bool res = gconf_client_set_string(mClient, key.get(),
                                        PromiseFlatCString(aCommand).get(),

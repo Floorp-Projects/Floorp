@@ -107,13 +107,13 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
           tmpStr.AssignLiteral("url(");
           nsStyleUtil::AppendEscapedCSSString(NS_ConvertUTF8toUTF16(specUTF8),
                                               tmpStr);
-          tmpStr.AppendLiteral(")");
+          tmpStr.Append(')');
         } else {
           // http://dev.w3.org/csswg/css3-values/#attr defines
           // 'about:invalid' as the default value for url attributes,
           // so let's also use it here as the default computed value
           // for invalid URLs.
-          tmpStr.Assign(NS_LITERAL_STRING("url(about:invalid)"));
+          tmpStr.AssignLiteral("url(about:invalid)");
         }
         break;
       }
@@ -247,14 +247,14 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
           tmpStr.Append(comma + colorValue);
         }
 
-        tmpStr.Append(NS_LITERAL_STRING(")"));
+        tmpStr.Append(')');
 
         break;
       }
     case CSS_S :
       {
         nsStyleUtil::AppendCSSNumber(mValue.mFloat, tmpStr);
-        tmpStr.AppendLiteral("s");
+        tmpStr.Append('s');
         break;
       }
     case CSS_CM :

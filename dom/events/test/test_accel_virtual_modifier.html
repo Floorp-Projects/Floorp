@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for DOM "Accel" virtual modifier</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+var kAccel = "Accel";
+var kAccelKeyCode = SpecialPowers.getIntPref("ui.key.accelKey");
+
+var mouseEvent = new MouseEvent("mousedown", {});
+is(mouseEvent.getModifierState(kAccel), false,
+   "MouseEvent.getModifierState(\"" + kAccel + "\") should be false");
+mouseEvent = new MouseEvent("wheel", { accelKey: true});
+is(mouseEvent.getModifierState(kAccel), false,
+   "MouseEvent.getModifierState(\"" + kAccel + "\") should be false due to not supporting accelKey attribute");
+mouseEvent = new MouseEvent("mousedown", { ctrlKey: true });
+is(mouseEvent.getModifierState(kAccel), kAccelKeyCode == KeyboardEvent.DOM_VK_CONTROL,
+   "MouseEvent.getModifierState(\"" + kAccel + "\") should be true if ctrlKey is an accel modifier");
+mouseEvent = new MouseEvent("mousedown", { altKey: true });
+is(mouseEvent.getModifierState(kAccel), kAccelKeyCode == KeyboardEvent.DOM_VK_ALT,
+   "MouseEvent.getModifierState(\"" + kAccel + "\") should be true if altKey is an accel modifier");
+mouseEvent = new MouseEvent("mousedown", { metaKey: true });
+is(mouseEvent.getModifierState(kAccel), kAccelKeyCode == KeyboardEvent.DOM_VK_META,
+   "MouseEvent.getModifierState(\"" + kAccel + "\") should be true if metaKey is an accel modifier");
+mouseEvent = new MouseEvent("mousedown", { ctrlKey: true, altKey: true, metaKey: true });
+is(mouseEvent.getModifierState(kAccel), kAccelKeyCode == KeyboardEvent.DOM_VK_CONTROL ||
+                                        kAccelKeyCode == KeyboardEvent.DOM_VK_ALT ||
+                                        kAccelKeyCode == KeyboardEvent.DOM_VK_META,
+   "MouseEvent.getModifierState(\"" + kAccel + "\") should be true if one of ctrlKey, altKey or metaKey is an accel modifier");
+
+var wheelEvent = new WheelEvent("wheel", {});
+is(wheelEvent.getModifierState(kAccel), false,
+   "WheelEvent.getModifierState(\"" + kAccel + "\") should be false");
+wheelEvent = new WheelEvent("wheel", { accelKey: true});
+is(wheelEvent.getModifierState(kAccel), false,
+   "WheelEvent.getModifierState(\"" + kAccel + "\") should be false due to not supporting accelKey attribute");
+wheelEvent = new WheelEvent("wheel", { ctrlKey: true });
+is(wheelEvent.getModifierState(kAccel), kAccelKeyCode == KeyboardEvent.DOM_VK_CONTROL,
+   "WheelEvent.getModifierState(\"" + kAccel + "\") should be true if ctrlKey is an accel modifier");
+wheelEvent = new WheelEvent("wheel", { altKey: true });
+is(wheelEvent.getModifierState(kAccel), kAccelKeyCode == KeyboardEvent.DOM_VK_ALT,
+   "WheelEvent.getModifierState(\"" + kAccel + "\") should be true if altKey is an accel modifier");
+wheelEvent = new WheelEvent("wheel", { metaKey: true });
+is(wheelEvent.getModifierState(kAccel), kAccelKeyCode == KeyboardEvent.DOM_VK_META,
+   "WheelEvent.getModifierState(\"" + kAccel + "\") should be true if metaKey is an accel modifier");
+wheelEvent = new WheelEvent("wheel", { ctrlKey: true, altKey: true, metaKey: true });
+is(wheelEvent.getModifierState(kAccel), kAccelKeyCode == KeyboardEvent.DOM_VK_CONTROL ||
+                                        kAccelKeyCode == KeyboardEvent.DOM_VK_ALT ||
+                                        kAccelKeyCode == KeyboardEvent.DOM_VK_META,
+   "WheelEvent.getModifierState(\"" + kAccel + "\") should be true if one of ctrlKey, altKey or metaKey is an accel modifier");
+
+var keyboardEvent = new KeyboardEvent("keydown", {});
+is(keyboardEvent.getModifierState(kAccel), false,
+   "KeyboardEvent.getModifierState(\"" + kAccel + "\") should be false");
+keyboardEvent = new KeyboardEvent("keydown", { accelKey: true});
+is(keyboardEvent.getModifierState(kAccel), false,
+   "KeyboardEvent.getModifierState(\"" + kAccel + "\") should be false due to not supporting accelKey attribute");
+keyboardEvent = new KeyboardEvent("keydown", { ctrlKey: true });
+is(keyboardEvent.getModifierState(kAccel), kAccelKeyCode == KeyboardEvent.DOM_VK_CONTROL,
+   "KeyboardEvent.getModifierState(\"" + kAccel + "\") should be true if ctrlKey is an accel modifier");
+keyboardEvent = new KeyboardEvent("keydown", { altKey: true });
+is(keyboardEvent.getModifierState(kAccel), kAccelKeyCode == KeyboardEvent.DOM_VK_ALT,
+   "KeyboardEvent.getModifierState(\"" + kAccel + "\") should be true if altKey is an accel modifier");
+keyboardEvent = new KeyboardEvent("keydown", { metaKey: true });
+is(keyboardEvent.getModifierState(kAccel), kAccelKeyCode == KeyboardEvent.DOM_VK_META,
+   "KeyboardEvent.getModifierState(\"" + kAccel + "\") should be true if metaKey is an accel modifier");
+keyboardEvent = new KeyboardEvent("keydown", { ctrlKey: true, altKey: true, metaKey: true });
+is(keyboardEvent.getModifierState(kAccel), kAccelKeyCode == KeyboardEvent.DOM_VK_CONTROL ||
+                                           kAccelKeyCode == KeyboardEvent.DOM_VK_ALT ||
+                                           kAccelKeyCode == KeyboardEvent.DOM_VK_META,
+   "KeyboardEvent.getModifierState(\"" + kAccel + "\") should be true if one of ctrlKey, altKey or metaKey is an accel modifier");
+
+// "Accel" virtual modifier must be supported with getModifierState().  So, any legacy init*Event()'s
+// modifiers list argument shouldn't accept "Accel".
+ok(typeof(KeyboardEvent.initKeyboardEvent) != "function",
+   "If we would support KeyboardEvent.initKeyboardEvent, we should test its modifier list argument doesn't accept \"" + kAccel + "\"");
+
+</script>
+</pre>
+</body>
+</html>

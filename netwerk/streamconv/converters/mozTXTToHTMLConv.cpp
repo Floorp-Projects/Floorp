@@ -678,7 +678,7 @@ mozTXTToHTMLConv::StructPhraseHit(const char16_t * aInString, int32_t aInStringL
     )
   {
     openTags++;
-    aOutString.AppendLiteral("<");
+    aOutString.Append('<');
     aOutString.AppendASCII(tagHTML);
     aOutString.Append(char16_t(' '));
     aOutString.AppendASCII(attributeHTML);

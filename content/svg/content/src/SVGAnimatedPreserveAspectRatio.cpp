@@ -224,7 +224,7 @@ SVGAnimatedPreserveAspectRatio::GetBaseValueString(
 
   if (mBaseVal.mAlign != uint8_t(SVG_PRESERVEASPECTRATIO_NONE)) {
 
-    aValueAsString.AppendLiteral(" ");
+    aValueAsString.Append(' ');
     GetMeetOrSliceString(tmpString, mBaseVal.mMeetOrSlice);
     aValueAsString.Append(tmpString);
   }

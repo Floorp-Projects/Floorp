@@ -92,9 +92,9 @@ GetGREVersion(const char *argv0,
               nsACString *aVersion)
 {
   if (aMilestone)
-    aMilestone->Assign("<Error>");
+    aMilestone->AssignLiteral("<Error>");
   if (aVersion)
-    aVersion->Assign("<Error>");
+    aVersion->AssignLiteral("<Error>");
 
   nsCOMPtr<nsIFile> iniFile;
   nsresult rv = BinaryPath::GetFile(argv0, getter_AddRefs(iniFile));

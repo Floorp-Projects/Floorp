@@ -379,7 +379,7 @@ Volume::HandleVoldResponse(int aResponseCode, nsCWhitespaceTokenizer& aTokenizer
       // So we parse out the state after the string " to "
       while (aTokenizer.hasMoreTokens()) {
         nsAutoCString token(aTokenizer.nextToken());
-        if (token.Equals("to")) {
+        if (token.EqualsLiteral("to")) {
           nsresult errCode;
           token = aTokenizer.nextToken();
           SetState((STATE)token.ToInteger(&errCode));

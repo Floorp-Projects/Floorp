@@ -61,7 +61,7 @@ nsResURL::EnsureFile()
     // In most cases, the scheme is jar if it's not file.
     // Regardless, net_GetFileFromURLSpec should be avoided
     // when the scheme isn't file.
-    if (!scheme.Equals(NS_LITERAL_CSTRING("file")))
+    if (!scheme.EqualsLiteral("file"))
         return NS_ERROR_NO_INTERFACE;
 
     rv = net_GetFileFromURLSpec(spec, getter_AddRefs(mFile));
@@ -316,7 +316,7 @@ nsResProtocolHandler::SetSubstitution(const nsACString& root, nsIURI *baseURI)
     nsAutoCString scheme;
     nsresult rv = baseURI->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (!scheme.Equals(NS_LITERAL_CSTRING("resource"))) {
+    if (!scheme.EqualsLiteral("resource")) {
         mSubstitutions.Put(root, baseURI);
         return NS_OK;
     }
