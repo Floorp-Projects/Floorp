@@ -43,17 +43,13 @@ public:
   void UpdateWritePosition(uint32_t aCount);
   // Get the read position of the stream, in microseconds.
   // Called on the state machine thead.
-  // Assumes the AudioStream lock is held and thus calls Unlocked versions
-  // of AudioStream funcs.
-  uint64_t GetPositionUnlocked();
+  uint64_t GetPosition();
   // Get the read position of the stream, in frames.
   // Called on the state machine thead.
   uint64_t GetPositionInFrames();
   // Set the playback rate.
   // Called on the audio thread.
-  // Assumes the AudioStream lock is held and thus calls Unlocked versions
-  // of AudioStream funcs.
-  void SetPlaybackRateUnlocked(double aPlaybackRate);
+  void SetPlaybackRate(double aPlaybackRate);
   // Get the current playback rate.
   // Called on the audio thread.
   double GetPlaybackRate();
@@ -258,18 +254,13 @@ public:
   int GetChannels() { return mChannels; }
   int GetOutChannels() { return mOutChannels; }
 
+  // This should be called before attempting to use the time stretcher.
+  nsresult EnsureTimeStretcherInitialized();
   // Set playback rate as a multiple of the intrinsic playback rate. This is to
   // be called only with aPlaybackRate > 0.0.
   nsresult SetPlaybackRate(double aPlaybackRate);
   // Switch between resampling (if false) and time stretching (if true, default).
   nsresult SetPreservesPitch(bool aPreservesPitch);
-
-protected:
-  friend class AudioClock;
-
-  // Shared implementation of underflow adjusted position calculation.
-  // Caller must own the monitor.
-  int64_t GetPositionInFramesUnlocked();
 
 private:
   static void PrefChanged(const char* aPref, void* aClosure);
@@ -298,6 +289,10 @@ private:
   long GetUnprocessed(void* aBuffer, long aFrames, int64_t &aTime);
   long GetTimeStretched(void* aBuffer, long aFrames, int64_t &aTime);
   long GetUnprocessedWithSilencePadding(void* aBuffer, long aFrames, int64_t &aTime);
+
+  // Shared implementation of underflow adjusted position calculation.
+  // Caller must own the monitor.
+  int64_t GetPositionInFramesUnlocked();
 
   int64_t GetLatencyInFrames();
   void GetBufferInsertTime(int64_t &aTimeMs);
