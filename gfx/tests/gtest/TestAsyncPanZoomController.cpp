@@ -1099,7 +1099,7 @@ static already_AddRefed<AsyncPanZoomController>
 GetTargetAPZC(APZCTreeManager* manager, const ScreenPoint& aPoint,
               gfx3DMatrix& aTransformToApzcOut, gfx3DMatrix& aTransformToGeckoOut)
 {
-  nsRefPtr<AsyncPanZoomController> hit = manager->GetTargetAPZC(aPoint);
+  nsRefPtr<AsyncPanZoomController> hit = manager->GetTargetAPZC(aPoint, nullptr);
   if (hit) {
     manager->GetInputTransforms(hit.get(), aTransformToApzcOut, aTransformToGeckoOut);
   }
