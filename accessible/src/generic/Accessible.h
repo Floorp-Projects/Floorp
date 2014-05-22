@@ -1066,6 +1066,8 @@ public:
   static const uint32_t kMeta = 8;
   static const uint32_t kOS = 16;
 
+  static uint32_t AccelModifier();
+
   KeyBinding() : mKey(0), mModifierMask(0) {}
   KeyBinding(uint32_t aKey, uint32_t aModifierMask) :
     mKey(aKey), mModifierMask(aModifierMask) {}
