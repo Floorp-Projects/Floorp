@@ -338,6 +338,7 @@ public:
         OES_depth32,
         OES_stencil8,
         OES_texture_npot,
+        IMG_texture_npot,
         ARB_depth_texture,
         OES_depth_texture,
         OES_packed_depth_stencil,
