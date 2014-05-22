@@ -520,7 +520,7 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
     // all header names are lower case in spdy
     ToLowerCase(name);
 
-    if (name.Equals("content-length")) {
+    if (name.EqualsLiteral("content-length")) {
       nsCString *val = new nsCString();
       int32_t valueIndex = colonIndex + 1;
       while (valueIndex < crlfIndex && beginBuffer[valueIndex] == ' ')

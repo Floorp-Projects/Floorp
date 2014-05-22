@@ -950,14 +950,14 @@ Http2Compressor::EncodeHeaderBlock(const nsCString &nvInput,
     ToLowerCase(name);
 
     // exclusions
-    if (name.Equals("connection") ||
-        name.Equals("host") ||
-        name.Equals("keep-alive") ||
-        name.Equals("proxy-connection") ||
-        name.Equals("te") ||
-        name.Equals("transfer-encoding") ||
-        name.Equals("upgrade") ||
-        name.Equals("accept-encoding")) {
+    if (name.EqualsLiteral("connection") ||
+        name.EqualsLiteral("host") ||
+        name.EqualsLiteral("keep-alive") ||
+        name.EqualsLiteral("proxy-connection") ||
+        name.EqualsLiteral("te") ||
+        name.EqualsLiteral("transfer-encoding") ||
+        name.EqualsLiteral("upgrade") ||
+        name.EqualsLiteral("accept-encoding")) {
       continue;
     }
 
@@ -972,7 +972,7 @@ Http2Compressor::EncodeHeaderBlock(const nsCString &nvInput,
     // if we have Expect: *100-continue,*" redact the 100-continue
     // as we don't have a good mechanism for clients to make use of it
     // anyhow
-    if (name.Equals("expect")) {
+    if (name.EqualsLiteral("expect")) {
       const char *continueHeader =
         nsHttp::FindToken(beginBuffer + valueIndex, "100-continue",
                           HTTP_HEADER_VALUE_SEPS);
@@ -995,14 +995,14 @@ Http2Compressor::EncodeHeaderBlock(const nsCString &nvInput,
     nsDependentCSubstring value = Substring(beginBuffer + valueIndex,
                                             beginBuffer + crlfIndex);
 
-    if (name.Equals("content-length")) {
+    if (name.EqualsLiteral("content-length")) {
       int64_t len;
       nsCString tmp(value);
       if (nsHttp::ParseInt64(tmp.get(), nullptr, &len))
         mParsedContentLength = len;
     }
 
-    if (name.Equals("cookie")) {
+    if (name.EqualsLiteral("cookie")) {
       // cookie crumbling
       bool haveMoreCookies = true;
       int32_t nextCookie = valueIndex;
@@ -1019,7 +1019,7 @@ Http2Compressor::EncodeHeaderBlock(const nsCString &nvInput,
         nextCookie = semiSpaceIndex + 2;
       }
     } else {
-      ProcessHeader(nvPair(name, value), name.Equals("authorization") ? true : false);
+      ProcessHeader(nvPair(name, value), name.EqualsLiteral("authorization") ? true : false);
     }
   }
 

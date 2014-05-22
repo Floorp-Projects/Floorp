@@ -480,12 +480,12 @@ static bool test_stripchars()
 {
   nsCString test(kAsciiData);
   test.StripChars("ld");
-  if (!test.Equals("Heo Wor"))
+  if (!test.EqualsLiteral("Heo Wor"))
     return false;
 
   test.Assign(kAsciiData);
   test.StripWhitespace();
-  if (!test.Equals("HelloWorld"))
+  if (!test.EqualsLiteral("HelloWorld"))
     return false;
 
   return true;
@@ -504,13 +504,13 @@ static bool test_trim()
   test2.Trim(kWS, true, false);
   test3.Trim(kWS, false, true);
 
-  if (!test1.Equals("Testing..."))
+  if (!test1.EqualsLiteral("Testing..."))
     return false;
 
-  if (!test2.Equals("Testing...\n\r"))
+  if (!test2.EqualsLiteral("Testing...\n\r"))
     return false;
 
-  if (!test3.Equals(" \n\tTesting..."))
+  if (!test3.EqualsLiteral(" \n\tTesting..."))
     return false;
 
   return true;

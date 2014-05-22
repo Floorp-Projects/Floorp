@@ -259,9 +259,9 @@ NS_IMETHODIMP_(void)
 nsParser::SetCommand(const char* aCommand)
 {
   mCommandStr.Assign(aCommand);
-  if (mCommandStr.Equals("view-source")) {
+  if (mCommandStr.EqualsLiteral("view-source")) {
     mCommand = eViewSource;
-  } else if (mCommandStr.Equals("view-fragment")) {
+  } else if (mCommandStr.EqualsLiteral("view-fragment")) {
     mCommand = eViewFragment;
   } else {
     mCommand = eViewNormal;

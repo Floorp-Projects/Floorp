@@ -283,9 +283,9 @@ nsBMPEncoder::ParseOptions(const nsAString& aOptions, Version* version,
     // name=value
     if (nameValuePair[0].Equals("version",
                                 nsCaseInsensitiveCStringComparator())) {
-      if (nameValuePair[1].Equals("3")) {
+      if (nameValuePair[1].EqualsLiteral("3")) {
         *version = VERSION_3;
-      } else if (nameValuePair[1].Equals("5")) {
+      } else if (nameValuePair[1].EqualsLiteral("5")) {
         *version = VERSION_5;
       } else {
         return NS_ERROR_INVALID_ARG;
@@ -294,9 +294,9 @@ nsBMPEncoder::ParseOptions(const nsAString& aOptions, Version* version,
 
     // Parse the bpp portion of the string name=value;bpp=<bpp_value>;name=value
     if (nameValuePair[0].Equals("bpp", nsCaseInsensitiveCStringComparator())) {
-      if (nameValuePair[1].Equals("24")) {
+      if (nameValuePair[1].EqualsLiteral("24")) {
         *bpp = 24;
-      } else if (nameValuePair[1].Equals("32")) {
+      } else if (nameValuePair[1].EqualsLiteral("32")) {
         *bpp = 32;
       } else {
         return NS_ERROR_INVALID_ARG;

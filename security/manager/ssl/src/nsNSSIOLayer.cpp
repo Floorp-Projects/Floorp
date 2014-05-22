@@ -1391,25 +1391,25 @@ PrefObserver::Observe(nsISupports* aSubject, const char* aTopic,
   if (nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
     NS_ConvertUTF16toUTF8 prefName(someData);
 
-    if (prefName.Equals("security.ssl.renego_unrestricted_hosts")) {
+    if (prefName.EqualsLiteral("security.ssl.renego_unrestricted_hosts")) {
       nsCString unrestricted_hosts;
       Preferences::GetCString("security.ssl.renego_unrestricted_hosts", &unrestricted_hosts);
       if (!unrestricted_hosts.IsEmpty()) {
         mOwner->setRenegoUnrestrictedSites(unrestricted_hosts);
       }
-    } else if (prefName.Equals("security.ssl.treat_unsafe_negotiation_as_broken")) {
+    } else if (prefName.EqualsLiteral("security.ssl.treat_unsafe_negotiation_as_broken")) {
       bool enabled;
       Preferences::GetBool("security.ssl.treat_unsafe_negotiation_as_broken", &enabled);
       mOwner->setTreatUnsafeNegotiationAsBroken(enabled);
-    } else if (prefName.Equals("security.ssl.warn_missing_rfc5746")) {
+    } else if (prefName.EqualsLiteral("security.ssl.warn_missing_rfc5746")) {
       int32_t warnLevel = 1;
       Preferences::GetInt("security.ssl.warn_missing_rfc5746", &warnLevel);
       mOwner->setWarnLevelMissingRFC5746(warnLevel);
-    } else if (prefName.Equals("security.ssl.false_start.require-npn")) {
+    } else if (prefName.EqualsLiteral("security.ssl.false_start.require-npn")) {
       mOwner->mFalseStartRequireNPN =
         Preferences::GetBool("security.ssl.false_start.require-npn",
                              FALSE_START_REQUIRE_NPN_DEFAULT);
-    } else if (prefName.Equals("security.ssl.false_start.require-forward-secrecy")) {
+    } else if (prefName.EqualsLiteral("security.ssl.false_start.require-forward-secrecy")) {
       mOwner->mFalseStartRequireForwardSecrecy =
         Preferences::GetBool("security.ssl.false_start.require-forward-secrecy",
                              FALSE_START_REQUIRE_FORWARD_SECRECY_DEFAULT);

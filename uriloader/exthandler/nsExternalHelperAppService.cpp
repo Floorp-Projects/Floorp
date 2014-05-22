@@ -694,7 +694,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
     if (httpChan) {
       nsAutoCString requestMethod;
       httpChan->GetRequestMethod(requestMethod);
-      allowURLExt = !requestMethod.Equals("POST");
+      allowURLExt = !requestMethod.EqualsLiteral("POST");
     }
 
     // Check if we had a query string - we don't want to check the URL

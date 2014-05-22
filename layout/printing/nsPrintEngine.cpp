@@ -1911,7 +1911,7 @@ nsPrintEngine::OnStateChange(nsIWebProgress* aWebProgress,
 {
   nsAutoCString name;
   aRequest->GetName(name);
-  if (name.Equals("about:document-onload-blocker")) {
+  if (name.EqualsLiteral("about:document-onload-blocker")) {
     return NS_OK;
   }
   if (aStateFlags & STATE_START) {
