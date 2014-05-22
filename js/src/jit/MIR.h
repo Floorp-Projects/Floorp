@@ -8798,6 +8798,49 @@ class MFloor
     }
 };
 
+// Inlined version of Math.ceil().
+class MCeil
+  : public MUnaryInstruction,
+    public FloatingPointPolicy<0>
+{
+    MCeil(MDefinition *num)
+      : MUnaryInstruction(num)
+    {
+        setResultType(MIRType_Int32);
+        setPolicyType(MIRType_Double);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(Ceil)
+
+    static MCeil *New(TempAllocator &alloc, MDefinition *num) {
+        return new(alloc) MCeil(num);
+    }
+
+    MDefinition *num() const {
+        return getOperand(0);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    bool isFloat32Commutative() const {
+        return true;
+    }
+    void trySpecializeFloat32(TempAllocator &alloc);
+#ifdef DEBUG
+    bool isConsistentFloat32Use(MUse *use) const {
+        return true;
+    }
+#endif
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+};
+
 // Inlined version of Math.round().
 class MRound
   : public MUnaryInstruction,

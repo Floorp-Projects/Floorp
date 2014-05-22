@@ -836,6 +836,14 @@ MFloor::trySpecializeFloat32(TempAllocator &alloc)
 }
 
 void
+MCeil::trySpecializeFloat32(TempAllocator &alloc)
+{
+    JS_ASSERT(type() == MIRType_Int32);
+    if (EnsureFloatInputOrConvert(this, alloc))
+        setPolicyType(MIRType_Float32);
+}
+
+void
 MRound::trySpecializeFloat32(TempAllocator &alloc)
 {
     JS_ASSERT(type() == MIRType_Int32);
