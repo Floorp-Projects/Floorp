@@ -230,7 +230,7 @@
     _(CallInitElementArray)         \
     _(CallSetProperty)              \
     _(CallDeleteProperty)           \
-    _(CallDeleteElement)           \
+    _(CallDeleteElement)            \
     _(SetPropertyCacheV)            \
     _(SetPropertyCacheT)            \
     _(SetElementCacheV)             \
@@ -276,7 +276,7 @@
     _(CallDOMNative)                \
     _(IsCallable)                   \
     _(HaveSameClass)                \
-    _(HasClass)                      \
+    _(HasClass)                     \
     _(AsmJSLoadHeap)                \
     _(AsmJSStoreHeap)               \
     _(AsmJSLoadGlobalVar)           \
