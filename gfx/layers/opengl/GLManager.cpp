@@ -43,11 +43,9 @@ public:
     return mImpl->GetProjMatrix();
   }
 
-  virtual void BindAndDrawQuad(ShaderProgramOGL *aProg,
-                               const gfx::Rect& aLayerRect,
-                               const gfx::Rect& aTextureRect) MOZ_OVERRIDE
+  virtual void BindAndDrawQuad(ShaderProgramOGL *aProg, const gfx::Rect& aRect) MOZ_OVERRIDE
   {
-    mImpl->BindAndDrawQuad(aProg, aLayerRect, aTextureRect);
+    mImpl->BindAndDrawQuad(aProg, aRect);
   }
 
 private:

@@ -31,6 +31,7 @@
 #include "nsThreadUtils.h"              // for nsRunnable
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType
 #include "nscore.h"                     // for NS_IMETHOD
+#include "VBOArena.h"                   // for gl::VBOArena
 #ifdef MOZ_WIDGET_GONK
 #include <ui/GraphicBuffer.h>
 #endif
@@ -311,6 +312,11 @@ private:
    */
   GLuint mQuadVBO;
 
+  /**
+   * When we can't use mQuadVBO, we allocate VBOs from this arena instead.
+   */
+  gl::VBOArena mVBOs;
+
   bool mHasBGRA;
 
   /**
@@ -356,24 +362,17 @@ private:
                             GLuint aSourceFrameBuffer,
                             GLuint *aFBO, GLuint *aTexture);
 
+  GLintptr QuadVBOVertexOffset() { return 0; }
+  GLintptr QuadVBOTexCoordOffset() { return sizeof(float)*4*2; }
+
   void BindQuadVBO();
   void QuadVBOVerticesAttrib(GLuint aAttribIndex);
   void QuadVBOTexCoordsAttrib(GLuint aAttribIndex);
-  void BindAndDrawQuads(ShaderProgramOGL *aProg,
-                        int aQuads,
-                        const gfx::Rect* aLayerRect,
-                        const gfx::Rect* aTextureRect);
   void BindAndDrawQuad(ShaderProgramOGL *aProg,
-                       const gfx::Rect& aLayerRect,
-                       const gfx::Rect& aTextureRect = gfx::Rect(0.0f, 0.0f, 1.0f, 1.0f)) {
-    gfx::Rect layerRects[4];
-    gfx::Rect textureRects[4];
-    layerRects[0] = aLayerRect;
-    textureRects[0] = aTextureRect;
-    BindAndDrawQuads(aProg, 1, layerRects, textureRects);
-  }
+                       const gfx::Rect& aRect);
   void BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
                                       const gfx::Rect& aRect,
+                                      const gfx3DMatrix& aTextureTransform,
                                       const gfx::Rect& aTexCoordRect,
                                       TextureSource *aTexture);
 
