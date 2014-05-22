@@ -1534,12 +1534,12 @@ int64_t FileMediaResource::Tell()
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
 
   MutexAutoLock lock(mLock);
-  if (!mSeekable)
-    return 0;
   EnsureSizeInitialized();
 
   int64_t offset = 0;
-  mSeekable->Tell(&offset);
+  // Return mSize as offset (end of stream) in case of error
+  if (!mSeekable || NS_FAILED(mSeekable->Tell(&offset)))
+    return mSize;
   return offset;
 }
 

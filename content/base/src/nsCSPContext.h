@@ -9,9 +9,12 @@
 #include "nsCSPUtils.h"
 #include "nsDataHashtable.h"
 #include "nsIChannel.h"
+#include "nsIChannelEventSink.h"
 #include "nsIClassInfo.h"
 #include "nsIContentSecurityPolicy.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsISerializable.h"
+#include "nsIStreamListener.h"
 #include "nsXPCOM.h"
 
 #define NS_CSPCONTEXT_CONTRACTID "@mozilla.org/cspcontext;1"
@@ -27,8 +30,26 @@ class nsCSPContext : public nsIContentSecurityPolicy
     NS_DECL_NSICONTENTSECURITYPOLICY
     NS_DECL_NSISERIALIZABLE
 
+  public:
     nsCSPContext();
     virtual ~nsCSPContext();
+
+    nsresult SendReports(nsISupports* aBlockedContentSource,
+                         nsIURI* aOriginalURI,
+                         nsAString& aViolatedDirective,
+                         uint32_t aViolatedPolicyIndex,
+                         nsAString& aSourceFile,
+                         nsAString& aScriptSample,
+                         uint32_t aLineNum);
+
+    nsresult AsyncReportViolation(nsISupports* aBlockedContentSource,
+                                  nsIURI* aOriginalURI,
+                                  const nsAString& aViolatedDirective,
+                                  uint32_t aViolatedPolicyIndex,
+                                  const nsAString& aObserverSubject,
+                                  const nsAString& aSourceFile,
+                                  const nsAString& aScriptSample,
+                                  uint32_t aLineNum);
 
   private:
     NS_IMETHODIMP getAllowsInternal(nsContentPolicyType aContentType,
@@ -37,9 +58,41 @@ class nsCSPContext : public nsIContentSecurityPolicy
                                     bool* outShouldReportViolations,
                                     bool* outIsAllowed) const;
 
+    nsCOMPtr<nsIURI>                           mReferrer;
+    uint64_t                                   mInnerWindowID; // used for web console logging
     nsTArray<nsCSPPolicy*>                     mPolicies;
     nsCOMPtr<nsIURI>                           mSelfURI;
     nsDataHashtable<nsCStringHashKey, int16_t> mShouldLoadCache;
+    nsCOMPtr<nsILoadGroup>                     mCallingChannelLoadGroup;
+};
+
+// Class that listens to violation report transmission and logs errors.
+class CSPViolationReportListener : public nsIStreamListener
+{
+  public:
+    NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSIREQUESTOBSERVER
+    NS_DECL_ISUPPORTS
+
+  public:
+    CSPViolationReportListener();
+    virtual ~CSPViolationReportListener();
+};
+
+// The POST of the violation report (if it happens) should not follow
+// redirects, per the spec. hence, we implement an nsIChannelEventSink
+// with an object so we can tell XHR to abort if a redirect happens.
+class CSPReportRedirectSink MOZ_FINAL : public nsIChannelEventSink,
+                                        public nsIInterfaceRequestor
+{
+  public:
+    NS_DECL_NSICHANNELEVENTSINK
+    NS_DECL_NSIINTERFACEREQUESTOR
+    NS_DECL_ISUPPORTS
+
+  public:
+    CSPReportRedirectSink();
+    virtual ~CSPReportRedirectSink();
 };
 
 #endif /* nsCSPContext_h___ */
