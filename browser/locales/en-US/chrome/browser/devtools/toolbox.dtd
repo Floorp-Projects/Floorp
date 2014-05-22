@@ -143,12 +143,12 @@
       Monitor -->
 <!ENTITY options.commonPrefs.label           "Common Preferences">
 
-<!-- LOCALIZATION NOTE (options.enablePersistentLogging.label): This is the
+<!-- LOCALIZATION NOTE (options.enablePersistentLogs.label): This is the
   -  label for the checkbox that toggles persistent logs in the Web Console and
   -  network monitor,  i.e. devtools.webconsole.persistlog a boolean preference in
   -  about:config, in the options panel. -->
-<!ENTITY options.enablePersistentLogging.label    "Enable persistent logs">
-<!ENTITY options.enablePersistentLogging.tooltip  "If you enable this option the Web Console and Network Monitor will not clear the output each time you navigate to a new page">
+<!ENTITY options.enablePersistentLogs.label    "Enable persistent logs">
+<!ENTITY options.enablePersistentLogs.tooltip  "If you enable this option the Web Console and Network Monitor will not clear the output each time you navigate to a new page">
 
 <!-- LOCALIZATION NOTE (options.showPlatformData.label): This is the
   -  label for the checkbox that toggles the display of the platform data in the,
