@@ -772,7 +772,7 @@ JSRuntime::onOutOfMemoryCanGC(void *p, size_t bytes)
 {
     if (!largeAllocationFailureCallback || bytes < LARGE_ALLOCATION)
         return nullptr;
-    largeAllocationFailureCallback();
+    largeAllocationFailureCallback(largeAllocationFailureCallbackData);
     return onOutOfMemory(p, bytes);
 }
 
