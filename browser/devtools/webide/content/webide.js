@@ -245,8 +245,7 @@ let UI = {
   },
 
   updateRuntimeButton: function() {
-    let buttonNode = document.querySelector("#runtime-panel-button");
-    let labelNode = buttonNode.querySelector(".panel-button-label");
+    let labelNode = document.querySelector("#runtime-panel-button > .panel-button-label");
     if (!AppManager.selectedRuntime) {
       labelNode.setAttribute("value", Strings.GetStringFromName("runtimeButton_label"));
     } else {
@@ -375,8 +374,6 @@ let UI = {
     document.querySelector("#cmd_showProjectPanel").removeAttribute("disabled");
     document.querySelector("#cmd_showRuntimePanel").removeAttribute("disabled");
 
-    document.querySelector("#runtime-panel-button").removeAttribute("active");
-
     // Action commands
     let playCmd = document.querySelector("#cmd_play");
     let stopCmd = document.querySelector("#cmd_stop");
@@ -410,7 +407,6 @@ let UI = {
           playCmd.setAttribute("disabled", "true");
         }
       }
-      document.querySelector("#runtime-panel-button").setAttribute("active", "true");
     }
 
     // Remove command
@@ -429,18 +425,21 @@ let UI = {
 
     let box = document.querySelector("#runtime-actions");
 
+    let runtimePanelButton = document.querySelector("#runtime-panel-button");
     if (AppManager.connection.status == Connection.Status.CONNECTED) {
       screenshotCmd.removeAttribute("disabled");
       permissionsCmd.removeAttribute("disabled");
       disconnectCmd.removeAttribute("disabled");
       detailsCmd.removeAttribute("disabled");
       box.removeAttribute("hidden");
+      runtimePanelButton.setAttribute("active", "true");
     } else {
       screenshotCmd.setAttribute("disabled", "true");
       permissionsCmd.setAttribute("disabled", "true");
       disconnectCmd.setAttribute("disabled", "true");
       detailsCmd.setAttribute("disabled", "true");
       box.setAttribute("hidden", "true");
+      runtimePanelButton.removeAttribute("active");
     }
 
   },
