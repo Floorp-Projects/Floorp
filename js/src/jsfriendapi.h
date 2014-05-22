@@ -587,11 +587,14 @@ struct Function {
 
 struct Atom {
     static const uint32_t INLINE_CHARS_BIT = JS_BIT(2);
+    static const uint32_t LATIN1_CHARS_BIT = JS_BIT(6);
     uint32_t flags;
     uint32_t length;
     union {
-        const jschar *nonInlineChars;
-        char inlineStorage[1];
+        const char *nonInlineCharsLatin1;
+        const jschar *nonInlineCharsTwoByte;
+        char inlineStorageLatin1[1];
+        jschar inlineStorageTwoByte[1];
     };
 };
 
@@ -773,11 +776,12 @@ GetAtomChars(JSAtom *atom)
 {
     using shadow::Atom;
     Atom *atom_ = reinterpret_cast<Atom *>(atom);
+    JS_ASSERT(!(atom_->flags & Atom::LATIN1_CHARS_BIT));
     if (atom_->flags & Atom::INLINE_CHARS_BIT) {
         char *p = reinterpret_cast<char *>(atom);
-        return reinterpret_cast<const jschar *>(p + offsetof(Atom, inlineStorage));
+        return reinterpret_cast<const jschar *>(p + offsetof(Atom, inlineStorageTwoByte));
     }
-    return atom_->nonInlineChars;
+    return atom_->nonInlineCharsTwoByte;
 }
 
 inline size_t
