@@ -298,6 +298,7 @@ WEBIDL_FILES = [
     'RTCIceCandidate.webidl',
     'RTCIdentityAssertion.webidl',
     'RTCPeerConnection.webidl',
+    'RTCPeerConnectionStatic.webidl',
     'RTCSessionDescription.webidl',
     'RTCStatsReport.webidl',
     'Screen.webidl',
