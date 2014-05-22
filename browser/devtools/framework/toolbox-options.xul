@@ -38,8 +38,8 @@
         </radiogroup>
         <label value="&options.commonPrefs.label;"/>
         <vbox id="commonprefs-options" class="options-groupbox">
-          <checkbox label="&options.enablePersistentLogging.label;"
-                    tooltiptext="&options.enablePersistentLogging.tooltip;"
+          <checkbox label="&options.enablePersistentLogs.label;"
+                    tooltiptext="&options.enablePersistentLogs.tooltip;"
                     data-pref="devtools.webconsole.persistlog"/>
         </vbox>
         <label value="&options.context.inspector;"/>
