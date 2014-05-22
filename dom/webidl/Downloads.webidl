@@ -54,9 +54,16 @@ interface DOMDownload : EventTarget {
   // The url of the resource.
   readonly attribute DOMString url;
 
-  // The path in local storage where the file will end up once the download
+  // The full path in local storage where the file will end up once the download
   // is complete.
   readonly attribute DOMString path;
+
+  // The DeviceStorage volume name on which the file is being downloaded.
+  readonly attribute DOMString storageName;
+
+  // The DeviceStorage path on the volume with 'storageName' of the file being
+  // downloaded.
+  readonly attribute DOMString storagePath;
 
   // The state of the download.
   readonly attribute DownloadState state;

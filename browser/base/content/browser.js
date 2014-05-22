@@ -1028,10 +1028,6 @@ var gBrowserInit = {
       // Note: loadOneOrMoreURIs *must not* be called if window.arguments.length >= 3.
       // Such callers expect that window.arguments[0] is handled as a single URI.
       else {
-        if (uriToLoad == "about:newtab" &&
-            Services.prefs.getBoolPref("browser.newtabpage.enabled")) {
-          Services.telemetry.getHistogramById("NEWTAB_PAGE_SHOWN").add(true);
-        }
         loadOneOrMoreURIs(uriToLoad);
       }
     }
@@ -4452,11 +4448,6 @@ var TabsInTitlebar = {
       fullTabsHeight += verticalMargins(tabsStyles);
 #endif
 
-      // If the navbar overlaps the tabbar using negative margins, we need to take those into
-      // account so we don't overlap it
-      let navbarMarginTop = parseFloat(window.getComputedStyle($("nav-bar")).marginTop);
-      navbarMarginTop = Math.min(navbarMarginTop, 0);
-
       // And get the height of what's in the titlebar:
       let titlebarContentHeight = rect(titlebarContent).height;
 
@@ -4497,9 +4488,6 @@ var TabsInTitlebar = {
         // We need to increase the titlebar content's outer height (ie including margins)
         // to match the tab and menu height:
         let extraMargin = tabAndMenuHeight - titlebarContentHeight;
-        // We need to reduce the height by the amount of navbar overlap
-        // (this value is 0 or negative):
-        extraMargin += navbarMarginTop;
         // On non-OSX, we can just use bottom margin:
 #ifndef XP_MACOSX
         titlebarContent.style.marginBottom = extraMargin + "px";
