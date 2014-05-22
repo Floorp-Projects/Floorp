@@ -9,6 +9,8 @@
  %editMenuStrings;
 <!ENTITY % sourceEditorStrings SYSTEM "chrome://browser/locale/devtools/sourceeditor.dtd">
  %sourceEditorStrings;
+<!ENTITY % csscoverageDTD SYSTEM "chrome://global/locale/devtools/csscoverage.dtd">
+ %csscoverageDTD;
 ]>
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
@@ -72,62 +74,116 @@
 
   <xul:keyset id="sourceEditorKeys"/>
 
-  <xul:box id="style-editor-chrome" class="theme-body splitview-root loading"
-           context="sidebar-context">
-    <xul:box class="splitview-controller">
-      <xul:box class="splitview-main">
-        <xul:toolbar class="devtools-toolbar">
-          <xul:toolbarbutton class="style-editor-newButton devtools-toolbarbutton"
-                      accesskey="&newButton.accesskey;"
-                      tooltiptext="&newButton.tooltip;"
-                      label="&newButton.label;"/>
-          <xul:toolbarbutton class="style-editor-importButton devtools-toolbarbutton"
-                      accesskey="&importButton.accesskey;"
-                      tooltiptext="&importButton.tooltip;"
-                      label="&importButton.label;"/>
-        </xul:toolbar>
-      </xul:box>
-      <xul:box id="splitview-resizer-target" class="theme-sidebar splitview-nav-container"
-              persist="height">
-        <ol class="splitview-nav" tabindex="0"></ol>
-        <div class="splitview-nav placeholder empty">
-          <p><strong>&noStyleSheet.label;</strong></p>
-          <p>&noStyleSheet-tip-start.label;
-            <a href="#"
-              class="style-editor-newButton">&noStyleSheet-tip-action.label;</a>
-            &noStyleSheet-tip-end.label;</p>
-        </div>
-      </xul:box> <!-- .splitview-nav-container -->
-    </xul:box>   <!-- .splitview-controller -->
-    <xul:splitter class="devtools-side-splitter splitview-landscape-splitter devtools-invisible-splitter"/>
-    <xul:box class="splitview-side-details"/>
+  <xul:stack id="style-editor-chrome" class="loading theme-body">
 
-    <div id="splitview-templates" hidden="true">
-      <li id="splitview-tpl-summary-stylesheet" tabindex="0">
-        <xul:label class="stylesheet-enabled" tabindex="0"
-          tooltiptext="&visibilityToggle.tooltip;"
-          accesskey="&saveButton.accesskey;"></xul:label>
-        <hgroup class="stylesheet-info">
-          <h1><a class="stylesheet-name" tabindex="0"><xul:label crop="start"/></a></h1>
-          <div class="stylesheet-more">
-            <h3 class="stylesheet-title"></h3>
-            <h3 class="stylesheet-linked-file"></h3>
-            <h3 class="stylesheet-rule-count"></h3>
-            <xul:spacer/>
-            <h3><xul:label class="stylesheet-saveButton"
-                  tooltiptext="&saveButton.tooltip;"
-                  accesskey="&saveButton.accesskey;">&saveButton.label;</xul:label></h3>
+    <xul:box class="splitview-root" context="sidebar-context">
+      <xul:box class="splitview-controller">
+        <xul:box class="splitview-main">
+          <xul:toolbar class="devtools-toolbar">
+            <xul:toolbarbutton class="style-editor-newButton devtools-toolbarbutton"
+                        accesskey="&newButton.accesskey;"
+                        tooltiptext="&newButton.tooltip;"
+                        label="&newButton.label;"/>
+            <xul:toolbarbutton class="style-editor-importButton devtools-toolbarbutton"
+                        accesskey="&importButton.accesskey;"
+                        tooltiptext="&importButton.tooltip;"
+                        label="&importButton.label;"/>
+          </xul:toolbar>
+        </xul:box>
+        <xul:box id="splitview-resizer-target" class="theme-sidebar splitview-nav-container"
+                persist="height">
+          <ol class="splitview-nav" tabindex="0"></ol>
+          <div class="splitview-nav placeholder empty">
+            <p><strong>&noStyleSheet.label;</strong></p>
+            <p>&noStyleSheet-tip-start.label;
+              <a href="#"
+                class="style-editor-newButton">&noStyleSheet-tip-action.label;</a>
+              &noStyleSheet-tip-end.label;</p>
           </div>
-        </hgroup>
-      </li>
+        </xul:box> <!-- .splitview-nav-container -->
+      </xul:box>   <!-- .splitview-controller -->
+      <xul:splitter class="devtools-side-splitter splitview-landscape-splitter devtools-invisible-splitter"/>
+      <xul:box class="splitview-side-details"/>
 
-      <xul:box id="splitview-tpl-details-stylesheet" class="splitview-details">
-        <xul:resizer class="splitview-portrait-resizer"
-                    dir="bottom"
-                    element="splitview-resizer-target"/>
-        <xul:box class="stylesheet-editor-input textbox"
-                data-placeholder="&editorTextbox.placeholder;"/>
-      </xul:box>
-    </div> <!-- #splitview-templates -->
-  </xul:box>   <!-- .splitview-root -->
+      <div id="splitview-templates" hidden="true">
+        <li id="splitview-tpl-summary-stylesheet" tabindex="0">
+          <xul:label class="stylesheet-enabled" tabindex="0"
+            tooltiptext="&visibilityToggle.tooltip;"
+            accesskey="&saveButton.accesskey;"></xul:label>
+          <hgroup class="stylesheet-info">
+            <h1><a class="stylesheet-name" tabindex="0"><xul:label crop="start"/></a></h1>
+            <div class="stylesheet-more">
+              <h3 class="stylesheet-title"></h3>
+              <h3 class="stylesheet-linked-file"></h3>
+              <h3 class="stylesheet-rule-count"></h3>
+              <xul:spacer/>
+              <h3><xul:label class="stylesheet-saveButton"
+                    tooltiptext="&saveButton.tooltip;"
+                    accesskey="&saveButton.accesskey;">&saveButton.label;</xul:label></h3>
+            </div>
+          </hgroup>
+        </li>
+
+        <xul:box id="splitview-tpl-details-stylesheet" class="splitview-details">
+          <xul:resizer class="splitview-portrait-resizer"
+                      dir="bottom"
+                      element="splitview-resizer-target"/>
+          <xul:box class="stylesheet-editor-input textbox"
+                  data-placeholder="&editorTextbox.placeholder;"/>
+        </xul:box>
+      </div> <!-- #splitview-templates -->
+    </xul:box>   <!-- .splitview-root -->
+
+    <xul:box class="csscoverage-template" hidden="true">
+      <xul:toolbar class="devtools-toolbar csscoverage-toolbar">
+        <xul:button class="devtools-toolbarbutton csscoverage-toolbarbutton"
+            label="&csscoverage.backButton;"
+            onclick="${onback}"/>
+      </xul:toolbar>
+      <!-- The data for this comes from UsageReportActor.createPageReport -->
+      <div class="csscoverage-report-container">
+        <div class="csscoverage-report-content">
+          <h2>&csscoverage.unused;</h2>
+          <p>&csscoverage.noMatch;</p>
+          <ul>
+            <li foreach="rule in ${unusedRules}">
+              <code>${rule.selectorText}</code>
+              <span class="link"
+                  title="${rule.url}">(${rule.shortHref} : ${rule.start.line})</span>
+            </li>
+          </ul>
+          <h2>&csscoverage.optimize;</h2>
+          <p>
+            &csscoverage.preload1;
+            <code>&lt;link ...></code>
+            &csscoverage.preload2;
+            <code>&lt;style>...</code>
+            &csscoverage.preload3;
+          </p>
+          <div if="${pages.length == 0}">
+            &csscoverage.noPreload;
+          </div>
+          <div if="${pages.length > 0}">
+            <div foreach="page in ${pages}">
+              <h3>${page.url}</h3>
+              <textarea>&lt;style>
+<loop foreach="rule in ${page.preloadRules}"
+                    onclick="${rule.onclick}">${rule.formattedCssText}</loop>&lt;/style></textarea>
+            </div>
+          </div>
+          <p>
+            &csscoverage.footer1;
+            <a target="_blank" href="&csscoverage.footer2;">&csscoverage.footer3;</a>
+            &csscoverage.footer4;
+          </p>
+          <p>&#160;</p>
+        </div>
+      </div>
+    </xul:box>
+
+    <xul:box class="csscoverage-report" hidden="true">
+    </xul:box>
+
+  </xul:stack>
+
 </xul:window>

@@ -28,6 +28,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
 
 const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
 const { PrefObserver, PREF_ORIG_SOURCES } = require("devtools/styleeditor/utils");
+const csscoverage = require("devtools/server/actors/csscoverage");
+const console = require("resource://gre/modules/devtools/Console.jsm").console;
 
 const LOAD_ERROR = "error-load";
 const STYLE_EDITOR_TEMPLATE = "stylesheet";
@@ -467,6 +469,14 @@ StyleEditorUI.prototype = {
           }
 
           editor.onShow();
+
+          csscoverage.getUsage(this._target).then(usage => {
+            let href = editor.styleSheet.href || editor.styleSheet.nodeHref;
+            usage.createEditorReport(href).then(data => {
+              editor.removeAllUnusedRegions();
+              editor.addUnusedRegions(data.reports);
+            });
+          }, console.error);
 
           this.emit("editor-selected", editor);
         }.bind(this)).then(null, Cu.reportError);

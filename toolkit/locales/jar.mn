@@ -31,6 +31,8 @@
   locale/@AB_CD@/global/customizeToolbar.properties     (%chrome/global/customizeToolbar.properties)
   locale/@AB_CD@/global/datetimepicker.dtd              (%chrome/global/datetimepicker.dtd)
   locale/@AB_CD@/global/dateFormat.properties           (%chrome/global/dateFormat.properties)
+  locale/@AB_CD@/global/devtools/csscoverage.properties (%chrome/global/devtools/csscoverage.properties)
+  locale/@AB_CD@/global/devtools/csscoverage.dtd        (%chrome/global/devtools/csscoverage.dtd)
   locale/@AB_CD@/global/devtools/debugger.properties    (%chrome/global/devtools/debugger.properties)
   locale/@AB_CD@/global/devtools/styleinspector.properties (%chrome/global/devtools/styleinspector.properties)
   locale/@AB_CD@/global/dialogOverlay.dtd               (%chrome/global/dialogOverlay.dtd)
