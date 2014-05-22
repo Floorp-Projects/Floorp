@@ -755,7 +755,7 @@ CreateMappedArrayBuffer(JSContext *cx, unsigned argc, Value *vp)
             JS_ReportError(cx, "Unable to stat file");
             return false;
         }
-        if (st.st_size < offset) {
+        if (st.st_size < off_t(offset)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                                  JSMSG_ARG_INDEX_OUT_OF_RANGE, "2");
             return false;
