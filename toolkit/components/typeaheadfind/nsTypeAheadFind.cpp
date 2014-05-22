@@ -269,13 +269,13 @@ nsTypeAheadFind::PlayNotFoundSound()
   if (mSoundInterface) {
     mIsSoundInitialized = true;
 
-    if (mNotFoundSoundURL.Equals("beep")) {
+    if (mNotFoundSoundURL.EqualsLiteral("beep")) {
       mSoundInterface->Beep();
       return;
     }
 
     nsCOMPtr<nsIURI> soundURI;
-    if (mNotFoundSoundURL.Equals("default"))
+    if (mNotFoundSoundURL.EqualsLiteral("default"))
       NS_NewURI(getter_AddRefs(soundURI), NS_LITERAL_CSTRING(TYPEAHEADFIND_NOTFOUND_WAV_URL));
     else
       NS_NewURI(getter_AddRefs(soundURI), mNotFoundSoundURL);
@@ -997,7 +997,7 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
     // by waiting for the first keystroke, we still get the startup time benefits.
     mIsSoundInitialized = true;
     mSoundInterface = do_CreateInstance("@mozilla.org/sound;1");
-    if (mSoundInterface && !mNotFoundSoundURL.Equals(NS_LITERAL_CSTRING("beep"))) {
+    if (mSoundInterface && !mNotFoundSoundURL.EqualsLiteral("beep")) {
       mSoundInterface->Init();
     }
   }

@@ -2307,7 +2307,7 @@ static void
 DumpPaintedImage(nsDisplayItem* aItem, gfxASurface* aSurf)
 {
   nsCString string(aItem->Name());
-  string.Append("-");
+  string.Append('-');
   string.AppendInt((uint64_t)aItem);
   fprintf_stderr(gfxUtils::sDumpPaintFile, "array[\"%s\"]=\"", string.BeginReading());
   aSurf->DumpAsDataURL(gfxUtils::sDumpPaintFile);
@@ -3854,6 +3854,14 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   }
 
   if (presContext->GetPaintFlashing()) {
+    gfxContextAutoSaveRestore save(aContext);
+    if (shouldDrawRectsSeparately) {
+      if (aClip == DrawRegionClip::DRAW_SNAPPED) {
+        gfxUtils::ClipToRegionSnapped(aContext, aRegionToDraw);
+      } else if (aClip == DrawRegionClip::DRAW) {
+        gfxUtils::ClipToRegion(aContext, aRegionToDraw);
+      }
+    }
     FlashPaint(aContext);
   }
 

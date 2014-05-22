@@ -158,7 +158,7 @@ nsPrintOptions::GetPrefName(const char * aPrefName,
   if (aPrinterName.Length()) {
     mPrefName.AppendLiteral("printer_");
     AppendUTF16toUTF8(aPrinterName, mPrefName);
-    mPrefName.AppendLiteral(".");
+    mPrefName.Append('.');
   }
   mPrefName += aPrefName;
 

@@ -33,7 +33,7 @@
 
 #ifdef __cplusplus
 
-namespace android {
+namespace stagefright {
 
 /*
  * A very simple utility that yells in the log when an operation takes too long.
@@ -62,9 +62,9 @@ private:
  * }
  */
 #define ALOGD_IF_SLOW(timeoutMillis, message) \
-    android::LogIfSlow _logIfSlow(LOG_TAG, ANDROID_LOG_DEBUG, timeoutMillis, message);
+    stagefright::LogIfSlow _logIfSlow(LOG_TAG, ANDROID_LOG_DEBUG, timeoutMillis, message);
 
-} // namespace android
+} // namespace stagefright
 
 #endif // __cplusplus
 

@@ -78,7 +78,7 @@ nsLayoutDebugCLH::Handle(nsICommandLine* aCmdLine)
 NS_IMETHODIMP
 nsLayoutDebugCLH::GetHelpInfo(nsACString& aResult)
 {
-    aResult.Assign(NS_LITERAL_CSTRING("  -layoutdebug [<url>] Start with Layout Debugger\n"));
+    aResult.AssignLiteral("  -layoutdebug [<url>] Start with Layout Debugger\n");
     return NS_OK;
 }
 

@@ -28,7 +28,7 @@
 
 // ---------------------------------------------------------------------------
 
-namespace android {
+namespace stagefright {
 
 template <typename TYPE>
 class SortedVector;
@@ -55,10 +55,8 @@ public:
     virtual                 ~Vector();
 
     /*! copy operator */
-            const Vector<TYPE>&     operator = (const Vector<TYPE>& rhs) const;
             Vector<TYPE>&           operator = (const Vector<TYPE>& rhs);    
 
-            const Vector<TYPE>&     operator = (const SortedVector<TYPE>& rhs) const;
             Vector<TYPE>&           operator = (const SortedVector<TYPE>& rhs);
 
             /*
@@ -171,8 +169,12 @@ public:
      typedef int (*compar_t)(const TYPE* lhs, const TYPE* rhs);
      typedef int (*compar_r_t)(const TYPE* lhs, const TYPE* rhs, void* state);
      
-     inline status_t        sort(compar_t cmp);
-     inline status_t        sort(compar_r_t cmp, void* state);
+     inline status_t        sort(compar_t cmp) {
+         return VectorImpl::sort((VectorImpl::compar_t)cmp);
+     }
+     inline status_t        sort(compar_r_t cmp, void* state) {
+         return VectorImpl::sort((VectorImpl::compar_r_t)cmp, state);
+     }
 
      // for debugging only
      inline size_t getItemSize() const { return itemSize(); }
@@ -247,21 +249,9 @@ Vector<TYPE>& Vector<TYPE>::operator = (const Vector<TYPE>& rhs) {
 }
 
 template<class TYPE> inline
-const Vector<TYPE>& Vector<TYPE>::operator = (const Vector<TYPE>& rhs) const {
-    VectorImpl::operator = (static_cast<const VectorImpl&>(rhs));
-    return *this;
-}
-
-template<class TYPE> inline
 Vector<TYPE>& Vector<TYPE>::operator = (const SortedVector<TYPE>& rhs) {
     VectorImpl::operator = (static_cast<const VectorImpl&>(rhs));
     return *this;
-}
-
-template<class TYPE> inline
-const Vector<TYPE>& Vector<TYPE>::operator = (const SortedVector<TYPE>& rhs) const {
-    VectorImpl::operator = (rhs);
-    return *this; 
 }
 
 template<class TYPE> inline
@@ -373,16 +363,6 @@ ssize_t Vector<TYPE>::removeItemsAt(size_t index, size_t count) {
     return VectorImpl::removeItemsAt(index, count);
 }
 
-template<class TYPE> inline
-status_t Vector<TYPE>::sort(Vector<TYPE>::compar_t cmp) {
-    return VectorImpl::sort((VectorImpl::compar_t)cmp);
-}
-
-template<class TYPE> inline
-status_t Vector<TYPE>::sort(Vector<TYPE>::compar_r_t cmp, void* state) {
-    return VectorImpl::sort((VectorImpl::compar_r_t)cmp, state);
-}
-
 // ---------------------------------------------------------------------------
 
 template<class TYPE>
@@ -415,7 +395,7 @@ void Vector<TYPE>::do_move_backward(void* dest, const void* from, size_t num) co
     move_backward_type( reinterpret_cast<TYPE*>(dest), reinterpret_cast<const TYPE*>(from), num );
 }
 
-}; // namespace android
+}; // namespace stagefright
 
 
 // ---------------------------------------------------------------------------

@@ -78,7 +78,7 @@ nsresult CheckValidTEXT(STGMEDIUM* pSTG)
   nsCString string;
   string = pText;
 
-  if (!string.Equals(NS_LITERAL_CSTRING("Mozilla can drag and drop"))) {
+  if (!string.EqualsLiteral("Mozilla can drag and drop")) {
     fail("Text passed through drop object wrong");
     return NS_ERROR_UNEXPECTED;
   }
@@ -103,7 +103,7 @@ nsresult CheckValidTEXTTwo(STGMEDIUM* pSTG)
   nsCString string;
   string = pText;
 
-  if (!string.Equals(NS_LITERAL_CSTRING("Mozilla can drag and drop twice over"))) {
+  if (!string.EqualsLiteral("Mozilla can drag and drop twice over")) {
     fail("Text passed through drop object wrong");
     return NS_ERROR_UNEXPECTED;
   }
@@ -128,7 +128,7 @@ nsresult CheckValidUNICODE(STGMEDIUM* pSTG)
   nsString string;
   string = pText;
 
-  if (!string.Equals(NS_LITERAL_STRING("Mozilla can drag and drop"))) {
+  if (!string.EqualsLiteral("Mozilla can drag and drop")) {
     fail("Text passed through drop object wrong");
     return NS_ERROR_UNEXPECTED;
   }
@@ -153,7 +153,7 @@ nsresult CheckValidUNICODETwo(STGMEDIUM* pSTG)
   nsString string;
   string = pText;
 
-  if (!string.Equals(NS_LITERAL_STRING("Mozilla can drag and drop twice over"))) {
+  if (!string.EqualsLiteral("Mozilla can drag and drop twice over")) {
     fail("Text passed through drop object wrong");
     return NS_ERROR_UNEXPECTED;
   }

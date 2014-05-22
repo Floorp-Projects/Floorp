@@ -20,7 +20,7 @@
 
 #include <sys/types.h>
 
-namespace android {
+namespace stagefright {
 
 struct AString;
 
@@ -28,6 +28,6 @@ void hexdump(
         const void *_data, size_t size,
         size_t indent = 0, AString *appendTo = NULL);
 
-}  // namespace android
+}  // namespace stagefright
 
 #endif  // HEXDUMP_H_

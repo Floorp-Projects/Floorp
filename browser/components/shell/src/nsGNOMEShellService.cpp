@@ -408,15 +408,15 @@ nsGNOMEShellService::SetDesktopBackground(nsIDOMElement* aElement,
   // Set desktop wallpaper filling style
   nsAutoCString options;
   if (aPosition == BACKGROUND_TILE)
-    options.Assign("wallpaper");
+    options.AssignLiteral("wallpaper");
   else if (aPosition == BACKGROUND_STRETCH)
-    options.Assign("stretched");
+    options.AssignLiteral("stretched");
   else if (aPosition == BACKGROUND_FILL)
-    options.Assign("zoom");
+    options.AssignLiteral("zoom");
   else if (aPosition == BACKGROUND_FIT)
-    options.Assign("scaled");
+    options.AssignLiteral("scaled");
   else
-    options.Assign("centered");
+    options.AssignLiteral("centered");
 
   // Write the background file to the home directory.
   nsAutoCString filePath(PR_GetEnv("HOME"));
@@ -439,7 +439,7 @@ nsGNOMEShellService::SetDesktopBackground(nsIDOMElement* aElement,
   // build the file name
   filePath.Append('/');
   filePath.Append(NS_ConvertUTF16toUTF8(brandName));
-  filePath.Append("_wallpaper.png");
+  filePath.AppendLiteral("_wallpaper.png");
 
   // write the image to a file in the home dir
   rv = WriteImage(filePath, container);
@@ -581,9 +581,9 @@ nsGNOMEShellService::OpenApplication(int32_t aApplication)
 {
   nsAutoCString scheme;
   if (aApplication == APPLICATION_MAIL)
-    scheme.Assign("mailto");
+    scheme.AssignLiteral("mailto");
   else if (aApplication == APPLICATION_NEWS)
-    scheme.Assign("news");
+    scheme.AssignLiteral("news");
   else
     return NS_ERROR_NOT_AVAILABLE;
 

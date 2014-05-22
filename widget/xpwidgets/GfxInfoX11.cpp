@@ -174,7 +174,7 @@ GfxInfo::GetData()
         if (bytesread) {
             mAdapterDescription.AppendLiteral(": ");
             mAdapterDescription.Append(nsDependentCString(buf));
-            mAdapterDescription.AppendLiteral("\n");
+            mAdapterDescription.Append('\n');
         }
 #ifdef MOZ_CRASHREPORTER
         CrashReporter::AppendAppNotesToCrashReport(mAdapterDescription);
@@ -187,13 +187,13 @@ GfxInfo::GetData()
     mAdapterDescription.Append(mRenderer);
 
     nsAutoCString note;
-    note.Append("OpenGL: ");
+    note.AppendLiteral("OpenGL: ");
     note.Append(mAdapterDescription);
-    note.Append(" -- ");
+    note.AppendLiteral(" -- ");
     note.Append(mVersion);
     if (mHasTextureFromPixmap)
-        note.Append(" -- texture_from_pixmap");
-    note.Append("\n");
+        note.AppendLiteral(" -- texture_from_pixmap");
+    note.AppendLiteral("\n");
 #ifdef MOZ_CRASHREPORTER
     CrashReporter::AppendAppNotesToCrashReport(note);
 #endif

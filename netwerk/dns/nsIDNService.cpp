@@ -123,9 +123,9 @@ void nsIDNService::prefsChanged(nsIPrefBranch *prefBranch, const char16_t *pref)
                                           getter_Copies(profile)))) {
       profile.Truncate();
     }
-    if (profile.Equals(NS_LITERAL_CSTRING("moderate"))) {
+    if (profile.EqualsLiteral("moderate")) {
       mRestrictionProfile = eModeratelyRestrictiveProfile;
-    } else if (profile.Equals(NS_LITERAL_CSTRING("high"))) {
+    } else if (profile.EqualsLiteral("high")) {
       mRestrictionProfile = eHighlyRestrictiveProfile;
     } else {
       mRestrictionProfile = eASCIIOnlyProfile;

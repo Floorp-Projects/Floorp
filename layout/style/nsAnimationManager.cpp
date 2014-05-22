@@ -352,7 +352,7 @@ ElementAnimations::CanPerformOnCompositorThread(CanAnimateFlags aFlags) const
       nsCString message;
       message.AppendLiteral("Gecko bug: Async animation of pseudoelements not supported.  See bug 771367 (");
       message.Append(nsAtomCString(mElementProperty));
-      message.AppendLiteral(")");
+      message.Append(')');
       LogAsyncAnimationFailure(message, mElement);
     }
     return false;

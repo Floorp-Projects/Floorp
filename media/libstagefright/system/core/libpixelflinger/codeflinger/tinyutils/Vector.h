@@ -29,7 +29,7 @@
 
 // ---------------------------------------------------------------------------
 
-namespace android {
+namespace stagefright {
 namespace tinyutils {
 
 /*!
@@ -345,7 +345,7 @@ void Vector<TYPE>::do_move_backward(void* dest, const void* from, size_t num) co
 }
 
 } // namespace tinyutils
-} // namespace android
+} // namespace stagefright
 
 
 // ---------------------------------------------------------------------------

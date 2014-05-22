@@ -135,7 +135,7 @@ canonicalizeBase(nsAutoCString &spec,
     if (underGre && underApp && greBase.Length() < appBase.Length())
         underGre = false;
 
-    out.Append("/resource/");
+    out.AppendLiteral("/resource/");
     out.Append(baseName[underGre ? mozilla::Omnijar::GRE : mozilla::Omnijar::APP]);
     out.Append(Substring(spec, underGre ? greBase.Length() : appBase.Length()));
     return true;
@@ -232,14 +232,14 @@ PathifyURI(nsIURI *in, nsACString &out)
             nsAutoCString path;
             rv = jarURI->GetJAREntry(path);
             NS_ENSURE_SUCCESS(rv, rv);
-            out.Append("/");
+            out.Append('/');
             out.Append(path);
         } else { // Very unlikely
             nsAutoCString spec;
             rv = uri->GetSpec(spec);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            out.Append("/");
+            out.Append('/');
             out.Append(spec);
         }
     }

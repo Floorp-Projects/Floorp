@@ -31,13 +31,26 @@
   width: 64px;
   height: 64px;
   position: absolute;
-  animation: moveX 3.05s linear 0s infinite alternate,
-             moveY 3.4s linear 0s infinite alternate;
+  transition: transform 1s ease-out;
+  animation: whimsyMoveX 3.05s linear 0s infinite alternate,
+             whimsyMoveY 3.4s linear 0s infinite alternate;
+}
+
+#PanelUI-popup #PanelUI-contents:active:empty::before {
+  animation: whimsyMoveX 3.05s linear 0s infinite alternate,
+             whimsyMoveY 3.4s linear 0s infinite alternate,
+             whimsyRotate 1s linear 0s infinite normal;
 }
 
 #PanelUI-popup #PanelUI-contents:-moz-locale-dir(rtl):empty::before {
-  animation: moveXRTL 3.05s linear 0s infinite alternate,
-             moveY 3.4s linear 0s infinite alternate;
+  animation: whimsyMoveXRTL 3.05s linear 0s infinite alternate,
+             whimsyMoveY 3.4s linear 0s infinite alternate;
+}
+
+#PanelUI-popup #PanelUI-contents:-moz-locale-dir(rtl):active:empty::before {
+  animation: whimsyMoveXRTL 3.05s linear 0s infinite alternate,
+             whimsyMoveY 3.4s linear 0s infinite alternate,
+             whimsyRotate 1s linear 0s infinite normal;
 }
 
 #PanelUI-popup #PanelUI-contents:empty:hover::before {
@@ -54,19 +67,23 @@
   }
 }
 
-@keyframes moveX {
+@keyframes whimsyMoveX {
   /* These values are adjusted for the padding on the panel. */
   from { margin-left: -15px; } to { margin-left: calc(100% - 49px); }
 }
 
-@keyframes moveXRTL {
+@keyframes whimsyMoveXRTL {
   /* These values are adjusted for the padding on the panel. */
   from { margin-right: -15px; } to { margin-right: calc(100% - 49px); }
 }
 
-@keyframes moveY {
+@keyframes whimsyMoveY {
   /* These values are adjusted for the padding and height of the panel. */
   from { margin-top: -.5em; } to { margin-top: calc(64px - .5em); }
+}
+
+@keyframes whimsyRotate {
+  to { transform: perspective(5000px) rotateY(360deg); }
 }
 
 #PanelUI-button {

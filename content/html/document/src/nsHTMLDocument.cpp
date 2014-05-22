@@ -2986,10 +2986,10 @@ ConvertToMidasInternalCommandInner(const nsAString& inCommandID,
   // Hack to support old boolean commands that were backwards (see bug 301490).
   bool invertBool = false;
   if (convertedCommandID.LowerCaseEqualsLiteral("usecss")) {
-    convertedCommandID.Assign("styleWithCSS");
+    convertedCommandID.AssignLiteral("styleWithCSS");
     invertBool = true;
   } else if (convertedCommandID.LowerCaseEqualsLiteral("readonly")) {
-    convertedCommandID.Assign("contentReadOnly");
+    convertedCommandID.AssignLiteral("contentReadOnly");
     invertBool = true;
   }
 
