@@ -7,7 +7,7 @@
   * listed symbols will exposed on import, and only when and where imported.
   */
 
-let EXPORTED_SYMBOLS = ["TPS"];
+let EXPORTED_SYMBOLS = ["ACTIONS", "TPS"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
@@ -40,7 +40,7 @@ var prefs = Cc["@mozilla.org/preferences-service;1"]
             .getService(Ci.nsIPrefBranch);
 
 var mozmillInit = {};
-Cu.import('resource://mozmill/modules/init.js', mozmillInit);
+Cu.import('resource://mozmill/driver/mozmill.js', mozmillInit);
 
 // Options for wiping data during a sync
 const SYNC_RESET_CLIENT = "resetClient";
@@ -795,7 +795,7 @@ let TPS = {
     frame.events.addListener('setTest', this.MozmillSetTestListener.bind(this));
     frame.events.addListener('endTest', this.MozmillEndTestListener.bind(this));
     this.StartAsyncOperation();
-    frame.runTestFile(mozmillfile.path, false);
+    frame.runTestFile(mozmillfile.path, null);
   },
 
   /**

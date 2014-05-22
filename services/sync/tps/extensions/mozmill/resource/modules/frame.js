@@ -1,132 +1,89 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, you can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ['loadFile','Collector','Runner','events',
-                        'jsbridge', 'runTestFile', 'log', 'getThread',
-                        'timers', 'persisted'];
+var EXPORTED_SYMBOLS = ['Collector','Runner','events', 'runTestFile', 'log',
+                        'timers', 'persisted', 'shutdownApplication'];
 
-var httpd = {};   Components.utils.import('resource://mozmill/stdlib/httpd.js', httpd);
-var os = {};      Components.utils.import('resource://mozmill/stdlib/os.js', os);
-var strings = {}; Components.utils.import('resource://mozmill/stdlib/strings.js', strings);
-var arrays = {};  Components.utils.import('resource://mozmill/stdlib/arrays.js', arrays);
-var withs = {};   Components.utils.import('resource://mozmill/stdlib/withs.js', withs);
-var utils = {};   Components.utils.import('resource://mozmill/modules/utils.js', utils);
-var securableModule = {};  Components.utils.import('resource://mozmill/stdlib/securable-module.js', securableModule);
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
 
-var aConsoleService = Components.classes["@mozilla.org/consoleservice;1"].
-     getService(Components.interfaces.nsIConsoleService);
-var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                    .getService(Components.interfaces.nsIIOService);
-var subscriptLoader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-                    .getService(Components.interfaces.mozIJSSubScriptLoader);
-var uuidgen = Components.classes["@mozilla.org/uuid-generator;1"]
-                    .getService(Components.interfaces.nsIUUIDGenerator);
+const TIMEOUT_SHUTDOWN_HTTPD = 15000;
 
+Cu.import("resource://gre/modules/Services.jsm");
+
+Cu.import('resource://mozmill/stdlib/httpd.js');
+
+var broker = {};  Cu.import('resource://mozmill/driver/msgbroker.js', broker);
+var assertions = {}; Cu.import('resource://mozmill/modules/assertions.js', assertions);
+var errors = {}; Cu.import('resource://mozmill/modules/errors.js', errors);
+var os = {};      Cu.import('resource://mozmill/stdlib/os.js', os);
+var strings = {}; Cu.import('resource://mozmill/stdlib/strings.js', strings);
+var arrays = {};  Cu.import('resource://mozmill/stdlib/arrays.js', arrays);
+var withs = {};   Cu.import('resource://mozmill/stdlib/withs.js', withs);
+var utils = {};   Cu.import('resource://mozmill/stdlib/utils.js', utils);
+
+var securableModule = {};
+Cu.import('resource://mozmill/stdlib/securable-module.js', securableModule);
+
+var uuidgen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+
+var httpd = null;
 var persisted = {};
 
-var moduleLoader = new securableModule.Loader({
-  rootPaths: ["resource://mozmill/modules/"],
-  defaultPrincipal: "system",
-  globals : { Cc: Components.classes,
-              Ci: Components.interfaces,
-              Cu: Components.utils,
-              Cr: Components.results}
-});
+var assert = new assertions.Assert();
 
-arrayRemove = function(array, from, to) {
-  var rest = array.slice((to || from) + 1 || array.length);
-  array.length = from < 0 ? array.length + from : from;
-  return array.push.apply(array, rest);
-};
+var mozmill = undefined;
+var mozelement = undefined;
+var modules = undefined;
 
-mozmill = undefined; mozelement = undefined;
+var timers = [];
 
-var loadTestResources = function () {
-  // load resources we want in our tests
-  if (mozmill == undefined) {
-    mozmill = {};
-    Components.utils.import("resource://mozmill/modules/mozmill.js", mozmill);
+
+/**
+ * Shutdown or restart the application
+ *
+ * @param {boolean} [aFlags=undefined]
+ *        Additional flags how to handle the shutdown or restart. The attributes
+ *        eRestarti386 and eRestartx86_64 have not been documented yet.
+ * @see https://developer.mozilla.org/nsIAppStartup#Attributes
+ */
+function shutdownApplication(aFlags) {
+  var flags = Ci.nsIAppStartup.eForceQuit;
+
+  if (aFlags) {
+    flags |= aFlags;
   }
-  if (mozelement == undefined) {
-    mozelement = {};
-    Components.utils.import("resource://mozmill/modules/mozelement.js", mozelement);
+
+  // Send a request to shutdown the application. That will allow us and other
+  // components to finish up with any shutdown code. Please note that we don't
+  // care if other components or add-ons want to prevent this via cancelQuit,
+  // we really force the shutdown.
+  let cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"].
+                   createInstance(Components.interfaces.nsISupportsPRBool);
+  Services.obs.notifyObservers(cancelQuit, "quit-application-requested", null);
+
+  // Use a timer to trigger the application restart, which will allow us to
+  // send an ACK packet via jsbridge if the method has been called via Python.
+  var event = {
+    notify: function(timer) {
+      Services.startup.quit(flags);
+    }
   }
+
+  var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  timer.initWithCallback(event, 100, Ci.nsITimer.TYPE_ONE_SHOT);
 }
 
-var loadFile = function(path, collector) {
-  // load a test module from a file and add some candy
-  var file = Components.classes["@mozilla.org/file/local;1"]
-                       .createInstance(Components.interfaces.nsILocalFile);
-  file.initWithPath(path);
-  var uri = ios.newFileURI(file).spec;
-
-  loadTestResources();
-  var assertions = moduleLoader.require("./assertions");
-  var module = {
-    collector:  collector,
-    mozmill: mozmill,
-    elementslib: mozelement,
-    findElement: mozelement,
-    persisted: persisted,
-    Cc: Components.classes,
-    Ci: Components.interfaces,
-    Cu: Components.utils,
-    Cr: Components.results,
-    log: log,
-    assert: new assertions.Assert(),
-    expect: new assertions.Expect()
-  }
-
-  module.require = function (mod) {
-    var loader = new securableModule.Loader({
-      rootPaths: [ios.newFileURI(file.parent).spec,
-                  "resource://mozmill/modules/"],
-      defaultPrincipal: "system",
-      globals : { mozmill: mozmill,
-                  elementslib: mozelement,      // This a quick hack to maintain backwards compatibility with 1.5.x
-                  findElement: mozelement,
-                  persisted: persisted,
-                  Cc: Components.classes,
-                  Ci: Components.interfaces,
-                  Cu: Components.utils,
-                  log: log }
-    });
-    return loader.require(mod);
-  }
-
-  if (collector != undefined) {
-    collector.current_file = file;
-    collector.current_path = path;
-  }
-  try {
-    subscriptLoader.loadSubScript(uri, module, "UTF-8");
-  } catch(e) {
-    events.fail(e);
-    var obj = {
-      'filename':path,
-      'passed':false,
-      'failed':true,
-      'passes':0,
-      'fails' :1,
-      'name'  :'Unknown Test',
-    };
-    events.fireEvent('endTest', obj);
-    Components.utils.reportError(e);
-  }
-
-  module.__file__ = path;
-  module.__uri__ = uri;
-  return module;
-}
-
-function stateChangeBase (possibilties, restrictions, target, cmeta, v) {
+function stateChangeBase(possibilties, restrictions, target, cmeta, v) {
   if (possibilties) {
     if (!arrays.inArray(possibilties, v)) {
       // TODO Error value not in this.poss
       return;
     }
   }
+
   if (restrictions) {
     for (var i in restrictions) {
       var r = restrictions[i];
@@ -136,87 +93,160 @@ function stateChangeBase (possibilties, restrictions, target, cmeta, v) {
       }
     }
   }
+
   // Fire jsbridge notification, logging notification, listener notifications
   events[target] = v;
   events.fireEvent(cmeta, target);
 }
 
-timers = [];
 
 var events = {
-  'currentState' : null,
-  'currentModule': null,
-  'currentTest'  : null,
-  'userShutdown' : false,
-  'appQuit'      : false,
-  'listeners'    : {},
+  appQuit           : false,
+  currentModule     : null,
+  currentState      : null,
+  currentTest       : null,
+  shutdownRequested : false,
+  userShutdown      : null,
+  userShutdownTimer : null,
+
+  listeners       : {},
+  globalListeners : []
 }
+
 events.setState = function (v) {
-   return stateChangeBase(['dependencies', 'setupModule', 'teardownModule',
-                           'setupTest', 'teardownTest', 'test', 'collection'],
-                           null, 'currentState', 'setState', v);
+  return stateChangeBase(['dependencies', 'setupModule', 'teardownModule',
+                          'test', 'setupTest', 'teardownTest', 'collection'],
+                          null, 'currentState', 'setState', v);
 }
+
 events.toggleUserShutdown = function (obj){
-  if (this.userShutdown) {
-      this.fail({'function':'frame.events.toggleUserShutdown', 'message':'Shutdown expected but none detected before timeout', 'userShutdown': obj});
+  if (!this.userShutdown) {
+    this.userShutdown = obj;
+
+    var event = {
+      notify: function(timer) {
+       events.toggleUserShutdown(obj);
+      }
+    }
+
+    this.userShutdownTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this.userShutdownTimer.initWithCallback(event, obj.timeout, Ci.nsITimer.TYPE_ONE_SHOT);
+
+  } else {
+    this.userShutdownTimer.cancel();
+
+    // If the application is not going to shutdown, the user shutdown failed and
+    // we have to force a shutdown.
+    if (!events.appQuit) {
+      this.fail({'function':'events.toggleUserShutdown',
+                 'message':'Shutdown expected but none detected before timeout',
+                 'userShutdown': obj});
+
+      var flags = Ci.nsIAppStartup.eAttemptQuit;
+      if (events.isRestartShutdown()) {
+        flags |= Ci.nsIAppStartup.eRestart;
+      }
+
+      shutdownApplication(flags);
+    }
   }
-  this.userShutdown = obj;
 }
+
 events.isUserShutdown = function () {
-  return Boolean(this.userShutdown);
+  return this.userShutdown ? this.userShutdown["user"] : false;
 }
-events.setTest = function (test, invokedFromIDE) {
+
+events.isRestartShutdown = function () {
+  return this.userShutdown.restart;
+}
+
+events.startShutdown = function (obj) {
+  events.fireEvent('shutdown', obj);
+
+  if (obj["user"]) {
+    events.toggleUserShutdown(obj);
+  } else {
+    shutdownApplication(obj.flags);
+  }
+}
+
+events.setTest = function (test) {
+  test.__start__ = Date.now();
   test.__passes__ = [];
   test.__fails__ = [];
-  test.__invokedFromIDE__ = invokedFromIDE;
+
   events.currentTest = test;
-  test.__start__ = Date.now();
-  var obj = {'filename':events.currentModule.__file__,
-             'name':test.__name__,
-            }
+
+  var obj = {'filename': events.currentModule.__file__,
+             'name': test.__name__}
   events.fireEvent('setTest', obj);
 }
+
 events.endTest = function (test) {
+  // use the current test unless specified
+  if (test === undefined) {
+    test = events.currentTest;
+  }
+
+  // If no test is set it has already been reported. Beside that we don't want
+  // to report it a second time.
+  if (!test || test.status === 'done')
+    return;
+
   // report the end of a test
-  test.status = 'done';
-  events.currentTest = null;
   test.__end__ = Date.now();
-  var obj = {'filename':events.currentModule.__file__,
-         'passed':test.__passes__.length,
-         'failed':test.__fails__.length,
-         'passes':test.__passes__,
-         'fails' :test.__fails__,
-         'name'  :test.__name__,
-         'time_start':test.__start__,
-         'time_end':test.__end__
-         }
+  test.status = 'done';
+
+  var obj = {'filename': events.currentModule.__file__,
+             'passed': test.__passes__.length,
+             'failed': test.__fails__.length,
+             'passes': test.__passes__,
+             'fails' : test.__fails__,
+             'name'  : test.__name__,
+             'time_start': test.__start__,
+             'time_end': test.__end__}
+
   if (test.skipped) {
     obj['skipped'] = true;
     obj.skipped_reason = test.skipped_reason;
   }
+
   if (test.meta) {
     obj.meta = test.meta;
   }
 
-  // Report the test result only if the test is a true test or if it is a
-  // failing setup/teardown
-  var shouldSkipReporting = false;
-  if (test.__passes__ &&
-      (test.__name__ == 'setupModule' ||
-       test.__name__ == 'setupTest' ||
-       test.__name__ == 'teardownTest' ||
-       test.__name__ == 'teardownModule')) {
-    shouldSkipReporting = true;
-  }
-
-  if (!shouldSkipReporting) {
+  // Report the test result only if the test is a true test or if it is failing
+  if (withs.startsWith(test.__name__, "test") || test.__fails__.length > 0) {
     events.fireEvent('endTest', obj);
   }
 }
 
-events.setModule = function (v) {
-  return stateChangeBase( null, [function (v) {return (v.__file__ != undefined)}],
-                          'currentModule', 'setModule', v);
+events.setModule = function (aModule) {
+  aModule.__start__ = Date.now();
+  aModule.__status__ = 'running';
+
+  var result = stateChangeBase(null,
+                               [function (aModule) {return (aModule.__file__ != undefined)}],
+                               'currentModule', 'setModule', aModule);
+
+  return result;
+}
+
+events.endModule = function (aModule) {
+  // It should only reported once, so check if it already has been done
+  if (aModule.__status__ === 'done')
+    return;
+
+  aModule.__end__ = Date.now();
+  aModule.__status__ = 'done';
+
+  var obj = {
+    'filename': aModule.__file__,
+    'time_start': aModule.__start__,
+    'time_end': aModule.__end__
+  }
+
+  events.fireEvent('endModule', obj);
 }
 
 events.pass = function (obj) {
@@ -224,17 +254,22 @@ events.pass = function (obj) {
   if (events.currentTest) {
     events.currentTest.__passes__.push(obj);
   }
-  for each(var timer in timers) {
+
+  for each (var timer in timers) {
     timer.actions.push(
-      {"currentTest":events.currentModule.__file__+"::"+events.currentTest.__name__, "obj":obj,
-       "result":"pass"}
+      {"currentTest": events.currentModule.__file__ + "::" + events.currentTest.__name__,
+       "obj": obj,
+       "result": "pass"}
     );
   }
+
   events.fireEvent('pass', obj);
 }
+
 events.fail = function (obj) {
   var error = obj.exception;
-  if(error) {
+
+  if (error) {
     // Error objects aren't enumerable https://bugzilla.mozilla.org/show_bug.cgi?id=637207
     obj.exception = {
       name: error.name,
@@ -244,147 +279,216 @@ events.fail = function (obj) {
       stack: error.stack
     };
   }
+
   // a low level event, such as a keystroke, fails
   if (events.currentTest) {
     events.currentTest.__fails__.push(obj);
   }
-  for each(var time in timers) {
+
+  for each (var time in timers) {
     timer.actions.push(
-      {"currentTest":events.currentModule.__file__+"::"+events.currentTest.__name__, "obj":obj,
-       "result":"fail"}
+      {"currentTest": events.currentModule.__file__ + "::" + events.currentTest.__name__,
+       "obj": obj,
+       "result": "fail"}
     );
   }
+
   events.fireEvent('fail', obj);
 }
+
 events.skip = function (reason) {
-  // this is used to report skips associated with setupModule and setupTest
-  // and nothing else
+  // this is used to report skips associated with setupModule and nothing else
   events.currentTest.skipped = true;
   events.currentTest.skipped_reason = reason;
-  for each(var timer in timers) {
+
+  for (var timer of timers) {
     timer.actions.push(
-      {"currentTest":events.currentModule.__file__+"::"+events.currentTest.__name__, "obj":reason,
-       "result":"skip"}
+      {"currentTest": events.currentModule.__file__ + "::" + events.currentTest.__name__,
+       "obj": reason,
+       "result": "skip"}
     );
   }
+
   events.fireEvent('skip', reason);
 }
+
 events.fireEvent = function (name, obj) {
+  if (events.appQuit) {
+    // dump('* Event discarded: ' + name + ' ' + JSON.stringify(obj) + '\n');
+    return;
+  }
+
   if (this.listeners[name]) {
     for (var i in this.listeners[name]) {
       this.listeners[name][i](obj);
     }
   }
+
   for each(var listener in this.globalListeners) {
     listener(name, obj);
   }
 }
-events.globalListeners = [];
+
 events.addListener = function (name, listener) {
   if (this.listeners[name]) {
     this.listeners[name].push(listener);
-  } else if (name =='') {
+  } else if (name == '') {
     this.globalListeners.push(listener)
   } else {
     this.listeners[name] = [listener];
   }
 }
-events.removeListener = function(listener) {
+
+events.removeListener = function (listener) {
   for (var listenerIndex in this.listeners) {
     var e = this.listeners[listenerIndex];
+
     for (var i in e){
       if (e[i] == listener) {
-        this.listeners[listenerIndex] = arrayRemove(e, i);
+        this.listeners[listenerIndex] = arrays.remove(e, i);
       }
     }
   }
+
   for (var i in this.globalListeners) {
     if (this.globalListeners[i] == listener) {
-      this.globalListeners = arrayRemove(this.globalListeners, i);
+      this.globalListeners = arrays.remove(this.globalListeners, i);
     }
   }
+}
+
+events.persist = function () {
+  try {
+    events.fireEvent('persist', persisted);
+  } catch (e) {
+    events.fireEvent('error', "persist serialization failed.")
+  }
+}
+
+events.firePythonCallback = function (obj) {
+  obj['test'] = events.currentModule.__file__;
+  events.fireEvent('firePythonCallback', obj);
+}
+
+events.screenshot = function (obj) {
+  // Find the name of the test function
+  for (var attr in events.currentModule) {
+    if (events.currentModule[attr] == events.currentTest) {
+      var testName = attr;
+      break;
+    }
+  }
+
+  obj['test_file'] = events.currentModule.__file__;
+  obj['test_name'] = testName;
+  events.fireEvent('screenshot', obj);
 }
 
 var log = function (obj) {
   events.fireEvent('log', obj);
 }
 
+// Register the listeners
+broker.addObject({'endTest': events.endTest,
+                  'fail': events.fail,
+                  'firePythonCallback': events.firePythonCallback,
+                  'log': log,
+                  'pass': events.pass,
+                  'persist': events.persist,
+                  'screenshot': events.screenshot,
+                  'shutdown': events.startShutdown,
+                 });
+
 try {
-  var jsbridge = {}; Components.utils.import('resource://jsbridge/modules/events.js', jsbridge);
-} catch(err) {
-  var jsbridge = null;
+  Cu.import('resource://jsbridge/modules/Events.jsm');
 
-  aConsoleService.logStringMessage("jsbridge not available.");
+  events.addListener('', function (name, obj) {
+    Events.fireEvent('mozmill.' + name, obj);
+  });
+} catch (e) {
+  Services.console.logStringMessage("Event module of JSBridge not available.");
 }
 
-if (jsbridge) {
-  events.addListener('', function (name, obj) {jsbridge.fireEvent('mozmill.'+name, obj)} );
+
+/**
+ * Observer for notifications when the application is going to shutdown
+ */
+function AppQuitObserver() {
+  this.runner = null;
+
+  Services.obs.addObserver(this, "quit-application-requested", false);
 }
 
-function Collector () {
-  // the collector handles HTTPD and initilizing the module
+AppQuitObserver.prototype = {
+  observe: function (aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "quit-application-requested":
+        Services.obs.removeObserver(this, "quit-application-requested");
+
+        // If we observe a quit notification make sure to send the
+        // results of the current test. In those cases we don't reach
+        // the equivalent code in runTestModule()
+        events.pass({'message': 'AppQuitObserver: ' + JSON.stringify(aData),
+                     'userShutdown': events.userShutdown});
+
+        if (this.runner) {
+          this.runner.end();
+        }
+
+        if (httpd) {
+          httpd.stop();
+        }
+
+        events.appQuit = true;
+
+        break;
+    }
+  }
+}
+
+var appQuitObserver = new AppQuitObserver();
+
+/**
+ * The collector handles HTTPd.js and initilizing the module
+ */
+function Collector() {
   this.test_modules_by_filename = {};
   this.testing = [];
-  this.httpd_started = false;
-  this.http_port = 43336;
-  this.http_server = httpd.getServer(this.http_port);
 }
 
-Collector.prototype.startHttpd = function () {
-  while (this.httpd == undefined) {
-    try {
-      this.http_server.start(this.http_port);
-      this.httpd = this.http_server;
-    } catch(e) { // Failure most likely due to port conflict
-      this.http_port++;
-      this.http_server = httpd.getServer(this.http_port);
-    };
-  }
-}
-Collector.prototype.stopHttpd = function () {
-  if (this.httpd) {
-    this.httpd.stop(function(){});  // Callback needed to pause execution until the server has been properly shutdown
-    this.httpd = null;
-  }
-}
-Collector.prototype.addHttpResource = function (directory, ns) {
-  if (!this.httpd) {
-    this.startHttpd();
-  }
+Collector.prototype.addHttpResource = function (aDirectory, aPath) {
+  var fp = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+  fp.initWithPath(os.abspath(aDirectory, this.current_file));
 
-  if (!ns) {
-    ns = '/';
-  } else {
-    ns = '/' + ns + '/';
-  }
-
-  var lp = Components.classes["@mozilla.org/file/local;1"].
-           createInstance(Components.interfaces.nsILocalFile);
-  lp.initWithPath(os.abspath(directory, this.current_file));
-  this.httpd.registerDirectory(ns, lp);
-
-  return 'http://localhost:' + this.http_port + ns
+  return httpd.addHttpResource(fp, aPath);
 }
 
-Collector.prototype.initTestModule = function (filename, name) {
-  var test_module = loadFile(filename, this);
+Collector.prototype.initTestModule = function (filename, testname) {
+  var test_module = this.loadFile(filename, this);
+  var has_restarted = !(testname == null);
   test_module.__tests__ = [];
+
   for (var i in test_module) {
     if (typeof(test_module[i]) == "function") {
       test_module[i].__name__ = i;
-      if (i == "setupTest") {
-        test_module.__setupTest__ = test_module[i];
-      } else if (i == "setupModule") {
+
+      // Only run setupModule if we are a single test OR if we are the first
+      // test of a restart chain (don't run it prior to members in a restart
+      // chain)
+      if (i == "setupModule" && !has_restarted) {
         test_module.__setupModule__ = test_module[i];
+      } else if (i == "setupTest") {
+        test_module.__setupTest__ = test_module[i];
       } else if (i == "teardownTest") {
         test_module.__teardownTest__ = test_module[i];
       } else if (i == "teardownModule") {
         test_module.__teardownModule__ = test_module[i];
       } else if (withs.startsWith(i, "test")) {
-        if (name && (i != name)) {
-            continue;
+        if (testname && (i != testname)) {
+          continue;
         }
-        name = null;
+
+        testname = null;
         test_module.__tests__.push(test_module[i]);
       }
     }
@@ -392,171 +496,290 @@ Collector.prototype.initTestModule = function (filename, name) {
 
   test_module.collector = this;
   test_module.status = 'loaded';
+
   this.test_modules_by_filename[filename] = test_module;
+
   return test_module;
 }
 
-// Observer which gets notified when the application quits
-function AppQuitObserver() {
-  this.register();
+Collector.prototype.loadFile = function (path, collector) {
+  var moduleLoader = new securableModule.Loader({
+    rootPaths: ["resource://mozmill/modules/"],
+    defaultPrincipal: "system",
+    globals : { Cc: Cc,
+                Ci: Ci,
+                Cu: Cu,
+                Cr: Components.results}
+  });
+
+  // load a test module from a file and add some candy
+  var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+  file.initWithPath(path);
+  var uri = Services.io.newFileURI(file).spec;
+
+  this.loadTestResources();
+
+  var systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+  var module = new Components.utils.Sandbox(systemPrincipal);
+  module.assert = new assertions.Assert();
+  module.Cc = Cc;
+  module.Ci = Ci;
+  module.Cr = Components.results;
+  module.Cu = Cu;
+  module.collector = collector;
+  module.driver = moduleLoader.require("driver");
+  module.elementslib = mozelement;
+  module.errors = errors;
+  module.expect = new assertions.Expect();
+  module.findElement = mozelement;
+  module.log = log;
+  module.mozmill = mozmill;
+  module.persisted = persisted;
+
+  module.require = function (mod) {
+    var loader = new securableModule.Loader({
+      rootPaths: [Services.io.newFileURI(file.parent).spec,
+                  "resource://mozmill/modules/"],
+      defaultPrincipal: "system",
+      globals : { mozmill: mozmill,
+                  elementslib: mozelement,      // This a quick hack to maintain backwards compatibility with 1.5.x
+                  findElement: mozelement,
+                  persisted: persisted,
+                  Cc: Cc,
+                  Ci: Ci,
+                  Cu: Cu,
+                  log: log }
+    });
+
+    if (modules != undefined) {
+      loader.modules = modules;
+    }
+
+    var retval = loader.require(mod);
+    modules = loader.modules;
+
+    return retval;
+  }
+
+  if (collector != undefined) {
+    collector.current_file = file;
+    collector.current_path = path;
+  }
+
+  try {
+    Services.scriptloader.loadSubScript(uri, module, "UTF-8");
+  } catch (e) {
+    var obj = {
+      'filename': path,
+      'passed': 0,
+      'failed': 1,
+      'passes': [],
+      'fails' : [{'exception' : {
+                    message: e.message,
+                    filename: e.filename,
+                    lineNumber: e.lineNumber}}],
+      'name'  :'<TOP_LEVEL>'
+    };
+
+    events.fail({'exception': e});
+    events.fireEvent('endTest', obj);
+  }
+
+  module.__file__ = path;
+  module.__uri__ = uri;
+
+  return module;
 }
-AppQuitObserver.prototype = {
-  observe: function(subject, topic, data) {
-    events.appQuit = true;
-  },
-  register: function() {
-    var obsService = Components.classes["@mozilla.org/observer-service;1"]
-                     .getService(Components.interfaces.nsIObserverService);
-    obsService.addObserver(this, "quit-application", false);
-  },
-  unregister: function() {
-    var obsService = Components.classes["@mozilla.org/observer-service;1"]
-                     .getService(Components.interfaces.nsIObserverService);
-    obsService.removeObserver(this, "quit-application");
+
+Collector.prototype.loadTestResources = function () {
+  // load resources we want in our tests
+  if (mozmill === undefined) {
+    mozmill = {};
+    Cu.import("resource://mozmill/driver/mozmill.js", mozmill);
+  }
+  if (mozelement === undefined) {
+    mozelement = {};
+    Cu.import("resource://mozmill/driver/mozelement.js", mozelement);
   }
 }
 
 
-function Runner (collector, invokedFromIDE) {
-  this.collector = collector;
-  this.invokedFromIDE = invokedFromIDE
-  events.fireEvent('startRunner', true);
-  var m = {}; Components.utils.import('resource://mozmill/modules/mozmill.js', m);
-  this.platform = m.platform;
+/**
+ *
+ */
+function Httpd(aPort) {
+  this.http_port = aPort;
+
+  while (true) {
+    try {
+      var srv = new HttpServer();
+      srv.registerContentType("sjs", "sjs");
+      srv.identity.setPrimary("http", "localhost", this.http_port);
+      srv.start(this.http_port);
+
+      this._httpd = srv;
+      break;
+    }
+    catch (e) {
+      // Failure most likely due to port conflict
+      this.http_port++;
+    }
+  }
 }
+
+Httpd.prototype.addHttpResource = function (aDir, aPath) {
+  var path = aPath ? ("/" + aPath + "/") : "/";
+
+  try {
+    this._httpd.registerDirectory(path, aDir);
+    return 'http://localhost:' + this.http_port + path;
+  }
+  catch (e) {
+    throw Error("Failure to register directory: " + aDir.path);
+  }
+};
+
+Httpd.prototype.stop = function () {
+  if (!this._httpd) {
+    return;
+  }
+
+  var shutdown = false;
+  this._httpd.stop(function () { shutdown = true; });
+
+  assert.waitFor(function () {
+    return shutdown;
+  }, "Local HTTP server has been stopped", TIMEOUT_SHUTDOWN_HTTPD);
+
+  this._httpd = null;
+};
+
+function startHTTPd() {
+  if (!httpd) {
+    // Ensure that we start the HTTP server only once during a session
+    httpd = new Httpd(43336);
+  }
+}
+
+
+function Runner() {
+  this.collector = new Collector();
+  this.ended = false;
+
+  var m = {}; Cu.import('resource://mozmill/driver/mozmill.js', m);
+  this.platform = m.platform;
+
+  events.fireEvent('startRunner', true);
+}
+
+Runner.prototype.end = function () {
+  if (!this.ended) {
+    this.ended = true;
+
+    appQuitObserver.runner = null;
+
+    events.endTest();
+    events.endModule(events.currentModule);
+    events.fireEvent('endRunner', true);
+    events.persist();
+  }
+};
 
 Runner.prototype.runTestFile = function (filename, name) {
-  this.collector.initTestModule(filename, name);
-  this.runTestModule(this.collector.test_modules_by_filename[filename]);
-}
-Runner.prototype.end = function () {
-  try {
-    events.fireEvent('persist', persisted);
-  } catch(e) {
-    events.fireEvent('error', "persist serialization failed.");
-  }
-  this.collector.stopHttpd();
-  events.fireEvent('endRunner', true);
-}
+  var module = this.collector.initTestModule(filename, name);
+  this.runTestModule(module);
+};
 
-Runner.prototype.wrapper = function (func, arg) {
-  thread = Components.classes["@mozilla.org/thread-manager;1"]
-                     .getService(Components.interfaces.nsIThreadManager)
-                     .currentThread;
+Runner.prototype.runTestModule = function (module) {
+  appQuitObserver.runner = this;
+  events.setModule(module);
+
+  // If setupModule passes, run all the tests. Otherwise mark them as skipped.
+  if (this.execFunction(module.__setupModule__, module)) {
+    for (var test of module.__tests__) {
+      if (events.shutdownRequested) {
+        break;
+      }
+
+      // If setupTest passes, run the test. Otherwise mark it as skipped.
+      if (this.execFunction(module.__setupTest__, module)) {
+        this.execFunction(test);
+      } else {
+        this.skipFunction(test, module.__setupTest__.__name__ + " failed");
+      }
+
+      this.execFunction(module.__teardownTest__, module);
+    }
+
+  } else {
+    for (var test of module.__tests__) {
+      this.skipFunction(test, module.__setupModule__.__name__ + " failed");
+    }
+  }
+
+  this.execFunction(module.__teardownModule__, module);
+  events.endModule(module);
+};
+
+Runner.prototype.execFunction = function (func, arg) {
+  if (typeof func !== "function" || events.shutdownRequested) {
+    return true;
+  }
+
+  var isTest = withs.startsWith(func.__name__, "test");
+
+  events.setState(isTest ? "test" : func.__name);
+  events.setTest(func);
 
   // skip excluded platforms
   if (func.EXCLUDED_PLATFORMS != undefined) {
     if (arrays.inArray(func.EXCLUDED_PLATFORMS, this.platform)) {
       events.skip("Platform exclusion");
-      return;
+      events.endTest(func);
+      return false;
     }
   }
 
   // skip function if requested
   if (func.__force_skip__ != undefined) {
     events.skip(func.__force_skip__);
-    return;
+    events.endTest(func);
+    return false;
   }
 
   // execute the test function
   try {
-    if (arg) {
-        func(arg);
-    } else {
-        func();
-    }
-
-    // If a user shutdown was expected but the application hasn't quit, throw a failure
-    if (events.isUserShutdown()) {
-      utils.sleep(500);  // Prevents race condition between mozrunner hard process kill and normal FFx shutdown
-      if (events.userShutdown['user'] && !events.appQuit) {
-          events.fail({'function':'Runner.wrapper',
-                       'message':'Shutdown expected but none detected before end of test',
-                       'userShutdown': events.userShutdown});
-      }
-    }
+    func(arg);
   } catch (e) {
-    // Allow the exception if a user shutdown was expected
-    if (!events.isUserShutdown()) {
-      events.fail({'exception': e, 'test':func})
-      Components.utils.reportError(e);
+    if (e instanceof errors.ApplicationQuitError) {
+      events.shutdownRequested = true;
+    } else {
+      events.fail({'exception': e, 'test': func})
     }
   }
-}
 
-Runner.prototype.runTestModule = function (module) {
-  events.setModule(module);
-  module.__status__ = 'running';
-  if (module.__setupModule__) {
-    events.setState('setupModule');
-    events.setTest(module.__setupModule__);
-    this.wrapper(module.__setupModule__, module);
-    var setupModulePassed = (events.currentTest.__fails__.length == 0 && !events.currentTest.skipped);
-    events.endTest(module.__setupModule__);
-  } else {
-    var setupModulePassed = true;
+  // If a user shutdown has been requested and the function already returned,
+  // we can assume that a shutdown will not happen anymore. We should force a
+  // shutdown then, to prevent the next test from being executed.
+  if (events.isUserShutdown()) {
+    events.shutdownRequested = true;
+    events.toggleUserShutdown(events.userShutdown);
   }
-  if (setupModulePassed) {
-    var observer = new AppQuitObserver();
-    for (var i in module.__tests__) {
-      events.appQuit = false;
-      var test = module.__tests__[i];
 
-      // TODO: introduce per-test timeout:
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=574871
+  events.endTest(func);
+  return events.currentTest.__fails__.length == 0;
+};
 
-      if (module.__setupTest__) {
-        events.setState('setupTest');
-        events.setTest(module.__setupTest__);
-        this.wrapper(module.__setupTest__, test);
-        var setupTestPassed = (events.currentTest.__fails__.length == 0 && !events.currentTest.skipped);
-        events.endTest(module.__setupTest__);
-      } else {
-        var setupTestPassed = true;
-      }
-      events.setState('test');
-      events.setTest(test, this.invokedFromIDE);
-      if (setupTestPassed) {
-        this.wrapper(test);
-        if (events.userShutdown && !events.userShutdown['user']) {
-            events.endTest(test);
-            break;
-        }
-      } else {
-        events.skip("setupTest failed.");
-      }
-      if (module.__teardownTest__) {
-        events.setState('teardownTest');
-        events.setTest(module.__teardownTest__);
-        this.wrapper(module.__teardownTest__, test);
-        events.endTest(module.__teardownTest__);
-      }
-      events.endTest(test)
-    }
-    observer.unregister();
-  } else {
-    for each(var test in module.__tests__) {
-      events.setTest(test);
-      events.skip("setupModule failed.");
-      events.endTest(test);
-    }
-  }
-  if (module.__teardownModule__) {
-    events.setState('teardownModule');
-    events.setTest(module.__teardownModule__);
-    this.wrapper(module.__teardownModule__, module);
-    events.endTest(module.__teardownModule__);
-  }
-  module.__status__ = 'done';
-}
-
-var runTestFile = function (filename, invokedFromIDE, name) {
-  var runner = new Runner(new Collector(), invokedFromIDE);
+function runTestFile(filename, name) {
+  var runner = new Runner();
   runner.runTestFile(filename, name);
   runner.end();
+
   return true;
 }
 
-var getThread = function () {
-  return thread;
-}
+Runner.prototype.skipFunction = function (func, message) {
+  events.setTest(func);
+  events.skip(message);
+  events.endTest(func);
+};
