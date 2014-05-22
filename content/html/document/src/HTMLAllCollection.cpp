@@ -68,28 +68,6 @@ HTMLAllCollection::Collection()
 }
 
 static bool
-IsAllNamedElement(nsIContent* aContent)
-{
-  nsIAtom* tag = aContent->Tag();
-  return
-    tag == nsGkAtoms::a ||
-    tag == nsGkAtoms::applet ||
-    tag == nsGkAtoms::button ||
-    tag == nsGkAtoms::embed ||
-    tag == nsGkAtoms::form ||
-    tag == nsGkAtoms::iframe ||
-    tag == nsGkAtoms::img ||
-    tag == nsGkAtoms::input ||
-    tag == nsGkAtoms::map ||
-    tag == nsGkAtoms::meta ||
-    tag == nsGkAtoms::object ||
-    tag == nsGkAtoms::select ||
-    tag == nsGkAtoms::textarea ||
-    tag == nsGkAtoms::frame ||
-    tag == nsGkAtoms::frameset;
-}
-
-static bool
 DocAllResultMatch(nsIContent* aContent, int32_t aNamespaceID, nsIAtom* aAtom,
                   void* aData)
 {
@@ -102,7 +80,20 @@ DocAllResultMatch(nsIContent* aContent, int32_t aNamespaceID, nsIAtom* aAtom,
     return false;
   }
 
-  if (!IsAllNamedElement(elm)) {
+  nsIAtom* tag = elm->Tag();
+  if (tag != nsGkAtoms::a &&
+      tag != nsGkAtoms::applet &&
+      tag != nsGkAtoms::button &&
+      tag != nsGkAtoms::embed &&
+      tag != nsGkAtoms::form &&
+      tag != nsGkAtoms::iframe &&
+      tag != nsGkAtoms::img &&
+      tag != nsGkAtoms::input &&
+      tag != nsGkAtoms::map &&
+      tag != nsGkAtoms::meta &&
+      tag != nsGkAtoms::object &&
+      tag != nsGkAtoms::select &&
+      tag != nsGkAtoms::textarea) {
     return false;
   }
 
@@ -167,51 +158,6 @@ HTMLAllCollection::NamedGetter(const nsAString& aID,
   aFound = false;
   aResult.SetNull();
 }
-
-void
-HTMLAllCollection::GetSupportedNames(unsigned aFlags, nsTArray<nsString>& aNames)
-{
-  if (!(aFlags & JSITER_HIDDEN)) {
-    return;
-  }
-
-  // XXXbz this is very similar to nsContentList::GetSupportedNames,
-  // but has to check IsAllNamedElement for the name case.
-  nsAutoTArray<nsIAtom*, 8> atoms;
-  for (uint32_t i = 0; i < Length(); ++i) {
-    nsIContent *content = Item(i);
-    if (content->HasID()) {
-      nsIAtom* id = content->GetID();
-      MOZ_ASSERT(id != nsGkAtoms::_empty,
-                 "Empty ids don't get atomized");
-      if (!atoms.Contains(id)) {
-        atoms.AppendElement(id);
-      }
-    }
-
-    nsGenericHTMLElement* el = nsGenericHTMLElement::FromContent(content);
-    if (el) {
-      // Note: nsINode::HasName means the name is exposed on the document,
-      // which is false for options, so we don't check it here.
-      const nsAttrValue* val = el->GetParsedAttr(nsGkAtoms::name);
-      if (val && val->Type() == nsAttrValue::eAtom &&
-          IsAllNamedElement(content)) {
-        nsIAtom* name = val->GetAtomValue();
-        MOZ_ASSERT(name != nsGkAtoms::_empty,
-                   "Empty names don't get atomized");
-        if (!atoms.Contains(name)) {
-          atoms.AppendElement(name);
-        }
-      }
-    }
-  }
-
-  aNames.SetCapacity(atoms.Length());
-  for (uint32_t i = 0; i < atoms.Length(); ++i) {
-    aNames.AppendElement(nsDependentAtomString(atoms[i]));
-  }
-}
-
 
 JSObject*
 HTMLAllCollection::WrapObject(JSContext* aCx)
