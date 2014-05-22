@@ -284,7 +284,7 @@ PendingDBLookup::LookupSpecInternal(const nsACString& aSpec)
   nsAutoCString blocklist;
   Preferences::GetCString(PREF_DOWNLOAD_BLOCK_TABLE, &blocklist);
   if (!mAllowlistOnly && !blocklist.IsEmpty()) {
-    tables.Append(",");
+    tables.Append(',');
     tables.Append(blocklist);
   }
   return dbService->Lookup(principal, tables, this);

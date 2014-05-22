@@ -153,7 +153,7 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
   }
   if (aDumpHtml && aItem->Painted()) {
     nsCString string(aItem->Name());
-    string.Append("-");
+    string.Append('-');
     string.AppendInt((uint64_t)aItem);
     str += nsPrintfCString("<a href=\"javascript:ViewImage('%s')\">", string.BeginReading());
   }

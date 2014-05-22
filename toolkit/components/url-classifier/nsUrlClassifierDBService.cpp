@@ -1207,7 +1207,7 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
   nsAutoCString phishing;
   Preferences::GetCString(PHISH_TABLE_PREF, &phishing);
   if (!phishing.IsEmpty()) {
-    tables.Append(",");
+    tables.Append(',');
     tables.Append(phishing);
   }
   nsresult rv = LookupURI(aPrincipal, tables, callback, false, result);

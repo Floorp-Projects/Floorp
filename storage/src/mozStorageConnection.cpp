@@ -745,7 +745,7 @@ Connection::databaseElementExists(enum DatabaseElementType aElementType,
   }
   query.AppendLiteral("' AND name ='");
   query.Append(element);
-  query.Append("'");
+  query.Append('\'');
 
   sqlite3_stmt *stmt;
   int srv = prepareStatement(mDBConn, query, &stmt);

@@ -191,7 +191,7 @@ Classifier::TableRequest(nsACString& aResult)
       continue;
 
     aResult.Append(store->TableName());
-    aResult.Append(";");
+    aResult.Append(';');
 
     ChunkSet &adds = store->AddChunks();
     ChunkSet &subs = store->SubChunks();
