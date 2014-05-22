@@ -673,7 +673,7 @@ function testListing(metadata, response)
           ),
           DIV({class: "clear"}),
           DIV({class: "frameholder"},
-            IFRAME({scrolling: "no", id: "testframe", width: "500", height: "300"})
+            IFRAME({scrolling: "no", id: "testframe"})
           ),
           DIV({class: "clear"}),
           DIV({class: "toggle"},
