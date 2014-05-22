@@ -10,6 +10,7 @@
 #include "GLDefs.h"
 #include "WebGLActiveInfo.h"
 #include "WebGLObjectModel.h"
+#include "WebGLRenderbuffer.h"
 #include <stdarg.h>
 
 #include "nsTArray.h"
@@ -88,6 +89,8 @@ class SourceSurface;
 
 WebGLTexelFormat GetWebGLTexelFormat(GLenum format, GLenum type);
 
+void AssertUintParamCorrect(gl::GLContext* gl, GLenum pname, GLuint shadow);
+
 struct WebGLContextOptions {
     // these are defaults
     WebGLContextOptions();
@@ -113,6 +116,19 @@ struct WebGLContextOptions {
     bool antialias;
     bool preserveDrawingBuffer;
 };
+
+#ifdef DEBUG
+static bool
+IsTextureBinding(GLenum binding)
+{
+    switch (binding) {
+    case LOCAL_GL_TEXTURE_BINDING_2D:
+    case LOCAL_GL_TEXTURE_BINDING_CUBE_MAP:
+        return true;
+    }
+    return false;
+}
+#endif
 
 class WebGLContext :
     public nsIDOMWebGLRenderingContext,
@@ -204,7 +220,8 @@ public:
 
     void DummyFramebufferOperation(const char *info);
 
-    WebGLTexture *activeBoundTextureForTarget(GLenum target) const {
+    WebGLTexture* activeBoundTextureForTarget(GLenum target) const {
+        MOZ_ASSERT(!IsTextureBinding(target));
         return target == LOCAL_GL_TEXTURE_2D ? mBound2DTextures[mActiveTexture]
                                              : mBoundCubeMapTextures[mActiveTexture];
     }
@@ -248,6 +265,9 @@ public:
     static void RobustnessTimerCallbackStatic(nsITimer* timer, void *thisPointer);
     void SetupContextLossTimer();
     void TerminateContextLossTimer();
+
+    void AssertCachedBindings();
+    void AssertCachedState();
 
     // WebIDL WebGLRenderingContext API
     dom::HTMLCanvasElement* GetCanvas() const { return mCanvasElement; }
