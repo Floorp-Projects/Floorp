@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=891952
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 891952</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 891952 **/
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(function() {
+      var all = document.all;
+      is(all["content"], $("content"), "Should find the content");
+      ok(!("" in all), "Should not have an empty string prop on document.all");
+      ise(all[""], undefined, "Should not get empty string on document.all");
+      ise(all.namedItem(""), null,
+          "namedItem for empty string should return null on document.all");
+
+      var divs = document.getElementsByTagName("div");
+      ok(!("" in divs), "Should not have an empty string prop on getElementsByTagName");
+      ise(divs[""], undefined, "Should not get empty string on getElementsByTagName");
+      ise(divs.namedItem(""), null,
+          "namedItem for empty string should return null on getElementsByTagName");
+      var forms = document.forms;
+      ok(!("" in forms), "Should not have an empty string prop on document.forms");
+      ise(forms[""], undefined, "Should not get empty string on document.forms");
+      ise(forms.namedItem(""), null,
+          "namedItem for empty string should return null on document.forms");
+
+      var form = $("form");
+      ok(!("" in form), "Should not have an empty string prop on form");
+      ise(form[""], undefined, "Should not get empty string on form");
+
+      var formEls = $("form").elements;
+      ok(!("" in formEls), "Should not have an empty string prop on form.elements");
+      ise(formEls[""], undefined, "Should not get empty string on form.elements");
+      ise(formEls.namedItem(""), null,
+          "namedItem for empty string should return null on form.elements");
+      SimpleTest.finish();
+    });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=891952">Mozilla Bug 891952</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <div id=""></div>
+  <div name=""></div>
+  <form id="form" name="">
+    <input name="">
+  </form>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
