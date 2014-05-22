@@ -510,17 +510,6 @@ TabParent::UpdateFrame(const FrameMetrics& aFrameMetrics)
 }
 
 void
-TabParent::UIResolutionChanged()
-{
-  if (!mIsDestroyed) {
-    // TryCacheDPIAndScale()'s cache is keyed off of
-    // mDPI being greater than 0, so this invalidates it.
-    mDPI = -1;
-    unused << SendUIResolutionChanged();
-  }
-}
-
-void
 TabParent::AcknowledgeScrollUpdate(const ViewID& aScrollId, const uint32_t& aScrollGeneration)
 {
   if (!mIsDestroyed) {
