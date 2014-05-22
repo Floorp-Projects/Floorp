@@ -133,8 +133,8 @@ static cubeb_stream_type ConvertChannelToCubebType(dom::AudioChannel aChannel)
       return CUBEB_STREAM_TYPE_VOICE_CALL;
     case dom::AudioChannel::Ringer:
       return CUBEB_STREAM_TYPE_RING;
-    // Currently Android openSLES library doesn't support FORCE_AUDIBLE yet.
     case dom::AudioChannel::Publicnotification:
+      return CUBEB_STREAM_TYPE_SYSTEM_ENFORCED;
     default:
       NS_ERROR("The value of AudioChannel is invalid");
       return CUBEB_STREAM_TYPE_MAX;
