@@ -5,6 +5,7 @@
 
 #include "mozilla/dom/ShadowRoot.h"
 
+#include "ChildIterator.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/HTMLShadowElement.h"
 #include "mozilla/dom/HTMLShadowElementBinding.h"
@@ -60,10 +61,28 @@ HTMLShadowElement::SetProjectedShadow(ShadowRoot* aProjectedShadow)
 {
   if (mProjectedShadow) {
     mProjectedShadow->RemoveMutationObserver(this);
+
+    // The currently projected ShadowRoot is going away,
+    // thus the destination insertion points need to be updated.
+    ExplicitChildIterator childIterator(mProjectedShadow);
+    for (nsIContent* content = childIterator.GetNextChild();
+         content;
+         content = childIterator.GetNextChild()) {
+      ShadowRoot::RemoveDestInsertionPoint(this, content->DestInsertionPoints());
+    }
   }
 
   mProjectedShadow = aProjectedShadow;
   if (mProjectedShadow) {
+    // A new ShadowRoot is being projected, thus its explcit
+    // children will be distributed to this shadow insertion point.
+    ExplicitChildIterator childIterator(mProjectedShadow);
+    for (nsIContent* content = childIterator.GetNextChild();
+         content;
+         content = childIterator.GetNextChild()) {
+      content->DestInsertionPoints().AppendElement(this);
+    }
+
     // Watch for mutations on the projected shadow because
     // it affects the nodes that are distributed to this shadow
     // insertion point.
@@ -156,6 +175,14 @@ HTMLShadowElement::UnbindFromTree(bool aDeep, bool aNullParent)
 void
 HTMLShadowElement::DistributeSingleNode(nsIContent* aContent)
 {
+  if (aContent->DestInsertionPoints().Contains(this)) {
+    // Node has already been distrbuted this this node,
+    // we are done.
+    return;
+  }
+
+  aContent->DestInsertionPoints().AppendElement(this);
+
   // Handle the case where the shadow element is a child of
   // a node with a ShadowRoot. The nodes that have been distributed to
   // this shadow insertion point will need to be reprojected into the
@@ -181,6 +208,8 @@ HTMLShadowElement::DistributeSingleNode(nsIContent* aContent)
 void
 HTMLShadowElement::RemoveDistributedNode(nsIContent* aContent)
 {
+  ShadowRoot::RemoveDestInsertionPoint(this, aContent->DestInsertionPoints());
+
   // Handle the case where the shadow element is a child of
   // a node with a ShadowRoot. The nodes that have been distributed to
   // this shadow insertion point will need to be removed from the
@@ -206,6 +235,21 @@ HTMLShadowElement::RemoveDistributedNode(nsIContent* aContent)
 void
 HTMLShadowElement::DistributeAllNodes()
 {
+  // All the explicit children of the projected ShadowRoot are distributed
+  // into this shadow insertion point so update the destination insertion
+  // points.
+  ShadowRoot* containingShadow = GetContainingShadow();
+  ShadowRoot* olderShadow = containingShadow->GetOlderShadow();
+  if (olderShadow) {
+    ExplicitChildIterator childIterator(olderShadow);
+    for (nsIContent* content = childIterator.GetNextChild();
+         content;
+         content = childIterator.GetNextChild()) {
+      ShadowRoot::RemoveDestInsertionPoint(this, content->DestInsertionPoints());
+      content->DestInsertionPoints().AppendElement(this);
+    }
+  }
+
   // Handle the case where the shadow element is a child of
   // a node with a ShadowRoot. The nodes that have been distributed to
   // this shadow insertion point will need to be reprojected into the
@@ -218,7 +262,6 @@ HTMLShadowElement::DistributeAllNodes()
 
   // Handle the case where the parent of this shadow element is a ShadowRoot
   // that is projected into a shadow insertion point in the younger ShadowRoot.
-  ShadowRoot* containingShadow = GetContainingShadow();
   ShadowRoot* youngerShadow = containingShadow->GetYoungerShadow();
   if (youngerShadow && GetParent() == containingShadow) {
     HTMLShadowElement* youngerShadowElement = youngerShadow->GetShadowElement();
@@ -269,7 +312,7 @@ HTMLShadowElement::ContentRemoved(nsIDocument* aDocument,
                                   int32_t aIndexInContainer,
                                   nsIContent* aPreviousSibling)
 {
-  // Watch for content removed to the projected shadow (the ShadowRoot that
+  // Watch for content removed from the projected shadow (the ShadowRoot that
   // will be rendered in place of this shadow insertion point) because the
   // nodes may need to be removed from other insertion points.
   if (!ShadowRoot::IsPooledNode(aChild, aContainer, mProjectedShadow)) {

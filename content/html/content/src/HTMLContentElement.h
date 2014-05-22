@@ -46,6 +46,9 @@ public:
   bool Match(nsIContent* aContent);
   bool IsInsertionPoint() const { return mIsInsertionPoint; }
   nsCOMArray<nsIContent>& MatchedNodes() { return mMatchedNodes; }
+  void AppendMatchedNode(nsIContent* aContent);
+  void RemoveMatchedNode(nsIContent* aContent);
+  void InsertMatchedNode(uint32_t aIndex, nsIContent* aContent);
   void ClearMatchedNodes();
 
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
@@ -68,6 +71,15 @@ public:
 
 protected:
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
+
+  /**
+   * Updates the destination insertion points of the fallback
+   * content of this insertion point. If there are nodes matched
+   * to this insertion point, then destination insertion points
+   * of fallback are cleared, otherwise, this insertion point
+   * is a destination insertion point.
+   */
+  void UpdateFallbackDistribution();
 
   /**
    * An array of nodes from the ShadowRoot host that match the

@@ -685,6 +685,23 @@ nsGenericDOMDataNode::SetShadowRoot(ShadowRoot* aShadowRoot)
 {
 }
 
+nsTArray<nsIContent*>&
+nsGenericDOMDataNode::DestInsertionPoints()
+{
+  nsDataSlots *slots = DataSlots();
+  return slots->mDestInsertionPoints;
+}
+
+nsTArray<nsIContent*>*
+nsGenericDOMDataNode::GetExistingDestInsertionPoints() const
+{
+  nsDataSlots *slots = GetExistingDataSlots();
+  if (slots) {
+    return &slots->mDestInsertionPoints;
+  }
+  return nullptr;
+}
+
 nsXBLBinding *
 nsGenericDOMDataNode::GetXBLBinding() const
 {
