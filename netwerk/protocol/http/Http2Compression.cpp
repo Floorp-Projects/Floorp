@@ -1019,7 +1019,7 @@ Http2Compressor::EncodeHeaderBlock(const nsCString &nvInput,
         nextCookie = semiSpaceIndex + 2;
       }
     } else {
-      ProcessHeader(nvPair(name, value), name.EqualsLiteral("authorization") ? true : false);
+      ProcessHeader(nvPair(name, value), name.EqualsLiteral("authorization"));
     }
   }
 

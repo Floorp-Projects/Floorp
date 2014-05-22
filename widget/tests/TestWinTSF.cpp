@@ -2903,7 +2903,7 @@ TestApp::TestScrollMessages(void)
 #define DO_CHECK(aFailureCondition, aDescription) \
   if (aFailureCondition) { \
     nsAutoCString str(aDescription); \
-    str.Append(": "); \
+    str.AppendLiteral(": "); \
     str.Append(#aFailureCondition); \
     fail(str.get()); \
     mTextArea->SetAttribute(NS_LITERAL_STRING("style"), EmptyString()); \

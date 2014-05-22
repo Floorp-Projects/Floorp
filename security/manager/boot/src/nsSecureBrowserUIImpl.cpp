@@ -814,17 +814,17 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   if (testFlags & nsIChannel::LOAD_DOCUMENT_URI)
   {
     testFlags -= nsIChannel::LOAD_DOCUMENT_URI;
-    info2.Append("LOAD_DOCUMENT_URI ");
+    info2.AppendLiteral("LOAD_DOCUMENT_URI ");
   }
   if (testFlags & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
   {
     testFlags -= nsIChannel::LOAD_RETARGETED_DOCUMENT_URI;
-    info2.Append("LOAD_RETARGETED_DOCUMENT_URI ");
+    info2.AppendLiteral("LOAD_RETARGETED_DOCUMENT_URI ");
   }
   if (testFlags & nsIChannel::LOAD_REPLACE)
   {
     testFlags -= nsIChannel::LOAD_REPLACE;
-    info2.Append("LOAD_REPLACE ");
+    info2.AppendLiteral("LOAD_REPLACE ");
   }
 
   const char *_status = NS_SUCCEEDED(aStatus) ? "1" : "0";
@@ -834,77 +834,77 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   if (f & nsIWebProgressListener::STATE_START)
   {
     f -= nsIWebProgressListener::STATE_START;
-    info.Append("START ");
+    info.AppendLiteral("START ");
   }
   if (f & nsIWebProgressListener::STATE_REDIRECTING)
   {
     f -= nsIWebProgressListener::STATE_REDIRECTING;
-    info.Append("REDIRECTING ");
+    info.AppendLiteral("REDIRECTING ");
   }
   if (f & nsIWebProgressListener::STATE_TRANSFERRING)
   {
     f -= nsIWebProgressListener::STATE_TRANSFERRING;
-    info.Append("TRANSFERRING ");
+    info.AppendLiteral("TRANSFERRING ");
   }
   if (f & nsIWebProgressListener::STATE_NEGOTIATING)
   {
     f -= nsIWebProgressListener::STATE_NEGOTIATING;
-    info.Append("NEGOTIATING ");
+    info.AppendLiteral("NEGOTIATING ");
   }
   if (f & nsIWebProgressListener::STATE_STOP)
   {
     f -= nsIWebProgressListener::STATE_STOP;
-    info.Append("STOP ");
+    info.AppendLiteral("STOP ");
   }
   if (f & nsIWebProgressListener::STATE_IS_REQUEST)
   {
     f -= nsIWebProgressListener::STATE_IS_REQUEST;
-    info.Append("IS_REQUEST ");
+    info.AppendLiteral("IS_REQUEST ");
   }
   if (f & nsIWebProgressListener::STATE_IS_DOCUMENT)
   {
     f -= nsIWebProgressListener::STATE_IS_DOCUMENT;
-    info.Append("IS_DOCUMENT ");
+    info.AppendLiteral("IS_DOCUMENT ");
   }
   if (f & nsIWebProgressListener::STATE_IS_NETWORK)
   {
     f -= nsIWebProgressListener::STATE_IS_NETWORK;
-    info.Append("IS_NETWORK ");
+    info.AppendLiteral("IS_NETWORK ");
   }
   if (f & nsIWebProgressListener::STATE_IS_WINDOW)
   {
     f -= nsIWebProgressListener::STATE_IS_WINDOW;
-    info.Append("IS_WINDOW ");
+    info.AppendLiteral("IS_WINDOW ");
   }
   if (f & nsIWebProgressListener::STATE_IS_INSECURE)
   {
     f -= nsIWebProgressListener::STATE_IS_INSECURE;
-    info.Append("IS_INSECURE ");
+    info.AppendLiteral("IS_INSECURE ");
   }
   if (f & nsIWebProgressListener::STATE_IS_BROKEN)
   {
     f -= nsIWebProgressListener::STATE_IS_BROKEN;
-    info.Append("IS_BROKEN ");
+    info.AppendLiteral("IS_BROKEN ");
   }
   if (f & nsIWebProgressListener::STATE_IS_SECURE)
   {
     f -= nsIWebProgressListener::STATE_IS_SECURE;
-    info.Append("IS_SECURE ");
+    info.AppendLiteral("IS_SECURE ");
   }
   if (f & nsIWebProgressListener::STATE_SECURE_HIGH)
   {
     f -= nsIWebProgressListener::STATE_SECURE_HIGH;
-    info.Append("SECURE_HIGH ");
+    info.AppendLiteral("SECURE_HIGH ");
   }
   if (f & nsIWebProgressListener::STATE_RESTORING)
   {
     f -= nsIWebProgressListener::STATE_RESTORING;
-    info.Append("STATE_RESTORING ");
+    info.AppendLiteral("STATE_RESTORING ");
   }
 
   if (f > 0)
   {
-    info.Append("f contains unknown flag!");
+    info.AppendLiteral("f contains unknown flag!");
   }
 
   PR_LOG(gSecureDocLog, PR_LOG_DEBUG,

@@ -2339,10 +2339,10 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
   uint32_t flags = infoObject->GetProviderFlags();
   nsAutoCString peerId;
   if (flags & nsISocketProvider::ANONYMOUS_CONNECT) { // See bug 466080
-    peerId.Append("anon:");
+    peerId.AppendLiteral("anon:");
   }
   if (flags & nsISocketProvider::NO_PERMANENT_STORAGE) {
-    peerId.Append("private:");
+    peerId.AppendLiteral("private:");
   }
   peerId.Append(host);
   peerId.Append(':');

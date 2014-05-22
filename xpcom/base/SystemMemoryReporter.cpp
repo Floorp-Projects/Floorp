@@ -255,11 +255,11 @@ private:
             // as path separators.  Consumers of this reporter (such as
             // about:memory) have to undo this change.
             processName.ReplaceChar('/', '\\');
-            processName.Append(", ");
+            processName.AppendLiteral(", ");
           }
           fclose(f);
         }
-        processName.Append("pid=");
+        processName.AppendLiteral("pid=");
         processName.Append(pidStr);
         processName.Append(")");
 
@@ -299,7 +299,7 @@ private:
 
       nsAutoCString desc("This is the sum of all processes' '");
       desc.Append(kindPathSuffixes[i]);
-      desc.Append("' numbers.");
+      desc.AppendLiteral("' numbers.");
 
       REPORT(path, processSizes.mSizes[i], desc);
     }
@@ -397,27 +397,28 @@ private:
     GetBasename(absPath, basename);
 
     if (basename.EqualsLiteral("[heap]")) {
-      aName.Append("anonymous/brk-heap");
-      aDesc.Append("Memory in anonymous mappings within the boundaries "
-                   "defined by brk() / sbrk().  This is likely to be just "
-                   "a portion of the application's heap; the remainder "
-                   "lives in other anonymous mappings. This corresponds to "
-                   "'[heap]' in /proc/<pid>/smaps.");
+      aName.AppendLiteral("anonymous/brk-heap");
+      aDesc.AppendLiteral(
+        "Memory in anonymous mappings within the boundaries defined by "
+        "brk() / sbrk().  This is likely to be just a portion of the "
+        "application's heap; the remainder lives in other anonymous mappings. "
+        "This corresponds to '[heap]' in /proc/<pid>/smaps.");
       *aProcessSizeKind = AnonymousBrkHeap;
 
     } else if (basename.EqualsLiteral("[stack]")) {
-      aName.Append("main-thread-stack");
-      aDesc.Append("The stack size of the process's main thread.  This "
-                   "corresponds to '[stack]' in /proc/<pid>/smaps.");
+      aName.AppendLiteral("main-thread-stack");
+      aDesc.AppendLiteral(
+        "The stack size of the process's main thread.  This corresponds to "
+        "'[stack]' in /proc/<pid>/smaps.");
       *aProcessSizeKind = MainThreadStack;
 
     } else if (basename.EqualsLiteral("[vdso]")) {
-      aName.Append("vdso");
-      aDesc.Append("The virtual dynamically-linked shared object, also known "
-                   "as the 'vsyscall page'. This is a memory region mapped by "
-                   "the operating system for the purpose of allowing processes "
-                   "to perform some privileged actions without the overhead of "
-                   "a syscall.");
+      aName.AppendLiteral("vdso");
+      aDesc.AppendLiteral(
+        "The virtual dynamically-linked shared object, also known as the "
+        "'vsyscall page'. This is a memory region mapped by the operating "
+        "system for the purpose of allowing processes to perform some "
+        "privileged actions without the overhead of a syscall.");
       *aProcessSizeKind = Vdso;
 
     } else if (!IsAnonymous(basename)) {
@@ -428,7 +429,7 @@ private:
       // its dirname contains "/lib", or if the basename ends with ".so".
       if (EndsWithLiteral(basename, ".so") ||
           (basename.Find(".so") != -1 && dirname.Find("/lib") != -1)) {
-        aName.Append("shared-libraries/");
+        aName.AppendLiteral("shared-libraries/");
 
         if (strncmp(aPerms, "r-x", 3) == 0) {
           *aProcessSizeKind = SharedLibrariesRX;
@@ -441,11 +442,11 @@ private:
         }
 
       } else {
-        aName.Append("other-files/");
+        aName.AppendLiteral("other-files/");
         if (EndsWithLiteral(basename, ".xpi")) {
-          aName.Append("extensions/");
+          aName.AppendLiteral("extensions/");
         } else if (dirname.Find("/fontconfig") != -1) {
-          aName.Append("fontconfig/");
+          aName.AppendLiteral("fontconfig/");
         }
         *aProcessSizeKind = OtherFiles;
       }
@@ -454,20 +455,21 @@ private:
       aDesc.Append(absPath);
 
     } else {
-      aName.Append("anonymous/outside-brk");
-      aDesc.Append("Memory in anonymous mappings outside the boundaries "
-                   "defined by brk() / sbrk().");
+      aName.AppendLiteral("anonymous/outside-brk");
+      aDesc.AppendLiteral(
+        "Memory in anonymous mappings outside the boundaries defined by "
+        "brk() / sbrk().");
       *aProcessSizeKind = AnonymousOutsideBrk;
     }
 
-    aName.Append("/[");
+    aName.AppendLiteral("/[");
     aName.Append(aPerms);
     aName.Append("]");
 
     // Append the permissions.  This is useful for non-verbose mode in
     // about:memory when the filename is long and goes of the right side of the
     // window.
-    aDesc.Append(" [");
+    aDesc.AppendLiteral(" [");
     aDesc.Append(aPerms);
     aDesc.Append("]");
   }

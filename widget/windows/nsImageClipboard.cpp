@@ -244,7 +244,7 @@ nsImageFromClipboard ::GetEncodedImageStream (unsigned char * aClipboardData, co
 
       // Map image/jpg to image/jpeg (which is how the encoder is registered).
       if (strcmp(aMIMEFormat, kJPGImageMime) == 0)
-        encoderCID.Append("image/jpeg");
+        encoderCID.AppendLiteral("image/jpeg");
       else
         encoderCID.Append(aMIMEFormat);
       nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(encoderCID.get(), &rv);

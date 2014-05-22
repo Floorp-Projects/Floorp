@@ -1009,7 +1009,7 @@ static int32_t kShift = 6;
         // service. Now that it's a member we can be more cleverer.
 
         s.Truncate();
-        s.Append("rdf:#$");
+        s.AppendLiteral("rdf:#$");
 
         uint32_t id = ++gCounter;
         while (id) {

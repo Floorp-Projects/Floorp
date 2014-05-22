@@ -285,18 +285,18 @@ nsGIOInputStream::DoOpenDirectory()
   mDirListPtr = mDirList;
 
   // Write base URL (make sure it ends with a '/')
-  mDirBuf.Append("300: ");
+  mDirBuf.AppendLiteral("300: ");
   mDirBuf.Append(mSpec);
   if (mSpec.get()[mSpec.Length() - 1] != '/')
     mDirBuf.Append('/');
   mDirBuf.Append('\n');
 
   // Write column names
-  mDirBuf.Append("200: filename content-length last-modified file-type\n");
+  mDirBuf.AppendLiteral("200: filename content-length last-modified file-type\n");
 
   // Write charset (assume UTF-8)
   // XXX is this correct?
-  mDirBuf.Append("301: UTF-8\n");
+  mDirBuf.AppendLiteral("301: UTF-8\n");
   SetContentTypeOfChannel(APPLICATION_HTTP_INDEX_FORMAT);
   return NS_OK;
 }
@@ -512,13 +512,13 @@ nsGIOInputStream::DoRead(char *aBuf, uint32_t aCount, uint32_t *aCountRead)
         switch (g_file_info_get_file_type(info))
         {
           case G_FILE_TYPE_REGULAR:
-            mDirBuf.Append("FILE ");
+            mDirBuf.AppendLiteral("FILE ");
             break;
           case G_FILE_TYPE_DIRECTORY:
-            mDirBuf.Append("DIRECTORY ");
+            mDirBuf.AppendLiteral("DIRECTORY ");
             break;
           case G_FILE_TYPE_SYMBOLIC_LINK:
-            mDirBuf.Append("SYMBOLIC-LINK ");
+            mDirBuf.AppendLiteral("SYMBOLIC-LINK ");
             break;
           default:
             break;

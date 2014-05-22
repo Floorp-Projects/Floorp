@@ -197,7 +197,7 @@ Classifier::TableRequest(nsACString& aResult)
     ChunkSet &subs = store->SubChunks();
 
     if (adds.Length() > 0) {
-      aResult.Append("a:");
+      aResult.AppendLiteral("a:");
       nsAutoCString addList;
       adds.Serialize(addList);
       aResult.Append(addList);
@@ -206,7 +206,7 @@ Classifier::TableRequest(nsACString& aResult)
     if (subs.Length() > 0) {
       if (adds.Length() > 0)
         aResult.Append(':');
-      aResult.Append("s:");
+      aResult.AppendLiteral("s:");
       nsAutoCString subList;
       subs.Serialize(subList);
       aResult.Append(subList);
