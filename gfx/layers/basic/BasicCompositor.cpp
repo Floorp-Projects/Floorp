@@ -374,6 +374,12 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
 }
 
 void
+BasicCompositor::ClearRect(const gfx::Rect& aRect)
+{
+  mRenderTarget->mDrawTarget->ClearRect(aRect);
+}
+
+void
 BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
                             const gfx::Rect *aClipRectIn,
                             const gfx::Matrix& aTransform,

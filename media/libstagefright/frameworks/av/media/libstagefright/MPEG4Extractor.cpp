@@ -15,6 +15,7 @@
  */
 
 //#define LOG_NDEBUG 0
+#undef LOG_TAG
 #define LOG_TAG "MPEG4Extractor"
 #include <utils/Log.h>
 
@@ -38,7 +39,7 @@
 #include <media/stagefright/MetaData.h>
 #include <utils/String8.h>
 
-namespace android {
+namespace stagefright {
 
 class MPEG4Source : public MediaSource {
 public:
@@ -1248,6 +1249,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             ALOGV("*** coding='%s' %d channels, size %d, rate %d\n",
                    chunk, num_channels, sample_size, sample_rate);
             mLastTrack->meta->setInt32(kKeyChannelCount, num_channels);
+            mLastTrack->meta->setInt32(kKeySampleSize, sample_size);
             mLastTrack->meta->setInt32(kKeySampleRate, sample_rate);
 
             off64_t stop_offset = *offset + chunk_size;
@@ -2278,6 +2280,10 @@ status_t MPEG4Extractor::updateAudioTrackInfoFromESDS_MPEG4Audio(
         objectType = 32 + br.getBits(6);
     }
 
+    if (objectType >= 1 && objectType <= 4) {
+      mLastTrack->meta->setInt32(kKeyAACProfile, objectType);
+    }
+
     uint32_t freqIndex = br.getBits(4);
 
     int32_t sampleRate = 0;
@@ -3154,6 +3160,7 @@ status_t MPEG4Source::read(
             CHECK(mBuffer != NULL);
             mBuffer->set_range(0, size);
             mBuffer->meta_data()->clear();
+            mBuffer->meta_data()->setInt64(kKey64BitFileOffset, offset);
             mBuffer->meta_data()->setInt64(
                     kKeyTime, ((int64_t)cts * 1000000) / mTimescale);
 
@@ -3276,6 +3283,7 @@ status_t MPEG4Source::read(
         }
 
         mBuffer->meta_data()->clear();
+        mBuffer->meta_data()->setInt64(kKey64BitFileOffset, offset);
         mBuffer->meta_data()->setInt64(
                 kKeyTime, ((int64_t)cts * 1000000) / mTimescale);
 
@@ -3360,6 +3368,18 @@ status_t MPEG4Source::fragmentedRead(
             // move to next fragment
             Sample lastSample = mCurrentSamples[mCurrentSamples.size() - 1];
             off64_t nextMoof = mNextMoofOffset; // lastSample.offset + lastSample.size;
+
+            // If we're pointing to a sidx box then we skip it.
+            uint32_t hdr[2];
+            if (mDataSource->readAt(nextMoof, hdr, 8) < 8) {
+                return ERROR_END_OF_STREAM;
+            }
+            uint64_t chunk_size = ntohl(hdr[0]);
+            uint32_t chunk_type = ntohl(hdr[1]);
+            if (chunk_type == FOURCC('s', 'i', 'd', 'x')) {
+                nextMoof += chunk_size;
+            }
+
             mCurrentMoofOffset = nextMoof;
             mCurrentSamples.clear();
             mCurrentSampleIndex = 0;
@@ -3626,6 +3646,7 @@ static bool isCompatibleBrand(uint32_t fourcc) {
     return false;
 }
 
+#if 0
 // Attempt to actually parse the 'ftyp' atom and determine if a suitable
 // compatible brand is present.
 // Also try to identify where this file's metadata ends
@@ -3756,5 +3777,8 @@ bool SniffMPEG4(
 
     return false;
 }
+#endif
 
-}  // namespace android
+}  // namespace stagefright
+
+#undef LOG_TAG

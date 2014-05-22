@@ -847,7 +847,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
       if (mark && array->Item(i).GetUnit() != eCSSUnit_Null) {
         if (unit == eCSSUnit_Array &&
             eCSSProperty_transition_timing_function != aProperty)
-          aResult.AppendLiteral(" ");
+          aResult.Append(' ');
         else
           aResult.AppendLiteral(", ");
       }
@@ -877,7 +877,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
     }
     if (eCSSUnit_Array == unit &&
         aProperty == eCSSProperty_transition_timing_function) {
-      aResult.AppendLiteral(")");
+      aResult.Append(')');
     }
   }
   /* Although Function is backed by an Array, we'll handle it separately
@@ -925,7 +925,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
     } else {
       MOZ_ASSERT(false, "should no longer have non-enumerated functions");
     }
-    aResult.AppendLiteral("(");
+    aResult.Append('(');
 
     /* Now, step through the function contents, writing each of them as we go. */
     for (size_t index = 1; index < array->Count(); ++index) {
@@ -938,7 +938,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
     }
 
     /* Finally, append the closing parenthesis. */
-    aResult.AppendLiteral(")");
+    aResult.Append(')');
   }
   else if (IsCalcUnit()) {
     NS_ABORT_IF_FALSE(GetUnit() == eCSSUnit_Calc, "unexpected unit");
@@ -1121,17 +1121,17 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
     }
   }
   else if (eCSSUnit_URL == unit || eCSSUnit_Image == unit) {
-    aResult.Append(NS_LITERAL_STRING("url("));
+    aResult.AppendLiteral("url(");
     nsStyleUtil::AppendEscapedCSSString(
       nsDependentString(GetOriginalURLValue()), aResult);
-    aResult.Append(NS_LITERAL_STRING(")"));
+    aResult.Append(')');
   }
   else if (eCSSUnit_Element == unit) {
-    aResult.Append(NS_LITERAL_STRING("-moz-element(#"));
+    aResult.AppendLiteral("-moz-element(#");
     nsAutoString tmpStr;
     GetStringValue(tmpStr);
     nsStyleUtil::AppendEscapedCSSIdent(tmpStr, aResult);
-    aResult.Append(NS_LITERAL_STRING(")"));
+    aResult.Append(')');
   }
   else if (eCSSUnit_Percent == unit) {
     aResult.AppendFloat(GetPercentValue() * 100.0f);
@@ -1172,7 +1172,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
 
         if (gradient->GetRadialSize().GetUnit() != eCSSUnit_None) {
           if (needSep) {
-            aResult.AppendLiteral(" ");
+            aResult.Append(' ');
           }
           NS_ABORT_IF_FALSE(gradient->GetRadialSize().GetUnit() ==
                             eCSSUnit_Enumerated,
@@ -1189,7 +1189,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
         gradient->GetRadiusX().AppendToString(aProperty, aResult,
                                               aSerialization);
         if (gradient->GetRadiusY().GetUnit() != eCSSUnit_None) {
-          aResult.AppendLiteral(" ");
+          aResult.Append(' ');
           gradient->GetRadiusY().AppendToString(aProperty, aResult,
                                                 aSerialization);
         }
@@ -1205,12 +1205,12 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
                           "unexpected unit");
         aResult.AppendLiteral("to");
         if (!(gradient->mBgPos.mXValue.GetIntValue() & NS_STYLE_BG_POSITION_CENTER)) {
-          aResult.AppendLiteral(" ");
+          aResult.Append(' ');
           gradient->mBgPos.mXValue.AppendToString(eCSSProperty_background_position,
                                                   aResult, aSerialization);
         }
         if (!(gradient->mBgPos.mYValue.GetIntValue() & NS_STYLE_BG_POSITION_CENTER)) {
-          aResult.AppendLiteral(" ");
+          aResult.Append(' ');
           gradient->mBgPos.mYValue.AppendToString(eCSSProperty_background_position,
                                                   aResult, aSerialization);
         }
@@ -1223,7 +1223,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
         gradient->mBgPos.mYValue.GetUnit() != eCSSUnit_None ||
         gradient->mAngle.GetUnit() != eCSSUnit_None) {
       if (needSep) {
-        aResult.AppendLiteral(" ");
+        aResult.Append(' ');
       }
       if (gradient->mIsRadial && !gradient->mIsLegacySyntax) {
         aResult.AppendLiteral("at ");
@@ -1231,12 +1231,12 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
       if (gradient->mBgPos.mXValue.GetUnit() != eCSSUnit_None) {
         gradient->mBgPos.mXValue.AppendToString(eCSSProperty_background_position,
                                                 aResult, aSerialization);
-        aResult.AppendLiteral(" ");
+        aResult.Append(' ');
       }
       if (gradient->mBgPos.mXValue.GetUnit() != eCSSUnit_None) {
         gradient->mBgPos.mYValue.AppendToString(eCSSProperty_background_position,
                                                 aResult, aSerialization);
-        aResult.AppendLiteral(" ");
+        aResult.Append(' ');
       }
       if (gradient->mAngle.GetUnit() != eCSSUnit_None) {
         NS_ABORT_IF_FALSE(gradient->mIsLegacySyntax,
@@ -1263,7 +1263,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
         AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(intValue,
                                nsCSSProps::kRadialGradientShapeKTable),
                            aResult);
-        aResult.AppendLiteral(" ");
+        aResult.Append(' ');
       }
 
       if (gradient->GetRadialSize().GetUnit() != eCSSUnit_None) {
@@ -1285,7 +1285,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
       gradient->mStops[i].mColor.AppendToString(aProperty, aResult,
                                                 aSerialization);
       if (gradient->mStops[i].mLocation.GetUnit() != eCSSUnit_None) {
-        aResult.AppendLiteral(" ");
+        aResult.Append(' ');
         gradient->mStops[i].mLocation.AppendToString(aProperty, aResult,
                                                      aSerialization);
       }
@@ -1295,7 +1295,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
       aResult.AppendLiteral(", ");
     }
 
-    aResult.AppendLiteral(")");
+    aResult.Append(')');
   } else if (eCSSUnit_TokenStream == unit) {
     nsCSSProperty shorthand = mValue.mTokenStream->mShorthandPropertyID;
     if (shorthand == eCSSProperty_UNKNOWN ||
@@ -1695,10 +1695,10 @@ AppendGridTemplateToString(const nsCSSValueList* val,
 
     } else if (unit == eCSSUnit_List || unit == eCSSUnit_ListDep) {
       // Non-empty <line-names>
-      aResult.AppendLiteral("(");
+      aResult.Append('(');
       AppendValueListToString(val->mValue.GetListValue(), aProperty,
                               aResult, aSerialization);
-      aResult.AppendLiteral(")");
+      aResult.Append(')');
 
     } else {
       // <track-size>

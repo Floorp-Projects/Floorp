@@ -154,7 +154,7 @@ gfxFcFontEntry::RealFaceName()
             NS_ConvertUTF8toUTF16 result((const char*)name);
             if (FcPatternGetString(mPatterns[0],
                                    FC_STYLE, 0, &name) == FcResultMatch) {
-                result.AppendLiteral(" ");
+                result.Append(' ');
                 AppendUTF8toUTF16((const char*)name, result);
             }
             return result;
@@ -1815,7 +1815,7 @@ gfxFcFont::GetOrMakeFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern,
 
                 AppendUTF8toUTF16(gfxFontconfigUtils::ToCString(fc_file), name);
                 if (index != 0) {
-                    name.AppendLiteral("/");
+                    name.Append('/');
                     name.AppendInt(index);
                 }
             }

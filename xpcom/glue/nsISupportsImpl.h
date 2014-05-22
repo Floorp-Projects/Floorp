@@ -138,7 +138,7 @@ public:
     : mRefCntAndFlags(0)
   {}
 
-  nsCycleCollectingAutoRefCnt(uintptr_t aValue)
+  explicit nsCycleCollectingAutoRefCnt(uintptr_t aValue)
     : mRefCntAndFlags(aValue << NS_NUMBER_OF_FLAGS_IN_REFCNT)
   {
   }
@@ -233,7 +233,7 @@ class nsAutoRefCnt {
 
  public:
     nsAutoRefCnt() : mValue(0) {}
-    nsAutoRefCnt(nsrefcnt aValue) : mValue(aValue) {}
+    explicit nsAutoRefCnt(nsrefcnt aValue) : mValue(aValue) {}
 
     // only support prefix increment/decrement
     nsrefcnt operator++() { return ++mValue; }

@@ -1872,7 +1872,7 @@ nsComponentManagerImpl::AddBootstrappedManifestLocation(nsIFile* aLocation)
   if (NS_FAILED(rv))
     return rv;
 
-  if (Substring(path, path.Length() - 4).Equals(NS_LITERAL_STRING(".xpi"))) {
+  if (Substring(path, path.Length() - 4).EqualsLiteral(".xpi")) {
     return XRE_AddJarManifestLocation(NS_BOOTSTRAPPED_LOCATION, aLocation);
   }
 
@@ -1897,7 +1897,7 @@ nsComponentManagerImpl::RemoveBootstrappedManifestLocation(nsIFile* aLocation)
   nsComponentManagerImpl::ComponentLocation elem;
   elem.type = NS_BOOTSTRAPPED_LOCATION;
 
-  if (Substring(path, path.Length() - 4).Equals(NS_LITERAL_STRING(".xpi"))) {
+  if (Substring(path, path.Length() - 4).EqualsLiteral(".xpi")) {
     elem.location.Init(aLocation, "chrome.manifest");
   } else {
     nsCOMPtr<nsIFile> lf = CloneAndAppend(aLocation, NS_LITERAL_CSTRING("chrome.manifest"));

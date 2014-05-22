@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=999999
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 999999</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=999999">Mozilla Bug 999999</a>
+<p id="display"></p>
+<div id="content">
+<div id="shadowhost"></div>
+</div>
+<pre id="test">
+</pre>
+<script type="application/javascript">
+
+/** Test for Bug 999999 **/
+var host = document.getElementById("shadowhost");
+
+// Test destination insertion points of node distributed to shadow element.
+var olderShadowRoot = host.createShadowRoot();
+var youngerShadowRoot = host.createShadowRoot();
+
+var shadowElem = document.createElement("shadow");
+youngerShadowRoot.appendChild(shadowElem);
+
+var span = document.createElement("span");
+olderShadowRoot.appendChild(span);
+
+is(span.getDestinationInsertionPoints().length, 1, "Child of ShadowRoot should be distributed to shadow insertion point.");
+is(span.getDestinationInsertionPoints()[0], shadowElem, "Shadow element should be in destination insertion point list.");
+
+// Test destination insertion points of node removed from tree.
+olderShadowRoot.removeChild(span);
+is(span.getDestinationInsertionPoints().length, 0, "Node removed from tree should no longer be distributed.");
+
+// Test destination insertion points of fallback content being reprojected into a shadow element.
+var content = document.createElement("content");
+var fallback = document.createElement("span");
+
+content.appendChild(fallback);
+olderShadowRoot.appendChild(content);
+
+is(fallback.getDestinationInsertionPoints().length, 2, "The fallback content should have 2 destination insertion points, the parent content and the shadow element to which it is reprojected.");
+is(fallback.getDestinationInsertionPoints()[0], content, "First destination of the fallback content should be the parent content element.");
+is(fallback.getDestinationInsertionPoints()[1], shadowElem, "Second destination of the fallback content should be the shadow element to which the element is reprojected.");
+
+// Test destination insertion points of fallback content being removed from tree.
+content.removeChild(fallback);
+is(fallback.getDestinationInsertionPoints().length, 0, "The content should no longer be distributed to any nodes because it is no longer fallback content.");
+
+// Test destination insertion points of distributed content after removing shadow insertion point.
+var div = document.createElement("div");
+olderShadowRoot.appendChild(div);
+is(div.getDestinationInsertionPoints().length, 1, "Children in older shadow root should be distributed to shadow insertion point.");
+is(div.getDestinationInsertionPoints()[0], shadowElem, "Destination insertion point should include shadow element.");
+
+youngerShadowRoot.removeChild(shadowElem);
+is(div.getDestinationInsertionPoints().length, 0, "Destination insertion points should be empty after removing shadow element.");
+
+</script>
+</body>
+</html>

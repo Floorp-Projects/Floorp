@@ -1640,7 +1640,7 @@ static PLDHashOperator ListToBeRemovedPlaceIds(PlaceHashKey* aEntry,
   if (visits.Length() == aEntry->visitCount && !aEntry->bookmarked) {
     nsCString* list = static_cast<nsCString*>(aIdsList);
     if (!list->IsEmpty())
-      list->AppendLiteral(",");
+      list->Append(',');
     list->AppendInt(visits[0].placeId);
   }
   return PL_DHASH_NEXT;
@@ -1844,7 +1844,7 @@ private:
     nsCString query("DELETE FROM moz_places "
                     "WHERE id IN (");
     query.Append(placeIdsToRemove);
-    query.AppendLiteral(")");
+    query.Append(')');
 
     nsCOMPtr<mozIStorageStatement> stmt = mHistory->GetStatement(query);
     NS_ENSURE_STATE(stmt);

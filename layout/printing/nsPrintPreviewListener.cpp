@@ -170,7 +170,7 @@ nsPrintPreviewListener::HandleEvent(nsIDOMEvent* aEvent)
       {
         nsAutoString eventString;
         aEvent->GetType(eventString);
-        if (eventString == NS_LITERAL_STRING("keydown")) {
+        if (eventString.EqualsLiteral("keydown")) {
           // Handle tabbing explicitly here since we don't want focus ending up
           // inside the content document, bug 244128.
           nsIDocument* doc = content->GetCurrentDoc();

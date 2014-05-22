@@ -555,7 +555,7 @@ nsTreeContentView::CycleHeader(nsITreeColumn* aCol)
 
         nsAutoString hints;
         column->GetAttr(kNameSpaceID_None, nsGkAtoms::sorthints, hints);
-        sortdirection.AppendLiteral(" ");
+        sortdirection.Append(' ');
         sortdirection += hints;
 
         nsCOMPtr<nsIDOMNode> rootnode = do_QueryInterface(mRoot);

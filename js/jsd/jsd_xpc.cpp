@@ -1911,7 +1911,7 @@ jsdStackFrame::GetFunctionName(nsACString &_rval)
     if (str)
         return AssignToJSString(mCx, &_rval, str);
     
-    _rval.Assign("anonymous");
+    _rval.AssignLiteral("anonymous");
     return NS_OK;
 }
 

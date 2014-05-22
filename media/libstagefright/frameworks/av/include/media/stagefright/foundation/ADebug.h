@@ -24,7 +24,7 @@
 #include <media/stagefright/foundation/AString.h>
 #include <utils/Log.h>
 
-namespace android {
+namespace stagefright {
 
 #define LITERAL_TO_STRING_INTERNAL(x)    #x
 #define LITERAL_TO_STRING(x) LITERAL_TO_STRING_INTERNAL(x)
@@ -80,7 +80,7 @@ MAKE_COMPARATOR(GT,>)
             __FILE__ ":" LITERAL_TO_STRING(__LINE__)            \
                 " Should not be here.");
 
-}  // namespace android
+}  // namespace stagefright
 
 #endif  // A_DEBUG_H_
 

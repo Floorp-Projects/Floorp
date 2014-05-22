@@ -1973,7 +1973,7 @@ GetBrandName(nsXPIDLString& brandName)
     }
 
     if (brandName.IsEmpty()) {
-        brandName.Assign(NS_LITERAL_STRING("Mozilla"));
+        brandName.AssignLiteral("Mozilla");
     }
 }
 

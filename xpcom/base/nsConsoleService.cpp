@@ -210,7 +210,7 @@ nsConsoleService::LogMessageWithMode(nsIConsoleMessage* aMessage,
     if (IsDebuggerPresent()) {
       nsString msg;
       aMessage->GetMessageMoz(getter_Copies(msg));
-      msg.AppendLiteral("\n");
+      msg.Append('\n');
       OutputDebugStringW(msg.get());
     }
 #endif

@@ -116,11 +116,11 @@ BlockingResourceBase::CheckAcquire(const CallStack& aCallContext)
 
     if (maybeImminent) {
         fputs("\n###!!! Deadlock may happen NOW!\n\n", stderr);
-        out.Append("\n###!!! Deadlock may happen NOW!\n\n");
+        out.AppendLiteral("\n###!!! Deadlock may happen NOW!\n\n");
     } else {
         fputs("\nDeadlock may happen for some other execution\n\n",
               stderr);
-        out.Append("\nDeadlock may happen for some other execution\n\n");
+        out.AppendLiteral("\nDeadlock may happen for some other execution\n\n");
     }
 
     // XXX can customize behavior on whether we /think/ deadlock is

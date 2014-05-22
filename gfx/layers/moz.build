@@ -279,6 +279,7 @@ UNIFIED_SOURCES += [
     'ImageLayers.cpp',
     'ipc/AsyncTransactionTracker.cpp',
     'ipc/CompositableTransactionParent.cpp',
+    'ipc/CompositorBench.cpp',
     'ipc/CompositorChild.cpp',
     'ipc/CompositorParent.cpp',
     'ipc/ImageBridgeChild.cpp',

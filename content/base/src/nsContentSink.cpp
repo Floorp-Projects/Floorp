@@ -1066,7 +1066,7 @@ nsContentSink::ProcessOfflineManifest(const nsAString& aManifestSpec)
         nsAutoCString method;
         rv = httpChannel->GetRequestMethod(method);
         if (NS_SUCCEEDED(rv))
-          fetchedWithHTTPGetOrEquiv = method.Equals("GET");
+          fetchedWithHTTPGetOrEquiv = method.EqualsLiteral("GET");
       }
 
       rv = SelectDocAppCache(applicationCache, manifestURI,

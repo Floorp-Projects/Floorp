@@ -189,7 +189,7 @@ GLBlitTextureImageHelper::SetBlitFramebufferForDestTexture(GLuint aTexture)
     GLenum result = mGL->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     if (aTexture && (result != LOCAL_GL_FRAMEBUFFER_COMPLETE)) {
         nsAutoCString msg;
-        msg.Append("Framebuffer not complete -- error 0x");
+        msg.AppendLiteral("Framebuffer not complete -- error 0x");
         msg.AppendInt(result, 16);
         // Note: if you are hitting this, it is likely that
         // your texture is not texture complete -- that is, you

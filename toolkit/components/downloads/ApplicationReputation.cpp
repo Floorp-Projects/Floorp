@@ -284,7 +284,7 @@ PendingDBLookup::LookupSpecInternal(const nsACString& aSpec)
   nsAutoCString blocklist;
   Preferences::GetCString(PREF_DOWNLOAD_BLOCK_TABLE, &blocklist);
   if (!mAllowlistOnly && !blocklist.IsEmpty()) {
-    tables.Append(",");
+    tables.Append(',');
     tables.Append(blocklist);
   }
   return dbService->Lookup(principal, tables, this);
@@ -415,11 +415,11 @@ PendingLookup::EscapeCertificateAttribute(const nsACString& aAttribute)
   escaped.SetCapacity(aAttribute.Length());
   for (unsigned int i = 0; i < aAttribute.Length(); ++i) {
     if (aAttribute.Data()[i] == '%') {
-      escaped.Append("%25");
+      escaped.AppendLiteral("%25");
     } else if (aAttribute.Data()[i] == '/') {
-      escaped.Append("%2F");
+      escaped.AppendLiteral("%2F");
     } else if (aAttribute.Data()[i] == ' ') {
-      escaped.Append("%20");
+      escaped.AppendLiteral("%20");
     } else {
       escaped.Append(aAttribute.Data()[i]);
     }
@@ -465,7 +465,7 @@ PendingLookup::GenerateWhitelistStringsForPair(
   rv = certificate->GetCommonName(commonName);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!commonName.IsEmpty()) {
-    whitelistString.Append("/CN=");
+    whitelistString.AppendLiteral("/CN=");
     whitelistString.Append(
       EscapeCertificateAttribute(NS_ConvertUTF16toUTF8(commonName)));
   }
@@ -474,7 +474,7 @@ PendingLookup::GenerateWhitelistStringsForPair(
   rv = certificate->GetOrganization(organization);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!organization.IsEmpty()) {
-    whitelistString.Append("/O=");
+    whitelistString.AppendLiteral("/O=");
     whitelistString.Append(
       EscapeCertificateAttribute(NS_ConvertUTF16toUTF8(organization)));
   }
@@ -483,7 +483,7 @@ PendingLookup::GenerateWhitelistStringsForPair(
   rv = certificate->GetOrganizationalUnit(organizationalUnit);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!organizationalUnit.IsEmpty()) {
-    whitelistString.Append("/OU=");
+    whitelistString.AppendLiteral("/OU=");
     whitelistString.Append(
       EscapeCertificateAttribute(NS_ConvertUTF16toUTF8(organizationalUnit)));
   }

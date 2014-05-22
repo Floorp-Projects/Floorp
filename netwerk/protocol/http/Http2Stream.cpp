@@ -249,13 +249,13 @@ Http2Stream::CreatePushHashKey(const nsCString &scheme,
                                nsCString &outKey)
 {
   outOrigin = scheme;
-  outOrigin.Append(NS_LITERAL_CSTRING("://"));
+  outOrigin.AppendLiteral("://");
   outOrigin.Append(hostHeader);
 
   outKey = outOrigin;
-  outKey.Append(NS_LITERAL_CSTRING("/[http2."));
+  outKey.AppendLiteral("/[http2.");
   outKey.AppendInt(serial);
-  outKey.Append(NS_LITERAL_CSTRING("]"));
+  outKey.Append(']');
   outKey.Append(pathInfo);
 }
 
@@ -520,7 +520,7 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
     // all header names are lower case in spdy
     ToLowerCase(name);
 
-    if (name.Equals("content-length")) {
+    if (name.EqualsLiteral("content-length")) {
       nsCString *val = new nsCString();
       int32_t valueIndex = colonIndex + 1;
       while (valueIndex < crlfIndex && beginBuffer[valueIndex] == ' ')
@@ -876,7 +876,7 @@ Http2Stream::ConvertResponseHeaders(Http2Decompressor *decompressor,
   }
 
   aHeadersIn.Truncate();
-  aHeadersOut.Append(NS_LITERAL_CSTRING("X-Firefox-Spdy: " NS_HTTP2_DRAFT_TOKEN "\r\n\r\n"));
+  aHeadersOut.Append("X-Firefox-Spdy: " NS_HTTP2_DRAFT_TOKEN "\r\n\r\n");
   LOG (("decoded response headers are:\n%s", aHeadersOut.BeginReading()));
   if (mIsTunnel) {
     aHeadersOut.Truncate();
@@ -916,7 +916,7 @@ Http2Stream::ConvertPushHeaders(Http2Decompressor *decompressor,
   }
 
   decompressor->GetMethod(method);
-  if (!method.Equals(NS_LITERAL_CSTRING("GET"))) {
+  if (!method.EqualsLiteral("GET")) {
     LOG3(("Http2Stream::ConvertPushHeaders %p Error - method not supported: %s\n",
           this, method.get()));
     return NS_ERROR_NOT_IMPLEMENTED;

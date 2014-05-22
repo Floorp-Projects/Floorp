@@ -1843,7 +1843,7 @@ nsXULContentBuilder::InsertSortedNode(nsIContent* aContainer,
         mRoot->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, sort);
         mRoot->GetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection, sortDirection);
         mRoot->GetAttr(kNameSpaceID_None, nsGkAtoms::sorthints, sortHints);
-        sortDirection.AppendLiteral(" ");
+        sortDirection += ' ';
         sortDirection += sortHints;
         rv = XULSortServiceImpl::InitializeSortState(mRoot, aContainer,
                                                      sort, sortDirection, &mSortState);

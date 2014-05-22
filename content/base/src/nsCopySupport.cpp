@@ -369,7 +369,7 @@ nsCopySupport::GetContents(const nsACString& aMimeType, uint32_t aFlags, nsISele
 
   uint32_t flags = aFlags | nsIDocumentEncoder::SkipInvisibleContent;
   
-  if (aMimeType.Equals("text/plain"))
+  if (aMimeType.EqualsLiteral("text/plain"))
     flags |= nsIDocumentEncoder::OutputPreformatted;
 
   NS_ConvertASCIItoUTF16 unicodeMimeType(aMimeType);

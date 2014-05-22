@@ -170,8 +170,8 @@ protected:
                               nsIScriptContext *aBoundContext, nsIAtom *aName,
                               JS::MutableHandle<JSObject*> aHandler);
   static int32_t KeyToMask(int32_t key);
-  
-  static int32_t kAccelKey;
+  static int32_t AccelKeyMask();
+
   static int32_t kMenuAccessKey;
   static void InitAccessKeys();
 
