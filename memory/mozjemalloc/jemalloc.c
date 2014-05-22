@@ -595,10 +595,6 @@ static const bool isthreaded = true;
 #define	RUN_MAX_OVRHD		0x0000003dU
 #define	RUN_MAX_OVRHD_RELAX	0x00001800U
 
-/* Put a cap on small object run size.  This overrides RUN_MAX_OVRHD. */
-#define	RUN_MAX_SMALL_2POW	15
-#define	RUN_MAX_SMALL		(1U << RUN_MAX_SMALL_2POW)
-
 /*
  * Hyper-threaded CPUs may need a special instruction inside spin loops in
  * order to yield to another virtual CPU.  If no such instruction is defined
@@ -3911,7 +3907,6 @@ arena_bin_run_size_calc(arena_bin_t *bin, size_t min_run_size)
 
 	assert(min_run_size >= pagesize);
 	assert(min_run_size <= arena_maxclass);
-	assert(min_run_size <= RUN_MAX_SMALL);
 
 	/*
 	 * Calculate known-valid settings before entering the run_size
@@ -3957,7 +3952,7 @@ arena_bin_run_size_calc(arena_bin_t *bin, size_t min_run_size)
 			    bin->reg_size);
 		} while (sizeof(arena_run_t) + (sizeof(unsigned) *
 		    (try_mask_nelms - 1)) > try_reg0_offset);
-	} while (try_run_size <= arena_maxclass && try_run_size <= RUN_MAX_SMALL
+	} while (try_run_size <= arena_maxclass
 	    && RUN_MAX_OVRHD * (bin->reg_size << 3) > RUN_MAX_OVRHD_RELAX
 	    && (try_reg0_offset << RUN_BFP) > RUN_MAX_OVRHD * try_run_size);
 
