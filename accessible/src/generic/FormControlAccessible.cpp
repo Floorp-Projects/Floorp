@@ -96,7 +96,7 @@ ProgressMeterAccessible<Max>::Value(nsString& aValue)
     (curValue / maxValue) * 100 : 100;
 
   aValue.AppendFloat(percentValue);
-  aValue.AppendLiteral("%");
+  aValue.Append('%');
 }
 
 template<int Max>

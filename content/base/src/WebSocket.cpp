@@ -1019,7 +1019,7 @@ WebSocket::ParseURL(const nsString& aURL)
 
   mResource = filePath;
   if (!query.IsEmpty()) {
-    mResource.AppendLiteral("?");
+    mResource.Append('?');
     mResource.Append(query);
   }
   uint32_t length = mResource.Length();

@@ -4574,7 +4574,7 @@ nsHTMLEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
         bool wasSet = false;
         res = GetAttributeValue(aElement, NS_LITERAL_STRING("style"), existingValue, &wasSet);
         NS_ENSURE_SUCCESS(res, res);
-        existingValue.AppendLiteral(" ");
+        existingValue.Append(' ');
         existingValue.Append(aValue);
         if (aSuppressTransaction)
           res = aElement->SetAttribute(aAttribute, existingValue);

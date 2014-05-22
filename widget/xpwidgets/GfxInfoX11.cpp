@@ -174,7 +174,7 @@ GfxInfo::GetData()
         if (bytesread) {
             mAdapterDescription.AppendLiteral(": ");
             mAdapterDescription.Append(nsDependentCString(buf));
-            mAdapterDescription.AppendLiteral("\n");
+            mAdapterDescription.Append('\n');
         }
 #ifdef MOZ_CRASHREPORTER
         CrashReporter::AppendAppNotesToCrashReport(mAdapterDescription);

@@ -76,7 +76,7 @@ CreateReversedDomain(const nsACString& aAsciiDomain,
 
   ReverseString(aAsciiDomain, aKey);
 
-  aKey.AppendLiteral(".");
+  aKey.Append('.');
   return NS_OK;
 }
 

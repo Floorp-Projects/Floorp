@@ -507,7 +507,7 @@ nsDSURIContentListener::ReportXFOViolation(nsIDocShellTreeItem* aTopDocShellItem
         case eALLOWFROM:
             msg.AppendLiteral(" does not permit framing by ");
             msg.Append(NS_ConvertUTF8toUTF16(topURIString));
-            msg.AppendLiteral(".");
+            msg.Append('.');
             break;
     }
 

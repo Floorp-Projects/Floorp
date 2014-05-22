@@ -1038,7 +1038,7 @@ nsNavHistory::invalidateFrecencies(const nsCString& aPlaceIdsQueryString)
   if (!aPlaceIdsQueryString.IsEmpty()) {
     invalidFrecenciesSQLFragment.AppendLiteral("AND id IN(");
     invalidFrecenciesSQLFragment.Append(aPlaceIdsQueryString);
-    invalidFrecenciesSQLFragment.AppendLiteral(")");
+    invalidFrecenciesSQLFragment.Append(')');
   }
   nsRefPtr<InvalidateAllFrecenciesCallback> cb =
     aPlaceIdsQueryString.IsEmpty() ? new InvalidateAllFrecenciesCallback()
@@ -2049,7 +2049,7 @@ PlacesSQLQueryBuilder::Limit()
   if (mUseLimit && mMaxResults > 0) {
     mQueryString += NS_LITERAL_CSTRING(" LIMIT ");
     mQueryString.AppendInt(mMaxResults);
-    mQueryString.AppendLiteral(" ");
+    mQueryString.Append(' ');
   }
   return NS_OK;
 }
@@ -2404,7 +2404,7 @@ nsNavHistory::CleanupPlacesOnVisitsDelete(const nsCString& aPlaceIdsQueryString)
     NS_ENSURE_SUCCESS(rv, rv);
     if (wholeEntry) {
       if (!filteredPlaceIds.IsEmpty()) {
-        filteredPlaceIds.AppendLiteral(",");
+        filteredPlaceIds.Append(',');
       }
       filteredPlaceIds.AppendInt(placeId);
       URIs.AppendObject(uri);
@@ -2469,7 +2469,7 @@ nsNavHistory::RemovePages(nsIURI **aURIs, uint32_t aLength)
     NS_ENSURE_SUCCESS(rv, rv);
     if (placeId != 0) {
       if (!deletePlaceIdsQueryString.IsEmpty())
-        deletePlaceIdsQueryString.AppendLiteral(",");
+        deletePlaceIdsQueryString.Append(',');
       deletePlaceIdsQueryString.AppendInt(placeId);
     }
   }
@@ -2589,7 +2589,7 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, bool aEntireDomain)
   bool hasMore = false;
   while (NS_SUCCEEDED(statement->ExecuteStep(&hasMore)) && hasMore) {
     if (!hostPlaceIds.IsEmpty())
-      hostPlaceIds.AppendLiteral(",");
+      hostPlaceIds.Append(',');
     int64_t placeId;
     rv = statement->GetInt64(0, &placeId);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2649,7 +2649,7 @@ nsNavHistory::RemovePagesByTimeframe(PRTime aBeginTime, PRTime aEndTime)
     NS_ENSURE_SUCCESS(rv, rv);
     if (placeId != 0) {
       if (!deletePlaceIdsQueryString.IsEmpty())
-        deletePlaceIdsQueryString.AppendLiteral(",");
+        deletePlaceIdsQueryString.Append(',');
       deletePlaceIdsQueryString.AppendInt(placeId);
     }
   }
@@ -2717,7 +2717,7 @@ nsNavHistory::RemoveVisitsByTimeframe(PRTime aBeginTime, PRTime aEndTime)
       // placeId should not be <= 0, but be defensive.
       if (placeId > 0) {
         if (!deletePlaceIdsQueryString.IsEmpty())
-          deletePlaceIdsQueryString.AppendLiteral(",");
+          deletePlaceIdsQueryString.Append(',');
         deletePlaceIdsQueryString.AppendInt(placeId);
       }
     }

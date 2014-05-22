@@ -1068,10 +1068,10 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
 
         } else if (unit == eCSSUnit_List || unit == eCSSUnit_ListDep) {
           // Non-empty <line-names>
-          aValue.AppendLiteral("(");
+          aValue.Append('(');
           rowsItem->mValue.AppendToString(eCSSProperty_grid_template_rows,
                                           aValue, aSerialization);
-          aValue.AppendLiteral(")");
+          aValue.Append(')');
 
         } else {
           nsStyleUtil::AppendEscapedCSSString(areas->mTemplates[row++], aValue);

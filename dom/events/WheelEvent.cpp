@@ -157,19 +157,19 @@ GetModifierList(bool aCtrl, bool aShift, bool aAlt, bool aMeta,
   }
   if (aShift) {
     if (!aModifierList.IsEmpty()) {
-      aModifierList.AppendLiteral(" ");
+      aModifierList.Append(' ');
     }
     aModifierList.AppendLiteral(NS_DOM_KEYNAME_SHIFT);
   }
   if (aAlt) {
     if (!aModifierList.IsEmpty()) {
-      aModifierList.AppendLiteral(" ");
+      aModifierList.Append(' ');
     }
     aModifierList.AppendLiteral(NS_DOM_KEYNAME_ALT);
   }
   if (aMeta) {
     if (!aModifierList.IsEmpty()) {
-      aModifierList.AppendLiteral(" ");
+      aModifierList.Append(' ');
     }
     aModifierList.AppendLiteral(NS_DOM_KEYNAME_META);
   }

@@ -205,7 +205,7 @@ nsClientAuthRememberService::GetHostWithCert(const nsACString & aHostName,
                                              nsACString& _retval)
 {
   nsAutoCString hostCert(aHostName);
-  hostCert.AppendLiteral(":");
+  hostCert.Append(':');
   hostCert.Append(fingerprint);
   
   _retval.Assign(hostCert);
