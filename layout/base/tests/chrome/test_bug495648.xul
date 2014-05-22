@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=495648
   <!-- test code goes here -->
   <script type="application/javascript">
   <![CDATA[
-  SimpleTest.expectAssertions(18, 24);
+  SimpleTest.expectAssertions(15, 24);
 
   /** Test for Bug 495648 **/
   var uri = window.location.href.replace(/test_bug495648.xul/, "bug495648.rdf");

@@ -92,6 +92,9 @@ function Tester(aTests, aDumper, aCallback) {
   this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/MemoryStats.js", simpleTestScope);
   this._scriptLoader.loadSubScript("chrome://mochikit/content/chrome-harness.js", simpleTestScope);
   this.SimpleTest = simpleTestScope.SimpleTest;
+
+  this.SimpleTest.harnessParameters = gConfig;
+
   this.MemoryStats = simpleTestScope.MemoryStats;
   this.Task = Task;
   this.Task.Debugging.maintainStack = true;
