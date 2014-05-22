@@ -586,24 +586,6 @@ MediaStreamGraphImpl::UpdateStreamOrderForStream(mozilla::LinkedList<MediaStream
   *mStreams.AppendElement() = stream.forget();
 }
 
-static void AudioMixerCallback(AudioDataValue* aMixedBuffer,
-                               AudioSampleFormat aFormat,
-                               uint32_t aChannels,
-                               uint32_t aFrames,
-                               uint32_t aSampleRate)
-{
-  // Need an api to register mixer callbacks, bug 989921
-#ifdef MOZ_WEBRTC
-  if (aFrames > 0 && aChannels > 0) {
-    // XXX need Observer base class and registration API
-    if (gFarendObserver) {
-      gFarendObserver->InsertFarEnd(aMixedBuffer, aFrames, false,
-                                    aSampleRate, aChannels, aFormat);
-    }
-  }
-#endif
-}
-
 void
 MediaStreamGraphImpl::UpdateStreamOrder()
 {
@@ -631,8 +613,12 @@ MediaStreamGraphImpl::UpdateStreamOrder()
   }
 
   if (!mMixer && shouldMix) {
-    mMixer = new AudioMixer(AudioMixerCallback);
+    mMixer = new AudioMixer();
+    if (gFarendObserver) {
+      mMixer->AddCallback(gFarendObserver);
+    }
   } else if (mMixer && !shouldMix) {
+    mMixer->RemoveCallback(gFarendObserver);
     mMixer = nullptr;
   }
 
