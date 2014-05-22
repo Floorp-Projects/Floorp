@@ -95,37 +95,19 @@ CloneRegExpObject(JSContext *cx, JSObject *obj);
  * A RegExpShared is the compiled representation of a regexp. A RegExpShared is
  * potentially pointed to by multiple RegExpObjects. Additionally, C++ code may
  * have pointers to RegExpShareds on the stack. The RegExpShareds are kept in a
- * cache so that they can be reused when compiling the same regex string.
+ * table so that they can be reused when compiling the same regex string.
  *
- * During a GC, the trace hook for RegExpObject clears any pointers to
- * RegExpShareds so that there will be no dangling pointers when they are
- * deleted. However, some RegExpShareds are not deleted:
- *
- *   1. Any RegExpShared with pointers from the C++ stack is not deleted.
- *   2. Any RegExpShared which has been embedded into jitcode is not deleted.
- *      This rarely comes into play, as jitcode is usually purged before the
- *      RegExpShared are sweeped.
- *   3. Any RegExpShared that was installed in a RegExpObject during an
- *      incremental GC is not deleted. This is because the RegExpObject may have
- *      been traced through before the new RegExpShared was installed, in which
- *      case deleting the RegExpShared would turn the RegExpObject's reference
- *      into a dangling pointer
- *
- * The activeUseCount and gcNumberWhenUsed fields are used to track these
- * conditions.
- *
- * There are two tables used to track RegExpShareds. map_ implements the cache
- * and is cleared on every GC. inUse_ logically owns all RegExpShareds in the
- * compartment and attempts to delete all RegExpShareds that aren't kept alive
- * by the above conditions on every GC sweep phase. It is necessary to use two
- * separate tables since map_ *must* be fully cleared on each GC since the Key
- * points to a JSAtom that can become garbage.
+ * During a GC, RegExpShared instances are marked and swept like GC things.
+ * Usually, RegExpObjects clear their pointers to their RegExpShareds rather
+ * than explicitly tracing them, so that the RegExpShared and any jitcode can
+ * be reclaimed quicker. However, the RegExpShareds are traced through by
+ * objects when we are preserving jitcode in their zone, to avoid the same
+ * recompilation inefficiencies as normal Ion and baseline compilation.
  */
 class RegExpShared
 {
     friend class RegExpCompartment;
     friend class RegExpStatics;
-    friend class RegExpGuard;
 
     typedef frontend::TokenStream TokenStream;
 
@@ -140,16 +122,13 @@ class RegExpShared
 #endif
 #endif
 
-    /*
-     * Source to the RegExp, for lazy compilation.
-     * The source must be rooted while activeUseCount is non-zero
-     * via RegExpGuard or explicit calls to trace().
-     */
-    JSAtom *           source;
+    /* Source to the RegExp, for lazy compilation. */
+    HeapPtrAtom        source;
 
     RegExpFlag         flags;
     size_t             parenCount;
     bool               canStringMatch;
+    bool               marked_;
 
 #ifdef JS_YARR
 
@@ -171,10 +150,6 @@ class RegExpShared
     // Tables referenced by JIT code.
     Vector<uint8_t *, 0, SystemAllocPolicy> tables;
 
-    /* Lifetime-preserving variables: see class-level comment above. */
-    size_t             activeUseCount;
-    uint64_t           gcNumberWhenUsed;
-
     /* Internal functions. */
     bool compile(JSContext *cx, bool matchOnly, const jschar *sampleChars, size_t sampleLength);
     bool compile(JSContext *cx, HandleAtom pattern, bool matchOnly, const jschar *sampleChars, size_t sampleLength);
@@ -186,7 +161,7 @@ class RegExpShared
 #endif
 
   public:
-    RegExpShared(JSAtom *source, RegExpFlag flags, uint64_t gcNumber);
+    RegExpShared(JSAtom *source, RegExpFlag flags);
     ~RegExpShared();
 
 #ifdef JS_YARR
@@ -207,18 +182,6 @@ class RegExpShared
     static void reportYarrError(ExclusiveContext *cx, TokenStream *ts, ErrorCode error);
     static bool checkSyntax(ExclusiveContext *cx, TokenStream *tokenStream, JSLinearString *source);
 #endif // JS_YARR
-
-    /* Called when a RegExpShared is installed into a RegExpObject. */
-    void prepareForUse(ExclusiveContext *cx) {
-        gcNumberWhenUsed = cx->zone()->gcNumber();
-        JSString::writeBarrierPre(source);
-#ifndef JS_YARR
-#ifdef JS_ION
-        if (jitCode)
-            jit::JitCode::writeBarrierPre(jitCode);
-#endif
-#endif // !JS_YARR
-    }
 
     /* Primary interface: run this regular expression on the given string. */
     RegExpRunStatus execute(JSContext *cx, const jschar *chars, size_t length,
@@ -242,12 +205,10 @@ class RegExpShared
         return parenCount;
     }
 
-    void incRef()                       { activeUseCount++; }
-    void decRef()                       { JS_ASSERT(activeUseCount > 0); activeUseCount--; }
-
     /* Accounts for the "0" (whole match) pair. */
     size_t pairCount() const            { return getParenCount() + 1; }
 
+    JSAtom *getSource() const           { return source; }
     RegExpFlag getFlags() const         { return flags; }
     bool ignoreCase() const             { return flags & IgnoreCaseFlag; }
     bool global() const                 { return flags & GlobalFlag; }
@@ -289,6 +250,11 @@ class RegExpShared
 
 #endif // JS_YARR
 
+    void trace(JSTracer *trc);
+
+    bool marked() const { return marked_; }
+    void clearMarked() { JS_ASSERT(marked_); marked_ = false; }
+
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 };
 
@@ -322,31 +288,15 @@ class RegExpGuard : public JS::CustomAutoRooter
     void init(RegExpShared &re) {
         JS_ASSERT(!initialized());
         re_ = &re;
-        re_->incRef();
     }
 
     void release() {
-        if (re_) {
-            re_->decRef();
-            re_ = nullptr;
-        }
+        re_ = nullptr;
     }
 
     virtual void trace(JSTracer *trc) {
-        if (!re_)
-            return;
-        if (re_->source) {
-            MarkStringRoot(trc, reinterpret_cast<JSString**>(&re_->source),
-                           "RegExpGuard source");
-        }
-#ifndef JS_YARR
-#ifdef JS_ION
-        if (re_->jitCode) {
-            MarkJitCodeRoot(trc, reinterpret_cast<jit::JitCode**>(&re_->jitCode),
-                            "RegExpGuard code");
-        }
-#endif
-#endif // !JS_YARR
+        if (re_)
+            re_->trace(trc);
     }
 
     bool initialized() const { return !!re_; }
@@ -365,6 +315,9 @@ class RegExpCompartment
         Key(JSAtom *atom, RegExpFlag flag)
           : atom(atom), flag(flag)
         { }
+        Key(RegExpShared *shared)
+          : atom(shared->getSource()), flag(shared->getFlags())
+        { }
 
         typedef Key Lookup;
         static HashNumber hash(const Lookup &l) {
@@ -376,19 +329,11 @@ class RegExpCompartment
     };
 
     /*
-     * Cache to reuse RegExpShareds with the same source/flags/etc. The cache
-     * is entirely cleared on each GC.
-     */
-    typedef HashMap<Key, RegExpShared *, Key, RuntimeAllocPolicy> Map;
-    Map map_;
-
-    /*
      * The set of all RegExpShareds in the compartment. On every GC, every
-     * RegExpShared that is not actively being used is deleted and removed from
-     * the set.
+     * RegExpShared that was not marked is deleted and removed from the set.
      */
-    typedef HashSet<RegExpShared *, DefaultHasher<RegExpShared*>, RuntimeAllocPolicy> PendingSet;
-    PendingSet inUse_;
+    typedef HashSet<RegExpShared *, Key, RuntimeAllocPolicy> Set;
+    Set set_;
 
     /*
      * This is the template object where the result of re.exec() is based on,
@@ -405,9 +350,10 @@ class RegExpCompartment
 
     bool init(JSContext *cx);
     void sweep(JSRuntime *rt);
-    void clearTables();
 
-    bool get(ExclusiveContext *cx, JSAtom *source, RegExpFlag flags, RegExpGuard *g);
+    bool empty() { return set_.empty(); }
+
+    bool get(JSContext *cx, JSAtom *source, RegExpFlag flags, RegExpGuard *g);
 
     /* Like 'get', but compile 'maybeOpt' (if non-null). */
     bool get(JSContext *cx, HandleAtom source, JSString *maybeOpt, RegExpGuard *g);
@@ -512,7 +458,7 @@ class RegExpObject : public JSObject
         g->init(*maybeShared());
     }
 
-    bool getShared(ExclusiveContext *cx, RegExpGuard *g) {
+    bool getShared(JSContext *cx, RegExpGuard *g) {
         if (RegExpShared *shared = maybeShared()) {
             g->init(*shared);
             return true;
@@ -520,10 +466,12 @@ class RegExpObject : public JSObject
         return createShared(cx, g);
     }
 
-    void setShared(ExclusiveContext *cx, RegExpShared &shared) {
-        shared.prepareForUse(cx);
+    void setShared(RegExpShared &shared) {
+        JS_ASSERT(!maybeShared());
         JSObject::setPrivate(&shared);
     }
+
+    static void trace(JSTracer *trc, JSObject *obj);
 
   private:
     friend class RegExpObjectBuilder;
@@ -547,7 +495,7 @@ class RegExpObject : public JSObject
      * Precondition: the syntax for |source| has already been validated.
      * Side effect: sets the private field.
      */
-    bool createShared(ExclusiveContext *cx, RegExpGuard *g);
+    bool createShared(JSContext *cx, RegExpGuard *g);
     RegExpShared *maybeShared() const {
         return static_cast<RegExpShared *>(JSObject::getPrivate());
     }

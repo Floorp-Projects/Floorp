@@ -569,7 +569,7 @@ class AutoScriptVector : public AutoVectorRooter<JSScript *>
 };
 
 /*
- * Cutsom rooting behavior for internal and external clients.
+ * Custom rooting behavior for internal and external clients.
  */
 class JS_PUBLIC_API(CustomAutoRooter) : private AutoGCRooter
 {

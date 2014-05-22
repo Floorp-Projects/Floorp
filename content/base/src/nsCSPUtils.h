@@ -16,6 +16,17 @@
 
 /* =============== Logging =================== */
 
+void CSP_LogLocalizedStr(const char16_t* aName,
+                         const char16_t** aParams,
+                         uint32_t aLength,
+                         const nsAString& aSourceName,
+                         const nsAString& aSourceLine,
+                         uint32_t aLineNumber,
+                         uint32_t aColumnNumber,
+                         uint32_t aFlags,
+                         const char* aCategory,
+                         uint32_t aInnerWindowID);
+
 void CSP_GetLocalizedStr(const char16_t* aName,
                          const char16_t** aParams,
                          uint32_t aLength,
@@ -33,7 +44,16 @@ void CSP_LogMessage(const nsAString& aMessage,
                     uint32_t aInnerWindowID);
 
 
-/* =============== Definitions ================== */
+/* =============== Constant and Type Definitions ================== */
+
+#define INLINE_STYLE_VIOLATION_OBSERVER_TOPIC   "violated base restriction: Inline Stylesheets will not apply"
+#define INLINE_SCRIPT_VIOLATION_OBSERVER_TOPIC  "violated base restriction: Inline Scripts will not execute"
+#define EVAL_VIOLATION_OBSERVER_TOPIC           "violated base restriction: Code will not be created from strings"
+#define SCRIPT_NONCE_VIOLATION_OBSERVER_TOPIC   "Inline Script had invalid nonce"
+#define STYLE_NONCE_VIOLATION_OBSERVER_TOPIC    "Inline Style had invalid nonce"
+#define SCRIPT_HASH_VIOLATION_OBSERVER_TOPIC    "Inline Script had invalid hash"
+#define STYLE_HASH_VIOLATION_OBSERVER_TOPIC     "Inline Style had invalid hash"
+
 
 // Please add any new enum items not only to CSPDirective, but also add
 // a string version for every enum >> using the same index << to
