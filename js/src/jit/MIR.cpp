@@ -815,36 +815,32 @@ MStringLength::foldsTo(TempAllocator &alloc, bool useValueNumbers)
     return this;
 }
 
+static bool
+EnsureFloatInputOrConvert(MUnaryInstruction *owner, TempAllocator &alloc)
+{
+    MDefinition *input = owner->input();
+    if (!input->canProduceFloat32()) {
+        if (input->type() == MIRType_Float32)
+            ConvertDefinitionToDouble<0>(alloc, input, owner);
+        return false;
+    }
+    return true;
+}
+
 void
 MFloor::trySpecializeFloat32(TempAllocator &alloc)
 {
-    // No need to look at the output, as it's an integer (see IonBuilder::inlineMathFloor)
-    if (!input()->canProduceFloat32()) {
-        if (input()->type() == MIRType_Float32)
-            ConvertDefinitionToDouble<0>(alloc, input(), this);
-        return;
-    }
-
-    if (type() == MIRType_Double)
-        setResultType(MIRType_Float32);
-
-    setPolicyType(MIRType_Float32);
+    JS_ASSERT(type() == MIRType_Int32);
+    if (EnsureFloatInputOrConvert(this, alloc))
+        setPolicyType(MIRType_Float32);
 }
 
 void
 MRound::trySpecializeFloat32(TempAllocator &alloc)
 {
-    // No need to look at the output, as it's an integer (unique way to have
-    // this instruction in IonBuilder::inlineMathRound)
     JS_ASSERT(type() == MIRType_Int32);
-
-    if (!input()->canProduceFloat32()) {
-        if (input()->type() == MIRType_Float32)
-            ConvertDefinitionToDouble<0>(alloc, input(), this);
-        return;
-    }
-
-    setPolicyType(MIRType_Float32);
+    if (EnsureFloatInputOrConvert(this, alloc))
+        setPolicyType(MIRType_Float32);
 }
 
 MCompare *
