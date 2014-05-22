@@ -102,7 +102,7 @@ class nsIntRegion;
 struct nsTArrayFallibleResult
 {
   // Note: allows implicit conversions from and to bool
-  nsTArrayFallibleResult(bool result)
+  MOZ_IMPLICIT nsTArrayFallibleResult(bool result)
     : mResult(result)
   {}
 
