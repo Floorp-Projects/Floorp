@@ -38,6 +38,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
+                                  "resource://gre/modules/Sqlite.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
@@ -1292,6 +1298,15 @@ this.PlacesUtils = {
   },
 
   /**
+   * Gets the shared Sqlite.jsm readonly connection to the Places database.
+   * This is intended to be used mostly internally, and by other Places modules.
+   * Outside the Places component, it should be used only as a last resort.
+   * Keep in mind the Places DB schema is by no means frozen or even stable.
+   * Your custom queries can - and will - break overtime.
+   */
+  promiseDBConnection: () => gAsyncDBConnPromised,
+
+  /**
    * Given a uri returns list of itemIds associated to it.
    *
    * @param aURI
@@ -1540,7 +1555,239 @@ this.PlacesUtils = {
    * @resolves to the GUID.
    * @rejects if there's no item for the given GUID.
    */
-  promiseItemId: function (aGUID) GUIDHelper.getItemId(aGUID)
+  promiseItemId: function (aGUID) GUIDHelper.getItemId(aGUID),
+
+  /**
+   * Asynchronously retrieve a JS-object representation of a places bookmarks
+   * item (a bookmark, a folder, or a separator) along with all of its
+   * descendants.
+   *
+   * @param [optional] aItemGUID
+   *        the (topmost) item to be queried.  If it's not passed, the places
+   *        root is queried: that is, you get a representation of the entire
+   *        bookmarks hierarchy.
+   * @param [optional] aOptions
+   *        Options for customizing the query behavior, in the form of a JS
+   *        object with any of the following properties:
+   *         - excludeItemsCallback: a function for excluding items, along with
+   *           their descendants.  Given an item object (that has everything set
+   *           apart its potential children data), it should return true if the
+   *           item should be excluded.  Once an item is excluded, the function
+   *           isn't called for any of its descendants.  This isn't called for
+   *           the root item.
+   *           WARNING: since the function may be called for each item, using
+   *           this option can slow down the process significantly if the
+   *           callback does anything that's not relatively trivial.  It is
+   *           highly recommended to avoid any synchronous I/O or DB queries.
+   *
+   * @return {Promise}
+   * @resolves to a JS object that represents either a single item or a
+   * bookmarks tree.  Each node in the tree has the following properties set:
+   *  - guid (string): the item's guid (same as aItemGUID for the top item).
+   *  - [deprecated] id (number): the item's id.  Only use it if you must. It'll
+   *    be removed once the switch to guids is complete.
+   *  - type (number):  the item's type.  @see PlacesUtils.TYPE_X_*
+   *  - title (string): the item's title. If it has no title, this property
+   *    isn't set.
+   *  - dateAdded (number, microseconds from the epoch): the date-added value of
+   *    the item.
+   *  - lastModified (number, microseconds from the epoch): the last-modified
+   *    value of the item.
+   *  - annos (see getAnnotationsForItem): the item's annotations.  This is not
+   *    set if there are no annotations set for the item).
+   *
+   * The root object (i.e. the one for aItemGUID) also has the following
+   * properties set:
+   *  - parentGUID (string): the guid of the root's parent.  This isn't set if
+   *    the root item is the places root.
+   *  - itemsCount (number, not enumerable): the number of items, including the
+   *    root item itself, which are represented in the resolved object.
+   *
+   * Bookmark items also have the following properties:
+   *  - uri (string): the item's url.
+   *  - tags (string): csv string of the bookmark's tags.
+   *  - charset (string): the last known charset of the bookmark.
+   *  - keyword (string): the bookmark's keyword (unset if none).
+   *  - iconuri (string): the bookmark's favicon url.
+   * The last four properties are not set at all if they're irrelevant (e.g.
+   * |charset| is not set if no charset was previously set for the bookmark
+   * url).
+   *
+   * Folders may also have the following properties:
+   *  - children (array): the folder's children information, each of them
+   *    having the same set of properties as above.
+   *
+   * @rejects if the query failed for any reason.
+   * @note if aItemGUID points to a non-existent item, the returned promise is
+   * resolved to null.
+   */
+  promiseBookmarksTree: Task.async(function* (aItemGUID = "", aOptions = {}) {
+    let createItemInfoObject = (aRow, aIncludeParentGUID) => {
+      let item = {};
+      let copyProps = (...props) => {
+        for (let prop of props) {
+          let val = aRow.getResultByName(prop);
+          if (val !== null)
+            item[prop] = val;
+        }
+      };
+      copyProps("id" ,"guid", "title", "index", "dateAdded", "lastModified");
+      if (aIncludeParentGUID)
+        copyProps("parentGUID");
+
+      let type = aRow.getResultByName("type");
+      if (type == Ci.nsINavBookmarksService.TYPE_BOOKMARK)
+        copyProps("charset", "tags", "iconuri");
+
+      // Add annotations.
+      if (aRow.getResultByName("has_annos")) {
+        try {
+          item.annos = PlacesUtils.getAnnotationsForItem(item.id);
+        } catch (e) {
+          Cu.reportError("Unexpected error while reading annotations " + e);
+        }
+      }
+
+      switch (type) {
+        case Ci.nsINavBookmarksService.TYPE_BOOKMARK:
+          item.type = PlacesUtils.TYPE_X_MOZ_PLACE;
+          // If this throws due to an invalid url, the item will be skipped.
+          item.uri = NetUtil.newURI(aRow.getResultByName("url")).spec;
+          // Keywords are cached, so this should be decently fast.
+          let keyword = PlacesUtils.bookmarks.getKeywordForBookmark(item.id);
+          if (keyword)
+            item.keyword = keyword;
+          break;
+        case Ci.nsINavBookmarksService.TYPE_FOLDER:
+          item.type = PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER;
+          // Mark root folders.
+          if (item.id == PlacesUtils.placesRootId)
+            item.root = "placesRoot";
+          else if (item.id == PlacesUtils.bookmarksMenuFolderId)
+            item.root = "bookmarksMenuFolder";
+          else if (item.id == PlacesUtils.unfiledBookmarksFolderId)
+            item.root = "unfiledBookmarksFolder";
+          else if (item.id == PlacesUtils.toolbarFolderId)
+            item.root = "toolbarFolder";
+          break;
+        case Ci.nsINavBookmarksService.TYPE_SEPARATOR:
+          item.type = PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR;
+          break;
+        default:
+          Cu.reportError("Unexpected bookmark type");
+          break;
+      }
+      return item;
+    };
+
+    const QUERY_STR =
+      "WITH RECURSIVE " +
+      "descendants(fk, level, type, id, guid, parent, parentGUID, position, " +
+      "            title, dateAdded, lastModified) AS (" +
+      "  SELECT b1.fk, 0, b1.type, b1.id, b1.guid, b1.parent, " +
+      "         (SELECT guid FROM moz_bookmarks WHERE id = b1.parent), " +
+      "         b1.position, b1.title, b1.dateAdded, b1.lastModified " +
+      "  FROM moz_bookmarks b1 WHERE b1.guid=:item_guid " +
+      "  UNION ALL " +
+      "  SELECT b2.fk, level + 1, b2.type, b2.id, b2.guid, b2.parent, " +
+      "         descendants.guid, b2.position, b2.title, b2.dateAdded, " +
+      "         b2.lastModified " +
+      "  FROM moz_bookmarks b2 " +
+      "  JOIN descendants ON b2.parent = descendants.id AND b2.id <> :tags_folder) " +
+      "SELECT d.level, d.id, d.guid, d.parent, d.parentGUID, d.type, " +
+      "       d.position AS [index], d.title, d.dateAdded, d.lastModified, " +
+      "       h.url, f.url AS iconuri, " +
+      "       (SELECT GROUP_CONCAT(t.title, ',') " +
+      "        FROM moz_bookmarks b2 " +
+      "        JOIN moz_bookmarks t ON t.id = +b2.parent AND t.parent = :tags_folder " +
+      "        WHERE b2.fk = h.id " +
+      "       ) AS tags, " +
+      "       EXISTS (SELECT 1 FROM moz_items_annos " +
+      "               WHERE item_id = d.id LIMIT 1) AS has_annos, " +
+      "       (SELECT a.content FROM moz_annos a " +
+      "        JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id " +
+      "        WHERE place_id = h.id AND n.name = :charset_anno " +
+      "       ) AS charset " +
+      "FROM descendants d " +
+      "LEFT JOIN moz_bookmarks b3 ON b3.id = d.parent " +
+      "LEFT JOIN moz_places h ON h.id = d.fk " +
+      "LEFT JOIN moz_favicons f ON f.id = h.favicon_id " +
+      "ORDER BY d.level, d.parent, d.position";
+
+
+    if (!aItemGUID)
+      aItemGUID = yield this.promiseItemGUID(PlacesUtils.placesRootId);
+
+    let hasExcludeItemsCallback =
+      aOptions.hasOwnProperty("excludeItemsCallback");
+    let excludedParents = new Set();
+    let shouldExcludeItem = (aItem, aParentGUID) => {
+      let exclude = excludedParents.has(aParentGUID) ||
+                    aOptions.excludeItemsCallback(aItem);
+      if (exclude) {
+        if (aItem.type == this.TYPE_X_MOZ_PLACE_CONTAINER)
+          excludedParents.add(aItem.guid);
+      }
+      return exclude;
+    };
+
+    let rootItem = null, rootItemCreationEx = null;
+    let parentsMap = new Map();
+    try {
+      let conn = yield this.promiseDBConnection();
+      yield conn.executeCached(QUERY_STR,
+          { tags_folder: PlacesUtils.tagsFolderId,
+            charset_anno: PlacesUtils.CHARSET_ANNO,
+            item_guid: aItemGUID }, (aRow) => {
+        let item;
+        if (!rootItem) {
+          // This is the first row.
+          try {
+            rootItem = item = createItemInfoObject(aRow, true);
+          }
+          catch(ex) {
+            // If we couldn't figure out the root item, that is just as bad
+            // as a failed query.  Bail out.
+            rootItemCreationEx = ex;
+            throw StopIteration;
+          }
+
+          Object.defineProperty(rootItem, "itemsCount",
+                                { value: 1
+                                , writable: true
+                                , enumerable: false
+                                , configurable: false });
+        }
+        else {
+          // Our query guarantees that we always visit parents ahead of their
+          // children.
+          item = createItemInfoObject(aRow, false);
+          let parentGUID = aRow.getResultByName("parentGUID");
+          if (hasExcludeItemsCallback && shouldExcludeItem(item, parentGUID))
+            return;
+
+          let parentItem = parentsMap.get(parentGUID);
+          if ("children" in parentItem)
+            parentItem.children.push(item);
+          else
+            parentItem.children = [item];
+
+          rootItem.itemsCount++;
+        }
+
+        if (item.type == this.TYPE_X_MOZ_PLACE_CONTAINER)
+          parentsMap.set(item.guid, item);
+      });
+    } catch(e) {
+      throw new Error("Unable to query the database " + e);
+    }
+    if (rootItemCreationEx) {
+      throw new Error("Failed to fetch the data for the root item" +
+                      rootItemCreationEx);
+    }
+
+    return rootItem;
+  })
 };
 
 /**
@@ -1609,10 +1856,9 @@ XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "tagging",
                                    "@mozilla.org/browser/tagging-service;1",
                                    "nsITaggingService");
 
-XPCOMUtils.defineLazyGetter(PlacesUtils, "livemarks", function() {
-  return Cc["@mozilla.org/browser/livemark-service;2"].
-         getService(Ci.mozIAsyncLivemarks);
-});
+XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "livemarks",
+                                   "@mozilla.org/browser/livemark-service;2",
+                                   "mozIAsyncLivemarks");
 
 XPCOMUtils.defineLazyGetter(PlacesUtils, "transactionManager", function() {
   let tm = Cc["@mozilla.org/transactionmanager;1"].
@@ -1653,9 +1899,14 @@ XPCOMUtils.defineLazyGetter(this, "bundle", function() {
          createBundle(PLACES_STRING_BUNDLE_URI);
 });
 
-XPCOMUtils.defineLazyServiceGetter(this, "focusManager",
-                                   "@mozilla.org/focus-manager;1",
-                                   "nsIFocusManager");
+XPCOMUtils.defineLazyGetter(this, "gAsyncDBConnPromised",
+  () => Sqlite.cloneStorageConnection({
+    connection: PlacesUtils.history.DBConnection,
+    readOnly: true }).then(conn => {
+      PlacesUtils.registerShutdownFunction(() => conn.close());
+      return conn;
+    })
+);
 
 // Sometime soon, likely as part of the transition to mozIAsyncBookmarks,
 // itemIds will be deprecated in favour of GUIDs, which play much better
@@ -1671,78 +1922,46 @@ XPCOMUtils.defineLazyServiceGetter(this, "focusManager",
 // working with GUIDs.  So, until it does, this helper object accesses the
 // Places database directly in order to switch between GUIDs and itemIds, and
 // "restore" GUIDs on items re-created items.
-const REASON_FINISHED = Ci.mozIStorageStatementCallback.REASON_FINISHED;
 let GUIDHelper = {
   // Cache for guid<->itemId paris.
   GUIDsForIds: new Map(),
   idsForGUIDs: new Map(),
 
-  getItemId: function (aGUID) {
-    if (this.idsForGUIDs.has(aGUID))
-      return Promise.resolve(this.idsForGUIDs.get(aGUID));
+  getItemId: Task.async(function* (aGUID) {
+    let cached = this.idsForGUIDs.get(aGUID);
+    if (cached !== undefined)
+      return cached;
 
-    let deferred = Promise.defer();
-    let itemId = -1;
+    let conn = yield PlacesUtils.promiseDBConnection();
+    let rows = yield conn.executeCached(
+      "SELECT b.id, b.guid from moz_bookmarks b WHERE b.guid = :guid LIMIT 1",
+      { guid: aGUID });
+    if (rows.length == 0)
+      throw new Error("no item found for the given guid");
 
-    this._getIDStatement.params.guid = aGUID;
-    this._getIDStatement.executeAsync({
-      handleResult: function (aResultSet) {
-        let row = aResultSet.getNextRow();
-        if (row)
-          itemId = row.getResultByIndex(0);
-      },
-      handleCompletion: aReason => {
-        if (aReason == REASON_FINISHED && itemId != -1) {
-          this.ensureObservingRemovedItems();
-          this.idsForGUIDs.set(aGUID, itemId);
+    this.ensureObservingRemovedItems();
+    let itemId = rows[0].getResultByName("id");
+    this.idsForGUIDs.set(aGUID, itemId);
+    return itemId;
+  }),
 
-          deferred.resolve(itemId);
-        }
-        else if (itemId != -1) {
-          deferred.reject("no item found for the given guid");
-        }
-        else {
-          deferred.reject("SQLite Error: " + aReason);
-        }
-      }
-    });
+  getItemGUID: Task.async(function* (aItemId) {
+    let cached = this.GUIDsForIds.get(aItemId);
+    if (cached !== undefined)
+      return cached;
 
-    return deferred.promise;
-  },
+    let conn = yield PlacesUtils.promiseDBConnection();
+    let rows = yield conn.executeCached(
+      "SELECT b.id, b.guid from moz_bookmarks b WHERE b.id = :id LIMIT 1",
+      { id: aItemId });
+    if (rows.length == 0)
+      throw new Error("no item found for the given itemId");
 
-  getItemGUID: function (aItemId) {
-    if (this.GUIDsForIds.has(aItemId))
-      return Promise.resolve(this.GUIDsForIds.get(aItemId));
-
-    let deferred = Promise.defer();
-    let guid = "";
-
-    this._getGUIDStatement.params.id = aItemId;
-    this._getGUIDStatement.executeAsync({
-      handleResult: function (aResultSet) {
-        let row = aResultSet.getNextRow();
-        if (row) {
-          guid = row.getResultByIndex(1);
-        }
-      },
-      handleCompletion: aReason => {
-        if (aReason == REASON_FINISHED && guid) {
-          this.ensureObservingRemovedItems();
-          this.GUIDsForIds.set(aItemId, guid);
-
-          deferred.resolve(guid);
-        }
-        else if (!guid) {
-          deferred.reject("no item found for the given itemId");
-        }
-        else {
-          deferred.reject("SQLite Error: " + aReason);
-        }
-      }
-    });
-
-    return deferred.promise;
-  },
+    this.ensureObservingRemovedItems();
+    let guid = rows[0].getResultByName("guid");
+    this.GUIDsForIds.set(aItemId, guid);
+    return guid;
+  }),
 
   ensureObservingRemovedItems: function () {
     if (!("observer" in this)) {
@@ -1776,18 +1995,6 @@ let GUIDHelper = {
     }
   }
 };
-XPCOMUtils.defineLazyGetter(GUIDHelper, "_getIDStatement", () => {
-  let s = PlacesUtils.history.DBConnection.createAsyncStatement(
-    "SELECT b.id, b.guid from moz_bookmarks b WHERE b.guid = :guid");
-  PlacesUtils.registerShutdownFunction( () => s.finalize() );
-  return s;
-});
-XPCOMUtils.defineLazyGetter(GUIDHelper, "_getGUIDStatement", () => {
-  let s = PlacesUtils.history.DBConnection.createAsyncStatement(
-    "SELECT b.id, b.guid from moz_bookmarks b WHERE b.id = :id");
-  PlacesUtils.registerShutdownFunction( () => s.finalize() );
-  return s;
-});
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Transactions handlers.
@@ -1798,7 +2005,7 @@ XPCOMUtils.defineLazyGetter(GUIDHelper, "_getGUIDStatement", () => {
  */
 function updateCommandsOnActiveWindow()
 {
-  let win = focusManager.activeWindow;
+  let win = Services.focus.activeWindow;
   if (win && win instanceof Ci.nsIDOMWindow) {
     // Updating "undo" will cause a group update including "redo".
     win.updateCommands("undo");
