@@ -522,7 +522,7 @@ nsGnomeVFSInputStream::DoRead(char *aBuf, uint32_t aCount, uint32_t *aCountRead)
           continue;
         }
 
-        mDirBuf.Assign("201: ");
+        mDirBuf.AssignLiteral("201: ");
 
         // The "filename" field
         nsCString escName;
@@ -794,7 +794,7 @@ nsGnomeVFSProtocolHandler::InitSupportedProtocolsPref(nsIPrefBranch *prefs)
     ToLowerCase(mSupportedProtocols);
   }
   else
-    mSupportedProtocols.Assign("smb:,sftp:"); // use defaults
+    mSupportedProtocols.AssignLiteral("smb:,sftp:"); // use defaults
 
   LOG(("gnomevfs: supported protocols \"%s\"\n", mSupportedProtocols.get()));
 }
