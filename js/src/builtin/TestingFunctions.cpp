@@ -1622,6 +1622,26 @@ DumpObject(JSContext *cx, unsigned argc, jsval *vp)
 }
 #endif
 
+static bool
+ReportOutOfMemory(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ReportOutOfMemory(cx);
+    cx->clearPendingException();
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
+ReportLargeAllocationFailure(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    void *buf = cx->runtime()->onOutOfMemoryCanGC(NULL, JSRuntime::LARGE_ALLOCATION);
+    js_free(buf);
+    args.rval().setUndefined();
+    return true;
+}
+
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'compartment')",
@@ -1891,6 +1911,16 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("stopTraceLogger", DisableTraceLogger, 0, 0,
 "stopTraceLogger()",
 "  Stop logging the mainThread."),
+
+    JS_FN_HELP("reportOutOfMemory", ReportOutOfMemory, 0, 0,
+"reportOutOfMemory()",
+"  Report OOM, then clear the exception and return undefined. For crash testing."),
+
+    JS_FN_HELP("reportLargeAllocationFailure", ReportLargeAllocationFailure, 0, 0,
+"reportLargeAllocationFailure()",
+"  Call the large allocation failure callback, as though a large malloc call failed,\n"
+"  then return undefined. In Gecko, this sends a memory pressure notification, which\n"
+"  can free up some memory."),
 
 #ifdef DEBUG
     JS_FN_HELP("dumpObject", DumpObject, 1, 0,

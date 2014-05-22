@@ -1316,6 +1316,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     JS_FRIEND_API(void *) onOutOfMemory(void *p, size_t nbytes);
     JS_FRIEND_API(void *) onOutOfMemory(void *p, size_t nbytes, JSContext *cx);
 
+    /*  onOutOfMemory but can call the largeAllocationFailureCallback. */
+    JS_FRIEND_API(void *) onOutOfMemoryCanGC(void *p, size_t bytes);
+
     // Ways in which the interrupt callback on the runtime can be triggered,
     // varying based on which thread is triggering the callback.
     enum InterruptMode {
@@ -1406,20 +1409,14 @@ struct JSRuntime : public JS::shadow::Runtime,
         void *p = calloc_(bytes);
         if (MOZ_LIKELY(!!p))
             return p;
-        if (!largeAllocationFailureCallback || bytes < LARGE_ALLOCATION)
-            return nullptr;
-        largeAllocationFailureCallback();
-        return onOutOfMemory(reinterpret_cast<void *>(1), bytes);
+        return onOutOfMemoryCanGC(reinterpret_cast<void *>(1), bytes);
     }
 
     void *reallocCanGC(void *p, size_t bytes) {
         void *p2 = realloc_(p, bytes);
         if (MOZ_LIKELY(!!p2))
             return p2;
-        if (!largeAllocationFailureCallback || bytes < LARGE_ALLOCATION)
-            return nullptr;
-        largeAllocationFailureCallback();
-        return onOutOfMemory(p, bytes);
+        return onOutOfMemoryCanGC(p, bytes);
     }
 };
 
