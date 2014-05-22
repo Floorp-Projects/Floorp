@@ -81,6 +81,7 @@ typedef struct {
                                    cache.  (jemalloc calls these "dirty".) */
         size_t  bookkeeping;    /* Committed bytes used internally by the
                                    allocator. */
+	size_t bin_unused; /* Bytes committed to a bin but currently unused. */
 } jemalloc_stats_t;
 
 #ifdef __cplusplus
