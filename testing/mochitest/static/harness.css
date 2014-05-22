@@ -95,3 +95,33 @@ div#current-test {
   margin: 0;
   padding: .5em;
 }
+
+#testframe {
+  width: 500px;
+  height: 300px;
+}
+
+
+body[singletest=true] table,
+body[singletest=true] h2,
+body[singletest=true] p,
+body[singletest=true] br,
+body[singletest=true] .clear,
+body[singletest=true] .toggle,
+body[singletest=true] #current-test,
+body[singletest=true] .status {
+  display: none;
+}
+
+
+body[singletest=true],
+body[singletest=true] .container,
+body[singletest=true] .frameholder,
+body[singletest=true] #testframe {
+  display: flex;
+  flex: 1 1 auto;
+  height: 100%;
+  box-sizing: border-box;
+  margin: 0;
+}
+
