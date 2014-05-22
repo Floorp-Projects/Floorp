@@ -126,12 +126,6 @@ HTMLAllCollection::NamedGetter(const nsAString& aID,
                                bool& aFound,
                                Nullable<OwningNodeOrHTMLCollection>& aResult)
 {
-  if (aID.IsEmpty()) {
-    aFound = false;
-    aResult.SetNull();
-    return;
-  }
-
   nsContentList* docAllList = GetDocumentAllList(aID);
   if (!docAllList) {
     aFound = false;
