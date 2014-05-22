@@ -557,7 +557,7 @@ static bool test_compressws()
 {
   nsString check(NS_LITERAL_STRING(" \tTesting  \n\t1\n 2 3\n "));
   CompressWhitespace(check);
-  return check.Equals(NS_LITERAL_STRING("Testing 1 2 3"));
+  return check.EqualsLiteral("Testing 1 2 3");
 }
 
 static bool test_comparisons()

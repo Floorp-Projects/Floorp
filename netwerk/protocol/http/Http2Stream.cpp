@@ -916,7 +916,7 @@ Http2Stream::ConvertPushHeaders(Http2Decompressor *decompressor,
   }
 
   decompressor->GetMethod(method);
-  if (!method.Equals(NS_LITERAL_CSTRING("GET"))) {
+  if (!method.EqualsLiteral("GET")) {
     LOG3(("Http2Stream::ConvertPushHeaders %p Error - method not supported: %s\n",
           this, method.get()));
     return NS_ERROR_NOT_IMPLEMENTED;

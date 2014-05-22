@@ -1219,7 +1219,7 @@ SpdyStream3::ConvertHeaders(nsACString &aHeadersOut)
       // to look for chunked specifically because it is the only HTTP
       // allowed default encoding and we did not negotiate further encodings
       // via TE
-      if (nameString.Equals(NS_LITERAL_CSTRING("transfer-encoding"))) {
+      if (nameString.EqualsLiteral("transfer-encoding")) {
         LOG3(("SpdyStream3::ConvertHeaders session=%p stream=%p "
               "transfer-encoding found. Chunked is invalid and no TE sent.",
               mSession, this));
@@ -1236,8 +1236,8 @@ SpdyStream3::ConvertHeaders(nsACString &aHeadersOut)
 
       // spdy transport level headers shouldn't be gatewayed into http/1
       if (!nameString.IsEmpty() && nameString[0] != ':' &&
-          !nameString.Equals(NS_LITERAL_CSTRING("connection")) &&
-          !nameString.Equals(NS_LITERAL_CSTRING("keep-alive"))) {
+          !nameString.EqualsLiteral("connection") &&
+          !nameString.EqualsLiteral("keep-alive")) {
         nsDependentCSubstring valueString =
           Substring(reinterpret_cast<const char *>(nvpair) + 8 + nameLen,
                     reinterpret_cast<const char *>(nvpair) + 8 + nameLen +
