@@ -1,0 +1,1387 @@
+diff --git a/include/cutils/properties.h b/include/cutils/properties.h
+index 2c70165..c380d5d 100644
+--- a/include/cutils/properties.h
++++ b/include/cutils/properties.h
+@@ -19,7 +19,6 @@
+ 
+ #include <sys/cdefs.h>
+ #include <stddef.h>
+-#include <sys/system_properties.h>
+ 
+ #ifdef __cplusplus
+ extern "C" {
+diff --git a/include/log/log.h b/include/log/log.h
+index 7faddea..6131f01 100644
+--- a/include/log/log.h
++++ b/include/log/log.h
+@@ -25,6 +25,16 @@
+ // supports O_APPEND.  These calls have mutex-protected data structures
+ // and so are NOT reentrant.  Do not use LOG in a signal handler.
+ //
++
++/*
++ * This is the local tag used for the following simplified
++ * logging macros.  You can change this preprocessor definition
++ * before using the other macros to change the tag.
++ */
++#ifndef LOG_TAG
++#define LOG_TAG NULL
++#endif
++
+ #ifndef _LIBS_LOG_LOG_H
+ #define _LIBS_LOG_LOG_H
+ 
+@@ -40,6 +50,10 @@
+ #include <log/uio.h>
+ #include <log/logd.h>
+ 
++#ifdef _MSC_VER
++#define __builtin_expect(X, Y) (X)
++#endif
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -59,15 +73,6 @@ extern "C" {
+ #endif
+ #endif
+ 
+-/*
+- * This is the local tag used for the following simplified
+- * logging macros.  You can change this preprocessor definition
+- * before using the other macros to change the tag.
+- */
+-#ifndef LOG_TAG
+-#define LOG_TAG NULL
+-#endif
+-
+ // ---------------------------------------------------------------------
+ 
+ /*
+@@ -498,11 +503,11 @@ typedef enum {
+  * The stuff in the rest of this file should not be used directly.
+  */
+ 
+-#define android_printLog(prio, tag, fmt...) \
+-    __android_log_print(prio, tag, fmt)
++#define android_printLog(prio, tag, ...) \
++    __android_log_print(prio, tag, __VA_ARGS__)
+ 
+-#define android_vprintLog(prio, cond, tag, fmt...) \
+-    __android_log_vprint(prio, tag, fmt)
++#define android_vprintLog(prio, cond, tag, ...) \
++    __android_log_vprint(prio, tag, __VA_ARGS__)
+ 
+ /* XXX Macros to work around syntax errors in places where format string
+  * arg is not passed to ALOG_ASSERT, LOG_ALWAYS_FATAL or LOG_ALWAYS_FATAL_IF
+@@ -519,9 +524,9 @@ typedef enum {
+  */
+ #define __android_rest(first, ...)               , ## __VA_ARGS__
+ 
+-#define android_printAssert(cond, tag, fmt...) \
++#define android_printAssert(cond, tag, ...) \
+     __android_log_assert(cond, tag, \
+-        __android_second(0, ## fmt, NULL) __android_rest(fmt))
++        __android_second(0, ## __VA_ARGS__, NULL) __android_rest(__VA_ARGS__))
+ 
+ #define android_writeLog(prio, tag, text) \
+     __android_log_write(prio, tag, text)
+diff --git a/include/log/logprint.h b/include/log/logprint.h
+index 481c96e..9b57e0e 100644
+--- a/include/log/logprint.h
++++ b/include/log/logprint.h
+@@ -20,7 +20,6 @@
+ #include <log/log.h>
+ #include <log/logger.h>
+ #include <log/event_tag_map.h>
+-#include <pthread.h>
+ 
+ #ifdef __cplusplus
+ extern "C" {
+diff --git a/include/sysutils/List.h b/include/sysutils/List.h
+index 31f7b37..72a9c44 100644
+--- a/include/sysutils/List.h
++++ b/include/sysutils/List.h
+@@ -30,7 +30,7 @@
+ #include <stddef.h>
+ #include <stdint.h>
+ 
+-namespace android {
++namespace stagefright {
+ namespace sysutils {
+ 
+ /*
+@@ -329,6 +329,6 @@ List<T>& List<T>::operator=(const List<T>& right)
+ }
+ 
+ }; // namespace sysutils
+-}; // namespace android
++}; // namespace stagefright
+ 
+ #endif // _SYSUTILS_LIST_H
+diff --git a/include/utils/CallStack.h b/include/utils/CallStack.h
+index 61dc832..eb52c8b 100644
+--- a/include/utils/CallStack.h
++++ b/include/utils/CallStack.h
+@@ -25,7 +25,7 @@
+ 
+ // ---------------------------------------------------------------------------
+ 
+-namespace android {
++namespace stagefright {
+ 
+ class CallStack
+ {
+@@ -68,7 +68,7 @@ private:
+     backtrace_frame_t mStack[MAX_DEPTH];
+ };
+ 
+-}; // namespace android
++}; // namespace stagefright
+ 
+ 
+ // ---------------------------------------------------------------------------
+diff --git a/include/utils/Condition.h b/include/utils/Condition.h
+index e63ba7e..e8e7ae9 100644
+--- a/include/utils/Condition.h
++++ b/include/utils/Condition.h
+@@ -30,7 +30,7 @@
+ #include <utils/Timers.h>
+ 
+ // ---------------------------------------------------------------------------
+-namespace android {
++namespace stagefright {
+ // ---------------------------------------------------------------------------
+ 
+ /*
+@@ -138,10 +138,22 @@ inline void Condition::broadcast() {
+     pthread_cond_broadcast(&mCond);
+ }
+ 
++#else
++
++inline Condition::Condition() {}
++inline Condition::Condition(int type) {}
++inline Condition::~Condition() {}
++inline status_t Condition::wait(Mutex& mutex) { return OK; }
++inline status_t Condition::waitRelative(Mutex& mutex, nsecs_t reltime) {
++    return OK;
++}
++inline void Condition::signal() {}
++inline void Condition::broadcast() {}
++
+ #endif // HAVE_PTHREADS
+ 
+ // ---------------------------------------------------------------------------
+-}; // namespace android
++}; // namespace stagefright
+ // ---------------------------------------------------------------------------
+ 
+ #endif // _LIBS_UTILS_CONDITON_H
+diff --git a/include/utils/Debug.h b/include/utils/Debug.h
+index 08893bd..41f09eb 100644
+--- a/include/utils/Debug.h
++++ b/include/utils/Debug.h
+@@ -20,7 +20,7 @@
+ #include <stdint.h>
+ #include <sys/types.h>
+ 
+-namespace android {
++namespace stagefright {
+ // ---------------------------------------------------------------------------
+ 
+ #ifdef __cplusplus
+@@ -43,6 +43,6 @@ struct CompileTimeIfElse<false, LHS, RHS> { typedef RHS TYPE; };
+ #endif
+ 
+ // ---------------------------------------------------------------------------
+-}; // namespace android
++}; // namespace stagefright
+ 
+ #endif // ANDROID_UTILS_DEBUG_H
+diff --git a/include/utils/Errors.h b/include/utils/Errors.h
+index 0b75b19..0ceda59 100644
+--- a/include/utils/Errors.h
++++ b/include/utils/Errors.h
+@@ -20,7 +20,7 @@
+ #include <sys/types.h>
+ #include <errno.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ // use this type to return error codes
+ #ifdef HAVE_MS_C_RUNTIME
+@@ -81,7 +81,7 @@ enum {
+ # define NO_ERROR 0L
+ #endif
+ 
+-}; // namespace android
++}; // namespace stagefright
+     
+ // ---------------------------------------------------------------------------
+     
+diff --git a/include/utils/KeyedVector.h b/include/utils/KeyedVector.h
+index c4faae0..ca4bfd6 100644
+--- a/include/utils/KeyedVector.h
++++ b/include/utils/KeyedVector.h
+@@ -29,7 +29,7 @@
+ 
+ // ---------------------------------------------------------------------------
+ 
+-namespace android {
++namespace stagefright {
+ 
+ template <typename KEY, typename VALUE>
+ class KeyedVector
+@@ -217,7 +217,7 @@ const VALUE& DefaultKeyedVector<KEY,VALUE>::valueFor(const KEY& key) const {
+     return i >= 0 ? KeyedVector<KEY,VALUE>::valueAt(i) : mDefault;
+ }
+ 
+-}; // namespace android
++}; // namespace stagefright
+ 
+ // ---------------------------------------------------------------------------
+ 
+diff --git a/include/utils/List.h b/include/utils/List.h
+index 403cd7f..f5c110e 100644
+--- a/include/utils/List.h
++++ b/include/utils/List.h
+@@ -30,7 +30,7 @@
+ #include <stddef.h>
+ #include <stdint.h>
+ 
+-namespace android {
++namespace stagefright {
+ 
+ /*
+  * Doubly-linked list.  Instantiate with "List<MyClass> myList".
+@@ -56,9 +56,11 @@ protected:
+         inline void setVal(const T& val) { mVal = val; }
+         inline void setPrev(_Node* ptr) { mpPrev = ptr; }
+         inline void setNext(_Node* ptr) { mpNext = ptr; }
++#ifndef _MSC_VER
+     private:
+         friend class List;
+         friend class _ListIterator;
++#endif
+         T           mVal;
+         _Node*      mpPrev;
+         _Node*      mpNext;
+@@ -327,6 +329,6 @@ List<T>& List<T>::operator=(const List<T>& right)
+     return *this;
+ }
+ 
+-}; // namespace android
++}; // namespace stagefright
+ 
+ #endif // _LIBS_UTILS_LIST_H
+diff --git a/include/utils/Log.h b/include/utils/Log.h
+index 4259c86..97cc4f3 100644
+--- a/include/utils/Log.h
++++ b/include/utils/Log.h
+@@ -33,7 +33,7 @@
+ 
+ #ifdef __cplusplus
+ 
+-namespace android {
++namespace stagefright {
+ 
+ /*
+  * A very simple utility that yells in the log when an operation takes too long.
+@@ -62,9 +62,9 @@ private:
+  * }
+  */
+ #define ALOGD_IF_SLOW(timeoutMillis, message) \
+-    android::LogIfSlow _logIfSlow(LOG_TAG, ANDROID_LOG_DEBUG, timeoutMillis, message);
++    stagefright::LogIfSlow _logIfSlow(LOG_TAG, ANDROID_LOG_DEBUG, timeoutMillis, message);
+ 
+-} // namespace android
++} // namespace stagefright
+ 
+ #endif // __cplusplus
+ 
+diff --git a/include/utils/Mutex.h b/include/utils/Mutex.h
+index dd201c8..b33efef 100644
+--- a/include/utils/Mutex.h
++++ b/include/utils/Mutex.h
+@@ -28,7 +28,7 @@
+ #include <utils/Errors.h>
+ 
+ // ---------------------------------------------------------------------------
+-namespace android {
++namespace stagefright {
+ // ---------------------------------------------------------------------------
+ 
+ class Condition;
+@@ -118,6 +118,17 @@ inline status_t Mutex::tryLock() {
+     return -pthread_mutex_trylock(&mMutex);
+ }
+ 
++#else
++
++inline Mutex::Mutex() {}
++inline Mutex::Mutex(const char* name) {}
++inline Mutex::Mutex(int type, const char* name) {}
++inline Mutex::~Mutex() {}
++inline status_t Mutex::lock() { return OK; }
++inline void Mutex::unlock() {}
++inline status_t Mutex::tryLock() { return OK; }
++inline void Mutex::_init() {}
++
+ #endif // HAVE_PTHREADS
+ 
+ // ---------------------------------------------------------------------------
+@@ -131,7 +142,7 @@ inline status_t Mutex::tryLock() {
+ typedef Mutex::Autolock AutoMutex;
+ 
+ // ---------------------------------------------------------------------------
+-}; // namespace android
++}; // namespace stagefright
+ // ---------------------------------------------------------------------------
+ 
+ #endif // _LIBS_UTILS_MUTEX_H
+diff --git a/include/utils/RWLock.h b/include/utils/RWLock.h
+index 90beb5f..4c43827 100644
+--- a/include/utils/RWLock.h
++++ b/include/utils/RWLock.h
+@@ -28,7 +28,7 @@
+ #include <utils/ThreadDefs.h>
+ 
+ // ---------------------------------------------------------------------------
+-namespace android {
++namespace stagefright {
+ // ---------------------------------------------------------------------------
+ 
+ #if defined(HAVE_PTHREADS)
+@@ -120,7 +120,7 @@ inline void RWLock::unlock() {
+ #endif // HAVE_PTHREADS
+ 
+ // ---------------------------------------------------------------------------
+-}; // namespace android
++}; // namespace stagefright
+ // ---------------------------------------------------------------------------
+ 
+ #endif // _LIBS_UTILS_RWLOCK_H
+diff --git a/include/utils/RefBase.h b/include/utils/RefBase.h
+index cbfe13a..e1f97c9 100644
+--- a/include/utils/RefBase.h
++++ b/include/utils/RefBase.h
+@@ -27,8 +27,12 @@
+ #include <utils/StrongPointer.h>
+ #include <utils/TypeHelpers.h>
+ 
++#ifdef _MSC_VER
++#define __attribute__(X)
++#endif
++
+ // ---------------------------------------------------------------------------
+-namespace android {
++namespace stagefright {
+ 
+ class TextOutput;
+ TextOutput& printWeakPointer(TextOutput& to, const void* val);
+@@ -539,7 +543,11 @@ void move_backward_type(wp<TYPE>* d, wp<TYPE> const* s, size_t n) {
+ }
+ 
+ 
+-}; // namespace android
++}; // namespace stagefright
++
++#ifdef _MSC_VER
++#undef __attribute__
++#endif
+ 
+ // ---------------------------------------------------------------------------
+ 
+diff --git a/include/utils/SharedBuffer.h b/include/utils/SharedBuffer.h
+index b670953..62d3ca4 100644
+--- a/include/utils/SharedBuffer.h
++++ b/include/utils/SharedBuffer.h
+@@ -22,7 +22,7 @@
+ 
+ // ---------------------------------------------------------------------------
+ 
+-namespace android {
++namespace stagefright {
+ 
+ class SharedBuffer
+ {
+@@ -130,7 +130,7 @@ bool SharedBuffer::onlyOwner() const {
+     return (mRefs == 1);
+ }
+ 
+-}; // namespace android
++}; // namespace stagefright
+ 
+ // ---------------------------------------------------------------------------
+ 
+diff --git a/include/utils/SortedVector.h b/include/utils/SortedVector.h
+index 2d3e82a..67bfea8 100644
+--- a/include/utils/SortedVector.h
++++ b/include/utils/SortedVector.h
+@@ -29,7 +29,7 @@
+ 
+ // ---------------------------------------------------------------------------
+ 
+-namespace android {
++namespace stagefright {
+ 
+ template <class TYPE>
+ class SortedVector : private SortedVectorImpl
+@@ -48,7 +48,6 @@ public:
+     virtual                 ~SortedVector();
+ 
+     /*! copy operator */
+-    const SortedVector<TYPE>&   operator = (const SortedVector<TYPE>& rhs) const;    
+     SortedVector<TYPE>&         operator = (const SortedVector<TYPE>& rhs);    
+ 
+     /*
+@@ -168,12 +167,6 @@ SortedVector<TYPE>& SortedVector<TYPE>::operator = (const SortedVector<TYPE>& rh
+ }
+ 
+ template<class TYPE> inline
+-const SortedVector<TYPE>& SortedVector<TYPE>::operator = (const SortedVector<TYPE>& rhs) const {
+-    SortedVectorImpl::operator = (rhs);
+-    return *this; 
+-}
+-
+-template<class TYPE> inline
+ const TYPE* SortedVector<TYPE>::array() const {
+     return static_cast<const TYPE *>(arrayImpl());
+ }
+@@ -274,7 +267,7 @@ int SortedVector<TYPE>::do_compare(const void* lhs, const void* rhs) const {
+     return compare_type( *reinterpret_cast<const TYPE*>(lhs), *reinterpret_cast<const TYPE*>(rhs) );
+ }
+ 
+-}; // namespace android
++}; // namespace stagefright
+ 
+ 
+ // ---------------------------------------------------------------------------
+diff --git a/include/utils/String16.h b/include/utils/String16.h
+index d131bfc..40632d7 100644
+--- a/include/utils/String16.h
++++ b/include/utils/String16.h
+@@ -30,7 +30,7 @@ extern "C" {
+ 
+ // ---------------------------------------------------------------------------
+ 
+-namespace android {
++namespace stagefright {
+ 
+ // ---------------------------------------------------------------------------
+ 
+@@ -243,7 +243,7 @@ inline String16::operator const char16_t*() const
+     return mString;
+ }
+ 
+-}; // namespace android
++}; // namespace stagefright
+ 
+ // ---------------------------------------------------------------------------
+ 
+diff --git a/include/utils/String8.h b/include/utils/String8.h
+index ef59470..3007f21 100644
+--- a/include/utils/String8.h
++++ b/include/utils/String8.h
+@@ -27,7 +27,11 @@
+ 
+ // ---------------------------------------------------------------------------
+ 
+-namespace android {
++#ifdef _MSC_VER
++#define __attribute__(X)
++#endif
++
++namespace stagefright {
+ 
+ class String16;
+ class TextOutput;
+@@ -388,7 +392,11 @@ inline String8::operator const char*() const
+     return mString;
+ }
+ 
+-}  // namespace android
++}  // namespace stagefright
++
++#ifdef _MSC_VER
++#undef __attribute__
++#endif
+ 
+ // ---------------------------------------------------------------------------
+ 
+diff --git a/include/utils/StrongPointer.h b/include/utils/StrongPointer.h
+index aba9577..db22900 100644
+--- a/include/utils/StrongPointer.h
++++ b/include/utils/StrongPointer.h
+@@ -24,7 +24,7 @@
+ #include <stdlib.h>
+ 
+ // ---------------------------------------------------------------------------
+-namespace android {
++namespace stagefright {
+ 
+ template<typename T> class wp;
+ 
+@@ -204,7 +204,7 @@ void sp<T>::set_pointer(T* ptr) {
+     m_ptr = ptr;
+ }
+ 
+-}; // namespace android
++}; // namespace stagefright
+ 
+ // ---------------------------------------------------------------------------
+ 
+diff --git a/include/utils/TypeHelpers.h b/include/utils/TypeHelpers.h
+index 13c9081..7a19244 100644
+--- a/include/utils/TypeHelpers.h
++++ b/include/utils/TypeHelpers.h
+@@ -24,7 +24,7 @@
+ 
+ // ---------------------------------------------------------------------------
+ 
+-namespace android {
++namespace stagefright {
+ 
+ /*
+  * Types traits
+@@ -201,7 +201,7 @@ void move_backward_type(TYPE* d, const TYPE* s, size_t n = 1) {
+     if ((traits<TYPE>::has_trivial_dtor && traits<TYPE>::has_trivial_copy) 
+             || traits<TYPE>::has_trivial_move) 
+     {
+-        memmove(d,s,n*sizeof(TYPE));
++        memmove((void*)d,(void*)s,n*sizeof(TYPE));
+     } else {
+         while (n--) {
+             if (!traits<TYPE>::has_trivial_copy) {
+@@ -295,7 +295,7 @@ template <typename T> inline hash_t hash_type(T* const & value) {
+     return hash_type(uintptr_t(value));
+ }
+ 
+-}; // namespace android
++}; // namespace stagefright
+ 
+ // ---------------------------------------------------------------------------
+ 
+diff --git a/include/utils/Unicode.h b/include/utils/Unicode.h
+index c8c87c3..b76a5e2 100644
+--- a/include/utils/Unicode.h
++++ b/include/utils/Unicode.h
+@@ -22,9 +22,6 @@
+ 
+ extern "C" {
+ 
+-typedef uint32_t char32_t;
+-typedef uint16_t char16_t;
+-
+ // Standard string functions on char16_t strings.
+ int strcmp16(const char16_t *, const char16_t *);
+ int strncmp16(const char16_t *s1, const char16_t *s2, size_t n);
+diff --git a/include/utils/Vector.h b/include/utils/Vector.h
+index ed7b725..2388d06 100644
+--- a/include/utils/Vector.h
++++ b/include/utils/Vector.h
+@@ -28,7 +28,7 @@
+ 
+ // ---------------------------------------------------------------------------
+ 
+-namespace android {
++namespace stagefright {
+ 
+ template <typename TYPE>
+ class SortedVector;
+@@ -55,10 +55,8 @@ public:
+     virtual                 ~Vector();
+ 
+     /*! copy operator */
+-            const Vector<TYPE>&     operator = (const Vector<TYPE>& rhs) const;
+             Vector<TYPE>&           operator = (const Vector<TYPE>& rhs);    
+ 
+-            const Vector<TYPE>&     operator = (const SortedVector<TYPE>& rhs) const;
+             Vector<TYPE>&           operator = (const SortedVector<TYPE>& rhs);
+ 
+             /*
+@@ -171,8 +169,12 @@ public:
+      typedef int (*compar_t)(const TYPE* lhs, const TYPE* rhs);
+      typedef int (*compar_r_t)(const TYPE* lhs, const TYPE* rhs, void* state);
+      
+-     inline status_t        sort(compar_t cmp);
+-     inline status_t        sort(compar_r_t cmp, void* state);
++     inline status_t        sort(compar_t cmp) {
++         return VectorImpl::sort((VectorImpl::compar_t)cmp);
++     }
++     inline status_t        sort(compar_r_t cmp, void* state) {
++         return VectorImpl::sort((VectorImpl::compar_r_t)cmp, state);
++     }
+ 
+      // for debugging only
+      inline size_t getItemSize() const { return itemSize(); }
+@@ -247,24 +249,12 @@ Vector<TYPE>& Vector<TYPE>::operator = (const Vector<TYPE>& rhs) {
+ }
+ 
+ template<class TYPE> inline
+-const Vector<TYPE>& Vector<TYPE>::operator = (const Vector<TYPE>& rhs) const {
+-    VectorImpl::operator = (static_cast<const VectorImpl&>(rhs));
+-    return *this;
+-}
+-
+-template<class TYPE> inline
+ Vector<TYPE>& Vector<TYPE>::operator = (const SortedVector<TYPE>& rhs) {
+     VectorImpl::operator = (static_cast<const VectorImpl&>(rhs));
+     return *this;
+ }
+ 
+ template<class TYPE> inline
+-const Vector<TYPE>& Vector<TYPE>::operator = (const SortedVector<TYPE>& rhs) const {
+-    VectorImpl::operator = (rhs);
+-    return *this; 
+-}
+-
+-template<class TYPE> inline
+ const TYPE* Vector<TYPE>::array() const {
+     return static_cast<const TYPE *>(arrayImpl());
+ }
+@@ -373,16 +363,6 @@ ssize_t Vector<TYPE>::removeItemsAt(size_t index, size_t count) {
+     return VectorImpl::removeItemsAt(index, count);
+ }
+ 
+-template<class TYPE> inline
+-status_t Vector<TYPE>::sort(Vector<TYPE>::compar_t cmp) {
+-    return VectorImpl::sort((VectorImpl::compar_t)cmp);
+-}
+-
+-template<class TYPE> inline
+-status_t Vector<TYPE>::sort(Vector<TYPE>::compar_r_t cmp, void* state) {
+-    return VectorImpl::sort((VectorImpl::compar_r_t)cmp, state);
+-}
+-
+ // ---------------------------------------------------------------------------
+ 
+ template<class TYPE>
+@@ -415,7 +395,7 @@ void Vector<TYPE>::do_move_backward(void* dest, const void* from, size_t num) co
+     move_backward_type( reinterpret_cast<TYPE*>(dest), reinterpret_cast<const TYPE*>(from), num );
+ }
+ 
+-}; // namespace android
++}; // namespace stagefright
+ 
+ 
+ // ---------------------------------------------------------------------------
+diff --git a/include/utils/VectorImpl.h b/include/utils/VectorImpl.h
+index 21ad71c..b83c946 100644
+--- a/include/utils/VectorImpl.h
++++ b/include/utils/VectorImpl.h
+@@ -26,7 +26,7 @@
+ // No user serviceable parts in here...
+ // ---------------------------------------------------------------------------
+ 
+-namespace android {
++namespace stagefright {
+ 
+ /*!
+  * Implementation of the guts of the vector<> class
+@@ -175,7 +175,7 @@ private:
+             ssize_t         replaceAt(const void* item, size_t index);
+ };
+ 
+-}; // namespace android
++}; // namespace stagefright
+ 
+ 
+ // ---------------------------------------------------------------------------
+diff --git a/liblog/fake_log_device.c b/liblog/fake_log_device.c
+index 5283619..a34838c 100644
+--- a/liblog/fake_log_device.c
++++ b/liblog/fake_log_device.c
+@@ -31,6 +31,34 @@
+ #include <pthread.h>
+ #endif
+ 
++#ifdef _MSC_VER
++#include <io.h>
++#include <process.h>
++#include <nspr/prprf.h>
++#define snprintf PR_snprintf
++
++/* We don't want to indent large blocks because it causes unnecessary merge
++ * conflicts */
++#define UNINDENTED_BLOCK_START {
++#define UNINDENTED_BLOCK_END }
++#else
++#define UNINDENTED_BLOCK_START
++#define UNINDENTED_BLOCK_END
++#endif
++
++#ifdef _MSC_VER
++#include <io.h>
++#include <process.h>
++
++/* We don't want to indent large blocks because it causes unnecessary merge
++ * conflicts */
++#define UNINDENTED_BLOCK_START {
++#define UNINDENTED_BLOCK_END }
++#else
++#define UNINDENTED_BLOCK_START
++#define UNINDENTED_BLOCK_END
++#endif
++
+ #define kMaxTagLen  16      /* from the long-dead utils/Log.cpp */
+ 
+ #define kTagSetSize 16      /* arbitrary */
+@@ -191,6 +219,7 @@ static void configureInitialState(const char* pathName, LogState* logState)
+     /*
+      * This is based on the the long-dead utils/Log.cpp code.
+      */
++    UNINDENTED_BLOCK_START
+     const char* tags = getenv("ANDROID_LOG_TAGS");
+     TRACE("Found ANDROID_LOG_TAGS='%s'\n", tags);
+     if (tags != NULL) {
+@@ -264,11 +293,12 @@ static void configureInitialState(const char* pathName, LogState* logState)
+             }
+         }
+     }
+-
++    UNINDENTED_BLOCK_END
+ 
+     /*
+      * Taken from the long-dead utils/Log.cpp
+      */
++    UNINDENTED_BLOCK_START
+     const char* fstr = getenv("ANDROID_PRINTF_LOG");
+     LogFormat format;
+     if (fstr == NULL) {
+@@ -293,6 +323,7 @@ static void configureInitialState(const char* pathName, LogState* logState)
+     }
+ 
+     logState->outputFormat = format;
++    UNINDENTED_BLOCK_END
+ }
+ 
+ /*
+@@ -321,7 +352,7 @@ static const char* getPriorityString(int priority)
+  */
+ static ssize_t fake_writev(int fd, const struct iovec *iov, int iovcnt) {
+     int result = 0;
+-    struct iovec* end = iov + iovcnt;
++    const struct iovec* end = iov + iovcnt;
+     for (; iov < end; iov++) {
+         int w = write(fd, iov->iov_base, iov->iov_len);
+         if (w != iov->iov_len) {
+@@ -354,7 +385,11 @@ static void showLog(LogState *state,
+     char prefixBuf[128], suffixBuf[128];
+     char priChar;
+     time_t when;
++#ifdef _MSC_VER
++    int pid, tid;
++#else
+     pid_t pid, tid;
++#endif
+ 
+     TRACE("LOG %d: %s %s", logPrio, tag, msg);
+ 
+@@ -382,6 +417,7 @@ static void showLog(LogState *state,
+     /*
+      * Construct a buffer containing the log header and log message.
+      */
++    UNINDENTED_BLOCK_START
+     size_t prefixLen, suffixLen;
+ 
+     switch (state->outputFormat) {
+@@ -431,6 +467,7 @@ static void showLog(LogState *state,
+     /*
+      * Figure out how many lines there will be.
+      */
++    UNINDENTED_BLOCK_START
+     const char* end = msg + strlen(msg);
+     size_t numLines = 0;
+     const char* p = msg;
+@@ -443,7 +480,8 @@ static void showLog(LogState *state,
+      * Create an array of iovecs large enough to write all of
+      * the lines with a prefix and a suffix.
+      */
+-    const size_t INLINE_VECS = 6;
++    UNINDENTED_BLOCK_START
++    #define INLINE_VECS 6
+     const size_t MAX_LINES   = ((size_t)~0)/(3*sizeof(struct iovec*));
+     struct iovec stackVec[INLINE_VECS];
+     struct iovec* vec = stackVec;
+@@ -467,6 +505,7 @@ static void showLog(LogState *state,
+      * Fill in the iovec pointers.
+      */
+     p = msg;
++    UNINDENTED_BLOCK_START
+     struct iovec* v = vec;
+     int totalLen = 0;
+     while (numLines > 0 && p < end) {
+@@ -476,6 +515,7 @@ static void showLog(LogState *state,
+             totalLen += prefixLen;
+             v++;
+         }
++        UNINDENTED_BLOCK_START
+         const char* start = p;
+         while (p < end && *p != '\n') p++;
+         if ((p-start) > 0) {
+@@ -492,6 +532,7 @@ static void showLog(LogState *state,
+             v++;
+         }
+         numLines -= 1;
++        UNINDENTED_BLOCK_END
+     }
+     
+     /*
+@@ -529,6 +570,10 @@ static void showLog(LogState *state,
+     /* if we allocated storage for the iovecs, free it */
+     if (vec != stackVec)
+         free(vec);
++    UNINDENTED_BLOCK_END
++    UNINDENTED_BLOCK_END
++    UNINDENTED_BLOCK_END
++    UNINDENTED_BLOCK_END
+ }
+ 
+ 
+@@ -567,6 +612,7 @@ static ssize_t logWritev(int fd, const struct iovec* vector, int count)
+     }
+ 
+     /* pull out the three fields */
++    UNINDENTED_BLOCK_START
+     int logPrio = *(const char*)vector[0].iov_base;
+     const char* tag = (const char*) vector[1].iov_base;
+     const char* msg = (const char*) vector[2].iov_base;
+@@ -590,6 +636,7 @@ static ssize_t logWritev(int fd, const struct iovec* vector, int count)
+     } else {
+         //TRACE("+++ NOLOG(%d): %s %s", logPrio, tag, msg);
+     }
++    UNINDENTED_BLOCK_END
+ 
+ bail:
+     unlock();
+@@ -683,3 +730,6 @@ ssize_t fakeLogWritev(int fd, const struct iovec* vector, int count)
+     /* Assume that open() was called first. */
+     return redirectWritev(fd, vector, count);
+ }
++
++#undef UNINDENTED_BLOCK_START
++#undef UNINDENTED_BLOCK_END
+diff --git a/liblog/logd_write.c b/liblog/logd_write.c
+index fff7cc4..a194a9c 100644
+--- a/liblog/logd_write.c
++++ b/liblog/logd_write.c
+@@ -33,7 +33,19 @@
+ 
+ #define LOG_BUF_SIZE	1024
+ 
++#ifdef _MSC_VER
++#include <nspr/prprf.h>
++#define snprintf PR_snprintf
++#define __builtin_trap abort
++static int W_OK = 0;
++static int access(char* c, int i) { return -1; }
++#endif
++
+ #if FAKE_LOG_DEVICE
++int fakeLogOpen(const char *pathName, int flags);
++ssize_t fakeLogWritev(int fd, const struct iovec* vector, int count);
++int fakeLogClose(int fd);
++
+ // This will be defined when building for the host.
+ #define log_open(pathname, flags) fakeLogOpen(pathname, flags)
+ #define log_writev(filedes, vector, count) fakeLogWritev(filedes, vector, count)
+@@ -258,7 +270,11 @@ void __android_log_assert(const char *cond, const char *tag,
+ 
+     __android_log_write(ANDROID_LOG_FATAL, tag, buf);
+ 
++#ifdef _MSC_VER
++    abort();
++#else
+     __builtin_trap(); /* trap so we have a chance to debug the situation */
++#endif
+ }
+ 
+ int __android_log_bwrite(int32_t tag, const void *payload, size_t len)
+diff --git a/liblog/logprint.c b/liblog/logprint.c
+index 508c825..6b229df 100644
+--- a/liblog/logprint.c
++++ b/liblog/logprint.c
+@@ -29,6 +29,35 @@
+ #include <log/logd.h>
+ #include <log/logprint.h>
+ 
++#ifdef _MSC_VER
++#include <nspr/prprf.h>
++#define snprintf PR_snprintf
++#define inline
++/* We don't want to indent large blocks because it causes unnecessary merge
++ * conflicts */
++#define UNINDENTED_BLOCK_START {
++#define UNINDENTED_BLOCK_END }
++
++static char *
++strsep(char **stringp, const char *delim)
++{
++    char* res = *stringp;
++    while (**stringp) {
++        const char *c;
++        for (c = delim; *c; c++) {
++            if (**stringp == *c) {
++                **stringp++ = 0;
++                return res;
++            }
++        }
++    }
++    return res;
++}
++#else
++#define UNINDENTED_BLOCK_START
++#define UNINDENTED_BLOCK_END
++#endif
++
+ typedef struct FilterInfo_t {
+     char *mTag;
+     android_LogPriority mPri;
+@@ -268,6 +297,7 @@ int android_log_addFilterRule(AndroidLogFormat *p_format,
+             pri = ANDROID_LOG_VERBOSE;
+         }
+ 
++        UNINDENTED_BLOCK_START
+         char *tagName;
+ 
+ // Presently HAVE_STRNDUP is never defined, so the second case is always taken
+@@ -280,11 +310,14 @@ int android_log_addFilterRule(AndroidLogFormat *p_format,
+         tagName[tagNameLength] = '\0';
+ #endif /*HAVE_STRNDUP*/
+ 
++        UNINDENTED_BLOCK_START
+         FilterInfo *p_fi = filterinfo_new(tagName, pri);
+         free(tagName);
+ 
+         p_fi->p_next = p_format->filters;
+         p_format->filters = p_fi;
++        UNINDENTED_BLOCK_END
++        UNINDENTED_BLOCK_END
+     }
+ 
+     return 0;
+@@ -373,6 +406,7 @@ int android_log_processLogBuffer(struct logger_entry *buf,
+         return -1;
+     }
+ 
++    UNINDENTED_BLOCK_START
+     int msgStart = -1;
+     int msgEnd = -1;
+ 
+@@ -404,6 +438,7 @@ int android_log_processLogBuffer(struct logger_entry *buf,
+     entry->messageLen = msgEnd - msgStart;
+ 
+     return 0;
++    UNINDENTED_BLOCK_END
+ }
+ 
+ /*
+@@ -621,11 +656,7 @@ int android_log_processBinaryLogBuffer(struct logger_entry *buf,
+     eventData += 4;
+     inCount -= 4;
+ 
+-    if (map != NULL) {
+-        entry->tag = android_lookupEventTag(map, tagIndex);
+-    } else {
+-        entry->tag = NULL;
+-    }
++    entry->tag = NULL;
+ 
+     /*
+      * If we don't have a map, or didn't find the tag number in the map,
+@@ -644,6 +675,7 @@ int android_log_processBinaryLogBuffer(struct logger_entry *buf,
+     /*
+      * Format the event log data into the buffer.
+      */
++    UNINDENTED_BLOCK_START
+     char* outBuf = messageBuf;
+     size_t outRemaining = messageBufLen-1;      /* leave one for nul byte */
+     int result;
+@@ -687,6 +719,7 @@ int android_log_processBinaryLogBuffer(struct logger_entry *buf,
+     entry->message = messageBuf;
+ 
+     return 0;
++    UNINDENTED_BLOCK_END
+ }
+ 
+ /**
+@@ -737,6 +770,7 @@ char *android_log_formatLogLine (
+     /*
+      * Construct a buffer containing the log header and log message.
+      */
++    UNINDENTED_BLOCK_START
+     size_t prefixLen, suffixLen;
+ 
+     switch (p_format->format) {
+@@ -807,6 +841,7 @@ char *android_log_formatLogLine (
+ 
+     /* the following code is tragically unreadable */
+ 
++    UNINDENTED_BLOCK_START
+     size_t numLines;
+     size_t i;
+     char *p;
+@@ -882,6 +917,8 @@ char *android_log_formatLogLine (
+     }
+ 
+     return ret;
++    UNINDENTED_BLOCK_END
++    UNINDENTED_BLOCK_END
+ }
+ 
+ /**
+@@ -1014,3 +1051,6 @@ void logprint_run_tests()
+     fprintf(stderr, "tests complete\n");
+ #endif
+ }
++
++#undef UNINDENTED_BLOCK_START
++#undef UNINDENTED_BLOCK_END
+diff --git a/libpixelflinger/codeflinger/tinyutils/Errors.h b/libpixelflinger/codeflinger/tinyutils/Errors.h
+index 47ae9d7..98f2190 100644
+--- a/libpixelflinger/codeflinger/tinyutils/Errors.h
++++ b/libpixelflinger/codeflinger/tinyutils/Errors.h
+@@ -20,7 +20,7 @@
+ #include <sys/types.h>
+ #include <errno.h>
+ 
+-namespace android {
++namespace stagefright {
+ namespace tinyutils {
+ 
+ // use this type to return error codes
+@@ -41,7 +41,7 @@ enum {
+ 
+ 
+ } // namespace tinyutils
+-} // namespace android
++} // namespace stagefright
+     
+ // ---------------------------------------------------------------------------
+     
+diff --git a/libpixelflinger/codeflinger/tinyutils/KeyedVector.h b/libpixelflinger/codeflinger/tinyutils/KeyedVector.h
+index 9d8668b..62fc760 100644
+--- a/libpixelflinger/codeflinger/tinyutils/KeyedVector.h
++++ b/libpixelflinger/codeflinger/tinyutils/KeyedVector.h
+@@ -27,7 +27,7 @@
+ 
+ // ---------------------------------------------------------------------------
+ 
+-namespace android {
++namespace stagefright {
+ namespace tinyutils {
+ 
+ template <typename KEY, typename VALUE>
+@@ -196,7 +196,7 @@ const VALUE& DefaultKeyedVector<KEY,VALUE>::valueFor(const KEY& key) const {
+ }
+ 
+ } // namespace tinyutils
+-} // namespace android
++} // namespace stagefright
+ 
+ // ---------------------------------------------------------------------------
+ 
+diff --git a/libpixelflinger/codeflinger/tinyutils/SortedVector.h b/libpixelflinger/codeflinger/tinyutils/SortedVector.h
+index a2b7005..71026c8 100644
+--- a/libpixelflinger/codeflinger/tinyutils/SortedVector.h
++++ b/libpixelflinger/codeflinger/tinyutils/SortedVector.h
+@@ -27,7 +27,7 @@
+ 
+ // ---------------------------------------------------------------------------
+ 
+-namespace android {
++namespace stagefright {
+ namespace tinyutils {
+ 
+ template <class TYPE>
+@@ -276,7 +276,7 @@ int SortedVector<TYPE>::do_compare(const void* lhs, const void* rhs) const {
+ }
+ 
+ } // namespace tinyutils
+-} // namespace android
++} // namespace stagefright
+ 
+ 
+ // ---------------------------------------------------------------------------
+diff --git a/libpixelflinger/codeflinger/tinyutils/Vector.h b/libpixelflinger/codeflinger/tinyutils/Vector.h
+index c07a17a..3fe87a2 100644
+--- a/libpixelflinger/codeflinger/tinyutils/Vector.h
++++ b/libpixelflinger/codeflinger/tinyutils/Vector.h
+@@ -29,7 +29,7 @@
+ 
+ // ---------------------------------------------------------------------------
+ 
+-namespace android {
++namespace stagefright {
+ namespace tinyutils {
+ 
+ /*!
+@@ -345,7 +345,7 @@ void Vector<TYPE>::do_move_backward(void* dest, const void* from, size_t num) co
+ }
+ 
+ } // namespace tinyutils
+-} // namespace android
++} // namespace stagefright
+ 
+ 
+ // ---------------------------------------------------------------------------
+diff --git a/libpixelflinger/codeflinger/tinyutils/VectorImpl.h b/libpixelflinger/codeflinger/tinyutils/VectorImpl.h
+index 56089b3..6cc55c4 100644
+--- a/libpixelflinger/codeflinger/tinyutils/VectorImpl.h
++++ b/libpixelflinger/codeflinger/tinyutils/VectorImpl.h
+@@ -25,7 +25,7 @@
+ // No user serviceable parts in here...
+ // ---------------------------------------------------------------------------
+ 
+-namespace android {
++namespace stagefright {
+ namespace tinyutils {
+ 
+ /*!
+@@ -187,7 +187,7 @@ private:
+ };
+ 
+ } // namespace tinyutils
+-} // namespace android
++} // namespace stagefright
+ 
+ 
+ // ---------------------------------------------------------------------------
+diff --git a/libutils/RefBase.cpp b/libutils/RefBase.cpp
+index f398a82..259b0a4 100644
+--- a/libutils/RefBase.cpp
++++ b/libutils/RefBase.cpp
+@@ -20,7 +20,14 @@
+ #include <utils/RefBase.h>
+ 
+ #include <utils/Atomic.h>
++#ifdef _MSC_VER
++class CallStack {
++public:
++    CallStack(int x) {}
++};
++#else
+ #include <utils/CallStack.h>
++#endif
+ #include <utils/Log.h>
+ #include <utils/threads.h>
+ 
+@@ -40,7 +47,7 @@
+ #define DEBUG_REFS_ENABLED_BY_DEFAULT   0
+ 
+ // whether callstack are collected (significantly slows things down)
+-#define DEBUG_REFS_CALLSTACK_ENABLED    1
++#define DEBUG_REFS_CALLSTACK_ENABLED    0
+ 
+ // folder where stack traces are saved when DEBUG_REFS is enabled
+ // this folder needs to exist and be writable
+@@ -51,7 +58,7 @@
+ 
+ // ---------------------------------------------------------------------------
+ 
+-namespace android {
++namespace stagefright {
+ 
+ #define INITIAL_STRONG_VALUE (1<<28)
+ 
+@@ -647,4 +654,4 @@ void RefBase::renameRefId(RefBase* ref,
+     ref->mRefs->renameWeakRefId(old_id, new_id);
+ }
+ 
+-}; // namespace android
++}; // namespace stagefright
+diff --git a/libutils/SharedBuffer.cpp b/libutils/SharedBuffer.cpp
+index 3555fb7..7aefe80 100644
+--- a/libutils/SharedBuffer.cpp
++++ b/libutils/SharedBuffer.cpp
+@@ -22,7 +22,7 @@
+ 
+ // ---------------------------------------------------------------------------
+ 
+-namespace android {
++namespace stagefright {
+ 
+ SharedBuffer* SharedBuffer::alloc(size_t size)
+ {
+@@ -110,4 +110,4 @@ int32_t SharedBuffer::release(uint32_t flags) const
+ }
+ 
+ 
+-}; // namespace android
++}; // namespace stagefright
+diff --git a/libutils/Static.cpp b/libutils/Static.cpp
+index 3ed07a1..476240f 100644
+--- a/libutils/Static.cpp
++++ b/libutils/Static.cpp
+@@ -17,7 +17,7 @@
+ // All static variables go here, to control initialization and
+ // destruction order in the library.
+ 
+-namespace android {
++namespace stagefright {
+ 
+ // For String8.cpp
+ extern void initialize_string8();
+@@ -46,4 +46,4 @@ public:
+ static LibUtilsFirstStatics gFirstStatics;
+ int gDarwinCantLoadAllObjects = 1;
+ 
+-}   // namespace android
++}   // namespace stagefright
+diff --git a/libutils/String16.cpp b/libutils/String16.cpp
+index b09b728..998cb94 100644
+--- a/libutils/String16.cpp
++++ b/libutils/String16.cpp
+@@ -27,7 +27,7 @@
+ #include <ctype.h>
+ 
+ 
+-namespace android {
++namespace stagefright {
+ 
+ static SharedBuffer* gEmptyStringBuf = NULL;
+ static char16_t* gEmptyString = NULL;
+@@ -419,4 +419,4 @@ status_t String16::remove(size_t len, size_t begin)
+     return NO_MEMORY;
+ }
+ 
+-}; // namespace android
++}; // namespace stagefright
+diff --git a/libutils/String8.cpp b/libutils/String8.cpp
+index e852d77..3d4b285 100644
+--- a/libutils/String8.cpp
++++ b/libutils/String8.cpp
+@@ -25,13 +25,13 @@
+ #include <ctype.h>
+ 
+ /*
+- * Functions outside android is below the namespace android, since they use
++ * Functions outside android is below the namespace stagefright, since they use
+  * functions and constants in android namespace.
+  */
+ 
+ // ---------------------------------------------------------------------------
+ 
+-namespace android {
++namespace stagefright {
+ 
+ // Separator used by resource paths. This is not platform dependent contrary
+ // to OS_PATH_SEPARATOR.
+@@ -138,17 +138,8 @@ static char* allocFromUTF32(const char32_t* in, size_t len)
+ // ---------------------------------------------------------------------------
+ 
+ String8::String8()
+-    : mString(getEmptyString())
+-{
+-}
+-
+-String8::String8(StaticLinkage)
+     : mString(0)
+ {
+-    // this constructor is used when we can't rely on the static-initializers
+-    // having run. In this case we always allocate an empty string. It's less
+-    // efficient than using getEmptyString(), but we assume it's uncommon.
+-
+     char* data = static_cast<char*>(
+             SharedBuffer::alloc(sizeof(char))->data());
+     data[0] = 0;
+@@ -324,16 +315,27 @@ status_t String8::appendFormat(const char* fmt, ...)
+ status_t String8::appendFormatV(const char* fmt, va_list args)
+ {
+     int result = NO_ERROR;
++#ifndef _MSC_VER
++    va_list o;
++    va_copy(o, args);
++#endif
+     int n = vsnprintf(NULL, 0, fmt, args);
+     if (n != 0) {
+         size_t oldLength = length();
+         char* buf = lockBuffer(oldLength + n);
+         if (buf) {
++#ifdef _MSC_VER
+             vsnprintf(buf + oldLength, n + 1, fmt, args);
++#else
++            vsnprintf(buf + oldLength, n + 1, fmt, o);
++#endif
+         } else {
+             result = NO_MEMORY;
+         }
+     }
++#ifndef _MSC_VER
++    va_end(o);
++#endif
+     return result;
+ }
+ 
+@@ -465,6 +467,8 @@ void String8::getUtf32(char32_t* dst) const
+ // ---------------------------------------------------------------------------
+ // Path functions
+ 
++#if 0
++
+ void String8::setPathName(const char* name)
+ {
+     setPathName(name, strlen(name));
+@@ -637,4 +641,6 @@ String8& String8::convertToResPath()
+     return *this;
+ }
+ 
+-}; // namespace android
++#endif
++
++}; // namespace stagefright
+diff --git a/libutils/Unicode.cpp b/libutils/Unicode.cpp
+index a66e3bb..b8aae5e 100644
+--- a/libutils/Unicode.cpp
++++ b/libutils/Unicode.cpp
+@@ -576,8 +576,8 @@ void utf8_to_utf16(const uint8_t* u8str, size_t u8len, char16_t* u16str) {
+ char16_t* utf8_to_utf16_n(const uint8_t* src, size_t srcLen, char16_t* dst, size_t dstLen) {
+     const uint8_t* const u8end = src + srcLen;
+     const uint8_t* u8cur = src;
+-    const uint16_t* const u16end = dst + dstLen;
+-    char16_t* u16cur = dst;
++    const uint16_t* const u16end = (const uint16_t* const) dst + dstLen;
++    uint16_t* u16cur = (uint16_t*) dst;
+ 
+     while (u8cur < u8end && u16cur < u16end) {
+         size_t u8len = utf8_codepoint_len(*u8cur);
+@@ -593,14 +593,14 @@ char16_t* utf8_to_utf16_n(const uint8_t* src, size_t srcLen, char16_t* dst, size
+             *u16cur++ = (char16_t) ((codepoint >> 10) + 0xD800);
+             if (u16cur >= u16end) {
+                 // Ooops...  not enough room for this surrogate pair.
+-                return u16cur-1;
++                return (char16_t*) u16cur-1;
+             }
+             *u16cur++ = (char16_t) ((codepoint & 0x3FF) + 0xDC00);
+         }
+ 
+         u8cur += u8len;
+     }
+-    return u16cur;
++    return (char16_t*) u16cur;
+ }
+ 
+ }
+diff --git a/libutils/VectorImpl.cpp b/libutils/VectorImpl.cpp
+index 5a79647..114fa90 100644
+--- a/libutils/VectorImpl.cpp
++++ b/libutils/VectorImpl.cpp
+@@ -29,7 +29,7 @@
+ /*****************************************************************************/
+ 
+ 
+-namespace android {
++namespace stagefright {
+ 
+ // ----------------------------------------------------------------------------
+ 
+@@ -621,5 +621,5 @@ ssize_t SortedVectorImpl::remove(const void* item)
+ 
+ /*****************************************************************************/
+ 
+-}; // namespace android
++}; // namespace stagefright
+ 

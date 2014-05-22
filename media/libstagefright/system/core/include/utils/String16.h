@@ -30,7 +30,7 @@ extern "C" {
 
 // ---------------------------------------------------------------------------
 
-namespace android {
+namespace stagefright {
 
 // ---------------------------------------------------------------------------
 
@@ -243,7 +243,7 @@ inline String16::operator const char16_t*() const
     return mString;
 }
 
-}; // namespace android
+}; // namespace stagefright
 
 // ---------------------------------------------------------------------------
 

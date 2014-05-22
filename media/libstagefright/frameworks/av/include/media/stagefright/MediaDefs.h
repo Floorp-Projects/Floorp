@@ -18,7 +18,7 @@
 
 #define MEDIA_DEFS_H_
 
-namespace android {
+namespace stagefright {
 
 extern const char *MEDIA_MIMETYPE_IMAGE_JPEG;
 
@@ -58,6 +58,6 @@ extern const char *MEDIA_MIMETYPE_CONTAINER_WVM;
 extern const char *MEDIA_MIMETYPE_TEXT_3GPP;
 extern const char *MEDIA_MIMETYPE_TEXT_SUBRIP;
 
-}  // namespace android
+}  // namespace stagefright
 
 #endif  // MEDIA_DEFS_H_
