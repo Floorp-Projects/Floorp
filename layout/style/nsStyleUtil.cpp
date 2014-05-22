@@ -342,7 +342,7 @@ nsStyleUtil::SerializeFunctionalAlternates(
       AppendEscapedCSSIdent(v.value, funcParams);
     } else {
       if (!funcParams.IsEmpty()) {
-        funcParams.Append(NS_LITERAL_STRING(", "));
+        funcParams.AppendLiteral(", ");
       }
       AppendEscapedCSSIdent(v.value, funcParams);
     }

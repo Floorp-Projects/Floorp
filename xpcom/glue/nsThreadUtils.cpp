@@ -323,7 +323,7 @@ nsThreadPoolNaming::SetThreadPoolName(const nsACString & aPoolName,
                                       nsIThread * aThread)
 {
   nsCString name(aPoolName);
-  name.Append(NS_LITERAL_CSTRING(" #"));
+  name.AppendLiteral(" #");
   name.AppendInt(++mCounter, 10); // The counter is declared as volatile
 
   if (aThread) {

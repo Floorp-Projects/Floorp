@@ -1067,9 +1067,9 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
 #endif // MOZ_B2G_RIL
   } else {
     nsCString warningMsg;
-    warningMsg.Append(NS_LITERAL_CSTRING("Unsupported AT command: "));
+    warningMsg.AppendLiteral("Unsupported AT command: ");
     warningMsg.Append(msg);
-    warningMsg.Append(NS_LITERAL_CSTRING(", reply with ERROR"));
+    warningMsg.AppendLiteral(", reply with ERROR");
     BT_WARNING(warningMsg.get());
 
     SendLine("ERROR");

@@ -1394,7 +1394,7 @@ nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace)
     // If breaker character is ASCII space with RFC 3676 support (delsp=yes),
     // add twice space.
     if ((mFlags & nsIDocumentEncoder::OutputFormatDelSp) && aBreakBySpace)
-      mCurrentLine.Append(NS_LITERAL_STRING("  "));
+      mCurrentLine.AppendLiteral("  ");
     else
       mCurrentLine.Append(char16_t(' '));
   }

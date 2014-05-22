@@ -1408,7 +1408,7 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
 
   // Add an additional .part to prevent the OS from running this file in the
   // default application.
-  tempLeafName.Append(NS_LITERAL_CSTRING(".part"));
+  tempLeafName.AppendLiteral(".part");
 
   rv = mTempFile->Append(NS_ConvertUTF8toUTF16(tempLeafName));
   // make this file unique!!!

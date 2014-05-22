@@ -571,12 +571,12 @@ VisualEventTracerLog::GetJSONString(nsACString& aResult)
   while (batch) {
     if (batch != mBatch) {
       // This is not the first batch we are writting, add comma
-      buffer.Append(NS_LITERAL_CSTRING(",\n"));
+      buffer.AppendLiteral(",\n");
     }
 
-    buffer.Append(NS_LITERAL_CSTRING("{\"thread\":\""));
+    buffer.AppendLiteral("{\"thread\":\"");
     buffer.Append(batch->mThreadNameCopy);
-    buffer.Append(NS_LITERAL_CSTRING("\",\"log\":[\n"));
+    buffer.AppendLiteral("\",\"log\":[\n");
 
     static const int kBufferSize = 2048;
     char buf[kBufferSize];
@@ -603,13 +603,13 @@ VisualEventTracerLog::GetJSONString(nsACString& aResult)
       buffer.Append(buf);
     }
 
-    buffer.Append(NS_LITERAL_CSTRING("]}\n"));
+    buffer.AppendLiteral("]}\n");
 
     RecordBatch* next = batch->mNextBatch;
     batch = next;
   }
 
-  buffer.Append(NS_LITERAL_CSTRING("]}\n"));
+  buffer.AppendLiteral("]}\n");
   aResult.Assign(buffer);
 
   return NS_OK;

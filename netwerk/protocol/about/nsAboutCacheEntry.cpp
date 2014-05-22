@@ -409,7 +409,7 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsICacheEntry *entry)
     if (NS_FAILED(entry->GetStorageDataSize(&dataSize)))
         dataSize = 0;
     s.AppendInt((int32_t)dataSize);     // XXX nsICacheEntryInfo interfaces should be fixed.
-    s.Append(NS_LITERAL_CSTRING(" B"));
+    s.AppendLiteral(" B");
     APPEND_ROW("Data size", s);
 
     // TODO - mayhemer

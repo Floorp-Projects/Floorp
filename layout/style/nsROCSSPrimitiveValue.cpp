@@ -247,7 +247,7 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
           tmpStr.Append(comma + colorValue);
         }
 
-        tmpStr.Append(NS_LITERAL_STRING(")"));
+        tmpStr.Append(')');
 
         break;
       }

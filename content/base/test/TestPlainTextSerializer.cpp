@@ -77,11 +77,11 @@ TestCJKWithFlowedDelSp()
   for (uint32_t i = 0; i < 36; i++) {
     result.Append(0x5341);
   }
-  result.Append(NS_LITERAL_STRING(" \r\n"));
+  result.AppendLiteral(" \r\n");
   for (uint32_t i = 0; i < 4; i++) {
     result.Append(0x5341);
   }
-  result.Append(NS_LITERAL_STRING("\r\n"));
+  result.AppendLiteral("\r\n");
 
   if (!test.Equals(result)) {
     fail("Wrong HTML to CJK text serialization with format=flowed; delsp=yes");

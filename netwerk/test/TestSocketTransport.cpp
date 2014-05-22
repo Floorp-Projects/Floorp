@@ -56,7 +56,7 @@ public:
         {
             mBuf.Assign(NS_LITERAL_CSTRING("GET "));
             mBuf.Append(path);
-            mBuf.Append(NS_LITERAL_CSTRING(" HTTP/1.0\r\n\r\n"));
+            mBuf.AppendLiteral(" HTTP/1.0\r\n\r\n");
         }
     virtual ~MyHandler() {}
 

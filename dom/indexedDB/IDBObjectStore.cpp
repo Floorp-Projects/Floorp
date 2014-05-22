@@ -3257,7 +3257,7 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
       }
 
       if (index) {
-        fileIds.Append(NS_LITERAL_STRING(" "));
+        fileIds.Append(' ');
       }
       fileIds.AppendInt(id);
     }

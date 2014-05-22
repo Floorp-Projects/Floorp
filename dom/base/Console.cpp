@@ -1589,7 +1589,7 @@ Console::IncreaseCounter(JSContext* aCx, const ConsoleStackEntry& aFrame,
 
   if (key.IsEmpty()) {
     key.Append(aFrame.mFilename);
-    key.Append(NS_LITERAL_STRING(":"));
+    key.Append(':');
     key.AppendInt(aFrame.mLineNumber);
   }
 
