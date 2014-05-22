@@ -155,7 +155,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx)
 
     // Exit with an exception. There is not enough space on the stack
     // for our working registers.
-    masm.mov(ImmWord(RegExpRunStatus_Error), temp0);
+    masm.movePtr(ImmWord(RegExpRunStatus_Error), temp0);
     masm.jump(&return_temp0);
 
     masm.bind(&stack_ok);
@@ -229,7 +229,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx)
     masm.branchPtr(Assembler::NotEqual, 
                    Address(StackPointer, offsetof(FrameData, startIndex)), ImmWord(0),
                    &load_char_start_regexp);
-    masm.mov(ImmWord('\n'), current_character);
+    masm.movePtr(ImmWord('\n'), current_character);
     masm.jump(&start_regexp);
 
     // Global regexp restarts matching here.
@@ -246,7 +246,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx)
     // Fill in stack push order, to avoid accessing across an unwritten
     // page (a problem on Windows).
     if (num_saved_registers_ > 8) {
-        masm.mov(ImmWord(register_offset(0)), temp1);
+        masm.movePtr(ImmWord(register_offset(0)), temp1);
         Label init_loop;
         masm.bind(&init_loop);
         masm.storePtr(temp0, BaseIndex(StackPointer, temp1, TimesOne));
@@ -290,7 +290,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx)
                 masm.loadPtr(register_location(i), temp0);
                 if (i == 0 && global_with_zero_length_check()) {
                     // Keep capture start in current_character for the zero-length check later.
-                    masm.mov(temp0, current_character);
+                    masm.movePtr(temp0, current_character);
                 }
 
                 // Convert to index from start of string, not end.
@@ -345,7 +345,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx)
 
             masm.jump(&load_char_start_regexp);
         } else {
-            masm.mov(ImmWord(RegExpRunStatus_Success), temp0);
+            masm.movePtr(ImmWord(RegExpRunStatus_Success), temp0);
         }
     }
 
@@ -389,7 +389,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx)
 
         Label grow_failed;
 
-        masm.mov(ImmPtr(runtime), temp1);
+        masm.movePtr(ImmPtr(runtime), temp1);
 
         // Save registers before calling C function
         RegisterSet volatileRegs = RegisterSet::Volatile();
@@ -432,7 +432,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx)
         masm.bind(&exit_with_exception_label_);
 
         // Exit with an error result to signal thrown exception.
-        masm.mov(ImmWord(RegExpRunStatus_Error), temp0);
+        masm.movePtr(ImmWord(RegExpRunStatus_Error), temp0);
         masm.jump(&return_temp0);
     }
 
@@ -568,7 +568,7 @@ NativeRegExpMacroAssembler::CheckCharacterAfterAnd(unsigned c, unsigned and_with
         masm.branchTest32(Assembler::Zero, current_character, Imm32(and_with),
                           BranchOrBacktrack(on_equal));
     } else {
-        masm.mov(ImmWord(and_with), temp0);
+        masm.move32(Imm32(and_with), temp0);
         masm.and32(current_character, temp0);
         masm.branch32(Assembler::Equal, temp0, Imm32(c), BranchOrBacktrack(on_equal));
     }
@@ -584,7 +584,7 @@ NativeRegExpMacroAssembler::CheckNotCharacterAfterAnd(unsigned c, unsigned and_w
         masm.branchTest32(Assembler::NonZero, current_character, Imm32(and_with),
                           BranchOrBacktrack(on_not_equal));
     } else {
-        masm.mov(ImmWord(and_with), temp0);
+        masm.move32(Imm32(and_with), temp0);
         masm.and32(current_character, temp0);
         masm.branch32(Assembler::NotEqual, temp0, Imm32(c), BranchOrBacktrack(on_not_equal));
     }
@@ -640,7 +640,7 @@ NativeRegExpMacroAssembler::CheckNotBackReference(int start_reg, Label* on_no_ma
     masm.branchPtr(Assembler::Equal, temp0, ImmWord(0), &fallthrough);
 
     // Check that there are sufficient characters left in the input.
-    masm.mov(current_position, temp1);
+    masm.movePtr(current_position, temp1);
     masm.addPtr(temp0, temp1);
     masm.branchPtr(Assembler::GreaterThan, temp1, ImmWord(0), BranchOrBacktrack(on_no_match));
 
@@ -680,7 +680,7 @@ NativeRegExpMacroAssembler::CheckNotBackReference(int start_reg, Label* on_no_ma
     masm.bind(&success);
 
     // Move current character position to position after match.
-    masm.mov(backtrack_stack_pointer, current_position);
+    masm.movePtr(backtrack_stack_pointer, current_position);
     masm.subPtr(input_end_pointer, current_position);
 
     // Restore backtrack stack pointer.
@@ -710,7 +710,7 @@ NativeRegExpMacroAssembler::CheckNotBackReferenceIgnoreCase(int start_reg, Label
     masm.branchPtr(Assembler::Equal, temp1, ImmWord(0), &fallthrough);
 
     // Check that there are sufficient characters left in the input.
-    masm.mov(current_position, temp0);
+    masm.movePtr(current_position, temp0);
     masm.addPtr(temp1, temp0);
     masm.branchPtr(Assembler::GreaterThan, temp0, ImmWord(0), BranchOrBacktrack(on_no_match));
 
@@ -801,8 +801,8 @@ NativeRegExpMacroAssembler::CheckBitInTable(uint8_t *table, Label *on_bit_set)
 
     JS_ASSERT(mode_ != ASCII); // Ascii case not handled here.
 
-    masm.mov(ImmPtr(table), temp0);
-    masm.mov(ImmWord(kTableSize - 1), temp1);
+    masm.movePtr(ImmPtr(table), temp0);
+    masm.move32(Imm32(kTableSize - 1), temp1);
     masm.and32(current_character, temp1);
 
     masm.load8ZeroExtend(BaseIndex(temp0, temp1, TimesOne), temp0);
@@ -815,7 +815,7 @@ NativeRegExpMacroAssembler::Fail()
     IonSpew(SPEW_PREFIX "Fail");
 
     if (!global())
-        masm.mov(ImmWord(RegExpRunStatus_Success_NotFound), temp0);
+        masm.movePtr(ImmWord(RegExpRunStatus_Success_NotFound), temp0);
     masm.jump(&exit_label_);
 }
 
@@ -969,7 +969,7 @@ NativeRegExpMacroAssembler::CheckBacktrackStackLimit()
                    backtrack_stack_pointer, &no_stack_overflow);
 
     // Copy the stack pointer before the call() instruction modifies it.
-    masm.mov(StackPointer, temp2);
+    masm.movePtr(StackPointer, temp2);
 
     masm.call(&stack_overflow_label_);
     masm.bind(&no_stack_overflow);
@@ -1140,7 +1140,7 @@ NativeRegExpMacroAssembler::CheckSpecialCharacterClass(jschar type, Label* on_no
         return true;
       case '.': {
         // Match non-newlines (not 0x0a('\n'), 0x0d('\r'), 0x2028 and 0x2029)
-        masm.mov(current_character, temp0);
+        masm.move32(current_character, temp0);
         masm.xor32(Imm32(0x01), temp0);
 
         // See if current character is '\n'^1 or '\r'^1, i.e., 0x0b or 0x0c
@@ -1161,7 +1161,7 @@ NativeRegExpMacroAssembler::CheckSpecialCharacterClass(jschar type, Label* on_no
             masm.branch32(Assembler::Above, current_character, Imm32('z'), branch);
         }
         JS_ASSERT(0 == word_character_map[0]);  // Character '\0' is not a word char.
-        masm.mov(ImmPtr(word_character_map), temp0);
+        masm.movePtr(ImmPtr(word_character_map), temp0);
         masm.load8ZeroExtend(BaseIndex(temp0, current_character, TimesOne), temp0);
         masm.branchTest32(Assembler::Zero, temp0, temp0, branch);
         return true;
@@ -1173,7 +1173,7 @@ NativeRegExpMacroAssembler::CheckSpecialCharacterClass(jschar type, Label* on_no
             masm.branch32(Assembler::Above, current_character, Imm32('z'), &done);
         }
         JS_ASSERT(0 == word_character_map[0]);  // Character '\0' is not a word char.
-        masm.mov(ImmPtr(word_character_map), temp0);
+        masm.movePtr(ImmPtr(word_character_map), temp0);
         masm.load8ZeroExtend(BaseIndex(temp0, current_character, TimesOne), temp0);
         masm.branchTest32(Assembler::NonZero, temp0, temp0, branch);
         if (mode_ != ASCII)
@@ -1187,7 +1187,7 @@ NativeRegExpMacroAssembler::CheckSpecialCharacterClass(jschar type, Label* on_no
       case 'n': {
         // Match newlines (0x0a('\n'), 0x0d('\r'), 0x2028 or 0x2029).
         // The opposite of '.'.
-        masm.mov(current_character, temp0);
+        masm.move32(current_character, temp0);
         masm.xor32(Imm32(0x01), temp0);
 
         // See if current character is '\n'^1 or '\r'^1, i.e., 0x0b or 0x0c
