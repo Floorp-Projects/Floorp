@@ -1,11 +1,13 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, you can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
  * @namespace Defines useful methods to work with localized content
  */
 var l10n = exports;
+
+Cu.import("resource://gre/modules/Services.jsm");
 
 /**
  * Retrieve the localized content for a given DTD entity
@@ -54,14 +56,11 @@ function getEntity(aDTDs, aEntityId) {
  * @returns {String} Value of the requested property
  */
 function getProperty(aURL, aProperty) {
-  var sbs = Cc["@mozilla.org/intl/stringbundle;1"].
-            getService(Ci.nsIStringBundleService);
-  var bundle = sbs.createBundle(aURL);
+  var bundle = Services.strings.createBundle(aURL);
 
   try {
     return bundle.GetStringFromName(aProperty);
-  }
-  catch (ex) {
+  } catch (ex) {
     throw new Error("Unkown property '" + aProperty + "'");
   }
 }
