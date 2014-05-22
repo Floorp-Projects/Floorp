@@ -167,7 +167,7 @@ class jsvalTypeCache(object):
         # Let self.magic_names be an array whose i'th element is the name of
         # the i'th magic value.
         d = gdb.types.make_enum_dict(gdb.lookup_type('JSWhyMagic'))
-        self.magic_names = range(max(d.itervalues()) + 1)
+        self.magic_names = list(range(max(d.values()) + 1))
         for (k,v) in d.items(): self.magic_names[v] = k
 
         # Choose an unboxing scheme for this architecture.
