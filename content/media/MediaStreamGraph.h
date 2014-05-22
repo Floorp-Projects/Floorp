@@ -18,7 +18,6 @@
 #include "MainThreadUtils.h"
 #include "nsAutoRef.h"
 #include "speex/speex_resampler.h"
-#include "AudioMixer.h"
 #include "mozilla/dom/AudioChannelBinding.h"
 
 class nsIRunnable;
