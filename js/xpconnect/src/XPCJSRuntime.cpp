@@ -1436,8 +1436,8 @@ XPCJSRuntime::InterruptCallback(JSContext *cx)
     return true;
 }
 
-/* static */ void
-XPCJSRuntime::OutOfMemoryCallback(JSContext *cx, void *data)
+void
+XPCJSRuntime::CustomOutOfMemoryCallback()
 {
     if (!Preferences::GetBool("memory.dump_reports_on_oom")) {
         return;
@@ -1452,6 +1452,15 @@ XPCJSRuntime::OutOfMemoryCallback(JSContext *cx, void *data)
     // If this fails, it fails silently.
     dumper->DumpMemoryInfoToTempDir(NS_LITERAL_STRING("due-to-JS-OOM"),
                                     /* minimizeMemoryUsage = */ false);
+}
+
+void
+XPCJSRuntime::CustomLargeAllocationFailureCallback()
+{
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os) {
+        os->NotifyObservers(nullptr, "memory-pressure", MOZ_UTF16("heap-minimize"));
+    }
 }
 
 size_t
@@ -3178,7 +3187,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     js::SetActivityCallback(runtime, ActivityCallback, this);
     js::SetCTypesActivityCallback(runtime, CTypesActivityCallback);
     JS_SetInterruptCallback(runtime, InterruptCallback);
-    JS::SetOutOfMemoryCallback(runtime, OutOfMemoryCallback, nullptr);
 
     // The JS engine needs to keep the source code around in order to implement
     // Function.prototype.toSource(). It'd be nice to not have to do this for
