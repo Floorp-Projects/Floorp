@@ -86,17 +86,6 @@ AudioOutputObserver::Size()
   return mPlayoutFifo->size();
 }
 
-void
-AudioOutputObserver::MixerCallback(AudioDataValue* aMixedBuffer,
-                                   AudioSampleFormat aFormat,
-                                   uint32_t aChannels,
-                                   uint32_t aFrames,
-                                   uint32_t aSampleRate)
-{
-  gFarendObserver->InsertFarEnd(aMixedBuffer, aFrames, false,
-                                aSampleRate, aChannels, aFormat);
-}
-
 // static
 void
 AudioOutputObserver::InsertFarEnd(const AudioDataValue *aBuffer, uint32_t aSamples, bool aOverran,
