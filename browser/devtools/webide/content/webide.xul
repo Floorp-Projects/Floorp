@@ -148,18 +148,13 @@
 
   </popupset>
 
-  <vbox flex="1" id="body">
+  <notificationbox flex="1" id="body">
     <iframe id="details" flex="1" hidden="true" src="details.xhtml"/>
     <iframe id="projecteditor" flex="1" hidden="true"/>
-  </vbox>
+  </notificationbox>
 
   <splitter hidden="true" class="devtools-horizontal-splitter" orient="vertical"/>
 
   <!-- toolbox iframe will be inserted here -->
-
-  <html:div id="logs-container">
-    <html:pre id="logs"></html:pre>
-    <html:button id="toggle-logs">&logs;</html:button>
-  </html:div>
 
 </window>

@@ -5,8 +5,8 @@
 const Cc = Components.classes;
 const Cu = Components.utils;
 const Ci = Components.interfaces;
-Cu.import("resource://gre/modules/Services.jsm");
 
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ZipUtils", "resource://gre/modules/ZipUtils.jsm");
@@ -100,18 +100,18 @@ function doOK() {
   let projectName = document.querySelector("#project-name").value;
 
   if (!projectName) {
-    AppManager.console.error("No project name");
+    console.error("No project name");
     return false;
   }
 
   if (!gTemplateList) {
-    AppManager.console.error("No template index");
+    console.error("No template index");
     return false;
   }
 
   let templatelistNode = document.querySelector("#templatelist");
   if (templatelistNode.selectedIndex < 0) {
-    AppManager.console.error("No template selected");
+    console.error("No template selected");
     return false;
   }
 
@@ -126,7 +126,7 @@ function doOK() {
     fp.init(window, "Select directory where to create app directory", Ci.nsIFilePicker.modeGetFolder);
     let res = fp.show();
     if (res == Ci.nsIFilePicker.returnCancel) {
-      AppManager.console.error("No directory selected");
+      console.error("No directory selected");
       return false;
     }
     folder = fp.file;
@@ -139,7 +139,7 @@ function doOK() {
   try {
     folder.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   } catch(e) {
-    AppManager.console.error(e);
+    console.error(e);
     return false;
   }
 
@@ -150,7 +150,7 @@ function doOK() {
   target.append(subfolder + ".zip");
 
   let bail = (e) => {
-    AppManager.console.error(e);
+    console.error(e);
     window.close();
   };
 
