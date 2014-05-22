@@ -47,7 +47,7 @@ nsCUPSShim::Init()
         if (! *(symAddr[i])) {
 #ifdef DEBUG
             nsAutoCString msg(gSymName[i]);
-            msg.Append(" not found in CUPS library");
+            msg.AppendLiteral(" not found in CUPS library");
             NS_WARNING(msg.get());
 #endif
             PR_UnloadLibrary(mCupsLib);

@@ -1242,7 +1242,7 @@ gfxFT2FontList::FindFonts()
     } else {
         root = NS_LITERAL_CSTRING("/system");
     }
-    root.Append("/fonts");
+    root.AppendLiteral("/fonts");
 
     FindFontsInDir(root, &fnc);
 

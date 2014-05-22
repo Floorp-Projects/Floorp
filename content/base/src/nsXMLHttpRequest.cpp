@@ -1379,7 +1379,7 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
       nsCString value;
       if (NS_SUCCEEDED(mChannel->GetContentCharset(value)) &&
           !value.IsEmpty()) {
-        _retval.Append(";charset=");
+        _retval.AppendLiteral(";charset=");
         _retval.Append(value);
       }
     }
@@ -3877,9 +3877,9 @@ nsHeaderVisitor::VisitHeader(const nsACString &header, const nsACString &value)
 {
   if (mXHR->IsSafeHeader(header, mHttpChannel)) {
     mHeaders.Append(header);
-    mHeaders.Append(": ");
+    mHeaders.AppendLiteral(": ");
     mHeaders.Append(value);
-    mHeaders.Append("\r\n");
+    mHeaders.AppendLiteral("\r\n");
   }
   return NS_OK;
 }

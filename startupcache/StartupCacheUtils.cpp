@@ -135,7 +135,7 @@ canonicalizeBase(nsAutoCString &spec,
     if (underGre && underApp && greBase.Length() < appBase.Length())
         underGre = false;
 
-    out.Append("/resource/");
+    out.AppendLiteral("/resource/");
     out.Append(baseName[underGre ? mozilla::Omnijar::GRE : mozilla::Omnijar::APP]);
     out.Append(Substring(spec, underGre ? greBase.Length() : appBase.Length()));
     return true;

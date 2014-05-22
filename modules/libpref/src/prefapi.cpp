@@ -217,19 +217,19 @@ static void str_escape(const char * original, nsAFlatCString& aResult)
         switch (*p)
         {
             case '\n':
-                aResult.Append("\\n");
+                aResult.AppendLiteral("\\n");
                 break;
 
             case '\r':
-                aResult.Append("\\r");
+                aResult.AppendLiteral("\\r");
                 break;
 
             case '\\':
-                aResult.Append("\\\\");
+                aResult.AppendLiteral("\\\\");
                 break;
 
             case '\"':
-                aResult.Append("\\\"");
+                aResult.AppendLiteral("\\\"");
                 break;
 
             default:

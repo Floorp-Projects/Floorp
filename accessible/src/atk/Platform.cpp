@@ -79,9 +79,9 @@ LoadGtkModule(GnomeAccessibilityModule& aModule)
         char *curLibPath = PR_GetLibraryPath();
         nsAutoCString libPath(curLibPath);
 #if defined(LINUX) && defined(__x86_64__)
-        libPath.Append(":/usr/lib64:/usr/lib");
+        libPath.AppendLiteral(":/usr/lib64:/usr/lib");
 #else
-        libPath.Append(":/usr/lib");
+        libPath.AppendLiteral(":/usr/lib");
 #endif
         PR_FreeLibraryName(curLibPath);
 
@@ -94,7 +94,7 @@ LoadGtkModule(GnomeAccessibilityModule& aModule)
             else
                 subLen = loc2 - loc1;
             nsAutoCString sub(Substring(libPath, loc1, subLen));
-            sub.Append("/gtk-2.0/modules/");
+            sub.AppendLiteral("/gtk-2.0/modules/");
             sub.Append(aModule.libName);
             aModule.lib = PR_LoadLibrary(sub.get());
             if (aModule.lib)

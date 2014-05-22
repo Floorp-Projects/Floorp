@@ -2281,7 +2281,7 @@ nsPluginHost::WritePluginInfo()
     return rv;
 
   nsAutoCString filename(kPluginRegistryFilename);
-  filename.Append(".tmp");
+  filename.AppendLiteral(".tmp");
   rv = pluginReg->AppendNative(filename);
   if (NS_FAILED(rv))
     return rv;

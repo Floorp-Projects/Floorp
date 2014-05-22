@@ -252,7 +252,7 @@ nsXULTemplateQueryProcessorRDF::GetDatasource(nsIArray* aDataSources,
             // security, a bad URL, etc.
   #ifdef DEBUG
             nsAutoCString msg;
-            msg.Append("unable to load datasource '");
+            msg.AppendLiteral("unable to load datasource '");
             msg.Append(uristrC);
             msg.Append('\'');
             NS_WARNING(msg.get());

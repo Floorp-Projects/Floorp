@@ -733,17 +733,17 @@ Connection::databaseElementExists(enum DatabaseElementType aElementType,
     element.Assign(Substring(aElementName, ind + 1, aElementName.Length()));
     query.Append(db);
   }
-  query.Append("sqlite_master UNION ALL SELECT * FROM sqlite_temp_master) WHERE type = '");
+  query.AppendLiteral("sqlite_master UNION ALL SELECT * FROM sqlite_temp_master) WHERE type = '");
 
   switch (aElementType) {
     case INDEX:
-      query.Append("index");
+      query.AppendLiteral("index");
       break;
     case TABLE:
-      query.Append("table");
+      query.AppendLiteral("table");
       break;
   }
-  query.Append("' AND name ='");
+  query.AppendLiteral("' AND name ='");
   query.Append(element);
   query.Append("'");
 

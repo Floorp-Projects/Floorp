@@ -1898,7 +1898,7 @@ PlacesSQLQueryBuilder::Where()
     nsAutoCString tmp = additionalVisitsConditions;
     additionalVisitsConditions = "AND EXISTS (SELECT 1 FROM moz_historyvisits WHERE place_id = h.id ";
     additionalVisitsConditions.Append(tmp);
-    additionalVisitsConditions.Append("LIMIT 1)");
+    additionalVisitsConditions.AppendLiteral("LIMIT 1)");
   }
 
   mQueryString.ReplaceSubstring("{QUERY_OPTIONS_VISITS}",
