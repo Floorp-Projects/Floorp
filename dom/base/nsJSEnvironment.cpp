@@ -605,15 +605,15 @@ NS_ScriptErrorReporter(JSContext *cx,
     nsAutoCString error;
     error.AssignLiteral("JavaScript ");
     if (JSREPORT_IS_STRICT(report->flags))
-      error.Append("strict ");
+      error.AppendLiteral("strict ");
     if (JSREPORT_IS_WARNING(report->flags))
-      error.Append("warning: ");
+      error.AppendLiteral("warning: ");
     else
-      error.Append("error: ");
+      error.AppendLiteral("error: ");
     error.Append(report->filename);
-    error.Append(", line ");
+    error.AppendLiteral(", line ");
     error.AppendInt(report->lineno, 10);
-    error.Append(": ");
+    error.AppendLiteral(": ");
     if (report->ucmessage) {
       AppendUTF16toUTF8(reinterpret_cast<const char16_t*>(report->ucmessage),
                         error);

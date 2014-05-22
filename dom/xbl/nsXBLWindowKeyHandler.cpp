@@ -149,7 +149,7 @@ nsXBLSpecialDocInfo::GetAllHandlers(const char* aType,
 {
   if (mUserHTMLBindings) {
     nsAutoCString type(aType);
-    type.Append("User");
+    type.AppendLiteral("User");
     GetHandlers(mUserHTMLBindings, type, aUserHandler);
   }
   if (mHTMLBindings) {

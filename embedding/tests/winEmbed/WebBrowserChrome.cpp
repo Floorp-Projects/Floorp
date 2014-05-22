@@ -428,7 +428,7 @@ WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, int3
     else if (!(strcmp(operation, "add")))
     {
         status.Assign(uriSpec);
-        status.Append(" added to session History");
+        status.AppendLiteral(" added to session History");
     }
     else if (!(strcmp(operation, "goto")))
     {
@@ -436,13 +436,13 @@ WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, int3
 
 	AppendIntToCString(info1, status);
 
-        status.Append(" Url: ");
+        status.AppendLiteral(" Url: ");
         status.Append(uriSpec);
     }
     else if (!(strcmp(operation, "purge")))
     {
         AppendIntToCString(info1, status);
-        status.Append(" purged from Session History");
+        status.AppendLiteral(" purged from Session History");
     }
     else if (!(strcmp(operation, "replace")))
     {
