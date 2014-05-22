@@ -120,6 +120,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitRsh(MRsh *ins);
     bool visitUrsh(MUrsh *ins);
     bool visitFloor(MFloor *ins);
+    bool visitCeil(MCeil *ins);
     bool visitRound(MRound *ins);
     bool visitMinMax(MMinMax *ins);
     bool visitAbs(MAbs *ins);
