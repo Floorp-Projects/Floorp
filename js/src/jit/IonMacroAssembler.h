@@ -384,7 +384,8 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void branchIfRope(Register str, Label *label) {
         Address flags(str, JSString::offsetOfFlags());
-        branch32(Assembler::Equal, flags, Imm32(JSString::ROPE_FLAGS), label);
+        static_assert(JSString::ROPE_FLAGS == 0, "Rope type flags must be 0");
+        branchTest32(Assembler::Zero, flags, Imm32(JSString::TYPE_FLAGS_MASK), label);
     }
 
     void loadSliceBounds(Register worker, Register dest) {
