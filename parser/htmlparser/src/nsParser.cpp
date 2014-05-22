@@ -662,7 +662,7 @@ DetermineHTMLParseMode(const nsString& aBuffer,
 
       // Special hack for IBM's custom DOCTYPE.
       if (!(resultFlags & PARSE_DTD_HAVE_INTERNAL_SUBSET) &&
-          sysIDUCS2 == NS_LITERAL_STRING(
+          sysIDUCS2.EqualsLiteral(
                "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd")) {
         aParseMode = eDTDMode_quirks;
         aDocType = eHTML_Quirks;
