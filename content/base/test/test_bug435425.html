@@ -37,6 +37,9 @@ function logEvent(evt) {
     if (evt.type == "loadstart") {
       uploadTotal = evt.total
     } else {
+      if (evt.type == "progress") {
+        ok(evt.lengthComputable, "event(" + evt.type +  ").lengthComputable should be true.");
+      }
       is(evt.total, uploadTotal, "event(" + evt.type +  ").total should not change during upload.");
     }
   }
