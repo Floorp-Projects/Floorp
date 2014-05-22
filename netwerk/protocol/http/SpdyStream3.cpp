@@ -425,12 +425,12 @@ SpdyStream3::ParseHttpRequestHeaders(const char *buf,
     ToLowerCase(name);
 
     // exclusions.. mostly from 3.2.1
-    if (name.Equals("connection") ||
-        name.Equals("keep-alive") ||
-        name.Equals("host") ||
-        name.Equals("accept-encoding") ||
-        name.Equals("te") ||
-        name.Equals("transfer-encoding"))
+    if (name.EqualsLiteral("connection") ||
+        name.EqualsLiteral("keep-alive") ||
+        name.EqualsLiteral("host") ||
+        name.EqualsLiteral("accept-encoding") ||
+        name.EqualsLiteral("te") ||
+        name.EqualsLiteral("transfer-encoding"))
       continue;
 
     nsCString *val = hdrHash.Get(name);
@@ -449,7 +449,7 @@ SpdyStream3::ParseHttpRequestHeaders(const char *buf,
       val->Append(static_cast<char>(0));
     val->Append(v);
 
-    if (name.Equals("content-length")) {
+    if (name.EqualsLiteral("content-length")) {
       int64_t len;
       if (nsHttp::ParseInt64(val->get(), nullptr, &len))
         mRequestBodyLenRemaining = len;

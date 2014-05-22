@@ -1638,15 +1638,15 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
     bool clearSessionCache = true;
     NS_ConvertUTF16toUTF8  prefName(someData);
 
-    if (prefName.Equals("security.tls.version.min") ||
-        prefName.Equals("security.tls.version.max")) {
+    if (prefName.EqualsLiteral("security.tls.version.min") ||
+        prefName.EqualsLiteral("security.tls.version.max")) {
       (void) setEnabledTLSVersions();
-    } else if (prefName.Equals("security.ssl.require_safe_negotiation")) {
+    } else if (prefName.EqualsLiteral("security.ssl.require_safe_negotiation")) {
       bool requireSafeNegotiation =
         Preferences::GetBool("security.ssl.require_safe_negotiation",
                              REQUIRE_SAFE_NEGOTIATION_DEFAULT);
       SSL_OptionSetDefault(SSL_REQUIRE_SAFE_NEGOTIATION, requireSafeNegotiation);
-    } else if (prefName.Equals("security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref")) {
+    } else if (prefName.EqualsLiteral("security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref")) {
       bool allowUnrestrictedRenego =
         Preferences::GetBool("security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref",
                              ALLOW_UNRESTRICTED_RENEGO_DEFAULT);
@@ -1654,31 +1654,31 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
                            allowUnrestrictedRenego ?
                              SSL_RENEGOTIATE_UNRESTRICTED :
                              SSL_RENEGOTIATE_REQUIRES_XTN);
-    } else if (prefName.Equals("security.ssl.enable_false_start")) {
+    } else if (prefName.EqualsLiteral("security.ssl.enable_false_start")) {
       SSL_OptionSetDefault(SSL_ENABLE_FALSE_START,
                            Preferences::GetBool("security.ssl.enable_false_start",
                                                 FALSE_START_ENABLED_DEFAULT));
-    } else if (prefName.Equals("security.ssl.enable_npn")) {
+    } else if (prefName.EqualsLiteral("security.ssl.enable_npn")) {
       SSL_OptionSetDefault(SSL_ENABLE_NPN,
                            Preferences::GetBool("security.ssl.enable_npn",
                                                 NPN_ENABLED_DEFAULT));
-    } else if (prefName.Equals("security.ssl.enable_alpn")) {
+    } else if (prefName.EqualsLiteral("security.ssl.enable_alpn")) {
       SSL_OptionSetDefault(SSL_ENABLE_ALPN,
                            Preferences::GetBool("security.ssl.enable_alpn",
                                                 ALPN_ENABLED_DEFAULT));
-    } else if (prefName.Equals("security.OCSP.enabled")
-               || prefName.Equals("security.CRL_download.enabled")
-               || prefName.Equals("security.fresh_revocation_info.require")
-               || prefName.Equals("security.missing_cert_download.enabled")
-               || prefName.Equals("security.OCSP.require")
-               || prefName.Equals("security.OCSP.GET.enabled")
-               || prefName.Equals("security.ssl.enable_ocsp_stapling")
-               || prefName.Equals("security.use_mozillapkix_verification")
-               || prefName.Equals("security.use_libpkix_verification")
-               || prefName.Equals("security.cert_pinning.enforcement_level")) {
+    } else if (prefName.EqualsLiteral("security.OCSP.enabled") ||
+               prefName.EqualsLiteral("security.CRL_download.enabled") ||
+               prefName.EqualsLiteral("security.fresh_revocation_info.require") ||
+               prefName.EqualsLiteral("security.missing_cert_download.enabled") ||
+               prefName.EqualsLiteral("security.OCSP.require") ||
+               prefName.EqualsLiteral("security.OCSP.GET.enabled") ||
+               prefName.EqualsLiteral("security.ssl.enable_ocsp_stapling") ||
+               prefName.EqualsLiteral("security.use_mozillapkix_verification") ||
+               prefName.EqualsLiteral("security.use_libpkix_verification") ||
+               prefName.EqualsLiteral("security.cert_pinning.enforcement_level")) {
       MutexAutoLock lock(mutex);
       setValidationOptions(false, lock);
-    } else if (prefName.Equals("network.ntlm.send-lm-response")) {
+    } else if (prefName.EqualsLiteral("network.ntlm.send-lm-response")) {
       bool sendLM = Preferences::GetBool("network.ntlm.send-lm-response",
                                          SEND_LM_DEFAULT);
       nsNTLMAuthModule::SetSendLM(sendLM);

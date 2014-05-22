@@ -85,7 +85,7 @@ nsUnixSystemProxySettings::GetPACURI(nsACString& aResult)
     nsCString proxyMode;
     // Check if mode is auto
     nsresult rv = mProxySettings->GetString(NS_LITERAL_CSTRING("mode"), proxyMode);
-    if (rv == NS_OK && proxyMode.Equals("auto")) {
+    if (rv == NS_OK && proxyMode.EqualsLiteral("auto")) {
       return mProxySettings->GetString(NS_LITERAL_CSTRING("autoconfig-url"), aResult);
     }
     /* The org.gnome.system.proxy schema has been found, but auto mode is not set.
@@ -451,7 +451,7 @@ nsUnixSystemProxySettings::GetProxyFromGSettings(const nsACString& aScheme,
   NS_ENSURE_SUCCESS(rv, rv);
   
   // return NS_ERROR_FAILURE when no proxy is set
-  if (!proxyMode.Equals("manual")) {
+  if (!proxyMode.EqualsLiteral("manual")) {
     return NS_ERROR_FAILURE;
   }
 
