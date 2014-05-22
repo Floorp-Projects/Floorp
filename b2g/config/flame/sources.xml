@@ -141,7 +141,7 @@
   <project name="platform/hardware/ril" path="hardware/ril" revision="c4e2ac95907a5519a0e09f01a0d8e27fec101af0"/>
   <project name="platform/system/bluetooth" path="system/bluetooth" revision="e1eb226fa3ad3874ea7b63c56a9dc7012d7ff3c2"/>
   <project name="platform/system/core" path="system/core" revision="bbf7212289fc8311e43f9d11e10788e310d36a08"/>
-  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="e0972cffef81e3833a5dad03a338651ebe55135f"/>
+  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="1997f7f20aebbe95fb10111465c0db945bd041fe"/>
   <project name="platform/system/qcom" path="system/qcom" revision="1cdab258b15258b7f9657da70e6f06ebd5a2fc25"/>
   <project name="platform/vendor/qcom/msm8610" path="device/qcom/msm8610" revision="4ae5df252123591d5b941191790e7abed1bce5a4"/>
 </manifest>
