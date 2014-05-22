@@ -17,6 +17,11 @@
 
 #ifdef XP_WIN
 #include <windows.h> // For HWND :(
+// Undo the windows.h damage
+#undef GetMessage
+#undef CreateEvent
+#undef GetClassName
+#undef GetBinaryType
 #endif
 
 class nsPresContext;
