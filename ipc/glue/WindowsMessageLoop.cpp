@@ -306,7 +306,7 @@ ProcessOrDeferMessage(HWND hwnd,
         if (GetClassNameW(hwnd, className, sizeof(className) - 1) > 0) {
           log.AppendLiteral(" (\"");
           log.Append(NS_ConvertUTF16toUTF8((char16_t*)className));
-          log.Append('\')");
+          log.AppendLiteral("\")");
         }
 
         log.AppendLiteral(", sending it to DefWindowProc instead of the normal "
