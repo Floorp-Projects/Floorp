@@ -653,9 +653,9 @@ main(int32_t argc, char *argv[])
         if (!cookie2) break;
         nsAutoCString name;
         cookie2->GetName(name);
-        if (name == NS_LITERAL_CSTRING("test2"))
+        if (name.EqualsLiteral("test2"))
           expiredCookie = cookie2;
-        else if (name == NS_LITERAL_CSTRING("test3"))
+        else if (name.EqualsLiteral("test3"))
           newDomainCookie = cookie2;
       }
       rv[5] = i == 3;

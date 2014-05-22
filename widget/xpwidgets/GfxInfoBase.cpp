@@ -206,31 +206,31 @@ BlacklistNodeToTextValue(nsIDOMNode *aBlacklistNode, nsAString& aValue)
 static OperatingSystem
 BlacklistOSToOperatingSystem(const nsAString& os)
 {
-  if (os == NS_LITERAL_STRING("WINNT 5.1"))
+  if (os.EqualsLiteral("WINNT 5.1"))
     return DRIVER_OS_WINDOWS_XP;
-  else if (os == NS_LITERAL_STRING("WINNT 5.2"))
+  else if (os.EqualsLiteral("WINNT 5.2"))
     return DRIVER_OS_WINDOWS_SERVER_2003;
-  else if (os == NS_LITERAL_STRING("WINNT 6.0"))
+  else if (os.EqualsLiteral("WINNT 6.0"))
     return DRIVER_OS_WINDOWS_VISTA;
-  else if (os == NS_LITERAL_STRING("WINNT 6.1"))
+  else if (os.EqualsLiteral("WINNT 6.1"))
     return DRIVER_OS_WINDOWS_7;
-  else if (os == NS_LITERAL_STRING("WINNT 6.2"))
+  else if (os.EqualsLiteral("WINNT 6.2"))
     return DRIVER_OS_WINDOWS_8;
-  else if (os == NS_LITERAL_STRING("WINNT 6.3"))
+  else if (os.EqualsLiteral("WINNT 6.3"))
     return DRIVER_OS_WINDOWS_8_1;
-  else if (os == NS_LITERAL_STRING("Linux"))
+  else if (os.EqualsLiteral("Linux"))
     return DRIVER_OS_LINUX;
-  else if (os == NS_LITERAL_STRING("Darwin 9"))
+  else if (os.EqualsLiteral("Darwin 9"))
     return DRIVER_OS_OS_X_10_5;
-  else if (os == NS_LITERAL_STRING("Darwin 10"))
+  else if (os.EqualsLiteral("Darwin 10"))
     return DRIVER_OS_OS_X_10_6;
-  else if (os == NS_LITERAL_STRING("Darwin 11"))
+  else if (os.EqualsLiteral("Darwin 11"))
     return DRIVER_OS_OS_X_10_7;
-  else if (os == NS_LITERAL_STRING("Darwin 12"))
+  else if (os.EqualsLiteral("Darwin 12"))
     return DRIVER_OS_OS_X_10_8;
-  else if (os == NS_LITERAL_STRING("Android"))
+  else if (os.EqualsLiteral("Android"))
     return DRIVER_OS_ANDROID;
-  else if (os == NS_LITERAL_STRING("All"))
+  else if (os.EqualsLiteral("All"))
     return DRIVER_OS_ALL;
 
   return DRIVER_OS_UNKNOWN;
@@ -265,25 +265,25 @@ BlacklistDevicesToDeviceFamily(nsIDOMHTMLCollection* aDevices)
 static int32_t
 BlacklistFeatureToGfxFeature(const nsAString& aFeature)
 {
-  if (aFeature == NS_LITERAL_STRING("DIRECT2D"))
+  if (aFeature.EqualsLiteral("DIRECT2D"))
     return nsIGfxInfo::FEATURE_DIRECT2D;
-  else if (aFeature == NS_LITERAL_STRING("DIRECT3D_9_LAYERS"))
+  else if (aFeature.EqualsLiteral("DIRECT3D_9_LAYERS"))
     return nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS;
-  else if (aFeature == NS_LITERAL_STRING("DIRECT3D_10_LAYERS"))
+  else if (aFeature.EqualsLiteral("DIRECT3D_10_LAYERS"))
     return nsIGfxInfo::FEATURE_DIRECT3D_10_LAYERS;
-  else if (aFeature == NS_LITERAL_STRING("DIRECT3D_10_1_LAYERS"))
+  else if (aFeature.EqualsLiteral("DIRECT3D_10_1_LAYERS"))
     return nsIGfxInfo::FEATURE_DIRECT3D_10_1_LAYERS;
-  else if (aFeature == NS_LITERAL_STRING("DIRECT3D_11_LAYERS"))
+  else if (aFeature.EqualsLiteral("DIRECT3D_11_LAYERS"))
     return nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS;
-  else if (aFeature == NS_LITERAL_STRING("OPENGL_LAYERS"))
+  else if (aFeature.EqualsLiteral("OPENGL_LAYERS"))
     return nsIGfxInfo::FEATURE_OPENGL_LAYERS;
-  else if (aFeature == NS_LITERAL_STRING("WEBGL_OPENGL"))
+  else if (aFeature.EqualsLiteral("WEBGL_OPENGL"))
     return nsIGfxInfo::FEATURE_WEBGL_OPENGL;
-  else if (aFeature == NS_LITERAL_STRING("WEBGL_ANGLE"))
+  else if (aFeature.EqualsLiteral("WEBGL_ANGLE"))
     return nsIGfxInfo::FEATURE_WEBGL_ANGLE;
-  else if (aFeature == NS_LITERAL_STRING("WEBGL_MSAA"))
+  else if (aFeature.EqualsLiteral("WEBGL_MSAA"))
     return nsIGfxInfo::FEATURE_WEBGL_MSAA;
-  else if (aFeature == NS_LITERAL_STRING("STAGEFRIGHT"))
+  else if (aFeature.EqualsLiteral("STAGEFRIGHT"))
     return nsIGfxInfo::FEATURE_STAGEFRIGHT;
   return 0;
 }
@@ -291,15 +291,15 @@ BlacklistFeatureToGfxFeature(const nsAString& aFeature)
 static int32_t
 BlacklistFeatureStatusToGfxFeatureStatus(const nsAString& aStatus)
 {
-  if (aStatus == NS_LITERAL_STRING("NO_INFO"))
+  if (aStatus.EqualsLiteral("NO_INFO"))
     return nsIGfxInfo::FEATURE_NO_INFO;
-  else if (aStatus == NS_LITERAL_STRING("BLOCKED_DRIVER_VERSION"))
+  else if (aStatus.EqualsLiteral("BLOCKED_DRIVER_VERSION"))
     return nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
-  else if (aStatus == NS_LITERAL_STRING("BLOCKED_DEVICE"))
+  else if (aStatus.EqualsLiteral("BLOCKED_DEVICE"))
     return nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
-  else if (aStatus == NS_LITERAL_STRING("DISCOURAGED"))
+  else if (aStatus.EqualsLiteral("DISCOURAGED"))
     return nsIGfxInfo::FEATURE_DISCOURAGED;
-  else if (aStatus == NS_LITERAL_STRING("BLOCKED_OS_VERSION"))
+  else if (aStatus.EqualsLiteral("BLOCKED_OS_VERSION"))
     return nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
 
   // Do not allow it to set STATUS_UNKNOWN.
@@ -310,23 +310,23 @@ BlacklistFeatureStatusToGfxFeatureStatus(const nsAString& aStatus)
 static VersionComparisonOp
 BlacklistComparatorToComparisonOp(const nsAString& op)
 {
-  if (op == NS_LITERAL_STRING("LESS_THAN"))
+  if (op.EqualsLiteral("LESS_THAN"))
     return DRIVER_LESS_THAN;
-  else if (op == NS_LITERAL_STRING("LESS_THAN_OR_EQUAL"))
+  else if (op.EqualsLiteral("LESS_THAN_OR_EQUAL"))
     return DRIVER_LESS_THAN_OR_EQUAL;
-  else if (op == NS_LITERAL_STRING("GREATER_THAN"))
+  else if (op.EqualsLiteral("GREATER_THAN"))
     return DRIVER_GREATER_THAN;
-  else if (op == NS_LITERAL_STRING("GREATER_THAN_OR_EQUAL"))
+  else if (op.EqualsLiteral("GREATER_THAN_OR_EQUAL"))
     return DRIVER_GREATER_THAN_OR_EQUAL;
-  else if (op == NS_LITERAL_STRING("EQUAL"))
+  else if (op.EqualsLiteral("EQUAL"))
     return DRIVER_EQUAL;
-  else if (op == NS_LITERAL_STRING("NOT_EQUAL"))
+  else if (op.EqualsLiteral("NOT_EQUAL"))
     return DRIVER_NOT_EQUAL;
-  else if (op == NS_LITERAL_STRING("BETWEEN_EXCLUSIVE"))
+  else if (op.EqualsLiteral("BETWEEN_EXCLUSIVE"))
     return DRIVER_BETWEEN_EXCLUSIVE;
-  else if (op == NS_LITERAL_STRING("BETWEEN_INCLUSIVE"))
+  else if (op.EqualsLiteral("BETWEEN_INCLUSIVE"))
     return DRIVER_BETWEEN_INCLUSIVE;
-  else if (op == NS_LITERAL_STRING("BETWEEN_INCLUSIVE_START"))
+  else if (op.EqualsLiteral("BETWEEN_INCLUSIVE_START"))
     return DRIVER_BETWEEN_INCLUSIVE_START;
 
   return DRIVER_COMPARISON_IGNORED;
