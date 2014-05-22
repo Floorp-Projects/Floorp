@@ -424,7 +424,7 @@ Http2Decompressor::OutputHeader(const nsACString &name, const nsACString &value)
   if (name.Equals(NS_LITERAL_CSTRING(":status"))) {
     nsAutoCString status(NS_LITERAL_CSTRING("HTTP/2.0 "));
     status.Append(value);
-    status.Append(NS_LITERAL_CSTRING("\r\n"));
+    status.AppendLiteral("\r\n");
     mOutput->Insert(status, 0);
     mHeaderStatus = value;
   } else if (name.Equals(NS_LITERAL_CSTRING(":authority"))) {
@@ -445,24 +445,24 @@ Http2Decompressor::OutputHeader(const nsACString &name, const nsACString &value)
   }
 
   mOutput->Append(name);
-  mOutput->Append(NS_LITERAL_CSTRING(": "));
+  mOutput->AppendLiteral(": ");
   // Special handling for set-cookie according to the spec
   bool isSetCookie = name.Equals(NS_LITERAL_CSTRING("set-cookie"));
   int32_t valueLen = value.Length();
   for (int32_t i = 0; i < valueLen; ++i) {
     if (value[i] == '\0') {
       if (isSetCookie) {
-        mOutput->Append(NS_LITERAL_CSTRING("\r\n"));
+        mOutput->AppendLiteral("\r\n");
         mOutput->Append(name);
-        mOutput->Append(NS_LITERAL_CSTRING(": "));
+        mOutput->AppendLiteral(": ");
       } else {
-        mOutput->Append(NS_LITERAL_CSTRING(", "));
+        mOutput->AppendLiteral(", ");
       }
     } else {
       mOutput->Append(value[i]);
     }
   }
-  mOutput->Append(NS_LITERAL_CSTRING("\r\n"));
+  mOutput->AppendLiteral("\r\n");
   return NS_OK;
 }
 

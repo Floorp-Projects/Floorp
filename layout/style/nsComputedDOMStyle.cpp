@@ -670,7 +670,7 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
       nsAutoString assertMsg(
         NS_LITERAL_STRING("we should be in a pseudo-element that is expected to contain elements ("));
       assertMsg.Append(nsDependentString(pseudoAtom->GetUTF16String()));
-      assertMsg.Append(NS_LITERAL_STRING(")"));
+      assertMsg.Append(')');
       NS_ASSERTION(nsCSSPseudoElements::PseudoElementContainsElements(pseudo),
                    NS_LossyConvertUTF16toASCII(assertMsg).get());
     }
@@ -1314,48 +1314,48 @@ nsComputedDOMStyle::MatrixToCSSValue(gfx3DMatrix& matrix)
 
   nsAutoString resultString(NS_LITERAL_STRING("matrix"));
   if (is3D) {
-    resultString.Append(NS_LITERAL_STRING("3d"));
+    resultString.AppendLiteral("3d");
   }
 
-  resultString.Append(NS_LITERAL_STRING("("));
+  resultString.Append('(');
   resultString.AppendFloat(matrix._11);
-  resultString.Append(NS_LITERAL_STRING(", "));
+  resultString.AppendLiteral(", ");
   resultString.AppendFloat(matrix._12);
-  resultString.Append(NS_LITERAL_STRING(", "));
+  resultString.AppendLiteral(", ");
   if (is3D) {
     resultString.AppendFloat(matrix._13);
-    resultString.Append(NS_LITERAL_STRING(", "));
+    resultString.AppendLiteral(", ");
     resultString.AppendFloat(matrix._14);
-    resultString.Append(NS_LITERAL_STRING(", "));
+    resultString.AppendLiteral(", ");
   }
   resultString.AppendFloat(matrix._21);
-  resultString.Append(NS_LITERAL_STRING(", "));
+  resultString.AppendLiteral(", ");
   resultString.AppendFloat(matrix._22);
-  resultString.Append(NS_LITERAL_STRING(", "));
+  resultString.AppendLiteral(", ");
   if (is3D) {
     resultString.AppendFloat(matrix._23);
-    resultString.Append(NS_LITERAL_STRING(", "));
+    resultString.AppendLiteral(", ");
     resultString.AppendFloat(matrix._24);
-    resultString.Append(NS_LITERAL_STRING(", "));
+    resultString.AppendLiteral(", ");
     resultString.AppendFloat(matrix._31);
-    resultString.Append(NS_LITERAL_STRING(", "));
+    resultString.AppendLiteral(", ");
     resultString.AppendFloat(matrix._32);
-    resultString.Append(NS_LITERAL_STRING(", "));
+    resultString.AppendLiteral(", ");
     resultString.AppendFloat(matrix._33);
-    resultString.Append(NS_LITERAL_STRING(", "));
+    resultString.AppendLiteral(", ");
     resultString.AppendFloat(matrix._34);
-    resultString.Append(NS_LITERAL_STRING(", "));
+    resultString.AppendLiteral(", ");
   }
   resultString.AppendFloat(matrix._41);
-  resultString.Append(NS_LITERAL_STRING(", "));
+  resultString.AppendLiteral(", ");
   resultString.AppendFloat(matrix._42);
   if (is3D) {
-    resultString.Append(NS_LITERAL_STRING(", "));
+    resultString.AppendLiteral(", ");
     resultString.AppendFloat(matrix._43);
-    resultString.Append(NS_LITERAL_STRING(", "));
+    resultString.AppendLiteral(", ");
     resultString.AppendFloat(matrix._44);
   }
-  resultString.Append(NS_LITERAL_STRING(")"));
+  resultString.Append(')');
 
   /* Create a value to hold our result. */
   nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;

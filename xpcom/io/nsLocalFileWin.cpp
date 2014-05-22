@@ -1454,7 +1454,8 @@ nsLocalFile::AppendInternal(const nsAFlatString& aNode,
 
   MakeDirty();
 
-  mWorkingPath.Append(NS_LITERAL_STRING("\\") + aNode);
+  mWorkingPath.Append('\\');
+  mWorkingPath.Append(node);
 
   return NS_OK;
 }

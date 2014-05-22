@@ -1121,17 +1121,17 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
     }
   }
   else if (eCSSUnit_URL == unit || eCSSUnit_Image == unit) {
-    aResult.Append(NS_LITERAL_STRING("url("));
+    aResult.AppendLiteral("url(");
     nsStyleUtil::AppendEscapedCSSString(
       nsDependentString(GetOriginalURLValue()), aResult);
-    aResult.Append(NS_LITERAL_STRING(")"));
+    aResult.Append(')');
   }
   else if (eCSSUnit_Element == unit) {
-    aResult.Append(NS_LITERAL_STRING("-moz-element(#"));
+    aResult.AppendLiteral("-moz-element(#");
     nsAutoString tmpStr;
     GetStringValue(tmpStr);
     nsStyleUtil::AppendEscapedCSSIdent(tmpStr, aResult);
-    aResult.Append(NS_LITERAL_STRING(")"));
+    aResult.Append(')');
   }
   else if (eCSSUnit_Percent == unit) {
     aResult.AppendFloat(GetPercentValue() * 100.0f);

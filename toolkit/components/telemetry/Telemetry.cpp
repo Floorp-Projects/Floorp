@@ -1483,7 +1483,7 @@ AddonHistogramName(const nsACString &id, const nsACString &name,
                    nsACString &ret)
 {
   ret.Append(id);
-  ret.Append(NS_LITERAL_CSTRING(":"));
+  ret.Append(':');
   ret.Append(name);
 }
 

@@ -788,7 +788,7 @@ mount_operation_ask_password (GMountOperation   *mount_op,
   nsAutoString key, realm;
 
   NS_ConvertUTF8toUTF16 dispHost(scheme);
-  dispHost.Append(NS_LITERAL_STRING("://"));
+  dispHost.AppendLiteral("://");
   dispHost.Append(NS_ConvertUTF8toUTF16(hostPort));
 
   key = dispHost;

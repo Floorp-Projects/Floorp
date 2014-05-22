@@ -236,13 +236,13 @@ SpdyStream3::CreatePushHashKey(const nsCString &scheme,
                                nsCString &outKey)
 {
   outOrigin = scheme;
-  outOrigin.Append(NS_LITERAL_CSTRING("://"));
+  outOrigin.AppendLiteral("://");
   outOrigin.Append(hostHeader);
 
   outKey = outOrigin;
-  outKey.Append(NS_LITERAL_CSTRING("/[spdy3."));
+  outKey.AppendLiteral("/[spdy3.");
   outKey.AppendInt(serial);
-  outKey.Append(NS_LITERAL_CSTRING("]"));
+  outKey.Append(']');
   outKey.Append(pathInfo);
 }
 
@@ -1163,9 +1163,9 @@ SpdyStream3::ConvertHeaders(nsACString &aHeadersOut)
   // create UI feedback.
 
   aHeadersOut.Append(version);
-  aHeadersOut.Append(NS_LITERAL_CSTRING(" "));
+  aHeadersOut.Append(' ');
   aHeadersOut.Append(status);
-  aHeadersOut.Append(NS_LITERAL_CSTRING("\r\n"));
+  aHeadersOut.AppendLiteral("\r\n");
 
   const unsigned char *nvpair = reinterpret_cast<unsigned char *>
     (mDecompressBuffer.get()) + 4;
@@ -1244,7 +1244,7 @@ SpdyStream3::ConvertHeaders(nsACString &aHeadersOut)
                     valueLen);
 
         aHeadersOut.Append(nameString);
-        aHeadersOut.Append(NS_LITERAL_CSTRING(": "));
+        aHeadersOut.AppendLiteral(": ");
 
         // expand nullptr bytes in the value string
         for (char *cPtr = valueString.BeginWriting();
@@ -1256,12 +1256,12 @@ SpdyStream3::ConvertHeaders(nsACString &aHeadersOut)
           }
 
           // NULLs are really "\r\nhdr: "
-          aHeadersOut.Append(NS_LITERAL_CSTRING("\r\n"));
+          aHeadersOut.AppendLiteral("\r\n");
           aHeadersOut.Append(nameString);
-          aHeadersOut.Append(NS_LITERAL_CSTRING(": "));
+          aHeadersOut.AppendLiteral(": ");
         }
 
-        aHeadersOut.Append(NS_LITERAL_CSTRING("\r\n"));
+        aHeadersOut.AppendLiteral("\r\n");
       }
       // move to the next name/value pair in this block
       nvpair += 8 + nameLen + valueLen;
@@ -1272,7 +1272,7 @@ SpdyStream3::ConvertHeaders(nsACString &aHeadersOut)
     nvpair += 4;
   } while (lastHeaderByte >= nvpair);
 
-  aHeadersOut.Append(NS_LITERAL_CSTRING("X-Firefox-Spdy: 3\r\n\r\n"));
+  aHeadersOut.AppendLiteral("X-Firefox-Spdy: 3\r\n\r\n");
   LOG (("decoded response headers are:\n%s",
         aHeadersOut.BeginReading()));
 
