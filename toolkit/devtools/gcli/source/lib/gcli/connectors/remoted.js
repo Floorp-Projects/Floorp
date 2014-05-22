@@ -227,7 +227,7 @@ Remoter.prototype.exposed = {
    * @return a promise of a string containing the output of the command
    */
   system: method(function(cmd, args, cwd, env) {
-    return host.exec({ cmd: cmd, args: args, cwd: cwd, env: env });
+    return host.spawn({ cmd: cmd, args: args, cwd: cwd, env: env });
   }, {
     request: {
       cmd: Arg(0, "string"), // The executable to call

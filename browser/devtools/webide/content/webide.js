@@ -17,6 +17,7 @@ const {AppProjects} = require("devtools/app-manager/app-projects");
 const {Connection} = require("devtools/client/connection-manager");
 const {AppManager} = require("devtools/app-manager");
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+const ProjectEditor = require("projecteditor/projecteditor");
 
 const Strings = Services.strings.createBundle("chrome://webide/content/webide.properties");
 
@@ -268,22 +269,65 @@ let UI = {
     }
   },
 
-  // details.xhtml
+  // ProjectEditor & details screen
+
+  getProjectEditor: function() {
+    if (this.projecteditor) {
+      return this.projecteditor.loaded;
+    }
+
+    let projecteditorIframe = document.querySelector("#projecteditor");
+    this.projecteditor = ProjectEditor.ProjectEditor(projecteditorIframe);
+    this.projecteditor.on("onEditorSave", (editor, resource) => {
+      AppManager.validateProject(AppManager.selectedProject);
+    });
+    return this.projecteditor.loaded;
+  },
+
+  isProjectEditorEnabled: function() {
+    return Services.prefs.getBoolPref("devtools.webide.showProjectEditor");
+  },
 
   openProject: function() {
-    let details = document.querySelector("#details");
+    let detailsIframe = document.querySelector("#details");
+    let projecteditorIframe = document.querySelector("#projecteditor");
+
     let project = AppManager.selectedProject;
 
+    // Nothing to show
+
     if (!project) {
-      details.setAttribute("hidden", "true");
+      detailsIframe.setAttribute("hidden", "true");
+      projecteditorIframe.setAttribute("hidden", "true");
+      document.commandDispatcher.focusedElement = document.documentElement;
       return;
     }
+
+    // Show only the details screen
+
+    if (project.type != "packaged" || !this.isProjectEditorEnabled()) {
+      detailsIframe.removeAttribute("hidden");
+      projecteditorIframe.setAttribute("hidden", "true");
+      document.commandDispatcher.focusedElement = document.documentElement;
+      return;
+    }
+
+    // Show ProjectEditor
+
+    detailsIframe.setAttribute("hidden", "true");
+    projecteditorIframe.removeAttribute("hidden");
+
+    this.getProjectEditor().then((projecteditor) => {
+      projecteditor.setProjectToAppPath(project.location, {
+        name: project.name,
+        iconUrl: project.icon,
+        projectOverviewURL: "chrome://webide/content/details.xhtml"
+      });
+    }, UI.console.error);
 
     if (project.location) {
       Services.prefs.setCharPref("devtools.webide.lastprojectlocation", project.location);
     }
-
-    details.removeAttribute("hidden");
   },
 
   /********** COMMANDS **********/

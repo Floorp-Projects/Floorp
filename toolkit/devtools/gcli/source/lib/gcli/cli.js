@@ -18,6 +18,7 @@
 
 var promise = require('./util/promise');
 var util = require('./util/util');
+var host = require('./util/host');
 var l10n = require('./util/l10n');
 
 var view = require('./ui/view');
@@ -2052,8 +2053,9 @@ Requisition.prototype.exec = function(options) {
   }
   else {
     try {
-      var reply = command.exec(args, this.executionContext);
-      return promise.resolve(reply).then(onDone, onError);
+      return host.exec(function() {
+        return command.exec(args, this.executionContext);
+      }.bind(this)).then(onDone, onError);
     }
     catch (ex) {
       var data = (typeof ex.message === 'string' && ex.stack != null) ?

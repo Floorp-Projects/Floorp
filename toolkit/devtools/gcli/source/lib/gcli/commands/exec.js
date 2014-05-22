@@ -64,14 +64,14 @@ exports.items = [
       });
       var cmd = cmdArgs.shift();
 
-      var execSpec = {
+      var spawnSpec = {
         cmd: cmd,
         args: cmdArgs,
         env: context.shell.env,
         cwd: context.shell.cwd
       };
 
-      return host.exec(execSpec).then(function(output) {
+      return host.spawn(spawnSpec).then(function(output) {
         if (output.code === 0) {
           return output;
         }
