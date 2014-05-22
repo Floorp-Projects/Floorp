@@ -18,10 +18,10 @@
 #include "TextureD3D9.h"
 #include "mozilla/gfx/Point.h"
 
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace layers {
+
+using namespace mozilla::gfx;
 
 const LPCWSTR kClassName       = L"D3D9WindowClass";
 

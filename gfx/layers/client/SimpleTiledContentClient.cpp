@@ -32,10 +32,10 @@
 
 #define ALOG(...)  __android_log_print(ANDROID_LOG_INFO, "SimpleTiles", __VA_ARGS__)
 
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace layers {
+
+using namespace mozilla::gfx;
 
 void
 SimpleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
