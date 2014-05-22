@@ -398,6 +398,7 @@ var DebuggerServer = {
     this.registerModule("devtools/server/actors/framerate");
     this.registerModule("devtools/server/actors/eventlooplag");
     this.registerModule("devtools/server/actors/layout");
+    this.registerModule("devtools/server/actors/csscoverage");
     if ("nsIProfiler" in Ci) {
       this.addActors("resource://gre/modules/devtools/server/actors/profiler.js");
     }

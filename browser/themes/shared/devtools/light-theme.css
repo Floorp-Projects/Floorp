@@ -74,6 +74,15 @@
   border-color: #cddae5;
 }
 
+.cm-s-mozilla .cm-unused-line {
+  text-decoration: line-through;
+  -moz-text-decoration-color: red;
+}
+
+.cm-s-mozilla .cm-executed-line {
+  background-color: #fcfffc;
+}
+
 .theme-fg-color1,
 .cm-s-mozilla .cm-number,
 .variable-or-property .token-number,
