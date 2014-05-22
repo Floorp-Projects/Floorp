@@ -54,7 +54,7 @@ public:
         , mOutput(out)
         , mWriteOffset(0)
         {
-            mBuf.Assign(NS_LITERAL_CSTRING("GET "));
+            mBuf.AssignLiteral("GET ");
             mBuf.Append(path);
             mBuf.AppendLiteral(" HTTP/1.0\r\n\r\n");
         }

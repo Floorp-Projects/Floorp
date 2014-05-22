@@ -2981,7 +2981,7 @@ nsIDocument::GetLastModified(nsAString& aLastModified) const
   } else {
     // If we for whatever reason failed to find the last modified time
     // (or even the current time), fall back to what NS4.x returned.
-    aLastModified.Assign(NS_LITERAL_STRING("01/01/1970 00:00:00"));
+    aLastModified.AssignLiteral("01/01/1970 00:00:00");
   }
 }
 
@@ -9212,16 +9212,16 @@ nsIDocument::GetReadyState(nsAString& aReadyState) const
 {
   switch(mReadyState) {
   case READYSTATE_LOADING :
-    aReadyState.Assign(NS_LITERAL_STRING("loading"));
+    aReadyState.AssignLiteral("loading");
     break;
   case READYSTATE_INTERACTIVE :
-    aReadyState.Assign(NS_LITERAL_STRING("interactive"));
+    aReadyState.AssignLiteral("interactive");
     break;
   case READYSTATE_COMPLETE :
-    aReadyState.Assign(NS_LITERAL_STRING("complete"));
+    aReadyState.AssignLiteral("complete");
     break;
   default:
-    aReadyState.Assign(NS_LITERAL_STRING("uninitialized"));
+    aReadyState.AssignLiteral("uninitialized");
   }
 }
 

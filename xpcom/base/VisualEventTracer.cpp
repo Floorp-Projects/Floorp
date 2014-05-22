@@ -564,8 +564,7 @@ NS_IMETHODIMP
 VisualEventTracerLog::GetJSONString(nsACString& aResult)
 {
   nsCString buffer;
-
-  buffer.Assign(NS_LITERAL_CSTRING("{\n\"version\": 1,\n\"records\":[\n"));
+  buffer.AssignLiteral("{\n\"version\": 1,\n\"records\":[\n");
 
   RecordBatch* batch = mBatch;
   while (batch) {

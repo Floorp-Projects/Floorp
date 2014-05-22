@@ -3660,7 +3660,7 @@ CreatePlacesPersistURN(nsNavHistoryQueryResultNode *aResultNode,
   nsresult rv = aResultNode->GetUri(uri);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aURN.Assign(NS_LITERAL_CSTRING("urn:places-persist:"));
+  aURN.AssignLiteral("urn:places-persist:");
   aURN.Append(uri);
 
   aURN.Append(',');
