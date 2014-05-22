@@ -2602,7 +2602,7 @@ nsLayoutUtils::GetOrMaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
   // displayport.
   // Note: we only do this in processes where we do subframe scrolling to
   //       begin with (i.e., not in the parent process on B2G).
-  if (WantSubAPZC() &&
+  if (aBuilder->IsPaintingToWindow() && WantSubAPZC() &&
       !aBuilder.HaveScrollableDisplayPort() &&
       scrollableFrame->WantAsyncScroll()) {
 
