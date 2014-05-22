@@ -369,7 +369,8 @@ private:
   void QuadVBOVerticesAttrib(GLuint aAttribIndex);
   void QuadVBOTexCoordsAttrib(GLuint aAttribIndex);
   void BindAndDrawQuad(ShaderProgramOGL *aProg,
-                       const gfx::Rect& aRect);
+                       const gfx::Rect& aLayerRect,
+                       const gfx::Rect& aTextureRect = gfx::Rect(0.0f, 0.0f, 1.0f, 1.0f));
   void BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
                                       const gfx::Rect& aRect,
                                       const gfx3DMatrix& aTextureTransform,
