@@ -303,6 +303,11 @@ protected:
    * Build the chain of APZCs that will handle overscroll for a pan starting at |aInitialTarget|.
    */
   void BuildOverscrollHandoffChain(const nsRefPtr<AsyncPanZoomController>& aInitialTarget);
+
+  /*
+   * Clear the handoff chain built in BuildOverscrollHandoffChain().
+   */
+  void ClearOverscrollHandoffChain();
 public:
   /* Some helper functions to find an APZC given some identifying input. These functions
      lock the tree of APZCs while they find the right one, and then return an addref'd
@@ -332,7 +337,6 @@ private:
                              ScrollableLayerGuid* aOutTargetGuid);
   void UpdateZoomConstraintsRecursively(AsyncPanZoomController* aApzc,
                                         const ZoomConstraints& aConstraints);
-  void ClearOverscrollHandoffChain();
 
   /**
    * Recursive helper function to build the APZC tree. The tree of APZC instances has
