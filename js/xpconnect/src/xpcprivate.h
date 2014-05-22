@@ -510,6 +510,8 @@ public:
     void DispatchDeferredDeletion(bool continuation) MOZ_OVERRIDE;
 
     void CustomGCCallback(JSGCStatus status) MOZ_OVERRIDE;
+    void CustomOutOfMemoryCallback() MOZ_OVERRIDE;
+    void CustomLargeAllocationFailureCallback() MOZ_OVERRIDE;
     bool CustomContextCallback(JSContext *cx, unsigned operation) MOZ_OVERRIDE;
     static void GCSliceCallback(JSRuntime *rt,
                                 JS::GCProgress progress,
@@ -547,7 +549,6 @@ public:
     static void CTypesActivityCallback(JSContext *cx,
                                        js::CTypesActivityType type);
     static bool InterruptCallback(JSContext *cx);
-    static void OutOfMemoryCallback(JSContext *cx, void *data);
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
