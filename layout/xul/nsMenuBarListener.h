@@ -6,6 +6,7 @@
 #define nsMenuBarListener_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/EventForwards.h"
 #include "nsIDOMEventListener.h"
 
 // X.h defines KeyPress
@@ -47,7 +48,7 @@ public:
 protected:
   static void InitAccessKey();
 
-  static uint32_t GetModifiers(nsIDOMKeyEvent* event);
+  static mozilla::Modifiers GetModifiersForAccessKey(nsIDOMKeyEvent* event);
 
   // This should only be called by the nsMenuBarListener during event dispatch,
   // thus ensuring that this doesn't get destroyed during the process.
@@ -60,7 +61,7 @@ protected:
   bool mAccessKeyDownCanceled;
   static bool mAccessKeyFocuses; // Does the access key by itself focus the menubar?
   static int32_t mAccessKey;     // See nsIDOMKeyEvent.h for sample values
-  static uint32_t mAccessKeyMask;// Modifier mask for the access key
+  static mozilla::Modifiers mAccessKeyMask;// Modifier mask for the access key
 };
 
 
