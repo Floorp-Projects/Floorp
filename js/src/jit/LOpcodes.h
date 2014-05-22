@@ -265,6 +265,8 @@
     _(ToIdV)                        \
     _(Floor)                        \
     _(FloorF)                       \
+    _(Ceil)                         \
+    _(CeilF)                        \
     _(Round)                        \
     _(RoundF)                       \
     _(In)                           \

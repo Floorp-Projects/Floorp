@@ -270,6 +270,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     CUSTOM_OP(Rest)
     SAFE_OP(RestPar)
     SAFE_OP(Floor)
+    SAFE_OP(Ceil)
     SAFE_OP(Round)
     UNSAFE_OP(InstanceOf)
     CUSTOM_OP(InterruptCheck)
