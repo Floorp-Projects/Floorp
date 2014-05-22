@@ -1439,13 +1439,13 @@ void
 Console::MakeFormatString(nsCString& aFormat, int32_t aInteger,
                           int32_t aMantissa, char aCh)
 {
-  aFormat.Append("%");
+  aFormat.Append('%');
   if (aInteger >= 0) {
     aFormat.AppendInt(aInteger);
   }
 
   if (aMantissa >= 0) {
-    aFormat.Append(".");
+    aFormat.Append('.');
     aFormat.AppendInt(aMantissa);
   }
 

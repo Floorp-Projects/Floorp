@@ -665,7 +665,7 @@ nsresult ChannelMediaResource::SetupChannelHeaders()
     } else {
       rangeString.AppendInt(mOffset);
     }
-    rangeString.Append("-");
+    rangeString.Append('-');
     if (!mByteRange.IsNull()) {
       rangeString.AppendInt(mByteRange.mEnd);
     }

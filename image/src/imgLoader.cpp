@@ -130,7 +130,7 @@ public:
       nsAutoCString path(NS_LITERAL_CSTRING(_path));                          \
       path.AppendLiteral("/(");                                               \
       path.Append(_uri);                                                      \
-      path.Append(")");                                                       \
+      path.Append(')');                                                       \
       nsresult rv;                                                            \
       rv = callback->Callback(EmptyCString(), path,                           \
                               KIND_HEAP, UNITS_BYTES, _amount,                \

@@ -3440,7 +3440,7 @@ nsDOMDeviceStorage::Add(nsIDOMBlob* aBlob, ErrorResult& aRv)
 
   nsAutoCString path;
   path.Assign(nsDependentCString(buffer));
-  path.Append(".");
+  path.Append('.');
   path.Append(extension);
 
   return AddNamed(aBlob, NS_ConvertASCIItoUTF16(path), aRv);

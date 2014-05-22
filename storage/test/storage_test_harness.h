@@ -160,7 +160,7 @@ AsyncStatementSpinner::HandleError(mozIStorageError *aError)
   nsAutoCString warnMsg;
   warnMsg.AppendLiteral("An error occurred while executing an async statement: ");
   warnMsg.AppendInt(result);
-  warnMsg.Append(" ");
+  warnMsg.Append(' ');
   warnMsg.Append(message);
   NS_WARNING(warnMsg.get());
 
