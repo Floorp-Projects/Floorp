@@ -31,11 +31,10 @@ AddUniforms(ProgramProfileOGL& aProfile)
 {
     static const char *sKnownUniformNames[] = {
         "uLayerTransform",
-        "uMaskTransform",
-        "uLayerRects",
+        "uMaskQuadTransform",
+        "uLayerQuadRect",
         "uMatrixProj",
         "uTextureTransform",
-        "uTextureRects",
         "uRenderTargetOffset",
         "uLayerOpacity",
         "uTexture",
@@ -146,7 +145,7 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   AddUniforms(result);
 
   vs << "uniform mat4 uMatrixProj;" << endl;
-  vs << "uniform vec4 uLayerRects[4];" << endl;
+  vs << "uniform vec4 uLayerQuadRect;" << endl;
   vs << "uniform mat4 uLayerTransform;" << endl;
   vs << "uniform vec4 uRenderTargetOffset;" << endl;
 
@@ -154,31 +153,28 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
 
   if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
     vs << "uniform mat4 uTextureTransform;" << endl;
-    vs << "uniform vec4 uTextureRects[4];" << endl;
-    vs << "attribute vec4 aTexCoord;" << endl;
+    vs << "attribute vec2 aTexCoord;" << endl;
     vs << "varying vec2 vTexCoord;" << endl;
   }
 
   if (aConfig.mFeatures & ENABLE_MASK_2D ||
       aConfig.mFeatures & ENABLE_MASK_3D) {
-    vs << "uniform mat4 uMaskTransform;" << endl;
+    vs << "uniform mat4 uMaskQuadTransform;" << endl;
     vs << "varying vec3 vMaskCoord;" << endl;
   }
 
   vs << "void main() {" << endl;
-  vs << "  int vertexID = int(aVertexCoord.w);" << endl;
-  vs << "  vec4 layerRect = uLayerRects[vertexID];" << endl;
-  vs << "  vec4 finalPosition = vec4(aVertexCoord.xy * layerRect.zw + layerRect.xy, 0.0, 1.0);" << endl;
+  vs << "  vec4 finalPosition = vec4(aVertexCoord.xy * uLayerQuadRect.zw + uLayerQuadRect.xy, 0.0, 1.0);" << endl;
   vs << "  finalPosition = uLayerTransform * finalPosition;" << endl;
   vs << "  finalPosition.xyz /= finalPosition.w;" << endl;
 
   if (aConfig.mFeatures & ENABLE_MASK_3D) {
-    vs << "  vMaskCoord.xy = (uMaskTransform * vec4(finalPosition.xyz, 1.0)).xy;" << endl;
+    vs << "  vMaskCoord.xy = (uMaskQuadTransform * vec4(finalPosition.xyz, 1.0)).xy;" << endl;
     // correct for perspective correct interpolation, see comment in D3D10 shader
     vs << "  vMaskCoord.z = 1.0;" << endl;
     vs << "  vMaskCoord *= finalPosition.w;" << endl;
   } else if (aConfig.mFeatures & ENABLE_MASK_2D) {
-    vs << "  vMaskCoord.xy = (uMaskTransform * finalPosition).xy;" << endl;
+    vs << "  vMaskCoord.xy = (uMaskQuadTransform * finalPosition).xy;" << endl;
   }
 
   vs << "  finalPosition = finalPosition - uRenderTargetOffset;" << endl;
@@ -186,9 +182,7 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   vs << "  finalPosition = uMatrixProj * finalPosition;" << endl;
 
   if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
-    vs << "  vec4 textureRect = uTextureRects[vertexID];" << endl;
-    vs << "  vec2 texCoord = aTexCoord.xy * textureRect.zw + textureRect.xy;" << endl;
-    vs << "  vTexCoord = (uTextureTransform * vec4(texCoord, 0.0, 1.0)).xy;" << endl;
+    vs << "  vTexCoord = (uTextureTransform * vec4(aTexCoord.x, aTexCoord.y, 0.0, 1.0)).xy;" << endl;
   }
 
   vs << "  gl_Position = finalPosition;" << endl;
