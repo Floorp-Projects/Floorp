@@ -66,37 +66,8 @@ INSTALL_TARGETS += LLDBINIT_FINAL_TARGET
 
 include $(topsrcdir)/config/rules.mk
 
-# we install to _leaktest/
 TARGET_DEPTH = ..
 include $(srcdir)/automation-build.mk
-
-_LEAKTEST_DIR = $(DEPTH)/_leaktest
-
-_LEAKTEST_FILES =    \
-		automation.py \
-		automationutils.py \
-		$(topsrcdir)/testing/profiles/prefs_general.js \
-		leaktest.py \
-		bloatcycle.html \
-		$(topsrcdir)/build/pgo/server-locations.txt \
-		$(topsrcdir)/build/pgo/favicon.ico \
-		$(topsrcdir)/build/pgo/blueprint/sample.html \
-		$(topsrcdir)/build/pgo/blueprint/elements.html \
-		$(topsrcdir)/build/pgo/blueprint/forms.html \
-		$(topsrcdir)/build/pgo/blueprint/grid.html \
-		$(topsrcdir)/build/pgo/blueprint/test.jpg \
-		$(topsrcdir)/build/pgo/blueprint/test-small.jpg \
-		$(topsrcdir)/build/pgo/blueprint/valid.png \
-		$(topsrcdir)/build/pgo/blueprint/screen.css \
-		$(topsrcdir)/build/pgo/blueprint/print.css \
-		$(topsrcdir)/build/pgo/blueprint/grid.png \
-		$(topsrcdir)/build/pgo/blueprint/fancytype-screen.css \
-		$(NULL)
-
-leaktest.py: leaktest.py.in
-	$(call py_action,preprocessor,$^ -o $@)
-	chmod +x $@
-GARBAGE += leaktest.py
 
 ifdef MOZ_APP_BASENAME
 $(FINAL_TARGET)/application.ini: $(APP_INI_DEPS)
@@ -109,8 +80,7 @@ GARBAGE += application.ini.h
 endif
 endif
 
-libs:: $(_LEAKTEST_FILES)
-	$(INSTALL) $^ $(_LEAKTEST_DIR)
+libs:: automation.py
 
 ifdef MOZ_VALGRIND
 _VALGRIND_DIR = $(DEPTH)/_valgrind
