@@ -104,7 +104,7 @@ test_malformed8()
 
     nsString tmp16(NS_LITERAL_STRING("string"));
     AppendUTF8toUTF16(str8, tmp16);
-    if (!tmp16.Equals(NS_LITERAL_STRING("string")))
+    if (!tmp16.EqualsLiteral("string"))
       return false;
 
     if (CompareUTF8toUTF16(str8, EmptyString()) == 0)

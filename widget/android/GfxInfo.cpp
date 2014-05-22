@@ -398,7 +398,7 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
         return NS_OK;
       }
 
-      if (mHardware.Equals(NS_LITERAL_STRING("ville"))) {
+      if (mHardware.EqualsLiteral("ville")) {
         *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
         return NS_OK;
       }

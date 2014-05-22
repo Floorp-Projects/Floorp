@@ -522,8 +522,8 @@ GetCacheSessionNameForStoragePolicy(
   MOZ_ASSERT(!isPrivate || storagePolicy == nsICache::STORE_IN_MEMORY);
 
   // HTTP
-  if (scheme.Equals(NS_LITERAL_CSTRING("http")) ||
-      scheme.Equals(NS_LITERAL_CSTRING("https"))) {
+  if (scheme.EqualsLiteral("http") ||
+      scheme.EqualsLiteral("https")) {
     switch (storagePolicy) {
     case nsICache::STORE_IN_MEMORY:
       if (isPrivate)
@@ -542,14 +542,14 @@ GetCacheSessionNameForStoragePolicy(
     }
   }
   // WYCIWYG
-  else if (scheme.Equals(NS_LITERAL_CSTRING("wyciwyg"))) {
+  else if (scheme.EqualsLiteral("wyciwyg")) {
     if (isPrivate)
       sessionName.Assign(NS_LITERAL_CSTRING("wyciwyg-private"));
     else
       sessionName.Assign(NS_LITERAL_CSTRING("wyciwyg"));
   }
   // FTP
-  else if (scheme.Equals(NS_LITERAL_CSTRING("ftp"))) {
+  else if (scheme.EqualsLiteral("ftp")) {
     if (isPrivate)
       sessionName.Assign(NS_LITERAL_CSTRING("FTP-private"));
     else
@@ -1096,8 +1096,8 @@ nsresult _OldStorage::AssembleCacheKey(nsIURI *aURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString uriSpec;
-  if (aScheme.Equals(NS_LITERAL_CSTRING("http")) ||
-      aScheme.Equals(NS_LITERAL_CSTRING("https"))) {
+  if (aScheme.EqualsLiteral("http") ||
+      aScheme.EqualsLiteral("https")) {
     if (mLoadInfo->IsAnonymous()) {
       aCacheKey.AssignLiteral("anon&");
     }
@@ -1117,7 +1117,7 @@ nsresult _OldStorage::AssembleCacheKey(nsIURI *aURI,
       aCacheKey.AppendLiteral("uri=");
     }
   }
-  else if (aScheme.Equals(NS_LITERAL_CSTRING("wyciwyg"))) {
+  else if (aScheme.EqualsLiteral("wyciwyg")) {
     rv = aURI->GetSpec(uriSpec);
     NS_ENSURE_SUCCESS(rv, rv);
   }

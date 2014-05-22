@@ -491,7 +491,7 @@ LoadDirsIntoArray(nsCOMArray<nsIFile>& aSourceDirs,
 
     nsAutoCString leaf;
     appended->GetNativeLeafName(leaf);
-    if (!Substring(leaf, leaf.Length() - 4).Equals(NS_LITERAL_CSTRING(".xpi"))) {
+    if (!Substring(leaf, leaf.Length() - 4).EqualsLiteral(".xpi")) {
       LoadDirIntoArray(appended,
                        aAppendList,
                        aDirectories);
@@ -564,7 +564,7 @@ LoadExtensionDirectories(nsINIParser &parser,
       continue;
 
     aDirectories.AppendObject(dir);
-    if (Substring(path, path.Length() - 4).Equals(NS_LITERAL_CSTRING(".xpi"))) {
+    if (Substring(path, path.Length() - 4).EqualsLiteral(".xpi")) {
       XRE_AddJarManifestLocation(aType, dir);
     }
     else {

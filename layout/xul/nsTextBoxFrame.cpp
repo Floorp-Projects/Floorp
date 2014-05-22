@@ -138,7 +138,7 @@ nsTextBoxFrame::AlwaysAppendAccessKey()
 
     const char* prefName = "intl.menuitems.alwaysappendaccesskeys";
     nsAdoptingString val = Preferences::GetLocalizedString(prefName);
-    gAlwaysAppendAccessKey = val.Equals(NS_LITERAL_STRING("true"));
+    gAlwaysAppendAccessKey = val.EqualsLiteral("true");
   }
   return gAlwaysAppendAccessKey;
 }
