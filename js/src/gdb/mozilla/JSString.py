@@ -11,10 +11,9 @@ mozilla.prettyprinters.clear_module_printers(__name__)
 class JSStringTypeCache(object):
     def __init__(self, cache):
         dummy = gdb.Value(0).cast(cache.JSString_ptr_t)
-        self.LENGTH_SHIFT = dummy['LENGTH_SHIFT']
-        self.FLAGS_MASK   = dummy['FLAGS_MASK']
-        self.ROPE_FLAGS   = dummy['ROPE_FLAGS']
-        self.ATOM_BIT     = dummy['ATOM_BIT']
+        self.ROPE_FLAGS = dummy['ROPE_FLAGS']
+        self.ATOM_BIT = dummy['ATOM_BIT']
+        self.INLINE_CHARS_BIT = dummy['INLINE_CHARS_BIT']
 
 class Common(mozilla.prettyprinters.Pointer):
     def __init__(self, value, cache):
@@ -30,16 +29,20 @@ class JSStringPtr(Common):
 
     def jschars(self):
         d = self.value['d']
-        lengthAndFlags = d['lengthAndFlags']
-        length = lengthAndFlags >> self.stc.LENGTH_SHIFT
-        is_rope = (lengthAndFlags & self.stc.FLAGS_MASK) == self.stc.ROPE_FLAGS
+        length = d['u1']['length']
+        flags = d['u1']['flags']
+        is_rope = (flags == self.stc.ROPE_FLAGS)
         if is_rope:
-            for c in JSStringPtr(d['u1']['left'], self.cache).jschars():
+            for c in JSStringPtr(d['s']['u2']['left'], self.cache).jschars():
                 yield c
-            for c in JSStringPtr(d['s']['u2']['right'], self.cache).jschars():
+            for c in JSStringPtr(d['s']['u3']['right'], self.cache).jschars():
                 yield c
         else:
-            chars = d['u1']['chars']
+            is_inline = (flags & self.stc.INLINE_CHARS_BIT) != 0
+            if is_inline:
+                chars = d['inlineStorage']
+            else:
+                chars = d['s']['u2']['nonInlineChars']
             for i in xrange(length):
                 yield chars[i]
 
