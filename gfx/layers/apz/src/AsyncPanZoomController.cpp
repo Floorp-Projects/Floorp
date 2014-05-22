@@ -1749,10 +1749,13 @@ bool ZoomAnimation::Sample(FrameMetrics& aFrameMetrics,
   return true;
 }
 
-bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime)
+bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
+                                             Vector<Task*>* aOutDeferredTasks)
 {
   if (mAnimation) {
-    if (mAnimation->Sample(mFrameMetrics, aSampleTime - mLastSampleTime)) {
+    bool continueAnimation = mAnimation->Sample(mFrameMetrics, aSampleTime - mLastSampleTime);
+    *aOutDeferredTasks = mAnimation->TakeDeferredTasks();
+    if (continueAnimation) {
       if (mPaintThrottler.TimeSinceLastRequest(aSampleTime) >
           mAnimation->mRepaintInterval) {
         RequestContentRepaint();
@@ -1784,7 +1787,7 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
   {
     ReentrantMonitorAutoEnter lock(mMonitor);
 
-    requestAnimationFrame = UpdateAnimation(aSampleTime);
+    requestAnimationFrame = UpdateAnimation(aSampleTime, &deferredTasks);
 
     aScrollOffset = mFrameMetrics.GetScrollOffset() * mFrameMetrics.GetZoom();
     *aNewTransform = GetCurrentAsyncTransform();
@@ -1794,17 +1797,12 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
               ParentLayerSize(mFrameMetrics.mCompositionBounds.Size()) / mFrameMetrics.GetZoomToParent()));
 
     mCurrentAsyncScrollOffset = mFrameMetrics.GetScrollOffset();
-
-    // Get any deferred tasks queued up by mAnimation's Sample() (called by
-    // UpdateAnimation()). This needs to be done here since mAnimation can
-    // be destroyed by another thread when we release the monitor, but
-    // the tasks need to be executed after we release the monitor since they
-    // are allowed to call APZCTreeManager methods which can grab the tree lock. 
-    if (mAnimation) {
-      deferredTasks = mAnimation->TakeDeferredTasks();
-    }
   }
 
+  // Execute any deferred tasks queued up by mAnimation's Sample() (called by
+  // UpdateAnimation()). This needs to be done after the monitor is released
+  // since the tasks are allowed to call APZCTreeManager methods which can grab
+  // the tree lock.
   for (uint32_t i = 0; i < deferredTasks.length(); ++i) {
     deferredTasks[i]->Run();
     delete deferredTasks[i];
