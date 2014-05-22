@@ -22,6 +22,7 @@ const ProjectEditor = require("projecteditor/projecteditor");
 const Strings = Services.strings.createBundle("chrome://webide/content/webide.properties");
 
 const HTML = "http://www.w3.org/1999/xhtml";
+const HELP_URL = "https://developer.mozilla.org/Firefox_OS/Using_the_App_Manager#Troubleshooting";
 
 window.addEventListener("load", function onLoad() {
   window.removeEventListener("load", onLoad);
@@ -43,8 +44,6 @@ let UI = {
     this.appManagerUpdate = this.appManagerUpdate.bind(this);
     AppManager.on("app-manager-update", this.appManagerUpdate);
 
-    this.logNode = document.querySelector("#logs");
-
     this.updateCommands();
     this.updateRuntimeList();
 
@@ -64,11 +63,6 @@ let UI = {
     } catch(e) {
       AppManager.selectedProject = null;
     }
-
-    document.querySelector("#toggle-logs").addEventListener("click", function() {
-      document.querySelector("#logs").classList.toggle("expand");
-      UI.logNode.scrollTop = UI.logNode.scrollTopMax;
-    });
   },
 
   uninit: function() {
@@ -92,12 +86,6 @@ let UI = {
   appManagerUpdate: function(event, what, details) {
     // Got a message from app-manager.js
     switch (what) {
-      case "console":
-        if (details.level == "log")     this.console.log(details.message);
-        if (details.level == "warning") this.console.warning(details.message);
-        if (details.level == "error")   this.console.error(details.message);
-        if (details.level == "success") this.console.success(details.message);
-        break;
       case "runtimelist":
         this.updateRuntimeList();
         break;
@@ -172,7 +160,7 @@ let UI = {
     this.hidePanels();
     let timeout = setTimeout(() => {
       this.unbusy();
-      this.console.error("Operation timeout: " + operationDescription);
+      UI.reportError("error_operationTimeout", operationDescription);
     }, 30000);
     this.busy();
     promise.then(() => {
@@ -180,10 +168,36 @@ let UI = {
       this.unbusy();
     }, (e) => {
       clearTimeout(timeout);
-      this.console.error("Error while processing: " + operationDescription + ": " + e);
+      UI.reportError("error_operationFail", operationDescription);
+      console.error(e);
       this.unbusy();
     });
     return promise;
+  },
+
+  reportError: function(l10nProperty, ...l10nArgs) {
+    let text;
+
+    if (l10nArgs.length > 0) {
+      text = Strings.formatStringFromName(l10nProperty, l10nArgs, l10nArgs.length);
+    } else {
+      text = Strings.GetStringFromName(l10nProperty);
+    }
+
+    console.error(text);
+
+    let buttons = [{
+      label: Strings.GetStringFromName("notification_showTroubleShooting_label"),
+      accessKey: Strings.GetStringFromName("notification_showTroubleShooting_accesskey"),
+      callback: function () {
+        Cmds.showTroubleShooting();
+      }
+    }];
+
+    let nbox = document.querySelector("#body");
+    nbox.removeAllNotifications(true);
+    nbox.appendNotification(text, "webide:errornotification", null,
+                            nbox.PRIORITY_WARNING_LOW, buttons);
   },
 
   /********** RUNTIME **********/
@@ -195,8 +209,6 @@ let UI = {
       USBListNode.firstChild.remove();
     }
 
-    this.console.log("Found " + AppManager.runtimeList.usb.length + " USB devices.");
-    this.console.log("Found " + AppManager.runtimeList.simulator.length + " simulators.");
     for (let runtime of AppManager.runtimeList.usb) {
       let panelItemNode = document.createElement("toolbarbutton");
       panelItemNode.className = "panel-item runtime-panel-item-usbruntime";
@@ -229,11 +241,7 @@ let UI = {
   connectToRuntime: function(runtime) {
     let name = runtime.getName();
     let promise = AppManager.connectToRuntime(runtime);
-    this.busyUntil(promise, "connecting to runtime");
-    promise.then(
-      () => {this.console.success("Connected to " + name)},
-      () => {this.console.error("Can't connect to " + name)});
-    return promise;
+    return this.busyUntil(promise, "connecting to runtime");
   },
 
   updateRuntimeButton: function() {
@@ -303,9 +311,19 @@ let UI = {
       return;
     }
 
+    // Make sure the directory exist before we show Project Editor
+
+    let forceDetailsOnly = false;
+    if (project.type == "packaged") {
+      let directory = new FileUtils.File(project.location);
+      forceDetailsOnly = !directory.exists();
+    }
+
     // Show only the details screen
 
-    if (project.type != "packaged" || !this.isProjectEditorEnabled()) {
+    if (project.type != "packaged" ||
+        !this.isProjectEditorEnabled() ||
+        forceDetailsOnly) {
       detailsIframe.removeAttribute("hidden");
       projecteditorIframe.setAttribute("hidden", "true");
       document.commandDispatcher.focusedElement = document.documentElement;
@@ -323,7 +341,7 @@ let UI = {
         iconUrl: project.icon,
         projectOverviewURL: "chrome://webide/content/details.xhtml"
       });
-    }, UI.console.error);
+    }, console.error);
 
     if (project.location) {
       Services.prefs.setCharPref("devtools.webide.lastprojectlocation", project.location);
@@ -439,7 +457,7 @@ let UI = {
           this.closeToolboxUI();
           break;
       }
-    } catch(e) { Cu.reportError(e); }
+    } catch(e) { console.error(e); }
   },
 
   closeToolbox: function() {
@@ -447,7 +465,7 @@ let UI = {
       this.toolboxPromise.then(toolbox => {
         toolbox.destroy();
         this.toolboxPromise = null;
-      }, this.console.error);
+      }, console.error);
     }
   },
 
@@ -487,32 +505,6 @@ let UI = {
     let splitter = document.querySelector(".devtools-horizontal-splitter");
     splitter.setAttribute("hidden", "true");
     document.querySelector("#action-button-debug").removeAttribute("active");
-  },
-
-  console: {
-    _log: function(msg, classname) {
-      let li = document.createElementNS(HTML, "p");
-      li.textContent = msg;
-      li.className = classname;
-      UI.logNode.appendChild(li);
-      UI.logNode.scrollTop = UI.logNode.scrollTopMax;
-    },
-    log: function(msg) {
-      UI.console._log(msg, "log");
-      console.log(msg);
-    },
-    warning: function(msg) {
-      UI.console._log(msg, "warning");
-      console.warning(msg);
-    },
-    error: function(msg) {
-      UI.console._log(msg, "error");
-      console.error(msg);
-    },
-    success: function(msg) {
-      UI.console._log(msg, "success");
-      console.log(msg);
-    },
   },
 }
 
@@ -672,8 +664,6 @@ let Cmds = {
       runtimeAppsNode.firstChild.remove();
     }
 
-    UI.console.log("Found " + AppManager.webAppsStore.object.all.length + " apps");
-
     for (let i = 0; i < AppManager.webAppsStore.object.all.length; i++) {
       let app = AppManager.webAppsStore.object.all[i];
       let panelItemNode = document.createElement("toolbarbutton");
@@ -717,7 +707,7 @@ let Cmds = {
   takeScreenshot: function() {
     return UI.busyUntil(AppManager.deviceFront.screenshotToDataURL().then(longstr => {
        return longstr.string().then(dataURL => {
-         longstr.release().then(null, UI.console.error);
+         longstr.release().then(null, console.error);
          UI.openInBrowser(dataURL);
        });
     }), "taking screenshot");
@@ -825,7 +815,7 @@ let Cmds = {
     } else {
       UI.toolboxPromise = AppManager.getTarget().then((target) => {
         return UI.showToolbox(target);
-      }, UI.console.error);
+      }, console.error);
       UI.busyUntil(UI.toolboxPromise, "opening toolbox");
       return UI.toolboxPromise;
     }
@@ -836,6 +826,11 @@ let Cmds = {
   },
 
   toggleEditors: function() {
-    // Toggle Itchpad
+    Services.prefs.setBoolPref("devtools.webide.showProjectEditor", !UI.isProjectEditorEnabled());
+    UI.openProject();
+  },
+
+  showTroubleShooting: function() {
+    UI.openInBrowser(HELP_URL);
   },
 }
