@@ -50,6 +50,10 @@ var isPrimaryTestWindow = !!parent.TestRunner || isSingleTestRun;
         }
         w = ancestor(w);
     }
+
+    if (parentRunner) {
+        SimpleTest.harnessParameters = parentRunner.getParameterInfo();
+    }
 })();
 
 /* Helper functions pulled out of various MochiKit modules */
@@ -841,7 +845,9 @@ SimpleTest.finish = function() {
         if (parentRunner) {
             /* We're running in an iframe, and the parent has a TestRunner */
             parentRunner.testFinished(SimpleTest._tests);
-        } else {
+        }
+
+        if (!parentRunner || parentRunner.showTestReport) {
             SpecialPowers.flushAllAppsLaunchable();
             SpecialPowers.flushPermissions(function () {
               SpecialPowers.flushPrefEnv(function() {
