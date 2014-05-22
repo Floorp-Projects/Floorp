@@ -311,7 +311,7 @@ public:
   /*
    * Clear aRect on current render target.
    */
-  virtual void ClearRect(const gfx::Rect& aRect) { }
+  virtual void ClearRect(const gfx::Rect& aRect) = 0;
 
   /**
    * Start a new frame.
