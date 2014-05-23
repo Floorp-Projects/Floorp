@@ -80,7 +80,20 @@ const Class JSObject::class_ = {
     JS_StrictPropertyStub,   /* setProperty */
     JS_EnumerateStub,
     JS_ResolveStub,
-    JS_ConvertStub
+    JS_ConvertStub,
+    nullptr,                 /* finalize */
+    nullptr,                 /* call */
+    nullptr,                 /* hasInstance */
+    nullptr,                 /* construct */
+    nullptr,                 /* trace */
+    {
+        CreateObjectConstructor,
+        CreateObjectPrototype,
+        object_static_methods,
+        object_methods,
+        object_properties,
+        FinishObjectClassInit
+    }
 };
 
 const Class* const js::ObjectClassPtr = &JSObject::class_;
