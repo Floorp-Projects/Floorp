@@ -421,6 +421,12 @@ public:
   void PassStringMozMap(const MozMap<nsString>&);
   void PassByteStringMozMap(const MozMap<nsCString>&);
   void PassMozMapOfMozMaps(const MozMap< MozMap<int32_t> >&);
+  void ReceiveMozMap(MozMap<int32_t>&);
+  void ReceiveNullableMozMap(Nullable<MozMap<int32_t>>&);
+  void ReceiveMozMapOfNullableInts(MozMap<Nullable<int32_t>>&);
+  void ReceiveNullableMozMapOfNullableInts(Nullable<MozMap<Nullable<int32_t>>>&);
+  void ReceiveMozMapOfMozMaps(MozMap<MozMap<int32_t>>&);
+  void ReceiveAnyMozMap(JSContext*, MozMap<JS::Value>&);
 
   // Typed array types
   void PassArrayBuffer(const ArrayBuffer&);
