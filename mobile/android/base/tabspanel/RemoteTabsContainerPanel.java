@@ -21,7 +21,7 @@ import android.view.ViewGroup;
  * Provides a container to wrap the list of synced tabs and provide swipe-to-refresh support. The
  * only child view should be an instance of {@link RemoteTabsList}.
  */
-public class RemoteTabsContainer extends GeckoSwipeRefreshLayout
+public class RemoteTabsContainerPanel extends GeckoSwipeRefreshLayout
                                  implements TabsPanel.PanelView {
     private static final String[] STAGES_TO_SYNC_ON_REFRESH = new String[] { "tabs" };
 
@@ -29,7 +29,7 @@ public class RemoteTabsContainer extends GeckoSwipeRefreshLayout
     private final RemoteTabsSyncObserver syncListener;
     private RemoteTabsList list;
 
-    public RemoteTabsContainer(Context context, AttributeSet attrs) {
+    public RemoteTabsContainerPanel(Context context, AttributeSet attrs) {
         super(context, attrs);
         this.context = context;
         this.syncListener = new RemoteTabsSyncObserver();
@@ -67,14 +67,14 @@ public class RemoteTabsContainer extends GeckoSwipeRefreshLayout
 
     @Override
     public void show() {
-        setVisibility(VISIBLE);
+        setVisibility(View.VISIBLE);
         TabsAccessor.getTabs(context, list);
         FirefoxAccounts.addSyncStatusListener(syncListener);
     }
 
     @Override
     public void hide() {
-        setVisibility(GONE);
+        setVisibility(View.GONE);
         FirefoxAccounts.removeSyncStatusListener(syncListener);
     }
 
@@ -96,7 +96,7 @@ public class RemoteTabsContainer extends GeckoSwipeRefreshLayout
     private class RemoteTabsSyncObserver implements FirefoxAccounts.SyncStatusListener {
         @Override
         public Context getContext() {
-            return RemoteTabsContainer.this.getContext();
+            return RemoteTabsContainerPanel.this.getContext();
         }
 
         @Override
