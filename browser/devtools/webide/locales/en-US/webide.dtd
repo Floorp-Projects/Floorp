@@ -61,9 +61,6 @@
 <!ENTITY runtimePanel_USBDevices "USB Devices">
 <!ENTITY runtimePanel_simulators "Simulators">
 
-<!ENTITY logs "Logs">
-
-
 <!-- Lense -->
 <!ENTITY details_valid_header "valid">
 <!ENTITY details_warning_header "warnings">

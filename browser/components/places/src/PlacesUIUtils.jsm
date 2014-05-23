@@ -1049,10 +1049,6 @@ XPCOMUtils.defineLazyGetter(this, "bundle", function() {
          createBundle(PLACES_STRING_BUNDLE_URI);
 });
 
-XPCOMUtils.defineLazyServiceGetter(this, "focusManager",
-                                   "@mozilla.org/focus-manager;1",
-                                   "nsIFocusManager");
-
 /**
  * This is a compatibility shim for old PUIU.ptm users.
  *
