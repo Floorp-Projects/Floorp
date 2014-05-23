@@ -194,7 +194,7 @@ bool ASessionDescription::findAttribute(
     return true;
 }
 
-void ASessionDescription::getFormatType(
+bool ASessionDescription::getFormatType(
         size_t index, unsigned long *PT,
         AString *desc, AString *params) const {
     AString format;
@@ -213,12 +213,19 @@ void ASessionDescription::getFormatType(
     char key[20];
     sprintf(key, "a=rtpmap:%lu", x);
 
-    CHECK(findAttribute(index, key, desc));
+    if (!findAttribute(index, key, desc)) {
+        // We only support dynamic payload type assignment for now.
+        // If SDP description doesn't have the "a=rtpmap:" line, it is static
+        // payload type assignment and we refuse to handle it.
+        return false;
+    }
 
     sprintf(key, "a=fmtp:%lu", x);
     if (!findAttribute(index, key, params)) {
         params->clear();
     }
+
+    return true;
 }
 
 bool ASessionDescription::getDimensions(
