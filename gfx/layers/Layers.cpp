@@ -1262,7 +1262,7 @@ Layer::Dump(FILE* aFile, const char* aPrefix, bool aDumpHtml)
   DumpSelf(aFile, aPrefix);
 
 #ifdef MOZ_DUMP_PAINTING
-  if (AsLayerComposite() && AsLayerComposite()->GetCompositableHost()) {
+  if (gfxUtils::sDumpPainting && AsLayerComposite() && AsLayerComposite()->GetCompositableHost()) {
     AsLayerComposite()->GetCompositableHost()->Dump(aFile, aPrefix, aDumpHtml);
   }
 #endif
