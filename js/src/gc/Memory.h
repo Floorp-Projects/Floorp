@@ -72,6 +72,11 @@ class SystemPageAllocator
     // the last ditch allocation pass. OOM crash reports generally show <= 7
     // unaligned chunks available (bug 1005844 comment #16).
     static const int    MaxLastDitchAttempts = 8;
+
+public:
+    void *testMapAlignedPagesLastDitch(size_t size, size_t alignment) {
+        return mapAlignedPagesLastDitch(size, alignment);
+    }
 };
 
 } // namespace gc
