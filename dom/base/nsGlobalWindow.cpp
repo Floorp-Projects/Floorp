@@ -13115,6 +13115,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGlobalChromeWindow,
                                                   nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowserDOMWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMessageManager)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGroupMessageManagers)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
@@ -13126,6 +13127,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsGlobalChromeWindow,
       tmp->mMessageManager.get())->Disconnect();
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mMessageManager)
   }
+
+  tmp->mGroupMessageManagers.EnumerateRead(DisconnectGroupMessageManager, nullptr);
+  tmp->mGroupMessageManagers.Clear();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGroupMessageManagers)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 DOMCI_DATA(ChromeWindow, nsGlobalChromeWindow)
@@ -13492,6 +13497,39 @@ nsGlobalWindow::GetMessageManager(ErrorResult& aError)
                                 MM_CHROME | MM_BROADCASTER);
   }
   return myself->mMessageManager;
+}
+
+NS_IMETHODIMP
+nsGlobalChromeWindow::GetGroupMessageManager(const nsAString& aGroup,
+                                             nsIMessageBroadcaster** aManager)
+{
+  ErrorResult rv;
+  NS_IF_ADDREF(*aManager = GetGroupMessageManager(aGroup, rv));
+  return rv.ErrorCode();
+}
+
+nsIMessageBroadcaster*
+nsGlobalWindow::GetGroupMessageManager(const nsAString& aGroup,
+                                       ErrorResult& aError)
+{
+  FORWARD_TO_INNER_OR_THROW(GetGroupMessageManager, (aGroup, aError), aError, nullptr);
+  MOZ_ASSERT(IsChromeWindow());
+
+  nsGlobalChromeWindow* myself = static_cast<nsGlobalChromeWindow*>(this);
+  nsCOMPtr<nsIMessageBroadcaster> messageManager =
+    myself->mGroupMessageManagers.Get(aGroup);
+
+  if (!messageManager) {
+    nsFrameMessageManager* parent =
+      static_cast<nsFrameMessageManager*>(GetMessageManager(aError));
+
+    messageManager = new nsFrameMessageManager(nullptr,
+                                               parent,
+                                               MM_CHROME | MM_BROADCASTER);
+    myself->mGroupMessageManagers.Put(aGroup, messageManager);
+  }
+
+  return messageManager;
 }
 
 // nsGlobalModalWindow implementation

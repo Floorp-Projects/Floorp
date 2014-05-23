@@ -434,6 +434,13 @@ interface ChromeWindow {
   readonly attribute nsIMessageBroadcaster messageManager;
 
   /**
+   * Returns the message manager identified by the given group name that
+   * manages all frame loaders belonging to that group.
+   */
+  [Throws, Func="nsGlobalWindow::IsChromeWindow"]
+  nsIMessageBroadcaster getGroupMessageManager(DOMString aGroup);
+
+  /**
    * On some operating systems, we must allow the window manager to
    * handle window dragging. This function tells the window manager to
    * start dragging the window. This function will fail unless called
