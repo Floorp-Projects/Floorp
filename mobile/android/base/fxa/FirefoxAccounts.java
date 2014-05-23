@@ -14,8 +14,10 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.fxa.authenticator.AccountPickler;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
+import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncAdapter;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncStatusHelper;
+import org.mozilla.gecko.fxa.tasks.FxAccountCodeResender;
 import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.Utils;
 
@@ -156,6 +158,38 @@ public class FirefoxAccounts {
     return null;
   }
 
+  /**
+   * @return
+   *     the {@link State} instance associated with the current account, or <code>null</code> if
+   *     no accounts exist.
+   */
+  public static State getFirefoxAccountState(final Context context) {
+    final Account account = getFirefoxAccount(context);
+    if (account == null) {
+      return null;
+    }
+
+    final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
+    try {
+      return fxAccount.getState();
+    } catch (final Exception ex) {
+      Logger.warn(LOG_TAG, "Could not get FX account state.", ex);
+      return null;
+    }
+  }
+
+  /*
+   * @param context Android context
+   * @return the email address associated with the configured Firefox account if one exists; null otherwise.
+   */
+  public static String getFirefoxAccountEmail(final Context context) {
+    final Account account = getFirefoxAccount(context);
+    if (account == null) {
+      return null;
+    }
+    return account.name;
+  }
+
   protected static void putHintsToSync(final Bundle extras, EnumSet<SyncHint> syncHints) {
     // stagesToSync and stagesToSkip are allowed to be null.
     if (syncHints == null) {
@@ -274,5 +308,27 @@ public class FirefoxAccounts {
     final String OS = AppConstants.OS_TARGET;
     final String LOCALE = Utils.getLanguageTag(locale);
     return res.getString(R.string.fxaccount_link_old_firefox, VERSION, OS, LOCALE);
+  }
+
+  /**
+   * Resends the account verification email, and displays an appropriate
+   * toast on both send success and failure. Note that because the underlying implementation
+   * uses {@link AsyncTask}, the provided context must be UI-capable, and this
+   * method called from the UI thread (see
+   * {@link org.mozilla.gecko.fxa.tasks.FxAccountCodeResender#resendCode(Context, AndroidFxAccount)}
+   * for more).
+   *
+   * @param context a UI-capable Android context.
+   * @return true if an account exists, false otherwise.
+   */
+  public static boolean resendVerificationEmail(final Context context) {
+    final Account account = getFirefoxAccount(context);
+    if (account == null) {
+      return false;
+    }
+
+    final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
+    FxAccountCodeResender.resendCode(context, fxAccount);
+    return true;
   }
 }
