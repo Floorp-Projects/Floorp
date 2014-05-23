@@ -2674,6 +2674,29 @@ nsFrameLoader::ResetPermissionManagerStatus()
   }
 }
 
+/**
+ * Send the RequestNotifyAfterRemotePaint message to the current Tab.
+ */
+NS_IMETHODIMP
+nsFrameLoader::RequestNotifyAfterRemotePaint()
+{
+  // If remote browsing (e10s), handle this with the TabParent.
+  if (mRemoteBrowser) {
+    unused << mRemoteBrowser->SendRequestNotifyAfterRemotePaint();
+    return NS_OK;
+  }
+
+  // If not remote browsing, directly use the document's window.
+  nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mDocShell);
+  if (!window) {
+    NS_WARNING("Unable to get window for synchronous MozAfterRemotePaint event.");
+    return NS_OK;
+  }
+
+  window->SetRequestNotifyAfterRemotePaint();
+  return NS_OK;
+}
+
 /* [infallible] */ NS_IMETHODIMP
 nsFrameLoader::SetVisible(bool aVisible)
 {
