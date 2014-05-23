@@ -69,7 +69,7 @@
 #if defined(XP_MACOSX)
 // These functions are defined in launchchild_osx.mm
 void LaunchChild(int argc, char **argv);
-void LaunchMacPostProcess(const char* aAppExe);
+void LaunchMacPostProcess(const char* aAppBundle);
 #endif
 
 #ifndef _O_BINARY
