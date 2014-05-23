@@ -249,7 +249,9 @@ void
 nsAppShell::ProcessGeckoEvents(void* aInfo)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-  PROFILER_LABEL("Events", "ProcessGeckoEvents");
+  PROFILER_LABEL("Events", "ProcessGeckoEvents",
+    js::ProfileEntry::Category::EVENTS);
+
   nsAppShell* self = static_cast<nsAppShell*> (aInfo);
 
   if (self->mRunningEventLoop) {

@@ -3573,7 +3573,9 @@ CreateMouseOrPointerWidgetEvent(WidgetMouseEvent* aMouseEvent,
 {
   WidgetPointerEvent* sourcePointer = aMouseEvent->AsPointerEvent();
   if (sourcePointer) {
-    PROFILER_LABEL("Input", "DispatchPointerEvent");
+    PROFILER_LABEL("Input", "DispatchPointerEvent",
+      js::ProfileEntry::Category::EVENTS);
+
     nsAutoPtr<WidgetPointerEvent> newPointerEvent;
     newPointerEvent =
       new WidgetPointerEvent(aMouseEvent->mFlags.mIsTrusted, aMessage,
@@ -3644,7 +3646,8 @@ EventStateManager::DispatchMouseOrPointerEvent(WidgetMouseEvent* aMouseEvent,
   nsIFrame* targetFrame = nullptr;
 
   if (aMouseEvent->AsMouseEvent()) {
-    PROFILER_LABEL("Input", "DispatchMouseEvent");
+    PROFILER_LABEL("Input", "DispatchMouseEvent",
+      js::ProfileEntry::Category::EVENTS);
   }
 
   nsEventStatus status = nsEventStatus_eIgnore;

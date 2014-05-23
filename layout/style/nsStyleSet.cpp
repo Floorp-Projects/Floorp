@@ -950,7 +950,8 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
                       RuleProcessorData* aData, Element* aElement,
                       nsRuleWalker* aRuleWalker)
 {
-  PROFILER_LABEL("nsStyleSet", "FileRules");
+  PROFILER_LABEL("nsStyleSet", "FileRules",
+    js::ProfileEntry::Category::CSS);
 
   // Cascading order:
   // [least important]
