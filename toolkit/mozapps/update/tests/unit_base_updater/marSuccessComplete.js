@@ -11,6 +11,8 @@ function run_test() {
   gTestDirs = gTestDirsCompleteSuccess;
   setupUpdaterTest(FILE_COMPLETE_MAR, false, false);
 
+  createUpdaterINI();
+
   // For Mac OS X set the last modified time for the root directory to a date in
   // the past to test that the last modified time is updated on a successful
   // update (bug 600098).
@@ -24,7 +26,24 @@ function run_test() {
   runUpdate(0, STATE_SUCCEEDED);
 }
 
+/**
+ * Checks if the post update binary was properly launched for the platforms that
+ * support launching post update process.
+ */
 function checkUpdateApplied() {
+  if (IS_MACOSX || IS_WIN) {
+    gCheckFunc = finishCheckUpdateApplied;
+    checkPostUpdateAppLog();
+  } else {
+    finishCheckUpdateApplied();
+  }
+}
+
+/**
+ * Checks if the update has finished and if it has finished performs checks for
+ * the test.
+ */
+function finishCheckUpdateApplied() {
   if (IS_MACOSX) {
     logTestInfo("testing last modified time on the apply to directory has " +
                 "changed after a successful update (bug 600098)");
