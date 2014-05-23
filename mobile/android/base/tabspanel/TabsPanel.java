@@ -102,7 +102,7 @@ public class TabsPanel extends LinearLayout
         mPanelPrivate = (PanelView) findViewById(R.id.private_tabs);
         mPanelPrivate.setTabsPanel(this);
 
-        mPanelRemote = (PanelView) findViewById(R.id.synced_tabs);
+        mPanelRemote = (PanelView) findViewById(R.id.remote_tabs);
         mPanelRemote.setTabsPanel(this);
 
         mFooter = (RelativeLayout) findViewById(R.id.tabs_panel_footer);
