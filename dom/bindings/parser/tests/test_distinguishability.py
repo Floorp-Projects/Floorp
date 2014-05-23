@@ -158,6 +158,7 @@ def WebIDLTest(parser, harness):
                  "CallbackInterface?", "CallbackInterface2",
                  "object", "Callback", "Callback2", "optional Dict",
                  "optional Dict2", "sequence<long>", "sequence<short>",
+                 "MozMap<object>", "MozMap<Dict>", "MozMap<long>",
                  "long[]", "short[]", "Date", "Date?", "any" ]
     # When we can parse Date and RegExp, we need to add them here.
 
@@ -219,6 +220,9 @@ def WebIDLTest(parser, harness):
     setDistinguishable("optional Dict2", allBut(nonUserObjects, nullables))
     setDistinguishable("sequence<long>", nonUserObjects)
     setDistinguishable("sequence<short>", nonUserObjects)
+    setDistinguishable("MozMap<object>", nonUserObjects)
+    setDistinguishable("MozMap<Dict>", nonUserObjects)
+    setDistinguishable("MozMap<long>", nonUserObjects)
     setDistinguishable("long[]", nonUserObjects)
     setDistinguishable("short[]", nonUserObjects)
     setDistinguishable("Date", allBut(argTypes, dates + ["object"]))
