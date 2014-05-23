@@ -4,7 +4,6 @@
 
 "use strict";
 
-let {Cu} = require("chrome");
 let Services = require("Services");
 let promise = require("devtools/toolkit/deprecated-sync-thenables");
 let {Class} = require("sdk/core/heritage");

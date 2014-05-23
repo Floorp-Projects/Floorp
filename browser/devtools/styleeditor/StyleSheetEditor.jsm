@@ -5,7 +5,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["StyleSheetEditor"];
+this.EXPORTED_SYMBOLS = ["StyleSheetEditor", "prettifyCSS"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -40,6 +40,9 @@ const CHECK_LINKED_SHEET_DELAY=500;
 
 // How many times to check for linked file changes
 const MAX_CHECK_COUNT=10;
+
+// The classname used to show a line that is not used
+const UNUSED_CLASS = "cm-unused-line";
 
 /**
  * StyleSheetEditor controls the editor linked to a particular StyleSheet
@@ -209,16 +212,55 @@ StyleSheetEditor.prototype = {
    * Start fetching the full text source for this editor's sheet.
    */
   fetchSource: function(callback) {
-    this.styleSheet.getText().then((longStr) => {
+    return this.styleSheet.getText().then((longStr) => {
       longStr.string().then((source) => {
         this._state.text = prettifyCSS(source);
         this.sourceLoaded = true;
 
-        callback(source);
+        if (callback) {
+          callback(source);
+        }
+        return source;
       });
     }, e => {
       this.emit("error", LOAD_ERROR, this.styleSheet.href);
+      throw e;
     })
+  },
+
+  /**
+   * Add markup to a region. UNUSED_CLASS is added to specified lines
+   * @param region An object shaped like
+   *   {
+   *     start: { line: L1, column: C1 },
+   *     end: { line: L2, column: C2 }    // optional
+   *   }
+   */
+  addUnusedRegion: function(region) {
+    this.sourceEditor.addLineClass(region.start.line - 1, UNUSED_CLASS);
+    if (region.end) {
+      for (let i = region.start.line; i <= region.end.line; i++) {
+        this.sourceEditor.addLineClass(i - 1, UNUSED_CLASS);
+      }
+    }
+  },
+
+  /**
+   * As addUnusedRegion except that it takes an array of regions
+   */
+  addUnusedRegions: function(regions) {
+    for (let region of regions) {
+      this.addUnusedRegion(region);
+    }
+  },
+
+  /**
+   * Remove all the unused markup regions added by addUnusedRegion
+   */
+  removeAllUnusedRegions: function() {
+    for (let i = 0; i < this.sourceEditor.lineCount(); i++) {
+      this.sourceEditor.removeLineClass(i, UNUSED_CLASS);
+    }
   },
 
   /**

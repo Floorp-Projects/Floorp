@@ -354,23 +354,27 @@ function processForEachMember(state, member, templNode, siblingNode, data, param
   try {
     var cState = cloneState(state);
     handleAsync(member, siblingNode, function(reply, node) {
-      data[paramName] = reply;
+      // Clone data because we can't be sure that we can safely mutate it
+      var newData = Object.create(null);
+      Object.keys(data).forEach(function(key) {
+        newData[key] = data[key];
+      });
+      newData[paramName] = reply;
       if (node.parentNode != null) {
         if (templNode.nodeName.toLowerCase() === 'loop') {
           for (var i = 0; i < templNode.childNodes.length; i++) {
             var clone = templNode.childNodes[i].cloneNode(true);
             node.parentNode.insertBefore(clone, node);
-            processNode(cState, clone, data);
+            processNode(cState, clone, newData);
           }
         }
         else {
           var clone = templNode.cloneNode(true);
           clone.removeAttribute('foreach');
           node.parentNode.insertBefore(clone, node);
-          processNode(cState, clone, data);
+          processNode(cState, clone, newData);
         }
       }
-      delete data[paramName];
     });
   }
   finally {

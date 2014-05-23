@@ -13,6 +13,7 @@ const commandModules = [
   "gcli/commands/calllog",
   "gcli/commands/cmd",
   "gcli/commands/cookie",
+  "gcli/commands/csscoverage",
   "gcli/commands/jsb",
   "gcli/commands/listen",
   "gcli/commands/media",
