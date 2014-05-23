@@ -448,6 +448,60 @@
          <item name="android:groupIndicator">@android:color/transparent</item>
     </style>
 
+    <!-- Remote tabs panel -->
+    <style name="RemoteTabsPanelChildBase">
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+    </style>
+
+    <style name="RemoteTabsPanelChild" parent="RemoteTabsPanelChildBase">
+        <item name="android:orientation">vertical</item>
+        <item name="android:paddingTop">62dp</item>
+    </style>
+
+    <style name="RemoteTabsSectionBase">
+        <item name="android:orientation">vertical</item>
+        <item name="android:layout_marginLeft">16dp</item>
+        <item name="android:layout_marginRight">16dp</item>
+    </style>
+
+    <style name="RemoteTabsSection" parent="RemoteTabsSectionBase">
+    </style>
+
+    <style name="RemoteTabsItem">
+        <item name="android:layout_marginBottom">28dp</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="RemoteTabsItem.ButtonBase">
+        <item name="android:background">@drawable/remote_tabs_setup_button_background</item>
+        <item name="android:textColor">#FFFEFF</item>
+        <item name="android:textSize">20sp</item>
+    </style>
+
+    <style name="RemoteTabsItem.Button" parent="RemoteTabsItem.ButtonBase">
+        <item name="android:paddingTop">18dp</item>
+        <item name="android:paddingBottom">18dp</item>
+        <item name="android:paddingLeft">72dp</item>
+        <item name="android:paddingRight">72dp</item>
+    </style>
+
+    <style name="RemoteTabsItem.TextAppearance">
+        <item name="android:textColor">#C0C9D0</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="RemoteTabsItem.TextAppearance.Header">
+        <item name="android:textSize">20sp</item>
+    </style>
+
+    <style name="RemoteTabsItem.TextAppearance.Linkified">
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:textColor">#0292D6</item>
+    </style>
+
     <!-- TabsTray Row -->
     <style name="TabRowTextAppearance">
         <item name="android:textColor">#FFFFFFFF</item>
