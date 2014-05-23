@@ -24,6 +24,7 @@ EXPORTS.mozilla.dom += [
     'Errors.msg',
     'Exceptions.h',
     'JSSlots.h',
+    'MozMap.h',
     'NonRefcountedDOMObject.h',
     'Nullable.h',
     'OwningNonNull.h',
