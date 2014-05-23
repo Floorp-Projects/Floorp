@@ -2425,8 +2425,19 @@ nsFrameLoader::EnsureMessageManager()
   nsCOMPtr<nsIDOMChromeWindow> chromeWindow =
     do_QueryInterface(GetOwnerDoc()->GetWindow());
   nsCOMPtr<nsIMessageBroadcaster> parentManager;
+
   if (chromeWindow) {
-    chromeWindow->GetMessageManager(getter_AddRefs(parentManager));
+    nsAutoString messagemanagergroup;
+    if (mOwnerContent->IsXUL() &&
+        mOwnerContent->GetAttr(kNameSpaceID_None,
+                               nsGkAtoms::messagemanagergroup,
+                               messagemanagergroup)) {
+      chromeWindow->GetGroupMessageManager(messagemanagergroup, getter_AddRefs(parentManager));
+    }
+
+    if (!parentManager) {
+      chromeWindow->GetMessageManager(getter_AddRefs(parentManager));
+    }
   }
 
   if (ShouldUseRemoteProcess()) {
