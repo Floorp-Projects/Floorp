@@ -45,6 +45,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
@@ -864,6 +865,24 @@ OnSharedPreferenceChangeListener
         });
 
         return true;
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        Log.d(LOGTAG, "onConfigurationChanged: " + newConfig.locale);
+
+        if (lastLocale.equals(newConfig.locale)) {
+            Log.d(LOGTAG, "Old locale same as new locale. Short-circuiting.");
+            return;
+        }
+
+        final LocaleManager localeManager = BrowserLocaleManager.getInstance();
+        final Locale changed = localeManager.onSystemConfigurationChanged(this, getResources(), newConfig, lastLocale);
+        if (changed != null) {
+            onLocaleChanged(changed);
+        }
     }
 
     /**
