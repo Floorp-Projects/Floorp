@@ -1063,6 +1063,7 @@ var CaptivePortalLoginHelper = {
   init: function init() {
     Services.obs.addObserver(this, 'captive-portal-login', false);
     Services.obs.addObserver(this, 'captive-portal-login-abort', false);
+    Services.obs.addObserver(this, 'captive-portal-login-success', false);
   },
   handleEvent: function handleEvent(detail) {
     Services.captivePortalDetector.cancelLogin(detail.id);

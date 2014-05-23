@@ -10,6 +10,10 @@ const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
 
+XPCOMUtils.defineLazyServiceGetter(this, "gSysMsgr",
+                                   "@mozilla.org/system-message-internal;1",
+                                   "nsISystemMessagesInternal");
+
 const DEBUG = false; // set to true to show debug messages
 
 const kCAPTIVEPORTALDETECTOR_CONTRACTID = '@mozilla.org/toolkit/captive-detector;1';
@@ -17,6 +21,9 @@ const kCAPTIVEPORTALDETECTOR_CID        = Components.ID('{d9cd00ba-aa4d-47b1-879
 
 const kOpenCaptivePortalLoginEvent = 'captive-portal-login';
 const kAbortCaptivePortalLoginEvent = 'captive-portal-login-abort';
+const kCaptivePortalLoginSuccessEvent = 'captive-portal-login-success';
+
+const kCaptivePortalSystemMessage = 'captive-portal';
 
 function URLFetcher(url, timeout) {
   let self = this;
@@ -332,6 +339,7 @@ CaptivePortalDetector.prototype = {
     this._loginObserver.attach();
     this._runningRequest['eventId'] = id;
     this._sendEvent(kOpenCaptivePortalLoginEvent, details);
+    gSysMsgr.broadcastMessage(kCaptivePortalSystemMessage, {});
   },
 
   _mayRetry: function _mayRetry() {
@@ -348,6 +356,16 @@ CaptivePortalDetector.prototype = {
       debug('callback executed');
       if (this._runningRequest.hasOwnProperty('callback')) {
         this._runningRequest.callback.complete(success);
+      }
+
+      // Only when the request has a event id and |success| is true
+      // do we need to notify the login-success event.
+      if (this._runningRequest.hasOwnProperty('eventId') && success) {
+        let details = {
+          type: kCaptivePortalLoginSuccessEvent,
+          id: this._runningRequest['eventId'],
+        };
+        this._sendEvent(kCaptivePortalLoginSuccessEvent, details);
       }
 
       // Continue the following request
