@@ -82,7 +82,7 @@ function checkSpecialContextMenus() {
       let menuItem = document.getElementById(menuID);
       let menuPopup = document.getElementById(kSpecialItemIDs[menuID]);
       let shownPromise = popupShown(menuPopup);
-      EventUtils.synthesizeMouseAtCenter(menuItem, {});
+      menuPopup.openPopup(menuItem, null, 0, 0, false, false, null);
       yield shownPromise;
 
       yield checkPlacesContextMenu(menuPopup);
