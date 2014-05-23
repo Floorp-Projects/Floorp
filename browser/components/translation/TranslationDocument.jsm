@@ -147,15 +147,18 @@ this.TranslationDocument.prototype = {
       }
 
       let objInMap = this.itemsMap.get(child);
-      if (objInMap) {
+      if (objInMap && !objInMap.isRoot) {
         // If this childNode is present in the itemsMap, it means
         // it's a translation node: it has useful content for translation.
         // In this case, we need to stringify this node.
+        // However, if this item is a root, we should skip it here in this
+        // object's child list (and just add a placeholder for it), because
+        // it will be stringfied separately for being a root.
         item.original.push(objInMap);
         str += this.generateTextForItem(objInMap);
       } else {
         // Otherwise, if this node doesn't contain any useful content,
-        // we can simply replace it by a placeholder node.
+        // or if it is a root itself, we can replace it with a placeholder node.
         // We can't simply eliminate this node from our string representation
         // because that could change the HTML structure (e.g., it would
         // probably merge two separate text nodes).
