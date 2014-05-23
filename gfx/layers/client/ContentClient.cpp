@@ -260,9 +260,6 @@ ContentClientRemoteBuffer::CreateBackBuffer(const nsIntRect& aBufferRect)
       return;
     }
   }
-
-  mBufferRect = aBufferRect;
-  mBufferRotation = nsIntPoint();
 }
 
 void
