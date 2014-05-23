@@ -48,7 +48,9 @@ Object.defineProperty(this, "Components", {
 
 const DBG_STRINGS_URI = "chrome://global/locale/devtools/debugger.properties";
 
-const nsFile = CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
+DevToolsUtils.defineLazyGetter(this, "nsFile", () => {
+  return CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
+});
 
 const LOG_PREF = "devtools.debugger.log";
 const VERBOSE_PREF = "devtools.debugger.log.verbose";
@@ -56,8 +58,6 @@ dumpn.wantLogging = Services.prefs.getBoolPref(LOG_PREF);
 dumpv.wantVerbose =
   Services.prefs.getPrefType(VERBOSE_PREF) !== Services.prefs.PREF_INVALID &&
   Services.prefs.getBoolPref(VERBOSE_PREF);
-
-Cu.import("resource://gre/modules/devtools/deprecated-sync-thenables.js");
 
 function loadSubScript(aURL)
 {
@@ -82,15 +82,18 @@ this.resolve = resolve;
 this.reject = reject;
 this.all = all;
 
-Cu.import("resource://gre/modules/devtools/SourceMap.jsm");
-
 // XPCOM constructors
-const ServerSocket = CC("@mozilla.org/network/server-socket;1",
-                        "nsIServerSocket",
-                        "initSpecialConnection");
-const UnixDomainServerSocket = CC("@mozilla.org/network/server-socket;1",
-                                  "nsIServerSocket",
-                                  "initWithFilename");
+DevToolsUtils.defineLazyGetter(this, "ServerSocket", () => {
+  return CC("@mozilla.org/network/server-socket;1",
+            "nsIServerSocket",
+            "initSpecialConnection");
+});
+
+DevToolsUtils.defineLazyGetter(this, "UnixDomainServerSocket", () => {
+  return CC("@mozilla.org/network/server-socket;1",
+            "nsIServerSocket",
+            "initWithFilename");
+});
 
 var gRegisteredModules = Object.create(null);
 
@@ -398,6 +401,7 @@ var DebuggerServer = {
     this.registerModule("devtools/server/actors/framerate");
     this.registerModule("devtools/server/actors/eventlooplag");
     this.registerModule("devtools/server/actors/layout");
+    this.registerModule("devtools/server/actors/csscoverage");
     if ("nsIProfiler" in Ci) {
       this.addActors("resource://gre/modules/devtools/server/actors/profiler.js");
     }

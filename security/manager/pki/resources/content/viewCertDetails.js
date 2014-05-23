@@ -241,10 +241,10 @@ function DisplayGeneralDataFromCert(cert)
   addAttributeFromCert('orgunit', cert.organizationalUnit);
   //  Serial Number
   addAttributeFromCert('serialnumber',cert.serialNumber);
+  // SHA-256 Fingerprint
+  addAttributeFromCert('sha256fingerprint', cert.sha256Fingerprint);
   //  SHA1 Fingerprint
   addAttributeFromCert('sha1fingerprint',cert.sha1Fingerprint);
-  //  MD5 Fingerprint
-  addAttributeFromCert('md5fingerprint',cert.md5Fingerprint);
   // Validity start
   addAttributeFromCert('validitystart', cert.validity.notBeforeLocalDay);
   // Validity end

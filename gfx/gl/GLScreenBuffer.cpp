@@ -22,10 +22,10 @@
 #include "ScopedGLHelpers.h"
 #include "gfx2DGlue.h"
 
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace gl {
+
+using namespace mozilla::gfx;
 
 GLScreenBuffer*
 GLScreenBuffer::Create(GLContext* gl,

@@ -1259,6 +1259,8 @@ extern tinybool sdp_attr_get_simple_boolean(void *sdp_ptr,
 extern sdp_result_e sdp_attr_set_simple_boolean(void *sdp_ptr,
                    sdp_attr_e attr_type, u16 level, u8 cap_num,
                    u16 inst_num, u32 bool_parm);
+extern tinybool sdp_attr_is_present (void *sdp_ptr, sdp_attr_e attr_type,
+                                     u16 level, u8 cap_num);
 extern const char* sdp_attr_get_maxprate(void *sdp_ptr, u16 level,
                                          u16 inst_num);
 extern sdp_result_e sdp_attr_set_maxprate(void *sdp_ptr, u16 level,

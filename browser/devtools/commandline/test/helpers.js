@@ -185,13 +185,7 @@ helpers.openTab = function(url, options) {
   options.browser = tabbrowser.getBrowserForTab(options.tab);
   options.target = TargetFactory.forTab(options.tab);
 
-  options.browser.contentWindow.location = url;
-
-  return helpers.listenOnce(options.browser, "load", true).then(function() {
-    options.document = options.browser.contentDocument;
-    options.window = options.document.defaultView;
-    return options;
-  });
+  return helpers.navigate(url, options);
 };
 
 /**
@@ -225,11 +219,37 @@ helpers.closeTab = function(options) {
  * happens on the new tab
  */
 helpers.openToolbar = function(options) {
+  options = options || {};
+  options.chromeWindow = options.chromeWindow || window;
+
   return options.chromeWindow.DeveloperToolbar.show(true).then(function() {
     var display = options.chromeWindow.DeveloperToolbar.display;
     options.automator = createFFDisplayAutomator(display);
     options.requisition = display.requisition;
+    return options;
   });
+};
+
+/**
+ * Navigate the current tab to a URL
+ */
+helpers.navigate = function(url, options) {
+  options = options || {};
+  options.chromeWindow = options.chromeWindow || window;
+  options.tab = options.tab || options.chromeWindow.gBrowser.selectedTab;
+
+  var tabbrowser = options.chromeWindow.gBrowser;
+  options.browser = tabbrowser.getBrowserForTab(options.tab);
+
+  var promise = helpers.listenOnce(options.browser, "load", true).then(function() {
+    options.document = options.browser.contentDocument;
+    options.window = options.document.defaultView;
+    return options;
+  });
+
+  options.browser.contentWindow.location = url;
+
+  return promise;
 };
 
 /**
@@ -1128,7 +1148,13 @@ Object.defineProperty(helpers, 'timingSummary', {
  *       If typeof output is a string then the output should be exactly equal
  *       to the given string. If the type of output is a RegExp or array of
  *       RegExps then the output should match all RegExps
- * - post: Function to be called after the checks have been run
+ *   - error: If true, then it is expected that this command will fail (that
+ *       is, return a rejected promise or throw an exception)
+ *   - type: A string documenting the expected type of the return value
+ * - post: Function to be called after the checks have been run, which will be
+ *     passed 2 parameters: the first being output data (with type, data, and
+ *     error properties), and the second being the converted text version of
+ *     the output data
  */
 helpers.audit = function(options, audits) {
   checkOptions(options);
