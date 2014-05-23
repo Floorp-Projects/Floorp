@@ -21,7 +21,7 @@ import org.mozilla.gecko.background.fxa.FxAccountClient20.LoginResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
 import org.mozilla.gecko.background.fxa.PasswordStretcher;
 import org.mozilla.gecko.fxa.FxAccountConstants;
-import org.mozilla.gecko.fxa.activities.FxAccountSetupTask.FxAccountCreateAccountTask;
+import org.mozilla.gecko.fxa.tasks.FxAccountCreateAccountTask;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
