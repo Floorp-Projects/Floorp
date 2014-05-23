@@ -80,48 +80,40 @@ nsEventQueue::GetEvent(bool mayWait, nsIRunnable **result)
   return true;
 }
 
-bool
+void
 nsEventQueue::PutEvent(nsIRunnable *runnable)
 {
   // Avoid calling AddRef+Release while holding our monitor.
   nsRefPtr<nsIRunnable> event(runnable);
-  bool rv = true;
-  {
-    if (ChaosMode::isActive()) {
-      // With probability 0.5, yield so other threads have a chance to
-      // dispatch events to this queue first.
-      if (ChaosMode::randomUint32LessThan(2)) {
-        PR_Sleep(PR_INTERVAL_NO_WAIT);
-      }
-    }
 
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-
-    if (!mHead) {
-      mHead = NewPage();
-      if (!mHead) {
-        rv = false;
-      } else {
-        mTail = mHead;
-        mOffsetHead = 0;
-        mOffsetTail = 0;
-      }
-    } else if (mOffsetTail == EVENTS_PER_PAGE) {
-      Page *page = NewPage();
-      if (!page) {
-        rv = false;
-      } else {
-        mTail->mNext = page;
-        mTail = page;
-        mOffsetTail = 0;
-      }
-    }
-    if (rv) {
-      event.swap(mTail->mEvents[mOffsetTail]);
-      ++mOffsetTail;
-      LOG(("EVENTQ(%p): notify\n", this)); 
-      mon.NotifyAll();
+  if (ChaosMode::isActive()) {
+    // With probability 0.5, yield so other threads have a chance to
+    // dispatch events to this queue first.
+    if (ChaosMode::randomUint32LessThan(2)) {
+      PR_Sleep(PR_INTERVAL_NO_WAIT);
     }
   }
-  return rv;
+
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+  if (!mHead) {
+    mHead = NewPage();
+    MOZ_ASSERT(mHead);
+
+    mTail = mHead;
+    mOffsetHead = 0;
+    mOffsetTail = 0;
+  } else if (mOffsetTail == EVENTS_PER_PAGE) {
+    Page *page = NewPage();
+    MOZ_ASSERT(page);
+
+    mTail->mNext = page;
+    mTail = page;
+    mOffsetTail = 0;
+  }
+
+  event.swap(mTail->mEvents[mOffsetTail]);
+  ++mOffsetTail;
+  LOG(("EVENTQ(%p): notify\n", this)); 
+  mon.NotifyAll();
 }
