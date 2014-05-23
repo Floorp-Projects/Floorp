@@ -26,7 +26,7 @@ fails-if(Android||B2G) == input-dyn-disabled.html input-ref.html
 == input-pattern-valid-changed.html input-withtext-ref.html
 == input-pattern-invalid.html input-withtext-ref.html
 == input-type-barred.html input-button-ref.html
-fuzzy(64,4) == input-type-invalid.html input-ref.html
+fuzzy(64,4) fails-if(B2G&&browserIsRemote) == input-type-invalid.html input-ref.html
 == input-disabled-fieldset-1.html input-fieldset-ref.html
 == input-disabled-fieldset-2.html input-fieldset-ref.html
 == input-fieldset-legend.html input-fieldset-legend-ref.html
