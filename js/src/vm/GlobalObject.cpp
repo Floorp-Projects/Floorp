@@ -132,6 +132,8 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     if (!setNewTypeUnknown(cx, &JSObject::class_, objectProto))
         return nullptr;
 
+    self->setPrototype(JSProto_Object, ObjectValue(*objectProto));
+
     /* Create |Function.prototype| next so we can create other functions. */
     RootedFunction functionProto(cx);
     {
@@ -201,6 +203,8 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
             return nullptr;
     }
 
+    self->setPrototype(JSProto_Function, ObjectValue(*functionProto));
+
     /* Create the Object function now that we have a [[Prototype]] for it. */
     RootedFunction objectCtor(cx);
     {
@@ -215,11 +219,8 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
             return nullptr;
     }
 
-    /*
-     * Install |Object| and |Object.prototype| for the benefit of subsequent
-     * code that looks for them.
-     */
-    self->setObjectClassDetails(objectCtor, objectProto);
+    self->setConstructor(JSProto_Object, ObjectValue(*objectCtor));
+    self->setConstructorPropertySlot(JSProto_Object, ObjectValue(*objectCtor));
 
     /* Create |Function| so it and |Function.prototype| can be installed. */
     RootedFunction functionCtor(cx);
@@ -237,11 +238,8 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         JS_ASSERT(ctor == functionCtor);
     }
 
-    /*
-     * Install |Function| and |Function.prototype| so that we can freely create
-     * functions and objects without special effort.
-     */
-    self->setFunctionClassDetails(functionCtor, functionProto);
+    self->setConstructor(JSProto_Function, ObjectValue(*functionCtor));
+    self->setConstructorPropertySlot(JSProto_Function, ObjectValue(*functionCtor));
 
     /*
      * The hard part's done: now go back and add all the properties these
