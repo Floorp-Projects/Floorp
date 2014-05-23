@@ -383,7 +383,8 @@ GlobalObject::resolveConstructor(JSContext *cx, Handle<GlobalObject*> global, JS
     }
 
     // We don't always have a prototype (i.e. Math and JSON). If we don't,
-    // |createPrototype| and |prototypeFunctions| should both be null.
+    // |createPrototype|, |prototypeFunctions|, and |prototypeProperties|
+    // should all be null.
     RootedObject proto(cx);
     if (clasp->spec.createPrototype) {
         proto = clasp->spec.createPrototype(cx, key);
@@ -392,6 +393,10 @@ GlobalObject::resolveConstructor(JSContext *cx, Handle<GlobalObject*> global, JS
     }
     if (const JSFunctionSpec *funs = clasp->spec.prototypeFunctions) {
         if (!JS_DefineFunctions(cx, proto, funs))
+            return false;
+    }
+    if (const JSPropertySpec *props = clasp->spec.prototypeProperties) {
+        if (!JS_DefineProperties(cx, proto, props))
             return false;
     }
 
