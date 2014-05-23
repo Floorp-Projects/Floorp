@@ -9,8 +9,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.Actions;
-import org.mozilla.gecko.Distribution;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
