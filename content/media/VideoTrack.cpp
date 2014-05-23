@@ -72,6 +72,11 @@ VideoTrack::SetEnabledInternal(bool aEnabled, int aFlags)
   // propose a spec change later.
   if (!(aFlags & MediaTrack::FIRE_NO_EVENTS)) {
     list.CreateAndDispatchChangeEvent();
+
+    HTMLMediaElement* element = mList->GetMediaElement();
+    if (element) {
+      element->NotifyMediaTrackEnabled(this);
+    }
   }
 }
 

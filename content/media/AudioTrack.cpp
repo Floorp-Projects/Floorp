@@ -50,6 +50,11 @@ AudioTrack::SetEnabledInternal(bool aEnabled, int aFlags)
 
   if (!(aFlags & MediaTrack::FIRE_NO_EVENTS)) {
     mList->CreateAndDispatchChangeEvent();
+
+    HTMLMediaElement* element = mList->GetMediaElement();
+    if (element) {
+      element->NotifyMediaTrackEnabled(this);
+    }
   }
 }
 
