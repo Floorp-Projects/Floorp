@@ -3776,170 +3776,6 @@ str_slice(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-#if JS_HAS_STR_HTML_HELPERS
-/*
- * HTML composition aids.
- */
-static bool
-tagify(JSContext *cx, const char *begin, HandleLinearString param, const char *end,
-       CallReceiver call)
-{
-    JSString *thisstr = ThisToStringForStringProto(cx, call);
-    if (!thisstr)
-        return false;
-
-    JSLinearString *str = thisstr->ensureLinear(cx);
-    if (!str)
-        return false;
-
-    if (!end)
-        end = begin;
-
-    size_t beglen = strlen(begin);
-    size_t taglen = 1 + beglen + 1;                     /* '<begin' + '>' */
-    if (param) {
-        size_t numChars = param->length();
-        const jschar *parchars = param->chars();
-        for (size_t i = 0, parlen = numChars; i < parlen; ++i) {
-            if (parchars[i] == '"')
-                numChars += 5;                          /* len(&quot;) - len(") */
-        }
-        taglen += 2 + numChars + 1;                     /* '="param"' */
-    }
-    size_t endlen = strlen(end);
-    taglen += str->length() + 2 + endlen + 1;           /* 'str</end>' */
-
-
-    StringBuffer sb(cx);
-    if (!sb.reserve(taglen))
-        return false;
-
-    sb.infallibleAppend('<');
-
-    MOZ_ALWAYS_TRUE(sb.appendInflated(begin, beglen));
-
-    if (param) {
-        sb.infallibleAppend('=');
-        sb.infallibleAppend('"');
-        const jschar *parchars = param->chars();
-        for (size_t i = 0, parlen = param->length(); i < parlen; ++i) {
-            if (parchars[i] != '"') {
-                sb.infallibleAppend(parchars[i]);
-            } else {
-                MOZ_ALWAYS_TRUE(sb.append("&quot;"));
-            }
-        }
-        sb.infallibleAppend('"');
-    }
-
-    sb.infallibleAppend('>');
-
-    MOZ_ALWAYS_TRUE(sb.append(str));
-
-    sb.infallibleAppend('<');
-    sb.infallibleAppend('/');
-
-    MOZ_ALWAYS_TRUE(sb.appendInflated(end, endlen));
-
-    sb.infallibleAppend('>');
-
-    JSFlatString *retstr = sb.finishString();
-    if (!retstr)
-        return false;
-
-    call.rval().setString(retstr);
-    return true;
-}
-
-static bool
-tagify_value(JSContext *cx, CallArgs args, const char *begin, const char *end)
-{
-    RootedLinearString param(cx, ArgToRootedString(cx, args, 0));
-    if (!param)
-        return false;
-
-    return tagify(cx, begin, param, end, args);
-}
-
-static bool
-str_bold(JSContext *cx, unsigned argc, Value *vp)
-{
-    return tagify(cx, "b", NullPtr(), nullptr, CallReceiverFromVp(vp));
-}
-
-static bool
-str_italics(JSContext *cx, unsigned argc, Value *vp)
-{
-    return tagify(cx, "i", NullPtr(), nullptr, CallReceiverFromVp(vp));
-}
-
-static bool
-str_fixed(JSContext *cx, unsigned argc, Value *vp)
-{
-    return tagify(cx, "tt", NullPtr(), nullptr, CallReceiverFromVp(vp));
-}
-
-static bool
-str_fontsize(JSContext *cx, unsigned argc, Value *vp)
-{
-    return tagify_value(cx, CallArgsFromVp(argc, vp), "font size", "font");
-}
-
-static bool
-str_fontcolor(JSContext *cx, unsigned argc, Value *vp)
-{
-    return tagify_value(cx, CallArgsFromVp(argc, vp), "font color", "font");
-}
-
-static bool
-str_link(JSContext *cx, unsigned argc, Value *vp)
-{
-    return tagify_value(cx, CallArgsFromVp(argc, vp), "a href", "a");
-}
-
-static bool
-str_anchor(JSContext *cx, unsigned argc, Value *vp)
-{
-    return tagify_value(cx, CallArgsFromVp(argc, vp), "a name", "a");
-}
-
-static bool
-str_strike(JSContext *cx, unsigned argc, Value *vp)
-{
-    return tagify(cx, "strike", NullPtr(), nullptr, CallReceiverFromVp(vp));
-}
-
-static bool
-str_small(JSContext *cx, unsigned argc, Value *vp)
-{
-    return tagify(cx, "small", NullPtr(), nullptr, CallReceiverFromVp(vp));
-}
-
-static bool
-str_big(JSContext *cx, unsigned argc, Value *vp)
-{
-    return tagify(cx, "big", NullPtr(), nullptr, CallReceiverFromVp(vp));
-}
-
-static bool
-str_blink(JSContext *cx, unsigned argc, Value *vp)
-{
-    return tagify(cx, "blink", NullPtr(), nullptr, CallReceiverFromVp(vp));
-}
-
-static bool
-str_sup(JSContext *cx, unsigned argc, Value *vp)
-{
-    return tagify(cx, "sup", NullPtr(), nullptr, CallReceiverFromVp(vp));
-}
-
-static bool
-str_sub(JSContext *cx, unsigned argc, Value *vp)
-{
-    return tagify(cx, "sub", NullPtr(), nullptr, CallReceiverFromVp(vp));
-}
-#endif /* JS_HAS_STR_HTML_HELPERS */
-
 static const JSFunctionSpec string_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN("quote",             str_quote,             0,JSFUN_GENERIC_NATIVE),
@@ -3987,21 +3823,20 @@ static const JSFunctionSpec string_methods[] = {
     JS_FN("slice",             str_slice,             2,JSFUN_GENERIC_NATIVE),
 
     /* HTML string methods. */
-#if JS_HAS_STR_HTML_HELPERS
-    JS_FN("bold",              str_bold,              0,0),
-    JS_FN("italics",           str_italics,           0,0),
-    JS_FN("fixed",             str_fixed,             0,0),
-    JS_FN("fontsize",          str_fontsize,          1,0),
-    JS_FN("fontcolor",         str_fontcolor,         1,0),
-    JS_FN("link",              str_link,              1,0),
-    JS_FN("anchor",            str_anchor,            1,0),
-    JS_FN("strike",            str_strike,            0,0),
-    JS_FN("small",             str_small,             0,0),
-    JS_FN("big",               str_big,               0,0),
-    JS_FN("blink",             str_blink,             0,0),
-    JS_FN("sup",               str_sup,               0,0),
-    JS_FN("sub",               str_sub,               0,0),
-#endif
+    JS_SELF_HOSTED_FN("bold",     "String_bold",       0,0),
+    JS_SELF_HOSTED_FN("italics",  "String_italics",    0,0),
+    JS_SELF_HOSTED_FN("fixed",    "String_fixed",      0,0),
+    JS_SELF_HOSTED_FN("strike",   "String_strike",     0,0),
+    JS_SELF_HOSTED_FN("small",    "String_small",      0,0),
+    JS_SELF_HOSTED_FN("big",      "String_big",        0,0),
+    JS_SELF_HOSTED_FN("blink",    "String_blink",      0,0),
+    JS_SELF_HOSTED_FN("sup",      "String_sup",        0,0),
+    JS_SELF_HOSTED_FN("sub",      "String_sub",        0,0),
+    JS_SELF_HOSTED_FN("anchor",   "String_anchor",     1,0),
+    JS_SELF_HOSTED_FN("link",     "String_link",       1,0),
+    JS_SELF_HOSTED_FN("fontcolor","String_fontcolor",  1,0),
+    JS_SELF_HOSTED_FN("fontsize", "String_fontsize",   1,0),
+
     JS_SELF_HOSTED_FN("@@iterator", "String_iterator", 0,0),
     JS_FS_END
 };
