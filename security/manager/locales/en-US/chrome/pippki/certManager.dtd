@@ -34,8 +34,8 @@
 <!ENTITY certmgr.certdetail.o                 "Organization (O)">
 <!ENTITY certmgr.certdetail.ou                "Organizational Unit (OU)">
 <!ENTITY certmgr.certdetail.serialnumber      "Serial Number">
+<!ENTITY certmgr.certdetail.sha256fingerprint "SHA-256 Fingerprint">
 <!ENTITY certmgr.certdetail.sha1fingerprint   "SHA1 Fingerprint">
-<!ENTITY certmgr.certdetail.md5fingerprint    "MD5 Fingerprint">
 
 <!ENTITY certmgr.editcert.title               "Edit Security Certificate Settings">
 <!ENTITY certmgr.editcacert.title             "Edit CA certificate trust settings">

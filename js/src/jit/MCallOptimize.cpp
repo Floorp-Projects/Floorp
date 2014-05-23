@@ -707,6 +707,14 @@ IonBuilder::inlineMathCeil(CallInfo &callInfo)
         return InliningStatus_Inlined;
     }
 
+    if (IsFloatingPointType(argType) && returnType == MIRType_Int32) {
+        callInfo.setImplicitlyUsedUnchecked();
+        MCeil *ins = MCeil::New(alloc(), callInfo.getArg(0));
+        current->add(ins);
+        current->push(ins);
+        return InliningStatus_Inlined;
+    }
+
     if (IsFloatingPointType(argType) && returnType == MIRType_Double) {
         callInfo.setImplicitlyUsedUnchecked();
         MMathFunction *ins = MMathFunction::New(alloc(), callInfo.getArg(0), MMathFunction::Ceil, nullptr);

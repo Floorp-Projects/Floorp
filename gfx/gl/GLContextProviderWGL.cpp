@@ -17,10 +17,10 @@
 
 #include "mozilla/Preferences.h"
 
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace gl {
+
+using namespace mozilla::gfx;
 
 WGLLibrary sWGLLib;
 

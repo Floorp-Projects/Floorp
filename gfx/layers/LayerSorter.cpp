@@ -23,10 +23,10 @@
 #include "limits.h"
 #include "mozilla/Assertions.h"
 
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace layers {
+
+using namespace mozilla::gfx;
 
 enum LayerSortOrder {
   Undefined,

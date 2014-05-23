@@ -87,12 +87,15 @@
           <spacer/>
         </row>
         <row>
-          <label value="&certmgr.certdetail.sha1fingerprint;"/>
-          <textbox id="sha1fingerprint" class="plain" readonly="true" style="min-width:34em;"/>
+          <label value="&certmgr.certdetail.sha256fingerprint;"/>
+          <hbox>
+            <textbox id="sha256fingerprint" class="plain" readonly="true" multiline="true"
+                     style="height: 6ex; width: 48ch; font-family: monospace;"/>
+          </hbox>
         </row>
         <row>
-          <label value="&certmgr.certdetail.md5fingerprint;"/>
-          <textbox id="md5fingerprint" class="plain" readonly="true"/>
+          <label value="&certmgr.certdetail.sha1fingerprint;"/>
+          <textbox id="sha1fingerprint" class="plain" readonly="true" style="min-width:34em;"/>
         </row>
       </rows>
     </grid>
