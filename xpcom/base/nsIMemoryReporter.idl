@@ -178,7 +178,7 @@ interface nsIFinishReportingCallback : nsISupports
   void callback(in nsISupports data);
 };
 
-[scriptable, builtinclass, uuid(b6e5ec8a-71d9-48db-8ae9-68b4c5bbf2c3)]
+[scriptable, builtinclass, uuid(c27f8662-a0b7-45b3-8207-14d66b02b9c5)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -370,6 +370,13 @@ interface nsIMemoryReporterManager : nsISupports
    * This attribute indicates if moz_malloc_usable_size() works.
    */
   [infallible] readonly attribute boolean hasMozMallocUsableSize;
+
+  /*
+   * These attributes indicate DMD's status. "Enabled" means enabled at
+   * build-time.
+   */
+  [infallible] readonly attribute boolean isDMDEnabled;
+  [infallible] readonly attribute boolean isDMDRunning;
 
   /*
    * Run a series of GC/CC's in an attempt to minimize the application's memory

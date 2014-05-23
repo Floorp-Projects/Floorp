@@ -1492,6 +1492,11 @@ namespace dmd {
 static bool
 ReportAndDump(JSContext *cx, unsigned argc, JS::Value *vp)
 {
+  if (!dmd::IsRunning()) {
+    JS_ReportError(cx, "DMD is not running");
+    return false;
+  }
+
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   JSString *str = JS::ToString(cx, args.get(0));
   if (!str)
@@ -1508,7 +1513,6 @@ ReportAndDump(JSContext *cx, unsigned argc, JS::Value *vp)
   }
 
   dmd::ClearReports();
-  fprintf(stderr, "DMD: running reporters...\n");
   dmd::RunReportersForThisProcess();
   dmd::Writer writer(FpWrite, fp);
   dmd::Dump(writer);
