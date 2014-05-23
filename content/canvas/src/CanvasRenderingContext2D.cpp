@@ -3127,10 +3127,14 @@ CanvasRenderingContext2D::SetMozDashOffset(double mozDashOffset)
 void
 CanvasRenderingContext2D::SetLineDash(const Sequence<double>& aSegments)
 {
-  FallibleTArray<mozilla::gfx::Float>& dash = CurrentState().dash;
-  dash.Clear();
+  FallibleTArray<mozilla::gfx::Float> dash;
 
   for (uint32_t x = 0; x < aSegments.Length(); x++) {
+    if (aSegments[x] < 0.0) {
+      // Pattern elements must be finite "numbers" >= 0, with "finite"
+      // taken care of by WebIDL
+      return;
+    }
     dash.AppendElement(aSegments[x]);
   }
   if (aSegments.Length() % 2) { // If the number of elements is odd, concatenate again
@@ -3138,6 +3142,8 @@ CanvasRenderingContext2D::SetLineDash(const Sequence<double>& aSegments)
       dash.AppendElement(aSegments[x]);
     }
   }
+
+  CurrentState().dash = dash;
 }
 
 void

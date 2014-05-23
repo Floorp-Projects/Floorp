@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Canvas test: toDataURL parameters (Bug 564388)</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<p>
+The line dash setting should not be changed when bad values are passed to setLineDash().
+</p>
+<p> See:
+<a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#dom-context-2d-setlinedash">
+http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#dom-context-2d-setlinedash
+</a>
+</p>
+<p>Mozilla
+    <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1006656">Bug 1006656</a>
+</p>
+<canvas id="canvas"><p class="fallback">FAIL (fallback content)</p></canvas>
+
+<script>
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+
+ctx.setLineDash([1,2,3,4,5,6,7,8,9,10]);
+isDeeply(ctx.getLineDash(), [1,2,3,4,5,6,7,8,9,10], "line dash sanity");
+
+ctx.setLineDash([1,2,3,4,5,6,7,8,9,10]);
+ctx.setLineDash([Infinity]);
+isDeeply(ctx.getLineDash(), [1,2,3,4,5,6,7,8,9,10], "Inf doesn't reset line dash");
+
+ctx.setLineDash([1,2,3,4,5,6,7,8,9,10]);
+ctx.setLineDash([NaN]);
+isDeeply(ctx.getLineDash(), [1,2,3,4,5,6,7,8,9,10], "NaN doesn't reset line dash");
+
+ctx.setLineDash([1,2,3,4,5,6,7,8,9,10]);
+ctx.setLineDash([-1]);
+isDeeply(ctx.getLineDash(), [1,2,3,4,5,6,7,8,9,10], "Negative doesn't reset line dash");
+</script>
+
+</html>
