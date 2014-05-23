@@ -734,9 +734,29 @@ nsImageFrame::ComputeSize(nsRenderingContext *aRenderingContext,
   nsPresContext *presContext = PresContext();
   EnsureIntrinsicSizeAndRatio(presContext);
 
+  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
+  NS_ASSERTION(imageLoader, "No content node??");
+  mozilla::IntrinsicSize intrinsicSize(mIntrinsicSize);
+
+  if (intrinsicSize.width.GetUnit() == eStyleUnit_Coord) {
+    uint32_t width;
+    if (NS_SUCCEEDED(imageLoader->GetNaturalWidth(&width))) {
+      nscoord appWidth = nsPresContext::CSSPixelsToAppUnits((int32_t)width);
+      intrinsicSize.width.SetCoordValue(appWidth);
+    }
+  }
+
+  if (intrinsicSize.height.GetUnit() == eStyleUnit_Coord) {
+    uint32_t height;
+    if (NS_SUCCEEDED(imageLoader->GetNaturalHeight(&height))) {
+      nscoord appHeight = nsPresContext::CSSPixelsToAppUnits((int32_t)height);
+      intrinsicSize.height.SetCoordValue(appHeight);
+    }
+  }
+
   return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
                             aRenderingContext, this,
-                            mIntrinsicSize, mIntrinsicRatio, aCBSize,
+                            intrinsicSize, mIntrinsicRatio, aCBSize,
                             aMargin, aBorder, aPadding);
 }
 
