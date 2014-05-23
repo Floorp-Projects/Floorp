@@ -52,6 +52,7 @@
 }
 
 #TabsToolbar:not([collapsed="true"]) + #nav-bar {
+  margin-top: -@tabToolbarNavbarOverlap@; /* Move up into the TabsToolbar */
   /* Position the toolbar above the bottom of background tabs */
   position: relative;
   z-index: 1;
@@ -1767,7 +1768,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   min-height: 0;
   padding: 0;
   position: relative;
-  margin-bottom: -@tabToolbarNavbarOverlap@;
 }
 
 /*
