@@ -78,6 +78,7 @@ CreateObjectConstructor(JSContext *cx, JSProtoKey key)
     Rooted<GlobalObject*> self(cx, cx->global());
     if (!GlobalObject::ensureConstructor(cx, self, JSProto_Function))
         return nullptr;
+
     RootedObject functionProto(cx, &self->getPrototype(JSProto_Function).toObject());
 
     /* Create the Object function now that we have a [[Prototype]] for it. */
@@ -85,9 +86,8 @@ CreateObjectConstructor(JSContext *cx, JSProtoKey key)
                                                   self, SingletonObject));
     if (!ctor)
         return nullptr;
-    RootedAtom objectAtom(cx, cx->names().Object);
     return NewFunction(cx, ctor, obj_construct, 1, JSFunction::NATIVE_CTOR, self,
-                       objectAtom);
+                       HandlePropertyName(cx->names().Object));
 }
 
 static JSObject *
