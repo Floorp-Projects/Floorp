@@ -4430,30 +4430,6 @@ PrintProfilerEvents(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static bool
-IsLatin1(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    bool isLatin1 = args.get(0).isString() && args[0].toString()->hasLatin1Chars();
-    args.rval().setBoolean(isLatin1);
-    return true;
-}
-
-static bool
-ToLatin1(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.get(0).isString() || !args[0].toString()->isLinear()) {
-        args.rval().setUndefined();
-        return true;
-    }
-
-    JSLinearString *s = &args[0].toString()->asLinear();
-    s->debugUnsafeConvertToLatin1();
-    args.rval().setString(s);
-    return true;
-}
-
 static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("version", Version, 0, 0,
 "version([number])",
@@ -4818,10 +4794,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Register a callback with the profiler that prints javascript profiler events\n"
 "  to stderr.  Callback is only registered if profiling is enabled."),
 
-    JS_FN_HELP("isLatin1", IsLatin1, 1, 0,
-"isLatin1(s)",
-"  Return true iff the string's characters are stored as Latin1."),
-
     JS_FS_HELP_END
 };
 
@@ -4885,10 +4857,6 @@ static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
     JS_FN_HELP("untrap", Untrap, 2, 0,
 "untrap(fun[, pc])",
 "  Remove a trap."),
-
-    JS_FN_HELP("toLatin1", ToLatin1, 1, 0,
-"toLatin1(s)",
-"  Convert the string's characters to Latin1."),
 
     JS_FN_HELP("withSourceHook", WithSourceHook, 1, 0,
 "withSourceHook(hook, fun)",

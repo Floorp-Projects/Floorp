@@ -600,10 +600,10 @@ js::Int32ToString(ThreadSafeContext *cx, int32_t si)
     if (!str)
         return nullptr;
 
-    jschar buffer[JSFatInlineString::MAX_LENGTH_TWO_BYTE + 1];
+    jschar buffer[JSFatInlineString::MAX_FAT_INLINE_LENGTH + 1];
     size_t length;
     jschar *start = BackfillInt32InBuffer(si, buffer,
-                                          JSFatInlineString::MAX_LENGTH_TWO_BYTE + 1, &length);
+                                          JSFatInlineString::MAX_FAT_INLINE_LENGTH + 1, &length);
 
     PodCopy(str->init(length), start, length + 1);
 
@@ -623,9 +623,9 @@ js::Int32ToAtom(ExclusiveContext *cx, int32_t si)
     if (JSFlatString *str = LookupInt32ToString(cx, si))
         return js::AtomizeString(cx, str);
 
-    char buffer[JSFatInlineString::MAX_LENGTH_TWO_BYTE + 1];
+    char buffer[JSFatInlineString::MAX_FAT_INLINE_LENGTH + 1];
     size_t length;
-    char *start = BackfillInt32InBuffer(si, buffer, JSFatInlineString::MAX_LENGTH_TWO_BYTE + 1, &length);
+    char *start = BackfillInt32InBuffer(si, buffer, JSFatInlineString::MAX_FAT_INLINE_LENGTH + 1, &length);
 
     JSAtom *atom = Atomize(cx, start, length);
     if (!atom)
@@ -1430,9 +1430,9 @@ js::IndexToString(JSContext *cx, uint32_t index)
     if (!str)
         return nullptr;
 
-    jschar buffer[JSFatInlineString::MAX_LENGTH_TWO_BYTE + 1];
-    RangedPtr<jschar> end(buffer + JSFatInlineString::MAX_LENGTH_TWO_BYTE,
-                          buffer, JSFatInlineString::MAX_LENGTH_TWO_BYTE + 1);
+    jschar buffer[JSFatInlineString::MAX_FAT_INLINE_LENGTH + 1];
+    RangedPtr<jschar> end(buffer + JSFatInlineString::MAX_FAT_INLINE_LENGTH,
+                          buffer, JSFatInlineString::MAX_FAT_INLINE_LENGTH + 1);
     *end = '\0';
     RangedPtr<jschar> start = BackfillIndexInCharBuffer(index, end);
 
