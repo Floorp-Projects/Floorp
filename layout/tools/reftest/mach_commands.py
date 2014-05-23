@@ -325,11 +325,6 @@ def B2GCommand(func):
         help='directory to store logcat dump files')
     func = logcatdir(func)
 
-    geckopath = CommandArgument('--gecko-path', default=None,
-        help='the path to a gecko distribution that should \
-              be installed on the emulator prior to test')
-    func = geckopath(func)
-
     sdcard = CommandArgument('--sdcard', default="10MB",
         help='Define size of sdcard: 1MB, 50MB...etc')
     func = sdcard(func)
