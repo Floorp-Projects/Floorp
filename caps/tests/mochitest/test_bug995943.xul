@@ -34,8 +34,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=995943
     debug("Invoking checkLoadFileURI with domain: " + domain + ", shouldLoad: " + shouldLoad);
     return new Promise(function(resolve, reject) {
       $('ifr').addEventListener('load', function l1() {
+        debug("Invoked l1 for " + domain);
         $('ifr').removeEventListener('load', l1);
         function l2() {
+          debug("Invoked l2 for " + domain);
           $('ifr').removeEventListener('load', l2);
           ok(shouldLoad, "Successfully loaded file:// URI for domain: " + domain);
           resolve();
@@ -43,6 +45,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=995943
         $('ifr').addEventListener('load', l2);
         try {
           window[0].wrappedJSObject.location = profileDir;
+          debug("Successfully navigated for " + domain);
         } catch (e) {
           ok(!shouldLoad && /denied|insecure/.test(e),
              "Prevented loading of file:// URI for domain: " + domain + " - " + e);
@@ -64,7 +67,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=995943
     return new Promise(function(resolve) { SpecialPowers.popPrefEnv(resolve); });
   }
 
+  var gGoCount = 0;
   function go() {
+    debug("Invoking go for window with id: " + window.getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID);
+    is(++gGoCount, 1, "Should only call go once!");
     checkLoadFileURI('http://example.com', false).then(
       pushPrefs.bind(null, [['capability.policy.policynames', ' somepolicy '],
                             ['capability.policy.somepolicy.checkloaduri.enabled', 'AlLAcCeSs'],
@@ -80,7 +86,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=995943
                             ['capability.policy.someotherpolicy.sites', 'http://example.net ']]))
     .then(checkLoadFileURI.bind(null, 'http://example.org', true))
     .then(checkLoadFileURI.bind(null, 'http://example.com', false))
-    .then(checkLoadFileURI.bind(null, 'https://example.com', true))
     .then(checkLoadFileURI.bind(null, 'http://example.net', false))
     .then(pushPrefs.bind(null, [['capability.policy.someotherpolicy.checkloaduri.enabled', 'allAccess']]))
     .then(checkLoadFileURI.bind(null, 'http://example.net', true))
