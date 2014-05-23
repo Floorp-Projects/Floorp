@@ -8,12 +8,13 @@ import org.mozilla.gecko.R;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.TextView;
 import android.widget.TabWidget;
+import android.widget.TextView;
 
 public class IconTabWidget extends TabWidget {
     private OnTabChangedListener mListener;
@@ -71,5 +72,25 @@ public class IconTabWidget extends TabWidget {
             if (mListener != null)
                 mListener.onTabChanged(mIndex);
         }
+    }
+
+    /**
+     * Fetch the Drawable icon corresponding to the given panel.
+     * @param panel to fetch icon for.
+     * @return Drawable instance, or null if no icon is being displayed, or the icon does not exist.
+     */
+    public Drawable getIconDrawable(int index) {
+        if (!mIsIcon) {
+            return null;
+        }
+        // We can have multiple views in the tray for each child. This finds the
+        // first view corresponding to the given tab. This varies by Android
+        // version. The first view should always be our ImageButton, but let's
+        // be safe.
+        final View view = getChildTabViewAt(index);
+        if (view instanceof ImageButton) {
+            return ((ImageButton) view).getDrawable();
+        }
+        return null;
     }
 }
