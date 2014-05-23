@@ -1520,7 +1520,7 @@ NS_IMETHODIMP nsCacheService::EvictEntries(nsCacheStoragePolicy storagePolicy)
         if (!NS_IsMainThread()) { 
             nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this,
                                                                &nsCacheService::FireClearNetworkCacheStoredAnywhereNotification);
-            NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+            NS_DispatchToMainThread(event);
         } else {
             // else you're already on main thread - notify observers
             FireClearNetworkCacheStoredAnywhereNotification(); 

@@ -360,7 +360,7 @@ AsyncConnectionHelper::Run()
                        "IDBRequest[%llu] DT Done", mRequest->GetSerialNumber(),
                        mResultCode);
 
-  return NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL);
+  return NS_DispatchToMainThread(this);
 }
 
 NS_IMETHODIMP

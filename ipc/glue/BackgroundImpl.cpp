@@ -1380,7 +1380,7 @@ ParentImpl::RequestMessageLoopRunnable::Run()
   mMessageLoop = MessageLoop::current();
   MOZ_ASSERT(mMessageLoop);
 
-  if (NS_FAILED(NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL))) {
+  if (NS_FAILED(NS_DispatchToMainThread(this))) {
     NS_WARNING("Failed to dispatch RequestMessageLoopRunnable to main thread!");
     return NS_ERROR_FAILURE;
   }
@@ -1634,7 +1634,7 @@ ChildImpl::GetOrCreateForCurrentThread(
   }
 
   nsRefPtr<CreateActorRunnable> runnable = new CreateActorRunnable();
-  if (NS_FAILED(NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL))) {
+  if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
     CRASH_IN_CHILD_PROCESS("Failed to dispatch to main thread!");
     return false;
   }

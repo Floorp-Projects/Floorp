@@ -142,7 +142,7 @@ SourceBufferList::QueueAsyncSimpleEvent(const char* aName)
 {
   MSE_DEBUG("%p Queuing event %s to SourceBufferList", this, aName);
   nsCOMPtr<nsIRunnable> event = new AsyncEventRunner<SourceBufferList>(this, aName);
-  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  NS_DispatchToMainThread(event);
 }
 
 SourceBufferList::SourceBufferList(MediaSource* aMediaSource)
