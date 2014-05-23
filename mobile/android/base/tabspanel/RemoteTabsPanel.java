@@ -99,6 +99,10 @@ class RemoteTabsPanel extends FrameLayout implements PanelView {
                 inflatedView = inflater.inflate(R.layout.remote_tabs_setup_panel, null);
                 break;
 
+            case VERIFICATION:
+                inflatedView = inflater.inflate(R.layout.remote_tabs_verification_panel, null);
+                break;
+
             case CONTAINER:
                 inflatedView = inflater.inflate(R.layout.remote_tabs_container_panel, null);
                 break;

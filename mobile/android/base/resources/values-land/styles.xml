@@ -40,4 +40,14 @@
         <item name="android:paddingRight">64dp</item>
     </style>
 
+    <style name="RemoteTabsItem.TextAppearance.Header.FXAccounts">
+        <item name="android:visibility">gone</item>
+    </style>
+
+    <style name="RemoteTabsItem.TextAppearance.Linkified.Resend">
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:gravity">center</item>
+        <item name="android:layout_gravity">center</item>
+    </style>
+
 </resources>
