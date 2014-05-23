@@ -466,6 +466,11 @@
     </style>
 
     <style name="RemoteTabsSection" parent="RemoteTabsSectionBase">
+        <!-- We set values in landscape. -->
+    </style>
+
+    <style name="RemoteTabsSection.Resend" parent="RemoteTabsSectionBase">
+        <!-- We set values in landscape. -->
     </style>
 
     <style name="RemoteTabsItem">
@@ -496,10 +501,18 @@
         <item name="android:textSize">20sp</item>
     </style>
 
+    <style name="RemoteTabsItem.TextAppearance.Header.FXAccounts">
+        <!-- We change these values on landscape. -->
+    </style>
+
     <style name="RemoteTabsItem.TextAppearance.Linkified">
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
         <item name="android:textColor">#0292D6</item>
+    </style>
+
+    <style name="RemoteTabsItem.TextAppearance.Linkified.Resend">
+        <item name="android:layout_height">wrap_content</item>
     </style>
 
     <!-- TabsTray Row -->
