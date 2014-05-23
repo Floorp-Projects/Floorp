@@ -33,6 +33,7 @@ class ArrayBufferViewObject;
 class SharedArrayBufferObject;
 class BaseShape;
 class DebugScopeObject;
+class GCHelperThread;
 class GlobalObject;
 class LazyScript;
 class Nursery;
@@ -353,12 +354,6 @@ GetGCKindSlots(AllocKind thingKind, const Class *clasp)
 
     return nslots;
 }
-
-// Class to assist in triggering background chunk allocation. This cannot be done
-// while holding the GC or worker thread state lock due to lock ordering issues.
-// As a result, the triggering is delayed using this class until neither of the
-// above locks is held.
-class AutoMaybeStartBackgroundAllocation;
 
 /*
  * Arena lists have a head and a cursor. The cursor conceptually lies on arena
@@ -776,8 +771,7 @@ class ArenaLists
     inline void queueForBackgroundSweep(FreeOp *fop, AllocKind thingKind);
 
     void *allocateFromArena(JS::Zone *zone, AllocKind thingKind);
-    inline void *allocateFromArenaInline(JS::Zone *zone, AllocKind thingKind,
-                                         AutoMaybeStartBackgroundAllocation &maybeStartBackgroundAllocation);
+    inline void *allocateFromArenaInline(JS::Zone *zone, AllocKind thingKind);
 
     inline void normalizeBackgroundFinalizeState(AllocKind thingKind);
 
@@ -920,20 +914,20 @@ extern void
 NotifyGCPostSwap(JSObject *a, JSObject *b, unsigned preResult);
 
 /*
- * Helper state for use when JS helper threads sweep and allocate GC thing kinds
- * that can be swept and allocated off the main thread.
+ * Helper that implements sweeping and allocation for kinds that can be swept
+ * and allocated off the main thread.
  *
  * In non-threadsafe builds, all actual sweeping and allocation is performed
- * on the main thread, but GCHelperState encapsulates this from clients as
+ * on the main thread, but GCHelperThread encapsulates this from clients as
  * much as possible.
  */
-class GCHelperState
-{
+class GCHelperThread {
     enum State {
         IDLE,
         SWEEPING,
         ALLOCATING,
-        CANCEL_ALLOCATION
+        CANCEL_ALLOCATION,
+        SHUTDOWN
     };
 
     /*
@@ -949,25 +943,13 @@ class GCHelperState
     static const size_t FREE_ARRAY_SIZE = size_t(1) << 16;
     static const size_t FREE_ARRAY_LENGTH = FREE_ARRAY_SIZE / sizeof(void *);
 
-    // Associated runtime.
-    JSRuntime *const rt;
+    JSRuntime         *const rt;
+    PRThread          *thread;
+    PRCondVar         *wakeup;
+    PRCondVar         *done;
+    volatile State    state;
 
-    // Condvar for notifying the main thread when work has finished. This is
-    // associated with the runtime's GC lock --- the worker thread state
-    // condvars can't be used here due to lock ordering issues.
-    PRCondVar *done;
-
-    // Activity for the helper to do, protected by the GC lock.
-    State state_;
-
-    // Thread which work is being performed on, or null.
-    PRThread *thread;
-
-    void startBackgroundThread(State newState);
-    void waitForBackgroundThread();
-
-    State state();
-    void setState(State state);
+    void wait(PRCondVar *which);
 
     bool              sweepFlag;
     bool              shrinkFlag;
@@ -990,15 +972,19 @@ class GCHelperState
         js_free(array);
     }
 
+    static void threadMain(void* arg);
+    void threadLoop();
+
     /* Must be called with the GC lock taken. */
     void doSweep();
 
   public:
-    GCHelperState(JSRuntime *rt)
+    GCHelperThread(JSRuntime *rt)
       : rt(rt),
-        done(nullptr),
-        state_(IDLE),
         thread(nullptr),
+        wakeup(nullptr),
+        done(nullptr),
+        state(IDLE),
         sweepFlag(false),
         shrinkFlag(false),
         freeCursor(nullptr),
@@ -1008,8 +994,6 @@ class GCHelperState
 
     bool init();
     void finish();
-
-    void work();
 
     /* Must be called with the GC lock taken. */
     void startBackgroundSweep(bool shouldShrink);
@@ -1024,7 +1008,7 @@ class GCHelperState
     void waitBackgroundSweepOrAllocEnd();
 
     /* Must be called with the GC lock taken. */
-    void startBackgroundAllocationIfIdle();
+    inline void startBackgroundAllocationIfIdle();
 
     bool canBackgroundAllocate() const {
         return backgroundAllocation;
@@ -1034,23 +1018,27 @@ class GCHelperState
         backgroundAllocation = false;
     }
 
+    PRThread *getThread() const {
+        return thread;
+    }
+
     bool onBackgroundThread();
 
     /*
      * Outside the GC lock may give true answer when in fact the sweeping has
      * been done.
      */
-    bool isBackgroundSweeping() const {
-        return state_ == SWEEPING;
+    bool sweeping() const {
+        return state == SWEEPING;
     }
 
     bool shouldShrink() const {
-        JS_ASSERT(isBackgroundSweeping());
+        JS_ASSERT(sweeping());
         return shrinkFlag;
     }
 
     void freeLater(void *ptr) {
-        JS_ASSERT(!isBackgroundSweeping());
+        JS_ASSERT(!sweeping());
         if (freeCursor != freeCursorEnd)
             *freeCursor++ = ptr;
         else
