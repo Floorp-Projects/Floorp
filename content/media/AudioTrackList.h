@@ -29,6 +29,9 @@ public:
   AudioTrack* IndexedGetter(uint32_t aIndex, bool& aFound);
 
   AudioTrack* GetTrackById(const nsAString& aId);
+
+protected:
+  virtual AudioTrackList* AsAudioTrackList() MOZ_OVERRIDE { return this; }
 };
 
 } // namespace dom

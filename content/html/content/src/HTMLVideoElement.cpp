@@ -79,6 +79,10 @@ nsresult HTMLVideoElement::GetVideoSize(nsIntSize* size)
     return NS_ERROR_FAILURE;
   }
 
+  if (mDisableVideo) {
+    return NS_ERROR_FAILURE;
+  }
+
   size->height = mMediaSize.height;
   size->width = mMediaSize.width;
   return NS_OK;

@@ -1,0 +1,189 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test track interfaces when consuming a MediaStream from gUM</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+function startTest() {
+  navigator.mozGetUserMedia({audio:true, video:true, fake:true},
+    function(stream) {
+      var audioStreamTracks = stream.getAudioTracks();
+      var videoStreamTracks = stream.getVideoTracks();
+
+      var audioOnchange = 0;
+      var audioOnaddtrack = 0;
+      var audioOnremovetrack = 0;
+      var videoOnchange = 0;
+      var videoOnaddtrack = 0;
+      var videoOnremovetrack = 0;
+
+      var element = document.createElement("video");
+      isnot(element.audioTracks, undefined, "HTMLMediaElement::AudioTracks() property should be available.");
+      isnot(element.videoTracks, undefined, "HTMLMediaElement::VideoTracks() property should be available.");
+
+      function verify_event(e, type) {
+        is(e.type, type, "Event type should be " + type);
+        ok(e.isTrusted, "Event should be trusted.");
+        ok(!e.bubbles, "Event shouldn't bubble.");
+        ok(!e.cancelable, "Event shouldn't be cancelable.");
+      }
+
+      function setAudioEnabled(enabled, index) {
+        return new Promise(function(resolve, reject) {
+          element.audioTracks[index].enabled = enabled;
+          element.audioTracks.onchange = function(e) {
+            ok(e instanceof window.Event, "Event fired from onchange should be a simple event.");
+            ok(true, 'onchange is expected to be called from audioTracks.');
+            verify_event(e, "change");
+            audioOnchange++;
+            resolve();
+          }
+        });
+      }
+
+      function setVideoSelected(selected, index) {
+        return new Promise(function(resolve, reject) {
+          element.videoTracks[index].selected = selected;
+          element.videoTracks.onchange = function(e) {
+            ok(e instanceof window.Event, "Event fired from onchange should be a simple event.");
+            ok(true, 'onchange is expected to be called from videoTracks.');
+            verify_event(e, "change");
+
+            var noVideoSelected = true;
+            for (var i=0; i < element.videoTracks.length; ++i) {
+              var track = element.videoTracks[i];
+              if (track.selected == true) {
+                noVideoSelected = false;
+                break;
+              }
+            }
+
+            if (selected) {
+              is(element.videoTracks.selectedIndex, index,
+                 'SelectedIndex shuld be '+index+' if video track is set selected.');
+            } else {
+              if (noVideoSelected) {
+                is(element.videoTracks.selectedIndex, -1,
+                   'SelectedIndex shuld be -1 if no video track is set selected.');
+              } else {
+                reject();
+              }
+            }
+            videoOnchange++;
+            resolve();
+          }
+        });
+      }
+
+      element.audioTracks.onaddtrack = function(e) {
+        ok(e instanceof TrackEvent, "Event fired from onaddtrack should be a TrackEvent");
+        ok(true, 'onaddtrack is expected to be called from audioTracks.');
+        verify_event(e, "addtrack");
+        audioOnaddtrack++;
+      }
+
+      element.audioTracks.onremovetrack = function(e) {
+        ok(e instanceof TrackEvent, "Event fired from onremovetrack should be a TrackEvent");
+        ok(true, 'onremovetrack is expected to be called from audioTracks.');
+        verify_event(e, "removetrack");
+        audioOnremovetrack++;
+      }
+
+      element.videoTracks.onaddtrack = function(e) {
+        ok(e instanceof TrackEvent, "Event fired from onaddtrack should be a TrackEvent");
+        ok(true, 'onaddtrack is expected to be called from videoTracks.');
+        verify_event(e, "addtrack");
+        videoOnaddtrack++;
+      }
+
+      element.videoTracks.onremovetrack = function(e) {
+        ok(e instanceof TrackEvent, "Event fired from onremovetrack should be a TrackEvent");
+        ok(true, 'onremovetrack is expected to be called from videoTracks.');
+        verify_event(e, "removetrack");
+        videoOnremovetrack++;
+      }
+
+
+      element.onended = function() {
+        is(audioOnchange, 2, 'change event on audioTracks should fired twice.');
+        is(videoOnchange, 2, 'change event on videoTracks should fired twice.');
+
+        is(audioOnremovetrack, audioStreamTracks.length,
+           'Calls of onremovetrack from audioTracks should match the numbers of AudioStreamTrack.');
+        is(videoOnremovetrack, videoStreamTracks.length,
+           'Calls of onremovetrack from videoTracks should match the numbers of VideoStreamTrack.');
+
+        SimpleTest.finish();
+      }
+
+      var promise = new Promise(function(resolve, reject) {
+        element.mozSrcObject = stream;
+        element.play();
+
+        element.onloadedmetadata = function() {
+          is(audioOnaddtrack, audioStreamTracks.length,
+             'Calls of onaddtrack from audioTracks should match the numbers of AudioStreamTrack.');
+          is(videoOnaddtrack, videoStreamTracks.length,
+             'Calls of onaddtrack from videoTracks should match the numbers of VideoStreamTrack.');
+
+          is(element.audioTracks.length, audioStreamTracks.length,
+            'Length of audioTracks should be the same as the length of AudioStreamTrack.');
+          is(element.videoTracks.length, videoStreamTracks.length,
+            'Length of videoTracks should be the same as the length of VideoStreamTrack.');
+
+          for (var i=0; i < audioStreamTracks.length; ++i) {
+            var track = element.audioTracks.getTrackById(audioStreamTracks[i].id);
+            isnot(track, null, 'Successfully get '+ track.id + ' from audioTracks.');
+          }
+          for (var i=0; i < videoStreamTracks.length; ++i) {
+            var track = element.videoTracks.getTrackById(videoStreamTracks[i].id);
+            isnot(track, null, 'Successfully get '+ track.id + ' from videoTracks.');
+          }
+
+          is(element.videoTracks.selectedIndex, 0,
+             'The first video track is set selected as default.');
+
+          resolve();
+        }
+      });
+
+      promise.then(function() {
+        var p1 = setAudioEnabled(false, 0);
+        var p2 = setVideoSelected(false, 0);
+        return Promise.all([p1, p2]);
+      }).catch(function(err) {
+        ok(false, 'Something went wrong in onchange callback.');
+      }).then(function() {
+        var p3 = setAudioEnabled(true, 0);
+        var p4 = setVideoSelected(true, 0);
+        return Promise.all([p3, p4]);
+      }).catch(function(err) {
+        ok(false, 'Something went wrong in onchange callback.');
+      }).then(function() {
+        stream.stop();
+      });
+    },
+    function(err) {
+      ok(false, 'Unexpected error fired with: ' + err);
+      SimpleTest.finish();
+    }
+  );
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {
+    "set": [
+      ["media.track.enabled", true]
+    ]
+  }, startTest);
+
+</script>
+</pre>
+</body>
+</html>
