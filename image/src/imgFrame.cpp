@@ -483,7 +483,9 @@ bool imgFrame::Draw(gfxContext *aContext, GraphicsFilter aFilter,
                     const nsIntMargin &aPadding, const nsIntRect &aSubimage,
                     uint32_t aImageFlags)
 {
-  PROFILER_LABEL("image", "imgFrame::Draw");
+  PROFILER_LABEL("imgFrame", "Draw",
+    js::ProfileEntry::Category::GRAPHICS);
+
   NS_ASSERTION(!aFill.IsEmpty(), "zero dest size --- fix caller");
   NS_ASSERTION(!aSubimage.IsEmpty(), "zero source size --- fix caller");
   NS_ASSERTION(!mPalettedImageData, "Directly drawing a paletted image!");
