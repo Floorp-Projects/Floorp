@@ -21,6 +21,7 @@ callback interface TestCallbackInterface {
   long doSomethingElse(DOMString arg, TestInterface otherArg);
   void doSequenceLongArg(sequence<long> arg);
   void doSequenceStringArg(sequence<DOMString> arg);
+  void doMozMapLongArg(MozMap<long> arg);
   sequence<long> getSequenceOfLong();
   sequence<TestInterface> getSequenceOfInterfaces();
   sequence<TestInterface>? getNullableSequenceOfInterfaces();
@@ -30,6 +31,7 @@ callback interface TestCallbackInterface {
   sequence<TestCallbackInterface>? getNullableSequenceOfCallbackInterfaces();
   sequence<TestCallbackInterface?> getSequenceOfNullableCallbackInterfaces();
   sequence<TestCallbackInterface?>? getNullableSequenceOfNullableCallbackInterfaces();
+  MozMap<long> getMozMapOfLong();
   Dict? getDictionary();
 };
 
