@@ -16,7 +16,9 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -45,12 +47,28 @@ public final class Distribution {
     private static final int STATE_NONE = 1;
     private static final int STATE_SET = 2;
 
+    private static Distribution instance;
+
     private final Context context;
     private final String packagePath;
     private final String prefsBranch;
 
     private volatile int state = STATE_UNKNOWN;
     private File distributionDir = null;
+
+    private final Queue<Runnable> onDistributionReady = new ConcurrentLinkedQueue<Runnable>();
+
+    /**
+     * This is a little bit of a bad singleton, because in principle a Distribution
+     * can be created with arbitrary paths. So we only have one path to get here, and
+     * it uses the default arguments. Watch out if you're creating your own instances!
+     */
+    public static synchronized Distribution getInstance(Context context) {
+        if (instance == null) {
+            instance = new Distribution(context);
+        }
+        return instance;
+    }
 
     public static class DistributionDescriptor {
         public final boolean valid;
@@ -94,20 +112,12 @@ public final class Distribution {
         }
     }
 
-    /**
-     * Initializes distribution if it hasn't already been initialized. Sends
-     * messages to Gecko as appropriate.
-     *
-     * @param packagePath where to look for the distribution directory.
-     */
-    @RobocopTarget
-    public static void init(final Context context, final String packagePath, final String prefsPath) {
+    private static void init(final Distribution distribution) {
         // Read/write preferences and files on the background thread.
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                Distribution dist = new Distribution(context, packagePath, prefsPath);
-                boolean distributionSet = dist.doInit();
+                boolean distributionSet = distribution.doInit();
                 if (distributionSet) {
                     GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Distribution:Set", ""));
                 }
@@ -116,11 +126,22 @@ public final class Distribution {
     }
 
     /**
+     * Initializes distribution if it hasn't already been initialized. Sends
+     * messages to Gecko as appropriate.
+     *
+     * @param packagePath where to look for the distribution directory.
+     */
+    @RobocopTarget
+    public static void init(final Context context, final String packagePath, final String prefsPath) {
+        init(new Distribution(context, packagePath, prefsPath));
+    }
+
+    /**
      * Use <code>Context.getPackageResourcePath</code> to find an implicit
-     * package path.
+     * package path. Reuses the existing Distribution if one exists.
      */
     public static void init(final Context context) {
-        Distribution.init(context, context.getPackageResourcePath(), null);
+        Distribution.init(Distribution.getInstance(context));
     }
 
     /**
@@ -241,6 +262,7 @@ public final class Distribution {
         String keyName = context.getPackageName() + ".distribution_state";
         this.state = settings.getInt(keyName, STATE_UNKNOWN);
         if (this.state == STATE_NONE) {
+            runReadyQueue();
             return false;
         }
 
@@ -248,6 +270,7 @@ public final class Distribution {
         if (this.state == STATE_SET) {
             // Note that we don't compute the distribution directory.
             // Call `ensureDistributionDir` if you need it.
+            runReadyQueue();
             return true;
         }
 
@@ -258,7 +281,21 @@ public final class Distribution {
 
         this.state = distributionSet ? STATE_SET : STATE_NONE;
         settings.edit().putInt(keyName, this.state).commit();
+
+        runReadyQueue();
         return distributionSet;
+    }
+
+    /**
+     * Execute tasks that wanted to run when we were done loading
+     * the distribution. These tasks are expected to call {@link #exists()}
+     * to find out whether there's a distribution or not.
+     */
+    private void runReadyQueue() {
+        Runnable task;
+        while ((task = onDistributionReady.poll()) != null) {
+            ThreadUtils.postToBackgroundThread(task);
+        }
     }
 
     /**
@@ -425,5 +462,28 @@ public final class Distribution {
 
     private File getSystemDistributionDir() {
         return new File("/system/" + context.getPackageName() + "/distribution");
+    }
+
+    /**
+     * The provided <code>Runnable</code> will be executed after the distribution
+     * is ready, or discarded if the distribution has already been processed.
+     *
+     * Each <code>Runnable</code> will be executed on the background thread.
+     */
+    public void addOnDistributionReadyCallback(Runnable runnable) {
+        if (state == STATE_UNKNOWN) {
+            this.onDistributionReady.add(runnable);
+        } else {
+            // If we're already initialized, just queue up the runnable.
+            ThreadUtils.postToBackgroundThread(runnable);
+        }
+    }
+
+    /**
+     * A safe way for callers to determine if this Distribution instance
+     * represents a real live distribution.
+     */
+    public boolean exists() {
+        return state == STATE_SET;
     }
 }
