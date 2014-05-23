@@ -105,12 +105,12 @@ ThrowTypeError(JSContext *cx, unsigned argc, Value *vp)
 }
 
 JSObject *
-GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
+js::CreateObjectPrototype(JSContext *cx, JSProtoKey key)
 {
-    Rooted<GlobalObject*> self(cx, this);
+    Rooted<GlobalObject*> self(cx, cx->global());
 
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
-    JS_ASSERT(isNative());
+    JS_ASSERT(self->isNative());
 
     cx->setDefaultCompartmentObjectIfUnset(self);
 
@@ -129,12 +129,18 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
      * to have unknown properties, to simplify handling of e.g. heterogenous
      * objects in JSON and script literals.
      */
-    if (!setNewTypeUnknown(cx, &JSObject::class_, objectProto))
+    if (!JSObject::setNewTypeUnknown(cx, &JSObject::class_, objectProto))
         return nullptr;
 
-    self->setPrototype(JSProto_Object, ObjectValue(*objectProto));
+    return objectProto;
+}
 
-    /* Create |Function.prototype| next so we can create other functions. */
+JSObject *
+js::CreateFunctionPrototype(JSContext *cx, JSProtoKey key)
+{
+    Rooted<GlobalObject*> self(cx, cx->global());
+
+    RootedObject objectProto(cx, &self->getPrototype(JSProto_Object).toObject());
     RootedFunction functionProto(cx);
     {
         JSObject *functionProto_ = NewObjectWithGivenProto(cx, &JSFunction::class_,
@@ -199,11 +205,18 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
          * inference to have unknown properties, to simplify handling of e.g.
          * CloneFunctionObject.
          */
-        if (!setNewTypeUnknown(cx, &JSFunction::class_, functionProto))
+        if (!JSObject::setNewTypeUnknown(cx, &JSFunction::class_, functionProto))
             return nullptr;
     }
 
-    self->setPrototype(JSProto_Function, ObjectValue(*functionProto));
+    return functionProto;
+}
+
+JSObject *
+js::CreateObjectConstructor(JSContext *cx, JSProtoKey key)
+{
+    Rooted<GlobalObject*> self(cx, cx->global());
+    RootedObject functionProto(cx, &self->getPrototype(JSProto_Function).toObject());
 
     /* Create the Object function now that we have a [[Prototype]] for it. */
     RootedFunction objectCtor(cx);
@@ -219,8 +232,14 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
             return nullptr;
     }
 
-    self->setConstructor(JSProto_Object, ObjectValue(*objectCtor));
-    self->setConstructorPropertySlot(JSProto_Object, ObjectValue(*objectCtor));
+    return objectCtor;
+}
+
+JSObject *
+js::CreateFunctionConstructor(JSContext *cx, JSProtoKey key)
+{
+    Rooted<GlobalObject*> self(cx, cx->global());
+    RootedObject functionProto(cx, &self->getPrototype(JSProto_Function).toObject());
 
     /* Create |Function| so it and |Function.prototype| can be installed. */
     RootedFunction functionCtor(cx);
@@ -238,6 +257,33 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         JS_ASSERT(ctor == functionCtor);
     }
 
+    return functionCtor;
+}
+
+JSObject *
+GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
+{
+    Rooted<GlobalObject*> self(cx, cx->global());
+
+    RootedObject objectProto(cx, CreateObjectPrototype(cx, JSProto_Object));
+    if (!objectProto)
+        return nullptr;
+    self->setPrototype(JSProto_Object, ObjectValue(*objectProto));
+
+    RootedObject functionProto(cx, CreateFunctionPrototype(cx, JSProto_Function));
+    if (!functionProto)
+        return nullptr;
+    self->setPrototype(JSProto_Function, ObjectValue(*functionProto));
+
+    RootedObject objectCtor(cx, CreateObjectConstructor(cx, JSProto_Object));
+    if (!objectCtor)
+        return nullptr;
+    self->setConstructor(JSProto_Object, ObjectValue(*objectCtor));
+    self->setConstructorPropertySlot(JSProto_Object, ObjectValue(*objectCtor));
+
+    RootedObject functionCtor(cx, CreateFunctionConstructor(cx, JSProto_Function));
+    if (!functionCtor)
+        return nullptr;
     self->setConstructor(JSProto_Function, ObjectValue(*functionCtor));
     self->setConstructorPropertySlot(JSProto_Function, ObjectValue(*functionCtor));
 
@@ -321,8 +367,9 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
      * Notify any debuggers about the creation of the script for
      * |Function.prototype| -- after all initialization, for simplicity.
      */
-    RootedScript functionProtoScript(cx, functionProto->nonLazyScript());
-    CallNewScriptHook(cx, functionProtoScript, functionProto);
+    RootedFunction functionProtoAsFun(cx, &functionProto->as<JSFunction>());
+    RootedScript functionProtoScript(cx, functionProtoAsFun->nonLazyScript());
+    CallNewScriptHook(cx, functionProtoScript, functionProtoAsFun);
     return functionProto;
 }
 
