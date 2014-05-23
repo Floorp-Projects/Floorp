@@ -381,6 +381,15 @@ parent:
     sync RequestNativeKeyBindings(WidgetKeyboardEvent event)
         returns (MaybeNativeKeyBinding bindings);
 
+    /**
+     * Child informs the parent that the graphics objects are ready for
+     * compositing.  This is sent when all pending changes have been
+     * sent to the compositor and are ready to be shown on the next composite.
+     * @see PCompositor
+     * @see RequestNotifyAfterRemotePaint
+     */
+    async RemotePaintIsReady();
+
 child:
     /**
      * Notify the remote browser that it has been Show()n on this
@@ -497,6 +506,14 @@ child:
      * Tell the child to update its docShell's active state.
      */
     SetIsDocShellActive(bool aIsActive);
+
+    /**
+     * The parent (chrome thread) requests that the child inform it when
+     * the graphics objects are ready to display.
+     * @see PCompositor
+     * @see RemotePaintIsReady
+     */
+    async RequestNotifyAfterRemotePaint();
 
     /**
      * Tell the child that the UI resolution changed for the containing

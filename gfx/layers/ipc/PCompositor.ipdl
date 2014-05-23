@@ -47,6 +47,15 @@ child:
   // The parent sends the child the requested fill ratio numbers.
   async Overfill(uint32_t aOverfill);
 
+  /**
+   * Parent informs the child that the graphics objects are ready for
+   * compositing.  This usually means that the graphics objects (textures
+   * and the like) are available on the GPU.  This is used for chrome UI.
+   * @see RequestNotifyAfterRemotePaint
+   * @see PBrowser
+   */
+  async RemotePaintIsReady();
+
 parent:
 
   // Child sends the parent a request for fill ratio numbers.
@@ -92,6 +101,14 @@ parent:
 
   // Notify the compositor that a region of the screen has been invalidated.
   async NotifyRegionInvalidated(nsIntRegion region);
+
+  /**
+   * The child (content/chrome thread) requests that the parent inform it when
+   * the graphics objects are ready to display.
+   * @see PBrowser
+   * @see RemotePaintIsReady
+   */
+  async RequestNotifyAfterRemotePaint();
 
 child:
   // Send back Compositor Frame Metrics from APZCs so tiled layers can
