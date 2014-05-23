@@ -33,6 +33,7 @@ import org.mozilla.gecko.db.BrowserContract.SuggestedSites;
 import org.mozilla.gecko.home.HomePanelPicker;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.widget.FloatingHintEditText;
 
 import android.app.ActionBar;
 import android.app.Activity;
@@ -971,7 +972,7 @@ OnSharedPreferenceChangeListener
     }
 
     private EditText getTextBox(int aHintText) {
-        EditText input = new EditText(GeckoAppShell.getContext());
+        EditText input = new FloatingHintEditText(GeckoAppShell.getContext());
         int inputtype = InputType.TYPE_CLASS_TEXT;
         inputtype |= InputType.TYPE_TEXT_VARIATION_PASSWORD | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS;
         input.setInputType(inputtype);
