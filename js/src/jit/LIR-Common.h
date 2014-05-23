@@ -4812,6 +4812,28 @@ class LFloorF : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Take the ceiling of a double precision number. Implements Math.ceil().
+class LCeil : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(Ceil)
+
+    LCeil(const LAllocation &num) {
+        setOperand(0, num);
+    }
+};
+
+// Take the ceiling of a single precision number. Implements Math.ceil().
+class LCeilF : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(CeilF)
+
+    LCeilF(const LAllocation &num) {
+        setOperand(0, num);
+    }
+};
+
 // Round a double precision number. Implements Math.round().
 class LRound : public LInstructionHelper<1, 1, 1>
 {

@@ -4010,6 +4010,43 @@ sdp_result_e sdp_attr_set_ice_attribute(void *sdp_ptr, u16 level,
     return (SDP_SUCCESS);
 }
 
+/* Function:    sdp_attr_is_present
+ * Description: Returns a boolean value based on attribute being present or
+ *              not
+ *
+ * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
+ *              attr_type   The attribute type.
+ *              level       The level to check for the attribute.
+ *              cap_num     The capability number associated with the
+ *                          attribute if any.  If none, should be zero.
+ * Returns:
+ *              Boolean value.
+ */
+
+tinybool sdp_attr_is_present (void *sdp_ptr, sdp_attr_e attr_type, u16 level,
+                              u8 cap_num)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (FALSE);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, attr_type, 1);
+    if (attr_p != NULL) {
+        return (TRUE);
+    }
+    if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
+        CSFLogDebug(logTag, "%s Attribute %s, level %u not found.",
+                    sdp_p->debug_str, sdp_get_attr_name(attr_type), level);
+    }
+
+    return (FALSE);
+}
+
+
+
 /* Function:    sdp_attr_get_rtcp_mux_attribute
  * Description: Returns the value of an rtcp-mux attribute at a given level
  *

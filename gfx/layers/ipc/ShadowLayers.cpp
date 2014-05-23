@@ -36,16 +36,15 @@
 
 struct nsIntPoint;
 
-using namespace mozilla::ipc;
-using namespace mozilla::gl;
-using namespace mozilla::dom;
-
 namespace mozilla {
 namespace ipc {
 class Shmem;
 }
 
 namespace layers {
+
+using namespace mozilla::ipc;
+using namespace mozilla::gl;
 
 class ClientTiledLayerBuffer;
 
@@ -64,7 +63,7 @@ public:
   {}
 
   void Begin(const nsIntRect& aTargetBounds, ScreenRotation aRotation,
-             const nsIntRect& aClientBounds, ScreenOrientation aOrientation)
+             const nsIntRect& aClientBounds, dom::ScreenOrientation aOrientation)
   {
     mOpen = true;
     mTargetBounds = aTargetBounds;
@@ -142,7 +141,7 @@ public:
   nsIntRect mTargetBounds;
   ScreenRotation mTargetRotation;
   nsIntRect mClientBounds;
-  ScreenOrientation mTargetOrientation;
+  dom::ScreenOrientation mTargetOrientation;
   bool mSwapRequired;
 
 private:
@@ -187,7 +186,7 @@ void
 ShadowLayerForwarder::BeginTransaction(const nsIntRect& aTargetBounds,
                                        ScreenRotation aRotation,
                                        const nsIntRect& aClientBounds,
-                                       ScreenOrientation aOrientation)
+                                       dom::ScreenOrientation aOrientation)
 {
   NS_ABORT_IF_FALSE(HasShadowManager(), "no manager to forward to");
   NS_ABORT_IF_FALSE(mTxn->Finished(), "uncommitted txn?");

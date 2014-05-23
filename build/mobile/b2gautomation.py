@@ -5,6 +5,7 @@
 import mozcrash
 import threading
 import os
+import posixpath
 import Queue
 import re
 import shutil
@@ -227,6 +228,11 @@ class B2GRemoteAutomation(Automation):
         # stop b2g
         self._devicemanager._runCmd(['shell', 'stop', 'b2g'])
         time.sleep(5)
+
+        # For some reason user.js in the profile doesn't get picked up.
+        # Manually copy it over to prefs.js. See bug 1009730 for more details.
+        self._devicemanager.moveTree(posixpath.join(self._remoteProfile, 'user.js'),
+                                     posixpath.join(self._remoteProfile, 'prefs.js'))
 
         # relaunch b2g inside b2g instance
         instance = self.B2GInstance(self._devicemanager, env=env)

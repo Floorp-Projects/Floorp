@@ -131,6 +131,12 @@ protected:
   virtual void CustomGCCallback(JSGCStatus aStatus)
   {
   }
+  virtual void CustomOutOfMemoryCallback()
+  {
+  }
+  virtual void CustomLargeAllocationFailureCallback()
+  {
+  }
   virtual bool CustomContextCallback(JSContext* aCx, unsigned aOperation)
   {
     return true; // Don't block context creation.
@@ -185,6 +191,8 @@ private:
   static void TraceBlackJS(JSTracer* aTracer, void* aData);
   static void TraceGrayJS(JSTracer* aTracer, void* aData);
   static void GCCallback(JSRuntime* aRuntime, JSGCStatus aStatus, void* aData);
+  static void OutOfMemoryCallback(JSContext *aContext, void *aData);
+  static void LargeAllocationFailureCallback(void *aData);
   static bool ContextCallback(JSContext* aCx, unsigned aOperation,
                               void* aData);
 
@@ -199,6 +207,8 @@ private:
   void FinalizeDeferredThings(DeferredFinalizeType aType);
 
   void OnGC(JSGCStatus aStatus);
+  void OnOutOfMemory();
+  void OnLargeAllocationFailure();
 
 public:
   void AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);

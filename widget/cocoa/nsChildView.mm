@@ -345,7 +345,9 @@ public:
   {
     return mProjMatrix;
   }
-  virtual void BindAndDrawQuad(ShaderProgramOGL *aProg, const gfx::Rect& aRect) MOZ_OVERRIDE;
+  virtual void BindAndDrawQuad(ShaderProgramOGL *aProg,
+                               const gfx::Rect& aLayerRect,
+                               const gfx::Rect& aTextureRect) MOZ_OVERRIDE;
 
   void BeginFrame(nsIntSize aRenderSize);
   void EndFrame();
@@ -2760,7 +2762,9 @@ RectTextureImage::Draw(GLManager* aManager,
   program->SetTexCoordMultiplier(mUsedSize.width, mUsedSize.height);
   program->SetTextureUnit(0);
 
-  aManager->BindAndDrawQuad(program, gfx::Rect(0, 0, mUsedSize.width, mUsedSize.height));
+  aManager->BindAndDrawQuad(program,
+                            gfx::Rect(0.0, 0.0, mUsedSize.width, mUsedSize.height),
+                            gfx::Rect(0.0, 0.0, 1.0f, 1.0f));
 
   aManager->gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
 }
@@ -2800,11 +2804,14 @@ GLPresenter::~GLPresenter()
 }
 
 void
-GLPresenter::BindAndDrawQuad(ShaderProgramOGL *aProgram, const gfx::Rect& aRect)
+GLPresenter::BindAndDrawQuad(ShaderProgramOGL *aProgram,
+                             const gfx::Rect& aLayerRect,
+                             const gfx::Rect& aTextureRect)
 {
   mGLContext->MakeCurrent();
 
-  aProgram->SetLayerQuadRect(aRect);
+  aProgram->SetLayerRect(aLayerRect);
+  aProgram->SetTextureRect(aTextureRect);
 
   GLuint vertAttribIndex = aProgram->AttribLocation(ShaderProgramOGL::VertexCoordAttrib);
   GLuint texCoordAttribIndex = aProgram->AttribLocation(ShaderProgramOGL::TexCoordAttrib);

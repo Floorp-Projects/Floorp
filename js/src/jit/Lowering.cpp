@@ -1189,6 +1189,25 @@ LIRGenerator::visitFloor(MFloor *ins)
 }
 
 bool
+LIRGenerator::visitCeil(MCeil *ins)
+{
+    MIRType type = ins->num()->type();
+    JS_ASSERT(IsFloatingPointType(type));
+
+    if (type == MIRType_Double) {
+        LCeil *lir = new(alloc()) LCeil(useRegister(ins->num()));
+        if (!assignSnapshot(lir))
+            return false;
+        return define(lir, ins);
+    }
+
+    LCeilF *lir = new(alloc()) LCeilF(useRegister(ins->num()));
+    if (!assignSnapshot(lir))
+        return false;
+    return define(lir, ins);
+}
+
+bool
 LIRGenerator::visitRound(MRound *ins)
 {
     MIRType type = ins->num()->type();

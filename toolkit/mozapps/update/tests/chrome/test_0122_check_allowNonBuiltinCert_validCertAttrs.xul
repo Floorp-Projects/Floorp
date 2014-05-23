@@ -30,7 +30,7 @@ Components.utils.import("resource://gre/modules/CertUtils.jsm");
 
 const CERT_ATTRS = ["nickname", "emailAddress", "subjectName", "commonName",
                     "organization", "organizationalUnit", "sha1Fingerprint",
-                    "md5Fingerprint", "tokenName", "issuerName", "serialNumber",
+                    "sha256Fingerprint", "tokenName", "issuerName", "serialNumber",
                     "issuerCommonName", "issuerOrganization",
                     "issuerOrganizationUnit", "dbKey", "windowTitle"];
 

@@ -14,10 +14,10 @@
 #include "mozilla/gfx/2D.h"
 #include "gfx2DGlue.h"
 
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace gl {
+
+using namespace mozilla::gfx;
 
 GLReadTexImageHelper::GLReadTexImageHelper(GLContext* gl)
     : mGL(gl)

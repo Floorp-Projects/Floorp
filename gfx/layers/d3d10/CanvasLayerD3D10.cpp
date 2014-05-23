@@ -15,11 +15,11 @@
 #include "GLContext.h"
 #include "gfxPrefs.h"
 
-using namespace mozilla::gl;
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace layers {
+
+using namespace mozilla::gl;
+using namespace mozilla::gfx;
 
 CanvasLayerD3D10::CanvasLayerD3D10(LayerManagerD3D10 *aManager)
   : CanvasLayer(aManager, nullptr)

@@ -22,10 +22,10 @@
 #define LOG(args...) __android_log_print(ANDROID_LOG_INFO, "SBMChild", ## args)
 #endif
 
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace layers {
+
+using namespace mozilla::gfx;
 
 // Singleton
 SharedBufferManagerChild* SharedBufferManagerChild::sSharedBufferManagerChildSingleton = nullptr;
