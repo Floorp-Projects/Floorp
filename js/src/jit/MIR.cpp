@@ -815,36 +815,40 @@ MStringLength::foldsTo(TempAllocator &alloc, bool useValueNumbers)
     return this;
 }
 
+static bool
+EnsureFloatInputOrConvert(MUnaryInstruction *owner, TempAllocator &alloc)
+{
+    MDefinition *input = owner->input();
+    if (!input->canProduceFloat32()) {
+        if (input->type() == MIRType_Float32)
+            ConvertDefinitionToDouble<0>(alloc, input, owner);
+        return false;
+    }
+    return true;
+}
+
 void
 MFloor::trySpecializeFloat32(TempAllocator &alloc)
 {
-    // No need to look at the output, as it's an integer (see IonBuilder::inlineMathFloor)
-    if (!input()->canProduceFloat32()) {
-        if (input()->type() == MIRType_Float32)
-            ConvertDefinitionToDouble<0>(alloc, input(), this);
-        return;
-    }
+    JS_ASSERT(type() == MIRType_Int32);
+    if (EnsureFloatInputOrConvert(this, alloc))
+        setPolicyType(MIRType_Float32);
+}
 
-    if (type() == MIRType_Double)
-        setResultType(MIRType_Float32);
-
-    setPolicyType(MIRType_Float32);
+void
+MCeil::trySpecializeFloat32(TempAllocator &alloc)
+{
+    JS_ASSERT(type() == MIRType_Int32);
+    if (EnsureFloatInputOrConvert(this, alloc))
+        setPolicyType(MIRType_Float32);
 }
 
 void
 MRound::trySpecializeFloat32(TempAllocator &alloc)
 {
-    // No need to look at the output, as it's an integer (unique way to have
-    // this instruction in IonBuilder::inlineMathRound)
     JS_ASSERT(type() == MIRType_Int32);
-
-    if (!input()->canProduceFloat32()) {
-        if (input()->type() == MIRType_Float32)
-            ConvertDefinitionToDouble<0>(alloc, input(), this);
-        return;
-    }
-
-    setPolicyType(MIRType_Float32);
+    if (EnsureFloatInputOrConvert(this, alloc))
+        setPolicyType(MIRType_Float32);
 }
 
 MCompare *
@@ -941,33 +945,20 @@ MPhi::removeAllOperands()
 }
 
 MDefinition *
-MPhi::operandIfRedundant()
-{
-    JS_ASSERT(inputs_.length() != 0);
-
-    // If this phi is redundant (e.g., phi(a,a) or b=phi(a,this)),
-    // returns the operand that it will always be equal to (a, in
-    // those two cases).
-    MDefinition *first = getOperand(0);
-    for (size_t i = 1, e = numOperands(); i < e; i++) {
-        // Phis need dominator information to fold based on value numbers. For
-        // simplicity, we only compare SSA names right now (bug 714727).
-        if (!EqualValues(false, getOperand(i), first) &&
-            !EqualValues(false, getOperand(i), this))
-        {
-            return nullptr;
-        }
-    }
-    return first;
-}
-
-MDefinition *
 MPhi::foldsTo(TempAllocator &alloc, bool useValueNumbers)
 {
-    if (MDefinition *def = operandIfRedundant())
-        return def;
+    JS_ASSERT(!inputs_.empty());
 
-    return this;
+    MDefinition *first = getOperand(0);
+
+    for (size_t i = 1; i < inputs_.length(); i++) {
+        // Phis need dominator information to fold based on value numbers. For
+        // simplicity, we only compare SSA names right now (bug 714727).
+        if (!EqualValues(false, getOperand(i), first))
+            return this;
+    }
+
+    return first;
 }
 
 bool

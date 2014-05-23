@@ -43,5 +43,8 @@ include generic/reftest.list
 # Color management test
 include color-management/reftest.list
 
+# Downscaling tests
+include downscaling/reftest.list
+
 # Lossless encoders
 skip-if(Android||B2G) include encoders-lossless/reftest.list # bug 783621

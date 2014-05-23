@@ -65,6 +65,8 @@ private:
   void destructorSafeDestroyNSSReference();
   bool InitFromDER(char* certDER, int derLen);  // return false on failure
 
+  nsresult GetCertificateHash(nsAString& aFingerprint, SECOidTag aHashAlg);
+
   enum {
     ev_status_unknown = -1, ev_status_invalid = 0, ev_status_valid = 1
   } mCachedEVStatus;

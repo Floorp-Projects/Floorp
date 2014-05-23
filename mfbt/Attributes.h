@@ -484,7 +484,7 @@
  *   during MOZ_STACK_CLASS and MOZ_NONHEAP_CLASS annotation checking.
  * MOZ_IMPLICIT: Applies to constructors. Implicit conversion constructors
  *   are disallowed by default unless they are marked as MOZ_IMPLICIT. This
- *   attribute must be used for constructors which intent to provide implicit
+ *   attribute must be used for constructors which intend to provide implicit
  *   conversions.
  */
 #ifdef MOZ_CLANG_PLUGIN

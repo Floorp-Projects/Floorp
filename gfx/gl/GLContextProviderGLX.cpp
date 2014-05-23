@@ -37,10 +37,10 @@
 #include "gfxPlatformGtk.h"
 #endif
 
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace gl {
+
+using namespace mozilla::gfx;
 
 GLXLibrary sGLXLibrary;
 

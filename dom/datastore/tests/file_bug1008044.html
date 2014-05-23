@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for DataStore - bug 1008044</title>
+</head>
+<body>
+<div id="container"></div>
+  <script type="application/javascript;version=1.7">
+
+function ok(a, msg) {
+  alert((!!a ? 'OK' : 'KO') + ' ' + msg)
+}
+
+function cbError() {
+  alert('KO error');
+}
+
+function finish() {
+  alert('DONE');
+}
+
+navigator.getDataStores('foo').then(function(stores) {
+  if (stores[0].name != 'foo') {
+    ok(false, "Wrong name is received! Expected 'foo'");
+  }
+  runTest();
+});
+
+navigator.getDataStores('bar').then(function(stores) {
+  if (stores[0].name != 'bar') {
+    ok(false, "Wrong name is received! Expected 'bar'");
+  }
+  runTest();
+});
+
+var pending = 2;
+function runTest() {
+  if (--pending == 0) {
+    ok(true, "Test passed!");
+    finish();
+  }
+}
+  </script>
+</body>
+</html>

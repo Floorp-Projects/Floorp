@@ -10,15 +10,35 @@
  * httpd.js.
  */
 
+this.EXPORTED_SYMBOLS = [
+  "HTTP_400",
+  "HTTP_401",
+  "HTTP_402",
+  "HTTP_403",
+  "HTTP_404",
+  "HTTP_405",
+  "HTTP_406",
+  "HTTP_407",
+  "HTTP_408",
+  "HTTP_409",
+  "HTTP_410",
+  "HTTP_411",
+  "HTTP_412",
+  "HTTP_413",
+  "HTTP_414",
+  "HTTP_415",
+  "HTTP_417",
+  "HTTP_500",
+  "HTTP_501",
+  "HTTP_502",
+  "HTTP_503",
+  "HTTP_504",
+  "HTTP_505",
+  "HttpError",
+  "HttpServer",
+];
+
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-
-var EXPORTED_SYMBOLS = ['getServer'];
-
-/**
- * Overwrite both dump functions because we do not wanna have this output for Mozmill
- */
-function dump() {}
-function dumpn() {}
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -58,7 +78,7 @@ function NS_ASSERT(cond, msg)
 }
 
 /** Constructs an HTTP error object. */
-function HttpError(code, description)
+this.HttpError = function HttpError(code, description)
 {
   this.code = code;
   this.description = description;
@@ -74,30 +94,30 @@ HttpError.prototype =
 /**
  * Errors thrown to trigger specific HTTP server responses.
  */
-const HTTP_400 = new HttpError(400, "Bad Request");
-const HTTP_401 = new HttpError(401, "Unauthorized");
-const HTTP_402 = new HttpError(402, "Payment Required");
-const HTTP_403 = new HttpError(403, "Forbidden");
-const HTTP_404 = new HttpError(404, "Not Found");
-const HTTP_405 = new HttpError(405, "Method Not Allowed");
-const HTTP_406 = new HttpError(406, "Not Acceptable");
-const HTTP_407 = new HttpError(407, "Proxy Authentication Required");
-const HTTP_408 = new HttpError(408, "Request Timeout");
-const HTTP_409 = new HttpError(409, "Conflict");
-const HTTP_410 = new HttpError(410, "Gone");
-const HTTP_411 = new HttpError(411, "Length Required");
-const HTTP_412 = new HttpError(412, "Precondition Failed");
-const HTTP_413 = new HttpError(413, "Request Entity Too Large");
-const HTTP_414 = new HttpError(414, "Request-URI Too Long");
-const HTTP_415 = new HttpError(415, "Unsupported Media Type");
-const HTTP_417 = new HttpError(417, "Expectation Failed");
+this.HTTP_400 = new HttpError(400, "Bad Request");
+this.HTTP_401 = new HttpError(401, "Unauthorized");
+this.HTTP_402 = new HttpError(402, "Payment Required");
+this.HTTP_403 = new HttpError(403, "Forbidden");
+this.HTTP_404 = new HttpError(404, "Not Found");
+this.HTTP_405 = new HttpError(405, "Method Not Allowed");
+this.HTTP_406 = new HttpError(406, "Not Acceptable");
+this.HTTP_407 = new HttpError(407, "Proxy Authentication Required");
+this.HTTP_408 = new HttpError(408, "Request Timeout");
+this.HTTP_409 = new HttpError(409, "Conflict");
+this.HTTP_410 = new HttpError(410, "Gone");
+this.HTTP_411 = new HttpError(411, "Length Required");
+this.HTTP_412 = new HttpError(412, "Precondition Failed");
+this.HTTP_413 = new HttpError(413, "Request Entity Too Large");
+this.HTTP_414 = new HttpError(414, "Request-URI Too Long");
+this.HTTP_415 = new HttpError(415, "Unsupported Media Type");
+this.HTTP_417 = new HttpError(417, "Expectation Failed");
 
-const HTTP_500 = new HttpError(500, "Internal Server Error");
-const HTTP_501 = new HttpError(501, "Not Implemented");
-const HTTP_502 = new HttpError(502, "Bad Gateway");
-const HTTP_503 = new HttpError(503, "Service Unavailable");
-const HTTP_504 = new HttpError(504, "Gateway Timeout");
-const HTTP_505 = new HttpError(505, "HTTP Version Not Supported");
+this.HTTP_500 = new HttpError(500, "Internal Server Error");
+this.HTTP_501 = new HttpError(501, "Not Implemented");
+this.HTTP_502 = new HttpError(502, "Bad Gateway");
+this.HTTP_503 = new HttpError(503, "Service Unavailable");
+this.HTTP_504 = new HttpError(504, "Gateway Timeout");
+this.HTTP_505 = new HttpError(505, "HTTP Version Not Supported");
 
 /** Creates a hash with fields corresponding to the values in arr. */
 function array2obj(arr)
@@ -266,7 +286,7 @@ function toDateString(date)
   {
     var hrs = date.getUTCHours();
     var rv  = (hrs < 10) ? "0" + hrs : hrs;
-
+    
     var mins = date.getUTCMinutes();
     rv += ":";
     rv += (mins < 10) ? "0" + mins : mins;
@@ -451,7 +471,15 @@ nsHttpServer.prototype =
   onStopListening: function(socket, status)
   {
     dumpn(">>> shutting down server on port " + socket.port);
+    for (var n in this._connections) {
+      if (!this._connections[n]._requestStarted) {
+        this._connections[n].close();
+      }
+    }
     this._socketClosed = true;
+    if (this._hasOpenConnections()) {
+      dumpn("*** open connections!!!");
+    }
     if (!this._hasOpenConnections())
     {
       dumpn("*** no open connections, notifying async from onStopListening");
@@ -493,12 +521,14 @@ nsHttpServer.prototype =
     this._host = host;
 
     // The listen queue needs to be long enough to handle
-    // network.http.max-persistent-connections-per-server concurrent connections,
-    // plus a safety margin in case some other process is talking to
-    // the server as well.
+    // network.http.max-persistent-connections-per-server or
+    // network.http.max-persistent-connections-per-proxy concurrent
+    // connections, plus a safety margin in case some other process is
+    // talking to the server as well.
     var prefs = getRootPrefBranch();
-    var maxConnections =
-      prefs.getIntPref("network.http.max-persistent-connections-per-server") + 5;
+    var maxConnections = 5 + Math.max(
+      prefs.getIntPref("network.http.max-persistent-connections-per-server"),
+      prefs.getIntPref("network.http.max-persistent-connections-per-proxy"));
 
     try
     {
@@ -507,18 +537,52 @@ nsHttpServer.prototype =
         var loopback = false;
       }
 
-      var socket = new ServerSocket(this._port,
+      // When automatically selecting a port, sometimes the chosen port is
+      // "blocked" from clients. We don't want to use these ports because
+      // tests will intermittently fail. So, we simply keep trying to to
+      // get a server socket until a valid port is obtained. We limit
+      // ourselves to finite attempts just so we don't loop forever.
+      var ios = Cc["@mozilla.org/network/io-service;1"]
+                  .getService(Ci.nsIIOService);
+      var socket;
+      for (var i = 100; i; i--)
+      {
+        var temp = new ServerSocket(this._port,
                                     loopback, // true = localhost, false = everybody
                                     maxConnections);
+
+        var allowed = ios.allowPort(temp.port, "http");
+        if (!allowed)
+        {
+          dumpn(">>>Warning: obtained ServerSocket listens on a blocked " +
+                "port: " + temp.port);
+        }
+
+        if (!allowed && this._port == -1)
+        {
+          dumpn(">>>Throwing away ServerSocket with bad port.");
+          temp.close();
+          continue;
+        }
+
+        socket = temp;
+        break;
+      }
+
+      if (!socket) {
+        throw new Error("No socket server available. Are there no available ports?");
+      }
+
       dumpn(">>> listening on port " + socket.port + ", " + maxConnections +
             " pending connections");
       socket.asyncListen(this);
-      this._identity._initialize(port, host, true);
+      this._port = socket.port;
+      this._identity._initialize(socket.port, host, true);
       this._socket = socket;
     }
     catch (e)
     {
-      dumpn("!!! could not start server on port " + port + ": " + e);
+      dump("\n!!! could not start server on port " + port + ": " + e + "\n\n");
       throw Cr.NS_ERROR_NOT_AVAILABLE;
     }
   },
@@ -585,6 +649,14 @@ nsHttpServer.prototype =
   registerPathHandler: function(path, handler)
   {
     this._handler.registerPathHandler(path, handler);
+  },
+
+  //
+  // see nsIHttpServer.registerPrefixHandler
+  //
+  registerPrefixHandler: function(prefix, handler)
+  {
+    this._handler.registerPrefixHandler(prefix, handler);
   },
 
   //
@@ -759,6 +831,10 @@ nsHttpServer.prototype =
     // Fire a pending server-stopped notification if it's our responsibility.
     if (!this._hasOpenConnections() && this._socketClosed)
       this._notifyStopped();
+    // Bug 508125: Add a GC here else we'll use gigabytes of memory running
+    // mochitests. We can't rely on xpcshell doing an automated GC, as that
+    // would interfere with testing GC stuff...
+    Components.utils.forceGC();
   },
 
   /**
@@ -772,6 +848,7 @@ nsHttpServer.prototype =
   }
 };
 
+this.HttpServer = nsHttpServer;
 
 //
 // RFC 2396 section 3.2.2:
@@ -790,7 +867,7 @@ const HOST_REGEX =
                // toplabel
                "[a-z](?:[a-z0-9-]*[a-z0-9])?" +
              "|" +
-               // IPv4 address
+               // IPv4 address 
                "\\d+\\.\\d+\\.\\d+\\.\\d+" +
              ")$",
              "i");
@@ -1001,7 +1078,7 @@ ServerIdentity.prototype =
       // Not the default primary location, nothing special to do here
       this.remove("http", "127.0.0.1", this._defaultPort);
     }
-
+    
     // This is a *very* tricky bit of reasoning here; make absolutely sure the
     // tests for this code pass before you commit changes to it.
     if (this._primaryScheme == "http" &&
@@ -1097,14 +1174,25 @@ function Connection(input, output, server, port, outgoingPort, number)
    */
   this.request = null;
 
-  /** State variables for debugging. */
-  this._closed = this._processed = false;
+  /** This allows a connection to disambiguate between a peer initiating a
+   *  close and the socket being forced closed on shutdown.
+   */
+  this._closed = false;
+
+  /** State variable for debugging. */
+  this._processed = false;
+
+  /** whether or not 1st line of request has been received */
+  this._requestStarted = false; 
 }
 Connection.prototype =
 {
   /** Closes this connection's input/output streams. */
   close: function()
   {
+    if (this._closed)
+        return;
+
     dumpn("*** closing connection " + this.number +
           " on port " + this._outgoingPort);
 
@@ -1162,6 +1250,11 @@ Connection.prototype =
     return "<Connection(" + this.number +
            (this.request ? ", " + this.request.path : "") +"): " +
            (this._closed ? "closed" : "open") + ">";
+  },
+
+  requestStarted: function()
+  {
+    this._requestStarted = true;
   }
 };
 
@@ -1348,6 +1441,7 @@ RequestReader.prototype =
     {
       this._parseRequestLine(line.value);
       this._state = READER_IN_HEADERS;
+      this._connection.requestStarted();
       return true;
     }
     catch (e)
@@ -1433,7 +1527,7 @@ RequestReader.prototype =
         this._handleResponse();
         return true;
       }
-
+      
       return false;
     }
     catch (e)
@@ -1606,7 +1700,10 @@ RequestReader.prototype =
     // between fields, even though only a single SP is required (section 19.3)
     var request = line.split(/[ \t]+/);
     if (!request || request.length != 3)
+    {
+      dumpn("*** No request in line");
       throw HTTP_400;
+    }
 
     metadata._method = request[0];
 
@@ -1614,7 +1711,10 @@ RequestReader.prototype =
     var ver = request[2];
     var match = ver.match(/^HTTP\/(\d+\.\d+)$/);
     if (!match)
+    {
+      dumpn("*** No HTTP version in line");
       throw HTTP_400;
+    }
 
     // determine HTTP version
     try
@@ -1639,7 +1739,10 @@ RequestReader.prototype =
     {
       // No absolute paths in the request line in HTTP prior to 1.1
       if (!metadata._httpVersion.atLeast(nsHttpVersion.HTTP_1_1))
+      {
+        dumpn("*** Metadata version too low");
         throw HTTP_400;
+      }
 
       try
       {
@@ -1653,11 +1756,18 @@ RequestReader.prototype =
         if (port === -1)
         {
           if (scheme === "http")
+          {
             port = 80;
+          }
           else if (scheme === "https")
+          {
             port = 443;
+          }
           else
+          {
+            dumpn("*** Unknown scheme: " + scheme);
             throw HTTP_400;
+          }
         }
       }
       catch (e)
@@ -1665,11 +1775,15 @@ RequestReader.prototype =
         // If the host is not a valid host on the server, the response MUST be a
         // 400 (Bad Request) error message (section 5.2).  Alternately, the URI
         // is malformed.
+        dumpn("*** Threw when dealing with URI: " + e);
         throw HTTP_400;
       }
 
       if (!serverIdentity.has(scheme, host, port) || fullPath.charAt(0) != "/")
+      {
+        dumpn("*** serverIdentity unknown or path does not start with '/'");
         throw HTTP_400;
+      }
     }
 
     var splitter = fullPath.indexOf("?");
@@ -1713,6 +1827,8 @@ RequestReader.prototype =
     var line = {};
     while (true)
     {
+      dumpn("*** Last name: '" + lastName + "'");
+      dumpn("*** Last val: '" + lastVal + "'");
       NS_ASSERT(!((lastVal === undefined) ^ (lastName === undefined)),
                 lastName === undefined ?
                   "lastVal without lastName?  lastVal: '" + lastVal + "'" :
@@ -1727,6 +1843,7 @@ RequestReader.prototype =
       }
 
       var lineText = line.value;
+      dumpn("*** Line text: '" + lineText + "'");
       var firstChar = lineText.charAt(0);
 
       // blank line means end of headers
@@ -1741,7 +1858,7 @@ RequestReader.prototype =
           }
           catch (e)
           {
-            dumpn("*** e == " + e);
+            dumpn("*** setHeader threw on last header, e == " + e);
             throw HTTP_400;
           }
         }
@@ -1759,7 +1876,7 @@ RequestReader.prototype =
         // multi-line header if we've already seen a header line
         if (!lastName)
         {
-          // we don't have a header to continue!
+          dumpn("We don't have a header to continue!");
           throw HTTP_400;
         }
 
@@ -1778,7 +1895,7 @@ RequestReader.prototype =
           }
           catch (e)
           {
-            dumpn("*** e == " + e);
+            dumpn("*** setHeader threw on a header, e == " + e);
             throw HTTP_400;
           }
         }
@@ -1786,7 +1903,7 @@ RequestReader.prototype =
         var colon = lineText.indexOf(":"); // first colon must be splitter
         if (colon < 1)
         {
-          // no colon or missing header field-name
+          dumpn("*** No colon or missing header field-name");
           throw HTTP_400;
         }
 
@@ -1811,12 +1928,14 @@ const CR = 0x0D, LF = 0x0A;
  *   character; the first CRLF is the lowest index i where
  *   |array[i] == "\r".charCodeAt(0)| and |array[i+1] == "\n".charCodeAt(0)|,
  *   if such an |i| exists, and -1 otherwise
+ * @param start : uint
+ *   start index from which to begin searching in array
  * @returns int
  *   the index of the first CRLF if any were present, -1 otherwise
  */
-function findCRLF(array)
+function findCRLF(array, start)
 {
-  for (var i = array.indexOf(CR); i >= 0; i = array.indexOf(CR, i + 1))
+  for (var i = array.indexOf(CR, start); i >= 0; i = array.indexOf(CR, i + 1))
   {
     if (array[i + 1] == LF)
       return i;
@@ -1833,6 +1952,9 @@ function LineData()
 {
   /** An array of queued bytes from which to get line-based characters. */
   this._data = [];
+
+  /** Start index from which to search for CRLF. */
+  this._start = 0;
 }
 LineData.prototype =
 {
@@ -1842,7 +1964,22 @@ LineData.prototype =
    */
   appendBytes: function(bytes)
   {
-    Array.prototype.push.apply(this._data, bytes);
+    var count = bytes.length;
+    var quantum = 262144; // just above half SpiderMonkey's argument-count limit
+    if (count < quantum)
+    {
+      Array.prototype.push.apply(this._data, bytes);
+      return;
+    }
+
+    // Large numbers of bytes may cause Array.prototype.push to be called with
+    // more arguments than the JavaScript engine supports.  In that case append
+    // bytes in fixed-size amounts until all bytes are appended.
+    for (var start = 0; start < count; start += quantum)
+    {
+      var slice = bytes.slice(start, Math.min(start + quantum, count));
+      Array.prototype.push.apply(this._data, slice);
+    }
   },
 
   /**
@@ -1860,23 +1997,38 @@ LineData.prototype =
   readLine: function(out)
   {
     var data = this._data;
-    var length = findCRLF(data);
+    var length = findCRLF(data, this._start);
     if (length < 0)
+    {
+      this._start = data.length;
+
+      // But if our data ends in a CR, we have to back up one, because
+      // the first byte in the next packet might be an LF and if we
+      // start looking at data.length we won't find it.
+      if (data.length > 0 && data[data.length - 1] === CR)
+        --this._start;
+
       return false;
+    }
+
+    // Reset for future lines.
+    this._start = 0;
 
     //
     // We have the index of the CR, so remove all the characters, including
-    // CRLF, from the array with splice, and convert the removed array into the
-    // corresponding string, from which we then strip the trailing CRLF.
+    // CRLF, from the array with splice, and convert the removed array
+    // (excluding the trailing CRLF characters) into the corresponding string.
     //
-    // Getting the line in this matter acknowledges that substring is an O(1)
-    // operation in SpiderMonkey because strings are immutable, whereas two
-    // splices, both from the beginning of the data, are less likely to be as
-    // cheap as a single splice plus two extra character conversions.
-    //
-    var line = String.fromCharCode.apply(null, data.splice(0, length + 2));
-    out.value = line.substring(0, length);
+    var leading = data.splice(0, length + 2);
+    var quantum = 262144;
+    var line = "";
+    for (var start = 0; start < length; start += quantum)
+    {
+      var slice = leading.slice(start, Math.min(start + quantum, length));
+      line += String.fromCharCode.apply(null, slice);
+    }
 
+    out.value = line;
     return true;
   },
 
@@ -1911,7 +2063,7 @@ function createHandlerFunc(handler)
  */
 function defaultIndexHandler(metadata, response)
 {
-  response.setHeader("Content-Type", "text/html", false);
+  response.setHeader("Content-Type", "text/html;charset=utf-8", false);
 
   var path = htmlEscape(decodeURI(metadata.path));
 
@@ -2018,6 +2170,7 @@ function toInternalPath(path, encoded)
   return comps.join("/");
 }
 
+const PERMS_READONLY = (4 << 6) | (4 << 3) | 4;
 
 /**
  * Adds custom-specified headers for the given file to the given response, if
@@ -2045,7 +2198,7 @@ function maybeAddHeaders(file, metadata, response)
     return;
 
   const PR_RDONLY = 0x01;
-  var fis = new FileInputStream(headerFile, PR_RDONLY, 0444,
+  var fis = new FileInputStream(headerFile, PR_RDONLY, PERMS_READONLY,
                                 Ci.nsIFileInputStream.CLOSE_ON_EOF);
 
   try
@@ -2078,7 +2231,7 @@ function maybeAddHeaders(file, metadata, response)
         code = status.substring(0, space);
         description = status.substring(space + 1, status.length);
       }
-
+    
       response.setStatusLine(metadata.httpVersion, parseInt(code, 10), description);
 
       line.value = "";
@@ -2150,6 +2303,15 @@ function ServerHandler(server)
   this._overridePaths = {};
 
   /**
+   * Custom request handlers for the path prefixes on the server in which this
+   * resides.  Path-handler pairs are stored as property-value pairs in this
+   * property.
+   *
+   * @see ServerHandler.prototype._defaultPaths
+   */
+  this._overridePrefixes = {};
+
+  /**
    * Custom request handlers for the error handlers in the server in which this
    * resides.  Path-handler pairs are stored as property-value pairs in this
    * property.
@@ -2213,7 +2375,23 @@ ServerHandler.prototype =
         }
         else
         {
-          this._handleDefault(request, response);
+          var longestPrefix = "";
+          for (let prefix in this._overridePrefixes) {
+            if (prefix.length > longestPrefix.length &&
+                path.substr(0, prefix.length) == prefix)
+            {
+              longestPrefix = prefix;
+            }
+          }
+          if (longestPrefix.length > 0)
+          {
+            dumpn("calling prefix override for " + longestPrefix);
+            this._overridePrefixes[longestPrefix](request, response);
+          }
+          else
+          {
+            this._handleDefault(request, response);
+          }
         }
       }
       catch (e)
@@ -2316,6 +2494,18 @@ ServerHandler.prototype =
       throw Cr.NS_ERROR_INVALID_ARG;
 
     this._handlerToField(handler, this._overridePaths, path);
+  },
+
+  //
+  // see nsIHttpServer.registerPrefixHandler
+  //
+  registerPrefixHandler: function(path, handler)
+  {
+    // XXX true path validation!
+    if (path.charAt(0) != "/" || path.charAt(path.length - 1) != "/")
+      throw Cr.NS_ERROR_INVALID_ARG;
+
+    this._handlerToField(handler, this._overridePrefixes, path);
   },
 
   //
@@ -2458,7 +2648,10 @@ ServerHandler.prototype =
     {
       var rangeMatch = metadata.getHeader("Range").match(/^bytes=(\d+)?-(\d+)?$/);
       if (!rangeMatch)
+      {
+        dumpn("*** Range header bogosity: '" + metadata.getHeader("Range") + "'");
         throw HTTP_400;
+      }
 
       if (rangeMatch[1] !== undefined)
         start = parseInt(rangeMatch[1], 10);
@@ -2467,7 +2660,10 @@ ServerHandler.prototype =
         end = parseInt(rangeMatch[2], 10);
 
       if (start === undefined && end === undefined)
+      {
+        dumpn("*** More Range header bogosity: '" + metadata.getHeader("Range") + "'");
         throw HTTP_400;
+      }
 
       // No start given, so the end is really the count of bytes from the
       // end of the file.
@@ -2537,7 +2733,7 @@ ServerHandler.prototype =
     var type = this._getTypeFromFile(file);
     if (type === SJS_TYPE)
     {
-      var fis = new FileInputStream(file, PR_RDONLY, 0444,
+      var fis = new FileInputStream(file, PR_RDONLY, PERMS_READONLY,
                                     Ci.nsIFileInputStream.CLOSE_ON_EOF);
 
       try
@@ -2574,6 +2770,10 @@ ServerHandler.prototype =
         {
           self._setObjectState(k, v);
         });
+        s.importFunction(function registerPathHandler(p, h)
+        {
+          self.registerPathHandler(p, h);
+        });
 
         // Make it possible for sjs files to access their location
         this._setState(path, "__LOCATION__", file.path);
@@ -2586,7 +2786,7 @@ ServerHandler.prototype =
           // getting the line number where we evaluate the SJS file.  Don't
           // separate these two lines!
           var line = new Error().lineNumber;
-          Cu.evalInSandbox(sis.read(file.fileSize), s);
+          Cu.evalInSandbox(sis.read(file.fileSize), s, "latest");
         }
         catch (e)
         {
@@ -2627,7 +2827,7 @@ ServerHandler.prototype =
       maybeAddHeaders(file, metadata, response);
       response.setHeader("Content-Length", "" + count, false);
 
-      var fis = new FileInputStream(file, PR_RDONLY, 0444,
+      var fis = new FileInputStream(file, PR_RDONLY, PERMS_READONLY,
                                     Ci.nsIFileInputStream.CLOSE_ON_EOF);
 
       offset = offset || 0;
@@ -2878,6 +3078,7 @@ ServerHandler.prototype =
     }
     catch (e)
     {
+      dumpn("*** toInternalPath threw " + e);
       throw HTTP_400; // malformed path
     }
 
@@ -2962,7 +3163,7 @@ ServerHandler.prototype =
     dumpn("*** error in request: " + errorCode);
 
     this._handleError(errorCode, new Request(connection.port), response);
-  },
+  }, 
 
   /**
    * Handles a request which generates the given error code, using the
@@ -3072,7 +3273,7 @@ ServerHandler.prototype =
     {
       // none of the data in metadata is reliable, so hard-code everything here
       response.setStatusLine("1.1", 400, "Bad Request");
-      response.setHeader("Content-Type", "text/plain", false);
+      response.setHeader("Content-Type", "text/plain;charset=utf-8", false);
 
       var body = "Bad request\n";
       response.bodyOutputStream.write(body, body.length);
@@ -3080,7 +3281,7 @@ ServerHandler.prototype =
     403: function(metadata, response)
     {
       response.setStatusLine(metadata.httpVersion, 403, "Forbidden");
-      response.setHeader("Content-Type", "text/html", false);
+      response.setHeader("Content-Type", "text/html;charset=utf-8", false);
 
       var body = "<html>\
                     <head><title>403 Forbidden</title></head>\
@@ -3093,7 +3294,7 @@ ServerHandler.prototype =
     404: function(metadata, response)
     {
       response.setStatusLine(metadata.httpVersion, 404, "Not Found");
-      response.setHeader("Content-Type", "text/html", false);
+      response.setHeader("Content-Type", "text/html;charset=utf-8", false);
 
       var body = "<html>\
                     <head><title>404 Not Found</title></head>\
@@ -3113,7 +3314,7 @@ ServerHandler.prototype =
       response.setStatusLine(metadata.httpVersion,
                             416,
                             "Requested Range Not Satisfiable");
-      response.setHeader("Content-Type", "text/html", false);
+      response.setHeader("Content-Type", "text/html;charset=utf-8", false);
 
       var body = "<html>\
                    <head>\
@@ -3132,7 +3333,7 @@ ServerHandler.prototype =
       response.setStatusLine(metadata.httpVersion,
                              500,
                              "Internal Server Error");
-      response.setHeader("Content-Type", "text/html", false);
+      response.setHeader("Content-Type", "text/html;charset=utf-8", false);
 
       var body = "<html>\
                     <head><title>500 Internal Server Error</title></head>\
@@ -3147,7 +3348,7 @@ ServerHandler.prototype =
     501: function(metadata, response)
     {
       response.setStatusLine(metadata.httpVersion, 501, "Not Implemented");
-      response.setHeader("Content-Type", "text/html", false);
+      response.setHeader("Content-Type", "text/html;charset=utf-8", false);
 
       var body = "<html>\
                     <head><title>501 Not Implemented</title></head>\
@@ -3161,7 +3362,7 @@ ServerHandler.prototype =
     505: function(metadata, response)
     {
       response.setStatusLine("1.1", 505, "HTTP Version Not Supported");
-      response.setHeader("Content-Type", "text/html", false);
+      response.setHeader("Content-Type", "text/html;charset=utf-8", false);
 
       var body = "<html>\
                     <head><title>505 HTTP Version Not Supported</title></head>\
@@ -3183,7 +3384,7 @@ ServerHandler.prototype =
     "/": function(metadata, response)
     {
       response.setStatusLine(metadata.httpVersion, 200, "OK");
-      response.setHeader("Content-Type", "text/html", false);
+      response.setHeader("Content-Type", "text/html;charset=utf-8", false);
 
       var body = "<html>\
                     <head><title>httpd.js</title></head>\
@@ -3201,7 +3402,7 @@ ServerHandler.prototype =
     "/trace": function(metadata, response)
     {
       response.setStatusLine(metadata.httpVersion, 200, "OK");
-      response.setHeader("Content-Type", "text/plain", false);
+      response.setHeader("Content-Type", "text/plain;charset=utf-8", false);
 
       var body = "Request-URI: " +
                  metadata.scheme + "://" + metadata.host + ":" + metadata.port +
@@ -3211,7 +3412,7 @@ ServerHandler.prototype =
 
       if (metadata.queryString)
         body +=  "?" + metadata.queryString;
-
+        
       body += " HTTP/" + metadata.httpVersion + "\r\n";
 
       var headEnum = metadata.headers;
@@ -4569,7 +4770,10 @@ const headerUtils =
   normalizeFieldName: function(fieldName)
   {
     if (fieldName == "")
+    {
+      dumpn("*** Empty fieldName");
       throw Cr.NS_ERROR_INVALID_ARG;
+    }
 
     for (var i = 0, sz = fieldName.length; i < sz; i++)
     {
@@ -4620,9 +4824,13 @@ const headerUtils =
     val = val.replace(/^ +/, "").replace(/ +$/, "");
 
     // that should have taken care of all CTLs, so val should contain no CTLs
+    dumpn("*** Normalized value: '" + val + "'");
     for (var i = 0, len = val.length; i < len; i++)
       if (isCTL(val.charCodeAt(i)))
+      {
+        dump("*** Char " + i + " has charcode " + val.charCodeAt(i));
         throw Cr.NS_ERROR_INVALID_ARG;
+      }
 
     // XXX disallows quoted-pair where CHAR is a CTL -- will not invalidly
     //     normalize, however, so this can be construed as a tightening of the
@@ -4757,17 +4965,17 @@ nsHttpHeaders.prototype =
     var value = headerUtils.normalizeFieldValue(fieldValue);
 
     // The following three headers are stored as arrays because their real-world
-    // syntax prevents joining individual headers into a single header using
+    // syntax prevents joining individual headers into a single header using 
     // ",".  See also <http://hg.mozilla.org/mozilla-central/diff/9b2a99adc05e/netwerk/protocol/http/src/nsHttpHeaderArray.cpp#l77>
     if (merge && name in this._headers)
     {
       if (name === "www-authenticate" ||
           name === "proxy-authenticate" ||
-          name === "set-cookie")
+          name === "set-cookie") 
       {
         this._headers[name].push(value);
       }
-      else
+      else 
       {
         this._headers[name][0] += "," + value;
         NS_ASSERT(this._headers[name].length === 1,
@@ -4790,8 +4998,8 @@ nsHttpHeaders.prototype =
    * @returns string
    *   the field value for the given header, possibly with non-semantic changes
    *   (i.e., leading/trailing whitespace stripped, whitespace runs replaced
-   *   with spaces, etc.) at the option of the implementation; multiple
-   *   instances of the header will be combined with a comma, except for
+   *   with spaces, etc.) at the option of the implementation; multiple 
+   *   instances of the header will be combined with a comma, except for 
    *   the three headers noted in the description of getHeaderValues
    */
   getHeader: function(fieldName)
@@ -5053,7 +5261,7 @@ Request.prototype =
   //
   // see nsIPropertyBag.getProperty
   //
-  getProperty: function(name)
+  getProperty: function(name) 
   {
     this._ensurePropertyBag();
     return this._bag.getProperty(name);
@@ -5075,7 +5283,7 @@ Request.prototype =
 
 
   // PRIVATE IMPLEMENTATION
-
+  
   /** Ensures a property bag has been created for ad-hoc behaviors. */
   _ensurePropertyBag: function()
   {
@@ -5086,10 +5294,8 @@ Request.prototype =
 
 
 // XPCOM trappings
-if (XPCOMUtils.generateNSGetFactory)
-  var NSGetFactory = XPCOMUtils.generateNSGetFactory([nsHttpServer]);
-else
-  var NSGetModule = XPCOMUtils.generateNSGetModule([nsHttpServer]);
+
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsHttpServer]);
 
 /**
  * Creates a new HTTP server listening for loopback traffic on the given port,
@@ -5146,21 +5352,4 @@ function server(port, basePath)
     thread.processNextEvent(true);
 
   DEBUG = false;
-}
-
-function getServer (port, basePath) {
-  if (basePath) {
-    var lp = Cc["@mozilla.org/file/local;1"]
-               .createInstance(Ci.nsILocalFile);
-    lp.initWithPath(basePath);
-   }
-
-   var srv = new nsHttpServer();
-   if (lp)
-     srv.registerDirectory("/", lp);
-   srv.registerContentType("sjs", SJS_TYPE);
-   srv.identity.setPrimary("http", "localhost", port);
-   srv._port = port;
-
-   return srv;
 }

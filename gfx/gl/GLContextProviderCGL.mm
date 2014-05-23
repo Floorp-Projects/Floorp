@@ -16,10 +16,10 @@
 #include "GeckoProfiler.h"
 #include "mozilla/gfx/MacIOSurface.h"
 
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace gl {
+
+using namespace mozilla::gfx;
 
 static bool gUseDoubleBufferedWindows = true;
 

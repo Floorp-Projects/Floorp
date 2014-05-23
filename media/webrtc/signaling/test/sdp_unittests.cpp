@@ -789,6 +789,27 @@ TEST_F(SdpTest, addFmtpMaxFsFr) {
             std::string::npos);
 }
 
+TEST_F(SdpTest, addIceLite) {
+    InitLocalSdp();
+    u16 inst_num = 0;
+    EXPECT_EQ(sdp_add_new_attr(sdp_ptr_, SDP_SESSION_LEVEL, 0,
+                               SDP_ATTR_ICE_LITE, &inst_num), SDP_SUCCESS);
+    std::string body = SerializeSdp();
+    ASSERT_NE(body.find("a=ice-lite\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, parseIceLite) {
+    std::string sdp =
+        "v=0\r\n"
+        "o=- 137331303 2 IN IP4 127.0.0.1\r\n"
+        "s=SIP Call\r\n"
+        "t=0 0\r\n"
+        "a=ice-lite\r\n";
+  ParseSdp(sdp);
+  ASSERT_TRUE(sdp_attr_is_present(sdp_ptr_, SDP_ATTR_ICE_LITE,
+                                  SDP_SESSION_LEVEL, 0));
+}
+
 } // End namespace test.
 
 int main(int argc, char **argv) {

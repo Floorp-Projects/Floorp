@@ -569,6 +569,15 @@ nsContentList::GetSupportedNames(unsigned aFlags, nsTArray<nsString>& aNames)
   nsAutoTArray<nsIAtom*, 8> atoms;
   for (uint32_t i = 0; i < mElements.Length(); ++i) {
     nsIContent *content = mElements.ElementAt(i);
+    if (content->HasID()) {
+      nsIAtom* id = content->GetID();
+      MOZ_ASSERT(id != nsGkAtoms::_empty,
+                 "Empty ids don't get atomized");
+      if (!atoms.Contains(id)) {
+        atoms.AppendElement(id);
+      }
+    }
+
     nsGenericHTMLElement* el = nsGenericHTMLElement::FromContent(content);
     if (el) {
       // XXXbz should we be checking for particular tags here?  How
@@ -583,14 +592,6 @@ nsContentList::GetSupportedNames(unsigned aFlags, nsTArray<nsString>& aNames)
         if (!atoms.Contains(name)) {
           atoms.AppendElement(name);
         }
-      }
-    }
-    if (content->HasID()) {
-      nsIAtom* id = content->GetID();
-      MOZ_ASSERT(id != nsGkAtoms::_empty,
-                 "Empty ids don't get atomized");
-      if (!atoms.Contains(id)) {
-        atoms.AppendElement(id);
       }
     }
   }

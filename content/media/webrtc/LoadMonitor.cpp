@@ -420,7 +420,11 @@ nsresult LoadInfo::UpdateSystemLoad()
   return NS_OK;
 #elif defined(__DragonFly__) || defined(__FreeBSD__) \
    || defined(__NetBSD__) || defined(__OpenBSD__)
+#if defined(__NetBSD__)
+  uint64_t cp_time[CPUSTATES];
+#else
   long cp_time[CPUSTATES];
+#endif // __NetBSD__
   size_t sz = sizeof(cp_time);
 #ifdef KERN_CP_TIME
   int mib[] = {
@@ -431,7 +435,7 @@ nsresult LoadInfo::UpdateSystemLoad()
   if (sysctl(mib, miblen, &cp_time, &sz, NULL, 0)) {
 #else
   if (sysctlbyname("kern.cp_time", &cp_time, &sz, NULL, 0)) {
-#endif
+#endif // KERN_CP_TIME
     LOG(("sysctl kern.cp_time failed"));
     return NS_ERROR_FAILURE;
   }

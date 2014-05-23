@@ -25,10 +25,10 @@
 #include "nsRect.h"                     // for nsIntRect
 #include "gfx2DGlue.h"
 
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace layers {
+
+using namespace mozilla::gfx;
 
 void
 ClientThebesLayer::PaintThebes()

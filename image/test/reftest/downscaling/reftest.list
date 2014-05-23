@@ -1,0 +1,28 @@
+# Reftests for downscaling
+#
+# Downscaling can be a lossy process, so a bit of mismatch is acceptable here,
+# as long as it's barely noticable visually. When necessary, this can be
+# explicitly allowed via 'fuzzy'/'fuzzy-if' annotations.
+#
+# IMPORTANT: For robustness, each test should be listed *twice* in this
+# manifest -- once with the high quality downscaling pref disabled, and once
+# with this pref enabled. The pref is set via "default-preferences", so
+# simply appending a new test to the lists below each of those lines should be
+# sufficient.
+#
+# Also note that Mac OS X has its own system-level downscaling algorithm, so
+# tests here may need Mac-specific "fuzzy-if(cocoaWidget,...)" annotations.
+
+# RUN TESTS WITH HIGH QUALITY DOWNSCALING DISABLED:
+# =================================================
+default-preferences pref(image.high_quality_downscaling.enabled,false)
+
+fuzzy-if(cocoaWidget,106,31) == downscale-1.html downscale-1-ref.html
+
+
+# RUN TESTS WITH HIGH QUALITY DOWNSCALING ENABLED:
+# ================================================
+# High-quality downscaling enabled:
+default-preferences pref(image.high_quality_downscaling.enabled,true)
+
+fuzzy(31,127) == downscale-1.html downscale-1-ref.html

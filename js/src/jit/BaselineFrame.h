@@ -78,8 +78,14 @@ class BaselineFrame
   protected: // Silence Clang warning about unused private fields.
     // We need to split the Value into 2 fields of 32 bits, otherwise the C++
     // compiler may add some padding between the fields.
-    uint32_t loScratchValue_;
-    uint32_t hiScratchValue_;
+
+    union {
+        struct {
+            uint32_t loScratchValue_;
+            uint32_t hiScratchValue_;
+        };
+        BaselineDebugModeOSRInfo *debugModeOSRInfo_;
+    };
     uint32_t loReturnValue_;              // If HAS_RVAL, the frame's return value.
     uint32_t hiReturnValue_;
     uint32_t frameSize_;
@@ -311,7 +317,7 @@ class BaselineFrame
 
     BaselineDebugModeOSRInfo *debugModeOSRInfo() {
         MOZ_ASSERT(flags_ & HAS_DEBUG_MODE_OSR_INFO);
-        return *reinterpret_cast<BaselineDebugModeOSRInfo **>(&loScratchValue_);
+        return debugModeOSRInfo_;
     }
 
     BaselineDebugModeOSRInfo *getDebugModeOSRInfo() {
@@ -322,7 +328,7 @@ class BaselineFrame
 
     void setDebugModeOSRInfo(BaselineDebugModeOSRInfo *info) {
         flags_ |= HAS_DEBUG_MODE_OSR_INFO;
-        *reinterpret_cast<BaselineDebugModeOSRInfo **>(&loScratchValue_) = info;
+        debugModeOSRInfo_ = info;
     }
 
     void deleteDebugModeOSRInfo();
