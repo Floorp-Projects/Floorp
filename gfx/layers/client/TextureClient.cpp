@@ -58,11 +58,12 @@
 #define RECYCLE_LOG(...) do { } while (0)
 #endif
 
-using namespace mozilla::gl;
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace layers {
+
+using namespace mozilla::ipc;
+using namespace mozilla::gl;
+using namespace mozilla::gfx;
 
 /**
  * TextureChild is the content-side incarnation of the PTexture IPDL actor.
@@ -439,7 +440,7 @@ bool
 ShmemTextureClient::Allocate(uint32_t aSize)
 {
   MOZ_ASSERT(mValid);
-  ipc::SharedMemory::SharedMemoryType memType = OptimalShmemType();
+  SharedMemory::SharedMemoryType memType = OptimalShmemType();
   mAllocated = GetAllocator()->AllocUnsafeShmem(aSize, memType, &mShmem);
   return mAllocated;
 }

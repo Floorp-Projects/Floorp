@@ -14,10 +14,10 @@
 
 #include "gfxWindowsPlatform.h"
 
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace layers {
+
+using namespace mozilla::gfx;
 
 static already_AddRefed<ID3D10Texture2D>
 DataToTexture(ID3D10Device *aDevice,

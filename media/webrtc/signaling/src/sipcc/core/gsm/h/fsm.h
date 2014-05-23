@@ -428,6 +428,7 @@ typedef struct {
 
     char *ice_ufrag;
     char *ice_pwd;
+    boolean peer_ice_lite;
     char ice_default_candidate_addr[MAX_IPADDR_STR_LEN];
 
     char digest_alg[FSMDEF_MAX_DIGEST_ALG_LEN];
