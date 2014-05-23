@@ -24,12 +24,9 @@ import moznetwork
 
 class B2GOptions(ReftestOptions):
 
-    def __init__(self, automation=None, **kwargs):
+    def __init__(self, **kwargs):
         defaults = {}
-        if not automation:
-            automation = B2GRemoteAutomation(None, "fennec", context_chrome=True)
-
-        ReftestOptions.__init__(self, automation)
+        ReftestOptions.__init__(self)
 
         self.add_option("--browser-arg", action="store",
                     type = "string", dest = "browser_arg",
@@ -88,12 +85,12 @@ class B2GOptions(ReftestOptions):
         self.add_option("--http-port", action = "store",
                     type = "string", dest = "httpPort",
                     help = "ip address where the remote web server is hosted at")
-        defaults["httpPort"] = automation.DEFAULT_HTTP_PORT
+        defaults["httpPort"] = None
 
         self.add_option("--ssl-port", action = "store",
                     type = "string", dest = "sslPort",
                     help = "ip address where the remote web server is hosted at")
-        defaults["sslPort"] = automation.DEFAULT_SSL_PORT
+        defaults["sslPort"] = None
 
         self.add_option("--pidfile", action = "store",
                     type = "string", dest = "pidFile",
@@ -125,7 +122,11 @@ class B2GOptions(ReftestOptions):
                         dest="desktop",
                         help="Run the tests on a B2G desktop build")
         defaults["desktop"] = False
-        defaults["remoteTestRoot"] = "/data/local/tests"
+        self.add_option("--enable-oop", action="store_true",
+                        dest="oop",
+                        help="Run the tests out of process")
+        defaults["oop"] = False
+        defaults["remoteTestRoot"] = None
         defaults["logFile"] = "reftest.log"
         defaults["autorun"] = True
         defaults["closeWhenDone"] = True
@@ -134,16 +135,17 @@ class B2GOptions(ReftestOptions):
 
         self.set_defaults(**defaults)
 
-    def verifyRemoteOptions(self, options):
+    def verifyRemoteOptions(self, options, auto):
         if options.runTestsInParallel:
             self.error("Cannot run parallel tests here")
 
         if not options.remoteTestRoot:
-            options.remoteTestRoot = self.automation._devicemanager.getDeviceRoot() + "/reftest"
+            options.remoteTestRoot = auto._devicemanager.getDeviceRoot() + "/reftest"
+
         options.remoteProfile = options.remoteTestRoot + "/profile"
 
-        productRoot = options.remoteTestRoot + "/" + self.automation._product
-        if options.utilityPath == self.automation.DIST_BIN:
+        productRoot = options.remoteTestRoot + "/" + auto._product
+        if options.utilityPath == auto.DIST_BIN:
             options.utilityPath = productRoot + "/bin"
 
         if options.remoteWebServer == None:
@@ -154,6 +156,12 @@ class B2GOptions(ReftestOptions):
                 return None
 
         options.webServer = options.remoteWebServer
+
+        if not options.httpPort:
+            options.httpPort = auto.DEFAULT_HTTP_PORT
+
+        if not options.sslPort:
+            options.sslPort = auto.DEFAULT_SSL_PORT
 
         if options.geckoPath and not options.emulator:
             self.error("You must specify --emulator if you specify --gecko-path")
@@ -240,7 +248,6 @@ class B2GRemoteReftest(RefTest):
         self.localLogName = options.localLogName
         self.remoteLogFile = options.remoteLogFile
         self.bundlesDir = '/system/b2g/distribution/bundles'
-        self.userJS = '/data/local/user.js'
         self.remoteMozillaPath = '/data/b2g/mozilla'
         self.remoteProfilesIniPath = os.path.join(self.remoteMozillaPath, 'profiles.ini')
         self.originalProfilesIni = None
@@ -281,10 +288,6 @@ class B2GRemoteReftest(RefTest):
             self._devicemanager.removeFile(self.remoteLogFile)
             self._devicemanager.removeDir(self.remoteProfile)
             self._devicemanager.removeDir(self.remoteTestRoot)
-
-            # Restore the original user.js.
-            self._devicemanager._checkCmd(['shell', 'rm', '-f', self.userJS])
-            self._devicemanager._checkCmd(['shell', 'dd', 'if=%s.orig' % self.userJS, 'of=%s' % self.userJS])
 
             # We've restored the original profile, so reboot the device so that
             # it gets picked up.
@@ -417,6 +420,7 @@ class B2GRemoteReftest(RefTest):
         profileDir = profile.profile
 
         prefs = {}
+
         # Turn off the locale picker screen
         prefs["browser.firstrun.show.localepicker"] = False
         prefs["browser.homescreenURL"] = "app://test-container.gaiamobile.org/index.html"
@@ -433,6 +437,11 @@ class B2GRemoteReftest(RefTest):
         # Set a future policy version to avoid the telemetry prompt.
         prefs["toolkit.telemetry.prompted"] = 999
         prefs["toolkit.telemetry.notifiedOptOut"] = 999
+
+        if options.oop:
+            prefs['browser.tabs.remote'] = True
+            prefs['browser.tabs.remote.autostart'] = True
+            prefs['reftest.browser.iframe.enabled'] = True
 
         # Set the extra prefs.
         profile.set_preferences(prefs)
@@ -457,12 +466,6 @@ class B2GRemoteReftest(RefTest):
         except DMError:
             print "Automation Error: Unable to copy extensions to device."
             raise
-
-        # In B2G, user.js is always read from /data/local, not the profile
-        # directory.  Backup the original user.js first so we can restore it.
-        self._devicemanager._checkCmd(['shell', 'rm', '-f', '%s.orig' % self.userJS])
-        self._devicemanager._checkCmd(['shell', 'dd', 'if=%s' % self.userJS, 'of=%s.orig' % self.userJS])
-        self._devicemanager.pushFile(os.path.join(profileDir, "user.js"), self.userJS)
 
         self.updateProfilesIni(self.remoteProfile)
 
@@ -523,7 +526,7 @@ def run_remote_reftests(parser, options, args):
         dm = DeviagerADB(**kwargs)
     auto.setDeviceManager(dm)
 
-    options = parser.verifyRemoteOptions(options)
+    options = parser.verifyRemoteOptions(options, auto)
 
     if (options == None):
         print "ERROR: Invalid options specified, use --help for a list of valid options"
