@@ -9,6 +9,8 @@
 #include "HyperTextAccessible.h"
 #include "TextRange.h"
 
+ #include "nsIMutableArray.h"
+
 using namespace mozilla;
 using namespace mozilla::a11y;
 
@@ -21,6 +23,7 @@ NS_IMPL_CYCLE_COLLECTION(xpcAccessibleTextRange,
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(xpcAccessibleTextRange)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleTextRange)
+  NS_INTERFACE_MAP_ENTRY(xpcAccessibleTextRange)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAccessibleTextRange)
 NS_INTERFACE_MAP_END
 
@@ -30,10 +33,10 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(xpcAccessibleTextRange)
 // nsIAccessibleTextRange
 
 NS_IMETHODIMP
-xpcAccessibleTextRange::GetStartContainer(nsIAccessible** aAnchor)
+xpcAccessibleTextRange::GetStartContainer(nsIAccessibleText** aAnchor)
 {
   NS_ENSURE_ARG_POINTER(aAnchor);
-  NS_IF_ADDREF(*aAnchor = static_cast<nsIAccessible*>(mRange.StartContainer()));
+  NS_IF_ADDREF(*aAnchor = static_cast<nsIAccessibleText*>(mRange.StartContainer()));
   return NS_OK;
 }
 
@@ -46,10 +49,10 @@ xpcAccessibleTextRange::GetStartOffset(int32_t* aOffset)
 }
 
 NS_IMETHODIMP
-xpcAccessibleTextRange::GetEndContainer(nsIAccessible** aAnchor)
+xpcAccessibleTextRange::GetEndContainer(nsIAccessibleText** aAnchor)
 {
   NS_ENSURE_ARG_POINTER(aAnchor);
-  NS_IF_ADDREF(*aAnchor = static_cast<nsIAccessible*>(mRange.EndContainer()));
+  NS_IF_ADDREF(*aAnchor = static_cast<nsIAccessibleText*>(mRange.EndContainer()));
   return NS_OK;
 }
 
@@ -62,11 +65,145 @@ xpcAccessibleTextRange::GetEndOffset(int32_t* aOffset)
 }
 
 NS_IMETHODIMP
+xpcAccessibleTextRange::GetContainer(nsIAccessible** aContainer)
+{
+  NS_ENSURE_ARG_POINTER(aContainer);
+  NS_IF_ADDREF(*aContainer = static_cast<nsIAccessible*>(mRange.Container()));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+xpcAccessibleTextRange::GetEmbeddedChildren(nsIArray** aList)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIMutableArray> xpcList =
+    do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsTArray<Accessible*> objects;
+  mRange.EmbeddedChildren(&objects);
+
+  uint32_t len = objects.Length();
+  for (uint32_t idx = 0; idx < len; idx++)
+    xpcList->AppendElement(static_cast<nsIAccessible*>(objects[idx]), false);
+
+  xpcList.forget(aList);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+xpcAccessibleTextRange::Compare(nsIAccessibleTextRange* aOtherRange,
+                                bool* aResult)
+{
+
+  nsRefPtr<xpcAccessibleTextRange> xpcRange(do_QueryObject(aOtherRange));
+  if (!xpcRange || !aResult)
+    return NS_ERROR_INVALID_ARG;
+
+  *aResult = (mRange == xpcRange->mRange);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+xpcAccessibleTextRange::CompareEndPoints(uint32_t aEndPoint,
+                                         nsIAccessibleTextRange* aOtherRange,
+                                         uint32_t aOtherRangeEndPoint,
+                                         int32_t* aResult)
+{
+  nsRefPtr<xpcAccessibleTextRange> xpcRange(do_QueryObject(aOtherRange));
+  if (!xpcRange || !aResult)
+    return NS_ERROR_INVALID_ARG;
+
+  TextPoint p = (aEndPoint == EndPoint_Start) ?
+    mRange.StartPoint() : mRange.EndPoint();
+  TextPoint otherPoint = (aOtherRangeEndPoint == EndPoint_Start) ?
+    xpcRange->mRange.StartPoint() : xpcRange->mRange.EndPoint();
+
+  if (p == otherPoint)
+    *aResult = 0;
+  else
+    *aResult = p < otherPoint ? -1 : 1;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 xpcAccessibleTextRange::GetText(nsAString& aText)
 {
   nsAutoString text;
   mRange.Text(text);
   aText.Assign(text);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+xpcAccessibleTextRange::GetBounds(nsIArray** aRectList)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+xpcAccessibleTextRange::Move(uint32_t aUnit, int32_t aCount)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+xpcAccessibleTextRange::MoveStart(uint32_t aUnit, int32_t aCount)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+xpcAccessibleTextRange::MoveEnd(uint32_t aUnit, int32_t aCount)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+xpcAccessibleTextRange::Normalize(uint32_t aUnit)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+xpcAccessibleTextRange::FindText(const nsAString& aText, bool aIsBackward,
+                                 bool aIsIgnoreCase,
+                                 nsIAccessibleTextRange** aRange)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+xpcAccessibleTextRange::FindAttr(uint32_t aAttr, nsIVariant* aVal,
+                                 bool aIsBackward,
+                                 nsIAccessibleTextRange** aRange)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+xpcAccessibleTextRange::AddToSelection()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+xpcAccessibleTextRange::RemoveFromSelection()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+xpcAccessibleTextRange::Select()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+xpcAccessibleTextRange::ScrollIntoView(uint32_t aHow)
+{
   return NS_OK;
 }
