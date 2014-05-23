@@ -431,7 +431,7 @@ nsFrameMessageManager::LoadFrameScript(const nsAString& aURL,
   aRunInGlobalScope = true;
 
   if (aAllowDelayedLoad) {
-    if (IsGlobal() || IsWindowLevel()) {
+    if (IsGlobal() || IsBroadcaster()) {
       // Cache for future windows or frames
       mPendingScripts.AppendElement(aURL);
       mPendingScriptsGlobalStates.AppendElement(aRunInGlobalScope);
@@ -481,7 +481,7 @@ nsFrameMessageManager::GetDelayedFrameScripts(JSContext* aCx, JS::MutableHandle<
 {
   // Frame message managers may return an incomplete list because scripts
   // that were loaded after it was connected are not added to the list.
-  if (!IsGlobal() && !IsWindowLevel()) {
+  if (!IsGlobal() && !IsBroadcaster()) {
     NS_WARNING("Cannot retrieve list of pending frame scripts for frame"
                "message managers as it may be incomplete");
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -590,7 +590,7 @@ nsFrameMessageManager::SendMessage(const nsAString& aMessageName,
                                    bool aIsSync)
 {
   NS_ASSERTION(!IsGlobal(), "Should not call SendSyncMessage in chrome");
-  NS_ASSERTION(!IsWindowLevel(), "Should not call SendSyncMessage in chrome");
+  NS_ASSERTION(!IsBroadcaster(), "Should not call SendSyncMessage in chrome");
   NS_ASSERTION(!mParentManager, "Should not have parent manager in content!");
 
   aRetval.setUndefined();
@@ -1099,19 +1099,26 @@ nsFrameMessageManager::AddChildManager(nsFrameMessageManager* aManager)
 
   nsRefPtr<nsFrameMessageManager> kungfuDeathGrip = this;
   nsRefPtr<nsFrameMessageManager> kungfuDeathGrip2 = aManager;
-  // We have parent manager if we're a window message manager.
-  // In that case we want to load the pending scripts from global
-  // message manager.
-  if (mParentManager) {
-    nsRefPtr<nsFrameMessageManager> globalMM = mParentManager;
-    for (uint32_t i = 0; i < globalMM->mPendingScripts.Length(); ++i) {
-      aManager->LoadFrameScript(globalMM->mPendingScripts[i], false,
-                                globalMM->mPendingScriptsGlobalStates[i]);
-    }
+
+  LoadPendingScripts(this, aManager);
+}
+
+void
+nsFrameMessageManager::LoadPendingScripts(nsFrameMessageManager* aManager,
+                                          nsFrameMessageManager* aChildMM)
+{
+  // We have parent manager if we're a message broadcaster.
+  // In that case we want to load the pending scripts from all parent
+  // message managers in the hierarchy. Process the parent first so
+  // that pending scripts higher up in the hierarchy are loaded before others.
+  if (aManager->mParentManager) {
+    LoadPendingScripts(aManager->mParentManager, aChildMM);
   }
-  for (uint32_t i = 0; i < mPendingScripts.Length(); ++i) {
-    aManager->LoadFrameScript(mPendingScripts[i], false,
-                              mPendingScriptsGlobalStates[i]);
+
+  for (uint32_t i = 0; i < aManager->mPendingScripts.Length(); ++i) {
+    aChildMM->LoadFrameScript(aManager->mPendingScripts[i],
+                              false,
+                              aManager->mPendingScriptsGlobalStates[i]);
   }
 }
 
@@ -1138,7 +1145,7 @@ nsFrameMessageManager::InitWithCallback(MessageManagerCallback* aCallback)
 
   SetCallback(aCallback);
 
-  // First load global scripts by adding this to parent manager.
+  // First load parent scripts by adding this to parent manager.
   if (mParentManager) {
     mParentManager->AddChildManager(this);
   }
