@@ -31,7 +31,7 @@ Tests of DOM Worker Threads XHR(Bug 450452 )
 
   worker.onerror = function(event) {
     is(event.target, worker, "Expected event target for error");
-    ok(false, "Worker had an error:" + event.data);
+    ok(false, "Worker had an error:" + event.message);
     SimpleTest.finish();
   }
 
