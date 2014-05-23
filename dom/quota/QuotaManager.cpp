@@ -3551,7 +3551,7 @@ OriginClearRunnable::Run()
       }
 
       // Now dispatch back to the main thread.
-      if (NS_FAILED(NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL))) {
+      if (NS_FAILED(NS_DispatchToMainThread(this))) {
         NS_WARNING("Failed to dispatch to main thread!");
         return NS_ERROR_FAILURE;
       }
@@ -3795,7 +3795,7 @@ AsyncUsageRunnable::Run()
       ResetUsage();
     }
 
-    if (NS_FAILED(NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL))) {
+    if (NS_FAILED(NS_DispatchToMainThread(this))) {
       NS_WARNING("Failed to dispatch to main thread!");
     }
   }

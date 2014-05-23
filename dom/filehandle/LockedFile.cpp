@@ -875,7 +875,7 @@ FinishHelper::Run()
     mStream = nullptr;
   }
 
-  return NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL);
+  return NS_DispatchToMainThread(this);
 }
 
 nsresult

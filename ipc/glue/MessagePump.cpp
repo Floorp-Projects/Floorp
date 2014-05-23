@@ -154,7 +154,7 @@ MessagePump::ScheduleWork()
   else {
     // Some things (like xpcshell) don't use the app shell and so Run hasn't
     // been called. We still need to wake up the main thread.
-    NS_DispatchToMainThread(mDoWorkEvent, NS_DISPATCH_NORMAL);
+    NS_DispatchToMainThread(mDoWorkEvent);
   }
   event_.Signal();
 }

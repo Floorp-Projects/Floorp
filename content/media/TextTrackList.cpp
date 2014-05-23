@@ -172,7 +172,7 @@ TextTrackList::CreateAndDispatchChangeEvent()
   event->SetTrusted(true);
 
   nsCOMPtr<nsIRunnable> eventRunner = new TrackEventRunner(this, event);
-  NS_DispatchToMainThread(eventRunner, NS_DISPATCH_NORMAL);
+  NS_DispatchToMainThread(eventRunner);
 }
 
 void
@@ -188,7 +188,7 @@ TextTrackList::CreateAndDispatchTrackEventRunner(TextTrack* aTrack,
 
   // Dispatch the TrackEvent asynchronously.
   nsCOMPtr<nsIRunnable> eventRunner = new TrackEventRunner(this, event);
-  NS_DispatchToMainThread(eventRunner, NS_DISPATCH_NORMAL);
+  NS_DispatchToMainThread(eventRunner);
 }
 
 HTMLMediaElement*

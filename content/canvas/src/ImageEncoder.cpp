@@ -154,7 +154,7 @@ public:
     } else {
       mEncodingCompleteEvent->SetMembers(imgData, imgSize, mType);
     }
-    rv = NS_DispatchToMainThread(mEncodingCompleteEvent, NS_DISPATCH_NORMAL);
+    rv = NS_DispatchToMainThread(mEncodingCompleteEvent);
     if (NS_FAILED(rv)) {
       // Better to leak than to crash.
       mEncodingCompleteEvent.forget();
