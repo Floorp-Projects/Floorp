@@ -85,7 +85,7 @@ function checkSpecialContextMenus() {
       let menuPopup = document.getElementById(kSpecialItemIDs[menuID]);
       info("Waiting to open menu for " + menuID);
       let shownPromise = popupShown(menuPopup);
-      EventUtils.synthesizeMouseAtCenter(menuItem, {});
+      menuPopup.openPopup(menuItem, null, 0, 0, false, false, null);
       yield shownPromise;
 
       yield checkPlacesContextMenu(menuPopup);
