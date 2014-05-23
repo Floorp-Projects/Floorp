@@ -29,6 +29,9 @@ public class RemoteTabsContainerPanel extends GeckoSwipeRefreshLayout
     private final RemoteTabsSyncObserver syncListener;
     private RemoteTabsList list;
 
+    // Whether or not a sync status listener is attached.
+    private boolean isListening = false;
+
     public RemoteTabsContainerPanel(Context context, AttributeSet attrs) {
         super(context, attrs);
         this.context = context;
@@ -67,15 +70,21 @@ public class RemoteTabsContainerPanel extends GeckoSwipeRefreshLayout
 
     @Override
     public void show() {
-        setVisibility(View.VISIBLE);
         TabsAccessor.getTabs(context, list);
-        FirefoxAccounts.addSyncStatusListener(syncListener);
+        if (!isListening) {
+            isListening = true;
+            FirefoxAccounts.addSyncStatusListener(syncListener);
+        }
+        setVisibility(View.VISIBLE);
     }
 
     @Override
     public void hide() {
         setVisibility(View.GONE);
-        FirefoxAccounts.removeSyncStatusListener(syncListener);
+        if (isListening) {
+            isListening = false;
+            FirefoxAccounts.removeSyncStatusListener(syncListener);
+        }
     }
 
     @Override
