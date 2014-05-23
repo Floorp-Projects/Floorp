@@ -127,7 +127,6 @@ interface nsINfcContentHelper : nsISupports
   *
   * @param status
   *        Status of sendFile operation
-  *        (GECKO_NFC_ERROR_SUCCESS, GECKO_NFC_ERROR_GENERIC_FAILURE)
   *
   * @param requestId
   *        Request ID of SendFile DOM Request
