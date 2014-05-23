@@ -15,6 +15,17 @@ notification[value="translation"] .messageImage {
   }
 }
 
+notification[value="translation"][state="translating"] .messageImage {
+  list-style-image: url(chrome://browser/skin/translating-16.png);
+  -moz-image-region: auto;
+}
+
+@media (min-resolution: 1.25dppx) {
+  notification[value="translation"][state="translating"] .messageImage {
+    list-style-image: url(chrome://browser/skin/translating-16@2x.png);
+  }
+}
+
 notification[value="translation"] {
   min-height: 40px;
 }
