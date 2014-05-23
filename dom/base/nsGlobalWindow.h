@@ -37,7 +37,8 @@
 #include "nsSize.h"
 #include "mozFlushType.h"
 #include "prclist.h"
-#include "nsIDOMStorageEvent.h"
+#include "mozilla/dom/StorageEvent.h"
+#include "mozilla/dom/StorageEventBinding.h"
 #include "nsFrameMessageManager.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/TimeStamp.h"
@@ -1336,8 +1337,9 @@ protected:
 
   inline int32_t DOMMinTimeoutValue() const;
 
-  nsresult CloneStorageEvent(const nsAString& aType,
-                             nsCOMPtr<nsIDOMStorageEvent>& aEvent);
+  already_AddRefed<mozilla::dom::StorageEvent>
+  CloneStorageEvent(const nsAString& aType,
+                    const nsRefPtr<mozilla::dom::StorageEvent>& aEvent);
 
   // Outer windows only.
   nsDOMWindowList* GetWindowList();
@@ -1522,7 +1524,7 @@ protected:
   // These member variables are used on both inner and the outer windows.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
 
-  typedef nsCOMArray<nsIDOMStorageEvent> nsDOMStorageEventArray;
+  typedef nsTArray<nsRefPtr<mozilla::dom::StorageEvent>> nsDOMStorageEventArray;
   nsDOMStorageEventArray mPendingStorageEvents;
 
   uint32_t mTimeoutsSuspendDepth;
