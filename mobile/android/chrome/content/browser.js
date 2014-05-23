@@ -1435,11 +1435,19 @@ var BrowserApp = {
 
       case "Tab:Load": {
         let data = JSON.parse(aData);
+        let url = data.url;
+        let flags;
+
+        if (/^[0-9]+$/.test(url)) {
+          // If the query is a number, force a search (see bug 993705; workaround for bug 693808).
+          url = URIFixup.keywordToURI(url).spec;
+        } else {
+          flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
+                   Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
+        }
 
         // Pass LOAD_FLAGS_DISALLOW_INHERIT_OWNER to prevent any loads from
         // inheriting the currently loaded document's principal.
-        let flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
-                    Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
         if (data.userEntered) {
           flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
         }
@@ -1456,7 +1464,6 @@ var BrowserApp = {
           desktopMode: (data.desktopMode === true)
         };
 
-        let url = data.url;
         if (data.engine) {
           let engine = Services.search.getEngineByName(data.engine);
           if (engine) {
