@@ -410,7 +410,7 @@ checkbox {
   width: 23px;
   height: 23px;
   border-radius: 2px;
-  border: 1px solid rgba(23,50,77,0.40);
+  border: 1px solid #C1C1C1;
   -moz-margin-end: 10px;
   background-color: #f1f1f1;
   background-image: linear-gradient(#ffffff, rgba(255,255,255,0.8));
@@ -419,20 +419,17 @@ checkbox {
   box-shadow: 0 1px 1px 0 #ffffff, inset 0 2px 0 0 rgba(0,0,0,0.03);
 }
 
-checkbox:not([disabled="true"]):not([checked]):hover .checkbox-check {
-  background-image: -moz-image-rect(url("chrome://browser/skin/preferences/in-content/check.png"), 0, 15, 10, 0),
-                    linear-gradient(#ffffff, rgba(255,255,255,0.8));
+checkbox:not([disabled="true"]):hover > .checkbox-check {
+  border-color: #0095DD;
 }
 
 .checkbox-check[checked] {
-  border-color: #0096dc;
-  background-image: -moz-image-rect(url("chrome://browser/skin/preferences/in-content/check.png"), 0, 30, 10, 15),
+  background-image: url("chrome://browser/skin/preferences/in-content/check.png"),
                     /* !important needed to override toolkit !important rule */
                     linear-gradient(#ffffff, rgba(255,255,255,0.8)) !important;
-  box-shadow: 0 0 2px 2px rgba(0,150,220,0.35), inset 0 0 2px 0 #0096dc;
 }
 
-checkbox[disabled="true"] .checkbox-check {
+checkbox[disabled="true"] > .checkbox-check {
   opacity: 0.5;
 }
 
@@ -442,15 +439,9 @@ checkbox[disabled="true"] .checkbox-check {
 }
 
 @media (min-resolution: 2dppx) {
-  checkbox:not([checked]):hover .checkbox-check {
-    background-size: 15px 10px, auto;
-    background-image: -moz-image-rect(url("chrome://browser/skin/preferences/in-content/check@2x.png"), 0, 30, 20, 0),
-                      linear-gradient(#ffffff, rgba(255,255,255,0.8));
-  }
-
   .checkbox-check[checked] {
-    background-size: 15px 10px, auto;
-    background-image: -moz-image-rect(url("chrome://browser/skin/preferences/in-content/check@2x.png"), 0, 60, 20, 30),
+    background-size: 12px 12px, auto;
+    background-image: url("chrome://browser/skin/preferences/in-content/check@2x.png"),
                       linear-gradient(#ffffff, rgba(255,255,255,0.8)) !important;
   }
 }
@@ -459,7 +450,7 @@ checkbox[disabled="true"] .checkbox-check {
   -moz-appearance: none;
   width: 23px;
   height: 23px;
-  border: 1px solid rgba(23,50,77,0.40);
+  border: 1px solid #C1C1C1;
   border-radius: 50%;
   -moz-margin-end: 10px;
   background-color: #f1f1f1;
@@ -467,23 +458,18 @@ checkbox[disabled="true"] .checkbox-check {
   box-shadow: 0 1px 1px 0 #ffffff, inset 0 2px 0 0 rgba(0,0,0,0.03);
 }
 
-radio:not([selected]):hover .radio-check {
-  background-image: radial-gradient(circle, rgba(23,146,229,0.25),
-                    rgba(76,177,255,0.25) 5.5px, rgba(76,177,255,0.05) 6px,
-                    transparent 6px),
-                    linear-gradient(#ffffff, rgba(255,255,255,0.8));
+radio:not([disabled="true"]):hover > .radio-check {
+  border-color: #0095DD;
 }
 
 .radio-check[selected] {
-  border-color: #0096dc;
   background-image: radial-gradient(circle, rgb(23,146,229),
                     rgb(76,177,255) 5.5px, rgba(76,177,255,0.2) 6px,
                     transparent 6px),
                     linear-gradient(rgb(255,255,255), rgba(255,255,255,0.8));
-  box-shadow: 0 0 2px 2px rgba(0,150,220,0.35), inset 0 0 2px 0 #0096dc;
 }
 
-radio[disabled="true"] .radio-check {
+radio[disabled="true"] > .radio-check {
   opacity: 0.5;
 }
 
