@@ -12,7 +12,6 @@
 #include "js/RootingAPI.h"
 #include "js/TracingAPI.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsWrapperCache.h"
 
@@ -28,12 +27,6 @@ protected:
 
   TypedArrayObjectStorage()
   {
-  }
-
-  TypedArrayObjectStorage(TypedArrayObjectStorage&& aOther)
-    : mObj(aOther.mObj)
-  {
-    aOther.mObj = nullptr;
   }
 
 public:
@@ -67,15 +60,6 @@ struct TypedArray_base : public TypedArrayObjectStorage {
   TypedArray_base()
   {
     mObj = nullptr;
-  }
-
-  TypedArray_base(TypedArray_base&& aOther)
-    : TypedArrayObjectStorage(Move(aOther)),
-      mData(aOther.mData),
-      mLength(aOther.mLength)
-  {
-    aOther.mData = nullptr;
-    aOther.mLength = 0;
   }
 
 private:
@@ -138,11 +122,6 @@ struct TypedArray : public TypedArray_base<T,UnboxArray> {
   TypedArray() :
     TypedArray_base<T,UnboxArray>()
   {}
-
-  TypedArray(TypedArray&& aOther)
-    : TypedArray_base<T,UnboxArray>(Move(aOther))
-  {
-  }
 
   static inline JSObject*
   Create(JSContext* cx, nsWrapperCache* creator, uint32_t length,
