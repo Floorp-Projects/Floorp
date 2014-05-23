@@ -21,6 +21,7 @@
     } catch (e) {
       ok(false,
          "Unexpected exception trying to get all alarms.");
+      return cbk();
     }
     domRequest.onsuccess = function(e) {
       ok(e.target.result.length === n, "Correct number of alarms set.");
