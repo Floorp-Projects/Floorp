@@ -4052,6 +4052,19 @@ if test -z "$MOZ_GOOGLE_API_KEY"; then
 fi
 AC_SUBST(MOZ_GOOGLE_API_KEY)
 
+# Allow specifying a Bing API key file that contains the client ID and the
+# secret key to be used for the Bing Translation API requests.
+MOZ_ARG_WITH_STRING(bing-api-keyfile,
+[  --with-bing-api-keyfile=file   Use the client id and secret key contained in the given keyfile for Bing API requests],
+ [MOZ_BING_API_CLIENTID=`cat $withval | cut -f 1 -d " "`
+  MOZ_BING_API_KEY=`cat $withval | cut -f 2 -d " "`])
+if test -z "$MOZ_BING_API_CLIENTID"; then
+    MOZ_BING_API_CLIENTID=no-bing-api-clientid
+    MOZ_BING_API_KEY=no-bing-api-key
+fi
+AC_SUBST(MOZ_BING_API_CLIENTID)
+AC_SUBST(MOZ_BING_API_KEY)
+
 # Allow the application to influence configure with a confvars.sh script.
 AC_MSG_CHECKING([if app-specific confvars.sh exists])
 if test -f "${srcdir}/${MOZ_BUILD_APP}/confvars.sh" ; then
