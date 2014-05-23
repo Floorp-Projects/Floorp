@@ -21,7 +21,7 @@
 package org.mozilla.gecko.widget;
 
 // Mozilla: New import
-import org.mozilla.gecko.Distribution;
+import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.GeckoProfile;
 import java.io.File;
 
