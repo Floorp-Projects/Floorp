@@ -316,7 +316,7 @@ this.WebappManager = {
         title: PluralForm.get(outdatedApps.length, Strings.GetStringFromName("downloadUpdateTitle")).
                replace("#1", outdatedApps.length),
         message: Strings.formatStringFromName("downloadUpdateMessage", [names], 1),
-        icon: "drawable://alert_download",
+        icon: "drawable://alert_app",
       }).dismissed;
 
       if (accepted) {
