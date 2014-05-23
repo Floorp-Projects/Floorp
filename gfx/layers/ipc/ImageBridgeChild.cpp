@@ -41,17 +41,17 @@
 
 struct nsIntRect;
 
-using base::Thread;
-using base::ProcessHandle;
-using namespace mozilla::ipc;
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace ipc {
 class Shmem;
 }
 
 namespace layers {
+
+using base::Thread;
+using base::ProcessHandle;
+using namespace mozilla::ipc;
+using namespace mozilla::gfx;
 
 typedef std::vector<CompositableOperation> OpVector;
 

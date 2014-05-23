@@ -181,10 +181,7 @@ public:
   JSEventHandler(nsISupports* aTarget, nsIAtom* aType,
                  const TypedEventHandler& aTypedHandler);
 
-  virtual ~JSEventHandler()
-  {
-    NS_ASSERTION(!mTarget, "Should have called Disconnect()!");
-  }
+  virtual ~JSEventHandler();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 

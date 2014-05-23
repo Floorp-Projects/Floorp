@@ -35,12 +35,12 @@ Here is a sample test:
 
     BEGIN_TEST(testIntString_bug515273)
     {
-        jsval v;
-        EVAL("'42';", &v);
+        RootedValue v(cx);
 
-        JSString *str = JSVAL_TO_STRING(v);
-        const char *bytes = JS_GetStringBytes(str);
-        CHECK(strcmp(bytes, "42") == 0);
+        EVAL("'42';", &v);
+        JSString *str = v.toString();
+        CHECK(JS_StringHasBeenInterned(cx, str));
+        CHECK(JS_FlatStringEqualsAscii(JS_ASSERT_STRING_IS_FLAT(str), "42"));
         return true;
     }
     END_TEST(testIntString_bug515273)

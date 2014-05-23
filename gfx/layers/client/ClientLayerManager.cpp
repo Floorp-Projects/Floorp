@@ -32,11 +32,10 @@
 #include "AndroidBridge.h"
 #endif
 
-using namespace mozilla::dom;
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace layers {
+
+using namespace mozilla::gfx;
 
 ClientLayerManager::ClientLayerManager(nsIWidget* aWidget)
   : mPhase(PHASE_NONE)
@@ -131,8 +130,8 @@ ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
   // If the last transaction was incomplete (a failed DoEmptyTransaction),
   // don't signal a new transaction to ShadowLayerForwarder. Carry on adding
   // to the previous transaction.
-  ScreenOrientation orientation;
-  if (TabChild* window = mWidget->GetOwningTabChild()) {
+  dom::ScreenOrientation orientation;
+  if (dom::TabChild* window = mWidget->GetOwningTabChild()) {
     orientation = window->GetOrientation();
   } else {
     hal::ScreenConfiguration currentConfig;
@@ -150,7 +149,7 @@ ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
   // a chance to repaint, so we have to ensure that it's all valid
   // and not rotated.
   if (mWidget) {
-    if (TabChild* window = mWidget->GetOwningTabChild()) {
+    if (dom::TabChild* window = mWidget->GetOwningTabChild()) {
       mCompositorMightResample = window->IsAsyncPanZoomEnabled();
     }
   }

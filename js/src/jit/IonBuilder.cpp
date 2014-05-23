@@ -3116,11 +3116,13 @@ IonBuilder::filterTypesAtTest(MTest *test)
                 return false;
 
             replace = ensureDefiniteTypeSet(subject, type);
-            // Make sure we don't hoist it above the MTest, we can use the
-            // 'dependency' of an MInstruction. This is normally used by
-            // Alias Analysis, but won't get overwritten, since this
-            // instruction doesn't have an AliasSet.
-            replace->setDependency(test);
+            if (replace != subject) {
+                // Make sure we don't hoist it above the MTest, we can use the
+                // 'dependency' of an MInstruction. This is normally used by
+                // Alias Analysis, but won't get overwritten, since this
+                // instruction doesn't have an AliasSet.
+                replace->setDependency(test);
+            }
         }
 
         current->setSlot(i, replace);
@@ -6406,6 +6408,12 @@ IonBuilder::ensureDefiniteTypeSet(MDefinition *def, types::TemporaryTypeSet *typ
     if (replace != def) {
         replace->setResultTypeSet(types);
         return replace;
+    }
+
+    // Don't replace if input type is more accurate than given typeset.
+    if (def->type() != types->getKnownMIRType()) {
+        MOZ_ASSERT(types->getKnownMIRType() == MIRType_Value);
+        return def;
     }
 
     // Create a NOP mir instruction to filter the typeset.
