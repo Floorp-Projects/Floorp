@@ -26,11 +26,11 @@ extern PRLogModuleInfo* GetDataChannelLog();
 #include "nsIDOMDataChannel.h"
 #include "nsIDOMMessageEvent.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 #include "nsError.h"
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsNetUtil.h"
@@ -382,14 +382,15 @@ nsDOMDataChannel::DoOnMessageAvailable(const nsACString& aData,
   if (NS_FAILED(rv)) {
     return NS_OK;
   }
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(GetOwner());
-  NS_ENSURE_TRUE(sgo, NS_ERROR_FAILURE);
 
-  nsIScriptContext* sc = sgo->GetContext();
-  NS_ENSURE_TRUE(sc, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIGlobalObject> globalObject = do_QueryInterface(GetOwner());
+  if (NS_WARN_IF(!globalObject)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  AutoPushJSContext cx(sc->GetNativeContext());
-  NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+  AutoJSAPI jsapi;
+  JSContext* cx = jsapi.cx();
+  JSAutoCompartment ac(cx, globalObject->GetGlobalJSObject());
 
   JS::Rooted<JS::Value> jsData(cx);
 
