@@ -145,7 +145,7 @@ gbjar.sources += [
     'db/SuggestedSites.java',
     'db/TabsProvider.java',
     'db/TopSitesCursorWrapper.java',
-    'Distribution.java',
+    'distribution/Distribution.java',
     'DoorHangerPopup.java',
     'DynamicToolbar.java',
     'EditBookmarkDialog.java',
