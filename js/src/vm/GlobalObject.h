@@ -797,6 +797,23 @@ DefinePropertiesAndBrand(JSContext *cx, JSObject *obj,
 typedef HashSet<GlobalObject *, DefaultHasher<GlobalObject *>, SystemAllocPolicy> GlobalObjectSet;
 
 /*
+ * ClassObjectCreationOps for Function and Object. These will eventually move
+ * into jsobj.cpp and jsfun.cpp.
+ */
+
+JSObject *
+CreateObjectPrototype(JSContext *cx, JSProtoKey key);
+
+JSObject *
+CreateFunctionPrototype(JSContext *cx, JSProtoKey key);
+
+JSObject *
+CreateObjectConstructor(JSContext *cx, JSProtoKey key);
+
+JSObject *
+CreateFunctionConstructor(JSContext *cx, JSProtoKey key);
+
+/*
  * Convenience templates to generic constructor and prototype creation functions
  * for ClassSpecs.
  */
