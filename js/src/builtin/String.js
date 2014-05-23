@@ -200,3 +200,102 @@ function String_static_localeCompare(str1, str2) {
     return callFunction(String_localeCompare, str1, str2, locales, options);
 }
 
+// ES6 draft 2014-04-27 B.2.3.3
+function String_big() {
+    CheckObjectCoercible(this);
+    return "<big>" + ToString(this) + "</big>";
+}
+
+// ES6 draft 2014-04-27 B.2.3.4
+function String_blink() {
+    CheckObjectCoercible(this);
+    return "<blink>" + ToString(this) + "</blink>";
+}
+
+// ES6 draft 2014-04-27 B.2.3.5
+function String_bold() {
+    CheckObjectCoercible(this);
+    return "<b>" + ToString(this) + "</b>";
+}
+
+// ES6 draft 2014-04-27 B.2.3.6
+function String_fixed() {
+    CheckObjectCoercible(this);
+    return "<tt>" + ToString(this) + "</tt>";
+}
+
+// ES6 draft 2014-04-27 B.2.3.9
+function String_italics() {
+    CheckObjectCoercible(this);
+    return "<i>" + ToString(this) + "</i>";
+}
+
+// ES6 draft 2014-04-27 B.2.3.11
+function String_small() {
+    CheckObjectCoercible(this);
+    return "<small>" + ToString(this) + "</small>";
+}
+
+// ES6 draft 2014-04-27 B.2.3.12
+function String_strike() {
+    CheckObjectCoercible(this);
+    return "<strike>" + ToString(this) + "</strike>";
+}
+
+// ES6 draft 2014-04-27 B.2.3.13
+function String_sub() {
+    CheckObjectCoercible(this);
+    return "<sub>" + ToString(this) + "</sub>";
+}
+
+// ES6 draft 2014-04-27 B.2.3.14
+function String_sup() {
+    CheckObjectCoercible(this);
+    return "<sup>" + ToString(this) + "</sup>";
+}
+
+function EscapeAttributeValue(v) {
+    var inputStr = ToString(v);
+    var inputLen = inputStr.length;
+    var outputStr = '';
+    var chunkStart = 0;
+    for (var i = 0; i < inputLen; i++) {
+        if (inputStr[i] === '"') {
+            outputStr += callFunction(std_String_substring, inputStr, chunkStart, i) + '&quot;';
+            chunkStart = i + 1;
+        }
+    }
+    if (chunkStart === 0)
+        return inputStr;
+    if (chunkStart < inputLen)
+        outputStr += callFunction(std_String_substring, inputStr, chunkStart);
+    return outputStr;
+}
+
+// ES6 draft 2014-04-27 B.2.3.2
+function String_anchor(name) {
+    CheckObjectCoercible(this);
+    var S = ToString(this);
+    return '<a name="' + EscapeAttributeValue(name) + '">' + S + "</a>";
+}
+
+// ES6 draft 2014-04-27 B.2.3.7
+function String_fontcolor(color) {
+    CheckObjectCoercible(this);
+    var S = ToString(this);
+    return '<font color="' + EscapeAttributeValue(color) + '">' + S + "</font>";
+}
+
+// ES6 draft 2014-04-27 B.2.3.8
+function String_fontsize(size) {
+    CheckObjectCoercible(this);
+    var S = ToString(this);
+    return '<font size="' + EscapeAttributeValue(size) + '">' + S + "</font>";
+}
+
+// ES6 draft 2014-04-27 B.2.3.10
+function String_link(url) {
+    CheckObjectCoercible(this);
+    var S = ToString(this);
+    return '<a href="' + EscapeAttributeValue(url) + '">' + S + "</a>";
+}
