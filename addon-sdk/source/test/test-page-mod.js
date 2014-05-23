@@ -29,7 +29,9 @@ const { LoaderWithHookedConsole } = require('sdk/test/loader');
 const { waitUntil } = require("sdk/test/utils");
 const data = require("./fixtures");
 
-const { gDevToolsExtensions } = Cu.import("resource://gre/modules/devtools/DevToolsExtensions.jsm", {});
+const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { require: devtoolsRequire } = devtools;
+const contentGlobals = devtoolsRequire("devtools/server/content-globals");
 
 const testPageURI = data.url("test.html");
 
@@ -1492,7 +1494,7 @@ exports.testDevToolsExtensionsGetContentGlobals = function(assert, done) {
       contentScriptWhen: "start",
       contentScript: "null;",
     }], function(win, done) {
-      assert.equal(gDevToolsExtensions.getContentGlobals({ 'inner-window-id': getInnerId(win) }).length, 1);
+      assert.equal(contentGlobals.getContentGlobals({ 'inner-window-id': getInnerId(win) }).length, 1);
       done();
     }
   );

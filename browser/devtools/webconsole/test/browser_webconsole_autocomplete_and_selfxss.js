@@ -7,6 +7,7 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>test for bug 642615";
 XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
                                    "@mozilla.org/widget/clipboardhelper;1",
                                    "nsIClipboardHelper");
+let WebConsoleUtils = require("devtools/toolkit/webconsole/utils").Utils;
 
 function consoleOpened(HUD) {
   let jsterm = HUD.jsterm;
@@ -35,13 +36,48 @@ function consoleOpened(HUD) {
   }
 
   function onClipboardCopy() {
-    info("wait for completion update after clipboard paste");
-    jsterm.once("autocomplete-updated", onClipboardPaste);
+    testSelfXss();
 
+    jsterm.setInputValue("docu");
+    info("wait for completion update after clipboard paste");
     updateEditUIVisibility();
+    jsterm.once("autocomplete-updated", onClipboardPaste);
     goDoCommand("cmd_paste");
   }
 
+
+  // Self xss prevention tests (bug 994134)
+  function testSelfXss(){
+    info("Self-xss paste tests")
+    WebConsoleUtils.usageCount = 0;
+    is(WebConsoleUtils.usageCount, 0, "Test for usage count getter")
+    // Input some commands to check if usage counting is working
+    for(let i = 0; i <= 5; i++){
+      jsterm.setInputValue(i);
+      jsterm.execute();
+    }
+    is(WebConsoleUtils.usageCount, 6, "Usage count incremented")
+    WebConsoleUtils.usageCount = 0;
+    updateEditUIVisibility();
+
+    let oldVal = jsterm.inputNode.value;
+    goDoCommand("cmd_paste");
+    let notificationbox = jsterm.hud.document.getElementById("webconsole-notificationbox");
+    let notification = notificationbox.getNotificationWithValue('selfxss-notification');
+    ok(notification,  "Self-xss notification shown");
+    is(oldVal, jsterm.inputNode.value, "Paste blocked by self-xss prevention");
+
+    // Allow pasting
+    jsterm.inputNode.value = "allow pasting";
+    var evt = document.createEvent("KeyboardEvent");
+    evt.initKeyEvent ("keyup", true, true, window,
+                      0, 0, 0, 0,
+                      0, " ".charCodeAt(0));
+    jsterm.inputNode.dispatchEvent(evt);
+    jsterm.inputNode.value = "";
+    goDoCommand("cmd_paste");
+    isnot("", jsterm.inputNode.value, "Paste works");
+  }
   function onClipboardPaste() {
     ok(!jsterm.completeNode.value, "no completion value after paste");
 
