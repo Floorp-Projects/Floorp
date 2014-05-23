@@ -226,23 +226,6 @@ class GlobalObject : public JSObject
     }
 
   private:
-    void setDetailsForKey(JSProtoKey key, JSObject *ctor, JSObject *proto) {
-        JS_ASSERT(getConstructor(key).isUndefined());
-        JS_ASSERT(getPrototype(key).isUndefined());
-        JS_ASSERT(getConstructorPropertySlot(key).isUndefined());
-        setConstructor(key, ObjectValue(*ctor));
-        setPrototype(key, ObjectValue(*proto));
-        setConstructorPropertySlot(key, ObjectValue(*ctor));
-    }
-
-    void setObjectClassDetails(JSFunction *ctor, JSObject *proto) {
-        setDetailsForKey(JSProto_Object, ctor, proto);
-    }
-
-    void setFunctionClassDetails(JSFunction *ctor, JSObject *proto) {
-        setDetailsForKey(JSProto_Function, ctor, proto);
-    }
-
     bool arrayClassInitialized() const {
         return classIsInitialized(JSProto_Array);
     }
