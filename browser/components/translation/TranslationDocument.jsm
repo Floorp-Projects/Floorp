@@ -115,21 +115,27 @@ this.TranslationDocument.prototype = {
    * Besides generating the string, it's also stored in the "original"
    * field of the TranslationItem object, which needs to be stored for
    * later to be used in the "Show Original" functionality.
+   * If this function had already been called for the given item (determined
+   * by the presence of the "original" array in the item), the text will
+   * be regenerated from the "original" data instead of from the related
+   * DOM nodes (because the nodes might contain translated data).
    *
    * @param item     A TranslationItem object
    *
    * @returns        A string representation of the TranslationItem.
    */
   generateTextForItem: function(item) {
+    if (item.original) {
+      return regenerateTextFromOriginalHelper(item);
+    }
+
     if (item.isSimpleRoot) {
       let text = item.nodeRef.firstChild.nodeValue.trim();
       item.original = [text];
       return text;
     }
 
-    let localName = item.isRoot ? "div" : "b";
-    let str = '<' + localName + ' id="n' + item.id + '">';
-
+    let str = "";
     item.original = [];
 
     for (let child of item.nodeRef.childNodes) {
@@ -157,8 +163,7 @@ this.TranslationDocument.prototype = {
       }
     }
 
-    str += '</' + localName + '>';
-    return str;
+    return generateTranslationHtmlForItem(item, str);
   },
 
   /**
@@ -315,6 +320,58 @@ TranslationItem.prototype = {
     swapTextForItem(this, target);
   }
 };
+
+/**
+ * Generate the outer HTML representation for a given item.
+ *
+ * @param   item       A TranslationItem object.
+ * param    content    The inner content for this item.
+ * @returns string     The outer HTML needed for translation
+ *                     of this item.
+ */
+function generateTranslationHtmlForItem(item, content) {
+  let localName = item.isRoot ? "div" : "b";
+  return '<' + localName + ' id="n' + item.id + '">' +
+         content +
+         "</" + localName + ">";
+}
+
+ /**
+ * Regenerate the text string that represents a TranslationItem object,
+ * with data from its "original" array. The array must have already
+ * been created by TranslationDocument.generateTextForItem().
+ *
+ * @param item     A TranslationItem object
+ *
+ * @returns        A string representation of the TranslationItem.
+ */
+function regenerateTextFromOriginalHelper(item) {
+  if (item.isSimpleRoot) {
+    return item.original[0];
+  }
+
+  let str = "";
+
+  let wasLastItemText = false;
+  for (let child of item.original) {
+    if (child instanceof TranslationItem) {
+      str += regenerateTextFromOriginalHelper(child);
+      wasLastItemText = false;
+    } else {
+      // The non-significant elements (which were replaced with <br/>
+      // during the first call to generateTextForItem) are not stored
+      // in the original array. If they are not properly re-generated,
+      // two adjacent text nodes would be merged into one.
+      if (wasLastItemText) {
+        str += "<br/>";
+      }
+      str += child;
+      wasLastItemText = true;
+    }
+  }
+
+  return generateTranslationHtmlForItem(item, str);
+}
 
 /**
  * Helper function to parse a HTML doc result.
