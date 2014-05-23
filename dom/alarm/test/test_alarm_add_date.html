@@ -57,7 +57,7 @@
          "Unexpected exception trying to add alarm for yesterday.");
 
       // Move on to the next test.
-      testNullDate();
+      return testNullDate();
     }
     domRequest.onsuccess = function(e) {
       navigator.mozAlarms.remove(e.target.result);
