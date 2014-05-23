@@ -16,6 +16,41 @@ class HTMLMediaElement;
 class MediaTrack;
 class AudioTrackList;
 class VideoTrackList;
+class AudioTrack;
+class VideoTrack;
+class MediaTrackList;
+
+/**
+ * This is for the media resource to notify its audio track and video track,
+ * when a media-resource-specific track has ended, or whether it has enabled or
+ * not. All notification methods are called from the main thread.
+ */
+class MediaTrackListListener
+{
+public:
+  MediaTrackListListener(MediaTrackList* aMediaTrackList)
+    : mMediaTrackList(aMediaTrackList) {};
+
+  ~MediaTrackListListener()
+  {
+    mMediaTrackList = nullptr;
+  };
+
+  // Notify mMediaTrackList that a track has created by the media resource,
+  // and this corresponding MediaTrack object should be added into
+  // mMediaTrackList, and fires a addtrack event.
+  void NotifyMediaTrackCreated(MediaTrack* aTrack);
+
+  // Notify mMediaTrackList that a track has ended by the media resource,
+  // and this corresponding MediaTrack object should be removed from
+  // mMediaTrackList, and fires a removetrack event.
+  void NotifyMediaTrackEnded(const nsAString& aId);
+
+protected:
+  // A weak reference to a MediaTrackList object, its lifetime managed by its
+  // owner.
+  MediaTrackList* mMediaTrackList;
+};
 
 /**
  * Base class of AudioTrackList and VideoTrackList. The AudioTrackList and
@@ -44,6 +79,19 @@ public:
 
   void RemoveTrack(const nsRefPtr<MediaTrack>& aTrack);
 
+  static already_AddRefed<AudioTrack>
+  CreateAudioTrack(const nsAString& aId,
+                   const nsAString& aKind,
+                   const nsAString& aLabel,
+                   const nsAString& aLanguage,
+                   bool aEnabled);
+
+  static already_AddRefed<VideoTrack>
+  CreateVideoTrack(const nsAString& aId,
+                   const nsAString& aKind,
+                   const nsAString& aLabel,
+                   const nsAString& aLanguage);
+
   virtual void EmptyTracks();
 
   void CreateAndDispatchChangeEvent();
@@ -62,9 +110,19 @@ public:
   IMPL_EVENT_HANDLER(addtrack)
   IMPL_EVENT_HANDLER(removetrack)
 
+  friend class MediaTrackListListener;
+  friend class AudioTrack;
+  friend class VideoTrack;
+
 protected:
   void CreateAndDispatchTrackEventRunner(MediaTrack* aTrack,
                                          const nsAString& aEventName);
+
+  virtual AudioTrackList* AsAudioTrackList() { return nullptr; }
+
+  virtual VideoTrackList* AsVideoTrackList() { return nullptr; }
+
+  HTMLMediaElement* GetMediaElement() { return mMediaElement; }
 
   nsTArray<nsRefPtr<MediaTrack>> mTracks;
   nsRefPtr<HTMLMediaElement> mMediaElement;
