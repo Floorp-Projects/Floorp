@@ -5,21 +5,8 @@
 
 package org.mozilla.gecko.distribution;
 
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
-import org.mozilla.gecko.GeckoSharedPrefs;
-import org.mozilla.gecko.mozglue.RobocopTarget;
-import org.mozilla.gecko.util.ThreadUtils;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.app.Activity;
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.util.Log;
-
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,12 +20,37 @@ import java.util.Scanner;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.mozglue.RobocopTarget;
+import org.mozilla.gecko.util.ThreadUtils;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.util.Log;
+
+/**
+ * Handles distribution file loading and fetching,
+ * and the corresponding hand-offs to Gecko.
+ */
 public final class Distribution {
     private static final String LOGTAG = "GeckoDistribution";
 
     private static final int STATE_UNKNOWN = 0;
     private static final int STATE_NONE = 1;
     private static final int STATE_SET = 2;
+
+    private final Context context;
+    private final String packagePath;
+    private final String prefsBranch;
+
+    private volatile int state = STATE_UNKNOWN;
+    private File distributionDir = null;
 
     public static class DistributionDescriptor {
         public final boolean valid;
@@ -83,7 +95,7 @@ public final class Distribution {
     }
 
     /**
-     * Initializes distribution if it hasn't already been initalized. Sends
+     * Initializes distribution if it hasn't already been initialized. Sends
      * messages to Gecko as appropriate.
      *
      * @param packagePath where to look for the distribution directory.
@@ -120,13 +132,6 @@ public final class Distribution {
         return dist.getBookmarks();
     }
 
-    private final Context context;
-    private final String packagePath;
-    private final String prefsBranch;
-
-    private int state = STATE_UNKNOWN;
-    private File distributionDir = null;
-
     /**
      * @param packagePath where to look for the distribution directory.
      */
@@ -141,149 +146,14 @@ public final class Distribution {
     }
 
     /**
-     * Don't call from the main thread.
-     *
-     * @return true if we've set a distribution.
-     */
-    private boolean doInit() {
-        // Bail if we've already tried to initialize the distribution, and
-        // there wasn't one.
-        final SharedPreferences settings;
-        if (prefsBranch == null) {
-            settings = GeckoSharedPrefs.forApp(context);
-        } else {
-            settings = context.getSharedPreferences(prefsBranch, Activity.MODE_PRIVATE);
-        }
-
-        String keyName = context.getPackageName() + ".distribution_state";
-        this.state = settings.getInt(keyName, STATE_UNKNOWN);
-        if (this.state == STATE_NONE) {
-            return false;
-        }
-
-        // We've done the work once; don't do it again.
-        if (this.state == STATE_SET) {
-            // Note that we don't compute the distribution directory.
-            // Call `ensureDistributionDir` if you need it.
-            return true;
-        }
-
-        boolean distributionSet = false;
-        try {
-            // First, try copying distribution files out of the APK.
-            distributionSet = copyFiles();
-            if (distributionSet) {
-                // We always copy to the data dir, and we only copy files from
-                // a 'distribution' subdirectory. Track our dist dir now that
-                // we know it.
-                this.distributionDir = new File(getDataDir(), "distribution/");
-            }
-        } catch (IOException e) {
-            Log.e(LOGTAG, "Error copying distribution files", e);
-        }
-
-        if (!distributionSet) {
-            // If there aren't any distribution files in the APK, look in the /system directory.
-            File distDir = getSystemDistributionDir();
-            if (distDir.exists()) {
-                distributionSet = true;
-                this.distributionDir = distDir;
-            }
-        }
-
-        this.state = distributionSet ? STATE_SET : STATE_NONE;
-        settings.edit().putInt(keyName, this.state).commit();
-        return distributionSet;
-    }
-
-    /**
-     * Copies the /distribution folder out of the APK and into the app's data directory.
-     * Returns true if distribution files were found and copied.
-     */
-    private boolean copyFiles() throws IOException {
-        File applicationPackage = new File(packagePath);
-        ZipFile zip = new ZipFile(applicationPackage);
-
-        boolean distributionSet = false;
-        Enumeration<? extends ZipEntry> zipEntries = zip.entries();
-
-        byte[] buffer = new byte[1024];
-        while (zipEntries.hasMoreElements()) {
-            ZipEntry fileEntry = zipEntries.nextElement();
-            String name = fileEntry.getName();
-
-            if (!name.startsWith("distribution/")) {
-                continue;
-            }
-
-            distributionSet = true;
-
-            File outFile = new File(getDataDir(), name);
-            File dir = outFile.getParentFile();
-
-            if (!dir.exists()) {
-                if (!dir.mkdirs()) {
-                    Log.e(LOGTAG, "Unable to create directories: " + dir.getAbsolutePath());
-                    continue;
-                }
-            }
-
-            InputStream fileStream = zip.getInputStream(fileEntry);
-            OutputStream outStream = new FileOutputStream(outFile);
-
-            int count;
-            while ((count = fileStream.read(buffer)) != -1) {
-                outStream.write(buffer, 0, count);
-            }
-
-            fileStream.close();
-            outStream.close();
-            outFile.setLastModified(fileEntry.getTime());
-        }
-
-        zip.close();
-
-        return distributionSet;
-    }
-
-    /**
-     * After calling this method, either <code>distributionDir</code>
-     * will be set, or there is no distribution in use.
-     *
-     * Only call after init.
-     */
-    private File ensureDistributionDir() {
-        if (this.distributionDir != null) {
-            return this.distributionDir;
-        }
-
-        if (this.state != STATE_SET) {
-            return null;
-        }
-
-        // After init, we know that either we've copied a distribution out of
-        // the APK, or it exists in /system/.
-        // Look in each location in turn.
-        // (This could be optimized by caching the path in shared prefs.)
-        File copied = new File(getDataDir(), "distribution/");
-        if (copied.exists()) {
-            return this.distributionDir = copied;
-        }
-        File system = getSystemDistributionDir();
-        if (system.exists()) {
-            return this.distributionDir = system;
-        }
-        return null;
-    }
-
-    /**
      * Helper to grab a file in the distribution directory.
      *
      * Returns null if there is no distribution directory or the file
      * doesn't exist. Ensures init first.
      */
     public File getDistributionFile(String name) {
-        Log.i(LOGTAG, "Getting file from distribution.");
+        Log.d(LOGTAG, "Getting file from distribution.");
+
         if (this.state == STATE_UNKNOWN) {
             if (!this.doInit()) {
                 return null;
@@ -345,6 +215,194 @@ public final class Distribution {
             Log.e(LOGTAG, "Error parsing bookmarks.json", e);
         }
 
+        return null;
+    }
+
+    /**
+     * Don't call from the main thread.
+     *
+     * Postcondition: if this returns true, distributionDir will have been
+     * set and populated.
+     *
+     * @return true if we've set a distribution.
+     */
+    private boolean doInit() {
+        ThreadUtils.assertNotOnUiThread();
+
+        // Bail if we've already tried to initialize the distribution, and
+        // there wasn't one.
+        final SharedPreferences settings;
+        if (prefsBranch == null) {
+            settings = GeckoSharedPrefs.forApp(context);
+        } else {
+            settings = context.getSharedPreferences(prefsBranch, Activity.MODE_PRIVATE);
+        }
+
+        String keyName = context.getPackageName() + ".distribution_state";
+        this.state = settings.getInt(keyName, STATE_UNKNOWN);
+        if (this.state == STATE_NONE) {
+            return false;
+        }
+
+        // We've done the work once; don't do it again.
+        if (this.state == STATE_SET) {
+            // Note that we don't compute the distribution directory.
+            // Call `ensureDistributionDir` if you need it.
+            return true;
+        }
+
+        // We try the APK, then the system directory.
+        final boolean distributionSet =
+                checkAPKDistribution() ||
+                checkSystemDistribution();
+
+        this.state = distributionSet ? STATE_SET : STATE_NONE;
+        settings.edit().putInt(keyName, this.state).commit();
+        return distributionSet;
+    }
+
+    /**
+     * @return true if we copied files out of the APK. Sets distributionDir in that case.
+     */
+    private boolean checkAPKDistribution() {
+        try {
+            // First, try copying distribution files out of the APK.
+            if (copyFiles()) {
+                // We always copy to the data dir, and we only copy files from
+                // a 'distribution' subdirectory. Track our dist dir now that
+                // we know it.
+                this.distributionDir = new File(getDataDir(), "distribution/");
+                return true;
+            }
+        } catch (IOException e) {
+            Log.e(LOGTAG, "Error copying distribution files from APK.", e);
+        }
+        return false;
+    }
+
+    /**
+     * @return true if we found a system distribution. Sets distributionDir in that case.
+     */
+    private boolean checkSystemDistribution() {
+        // If there aren't any distribution files in the APK, look in the /system directory.
+        final File distDir = getSystemDistributionDir();
+        if (distDir.exists()) {
+            this.distributionDir = distDir;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Copies the /distribution folder out of the APK and into the app's data directory.
+     * Returns true if distribution files were found and copied.
+     */
+    private boolean copyFiles() throws IOException {
+        final File applicationPackage = new File(packagePath);
+        final ZipFile zip = new ZipFile(applicationPackage);
+
+        boolean distributionSet = false;
+        try {
+            final byte[] buffer = new byte[1024];
+
+            final Enumeration<? extends ZipEntry> zipEntries = zip.entries();
+            while (zipEntries.hasMoreElements()) {
+                final ZipEntry fileEntry = zipEntries.nextElement();
+                final String name = fileEntry.getName();
+
+                if (fileEntry.isDirectory()) {
+                    // We'll let getDataFile deal with creating the directory hierarchy.
+                    continue;
+                }
+
+                if (!name.startsWith("distribution/")) {
+                    continue;
+                }
+
+                final File outFile = getDataFile(name);
+                if (outFile == null) {
+                    continue;
+                }
+
+                distributionSet = true;
+
+                final InputStream fileStream = zip.getInputStream(fileEntry);
+                try {
+                    writeStream(fileStream, outFile, fileEntry.getTime(), buffer);
+                } finally {
+                    fileStream.close();
+                }
+            }
+        } finally {
+            zip.close();
+        }
+
+        return distributionSet;
+    }
+
+    private void writeStream(InputStream fileStream, File outFile, final long modifiedTime, byte[] buffer)
+            throws FileNotFoundException, IOException {
+        final OutputStream outStream = new FileOutputStream(outFile);
+        try {
+            int count;
+            while ((count = fileStream.read(buffer)) > 0) {
+                outStream.write(buffer, 0, count);
+            }
+
+            outFile.setLastModified(modifiedTime);
+        } finally {
+            outStream.close();
+        }
+    }
+
+    /**
+     * Return a File instance in the data directory, ensuring
+     * that the parent exists.
+     *
+     * @return null if the parents could not be created.
+     */
+    private File getDataFile(final String name) {
+        File outFile = new File(getDataDir(), name);
+        File dir = outFile.getParentFile();
+
+        if (!dir.exists()) {
+            Log.d(LOGTAG, "Creating " + dir.getAbsolutePath());
+            if (!dir.mkdirs()) {
+                Log.e(LOGTAG, "Unable to create directories: " + dir.getAbsolutePath());
+                return null;
+            }
+        }
+
+        return outFile;
+    }
+
+    /**
+     * After calling this method, either <code>distributionDir</code>
+     * will be set, or there is no distribution in use.
+     *
+     * Only call after init.
+     */
+    private File ensureDistributionDir() {
+        if (this.distributionDir != null) {
+            return this.distributionDir;
+        }
+
+        if (this.state != STATE_SET) {
+            return null;
+        }
+
+        // After init, we know that either we've copied a distribution out of
+        // the APK, or it exists in /system/.
+        // Look in each location in turn.
+        // (This could be optimized by caching the path in shared prefs.)
+        File copied = new File(getDataDir(), "distribution/");
+        if (copied.exists()) {
+            return this.distributionDir = copied;
+        }
+        File system = getSystemDistributionDir();
+        if (system.exists()) {
+            return this.distributionDir = system;
+        }
         return null;
     }
 
