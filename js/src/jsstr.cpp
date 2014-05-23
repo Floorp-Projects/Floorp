@@ -2775,7 +2775,7 @@ static inline JSFatInlineString *
 FlattenSubstrings(JSContext *cx, const jschar *chars,
                   const StringRange *ranges, size_t rangesLen, size_t outputLen)
 {
-    JS_ASSERT(JSFatInlineString::twoByteLengthFits(outputLen));
+    JS_ASSERT(JSFatInlineString::lengthFits(outputLen));
 
     JSFatInlineString *str = js_NewGCFatInlineString<CanGC>(cx);
     if (!str)
@@ -2817,7 +2817,7 @@ AppendSubstrings(JSContext *cx, Handle<JSFlatString*> flatStr,
         size_t substrLen = 0;
         size_t end = i;
         for (; end < rangesLen; end++) {
-            if (substrLen + ranges[end].length > JSFatInlineString::MAX_LENGTH_TWO_BYTE)
+            if (substrLen + ranges[end].length > JSFatInlineString::MAX_FAT_INLINE_LENGTH)
                 break;
             substrLen += ranges[end].length;
         }
@@ -4179,7 +4179,7 @@ template <AllowGC allowGC>
 JSFlatString *
 js_NewStringCopyN(ExclusiveContext *cx, const jschar *s, size_t n)
 {
-    if (JSFatInlineString::twoByteLengthFits(n))
+    if (JSFatInlineString::lengthFits(n))
         return NewFatInlineString<allowGC>(cx, TwoByteChars(s, n));
 
     jschar *news = cx->pod_malloc<jschar>(n + 1);
@@ -4203,7 +4203,7 @@ template <AllowGC allowGC>
 JSFlatString *
 js_NewStringCopyN(ThreadSafeContext *cx, const char *s, size_t n)
 {
-    if (JSFatInlineString::twoByteLengthFits(n))
+    if (JSFatInlineString::lengthFits(n))
         return NewFatInlineString<allowGC>(cx, JS::Latin1Chars(s, n));
 
     jschar *chars = InflateString(cx, s, &n);
@@ -4226,7 +4226,7 @@ JSFlatString *
 js_NewStringCopyZ(ExclusiveContext *cx, const jschar *s)
 {
     size_t n = js_strlen(s);
-    if (JSFatInlineString::twoByteLengthFits(n))
+    if (JSFatInlineString::lengthFits(n))
         return NewFatInlineString<allowGC>(cx, TwoByteChars(s, n));
 
     size_t m = (n + 1) * sizeof(jschar);
