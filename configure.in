@@ -3546,6 +3546,17 @@ MOZ_ARG_DISABLE_BOOL(unified-compilation,
     MOZ_DISABLE_UNIFIED_COMPILATION=)
 AC_SUBST(MOZ_DISABLE_UNIFIED_COMPILATION)
 
+dnl ========================================================
+dnl Multiprocess Firefox Nightly Testing UI
+dnl To be removed in Bug 1003313
+dnl ========================================================
+if test -z "$NIGHTLY_BUILD"; then
+    E10S_TESTING_ONLY=1
+fi
+
+AC_SUBST(E10S_TESTING_ONLY)
+
+dnl ========================================================
 dnl system libevent Support
 dnl ========================================================
 MOZ_ARG_WITH_STRING(system-libevent,

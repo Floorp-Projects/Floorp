@@ -679,18 +679,6 @@
   opacity: 0.6;
 }
 
-.variable-or-property[non-configurable]:not([pseudo-item]) > .title > .name {
-  border-bottom: 1px dashed #99f;
-}
-
-.variable-or-property[non-writable]:not([pseudo-item]) > .title > .name {
-  border-bottom: 1px dashed #f99;
-}
-
-.variable-or-property[safe-getter]:not([pseudo-item]) > .title > .name {
-  border-bottom: 1px dashed #8b0;
-}
-
 .variable-or-property-non-writable-icon {
   background: url("chrome://browser/skin/devtools/vview-lock.png") no-repeat;
   background-size: cover;

@@ -18,21 +18,34 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        openWebIDE().then((win) => {
+        Task.spawn(function* () {
+            let win = yield openWebIDE();
+
             ok(win, "Found a window");
             ok(win.AppManager, "App Manager accessible");
             let appmgr = win.AppManager;
             ok(appmgr.connection, "App Manager connection ready");
             ok(appmgr.runtimeList, "Runtime list ready");
             ok(appmgr.webAppsStore, "WebApps store ready");
-            closeWebIDE(win).then(() => {
-              ok(!appmgr.connection, "App Manager connection destroyed");
-              ok(!appmgr.runtimeList, "Runtime list destroyed");
-              ok(!appmgr.webAppsStore, "WebApps store destroyed");
-              SimpleTest.finish();
-            });
-        });
 
+            // test error reporting
+            let nbox = win.document.querySelector("#body");
+            let notification =  nbox.getNotificationWithValue("webide:errornotification");
+            ok(!notification, "No notification yet");
+            let deferred = promise.defer();
+            nextTick().then(() => {
+              deferred.reject("BOOM!");
+            });
+            try {
+              yield win.UI.busyUntil(deferred.promise, "xx");
+            } catch(e) {/* This *will* fail */}
+            notification =  nbox.getNotificationWithValue("webide:errornotification");
+            ok(notification, "Error has been reported");
+
+            yield closeWebIDE(win);
+
+            SimpleTest.finish();
+        });
       }
     </script>
   </body>

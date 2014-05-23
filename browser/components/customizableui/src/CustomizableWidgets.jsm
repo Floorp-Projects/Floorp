@@ -906,7 +906,7 @@ if (Services.metro && Services.metro.supported) {
 #endif
 #endif
 
-#ifdef NIGHTLY_BUILD
+#ifdef E10S_TESTING_ONLY
 /**
  * The e10s button's purpose is to lower the barrier of entry
  * for our Nightly testers to use e10s windows. We'll be removing it
