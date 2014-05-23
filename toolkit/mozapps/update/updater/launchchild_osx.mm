@@ -75,27 +75,18 @@ void LaunchChild(int argc, char **argv)
 }
 
 void
-LaunchMacPostProcess(const char* aAppExe)
+LaunchMacPostProcess(const char* aAppBundle)
 {
   // Launch helper to perform post processing for the update; this is the Mac
   // analogue of LaunchWinPostProcess (PostUpdateWin).
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-  // Find the app bundle containing the executable path given
-  NSString *path = [NSString stringWithUTF8String:aAppExe];
-  NSBundle *bundle;
-  do {
-    path = [path stringByDeletingLastPathComponent];
-    bundle = [NSBundle bundleWithPath:path];
-  } while ((!bundle || ![bundle bundleIdentifier]) && [path length] > 1);
-  if (!bundle) {
-    // No bundle found for the app being launched
-    [pool release];
-    return;
-  }
+  NSString* iniPath = [NSString stringWithUTF8String:aAppBundle];
+  iniPath =
+    [iniPath stringByAppendingPathComponent:@"Contents/MacOS/updater.ini"];
 
-  NSString *iniPath = [bundle pathForResource:@"updater" ofType:@"ini"];
-  if (!iniPath) {
+  NSFileManager* fileManager = [NSFileManager defaultManager];
+  if (![fileManager fileExistsAtPath:iniPath]) {
     // the file does not exist; there is nothing to run
     [pool release];
     return;
@@ -119,9 +110,9 @@ LaunchMacPostProcess(const char* aAppExe)
     [pool release];
     return;
   }
-  
-  NSString *resourcePath = [bundle resourcePath];
-  NSString *exeFullPath = [resourcePath stringByAppendingPathComponent:exeRelPath];
+
+  NSString* exeFullPath = [NSString stringWithUTF8String:aAppBundle];
+  exeFullPath = [exeFullPath stringByAppendingPathComponent:exeRelPath];
 
   NSTask *task = [[NSTask alloc] init];
   [task setLaunchPath:exeFullPath];
@@ -131,6 +122,6 @@ LaunchMacPostProcess(const char* aAppExe)
   // ignore the return value of the task, there's nothing we can do with it
   [task release];
 
-  [pool release];  
+  [pool release];
 }
 

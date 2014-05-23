@@ -3173,7 +3173,10 @@ int NS_main(int argc, NS_tchar **argv)
 #endif /* XP_WIN */
 #ifdef XP_MACOSX
     if (gSucceeded) {
-      LaunchMacPostProcess(argv[callbackIndex]);
+      char installDir[MAXPATHLEN];
+      if (GetInstallationDir(installDir)) {
+        LaunchMacPostProcess(installDir);
+      }
     }
 #endif /* XP_MACOSX */
 
