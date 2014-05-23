@@ -8,6 +8,11 @@
 
 var kSignonBundle;
 var showingPasswords = false;
+var dateFormatter = new Intl.DateTimeFormat(undefined,
+                      { day: "numeric", month: "short", year: "numeric" });
+var dateAndTimeFormatter = new Intl.DateTimeFormat(undefined,
+                             { day: "numeric", month: "short", year: "numeric",
+                               hour: "numeric", minute: "numeric" });
 
 function SignonsStartup() {
   kSignonBundle = document.getElementById("signonBundle");
@@ -41,6 +46,7 @@ var signonsTreeView = {
   getProgressMode : function(row,column) {},
   getCellValue : function(row,column) {},
   getCellText : function(row,column) {
+    var time;
     var signon = this._filterSet.length ? this._filterSet[row] : signons[row];
     switch (column.id) {
       case "siteCol":
@@ -51,6 +57,17 @@ var signonsTreeView = {
         return signon.username || "";
       case "passwordCol":
         return signon.password || "";
+      case "timeCreatedCol":
+        time = new Date(signon.timeCreated);
+        return dateFormatter.format(time);
+      case "timeLastUsedCol":
+        time = new Date(signon.timeLastUsed);
+        return dateAndTimeFormatter.format(time);
+      case "timePasswordChangedCol":
+        time = new Date(signon.timePasswordChanged);
+        return dateFormatter.format(time);
+      case "timesUsedCol":
+        return signon.timesUsed;
       default:
         return "";
     }
@@ -77,6 +94,7 @@ function LoadSignons() {
   } catch (e) {
     signons = [];
   }
+  signons.forEach(login => login.QueryInterface(Components.interfaces.nsILoginMetaInfo));
   signonsTreeView.rowCount = signons.length;
 
   // sort and display the table
@@ -197,6 +215,14 @@ function getColumnByName(column) {
       return document.getElementById("userCol");
     case "password":
       return document.getElementById("passwordCol");
+    case "timeCreated":
+      return document.getElementById("timeCreatedCol");
+    case "timeLastUsed":
+      return document.getElementById("timeLastUsedCol");
+    case "timePasswordChanged":
+      return document.getElementById("timePasswordChangedCol");
+    case "timesUsed":
+      return document.getElementById("timesUsedCol");
   }
 }
 

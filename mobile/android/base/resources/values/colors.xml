@@ -96,4 +96,8 @@
   <color name="swipe_refresh_orange">#FFFFC26C</color>
   <color name="swipe_refresh_white">#FFFFFFFF</color>
   <color name="swipe_refresh_orange_dark">#FF9500</color>
+
+  <!-- Remote tabs setup -->
+  <color name="remote_tabs_setup_button_background">#E66000</color>
+  <color name="remote_tabs_setup_button_background_hit">#D95300</color>
 </resources>

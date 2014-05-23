@@ -7,6 +7,7 @@ package org.mozilla.gecko.tabspanel;
 
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoAppShell.AppStateListener;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.LightweightTheme;
@@ -23,7 +24,6 @@ import android.os.Build;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -63,6 +63,7 @@ public class TabsPanel extends LinearLayout
     private PanelView mPanelRemote;
     private RelativeLayout mFooter;
     private TabsLayoutChangeListener mLayoutChangeListener;
+    private AppStateListener mAppStateListener;
 
     private IconTabWidget mTabWidget;
     private static ImageButton mAddTab;
@@ -90,6 +91,24 @@ public class TabsPanel extends LinearLayout
 
         LayoutInflater.from(context).inflate(R.layout.tabs_panel, this);
         initialize();
+
+        mAppStateListener = new AppStateListener() {
+            @Override
+            public void onResume() {
+                if (mPanel == mPanelRemote) {
+                    // Refresh the remote panel.
+                    mPanelRemote.show();
+                }
+            }
+
+            @Override
+            public void onOrientationChanged() {
+                // Remote panel is already refreshed by chrome refresh.
+            }
+
+            @Override
+            public void onPause() {}
+        };
     }
 
     private void initialize() {
@@ -102,7 +121,7 @@ public class TabsPanel extends LinearLayout
         mPanelPrivate = (PanelView) findViewById(R.id.private_tabs);
         mPanelPrivate.setTabsPanel(this);
 
-        mPanelRemote = (PanelView) findViewById(R.id.synced_tabs);
+        mPanelRemote = (PanelView) findViewById(R.id.remote_tabs);
         mPanelRemote.setTabsPanel(this);
 
         mFooter = (RelativeLayout) findViewById(R.id.tabs_panel_footer);
@@ -174,12 +193,14 @@ public class TabsPanel extends LinearLayout
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
         mTheme.addListener(this);
+        mActivity.addAppStateListener(mAppStateListener);
     }
 
     @Override
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         mTheme.removeListener(this);
+        mActivity.removeAppStateListener(mAppStateListener);
     }
 
     @Override
