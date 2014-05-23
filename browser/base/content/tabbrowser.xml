@@ -2520,6 +2520,7 @@
         </body>
       </method>
 
+#ifdef E10S_TESTING_ONLY
       <!-- Opens a given tab to a non-remote window. -->
       <method name="openNonRemoteWindow">
         <parameter name="aTab"/>
@@ -2530,6 +2531,7 @@
           ]]>
         </body>
       </method>
+#endif
 
       <method name="moveTabTo">
         <parameter name="aTab"/>

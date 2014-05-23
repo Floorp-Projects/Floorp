@@ -17,10 +17,10 @@
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "gfxPrefs.h"
 
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace layers {
+
+using namespace mozilla::gfx;
 
 CompositorD3D9::CompositorD3D9(PCompositorParent* aParent, nsIWidget *aWidget)
   : Compositor(aParent)

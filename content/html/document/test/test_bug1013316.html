@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1013316
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1013316</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1013316 **/
+  SimpleTest.waitForExplicitFinish();
+   addLoadEvent(function() {
+      is(Object.keys(document.all).length, 15, "We have 15 indexed props");
+      var props = Object.getOwnPropertyNames(document.all);
+      is(props.length, 20, "Should have five names");
+      is(props[15], "display", "display first");
+      is(props[16], "content", "content second");
+      is(props[17], "bar", "bar third");
+      is(props[18], "foo", "foo fourth");
+      is(props[19], "test", "test fifth");
+
+      is(Object.keys(document.images).length, 2, "We have 2 indexed props");
+      props = Object.getOwnPropertyNames(document.images);
+      is(props.length, 5, "Should have 3 names");
+      is(props[2], "display", "display first on document.images");
+      is(props[3], "bar", "bar second on document.images");
+      is(props[4], "foo", "foo third on document.images");
+      SimpleTest.finish();
+  })
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1013316">Mozilla Bug 1013316</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <img id="display">
+  <img name="foo" id="bar">
+  <div name="baz">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

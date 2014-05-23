@@ -43,11 +43,11 @@
 #include "nsCocoaFeatures.h"
 #endif
 
-using namespace mozilla::gfx;
-using namespace mozilla::layers;
-
 namespace mozilla {
 namespace gl {
+
+using namespace mozilla::gfx;
+using namespace mozilla::layers;
 
 #ifdef DEBUG
 unsigned GLContext::sCurrentGLContextTLS = -1;

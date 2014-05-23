@@ -15,7 +15,7 @@ function test()
   //  ] count can be left to represent 1
   // ]
   let keyStates = [
-    ["d", [["div", 4], ["#d1", 1], ["#d2", 1]]],
+    ["d", [["div", 4]]],
     ["i", [["div", 4]]],
     ["v", []],
     [" ", [["div div", 2], ["div span", 2]]],
@@ -25,7 +25,7 @@ function test()
     ["VK_BACK_SPACE", [["div div", 2], ["div span", 2]]],
     ["VK_BACK_SPACE", []],
     ["VK_BACK_SPACE", [["div", 4]]],
-    ["VK_BACK_SPACE", [["div", 4], ["#d1", 1], ["#d2", 1]]],
+    ["VK_BACK_SPACE", [["div", 4]]],
     ["VK_BACK_SPACE", []],
     ["p", []],
     [" ", [["p strong"]]],
