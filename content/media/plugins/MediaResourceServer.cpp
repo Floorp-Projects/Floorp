@@ -322,7 +322,7 @@ ServeResourceEvent::Shutdown()
   // To shutdown the current thread we need to first exit this event.
   // The Shutdown event below is posted to the main thread to do this.
   nsCOMPtr<nsIRunnable> event = new ShutdownThreadEvent(NS_GetCurrentThread());
-  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  NS_DispatchToMainThread(event);
 }
 
 /*

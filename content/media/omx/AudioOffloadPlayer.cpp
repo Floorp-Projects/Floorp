@@ -342,7 +342,7 @@ status_t AudioOffloadPlayer::SeekTo(int64_t aTimeUs, bool aDispatchSeekEvents)
   if (mDispatchSeekEvents) {
     nsCOMPtr<nsIRunnable> nsEvent = NS_NewRunnableMethod(mObserver,
         &MediaDecoder::SeekingStarted);
-    NS_DispatchToMainThread(nsEvent, NS_DISPATCH_NORMAL);
+    NS_DispatchToCurrentThread(nsEvent);
   }
 
   if (mPlaying) {
@@ -362,7 +362,7 @@ status_t AudioOffloadPlayer::SeekTo(int64_t aTimeUs, bool aDispatchSeekEvents)
       AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("Fake seek complete during pause"));
       nsCOMPtr<nsIRunnable> nsEvent = NS_NewRunnableMethod(mObserver,
           &MediaDecoder::SeekingStopped);
-      NS_DispatchToMainThread(nsEvent, NS_DISPATCH_NORMAL);
+      NS_DispatchToCurrentThread(nsEvent);
     }
   }
 
@@ -415,21 +415,21 @@ void AudioOffloadPlayer::NotifyAudioEOS()
 {
   nsCOMPtr<nsIRunnable> nsEvent = NS_NewRunnableMethod(mObserver,
       &MediaDecoder::PlaybackEnded);
-  NS_DispatchToMainThread(nsEvent, NS_DISPATCH_NORMAL);
+  NS_DispatchToMainThread(nsEvent);
 }
 
 void AudioOffloadPlayer::NotifyPositionChanged()
 {
   nsCOMPtr<nsIRunnable> nsEvent = NS_NewRunnableMethod(mObserver,
       &MediaOmxDecoder::PlaybackPositionChanged);
-  NS_DispatchToMainThread(nsEvent, NS_DISPATCH_NORMAL);
+  NS_DispatchToMainThread(nsEvent);
 }
 
 void AudioOffloadPlayer::NotifyAudioTearDown()
 {
   nsCOMPtr<nsIRunnable> nsEvent = NS_NewRunnableMethod(mObserver,
       &MediaOmxDecoder::AudioOffloadTearDown);
-  NS_DispatchToMainThread(nsEvent, NS_DISPATCH_NORMAL);
+  NS_DispatchToMainThread(nsEvent);
 }
 
 // static
@@ -536,7 +536,6 @@ size_t AudioOffloadPlayer::FillBuffer(void* aData, size_t aSize)
       }
 
       if (refreshSeekTime) {
-
         if (mDispatchSeekEvents && !mSeekDuringPause) {
           mDispatchSeekEvents = false;
           AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("FillBuffer posting SEEK_COMPLETE"));
