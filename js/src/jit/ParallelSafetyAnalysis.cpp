@@ -347,6 +347,9 @@ ParallelSafetyAnalysis::analyze()
             return false;
 
         if (block->isMarked()) {
+            // Count the number of reachable blocks.
+            marked++;
+
             // Iterate through and transform the instructions.  Stop
             // if we encounter an inherently unsafe operation, in
             // which case we will transform this block into a bailout
@@ -371,9 +374,6 @@ ParallelSafetyAnalysis::analyze()
             }
 
             if (!visitor.unsafe()) {
-                // Count the number of reachable blocks.
-                marked++;
-
                 // Block consists of only safe instructions.  Visit its successors.
                 for (uint32_t i = 0; i < block->numSuccessors(); i++)
                     block->getSuccessor(i)->mark();
@@ -393,8 +393,6 @@ ParallelSafetyAnalysis::analyze()
                 // Otherwise, create a replacement that will.
                 if (!visitor.convertToBailout(*block, instr))
                     return false;
-
-                JS_ASSERT(!block->isMarked());
             }
         }
     }
@@ -470,51 +468,17 @@ ParallelSafetyVisitor::convertToBailout(MBasicBlock *block, MInstruction *ins)
     JS_ASSERT(unsafe()); // `block` must have contained unsafe items
     JS_ASSERT(block->isMarked()); // `block` must have been reachable to get here
 
-    // Clear the unsafe flag for subsequent blocks.
-    clearUnsafe();
-
-    // This block is no longer reachable.
-    block->unmark();
-
-    // Create a bailout block for each predecessor.  In principle, we
-    // only need one bailout block--in fact, only one per graph! But I
+    // Convert the block to a bailout block.  In principle, we
+    // only need one bailout block per graph! But I
     // found this approach easier to implement given the design of the
-    // MIR Graph construction routines.  Besides, most often `block`
-    // has only one predecessor.  Also, using multiple blocks helps to
-    // keep the PC information more accurate (though replacing `block`
-    // with exactly one bailout would be just as good).
-    for (size_t i = 0; i < block->numPredecessors(); i++) {
-        MBasicBlock *pred = block->getPredecessor(i);
-
-        // We only care about incoming edges from reachable predecessors.
-        if (!pred->isMarked())
-            continue;
-
-        // create bailout block to insert on this edge
-        MBasicBlock *bailBlock = MBasicBlock::NewAbortPar(graph_, block->info(), pred,
-                                                          BytecodeSite(block->trackedTree(),
-                                                                       block->pc()),
-                                                          block->entryResumePoint());
-        if (!bailBlock)
-            return false;
-
-        // if `block` had phis, we are replacing it with `bailBlock` which does not
-        if (pred->successorWithPhis() == block)
-            pred->setSuccessorWithPhis(nullptr, 0);
-
-        // redirect the predecessor to the bailout block
-        uint32_t succIdx = pred->getSuccessorIndex(block);
-        pred->replaceSuccessor(succIdx, bailBlock);
-
-        // Insert the bailout block after `block` in the execution
-        // order.  This should satisfy the RPO requirements and
-        // moreover ensures that we will visit this block in our outer
-        // walk, thus allowing us to keep the count of marked blocks
-        // accurate.
-        graph_.insertBlockAfter(block, bailBlock);
-        bailBlock->mark();
-    }
-
+    // MIR Graph construction routines. Using multiple blocks helps to
+    // keep the PC information more accurate.
+    for (size_t i = 0, e = block->numSuccessors(); i < e; i++)
+        block->getSuccessor(i)->removePredecessor(block);
+    clearUnsafe();
+    block->discardAllPhis();
+    block->discardAllInstructions();
+    block->end(MAbortPar::New(graph_.alloc()));
     return true;
 }
 
