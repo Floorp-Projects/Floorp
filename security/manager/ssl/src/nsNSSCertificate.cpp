@@ -997,52 +997,43 @@ nsNSSCertificate::GetSerialNumber(nsAString& _serialNumber)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsNSSCertificate::GetSha1Fingerprint(nsAString& _sha1Fingerprint)
+nsresult
+nsNSSCertificate::GetCertificateHash(nsAString& aFingerprint, SECOidTag aHashAlg)
 {
   nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown())
+  if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
-
-  _sha1Fingerprint.Truncate();
-  unsigned char fingerprint[20];
-  SECItem fpItem;
-  memset(fingerprint, 0, sizeof fingerprint);
-  PK11_HashBuf(SEC_OID_SHA1, fingerprint,
-               mCert->derCert.data, mCert->derCert.len);
-  fpItem.data = fingerprint;
-  fpItem.len = SHA1_LENGTH;
-  char* fpStr = CERT_Hexify(&fpItem, 1);
-  if (fpStr) {
-    _sha1Fingerprint = NS_ConvertASCIItoUTF16(fpStr);
-    PORT_Free(fpStr);
-    return NS_OK;
   }
-  return NS_ERROR_FAILURE;
+
+  aFingerprint.Truncate();
+  Digest digest;
+  nsresult rv = digest.DigestBuf(aHashAlg, mCert->derCert.data,
+                                 mCert->derCert.len);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // CERT_Hexify's second argument is an int that is interpreted as a boolean
+  char* fpStr = CERT_Hexify(const_cast<SECItem*>(&digest.get()), 1);
+  if (!fpStr) {
+    return NS_ERROR_FAILURE;
+  }
+
+  aFingerprint.AssignASCII(fpStr);
+  PORT_Free(fpStr);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetMd5Fingerprint(nsAString& _md5Fingerprint)
+nsNSSCertificate::GetSha256Fingerprint(nsAString& aSha256Fingerprint)
 {
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
+  return GetCertificateHash(aSha256Fingerprint, SEC_OID_SHA256);
+}
 
-  _md5Fingerprint.Truncate();
-  unsigned char fingerprint[20];
-  SECItem fpItem;
-  memset(fingerprint, 0, sizeof fingerprint);
-  PK11_HashBuf(SEC_OID_MD5, fingerprint,
-               mCert->derCert.data, mCert->derCert.len);
-  fpItem.data = fingerprint;
-  fpItem.len = MD5_LENGTH;
-  char* fpStr = CERT_Hexify(&fpItem, 1);
-  if (fpStr) {
-    _md5Fingerprint = NS_ConvertASCIItoUTF16(fpStr);
-    PORT_Free(fpStr);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+NS_IMETHODIMP
+nsNSSCertificate::GetSha1Fingerprint(nsAString& _sha1Fingerprint)
+{
+  return GetCertificateHash(_sha1Fingerprint, SEC_OID_SHA1);
 }
 
 NS_IMETHODIMP
