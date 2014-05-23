@@ -1590,9 +1590,7 @@ CodeGeneratorX86Shared::visitFloor(LFloor *lir)
         // Round toward -Infinity.
         masm.roundsd(input, scratch, JSC::X86Assembler::RoundDown);
 
-        masm.cvttsd2si(scratch, output);
-        masm.cmp32(output, Imm32(INT_MIN));
-        if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+        if (!bailoutCvttsd2si(scratch, output, lir->snapshot()))
             return false;
     } else {
         Label negative, end;
@@ -1607,9 +1605,7 @@ CodeGeneratorX86Shared::visitFloor(LFloor *lir)
             return false;
 
         // Input is non-negative, so truncation correctly rounds.
-        masm.cvttsd2si(input, output);
-        masm.cmp32(output, Imm32(INT_MIN));
-        if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+        if (!bailoutCvttsd2si(input, output, lir->snapshot()))
             return false;
 
         masm.jump(&end);
@@ -1621,9 +1617,7 @@ CodeGeneratorX86Shared::visitFloor(LFloor *lir)
         {
             // Truncate and round toward zero.
             // This is off-by-one for everything but integer-valued inputs.
-            masm.cvttsd2si(input, output);
-            masm.cmp32(output, Imm32(INT_MIN));
-            if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+            if (!bailoutCvttsd2si(input, output, lir->snapshot()))
                 return false;
 
             // Test whether the input double was integer-valued.
@@ -1659,9 +1653,7 @@ CodeGeneratorX86Shared::visitFloorF(LFloorF *lir)
         // Round toward -Infinity.
         masm.roundss(input, scratch, JSC::X86Assembler::RoundDown);
 
-        masm.cvttss2si(scratch, output);
-        masm.cmp32(output, Imm32(INT_MIN));
-        if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+        if (!bailoutCvttss2si(scratch, output, lir->snapshot()))
             return false;
     } else {
         Label negative, end;
@@ -1676,9 +1668,7 @@ CodeGeneratorX86Shared::visitFloorF(LFloorF *lir)
             return false;
 
         // Input is non-negative, so truncation correctly rounds.
-        masm.cvttss2si(input, output);
-        masm.cmp32(output, Imm32(INT_MIN));
-        if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+        if (!bailoutCvttss2si(input, output, lir->snapshot()))
             return false;
 
         masm.jump(&end);
@@ -1690,9 +1680,7 @@ CodeGeneratorX86Shared::visitFloorF(LFloorF *lir)
         {
             // Truncate and round toward zero.
             // This is off-by-one for everything but integer-valued inputs.
-            masm.cvttss2si(input, output);
-            masm.cmp32(output, Imm32(INT_MIN));
-            if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+            if (!bailoutCvttss2si(input, output, lir->snapshot()))
                 return false;
 
             // Test whether the input double was integer-valued.
@@ -1707,6 +1695,118 @@ CodeGeneratorX86Shared::visitFloorF(LFloorF *lir)
 
         masm.bind(&end);
     }
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitCeil(LCeil *lir)
+{
+    FloatRegister input = ToFloatRegister(lir->input());
+    FloatRegister scratch = ScratchFloatReg;
+    Register output = ToRegister(lir->output());
+
+    Label bailout, lessThanMinusOne;
+
+    // Bail on ]-1; -0] range
+    masm.loadConstantDouble(-1, scratch);
+    masm.branchDouble(Assembler::DoubleLessThanOrEqualOrUnordered, input,
+                      scratch, &lessThanMinusOne);
+
+    // Test for remaining values with the sign bit set, i.e. ]-1; -0]
+    masm.movmskpd(input, output);
+    masm.branchTest32(Assembler::NonZero, output, Imm32(1), &bailout);
+    if (!bailoutFrom(&bailout, lir->snapshot()))
+        return false;
+
+    if (AssemblerX86Shared::HasSSE41()) {
+        // x <= -1 or x > -0
+        masm.bind(&lessThanMinusOne);
+        // Round toward +Infinity.
+        masm.roundsd(input, scratch, JSC::X86Assembler::RoundUp);
+        return bailoutCvttsd2si(scratch, output, lir->snapshot());
+    }
+
+    // No SSE4.1
+    Label end;
+
+    // x >= 0 and x is not -0.0, we can truncate (resp. truncate and add 1) for
+    // integer (resp. non-integer) values.
+    // Will also work for values >= INT_MAX + 1, as the truncate
+    // operation will return INT_MIN and there'll be a bailout.
+    if (!bailoutCvttsd2si(input, output, lir->snapshot()))
+        return false;
+    masm.convertInt32ToDouble(output, scratch);
+    masm.branchDouble(Assembler::DoubleEqualOrUnordered, input, scratch, &end);
+
+    // Input is not integer-valued, add 1 to obtain the ceiling value
+    masm.addl(Imm32(1), output);
+    // if input > INT_MAX, output == INT_MAX so adding 1 will overflow.
+    if (!bailoutIf(Assembler::Overflow, lir->snapshot()))
+        return false;
+    masm.jump(&end);
+
+    // x <= -1, truncation is the way to go.
+    masm.bind(&lessThanMinusOne);
+    if (!bailoutCvttsd2si(input, output, lir->snapshot()))
+        return false;
+
+    masm.bind(&end);
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitCeilF(LCeilF *lir)
+{
+    FloatRegister input = ToFloatRegister(lir->input());
+    FloatRegister scratch = ScratchFloatReg;
+    Register output = ToRegister(lir->output());
+
+    Label bailout, lessThanMinusOne;
+
+    // Bail on ]-1; -0] range
+    masm.loadConstantFloat32(-1.f, scratch);
+    masm.branchFloat(Assembler::DoubleLessThanOrEqualOrUnordered, input,
+                     scratch, &lessThanMinusOne);
+
+    // Test for remaining values with the sign bit set, i.e. ]-1; -0]
+    masm.movmskps(input, output);
+    masm.branchTest32(Assembler::NonZero, output, Imm32(1), &bailout);
+    if (!bailoutFrom(&bailout, lir->snapshot()))
+        return false;
+
+    if (AssemblerX86Shared::HasSSE41()) {
+        // x <= -1 or x > -0
+        masm.bind(&lessThanMinusOne);
+        // Round toward +Infinity.
+        masm.roundss(input, scratch, JSC::X86Assembler::RoundUp);
+        return bailoutCvttss2si(scratch, output, lir->snapshot());
+    }
+
+    // No SSE4.1
+    Label end;
+
+    // x >= 0 and x is not -0.0, we can truncate (resp. truncate and add 1) for
+    // integer (resp. non-integer) values.
+    // Will also work for values >= INT_MAX + 1, as the truncate
+    // operation will return INT_MIN and there'll be a bailout.
+    if (!bailoutCvttss2si(input, output, lir->snapshot()))
+        return false;
+    masm.convertInt32ToFloat32(output, scratch);
+    masm.branchFloat(Assembler::DoubleEqualOrUnordered, input, scratch, &end);
+
+    // Input is not integer-valued, add 1 to obtain the ceiling value
+    masm.addl(Imm32(1), output);
+    // if input > INT_MAX, output == INT_MAX so adding 1 will overflow.
+    if (!bailoutIf(Assembler::Overflow, lir->snapshot()))
+        return false;
+    masm.jump(&end);
+
+    // x <= -1, truncation is the way to go.
+    masm.bind(&lessThanMinusOne);
+    if (!bailoutCvttss2si(input, output, lir->snapshot()))
+        return false;
+
+    masm.bind(&end);
     return true;
 }
 
@@ -1736,10 +1836,7 @@ CodeGeneratorX86Shared::visitRound(LRound *lir)
     // have to add the input to the temp register (which contains 0.5) because
     // we're not allowed to modify the input register.
     masm.addsd(input, temp);
-
-    masm.cvttsd2si(temp, output);
-    masm.cmp32(output, Imm32(INT_MIN));
-    if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+    if (!bailoutCvttsd2si(temp, output, lir->snapshot()))
         return false;
 
     masm.jump(&end);
@@ -1755,9 +1852,7 @@ CodeGeneratorX86Shared::visitRound(LRound *lir)
         masm.roundsd(temp, scratch, JSC::X86Assembler::RoundDown);
 
         // Truncate.
-        masm.cvttsd2si(scratch, output);
-        masm.cmp32(output, Imm32(INT_MIN));
-        if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+        if (!bailoutCvttsd2si(scratch, output, lir->snapshot()))
             return false;
 
         // If the result is positive zero, then the actual result is -0. Bail.
@@ -1778,9 +1873,7 @@ CodeGeneratorX86Shared::visitRound(LRound *lir)
 
             // Truncate and round toward zero.
             // This is off-by-one for everything but integer-valued inputs.
-            masm.cvttsd2si(temp, output);
-            masm.cmp32(output, Imm32(INT_MIN));
-            if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+            if (!bailoutCvttsd2si(temp, output, lir->snapshot()))
                 return false;
 
             // Test whether the truncated double was integer-valued.
@@ -1825,9 +1918,7 @@ CodeGeneratorX86Shared::visitRoundF(LRoundF *lir)
     // we're not allowed to modify the input register.
     masm.addss(input, temp);
 
-    masm.cvttss2si(temp, output);
-    masm.cmp32(output, Imm32(INT_MIN));
-    if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+    if (!bailoutCvttss2si(temp, output, lir->snapshot()))
         return false;
 
     masm.jump(&end);
@@ -1843,9 +1934,7 @@ CodeGeneratorX86Shared::visitRoundF(LRoundF *lir)
         masm.roundss(temp, scratch, JSC::X86Assembler::RoundDown);
 
         // Truncate.
-        masm.cvttss2si(scratch, output);
-        masm.cmp32(output, Imm32(INT_MIN));
-        if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+        if (!bailoutCvttss2si(scratch, output, lir->snapshot()))
             return false;
 
         // If the result is positive zero, then the actual result is -0. Bail.
@@ -1865,9 +1954,7 @@ CodeGeneratorX86Shared::visitRoundF(LRoundF *lir)
 
             // Truncate and round toward zero.
             // This is off-by-one for everything but integer-valued inputs.
-            masm.cvttss2si(temp, output);
-            masm.cmp32(output, Imm32(INT_MIN));
-            if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+            if (!bailoutCvttss2si(temp, output, lir->snapshot()))
                 return false;
 
             // Test whether the truncated double was integer-valued.

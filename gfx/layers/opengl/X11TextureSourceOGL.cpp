@@ -10,8 +10,9 @@
 #include "gfxXlibSurface.h"
 #include "gfx2DGlue.h"
 
-using namespace mozilla;
-using namespace mozilla::layers;
+namespace mozilla {
+namespace layers {
+
 using namespace mozilla::gfx;
 
 X11TextureSourceOGL::X11TextureSourceOGL(CompositorOGL* aCompositor, gfxXlibSurface* aSurface)
@@ -102,3 +103,6 @@ X11TextureSourceOGL::ContentTypeToSurfaceFormat(gfxContentType aType)
 }
 
 #endif
+
+}
+}

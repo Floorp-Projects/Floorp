@@ -51,11 +51,10 @@
 
 class nsIWidget;
 
-using namespace mozilla::dom;
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace layers {
+
+using namespace mozilla::gfx;
 
 /**
  * Clips to the smallest device-pixel-aligned rectangle containing aRect

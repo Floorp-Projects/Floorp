@@ -35,11 +35,11 @@
 #include "mozilla/layers/TextureHost.h"
 #include "nsThreadUtils.h"
 
-using namespace mozilla::ipc;
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace layers {
+
+using namespace mozilla::ipc;
+using namespace mozilla::gfx;
 
 ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop, Transport* aTransport)
   : mMessageLoop(aLoop)

@@ -376,7 +376,7 @@ js_ReportOutOfMemory(ThreadSafeContext *cxArg)
     /* Report the oom. */
     if (JS::OutOfMemoryCallback oomCallback = cx->runtime()->oomCallback) {
         AutoSuppressGC suppressGC(cx);
-        oomCallback(cx);
+        oomCallback(cx, cx->runtime()->oomCallbackData);
     }
 
     if (JS_IsRunning(cx)) {

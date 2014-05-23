@@ -6576,14 +6576,17 @@ JSAutoByteString::encodeLatin1(ExclusiveContext *cx, JSString *str)
 }
 
 JS_PUBLIC_API(void)
-JS::SetLargeAllocationFailureCallback(JSRuntime *rt, JS::LargeAllocationFailureCallback lafc)
+JS::SetLargeAllocationFailureCallback(JSRuntime *rt, JS::LargeAllocationFailureCallback lafc,
+                                      void *data)
 {
     rt->largeAllocationFailureCallback = lafc;
+    rt->largeAllocationFailureCallbackData = data;
 }
 
 JS_PUBLIC_API(void)
-JS::SetOutOfMemoryCallback(JSRuntime *rt, OutOfMemoryCallback cb)
+JS::SetOutOfMemoryCallback(JSRuntime *rt, OutOfMemoryCallback cb, void *data)
 {
     rt->oomCallback = cb;
+    rt->oomCallbackData = data;
 }
 

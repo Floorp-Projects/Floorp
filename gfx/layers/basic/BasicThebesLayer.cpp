@@ -28,10 +28,10 @@
 #include "AutoMaskData.h"
 #include "gfx2DGlue.h"
 
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace layers {
+
+using namespace mozilla::gfx;
 
 static nsIntRegion
 IntersectWithClip(const nsIntRegion& aRegion, gfxContext* aContext)
