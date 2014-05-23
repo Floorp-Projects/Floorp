@@ -131,6 +131,15 @@ class GlobalObject : public JSObject
     JSObject *
     initFunctionAndObjectClasses(JSContext *cx);
 
+    // Emit the specified warning if the given slot in |obj|'s global isn't
+    // true, then set the slot to true.  Thus calling this method warns once
+    // for each global object it's called on, and every other call does
+    // nothing.
+    static bool
+    warnOnceAbout(JSContext *cx, HandleObject obj, uint32_t slot, unsigned errorNumber);
+
+
+  public:
     void setThrowTypeError(JSFunction *fun) {
         JS_ASSERT(getSlotRef(THROWTYPEERROR).isUndefined());
         setSlot(THROWTYPEERROR, ObjectValue(*fun));
@@ -146,14 +155,6 @@ class GlobalObject : public JSObject
         setSlot(INTRINSICS, ObjectValue(*obj));
     }
 
-    // Emit the specified warning if the given slot in |obj|'s global isn't
-    // true, then set the slot to true.  Thus calling this method warns once
-    // for each global object it's called on, and every other call does
-    // nothing.
-    static bool
-    warnOnceAbout(JSContext *cx, HandleObject obj, uint32_t slot, unsigned errorNumber);
-
-  public:
     Value getConstructor(JSProtoKey key) const {
         JS_ASSERT(key <= JSProto_LIMIT);
         return getSlot(APPLICATION_SLOTS + key);
@@ -797,7 +798,7 @@ DefinePropertiesAndBrand(JSContext *cx, JSObject *obj,
 typedef HashSet<GlobalObject *, DefaultHasher<GlobalObject *>, SystemAllocPolicy> GlobalObjectSet;
 
 /*
- * ClassObjectCreationOps for Function and Object. These will eventually move
+ * ClassSpec operations for Function and Object. These will eventually move
  * into jsobj.cpp and jsfun.cpp.
  */
 
@@ -812,6 +813,12 @@ CreateObjectConstructor(JSContext *cx, JSProtoKey key);
 
 JSObject *
 CreateFunctionConstructor(JSContext *cx, JSProtoKey key);
+
+bool
+FinishObjectClassInit(JSContext *cx, JS::HandleObject ctor, JS::HandleObject proto);
+
+bool
+FinishFunctionClassInit(JSContext *cx, JS::HandleObject ctor, JS::HandleObject proto);
 
 /*
  * Convenience templates to generic constructor and prototype creation functions
