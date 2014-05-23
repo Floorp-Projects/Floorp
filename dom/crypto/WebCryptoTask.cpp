@@ -24,6 +24,20 @@ namespace dom {
 
 // Convenience functions for extracting / converting information
 
+// OOM-safe CryptoBuffer initialization, suitable for constructors
+#define ATTEMPT_BUFFER_INIT(dst, src) \
+  if (!dst.Assign(src)) { \
+    mEarlyRv = NS_ERROR_DOM_UNKNOWN_ERR; \
+    return; \
+  }
+
+// OOM-safe CryptoBuffer-to-SECItem copy, suitable for DoCrypto
+#define ATTEMPT_BUFFER_TO_SECITEM(dst, src) \
+  dst = src.ToSECItem(); \
+  if (!dst) { \
+    return NS_ERROR_DOM_UNKNOWN_ERR; \
+  }
+
 class ClearException
 {
 public:
@@ -107,6 +121,264 @@ private:
   }
 };
 
+class AesTask : public ReturnArrayBufferViewTask
+{
+public:
+  AesTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
+          mozilla::dom::Key& aKey, const CryptoOperationData& aData,
+          bool aEncrypt)
+    : mSymKey(aKey.GetSymKey())
+    , mEncrypt(aEncrypt)
+  {
+    ATTEMPT_BUFFER_INIT(mData, aData);
+
+    nsString algName;
+    mEarlyRv = GetAlgorithmName(aCx, aAlgorithm, algName);
+    if (NS_FAILED(mEarlyRv)) {
+      return;
+    }
+
+    // Check that we got a reasonable key
+    if ((mSymKey.Length() != 16) &&
+        (mSymKey.Length() != 24) &&
+        (mSymKey.Length() != 32))
+    {
+      mEarlyRv = NS_ERROR_DOM_DATA_ERR;
+      return;
+    }
+
+    // Cache parameters depending on the specific algorithm
+    if (algName.EqualsLiteral(WEBCRYPTO_ALG_AES_CBC)) {
+      mMechanism = CKM_AES_CBC_PAD;
+      AesCbcParams params;
+      nsresult rv = Coerce(aCx, params, aAlgorithm);
+      if (NS_FAILED(rv) || !params.mIv.WasPassed()) {
+        mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;
+        return;
+      }
+
+      ATTEMPT_BUFFER_INIT(mIv, params.mIv.Value())
+    } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_AES_CTR)) {
+      mMechanism = CKM_AES_CTR;
+      AesCtrParams params;
+      nsresult rv = Coerce(aCx, params, aAlgorithm);
+      if (NS_FAILED(rv) || !params.mCounter.WasPassed() ||
+          !params.mLength.WasPassed()) {
+        mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+        return;
+      }
+
+      ATTEMPT_BUFFER_INIT(mIv, params.mCounter.Value())
+      if (mIv.Length() != 16) {
+        mEarlyRv = NS_ERROR_DOM_DATA_ERR;
+        return;
+      }
+
+      mCounterLength = params.mLength.Value();
+    } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_AES_GCM)) {
+      mMechanism = CKM_AES_GCM;
+      AesGcmParams params;
+      nsresult rv = Coerce(aCx, params, aAlgorithm);
+      if (NS_FAILED(rv) || !params.mIv.WasPassed()) {
+        mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+        return;
+      }
+
+      ATTEMPT_BUFFER_INIT(mIv, params.mIv.Value())
+
+      if (params.mAdditionalData.WasPassed()) {
+        ATTEMPT_BUFFER_INIT(mAad, params.mAdditionalData.Value())
+      }
+
+      // 32, 64, 96, 104, 112, 120 or 128
+      mTagLength = 128;
+      if (params.mTagLength.WasPassed()) {
+        mTagLength = params.mTagLength.Value();
+        if ((mTagLength > 128) ||
+            !(mTagLength == 32 || mTagLength == 64 ||
+              (mTagLength >= 96 && mTagLength % 8 == 0))) {
+          mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+          return;
+        }
+      }
+    } else {
+      mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+      return;
+    }
+  }
+
+private:
+  CK_MECHANISM_TYPE mMechanism;
+  CryptoBuffer mSymKey;
+  CryptoBuffer mIv;   // Initialization vector
+  CryptoBuffer mData;
+  CryptoBuffer mAad;  // Additional Authenticated Data
+  uint8_t mTagLength;
+  uint8_t mCounterLength;
+  bool mEncrypt;
+
+  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  {
+    nsresult rv;
+
+    // Construct the parameters object depending on algorithm
+    SECItem param;
+    ScopedSECItem cbcParam;
+    CK_AES_CTR_PARAMS ctrParams;
+    CK_GCM_PARAMS gcmParams;
+    switch (mMechanism) {
+      case CKM_AES_CBC_PAD:
+        ATTEMPT_BUFFER_TO_SECITEM(cbcParam, mIv);
+        param = *cbcParam;
+        break;
+      case CKM_AES_CTR:
+        ctrParams.ulCounterBits = mCounterLength;
+        MOZ_ASSERT(mIv.Length() == 16);
+        memcpy(&ctrParams.cb, mIv.Elements(), 16);
+        param.type = siBuffer;
+        param.data = (unsigned char*) &ctrParams;
+        param.len  = sizeof(ctrParams);
+        break;
+      case CKM_AES_GCM:
+        gcmParams.pIv = mIv.Elements();
+        gcmParams.ulIvLen = mIv.Length();
+        gcmParams.pAAD = mAad.Elements();
+        gcmParams.ulAADLen = mAad.Length();
+        gcmParams.ulTagBits = mTagLength;
+        param.type = siBuffer;
+        param.data = (unsigned char*) &gcmParams;
+        param.len  = sizeof(gcmParams);
+        break;
+      default:
+        return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    }
+
+    // Import the key
+    ScopedSECItem keyItem;
+    ATTEMPT_BUFFER_TO_SECITEM(keyItem, mSymKey);
+    ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+    MOZ_ASSERT(slot.get());
+    ScopedPK11SymKey symKey(PK11_ImportSymKey(slot, mMechanism, PK11_OriginUnwrap,
+                                              CKA_ENCRYPT, keyItem.get(), nullptr));
+    if (!symKey) {
+      return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+    }
+
+    // Initialize the output buffer (enough space for padding / a full tag)
+    uint32_t dataLen = mData.Length();
+    uint32_t maxLen = dataLen + 16;
+    if (!mResult.SetLength(maxLen)) {
+      return NS_ERROR_DOM_UNKNOWN_ERR;
+    }
+    uint32_t outLen = 0;
+
+    // Perform the encryption/decryption
+    if (mEncrypt) {
+      rv = MapSECStatus(PK11_Encrypt(symKey.get(), mMechanism, &param,
+                                     mResult.Elements(), &outLen, maxLen,
+                                     mData.Elements(), mData.Length()));
+    } else {
+      rv = MapSECStatus(PK11_Decrypt(symKey.get(), mMechanism, &param,
+                                     mResult.Elements(), &outLen, maxLen,
+                                     mData.Elements(), mData.Length()));
+    }
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
+
+    mResult.SetLength(outLen);
+    return rv;
+  }
+};
+
+class HmacTask : public WebCryptoTask
+{
+public:
+  HmacTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
+           mozilla::dom::Key& aKey,
+           const CryptoOperationData& aSignature,
+           const CryptoOperationData& aData,
+           bool aSign)
+    : mMechanism(aKey.Algorithm()->Mechanism())
+    , mSymKey(aKey.GetSymKey())
+    , mSign(aSign)
+  {
+    ATTEMPT_BUFFER_INIT(mData, aData);
+    if (!aSign) {
+      ATTEMPT_BUFFER_INIT(mSignature, aSignature);
+    }
+
+    // Check that we got a symmetric key
+    if (mSymKey.Length() == 0) {
+      mEarlyRv = NS_ERROR_DOM_DATA_ERR;
+      return;
+    }
+  }
+
+private:
+  CK_MECHANISM_TYPE mMechanism;
+  CryptoBuffer mSymKey;
+  CryptoBuffer mData;
+  CryptoBuffer mSignature;
+  CryptoBuffer mResult;
+  bool mSign;
+
+  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  {
+    // Initialize the output buffer
+    if (!mResult.SetLength(HASH_LENGTH_MAX)) {
+      return NS_ERROR_DOM_UNKNOWN_ERR;
+    }
+    uint32_t outLen;
+
+    // Import the key
+    ScopedSECItem keyItem;
+    ATTEMPT_BUFFER_TO_SECITEM(keyItem, mSymKey);
+    ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+    MOZ_ASSERT(slot.get());
+    ScopedPK11SymKey symKey(PK11_ImportSymKey(slot, mMechanism, PK11_OriginUnwrap,
+                                              CKA_SIGN, keyItem.get(), nullptr));
+    if (!symKey) {
+      return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+    }
+
+    // Compute the MAC
+    SECItem param = { siBuffer, nullptr, 0 };
+    ScopedPK11Context ctx(PK11_CreateContextBySymKey(mMechanism, CKA_SIGN,
+                                                     symKey.get(), &param));
+    if (!ctx.get()) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
+    nsresult rv = MapSECStatus(PK11_DigestBegin(ctx.get()));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
+    rv = MapSECStatus(PK11_DigestOp(ctx.get(), mData.Elements(), mData.Length()));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
+    rv = MapSECStatus(PK11_DigestFinal(ctx.get(), mResult.Elements(),
+                                       &outLen, HASH_LENGTH_MAX));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
+
+    mResult.SetLength(outLen);
+    return rv;
+  }
+
+  // Returns mResult as an ArrayBufferView, or an error
+  virtual void Resolve() MOZ_OVERRIDE
+  {
+    if (mSign) {
+      // Return the computed MAC
+      TypedArrayCreator<Uint8Array> ret(mResult);
+      mResultPromise->MaybeResolve(ret);
+    } else {
+      // Compare the MAC to the provided signature
+      // No truncation allowed
+      bool equal = (mResult.Length() == mSignature.Length());
+      int cmp = NSS_SecureMemcmp(mSignature.Elements(),
+                                 mResult.Elements(),
+                                 mSignature.Length());
+      equal = equal && (cmp == 0);
+      mResultPromise->MaybeResolve(equal);
+    }
+  }
+};
+
 class SimpleDigestTask : public ReturnArrayBufferViewTask
 {
 public:
@@ -114,10 +386,7 @@ public:
                    const ObjectOrString& aAlgorithm,
                    const CryptoOperationData& aData)
   {
-    if (!mData.Assign(aData)) {
-      mEarlyRv = NS_ERROR_DOM_UNKNOWN_ERR;
-      return;
-    }
+    ATTEMPT_BUFFER_INIT(mData, aData);
 
     nsString algName;
     mEarlyRv = GetAlgorithmName(aCx, aAlgorithm, algName);
@@ -513,6 +782,24 @@ WebCryptoTask::EncryptDecryptTask(JSContext* aCx,
                                   const CryptoOperationData& aData,
                                   bool aEncrypt)
 {
+  nsString algName;
+  nsresult rv = GetAlgorithmName(aCx, aAlgorithm, algName);
+  if (NS_FAILED(rv)) {
+    return new FailureTask(rv);
+  }
+
+  // Ensure key is usable for this operation
+  if ((aEncrypt  && !aKey.HasUsage(Key::ENCRYPT)) ||
+      (!aEncrypt && !aKey.HasUsage(Key::DECRYPT))) {
+    return new FailureTask(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+  }
+
+  if (algName.EqualsLiteral(WEBCRYPTO_ALG_AES_CBC) ||
+      algName.EqualsLiteral(WEBCRYPTO_ALG_AES_CTR) ||
+      algName.EqualsLiteral(WEBCRYPTO_ALG_AES_GCM)) {
+    return new AesTask(aCx, aAlgorithm, aKey, aData, aEncrypt);
+  }
+
   return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
 }
 
@@ -524,6 +811,22 @@ WebCryptoTask::SignVerifyTask(JSContext* aCx,
                               const CryptoOperationData& aData,
                               bool aSign)
 {
+  nsString algName;
+  nsresult rv = GetAlgorithmName(aCx, aAlgorithm, algName);
+  if (NS_FAILED(rv)) {
+    return new FailureTask(rv);
+  }
+
+  // Ensure key is usable for this operation
+  if ((aSign  && !aKey.HasUsage(Key::SIGN)) ||
+      (!aSign && !aKey.HasUsage(Key::VERIFY))) {
+    return new FailureTask(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+  }
+
+  if (algName.EqualsLiteral(WEBCRYPTO_ALG_HMAC)) {
+    return new HmacTask(aCx, aAlgorithm, aKey, aSignature, aData, aSign);
+  }
+
   return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
 }
 
