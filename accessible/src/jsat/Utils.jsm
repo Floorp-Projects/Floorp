@@ -151,8 +151,19 @@ this.Utils = {
   get AllMessageManagers() {
     let messageManagers = [];
 
-    for (let i = 0; i < this.win.messageManager.childCount; i++)
-      messageManagers.push(this.win.messageManager.getChildAt(i));
+    function collectLeafMessageManagers(mm) {
+      for (let i = 0; i < mm.childCount; i++) {
+        let childMM = mm.getChildAt(i);
+
+        if ("sendAsyncMessage" in childMM) {
+          messageManagers.push(childMM);
+        } else {
+          collectLeafMessageManagers(childMM);
+        }
+      }
+    }
+
+    collectLeafMessageManagers(this.win.messageManager);
 
     let document = this.CurrentContentDoc;
 
