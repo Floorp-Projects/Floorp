@@ -371,17 +371,13 @@ GlobalObject::resolveConstructor(JSContext *cx, Handle<GlobalObject*> global, JS
     // Ok, we're doing it with a class spec.
     //
 
-    // Create the constructor.
-    RootedObject ctor(cx, clasp->spec.createConstructor(cx, key));
-    if (!ctor)
-        return false;
-
-    // Define any specified functions.
-    if (const JSFunctionSpec *funs = clasp->spec.constructorFunctions) {
-        if (!JS_DefineFunctions(cx, ctor, funs))
-            return false;
-    }
-
+    // We need to create the prototype first, and immediately stash it in the
+    // slot. This is so the following bootstrap ordering is possible:
+    // * Object.prototype
+    // * Function.prototype
+    // * Function
+    // * Object
+    //
     // We don't always have a prototype (i.e. Math and JSON). If we don't,
     // |createPrototype|, |prototypeFunctions|, and |prototypeProperties|
     // should all be null.
@@ -390,13 +386,33 @@ GlobalObject::resolveConstructor(JSContext *cx, Handle<GlobalObject*> global, JS
         proto = clasp->spec.createPrototype(cx, key);
         if (!proto)
             return false;
+
+        global->setPrototype(key, ObjectValue(*proto));
     }
+
+    // Create the constructor.
+    RootedObject ctor(cx, clasp->spec.createConstructor(cx, key));
+    if (!ctor)
+        return false;
+
+    RootedId id(cx, NameToId(ClassName(key, cx)));
+    if (!global->addDataProperty(cx, id, constructorPropertySlot(key), 0))
+        return false;
+
+    global->setConstructor(key, ObjectValue(*ctor));
+    global->setConstructorPropertySlot(key, ObjectValue(*ctor));
+
+    // Define any specified functions and properties.
     if (const JSFunctionSpec *funs = clasp->spec.prototypeFunctions) {
         if (!JS_DefineFunctions(cx, proto, funs))
             return false;
     }
     if (const JSPropertySpec *props = clasp->spec.prototypeProperties) {
         if (!JS_DefineProperties(cx, proto, props))
+            return false;
+    }
+    if (const JSFunctionSpec *funs = clasp->spec.constructorFunctions) {
+        if (!JS_DefineFunctions(cx, ctor, funs))
             return false;
     }
 
@@ -408,8 +424,11 @@ GlobalObject::resolveConstructor(JSContext *cx, Handle<GlobalObject*> global, JS
     if (clasp->spec.finishInit && !clasp->spec.finishInit(cx, ctor, proto))
         return false;
 
-    // Stash things in the right slots and define the constructor on the global.
-    return initBuiltinConstructor(cx, global, key, ctor, proto);
+    // Stash type information, so that what we do here is equivalent to
+    // initBuiltinConstructor.
+    types::AddTypePropertyId(cx, global, id, ObjectValue(*ctor));
+
+    return true;
 }
 
 /* static */ bool
