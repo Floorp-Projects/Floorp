@@ -684,4 +684,8 @@
         <item name="android:minHeight">@dimen/menu_item_row_height</item>
     </style>
 
+    <style name="FloatingHintEditText" parent="android:style/Widget.EditText">
+        <item name="android:paddingTop">0dp</item>
+    </style>
+
 </resources>
