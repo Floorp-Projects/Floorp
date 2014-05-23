@@ -7,6 +7,7 @@
 #include "MediaTrack.h"
 #include "MediaTrackList.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/AudioTrack.h"
 #include "mozilla/dom/VideoTrack.h"
 #include "mozilla/dom/TrackEvent.h"
@@ -14,6 +15,33 @@
 
 namespace mozilla {
 namespace dom {
+
+void
+MediaTrackListListener::NotifyMediaTrackCreated(MediaTrack* aTrack)
+{
+  if (!mMediaTrackList && !aTrack) {
+    return;
+  }
+
+  if (aTrack->AsAudioTrack() && mMediaTrackList->AsAudioTrackList()) {
+    mMediaTrackList->AddTrack(aTrack);
+  } else if (aTrack->AsVideoTrack() && mMediaTrackList->AsVideoTrackList()) {
+    mMediaTrackList->AddTrack(aTrack);
+  }
+}
+
+void
+MediaTrackListListener::NotifyMediaTrackEnded(const nsAString& aId)
+{
+  if (!mMediaTrackList) {
+    return;
+  }
+
+  const nsRefPtr<MediaTrack> track = mMediaTrackList->GetTrackById(aId);
+  if (track) {
+    mMediaTrackList->RemoveTrack(track);
+  }
+}
 
 MediaTrackList::MediaTrackList(nsPIDOMWindow* aOwnerWindow,
                                HTMLMediaElement* aMediaElement)
@@ -75,6 +103,28 @@ MediaTrackList::RemoveTrack(const nsRefPtr<MediaTrack>& aTrack)
   mTracks.RemoveElement(aTrack);
   aTrack->SetTrackList(nullptr);
   CreateAndDispatchTrackEventRunner(aTrack, NS_LITERAL_STRING("removetrack"));
+}
+
+already_AddRefed<AudioTrack>
+MediaTrackList::CreateAudioTrack(const nsAString& aId,
+                                 const nsAString& aKind,
+                                 const nsAString& aLabel,
+                                 const nsAString& aLanguage,
+                                 bool aEnabled)
+{
+  nsRefPtr<AudioTrack> track = new AudioTrack(aId, aKind, aLabel, aLanguage,
+                                              aEnabled);
+  return track.forget();
+}
+
+already_AddRefed<VideoTrack>
+MediaTrackList::CreateVideoTrack(const nsAString& aId,
+                                 const nsAString& aKind,
+                                 const nsAString& aLabel,
+                                 const nsAString& aLanguage)
+{
+  nsRefPtr<VideoTrack> track = new VideoTrack(aId, aKind, aLabel, aLanguage);
+  return track.forget();
 }
 
 void
