@@ -271,7 +271,35 @@ interface TestJSImplInterface {
   sequence<object?> receiveNullableObjectSequence();
 
   void passSequenceOfSequences(sequence<sequence<long>> arg);
+  //XXXbz No support for sequence of sequence return values yet.
   //sequence<sequence<long>> receiveSequenceOfSequences();
+
+  // MozMap types
+  void passMozMap(MozMap<long> arg);
+  void passNullableMozMap(MozMap<long>? arg);
+  void passMozMapOfNullableInts(MozMap<long?> arg);
+  void passOptionalMozMapOfNullableInts(optional MozMap<long?> arg);
+  void passOptionalNullableMozMapOfNullableInts(optional MozMap<long?>? arg);
+  void passCastableObjectMozMap(MozMap<TestJSImplInterface> arg);
+  void passNullableCastableObjectMozMap(MozMap<TestJSImplInterface?> arg);
+  void passCastableObjectNullableMozMap(MozMap<TestJSImplInterface>? arg);
+  void passNullableCastableObjectNullableMozMap(MozMap<TestJSImplInterface?>? arg);
+  void passOptionalMozMap(optional MozMap<long> arg);
+  void passOptionalNullableMozMap(optional MozMap<long>? arg);
+  void passOptionalNullableMozMapWithDefaultValue(optional MozMap<long>? arg = null);
+  void passOptionalObjectMozMap(optional MozMap<TestJSImplInterface> arg);
+  void passExternalInterfaceMozMap(MozMap<TestExternalInterface> arg);
+  void passNullableExternalInterfaceMozMap(MozMap<TestExternalInterface?> arg);
+  void passStringMozMap(MozMap<DOMString> arg);
+  void passByteStringMozMap(MozMap<ByteString> arg);
+  void passMozMapOfMozMaps(MozMap<MozMap<long>> arg);
+  MozMap<long> receiveMozMap();
+  MozMap<long>? receiveNullableMozMap();
+  MozMap<long?> receiveMozMapOfNullableInts();
+  MozMap<long?>? receiveNullableMozMapOfNullableInts();
+  //XXXbz No support for MozMap of MozMaps return values yet.
+  //MozMap<MozMap<long>> receiveMozMapOfMozMaps();
+  MozMap<any> receiveAnyMozMap();
 
   // ArrayBuffer is handled differently in callback interfaces and the example generator.
   // Need to figure out what should be done there.  Seems like other typed array stuff is
@@ -295,6 +323,8 @@ interface TestJSImplInterface {
   //void passFloat64Array(Float64Array arg);
   //void passSequenceOfArrayBuffers(sequence<ArrayBuffer> arg);
   //void passSequenceOfNullableArrayBuffers(sequence<ArrayBuffer?> arg);
+  //void passMozMapOfArrayBuffers(MozMap<ArrayBuffer> arg);
+  //void passMozMapOfNullableArrayBuffers(MozMap<ArrayBuffer?> arg);
   //void passVariadicTypedArray(Float32Array... arg);
   //void passVariadicNullableTypedArray(Float32Array?... arg);
   //Uint8Array receiveUint8Array();
@@ -355,8 +385,20 @@ interface TestJSImplInterface {
   void passSequenceOfNullableSequenceOfAny(sequence<sequence<any>?> arg);
   void passNullableSequenceOfNullableSequenceOfAny(sequence<sequence<any>?>? arg);
   void passOptionalNullableSequenceOfNullableSequenceOfAny(optional sequence<sequence<any>?>? arg);
+  void passMozMapOfAny(MozMap<any> arg);
+  void passNullableMozMapOfAny(MozMap<any>? arg);
+  void passOptionalMozMapOfAny(optional MozMap<any> arg);
+  void passOptionalNullableMozMapOfAny(optional MozMap<any>? arg);
+  void passOptionalMozMapOfAnyWithDefaultValue(optional MozMap<any>? arg = null);
+  void passMozMapOfMozMapOfAny(MozMap<MozMap<any>> arg);
+  void passMozMapOfNullableMozMapOfAny(MozMap<MozMap<any>?> arg);
+  void passNullableMozMapOfNullableMozMapOfAny(MozMap<MozMap<any>?>? arg);
+  void passOptionalNullableMozMapOfNullableMozMapOfAny(optional MozMap<MozMap<any>?>? arg);
+  void passOptionalNullableMozMapOfNullableSequenceOfAny(optional MozMap<sequence<any>?>? arg);
+  void passOptionalNullableSequenceOfNullableMozMapOfAny(optional sequence<MozMap<any>?>? arg);
   any receiveAny();
 
+  // object types
   void passObject(object arg);
   void passVariadicObject(object... arg);
   void passNullableObject(object? arg);
@@ -369,6 +411,7 @@ interface TestJSImplInterface {
   void passNullableSequenceOfObject(sequence<object>? arg);
   void passOptionalNullableSequenceOfNullableSequenceOfObject(optional sequence<sequence<object>?>? arg);
   void passOptionalNullableSequenceOfNullableSequenceOfNullableObject(optional sequence<sequence<object?>?>? arg);
+  void passMozMapOfObject(MozMap<object> arg);
   object receiveObject();
   object? receiveNullableObject();
 
@@ -442,6 +485,9 @@ interface TestJSImplInterface {
 
   void passSequenceOfNullableUnions(sequence<(CanvasPattern or CanvasGradient)?> arg);
   void passVariadicNullableUnion((CanvasPattern or CanvasGradient)?... arg);
+  void passMozMapOfUnions(MozMap<(CanvasPattern or CanvasGradient)> arg);
+  // XXXbz no move constructor on some unions
+  // void passMozMapOfUnions2(MozMap<(object or long)> arg);
 
   //(CanvasPattern or CanvasGradient) receiveUnion();
   //(object or long) receiveUnion2();
@@ -461,6 +507,7 @@ interface TestJSImplInterface {
   void passOptionalNullableDateWithDefaultValue(optional Date? arg = null);
   void passDateSequence(sequence<Date> arg);
   void passNullableDateSequence(sequence<Date?> arg);
+  void passDateMozMap(MozMap<Date> arg);
   Date receiveDate();
   Date? receiveNullableDate();
 
@@ -487,6 +534,7 @@ interface TestJSImplInterface {
   Dict? receiveNullableDictionary();
   void passOtherDictionary(optional GrandparentDict x);
   void passSequenceOfDictionaries(sequence<Dict> x);
+  void passMozMapOfDictionaries(MozMap<GrandparentDict> x);
   // No support for nullable dictionaries inside a sequence (nor should there be)
   //  void passSequenceOfNullableDictionaries(sequence<Dict?> x);
   void passDictionaryOrLong(optional Dict x);
