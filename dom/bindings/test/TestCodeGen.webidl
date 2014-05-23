@@ -379,6 +379,12 @@ interface TestInterface {
   void passStringMozMap(MozMap<DOMString> arg);
   void passByteStringMozMap(MozMap<ByteString> arg);
   void passMozMapOfMozMaps(MozMap<MozMap<long>> arg);
+  MozMap<long> receiveMozMap();
+  MozMap<long>? receiveNullableMozMap();
+  MozMap<long?> receiveMozMapOfNullableInts();
+  MozMap<long?>? receiveNullableMozMapOfNullableInts();
+  MozMap<MozMap<long>> receiveMozMapOfMozMaps();
+  MozMap<any> receiveAnyMozMap();
 
   // Typed array types
   void passArrayBuffer(ArrayBuffer arg);

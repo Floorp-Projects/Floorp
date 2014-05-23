@@ -5015,6 +5015,7 @@ def getMaybeWrapValueFuncForType(type):
 
 
 sequenceWrapLevel = 0
+mozMapWrapLevel = 0
 
 
 def getWrapTemplateForType(type, descriptorProvider, result, successCode,
@@ -5121,26 +5122,26 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
     if type.isArray():
         raise TypeError("Can't handle array return values yet")
 
+    if (type.isSequence() or type.isMozMap()) and type.nullable():
+        # These are both wrapped in Nullable<>
+        recTemplate, recInfall = getWrapTemplateForType(type.inner, descriptorProvider,
+                                                        "%s.Value()" % result, successCode,
+                                                        returnsNewObject, exceptionCode,
+                                                        typedArraysAreStructs)
+        code = fill(
+            """
+
+            if (${result}.IsNull()) {
+              $*{setNull}
+            }
+            $*{recTemplate}
+            """,
+            result=result,
+        setNull=setNull(),
+            recTemplate=recTemplate)
+        return code, recInfall
+
     if type.isSequence():
-        if type.nullable():
-            # Nullable sequences are Nullable< nsTArray<T> >
-            recTemplate, recInfall = getWrapTemplateForType(type.inner, descriptorProvider,
-                                                            "%s.Value()" % result, successCode,
-                                                            returnsNewObject, exceptionCode,
-                                                            typedArraysAreStructs)
-            code = fill(
-                """
-
-                if (${result}.IsNull()) {
-                  $*{setNull}
-                }
-                $*{recTemplate}
-                """,
-                result=result,
-                setNull=setNull(),
-                recTemplate=recTemplate)
-            return code, recInfall
-
         # Now do non-nullable sequences.  Our success code is just to break to
         # where we set the element in the array.  Note that we bump the
         # sequenceWrapLevel around this call so that nested sequence conversions
@@ -5190,6 +5191,62 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
             index=index,
             innerTemplate=innerTemplate,
             set=setObject("*returnArray"))
+
+        return (code, False)
+
+    if type.isMozMap():
+        # Now do non-nullable MozMap.  Our success code is just to break to
+        # where we define the property on the object.  Note that we bump the
+        # mozMapWrapLevel around this call so that nested MozMap conversions
+        # will use different temp value names.
+        global mozMapWrapLevel
+        valueName = "mozMapValue%d" % mozMapWrapLevel
+        mozMapWrapLevel += 1
+        innerTemplate = wrapForType(
+            type.inner, descriptorProvider,
+            {
+                'result': valueName,
+                'successCode': "break;\n",
+                'jsvalRef': "tmp",
+                'jsvalHandle': "&tmp",
+                'returnsNewObject': returnsNewObject,
+                'exceptionCode': exceptionCode,
+                'obj': "returnObj"
+            })
+        mozMapWrapLevel -= 1
+        code = fill(
+            """
+
+            nsTArray<nsString> keys;
+            ${result}.GetKeys(keys);
+            JS::Rooted<JSObject*> returnObj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+            if (!returnObj) {
+              $*{exceptionCode}
+            }
+            // Scope for 'tmp'
+            {
+              JS::Rooted<JS::Value> tmp(cx);
+              for (size_t idx = 0; idx < keys.Length(); ++idx) {
+                auto& ${valueName} = ${result}.Get(keys[idx]);
+                // Control block to let us common up the JS_DefineUCProperty calls when there
+                // are different ways to succeed at wrapping the value.
+                do {
+                  $*{innerTemplate}
+                } while (0);
+                if (!JS_DefineUCProperty(cx, returnObj, keys[idx].get(),
+                                         keys[idx].Length(), tmp,
+                                         JSPROP_ENUMERATE)) {
+                  $*{exceptionCode}
+                }
+              }
+            }
+            $*{set}
+            """,
+            result=result,
+            exceptionCode=exceptionCode,
+            valueName=valueName,
+            innerTemplate=innerTemplate,
+            set=setObject("*returnObj"))
 
         return (code, False)
 
@@ -5554,6 +5611,26 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         else:
             rooter = None
         result = CGTemplatedType("nsTArray", result)
+        if nullable:
+            result = CGTemplatedType("Nullable", result)
+        return result, True, rooter, None
+    if returnType.isMozMap():
+        nullable = returnType.nullable()
+        if nullable:
+            returnType = returnType.inner
+        # If our result is already addrefed, use the right type in the
+        # MozMap argument here.
+        result, _, _, _ = getRetvalDeclarationForType(returnType.inner,
+                                                      descriptorProvider,
+                                                      resultAlreadyAddRefed,
+                                                      isMember="MozMap")
+        # While we have our inner type, set up our rooter, if needed
+        if not isMember and typeNeedsRooting(returnType):
+            rooter = CGGeneric("MozMapRooter<%s> resultRooter(cx, &result);\n" %
+                               result.define())
+        else:
+            rooter = None
+        result = CGTemplatedType("MozMap", result)
         if nullable:
             result = CGTemplatedType("Nullable", result)
         return result, True, rooter, None
@@ -7501,6 +7578,8 @@ class CGMemberJITInfo(CGThing):
             # No idea yet
             assert False
         if t.isSequence():
+            return "JSVAL_TYPE_OBJECT"
+        if t.isMozMap():
             return "JSVAL_TYPE_OBJECT"
         if t.isGeckoInterface():
             return "JSVAL_TYPE_OBJECT"
@@ -11420,6 +11499,16 @@ class CGNativeMember(ClassMethod):
             # And now the actual underlying type
             elementDecl = self.getReturnType(returnType.inner, True)
             type = CGTemplatedType("nsTArray", CGGeneric(elementDecl))
+            if nullable:
+                type = CGTemplatedType("Nullable", type)
+            args.append(Argument("%s&" % type.define(), "aRetVal"))
+        elif returnType.isMozMap():
+            nullable = returnType.nullable()
+            if nullable:
+                returnType = returnType.inner
+            # And now the actual underlying type
+            elementDecl = self.getReturnType(returnType.inner, True)
+            type = CGTemplatedType("MozMap", CGGeneric(elementDecl))
             if nullable:
                 type = CGTemplatedType("Nullable", type)
             args.append(Argument("%s&" % type.define(), "aRetVal"))
