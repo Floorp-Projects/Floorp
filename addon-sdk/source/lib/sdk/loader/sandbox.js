@@ -15,9 +15,9 @@ const self = require('sdk/self');
 const { getTabId, getTabForContentWindow } = require('../tabs/utils');
 const { getInnerId } = require('../window/utils');
 
-const { gDevToolsExtensions: {
-  addContentGlobal, removeContentGlobal
-} } = Cu.import("resource://gre/modules/devtools/DevToolsExtensions.jsm", {});
+const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { require: devtoolsRequire } = devtools;
+const { addContentGlobal, removeContentGlobal } = devtoolsRequire("devtools/server/content-globals");
 
 /**
  * Make a new sandbox that inherits given `source`'s principals. Source can be

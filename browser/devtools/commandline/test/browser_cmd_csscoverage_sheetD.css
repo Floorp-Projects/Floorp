@@ -1,0 +1,20 @@
+/* This should match in page 1, 2 and 3 */
+.sheetD-test1 {
+  color: #0D1;
+}
+/* This should not match anywhere */
+.sheetD-test2 {
+  color: #0D2;
+}
+/* This should match in page 1 only */
+.sheetD-test3 {
+  color: #0D3;
+}
+/* This should match in page 2 only */
+.sheetD-test4 {
+  color: #0D4;
+}
+/* This should match in page 3 only */
+.sheetD-test5 {
+  color: #0D5;
+}

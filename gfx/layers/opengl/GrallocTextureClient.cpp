@@ -171,6 +171,10 @@ GrallocTextureClientOGL::GetAsDrawTarget()
   MOZ_ASSERT(IsValid());
   MOZ_ASSERT(mMappedBuffer, "Calling TextureClient::GetAsDrawTarget without locking :(");
 
+  if (!IsValid() || !IsAllocated()) {
+    return nullptr;
+  }
+
   if (mDrawTarget) {
     return mDrawTarget;
   }

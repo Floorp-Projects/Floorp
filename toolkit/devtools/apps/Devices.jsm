@@ -18,6 +18,11 @@ const Devices = {
   },
   set helperAddonInstalled(v) {
     addonInstalled = v;
+    if (!addonInstalled) {
+      for (let name in this._devices) {
+        this.unregister(name);
+      }
+    }
     this.emit("addon-status-updated", v);
   },
 

@@ -154,7 +154,6 @@ class B2GUpdateTestCase(MarionetteTestCase):
 
     MAX_OTA_WAIT   = 60 * 2  # 2 minutes
     MAX_FOTA_WAIT  = 60 * 10 # 10 minutes
-    REMOTE_USER_JS = '/data/local/user.js'
 
     def __init__(self, marionette_weakref, **kwargs):
         if 'runner' in kwargs:
@@ -286,7 +285,6 @@ class B2GUpdateTestCase(MarionetteTestCase):
             'adb_path': self.runner.adb.tool,
             'update_xml': update_xml,
             'only_override': kwargs.get('only_override', False),
-            'remote_prefs_js': self.REMOTE_USER_JS
         }
         for key in ('complete_mar', 'partial_mar', 'url_template', 'update_dir'):
             test_kwargs[key] = kwargs.get(key)
