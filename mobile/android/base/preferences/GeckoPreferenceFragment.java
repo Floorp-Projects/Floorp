@@ -10,12 +10,14 @@ import java.util.Locale;
 
 import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.LocaleManager;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
 
 import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
@@ -32,6 +34,20 @@ import android.view.ViewConfiguration;
  * as well as initializing Gecko prefs when a fragment is shown.
 */
 public class GeckoPreferenceFragment extends PreferenceFragment {
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        Log.d(LOGTAG, "onConfigurationChanged: " + newConfig.locale);
+
+        final Activity context = getActivity();
+
+        final LocaleManager localeManager = BrowserLocaleManager.getInstance();
+        final Locale changed = localeManager.onSystemConfigurationChanged(context, getResources(), newConfig, lastLocale);
+        if (changed != null) {
+            applyLocale(changed);
+        }
+    }
 
     private static final String LOGTAG = "GeckoPreferenceFragment";
     private int mPrefsRequestId = 0;
@@ -112,7 +128,13 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
 
     @Override
     public void onResume() {
-        final Locale currentLocale = Locale.getDefault();
+        // This is a little delicate. Ensure that you do nothing prior to
+        // super.onResume that you wouldn't do in onCreate.
+        applyLocale(Locale.getDefault());
+        super.onResume();
+    }
+
+    private void applyLocale(final Locale currentLocale) {
         final Context context = getActivity().getApplicationContext();
 
         BrowserLocaleManager.getInstance().updateConfiguration(context, currentLocale);
@@ -129,8 +151,6 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
 
         // Fix the parent title regardless.
         updateTitle();
-
-        super.onResume();
     }
 
     /*
