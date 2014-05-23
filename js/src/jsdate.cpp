@@ -3049,6 +3049,7 @@ const Class DateObject::class_ = {
         GenericCreatePrototype<&DateObject::class_>,
         date_static_methods,
         date_methods,
+        nullptr,
         FinishDateClassInit
     }
 };
