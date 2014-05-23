@@ -5,16 +5,15 @@
  */
 
 [Constructor(DOMString type,
-             optional BluetoothStatusChangedEventInit eventInitDict),
+             optional BluetoothDiscoveryStateChangedEventInit eventInitDict),
  Func="Navigator::HasBluetoothSupport"]
-interface BluetoothStatusChangedEvent : Event
+interface BluetoothDiscoveryStateChangedEvent : Event
 {
-  readonly attribute DOMString address;
-  readonly attribute boolean status;
+    readonly attribute boolean discovering;
 };
 
-dictionary BluetoothStatusChangedEventInit : EventInit
+dictionary BluetoothDiscoveryStateChangedEventInit : EventInit
 {
-  DOMString address = "";
-  boolean status = false;
+    boolean discovering = false;
 };
+
