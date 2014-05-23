@@ -29,6 +29,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.background.announcements.AnnouncementsConstants;
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.healthreport.HealthReportConstants;
+import org.mozilla.gecko.db.BrowserContract.SuggestedSites;
 import org.mozilla.gecko.home.HomePanelPicker;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -40,6 +41,7 @@ import android.app.Dialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.NotificationManager;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -112,6 +114,7 @@ OnSharedPreferenceChangeListener
     private static final String PREFS_BROWSER_LOCALE = "locale";
 
     public static final String PREFS_RESTORE_SESSION = NON_PREF_PREFIX + "restoreSession3";
+    public static final String PREFS_SUGGESTED_SITES = NON_PREF_PREFIX + "home_suggested_sites";
 
     // These values are chosen to be distinct from other Activity constants.
     private static final int REQUEST_CODE_PREF_SCREEN = 5;
@@ -901,6 +904,12 @@ OnSharedPreferenceChangeListener
         if (PREFS_BROWSER_LOCALE.equals(key)) {
             onLocaleSelected(BrowserLocaleManager.getLanguageTag(lastLocale),
                              sharedPreferences.getString(key, null));
+        } else if (PREFS_SUGGESTED_SITES.equals(key)) {
+            final ContentResolver cr = getApplicationContext().getContentResolver();
+
+            // This will force all active suggested sites cursors
+            // to request a refresh (e.g. cursor loaders).
+            cr.notifyChange(SuggestedSites.CONTENT_URI, null);
         }
     }
 
