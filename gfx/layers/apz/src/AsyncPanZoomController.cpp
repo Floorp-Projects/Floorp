@@ -1630,6 +1630,7 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
 
   for (uint32_t i = 0; i < deferredTasks.length(); ++i) {
     deferredTasks[i]->Run();
+    delete deferredTasks[i];
   }
 
   // Cancel the mAsyncScrollTimeoutTask because we will fire a
