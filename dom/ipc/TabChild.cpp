@@ -2858,6 +2858,19 @@ TabChild::OnHideTooltip()
 }
 
 bool
+TabChild::RecvRequestNotifyAfterRemotePaint()
+{
+  // Get the CompositorChild instance for this content thread.
+  CompositorChild* compositor = CompositorChild::Get();
+
+  // Tell the CompositorChild that, when it gets a RemotePaintIsReady
+  // message that it should forward it us so that we can bounce it to our
+  // RenderFrameParent.
+  compositor->RequestNotifyAfterRemotePaint(this);
+  return true;
+}
+
+bool
 TabChild::RecvUIResolutionChanged()
 {
   static_cast<PuppetWidget*>(mWidget.get())->ClearBackingScaleCache();
