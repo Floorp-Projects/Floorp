@@ -38,16 +38,16 @@
 == t1204-implied-00-b-test.html t1204-implied-00-b-reference.html
 == t1204-implied-01-c-test.html t1204-implied-01-c-reference.html
 == t1204-implied-02-d-test.html t1204-implied-02-d-reference.html
-== t1204-increment-00-c-o-test.html t1204-increment-00-c-o-reference.html
-== t1204-increment-01-c-o-test.html t1204-increment-01-c-o-reference.html
-== t1204-increment-02-c-o-test.html t1204-increment-02-c-o-reference.html
+fails-if(B2G&&browserIsRemote) == t1204-increment-00-c-o-test.html t1204-increment-00-c-o-reference.html
+fails-if(B2G&&browserIsRemote) == t1204-increment-01-c-o-test.html t1204-increment-01-c-o-reference.html
+fails-if(B2G&&browserIsRemote) == t1204-increment-02-c-o-test.html t1204-increment-02-c-o-reference.html
 == t1204-multiple-00-c-test.html t1204-multiple-00-c-reference.html
 == t1204-multiple-01-c-test.html t1204-multiple-01-c-reference.html
 == t1204-order-00-c-test.html t1204-order-00-c-reference.html
 == t1204-order-01-d-test.html t1204-order-01-d-reference.html
-== t1204-reset-00-c-o-test.html t1204-reset-00-c-o-reference.html
-== t1204-reset-01-c-o-test.html t1204-reset-01-c-o-reference.html
-== t1204-reset-02-c-o-test.html t1204-reset-02-c-o-reference.html
+fails-if(B2G&&browserIsRemote) == t1204-reset-00-c-o-test.html t1204-reset-00-c-o-reference.html
+fails-if(B2G&&browserIsRemote) == t1204-reset-01-c-o-test.html t1204-reset-01-c-o-reference.html
+fails-if(B2G&&browserIsRemote) == t1204-reset-02-c-o-test.html t1204-reset-02-c-o-reference.html
 == t1204-root-e-test.html t1204-root-e-reference.html
 == t120401-scope-00-b-test.html t120401-scope-00-b-reference.html
 == t120401-scope-01-c-test.html t120401-scope-01-c-reference.html
