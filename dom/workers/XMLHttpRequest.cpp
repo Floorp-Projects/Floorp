@@ -564,17 +564,6 @@ private:
   MainThreadRun() MOZ_OVERRIDE
   {
     mProxy->Teardown();
-
-    // Make sure to stop the syncLoop of a sync XHR request whose
-    // worker was released while the request was still running.
-    if (mProxy->mSyncLoopTarget) {
-      nsRefPtr<MainThreadStopSyncLoopRunnable> runnable =
-        new MainThreadStopSyncLoopRunnable(mWorkerPrivate,
-                                           mProxy->mSyncLoopTarget.forget(),
-                                           false);
-      MOZ_ALWAYS_TRUE(runnable->Dispatch(nullptr));
-    }
-
     return NS_OK;
   }
 };
@@ -1119,9 +1108,6 @@ LoadStartDetectionRunnable::Run()
         mProxy->mWorkerPrivate = nullptr;
         mProxy->mOutstandingSendCount--;
       }
-    } else {
-      // The proxy was released and torn down by a SyncTeardownRunnable.
-      mProxy->mWorkerPrivate = nullptr;
     }
   }
 
