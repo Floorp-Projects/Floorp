@@ -31,7 +31,7 @@ add_task(function() {
   setToolbarVisibility(bookmarksToolbar, true);
   setToolbarVisibility(navbar, false);
   isnot(bookmarksToolbar.getBoundingClientRect().height, 0, "bookmarksToolbar should be visible now");
-  is(navbar.getBoundingClientRect().height, 1, "navbar should have a height=1 (due to border)");
+  is(navbar.getBoundingClientRect().height, 0, "navbar should have height=0");
   is(CustomizableUI.inDefaultState, false, "Should no longer be in default state");
 
   yield startCustomizing();
