@@ -184,6 +184,8 @@ class ReftestRunner(MozbuildObject):
 
             options.desktop = True
             options.app = self.get_binary_path()
+            if options.oop:
+                options.browser_arg = '-oop'
             if not options.app.endswith('-bin'):
                 options.app = '%s-bin' % options.app
             if not os.path.isfile(options.app):
@@ -347,6 +349,10 @@ def B2GCommand(func):
     thisChunk = CommandArgument('--this-chunk', dest='thisChunk',
         help = 'Which chunk to run between 1 and --total-chunks.')
     func = thisChunk(func)
+
+    oop = CommandArgument('--enable-oop', action='store_true', dest='oop',
+        help = 'Run tests in out-of-process mode.')
+    func = oop(func)
 
     path = CommandArgument('test_file', default=None, nargs='?',
         metavar='TEST',
