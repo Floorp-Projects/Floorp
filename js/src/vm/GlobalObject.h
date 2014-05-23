@@ -19,12 +19,6 @@
 #include "vm/ErrorObject.h"
 
 extern JSObject *
-js_InitObjectClass(JSContext *cx, js::HandleObject obj);
-
-extern JSObject *
-js_InitFunctionClass(JSContext *cx, js::HandleObject obj);
-
-extern JSObject *
 js_InitTypedArrayClasses(JSContext *cx, js::HandleObject obj);
 
 extern JSObject *
@@ -126,10 +120,6 @@ class GlobalObject : public JSObject
      */
     static_assert(JSCLASS_GLOBAL_SLOT_COUNT == RESERVED_SLOTS,
                   "global object slot counts are inconsistent");
-
-    /* Initialize the Function and Object classes.  Must only be called once! */
-    JSObject *
-    initFunctionAndObjectClasses(JSContext *cx);
 
     // Emit the specified warning if the given slot in |obj|'s global isn't
     // true, then set the slot to true.  Thus calling this method warns once
@@ -313,7 +303,7 @@ class GlobalObject : public JSObject
         if (functionObjectClassesInitialized())
             return &getPrototype(JSProto_Object).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!initFunctionAndObjectClasses(cx))
+        if (!ensureConstructor(cx, self, JSProto_Object))
             return nullptr;
         return &self->getPrototype(JSProto_Object).toObject();
     }
@@ -322,7 +312,7 @@ class GlobalObject : public JSObject
         if (functionObjectClassesInitialized())
             return &getPrototype(JSProto_Function).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!initFunctionAndObjectClasses(cx))
+        if (!ensureConstructor(cx, self, JSProto_Object))
             return nullptr;
         return &self->getPrototype(JSProto_Function).toObject();
     }
