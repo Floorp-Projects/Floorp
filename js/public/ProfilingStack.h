@@ -63,6 +63,18 @@ class ProfileEntry
         FRAME_LABEL_COPY = 0x02
     };
 
+    enum class Category {
+        OTHER    = 0x04,
+        CSS      = 0x08,
+        JS       = 0x16,
+        GC       = 0x32,
+        CC       = 0x64,
+        NETWORK  = 0x128,
+        GRAPHICS = 0x256,
+        STORAGE  = 0x512,
+        EVENTS   = 0x1024
+    };
+
     // All of these methods are marked with the 'volatile' keyword because SPS's
     // representation of the stack is stored such that all ProfileEntry
     // instances are volatile. These methods would not be available unless they

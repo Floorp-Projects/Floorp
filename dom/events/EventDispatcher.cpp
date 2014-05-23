@@ -388,7 +388,9 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
                           EventDispatchingCallback* aCallback,
                           nsCOMArray<EventTarget>* aTargets)
 {
-  PROFILER_LABEL("EventDispatcher", "Dispatch");
+  PROFILER_LABEL("EventDispatcher", "Dispatch",
+    js::ProfileEntry::Category::EVENTS);
+
   NS_ASSERTION(aEvent, "Trying to dispatch without WidgetEvent!");
   NS_ENSURE_TRUE(!aEvent->mFlags.mIsBeingDispatched,
                  NS_ERROR_DOM_INVALID_STATE_ERR);
