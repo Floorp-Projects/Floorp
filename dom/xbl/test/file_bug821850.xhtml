@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
 
           // Wait for both constructors to fire.
           window.constructorCount = (window.constructorCount + 1) || 1;
-          if (window.constructorCount != 2)
+          if (window.constructorCount != 3)
             return;
 
           // Grab some basic infrastructure off the content window.
@@ -37,6 +37,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
           ok(Cu.isXrayWrapper(document), "Document is Xrayed");
 
           var bound = document.getElementById('bound');
+          var bound2 = document.getElementById('bound2');
+          var bound3 = document.getElementById('bound3');
           ok(bound, "bound is non-null");
           is(bound.method('baz'), "method:baz", "Xray methods work");
           is(bound.prop, "propVal", "Property Xrays work");
@@ -67,6 +69,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
           ok(Function != window.Function, "Function constructors are distinct");
           is(Object.getPrototypeOf(Function.prototype), Object.getPrototypeOf({foo: 42}),
              "Function constructor is local");
+
+          ok(Object.getPrototypeOf(bound.wrappedJSObject) == Object.getPrototypeOf(bound2.wrappedJSObject),
+             "Div and div should have the same content-side prototype");
+          ok(Object.getPrototypeOf(bound.wrappedJSObject) != Object.getPrototypeOf(bound3.wrappedJSObject),
+             "Div and span should have different content-side prototypes");
+          ok(bound.wrappedJSObject.method == bound3.wrappedJSObject.method,
+             "Methods should be shared");
 
           // This gets invoked by an event handler.
           window.finish = function() {
@@ -279,6 +288,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
     // test will continue.
     document.getElementById('bound').style.MozBinding = 'url(#testBinding)';
     document.getElementById('bound2').style.MozBinding = 'url(#testBinding)';
+    document.getElementById('bound3').style.MozBinding = 'url(#testBinding)';
   }
 
   ]]>
@@ -290,6 +300,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
 <div id="content">
   <div id="bound">Bound element</div>
   <div id="bound2">Bound element</div>
+  <span id="bound3">Bound element</span>
   <img/>
 </div>
 <pre id="test">
