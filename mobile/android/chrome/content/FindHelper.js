@@ -77,8 +77,7 @@ var FindHelper = {
         this._targetTab.sendViewportUpdate();
       }
     } else {
-      // Disabled until bug 1014113 is fixed
-      //ZoomHelper.zoomToRect(aData.rect, -1, false, true);
+      ZoomHelper.zoomToRect(aData.rect, -1, false, true);
       this._viewportChanged = true;
     }
   }
