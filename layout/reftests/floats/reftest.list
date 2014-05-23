@@ -17,4 +17,4 @@ fails == 345369-2.html 345369-2-ref.html
 == 345369-5.html 345369-5-ref.html
 == 429974-1.html 429974-1-ref.html
 == 546048-1.html 546048-1-ref.html
-== 775350-1.html 775350-1-ref.html
+random-if(B2G&&browserIsRemote) == 775350-1.html 775350-1-ref.html
