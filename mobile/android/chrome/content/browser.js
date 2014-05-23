@@ -3285,11 +3285,13 @@ Tab.prototype = {
 
     let scrollx = this.browser.contentWindow.scrollX * zoom;
     let scrolly = this.browser.contentWindow.scrollY * zoom;
+    let screenWidth = gScreenWidth - gViewportMargins.left - gViewportMargins.right;
+    let screenHeight = gScreenHeight - gViewportMargins.top - gViewportMargins.bottom;
     let displayPortMargins = {
       left: scrollx - aDisplayPort.left,
       top: scrolly - aDisplayPort.top,
-      right: aDisplayPort.right - (scrollx + gScreenWidth),
-      bottom: aDisplayPort.bottom - (scrolly + gScreenHeight)
+      right: aDisplayPort.right - (scrollx + screenWidth),
+      bottom: aDisplayPort.bottom - (scrolly + screenHeight)
     };
 
     if (this._oldDisplayPortMargins == null ||
