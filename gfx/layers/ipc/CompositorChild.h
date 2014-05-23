@@ -18,11 +18,19 @@
 #include "nsHashKeys.h"                 // for nsUint64HashKey
 #include "nsISupportsImpl.h"            // for NS_INLINE_DECL_REFCOUNTING
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
+#include "nsWeakReference.h"
 
 class nsIObserver;
 
 namespace mozilla {
+
+namespace dom {
+  class TabChild;
+}
+
 namespace layers {
+
+using mozilla::dom::TabChild;
 
 class ClientLayerManager;
 class CompositorParent;
@@ -62,6 +70,14 @@ public:
 
   virtual bool RecvDidComposite(const uint64_t& aId, const uint64_t& aTransactionId) MOZ_OVERRIDE;
 
+  /**
+   * Request that the parent tell us when graphics are ready on GPU.
+   * When we get that message, we bounce it to the TabParent via
+   * the TabChild
+   * @param tabChild The object to bounce the note to.  Non-NULL.
+   */
+  void RequestNotifyAfterRemotePaint(TabChild* aTabChild);
+
 private:
   // Private destructor, to discourage deletion outside of Release():
   virtual ~CompositorChild();
@@ -82,6 +98,9 @@ private:
 
   virtual bool RecvReleaseSharedCompositorFrameMetrics(const ViewID& aId,
                                                        const uint32_t& aAPZCId) MOZ_OVERRIDE;
+
+  virtual bool
+  RecvRemotePaintIsReady() MOZ_OVERRIDE;
 
   // Class used to store the shared FrameMetrics, mutex, and APZCId  in a hash table
   class SharedFrameMetricsData {
@@ -116,6 +135,10 @@ private:
   // compositor that we use to forward transactions directly to the
   // compositor context in another process.
   static CompositorChild* sCompositor;
+
+  // Weakly hold the TabChild that made a request to be alerted when
+  // the transaction has been received.
+  nsWeakPtr mWeakTabChild;      // type is TabChild
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorChild);
 
