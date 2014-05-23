@@ -116,27 +116,6 @@ JSString::equals(const char *s)
 }
 #endif /* DEBUG */
 
-void
-JSLinearString::debugUnsafeConvertToLatin1()
-{
-    // Temporary helper function to test changes for bug 998392.
-
-    MOZ_ASSERT(hasTwoByteChars());
-    MOZ_ASSERT(!hasBase());
-
-    size_t len = length();
-    const jschar *twoByteChars = chars();
-    char *latin1Chars = (char *)twoByteChars;
-
-    for (size_t i = 0; i < len; i++) {
-        MOZ_ASSERT((twoByteChars[i] & 0xff00) == 0);
-        latin1Chars[i] = char(twoByteChars[i]);
-    }
-
-    latin1Chars[len] = '\0';
-    d.u1.flags |= LATIN1_CHARS_BIT;
-}
-
 static MOZ_ALWAYS_INLINE bool
 AllocChars(ThreadSafeContext *maybecx, size_t length, jschar **chars, size_t *capacity)
 {
@@ -290,7 +269,7 @@ JSRope::flattenInternal(ExclusiveContext *maybecx)
                 }
                 JSString *child = str->d.s.u2.left;
                 JS_ASSERT(child->isRope());
-                str->d.s.u2.nonInlineCharsTwoByte = left.nonInlineChars();
+                str->d.s.u2.nonInlineChars = left.nonInlineChars();
                 child->d.u1.flattenData = uintptr_t(str) | Tag_VisitRightChild;
                 str = child;
             }
@@ -298,7 +277,7 @@ JSRope::flattenInternal(ExclusiveContext *maybecx)
                 JSString::writeBarrierPre(str->d.s.u2.left);
                 JSString::writeBarrierPre(str->d.s.u3.right);
             }
-            str->d.s.u2.nonInlineCharsTwoByte = left.nonInlineChars();
+            str->d.s.u2.nonInlineChars = left.nonInlineChars();
             wholeCapacity = capacity;
             wholeChars = const_cast<jschar *>(left.nonInlineChars());
             pos = wholeChars + left.d.u1.length;
@@ -322,7 +301,7 @@ JSRope::flattenInternal(ExclusiveContext *maybecx)
         }
 
         JSString &left = *str->d.s.u2.left;
-        str->d.s.u2.nonInlineCharsTwoByte = pos;
+        str->d.s.u2.nonInlineChars = pos;
         StringWriteBarrierPostRemove(maybecx, &str->d.s.u2.left);
         if (left.isRope()) {
             /* Return to this node when 'left' done, then goto visit_right_child. */
@@ -352,7 +331,7 @@ JSRope::flattenInternal(ExclusiveContext *maybecx)
             *pos = '\0';
             str->d.u1.length = wholeLength;
             str->d.u1.flags = EXTENSIBLE_FLAGS;
-            str->d.s.u2.nonInlineCharsTwoByte = wholeChars;
+            str->d.s.u2.nonInlineChars = wholeChars;
             str->d.s.u3.capacity = wholeCapacity;
             StringWriteBarrierPostRemove(maybecx, &str->d.s.u2.left);
             StringWriteBarrierPostRemove(maybecx, &str->d.s.u3.right);
@@ -360,7 +339,7 @@ JSRope::flattenInternal(ExclusiveContext *maybecx)
         }
         uintptr_t flattenData = str->d.u1.flattenData;
         str->d.u1.flags = DEPENDENT_FLAGS;
-        str->d.u1.length = pos - str->d.s.u2.nonInlineCharsTwoByte;
+        str->d.u1.length = pos - str->d.s.u2.nonInlineChars;
         str->d.s.u3.base = (JSLinearString *)this;       /* will be true on exit */
         StringWriteBarrierPost(maybecx, (JSString **)&str->d.s.u3.base);
         str = (JSString *)(flattenData & ~Tag_Mask);
@@ -405,7 +384,7 @@ js::ConcatStrings(ThreadSafeContext *cx,
     if (!JSString::validateLength(cx, wholeLength))
         return nullptr;
 
-    if (JSFatInlineString::twoByteLengthFits(wholeLength) && cx->isJSContext()) {
+    if (JSFatInlineString::lengthFits(wholeLength) && cx->isJSContext()) {
         JSFatInlineString *str = js_NewGCFatInlineString<allowGC>(cx);
         if (!str)
             return nullptr;
@@ -469,7 +448,7 @@ JSDependentString::undepend(ExclusiveContext *cx)
 
     PodCopy(s, nonInlineChars(), n);
     s[n] = 0;
-    d.s.u2.nonInlineCharsTwoByte = s;
+    d.s.u2.nonInlineChars = s;
 
     /*
      * Transform *this into an undepended string so 'base' will remain rooted
