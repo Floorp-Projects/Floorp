@@ -6,6 +6,7 @@
 
 #include "pk11pub.h"
 #include "cryptohi.h"
+#include "secerr.h"
 #include "ScopedNSSTypes.h"
 
 #include "mozilla/dom/WebCryptoTask.h"
@@ -289,6 +290,76 @@ private:
   }
 };
 
+class RsaesPkcs1Task : public ReturnArrayBufferViewTask
+{
+public:
+  RsaesPkcs1Task(JSContext* aCx, const ObjectOrString& aAlgorithm,
+                 mozilla::dom::Key& aKey, const CryptoOperationData& aData,
+                 bool aEncrypt)
+    : mPrivKey(aKey.GetPrivateKey())
+    , mPubKey(aKey.GetPublicKey())
+    , mEncrypt(aEncrypt)
+  {
+    ATTEMPT_BUFFER_INIT(mData, aData);
+
+    if (mEncrypt) {
+      if (!mPubKey) {
+        mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;
+        return;
+      }
+      mStrength = SECKEY_PublicKeyStrength(mPubKey);
+
+      // Verify that the data input is not too big
+      // (as required by PKCS#1 / RFC 3447)
+      if (mData.Length() > mStrength - 11) {
+        mEarlyRv = NS_ERROR_DOM_DATA_ERR;
+        return;
+      }
+    } else {
+      if (!mPrivKey) {
+        mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;
+        return;
+      }
+      mStrength = PK11_GetPrivateModulusLen(mPrivKey);
+    }
+  }
+
+private:
+  ScopedSECKEYPrivateKey mPrivKey;
+  ScopedSECKEYPublicKey mPubKey;
+  CryptoBuffer mData;
+  uint32_t mStrength;
+  bool mEncrypt;
+
+  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  {
+    nsresult rv;
+
+    // Ciphertext is an integer mod the modulus, so it will be
+    // no longer than mStrength octets
+    if (!mResult.SetLength(mStrength)) {
+      return NS_ERROR_DOM_UNKNOWN_ERR;
+    }
+
+    if (mEncrypt) {
+      rv = MapSECStatus(PK11_PubEncryptPKCS1(
+              mPubKey.get(), mResult.Elements(),
+              mData.Elements(), mData.Length(),
+              nullptr));
+    } else {
+      uint32_t outLen;
+      rv = MapSECStatus(PK11_PrivDecryptPKCS1(
+              mPrivKey.get(), mResult.Elements(),
+              &outLen, mResult.Length(),
+              mData.Elements(), mData.Length()));
+      mResult.SetLength(outLen);
+    }
+
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
+    return NS_OK;
+  }
+};
+
 class HmacTask : public WebCryptoTask
 {
 public:
@@ -375,6 +446,122 @@ private:
                                  mSignature.Length());
       equal = equal && (cmp == 0);
       mResultPromise->MaybeResolve(equal);
+    }
+  }
+};
+
+class RsassaPkcs1Task : public WebCryptoTask
+{
+public:
+  RsassaPkcs1Task(JSContext* aCx, const ObjectOrString& aAlgorithm,
+                  mozilla::dom::Key& aKey,
+                  const CryptoOperationData& aSignature,
+                  const CryptoOperationData& aData,
+                  bool aSign)
+    : mOidTag(SEC_OID_UNKNOWN)
+    , mPrivKey(aKey.GetPrivateKey())
+    , mPubKey(aKey.GetPublicKey())
+    , mSign(aSign)
+    , mVerified(false)
+  {
+    ATTEMPT_BUFFER_INIT(mData, aData);
+    if (!aSign) {
+      ATTEMPT_BUFFER_INIT(mSignature, aSignature);
+    }
+
+    // Look up the SECOidTag based on the KeyAlgorithm
+    // static_cast is safe because we only get here if the algorithm name
+    // is RSASSA-PKCS1-v1_5, and that only happens if we've constructed
+    // an RsaHashedKeyAlgorithm
+    nsRefPtr<RsaHashedKeyAlgorithm> rsaAlg = static_cast<RsaHashedKeyAlgorithm*>(aKey.Algorithm());
+    nsRefPtr<KeyAlgorithm> hashAlg = rsaAlg->Hash();
+
+    switch (hashAlg->Mechanism()) {
+      case CKM_SHA_1:
+        mOidTag = SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION; break;
+      case CKM_SHA224:
+        mOidTag = SEC_OID_PKCS1_SHA224_WITH_RSA_ENCRYPTION; break;
+      case CKM_SHA256:
+        mOidTag = SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION; break;
+      case CKM_SHA384:
+        mOidTag = SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION; break;
+      case CKM_SHA512:
+        mOidTag = SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION; break;
+      default: {
+        mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+        return;
+      }
+    }
+
+    // Check that we have the appropriate key
+    if ((mSign && !mPrivKey) || (!mSign && !mPubKey)) {
+      mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;
+      return;
+    }
+  }
+
+private:
+  SECOidTag mOidTag;
+  ScopedSECKEYPrivateKey mPrivKey;
+  ScopedSECKEYPublicKey mPubKey;
+  CryptoBuffer mSignature;
+  CryptoBuffer mData;
+  bool mSign;
+  bool mVerified;
+
+  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  {
+    nsresult rv;
+    if (mSign) {
+      ScopedSECItem signature((SECItem*) PORT_Alloc(sizeof(SECItem)));
+      ScopedSGNContext ctx(SGN_NewContext(mOidTag, mPrivKey));
+      if (!ctx) {
+        return NS_ERROR_DOM_OPERATION_ERR;
+      }
+
+      rv = MapSECStatus(SGN_Begin(ctx));
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
+
+      rv = MapSECStatus(SGN_Update(ctx, mData.Elements(), mData.Length()));
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
+
+      rv = MapSECStatus(SGN_End(ctx, signature));
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
+
+      mSignature.Assign(signature);
+    } else {
+      ScopedSECItem signature(mSignature.ToSECItem());
+      ScopedVFYContext ctx(VFY_CreateContext(mPubKey, signature,
+                                             mOidTag, nullptr));
+      if (!ctx) {
+        int err = PORT_GetError();
+        if (err == SEC_ERROR_BAD_SIGNATURE) {
+          mVerified = false;
+          return NS_OK;
+        }
+        return NS_ERROR_DOM_OPERATION_ERR;
+      }
+
+      rv = MapSECStatus(VFY_Begin(ctx));
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
+
+      rv = MapSECStatus(VFY_Update(ctx, mData.Elements(), mData.Length()));
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
+
+      rv = MapSECStatus(VFY_End(ctx));
+      mVerified = NS_SUCCEEDED(rv);
+    }
+
+    return NS_OK;
+  }
+
+  virtual void Resolve() MOZ_OVERRIDE
+  {
+    if (mSign) {
+      TypedArrayCreator<Uint8Array> ret(mSignature);
+      mResultPromise->MaybeResolve(ret);
+    } else {
+      mResultPromise->MaybeResolve(mVerified);
     }
   }
 };
@@ -798,6 +985,8 @@ WebCryptoTask::EncryptDecryptTask(JSContext* aCx,
       algName.EqualsLiteral(WEBCRYPTO_ALG_AES_CTR) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_AES_GCM)) {
     return new AesTask(aCx, aAlgorithm, aKey, aData, aEncrypt);
+  } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_RSAES_PKCS1)) {
+    return new RsaesPkcs1Task(aCx, aAlgorithm, aKey, aData, aEncrypt);
   }
 
   return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
@@ -825,6 +1014,8 @@ WebCryptoTask::SignVerifyTask(JSContext* aCx,
 
   if (algName.EqualsLiteral(WEBCRYPTO_ALG_HMAC)) {
     return new HmacTask(aCx, aAlgorithm, aKey, aSignature, aData, aSign);
+  } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1)) {
+    return new RsassaPkcs1Task(aCx, aAlgorithm, aKey, aSignature, aData, aSign);
   }
 
   return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);

@@ -590,3 +590,181 @@ TestArray.addTest(
   }
 );
 
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSAES-PKCS#1 encrypt/decrypt round-trip",
+  function () {
+    var that = this;
+    var privKey, pubKey;
+    var alg = {name:"RSAES-PKCS1-v1_5"};
+
+    var privKey, pubKey, data, ct, pt;
+    function setPriv(x) { privKey = x; }
+    function setPub(x) { pubKey = x; }
+    function doEncrypt() {
+      return crypto.subtle.encrypt(alg.name, pubKey, tv.rsaes.data);
+    }
+    function doDecrypt(x) {
+      return crypto.subtle.decrypt(alg.name, privKey, x);
+    }
+
+    function fail() { error(that); }
+
+    Promise.all([
+      crypto.subtle.importKey("pkcs8", tv.rsaes.pkcs8, alg, false, ['decrypt'])
+          .then(setPriv, error(that)),
+      crypto.subtle.importKey("spki", tv.rsaes.spki, alg, false, ['encrypt'])
+          .then(setPub, error(that))
+    ]).then(doEncrypt, error(that))
+      .then(doDecrypt, error(that))
+      .then(
+        memcmp_complete(that, tv.rsaes.data),
+        error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSAES-PKCS#1 decryption known answer",
+  function () {
+    var that = this;
+    var alg = {name:"RSAES-PKCS1-v1_5"};
+
+    function doDecrypt(x) {
+      return crypto.subtle.decrypt(alg.name, x, tv.rsaes.result);
+    }
+    function fail() { error(that); }
+
+    crypto.subtle.importKey("pkcs8", tv.rsaes.pkcs8, alg, false, ['decrypt'])
+      .then( doDecrypt, fail )
+      .then( memcmp_complete(that, tv.rsaes.data), fail );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSASSA/SHA-1 signature",
+  function () {
+    var that = this;
+    var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-1" };
+
+    function doSign(x) {
+      console.log("sign");
+      console.log(x);
+      return crypto.subtle.sign(alg.name, x, tv.rsassa.data);
+    }
+    function fail() { console.log("fail"); error(that); }
+
+    crypto.subtle.importKey("pkcs8", tv.rsassa.pkcs8, alg, false, ['sign'])
+      .then( doSign, fail )
+      .then( memcmp_complete(that, tv.rsassa.sig1), fail );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSASSA verification (SHA-1)",
+  function () {
+    var that = this;
+    var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-1" };
+
+    function doVerify(x) {
+      return crypto.subtle.verify(alg.name, x, tv.rsassa.sig1, tv.rsassa.data);
+    }
+    function fail(x) { error(that); }
+
+    crypto.subtle.importKey("spki", tv.rsassa.spki, alg, false, ['verify'])
+      .then( doVerify, fail )
+      .then(
+        complete(that, function(x) { return x; }),
+        fail
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSASSA verification (SHA-1), failing verification",
+  function () {
+    var that = this;
+    var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-1" };
+
+    function doVerify(x) {
+      return crypto.subtle.verify(alg.name, x, tv.rsassa.sig_fail, tv.rsassa.data);
+    }
+    function fail(x) { error(that); }
+
+    crypto.subtle.importKey("spki", tv.rsassa.spki, alg, false, ['verify'])
+      .then( doVerify, fail )
+      .then(
+        complete(that, function(x) { return !x; }),
+        fail
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSASSA/SHA-256 signature",
+  function () {
+    var that = this;
+    var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" };
+
+    function doSign(x) {
+      return crypto.subtle.sign(alg.name, x, tv.rsassa.data);
+    }
+    function fail(x) { console.log(x); error(that); }
+
+    crypto.subtle.importKey("pkcs8", tv.rsassa.pkcs8, alg, false, ['sign'])
+      .then( doSign, fail )
+      .then( memcmp_complete(that, tv.rsassa.sig256), fail );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSASSA verification (SHA-256)",
+  function () {
+    var that = this;
+    var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" };
+
+    function doVerify(x) {
+      return crypto.subtle.verify(alg.name, x, tv.rsassa.sig256, tv.rsassa.data);
+    }
+    function fail(x) { error(that); }
+
+    crypto.subtle.importKey("spki", tv.rsassa.spki, alg, false, ['verify'])
+      .then( doVerify, fail )
+      .then(
+        complete(that, function(x) { return x; }),
+        fail
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSASSA verification (SHA-256), failing verification",
+  function () {
+    var that = this;
+    var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" };
+    var use = ['sign', 'verify'];
+
+    function doVerify(x) {
+      console.log("verifying")
+      return crypto.subtle.verify(alg.name, x, tv.rsassa.sig_fail, tv.rsassa.data);
+    }
+    function fail(x) { console.log("failing"); error(that)(x); }
+
+    console.log("running")
+    crypto.subtle.importKey("spki", tv.rsassa.spki, alg, false, ['verify'])
+      .then( doVerify, fail )
+      .then(
+        complete(that, function(x) { return !x; }),
+        fail
+      );
+  }
+);
+
+
