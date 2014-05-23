@@ -50,6 +50,11 @@ class SystemPageAllocator
   private:
     bool decommitEnabled();
     void *mapAlignedPagesSlow(size_t size, size_t alignment);
+    void *mapAlignedPagesLastDitch(size_t size, size_t alignment);
+    void getNewChunk(void **aAddress, void **aRetainedAddr, size_t *aRetainedSize,
+                     size_t size, size_t alignment);
+    bool getNewChunkInner(void **aAddress, void **aRetainedAddr, size_t *aRetainedSize,
+                          size_t size, size_t alignment, bool addrsGrowDown);
 
     // The GC can only safely decommit memory when the page size of the
     // running process matches the compiled arena size.
@@ -57,6 +62,16 @@ class SystemPageAllocator
 
     // The OS allocation granularity may not match the page size.
     size_t              allocGranularity;
+
+#if defined(XP_UNIX)
+    // The addresses handed out by mmap may grow up or down.
+    int                 growthDirection;
+#endif
+
+    // The maximum number of unalignable chunks to temporarily keep alive in
+    // the last ditch allocation pass. OOM crash reports generally show <= 7
+    // unaligned chunks available (bug 1005844 comment #16).
+    static const int    MaxLastDitchAttempts = 8;
 };
 
 } // namespace gc
