@@ -37,10 +37,6 @@ html|input.ac {
   padding: 0 4px !important;
 }
 
-#mac html|input.ac {
-  padding: 0 3px !important;
-}
-
 html|input.empty {
   color: graytext;
 }
