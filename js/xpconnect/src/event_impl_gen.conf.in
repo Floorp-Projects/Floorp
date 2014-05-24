@@ -9,7 +9,6 @@
 
 simple_events = [
     'ProgressEvent',
-    'StorageEvent',
     'MozSettingsEvent',
     'CustomEvent',
     'PageTransitionEvent',

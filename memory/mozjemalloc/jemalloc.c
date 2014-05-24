@@ -5270,10 +5270,6 @@ huge_dalloc(void *ptr)
 	malloc_mutex_unlock(&huge_mtx);
 
 	/* Unmap chunk. */
-#ifdef MALLOC_FILL
-	if (opt_junk)
-		memset(node->addr, 0x5a, node->size);
-#endif
 	chunk_dealloc(node->addr, CHUNK_CEILING(node->size));
 	VALGRIND_FREELIKE_BLOCK(node->addr, 0);
 

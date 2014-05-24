@@ -17,4 +17,37 @@
          <item name="android:nextFocusUp">@+id/info</item>
     </style>
 
+    <!-- Remote tabs panel -->
+    <style name="RemoteTabsPanelChild" parent="RemoteTabsPanelChildBase">
+        <item name="android:orientation">horizontal</item>
+        <item name="android:paddingTop">24dp</item>
+    </style>
+
+    <style name="RemoteTabsSection" parent="RemoteTabsSectionBase">
+        <item name="android:layout_weight">1</item>
+    </style>
+
+    <style name="RemoteTabsItem">
+        <item name="android:layout_marginBottom">20dp</item>
+        <item name="android:layout_gravity">left</item>
+        <item name="android:gravity">left</item>
+    </style>
+
+    <style name="RemoteTabsItem.Button" parent="RemoteTabsItem.ButtonBase">
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+        <item name="android:paddingLeft">64dp</item>
+        <item name="android:paddingRight">64dp</item>
+    </style>
+
+    <style name="RemoteTabsItem.TextAppearance.Header.FXAccounts">
+        <item name="android:visibility">gone</item>
+    </style>
+
+    <style name="RemoteTabsItem.TextAppearance.Linkified.Resend">
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:gravity">center</item>
+        <item name="android:layout_gravity">center</item>
+    </style>
+
 </resources>

@@ -1440,7 +1440,6 @@ void MediaDecoderStateMachine::Seek(const SeekTarget& aTarget)
                "Can only seek in range [0,duration]");
   mSeekTarget = SeekTarget(seekTime, aTarget.mType);
 
-  mBasePosition = seekTime - mStartTime;
   DECODER_LOG(PR_LOG_DEBUG, "Changed state to SEEKING (to %lld)", mSeekTarget.mTime);
   mState = DECODER_STATE_SEEKING;
   if (mDecoder->GetDecodedStream()) {
@@ -1919,6 +1918,12 @@ void MediaDecoderStateMachine::DecodeSeek()
     StopPlayback();
     UpdatePlaybackPositionInternal(seekTime);
   }
+
+  // Update mBasePosition only after StopPlayback() which will call GetClock()
+  // which will call GetVideoStreamPosition() which will read mBasePosition.
+  // If we update mBasePosition too early in Seek(), |pos -= mBasePosition|
+  // will be wrong and assertion will fail in GetVideoStreamPosition().
+  mBasePosition = seekTime - mStartTime;
 
   // SeekingStarted will do a UpdateReadyStateForData which will
   // inform the element and its users that we have no frames

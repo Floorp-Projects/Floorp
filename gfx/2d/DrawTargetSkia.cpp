@@ -600,6 +600,16 @@ DrawTargetSkia::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFor
   return target;
 }
 
+bool
+DrawTargetSkia::UsingSkiaGPU() const
+{
+#ifdef USE_SKIA_GPU
+  return !!mTexture;
+#else
+  return false;
+#endif
+}
+
 TemporaryRef<SourceSurface>
 DrawTargetSkia::OptimizeSourceSurface(SourceSurface *aSurface) const
 {
@@ -607,7 +617,28 @@ DrawTargetSkia::OptimizeSourceSurface(SourceSurface *aSurface) const
     return aSurface;
   }
 
-  return aSurface->GetDataSurface();
+  if (!UsingSkiaGPU()) {
+    // If we're not using skia-gl then drawing doesn't require any
+    // uploading, so any data surface is fine. Call GetDataSurface
+    // to trigger any required readback so that it only happens
+    // once.
+    return aSurface->GetDataSurface();
+  }
+
+  // If we are using skia-gl then we want to copy into a surface that
+  // will cache the uploaded gl texture.
+  RefPtr<DataSourceSurface> dataSurf = aSurface->GetDataSurface();
+  DataSourceSurface::MappedSurface map;
+  if (!dataSurf->Map(DataSourceSurface::READ, &map)) {
+    return nullptr;
+  }
+
+  RefPtr<SourceSurface> result = CreateSourceSurfaceFromData(map.mData,
+                                                             dataSurf->GetSize(),
+                                                             map.mStride,
+                                                             dataSurf->GetFormat());
+  dataSurf->Unmap();
+  return result;
 }
 
 TemporaryRef<SourceSurface>

@@ -36,13 +36,20 @@ function checkPreferences(prefsWin) {
     });
   });
 }
+// Same as the other one, but for in-content preferences
+function checkInContentPreferences(win) {
+  let sel = win.history.state;
+  let doc = win.document;
+  let tab = doc.getElementById("advancedPrefs").selectedTab.id;
+  is(gBrowser.currentURI.spec, "about:preferences", "about:preferences loaded");
+  is(sel, "paneAdvanced", "Advanced pane was selected");
+  is(tab, "networkTab", "Network tab is selected");
+  // all good, we are done.
+  win.close();
+  finish();
+}
 
 function test() {
-  if (Services.prefs.getBoolPref("browser.preferences.inContent")) {
-    // Bug 881576 - ensure this works with inContent prefs.
-    todo(false, "Bug 881576 - this test needs to be updated for inContent prefs");
-    return;
-  }
   waitForExplicitFinish();
   gBrowser.selectedBrowser.addEventListener("load", function onload() {
     gBrowser.selectedBrowser.removeEventListener("load", onload, true);
@@ -55,13 +62,22 @@ function test() {
         // window to open - which we track either via a window watcher (for
         // the window-based prefs) or via an "Initialized" event (for
         // in-content prefs.)
-        Services.ww.registerNotification(function wwobserver(aSubject, aTopic, aData) {
-          if (aTopic != "domwindowopened")
-            return;
-          Services.ww.unregisterNotification(wwobserver);
-          checkPreferences(aSubject);
-        });
+        if (!Services.prefs.getBoolPref("browser.preferences.inContent")) {
+          Services.ww.registerNotification(function wwobserver(aSubject, aTopic, aData) {
+            if (aTopic != "domwindowopened")
+              return;
+            Services.ww.unregisterNotification(wwobserver);
+            checkPreferences(aSubject);
+          });
+        }
         PopupNotifications.panel.firstElementChild.button.click();
+        if (Services.prefs.getBoolPref("browser.preferences.inContent")) {
+          let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
+          newTabBrowser.addEventListener("Initialized", function PrefInit() {
+            newTabBrowser.removeEventListener("Initialized", PrefInit, true);
+            checkInContentPreferences(newTabBrowser.contentWindow);
+          }, true);
+        }
       });
     };
     Services.prefs.setIntPref("offline-apps.quota.warn", 1);
