@@ -112,27 +112,11 @@ void VCMPacket::CopyCodecSpecifics(const RTPVideoHeader& videoHeader) {
     case kRtpVideoH264: {
       uint8_t nal_type = videoHeader.codecHeader.H264.nalu_header & RtpFormatH264::kH264NAL_TypeMask;
       if (videoHeader.codecHeader.H264.single_nalu) {
-        if (nal_type == RtpFormatH264::kH264NALU_SPS ||
-            nal_type == RtpFormatH264::kH264NALU_PPS) {
-          insertStartCode = true;
-          isFirstPacket   = false;
-          markerBit       = false;
-        } else {
-          isFirstPacket   = true;
-          markerBit       = true;
-          insertStartCode = true;
-        }
-      } else {
-        // Fragmented NALU
-        if (isFirstPacket) {
-          insertStartCode = true;
-          if (nal_type == RtpFormatH264::kH264NALU_IDR) {
-            // We always assume IDR is pre-leaded with a PPS or SPS/PPS.
-            isFirstPacket = false;
-          }
-        } else {
-          insertStartCode = false;
-        }
+        isFirstPacket   = true;
+        markerBit       = true;
+      }
+      if (isFirstPacket) {
+        insertStartCode = true;
       }
 
       if (isFirstPacket && markerBit)
@@ -144,6 +128,7 @@ void VCMPacket::CopyCodecSpecifics(const RTPVideoHeader& videoHeader) {
       else
          completeNALU = kNaluIncomplete;
       codec = kVideoCodecH264;
+      break;
     }
     default: {
       codec = kVideoCodecUnknown;

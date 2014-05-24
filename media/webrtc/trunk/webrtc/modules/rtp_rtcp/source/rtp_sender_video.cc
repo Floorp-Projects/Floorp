@@ -528,6 +528,11 @@ int32_t RTPSenderVideo::SendH264(const FrameType frameType,
                               rtpHeaderLength, captureTimeStamp,
                               capture_time_ms, storage, protect)) {
     }
+
+    if (ret_val == 0) {
+      // single NAL unit
+      last = true;
+    }
   }
   return 0;
 }
