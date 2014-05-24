@@ -600,7 +600,7 @@ public:
    * frame subtree, StickyScrollContainer::NotifyReparentedFrameAcrossScrollFrameBoundary
    * must also be called.
    */
-  virtual void SetParent(nsContainerFrame* aParent) = 0;
+  void SetParent(nsContainerFrame* aParent);
 
   /**
    * The frame's writing-mode, used for logical layout computations.

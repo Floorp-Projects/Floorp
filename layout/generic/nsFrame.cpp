@@ -130,6 +130,30 @@ static void RefreshContentFrames(nsPresContext* aPresContext, nsIContent * aStar
 
 #include "prenv.h"
 
+static void
+DestroyBoxMetrics(void* aPropertyValue)
+{
+  delete static_cast<nsBoxLayoutMetrics*>(aPropertyValue);
+}
+
+NS_DECLARE_FRAME_PROPERTY(BoxMetricsProperty, DestroyBoxMetrics)
+
+static void
+InitBoxMetrics(nsIFrame* aFrame, bool aClear)
+{
+  FrameProperties props = aFrame->Properties();
+  if (aClear) {
+    props.Delete(BoxMetricsProperty());
+  }
+
+  nsBoxLayoutMetrics *metrics = new nsBoxLayoutMetrics();
+  props.Set(BoxMetricsProperty(), metrics);
+
+  static_cast<nsFrame*>(aFrame)->nsFrame::MarkIntrinsicWidthsDirty();
+  metrics->mBlockAscent = 0;
+  metrics->mLastSize.SizeTo(0, 0);
+}
+
 // Formerly the nsIFrameDebug interface
 
 #ifdef DEBUG
@@ -541,7 +565,7 @@ nsFrame::Init(nsIContent*       aContent,
   DidSetStyleContext(nullptr);
 
   if (IsBoxWrapped())
-    InitBoxMetrics(false);
+    ::InitBoxMetrics(this, false);
 }
 
 void
@@ -8358,14 +8382,6 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
 #endif
 }
 
-static void
-DestroyBoxMetrics(void* aPropertyValue)
-{
-  delete static_cast<nsBoxLayoutMetrics*>(aPropertyValue);
-}
-
-NS_DECLARE_FRAME_PROPERTY(BoxMetricsProperty, DestroyBoxMetrics)
-
 nsBoxLayoutMetrics*
 nsFrame::BoxMetrics() const
 {
@@ -8415,12 +8431,12 @@ nsIFrame::RemoveInPopupStateBitFromDescendants(nsIFrame* aFrame)
 }
 
 void
-nsFrame::SetParent(nsContainerFrame* aParent)
+nsIFrame::SetParent(nsContainerFrame* aParent)
 {
   bool wasBoxWrapped = IsBoxWrapped();
   mParent = aParent;
   if (!wasBoxWrapped && IsBoxWrapped()) {
-    InitBoxMetrics(true);
+    ::InitBoxMetrics(this, true);
   } else if (wasBoxWrapped && !IsBoxWrapped()) {
     Properties().Delete(BoxMetricsProperty());
   }
@@ -8453,22 +8469,6 @@ nsFrame::SetParent(nsContainerFrame* aParent)
   if (aParent->HasAnyStateBits(NS_FRAME_ALL_DESCENDANTS_NEED_PAINT)) {
     InvalidateFrame();
   }
-}
-
-void
-nsFrame::InitBoxMetrics(bool aClear)
-{
-  FrameProperties props = Properties();
-  if (aClear) {
-    props.Delete(BoxMetricsProperty());
-  }
-
-  nsBoxLayoutMetrics *metrics = new nsBoxLayoutMetrics();
-  props.Set(BoxMetricsProperty(), metrics);
-
-  nsFrame::MarkIntrinsicWidthsDirty();
-  metrics->mBlockAscent = 0;
-  metrics->mLastSize.SizeTo(0, 0);
 }
 
 void
