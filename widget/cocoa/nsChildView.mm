@@ -2810,8 +2810,14 @@ GLPresenter::BindAndDrawQuad(ShaderProgramOGL *aProgram,
 {
   mGLContext->MakeCurrent();
 
-  aProgram->SetLayerRect(aLayerRect);
-  aProgram->SetTextureRect(aTextureRect);
+  gfx::Rect layerRects[4];
+  gfx::Rect textureRects[4];
+
+  layerRects[0] = aLayerRect;
+  textureRects[0] = aTextureRect;
+
+  aProgram->SetLayerRects(layerRects);
+  aProgram->SetTextureRects(textureRects);
 
   GLuint vertAttribIndex = aProgram->AttribLocation(ShaderProgramOGL::VertexCoordAttrib);
   GLuint texCoordAttribIndex = aProgram->AttribLocation(ShaderProgramOGL::TexCoordAttrib);
