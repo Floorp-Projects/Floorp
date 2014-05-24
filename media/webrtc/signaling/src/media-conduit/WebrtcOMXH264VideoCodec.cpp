@@ -230,7 +230,9 @@ public:
 
     mLooper = new ALooper;
     mLooper->start();
+    CODEC_LOGD("WebrtcOMXH264VideoDecoder:%p creating decoder", this);
     mCodec = MediaCodec::CreateByType(mLooper, aMimeType, false /* encoder */);
+    CODEC_LOGD("WebrtcOMXH264VideoDecoder:%p OMX created", this);
   }
 
   virtual ~WebrtcOMXDecoder()
@@ -284,6 +286,7 @@ public:
     }
     status_t result = mCodec->configure(config, surface, nullptr, 0);
     if (result == OK) {
+      CODEC_LOGD("OMX:%p decoder configured", this);
       result = Start();
     }
     return result;
@@ -562,7 +565,7 @@ protected:
 
     if (output.Length() == 0) {
       // No encoded data yet. Try later.
-      CODEC_LOGD("OMX:%p (encode no output available this time)", mOMX);
+      CODEC_LOGD("OMX: (encode no output available this time)");
       return false;
     }
 
@@ -677,6 +680,7 @@ WebrtcOMXH264VideoEncoder::InitEncode(const webrtc::VideoCodec* aCodecSettings,
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
     mOMX = omx.forget();
+    CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p OMX created", this);
   }
 
   // Defer configuration until 1st frame is received because this function will
@@ -712,7 +716,7 @@ WebrtcOMXH264VideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
     // XXX take from initial config parameters
     format->setInt32("bitrate", 300*1000);
     // XXX Only set if we're not using any recovery RTCP options
-    format->setInt32("i-frame-interval", 3 /* seconds */);
+    format->setInt32("i-frame-interval", 2 /* seconds */);
     // See mozilla::layers::GrallocImage, supports YUV 4:2:0, CbCr width and
     // height is half that of Y
     format->setInt32("color-format", OMX_COLOR_FormatYUV420SemiPlanar);
@@ -726,16 +730,17 @@ WebrtcOMXH264VideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
     format->setInt32("height", mHeight);
     format->setInt32("stride", mWidth);
     format->setInt32("slice-height", mHeight);
-    format->setInt32("frame-rate", 10 /* XXX mFrameRate*/);
+    mFrameRate = 10; /* XXX hack*/
+    format->setInt32("frame-rate", mFrameRate);
 
+    CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p configuring encoder %dx%d @ %d fps",
+               this, mWidth, mHeight, mFrameRate);
     nsresult rv = mOMX->ConfigureDirect(format,
                                         OMXVideoEncoder::BlobFormat::AVC_NAL);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
     mOMXConfigured = true;
-    CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p start OMX with image size:%ux%u",
-               this, mWidth, mHeight);
   }
 
   if (aFrameTypes && aFrameTypes->size() &&
