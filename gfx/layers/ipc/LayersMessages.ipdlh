@@ -334,16 +334,15 @@ struct OpRemoveTexture {
 };
 
 struct OpRemoveTextureAsync {
-  uint64_t holderId;
   uint64_t transactionId;
   PCompositable compositable;
   PTexture texture;
 };
 
 struct OpReplyRemoveTexture {
-  bool isMain;
-  uint64_t holderId;
   uint64_t transactionId;
+  PCompositable compositable;
+  PTexture texture;
 };
 
 /**
@@ -375,13 +374,6 @@ struct OpUpdateTexture {
 struct OpDeliverFence {
   uint64_t transactionId;
   PTexture texture;
-  FenceHandle fence;
-};
-
-struct OpDeliverFenceToTracker {
-  uint64_t transactionId;
-  uint64_t destHolderId;
-  uint64_t destTransactionId;
   FenceHandle fence;
 };
 
@@ -463,7 +455,6 @@ union EditReply {
 
 union AsyncParentMessageData {
   OpDeliverFence;
-  OpDeliverFenceToTracker;
   OpReplyRemoveTexture;
 };
 

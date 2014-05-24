@@ -597,7 +597,7 @@ bool ImageBridgeChild::StartUpOnThread(Thread* aThread)
     }
     sImageBridgeChildSingleton = new ImageBridgeChild();
     sImageBridgeParentSingleton = new ImageBridgeParent(
-      CompositorParent::CompositorLoop(), nullptr, base::GetProcId(base::GetCurrentProcessHandle()));
+      CompositorParent::CompositorLoop(), nullptr);
     sImageBridgeChildSingleton->ConnectAsync(sImageBridgeParentSingleton);
     return true;
   } else {
@@ -820,24 +820,10 @@ ImageBridgeChild::RecvParentAsyncMessage(const InfallibleTArray<AsyncParentMessa
         HoldTransactionsToRespond(op.transactionId());
         break;
       }
-      case AsyncParentMessageData::TOpDeliverFenceToTracker: {
-        const OpDeliverFenceToTracker& op = message.get_OpDeliverFenceToTracker();
-        FenceHandle fence = op.fence();
+    case AsyncParentMessageData::TOpReplyRemoveTexture: {
+      const OpReplyRemoveTexture& op = message.get_OpReplyRemoveTexture();
 
-        AsyncTransactionTrackersHolder::SetReleaseFenceHandle(fence,
-                                                              op.destHolderId(),
-                                                              op.destTransactionId());
-        // Send back a response.
-        InfallibleTArray<AsyncChildMessageData> replies;
-        replies.AppendElement(OpReplyDeliverFence(op.transactionId()));
-        SendChildAsyncMessages(replies);
-        break;
-      }
-      case AsyncParentMessageData::TOpReplyRemoveTexture: {
-        const OpReplyRemoveTexture& op = message.get_OpReplyRemoveTexture();
-
-        AsyncTransactionTrackersHolder::TransactionCompleteted(op.holderId(),
-                                                               op.transactionId());
+      CompositableClient::TransactionCompleteted(op.compositableChild(), op.transactionId());
       break;
     }
       default:
@@ -877,13 +863,15 @@ ImageBridgeChild::RemoveTextureFromCompositableAsync(AsyncTransactionTracker* aA
                                                      CompositableClient* aCompositable,
                                                      TextureClient* aTexture)
 {
-  mTxn->AddNoSwapEdit(OpRemoveTextureAsync(CompositableClient::GetTrackersHolderId(aCompositable->GetIPDLActor()),
-                                           aAsyncTransactionTracker->GetId(),
+  mTxn->AddNoSwapEdit(OpRemoveTextureAsync(aAsyncTransactionTracker->GetId(),
                                            nullptr, aCompositable->GetIPDLActor(),
                                            nullptr, aTexture->GetIPDLActor()));
   // Hold AsyncTransactionTracker until receving reply
   CompositableClient::HoldUntilComplete(aCompositable->GetIPDLActor(),
                                         aAsyncTransactionTracker);
+
+  // Hold texture until transaction complete.
+  HoldUntilTransaction(aTexture);
 }
 
 static void RemoveTextureSync(TextureClient* aTexture, ReentrantMonitor* aBarrier, bool* aDone)

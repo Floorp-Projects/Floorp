@@ -128,24 +128,6 @@ TextureHost::SendFenceHandleIfPresent(PTextureParent* actor)
   parent->SendFenceHandleIfPresent();
 }
 
-FenceHandle
-TextureHost::GetAndResetReleaseFenceHandle()
-{
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-  TextureHostOGL* hostOGL = this->AsHostOGL();
-  if (!hostOGL) {
-    return FenceHandle();
-  }
-
-  android::sp<android::Fence> fence = hostOGL->GetAndResetReleaseFence();
-  if (fence.get() && fence->isValid()) {
-    FenceHandle handle = FenceHandle(fence);
-    return handle;
-  }
-#endif
-  return FenceHandle();
-}
-
 // implemented in TextureHostOGL.cpp
 TemporaryRef<TextureHost> CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
                                                ISurfaceAllocator* aDeallocator,
@@ -681,7 +663,7 @@ TextureParent::SendFenceHandleIfPresent()
       // In this case, HWC implicitly handles buffer's fence.
 
       FenceHandle handle = FenceHandle(fence);
-      RefPtr<FenceDeliveryTracker> tracker = new FenceDeliveryTracker(handle);
+      RefPtr<FenceDeliveryTracker> tracker = new FenceDeliveryTracker(fence);
       mCompositableManager->SendFenceHandle(tracker, this, handle);
     }
   }
