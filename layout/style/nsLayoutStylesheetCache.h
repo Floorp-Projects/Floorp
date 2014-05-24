@@ -41,6 +41,8 @@ class nsLayoutStylesheetCache MOZ_FINAL
   static nsCSSStyleSheet* UASheet();
   static nsCSSStyleSheet* QuirkSheet();
   static nsCSSStyleSheet* FullScreenOverrideSheet();
+  static nsCSSStyleSheet* SVGSheet();
+  static nsCSSStyleSheet* MathMLSheet();
 
   static void Shutdown();
 
@@ -67,6 +69,8 @@ private:
   nsRefPtr<nsCSSStyleSheet> mUASheet;
   nsRefPtr<nsCSSStyleSheet> mQuirkSheet;
   nsRefPtr<nsCSSStyleSheet> mFullScreenOverrideSheet;
+  nsRefPtr<nsCSSStyleSheet> mSVGSheet;
+  nsRefPtr<nsCSSStyleSheet> mMathMLSheet;
 };
 
 #endif
