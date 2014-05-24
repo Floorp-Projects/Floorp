@@ -32,10 +32,10 @@ AddUniforms(ProgramProfileOGL& aProfile)
     static const char *sKnownUniformNames[] = {
         "uLayerTransform",
         "uMaskTransform",
-        "uLayerRect",
+        "uLayerRects",
         "uMatrixProj",
         "uTextureTransform",
-        "uTextureRect",
+        "uTextureRects",
         "uRenderTargetOffset",
         "uLayerOpacity",
         "uTexture",
@@ -146,7 +146,7 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   AddUniforms(result);
 
   vs << "uniform mat4 uMatrixProj;" << endl;
-  vs << "uniform vec4 uLayerRect;" << endl;
+  vs << "uniform vec4 uLayerRects[4];" << endl;
   vs << "uniform mat4 uLayerTransform;" << endl;
   vs << "uniform vec4 uRenderTargetOffset;" << endl;
 
@@ -154,8 +154,8 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
 
   if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
     vs << "uniform mat4 uTextureTransform;" << endl;
-    vs << "uniform vec4 uTextureRect;" << endl;
-    vs << "attribute vec2 aTexCoord;" << endl;
+    vs << "uniform vec4 uTextureRects[4];" << endl;
+    vs << "attribute vec4 aTexCoord;" << endl;
     vs << "varying vec2 vTexCoord;" << endl;
   }
 
@@ -166,7 +166,9 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   }
 
   vs << "void main() {" << endl;
-  vs << "  vec4 finalPosition = vec4(aVertexCoord.xy * uLayerRect.zw + uLayerRect.xy, 0.0, 1.0);" << endl;
+  vs << "  int vertexID = int(aVertexCoord.w);" << endl;
+  vs << "  vec4 layerRect = uLayerRects[vertexID];" << endl;
+  vs << "  vec4 finalPosition = vec4(aVertexCoord.xy * layerRect.zw + layerRect.xy, 0.0, 1.0);" << endl;
   vs << "  finalPosition = uLayerTransform * finalPosition;" << endl;
   vs << "  finalPosition.xyz /= finalPosition.w;" << endl;
 
@@ -184,7 +186,8 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   vs << "  finalPosition = uMatrixProj * finalPosition;" << endl;
 
   if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
-    vs << "  vec2 texCoord = aTexCoord * uTextureRect.zw + uTextureRect.xy;" << endl;
+    vs << "  vec4 textureRect = uTextureRects[vertexID];" << endl;
+    vs << "  vec2 texCoord = aTexCoord.xy * textureRect.zw + textureRect.xy;" << endl;
     vs << "  vTexCoord = (uTextureTransform * vec4(texCoord, 0.0, 1.0)).xy;" << endl;
   }
 
