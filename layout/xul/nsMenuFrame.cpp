@@ -186,7 +186,7 @@ nsMenuFrame::nsMenuFrame(nsIPresShell* aShell, nsStyleContext* aContext):
 }
 
 void
-nsMenuFrame::SetParent(nsIFrame* aParent)
+nsMenuFrame::SetParent(nsContainerFrame* aParent)
 {
   nsBoxFrame::SetParent(aParent);
   InitMenuParent(aParent);

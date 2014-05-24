@@ -243,7 +243,7 @@ NS_DECLARE_FRAME_PROPERTY(BottomEdgeOfChildrenProperty, nullptr)
 
 //----------------------------------------------------------------------
 
-nsIFrame*
+nsBlockFrame*
 NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, nsFrameState aFlags)
 {
   nsBlockFrame* it = new (aPresShell) nsBlockFrame(aContext);
@@ -523,7 +523,8 @@ nsBlockFrame::IsFloatContainingBlock() const
 }
 
 static void
-ReparentFrame(nsIFrame* aFrame, nsIFrame* aOldParent, nsIFrame* aNewParent)
+ReparentFrame(nsIFrame* aFrame, nsContainerFrame* aOldParent,
+              nsContainerFrame* aNewParent)
 {
   NS_ASSERTION(aOldParent == aFrame->GetParent(),
                "Parent not consistent with expectations");
@@ -536,8 +537,8 @@ ReparentFrame(nsIFrame* aFrame, nsIFrame* aOldParent, nsIFrame* aNewParent)
 }
  
 static void
-ReparentFrames(nsFrameList& aFrameList, nsIFrame* aOldParent,
-               nsIFrame* aNewParent)
+ReparentFrames(nsFrameList& aFrameList, nsContainerFrame* aOldParent,
+               nsContainerFrame* aNewParent)
 {
   for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
     ReparentFrame(e.get(), aOldParent, aNewParent);

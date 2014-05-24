@@ -187,7 +187,8 @@ class nsFirstLineFrame MOZ_FINAL : public nsInlineFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  friend nsIFrame* NS_NewFirstLineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsFirstLineFrame* NS_NewFirstLineFrame(nsIPresShell* aPresShell,
+                                                nsStyleContext* aContext);
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;

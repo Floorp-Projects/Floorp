@@ -82,6 +82,7 @@ class gfxContext;
 class nsLineList_iterator;
 class nsAbsoluteContainingBlock;
 class nsIContent;
+class nsContainerFrame;
 
 struct nsPeekOffsetStruct;
 struct nsPoint;
@@ -672,14 +673,14 @@ public:
   /**
    * Accessor functions for geometric parent
    */
-  nsIFrame* GetParent() const { return mParent; }
+  nsContainerFrame* GetParent() const { return static_cast<nsContainerFrame*>(static_cast<void*>(mParent)); }  // XXX static_cast will be removed in a later patch
   /**
    * Set this frame's parent to aParent.
    * If the frame may have moved into or out of a scrollframe's
    * frame subtree, StickyScrollContainer::NotifyReparentedFrameAcrossScrollFrameBoundary
    * must also be called.
    */
-  virtual void SetParent(nsIFrame* aParent) = 0;
+  virtual void SetParent(nsContainerFrame* aParent) = 0;
 
   /**
    * The frame's writing-mode, used for logical layout computations.
@@ -1296,14 +1297,7 @@ public:
   /**
    * Returns the number of ancestors between this and the root of our frame tree
    */
-  uint32_t GetDepthInFrameTree() {
-    uint32_t result = 0;
-    for (nsIFrame* ancestor = GetParent(); ancestor;
-         ancestor = ancestor->GetParent()) {
-      result++;
-    }
-    return result;
-  }
+  uint32_t GetDepthInFrameTree() const;
 
   /**
    * Event handling of GUI events.

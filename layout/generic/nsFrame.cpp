@@ -7486,6 +7486,17 @@ nsIFrame::ComputePreserve3DChildrenOverflow(nsOverflowAreas& aOverflowAreas, con
   aOverflowAreas.Overflow(eScrollableOverflow) = aOverflowAreas.Overflow(eScrollableOverflow).Union(childScrollable);
 }
 
+uint32_t
+nsIFrame::GetDepthInFrameTree() const
+{
+  uint32_t result = 0;
+  for (nsContainerFrame* ancestor = GetParent(); ancestor;
+       ancestor = ancestor->GetParent()) {
+    result++;
+  }
+  return result;
+}
+
 void
 nsFrame::ConsiderChildOverflow(nsOverflowAreas& aOverflowAreas,
                                nsIFrame* aChildFrame)
@@ -8443,7 +8454,7 @@ nsIFrame::RemoveInPopupStateBitFromDescendants(nsIFrame* aFrame)
 }
 
 void
-nsFrame::SetParent(nsIFrame* aParent)
+nsFrame::SetParent(nsContainerFrame* aParent)
 {
   bool wasBoxWrapped = IsBoxWrapped();
   mParent = aParent;
