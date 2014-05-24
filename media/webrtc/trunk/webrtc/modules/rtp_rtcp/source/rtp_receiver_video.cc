@@ -271,15 +271,16 @@ int32_t RTPReceiverVideo::ReceiveH264Codec(WebRtcRTPHeader* rtp_header,
     payload_length = payload_data_length;
 
     rtp_header->type.Video.codec    = kRtpVideoH264;
-    rtp_header->type.Video.isFirstPacket = true; // First packet
+    rtp_header->type.Video.isFirstPacket = true;
     RTPVideoHeaderH264* h264_header = &rtp_header->type.Video.codecHeader.H264;
     h264_header->nalu_header        = payload_data[0];
     h264_header->single_nalu        = true;
 
     // WebRtcRTPHeader
-    if (nal_type == RtpFormatH264::kH264NALU_IDR) {
-      rtp_header->frameType = kVideoFrameKey;
-      rtp_header->type.Video.isFirstPacket = false;
+    if (nal_type == RtpFormatH264::kH264NALU_SPS ||
+        nal_type == RtpFormatH264::kH264NALU_PPS ||
+        nal_type == RtpFormatH264::kH264NALU_IDR) {
+      rtp_header->frameType = kVideoFrameKey; // not really....
     } else {
       rtp_header->frameType = kVideoFrameDelta;
     }
