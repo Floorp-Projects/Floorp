@@ -228,11 +228,14 @@ public:
                       mCapId(-1),
                       mCurSendCodecConfig(nullptr),
                       mSendingWidth(0),
-		      mSendingHeight(0),
-		      mReceivingWidth(640),
-		      mReceivingHeight(480),
-		      mVideoLatencyTestEnable(false),
-		      mVideoLatencyAvg(0)
+                      mSendingHeight(0),
+                      mReceivingWidth(640),
+                      mReceivingHeight(480),
+                      mVideoLatencyTestEnable(false),
+                      mVideoLatencyAvg(0),
+                      mMinBitrate(200),
+                      mStartBitrate(300),
+                      mMaxBitrate(2000)
   {
   }
 
@@ -326,6 +329,9 @@ private:
   unsigned short mReceivingHeight;
   bool mVideoLatencyTestEnable;
   uint64_t mVideoLatencyAvg;
+  uint32_t mMinBitrate;
+  uint32_t mStartBitrate;
+  uint32_t mMaxBitrate;
 
   static const unsigned int sAlphaNum = 7;
   static const unsigned int sAlphaDen = 8;

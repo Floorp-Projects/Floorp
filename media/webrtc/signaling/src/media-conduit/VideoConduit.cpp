@@ -196,11 +196,41 @@ bool WebrtcVideoConduit::GetRTCPSenderReport(DOMHighResTimeStamp* timestamp,
 }
 
 /**
- * Peforms intialization of the MANDATORY components of the Video Engine
+ * Performs initialization of the MANDATORY components of the Video Engine
  */
 MediaConduitErrorCode WebrtcVideoConduit::Init(WebrtcVideoConduit *other)
 {
   CSFLogDebug(logTag,  "%s this=%p other=%p", __FUNCTION__, this, other);
+
+#ifdef MOZILLA_INTERNAL_API
+  // already know we must be on MainThread barring unit test weirdness
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsresult rv;
+  nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
+  if (!NS_WARN_IF(NS_FAILED(rv)))
+  {
+    nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
+
+    if (branch)
+    {
+      int32_t temp;
+      NS_WARN_IF(NS_FAILED(branch->GetBoolPref("media.video.test_latency", &mVideoLatencyTestEnable)));
+      NS_WARN_IF(NS_FAILED(branch->GetIntPref("media.peerconnection.video.min_bitrate", &temp)));
+      if (temp >= 0) {
+        mMinBitrate = temp;
+      }
+      NS_WARN_IF(NS_FAILED(branch->GetIntPref("media.peerconnection.video.start_bitrate", &temp)));
+      if (temp >= 0) {
+        mStartBitrate = temp;
+      }
+      NS_WARN_IF(NS_FAILED(branch->GetIntPref("media.peerconnection.video.max_bitrate", &temp)));
+      if (temp >= 0) {
+        mMaxBitrate = temp;
+      }
+    }
+  }
+#endif
 
   if (other) {
     MOZ_ASSERT(!other->mOtherDirection);
@@ -734,20 +764,6 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
     return kMediaConduitUnknownError;
   }
 
-#ifdef MOZILLA_INTERNAL_API
-  if (NS_IsMainThread()) {
-    nsresult rv;
-    nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
-
-      if (branch) {
-	branch->GetBoolPref("media.video.test_latency", &mVideoLatencyTestEnable);
-      }
-    }
-  }
-#endif
-
   // by now we should be successfully started the reception
   mPtrRTP->SetRembStatus(mChannel, false, true);
   mEngineReceiving = true;
@@ -1099,11 +1115,11 @@ WebrtcVideoConduit::DeliverFrame(unsigned char* buffer,
       uint64_t now = PR_Now();
       uint64_t timestamp = 0;
       bool ok = YuvStamper::Decode(mReceivingWidth, mReceivingHeight, mReceivingWidth,
-				   buffer,
-				   reinterpret_cast<unsigned char*>(&timestamp),
-				   sizeof(timestamp), 0, 0);
+                                   buffer,
+                                   reinterpret_cast<unsigned char*>(&timestamp),
+                                   sizeof(timestamp), 0, 0);
       if (ok) {
-	VideoLatencyUpdate(now - timestamp);
+        VideoLatencyUpdate(now - timestamp);
       }
     }
 
@@ -1131,9 +1147,9 @@ WebrtcVideoConduit::CodecConfigToWebRTCCodec(const VideoCodecConfig* codecInfo,
   {
     cinst.maxFramerate = codecInfo->mMaxFrameRate;
   }
-  cinst.minBitrate = 200;
-  cinst.startBitrate = 300;
-  cinst.maxBitrate = 2000;
+  cinst.minBitrate = mMinBitrate;
+  cinst.startBitrate = mStartBitrate;
+  cinst.maxBitrate = mMaxBitrate;
 }
 
 //Copy the codec passed into Conduit's database
