@@ -331,6 +331,10 @@ public:
     mFrontClientOnWhite = nullptr;
   }
 
+  virtual void Updated(const nsIntRegion& aRegionToDraw,
+                       const nsIntRegion& aVisibleRegion,
+                       bool aDidSelfCopy) MOZ_OVERRIDE;
+
   virtual void SwapBuffers(const nsIntRegion& aFrontUpdatedRegion) MOZ_OVERRIDE;
 
   virtual void BeginPaint() MOZ_OVERRIDE;
