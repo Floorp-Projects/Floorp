@@ -173,6 +173,9 @@ CompositorOGL::CleanupResources()
     mQuadVBO = 0;
   }
 
+  mGLContext->MakeCurrent();
+  mContextStateTracker.DestroyOGL(mGLContext);
+
   // On the main thread the Widget will be destroyed soon and calling MakeCurrent
   // after that could cause a crash (at least with GLX, see bug 1059793), unless
   // context is marked as destroyed.
@@ -664,6 +667,8 @@ CompositorOGL::SetRenderTarget(CompositingRenderTarget *aSurface)
     = static_cast<CompositingRenderTargetOGL*>(aSurface);
   if (mCurrentRenderTarget != surface) {
     mCurrentRenderTarget = surface;
+    mContextStateTracker.PopOGLSection(gl(), "Frame");
+    mContextStateTracker.PushOGLSection(gl(), "Frame");
     surface->BindRenderTarget();
   }
 }
@@ -768,6 +773,8 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
     CompositingRenderTargetOGL::RenderTargetForWindow(this,
                                                       IntSize(width, height));
   mCurrentRenderTarget->BindRenderTarget();
+
+  mContextStateTracker.PushOGLSection(gl(), "Frame");
 #ifdef DEBUG
   mWindowRenderTarget = mCurrentRenderTarget;
 #endif
@@ -1344,6 +1351,8 @@ CompositorOGL::EndFrame()
     WriteSnapshotToDumpFile(this, target);
   }
 #endif
+
+  mContextStateTracker.PopOGLSection(gl(), "Frame");
 
   mFrameInProgress = false;
 
