@@ -1,5 +1,5 @@
  /*
-  *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+  *  Copyright (c) 2014 The WebRTC project authors. All Rights Reserved.
   *
   *  Use of this source code is governed by a BSD-style license
   *  that can be found in the LICENSE file in the root of the source
@@ -35,12 +35,30 @@ namespace webrtc {
 class RtpFormatH264 {
  public:
   enum {
-    kH264NALHeaderLengthInBytes = 1,
-    kH264FUAHeaderLengthInBytes = 2,
-    kH264FUANALUType            = 28,
+    kH264NALU_SLICE             = 1,
+    kH264NALU_IDR               = 5,
+    kH264NALU_SEI               = 6,
     kH264NALU_SPS               = 7,
     kH264NALU_PPS               = 8,
-    kH264NALU_IDR               = 5
+    kH264NALU_STAPA             = 24,
+    kH264NALU_FUA               = 28
+  };
+
+  static const int kH264NALHeaderLengthInBytes = 1;
+  static const int kH264FUAHeaderLengthInBytes = 2;
+
+// bits for FU (A and B) indicators
+  enum H264NalDefs {
+    kH264NAL_FBit = 0x80,
+    kH264NAL_NRIMask = 0x60,
+    kH264NAL_TypeMask = 0x1F
+  };
+
+  enum H264FUDefs {
+    // bits for FU (A and B) headers
+    kH264FU_SBit = 0x80,
+    kH264FU_EBit = 0x40,
+    kH264FU_RBit = 0x20
   };
 
   // Initialize with payload from encoder.

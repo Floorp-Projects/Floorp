@@ -137,7 +137,7 @@ int VCMSessionInfo::InsertBuffer(uint8_t* frame_buffer,
 
   ShiftSubsequentPackets(packet_it, packet_size);
 
-  const unsigned char startCode[] = {0, 0, 0, 1};
+  const uint8_t startCode[] = {0, 0, 0, 1};
   if (packet.insertStartCode) {
     memcpy(const_cast<uint8_t*>(packet.dataPtr), startCode,
            kH264StartCodeLengthBytes);
@@ -422,7 +422,7 @@ int VCMSessionInfo::InsertPacket(const VCMPacket& packet,
   PacketIterator packet_list_it;
   if (packet.codec == kVideoCodecH264) {
     RTPVideoHeaderH264 h264 = packet.codecSpecificHeader.codecHeader.H264;
-    unsigned char nal_type = h264.nalu_header & 0x1F;
+    uint8_t nal_type = h264.nalu_header & RtpFormatH264::kH264NAL_TypeMask;
     bool potential_start = false;
     if (nal_type == RtpFormatH264::kH264NALU_SPS ||
         nal_type == RtpFormatH264::kH264NALU_PPS ||
@@ -444,8 +444,8 @@ int VCMSessionInfo::InsertPacket(const VCMPacket& packet,
       last_packet_seq_num_ = static_cast<int>(packet.seqNum);
     } else if (last_packet_seq_num_ != -1 &&
       IsNewerSequenceNumber(packet.seqNum, last_packet_seq_num_)) {
-      LOG(LS_WARNING) << "Received packet with a sequence number which is out "
-                       " of frame boundaries";
+      //LOG(LS_WARNING) << "Received packet with a sequence number which is out "
+      //                 " of frame boundaries";
       return -3;
     }
 
@@ -472,8 +472,8 @@ int VCMSessionInfo::InsertPacket(const VCMPacket& packet,
       first_packet_seq_num_ = static_cast<int>(packet.seqNum);
     } else if (first_packet_seq_num_ != -1 &&
       !IsNewerSequenceNumber(packet.seqNum, first_packet_seq_num_)) {
-      LOG(LS_WARNING) << "Received packet with a sequence number which is out "
-                       "of frame boundaries";
+      //LOG(LS_WARNING) << "Received packet with a sequence number which is out "
+      //                 "of frame boundaries";
       return -3;
     } else if (frame_type_ == kFrameEmpty && packet.frameType != kFrameEmpty) {
       // Update the frame type with the type of the first media packet.
@@ -486,8 +486,8 @@ int VCMSessionInfo::InsertPacket(const VCMPacket& packet,
       last_packet_seq_num_ = static_cast<int>(packet.seqNum);
     } else if (last_packet_seq_num_ != -1 &&
         IsNewerSequenceNumber(packet.seqNum, last_packet_seq_num_)) {
-      LOG(LS_WARNING) << "Received packet with a sequence number which is out "
-                       "of frame boundaries";
+      //LOG(LS_WARNING) << "Received packet with a sequence number which is out "
+      //                 "of frame boundaries";
       return -3;
     }
 

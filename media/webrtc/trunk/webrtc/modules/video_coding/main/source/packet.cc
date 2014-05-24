@@ -110,7 +110,7 @@ void VCMPacket::CopyCodecSpecifics(const RTPVideoHeader& videoHeader) {
       break;
     }
     case kRtpVideoH264: {
-      unsigned char nal_type = videoHeader.codecHeader.H264.nalu_header & 0x1F;
+      uint8_t nal_type = videoHeader.codecHeader.H264.nalu_header & RtpFormatH264::kH264NAL_TypeMask;
       if (videoHeader.codecHeader.H264.single_nalu) {
         if (nal_type == RtpFormatH264::kH264NALU_SPS ||
             nal_type == RtpFormatH264::kH264NALU_PPS) {
