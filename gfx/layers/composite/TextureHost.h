@@ -16,7 +16,6 @@
 #include "mozilla/gfx/Point.h"          // for IntSize, IntPoint
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat, etc
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags, etc
-#include "mozilla/layers/FenceUtils.h"  // for FenceHandle
 #include "mozilla/layers/LayersTypes.h"  // for LayerRenderState, etc
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsCOMPtr.h"                   // for already_AddRefed
@@ -418,8 +417,6 @@ public:
   PTextureParent* GetIPDLActor();
 
   static void SendFenceHandleIfPresent(PTextureParent* actor);
-
-  FenceHandle GetAndResetReleaseFenceHandle();
 
   /**
    * Specific to B2G's Composer2D

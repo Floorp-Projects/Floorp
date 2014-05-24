@@ -41,6 +41,46 @@ namespace layers {
 
 using namespace mozilla::gfx;
 
+/**
+ * Handle RemoveTextureFromCompositableAsync() transaction.
+ */
+class RemoveTextureFromCompositableTracker : public AsyncTransactionTracker {
+public:
+  RemoveTextureFromCompositableTracker(CompositableClient* aCompositableClient)
+    : mCompositableClient(aCompositableClient)
+  {
+    MOZ_COUNT_CTOR(RemoveTextureFromCompositableTracker);
+  }
+
+  ~RemoveTextureFromCompositableTracker()
+  {
+    MOZ_COUNT_DTOR(RemoveTextureFromCompositableTracker);
+  }
+
+  virtual void Complete() MOZ_OVERRIDE
+  {
+    // The TextureClient's recycling is postponed until the transaction
+    // complete.
+    mTextureClient = nullptr;
+    mCompositableClient = nullptr;
+  }
+
+  virtual void Cancel() MOZ_OVERRIDE
+  {
+    mTextureClient = nullptr;
+    mCompositableClient = nullptr;
+  }
+
+  virtual void SetTextureClient(TextureClient* aTextureClient) MOZ_OVERRIDE
+  {
+    mTextureClient = aTextureClient;
+  }
+
+private:
+  RefPtr<CompositableClient> mCompositableClient;
+  RefPtr<TextureClient> mTextureClient;
+};
+
 /* static */ TemporaryRef<ImageClient>
 ImageClient::CreateImageClient(CompositableType aCompositableHostType,
                                CompositableForwarder* aForwarder,
