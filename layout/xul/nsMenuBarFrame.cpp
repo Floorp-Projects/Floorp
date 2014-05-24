@@ -159,17 +159,6 @@ nsMenuBarFrame::ToggleMenuActiveState()
   return nullptr;
 }
 
-static void
-GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aFrame, nsIFrame* aChild,
-                  nsIFrame** aResult)
-{
-  nsIContent* child = nullptr;
-  if (aChild)
-    child = aChild->GetContent();
-  *aResult = aShell->FrameConstructor()->
-    GetInsertionPoint(aFrame->GetContent(), child);
-}
-
 nsMenuFrame*
 nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent)
 {
@@ -188,8 +177,8 @@ nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent)
     return nullptr; // no character was pressed so just return
 
   // Enumerate over our list of frames.
-  nsIFrame* immediateParent = nullptr;
-  GetInsertionPoint(PresContext()->PresShell(), this, nullptr, &immediateParent);
+  nsIFrame* immediateParent = PresContext()->PresShell()->FrameConstructor()->
+    GetInsertionPoint(GetContent(), nullptr);
   if (!immediateParent)
     immediateParent = this;
 

@@ -29,6 +29,7 @@ struct nsStyleDisplay;
 class nsIDOMHTMLSelectElement;
 struct nsGenConInitializer;
 
+class nsContainerFrame;
 class nsFirstLineFrame;
 class nsICSSAnonBoxPseudo;
 class nsPageContentFrame;
@@ -111,10 +112,10 @@ private:
   // that insertion point. If not, returns null and issues single
   // ContentInserted calls for each child.  aEndChild = nullptr indicates that we
   // are dealing with an append.
-  nsIFrame* GetRangeInsertionPoint(nsIContent* aContainer,
-                                   nsIContent* aStartChild,
-                                   nsIContent* aEndChild,
-                                   bool aAllowLazyConstruction);
+  nsContainerFrame* GetRangeInsertionPoint(nsIContent* aContainer,
+                                           nsIContent* aStartChild,
+                                           nsIContent* aEndChild,
+                                           bool aAllowLazyConstruction);
 
   // Returns true if parent was recreated due to frameset child, false otherwise.
   bool MaybeRecreateForFrameset(nsIFrame* aParentFrame,
@@ -233,9 +234,9 @@ public:
   nsresult ReplicateFixedFrames(nsPageContentFrame* aParentFrame);
 
   // Get the XBL insertion point for a child
-  nsIFrame* GetInsertionPoint(nsIContent* aContainer,
-                              nsIContent* aChildContent,
-                              bool*       aMultiple = nullptr);
+  nsContainerFrame* GetInsertionPoint(nsIContent* aContainer,
+                                      nsIContent* aChildContent,
+                                      bool*       aMultiple = nullptr);
 
   nsresult CreateListBoxContent(nsPresContext* aPresContext,
                                 nsIFrame*       aParentFrame,
@@ -1687,7 +1688,7 @@ private:
   nsresult InsertFirstLineFrames(nsFrameConstructorState& aState,
                                  nsIContent*              aContent,
                                  nsIFrame*                aBlockFrame,
-                                 nsIFrame**               aParentFrame,
+                                 nsContainerFrame**       aParentFrame,
                                  nsIFrame*                aPrevSibling,
                                  nsFrameItems&            aFrameItems);
 
@@ -1728,7 +1729,7 @@ private:
   // including aEndSkipChild will be skipped over when looking for sibling
   // frames. Skipping a range can deal with XBL but not when there are multiple
   // insertion points.
-  nsIFrame* GetInsertionPrevSibling(nsIFrame*& aParentFrame, /* inout */
+  nsIFrame* GetInsertionPrevSibling(nsContainerFrame*& aParentFrame, /* inout */
                                     nsIContent* aContainer,
                                     nsIContent* aChild,
                                     bool* aIsAppend,

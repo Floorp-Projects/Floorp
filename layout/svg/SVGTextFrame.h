@@ -279,7 +279,7 @@ public:
                                     nsIAtom* aAttribute,
                                     int32_t aModType) MOZ_OVERRIDE;
 
-  virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE
+  virtual nsContainerFrame* GetContentInsertionFrame() MOZ_OVERRIDE
   {
     return GetFirstPrincipalChild()->GetContentInsertionFrame();
   }

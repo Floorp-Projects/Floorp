@@ -99,7 +99,7 @@ public:
   virtual nsresult  RemoveFrame(ChildListID     aListID,
                                 nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
-  virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE;
+  virtual nsContainerFrame* GetContentInsertionFrame() MOZ_OVERRIDE;
 
   virtual nsresult  SetInitialChildList(ChildListID  aListID,
                                         nsFrameList& aChildList) MOZ_OVERRIDE;

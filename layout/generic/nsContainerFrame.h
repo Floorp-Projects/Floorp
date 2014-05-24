@@ -61,6 +61,10 @@ public:
                                 nsFrameList& aFrameList) MOZ_OVERRIDE;
   virtual nsresult RemoveFrame(ChildListID aListID,
                                nsIFrame* aOldFrame) MOZ_OVERRIDE;
+  virtual nsContainerFrame* GetContentInsertionFrame() MOZ_OVERRIDE
+  {
+    return this;
+  }
 
   virtual const nsFrameList& GetChildList(ChildListID aList) const MOZ_OVERRIDE;
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const MOZ_OVERRIDE;

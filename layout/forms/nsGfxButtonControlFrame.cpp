@@ -210,7 +210,7 @@ nsGfxButtonControlFrame::IsLeaf() const
   return true;
 }
 
-nsIFrame*
+nsContainerFrame*
 nsGfxButtonControlFrame::GetContentInsertionFrame()
 {
   return this;
