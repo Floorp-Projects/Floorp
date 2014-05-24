@@ -700,8 +700,39 @@ WebrtcOMXH264VideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
   }
 
   if (!mOMXConfigured) {
-    mOMX->Configure(mWidth, mHeight, mFrameRate,
-                    OMXVideoEncoder::BlobFormat::AVC_NAL);
+    // XXX take from negotiated SDP in codecSpecific data
+    OMX_VIDEO_AVCLEVELTYPE level = OMX_VIDEO_AVCLevel3;
+    // We could use ControlRateConstantSkipFrames
+    OMX_VIDEO_CONTROLRATETYPE bitrateMode = OMX_Video_ControlRateConstant;
+
+    // Set up configuration parameters for AVC/H.264 encoder.
+    sp<AMessage> format = new AMessage;
+    // Fixed values
+    format->setString("mime", MEDIA_MIMETYPE_VIDEO_AVC);
+    // XXX take from initial config parameters
+    format->setInt32("bitrate", 300*1000);
+    // XXX Only set if we're not using any recovery RTCP options
+    format->setInt32("i-frame-interval", 3 /* seconds */);
+    // See mozilla::layers::GrallocImage, supports YUV 4:2:0, CbCr width and
+    // height is half that of Y
+    format->setInt32("color-format", OMX_COLOR_FormatYUV420SemiPlanar);
+    format->setInt32("profile", OMX_VIDEO_AVCProfileBaseline);
+    format->setInt32("level", level);
+    format->setInt32("bitrate-mode", bitrateMode);
+    format->setInt32("store-metadata-in-buffers", 0);
+    format->setInt32("prepend-sps-pps-to-idr-frames", 1); // 8x10 doesn't support this
+    // Input values.
+    format->setInt32("width", mWidth);
+    format->setInt32("height", mHeight);
+    format->setInt32("stride", mWidth);
+    format->setInt32("slice-height", mHeight);
+    format->setInt32("frame-rate", 10 /* XXX mFrameRate*/);
+
+    nsresult rv = mOMX->ConfigureDirect(format,
+                                        OMXVideoEncoder::BlobFormat::AVC_NAL);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
     mOMXConfigured = true;
     CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p start OMX with image size:%ux%u",
                this, mWidth, mHeight);
@@ -802,18 +833,18 @@ WebrtcOMXH264VideoEncoder::SetChannelParameters(uint32_t aPacketLossRate,
 
 // TODO: Bug 997567. Find the way to support frame rate change.
 int32_t
-WebrtcOMXH264VideoEncoder::SetRates(uint32_t aBitRate, uint32_t aFrameRate)
+WebrtcOMXH264VideoEncoder::SetRates(uint32_t aBitRateKbps, uint32_t aFrameRate)
 {
   CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p set bitrate:%u, frame rate:%u)",
-             this, aBitRate, aFrameRate);
+             this, aBitRateKbps, aFrameRate);
   MOZ_ASSERT(mOMX != nullptr);
   if (mOMX == nullptr) {
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
   }
 
-  mOMX->SetBitrate(aBitRate);
-
-  return WEBRTC_VIDEO_CODEC_OK;
+  nsresult rv = mOMX->SetBitrate(aBitRateKbps);
+  NS_WARN_IF(NS_FAILED(rv));
+  return NS_FAILED(rv) ? WEBRTC_VIDEO_CODEC_OK : WEBRTC_VIDEO_CODEC_ERROR;
 }
 
 // Decoder.
