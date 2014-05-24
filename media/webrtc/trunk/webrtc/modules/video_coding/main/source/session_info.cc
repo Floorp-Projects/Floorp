@@ -432,8 +432,14 @@ int VCMSessionInfo::InsertPacket(const VCMPacket& packet,
       }
     }
 
-    // Track the marker bit, should only be set for one packet per session.
-    if (packet.markerBit && last_packet_seq_num_ == -1) {
+    // TODO(jesup) Handle STAP-A's here, since they must share a timestamp.  Break
+    // into individual packets at this point, then handle like kNaluCompletes
+
+    // Ignore Marker bit for reassembly, since it's not 100% guaranteed to be correct
+    // Look at kNaluComplete (single_nal), or an unbroken sequence of
+    // isFirstPacket/kNaluStart (FU-A with S bit), FU-A's, FU-A with E bit (kNaluEnd)
+    if ((packet.completeNALU == kNaluComplete || packet.completeNALU == kNaluEnd) &&
+        last_packet_seq_num_ == -1) {
       last_packet_seq_num_ = static_cast<int>(packet.seqNum);
     } else if (last_packet_seq_num_ != -1 &&
       IsNewerSequenceNumber(packet.seqNum, last_packet_seq_num_)) {
@@ -442,17 +448,8 @@ int VCMSessionInfo::InsertPacket(const VCMPacket& packet,
       return -3;
     }
 
-    if (first_packet_seq_num_ == packet.seqNum &&
-        packet.completeNALU != kNaluComplete) {
-      VCMPacket& npacket = const_cast<VCMPacket&> (packet);
-      npacket.isFirstPacket = true;
-      npacket.completeNALU = kNaluStart;
-      // The insert operation invalidates the iterator |rit|.
-      packet_list_it = packets_.insert(rit.base(), npacket);
-    } else {
-      // The insert operation invalidates the iterator |rit|.
-      packet_list_it = packets_.insert(rit.base(), packet);
-    }
+    // The insert operation invalidates the iterator |rit|.
+    packet_list_it = packets_.insert(rit.base(), packet);
   } else {
     // Only insert media packets between first and last packets (when available).
     // Placing check here, as to properly account for duplicate packets.

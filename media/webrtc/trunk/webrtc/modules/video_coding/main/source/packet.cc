@@ -111,17 +111,13 @@ void VCMPacket::CopyCodecSpecifics(const RTPVideoHeader& videoHeader) {
     }
     case kRtpVideoH264: {
       uint8_t nal_type = videoHeader.codecHeader.H264.nalu_header & RtpFormatH264::kH264NAL_TypeMask;
-      if (videoHeader.codecHeader.H264.single_nalu) {
-        isFirstPacket   = true;
-        markerBit       = true;
-      }
+      isFirstPacket = videoHeader.isFirstPacket;
       if (isFirstPacket) {
         insertStartCode = true;
       }
-
-      if (isFirstPacket && markerBit)
+      if (videoHeader.codecHeader.H264.single_nalu) {
          completeNALU = kNaluComplete;
-      else if (isFirstPacket)
+      } else if (isFirstPacket)
          completeNALU = kNaluStart;
       else if (markerBit)
          completeNALU = kNaluEnd;
