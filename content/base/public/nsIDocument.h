@@ -133,9 +133,6 @@ typedef CallbackObjectHolder<NodeFilter, nsIDOMNodeFilter> NodeFilterHolder;
 { 0x0300e2e0, 0x24c9, 0x4ecf, \
   { 0x81, 0xec, 0x64, 0x26, 0x9a, 0x4b, 0xef, 0x18 } }
 
-// Flag for AddStyleSheet().
-#define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
-
 // Enum for requesting a particular type of document when creating a doc
 enum DocumentFlavor {
   DocumentFlavorLegacyGuess, // compat with old code until made HTML5-compliant
@@ -761,7 +758,29 @@ public:
    */
 
   /**
-   * Get the number of stylesheets
+   * These exists to allow us to on-demand load user-agent style sheets that
+   * would otherwise be loaded by nsDocumentViewer::CreateStyleSet. This allows
+   * us to keep the memory used by a document's rule cascade data (the stuff in
+   * its nsStyleSet's nsCSSRuleProcessors) - which can be considerable - lower
+   * than it would be if we loaded all built-in user-agent style sheets up
+   * front.
+   *
+   * By "built-in" user-agent style sheets we mean the user-agent style sheets
+   * that gecko itself supplies (such as html.css and svg.css) as opposed to
+   * user-agent level style sheets inserted by add-ons or the like.
+   *
+   * This function prepends the given style sheet to the document's style set
+   * in order to make sure that it does not override user-agent style sheets
+   * supplied by add-ons or by the app (Firefox OS or Firefox Mobile, for
+   * example), since their sheets should override built-in sheets.
+   *
+   * TODO We can get rid of the whole concept of delayed loading if we fix
+   * bug 77999.
+   */
+  virtual void EnsureOnDemandBuiltInUASheet(const char *aStyleSheetURI) = 0;
+
+  /**
+   * Get the number of (document) stylesheets
    *
    * @return the number of stylesheets
    * @throws no exceptions
@@ -820,15 +839,6 @@ public:
    */
   virtual void SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
                                             bool aApplicable) = 0;  
-
-  /**
-   * Just like the style sheet API, but for "catalog" sheets,
-   * extra sheets inserted at the UA level.
-   */
-  virtual int32_t GetNumberOfCatalogStyleSheets() const = 0;
-  virtual nsIStyleSheet* GetCatalogStyleSheetAt(int32_t aIndex) const = 0;
-  virtual void AddCatalogStyleSheet(nsCSSStyleSheet* aSheet) = 0;
-  virtual void EnsureCatalogStyleSheet(const char *aStyleSheetURI) = 0;
 
   enum additionalSheetType {
     eAgentSheet,
