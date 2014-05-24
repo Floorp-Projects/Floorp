@@ -5184,6 +5184,13 @@ nsIFrame::GetNormalPosition() const
   return GetPosition();
 }
 
+nsPoint
+nsIFrame::GetPositionIgnoringScrolling()
+{
+  return GetParent() ? GetParent()->GetPositionOfChildIgnoringScrolling(this)
+    : GetPosition();
+}
+
 nsRect
 nsIFrame::GetOverflowRect(nsOverflowType aType) const
 {
