@@ -154,6 +154,14 @@ InitBoxMetrics(nsIFrame* aFrame, bool aClear)
   metrics->mLastSize.SizeTo(0, 0);
 }
 
+static bool
+IsBoxWrapped(const nsIFrame* aFrame)
+{
+  return aFrame->GetParent() &&
+         aFrame->GetParent()->IsBoxFrame() &&
+         !aFrame->IsBoxFrame();
+}
+
 // Formerly the nsIFrameDebug interface
 
 #ifdef DEBUG
@@ -564,7 +572,7 @@ nsFrame::Init(nsIContent*       aContent,
 
   DidSetStyleContext(nullptr);
 
-  if (IsBoxWrapped())
+  if (::IsBoxWrapped(this))
     ::InitBoxMetrics(this, false);
 }
 
@@ -3784,7 +3792,7 @@ nsFrame::MarkIntrinsicWidthsDirty()
 {
   // This version is meant only for what used to be box-to-block adaptors.
   // It should not be called by other derived classes.
-  if (IsBoxWrapped()) {
+  if (::IsBoxWrapped(this)) {
     nsBoxLayoutMetrics *metrics = BoxMetrics();
 
     SizeNeedsRecalc(metrics->mPrefSize);
@@ -5287,7 +5295,7 @@ nsFrame::UpdateOverflow()
   nsOverflowAreas overflowAreas(rect, rect);
 
   if (!DoesClipChildren() &&
-      !(IsCollapsed() && (IsBoxFrame() || IsBoxWrapped()))) {
+      !(IsCollapsed() && (IsBoxFrame() || ::IsBoxWrapped(this)))) {
     nsLayoutUtils::UnionChildOverflow(this, overflowAreas);
   }
 
@@ -7254,7 +7262,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
 
   // Note that NS_STYLE_OVERFLOW_CLIP doesn't clip the frame background,
   // so we add theme background overflow here so it's not clipped.
-  if (!IsBoxWrapped() && IsThemed(disp)) {
+  if (!::IsBoxWrapped(this) && IsThemed(disp)) {
     nsRect r(bounds);
     nsPresContext *presContext = PresContext();
     if (presContext->GetTheme()->
@@ -8433,11 +8441,11 @@ nsIFrame::RemoveInPopupStateBitFromDescendants(nsIFrame* aFrame)
 void
 nsIFrame::SetParent(nsContainerFrame* aParent)
 {
-  bool wasBoxWrapped = IsBoxWrapped();
+  bool wasBoxWrapped = ::IsBoxWrapped(this);
   mParent = aParent;
-  if (!wasBoxWrapped && IsBoxWrapped()) {
+  if (!wasBoxWrapped && ::IsBoxWrapped(this)) {
     ::InitBoxMetrics(this, true);
-  } else if (wasBoxWrapped && !IsBoxWrapped()) {
+  } else if (wasBoxWrapped && !::IsBoxWrapped(this)) {
     Properties().Delete(BoxMetricsProperty());
   }
 
