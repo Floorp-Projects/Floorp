@@ -47,7 +47,7 @@ addTest(function inheritedUserStyles() {
   promiseDone(gWalker.querySelector(gWalker.rootNode, "#svgcontent rect").then(node => {
     return gStyles.getApplied(node, { inherited: true, filter: "user" });
   }).then(applied => {
-    is(applied.length, 3, "Should have 3 rules");
+    is(applied.length, 2, "Should have 2 rules");
     is(applied[1].rule.cssText, "fill: rgb(1, 2, 3);", "cssText is right");
   }).then(runNextTest));
 });

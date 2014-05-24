@@ -672,6 +672,8 @@ class nsDocument : public nsIDocument,
                    public nsIObserver,
                    public nsIDOMXPathEvaluator
 {
+  friend class nsIDocument;
+
 public:
   typedef mozilla::dom::Element Element;
   using nsIDocument::GetElementsByTagName;
@@ -779,8 +781,10 @@ public:
   virtual Element* FindContentForSubDocument(nsIDocument *aDocument) const MOZ_OVERRIDE;
   virtual Element* GetRootElementInternal() const MOZ_OVERRIDE;
 
+  virtual void EnsureOnDemandBuiltInUASheet(const char *aStyleSheetURI) MOZ_OVERRIDE;
+
   /**
-   * Get the style sheets owned by this document.
+   * Get the (document) style sheets owned by this document.
    * These are ordered, highest priority last
    */
   virtual int32_t GetNumberOfStyleSheets() const MOZ_OVERRIDE;
@@ -797,11 +801,6 @@ public:
   virtual void InsertStyleSheetAt(nsIStyleSheet* aSheet, int32_t aIndex) MOZ_OVERRIDE;
   virtual void SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
                                             bool aApplicable) MOZ_OVERRIDE;
-
-  virtual int32_t GetNumberOfCatalogStyleSheets() const MOZ_OVERRIDE;
-  virtual nsIStyleSheet* GetCatalogStyleSheetAt(int32_t aIndex) const MOZ_OVERRIDE;
-  virtual void AddCatalogStyleSheet(nsCSSStyleSheet* aSheet) MOZ_OVERRIDE;
-  virtual void EnsureCatalogStyleSheet(const char *aStyleSheetURI) MOZ_OVERRIDE;
 
   virtual nsresult LoadAdditionalStyleSheet(additionalSheetType aType, nsIURI* aSheetURI) MOZ_OVERRIDE;
   virtual void RemoveAdditionalStyleSheet(additionalSheetType aType, nsIURI* sheetURI) MOZ_OVERRIDE;
@@ -928,6 +927,7 @@ public:
   virtual nsViewportInfo GetViewportInfo(const mozilla::ScreenIntSize& aDisplaySize) MOZ_OVERRIDE;
 
 private:
+  void AddOnDemandBuiltInUASheet(nsCSSStyleSheet* aSheet);
   nsRadioGroupStruct* GetRadioGroupInternal(const nsAString& aName) const;
   void SendToConsole(nsCOMArray<nsISecurityConsoleMessage>& aMessages);
 
@@ -1423,7 +1423,7 @@ protected:
   nsWeakPtr mWeakSink;
 
   nsCOMArray<nsIStyleSheet> mStyleSheets;
-  nsCOMArray<nsIStyleSheet> mCatalogSheets;
+  nsCOMArray<nsIStyleSheet> mOnDemandBuiltInUASheets;
   nsCOMArray<nsIStyleSheet> mAdditionalSheets[SheetTypeCount];
 
   // Array of observers

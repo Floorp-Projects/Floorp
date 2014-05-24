@@ -108,7 +108,7 @@ nsMathMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
       // construction, because we could move a MathML element from the document
       // that created it to another document.
       aDocument->SetMathMLEnabled();
-      aDocument->EnsureCatalogStyleSheet(kMathMLStyleSheetURI);
+      aDocument->EnsureOnDemandBuiltInUASheet(kMathMLStyleSheetURI);
 
       // Rebuild style data for the presshell, because style system
       // optimizations may have taken place assuming MathML was disabled.
