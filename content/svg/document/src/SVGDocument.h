@@ -20,6 +20,7 @@ public:
   SVGDocument()
     : XMLDocument("image/svg+xml")
   {
+    mType = eSVG;
   }
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;

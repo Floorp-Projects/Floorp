@@ -9114,7 +9114,7 @@ nsDocument::CloneDocHelper(nsDocument* clone) const
   clone->mSecurityInfo = mSecurityInfo;
 
   // State from nsDocument
-  clone->mIsRegularHTML = mIsRegularHTML;
+  clone->mType = mType;
   clone->mXMLDeclarationBits = mXMLDeclarationBits;
   clone->mBaseTarget = mBaseTarget;
   return NS_OK;
