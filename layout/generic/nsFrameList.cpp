@@ -136,7 +136,7 @@ nsFrameList::DestroyFrame(nsIFrame* aFrame)
 }
 
 nsFrameList::Slice
-nsFrameList::InsertFrames(nsIFrame* aParent, nsIFrame* aPrevSibling,
+nsFrameList::InsertFrames(nsContainerFrame* aParent, nsIFrame* aPrevSibling,
                           nsFrameList& aFrameList)
 {
   NS_PRECONDITION(aFrameList.NotEmpty(), "Unexpected empty list");
@@ -309,12 +309,12 @@ nsFrameList::GetLength() const
 }
 
 void
-nsFrameList::ApplySetParent(nsIFrame* aParent) const
+nsFrameList::ApplySetParent(nsContainerFrame* aParent) const
 {
   NS_ASSERTION(aParent, "null ptr");
 
   for (nsIFrame* f = FirstChild(); f; f = f->GetNextSibling()) {
-    f->SetParent(static_cast<nsContainerFrame*>(aParent)); // XXX static_cast will be removed in a later patch
+    f->SetParent(aParent);
   }
 }
 
