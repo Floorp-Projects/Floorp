@@ -384,20 +384,17 @@ DecomposeIntoNoRepeatRects(const Rect& aRect,
 {
   Rect texCoordRect = aTexCoordRect;
 
-  // We want to normalize here instead of clamp because the rects we were
-  // given assume GL_REPEAT, which we explicitly won't use and instead
-  // manually split into sub-rects.
-  while (texCoordRect.x >= 1.0f)
-    texCoordRect.x -= 1.0f;
-  while (texCoordRect.y >= 1.0f)
-    texCoordRect.y -= 1.0f;
+  // Move the texture coordinates within the range (0,1). For GL_REPEAT this
+  // doesn't matter but the code below assumes it.
+  texCoordRect.x -= uint32_t(texCoordRect.x);
+  texCoordRect.y -= uint32_t(texCoordRect.y);
 
   // If the texture should be flipped, it will have negative height. Detect that
   // here and compensate for it. We will flip each rect as we emit it.
   bool flipped = false;
   if (texCoordRect.height < 0) {
     flipped = true;
-    texCoordRect.y = texCoordRect.YMost();
+    texCoordRect.y += texCoordRect.height;
     texCoordRect.height = -texCoordRect.height;
   }
 
