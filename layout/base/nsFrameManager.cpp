@@ -349,9 +349,9 @@ nsFrameManager::ClearAllUndisplayedContentIn(nsIContent* aParentContent)
 
 //----------------------------------------------------------------------
 nsresult
-nsFrameManager::AppendFrames(nsIFrame*       aParentFrame,
-                             ChildListID     aListID,
-                             nsFrameList&    aFrameList)
+nsFrameManager::AppendFrames(nsContainerFrame* aParentFrame,
+                             ChildListID       aListID,
+                             nsFrameList&      aFrameList)
 {
   if (aParentFrame->IsAbsoluteContainer() &&
       aListID == aParentFrame->GetAbsoluteListID()) {
@@ -363,10 +363,10 @@ nsFrameManager::AppendFrames(nsIFrame*       aParentFrame,
 }
 
 nsresult
-nsFrameManager::InsertFrames(nsIFrame*       aParentFrame,
-                             ChildListID     aListID,
-                             nsIFrame*       aPrevFrame,
-                             nsFrameList&    aFrameList)
+nsFrameManager::InsertFrames(nsContainerFrame* aParentFrame,
+                             ChildListID       aListID,
+                             nsIFrame*         aPrevFrame,
+                             nsFrameList&      aFrameList)
 {
   NS_PRECONDITION(!aPrevFrame || (!aPrevFrame->GetNextContinuation()
                   || (((aPrevFrame->GetNextContinuation()->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER))
@@ -405,7 +405,7 @@ nsFrameManager::RemoveFrame(ChildListID     aListID,
                  GetPlaceholderFrameFor(aOldFrame)),
                "Must call RemoveFrame on placeholder for out-of-flows.");
   nsresult rv = NS_OK;
-  nsIFrame* parentFrame = aOldFrame->GetParent();
+  nsContainerFrame* parentFrame = aOldFrame->GetParent();
   if (parentFrame->IsAbsoluteContainer() &&
       aListID == parentFrame->GetAbsoluteListID()) {
     parentFrame->GetAbsoluteContainingBlock()->
