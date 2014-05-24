@@ -477,6 +477,7 @@ protected:
   friend class nsFrameList; // needed to pass aDestructRoot through to children
   friend class nsLineBox;   // needed to pass aDestructRoot through to children
   friend class nsContainerFrame; // needed to pass aDestructRoot through to children
+  friend class nsFrame; // need to assign mParent
 public:
 
   /**
@@ -591,9 +592,9 @@ public:
                                          nsStyleContext* aStyleContext) = 0;
 
   /**
-   * Accessor functions for geometric parent
+   * Accessor functions for geometric parent.
    */
-  nsContainerFrame* GetParent() const { return static_cast<nsContainerFrame*>(static_cast<void*>(mParent)); }  // XXX static_cast will be removed in a later patch
+  nsContainerFrame* GetParent() const { return mParent; }
   /**
    * Set this frame's parent to aParent.
    * If the frame may have moved into or out of a scrollframe's
@@ -2921,8 +2922,8 @@ protected:
   nsRect           mRect;
   nsIContent*      mContent;
   nsStyleContext*  mStyleContext;
-  nsIFrame*        mParent;
 private:
+  nsContainerFrame* mParent;
   nsIFrame*        mNextSibling;  // doubly-linked list of frames
   nsIFrame*        mPrevSibling;  // Do not touch outside SetNextSibling!
 
