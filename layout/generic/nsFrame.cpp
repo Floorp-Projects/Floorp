@@ -516,8 +516,8 @@ nsFrame::Init(nsIContent*       aContent,
                        NS_FRAME_MAY_HAVE_GENERATED_CONTENT |
                        NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
   }
-  if (mParent) {
-    nsFrameState state = mParent->GetStateBits();
+  if (GetParent()) {
+    nsFrameState state = GetParent()->GetStateBits();
 
     // Make bits that are currently off (see constructor) the same:
     mState |= state & (NS_FRAME_INDEPENDENT_SELECTION |
@@ -4070,7 +4070,7 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
     // property (e.g. "width") for sizing purposes, *unless* they have
     // "flex-basis:auto", in which case they use their main-size property after
     // all.
-    uint32_t flexDirection = mParent->StylePosition()->mFlexDirection;
+    uint32_t flexDirection = GetParent()->StylePosition()->mFlexDirection;
     isHorizontalFlexItem =
       flexDirection == NS_STYLE_FLEX_DIRECTION_ROW ||
       flexDirection == NS_STYLE_FLEX_DIRECTION_ROW_REVERSE;
@@ -4521,7 +4521,7 @@ nsIFrame* nsIFrame::GetAncestorWithViewExternal() const
 // Find the first geometric parent that has a view
 nsIFrame* nsIFrame::GetAncestorWithView() const
 {
-  for (nsIFrame* f = mParent; nullptr != f; f = f->GetParent()) {
+  for (nsIFrame* f = GetParent(); nullptr != f; f = f->GetParent()) {
     if (f->HasView()) {
       return f;
     }
@@ -5511,7 +5511,7 @@ nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix, uint32_t aFlags) con
       pseudoTag->ToString(atomString);
       aTo += nsPrintfCString("%s", NS_LossyConvertUTF16toASCII(atomString).get());
     }
-    if (mParent && mStyleContext->GetParent() != mParent->StyleContext()) {
+    if (GetParent() && mStyleContext->GetParent() != GetParent()->StyleContext()) {
       aTo += nsPrintfCString(",parent=%p", mStyleContext->GetParent());
     }
   }
@@ -5759,7 +5759,7 @@ nsFrame::DumpRegressionData(nsPresContext* aPresContext, FILE* out, int32_t aInd
   XMLQuote(name);
   fputs(NS_LossyConvertUTF16toASCII(name).get(), out);
   fprintf(out, "\" state=\"%016llx\" parent=\"%p\">\n",
-          (unsigned long long)GetDebugStateBits(), (void*)mParent);
+          (unsigned long long)GetDebugStateBits(), (void*)GetParent());
 
   aIndent++;
   DumpBaseRegressionData(aPresContext, out, aIndent);

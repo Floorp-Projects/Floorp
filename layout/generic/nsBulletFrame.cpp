@@ -440,7 +440,7 @@ nsBulletFrame::SetListItemOrdinal(int32_t aNextOrdinal,
   // Try to get value directly from the list-item, if it specifies a
   // value attribute. Note: we do this with our parent's content
   // because our parent is the list-item.
-  nsIContent* parentContent = mParent->GetContent();
+  nsIContent* parentContent = GetParent()->GetContent();
   if (parentContent) {
     nsGenericHTMLElement *hc =
       nsGenericHTMLElement::FromContent(parentContent);

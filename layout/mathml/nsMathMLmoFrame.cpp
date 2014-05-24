@@ -810,7 +810,7 @@ nsMathMLmoFrame::Stretch(nsRenderingContext& aRenderingContext,
     NS_MATHML_EMBELLISH_IS_ACCENT(mEmbellishData.flags);
   if (isAccent) {
     nsEmbellishData parentData;
-    GetEmbellishDataFrom(mParent, parentData);
+    GetEmbellishDataFrom(GetParent(), parentData);
     isAccent =
        (NS_MATHML_EMBELLISH_IS_ACCENTOVER(parentData.flags) ||
         NS_MATHML_EMBELLISH_IS_ACCENTUNDER(parentData.flags)) &&

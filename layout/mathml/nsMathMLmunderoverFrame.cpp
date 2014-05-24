@@ -36,7 +36,7 @@ nsMathMLmunderoverFrame::AttributeChanged(int32_t         aNameSpaceID,
       nsGkAtoms::accentunder_ == aAttribute) {
     // When we have automatic data to update within ourselves, we ask our
     // parent to re-layout its children
-    return ReLayoutChildren(mParent);
+    return ReLayoutChildren(GetParent());
   }
 
   return nsMathMLContainerFrame::

@@ -518,9 +518,9 @@ nsSVGPathGeometryFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
     }
   }
 
-  NS_ASSERTION(mParent, "null parent");
+  NS_ASSERTION(GetParent(), "null parent");
 
-  nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
+  nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(GetParent());
   dom::SVGGraphicsElement *content = static_cast<dom::SVGGraphicsElement*>(mContent);
 
   return content->PrependLocalTransformsTo(
