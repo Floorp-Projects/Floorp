@@ -1375,8 +1375,6 @@ private:
                        PendingBinding*          aPendingBinding,
                        nsIFrame*                aPossiblyLeafFrame = nullptr);
 
-  nsIFrame* GetFrameFor(nsIContent* aContent);
-
   /**
    * These two functions are used when we start frame creation from a non-root
    * element. They should recreate the same state that we would have
