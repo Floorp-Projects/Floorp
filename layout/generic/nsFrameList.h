@@ -16,6 +16,7 @@
 #define DEBUG_FRAME_DUMP 1
 #endif
 
+class nsContainerFrame;
 class nsIFrame;
 class nsIPresShell;
 class nsPresContext;
@@ -112,7 +113,7 @@ public:
    * reparents the newly added frames.  Clears out aFrameList and
    * returns a list slice represening the newly-appended frames.
    */
-  Slice AppendFrames(nsIFrame* aParent, nsFrameList& aFrameList) {
+  Slice AppendFrames(nsContainerFrame* aParent, nsFrameList& aFrameList) {
     return InsertFrames(aParent, LastChild(), aFrameList);
   }
 
@@ -121,7 +122,7 @@ public:
    * Append aFrame to this list.  If aParent is not null,
    * reparents the newly added frame.
    */
-  void AppendFrame(nsIFrame* aParent, nsIFrame* aFrame) {
+  void AppendFrame(nsContainerFrame* aParent, nsIFrame* aFrame) {
     nsFrameList temp(aFrame, aFrame);
     AppendFrames(aParent, temp);
   }
@@ -189,7 +190,7 @@ public:
    * reparents newly-added frame. Note that this method always
    * sets the frame's nextSibling pointer.
    */
-  void InsertFrame(nsIFrame* aParent, nsIFrame* aPrevSibling,
+  void InsertFrame(nsContainerFrame* aParent, nsIFrame* aPrevSibling,
                    nsIFrame* aFrame) {
     nsFrameList temp(aFrame, aFrame);
     InsertFrames(aParent, aPrevSibling, temp);
@@ -202,7 +203,7 @@ public:
    * frames.  Clears out aFrameList and returns a list slice representing the
    * newly-inserted frames.
    */
-  Slice InsertFrames(nsIFrame* aParent, nsIFrame* aPrevSibling,
+  Slice InsertFrames(nsContainerFrame* aParent, nsIFrame* aPrevSibling,
                      nsFrameList& aFrameList);
 
   class FrameLinkEnumerator;
@@ -259,7 +260,7 @@ public:
    * Call SetParent(aParent) for each frame in this list.
    * @param aParent the new parent frame, must be non-null
    */
-  void ApplySetParent(nsIFrame* aParent) const;
+  void ApplySetParent(nsContainerFrame* aParent) const;
 
   /**
    * If this frame list is non-empty then append it to aLists as the
