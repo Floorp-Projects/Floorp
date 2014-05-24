@@ -212,7 +212,7 @@ PerfSpewer::writeProfile(JSScript *script,
 
         size_t size = code->instructionsSize();
         if (size > 0) {
-            fprintf(PerfFilePtr, "%zx %zx %s:%d: Func%02d\n",
+            fprintf(PerfFilePtr, "%zx %zx %s:%zu: Func%02d\n",
                     reinterpret_cast<uintptr_t>(code->raw()),
                     size,
                     script->filename(),
@@ -236,7 +236,7 @@ PerfSpewer::writeProfile(JSScript *script,
         size_t prologueSize = masm.actualOffset(basicBlocks_[0].start.offset());
 
         if (prologueSize > 0) {
-            fprintf(PerfFilePtr, "%zx %zx %s:%d: Func%02d-Prologue\n",
+            fprintf(PerfFilePtr, "%zx %zx %s:%zu: Func%02d-Prologue\n",
                     funcStart, prologueSize, script->filename(), script->lineno(), thisFunctionIndex);
         }
 
@@ -249,7 +249,7 @@ PerfSpewer::writeProfile(JSScript *script,
 
             JS_ASSERT(cur <= blockStart);
             if (cur < blockStart) {
-                fprintf(PerfFilePtr, "%zx %zx %s:%d: Func%02d-Block?\n",
+                fprintf(PerfFilePtr, "%zx %zx %s:%zu: Func%02d-Block?\n",
                         static_cast<uintptr_t>(cur),
                         static_cast<uintptr_t>(blockStart - cur),
                         script->filename(), script->lineno(),
@@ -269,7 +269,7 @@ PerfSpewer::writeProfile(JSScript *script,
 
         JS_ASSERT(cur <= funcEndInlineCode);
         if (cur < funcEndInlineCode) {
-            fprintf(PerfFilePtr, "%zx %zx %s:%d: Func%02d-Epilogue\n",
+            fprintf(PerfFilePtr, "%zx %zx %s:%zu: Func%02d-Epilogue\n",
                     cur, funcEndInlineCode - cur,
                     script->filename(), script->lineno(),
                     thisFunctionIndex);
@@ -277,7 +277,7 @@ PerfSpewer::writeProfile(JSScript *script,
 
         JS_ASSERT(funcEndInlineCode <= funcEnd);
         if (funcEndInlineCode < funcEnd) {
-            fprintf(PerfFilePtr, "%zx %zx %s:%d: Func%02d-OOL\n",
+            fprintf(PerfFilePtr, "%zx %zx %s:%zu: Func%02d-OOL\n",
                     funcEndInlineCode, funcEnd - funcEndInlineCode,
                     script->filename(), script->lineno(),
                     thisFunctionIndex);
@@ -299,7 +299,7 @@ js::jit::writePerfSpewerBaselineProfile(JSScript *script, JitCode *code)
 
     size_t size = code->instructionsSize();
     if (size > 0) {
-        fprintf(PerfFilePtr, "%zx %zx %s:%d: Baseline\n",
+        fprintf(PerfFilePtr, "%zx %zx %s:%zu: Baseline\n",
                 reinterpret_cast<uintptr_t>(code->raw()),
                 size, script->filename(), script->lineno());
     }

@@ -13,6 +13,10 @@ git checkout "$UPSTREAM_COMMIT"
 autoconf
 git describe --long --abbrev=40 > VERSION
 rm -rf .git .gitignore autom4te.cache
+
+patch -p1 < ../0001-Use-a-configure-test-to-detect-whether-to-use-a-cons.patch
+patch -p1 < ../0002-Use-ULL-prefix-instead-of-LLU-for-unsigned-long-long.patch
+
 cd ..
 hg addremove -q src
 

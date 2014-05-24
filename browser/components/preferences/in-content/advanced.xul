@@ -437,9 +437,6 @@
 
         <separator/>
 
-#ifdef XP_MACOSX
-        <vbox>
-#endif
         <hbox>
           <button id="viewCertificatesButton"
                   label="&viewCerts.label;" accesskey="&viewCerts.accesskey;"
@@ -448,18 +445,11 @@
           <button id="verificationButton"
                   label="&verify2.label;" accesskey="&verify2.accesskey;"
                   oncommand="gAdvancedPane.showOCSP();"/>
-#ifdef XP_MACOSX
-        </hbox>
-        <hbox>
-#endif
           <button id="viewSecurityDevicesButton"
                   label="&viewSecurityDevices.label;" accesskey="&viewSecurityDevices.accesskey;"
                   oncommand="gAdvancedPane.showSecurityDevices();"
                   preference="security.disable_button.openDeviceManager"/>
         </hbox>
-#ifdef XP_MACOSX
-        </vbox>
-#endif
     </tabpanel>
   </tabpanels>
 </tabbox>

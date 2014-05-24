@@ -182,13 +182,8 @@ nsPlainTextSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
     }
   }
 
-  // XXX We should let the caller pass this in.
-  if (Preferences::GetBool("browser.frames.enabled")) {
-    mFlags &= ~nsIDocumentEncoder::OutputNoFramesContent;
-  }
-  else {
-    mFlags |= nsIDocumentEncoder::OutputNoFramesContent;
-  }
+  // XXX We should let the caller decide whether to do this or not
+  mFlags &= ~nsIDocumentEncoder::OutputNoFramesContent;
 
   return NS_OK;
 }

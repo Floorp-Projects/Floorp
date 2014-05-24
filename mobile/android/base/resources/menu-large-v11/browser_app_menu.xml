@@ -108,6 +108,9 @@
           android:icon="@drawable/ic_menu_settings"
           android:title="@string/settings" />
 
+    <item android:id="@+id/help"
+          android:title="@string/help_menu" />
+
     <item android:id="@+id/exit_guest_session"
           android:icon="@drawable/ic_menu_guest"
           android:visible="false"

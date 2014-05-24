@@ -17,6 +17,8 @@ function run_test() {
   gTestDirs = [];
   setupUpdaterTest(FILE_OLD_VERSION_MAR, false, false);
 
+  createUpdaterINI(true);
+
   // Apply the MAR
   // Note that if execv is used, the updater process will turn into the
   // callback process, so its return code will be that of the callback
@@ -24,7 +26,16 @@ function run_test() {
   runUpdate((USE_EXECV ? 0 : 1), STATE_FAILED_VERSION_DOWNGRADE_ERROR);
 }
 
+/**
+ * Checks if the update has finished and if it has finished performs checks for
+ * the test.
+ */
 function checkUpdateApplied() {
+  if (IS_MACOSX || IS_WIN) {
+    // Check that the post update process was not launched.
+    do_check_false(getPostUpdateFile(".running").exists());
+  }
+
   checkFilesAfterUpdateSuccess();
   doTestFinish();
 }

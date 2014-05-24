@@ -7,6 +7,7 @@ var ignoreIndirectCalls = {
     "mallocSizeOf" : true,
     "aMallocSizeOf" : true,
     "_malloc_message" : true,
+    "je_malloc_message" : true,
     "__conv" : true,
     "__convf" : true,
     "prerrortable.c:callback_newtable" : true,

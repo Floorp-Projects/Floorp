@@ -7,12 +7,32 @@ var HAVE_LOCAL_OFFER = "have-local-offer";
 var HAVE_REMOTE_OFFER = "have-remote-offer";
 var CLOSED = "closed";
 
+function deltaSeconds(date1, date2) {
+  return (date2.getTime() - date1.getTime())/1000;
+}
+
 function dumpSdp(test) {
   if (typeof test._local_offer !== 'undefined') {
     dump("ERROR: SDP offer: " + test._local_offer.sdp.replace(/[\r]/g, ''));
   }
   if (typeof test._remote_answer !== 'undefined') {
     dump("ERROR: SDP answer: " + test._remote_answer.sdp.replace(/[\r]/g, ''));
+  }
+
+  if ((typeof test.pcLocal.setRemoteDescDate !== 'undefined') &&
+    (typeof test.pcRemote.setLocalDescDate !== 'undefined')) {
+    var delta = deltaSeconds(test.pcLocal.setRemoteDescDate, test.pcRemote.setLocalDescDate);
+    dump("Delay between pcLocal.setRemote <-> pcRemote.setLocal: " + delta + "\n");
+  }
+  if ((typeof test.pcLocal.setRemoteDescDate !== 'undefined') &&
+    (typeof test.pcLocal.setRemoteDescStableEventDate !== 'undefined')) {
+    var delta = deltaSeconds(test.pcLocal.setRemoteDescDate, test.pcLocal.setRemoteDescStableEventDate);
+    dump("Delay between pcLocal.setRemote <-> pcLocal.signalingStateStable: " + delta + "\n");
+  }
+  if ((typeof test.pcRemote.setLocalDescDate !== 'undefined') &&
+    (typeof test.pcRemote.setLocalDescStableEventDate !== 'undefined')) {
+    var delta = deltaSeconds(test.pcRemote.setLocalDescDate, test.pcRemote.setLocalDescStableEventDate);
+    dump("Delay between pcRemote.setLocal <-> pcRemote.signalingStateStable: " + delta + "\n");
   }
 }
 

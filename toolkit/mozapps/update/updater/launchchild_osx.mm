@@ -75,27 +75,18 @@ void LaunchChild(int argc, char **argv)
 }
 
 void
-LaunchMacPostProcess(const char* aAppExe)
+LaunchMacPostProcess(const char* aAppBundle)
 {
   // Launch helper to perform post processing for the update; this is the Mac
   // analogue of LaunchWinPostProcess (PostUpdateWin).
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-  // Find the app bundle containing the executable path given
-  NSString *path = [NSString stringWithUTF8String:aAppExe];
-  NSBundle *bundle;
-  do {
-    path = [path stringByDeletingLastPathComponent];
-    bundle = [NSBundle bundleWithPath:path];
-  } while ((!bundle || ![bundle bundleIdentifier]) && [path length] > 1);
-  if (!bundle) {
-    // No bundle found for the app being launched
-    [pool release];
-    return;
-  }
+  NSString* iniPath = [NSString stringWithUTF8String:aAppBundle];
+  iniPath =
+    [iniPath stringByAppendingPathComponent:@"Contents/MacOS/updater.ini"];
 
-  NSString *iniPath = [bundle pathForResource:@"updater" ofType:@"ini"];
-  if (!iniPath) {
+  NSFileManager* fileManager = [NSFileManager defaultManager];
+  if (![fileManager fileExistsAtPath:iniPath]) {
     // the file does not exist; there is nothing to run
     [pool release];
     return;
@@ -104,7 +95,7 @@ LaunchMacPostProcess(const char* aAppExe)
   int readResult;
   char values[2][MAX_TEXT_LEN];
   readResult = ReadStrings([iniPath UTF8String],
-                           "ExeArg\0ExeRelPath\0",
+                           "ExeRelPath\0ExeArg\0",
                            2,
                            values,
                            "PostUpdateMac");
@@ -113,24 +104,35 @@ LaunchMacPostProcess(const char* aAppExe)
     return;
   }
 
-  NSString *exeArg = [NSString stringWithUTF8String:values[0]];
-  NSString *exeRelPath = [NSString stringWithUTF8String:values[1]];
+  NSString *exeRelPath = [NSString stringWithUTF8String:values[0]];
+  NSString *exeArg = [NSString stringWithUTF8String:values[1]];
   if (!exeArg || !exeRelPath) {
     [pool release];
     return;
   }
-  
-  NSString *resourcePath = [bundle resourcePath];
-  NSString *exeFullPath = [resourcePath stringByAppendingPathComponent:exeRelPath];
+
+  NSString* exeFullPath = [NSString stringWithUTF8String:aAppBundle];
+  exeFullPath = [exeFullPath stringByAppendingPathComponent:exeRelPath];
+
+  char optVals[1][MAX_TEXT_LEN];
+  readResult = ReadStrings([iniPath UTF8String],
+                           "ExeAsync\0",
+                           1,
+                           optVals,
+                           "PostUpdateMac");
 
   NSTask *task = [[NSTask alloc] init];
   [task setLaunchPath:exeFullPath];
   [task setArguments:[NSArray arrayWithObject:exeArg]];
   [task launch];
-  [task waitUntilExit];
+  if (!readResult) {
+    NSString *exeAsync = [NSString stringWithUTF8String:optVals[0]];
+    if ([exeAsync isEqualToString:@"false"]) {
+      [task waitUntilExit];
+    }
+  }
   // ignore the return value of the task, there's nothing we can do with it
   [task release];
 
-  [pool release];  
+  [pool release];
 }
-

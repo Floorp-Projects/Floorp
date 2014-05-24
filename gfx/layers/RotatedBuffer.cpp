@@ -691,7 +691,7 @@ RotatedContentBuffer::BeginPaint(ThebesLayer* aLayer,
 }
 
 DrawTarget*
-RotatedContentBuffer::BorrowDrawTargetForPainting(const PaintState& aPaintState,
+RotatedContentBuffer::BorrowDrawTargetForPainting(PaintState& aPaintState,
                                                   DrawIterator* aIter /* = nullptr */)
 {
   if (aPaintState.mMode == SurfaceMode::SURFACE_NONE) {
@@ -703,12 +703,16 @@ RotatedContentBuffer::BorrowDrawTargetForPainting(const PaintState& aPaintState,
   if (!result) {
     return nullptr;
   }
-  const nsIntRegion* drawPtr = &aPaintState.mRegionToDraw;
+  nsIntRegion* drawPtr = &aPaintState.mRegionToDraw;
   if (aIter) {
     // The iterators draw region currently only contains the bounds of the region,
     // this makes it the precise region.
     aIter->mDrawRegion.And(aIter->mDrawRegion, aPaintState.mRegionToDraw);
     drawPtr = &aIter->mDrawRegion;
+  }
+  if (result->GetType() == BackendType::DIRECT2D ||
+      result->GetType() == BackendType::DIRECT2D1_1) {
+    drawPtr->SimplifyOutwardByArea(100 * 100);
   }
 
   if (aPaintState.mMode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
