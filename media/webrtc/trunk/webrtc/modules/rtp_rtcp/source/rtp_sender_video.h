@@ -111,6 +111,15 @@ private:
                     const RTPFragmentationHeader* fragmentation,
                     const RTPVideoTypeHeader* rtpTypeHdr);
 
+    int32_t SendH264(const FrameType frameType,
+                    const int8_t payloadType,
+                    const uint32_t captureTimeStamp,
+                    int64_t capture_time_ms,
+                    const uint8_t* payloadData,
+                    const uint32_t payloadSize,
+                    const RTPFragmentationHeader* fragmentation,
+                    const RTPVideoTypeHeader* rtpTypeHdr);
+
 private:
     int32_t             _id;
     RTPSenderInterface&        _rtpSender;
