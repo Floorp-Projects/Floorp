@@ -3561,7 +3561,7 @@ nsTableFrame::GetBaseline() const
 }
 /* ----- global methods ----- */
 
-nsIFrame*
+nsTableFrame*
 NS_NewTableFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsTableFrame(aContext);

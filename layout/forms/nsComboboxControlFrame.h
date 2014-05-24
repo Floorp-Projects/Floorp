@@ -46,7 +46,9 @@ class nsComboboxControlFrame : public nsBlockFrame,
                                public nsIStatefulFrame
 {
 public:
-  friend nsIFrame* NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, nsFrameState aFlags);
+  friend nsContainerFrame* NS_NewComboboxControlFrame(nsIPresShell* aPresShell,
+                                                      nsStyleContext* aContext,
+                                                      nsFrameState aFlags);
   friend class nsComboboxDisplayFrame;
 
   nsComboboxControlFrame(nsStyleContext* aContext);

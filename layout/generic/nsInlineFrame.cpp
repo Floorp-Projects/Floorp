@@ -31,7 +31,7 @@ using namespace mozilla::layout;
 
 // Basic nsInlineFrame methods
 
-nsIFrame*
+nsInlineFrame*
 NS_NewInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsInlineFrame(aContext);

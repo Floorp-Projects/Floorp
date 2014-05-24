@@ -21,7 +21,8 @@ class nsMathMLmtableOuterFrame : public nsTableOuterFrame,
                                  public nsMathMLFrame
 {
 public:
-  friend nsIFrame* NS_NewMathMLmtableOuterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsContainerFrame* NS_NewMathMLmtableOuterFrame(nsIPresShell* aPresShell,
+                                                        nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
@@ -63,7 +64,8 @@ class nsMathMLmtableFrame : public nsTableFrame
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  friend nsIFrame* NS_NewMathMLmtableFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsContainerFrame* NS_NewMathMLmtableFrame(nsIPresShell* aPresShell,
+                                                   nsStyleContext* aContext);
 
   // Overloaded nsTableFrame methods
 
@@ -121,7 +123,8 @@ class nsMathMLmtrFrame : public nsTableRowFrame
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  friend nsIFrame* NS_NewMathMLmtrFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsContainerFrame* NS_NewMathMLmtrFrame(nsIPresShell* aPresShell,
+                                                nsStyleContext* aContext);
 
   // overloaded nsTableRowFrame methods
 
@@ -185,7 +188,8 @@ class nsMathMLmtdFrame : public nsTableCellFrame
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  friend nsIFrame* NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsContainerFrame* NS_NewMathMLmtdFrame(nsIPresShell* aPresShell,
+                                                nsStyleContext* aContext);
 
   // overloaded nsTableCellFrame methods
 
@@ -218,7 +222,7 @@ protected:
 class nsMathMLmtdInnerFrame : public nsBlockFrame,
                               public nsMathMLFrame {
 public:
-  friend nsIFrame* NS_NewMathMLmtdInnerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsContainerFrame* NS_NewMathMLmtdInnerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS

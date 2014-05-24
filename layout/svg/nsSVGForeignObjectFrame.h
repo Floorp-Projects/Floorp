@@ -21,7 +21,7 @@ typedef nsContainerFrame nsSVGForeignObjectFrameBase;
 class nsSVGForeignObjectFrame : public nsSVGForeignObjectFrameBase,
                                 public nsISVGChildFrame
 {
-  friend nsIFrame*
+  friend nsContainerFrame*
   NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   nsSVGForeignObjectFrame(nsStyleContext* aContext);

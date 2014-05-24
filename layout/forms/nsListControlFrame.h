@@ -52,7 +52,8 @@ class nsListControlFrame : public nsHTMLScrollFrame,
                            public nsISelectControlFrame
 {
 public:
-  friend nsIFrame* NS_NewListControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsContainerFrame* NS_NewListControlFrame(nsIPresShell* aPresShell,
+                                                  nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS

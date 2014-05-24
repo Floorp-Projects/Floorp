@@ -55,7 +55,8 @@ public:
     *
     * @return           the frame that was created
     */
-  friend nsIFrame* NS_NewTableRowFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsTableRowFrame* NS_NewTableRowFrame(nsIPresShell* aPresShell,
+                                              nsStyleContext* aContext);
 
   virtual nsMargin GetUsedMargin() const MOZ_OVERRIDE;
   virtual nsMargin GetUsedBorder() const MOZ_OVERRIDE;

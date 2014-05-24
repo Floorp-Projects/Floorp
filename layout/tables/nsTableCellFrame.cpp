@@ -1047,7 +1047,7 @@ nsTableCellFrame::GetCellIndexes(int32_t &aRowIndex, int32_t &aColIndex)
   return  NS_OK;
 }
 
-nsIFrame*
+nsTableCellFrame*
 NS_NewTableCellFrame(nsIPresShell*   aPresShell,
                      nsStyleContext* aContext,
                      bool            aIsBorderCollapse)

@@ -17,7 +17,8 @@ class nsPageFrame : public nsContainerFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  friend nsIFrame* NS_NewPageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsPageFrame* NS_NewPageFrame(nsIPresShell* aPresShell,
+                                      nsStyleContext* aContext);
 
   virtual void Reflow(nsPresContext*      aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,

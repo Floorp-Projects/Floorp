@@ -55,7 +55,7 @@ nsSVGOuterSVGFrame::UnregisterForeignObject(nsSVGForeignObjectFrame* aFrame)
 //----------------------------------------------------------------------
 // Implementation
 
-nsIFrame*
+nsContainerFrame*
 NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {  
   return new (aPresShell) nsSVGOuterSVGFrame(aContext);
@@ -901,7 +901,7 @@ nsSVGOuterSVGFrame::VerticalScrollbarNotNeeded() const
 //----------------------------------------------------------------------
 // Implementation of nsSVGOuterSVGAnonChildFrame
 
-nsIFrame*
+nsContainerFrame*
 NS_NewSVGOuterSVGAnonChildFrame(nsIPresShell* aPresShell,
                                 nsStyleContext* aContext)
 {

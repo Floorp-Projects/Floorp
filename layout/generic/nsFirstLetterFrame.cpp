@@ -21,7 +21,7 @@
 using namespace mozilla;
 using namespace mozilla::layout;
 
-nsIFrame*
+nsFirstLetterFrame*
 NS_NewFirstLetterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsFirstLetterFrame(aContext);
@@ -303,7 +303,7 @@ nsFirstLetterFrame::CreateContinuationForFloatingParent(nsPresContext* aPresCont
   nsIPresShell* presShell = aPresContext->PresShell();
   nsPlaceholderFrame* placeholderFrame =
     presShell->FrameManager()->GetPlaceholderFrameFor(this);
-  nsIFrame* parent = placeholderFrame->GetParent();
+  nsContainerFrame* parent = placeholderFrame->GetParent();
 
   nsIFrame* continuation = presShell->FrameConstructor()->
     CreateContinuingFrame(aPresContext, aChild, parent, aIsFluid);
