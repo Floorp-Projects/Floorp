@@ -40,9 +40,9 @@ inline uint32_t MaskWord64ToUWord32(int64_t w64)
   #define VCM_VP8_IDX VCM_NO_CODEC_IDX
 #endif
 #ifdef VIDEOCODEC_I420
-  #define VCM_I420_IDX VCM_VP8_IDX + 1
+  #define VCM_I420_IDX VIDEOCODEC_VP8 + 1
 #else
-  #define VCM_I420_IDX VCM_VP8_IDX
+  #define VCM_I420_IDX VIDEOCODEC_VP8
 #endif
 #define VCM_NUM_VIDEO_CODECS_AVAILABLE VCM_I420_IDX + 1
 
