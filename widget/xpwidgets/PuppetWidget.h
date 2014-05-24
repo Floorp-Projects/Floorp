@@ -183,6 +183,11 @@ public:
   virtual bool NeedsPaint() MOZ_OVERRIDE;
 
   virtual TabChild* GetOwningTabChild() MOZ_OVERRIDE { return mTabChild; }
+  virtual void ClearBackingScaleCache()
+  {
+    mDPI = -1;
+    mDefaultScale = -1;
+  }
 
 private:
   nsresult Paint();

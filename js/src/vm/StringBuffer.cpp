@@ -49,8 +49,8 @@ StringBuffer::finishString()
     if (!JSString::validateLength(cx, length))
         return nullptr;
 
-    JS_STATIC_ASSERT(JSFatInlineString::MAX_FAT_INLINE_LENGTH < CharBuffer::InlineLength);
-    if (JSFatInlineString::lengthFits(length))
+    JS_STATIC_ASSERT(JSFatInlineString::MAX_LENGTH_TWO_BYTE < CharBuffer::InlineLength);
+    if (JSFatInlineString::twoByteLengthFits(length))
         return NewFatInlineString<CanGC>(cx, TwoByteChars(cb.begin(), length));
 
     if (!cb.append('\0'))

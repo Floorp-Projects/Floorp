@@ -840,12 +840,6 @@ struct RtspConnectionHandler : public AHandler {
                 size_t trackIndex = 0;
                 msg->findSize("trackIndex", &trackIndex);
                 postQueueEOS(trackIndex, ERROR_END_OF_STREAM);
-                TrackInfo *info = &mTracks.editItemAt(trackIndex);
-                if (info) {
-                  mRTPConn->removeStream(info->mRTPSocket, info->mRTCPSocket);
-                  PR_Close(info->mRTPSocket);
-                  PR_Close(info->mRTCPSocket);
-                }
                 break;
             }
 

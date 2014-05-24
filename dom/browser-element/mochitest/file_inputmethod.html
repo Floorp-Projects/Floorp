@@ -4,23 +4,17 @@
 <script>
   var im = navigator.mozInputMethod;
   if (im) {
-    var intervalId = null;
-    // Automatically append location hash to current input field.
     im.oninputcontextchange = function() {
       var ctx = im.inputcontext;
+      // Report back to parent frame on status of ctx gotten.
+      window.postMessage(window.location.hash + !!ctx, '*');
+      // If there is a context, send out the hash.
       if (ctx) {
-        dump('inputcontext is received for input method ' + location.hash + '\n');
-        intervalId = setInterval(function() {
-          dump('sending text in input method ' + location.hash + '\n');
-          ctx.replaceSurroundingText(location.hash);
-        }, 500);
-      } else {
-        dump('inputcontext is removed for input method ' + location.hash + '\n');
-        clearInterval(intervalId);
+        ctx.replaceSurroundingText(location.hash);
       }
     };
   }
 </script>
-<p>This frame representing the input method frame.</p>
+<p>This frame represents the input method frame.</p>
 </body>
 </html>

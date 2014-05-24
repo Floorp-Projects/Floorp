@@ -6,7 +6,6 @@
 
 XPIDL_SOURCES += [
     'nsIDOMStorage.idl',
-    'nsIDOMStorageEvent.idl',
     'nsIDOMStorageManager.idl',
 ]
 

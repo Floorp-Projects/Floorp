@@ -164,6 +164,37 @@ VerifyCertificateTrustForFile(LPCWSTR filePath)
 
 int NS_main(int argc, NS_tchar **argv)
 {
+  if (argc == 2) {
+    if (!NS_tstrcmp(argv[1], NS_T("post-update-async")) ||
+        !NS_tstrcmp(argv[1], NS_T("post-update-sync"))) {
+      NS_tchar exePath[MAXPATHLEN];
+#ifdef XP_WIN
+      if (!::GetModuleFileNameW(0, exePath, MAXPATHLEN)) {
+        return 1;
+      }
+#else
+      strcpy(exePath, argv[0]);
+#endif
+      NS_tchar runFilePath[MAXPATHLEN];
+      NS_tsnprintf(runFilePath, sizeof(runFilePath)/sizeof(runFilePath[0]),
+                   NS_T("%s.running"), exePath);
+      WriteMsg(runFilePath, "running");
+
+      if (!NS_tstrcmp(argv[1], NS_T("post-update-sync"))) {
+#ifdef XP_WIN
+        Sleep(2000);
+#else
+        sleep(2);
+#endif
+      }
+
+      NS_tchar logFilePath[MAXPATHLEN];
+      NS_tsnprintf(logFilePath, sizeof(logFilePath)/sizeof(logFilePath[0]),
+                   NS_T("%s.log"), exePath);
+      WriteMsg(logFilePath, "post-update");
+      return 0;
+    }
+  }
 
   if (argc < 3) {
     fprintf(stderr, \
@@ -176,6 +207,7 @@ int NS_main(int argc, NS_tchar **argv)
             "   or: setup-symlink dir1 dir2 file symlink\n" \
             "   or: remove-symlink dir1 dir2 file symlink\n" \
             "   or: check-symlink symlink\n" \
+            "   or: post-update\n" \
             "\n" \
             "  WORKINGDIR  \tThe relative path to the working directory to use.\n" \
             "  INFILE      \tThe relative path from the working directory for the file to\n" \
@@ -306,8 +338,6 @@ int NS_main(int argc, NS_tchar **argv)
 #endif
   }
 
-  int i = 0;
-
   if (NS_tchdir(argv[1]) != 0) {
     return 1;
   }
@@ -336,6 +366,7 @@ int NS_main(int argc, NS_tchar **argv)
     }
 
     WriteMsg(outFilePath, "sleeping");
+    int i = 0;
     while (!CheckMsg(inFilePath, "finish\n") && i++ <= seconds)  {
       Sleep(1000);
     }
@@ -345,6 +376,7 @@ int NS_main(int argc, NS_tchar **argv)
     }
 #else
     WriteMsg(outFilePath, "sleeping");
+    int i = 0;
     while (!CheckMsg(inFilePath, "finish\n") && i++ <= seconds)  {
       sleep(1);
     }
@@ -353,18 +385,20 @@ int NS_main(int argc, NS_tchar **argv)
     return 0;
   }
 
-  // Command line argument test helper section
-  NS_tchar logFilePath[MAXPATHLEN];
-  NS_tsnprintf(logFilePath, sizeof(logFilePath)/sizeof(logFilePath[0]),
-               NS_T("%s"), argv[2]);
+  {
+    // Command line argument test helper section
+    NS_tchar logFilePath[MAXPATHLEN];
+    NS_tsnprintf(logFilePath, sizeof(logFilePath)/sizeof(logFilePath[0]),
+                 NS_T("%s"), argv[2]);
 
-  FILE* logFP = NS_tfopen(logFilePath, NS_T("wb"));
-  for (i = 1; i < argc; ++i) {
-    fprintf(logFP, LOG_S "\n", argv[i]);
+    FILE* logFP = NS_tfopen(logFilePath, NS_T("wb"));
+    for (int i = 1; i < argc; ++i) {
+      fprintf(logFP, LOG_S "\n", argv[i]);
+    }
+
+    fclose(logFP);
+    logFP = nullptr;
   }
-
-  fclose(logFP);
-  logFP = nullptr;
 
   return 0;
 } 

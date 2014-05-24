@@ -64,6 +64,7 @@ INI_TEST_FILES = \
   TestAUSReadStrings3.ini \
   $(NULL)
 
+MOZ_GLUE_LDFLAGS =
 MOZ_WINCONSOLE = 1
 
 ifeq ($(OS_ARCH),WINNT)

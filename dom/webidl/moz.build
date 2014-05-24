@@ -534,7 +534,6 @@ WEBIDL_FILES += [
     'ProgressEvent.webidl',
     'RecordErrorEvent.webidl',
     'SmartCardEvent.webidl',
-    'StorageEvent.webidl',
     'StyleRuleChangeEvent.webidl',
     'StyleSheetApplicableStateChangeEvent.webidl',
     'StyleSheetChangeEvent.webidl',
@@ -641,6 +640,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'RTCPeerConnectionIceEvent.webidl',
     'RTCPeerConnectionIdentityErrorEvent.webidl',
     'RTCPeerConnectionIdentityEvent.webidl',
+    'StorageEvent.webidl',
     'TrackEvent.webidl',
     'UserProximityEvent.webidl',
     'USSDReceivedEvent.webidl',
@@ -656,6 +656,7 @@ if CONFIG['MOZ_GAMEPAD']:
 if CONFIG['MOZ_B2G_BT']:
     GENERATED_EVENTS_WEBIDL_FILES += [
         'BluetoothDeviceEvent.webidl',
+        'BluetoothDiscoveryStateChangedEvent.webidl',
         'BluetoothStatusChangedEvent.webidl',
     ]
 

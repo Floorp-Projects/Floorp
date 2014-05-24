@@ -84,7 +84,6 @@ const FILE_OLD_VERSION_MAR = "old_version.mar";
 const FILE_PARTIAL_EXE = "partial.exe";
 const FILE_PARTIAL_MAR = "partial.mar";
 const FILE_UPDATER_BIN = "updater" + BIN_SUFFIX;
-const FILE_UPDATER_INI_BAK = "updater.ini.bak";
 const FILE_WRONG_CHANNEL_MAR = "wrong_product_channel.mar";
 
 const LOG_COMPLETE_SUCCESS = "complete_log_success";
@@ -169,6 +168,7 @@ var gServiceLaunchedCallbackArgs = null;
 // necessary.
 var gCallbackBinFile = "callback_app" + BIN_SUFFIX;
 var gCallbackArgs = ["./", "callback.log", "Test Arg 2", "Test Arg 3"];
+var gPostUpdateBinFile = "postup_app" + BIN_SUFFIX;
 var gStageUpdate = false;
 var gSwitchApp = false;
 var gDisableReplaceFallback = false;
@@ -2187,6 +2187,11 @@ function setupUpdaterTest(aMarFile, aUpdatedDirExists, aToBeDeletedDirExists) {
 
   createUpdateSettingsINI();
 
+  let helperBin = getTestDirFile(FILE_HELPER_BIN);
+  let afterApplyBinDir = getApplyDirFile("a/b/", true);
+  helperBin.copyToFollowingLinks(afterApplyBinDir, gCallbackBinFile);
+  helperBin.copyToFollowingLinks(afterApplyBinDir, gPostUpdateBinFile);
+
   let applyToDir = getApplyDirFile(null, true);
   gTestFiles.forEach(function SUT_TF_FE(aTestFile) {
     if (aTestFile.originalFile || aTestFile.originalContents) {
@@ -2217,10 +2222,6 @@ function setupUpdaterTest(aMarFile, aUpdatedDirExists, aToBeDeletedDirExists) {
       }
     }
   });
-
-  let helperBin = getTestDirFile(FILE_HELPER_BIN);
-  let afterApplyBinDir = getApplyDirFile("a/b/", true);
-  helperBin.copyToFollowingLinks(afterApplyBinDir, gCallbackBinFile);
 
   // Add the test directory that will be updated for a successful update or left
   // in the initial state for a failed update.
@@ -2267,13 +2268,49 @@ function setupUpdaterTest(aMarFile, aUpdatedDirExists, aToBeDeletedDirExists) {
  * file.
  */
 function createUpdateSettingsINI() {
-  updateSettingsIni = getApplyDirFile(null, true);
+  let updateSettingsIni = getApplyDirFile(null, true);
   if (IS_MACOSX) {
     updateSettingsIni.append("Contents");
     updateSettingsIni.append("MacOS");
   }
   updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
   writeFile(updateSettingsIni, UPDATE_SETTINGS_CONTENTS);
+}
+
+/**
+ * Helper function for updater binary tests that creates the updater.ini
+ * file.
+ *
+ * @param   aIsExeAsync
+ *          True or undefined if the post update process should be async. If
+ *          undefined ExeAsync will not be added to the updater.ini file in
+ *          order to test the default launch behavior which is async.
+ */
+function createUpdaterINI(aIsExeAsync) {
+  let exeArg = "ExeArg=post-update-async\n";
+  let exeAsync = "";
+  if (aIsExeAsync !== undefined)
+  {
+    if (aIsExeAsync) {
+      exeAsync = "ExeAsync=true\n";
+    } else {
+      exeArg = "ExeArg=post-update-sync\n";
+      exeAsync = "ExeAsync=false\n";
+    }
+  }
+
+  let updaterIniContents = "[PostUpdateMac]\n" +
+                           "ExeRelPath=a/b/" + gPostUpdateBinFile + "\n" +
+                           exeArg +
+                           exeAsync +
+                           "\n" +
+                           "[PostUpdateWin]\n" +
+                           "ExeRelPath=a/b/" + gPostUpdateBinFile + "\n" +
+                           exeArg +
+                           exeAsync;
+  let updaterIni = getApplyDirFile((IS_MACOSX ? "Contents/MacOS/" : "") +
+                                    FILE_UPDATER_INI, true);
+  writeFile(updaterIni, updaterIniContents);
 }
 
 /**
@@ -2649,6 +2686,57 @@ function checkCallbackAppLog() {
   }
 
   waitForFilesInUse();
+}
+
+/**
+ * Helper function for updater binary tests for getting the log and running
+ * files created by the test helper binary file when called with the post-update
+ * command line argument.
+ *
+ * @param   aSuffix
+ *          The string to append to the post update test helper binary path.
+ */
+function getPostUpdateFile(aSuffix) {
+  return getApplyDirFile("a/b/" + gPostUpdateBinFile + aSuffix, true);
+}
+
+/**
+ * Helper function for updater binary tests for verifying the contents of the
+ * updater post update binary log.
+ */
+function checkPostUpdateAppLog() {
+  gTimeoutRuns++;
+  let postUpdateLog = getPostUpdateFile(".log");
+  if (!postUpdateLog.exists()) {
+    logTestInfo("postUpdateLog does not exist");
+    if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
+      do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the post update " +
+               "process to create the post update log. Path: " +
+               postUpdateLog.path);
+    }
+    do_timeout(TEST_HELPER_TIMEOUT, checkPostUpdateAppLog);
+    return;
+  }
+
+  let logContents = readFile(postUpdateLog);
+  // It is possible for the log file contents check to occur before the log file
+  // contents are completely written so wait until the contents are the expected
+  // value. If the contents are never the expected value then the test will
+  // fail by timing out.
+  if (logContents != "post-update\n") {
+    if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
+      do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the post update " +
+               "process to create the expected contents in the post update log. Path: " +
+               postUpdateLog.path);
+    }
+    do_timeout(TEST_HELPER_TIMEOUT, checkPostUpdateAppLog);
+    return;
+  }
+
+  logTestInfo("post update app log file contents are correct");
+  do_check_true(true);
+
+  gCheckFunc();
 }
 
 /**

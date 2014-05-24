@@ -4,7 +4,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional BluetoothStatusChangedEventInit eventInitDict)]
+[Constructor(DOMString type,
+             optional BluetoothStatusChangedEventInit eventInitDict),
+ Func="Navigator::HasBluetoothSupport"]
 interface BluetoothStatusChangedEvent : Event
 {
   readonly attribute DOMString address;

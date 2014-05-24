@@ -35,8 +35,8 @@ class jsid(object):
         elif self.concrete_type.code == gdb.TYPE_CODE_INT:
             return self.value
         else:
-            raise RuntimeError, ("definition of SpiderMonkey 'jsid' type"
-                                 "neither struct nor integral type")
+            raise RuntimeError("definition of SpiderMonkey 'jsid' type"
+                               "neither struct nor integral type")
 
     def to_string(self):
         bits = self.as_bits()

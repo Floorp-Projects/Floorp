@@ -17,6 +17,8 @@ function run_test() {
   setTestFilesAndDirsForFailure();
   setupUpdaterTest(FILE_PARTIAL_MAR, false, false);
 
+  createUpdaterINI();
+
   // For Mac OS X set the last modified time for the root directory to a date in
   // the past to test that the last modified time is updated on all updates since
   // the precomplete file in the root of the bundle is renamed, etc. (bug 600098).
@@ -34,7 +36,16 @@ function setupAppFilesFinished() {
   runUpdateUsingService(STATE_PENDING_SVC, STATE_FAILED);
 }
 
+/**
+ * Checks if the update has finished and if it has finished performs checks for
+ * the test.
+ */
 function checkUpdateFinished() {
+  if (IS_MACOSX || IS_WIN) {
+    // Check that the post update process was not launched.
+    do_check_false(getPostUpdateFile(".running").exists());
+  }
+
   if (IS_MACOSX) {
     logTestInfo("testing last modified time on the apply to directory has " +
                 "changed after a successful update (bug 600098)");
