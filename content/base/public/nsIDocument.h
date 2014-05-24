@@ -1221,15 +1221,23 @@ public:
    */
   bool IsHTML() const
   {
-    return mIsRegularHTML;
+    return mType == eHTML;
+  }
+  bool IsHTMLOrXHTML() const
+  {
+    return mType == eHTML || mType == eXHTML;
   }
   bool IsXML() const
   {
     return !IsHTML();
   }
+  bool IsSVG() const
+  {
+    return mType == eSVG;
+  }
   bool IsXUL() const
   {
-    return mIsXUL;
+    return mType == eXUL;
   }
   bool IsUnstyledDocument()
   {
@@ -2402,15 +2410,6 @@ protected:
   // document in it.
   bool mIsInitialDocumentInWindow;
 
-  bool mIsRegularHTML;
-  bool mIsXUL;
-
-  enum {
-    eTriUnset = 0,
-    eTriFalse,
-    eTriTrue
-  } mAllowXULXBL;
-
   // True if we're loaded as data and therefor has any dangerous stuff, such
   // as scripts and plugins, disabled.
   bool mLoadedAsData;
@@ -2514,6 +2513,27 @@ protected:
   bool mIsLinkUpdateRegistrationsForbidden;
 #endif
 
+  enum Type {
+    eUnknown, // should never be used
+    eHTML,
+    eXHTML,
+    eGenericXML,
+    eSVG,
+    eXUL
+  };
+
+  uint8_t mType;
+
+  uint8_t mDefaultElementType;
+
+  enum {
+    eTriUnset = 0,
+    eTriFalse,
+    eTriTrue
+  };
+
+  uint8_t mAllowXULXBL;
+
   // The document's script global object, the object from which the
   // document can get its script context and scope. This is the
   // *inner* window object.
@@ -2595,8 +2615,6 @@ protected:
 
   nsCOMPtr<nsIStructuredCloneContainer> mStateObjectContainer;
   nsCOMPtr<nsIVariant> mStateObjectCached;
-
-  uint8_t mDefaultElementType;
 
   uint32_t mInSyncOperationCount;
 
