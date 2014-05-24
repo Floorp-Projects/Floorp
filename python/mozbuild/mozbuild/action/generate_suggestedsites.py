@@ -7,18 +7,21 @@
 
 This script follows these steps:
 
-1. Looks for a 'list.txt' file in one of the given source directories
-(see srcdir). The list.txt contains the list of site names, one per line.
+1. Read the region.properties file in all the given source directories
+(see srcdir option). Merge all properties into a single dict accounting for
+the priority of source directories.
 
-2. For each site name found in 'list.txt', it tries to find a matching
-.json file in one of the source directories.
+2. Read the list of sites from the 'browser.suggestedsites.list.INDEX'
+properties with value of these keys being an identifier for each suggested site
+e.g. browser.suggestedsites.list.0=mozilla, browser.suggestedsites.list.1=fxmarketplace.
 
-3. For each json file, load it and define the respective imageurl
-based on a image URL template composed by the target Android package name
-and the site name.
+3. For each site identifier defined by the list keys, look for matching branches
+containing the respective properties i.e. url, title, etc. For example,
+for a 'mozilla' identifier, we'll look for keys like:
+browser.suggestedsites.mozilla.url, browser.suggestedsites.mozilla.title, etc.
 
-4. Join the JSON representation of each site into a JSON array and write
-the result to suggestedsites.json on the locale-specific raw resource
+4. Generate a JSON representation of each site, join them in a JSON array, and
+write the result to suggestedsites.json on the locale-specific raw resource
 directory e.g. raw/suggestedsites.json, raw-pt-rBR/suggestedsites.json.
 '''
 
@@ -26,6 +29,7 @@ from __future__ import print_function
 
 import argparse
 import json
+import re
 import sys
 import os
 
@@ -36,6 +40,59 @@ from mozpack.files import (
     FileFinder,
 )
 import mozpack.path as mozpath
+
+
+def read_properties_file(filename):
+    """Reads a properties file into a dict.
+
+    Ignores empty, comment lines, and keys not starting with the prefix for
+    suggested sites ('browser.suggestedsites'). Removes the prefix from all
+    matching keys i.e. turns 'browser.suggestedsites.foo' into simply 'foo'
+    """
+    prefix = 'browser.suggestedsites.'
+    properties = {}
+    for l in open(filename, 'rt').readlines():
+        line = l.strip()
+        if not line.startswith(prefix):
+            continue
+        (k, v) = re.split('\s*=\s*', line, 1)
+        properties[k[len(prefix):]] = v
+    return properties
+
+
+def merge_properties(filename, srcdirs):
+    """Merges properties from the given file in the given source directories."""
+    properties = {}
+    for srcdir in srcdirs:
+        path = mozpath.join(srcdir, filename)
+        try:
+            properties.update(read_properties_file(path))
+        except IOError, e:
+            # Ignore non-existing files
+            continue
+    return properties
+
+
+def get_site_list_from_properties(properties):
+    """Turns {'list.0':'foo', 'list.1':'bar'} into ['foo', 'bar']."""
+    prefix = 'list.'
+    indexes = []
+    for k, v in properties.iteritems():
+        if not k.startswith(prefix):
+            continue
+        indexes.append(int(k[len(prefix):]))
+    return [properties[prefix + str(index)] for index in sorted(indexes)]
+
+
+def get_site_from_properties(name, properties):
+    """Turns {'foo.title':'title', ...} into {'title':'title', ...}."""
+    prefix = '{name}.'.format(name=name)
+    try:
+        site = dict((k, properties[prefix + k]) for k in ('title', 'url', 'bgcolor'))
+    except IndexError, e:
+        raise Exception("Could not find required property for '{name}: {error}'"
+                        .format(name=name, error=str(e)))
+    return site
 
 
 def main(args):
@@ -57,15 +114,9 @@ def main(args):
                         help='output')
     opts = parser.parse_args(args)
 
-    def resolve_filename(filename):
-        for srcdir in opts.srcdir:
-            path = mozpath.join(srcdir, filename)
-            if os.path.exists(path):
-                return path
-        return None
-
-    # The list.txt file has one site name per line.
-    names = [s.strip() for s in open(resolve_filename('list.txt'), 'rt').readlines()]
+    # Use reversed order so that the first srcdir has higher priority to override keys.
+    all_properties = merge_properties('region.properties', reversed(opts.srcdir))
+    names = get_site_list_from_properties(all_properties)
     if opts.verbose:
         print('Reading {len} suggested sites: {names}'.format(len=len(names), names=names))
 
@@ -73,15 +124,11 @@ def main(args):
     image_url_template = 'android.resource://%s/drawable/suggestedsites_{name}' % opts.android_package_name
     drawables_template = 'drawable*/suggestedsites_{name}.*'
 
-    # Load json files corresponding to each site name and define their
+    # Load properties corresponding to each site name and define their
     # respective image URL.
     sites = []
     for name in names:
-        filename = resolve_filename(name + '.json')
-        if opts.verbose:
-            print("Reading '{name}' from {filename}"
-                .format(name=name, filename=filename))
-        site = json.load(open(filename, 'rt'))
+        site = get_site_from_properties(name, all_properties)
         site['imageurl'] = image_url_template.format(name=name)
         sites.append(site)
 

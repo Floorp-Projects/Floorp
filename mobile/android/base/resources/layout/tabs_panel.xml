@@ -47,20 +47,11 @@
                                               android:visibility="gone"
                                               gecko:tabs="tabs_private"/>
 
-        <org.mozilla.gecko.tabspanel.RemoteTabsContainer android:id="@+id/synced_tabs"
-                                                         android:layout_width="fill_parent"
-                                                         android:layout_height="fill_parent"
-                                                         android:visibility="gone">
-
-            <org.mozilla.gecko.tabspanel.RemoteTabsList android:id="@+id/synced_tabs"
-                                                        style="@style/RemoteTabsList"
-                                                        android:layout_width="fill_parent"
-                                                        android:layout_height="fill_parent"
-                                                        android:paddingLeft="@dimen/tabs_panel_list_padding"
-                                                        android:paddingRight="@dimen/tabs_panel_list_padding"
-                                                        android:scrollbarStyle="outsideOverlay"/>
-
-        </org.mozilla.gecko.tabspanel.RemoteTabsContainer>
+        <org.mozilla.gecko.tabspanel.RemoteTabsPanel
+                android:id="@+id/remote_tabs"
+                android:layout_height="match_parent"
+                android:layout_width="match_parent"
+                android:visibility="gone"/>
 
     </view>
 

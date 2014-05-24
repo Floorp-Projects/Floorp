@@ -656,6 +656,7 @@ if CONFIG['MOZ_GAMEPAD']:
 if CONFIG['MOZ_B2G_BT']:
     GENERATED_EVENTS_WEBIDL_FILES += [
         'BluetoothDeviceEvent.webidl',
+        'BluetoothDiscoveryStateChangedEvent.webidl',
         'BluetoothStatusChangedEvent.webidl',
     ]
 

@@ -29,7 +29,9 @@ import android.widget.Button;
 import android.widget.TextView;
 
 public class ButtonToast {
+    @SuppressWarnings("unused")
     private final static String LOGTAG = "GeckoButtonToast";
+
     private final static int TOAST_DURATION = 5000;
 
     private final View mView;
@@ -37,7 +39,6 @@ public class ButtonToast {
     private final Button mButton;
     private final Handler mHideHandler = new Handler();
 
-    private final ToastListener mListener;
     private final LinkedList<Toast> mQueue = new LinkedList<Toast>();
     private Toast mCurrentToast;
 
@@ -70,7 +71,6 @@ public class ButtonToast {
 
     public ButtonToast(View view) {
         mView = view;
-        mListener = null;
         mMessageView = (TextView) mView.findViewById(R.id.toast_message);
         mButton = (Button) mView.findViewById(R.id.toast_button);
         mButton.setOnClickListener(new View.OnClickListener() {
@@ -91,6 +91,13 @@ public class ButtonToast {
     }
 
     public void show(boolean immediate, CharSequence message,
+                     CharSequence buttonMessage, int buttonDrawableId,
+                     ToastListener listener) {
+        final Drawable d = mView.getContext().getResources().getDrawable(buttonDrawableId);
+        show(false, message, buttonMessage, d, listener);
+    }
+
+    public void show(boolean immediate, CharSequence message,
                      CharSequence buttonMessage, Drawable buttonDrawable,
                      ToastListener listener) {
         show(new Toast(message, buttonMessage, buttonDrawable, listener), immediate);
@@ -106,10 +113,16 @@ public class ButtonToast {
         mCurrentToast = t;
         mButton.setEnabled(true);
 
-        mMessageView.setText(t.message);
-        mButton.setText(t.buttonMessage);
-        mButton.setCompoundDrawablePadding(mView.getContext().getResources().getDimensionPixelSize(R.dimen.toast_button_padding));
-        mButton.setCompoundDrawablesWithIntrinsicBounds(t.buttonDrawable, null, null, null);
+        // Our toast is re-used, so we update all fields to clear any old values.
+        mMessageView.setText(null != t.message ? t.message : "");
+        mButton.setText(null != t.buttonMessage ? t.buttonMessage : "");
+        if (null != t.buttonDrawable) {
+            mButton.setCompoundDrawablePadding(mView.getContext().getResources().getDimensionPixelSize(R.dimen.toast_button_padding));
+            mButton.setCompoundDrawablesWithIntrinsicBounds(t.buttonDrawable, null, null, null);
+        } else {
+            mButton.setCompoundDrawablePadding(0);
+            mButton.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
+        }
 
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, TOAST_DURATION);

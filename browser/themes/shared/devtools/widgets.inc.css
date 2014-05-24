@@ -372,7 +372,7 @@
 
 .theme-dark .side-menu-widget-container,
 .theme-dark .side-menu-widget-empty-text {
-  background: url(background-noise-toolbar.png), #343c45; /* Toolbars */
+  background-color: #343c45; /* Toolbars */
 }
 
 .theme-dark .side-menu-widget-container:-moz-locale-dir(ltr),
@@ -522,11 +522,11 @@
 }
 
 .theme-dark .side-menu-widget-item-other {
-  background: url(background-noise-toolbar.png), rgba(0,0,0,.1);
+  background-color: rgba(0,0,0,.1);
 }
 
 .theme-light .side-menu-widget-item-other {
-  background: url(background-noise-toolbar.png), rgba(128,128,128,.1);
+  background-color: rgba(128,128,128,.1);
 }
 
 .theme-dark .side-menu-widget-item.selected .side-menu-widget-item-other {
@@ -568,7 +568,7 @@
 }
 
 .theme-dark .side-menu-widget-empty-text {
-  background: url(background-noise-toolbar.png), #343c45; /* Toolbars */
+  background-color: #343c45; /* Toolbars */
   color: #b6babf; /* Foreground (Text) - Grey */
 }
 
@@ -1067,7 +1067,7 @@
 
 .theme-dark .table-widget-body,
 .theme-dark .table-widget-empty-text {
-  background: url(background-noise-toolbar.png), #343c45; /* Toolbars */
+  background-color: #343c45; /* Toolbars */
 }
 
 .theme-dark .table-widget-body:-moz-locale-dir(ltr) {

@@ -3704,6 +3704,7 @@ function XULWidgetSingleWrapper(aWidgetId, aNode, aDocument) {
 }
 
 const LAZY_RESIZE_INTERVAL_MS = 200;
+const OVERFLOW_PANEL_HIDE_DELAY_MS = 500
 
 function OverflowableToolbar(aToolbarNode) {
   this._toolbar = aToolbarNode;
@@ -3747,6 +3748,8 @@ OverflowableToolbar.prototype = {
     let chevronId = this._toolbar.getAttribute("overflowbutton");
     this._chevron = doc.getElementById(chevronId);
     this._chevron.addEventListener("command", this);
+    this._chevron.addEventListener("dragover", this);
+    this._chevron.addEventListener("dragend", this);
 
     let panelId = this._toolbar.getAttribute("overflowpanel");
     this._panel = doc.getElementById(panelId);
@@ -3781,6 +3784,8 @@ OverflowableToolbar.prototype = {
     window.gNavToolbox.removeEventListener("customizationstarting", this);
     window.gNavToolbox.removeEventListener("aftercustomization", this);
     this._chevron.removeEventListener("command", this);
+    this._chevron.removeEventListener("dragover", this);
+    this._chevron.removeEventListener("dragend", this);
     this._panel.removeEventListener("popuphiding", this);
     CustomizableUI.removeListener(this);
     CustomizableUIInternal.removePanelCloseListeners(this._panel);
@@ -3788,8 +3793,8 @@ OverflowableToolbar.prototype = {
 
   handleEvent: function(aEvent) {
     switch(aEvent.type) {
-      case "resize":
-        this._onResize(aEvent);
+      case "aftercustomization":
+        this._enable();
         break;
       case "command":
         if (aEvent.target == this._chevron) {
@@ -3798,15 +3803,20 @@ OverflowableToolbar.prototype = {
           this._panel.hidePopup();
         }
         break;
-      case "popuphiding":
-        this._onPanelHiding(aEvent);
-        break;
       case "customizationstarting":
         this._disable();
         break;
-      case "aftercustomization":
-        this._enable();
+      case "dragover":
+        this._showWithTimeout();
         break;
+      case "dragend":
+        this._panel.hidePopup();
+        break;
+      case "popuphiding":
+        this._onPanelHiding(aEvent);
+        break;
+      case "resize":
+        this._onResize(aEvent);
     }
   },
 
@@ -3824,8 +3834,11 @@ OverflowableToolbar.prototype = {
     this._panel.openPopup(anchor || this._chevron);
     this._chevron.open = true;
 
-    this._panel.addEventListener("popupshown", function onPopupShown() {
+    let overflowableToolbarInstance = this;
+    this._panel.addEventListener("popupshown", function onPopupShown(aEvent) {
       this.removeEventListener("popupshown", onPopupShown);
+      this.addEventListener("dragover", overflowableToolbarInstance);
+      this.addEventListener("dragend", overflowableToolbarInstance);
       deferred.resolve();
     });
 
@@ -3843,6 +3856,8 @@ OverflowableToolbar.prototype = {
 
   _onPanelHiding: function(aEvent) {
     this._chevron.open = false;
+    this._panel.removeEventListener("dragover", this);
+    this._panel.removeEventListener("dragend", this);
     let doc = aEvent.target.ownerDocument;
     let contextMenu = doc.getElementById(this._panel.getAttribute("context"));
     gELS.removeSystemEventListener(contextMenu, 'command', this, true);
@@ -4076,6 +4091,21 @@ OverflowableToolbar.prototype = {
       return this._list;
     }
     return this._target;
+  },
+
+  _hideTimeoutId: null,
+  _showWithTimeout: function() {
+    this.show();
+    let window = this._toolbar.ownerDocument.defaultView;
+    if (this._hideTimeoutId) {
+      window.clearTimeout(this._hideTimeoutId);
+      this._hideTimeoutId = null;
+    }
+    this._hideTimeoutId = window.setTimeout(() => {
+      if (!this._panel.firstChild.mozMatchesSelector(":hover")) {
+        this._panel.hidePopup();
+      }
+    }, OVERFLOW_PANEL_HIDE_DELAY_MS);
   },
 };
 

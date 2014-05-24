@@ -247,7 +247,7 @@ void RTSPSource::performSuspend() {
 }
 
 void RTSPSource::performSeek(int64_t seekTimeUs) {
-    if (mState != PLAYING && mState != PAUSING) {
+    if (mState != CONNECTED && mState != PLAYING && mState != PAUSING) {
         return;
     }
 

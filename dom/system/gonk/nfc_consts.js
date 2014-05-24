@@ -56,9 +56,83 @@ this.NFC_TECHS = {
   8:"NFC_ISO_DEP"
 };
 
-// TODO: Bug 933595. Fill-in all error codes for Gonk/nfcd protocol
-this.GECKO_NFC_ERROR_SUCCESS             = 0;
-this.GECKO_NFC_ERROR_GENERIC_FAILURE     = 1;
+// nfcd error codes
+this.NFC_SUCCESS = 0;
+this.NFC_ERROR_IO = -1;
+this.NFC_ERROR_CANCELLED = -2;
+this.NFC_ERROR_TIMEOUT = -3;
+this.NFC_ERROR_BUSY = -4;
+this.NFC_ERROR_CONNECT = -5;
+this.NFC_ERROR_DISCONNECT = -6;
+this.NFC_ERROR_READ = -7;
+this.NFC_ERROR_WRITE = -8;
+this.NFC_ERROR_INVALID_PARAM = -9;
+this.NFC_ERROR_INSUFFICIENT_RESOURCES = -10;
+this.NFC_ERROR_SOCKET_CREATION = -11;
+this.NFC_ERROR_SOCKET_NOT_CONNECTED = -12;
+this.NFC_ERROR_BUFFER_TOO_SMALL = -13;
+this.NFC_ERROR_SAP_USED = -14;
+this.NFC_ERROR_SERVICE_NAME_USED = -15;
+this.NFC_ERROR_SOCKET_OPTIONS = -16;
+this.NFC_ERROR_NFC_ALREADY_ON = -17;
+this.NFC_ERROR_NFC_ALREADY_OFF = -18;
+this.NFC_ERROR_ALREADY_DISCOVERY_ON = -19;
+this.NFC_ERROR_ALREADY_DISCOVERY_OFF = -20;
+this.NFC_ERROR_FAIL_ENABLE_DISCOVERY = -21;
+this.NFC_ERROR_FAIL_DISABLE_DISCOVERY = -22;
+this.NFC_ERROR_NOT_INITIALIZED = -23;
+this.NFC_ERROR_INITIALIZE_FAIL = -24;
+this.NFC_ERROR_DEINITIALIZE_FAIL = -25;
+this.NFC_ERROR_SE_ALREADY_SELECTED = -26;
+this.NFC_ERROR_SE_CONNECTED = -27;
+this.NFC_ERROR_NO_SE_CONNECTED = -28;
+this.NFC_ERROR_NOT_SUPPORTED = -29;
+this.NFC_ERROR_BAD_SESSION_ID = -30;
+this.NFC_ERROR_LOST_TECH = -31;
+this.NFC_ERROR_BAD_TECH_TYPE = -32;
+
+// Gecko specific error codes
+this.NFC_GECKO_ERROR_GENERIC_FAILURE = 1;
+this.NFC_GECKO_ERROR_P2P_REG_INVALID = 2;
+this.NFC_GECKO_ERROR_NOT_ENABLED = 3;
+
+this.NFC_ERROR_MSG = {};
+this.NFC_ERROR_MSG[this.NFC_ERROR_IO] = "NfcIoError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_CANCELLED] = "NfcCancelledError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_TIMEOUT] = "NfcTimeoutError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_BUSY] = "NfcBusyError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_CONNECT] = "NfcConnectError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_DISCONNECT] = "NfcDisconnectError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_READ] = "NfcReadError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_WRITE] = "NfcWriteError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_INVALID_PARAM] = "NfcInvalidParamError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_INSUFFICIENT_RESOURCES] = "NfcInsufficentResourcesError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_SOCKET_CREATION] = "NfcSocketCreationError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_SOCKET_NOT_CONNECTED] = "NfcSocketNotConntectedError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_BUFFER_TOO_SMALL] = "NfcBufferTooSmallError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_SAP_USED] = "NfcSapUsedError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_SERVICE_NAME_USED] = "NfcServiceNameUsedError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_SOCKET_OPTIONS] = "NfcSocketOptionsError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_NFC_ALREADY_ON] = "NfcAlreadOnError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_NFC_ALREADY_OFF] = "NfcAlreadyOffError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_ALREADY_DISCOVERY_ON] = "NfcDiscoveryOnError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_ALREADY_DISCOVERY_OFF] = "NfcDiscoveryOffError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_FAIL_ENABLE_DISCOVERY] = "NfcFailEnableDiscoveryError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_FAIL_DISABLE_DISCOVERY] = "NfcFailDisableDiscoveryError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_NOT_INITIALIZED] = "NfcNotInitializedError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_INITIALIZE_FAIL] = "NfcInitializeFailError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_DEINITIALIZE_FAIL] = "NfcDeinitializeFailError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_SE_ALREADY_SELECTED] = "NfcSeAlreadySelectedError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_SE_CONNECTED] = "NfcSeConnectedError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_NO_SE_CONNECTED] = "NfcNoSeConnectedError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_NOT_SUPPORTED] = "NfcNotSupportedError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_BAD_SESSION_ID] = "NfcBadSessionIdError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_LOST_TECH] = "NfcLostTechError";
+this.NFC_ERROR_MSG[this.NFC_ERROR_BAD_TECH_TYPE] = "NfcBadTechTypeError";
+
+this.NFC_ERROR_MSG[this.NFC_GECKO_ERROR_GENERIC_FAILURE] = "NfcGenericFailureError";
+this.NFC_ERROR_MSG[this.NFC_GECKO_ERROR_P2P_REG_INVALID] = "NfcP2PRegistrationInvalid";
+this.NFC_ERROR_MSG[this.NFC_GECKO_ERROR_NOT_ENABLED] = "NfcNotEnabledError";
 
 // NFC powerlevels must match config PDUs.
 this.NFC_POWER_LEVEL_UNKNOWN        = -1;

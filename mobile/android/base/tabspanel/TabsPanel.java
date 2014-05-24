@@ -7,6 +7,7 @@ package org.mozilla.gecko.tabspanel;
 
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoAppShell.AppStateListener;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.LightweightTheme;
@@ -19,11 +20,11 @@ import org.mozilla.gecko.widget.IconTabWidget;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -63,6 +64,7 @@ public class TabsPanel extends LinearLayout
     private PanelView mPanelRemote;
     private RelativeLayout mFooter;
     private TabsLayoutChangeListener mLayoutChangeListener;
+    private AppStateListener mAppStateListener;
 
     private IconTabWidget mTabWidget;
     private static ImageButton mAddTab;
@@ -90,6 +92,24 @@ public class TabsPanel extends LinearLayout
 
         LayoutInflater.from(context).inflate(R.layout.tabs_panel, this);
         initialize();
+
+        mAppStateListener = new AppStateListener() {
+            @Override
+            public void onResume() {
+                if (mPanel == mPanelRemote) {
+                    // Refresh the remote panel.
+                    mPanelRemote.show();
+                }
+            }
+
+            @Override
+            public void onOrientationChanged() {
+                // Remote panel is already refreshed by chrome refresh.
+            }
+
+            @Override
+            public void onPause() {}
+        };
     }
 
     private void initialize() {
@@ -102,7 +122,7 @@ public class TabsPanel extends LinearLayout
         mPanelPrivate = (PanelView) findViewById(R.id.private_tabs);
         mPanelPrivate.setTabsPanel(this);
 
-        mPanelRemote = (PanelView) findViewById(R.id.synced_tabs);
+        mPanelRemote = (PanelView) findViewById(R.id.remote_tabs);
         mPanelRemote.setTabsPanel(this);
 
         mFooter = (RelativeLayout) findViewById(R.id.tabs_panel_footer);
@@ -121,7 +141,8 @@ public class TabsPanel extends LinearLayout
         mTabWidget.addTab(R.drawable.tabs_private, R.string.tabs_private);
 
         if (!GeckoProfile.get(mContext).inGuestMode()) {
-            mTabWidget.addTab(R.drawable.tabs_synced, R.string.tabs_synced);
+            // n.b.: the animation does not start automatically.
+            mTabWidget.addTab(R.drawable.tabs_synced_animation, R.string.tabs_synced);
         }
 
         mTabWidget.setTabSelectionListener(this);
@@ -174,12 +195,14 @@ public class TabsPanel extends LinearLayout
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
         mTheme.addListener(this);
+        mActivity.addAppStateListener(mAppStateListener);
     }
 
     @Override
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         mTheme.removeListener(this);
+        mActivity.removeAppStateListener(mAppStateListener);
     }
 
     @Override
@@ -439,5 +462,14 @@ public class TabsPanel extends LinearLayout
     private void dispatchLayoutChange(int width, int height) {
         if (mLayoutChangeListener != null)
             mLayoutChangeListener.onTabsLayoutChange(width, height);
+    }
+
+    /**
+     * Fetch the Drawable icon corresponding to the given panel.
+     * @param panel to fetch icon for.
+     * @return Drawable instance, or null if no icon is being displayed, or the icon does not exist.
+     */
+    public Drawable getIconDrawable(Panel panel) {
+        return mTabWidget.getIconDrawable(panel.ordinal());
     }
 }
