@@ -45,7 +45,7 @@ using namespace android;
 
 namespace mozilla {
 
-static uint8_t kNALStartCode[] = { 0x00, 0x00, 0x00, 0x01 };
+static const uint8_t kNALStartCode[] = { 0x00, 0x00, 0x00, 0x01 };
 enum {
   kNALTypeSPS = 7,
   kNALTypePPS = 8,
@@ -302,7 +302,11 @@ public:
     status_t err = mCodec->dequeueInputBuffer(&index,
       aIsFirstFrame ? START_DEQUEUE_BUFFER_TIMEOUT_US : DEQUEUE_BUFFER_TIMEOUT_US);
     if (err != OK) {
-      CODEC_LOGE("decode dequeue input buffer error:%d", err);
+      if (err != -EAGAIN) {
+        CODEC_LOGE("decode dequeue input buffer error:%d", err);
+      } else {
+        CODEC_LOGE("decode dequeue 100ms without a buffer (EAGAIN)");
+      }
       return err;
     }
 
@@ -324,6 +328,8 @@ public:
       flags = (nalType == kNALTypeSPS || nalType == kNALTypePPS) ?
               MediaCodec::BUFFER_FLAG_CODECCONFIG : MediaCodec::BUFFER_FLAG_SYNCFRAME;
     }
+    CODEC_LOGD("Decoder input: %d bytes (NAL 0x%02x), time %lld (%u), flags 0x%x",
+               size, dst[sizeof(kNALStartCode)], inputTimeUs, aEncoded._timeStamp, flags);
     err = mCodec->queueInputBuffer(index, 0, size, inputTimeUs, flags);
     if (err == OK && !(flags & MediaCodec::BUFFER_FLAG_CODECCONFIG)) {
       if (mOutputDrain == nullptr) {
@@ -382,6 +388,8 @@ public:
         return OK;
     }
 
+    CODEC_LOGD("Decoder output: %d bytes, offset %u, time %lld, flags 0x%x",
+               outSize, outOffset, outTime, outFlags);
     if (mCallback) {
       {
         // Store info of this frame. OnNewFrame() will need the timestamp later.
@@ -428,6 +436,9 @@ public:
       mDecodedFrames.pop();
     }
     MOZ_ASSERT(timestamp >= 0 && renderTimeMs >= 0);
+
+    CODEC_LOGD("Decoder NewFrame: %d bytes, %dx%d, timestamp %lld, renderTimeMs %lld",
+               buffer->GetSize(), grallocData.mPicSize.width, grallocData.mPicSize.height, timestamp, renderTimeMs);
 
     nsAutoPtr<webrtc::I420VideoFrame> videoFrame(
       new webrtc::TextureVideoFrame(new ImageNativeHandle(grallocImage.forget()),
@@ -575,6 +586,9 @@ protected:
       encoded.capture_time_ms_ = aInputFrame.mRenderTimeMs;
       encoded._completeFrame = true;
 
+      CODEC_LOGD("Encoded frame: %d bytes, %dx%d, is_param %d, is_iframe %d, timestamp %u, captureTimeMs %u",
+                 output.Length(), encoded._encodedWidth, encoded._encodedHeight,
+                 isParamSets, isIFrame, encoded._timeStamp, encoded.capture_time_ms_);
       // Prepend SPS/PPS to I-frames unless they were sent last time.
       SendEncodedDataToCallback(encoded, isIFrame && !mIsPrevOutputParamSets);
       mIsPrevOutputParamSets = isParamSets;
@@ -714,6 +728,10 @@ WebrtcOMXH264VideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
   layers::PlanarYCbCrImage img(nullptr);
   img.SetDataNoCopy(yuvData);
 
+  CODEC_LOGD("Encode frame: %dx%d, timestamp %u, renderTimeMs %u",
+             aInputImage.width(), aInputImage.height(),
+             aInputImage.timestamp(), aInputImage.render_time_ms());
+
   nsresult rv = mOMX->Encode(&img,
                              yuvData.mYSize.width,
                              yuvData.mYSize.height,
@@ -839,7 +857,7 @@ WebrtcOMXH264VideoDecoder::Decode(const webrtc::EncodedImage& aInputImage,
                                                              &width, &height);
     if (result != OK) {
       // Cannot config decoder because SPS haven't been seen.
-      CODEC_LOGI("WebrtcOMXH264VideoDecoder:%p missing SPS in input");
+      CODEC_LOGI("WebrtcOMXH264VideoDecoder:%p missing SPS in input", this);
       return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
     }
     RefPtr<WebrtcOMXDecoder> omx = new WebrtcOMXDecoder(MEDIA_MIMETYPE_VIDEO_AVC,
