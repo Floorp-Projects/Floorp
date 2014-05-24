@@ -50,7 +50,7 @@ public:
 
   virtual bool IsLeaf() const MOZ_OVERRIDE;
 
-  virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE;
+  virtual nsContainerFrame* GetContentInsertionFrame() MOZ_OVERRIDE;
 
 protected:
   nsresult GetDefaultLabel(nsXPIDLString& aLabel) const;

@@ -1098,7 +1098,7 @@ nsBoxFrame::AppendFrames(ChildListID     aListID,
    return NS_OK;
 }
 
-/* virtual */ nsIFrame*
+/* virtual */ nsContainerFrame*
 nsBoxFrame::GetContentInsertionFrame()
 {
   if (GetStateBits() & NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK)

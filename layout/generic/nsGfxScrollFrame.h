@@ -519,7 +519,7 @@ public:
     return this;
   }
 
-  virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
+  virtual nsContainerFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
     return mHelper.GetScrolledFrame()->GetContentInsertionFrame();
   }
 
@@ -802,7 +802,7 @@ public:
     return this;
   }
 
-  virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
+  virtual nsContainerFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
     return mHelper.GetScrolledFrame()->GetContentInsertionFrame();
   }
 
