@@ -8,6 +8,7 @@
 #include "gfxPlatform.h"
 #include "mozilla/gfx/2D.h"
 #include "imgIContainer.h"
+#include "nsContainerFrame.h"
 #include "nsIImageLoadingContent.h"
 #include "nsLayoutUtils.h"
 #include "nsRenderingContext.h"

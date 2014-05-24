@@ -9,7 +9,7 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
-#include "nsIFrame.h"
+#include "nsContainerFrame.h"
 #include "nsIDocShell.h"
 #include "nsReadableUtils.h"
 #include "nsDOMClassInfoID.h"

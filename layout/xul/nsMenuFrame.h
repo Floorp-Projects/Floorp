@@ -152,7 +152,7 @@ public:
   // otherwise null will be returned.
   nsMenuFrame* Enter(mozilla::WidgetGUIEvent* aEvent);
 
-  virtual void SetParent(nsIFrame* aParent) MOZ_OVERRIDE;
+  virtual void SetParent(nsContainerFrame* aParent) MOZ_OVERRIDE;
 
   virtual nsMenuParent *GetMenuParent() { return mMenuParent; }
   const nsAString& GetRadioGroupName() { return mGroupName; }

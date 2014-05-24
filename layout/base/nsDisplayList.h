@@ -15,7 +15,7 @@
 
 #include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
-#include "nsIFrame.h"
+#include "nsContainerFrame.h"
 #include "nsPoint.h"
 #include "nsRect.h"
 #include "nsCaret.h"
