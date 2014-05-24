@@ -743,10 +743,7 @@ public:
   virtual nsPoint GetPositionOfChildIgnoringScrolling(nsIFrame* aChild)
   { return aChild->GetPosition(); }
   
-  nsPoint GetPositionIgnoringScrolling() {
-    return mParent ? mParent->GetPositionOfChildIgnoringScrolling(this)
-      : GetPosition();
-  }
+  nsPoint GetPositionIgnoringScrolling();
 
   static void DestroyRegion(void* aPropertyValue);
 
