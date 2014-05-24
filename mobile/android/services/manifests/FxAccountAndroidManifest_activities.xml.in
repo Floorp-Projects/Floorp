@@ -4,6 +4,7 @@
             android:clearTaskOnLaunch="true"
             android:taskAffinity="@ANDROID_PACKAGE_NAME@.FXA"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountStatusActivity"
+            android:configChanges="locale|layoutDirection"
             android:windowSoftInputMode="adjustResize">
             <!-- Adding a launcher will make this activity appear on the
                  Apps screen, which we only want when testing. -->
@@ -19,6 +20,7 @@
             android:clearTaskOnLaunch="true"
             android:taskAffinity="@ANDROID_PACKAGE_NAME@.FXA"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity"
+            android:configChanges="locale|layoutDirection"
             android:windowSoftInputMode="adjustResize">
             <!-- Adding a launcher will make this activity appear on the
                  Apps screen, which we only want when testing. -->
@@ -31,12 +33,14 @@
         <activity
             android:theme="@style/FxAccountTheme"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountCreateAccountActivity"
+            android:configChanges="locale|layoutDirection"
             android:windowSoftInputMode="adjustResize">
         </activity>
 
         <activity
             android:theme="@style/FxAccountTheme"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountConfirmAccountActivity"
+            android:configChanges="locale|layoutDirection"
             android:noHistory="true"
             android:windowSoftInputMode="adjustResize">
         </activity>
@@ -44,12 +48,14 @@
         <activity
             android:theme="@style/FxAccountTheme"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountSignInActivity"
+            android:configChanges="locale|layoutDirection"
             android:windowSoftInputMode="adjustResize">
         </activity>
 
         <activity
             android:theme="@style/FxAccountTheme"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountVerifiedAccountActivity"
+            android:configChanges="locale|layoutDirection"
             android:noHistory="true"
             android:windowSoftInputMode="adjustResize">
         </activity>
@@ -57,12 +63,14 @@
         <activity
             android:theme="@style/FxAccountTheme"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountUpdateCredentialsActivity"
+            android:configChanges="locale|layoutDirection"
             android:windowSoftInputMode="adjustResize">
         </activity>
 
         <activity
             android:theme="@style/FxAccountTheme"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountCreateAccountNotAllowedActivity"
+            android:configChanges="locale|layoutDirection"
             android:noHistory="true"
             android:windowSoftInputMode="adjustResize">
         </activity>

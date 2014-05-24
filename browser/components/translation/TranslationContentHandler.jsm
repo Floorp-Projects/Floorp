@@ -67,7 +67,12 @@ TranslationContentHandler.prototype = {
         Cu.import("resource:///modules/translation/TranslationDocument.jsm");
         Cu.import("resource:///modules/translation/BingTranslator.jsm");
 
-        let translationDocument = new TranslationDocument(this.global.content.document);
+        // If a TranslationDocument already exists for this document, it should
+        // be used instead of creating a new one so that we can use the original
+        // content of the page for the new translation instead of the newly
+        // translated text.
+        let translationDocument = this.global.content.translationDocument ||
+                                  new TranslationDocument(this.global.content.document);
         let bingTranslation = new BingTranslation(translationDocument,
                                                   msg.data.from,
                                                   msg.data.to);

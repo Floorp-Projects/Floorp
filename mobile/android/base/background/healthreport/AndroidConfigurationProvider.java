@@ -6,7 +6,6 @@ package org.mozilla.gecko.background.healthreport;
 
 import org.mozilla.gecko.background.healthreport.Environment.UIType;
 import org.mozilla.gecko.background.healthreport.EnvironmentBuilder.ConfigurationProvider;
-import org.mozilla.gecko.sync.jpake.stage.GetRequestStage.GetStepTimerTask;
 import org.mozilla.gecko.util.HardwareUtils;
 
 import android.content.Context;

@@ -30,6 +30,20 @@
 
   <button id="refresh">&aboutDevices.refresh;</button>
 
+  <h1>&aboutDevices.addDeviceHeader;</h1>
+
+  <div id="manual">
+    <select id="type">
+      <option value="roku">&aboutDevices.roku;</option>
+      <option value="chromecast">&aboutDevices.chromecast;</option>
+    </select>
+
+    <input id="ip" type="text" required="required"
+           pattern="((^|\.)((25[0-5])|(2[0-4]\d)|(1\d\d)|([1-9]?\d))){4}$"
+           placeholder="&aboutDevices.placeholder;" />
+    <button id="connect">&aboutDevices.connectManually;</button>
+  </div>
+
   <script type="text/javascript;version=1.8" src="chrome://browser/content/aboutDevices.js"></script>
 </body>
 </html>

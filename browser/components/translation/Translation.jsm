@@ -8,6 +8,8 @@ this.EXPORTED_SYMBOLS = ["Translation"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
+const TRANSLATION_PREF_SHOWUI = "browser.translation.ui.show";
+
 Cu.import("resource://gre/modules/Services.jsm");
 
 this.Translation = {
@@ -26,6 +28,9 @@ this.Translation = {
   },
 
   languageDetected: function(aBrowser, aDetectedLanguage) {
+    if (!Services.prefs.getBoolPref(TRANSLATION_PREF_SHOWUI))
+      return;
+
     if (this.supportedSourceLanguages.indexOf(aDetectedLanguage) != -1 &&
         aDetectedLanguage != this.defaultTargetLanguage) {
       if (!aBrowser.translationUI)

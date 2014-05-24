@@ -6,6 +6,7 @@
 package org.mozilla.gecko.db;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.database.MatrixCursor.RowBuilder;
@@ -22,9 +23,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.mozglue.RobocopTarget;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.RawResource;
 
 /**
@@ -150,6 +153,11 @@ public class SuggestedSites {
         return sites;
     }
 
+    private boolean isEnabled() {
+        final SharedPreferences prefs = GeckoSharedPrefs.forApp(context);
+        return prefs.getBoolean(GeckoPreferences.PREFS_SUGGESTED_SITES, true);
+    }
+
     /**
      * Returns a {@code Cursor} with the list of suggested websites.
      *
@@ -166,13 +174,19 @@ public class SuggestedSites {
      * @param excludeUrls list of URLs to be excluded from the list.
      */
     public Cursor get(int limit, List<String> excludeUrls) {
+        final MatrixCursor cursor = new MatrixCursor(COLUMNS);
+
+        // Return an empty cursor if suggested sites have been
+        // disabled by the user.
+        if (!isEnabled()) {
+            return cursor;
+        }
+
         List<Site> sites = cachedSites.get();
         if (sites == null) {
             Log.d(LOGTAG, "No cached sites, refreshing.");
             sites = refresh();
         }
-
-        final MatrixCursor cursor = new MatrixCursor(COLUMNS);
 
         // Return empty cursor if there was an error when
         // loading the suggested sites or the list is empty.
@@ -198,6 +212,9 @@ public class SuggestedSites {
             row.add(site.imageUrl);
             row.add(site.bgColor);
         }
+
+        cursor.setNotificationUri(context.getContentResolver(),
+                                  BrowserContract.SuggestedSites.CONTENT_URI);
 
         return cursor;
     }

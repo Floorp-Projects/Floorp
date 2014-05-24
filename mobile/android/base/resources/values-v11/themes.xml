@@ -60,6 +60,7 @@
         <item name="android:actionModeCopyDrawable">@drawable/ab_copy</item>
         <item name="android:actionModePasteDrawable">@drawable/ab_paste</item>
         <item name="android:actionModeSelectAllDrawable">@drawable/ab_select_all</item>
+        <item name="floatingHintEditTextStyle">@style/FloatingHintEditText</item>
     </style>
 
 </resources>
