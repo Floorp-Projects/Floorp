@@ -708,7 +708,9 @@ WebrtcOMXH264VideoEncoder::WebrtcOMXH264VideoEncoder()
   , mWidth(0)
   , mHeight(0)
   , mFrameRate(0)
+  , mBitRateKbps(0)
   , mOMXConfigured(false)
+  , mOMXReconfigure(false)
 {
   CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p constructed", this);
 }
@@ -735,6 +737,8 @@ WebrtcOMXH264VideoEncoder::InitEncode(const webrtc::VideoCodec* aCodecSettings,
   mWidth = aCodecSettings->width;
   mHeight = aCodecSettings->height;
   mFrameRate = aCodecSettings->maxFramerate;
+  mBitRateKbps = aCodecSettings->startBitrate;
+  // XXX handle maxpayloadsize (aka mode 0/1)
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -749,7 +753,26 @@ WebrtcOMXH264VideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  if (!mOMXConfigured) {
+  // Have to reconfigure for resolution or framerate changes :-(
+  // ~220ms initial configure on 8x10, 50-100ms for re-configure it appears
+  // XXX drop frames while this is happening?
+  if (aInputImage.width() != mWidth ||
+      aInputImage.height() != mHeight) {
+    mWidth = aInputImage.width();
+    mHeight = aInputImage.height();
+    mOMXReconfigure = true;
+  }
+
+  if (!mOMXConfigured || mOMXReconfigure) {
+    if (mOMXConfigured) {
+      CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p reconfiguring encoder %dx%d @ %u fps",
+                 this, mWidth, mHeight, mFrameRate);
+      mOMXConfigured = false;
+    }
+    mOMXReconfigure = false;
+    // XXX This can take time.  Encode() likely assumes encodes are queued "quickly" and
+    // don't block the input too long.  Frames may build up.
+
     // XXX take from negotiated SDP in codecSpecific data
     OMX_VIDEO_AVCLEVELTYPE level = OMX_VIDEO_AVCLevel3;
     // OMX_Video_ControlRateConstant is not supported on QC 8x10
@@ -759,9 +782,9 @@ WebrtcOMXH264VideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
     sp<AMessage> format = new AMessage;
     // Fixed values
     format->setString("mime", MEDIA_MIMETYPE_VIDEO_AVC);
-    // XXX take from initial config parameters
-    format->setInt32("bitrate", 300*1000);
     // XXX Only set if we're not using any recovery RTCP options
+    // However, we MUST set it to a low value because the 8x10 rate controller
+    // only changes rate at GOP boundaries.... :-(
     format->setInt32("i-frame-interval", 2 /* seconds */);
     // See mozilla::layers::GrallocImage, supports YUV 4:2:0, CbCr width and
     // height is half that of Y
@@ -770,20 +793,22 @@ WebrtcOMXH264VideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
     format->setInt32("level", level);
     format->setInt32("bitrate-mode", bitrateMode);
     format->setInt32("store-metadata-in-buffers", 0);
-    format->setInt32("prepend-sps-pps-to-idr-frames", 1); // 8x10 doesn't support this
+    // XXX Unfortunately, 8x10 doesn't support this, but ask anyways
+    format->setInt32("prepend-sps-pps-to-idr-frames", 1);
     // Input values.
     format->setInt32("width", mWidth);
     format->setInt32("height", mHeight);
     format->setInt32("stride", mWidth);
     format->setInt32("slice-height", mHeight);
-    mFrameRate = 10; /* XXX hack*/
     format->setInt32("frame-rate", mFrameRate);
+    format->setInt32("bitrate", mBitRateKbps*1000);
 
     CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p configuring encoder %dx%d @ %d fps",
                this, mWidth, mHeight, mFrameRate);
     nsresult rv = mOMX->ConfigureDirect(format,
                                         OMXVideoEncoder::BlobFormat::AVC_NAL);
     if (NS_WARN_IF(NS_FAILED(rv))) {
+      CODEC_LOGE("WebrtcOMXH264VideoEncoder:%p FAILED configuring encoder %d", this, rv);
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
     mOMXConfigured = true;
@@ -858,6 +883,7 @@ WebrtcOMXH264VideoEncoder::Release()
   }
   mOMXConfigured = false;
   mOMX = nullptr;
+  CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p released", this);
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -887,14 +913,58 @@ WebrtcOMXH264VideoEncoder::SetChannelParameters(uint32_t aPacketLossRate,
 int32_t
 WebrtcOMXH264VideoEncoder::SetRates(uint32_t aBitRateKbps, uint32_t aFrameRate)
 {
-  CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p set bitrate:%u, frame rate:%u)",
-             this, aBitRateKbps, aFrameRate);
+  CODEC_LOGE("WebrtcOMXH264VideoEncoder:%p set bitrate:%u, frame rate:%u (%u))",
+             this, aBitRateKbps, aFrameRate, mFrameRate);
   MOZ_ASSERT(mOMX != nullptr);
   if (mOMX == nullptr) {
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
   }
 
-  nsresult rv = mOMX->SetBitrate(aBitRateKbps);
+  // XXX Should use StageFright framerate change, perhaps only on major changes of framerate.
+
+  // Without Stagefright support, Algorithm should be:
+  // if (frameRate < 50% of configured) {
+  //   drop framerate to next step down that includes current framerate within 50%
+  // } else if (frameRate > configured) {
+  //   change config to next step up that includes current framerate
+  // }
+#if !defined(TEST_OMX_FRAMERATE_CHANGES)
+  if (aFrameRate > mFrameRate ||
+      aFrameRate < mFrameRate/2) {
+    uint32_t old_rate = mFrameRate;
+    if (aFrameRate >= 15) {
+      mFrameRate = 30;
+    } else if (aFrameRate >= 10) {
+      mFrameRate = 20;
+    } else if (aFrameRate >= 8) {
+      mFrameRate = 15;
+    } else /* if (aFrameRate >= 5)*/ {
+      // don't go lower; encoder may not be stable
+      mFrameRate = 10;
+    }
+    if (mFrameRate < aFrameRate) { // safety
+      mFrameRate = aFrameRate;
+    }
+    if (old_rate != mFrameRate) {
+      mOMXReconfigure = true;  // force re-configure on next frame
+    }
+  }
+#else
+  // XXX for testing, be wild!
+  if (aFrameRate != mFrameRate) {
+    mFrameRate = aFrameRate;
+    mOMXReconfigure = true;  // force re-configure on next frame
+  }
+#endif
+
+  // XXX Limit bitrate for 8x10 devices to a specific level depending on fps and resolution
+  // mBitRateKbps = LimitBitrate8x10(mWidth, mHeight, mFrameRate, aBitRateKbps);
+  // Rely on global single setting (~720 kbps for HVGA@30fps) for now
+  if (aBitRateKbps > 700) {
+    aBitRateKbps = 700;
+  }
+  mBitRateKbps = aBitRateKbps;
+  nsresult rv = mOMX->SetBitrate(mBitRateKbps);
   NS_WARN_IF(NS_FAILED(rv));
   return NS_FAILED(rv) ? WEBRTC_VIDEO_CODEC_OK : WEBRTC_VIDEO_CODEC_ERROR;
 }
