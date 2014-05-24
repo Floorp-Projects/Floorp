@@ -709,6 +709,7 @@ WebrtcOMXH264VideoEncoder::WebrtcOMXH264VideoEncoder()
   , mHeight(0)
   , mFrameRate(0)
   , mBitRateKbps(0)
+  , mBitRateAtLastIDR(0)
   , mOMXConfigured(false)
   , mOMXReconfigure(false)
 {
@@ -782,10 +783,13 @@ WebrtcOMXH264VideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
     sp<AMessage> format = new AMessage;
     // Fixed values
     format->setString("mime", MEDIA_MIMETYPE_VIDEO_AVC);
-    // XXX Only set if we're not using any recovery RTCP options
-    // However, we MUST set it to a low value because the 8x10 rate controller
-    // only changes rate at GOP boundaries.... :-(
-    format->setInt32("i-frame-interval", 2 /* seconds */);
+    // XXX We should only set to < infinity if we're not using any recovery RTCP options
+    // However, we MUST set it to a lower value because the 8x10 rate controller
+    // only changes rate at GOP boundaries.... but it also changes rate on requested GOPs
+
+    // Too long and we have very low bitrates for the first second or two... plus
+    // bug 1014921 means we have to force them every ~3 seconds or less.
+    format->setInt32("i-frame-interval", 4 /* seconds */);
     // See mozilla::layers::GrallocImage, supports YUV 4:2:0, CbCr width and
     // height is half that of Y
     format->setInt32("color-format", OMX_COLOR_FormatYUV420SemiPlanar);
@@ -803,8 +807,8 @@ WebrtcOMXH264VideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
     format->setInt32("frame-rate", mFrameRate);
     format->setInt32("bitrate", mBitRateKbps*1000);
 
-    CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p configuring encoder %dx%d @ %d fps",
-               this, mWidth, mHeight, mFrameRate);
+    CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p configuring encoder %dx%d @ %d fps, rate %d kbps",
+               this, mWidth, mHeight, mFrameRate, mBitRateKbps);
     nsresult rv = mOMX->ConfigureDirect(format,
                                         OMXVideoEncoder::BlobFormat::AVC_NAL);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -812,11 +816,38 @@ WebrtcOMXH264VideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
     mOMXConfigured = true;
+    mLastIDRTime = TimeStamp::Now();
+    mBitRateAtLastIDR = mBitRateKbps;
   }
 
   if (aFrameTypes && aFrameTypes->size() &&
       ((*aFrameTypes)[0] == webrtc::kKeyFrame)) {
     mOMX->RequestIDRFrame();
+    mLastIDRTime = TimeStamp::Now();
+    mBitRateAtLastIDR = mBitRateKbps;
+  } else if (mBitRateKbps != mBitRateAtLastIDR) {
+    // 8x10 OMX codec requires a keyframe to shift bitrates!
+    TimeStamp now = TimeStamp::Now();
+    if (mLastIDRTime.IsNull()) {
+      // paranoia
+      mLastIDRTime = now;
+    }
+    int32_t timeSinceLastIDR = (now - mLastIDRTime).ToMilliseconds();
+
+    // balance asking for IDRs too often against direction and amount of bitrate change
+    // heuristic, could use tuning perhaps
+    if ((mBitRateKbps < (mBitRateAtLastIDR * 8)/10) ||
+        (timeSinceLastIDR < 300 && mBitRateKbps < (mBitRateAtLastIDR * 9)/10) ||
+        (timeSinceLastIDR < 1000 && mBitRateKbps < (mBitRateAtLastIDR * 97)/100) ||
+        (timeSinceLastIDR >= 1000 && mBitRateKbps < mBitRateAtLastIDR) ||
+        (mBitRateKbps > (mBitRateAtLastIDR * 15)/10) ||
+        (timeSinceLastIDR < 500 && mBitRateKbps > (mBitRateAtLastIDR * 13)/10) ||
+        (timeSinceLastIDR < 1000 && mBitRateKbps > (mBitRateAtLastIDR * 11)/10) ||
+        (timeSinceLastIDR >= 1000 && mBitRateKbps > mBitRateAtLastIDR)) {
+      mOMX->RequestIDRFrame();
+      mLastIDRTime = now;
+      mBitRateAtLastIDR = mBitRateKbps;
+    }
   }
 
   // Wrap I420VideoFrame input with PlanarYCbCrImage for OMXVideoEncoder.
