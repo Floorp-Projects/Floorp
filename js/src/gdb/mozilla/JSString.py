@@ -4,6 +4,11 @@ import gdb
 import mozilla.prettyprinters
 from mozilla.prettyprinters import pretty_printer, ptr_pretty_printer
 
+try:
+    chr(10000) # UPPER RIGHT PENCIL
+except ValueError as exc: # yuck, we are in Python 2.x, so chr() is 8-bit
+    chr = unichr # replace with teh unicodes
+
 # Forget any printers from previous loads of this module.
 mozilla.prettyprinters.clear_module_printers(__name__)
 
@@ -14,6 +19,8 @@ class JSStringTypeCache(object):
         self.ROPE_FLAGS = dummy['ROPE_FLAGS']
         self.ATOM_BIT = dummy['ATOM_BIT']
         self.INLINE_CHARS_BIT = dummy['INLINE_CHARS_BIT']
+        self.TYPE_FLAGS_MASK = dummy['TYPE_FLAGS_MASK']
+        self.LATIN1_CHARS_BIT = dummy['LATIN1_CHARS_BIT']
 
 class Common(mozilla.prettyprinters.Pointer):
     def __init__(self, value, cache):
@@ -31,7 +38,7 @@ class JSStringPtr(Common):
         d = self.value['d']
         length = d['u1']['length']
         flags = d['u1']['flags']
-        is_rope = (flags == self.stc.ROPE_FLAGS)
+        is_rope = ((flags & self.stc.TYPE_FLAGS_MASK) == self.stc.ROPE_FLAGS)
         if is_rope:
             for c in JSStringPtr(d['s']['u2']['left'], self.cache).jschars():
                 yield c
@@ -39,17 +46,24 @@ class JSStringPtr(Common):
                 yield c
         else:
             is_inline = (flags & self.stc.INLINE_CHARS_BIT) != 0
+            is_latin1 = (flags & self.stc.LATIN1_CHARS_BIT) != 0
             if is_inline:
-                chars = d['inlineStorage']
+                if is_latin1:
+                    chars = d['inlineStorageLatin1']
+                else:
+                    chars = d['inlineStorageTwoByte']
             else:
-                chars = d['s']['u2']['nonInlineChars']
-            for i in xrange(length):
+                if is_latin1:
+                    chars = d['s']['u2']['nonInlineCharsLatin1']
+                else:
+                    chars = d['s']['u2']['nonInlineCharsTwoByte']
+            for i in range(length):
                 yield chars[i]
 
     def to_string(self):
         s = u''
         for c in self.jschars():
-            s += unichr(c)
+            s += chr(c)
         return s
 
 @ptr_pretty_printer("JSAtom")

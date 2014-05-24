@@ -48,7 +48,6 @@ HwcUtils::PrepareLayerRects(nsIntRect aVisible, const gfxMatrix& aTransform,
     visibleRectScreen.IntersectRect(visibleRectScreen, clip);
 
     if (visibleRectScreen.IsEmpty()) {
-        LOGD("Skip layer");
         return false;
     }
 
@@ -61,7 +60,6 @@ HwcUtils::PrepareLayerRects(nsIntRect aVisible, const gfxMatrix& aTransform,
     crop.Round();
 
     if (crop.IsEmpty()) {
-        LOGD("Skip layer");
         return false;
     }
 

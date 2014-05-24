@@ -50,6 +50,7 @@
   <!-- Hint colors -->
   <color name="text_color_hint">#666666</color>
   <color name="text_color_hint_inverse">#7F828A</color>
+  <color name="text_color_hint_floating_focused">#33b5e5</color>
 
   <!-- Highlight colors -->
   <color name="text_color_highlight">#FF9500</color>
@@ -96,4 +97,8 @@
   <color name="swipe_refresh_orange">#FFFFC26C</color>
   <color name="swipe_refresh_white">#FFFFFFFF</color>
   <color name="swipe_refresh_orange_dark">#FF9500</color>
+
+  <!-- Remote tabs setup -->
+  <color name="remote_tabs_setup_button_background">#E66000</color>
+  <color name="remote_tabs_setup_button_background_hit">#D95300</color>
 </resources>

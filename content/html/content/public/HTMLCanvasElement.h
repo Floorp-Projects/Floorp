@@ -185,6 +185,8 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
   nsresult CopyInnerTo(mozilla::dom::Element* aDest);
 
+  virtual nsresult PreHandleEvent(mozilla::EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+
   /*
    * Helpers called by various users of Canvas
    */

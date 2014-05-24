@@ -663,6 +663,7 @@ function PCT_setLocalDescription(peer, desc, stateExpected, onSuccess) {
     info(peer + ": 'onsignalingstatechange' event '" + state + "' received");
     if(stateExpected === state && eventFired == false) {
       eventFired = true;
+      peer.setLocalDescStableEventDate = new Date();
       check_next_test();
     } else {
       ok(false, "This event has either already fired or there has been a " +
@@ -673,6 +674,7 @@ function PCT_setLocalDescription(peer, desc, stateExpected, onSuccess) {
 
   peer.setLocalDescription(desc, function () {
     stateChanged = true;
+    peer.setLocalDescDate = new Date();
     check_next_test();
   });
 };
@@ -729,6 +731,7 @@ function PCT_setRemoteDescription(peer, desc, stateExpected, onSuccess) {
     info(peer + ": 'onsignalingstatechange' event '" + state + "' received");
     if(stateExpected === state && eventFired == false) {
       eventFired = true;
+      peer.setRemoteDescStableEventDate = new Date();
       check_next_test();
     } else {
       ok(false, "This event has either already fired or there has been a " +
@@ -739,6 +742,7 @@ function PCT_setRemoteDescription(peer, desc, stateExpected, onSuccess) {
 
   peer.setRemoteDescription(desc, function () {
     stateChanged = true;
+    peer.setRemoteDescDate = new Date();
     check_next_test();
   });
 };

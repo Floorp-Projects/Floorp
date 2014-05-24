@@ -60,7 +60,7 @@ struct AnyRegister {
     const char *name() const {
         return isFloat() ? fpu().name() : gpr().name();
     }
-    const Code code() const {
+    Code code() const {
         return code_;
     }
     bool volatile_() const {

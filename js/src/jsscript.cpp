@@ -3422,10 +3422,10 @@ JSScript::getStaticScope(jsbytecode *pc)
     if (!hasBlockScopes())
         return nullptr;
 
-    ptrdiff_t offset = pc - main();
-
-    if (offset < 0)
+    if (pc < main())
         return nullptr;
+
+    size_t offset = pc - main();
 
     BlockScopeArray *scopes = blockScopes();
     NestedScopeObject *blockChain = nullptr;

@@ -89,7 +89,7 @@ $(dir-strings-xml)/strings.xml: $(strings-xml-preqs)
       $< \
 	  -o $@)
 
-suggestedsites-srcdir := $(dir $(abspath $(call MERGE_FILE,suggestedsites/list.txt)))
+suggestedsites-srcdir := $(if $(filter en-US,$(AB_CD)),,$(or $(realpath $(L10NBASEDIR)),$(abspath $(L10NBASEDIR)))/$(AB_CD)/mobile/chrome)
 
 # Determine the ../res/raw[-*] path.  This can be ../res/raw when no
 # locale is explicitly specified.
@@ -105,5 +105,5 @@ $(suggestedsites-dstdir-raw)/suggestedsites.json: FORCE
 		--android-package-name=$(ANDROID_PACKAGE_NAME) \
 		--resources=$(srcdir)/../resources \
 		$(if $(filter en-US,$(AB_CD)),,--srcdir=$(suggestedsites-srcdir)) \
-		--srcdir=$(addprefix $(srcdir)/,en-US/suggestedsites) \
+		--srcdir=$(topsrcdir)/mobile/locales/en-US/chrome \
 		$@)

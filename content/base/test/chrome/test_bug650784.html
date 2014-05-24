@@ -31,8 +31,7 @@ is(s.convertToPlainText("<body><noscript>b<span>a</span>r</noscript>foo", c.Outp
 is(s.convertToPlainText("foo\u00A0bar", c.OutputPersistNBSP | c.OutputLFLineBreak, 0), "foo\u00A0bar", "Wrong conversion result 5");
 is(s.convertToPlainText("foo\u00A0bar", c.OutputLFLineBreak, 0), "foo bar", "Wrong conversion result 6");
 is(s.convertToPlainText("<body><noframes>bar</noframes>foo", c.OutputLFLineBreak, 0), "foo", "Wrong conversion result 7");
-// OutputNoFramesContent doesn't actually work, because the flag gets overridden by 
-// the browser.frames.enabled pref in all cases.
+// OutputNoFramesContent doesn't actually work, because the flag gets overridden in all cases.
 is(s.convertToPlainText("<body><noframes>bar</noframes>foo", c.OutputNoFramesContent | c.OutputLFLineBreak, 0), "foo", "Wrong conversion result 8");
 is(s.convertToPlainText("<i>foo</i> <b>bar</b>", c.OutputFormatted | c.OutputLFLineBreak, 0), "/foo/ *bar*\n", "Wrong conversion result 9");
 is(s.convertToPlainText("<p>foo</p> <p>bar</p>", c.OutputLFLineBreak, 0), "foo\n\nbar", "Wrong conversion result 10");

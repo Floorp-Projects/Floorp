@@ -338,7 +338,7 @@ struct FuzzyEqualsEpsilon<float>
 {
   // A number near 1e-5 that is exactly representable in
   // floating point
-  static const float value() { return 1.0f / (1 << 17); }
+  static float value() { return 1.0f / (1 << 17); }
 };
 
 template<>
@@ -346,7 +346,7 @@ struct FuzzyEqualsEpsilon<double>
 {
   // A number near 1e-12 that is exactly representable in
   // a double
-  static const double value() { return 1.0 / (1LL << 40); }
+  static double value() { return 1.0 / (1LL << 40); }
 };
 
 } // namespace detail

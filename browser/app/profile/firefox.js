@@ -278,7 +278,7 @@ pref("browser.startup.page",                1);
 pref("browser.startup.homepage",            "chrome://branding/locale/browserconfig.properties");
 
 pref("browser.slowStartup.notificationDisabled", false);
-pref("browser.slowStartup.timeThreshold", 60000);
+pref("browser.slowStartup.timeThreshold", 45000);
 pref("browser.slowStartup.maxSamples", 5);
 
 // This url, if changed, MUST continue to point to an https url. Pulling arbitrary content to inject into
@@ -1568,6 +1568,8 @@ pref("browser.cache.frecency_experiment", 0);
 
 pref("browser.translation.detectLanguage", false);
 pref("browser.translation.neverForLanguages", "");
+// Show the translation UI bits, like the info bar, notification icon and preferences.
+pref("browser.translation.ui.show", false);
 
 // Telemetry experiments settings.
 pref("experiments.enabled", true);

@@ -5,6 +5,8 @@
  * order to be used as a replacement for UniversalXPConnect
  */
 
+"use strict";
+
 var Ci = Components.interfaces;
 var Cc = Components.classes;
 var Cu = Components.utils;
@@ -186,7 +188,7 @@ function ExposedPropsWaiverHandler() {
     delete: function(name) { throw Error("Can't delete props from ExposedPropsWaiver"); }
   };
 };
-ExposedPropsWaiver = Proxy.create(ExposedPropsWaiverHandler());
+var ExposedPropsWaiver = Proxy.create(ExposedPropsWaiverHandler());
 
 function SpecialPowersHandler(obj) {
   this.wrappedObject = obj;
@@ -408,13 +410,13 @@ SPConsoleListener.prototype = {
 
 function wrapCallback(cb) {
   return function SpecialPowersCallbackWrapper() {
-    args = Array.prototype.map.call(arguments, wrapIfUnwrapped);
+    var args = Array.prototype.map.call(arguments, wrapIfUnwrapped);
     return cb.apply(this, args);
   }
 }
 
 function wrapCallbackObject(obj) {
-  wrapper = { __exposedProps__: ExposedPropsWaiver };
+  var wrapper = { __exposedProps__: ExposedPropsWaiver };
   for (var i in obj) {
     if (typeof obj[i] == 'function')
       wrapper[i] = wrapCallback(obj[i]);
@@ -1585,9 +1587,10 @@ SpecialPowersAPI.prototype = {
   },
 
   get isDebugBuild() {
-    delete this.isDebugBuild;
+    delete SpecialPowersAPI.prototype.isDebugBuild;
+
     var debug = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
-    return this.isDebugBuild = debug.isDebugBuild;
+    return SpecialPowersAPI.prototype.isDebugBuild = debug.isDebugBuild;
   },
   assertionCount: function() {
     var debugsvc = Cc['@mozilla.org/xpcom/debug;1'].getService(Ci.nsIDebug2);

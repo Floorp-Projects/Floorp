@@ -23,6 +23,8 @@ function run_test() {
   setTestFilesAndDirsForFailure();
   setupUpdaterTest(FILE_COMPLETE_MAR, false, false);
 
+  createUpdaterINI(false);
+
   let channel = Services.prefs.getCharPref(PREF_APP_UPDATE_CHANNEL);
   let patches = getLocalPatchString(null, null, null, null, null, "true",
                                     STATE_PENDING_SVC);
@@ -69,6 +71,11 @@ function checkUpdateApplied() {
 }
 
 function finishTest() {
+  if (IS_MACOSX || IS_WIN) {
+    // Check that the post update process was not launched.
+    do_check_false(getPostUpdateFile(".running").exists());
+  }
+
   do_check_eq(readStatusState(), STATE_PENDING);
   unlockDirectory(getAppBaseDir());
   waitForFilesInUse();

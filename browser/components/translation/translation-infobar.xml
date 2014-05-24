@@ -21,7 +21,7 @@
     <content>
       <xul:hbox class="notification-inner outset" flex="1" xbl:inherits="type">
         <xul:hbox anonid="details" align="center" flex="1">
-          <xul:image anonid="messageImage" class="messageImage" xbl:inherits="src=image,type,value"/>
+          <xul:image anonid="messageImage" class="messageImage"/>
           <xul:deck anonid="translationStates" selectedIndex="0">
 
             <!-- offer to translate -->
@@ -106,6 +106,15 @@
           let activeElt = document.activeElement;
           if (activeElt && deck.contains(activeElt))
             activeElt.blur();
+
+          let stateName;
+          for (let name of ["OFFER", "TRANSLATING", "TRANSLATED", "ERROR"]) {
+            if (this.translation["STATE_" + name] == val) {
+              stateName = name.toLowerCase();
+              break;
+            }
+          }
+          this.setAttribute("state", stateName);
 
           deck.selectedIndex = val;
           ]]>

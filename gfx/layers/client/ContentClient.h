@@ -92,7 +92,7 @@ public:
   virtual void Clear() = 0;
   virtual RotatedContentBuffer::PaintState BeginPaintBuffer(ThebesLayer* aLayer,
                                                             uint32_t aFlags) = 0;
-  virtual gfx::DrawTarget* BorrowDrawTargetForPainting(const RotatedContentBuffer::PaintState& aPaintState,
+  virtual gfx::DrawTarget* BorrowDrawTargetForPainting(RotatedContentBuffer::PaintState& aPaintState,
                                                        RotatedContentBuffer::DrawIterator* aIter = nullptr) = 0;
   virtual void ReturnDrawTargetToBuffer(gfx::DrawTarget*& aReturned) = 0;
 
@@ -137,7 +137,7 @@ public:
   {
     return RotatedContentBuffer::BeginPaint(aLayer, aFlags);
   }
-  virtual gfx::DrawTarget* BorrowDrawTargetForPainting(const PaintState& aPaintState,
+  virtual gfx::DrawTarget* BorrowDrawTargetForPainting(PaintState& aPaintState,
                                                        RotatedContentBuffer::DrawIterator* aIter = nullptr) MOZ_OVERRIDE
   {
     return RotatedContentBuffer::BorrowDrawTargetForPainting(aPaintState, aIter);
@@ -212,7 +212,7 @@ public:
   {
     return RotatedContentBuffer::BeginPaint(aLayer, aFlags);
   }
-  virtual gfx::DrawTarget* BorrowDrawTargetForPainting(const PaintState& aPaintState,
+  virtual gfx::DrawTarget* BorrowDrawTargetForPainting(PaintState& aPaintState,
                                                        RotatedContentBuffer::DrawIterator* aIter = nullptr) MOZ_OVERRIDE
   {
     return RotatedContentBuffer::BorrowDrawTargetForPainting(aPaintState, aIter);
@@ -418,7 +418,7 @@ public:
 
   virtual PaintState BeginPaintBuffer(ThebesLayer* aLayer,
                                       uint32_t aFlags) MOZ_OVERRIDE;
-  virtual gfx::DrawTarget* BorrowDrawTargetForPainting(const PaintState& aPaintState,
+  virtual gfx::DrawTarget* BorrowDrawTargetForPainting(PaintState& aPaintState,
                                                        RotatedContentBuffer::DrawIterator* aIter = nullptr) MOZ_OVERRIDE;
   virtual void ReturnDrawTargetToBuffer(gfx::DrawTarget*& aReturned) MOZ_OVERRIDE
   {
