@@ -266,6 +266,9 @@ pref("media.peerconnection.video.enabled", true);
 pref("media.navigator.video.max_fs", 0); // unrestricted
 pref("media.navigator.video.max_fr", 0); // unrestricted
 #endif
+pref("media.peerconnection.video.min_bitrate", 200);
+pref("media.peerconnection.video.start_bitrate", 300);
+pref("media.peerconnection.video.max_bitrate", 2000);
 pref("media.navigator.permission.disabled", false);
 pref("media.peerconnection.default_iceservers", "[{\"url\": \"stun:stun.services.mozilla.com\"}]");
 pref("media.peerconnection.trickle_ice", true);
