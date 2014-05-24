@@ -442,8 +442,7 @@ SplitInlineAncestors(nsContainerFrame* aParent,
       newParent = static_cast<nsContainerFrame*>(presShell->FrameConstructor()->
         CreateContinuingFrame(presContext, parent, grandparent, false));
 
-      nsContainerFrame* container = do_QueryFrame(parent);
-      nsFrameList tail = container->StealFramesAfter(frame);
+      nsFrameList tail = parent->StealFramesAfter(frame);
 
       // Reparent views as necessary
       nsresult rv;
