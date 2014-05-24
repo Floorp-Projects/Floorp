@@ -4005,6 +4005,10 @@ nsDocument::AddOnDemandBuiltInUASheet(nsCSSStyleSheet* aSheet)
     // This is like |AddStyleSheetToStyleSets|, but for an agent sheet.
     nsCOMPtr<nsIPresShell> shell = GetShell();
     if (shell) {
+      // Note that prepending here is necessary to make sure that html.css etc.
+      // do not override Firefox OS/Mobile's content.css sheet. Maybe we should
+      // have an insertion point to match the order of
+      // nsDocumentViewer::CreateStyleSet though?
       shell->StyleSet()->PrependStyleSheet(nsStyleSet::eAgentSheet, aSheet);
     }
   }
