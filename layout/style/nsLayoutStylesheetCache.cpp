@@ -168,6 +168,35 @@ nsLayoutStylesheetCache::FullScreenOverrideSheet()
   return gStyleCache->mFullScreenOverrideSheet;
 }
 
+nsCSSStyleSheet*
+nsLayoutStylesheetCache::SVGSheet()
+{
+  EnsureGlobal();
+  if (!gStyleCache)
+    return nullptr;
+
+  return gStyleCache->mSVGSheet;
+}
+
+nsCSSStyleSheet*
+nsLayoutStylesheetCache::MathMLSheet()
+{
+  EnsureGlobal();
+  if (!gStyleCache)
+    return nullptr;
+
+  if (!gStyleCache->mMathMLSheet) {
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), "resource://gre-resources/mathml.css");
+    if (uri) {
+      LoadSheet(uri, gStyleCache->mMathMLSheet, true);
+    }
+    NS_ASSERTION(gStyleCache->mMathMLSheet, "Could not load mathml.css");
+  }
+
+  return gStyleCache->mMathMLSheet;
+}
+
 void
 nsLayoutStylesheetCache::Shutdown()
 {
@@ -203,6 +232,10 @@ nsLayoutStylesheetCache::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf
   MEASURE(mUASheet);
   MEASURE(mQuirkSheet);
   MEASURE(mFullScreenOverrideSheet);
+  MEASURE(mSVGSheet);
+  if (mMathMLSheet) {
+    MEASURE(mMathMLSheet);
+  }
 
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:
@@ -246,6 +279,15 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache()
     LoadSheet(uri, mFullScreenOverrideSheet, true);
   }
   NS_ASSERTION(mFullScreenOverrideSheet, "Could not load full-screen-override.css");
+
+  NS_NewURI(getter_AddRefs(uri), "resource://gre/res/svg.css");
+  if (uri) {
+    LoadSheet(uri, mSVGSheet, true);
+  }
+  NS_ASSERTION(mSVGSheet, "Could not load svg.css");
+
+  // mMathMLSheet is created on-demand since its use is rare. This helps save
+  // memory for Firefox OS apps.
 }
 
 nsLayoutStylesheetCache::~nsLayoutStylesheetCache()

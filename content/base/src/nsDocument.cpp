@@ -3980,41 +3980,23 @@ nsDocument::RemoveChildAt(uint32_t aIndex, bool aNotify)
 }
 
 void
-nsDocument::EnsureOnDemandBuiltInUASheet(const char* aStyleSheetURI)
+nsDocument::EnsureOnDemandBuiltInUASheet(nsCSSStyleSheet* aSheet)
 {
-  mozilla::css::Loader* cssLoader = CSSLoader();
-  if (!cssLoader->GetEnabled()) {
+  // Contains() takes nsISupport*, so annoyingly we have to cast here
+  if (mOnDemandBuiltInUASheets.Contains(static_cast<nsIStyleSheet*>(aSheet))) {
     return;
   }
-
-  int32_t sheetCount = mOnDemandBuiltInUASheets.Count();
-  for (int32_t i = 0; i < sheetCount; i++) {
-    nsIStyleSheet* sheet = mOnDemandBuiltInUASheets[i];
-    NS_ASSERTION(sheet, "unexpected null stylesheet in the document");
-    if (sheet) {
-      nsAutoCString uriStr;
-      sheet->GetSheetURI()->GetSpec(uriStr);
-      if (uriStr.Equals(aStyleSheetURI))
-        return;
-    }
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), aStyleSheetURI);
-  if (uri) {
-    nsRefPtr<nsCSSStyleSheet> sheet;
-    cssLoader->LoadSheetSync(uri, true, true, getter_AddRefs(sheet));
-    if (sheet) {
-      BeginUpdate(UPDATE_STYLE);
-      AddOnDemandBuiltInUASheet(sheet);
-      EndUpdate(UPDATE_STYLE);
-    }
-  }
+  BeginUpdate(UPDATE_STYLE);
+  AddOnDemandBuiltInUASheet(aSheet);
+  EndUpdate(UPDATE_STYLE);
 }
 
 void
 nsDocument::AddOnDemandBuiltInUASheet(nsCSSStyleSheet* aSheet)
 {
+  // Contains() takes nsISupport*, so annoyingly we have to cast here
+  MOZ_ASSERT(!mOnDemandBuiltInUASheets.Contains(static_cast<nsIStyleSheet*>(aSheet)));
+
   // Prepend here so that we store the sheets in mOnDemandBuiltInUASheets in
   // the same order that they should end up in the style set.
   mOnDemandBuiltInUASheets.InsertElementAt(0, aSheet);
@@ -11995,8 +11977,11 @@ nsDocument::DocAddSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
   aWindowSizes->mStyleSheetsSize +=
     mStyleSheets.SizeOfExcludingThis(SizeOfStyleSheetsElementIncludingThis,
                                      aWindowSizes->mMallocSizeOf);
+  // Note that we do not own the sheets pointed to by mOnDemandBuiltInUASheets
+  // (the nsLayoutStyleSheetCache singleton does) so pass nullptr as the
+  // aSizeOfElementIncludingThis callback argument.
   aWindowSizes->mStyleSheetsSize +=
-    mOnDemandBuiltInUASheets.SizeOfExcludingThis(SizeOfStyleSheetsElementIncludingThis,
+    mOnDemandBuiltInUASheets.SizeOfExcludingThis(nullptr,
                                                  aWindowSizes->mMallocSizeOf);
   aWindowSizes->mStyleSheetsSize +=
     mAdditionalSheets[eAgentSheet].
