@@ -50,6 +50,8 @@ function run_test() {
   gTestDirs = gTestDirsCompleteSuccess;
   setupUpdaterTest(FILE_COMPLETE_MAR, false, false);
 
+  createUpdaterINI(false);
+
   // For Mac OS X set the last modified time for the root directory to a date in
   // the past to test that the last modified time is updated on a successful
   // update (bug 600098).
@@ -94,6 +96,12 @@ function run_test() {
     checkUpdateLogContents(LOG_COMPLETE_SUCCESS);
   }
 
+  if (IS_MACOSX || IS_WIN) {
+    // Check that the post update process was not launched when staging an
+    // update.
+    do_check_false(getPostUpdateFile(".running").exists());
+  }
+
   // Switch the application to the staged application that was updated.
   gStageUpdate = false;
   gSwitchApp = true;
@@ -102,12 +110,29 @@ function run_test() {
   });
 }
 
+/**
+ * Checks if the post update binary was properly launched for the platforms that
+ * support launching post update process.
+ */
 function checkUpdateApplied() {
-  let applyToDir = getApplyDirFile();
+  if (IS_MACOSX || IS_WIN) {
+    gCheckFunc = finishCheckUpdateApplied;
+    checkPostUpdateAppLog();
+  } else {
+    finishCheckUpdateApplied();
+  }
+}
+
+/**
+ * Checks if the update has finished and if it has finished performs checks for
+ * the test.
+ */
+function finishCheckUpdateApplied() {
   if (IS_MACOSX) {
     logTestInfo("testing last modified time on the apply to directory has " +
                 "changed after a successful update (bug 600098)");
     let now = Date.now();
+    let applyToDir = getApplyDirFile();
     let timeDiff = Math.abs(applyToDir.lastModifiedTime - now);
     do_check_true(timeDiff < MAC_MAX_TIME_DIFFERENCE);
   }

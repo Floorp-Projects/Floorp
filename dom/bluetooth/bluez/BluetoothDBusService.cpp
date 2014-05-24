@@ -570,6 +570,21 @@ private:
   bool mDelay;
 };
 
+class InternalStopDiscoveryTask : public nsRunnable
+{
+  nsresult Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    BluetoothService* bs = BluetoothService::Get();
+    NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
+
+    bs->StopDiscoveryInternal(nullptr);
+
+    return NS_OK;
+  }
+};
+
 static bool
 IsDBusMessageError(DBusMessage* aMsg, DBusError* aErr, nsAString& aErrorStr)
 {
@@ -1809,6 +1824,17 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
                         errorStr,
                         sAdapterProperties,
                         ArrayLength(sAdapterProperties));
+
+    BluetoothNamedValue& property = v.get_ArrayOfBluetoothNamedValue()[0];
+    if (property.name().EqualsLiteral("Discovering")) {
+      // Special handling when discovery process is stopped by the stack. It
+      // does happen when the stack uses Periodic Inquiry instead of Inquiry.
+      bool isDiscovering = property.value();
+      if (!isDiscovering &&
+          NS_FAILED(NS_DispatchToMainThread(new InternalStopDiscoveryTask()))) {
+        BT_WARNING("Failed to dispatch to main thread!");
+      }
+    }
   } else if (dbus_message_is_signal(aMsg, DBUS_DEVICE_IFACE,
                                     "PropertyChanged")) {
     ParsePropertyChange(aMsg,
@@ -2404,6 +2430,20 @@ OnSendDiscoveryMessageReply(DBusMessage *aReply, void *aData)
     errorStr.AssignLiteral("SendDiscovery failed");
   }
 
+  // aData may be a nullptr because we may call StopDiscovery internally when
+  // receiving PropertyChanged event of property Discovering from BlueZ.
+  //
+  // Please see bug 942104 for more details.
+  if (!aData) {
+    BluetoothSignal signal(NS_LITERAL_STRING(DISCOVERY_STATE_CHANGED_ID),
+                           NS_LITERAL_STRING(KEY_ADAPTER), false);
+    nsresult rv =
+      NS_DispatchToMainThread(new DistributeBluetoothSignalTask(signal));
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    return;
+  }
+
   nsRefPtr<BluetoothReplyRunnable> runnable =
     dont_AddRef<BluetoothReplyRunnable>(static_cast<BluetoothReplyRunnable*>(aData));
 
@@ -2419,7 +2459,6 @@ public:
     , mRunnable(aRunnable)
   {
     MOZ_ASSERT(!mMessageName.IsEmpty());
-    MOZ_ASSERT(mRunnable);
   }
 
   void Run() MOZ_OVERRIDE
@@ -2453,8 +2492,11 @@ BluetoothDBusService::SendDiscoveryMessage(const char* aMessageName,
   MOZ_ASSERT(!sAdapterPath.IsEmpty());
 
   if (!IsReady()) {
-    NS_NAMED_LITERAL_STRING(errorStr, "Bluetooth service is not ready yet!");
-    DispatchBluetoothReply(aRunnable, BluetoothValue(), errorStr);
+    if (aRunnable) {
+      NS_NAMED_LITERAL_STRING(errorStr, "Bluetooth service is not ready yet!");
+      DispatchBluetoothReply(aRunnable, BluetoothValue(), errorStr);
+    }
+
     return NS_OK;
   }
 

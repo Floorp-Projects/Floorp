@@ -66,7 +66,7 @@
 <!ENTITY unknownSocketType.longDesc "<p>The site responded to the network request in an unexpected way and the browser cannot continue.</p>">
 
 <!ENTITY nssFailure2.title "Secure Connection Failed">
-<!ENTITY nssFailure2.longDesc "<p>The page you are trying to view cannot be shown because the authenticity of the received data could not be verified.</p><ul><li>Please contact the website owners to inform them of this problem.</li></ul>">
+<!ENTITY nssFailure2.longDesc2 "<p>The page you are trying to view cannot be shown because the authenticity of the received data could not be verified.</p><ul><li>Please contact the website owners to inform them of this problem.</li></ul>">
 
 <!ENTITY nssBadCert.title "Secure Connection Failed">
 <!ENTITY nssBadCert.longDesc2 "<ul>

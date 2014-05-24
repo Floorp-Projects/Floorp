@@ -14,6 +14,7 @@
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/dom/BluetoothAdapterBinding.h"
 #include "mozilla/dom/BluetoothDeviceEvent.h"
+#include "mozilla/dom/BluetoothDiscoveryStateChangedEvent.h"
 #include "mozilla/dom/BluetoothStatusChangedEvent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/LazyIdleThread.h"
@@ -330,6 +331,16 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
     for (uint32_t i = 0, propCount = arr.Length(); i < propCount; ++i) {
       SetPropertyByValue(arr[i]);
     }
+  } else if (aData.name().EqualsLiteral(DISCOVERY_STATE_CHANGED_ID)) {
+    MOZ_ASSERT(v.type() == BluetoothValue::Tbool);
+
+    BluetoothDiscoveryStateChangedEventInit init;
+    init.mDiscovering = v.get_bool();
+
+    nsRefPtr<BluetoothDiscoveryStateChangedEvent> event =
+      BluetoothDiscoveryStateChangedEvent::Constructor(
+        this, NS_LITERAL_STRING(DISCOVERY_STATE_CHANGED_ID), init);
+    DispatchTrustedEvent(event);
   } else if (aData.name().EqualsLiteral(PAIRED_STATUS_CHANGED_ID) ||
              aData.name().EqualsLiteral(HFP_STATUS_CHANGED_ID) ||
              aData.name().EqualsLiteral(SCO_STATUS_CHANGED_ID) ||

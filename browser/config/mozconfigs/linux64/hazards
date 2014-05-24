@@ -22,6 +22,9 @@ ac_add_options --enable-debug
 ac_add_options --enable-tests
 ac_add_options --enable-optimize
 
+# Until bug 1014134 is entirely fixed
+ac_add_options --disable-replace-malloc
+
 CFLAGS="$CFLAGS -Wno-attributes"
 CPPFLAGS="$CPPFLAGS -Wno-attributes"
 CXXFLAGS="$CXXFLAGS -Wno-attributes"

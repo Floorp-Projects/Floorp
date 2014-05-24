@@ -1372,7 +1372,7 @@ lg_GetAttributeValue(SDB *sdb, CK_OBJECT_HANDLE handle, CK_ATTRIBUTE *templ,
 {
     LGObjectCache *obj = lg_NewObjectCache(sdb, NULL, handle & ~LG_TOKEN_MASK);
     CK_RV crv, crvCollect = CKR_OK;
-    int i;
+    unsigned int i;
 
     if (obj == NULL) {
 	return CKR_OBJECT_HANDLE_INVALID;
@@ -1434,7 +1434,7 @@ lg_tokenMatch(SDB *sdb, const SECItem *dbKey, CK_OBJECT_HANDLE class,
 {
     PRBool match = PR_TRUE;
     LGObjectCache *obj = lg_NewObjectCache(sdb, dbKey, class);
-    int i;
+    unsigned int i;
 
     if (obj == NULL) {
 	return PR_FALSE;
@@ -1758,7 +1758,7 @@ lg_SetAttributeValue(SDB *sdb, CK_OBJECT_HANDLE handle,
     LGObjectCache *obj = lg_NewObjectCache(sdb, NULL, handle & ~LG_TOKEN_MASK);
     CK_RV crv, crvCollect = CKR_OK;
     PRBool writePrivate = PR_FALSE;
-    int i;
+    unsigned int i;
 
     if (obj == NULL) {
 	return CKR_OBJECT_HANDLE_INVALID;

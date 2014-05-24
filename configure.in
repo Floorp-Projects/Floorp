@@ -3208,7 +3208,6 @@ if test "$ac_cv_cpp_dynamic_cast_void_ptr" = yes ; then
    AC_DEFINE(HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR)
 fi
 
-
 dnl note that this one is reversed - if the test fails, then
 dnl we require implementations of unused virtual methods. Which
 dnl really blows because it means we'll have useless vtable
@@ -6964,6 +6963,10 @@ fi
 dnl ========================================================
 dnl = Enable dynamic replacement of malloc implementation
 dnl ========================================================
+if test -n "$NIGHTLY_BUILD" -a -n "$MOZ_MEMORY"; then
+  # Enable on central for the debugging opportunities it adds.
+  MOZ_REPLACE_MALLOC=1
+fi
 MOZ_ARG_ENABLE_BOOL(replace-malloc,
 [  --enable-replace-malloc   Enable ability to dynamically replace the malloc implementation],
     MOZ_REPLACE_MALLOC=1,
@@ -9121,7 +9124,13 @@ if test -z "$MOZ_NATIVE_JEMALLOC" -a "$MOZ_MEMORY" && test -n "$MOZ_JEMALLOC3" -
     mkdir -p memory/jemalloc
   fi
 
+  dnl jemalloc's configure uses $srcdir in AC_CONFIG_HEADERS, which syntax uses
+  dnl colons, conflicting with the windows-style path in $srcdir.
+  dnl Turn it into a msys path just for jemalloc's configure
+  _save_srcdir="$srcdir"
+  srcdir=`cd $srcdir; pwd`
   AC_OUTPUT_SUBDIRS(memory/jemalloc/src)
+  srcdir="$_save_srcdir"
   cache_file="$_save_cache_file"
   ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 fi

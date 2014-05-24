@@ -69,7 +69,7 @@
 #if defined(XP_MACOSX)
 // These functions are defined in launchchild_osx.mm
 void LaunchChild(int argc, char **argv);
-void LaunchMacPostProcess(const char* aAppExe);
+void LaunchMacPostProcess(const char* aAppBundle);
 #endif
 
 #ifndef _O_BINARY
@@ -3173,7 +3173,10 @@ int NS_main(int argc, NS_tchar **argv)
 #endif /* XP_WIN */
 #ifdef XP_MACOSX
     if (gSucceeded) {
-      LaunchMacPostProcess(argv[callbackIndex]);
+      char installDir[MAXPATHLEN];
+      if (GetInstallationDir(installDir)) {
+        LaunchMacPostProcess(installDir);
+      }
     }
 #endif /* XP_MACOSX */
 

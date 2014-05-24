@@ -295,8 +295,9 @@ function onLoad()
                             "WARNING: These logs may be large (>1GB).";
 
   const DMDEnabledDesc = "Run DMD analysis and save it to '" + DMDFile + "'.\n";
-  const DMDDisabledDesc = "DMD is not enabled. Please re-run with $DMD set " +
-                          "appropriately\n";
+  const DMDDisabledDesc = "DMD is not running. Please re-start with $DMD and " +
+                          "the other relevant environment variables set " +
+                          "appropriately.";
 
   let ops = appendElement(header, "div", "");
 
@@ -341,22 +342,19 @@ function onLoad()
   appendButton(row4, GCAndCCAllLogDesc,
                saveGCLogAndVerboseCCLog, "Save verbose", 'saveLogsVerbose');
 
-  // This only succeeds in --enable-dmd builds.
-  if (typeof DMDReportAndDump == 'function') {
-    let env = Components.classes["@mozilla.org/process/environment;1"]
-                        .getService(Components.interfaces.nsIEnvironment);
-
-    // Gray the button out if DMD isn't enabled at start-up.
-    let dmd = env.get('DMD');
-    let disabled = dmd === '' || dmd === '0';
-
+  // Three cases here:
+  // - DMD is disabled (i.e. not built): don't show the button.
+  // - DMD is enabled but is not running: show the button, but disable it.
+  // - DMD is enabled and is running: show the button and enable it.
+  if (gMgr.isDMDEnabled) {
     let row5 = appendElement(ops, "div", "opsRow");
 
     appendElementWithText(row5, "div", "opsRowLabel", "Save DMD output");
+    let enableButton = gMgr.isDMDRunning;
     let dmdButton =
-      appendButton(row5, disabled ? DMDDisabledDesc : DMDEnabledDesc, doDMD,
-                   "Save", "dmdButton");
-    dmdButton.disabled = disabled;
+      appendButton(row5, enableButton ? DMDEnabledDesc : DMDDisabledDesc,
+                   doDMD, "Save", "dmdButton");
+    dmdButton.disabled = !enableButton;
   }
 
   // Generate the main div, where content ("section" divs) will go.  It's
@@ -440,8 +438,12 @@ function saveGCLogAndVerboseCCLog()
 function doDMD()
 {
   updateMainAndFooter('Saving DMD output...', HIDE_FOOTER);
-  DMDReportAndDump('out.dmd');
-  updateMainAndFooter('Saved DMD output to ' + DMDFile, HIDE_FOOTER);
+  try {
+    let x = DMDReportAndDump('out.dmd');
+    updateMainAndFooter('Saved DMD output to ' + DMDFile, HIDE_FOOTER);
+  } catch (ex) {
+    updateMainAndFooter(ex.toString(), HIDE_FOOTER);
+  }
 }
 
 function dumpGCLogAndCCLog(aVerbose)

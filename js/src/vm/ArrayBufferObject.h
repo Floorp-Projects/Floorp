@@ -388,14 +388,14 @@ struct uint8_clamped {
 };
 
 /* Note that we can't use std::numeric_limits here due to uint8_clamped. */
-template<typename T> inline const bool TypeIsFloatingPoint() { return false; }
-template<> inline const bool TypeIsFloatingPoint<float>() { return true; }
-template<> inline const bool TypeIsFloatingPoint<double>() { return true; }
+template<typename T> inline bool TypeIsFloatingPoint() { return false; }
+template<> inline bool TypeIsFloatingPoint<float>() { return true; }
+template<> inline bool TypeIsFloatingPoint<double>() { return true; }
 
-template<typename T> inline const bool TypeIsUnsigned() { return false; }
-template<> inline const bool TypeIsUnsigned<uint8_t>() { return true; }
-template<> inline const bool TypeIsUnsigned<uint16_t>() { return true; }
-template<> inline const bool TypeIsUnsigned<uint32_t>() { return true; }
+template<typename T> inline bool TypeIsUnsigned() { return false; }
+template<> inline bool TypeIsUnsigned<uint8_t>() { return true; }
+template<> inline bool TypeIsUnsigned<uint16_t>() { return true; }
+template<> inline bool TypeIsUnsigned<uint32_t>() { return true; }
 
 } // namespace js
 

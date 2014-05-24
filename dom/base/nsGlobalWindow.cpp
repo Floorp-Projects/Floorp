@@ -11148,12 +11148,15 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     nsIPrincipal *principal;
     nsresult rv;
 
-    nsCOMPtr<nsIDOMStorageEvent> event = do_QueryInterface(aSubject, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsRefPtr<StorageEvent> event = static_cast<StorageEvent*>(aSubject);
+    if (!event) {
+      return NS_ERROR_FAILURE;
+    }
 
-    nsCOMPtr<nsIDOMStorage> changingStorage;
-    rv = event->GetStorageArea(getter_AddRefs(changingStorage));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIDOMStorage> changingStorage = event->GetStorageArea();
+    if (!changingStorage) {
+      return NS_ERROR_FAILURE;
+    }
 
     bool fireMozStorageChanged = false;
     principal = GetPrincipal();
@@ -11221,16 +11224,16 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
 
     // Clone the storage event included in the observer notification. We want
     // to dispatch clones rather than the original event.
-    rv = CloneStorageEvent(fireMozStorageChanged ?
-                           NS_LITERAL_STRING("MozStorageChanged") :
-                           NS_LITERAL_STRING("storage"),
-                           event);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsRefPtr<StorageEvent> newEvent =
+      CloneStorageEvent(fireMozStorageChanged ?
+                          NS_LITERAL_STRING("MozStorageChanged") :
+                          NS_LITERAL_STRING("storage"),
+                        event);
 
-    event->SetTrusted(true);
+    newEvent->SetTrusted(true);
 
     if (fireMozStorageChanged) {
-      WidgetEvent* internalEvent = event->GetInternalNSEvent();
+      WidgetEvent* internalEvent = newEvent->GetInternalNSEvent();
       internalEvent->mFlags.mOnlyChromeDispatch = true;
     }
 
@@ -11239,12 +11242,12 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       // store the domain in which the change happened and fire the
       // events if we're ever thawed.
 
-      mPendingStorageEvents.AppendObject(event);
+      mPendingStorageEvents.AppendElement(newEvent);
       return NS_OK;
     }
 
     bool defaultActionEnabled;
-    DispatchEvent((nsIDOMStorageEvent *)event, &defaultActionEnabled);
+    DispatchEvent(newEvent, &defaultActionEnabled);
 
     return NS_OK;
   }
@@ -11319,37 +11322,22 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_ERROR_FAILURE;
 }
 
-nsresult
+already_AddRefed<StorageEvent>
 nsGlobalWindow::CloneStorageEvent(const nsAString& aType,
-                                  nsCOMPtr<nsIDOMStorageEvent>& aEvent)
+                                  const nsRefPtr<StorageEvent>& aEvent)
 {
-  nsresult rv;
+  StorageEventInit dict;
 
-  bool canBubble;
-  bool cancelable;
-  nsAutoString key;
-  nsAutoString oldValue;
-  nsAutoString newValue;
-  nsAutoString url;
-  nsCOMPtr<nsIDOMStorage> storageArea;
+  dict.mBubbles = aEvent->Bubbles();
+  dict.mCancelable = aEvent->Cancelable();
+  aEvent->GetKey(dict.mKey);
+  aEvent->GetOldValue(dict.mOldValue);
+  aEvent->GetNewValue(dict.mNewValue);
+  aEvent->GetUrl(dict.mUrl);
+  dict.mStorageArea = aEvent->GetStorageArea();
 
-  nsCOMPtr<nsIDOMEvent> domEvent = do_QueryInterface(aEvent, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  domEvent->GetBubbles(&canBubble);
-  domEvent->GetCancelable(&cancelable);
-
-  aEvent->GetKey(key);
-  aEvent->GetOldValue(oldValue);
-  aEvent->GetNewValue(newValue);
-  aEvent->GetUrl(url);
-  aEvent->GetStorageArea(getter_AddRefs(storageArea));
-
-  NS_NewDOMStorageEvent(getter_AddRefs(domEvent), this, nullptr, nullptr);
-  aEvent = do_QueryInterface(domEvent);
-  return aEvent->InitStorageEvent(aType, canBubble, cancelable,
-                                  key, oldValue, newValue,
-                                  url, storageArea);
+  nsRefPtr<StorageEvent> event = StorageEvent::Constructor(this, aType, dict);
+  return event.forget();
 }
 
 nsresult
@@ -11357,7 +11345,7 @@ nsGlobalWindow::FireDelayedDOMEvents()
 {
   FORWARD_TO_INNER(FireDelayedDOMEvents, (), NS_ERROR_UNEXPECTED);
 
-  for (int32_t i = 0; i < mPendingStorageEvents.Count(); ++i) {
+  for (uint32_t i = 0, len = mPendingStorageEvents.Length(); i < len; ++i) {
     Observe(mPendingStorageEvents[i], "dom-storage2-changed", nullptr);
   }
 

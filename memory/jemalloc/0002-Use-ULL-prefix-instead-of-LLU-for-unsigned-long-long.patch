@@ -1,0 +1,46 @@
+diff --git a/include/jemalloc/internal/hash.h b/include/jemalloc/internal/hash.h
+--- a/include/jemalloc/internal/hash.h
++++ b/include/jemalloc/internal/hash.h
+@@ -71,19 +71,19 @@ hash_fmix_32(uint32_t h)
+ 	return (h);
+ }
+ 
+ JEMALLOC_INLINE uint64_t
+ hash_fmix_64(uint64_t k)
+ {
+ 
+ 	k ^= k >> 33;
+-	k *= QU(0xff51afd7ed558ccdLLU);
++	k *= QU(0xff51afd7ed558ccdULL);
+ 	k ^= k >> 33;
+-	k *= QU(0xc4ceb9fe1a85ec53LLU);
++	k *= QU(0xc4ceb9fe1a85ec53ULL);
+ 	k ^= k >> 33;
+ 
+ 	return (k);
+ }
+ 
+ JEMALLOC_INLINE uint32_t
+ hash_x86_32(const void *key, int len, uint32_t seed)
+ {
+@@ -242,18 +242,18 @@ hash_x64_128(const void *key, const int 
+     uint64_t r_out[2])
+ {
+ 	const uint8_t *data = (const uint8_t *) key;
+ 	const int nblocks = len / 16;
+ 
+ 	uint64_t h1 = seed;
+ 	uint64_t h2 = seed;
+ 
+-	const uint64_t c1 = QU(0x87c37b91114253d5LLU);
+-	const uint64_t c2 = QU(0x4cf5ad432745937fLLU);
++	const uint64_t c1 = QU(0x87c37b91114253d5ULL);
++	const uint64_t c2 = QU(0x4cf5ad432745937fULL);
+ 
+ 	/* body */
+ 	{
+ 		const uint64_t *blocks = (const uint64_t *) (data);
+ 		int i;
+ 
+ 		for (i = 0; i < nblocks; i++) {
+ 			uint64_t k1 = hash_get_block_64(blocks, i*2 + 0);

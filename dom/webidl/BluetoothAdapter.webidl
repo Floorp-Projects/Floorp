@@ -32,6 +32,7 @@ dictionary MediaPlayStatus
   DOMString   playStatus = "";
 };
 
+[Func="Navigator::HasBluetoothSupport"]
 interface BluetoothAdapter : EventTarget {
   readonly attribute DOMString      address;
   readonly attribute unsigned long  class;
@@ -49,6 +50,9 @@ interface BluetoothAdapter : EventTarget {
   readonly attribute any            uuids;
 
            attribute EventHandler   ondevicefound;
+
+  // Fired when discovery process has been done or has started
+           attribute EventHandler   ondiscoverystatechanged;
 
   // Fired when pairing process is completed
            attribute EventHandler   onpairedstatuschanged;
