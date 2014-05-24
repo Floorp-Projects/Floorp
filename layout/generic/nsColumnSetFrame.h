@@ -39,7 +39,7 @@ public:
    */
   virtual nscoord GetAvailableContentHeight(const nsHTMLReflowState& aReflowState);
 
-  virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
+  virtual nsContainerFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
     nsIFrame* frame = GetFirstPrincipalChild();
 
     // if no children return nullptr
