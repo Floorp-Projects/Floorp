@@ -182,7 +182,7 @@ nsDeckFrame::DoLayout(nsBoxLayoutState& aState)
   nsresult rv = nsBoxFrame::DoLayout(aState);
 
   // run though each child. Hide all but the selected one
-  nsIFrame* box = GetChildBox();
+  nsIFrame* box = nsBox::GetChildBox(this);
 
   nscoord count = 0;
   while (box) 
@@ -191,7 +191,7 @@ nsDeckFrame::DoLayout(nsBoxLayoutState& aState)
     if (count != mIndex) 
       HideBox(box);
 
-    box = box->GetNextBox();
+    box = GetNextBox(box);
     count++;
   }
 

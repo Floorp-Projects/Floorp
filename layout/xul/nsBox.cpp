@@ -139,7 +139,7 @@ nsBox::BeginLayout(nsBoxLayoutState& aState)
     // If the parent is dirty, all the children are dirty (nsHTMLReflowState
     // does this too).
     nsIFrame* box;
-    for (box = GetChildBox(); box; box = box->GetNextBox())
+    for (box = GetChildBox(this); box; box = GetNextBox(box))
       box->AddStateBits(NS_FRAME_IS_DIRTY);
   }
 
@@ -925,6 +925,28 @@ nsBox::BoundsCheck(const nsSize& aMinSize, const nsSize& aPrefSize, const nsSize
                 BoundsCheck(aMinSize.height, aPrefSize.height, aMaxSize.height));
 }
 
+/*static*/ nsIFrame*
+nsBox::GetChildBox(const nsIFrame* aFrame)
+{
+  // box layout ends at box-wrapped frames, so don't allow these frames
+  // to report child boxes.
+  return aFrame->IsBoxFrame() ? aFrame->GetFirstPrincipalChild() : nullptr;
+}
+
+/*static*/ nsIFrame*
+nsBox::GetNextBox(const nsIFrame* aFrame)
+{
+  return aFrame->GetParent() &&
+    aFrame->GetParent()->IsBoxFrame() ? aFrame->GetNextSibling() : nullptr;
+}
+
+/*static*/ nsIFrame*
+nsBox::GetParentBox(const nsIFrame* aFrame)
+{
+  return aFrame->GetParent() &&
+    aFrame->GetParent()->IsBoxFrame() ? aFrame->GetParent() : nullptr;
+}
+
 #ifdef DEBUG_LAYOUT
 nsresult
 nsBox::SetDebug(nsBoxLayoutState& aState, bool aDebug)
@@ -940,7 +962,7 @@ nsBox::GetDebugBoxAt( const nsPoint& aPoint,
   if (!thisRect.Contains(aPoint))
     return NS_ERROR_FAILURE;
 
-  nsIFrame* child = GetChildBox();
+  nsIFrame* child = nsBox::GetChildBox(this);
   nsIFrame* hit = nullptr;
 
   *aBox = nullptr;
@@ -950,7 +972,7 @@ nsBox::GetDebugBoxAt( const nsPoint& aPoint,
     if (NS_SUCCEEDED(rv) && hit) {
       *aBox = hit;
     }
-    child = child->GetNextBox();
+    child = GetNextBox(child);
   }
 
   // found a child

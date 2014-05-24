@@ -1445,7 +1445,7 @@ GetMouseThrough(const nsIFrame* aFrame)
     } else if (frame->GetStateBits() & NS_FRAME_MOUSE_THROUGH_NEVER) {
       return false;
     }
-    frame = frame->GetParentBox();
+    frame = nsBox::GetParentBox(frame);
   }
   return false;
 }
