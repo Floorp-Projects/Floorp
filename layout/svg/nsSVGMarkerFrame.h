@@ -176,7 +176,7 @@ public:
   virtual gfxMatrix GetCanvasTM(uint32_t aFor,
                                 nsIFrame* aTransformRoot = nullptr) MOZ_OVERRIDE
   {
-    nsSVGMarkerFrame* marker = static_cast<nsSVGMarkerFrame*>(mParent);
+    nsSVGMarkerFrame* marker = static_cast<nsSVGMarkerFrame*>(GetParent());
     return marker->GetCanvasTM(aFor, aTransformRoot);
   }
 };

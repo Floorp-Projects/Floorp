@@ -1386,7 +1386,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   }
 
   if (NS_UNCONSTRAINEDSIZE != aReflowState.ComputedHeight()
-      && (mParent->GetType() != nsGkAtoms::columnSetFrame ||
+      && (GetParent()->GetType() != nsGkAtoms::columnSetFrame ||
           aReflowState.parentReflowState->AvailableHeight() == NS_UNCONSTRAINEDSIZE)) {
     ComputeFinalHeight(aReflowState, &aState.mReflowStatus,
                        aState.mY + nonCarriedOutVerticalMargin,
@@ -6467,7 +6467,7 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
     bool haveFirstLetterStyle =
       (!pseudo ||
        (pseudo == nsCSSAnonBoxes::cellContent &&
-        mParent->StyleContext()->GetPseudo() == nullptr) ||
+        GetParent()->StyleContext()->GetPseudo() == nullptr) ||
        pseudo == nsCSSAnonBoxes::fieldsetContent ||
        pseudo == nsCSSAnonBoxes::scrolledContent ||
        pseudo == nsCSSAnonBoxes::columnContent ||
@@ -7224,7 +7224,7 @@ int32_t
 nsBlockFrame::GetDepth() const
 {
   int32_t depth = 0;
-  nsIFrame* parent = mParent;
+  nsIFrame* parent = GetParent();
   while (parent) {
     parent = parent->GetParent();
     depth++;
