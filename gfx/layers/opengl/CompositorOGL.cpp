@@ -307,24 +307,11 @@ CompositorOGL::Initialize()
   mGLContext->fGenBuffers(1, &mQuadVBO);
   mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mQuadVBO);
 
-  // 4 quads, with the number of the quad (vertexID) encoded in w.
   GLfloat vertices[] = {
-    0.0f, 0.0f, 0.0f, 0.0f,
-    1.0f, 0.0f, 0.0f, 0.0f,
-    0.0f, 1.0f, 0.0f, 0.0f,
-    1.0f, 1.0f, 0.0f, 0.0f,
-    0.0f, 0.0f, 0.0f, 1.0f,
-    1.0f, 0.0f, 0.0f, 1.0f,
-    0.0f, 1.0f, 0.0f, 1.0f,
-    1.0f, 1.0f, 0.0f, 1.0f,
-    0.0f, 0.0f, 0.0f, 2.0f,
-    1.0f, 0.0f, 0.0f, 2.0f,
-    0.0f, 1.0f, 0.0f, 2.0f,
-    1.0f, 1.0f, 0.0f, 2.0f,
-    0.0f, 0.0f, 0.0f, 3.0f,
-    1.0f, 0.0f, 0.0f, 3.0f,
-    0.0f, 1.0f, 0.0f, 3.0f,
-    1.0f, 1.0f, 0.0f, 3.0f,
+    /* First quad vertices */
+    0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+    /* Then quad texcoords */
+    0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
   };
   HeapCopyOfStackArray<GLfloat> verticesOnHeap(vertices);
   mGLContext->fBufferData(LOCAL_GL_ARRAY_BUFFER,
@@ -397,17 +384,20 @@ DecomposeIntoNoRepeatRects(const Rect& aRect,
 {
   Rect texCoordRect = aTexCoordRect;
 
-  // Move the texture coordinates within the range (0,1). For GL_REPEAT this
-  // doesn't matter but the code below assumes it.
-  texCoordRect.x -= uint32_t(texCoordRect.x);
-  texCoordRect.y -= uint32_t(texCoordRect.y);
+  // We want to normalize here instead of clamp because the rects we were
+  // given assume GL_REPEAT, which we explicitly won't use and instead
+  // manually split into sub-rects.
+  while (texCoordRect.x >= 1.0f)
+    texCoordRect.x -= 1.0f;
+  while (texCoordRect.y >= 1.0f)
+    texCoordRect.y -= 1.0f;
 
   // If the texture should be flipped, it will have negative height. Detect that
   // here and compensate for it. We will flip each rect as we emit it.
   bool flipped = false;
   if (texCoordRect.height < 0) {
     flipped = true;
-    texCoordRect.y += texCoordRect.height;
+    texCoordRect.y = texCoordRect.YMost();
     texCoordRect.height = -texCoordRect.height;
   }
 
@@ -534,7 +524,9 @@ CompositorOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
                                          aTexCoordRect,
                                          layerRects,
                                          textureRects);
-  BindAndDrawQuads(aProg, rects, layerRects, textureRects);
+  for (int n = 0; n < rects; ++n) {
+    BindAndDrawQuad(aProg, layerRects[n], textureRects[n]);
+  }
 }
 
 void
@@ -1498,27 +1490,26 @@ CompositorOGL::BindQuadVBO() {
 
 void
 CompositorOGL::QuadVBOVerticesAttrib(GLuint aAttribIndex) {
-  mGLContext->fVertexAttribPointer(aAttribIndex, 4,
-                                   LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
-                                   (GLvoid*) 0);
+  mGLContext->fVertexAttribPointer(aAttribIndex, 2,
+                                    LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
+                                    (GLvoid*) QuadVBOVertexOffset());
 }
 
 void
 CompositorOGL::QuadVBOTexCoordsAttrib(GLuint aAttribIndex) {
-  mGLContext->fVertexAttribPointer(aAttribIndex, 4,
-                                   LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
-                                   (GLvoid*) 0);
+  mGLContext->fVertexAttribPointer(aAttribIndex, 2,
+                                    LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
+                                    (GLvoid*) QuadVBOTexCoordOffset());
 }
 
 void
-CompositorOGL::BindAndDrawQuads(ShaderProgramOGL *aProg,
-                                int aQuads,
-                                const Rect* aLayerRects,
-                                const Rect* aTextureRects)
+CompositorOGL::BindAndDrawQuad(ShaderProgramOGL *aProg,
+                               const Rect& aLayerRect,
+                               const Rect& aTextureRect)
 {
   NS_ASSERTION(aProg->HasInitialized(), "Shader program not correctly initialized");
 
-  aProg->SetLayerRects(aLayerRects);
+  aProg->SetLayerRect(aLayerRect);
 
   GLuint vertAttribIndex = aProg->AttribLocation(ShaderProgramOGL::VertexCoordAttrib);
   GLuint texCoordAttribIndex = aProg->AttribLocation(ShaderProgramOGL::TexCoordAttrib);
@@ -1530,11 +1521,11 @@ CompositorOGL::BindAndDrawQuads(ShaderProgramOGL *aProg,
     QuadVBOTexCoordsAttrib(texCoordAttribIndex);
     mGLContext->fEnableVertexAttribArray(texCoordAttribIndex);
 
-    aProg->SetTextureRects(aTextureRects);
+    aProg->SetTextureRect(aTextureRect);
   }
 
   mGLContext->fEnableVertexAttribArray(vertAttribIndex);
-  mGLContext->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4 * aQuads);
+  mGLContext->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
 }
 
 GLuint
