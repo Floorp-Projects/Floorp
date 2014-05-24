@@ -5,3 +5,10 @@
 <!ENTITY aboutDevices.title              "Devices">
 <!ENTITY aboutDevices.header             "Your devices">
 <!ENTITY aboutDevices.refresh            "Refresh">
+<!ENTITY aboutDevices.addDeviceHeader    "Add a device">
+<!ENTITY aboutDevices.roku               "Roku">
+<!ENTITY aboutDevices.chromecast         "Chromecast">
+<!-- Localization note (aboutDevices.placeholder): this is the hint shown to the
+     user prompting them to input the IP address of a casting device. -->
+<!ENTITY aboutDevices.placeholder        "IP address">
+<!ENTITY aboutDevices.connectManually    "Connect manually">
