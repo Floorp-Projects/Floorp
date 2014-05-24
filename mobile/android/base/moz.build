@@ -415,6 +415,7 @@ gbjar.sources += [
     'widget/DoorHanger.java',
     'widget/EllipsisTextView.java',
     'widget/FaviconView.java',
+    'widget/FloatingHintEditText.java',
     'widget/FlowLayout.java',
     'widget/GeckoActionProvider.java',
     'widget/GeckoPopupMenu.java',

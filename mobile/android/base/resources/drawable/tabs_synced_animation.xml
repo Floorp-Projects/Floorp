@@ -1,0 +1,44 @@
+<animation-list xmlns:android="http://schemas.android.com/apk/res/android"
+    android:oneshot="false" >
+
+    <!-- Forgive me, but this is actually a reasonable way to get a
+         frame-by-frame rotation animation without adding lots of small
+         resources. The inner drawables rotate the master drawable. -->
+    <item
+        android:drawable="@drawable/tabs_synced"
+        android:duration="100"/>
+    <item
+        android:drawable="@drawable/tabs_synced_030"
+        android:duration="100"/>
+    <item
+        android:drawable="@drawable/tabs_synced_060"
+        android:duration="100"/>
+    <item
+        android:drawable="@drawable/tabs_synced_090"
+        android:duration="100"/>
+    <item
+        android:drawable="@drawable/tabs_synced_120"
+        android:duration="100"/>
+    <item
+        android:drawable="@drawable/tabs_synced_150"
+        android:duration="100"/>
+    <item
+        android:drawable="@drawable/tabs_synced_180"
+        android:duration="100"/>
+    <item
+        android:drawable="@drawable/tabs_synced_210"
+        android:duration="100"/>
+    <item
+        android:drawable="@drawable/tabs_synced_240"
+        android:duration="100"/>
+    <item
+        android:drawable="@drawable/tabs_synced_270"
+        android:duration="100"/>
+    <item
+        android:drawable="@drawable/tabs_synced_300"
+        android:duration="100"/>
+    <item
+        android:drawable="@drawable/tabs_synced_330"
+        android:duration="100"/>
+
+</animation-list>

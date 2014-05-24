@@ -5,28 +5,41 @@
 package org.mozilla.gecko.tabspanel;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.TabsAccessor;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
-import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
+import org.mozilla.gecko.tabspanel.TabsPanel.Panel;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.GeckoSwipeRefreshLayout;
 
 import android.accounts.Account;
 import android.content.Context;
+import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.Drawable;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 
 /**
- * Provides a container to wrap the list of synced tabs and provide swipe-to-refresh support. The
- * only child view should be an instance of {@link RemoteTabsList}.
+ * Provides a container to wrap the list of synced tabs and provide
+ * swipe-to-refresh support. The only child view should be an instance of
+ * {@link RemoteTabsList}.
  */
 public class RemoteTabsContainerPanel extends GeckoSwipeRefreshLayout
                                  implements TabsPanel.PanelView {
     private static final String[] STAGES_TO_SYNC_ON_REFRESH = new String[] { "tabs" };
 
+    /**
+     * Refresh indicators (the swipe-to-refresh "laser show" and the spinning
+     * icon) will never be shown for less than the following duration, in
+     * milliseconds.
+     */
+    private static final long MINIMUM_REFRESH_INDICATOR_DURATION_IN_MS = 12 * 100; // 12 frames, 100 ms each.
+
     private final Context context;
     private final RemoteTabsSyncObserver syncListener;
+    private TabsPanel panel;
     private RemoteTabsList list;
 
     // Whether or not a sync status listener is attached.
@@ -54,8 +67,8 @@ public class RemoteTabsContainerPanel extends GeckoSwipeRefreshLayout
 
     @Override
     public boolean canChildScrollUp() {
-        // We are not supporting swipe-to-refresh for old sync. This disables the swipe gesture if
-        // no FxA are detected.
+        // We are not supporting swipe-to-refresh for old sync. This disables
+        // the swipe gesture if no FxA are detected.
         if (FirefoxAccounts.firefoxAccountsExist(getContext())) {
             return super.canChildScrollUp();
         } else {
@@ -65,12 +78,18 @@ public class RemoteTabsContainerPanel extends GeckoSwipeRefreshLayout
 
     @Override
     public void setTabsPanel(TabsPanel panel) {
+        this.panel = panel;
         list.setTabsPanel(panel);
     }
 
     @Override
     public void show() {
+        // Start fetching remote tabs.
         TabsAccessor.getTabs(context, list);
+        // The user can trigger a tabs sync, so we want to be very certain the
+        // locally-persisted tabs are fresh (tab writes are batched and delayed).
+        Tabs.getInstance().persistAllTabs();
+
         if (!isListening) {
             isListening = true;
             FirefoxAccounts.addSyncStatusListener(syncListener);
@@ -103,6 +122,10 @@ public class RemoteTabsContainerPanel extends GeckoSwipeRefreshLayout
     }
 
     private class RemoteTabsSyncObserver implements FirefoxAccounts.SyncStatusListener {
+        // Written on the main thread, and read off the main thread, but no need
+        // to synchronize.
+        protected volatile long lastSyncStarted = 0;
+
         @Override
         public Context getContext() {
             return RemoteTabsContainerPanel.this.getContext();
@@ -113,16 +136,50 @@ public class RemoteTabsContainerPanel extends GeckoSwipeRefreshLayout
             return FirefoxAccounts.getFirefoxAccount(getContext());
         }
 
-        public void onSyncFinished() {
+        public void onSyncStarted() {
             ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    TabsAccessor.getTabs(context, list);
-                    setRefreshing(false);
+                    lastSyncStarted = System.currentTimeMillis();
+
+                    // Get the sync icon and start the drawable's animation.
+                    final Drawable iconDrawable = panel.getIconDrawable(Panel.REMOTE_TABS);
+                    if (iconDrawable instanceof AnimationDrawable) {
+                        ((AnimationDrawable) iconDrawable).start();
+                    }
                 }
             });
         }
 
-        public void onSyncStarted() {}
+        public void onSyncFinished() {
+            final Handler uiHandler = ThreadUtils.getUiHandler();
+
+            // We want to update the list immediately ...
+            uiHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    TabsAccessor.getTabs(context, list);
+                }
+            });
+
+            // ... but we want the refresh indicators to persist for long enough
+            // to be visible.
+            final long last = lastSyncStarted;
+            final long now = System.currentTimeMillis();
+            final long delay = Math.max(0, MINIMUM_REFRESH_INDICATOR_DURATION_IN_MS - (now - last));
+
+            uiHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    setRefreshing(false);
+
+                    // Get the sync icon and stop the drawable's animation.
+                    final Drawable iconDrawable = panel.getIconDrawable(Panel.REMOTE_TABS);
+                    if (iconDrawable instanceof AnimationDrawable) {
+                        ((AnimationDrawable) iconDrawable).stop();
+                    }
+                }
+            }, delay);
+        }
     }
 }

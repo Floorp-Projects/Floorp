@@ -50,6 +50,7 @@
   <!-- Hint colors -->
   <color name="text_color_hint">#666666</color>
   <color name="text_color_hint_inverse">#7F828A</color>
+  <color name="text_color_hint_floating_focused">#33b5e5</color>
 
   <!-- Highlight colors -->
   <color name="text_color_highlight">#FF9500</color>
