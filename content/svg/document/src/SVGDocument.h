@@ -17,6 +17,11 @@ namespace dom {
 class SVGDocument MOZ_FINAL : public XMLDocument
 {
 public:
+  SVGDocument()
+    : XMLDocument("image/svg+xml")
+  {
+  }
+
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL API
