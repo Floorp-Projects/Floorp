@@ -798,7 +798,7 @@ public abstract class GeckoApp
         });
     }
 
-    protected ButtonToast getButtonToast() {
+    public ButtonToast getButtonToast() {
         if (mToast != null) {
             return mToast;
         }

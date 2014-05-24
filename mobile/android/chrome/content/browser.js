@@ -485,11 +485,16 @@ var BrowserApp = {
       function(aTarget) {
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
         ContentAreaUtils.urlSecurityCheck(url, aTarget.ownerDocument.nodePrincipal);
-        BrowserApp.addTab(url, { selected: false, parentId: BrowserApp.selectedTab.id });
+        let tab = BrowserApp.addTab(url, { selected: false, parentId: BrowserApp.selectedTab.id });
 
         let newtabStrings = Strings.browser.GetStringFromName("newtabpopup.opened");
         let label = PluralForm.get(1, newtabStrings).replace("#1", 1);
-        NativeWindow.toast.show(label, "short");
+        NativeWindow.toast.show(label, "long", {
+          button: {
+            icon: "drawable://select_opened_tab",
+            callback: () => { BrowserApp.selectTab(tab); },
+          }
+        });
       });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.openInPrivateTab"),
@@ -497,11 +502,16 @@ var BrowserApp = {
       function(aTarget) {
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
         ContentAreaUtils.urlSecurityCheck(url, aTarget.ownerDocument.nodePrincipal);
-        BrowserApp.addTab(url, { selected: false, parentId: BrowserApp.selectedTab.id, isPrivate: true });
+        let tab = BrowserApp.addTab(url, { selected: false, parentId: BrowserApp.selectedTab.id, isPrivate: true });
 
         let newtabStrings = Strings.browser.GetStringFromName("newprivatetabpopup.opened");
         let label = PluralForm.get(1, newtabStrings).replace("#1", 1);
-        NativeWindow.toast.show(label, "short");
+        NativeWindow.toast.show(label, "long", {
+          button: {
+            icon: "drawable://select_opened_tab",
+            callback: () => { BrowserApp.selectTab(tab); },
+          }
+        });
       });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyLink"),
@@ -1764,12 +1774,20 @@ var NativeWindow = {
 
       if (aOptions && aOptions.button) {
         msg.button = {
-          label: aOptions.button.label,
           id: uuidgen.generateUUID().toString(),
+        };
+
+        // null is badly handled by the receiver, so try to avoid including nulls.
+        if (aOptions.button.label) {
+          msg.button.label = aOptions.button.label;
+        }
+
+        if (aOptions.button.icon) {
           // If the caller specified a button, make sure we convert any chrome urls
           // to jar:jar urls so that the frontend can show them
-          icon: aOptions.button.icon ? resolveGeckoURI(aOptions.button.icon) : null,
+          msg.button.icon = resolveGeckoURI(aOptions.button.icon);
         };
+
         this._callbacks[msg.button.id] = aOptions.button.callback;
       }
 

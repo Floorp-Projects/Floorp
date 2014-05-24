@@ -364,7 +364,6 @@ browser.jar:
   skin/classic/browser/devtools/itemArrow-dark-ltr.svg      (../shared/devtools/images/itemArrow-dark-ltr.svg)
   skin/classic/browser/devtools/itemArrow-rtl.svg           (../shared/devtools/images/itemArrow-rtl.svg)
   skin/classic/browser/devtools/itemArrow-ltr.svg           (../shared/devtools/images/itemArrow-ltr.svg)
-  skin/classic/browser/devtools/background-noise-toolbar.png (../shared/devtools/images/background-noise-toolbar.png)
   skin/classic/browser/devtools/noise.png                   (../shared/devtools/images/noise.png)
   skin/classic/browser/devtools/dropmarker.png              (../shared/devtools/images/dropmarker.png)
   skin/classic/browser/devtools/layoutview.css              (../shared/devtools/layoutview.css)

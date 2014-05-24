@@ -18,7 +18,7 @@
 }
 
 .theme-dark .splitview-nav-container {
-  background: url(background-noise-toolbar.png), #343c45;
+  background-color: #343c45; /* Toolbars */
 }
 
 .splitview-nav {

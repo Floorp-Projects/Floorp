@@ -62,6 +62,7 @@
      We can't use android plural forms, sadly. See bug #753859. -->
 <!ENTITY num_tabs2 "&formatD; tabs">
 <!ENTITY new_tab_opened "New tab opened">
+<!ENTITY new_private_tab_opened "New private tab opened">
 
 <!ENTITY settings "Settings">
 <!ENTITY settings_title "Settings">
@@ -115,6 +116,8 @@
 <!ENTITY pref_home_updates "Automatic updates">
 <!ENTITY pref_home_updates_enabled "Enabled">
 <!ENTITY pref_home_updates_wifi "Only over Wi-Fi">
+<!ENTITY pref_home_suggested_sites "Show site suggestions">
+<!ENTITY pref_home_suggested_sites_summary "Display shortcuts to sites on your homepage that we think you might find interesting">
 
 <!-- Localization note: These are shown in the left sidebar on tablets -->
 <!ENTITY pref_header_customize "Customize">
