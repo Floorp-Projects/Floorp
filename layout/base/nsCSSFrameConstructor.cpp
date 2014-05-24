@@ -9370,8 +9370,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
   if (ShouldSuppressFloatingOfDescendants(aFrame)) {
     aState.PushFloatContainingBlock(nullptr, floatSaveState);
   } else if (aFrame->IsFloatContainingBlock()) {
-    aState.PushFloatContainingBlock(static_cast<nsContainerFrame*>(aFrame),
-                                    floatSaveState);
+    aState.PushFloatContainingBlock(aFrame, floatSaveState);
   }
 
   nsFrameConstructorState::PendingBindingAutoPusher pusher(aState,
