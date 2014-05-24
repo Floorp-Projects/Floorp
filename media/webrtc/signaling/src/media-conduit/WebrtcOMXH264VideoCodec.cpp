@@ -834,9 +834,13 @@ WebrtcOMXH264VideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
     }
     int32_t timeSinceLastIDR = (now - mLastIDRTime).ToMilliseconds();
 
-    // balance asking for IDRs too often against direction and amount of bitrate change
-    // heuristic, could use tuning perhaps
-    if ((mBitRateKbps < (mBitRateAtLastIDR * 8)/10) ||
+    // Balance asking for IDRs too often against direction and amount of bitrate change.
+
+    // HACK for bug 1014921: 8x10 has encode/decode mismatches that build up errors
+    // if you go too long without an IDR.  In normal use, bitrate will change often
+    // enough to never hit this time limit.
+    if ((timeSinceLastIDR > 3000) ||
+        (mBitRateKbps < (mBitRateAtLastIDR * 8)/10) ||
         (timeSinceLastIDR < 300 && mBitRateKbps < (mBitRateAtLastIDR * 9)/10) ||
         (timeSinceLastIDR < 1000 && mBitRateKbps < (mBitRateAtLastIDR * 97)/100) ||
         (timeSinceLastIDR >= 1000 && mBitRateKbps < mBitRateAtLastIDR) ||
