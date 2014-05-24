@@ -423,15 +423,8 @@ int VCMSessionInfo::InsertPacket(const VCMPacket& packet,
   if (packet.codec == kVideoCodecH264) {
     RTPVideoHeaderH264 h264 = packet.codecSpecificHeader.codecHeader.H264;
     uint8_t nal_type = h264.nalu_header & RtpFormatH264::kH264NAL_TypeMask;
-    bool potential_start = false;
-    if (nal_type == RtpFormatH264::kH264NALU_SPS ||
-        nal_type == RtpFormatH264::kH264NALU_PPS ||
-        packet.codecSpecificHeader.codecHeader.H264.single_nalu) {
-      potential_start = true;
-    } else {
-      potential_start = packet.isFirstPacket;
-    }
-    if (potential_start) {
+
+    if (packet.isFirstPacket) {
       if (HaveFirstPacket() == false ||
           IsNewerSequenceNumber(first_packet_seq_num_, packet.seqNum)) {
         first_packet_seq_num_ = packet.seqNum;
