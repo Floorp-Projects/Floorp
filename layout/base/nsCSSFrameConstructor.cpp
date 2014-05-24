@@ -1254,7 +1254,7 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
     return;
   }
 
-  nsIFrame* containingBlock = aFrameItems.containingBlock;
+  nsContainerFrame* containingBlock = aFrameItems.containingBlock;
 
   NS_ASSERTION(containingBlock,
                "Child list without containing block?");
