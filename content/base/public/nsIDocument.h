@@ -116,6 +116,7 @@ class NodeFilter;
 class NodeIterator;
 class ProcessingInstruction;
 class StyleSheetList;
+class SVGDocument;
 class Touch;
 class TouchList;
 class TreeWalker;
@@ -2289,6 +2290,7 @@ public:
   uint32_t ChildElementCount();
 
   virtual nsHTMLDocument* AsHTMLDocument() { return nullptr; }
+  virtual mozilla::dom::SVGDocument* AsSVGDocument() { return nullptr; }
 
   virtual JSObject* WrapObject(JSContext *aCx) MOZ_OVERRIDE;
 
