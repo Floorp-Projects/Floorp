@@ -202,7 +202,7 @@ XULDocument::XULDocument(void)
     mCharacterSet.AssignLiteral("UTF-8");
 
     mDefaultElementType = kNameSpaceID_XUL;
-    mIsXUL = true;
+    mType = eXUL;
 
     mDelayFrameLoaderInitialization = true;
 
