@@ -433,7 +433,7 @@ SplitInlineAncestors(nsIFrame* aParent,
   nsIFrame* newParent;
 
   while (IsBidiSplittable(parent)) {
-    nsIFrame* grandparent = parent->GetParent();
+    nsContainerFrame* grandparent = parent->GetParent();
     NS_ASSERTION(grandparent, "Couldn't get parent's parent in nsBidiPresUtils::SplitInlineAncestors");
     
     // Split the child list after |frame|, unless it is the last child.
@@ -540,7 +540,7 @@ CreateContinuation(nsIFrame*  aFrame,
   nsIPresShell *presShell = presContext->PresShell();
   NS_ASSERTION(presShell, "PresShell must be set on PresContext before calling nsBidiPresUtils::CreateContinuation");
 
-  nsIFrame* parent = aFrame->GetParent();
+  nsContainerFrame* parent = aFrame->GetParent();
   NS_ASSERTION(parent, "Couldn't get frame parent in nsBidiPresUtils::CreateContinuation");
 
   nsresult rv = NS_OK;

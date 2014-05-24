@@ -17,7 +17,7 @@
 
 using namespace mozilla;
 
-nsIFrame*
+ViewportFrame*
 NS_NewViewportFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) ViewportFrame(aContext);

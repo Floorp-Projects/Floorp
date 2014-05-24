@@ -75,7 +75,7 @@ private:
 };
 
 //---------------------------------------------------------
-nsIFrame*
+nsContainerFrame*
 NS_NewListControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   nsListControlFrame* it =

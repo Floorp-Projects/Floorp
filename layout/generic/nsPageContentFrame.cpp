@@ -9,7 +9,7 @@
 #include "nsIPresShell.h"
 #include "nsSimplePageSequenceFrame.h"
 
-nsIFrame*
+nsPageContentFrame*
 NS_NewPageContentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsPageContentFrame(aContext);

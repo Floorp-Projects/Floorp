@@ -22,7 +22,7 @@ nsGfxButtonControlFrame::nsGfxButtonControlFrame(nsStyleContext* aContext):
 {
 }
 
-nsIFrame*
+nsContainerFrame*
 NS_NewGfxButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsGfxButtonControlFrame(aContext);

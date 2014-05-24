@@ -21,7 +21,7 @@ typedef nsSVGDisplayContainerFrame nsSVGOuterSVGFrameBase;
 class nsSVGOuterSVGFrame : public nsSVGOuterSVGFrameBase,
                            public nsISVGSVGFrame
 {
-  friend nsIFrame*
+  friend nsContainerFrame*
   NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   nsSVGOuterSVGFrame(nsStyleContext* aContext);
@@ -233,7 +233,7 @@ typedef nsSVGDisplayContainerFrame nsSVGOuterSVGAnonChildFrameBase;
 class nsSVGOuterSVGAnonChildFrame
   : public nsSVGOuterSVGAnonChildFrameBase
 {
-  friend nsIFrame*
+  friend nsContainerFrame*
   NS_NewSVGOuterSVGAnonChildFrame(nsIPresShell* aPresShell,
                                   nsStyleContext* aContext);
 

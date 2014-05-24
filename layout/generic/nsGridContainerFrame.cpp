@@ -23,7 +23,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsGridContainerFrame)
 
-nsIFrame*
+nsContainerFrame*
 NS_NewGridContainerFrame(nsIPresShell* aPresShell,
                          nsStyleContext* aContext)
 {

@@ -28,7 +28,8 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
-  friend nsIFrame* NS_NewInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsInlineFrame* NS_NewInlineFrame(nsIPresShell* aPresShell,
+                                          nsStyleContext* aContext);
 
   // nsIFrame overrides
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,

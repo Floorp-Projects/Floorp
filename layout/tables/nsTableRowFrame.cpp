@@ -1435,7 +1435,7 @@ nsTableRowFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayI
 
 /* ----- global methods ----- */
 
-nsIFrame* 
+nsTableRowFrame* 
 NS_NewTableRowFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsTableRowFrame(aContext);

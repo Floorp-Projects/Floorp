@@ -122,7 +122,8 @@ public:
     *
     * @return           the frame that was created
     */
-  friend nsIFrame* NS_NewTableFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsTableFrame* NS_NewTableFrame(nsIPresShell* aPresShell,
+                                        nsStyleContext* aContext);
 
   /** sets defaults for table-specific style.
     * @see nsIFrame::Init 
