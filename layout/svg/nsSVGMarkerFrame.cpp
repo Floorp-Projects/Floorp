@@ -51,9 +51,9 @@ nsSVGMarkerFrame::AttributeChanged(int32_t  aNameSpaceID,
 
 #ifdef DEBUG
 void
-nsSVGMarkerFrame::Init(nsIContent* aContent,
-                       nsIFrame* aParent,
-                       nsIFrame* aPrevInFlow)
+nsSVGMarkerFrame::Init(nsIContent*       aContent,
+                       nsContainerFrame* aParent,
+                       nsIFrame*         aPrevInFlow)
 {
   NS_ASSERTION(aContent->IsSVG(nsGkAtoms::marker), "Content is not an SVG marker");
 
@@ -255,9 +255,9 @@ NS_IMPL_FRAMEARENA_HELPERS(nsSVGMarkerAnonChildFrame)
 
 #ifdef DEBUG
 void
-nsSVGMarkerAnonChildFrame::Init(nsIContent* aContent,
-                                nsIFrame* aParent,
-                                nsIFrame* aPrevInFlow)
+nsSVGMarkerAnonChildFrame::Init(nsIContent*       aContent,
+                                nsContainerFrame* aParent,
+                                nsIFrame*         aPrevInFlow)
 {
   NS_ABORT_IF_FALSE(aParent->GetType() == nsGkAtoms::svgMarkerFrame,
                     "Unexpected parent");

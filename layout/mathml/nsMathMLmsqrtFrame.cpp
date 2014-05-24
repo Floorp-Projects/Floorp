@@ -37,9 +37,9 @@ nsMathMLmsqrtFrame::~nsMathMLmsqrtFrame()
 }
 
 void
-nsMathMLmsqrtFrame::Init(nsIContent*      aContent,
-                         nsIFrame*        aParent,
-                         nsIFrame*        aPrevInFlow)
+nsMathMLmsqrtFrame::Init(nsIContent*       aContent,
+                         nsContainerFrame* aParent,
+                         nsIFrame*         aPrevInFlow)
 {
   nsMathMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
   AllocateMathMLChar(NOTATION_RADICAL);
