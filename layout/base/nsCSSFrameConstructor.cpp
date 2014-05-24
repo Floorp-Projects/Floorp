@@ -590,7 +590,7 @@ FindFirstNonBlock(const nsFrameList& aList)
 }
 
 inline void
-SetInitialSingleChild(nsIFrame* aParent, nsIFrame* aFrame)
+SetInitialSingleChild(nsContainerFrame* aParent, nsIFrame* aFrame)
 {
   NS_PRECONDITION(!aFrame->GetNextSibling(), "Should be using a frame list");
   nsFrameList temp(aFrame, aFrame);
@@ -3714,6 +3714,10 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
       nsIFrame* blockFrame =
         NS_NewBlockFormattingContext(mPresShell, blockContext);
 
+#ifdef DEBUG
+      nsContainerFrame* containerFrame = do_QueryFrame(newFrame);
+      MOZ_ASSERT(containerFrame);
+#endif
       nsContainerFrame* container = static_cast<nsContainerFrame*>(newFrame);
       InitAndRestoreFrame(aState, content, container, blockFrame);
 
@@ -8164,11 +8168,11 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext*    aPresContext,
       nsTableFrame::RegisterPositionedTablePart(newFrame);
     }
   } else if (nsGkAtoms::tableRowFrame == frameType) {
-    newFrame = NS_NewTableRowFrame(shell, styleContext);
+    nsTableRowFrame* rowFrame = NS_NewTableRowFrame(shell, styleContext);
 
-    newFrame->Init(content, aParentFrame, aFrame);
-    if (newFrame->GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN) {
-      nsTableFrame::RegisterPositionedTablePart(newFrame);
+    rowFrame->Init(content, aParentFrame, aFrame);
+    if (rowFrame->GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN) {
+      nsTableFrame::RegisterPositionedTablePart(rowFrame);
     }
 
     // Create a continuing frame for each table cell frame
@@ -8178,35 +8182,35 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext*    aPresContext,
       // See if it's a table cell frame
       if (IS_TABLE_CELL(cellFrame->GetType())) {
         nsIFrame* continuingCellFrame =
-          CreateContinuingFrame(aPresContext, cellFrame,
-                                static_cast<nsContainerFrame*>(newFrame));
+          CreateContinuingFrame(aPresContext, cellFrame, rowFrame);
         newChildList.AddChild(continuingCellFrame);
       }
       cellFrame = cellFrame->GetNextSibling();
     }
 
-    // Set the table cell's initial child list
-    newFrame->SetInitialChildList(kPrincipalList, newChildList);
+    rowFrame->SetInitialChildList(kPrincipalList, newChildList);
+    newFrame = rowFrame;
 
   } else if (IS_TABLE_CELL(frameType)) {
     // Warning: If you change this and add a wrapper frame around table cell
     // frames, make sure Bug 368554 doesn't regress!
     // See IsInAutoWidthTableCellForQuirk() in nsImageFrame.cpp.
-    newFrame = NS_NewTableCellFrame(shell, styleContext, IsBorderCollapse(aParentFrame));
+    nsTableCellFrame* cellFrame =
+      NS_NewTableCellFrame(shell, styleContext, IsBorderCollapse(aParentFrame));
 
-    newFrame->Init(content, aParentFrame, aFrame);
-    if (newFrame->GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN) {
-      nsTableFrame::RegisterPositionedTablePart(newFrame);
+    cellFrame->Init(content, aParentFrame, aFrame);
+    if (cellFrame->GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN) {
+      nsTableFrame::RegisterPositionedTablePart(cellFrame);
     }
 
     // Create a continuing area frame
     nsIFrame* blockFrame = aFrame->GetFirstPrincipalChild();
     nsIFrame* continuingBlockFrame =
       CreateContinuingFrame(aPresContext, blockFrame,
-                            static_cast<nsContainerFrame*>(newFrame));
+                            static_cast<nsContainerFrame*>(cellFrame));
 
-    // Set the table cell's initial child list
-    SetInitialSingleChild(newFrame, continuingBlockFrame);
+    SetInitialSingleChild(cellFrame, continuingBlockFrame);
+    newFrame = cellFrame;
   } else if (nsGkAtoms::lineFrame == frameType) {
     newFrame = NS_NewFirstLineFrame(shell, styleContext);
     newFrame->Init(content, aParentFrame, aFrame);
@@ -8229,23 +8233,23 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext*    aPresContext,
                                 aParentFrame, aFrame,
                                 aFrame->GetStateBits() & PLACEHOLDER_TYPE_MASK);
   } else if (nsGkAtoms::fieldSetFrame == frameType) {
-    newFrame = NS_NewFieldSetFrame(shell, styleContext);
+    nsContainerFrame* fieldset = NS_NewFieldSetFrame(shell, styleContext);
 
-    newFrame->Init(content, aParentFrame, aFrame);
+    fieldset->Init(content, aParentFrame, aFrame);
 
     // Create a continuing area frame
     // XXXbz we really shouldn't have to do this by hand!
-    nsIFrame* blockFrame = GetFieldSetBlockFrame(aFrame);
+    nsContainerFrame* blockFrame = GetFieldSetBlockFrame(aFrame);
     if (blockFrame) {
       nsIFrame* continuingBlockFrame =
-        CreateContinuingFrame(aPresContext, blockFrame,
-                              static_cast<nsContainerFrame*>(newFrame));
+        CreateContinuingFrame(aPresContext, blockFrame, fieldset);
       // Set the fieldset's initial child list
-      SetInitialSingleChild(newFrame, continuingBlockFrame);
+      SetInitialSingleChild(fieldset, continuingBlockFrame);
     } else {
       MOZ_ASSERT(aFrame->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER,
                  "FieldSet block may only be null for overflow containers");
     }
+    newFrame = fieldset;
   } else if (nsGkAtoms::legendFrame == frameType) {
     newFrame = NS_NewLegendFrame(shell, styleContext);
     newFrame->Init(content, aParentFrame, aFrame);
