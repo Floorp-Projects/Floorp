@@ -157,7 +157,7 @@ public:
   virtual nsStyleContext* GetAdditionalStyleContext(int32_t aIndex) const MOZ_OVERRIDE;
   virtual void SetAdditionalStyleContext(int32_t aIndex,
                                          nsStyleContext* aStyleContext) MOZ_OVERRIDE;
-  virtual void SetParent(nsIFrame* aParent) MOZ_OVERRIDE;
+  virtual void SetParent(nsContainerFrame* aParent) MOZ_OVERRIDE;
   virtual nscoord GetBaseline() const MOZ_OVERRIDE;
   virtual const nsFrameList& GetChildList(ChildListID aListID) const MOZ_OVERRIDE;
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const MOZ_OVERRIDE;
@@ -603,6 +603,8 @@ public:
       aFrame->GetType() == nsGkAtoms::blockFrame;
   }
 
+  virtual nsILineIterator* GetLineIterator() MOZ_OVERRIDE;
+
 protected:
 
   // Test if we are selecting a table object:
@@ -647,8 +649,6 @@ private:
                  bool aMoveFrame = true);
 
   NS_IMETHODIMP RefreshSizeCache(nsBoxLayoutState& aState);
-
-  virtual nsILineIterator* GetLineIterator() MOZ_OVERRIDE;
 
 #ifdef DEBUG_FRAME_DUMP
 public:

@@ -1578,7 +1578,7 @@ nsMathMLContainerFrame::ReportInvalidChildError(nsIAtom* aChildTag)
 
 //==========================
 
-nsIFrame*
+nsContainerFrame*
 NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
                            nsFrameState aFlags)
 {
@@ -1593,7 +1593,7 @@ NS_QUERYFRAME_HEAD(nsMathMLmathBlockFrame)
   NS_QUERYFRAME_ENTRY(nsMathMLmathBlockFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
-nsIFrame*
+nsContainerFrame*
 NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsMathMLmathInlineFrame(aContext);

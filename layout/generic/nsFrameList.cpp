@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsFrameList.h"
-#include "nsIFrame.h"
+#include "nsContainerFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -314,7 +314,7 @@ nsFrameList::ApplySetParent(nsIFrame* aParent) const
   NS_ASSERTION(aParent, "null ptr");
 
   for (nsIFrame* f = FirstChild(); f; f = f->GetNextSibling()) {
-    f->SetParent(aParent);
+    f->SetParent(static_cast<nsContainerFrame*>(aParent)); // XXX static_cast will be removed in a later patch
   }
 }
 

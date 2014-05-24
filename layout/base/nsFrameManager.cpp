@@ -36,6 +36,7 @@
 #include "nsFrameManager.h"
 #include "GeckoProfiler.h"
 #include "nsIStatefulFrame.h"
+#include "nsContainerFrame.h"
 
   #ifdef DEBUG
     //#define DEBUG_UNDISPLAYED_MAP

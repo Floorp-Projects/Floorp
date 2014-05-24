@@ -99,7 +99,9 @@ public:
   line_iterator line(nsLineBox* aList) { return mLines.begin(aList); }
   reverse_line_iterator rline(nsLineBox* aList) { return mLines.rbegin(aList); }
 
-  friend nsIFrame* NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, nsFrameState aFlags);
+  friend nsBlockFrame* NS_NewBlockFrame(nsIPresShell* aPresShell,
+                                        nsStyleContext* aContext,
+                                        nsFrameState aFlags);
 
   // nsQueryFrame
   NS_DECL_QUERYFRAME
