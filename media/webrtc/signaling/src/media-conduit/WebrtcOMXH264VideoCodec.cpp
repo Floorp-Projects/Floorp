@@ -47,6 +47,7 @@ namespace mozilla {
 
 static const uint8_t kNALStartCode[] = { 0x00, 0x00, 0x00, 0x01 };
 enum {
+  kNALTypeIDR = 5,
   kNALTypeSPS = 7,
   kNALTypePPS = 8,
 };
@@ -324,11 +325,19 @@ public:
     memcpy(dst, aEncoded._buffer, aEncoded._length);
     int64_t inputTimeUs = (aEncoded._timeStamp * 1000ll) / 90; // 90kHz -> us.
     // Assign input flags according to input buffer NALU and frame types.
-    uint32_t flags = 0;
-    if (aEncoded._frameType == webrtc::kKeyFrame) {
-      int nalType = dst[sizeof(kNALStartCode)] & 0x1f;
-      flags = (nalType == kNALTypeSPS || nalType == kNALTypePPS) ?
-              MediaCodec::BUFFER_FLAG_CODECCONFIG : MediaCodec::BUFFER_FLAG_SYNCFRAME;
+    uint32_t flags;
+    int nalType = dst[sizeof(kNALStartCode)] & 0x1f;
+    switch (nalType) {
+      case kNALTypeSPS:
+      case kNALTypePPS:
+        flags = MediaCodec::BUFFER_FLAG_CODECCONFIG;
+        break;
+      case kNALTypeIDR:
+        flags = MediaCodec::BUFFER_FLAG_SYNCFRAME;
+        break;
+      default:
+        flags = 0;
+        break;
     }
     CODEC_LOGD("Decoder input: %d bytes (NAL 0x%02x), time %lld (%u), flags 0x%x",
                aEncoded._length, dst[sizeof(kNALStartCode)], inputTimeUs, aEncoded._timeStamp, flags);
@@ -555,7 +564,7 @@ public:
     : OMXOutputDrain()
     , mOMX(aOMX)
     , mCallback(aCallback)
-    , mIsPrevOutputParamSets(false)
+    , mIsPrevFrameParamSets(false)
   {}
 
 protected:
@@ -600,6 +609,7 @@ protected:
       {
         MonitorAutoLock lock(mMonitor);
 #ifdef OMX_OUTPUT_TIMESTAMPS_WORK
+        // will sps/pps have the same timestamp as their iframe?
         do {
           if (mInputFrames.empty()) {
             // Let's assume it was the last item in the queue, but leave it there
@@ -635,16 +645,22 @@ protected:
       encoded._completeFrame = true;
 
       CODEC_LOGD("Encoded frame: %d bytes, %dx%d, is_param %d, is_iframe %d, timestamp %u, captureTimeMs %u",
-                 output.Length(), encoded._encodedWidth, encoded._encodedHeight,
+                 encoded._length, encoded._encodedWidth, encoded._encodedHeight,
                  isParamSets, isIFrame, encoded._timeStamp, encoded.capture_time_ms_);
       // Prepend SPS/PPS to I-frames unless they were sent last time.
-      SendEncodedDataToCallback(encoded, isIFrame && !mIsPrevOutputParamSets);
-      mIsPrevOutputParamSets = isParamSets;
+      SendEncodedDataToCallback(encoded, isIFrame && !mIsPrevFrameParamSets);
+      // This will be true only for the frame following a paramset block!  So if we're
+      // working with a correct encoder that generates SPS/PPS/IDR always, we
+      // won't try to insert.
+      mIsPrevFrameParamSets = isParamSets;
+      if (isParamSets) {
+        // copy off the param sets for inserting later
+        mParamSets.Clear();
+        mParamSets.AppendElements(encoded._buffer, encoded._length);
+      }
     }
 
-    // Tell base class not to pop input for parameter sets blob because they
-    // don't have corresponding input.
-    return !isParamSets;
+    return !isParamSets; // not really needed anymore
   }
 
 private:
@@ -659,13 +675,12 @@ private:
 
     if (aPrependParamSets) {
       // Insert current parameter sets in front of the input encoded data.
-      nsTArray<uint8_t> paramSets;
-      mOMX->GetCodecConfig(&paramSets);
-      MOZ_ASSERT(paramSets.Length() > 4); // Start code + ...
-      // Set buffer range.
-      nalu._buffer = paramSets.Elements();
-      nalu._length = paramSets.Length();
+      MOZ_ASSERT(mParamSets.Length() > 4); // Start code + ...
+      nalu._length = mParamSets.Length();
+      nalu._buffer = mParamSets.Elements();
       // Break into NALUs and send.
+      CODEC_LOGD("Prepending SPS/PPS: %d bytes, timestamp %u, captureTimeMs %u",
+                 nalu._length, nalu._timeStamp, nalu.capture_time_ms_);
       SendEncodedDataToCallback(nalu, false);
     }
 
@@ -683,7 +698,8 @@ private:
 
   OMXVideoEncoder* mOMX;
   webrtc::EncodedImageCallback* mCallback;
-  bool mIsPrevOutputParamSets;
+  bool mIsPrevFrameParamSets;
+  nsTArray<uint8_t> mParamSets;
 };
 
 // Encoder.
@@ -833,6 +849,9 @@ WebrtcOMXH264VideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
         (timeSinceLastIDR < 500 && mBitRateKbps > (mBitRateAtLastIDR * 13)/10) ||
         (timeSinceLastIDR < 1000 && mBitRateKbps > (mBitRateAtLastIDR * 11)/10) ||
         (timeSinceLastIDR >= 1000 && mBitRateKbps > mBitRateAtLastIDR)) {
+      CODEC_LOGD("Requesting IDR for bitrate change from %u to %u (time since last idr %dms)",
+                 mBitRateAtLastIDR, mBitRateKbps, timeSinceLastIDR);
+
       mOMX->RequestIDRFrame();
       mLastIDRTime = now;
       mBitRateAtLastIDR = mBitRateKbps;
