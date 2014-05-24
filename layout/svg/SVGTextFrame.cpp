@@ -3872,13 +3872,13 @@ SVGTextFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
     }
   }
   if (!mCanvasTM) {
-    NS_ASSERTION(mParent, "null parent");
+    NS_ASSERTION(GetParent(), "null parent");
     NS_ASSERTION(!(aFor == FOR_OUTERSVG_TM &&
                    (GetStateBits() & NS_FRAME_IS_NONDISPLAY)),
                  "should not call GetCanvasTM(FOR_OUTERSVG_TM) when we are "
                  "non-display");
 
-    nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
+    nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(GetParent());
     dom::SVGTextContentElement *content = static_cast<dom::SVGTextContentElement*>(mContent);
 
     gfxMatrix tm = content->PrependLocalTransformsTo(

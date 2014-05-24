@@ -269,7 +269,7 @@ public:
     // GetCanvasTM returns the transform from an SVG frame to the frame's
     // nsSVGOuterSVGFrame's content box, so we do not include any x/y offset
     // set on us for any CSS border or padding on our nsSVGOuterSVGFrame.
-    return static_cast<nsSVGOuterSVGFrame*>(mParent)->GetCanvasTM(aFor, aTransformRoot);
+    return static_cast<nsSVGOuterSVGFrame*>(GetParent())->GetCanvasTM(aFor, aTransformRoot);
   }
 
   virtual bool HasChildrenOnlyTransform(Matrix *aTransform) const MOZ_OVERRIDE;

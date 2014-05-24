@@ -56,8 +56,8 @@ nsSVGGenericContainerFrame::GetCanvasTM(uint32_t aFor,
     }
   }
 
-  NS_ASSERTION(mParent, "null parent");
+  NS_ASSERTION(GetParent(), "null parent");
   
-  return static_cast<nsSVGContainerFrame*>(mParent)->
+  return static_cast<nsSVGContainerFrame*>(GetParent())->
       GetCanvasTM(aFor, aTransformRoot);
 }
