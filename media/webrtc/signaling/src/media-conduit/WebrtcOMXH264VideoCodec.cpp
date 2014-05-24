@@ -251,11 +251,11 @@ public:
   static status_t ExtractPicDimensions(uint8_t* aData, size_t aSize,
                                        int32_t* aWidth, int32_t* aHeight)
   {
-    MOZ_ASSERT(aData && aSize > 1);
-    if ((aData[0] & 0x1f) != kNALTypeSPS) {
+    MOZ_ASSERT(aData && aSize > sizeof(kNALStartCode));
+    if ((aData[sizeof(kNALStartCode)] & 0x1f) != kNALTypeSPS) {
       return ERROR_MALFORMED;
     }
-    sp<ABuffer> sps = new ABuffer(aData, aSize);
+    sp<ABuffer> sps = new ABuffer(&aData[sizeof(kNALStartCode)], aSize - sizeof(kNALStartCode));
     FindAVCDimensions(sps, aWidth, aHeight);
     return OK;
   }
@@ -314,15 +314,14 @@ public:
     }
 
     // Prepend start code to buffer.
-    size_t size = aEncoded._length + sizeof(kNALStartCode);
+    MOZ_ASSERT(memcmp(aEncoded._buffer, kNALStartCode, sizeof(kNALStartCode)) == 0);
     const sp<ABuffer>& omxIn = mInputBuffers.itemAt(index);
-    MOZ_ASSERT(omxIn->capacity() >= size);
-    omxIn->setRange(0, size);
+    MOZ_ASSERT(omxIn->capacity() >= aEncoded._length);
+    omxIn->setRange(0, aEncoded._length);
     // Copying is needed because MediaCodec API doesn't support externallay
     // allocated buffer as input.
     uint8_t* dst = omxIn->data();
-    memcpy(dst, kNALStartCode, sizeof(kNALStartCode));
-    memcpy(dst + sizeof(kNALStartCode), aEncoded._buffer, aEncoded._length);
+    memcpy(dst, aEncoded._buffer, aEncoded._length);
     int64_t inputTimeUs = (aEncoded._timeStamp * 1000ll) / 90; // 90kHz -> us.
     // Assign input flags according to input buffer NALU and frame types.
     uint32_t flags = 0;
@@ -332,8 +331,8 @@ public:
               MediaCodec::BUFFER_FLAG_CODECCONFIG : MediaCodec::BUFFER_FLAG_SYNCFRAME;
     }
     CODEC_LOGD("Decoder input: %d bytes (NAL 0x%02x), time %lld (%u), flags 0x%x",
-               size, dst[sizeof(kNALStartCode)], inputTimeUs, aEncoded._timeStamp, flags);
-    err = mCodec->queueInputBuffer(index, 0, size, inputTimeUs, flags);
+               aEncoded._length, dst[sizeof(kNALStartCode)], inputTimeUs, aEncoded._timeStamp, flags);
+    err = mCodec->queueInputBuffer(index, 0, aEncoded._length, inputTimeUs, flags);
     if (err == OK && !(flags & MediaCodec::BUFFER_FLAG_CODECCONFIG)) {
       if (mOutputDrain == nullptr) {
         mOutputDrain = new OutputDrain(this);
@@ -678,20 +677,6 @@ private:
     while (getNextNALUnit(&data, &size, &nalStart, &nalSize, true) == OK) {
       nalu._buffer = const_cast<uint8_t*>(nalStart);
       nalu._length = nalSize;
-      // [Workaround] Jitter buffer code in WebRTC.org cannot correctly deliver
-      // SPS/PPS/I-frame NALUs that share same timestamp. Change timestamp value
-      // for SPS/PPS to avoid it.
-      // TODO: remove when bug 985254 lands. The patch there has same workaround.
-      switch (nalStart[0] & 0x1f) {
-        case 7:
-          nalu._timeStamp -= 100;
-          break;
-        case 8:
-          nalu._timeStamp -= 50;
-          break;
-        default:
-          break;
-      }
       mCallback->Encoded(nalu, nullptr, nullptr);
     }
   }
@@ -1045,7 +1030,8 @@ WebrtcOMXH264VideoDecoder::Decode(const webrtc::EncodedImage& aInputImage,
                                                              &width, &height);
     if (result != OK) {
       // Cannot config decoder because SPS haven't been seen.
-      CODEC_LOGI("WebrtcOMXH264VideoDecoder:%p missing SPS in input", this);
+      CODEC_LOGI("WebrtcOMXH264VideoDecoder:%p missing SPS in input (nal 0x%02x, len %d)",
+                 this, aInputImage._buffer[sizeof(kNALStartCode)] & 0x1f, aInputImage._length);
       return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
     }
     RefPtr<WebrtcOMXDecoder> omx = new WebrtcOMXDecoder(MEDIA_MIMETYPE_VIDEO_AVC,
