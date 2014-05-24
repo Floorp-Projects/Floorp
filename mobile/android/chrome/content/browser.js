@@ -3310,11 +3310,13 @@ Tab.prototype = {
 
     let scrollx = this.browser.contentWindow.scrollX * zoom;
     let scrolly = this.browser.contentWindow.scrollY * zoom;
+    let screenWidth = gScreenWidth - gViewportMargins.left - gViewportMargins.right;
+    let screenHeight = gScreenHeight - gViewportMargins.top - gViewportMargins.bottom;
     let displayPortMargins = {
       left: scrollx - aDisplayPort.left,
       top: scrolly - aDisplayPort.top,
-      right: aDisplayPort.right - (scrollx + gScreenWidth),
-      bottom: aDisplayPort.bottom - (scrolly + gScreenHeight)
+      right: aDisplayPort.right - (scrollx + screenWidth),
+      bottom: aDisplayPort.bottom - (scrolly + screenHeight)
     };
 
     if (this._oldDisplayPortMargins == null ||
@@ -3426,13 +3428,6 @@ Tab.prototype = {
         cwu.setResolution(aZoom / window.devicePixelRatio, aZoom / window.devicePixelRatio);
       }
     }
-  },
-
-  getPageSize: function(aDocument, aDefaultWidth, aDefaultHeight) {
-    let body = aDocument.body || { scrollWidth: aDefaultWidth, scrollHeight: aDefaultHeight };
-    let html = aDocument.documentElement || { scrollWidth: aDefaultWidth, scrollHeight: aDefaultHeight };
-    return [Math.max(body.scrollWidth, html.scrollWidth),
-      Math.max(body.scrollHeight, html.scrollHeight)];
   },
 
   getViewport: function() {
@@ -4279,21 +4274,22 @@ Tab.prototype = {
     if (this.browser.contentDocument) {
       // this may get run during a Viewport:Change message while the document
       // has not yet loaded, so need to guard against a null document.
-      let [pageWidth, pageHeight] = this.getPageSize(this.browser.contentDocument, viewportW, viewportH);
+      let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      let cssPageRect = cwu.getRootBounds();
 
       // In the situation the page size equals or exceeds the screen size,
       // lengthen the viewport on the corresponding axis to include the margins.
       // The '- 0.5' is to account for rounding errors.
-      if (pageWidth * this._zoom > gScreenWidth - 0.5) {
+      if (cssPageRect.width * this._zoom > gScreenWidth - 0.5) {
         screenW = gScreenWidth;
         this.viewportExcludesHorizontalMargins = false;
       }
-      if (pageHeight * this._zoom > gScreenHeight - 0.5) {
+      if (cssPageRect.height * this._zoom > gScreenHeight - 0.5) {
         screenH = gScreenHeight;
         this.viewportExcludesVerticalMargins = false;
       }
 
-      minScale = screenW / pageWidth;
+      minScale = screenW / cssPageRect.width;
     }
     minScale = this.clampZoom(minScale);
     viewportH = Math.max(viewportH, screenH / minScale);
