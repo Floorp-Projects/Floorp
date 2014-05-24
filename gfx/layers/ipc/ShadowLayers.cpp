@@ -428,20 +428,6 @@ ShadowLayerForwarder::RemoveTextureFromCompositable(CompositableClient* aComposi
 }
 
 void
-ShadowLayerForwarder::RemoveTextureFromCompositableAsync(AsyncTransactionTracker* aAsyncTransactionTracker,
-                                                     CompositableClient* aCompositable,
-                                                     TextureClient* aTexture)
-{
-  mTxn->AddEdit(OpRemoveTextureAsync(CompositableClient::GetTrackersHolderId(aCompositable->GetIPDLActor()),
-                                     aAsyncTransactionTracker->GetId(),
-                                     nullptr, aCompositable->GetIPDLActor(),
-                                     nullptr, aTexture->GetIPDLActor()));
-  // Hold AsyncTransactionTracker until receving reply
-  CompositableClient::HoldUntilComplete(aCompositable->GetIPDLActor(),
-                                        aAsyncTransactionTracker);
-}
-
-void
 ShadowLayerForwarder::RemoveTexture(TextureClient* aTexture)
 {
   MOZ_ASSERT(aTexture);
