@@ -812,7 +812,7 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
                                 nullptr);
 
         layers::CompositorParent::ShutDown();
-        layers::AsyncTransactionTracker::Finalize();
+        layers::AsyncTransactionTrackersHolder::Finalize();
 
         gXPCOMThreadsShutDown = true;
         NS_ProcessPendingEvents(thread);
