@@ -781,7 +781,7 @@ public:
   virtual Element* FindContentForSubDocument(nsIDocument *aDocument) const MOZ_OVERRIDE;
   virtual Element* GetRootElementInternal() const MOZ_OVERRIDE;
 
-  virtual void EnsureOnDemandBuiltInUASheet(const char *aStyleSheetURI) MOZ_OVERRIDE;
+  virtual void EnsureOnDemandBuiltInUASheet(nsCSSStyleSheet* aSheet) MOZ_OVERRIDE;
 
   /**
    * Get the (document) style sheets owned by this document.

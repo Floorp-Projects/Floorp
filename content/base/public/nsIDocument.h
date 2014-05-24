@@ -777,7 +777,7 @@ public:
    * TODO We can get rid of the whole concept of delayed loading if we fix
    * bug 77999.
    */
-  virtual void EnsureOnDemandBuiltInUASheet(const char *aStyleSheetURI) = 0;
+  virtual void EnsureOnDemandBuiltInUASheet(nsCSSStyleSheet* aSheet) = 0;
 
   /**
    * Get the number of (document) stylesheets
