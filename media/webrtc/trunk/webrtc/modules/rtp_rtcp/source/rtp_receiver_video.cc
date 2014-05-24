@@ -277,12 +277,23 @@ int32_t RTPReceiverVideo::ReceiveH264Codec(WebRtcRTPHeader* rtp_header,
     h264_header->single_nalu        = true;
 
     // WebRtcRTPHeader
-    if (nal_type == RtpFormatH264::kH264NALU_SPS ||
-        nal_type == RtpFormatH264::kH264NALU_PPS ||
-        nal_type == RtpFormatH264::kH264NALU_IDR) {
-      rtp_header->frameType = kVideoFrameKey; // not really....
-    } else {
-      rtp_header->frameType = kVideoFrameDelta;
+    switch (nal_type) {
+      // TODO(jesup): Evil hack.  The jitter buffer *really* doesn't like
+      // "frames" to have the same timestamps.  NOTE: this only works
+      // for SPS/PPS/IDR, not for PPS/SPS/IDR.  Keep this until all issues
+      // are resolved in the jitter buffer
+      case RtpFormatH264::kH264NALU_SPS:
+        rtp_header->header.timestamp -= 10;
+        // fall through
+      case RtpFormatH264::kH264NALU_PPS:
+        rtp_header->header.timestamp -= 10;
+        // fall through
+      case RtpFormatH264::kH264NALU_IDR:
+        rtp_header->frameType = kVideoFrameKey;
+        break;
+      default:
+        rtp_header->frameType = kVideoFrameDelta;
+        break;
     }
   }
 
