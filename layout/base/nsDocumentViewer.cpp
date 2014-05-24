@@ -2188,7 +2188,22 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
   styleSet->BeginUpdate();
   
   // The document will fill in the document sheets when we create the presshell
-  
+
+  if (aDocument->IsBeingUsedAsImage()) {
+    MOZ_ASSERT(aDocument->IsSVG(),
+               "Do we want to skip most sheets for this new image type?");
+
+    // SVG-as-an-image must be kept as light and small as possible. We
+    // deliberately skip loading everything and leave svg.css (and html.css and
+    // xul.css) to be loaded on-demand.
+    // XXXjwatt Nothing else is loaded on-demand, but I don't think that
+    // should matter for SVG-as-an-image. If it does, I want to know why!
+
+    // Caller will handle calling EndUpdate, per contract.
+    *aStyleSet = styleSet;
+    return NS_OK;
+  }
+
   // Handle the user sheets.
   nsCSSStyleSheet* sheet = nullptr;
   if (nsContentUtils::IsInChromeDocshell(aDocument)) {

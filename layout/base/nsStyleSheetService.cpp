@@ -97,6 +97,9 @@ nsStyleSheetService::FindSheetByURI(const nsCOMArray<nsIStyleSheet> &sheets,
 nsresult
 nsStyleSheetService::Init()
 {
+  // If you make changes here, consider whether
+  // SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded should be updated too.
+
   // Child processes get their style sheets from the ContentParent.
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     return NS_OK;
