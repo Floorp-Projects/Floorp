@@ -743,6 +743,8 @@ bool ViECodecImpl::CodecValid(const VideoCodec& video_codec) {
     return false;
   } else if ((video_codec.codecType == kVideoCodecVP8 &&
               strncmp(video_codec.plName, "VP8", 4) == 0) ||
+             (video_codec.codecType == kVideoCodecH264 &&
+              strncmp(video_codec.plName, "H264", 4) == 0) ||
              (video_codec.codecType == kVideoCodecI420 &&
               strncmp(video_codec.plName, "I420", 4) == 0)) {
     // OK.
