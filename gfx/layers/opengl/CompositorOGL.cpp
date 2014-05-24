@@ -376,6 +376,12 @@ SetRects(int n,
   aTextureRects[n] = Rect(tx0, ty0, tx1 - tx0, ty1 - ty0);
 }
 
+static inline bool
+FuzzyEqual(float a, float b)
+{
+  return fabs(a - b) < 0.0001f;
+}
+
 static int
 DecomposeIntoNoRepeatRects(const Rect& aRect,
                            const Rect& aTexCoordRect,
@@ -389,61 +395,47 @@ DecomposeIntoNoRepeatRects(const Rect& aRect,
   bool flipped = false;
   if (texCoordRect.height < 0) {
     flipped = true;
-    texCoordRect.y = texCoordRect.YMost();
+    texCoordRect.y += texCoordRect.height;
     texCoordRect.height = -texCoordRect.height;
   }
 
+  // Wrap the texture coordinates so they are within [0,1] and cap width/height
+  // at 1. We rely on this below.
+  texCoordRect = Rect(Point(WrapTexCoord(texCoordRect.x),
+                            WrapTexCoord(texCoordRect.y)),
+                      Size(std::min(texCoordRect.width, 1.0f),
+                           std::min(texCoordRect.height, 1.0f)));
+
+  NS_ASSERTION(texCoordRect.x >= 0.0f && texCoordRect.x <= 1.0f &&
+               texCoordRect.y >= 0.0f && texCoordRect.y <= 1.0f &&
+               texCoordRect.width >= 0.0f && texCoordRect.width <= 1.0f &&
+               texCoordRect.height >= 0.0f && texCoordRect.height <= 1.0f &&
+               texCoordRect.XMost() >= 0.0f && texCoordRect.XMost() <= 2.0f &&
+               texCoordRect.YMost() >= 0.0f && texCoordRect.YMost() <= 2.0f,
+               "We just wrapped the texture coordinates, didn't we?");
+
+  // Get the top left and bottom right points of the rectangle. Note that
+  // tl.x/tl.y are within [0,1] but br.x/br.y are within [0,2].
   Point tl = texCoordRect.TopLeft();
   Point br = texCoordRect.BottomRight();
 
-  // Chen check if we wrap in either the x or y axis; if we do,
-  // then also use fmod to figure out the "true" non-wrapping
-  // texture coordinates.
-  bool xwrap = false, ywrap = false;
-
-  if (texCoordRect.x < 0 ||
-      texCoordRect.x > 1.0f ||
-      texCoordRect.XMost() < 0 ||
-      texCoordRect.XMost() > 1.0f) {
-    xwrap = true;
-    tl = Point(WrapTexCoord(tl.x), tl.y);
-    br = Point(WrapTexCoord(br.x), br.y);
-  }
-
-  if (texCoordRect.y < 0 ||
-      texCoordRect.y > 1.0f ||
-      texCoordRect.YMost() < 0 ||
-      texCoordRect.YMost() > 1.0f) {
-    ywrap = true;
-    tl = Point(tl.x, WrapTexCoord(tl.y));
-    br = Point(br.x, WrapTexCoord(br.y));
-  }
-
   NS_ASSERTION(tl.x >= 0.0f && tl.x <= 1.0f &&
                tl.y >= 0.0f && tl.y <= 1.0f &&
-               br.x >= 0.0f && br.x <= 1.0f &&
-               br.y >= 0.0f && br.y <= 1.0f,
+               br.x >= tl.x && br.x <= 2.0f &&
+               br.y >= tl.y && br.y <= 2.0f &&
+               br.x - tl.x <= 1.0f &&
+               br.y - tl.y <= 1.0f,
                "Somehow generated invalid texture coordinates");
 
-  // If xwrap is false, the texture will be sampled from tl.x
-  // .. br.x.  If xwrap is true, then it will be split into tl.x
-  // .. 1.0, and 0.0 .. br.x.  Same for the Y axis.  The
-  // destination rectangle is also split appropriately, according
-  // to the calculated xmid/ymid values.
+  // Then check if we wrap in either the x or y axis.
+  bool xwrap = br.x > 1.0f;
+  bool ywrap = br.y > 1.0f;
 
-  // There isn't a 1:1 mapping between tex coords and destination coords;
-  // when computing midpoints, we have to take that into account.  We
-  // need to map the texture coords, which are (in the wrap case):
-  // |tl->1| and |0->br| to the |0->1| range of the vertex coords.  So
-  // we have the length (1-tl)+(br) that needs to map into 0->1.
-  // These are only valid if there is wrap involved, they won't be used
-  // otherwise.
-  GLfloat xlen = (1.0f - tl.x) + br.x;
-  GLfloat ylen = (1.0f - tl.y) + br.y;
-
-  NS_ASSERTION(!xwrap || xlen > 0.0f, "xlen isn't > 0, what's going on?");
-  NS_ASSERTION(!ywrap || ylen > 0.0f, "ylen isn't > 0, what's going on?");
-
+  // If xwrap is false, the texture will be sampled from tl.x .. br.x.
+  // If xwrap is true, then it will be split into tl.x .. 1.0, and
+  // 0.0 .. WrapTexCoord(br.x). Same for the Y axis. The destination
+  // rectangle is also split appropriately, according to the calculated
+  // xmid/ymid values.
   if (!xwrap && !ywrap) {
     SetRects(0, aLayerRects, aTextureRects,
              aRect.x, aRect.y, aRect.XMost(), aRect.YMost(),
@@ -452,8 +444,28 @@ DecomposeIntoNoRepeatRects(const Rect& aRect,
     return 1;
   }
 
-  GLfloat xmid = aRect.x + (1.0f - tl.x) / xlen * aRect.width;
-  GLfloat ymid = aRect.y + (1.0f - tl.y) / ylen * aRect.height;
+  // If we are dealing with wrapping br.x and br.y are greater than 1.0 so
+  // wrap them here as well.
+  br = Point(xwrap ? WrapTexCoord(br.x) : br.x,
+             ywrap ? WrapTexCoord(br.y) : br.y);
+
+  // If we wrap around along the x axis, we will draw first from
+  // tl.x .. 1.0 and then from 0.0 .. br.x (which we just wrapped above).
+  // The same applies for the Y axis. The midpoints we calculate here are
+  // only valid if we actually wrap around.
+  GLfloat xmid = aRect.x + (1.0f - tl.x) / texCoordRect.width * aRect.width;
+  GLfloat ymid = aRect.y + (1.0f - tl.y) / texCoordRect.height * aRect.height;
+
+  NS_ASSERTION(!xwrap ||
+               (xmid > aRect.x &&
+                xmid < aRect.XMost() &&
+                FuzzyEqual((xmid - aRect.x) + (aRect.XMost() - xmid), aRect.width)),
+               "xmid should be within [x,XMost()] and the wrapped rect should have the same width");
+  NS_ASSERTION(!ywrap ||
+               (ymid > aRect.y &&
+                ymid < aRect.YMost() &&
+                FuzzyEqual((ymid - aRect.y) + (aRect.YMost() - ymid), aRect.height)),
+               "ymid should be within [y,YMost()] and the wrapped rect should have the same height");
 
   if (!xwrap && ywrap) {
     SetRects(0, aLayerRects, aTextureRects,
