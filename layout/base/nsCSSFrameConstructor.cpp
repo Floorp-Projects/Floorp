@@ -591,6 +591,30 @@ SetInitialSingleChild(nsIFrame* aParent, nsIFrame* aFrame)
   aParent->SetInitialChildList(kPrincipalList, temp);
 }
 
+static nsIFrame*
+GetContentInsertionFrameFor(nsIContent* aContent)
+{
+  // Get the primary frame associated with the content
+  nsIFrame* frame = aContent->GetPrimaryFrame();
+
+  if (!frame)
+    return nullptr;
+
+  // If the content of the frame is not the desired content then this is not
+  // really a frame for the desired content.
+  // XXX This check is needed due to bug 135040. Remove it once that's fixed.
+  if (frame->GetContent() != aContent) {
+    return nullptr;
+  }
+
+  nsIFrame* insertionFrame = frame->GetContentInsertionFrame();
+
+  NS_ASSERTION(insertionFrame == frame || !frame->IsLeaf(),
+    "The insertion frame is the primary frame or the primary frame isn't a leaf");
+
+  return insertionFrame;
+}
+
 // -----------------------------------------------------------
 
 // Structure used when constructing formatting object trees.
@@ -5644,30 +5668,6 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy()
 }
 
 nsIFrame*
-nsCSSFrameConstructor::GetFrameFor(nsIContent* aContent)
-{
-  // Get the primary frame associated with the content
-  nsIFrame* frame = aContent->GetPrimaryFrame();
-
-  if (!frame)
-    return nullptr;
-
-  // If the content of the frame is not the desired content then this is not
-  // really a frame for the desired content.
-  // XXX This check is needed due to bug 135040. Remove it once that's fixed.
-  if (frame->GetContent() != aContent) {
-    return nullptr;
-  }
-
-  nsIFrame* insertionFrame = frame->GetContentInsertionFrame();
-
-  NS_ASSERTION(insertionFrame == frame || !frame->IsLeaf(),
-    "The insertion frame is the primary frame or the primary frame isn't a leaf");
-
-  return insertionFrame;
-}
-
-nsIFrame*
 nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame,
                                                   ContainingBlockType aType)
 {
@@ -6645,7 +6645,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   }
 
   // Get the frame associated with the content
-  nsIFrame* parentFrame = GetFrameFor(aContainer);
+  nsIFrame* parentFrame = ::GetContentInsertionFrameFor(aContainer);
 
   // See comment in ContentRangeInserted for why this is necessary.
   if (!parentFrame && !aContainer->IsActiveChildrenElement()) {
@@ -7078,7 +7078,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
     return rv;
   }
 
-  nsIFrame* parentFrame = GetFrameFor(aContainer);
+  nsIFrame* parentFrame = ::GetContentInsertionFrameFor(aContainer);
   // The xbl:children element won't have a frame, but default content can have the children as
   // a parent. While its uncommon to change the structure of the default content itself, a label,
   // for example, can be reframed by having its value attribute set or removed.
@@ -8354,7 +8354,7 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIContent*   aContainer,
     if (aChildContent->GetBindingParent() == aContainer) {
       // This child content is anonymous. Don't use the insertion
       // point, since that's only for the explicit kids.
-      return GetFrameFor(aContainer);
+      return ::GetContentInsertionFrameFor(aContainer);
     }
 
     insertionElement = bindingManager->FindNestedInsertionPoint(aContainer, aChildContent);
@@ -8375,7 +8375,7 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIContent*   aContainer,
     insertionElement = aContainer;
   }
 
-  nsIFrame* insertionPoint = GetFrameFor(insertionElement);
+  nsIFrame* insertionPoint = ::GetContentInsertionFrameFor(insertionElement);
 
   // fieldsets have multiple insertion points.  Note that we might
   // have to look at insertionElement here...
