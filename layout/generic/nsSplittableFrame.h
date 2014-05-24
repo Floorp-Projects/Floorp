@@ -20,9 +20,9 @@ class nsSplittableFrame : public nsFrame
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  virtual void Init(nsIContent*      aContent,
-                    nsIFrame*        aParent,
-                    nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*       aContent,
+                    nsContainerFrame* aParent,
+                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
   
   virtual nsSplittableType GetSplittableType() const MOZ_OVERRIDE;
 

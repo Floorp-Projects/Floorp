@@ -37,9 +37,9 @@ nsTreeColFrame::~nsTreeColFrame()
 }
 
 void
-nsTreeColFrame::Init(nsIContent*      aContent,
-                     nsIFrame*        aParent,
-                     nsIFrame*        aPrevInFlow)
+nsTreeColFrame::Init(nsIContent*       aContent,
+                     nsContainerFrame* aParent,
+                     nsIFrame*         aPrevInFlow)
 {
   nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
   InvalidateColumns();

@@ -15,9 +15,9 @@
 NS_IMPL_FRAMEARENA_HELPERS(nsSplittableFrame)
 
 void
-nsSplittableFrame::Init(nsIContent*      aContent,
-                        nsIFrame*        aParent,
-                        nsIFrame*        aPrevInFlow)
+nsSplittableFrame::Init(nsIContent*       aContent,
+                        nsContainerFrame* aParent,
+                        nsIFrame*         aPrevInFlow)
 {
   nsFrame::Init(aContent, aParent, aPrevInFlow);
 

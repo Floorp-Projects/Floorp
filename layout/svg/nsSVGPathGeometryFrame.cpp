@@ -104,9 +104,9 @@ nsDisplaySVGPathGeometry::Paint(nsDisplayListBuilder* aBuilder,
 // nsIFrame methods
 
 void
-nsSVGPathGeometryFrame::Init(nsIContent* aContent,
-                             nsIFrame* aParent,
-                             nsIFrame* aPrevInFlow)
+nsSVGPathGeometryFrame::Init(nsIContent*       aContent,
+                             nsContainerFrame* aParent,
+                             nsIFrame*         aPrevInFlow)
 {
   AddStateBits(aParent->GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD);
   nsSVGPathGeometryFrameBase::Init(aContent, aParent, aPrevInFlow);

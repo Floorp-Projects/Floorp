@@ -46,9 +46,9 @@ nsMathMLmrootFrame::~nsMathMLmrootFrame()
 }
 
 void
-nsMathMLmrootFrame::Init(nsIContent*      aContent,
-                         nsIFrame*        aParent,
-                         nsIFrame*        aPrevInFlow)
+nsMathMLmrootFrame::Init(nsIContent*       aContent,
+                         nsContainerFrame* aParent,
+                         nsIFrame*         aPrevInFlow)
 {
   nsMathMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
   

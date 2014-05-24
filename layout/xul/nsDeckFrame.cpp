@@ -75,9 +75,9 @@ nsDeckFrame::AttributeChanged(int32_t         aNameSpaceID,
 }
 
 void
-nsDeckFrame::Init(nsIContent*     aContent,
-                  nsIFrame*       aParent,
-                  nsIFrame*       aPrevInFlow)
+nsDeckFrame::Init(nsIContent*       aContent,
+                  nsContainerFrame* aParent,
+                  nsIFrame*         aPrevInFlow)
 {
   nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
 

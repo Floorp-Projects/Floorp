@@ -59,9 +59,9 @@ NS_QUERYFRAME_HEAD(nsRangeFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 void
-nsRangeFrame::Init(nsIContent* aContent,
-                   nsIFrame*   aParent,
-                   nsIFrame*   aPrevInFlow)
+nsRangeFrame::Init(nsIContent*       aContent,
+                   nsContainerFrame* aParent,
+                   nsIFrame*         aPrevInFlow)
 {
   // B2G's AsyncPanZoomController::ReceiveInputEvent handles touch events
   // without checking whether the out-of-process document that it controls

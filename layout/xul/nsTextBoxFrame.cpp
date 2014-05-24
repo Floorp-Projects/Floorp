@@ -107,9 +107,9 @@ nsTextBoxFrame::~nsTextBoxFrame()
 
 
 void
-nsTextBoxFrame::Init(nsIContent*      aContent,
-                     nsIFrame*        aParent,
-                     nsIFrame*        aPrevInFlow)
+nsTextBoxFrame::Init(nsIContent*       aContent,
+                     nsContainerFrame* aParent,
+                     nsIFrame*         aPrevInFlow)
 {
     nsTextBoxFrameSuper::Init(aContent, aParent, aPrevInFlow);
 

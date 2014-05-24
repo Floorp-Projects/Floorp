@@ -262,9 +262,9 @@ nsSplitterFrame::AttributeChanged(int32_t aNameSpaceID,
  * Initialize us. If we are in a box get our alignment so we know what direction we are
  */
 void
-nsSplitterFrame::Init(nsIContent*      aContent,
-                      nsIFrame*        aParent,
-                      nsIFrame*        aPrevInFlow)
+nsSplitterFrame::Init(nsIContent*       aContent,
+                      nsContainerFrame* aParent,
+                      nsIFrame*         aPrevInFlow)
 {
   MOZ_ASSERT(!mInner);
   mInner = new nsSplitterFrameInner(this);

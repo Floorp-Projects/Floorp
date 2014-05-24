@@ -52,9 +52,9 @@ NS_QUERYFRAME_HEAD(nsSVGForeignObjectFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsSVGForeignObjectFrameBase)
 
 void
-nsSVGForeignObjectFrame::Init(nsIContent* aContent,
-                              nsIFrame*   aParent,
-                              nsIFrame*   aPrevInFlow)
+nsSVGForeignObjectFrame::Init(nsIContent*       aContent,
+                              nsContainerFrame* aParent,
+                              nsIFrame*         aPrevInFlow)
 {
   NS_ASSERTION(aContent->IsSVG(nsGkAtoms::foreignObject),
                "Content is not an SVG foreignObject!");
