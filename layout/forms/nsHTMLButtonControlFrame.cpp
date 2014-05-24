@@ -19,7 +19,7 @@
 
 using namespace mozilla;
 
-nsIFrame*
+nsContainerFrame*
 NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsHTMLButtonControlFrame(aContext);

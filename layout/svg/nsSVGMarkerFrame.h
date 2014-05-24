@@ -15,12 +15,7 @@
 #include "nsSVGContainerFrame.h"
 #include "nsSVGUtils.h"
 
-class nsIAtom;
-class nsIContent;
-class nsIFrame;
-class nsIPresShell;
 class nsRenderingContext;
-class nsStyleContext;
 class nsSVGPathGeometryFrame;
 
 namespace mozilla {
@@ -36,7 +31,7 @@ typedef nsSVGContainerFrame nsSVGMarkerFrameBase;
 class nsSVGMarkerFrame : public nsSVGMarkerFrameBase
 {
   friend class nsSVGMarkerAnonChildFrame;
-  friend nsIFrame*
+  friend nsContainerFrame*
   NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   nsSVGMarkerFrame(nsStyleContext* aContext)
@@ -147,7 +142,7 @@ typedef nsSVGDisplayContainerFrame nsSVGMarkerAnonChildFrameBase;
 class nsSVGMarkerAnonChildFrame
   : public nsSVGMarkerAnonChildFrameBase
 {
-  friend nsIFrame*
+  friend nsContainerFrame*
   NS_NewSVGMarkerAnonChildFrame(nsIPresShell* aPresShell,
                                 nsStyleContext* aContext);
 

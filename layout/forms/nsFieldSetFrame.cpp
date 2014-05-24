@@ -23,7 +23,7 @@
 using namespace mozilla;
 using namespace mozilla::layout;
 
-nsIFrame*
+nsContainerFrame*
 NS_NewFieldSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsFieldSetFrame(aContext);
