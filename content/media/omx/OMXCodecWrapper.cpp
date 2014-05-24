@@ -404,7 +404,6 @@ OMXVideoEncoder::AppendDecoderConfig(nsTArray<uint8_t>* aOutputBuf,
   // NAL unit format is needed by WebRTC for RTP packets; AVC/H.264 decoder
   // config descriptor is needed to construct MP4 'avcC' box.
   status_t result = GenerateAVCDescriptorBlob(format, aOutputBuf, mBlobFormat);
-  mHasConfigBlob = (result == OK);
 
   return result;
 }
@@ -431,14 +430,6 @@ OMXVideoEncoder::AppendFrame(nsTArray<uint8_t>* aOutputBuf,
   };
   aOutputBuf->AppendElements(length, sizeof(length));
   aOutputBuf->AppendElements(aData + sizeof(length), aSize);
-}
-
-nsresult
-OMXVideoEncoder::GetCodecConfig(nsTArray<uint8_t>* aOutputBuf)
-{
-  MOZ_ASSERT(mHasConfigBlob, "Haven't received codec config yet.");
-
-  return AppendDecoderConfig(aOutputBuf, nullptr) == OK ? NS_OK : NS_ERROR_FAILURE;
 }
 
 // MediaCodec::setParameters() is available only after API level 18.
