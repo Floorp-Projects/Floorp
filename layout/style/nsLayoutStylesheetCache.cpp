@@ -149,6 +149,26 @@ nsLayoutStylesheetCache::UASheet()
 }
 
 nsCSSStyleSheet*
+nsLayoutStylesheetCache::MinimalXULSheet()
+{
+  EnsureGlobal();
+  if (!gStyleCache)
+    return nullptr;
+
+  return gStyleCache->mMinimalXULSheet;
+}
+
+nsCSSStyleSheet*
+nsLayoutStylesheetCache::XULSheet()
+{
+  EnsureGlobal();
+  if (!gStyleCache)
+    return nullptr;
+
+  return gStyleCache->mXULSheet;
+}
+
+nsCSSStyleSheet*
 nsLayoutStylesheetCache::QuirkSheet()
 {
   EnsureGlobal();
@@ -230,6 +250,8 @@ nsLayoutStylesheetCache::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf
   MEASURE(mUserContentSheet);
   MEASURE(mUserChromeSheet);
   MEASURE(mUASheet);
+  MEASURE(mMinimalXULSheet);
+  MEASURE(mXULSheet);
   MEASURE(mQuirkSheet);
   MEASURE(mFullScreenOverrideSheet);
   MEASURE(mSVGSheet);
@@ -267,6 +289,18 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache()
     LoadSheet(uri, mUASheet, true);
   }
   NS_ASSERTION(mUASheet, "Could not load ua.css");
+
+  NS_NewURI(getter_AddRefs(uri), "chrome://global/content/minimal-xul.css");
+  if (uri) {
+    LoadSheet(uri, mMinimalXULSheet, true);
+  }
+  NS_ASSERTION(mMinimalXULSheet, "Could not load minimal-xul.css");
+
+  NS_NewURI(getter_AddRefs(uri), "chrome://global/content/xul.css");
+  if (uri) {
+    LoadSheet(uri, mXULSheet, true);
+  }
+  NS_ASSERTION(mXULSheet, "Could not load xul.css");
 
   NS_NewURI(getter_AddRefs(uri), "resource://gre-resources/quirk.css");
   if (uri) {

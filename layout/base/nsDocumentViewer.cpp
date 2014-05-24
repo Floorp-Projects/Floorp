@@ -2280,6 +2280,20 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
   // after the html.css and so forth that the UA sheet imports).
   styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, quirkClone);
   styleSet->SetQuirkStyleSheet(quirkClone);
+  if (aDocument->LoadsFullXULStyleSheetUpFront()) {
+    // nsXULElement::BindToTree loads xul.css on-demand if we don't load it
+    // up-front here.
+    sheet = nsLayoutStylesheetCache::XULSheet();
+    if (sheet) {
+      styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
+    }
+  }
+  sheet = nsLayoutStylesheetCache::MinimalXULSheet();
+  if (sheet) {
+    // Load the minimal XUL rules for scrollbars and a few other XUL things
+    // that non-XUL (typically HTML) documents commonly use.
+    styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
+  }
   styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet,
                               nsLayoutStylesheetCache::UASheet());
 

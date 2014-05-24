@@ -1213,13 +1213,31 @@ public:
                                  nsAString& aEncoding,
                                  nsAString& Standalone) = 0;
 
+  /**
+   * Returns true if this is what HTML 5 calls an "HTML document" (for example
+   * regular HTML document with Content-Type "text/html", image documents and
+   * media documents).  Returns false for XHTML and any other documents parsed
+   * by the XML parser.
+   */
   bool IsHTML() const
   {
     return mIsRegularHTML;
   }
+  bool IsXML() const
+  {
+    return !IsHTML();
+  }
   bool IsXUL() const
   {
     return mIsXUL;
+  }
+  bool IsUnstyledDocument()
+  {
+    return IsLoadedAsData() || IsLoadedAsInteractiveData();
+  }
+  bool LoadsFullXULStyleSheetUpFront()
+  {
+    return IsXUL() || AllowXULXBL();
   }
 
   virtual bool IsScriptEnabled() = 0;
