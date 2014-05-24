@@ -6,6 +6,7 @@
 #include "mozilla/ArrayUtils.h"
 
 #include "nsCOMPtr.h"
+#include "mozilla/dom/SVGDocument.h"
 #include "mozilla/dom/SVGForeignObjectElement.h"
 #include "mozilla/dom/SVGForeignObjectElementBinding.h"
 
@@ -106,6 +107,31 @@ SVGForeignObjectElement::HasValidDimensions() const
 
 //----------------------------------------------------------------------
 // nsIContent methods
+
+nsresult
+SVGForeignObjectElement::BindToTree(nsIDocument* aDocument,
+                                    nsIContent* aParent,
+                                    nsIContent* aBindingParent,
+                                    bool aCompileEventHandlers)
+{
+  nsresult rv = SVGGraphicsElement::BindToTree(aDocument, aParent,
+                                               aBindingParent,
+                                               aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aDocument && aDocument->IsSVG()) {
+    // We assume that we're going to have HTML content, so we ensure that the
+    // UA style sheets that nsDocumentViewer::CreateStyleSet skipped when
+    // it saw the document was an SVG document are loaded.
+    //
+    // We setup these style sheets during binding, not element construction,
+    // because elements can be moved from the document that creates them to
+    // another document.
+    aDocument->AsSVGDocument()->EnsureNonSVGUserAgentStyleSheetsLoaded();
+  }
+
+  return rv;
+}
 
 NS_IMETHODIMP_(bool)
 SVGForeignObjectElement::IsAttributeMapped(const nsIAtom* name) const

@@ -14,11 +14,16 @@ class nsSVGElement;
 namespace mozilla {
 namespace dom {
 
+class SVGForeignObjectElement;
+
 class SVGDocument MOZ_FINAL : public XMLDocument
 {
+  friend class SVGForeignObjectElement; // To call EnsureNonSVGUserAgentStyleSheetsLoaded
+
 public:
   SVGDocument()
     : XMLDocument("image/svg+xml")
+    , mHasLoadedNonSVGUserAgentStyleSheets(false)
   {
     mType = eSVG;
   }
@@ -29,8 +34,16 @@ public:
   void GetDomain(nsAString& aDomain, ErrorResult& aRv);
   nsSVGElement* GetRootElement(ErrorResult& aRv);
 
-protected:
+  virtual SVGDocument* AsSVGDocument() MOZ_OVERRIDE {
+    return this;
+  }
+
+private:
+  void EnsureNonSVGUserAgentStyleSheetsLoaded();
+
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
+
+  bool mHasLoadedNonSVGUserAgentStyleSheets;
 };
 
 } // namespace dom

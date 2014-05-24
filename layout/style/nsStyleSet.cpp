@@ -632,6 +632,10 @@ nsStyleSet::EndUpdate()
 void
 nsStyleSet::EnableQuirkStyleSheet(bool aEnable)
 {
+  if (!mQuirkStyleSheet) {
+    // SVG-as-an-image doesn't load this sheet
+    return;
+  }
 #ifdef DEBUG
   bool oldEnabled;
   {

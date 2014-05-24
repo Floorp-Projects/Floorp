@@ -2250,52 +2250,77 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
     }
   }
 
-  sheet = nsLayoutStylesheetCache::NumberControlSheet();
-  if (sheet) {
-    styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
-  }
-
-  sheet = nsLayoutStylesheetCache::FormsSheet();
-  if (sheet) {
-    styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
-  }
-
   sheet = nsLayoutStylesheetCache::FullScreenOverrideSheet();
   if (sheet) {
     styleSet->PrependStyleSheet(nsStyleSet::eOverrideSheet, sheet);
   }
 
-  // Make sure to clone the quirk sheet so that it can be usefully
-  // enabled/disabled as needed.
-  nsRefPtr<nsCSSStyleSheet> quirkClone;
-  nsCSSStyleSheet* quirkSheet;
-  if (!nsLayoutStylesheetCache::UASheet() ||
-      !(quirkSheet = nsLayoutStylesheetCache::QuirkSheet()) ||
-      !(quirkClone = quirkSheet->Clone(nullptr, nullptr, nullptr, nullptr)) ||
-      !sheet) {
-    delete styleSet;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  // quirk.css needs to come after the regular UA sheet (or more precisely,
-  // after the html.css and so forth that the UA sheet imports).
-  styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, quirkClone);
-  styleSet->SetQuirkStyleSheet(quirkClone);
-  if (aDocument->LoadsFullXULStyleSheetUpFront()) {
-    // nsXULElement::BindToTree loads xul.css on-demand if we don't load it
-    // up-front here.
-    sheet = nsLayoutStylesheetCache::XULSheet();
+  if (!aDocument->IsSVG()) {
+    // !!! IMPORTANT - KEEP THIS BLOCK IN SYNC WITH
+    // !!! SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded.
+
+    // SVGForeignObjectElement::BindToTree calls SVGDocument::
+    // EnsureNonSVGUserAgentStyleSheetsLoaded to loads these UA sheet
+    // on-demand. (Excluding the quirks sheet, which should never be loaded for
+    // an SVG document, and excluding xul.css which will be loaded on demand by
+    // nsXULElement::BindToTree.)
+
+    sheet = nsLayoutStylesheetCache::NumberControlSheet();
+    if (sheet) {
+      styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
+    }
+
+    sheet = nsLayoutStylesheetCache::FormsSheet();
+    if (sheet) {
+      styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
+    }
+
+    // Make sure to clone the quirk sheet so that it can be usefully
+    // enabled/disabled as needed.
+    nsRefPtr<nsCSSStyleSheet> quirkClone;
+    nsCSSStyleSheet* quirkSheet;
+    if (!nsLayoutStylesheetCache::UASheet() ||
+        !(quirkSheet = nsLayoutStylesheetCache::QuirkSheet()) ||
+        !(quirkClone = quirkSheet->Clone(nullptr, nullptr, nullptr, nullptr)) ||
+        !sheet) {
+      delete styleSet;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    // quirk.css needs to come after the regular UA sheet (or more precisely,
+    // after the html.css and so forth that the UA sheet imports).
+    styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, quirkClone);
+    styleSet->SetQuirkStyleSheet(quirkClone);
+
+    if (aDocument->LoadsFullXULStyleSheetUpFront()) {
+      // nsXULElement::BindToTree loads xul.css on-demand if we don't load it
+      // up-front here.
+      sheet = nsLayoutStylesheetCache::XULSheet();
+      if (sheet) {
+        styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
+      }
+    }
+
+    sheet = nsLayoutStylesheetCache::MinimalXULSheet();
+    if (sheet) {
+      // Load the minimal XUL rules for scrollbars and a few other XUL things
+      // that non-XUL (typically HTML) documents commonly use.
+      styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
+    }
+
+    sheet = nsLayoutStylesheetCache::HTMLSheet();
+    if (sheet) {
+      styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
+    }
+
+    styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet,
+                                nsLayoutStylesheetCache::UASheet());
+  } else {
+    // SVG documents may have scrollbars and need the scrollbar styling.
+    sheet = nsLayoutStylesheetCache::MinimalXULSheet();
     if (sheet) {
       styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
     }
   }
-  sheet = nsLayoutStylesheetCache::MinimalXULSheet();
-  if (sheet) {
-    // Load the minimal XUL rules for scrollbars and a few other XUL things
-    // that non-XUL (typically HTML) documents commonly use.
-    styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
-  }
-  styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet,
-                              nsLayoutStylesheetCache::UASheet());
 
   nsStyleSheetService *sheetService = nsStyleSheetService::GetInstance();
   if (sheetService) {
