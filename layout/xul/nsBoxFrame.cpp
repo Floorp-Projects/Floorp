@@ -170,9 +170,9 @@ nsBoxFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
  * Initialize us. This is a good time to get the alignment of the box
  */
 void
-nsBoxFrame::Init(nsIContent*      aContent,
-                 nsIFrame*        aParent,
-                 nsIFrame*        aPrevInFlow)
+nsBoxFrame::Init(nsIContent*       aContent,
+                 nsContainerFrame* aParent,
+                 nsIFrame*         aPrevInFlow)
 {
   nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 

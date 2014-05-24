@@ -83,7 +83,7 @@ nsGfxButtonControlFrame::CreateFrameFor(nsIContent*      aContent)
   nsIFrame * newFrame = nullptr;
 
   if (aContent == mTextContent) {
-    nsIFrame * parentFrame = mFrames.FirstChild();
+    nsContainerFrame* parentFrame = do_QueryFrame(mFrames.FirstChild());
 
     nsPresContext* presContext = PresContext();
     nsRefPtr<nsStyleContext> textStyleContext;

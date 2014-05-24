@@ -964,8 +964,9 @@ NS_NewFirstLineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsFirstLineFrame)
 
 void
-nsFirstLineFrame::Init(nsIContent* aContent, nsIFrame* aParent,
-                       nsIFrame* aPrevInFlow)
+nsFirstLineFrame::Init(nsIContent*       aContent,
+                       nsContainerFrame* aParent,
+                       nsIFrame*         aPrevInFlow)
 {
   nsInlineFrame::Init(aContent, aParent, aPrevInFlow);
   if (!aPrevInFlow) {

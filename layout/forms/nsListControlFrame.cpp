@@ -923,9 +923,9 @@ nsListControlFrame::SetInitialChildList(ChildListID    aListID,
 
 //---------------------------------------------------------
 void
-nsListControlFrame::Init(nsIContent*     aContent,
-                         nsIFrame*       aParent,
-                         nsIFrame*       aPrevInFlow)
+nsListControlFrame::Init(nsIContent*       aContent,
+                         nsContainerFrame* aParent,
+                         nsIFrame*         aPrevInFlow)
 {
   nsHTMLScrollFrame::Init(aContent, aParent, aPrevInFlow);
 

@@ -183,9 +183,9 @@ nsImageBoxFrame::DestroyFrom(nsIFrame* aDestructRoot)
 
 
 void
-nsImageBoxFrame::Init(nsIContent*      aContent,
-                      nsIFrame*        aParent,
-                      nsIFrame*        aPrevInFlow)
+nsImageBoxFrame::Init(nsIContent*       aContent,
+                      nsContainerFrame* aParent,
+                      nsIFrame*         aPrevInFlow)
 {
   if (!mListener) {
     nsImageBoxListener *listener = new nsImageBoxListener();

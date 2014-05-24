@@ -200,8 +200,9 @@ public:
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus& aStatus) MOZ_OVERRIDE;
 
-  virtual void Init(nsIContent* aContent, nsIFrame* aParent,
-                    nsIFrame* aPrevInFlow) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*       aContent,
+                    nsContainerFrame* aParent,
+                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
   virtual void PullOverflowsFromPrevInFlow() MOZ_OVERRIDE;
   virtual bool DrainSelfOverflowList() MOZ_OVERRIDE;
 

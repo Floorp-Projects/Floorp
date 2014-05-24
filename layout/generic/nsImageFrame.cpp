@@ -219,9 +219,9 @@ nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
 
 
 void
-nsImageFrame::Init(nsIContent*      aContent,
-                   nsIFrame*        aParent,
-                   nsIFrame*        aPrevInFlow)
+nsImageFrame::Init(nsIContent*       aContent,
+                   nsContainerFrame* aParent,
+                   nsIFrame*         aPrevInFlow)
 {
   nsSplittableFrame::Init(aContent, aParent, aPrevInFlow);
 

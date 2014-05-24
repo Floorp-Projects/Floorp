@@ -457,9 +457,9 @@ IsFontSizeInflationContainer(nsIFrame* aFrame,
 }
 
 void
-nsFrame::Init(nsIContent*      aContent,
-              nsIFrame*        aParent,
-              nsIFrame*        aPrevInFlow)
+nsFrame::Init(nsIContent*       aContent,
+              nsContainerFrame* aParent,
+              nsIFrame*         aPrevInFlow)
 {
   NS_PRECONDITION(!mContent, "Double-initing a frame?");
   NS_ASSERTION(IsFrameOfType(eDEBUGAllFrames) &&

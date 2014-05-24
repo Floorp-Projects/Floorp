@@ -53,9 +53,9 @@ NS_QUERYFRAME_HEAD(nsContainerFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsSplittableFrame)
 
 void
-nsContainerFrame::Init(nsIContent* aContent,
-                       nsIFrame*   aParent,
-                       nsIFrame*   aPrevInFlow)
+nsContainerFrame::Init(nsIContent*       aContent,
+                       nsContainerFrame* aParent,
+                       nsIFrame*         aPrevInFlow)
 {
   nsSplittableFrame::Init(aContent, aParent, aPrevInFlow);
   if (aPrevInFlow) {
