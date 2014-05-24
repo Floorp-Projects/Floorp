@@ -10,7 +10,7 @@
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
 #include "nsPresContext.h"
-#include "nsIFrame.h"
+#include "nsBox.h"
 #include "nsIScrollableFrame.h"
 
 using namespace mozilla;
@@ -101,7 +101,7 @@ static nsIFrame* GetScrolledBox(nsBoxObject* aScrollBox) {
   nsIFrame* scrolledFrame = scrollFrame->GetScrolledFrame();
   if (!scrolledFrame)
     return nullptr;
-  return scrolledFrame->GetChildBox();
+  return nsBox::GetChildBox(scrolledFrame);
 }
 
 /* void scrollByIndex (in long dindexes); */
@@ -117,7 +117,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByIndex(int32_t dindexes)
     nsRect rect;
 
     // now get the scrolled boxes first child.
-    nsIFrame* child = scrolledBox->GetChildBox();
+    nsIFrame* child = nsBox::GetChildBox(scrolledBox);
 
     bool horiz = scrolledBox->IsHorizontal();
     nsPoint cp = sf->GetScrollPosition();
@@ -156,7 +156,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByIndex(int32_t dindexes)
           break;
         }
       }
-      child = child->GetNextBox();
+      child = nsBox::GetNextBox(child);
       curIndex++;
     }
 
@@ -167,7 +167,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByIndex(int32_t dindexes)
 
     if (dindexes > 0) {
       while(child) {
-        child = child->GetNextBox();
+        child = nsBox::GetNextBox(child);
         if (child)
           rect = child->GetRect();
         count++;
@@ -176,14 +176,14 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByIndex(int32_t dindexes)
       }
 
    } else if (dindexes < 0) {
-      child = scrolledBox->GetChildBox();
+      child = nsBox::GetChildBox(scrolledBox);
       while(child) {
         rect = child->GetRect();
         if (count >= curIndex + dindexes)
           break;
 
         count++;
-        child = child->GetNextBox();
+        child = nsBox::GetNextBox(child);
 
       }
    }
