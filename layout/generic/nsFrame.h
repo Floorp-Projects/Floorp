@@ -144,15 +144,6 @@ public:
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
-  virtual nsresult  SetInitialChildList(ChildListID  aListID,
-                                        nsFrameList& aChildList) MOZ_OVERRIDE;
-  virtual nsresult  AppendFrames(ChildListID     aListID,
-                                 nsFrameList&    aFrameList) MOZ_OVERRIDE;
-  virtual nsresult  InsertFrames(ChildListID     aListID,
-                                 nsIFrame*       aPrevFrame,
-                                 nsFrameList&    aFrameList) MOZ_OVERRIDE;
-  virtual nsresult  RemoveFrame(ChildListID     aListID,
-                                nsIFrame*       aOldFrame) MOZ_OVERRIDE;
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
   virtual nsStyleContext* GetAdditionalStyleContext(int32_t aIndex) const MOZ_OVERRIDE;
   virtual void SetAdditionalStyleContext(int32_t aIndex,
