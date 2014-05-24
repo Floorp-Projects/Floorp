@@ -6,6 +6,7 @@
 
 #include "DMD.h"
 
+#include <alloca.h>
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
@@ -178,10 +179,9 @@ StatusMsg(const char* aFmt, ...)
   __android_log_vprint(ANDROID_LOG_INFO, "DMD", aFmt, ap);
 #else
   // The +64 is easily enough for the "DMD[<pid>] " prefix and the NUL.
-  char* fmt = (char*) InfallibleAllocPolicy::malloc_(strlen(aFmt) + 64);
+  char* fmt = (char*) alloca(strlen(aFmt) + 64);
   sprintf(fmt, "DMD[%d] %s", getpid(), aFmt);
   vfprintf(stderr, fmt, ap);
-  InfallibleAllocPolicy::free_(fmt);
 #endif
   va_end(ap);
 }
@@ -1935,7 +1935,7 @@ ClearReports()
 }
 
 MOZ_EXPORT bool
-IsEnabled()
+IsRunning()
 {
   return gIsDMDRunning;
 }

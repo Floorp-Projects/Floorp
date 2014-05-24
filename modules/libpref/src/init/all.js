@@ -549,9 +549,6 @@ pref("accessibility.typeaheadfind.matchesCountLimit", 100);
 // use Mac OS X Appearance panel text smoothing setting when rendering text, disabled by default
 pref("gfx.use_text_smoothing_setting", false);
 
-// loading and rendering of framesets and iframes
-pref("browser.frames.enabled", true);
-
 // Number of characters to consider emphasizing for rich autocomplete results
 pref("toolkit.autocomplete.richBoundaryCutoff", 200);
 

@@ -244,7 +244,7 @@ struct ThreadSafeContext : ContextFriendFields,
   public:
     static size_t offsetOfAllocator() { return offsetof(ThreadSafeContext, allocator_); }
 
-    inline Allocator *const allocator();
+    inline Allocator *allocator() const;
 
     // Allocations can only trigger GC when running on the main thread.
     inline AllowGC allowGC() const { return isJSContext() ? CanGC : NoGC; }

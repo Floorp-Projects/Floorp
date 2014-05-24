@@ -415,6 +415,9 @@ nsresult PeerConnectionCtx::Cleanup() {
 PeerConnectionCtx::~PeerConnectionCtx() {
     // ensure mTelemetryTimer ends on main thread
   MOZ_ASSERT(NS_IsMainThread());
+  if (mTelemetryTimer) {
+    mTelemetryTimer->Cancel();
+  }
 };
 
 CSF::CC_CallPtr PeerConnectionCtx::createCall() {

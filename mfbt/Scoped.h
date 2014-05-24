@@ -290,8 +290,8 @@ template <typename T>
 struct TypeSpecificScopedPointerTraits
 {
     typedef T* type;
-    const static type empty() { return nullptr; }
-    const static void release(type value)
+    static type empty() { return nullptr; }
+    static void release(type value)
     {
       if (value)
         TypeSpecificDelete(value);

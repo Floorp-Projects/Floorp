@@ -5154,7 +5154,7 @@ JitCompartment::generateStringConcatStub(JSContext *cx, ExecutionMode mode)
 
     // Check if we can use a JSFatInlineString.
     Label isFatInline;
-    masm.branch32(Assembler::BelowOrEqual, temp2, Imm32(JSFatInlineString::MAX_FAT_INLINE_LENGTH),
+    masm.branch32(Assembler::BelowOrEqual, temp2, Imm32(JSFatInlineString::MAX_LENGTH_TWO_BYTE),
                   &isFatInline);
 
     // Ensure result length <= JSString::MAX_LENGTH.

@@ -274,6 +274,10 @@ nsEventStatus GestureEventListener::HandleInputTouchMove()
 
 nsEventStatus GestureEventListener::HandleInputTouchEnd()
 {
+  // We intentionally do not pass apzc return statuses up since
+  // it may cause apzc stay in the touching state even after
+  // gestures are completed (please see Bug 1013378 for reference).
+
   nsEventStatus rv = nsEventStatus_eIgnore;
 
   switch (mState) {
@@ -288,8 +292,8 @@ nsEventStatus GestureEventListener::HandleInputTouchEnd()
                              mLastTouchInput.mTime,
                              mLastTouchInput.mTouches[0].mScreenPoint,
                              mLastTouchInput.modifiers);
-    rv = mAsyncPanZoomController->HandleGestureEvent(tapEvent);
-    if (rv == nsEventStatus_eIgnore) {
+    nsEventStatus tapupStatus = mAsyncPanZoomController->HandleGestureEvent(tapEvent);
+    if (tapupStatus == nsEventStatus_eIgnore) {
       SetState(GESTURE_FIRST_SINGLE_TOUCH_UP);
       CreateMaxTapTimeoutTask();
     } else {
@@ -306,7 +310,7 @@ nsEventStatus GestureEventListener::HandleInputTouchEnd()
                              mLastTouchInput.mTime,
                              mLastTouchInput.mTouches[0].mScreenPoint,
                              mLastTouchInput.modifiers);
-    rv = mAsyncPanZoomController->HandleGestureEvent(tapEvent);
+    mAsyncPanZoomController->HandleGestureEvent(tapEvent);
     break;
   }
 
@@ -322,7 +326,7 @@ nsEventStatus GestureEventListener::HandleInputTouchEnd()
                              mLastTouchInput.mTime,
                              mLastTouchInput.mTouches[0].mScreenPoint,
                              mLastTouchInput.modifiers);
-    rv = mAsyncPanZoomController->HandleGestureEvent(tapEvent);
+    mAsyncPanZoomController->HandleGestureEvent(tapEvent);
     break;
   }
 
@@ -341,8 +345,10 @@ nsEventStatus GestureEventListener::HandleInputTouchEnd()
                                    1.0f,
                                    1.0f,
                                    mLastTouchInput.modifiers);
-      rv = mAsyncPanZoomController->HandleGestureEvent(pinchEvent);
+      mAsyncPanZoomController->HandleGestureEvent(pinchEvent);
     }
+
+    rv = nsEventStatus_eConsumeNoDefault;
 
     break;
 
