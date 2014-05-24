@@ -176,7 +176,11 @@ nsresult
 OMXVideoEncoder::ConfigureDirect(sp<AMessage>& aFormat,
                                  BlobFormat aBlobFormat)
 {
-  MOZ_ASSERT(!mStarted, "Configure() was called already.");
+  // We now allow re-configuration to handle resolution/framerate/etc changes
+  if (mStarted) {
+    Stop();
+  }
+  MOZ_ASSERT(!mStarted, "OMX Stop() failed?");
 
   int width = 0;
   int height = 0;
