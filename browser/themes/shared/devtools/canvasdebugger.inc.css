@@ -18,12 +18,12 @@
 }
 
 .theme-dark .notice-container {
-  background: url(background-noise-toolbar.png), #343c45; /* Toolbars */
+  background-color: #343c45; /* Toolbars */
   color: #f5f7fa; /* Light foreground text */
 }
 
 .theme-light .notice-container {
-  background: url(background-noise-toolbar.png), #f0f1f2; /* Toolbars */
+  background-color: #f0f1f2; /* Toolbars */
   color: #585959; /* Grey foreground text */
 }
 
@@ -439,13 +439,11 @@
 
 .theme-dark #snapshot-filmstrip {
   border-top: 1px solid #000;
-  background-image: url(background-noise-toolbar.png);
   color: #f5f7fa; /* Light foreground text */
 }
 
 .theme-light #snapshot-filmstrip {
   border-top: 1px solid #aaa;
-  background-image: url(background-noise-toolbar.png);
   color: #585959; /* Grey foreground text */
 }
 

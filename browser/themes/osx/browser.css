@@ -110,7 +110,6 @@ toolbarseparator {
 }
 
 #TabsToolbar:not([collapsed="true"]) + #nav-bar {
-  margin-top: -@tabToolbarNavbarOverlap@; /* Move up into the TabsToolbar */
   /* Position the toolbar above the bottom of background tabs */
   position: relative;
   z-index: 1;
@@ -2797,6 +2796,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   position: relative;
   -moz-appearance: none;
   background-repeat: repeat-x;
+  margin-bottom: -@tabToolbarNavbarOverlap@;
 }
 
 #TabsToolbar:not(:-moz-lwtheme) {

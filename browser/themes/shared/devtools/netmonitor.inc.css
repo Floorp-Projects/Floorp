@@ -417,7 +417,7 @@ label.requests-menu-status-code {
 /* Network request details tabpanels */
 
 .theme-dark .tabpanel-content {
-  background: url(background-noise-toolbar.png), #343c45; /* Toolbars */
+  background-color: #343c45; /* Toolbars */
   color: #f5f7fa; /* Light foreground text */
 }
 
@@ -461,12 +461,12 @@ label.requests-menu-status-code {
 }
 
 .theme-dark  #response-content-info-header {
-  background: url(background-noise-toolbar.png), #eb5368; /* Red highlight */
+  background-color: #eb5368; /* Red highlight */
   color: #f5f7fa; /* Light foreground text */
 }
 
 .theme-light  #response-content-info-header {
-  background: url(background-noise-toolbar.png), #ed2655; /* Red highlight */
+  background-color: #ed2655; /* Red highlight */
   color: #f5f7fa; /* Light foreground text */
 }
 
@@ -531,13 +531,13 @@ label.requests-menu-status-code {
 .theme-dark #requests-menu-footer {
   border-top: 1px solid @table_itemDarkStartBorder@;
   box-shadow: 0 1px 0 @table_itemDarkEndBorder@ inset;
-  background: url(background-noise-toolbar.png), #343c45; /* Toolbars */
+  background-color: #343c45; /* Toolbars */
 }
 
 .theme-light #requests-menu-footer {
   border-top: 1px solid @table_itemLightStartBorder@;
   box-shadow: 0 1px 0 @table_itemLightEndBorder@ inset;
-  background: url(background-noise-toolbar.png), #f0f1f2; /* Toolbars */
+  background-color: #f0f1f2; /* Toolbars */
 }
 
 .requests-menu-footer-button,
@@ -656,11 +656,11 @@ label.requests-menu-status-code {
 }
 
 .theme-dark #network-statistics-charts {
-  background: url(background-noise-toolbar.png), #343c45; /* Toolbars */
+  background-color: #343c45; /* Toolbars */
 }
 
 .theme-light #network-statistics-charts {
-  background: url(background-noise-toolbar.png), #f0f1f2; /* Toolbars */
+  background-color: #f0f1f2; /* Toolbars */
 }
 
 #network-statistics-charts .pie-chart-container {

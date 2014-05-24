@@ -4428,7 +4428,8 @@ var TabsInTitlebar = {
 
       // Get the full height of the tabs toolbar:
       let tabsToolbar = $("TabsToolbar");
-      let fullTabsHeight = rect(tabsToolbar).height;
+      let tabsStyles = window.getComputedStyle(tabsToolbar);
+      let fullTabsHeight = rect(tabsToolbar).height + verticalMargins(tabsStyles);
       // Buttons first:
       let captionButtonsBoxWidth = rect($("titlebar-buttonbox-container")).width;
 
@@ -4437,15 +4438,11 @@ var TabsInTitlebar = {
       // No need to look up the menubar stuff on OS X:
       let menuHeight = 0;
       let fullMenuHeight = 0;
-      // Instead, look up the titlebar padding:
-      let titlebarPadding = parseInt(window.getComputedStyle(titlebar).paddingTop, 10);
 #else
       // Otherwise, get the height and margins separately for the menubar
       let menuHeight = rect(menubar).height;
       let menuStyles = window.getComputedStyle(menubar);
       let fullMenuHeight = verticalMargins(menuStyles) + menuHeight;
-      let tabsStyles = window.getComputedStyle(tabsToolbar);
-      fullTabsHeight += verticalMargins(tabsStyles);
 #endif
 
       // And get the height of what's in the titlebar:
@@ -4488,7 +4485,6 @@ var TabsInTitlebar = {
         // We need to increase the titlebar content's outer height (ie including margins)
         // to match the tab and menu height:
         let extraMargin = tabAndMenuHeight - titlebarContentHeight;
-        // On non-OSX, we can just use bottom margin:
 #ifndef XP_MACOSX
         titlebarContent.style.marginBottom = extraMargin + "px";
 #endif
