@@ -544,45 +544,6 @@ nsFrame::Init(nsIContent*       aContent,
     InitBoxMetrics(false);
 }
 
-nsresult nsFrame::SetInitialChildList(ChildListID     aListID,
-                                           nsFrameList&    aChildList)
-{
-  // XXX This shouldn't be getting called at all, but currently is for backwards
-  // compatility reasons...
-#if 0
-  NS_ERROR("not a container");
-  return NS_ERROR_UNEXPECTED;
-#else
-  NS_ASSERTION(aChildList.IsEmpty(), "not a container");
-  return NS_OK;
-#endif
-}
-
-nsresult
-nsFrame::AppendFrames(ChildListID     aListID,
-                      nsFrameList&    aFrameList)
-{
-  NS_PRECONDITION(false, "not a container");
-  return NS_ERROR_UNEXPECTED;
-}
-
-nsresult
-nsFrame::InsertFrames(ChildListID     aListID,
-                      nsIFrame*       aPrevFrame,
-                      nsFrameList&    aFrameList)
-{
-  NS_PRECONDITION(false, "not a container");
-  return NS_ERROR_UNEXPECTED;
-}
-
-nsresult
-nsFrame::RemoveFrame(ChildListID     aListID,
-                     nsIFrame*       aOldFrame)
-{
-  NS_PRECONDITION(false, "not a container");
-  return NS_ERROR_UNEXPECTED;
-}
-
 void
 nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
