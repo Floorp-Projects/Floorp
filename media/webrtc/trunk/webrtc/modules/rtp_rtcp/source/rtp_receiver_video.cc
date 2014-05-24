@@ -229,17 +229,18 @@ int32_t RTPReceiverVideo::ReceiveH264Codec(WebRtcRTPHeader* rtp_header,
   // real payload
   uint8_t* payload;
   uint16_t payload_length;
-  unsigned char nal_type = payload_data[0] & 0x1F;
+  uint8_t nal_type = payload_data[0] & RtpFormatH264::kH264NAL_TypeMask;
 
   // Note: This code handles only FU-A and single NALU mode packets.
-  if (nal_type == RtpFormatH264::kH264FUANALUType) {
+  if (nal_type == RtpFormatH264::kH264NALU_FUA) {
     // Fragmentation
-    unsigned char fnri = payload_data[0] & 0xE0;
-    unsigned char original_nal_type = payload_data[1] & 0x1F;
-    bool first_fragment = (payload_data[1] & 0x80) >> 7;
-    //bool last_fragment = (payload_data[1] & 0x40) >> 6;
+    uint8_t fnri = payload_data[0] & 
+                   (RtpFormatH264::kH264NAL_FBit | RtpFormatH264::kH264NAL_NRIMask);
+    uint8_t original_nal_type = payload_data[1] & RtpFormatH264::kH264NAL_TypeMask;
+    bool first_fragment = !!(payload_data[1] & RtpFormatH264::kH264FU_SBit);
+    //bool last_fragment = !!(payload_data[1] & RtpFormatH264::kH264FU_EBit);
 
-    unsigned char original_nal_header = fnri | original_nal_type;
+    uint8_t original_nal_header = fnri | original_nal_type;
     if (first_fragment) {
       payload = const_cast<uint8_t*> (payload_data) +
           RtpFormatH264::kH264NALHeaderLengthInBytes;
@@ -276,8 +277,7 @@ int32_t RTPReceiverVideo::ReceiveH264Codec(WebRtcRTPHeader* rtp_header,
     h264_header->single_nalu        = true;
 
     // WebRtcRTPHeader
-    if (nal_type == RtpFormatH264::kH264NALU_SPS ||
-        nal_type == RtpFormatH264::kH264NALU_PPS) {
+    if (nal_type == RtpFormatH264::kH264NALU_IDR) {
       rtp_header->frameType = kVideoFrameKey;
       rtp_header->type.Video.isFirstPacket = false;
     } else {

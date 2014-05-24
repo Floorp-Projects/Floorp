@@ -48,8 +48,9 @@ struct CodecSpecificInfoGeneric {
 };
 
 struct CodecSpecificInfoH264 {
-  unsigned char nalu_header;
-  bool          single_nalu;
+  uint8_t nalu_header;
+  bool    single_nalu;
+  uint8_t simulcastIdx;
 };
 
 union CodecSpecificInfoUnion {
