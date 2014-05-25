@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=990812
+-->
+<window title="Mozilla Bug 990812"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="start();">
+  <label value="Mozilla Bug 990812"/>
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+    var FRAME_SCRIPT = "data:,addMessageListener('test', function (msg) {" +
+                       "sendSyncMessage('test', msg.data)})";
+
+    var Cc = Components.classes;
+    var Ci = Components.interfaces;
+    var globalMM = Cc["@mozilla.org/globalmessagemanager;1"]
+                     .getService(Ci.nsIMessageListenerManager);
+
+    function is(val, exp, msg) {
+      opener.wrappedJSObject.is(val, exp, msg);
+    }
+
+    function promiseMessage(type, mm) {
+      var order = [type, "window", "global"];
+
+      return new Promise(function (resolve) {
+        mm.addMessageListener("test", function onMessage(msg) {
+          is(msg.data, order.shift(), "correct message " + msg.data);
+
+          if (order.length == 0) {
+            mm.removeMessageListener("test", onMessage);
+            resolve();
+          }
+        });
+      });
+    }
+
+    /**
+     * Ensures that broadcasting an async message does only reach descendants
+     * of a specific message manager and respects message manager groups.
+     */
+    function start() {
+      var mm1 = document.querySelector("browser").messageManager;
+      var promise1 = promiseMessage("group1", mm1);
+      mm1.loadFrameScript(FRAME_SCRIPT, true);
+
+      var mm2 = document.querySelector("browser + browser").messageManager;
+      var promise2 = promiseMessage("group2", mm2);
+      mm2.loadFrameScript(FRAME_SCRIPT, true);
+
+      getGroupMessageManager("test1").broadcastAsyncMessage("test", "group1");
+      getGroupMessageManager("test2").broadcastAsyncMessage("test", "group2");
+      messageManager.broadcastAsyncMessage("test", "window");
+      globalMM.broadcastAsyncMessage("test", "global");
+
+      Promise.all([promise1, promise2]).then(function () {
+        opener.setTimeout("next()");
+        window.close();
+      });
+    }
+
+  ]]></script>
+
+  <browser messagemanagergroup="test1" type="content-targetable" src="about:mozilla" />
+  <browser messagemanagergroup="test2" type="content-targetable" src="about:mozilla" />
+
+</window>
