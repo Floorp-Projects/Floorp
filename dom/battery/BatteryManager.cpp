@@ -8,7 +8,6 @@
 #include "Constants.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/Hal.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/dom/BatteryManagerBinding.h"
 #include "nsIDOMClassInfo.h"
 
@@ -131,12 +130,6 @@ BatteryManager::Notify(const hal::BatteryInformation& aBatteryInfo)
     DispatchTrustedEvent(mCharging ? CHARGINGTIMECHANGE_EVENT_NAME
                                    : DISCHARGINGTIMECHANGE_EVENT_NAME);
   }
-}
-
-/* static */ bool
-BatteryManager::HasSupport()
-{
-  return Preferences::GetBool("dom.battery.enabled", true);
 }
 
 } // namespace battery

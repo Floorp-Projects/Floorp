@@ -5,7 +5,8 @@
  */
 
 [Constructor(DOMString type, optional DownloadEventInit eventInitDict),
- Func="Navigator::HasDownloadsSupport"]
+ Pref="dom.mozDownloads.enabled",
+ CheckPermissions="downloads"]
 interface DownloadEvent : Event
 {
   readonly attribute DOMDownload? download;

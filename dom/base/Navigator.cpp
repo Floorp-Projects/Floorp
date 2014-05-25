@@ -661,12 +661,6 @@ Navigator::RefreshMIMEArray()
   }
 }
 
-bool
-Navigator::HasDesktopNotificationSupport()
-{
-  return Preferences::GetBool("notification.feature.enabled", false);
-}
-
 namespace {
 
 class VibrateWindowListener : public nsIDOMEventListener
@@ -2105,41 +2099,6 @@ Navigator::WrapObject(JSContext* cx)
 
 /* static */
 bool
-Navigator::HasBatterySupport(JSContext* /* unused*/, JSObject* /*unused */)
-{
-  return battery::BatteryManager::HasSupport();
-}
-
-/* static */
-bool
-Navigator::HasPowerSupport(JSContext* /* unused */, JSObject* aGlobal)
-{
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
-  return win && PowerManager::CheckPermission(win);
-}
-
-/* static */
-bool
-Navigator::HasPhoneNumberSupport(JSContext* /* unused */, JSObject* aGlobal)
-{
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
-  return CheckPermission(win, "phonenumberservice");
-}
-
-/* static */
-bool
-Navigator::HasIdleSupport(JSContext*  /* unused */, JSObject* aGlobal)
-{
-  if (!nsContentUtils::IsIdleObserverAPIEnabled()) {
-    return false;
-  }
-
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
-  return CheckPermission(win, "idle");
-}
-
-/* static */
-bool
 Navigator::HasWakeLockSupport(JSContext* /* unused*/, JSObject* /*unused */)
 {
   nsCOMPtr<nsIPowerManagerService> pmService =
@@ -2177,87 +2136,11 @@ Navigator::HasMobileMessageSupport(JSContext* /* unused */, JSObject* aGlobal)
 
 /* static */
 bool
-Navigator::HasTelephonySupport(JSContext* cx, JSObject* aGlobal)
-{
-  JS::Rooted<JSObject*> global(cx, aGlobal);
-
-  // First of all, the general pref has to be turned on.
-  bool enabled = false;
-  Preferences::GetBool("dom.telephony.enabled", &enabled);
-  if (!enabled) {
-    return false;
-  }
-
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(global);
-  return win && CheckPermission(win, "telephony");
-}
-
-/* static */
-bool
 Navigator::HasCameraSupport(JSContext* /* unused */, JSObject* aGlobal)
 {
   nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
   return win && nsDOMCameraManager::CheckPermission(win);
 }
-
-#ifdef MOZ_B2G_RIL
-/* static */
-bool
-Navigator::HasMobileConnectionSupport(JSContext* /* unused */,
-                                      JSObject* aGlobal)
-{
-  // First of all, the general pref has to be turned on.
-  bool enabled = false;
-  Preferences::GetBool("dom.mobileconnection.enabled", &enabled);
-  NS_ENSURE_TRUE(enabled, false);
-
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
-  return win && (CheckPermission(win, "mobileconnection") ||
-                 CheckPermission(win, "mobilenetwork"));
-}
-
-/* static */
-bool
-Navigator::HasCellBroadcastSupport(JSContext* /* unused */,
-                                   JSObject* aGlobal)
-{
-  // First of all, the general pref has to be turned on.
-  bool enabled = false;
-  Preferences::GetBool("dom.cellbroadcast.enabled", &enabled);
-  NS_ENSURE_TRUE(enabled, false);
-
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
-  return win && CheckPermission(win, "cellbroadcast");
-}
-
-/* static */
-bool
-Navigator::HasVoicemailSupport(JSContext* /* unused */,
-                               JSObject* aGlobal)
-{
-  // First of all, the general pref has to be turned on.
-  bool enabled = false;
-  Preferences::GetBool("dom.voicemail.enabled", &enabled);
-  NS_ENSURE_TRUE(enabled, false);
-
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
-  return win && CheckPermission(win, "voicemail");
-}
-
-/* static */
-bool
-Navigator::HasIccManagerSupport(JSContext* /* unused */,
-                                JSObject* aGlobal)
-{
-  // First of all, the general pref has to be turned on.
-  bool enabled = false;
-  Preferences::GetBool("dom.icc.enabled", &enabled);
-  NS_ENSURE_TRUE(enabled, false);
-
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
-  return win && CheckPermission(win, "mobileconnection");
-}
-#endif // MOZ_B2G_RIL
 
 /* static */
 bool
@@ -2279,26 +2162,6 @@ Navigator::HasWifiManagerSupport(JSContext* /* unused */,
   return nsIPermissionManager::ALLOW_ACTION == permission;
 }
 
-#ifdef MOZ_B2G_BT
-/* static */
-bool
-Navigator::HasBluetoothSupport(JSContext* /* unused */, JSObject* aGlobal)
-{
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
-  return win && bluetooth::BluetoothManager::CheckPermission(win);
-}
-#endif // MOZ_B2G_BT
-
-#ifdef MOZ_B2G_FM
-/* static */
-bool
-Navigator::HasFMRadioSupport(JSContext* /* unused */, JSObject* aGlobal)
-{
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
-  return win && CheckPermission(win, "fmradio");
-}
-#endif // MOZ_B2G_FM
-
 #ifdef MOZ_NFC
 /* static */
 bool
@@ -2313,22 +2176,6 @@ Navigator::HasNFCSupport(JSContext* /* unused */, JSObject* aGlobal)
   nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
   return win && (CheckPermission(win, "nfc-read") ||
                  CheckPermission(win, "nfc-write"));
-}
-
-/* static */
-bool
-Navigator::HasNFCPeerSupport(JSContext* /* unused */, JSObject* aGlobal)
-{
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
-  return win && CheckPermission(win, "nfc-write");
-}
-
-/* static */
-bool
-Navigator::HasNFCManagerSupport(JSContext* /* unused */, JSObject* aGlobal)
-{
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
-  return win && CheckPermission(win, "nfc-manager");
 }
 #endif // MOZ_NFC
 
@@ -2353,16 +2200,6 @@ Navigator::HasUserMediaSupport(JSContext* /* unused */,
          Preferences::GetBool("media.peerconnection.enabled", false);
 }
 #endif // MOZ_MEDIA_NAVIGATOR
-
-/* static */
-bool
-Navigator::HasPushNotificationsSupport(JSContext* /* unused */,
-                                       JSObject* aGlobal)
-{
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
-  return Preferences::GetBool("services.push.enabled", false) &&
-         win && CheckPermission(win, "push");
-}
 
 /* static */
 bool
@@ -2469,25 +2306,6 @@ Navigator::HasDataStoreSupport(JSContext* aCx, JSObject* aGlobal)
   }
 
   return HasDataStoreSupport(doc->NodePrincipal());
-}
-
-/* static */
-bool
-Navigator::HasDownloadsSupport(JSContext* aCx, JSObject* aGlobal)
-{
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
-
-  return win &&
-         CheckPermission(win, "downloads")  &&
-         Preferences::GetBool("dom.mozDownloads.enabled");
-}
-
-/* static */
-bool
-Navigator::HasPermissionSettingsSupport(JSContext* /* unused */, JSObject* aGlobal)
-{
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
-  return CheckPermission(win, "permissions");
 }
 
 /* static */
