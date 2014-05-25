@@ -1835,11 +1835,6 @@ public:
    */
   static bool IsFullscreenApiContentOnly();
 
-  /**
-   * Returns true if the idle observers API is enabled.
-   */
-  static bool IsIdleObserverAPIEnabled() { return sIsIdleObserverAPIEnabled; }
-
   /*
    * Returns true if the performance timing APIs are enabled.
    */
@@ -2228,7 +2223,6 @@ private:
   static bool sTrustedFullScreenOnly;
   static bool sFullscreenApiIsContentOnly;
   static uint32_t sHandlingInputTimeout;
-  static bool sIsIdleObserverAPIEnabled;
   static bool sIsPerformanceTimingEnabled;
   static bool sIsResourceTimingEnabled;
 
