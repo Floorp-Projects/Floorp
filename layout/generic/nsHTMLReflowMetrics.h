@@ -218,11 +218,27 @@ public:
   // ISize is the size in the writing mode's inline direction (which equates to
   // width in horizontal writing modes, height in vertical ones), and BSize is
   // the size in the block-progression direction.
-  nscoord ISize() const { return mISize; }
-  nscoord BSize() const { return mBSize; }
+  nscoord ISize(mozilla::WritingMode aWritingMode) const {
+    CHECK_WRITING_MODE(aWritingMode);
+    return mISize;
+  }
+  nscoord BSize(mozilla::WritingMode aWritingMode) const {
+    CHECK_WRITING_MODE(aWritingMode);
+    return mBSize;
+  }
+  mozilla::LogicalSize Size(mozilla::WritingMode aWritingMode) const {
+    CHECK_WRITING_MODE(aWritingMode);
+    return mozilla::LogicalSize(aWritingMode, mISize, mBSize);
+  }
 
-  nscoord& ISize() { return mISize; }
-  nscoord& BSize() { return mBSize; }
+  nscoord& ISize(mozilla::WritingMode aWritingMode) {
+    CHECK_WRITING_MODE(aWritingMode);
+    return mISize;
+  }
+  nscoord& BSize(mozilla::WritingMode aWritingMode) {
+    CHECK_WRITING_MODE(aWritingMode);
+    return mBSize;
+  }
 
   // Width and Height are physical dimensions, independent of writing mode.
   // Accessing these is slightly more expensive than accessing the logical
