@@ -289,6 +289,7 @@ private:
 
     uint32_t mDOMKeyCode;
     KeyNameIndex mDOMKeyNameIndex;
+    CodeNameIndex mDOMCodeNameIndex;
     char16_t mDOMPrintableKeyValue;
 
     bool IsKeyPress() const
@@ -330,6 +331,7 @@ KeyEventDispatcher::KeyEventDispatcher(const UserInputData& aData,
     mDOMKeyCode = (mData.key.keyCode < (ssize_t)ArrayLength(kKeyMapping)) ?
         kKeyMapping[mData.key.keyCode] : 0;
     mDOMKeyNameIndex = GetKeyNameIndex(mData.key.keyCode);
+    mDOMCodeNameIndex = GetCodeNameIndex(mData.key.scanCode);
 
     if (!mKeyCharMap.get()) {
         return;
@@ -380,6 +382,7 @@ KeyEventDispatcher::DispatchKeyEventInternal(uint32_t aEventMessage)
     if (mDOMPrintableKeyValue) {
         event.mKeyValue = mDOMPrintableKeyValue;
     }
+    event.mCodeNameIndex = mDOMCodeNameIndex;
     event.modifiers = mData.DOMModifiers();
     event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_MOBILE;
     event.time = mData.timeMs;
