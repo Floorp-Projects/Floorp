@@ -654,7 +654,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   // line-height calculations. However, continuations of an inline
   // that are empty we force to empty so that things like collapsed
   // whitespace in an inline element don't affect the line-height.
-  aMetrics.ISize(wm) = lineLayout->EndSpan(this);
+  aMetrics.ISize() = lineLayout->EndSpan(this);
 
   // Compute final width.
 
@@ -664,7 +664,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   // and padding since all continuations have them.
   if ((!GetPrevContinuation() && !FrameIsNonFirstInIBSplit()) ||
       boxDecorationBreakClone) {
-    aMetrics.ISize(wm) += aReflowState.ComputedLogicalBorderPadding().IStart(wm);
+    aMetrics.ISize() += aReflowState.ComputedLogicalBorderPadding().IStart(wm);
   }
 
   /*
