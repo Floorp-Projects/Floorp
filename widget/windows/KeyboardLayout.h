@@ -267,6 +267,7 @@ private:
 
   uint32_t mDOMKeyCode;
   KeyNameIndex mKeyNameIndex;
+  CodeNameIndex mCodeNameIndex;
 
   ModifierKeyState mModKeyState;
 
@@ -559,6 +560,18 @@ public:
    * non-printable keys (except some special keys like space key).
    */
   KeyNameIndex ConvertNativeKeyCodeToKeyNameIndex(uint8_t aVirtualKey) const;
+
+  /**
+   * ConvertScanCodeToCodeNameIndex() returns CodeNameIndex value for
+   * the given scan code.  aScanCode can be over 0xE000 since this method
+   * doesn't use Windows API.
+   *
+   * NOTE: Some special keys always generate 0xE000 for the scan code but
+   *       the virtual keycode indicates the key.  In such case, this method
+   *       computes CodeNameIndex from aVirtualKeyCode.
+   */
+  static CodeNameIndex ConvertScanCodeToCodeNameIndex(UINT aScanCode,
+                                                      UINT aVirtualKeyCode);
 
   HKL GetLayout() const
   {
