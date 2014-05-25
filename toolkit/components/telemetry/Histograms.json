@@ -6072,5 +6072,10 @@
     "kind": "enumerated",
     "n_values": 512,
     "description": "Certificate pinning test results by host for Mozilla operational sites"
+  },
+  "MASTER_PASSWORD_ENABLED": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "If a master-password is enabled for this profile"
   }
 }
