@@ -365,6 +365,7 @@ var keyboardEventProps =
   { view: null },
   { detail: 0 },
   { key: "" },
+  { code: "" },
   { location: 0 },
   { ctrlKey: false },
   { shiftKey: false },
@@ -384,6 +385,7 @@ var testKeyboardProps =
   { view: window },
   { detail: 1 },
   { key: "CustomKey" },
+  { code: "CustomCode" },
   { location: 1 },
   { ctrlKey: true },
   { shiftKey: true },
@@ -400,9 +402,13 @@ var testKeyboardProps =
   { keyCode: 11, charCode: 12, which: 13 },
 ];
 
+var codeEnabled = SpecialPowers.getBoolPref("dom.keyboardevent.code.enabled");
 var defaultKeyboardEventValues = {};
 for (var i = 0; i < keyboardEventProps.length; ++i) {
   for (prop in keyboardEventProps[i]) {
+    if (!codeEnabled && prop == "code") {
+      continue;
+    }
     ok(prop in e, "keyboardEvent: KeyboardEvent doesn't have property " + prop + "!");
     defaultKeyboardEventValues[prop] = keyboardEventProps[i][prop]; 
   }
@@ -412,6 +418,9 @@ while (testKeyboardProps.length) {
   var p = testKeyboardProps.shift();
   e = new KeyboardEvent("foo", p);
   for (var def in defaultKeyboardEventValues) {
+    if (!codeEnabled && def == "code") {
+      continue;
+    }
     if (!(def in p)) {
       is(e[def], defaultKeyboardEventValues[def],
          "KeyboardEvent: Wrong default value for " + def + "!");

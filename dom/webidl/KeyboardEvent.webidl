@@ -31,11 +31,14 @@ interface KeyboardEvent : UIEvent
   readonly attribute boolean       isComposing;
 
   readonly attribute DOMString key;
+  [Pref="dom.keyboardevent.code.enabled"]
+  readonly attribute DOMString code;
 };
 
 dictionary KeyboardEventInit : UIEventInit
 {
   DOMString      key           = "";
+  DOMString      code          = "";
   unsigned long  location      = 0;
   boolean        ctrlKey       = false;
   boolean        shiftKey      = false;

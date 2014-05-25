@@ -121,6 +121,13 @@ pref("dom.gamepad.non_standard_events.enabled", false);
 pref("dom.gamepad.non_standard_events.enabled", true);
 #endif
 
+// Whether the KeyboardEvent.code is enabled
+#ifdef RELEASE_BUILD
+pref("dom.keyboardevent.code.enabled", false);
+#else
+pref("dom.keyboardevent.code.enabled", true);
+#endif
+
 // Whether the WebCrypto API is enabled
 #ifdef RELEASE_BUILD
 pref("dom.webcrypto.enabled", false);
