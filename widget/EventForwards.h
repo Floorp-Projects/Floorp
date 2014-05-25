@@ -45,6 +45,19 @@ enum KeyNameIndex
 
 #undef NS_DEFINE_KEYNAME
 
+#define NS_DEFINE_PHYSICAL_KEY_CODE_NAME(aCPPName, aDOMCodeName) \
+  CODE_NAME_INDEX_##aCPPName,
+
+enum CodeNameIndex
+{
+#include "mozilla/PhysicalKeyCodeNameList.h"
+  // If a DOM keyboard event is synthesized by script, this is used.  Then,
+  // specified code name should be stored and use it as .code value.
+  CODE_NAME_INDEX_USE_STRING
+};
+
+#undef NS_DEFINE_PHYSICAL_KEY_CODE_NAME
+
 #define NS_DEFINE_COMMAND(aName, aCommandStr) , Command##aName
 
 typedef int8_t CommandInt;
