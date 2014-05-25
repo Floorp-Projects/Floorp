@@ -48,6 +48,12 @@ PRLogModuleInfo* gMediaStreamGraphLog;
 #endif
 
 /**
+ * We make the initial mCurrentTime nonzero so that zero times can have
+ * special meaning if necessary.
+ */
+static const int32_t INITIAL_CURRENT_TIME = 1;
+
+/**
  * The singleton graph instance.
  */
 static MediaStreamGraphImpl* gGraph;
@@ -354,8 +360,8 @@ MediaStreamGraphImpl::UpdateCurrentTime()
   if (mRealtime) {
     TimeStamp now = TimeStamp::Now();
     prevCurrentTime = mCurrentTime;
-    nextCurrentTime =
-      SecondsToMediaTime((now - mCurrentTimeStamp).ToSeconds()) + mCurrentTime;
+    nextCurrentTime = INITIAL_CURRENT_TIME +
+      SecondsToMediaTime((now - mInitialTimeStamp).ToSeconds());
 
     mCurrentTimeStamp = now;
     STREAM_LOG(PR_LOG_DEBUG+1, ("Updating current time to %f (real %f, mStateComputedTime %f)",
@@ -372,6 +378,11 @@ MediaStreamGraphImpl::UpdateCurrentTime()
 
   if (mStateComputedTime < nextCurrentTime) {
     STREAM_LOG(PR_LOG_WARNING, ("Media graph global underrun detected"));
+    if (mRealtime) {
+      // Adjust mInitialTimeStamp to remove the missed time.
+      mInitialTimeStamp += TimeDuration::
+        FromSeconds(MediaTimeToSeconds(nextCurrentTime - mStateComputedTime));
+    }
     nextCurrentTime = mStateComputedTime;
   }
 
@@ -2629,12 +2640,6 @@ ProcessedMediaStream::DestroyImpl()
   MediaStream::DestroyImpl();
   GraphImpl()->SetStreamOrderDirty();
 }
-
-/**
- * We make the initial mCurrentTime nonzero so that zero times can have
- * special meaning if necessary.
- */
-static const int32_t INITIAL_CURRENT_TIME = 1;
 
 MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime, TrackRate aSampleRate)
   : mCurrentTime(INITIAL_CURRENT_TIME)
