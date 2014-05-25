@@ -339,6 +339,7 @@ public:
 
   // public methods
   nsPIDOMWindow* GetPrivateParent();
+
   // callback for close event
   void ReallyCloseWindow();
 
