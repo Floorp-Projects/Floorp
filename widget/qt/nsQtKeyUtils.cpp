@@ -497,3 +497,19 @@ QtKeyCodeToDOMKeyNameIndex(int aKeysym)
     }
 }
 
+CodeNameIndex
+ScanCodeToDOMCodeNameIndex(int32_t aScanCode)
+{
+    switch (aScanCode) {
+
+#define NS_NATIVE_KEY_TO_DOM_CODE_NAME_INDEX(aNativeKey, aCodeNameIndex) \
+        case aNativeKey: return aCodeNameIndex;
+
+#include "NativeKeyToDOMCodeName.h"
+
+#undef NS_NATIVE_KEY_TO_DOM_CODE_NAME_INDEX
+
+        default:
+            return CODE_NAME_INDEX_UNKNOWN;
+    }
+}

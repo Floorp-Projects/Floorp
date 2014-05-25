@@ -14,5 +14,6 @@ int      QtKeyCodeToDOMKeyCode     (int aKeysym);
 int      DOMKeyCodeToQtKeyCode     (int aKeysym);
 
 mozilla::KeyNameIndex QtKeyCodeToDOMKeyNameIndex(int aKeysym);
+mozilla::CodeNameIndex ScanCodeToDOMCodeNameIndex(int32_t aScanCode);
 
 #endif /* __nsQtKeyUtils_h__ */
