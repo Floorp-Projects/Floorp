@@ -58,6 +58,8 @@ public:
   virtual uint32_t Which() MOZ_OVERRIDE;
   uint32_t Location();
 
+  void GetCode(nsAString& aCode);
+
   void InitKeyEvent(const nsAString& aType, bool aCanBubble, bool aCancelable,
                     nsIDOMWindow* aView, bool aCtrlKey, bool aAltKey,
                     bool aShiftKey, bool aMetaKey,

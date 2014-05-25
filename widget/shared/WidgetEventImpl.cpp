@@ -350,6 +350,29 @@ WidgetKeyboardEvent::GetDOMKeyName(KeyNameIndex aKeyNameIndex,
 #undef KEY_STR_NUM_INTERNAL
 }
 
+/*static*/ void
+WidgetKeyboardEvent::GetDOMCodeName(CodeNameIndex aCodeNameIndex,
+                                    nsAString& aCodeName)
+{
+  if (aCodeNameIndex >= CODE_NAME_INDEX_USE_STRING) {
+    aCodeName.Truncate();
+    return;
+  }
+
+#define NS_DEFINE_PHYSICAL_KEY_CODE_NAME(aCPPName, aDOMCodeName) \
+    MOZ_UTF16(aDOMCodeName),
+  static const char16_t* kCodeNames[] = {
+#include "mozilla/PhysicalKeyCodeNameList.h"
+    MOZ_UTF16("")
+  };
+#undef NS_DEFINE_PHYSICAL_KEY_CODE_NAME
+
+  MOZ_RELEASE_ASSERT(static_cast<size_t>(aCodeNameIndex) <
+                       ArrayLength(kCodeNames),
+                     "Illegal physical code enumeration value");
+  aCodeName = kCodeNames[aCodeNameIndex];
+}
+
 /* static */ const char*
 WidgetKeyboardEvent::GetCommandStr(Command aCommand)
 {
