@@ -692,13 +692,18 @@ filefield {
 
 /* Applications Pane Styles */
 
-#applications-content {
+#applicationsContent {
   -moz-margin-start: 60px;
-  padding: 15px;
+  padding: 15px 0;
+}
+
+#filter {
+  -moz-margin-start: 0;
 }
 
 #handlersView {
   -moz-appearance: none;
+  -moz-margin-start: 0;
   font-size: 1.25rem;
   line-height: 22px;
   color: #333333;
