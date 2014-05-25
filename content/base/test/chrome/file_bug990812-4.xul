@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=990812
+-->
+<window title="Mozilla Bug 990812"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="start();">
+  <label value="Mozilla Bug 990812"/>
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+    var FRAME_SCRIPT1 = "data:,addMessageListener('test', function () {" +
+                        "sendSyncMessage('test', 'frame1')})";
+    var FRAME_SCRIPT2 = "data:,addMessageListener('test', function () {" +
+                        "sendSyncMessage('test', 'frame2')})";
+
+    var Cc = Components.classes;
+    var Ci = Components.interfaces;
+    var globalMM = Cc["@mozilla.org/globalmessagemanager;1"]
+                     .getService(Ci.nsIMessageListenerManager);
+
+    function is(val, exp, msg) {
+      opener.wrappedJSObject.is(val, exp, msg);
+    }
+
+    function promiseMessage(type, mm) {
+      return new Promise(function (resolve) {
+        mm.addMessageListener("test", function onMessage(msg) {
+          mm.removeMessageListener("test", onMessage);
+          is(msg.data, type, "correct message " + type);
+          resolve();
+        });
+      });
+    }
+
+    /**
+     * Tests that swapping docShells works as expected wrt to groups.
+     */
+    function start() {
+      var browser1 = document.querySelector("browser");
+      browser1.messageManager.loadFrameScript(FRAME_SCRIPT1, true);
+
+      var browser2 = document.querySelector("browser + browser");
+      browser2.messageManager.loadFrameScript(FRAME_SCRIPT2, true);
+
+      var promise1 = promiseMessage("frame2", getGroupMessageManager("test1"));
+      var promise2 = promiseMessage("frame1", getGroupMessageManager("test2"));
+
+      var flo1 = browser1.QueryInterface(Ci.nsIFrameLoaderOwner);
+      var flo2 = browser2.QueryInterface(Ci.nsIFrameLoaderOwner);
+      flo1.swapFrameLoaders(flo2);
+      messageManager.broadcastAsyncMessage("test");
+
+      Promise.all([promise1, promise2]).then(function () {
+        opener.setTimeout("next()");
+        window.close();
+      });
+    }
+
+  ]]></script>
+
+  <browser messagemanagergroup="test1" type="content-targetable" src="about:mozilla" />
+  <browser messagemanagergroup="test2" type="content-targetable" src="about:mozilla" />
+
+</window>
