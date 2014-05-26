@@ -1195,7 +1195,7 @@ gfxFT2FontList::FindFonts()
             bool moreFiles = handle != INVALID_HANDLE_VALUE;
             while (moreFiles) {
                 nsAutoString filePath(path);
-                filePath.AppendLiteral("\\");
+                filePath.Append('\\');
                 filePath.Append(results.cFileName);
                 AppendFacesFromFontFile(NS_ConvertUTF16toUTF8(filePath));
                 moreFiles = FindNextFile(handle, &results);

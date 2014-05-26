@@ -77,7 +77,7 @@ TriplesVisitor::Visit(nsIRDFNode *aSubject, nsIRDFResource *aPredicate,
         const char16_t *value;
         lit->GetValueConst(&value);
         nsAutoCString object;
-        object.AppendLiteral("\"");
+        object.Append('"');
         AppendUTF16toUTF8(value, object);
         object.AppendLiteral("\" ");
         uint32_t writeCount = object.Length();
