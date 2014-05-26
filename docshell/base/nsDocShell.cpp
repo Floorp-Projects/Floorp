@@ -4612,7 +4612,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
       // If the page doesn't have a title, we will use a blank space which will be trimmed
       // and thus treated as empty by the front-end.
       if (messageStr.IsEmpty()) {
-        messageStr.Assign(' ');
+        messageStr.AssignLiteral(MOZ_UTF16(" "));
       }
     }
     else {
