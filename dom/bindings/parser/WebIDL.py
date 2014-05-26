@@ -1001,8 +1001,7 @@ class IDLInterface(IDLObjectWithScope):
                   identifier == "HeaderFile" or
                   identifier == "NavigatorProperty" or
                   identifier == "AvailableIn" or
-                  identifier == "Func" or
-                  identifier == "CheckPermissions"):
+                  identifier == "Func"):
                 # Known extended attributes that take a string value
                 if not attr.hasValue():
                     raise WebIDLError("[%s] must have a value" % identifier,
@@ -2944,8 +2943,7 @@ class IDLAttribute(IDLInterfaceMember):
               identifier == "Func" or
               identifier == "Frozen" or
               identifier == "AvailableIn" or
-              identifier == "NewObject" or
-              identifier == "CheckPermissions"):
+              identifier == "NewObject"):
             # Known attributes that we don't need to do anything with here
             pass
         else:
@@ -3522,8 +3520,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
               identifier == "AvailableIn" or
               identifier == "Pure" or
               identifier == "CrossOriginCallable" or
-              identifier == "WebGLHandlesContextLoss" or
-              identifier == "CheckPermissions"):
+              identifier == "WebGLHandlesContextLoss"):
             # Known attributes that we don't need to do anything with here
             pass
         else:
