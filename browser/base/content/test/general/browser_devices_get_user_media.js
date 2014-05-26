@@ -127,9 +127,8 @@ function promiseNoPopupNotification(aName) {
   return deferred.promise;
 }
 
-const kActionAlways = 1;
-const kActionDeny = 2;
-const kActionNever = 3;
+const kActionDeny = 1;
+const kActionNever = 2;
 
 function activateSecondaryAction(aAction) {
   let notification = PopupNotifications.panel.firstChild;
@@ -453,12 +452,12 @@ let gTests = [
 },
 
 {
-  desc: "getUserMedia prompt: Always/Never Share",
-  run: function checkRememberCheckbox() {
+  desc: "getUserMedia prompt: Never Share",
+  run: function checkNeverShare() {
     let elt = id => document.getElementById(id);
 
     function checkPerm(aRequestAudio, aRequestVideo, aAllowAudio, aAllowVideo,
-                       aExpectedAudioPerm, aExpectedVideoPerm, aNever) {
+                       aExpectedAudioPerm, aExpectedVideoPerm) {
       yield promisePopupNotificationShown("webRTC-shareDevices", () => {
         content.wrappedJSObject.requestDevice(aRequestAudio, aRequestVideo);
       });
@@ -468,18 +467,18 @@ let gTests = [
       is(elt("webRTC-selectMicrophone").hidden, noAudio,
          "microphone selector expected to be " + (noAudio ? "hidden" : "visible"));
       if (!noAudio)
-        elt("webRTC-selectMicrophone-menulist").value = (aAllowAudio || aNever) ? 0 : -1;
+        elt("webRTC-selectMicrophone-menulist").value = 0;
 
       let noVideo = aAllowVideo === undefined;
       is(elt("webRTC-selectCamera").hidden, noVideo,
          "camera selector expected to be " + (noVideo ? "hidden" : "visible"));
       if (!noVideo)
-        elt("webRTC-selectCamera-menulist").value = (aAllowVideo || aNever) ? 0 : -1;
+        elt("webRTC-selectCamera-menulist").value = 0;
 
       let expectedMessage =
         (aAllowVideo || aAllowAudio) ? "ok" : "error: PERMISSION_DENIED";
       yield promiseMessage(expectedMessage, () => {
-        activateSecondaryAction(aNever ? kActionNever : kActionAlways);
+        activateSecondaryAction(kActionNever);
       });
       let expected = [];
       if (expectedMessage == "ok") {
@@ -518,37 +517,13 @@ let gTests = [
         yield closeStream();
     }
 
-    // 3 cases where the user accepts the device prompt.
-    info("audio+video, user grants, expect both perms set to allow");
-    yield checkPerm(true, true, true, true, true, true);
-    info("audio only, user grants, check audio perm set to allow, video perm not set");
-    yield checkPerm(true, false, true, undefined, true, undefined);
-    info("video only, user grants, check video perm set to allow, audio perm not set");
-    yield checkPerm(false, true, undefined, true, undefined, true);
-
-    // 3 cases where the user rejects the device request.
-    // First test these cases by setting the device to 'No Audio'/'No Video'
+    // 3 cases where the user rejects the device request by using the 'Never Share' action.
     info("audio+video, user denies, expect both perms set to deny");
     yield checkPerm(true, true, false, false, false, false);
     info("audio only, user denies, expect audio perm set to deny, video not set");
     yield checkPerm(true, false, false, undefined, false, undefined);
     info("video only, user denies, expect video perm set to deny, audio perm not set");
     yield checkPerm(false, true, undefined, false, undefined, false);
-    // Now test these 3 cases again by using the 'Never Share' action.
-    info("audio+video, user denies, expect both perms set to deny");
-    yield checkPerm(true, true, false, false, false, false, true);
-    info("audio only, user denies, expect audio perm set to deny, video not set");
-    yield checkPerm(true, false, false, undefined, false, undefined, true);
-    info("video only, user denies, expect video perm set to deny, audio perm not set");
-    yield checkPerm(false, true, undefined, false, undefined, false, true);
-
-    // 2 cases where the user allows half of what's requested.
-    info("audio+video, user denies video, grants audio, " +
-         "expect video perm set to deny, audio perm set to allow.");
-    yield checkPerm(true, true, true, false, true, false);
-    info("audio+video, user denies audio, grants video, " +
-         "expect video perm set to allow, audio perm set to deny.");
-    yield checkPerm(true, true, false, true, false, true);
 
     // reset the menuitems to have no impact on the following tests.
     elt("webRTC-selectMicrophone-menulist").value = 0;
@@ -561,6 +536,11 @@ let gTests = [
   run: function checkUsePersistentPermissions() {
     function usePerm(aAllowAudio, aAllowVideo, aRequestAudio, aRequestVideo,
                      aExpectStream) {
+
+      // The 'Allow' option is temporarily disabled.
+      if (aExpectStream)
+        aExpectStream = undefined;
+
       let Perms = Services.perms;
       let uri = content.document.documentURIObject;
       if (aAllowAudio !== undefined) {
@@ -589,8 +569,7 @@ let gTests = [
         expectObserverCalled("recording-window-ended");
       }
       else {
-        let allow = (aAllowVideo && aRequestVideo) || (aAllowAudio && aRequestAudio);
-        let expectedMessage = allow ? "ok" : "error: PERMISSION_DENIED";
+        let expectedMessage = aExpectStream ? "ok" : "error: PERMISSION_DENIED";
         yield promiseMessage(expectedMessage, gum);
 
         if (expectedMessage == "ok") {
@@ -635,9 +614,9 @@ let gTests = [
     info("deny audio, allow video, request audio+video, expect ok (video)");
     yield usePerm(false, true, true, true, true);
     info("deny audio, allow video, request audio, expect denied");
-    yield usePerm(false, true, true, false, true);
+    yield usePerm(false, true, true, false, false);
     info("deny audio, allow video, request video, expect ok (video)");
-    yield usePerm(false, true, false, true, false);
+    yield usePerm(false, true, false, true, true);
 
     // Allow audio, video not set.
     info("allow audio, request audio+video, expect prompt");
@@ -670,75 +649,6 @@ let gTests = [
     yield usePerm(undefined, false, true, false, undefined);
     info("deny video, request video, expect denied");
     yield usePerm(undefined, false, false, true, false);
-  }
-},
-
-{
-  desc: "Stop Sharing removes persistent permissions",
-  run: function checkStopSharingRemovesPersistentPermissions() {
-    function stopAndCheckPerm(aRequestAudio, aRequestVideo) {
-      let Perms = Services.perms;
-      let uri = content.document.documentURIObject;
-
-      // Initially set both permissions to 'allow'.
-      Perms.add(uri, "microphone", Perms.ALLOW_ACTION);
-      Perms.add(uri, "camera", Perms.ALLOW_ACTION);
-
-      // Start sharing what's been requested.
-      yield promiseMessage("ok", () => {
-        content.wrappedJSObject.requestDevice(aRequestAudio, aRequestVideo);
-      });
-      expectObserverCalled("recording-device-events");
-      yield checkSharingUI();
-
-      PopupNotifications.getNotification("webRTC-sharingDevices").reshow();
-      let expectedIcon = "webRTC-sharingDevices";
-      if (aRequestAudio && !aRequestVideo)
-        expectedIcon = "webRTC-sharingMicrophone";
-      is(PopupNotifications.getNotification("webRTC-sharingDevices").anchorID,
-         expectedIcon + "-notification-icon", "anchored to correct icon");
-      is(PopupNotifications.panel.firstChild.getAttribute("popupid"), expectedIcon,
-         "panel using correct icon");
-
-      // Stop sharing.
-      activateSecondaryAction(kActionDeny);
-
-      yield promiseObserverCalled("recording-device-events");
-      expectObserverCalled("getUserMedia:revoke");
-
-      yield promiseNoPopupNotification("webRTC-sharingDevices");
-
-      if (gObservedTopics["recording-device-events"] == 1) {
-        todo(false, "Got the 'recording-device-events' notification twice, likely because of bug 962719");
-        gObservedTopics["recording-device-events"] = 0;
-      }
-
-      // Check that permissions have been removed as expected.
-      let audioPerm = Perms.testExactPermission(uri, "microphone");
-      if (aRequestAudio)
-        is(audioPerm, Perms.UNKNOWN_ACTION, "microphone permissions removed");
-      else
-        is(audioPerm, Perms.ALLOW_ACTION, "microphone permissions untouched");
-
-      let videoPerm = Perms.testExactPermission(uri, "camera");
-      if (aRequestVideo)
-        is(videoPerm, Perms.UNKNOWN_ACTION, "camera permissions removed");
-      else
-        is(videoPerm, Perms.ALLOW_ACTION, "camera permissions untouched");
-
-      // Cleanup.
-      yield closeStream(true);
-
-      Perms.remove(uri.host, "camera");
-      Perms.remove(uri.host, "microphone");
-    }
-
-    info("request audio+video, stop sharing resets both");
-    yield stopAndCheckPerm(true, true);
-    info("request audio, stop sharing resets audio only");
-    yield stopAndCheckPerm(true, false);
-    info("request video, stop sharing resets video only");
-    yield stopAndCheckPerm(false, true);
   }
 },
 
