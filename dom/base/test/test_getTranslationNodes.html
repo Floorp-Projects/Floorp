@@ -206,5 +206,22 @@
      expected="p[root] a b span em">
   <p>Lorem <a>ipsum <b>dolor <span>sit</span> amet</b></a>, <em>consetetur</em></p>
 </div>
+
+<!-- Test that comment nodes are not considered for translation -->
+<div id="testcase16"
+     expected="p[root] p[root]">
+  <p>Lorem ipsum</p>
+  <div>  <!-- Comment -->  </div>
+  <p>Lorem ipsum</p>
+</div>
+
+<!-- Test that comment nodes are not considered for translation -->
+<div id="testcase17"
+     expected="p[root]">
+  <div>
+    <!-- Comment -->
+    <p>Lorem Ipsum</p>
+  </div>
+</div>
 </body>
 </html>

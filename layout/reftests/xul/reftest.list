@@ -1,9 +1,9 @@
-== menuitem-key.xul menuitem-key-ref.xul
+skip-if(B2G&&browserIsRemote)  == menuitem-key.xul menuitem-key-ref.xul
 # these random-if(Android) are due to differences between Android Native & Xul, see bug 732569
-random-if(Android||B2G) == menulist-shrinkwrap-1.xul menulist-shrinkwrap-1-ref.xul
-random-if(Android||B2G) fails-if(winWidget) == menulist-shrinkwrap-2.xul menulist-shrinkwrap-2-ref.xul
-== textbox-overflow-1.xul textbox-overflow-1-ref.xul # for bug 749658
+random-if(Android||(B2G&&browserIsRemote)) skip-if(B2G&&browserIsRemote) == menulist-shrinkwrap-1.xul menulist-shrinkwrap-1-ref.xul
+random-if(Android||(B2G&&browserIsRemote)) fails-if(winWidget) skip-if(B2G&&browserIsRemote) == menulist-shrinkwrap-2.xul menulist-shrinkwrap-2-ref.xul
+skip-if(B2G&&browserIsRemote) == textbox-overflow-1.xul textbox-overflow-1-ref.xul # for bug 749658
 # accesskeys are not normally displayed on Mac, so skip this test
-skip-if(cocoaWidget) == accesskey.xul accesskey-ref.xul
-fails-if(cocoaWidget) == tree-row-outline-1.xul tree-row-outline-1-ref.xul
-!= tree-row-outline-1.xul tree-row-outline-1-notref.xul
+skip-if(cocoaWidget) skip-if(B2G&&browserIsRemote) == accesskey.xul accesskey-ref.xul
+fails-if(cocoaWidget) skip-if(B2G&&browserIsRemote) == tree-row-outline-1.xul tree-row-outline-1-ref.xul
+skip-if(B2G&&browserIsRemote) != tree-row-outline-1.xul tree-row-outline-1-notref.xul

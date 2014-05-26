@@ -1,1 +1,1 @@
-== image-region.xul image-region-ref.xul
+skip-if(B2G&&browserIsRemote) == image-region.xul image-region-ref.xul

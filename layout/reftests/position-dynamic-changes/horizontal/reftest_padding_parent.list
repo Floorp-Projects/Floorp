@@ -1,13 +1,13 @@
 # Please see the comment at the beginning of reftest.list
 
-== leftN-widthA-rightA.html?padding_parent leftN-widthA-rightA-ref.html?padding_parent
-== leftN-widthA-rightA-2.html?padding_parent leftN-widthA-rightA-2-ref.html?padding_parent
-== leftN-widthA-rightN.html?padding_parent leftN-widthA-rightN-ref.html?padding_parent
-== leftN-widthA-rightN-2.html?padding_parent leftN-widthA-rightN-2-ref.html?padding_parent
-== leftA-widthN-rightA.html?padding_parent leftA-widthN-rightA-ref.html?padding_parent
-== leftN-widthN-rightA.html?padding_parent leftN-widthN-rightA-ref.html?padding_parent
-== leftA-widthN-rightN.html?padding_parent leftA-widthN-rightN-ref.html?padding_parent
-== leftA-widthA-rightN.html?padding_parent leftA-widthA-rightN-ref.html?padding_parent
+fails-if(B2G&&browserIsRemote) == leftN-widthA-rightA.html?padding_parent leftN-widthA-rightA-ref.html?padding_parent
+fails-if(B2G&&browserIsRemote) == leftN-widthA-rightA-2.html?padding_parent leftN-widthA-rightA-2-ref.html?padding_parent
+fails-if(B2G&&browserIsRemote) == leftN-widthA-rightN.html?padding_parent leftN-widthA-rightN-ref.html?padding_parent
+fails-if(B2G&&browserIsRemote) == leftN-widthA-rightN-2.html?padding_parent leftN-widthA-rightN-2-ref.html?padding_parent
+fails-if(B2G&&browserIsRemote) == leftA-widthN-rightA.html?padding_parent leftA-widthN-rightA-ref.html?padding_parent
+fails-if(B2G&&browserIsRemote) == leftN-widthN-rightA.html?padding_parent leftN-widthN-rightA-ref.html?padding_parent
+fails-if(B2G&&browserIsRemote) == leftA-widthN-rightN.html?padding_parent leftA-widthN-rightN-ref.html?padding_parent
+fails-if(B2G&&browserIsRemote) == leftA-widthA-rightN.html?padding_parent leftA-widthA-rightN-ref.html?padding_parent
 == toauto-leftN-widthA-rightA.html?padding_parent toauto-leftN-widthA-rightA-ref.html?padding_parent
 == toauto-leftN-widthA-rightA-2.html?padding_parent toauto-leftN-widthA-rightA-2-ref.html?padding_parent
 == toauto-leftN-widthA-rightN.html?padding_parent toauto-leftN-widthA-rightN-ref.html?padding_parent

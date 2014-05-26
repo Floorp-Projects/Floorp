@@ -20,4 +20,4 @@ pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy-if(cocoaWidget,255,1
 pref(gfx.font_rendering.opentype_svg.enabled,true)    fails == svg-glyph-mask.svg svg-glyph-mask-ref.svg # bug 872483
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-paint-server.svg svg-glyph-paint-server-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-transform.svg svg-glyph-transform-ref.svg
-pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-extents.html svg-glyph-extents-ref.html
+pref(gfx.font_rendering.opentype_svg.enabled,true)    random-if(B2G&&browserIsRemote) == svg-glyph-extents.html svg-glyph-extents-ref.html

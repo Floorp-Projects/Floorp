@@ -1682,13 +1682,13 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool& doAction
 
   lastKeyTime = keyTime;
 
-  nsIFrame* currFrame;
   // NOTE: If you crashed here due to a bogus |immediateParent| it is 
   //       possible that the menu whose shortcut is being looked up has 
   //       been destroyed already.  One strategy would be to 
   //       setTimeout(<func>,0) as detailed in:
   //       <http://bugzilla.mozilla.org/show_bug.cgi?id=126675#c32>
-  currFrame = immediateParent->GetFirstPrincipalChild();
+  nsIFrame* firstMenuItem = nsXULPopupManager::GetNextMenuItem(immediateParent, nullptr, true);
+  nsIFrame* currFrame = firstMenuItem;
 
   int32_t menuAccessKey = -1;
   nsMenuBarListener::GetMenuAccessKey(&menuAccessKey);
@@ -1697,64 +1697,64 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool& doAction
   //   -- before current and after current -- by the current item
   while (currFrame) {
     nsIContent* current = currFrame->GetContent();
-    
-    // See if it's a menu item.
-    if (nsXULPopupManager::IsValidMenuItem(PresContext(), current, true)) {
-      nsAutoString textKey;
-      if (menuAccessKey >= 0) {
-        // Get the shortcut attribute.
-        current->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, textKey);
-      }
-      if (textKey.IsEmpty()) { // No shortcut, try first letter
-        isShortcut = false;
-        current->GetAttr(kNameSpaceID_None, nsGkAtoms::label, textKey);
-        if (textKey.IsEmpty()) // No label, try another attribute (value)
-          current->GetAttr(kNameSpaceID_None, nsGkAtoms::value, textKey);
+    nsAutoString textKey;
+    if (menuAccessKey >= 0) {
+      // Get the shortcut attribute.
+      current->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, textKey);
+    }
+    if (textKey.IsEmpty()) { // No shortcut, try first letter
+      isShortcut = false;
+      current->GetAttr(kNameSpaceID_None, nsGkAtoms::label, textKey);
+      if (textKey.IsEmpty()) // No label, try another attribute (value)
+        current->GetAttr(kNameSpaceID_None, nsGkAtoms::value, textKey);
+    }
+    else
+      isShortcut = true;
+
+    if (StringBeginsWith(textKey, incrementalString,
+                         nsCaseInsensitiveStringComparator())) {
+      // mIncrementalString is a prefix of textKey
+      nsMenuFrame* menu = do_QueryFrame(currFrame);
+      if (menu) {
+        // There is one match
+        matchCount++;
+        if (isShortcut) {
+          // There is one shortcut-key match
+          matchShortcutCount++;
+          // Record the matched item. If there is only one matched shortcut item, do it
+          frameShortcut = menu;
+        }
+        if (!foundActive) {
+          // It's a first candidate item located before/on the current item
+          if (!frameBefore)
+            frameBefore = menu;
+        }
+        else {
+          // It's a first candidate item located after the current item
+          if (!frameAfter)
+            frameAfter = menu;
+        }
       }
       else
-        isShortcut = true;
+        return nullptr;
+    }
 
-      if (StringBeginsWith(textKey, incrementalString,
-                           nsCaseInsensitiveStringComparator())) {
-        // mIncrementalString is a prefix of textKey
-        nsMenuFrame* menu = do_QueryFrame(currFrame);
-        if (menu) {
-          // There is one match
-          matchCount++;
-          if (isShortcut) {
-            // There is one shortcut-key match
-            matchShortcutCount++;
-            // Record the matched item. If there is only one matched shortcut item, do it
-            frameShortcut = menu;
-          }
-          if (!foundActive) {
-            // It's a first candidate item located before/on the current item
-            if (!frameBefore)
-              frameBefore = menu;
-          }
-          else {
-            // It's a first candidate item located after the current item
-            if (!frameAfter)
-              frameAfter = menu;
-          }
-        }
-        else
-          return nullptr;
-      }
-
-      // Get the active status
-      if (current->AttrValueIs(kNameSpaceID_None, nsGkAtoms::menuactive,
-                               nsGkAtoms::_true, eCaseMatters)) {
-        foundActive = true;
-        if (stringLength > 1) {
-          // If there is more than one char typed, the current item has highest priority,
-          //   otherwise the item next to current has highest priority
-          if (currFrame == frameBefore)
-            return frameBefore;
-        }
+    // Get the active status
+    if (current->AttrValueIs(kNameSpaceID_None, nsGkAtoms::menuactive,
+                             nsGkAtoms::_true, eCaseMatters)) {
+      foundActive = true;
+      if (stringLength > 1) {
+        // If there is more than one char typed, the current item has highest priority,
+        //   otherwise the item next to current has highest priority
+        if (currFrame == frameBefore)
+          return frameBefore;
       }
     }
-    currFrame = currFrame->GetNextSibling();
+
+    nsMenuFrame* menu = do_QueryFrame(currFrame);
+    currFrame = nsXULPopupManager::GetNextMenuItem(immediateParent, menu, true);
+    if (currFrame == firstMenuItem)
+      break;
   }
 
   doAction = (isMenu && (matchCount == 1 || matchShortcutCount == 1));
