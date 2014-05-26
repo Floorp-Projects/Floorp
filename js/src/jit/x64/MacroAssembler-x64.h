@@ -1301,23 +1301,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         orq(Imm32(type), frameSizeReg);
     }
 
-    // Save an exit frame (which must be aligned to the stack pointer) to
-    // PerThreadData::jitTop of the main thread.
-    void linkExitFrame() {
-        storePtr(StackPointer, AbsoluteAddress(GetIonContext()->runtime->addressOfJitTop()));
-    }
-
     void callWithExitFrame(JitCode *target, Register dynStack) {
         addPtr(Imm32(framePushed()), dynStack);
         makeFrameDescriptor(dynStack, JitFrame_IonJS);
         Push(dynStack);
         call(target);
-    }
-
-    // Save an exit frame to the thread data of the current thread, given a
-    // register that holds a PerThreadData *.
-    void linkParallelExitFrame(Register pt) {
-        storePtr(StackPointer, Address(pt, offsetof(PerThreadData, jitTop)));
     }
 
     // See CodeGeneratorX64 calls to noteAsmJSGlobalAccess.
