@@ -61,6 +61,7 @@
     </xul:menupopup>
     <xul:menupopup id="sidebar-context">
       <xul:menuitem id="context-origsources"/>
+      <xul:menuitem id="context-show-media"/>
     </xul:menupopup>
   </xul:popupset>
 
@@ -128,8 +129,16 @@
           <xul:resizer class="splitview-portrait-resizer"
                       dir="bottom"
                       element="splitview-resizer-target"/>
-          <xul:box class="stylesheet-editor-input textbox"
-                  data-placeholder="&editorTextbox.placeholder;"/>
+          <xul:hbox class="stylesheet-details-container">
+            <xul:box class="stylesheet-editor-input textbox"
+                     data-placeholder="&editorTextbox.placeholder;"/>
+            <xul:vbox class="stylesheet-sidebar theme-sidebar" hidden="true">
+              <xul:toolbar class="devtools-toolbar">
+                &mediaRules.label;
+              </xul:toolbar>
+              <xul:vbox class="stylesheet-media-list"/>
+            </xul:vbox>
+          </xul:hbox>
         </xul:box>
       </div> <!-- #splitview-templates -->
     </xul:box>   <!-- .splitview-root -->

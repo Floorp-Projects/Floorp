@@ -1340,6 +1340,7 @@ pref("devtools.scratchpad.enableAutocompletion", true);
 pref("devtools.styleeditor.enabled", true);
 pref("devtools.styleeditor.source-maps-enabled", false);
 pref("devtools.styleeditor.autocompletion-enabled", true);
+pref("devtools.styleeditor.showMediaSidebar", false);
 
 // Enable the Shader Editor.
 pref("devtools.shadereditor.enabled", false);

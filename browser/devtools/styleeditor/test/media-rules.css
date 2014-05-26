@@ -1,0 +1,23 @@
+@media not all {
+  div {
+    color: blue;
+  }
+}
+
+@media all {
+  div {
+    color: red;
+  }
+}
+
+div {
+  width: 20px;
+  height: 20px;
+  background-color: ghostwhite;
+}
+
+@media (max-width: 400px) {
+  div {
+    color: green;
+  }
+}
