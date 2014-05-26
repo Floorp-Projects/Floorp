@@ -506,6 +506,7 @@ public:
     nsAString& CharactersExtra() { return mCharactersExtra; }
     nsAString& Data() { return mData; }
     int KeyCode() { return mKeyCode; }
+    int ScanCode() { return mScanCode; }
     int MetaState() { return mMetaState; }
     uint32_t DomKeyLocation() { return mDomKeyLocation; }
     Modifiers DOMModifiers() const;
@@ -562,7 +563,8 @@ protected:
     nsIntRect mRect;
     int mFlags, mMetaState;
     uint32_t mDomKeyLocation;
-    int mKeyCode, mUnicodeChar, mBaseUnicodeChar, mDOMPrintableKeyValue;
+    int mKeyCode, mScanCode;
+    int mUnicodeChar, mBaseUnicodeChar, mDOMPrintableKeyValue;
     int mRepeatCount;
     int mCount;
     int mStart, mEnd;
@@ -632,6 +634,7 @@ protected:
     static jfieldID jDataField;
     static jfieldID jDOMPrintableKeyValueField;
     static jfieldID jKeyCodeField;
+    static jfieldID jScanCodeField;
     static jfieldID jMetaStateField;
     static jfieldID jDomKeyLocationField;
     static jfieldID jFlagsField;

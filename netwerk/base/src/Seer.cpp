@@ -788,7 +788,7 @@ Seer::EnsureInitStorage()
   BeginTransaction();
 
   nsRefPtr<SeerCommitTimerInitEvent> event = new SeerCommitTimerInitEvent();
-  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  NS_DispatchToMainThread(event);
 
   return NS_OK;
 }

@@ -367,7 +367,7 @@ PluginHangUIParent::RecvUserResponse(const unsigned int& aResponse)
                                                                dontAskCode,
                                                                LastShowDurationMs(),
                                                                mTimeoutPrefMs);
-  NS_DispatchToMainThread(workItem, NS_DISPATCH_NORMAL);
+  NS_DispatchToMainThread(workItem);
   return true;
 }
 

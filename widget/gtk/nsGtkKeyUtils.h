@@ -42,6 +42,12 @@ public:
     KeyNameIndex ComputeDOMKeyNameIndex(const GdkEventKey* aGdkKeyEvent);
 
     /**
+     * Compute a DOM code name index from aGdkKeyEvent.
+     */
+    static CodeNameIndex ComputeDOMCodeNameIndex(
+                           const GdkEventKey* aGdkKeyEvent);
+
+    /**
      * Modifier is list of modifiers which we support in widget level.
      */
     enum Modifier {

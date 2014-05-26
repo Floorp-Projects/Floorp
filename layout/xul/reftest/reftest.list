@@ -3,3 +3,4 @@ fails-if(Android||B2G) == textbox-multiline-noresize.xul textbox-multiline-ref.x
 == popup-explicit-size.xul popup-explicit-size-ref.xul
 random-if(Android) == image-size.xul image-size-ref.xul
 == image-scaling-min-height-1.xul image-scaling-min-height-1-ref.xul
+== textbox-text-transform.xul textbox-text-transform-ref.xul

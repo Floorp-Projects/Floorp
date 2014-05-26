@@ -1691,14 +1691,10 @@ nsDocument::~nsDocument()
   while (--indx >= 0) {
     mStyleSheets[indx]->SetOwningDocument(nullptr);
   }
-  indx = mCatalogSheets.Count();
-  while (--indx >= 0) {
-    static_cast<nsCSSStyleSheet*>(mCatalogSheets[indx])->SetOwningNode(nullptr);
-    mCatalogSheets[indx]->SetOwningDocument(nullptr);
-  }
   if (mAttrStyleSheet) {
     mAttrStyleSheet->SetOwningDocument(nullptr);
   }
+  // We don't own the mOnDemandBuiltInUASheets, so we don't need to reset them.
 
   if (mListenerManager) {
     mListenerManager->Disconnect();
@@ -1972,7 +1968,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
 
   // Traverse all our nsCOMArrays.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheets)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCatalogSheets)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOnDemandBuiltInUASheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPreloadingImages)
 
   for (uint32_t i = 0; i < tmp->mFrameRequestCallbacks.Length(); ++i) {
@@ -2417,13 +2413,14 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
 
   mozAutoDocUpdate upd(this, UPDATE_STYLE, true);
   RemoveDocStyleSheetsFromStyleSets();
-  RemoveStyleSheetsFromStyleSets(mCatalogSheets, nsStyleSet::eAgentSheet);
+  RemoveStyleSheetsFromStyleSets(mOnDemandBuiltInUASheets, nsStyleSet::eAgentSheet);
   RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eAgentSheet], nsStyleSet::eAgentSheet);
   RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eUserSheet], nsStyleSet::eUserSheet);
   RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eAuthorSheet], nsStyleSet::eDocSheet);
 
   // Release all the sheets
   mStyleSheets.Clear();
+  mOnDemandBuiltInUASheets.Clear();
   for (uint32_t i = 0; i < SheetTypeCount; ++i)
     mAdditionalSheets[i].Clear();
 
@@ -2495,10 +2492,11 @@ nsDocument::FillStyleSet(nsStyleSet* aStyleSet)
                                                          aStyleSet);
   }
 
-  for (i = mCatalogSheets.Count() - 1; i >= 0; --i) {
-    nsIStyleSheet* sheet = mCatalogSheets[i];
+  // Iterate backwards to maintain order
+  for (i = mOnDemandBuiltInUASheets.Count() - 1; i >= 0; --i) {
+    nsIStyleSheet* sheet = mOnDemandBuiltInUASheets[i];
     if (sheet->IsApplicable()) {
-      aStyleSet->AppendStyleSheet(nsStyleSet::eAgentSheet, sheet);
+      aStyleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
     }
   }
 
@@ -3981,6 +3979,43 @@ nsDocument::RemoveChildAt(uint32_t aIndex, bool aNotify)
   mCachedRootElement = nullptr;
 }
 
+void
+nsDocument::EnsureOnDemandBuiltInUASheet(nsCSSStyleSheet* aSheet)
+{
+  // Contains() takes nsISupport*, so annoyingly we have to cast here
+  if (mOnDemandBuiltInUASheets.Contains(static_cast<nsIStyleSheet*>(aSheet))) {
+    return;
+  }
+  BeginUpdate(UPDATE_STYLE);
+  AddOnDemandBuiltInUASheet(aSheet);
+  EndUpdate(UPDATE_STYLE);
+}
+
+void
+nsDocument::AddOnDemandBuiltInUASheet(nsCSSStyleSheet* aSheet)
+{
+  // Contains() takes nsISupport*, so annoyingly we have to cast here
+  MOZ_ASSERT(!mOnDemandBuiltInUASheets.Contains(static_cast<nsIStyleSheet*>(aSheet)));
+
+  // Prepend here so that we store the sheets in mOnDemandBuiltInUASheets in
+  // the same order that they should end up in the style set.
+  mOnDemandBuiltInUASheets.InsertElementAt(0, aSheet);
+
+  if (aSheet->IsApplicable()) {
+    // This is like |AddStyleSheetToStyleSets|, but for an agent sheet.
+    nsCOMPtr<nsIPresShell> shell = GetShell();
+    if (shell) {
+      // Note that prepending here is necessary to make sure that html.css etc.
+      // do not override Firefox OS/Mobile's content.css sheet. Maybe we should
+      // have an insertion point to match the order of
+      // nsDocumentViewer::CreateStyleSet though?
+      shell->StyleSet()->PrependStyleSheet(nsStyleSet::eAgentSheet, aSheet);
+    }
+  }
+
+  NotifyStyleSheetAdded(aSheet, false);
+}
+
 int32_t
 nsDocument::GetNumberOfStyleSheets() const
 {
@@ -4209,71 +4244,6 @@ nsDocument::NotifyStyleSheetApplicableStateChanged()
     observerService->NotifyObservers(static_cast<nsIDocument*>(this),
                                      "style-sheet-applicable-state-changed",
                                      nullptr);
-  }
-}
-
-// These three functions are a lot like the implementation of the
-// corresponding API for regular stylesheets.
-
-int32_t
-nsDocument::GetNumberOfCatalogStyleSheets() const
-{
-  return mCatalogSheets.Count();
-}
-
-nsIStyleSheet*
-nsDocument::GetCatalogStyleSheetAt(int32_t aIndex) const
-{
-  NS_ENSURE_TRUE(0 <= aIndex && aIndex < mCatalogSheets.Count(), nullptr);
-  return mCatalogSheets[aIndex];
-}
-
-void
-nsDocument::AddCatalogStyleSheet(nsCSSStyleSheet* aSheet)
-{
-  mCatalogSheets.AppendObject(aSheet);
-  aSheet->SetOwningDocument(this);
-  aSheet->SetOwningNode(this);
-
-  if (aSheet->IsApplicable()) {
-    // This is like |AddStyleSheetToStyleSets|, but for an agent sheet.
-    nsCOMPtr<nsIPresShell> shell = GetShell();
-    if (shell) {
-      shell->StyleSet()->AppendStyleSheet(nsStyleSet::eAgentSheet, aSheet);
-    }
-  }
-
-  NotifyStyleSheetAdded(aSheet, false);
-}
-
-void
-nsDocument::EnsureCatalogStyleSheet(const char *aStyleSheetURI)
-{
-  mozilla::css::Loader* cssLoader = CSSLoader();
-  if (cssLoader->GetEnabled()) {
-    int32_t sheetCount = GetNumberOfCatalogStyleSheets();
-    for (int32_t i = 0; i < sheetCount; i++) {
-      nsIStyleSheet* sheet = GetCatalogStyleSheetAt(i);
-      NS_ASSERTION(sheet, "unexpected null stylesheet in the document");
-      if (sheet) {
-        nsAutoCString uriStr;
-        sheet->GetSheetURI()->GetSpec(uriStr);
-        if (uriStr.Equals(aStyleSheetURI))
-          return;
-      }
-    }
-
-    nsCOMPtr<nsIURI> uri;
-    NS_NewURI(getter_AddRefs(uri), aStyleSheetURI);
-    if (uri) {
-      nsRefPtr<nsCSSStyleSheet> sheet;
-      cssLoader->LoadSheetSync(uri, true, true, getter_AddRefs(sheet));
-      if (sheet) {
-        BeginUpdate(UPDATE_STYLE);
-        AddCatalogStyleSheet(sheet);
-        EndUpdate(UPDATE_STYLE);
-      }
-    }
   }
 }
 
@@ -9148,7 +9118,7 @@ nsDocument::CloneDocHelper(nsDocument* clone) const
   clone->mSecurityInfo = mSecurityInfo;
 
   // State from nsDocument
-  clone->mIsRegularHTML = mIsRegularHTML;
+  clone->mType = mType;
   clone->mXMLDeclarationBits = mXMLDeclarationBits;
   clone->mBaseTarget = mBaseTarget;
   return NS_OK;
@@ -9705,21 +9675,21 @@ nsIDocument::FlushPendingLinkUpdates()
 already_AddRefed<nsIDocument>
 nsIDocument::CreateStaticClone(nsIDocShell* aCloneContainer)
 {
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(this);
-  NS_ENSURE_TRUE(domDoc, nullptr);
+  nsDocument* thisAsDoc = static_cast<nsDocument*>(this);
   mCreatingStaticClone = true;
 
   // Make document use different container during cloning.
   nsRefPtr<nsDocShell> originalShell = mDocumentContainer.get();
   SetContainer(static_cast<nsDocShell*>(aCloneContainer));
   nsCOMPtr<nsIDOMNode> clonedNode;
-  nsresult rv = domDoc->CloneNode(true, 1, getter_AddRefs(clonedNode));
+  nsresult rv = thisAsDoc->CloneNode(true, 1, getter_AddRefs(clonedNode));
   SetContainer(originalShell);
 
-  nsCOMPtr<nsIDocument> clonedDoc;
+  nsRefPtr<nsDocument> clonedDoc;
   if (NS_SUCCEEDED(rv)) {
-    clonedDoc = do_QueryInterface(clonedNode);
-    if (clonedDoc) {
+    nsCOMPtr<nsIDocument> tmp = do_QueryInterface(clonedNode);
+    if (tmp) {
+      clonedDoc = static_cast<nsDocument*>(tmp.get());
       if (IsStaticDocument()) {
         clonedDoc->mOriginalDocument = mOriginalDocument;
       } else {
@@ -9740,17 +9710,18 @@ nsIDocument::CreateStaticClone(nsIDocShell* aCloneContainer)
         }
       }
 
-      sheetsCount = GetNumberOfCatalogStyleSheets();
-      for (int32_t i = 0; i < sheetsCount; ++i) {
+      sheetsCount = thisAsDoc->mOnDemandBuiltInUASheets.Count();
+      // Iterate backwards to maintain order
+      for (int32_t i = sheetsCount - 1; i >= 0; --i) {
         nsRefPtr<nsCSSStyleSheet> sheet =
-          do_QueryObject(GetCatalogStyleSheetAt(i));
+          do_QueryObject(thisAsDoc->mOnDemandBuiltInUASheets[i]);
         if (sheet) {
           if (sheet->IsApplicable()) {
             nsRefPtr<nsCSSStyleSheet> clonedSheet =
               sheet->Clone(nullptr, nullptr, clonedDoc, nullptr);
             NS_WARN_IF_FALSE(clonedSheet, "Cloning a stylesheet didn't work!");
             if (clonedSheet) {
-              clonedDoc->AddCatalogStyleSheet(clonedSheet);
+              clonedDoc->AddOnDemandBuiltInUASheet(clonedSheet);
             }
           }
         }
@@ -12010,9 +11981,12 @@ nsDocument::DocAddSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
   aWindowSizes->mStyleSheetsSize +=
     mStyleSheets.SizeOfExcludingThis(SizeOfStyleSheetsElementIncludingThis,
                                      aWindowSizes->mMallocSizeOf);
+  // Note that we do not own the sheets pointed to by mOnDemandBuiltInUASheets
+  // (the nsLayoutStyleSheetCache singleton does) so pass nullptr as the
+  // aSizeOfElementIncludingThis callback argument.
   aWindowSizes->mStyleSheetsSize +=
-    mCatalogSheets.SizeOfExcludingThis(SizeOfStyleSheetsElementIncludingThis,
-                                       aWindowSizes->mMallocSizeOf);
+    mOnDemandBuiltInUASheets.SizeOfExcludingThis(nullptr,
+                                                 aWindowSizes->mMallocSizeOf);
   aWindowSizes->mStyleSheetsSize +=
     mAdditionalSheets[eAgentSheet].
       SizeOfExcludingThis(SizeOfStyleSheetsElementIncludingThis,

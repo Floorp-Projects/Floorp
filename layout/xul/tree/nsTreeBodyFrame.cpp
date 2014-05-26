@@ -161,9 +161,9 @@ AdjustForBorderPadding(nsStyleContext* aContext, nsRect& aRect)
 }
 
 void
-nsTreeBodyFrame::Init(nsIContent*     aContent,
-                      nsIFrame*       aParent,
-                      nsIFrame*       aPrevInFlow)
+nsTreeBodyFrame::Init(nsIContent*       aContent,
+                      nsContainerFrame* aParent,
+                      nsIFrame*         aPrevInFlow)
 {
   nsLeafBoxFrame::Init(aContent, aParent, aPrevInFlow);
 

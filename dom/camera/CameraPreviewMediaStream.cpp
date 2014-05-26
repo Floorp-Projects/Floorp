@@ -113,7 +113,7 @@ CameraPreviewMediaStream::SetCurrentFrame(const gfxIntSize& aIntrinsicSize, Imag
     output->SetCurrentFrame(aIntrinsicSize, aImage, now);
     nsCOMPtr<nsIRunnable> event =
       NS_NewRunnableMethod(output, &VideoFrameContainer::Invalidate);
-    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+    NS_DispatchToMainThread(event);
   }
 
   if (mFrameCallback) {
@@ -131,7 +131,7 @@ CameraPreviewMediaStream::ClearCurrentFrame()
     output->ClearCurrentFrame();
     nsCOMPtr<nsIRunnable> event =
       NS_NewRunnableMethod(output, &VideoFrameContainer::Invalidate);
-    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+    NS_DispatchToMainThread(event);
   }
 }
 
