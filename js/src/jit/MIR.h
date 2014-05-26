@@ -4300,6 +4300,11 @@ class MSub : public MBinaryArithInstruction
     void computeRange(TempAllocator &alloc);
     bool truncate(TruncateKind kind);
     TruncateKind operandTruncateKind(size_t index) const;
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return specialization_ != MIRType_None;
+    }
 };
 
 class MMul : public MBinaryArithInstruction
