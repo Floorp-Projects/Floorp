@@ -1323,40 +1323,23 @@ this.PlacesUtils = {
    */
   asyncGetBookmarkIds: function PU_asyncGetBookmarkIds(aURI, aCallback)
   {
-    if (!this._asyncGetBookmarksStmt) {
-      let db = this.history.DBConnection;
-      this._asyncGetBookmarksStmt = db.createAsyncStatement(
-        "SELECT b.id "
-      + "FROM moz_bookmarks b "
-      + "JOIN moz_places h on h.id = b.fk "
-      + "WHERE h.url = :url "
-      );
-      this.registerShutdownFunction(function () {
-        this._asyncGetBookmarksStmt.finalize();
+    let abort = false;
+    let itemIds = [];
+    Task.spawn(function* () {
+      let conn = yield this.promiseDBConnection();
+      const QUERY_STR =
+        "SELECT b.id FROM moz_bookmarks b JOIN moz_places h on h.id = b.fk " +
+        "WHERE h.url = :url";
+      let spec = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
+      yield conn.executeCached(QUERY_STR, { url: spec }, aRow => {
+        if (abort)
+          throw StopIteration;
+        itemIds.push(aRow.getResultByIndex(0));  
       });
-    }
-
-    let url = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
-    this._asyncGetBookmarksStmt.params.url = url;
-
-    // Storage does not guarantee that invoking cancel() on a statement
-    // will cause a REASON_CANCELED.  Thus we wrap the statement.
-    let stmt = new AsyncStatementCancelWrapper(this._asyncGetBookmarksStmt);
-    return stmt.executeAsync({
-      _callback: aCallback,
-      _itemIds: [],
-      handleResult: function(aResultSet) {
-        for (let row; (row = aResultSet.getNextRow());) {
-          this._itemIds.push(row.getResultByIndex(0));
-        }
-      },
-      handleCompletion: function(aReason)
-      {
-        if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED) {
-          this._callback(this._itemIds, aURI);
-        }
-      }
-    });
+      if (!abort)
+        aCallback(itemIds, aURI);
+    }.bind(this)).then(null, Cu.reportError);
+    return { cancel: () => { abort = true; } };
   },
 
   /**
@@ -1789,41 +1772,6 @@ this.PlacesUtils = {
     return rootItem;
   })
 };
-
-/**
- * Wraps the provided statement so that invoking cancel() on the pending
- * statement object will always cause a REASON_CANCELED.
- */
-function AsyncStatementCancelWrapper(aStmt) {
-  this._stmt = aStmt;
-}
-AsyncStatementCancelWrapper.prototype = {
-  _canceled: false,
-  _cancel: function() {
-    this._canceled = true;
-    this._pendingStmt.cancel();
-  },
-  handleResult: function(aResultSet) {
-    this._callback.handleResult(aResultSet);
-  },
-  handleError: function(aError) {
-    Cu.reportError("Async statement execution returned (" + aError.result +
-                   "): " + aError.message);
-  },
-  handleCompletion: function(aReason)
-  {
-    let reason = this._canceled ?
-                   Ci.mozIStorageStatementCallback.REASON_CANCELED :
-                   aReason;
-    this._callback.handleCompletion(reason);
-  },
-  executeAsync: function(aCallback) {
-    this._pendingStmt = this._stmt.executeAsync(this);
-    this._callback = aCallback;
-    let self = this;
-    return { cancel: function () { self._cancel(); } }
-  }
-}
 
 XPCOMUtils.defineLazyGetter(PlacesUtils, "history", function() {
   return Cc["@mozilla.org/browser/nav-history-service;1"]
