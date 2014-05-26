@@ -636,72 +636,95 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   }
 }
 
-void
-nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
-    gfxContext* aRefContext)
-{
-  uint32_t length = aTextRun->GetLength();
-  const char16_t* str = aTextRun->mString.BeginReading();
-  nsRefPtr<nsStyleContext>* styles = aTextRun->mStyles.Elements();
+// Some languages have special casing conventions that differ from the
+// default Unicode mappings.
+// The enum values here are named for well-known exemplar languages that
+// exhibit the behavior in question; multiple lang tags may map to the
+// same setting here, if the behavior is shared by other languages.
+enum LanguageSpecificCasingBehavior {
+  eLSCB_None,    // default non-lang-specific behavior
+  eLSCB_Turkish, // preserve dotted/dotless-i distinction in uppercase
+  eLSCB_Dutch,   // treat "ij" digraph as a unit for capitalization
+  eLSCB_Greek    // strip accent when uppercasing Greek vowels
+};
 
-  nsAutoString convertedString;
-  nsAutoTArray<bool,50> charsToMergeArray;
-  nsAutoTArray<bool,50> deletedCharsArray;
-  nsAutoTArray<nsStyleContext*,50> styleArray;
-  nsAutoTArray<uint8_t,50> canBreakBeforeArray;
+static LanguageSpecificCasingBehavior
+GetCasingFor(const nsIAtom* aLang)
+{
+  if (aLang == nsGkAtoms::tr ||
+      aLang == nsGkAtoms::az ||
+      aLang == nsGkAtoms::ba ||
+      aLang == nsGkAtoms::crh ||
+      aLang == nsGkAtoms::tt) {
+    return eLSCB_Turkish;
+  }
+  if (aLang == nsGkAtoms::nl) {
+    return eLSCB_Dutch;
+  }
+  if (aLang == nsGkAtoms::el) {
+    return eLSCB_Greek;
+  }
+  return eLSCB_None;
+}
+
+bool
+nsCaseTransformTextRunFactory::TransformString(
+    const nsAString& aString,
+    nsString& aConvertedString,
+    bool aAllUppercase,
+    const nsIAtom* aLanguage,
+    nsTArray<bool>& aCharsToMergeArray,
+    nsTArray<bool>& aDeletedCharsArray,
+    nsTransformedTextRun* aTextRun,
+    nsTArray<uint8_t>* aCanBreakBeforeArray,
+    nsTArray<nsStyleContext*>* aStyleArray)
+{
+  NS_PRECONDITION(!aTextRun || (aCanBreakBeforeArray && aStyleArray),
+                  "either none or all three optional parameters required");
+
+  uint32_t length = aString.Length();
+  const char16_t* str = aString.BeginReading();
+
   bool mergeNeeded = false;
 
-  // Some languages have special casing conventions that differ from the
-  // default Unicode mappings.
-  // The enum values here are named for well-known exemplar languages that
-  // exhibit the behavior in question; multiple lang tags may map to the
-  // same setting here, if the behavior is shared by other languages.
-  enum {
-    eNone,    // default non-lang-specific behavior
-    eTurkish, // preserve dotted/dotless-i distinction in uppercase
-    eDutch,   // treat "ij" digraph as a unit for capitalization
-    eGreek    // strip accent when uppercasing Greek vowels
-  } languageSpecificCasing = eNone;
-
-  const nsIAtom* lang = nullptr;
   bool capitalizeDutchIJ = false;
   bool prevIsLetter = false;
   uint32_t sigmaIndex = uint32_t(-1);
   nsIUGenCategory::nsUGenCategory cat;
-  GreekCasingState greekState = kStart;
-  uint32_t i;
-  for (i = 0; i < length; ++i) {
-    uint32_t ch = str[i];
-    nsStyleContext* styleContext = styles[i];
 
-    uint8_t style = mAllUppercase ? NS_STYLE_TEXT_TRANSFORM_UPPERCASE
-      : styleContext->StyleText()->mTextTransform;
+  uint8_t style = aAllUppercase ? NS_STYLE_TEXT_TRANSFORM_UPPERCASE : 0;
+  const nsIAtom* lang = aLanguage;
+
+  LanguageSpecificCasingBehavior languageSpecificCasing = GetCasingFor(lang);
+  GreekCasingState greekState = kStart;
+
+  for (uint32_t i = 0; i < length; ++i) {
+    uint32_t ch = str[i];
+
+    nsStyleContext* styleContext;
+    if (aTextRun) {
+      styleContext = aTextRun->mStyles[i];
+      style = aAllUppercase ? NS_STYLE_TEXT_TRANSFORM_UPPERCASE :
+        styleContext->StyleText()->mTextTransform;
+
+      if (lang != styleContext->StyleFont()->mLanguage) {
+        lang = styleContext->StyleFont()->mLanguage;
+        languageSpecificCasing = GetCasingFor(lang);
+        greekState = kStart;
+      }
+    }
+
     int extraChars = 0;
     const mozilla::unicode::MultiCharMapping *mcm;
 
-    if (NS_IS_HIGH_SURROGATE(ch) && i < length - 1 && NS_IS_LOW_SURROGATE(str[i + 1])) {
+    if (NS_IS_HIGH_SURROGATE(ch) && i < length - 1 &&
+        NS_IS_LOW_SURROGATE(str[i + 1])) {
       ch = SURROGATE_TO_UCS4(ch, str[i + 1]);
-    }
-
-    if (lang != styleContext->StyleFont()->mLanguage) {
-      lang = styleContext->StyleFont()->mLanguage;
-      if (lang == nsGkAtoms::tr || lang == nsGkAtoms::az ||
-          lang == nsGkAtoms::ba || lang == nsGkAtoms::crh ||
-          lang == nsGkAtoms::tt) {
-        languageSpecificCasing = eTurkish;
-      } else if (lang == nsGkAtoms::nl) {
-        languageSpecificCasing = eDutch;
-      } else if (lang == nsGkAtoms::el) {
-        languageSpecificCasing = eGreek;
-        greekState = kStart;
-      } else {
-        languageSpecificCasing = eNone;
-      }
     }
 
     switch (style) {
     case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
-      if (languageSpecificCasing == eTurkish) {
+      if (languageSpecificCasing == eLSCB_Turkish) {
         if (ch == 'I') {
           ch = LATIN_SMALL_LETTER_DOTLESS_I;
           prevIsLetter = true;
@@ -741,7 +764,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       // need to change it to SMALL SIGMA.
       if (sigmaIndex != uint32_t(-1)) {
         if (cat == nsIUGenCategory::kLetter) {
-          convertedString.SetCharAt(GREEK_SMALL_LETTER_SIGMA, sigmaIndex);
+          aConvertedString.SetCharAt(GREEK_SMALL_LETTER_SIGMA, sigmaIndex);
         }
       }
 
@@ -751,7 +774,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
         // to standard SMALL SIGMA later if another letter follows
         if (prevIsLetter) {
           ch = GREEK_SMALL_LETTER_FINAL_SIGMA;
-          sigmaIndex = convertedString.Length();
+          sigmaIndex = aConvertedString.Length();
         } else {
           // CAPITAL SIGMA not preceded by a letter is unconditionally mapped
           // to SMALL SIGMA
@@ -774,7 +797,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       if (mcm) {
         int j = 0;
         while (j < 2 && mcm->mMappedChars[j + 1]) {
-          convertedString.Append(mcm->mMappedChars[j]);
+          aConvertedString.Append(mcm->mMappedChars[j]);
           ++extraChars;
           ++j;
         }
@@ -786,12 +809,12 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       break;
 
     case NS_STYLE_TEXT_TRANSFORM_UPPERCASE:
-      if (languageSpecificCasing == eTurkish && ch == 'i') {
+      if (languageSpecificCasing == eLSCB_Turkish && ch == 'i') {
         ch = LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE;
         break;
       }
 
-      if (languageSpecificCasing == eGreek) {
+      if (languageSpecificCasing == eLSCB_Greek) {
         ch = GreekUpperCase(ch, &greekState);
         break;
       }
@@ -800,7 +823,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       if (mcm) {
         int j = 0;
         while (j < 2 && mcm->mMappedChars[j + 1]) {
-          convertedString.Append(mcm->mMappedChars[j]);
+          aConvertedString.Append(mcm->mMappedChars[j]);
           ++extraChars;
           ++j;
         }
@@ -812,36 +835,38 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       break;
 
     case NS_STYLE_TEXT_TRANSFORM_CAPITALIZE:
-      if (capitalizeDutchIJ && ch == 'j') {
-        ch = 'J';
+      if (aTextRun) {
+        if (capitalizeDutchIJ && ch == 'j') {
+          ch = 'J';
+          capitalizeDutchIJ = false;
+          break;
+        }
         capitalizeDutchIJ = false;
-        break;
-      }
-      capitalizeDutchIJ = false;
-      if (i < aTextRun->mCapitalize.Length() && aTextRun->mCapitalize[i]) {
-        if (languageSpecificCasing == eTurkish && ch == 'i') {
-          ch = LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE;
-          break;
-        }
-        if (languageSpecificCasing == eDutch && ch == 'i') {
-          ch = 'I';
-          capitalizeDutchIJ = true;
-          break;
-        }
-
-        mcm = mozilla::unicode::SpecialTitle(ch);
-        if (mcm) {
-          int j = 0;
-          while (j < 2 && mcm->mMappedChars[j + 1]) {
-            convertedString.Append(mcm->mMappedChars[j]);
-            ++extraChars;
-            ++j;
+        if (i < aTextRun->mCapitalize.Length() && aTextRun->mCapitalize[i]) {
+          if (languageSpecificCasing == eLSCB_Turkish && ch == 'i') {
+            ch = LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE;
+            break;
           }
-          ch = mcm->mMappedChars[j];
-          break;
-        }
+          if (languageSpecificCasing == eLSCB_Dutch && ch == 'i') {
+            ch = 'I';
+            capitalizeDutchIJ = true;
+            break;
+          }
 
-        ch = ToTitleCase(ch);
+          mcm = mozilla::unicode::SpecialTitle(ch);
+          if (mcm) {
+            int j = 0;
+            while (j < 2 && mcm->mMappedChars[j + 1]) {
+              aConvertedString.Append(mcm->mMappedChars[j]);
+              ++extraChars;
+              ++j;
+            }
+            ch = mcm->mMappedChars[j];
+            break;
+          }
+
+          ch = ToTitleCase(ch);
+        }
       }
       break;
 
@@ -854,33 +879,60 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
     }
 
     if (ch == uint32_t(-1)) {
-      deletedCharsArray.AppendElement(true);
+      aDeletedCharsArray.AppendElement(true);
       mergeNeeded = true;
     } else {
-      deletedCharsArray.AppendElement(false);
-      charsToMergeArray.AppendElement(false);
-      styleArray.AppendElement(styleContext);
-      canBreakBeforeArray.AppendElement(aTextRun->CanBreakLineBefore(i));
+      aDeletedCharsArray.AppendElement(false);
+      aCharsToMergeArray.AppendElement(false);
+      if (aTextRun) {
+        aStyleArray->AppendElement(styleContext);
+        aCanBreakBeforeArray->AppendElement(aTextRun->CanBreakLineBefore(i));
+      }
 
       if (IS_IN_BMP(ch)) {
-        convertedString.Append(ch);
+        aConvertedString.Append(ch);
       } else {
-        convertedString.Append(H_SURROGATE(ch));
-        convertedString.Append(L_SURROGATE(ch));
+        aConvertedString.Append(H_SURROGATE(ch));
+        aConvertedString.Append(L_SURROGATE(ch));
         ++i;
-        deletedCharsArray.AppendElement(true); // not exactly deleted, but the
-                                               // trailing surrogate is skipped
+        aDeletedCharsArray.AppendElement(true); // not exactly deleted, but the
+                                                // trailing surrogate is skipped
         ++extraChars;
       }
 
       while (extraChars-- > 0) {
         mergeNeeded = true;
-        charsToMergeArray.AppendElement(true);
-        styleArray.AppendElement(styleContext);
-        canBreakBeforeArray.AppendElement(false);
+        aCharsToMergeArray.AppendElement(true);
+        if (aTextRun) {
+          aStyleArray->AppendElement(styleContext);
+          aCanBreakBeforeArray->AppendElement(false);
+        }
       }
     }
   }
+
+  return mergeNeeded;
+}
+
+void
+nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
+    gfxContext* aRefContext)
+{
+  nsAutoString convertedString;
+  nsAutoTArray<bool,50> charsToMergeArray;
+  nsAutoTArray<bool,50> deletedCharsArray;
+  nsAutoTArray<uint8_t,50> canBreakBeforeArray;
+  nsAutoTArray<nsStyleContext*,50> styleArray;
+
+  bool mergeNeeded = TransformString(aTextRun->mString,
+                                     convertedString,
+                                     mAllUppercase,
+                                     nullptr,
+                                     charsToMergeArray,
+                                     deletedCharsArray,
+                                     aTextRun,
+                                     &canBreakBeforeArray,
+                                     &styleArray);
 
   uint32_t flags;
   gfxTextRunFactory::Parameters innerParams =
