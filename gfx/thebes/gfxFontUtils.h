@@ -605,6 +605,22 @@ struct KernTableSubtableHeaderVersion1 {
     AutoSwap_PRUint16    tupleIndex;
 };
 
+struct COLRHeader {
+    AutoSwap_PRUint16    version;
+    AutoSwap_PRUint16    numBaseGlyphRecord;
+    AutoSwap_PRUint32    offsetBaseGlyphRecord;
+    AutoSwap_PRUint32    offsetLayerRecord;
+    AutoSwap_PRUint16    numLayerRecords;
+};
+
+struct CPALHeaderVersion0 {
+    AutoSwap_PRUint16    version;
+    AutoSwap_PRUint16    numPaletteEntries;
+    AutoSwap_PRUint16    numPalettes;
+    AutoSwap_PRUint16    numColorRecords;
+    AutoSwap_PRUint32    offsetFirstColorRecord;
+};
+
 #pragma pack()
 
 // Return just the highest bit of the given value, i.e., the highest
@@ -925,6 +941,14 @@ public:
 
     // generate a unique font name
     static nsresult MakeUniqueUserFontName(nsAString& aName);
+
+    // for color layer from glyph using COLR and CPAL tables
+    static bool ValidateColorGlyphs(hb_blob_t* aCOLR, hb_blob_t* aCPAL);
+    static bool GetColorGlyphLayers(hb_blob_t* aCOLR,
+                                    hb_blob_t* aCPAL,
+                                    uint32_t aGlyphId,
+                                    nsTArray<uint16_t> &aGlyphs,
+                                    nsTArray<mozilla::gfx::Color> &aColors);
 
 protected:
     static nsresult
