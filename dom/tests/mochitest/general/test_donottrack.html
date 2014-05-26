@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=629535
+-->
+<head>
+  <title>Test for Bug 629535</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=629535">Mozilla Bug 629535</a>
+
+<script type="application/javascript">
+
+const dntPref = 'privacy.donottrackheader.enabled';
+const dntValuePref = 'privacy.donottrackheader.value';
+
+SimpleTest.waitForExplicitFinish();
+
+var currentTestIdx = -1;
+var tests = [];
+function nextTest() {
+  currentTestIdx++;
+  if (currentTestIdx >= tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  tests[currentTestIdx]();
+}
+
+tests.push(function testDefaultValues() {
+  // The default pref values depend on the OS it seems.
+  var isAndroid = !!navigator.userAgent.contains("Android");
+  var isB2G = !isAndroid && /Mobile|Tablet/.test(navigator.userAgent);
+
+  is(SpecialPowers.getBoolPref(dntPref), false,
+     'DNT should be disabled by default');
+  is(navigator.doNotTrack, 'unspecified',
+     'navigator.doNotTrack should initially be "unspecified".');
+  is(SpecialPowers.getIntPref(dntValuePref), isB2G ? -1 : 1,
+     'DNT value should be "1" by default');
+
+  nextTest();
+});
+
+tests.push(function clearedEnabled() {
+  SpecialPowers.pushPrefEnv({"clear": [[dntPref]]}, function() {
+    is(navigator.doNotTrack, "unspecified", 'after clearing pref');
+    nextTest();
+  });
+});
+
+tests.push(function setEnabled() {
+  SpecialPowers.pushPrefEnv({"set": [[dntPref, true]]}, function() {
+    is(navigator.doNotTrack, "1", 'after setting pref to true');
+    nextTest();
+  });
+});
+
+tests.push(function clearedValue() {
+  SpecialPowers.pushPrefEnv({"clear": [[dntValuePref]]}, function() {
+    is(navigator.doNotTrack, "1", 'after clearing value pref');
+    nextTest();
+  });
+});
+
+tests.push(function setValue0() {
+  SpecialPowers.pushPrefEnv({"set": [[dntValuePref, 0]]}, function() {
+    is(navigator.doNotTrack, "0", 'after setting value pref');
+    nextTest();
+  });
+});
+
+tests.push(function setValue42() {
+  SpecialPowers.pushPrefEnv({"set": [[dntValuePref, 42]]}, function() {
+    is(navigator.doNotTrack, "1", 'after setting value pref');
+    nextTest();
+  });
+});
+
+tests.push(function clearValueAgain() {
+  SpecialPowers.pushPrefEnv({"clear": [[dntValuePref]]}, function() {
+    is(navigator.doNotTrack, "1", 'after clearing value pref');
+    nextTest();
+  });
+});
+
+tests.push(function setDisabled() {
+  SpecialPowers.pushPrefEnv({"set": [[dntPref, false]]}, function() {
+    is(navigator.doNotTrack, "unspecified", 'after setting pref to false');
+    nextTest();
+  });
+});
+
+nextTest();
+
+</script>
+
+</body>
+</html>
+
