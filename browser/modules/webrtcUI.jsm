@@ -163,17 +163,6 @@ function prompt(aContentWindow, aCallID, aAudioRequested, aVideoRequested, aDevi
     }
   ];
 
-  if (aSecure) {
-    // Don't show the 'Always' action if the connection isn't secure.
-    secondaryActions.unshift({
-      label: stringBundle.getString("getUserMedia.always.label"),
-      accessKey: stringBundle.getString("getUserMedia.always.accesskey"),
-      callback: function () {
-        mainAction.callback(true);
-      }
-    });
-  }
-
   let options = {
     eventCallback: function(aTopic, aNewBrowser) {
       if (aTopic == "swapping")
@@ -222,7 +211,7 @@ function prompt(aContentWindow, aCallID, aAudioRequested, aVideoRequested, aDevi
         addDeviceToList(micMenupopup, stringBundle.getString("getUserMedia.noAudio.label"), "-1");
       }
 
-      this.mainAction.callback = function(aRemember) {
+      this.mainAction.callback = function() {
         let allowedDevices = Cc["@mozilla.org/supports-array;1"]
                                .createInstance(Ci.nsISupportsArray);
         let perms = Services.perms;
@@ -231,20 +220,12 @@ function prompt(aContentWindow, aCallID, aAudioRequested, aVideoRequested, aDevi
           let allowCamera = videoDeviceIndex != "-1";
           if (allowCamera)
             allowedDevices.AppendElement(videoDevices[videoDeviceIndex]);
-          if (aRemember) {
-            perms.add(uri, "camera",
-                      allowCamera ? perms.ALLOW_ACTION : perms.DENY_ACTION);
-          }
         }
         if (audioDevices.length) {
           let audioDeviceIndex = chromeDoc.getElementById("webRTC-selectMicrophone-menulist").value;
           let allowMic = audioDeviceIndex != "-1";
           if (allowMic)
             allowedDevices.AppendElement(audioDevices[audioDeviceIndex]);
-          if (aRemember) {
-            perms.add(uri, "microphone",
-                      allowMic ? perms.ALLOW_ACTION : perms.DENY_ACTION);
-          }
         }
 
         if (allowedDevices.Count() == 0) {
