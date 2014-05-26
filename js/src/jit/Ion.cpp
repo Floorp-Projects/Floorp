@@ -3017,10 +3017,12 @@ AutoFlushICache::setInhibit()
 // the respective AutoFlushICache dynamic context.
 //
 AutoFlushICache::AutoFlushICache(const char *nonce, bool inhibit)
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
   : start_(0),
     stop_(0),
     name_(nonce),
     inhibit_(inhibit)
+#endif
 {
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
     PerThreadData *pt = TlsPerThreadData.get();

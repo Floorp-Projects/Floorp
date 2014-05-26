@@ -777,11 +777,13 @@ class JitRuntime;
 struct AutoFlushICache
 {
   private:
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
     uintptr_t start_;
     uintptr_t stop_;
     const char *name_;
     bool inhibit_;
     AutoFlushICache *prev_;
+#endif
 
   public:
     static void setRange(uintptr_t p, size_t len);
