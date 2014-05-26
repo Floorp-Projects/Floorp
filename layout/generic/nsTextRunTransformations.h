@@ -9,9 +9,9 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 #include "gfxFont.h"
+#include "nsStyleContext.h"
 
 class nsTransformedTextRun;
-class nsStyleContext;
 
 class nsTransformingTextRunFactory {
 public:
