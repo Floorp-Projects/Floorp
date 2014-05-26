@@ -1996,7 +1996,18 @@ sparc*-*)
 dnl ENABLE_ION=0
     AC_DEFINE(JS_CPU_SPARC)
     AC_DEFINE(JS_NUNBOX32)
+    else
+    AC_DEFINE(JS_CPU_SPARC64)
+    AC_DEFINE(JS_PUNBOX64)
     fi
+    ;;
+powerpc64-*)
+    AC_DEFINE(JS_CPU_PPC64)
+    AC_DEFINE(JS_PUNBOX64)
+    ;;
+powerpc-*)
+    AC_DEFINE(JS_CPU_PPC)
+    AC_DEFINE(JS_NUNBOX32)
     ;;
 mips*-*)
     AC_DEFINE(JS_CPU_MIPS)

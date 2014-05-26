@@ -21,6 +21,7 @@
     } catch (e) {
       ok(false,
          "Unexpected exception trying to get all alarms.");
+      return cbk();
     }
     domRequest.onsuccess = function(e) {
       ok(e.target.result.length === n, "Correct number of alarms set.");
@@ -71,20 +72,34 @@
   }
 
   function startTests() {
+    SpecialPowers.pushPrefEnv({
+      "set": [["dom.mozAlarms.enabled", true]]
+    }, function() {
+      var isAllowedToTest = true;
 
-    SpecialPowers.pushPrefEnv({"set": [["dom.mozAlarms.enabled", true]]}, function() {
-
-      // Currently applicable only on FxOS
-      if (navigator.userAgent.indexOf("Mobile") != -1 &&
-          navigator.appVersion.indexOf("Android") == -1) {
-
-        testAddRemove();
-
-      } else {
-        ok(true, "mozAlarms on Firefox OS only.");
-        SimpleTest.finish();
+      if (navigator.appVersion.indexOf("Android") !== -1) {
+        ok(true, "mozAlarms is not allowed on Android for now. " +
+                 "TODO Bug 863557.");
+        isAllowedToTest = false;
+      } else if (SpecialPowers.wrap(document).nodePrincipal.appStatus ==
+                 SpecialPowers.Ci.nsIPrincipal.APP_STATUS_NOT_INSTALLED) {
+        ok(true, "mozAlarms is not allowed for non-installed apps. " +
+                 "TODO Bug 876981.");
+        isAllowedToTest = false;
       }
 
+      if (isAllowedToTest) {
+        ok(true, "Start to test...");
+        testAddRemove();
+      } else {
+        // A sanity check to make sure we must run tests on Firefox OS (B2G).
+        if (navigator.userAgent.indexOf("Mobile") != -1 &&
+            navigator.appVersion.indexOf("Android") == -1) {
+          ok(false, "Should run the test on Firefox OS (B2G)!");
+        }
+
+        SimpleTest.finish();
+      }
     });
   }
 

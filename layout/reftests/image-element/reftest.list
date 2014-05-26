@@ -44,4 +44,4 @@ fuzzy(1,16900) == gradient-html-07c.html gradient-html-07d.html
 HTTP == invalidate-1.html invalidate-1-ref.html
 == pattern-html-01.html pattern-html-01-ref.svg
 == pattern-html-02.html pattern-html-02-ref.svg
-== referenced-from-binding-01.html referenced-from-binding-01-ref.html
+fails-if(B2G&&browserIsRemote) == referenced-from-binding-01.html referenced-from-binding-01-ref.html # Bug 988763

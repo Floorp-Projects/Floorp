@@ -1,7 +1,7 @@
 == table-repaint-a.html table-repaint-a-ref.html
-== table-repaint-b.html table-repaint-b-ref.html
+fails-if(B2G&&browserIsRemote) == table-repaint-b.html table-repaint-b-ref.html
 == table-repaint-c.html table-repaint-c-ref.html
-== table-repaint-d.html table-repaint-d-ref.html
+fails-if(B2G&&browserIsRemote) == table-repaint-d.html table-repaint-d-ref.html
 skip-if(B2G&&browserIsRemote) == 540247-1.xul 540247-1-ref.xul  # bug 974780
 skip-if(B2G&&browserIsRemote) == 543681-1.html 543681-1-ref.html
 == test-image-layers.html test-image-layers-ref.html
@@ -20,24 +20,24 @@ pref(layout.animated-image-layers.enabled,true) == test-animated-image-layers-ba
 == filter-userspace-offset.svg?offsetContainer=use&filter=matrix-boundingBox filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=innerSVG&filter=matrix-boundingBox filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=foreignObject&filter=matrix-boundingBox filter-userspace-offset.svg
-== filter-userspace-offset.svg?offsetContainer=rect&filter=flood-userSpace-at100 filter-userspace-offset.svg
-== filter-userspace-offset.svg?offsetContainer=use&filter=flood-userSpace-at100 filter-userspace-offset.svg
+fails-if(B2G&&browserIsRemote) == filter-userspace-offset.svg?offsetContainer=rect&filter=flood-userSpace-at100 filter-userspace-offset.svg
+fails-if(B2G&&browserIsRemote) == filter-userspace-offset.svg?offsetContainer=use&filter=flood-userSpace-at100 filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=innerSVG&filter=flood-userSpace-atZero filter-userspace-offset.svg
-== filter-userspace-offset.svg?offsetContainer=foreignObject&filter=flood-userSpace-at100 filter-userspace-offset.svg
-== filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-userSpace-at100 filter-userspace-offset.svg
-== filter-userspace-offset.svg?offsetContainer=use&filter=matrix-userSpace-at100 filter-userspace-offset.svg
+fails-if(B2G&&browserIsRemote) == filter-userspace-offset.svg?offsetContainer=foreignObject&filter=flood-userSpace-at100 filter-userspace-offset.svg
+fails-if(B2G&&browserIsRemote) == filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-userSpace-at100 filter-userspace-offset.svg
+fails-if(B2G&&browserIsRemote) == filter-userspace-offset.svg?offsetContainer=use&filter=matrix-userSpace-at100 filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=innerSVG&filter=matrix-userSpace-atZero filter-userspace-offset.svg
-== filter-userspace-offset.svg?offsetContainer=foreignObject&filter=matrix-userSpace-at100 filter-userspace-offset.svg
+fails-if(B2G&&browserIsRemote) == filter-userspace-offset.svg?offsetContainer=foreignObject&filter=matrix-userSpace-at100 filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=rect&mask=boundingBox filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=use&mask=boundingBox filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=innerSVG&mask=boundingBox filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=foreignObject&mask=boundingBox filter-userspace-offset.svg
-== filter-userspace-offset.svg?offsetContainer=rect&mask=userSpace-at100 filter-userspace-offset.svg
-== filter-userspace-offset.svg?offsetContainer=use&mask=userSpace-at100 filter-userspace-offset.svg
+fails-if(B2G&&browserIsRemote) == filter-userspace-offset.svg?offsetContainer=rect&mask=userSpace-at100 filter-userspace-offset.svg
+fails-if(B2G&&browserIsRemote) == filter-userspace-offset.svg?offsetContainer=use&mask=userSpace-at100 filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=innerSVG&mask=userSpace-atZero filter-userspace-offset.svg
-== filter-userspace-offset.svg?offsetContainer=foreignObject&mask=userSpace-at100 filter-userspace-offset.svg
+fails-if(B2G&&browserIsRemote) == filter-userspace-offset.svg?offsetContainer=foreignObject&mask=userSpace-at100 filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-fillPaint-boundingBox filter-userspace-offset.svg
-== filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-fillPaint-userSpace-at100 filter-userspace-offset.svg
+fails-if(B2G&&browserIsRemote) == filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-fillPaint-userSpace-at100 filter-userspace-offset.svg
 == scroll-inactive-layers.html scroll-inactive-layers.html
 == scroll-inactive-layers-2.html scroll-inactive-layers-2.html
 != inactive-layertree-visible-region-1.html about:blank

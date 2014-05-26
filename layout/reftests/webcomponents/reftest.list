@@ -1,4 +1,4 @@
-pref(dom.webcomponents.enabled,true) == cross-tree-selection-1.html cross-tree-selection-1-ref.html
+pref(dom.webcomponents.enabled,true) random-if(B2G&&browserIsRemote) == cross-tree-selection-1.html cross-tree-selection-1-ref.html
 pref(dom.webcomponents.enabled,true) == basic-shadow-1.html basic-shadow-1-ref.html
 pref(dom.webcomponents.enabled,true) == basic-shadow-2.html basic-shadow-2-ref.html
 pref(dom.webcomponents.enabled,true) == basic-shadow-3.html basic-shadow-3-ref.html

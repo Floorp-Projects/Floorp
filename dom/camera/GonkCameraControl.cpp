@@ -1070,7 +1070,7 @@ nsGonkCameraControl::StopRecordingImpl()
   }
 
   // notify DeviceStorage that the new video file is closed and ready
-  return NS_DispatchToMainThread(new RecordingComplete(mVideoFile), NS_DISPATCH_NORMAL);
+  return NS_DispatchToMainThread(new RecordingComplete(mVideoFile));
 }
 
 nsresult

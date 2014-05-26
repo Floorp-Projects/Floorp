@@ -130,6 +130,12 @@ KeyboardEvent::GetKey(nsAString& aKeyName)
   return NS_OK;
 }
 
+void
+KeyboardEvent::GetCode(nsAString& aCodeName)
+{
+  mEvent->AsKeyboardEvent()->GetDOMCodeName(aCodeName);
+}
+
 NS_IMETHODIMP
 KeyboardEvent::GetCharCode(uint32_t* aCharCode)
 {
@@ -249,6 +255,8 @@ KeyboardEvent::Constructor(const GlobalObject& aGlobal,
   internalEvent->mIsComposing = aParam.mIsComposing;
   internalEvent->mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
   internalEvent->mKeyValue = aParam.mKey;
+  internalEvent->mCodeNameIndex = CODE_NAME_INDEX_USE_STRING;
+  internalEvent->mCodeValue = aParam.mCode;
 
   return newEvent.forget();
 }

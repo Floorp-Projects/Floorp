@@ -16,6 +16,7 @@
 #include "vm/TraceLogging.h"
 
 #include "jit/JitFrameIterator-inl.h"
+#include "vm/Probes-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
@@ -96,8 +97,20 @@ jit::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
               retval == BAILOUT_RETURN_OVERRECURSED);
     JS_ASSERT_IF(retval == BAILOUT_RETURN_OK, *bailoutInfo != nullptr);
 
-    if (retval != BAILOUT_RETURN_OK)
+    if (retval != BAILOUT_RETURN_OK) {
+        // If the bailout failed, then bailout trampoline will pop the
+        // current frame and jump straight to exception handling code when
+        // this function returns.  Any SPS entry pushed for this frame will
+        // be silently forgotten.
+        //
+        // We call ExitScript here to ensure that if the ionScript had SPS
+        // instrumentation, then the SPS entry for it is popped.
+        JSScript *script = iter.script();
+        probes::ExitScript(cx, script, script->functionNonDelazifying(),
+                           iter.ionScript()->hasSPSInstrumentation());
+
         EnsureExitFrame(iter.jsFrame());
+    }
 
     return retval;
 }
@@ -136,8 +149,20 @@ jit::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
     JS_ASSERT_IF(retval == BAILOUT_RETURN_OK, *bailoutInfo != nullptr);
 
     if (retval != BAILOUT_RETURN_OK) {
+        // If the bailout failed, then bailout trampoline will pop the
+        // current frame and jump straight to exception handling code when
+        // this function returns.  Any SPS entry pushed for this frame will
+        // be silently forgotten.
+        //
+        // We call ExitScript here to ensure that if the ionScript had SPS
+        // instrumentation, then the SPS entry for it is popped.
+        JSScript *script = iter.script();
+        probes::ExitScript(cx, script, script->functionNonDelazifying(),
+                           iter.ionScript()->hasSPSInstrumentation());
+
         IonJSFrameLayout *frame = iter.jsFrame();
-        IonSpew(IonSpew_Invalidate, "converting to exit frame");
+        IonSpew(IonSpew_Invalidate, "Bailout failed (%s): converting to exit frame",
+                (retval == BAILOUT_RETURN_FATAL_ERROR) ? "Fatal Error" : "Over Recursion");
         IonSpew(IonSpew_Invalidate, "   orig calleeToken %p", (void *) frame->calleeToken());
         IonSpew(IonSpew_Invalidate, "   orig frameSize %u", unsigned(frame->prevFrameLocalSize()));
         IonSpew(IonSpew_Invalidate, "   orig ra %p", (void *) frame->returnAddress());

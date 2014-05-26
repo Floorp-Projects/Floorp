@@ -147,7 +147,7 @@ extern void NS_SealStaticAtomTable();
 class nsAtomString : public nsString
 {
 public:
-  nsAtomString(nsIAtom* aAtom)
+  explicit nsAtomString(nsIAtom* aAtom)
   {
     aAtom->ToString(*this);
   }
@@ -156,7 +156,7 @@ public:
 class nsAtomCString : public nsCString
 {
 public:
-  nsAtomCString(nsIAtom* aAtom)
+  explicit nsAtomCString(nsIAtom* aAtom)
   {
     aAtom->ToUTF8String(*this);
   }
@@ -165,7 +165,7 @@ public:
 class nsDependentAtomString : public nsDependentString
 {
 public:
-  nsDependentAtomString(nsIAtom* aAtom)
+  explicit nsDependentAtomString(nsIAtom* aAtom)
     : nsDependentString(aAtom->GetUTF16String(), aAtom->GetLength())
   {
   }

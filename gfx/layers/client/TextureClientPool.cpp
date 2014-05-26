@@ -44,7 +44,7 @@ TextureClientPool::GetTextureClient()
   RefPtr<TextureClient> textureClient;
   if (mTextureClients.size()) {
     textureClient = mTextureClients.top();
-    textureClient->WaitReleaseFence();
+    textureClient->WaitForBufferOwnership();
     mTextureClients.pop();
     return textureClient;
   }

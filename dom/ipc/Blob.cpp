@@ -604,7 +604,7 @@ private:
       NS_WARNING("Available failed on this stream!");
     }
 
-    nsresult rv = NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL);
+    nsresult rv = NS_DispatchToMainThread(this);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;

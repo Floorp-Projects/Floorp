@@ -61,7 +61,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=123456
     var worker = new Worker("file_worker.js");
 
     worker.onerror = function(event) {
-      ok(false, "Worker had an error: " + event.data);
+      ok(false, "Worker had an error: " + event.message);
       finish();
     };
 

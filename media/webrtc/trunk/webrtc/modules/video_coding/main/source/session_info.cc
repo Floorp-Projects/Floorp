@@ -11,6 +11,7 @@
 #include "webrtc/modules/video_coding/main/source/session_info.h"
 
 #include "webrtc/modules/video_coding/main/source/packet.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_format_h264.h"
 
 namespace webrtc {
 
@@ -136,7 +137,7 @@ int VCMSessionInfo::InsertBuffer(uint8_t* frame_buffer,
 
   ShiftSubsequentPackets(packet_it, packet_size);
 
-  const unsigned char startCode[] = {0, 0, 0, 1};
+  const uint8_t startCode[] = {0, 0, 0, 1};
   if (packet.insertStartCode) {
     memcpy(const_cast<uint8_t*>(packet.dataPtr), startCode,
            kH264StartCodeLengthBytes);
@@ -418,34 +419,71 @@ int VCMSessionInfo::InsertPacket(const VCMPacket& packet,
       (*rit).seqNum == packet.seqNum && (*rit).sizeBytes > 0)
     return -2;
 
-  // Only insert media packets between first and last packets (when available).
-  // Placing check here, as to properly account for duplicate packets.
-  // Check if this is first packet (only valid for some codecs)
-  // Should only be set for one packet per session.
-  if (packet.isFirstPacket && first_packet_seq_num_ == -1) {
-    // The first packet in a frame signals the frame type.
-    frame_type_ = packet.frameType;
-    // Store the sequence number for the first packet.
-    first_packet_seq_num_ = static_cast<int>(packet.seqNum);
-  } else if (first_packet_seq_num_ != -1 &&
-        !IsNewerSequenceNumber(packet.seqNum, first_packet_seq_num_)) {
-    return -3;
-  } else if (frame_type_ == kFrameEmpty && packet.frameType != kFrameEmpty) {
-    // Update the frame type with the type of the first media packet.
-    // TODO(mikhal): Can this trigger?
-    frame_type_ = packet.frameType;
-  }
+  PacketIterator packet_list_it;
+  if (packet.codec == kVideoCodecH264) {
+    RTPVideoHeaderH264 h264 = packet.codecSpecificHeader.codecHeader.H264;
+    uint8_t nal_type = h264.nalu_header & RtpFormatH264::kH264NAL_TypeMask;
 
-  // Track the marker bit, should only be set for one packet per session.
-  if (packet.markerBit && last_packet_seq_num_ == -1) {
-    last_packet_seq_num_ = static_cast<int>(packet.seqNum);
-  } else if (last_packet_seq_num_ != -1 &&
+    if (packet.isFirstPacket) {
+      if (HaveFirstPacket() == false ||
+          IsNewerSequenceNumber(first_packet_seq_num_, packet.seqNum)) {
+        first_packet_seq_num_ = packet.seqNum;
+        frame_type_ = packet.frameType;
+      }
+    }
+
+    // TODO(jesup) Handle STAP-A's here, since they must share a timestamp.  Break
+    // into individual packets at this point, then handle like kNaluCompletes
+
+    // Ignore Marker bit for reassembly, since it's not 100% guaranteed to be correct
+    // Look at kNaluComplete (single_nal), or an unbroken sequence of
+    // isFirstPacket/kNaluStart (FU-A with S bit), FU-A's, FU-A with E bit (kNaluEnd)
+    if ((packet.completeNALU == kNaluComplete || packet.completeNALU == kNaluEnd) &&
+        last_packet_seq_num_ == -1) {
+      last_packet_seq_num_ = static_cast<int>(packet.seqNum);
+    } else if (last_packet_seq_num_ != -1 &&
       IsNewerSequenceNumber(packet.seqNum, last_packet_seq_num_)) {
-    return -3;
-  }
+      //LOG(LS_WARNING) << "Received packet with a sequence number which is out "
+      //                 " of frame boundaries";
+      return -3;
+    }
 
-  // The insert operation invalidates the iterator |rit|.
-  PacketIterator packet_list_it = packets_.insert(rit.base(), packet);
+    // The insert operation invalidates the iterator |rit|.
+    packet_list_it = packets_.insert(rit.base(), packet);
+  } else {
+    // Only insert media packets between first and last packets (when available).
+    // Placing check here, as to properly account for duplicate packets.
+    // Check if this is first packet (only valid for some codecs)
+    // Should only be set for one packet per session.
+    if (packet.isFirstPacket && first_packet_seq_num_ == -1) {
+      // The first packet in a frame signals the frame type.
+      frame_type_ = packet.frameType;
+      // Store the sequence number for the first packet.
+      first_packet_seq_num_ = static_cast<int>(packet.seqNum);
+    } else if (first_packet_seq_num_ != -1 &&
+      !IsNewerSequenceNumber(packet.seqNum, first_packet_seq_num_)) {
+      //LOG(LS_WARNING) << "Received packet with a sequence number which is out "
+      //                 "of frame boundaries";
+      return -3;
+    } else if (frame_type_ == kFrameEmpty && packet.frameType != kFrameEmpty) {
+      // Update the frame type with the type of the first media packet.
+      // TODO(mikhal): Can this trigger?
+      frame_type_ = packet.frameType;
+    }
+
+    // Track the marker bit, should only be set for one packet per session.
+    if (packet.markerBit && last_packet_seq_num_ == -1) {
+      last_packet_seq_num_ = static_cast<int>(packet.seqNum);
+    } else if (last_packet_seq_num_ != -1 &&
+        IsNewerSequenceNumber(packet.seqNum, last_packet_seq_num_)) {
+      //LOG(LS_WARNING) << "Received packet with a sequence number which is out "
+      //                 "of frame boundaries";
+      return -3;
+    }
+
+    // The insert operation invalidates the iterator |rit|.
+    packet_list_it = packets_.insert(rit.base(), packet);
+  }
 
   int returnLength = InsertBuffer(frame_buffer, packet_list_it);
   UpdateCompleteSession();

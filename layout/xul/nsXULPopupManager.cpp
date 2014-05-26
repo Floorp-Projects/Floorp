@@ -2151,12 +2151,12 @@ nsXULPopupManager::HandleKeyboardEventWithKeyCode(
 }
 
 nsMenuFrame*
-nsXULPopupManager::GetNextMenuItem(nsIFrame* aParent,
+nsXULPopupManager::GetNextMenuItem(nsContainerFrame* aParent,
                                    nsMenuFrame* aStart,
                                    bool aIsPopup)
 {
   nsPresContext* presContext = aParent->PresContext();
-  nsIFrame* immediateParent = presContext->PresShell()->
+  nsContainerFrame* immediateParent = presContext->PresShell()->
     FrameConstructor()->GetInsertionPoint(aParent->GetContent(), nullptr);
   if (!immediateParent)
     immediateParent = aParent;
@@ -2209,12 +2209,12 @@ nsXULPopupManager::GetNextMenuItem(nsIFrame* aParent,
 }
 
 nsMenuFrame*
-nsXULPopupManager::GetPreviousMenuItem(nsIFrame* aParent,
+nsXULPopupManager::GetPreviousMenuItem(nsContainerFrame* aParent,
                                        nsMenuFrame* aStart,
                                        bool aIsPopup)
 {
   nsPresContext* presContext = aParent->PresContext();
-  nsIFrame* immediateParent = presContext->PresShell()->
+  nsContainerFrame* immediateParent = presContext->PresShell()->
     FrameConstructor()->GetInsertionPoint(aParent->GetContent(), nullptr);
   if (!immediateParent)
     immediateParent = aParent;

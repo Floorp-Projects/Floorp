@@ -1047,6 +1047,9 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
     aKeyEvent.mKeyNameIndex = ComputeGeckoKeyNameIndex(nativeKeyCode);
   }
 
+  aKeyEvent.mCodeNameIndex = ComputeGeckoCodeNameIndex(nativeKeyCode);
+  MOZ_ASSERT(aKeyEvent.mCodeNameIndex != CODE_NAME_INDEX_USE_STRING);
+
   NS_OBJC_END_TRY_ABORT_BLOCK
 }
 
@@ -1396,6 +1399,13 @@ TISInputSourceWrapper::ComputeGeckoKeyCode(UInt32 aNativeKeyCode,
 KeyNameIndex
 TISInputSourceWrapper::ComputeGeckoKeyNameIndex(UInt32 aNativeKeyCode)
 {
+  // NOTE:
+  //   When unsupported keys like Convert, Nonconvert of Japanese keyboard is
+  //   pressed:
+  //     on 10.6.x, 'A' key event is fired (and also actually 'a' is inserted).
+  //     on 10.7.x, Nothing happens.
+  //     on 10.8.x, Nothing happens.
+  //     on 10.9.x, FlagsChanged event is fired with keyCode 0xFF.
   switch (aNativeKeyCode) {
 
 #define NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, aKeyNameIndex) \
@@ -1407,6 +1417,24 @@ TISInputSourceWrapper::ComputeGeckoKeyNameIndex(UInt32 aNativeKeyCode)
 
     default:
       return KEY_NAME_INDEX_Unidentified;
+  }
+}
+
+// static
+CodeNameIndex
+TISInputSourceWrapper::ComputeGeckoCodeNameIndex(UInt32 aNativeKeyCode)
+{
+  switch (aNativeKeyCode) {
+
+#define NS_NATIVE_KEY_TO_DOM_CODE_NAME_INDEX(aNativeKey, aCodeNameIndex) \
+    case aNativeKey: return aCodeNameIndex;
+
+#include "NativeKeyToDOMCodeName.h"
+
+#undef NS_NATIVE_KEY_TO_DOM_CODE_NAME_INDEX
+
+    default:
+      return CODE_NAME_INDEX_UNKNOWN;
   }
 }
 
@@ -2665,7 +2693,7 @@ IMEInputHandler::CreateTextRangeArray(NSAttributedString *aAttrString,
 
   return textRangeArray.forget();
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL;
 }
 
 bool

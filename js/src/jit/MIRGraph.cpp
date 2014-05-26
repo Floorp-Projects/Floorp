@@ -236,26 +236,6 @@ MBasicBlock::NewSplitEdge(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred)
 }
 
 MBasicBlock *
-MBasicBlock::NewAbortPar(MIRGraph &graph, CompileInfo &info,
-                         MBasicBlock *pred, const BytecodeSite &site,
-                         MResumePoint *resumePoint)
-{
-    MBasicBlock *block = new(graph.alloc()) MBasicBlock(graph, info, site, NORMAL);
-
-    resumePoint->block_ = block;
-    block->entryResumePoint_ = resumePoint;
-
-    if (!block->init())
-        return nullptr;
-
-    if (!block->addPredecessorWithoutPhis(pred))
-        return nullptr;
-
-    block->end(MAbortPar::New(graph.alloc()));
-    return block;
-}
-
-MBasicBlock *
 MBasicBlock::NewAsmJS(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred, Kind kind)
 {
     MBasicBlock *block = new(graph.alloc()) MBasicBlock(graph, info, BytecodeSite(), kind);
@@ -1133,7 +1113,9 @@ MBasicBlock::clearDominatorInfo()
 void
 MBasicBlock::removePredecessor(MBasicBlock *pred)
 {
-    JS_ASSERT(numPredecessors() >= 2);
+    // If we're removing the last backedge, this is no longer a loop.
+    if (isLoopHeader() && hasUniqueBackedge() && backedge() == pred)
+        clearLoopHeader();
 
     for (size_t i = 0; i < numPredecessors(); i++) {
         if (getPredecessor(i) != pred)
@@ -1146,6 +1128,7 @@ MBasicBlock::removePredecessor(MBasicBlock *pred)
             JS_ASSERT(pred->positionInPhiSuccessor() == i);
             for (MPhiIterator iter = phisBegin(); iter != phisEnd(); iter++)
                 iter->removeOperand(i);
+            pred->setSuccessorWithPhis(nullptr, 0);
             for (size_t j = i+1; j < numPredecessors(); j++)
                 getPredecessor(j)->setSuccessorWithPhis(this, j - 1);
         }

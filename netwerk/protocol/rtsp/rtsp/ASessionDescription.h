@@ -41,7 +41,7 @@ struct ASessionDescription : public RefBase {
     size_t countTracks() const;
     void getFormat(size_t index, AString *value) const;
 
-    void getFormatType(
+    bool getFormatType(
             size_t index, unsigned long *PT,
             AString *desc, AString *params) const;
 

@@ -1,0 +1,29 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+  * To be implemented by @mozilla.org/dom/apps/inter-app-comm-ui-glue;1
+  */
+[scriptable, uuid(634555c6-e246-11e3-b427-74d02b97e723)]
+interface nsIInterAppCommUIGlue : nsISupports
+{
+    /**
+      * This method is to notify the prompt to let the user select some of the
+      * IAC-eligible apps.
+      *
+      * @param callerID           The generated UUID to identify the caller and
+      *                           should be unique for each call.
+      * @param pubAppManifestURL  The manifest URL of the publisher.
+      * @param keyword            The IAC keyword.
+      * @param appsToSelect       The IAC-eligible apps for selection.
+      *
+      * Returns a promise.
+      */
+    jsval selectApps(in AString callerID,
+                     in AString pubAppManifestURL,
+                     in AString keyword,
+                     in jsval appsToSelect);
+};

@@ -95,9 +95,9 @@ static void
 EndSwapDocShellsForViews(nsView* aView);
 
 void
-nsSubDocumentFrame::Init(nsIContent*     aContent,
-                         nsIFrame*       aParent,
-                         nsIFrame*       aPrevInFlow)
+nsSubDocumentFrame::Init(nsIContent*       aContent,
+                         nsContainerFrame* aParent,
+                         nsIFrame*         aPrevInFlow)
 {
   // determine if we are a <frame> or <iframe>
   if (aContent) {

@@ -595,10 +595,6 @@ static const bool isthreaded = true;
 #define	RUN_MAX_OVRHD		0x0000003dU
 #define	RUN_MAX_OVRHD_RELAX	0x00001800U
 
-/* Put a cap on small object run size.  This overrides RUN_MAX_OVRHD. */
-#define	RUN_MAX_SMALL_2POW	15
-#define	RUN_MAX_SMALL		(1U << RUN_MAX_SMALL_2POW)
-
 /*
  * Hyper-threaded CPUs may need a special instruction inside spin loops in
  * order to yield to another virtual CPU.  If no such instruction is defined
@@ -3911,7 +3907,6 @@ arena_bin_run_size_calc(arena_bin_t *bin, size_t min_run_size)
 
 	assert(min_run_size >= pagesize);
 	assert(min_run_size <= arena_maxclass);
-	assert(min_run_size <= RUN_MAX_SMALL);
 
 	/*
 	 * Calculate known-valid settings before entering the run_size
@@ -3957,7 +3952,7 @@ arena_bin_run_size_calc(arena_bin_t *bin, size_t min_run_size)
 			    bin->reg_size);
 		} while (sizeof(arena_run_t) + (sizeof(unsigned) *
 		    (try_mask_nelms - 1)) > try_reg0_offset);
-	} while (try_run_size <= arena_maxclass && try_run_size <= RUN_MAX_SMALL
+	} while (try_run_size <= arena_maxclass
 	    && RUN_MAX_OVRHD * (bin->reg_size << 3) > RUN_MAX_OVRHD_RELAX
 	    && (try_reg0_offset << RUN_BFP) > RUN_MAX_OVRHD * try_run_size);
 
@@ -6584,7 +6579,7 @@ malloc_usable_size_impl(const void *ptr)
 MOZ_JEMALLOC_API void
 jemalloc_stats_impl(jemalloc_stats_t *stats)
 {
-	size_t i;
+	size_t i, non_arena_mapped, chunk_header_size;
 
 	assert(stats != NULL);
 
@@ -6644,17 +6639,20 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
         stats->waste = 0;
 	stats->page_cache = 0;
         stats->bookkeeping = 0;
+	stats->bin_unused = 0;
+
+	non_arena_mapped = 0;
 
 	/* Get huge mapped/allocated. */
 	malloc_mutex_lock(&huge_mtx);
-	stats->mapped += huge_mapped;
+	non_arena_mapped += huge_mapped;
 	stats->allocated += huge_allocated;
 	assert(huge_mapped >= huge_allocated);
 	malloc_mutex_unlock(&huge_mtx);
 
 	/* Get base mapped/allocated. */
 	malloc_mutex_lock(&base_mtx);
-	stats->mapped += base_mapped;
+	non_arena_mapped += base_mapped;
 	stats->bookkeeping += base_committed;
 	assert(base_mapped >= base_committed);
 	malloc_mutex_unlock(&base_mtx);
@@ -6662,11 +6660,17 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
 	/* Iterate over arenas. */
 	for (i = 0; i < narenas; i++) {
 		arena_t *arena = arenas[i];
-		size_t arena_mapped, arena_allocated, arena_committed, arena_dirty;
+		size_t arena_mapped, arena_allocated, arena_committed, arena_dirty, j,
+		    arena_unused, arena_headers;
+		arena_run_t* run;
+		arena_chunk_map_t* mapelm;
 
 		if (arena == NULL) {
 			continue;
 		}
+
+		arena_headers = 0;
+		arena_unused = 0;
 
 		malloc_spin_lock(&arena->lock);
 
@@ -6680,6 +6684,25 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
 
 		arena_dirty = arena->ndirty << pagesize_2pow;
 
+		for (j = 0; j < ntbins + nqbins + nsbins; j++) {
+			arena_bin_t* bin = &arena->bins[j];
+			size_t bin_unused = 0;
+			const size_t run_header_size = sizeof(arena_run_t) +
+			    (sizeof(unsigned) * (bin->regs_mask_nelms - 1));
+
+			rb_foreach_begin(arena_chunk_map_t, link, &bin->runs, mapelm) {
+				run = (arena_run_t *)(mapelm->bits & ~pagesize_mask);
+				bin_unused += run->nfree * bin->reg_size;
+			} rb_foreach_end(arena_chunk_map_t, link, &bin->runs, mapelm)
+
+			if (bin->runcur) {
+				bin_unused += bin->runcur->nfree * bin->reg_size;
+			}
+
+			arena_unused += bin_unused;
+			arena_headers += bin->stats.curruns * bin->reg0_offset;
+		}
+
 		malloc_spin_unlock(&arena->lock);
 
 		assert(arena_mapped >= arena_committed);
@@ -6690,8 +6713,20 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
 		stats->mapped += arena_mapped;
 		stats->allocated += arena_allocated;
 		stats->page_cache += arena_dirty;
-		stats->waste += arena_committed - arena_allocated - arena_dirty;
+		stats->waste += arena_committed -
+		    arena_allocated - arena_dirty - arena_unused - arena_headers;
+		stats->bin_unused += arena_unused;
+		stats->bookkeeping += arena_headers;
 	}
+
+	/* Account for arena chunk headers in bookkeeping rather than waste. */
+	chunk_header_size =
+	    ((stats->mapped / stats->chunksize) * arena_chunk_header_npages) <<
+	    pagesize_2pow;
+
+	stats->mapped += non_arena_mapped;
+	stats->bookkeeping += chunk_header_size;
+	stats->waste -= chunk_header_size;
 
 	assert(stats->mapped >= stats->allocated + stats->waste +
 				stats->page_cache + stats->bookkeeping);
