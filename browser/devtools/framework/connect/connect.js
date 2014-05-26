@@ -107,7 +107,7 @@ let onConnectionReady = Task.async(function*(aType, aTraits) {
   parent = document.getElementById("tabActors");
 
   // Add Global Process debugging...
-  let globals = JSON.parse(JSON.stringify(response));
+  let globals = Cu.cloneInto(response, {});
   delete globals.tabs;
   delete globals.selected;
   // ...only if there are appropriate actors (a 'from' property will always
