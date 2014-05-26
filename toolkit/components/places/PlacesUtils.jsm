@@ -1327,9 +1327,9 @@ this.PlacesUtils = {
     let itemIds = [];
     Task.spawn(function* () {
       let conn = yield this.promiseDBConnection();
-      const QUERY_STR =
-        "SELECT b.id FROM moz_bookmarks b JOIN moz_places h on h.id = b.fk " +
-        "WHERE h.url = :url";
+      const QUERY_STR = "SELECT b.id FROM moz_bookmarks b " +
+                        "JOIN moz_places h on h.id = b.fk " +
+                        "WHERE h.url = :url";
       let spec = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
       yield conn.executeCached(QUERY_STR, { url: spec }, aRow => {
         if (abort)
