@@ -1532,14 +1532,14 @@ nsObjectLoadingContent::UpdateObjectParameters(bool aJavaURI)
 
   if (isJava && hasCodebase && codebaseStr.IsEmpty()) {
     // Java treats codebase="" as "/"
-    codebaseStr.AssignLiteral("/");
+    codebaseStr.Assign('/');
     // XXX(johns): This doesn't cover the case of "https:" which java would
     //             interpret as "https:///" but we interpret as this document's
     //             URI but with a changed scheme.
   } else if (isJava && !hasCodebase) {
     // Java expects a directory as the codebase, or else it will construct
     // relative URIs incorrectly :(
-    codebaseStr.AssignLiteral(".");
+    codebaseStr.Assign('.');
   }
 
   if (!codebaseStr.IsEmpty()) {

@@ -4249,7 +4249,7 @@ XULDocument::BroadcasterHookup::~BroadcasterHookup()
         }
         else {
             mObservesElement->GetAttr(kNameSpaceID_None, nsGkAtoms::observes, broadcasterID);
-            attribute.AssignLiteral("*");
+            attribute.Assign('*');
         }
 
         nsAutoCString attributeC,broadcasteridC;
@@ -4398,7 +4398,7 @@ XULDocument::FindBroadcaster(Element* aElement,
         *aListener = aElement;
         NS_ADDREF(*aListener);
 
-        aAttribute.AssignLiteral("*");
+        aAttribute.Assign('*');
     }
 
     // Make sure we got a valid listener.
