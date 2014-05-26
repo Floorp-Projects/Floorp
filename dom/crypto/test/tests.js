@@ -311,6 +311,53 @@ TestArray.addTest(
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
+  "Generate a 192-bit AES key",
+  function() {
+    var that = this;
+    var alg = { name: "AES-GCM", length: 192 };
+    crypto.subtle.generateKey(alg, true, ["encrypt"]).then(
+      complete(that, function(x) {
+        return hasKeyFields(x);
+      }),
+      error(that)
+    );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Generate a 1024-bit RSA key",
+  function() {
+    var that = this;
+    var alg = {
+      name: "RSAES-PKCS1-v1_5",
+      modulusLength: 1024,
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+    };
+    crypto.subtle.generateKey(alg, false, ["encrypt", "decrypt"]).then(
+      complete(that, function(x) {
+        return exists(x.publicKey) &&
+               (x.publicKey.algorithm.name == alg.name) &&
+               (x.publicKey.algorithm.modulusLength == alg.modulusLength) &&
+               (x.publicKey.type == "public") &&
+               x.publicKey.extractable &&
+               (x.publicKey.usages.length == 1) &&
+               (x.publicKey.usages[0] == "encrypt") &&
+               exists(x.privateKey) &&
+               (x.privateKey.algorithm.name == alg.name) &&
+               (x.privateKey.algorithm.modulusLength == alg.modulusLength) &&
+               (x.privateKey.type == "private") &&
+               !x.privateKey.extractable &&
+               (x.privateKey.usages.length == 1) &&
+               (x.privateKey.usages[0] == "decrypt");
+      }),
+      error(that)
+    );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
   "SHA-256 digest",
   function() {
     var that = this;
