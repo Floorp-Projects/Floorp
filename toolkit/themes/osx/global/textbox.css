@@ -16,7 +16,7 @@ textbox {
   -moz-border-left-colors: transparent #888888 #000000;
   border-top-right-radius: 2px;
   border-bottom-left-radius: 2px;
-  padding: 0px 1px;
+  padding: 0px;
   background-color: -moz-Field;
   color: -moz-FieldText;
 }
@@ -25,7 +25,7 @@ html|*.textbox-input,
 html|*.textbox-textarea {
   margin: 0px !important;
   border: none !important;
-  padding: 0px !important;
+  padding: 0px 1px !important;
   background-color: inherit;
   color: inherit;
   font: inherit;
@@ -65,11 +65,16 @@ textbox.plain {
   border: none !important;
 }
 
+textbox.plain html|*.textbox-input,
+textbox.plain html|*.textbox-textarea {
+  padding: 0px !important;
+}
+
 /* ::::: search box ::::: */
 
 textbox[type="search"] {
   -moz-appearance: searchfield;
-  padding: 1px 2px;
+  padding: 1px;
   font-size: 12px;
 }
 
@@ -84,7 +89,7 @@ textbox[type="search"] {
 }
 
 textbox[type="search"].compact {
-  padding: 0 1px;
+  padding: 0;
   font-size: 11px;
 }
 

@@ -15,8 +15,8 @@ textbox {
   cursor: text;
   margin: 2px 4px;
   border: 1px solid #555555;
-  padding: 2px 3px 3px;
-  -moz-padding-start: 5px;
+  padding: 2px 2px 3px;
+  -moz-padding-start: 4px;
   background-color: white;
   color: black;
 }
@@ -25,7 +25,7 @@ html|*.textbox-input,
 html|*.textbox-textarea {
   margin: 0px !important;
   border: none !important;
-  padding: 0px !important;
+  padding: 0px 1px !important;
   background-color: inherit;
   color: inherit;
   font: inherit;
@@ -57,6 +57,11 @@ textbox.plain {
   padding: 0px !important;
   margin: 0px !important;
   border: none !important;
+}
+
+textbox.plain html|*.textbox-input,
+textbox.plain html|*.textbox-textarea {
+  padding: 0px !important;
 }
 
 /* ::::: search textbox ::::: */

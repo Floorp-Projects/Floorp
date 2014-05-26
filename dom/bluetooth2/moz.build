@@ -91,7 +91,10 @@ EXPORTS.mozilla.dom.bluetooth.ipc += [
 ]
 
 EXPORTS.mozilla.dom.bluetooth += [
+    'BluetoothAdapter.h',
     'BluetoothCommon.h',
+    'BluetoothDevice.h',
+    'BluetoothManager.h',
 ]
 
 IPDL_SOURCES += [

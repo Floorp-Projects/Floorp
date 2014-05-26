@@ -11,8 +11,8 @@ skip-if(!Android&&!B2G) == number-same-as-text-unthemed.html number-same-as-text
 == number-similar-to-text-unthemed.html number-similar-to-text-unthemed-ref.html
 
 # dynamic type changes:
-fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),64,4) fuzzy-if(cocoaWidget,63,4) == to-number-from-other-type-unthemed-1.html to-number-from-other-type-unthemed-1-ref.html
-== from-number-to-other-type-unthemed-1.html from-number-to-other-type-unthemed-1-ref.html
+fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),64,4) fuzzy-if(cocoaWidget,63,4) fails-if(B2G&&browserIsRemote) == to-number-from-other-type-unthemed-1.html to-number-from-other-type-unthemed-1-ref.html
+fails-if(B2G&&browserIsRemote) == from-number-to-other-type-unthemed-1.html from-number-to-other-type-unthemed-1-ref.html
 
 # dynamic value changes:
 == show-value.html show-value-ref.html
@@ -21,7 +21,7 @@ fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),64,4) fuzzy-if(cocoaWidget,63
 == number-disabled.html number-disabled-ref.html
 
 # auto width:
-== number-auto-width-1.html number-auto-width-1-ref.html
+random-if(B2G&&browserIsRemote) == number-auto-width-1.html number-auto-width-1-ref.html
 
 # min-height/max-height tests:
 skip-if(B2G||Android) == number-min-height-1.html number-min-height-1-ref.html

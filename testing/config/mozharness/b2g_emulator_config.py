@@ -27,7 +27,7 @@ config = {
         "--emulator-res=800x1000", "--logcat-dir=%(logcat_dir)s",
         "--remote-webserver=%(remote_webserver)s", "--ignore-window-size",
         "--xre-path=%(xre_path)s", "--symbols-path=%(symbols_path)s", "--busybox=%(busybox)s",
-        "--total-chunks=%(total_chunks)s", "--this-chunk=%(this_chunk)s",
+        "--total-chunks=%(total_chunks)s", "--this-chunk=%(this_chunk)s", "--enable-oop",
         "%(test_manifest)s",
     ],
 

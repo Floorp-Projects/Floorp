@@ -47,6 +47,11 @@ spinbuttons {
   -moz-appearance: none;
 }
 
+.treecol-sortdirection {
+  /* override the Linux only toolkit rule */
+  -moz-appearance: none;
+}
+
 .actionsMenu {
   font-family: "Clear Sans", sans-serif;
   font-size: 1.25rem;

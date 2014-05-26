@@ -171,7 +171,7 @@ include font-face/reftest.list
 include font-features/reftest.list
 
 # mobile font size inflation
-include font-inflation/reftest.list
+skip-if(B2G&&browserIsRemote) include font-inflation/reftest.list # Bug 972697
 
 # font matching
 include font-matching/reftest.list
@@ -268,7 +268,7 @@ include scoped-style/reftest.list
 include scrolling/reftest.list
 
 # selection
-include selection/reftest.list
+skip-if(B2G&&browserIsRemote) include selection/reftest.list
 
 # sticky positioning
 include position-sticky/reftest.list

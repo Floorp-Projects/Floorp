@@ -986,11 +986,11 @@ nsMenuFrame::UpdateMenuSpecialState(nsPresContext* aPresContext)
   // get the first sibling in this menu popup. This frame may be it, and if we're
   // being called at creation time, this frame isn't yet in the parent's child list.
   // All I'm saying is that this may fail, but it's most likely alright.
-  nsIFrame* sib = GetParent()->GetFirstPrincipalChild();
-
+  nsIFrame* firstMenuItem = nsXULPopupManager::GetNextMenuItem(GetParent(), nullptr, true);
+  nsIFrame* sib = firstMenuItem;
   while (sib) {
+    nsMenuFrame* menu = do_QueryFrame(sib);
     if (sib != this) {
-      nsMenuFrame* menu = do_QueryFrame(sib);
       if (menu && menu->GetMenuType() == eMenuType_Radio &&
           menu->IsChecked() && menu->GetRadioGroupName() == mGroupName) {
         /* uncheck the old item */
@@ -1000,8 +1000,10 @@ nsMenuFrame::UpdateMenuSpecialState(nsPresContext* aPresContext)
         return;
       }
     }
-
-    sib = sib->GetNextSibling();
+    sib = nsXULPopupManager::GetNextMenuItem(GetParent(), menu, true);
+    if (sib == firstMenuItem) {
+      break;
+    }
   } 
 }
 
