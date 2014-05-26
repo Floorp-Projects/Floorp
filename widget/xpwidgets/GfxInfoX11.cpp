@@ -423,7 +423,7 @@ GfxInfo::GetAdapterDescription2(nsAString & aAdapterDescription)
 NS_IMETHODIMP
 GfxInfo::GetAdapterRAM(nsAString & aAdapterRAM)
 {
-  aAdapterRAM.AssignLiteral("");
+  aAdapterRAM.Truncate();
   return NS_OK;
 }
 
@@ -438,7 +438,7 @@ GfxInfo::GetAdapterRAM2(nsAString & aAdapterRAM)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDriver(nsAString & aAdapterDriver)
 {
-  aAdapterDriver.AssignLiteral("");
+  aAdapterDriver.Truncate();
   return NS_OK;
 }
 
@@ -469,7 +469,7 @@ GfxInfo::GetAdapterDriverVersion2(nsAString & aAdapterDriverVersion)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDriverDate(nsAString & aAdapterDriverDate)
 {
-  aAdapterDriverDate.AssignLiteral("");
+  aAdapterDriverDate.Truncate();
   return NS_OK;
 }
 

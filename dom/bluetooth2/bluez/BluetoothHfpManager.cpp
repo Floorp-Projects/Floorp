@@ -1529,7 +1529,7 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
 
         nsAutoString number(aNumber);
         if (!mCLIP) {
-          number.AssignLiteral("");
+          number.Truncate();
         }
 
         MessageLoop::current()->PostDelayedTask(
