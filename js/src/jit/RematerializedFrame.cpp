@@ -19,7 +19,7 @@ struct CopyValueToRematerializedFrame
 {
     Value *slots;
 
-    CopyValueToRematerializedFrame(Value *slots)
+    explicit CopyValueToRematerializedFrame(Value *slots)
       : slots(slots)
     { }
 

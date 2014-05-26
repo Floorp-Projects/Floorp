@@ -384,7 +384,7 @@ JSObject::clearType(JSContext *cx, js::HandleObject obj)
     JS_ASSERT(!obj->hasSingletonType());
     JS_ASSERT(cx->compartment() == obj->compartment());
 
-    js::types::TypeObject *type = cx->getNewType(obj->getClass(), nullptr);
+    js::types::TypeObject *type = cx->getNewType(obj->getClass(), js::TaggedProto(nullptr));
     if (!type)
         return false;
 
@@ -472,7 +472,8 @@ JSObject::setProto(JSContext *cx, JS::HandleObject obj, JS::HandleObject proto, 
             return false;
     }
 
-    return SetClassAndProto(cx, obj, obj->getClass(), proto, succeeded);
+    JS::Rooted<js::TaggedProto> taggedProto(cx, js::TaggedProto(proto));
+    return SetClassAndProto(cx, obj, obj->getClass(), taggedProto, succeeded);
 }
 
 inline bool
@@ -774,7 +775,7 @@ IsInternalFunctionObject(JSObject *funobj)
 class AutoPropDescArrayRooter : private AutoGCRooter
 {
   public:
-    AutoPropDescArrayRooter(JSContext *cx)
+    explicit AutoPropDescArrayRooter(JSContext *cx)
       : AutoGCRooter(cx, DESCRIPTORS), descriptors(cx)
     { }
 

@@ -1251,7 +1251,7 @@ class Value
 
   private:
 #if defined(JS_VALUE_IS_CONSTEXPR)
-    JS_VALUE_CONSTEXPR Value(jsval_layout layout) : data(layout) {}
+    MOZ_IMPLICIT JS_VALUE_CONSTEXPR Value(jsval_layout layout) : data(layout) {}
 #endif
 
     void staticAssertions() {

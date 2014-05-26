@@ -150,14 +150,14 @@ InterpreterFrame::unaliasedForEachActual(Op op)
 struct CopyTo
 {
     Value *dst;
-    CopyTo(Value *dst) : dst(dst) {}
+    explicit CopyTo(Value *dst) : dst(dst) {}
     void operator()(const Value &src) { *dst++ = src; }
 };
 
 struct CopyToHeap
 {
     HeapValue *dst;
-    CopyToHeap(HeapValue *dst) : dst(dst) {}
+    explicit CopyToHeap(HeapValue *dst) : dst(dst) {}
     void operator()(const Value &src) { dst->init(src); ++dst; }
 };
 

@@ -2866,7 +2866,7 @@ class CheckOverRecursedFailure : public OutOfLineCodeBase<CodeGenerator>
     LCheckOverRecursed *lir_;
 
   public:
-    CheckOverRecursedFailure(LCheckOverRecursed *lir)
+    explicit CheckOverRecursedFailure(LCheckOverRecursed *lir)
       : lir_(lir)
     { }
 
@@ -2973,7 +2973,7 @@ class CheckOverRecursedFailurePar : public OutOfLineCodeBase<CodeGenerator>
     LCheckOverRecursedPar *lir_;
 
   public:
-    CheckOverRecursedFailurePar(LCheckOverRecursedPar *lir)
+    explicit CheckOverRecursedFailurePar(LCheckOverRecursedPar *lir)
       : lir_(lir)
     { }
 
@@ -3047,7 +3047,7 @@ class OutOfLineInterruptCheckPar : public OutOfLineCodeBase<CodeGenerator>
   public:
     LInterruptCheckPar *const lir;
 
-    OutOfLineInterruptCheckPar(LInterruptCheckPar *lir)
+    explicit OutOfLineInterruptCheckPar(LInterruptCheckPar *lir)
       : lir(lir)
     { }
 
@@ -3450,7 +3450,7 @@ class OutOfLineNewArray : public OutOfLineCodeBase<CodeGenerator>
     LNewArray *lir_;
 
   public:
-    OutOfLineNewArray(LNewArray *lir)
+    explicit OutOfLineNewArray(LNewArray *lir)
       : lir_(lir)
     { }
 
@@ -3583,7 +3583,7 @@ class OutOfLineNewObject : public OutOfLineCodeBase<CodeGenerator>
     LNewObject *lir_;
 
   public:
-    OutOfLineNewObject(LNewObject *lir)
+    explicit OutOfLineNewObject(LNewObject *lir)
       : lir_(lir)
     { }
 
@@ -5593,7 +5593,7 @@ class OutOfLineStoreElementHole : public OutOfLineCodeBase<CodeGenerator>
     Label rejoinStore_;
 
   public:
-    OutOfLineStoreElementHole(LInstruction *ins)
+    explicit OutOfLineStoreElementHole(LInstruction *ins)
       : ins_(ins)
     {
         JS_ASSERT(ins->isStoreElementHoleV() || ins->isStoreElementHoleT());
@@ -6734,7 +6734,7 @@ class OutOfLineUnboxFloatingPoint : public OutOfLineCodeBase<CodeGenerator>
     LUnboxFloatingPoint *unboxFloatingPoint_;
 
   public:
-    OutOfLineUnboxFloatingPoint(LUnboxFloatingPoint *unboxFloatingPoint)
+    explicit OutOfLineUnboxFloatingPoint(LUnboxFloatingPoint *unboxFloatingPoint)
       : unboxFloatingPoint_(unboxFloatingPoint)
     { }
 
@@ -7524,7 +7524,7 @@ class OutOfLineTypeOfV : public OutOfLineCodeBase<CodeGenerator>
     LTypeOfV *ins_;
 
   public:
-    OutOfLineTypeOfV(LTypeOfV *ins)
+    explicit OutOfLineTypeOfV(LTypeOfV *ins)
       : ins_(ins)
     { }
 
@@ -8485,7 +8485,7 @@ CodeGenerator::visitAsmJSCall(LAsmJSCall *ins)
         masm.call(mir->desc(), ToRegister(ins->getOperand(mir->dynamicCalleeOperandIndex())));
         break;
       case MAsmJSCall::Callee::Builtin:
-        masm.call(mir->desc(), callee.builtin());
+        masm.call(mir->desc(), AsmJSImmPtr(callee.builtin()));
         break;
     }
 

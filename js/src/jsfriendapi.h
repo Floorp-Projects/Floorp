@@ -1002,13 +1002,13 @@ struct ChromeCompartmentsOnly : public CompartmentFilter {
 
 struct SingleCompartment : public CompartmentFilter {
     JSCompartment *ours;
-    SingleCompartment(JSCompartment *c) : ours(c) {}
+    explicit SingleCompartment(JSCompartment *c) : ours(c) {}
     virtual bool match(JSCompartment *c) const { return c == ours; }
 };
 
 struct CompartmentsWithPrincipals : public CompartmentFilter {
     JSPrincipals *principals;
-    CompartmentsWithPrincipals(JSPrincipals *p) : principals(p) {}
+    explicit CompartmentsWithPrincipals(JSPrincipals *p) : principals(p) {}
     virtual bool match(JSCompartment *c) const {
         return JS_GetCompartmentPrincipals(c) == principals;
     }

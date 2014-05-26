@@ -367,7 +367,7 @@ class BailoutJump {
     Assembler::Condition cond_;
 
   public:
-    BailoutJump(Assembler::Condition cond) : cond_(cond)
+    explicit BailoutJump(Assembler::Condition cond) : cond_(cond)
     { }
 #ifdef JS_CODEGEN_X86
     void operator()(MacroAssembler &masm, uint8_t *code) const {
@@ -383,7 +383,7 @@ class BailoutLabel {
     Label *label_;
 
   public:
-    BailoutLabel(Label *label) : label_(label)
+    explicit BailoutLabel(Label *label) : label_(label)
     { }
 #ifdef JS_CODEGEN_X86
     void operator()(MacroAssembler &masm, uint8_t *code) const {
@@ -616,7 +616,7 @@ class OutOfLineUndoALUOperation : public OutOfLineCodeBase<CodeGeneratorX86Share
     LInstruction *ins_;
 
   public:
-    OutOfLineUndoALUOperation(LInstruction *ins)
+    explicit OutOfLineUndoALUOperation(LInstruction *ins)
         : ins_(ins)
     { }
 
@@ -711,7 +711,7 @@ class MulNegativeZeroCheck : public OutOfLineCodeBase<CodeGeneratorX86Shared>
     LMulI *ins_;
 
   public:
-    MulNegativeZeroCheck(LMulI *ins)
+    explicit MulNegativeZeroCheck(LMulI *ins)
       : ins_(ins)
     { }
 
@@ -1446,7 +1446,7 @@ class OutOfLineTableSwitch : public OutOfLineCodeBase<CodeGeneratorX86Shared>
     }
 
   public:
-    OutOfLineTableSwitch(MTableSwitch *mir)
+    explicit OutOfLineTableSwitch(MTableSwitch *mir)
       : mir_(mir)
     {}
 

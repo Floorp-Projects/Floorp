@@ -699,7 +699,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
 
     CodeOffsetLabel movWithPatch(ImmWord imm, Register dest) {
-        CodeOffsetLabel label = currentOffset();
+        CodeOffsetLabel label = CodeOffsetLabel(currentOffset());
         ma_movPatchable(Imm32(imm.value), dest, Always, hasMOVWT() ? L_MOVWT : L_LDR);
         return label;
     }

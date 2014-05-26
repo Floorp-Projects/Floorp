@@ -100,7 +100,7 @@ class OrderedHashTable
     AllocPolicy alloc;
 
   public:
-    OrderedHashTable(AllocPolicy &ap)
+    explicit OrderedHashTable(AllocPolicy &ap)
         : hashTable(nullptr), data(nullptr), dataLength(0), ranges(nullptr), alloc(ap) {}
 
     bool init() {
@@ -331,7 +331,7 @@ class OrderedHashTable
          * Create a Range over all the entries in ht.
          * (This is private on purpose. End users must use ht.all().)
          */
-        Range(OrderedHashTable &ht) : ht(ht), i(0), count(0), prevp(&ht.ranges), next(ht.ranges) {
+        explicit Range(OrderedHashTable &ht) : ht(ht), i(0), count(0), prevp(&ht.ranges), next(ht.ranges) {
             *prevp = this;
             if (next)
                 next->prevp = &next;
@@ -717,7 +717,7 @@ class OrderedHashMap
   public:
     typedef typename Impl::Range Range;
 
-    OrderedHashMap(AllocPolicy ap = AllocPolicy()) : impl(ap) {}
+    explicit OrderedHashMap(AllocPolicy ap = AllocPolicy()) : impl(ap) {}
     bool init()                                     { return impl.init(); }
     uint32_t count() const                          { return impl.count(); }
     bool has(const Key &key) const                  { return impl.has(key); }
@@ -753,7 +753,7 @@ class OrderedHashSet
   public:
     typedef typename Impl::Range Range;
 
-    OrderedHashSet(AllocPolicy ap = AllocPolicy()) : impl(ap) {}
+    explicit OrderedHashSet(AllocPolicy ap = AllocPolicy()) : impl(ap) {}
     bool init()                                     { return impl.init(); }
     uint32_t count() const                          { return impl.count(); }
     bool has(const T &value) const                  { return impl.has(value); }

@@ -222,7 +222,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
             AutoSaveContextOptions asco(cx);
             ContextOptionsRef(cx).setDontReportUncaught(true);
             RootedValue arg(cx, JS::ObjectValue(*id));
-            success = JS_CallFunctionValue(cx, jsobj, fun, arg, &retval);
+            success = JS_CallFunctionValue(cx, jsobj, fun, HandleValueArray(arg), &retval);
         }
 
         if (!success && JS_IsExceptionPending(cx)) {

@@ -143,7 +143,7 @@ struct EvalCacheEntry
 
 struct EvalCacheLookup
 {
-    EvalCacheLookup(JSContext *cx) : str(cx), callerScript(cx) {}
+    explicit EvalCacheLookup(JSContext *cx) : str(cx), callerScript(cx) {}
     RootedLinearString str;
     RootedScript callerScript;
     JSVersion version;
@@ -580,7 +580,7 @@ class PerThreadData : public PerThreadDataFriendFields
     // Number of active bytecode compilation on this thread.
     unsigned activeCompilations;
 
-    PerThreadData(JSRuntime *runtime);
+    explicit PerThreadData(JSRuntime *runtime);
     ~PerThreadData();
 
     bool init();
@@ -692,7 +692,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     class AutoLockForInterrupt {
         JSRuntime *rt;
       public:
-        AutoLockForInterrupt(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM) : rt(rt) {
+        explicit AutoLockForInterrupt(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM) : rt(rt) {
             MOZ_GUARD_OBJECT_NOTIFIER_INIT;
             rt->assertCanLock(js::InterruptLock);
 #ifdef JS_THREADSAFE
@@ -1691,7 +1691,7 @@ class RuntimeAllocPolicy
     JSRuntime *const runtime;
 
   public:
-    RuntimeAllocPolicy(JSRuntime *rt) : runtime(rt) {}
+    MOZ_IMPLICIT RuntimeAllocPolicy(JSRuntime *rt) : runtime(rt) {}
     void *malloc_(size_t bytes) { return runtime->malloc_(bytes); }
     void *calloc_(size_t bytes) { return runtime->calloc_(bytes); }
     void *realloc_(void *p, size_t bytes) { return runtime->realloc_(p, bytes); }

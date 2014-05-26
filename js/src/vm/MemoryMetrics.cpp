@@ -651,7 +651,7 @@ AddSizeOfTab(JSRuntime *rt, HandleObject obj, MallocSizeOf mallocSizeOf, ObjectP
     class SimpleJSRuntimeStats : public JS::RuntimeStats
     {
       public:
-        SimpleJSRuntimeStats(MallocSizeOf mallocSizeOf)
+        explicit SimpleJSRuntimeStats(MallocSizeOf mallocSizeOf)
           : JS::RuntimeStats(mallocSizeOf)
         {}
 

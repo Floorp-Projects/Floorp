@@ -496,14 +496,14 @@ bool
 JitCompartment::ensureIonStubsExist(JSContext *cx)
 {
     if (!stringConcatStub_) {
-        stringConcatStub_ = generateStringConcatStub(cx, SequentialExecution);
+        stringConcatStub_.set(generateStringConcatStub(cx, SequentialExecution));
         if (!stringConcatStub_)
             return false;
     }
 
 #ifdef JS_THREADSAFE
     if (!parallelStringConcatStub_) {
-        parallelStringConcatStub_ = generateStringConcatStub(cx, ParallelExecution);
+        parallelStringConcatStub_.set(generateStringConcatStub(cx, ParallelExecution));
         if (!parallelStringConcatStub_)
             return false;
     }
@@ -645,10 +645,10 @@ JitCompartment::sweep(FreeOp *fop)
         baselineSetPropReturnAddr_ = nullptr;
 
     if (stringConcatStub_ && !IsJitCodeMarked(stringConcatStub_.unsafeGet()))
-        stringConcatStub_ = nullptr;
+        stringConcatStub_.set(nullptr);
 
     if (parallelStringConcatStub_ && !IsJitCodeMarked(parallelStringConcatStub_.unsafeGet()))
-        parallelStringConcatStub_ = nullptr;
+        parallelStringConcatStub_.set(nullptr);
 
     if (activeParallelEntryScripts_) {
         for (ScriptSet::Enum e(*activeParallelEntryScripts_); !e.empty(); e.popFront()) {
@@ -778,7 +778,7 @@ JitCode::togglePreBarriers(bool enabled)
 
     while (reader.more()) {
         size_t offset = reader.readUnsigned();
-        CodeLocationLabel loc(this, offset);
+        CodeLocationLabel loc(this, CodeOffsetLabel(offset));
         if (enabled)
             Assembler::ToggleToCmp(loc);
         else
@@ -2634,7 +2634,7 @@ InvalidateActivation(FreeOp *fop, uint8_t *jitTop, bool invalidateAll)
         Assembler::patchWrite_Imm32(dataLabelToMunge, Imm32(delta));
 
         CodeLocationLabel osiPatchPoint = SafepointReader::InvalidationPatchPoint(ionScript, si);
-        CodeLocationLabel invalidateEpilogue(ionCode, ionScript->invalidateEpilogueOffset());
+        CodeLocationLabel invalidateEpilogue(ionCode, CodeOffsetLabel(ionScript->invalidateEpilogueOffset()));
 
         IonSpew(IonSpew_Invalidate, "   ! Invalidate ionScript %p (ref %u) -> patching osipoint %p",
                 ionScript, ionScript->refcount(), (void *) osiPatchPoint.raw());

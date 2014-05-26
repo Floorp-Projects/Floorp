@@ -40,10 +40,10 @@ class PICStub
     CatStub *next_;
 
     PICStub() : next_(nullptr) {}
-    PICStub(const CatStub *next) : next_(next) {
+    explicit PICStub(const CatStub *next) : next_(next) {
         JS_ASSERT(next_);
     }
-    PICStub(const CatStub &other) : next_(other.next_) {}
+    explicit PICStub(const CatStub &other) : next_(other.next_) {}
 
   public:
     CatStub *next() const {
@@ -139,7 +139,7 @@ struct ForOfPIC
         Shape *shape_;
 
       public:
-        Stub(Shape *shape)
+        explicit Stub(Shape *shape)
           : BaseStub(),
             shape_(shape)
         {

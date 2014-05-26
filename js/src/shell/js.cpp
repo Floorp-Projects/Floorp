@@ -221,7 +221,7 @@ class ShellPrincipals: public JSPrincipals {
     }
 
   public:
-    ShellPrincipals(uint32_t bits, int32_t refcount = 0) : bits(bits) {
+    explicit ShellPrincipals(uint32_t bits, int32_t refcount = 0) : bits(bits) {
         this->refcount = refcount;
     }
 
@@ -1086,7 +1086,7 @@ class AutoSaveFrameChain
     bool saved_;
 
   public:
-    AutoSaveFrameChain(JSContext *cx)
+    explicit AutoSaveFrameChain(JSContext *cx)
       : cx_(cx),
         saved_(false)
     {}
@@ -3782,7 +3782,7 @@ struct FreeOnReturn
     const char *ptr;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
-    FreeOnReturn(JSContext *cx, const char *ptr = nullptr
+    explicit FreeOnReturn(JSContext *cx, const char *ptr = nullptr
                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : cx(cx), ptr(ptr)
     {
@@ -3936,7 +3936,7 @@ class AutoCStringVector
 {
     Vector<char *> argv_;
   public:
-    AutoCStringVector(JSContext *cx) : argv_(cx) {}
+    explicit AutoCStringVector(JSContext *cx) : argv_(cx) {}
     ~AutoCStringVector() {
         for (size_t i = 0; i < argv_.length(); i++)
             js_free(argv_[i]);
@@ -4347,7 +4347,7 @@ class ShellSourceHook: public SourceHook {
         RootedValue filenameValue(cx, StringValue(str));
 
         RootedValue result(cx);
-        if (!Call(cx, UndefinedHandleValue, fun, filenameValue, &result))
+        if (!Call(cx, UndefinedHandleValue, fun, HandleValueArray(filenameValue), &result))
             return false;
 
         str = JS::ToString(cx, result);

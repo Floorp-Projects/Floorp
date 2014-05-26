@@ -52,8 +52,8 @@ class TempAllocPolicy
     JS_FRIEND_API(void *) onOutOfMemory(void *p, size_t nbytes);
 
   public:
-    TempAllocPolicy(JSContext *cx) : cx_((ContextFriendFields *) cx) {} // :(
-    TempAllocPolicy(ContextFriendFields *cx) : cx_(cx) {}
+    MOZ_IMPLICIT TempAllocPolicy(JSContext *cx) : cx_((ContextFriendFields *) cx) {} // :(
+    MOZ_IMPLICIT TempAllocPolicy(ContextFriendFields *cx) : cx_(cx) {}
 
     void *malloc_(size_t bytes) {
         void *p = js_malloc(bytes);
