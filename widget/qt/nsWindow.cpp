@@ -1971,7 +1971,7 @@ GetBrandName(nsXPIDLString& brandName)
     }
 
     if (brandName.IsEmpty()) {
-        brandName.AssignLiteral("Mozilla");
+        brandName.AssignLiteral(MOZ_UTF16("Mozilla"));
     }
 }
 
