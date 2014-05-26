@@ -31,15 +31,6 @@ public:
 };
 
 /**
- * Builds textruns that render their text using a font-variant (i.e.,
- * smallcaps).
- */
-class nsFontVariantTextRunFactory : public nsTransformingTextRunFactory {
-public:
-  virtual void RebuildTextRun(nsTransformedTextRun* aTextRun, gfxContext* aRefContext) MOZ_OVERRIDE;
-};
-
-/**
  * Builds textruns that transform the text in some way (e.g., capitalize)
  * and then render the text using some other textrun implementation.
  */
