@@ -28,7 +28,8 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
-  friend nsIFrame* NS_NewInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsInlineFrame* NS_NewInlineFrame(nsIPresShell* aPresShell,
+                                          nsStyleContext* aContext);
 
   // nsIFrame overrides
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -187,7 +188,8 @@ class nsFirstLineFrame MOZ_FINAL : public nsInlineFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  friend nsIFrame* NS_NewFirstLineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsFirstLineFrame* NS_NewFirstLineFrame(nsIPresShell* aPresShell,
+                                                nsStyleContext* aContext);
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
@@ -198,8 +200,9 @@ public:
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus& aStatus) MOZ_OVERRIDE;
 
-  virtual void Init(nsIContent* aContent, nsIFrame* aParent,
-                    nsIFrame* aPrevInFlow) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*       aContent,
+                    nsContainerFrame* aParent,
+                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
   virtual void PullOverflowsFromPrevInFlow() MOZ_OVERRIDE;
   virtual bool DrainSelfOverflowList() MOZ_OVERRIDE;
 

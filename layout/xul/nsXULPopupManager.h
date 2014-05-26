@@ -46,6 +46,7 @@
  * calling Rollup.
  */
 
+class nsContainerFrame;
 class nsMenuFrame;
 class nsMenuPopupFrame;
 class nsMenuBarFrame;
@@ -329,10 +330,10 @@ public:
   //          returns the item before it, while GetNextMenuItem returns the
   //          item after it.
   // aIsPopup - true for menupopups, false for menubars
-  static nsMenuFrame* GetPreviousMenuItem(nsIFrame* aParent,
+  static nsMenuFrame* GetPreviousMenuItem(nsContainerFrame* aParent,
                                           nsMenuFrame* aStart,
                                           bool aIsPopup);
-  static nsMenuFrame* GetNextMenuItem(nsIFrame* aParent,
+  static nsMenuFrame* GetNextMenuItem(nsContainerFrame* aParent,
                                       nsMenuFrame* aStart,
                                       bool aIsPopup);
 

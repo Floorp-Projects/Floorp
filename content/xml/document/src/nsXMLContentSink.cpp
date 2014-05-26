@@ -1187,26 +1187,8 @@ nsXMLContentSink::HandleDoctypeDecl(const nsAString & aSubset,
     return rv;
   }
 
-  if (aCatalogData && mCSSLoader && mDocument) {
-    // bug 124570 - we only expect additional agent sheets for now -- ignore
-    // exit codes, error are not fatal here, just that the stylesheet won't apply
-    nsCOMPtr<nsIURI> uri(do_QueryInterface(aCatalogData));
-    if (uri) {
-      nsRefPtr<nsCSSStyleSheet> sheet;
-      mCSSLoader->LoadSheetSync(uri, true, true, getter_AddRefs(sheet));
-
-#ifdef DEBUG
-      nsAutoCString uriStr;
-      uri->GetSpec(uriStr);
-      printf("Loading catalog stylesheet: %s ... %s\n", uriStr.get(), sheet.get() ? "Done" : "Failed");
-#endif
-      if (sheet) {
-        mDocument->BeginUpdate(UPDATE_STYLE);
-        mDocument->AddCatalogStyleSheet(sheet);
-        mDocument->EndUpdate(UPDATE_STYLE);
-      }
-    }
-  }
+  MOZ_ASSERT(!aCatalogData, "Need to add back support for catalog style "
+                            "sheets");
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(docType);
   NS_ASSERTION(content, "doctype isn't content?");

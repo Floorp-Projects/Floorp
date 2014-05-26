@@ -45,6 +45,7 @@ class nsFontFaceList;
 class nsIImageLoadingContent;
 class nsStyleContext;
 class nsBlockFrame;
+class nsContainerFrame;
 class gfxASurface;
 class gfxDrawable;
 class nsView;
@@ -384,7 +385,7 @@ public:
    * LastContinuationWithChild gets the last continuation in aFrame's chain
    * that has a child, or the first continuation if the frame has no children.
    */
-  static nsIFrame* LastContinuationWithChild(nsIFrame* aFrame);
+  static nsContainerFrame* LastContinuationWithChild(nsContainerFrame* aFrame);
 
   /**
    * GetLastSibling simply finds the last sibling of aFrame, or returns nullptr if

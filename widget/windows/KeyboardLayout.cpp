@@ -732,6 +732,11 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
     keyboardLayout->ConvertNativeKeyCodeToDOMKeyCode(mOriginalVirtualKeyCode);
   mKeyNameIndex =
     keyboardLayout->ConvertNativeKeyCodeToKeyNameIndex(mOriginalVirtualKeyCode);
+  // Even on WinXP or WinServer 2003, we should use extended flag for computing
+  // the DOM code value since it's really our internal code.
+  mCodeNameIndex =
+    KeyboardLayout::ConvertScanCodeToCodeNameIndex(
+      mIsExtended ? (0xE000 | mScanCode) : mScanCode, mOriginalVirtualKeyCode);
 
   keyboardLayout->InitNativeKey(*this, mModKeyState);
 
@@ -938,6 +943,8 @@ NativeKey::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
   if (mKeyNameIndex == KEY_NAME_INDEX_USE_STRING) {
     aKeyEvent.mKeyValue = mCommittedCharsAndModifiers.ToString();
   }
+  aKeyEvent.mCodeNameIndex = mCodeNameIndex;
+  MOZ_ASSERT(mCodeNameIndex != CODE_NAME_INDEX_USE_STRING);
   aKeyEvent.location = GetKeyLocation();
   aModKeyState.InitInputEvent(aKeyEvent);
 }
@@ -2617,6 +2624,68 @@ KeyboardLayout::ConvertNativeKeyCodeToKeyNameIndex(uint8_t aVirtualKey) const
 
     default:
       return KEY_NAME_INDEX_Unidentified;
+  }
+}
+
+// static
+CodeNameIndex
+KeyboardLayout::ConvertScanCodeToCodeNameIndex(UINT aScanCode,
+                                               UINT aVirtualKeyCode)
+{
+  switch (aScanCode) {
+
+#define NS_NATIVE_KEY_TO_DOM_CODE_NAME_INDEX(aNativeKey, aCodeNameIndex) \
+    case aNativeKey: return aCodeNameIndex;
+
+#include "NativeKeyToDOMCodeName.h"
+
+#undef NS_NATIVE_KEY_TO_DOM_CODE_NAME_INDEX
+
+    // Some special keys cuases 0xE000 of scan code.  Then, we should compute
+    // the code value with virtual keycode.
+    case 0xE000:
+      switch (aVirtualKeyCode) {
+        case VK_BROWSER_BACK:
+          return CODE_NAME_INDEX_BrowserBack;
+        case VK_BROWSER_FAVORITES:
+          return CODE_NAME_INDEX_BrowserFavorites;
+        case VK_BROWSER_FORWARD:
+          return CODE_NAME_INDEX_BrowserForward;
+        case VK_BROWSER_HOME:
+          return CODE_NAME_INDEX_BrowserHome;
+        case VK_BROWSER_REFRESH:
+          return CODE_NAME_INDEX_BrowserRefresh;
+        case VK_BROWSER_SEARCH:
+          return CODE_NAME_INDEX_BrowserSearch;
+        case VK_BROWSER_STOP:
+          return CODE_NAME_INDEX_BrowserStop;
+        case VK_LAUNCH_APP1: // my computer
+          return CODE_NAME_INDEX_LaunchApp1;
+        case VK_LAUNCH_APP2: // calculator
+          return CODE_NAME_INDEX_LaunchApp2;
+        case VK_LAUNCH_MAIL:
+          return CODE_NAME_INDEX_LaunchMail;
+        case VK_LAUNCH_MEDIA_SELECT:
+          return CODE_NAME_INDEX_MediaSelect;
+        case VK_MEDIA_PLAY_PAUSE:
+          return CODE_NAME_INDEX_MediaPlayPause;
+        case VK_MEDIA_STOP:
+          return CODE_NAME_INDEX_MediaStop;
+        case VK_MEDIA_NEXT_TRACK:
+          return CODE_NAME_INDEX_MediaTrackNext;
+        case VK_MEDIA_PREV_TRACK:
+          return CODE_NAME_INDEX_MediaTrackPrevious;
+        case VK_VOLUME_MUTE:
+          return CODE_NAME_INDEX_VolumeMute;
+        case VK_VOLUME_DOWN:
+          return CODE_NAME_INDEX_VolumeDown;
+        case VK_VOLUME_UP:
+          return CODE_NAME_INDEX_VolumeUp;
+        default:
+          return CODE_NAME_INDEX_UNKNOWN;
+      }
+    default:
+      return CODE_NAME_INDEX_UNKNOWN;
   }
 }
 

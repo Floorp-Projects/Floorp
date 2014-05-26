@@ -21,7 +21,7 @@ typedef nsSVGDisplayContainerFrame nsSVGOuterSVGFrameBase;
 class nsSVGOuterSVGFrame : public nsSVGOuterSVGFrameBase,
                            public nsISVGSVGFrame
 {
-  friend nsIFrame*
+  friend nsContainerFrame*
   NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   nsSVGOuterSVGFrame(nsStyleContext* aContext);
@@ -64,9 +64,9 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
-  virtual void Init(nsIContent*      aContent,
-                    nsIFrame*        aParent,
-                    nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*       aContent,
+                    nsContainerFrame* aParent,
+                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
 
   virtual nsSplittableType GetSplittableType() const MOZ_OVERRIDE;
 
@@ -88,7 +88,7 @@ public:
                                      nsIAtom*        aAttribute,
                                      int32_t         aModType) MOZ_OVERRIDE;
 
-  virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
+  virtual nsContainerFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
     // Any children must be added to our single anonymous inner frame kid.
     NS_ABORT_IF_FALSE(GetFirstPrincipalChild() &&
                       GetFirstPrincipalChild()->GetType() ==
@@ -233,7 +233,7 @@ typedef nsSVGDisplayContainerFrame nsSVGOuterSVGAnonChildFrameBase;
 class nsSVGOuterSVGAnonChildFrame
   : public nsSVGOuterSVGAnonChildFrameBase
 {
-  friend nsIFrame*
+  friend nsContainerFrame*
   NS_NewSVGOuterSVGAnonChildFrame(nsIPresShell* aPresShell,
                                   nsStyleContext* aContext);
 
@@ -245,9 +245,9 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
 #ifdef DEBUG
-  virtual void Init(nsIContent* aContent,
-                    nsIFrame* aParent,
-                    nsIFrame* aPrevInFlow) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*       aContent,
+                    nsContainerFrame* aParent,
+                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
 #endif
 
 #ifdef DEBUG_FRAME_DUMP
@@ -269,7 +269,7 @@ public:
     // GetCanvasTM returns the transform from an SVG frame to the frame's
     // nsSVGOuterSVGFrame's content box, so we do not include any x/y offset
     // set on us for any CSS border or padding on our nsSVGOuterSVGFrame.
-    return static_cast<nsSVGOuterSVGFrame*>(mParent)->GetCanvasTM(aFor, aTransformRoot);
+    return static_cast<nsSVGOuterSVGFrame*>(GetParent())->GetCanvasTM(aFor, aTransformRoot);
   }
 
   virtual bool HasChildrenOnlyTransform(Matrix *aTransform) const MOZ_OVERRIDE;

@@ -149,6 +149,36 @@ nsLayoutStylesheetCache::UASheet()
 }
 
 nsCSSStyleSheet*
+nsLayoutStylesheetCache::HTMLSheet()
+{
+  EnsureGlobal();
+  if (!gStyleCache)
+    return nullptr;
+
+  return gStyleCache->mHTMLSheet;
+}
+
+nsCSSStyleSheet*
+nsLayoutStylesheetCache::MinimalXULSheet()
+{
+  EnsureGlobal();
+  if (!gStyleCache)
+    return nullptr;
+
+  return gStyleCache->mMinimalXULSheet;
+}
+
+nsCSSStyleSheet*
+nsLayoutStylesheetCache::XULSheet()
+{
+  EnsureGlobal();
+  if (!gStyleCache)
+    return nullptr;
+
+  return gStyleCache->mXULSheet;
+}
+
+nsCSSStyleSheet*
 nsLayoutStylesheetCache::QuirkSheet()
 {
   EnsureGlobal();
@@ -166,6 +196,35 @@ nsLayoutStylesheetCache::FullScreenOverrideSheet()
     return nullptr;
 
   return gStyleCache->mFullScreenOverrideSheet;
+}
+
+nsCSSStyleSheet*
+nsLayoutStylesheetCache::SVGSheet()
+{
+  EnsureGlobal();
+  if (!gStyleCache)
+    return nullptr;
+
+  return gStyleCache->mSVGSheet;
+}
+
+nsCSSStyleSheet*
+nsLayoutStylesheetCache::MathMLSheet()
+{
+  EnsureGlobal();
+  if (!gStyleCache)
+    return nullptr;
+
+  if (!gStyleCache->mMathMLSheet) {
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), "resource://gre-resources/mathml.css");
+    if (uri) {
+      LoadSheet(uri, gStyleCache->mMathMLSheet, true);
+    }
+    NS_ASSERTION(gStyleCache->mMathMLSheet, "Could not load mathml.css");
+  }
+
+  return gStyleCache->mMathMLSheet;
 }
 
 void
@@ -201,8 +260,15 @@ nsLayoutStylesheetCache::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf
   MEASURE(mUserContentSheet);
   MEASURE(mUserChromeSheet);
   MEASURE(mUASheet);
+  MEASURE(mHTMLSheet);
+  MEASURE(mMinimalXULSheet);
+  MEASURE(mXULSheet);
   MEASURE(mQuirkSheet);
   MEASURE(mFullScreenOverrideSheet);
+  MEASURE(mSVGSheet);
+  if (mMathMLSheet) {
+    MEASURE(mMathMLSheet);
+  }
 
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:
@@ -235,6 +301,24 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache()
   }
   NS_ASSERTION(mUASheet, "Could not load ua.css");
 
+  NS_NewURI(getter_AddRefs(uri), "resource://gre-resources/html.css");
+  if (uri) {
+    LoadSheet(uri, mHTMLSheet, true);
+  }
+  NS_ASSERTION(mHTMLSheet, "Could not load xul.css");
+
+  NS_NewURI(getter_AddRefs(uri), "chrome://global/content/minimal-xul.css");
+  if (uri) {
+    LoadSheet(uri, mMinimalXULSheet, true);
+  }
+  NS_ASSERTION(mMinimalXULSheet, "Could not load minimal-xul.css");
+
+  NS_NewURI(getter_AddRefs(uri), "chrome://global/content/xul.css");
+  if (uri) {
+    LoadSheet(uri, mXULSheet, true);
+  }
+  NS_ASSERTION(mXULSheet, "Could not load xul.css");
+
   NS_NewURI(getter_AddRefs(uri), "resource://gre-resources/quirk.css");
   if (uri) {
     LoadSheet(uri, mQuirkSheet, true);
@@ -246,6 +330,15 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache()
     LoadSheet(uri, mFullScreenOverrideSheet, true);
   }
   NS_ASSERTION(mFullScreenOverrideSheet, "Could not load full-screen-override.css");
+
+  NS_NewURI(getter_AddRefs(uri), "resource://gre/res/svg.css");
+  if (uri) {
+    LoadSheet(uri, mSVGSheet, true);
+  }
+  NS_ASSERTION(mSVGSheet, "Could not load svg.css");
+
+  // mMathMLSheet is created on-demand since its use is rare. This helps save
+  // memory for Firefox OS apps.
 }
 
 nsLayoutStylesheetCache::~nsLayoutStylesheetCache()

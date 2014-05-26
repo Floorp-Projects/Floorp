@@ -243,7 +243,7 @@ NS_DECLARE_FRAME_PROPERTY(BottomEdgeOfChildrenProperty, nullptr)
 
 //----------------------------------------------------------------------
 
-nsIFrame*
+nsBlockFrame*
 NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, nsFrameState aFlags)
 {
   nsBlockFrame* it = new (aPresShell) nsBlockFrame(aContext);
@@ -523,7 +523,8 @@ nsBlockFrame::IsFloatContainingBlock() const
 }
 
 static void
-ReparentFrame(nsIFrame* aFrame, nsIFrame* aOldParent, nsIFrame* aNewParent)
+ReparentFrame(nsIFrame* aFrame, nsContainerFrame* aOldParent,
+              nsContainerFrame* aNewParent)
 {
   NS_ASSERTION(aOldParent == aFrame->GetParent(),
                "Parent not consistent with expectations");
@@ -536,8 +537,8 @@ ReparentFrame(nsIFrame* aFrame, nsIFrame* aOldParent, nsIFrame* aNewParent)
 }
  
 static void
-ReparentFrames(nsFrameList& aFrameList, nsIFrame* aOldParent,
-               nsIFrame* aNewParent)
+ReparentFrames(nsFrameList& aFrameList, nsContainerFrame* aOldParent,
+               nsContainerFrame* aNewParent)
 {
   for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
     ReparentFrame(e.get(), aOldParent, aNewParent);
@@ -1385,7 +1386,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   }
 
   if (NS_UNCONSTRAINEDSIZE != aReflowState.ComputedHeight()
-      && (mParent->GetType() != nsGkAtoms::columnSetFrame ||
+      && (GetParent()->GetType() != nsGkAtoms::columnSetFrame ||
           aReflowState.parentReflowState->AvailableHeight() == NS_UNCONSTRAINEDSIZE)) {
     ComputeFinalHeight(aReflowState, &aState.mReflowStatus,
                        aState.mY + nonCarriedOutVerticalMargin,
@@ -3200,8 +3201,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
             if (!madeContinuation &&
                 (NS_FRAME_IS_OVERFLOW_CONTAINER & nextFrame->GetStateBits())) {
               nsOverflowContinuationTracker::AutoFinish fini(aState.mOverflowTracker, frame);
-              nsContainerFrame* parent =
-                static_cast<nsContainerFrame*>(nextFrame->GetParent());
+              nsContainerFrame* parent = nextFrame->GetParent();
               nsresult rv = parent->StealFrame(nextFrame);
               if (NS_FAILED(rv)) {
                 return;
@@ -3269,9 +3269,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                 !(NS_FRAME_IS_OVERFLOW_CONTAINER & nextFrame->GetStateBits())) {
               // It already exists, but as a normal next-in-flow, so we need
               // to dig it out of the child lists.
-              nsContainerFrame* parent = static_cast<nsContainerFrame*>
-                                           (nextFrame->GetParent());
-              nsresult rv = parent->StealFrame(nextFrame);
+              nsresult rv = nextFrame->GetParent()->StealFrame(nextFrame);
               if (NS_FAILED(rv)) {
                 return;
               }
@@ -3861,8 +3859,7 @@ nsBlockFrame::SplitFloat(nsBlockReflowState& aState,
 {
   nsIFrame* nextInFlow = aFloat->GetNextInFlow();
   if (nextInFlow) {
-    nsContainerFrame *oldParent =
-      static_cast<nsContainerFrame*>(nextInFlow->GetParent());
+    nsContainerFrame *oldParent = nextInFlow->GetParent();
     DebugOnly<nsresult> rv = oldParent->StealFrame(nextInFlow);
     NS_ASSERTION(NS_SUCCEEDED(rv), "StealFrame failed");
     if (oldParent != this) {
@@ -5061,8 +5058,7 @@ nsBlockFrame::DoRemoveOutOfFlowFrame(nsIFrame* aFrame)
     // First remove aFrame's next-in-flows.
     nsIFrame* nif = aFrame->GetNextInFlow();
     if (nif) {
-      static_cast<nsContainerFrame*>(nif->GetParent())
-        ->DeleteNextInFlowChild(nif, false);
+      nif->GetParent()->DeleteNextInFlowChild(nif, false);
     }
     // Now remove aFrame from its child list and Destroy it.
     block->RemoveFloatFromFloatCache(aFrame);
@@ -5439,8 +5435,8 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, uint32_t aFlags)
     // If next-in-flow is an overflow container, must remove it first.
     if (deletedNextContinuation &&
         deletedNextContinuation->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) {
-      static_cast<nsContainerFrame*>(deletedNextContinuation->GetParent())
-        ->DeleteNextInFlowChild(deletedNextContinuation, false);
+      deletedNextContinuation->GetParent()->
+        DeleteNextInFlowChild(deletedNextContinuation, false);
       deletedNextContinuation = nullptr;
     }
 
@@ -6418,9 +6414,9 @@ nsBlockFrame::ChildIsDirty(nsIFrame* aChild)
 }
 
 void
-nsBlockFrame::Init(nsIContent*      aContent,
-                   nsIFrame*        aParent,
-                   nsIFrame*        aPrevInFlow)
+nsBlockFrame::Init(nsIContent*       aContent,
+                   nsContainerFrame* aParent,
+                   nsIFrame*         aPrevInFlow)
 {
   if (aPrevInFlow) {
     // Copy over the inherited block frame bits from the prev-in-flow.
@@ -6471,7 +6467,7 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
     bool haveFirstLetterStyle =
       (!pseudo ||
        (pseudo == nsCSSAnonBoxes::cellContent &&
-        mParent->StyleContext()->GetPseudo() == nullptr) ||
+        GetParent()->StyleContext()->GetPseudo() == nullptr) ||
        pseudo == nsCSSAnonBoxes::fieldsetContent ||
        pseudo == nsCSSAnonBoxes::scrolledContent ||
        pseudo == nsCSSAnonBoxes::columnContent ||
@@ -7228,7 +7224,7 @@ int32_t
 nsBlockFrame::GetDepth() const
 {
   int32_t depth = 0;
-  nsIFrame* parent = mParent;
+  nsIFrame* parent = GetParent();
   while (parent) {
     parent = parent->GetParent();
     depth++;

@@ -35,9 +35,9 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
 #ifdef DEBUG
-  virtual void Init(nsIContent* aContent,
-                    nsIFrame*   aParent,
-                    nsIFrame*   aPrevInFlow) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*       aContent,
+                    nsContainerFrame* aParent,
+                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
 #endif
 
   virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
@@ -79,9 +79,9 @@ NS_IMPL_FRAMEARENA_HELPERS(SVGViewFrame)
 
 #ifdef DEBUG
 void
-SVGViewFrame::Init(nsIContent* aContent,
-                   nsIFrame* aParent,
-                   nsIFrame* aPrevInFlow)
+SVGViewFrame::Init(nsIContent*       aContent,
+                   nsContainerFrame* aParent,
+                   nsIFrame*         aPrevInFlow)
 {
   NS_ASSERTION(aContent->IsSVG(nsGkAtoms::view),
                "Content is not an SVG view");

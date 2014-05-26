@@ -8,6 +8,7 @@
 #include "nsFrameTraversal.h"
 #include "nsFrameList.h"
 #include "nsPlaceholderFrame.h"
+#include "nsContainerFrame.h"
 
 
 class nsFrameIterator : public nsIFrameEnumerator

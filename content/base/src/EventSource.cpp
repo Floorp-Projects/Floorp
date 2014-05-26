@@ -382,7 +382,7 @@ EventSource::OnStartRequest(nsIRequest *aRequest,
     NS_NewRunnableMethod(this, &EventSource::AnnounceConnection);
   NS_ENSURE_STATE(event);
 
-  rv = NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  rv = NS_DispatchToMainThread(event);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mStatus = PARSE_STATE_BEGIN_OF_STREAM;
@@ -484,7 +484,7 @@ EventSource::OnStopRequest(nsIRequest *aRequest,
     NS_NewRunnableMethod(this, &EventSource::ReestablishConnection);
   NS_ENSURE_STATE(event);
 
-  rv = NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  rv = NS_DispatchToMainThread(event);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return healthOfRequestResult;
@@ -1010,7 +1010,7 @@ EventSource::DispatchFailConnection()
     NS_NewRunnableMethod(this, &EventSource::FailConnection);
   NS_ENSURE_STATE(event);
 
-  return NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  return NS_DispatchToMainThread(event);
 }
 
 void
@@ -1156,7 +1156,7 @@ EventSource::Thaw()
 
     mGoingToDispatchAllMessages = true;
 
-    rv = NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+    rv = NS_DispatchToMainThread(event);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1216,7 +1216,7 @@ EventSource::DispatchCurrentMessageEvent()
 
     mGoingToDispatchAllMessages = true;
 
-    return NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+    return NS_DispatchToMainThread(event);
   }
 
   return NS_OK;
