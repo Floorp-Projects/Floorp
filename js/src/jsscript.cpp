@@ -117,7 +117,7 @@ Bindings::initWithTemporaryStorage(ExclusiveContext *cx, InternalBindingsHandle 
 
     // Start with the empty shape and then append one shape per aliased binding.
     RootedShape shape(cx,
-        EmptyShape::getInitialShape(cx, &CallObject::class_, nullptr, nullptr, nullptr,
+        EmptyShape::getInitialShape(cx, &CallObject::class_, TaggedProto(nullptr), nullptr, nullptr,
                                     nfixed, BaseShape::VAROBJ | BaseShape::DELEGATE));
     if (!shape)
         return false;
@@ -2974,7 +2974,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
             ScriptSourceObject *obj = frontend::CreateScriptSourceObject(cx, options);
             if (!obj)
                 return nullptr;
-            cx->compartment()->selfHostingScriptSource = obj;
+            cx->compartment()->selfHostingScriptSource.set(obj);
         }
         sourceObject = cx->compartment()->selfHostingScriptSource;
     } else {
@@ -3515,8 +3515,8 @@ js::SetFrameArgumentsObject(JSContext *cx, AbstractFramePtr frame,
         // Note that here and below, it is insufficient to only check for
         // JS_OPTIMIZED_ARGUMENTS, as Ion could have optimized out the
         // arguments slot.
-        if (IsOptimizedPlaceholderMagicValue(frame.callObj().as<ScopeObject>().aliasedVar(pc)))
-            frame.callObj().as<ScopeObject>().setAliasedVar(cx, pc, cx->names().arguments, ObjectValue(*argsobj));
+        if (IsOptimizedPlaceholderMagicValue(frame.callObj().as<ScopeObject>().aliasedVar(ScopeCoordinate(pc))))
+            frame.callObj().as<ScopeObject>().setAliasedVar(cx, ScopeCoordinate(pc), cx->names().arguments, ObjectValue(*argsobj));
     } else {
         if (IsOptimizedPlaceholderMagicValue(frame.unaliasedLocal(var)))
             frame.unaliasedLocal(var) = ObjectValue(*argsobj);

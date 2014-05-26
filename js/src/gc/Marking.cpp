@@ -1694,7 +1694,7 @@ struct UnmarkGrayTracer : public JSTracer
      * We set eagerlyTraceWeakMaps to false because the cycle collector will fix
      * up any color mismatches involving weakmaps when it runs.
      */
-    UnmarkGrayTracer(JSRuntime *rt)
+    explicit UnmarkGrayTracer(JSRuntime *rt)
       : JSTracer(rt, UnmarkGrayChildren, DoNotTraceWeakMaps),
         tracingShape(false),
         previousShape(nullptr),

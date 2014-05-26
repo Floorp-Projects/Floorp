@@ -68,7 +68,7 @@ class RInstruction
 #define RINSTRUCTION_HEADER_(op)                                        \
   private:                                                              \
     friend class RInstruction;                                          \
-    R##op(CompactBufferReader &reader);                                 \
+    explicit R##op(CompactBufferReader &reader);                        \
                                                                         \
   public:                                                               \
     Opcode opcode() const {                                             \

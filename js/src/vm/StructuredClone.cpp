@@ -1137,7 +1137,7 @@ class Chars {
     JSContext *cx;
     jschar *p;
   public:
-    Chars(JSContext *cx) : cx(cx), p(nullptr) {}
+    explicit Chars(JSContext *cx) : cx(cx), p(nullptr) {}
     ~Chars() { js_free(p); }
 
     bool allocate(size_t len) {

@@ -99,7 +99,7 @@ struct LinearTerm
 class LinearSum
 {
   public:
-    LinearSum(TempAllocator &alloc)
+    explicit LinearSum(TempAllocator &alloc)
       : terms_(alloc),
         constant_(0)
     {

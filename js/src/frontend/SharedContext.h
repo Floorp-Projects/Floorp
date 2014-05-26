@@ -410,7 +410,7 @@ struct StmtInfoBase {
     // isNestedScope.
     Rooted<NestedScopeObject *> staticScope;
 
-    StmtInfoBase(ExclusiveContext *cx)
+    explicit StmtInfoBase(ExclusiveContext *cx)
         : isBlockScope(false), isNestedScope(false), isForLetBlock(false),
           label(cx), staticScope(cx)
     {}

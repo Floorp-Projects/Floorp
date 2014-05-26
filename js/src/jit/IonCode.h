@@ -790,7 +790,7 @@ struct AutoFlushICache
     static void flush(uintptr_t p, size_t len);
     static void setInhibit();
     ~AutoFlushICache();
-    AutoFlushICache(const char *nonce, bool inhibit=false);
+    explicit AutoFlushICache(const char *nonce, bool inhibit=false);
 };
 
 } // namespace jit

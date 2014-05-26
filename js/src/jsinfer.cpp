@@ -754,7 +754,7 @@ class types::CompilerConstraintList
 #endif
 
   public:
-    CompilerConstraintList(jit::TempAllocator &alloc)
+    explicit CompilerConstraintList(jit::TempAllocator &alloc)
       : failed_(false)
 #ifdef JS_ION
       , alloc_(alloc.lifoAlloc())
@@ -1089,7 +1089,7 @@ class TypeConstraintFreezeStack : public TypeConstraint
     JSScript *script_;
 
   public:
-    TypeConstraintFreezeStack(JSScript *script)
+    explicit TypeConstraintFreezeStack(JSScript *script)
         : script_(script)
     {}
 
@@ -1446,7 +1446,7 @@ class ConstraintDataFreezeObjectFlags
     // Flags we are watching for on this object.
     TypeObjectFlags flags;
 
-    ConstraintDataFreezeObjectFlags(TypeObjectFlags flags)
+    explicit ConstraintDataFreezeObjectFlags(TypeObjectFlags flags)
       : flags(flags)
     {
         JS_ASSERT(flags);
@@ -1572,7 +1572,7 @@ class ConstraintDataFreezeObjectForNewScriptTemplate
     JSObject *templateObject;
 
   public:
-    ConstraintDataFreezeObjectForNewScriptTemplate(JSObject *templateObject)
+    explicit ConstraintDataFreezeObjectForNewScriptTemplate(JSObject *templateObject)
       : templateObject(templateObject)
     {}
 
@@ -1603,7 +1603,7 @@ class ConstraintDataFreezeObjectForTypedArrayBuffer
     void *viewData;
 
   public:
-    ConstraintDataFreezeObjectForTypedArrayBuffer(void *viewData)
+    explicit ConstraintDataFreezeObjectForTypedArrayBuffer(void *viewData)
       : viewData(viewData)
     {}
 
@@ -1702,7 +1702,7 @@ class ConstraintDataFreezePropertyState
         NON_WRITABLE
     } which;
 
-    ConstraintDataFreezePropertyState(Which which)
+    explicit ConstraintDataFreezePropertyState(Which which)
       : which(which)
     {}
 
@@ -1980,7 +1980,7 @@ TemporaryTypeSet::getCommonPrototype()
 
         TaggedProto nproto = object->proto();
         if (proto) {
-            if (nproto != proto)
+            if (nproto != TaggedProto(proto))
                 return nullptr;
         } else {
             if (!nproto.isObject())
@@ -2449,7 +2449,8 @@ TypeCompartment::setTypeToHomogenousArray(ExclusiveContext *cx,
     } else {
         /* Make a new type to use for future arrays with the same elements. */
         RootedObject objProto(cx, obj->getProto());
-        TypeObject *objType = newTypeObject(cx, &ArrayObject::class_, objProto);
+        Rooted<TaggedProto> taggedProto(cx, TaggedProto(objProto));
+        TypeObject *objType = newTypeObject(cx, &ArrayObject::class_, taggedProto);
         if (!objType)
             return;
         obj->setType(objType);
@@ -2670,8 +2671,8 @@ TypeCompartment::fixObjectType(ExclusiveContext *cx, JSObject *obj)
     JS_ASSERT(ObjectTableKey::match(key, lookup));
 
     ObjectTableEntry entry;
-    entry.object = objType;
-    entry.shape = obj->lastProperty();
+    entry.object.set(objType);
+    entry.shape.set(obj->lastProperty());
     entry.types = types;
 
     obj->setType(objType);
@@ -3263,7 +3264,7 @@ class TypeConstraintClearDefiniteGetterSetter : public TypeConstraint
   public:
     TypeObject *object;
 
-    TypeConstraintClearDefiniteGetterSetter(TypeObject *object)
+    explicit TypeConstraintClearDefiniteGetterSetter(TypeObject *object)
         : object(object)
     {}
 
@@ -3327,7 +3328,7 @@ class TypeConstraintClearDefiniteSingle : public TypeConstraint
   public:
     TypeObject *object;
 
-    TypeConstraintClearDefiniteSingle(TypeObject *object)
+    explicit TypeConstraintClearDefiniteSingle(TypeObject *object)
         : object(object)
     {}
 
@@ -3665,8 +3666,9 @@ JSFunction::setTypeForScriptedFunction(ExclusiveContext *cx, HandleFunction fun,
             return false;
     } else {
         RootedObject funProto(cx, fun->getProto());
+        Rooted<TaggedProto> taggedProto(cx, TaggedProto(funProto));
         TypeObject *type =
-            cx->compartment()->types.newTypeObject(cx, &JSFunction::class_, funProto);
+            cx->compartment()->types.newTypeObject(cx, &JSFunction::class_, taggedProto);
         if (!type)
             return false;
 
@@ -3801,7 +3803,7 @@ JSObject::hasNewType(const Class *clasp, TypeObject *type)
     if (!table.initialized())
         return false;
 
-    TypeObjectWithNewScriptSet::Ptr p = table.lookup(TypeObjectWithNewScriptSet::Lookup(clasp, this, nullptr));
+    TypeObjectWithNewScriptSet::Ptr p = table.lookup(TypeObjectWithNewScriptSet::Lookup(clasp, TaggedProto(this), nullptr));
     return p && p->object == type;
 }
 #endif /* DEBUG */
@@ -3819,7 +3821,8 @@ JSObject::setNewTypeUnknown(JSContext *cx, const Class *clasp, HandleObject obj)
      */
     TypeObjectWithNewScriptSet &table = cx->compartment()->newTypeObjects;
     if (table.initialized()) {
-        if (TypeObjectWithNewScriptSet::Ptr p = table.lookup(TypeObjectWithNewScriptSet::Lookup(clasp, obj.get(), nullptr)))
+        Rooted<TaggedProto> taggedProto(cx, TaggedProto(obj));
+        if (TypeObjectWithNewScriptSet::Ptr p = table.lookup(TypeObjectWithNewScriptSet::Lookup(clasp, taggedProto, nullptr)))
             MarkTypeObjectUnknownProperties(cx, p->object);
     }
 
@@ -3851,11 +3854,11 @@ class NewTypeObjectsSetRef : public BufferableRef
         if (prior == proto)
             return;
 
-        TypeObjectWithNewScriptSet::Ptr p = set->lookup(TypeObjectWithNewScriptSet::Lookup(clasp, prior, proto, newFunction));
+        TypeObjectWithNewScriptSet::Ptr p = set->lookup(TypeObjectWithNewScriptSet::Lookup(clasp, TaggedProto(prior), TaggedProto(proto), newFunction));
         JS_ASSERT(p);  // newTypeObjects set must still contain original entry.
 
-        set->rekeyAs(TypeObjectWithNewScriptSet::Lookup(clasp, prior, proto, newFunction),
-                     TypeObjectWithNewScriptSet::Lookup(clasp, proto, newFunction), *p);
+        set->rekeyAs(TypeObjectWithNewScriptSet::Lookup(clasp, TaggedProto(prior), TaggedProto(proto), newFunction),
+                     TypeObjectWithNewScriptSet::Lookup(clasp, TaggedProto(proto), newFunction), *p);
     }
 };
 #endif
@@ -4399,7 +4402,7 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes, bool *oom)
             if (output.isValid()) {
                 JSScript *script = output.script();
                 if (IsScriptAboutToBeFinalized(&script)) {
-                    jit::GetIonScript(script, output.mode())->recompileInfoRef() = uint32_t(-1);
+                    jit::GetIonScript(script, output.mode())->recompileInfoRef() = RecompileInfo(uint32_t(-1));
                     output.invalidate();
                 } else {
                     output.setSweepIndex(newCompilerOutputCount++);

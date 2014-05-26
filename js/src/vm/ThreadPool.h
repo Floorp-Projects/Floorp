@@ -210,7 +210,7 @@ class ThreadPool : public Monitor
 
     static const uint16_t MAX_SLICE_ID = UINT16_MAX;
 
-    ThreadPool(JSRuntime *rt);
+    explicit ThreadPool(JSRuntime *rt);
     ~ThreadPool();
 
     bool init();

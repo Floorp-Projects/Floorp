@@ -959,7 +959,7 @@ struct EmptySeparatorOp
 struct CharSeparatorOp
 {
     jschar sep;
-    CharSeparatorOp(jschar sep) : sep(sep) {};
+    explicit CharSeparatorOp(jschar sep) : sep(sep) {};
     bool operator()(JSContext *, StringBuffer &sb) { return sb.append(sep); }
 };
 
@@ -1510,7 +1510,7 @@ struct SortComparatorStrings
 {
     JSContext   *const cx;
 
-    SortComparatorStrings(JSContext *cx)
+    explicit SortComparatorStrings(JSContext *cx)
       : cx(cx) {}
 
     bool operator()(const Value &a, const Value &b, bool *lessOrEqualp) {
@@ -3081,7 +3081,7 @@ js_InitArrayClass(JSContext *cx, HandleObject obj)
     if (!proto)
         return nullptr;
 
-    RootedTypeObject type(cx, cx->getNewType(&ArrayObject::class_, proto.get()));
+    RootedTypeObject type(cx, cx->getNewType(&ArrayObject::class_, TaggedProto(proto)));
     if (!type)
         return nullptr;
 
@@ -3191,7 +3191,7 @@ NewArray(ExclusiveContext *cxArg, uint32_t length,
     if (!proto && !GetBuiltinPrototype(cxArg, JSProto_Array, &proto))
         return nullptr;
 
-    RootedTypeObject type(cxArg, cxArg->getNewType(&ArrayObject::class_, proto.get()));
+    RootedTypeObject type(cxArg, cxArg->getNewType(&ArrayObject::class_, TaggedProto(proto)));
     if (!type)
         return nullptr;
 

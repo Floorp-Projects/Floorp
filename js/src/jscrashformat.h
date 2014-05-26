@@ -33,7 +33,7 @@ struct CrashHeader
     /* id of the crash data, chosen from the enum above. */
     uint64_t id;
 
-    CrashHeader(uint64_t id) : id(id) { memcpy(cookie, crash_cookie, crash_cookie_len); }
+    explicit CrashHeader(uint64_t id) : id(id) { memcpy(cookie, crash_cookie, crash_cookie_len); }
 };
 
 struct CrashRegisters
@@ -45,7 +45,7 @@ static const int crash_buffer_size = 32 * 1024;
 
 struct CrashStack
 {
-    CrashStack(uint64_t id) : header(id) {}
+    explicit CrashStack(uint64_t id) : header(id) {}
 
     CrashHeader header;
     uint64_t snaptime;    /* Unix time when the stack was snapshotted. */
@@ -57,7 +57,7 @@ struct CrashStack
 
 struct CrashRing
 {
-    CrashRing(uint64_t id) : header(id), offset(0) { memset(buffer, 0, sizeof(buffer)); }
+    explicit CrashRing(uint64_t id) : header(id), offset(0) { memset(buffer, 0, sizeof(buffer)); }
 
     CrashHeader header;
     uint64_t offset; /* Next byte to be written in the buffer. */

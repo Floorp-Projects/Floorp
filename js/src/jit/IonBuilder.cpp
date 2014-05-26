@@ -45,7 +45,7 @@ class jit::BaselineFrameInspector
     Vector<types::Type, 4, IonAllocPolicy> argTypes;
     Vector<types::Type, 4, IonAllocPolicy> varTypes;
 
-    BaselineFrameInspector(TempAllocator *temp)
+    explicit BaselineFrameInspector(TempAllocator *temp)
       : thisType(types::Type::UndefinedType()),
         singletonScopeChain(nullptr),
         argTypes(*temp),
@@ -8376,7 +8376,7 @@ IonBuilder::freezePropertiesForCommonPrototype(types::TemporaryTypeSet *types, P
             // Don't mark the proto. It will be held down by the shape
             // guard. This allows us to use properties found on prototypes
             // with properties unknown to TI.
-            if (type->proto() == foundProto)
+            if (type->proto() == TaggedProto(foundProto))
                 break;
             type = types::TypeObjectKey::get(type->proto().toObjectOrNull());
         }

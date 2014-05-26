@@ -45,7 +45,7 @@ class gcstats::StatisticsSerializer
         AsText = false
     };
 
-    StatisticsSerializer(Mode asJSON)
+    explicit StatisticsSerializer(Mode asJSON)
       : buf_(), asJSON_(asJSON), needComma_(false), oom_(false)
     {}
 
