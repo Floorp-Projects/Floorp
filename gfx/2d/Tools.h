@@ -138,14 +138,21 @@ struct AlignedArray
   T *mPtr;
 };
 
+/**
+ * Returns aStride increased, if necessary, so that it divides exactly into
+ * |alignment|.
+ *
+ * Note that currently |alignment| must be a power-of-2. If for some reason we
+ * want to support NPOT alignment we can revert back to this functions old
+ * implementation.
+ */
 template<int alignment>
 int32_t GetAlignedStride(int32_t aStride)
 {
-  if (aStride % alignment) {
-    return aStride + (alignment - (aStride % alignment));
-  }
-
-  return aStride;
+  MOZ_ASSERT(aStride > 0 && (aStride & (aStride-1)) == 0,
+             "This implementation currently require power-of-two");
+  const int32_t mask = alignment - 1;
+  return (aStride + mask) & ~mask;
 }
 
 }
