@@ -127,7 +127,7 @@ TranslationUI.prototype = {
     this.browser.messageManager.sendAsyncMessage("Translation:ShowTranslation");
   },
 
-  get notificationBox() this.browser.ownerGlobal.gBrowser.getNotificationBox(),
+  get notificationBox() this.browser.ownerGlobal.gBrowser.getNotificationBox(this.browser),
 
   showTranslationInfoBar: function() {
     let notificationBox = this.notificationBox;
