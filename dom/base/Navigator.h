@@ -132,6 +132,8 @@ public:
 
   void RefreshMIMEArray();
 
+  static bool HasDesktopNotificationSupport();
+
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   /**
@@ -264,15 +266,44 @@ public:
   void GetAcceptLanguages(nsTArray<nsString>& aLanguages);
 
   // WebIDL helper methods
+  static bool HasBatterySupport(JSContext* /* unused*/, JSObject* /*unused */);
+  static bool HasPowerSupport(JSContext* /* unused */, JSObject* aGlobal);
+  static bool HasPhoneNumberSupport(JSContext* /* unused */, JSObject* aGlobal);
+  static bool HasIdleSupport(JSContext* /* unused */, JSObject* aGlobal);
   static bool HasWakeLockSupport(JSContext* /* unused*/, JSObject* /*unused */);
+  static bool HasDesktopNotificationSupport(JSContext* /* unused*/,
+                                            JSObject* /*unused */)
+  {
+    return HasDesktopNotificationSupport();
+  }
   static bool HasMobileMessageSupport(JSContext* /* unused */,
                                       JSObject* aGlobal);
+  static bool HasTelephonySupport(JSContext* cx,
+                                  JSObject* aGlobal);
   static bool HasCameraSupport(JSContext* /* unused */,
                                JSObject* aGlobal);
+#ifdef MOZ_B2G_RIL
+  static bool HasMobileConnectionSupport(JSContext* /* unused */,
+                                         JSObject* aGlobal);
+  static bool HasCellBroadcastSupport(JSContext* /* unused */,
+                                      JSObject* aGlobal);
+  static bool HasVoicemailSupport(JSContext* /* unused */,
+                                  JSObject* aGlobal);
+  static bool HasIccManagerSupport(JSContext* /* unused */,
+                                   JSObject* aGlobal);
+#endif // MOZ_B2G_RIL
   static bool HasWifiManagerSupport(JSContext* /* unused */,
                                   JSObject* aGlobal);
+#ifdef MOZ_B2G_BT
+  static bool HasBluetoothSupport(JSContext* /* unused */, JSObject* aGlobal);
+#endif // MOZ_B2G_BT
+#ifdef MOZ_B2G_FM
+  static bool HasFMRadioSupport(JSContext* /* unused */, JSObject* aGlobal);
+#endif // MOZ_B2G_FM
 #ifdef MOZ_NFC
   static bool HasNFCSupport(JSContext* /* unused */, JSObject* aGlobal);
+  static bool HasNFCPeerSupport(JSContext* /* unused */, JSObject* aGlobal);
+  static bool HasNFCManagerSupport(JSContext* /* unused */, JSObject* aGlobal);
 #endif // MOZ_NFC
 #ifdef MOZ_TIME_MANAGER
   static bool HasTimeSupport(JSContext* /* unused */, JSObject* aGlobal);
@@ -282,11 +313,18 @@ public:
                                   JSObject* /* unused */);
 #endif // MOZ_MEDIA_NAVIGATOR
 
+  static bool HasPushNotificationsSupport(JSContext* /* unused */,
+                                          JSObject* aGlobal);
+
   static bool HasInputMethodSupport(JSContext* /* unused */, JSObject* aGlobal);
 
   static bool HasDataStoreSupport(nsIPrincipal* aPrincipal);
 
   static bool HasDataStoreSupport(JSContext* cx, JSObject* aGlobal);
+
+  static bool HasDownloadsSupport(JSContext* aCx, JSObject* aGlobal);
+
+  static bool HasPermissionSettingsSupport(JSContext* aCx, JSObject* aGlobal);
 
   static bool HasNetworkStatsSupport(JSContext* aCx, JSObject* aGlobal);
 

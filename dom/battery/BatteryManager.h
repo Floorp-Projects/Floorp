@@ -36,6 +36,12 @@ public:
   void Notify(const hal::BatteryInformation& aBatteryInfo);
 
   /**
+   * Returns whether the battery api is supported (ie. not disabled by the user)
+   * @return whether the battery api is supported.
+   */
+  static bool HasSupport();
+
+  /**
    * WebIDL Interface
    */
 

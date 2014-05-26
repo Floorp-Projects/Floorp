@@ -182,6 +182,19 @@ PowerManager::SetCpuSleepAllowed(bool aAllowed)
   hal::SetCpuSleepAllowed(aAllowed);
 }
 
+bool
+PowerManager::CheckPermission(nsPIDOMWindow* aWindow)
+{
+  nsCOMPtr<nsIPermissionManager> permMgr =
+    services::GetPermissionManager();
+  NS_ENSURE_TRUE(permMgr, false);
+
+  uint32_t permission = nsIPermissionManager::DENY_ACTION;
+  permMgr->TestPermissionFromWindow(aWindow, "power", &permission);
+
+  return permission == nsIPermissionManager::ALLOW_ACTION;
+}
+
 already_AddRefed<PowerManager>
 PowerManager::CreateInstance(nsPIDOMWindow* aWindow)
 {

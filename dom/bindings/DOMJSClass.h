@@ -38,9 +38,6 @@ typedef bool
                            JS::Handle<JSObject*> obj,
                            JS::AutoIdVector& props);
 
-bool
-CheckPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[]);
-
 struct ConstantSpec
 {
   const char* name;
@@ -55,7 +52,7 @@ struct Prefable {
     if (!enabled) {
       return false;
     }
-    if (!enabledFunc && !availableFunc && !checkPermissions) {
+    if (!enabledFunc && !availableFunc) {
       return true;
     }
     // Just go ahead and root obj, in case enabledFunc GCs
@@ -66,11 +63,6 @@ struct Prefable {
     }
     if (availableFunc &&
         !availableFunc(cx, js::GetGlobalForObjectCrossCompartment(rootedObj))) {
-      return false;
-    }
-    if (checkPermissions &&
-        !CheckPermissions(cx, js::GetGlobalForObjectCrossCompartment(rootedObj),
-                          checkPermissions)) {
       return false;
     }
     return true;
@@ -87,7 +79,6 @@ struct Prefable {
   // is basically a hack to avoid having to codegen PropertyEnabled
   // implementations in case when we need to do two separate checks.
   PropertyEnabled availableFunc;
-  const char* const* checkPermissions;
   // Array of specs, terminated in whatever way is customary for T.
   // Null to indicate a end-of-array for Prefable, when such an
   // indicator is needed.
