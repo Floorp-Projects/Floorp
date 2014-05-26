@@ -129,8 +129,6 @@ WidgetModifiersToDOMModifiers(mozilla::Modifiers aModifiers)
 namespace mozilla {
 namespace layers {
 
-using namespace mozilla::css;
-
 typedef mozilla::layers::AllowedTouchBehavior AllowedTouchBehavior;
 typedef GeckoContentController::APZStateChange APZStateChange;
 
@@ -291,7 +289,7 @@ static const double ALLOWED_DIRECT_PAN_ANGLE = M_PI / 3.0; // 60 degrees
 /**
  * Computed time function used for sampling frames of a zoom to animation.
  */
-StaticAutoPtr<ComputedTimingFunction> gComputedTimingFunction;
+StaticAutoPtr<css::ComputedTimingFunction> gComputedTimingFunction;
 
 /**
  * Maximum zoom amount, always used, even if a page asks for higher.
@@ -471,7 +469,7 @@ AsyncPanZoomController::InitializeGlobalState()
     return;
   sInitialized = true;
 
-  gComputedTimingFunction = new ComputedTimingFunction();
+  gComputedTimingFunction = new css::ComputedTimingFunction();
   gComputedTimingFunction->Init(
     nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE));
   ClearOnShutdown(&gComputedTimingFunction);
