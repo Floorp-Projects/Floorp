@@ -76,7 +76,7 @@
 
 .cm-s-mozilla .cm-unused-line {
   text-decoration: line-through;
-  -moz-text-decoration-color: red;
+  -moz-text-decoration-color: #5f88b0;
 }
 
 .cm-s-mozilla .cm-executed-line {
