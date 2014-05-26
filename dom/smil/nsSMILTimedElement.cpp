@@ -2312,7 +2312,7 @@ nsSMILTimedElement::FireTimeEventAsync(uint32_t aMsg, int32_t aDetail)
 
   nsCOMPtr<nsIRunnable> event =
     new AsyncTimeEventRunner(mAnimationElement, aMsg, aDetail);
-  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  NS_DispatchToMainThread(event);
 }
 
 const nsSMILInstanceTime*

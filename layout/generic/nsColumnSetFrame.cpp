@@ -20,7 +20,7 @@ using namespace mozilla::layout;
  *
  * XXX should we support CSS columns applied to table elements?
  */
-nsIFrame*
+nsContainerFrame*
 NS_NewColumnSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, nsFrameState aStateFlags)
 {
   nsColumnSetFrame* it = new (aPresShell) nsColumnSetFrame(aContext);

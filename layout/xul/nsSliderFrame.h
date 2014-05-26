@@ -82,9 +82,9 @@ public:
                                     nsIAtom* aAttribute,
                                     int32_t aModType) MOZ_OVERRIDE;
 
-  virtual void Init(nsIContent*      aContent,
-                    nsIFrame*        aParent,
-                    nsIFrame*        asPrevInFlow) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*       aContent,
+                    nsContainerFrame* aParent,
+                    nsIFrame*         asPrevInFlow) MOZ_OVERRIDE;
 
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,

@@ -17,7 +17,7 @@
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 
-nsIFrame*
+nsContainerFrame*
 NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsSVGMarkerFrame(aContext);
@@ -51,9 +51,9 @@ nsSVGMarkerFrame::AttributeChanged(int32_t  aNameSpaceID,
 
 #ifdef DEBUG
 void
-nsSVGMarkerFrame::Init(nsIContent* aContent,
-                       nsIFrame* aParent,
-                       nsIFrame* aPrevInFlow)
+nsSVGMarkerFrame::Init(nsIContent*       aContent,
+                       nsContainerFrame* aParent,
+                       nsIFrame*         aPrevInFlow)
 {
   NS_ASSERTION(aContent->IsSVG(nsGkAtoms::marker), "Content is not an SVG marker");
 
@@ -244,7 +244,7 @@ nsSVGMarkerFrame::AutoMarkerReferencer::~AutoMarkerReferencer()
 //----------------------------------------------------------------------
 // Implementation of nsSVGMarkerAnonChildFrame
 
-nsIFrame*
+nsContainerFrame*
 NS_NewSVGMarkerAnonChildFrame(nsIPresShell* aPresShell,
                               nsStyleContext* aContext)
 {
@@ -255,9 +255,9 @@ NS_IMPL_FRAMEARENA_HELPERS(nsSVGMarkerAnonChildFrame)
 
 #ifdef DEBUG
 void
-nsSVGMarkerAnonChildFrame::Init(nsIContent* aContent,
-                                nsIFrame* aParent,
-                                nsIFrame* aPrevInFlow)
+nsSVGMarkerAnonChildFrame::Init(nsIContent*       aContent,
+                                nsContainerFrame* aParent,
+                                nsIFrame*         aPrevInFlow)
 {
   NS_ABORT_IF_FALSE(aParent->GetType() == nsGkAtoms::svgMarkerFrame,
                     "Unexpected parent");

@@ -301,8 +301,12 @@ nsCaret::GetGeometryForFrame(nsIFrame* aFrame,
   if (NS_FAILED(rv))
     return rv;
 
-  nsIFrame *frame = aFrame->GetContentInsertionFrame();
-  NS_ASSERTION(frame, "We should not be in the middle of reflow");
+  nsIFrame* frame = aFrame->GetContentInsertionFrame();
+  if (!frame) {
+    frame = aFrame;
+  }
+  NS_ASSERTION(!(frame->GetStateBits() & NS_FRAME_IN_REFLOW),
+               "We should not be in the middle of reflow");
   nscoord baseline = frame->GetCaretBaseline();
   nscoord ascent = 0, descent = 0;
   nsRefPtr<nsFontMetrics> fm;

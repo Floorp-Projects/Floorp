@@ -1,4 +1,4 @@
-== font-size-wrap.html font-size-wrap-ref.html
+random-if(B2G&&browserIsRemote) == font-size-wrap.html font-size-wrap-ref.html
 == abs-pos-auto-margin-1.html abs-pos-auto-margin-1-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,73,1) == auto-offset-inline-block-1.html auto-offset-inline-block-1-ref.html # bug 696670
 == fieldset-1.html fieldset-1-ref.html

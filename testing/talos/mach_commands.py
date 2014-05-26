@@ -24,7 +24,7 @@ from mach.decorators import (
 )
 
 class TalosRunner(MozbuildObject):
-    def run_test(self, suite, repo, rev):
+    def run_test(self, suite, repo, rev, sps_profile):
         """
         We want to do couple of things before running Talos
         1. Clone mozharness
@@ -33,15 +33,16 @@ class TalosRunner(MozbuildObject):
         """
 
         print("Running Talos test suite %s" % suite)
-        self.init_variables(suite, repo, rev)
+        self.init_variables(suite, repo, rev, sps_profile)
         self.clone_mozharness()
         self.make_config()
         self.write_config()
         self.make_args()
         return self.run_mozharness()
 
-    def init_variables(self, suite, repo, rev):
+    def init_variables(self, suite, repo, rev, sps_profile):
         self.suite = suite
+        self.sps_profile = sps_profile
         self.mozharness_repo = repo
         self.mozharness_rev = rev
 
@@ -103,6 +104,7 @@ class TalosRunner(MozbuildObject):
         self.args = {
             'config': {
                 'suite': self.suite,
+                'sps_profile': self.sps_profile,
                 'use_talos_json': True
             },
            'initial_config_file': self.config_file_path,
@@ -140,11 +142,15 @@ class MachCommands(MachCommandBase):
     @CommandArgument('--rev', default=mozharness_rev,
                      help='The mozharness revision to clone. Defaults to '
                           'production')
-    def run_talos_test(self, suite, repo=None, rev=None):
+    @CommandArgument('--spsProfile', default=False,
+                     help='Use the Gecko Profiler to capture profiles that can '
+                          'then be displayed by Cleopatra.', action='store_true')
+
+    def run_talos_test(self, suite, repo=None, rev=None, spsProfile=False):
         talos = self._spawn(TalosRunner)
 
         try:
-            return talos.run_test(suite, repo, rev)
+            return talos.run_test(suite, repo, rev, spsProfile)
         except Exception as e:
             print(str(e))
             return 1

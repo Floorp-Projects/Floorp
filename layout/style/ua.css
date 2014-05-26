@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@import url(resource://gre-resources/html.css);
-@import url(chrome://global/content/xul.css);
-
 @namespace parsererror url(http://www.mozilla.org/newlayout/xml/parsererror.xml);
 @namespace xul url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 

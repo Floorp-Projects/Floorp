@@ -20,11 +20,10 @@ public:
   nsEventQueue();
   ~nsEventQueue();
 
-  // This method adds a new event to the pending event queue.  The event object
-  // is AddRef'd if this method succeeds.  This method returns true if the
-  // event was stored in the event queue, and it returns false if it could
-  // not allocate sufficient memory.
-  bool PutEvent(nsIRunnable *event);
+  // This method adds a new event to the pending event queue.  The queue holds
+  // a strong reference to the event after this method returns.  This method
+  // cannot fail.
+  void PutEvent(nsIRunnable *event);
 
   // This method gets an event from the event queue.  If mayWait is true, then
   // the method will block the calling thread until an event is available.  If
@@ -42,11 +41,6 @@ public:
   // This method returns the next pending event or null.
   bool GetPendingEvent(nsIRunnable **runnable) {
     return GetEvent(false, runnable);
-  }
-
-  // This method waits for and returns the next pending event.
-  bool WaitPendingEvent(nsIRunnable **runnable) {
-    return GetEvent(true, runnable);
   }
 
   // Expose the event queue's monitor for "power users"
@@ -73,7 +67,7 @@ private:
                 "sizeof(Page) should be a power of two to avoid heap slop.");
 
   static Page *NewPage() {
-    return static_cast<Page *>(calloc(1, sizeof(Page)));
+    return static_cast<Page *>(moz_xcalloc(1, sizeof(Page)));
   }
 
   static void FreePage(Page *p) {

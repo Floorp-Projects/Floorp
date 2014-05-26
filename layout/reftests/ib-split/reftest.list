@@ -64,7 +64,7 @@
 == insert-into-split-inline-16a.html insert-into-split-inline-16-ref.html
 == insert-into-split-inline-16b.html insert-into-split-inline-16-ref.html
 == insert-into-split-inline-16-ref.html insert-into-split-inline-16-noib-ref.html
-== float-inside-inline-between-blocks-1.html float-inside-inline-between-blocks-1-ref.html
+random-if(B2G&&browserIsRemote) == float-inside-inline-between-blocks-1.html float-inside-inline-between-blocks-1-ref.html
 == table-pseudo-in-part3-1.html table-pseudo-in-part3-1-ref.html
 == emptyspan-1.html emptyspan-1-ref.html
 == emptyspan-2.html emptyspan-2-ref.html

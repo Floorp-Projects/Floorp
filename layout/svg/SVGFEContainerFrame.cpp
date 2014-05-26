@@ -45,9 +45,9 @@ public:
 #endif
 
 #ifdef DEBUG
-  virtual void Init(nsIContent* aContent,
-                    nsIFrame*   aParent,
-                    nsIFrame*   aPrevInFlow) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*       aContent,
+                    nsContainerFrame* aParent,
+                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
 #endif
   /**
    * Get the "type" of the frame
@@ -76,9 +76,9 @@ NS_IMPL_FRAMEARENA_HELPERS(SVGFEContainerFrame)
 
 #ifdef DEBUG
 void
-SVGFEContainerFrame::Init(nsIContent* aContent,
-                          nsIFrame* aParent,
-                          nsIFrame* aPrevInFlow)
+SVGFEContainerFrame::Init(nsIContent*       aContent,
+                          nsContainerFrame* aParent,
+                          nsIFrame*         aPrevInFlow)
 {
   NS_ASSERTION(aContent->IsNodeOfType(nsINode::eFILTER),
                "Trying to construct an SVGFEContainerFrame for a "

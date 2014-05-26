@@ -1,0 +1,30 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="templates.js"></script>
+  <script type="application/javascript" src="turnConfig.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1013809",
+    title: "Audio-only peer connection with swapped setLocal and setRemote steps"
+  });
+
+  var test;
+  runTest(function (options) {
+    test = new PeerConnectionTest(options);
+    var sld = test.chain.remove("PC_REMOTE_SET_LOCAL_DESCRIPTION");
+    test.chain.insertAfter("PC_LOCAL_SET_REMOTE_DESCRIPTION", sld);
+    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

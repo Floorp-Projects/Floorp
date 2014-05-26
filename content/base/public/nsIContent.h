@@ -70,9 +70,11 @@ public:
    * appended to a parent, this will be called after the node has been added to
    * the parent's child list and before nsIDocumentObserver notifications for
    * the addition are dispatched.
-   * @param aDocument The new document for the content node.  Must match the
-   *                  current document of aParent, if aParent is not null.
-   *                  May not be null if aParent is null.
+   * @param aDocument The new document for the content node.  May not be null
+   *                  if aParent is null.  Must match the current document of
+   *                  aParent, if aParent is not null (note that
+   *                  aParent->GetCurrentDoc() can be null, in which case this
+   *                  must also be null).
    * @param aParent The new parent for the content node.  May be null if the
    *                node is being bound as a direct child of the document.
    * @param aBindingParent The new binding parent for the content node.

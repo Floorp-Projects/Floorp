@@ -601,7 +601,7 @@ class CopyToUpperCase
 public:
   typedef char value_type;
 
-  CopyToUpperCase( nsACString::iterator& aDestIter )
+  explicit CopyToUpperCase( nsACString::iterator& aDestIter )
     : mIter(aDestIter)
   {
   }
@@ -679,7 +679,7 @@ class CopyToLowerCase
 public:
   typedef char value_type;
 
-  CopyToLowerCase( nsACString::iterator& aDestIter )
+  explicit CopyToLowerCase( nsACString::iterator& aDestIter )
     : mIter(aDestIter)
   {
   }

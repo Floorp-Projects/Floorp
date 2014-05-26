@@ -17,7 +17,7 @@
 
 using namespace mozilla;
 
-nsIFrame*
+ViewportFrame*
 NS_NewViewportFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) ViewportFrame(aContext);
@@ -29,9 +29,9 @@ NS_QUERYFRAME_HEAD(ViewportFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 void
-ViewportFrame::Init(nsIContent*      aContent,
-                    nsIFrame*        aParent,
-                    nsIFrame*        aPrevInFlow)
+ViewportFrame::Init(nsIContent*       aContent,
+                    nsContainerFrame* aParent,
+                    nsIFrame*         aPrevInFlow)
 {
   Super::Init(aContent, aParent, aPrevInFlow);
 

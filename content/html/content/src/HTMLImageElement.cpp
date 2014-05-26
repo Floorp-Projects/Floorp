@@ -18,7 +18,7 @@
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
 #include "nsContentUtils.h"
-#include "nsIFrame.h"
+#include "nsContainerFrame.h"
 #include "nsNodeInfoManager.h"
 #include "mozilla/MouseEvents.h"
 #include "nsContentPolicyUtils.h"

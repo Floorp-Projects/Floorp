@@ -22,6 +22,6 @@ skip-if(B2G) == bar-pseudo-element-vertical.html bar-pseudo-element-vertical-ref
 include default-style/reftest.list
 
 # Tests for bugs:
-== block-invalidate.html block-invalidate-ref.html
+random-if(B2G&&browserIsRemote) == block-invalidate.html block-invalidate-ref.html
 == in-cells.html in-cells-ref.html
 == max-height.html max-height-ref.html

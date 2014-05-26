@@ -245,6 +245,13 @@ public:
    */
   static KeyNameIndex ComputeGeckoKeyNameIndex(UInt32 aNativeKeyCode);
 
+  /**
+   * ComputeGeckoCodeNameIndex() returns Gecko code name index for the key.
+   *
+   * @param aNativeKeyCode        A native keycode.
+   */
+  static CodeNameIndex ComputeGeckoCodeNameIndex(UInt32 aNativeKeyCode);
+
 protected:
   /**
    * TranslateToString() computes the inputted text from the native keyCode,

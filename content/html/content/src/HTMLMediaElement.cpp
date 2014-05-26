@@ -3267,7 +3267,7 @@ nsresult HTMLMediaElement::DispatchAsyncEvent(const nsAString& aName)
   }
 
   nsCOMPtr<nsIRunnable> event = new nsAsyncEventRunner(aName, this);
-  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  NS_DispatchToMainThread(event);
   return NS_OK;
 }
 
@@ -3459,7 +3459,7 @@ void HTMLMediaElement::DispatchAsyncSourceError(nsIContent* aSourceElement)
   LOG_EVENT(PR_LOG_DEBUG, ("%p Queuing simple source error event", this));
 
   nsCOMPtr<nsIRunnable> event = new nsSourceErrorEventRunner(this, aSourceElement);
-  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  NS_DispatchToMainThread(event);
 }
 
 void HTMLMediaElement::NotifyAddedSource()

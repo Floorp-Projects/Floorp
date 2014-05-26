@@ -2135,7 +2135,7 @@ static int vcmEnsureExternalCodec(
     // whitelist internal codecs; I420 will be here once we resolve bug 995884
     return 0;
 #ifdef MOZ_WEBRTC_OMX
-  } else if (config->mName == "I420") {
+  } else if (config->mName == "H264_P0" || config->mName == "H264_P1") {
     // Here we use "I420" to register H.264 because WebRTC.org code has a
     // whitelist of supported video codec in |webrtc::ViECodecImpl::CodecValid()|
     // and will reject registration of those not in it.
@@ -2145,14 +2145,14 @@ static int vcmEnsureExternalCodec(
     if (send) {
       VideoEncoder* encoder = OMXVideoCodec::CreateEncoder(OMXVideoCodec::CodecType::CODEC_H264);
       if (encoder) {
-        return conduit->SetExternalSendCodec(config->mType, encoder);
+        return conduit->SetExternalSendCodec(config, encoder);
       } else {
         return kMediaConduitInvalidSendCodec;
       }
     } else {
       VideoDecoder* decoder = OMXVideoCodec::CreateDecoder(OMXVideoCodec::CodecType::CODEC_H264);
       if (decoder) {
-        return conduit->SetExternalRecvCodec(config->mType, decoder);
+        return conduit->SetExternalRecvCodec(config, decoder);
       } else {
         return kMediaConduitInvalidReceiveCodec;
       }
@@ -2740,7 +2740,8 @@ int vcmGetVideoCodecList(int request_type)
  */
 int vcmGetVideoMaxSupportedPacketizationMode()
 {
-    return 0;
+  // We support mode 1 packetization in webrtc
+  return 1;
 }
 
 /**
@@ -3015,7 +3016,9 @@ void vcmPopulateAttribs(void *sdp_p, int level, cc_uint32_t media_type,
 
         (void) ccsdpAttrSetFmtpPayloadType(sdp_p, level, 0, a_inst, payload_number);
 
-        //(void) sdp_attr_set_fmtp_pack_mode(sdp_p, level, 0, a_inst, 1 /*packetization_mode*/);
+        if (media_type == RTP_H264_P1) {
+          (void) ccsdpAttrSetFmtpPackMode(sdp_p, level, 0, a_inst, 1 /*packetization_mode*/);
+        }
         //(void) sdp_attr_set_fmtp_parameter_sets(sdp_p, level, 0, a_inst, "J0KAFJWgUH5A,KM4H8n==");    // NAL units 27 42 80 14 95 a0 50 7e 40 28 ce 07 f2
 
         //profile = 0x42E000 + H264ToSDPLevel( vt_GetClientProfileLevel() );

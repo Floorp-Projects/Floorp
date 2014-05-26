@@ -66,7 +66,8 @@ nsLegendFrame::Reflow(nsPresContext*          aPresContext,
 int32_t nsLegendFrame::GetAlign()
 {
   int32_t intValue = NS_STYLE_TEXT_ALIGN_LEFT;
-  if (mParent && NS_STYLE_DIRECTION_RTL == mParent->StyleVisibility()->mDirection) {
+  if (GetParent() &&
+      NS_STYLE_DIRECTION_RTL == GetParent()->StyleVisibility()->mDirection) {
     intValue = NS_STYLE_TEXT_ALIGN_RIGHT;
   }
 

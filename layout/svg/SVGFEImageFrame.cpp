@@ -31,9 +31,9 @@ protected:
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  virtual void Init(nsIContent* aContent,
-                    nsIFrame*   aParent,
-                    nsIFrame*   aPrevInFlow) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*       aContent,
+                    nsContainerFrame* aParent,
+                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
@@ -88,9 +88,9 @@ SVGFEImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
 }
 
 void
-SVGFEImageFrame::Init(nsIContent* aContent,
-                        nsIFrame* aParent,
-                        nsIFrame* aPrevInFlow)
+SVGFEImageFrame::Init(nsIContent*       aContent,
+                      nsContainerFrame* aParent,
+                      nsIFrame*         aPrevInFlow)
 {
   NS_ASSERTION(aContent->IsSVG(nsGkAtoms::feImage),
                "Trying to construct an SVGFEImageFrame for a "

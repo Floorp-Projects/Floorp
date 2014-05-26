@@ -99,15 +99,17 @@ public:
   line_iterator line(nsLineBox* aList) { return mLines.begin(aList); }
   reverse_line_iterator rline(nsLineBox* aList) { return mLines.rbegin(aList); }
 
-  friend nsIFrame* NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, nsFrameState aFlags);
+  friend nsBlockFrame* NS_NewBlockFrame(nsIPresShell* aPresShell,
+                                        nsStyleContext* aContext,
+                                        nsFrameState aFlags);
 
   // nsQueryFrame
   NS_DECL_QUERYFRAME
 
   // nsIFrame
-  virtual void Init(nsIContent*      aContent,
-                    nsIFrame*        aParent,
-                    nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*       aContent,
+                    nsContainerFrame* aParent,
+                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
   virtual nsresult SetInitialChildList(ChildListID     aListID,
                                        nsFrameList&    aChildList) MOZ_OVERRIDE;
   virtual nsresult  AppendFrames(ChildListID     aListID,

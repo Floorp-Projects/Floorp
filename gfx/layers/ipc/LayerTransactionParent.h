@@ -48,7 +48,8 @@ class LayerTransactionParent : public PLayerTransactionParent,
 public:
   LayerTransactionParent(LayerManagerComposite* aManager,
                          ShadowLayersManager* aLayersManager,
-                         uint64_t aId);
+                         uint64_t aId,
+                         ProcessId aOtherProcess);
   ~LayerTransactionParent();
 
   void Destroy();
@@ -86,6 +87,11 @@ public:
                                const FenceHandle& aFence) MOZ_OVERRIDE;
 
   virtual void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) MOZ_OVERRIDE;
+
+  virtual base::ProcessId GetChildProcessId() MOZ_OVERRIDE
+  {
+    return mChildProcessId;
+  }
 
 protected:
   virtual bool RecvUpdate(const EditArray& cset,
@@ -171,6 +177,10 @@ private:
   // called on us but the mLayerManager might not be destroyed, or
   // vice versa.  In both cases though, we want to ignore shadow-layer
   // transactions posted by the child.
+
+  // Child side's process id.
+  base::ProcessId mChildProcessId;
+
   bool mDestroyed;
 
   bool mIPCOpen;

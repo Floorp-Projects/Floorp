@@ -3850,9 +3850,9 @@ nsTextFrame::AccessibleType()
 
 //-----------------------------------------------------------------------------
 void
-nsTextFrame::Init(nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIFrame*        aPrevInFlow)
+nsTextFrame::Init(nsIContent*       aContent,
+                  nsContainerFrame* aParent,
+                  nsIFrame*         aPrevInFlow)
 {
   NS_ASSERTION(!aPrevInFlow, "Can't be a continuation!");
   NS_PRECONDITION(aContent->IsNodeOfType(nsINode::eTEXT),
@@ -3912,9 +3912,9 @@ public:
 
   friend nsIFrame* NS_NewContinuingTextFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  virtual void Init(nsIContent*      aContent,
-                    nsIFrame*        aParent,
-                    nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*       aContent,
+                    nsContainerFrame* aParent,
+                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
@@ -3964,9 +3964,9 @@ protected:
 };
 
 void
-nsContinuingTextFrame::Init(nsIContent* aContent,
-                            nsIFrame*   aParent,
-                            nsIFrame*   aPrevInFlow)
+nsContinuingTextFrame::Init(nsIContent*       aContent,
+                            nsContainerFrame* aParent,
+                            nsIFrame*         aPrevInFlow)
 {
   NS_ASSERTION(aPrevInFlow, "Must be a continuation!");
   // NOTE: bypassing nsTextFrame::Init!!!
@@ -7407,7 +7407,7 @@ RemoveInFlows(nsTextFrame* aFrame, nsTextFrame* aFirstToNotRemove)
   aFrame->SetPrevInFlow(nullptr);
   lastRemoved->SetNextInFlow(nullptr);
 
-  nsIFrame* parent = aFrame->GetParent();
+  nsContainerFrame* parent = aFrame->GetParent();
   nsBlockFrame* parentBlock = nsLayoutUtils::GetAsBlock(parent);
   if (parentBlock) {
     // Manually call DoRemoveFrame so we can tell it that we're

@@ -29,9 +29,9 @@ NS_IMPL_FRAMEARENA_HELPERS(nsSVGGFrame)
 
 #ifdef DEBUG
 void
-nsSVGGFrame::Init(nsIContent* aContent,
-                  nsIFrame* aParent,
-                  nsIFrame* aPrevInFlow)
+nsSVGGFrame::Init(nsIContent*       aContent,
+                  nsContainerFrame* aParent,
+                  nsIFrame*         aPrevInFlow)
 {
   NS_ASSERTION(aContent->IsSVG() &&
                static_cast<nsSVGElement*>(aContent)->IsTransformable(),
@@ -74,9 +74,9 @@ nsSVGGFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
     }
   }
   if (!mCanvasTM) {
-    NS_ASSERTION(mParent, "null parent");
+    NS_ASSERTION(GetParent(), "null parent");
 
-    nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
+    nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(GetParent());
     SVGGraphicsElement *content = static_cast<SVGGraphicsElement*>(mContent);
     gfxMatrix tm = content->PrependLocalTransformsTo(
         this == aTransformRoot ? gfxMatrix() :

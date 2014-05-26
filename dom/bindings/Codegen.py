@@ -39,7 +39,7 @@ def toBindingNamespace(arg):
 
 
 def isTypeCopyConstructible(type):
-    # Nullable and sequence stuff doesn't affect copy/constructibility
+    # Nullable and sequence stuff doesn't affect copy-constructibility
     type = type.unroll()
     return (type.isPrimitive() or type.isString() or type.isEnum() or
             (type.isUnion() and
@@ -1028,7 +1028,7 @@ class CGHeaders(CGWrapper):
                 headerSet.add(self.getDeclarationFilename(unrolled.inner))
             elif unrolled.isCallback():
                 # Callbacks are both a type and an object
-                headerSet.add(self.getDeclarationFilename(t.unroll()))
+                headerSet.add(self.getDeclarationFilename(unrolled))
             elif unrolled.isFloat() and not unrolled.isUnrestricted():
                 # Restricted floats are tested for finiteness
                 bindingHeaders.add("mozilla/FloatingPoint.h")
@@ -1038,6 +1038,14 @@ class CGHeaders(CGWrapper):
                 declareIncludes.add(filename)
             elif unrolled.isPrimitive():
                 bindingHeaders.add("mozilla/dom/PrimitiveConversions.h")
+            elif unrolled.isMozMap():
+                if dictionary or jsImplementedDescriptors:
+                    declareIncludes.add("mozilla/dom/MozMap.h")
+                else:
+                    bindingHeaders.add("mozilla/dom/MozMap.h")
+                # Also add headers for the type the MozMap is
+                # parametrized over, if needed.
+                addHeadersForType((t.inner, descriptor, dictionary))
 
         map(addHeadersForType,
             getAllTypes(descriptors + callbackDescriptors, dictionaries,
@@ -1153,6 +1161,8 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
         assert not descriptor or not dictionary
 
         t = t.unroll()
+        while t.isMozMap():
+            t = t.inner.unroll()
         if not t.isUnion():
             continue
         name = str(t)
@@ -1163,10 +1173,10 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
             owningUnionStructs[name] = CGUnionStruct(t, providers[0],
                                                      ownsMembers=True)
 
-            for f in t.flatMemberTypes:
-                f = f.unroll()
+            def addHeadersForType(f):
                 if f.nullable():
                     headers.add("mozilla/dom/Nullable.h")
+                f = f.unroll()
                 if f.isInterface():
                     if f.isSpiderMonkeyInterface():
                         headers.add("jsfriendapi.h")
@@ -1202,6 +1212,14 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
                     # the right header to be able to Release() in our inlined
                     # code.
                     headers.add(CGHeaders.getDeclarationFilename(f))
+                elif f.isMozMap():
+                    headers.add("mozilla/dom/MozMap.h")
+                    # And add headers for the type we're parametrized over
+                    addHeadersForType(f.inner)
+
+            for f in t.flatMemberTypes:
+                assert not f.nullable()
+                addHeadersForType(f)
 
     return (headers, implheaders, declarations,
             CGList(SortedDictValues(unionStructs) +
@@ -1230,7 +1248,7 @@ def UnionConversions(descriptors, dictionaries, callbacks, config):
         if name not in unionConversions:
             providers = getRelevantProviders(descriptor, config)
             unionConversions[name] = CGUnionConversionStruct(t, providers[0])
-            for f in t.flatMemberTypes:
+            def addHeadersForType(f, providers):
                 f = f.unroll()
                 if f.isInterface():
                     if f.isSpiderMonkeyInterface():
@@ -1257,6 +1275,13 @@ def UnionConversions(descriptors, dictionaries, callbacks, config):
                     headers.add(CGHeaders.getDeclarationFilename(f.inner))
                 elif f.isPrimitive():
                     headers.add("mozilla/dom/PrimitiveConversions.h")
+                elif f.isMozMap():
+                    headers.add("mozilla/dom/MozMap.h")
+                    # And the internal type of the MozMap
+                    addHeadersForType(f.inner, providers)
+
+            for f in t.flatMemberTypes:
+                addHeadersForType(f, providers)
 
     return (headers,
             CGWrapper(CGList(SortedDictValues(unionConversions), "\n"),
@@ -3623,8 +3648,8 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 declType = CGGeneric("JS::Rooted<JSObject*>")
             declArgs = "cx"
         else:
-            assert (isMember == "Sequence" or isMember == "Variadic" or
-                    isMember == "Dictionary" or isMember == "OwningUnion")
+            assert (isMember in
+                    ("Sequence", "Variadic", "Dictionary", "OwningUnion", "MozMap"))
             # We'll get traced by the sequence or dictionary or union tracer
             declType = CGGeneric("JSObject*")
             declArgs = None
@@ -3677,7 +3702,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         else:
             sequenceClass = "binding_detail::AutoSequence"
 
-        # XXXbz we can't include the index in the the sourceDescription, because
+        # XXXbz we can't include the index in the sourceDescription, because
         # we don't really have a way to pass one in dynamically at runtime...
         elementInfo = getJSToNativeConversionInfo(
             elementType, descriptorProvider, isMember="Sequence",
@@ -3696,6 +3721,16 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             arrayRef = "${declName}.SetValue()"
         else:
             arrayRef = "${declName}"
+
+        elementConversion = string.Template(elementInfo.template).substitute({
+                "val": "temp",
+                "mutableVal": "&temp",
+                "declName": "slot",
+                # We only need holderName here to handle isExternal()
+                # interfaces, which use an internal holder for the
+                # conversion even when forceOwningType ends up true.
+                "holderName": "tempHolder"
+            })
 
         # NOTE: Keep this in sync with variadic conversions as needed
         templateBody = fill(
@@ -3723,25 +3758,16 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 $*{exceptionCode}
               }
               ${elementType}& slot = *slotPtr;
+              $*{elementConversion}
+            }
             """,
             exceptionCode=exceptionCode,
             notSequence=notSequence,
             sequenceType=sequenceType,
             arrayRef=arrayRef,
-            elementType=elementInfo.declType.define())
+            elementType=elementInfo.declType.define(),
+            elementConversion=elementConversion)
 
-        templateBody += indent(
-            string.Template(elementInfo.template).substitute({
-                "val": "temp",
-                "mutableVal": "&temp",
-                "declName": "slot",
-                # We only need holderName here to handle isExternal()
-                # interfaces, which use an internal holder for the
-                # conversion even when forceOwningType ends up true.
-                "holderName": "tempHolder"
-            }))
-
-        templateBody += "}\n"
         templateBody = wrapObjectTemplate(templateBody, type,
                                           "${declName}.SetNull();\n", notSequence)
         # Sequence arguments that might contain traceable things need
@@ -3757,6 +3783,116 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             holderArgs = None
 
         return JSToNativeConversionInfo(templateBody, declType=typeName,
+                                        holderType=holderType,
+                                        dealWithOptional=isOptional,
+                                        holderArgs=holderArgs)
+
+    if type.isMozMap():
+        assert not isEnforceRange and not isClamp
+        if failureCode is None:
+            notMozMap = ('ThrowErrorMessage(cx, MSG_NOT_OBJECT, "%s");\n'
+                           "%s" % (firstCap(sourceDescription), exceptionCode))
+        else:
+            notMozMap = failureCode
+
+        nullable = type.nullable()
+        # Be very careful not to change "type": we need it later
+        if nullable:
+            valueType = type.inner.inner
+        else:
+            valueType = type.inner
+
+        valueInfo = getJSToNativeConversionInfo(
+            valueType, descriptorProvider, isMember="MozMap",
+            exceptionCode=exceptionCode, lenientFloatCode=lenientFloatCode,
+            isCallbackReturnValue=isCallbackReturnValue,
+            sourceDescription="value in %s" % sourceDescription)
+        if valueInfo.dealWithOptional:
+            raise TypeError("Shouldn't have optional things in MozMap")
+        if valueInfo.holderType is not None:
+            raise TypeError("Shouldn't need holders for MozMap")
+
+        typeName = CGTemplatedType("MozMap", valueInfo.declType)
+        mozMapType = typeName.define()
+        if nullable:
+            typeName = CGTemplatedType("Nullable", typeName)
+            mozMapRef = "${declName}.SetValue()"
+        else:
+            mozMapRef = "${declName}"
+
+        valueConversion = string.Template(valueInfo.template).substitute({
+                "val": "temp",
+                "mutableVal": "&temp",
+                "declName": "slot",
+                # We only need holderName here to handle isExternal()
+                # interfaces, which use an internal holder for the
+                # conversion even when forceOwningType ends up true.
+                "holderName": "tempHolder"
+            })
+
+        templateBody = fill(
+            """
+            ${mozMapType} &mozMap = ${mozMapRef};
+
+            JS::Rooted<JSObject*> mozMapObj(cx, &$${val}.toObject());
+            JS::AutoIdArray ids(cx, JS_Enumerate(cx, mozMapObj));
+            if (!ids) {
+              $*{exceptionCode}
+            }
+            JS::Rooted<JS::Value> propNameValue(cx);
+            JS::Rooted<JS::Value> temp(cx);
+            JS::Rooted<jsid> curId(cx);
+            for (size_t i = 0; i < ids.length(); ++i) {
+              // Make sure we get the value before converting the name, since
+              // getting the value can trigger GC but our name is a dependent
+              // string.
+              curId = ids[i];
+              binding_detail::FakeDependentString propName;
+              if (!JS_GetPropertyById(cx, mozMapObj, curId, &temp) ||
+                  !JS_IdToValue(cx, curId, &propNameValue) ||
+                  !ConvertJSValueToString(cx, propNameValue, &propNameValue,
+                                          eStringify, eStringify, propName)) {
+                $*{exceptionCode}
+              }
+
+              ${valueType}* slotPtr = mozMap.AddEntry(propName);
+              if (!slotPtr) {
+                JS_ReportOutOfMemory(cx);
+                $*{exceptionCode}
+              }
+              ${valueType}& slot = *slotPtr;
+              $*{valueConversion}
+            }
+            """,
+            exceptionCode=exceptionCode,
+            mozMapType=mozMapType,
+            mozMapRef=mozMapRef,
+            valueType=valueInfo.declType.define(),
+            valueConversion=valueConversion)
+
+        templateBody = wrapObjectTemplate(templateBody, type,
+                                          "${declName}.SetNull();\n",
+                                          notMozMap)
+
+        declType = typeName
+        declArgs = None
+        holderType = None
+        holderArgs = None
+        # MozMap arguments that might contain traceable things need
+        # to get traced
+        if not isMember and isCallbackReturnValue:
+            # Go ahead and just convert directly into our actual return value
+            declType = CGWrapper(declType, post="&")
+            declArgs = "aRetVal"
+        elif not isMember and typeNeedsRooting(valueType):
+            holderType = CGTemplatedType("MozMapRooter", valueInfo.declType)
+            # If our MozMap is nullable, this will set the Nullable to be
+            # not-null, but that's ok because we make an explicit SetNull() call
+            # on it as needed if our JS value is actually null.
+            holderArgs = "cx, &%s" % mozMapRef
+
+        return JSToNativeConversionInfo(templateBody, declType=declType,
+                                        declArgs=declArgs,
                                         holderType=holderType,
                                         dealWithOptional=isOptional,
                                         holderArgs=holderArgs)
@@ -3832,6 +3968,10 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             names.append(name)
         else:
             setDictionary = None
+
+        mozMapMemberTypes = filter(lambda t: t.isMozMap(), memberTypes)
+        if len(mozMapMemberTypes) > 0:
+            raise TypeError("We don't support MozMap in unions yet")
 
         objectMemberTypes = filter(lambda t: t.isObject(), memberTypes)
         if len(objectMemberTypes) > 0:
@@ -4466,7 +4606,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         assert not isEnforceRange and not isClamp
 
         declArgs = None
-        if isMember in ("Variadic", "Sequence", "Dictionary"):
+        if isMember in ("Variadic", "Sequence", "Dictionary", "MozMap"):
             # Rooting is handled by the sequence and dictionary tracers.
             declType = "JS::Value"
         else:
@@ -4928,6 +5068,7 @@ def getMaybeWrapValueFuncForType(type):
 
 
 sequenceWrapLevel = 0
+mozMapWrapLevel = 0
 
 
 def getWrapTemplateForType(type, descriptorProvider, result, successCode,
@@ -5034,26 +5175,26 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
     if type.isArray():
         raise TypeError("Can't handle array return values yet")
 
+    if (type.isSequence() or type.isMozMap()) and type.nullable():
+        # These are both wrapped in Nullable<>
+        recTemplate, recInfall = getWrapTemplateForType(type.inner, descriptorProvider,
+                                                        "%s.Value()" % result, successCode,
+                                                        returnsNewObject, exceptionCode,
+                                                        typedArraysAreStructs)
+        code = fill(
+            """
+
+            if (${result}.IsNull()) {
+              $*{setNull}
+            }
+            $*{recTemplate}
+            """,
+            result=result,
+        setNull=setNull(),
+            recTemplate=recTemplate)
+        return code, recInfall
+
     if type.isSequence():
-        if type.nullable():
-            # Nullable sequences are Nullable< nsTArray<T> >
-            recTemplate, recInfall = getWrapTemplateForType(type.inner, descriptorProvider,
-                                                            "%s.Value()" % result, successCode,
-                                                            returnsNewObject, exceptionCode,
-                                                            typedArraysAreStructs)
-            code = fill(
-                """
-
-                if (${result}.IsNull()) {
-                  $*{setNull}
-                }
-                $*{recTemplate}
-                """,
-                result=result,
-                setNull=setNull(),
-                recTemplate=recTemplate)
-            return code, recInfall
-
         # Now do non-nullable sequences.  Our success code is just to break to
         # where we set the element in the array.  Note that we bump the
         # sequenceWrapLevel around this call so that nested sequence conversions
@@ -5103,6 +5244,62 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
             index=index,
             innerTemplate=innerTemplate,
             set=setObject("*returnArray"))
+
+        return (code, False)
+
+    if type.isMozMap():
+        # Now do non-nullable MozMap.  Our success code is just to break to
+        # where we define the property on the object.  Note that we bump the
+        # mozMapWrapLevel around this call so that nested MozMap conversions
+        # will use different temp value names.
+        global mozMapWrapLevel
+        valueName = "mozMapValue%d" % mozMapWrapLevel
+        mozMapWrapLevel += 1
+        innerTemplate = wrapForType(
+            type.inner, descriptorProvider,
+            {
+                'result': valueName,
+                'successCode': "break;\n",
+                'jsvalRef': "tmp",
+                'jsvalHandle': "&tmp",
+                'returnsNewObject': returnsNewObject,
+                'exceptionCode': exceptionCode,
+                'obj': "returnObj"
+            })
+        mozMapWrapLevel -= 1
+        code = fill(
+            """
+
+            nsTArray<nsString> keys;
+            ${result}.GetKeys(keys);
+            JS::Rooted<JSObject*> returnObj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+            if (!returnObj) {
+              $*{exceptionCode}
+            }
+            // Scope for 'tmp'
+            {
+              JS::Rooted<JS::Value> tmp(cx);
+              for (size_t idx = 0; idx < keys.Length(); ++idx) {
+                auto& ${valueName} = ${result}.Get(keys[idx]);
+                // Control block to let us common up the JS_DefineUCProperty calls when there
+                // are different ways to succeed at wrapping the value.
+                do {
+                  $*{innerTemplate}
+                } while (0);
+                if (!JS_DefineUCProperty(cx, returnObj, keys[idx].get(),
+                                         keys[idx].Length(), tmp,
+                                         JSPROP_ENUMERATE)) {
+                  $*{exceptionCode}
+                }
+              }
+            }
+            $*{set}
+            """,
+            result=result,
+            exceptionCode=exceptionCode,
+            valueName=valueName,
+            innerTemplate=innerTemplate,
+            set=setObject("*returnObj"))
 
         return (code, False)
 
@@ -5378,7 +5575,7 @@ def typeMatchesLambda(type, func):
         return False
     if type.nullable():
         return typeMatchesLambda(type.inner, func)
-    if type.isSequence() or type.isArray():
+    if type.isSequence() or type.isMozMap() or type.isArray():
         return typeMatchesLambda(type.inner, func)
     if type.isUnion():
         return any(typeMatchesLambda(t, func) for t in
@@ -5467,6 +5664,26 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         else:
             rooter = None
         result = CGTemplatedType("nsTArray", result)
+        if nullable:
+            result = CGTemplatedType("Nullable", result)
+        return result, True, rooter, None
+    if returnType.isMozMap():
+        nullable = returnType.nullable()
+        if nullable:
+            returnType = returnType.inner
+        # If our result is already addrefed, use the right type in the
+        # MozMap argument here.
+        result, _, _, _ = getRetvalDeclarationForType(returnType.inner,
+                                                      descriptorProvider,
+                                                      resultAlreadyAddRefed,
+                                                      isMember="MozMap")
+        # While we have our inner type, set up our rooter, if needed
+        if not isMember and typeNeedsRooting(returnType):
+            rooter = CGGeneric("MozMapRooter<%s> resultRooter(cx, &result);\n" %
+                               result.define())
+        else:
+            rooter = None
+        result = CGTemplatedType("MozMap", result)
         if nullable:
             result = CGTemplatedType("Nullable", result)
         return result, True, rooter, None
@@ -5560,6 +5777,8 @@ class CGCallGenerator(CGThing):
                 if a.type.isDictionary():
                     return True
                 if a.type.isSequence():
+                    return True
+                if a.type.isMozMap():
                     return True
                 # isObject() types are always a JS::Rooted, whether
                 # nullable or not, and it turns out a const JS::Rooted
@@ -7428,6 +7647,8 @@ class CGMemberJITInfo(CGThing):
             # No idea yet
             assert False
         if t.isSequence():
+            return "JSVAL_TYPE_OBJECT"
+        if t.isMozMap():
             return "JSVAL_TYPE_OBJECT"
         if t.isGeckoInterface():
             return "JSVAL_TYPE_OBJECT"
@@ -10955,6 +11176,8 @@ class CGForwardDeclarations(CGWrapper):
                 # since we don't know which one we might want
                 builder.addInMozillaDom(CGUnionStruct.unionTypeName(t, False))
                 builder.addInMozillaDom(CGUnionStruct.unionTypeName(t, True))
+            elif t.isMozMap():
+                forwardDeclareForType(t.inner, workerness)
             # Don't need to do anything for void, primitive, string, any or object.
             # There may be some other cases we are missing.
 
@@ -11058,6 +11281,8 @@ class CGBindingRoot(CGThing):
         def checkForXPConnectImpls(typeInfo):
             type, _, _ = typeInfo
             type = type.unroll()
+            while type.isMozMap():
+                type = type.inner.unroll()
             if not type.isInterface() or not type.isGeckoInterface():
                 return False
             try:
@@ -11315,6 +11540,13 @@ class CGNativeMember(ClassMethod):
             else:
                 returnCode = "aRetVal.SwapElements(${declName});\n"
             return "void", "", returnCode
+        if type.isMozMap():
+            # If we want to handle MozMap-of-MozMap return values, we're
+            # going to need to fix example codegen to not produce MozMap<void>
+            # for the relevant argument...
+            assert not isMember
+            # In this case we convert directly into our outparam to start with
+            return "void", "", ""
         if type.isDate():
             result = CGGeneric("Date")
             if type.nullable():
@@ -11355,6 +11587,16 @@ class CGNativeMember(ClassMethod):
             # And now the actual underlying type
             elementDecl = self.getReturnType(returnType.inner, True)
             type = CGTemplatedType("nsTArray", CGGeneric(elementDecl))
+            if nullable:
+                type = CGTemplatedType("Nullable", type)
+            args.append(Argument("%s&" % type.define(), "aRetVal"))
+        elif returnType.isMozMap():
+            nullable = returnType.nullable()
+            if nullable:
+                returnType = returnType.inner
+            # And now the actual underlying type
+            elementDecl = self.getReturnType(returnType.inner, True)
+            type = CGTemplatedType("MozMap", CGGeneric(elementDecl))
             if nullable:
                 type = CGTemplatedType("Nullable", type)
             args.append(Argument("%s&" % type.define(), "aRetVal"))
@@ -11399,7 +11641,8 @@ class CGNativeMember(ClassMethod):
         is a const ref, as well as whether the type should be wrapped in
         Nullable as needed.
 
-        isMember can be false or one of the strings "Sequence" or "Variadic"
+        isMember can be false or one of the strings "Sequence", "Variadic",
+                 "MozMap"
         """
         if type.isArray():
             raise TypeError("Can't handle array arguments yet")
@@ -11411,6 +11654,15 @@ class CGNativeMember(ClassMethod):
             elementType = type.inner
             argType = self.getArgType(elementType, False, "Sequence")[0]
             decl = CGTemplatedType("Sequence", argType)
+            return decl.define(), True, True
+
+        if type.isMozMap():
+            nullable = type.nullable()
+            if nullable:
+                type = type.inner
+            elementType = type.inner
+            argType = self.getArgType(elementType, False, "MozMap")[0]
+            decl = CGTemplatedType("MozMap", argType)
             return decl.define(), True, True
 
         if type.isUnion():

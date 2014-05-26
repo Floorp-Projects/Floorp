@@ -111,9 +111,9 @@ nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell, nsStyleContext* aContex
 
 
 void
-nsMenuPopupFrame::Init(nsIContent*      aContent,
-                       nsIFrame*        aParent,
-                       nsIFrame*        aPrevInFlow)
+nsMenuPopupFrame::Init(nsIContent*       aContent,
+                       nsContainerFrame* aParent,
+                       nsIFrame*         aPrevInFlow)
 {
   nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
 
@@ -406,7 +406,7 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
 
   // if the popup has just been opened, make sure the scrolled window is at 0,0
   if (mIsOpenChanged) {
-    nsIScrollableFrame *scrollframe = do_QueryFrame(GetChildBox());
+    nsIScrollableFrame *scrollframe = do_QueryFrame(nsBox::GetChildBox(this));
     if (scrollframe) {
       nsWeakFrame weakFrame(this);
       scrollframe->ScrollTo(nsPoint(0,0), nsIScrollableFrame::INSTANT);
@@ -1622,7 +1622,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool& doAction
   doAction = false;
 
   // Enumerate over our list of frames.
-  nsIFrame* immediateParent = PresContext()->PresShell()->
+  nsContainerFrame* immediateParent = PresContext()->PresShell()->
     FrameConstructor()->GetInsertionPoint(GetContent(), nullptr);
   if (!immediateParent)
     immediateParent = this;

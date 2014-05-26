@@ -21,7 +21,7 @@ typedef nsContainerFrame nsSVGForeignObjectFrameBase;
 class nsSVGForeignObjectFrame : public nsSVGForeignObjectFrameBase,
                                 public nsISVGChildFrame
 {
-  friend nsIFrame*
+  friend nsContainerFrame*
   NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   nsSVGForeignObjectFrame(nsStyleContext* aContext);
@@ -31,15 +31,15 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   // nsIFrame:
-  virtual void Init(nsIContent* aContent,
-                    nsIFrame*   aParent,
-                    nsIFrame*   aPrevInFlow) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*       aContent,
+                    nsContainerFrame* aParent,
+                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
   virtual nsresult  AttributeChanged(int32_t         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      int32_t         aModType) MOZ_OVERRIDE;
 
-  virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
+  virtual nsContainerFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
     return GetFirstPrincipalChild()->GetContentInsertionFrame();
   }
 

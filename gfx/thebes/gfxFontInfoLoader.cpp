@@ -78,7 +78,7 @@ AsyncFontInfoLoader::Run()
     mFontInfo->Load();
 
     // post a completion event that transfer the data to the fontlist
-    NS_DispatchToMainThread(mCompleteEvent, NS_DISPATCH_NORMAL);
+    NS_DispatchToMainThread(mCompleteEvent);
     mFontInfo = nullptr;
 
     return NS_OK;
