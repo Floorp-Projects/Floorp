@@ -69,6 +69,25 @@ function rbitxor_object(i) {
     return i;
 }
 
+var uceFault_lsh_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_lsh_number'));
+function rlsh_number(i) {
+    var x = i << 1;
+    if (uceFault_lsh_number(i) || uceFault_lsh_number(i))
+        assertEq(x, 198); /* 99 << 1 == 198 */
+    return i;
+}
+
+var uceFault_lsh_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_lsh_object'));
+function rlsh_object(i) {
+    var t = i;
+    var o = { valueOf: function() { return t; } };
+    var x = o << 1;
+    t = 1000;
+    if (uceFault_lsh_object(i) || uceFault_lsh_object(i))
+        assertEq(x, 198);
+    return i;
+}
+
 var uceFault_ursh_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_ursh_number'));
 function rursh_number(i) {
     var x = i >>> 1;
@@ -132,6 +151,8 @@ for (i = 0; i < 100; i++) {
     rbitor_object(i);
     rbitxor_number(i);
     rbitxor_object(i);
+    rlsh_number(i);
+    rlsh_object(i);
     rursh_number(i);
     rursh_object(i);
     radd_number(i);
