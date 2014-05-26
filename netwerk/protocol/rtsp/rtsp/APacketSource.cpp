@@ -406,7 +406,11 @@ APacketSource::APacketSource(
     unsigned long PT;
     AString desc;
     AString params;
-    sessionDesc->getFormatType(index, &PT, &desc, &params);
+
+    if (!sessionDesc->getFormatType(index, &PT, &desc, &params)) {
+      mInitCheck = ERROR_UNSUPPORTED;
+      return;
+    }
 
     int64_t durationUs;
     if (sessionDesc->getDurationUs(&durationUs)) {
