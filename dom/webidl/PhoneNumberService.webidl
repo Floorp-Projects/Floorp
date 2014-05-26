@@ -4,12 +4,13 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[JSImplementation="@mozilla.org/phoneNumberService;1",
- NavigatorProperty="mozPhoneNumberService",
- CheckPermissions="phonenumberservice"]
+[JSImplementation="@mozilla.org/phoneNumberService;1", NavigatorProperty="mozPhoneNumberService"]
 interface PhoneNumberService {
+
+  [Func="Navigator::HasPhoneNumberSupport"]
   DOMRequest fuzzyMatch([TreatNullAs=EmptyString] optional DOMString number1 = "",
                         [TreatNullAs=EmptyString] optional DOMString number2= "");
 
+  [Func="Navigator::HasPhoneNumberSupport"]
   DOMString normalize(DOMString number);
 };
