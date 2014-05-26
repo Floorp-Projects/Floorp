@@ -420,6 +420,9 @@ nsresult PeerConnectionCtx::Initialize() {
   if (Preferences::GetBool("media.peerconnection.video.h264_enabled")) {
     codecMask |= VCM_CODEC_RESOURCE_H264;
   }
+#else
+  // Outside MOZILLA_INTERNAL_API ensures H.264 available in unit tests
+  codecMask |= VCM_CODEC_RESOURCE_H264;
 #endif
 
   codecMask |= VCM_CODEC_RESOURCE_VP8;
