@@ -24,6 +24,8 @@ elif CONFIG['OS_TARGET'] == 'Darwin':
 elif CONFIG['OS_TARGET'] in ('DragonFly', 'FreeBSD', 'OpenBSD', 'NetBSD'):
     if not CONFIG['OS_TARGET'] == 'NetBSD':
         DEFINES['ENODATA'] = '-0x80000003'
+    if CONFIG['OS_TARGET'] == 'OpenBSD':
+        DEFINES['EBADMSG'] = '-0x80000006'
     DEFINES['HAVE_SYS_UIO_H'] = True
     DEFINES['off64_t'] = 'off_t'
     LOCAL_INCLUDES += [ 'ports/bsd/include' ]

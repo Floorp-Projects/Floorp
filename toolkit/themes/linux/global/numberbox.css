@@ -30,7 +30,7 @@ html|*.numberbox-input {
   -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
-  padding: 3px 4px;
+  padding: 3px;
 }
 
 textbox[hidespinbuttons="true"] > .numberbox-input-box {

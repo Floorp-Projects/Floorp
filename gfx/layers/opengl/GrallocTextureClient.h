@@ -62,7 +62,9 @@ public:
 
   virtual void SetReleaseFenceHandle(FenceHandle aReleaseFenceHandle) MOZ_OVERRIDE;
 
-  virtual void WaitReleaseFence() MOZ_OVERRIDE;
+  virtual void SetRemoveFromCompositableTracker(AsyncTransactionTracker* aTracker) MOZ_OVERRIDE;
+
+  virtual void WaitForBufferOwnership() MOZ_OVERRIDE;
 
   void InitWith(MaybeMagicGrallocBufferHandle aDesc, gfx::IntSize aSize);
 
@@ -119,6 +121,8 @@ protected:
    * Unfortunately, until bug 879681 is fixed we need to use a GrallocBufferActor.
    */
   MaybeMagicGrallocBufferHandle mGrallocHandle;
+
+  RefPtr<AsyncTransactionTracker> mRemoveFromCompositableTracker;
 
   android::sp<android::GraphicBuffer> mGraphicBuffer;
 

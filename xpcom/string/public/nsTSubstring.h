@@ -658,7 +658,7 @@ public:
    * this is public to support automatic conversion of tuple to string
    * base type, which helps avoid converting to nsTAString.
    */
-  nsTSubstring_CharT(const substring_tuple_type& tuple)
+  MOZ_IMPLICIT nsTSubstring_CharT(const substring_tuple_type& tuple)
     : mData(nullptr),
       mLength(0),
       mFlags(F_NONE)

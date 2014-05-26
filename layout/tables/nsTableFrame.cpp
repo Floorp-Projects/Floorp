@@ -138,13 +138,13 @@ nsTableFrame::GetParentStyleContextFrame() const
   // Since our parent, the table outer frame, returned this frame, we
   // must return whatever our parent would normally have returned.
 
-  NS_PRECONDITION(mParent, "table constructed without outer table");
+  NS_PRECONDITION(GetParent(), "table constructed without outer table");
   if (!mContent->GetParent() && !StyleContext()->GetPseudo()) {
     // We're the root.  We have no style context parent.
     return nullptr;
   }
 
-  return static_cast<nsFrame*>(GetParent())->DoGetParentStyleContextFrame();
+  return GetParent()->DoGetParentStyleContextFrame();
 }
 
 
@@ -164,9 +164,9 @@ nsTableFrame::nsTableFrame(nsStyleContext* aContext)
 }
 
 void
-nsTableFrame::Init(nsIContent*      aContent,
-                   nsIFrame*        aParent,
-                   nsIFrame*        aPrevInFlow)
+nsTableFrame::Init(nsIContent*       aContent,
+                   nsContainerFrame* aParent,
+                   nsIFrame*         aPrevInFlow)
 {
   NS_PRECONDITION(!mCellMap, "Init called twice");
   NS_PRECONDITION(!aPrevInFlow ||
@@ -3561,7 +3561,7 @@ nsTableFrame::GetBaseline() const
 }
 /* ----- global methods ----- */
 
-nsIFrame*
+nsTableFrame*
 NS_NewTableFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsTableFrame(aContext);

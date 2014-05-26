@@ -26,11 +26,13 @@ function test() {
       EventUtils.synthesizeMouseAtCenter(video1,
                                          { type: "contextmenu", button: 2 },
                                          gBrowser.contentWindow);
+      info("context menu click on video1");
     });
   });
 
   function contextMenuOpened(event) {
     event.currentTarget.removeEventListener("popupshown", contextMenuOpened);
+    info("context menu opened on video1");
 
     // Create the folder the video will be saved into.
     var destDir = createTemporarySaveDirectory();
@@ -56,6 +58,7 @@ function test() {
     // Select "Save Video As" option from context menu
     var saveVideoCommand = document.getElementById("context-savevideo");
     saveVideoCommand.doCommand();
+    info("context-savevideo command executed");
 
     event.target.hidePopup();
   }

@@ -457,7 +457,7 @@ void nsTableColGroupFrame::GetContinuousBCBorderWidth(nsMargin& aBorder)
 
 /* ----- global methods ----- */
 
-nsIFrame*
+nsTableColGroupFrame*
 NS_NewTableColGroupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsTableColGroupFrame(aContext);

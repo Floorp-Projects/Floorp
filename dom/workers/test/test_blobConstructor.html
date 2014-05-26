@@ -42,7 +42,7 @@ Tests of DOM Worker Blob constructor
   };
   w.onerror = function(e) {
     is(e.target, w);
-    ok(false, "Worker had an error: " + e.data);
+    ok(false, "Worker had an error: " + e.message);
     SimpleTest.finish();
   };
 

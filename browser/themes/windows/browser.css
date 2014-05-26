@@ -2935,3 +2935,16 @@ chatbox {
 #UITourTooltipButtons {
   margin: 24px -4px -4px;
 }
+
+%include ../shared/contextmenu.inc.css
+
+#context-navigation {
+  background-color: -moz-dialog;
+  padding-bottom: 2px;
+  margin-bottom: 2px;
+}
+
+#context-sep-navigation {
+  -moz-margin-start: -28px;
+  margin-top: -4px;
+}

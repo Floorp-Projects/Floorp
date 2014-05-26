@@ -125,7 +125,7 @@ nsColorControlFrame::AttributeChanged(int32_t  aNameSpaceID,
                                                     aModType);
 }
 
-nsIFrame*
+nsContainerFrame*
 nsColorControlFrame::GetContentInsertionFrame()
 {
   return this;

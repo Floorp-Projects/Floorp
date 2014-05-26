@@ -27,7 +27,7 @@ using namespace mozilla::dom;
 //----------------------------------------------------------------------
 // Implementation
 
-nsIFrame*
+nsContainerFrame*
 NS_NewSVGForeignObjectFrame(nsIPresShell   *aPresShell,
                             nsStyleContext *aContext)
 {
@@ -52,9 +52,9 @@ NS_QUERYFRAME_HEAD(nsSVGForeignObjectFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsSVGForeignObjectFrameBase)
 
 void
-nsSVGForeignObjectFrame::Init(nsIContent* aContent,
-                              nsIFrame*   aParent,
-                              nsIFrame*   aPrevInFlow)
+nsSVGForeignObjectFrame::Init(nsIContent*       aContent,
+                              nsContainerFrame* aParent,
+                              nsIFrame*         aPrevInFlow)
 {
   NS_ASSERTION(aContent->IsSVG(nsGkAtoms::foreignObject),
                "Content is not an SVG foreignObject!");
@@ -499,9 +499,9 @@ nsSVGForeignObjectFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
     }
   }
   if (!mCanvasTM) {
-    NS_ASSERTION(mParent, "null parent");
+    NS_ASSERTION(GetParent(), "null parent");
 
-    nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
+    nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(GetParent());
     SVGForeignObjectElement *content =
       static_cast<SVGForeignObjectElement*>(mContent);
 

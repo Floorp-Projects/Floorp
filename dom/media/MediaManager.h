@@ -382,7 +382,7 @@ public:
                                               mWindowID, mError.forget());
           // event must always be released on mainthread due to the JS callbacks
           // in the TracksAvailableCallback
-          NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+          NS_DispatchToMainThread(event);
         }
         break;
 
@@ -409,7 +409,7 @@ public:
                                               mWindowID);
           // event must always be released on mainthread due to the JS callbacks
           // in the TracksAvailableCallback
-          NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+          NS_DispatchToMainThread(event);
         }
         break;
 
