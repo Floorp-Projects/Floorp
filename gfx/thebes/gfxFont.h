@@ -389,6 +389,11 @@ public:
     bool     GetMathVariantsParts(uint32_t aGlyphID, bool aVertical,
                                   uint32_t aGlyphs[4]);
 
+    bool     TryGetColorGlyphs();
+    bool     GetColorLayersInfo(uint32_t aGlyphId,
+                                nsTArray<uint16_t>& layerGlyphs,
+                                nsTArray<mozilla::gfx::Color>& layerColors);
+
     virtual bool MatchesGenericFamily(const nsACString& aGeneric) const {
         return true;
     }
@@ -531,6 +536,7 @@ public:
     bool             mCheckedForGraphiteTables : 1;
     bool             mHasCmapTable : 1;
     bool             mGrFaceInitialized : 1;
+    bool             mCheckedForColorGlyph : 1;
 
     // bitvector of substitution space features per script, one each
     // for default and non-default features
@@ -550,6 +556,10 @@ public:
     nsAutoPtr<gfxMathTable> mMathTable;
     nsTArray<gfxFontFeature> mFeatureSettings;
     uint32_t         mLanguageOverride;
+
+    // Color Layer font support
+    hb_blob_t*       mCOLR;
+    hb_blob_t*       mCPAL;
 
 protected:
     friend class gfxPlatformFontList;
@@ -2134,6 +2144,14 @@ protected:
                         uint32_t aGlyphId, gfxTextContextPaint *aContextPaint,
                         gfxTextRunDrawCallbacks *aCallbacks,
                         bool& aEmittedGlyphs);
+
+    bool RenderColorGlyph(gfxContext* aContext, gfxPoint& point, uint32_t aGlyphId);
+    bool RenderColorGlyph(gfxContext* aContext,
+                          mozilla::gfx::ScaledFont* scaledFont,
+                          mozilla::gfx::GlyphRenderingOptions* renderingOptions,
+                          mozilla::gfx::DrawOptions drawOptions,
+                          const mozilla::gfx::Point& aPoint,
+                          uint32_t aGlyphId);
 
     // Bug 674909. When synthetic bolding text by drawing twice, need to
     // render using a pixel offset in device pixels, otherwise text
