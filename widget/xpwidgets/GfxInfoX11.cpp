@@ -193,7 +193,7 @@ GfxInfo::GetData()
     note.Append(mVersion);
     if (mHasTextureFromPixmap)
         note.AppendLiteral(" -- texture_from_pixmap");
-    note.AppendLiteral("\n");
+    note.Append('\n');
 #ifdef MOZ_CRASHREPORTER
     CrashReporter::AppendAppNotesToCrashReport(note);
 #endif

@@ -811,7 +811,7 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
     message.AppendInt(mNetworkSelectionMode);
     message.AppendLiteral(",0,\"");
     message.Append(NS_ConvertUTF16toUTF8(mOperatorName));
-    message.AppendLiteral("\"");
+    message.Append('"');
     SendLine(message.get());
   } else if (msg.Find("AT+VTS=") != -1) {
     ParseAtCommand(msg, 7, atCommandValues);
@@ -1211,9 +1211,9 @@ BluetoothHfpManager::SendCLCC(const Call& aCall, int aIndex)
 
   nsAutoCString message(RESPONSE_CLCC);
   message.AppendInt(aIndex);
-  message.AppendLiteral(",");
+  message.Append(',');
   message.AppendInt(aCall.mDirection);
-  message.AppendLiteral(",");
+  message.Append(',');
 
   int status = 0;
   switch (aCall.mState) {
@@ -1290,7 +1290,7 @@ BluetoothHfpManager::SendCommand(const char* aCommand, uint32_t aValue)
     }
 
     message.AppendInt(aValue);
-    message.AppendLiteral(",");
+    message.Append(',');
     message.AppendInt(sCINDItems[aValue].value);
   } else if (!strcmp(aCommand, RESPONSE_CIND)) {
     if (!aValue) {
@@ -1300,9 +1300,9 @@ BluetoothHfpManager::SendCommand(const char* aCommand, uint32_t aValue)
         message.Append(sCINDItems[i].name);
         message.AppendLiteral("\",(");
         message.Append(sCINDItems[i].range);
-        message.AppendLiteral(")");
+        message.Append(')');
         if (i == (ArrayLength(sCINDItems) - 1)) {
-          message.AppendLiteral(")");
+          message.Append(')');
           break;
         }
         message.AppendLiteral("),");
@@ -1314,7 +1314,7 @@ BluetoothHfpManager::SendCommand(const char* aCommand, uint32_t aValue)
         if (i == (ArrayLength(sCINDItems) - 1)) {
           break;
         }
-        message.AppendLiteral(",");
+        message.Append(',');
       }
     }
 #ifdef MOZ_B2G_RIL
