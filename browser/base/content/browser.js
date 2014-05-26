@@ -1207,16 +1207,6 @@ var gBrowserInit = {
       SocialUI.init();
       TabView.init();
     });
-
-    // telemetry for master-password
-    let secmodDB = Cc["@mozilla.org/security/pkcs11moduledb;1"].
-                   getService(Ci.nsIPKCS11ModuleDB);
-    let slot = secmodDB.findSlotByName("");
-    let mpEnabled = slot &&
-                    slot.status != Ci.nsIPKCS11Slot.SLOT_UNINITIALIZED &&
-                    slot.status != Ci.nsIPKCS11Slot.SLOT_READY;
-    Services.telemetry.getHistogramById("MASTER_PASSWORD_ENABLED").add(mpEnabled);
-
     this.delayedStartupFinished = true;
 
     Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
