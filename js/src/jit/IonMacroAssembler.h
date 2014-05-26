@@ -850,6 +850,10 @@ class MacroAssembler : public MacroAssemblerSpecific
   private:
     CodeOffsetLabel exitCodePatch_;
 
+  private:
+    void linkExitFrame();
+    void linkParallelExitFrame(Register pt);
+
   public:
     void enterExitFrame(const VMFunction *f = nullptr) {
         linkExitFrame();
