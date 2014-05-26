@@ -927,7 +927,7 @@ ParentImpl::GetContentParent(PBackgroundParent* aBackgroundActor)
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
   }
 
-  return actor->mContent.get();
+  return already_AddRefed<ContentParent>(actor->mContent.get());
 }
 
 // static

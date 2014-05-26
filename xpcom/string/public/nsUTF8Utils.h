@@ -280,7 +280,7 @@ public:
   typedef char value_type;
   typedef char16_t buffer_type;
 
-  ConvertUTF8toUTF16( buffer_type* aBuffer )
+  explicit ConvertUTF8toUTF16( buffer_type* aBuffer )
     : mStart(aBuffer), mBuffer(aBuffer), mErrorEncountered(false) {}
 
   size_t Length() const { return mBuffer - mStart; }
@@ -445,7 +445,7 @@ public:
   // |ConvertUTF8toUTF16|, but it's that way for backwards
   // compatibility.
 
-  ConvertUTF16toUTF8( buffer_type* aBuffer )
+  explicit ConvertUTF16toUTF8( buffer_type* aBuffer )
     : mStart(aBuffer), mBuffer(aBuffer) {}
 
   size_t Size() const { return mBuffer - mStart; }
@@ -644,7 +644,7 @@ public:
   typedef char16_t output_type;
 
 public:
-  LossyConvertEncoding8to16( char16_t* aDestination ) :
+  explicit LossyConvertEncoding8to16( char16_t* aDestination ) :
     mDestination(aDestination) { }
 
   void
@@ -686,7 +686,7 @@ public:
   typedef char16_t input_type;
   typedef char output_type;
 
-  LossyConvertEncoding16to8( char* aDestination ) : mDestination(aDestination) { }
+  explicit LossyConvertEncoding16to8( char* aDestination ) : mDestination(aDestination) { }
 
   void
   write( const char16_t* aSource, uint32_t aSourceLength)
