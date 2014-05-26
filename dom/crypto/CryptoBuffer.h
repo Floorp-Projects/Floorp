@@ -27,6 +27,14 @@ public:
   uint8_t* Assign(const ArrayBufferViewOrArrayBuffer& aData);
   uint8_t* Assign(const OwningArrayBufferViewOrArrayBuffer& aData);
 
+  template<typename T,
+         JSObject* UnboxArray(JSObject*, uint32_t*, T**)>
+  uint8_t* Assign(const TypedArray_base<T, UnboxArray>& aData)
+  {
+    return Assign(aData.Data(), aData.Length());
+  }
+
+
   SECItem* ToSECItem();
 
   bool GetBigIntValue(unsigned long& aRetVal);
