@@ -78,14 +78,12 @@ SettingsListener.observe('language.current', 'en-US', function(value) {
   Services.prefs.setCharPref('general.useragent.locale', value);
 
   let prefName = 'intl.accept_languages';
-  if (Services.prefs.prefHasUserValue(prefName)) {
-    Services.prefs.clearUserPref(prefName);
-  }
+  let defaultBranch = Services.prefs.getDefaultBranch(null);
 
   let intl = '';
   try {
-    intl = Services.prefs.getComplexValue(prefName,
-                                          Ci.nsIPrefLocalizedString).data;
+    intl = defaultBranch.getComplexValue(prefName,
+                                         Ci.nsIPrefLocalizedString).data;
   } catch(e) {}
 
   // Bug 830782 - Homescreen is in English instead of selected locale after
