@@ -44,6 +44,7 @@
       'modules_java_gyp_path%': '<(modules_java_gyp_path)',
 
       'webrtc_vp8_dir%': '<(webrtc_root)/modules/video_coding/codecs/vp8',
+      'webrtc_h264_dir%': '<(webrtc_root)/modules/video_coding/codecs/h264',
       'rbe_components_path%': '<(webrtc_root)/modules/remote_bitrate_estimator',
       'include_g711%': 1,
       'include_g722%': 1,
@@ -59,6 +60,7 @@
     'import_isolate_path%': '<(import_isolate_path)',
     'modules_java_gyp_path%': '<(modules_java_gyp_path)',
     'webrtc_vp8_dir%': '<(webrtc_vp8_dir)',
+    'webrtc_h264_dir%': '<(webrtc_h264_dir)',
 
     'include_g711%': '<(include_g711)',
     'include_g722%': '<(include_g722)',

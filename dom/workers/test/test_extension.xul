@@ -37,7 +37,7 @@
           SimpleTest.finish();
         },
         onerror: function(data) {
-          ok(false, "Worker had an error: " + data);
+          ok(false, "Worker had an error: " + data.message);
           workertest.callback = null;
           workertest = null;
           SimpleTest.finish();

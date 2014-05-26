@@ -33,6 +33,7 @@ class gfxImageSurface;
 namespace mozilla {
 namespace layers {
 
+class AsyncTransactionTracker;
 class ContentClient;
 class CompositableForwarder;
 class ISurfaceAllocator;
@@ -298,11 +299,14 @@ public:
   }
 
   /**
-   * Wait until the current buffer is no longer being read.
-   *
-   * Platform support is necessary. gonk JB supports this function.
+   * Set AsyncTransactionTracker of RemoveTextureFromCompositableAsync() transaction.
    */
-  virtual void WaitReleaseFence() {}
+  virtual void SetRemoveFromCompositableTracker(AsyncTransactionTracker* aTracker) {}
+
+  /**
+   * This function waits until the buffer is no longer being used.
+   */
+  virtual void WaitForBufferOwnership() {}
 
 private:
   /**

@@ -189,11 +189,12 @@ function runTest(testNum) {
     case 13: // type='number'
     case 14: // type='color'
     case 15: // type='range'
-        checkContextMenu(["context-back",         false,
-                          "context-forward",      false,
-                          "context-reload",       true,
+        checkContextMenu(["context-navigation", null,
+                              ["context-back",         false,
+                               "context-forward",      false,
+                               "context-reload",       true,
+                               "context-bookmarkpage", true], null,
                           "---",                  null,
-                          "context-bookmarkpage", true,
                           "context-savepage",     true,
                           "---",                  null,
                           "context-viewbgimage",  false,

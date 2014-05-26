@@ -43,9 +43,9 @@ nsFileControlFrame::nsFileControlFrame(nsStyleContext* aContext)
 
 
 void
-nsFileControlFrame::Init(nsIContent* aContent,
-                         nsIFrame*   aParent,
-                         nsIFrame*   aPrevInFlow)
+nsFileControlFrame::Init(nsIContent*       aContent,
+                         nsContainerFrame* aParent,
+                         nsIFrame*         aPrevInFlow)
 {
   nsBlockFrame::Init(aContent, aParent, aPrevInFlow);
 

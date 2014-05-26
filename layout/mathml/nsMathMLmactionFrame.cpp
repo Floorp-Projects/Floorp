@@ -80,9 +80,9 @@ nsMathMLmactionFrame::~nsMathMLmactionFrame()
 }
 
 void
-nsMathMLmactionFrame::Init(nsIContent*      aContent,
-                           nsIFrame*        aParent,
-                           nsIFrame*        aPrevInFlow)
+nsMathMLmactionFrame::Init(nsIContent*       aContent,
+                           nsContainerFrame* aParent,
+                           nsIFrame*         aPrevInFlow)
 {
   // Init our local attributes
 

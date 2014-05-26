@@ -13,7 +13,7 @@
 
 #include "mozilla/dom/Element.h"
 #include "nsDataHashtable.h"
-#include "nsIFrame.h"
+#include "nsContainerFrame.h"
 #include "mozilla/SplayTree.h"
 
 namespace mozilla {

@@ -1998,10 +1998,10 @@ nsFtpState::StopProcessing()
                 alertEvent = new nsFtpAsyncAlert(prompter,
                     NS_ConvertASCIItoUTF16(mResponseMsg));
             }
-            NS_DispatchToMainThread(alertEvent, NS_DISPATCH_NORMAL);
+            NS_DispatchToMainThread(alertEvent);
         }
     }
-    
+
     nsresult broadcastErrorCode = mControlStatus;
     if (NS_SUCCEEDED(broadcastErrorCode))
         broadcastErrorCode = mInternalError;

@@ -255,6 +255,33 @@ interface TestExampleInterface {
   //XXXbz No support for sequence of sequence return values yet.
   //sequence<sequence<long>> receiveSequenceOfSequences();
 
+  // MozMap types
+  void passMozMap(MozMap<long> arg);
+  void passNullableMozMap(MozMap<long>? arg);
+  void passMozMapOfNullableInts(MozMap<long?> arg);
+  void passOptionalMozMapOfNullableInts(optional MozMap<long?> arg);
+  void passOptionalNullableMozMapOfNullableInts(optional MozMap<long?>? arg);
+  void passCastableObjectMozMap(MozMap<TestInterface> arg);
+  void passNullableCastableObjectMozMap(MozMap<TestInterface?> arg);
+  void passCastableObjectNullableMozMap(MozMap<TestInterface>? arg);
+  void passNullableCastableObjectNullableMozMap(MozMap<TestInterface?>? arg);
+  void passOptionalMozMap(optional MozMap<long> arg);
+  void passOptionalNullableMozMap(optional MozMap<long>? arg);
+  void passOptionalNullableMozMapWithDefaultValue(optional MozMap<long>? arg = null);
+  void passOptionalObjectMozMap(optional MozMap<TestInterface> arg);
+  void passExternalInterfaceMozMap(MozMap<TestExternalInterface> arg);
+  void passNullableExternalInterfaceMozMap(MozMap<TestExternalInterface?> arg);
+  void passStringMozMap(MozMap<DOMString> arg);
+  void passByteStringMozMap(MozMap<ByteString> arg);
+  void passMozMapOfMozMaps(MozMap<MozMap<long>> arg);
+  MozMap<long> receiveMozMap();
+  MozMap<long>? receiveNullableMozMap();
+  MozMap<long?> receiveMozMapOfNullableInts();
+  MozMap<long?>? receiveNullableMozMapOfNullableInts();
+  //XXXbz No support for MozMap of MozMaps return values yet.
+  //MozMap<MozMap<long>> receiveMozMapOfMozMaps();
+  MozMap<any> receiveAnyMozMap();
+
   // Typed array types
   void passArrayBuffer(ArrayBuffer arg);
   void passNullableArrayBuffer(ArrayBuffer? arg);
@@ -273,6 +300,8 @@ interface TestExampleInterface {
   void passFloat64Array(Float64Array arg);
   void passSequenceOfArrayBuffers(sequence<ArrayBuffer> arg);
   void passSequenceOfNullableArrayBuffers(sequence<ArrayBuffer?> arg);
+  void passMozMapOfArrayBuffers(MozMap<ArrayBuffer> arg);
+  void passMozMapOfNullableArrayBuffers(MozMap<ArrayBuffer?> arg);
   void passVariadicTypedArray(Float32Array... arg);
   void passVariadicNullableTypedArray(Float32Array?... arg);
   Uint8Array receiveUint8Array();
@@ -332,6 +361,17 @@ interface TestExampleInterface {
   void passSequenceOfNullableSequenceOfAny(sequence<sequence<any>?> arg);
   void passNullableSequenceOfNullableSequenceOfAny(sequence<sequence<any>?>? arg);
   void passOptionalNullableSequenceOfNullableSequenceOfAny(optional sequence<sequence<any>?>? arg);
+  void passMozMapOfAny(MozMap<any> arg);
+  void passNullableMozMapOfAny(MozMap<any>? arg);
+  void passOptionalMozMapOfAny(optional MozMap<any> arg);
+  void passOptionalNullableMozMapOfAny(optional MozMap<any>? arg);
+  void passOptionalMozMapOfAnyWithDefaultValue(optional MozMap<any>? arg = null);
+  void passMozMapOfMozMapOfAny(MozMap<MozMap<any>> arg);
+  void passMozMapOfNullableMozMapOfAny(MozMap<MozMap<any>?> arg);
+  void passNullableMozMapOfNullableMozMapOfAny(MozMap<MozMap<any>?>? arg);
+  void passOptionalNullableMozMapOfNullableMozMapOfAny(optional MozMap<MozMap<any>?>? arg);
+  void passOptionalNullableMozMapOfNullableSequenceOfAny(optional MozMap<sequence<any>?>? arg);
+  void passOptionalNullableSequenceOfNullableMozMapOfAny(optional sequence<MozMap<any>?>? arg);
   any receiveAny();
 
   // object types
@@ -347,6 +387,7 @@ interface TestExampleInterface {
   void passNullableSequenceOfObject(sequence<object>? arg);
   void passOptionalNullableSequenceOfNullableSequenceOfObject(optional sequence<sequence<object>?>? arg);
   void passOptionalNullableSequenceOfNullableSequenceOfNullableObject(optional sequence<sequence<object?>?>? arg);
+  void passMozMapOfObject(MozMap<object> arg);
   object receiveObject();
   object? receiveNullableObject();
 
@@ -420,6 +461,9 @@ interface TestExampleInterface {
 
   void passSequenceOfNullableUnions(sequence<(CanvasPattern or CanvasGradient)?> arg);
   void passVariadicNullableUnion((CanvasPattern or CanvasGradient)?... arg);
+  void passMozMapOfUnions(MozMap<(CanvasPattern or CanvasGradient)> arg);
+  // XXXbz no move constructor on some unions
+  // void passMozMapOfUnions2(MozMap<(object or long)> arg);
 
   //(CanvasPattern or CanvasGradient) receiveUnion();
   //(object or long) receiveUnion2();
@@ -439,6 +483,7 @@ interface TestExampleInterface {
   void passOptionalNullableDateWithDefaultValue(optional Date? arg = null);
   void passDateSequence(sequence<Date> arg);
   void passNullableDateSequence(sequence<Date?> arg);
+  void passDateMozMap(MozMap<Date> arg);
   Date receiveDate();
   Date? receiveNullableDate();
 
@@ -465,6 +510,7 @@ interface TestExampleInterface {
   Dict? receiveNullableDictionary();
   void passOtherDictionary(optional GrandparentDict x);
   void passSequenceOfDictionaries(sequence<Dict> x);
+  void passMozMapOfDictionaries(MozMap<GrandparentDict> x);
   // No support for nullable dictionaries inside a sequence (nor should there be)
   //  void passSequenceOfNullableDictionaries(sequence<Dict?> x);
   void passDictionaryOrLong(optional Dict x);

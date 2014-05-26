@@ -537,8 +537,7 @@ WebSocketChannelChild::SendBinaryStream(nsIInputStream *aStream,
 
   if (!NS_IsMainThread()) {
     MOZ_RELEASE_ASSERT(NS_GetCurrentThread() == mTargetThread);
-    return NS_DispatchToMainThread(new BinaryStreamEvent(this, stream, aLength),
-                                   NS_DISPATCH_NORMAL);
+    return NS_DispatchToMainThread(new BinaryStreamEvent(this, stream, aLength));
   }
   return SendBinaryStream(stream, aLength);
 }
