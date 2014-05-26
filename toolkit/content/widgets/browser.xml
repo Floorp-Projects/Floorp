@@ -1100,7 +1100,11 @@
           if (event.defaultPrevented || !event.isTrusted)
             return;
 
-          var isEnabled = this.mPrefs.getBoolPref("accessibility.browsewithcaret_shortcut.enabled");
+          const kPrefShortcutEnabled = "accessibility.browsewithcaret_shortcut.enabled";
+          const kPrefWarnOnEnable    = "accessibility.warn_on_browsewithcaret";
+          const kPrefCaretBrowsingOn = "accessibility.browsewithcaret";
+
+          var isEnabled = this.mPrefs.getBoolPref(kPrefShortcutEnabled);
           if (!isEnabled)
             return;
 
@@ -1109,12 +1113,12 @@
           var warn = true;
 
           try {
-            warn = this.mPrefs.getBoolPref("accessibility.warn_on_browsewithcaret");
+            warn = this.mPrefs.getBoolPref(kPrefWarnOnEnable);
           } catch (ex) {
           }
 
           try {
-            browseWithCaretOn = this.mPrefs.getBoolPref("accessibility.browsewithcaret");
+            browseWithCaretOn = this.mPrefs.getBoolPref(kPrefCaretBrowsingOn);
           } catch (ex) {
           }
           if (warn && !browseWithCaretOn) {
@@ -1125,14 +1129,22 @@
             var buttonPressed = promptService.confirmEx(window,
               this.mStrBundle.GetStringFromName('browsewithcaret.checkWindowTitle'),
               this.mStrBundle.GetStringFromName('browsewithcaret.checkLabel'),
-              promptService.STD_YES_NO_BUTTONS,
+              // Make "No" the default:
+              promptService.STD_YES_NO_BUTTONS | promptService.BUTTON_POS_1_DEFAULT,
               null, null, null, this.mStrBundle.GetStringFromName('browsewithcaret.checkMsg'),
               checkValue);
-            if (buttonPressed != 0)
+            if (buttonPressed != 0) {
+              if (checkValue.value) {
+                try {
+                  this.mPrefs.setBoolPref(kPrefShortcutEnabled, false);
+                } catch (ex) {
+                }
+              }
               return;
+            }
             if (checkValue.value) {
               try {
-                this.mPrefs.setBoolPref("accessibility.warn_on_browsewithcaret", false);
+                this.mPrefs.setBoolPref(kPrefWarnOnEnable, false);
               }
               catch (ex) {
               }
@@ -1141,7 +1153,7 @@
 
           // Toggle the pref
           try {
-            this.mPrefs.setBoolPref("accessibility.browsewithcaret",!browseWithCaretOn);
+            this.mPrefs.setBoolPref(kPrefCaretBrowsingOn, !browseWithCaretOn);
           } catch (ex) {
           }
         ]]>
