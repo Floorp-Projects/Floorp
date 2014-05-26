@@ -8,12 +8,12 @@
 fails == dir-8.html dir-8-ref.html
 fails == dir-9.html dir-9-ref.html # Bug 787215
 == dir-10.html dir-10-ref.html
-== dir-11.html dir-11-ref.html
+random-if(B2G&&browserIsRemote) == dir-11.html dir-11-ref.html
 == displaystyle-1.html displaystyle-1-ref.html
 == displaystyle-2.html displaystyle-2-ref.html
 == displaystyle-3.html displaystyle-3-ref.html
-== displaystyle-4.html displaystyle-4-ref.html
-skip-if(B2G) fails-if(smallScreen&&Android) fuzzy(255,200) == mirror-op-1.html mirror-op-1-ref.html
+random-if(B2G&&browserIsRemote) == displaystyle-4.html displaystyle-4-ref.html
+skip-if(B2G&&browserIsRemote) random-if(smallScreen&&Android) fuzzy(255,200) == mirror-op-1.html mirror-op-1-ref.html
 != mirror-op-2.html mirror-op-2-ref.html
 != mirror-op-3.html mirror-op-3-ref.html
 != mirror-op-4.html mirror-op-4-ref.html
@@ -69,7 +69,7 @@ skip-if(B2G) == quotes-1.xhtml quotes-1-ref.xhtml
 == embellished-op-4-3.html embellished-op-4-3-ref.html
 == embellished-op-5-1.html embellished-op-5-ref.html
 == embellished-op-5-2.html embellished-op-5-ref.html
-fails-if(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu)) == semantics-1.xhtml semantics-1-ref.xhtml # Windows versions with Cambria Math
+random-if(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu)) == semantics-1.xhtml semantics-1-ref.xhtml # Windows versions with Cambria Math
 == semantics-2.html semantics-2-ref.html
 == semantics-3.html semantics-3-ref.html
 != mathcolor-1.xml mathcolor-1-ref.xml
@@ -99,9 +99,9 @@ fails-if(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu)) == semantics-1.x
 == mpadded-5.html mpadded-5-ref.html
 == mpadded-1-2.html mpadded-1-2-ref.html
 == mpadded-6.html mpadded-6-ref.html
-fails-if(B2G) == mpadded-7.html mpadded-7-ref.html # B2G: slight character width variation
-fails-if(B2G) == mpadded-8.html mpadded-8-ref.html # B2G: slight character width variation
-fails-if(B2G) == mpadded-9.html mpadded-9-ref.html # B2G: slight character width variation
+random-if(B2G&&browserIsRemote) == mpadded-7.html mpadded-7-ref.html # B2G: slight character width variation
+random-if(B2G&&browserIsRemote) == mpadded-8.html mpadded-8-ref.html # B2G: slight character width variation
+random-if(B2G&&browserIsRemote) == mpadded-9.html mpadded-9-ref.html # B2G: slight character width variation
 == math-display.html math-display-ref.html
 == scriptlevel-1.html scriptlevel-1-ref.html
 == scriptlevel-movablelimits-1.html scriptlevel-movablelimits-1-ref.html
@@ -119,24 +119,24 @@ fails-if(B2G) == mpadded-9.html mpadded-9-ref.html # B2G: slight character width
 == positive-namedspace.html positive-namedspace-ref.html
 == mtable-align-whitespace.html mtable-align-whitespace-ref.html
 == mtable-width.html mtable-width-ref.html
-== mtable-rowlines-single-mtable-dynamic.html mtable-rowlines-single-ref.html
-== mtable-rowlines-multi-mtable-dynamic.html mtable-rowlines-multi-ref.html
-== mtable-rowalign-single-mtr.html mtable-rowalign-single-ref.html
-== mtable-rowalign-single-mtr-dynamic.html mtable-rowalign-single-ref.html
-== mtable-rowalign-single-mtable.html mtable-rowalign-single-ref.html
-== mtable-rowalign-single-mtable-dynamic.html mtable-rowalign-single-ref.html
-== mtable-rowalign-multi-mtable.html mtable-rowalign-multi-ref.html
-== mtable-rowalign-multi-mtable-dynamic.html mtable-rowalign-multi-ref.html
-== mtable-columnlines-single-mtable-dynamic.html mtable-columnlines-single-ref.html
-== mtable-columnlines-multi-mtable-dynamic.html mtable-columnlines-multi-ref.html
+random-if(B2G&&browserIsRemote) == mtable-rowlines-single-mtable-dynamic.html mtable-rowlines-single-ref.html
+random-if(B2G&&browserIsRemote) == mtable-rowlines-multi-mtable-dynamic.html mtable-rowlines-multi-ref.html
+random-if(B2G&&browserIsRemote) == mtable-rowalign-single-mtr.html mtable-rowalign-single-ref.html
+random-if(B2G&&browserIsRemote) == mtable-rowalign-single-mtr-dynamic.html mtable-rowalign-single-ref.html
+random-if(B2G&&browserIsRemote) == mtable-rowalign-single-mtable.html mtable-rowalign-single-ref.html
+random-if(B2G&&browserIsRemote) == mtable-rowalign-single-mtable-dynamic.html mtable-rowalign-single-ref.html
+random-if(B2G&&browserIsRemote) == mtable-rowalign-multi-mtable.html mtable-rowalign-multi-ref.html
+random-if(B2G&&browserIsRemote) == mtable-rowalign-multi-mtable-dynamic.html mtable-rowalign-multi-ref.html
+random-if(B2G&&browserIsRemote) == mtable-columnlines-single-mtable-dynamic.html mtable-columnlines-single-ref.html
+random-if(B2G&&browserIsRemote) == mtable-columnlines-multi-mtable-dynamic.html mtable-columnlines-multi-ref.html
 == mtable-columnalign-single-mtr.html mtable-columnalign-single-ref.html
-== mtable-columnalign-single-mtr-dynamic.html mtable-columnalign-single-ref.html
+random-if(B2G&&browserIsRemote) == mtable-columnalign-single-mtr-dynamic.html mtable-columnalign-single-ref.html
 == mtable-columnalign-single-mtable.html mtable-columnalign-single-ref.html
-== mtable-columnalign-single-mtable-dynamic.html mtable-columnalign-single-ref.html
-== mtable-columnalign-multi-mtr.html mtable-columnalign-multi-ref.html
-== mtable-columnalign-multi-mtr-dynamic.html mtable-columnalign-multi-ref.html
-== mtable-columnalign-multi-mtable.html mtable-columnalign-multi-ref.html
-== mtable-columnalign-multi-mtable-dynamic.html mtable-columnalign-multi-ref.html
+random-if(B2G&&browserIsRemote) == mtable-columnalign-single-mtable-dynamic.html mtable-columnalign-single-ref.html
+random-if(B2G&&browserIsRemote) == mtable-columnalign-multi-mtr.html mtable-columnalign-multi-ref.html
+random-if(B2G&&browserIsRemote) == mtable-columnalign-multi-mtr-dynamic.html mtable-columnalign-multi-ref.html
+random-if(B2G&&browserIsRemote) == mtable-columnalign-multi-mtable.html mtable-columnalign-multi-ref.html
+random-if(B2G&&browserIsRemote) == mtable-columnalign-multi-mtable-dynamic.html mtable-columnalign-multi-ref.html
 == maction-selection.html maction-selection-ref.html
 == maction-dynamic-embellished-op.html maction-dynamic-embellished-op-ref.html
 skip-if(B2G) == maction-dynamic-1.html maction-dynamic-1-ref.html # bug 773482
@@ -153,11 +153,11 @@ skip-if(B2G) == maction-dynamic-3.html maction-dynamic-3-ref.html # bug 773482
 == whitespace-trim-3.html whitespace-trim-3-ref.html
 fails == whitespace-trim-4.html whitespace-trim-4-ref.html # Bug 787215
 == whitespace-trim-5.html whitespace-trim-5-ref.html
-fails-if(winWidget&&!d2d) == opentype-stretchy.html opentype-stretchy-ref.html
+random-if(winWidget&&!d2d) == opentype-stretchy.html opentype-stretchy-ref.html
 == operator-1.xhtml operator-1-ref.xhtml
 == scriptshift-1.xhtml scriptshift-1-ref.xhtml
 == number-size-1.xhtml number-size-1-ref.xhtml
-fails-if(B2G) == multiscripts-1.html multiscripts-1-ref.html # B2G - slight height variation from font metrics
+random-if(B2G&&browserIsRemote) == multiscripts-1.html multiscripts-1-ref.html # B2G - slight height variation from font metrics
 == mathml-mmultiscript-base.html mathml-mmultiscript-base-ref.html
 == mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript-ref.html
 != menclose-1a.html menclose-1-ref.html
@@ -180,7 +180,7 @@ fails-if(B2G) == multiscripts-1.html multiscripts-1-ref.html # B2G - slight heig
 fails-if(B2G) == menclose-2-actuarial.html menclose-2-actuarial-ref.html # B2G slight thickness variation
 == menclose-2-bottom.html menclose-2-bottom-ref.html
 fails-if(B2G) == menclose-2-box.html menclose-2-box-ref.html # B2G slight thickness variation
-== menclose-2-circle.html menclose-2-circle-ref.html
+fails-if(B2G) == menclose-2-circle.html menclose-2-circle-ref.html
 == menclose-2-downdiagonalstrike.html menclose-2-downdiagonalstrike-ref.html
 == menclose-2-horizontalstrike.html menclose-2-horizontalstrike-ref.html
 fails-if(B2G) == menclose-2-left.html menclose-2-left-ref.html # B2G slight thickness variation
@@ -200,41 +200,41 @@ fails-if(B2G||Android||OSX==10.6) == menclose-3-radical.html menclose-3-radical-
 == menclose-3-invalid.html menclose-3-invalid-ref.html
 == menclose-3-multiple.html menclose-3-multiple-ref.html
 == menclose-3-unknown.html menclose-3-unknown.html
-== menclose-4.html data:text/html,<body>Pass
-== menclose-5-actuarial.html menclose-5-actuarial-ref.html
-== menclose-5-bottom.html menclose-5-bottom-ref.html
-== menclose-5-box.html menclose-5-box-ref.html
-fuzzy-if(OSX,1,100) == menclose-5-circle.html menclose-5-circle-ref.html
-== menclose-5-downdiagonalstrike.html menclose-5-downdiagonalstrike-ref.html
-== menclose-5-horizontalstrike.html menclose-5-horizontalstrike-ref.html
-== menclose-5-left.html menclose-5-left-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-4.html data:text/html,<body>Pass
+fails-if(B2G&&browserIsRemote) == menclose-5-actuarial.html menclose-5-actuarial-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-5-bottom.html menclose-5-bottom-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-5-box.html menclose-5-box-ref.html
+fuzzy-if(OSX,1,100) fails-if(B2G&&browserIsRemote) == menclose-5-circle.html menclose-5-circle-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-5-downdiagonalstrike.html menclose-5-downdiagonalstrike-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-5-horizontalstrike.html menclose-5-horizontalstrike-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-5-left.html menclose-5-left-ref.html
 == menclose-5-longdiv.html menclose-5-longdiv-ref.html
-== menclose-5-madruwb.html menclose-5-madruwb-ref.html
-== menclose-5-radical.html menclose-5-radical-ref.html
-== menclose-5-right.html menclose-5-right-ref.html
-== menclose-5-roundedbox.html menclose-5-roundedbox-ref.html
-== menclose-5-top.html menclose-5-top-ref.html
-== menclose-5-updiagonalarrow.html menclose-5-updiagonalarrow-ref.html
-== menclose-5-updiagonalstrike.html menclose-5-updiagonalstrike-ref.html
-== menclose-5-verticalstrike.html menclose-5-verticalstrike-ref.html
-== menclose-5-phasorangle.html menclose-5-phasorangle-ref.html
-== menclose-6-actuarial.html menclose-6-ref.html
-== menclose-6-bottom.html menclose-6-ref.html
-== menclose-6-box.html menclose-6-ref.html
-== menclose-6-circle.html menclose-6-ref.html
-== menclose-6-downdiagonalstrike.html menclose-6-ref.html
-== menclose-6-horizontalstrike.html menclose-6-ref.html
-== menclose-6-left.html menclose-6-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-5-madruwb.html menclose-5-madruwb-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-5-radical.html menclose-5-radical-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-5-right.html menclose-5-right-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-5-roundedbox.html menclose-5-roundedbox-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-5-top.html menclose-5-top-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-5-updiagonalarrow.html menclose-5-updiagonalarrow-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-5-updiagonalstrike.html menclose-5-updiagonalstrike-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-5-verticalstrike.html menclose-5-verticalstrike-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-5-phasorangle.html menclose-5-phasorangle-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-6-actuarial.html menclose-6-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-6-bottom.html menclose-6-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-6-box.html menclose-6-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-6-circle.html menclose-6-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-6-downdiagonalstrike.html menclose-6-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-6-horizontalstrike.html menclose-6-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-6-left.html menclose-6-ref.html
 == menclose-6-longdiv.html menclose-6-ref.html
-== menclose-6-madruwb.html menclose-6-ref.html
-== menclose-6-radical.html menclose-6-ref.html
-== menclose-6-right.html menclose-6-ref.html
-== menclose-6-roundedbox.html menclose-6-ref.html
-== menclose-6-top.html menclose-6-ref.html
-== menclose-6-updiagonalarrow.html menclose-6-ref.html
-== menclose-6-updiagonalstrike.html menclose-6-ref.html
-== menclose-6-verticalstrike.html menclose-6-ref.html
-== menclose-6-phasorangle.html menclose-6-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-6-madruwb.html menclose-6-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-6-radical.html menclose-6-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-6-right.html menclose-6-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-6-roundedbox.html menclose-6-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-6-top.html menclose-6-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-6-updiagonalarrow.html menclose-6-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-6-updiagonalstrike.html menclose-6-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-6-verticalstrike.html menclose-6-ref.html
+fails-if(B2G&&browserIsRemote) == menclose-6-phasorangle.html menclose-6-ref.html
 == mmultiscript-align.html mmultiscript-align-ref.html
 fails-if(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu)) == subscript-italic-correction.html subscript-italic-correction-ref.html # Windows versions with Cambria Math, bug 961482
 fails-if(B2G||Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX==10.6) == mathvariant-1a.html mathvariant-1a-ref.html # Bug 1010679
@@ -244,17 +244,17 @@ fails-if(B2G||Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX==10.6) == 
 fails-if(B2G||Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX) == mathvariant-2.html mathvariant-2-ref.html # Bugs 1010678, 1010679
 == mathvariant-3.html mathvariant-3-ref.html
 == mathvariant-4.html mathvariant-4-ref.html
-== mathvariant-5.html mathvariant-5-ref.html
+random-if(B2G&&browserIsRemote) == mathvariant-5.html mathvariant-5-ref.html
 == ssty-1.html ssty-1-ref.html
 == ssty-2.html ssty-2-ref.html
 == ssty-3.html ssty-3-ref.html
-== ssty-4.html ssty-4-ref.html
+random-if(B2G&&browserIsRemote) == ssty-4.html ssty-4-ref.html
 == mathscript-1.html mathscript-1-ref.html
 == mathscript-2.html mathscript-2-ref.html
-== mo-accent-dynamic.html mo-accent-dynamic-ref.html
-== mo-movablelimits-dynamic.html mo-movablelimits-dynamic-ref.html
-== munderover-accent-dynamic.html munderover-accent-dynamic-ref.html
-== munderover-accentunder-dynamic.html munderover-accentunder-dynamic-ref.html
+random-if(B2G&&browserIsRemote) == mo-accent-dynamic.html mo-accent-dynamic-ref.html
+random-if(B2G&&browserIsRemote) == mo-movablelimits-dynamic.html mo-movablelimits-dynamic-ref.html
+random-if(B2G&&browserIsRemote) == munderover-accent-dynamic.html munderover-accent-dynamic-ref.html
+random-if(B2G&&browserIsRemote) == munderover-accentunder-dynamic.html munderover-accentunder-dynamic-ref.html
 == columnlines-1a.html columnlines-1-ref.html
 != columnlines-1b.html columnlines-1-ref.html
 != columnlines-1c.html columnlines-1-ref.html
@@ -290,19 +290,19 @@ fails-if(B2G||Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX) == mathva
 == mfrac-A-6.html mfrac-A-6-ref.html
 == mfrac-A-7.html mfrac-A-7-ref.html
 == mfrac-A-8.html mfrac-A-8-ref.html
-== mfrac-B-1.html mfrac-B-1-ref.html
-== mfrac-B-2.html mfrac-B-2-3-ref.html
-== mfrac-B-3.html mfrac-B-2-3-ref.html
-== mfrac-B-4.html mfrac-B-4-5-ref.html
-== mfrac-B-5.html mfrac-B-4-5-ref.html
-== mfrac-B-6.html mfrac-B-6-7-ref.html
-== mfrac-B-7.html mfrac-B-6-7-ref.html
-fuzzy-if(OSX,1,100) == mfrac-C-1.html mfrac-C-1-ref.html
-== mfrac-C-2.html mfrac-C-2-ref.html
-== mfrac-C-3.html mfrac-C-3-ref.html
-== mfrac-C-4.html mfrac-C-4-ref.html
-fuzzy-if(OSX,1,100) == mfrac-D-1.html mfrac-D-1-ref.html
-== mfrac-D-2.html mfrac-D-2-ref.html
-== mfrac-D-3.html mfrac-D-3-ref.html
-== mfrac-D-4.html mfrac-D-4-ref.html
-== mfrac-E-1.html mfrac-E-1-ref.html
+random-if(B2G&&browserIsRemote) == mfrac-B-1.html mfrac-B-1-ref.html
+random-if(B2G&&browserIsRemote) == mfrac-B-2.html mfrac-B-2-3-ref.html
+random-if(B2G&&browserIsRemote) == mfrac-B-3.html mfrac-B-2-3-ref.html
+random-if(B2G&&browserIsRemote) == mfrac-B-4.html mfrac-B-4-5-ref.html
+random-if(B2G&&browserIsRemote) == mfrac-B-5.html mfrac-B-4-5-ref.html
+random-if(B2G&&browserIsRemote) == mfrac-B-6.html mfrac-B-6-7-ref.html
+random-if(B2G&&browserIsRemote) == mfrac-B-7.html mfrac-B-6-7-ref.html
+fuzzy-if(OSX,1,100) random-if(B2G&&browserIsRemote) == mfrac-C-1.html mfrac-C-1-ref.html
+random-if(B2G&&browserIsRemote) == mfrac-C-2.html mfrac-C-2-ref.html
+random-if(B2G&&browserIsRemote) == mfrac-C-3.html mfrac-C-3-ref.html
+random-if(B2G&&browserIsRemote) == mfrac-C-4.html mfrac-C-4-ref.html
+fuzzy-if(OSX,1,100) random-if(B2G&&browserIsRemote) == mfrac-D-1.html mfrac-D-1-ref.html
+random-if(B2G&&browserIsRemote) == mfrac-D-2.html mfrac-D-2-ref.html
+random-if(B2G&&browserIsRemote) == mfrac-D-3.html mfrac-D-3-ref.html
+random-if(B2G&&browserIsRemote) == mfrac-D-4.html mfrac-D-4-ref.html
+random-if(B2G&&browserIsRemote) == mfrac-E-1.html mfrac-E-1-ref.html
