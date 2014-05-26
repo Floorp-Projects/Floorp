@@ -792,7 +792,6 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/FilePicker.js
 @BINPATH@/components/HelperAppDialog.js
 @BINPATH@/components/DownloadsUI.js
-@BINPATH@/components/InterAppCommUIGlue.js
 
 #ifndef MOZ_WIDGET_GONK
 @BINPATH@/components/SimulatorScreen.js
