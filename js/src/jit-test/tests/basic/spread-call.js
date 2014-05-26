@@ -40,11 +40,8 @@ function checkCommon(f, makeFn) {
 
   assertEqArray(makeFn("...arg=[1, 2, 3]")(f), [1, 2, 3]);
 
-  // According to the draft spec, null and undefined are to be treated as empty
-  // arrays. However, they are not iterable. If the spec is not changed to be in
-  // terms of iterables, these tests should be fixed.
-  //assertEqArray(makeFn(1, ...null, 2, 3)(f), [1, 2, 3]);
-  //assertEqArray(makeFn(1, ...undefined, 2, 3)(f), [1, 2, 3]);
+  // 12.2.4.1.2 Runtime Semantics: ArrayAccumulation
+  // If Type(spreadObj) is not Object, then throw a TypeError exception.
   assertThrowsInstanceOf(makeFn("1, ...null, 2, 3"), TypeError);
   assertThrowsInstanceOf(makeFn("1, ...undefined, 2, 3"), TypeError);
 }
