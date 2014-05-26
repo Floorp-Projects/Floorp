@@ -60,6 +60,8 @@ class nsILanguageAtomService;
 
 #define NO_FONT_LANGUAGE_OVERRIDE      0
 
+#define SMALL_CAPS_SCALE_FACTOR        0.8
+
 struct FontListSizes;
 struct gfxTextRunDrawCallbacks;
 
@@ -1806,6 +1808,22 @@ public:
         return mFontEntry->GetUVSGlyph(aCh, aVS); 
     }
 
+    bool InitSmallCapsRun(gfxContext     *aContext,
+                          gfxTextRun     *aTextRun,
+                          const uint8_t  *aText,
+                          uint32_t        aOffset,
+                          uint32_t        aLength,
+                          uint8_t         aMatchType,
+                          int32_t         aScript);
+
+    bool InitSmallCapsRun(gfxContext     *aContext,
+                          gfxTextRun     *aTextRun,
+                          const char16_t *aText,
+                          uint32_t        aOffset,
+                          uint32_t        aLength,
+                          uint8_t         aMatchType,
+                          int32_t         aScript);
+
     // call the (virtual) InitTextRun method to do glyph generation/shaping,
     // limiting the length of text passed by processing the run in multiple
     // segments if necessary
@@ -1914,6 +1932,13 @@ public:
     }
 
 protected:
+    // Return a font that is a "clone" of this one, but reduced to 80% size
+    // (and with the smallCaps style set to false).
+    // Default implementation relies on gfxFontEntry::CreateFontInstance;
+    // backends that don't implement that will need to override this and use
+    // an alternative technique. (gfxPangoFonts, I'm looking at you...)
+    virtual already_AddRefed<gfxFont> GetSmallCapsFont();
+
     // subclasses may provide (possibly hinted) glyph widths (in font units);
     // if they do not override this, harfbuzz will use unhinted widths
     // derived from the font tables
