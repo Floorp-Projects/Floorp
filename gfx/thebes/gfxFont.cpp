@@ -123,9 +123,12 @@ gfxFontEntry::gfxFontEntry() :
     mCheckedForGraphiteTables(false),
     mHasCmapTable(false),
     mGrFaceInitialized(false),
+    mCheckedForColorGlyph(false),
     mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
     mUVSOffset(0), mUVSData(nullptr),
     mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE),
+    mCOLR(nullptr),
+    mCPAL(nullptr),
     mUnitsPerEm(0),
     mHBFace(nullptr),
     mGrFace(nullptr),
@@ -153,9 +156,12 @@ gfxFontEntry::gfxFontEntry(const nsAString& aName, bool aIsStandardFace) :
     mCheckedForGraphiteTables(false),
     mHasCmapTable(false),
     mGrFaceInitialized(false),
+    mCheckedForColorGlyph(false),
     mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
     mUVSOffset(0), mUVSData(nullptr),
     mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE),
+    mCOLR(nullptr),
+    mCPAL(nullptr),
     mUnitsPerEm(0),
     mHBFace(nullptr),
     mGrFace(nullptr),
@@ -167,6 +173,14 @@ gfxFontEntry::gfxFontEntry(const nsAString& aName, bool aIsStandardFace) :
 
 gfxFontEntry::~gfxFontEntry()
 {
+    if (mCOLR) {
+        hb_blob_destroy(mCOLR);
+    }
+
+    if (mCPAL) {
+        hb_blob_destroy(mCPAL);
+    }
+
     // For downloaded fonts, we need to tell the user font cache that this
     // entry is being deleted.
     if (!mIsProxy && IsUserFont() && !IsLocalUserFont()) {
@@ -480,6 +494,39 @@ gfxFontEntry::GetMathVariantsParts(uint32_t aGlyphID, bool aVertical,
 {
     NS_ASSERTION(mMathTable, "Math data has not yet been loaded. TryGetMathData() first.");
     return mMathTable->GetMathVariantsParts(aGlyphID, aVertical, aGlyphs);
+}
+
+bool
+gfxFontEntry::TryGetColorGlyphs()
+{
+    if (mCheckedForColorGlyph) {
+        return (mCOLR && mCPAL);
+    }
+
+    mCheckedForColorGlyph = true;
+
+    mCOLR = GetFontTable(TRUETYPE_TAG('C', 'O', 'L', 'R'));
+    if (!mCOLR) {
+        return false;
+    }
+
+    mCPAL = GetFontTable(TRUETYPE_TAG('C', 'P', 'A', 'L'));
+    if (!mCPAL) {
+        hb_blob_destroy(mCOLR);
+        mCOLR = nullptr;
+        return false;
+    }
+
+    // validation COLR and CPAL table
+    if (gfxFontUtils::ValidateColorGlyphs(mCOLR, mCPAL)) {
+        return true;
+    }
+
+    hb_blob_destroy(mCOLR);
+    hb_blob_destroy(mCPAL);
+    mCOLR = nullptr;
+    mCPAL = nullptr;
+    return false;
 }
 
 /**
@@ -828,6 +875,18 @@ void
 gfxFontEntry::CheckForGraphiteTables()
 {
     mHasGraphiteTables = HasFontTable(TRUETYPE_TAG('S','i','l','f'));
+}
+
+bool
+gfxFontEntry::GetColorLayersInfo(uint32_t aGlyphId,
+                            nsTArray<uint16_t>& aLayerGlyphs,
+                            nsTArray<mozilla::gfx::Color>& aLayerColors)
+{
+    return gfxFontUtils::GetColorGlyphLayers(mCOLR,
+                                             mCPAL,
+                                             aGlyphId,
+                                             aLayerGlyphs,
+                                             aLayerColors);
 }
 
 /* static */ size_t
@@ -2867,6 +2926,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
     gfxMatrix globalMatrix = aContext->CurrentMatrix();
 
     bool haveSVGGlyphs = GetFontEntry()->TryGetSVGData(this);
+    bool haveColorGlyphs = GetFontEntry()->TryGetColorGlyphs();
     nsAutoPtr<gfxTextContextPaint> contextPaint;
     if (haveSVGGlyphs && !aContextPaint) {
         // If no pattern is specified for fill, use the current pattern
@@ -2939,6 +2999,14 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
                   }
               }
 
+              if (haveColorGlyphs) {
+                  gfxPoint point(ToDeviceUnits(glyphX, devUnitsPerAppUnit),
+                                 ToDeviceUnits(y, devUnitsPerAppUnit));
+                  if (RenderColorGlyph(aContext, point, glyphData->GetSimpleGlyph())) {
+                      continue;
+                  }
+              }
+
               // Perhaps we should put a scale in the cairo context instead of
               // doing this scaling here...
               // Multiplying by the reciprocal may introduce tiny error here,
@@ -3001,18 +3069,30 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
                               glyphX -= advance;
                           }
 
-                          gfxPoint point(ToDeviceUnits(glyphX, devUnitsPerAppUnit),
-                                         ToDeviceUnits(y, devUnitsPerAppUnit));
-
                           if (haveSVGGlyphs) {
                               if (!paintSVGGlyphs) {
                                   continue;
                               }
+
+                              gfxPoint point(ToDeviceUnits(glyphX, devUnitsPerAppUnit),
+                                             ToDeviceUnits(y, devUnitsPerAppUnit));
+
                               DrawMode mode = ForcePaintingDrawMode(aDrawMode);
                               if (RenderSVGGlyph(aContext, point, mode,
                                                   details->mGlyphID,
                                                   aContextPaint, aCallbacks,
                                                   emittedGlyphs)) {
+                                  continue;
+                              }
+                          }
+
+                          if (haveColorGlyphs) {
+                              gfxPoint point(ToDeviceUnits(glyphX,
+                                                           devUnitsPerAppUnit),
+                                             ToDeviceUnits(y + details->mYOffset,
+                                                           devUnitsPerAppUnit));
+                              if (RenderColorGlyph(aContext, point,
+                                                   details->mGlyphID)) {
                                   continue;
                               }
                           }
@@ -3157,6 +3237,18 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
                   }
               }
 
+              if (haveColorGlyphs) {
+                  mozilla::gfx::Point point(ToDeviceUnits(glyphX,
+                                                          devUnitsPerAppUnit),
+                                            ToDeviceUnits(y,
+                                                          devUnitsPerAppUnit));
+                  if (RenderColorGlyph(aContext, scaledFont, renderingOptions,
+                                       drawOptions, matInv * point,
+                                       glyphData->GetSimpleGlyph())) {
+                      continue;
+                  }
+              }
+
               // Perhaps we should put a scale in the cairo context instead of
               // doing this scaling here...
               // Multiplying by the reciprocal may introduce tiny error here,
@@ -3239,6 +3331,19 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
                                                  details->mGlyphID,
                                                  aContextPaint, aCallbacks,
                                                  emittedGlyphs)) {
+                                  continue;
+                              }
+                          }
+
+                          if (haveColorGlyphs) {
+                              mozilla::gfx::Point point(ToDeviceUnits(glyphX,
+                                                                      devUnitsPerAppUnit),
+                                                        ToDeviceUnits(y + details->mYOffset,
+                                                                      devUnitsPerAppUnit));
+                              if (RenderColorGlyph(aContext, scaledFont,
+                                                   renderingOptions,
+                                                   drawOptions, matInv * point,
+                                                   details->mGlyphID)) {
                                   continue;
                               }
                           }
@@ -3341,6 +3446,73 @@ gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint, DrawMode aDrawMod
         aCallbacks->NotifyAfterSVGGlyphPainted();
     }
     return rendered;
+}
+
+bool
+gfxFont::RenderColorGlyph(gfxContext* aContext, gfxPoint& point,
+                          uint32_t aGlyphId)
+{
+    nsAutoTArray<uint16_t, 8> layerGlyphs;
+    nsAutoTArray<mozilla::gfx::Color, 8> layerColors;
+
+    if (!GetFontEntry()->GetColorLayersInfo(aGlyphId, layerGlyphs, layerColors)) {
+        return false;
+    }
+
+    cairo_t* cr = aContext->GetCairo();
+    cairo_save(cr);
+    for (uint32_t layerIndex = 0; layerIndex < layerGlyphs.Length();
+         layerIndex++) {
+
+        cairo_glyph_t glyph;
+        glyph.index = layerGlyphs[layerIndex];
+        glyph.x = point.x;
+        glyph.y = point.y;
+
+        mozilla::gfx::Color &color = layerColors[layerIndex];
+        cairo_pattern_t* pattern =
+            cairo_pattern_create_rgba(color.r, color.g, color.b, color.a);
+
+        cairo_set_source(cr, pattern);
+        cairo_show_glyphs(cr, &glyph, 1);
+        cairo_pattern_destroy(pattern);
+    }
+    cairo_restore(cr);
+
+    return true;
+}
+
+bool
+gfxFont::RenderColorGlyph(gfxContext* aContext,
+                          mozilla::gfx::ScaledFont* scaledFont,
+                          GlyphRenderingOptions* aRenderingOptions,
+                          mozilla::gfx::DrawOptions aDrawOptions,
+                          const mozilla::gfx::Point& aPoint,
+                          uint32_t aGlyphId)
+{
+    nsAutoTArray<uint16_t, 8> layerGlyphs;
+    nsAutoTArray<mozilla::gfx::Color, 8> layerColors;
+
+    if (!GetFontEntry()->GetColorLayersInfo(aGlyphId, layerGlyphs, layerColors)) {
+        return false;
+    }
+
+    RefPtr<DrawTarget> dt = aContext->GetDrawTarget();
+    for (uint32_t layerIndex = 0; layerIndex < layerGlyphs.Length();
+         layerIndex++) {
+        Glyph glyph;
+        glyph.mIndex = layerGlyphs[layerIndex];
+        glyph.mPosition = aPoint;
+
+        mozilla::gfx::GlyphBuffer buffer;
+        buffer.mGlyphs = &glyph;
+        buffer.mNumGlyphs = 1;
+
+        dt->FillGlyphs(scaledFont, buffer,
+                       ColorPattern(layerColors[layerIndex]),
+                       aDrawOptions, aRenderingOptions);
+    }
+    return true;
 }
 
 static void
