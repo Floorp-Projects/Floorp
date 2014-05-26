@@ -1191,8 +1191,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_orr(Imm32(type), frameSizeReg);
     }
 
-    void linkExitFrame();
-    void linkParallelExitFrame(Register pt);
     void handleFailureWithHandler(void *handler);
     void handleFailureWithHandlerTail();
 
