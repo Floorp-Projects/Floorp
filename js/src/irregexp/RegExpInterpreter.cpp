@@ -173,6 +173,8 @@ irregexp::InterpretCode(JSContext *cx, const uint8_t *byteCode,
             pc += BC_POP_CP_LENGTH;
             break;
           BYTECODE(POP_BT)
+            if (!CheckForInterrupt(cx))
+                return RegExpRunStatus_Error;
             pc = byteCode + stack.pop();
             break;
           BYTECODE(POP_REGISTER)
