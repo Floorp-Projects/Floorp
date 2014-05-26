@@ -52,6 +52,7 @@ const kMessages =["Webapps:Connect",
 this.InterAppCommService = {
   init: function() {
     Services.obs.addObserver(this, "xpcom-shutdown", false);
+    Services.obs.addObserver(this, "inter-app-comm-select-app-result", false);
 
     kMessages.forEach(function(aMsg) {
       ppmm.addMessageListener(aMsg, this);
@@ -543,36 +544,30 @@ this.InterAppCommService = {
       target: aTarget
     };
 
-    let glue = Cc["@mozilla.org/dom/apps/inter-app-comm-ui-glue;1"]
-                 .createInstance(Ci.nsIInterAppCommUIGlue);
-    if (glue) {
-      glue.selectApps(callerID, pubAppManifestURL, keyword, appsToSelect).then(
-        function(aData) {
-          this._handleSelectedApps(aData);
-        }.bind(this),
-        function(aError) {
-          if (DEBUG) {
-            debug("Error occurred in the UI glue component. " + aError)
-          }
+    // TODO Bug 897169 Temporarily disable the notification for popping up
+    // the prompt until the UX/UI for the prompt is confirmed.
+    //
+    // TODO Bug 908191 We need to change the way of interaction between API and
+    // run-time prompt from observer notification to xpcom-interface caller.
+    //
+    /*
+    if (DEBUG) debug("appsToSelect: " + appsToSelect);
+    Services.obs.notifyObservers(null, "inter-app-comm-select-app",
+      JSON.stringify({ callerID: callerID,
+                       manifestURL: pubAppManifestURL,
+                       keyword: keyword,
+                       appsToSelect: appsToSelect }));
+    */
 
-          // Resolve the caller as if there were no selected apps.
-          this._handleSelectedApps({ callerID: callerID,
-                                     keyword: keyword,
-                                     manifestURL: pubAppManifestURL,
-                                     selectedApps: [] });
-        }.bind(this)
-      );
-    } else {
-      if (DEBUG) {
-        debug("Error! The UI glue component is not implemented.")
-      }
-
-      // Resolve the caller as if there were no selected apps.
-      this._handleSelectedApps({ callerID: callerID,
-                                 keyword: keyword,
-                                 manifestURL: pubAppManifestURL,
-                                 selectedApps: [] });
-    }
+    // TODO Bug 897169 Simulate the return of the app-selected result by
+    // the prompt, which always allows the connection. This dummy codes
+    // will be removed when the UX/UI for the prompt is ready.
+    if (DEBUG) debug("appsToSelect: " + appsToSelect);
+    Services.obs.notifyObservers(null, 'inter-app-comm-select-app-result',
+      JSON.stringify({ callerID: callerID,
+                       manifestURL: pubAppManifestURL,
+                       keyword: keyword,
+                       selectedApps: appsToSelect }));
   },
 
   _getConnections: function(aMessage, aTarget) {
@@ -785,7 +780,7 @@ this.InterAppCommService = {
                                        message: message });
   },
 
-  _handleSelectedApps: function(aData) {
+  _handleSelectcedApps: function(aData) {
     let callerID = aData.callerID;
     let caller = this._promptUICallers[callerID];
     if (!caller) {
@@ -882,10 +877,15 @@ this.InterAppCommService = {
     switch (aTopic) {
       case "xpcom-shutdown":
         Services.obs.removeObserver(this, "xpcom-shutdown");
+        Services.obs.removeObserver(this, "inter-app-comm-select-app-result");
         kMessages.forEach(function(aMsg) {
           ppmm.removeMessageListener(aMsg, this);
         }, this);
         ppmm = null;
+        break;
+      case "inter-app-comm-select-app-result":
+        if (DEBUG) debug("inter-app-comm-select-app-result: " + aData);
+        this._handleSelectcedApps(JSON.parse(aData));
         break;
     }
   }

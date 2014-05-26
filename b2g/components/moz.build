@@ -13,7 +13,6 @@ EXTRA_COMPONENTS += [
     'ContentPermissionPrompt.js',
     'FilePicker.js',
     'HelperAppDialog.js',
-    'InterAppCommUIGlue.js',
     'MailtoProtocolHandler.js',
     'PaymentGlue.js',
     'ProcessGlobal.js',
