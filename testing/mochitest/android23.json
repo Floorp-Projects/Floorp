@@ -3,14 +3,8 @@
 "excludetests": {
   "robocop": "TIMED_OUT",
   "content/canvas/test/webgl-conformance": "bug 865443 - separate suite -- mochitest-gl",
-  "content/canvas/test/webgl-mochitest/test_no_arr_points.html": "Android 2.3 only; bug 975487",
-  "content/html/content/test/test_ignoreuserfocus.html": "Android 2.3 only; bug 981895",
   "content/media/test": "Android 2.3 only; bug 981898",
   "content/media/webaudio/test": "Android 2.3 only; bug 981889",
-  "content/media/webspeech": "Android 2.3 only; bug 981886",
-  "dom/media/tests/mochitest":"Android 2.3 only; bug 981881",
-  "image/test/mochitest/test_bug512435.html":"Android 2.3 only; bug 910533",
-  "image/test/mochitest/test_bug767779.html":"Android 2.3 only; bug 943367",
-  "layout/style/test/test_media_queries.html": "Android 2.3 only; bug 981881"
+  "dom/media/tests/mochitest":"Android 2.3 only; bug 981881"
   }
 }
