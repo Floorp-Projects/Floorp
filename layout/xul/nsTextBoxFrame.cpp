@@ -107,9 +107,9 @@ nsTextBoxFrame::~nsTextBoxFrame()
 
 
 void
-nsTextBoxFrame::Init(nsIContent*      aContent,
-                     nsIFrame*        aParent,
-                     nsIFrame*        aPrevInFlow)
+nsTextBoxFrame::Init(nsIContent*       aContent,
+                     nsContainerFrame* aParent,
+                     nsIFrame*         aPrevInFlow)
 {
     nsTextBoxFrameSuper::Init(aContent, aParent, aPrevInFlow);
 
@@ -208,7 +208,7 @@ nsTextBoxFrame::UpdateAccesskey(nsWeakFrame& aWeakThis)
 
     if (!accesskey.Equals(mAccessKey)) {
         // Need to get clean mTitle.
-        mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, mTitle);
+        RecomputeTitle();
         mAccessKey = accesskey;
         UpdateAccessTitle();
         PresContext()->PresShell()->
@@ -258,7 +258,7 @@ nsTextBoxFrame::UpdateAttributes(nsIAtom*         aAttribute,
     }
 
     if (aAttribute == nullptr || aAttribute == nsGkAtoms::value) {
-        mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, mTitle);
+        RecomputeTitle();
         doUpdateTitle = true;
     }
 
@@ -869,6 +869,43 @@ nsTextBoxFrame::UpdateAccessIndex()
                 mAccessKeyInfo->mAccesskeyIndex = kNotFound;
         }
     }
+}
+
+void
+nsTextBoxFrame::RecomputeTitle()
+{
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, mTitle);
+
+  // This doesn't handle language-specific uppercasing/lowercasing
+  // rules, unlike textruns.
+  uint8_t textTransform = StyleText()->mTextTransform;
+  if (textTransform == NS_STYLE_TEXT_TRANSFORM_UPPERCASE) {
+    ToUpperCase(mTitle);
+  } else if (textTransform == NS_STYLE_TEXT_TRANSFORM_LOWERCASE) {
+    ToLowerCase(mTitle);
+  }
+  // We can't handle NS_STYLE_TEXT_TRANSFORM_CAPITALIZE because we
+  // have no clue about word boundaries here.  We also don't handle
+  // NS_STYLE_TEXT_TRANSFORM_FULLWIDTH.
+}
+
+void
+nsTextBoxFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
+{
+  if (!aOldStyleContext) {
+    // We're just being initialized
+    return;
+  }
+
+  const nsStyleText* oldTextStyle = aOldStyleContext->PeekStyleText();
+  // We should really have oldTextStyle here, since we asked for our
+  // nsStyleText during Init(), but if it's not there for some reason
+  // just assume the worst and recompute mTitle.
+  if (!oldTextStyle ||
+      oldTextStyle->mTextTransform != StyleText()->mTextTransform) {
+    RecomputeTitle();
+    UpdateAccessTitle();
+  }
 }
 
 NS_IMETHODIMP

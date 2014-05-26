@@ -49,18 +49,13 @@ public:
   NS_DECL_QUERYFRAME
 
   // nsIFrame overrides
-  virtual void Init(nsIContent* aContent,
-                    nsIFrame*   aParent,
-                    nsIFrame*   aPrevInFlow) MOZ_OVERRIDE;
-  virtual nsresult SetInitialChildList(ChildListID  aListID,
-                                       nsFrameList& aChildList) MOZ_OVERRIDE;
-  virtual nsresult AppendFrames(ChildListID  aListID,
-                                nsFrameList& aFrameList) MOZ_OVERRIDE;
-  virtual nsresult InsertFrames(ChildListID aListID,
-                                nsIFrame* aPrevFrame,
-                                nsFrameList& aFrameList) MOZ_OVERRIDE;
-  virtual nsresult RemoveFrame(ChildListID aListID,
-                               nsIFrame* aOldFrame) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*       aContent,
+                    nsContainerFrame* aParent,
+                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
+  virtual nsContainerFrame* GetContentInsertionFrame() MOZ_OVERRIDE
+  {
+    return this;
+  }
 
   virtual const nsFrameList& GetChildList(ChildListID aList) const MOZ_OVERRIDE;
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const MOZ_OVERRIDE;
@@ -77,6 +72,84 @@ public:
 #endif  
 
   // nsContainerFrame methods
+
+  /**
+   * Called to set the initial list of frames. This happens after the frame
+   * has been initialized.
+   *
+   * This is only called once for a given child list, and won't be called
+   * at all for child lists with no initial list of frames.
+   *
+   * @param   aListID the child list identifier.
+   * @param   aChildList list of child frames. Each of the frames has its
+   *            NS_FRAME_IS_DIRTY bit set.  Must not be empty.
+   *            This method cannot handle the child list returned by
+   *            GetAbsoluteListID().
+   * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
+   *            name,
+   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame or if the
+   *            initial list of frames has already been set for that child list,
+   *          NS_OK otherwise.  In this case, SetInitialChildList empties out
+   *            aChildList in the process of moving the frames over to its own
+   *            child list.
+   * @see     #Init()
+   */
+  virtual nsresult SetInitialChildList(ChildListID aListID,
+                                       nsFrameList& aChildList);
+
+  /**
+   * This method is responsible for appending frames to the frame
+   * list.  The implementation should append the frames to the specified
+   * child list and then generate a reflow command.
+   *
+   * @param   aListID the child list identifier.
+   * @param   aFrameList list of child frames to append. Each of the frames has
+   *            its NS_FRAME_IS_DIRTY bit set.  Must not be empty.
+   * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
+   *            name,
+   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
+   *          NS_OK otherwise.  In this case, AppendFrames empties out
+   *            aFrameList in the process of moving the frames over to its own
+   *            child list.
+   */
+  virtual nsresult AppendFrames(ChildListID aListID, nsFrameList& aFrameList);
+
+  /**
+   * This method is responsible for inserting frames into the frame
+   * list.  The implementation should insert the new frames into the specified
+   * child list and then generate a reflow command.
+   *
+   * @param   aListID the child list identifier.
+   * @param   aPrevFrame the frame to insert frames <b>after</b>
+   * @param   aFrameList list of child frames to insert <b>after</b> aPrevFrame.
+   *            Each of the frames has its NS_FRAME_IS_DIRTY bit set
+   * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
+   *            name,
+   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
+   *          NS_OK otherwise.  In this case, InsertFrames empties out
+   *            aFrameList in the process of moving the frames over to its own
+   *            child list.
+   */
+  virtual nsresult InsertFrames(ChildListID  aListID,
+                                nsIFrame*    aPrevFrame,
+                                nsFrameList& aFrameList);
+
+  /**
+   * This method is responsible for removing a frame in the frame
+   * list.  The implementation should do something with the removed frame
+   * and then generate a reflow command. The implementation is responsible
+   * for destroying aOldFrame (the caller mustn't destroy aOldFrame).
+   *
+   * @param   aListID the child list identifier.
+   * @param   aOldFrame the frame to remove
+   * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
+   *            name,
+   *          NS_ERROR_FAILURE if the child frame is not in the specified
+   *            child list,
+   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
+   *          NS_OK otherwise
+   */
+  virtual nsresult RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame);
 
   /**
    * Helper method to create next-in-flows if necessary. If aFrame

@@ -105,7 +105,7 @@ protected:
 
 //----------------------------------------------------------------------
 
-nsIFrame*
+nsContainerFrame*
 NS_NewRootBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsRootBoxFrame (aPresShell, aContext);

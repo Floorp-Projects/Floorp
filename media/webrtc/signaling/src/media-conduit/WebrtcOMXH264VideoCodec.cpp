@@ -45,8 +45,9 @@ using namespace android;
 
 namespace mozilla {
 
-static uint8_t kNALStartCode[] = { 0x00, 0x00, 0x00, 0x01 };
+static const uint8_t kNALStartCode[] = { 0x00, 0x00, 0x00, 0x01 };
 enum {
+  kNALTypeIDR = 5,
   kNALTypeSPS = 7,
   kNALTypePPS = 8,
 };
@@ -128,6 +129,7 @@ public:
   }
 
   void Stop() {
+    CODEC_LOGD("OMXOutputDrain stopping");
     MonitorAutoLock lock(mMonitor);
     mEnding = true;
     lock.NotifyAll(); // In case Run() is waiting.
@@ -164,21 +166,16 @@ public:
       }
 
       if (mEnding) {
+        CODEC_LOGD("OMXOutputDrain Run() ending");
         // Stop draining.
         break;
       }
 
       MOZ_ASSERT(!mInputFrames.empty());
-      EncodedFrame frame = mInputFrames.front();
-      bool shouldPop = false;
       {
         // Release monitor while draining because it's blocking.
         MonitorAutoUnlock unlock(mMonitor);
-        // |frame| provides size and time of corresponding input.
-        shouldPop = DrainOutput(frame);
-      }
-      if (shouldPop) {
-        mInputFrames.pop();
+        DrainOutput();
       }
     }
 
@@ -192,21 +189,25 @@ protected:
     , mEnding(false)
   {}
 
-  // Drain output buffer for input frame aFrame.
-  // aFrame contains info such as size and time of the input frame and can be
-  // used to construct data for encoded/decoded callbacks if needed.
-  // Return true to indicate we should pop input queue, and return false to
-  // indicate aFrame should not be removed from input queue (either output is
-  // not ready yet and should try again later, or the drained output is SPS/PPS
-  // NALUs that has no corresponding input in queue).
-  virtual bool DrainOutput(const EncodedFrame& aFrame) = 0;
+  // Drain output buffer for input frame queue mInputFrames.
+  // mInputFrames contains info such as size and time of the input frames.
+  // We have to give a queue to handle encoder frame skips - we can input 10
+  // frames and get one back.  NOTE: any access of aInputFrames MUST be preceded
+  // locking mMonitor!
 
-private:
+  // Blocks waiting for decoded buffers, but for a limited period because
+  // we need to check for shutdown.
+  virtual bool DrainOutput() = 0;
+
+protected:
   // This monitor protects all things below it, and is also used to
   // wait/notify queued input.
   Monitor mMonitor;
-  nsCOMPtr<nsIThread> mThread;
   std::queue<EncodedFrame> mInputFrames;
+
+private:
+  // also protected by mMonitor
+  nsCOMPtr<nsIThread> mThread;
   bool mEnding;
 };
 
@@ -230,7 +231,9 @@ public:
 
     mLooper = new ALooper;
     mLooper->start();
+    CODEC_LOGD("WebrtcOMXH264VideoDecoder:%p creating decoder", this);
     mCodec = MediaCodec::CreateByType(mLooper, aMimeType, false /* encoder */);
+    CODEC_LOGD("WebrtcOMXH264VideoDecoder:%p OMX created", this);
   }
 
   virtual ~WebrtcOMXDecoder()
@@ -249,11 +252,11 @@ public:
   static status_t ExtractPicDimensions(uint8_t* aData, size_t aSize,
                                        int32_t* aWidth, int32_t* aHeight)
   {
-    MOZ_ASSERT(aData && aSize > 1);
-    if ((aData[0] & 0x1f) != kNALTypeSPS) {
+    MOZ_ASSERT(aData && aSize > sizeof(kNALStartCode));
+    if ((aData[sizeof(kNALStartCode)] & 0x1f) != kNALTypeSPS) {
       return ERROR_MALFORMED;
     }
-    sp<ABuffer> sps = new ABuffer(aData, aSize);
+    sp<ABuffer> sps = new ABuffer(&aData[sizeof(kNALStartCode)], aSize - sizeof(kNALStartCode));
     FindAVCDimensions(sps, aWidth, aHeight);
     return OK;
   }
@@ -284,6 +287,7 @@ public:
     }
     status_t result = mCodec->configure(config, surface, nullptr, 0);
     if (result == OK) {
+      CODEC_LOGD("OMX:%p decoder configured", this);
       result = Start();
     }
     return result;
@@ -302,29 +306,42 @@ public:
     status_t err = mCodec->dequeueInputBuffer(&index,
       aIsFirstFrame ? START_DEQUEUE_BUFFER_TIMEOUT_US : DEQUEUE_BUFFER_TIMEOUT_US);
     if (err != OK) {
-      CODEC_LOGE("decode dequeue input buffer error:%d", err);
+      if (err != -EAGAIN) {
+        CODEC_LOGE("decode dequeue input buffer error:%d", err);
+      } else {
+        CODEC_LOGE("decode dequeue 100ms without a buffer (EAGAIN)");
+      }
       return err;
     }
 
     // Prepend start code to buffer.
-    size_t size = aEncoded._length + sizeof(kNALStartCode);
+    MOZ_ASSERT(memcmp(aEncoded._buffer, kNALStartCode, sizeof(kNALStartCode)) == 0);
     const sp<ABuffer>& omxIn = mInputBuffers.itemAt(index);
-    MOZ_ASSERT(omxIn->capacity() >= size);
-    omxIn->setRange(0, size);
+    MOZ_ASSERT(omxIn->capacity() >= aEncoded._length);
+    omxIn->setRange(0, aEncoded._length);
     // Copying is needed because MediaCodec API doesn't support externallay
     // allocated buffer as input.
     uint8_t* dst = omxIn->data();
-    memcpy(dst, kNALStartCode, sizeof(kNALStartCode));
-    memcpy(dst + sizeof(kNALStartCode), aEncoded._buffer, aEncoded._length);
-    int64_t inputTimeUs = aEncoded._timeStamp * 1000 / 90; // 90kHz -> us.
+    memcpy(dst, aEncoded._buffer, aEncoded._length);
+    int64_t inputTimeUs = (aEncoded._timeStamp * 1000ll) / 90; // 90kHz -> us.
     // Assign input flags according to input buffer NALU and frame types.
-    uint32_t flags = 0;
-    if (aEncoded._frameType == webrtc::kKeyFrame) {
-      int nalType = dst[sizeof(kNALStartCode)] & 0x1f;
-      flags = (nalType == kNALTypeSPS || nalType == kNALTypePPS) ?
-              MediaCodec::BUFFER_FLAG_CODECCONFIG : MediaCodec::BUFFER_FLAG_SYNCFRAME;
+    uint32_t flags;
+    int nalType = dst[sizeof(kNALStartCode)] & 0x1f;
+    switch (nalType) {
+      case kNALTypeSPS:
+      case kNALTypePPS:
+        flags = MediaCodec::BUFFER_FLAG_CODECCONFIG;
+        break;
+      case kNALTypeIDR:
+        flags = MediaCodec::BUFFER_FLAG_SYNCFRAME;
+        break;
+      default:
+        flags = 0;
+        break;
     }
-    err = mCodec->queueInputBuffer(index, 0, size, inputTimeUs, flags);
+    CODEC_LOGD("Decoder input: %d bytes (NAL 0x%02x), time %lld (%u), flags 0x%x",
+               aEncoded._length, dst[sizeof(kNALStartCode)], inputTimeUs, aEncoded._timeStamp, flags);
+    err = mCodec->queueInputBuffer(index, 0, aEncoded._length, inputTimeUs, flags);
     if (err == OK && !(flags & MediaCodec::BUFFER_FLAG_CODECCONFIG)) {
       if (mOutputDrain == nullptr) {
         mOutputDrain = new OutputDrain(this);
@@ -342,7 +359,7 @@ public:
   }
 
   status_t
-  DrainOutput(const EncodedFrame& aFrame)
+  DrainOutput(std::queue<EncodedFrame>& aInputFrames, Monitor& aMonitor)
   {
     MOZ_ASSERT(mCodec != nullptr);
     if (mCodec == nullptr) {
@@ -379,14 +396,24 @@ public:
       default:
         CODEC_LOGE("decode dequeue OMX output buffer error:%d", err);
         // Return OK to instruct OutputDrain to drop input from queue.
+        MonitorAutoLock lock(aMonitor);
+        aInputFrames.pop();
         return OK;
     }
 
+    CODEC_LOGD("Decoder output: %d bytes, offset %u, time %lld, flags 0x%x",
+               outSize, outOffset, outTime, outFlags);
     if (mCallback) {
+      EncodedFrame frame;
+      {
+        MonitorAutoLock lock(aMonitor);
+        frame = aInputFrames.front();
+        aInputFrames.pop();
+      }
       {
         // Store info of this frame. OnNewFrame() will need the timestamp later.
         MutexAutoLock lock(mDecodedFrameLock);
-        mDecodedFrames.push(aFrame);
+        mDecodedFrames.push(frame);
       }
       // Ask codec to queue buffer back to native window. OnNewFrame() will be
       // called.
@@ -429,6 +456,9 @@ public:
     }
     MOZ_ASSERT(timestamp >= 0 && renderTimeMs >= 0);
 
+    CODEC_LOGD("Decoder NewFrame: %d bytes, %dx%d, timestamp %lld, renderTimeMs %lld",
+               buffer->GetSize(), grallocData.mPicSize.width, grallocData.mPicSize.height, timestamp, renderTimeMs);
+
     nsAutoPtr<webrtc::I420VideoFrame> videoFrame(
       new webrtc::TextureVideoFrame(new ImageNativeHandle(grallocImage.forget()),
                                     grallocData.mPicSize.width,
@@ -450,9 +480,9 @@ private:
     {}
 
   protected:
-    virtual bool DrainOutput(const EncodedFrame& aFrame) MOZ_OVERRIDE
+    virtual bool DrainOutput() MOZ_OVERRIDE
     {
-      return (mOMX->DrainOutput(aFrame) == OK);
+      return (mOMX->DrainOutput(mInputFrames, mMonitor) == OK);
     }
 
   private:
@@ -483,6 +513,7 @@ private:
       return OK;
     }
 
+    CODEC_LOGD("OMXOutputDrain decoder stopping");
     // Drop all 'pending to render' frames.
     {
       MutexAutoLock lock(mDecodedFrameLock);
@@ -504,6 +535,7 @@ private:
     } else {
       MOZ_ASSERT(false);
     }
+    CODEC_LOGD("OMXOutputDrain decoder stopped");
 
     return err;
   }
@@ -532,11 +564,11 @@ public:
     : OMXOutputDrain()
     , mOMX(aOMX)
     , mCallback(aCallback)
-    , mIsPrevOutputParamSets(false)
+    , mIsPrevFrameParamSets(false)
   {}
 
 protected:
-  virtual bool DrainOutput(const EncodedFrame& aInputFrame) MOZ_OVERRIDE
+  virtual bool DrainOutput() MOZ_OVERRIDE
   {
     nsTArray<uint8_t> output;
     int64_t timeUs = -1ll;
@@ -546,17 +578,21 @@ protected:
     if (NS_WARN_IF(NS_FAILED(rv))) {
       // Fail to get encoded frame. The corresponding input frame should be
       // removed.
+      // We'll treat this like a skipped frame
       return true;
     }
 
     if (output.Length() == 0) {
       // No encoded data yet. Try later.
-      CODEC_LOGD("OMX:%p (encode no output available this time)", mOMX);
+      CODEC_LOGD("OMX: (encode no output available this time)");
       return false;
     }
 
+    uint32_t target_timestamp = (timeUs * 90ll) / 1000; // us -> 90KHz
     bool isParamSets = (flags & MediaCodec::BUFFER_FLAG_CODECCONFIG);
     bool isIFrame = (flags & MediaCodec::BUFFER_FLAG_SYNCFRAME);
+    CODEC_LOGD("OMX: encoded frame (%d): time %lld (%u), flags x%x",
+               output.Length(), timeUs, target_timestamp, flags);
     // Should not be parameter sets and I-frame at the same time.
     MOZ_ASSERT(!(isParamSets && isIFrame));
 
@@ -569,20 +605,62 @@ protected:
                                    output.Capacity());
       encoded._frameType = (isParamSets || isIFrame) ?
                            webrtc::kKeyFrame : webrtc::kDeltaFrame;
-      encoded._encodedWidth = aInputFrame.mWidth;
-      encoded._encodedHeight = aInputFrame.mHeight;
-      encoded._timeStamp = aInputFrame.mTimestamp;
-      encoded.capture_time_ms_ = aInputFrame.mRenderTimeMs;
+      EncodedFrame input_frame;
+      {
+        MonitorAutoLock lock(mMonitor);
+#ifdef OMX_OUTPUT_TIMESTAMPS_WORK
+        // will sps/pps have the same timestamp as their iframe?
+        do {
+          if (mInputFrames.empty()) {
+            // Let's assume it was the last item in the queue, but leave it there
+            mInputFrames.push(input_frame);
+            CODEC_LOGE("OMX: encoded timestamp %u which doesn't match input queue!!",
+                       target_timestamp);
+            break;
+          }
+
+          input_frame = mInputFrames.front();
+          mInputFrames.pop();
+          if (input_frame.mTimestamp != target_timestamp) {
+            CODEC_LOGD("OMX: encoder skipped frame timestamp %u", input_frame.mTimestamp);
+          }
+        } while (input_frame.mTimestamp != target_timestamp);
+#else
+        // Assume no Encode() buffering, drop all frames but the last one submitted to Encode()
+        MOZ_ASSERT(!mInputFrames.empty());
+        do {
+          input_frame = mInputFrames.front();
+          mInputFrames.pop();
+          if (!mInputFrames.empty()) {
+            CODEC_LOGD("OMX: Encoded frame: skipped frame timestamp %u", input_frame.mTimestamp);
+          }
+        } while (!mInputFrames.empty());
+#endif
+      }
+
+      encoded._encodedWidth = input_frame.mWidth;
+      encoded._encodedHeight = input_frame.mHeight;
+      encoded._timeStamp = input_frame.mTimestamp;
+      encoded.capture_time_ms_ = input_frame.mRenderTimeMs;
       encoded._completeFrame = true;
 
+      CODEC_LOGD("Encoded frame: %d bytes, %dx%d, is_param %d, is_iframe %d, timestamp %u, captureTimeMs %u",
+                 encoded._length, encoded._encodedWidth, encoded._encodedHeight,
+                 isParamSets, isIFrame, encoded._timeStamp, encoded.capture_time_ms_);
       // Prepend SPS/PPS to I-frames unless they were sent last time.
-      SendEncodedDataToCallback(encoded, isIFrame && !mIsPrevOutputParamSets);
-      mIsPrevOutputParamSets = isParamSets;
+      SendEncodedDataToCallback(encoded, isIFrame && !mIsPrevFrameParamSets);
+      // This will be true only for the frame following a paramset block!  So if we're
+      // working with a correct encoder that generates SPS/PPS/IDR always, we
+      // won't try to insert.
+      mIsPrevFrameParamSets = isParamSets;
+      if (isParamSets) {
+        // copy off the param sets for inserting later
+        mParamSets.Clear();
+        mParamSets.AppendElements(encoded._buffer, encoded._length);
+      }
     }
 
-    // Tell base class not to pop input for parameter sets blob because they
-    // don't have corresponding input.
-    return !isParamSets;
+    return !isParamSets; // not really needed anymore
   }
 
 private:
@@ -597,13 +675,12 @@ private:
 
     if (aPrependParamSets) {
       // Insert current parameter sets in front of the input encoded data.
-      nsTArray<uint8_t> paramSets;
-      mOMX->GetCodecConfig(&paramSets);
-      MOZ_ASSERT(paramSets.Length() > 4); // Start code + ...
-      // Set buffer range.
-      nalu._buffer = paramSets.Elements();
-      nalu._length = paramSets.Length();
+      MOZ_ASSERT(mParamSets.Length() > 4); // Start code + ...
+      nalu._length = mParamSets.Length();
+      nalu._buffer = mParamSets.Elements();
       // Break into NALUs and send.
+      CODEC_LOGD("Prepending SPS/PPS: %d bytes, timestamp %u, captureTimeMs %u",
+                 nalu._length, nalu._timeStamp, nalu.capture_time_ms_);
       SendEncodedDataToCallback(nalu, false);
     }
 
@@ -615,27 +692,14 @@ private:
     while (getNextNALUnit(&data, &size, &nalStart, &nalSize, true) == OK) {
       nalu._buffer = const_cast<uint8_t*>(nalStart);
       nalu._length = nalSize;
-      // [Workaround] Jitter buffer code in WebRTC.org cannot correctly deliver
-      // SPS/PPS/I-frame NALUs that share same timestamp. Change timestamp value
-      // for SPS/PPS to avoid it.
-      // TODO: remove when bug 985254 lands. The patch there has same workaround.
-      switch (nalStart[0] & 0x1f) {
-        case 7:
-          nalu._timeStamp -= 100;
-          break;
-        case 8:
-          nalu._timeStamp -= 50;
-          break;
-        default:
-          break;
-      }
       mCallback->Encoded(nalu, nullptr, nullptr);
     }
   }
 
   OMXVideoEncoder* mOMX;
   webrtc::EncodedImageCallback* mCallback;
-  bool mIsPrevOutputParamSets;
+  bool mIsPrevFrameParamSets;
+  nsTArray<uint8_t> mParamSets;
 };
 
 // Encoder.
@@ -645,7 +709,10 @@ WebrtcOMXH264VideoEncoder::WebrtcOMXH264VideoEncoder()
   , mWidth(0)
   , mHeight(0)
   , mFrameRate(0)
+  , mBitRateKbps(0)
+  , mBitRateAtLastIDR(0)
   , mOMXConfigured(false)
+  , mOMXReconfigure(false)
 {
   CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p constructed", this);
 }
@@ -663,6 +730,7 @@ WebrtcOMXH264VideoEncoder::InitEncode(const webrtc::VideoCodec* aCodecSettings,
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
     mOMX = omx.forget();
+    CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p OMX created", this);
   }
 
   // Defer configuration until 1st frame is received because this function will
@@ -671,6 +739,8 @@ WebrtcOMXH264VideoEncoder::InitEncode(const webrtc::VideoCodec* aCodecSettings,
   mWidth = aCodecSettings->width;
   mHeight = aCodecSettings->height;
   mFrameRate = aCodecSettings->maxFramerate;
+  mBitRateKbps = aCodecSettings->startBitrate;
+  // XXX handle maxpayloadsize (aka mode 0/1)
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -685,17 +755,107 @@ WebrtcOMXH264VideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  if (!mOMXConfigured) {
-    mOMX->Configure(mWidth, mHeight, mFrameRate,
-                    OMXVideoEncoder::BlobFormat::AVC_NAL);
+  // Have to reconfigure for resolution or framerate changes :-(
+  // ~220ms initial configure on 8x10, 50-100ms for re-configure it appears
+  // XXX drop frames while this is happening?
+  if (aInputImage.width() != mWidth ||
+      aInputImage.height() != mHeight) {
+    mWidth = aInputImage.width();
+    mHeight = aInputImage.height();
+    mOMXReconfigure = true;
+  }
+
+  if (!mOMXConfigured || mOMXReconfigure) {
+    if (mOMXConfigured) {
+      CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p reconfiguring encoder %dx%d @ %u fps",
+                 this, mWidth, mHeight, mFrameRate);
+      mOMXConfigured = false;
+    }
+    mOMXReconfigure = false;
+    // XXX This can take time.  Encode() likely assumes encodes are queued "quickly" and
+    // don't block the input too long.  Frames may build up.
+
+    // XXX take from negotiated SDP in codecSpecific data
+    OMX_VIDEO_AVCLEVELTYPE level = OMX_VIDEO_AVCLevel3;
+    // OMX_Video_ControlRateConstant is not supported on QC 8x10
+    OMX_VIDEO_CONTROLRATETYPE bitrateMode = OMX_Video_ControlRateConstantSkipFrames;
+
+    // Set up configuration parameters for AVC/H.264 encoder.
+    sp<AMessage> format = new AMessage;
+    // Fixed values
+    format->setString("mime", MEDIA_MIMETYPE_VIDEO_AVC);
+    // XXX We should only set to < infinity if we're not using any recovery RTCP options
+    // However, we MUST set it to a lower value because the 8x10 rate controller
+    // only changes rate at GOP boundaries.... but it also changes rate on requested GOPs
+
+    // Too long and we have very low bitrates for the first second or two... plus
+    // bug 1014921 means we have to force them every ~3 seconds or less.
+    format->setInt32("i-frame-interval", 4 /* seconds */);
+    // See mozilla::layers::GrallocImage, supports YUV 4:2:0, CbCr width and
+    // height is half that of Y
+    format->setInt32("color-format", OMX_COLOR_FormatYUV420SemiPlanar);
+    format->setInt32("profile", OMX_VIDEO_AVCProfileBaseline);
+    format->setInt32("level", level);
+    format->setInt32("bitrate-mode", bitrateMode);
+    format->setInt32("store-metadata-in-buffers", 0);
+    // XXX Unfortunately, 8x10 doesn't support this, but ask anyways
+    format->setInt32("prepend-sps-pps-to-idr-frames", 1);
+    // Input values.
+    format->setInt32("width", mWidth);
+    format->setInt32("height", mHeight);
+    format->setInt32("stride", mWidth);
+    format->setInt32("slice-height", mHeight);
+    format->setInt32("frame-rate", mFrameRate);
+    format->setInt32("bitrate", mBitRateKbps*1000);
+
+    CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p configuring encoder %dx%d @ %d fps, rate %d kbps",
+               this, mWidth, mHeight, mFrameRate, mBitRateKbps);
+    nsresult rv = mOMX->ConfigureDirect(format,
+                                        OMXVideoEncoder::BlobFormat::AVC_NAL);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      CODEC_LOGE("WebrtcOMXH264VideoEncoder:%p FAILED configuring encoder %d", this, rv);
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
     mOMXConfigured = true;
-    CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p start OMX with image size:%ux%u",
-               this, mWidth, mHeight);
+    mLastIDRTime = TimeStamp::Now();
+    mBitRateAtLastIDR = mBitRateKbps;
   }
 
   if (aFrameTypes && aFrameTypes->size() &&
       ((*aFrameTypes)[0] == webrtc::kKeyFrame)) {
     mOMX->RequestIDRFrame();
+    mLastIDRTime = TimeStamp::Now();
+    mBitRateAtLastIDR = mBitRateKbps;
+  } else if (mBitRateKbps != mBitRateAtLastIDR) {
+    // 8x10 OMX codec requires a keyframe to shift bitrates!
+    TimeStamp now = TimeStamp::Now();
+    if (mLastIDRTime.IsNull()) {
+      // paranoia
+      mLastIDRTime = now;
+    }
+    int32_t timeSinceLastIDR = (now - mLastIDRTime).ToMilliseconds();
+
+    // Balance asking for IDRs too often against direction and amount of bitrate change.
+
+    // HACK for bug 1014921: 8x10 has encode/decode mismatches that build up errors
+    // if you go too long without an IDR.  In normal use, bitrate will change often
+    // enough to never hit this time limit.
+    if ((timeSinceLastIDR > 3000) ||
+        (mBitRateKbps < (mBitRateAtLastIDR * 8)/10) ||
+        (timeSinceLastIDR < 300 && mBitRateKbps < (mBitRateAtLastIDR * 9)/10) ||
+        (timeSinceLastIDR < 1000 && mBitRateKbps < (mBitRateAtLastIDR * 97)/100) ||
+        (timeSinceLastIDR >= 1000 && mBitRateKbps < mBitRateAtLastIDR) ||
+        (mBitRateKbps > (mBitRateAtLastIDR * 15)/10) ||
+        (timeSinceLastIDR < 500 && mBitRateKbps > (mBitRateAtLastIDR * 13)/10) ||
+        (timeSinceLastIDR < 1000 && mBitRateKbps > (mBitRateAtLastIDR * 11)/10) ||
+        (timeSinceLastIDR >= 1000 && mBitRateKbps > mBitRateAtLastIDR)) {
+      CODEC_LOGD("Requesting IDR for bitrate change from %u to %u (time since last idr %dms)",
+                 mBitRateAtLastIDR, mBitRateKbps, timeSinceLastIDR);
+
+      mOMX->RequestIDRFrame();
+      mLastIDRTime = now;
+      mBitRateAtLastIDR = mBitRateKbps;
+    }
   }
 
   // Wrap I420VideoFrame input with PlanarYCbCrImage for OMXVideoEncoder.
@@ -714,10 +874,15 @@ WebrtcOMXH264VideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
   layers::PlanarYCbCrImage img(nullptr);
   img.SetDataNoCopy(yuvData);
 
+  CODEC_LOGD("Encode frame: %dx%d, timestamp %u (%lld), renderTimeMs %u",
+             aInputImage.width(), aInputImage.height(),
+             aInputImage.timestamp(), aInputImage.timestamp() * 100011 / 90,
+             aInputImage.render_time_ms());
+
   nsresult rv = mOMX->Encode(&img,
                              yuvData.mYSize.width,
                              yuvData.mYSize.height,
-                             aInputImage.timestamp() * 1000 / 90, // 90kHz -> us.
+                             aInputImage.timestamp() * 100011 / 90, // 90kHz -> us.
                              0);
   if (rv == NS_OK) {
     if (mOutputDrain == nullptr) {
@@ -757,6 +922,7 @@ WebrtcOMXH264VideoEncoder::Release()
   }
   mOMXConfigured = false;
   mOMX = nullptr;
+  CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p released", this);
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -784,18 +950,62 @@ WebrtcOMXH264VideoEncoder::SetChannelParameters(uint32_t aPacketLossRate,
 
 // TODO: Bug 997567. Find the way to support frame rate change.
 int32_t
-WebrtcOMXH264VideoEncoder::SetRates(uint32_t aBitRate, uint32_t aFrameRate)
+WebrtcOMXH264VideoEncoder::SetRates(uint32_t aBitRateKbps, uint32_t aFrameRate)
 {
-  CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p set bitrate:%u, frame rate:%u)",
-             this, aBitRate, aFrameRate);
+  CODEC_LOGE("WebrtcOMXH264VideoEncoder:%p set bitrate:%u, frame rate:%u (%u))",
+             this, aBitRateKbps, aFrameRate, mFrameRate);
   MOZ_ASSERT(mOMX != nullptr);
   if (mOMX == nullptr) {
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
   }
 
-  mOMX->SetBitrate(aBitRate);
+  // XXX Should use StageFright framerate change, perhaps only on major changes of framerate.
 
-  return WEBRTC_VIDEO_CODEC_OK;
+  // Without Stagefright support, Algorithm should be:
+  // if (frameRate < 50% of configured) {
+  //   drop framerate to next step down that includes current framerate within 50%
+  // } else if (frameRate > configured) {
+  //   change config to next step up that includes current framerate
+  // }
+#if !defined(TEST_OMX_FRAMERATE_CHANGES)
+  if (aFrameRate > mFrameRate ||
+      aFrameRate < mFrameRate/2) {
+    uint32_t old_rate = mFrameRate;
+    if (aFrameRate >= 15) {
+      mFrameRate = 30;
+    } else if (aFrameRate >= 10) {
+      mFrameRate = 20;
+    } else if (aFrameRate >= 8) {
+      mFrameRate = 15;
+    } else /* if (aFrameRate >= 5)*/ {
+      // don't go lower; encoder may not be stable
+      mFrameRate = 10;
+    }
+    if (mFrameRate < aFrameRate) { // safety
+      mFrameRate = aFrameRate;
+    }
+    if (old_rate != mFrameRate) {
+      mOMXReconfigure = true;  // force re-configure on next frame
+    }
+  }
+#else
+  // XXX for testing, be wild!
+  if (aFrameRate != mFrameRate) {
+    mFrameRate = aFrameRate;
+    mOMXReconfigure = true;  // force re-configure on next frame
+  }
+#endif
+
+  // XXX Limit bitrate for 8x10 devices to a specific level depending on fps and resolution
+  // mBitRateKbps = LimitBitrate8x10(mWidth, mHeight, mFrameRate, aBitRateKbps);
+  // Rely on global single setting (~720 kbps for HVGA@30fps) for now
+  if (aBitRateKbps > 700) {
+    aBitRateKbps = 700;
+  }
+  mBitRateKbps = aBitRateKbps;
+  nsresult rv = mOMX->SetBitrate(mBitRateKbps);
+  NS_WARN_IF(NS_FAILED(rv));
+  return NS_FAILED(rv) ? WEBRTC_VIDEO_CODEC_OK : WEBRTC_VIDEO_CODEC_ERROR;
 }
 
 // Decoder.
@@ -839,7 +1049,8 @@ WebrtcOMXH264VideoDecoder::Decode(const webrtc::EncodedImage& aInputImage,
                                                              &width, &height);
     if (result != OK) {
       // Cannot config decoder because SPS haven't been seen.
-      CODEC_LOGI("WebrtcOMXH264VideoDecoder:%p missing SPS in input");
+      CODEC_LOGI("WebrtcOMXH264VideoDecoder:%p missing SPS in input (nal 0x%02x, len %d)",
+                 this, aInputImage._buffer[sizeof(kNALStartCode)] & 0x1f, aInputImage._length);
       return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
     }
     RefPtr<WebrtcOMXDecoder> omx = new WebrtcOMXDecoder(MEDIA_MIMETYPE_VIDEO_AVC,

@@ -37,7 +37,8 @@ public:
     *
     * @return           the frame that was created
     */
-  friend nsIFrame* NS_NewTableColGroupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsTableColGroupFrame* NS_NewTableColGroupFrame(nsIPresShell* aPresShell,
+                                                        nsStyleContext* aContext);
 
   /** Initialize the colgroup frame with a set of children.
     * @see nsIFrame::SetInitialChildList

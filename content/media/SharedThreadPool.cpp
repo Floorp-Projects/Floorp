@@ -165,7 +165,7 @@ NS_IMETHODIMP_(MozExternalRefCountType) SharedThreadPool::Release(void)
     // Ensure that we only run on the main thread.
     // Do this in an event so that if something holds the monitor we won't
     // be deleting the monitor while it's held.
-    NS_DispatchToMainThread(new ShutdownPoolsEvent(), NS_DISPATCH_NORMAL);
+    NS_DispatchToMainThread(new ShutdownPoolsEvent());
   }
   return 0;
 }

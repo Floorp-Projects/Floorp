@@ -92,9 +92,9 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 NS_IMPL_FRAMEARENA_HELPERS(nsHTMLCanvasFrame)
 
 void
-nsHTMLCanvasFrame::Init(nsIContent* aContent,
-                        nsIFrame*   aParent,
-                        nsIFrame*   aPrevInFlow)
+nsHTMLCanvasFrame::Init(nsIContent*       aContent,
+                        nsContainerFrame* aParent,
+                        nsIFrame*         aPrevInFlow)
 {
   nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 

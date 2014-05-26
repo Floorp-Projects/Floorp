@@ -314,9 +314,9 @@ class OSXBootstrapper(BaseBootstrapper):
         if self.os_version < StrictVersion('10.7') and MACPORTS_CLANG_PACKAGE not in installed:
             print(PACKAGE_MANAGER_OLD_CLANG % ('MacPorts',))
             self.run_as_root([self.port, '-v', 'install', MACPORTS_CLANG_PACKAGE])
+            self.run_as_root([self.port, 'select', '--set', 'clang', 'mp-' + MACPORTS_CLANG_PACKAGE])
 
         self.run_as_root([self.port, 'select', '--set', 'python', 'python27'])
-        self.run_as_root([self.port, 'select', '--set', 'clang', 'mp-' + MACPORTS_CLANG_PACKAGE])
 
     def ensure_package_manager(self):
         '''

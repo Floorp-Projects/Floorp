@@ -29,9 +29,9 @@ public:
 
   friend nsIFrame* NS_NewTextBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  virtual void Init(nsIContent*      aContent,
-                    nsIFrame*        aParent,
-                    nsIFrame*        asPrevInFlow) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*       aContent,
+                    nsContainerFrame* aParent,
+                    nsIFrame*         asPrevInFlow) MOZ_OVERRIDE;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
@@ -64,6 +64,8 @@ public:
 
   void GetCroppedTitle(nsString& aTitle) const { aTitle = mCroppedTitle; }
 
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) MOZ_OVERRIDE;
+
 protected:
   friend class nsAsyncAccesskeyUpdate;
   friend class nsDisplayXULTextBox;
@@ -72,6 +74,10 @@ protected:
   bool UpdateAccesskey(nsWeakFrame& aWeakThis);
   void UpdateAccessTitle();
   void UpdateAccessIndex();
+
+  // Recompute our title, ignoring the access key but taking into
+  // account text-transform.
+  void RecomputeTitle();
 
   // REVIEW: SORRY! Couldn't resist devirtualizing these
   void LayoutTitle(nsPresContext*      aPresContext,

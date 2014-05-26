@@ -80,7 +80,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=995943
                             ['capability.policy.someotherpolicy.sites', 'http://example.net ']]))
     .then(checkLoadFileURI.bind(null, 'http://example.org', true))
     .then(checkLoadFileURI.bind(null, 'http://example.com', false))
-    .then(checkLoadFileURI.bind(null, 'https://example.com', true))
     .then(checkLoadFileURI.bind(null, 'http://example.net', false))
     .then(pushPrefs.bind(null, [['capability.policy.someotherpolicy.checkloaduri.enabled', 'allAccess']]))
     .then(checkLoadFileURI.bind(null, 'http://example.net', true))

@@ -156,6 +156,11 @@ nsStyleSet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
     if (mRuleProcessors[i]) {
       n += mRuleProcessors[i]->SizeOfIncludingThis(aMallocSizeOf);
     }
+    // mSheets is a C-style array of nsCOMArrays.  We do not own the sheets in
+    // the nsCOMArrays (either the nsLayoutStyleSheetCache singleton or our
+    // document owns them) so we do not count the sheets here (we pass nullptr
+    // as the aSizeOfElementIncludingThis argument).  All we're doing here is
+    // counting the size of the nsCOMArrays' buffers.
     n += mSheets[i].SizeOfExcludingThis(nullptr, aMallocSizeOf);
   }
 
@@ -632,6 +637,10 @@ nsStyleSet::EndUpdate()
 void
 nsStyleSet::EnableQuirkStyleSheet(bool aEnable)
 {
+  if (!mQuirkStyleSheet) {
+    // SVG-as-an-image doesn't load this sheet
+    return;
+  }
 #ifdef DEBUG
   bool oldEnabled;
   {
