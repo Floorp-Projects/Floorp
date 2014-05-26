@@ -57,7 +57,7 @@ namespace mozilla {
                                          metadata->mHasAudio,
                                          metadata->mHasVideo,
                                          metadata->mTags.forget());
-          NS_DispatchToMainThread(metadataUpdatedEvent, NS_DISPATCH_NORMAL);
+          NS_DispatchToMainThread(metadataUpdatedEvent);
           delete mMetadataQueue.popFirst();
           metadata = mMetadataQueue.getFirst();
         }

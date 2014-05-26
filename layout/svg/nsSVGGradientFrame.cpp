@@ -400,9 +400,9 @@ nsSVGGradientFrame::GetStopFrames(nsTArray<nsIFrame*>* aStopFrames)
 
 #ifdef DEBUG
 void
-nsSVGLinearGradientFrame::Init(nsIContent* aContent,
-                               nsIFrame* aParent,
-                               nsIFrame* aPrevInFlow)
+nsSVGLinearGradientFrame::Init(nsIContent*       aContent,
+                               nsContainerFrame* aParent,
+                               nsIFrame*         aPrevInFlow)
 {
   NS_ASSERTION(aContent->IsSVG(nsGkAtoms::linearGradient),
                "Content is not an SVG linearGradient");
@@ -509,9 +509,9 @@ nsSVGLinearGradientFrame::CreateGradient()
 
 #ifdef DEBUG
 void
-nsSVGRadialGradientFrame::Init(nsIContent* aContent,
-                               nsIFrame* aParent,
-                               nsIFrame* aPrevInFlow)
+nsSVGRadialGradientFrame::Init(nsIContent*       aContent,
+                               nsContainerFrame* aParent,
+                               nsIFrame*         aPrevInFlow)
 {
   NS_ASSERTION(aContent->IsSVG(nsGkAtoms::radialGradient),
                "Content is not an SVG radialGradient");

@@ -110,6 +110,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
   ["WebrtcUI", ["getUserMedia:request", "recording-device-events"], "chrome://browser/content/WebrtcUI.js"],
 #endif
   ["MemoryObserver", ["memory-pressure", "Memory:Dump"], "chrome://browser/content/MemoryObserver.js"],
+  ["ConsoleAPI", ["console-api-log-event"], "chrome://browser/content/ConsoleAPI.js"],
   ["FindHelper", ["FindInPage:Find", "FindInPage:Prev", "FindInPage:Next", "FindInPage:Closed", "Tab:Selected"], "chrome://browser/content/FindHelper.js"],
   ["PermissionsHelper", ["Permissions:Get", "Permissions:Clear"], "chrome://browser/content/PermissionsHelper.js"],
   ["FeedHandler", ["Feeds:Subscribe"], "chrome://browser/content/FeedHandler.js"],
@@ -3882,9 +3883,12 @@ Tab.prototype = {
 
         // Once document is fully loaded, parse it
         Reader.parseDocumentFromTab(this.id, function (article) {
+          // The loaded page may have changed while we were parsing the document. 
+          // Make sure we've got the current one.
+          let uri = this.browser.currentURI;
+          let tabURL = uri.specIgnoringRef;
           // Do nothing if there's no article or the page in this tab has
           // changed
-          let tabURL = uri.specIgnoringRef;
           if (article == null || (article.url != tabURL)) {
             // Don't clear the article for about:reader pages since we want to
             // use the article from the previous page

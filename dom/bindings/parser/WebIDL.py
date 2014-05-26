@@ -1200,9 +1200,10 @@ class IDLDictionary(IDLObjectWithScope):
                     None, if the boolean value in the first element is False.
             """
 
-            if memberType.nullable() or \
-               memberType.isArray() or \
-               memberType.isSequence():
+            if (memberType.nullable() or
+                memberType.isArray() or
+                memberType.isSequence() or
+                memberType.isMozMap()):
                 return typeContainsDictionary(memberType.inner, dictionary)
 
             if memberType.isDictionary():
@@ -1320,6 +1321,7 @@ class IDLType(IDLObject):
         'callback',
         'union',
         'sequence',
+        'mozmap',
         'array'
         )
 
@@ -1365,6 +1367,9 @@ class IDLType(IDLObject):
         return self.name == "Void"
 
     def isSequence(self):
+        return False
+
+    def isMozMap(self):
         return False
 
     def isArray(self):
@@ -1549,6 +1554,9 @@ class IDLNullableType(IDLType):
     def isSequence(self):
         return self.inner.isSequence()
 
+    def isMozMap(self):
+        return self.inner.isMozMap()
+
     def isArray(self):
         return self.inner.isArray()
 
@@ -1701,6 +1709,60 @@ class IDLSequenceType(IDLType):
     def _getDependentObjects(self):
         return self.inner._getDependentObjects()
 
+class IDLMozMapType(IDLType):
+    # XXXbz This is pretty similar to IDLSequenceType in various ways.
+    # And maybe to IDLNullableType.  Should we have a superclass for
+    # "type containing this other type"?  Bug 1015318.
+    def __init__(self, location, parameterType):
+        assert not parameterType.isVoid()
+
+        IDLType.__init__(self, location, parameterType.name)
+        self.inner = parameterType
+        self.builtin = False
+
+    def __eq__(self, other):
+        return isinstance(other, IDLMozMapType) and self.inner == other.inner
+
+    def __str__(self):
+        return self.inner.__str__() + "MozMap"
+
+    def isMozMap(self):
+        return True
+
+    def includesRestrictedFloat(self):
+        return self.inner.includesRestrictedFloat()
+
+    def tag(self):
+        return IDLType.Tags.mozmap
+
+    def resolveType(self, parentScope):
+        assert isinstance(parentScope, IDLScope)
+        self.inner.resolveType(parentScope)
+
+    def isComplete(self):
+        return self.inner.isComplete()
+
+    def complete(self, scope):
+        self.inner = self.inner.complete(scope)
+        self.name = self.inner.name
+        return self
+
+    def unroll(self):
+        # We do not unroll our inner.  Just stop at ourselves.  That
+        # lets us add headers for both ourselves and our inner as
+        # needed.
+        return self
+
+    def isDistinguishableFrom(self, other):
+        if other.isUnion():
+            # Just forward to the union; it'll deal
+            return other.isDistinguishableFrom(self)
+        return (other.isPrimitive() or other.isString() or other.isEnum() or
+                other.isDate() or other.isNonCallbackInterface())
+
+    def _getDependentObjects(self):
+        return self.inner._getDependentObjects()
+
 class IDLUnionType(IDLType):
     def __init__(self, location, memberTypes):
         IDLType.__init__(self, location, "")
@@ -1744,7 +1806,8 @@ class IDLUnionType(IDLType):
                 return typeName(type._identifier.object())
             if isinstance(type, IDLObjectWithIdentifier):
                 return typeName(type.identifier)
-            if isinstance(type, IDLType) and (type.isArray() or type.isSequence()):
+            if (isinstance(type, IDLType) and
+                (type.isArray() or type.isSequence() or type.isMozMap)):
                 return str(type)
             return type.name
 
@@ -1815,6 +1878,9 @@ class IDLArrayType(IDLType):
         assert not parameterType.isVoid()
         if parameterType.isSequence():
             raise WebIDLError("Array type cannot parameterize over a sequence type",
+                              [location])
+        if parameterType.isMozMap():
+            raise WebIDLError("Array type cannot parameterize over a MozMap type",
                               [location])
         if parameterType.isDictionary():
             raise WebIDLError("Array type cannot parameterize over a dictionary type",
@@ -1945,6 +2011,9 @@ class IDLTypedefType(IDLType, IDLObjectWithIdentifier):
 
     def isSequence(self):
         return self.inner.isSequence()
+
+    def isMozMap(self):
+        return self.inner.isMozMap()
 
     def isArray(self):
         return self.inner.isArray()
@@ -2100,7 +2169,7 @@ class IDLWrapperType(IDLType):
         if self.isEnum():
             return (other.isPrimitive() or other.isInterface() or other.isObject() or
                     other.isCallback() or other.isDictionary() or
-                    other.isSequence() or other.isArray() or
+                    other.isSequence() or other.isMozMap() or other.isArray() or
                     other.isDate())
         if self.isDictionary() and other.nullable():
             return False
@@ -2122,7 +2191,7 @@ class IDLWrapperType(IDLType):
                     (self.isNonCallbackInterface() or
                      other.isNonCallbackInterface()))
         if (other.isDictionary() or other.isCallback() or
-            other.isSequence() or other.isArray()):
+            other.isSequence() or other.isMozMap() or other.isArray()):
             return self.isNonCallbackInterface()
 
         # Not much else |other| can be
@@ -2296,19 +2365,19 @@ class IDLBuiltinType(IDLType):
             return (other.isNumeric() or other.isString() or other.isEnum() or
                     other.isInterface() or other.isObject() or
                     other.isCallback() or other.isDictionary() or
-                    other.isSequence() or other.isArray() or
+                    other.isSequence() or other.isMozMap() or other.isArray() or
                     other.isDate())
         if self.isNumeric():
             return (other.isBoolean() or other.isString() or other.isEnum() or
                     other.isInterface() or other.isObject() or
                     other.isCallback() or other.isDictionary() or
-                    other.isSequence() or other.isArray() or
+                    other.isSequence() or other.isMozMap() or other.isArray() or
                     other.isDate())
         if self.isString():
             return (other.isPrimitive() or other.isInterface() or
                     other.isObject() or
                     other.isCallback() or other.isDictionary() or
-                    other.isSequence() or other.isArray() or
+                    other.isSequence() or other.isMozMap() or other.isArray() or
                     other.isDate())
         if self.isAny():
             # Can't tell "any" apart from anything
@@ -2319,7 +2388,7 @@ class IDLBuiltinType(IDLType):
             return (other.isPrimitive() or other.isString() or other.isEnum() or
                     other.isInterface() or other.isCallback() or
                     other.isDictionary() or other.isSequence() or
-                    other.isArray())
+                    other.isMozMap() or other.isArray())
         if self.isVoid():
             return not other.isVoid()
         # Not much else we could be!
@@ -2327,7 +2396,8 @@ class IDLBuiltinType(IDLType):
         # Like interfaces, but we know we're not a callback
         return (other.isPrimitive() or other.isString() or other.isEnum() or
                 other.isCallback() or other.isDictionary() or
-                other.isSequence() or other.isArray() or other.isDate() or
+                other.isSequence() or other.isMozMap() or other.isArray() or
+                other.isDate() or
                 (other.isInterface() and (
                  # ArrayBuffer is distinguishable from everything
                  # that's not an ArrayBuffer or a callback interface
@@ -2710,6 +2780,9 @@ class IDLAttribute(IDLInterfaceMember):
         if self.type.isSequence() and not self.getExtendedAttribute("Cached"):
             raise WebIDLError("A non-cached attribute cannot be of a sequence "
                               "type", [self.location])
+        if self.type.isMozMap() and not self.getExtendedAttribute("Cached"):
+            raise WebIDLError("A non-cached attribute cannot be of a MozMap "
+                              "type", [self.location])
         if self.type.isUnion():
             for f in self.type.unroll().flatMemberTypes:
                 if f.isDictionary():
@@ -2723,6 +2796,12 @@ class IDLAttribute(IDLInterfaceMember):
                                       "type if one of its member types (or "
                                       "one of its member types's member "
                                       "types, and so on) is a sequence "
+                                      "type", [self.location, f.location])
+                if f.isMozMap():
+                    raise WebIDLError("An attribute cannot be of a union "
+                                      "type if one of its member types (or "
+                                      "one of its member types's member "
+                                      "types, and so on) is a MozMap "
                                       "type", [self.location, f.location])
         if not self.type.isInterface() and self.getExtendedAttribute("PutForwards"):
             raise WebIDLError("An attribute with [PutForwards] must have an "
@@ -2742,9 +2821,11 @@ class IDLAttribute(IDLInterfaceMember):
                               "getter won't always be called.",
                               [self.location])
         if self.getExtendedAttribute("Frozen"):
-            if not self.type.isSequence() and not self.type.isDictionary():
-                raise WebIDLError("[Frozen] is only allowed on sequence-valued "
-                                  "and dictionary-valued attributes",
+            if (not self.type.isSequence() and not self.type.isDictionary() and
+                not self.type.isMozMap()):
+                raise WebIDLError("[Frozen] is only allowed on "
+                                  "sequence-valued, dictionary-valued, and "
+                                  "MozMap-valued attributes",
                                   [self.location])
 
     def handleExtendedAttribute(self, attr):
@@ -3627,6 +3708,7 @@ class Tokenizer(object):
         "octet": "OCTET",
         "optional": "OPTIONAL",
         "sequence": "SEQUENCE",
+        "MozMap": "MOZMAP",
         "short": "SHORT",
         "unsigned": "UNSIGNED",
         "void": "VOID",
@@ -4523,6 +4605,7 @@ class Parser(Tokenizer):
                   | OCTET
                   | OPTIONAL
                   | SEQUENCE
+                  | MOZMAP
                   | SETTER
                   | SHORT
                   | STATIC
@@ -4628,6 +4711,16 @@ class Parser(Tokenizer):
         """
         innerType = p[3]
         type = IDLSequenceType(self.getLocation(p, 1), innerType)
+        if p[5]:
+            type = IDLNullableType(self.getLocation(p, 5), type)
+        p[0] = type
+
+    def p_NonAnyTypeMozMapType(self, p):
+        """
+            NonAnyType : MOZMAP LT Type GT Null
+        """
+        innerType = p[3]
+        type = IDLMozMapType(self.getLocation(p, 1), innerType)
         if p[5]:
             type = IDLNullableType(self.getLocation(p, 5), type)
         p[0] = type

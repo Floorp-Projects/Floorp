@@ -15,12 +15,7 @@
 #include "nsSVGContainerFrame.h"
 #include "nsSVGUtils.h"
 
-class nsIAtom;
-class nsIContent;
-class nsIFrame;
-class nsIPresShell;
 class nsRenderingContext;
-class nsStyleContext;
 class nsSVGPathGeometryFrame;
 
 namespace mozilla {
@@ -36,7 +31,7 @@ typedef nsSVGContainerFrame nsSVGMarkerFrameBase;
 class nsSVGMarkerFrame : public nsSVGMarkerFrameBase
 {
   friend class nsSVGMarkerAnonChildFrame;
-  friend nsIFrame*
+  friend nsContainerFrame*
   NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   nsSVGMarkerFrame(nsStyleContext* aContext)
@@ -53,9 +48,9 @@ public:
 
   // nsIFrame interface:
 #ifdef DEBUG
-  virtual void Init(nsIContent*      aContent,
-                    nsIFrame*        aParent,
-                    nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*       aContent,
+                    nsContainerFrame* aParent,
+                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
 #endif
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -79,7 +74,7 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
+  virtual nsContainerFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
     // Any children must be added to our single anonymous inner frame kid.
     NS_ABORT_IF_FALSE(GetFirstPrincipalChild() &&
                       GetFirstPrincipalChild()->GetType() ==
@@ -147,7 +142,7 @@ typedef nsSVGDisplayContainerFrame nsSVGMarkerAnonChildFrameBase;
 class nsSVGMarkerAnonChildFrame
   : public nsSVGMarkerAnonChildFrameBase
 {
-  friend nsIFrame*
+  friend nsContainerFrame*
   NS_NewSVGMarkerAnonChildFrame(nsIPresShell* aPresShell,
                                 nsStyleContext* aContext);
 
@@ -159,9 +154,9 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
 #ifdef DEBUG
-  virtual void Init(nsIContent* aContent,
-                    nsIFrame* aParent,
-                    nsIFrame* aPrevInFlow) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*       aContent,
+                    nsContainerFrame* aParent,
+                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
 #endif
 
 #ifdef DEBUG_FRAME_DUMP
@@ -181,7 +176,7 @@ public:
   virtual gfxMatrix GetCanvasTM(uint32_t aFor,
                                 nsIFrame* aTransformRoot = nullptr) MOZ_OVERRIDE
   {
-    nsSVGMarkerFrame* marker = static_cast<nsSVGMarkerFrame*>(mParent);
+    nsSVGMarkerFrame* marker = static_cast<nsSVGMarkerFrame*>(GetParent());
     return marker->GetCanvasTM(aFor, aTransformRoot);
   }
 };

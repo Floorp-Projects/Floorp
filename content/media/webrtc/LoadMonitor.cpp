@@ -158,7 +158,7 @@ void LoadMonitor::Shutdown()
 
     nsRefPtr<LoadMonitorRemoveObserver> remObsRunner = new LoadMonitorRemoveObserver(this);
     if (!NS_IsMainThread()) {
-      NS_DispatchToMainThread(remObsRunner, NS_DISPATCH_NORMAL);
+      NS_DispatchToMainThread(remObsRunner);
     } else {
       remObsRunner->Run();
     }
@@ -600,7 +600,7 @@ LoadMonitor::Init(nsRefPtr<LoadMonitor> &self)
   }
 
   nsRefPtr<LoadMonitorAddObserver> addObsRunner = new LoadMonitorAddObserver(self);
-  NS_DispatchToMainThread(addObsRunner, NS_DISPATCH_NORMAL);
+  NS_DispatchToMainThread(addObsRunner);
 
   NS_NewNamedThread("Sys Load Info", getter_AddRefs(mLoadInfoThread));
 

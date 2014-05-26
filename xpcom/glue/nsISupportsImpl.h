@@ -255,7 +255,7 @@ namespace mozilla {
 class ThreadSafeAutoRefCnt {
  public:
     ThreadSafeAutoRefCnt() : mValue(0) {}
-    ThreadSafeAutoRefCnt(nsrefcnt aValue) : mValue(aValue) {}
+    explicit ThreadSafeAutoRefCnt(nsrefcnt aValue) : mValue(aValue) {}
     
     // only support prefix increment/decrement
     MOZ_ALWAYS_INLINE nsrefcnt operator++() { return ++mValue; }

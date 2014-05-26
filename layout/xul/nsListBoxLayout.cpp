@@ -136,7 +136,7 @@ nsListBoxLayout::LayoutInternal(nsIFrame* aBox, nsBoxLayoutState& aState)
   }
 
   // run through all our currently created children
-  nsIFrame* box = body->GetChildBox();
+  nsIFrame* box = nsBox::GetChildBox(body);
 
   // if the reason is resize or initial we must relayout.
   nscoord rowHeight = body->GetRowHeightAppUnits();
@@ -185,7 +185,7 @@ nsListBoxLayout::LayoutInternal(nsIFrame* aBox, nsBoxLayoutState& aState)
     yOffset += size;
     availableHeight -= size;
     
-    box = box->GetNextBox();
+    box = nsBox::GetNextBox(box);
   }
   
   // We have enough available height left to add some more rows

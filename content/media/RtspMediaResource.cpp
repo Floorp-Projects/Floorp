@@ -572,7 +572,7 @@ RtspMediaResource::OnConnected(uint8_t aTrackIdx,
     // Give up, report error to media element.
     nsCOMPtr<nsIRunnable> event =
       NS_NewRunnableMethod(mDecoder, &MediaDecoder::DecodeError);
-    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+    NS_DispatchToMainThread(event);
     return NS_ERROR_FAILURE;
   }
   uint64_t duration = 0;
@@ -618,7 +618,7 @@ RtspMediaResource::OnConnected(uint8_t aTrackIdx,
       // Give up, report error to media element.
       nsCOMPtr<nsIRunnable> event =
         NS_NewRunnableMethod(mDecoder, &MediaDecoder::DecodeError);
-      NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+      NS_DispatchToMainThread(event);
       return NS_ERROR_FAILURE;
     } else {
       mRealTime = true;

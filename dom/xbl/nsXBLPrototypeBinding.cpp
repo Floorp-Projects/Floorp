@@ -1160,7 +1160,7 @@ nsXBLPrototypeBinding::Write(nsIObjectOutputStream* aStream)
     nsAutoString attrValue;
     for (uint32_t i = 0; i < attributes; ++i) {
       const nsAttrName* attr = mBinding->GetAttrNameAt(i);
-      nsDependentAtomString attrName = attr->LocalName();
+      nsDependentAtomString attrName(attr->LocalName());
       mBinding->GetAttr(attr->NamespaceID(), attr->LocalName(), attrValue);
       rv = aStream->Write8(XBLBinding_Serialize_Attribute);
       NS_ENSURE_SUCCESS(rv, rv);
