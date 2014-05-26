@@ -294,7 +294,7 @@ RootActor.prototype = {
      * Request packets are frozen. Copy aRequest, so that
      * DebuggerServerConnection.onPacket can attach a 'from' property.
      */
-    return JSON.parse(JSON.stringify(aRequest));
+    return Cu.cloneInto(aRequest, {});
   },
 
   onProtocolDescription: dumpProtocolSpec,
