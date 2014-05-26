@@ -11,6 +11,7 @@ const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {})
 const events = require("sdk/event/core");
 const protocol = require("devtools/server/protocol");
 const { CallWatcherActor, CallWatcherFront } = require("devtools/server/actors/call-watcher");
+const { ThreadActor } = require("devtools/server/actors/script");
 
 const { on, once, off, emit } = events;
 const { method, Arg, Option, RetVal } = protocol;
@@ -98,7 +99,7 @@ const NODE_PROPERTIES = {
     "fftSize": {},
     "minDecibels": {},
     "maxDecibels": {},
-    "smoothingTimeConstraint": {},
+    "smoothingTimeConstant": {},
     "frequencyBinCount": { "readonly": true },
   },
   "AudioDestinationNode": {},
@@ -128,7 +129,7 @@ let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
     protocol.Actor.prototype.initialize.call(this, conn);
     this.node = unwrap(node);
     try {
-      this.type = this.node.toString().match(/\[object (.*)\]$/)[1];
+      this.type = getConstructorName(this.node);
     } catch (e) {
       this.type = "";
     }
@@ -188,11 +189,23 @@ let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
    *        Name of the AudioParam to fetch.
    */
   getParam: method(function (param) {
-    // If property does not exist, just return "undefined"
-    if (!this.node[param])
-      return undefined;
+    // Check to see if it's an AudioParam -- if so,
+    // return the `value` property of the parameter.
     let value = isAudioParam(this.node, param) ? this.node[param].value : this.node[param];
-    return value;
+
+    // Return the grip form of the value; at this time,
+    // there shouldn't be any non-primitives at the moment, other than
+    // AudioBuffer or Float32Array references and the like,
+    // so this just formats the value to be displayed in the VariablesView,
+    // without using real grips and managing via actor pools.
+    let grip;
+    try {
+      grip = ThreadActor.prototype.createValueGrip(value);
+    }
+    catch (e) {
+      grip = createObjectGrip(value);
+    }
+    return grip;
   }, {
     request: {
       param: Arg(0, "string")
@@ -499,7 +512,7 @@ WebAudioFront.NODE_ROUTING_METHODS = new Set(NODE_ROUTING_METHODS);
  * @return Boolean
  */
 function isAudioParam (node, prop) {
-  return /AudioParam/.test(node[prop].toString());
+  return !!(node[prop] && /AudioParam/.test(node[prop].toString()));
 }
 
 /**
@@ -516,6 +529,31 @@ function constructError (err) {
   };
 }
 
+/**
+ * Takes an object and converts it's `toString()` form, like
+ * "[object OscillatorNode]" or "[object Float32Array]"
+ * to a string of just the constructor name, like "OscillatorNode",
+ * or "Float32Array".
+ */
+function getConstructorName (obj) {
+  return obj.toString().match(/\[object (.*)\]$/)[1];
+}
+
+/**
+ * Create a grip-like object to pass in renderable information
+ * to the front-end for things like Float32Arrays, AudioBuffers,
+ * without tracking them in an actor pool.
+ */
+function createObjectGrip (value) {
+  return {
+    type: "object",
+    preview: {
+      kind: "ObjectWithText",
+      text: ""
+    },
+    class: getConstructorName(value)
+  };
+}
 function unwrap (obj) {
   return XPCNativeWrapper.unwrap(obj);
 }
