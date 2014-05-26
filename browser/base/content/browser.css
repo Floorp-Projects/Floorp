@@ -1133,3 +1133,9 @@ toolbarpaletteitem[place="palette"][hidden] {
   animation-name: uitour-color;
   animation-duration: 2s;
 }
+
+/* Combined context-menu items */
+#context-navigation > .menuitem-iconic > .menu-iconic-text,
+#context-navigation > .menuitem-iconic > .menu-accel-container {
+  display: none;
+}

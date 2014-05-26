@@ -96,9 +96,22 @@ function getVisibleMenuItems(aMenu, aData) {
             }
             items.push(item.id);
             items.push(!item.disabled);
-            // Add a dummy item to that the indexes in checkMenu are the same
+            // Add a dummy item so that the indexes in checkMenu are the same
             // for expectedItems and actualItems.
             items.push([]);
+            items.push(null);
+        } else if (item.nodeName == "menugroup") {
+            ok(item.id, "child menugroup #" + i + " has an ID");
+            items.push(item.id);
+            items.push(!item.disabled);
+            var menugroupChildren = [];
+            for (var child of item.children) {
+                if (child.hidden)
+                    continue;
+
+                menugroupChildren.push([child.id, !child.disabled]);
+            }
+            items.push(menugroupChildren);
             items.push(null);
         } else {
             ok(false, "child #" + i + " of menu ID " + aMenu.id +
@@ -112,6 +125,43 @@ function checkContextMenu(expectedItems) {
     is(contextMenu.state, "open", "checking if popup is open");
     var data = { generatedSubmenuId: 1 };
     checkMenu(contextMenu, expectedItems, data);
+}
+
+function checkMenuItem(actualItem, actualEnabled, expectedItem, expectedEnabled, index) {
+    is(actualItem, expectedItem,
+       "checking item #" + index/2 + " (" + expectedItem + ") name");
+
+    if (typeof expectedEnabled == "object" && expectedEnabled != null ||
+        typeof actualEnabled == "object" && actualEnabled != null) {
+
+        ok(!(actualEnabled == null), "actualEnabled is not null");
+        ok(!(expectedEnabled == null), "expectedEnabled is not null");
+        is(typeof actualEnabled, typeof expectedEnabled, "checking types");
+
+        if (typeof actualEnabled != typeof expectedEnabled ||
+            actualEnabled == null || expectedEnabled == null)
+          return;
+
+        is(actualEnabled.type, expectedEnabled.type,
+           "checking item #" + index/2 + " (" + expectedItem + ") type attr value");
+        var icon = actualEnabled.icon;
+        if (icon) {
+          var tmp = "";
+          var j = icon.length - 1;
+          while (j && icon[j] != "/") {
+            tmp = icon[j--] + tmp;
+          }
+          icon = tmp;
+        }
+        is(icon, expectedEnabled.icon,
+           "checking item #" + index/2 + " (" + expectedItem + ") icon attr value");
+        is(actualEnabled.checked, expectedEnabled.checked,
+           "checking item #" + index/2 + " (" + expectedItem + ") has checked attr");
+        is(actualEnabled.disabled, expectedEnabled.disabled,
+           "checking item #" + index/2 + " (" + expectedItem + ") has disabled attr");
+    } else if (expectedEnabled != null)
+        is(actualEnabled, expectedEnabled,
+           "checking item #" + index/2 + " (" + expectedItem + ") enabled state");
 }
 
 /*
@@ -136,50 +186,26 @@ function checkMenu(menu, expectedItems, data) {
         var expectedItem = expectedItems[i];
         var expectedEnabled = expectedItems[i + 1];
         if (expectedItem instanceof Array) {
-            ok(true, "Checking submenu...");
-            var menuID = expectedItems[i - 2]; // The last item was the menu ID.
-            var submenu = menu.getElementsByAttribute("id", menuID)[0];
-            ok(submenu, "got a submenu element of id='" + menuID + "'");
-            if (submenu) {
-              is(submenu.nodeName, "menu", "submenu element of id='" + menuID +
+            ok(true, "Checking submenu/menugroup...");
+            var previousId = expectedItems[i - 2]; // The last item was the menu ID.
+            var previousItem = menu.getElementsByAttribute("id", previousId)[0];
+            ok(previousItem, (previousItem ? previousItem.nodeName : "item") + " with previous id (" + previousId + ") found");
+            if (previousItem && previousItem.nodeName == "menu") {
+              ok(previousItem, "got a submenu element of id='" + previousId + "'");
+              is(previousItem.nodeName, "menu", "submenu element of id='" + previousId +
                                            "' has expected nodeName");
-              checkMenu(submenu.menupopup, expectedItem, data);
+              checkMenu(previousItem.menupopup, expectedItem, data, i);
+            } else if (previousItem && previousItem.nodeName == "menugroup") {
+              ok(expectedItem.length, "menugroup must not be empty");
+              for (var j = 0; j < expectedItem.length / 2; j++) {
+                checkMenuItem(actualItems[i][j][0], actualItems[i][j][1], expectedItem[j*2], expectedItem[j*2+1], i+j*2);
+              }
+              i += j;
+            } else {
+              ok(false, "previous item is not a menu or menugroup");
             }
         } else {
-            is(actualItem, expectedItem,
-               "checking item #" + i/2 + " (" + expectedItem + ") name");
-
-            if (typeof expectedEnabled == "object" && expectedEnabled != null ||
-                typeof actualEnabled == "object" && actualEnabled != null) {
-
-                ok(!(actualEnabled == null), "actualEnabled is not null");
-                ok(!(expectedEnabled == null), "expectedEnabled is not null");
-                is(typeof actualEnabled, typeof expectedEnabled, "checking types");
-
-                if (typeof actualEnabled != typeof expectedEnabled ||
-                    actualEnabled == null || expectedEnabled == null)
-                  continue;
-
-                is(actualEnabled.type, expectedEnabled.type,
-                   "checking item #" + i/2 + " (" + expectedItem + ") type attr value");
-                var icon = actualEnabled.icon;
-                if (icon) {
-                  var tmp = "";
-                  var j = icon.length - 1;
-                  while (j && icon[j] != "/") {
-                    tmp = icon[j--] + tmp;
-                  }
-                  icon = tmp;
-                }
-                is(icon, expectedEnabled.icon,
-                   "checking item #" + i/2 + " (" + expectedItem + ") icon attr value");
-                is(actualEnabled.checked, expectedEnabled.checked,
-                   "checking item #" + i/2 + " (" + expectedItem + ") has checked attr");
-                is(actualEnabled.disabled, expectedEnabled.disabled,
-                   "checking item #" + i/2 + " (" + expectedItem + ") has disabled attr");
-            } else if (expectedEnabled != null)
-                is(actualEnabled, expectedEnabled,
-                   "checking item #" + i/2 + " (" + expectedItem + ") enabled state");
+            checkMenuItem(actualItem, actualEnabled, expectedItem, expectedEnabled, i);
         }
     }
     // Could find unexpected extra items at the end...
