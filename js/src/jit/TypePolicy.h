@@ -327,6 +327,12 @@ class ClampPolicy : public BoxInputsPolicy
     bool adjustInputs(TempAllocator &alloc, MInstruction *ins);
 };
 
+class FilterTypeSetPolicy : public BoxInputsPolicy
+{
+  public:
+    bool adjustInputs(TempAllocator &alloc, MInstruction *ins);
+};
+
 static inline bool
 CoercesToDouble(MIRType type)
 {

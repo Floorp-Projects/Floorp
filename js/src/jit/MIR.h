@@ -8862,7 +8862,8 @@ class MGuardThreadExclusive
 };
 
 class MFilterTypeSet
-  : public MUnaryInstruction
+  : public MUnaryInstruction,
+    public FilterTypeSetPolicy
 {
     MFilterTypeSet(MDefinition *def, types::TemporaryTypeSet *types)
       : MUnaryInstruction(def)
@@ -8881,6 +8882,9 @@ class MFilterTypeSet
         return new(alloc) MFilterTypeSet(def, types);
     }
 
+    TypePolicy *typePolicy() {
+        return this;
+    }
     bool congruentTo(MDefinition *def) const {
         return false;
     }
