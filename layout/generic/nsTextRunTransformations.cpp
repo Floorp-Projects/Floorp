@@ -10,6 +10,7 @@
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsStyleContext.h"
+#include "nsUnicharUtils.h"
 #include "nsUnicodeProperties.h"
 #include "nsSpecialCasingData.h"
 #include "mozilla/gfx/2D.h"
@@ -27,288 +28,6 @@
 #define GREEK_CAPITAL_LETTER_SIGMA             0x03A3
 #define GREEK_SMALL_LETTER_FINAL_SIGMA         0x03C2
 #define GREEK_SMALL_LETTER_SIGMA               0x03C3
-
-// Custom uppercase mapping for Greek; see bug 307039 for details
-#define GREEK_LOWER_ALPHA                      0x03B1
-#define GREEK_LOWER_ALPHA_TONOS                0x03AC
-#define GREEK_LOWER_ALPHA_OXIA                 0x1F71
-#define GREEK_LOWER_EPSILON                    0x03B5
-#define GREEK_LOWER_EPSILON_TONOS              0x03AD
-#define GREEK_LOWER_EPSILON_OXIA               0x1F73
-#define GREEK_LOWER_ETA                        0x03B7
-#define GREEK_LOWER_ETA_TONOS                  0x03AE
-#define GREEK_LOWER_ETA_OXIA                   0x1F75
-#define GREEK_LOWER_IOTA                       0x03B9
-#define GREEK_LOWER_IOTA_TONOS                 0x03AF
-#define GREEK_LOWER_IOTA_OXIA                  0x1F77
-#define GREEK_LOWER_IOTA_DIALYTIKA             0x03CA
-#define GREEK_LOWER_IOTA_DIALYTIKA_TONOS       0x0390
-#define GREEK_LOWER_IOTA_DIALYTIKA_OXIA        0x1FD3
-#define GREEK_LOWER_OMICRON                    0x03BF
-#define GREEK_LOWER_OMICRON_TONOS              0x03CC
-#define GREEK_LOWER_OMICRON_OXIA               0x1F79
-#define GREEK_LOWER_UPSILON                    0x03C5
-#define GREEK_LOWER_UPSILON_TONOS              0x03CD
-#define GREEK_LOWER_UPSILON_OXIA               0x1F7B
-#define GREEK_LOWER_UPSILON_DIALYTIKA          0x03CB
-#define GREEK_LOWER_UPSILON_DIALYTIKA_TONOS    0x03B0
-#define GREEK_LOWER_UPSILON_DIALYTIKA_OXIA     0x1FE3
-#define GREEK_LOWER_OMEGA                      0x03C9
-#define GREEK_LOWER_OMEGA_TONOS                0x03CE
-#define GREEK_LOWER_OMEGA_OXIA                 0x1F7D
-#define GREEK_UPPER_ALPHA                      0x0391
-#define GREEK_UPPER_EPSILON                    0x0395
-#define GREEK_UPPER_ETA                        0x0397
-#define GREEK_UPPER_IOTA                       0x0399
-#define GREEK_UPPER_IOTA_DIALYTIKA             0x03AA
-#define GREEK_UPPER_OMICRON                    0x039F
-#define GREEK_UPPER_UPSILON                    0x03A5
-#define GREEK_UPPER_UPSILON_DIALYTIKA          0x03AB
-#define GREEK_UPPER_OMEGA                      0x03A9
-#define GREEK_UPPER_ALPHA_TONOS                0x0386
-#define GREEK_UPPER_ALPHA_OXIA                 0x1FBB
-#define GREEK_UPPER_EPSILON_TONOS              0x0388
-#define GREEK_UPPER_EPSILON_OXIA               0x1FC9
-#define GREEK_UPPER_ETA_TONOS                  0x0389
-#define GREEK_UPPER_ETA_OXIA                   0x1FCB
-#define GREEK_UPPER_IOTA_TONOS                 0x038A
-#define GREEK_UPPER_IOTA_OXIA                  0x1FDB
-#define GREEK_UPPER_OMICRON_TONOS              0x038C
-#define GREEK_UPPER_OMICRON_OXIA               0x1FF9
-#define GREEK_UPPER_UPSILON_TONOS              0x038E
-#define GREEK_UPPER_UPSILON_OXIA               0x1FEB
-#define GREEK_UPPER_OMEGA_TONOS                0x038F
-#define GREEK_UPPER_OMEGA_OXIA                 0x1FFB
-#define COMBINING_ACUTE_ACCENT                 0x0301
-#define COMBINING_DIAERESIS                    0x0308
-#define COMBINING_ACUTE_TONE_MARK              0x0341
-#define COMBINING_GREEK_DIALYTIKA_TONOS        0x0344
-
-// When doing an Uppercase transform in Greek, we need to keep track of the
-// current state while iterating through the string, to recognize and process
-// diphthongs correctly. For clarity, we define a state for each vowel and
-// each vowel with accent, although a few of these do not actually need any
-// special treatment and could be folded into kStart.
-enum GreekCasingState {
-  kStart,
-  kAlpha,
-  kEpsilon,
-  kEta,
-  kIota,
-  kOmicron,
-  kUpsilon,
-  kOmega,
-  kAlphaAcc,
-  kEpsilonAcc,
-  kEtaAcc,
-  kIotaAcc,
-  kOmicronAcc,
-  kUpsilonAcc,
-  kOmegaAcc,
-  kOmicronUpsilon,
-  kDiaeresis
-};
-
-static uint32_t
-GreekUpperCase(uint32_t aCh, GreekCasingState* aState)
-{
-  switch (aCh) {
-  case GREEK_UPPER_ALPHA:
-  case GREEK_LOWER_ALPHA:
-    *aState = kAlpha;
-    return GREEK_UPPER_ALPHA;
-
-  case GREEK_UPPER_EPSILON:
-  case GREEK_LOWER_EPSILON:
-    *aState = kEpsilon;
-    return GREEK_UPPER_EPSILON;
-
-  case GREEK_UPPER_ETA:
-  case GREEK_LOWER_ETA:
-    *aState = kEta;
-    return GREEK_UPPER_ETA;
-
-  case GREEK_UPPER_IOTA:
-    *aState = kIota;
-    return GREEK_UPPER_IOTA;
-
-  case GREEK_UPPER_OMICRON:
-  case GREEK_LOWER_OMICRON:
-    *aState = kOmicron;
-    return GREEK_UPPER_OMICRON;
-
-  case GREEK_UPPER_UPSILON:
-    switch (*aState) {
-    case kOmicron:
-      *aState = kOmicronUpsilon;
-      break;
-    default:
-      *aState = kUpsilon;
-      break;
-    }
-    return GREEK_UPPER_UPSILON;
-
-  case GREEK_UPPER_OMEGA:
-  case GREEK_LOWER_OMEGA:
-    *aState = kOmega;
-    return GREEK_UPPER_OMEGA;
-
-  // iota and upsilon may be the second vowel of a diphthong
-  case GREEK_LOWER_IOTA:
-    switch (*aState) {
-    case kAlphaAcc:
-    case kEpsilonAcc:
-    case kOmicronAcc:
-    case kUpsilonAcc:
-      *aState = kStart;
-      return GREEK_UPPER_IOTA_DIALYTIKA;
-    default:
-      break;
-    }
-    *aState = kIota;
-    return GREEK_UPPER_IOTA;
-
-  case GREEK_LOWER_UPSILON:
-    switch (*aState) {
-    case kAlphaAcc:
-    case kEpsilonAcc:
-    case kEtaAcc:
-    case kOmicronAcc:
-      *aState = kStart;
-      return GREEK_UPPER_UPSILON_DIALYTIKA;
-    case kOmicron:
-      *aState = kOmicronUpsilon;
-      break;
-    default:
-      *aState = kUpsilon;
-      break;
-    }
-    return GREEK_UPPER_UPSILON;
-
-  case GREEK_UPPER_IOTA_DIALYTIKA:
-  case GREEK_LOWER_IOTA_DIALYTIKA:
-  case GREEK_UPPER_UPSILON_DIALYTIKA:
-  case GREEK_LOWER_UPSILON_DIALYTIKA:
-  case COMBINING_DIAERESIS:
-    *aState = kDiaeresis;
-    return ToUpperCase(aCh);
-
-  // remove accent if it follows a vowel or diaeresis,
-  // and set appropriate state for diphthong detection
-  case COMBINING_ACUTE_ACCENT:
-  case COMBINING_ACUTE_TONE_MARK:
-    switch (*aState) {
-    case kAlpha:
-      *aState = kAlphaAcc;
-      return uint32_t(-1); // omit this char from result string
-    case kEpsilon:
-      *aState = kEpsilonAcc;
-      return uint32_t(-1);
-    case kEta:
-      *aState = kEtaAcc;
-      return uint32_t(-1);
-    case kIota:
-      *aState = kIotaAcc;
-      return uint32_t(-1);
-    case kOmicron:
-      *aState = kOmicronAcc;
-      return uint32_t(-1);
-    case kUpsilon:
-      *aState = kUpsilonAcc;
-      return uint32_t(-1);
-    case kOmicronUpsilon:
-      *aState = kStart; // this completed a diphthong
-      return uint32_t(-1);
-    case kOmega:
-      *aState = kOmegaAcc;
-      return uint32_t(-1);
-    case kDiaeresis:
-      *aState = kStart;
-      return uint32_t(-1);
-    default:
-      break;
-    }
-    break;
-
-  // combinations with dieresis+accent just strip the accent,
-  // and reset to start state (don't form diphthong with following vowel)
-  case GREEK_LOWER_IOTA_DIALYTIKA_TONOS:
-  case GREEK_LOWER_IOTA_DIALYTIKA_OXIA:
-    *aState = kStart;
-    return GREEK_UPPER_IOTA_DIALYTIKA;
-
-  case GREEK_LOWER_UPSILON_DIALYTIKA_TONOS:
-  case GREEK_LOWER_UPSILON_DIALYTIKA_OXIA:
-    *aState = kStart;
-    return GREEK_UPPER_UPSILON_DIALYTIKA;
-
-  case COMBINING_GREEK_DIALYTIKA_TONOS:
-    *aState = kStart;
-    return COMBINING_DIAERESIS;
-
-  // strip accents from vowels, and note the vowel seen so that we can detect
-  // diphthongs where diaeresis needs to be added
-  case GREEK_LOWER_ALPHA_TONOS:
-  case GREEK_LOWER_ALPHA_OXIA:
-  case GREEK_UPPER_ALPHA_TONOS:
-  case GREEK_UPPER_ALPHA_OXIA:
-    *aState = kAlphaAcc;
-    return GREEK_UPPER_ALPHA;
-
-  case GREEK_LOWER_EPSILON_TONOS:
-  case GREEK_LOWER_EPSILON_OXIA:
-  case GREEK_UPPER_EPSILON_TONOS:
-  case GREEK_UPPER_EPSILON_OXIA:
-    *aState = kEpsilonAcc;
-    return GREEK_UPPER_EPSILON;
-
-  case GREEK_LOWER_ETA_TONOS:
-  case GREEK_LOWER_ETA_OXIA:
-  case GREEK_UPPER_ETA_TONOS:
-  case GREEK_UPPER_ETA_OXIA:
-    *aState = kEtaAcc;
-    return GREEK_UPPER_ETA;
-
-  case GREEK_LOWER_IOTA_TONOS:
-  case GREEK_LOWER_IOTA_OXIA:
-  case GREEK_UPPER_IOTA_TONOS:
-  case GREEK_UPPER_IOTA_OXIA:
-    *aState = kIotaAcc;
-    return GREEK_UPPER_IOTA;
-
-  case GREEK_LOWER_OMICRON_TONOS:
-  case GREEK_LOWER_OMICRON_OXIA:
-  case GREEK_UPPER_OMICRON_TONOS:
-  case GREEK_UPPER_OMICRON_OXIA:
-    *aState = kOmicronAcc;
-    return GREEK_UPPER_OMICRON;
-
-  case GREEK_LOWER_UPSILON_TONOS:
-  case GREEK_LOWER_UPSILON_OXIA:
-  case GREEK_UPPER_UPSILON_TONOS:
-  case GREEK_UPPER_UPSILON_OXIA:
-    switch (*aState) {
-    case kOmicron:
-      *aState = kStart; // this completed a diphthong
-      break;
-    default:
-      *aState = kUpsilonAcc;
-      break;
-    }
-    return GREEK_UPPER_UPSILON;
-
-  case GREEK_LOWER_OMEGA_TONOS:
-  case GREEK_LOWER_OMEGA_OXIA:
-  case GREEK_UPPER_OMEGA_TONOS:
-  case GREEK_UPPER_OMEGA_OXIA:
-    *aState = kOmegaAcc;
-    return GREEK_UPPER_OMEGA;
-  }
-
-  // all other characters just reset the state, and use standard mappings
-  *aState = kStart;
-  return ToUpperCase(aCh);
-}
 
 nsTransformedTextRun *
 nsTransformedTextRun::Create(const gfxTextRunFactory::Parameters* aParams,
@@ -566,8 +285,8 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
             // GreekUpperCase mapping - this catches accented capitals where
             // the accent is to be removed (bug 307039). These are handled by
             // a transformed child run using the full-size font.
-            GreekCasingState state = kStart; // don't need exact context here
-            ch2 = GreekUpperCase(ch, &state);
+            GreekCasing::State state; // don't need real context here
+            ch2 = GreekCasing::UpperCase(ch, state);
             if (ch != ch2) {
               chCase = kSpecialUpper;
             }
@@ -696,7 +415,7 @@ nsCaseTransformTextRunFactory::TransformString(
   const nsIAtom* lang = aLanguage;
 
   LanguageSpecificCasingBehavior languageSpecificCasing = GetCasingFor(lang);
-  GreekCasingState greekState = kStart;
+  GreekCasing::State greekState;
 
   for (uint32_t i = 0; i < length; ++i) {
     uint32_t ch = str[i];
@@ -710,7 +429,7 @@ nsCaseTransformTextRunFactory::TransformString(
       if (lang != styleContext->StyleFont()->mLanguage) {
         lang = styleContext->StyleFont()->mLanguage;
         languageSpecificCasing = GetCasingFor(lang);
-        greekState = kStart;
+        greekState.Reset();
       }
     }
 
@@ -815,7 +534,7 @@ nsCaseTransformTextRunFactory::TransformString(
       }
 
       if (languageSpecificCasing == eLSCB_Greek) {
-        ch = GreekUpperCase(ch, &greekState);
+        ch = GreekCasing::UpperCase(ch, greekState);
         break;
       }
 
