@@ -1438,13 +1438,9 @@ MediaManager::GetUserMedia(JSContext* aCx, bool aPrivileged,
       rv = permManager->TestExactPermissionFromPrincipal(
         aWindow->GetExtantDoc()->NodePrincipal(), "microphone", &audioPerm);
       NS_ENSURE_SUCCESS(rv, rv);
-      if (audioPerm == nsIPermissionManager::PROMPT_ACTION) {
+      if (audioPerm == nsIPermissionManager::PROMPT_ACTION ||
+          audioPerm == nsIPermissionManager::ALLOW_ACTION) {
         audioPerm = nsIPermissionManager::UNKNOWN_ACTION;
-      }
-      if (audioPerm == nsIPermissionManager::ALLOW_ACTION) {
-        if (!isHTTPS) {
-          audioPerm = nsIPermissionManager::UNKNOWN_ACTION;
-        }
       }
     }
 
@@ -1453,13 +1449,9 @@ MediaManager::GetUserMedia(JSContext* aCx, bool aPrivileged,
       rv = permManager->TestExactPermissionFromPrincipal(
         aWindow->GetExtantDoc()->NodePrincipal(), "camera", &videoPerm);
       NS_ENSURE_SUCCESS(rv, rv);
-      if (videoPerm == nsIPermissionManager::PROMPT_ACTION) {
+      if (videoPerm == nsIPermissionManager::PROMPT_ACTION ||
+          videoPerm == nsIPermissionManager::ALLOW_ACTION) {
         videoPerm = nsIPermissionManager::UNKNOWN_ACTION;
-      }
-      if (videoPerm == nsIPermissionManager::ALLOW_ACTION) {
-        if (!isHTTPS) {
-          videoPerm = nsIPermissionManager::UNKNOWN_ACTION;
-        }
       }
     }
 
