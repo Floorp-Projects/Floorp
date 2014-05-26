@@ -34,6 +34,25 @@ li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
   display: -moz-box;
 }
 
+.stylesheet-details-container {
+  -moz-box-flex: 1;
+}
+
+.stylesheet-media-list {
+  overflow-x: hidden;
+  overflow-y: auto;
+  -moz-box-flex: 1;
+}
+
+.media-rule-label {
+  display: flex;
+}
+
+.media-rule-condition {
+  flex: 1;
+  overflow: hidden;
+}
+
 .splitview-nav > li {
   -moz-box-orient: horizontal;
 }
