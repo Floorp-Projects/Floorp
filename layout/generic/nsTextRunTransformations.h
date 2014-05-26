@@ -59,6 +59,26 @@ public:
 
   virtual void RebuildTextRun(nsTransformedTextRun* aTextRun, gfxContext* aRefContext) MOZ_OVERRIDE;
 
+  // Perform a transformation on the given string, writing the result into
+  // aConvertedString. If aAllUppercase is true, the transform is (global)
+  // upper-casing, and aLanguage is used to determine any language-specific
+  // behavior; otherwise, an nsTransformedTextRun should be passed in
+  // as aTextRun and its styles will be used to determine the transform(s)
+  // to be applied.
+  // If such an input textrun is provided, then its line-breaks and styles
+  // will be copied to the output arrays, which must also be provided by
+  // the caller. For the global upper-casing usage (no input textrun),
+  // these are ignored.
+  static bool TransformString(const nsAString& aString,
+                              nsString& aConvertedString,
+                              bool aAllUppercase,
+                              const nsIAtom* aLanguage,
+                              nsTArray<bool>& aCharsToMergeArray,
+                              nsTArray<bool>& aDeletedCharsArray,
+                              nsTransformedTextRun* aTextRun = nullptr,
+                              nsTArray<uint8_t>* aCanBreakBeforeArray = nullptr,
+                              nsTArray<nsStyleContext*>* aStyleArray = nullptr);
+
 protected:
   nsAutoPtr<nsTransformingTextRunFactory> mInnerTransformingTextRunFactory;
   bool                                    mAllUppercase;
