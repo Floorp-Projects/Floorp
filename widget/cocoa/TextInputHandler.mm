@@ -2693,7 +2693,7 @@ IMEInputHandler::CreateTextRangeArray(NSAttributedString *aAttrString,
 
   return textRangeArray.forget();
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL;
 }
 
 bool
