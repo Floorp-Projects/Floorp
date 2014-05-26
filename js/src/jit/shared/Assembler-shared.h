@@ -363,7 +363,7 @@ class CodeLabel
   public:
     CodeLabel()
     { }
-    CodeLabel(const AbsoluteLabel &dest)
+    explicit CodeLabel(const AbsoluteLabel &dest)
        : dest_(dest)
     { }
     AbsoluteLabel *dest() {
@@ -413,7 +413,7 @@ class CodeOffsetLabel
     size_t offset_;
 
   public:
-    CodeOffsetLabel(size_t offset) : offset_(offset) {}
+    explicit CodeOffsetLabel(size_t offset) : offset_(offset) {}
     CodeOffsetLabel() : offset_(0) {}
 
     size_t offset() const {
@@ -529,11 +529,11 @@ class CodeLocationLabel
         *this = base;
         repoint(code);
     }
-    CodeLocationLabel(JitCode *code) {
+    explicit CodeLocationLabel(JitCode *code) {
         raw_ = code->raw();
         setAbsolute();
     }
-    CodeLocationLabel(uint8_t *raw) {
+    explicit CodeLocationLabel(uint8_t *raw) {
         raw_ = raw;
         setAbsolute();
     }
@@ -757,7 +757,8 @@ class AsmJSImmPtr
     AsmJSImmKind kind_;
   public:
     AsmJSImmKind kind() const { return kind_; }
-    AsmJSImmPtr(AsmJSImmKind kind) : kind_(kind) { JS_ASSERT(IsCompilingAsmJS()); }
+    // This needs to be MOZ_IMPLICIT in order to make MacroAssember::CallWithABINoProfiling compile.
+    MOZ_IMPLICIT AsmJSImmPtr(AsmJSImmKind kind) : kind_(kind) { JS_ASSERT(IsCompilingAsmJS()); }
     AsmJSImmPtr() {}
 };
 
@@ -768,7 +769,7 @@ class AsmJSAbsoluteAddress
     AsmJSImmKind kind_;
   public:
     AsmJSImmKind kind() const { return kind_; }
-    AsmJSAbsoluteAddress(AsmJSImmKind kind) : kind_(kind) { JS_ASSERT(IsCompilingAsmJS()); }
+    explicit AsmJSAbsoluteAddress(AsmJSImmKind kind) : kind_(kind) { JS_ASSERT(IsCompilingAsmJS()); }
     AsmJSAbsoluteAddress() {}
 };
 

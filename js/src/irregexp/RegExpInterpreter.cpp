@@ -43,7 +43,7 @@ static const size_t kBitsPerByteLog2 = 3;
 class MOZ_STACK_CLASS RegExpStackCursor
 {
   public:
-    RegExpStackCursor(JSContext *cx)
+    explicit RegExpStackCursor(JSContext *cx)
       : cx(cx), cursor(base())
     {}
 

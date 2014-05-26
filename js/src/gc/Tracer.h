@@ -54,7 +54,7 @@ class MarkStack
     size_t maxCapacity_;
 
   public:
-    MarkStack(size_t maxCapacity)
+    explicit MarkStack(size_t maxCapacity)
       : stack_(nullptr),
         tos_(nullptr),
         end_(nullptr),

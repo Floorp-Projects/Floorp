@@ -16,18 +16,18 @@ namespace jit {
 
 struct ImmShiftedTag : public ImmWord
 {
-    ImmShiftedTag(JSValueShiftedTag shtag)
+    explicit ImmShiftedTag(JSValueShiftedTag shtag)
       : ImmWord((uintptr_t)shtag)
     { }
 
-    ImmShiftedTag(JSValueType type)
+    explicit ImmShiftedTag(JSValueType type)
       : ImmWord(uintptr_t(JSValueShiftedTag(JSVAL_TYPE_TO_SHIFTED_TAG(type))))
     { }
 };
 
 struct ImmTag : public Imm32
 {
-    ImmTag(JSValueTag tag)
+    explicit ImmTag(JSValueTag tag)
       : Imm32(tag)
     { }
 };
@@ -50,7 +50,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     struct Double {
         double value;
         NonAssertingLabel uses;
-        Double(double value) : value(value) {}
+        explicit Double(double value) : value(value) {}
     };
     Vector<Double, 0, SystemAllocPolicy> doubles_;
 
@@ -60,7 +60,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     struct Float {
         float value;
         NonAssertingLabel uses;
-        Float(float value) : value(value) {}
+        explicit Float(float value) : value(value) {}
     };
     Vector<Float, 0, SystemAllocPolicy> floats_;
 

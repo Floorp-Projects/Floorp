@@ -27,7 +27,7 @@ class SplayTree
         T item;
         Node *left, *right, *parent;
 
-        Node(const T &item)
+        explicit Node(const T &item)
           : item(item), left(nullptr), right(nullptr), parent(nullptr)
         {}
     };
@@ -40,7 +40,7 @@ class SplayTree
 
   public:
 
-    SplayTree(LifoAlloc *alloc = nullptr)
+    explicit SplayTree(LifoAlloc *alloc = nullptr)
       : alloc(alloc), root(nullptr), freeList(nullptr)
     {}
 
