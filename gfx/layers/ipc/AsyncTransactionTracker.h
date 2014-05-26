@@ -11,6 +11,7 @@
 #include <map>
 
 #include "mozilla/Atomics.h"
+#include "mozilla/layers/FenceUtils.h"  // for FenceHandle
 #include "mozilla/Monitor.h"      // for Monitor
 #include "mozilla/RefPtr.h"       // for AtomicRefCounted
 
@@ -18,6 +19,7 @@ namespace mozilla {
 namespace layers {
 
 class TextureClient;
+class AsyncTransactionTrackersHolder;
 
 /**
  * AsyncTransactionTracker tracks asynchronous transaction.
@@ -25,25 +27,11 @@ class TextureClient;
  */
 class AsyncTransactionTracker
 {
+  friend class AsyncTransactionTrackersHolder;
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AsyncTransactionTracker)
 
   AsyncTransactionTracker();
-
-  static void Initialize()
-  {
-    if (!sLock) {
-      sLock = new Mutex("AsyncTransactionTracker::sLock");
-    }
-  }
-
-  static void Finalize()
-  {
-    if (sLock) {
-      delete sLock;
-      sLock = nullptr;
-    }
-  }
 
   Monitor& GetReentrantMonitor()
   {
@@ -83,19 +71,31 @@ public:
 
   virtual void SetTextureClient(TextureClient* aTextureClient) {}
 
+  virtual void SetReleaseFenceHandle(FenceHandle& aReleaseFenceHandle) {}
+
 protected:
   virtual ~AsyncTransactionTracker();
+
+  static void Initialize()
+  {
+    if (!sLock) {
+      sLock = new Mutex("AsyncTransactionTracker::sLock");
+    }
+  }
+
+  static void Finalize()
+  {
+    if (sLock) {
+      delete sLock;
+      sLock = nullptr;
+    }
+  }
 
   static uint64_t GetNextSerial()
   {
     MOZ_ASSERT(sLock);
-    if(sLock) {
-      sLock->Lock();
-    }
+    MutexAutoLock lock(*sLock);
     ++sSerialCounter;
-    if(sLock) {
-      sLock->Unlock();
-    }
     return sSerialCounter;
   }
 
@@ -117,18 +117,102 @@ public:
   AsyncTransactionTrackersHolder();
   virtual ~AsyncTransactionTrackersHolder();
 
+  static void Initialize()
+  {
+    if (!sHolderLock) {
+      sHolderLock = new Mutex("AsyncTransactionTrackersHolder::sHolderLock");
+    }
+    AsyncTransactionTracker::Initialize();
+  }
+
+  static void Finalize()
+  {
+    if (sHolderLock) {
+      delete sHolderLock;
+      sHolderLock = nullptr;
+    }
+    AsyncTransactionTracker::Finalize();
+  }
+
   void HoldUntilComplete(AsyncTransactionTracker* aTransactionTracker);
 
   void TransactionCompleteted(uint64_t aTransactionId);
 
+  static void TransactionCompleteted(uint64_t aHolderId, uint64_t aTransactionId);
+
+  static void SetReleaseFenceHandle(FenceHandle& aReleaseFenceHandle,
+                                    uint64_t aHolderId,
+                                    uint64_t aTransactionId);
+
+  uint64_t GetId()
+  {
+    return mSerial;
+  }
+
 protected:
+
+  static uint64_t GetNextSerial()
+  {
+    MOZ_ASSERT(sHolderLock);
+    MutexAutoLock lock(*sHolderLock);
+    ++sSerialCounter;
+    return sSerialCounter;
+  }
+
+  void TransactionCompletetedInternal(uint64_t aTransactionId);
+
+  void SetReleaseFenceHandle(FenceHandle& aReleaseFenceHandle, uint64_t aTransactionId);
+
   void ClearAllAsyncTransactionTrackers();
 
   void DestroyAsyncTransactionTrackersHolder();
 
+  uint64_t mSerial;
+
   bool mIsTrackersHolderDestroyed;
   std::map<uint64_t, RefPtr<AsyncTransactionTracker> > mAsyncTransactionTrackeres;
 
+  /**
+   * gecko does not provide atomic operation for uint64_t.
+   * Ensure atomicity by using Mutex.
+   */
+  static uint64_t sSerialCounter;
+  static Mutex* sHolderLock;
+
+  /**
+   * Map of all living AsyncTransactionTrackersHolder instances
+   */
+  static std::map<uint64_t, AsyncTransactionTrackersHolder*> sTrackersHolders;
+};
+
+/**
+ * FenceDeliveryTracker puts off releasing a Fence until a transaction complete.
+ */
+class FenceDeliveryTracker : public AsyncTransactionTracker {
+public:
+  FenceDeliveryTracker(FenceHandle& aFenceHandle)
+    : mFenceHandle(aFenceHandle)
+  {
+    MOZ_COUNT_CTOR(FenceDeliveryTracker);
+  }
+
+  ~FenceDeliveryTracker()
+  {
+    MOZ_COUNT_DTOR(FenceDeliveryTracker);
+  }
+
+  virtual void Complete() MOZ_OVERRIDE
+  {
+    mFenceHandle = FenceHandle();
+  }
+
+  virtual void Cancel() MOZ_OVERRIDE
+  {
+    mFenceHandle = FenceHandle();
+  }
+
+private:
+  FenceHandle mFenceHandle;
 };
 
 } // namespace layers

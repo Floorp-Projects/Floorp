@@ -816,7 +816,7 @@ nsBinaryInputStream::ReadByteArray(uint32_t aLength, uint8_t** aResult)
 NS_IMETHODIMP
 nsBinaryInputStream::ReadArrayBuffer(uint32_t aLength,
                                      JS::Handle<JS::Value> aBuffer,
-                                     JSContext* aCx)
+                                     JSContext* aCx, uint32_t *rLength)
 {
   if (!aBuffer.isObject()) {
     return NS_ERROR_FAILURE;
@@ -831,14 +831,11 @@ nsBinaryInputStream::ReadArrayBuffer(uint32_t aLength,
     return NS_ERROR_FAILURE;
   }
 
-  uint32_t bytesRead;
-  nsresult rv = Read(reinterpret_cast<char*>(data), aLength, &bytesRead);
+  nsresult rv = Read(reinterpret_cast<char*>(data), aLength, rLength);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  if (bytesRead != aLength) {
-    return NS_ERROR_FAILURE;
-  }
+
   return NS_OK;
 }
 

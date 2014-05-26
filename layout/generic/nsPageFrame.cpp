@@ -26,7 +26,7 @@ extern PRLogModuleInfo *GetLayoutPrintingLog();
 
 using namespace mozilla;
 
-nsIFrame*
+nsPageFrame*
 NS_NewPageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsPageFrame(aContext);

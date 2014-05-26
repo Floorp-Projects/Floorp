@@ -1,23 +1,23 @@
-== test001.xul reference-green-window.xul
-== test002.xul reference-green-window.xul
-== test003.xul reference-green-window.xul
-== test004.xul reference-green-window.xul
-== test005.xul reference-green-window.xul
-== test006.xul reference-green-window.xul
-== test007.xul reference-green-window.xul
-== test008.xul reference-green-window.xul
-== test009.xul reference-green-window.xul
-== test010.xul reference-green-window.xul
-== test011.xul reference-green-window.xul
-== test012.xul reference-green-window.xul
-== test013.xul reference-green-window.xul
-== test014.xul reference-green-window.xul
+skip-if(B2G&&browserIsRemote) == test001.xul reference-green-window.xul
+skip-if(B2G&&browserIsRemote) == test002.xul reference-green-window.xul
+skip-if(B2G&&browserIsRemote) == test003.xul reference-green-window.xul
+skip-if(B2G&&browserIsRemote) == test004.xul reference-green-window.xul
+skip-if(B2G&&browserIsRemote) == test005.xul reference-green-window.xul
+skip-if(B2G&&browserIsRemote) == test006.xul reference-green-window.xul
+skip-if(B2G&&browserIsRemote) == test007.xul reference-green-window.xul
+skip-if(B2G&&browserIsRemote) == test008.xul reference-green-window.xul
+skip-if(B2G&&browserIsRemote) == test009.xul reference-green-window.xul
+skip-if(B2G&&browserIsRemote) == test010.xul reference-green-window.xul
+skip-if(B2G&&browserIsRemote) == test011.xul reference-green-window.xul
+skip-if(B2G&&browserIsRemote) == test012.xul reference-green-window.xul
+skip-if(B2G&&browserIsRemote) == test013.xul reference-green-window.xul
+skip-if(B2G&&browserIsRemote) == test014.xul reference-green-window.xul
 # Disabled due to compartments for now.
-#== test015.xul reference-green-window.xul
-== test016.xul reference-green-window.xul
-== test017.xul reference-green-window.xul
-== test018.xul reference-green-window.xul
-== test019.xul reference-green-window.xul
-== test020.xul reference-green-window.xul
-== test021.xul reference-green-window.xul
-== test022.xul reference-green-window.xul
+#skip-if(B2G&&browserIsRemote) == test015.xul reference-green-window.xul
+skip-if(B2G&&browserIsRemote) == test016.xul reference-green-window.xul
+skip-if(B2G&&browserIsRemote) == test017.xul reference-green-window.xul
+skip-if(B2G&&browserIsRemote) == test018.xul reference-green-window.xul
+skip-if(B2G&&browserIsRemote) == test019.xul reference-green-window.xul
+skip-if(B2G&&browserIsRemote) == test020.xul reference-green-window.xul
+skip-if(B2G&&browserIsRemote) == test021.xul reference-green-window.xul
+skip-if(B2G&&browserIsRemote) == test022.xul reference-green-window.xul

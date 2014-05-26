@@ -74,3 +74,11 @@ foreignObject {
   mask: inherit;
   opacity: inherit;
 }
+
+/* nsDocumentViewer::CreateStyleSet doesn't load ua.css for SVG-as-an-image,
+ * but SVG-as-an-image needs this rule from that file.
+ */
+*|*::-moz-viewport, *|*::-moz-viewport-scroll, *|*::-moz-canvas, *|*::-moz-scrolled-canvas {
+  display: block !important;
+  background-color: inherit;
+}

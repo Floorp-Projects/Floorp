@@ -288,9 +288,9 @@ nsSVGMaskFrame::AttributeChanged(int32_t  aNameSpaceID,
 
 #ifdef DEBUG
 void
-nsSVGMaskFrame::Init(nsIContent* aContent,
-                     nsIFrame* aParent,
-                     nsIFrame* aPrevInFlow)
+nsSVGMaskFrame::Init(nsIContent*       aContent,
+                     nsContainerFrame* aParent,
+                     nsIFrame*         aPrevInFlow)
 {
   NS_ASSERTION(aContent->IsSVG(nsGkAtoms::mask),
                "Content is not an SVG mask");

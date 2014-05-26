@@ -56,30 +56,30 @@ fuzzy-if(B2G,10,3) random-if(winWidget) == flexbox-align-self-baseline-horiz-3.x
 == flexbox-box-sizing-on-items-vert-1b.html flexbox-box-sizing-on-items-vert-1-ref.html
 
 # Tests for dynamic modifications of content inside/around a flex container
-== flexbox-dyn-changeFrameWidth-1.xhtml flexbox-dyn-changeFrameWidth-1-ref.xhtml
+fails-if(B2G&&browserIsRemote) == flexbox-dyn-changeFrameWidth-1.xhtml flexbox-dyn-changeFrameWidth-1-ref.xhtml
 == flexbox-dyn-changeFrameWidth-2.xhtml flexbox-dyn-changeFrameWidth-2-ref.xhtml
 == flexbox-dyn-changeFrameWidth-3.xhtml flexbox-dyn-changeFrameWidth-3-ref.xhtml
-== flexbox-dyn-changeFrameWidth-4.xhtml flexbox-dyn-changeFrameWidth-4-ref.xhtml
-== flexbox-dyn-changePadding-1a.xhtml flexbox-dyn-changePadding-1-ref.xhtml
-== flexbox-dyn-changePadding-1b.xhtml flexbox-dyn-changePadding-1-ref.xhtml
+fails-if(B2G&&browserIsRemote) == flexbox-dyn-changeFrameWidth-4.xhtml flexbox-dyn-changeFrameWidth-4-ref.xhtml
+fails-if(B2G&&browserIsRemote) == flexbox-dyn-changePadding-1a.xhtml flexbox-dyn-changePadding-1-ref.xhtml
+fails-if(B2G&&browserIsRemote) == flexbox-dyn-changePadding-1b.xhtml flexbox-dyn-changePadding-1-ref.xhtml
 
 # Tests for dynamic insertions of content into a flex container
 # (with existing [div | span | text] inside the flexbox, and new content
 # inserted adjacent to that existing content.)
 == flexbox-dyn-insertAroundDiv-1.xhtml flexbox-dyn-insertAroundDiv-1-ref.xhtml
-== flexbox-dyn-insertAroundDiv-2.xhtml flexbox-dyn-insertAroundDiv-2-ref.xhtml
-== flexbox-dyn-insertAroundDiv-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
+fails-if(B2G&&browserIsRemote) == flexbox-dyn-insertAroundDiv-2.xhtml flexbox-dyn-insertAroundDiv-2-ref.xhtml
+fails-if(B2G&&browserIsRemote) == flexbox-dyn-insertAroundDiv-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
 
 == flexbox-dyn-insertAroundSpan-1.xhtml flexbox-dyn-insertAroundDiv-1-ref.xhtml
-== flexbox-dyn-insertAroundSpan-2.xhtml flexbox-dyn-insertAroundDiv-2-ref.xhtml
-== flexbox-dyn-insertAroundSpan-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
+fails-if(B2G&&browserIsRemote) == flexbox-dyn-insertAroundSpan-2.xhtml flexbox-dyn-insertAroundDiv-2-ref.xhtml
+fails-if(B2G&&browserIsRemote) == flexbox-dyn-insertAroundSpan-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
 
 == flexbox-dyn-insertAroundText-1.xhtml flexbox-dyn-insertAroundText-1-ref.xhtml
-== flexbox-dyn-insertAroundText-2.xhtml flexbox-dyn-insertAroundText-2-ref.xhtml
-== flexbox-dyn-insertAroundText-3.xhtml flexbox-dyn-insertAroundText-3-ref.xhtml
+fails-if(B2G&&browserIsRemote) == flexbox-dyn-insertAroundText-2.xhtml flexbox-dyn-insertAroundText-2-ref.xhtml
+fails-if(B2G&&browserIsRemote) == flexbox-dyn-insertAroundText-3.xhtml flexbox-dyn-insertAroundText-3-ref.xhtml
 
 # Variant of one of the above tests, to regression-test an invalidation issue
-== flexbox-dyn-insertEmptySpan-1.xhtml flexbox-dyn-insertEmptySpan-1-ref.xhtml
+fails-if(B2G&&browserIsRemote) == flexbox-dyn-insertEmptySpan-1.xhtml flexbox-dyn-insertEmptySpan-1-ref.xhtml
 
 # Tests for empty flexboxes (with no flex items)
 == flexbox-empty-1a.xhtml  flexbox-empty-1-ref.xhtml
@@ -114,10 +114,10 @@ fuzzy-if(Android&&AndroidVersion>=15,16,400) == flexbox-position-fixed-2.xhtml  
 # Tests for inline content in a flexbox that gets wrapped in an anonymous block
 fails == flexbox-inlinecontent-horiz-1a.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml # reference case rendering is incorrect; bug 858333
 fails == flexbox-inlinecontent-horiz-1b.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml # reference case rendering is incorrect; bug 858333
-== flexbox-inlinecontent-horiz-2.xhtml  flexbox-inlinecontent-horiz-2-ref.xhtml
+fails-if(B2G&&browserIsRemote) == flexbox-inlinecontent-horiz-2.xhtml  flexbox-inlinecontent-horiz-2-ref.xhtml
 == flexbox-inlinecontent-horiz-3a.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
-== flexbox-inlinecontent-horiz-3b.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
-== flexbox-inlinecontent-horiz-3c.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
+fails-if(B2G&&browserIsRemote) == flexbox-inlinecontent-horiz-3b.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
+fails-if(B2G&&browserIsRemote) == flexbox-inlinecontent-horiz-3c.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
 == flexbox-inlinecontent-horiz-4.xhtml  flexbox-inlinecontent-horiz-4-ref.xhtml
 == flexbox-inlinecontent-horiz-5.xhtml  flexbox-inlinecontent-horiz-5-ref.xhtml
 
@@ -128,7 +128,7 @@ fails == flexbox-inlinecontent-horiz-1b.xhtml flexbox-inlinecontent-horiz-1-ref.
 == flexbox-intrinsic-sizing-horiz-2b.xhtml flexbox-intrinsic-sizing-horiz-2-ref.xhtml
 
 # Tests for invalidation after dynamic modifications
-== flexbox-invalidation-1.html flexbox-invalidation-1-ref.html
+fails-if(B2G&&browserIsRemote) == flexbox-invalidation-1.html flexbox-invalidation-1-ref.html
 
 # Tests for flexbox in an iframe that gets resized.
 skip-if(B2G) == flexbox-resizeviewport-1.xhtml flexbox-resizeviewport-1-ref.xhtml

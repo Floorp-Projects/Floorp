@@ -154,7 +154,7 @@ class MOZ_STACK_CLASS NativeRegExpMacroAssembler : public RegExpMacroAssembler
     inline int char_size() { return static_cast<int>(mode_); }
     inline jit::Scale factor() { return mode_ == JSCHAR ? jit::TimesTwo : jit::TimesOne; }
 
-    void BranchOrBacktrack(jit::Assembler::Condition condition, jit::Label *to);
+    jit::Label *BranchOrBacktrack(jit::Label *branch);
 
     // Pushes a register or constant on the backtrack stack. Decrements the
     // stack pointer by a word size and stores the register's value there.

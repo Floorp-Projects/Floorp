@@ -846,12 +846,33 @@ KeymapWrapper::ComputeDOMKeyNameIndex(const GdkEventKey* aGdkKeyEvent)
     return KEY_NAME_INDEX_Unidentified;
 }
 
+/* static */ CodeNameIndex
+KeymapWrapper::ComputeDOMCodeNameIndex(const GdkEventKey* aGdkKeyEvent)
+{
+    switch (aGdkKeyEvent->hardware_keycode) {
+
+#define NS_NATIVE_KEY_TO_DOM_CODE_NAME_INDEX(aNativeKey, aCodeNameIndex) \
+        case aNativeKey: return aCodeNameIndex;
+
+#include "NativeKeyToDOMCodeName.h"
+
+#undef NS_NATIVE_KEY_TO_DOM_CODE_NAME_INDEX
+
+        default:
+            break;
+    }
+
+    return CODE_NAME_INDEX_UNKNOWN;
+}
+
 /* static */ void
 KeymapWrapper::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
                             GdkEventKey* aGdkKeyEvent)
 {
     KeymapWrapper* keymapWrapper = GetInstance();
 
+    aKeyEvent.mCodeNameIndex = ComputeDOMCodeNameIndex(aGdkKeyEvent);
+    MOZ_ASSERT(aKeyEvent.mCodeNameIndex != CODE_NAME_INDEX_USE_STRING);
     aKeyEvent.mKeyNameIndex =
         keymapWrapper->ComputeDOMKeyNameIndex(aGdkKeyEvent);
     if (aKeyEvent.mKeyNameIndex == KEY_NAME_INDEX_Unidentified) {

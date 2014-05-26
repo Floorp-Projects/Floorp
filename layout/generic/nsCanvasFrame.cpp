@@ -30,7 +30,7 @@ using namespace mozilla;
 using namespace mozilla::layout;
 using namespace mozilla::gfx;
 
-nsIFrame*
+nsCanvasFrame*
 NS_NewCanvasFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsCanvasFrame(aContext);

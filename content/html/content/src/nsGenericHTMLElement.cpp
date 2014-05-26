@@ -52,6 +52,7 @@
 #include "nsScriptLoader.h"
 #include "nsRuleData.h"
 #include "nsIPrincipal.h"
+#include "nsContainerFrame.h"
 
 #include "nsPresState.h"
 #include "nsILayoutHistoryState.h"

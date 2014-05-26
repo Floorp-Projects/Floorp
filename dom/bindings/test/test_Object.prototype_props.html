@@ -7,7 +7,8 @@
 <script>
 test(function() {
   var props = Object.getOwnPropertyNames(Object.prototype);
-  // getOwnPropertyNames doesn't include "__proto__" yet for some reason
+  // getOwnPropertyNames intentionally filters out the non-standard
+  // "__proto__" property.
   props.push("__proto__");
   // If you change this list, make sure it continues to match the list in
   // Codegen.py's CGDictionary.getMemberDefinition method.
@@ -17,6 +18,6 @@ test(function() {
       "propertyIsEnumerable", "__defineGetter__", "__defineSetter__",
       "__lookupGetter__", "__lookupSetter__", "__proto__"
     ];
-  assert_array_equals(props, expected);
+  assert_array_equals(props.sort(), expected.sort());
 }, "Own properties of Object.prototype");
 </script>

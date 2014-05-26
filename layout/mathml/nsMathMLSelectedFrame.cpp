@@ -11,9 +11,9 @@ nsMathMLSelectedFrame::~nsMathMLSelectedFrame()
 }
 
 void
-nsMathMLSelectedFrame::Init(nsIContent*      aContent,
-                            nsIFrame*        aParent,
-                            nsIFrame*        aPrevInFlow)
+nsMathMLSelectedFrame::Init(nsIContent*       aContent,
+                            nsContainerFrame* aParent,
+                            nsIFrame*         aPrevInFlow)
 {
   // Init our local attributes
   mInvalidMarkup = false;

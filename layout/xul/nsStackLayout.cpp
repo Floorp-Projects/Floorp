@@ -63,7 +63,7 @@ nsStackLayout::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   nsSize prefSize (0, 0);
 
-  nsIFrame* child = aBox->GetChildBox();
+  nsIFrame* child = nsBox::GetChildBox(aBox);
   while (child) {
     if (child->StyleXUL()->mStretchStack) {
       nsSize pref = child->GetPrefSize(aState);
@@ -76,7 +76,7 @@ nsStackLayout::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
       AddLargestSize(prefSize, pref);
     }
 
-    child = child->GetNextBox();
+    child = nsBox::GetNextBox(child);
   }
 
   AddBorderAndPadding(aBox, prefSize);
@@ -89,7 +89,7 @@ nsStackLayout::GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   nsSize minSize (0, 0);
 
-  nsIFrame* child = aBox->GetChildBox();
+  nsIFrame* child = nsBox::GetChildBox(aBox);
   while (child) {
     if (child->StyleXUL()->mStretchStack) {
       nsSize min = child->GetMinSize(aState);
@@ -102,7 +102,7 @@ nsStackLayout::GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
       AddLargestSize(minSize, min);
     }
 
-    child = child->GetNextBox();
+    child = nsBox::GetNextBox(child);
   }
 
   AddBorderAndPadding(aBox, minSize);
@@ -115,7 +115,7 @@ nsStackLayout::GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   nsSize maxSize (NS_INTRINSICSIZE, NS_INTRINSICSIZE);
 
-  nsIFrame* child = aBox->GetChildBox();
+  nsIFrame* child = nsBox::GetChildBox(aBox);
   while (child) {
     if (child->StyleXUL()->mStretchStack) {
       nsSize min = child->GetMinSize(aState);
@@ -131,7 +131,7 @@ nsStackLayout::GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
       AddSmallestSize(maxSize, max);
     }
 
-    child = child->GetNextBox();
+    child = nsBox::GetNextBox(child);
   }
 
   AddBorderAndPadding(aBox, maxSize);
@@ -145,7 +145,7 @@ nsStackLayout::GetAscent(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   nscoord vAscent = 0;
 
-  nsIFrame* child = aBox->GetChildBox();
+  nsIFrame* child = nsBox::GetChildBox(aBox);
   while (child) {  
     nscoord ascent = child->GetBoxAscent(aState);
     nsMargin margin;
@@ -154,7 +154,7 @@ nsStackLayout::GetAscent(nsIFrame* aBox, nsBoxLayoutState& aState)
     if (ascent > vAscent)
       vAscent = ascent;
 
-    child = child->GetNextBox();
+    child = nsBox::GetNextBox(child);
   }
 
   return vAscent;
@@ -260,7 +260,7 @@ nsStackLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
   bool grow;
 
   do {
-    nsIFrame* child = aBox->GetChildBox();
+    nsIFrame* child = nsBox::GetChildBox(aBox);
     grow = false;
 
     while (child) 
@@ -357,7 +357,7 @@ nsStackLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
           }
        }
 
-       child = child->GetNextBox();
+       child = nsBox::GetNextBox(child);
      }
    } while (grow);
    

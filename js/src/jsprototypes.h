@@ -62,8 +62,8 @@
 
 #define JS_FOR_PROTOTYPES(real,imaginary) \
     imaginary(Null,              0,     js_InitNullClass,          dummy) \
-    real(Object,                 1,     js_InitObjectClass,        &JSObject::class_) \
-    real(Function,               2,     js_InitFunctionClass,      &JSFunction::class_) \
+    real(Object,                 1,     js_InitViaClassSpec,       &JSObject::class_) \
+    real(Function,               2,     js_InitViaClassSpec,       &JSFunction::class_) \
     real(Array,                  3,     js_InitArrayClass,         OCLASP(Array)) \
     real(Boolean,                4,     js_InitBooleanClass,       OCLASP(Boolean)) \
     real(JSON,                   5,     js_InitJSONClass,          CLASP(JSON)) \

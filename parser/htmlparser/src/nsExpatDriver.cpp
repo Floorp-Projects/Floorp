@@ -264,9 +264,9 @@ static const nsCatalogData kCatalogTable[] = {
   { "-//W3C//DTD XHTML 1.0 Strict//EN",          "htmlmathml-f.ent", nullptr },
   { "-//W3C//DTD XHTML 1.0 Frameset//EN",        "htmlmathml-f.ent", nullptr },
   { "-//W3C//DTD XHTML Basic 1.0//EN",           "htmlmathml-f.ent", nullptr },
-  { "-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN", "htmlmathml-f.ent", "resource://gre-resources/mathml.css" },
-  { "-//W3C//DTD XHTML 1.1 plus MathML 2.0 plus SVG 1.1//EN", "htmlmathml-f.ent", "resource://gre-resources/mathml.css" },
-  { "-//W3C//DTD MathML 2.0//EN",                "htmlmathml-f.ent", "resource://gre-resources/mathml.css" },
+  { "-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN", "htmlmathml-f.ent", nullptr },
+  { "-//W3C//DTD XHTML 1.1 plus MathML 2.0 plus SVG 1.1//EN", "htmlmathml-f.ent", nullptr },
+  { "-//W3C//DTD MathML 2.0//EN",                "htmlmathml-f.ent", nullptr },
   { "-//WAPFORUM//DTD XHTML Mobile 1.0//EN",     "htmlmathml-f.ent", nullptr },
   { nullptr, nullptr, nullptr }
 };
@@ -629,9 +629,16 @@ nsExpatDriver::HandleEndDoctypeDecl()
     // document (currently, from bug 124570, we only expect to pass additional
     // agent sheets needed to layout the XML vocabulary of the document)
     nsCOMPtr<nsIURI> data;
+#if 0
     if (mCatalogData && mCatalogData->mAgentSheet) {
       NS_NewURI(getter_AddRefs(data), mCatalogData->mAgentSheet);
     }
+#endif
+
+    // The unused support for "catalog style sheets" was removed. It doesn't
+    // look like we'll ever fix bug 98413 either.
+    MOZ_ASSERT(!mCatalogData || !mCatalogData->mAgentSheet,
+               "Need to add back support for catalog style sheets");
 
     // Note: mInternalSubset already doesn't include the [] around it.
     nsresult rv = mSink->HandleDoctypeDecl(mInternalSubset, mDoctypeName,

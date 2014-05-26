@@ -295,9 +295,9 @@ nsSVGClipPathFrame::AttributeChanged(int32_t         aNameSpaceID,
 }
 
 void
-nsSVGClipPathFrame::Init(nsIContent* aContent,
-                         nsIFrame* aParent,
-                         nsIFrame* aPrevInFlow)
+nsSVGClipPathFrame::Init(nsIContent*       aContent,
+                         nsContainerFrame* aParent,
+                         nsIFrame*         aPrevInFlow)
 {
   NS_ASSERTION(aContent->IsSVG(nsGkAtoms::clipPath),
                "Content is not an SVG clipPath!");

@@ -130,7 +130,7 @@ nsMemoryImpl::FlushMemory(const char16_t* aReason, bool aImmediate)
     // Don't broadcast more than once every 1000ms to avoid being noisy
     if (PR_IntervalToMicroseconds(now - sLastFlushTime) > 1000) {
       sFlushEvent.mReason = aReason;
-      rv = NS_DispatchToMainThread(&sFlushEvent, NS_DISPATCH_NORMAL);
+      rv = NS_DispatchToMainThread(&sFlushEvent);
     }
   }
 

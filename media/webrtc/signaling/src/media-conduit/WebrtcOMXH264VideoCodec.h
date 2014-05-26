@@ -53,7 +53,11 @@ private:
   uint32_t mWidth;
   uint32_t mHeight;
   uint32_t mFrameRate;
+  uint32_t mBitRateKbps;
+  uint32_t mBitRateAtLastIDR;
+  TimeStamp mLastIDRTime;
   bool mOMXConfigured;
+  bool mOMXReconfigure;
   webrtc::EncodedImage mEncodedImage;
 };
 

@@ -603,6 +603,118 @@ fun_trace(JSTracer *trc, JSObject *obj)
     obj->as<JSFunction>().trace(trc);
 }
 
+static JSObject *
+CreateFunctionConstructor(JSContext *cx, JSProtoKey key)
+{
+    Rooted<GlobalObject*> self(cx, cx->global());
+    RootedObject functionProto(cx, &self->getPrototype(JSProto_Function).toObject());
+
+    // Note that ctor is rooted purely for the JS_ASSERT at the end
+    RootedObject ctor(cx, NewObjectWithGivenProto(cx, &JSFunction::class_, functionProto,
+                                                  self, SingletonObject));
+    if (!ctor)
+        return nullptr;
+    RootedObject functionCtor(cx, NewFunction(cx, ctor, Function, 1, JSFunction::NATIVE_CTOR, self,
+                                              HandlePropertyName(cx->names().Function)));
+    if (!functionCtor)
+        return nullptr;
+
+    JS_ASSERT(ctor == functionCtor);
+    return functionCtor;
+
+}
+
+static JSObject *
+CreateFunctionPrototype(JSContext *cx, JSProtoKey key)
+{
+    Rooted<GlobalObject*> self(cx, cx->global());
+    RootedObject objectProto(cx, &self->getPrototype(JSProto_Object).toObject());
+    JSObject *functionProto_ = NewObjectWithGivenProto(cx, &JSFunction::class_,
+                                                       objectProto, self, SingletonObject);
+    if (!functionProto_)
+        return nullptr;
+
+    RootedFunction functionProto(cx, &functionProto_->as<JSFunction>());
+
+    /*
+     * Bizarrely, |Function.prototype| must be an interpreted function, so
+     * give it the guts to be one.
+     */
+    {
+        JSObject *proto = NewFunction(cx, functionProto, nullptr, 0, JSFunction::INTERPRETED,
+                                      self, js::NullPtr());
+        if (!proto)
+            return nullptr;
+
+        JS_ASSERT(proto == functionProto);
+        functionProto->setIsFunctionPrototype();
+    }
+
+    const char *rawSource = "() {\n}";
+    size_t sourceLen = strlen(rawSource);
+    jschar *source = InflateString(cx, rawSource, &sourceLen);
+    if (!source)
+        return nullptr;
+
+    ScriptSource *ss =
+        cx->new_<ScriptSource>();
+    if (!ss) {
+        js_free(source);
+        return nullptr;
+    }
+    ScriptSourceHolder ssHolder(ss);
+    ss->setSource(source, sourceLen);
+    CompileOptions options(cx);
+    options.setNoScriptRval(true)
+           .setVersion(JSVERSION_DEFAULT);
+    RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss, options));
+    if (!sourceObject)
+        return nullptr;
+
+    RootedScript script(cx, JSScript::Create(cx,
+                                             /* enclosingScope = */ js::NullPtr(),
+                                             /* savedCallerFun = */ false,
+                                             options,
+                                             /* staticLevel = */ 0,
+                                             sourceObject,
+                                             0,
+                                             ss->length()));
+    if (!script || !JSScript::fullyInitTrivial(cx, script))
+        return nullptr;
+
+    functionProto->initScript(script);
+    types::TypeObject* protoType = functionProto->getType(cx);
+    if (!protoType)
+        return nullptr;
+
+    protoType->interpretedFunction = functionProto;
+    script->setFunction(functionProto);
+
+    /*
+     * The default 'new' type of Function.prototype is required by type
+     * inference to have unknown properties, to simplify handling of e.g.
+     * CloneFunctionObject.
+     */
+    if (!JSObject::setNewTypeUnknown(cx, &JSFunction::class_, functionProto))
+        return nullptr;
+
+    return functionProto;
+}
+
+static bool
+FinishFunctionClassInit(JSContext *cx, JS::HandleObject ctor, JS::HandleObject proto)
+{
+    /*
+     * Notify any debuggers about the creation of the script for
+     * |Function.prototype| -- after all initialization, for simplicity.
+     */
+    RootedFunction functionProto(cx, &proto->as<JSFunction>());
+    RootedScript functionProtoScript(cx, functionProto->nonLazyScript());
+    CallNewScriptHook(cx, functionProtoScript, functionProto);
+    return true;
+}
+
+
 const Class JSFunction::class_ = {
     js_Function_str,
     JSCLASS_NEW_RESOLVE | JSCLASS_IMPLEMENTS_BARRIERS |
@@ -618,7 +730,15 @@ const Class JSFunction::class_ = {
     nullptr,                 /* call        */
     fun_hasInstance,
     nullptr,                 /* construct   */
-    fun_trace
+    fun_trace,
+    {
+        CreateFunctionConstructor,
+        CreateFunctionPrototype,
+        nullptr,
+        function_methods,
+        nullptr,
+        FinishFunctionClassInit
+    }
 };
 
 const Class* const js::FunctionClassPtr = &JSFunction::class_;

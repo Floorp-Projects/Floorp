@@ -12,6 +12,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import("resource://gre/modules/BrowserElementPromptService.jsm");
+Cu.import("resource://gre/modules/AppsServiceChild.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
@@ -264,50 +265,9 @@ WebappsRegistry.prototype = {
   * mozIDOMApplication object
   */
 
-// A simple cache for the wrapped manifests.
-let manifestCache = {
-  _cache: { },
-
-  // Gets an entry from the cache, and populates the cache if needed.
-  get: function mcache_get(aManifestURL, aManifest, aWindow, aInnerWindowID) {
-    if (!(aManifestURL in this._cache)) {
-      this._cache[aManifestURL] = { };
-    }
-
-    let winObjs = this._cache[aManifestURL];
-    if (!(aInnerWindowID in winObjs)) {
-      winObjs[aInnerWindowID] = Cu.cloneInto(aManifest, aWindow);
-    }
-
-    return winObjs[aInnerWindowID];
-  },
-
-  // Invalidates an entry in the cache.
-  evict: function mcache_evict(aManifestURL, aInnerWindowID) {
-    if (aManifestURL in this._cache) {
-      let winObjs = this._cache[aManifestURL];
-      if (aInnerWindowID in winObjs) {
-        delete winObjs[aInnerWindowID];
-      }
-
-      if (Object.keys(winObjs).length == 0) {
-        delete this._cache[aManifestURL];
-      }
-    }
-  },
-
-  observe: function(aSubject, aTopic, aData) {
-    // Clear the cache on memory pressure.
-    this._cache = { };
-  },
-
-  init: function() {
-    Services.obs.addObserver(this, "memory-pressure", false);
-  }
-};
-
 function createApplicationObject(aWindow, aApp) {
-  let app = Cc["@mozilla.org/webapps/application;1"].createInstance(Ci.mozIDOMApplication);
+  let app = Cc["@mozilla.org/webapps/application;1"]
+              .createInstance(Ci.mozIDOMApplication);
   app.wrappedJSObject.init(aWindow, aApp);
   return app;
 }
@@ -320,27 +280,12 @@ WebappsApplication.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
 
   init: function(aWindow, aApp) {
+    let proxyHandler = DOMApplicationRegistry.addDOMApp(this,
+                                                        aApp.manifestURL,
+                                                        aApp.id);
+    this._proxy = new Proxy(this, proxyHandler);
+
     this._window = aWindow;
-    let principal = this._window.document.nodePrincipal;
-    this._appStatus = principal.appStatus;
-    this.origin = aApp.origin;
-    this._manifest = aApp.manifest;
-    this._updateManifest = aApp.updateManifest;
-    this.manifestURL = aApp.manifestURL;
-    this.receipts = aApp.receipts;
-    this.installOrigin = aApp.installOrigin;
-    this.installTime = aApp.installTime;
-    this.installState = aApp.installState || "installed";
-    this.removable = aApp.removable;
-    this.lastUpdateCheck = aApp.lastUpdateCheck ? aApp.lastUpdateCheck
-                                                : Date.now();
-    this.updateTime = aApp.updateTime ? aApp.updateTime
-                                      : aApp.installTime;
-    this.progress = NaN;
-    this.downloadAvailable = aApp.downloadAvailable;
-    this.downloading = aApp.downloading;
-    this.readyToApplyDownload = aApp.readyToApplyDownload;
-    this.downloadSize = aApp.downloadSize || 0;
 
     this._onprogress = null;
     this._ondownloadsuccess = null;
@@ -348,40 +293,83 @@ WebappsApplication.prototype = {
     this._ondownloadavailable = null;
     this._ondownloadapplied = null;
 
-    this._downloadError = null;
+    this.initDOMRequestHelper(aWindow);
+  },
 
-    this.initDOMRequestHelper(aWindow, [
-      { name: "Webapps:CheckForUpdate:Return:KO", weakRef: true },
-      { name: "Webapps:Connect:Return:OK", weakRef: true },
-      { name: "Webapps:Connect:Return:KO", weakRef: true },
-      { name: "Webapps:FireEvent", weakRef: true },
-      { name: "Webapps:GetConnections:Return:OK", weakRef: true },
-      { name: "Webapps:UpdateState", weakRef: true }
-    ]);
+  get _appStatus() {
+    return this._proxy.appStatus;
+  },
 
-    cpmm.sendAsyncMessage("Webapps:RegisterForMessages", {
-      messages: ["Webapps:FireEvent",
-                 "Webapps:UpdateState"],
-      app: {
-        id: this.id,
-        manifestURL: this.manifestURL,
-        installState: this.installState,
-        downloading: this.downloading
-      }
-    });
+  get downloadAvailable() {
+    return this._proxy.downloadAvailable;
+  },
+
+  get downloading() {
+    return this._proxy.downloading;
+  },
+
+  get downloadSize() {
+    return this._proxy.downloadSize;
+  },
+
+  get installOrigin() {
+    return this._proxy.installOrigin;
+  },
+
+  get installState() {
+    return this._proxy.installState;
+  },
+
+  get installTime() {
+    return this._proxy.installTime;
+  },
+
+  get lastUpdateCheck() {
+    return this._proxy.lastUpdateCheck;
+  },
+
+  get manifestURL() {
+    return this._proxy.manifestURL;
+  },
+
+  get origin() {
+    return this._proxy.origin;
+  },
+
+  get progress() {
+    return this._proxy.progress;
+  },
+
+  get readyToApplyDownload() {
+    return this._proxy.readyToApplyDownload;
+  },
+
+  get receipts() {
+    return this._proxy.receipts;
+  },
+
+  set receipts(aReceipts) {
+    this._proxy.receipts = aReceipts;
+  },
+
+  get removable() {
+    return this._proxy.removable;
+  },
+
+  get updateTime() {
+    return this._proxy.updateTime;
   },
 
   get manifest() {
-    return manifestCache.get(this.manifestURL,
-                             this._manifest,
-                             this._window,
-                             this.innerWindowID);
+    return WrappedManifestCache.get(this.manifestURL,
+                                    this._proxy.manifest,
+                                    this._window,
+                                    this.innerWindowID);
   },
 
   get updateManifest() {
-    return this.updateManifest =
-      this._updateManifest ? Cu.cloneInto(this._updateManifest, this._window)
-                           : null;
+    return this._proxy.updateManifest ?
+      Cu.cloneInto(this._proxy.updateManifest, this._window) : null;
   },
 
   set onprogress(aCallback) {
@@ -425,7 +413,7 @@ WebappsApplication.prototype = {
   },
 
   get downloadError() {
-    return new this._window.DOMError(this._downloadError || '');
+    return new this._window.DOMError(this._proxy.downloadError || '');
   },
 
   download: function() {
@@ -467,12 +455,11 @@ WebappsApplication.prototype = {
       BrowserElementPromptService.getBrowserElementChildForWindow(this._window);
     if (browserChild) {
       this.addMessageListeners("Webapps:ClearBrowserData:Return");
-      browserChild.messageManager.sendAsyncMessage(
-        "Webapps:ClearBrowserData",
-        { manifestURL: this.manifestURL,
-          oid: this._id,
-          requestID: this.getRequestId(request) }
-      );
+      browserChild.messageManager.sendAsyncMessage("Webapps:ClearBrowserData", {
+        manifestURL: this.manifestURL,
+        oid: this._id,
+        requestID: this.getRequestId(request)
+      });
     } else {
       Services.DOMRequest.fireErrorAsync(request, "NO_CLEARABLE_BROWSER");
     }
@@ -480,28 +467,33 @@ WebappsApplication.prototype = {
   },
 
   connect: function(aKeyword, aRules) {
+    this.addMessageListeners(["Webapps:Connect:Return:OK",
+                              "Webapps:Connect:Return:KO"]);
     return this.createPromise(function (aResolve, aReject) {
-      cpmm.sendAsyncMessage("Webapps:Connect",
-                            { keyword: aKeyword,
-                              rules: aRules,
-                              manifestURL: this.manifestURL,
-                              outerWindowID: this._id,
-                              requestID: this.getPromiseResolverId({
-                                resolve: aResolve,
-                                reject: aReject
-                              })});
+      cpmm.sendAsyncMessage("Webapps:Connect", {
+        keyword: aKeyword,
+        rules: aRules,
+        manifestURL: this.manifestURL,
+        outerWindowID: this._id,
+        requestID: this.getPromiseResolverId({
+          resolve: aResolve,
+          reject: aReject
+        })
+      });
     }.bind(this));
   },
 
   getConnections: function() {
+    this.addMessageListeners("Webapps:GetConnections:Return:OK");
     return this.createPromise(function (aResolve, aReject) {
-      cpmm.sendAsyncMessage("Webapps:GetConnections",
-                            { manifestURL: this.manifestURL,
-                              outerWindowID: this._id,
-                              requestID: this.getPromiseResolverId({
-                                resolve: aResolve,
-                                reject: aReject
-                              })});
+      cpmm.sendAsyncMessage("Webapps:GetConnections", {
+        manifestURL: this.manifestURL,
+        outerWindowID: this._id,
+        requestID: this.getPromiseResolverId({
+          resolve: aResolve,
+          reject: aReject
+        })
+      });
     }.bind(this));
   },
 
@@ -550,12 +542,7 @@ WebappsApplication.prototype = {
 
   uninit: function() {
     this._onprogress = null;
-    cpmm.sendAsyncMessage("Webapps:UnregisterForMessages", [
-      "Webapps:FireEvent",
-      "Webapps:UpdateState"
-    ]);
-
-    manifestCache.evict(this.manifestURL, this.innerWindowID);
+    WrappedManifestCache.evict(this.manifestURL, this.innerWindowID);
   },
 
   _fireEvent: function(aName) {
@@ -572,21 +559,15 @@ WebappsApplication.prototype = {
     }
   },
 
-  _updateState: function(aMsg) {
-    if (aMsg.app) {
-      for (let prop in aMsg.app) {
-        this[prop] = aMsg.app[prop];
-      }
+  _fireRequestResult: function(aMessage, aIsError) {
+    let req;
+    let msg = aMessage.data;
+    req = this.takeRequest(msg.requestID);
+    if (!req) {
+      return;
     }
-
-    if (aMsg.error) {
-      this._downloadError = aMsg.error;
-    }
-
-    if (aMsg.manifest) {
-      this._manifest = aMsg.manifest;
-      manifestCache.evict(this.manifestURL, this.innerWindowID);
-    }
+    aIsError ? Services.DOMRequest.fireError(req, msg.error)
+             : Services.DOMRequest.fireSuccess(req, msg.result);
   },
 
   receiveMessage: function(aMessage) {
@@ -600,10 +581,7 @@ WebappsApplication.prototype = {
       req = this.takeRequest(msg.requestID);
     }
 
-    // ondownload* callbacks should be triggered on all app instances
-    if ((msg.oid != this._id || !req) &&
-        aMessage.name !== "Webapps:FireEvent" &&
-        aMessage.name !== "Webapps:UpdateState") {
+    if (msg.oid != this._id || !req) {
       return;
     }
 
@@ -618,45 +596,13 @@ WebappsApplication.prototype = {
                                      "Webapps:Launch:Return:KO"]);
         Services.DOMRequest.fireSuccess(req, null);
         break;
-      case "Webapps:CheckForUpdate:Return:KO":
-        Services.DOMRequest.fireError(req, msg.error);
-        break;
-      case "Webapps:FireEvent":
-        if (msg.manifestURL != this.manifestURL) {
-           return;
-        }
-
-        // The parent might ask childs to trigger more than one event in one
-        // shot, so in order to avoid needless IPC we allow an array for the
-        // 'eventType' IPC message field.
-        if (!Array.isArray(msg.eventType)) {
-          msg.eventType = [msg.eventType];
-        }
-
-        msg.eventType.forEach((aEventType) => {
-          if ("_on" + aEventType in this) {
-            this._fireEvent(aEventType);
-          } else {
-            dump("Unsupported event type " + aEventType + "\n");
-          }
-        });
-
-        if (req) {
-          Services.DOMRequest.fireSuccess(req, this.manifestURL);
-        }
-        break;
-      case "Webapps:UpdateState":
-        if (msg.manifestURL != this.manifestURL) {
-          return;
-        }
-
-        this._updateState(msg);
-        break;
       case "Webapps:ClearBrowserData:Return":
         this.removeMessageListeners(aMessage.name);
         Services.DOMRequest.fireSuccess(req, null);
         break;
       case "Webapps:Connect:Return:OK":
+        this.removeMessageListeners(["Webapps:Connect:Return:OK",
+                                     "Webapps:Connect:Return:KO"]);
         let messagePorts = [];
         msg.messagePortIDs.forEach((aPortID) => {
           let port = new this._window.MozInterAppMessagePort(aPortID);
@@ -665,9 +611,12 @@ WebappsApplication.prototype = {
         req.resolve(messagePorts);
         break;
       case "Webapps:Connect:Return:KO":
+        this.removeMessageListeners(["Webapps:Connect:Return:OK",
+                                     "Webapps:Connect:Return:KO"]);
         req.reject("No connections registered");
         break;
       case "Webapps:GetConnections:Return:OK":
+        this.removeMessageListeners(aMessage.name);
         let connections = [];
         msg.connections.forEach((aConnection) => {
           let connection =
@@ -849,12 +798,8 @@ WebappsApplicationMgmt.prototype = {
         break;
       case "Webapps:Uninstall:Broadcast:Return:OK":
         if (this._onuninstall) {
-          let detail = {
-            manifestURL: msg.manifestURL,
-            origin: msg.origin
-          };
           let event = new this._window.MozApplicationEvent("applicationuninstall",
-                           { application : createApplicationObject(this._window, detail) });
+                           { application : createApplicationObject(this._window, msg) });
           this._onuninstall.handleEvent(event);
         }
         break;
@@ -882,8 +827,6 @@ WebappsApplicationMgmt.prototype = {
                                     flags: Ci.nsIClassInfo.DOM_OBJECT,
                                     classDescription: "Webapps Application Mgmt"})
 }
-
-manifestCache.init();
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([WebappsRegistry,
                                                      WebappsApplication]);

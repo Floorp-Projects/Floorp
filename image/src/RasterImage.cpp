@@ -362,7 +362,7 @@ public:
     // OK, we've got a new scaled image. Let's get the main thread to unlock and
     // redraw it.
     nsRefPtr<DrawRunner> runner = new DrawRunner(mScaleRequest.forget());
-    NS_DispatchToMainThread(runner, NS_DISPATCH_NORMAL);
+    NS_DispatchToMainThread(runner);
 
     return NS_OK;
   }

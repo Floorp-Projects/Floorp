@@ -67,9 +67,9 @@ nsTableCellFrame::GetNextCell() const
 }
 
 void
-nsTableCellFrame::Init(nsIContent*      aContent,
-                       nsIFrame*        aParent,
-                       nsIFrame*        aPrevInFlow)
+nsTableCellFrame::Init(nsIContent*       aContent,
+                       nsContainerFrame* aParent,
+                       nsIFrame*         aPrevInFlow)
 {
   // Let the base class do its initialization
   nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
@@ -1047,7 +1047,7 @@ nsTableCellFrame::GetCellIndexes(int32_t &aRowIndex, int32_t &aColIndex)
   return  NS_OK;
 }
 
-nsIFrame*
+nsTableCellFrame*
 NS_NewTableCellFrame(nsIPresShell*   aPresShell,
                      nsStyleContext* aContext,
                      bool            aIsBorderCollapse)

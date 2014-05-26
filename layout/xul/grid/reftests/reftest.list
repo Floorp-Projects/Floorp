@@ -1,18 +1,18 @@
-== row-sizing-1.xul row-sizing-1-ref.xul
-== column-sizing-1.xul column-sizing-1-ref.xul
-== row-or-column-sizing-1.xul row-or-column-sizing-2.xul
-== row-or-column-sizing-1.xul row-or-column-sizing-3.xul
-== row-or-column-sizing-1.xul row-or-column-sizing-4.xul
-== z-order-1.xul z-order-1-ref.xul
-== z-order-2.xul z-order-2-ref.xul
-== not-full-basic.xul not-full-basic-ref.xhtml
-== not-full-grid-pack-align.xul not-full-basic-ref.xhtml
-== not-full-row-group-align.xul not-full-row-group-align-ref.xhtml # does anyone want/need this behavior?
-== not-full-row-group-pack.xul not-full-row-group-pack-ref.xhtml
-== not-full-row-group-direction.xul not-full-row-group-direction-ref.xhtml
-== not-full-row-leaf-align.xul not-full-basic-ref.xhtml
-== not-full-row-leaf-pack.xul not-full-row-leaf-pack-ref.xhtml
-== not-full-row-leaf-direction.xul not-full-row-leaf-pack-ref.xhtml
+skip-if(B2G&&browserIsRemote) == row-sizing-1.xul row-sizing-1-ref.xul
+skip-if(B2G&&browserIsRemote) == column-sizing-1.xul column-sizing-1-ref.xul
+skip-if(B2G&&browserIsRemote) == row-or-column-sizing-1.xul row-or-column-sizing-2.xul
+skip-if(B2G&&browserIsRemote) == row-or-column-sizing-1.xul row-or-column-sizing-3.xul
+skip-if(B2G&&browserIsRemote) == row-or-column-sizing-1.xul row-or-column-sizing-4.xul
+skip-if(B2G&&browserIsRemote) == z-order-1.xul z-order-1-ref.xul
+skip-if(B2G&&browserIsRemote) == z-order-2.xul z-order-2-ref.xul
+skip-if(B2G&&browserIsRemote) == not-full-basic.xul not-full-basic-ref.xhtml
+skip-if(B2G&&browserIsRemote) == not-full-grid-pack-align.xul not-full-basic-ref.xhtml
+skip-if(B2G&&browserIsRemote) == not-full-row-group-align.xul not-full-row-group-align-ref.xhtml # does anyone want/need this behavior?
+skip-if(B2G&&browserIsRemote) == not-full-row-group-pack.xul not-full-row-group-pack-ref.xhtml
+skip-if(B2G&&browserIsRemote) == not-full-row-group-direction.xul not-full-row-group-direction-ref.xhtml
+skip-if(B2G&&browserIsRemote) == not-full-row-leaf-align.xul not-full-basic-ref.xhtml
+skip-if(B2G&&browserIsRemote) == not-full-row-leaf-pack.xul not-full-row-leaf-pack-ref.xhtml
+skip-if(B2G&&browserIsRemote) == not-full-row-leaf-direction.xul not-full-row-leaf-pack-ref.xhtml
 skip-if(B2G) fails-if(Android&&browserIsRemote) == scrollable-columns.xul scrollable-columns-ref.xhtml # bug 650597, 732569
-fails == scrollable-rows.xul scrollable-rows-ref.xhtml
-== sizing-2d.xul sizing-2d-ref.xul
+fails skip-if(B2G&&browserIsRemote) == scrollable-rows.xul scrollable-rows-ref.xhtml
+skip-if(B2G&&browserIsRemote) == sizing-2d.xul sizing-2d-ref.xul

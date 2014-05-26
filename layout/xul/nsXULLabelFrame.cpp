@@ -64,9 +64,9 @@ nsXULLabelFrame::RegUnregAccessKey(bool aDoReg)
 // nsIFrame
 
 void
-nsXULLabelFrame::Init(nsIContent*      aContent,
-                      nsIFrame*        aParent,
-                      nsIFrame*        aPrevInFlow)
+nsXULLabelFrame::Init(nsIContent*       aContent,
+                      nsContainerFrame* aParent,
+                      nsIFrame*         aPrevInFlow)
 {
   nsBlockFrame::Init(aContent, aParent, aPrevInFlow);
 

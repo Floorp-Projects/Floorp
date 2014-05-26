@@ -184,7 +184,7 @@ public:
                          mSetupPACData);
 
       nsRefPtr<PACLoadComplete> runnable = new PACLoadComplete(mPACMan);
-      NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
+      NS_DispatchToMainThread(runnable);
       return NS_OK;
     }
 
@@ -226,7 +226,7 @@ PendingPACQuery::Complete(nsresult status, const nsCString &pacString)
   nsRefPtr<ExecuteCallback> runnable = new ExecuteCallback(mCallback, status);
   runnable->SetPACString(pacString);
   if (mOnMainThreadOnly)
-    NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
+    NS_DispatchToMainThread(runnable);
   else
     runnable->Run();
 }
@@ -240,7 +240,7 @@ PendingPACQuery::UseAlternatePACFile(const nsCString &pacURL)
   nsRefPtr<ExecuteCallback> runnable = new ExecuteCallback(mCallback, NS_OK);
   runnable->SetPACURL(pacURL);
   if (mOnMainThreadOnly)
-    NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
+    NS_DispatchToMainThread(runnable);
   else
     runnable->Run();
 }
@@ -272,7 +272,7 @@ nsPACMan::~nsPACMan()
     }
     else {
       nsRefPtr<ShutdownThread> runnable = new ShutdownThread(mPACThread);
-      NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
+      NS_DispatchToMainThread(runnable);
     }
   }
 
