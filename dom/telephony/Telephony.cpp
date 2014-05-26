@@ -28,7 +28,6 @@
 
 using namespace mozilla::dom;
 using mozilla::ErrorResult;
-using mozilla::dom::telephony::kOutgoingPlaceholderCallIndex;
 
 class Telephony::Listener : public nsITelephonyListener
 {
@@ -82,10 +81,10 @@ public:
   }
 
   NS_IMETHODIMP
-  NotifyDialSuccess()
+  NotifyDialSuccess(uint32_t aCallIndex)
   {
     nsRefPtr<TelephonyCall> call =
-      mTelephony->CreateNewDialingCall(mServiceId, mNumber);
+      mTelephony->CreateNewDialingCall(mServiceId, mNumber, aCallIndex);
 
     mPromise->MaybeResolve(call);
     return NS_OK;
@@ -278,11 +277,12 @@ Telephony::DialInternal(uint32_t aServiceId, const nsAString& aNumber,
 }
 
 already_AddRefed<TelephonyCall>
-Telephony::CreateNewDialingCall(uint32_t aServiceId, const nsAString& aNumber)
+Telephony::CreateNewDialingCall(uint32_t aServiceId, const nsAString& aNumber,
+                                uint32_t aCallIndex)
 {
   nsRefPtr<TelephonyCall> call =
     TelephonyCall::Create(this, aServiceId, aNumber,
-                          nsITelephonyProvider::CALL_STATE_DIALING);
+                          nsITelephonyProvider::CALL_STATE_DIALING, aCallIndex);
   NS_ASSERTION(call, "This should never fail!");
 
   NS_ASSERTION(mCalls.Contains(call), "Should have auto-added new call!");
@@ -317,26 +317,6 @@ Telephony::GetCall(uint32_t aServiceId, uint32_t aCallIndex)
         tempCall->CallIndex() == aCallIndex) {
       call = tempCall;
       break;
-    }
-  }
-
-  return call.forget();
-}
-
-already_AddRefed<TelephonyCall>
-Telephony::GetOutgoingCall()
-{
-  nsRefPtr<TelephonyCall> call;
-
-  for (uint32_t i = 0; i < mCalls.Length(); i++) {
-    nsRefPtr<TelephonyCall>& tempCall = mCalls[i];
-    if (tempCall->CallIndex() == kOutgoingPlaceholderCallIndex) {
-      NS_ASSERTION(!call, "More than one outgoing call not supported!");
-      NS_ASSERTION(tempCall->CallState() == nsITelephonyProvider::CALL_STATE_DIALING,
-                   "Something really wrong here!");
-
-      call = tempCall;
-      // No break. We will search entire list to ensure only one outgoing call.
     }
   }
 
@@ -512,21 +492,8 @@ Telephony::CallStateChanged(uint32_t aServiceId, uint32_t aCallIndex,
   nsRefPtr<TelephonyCall> modifiedCall
       = GetCallFromEverywhere(aServiceId, aCallIndex);
 
-  // Try to use the outgoing call if we don't find the modified call.
-  if (!modifiedCall) {
-    nsRefPtr<TelephonyCall> outgoingCall = GetOutgoingCall();
-
-    // If the call state isn't incoming but we do have an outgoing call then
-    // we must be seeing a status update for our outgoing call.
-    if (outgoingCall &&
-        aCallState != nsITelephonyProvider::CALL_STATE_INCOMING) {
-      outgoingCall->UpdateCallIndex(aCallIndex);
-      outgoingCall->UpdateEmergency(aIsEmergency);
-      modifiedCall.swap(outgoingCall);
-    }
-  }
-
   if (modifiedCall) {
+    modifiedCall->UpdateEmergency(aIsEmergency);
     modifiedCall->UpdateSwitchable(aIsSwitchable);
     modifiedCall->UpdateMergeable(aIsMergeable);
 
