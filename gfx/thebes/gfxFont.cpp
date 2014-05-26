@@ -4051,8 +4051,8 @@ template<typename T>
 bool
 gfxFont::SplitAndInitTextRun(gfxContext *aContext,
                              gfxTextRun *aTextRun,
-                             const T *aString,
-                             uint32_t aRunStart,
+                             const T *aString, // text for this font run
+                             uint32_t aRunStart, // position in the textrun
                              uint32_t aRunLength,
                              int32_t aRunScript)
 {
@@ -4086,9 +4086,9 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
     // is short enough to fit in the word cache and it lacks spaces.
     if (SpaceMayParticipateInShaping(aRunScript)) {
         if (aRunLength > wordCacheCharLimit ||
-            HasSpaces(aString + aRunStart, aRunLength)) {
+            HasSpaces(aString, aRunLength)) {
             TEXT_PERF_INCR(tp, wordCacheSpaceRules);
-            return ShapeTextWithoutWordCache(aContext, aString + aRunStart,
+            return ShapeTextWithoutWordCache(aContext, aString,
                                              aRunStart, aRunLength, aRunScript,
                                              aTextRun);
         }
@@ -4105,16 +4105,15 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
         flags |= gfxTextRunFactory::TEXT_IS_8BIT;
     }
 
-    const T *text = aString + aRunStart;
     uint32_t wordStart = 0;
     uint32_t hash = 0;
     bool wordIs8Bit = true;
     int32_t appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
 
-    T nextCh = text[0];
+    T nextCh = aString[0];
     for (uint32_t i = 0; i <= aRunLength; ++i) {
         T ch = nextCh;
-        nextCh = (i < aRunLength - 1) ? text[i + 1] : '\n';
+        nextCh = (i < aRunLength - 1) ? aString[i + 1] : '\n';
         bool boundary = IsBoundarySpace(ch, nextCh);
         bool invalid = !boundary && gfxFontGroup::IsInvalidChar(ch);
         uint32_t length = i - wordStart;
@@ -4138,7 +4137,7 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
         if (length > wordCacheCharLimit) {
             TEXT_PERF_INCR(tp, wordCacheLong);
             bool ok = ShapeFragmentWithoutWordCache(aContext,
-                                                    text + wordStart,
+                                                    aString + wordStart,
                                                     aRunStart + wordStart,
                                                     length,
                                                     aRunScript,
@@ -4157,7 +4156,7 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
                 }
             }
             gfxShapedWord *sw = GetShapedWord(aContext,
-                                              text + wordStart, length,
+                                              aString + wordStart, length,
                                               hash, aRunScript,
                                               appUnitsPerDevUnit,
                                               wordFlags, tp);
@@ -5390,8 +5389,8 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
             }
 #endif
 
-            InitScriptRun(aContext, aTextRun, textPtr,
-                          runStart, runLimit, runScript);
+            InitScriptRun(aContext, aTextRun, textPtr + runStart,
+                          runStart, runLimit - runStart, runScript);
         }
     }
 
@@ -5420,20 +5419,20 @@ template<typename T>
 void
 gfxFontGroup::InitScriptRun(gfxContext *aContext,
                             gfxTextRun *aTextRun,
-                            const T *aString,
-                            uint32_t aScriptRunStart,
-                            uint32_t aScriptRunEnd,
+                            const T *aString, // text for this script run,
+                                              // not the entire textrun
+                            uint32_t aOffset, // position of the script run
+                                              // within the textrun
+                            uint32_t aLength, // length of the script run
                             int32_t aRunScript)
 {
-    NS_ASSERTION(aScriptRunEnd > aScriptRunStart,
-                 "don't call InitScriptRun for a zero-length run");
+    NS_ASSERTION(aLength > 0, "don't call InitScriptRun for a 0-length run");
 
     gfxFont *mainFont = GetFontAt(0);
 
-    uint32_t runStart = aScriptRunStart;
+    uint32_t runStart = 0;
     nsAutoTArray<gfxTextRange,3> fontRanges;
-    ComputeRanges(fontRanges, aString + aScriptRunStart,
-                  aScriptRunEnd - aScriptRunStart, aRunScript);
+    ComputeRanges(fontRanges, aString, aLength, aRunScript);
     uint32_t numRanges = fontRanges.Length();
 
     for (uint32_t r = 0; r < numRanges; r++) {
@@ -5444,24 +5443,26 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
         // create the glyph run for this range
         if (matchedFont) {
             aTextRun->AddGlyphRun(matchedFont, range.matchType,
-                                  runStart, (matchedLength > 0));
+                                  aOffset + runStart, (matchedLength > 0));
             // do glyph layout and record the resulting positioned glyphs
-            if (!matchedFont->SplitAndInitTextRun(aContext, aTextRun, aString,
-                                                  runStart, matchedLength,
+            if (!matchedFont->SplitAndInitTextRun(aContext, aTextRun,
+                                                  aString + runStart,
+                                                  aOffset + runStart,
+                                                  matchedLength,
                                                   aRunScript)) {
                 // glyph layout failed! treat as missing glyphs
                 matchedFont = nullptr;
             }
         } else {
             aTextRun->AddGlyphRun(mainFont, gfxTextRange::kFontGroup,
-                                  runStart, (matchedLength > 0));
+                                  aOffset + runStart, (matchedLength > 0));
         }
 
         if (!matchedFont) {
             // We need to set cluster boundaries (and mark spaces) so that
             // surrogate pairs, combining characters, etc behave properly,
             // even if we don't have glyphs for them
-            aTextRun->SetupClusterBoundaries(runStart, aString + runStart,
+            aTextRun->SetupClusterBoundaries(aOffset + runStart, aString + runStart,
                                              matchedLength);
 
             // various "missing" characters may need special handling,
@@ -5473,11 +5474,11 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
                 // tab and newline are not to be displayed as hexboxes,
                 // but do need to be recorded in the textrun
                 if (ch == '\n') {
-                    aTextRun->SetIsNewline(index);
+                    aTextRun->SetIsNewline(aOffset + index);
                     continue;
                 }
                 if (ch == '\t') {
-                    aTextRun->SetIsTab(index);
+                    aTextRun->SetIsTab(aOffset + index);
                     continue;
                 }
 
@@ -5485,10 +5486,10 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
                 // special Unicode spaces; omit these checks in 8-bit runs
                 if (sizeof(T) == sizeof(char16_t)) {
                     if (NS_IS_HIGH_SURROGATE(ch) &&
-                        index + 1 < aScriptRunEnd &&
+                        index + 1 < aLength &&
                         NS_IS_LOW_SURROGATE(aString[index + 1]))
                     {
-                        aTextRun->SetMissingGlyph(index,
+                        aTextRun->SetMissingGlyph(aOffset + index,
                                                   SURROGATE_TO_UCS4(ch,
                                                                     aString[index + 1]),
                                                   mainFont);
@@ -5503,7 +5504,7 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
                         nscoord advance =
                             aTextRun->GetAppUnitsPerDevUnit() * floor(wid + 0.5);
                         if (gfxShapedText::CompressedGlyph::IsSimpleAdvance(advance)) {
-                            aTextRun->GetCharacterGlyphs()[index].
+                            aTextRun->GetCharacterGlyphs()[aOffset + index].
                                 SetSimpleGlyph(advance,
                                                mainFont->GetSpaceGlyph());
                         } else {
@@ -5513,7 +5514,7 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
                             detailedGlyph.mXOffset = detailedGlyph.mYOffset = 0;
                             gfxShapedText::CompressedGlyph g;
                             g.SetComplex(true, true, 1);
-                            aTextRun->SetGlyphs(index,
+                            aTextRun->SetGlyphs(aOffset + index,
                                                 g, &detailedGlyph);
                         }
                         continue;
@@ -5526,7 +5527,7 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
                 }
 
                 // record char code so we can draw a box with the Unicode value
-                aTextRun->SetMissingGlyph(index, ch, mainFont);
+                aTextRun->SetMissingGlyph(aOffset + index, ch, mainFont);
             }
         }
 
