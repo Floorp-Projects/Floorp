@@ -317,7 +317,7 @@ StyleEditorUI.prototype = {
       }
       NetUtil.asyncFetch(file, (stream, status) => {
         if (!Components.isSuccessCode(status)) {
-          this.emit("error", LOAD_ERROR);
+          this.emit("error", { key: LOAD_ERROR });
           return;
         }
         let source = NetUtil.readInputStreamToString(stream, stream.available());
@@ -347,13 +347,11 @@ StyleEditorUI.prototype = {
    *
    * @param  {string} event
    *         Event name
-   * @param  {string} errorCode
-   *         Code represeting type of error
-   * @param  {string} message
-   *         The full error message
+   * @param  {data} data
+   *         The event data
    */
-  _onError: function(event, errorCode, message) {
-    this.emit("error", errorCode, message);
+  _onError: function(event, data) {
+    this.emit("error", data);
   },
 
   /**
@@ -501,15 +499,29 @@ StyleEditorUI.prototype = {
 
           editor.onShow();
 
+          this.emit("editor-selected", editor);
+
+          // Is there any CSS coverage markup to include?
           csscoverage.getUsage(this._target).then(usage => {
             let href = editor.styleSheet.href || editor.styleSheet.nodeHref;
             usage.createEditorReport(href).then(data => {
               editor.removeAllUnusedRegions();
-              editor.addUnusedRegions(data.reports);
+
+              if (data.reports.length > 0) {
+                // So there is some coverage markup, but can we apply it?
+                let text = editor.sourceEditor.getText() + "\r";
+                // If the CSS text contains a '}' with some non-whitespace
+                // after then we assume this is compressed CSS and stop
+                // marking-up.
+                if (!/}\s*\S+\s*\r/.test(text)) {
+                  editor.addUnusedRegions(data.reports);
+                }
+                else {
+                  this.emit("error", { key: "error-compressed", level: "info" });
+                }
+              }
             });
           }, console.error);
-
-          this.emit("editor-selected", editor);
         }.bind(this)).then(null, Cu.reportError);
       }.bind(this)
     });

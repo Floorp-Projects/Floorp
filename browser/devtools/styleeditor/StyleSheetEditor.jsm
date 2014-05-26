@@ -231,7 +231,7 @@ StyleSheetEditor.prototype = {
         return source;
       });
     }, e => {
-      this.emit("error", LOAD_ERROR, this.styleSheet.href);
+      this.emit("error", { key: LOAD_ERROR, append: this.styleSheet.href });
       throw e;
     })
   },
@@ -320,8 +320,8 @@ StyleSheetEditor.prototype = {
    *         Event type
    * @param  {string} errorCode
    */
-  _onError: function(event, errorCode) {
-    this.emit("error", errorCode);
+  _onError: function(event, data) {
+    this.emit("error", data);
   },
 
   /**
@@ -502,7 +502,7 @@ StyleSheetEditor.prototype = {
           if (callback) {
             callback(null);
           }
-          this.emit("error", SAVE_ERROR);
+          this.emit("error", { key: SAVE_ERROR });
           return;
         }
         FileUtils.closeSafeFileOutputStream(ostream);
