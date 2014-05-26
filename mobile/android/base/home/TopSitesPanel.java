@@ -328,7 +328,7 @@ public class TopSitesPanel extends HomeFragment {
                 }
             });
 
-            Telemetry.sendUIEvent(TelemetryContract.Event.TOP_SITES_PIN);
+            Telemetry.sendUIEvent(TelemetryContract.Event.PIN);
             return true;
         }
 
@@ -343,7 +343,7 @@ public class TopSitesPanel extends HomeFragment {
                 }
             });
 
-            Telemetry.sendUIEvent(TelemetryContract.Event.TOP_SITES_UNPIN);
+            Telemetry.sendUIEvent(TelemetryContract.Event.UNPIN);
 
             return true;
         }
@@ -352,7 +352,7 @@ public class TopSitesPanel extends HomeFragment {
             // Decode "user-entered" URLs before showing them.
             mEditPinnedSiteListener.onEditPinnedSite(info.position, decodeUserEnteredUrl(info.url));
 
-            Telemetry.sendUIEvent(TelemetryContract.Event.TOP_SITES_EDIT);
+            Telemetry.sendUIEvent(TelemetryContract.Event.EDIT);
             return true;
         }
 

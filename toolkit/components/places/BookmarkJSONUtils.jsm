@@ -77,7 +77,7 @@ this.BookmarkJSONUtils = Object.freeze({
    *       before executing the restore.
    *
    * @param aFilePath
-   *        OS.File path string of bookmarks in JSON format to be restored.
+   *        OS.File path string of bookmarks in JSON or JSONlz4 format to be restored.
    * @param aReplace
    *        Boolean if true, replace existing bookmarks, else merge.
    *
@@ -101,8 +101,11 @@ this.BookmarkJSONUtils = Object.freeze({
           throw new Error("Cannot restore from nonexisting json file");
 
         let importer = new BookmarkImporter(aReplace);
-        yield importer.importFromURL(OS.Path.toFileURI(aFilePath));
-
+        if (aFilePath.endsWith("jsonlz4")) {
+          yield importer.importFromCompressedFile(aFilePath);
+        } else {
+          yield importer.importFromURL(OS.Path.toFileURI(aFilePath));
+        }
         notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS);
       } catch(ex) {
         Cu.reportError("Failed to restore bookmarks from " + aFilePath + ": " + ex);
@@ -116,11 +119,12 @@ this.BookmarkJSONUtils = Object.freeze({
    * Serializes bookmarks using JSON, and writes to the supplied file path.
    *
    * @param aFilePath
-   *        OS.File path string for the "bookmarks.json" file to be created.
+   *        OS.File path string for the bookmarks file to be created.
    * @param [optional] aOptions
    *        Object containing options for the export:
    *         - failIfHashIs: if the generated file would have the same hash
    *                         defined here, will reject with ex.becauseSameHash
+   *         - compress: if true, writes file using lz4 compression
    * @return {Promise}
    * @resolves once the file has been created, to an object with the
    *           following properties:
@@ -169,8 +173,11 @@ this.BookmarkJSONUtils = Object.freeze({
       // Do not write to the tmp folder, otherwise if it has a different
       // filesystem writeAtomic will fail.  Eventual dangling .tmp files should
       // be cleaned up by the caller.
-      yield OS.File.writeAtomic(aFilePath, jsonString,
-                                { tmpPath: OS.Path.join(aFilePath + ".tmp") });
+      let writeOptions = { tmpPath: OS.Path.join(aFilePath + ".tmp") };
+      if (aOptions.compress)
+        writeOptions.compression = "lz4";
+
+      yield OS.File.writeAtomic(aFilePath, jsonString, writeOptions);
       return { count: count, hash: hash };
     });
   }
@@ -224,6 +231,25 @@ BookmarkImporter.prototype = {
     }
 
     return deferred.promise;
+  },
+
+  /**
+   * Import bookmarks from a compressed file.
+   *
+   * @param aFilePath
+   *        OS.File path string of the bookmark data.
+   *
+   * @return {Promise}
+   * @resolves When the new bookmarks have been created.
+   * @rejects JavaScript exception.
+   */
+  importFromCompressedFile: function* BI_importFromCompressedFile(aFilePath) {
+      let aResult = yield OS.File.read(aFilePath, { compression: "lz4" });
+      let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+                        createInstance(Ci.nsIScriptableUnicodeConverter);
+      converter.charset = "UTF-8";
+      let jsonString = converter.convertFromByteArray(aResult, aResult.length);
+      yield this.importFromJSON(jsonString);
   },
 
   /**
