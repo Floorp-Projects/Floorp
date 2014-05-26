@@ -438,13 +438,13 @@ nsXULContentUtils::SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElemen
     nsAutoString events;
     aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::events, events);
     if (events.IsEmpty())
-        events.AssignLiteral("*");
+        events.Assign('*');
 
     nsAutoString targets;
     aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::targets, targets);
 
     if (targets.IsEmpty())
-        targets.AssignLiteral("*");
+        targets.Assign('*');
 
     nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(aElement);
     NS_ASSERTION(domelement != nullptr, "not a DOM element");
