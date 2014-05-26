@@ -519,10 +519,10 @@ TelephonyRequestParent::NotifyDialError(const nsAString& aError)
 }
 
 NS_IMETHODIMP
-TelephonyRequestParent::NotifyDialSuccess()
+TelephonyRequestParent::NotifyDialSuccess(uint32_t aCallIndex)
 {
   NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
 
-  return (SendNotifyDialSuccess() &&
+  return (SendNotifyDialSuccess(aCallIndex) &&
           Send__delete__(this, DialResponse())) ? NS_OK : NS_ERROR_FAILURE;
 }
