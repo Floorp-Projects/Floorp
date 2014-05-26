@@ -2234,7 +2234,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 .notification-anchor-icon:-moz-focusring {
   outline: 1px dotted -moz-DialogText;
-  outline-offset: -3px;
 }
 
 .default-notification-icon,
