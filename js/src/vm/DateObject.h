@@ -41,6 +41,7 @@ class DateObject : public NativeObject
 
   public:
     static const Class class_;
+    static const Class protoClass_;
 
     inline const js::Value& UTCTime() const {
         return getFixedSlot(UTC_TIME_SLOT);
