@@ -823,3 +823,34 @@ ClampPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
 
     return true;
 }
+
+bool
+FilterTypeSetPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
+{
+    MOZ_ASSERT(ins->numOperands() == 1);
+
+    // Do nothing if already same type.
+    if (ins->type() == ins->getOperand(0)->type())
+        return true;
+
+    // Box input if ouput type is MIRType_Value
+    if (ins->type() == MIRType_Value) {
+        ins->replaceOperand(0, boxAt(alloc, ins, ins->getOperand(0)));
+        return true;
+    }
+
+    // For simplicity just mark output type as MIRType_Value if input type
+    // is MIRType_Value. It should be possible to unbox, but we need to
+    // add extra code for Undefined/Null.
+    if (ins->getOperand(0)->type() == MIRType_Value) {
+        ins->setResultType(MIRType_Value);
+        return true;
+    }
+
+    // In all other cases we will definitely bail, since types don't
+    // correspond. Just box and mark output as MIRType_Value.
+    ins->replaceOperand(0, boxAt(alloc, ins, ins->getOperand(0)));
+    ins->setResultType(MIRType_Value);
+
+    return true;
+}
