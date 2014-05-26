@@ -111,6 +111,7 @@ static bool sUseHardLinks = true;
 
 #ifdef XP_WIN
 #include "updatehelper.h"
+#include <aclapi.h>
 
 // Closes the handle if valid and if the updater is elevated returns with the
 // return code specified. This prevents multiple launches of the callback
@@ -2801,35 +2802,141 @@ int NS_main(int argc, NS_tchar **argv)
         }
       }
 
-      // If we didn't want to use the service at all, or if an update was 
-      // already happening, or launching the service command failed, then 
+      // If we didn't want to use the service at all, or if an update was
+      // already happening, or launching the service command failed, then
       // launch the elevated updater.exe as we do without the service.
       // We don't launch the elevated updater in the case that we did have
       // write access all along because in that case the only reason we're
-      // using the service is because we are testing. 
-      if (!useService && !noServiceFallback && 
+      // using the service is because we are testing.
+      if (!useService && !noServiceFallback &&
           updateLockFileHandle == INVALID_HANDLE_VALUE) {
-        SHELLEXECUTEINFO sinfo;
-        memset(&sinfo, 0, sizeof(SHELLEXECUTEINFO));
-        sinfo.cbSize       = sizeof(SHELLEXECUTEINFO);
-        sinfo.fMask        = SEE_MASK_FLAG_NO_UI |
-                             SEE_MASK_FLAG_DDEWAIT |
-                             SEE_MASK_NOCLOSEPROCESS;
-        sinfo.hwnd         = nullptr;
-        sinfo.lpFile       = argv[0];
-        sinfo.lpParameters = cmdLine;
-        sinfo.lpVerb       = L"runas";
-        sinfo.nShow        = SW_SHOWNORMAL;
 
-        bool result = ShellExecuteEx(&sinfo);
-        free(cmdLine);
-
-        if (result) {
-          WaitForSingleObject(sinfo.hProcess, INFINITE);
-          CloseHandle(sinfo.hProcess);
+        // Get a unique directory name to secure
+        RPC_WSTR guidString = RPC_WSTR(L"");
+        GUID guid;
+        HRESULT hr = CoCreateGuid(&guid);
+        BOOL result = TRUE;
+        bool safeToUpdate = true;
+        WCHAR secureUpdaterPath[MAX_PATH + 1] = { L'\0' };
+        WCHAR secureDirPath[MAX_PATH + 1] = { L'\0' };
+        if (SUCCEEDED(hr)) {
+          UuidToString(&guid, &guidString);
+          result = PathGetSiblingFilePath(secureDirPath, argv[0],
+                                          reinterpret_cast<LPCWSTR>(guidString));
+          RpcStringFree(&guidString);
         } else {
-          WriteStatusFile(ELEVATION_CANCELED);
+          // This should never happen, but just in case
+          result = PathGetSiblingFilePath(secureDirPath, argv[0], L"tmp_update");
         }
+
+        if (!result) {
+          fprintf(stderr, "Could not obtain secure update directory path");
+          safeToUpdate = false;
+        }
+
+        // If it's still safe to update, create the directory
+        if (safeToUpdate) {
+          result = CreateDirectoryW(secureDirPath, nullptr);
+          if (!result) {
+            fprintf(stderr, "Could not create secure update directory");
+            safeToUpdate = false;
+          }
+        }
+
+        // If it's still safe to update, get the new updater path
+        if (safeToUpdate) {
+          wcsncpy(secureUpdaterPath, secureDirPath, MAX_PATH);
+          result = PathAppendSafe(secureUpdaterPath, L"updater.exe");
+          if (!result) {
+            fprintf(stderr, "Could not obtain secure updater file name");
+            safeToUpdate = false;
+          }
+        }
+
+        // If it's still safe to update, copy the file in
+        if (safeToUpdate) {
+          result = CopyFileW(argv[0], secureUpdaterPath, TRUE);
+          if (!result) {
+            fprintf(stderr, "Could not copy updater to secure location");
+            safeToUpdate = false;
+          }
+        }
+
+        // If it's still safe to update, restrict access to the directory item
+        // itself so that the directory cannot be deleted and re-created,
+        // nor have its properties modified.  Note that this does not disallow
+        // adding items inside the directory.
+        HANDLE handle = INVALID_HANDLE_VALUE;
+        if (safeToUpdate) {
+          handle = CreateFileW(secureDirPath, GENERIC_READ, FILE_SHARE_READ,
+                               nullptr, OPEN_EXISTING,
+                               FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+          safeToUpdate = handle != INVALID_HANDLE_VALUE;
+        }
+
+        // If it's still safe to update, deny write access completely to the
+        // directory.
+        PACL originalACL = nullptr;
+        PSECURITY_DESCRIPTOR sd = nullptr;
+        if (safeToUpdate) {
+          safeToUpdate = UACHelper::DenyWriteACLOnPath(secureDirPath,
+                                                       &originalACL, &sd);
+        }
+
+        // If it's still safe to update, verify that there is only updater.exe
+        // in the directory and nothing else.
+        if (safeToUpdate) {
+          if (!UACHelper::IsDirectorySafe(secureDirPath)) {
+            safeToUpdate = false;
+          }
+        }
+
+        if (!safeToUpdate) {
+          fprintf(stderr, "Will not proceed to copy secure updater because it "
+                          "is not safe to do so.");
+          WriteStatusFile(SECURE_LOCATION_UPDATE_ERROR);
+        } else {
+          SHELLEXECUTEINFO sinfo;
+          memset(&sinfo, 0, sizeof(SHELLEXECUTEINFO));
+          sinfo.cbSize       = sizeof(SHELLEXECUTEINFO);
+          sinfo.fMask        = SEE_MASK_FLAG_NO_UI |
+                              SEE_MASK_FLAG_DDEWAIT |
+                              SEE_MASK_NOCLOSEPROCESS;
+          sinfo.hwnd         = nullptr;
+          sinfo.lpFile       = secureUpdaterPath;
+          sinfo.lpParameters = cmdLine;
+          sinfo.lpVerb       = L"runas";
+          sinfo.nShow        = SW_SHOWNORMAL;
+
+          bool result = ShellExecuteEx(&sinfo);
+          free(cmdLine);
+
+          if (result) {
+            WaitForSingleObject(sinfo.hProcess, INFINITE);
+            CloseHandle(sinfo.hProcess);
+          } else {
+            WriteStatusFile(ELEVATION_CANCELED);
+          }
+        }
+
+        // All done, revert back the permissions.
+        if (originalACL) {
+          SetNamedSecurityInfoW(const_cast<LPWSTR>(secureDirPath), SE_FILE_OBJECT,
+                                DACL_SECURITY_INFORMATION, nullptr, nullptr,
+                                originalACL, nullptr);
+        }
+        if (sd) {
+          LocalFree(sd);
+        }
+
+        // Done with the directory, no need to lock it.
+        if (INVALID_HANDLE_VALUE != handle) {
+          CloseHandle(handle);
+        }
+
+        // We no longer need the secure updater and directory
+        DeleteFileW(secureUpdaterPath);
+        RemoveDirectoryW(secureDirPath);
       }
 
       if (argc > callbackIndex) {
