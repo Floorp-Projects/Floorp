@@ -14,8 +14,10 @@
 ]>
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/devtools/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/devtools/splitview.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/splitview.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/devtools/styleeditor.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/styleeditor.css" type="text/css"?>
@@ -152,39 +154,43 @@
       <!-- The data for this comes from UsageReportActor.createPageReport -->
       <div class="csscoverage-report-container">
         <div class="csscoverage-report-content">
-          <h2>&csscoverage.unused;</h2>
-          <p>&csscoverage.noMatch;</p>
-          <ul>
-            <li foreach="rule in ${unusedRules}">
-              <code>${rule.selectorText}</code>
-              <span class="link"
-                  title="${rule.url}">(${rule.shortHref} : ${rule.start.line})</span>
-            </li>
-          </ul>
-          <h2>&csscoverage.optimize;</h2>
-          <p>
-            &csscoverage.preload1;
-            <code>&lt;link ...></code>
-            &csscoverage.preload2;
-            <code>&lt;style>...</code>
-            &csscoverage.preload3;
-          </p>
-          <div if="${pages.length == 0}">
-            &csscoverage.noPreload;
+          <div class="csscoverage-report-summary">
+            <div class="csscoverage-report-chart"/>
           </div>
-          <div if="${pages.length > 0}">
-            <div foreach="page in ${pages}">
+          <div class="csscoverage-report-unused">
+            <h2>&csscoverage.unused;</h2>
+            <p>&csscoverage.noMatch;</p>
+            <div foreach="page in ${unused}">
               <h3>${page.url}</h3>
-              <textarea>&lt;style>
-<loop foreach="rule in ${page.preloadRules}"
-                    onclick="${rule.onclick}">${rule.formattedCssText}</loop>&lt;/style></textarea>
+              <code foreach="rule in ${page.rules}"
+                    href="${rule.url}"
+                    class="csscoverage-list">${rule.selectorText}</code>
             </div>
           </div>
-          <p>
-            &csscoverage.footer1;
-            <a target="_blank" href="&csscoverage.footer2;">&csscoverage.footer3;</a>
-            &csscoverage.footer4;
-          </p>
+          <div class="csscoverage-report-optimize">
+            <h2>&csscoverage.optimize;</h2>
+            <p>
+              &csscoverage.preload1;
+              <code>&lt;link ...></code>
+              &csscoverage.preload2;
+              <code>&lt;style>...</code>
+              &csscoverage.preload3;
+            </p>
+            <div if="${preload.length == 0}">&csscoverage.noPreload;</div>
+            <div if="${preload.length > 0}">
+              <div foreach="page in ${preload}">
+                <h3>${page.url}</h3>
+                <textarea>&lt;style>
+<loop foreach="rule in ${page.rules}"
+                      onclick="${rule.onclick}">${rule.formattedCssText}</loop>&lt;/style></textarea>
+              </div>
+            </div>
+            <p>
+              &csscoverage.footer1;
+              <a target="_blank" href="&csscoverage.footer2;">&csscoverage.footer3;</a>
+              &csscoverage.footer4;
+            </p>
+          </div>
           <p>&#160;</p>
         </div>
       </div>
