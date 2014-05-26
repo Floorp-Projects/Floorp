@@ -223,7 +223,7 @@ NS_IMETHODIMP
 GfxInfo::GetAdapterRAM(nsAString & aAdapterRAM)
 {
   EnsureInitialized();
-  aAdapterRAM.AssignLiteral("");
+  aAdapterRAM.Truncate();
   return NS_OK;
 }
 
@@ -240,7 +240,7 @@ NS_IMETHODIMP
 GfxInfo::GetAdapterDriver(nsAString & aAdapterDriver)
 {
   EnsureInitialized();
-  aAdapterDriver.AssignLiteral("");
+  aAdapterDriver.Truncate();
   return NS_OK;
 }
 
@@ -274,7 +274,7 @@ NS_IMETHODIMP
 GfxInfo::GetAdapterDriverDate(nsAString & aAdapterDriverDate)
 {
   EnsureInitialized();
-  aAdapterDriverDate.AssignLiteral("");
+  aAdapterDriverDate.Truncate();
   return NS_OK;
 }
 
