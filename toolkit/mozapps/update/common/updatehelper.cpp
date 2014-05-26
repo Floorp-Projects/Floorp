@@ -33,7 +33,6 @@ using mozilla::MakeUnique;
 using mozilla::UniquePtr;
 
 WCHAR* MakeCommandLine(int argc, WCHAR **argv);
-BOOL PathAppendSafe(LPWSTR base, LPCWSTR extra);
 
 /**
  * Obtains the path of a file in the same directory as the specified file.
