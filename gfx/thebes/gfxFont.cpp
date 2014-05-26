@@ -27,6 +27,8 @@
 #include "gfxUserFontSet.h"
 #include "gfxPlatformFontList.h"
 #include "gfxScriptItemizer.h"
+#include "nsSpecialCasingData.h"
+#include "nsTextRunTransformations.h"
 #include "nsUnicodeProperties.h"
 #include "nsMathUtils.h"
 #include "nsBidiUtils.h"
@@ -5442,16 +5444,27 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
 
         // create the glyph run for this range
         if (matchedFont) {
-            aTextRun->AddGlyphRun(matchedFont, range.matchType,
-                                  aOffset + runStart, (matchedLength > 0));
-            // do glyph layout and record the resulting positioned glyphs
-            if (!matchedFont->SplitAndInitTextRun(aContext, aTextRun,
-                                                  aString + runStart,
-                                                  aOffset + runStart,
-                                                  matchedLength,
-                                                  aRunScript)) {
-                // glyph layout failed! treat as missing glyphs
-                matchedFont = nullptr;
+            if (mStyle.smallCaps) {
+                if (!matchedFont->InitSmallCapsRun(aContext, aTextRun,
+                                                   aString + runStart,
+                                                   aOffset + runStart,
+                                                   matchedLength,
+                                                   range.matchType,
+                                                   aRunScript)) {
+                    matchedFont = nullptr;
+                }
+            } else {
+                aTextRun->AddGlyphRun(matchedFont, range.matchType,
+                                      aOffset + runStart, (matchedLength > 0));
+                // do glyph layout and record the resulting positioned glyphs
+                if (!matchedFont->SplitAndInitTextRun(aContext, aTextRun,
+                                                      aString + runStart,
+                                                      aOffset + runStart,
+                                                      matchedLength,
+                                                      aRunScript)) {
+                    // glyph layout failed! treat as missing glyphs
+                    matchedFont = nullptr;
+                }
             }
         } else {
             aTextRun->AddGlyphRun(mainFont, gfxTextRange::kFontGroup,
@@ -5533,6 +5546,180 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
 
         runStart += matchedLength;
     }
+}
+
+bool
+gfxFont::InitSmallCapsRun(gfxContext     *aContext,
+                          gfxTextRun     *aTextRun,
+                          const uint8_t  *aText,
+                          uint32_t        aOffset,
+                          uint32_t        aLength,
+                          uint8_t         aMatchType,
+                          int32_t         aScript)
+{
+    NS_ConvertASCIItoUTF16 unicodeString(reinterpret_cast<const char*>(aText),
+                                         aLength);
+    return InitSmallCapsRun(aContext, aTextRun, unicodeString.get(),
+                            aOffset, aLength, aMatchType, aScript);
+}
+
+bool
+gfxFont::InitSmallCapsRun(gfxContext     *aContext,
+                          gfxTextRun     *aTextRun,
+                          const char16_t *aText,
+                          uint32_t        aOffset,
+                          uint32_t        aLength,
+                          uint8_t         aMatchType,
+                          int32_t         aScript)
+{
+    bool ok = true;
+
+    nsRefPtr<gfxFont> smallCapsFont = GetSmallCapsFont();
+
+    enum RunCaseState {
+        kUpperOrCaseless, // will be untouched by font-variant:small-caps
+        kLowercase,       // will be uppercased and reduced
+        kSpecialUpper     // specials: don't shrink, but apply uppercase mapping
+    };
+    RunCaseState runCase = kUpperOrCaseless;
+    uint32_t runStart = 0;
+
+    for (uint32_t i = 0; i <= aLength; ++i) {
+        RunCaseState chCase = kUpperOrCaseless;
+        // Unless we're at the end, figure out what treatment the current
+        // character will need.
+        if (i < aLength) {
+            uint32_t ch = aText[i];
+            if (NS_IS_HIGH_SURROGATE(ch) && i < aLength - 1 &&
+                NS_IS_LOW_SURROGATE(aText[i + 1])) {
+                ch = SURROGATE_TO_UCS4(ch, aText[i + 1]);
+            }
+            // Characters that aren't the start of a cluster are ignored here.
+            // They get added to whatever lowercase/non-lowercase run we're in.
+            if (IsClusterExtender(ch)) {
+                chCase = runCase;
+            } else {
+                uint32_t ch2 = ToUpperCase(ch);
+                if (ch != ch2 || mozilla::unicode::SpecialUpper(ch)) {
+                    chCase = kLowercase;
+                }
+                else if (mStyle.language == nsGkAtoms::el) {
+                    // In Greek, check for characters that will be modified by
+                    // the GreekUpperCase mapping - this catches accented
+                    // capitals where the accent is to be removed (bug 307039).
+                    // These are handled by using the full-size font with the
+                    // uppercasing transform.
+                    GreekCasing::State state;
+                    ch2 = GreekCasing::UpperCase(ch, state);
+                    if (ch != ch2) {
+                        chCase = kSpecialUpper;
+                    }
+                }
+            }
+        }
+
+        // At the end of the text or when the current character needs different
+        // casing treatment from the current run, finish the run-in-progress
+        // and prepare to accumulate a new run.
+        // Note that we do not look at any source data for offset [i] here,
+        // as that would be invalid in the case where i==length.
+        if ((i == aLength || runCase != chCase) && runStart < i) {
+            uint32_t runLength = i - runStart;
+            gfxFont* f = this;
+            switch (runCase) {
+            case kUpperOrCaseless:
+                // just use the current font and the existing string
+                aTextRun->AddGlyphRun(f, aMatchType, aOffset + runStart, true);
+                if (!f->SplitAndInitTextRun(aContext, aTextRun,
+                                            aText + runStart,
+                                            aOffset + runStart, runLength,
+                                            aScript)) {
+                    ok = false;
+                }
+                break;
+
+            case kLowercase:
+                // use reduced-size font, fall through to uppercase the text
+                f = smallCapsFont;
+
+            case kSpecialUpper:
+                // apply uppercase transform to the string
+                nsDependentSubstring origString(aText + runStart, runLength);
+                nsAutoString convertedString;
+                nsAutoTArray<bool,50> charsToMergeArray;
+                nsAutoTArray<bool,50> deletedCharsArray;
+
+                bool mergeNeeded = nsCaseTransformTextRunFactory::
+                    TransformString(origString,
+                                    convertedString,
+                                    true,
+                                    mStyle.language,
+                                    charsToMergeArray,
+                                    deletedCharsArray);
+
+                if (mergeNeeded) {
+                    // This is the hard case: the transformation caused chars
+                    // to be inserted or deleted, so we can't shape directly
+                    // into the destination textrun but have to handle the
+                    // mismatch of character positions.
+                    gfxTextRunFactory::Parameters params = {
+                        aContext, nullptr, nullptr, nullptr, 0,
+                        aTextRun->GetAppUnitsPerDevUnit()
+                    };
+                    nsAutoPtr<gfxTextRun> tempRun;
+                    tempRun =
+                        gfxTextRun::Create(&params, convertedString.Length(),
+                                           aTextRun->GetFontGroup(), 0);
+                    tempRun->AddGlyphRun(f, aMatchType, 0, true);
+                    if (!f->SplitAndInitTextRun(aContext, tempRun,
+                                                convertedString.BeginReading(),
+                                                0, convertedString.Length(),
+                                                aScript)) {
+                        ok = false;
+                    } else {
+                        nsAutoPtr<gfxTextRun> mergedRun;
+                        mergedRun =
+                            gfxTextRun::Create(&params, runLength,
+                                               aTextRun->GetFontGroup(), 0);
+                        MergeCharactersInTextRun(mergedRun, tempRun,
+                                                 charsToMergeArray.Elements(),
+                                                 deletedCharsArray.Elements());
+                        aTextRun->CopyGlyphDataFrom(mergedRun, 0, runLength,
+                                                    aOffset + runStart);
+                    }
+                } else {
+                    aTextRun->AddGlyphRun(f, aMatchType, aOffset + runStart,
+                                          true);
+                    if (!f->SplitAndInitTextRun(aContext, aTextRun,
+                                                convertedString.BeginReading(),
+                                                aOffset + runStart, runLength,
+                                                aScript)) {
+                        ok = false;
+                    }
+                }
+                break;
+            }
+
+            runStart = i;
+        }
+
+        if (i < aLength) {
+            runCase = chCase;
+        }
+    }
+
+    return ok;
+}
+
+already_AddRefed<gfxFont>
+gfxFont::GetSmallCapsFont()
+{
+    gfxFontStyle style(*GetStyle());
+    style.size *= SMALL_CAPS_SCALE_FACTOR;
+    style.smallCaps = false;
+    gfxFontEntry* fe = GetFontEntry();
+    bool needsBold = style.weight >= 600 && !fe->IsBold();
+    return fe->FindOrMakeFont(&style, needsBold);
 }
 
 gfxTextRun *
