@@ -1,5 +1,5 @@
 == input-valid.html input-ref.html
-fuzzy(64,4) == input-customerror.html input-ref.html
+fuzzy(64,4) fails-if(B2G&&browserIsRemote) == input-customerror.html input-ref.html
 skip-if(B2G) fails-if(Android) == input-disabled.html input-ref.html
 skip-if(B2G) fails-if(Android) == input-dyn-disabled.html input-ref.html
 == input-dyn-not-disabled.html input-ref.html
@@ -25,7 +25,7 @@ skip-if(B2G) fails-if(Android) == input-dyn-disabled.html input-ref.html
 == input-pattern-invalid-default.html input-withtext-ref.html
 == input-pattern-invalid-changed.html input-withtext-ref.html
 == input-type-barred.html input-button-ref.html
-fuzzy(64,4) == input-type-invalid.html input-ref.html
+fuzzy(64,4) fails-if(B2G&&browserIsRemote) == input-type-invalid.html input-ref.html
 == input-disabled-fieldset-1.html input-fieldset-ref.html
 == input-disabled-fieldset-2.html input-fieldset-ref.html
 == input-fieldset-legend.html input-fieldset-legend-ref.html

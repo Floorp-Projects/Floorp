@@ -31,7 +31,7 @@
 == insertmultiplemultiple-2.html insertmultiplemultiple-ref.html
 
 # testing bindings that have multiple insertion points
-== multipleinsertionpoints-ref2.xhtml multipleinsertionpoints-ref.xhtml
+fails-if(B2G&&browserIsRemote) == multipleinsertionpoints-ref2.xhtml multipleinsertionpoints-ref.xhtml #Bug 988759
 # append a single element
 skip-if(B2G) == multipleinsertionpoints-appendsingle-1.xhtml multipleinsertionpoints-ref.xhtml # bug 773482
 skip-if(B2G) == multipleinsertionpoints-appendsingle-2.xhtml multipleinsertionpoints-ref.xhtml # bug 773482
@@ -45,7 +45,7 @@ skip-if(B2G) == multipleinsertionpoints-insertmultiple.xhtml multipleinsertionpo
 
 # test appending some nodes whose frame construction should be done lazily
 # followed by appending a node that might not be done lazily
-== multipleappendwithxul.xhtml multipleappendwithxul-ref.xhtml
+skip-if(B2G&&browserIsRemote) == multipleappendwithxul.xhtml multipleappendwithxul-ref.xhtml # Bug 974780
 == multipleappendwithinput.xhtml multipleappendwithinput-ref.xhtml
 == multipleappendwitheditable.xhtml multipleappendwitheditable-ref.xhtml
 

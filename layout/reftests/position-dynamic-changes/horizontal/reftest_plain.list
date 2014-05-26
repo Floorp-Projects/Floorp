@@ -1,13 +1,13 @@
 # Please see the comment at the beginning of reftest.list
 
-== leftN-widthA-rightA.html leftN-widthA-rightA-ref.html
-== leftN-widthA-rightA-2.html leftN-widthA-rightA-2-ref.html
-== leftN-widthA-rightN.html leftN-widthA-rightN-ref.html
-== leftN-widthA-rightN-2.html leftN-widthA-rightN-2-ref.html
-== leftA-widthN-rightA.html leftA-widthN-rightA-ref.html
-== leftN-widthN-rightA.html leftN-widthN-rightA-ref.html
-== leftA-widthN-rightN.html leftA-widthN-rightN-ref.html
-== leftA-widthA-rightN.html leftA-widthA-rightN-ref.html
+fails-if(B2G&&browserIsRemote) == leftN-widthA-rightA.html leftN-widthA-rightA-ref.html
+fails-if(B2G&&browserIsRemote) == leftN-widthA-rightA-2.html leftN-widthA-rightA-2-ref.html
+fails-if(B2G&&browserIsRemote) == leftN-widthA-rightN.html leftN-widthA-rightN-ref.html
+fails-if(B2G&&browserIsRemote) == leftN-widthA-rightN-2.html leftN-widthA-rightN-2-ref.html
+fails-if(B2G&&browserIsRemote) == leftA-widthN-rightA.html leftA-widthN-rightA-ref.html
+fails-if(B2G&&browserIsRemote) == leftN-widthN-rightA.html leftN-widthN-rightA-ref.html
+fails-if(B2G&&browserIsRemote) == leftA-widthN-rightN.html leftA-widthN-rightN-ref.html
+fails-if(B2G&&browserIsRemote) == leftA-widthA-rightN.html leftA-widthA-rightN-ref.html
 == toauto-leftN-widthA-rightA.html toauto-leftN-widthA-rightA-ref.html
 == toauto-leftN-widthA-rightA-2.html toauto-leftN-widthA-rightA-2-ref.html
 == toauto-leftN-widthA-rightN.html toauto-leftN-widthA-rightN-ref.html

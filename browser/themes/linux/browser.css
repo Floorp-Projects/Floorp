@@ -437,22 +437,9 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   list-style-image: url("moz-icon://stock/gtk-preferences?size=menu");
 }
 
-#context-stop {
-  list-style-image: url("moz-icon://stock/gtk-stop?size=menu");
-}
-
-#context-stop[disabled] {
-  list-style-image: url("moz-icon://stock/gtk-stop?size=menu&state=disabled");
-}
-
 #placesContext_reload,
-#context-reload,
 #context-reloadframe {
   list-style-image: url("moz-icon://stock/gtk-refresh?size=menu");
-}
-
-#context-reload[disabled] {
-  list-style-image: url("moz-icon://stock/gtk-refresh?size=menu&state=disabled");
 }
 
 #menu_zoomEnlarge {
@@ -465,38 +452,6 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 
 #menu_zoomReset {
   list-style-image: url("moz-icon://stock/gtk-zoom-100?size=menu");
-}
-
-#context-back {
-  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu");
-}
-
-#context-back[disabled] {
-  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu&state=disabled");
-}
-
-#context-back:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu");
-}
-
-#context-back[disabled]:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu&state=disabled");
-}
-
-#context-forward {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu");
-}
-
-#context-forward[disabled] {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu&state=disabled");
-}
-
-#context-forward:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu");
-}
-
-#context-forward[disabled]:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu&state=disabled");
 }
 
 #menu_showAllHistory {
@@ -2288,4 +2243,24 @@ chatbox {
 
 #UITourTooltipButtons {
   margin-bottom: -10px;
+}
+
+%include ../shared/contextmenu.inc.css
+
+#context-navigation {
+  background-color: -moz-dialog;
+  padding-bottom: 2px;
+  margin-bottom: 2px;
+  -moz-appearance: menuitem;
+}
+
+#context-navigation > .menuitem-iconic > .menu-iconic-left {
+  visibility: visible;
+  /* override toolkit/themes/linux/global/menu.css */
+  -moz-padding-end: 0 !important;
+  -moz-margin-end: 0 !important;
+}
+
+#context-sep-navigation {
+  margin-top: -4px;
 }

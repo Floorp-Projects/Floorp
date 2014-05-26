@@ -77,7 +77,7 @@ fuzzy-if(Android,4,87) skip-if(B2G) == dynamic-clipPath-01.svg pass.svg
 == dynamic-clipPath-02.svg pass.svg
 == dynamic-feFlood-01.svg pass.svg
 asserts(0-1) == dynamic-feImage-01.svg pass.svg # intermittent assertions (bug 886080)
-== dynamic-fill-01.svg dynamic-fill-01-ref.svg
+fails-if(B2G&&browserIsRemote) == dynamic-fill-01.svg dynamic-fill-01-ref.svg
 skip-if(B2G) fuzzy-if(d2d,1,10000) == dynamic-filter-contents-01a.svg dynamic-filter-contents-01-ref.svg
 skip-if(B2G) fuzzy-if(d2d,1,10000) == dynamic-filter-contents-01b.svg dynamic-filter-contents-01-ref.svg
 skip-if(B2G) == dynamic-gradient-contents-01.svg pass.svg
@@ -89,7 +89,7 @@ skip-if(B2G) == dynamic-marker-02.svg dynamic-marker-02-ref.svg
 skip-if(B2G) == dynamic-marker-03.svg pass.svg
 == dynamic-mask-01.svg pass.svg
 skip-if(B2G) == dynamic-mask-contents-01.svg pass.svg
-== dynamic-opacity-property-01.svg pass.svg
+fails-if(B2G&&browserIsRemote) == dynamic-opacity-property-01.svg pass.svg
 skip-if(B2G) == dynamic-pattern-01.svg pass.svg
 skip-if(B2G) == dynamic-pattern-02.svg pass.svg
 skip-if(B2G) == dynamic-pattern-contents-01.svg pass.svg
@@ -115,15 +115,15 @@ skip-if(B2G) == dynamic-text-06.svg pass.svg
 == dynamic-text-07.svg dynamic-text-07-ref.svg
 == dynamic-text-08.svg dynamic-text-08-ref.svg
 skip-if(B2G) == dynamic-textPath-01.svg dynamic-textPath-01-ref.svg
-== dynamic-textPath-02.svg dynamic-textPath-02-ref.svg
-== dynamic-textPath-03.svg dynamic-textPath-03-ref.svg
+fails-if(B2G&&browserIsRemote) == dynamic-textPath-02.svg dynamic-textPath-02-ref.svg
+fails-if(B2G&&browserIsRemote) == dynamic-textPath-03.svg dynamic-textPath-03-ref.svg
 == dynamic-use-01.svg pass.svg
 == dynamic-use-02.svg pass.svg
 skip-if(B2G) == dynamic-use-03.svg pass.svg
 skip-if(B2G) == dynamic-use-04.svg pass.svg
 skip-if(B2G) == dynamic-use-05.svg pass.svg
-== dynamic-use-06.svg pass.svg
-== dynamic-use-07.svg pass.svg
+fails-if(B2G&&browserIsRemote) == dynamic-use-06.svg pass.svg
+fails-if(B2G&&browserIsRemote) == dynamic-use-07.svg pass.svg
 random == dynamic-use-nested-01a.svg dynamic-use-nested-01-ref.svg
 random == dynamic-use-nested-01b.svg dynamic-use-nested-01-ref.svg
 == dynamic-use-remove-width.svg dynamic-use-remove-width-ref.svg
@@ -210,7 +210,7 @@ pref(layout.css.masking.enabled,true) fuzzy-if(d2d,1,6400) == mask-type-04.svg m
 == nesting-invalid-01.svg nesting-invalid-01-ref.svg
 == non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg 
 fuzzy-if(Android||B2G,1,99) fuzzy-if(!contentSameGfxBackendAsCanvas,9,99) == non-scaling-stroke-02.svg non-scaling-stroke-02-ref.svg
-== non-scaling-stroke-03.svg non-scaling-stroke-03-ref.svg 
+fails-if(B2G&&browserIsRemote) == non-scaling-stroke-03.svg non-scaling-stroke-03-ref.svg 
 == objectBoundingBox-and-clipPath.svg pass.svg
 # Bug 588684
 random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-01.svg objectBoundingBox-and-fePointLight-01-ref.svg
@@ -226,21 +226,21 @@ random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-02.svg objectBoundin
 skip-if(d2d) fuzzy-if(azureQuartz,1,99974) == opacity-and-gradient-02.svg opacity-and-gradient-02-ref.svg
 == opacity-and-pattern-01.svg pass.svg
 == opacity-and-transform-01.svg opacity-and-transform-01-ref.svg
-fuzzy-if(Android&&AndroidVersion>=15,8,200) == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg
+fuzzy-if(Android&&AndroidVersion>=15,8,200) random-if(B2G&&browserIsRemote) == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg
 == overflow-on-outer-svg-01.svg overflow-on-outer-svg-01-ref.svg
 == overflow-on-outer-svg-02a.xhtml overflow-on-outer-svg-02-ref.xhtml
 == overflow-on-outer-svg-02b.xhtml overflow-on-outer-svg-02-ref.xhtml
 == overflow-on-outer-svg-02c.xhtml overflow-on-outer-svg-02-ref.xhtml
-== overflow-on-outer-svg-02d.xhtml overflow-on-outer-svg-02-ref.xhtml
-== overflow-on-outer-svg-03a.xhtml overflow-on-outer-svg-03-ref.xhtml
-== overflow-on-outer-svg-03b.xhtml overflow-on-outer-svg-03-ref.xhtml
+random-if(B2G&&browserIsRemote) == overflow-on-outer-svg-02d.xhtml overflow-on-outer-svg-02-ref.xhtml
+random-if(B2G&&browserIsRemote) == overflow-on-outer-svg-03a.xhtml overflow-on-outer-svg-03-ref.xhtml
+random-if(B2G&&browserIsRemote) == overflow-on-outer-svg-03b.xhtml overflow-on-outer-svg-03-ref.xhtml
 pref(svg.paint-order.enabled,true) == paint-order-01.svg paint-order-01-ref.svg
 pref(svg.paint-order.enabled,true) == paint-order-02.svg paint-order-02-ref.svg
 pref(svg.paint-order.enabled,true) == paint-order-03.svg paint-order-03-ref.svg
 fuzzy-if(azureQuartz,6,47) == path-01.svg path-01-ref.svg
 == path-02.svg pass.svg
 == path-03.svg pass.svg
-== path-04.svg pass.svg
+fails-if(B2G&&browserIsRemote) == path-04.svg pass.svg
 == path-05.svg pass.svg
 == path-06.svg path-06-ref.svg
 == path-07.svg path-07-ref.svg
@@ -249,9 +249,9 @@ fuzzy-if(azureQuartz,6,47) == path-01.svg path-01-ref.svg
 == pathLength-02.svg pass.svg
 == pattern-basic-01.svg pass.svg
 == pattern-invalid-01.svg pattern-invalid-01-ref.svg
-== pattern-live-01a.svg pattern-live-01-ref.svg
-== pattern-live-01b.svg pattern-live-01-ref.svg
-== pattern-live-01c.svg pattern-live-01-ref.svg
+fails-if(B2G&&browserIsRemote) == pattern-live-01a.svg pattern-live-01-ref.svg
+fails-if(B2G&&browserIsRemote) == pattern-live-01b.svg pattern-live-01-ref.svg
+fails-if(B2G&&browserIsRemote) == pattern-live-01c.svg pattern-live-01-ref.svg
 == pattern-scale-01a.svg pattern-scale-01-ref.svg
 == pattern-scale-01b.svg pattern-scale-01-ref.svg
 == pattern-scale-01c.svg pattern-scale-01-ref.svg
@@ -279,9 +279,9 @@ fuzzy-if(azureQuartz,6,47) == path-01.svg path-01-ref.svg
 == script-empty-01.svg pass.svg
 == selector-01.svg pass.svg
 == stroke-width-percentage-01.svg pass.svg
-== stroke-width-percentage-02a.svg stroke-width-percentage-02-ref.svg
-== stroke-width-percentage-02b.svg stroke-width-percentage-02-ref.svg
-== stroke-width-percentage-03.xhtml stroke-width-percentage-03-ref.xhtml
+fails-if(B2G&&browserIsRemote) == stroke-width-percentage-02a.svg stroke-width-percentage-02-ref.svg
+fails-if(B2G&&browserIsRemote) == stroke-width-percentage-02b.svg stroke-width-percentage-02-ref.svg
+fails-if(B2G&&browserIsRemote) == stroke-width-percentage-03.xhtml stroke-width-percentage-03-ref.xhtml
 == style-property-on-script-element-01.svg pass.svg
 == style-without-type-attribute.svg pass.svg
 == svg-in-foreignObject-01.xhtml svg-in-foreignObject-01-ref.xhtml

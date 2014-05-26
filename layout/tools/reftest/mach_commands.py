@@ -205,6 +205,11 @@ class ReftestRunner(MozbuildObject):
         options.httpdPath = os.path.join(self.topsrcdir, 'netwerk', 'test', 'httpserver')
         options.xrePath = xre_path
         options.ignoreWindowSize = True
+
+        # Don't enable oop for crashtest until they run oop in automation
+        if suite == 'reftest':
+            options.oop = True
+
         return reftest.run_remote_reftests(parser, options, args)
 
     def run_desktop_test(self, test_file=None, filter=None, suite=None,

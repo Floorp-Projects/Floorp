@@ -524,7 +524,7 @@ AnimationThread(void *)
                     break;
                 }
 
-                if (buf->height == frame.height && buf->width == frame.width) {
+                if (buf->height == frame.height && buf->stride == frame.width) {
                     memcpy(vaddr, frame.buf,
                            frame.width * frame.height * frame.bytepp);
                 } else if (buf->height >= frame.height &&
