@@ -4699,7 +4699,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
             if (aURI) {
                 aURI->GetHostPort(hostport);
             } else {
-                hostport.AssignLiteral("?");
+                hostport.Assign('?');
             }
             CopyUTF8toUTF16(hostport, formatStrs[formatStrCount++]);
         }
@@ -4725,7 +4725,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
                 rv = textToSubURI->UnEscapeURIForUI(charset, spec, formatStrs[formatStrCount]);
             }
         } else {
-            spec.AssignLiteral("?");
+            spec.Assign('?');
         }
         if (NS_FAILED(rv))
             CopyUTF8toUTF16(spec, formatStrs[formatStrCount]);
