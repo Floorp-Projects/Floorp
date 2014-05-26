@@ -4657,6 +4657,9 @@ class MFromCharCode
   public:
     INSTRUCTION_HEADER(FromCharCode)
 
+    TypePolicy *typePolicy() {
+        return this;
+    }
     static MFromCharCode *New(TempAllocator &alloc, MDefinition *code) {
         return new(alloc) MFromCharCode(code);
     }
@@ -5512,6 +5515,10 @@ class MLambdaPar
 
     MDefinition *scopeChain() const {
         return getOperand(1);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
     }
 
     const LambdaFunctionInfo &info() const {
@@ -9391,6 +9398,9 @@ class MGuardThreadExclusive
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
+    TypePolicy *typePolicy() {
+        return this;
+    }
     bool possiblyCalls() const {
         return true;
     }
@@ -9957,6 +9967,9 @@ class MIsCallable
         return new(alloc) MIsCallable(obj);
     }
 
+    TypePolicy *typePolicy() {
+        return this;
+    }
     MDefinition *object() const {
         return getOperand(0);
     }
@@ -10016,6 +10029,9 @@ class MHasClass
         return new(alloc) MHasClass(obj, clasp);
     }
 
+    TypePolicy *typePolicy() {
+        return this;
+    }
     MDefinition *object() const {
         return getOperand(0);
     }
