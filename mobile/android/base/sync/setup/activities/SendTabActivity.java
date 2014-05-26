@@ -25,6 +25,8 @@ import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.sync.SyncConstants;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
+import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
+import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository.FennecTabsRepositorySession;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.sync.setup.activities.LocaleAware.LocaleAwareActivity;
@@ -46,7 +48,7 @@ import android.widget.Toast;
 
 public class SendTabActivity extends LocaleAwareActivity {
   private interface TabSender {
-    static final String[] CLIENTS_STAGE = new String[] { SyncClientsEngineStage.COLLECTION_NAME };
+    public static final String[] STAGES_TO_SYNC = new String[] { "clients", "tabs" };
 
     /**
      * @return Return null if the account isn't correctly initialized. Return
@@ -55,9 +57,9 @@ public class SendTabActivity extends LocaleAwareActivity {
     String getAccountGUID();
 
     /**
-     * Sync this account, specifying only clients as the engine to sync.
+     * Sync this account, specifying only clients and tabs as the engines to sync.
      */
-    void syncClientsStage();
+    void sync();
   }
 
   private static class FxAccountTabSender implements TabSender {
@@ -79,8 +81,8 @@ public class SendTabActivity extends LocaleAwareActivity {
     }
 
     @Override
-    public void syncClientsStage() {
-      fxAccount.requestSync(FirefoxAccounts.FORCE, CLIENTS_STAGE, null);
+    public void sync() {
+      fxAccount.requestSync(FirefoxAccounts.FORCE, STAGES_TO_SYNC, null);
     }
   }
 
@@ -107,8 +109,8 @@ public class SendTabActivity extends LocaleAwareActivity {
     }
 
     @Override
-    public void syncClientsStage() {
-      SyncAdapter.requestImmediateSync(this.account, CLIENTS_STAGE);
+    public void sync() {
+      SyncAdapter.requestImmediateSync(this.account, STAGES_TO_SYNC);
     }
   }
 
@@ -302,7 +304,7 @@ public class SendTabActivity extends LocaleAwareActivity {
         }
 
         Logger.info(LOG_TAG, "Requesting immediate clients stage sync.");
-        sender.syncClientsStage();
+        sender.sync();
 
         return true;
       }
