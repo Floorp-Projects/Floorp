@@ -77,7 +77,7 @@
 
   @media (-moz-os-version: windows-vista),
          (-moz-os-version: windows-win7) {
-    #navigator-toolbox > toolbar:not(:-moz-lwtheme),
+    #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(:-moz-lwtheme),
     #browser-bottombox:not(:-moz-lwtheme),
     .browserContainer > findbar {
       background-color: @customToolbarColor@;
@@ -139,7 +139,6 @@
   @media (-moz-windows-default-theme) {
     #toolbar-menubar:not(:-moz-lwtheme),
     #TabsToolbar:not(:-moz-lwtheme) {
-      background-color: transparent !important;
       color: black;
     }
 
@@ -281,7 +280,7 @@
   /* End Glass Fog */
 }
 
-
+/* Aero Basic */
 @media not all and (-moz-windows-compositor) {
   @media (-moz-windows-default-theme) {
     #main-window {
@@ -294,10 +293,6 @@
     #toolbar-menubar:not([autohide=true]):not(:-moz-lwtheme),
     #TabsToolbar:not(:-moz-lwtheme) {
       -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-drag");
-      background-color: transparent;
-    }
-    #toolbar-menubar[autohide=true] {
-      background-color: transparent !important;
     }
 
     /* Render a window top border for lwthemes: */
