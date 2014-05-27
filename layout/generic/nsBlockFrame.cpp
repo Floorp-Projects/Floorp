@@ -6545,12 +6545,15 @@ nsBlockFrame::GetBulletText(nsAString& aText) const
   if (myList->GetListStyleImage() ||
       myList->mListStyleType == NS_STYLE_LIST_STYLE_DISC) {
     aText.Assign(kDiscCharacter);
+    aText.Append(' ');
   }
   else if (myList->mListStyleType == NS_STYLE_LIST_STYLE_CIRCLE) {
     aText.Assign(kCircleCharacter);
+    aText.Append(' ');
   }
   else if (myList->mListStyleType == NS_STYLE_LIST_STYLE_SQUARE) {
     aText.Assign(kSquareCharacter);
+    aText.Append(' ');
   }
   else if (myList->mListStyleType != NS_STYLE_LIST_STYLE_NONE) {
     nsBulletFrame* bullet = GetBullet();
