@@ -49,7 +49,7 @@ void Axis::UpdateWithTouchAtDevicePoint(int32_t aPos, uint32_t aTimestampMs) {
   mPosTimeMs = aTimestampMs;
 
   // Limit queue size pased on pref
-  mVelocityQueue.AppendElement(mVelocity);
+  mVelocityQueue.AppendElement(std::make_pair(aTimestampMs, mVelocity));
   if (mVelocityQueue.Length() > gfxPrefs::APZMaxVelocityQueueSize()) {
     mVelocityQueue.RemoveElementAt(0);
   }
@@ -179,15 +179,18 @@ float Axis::PanDistance(float aPos) {
   return fabsf(aPos - mStartPos);
 }
 
-void Axis::EndTouch() {
-  // Calculate the mean velocity and empty the queue.
-  int count = mVelocityQueue.Length();
-  if (count) {
-    mVelocity = 0;
-    while (!mVelocityQueue.IsEmpty()) {
-      mVelocity += mVelocityQueue[0];
-      mVelocityQueue.RemoveElementAt(0);
+void Axis::EndTouch(uint32_t aTimestampMs) {
+  mVelocity = 0;
+  int count = 0;
+  while (!mVelocityQueue.IsEmpty()) {
+    uint32_t timeDelta = (aTimestampMs - mVelocityQueue[0].first);
+    if (timeDelta < gfxPrefs::APZVelocityRelevanceTime()) {
+      count++;
+      mVelocity += mVelocityQueue[0].second;
     }
+    mVelocityQueue.RemoveElementAt(0);
+  }
+  if (count > 1) {
     mVelocity /= count;
   }
 }
