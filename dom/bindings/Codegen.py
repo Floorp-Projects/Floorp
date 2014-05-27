@@ -5241,6 +5241,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
                 } while (0);
                 if (!JS_DefineUCProperty(cx, returnObj, keys[idx].get(),
                                          keys[idx].Length(), tmp,
+                                         JS_PropertyStub, JS_StrictPropertyStub,
                                          JSPROP_ENUMERATE)) {
                   $*{exceptionCode}
                 }
