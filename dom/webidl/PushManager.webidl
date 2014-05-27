@@ -4,7 +4,11 @@
 * You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-[NoInterfaceObject, NavigatorProperty="push", JSImplementation="@mozilla.org/push/PushManager;1", Func="Navigator::HasPushNotificationsSupport"]
+[NoInterfaceObject,
+ NavigatorProperty="push",
+ JSImplementation="@mozilla.org/push/PushManager;1",
+ CheckPermissions="push",
+ Pref="services.push.enabled"]
 interface PushManager {
     DOMRequest register();
     DOMRequest unregister(DOMString pushEndpoint);
