@@ -47,8 +47,6 @@ public:
   static NPObject *GetNewOrUsed(NPP npp, JSContext *cx,
                                 JS::Handle<JSObject*> obj);
 
-  void ClearJSObject();
-
 protected:
   nsJSObjWrapper(NPP npp);
   ~nsJSObjWrapper();
