@@ -67,7 +67,7 @@ public:
    * Notify this Axis that a touch has ended gracefully. This may perform
    * recalculations of the axis velocity.
    */
-  void EndTouch();
+  void EndTouch(uint32_t aTimestampMs);
 
   /**
    * Notify this Axis that a touch has ended forcefully. Useful for stopping
@@ -222,7 +222,10 @@ protected:
   // its maximum value if mOverscroll is positive, and at its minimum value
   // if mOverscroll is negative).
   float mOverscroll;
-  nsTArray<float> mVelocityQueue;
+  // A queue of (timestamp, velocity) pairs; these are the historical
+  // velocities at the given timestamps. Timestamps are in milliseconds,
+  // velocities are in screen pixels per ms.
+  nsTArray<std::pair<uint32_t, float> > mVelocityQueue;
 
   const FrameMetrics& GetFrameMetrics() const;
 

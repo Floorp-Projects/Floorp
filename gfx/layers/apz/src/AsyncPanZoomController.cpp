@@ -245,6 +245,12 @@ typedef GeckoContentController::APZStateChange APZStateChange;
  * How much to adjust the displayport in the direction of scrolling. This value
  * is multiplied by the velocity and added to the displayport offset.
  *
+ * "apz.velocity_relevance_time_ms"
+ * When computing a fling velocity from the most recently stored velocity
+ * information, only velocities within the most X milliseconds are used.
+ * This pref controls the value of X.
+ * Units: ms
+ *
  * "apz.x_skate_size_multiplier", "apz.y_skate_size_multiplier"
  * The multiplier we apply to the displayport size if it is skating (current
  * velocity is above apz.min_skate_speed). We prefer to increase the size of the
@@ -882,8 +888,8 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
         }
       }
     }
-    mX.EndTouch();
-    mY.EndTouch();
+    mX.EndTouch(aEvent.mTime);
+    mY.EndTouch(aEvent.mTime);
     SetState(FLING);
     StartAnimation(new FlingAnimation(*this,
                                       true  /* apply acceleration */,
