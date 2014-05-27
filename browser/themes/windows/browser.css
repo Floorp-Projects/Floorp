@@ -72,6 +72,9 @@
 #navigator-toolbox > toolbar:not(:-moz-lwtheme) {
   -moz-appearance: none;
   border-style: none;
+}
+
+#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(:-moz-lwtheme) {
   background-color: -moz-Dialog;
 }
 
@@ -79,10 +82,6 @@
 @media not all and (-moz-windows-compositor),
        not all and (-moz-windows-default-theme) {
 %endif
-  #toolbar-menubar {
-    background-color: transparent !important;
-  }
-
   #main-window[tabsintitlebar]:not([inFullscreen]) #toolbar-menubar:not(:-moz-lwtheme),
   #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar:not(:-moz-lwtheme) {
     color: CaptionText;
@@ -133,7 +132,6 @@
   }
 
   #main-window[tabsintitlebar] #TabsToolbar:not(:-moz-lwtheme) {
-    background-image: none;
     position: relative;
   }
 
@@ -1757,10 +1755,6 @@ toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
   margin-bottom: -@tabToolbarNavbarOverlap@; /* overlap the nav-bar's top border */
 }
 
-#main-window[tabsintitlebar] #TabsToolbar {
-  background-color: transparent;
-}
-
 %ifndef WINDOWS_AERO
 @media (-moz-windows-default-theme) {
   #main-window[sizemode=normal] #TabsToolbar {
@@ -2234,7 +2228,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 .notification-anchor-icon:-moz-focusring {
   outline: 1px dotted -moz-DialogText;
-  outline-offset: -3px;
 }
 
 .default-notification-icon,

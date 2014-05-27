@@ -431,8 +431,42 @@ LoginManagerStorage_mozStorage.prototype = {
             throw "newLoginData needs an expected interface!";
         }
 
+        // Sanity check the login
+        if (newLogin.hostname == null || newLogin.hostname.length == 0)
+            throw "Can't add a login with a null or empty hostname.";
+
+        // For logins w/o a username, set to "", not null.
+        if (newLogin.username == null)
+            throw "Can't add a login with a null username.";
+
+        if (newLogin.password == null || newLogin.password.length == 0)
+            throw "Can't add a login with a null or empty password.";
+
+        if (newLogin.formSubmitURL || newLogin.formSubmitURL == "") {
+            // We have a form submit URL. Can't have a HTTP realm.
+            if (newLogin.httpRealm != null)
+                throw "Can't add a login with both a httpRealm and formSubmitURL.";
+        } else if (newLogin.httpRealm) {
+            // We have a HTTP realm. Can't have a form submit URL.
+            if (newLogin.formSubmitURL != null)
+                throw "Can't add a login with both a httpRealm and formSubmitURL.";
+        } else {
+            // Need one or the other!
+            throw "Can't add a login without a httpRealm or formSubmitURL.";
+        }
+
         // Throws if there are bogus values.
         this._checkLoginValues(newLogin);
+
+        // Look for an existing entry in case key properties changed.
+        if (!newLogin.matches(oldLogin, true)) {
+            let logins = this.findLogins({}, newLogin.hostname,
+                                         newLogin.formSubmitURL,
+                                         newLogin.httpRealm);
+
+            if (logins.some(login => newLogin.matches(login, true)))
+                throw "This login already exists.";
+        }
 
         // Get the encrypted value of the username and password.
         let [encUsername, encPassword, encType] = this._encryptLogin(newLogin);

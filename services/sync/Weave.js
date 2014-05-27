@@ -146,19 +146,22 @@ WeaveService.prototype = {
       this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
       this.timer.initWithCallback({
         notify: function() {
+          let isConfigured = false;
           // We only load more if it looks like Sync is configured.
           let prefs = Services.prefs.getBranch(SYNC_PREFS_BRANCH);
-          if (!prefs.prefHasUserValue("username")) {
-            return;
+          if (prefs.prefHasUserValue("username")) {
+            // We have a username. So, do a more thorough check. This will
+            // import a number of modules and thus increase memory
+            // accordingly. We could potentially copy code performed by
+            // this check into this file if our above code is yielding too
+            // many false positives.
+            Components.utils.import("resource://services-sync/main.js");
+            isConfigured = Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED;
           }
-
-          // We have a username. So, do a more thorough check. This will
-          // import a number of modules and thus increase memory
-          // accordingly. We could potentially copy code performed by
-          // this check into this file if our above code is yielding too
-          // many false positives.
-          Components.utils.import("resource://services-sync/main.js");
-          if (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED) {
+          let getHistogramById = Services.telemetry.getHistogramById;
+          getHistogramById("WEAVE_CONFIGURED").add(isConfigured);
+          if (isConfigured) {
+            getHistogramById("WEAVE_CONFIGURED_MASTER_PASSWORD").add(Utils.mpEnabled());
             this.ensureLoaded();
           }
         }.bind(this)
