@@ -3359,7 +3359,14 @@ RilObject.prototype = {
                                iccStatus.gsmUmtsSubscriptionAppIndex;
 
     if (RILQUIRKS_SUBSCRIPTION_CONTROL && index === -1) {
-      // Should enable uicc scription.
+      // Should enable uicc scription if index is not valid.
+      if (this.radioState !== GECKO_RADIOSTATE_READY) {
+        // Note: setUiccSubscription works abnormally when RADIO is OFF,
+        // which causes SMS function broken in Flame.
+        // See bug 1008557 for detailed info.
+        return;
+      }
+
       for (let i = 0; i < iccStatus.apps.length; i++) {
         this.setUiccSubscription({appIndex: i, enabled: true});
       }
