@@ -93,28 +93,12 @@ protected:
     static gfxFontconfigUtils *sFontconfigUtils;
 
 private:
-
-    bool UseXRender() {
-#if defined(MOZ_X11)
-        if (GetContentBackend() != mozilla::gfx::BackendType::NONE &&
-            GetContentBackend() != mozilla::gfx::BackendType::CAIRO)
-            return false;
-
-        return sUseXRender;
-#else
-        return false;
-#endif
-    }
-
     virtual void GetPlatformCMSOutputProfile(void *&mem, size_t &size) MOZ_OVERRIDE;
 
     // TODO: unify this with mPrefFonts (NB: holds families, not fonts) in gfxPlatformFontList
     nsDataHashtable<nsCStringHashKey, nsTArray<nsRefPtr<gfxFontEntry> > > mPrefFonts;
 
     int mScreenDepth;
-#ifdef MOZ_X11
-    static bool sUseXRender;
-#endif
 };
 
 #endif /* GFX_PLATFORM_QT_H */

@@ -104,7 +104,7 @@ class CallbackVector : public Vector<Callback<F>, 4, SystemAllocPolicy> {};
 class GCRuntime
 {
   public:
-    GCRuntime(JSRuntime *rt);
+    explicit GCRuntime(JSRuntime *rt);
     bool init(uint32_t maxbytes);
     void finish();
 

@@ -1904,7 +1904,7 @@ struct ScriptBytecodeHasher
         jsbytecode          *code;
         uint32_t            length;
 
-        Lookup(SharedScriptData *ssd) : code(ssd->data), length(ssd->length) {}
+        explicit Lookup(SharedScriptData *ssd) : code(ssd->data), length(ssd->length) {}
     };
     static HashNumber hash(const Lookup &l) { return mozilla::HashBytes(l.code, l.length); }
     static bool match(SharedScriptData *entry, const Lookup &lookup) {

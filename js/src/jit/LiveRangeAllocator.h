@@ -33,7 +33,7 @@ class Requirement
       : kind_(NONE)
     { }
 
-    Requirement(Kind kind)
+    explicit Requirement(Kind kind)
       : kind_(kind)
     {
         // These have dedicated constructors.
@@ -48,7 +48,7 @@ class Requirement
         JS_ASSERT(kind != FIXED && kind != SAME_AS_OTHER);
     }
 
-    Requirement(LAllocation fixed)
+    explicit Requirement(LAllocation fixed)
       : kind_(FIXED),
         allocation_(fixed)
     {

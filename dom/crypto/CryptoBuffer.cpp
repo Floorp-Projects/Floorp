@@ -19,6 +19,7 @@ CryptoBuffer::Assign(const uint8_t* aData, uint32_t aLength)
 uint8_t*
 CryptoBuffer::Assign(const SECItem* aItem)
 {
+  MOZ_ASSERT(aItem);
   return Assign(aItem->data, aItem->len);
 }
 

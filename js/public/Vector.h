@@ -54,7 +54,7 @@ class Vector
     typedef typename mozilla::VectorBase<T, MinInlineCapacity, AllocPolicy, Vector> Base;
 
   public:
-    Vector(AllocPolicy alloc = AllocPolicy()) : Base(alloc) {}
+    explicit Vector(AllocPolicy alloc = AllocPolicy()) : Base(alloc) {}
     Vector(Vector &&vec) : Base(mozilla::Move(vec)) {}
     Vector &operator=(Vector &&vec) {
         return Base::operator=(mozilla::Move(vec));

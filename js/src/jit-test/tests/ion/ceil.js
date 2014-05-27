@@ -47,6 +47,7 @@ function testBailout(value) {
 
 var INT_MAX = Math.pow(2, 31) - 1;
 var INT_MIN = INT_MAX + 1 | 0;
+var UINT_MAX = Math.pow(2, 32) - 1;
 
 // Values in ]-1; -0]
 testBailout(-0);
@@ -55,5 +56,10 @@ testBailout(-.5);
 // single precision
 testBailout(INT_MAX + .5);
 testBailout(INT_MIN - 129);
+// (UINT_MAX; +inf] have special behavior on ARM
+testBailout(UINT_MAX);
+testBailout(UINT_MAX + .5);
+testBailout(UINT_MAX + 1);
+testBailout(UINT_MAX + 2);
 // BatNaN
 testBailout(NaN);
