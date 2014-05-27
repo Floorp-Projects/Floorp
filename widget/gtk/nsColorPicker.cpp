@@ -175,7 +175,7 @@ void nsColorPicker::ReadValueFromColorSelection(GtkColorSelection* colorselectio
   GdkColor rgba;
   gtk_color_selection_get_current_color(colorselection, &rgba);
 
-  mColor.AssignLiteral("#");
+  mColor.Assign('#');
   mColor += ToHexString(convertGdkColorComponent(rgba.red));
   mColor += ToHexString(convertGdkColorComponent(rgba.green));
   mColor += ToHexString(convertGdkColorComponent(rgba.blue));

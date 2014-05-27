@@ -708,9 +708,9 @@ nsHTMLEditor::SetResizingInfoPosition(int32_t aX, int32_t aY, int32_t aW, int32_
   int32_t diffWidth  = aW - mResizedObjectWidth;
   int32_t diffHeight = aH - mResizedObjectHeight;
   if (diffWidth > 0)
-    diffWidthStr.AssignLiteral("+");
+    diffWidthStr.Assign('+');
   if (diffHeight > 0)
-    diffHeightStr.AssignLiteral("+");
+    diffHeightStr.Assign('+');
   diffWidthStr.AppendInt(diffWidth);
   diffHeightStr.AppendInt(diffHeight);
 

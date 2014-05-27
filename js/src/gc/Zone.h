@@ -93,7 +93,7 @@ struct Zone : public JS::shadow::Zone,
               public js::gc::GraphNodeBase<JS::Zone>,
               public js::MallocProvider<JS::Zone>
 {
-    Zone(JSRuntime *rt);
+    explicit Zone(JSRuntime *rt);
     ~Zone();
     bool init();
 

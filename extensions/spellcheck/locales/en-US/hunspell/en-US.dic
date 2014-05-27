@@ -1,4 +1,4 @@
-57488
+57499
 0/nm
 0th/pt
 1/n1
@@ -19033,7 +19033,7 @@ baddest
 baddie/M
 baddy/SM
 bade
-badge/MZDRS
+badge/MZDRSG
 badger/GMD
 badinage/M
 badlands/M
@@ -22354,7 +22354,7 @@ cheapo
 cheapskate/SM
 cheat/ZGMDRS
 cheater/M
-check/AGMDS
+check/AGMDSU
 checkbook/SM
 checked/U
 checker/MDGS
@@ -22404,7 +22404,7 @@ chemiluminescence
 chemiluminescent
 chemise/MS
 chemist/MS
-chemistry/M
+chemistry/MS
 chemo/M
 chemosynthesis
 chemotherapeutic
@@ -23379,6 +23379,8 @@ colonizations
 colonize/CAGSD
 colonizer/MS
 colonnade/MDS
+colonoscope/SM
+colonoscopy/SM
 colony/SM
 colophon/SM
 color's
@@ -25627,6 +25629,7 @@ decent/ITRY
 deception/MS
 deceptive/YP
 deceptiveness/M
+decertify/DSGNX
 decibel/MS
 decidability/U
 decidable/U
@@ -28614,6 +28617,8 @@ escapology
 escargot/MS
 escarole/MS
 escarpment/SM
+eschatological
+eschatologist/SM
 eschatology
 eschew/SDG
 escort/SMDG
@@ -29526,6 +29531,7 @@ faun/MS
 fauna/SM
 fauvism/M
 fauvist/SM
+faux
 fave/S
 favor/ESMDG
 favorable/U
@@ -35321,8 +35327,11 @@ interloper/M
 interlude/MGDS
 intermarriage/MS
 intermarry/DSG
+intermediacy/S
 intermediary/SM
-intermediate/SMY
+intermediate/SMYPGD
+intermediation/SE
+intermediator/SM
 interment/EM
 interments
 intermezzi
@@ -42530,6 +42539,7 @@ park/MDSG
 parka/SM
 parking/M
 parkland
+parkour
 parkway/MS
 parky
 parlance/M
@@ -53867,6 +53877,7 @@ traceable/U
 traceless
 tracer/M
 tracery/SM
+traceur/SM
 trachea/M
 tracheae
 tracheal

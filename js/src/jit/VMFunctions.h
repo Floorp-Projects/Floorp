@@ -242,7 +242,7 @@ struct VMFunction
 // A collection of VM functions for each execution mode.
 struct VMFunctionsModal
 {
-    VMFunctionsModal(const VMFunction &info) {
+    explicit VMFunctionsModal(const VMFunction &info) {
         add(info);
     }
     VMFunctionsModal(const VMFunction &info1, const VMFunction &info2) {
@@ -445,7 +445,7 @@ template <> struct MatchContext<ThreadSafeContext *> {
     static inline uint64_t argumentRootTypes() {                                        \
         return ForEachNb(COMPUTE_ARG_ROOT, SEP_OR, NOTHING);                            \
     }                                                                                   \
-    FunctionInfo(pf fun, PopValues extraValuesToPop = PopValues(0))                     \
+    explicit FunctionInfo(pf fun, PopValues extraValuesToPop = PopValues(0))            \
         : VMFunction(JS_FUNC_TO_DATA_PTR(void *, fun), explicitArgs(),                  \
                      argumentProperties(), argumentPassedInFloatRegs(),                 \
                      argumentRootTypes(), outParam(), outParamRootType(),               \
@@ -486,7 +486,7 @@ struct FunctionInfo<R (*)(Context)> : public VMFunction {
     static inline uint64_t argumentRootTypes() {
         return 0;
     }
-    FunctionInfo(pf fun)
+    explicit FunctionInfo(pf fun)
       : VMFunction(JS_FUNC_TO_DATA_PTR(void *, fun), explicitArgs(),
                    argumentProperties(), argumentPassedInFloatRegs(),
                    argumentRootTypes(), outParam(), outParamRootType(),

@@ -83,7 +83,7 @@ BGRIntToRGBString(DWORD color, nsAString& aResult)
   BYTE g = GetGValue(color);
   BYTE b = GetBValue(color);
 
-  aResult.AssignLiteral("#");
+  aResult.Assign('#');
   aResult.Append(ToHexString(r));
   aResult.Append(ToHexString(g));
   aResult.Append(ToHexString(b));

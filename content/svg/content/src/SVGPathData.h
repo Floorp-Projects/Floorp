@@ -13,6 +13,7 @@
 #include "nsIWeakReferenceUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Types.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/RefPtr.h"
 #include "nsSVGElement.h"
 #include "nsTArray.h"
@@ -173,6 +174,10 @@ public:
   const_iterator begin() const { return mData.Elements(); }
   const_iterator end() const { return mData.Elements() + mData.Length(); }
 
+  // memory reporting methods
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
   // Access to methods that can modify objects of this type is deliberately
   // limited. This is to reduce the chances of someone modifying objects of
   // this type without taking the necessary steps to keep DOM wrappers in sync.
@@ -232,7 +237,7 @@ protected:
  * sync, so we can safely expose any protected base class methods required by
  * the SMIL code.
  */
-class SVGPathDataAndInfo : public SVGPathData
+class SVGPathDataAndInfo MOZ_FINAL : public SVGPathData
 {
 public:
   SVGPathDataAndInfo(nsSVGElement *aElement = nullptr)

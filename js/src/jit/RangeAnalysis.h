@@ -366,7 +366,7 @@ class Range : public TempObject {
     // Construct a range from the given MDefinition. This differs from the
     // MDefinition's range() method in that it describes the range of values
     // *after* any bailout checks.
-    Range(const MDefinition *def);
+    explicit Range(const MDefinition *def);
 
     static Range *NewInt32Range(TempAllocator &alloc, int32_t l, int32_t h) {
         return new(alloc) Range(l, h, false, MaxInt32Exponent);

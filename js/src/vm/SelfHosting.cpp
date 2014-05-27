@@ -1157,7 +1157,7 @@ CloneObject(JSContext *cx, HandleObject selfHostedObject)
         clone = NewDenseEmptyArray(cx, nullptr, TenuredObject);
     } else {
         JS_ASSERT(selfHostedObject->isNative());
-        clone = NewObjectWithGivenProto(cx, selfHostedObject->getClass(), nullptr, cx->global(),
+        clone = NewObjectWithGivenProto(cx, selfHostedObject->getClass(), TaggedProto(nullptr), cx->global(),
                                         selfHostedObject->tenuredGetAllocKind(),
                                         SingletonObject);
     }

@@ -510,7 +510,14 @@ SelectForGC(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
+    /*
+     * The selectedForMarking set is intended to be manually marked at slice
+     * start to detect missing pre-barriers. It is invalid for nursery things
+     * to be in the set, so evict the nursery before adding items.
+     */
     JSRuntime *rt = cx->runtime();
+    MinorGC(rt, JS::gcreason::EVICT_NURSERY);
+
     for (unsigned i = 0; i < args.length(); i++) {
         if (args[i].isObject()) {
             if (!rt->gc.selectedForMarking.append(&args[i].toObject()))

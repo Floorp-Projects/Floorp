@@ -35,7 +35,7 @@ GetFrameState(nsIFrame* aFrame)
   nsFrameState state = aFrame->GetStateBits();
 
   if (state == nsFrameState(0)) {
-    result.AssignLiteral("0");
+    result.Assign('0');
     return result;
   }
 

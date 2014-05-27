@@ -1121,7 +1121,8 @@ this.DOMApplicationRegistry = {
         this.removeMessageListener(["Webapps:Internal:AllMessages"], mm);
         break;
       case "Webapps:GetList":
-        return { webapps: this.webapps, manifests: this._manifestCache };
+        this.addMessageListener(["Webapps:AddApp", "Webapps:RemoveApp"], null, mm);
+        return this.webapps;
       case "Webapps:Download":
         this.startDownload(msg.manifestURL);
         break;
@@ -1303,7 +1304,7 @@ this.DOMApplicationRegistry = {
           downloading: false
         },
         error: error,
-        id: app.id
+        manifestURL: app.manifestURL,
       })
       this.broadcastMessage("Webapps:FireEvent", {
         eventType: "downloaderror",
@@ -1333,7 +1334,7 @@ this.DOMApplicationRegistry = {
     if (!app.downloadAvailable) {
       this.broadcastMessage("Webapps:UpdateState", {
         error: "NO_DOWNLOAD_AVAILABLE",
-        id: app.id
+        manifestURL: app.manifestURL
       });
       this.broadcastMessage("Webapps:FireEvent", {
         eventType: "downloaderror",
@@ -1381,7 +1382,7 @@ this.DOMApplicationRegistry = {
         this.broadcastMessage("Webapps:UpdateState", {
           app: app,
           manifest: jsonManifest,
-          id: app.id
+          manifestURL: aManifestURL
         });
         this.broadcastMessage("Webapps:FireEvent", {
           eventType: "downloadsuccess",
@@ -1425,7 +1426,7 @@ this.DOMApplicationRegistry = {
 
     this.broadcastMessage("Webapps:UpdateState", {
       app: app,
-      id: app.id
+      manifestURL: aManifestURL
     });
     this.broadcastMessage("Webapps:FireEvent", {
       eventType: "downloadsuccess",
@@ -1525,7 +1526,7 @@ this.DOMApplicationRegistry = {
           this.broadcastMessage("Webapps:UpdateState", {
             app: app,
             manifest: aData,
-            id: app.id
+            manifestURL: app.manifestURL
           });
           this.broadcastMessage("Webapps:FireEvent", {
             eventType: "downloadapplied",
@@ -1565,7 +1566,7 @@ this.DOMApplicationRegistry = {
           installState: aApp.installState,
           progress: 0
         },
-        id: aApp.id
+        manifestURL: aApp.manifestURL
       });
       let cacheUpdate = updateSvc.scheduleAppUpdate(
         appcacheURI, docURI, aApp.localId, false, aProfileDir);
@@ -1615,7 +1616,6 @@ this.DOMApplicationRegistry = {
     debug("checkForUpdate for " + aData.manifestURL);
 
     function sendError(aError) {
-      debug("checkForUpdate error " + aError);
       aData.error = aError;
       aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:KO", aData);
     }
@@ -1645,7 +1645,8 @@ this.DOMApplicationRegistry = {
     // then we can't have an update.
     if (app.origin.startsWith("app://") &&
         app.manifestURL.startsWith("app://")) {
-      sendError("NOT_UPDATABLE");
+      aData.error = "NOT_UPDATABLE";
+      aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:KO", aData);
       return;
     }
 
@@ -1662,7 +1663,8 @@ this.DOMApplicationRegistry = {
     if (onlyCheckAppCache) {
       // Bail out for packaged apps.
       if (app.origin.startsWith("app://")) {
-        sendError("NOT_UPDATABLE");
+        aData.error = "NOT_UPDATABLE";
+        aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:KO", aData);
         return;
       }
 
@@ -1670,7 +1672,8 @@ this.DOMApplicationRegistry = {
       this._readManifests([{ id: id }]).then((aResult) => {
         let manifest = aResult[0].manifest;
         if (!manifest.appcache_path) {
-          sendError("NOT_UPDATABLE");
+          aData.error = "NOT_UPDATABLE";
+          aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:KO", aData);
           return;
         }
 
@@ -1686,7 +1689,7 @@ this.DOMApplicationRegistry = {
               this._saveApps().then(() => {
                 this.broadcastMessage("Webapps:UpdateState", {
                   app: app,
-                  id: app.id
+                  manifestURL: app.manifestURL
                 });
                 this.broadcastMessage("Webapps:FireEvent", {
                   eventType: "downloadavailable",
@@ -1695,7 +1698,8 @@ this.DOMApplicationRegistry = {
                 });
               });
             } else {
-              sendError("NOT_UPDATABLE");
+              aData.error = "NOT_UPDATABLE";
+              aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:KO", aData);
             }
           }
         };
@@ -1755,7 +1759,7 @@ this.DOMApplicationRegistry = {
                                                       : "downloadapplied";
                 aMm.sendAsyncMessage("Webapps:UpdateState", {
                   app: app,
-                  id: app.id
+                  manifestURL: app.manifestURL
                 });
                 aMm.sendAsyncMessage("Webapps:FireEvent", {
                   eventType: eventType,
@@ -1782,7 +1786,7 @@ this.DOMApplicationRegistry = {
                                                   : "downloadapplied";
             aMm.sendAsyncMessage("Webapps:UpdateState", {
               app: app,
-              id: app.id
+              manifestURL: app.manifestURL
             });
             aMm.sendAsyncMessage("Webapps:FireEvent", {
               eventType: eventType,
@@ -1891,7 +1895,7 @@ this.DOMApplicationRegistry = {
 
     this.broadcastMessage("Webapps:UpdateState", {
       app: aApp,
-      id: aApp.id
+      manifestURL: aApp.manifestURL
     });
     this.broadcastMessage("Webapps:FireEvent", {
       eventType: "downloadavailable",
@@ -1957,7 +1961,7 @@ this.DOMApplicationRegistry = {
       this.broadcastMessage("Webapps:UpdateState", {
         app: aApp,
         manifest: aApp.manifest,
-        id: aApp.id
+        manifestURL: aApp.manifestURL
       });
       this.broadcastMessage("Webapps:FireEvent", {
         eventType: "downloadapplied",
@@ -1991,7 +1995,7 @@ this.DOMApplicationRegistry = {
       this.broadcastMessage("Webapps:UpdateState", {
         app: aApp,
         manifest: aApp.manifest,
-        id: aApp.id
+        manifestURL: aApp.manifestURL
       });
       this.broadcastMessage("Webapps:FireEvent", {
         eventType: eventType,
@@ -2519,8 +2523,6 @@ this.DOMApplicationRegistry = {
     // saved in the registry.
     yield this._saveApps();
 
-    aData.isPackage ? appObject.updateManifest = jsonManifest :
-                      appObject.manifest = jsonManifest;
     this.broadcastMessage("Webapps:AddApp", { id: id, app: appObject });
     if (aData.isPackage && aData.autoInstall) {
       // Skip directly to onInstallSuccessAck, since there isn't
@@ -2614,7 +2616,7 @@ this.DOMApplicationRegistry = {
     this.broadcastMessage("Webapps:UpdateState", {
       app: app,
       manifest: aManifest,
-      id: app.id
+      manifestURL: aNewApp.manifestURL
     });
 
     // Check if we have asm.js code to preload for this application.
@@ -2728,11 +2730,14 @@ this.DOMApplicationRegistry = {
                                                    oldApp,
                                                    aNewApp);
 
-      AppDownloadManager.add(aNewApp.manifestURL, {
-        channel: requestChannel,
-        appId: id,
-        previousState: aIsUpdate ? "installed" : "pending"
-      });
+      AppDownloadManager.add(
+        aNewApp.manifestURL,
+        {
+          channel: requestChannel,
+          appId: id,
+          previousState: aIsUpdate ? "installed" : "pending"
+        }
+      );
 
       // We set the 'downloading' flag to true right before starting the fetch.
       oldApp.downloading = true;
@@ -2755,7 +2760,7 @@ this.DOMApplicationRegistry = {
         debug("package's etag or hash unchanged; sending 'applied' event");
         // The package's Etag or hash has not changed.
         // We send a "applied" event right away.
-        this._sendAppliedEvent(oldApp);
+        this._sendAppliedEvent(aNewApp, oldApp, id);
         return;
       }
 
@@ -2895,7 +2900,7 @@ this.DOMApplicationRegistry = {
       app: {
         progress: aProgress
       },
-      id: aNewApp.id
+      manifestURL: aNewApp.manifestURL
     });
     this.broadcastMessage("Webapps:FireEvent", {
       eventType: "progress",
@@ -3012,24 +3017,27 @@ this.DOMApplicationRegistry = {
    * something similar after updating the app, and we could refactor both cases
    * to use the same code to send the "applied" event.
    *
-   * @param aApp {Object} app data
+   * @param aNewApp {Object} the new app data
+   * @param aOldApp {Object} the currently stored app data
+   * @param aId {String} the unique id of the app
    */
-  _sendAppliedEvent: function(aApp) {
-    aApp.downloading = false;
-    aApp.downloadAvailable = false;
-    aApp.downloadSize = 0;
-    aApp.installState = "installed";
-    aApp.readyToApplyDownload = false;
-    if (aApp.staged && aApp.staged.manifestHash) {
+  _sendAppliedEvent: function(aNewApp, aOldApp, aId) {
+    aOldApp.downloading = false;
+    aOldApp.downloadAvailable = false;
+    aOldApp.downloadSize = 0;
+    aOldApp.installState = "installed";
+    aOldApp.readyToApplyDownload = false;
+    if (aOldApp.staged && aOldApp.staged.manifestHash) {
       // If we're here then the manifest has changed but the package
       // hasn't. Let's clear this, so we don't keep offering
       // a bogus update to the user
-      aApp.manifestHash = aApp.staged.manifestHash;
-      aApp.etag = aApp.staged.etag || aApp.etag;
-      aApp.staged = {};
-     // Move the staged update manifest to a non staged one.
+      aOldApp.manifestHash = aOldApp.staged.manifestHash;
+      aOldApp.etag = aOldApp.staged.etag || aOldApp.etag;
+      aOldApp.staged = {};
+
+      // Move the staged update manifest to a non staged one.
       try {
-        let staged = this._getAppDir(aApp.id);
+        let staged = this._getAppDir(aId);
         staged.append("staged-update.webapp");
         staged.moveTo(staged.parent, "update.webapp");
       } catch (ex) {
@@ -3040,15 +3048,15 @@ this.DOMApplicationRegistry = {
     // Save the updated registry, and cleanup the tmp directory.
     this._saveApps().then(() => {
       this.broadcastMessage("Webapps:UpdateState", {
-        app: aApp,
-        id: aApp.id
+        app: aOldApp,
+        manifestURL: aNewApp.manifestURL
       });
       this.broadcastMessage("Webapps:FireEvent", {
-        manifestURL: aApp.manifestURL,
+        manifestURL: aNewApp.manifestURL,
         eventType: ["downloadsuccess", "downloadapplied"]
       });
     });
-    let file = FileUtils.getFile("TmpD", ["webapps", aApp.id], false);
+    let file = FileUtils.getFile("TmpD", ["webapps", aId], false);
     if (file && file.exists()) {
       file.remove(true);
     }
@@ -3353,10 +3361,9 @@ this.DOMApplicationRegistry = {
           dir.moveTo(parent, newId);
         });
         // Signals that we need to swap the old id with the new app.
-        this.broadcastMessage("Webapps:UpdateApp", { oldId: oldId,
-                                                     newId: newId,
-                                                     app: aOldApp });
-
+        this.broadcastMessage("Webapps:RemoveApp", { id: oldId });
+        this.broadcastMessage("Webapps:AddApp", { id: newId,
+                                                  app: aOldApp });
       }
     }
   },
@@ -3459,7 +3466,7 @@ this.DOMApplicationRegistry = {
       this.broadcastMessage("Webapps:UpdateState", {
         app: aOldApp,
         error: aError,
-        id: aNewApp.id
+        manifestURL: aNewApp.manifestURL
       });
       this.broadcastMessage("Webapps:FireEvent", {
         eventType: "downloaderror",
@@ -4009,7 +4016,7 @@ AppcacheObserver.prototype = {
     let app = this.app;
     DOMApplicationRegistry.broadcastMessage("Webapps:UpdateState", {
       app: app,
-      id: app.id
+      manifestURL: app.manifestURL
     });
     DOMApplicationRegistry.broadcastMessage("Webapps:FireEvent", {
       eventType: "progress",
@@ -4041,7 +4048,7 @@ AppcacheObserver.prototype = {
       app.downloadAvailable = false;
       DOMApplicationRegistry.broadcastMessage("Webapps:UpdateState", {
         app: app,
-        id: app.id
+        manifestURL: app.manifestURL
       });
       DOMApplicationRegistry.broadcastMessage("Webapps:FireEvent", {
         eventType: ["downloadsuccess", "downloadapplied"],
@@ -4055,7 +4062,7 @@ AppcacheObserver.prototype = {
       DOMApplicationRegistry.broadcastMessage("Webapps:UpdateState", {
         app: app,
         error: aError,
-        id: app.id
+        manifestURL: app.manifestURL
       });
       DOMApplicationRegistry.broadcastMessage("Webapps:FireEvent", {
         eventType: "downloaderror",

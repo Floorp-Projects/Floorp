@@ -37,7 +37,7 @@ class LBox : public LInstructionHelper<1, 1, 0>
 class LUnboxBase : public LInstructionHelper<1, 1, 0>
 {
   public:
-    LUnboxBase(const LAllocation &input) {
+    explicit LUnboxBase(const LAllocation &input) {
         setOperand(0, input);
     }
 
@@ -52,7 +52,7 @@ class LUnbox : public LUnboxBase {
   public:
     LIR_HEADER(Unbox)
 
-    LUnbox(const LAllocation &input)
+    explicit LUnbox(const LAllocation &input)
       : LUnboxBase(input)
     { }
 
@@ -86,7 +86,7 @@ class LAsmJSUInt32ToDouble : public LInstructionHelper<1, 1, 0>
   public:
     LIR_HEADER(AsmJSUInt32ToDouble)
 
-    LAsmJSUInt32ToDouble(const LAllocation &input) {
+    explicit LAsmJSUInt32ToDouble(const LAllocation &input) {
         setOperand(0, input);
     }
 };
@@ -97,7 +97,7 @@ class LAsmJSUInt32ToFloat32 : public LInstructionHelper<1, 1, 0>
   public:
     LIR_HEADER(AsmJSUInt32ToFloat32)
 
-    LAsmJSUInt32ToFloat32(const LAllocation &input) {
+    explicit LAsmJSUInt32ToFloat32(const LAllocation &input) {
         setOperand(0, input);
     }
 };

@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" align="left">
+<hbox style="font: 40px arial, helvetica, roboto, droid sans, sans-serif;">
+  <label value="lowercase" style="font-variant: normal;"/>
+  <label value="smallcaps" style="font-variant: small-caps;"/>
+  <label value="CAPITALS" style="font-variant: small-caps;"/>
+</hbox>
+</window>

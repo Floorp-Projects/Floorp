@@ -321,13 +321,13 @@ struct uint8_clamped {
     uint8_clamped(const uint8_clamped& other) : val(other.val) { }
 
     // invoke our assignment helpers for constructor conversion
-    uint8_clamped(uint8_t x)    { *this = x; }
-    uint8_clamped(uint16_t x)   { *this = x; }
-    uint8_clamped(uint32_t x)   { *this = x; }
-    uint8_clamped(int8_t x)     { *this = x; }
-    uint8_clamped(int16_t x)    { *this = x; }
-    uint8_clamped(int32_t x)    { *this = x; }
-    uint8_clamped(double x)     { *this = x; }
+    explicit uint8_clamped(uint8_t x)    { *this = x; }
+    explicit uint8_clamped(uint16_t x)   { *this = x; }
+    explicit uint8_clamped(uint32_t x)   { *this = x; }
+    explicit uint8_clamped(int8_t x)     { *this = x; }
+    explicit uint8_clamped(int16_t x)    { *this = x; }
+    explicit uint8_clamped(int32_t x)    { *this = x; }
+    explicit uint8_clamped(double x)     { *this = x; }
 
     uint8_clamped& operator=(const uint8_clamped& x) {
         val = x.val;

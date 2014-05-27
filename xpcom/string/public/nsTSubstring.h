@@ -20,9 +20,12 @@ class nsTStringComparator_CharT
 public:
   typedef CharT char_type;
 
-  nsTStringComparator_CharT() {}
+  nsTStringComparator_CharT()
+  {
+  }
 
-  virtual int operator()( const char_type*, const char_type*, uint32_t, uint32_t ) const = 0;
+  virtual int operator()(const char_type*, const char_type*,
+                         uint32_t, uint32_t) const = 0;
 };
 
 
@@ -35,9 +38,12 @@ class nsTDefaultStringComparator_CharT
 public:
   typedef CharT char_type;
 
-  nsTDefaultStringComparator_CharT() {}
+  nsTDefaultStringComparator_CharT()
+  {
+  }
 
-  virtual int operator()( const char_type*, const char_type*, uint32_t, uint32_t ) const;
+  virtual int operator()(const char_type*, const char_type*,
+                         uint32_t, uint32_t) const;
 };
 
 /**
@@ -84,43 +90,52 @@ public:
 public:
 
   // this acts like a virtual destructor
-  ~nsTSubstring_CharT() { Finalize(); }
+  ~nsTSubstring_CharT()
+  {
+    Finalize();
+  }
 
   /**
    * reading iterators
    */
 
-  const_char_iterator BeginReading() const { return mData; }
-  const_char_iterator EndReading() const { return mData + mLength; }
+  const_char_iterator BeginReading() const
+  {
+    return mData;
+  }
+  const_char_iterator EndReading() const
+  {
+    return mData + mLength;
+  }
 
   /**
    * deprecated reading iterators
    */
 
-  const_iterator& BeginReading( const_iterator& iter ) const
+  const_iterator& BeginReading(const_iterator& aIter) const
   {
-    iter.mStart = mData;
-    iter.mEnd = mData + mLength;
-    iter.mPosition = iter.mStart;
-    return iter;
+    aIter.mStart = mData;
+    aIter.mEnd = mData + mLength;
+    aIter.mPosition = aIter.mStart;
+    return aIter;
   }
 
-  const_iterator& EndReading( const_iterator& iter ) const
+  const_iterator& EndReading(const_iterator& aIter) const
   {
-    iter.mStart = mData;
-    iter.mEnd = mData + mLength;
-    iter.mPosition = iter.mEnd;
-    return iter;
+    aIter.mStart = mData;
+    aIter.mEnd = mData + mLength;
+    aIter.mPosition = aIter.mEnd;
+    return aIter;
   }
 
-  const_char_iterator& BeginReading( const_char_iterator& iter ) const
+  const_char_iterator& BeginReading(const_char_iterator& aIter) const
   {
-    return iter = mData;
+    return aIter = mData;
   }
 
-  const_char_iterator& EndReading( const_char_iterator& iter ) const
+  const_char_iterator& EndReading(const_char_iterator& aIter) const
   {
-    return iter = mData + mLength;
+    return aIter = mData + mLength;
   }
 
 
@@ -130,70 +145,72 @@ public:
 
   char_iterator BeginWriting()
   {
-    if (!EnsureMutable())
+    if (!EnsureMutable()) {
       NS_ABORT_OOM(mLength);
+    }
 
     return mData;
   }
 
-  char_iterator BeginWriting( const fallible_t& )
+  char_iterator BeginWriting(const fallible_t&)
   {
     return EnsureMutable() ? mData : char_iterator(0);
   }
 
   char_iterator EndWriting()
   {
-    if (!EnsureMutable())
+    if (!EnsureMutable()) {
       NS_ABORT_OOM(mLength);
+    }
 
     return mData + mLength;
   }
 
-  char_iterator EndWriting( const fallible_t& )
+  char_iterator EndWriting(const fallible_t&)
   {
     return EnsureMutable() ? (mData + mLength) : char_iterator(0);
   }
 
-  char_iterator& BeginWriting( char_iterator& iter )
+  char_iterator& BeginWriting(char_iterator& aIter)
   {
-    return iter = BeginWriting();
+    return aIter = BeginWriting();
   }
 
-  char_iterator& BeginWriting( char_iterator& iter, const fallible_t& )
+  char_iterator& BeginWriting(char_iterator& aIter, const fallible_t&)
   {
-    return iter = BeginWriting(fallible_t());
+    return aIter = BeginWriting(fallible_t());
   }
 
-  char_iterator& EndWriting( char_iterator& iter )
+  char_iterator& EndWriting(char_iterator& aIter)
   {
-    return iter = EndWriting();
+    return aIter = EndWriting();
   }
 
-  char_iterator& EndWriting( char_iterator& iter, const fallible_t& )
+  char_iterator& EndWriting(char_iterator& aIter, const fallible_t&)
   {
-    return iter = EndWriting(fallible_t());
+    return aIter = EndWriting(fallible_t());
   }
 
   /**
    * deprecated writing iterators
    */
 
-  iterator& BeginWriting( iterator& iter )
+  iterator& BeginWriting(iterator& aIter)
   {
-    char_type *data = BeginWriting();
-    iter.mStart = data;
-    iter.mEnd = data + mLength;
-    iter.mPosition = iter.mStart;
-    return iter;
+    char_type* data = BeginWriting();
+    aIter.mStart = data;
+    aIter.mEnd = data + mLength;
+    aIter.mPosition = aIter.mStart;
+    return aIter;
   }
 
-  iterator& EndWriting( iterator& iter )
+  iterator& EndWriting(iterator& aIter)
   {
-    char_type *data = BeginWriting();
-    iter.mStart = data;
-    iter.mEnd = data + mLength;
-    iter.mPosition = iter.mEnd;
-    return iter;
+    char_type* data = BeginWriting();
+    aIter.mStart = data;
+    aIter.mEnd = data + mLength;
+    aIter.mPosition = aIter.mEnd;
+    return aIter;
   }
 
   /**
@@ -204,7 +221,7 @@ public:
 #if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
   char16ptr_t Data() const
 #else
-  const char_type *Data() const
+  const char_type* Data() const
 #endif
   {
     return mData;
@@ -240,15 +257,15 @@ public:
     return (mFlags & F_TERMINATED) != 0;
   }
 
-  char_type CharAt( index_type i ) const
+  char_type CharAt(index_type aIndex) const
   {
-    NS_ASSERTION(i < mLength, "index exceeds allowable range");
-    return mData[i];
+    NS_ASSERTION(aIndex < mLength, "index exceeds allowable range");
+    return mData[aIndex];
   }
 
-  char_type operator[]( index_type i ) const
+  char_type operator[](index_type aIndex) const
   {
-    return CharAt(i);
+    return CharAt(aIndex);
   }
 
   char_type First() const
@@ -257,35 +274,35 @@ public:
     return mData[0];
   }
 
-  inline
-  char_type Last() const
+  inline   char_type Last() const
   {
     NS_ASSERTION(mLength > 0, "|Last()| called on an empty string");
     return mData[mLength - 1];
   }
 
-  size_type NS_FASTCALL CountChar( char_type ) const;
-  int32_t NS_FASTCALL FindChar( char_type, index_type offset = 0 ) const;
+  size_type NS_FASTCALL CountChar(char_type) const;
+  int32_t NS_FASTCALL FindChar(char_type, index_type aOffset = 0) const;
 
 
   /**
    * equality
    */
 
-  bool NS_FASTCALL Equals( const self_type& ) const;
-  bool NS_FASTCALL Equals( const self_type&, const comparator_type& ) const;
+  bool NS_FASTCALL Equals(const self_type&) const;
+  bool NS_FASTCALL Equals(const self_type&, const comparator_type&) const;
 
-  bool NS_FASTCALL Equals( const char_type* data ) const;
-  bool NS_FASTCALL Equals( const char_type* data, const comparator_type& comp ) const;
+  bool NS_FASTCALL Equals(const char_type* aData) const;
+  bool NS_FASTCALL Equals(const char_type* aData,
+                          const comparator_type& aComp) const;
 
 #if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
-  bool NS_FASTCALL Equals( char16ptr_t data ) const
+  bool NS_FASTCALL Equals(char16ptr_t aData) const
   {
-    return Equals(static_cast<const char16_t*>(data));
+    return Equals(static_cast<const char16_t*>(aData));
   }
-  bool NS_FASTCALL Equals( char16ptr_t data, const comparator_type& comp ) const
+  bool NS_FASTCALL Equals(char16ptr_t aData, const comparator_type& aComp) const
   {
-    return Equals(static_cast<const char16_t*>(data), comp);
+    return Equals(static_cast<const char16_t*>(aData), aComp);
   }
 #endif
 
@@ -294,13 +311,13 @@ public:
    * for wide strings. Call this version when you know the
    * length of 'data'.
    */
-  bool NS_FASTCALL EqualsASCII( const char* data, size_type len ) const;
+  bool NS_FASTCALL EqualsASCII(const char* aData, size_type aLen) const;
   /**
    * An efficient comparison with ASCII that can be used even
    * for wide strings. Call this version when 'data' is
    * null-terminated.
    */
-  bool NS_FASTCALL EqualsASCII( const char* data ) const;
+  bool NS_FASTCALL EqualsASCII(const char* aData) const;
 
   // EqualsLiteral must ONLY be applied to an actual literal string, or
   // a char array *constant* declared without an explicit size.
@@ -309,9 +326,9 @@ public:
   // The template trick to acquire the array length at compile time without
   // using a macro is due to Corey Kosak, with much thanks.
   template<int N>
-  inline bool EqualsLiteral( const char (&str)[N] ) const
+  inline bool EqualsLiteral(const char (&aStr)[N]) const
   {
-    return EqualsASCII(str, N-1);
+    return EqualsASCII(aStr, N - 1);
   }
 
   // The LowerCaseEquals methods compare the ASCII-lowercase version of
@@ -320,8 +337,9 @@ public:
   // you. If you compare to an ASCII or literal string that contains an
   // uppercase character, it is guaranteed to return false. We will
   // throw assertions too.
-  bool NS_FASTCALL LowerCaseEqualsASCII( const char* data, size_type len ) const;
-  bool NS_FASTCALL LowerCaseEqualsASCII( const char* data ) const;
+  bool NS_FASTCALL LowerCaseEqualsASCII(const char* aData,
+                                        size_type aLen) const;
+  bool NS_FASTCALL LowerCaseEqualsASCII(const char* aData) const;
 
   // LowerCaseEqualsLiteral must ONLY be applied to an actual
   // literal string, or a char array *constant* declared without an
@@ -329,60 +347,71 @@ public:
   // pointer, or with a non-constant char array variable. Use
   // LowerCaseEqualsASCII for them.
   template<int N>
-  inline bool LowerCaseEqualsLiteral( const char (&str)[N] ) const
+  inline bool LowerCaseEqualsLiteral(const char (&aStr)[N]) const
   {
-    return LowerCaseEqualsASCII(str, N-1);
+    return LowerCaseEqualsASCII(aStr, N - 1);
   }
 
   /**
    * assignment
    */
 
-  void NS_FASTCALL Assign( char_type c );
-  bool NS_FASTCALL Assign( char_type c, const fallible_t& ) NS_WARN_UNUSED_RESULT;
+  void NS_FASTCALL Assign(char_type aChar);
+  NS_WARN_UNUSED_RESULT bool NS_FASTCALL Assign(char_type aChar,
+                                                const fallible_t&);
 
-  void NS_FASTCALL Assign( const char_type* data );
-  void NS_FASTCALL Assign( const char_type* data, size_type length );
-  bool NS_FASTCALL Assign( const char_type* data, size_type length, const fallible_t& ) NS_WARN_UNUSED_RESULT;
+  void NS_FASTCALL Assign(const char_type* aData);
+  void NS_FASTCALL Assign(const char_type* aData, size_type aLength);
+  NS_WARN_UNUSED_RESULT bool NS_FASTCALL Assign(const char_type* aData,
+                                                size_type aLength,
+                                                const fallible_t&);
 
-  void NS_FASTCALL Assign( const self_type& );
-  bool NS_FASTCALL Assign( const self_type&, const fallible_t& ) NS_WARN_UNUSED_RESULT;
+  void NS_FASTCALL Assign(const self_type&);
+  NS_WARN_UNUSED_RESULT bool NS_FASTCALL Assign(const self_type&,
+                                                const fallible_t&);
 
-  void NS_FASTCALL Assign( const substring_tuple_type& );
-  bool NS_FASTCALL Assign( const substring_tuple_type&, const fallible_t& ) NS_WARN_UNUSED_RESULT;
+  void NS_FASTCALL Assign(const substring_tuple_type&);
+  NS_WARN_UNUSED_RESULT bool NS_FASTCALL Assign(const substring_tuple_type&,
+                                                const fallible_t&);
 
 #if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
-  void Assign (char16ptr_t data)
+  void Assign(char16ptr_t aData)
   {
-    Assign(static_cast<const char16_t*>(data));
+    Assign(static_cast<const char16_t*>(aData));
   }
 
-  bool Assign(char16ptr_t data, const fallible_t&) NS_WARN_UNUSED_RESULT
+  NS_WARN_UNUSED_RESULT bool Assign(char16ptr_t aData, const fallible_t&)
   {
-    return Assign(static_cast<const char16_t*>(data), fallible_t());
+    return Assign(static_cast<const char16_t*>(aData), fallible_t());
   }
 
-  void Assign (char16ptr_t data, size_type length)
+  void Assign(char16ptr_t aData, size_type aLength)
   {
-    Assign(static_cast<const char16_t*>(data), length);
+    Assign(static_cast<const char16_t*>(aData), aLength);
   }
 
-  bool Assign(char16ptr_t data, size_type length, const fallible_t&) NS_WARN_UNUSED_RESULT
+  NS_WARN_UNUSED_RESULT bool Assign(char16ptr_t aData, size_type aLength,
+                                    const fallible_t&)
   {
-    return Assign(static_cast<const char16_t*>(data), length, fallible_t());
+    return Assign(static_cast<const char16_t*>(aData), aLength, fallible_t());
   }
 #endif
 
-  void NS_FASTCALL AssignASCII( const char* data, size_type length );
-  bool NS_FASTCALL AssignASCII( const char* data, size_type length, const fallible_t& ) NS_WARN_UNUSED_RESULT;
+  void NS_FASTCALL AssignASCII(const char* aData, size_type aLength);
+  NS_WARN_UNUSED_RESULT bool NS_FASTCALL AssignASCII(const char* aData,
+                                                     size_type aLength,
+                                                     const fallible_t&);
 
-  void NS_FASTCALL AssignASCII( const char* data )
+  void NS_FASTCALL AssignASCII(const char* aData)
   {
-    AssignASCII(data, mozilla::SafeCast<size_type, size_t>(strlen(data)));
+    AssignASCII(aData, mozilla::SafeCast<size_type, size_t>(strlen(aData)));
   }
-  bool NS_FASTCALL AssignASCII( const char* data, const fallible_t& ) NS_WARN_UNUSED_RESULT
+  NS_WARN_UNUSED_RESULT bool NS_FASTCALL AssignASCII(const char* aData,
+                                                     const fallible_t&)
   {
-    return AssignASCII(data, mozilla::SafeCast<size_type, size_t>(strlen(data)), fallible_t());
+    return AssignASCII(aData,
+                       mozilla::SafeCast<size_type, size_t>(strlen(aData)),
+                       fallible_t());
   }
 
   // AssignLiteral must ONLY be applied to an actual literal string, or
@@ -392,138 +421,269 @@ public:
   // There are not fallible version of these methods because they only really
   // apply to small allocations that we wouldn't want to check anyway.
   template<int N>
-  void AssignLiteral( const char_type (&str)[N] )
-  { AssignLiteral(str, N - 1); }
+  void AssignLiteral(const char_type (&aStr)[N])
+  {
+    AssignLiteral(aStr, N - 1);
+  }
 #ifdef CharT_is_PRUnichar
   template<int N>
-  void AssignLiteral( const char (&str)[N] )
-  { AssignASCII(str, N-1); }
+  void AssignLiteral(const char (&aStr)[N])
+  {
+    AssignASCII(aStr, N - 1);
+  }
 #endif
 
-  self_type& operator=( char_type c )                                                       { Assign(c);        return *this; }
-  self_type& operator=( const char_type* data )                                             { Assign(data);     return *this; }
+  self_type& operator=(char_type aChar)
+  {
+    Assign(aChar);
+    return *this;
+  }
+  self_type& operator=(const char_type* aData)
+  {
+    Assign(aData);
+    return *this;
+  }
 #if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
-  self_type& operator=( char16ptr_t data )                                                  { Assign(data);     return *this; }
+  self_type& operator=(char16ptr_t aData)
+  {
+    Assign(aData);
+    return *this;
+  }
 #endif
-  self_type& operator=( const self_type& str )                                              { Assign(str);      return *this; }
-  self_type& operator=( const substring_tuple_type& tuple )                                 { Assign(tuple);    return *this; }
+  self_type& operator=(const self_type& aStr)
+  {
+    Assign(aStr);
+    return *this;
+  }
+  self_type& operator=(const substring_tuple_type& aTuple)
+  {
+    Assign(aTuple);
+    return *this;
+  }
 
-  void NS_FASTCALL Adopt( char_type* data, size_type length = size_type(-1) );
+  void NS_FASTCALL Adopt(char_type* aData, size_type aLength = size_type(-1));
 
 
   /**
    * buffer manipulation
    */
 
-  void NS_FASTCALL Replace( index_type cutStart, size_type cutLength, char_type c );
-  bool NS_FASTCALL Replace( index_type cutStart, size_type cutLength, char_type c, const mozilla::fallible_t&) NS_WARN_UNUSED_RESULT;
-  void NS_FASTCALL Replace( index_type cutStart, size_type cutLength, const char_type* data, size_type length = size_type(-1) );
-  bool NS_FASTCALL Replace( index_type cutStart, size_type cutLength, const char_type* data, size_type length, const mozilla::fallible_t&) NS_WARN_UNUSED_RESULT;
-  void Replace( index_type cutStart, size_type cutLength, const self_type& str )      { Replace(cutStart, cutLength, str.Data(), str.Length()); }
-  bool Replace( index_type cutStart, size_type cutLength, const self_type& str, const mozilla::fallible_t&) NS_WARN_UNUSED_RESULT
-  { return Replace(cutStart, cutLength, str.Data(), str.Length(), mozilla::fallible_t()); }
-  void NS_FASTCALL Replace( index_type cutStart, size_type cutLength, const substring_tuple_type& tuple );
+  void NS_FASTCALL Replace(index_type aCutStart, size_type aCutLength,
+                           char_type aChar);
+  NS_WARN_UNUSED_RESULT bool NS_FASTCALL Replace(index_type aCutStart,
+                                                 size_type aCutLength,
+                                                 char_type aChar,
+                                                 const mozilla::fallible_t&);
+  void NS_FASTCALL Replace(index_type aCutStart, size_type aCutLength,
+                           const char_type* aData,
+                           size_type aLength = size_type(-1));
+  NS_WARN_UNUSED_RESULT bool NS_FASTCALL Replace(index_type aCutStart,
+                                                 size_type aCutLength,
+                                                 const char_type* aData,
+                                                 size_type aLength,
+                                                 const mozilla::fallible_t&);
+  void Replace(index_type aCutStart, size_type aCutLength,
+               const self_type& aStr)
+  {
+    Replace(aCutStart, aCutLength, aStr.Data(), aStr.Length());
+  }
+  NS_WARN_UNUSED_RESULT bool Replace(index_type aCutStart,
+                                     size_type aCutLength,
+                                     const self_type& aStr,
+                                     const mozilla::fallible_t&)
+  {
+    return Replace(aCutStart, aCutLength, aStr.Data(), aStr.Length(),
+                   mozilla::fallible_t());
+  }
+  void NS_FASTCALL Replace(index_type aCutStart, size_type aCutLength,
+                           const substring_tuple_type& aTuple);
 
-  void NS_FASTCALL ReplaceASCII( index_type cutStart, size_type cutLength, const char* data, size_type length = size_type(-1) );
+  void NS_FASTCALL ReplaceASCII(index_type aCutStart, size_type aCutLength,
+                                const char* aData,
+                                size_type aLength = size_type(-1));
 
   // ReplaceLiteral must ONLY be applied to an actual literal string.
   // Do not attempt to use it with a regular char* pointer, or with a char
   // array variable. Use Replace or ReplaceASCII for those.
   template<int N>
-  void ReplaceLiteral( index_type cutStart, size_type cutLength, const char_type (&str)[N] ) { ReplaceLiteral(cutStart, cutLength, str, N - 1); }
+  void ReplaceLiteral(index_type aCutStart, size_type aCutLength,
+                      const char_type (&aStr)[N])
+  {
+    ReplaceLiteral(aCutStart, aCutLength, aStr, N - 1);
+  }
 
-  void Append( char_type c )                                                                 { Replace(mLength, 0, c); }
-  bool Append( char_type c, const mozilla::fallible_t&) NS_WARN_UNUSED_RESULT                { return Replace(mLength, 0, c, mozilla::fallible_t()); }
-  void Append( const char_type* data, size_type length = size_type(-1) )                     { Replace(mLength, 0, data, length); }
-  bool Append( const char_type* data, size_type length, const mozilla::fallible_t&) NS_WARN_UNUSED_RESULT
-  { return Replace(mLength, 0, data, length, mozilla::fallible_t()); }
+  void Append(char_type aChar)
+  {
+    Replace(mLength, 0, aChar);
+  }
+  NS_WARN_UNUSED_RESULT bool Append(char_type aChar,
+                                    const mozilla::fallible_t&)
+  {
+    return Replace(mLength, 0, aChar, mozilla::fallible_t());
+  }
+  void Append(const char_type* aData, size_type aLength = size_type(-1))
+  {
+    Replace(mLength, 0, aData, aLength);
+  }
+  NS_WARN_UNUSED_RESULT bool Append(const char_type* aData, size_type aLength,
+                                    const mozilla::fallible_t&)
+  {
+    return Replace(mLength, 0, aData, aLength, mozilla::fallible_t());
+  }
 
 #if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
-  void Append( char16ptr_t data, size_type length = size_type(-1) )                            { Append(static_cast<const char16_t*>(data), length); }
+  void Append(char16ptr_t aData, size_type aLength = size_type(-1))
+  {
+    Append(static_cast<const char16_t*>(aData), aLength);
+  }
 #endif
 
-  void Append( const self_type& str )                                                        { Replace(mLength, 0, str); }
-  void Append( const substring_tuple_type& tuple )                                           { Replace(mLength, 0, tuple); }
+  void Append(const self_type& aStr)
+  {
+    Replace(mLength, 0, aStr);
+  }
+  void Append(const substring_tuple_type& aTuple)
+  {
+    Replace(mLength, 0, aTuple);
+  }
 
-  void AppendASCII( const char* data, size_type length = size_type(-1) )                     { ReplaceASCII(mLength, 0, data, length); }
+  void AppendASCII(const char* aData, size_type aLength = size_type(-1))
+  {
+    ReplaceASCII(mLength, 0, aData, aLength);
+  }
 
   /**
    * Append a formatted string to the current string. Uses the format
    * codes documented in prprf.h
    */
-  void AppendPrintf( const char* format, ... );
-  void AppendPrintf( const char* format, va_list ap );
-  void AppendInt( int32_t aInteger )
-  { AppendPrintf( "%d", aInteger ); }
-  void AppendInt( int32_t aInteger, int aRadix )
+  void AppendPrintf(const char* aFormat, ...);
+  void AppendPrintf(const char* aFormat, va_list aAp);
+  void AppendInt(int32_t aInteger)
   {
-    const char *fmt = aRadix == 10 ? "%d" : aRadix == 8 ? "%o" : "%x";
-    AppendPrintf( fmt, aInteger );
+    AppendPrintf("%d", aInteger);
   }
-  void AppendInt( uint32_t aInteger )
-  { AppendPrintf( "%u", aInteger ); }
-  void AppendInt( uint32_t aInteger, int aRadix )
+  void AppendInt(int32_t aInteger, int aRadix)
   {
-    const char *fmt = aRadix == 10 ? "%u" : aRadix == 8 ? "%o" : "%x";
-    AppendPrintf( fmt, aInteger );
+    const char* fmt = aRadix == 10 ? "%d" : aRadix == 8 ? "%o" : "%x";
+    AppendPrintf(fmt, aInteger);
   }
-  void AppendInt( int64_t aInteger )
-  { AppendPrintf( "%lld", aInteger ); }
-  void AppendInt( int64_t aInteger, int aRadix )
+  void AppendInt(uint32_t aInteger)
   {
-    const char *fmt = aRadix == 10 ? "%lld" : aRadix == 8 ? "%llo" : "%llx";
-    AppendPrintf( fmt, aInteger );
+    AppendPrintf("%u", aInteger);
   }
-  void AppendInt( uint64_t aInteger )
-  { AppendPrintf( "%llu", aInteger ); }
-  void AppendInt( uint64_t aInteger, int aRadix )
+  void AppendInt(uint32_t aInteger, int aRadix)
   {
-    const char *fmt = aRadix == 10 ? "%llu" : aRadix == 8 ? "%llo" : "%llx";
-    AppendPrintf( fmt, aInteger );
+    const char* fmt = aRadix == 10 ? "%u" : aRadix == 8 ? "%o" : "%x";
+    AppendPrintf(fmt, aInteger);
+  }
+  void AppendInt(int64_t aInteger)
+  {
+    AppendPrintf("%lld", aInteger);
+  }
+  void AppendInt(int64_t aInteger, int aRadix)
+  {
+    const char* fmt = aRadix == 10 ? "%lld" : aRadix == 8 ? "%llo" : "%llx";
+    AppendPrintf(fmt, aInteger);
+  }
+  void AppendInt(uint64_t aInteger)
+  {
+    AppendPrintf("%llu", aInteger);
+  }
+  void AppendInt(uint64_t aInteger, int aRadix)
+  {
+    const char* fmt = aRadix == 10 ? "%llu" : aRadix == 8 ? "%llo" : "%llx";
+    AppendPrintf(fmt, aInteger);
   }
 
   /**
    * Append the given float to this string
    */
-  void NS_FASTCALL AppendFloat( float aFloat );
-  void NS_FASTCALL AppendFloat( double aFloat );
+  void NS_FASTCALL AppendFloat(float aFloat);
+  void NS_FASTCALL AppendFloat(double aFloat);
 public:
 
   // AppendLiteral must ONLY be applied to an actual literal string.
   // Do not attempt to use it with a regular char* pointer, or with a char
   // array variable. Use Append or AppendASCII for those.
   template<int N>
-  void AppendLiteral( const char_type (&str)[N] )                                             { ReplaceLiteral(mLength, 0, str, N - 1); }
+  void AppendLiteral(const char_type (&aStr)[N])
+  {
+    ReplaceLiteral(mLength, 0, aStr, N - 1);
+  }
 #ifdef CharT_is_PRUnichar
   template<int N>
-  void AppendLiteral( const char (&str)[N] )
-  { AppendASCII(str, N-1); }
+  void AppendLiteral(const char (&aStr)[N])
+  {
+    AppendASCII(aStr, N - 1);
+  }
 #endif
 
-  self_type& operator+=( char_type c )                                                       { Append(c);        return *this; }
-  self_type& operator+=( const char_type* data )                                             { Append(data);     return *this; }
+  self_type& operator+=(char_type aChar)
+  {
+    Append(aChar);
+    return *this;
+  }
+  self_type& operator+=(const char_type* aData)
+  {
+    Append(aData);
+    return *this;
+  }
 #if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
-  self_type& operator+=( char16ptr_t data )                                                  { Append(data);     return *this; }
+  self_type& operator+=(char16ptr_t aData)
+  {
+    Append(aData);
+    return *this;
+  }
 #endif
-  self_type& operator+=( const self_type& str )                                              { Append(str);      return *this; }
-  self_type& operator+=( const substring_tuple_type& tuple )                                 { Append(tuple);    return *this; }
+  self_type& operator+=(const self_type& aStr)
+  {
+    Append(aStr);
+    return *this;
+  }
+  self_type& operator+=(const substring_tuple_type& aTuple)
+  {
+    Append(aTuple);
+    return *this;
+  }
 
-  void Insert( char_type c, index_type pos )                                                 { Replace(pos, 0, c); }
-  void Insert( const char_type* data, index_type pos, size_type length = size_type(-1) )     { Replace(pos, 0, data, length); }
+  void Insert(char_type aChar, index_type aPos)
+  {
+    Replace(aPos, 0, aChar);
+  }
+  void Insert(const char_type* aData, index_type aPos,
+              size_type aLength = size_type(-1))
+  {
+    Replace(aPos, 0, aData, aLength);
+  }
 #if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
-  void Insert( char16ptr_t data, index_type pos, size_type length = size_type(-1) )
-  { Insert(static_cast<const char16_t*>(data), pos, length); }
+  void Insert(char16ptr_t aData, index_type aPos,
+              size_type aLength = size_type(-1))
+  {
+    Insert(static_cast<const char16_t*>(aData), aPos, aLength);
+  }
 #endif
-  void Insert( const self_type& str, index_type pos )                                        { Replace(pos, 0, str); }
-  void Insert( const substring_tuple_type& tuple, index_type pos )                           { Replace(pos, 0, tuple); }
+  void Insert(const self_type& aStr, index_type aPos)
+  {
+    Replace(aPos, 0, aStr);
+  }
+  void Insert(const substring_tuple_type& aTuple, index_type aPos)
+  {
+    Replace(aPos, 0, aTuple);
+  }
 
   // InsertLiteral must ONLY be applied to an actual literal string.
   // Do not attempt to use it with a regular char* pointer, or with a char
   // array variable. Use Insert for those.
   template<int N>
-  void InsertLiteral( const char_type (&str)[N], index_type pos )                            { ReplaceLiteral(pos, 0, str, N - 1); }
+  void InsertLiteral(const char_type (&aStr)[N], index_type aPos)
+  {
+    ReplaceLiteral(aPos, 0, aStr, N - 1);
+  }
 
-  void Cut( index_type cutStart, size_type cutLength )                                       { Replace(cutStart, cutLength, char_traits::sEmptyBuffer, 0); }
+  void Cut(index_type aCutStart, size_type aCutLength)
+  {
+    Replace(aCutStart, aCutLength, char_traits::sEmptyBuffer, 0);
+  }
 
 
   /**
@@ -537,16 +697,18 @@ public:
    * the job of the string class.
    * Also ensures that the buffer is mutable.
    */
-  void NS_FASTCALL SetCapacity( size_type newCapacity );
-  bool NS_FASTCALL SetCapacity( size_type newCapacity, const fallible_t& ) NS_WARN_UNUSED_RESULT;
+  void NS_FASTCALL SetCapacity(size_type aNewCapacity);
+  NS_WARN_UNUSED_RESULT bool NS_FASTCALL SetCapacity(size_type aNewCapacity,
+                                                     const fallible_t&);
 
-  void NS_FASTCALL SetLength( size_type newLength );
-  bool NS_FASTCALL SetLength( size_type newLength, const fallible_t& ) NS_WARN_UNUSED_RESULT;
+  void NS_FASTCALL SetLength(size_type aNewLength);
+  NS_WARN_UNUSED_RESULT bool NS_FASTCALL SetLength(size_type aNewLength,
+                                                   const fallible_t&);
 
-  void Truncate( size_type newLength = 0 )
+  void Truncate(size_type aNewLength = 0)
   {
-    NS_ASSERTION(newLength <= mLength, "Truncate cannot make string longer");
-    SetLength(newLength);
+    NS_ASSERTION(aNewLength <= mLength, "Truncate cannot make string longer");
+    SetLength(aNewLength);
   }
 
 
@@ -561,9 +723,9 @@ public:
    *
    * @returns The length of the buffer in characters.
    */
-  inline size_type GetData( const char_type** data ) const
+  inline size_type GetData(const char_type** aData) const
   {
-    *data = mData;
+    *aData = mData;
     return mLength;
   }
 
@@ -577,36 +739,36 @@ public:
    * @returns The length of the buffer in characters or 0 if unable to
    * satisfy the request due to low-memory conditions.
    */
-  size_type GetMutableData( char_type** data, size_type newLen = size_type(-1) )
+  size_type GetMutableData(char_type** aData, size_type aNewLen = size_type(-1))
   {
-    if (!EnsureMutable(newLen))
-      NS_ABORT_OOM(newLen == size_type(-1) ? mLength : newLen);
+    if (!EnsureMutable(aNewLen)) {
+      NS_ABORT_OOM(aNewLen == size_type(-1) ? mLength : aNewLen);
+    }
 
-    *data = mData;
+    *aData = mData;
     return mLength;
   }
 
-  size_type GetMutableData( char_type** data, size_type newLen, const fallible_t& )
+  size_type GetMutableData(char_type** aData, size_type aNewLen, const fallible_t&)
   {
-    if (!EnsureMutable(newLen))
-    {
-      *data = nullptr;
+    if (!EnsureMutable(aNewLen)) {
+      *aData = nullptr;
       return 0;
     }
 
-    *data = mData;
+    *aData = mData;
     return mLength;
   }
 
 #if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
-  size_type GetMutableData( wchar_t** data, size_type newLen = size_type(-1) )
+  size_type GetMutableData(wchar_t** aData, size_type aNewLen = size_type(-1))
   {
-    return GetMutableData(reinterpret_cast<char16_t**>(data), newLen);
+    return GetMutableData(reinterpret_cast<char16_t**>(aData), aNewLen);
   }
 
-  size_type GetMutableData( wchar_t** data, size_type newLen, const fallible_t& )
+  size_type GetMutableData(wchar_t** aData, size_type aNewLen, const fallible_t&)
   {
-    return GetMutableData(reinterpret_cast<char16_t**>(data), newLen, fallible_t());
+    return GetMutableData(reinterpret_cast<char16_t**>(aData), aNewLen, fallible_t());
   }
 #endif
 
@@ -616,7 +778,7 @@ public:
    * string will be truncated.  @see nsTSubstring::IsVoid
    */
 
-  void NS_FASTCALL SetIsVoid( bool );
+  void NS_FASTCALL SetIsVoid(bool);
 
   /**
    *  This method is used to remove all occurrences of aChar from this
@@ -626,7 +788,7 @@ public:
    *  @param  aOffset -- where in this string to start stripping chars
    */
 
-  void StripChar( char_type aChar, int32_t aOffset=0 );
+  void StripChar(char_type aChar, int32_t aOffset = 0);
 
   /**
    *  This method is used to remove all occurrences of aChars from this
@@ -636,7 +798,7 @@ public:
    *  @param  aOffset -- where in this string to start stripping chars
    */
 
-  void StripChars( const char_type* aChars, uint32_t aOffset=0 );
+  void StripChars(const char_type* aChars, uint32_t aOffset = 0);
 
   /**
    * If the string uses a shared buffer, this method
@@ -644,8 +806,7 @@ public:
    */
   void ForgetSharedBuffer()
   {
-    if (mFlags & nsSubstring::F_SHARED)
-    {
+    if (mFlags & nsSubstring::F_SHARED) {
       mData = char_traits::sEmptyBuffer;
       mLength = 0;
       mFlags = F_TERMINATED;
@@ -658,12 +819,12 @@ public:
    * this is public to support automatic conversion of tuple to string
    * base type, which helps avoid converting to nsTAString.
    */
-  MOZ_IMPLICIT nsTSubstring_CharT(const substring_tuple_type& tuple)
-    : mData(nullptr),
-      mLength(0),
-      mFlags(F_NONE)
+  MOZ_IMPLICIT nsTSubstring_CharT(const substring_tuple_type& aTuple)
+    : mData(nullptr)
+    , mLength(0)
+    , mFlags(F_NONE)
   {
-    Assign(tuple);
+    Assign(aTuple);
   }
 
   /**
@@ -675,23 +836,25 @@ public:
   // XXXbz or can I just include nscore.h and use NS_BUILD_REFCNT_LOGGING?
 #if defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING)
 #define XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
-  nsTSubstring_CharT( char_type *data, size_type length, uint32_t flags );
+  nsTSubstring_CharT(char_type* aData, size_type aLength, uint32_t aFlags);
 #else
 #undef XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
-  nsTSubstring_CharT( char_type *data, size_type length, uint32_t flags )
-    : mData(data),
-      mLength(length),
-      mFlags(flags) {}
+  nsTSubstring_CharT(char_type* aData, size_type aLength, uint32_t aFlags)
+    : mData(aData)
+    , mLength(aLength)
+    , mFlags(aFlags)
+  {
+  }
 #endif /* DEBUG || FORCE_BUILD_REFCNT_LOGGING */
 
-  size_t SizeOfExcludingThisMustBeUnshared(mozilla::MallocSizeOf mallocSizeOf)
+  size_t SizeOfExcludingThisMustBeUnshared(mozilla::MallocSizeOf aMallocSizeOf)
   const;
-  size_t SizeOfIncludingThisMustBeUnshared(mozilla::MallocSizeOf mallocSizeOf)
+  size_t SizeOfIncludingThisMustBeUnshared(mozilla::MallocSizeOf aMallocSizeOf)
   const;
 
-  size_t SizeOfExcludingThisIfUnshared(mozilla::MallocSizeOf mallocSizeOf)
+  size_t SizeOfExcludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf)
   const;
-  size_t SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf mallocSizeOf)
+  size_t SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf)
   const;
 
   /**
@@ -700,9 +863,9 @@ public:
    * you do use them, please explain clearly in a comment why it's safe
    * and won't lead to double-counting.
    */
-  size_t SizeOfExcludingThisEvenIfShared(mozilla::MallocSizeOf mallocSizeOf)
+  size_t SizeOfExcludingThisEvenIfShared(mozilla::MallocSizeOf aMallocSizeOf)
   const;
-  size_t SizeOfIncludingThisEvenIfShared(mozilla::MallocSizeOf mallocSizeOf)
+  size_t SizeOfIncludingThisEvenIfShared(mozilla::MallocSizeOf aMallocSizeOf)
   const;
 
 protected:
@@ -719,21 +882,27 @@ protected:
 
   // default initialization
   nsTSubstring_CharT()
-    : mData(char_traits::sEmptyBuffer),
-      mLength(0),
-      mFlags(F_TERMINATED) {}
+    : mData(char_traits::sEmptyBuffer)
+    ,  mLength(0)
+    ,  mFlags(F_TERMINATED)
+  {
+  }
 
   // version of constructor that leaves mData and mLength uninitialized
   explicit
-  nsTSubstring_CharT( uint32_t flags )
-    : mFlags(flags) {}
+  nsTSubstring_CharT(uint32_t aFlags)
+    : mFlags(aFlags)
+  {
+  }
 
   // copy-constructor, constructs as dependent on given object
   // (NOTE: this is for internal use only)
-  nsTSubstring_CharT( const self_type& str )
-    : mData(str.mData),
-      mLength(str.mLength),
-      mFlags(str.mFlags & (F_TERMINATED | F_VOIDED)) {}
+  nsTSubstring_CharT(const self_type& aStr)
+    : mData(aStr.mData)
+    ,  mLength(aStr.mLength)
+    ,  mFlags(aStr.mFlags & (F_TERMINATED | F_VOIDED))
+  {
+  }
 
   /**
    * this function releases mData and does not change the value of
@@ -745,9 +914,9 @@ protected:
   /**
    * this function prepares mData to be mutated.
    *
-   * @param capacity     specifies the required capacity of mData
-   * @param old_data     returns null or the old value of mData
-   * @param old_flags    returns 0 or the old value of mFlags
+   * @param aCapacity    specifies the required capacity of mData
+   * @param aOldData     returns null or the old value of mData
+   * @param aOldFlags    returns 0 or the old value of mFlags
    *
    * if mData is already mutable and of sufficient capacity, then this
    * function will return immediately.  otherwise, it will either resize
@@ -760,16 +929,17 @@ protected:
    *
    * XXX we should expose a way for subclasses to free old_data.
    */
-  bool NS_FASTCALL MutatePrep( size_type capacity, char_type** old_data, uint32_t* old_flags );
+  bool NS_FASTCALL MutatePrep(size_type aCapacity,
+                              char_type** aOldData, uint32_t* aOldFlags);
 
   /**
    * this function prepares a section of mData to be modified.  if
    * necessary, this function will reallocate mData and possibly move
    * existing data to open up the specified section.
    *
-   * @param cutStart     specifies the starting offset of the section
-   * @param cutLength    specifies the length of the section to be replaced
-   * @param newLength    specifies the length of the new section
+   * @param aCutStart    specifies the starting offset of the section
+   * @param aCutLength   specifies the length of the section to be replaced
+   * @param aNewLength   specifies the length of the new section
    *
    * for example, suppose mData contains the string "abcdef" then
    *
@@ -782,25 +952,27 @@ protected:
    * this function returns false if is unable to allocate sufficient
    * memory.
    */
-  bool ReplacePrep(index_type cutStart, size_type cutLength,
-                   size_type newLength) NS_WARN_UNUSED_RESULT
+  NS_WARN_UNUSED_RESULT bool ReplacePrep(index_type aCutStart,
+                                         size_type aCutLength,
+                                         size_type aNewLength)
   {
-    cutLength = XPCOM_MIN(cutLength, mLength - cutStart);
-    uint32_t newTotalLen = mLength - cutLength + newLength;
-    if (cutStart == mLength && Capacity() > newTotalLen) {
+    aCutLength = XPCOM_MIN(aCutLength, mLength - aCutStart);
+    uint32_t newTotalLen = mLength - aCutLength + aNewLength;
+    if (aCutStart == mLength && Capacity() > newTotalLen)
+    {
       mFlags &= ~F_VOIDED;
       mData[newTotalLen] = char_type(0);
       mLength = newTotalLen;
       return true;
     }
-    return ReplacePrepInternal(cutStart, cutLength, newLength, newTotalLen);
+    return ReplacePrepInternal(aCutStart, aCutLength, aNewLength, newTotalLen);
   }
 
-  bool NS_FASTCALL ReplacePrepInternal(index_type cutStart,
-                                       size_type cutLength,
-                                       size_type newFragLength,
-                                       size_type newTotalLength)
-  NS_WARN_UNUSED_RESULT;
+  NS_WARN_UNUSED_RESULT bool NS_FASTCALL ReplacePrepInternal(
+    index_type aCutStart,
+    size_type aCutLength,
+    size_type aNewFragLength,
+    size_type aNewTotalLength);
 
   /**
    * returns the number of writable storage units starting at mData.
@@ -815,42 +987,44 @@ protected:
    * this helper function can be called prior to directly manipulating
    * the contents of mData.  see, for example, BeginWriting.
    */
-  bool NS_FASTCALL EnsureMutable( size_type newLen = size_type(-1) ) NS_WARN_UNUSED_RESULT;
+  NS_WARN_UNUSED_RESULT bool NS_FASTCALL EnsureMutable(
+    size_type aNewLen = size_type(-1));
 
   /**
    * returns true if this string overlaps with the given string fragment.
    */
-  bool IsDependentOn( const char_type *start, const char_type *end ) const
+  bool IsDependentOn(const char_type* aStart, const char_type* aEnd) const
   {
     /**
      * if it _isn't_ the case that one fragment starts after the other ends,
      * or ends before the other starts, then, they conflict:
      *
-     *   !(f2.begin >= f1.end || f2.end <= f1.begin)
+     *   !(f2.begin >= f1.aEnd || f2.aEnd <= f1.begin)
      *
      * Simplified, that gives us:
      */
-    return ( start < (mData + mLength) && end > mData );
+    return (aStart < (mData + mLength) && aEnd > mData);
   }
 
   /**
    * this helper function stores the specified dataFlags in mFlags
    */
-  void SetDataFlags(uint32_t dataFlags)
+  void SetDataFlags(uint32_t aDataFlags)
   {
-    NS_ASSERTION((dataFlags & 0xFFFF0000) == 0, "bad flags");
-    mFlags = dataFlags | (mFlags & 0xFFFF0000);
+    NS_ASSERTION((aDataFlags & 0xFFFF0000) == 0, "bad flags");
+    mFlags = aDataFlags | (mFlags & 0xFFFF0000);
   }
 
-  void NS_FASTCALL ReplaceLiteral( index_type cutStart, size_type cutLength, const char_type* data, size_type length );
+  void NS_FASTCALL ReplaceLiteral(index_type aCutStart, size_type aCutLength,
+                                  const char_type* aData, size_type aLength);
 
-  static int AppendFunc( void* arg, const char* s, uint32_t len);
+  static int AppendFunc(void* aArg, const char* aStr, uint32_t aLen);
 
 public:
 
   // NOTE: this method is declared public _only_ for convenience for
   // callers who don't have access to the original nsLiteralString_CharT.
-  void NS_FASTCALL AssignLiteral( const char_type* data, size_type length );
+  void NS_FASTCALL AssignLiteral(const char_type* aData, size_type aLength);
 
   // mFlags is a bitwise combination of the following flags.  the meaning
   // and interpretation of these flags is an implementation detail.
@@ -909,48 +1083,58 @@ public:
   //
 };
 
-int NS_FASTCALL Compare( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs, const nsTStringComparator_CharT& = nsTDefaultStringComparator_CharT() );
+int NS_FASTCALL
+Compare(const nsTSubstring_CharT::base_string_type& aLhs,
+        const nsTSubstring_CharT::base_string_type& aRhs,
+        const nsTStringComparator_CharT& = nsTDefaultStringComparator_CharT());
 
 
-inline
-bool operator!=( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
+inline bool
+operator!=(const nsTSubstring_CharT::base_string_type& aLhs,
+           const nsTSubstring_CharT::base_string_type& aRhs)
 {
-  return !lhs.Equals(rhs);
+  return !aLhs.Equals(aRhs);
 }
 
-inline
-bool operator< ( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
+inline bool
+operator<(const nsTSubstring_CharT::base_string_type& aLhs,
+          const nsTSubstring_CharT::base_string_type& aRhs)
 {
-  return Compare(lhs, rhs)< 0;
+  return Compare(aLhs, aRhs) < 0;
 }
 
-inline
-bool operator<=( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
+inline bool
+operator<=(const nsTSubstring_CharT::base_string_type& aLhs,
+           const nsTSubstring_CharT::base_string_type& aRhs)
 {
-  return Compare(lhs, rhs)<=0;
+  return Compare(aLhs, aRhs) <= 0;
 }
 
-inline
-bool operator==( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
+inline bool
+operator==(const nsTSubstring_CharT::base_string_type& aLhs,
+           const nsTSubstring_CharT::base_string_type& aRhs)
 {
-  return lhs.Equals(rhs);
+  return aLhs.Equals(aRhs);
 }
 
-inline
-bool operator==( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::char_type* rhs )
+inline bool
+operator==(const nsTSubstring_CharT::base_string_type& aLhs,
+           const nsTSubstring_CharT::char_type* aRhs)
 {
-  return lhs.Equals(rhs);
+  return aLhs.Equals(aRhs);
 }
 
 
-inline
-bool operator>=( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
+inline bool
+operator>=(const nsTSubstring_CharT::base_string_type& aLhs,
+           const nsTSubstring_CharT::base_string_type& aRhs)
 {
-  return Compare(lhs, rhs)>=0;
+  return Compare(aLhs, aRhs) >= 0;
 }
 
-inline
-bool operator> ( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
+inline bool
+operator>(const nsTSubstring_CharT::base_string_type& aLhs,
+          const nsTSubstring_CharT::base_string_type& aRhs)
 {
-  return Compare(lhs, rhs)> 0;
+  return Compare(aLhs, aRhs) > 0;
 }

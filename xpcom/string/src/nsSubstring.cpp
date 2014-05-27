@@ -43,7 +43,7 @@ using mozilla::Atomic;
 static const char16_t gNullChar = 0;
 
 char* const nsCharTraits<char>::sEmptyBuffer =
-  (char*) const_cast<char16_t*>(&gNullChar);
+  (char*)const_cast<char16_t*>(&gNullChar);
 char16_t* const nsCharTraits<char16_t>::sEmptyBuffer =
   const_cast<char16_t*>(&gNullChar);
 
@@ -54,31 +54,39 @@ class nsStringStats
 {
 public:
   nsStringStats()
-    : mAllocCount(0), mReallocCount(0), mFreeCount(0), mShareCount(0) {}
+    : mAllocCount(0)
+    , mReallocCount(0)
+    , mFreeCount(0)
+    , mShareCount(0)
+  {
+  }
 
   ~nsStringStats()
   {
     // this is a hack to suppress duplicate string stats printing
     // in seamonkey as a result of the string code being linked
     // into seamonkey and libxpcom! :-(
-    if (!mAllocCount && !mAdoptCount)
+    if (!mAllocCount && !mAdoptCount) {
       return;
+    }
 
     printf("nsStringStats\n");
     printf(" => mAllocCount:     % 10d\n", int(mAllocCount));
     printf(" => mReallocCount:   % 10d\n", int(mReallocCount));
     printf(" => mFreeCount:      % 10d", int(mFreeCount));
-    if (mAllocCount > mFreeCount)
+    if (mAllocCount > mFreeCount) {
       printf("  --  LEAKED %d !!!\n", mAllocCount - mFreeCount);
-    else
+    } else {
       printf("\n");
+    }
     printf(" => mShareCount:     % 10d\n", int(mShareCount));
     printf(" => mAdoptCount:     % 10d\n", int(mAdoptCount));
     printf(" => mAdoptFreeCount: % 10d", int(mAdoptFreeCount));
-    if (mAdoptCount > mAdoptFreeCount)
+    if (mAdoptCount > mAdoptFreeCount) {
       printf("  --  LEAKED %d !!!\n", mAdoptCount - mAdoptFreeCount);
-    else
+    } else {
       printf("\n");
+    }
     printf(" => Process ID: %" PRIuPTR ", Thread ID: %" PRIuPTR "\n",
            uintptr_t(getpid()), uintptr_t(pthread_self()));
   }
@@ -99,20 +107,17 @@ static nsStringStats gStringStats;
 // ---------------------------------------------------------------------------
 
 inline void
-ReleaseData( void* data, uint32_t flags )
+ReleaseData(void* aData, uint32_t aFlags)
 {
-  if (flags & nsSubstring::F_SHARED)
-  {
-    nsStringBuffer::FromData(data)->Release();
-  }
-  else if (flags & nsSubstring::F_OWNED)
-  {
-    nsMemory::Free(data);
+  if (aFlags & nsSubstring::F_SHARED) {
+    nsStringBuffer::FromData(aData)->Release();
+  } else if (aFlags & nsSubstring::F_OWNED) {
+    nsMemory::Free(aData);
     STRING_STAT_INCREMENT(AdoptFree);
 #ifdef NS_BUILD_REFCNT_LOGGING
     // Treat this as destruction of a "StringAdopt" object for leak
     // tracking purposes.
-    NS_LogDtor(data, "StringAdopt", 1);
+    NS_LogDtor(aData, "StringAdopt", 1);
 #endif // NS_BUILD_REFCNT_LOGGING
   }
   // otherwise, nothing to do.
@@ -128,16 +133,25 @@ private:
   nsAStringAccessor(); // NOT IMPLEMENTED
 
 public:
-  char_type  *data() const   { return mData; }
-  size_type   length() const { return mLength; }
-  uint32_t    flags() const  { return mFlags; }
+  char_type* data() const
+  {
+    return mData;
+  }
+  size_type length() const
+  {
+    return mLength;
+  }
+  uint32_t flags() const
+  {
+    return mFlags;
+  }
 
-  void set(char_type *data, size_type len, uint32_t flags)
+  void set(char_type* aData, size_type aLen, uint32_t aFlags)
   {
     ReleaseData(mData, mFlags);
-    mData = data;
-    mLength = len;
-    mFlags = flags;
+    mData = aData;
+    mLength = aLen;
+    mFlags = aFlags;
   }
 };
 
@@ -147,16 +161,25 @@ private:
   nsACStringAccessor(); // NOT IMPLEMENTED
 
 public:
-  char_type  *data() const   { return mData; }
-  size_type   length() const { return mLength; }
-  uint32_t    flags() const  { return mFlags; }
+  char_type* data() const
+  {
+    return mData;
+  }
+  size_type length() const
+  {
+    return mLength;
+  }
+  uint32_t flags() const
+  {
+    return mFlags;
+  }
 
-  void set(char_type *data, size_type len, uint32_t flags)
+  void set(char_type* aData, size_type aLen, uint32_t aFlags)
   {
     ReleaseData(mData, mFlags);
-    mData = data;
-    mLength = len;
-    mFlags = flags;
+    mData = aData;
+    mLength = aLen;
+    mFlags = aFlags;
   }
 };
 
@@ -175,8 +198,7 @@ nsStringBuffer::Release()
 {
   int32_t count = --mRefCount;
   NS_LOG_RELEASE(this, count, "nsStringBuffer");
-  if (count == 0)
-  {
+  if (count == 0) {
     STRING_STAT_INCREMENT(Free);
     free(this); // we were allocated with |malloc|
   }
@@ -186,85 +208,86 @@ nsStringBuffer::Release()
  * Alloc returns a pointer to a new string header with set capacity.
  */
 already_AddRefed<nsStringBuffer>
-nsStringBuffer::Alloc(size_t size)
+nsStringBuffer::Alloc(size_t aSize)
 {
-  NS_ASSERTION(size != 0, "zero capacity allocation not allowed");
-  NS_ASSERTION(sizeof(nsStringBuffer) + size <= size_t(uint32_t(-1)) &&
-               sizeof(nsStringBuffer) + size > size,
+  NS_ASSERTION(aSize != 0, "zero capacity allocation not allowed");
+  NS_ASSERTION(sizeof(nsStringBuffer) + aSize <= size_t(uint32_t(-1)) &&
+               sizeof(nsStringBuffer) + aSize > aSize,
                "mStorageSize will truncate");
 
-  nsStringBuffer *hdr =
-    (nsStringBuffer *) malloc(sizeof(nsStringBuffer) + size);
-  if (hdr)
-  {
+  nsStringBuffer* hdr =
+    (nsStringBuffer*)malloc(sizeof(nsStringBuffer) + aSize);
+  if (hdr) {
     STRING_STAT_INCREMENT(Alloc);
 
     hdr->mRefCount = 1;
-    hdr->mStorageSize = size;
+    hdr->mStorageSize = aSize;
     NS_LOG_ADDREF(hdr, 1, "nsStringBuffer", sizeof(*hdr));
   }
   return dont_AddRef(hdr);
 }
 
 nsStringBuffer*
-nsStringBuffer::Realloc(nsStringBuffer* hdr, size_t size)
+nsStringBuffer::Realloc(nsStringBuffer* aHdr, size_t aSize)
 {
   STRING_STAT_INCREMENT(Realloc);
 
-  NS_ASSERTION(size != 0, "zero capacity allocation not allowed");
-  NS_ASSERTION(sizeof(nsStringBuffer) + size <= size_t(uint32_t(-1)) &&
-               sizeof(nsStringBuffer) + size > size,
+  NS_ASSERTION(aSize != 0, "zero capacity allocation not allowed");
+  NS_ASSERTION(sizeof(nsStringBuffer) + aSize <= size_t(uint32_t(-1)) &&
+               sizeof(nsStringBuffer) + aSize > aSize,
                "mStorageSize will truncate");
 
   // no point in trying to save ourselves if we hit this assertion
-  NS_ASSERTION(!hdr->IsReadonly(), "|Realloc| attempted on readonly string");
+  NS_ASSERTION(!aHdr->IsReadonly(), "|Realloc| attempted on readonly string");
 
   // Treat this as a release and addref for refcounting purposes, since we
   // just asserted that the refcount is 1.  If we don't do that, refcount
   // logging will claim we've leaked all sorts of stuff.
-  NS_LOG_RELEASE(hdr, 0, "nsStringBuffer");
+  NS_LOG_RELEASE(aHdr, 0, "nsStringBuffer");
 
-  hdr = (nsStringBuffer*) realloc(hdr, sizeof(nsStringBuffer) + size);
-  if (hdr) {
-    NS_LOG_ADDREF(hdr, 1, "nsStringBuffer", sizeof(*hdr));
-    hdr->mStorageSize = size;
+  aHdr = (nsStringBuffer*)realloc(aHdr, sizeof(nsStringBuffer) + aSize);
+  if (aHdr) {
+    NS_LOG_ADDREF(aHdr, 1, "nsStringBuffer", sizeof(*aHdr));
+    aHdr->mStorageSize = aSize;
   }
 
-  return hdr;
+  return aHdr;
 }
 
 nsStringBuffer*
-nsStringBuffer::FromString(const nsAString& str)
+nsStringBuffer::FromString(const nsAString& aStr)
 {
   const nsAStringAccessor* accessor =
-    static_cast<const nsAStringAccessor*>(&str);
+    static_cast<const nsAStringAccessor*>(&aStr);
 
-  if (!(accessor->flags() & nsSubstring::F_SHARED))
+  if (!(accessor->flags() & nsSubstring::F_SHARED)) {
     return nullptr;
+  }
 
   return FromData(accessor->data());
 }
 
 nsStringBuffer*
-nsStringBuffer::FromString(const nsACString& str)
+nsStringBuffer::FromString(const nsACString& aStr)
 {
   const nsACStringAccessor* accessor =
-    static_cast<const nsACStringAccessor*>(&str);
+    static_cast<const nsACStringAccessor*>(&aStr);
 
-  if (!(accessor->flags() & nsCSubstring::F_SHARED))
+  if (!(accessor->flags() & nsCSubstring::F_SHARED)) {
     return nullptr;
+  }
 
   return FromData(accessor->data());
 }
 
 void
-nsStringBuffer::ToString(uint32_t len, nsAString &str,
+nsStringBuffer::ToString(uint32_t aLen, nsAString& aStr,
                          bool aMoveOwnership)
 {
   char16_t* data = static_cast<char16_t*>(Data());
 
-  nsAStringAccessor* accessor = static_cast<nsAStringAccessor*>(&str);
-  NS_ASSERTION(data[len] == char16_t(0), "data should be null terminated");
+  nsAStringAccessor* accessor = static_cast<nsAStringAccessor*>(&aStr);
+  NS_ASSERTION(data[aLen] == char16_t(0), "data should be null terminated");
 
   // preserve class flags
   uint32_t flags = accessor->flags();
@@ -273,17 +296,17 @@ nsStringBuffer::ToString(uint32_t len, nsAString &str,
   if (!aMoveOwnership) {
     AddRef();
   }
-  accessor->set(data, len, flags);
+  accessor->set(data, aLen, flags);
 }
 
 void
-nsStringBuffer::ToString(uint32_t len, nsACString &str,
+nsStringBuffer::ToString(uint32_t aLen, nsACString& aStr,
                          bool aMoveOwnership)
 {
   char* data = static_cast<char*>(Data());
 
-  nsACStringAccessor* accessor = static_cast<nsACStringAccessor*>(&str);
-  NS_ASSERTION(data[len] == char(0), "data should be null terminated");
+  nsACStringAccessor* accessor = static_cast<nsACStringAccessor*>(&aStr);
+  NS_ASSERTION(data[aLen] == char(0), "data should be null terminated");
 
   // preserve class flags
   uint32_t flags = accessor->flags();
@@ -292,7 +315,7 @@ nsStringBuffer::ToString(uint32_t len, nsACString &str,
   if (!aMoveOwnership) {
     AddRef();
   }
-  accessor->set(data, len, flags);
+  accessor->set(data, aLen, flags);
 }
 
 size_t
@@ -306,8 +329,7 @@ nsStringBuffer::SizeOfIncludingThisMustBeUnshared(mozilla::MallocSizeOf aMallocS
 size_t
 nsStringBuffer::SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf) const
 {
-  if (!IsReadonly())
-  {
+  if (!IsReadonly()) {
     return SizeOfIncludingThisMustBeUnshared(aMallocSizeOf);
   }
   return 0;

@@ -137,7 +137,7 @@ BEGIN_TEST(test_cloneScriptWithPrincipals)
 
         JS::RootedValue v(cx);
         JS::RootedValue arg(cx, JS::Int32Value(1));
-        CHECK(JS_CallFunctionValue(cx, B, clonedValue, arg, &v));
+        CHECK(JS_CallFunctionValue(cx, B, clonedValue, JS::HandleValueArray(arg), &v));
         CHECK(v.isObject());
 
         JSObject *funobj = &v.toObject();

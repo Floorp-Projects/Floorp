@@ -256,13 +256,13 @@ class LUse : public LAllocation
         set(policy, 0, usedAtStart);
         setVirtualRegister(vreg);
     }
-    LUse(Policy policy, bool usedAtStart = false) {
+    explicit LUse(Policy policy, bool usedAtStart = false) {
         set(policy, 0, usedAtStart);
     }
-    LUse(Register reg, bool usedAtStart = false) {
+    explicit LUse(Register reg, bool usedAtStart = false) {
         set(FIXED, reg.code(), usedAtStart);
     }
-    LUse(FloatRegister reg, bool usedAtStart = false) {
+    explicit LUse(FloatRegister reg, bool usedAtStart = false) {
         set(FIXED, reg.code(), usedAtStart);
     }
     LUse(Register reg, uint32_t virtualRegister) {
@@ -455,7 +455,7 @@ class LDefinition
         set(index, type, policy);
     }
 
-    LDefinition(Type type, Policy policy = DEFAULT) {
+    explicit LDefinition(Type type, Policy policy = DEFAULT) {
         set(0, type, policy);
     }
 
@@ -905,7 +905,7 @@ class LRecoverInfo : public TempObject
     // Cached offset where this resume point is encoded.
     RecoverOffset recoverOffset_;
 
-    LRecoverInfo(TempAllocator &alloc);
+    explicit LRecoverInfo(TempAllocator &alloc);
     bool init(MResumePoint *mir);
 
     // Fill the instruction vector such as all instructions needed for the
@@ -945,7 +945,7 @@ class LRecoverInfo : public TempObject
         size_t op_;
 
       public:
-        OperandIter(MNode **it)
+        explicit OperandIter(MNode **it)
           : it_(it), op_(0)
         { }
 
@@ -1133,7 +1133,7 @@ class LSafepoint : public TempObject
         JS_ASSERT((gcRegs().bits() & ~liveRegs().gprs().bits()) == 0);
     }
 
-    LSafepoint(TempAllocator &alloc)
+    explicit LSafepoint(TempAllocator &alloc)
       : safepointOffset_(INVALID_SAFEPOINT_OFFSET)
       , osiCallPointOffset_(0)
       , gcSlots_(alloc)
@@ -1423,7 +1423,7 @@ class LInstruction::InputIterator
     }
 
 public:
-    InputIterator(LInstruction &ins) :
+    explicit InputIterator(LInstruction &ins) :
       ins_(ins),
       idx_(0),
       snapshot_(false)
@@ -1506,7 +1506,7 @@ class LIRGraph
     MIRGraph &mir_;
 
   public:
-    LIRGraph(MIRGraph *mir);
+    explicit LIRGraph(MIRGraph *mir);
 
     bool init() {
         return constantPoolMap_.init();

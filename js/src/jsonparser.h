@@ -75,11 +75,11 @@ class MOZ_STACK_CLASS JSONParser : private AutoGCRooter
             return * static_cast<PropertyVector *>(vector);
         }
 
-        StackEntry(ElementVector *elements)
+        explicit StackEntry(ElementVector *elements)
           : state(FinishArrayElement), vector(elements)
         {}
 
-        StackEntry(PropertyVector *properties)
+        explicit StackEntry(PropertyVector *properties)
           : state(FinishObjectMember), vector(properties)
         {}
 

@@ -39,6 +39,9 @@ protected:
   SVGPathElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
 
 public:
+  // DOM memory reporter participant
+  NS_DECL_SIZEOF_EXCLUDING_THIS
+
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const MOZ_OVERRIDE;
 

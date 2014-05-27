@@ -178,10 +178,10 @@ TelephonyRequestChild::RecvNotifyDialError(const nsString& aError)
 }
 
 bool
-TelephonyRequestChild::RecvNotifyDialSuccess()
+TelephonyRequestChild::RecvNotifyDialSuccess(const uint32_t& aCallIndex)
 {
   MOZ_ASSERT(mCallback);
 
-  mCallback->NotifyDialSuccess();
+  mCallback->NotifyDialSuccess(aCallIndex);
   return true;
 }

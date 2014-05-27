@@ -13,7 +13,7 @@ function handleTechnologyDiscoveredRE0(msg) {
   log('Received \'nfc-manager-tech-discovered\'');
   is(msg.type, 'techDiscovered', 'check for correct message type');
   is(msg.techList[0], 'P2P', 'check for correct tech type');
-  toggleNFC(false, runNextTest);
+  toggleNFC(false).then(runNextTest);
 }
 
 function activateRE(re) {
@@ -45,9 +45,7 @@ function testActivateRE0() {
   window.navigator.mozSetMessageHandler(
     'nfc-manager-tech-discovered', handleTechnologyDiscoveredRE0);
 
-  toggleNFC(true, function() {
-    activateRE(0);
-  });
+  toggleNFC(true).then(() => activateRE(0));
 }
 
 // Check NCI Spec 5.2, this will change NCI state from
@@ -57,11 +55,10 @@ function testRfDiscover() {
   window.navigator.mozSetMessageHandler(
     'nfc-manager-tech-discovered', handleTechnologyDiscoveredRE0);
 
-  toggleNFC(true, function() {
-    notifyDiscoverRE(0, NCI_MORE_NOTIFICATIONS)
-    .then(() => notifyDiscoverRE(1, NCI_LAST_NOTIFICATION))
-    .then(() => activateRE(0));
-  });
+  toggleNFC(true)
+  .then(() => notifyDiscoverRE(0, NCI_MORE_NOTIFICATIONS))
+  .then(() => notifyDiscoverRE(1, NCI_LAST_NOTIFICATION))
+  .then(() => activateRE(0));
 }
 
 let tests = [
