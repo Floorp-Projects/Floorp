@@ -864,6 +864,7 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
             }
           }
           frame->AdjustOffsetsForBidi(contentOffset, contentOffset + fragmentLength);
+          currentLine->MarkDirty();
         }
       } // isTextFrame
       else {
