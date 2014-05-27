@@ -385,7 +385,7 @@ static inline PropertyIteratorObject *
 NewPropertyIteratorObject(JSContext *cx, unsigned flags)
 {
     if (flags & JSITER_ENUMERATE) {
-        RootedTypeObject type(cx, cx->getNewType(&PropertyIteratorObject::class_, nullptr));
+        RootedTypeObject type(cx, cx->getNewType(&PropertyIteratorObject::class_, TaggedProto(nullptr)));
         if (!type)
             return nullptr;
 
@@ -394,7 +394,7 @@ NewPropertyIteratorObject(JSContext *cx, unsigned flags)
             return nullptr;
 
         const Class *clasp = &PropertyIteratorObject::class_;
-        RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, nullptr, nullptr, metadata,
+        RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, TaggedProto(nullptr), nullptr, metadata,
                                                           ITERATOR_FINALIZE_KIND));
         if (!shape)
             return nullptr;
@@ -1121,7 +1121,7 @@ namespace {
 class SingleStringPredicate {
     Handle<JSFlatString*> str;
 public:
-    SingleStringPredicate(Handle<JSFlatString*> str) : str(str) {}
+    explicit SingleStringPredicate(Handle<JSFlatString*> str) : str(str) {}
 
     bool operator()(JSFlatString *str) { return EqualStrings(str, this->str); }
     bool matchesAtMostOne() { return true; }

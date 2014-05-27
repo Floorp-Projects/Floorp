@@ -22,6 +22,31 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Key)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+nsresult
+StringToUsage(const nsString& aUsage, Key::KeyUsage& aUsageOut)
+{
+  if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_ENCRYPT)) {
+    aUsageOut = Key::ENCRYPT;
+  } else if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_DECRYPT)) {
+    aUsageOut = Key::DECRYPT;
+  } else if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_SIGN)) {
+    aUsageOut = Key::SIGN;
+  } else if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_VERIFY)) {
+    aUsageOut = Key::VERIFY;
+  } else if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_DERIVEKEY)) {
+    aUsageOut = Key::DERIVEKEY;
+  } else if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_DERIVEBITS)) {
+    aUsageOut = Key::DERIVEBITS;
+  } else if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_WRAPKEY)) {
+    aUsageOut = Key::WRAPKEY;
+  } else if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_UNWRAPKEY)) {
+    aUsageOut = Key::UNWRAPKEY;
+  } else {
+    return NS_ERROR_DOM_SYNTAX_ERR;
+  }
+  return NS_OK;
+}
+
 Key::Key(nsIGlobalObject* aGlobal)
   : mGlobal(aGlobal)
   , mAttributes(0)
@@ -155,24 +180,20 @@ Key::ClearUsages()
 nsresult
 Key::AddUsage(const nsString& aUsage)
 {
-  if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_ENCRYPT)) {
-    mAttributes |= ENCRYPT;
-  } else if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_DECRYPT)) {
-    mAttributes |= DECRYPT;
-  } else if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_SIGN)) {
-    mAttributes |= SIGN;
-  } else if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_VERIFY)) {
-    mAttributes |= VERIFY;
-  } else if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_DERIVEKEY)) {
-    mAttributes |= DERIVEKEY;
-  } else if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_DERIVEBITS)) {
-    mAttributes |= DERIVEBITS;
-  } else if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_WRAPKEY)) {
-    mAttributes |= WRAPKEY;
-  } else if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_UNWRAPKEY)) {
-    mAttributes |= UNWRAPKEY;
-  } else {
+  return AddUsageIntersecting(aUsage, USAGES_MASK);
+}
+
+nsresult
+Key::AddUsageIntersecting(const nsString& aUsage, uint32_t aUsageMask)
+{
+  KeyUsage usage;
+  if (NS_FAILED(StringToUsage(aUsage, usage))) {
     return NS_ERROR_DOM_SYNTAX_ERR;
+  }
+
+  if (usage & aUsageMask) {
+    AddUsage(usage);
+    return NS_OK;
   }
 
   return NS_OK;

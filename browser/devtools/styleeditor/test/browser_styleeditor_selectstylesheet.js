@@ -34,7 +34,7 @@ function runTests()
     editor.getSourceEditor().then(() => {
       is(gUI.selectedEditor, gUI.editors[1], "second editor is selected");
       let {line, ch} = gUI.selectedEditor.sourceEditor.getCursor();
-      
+
       is(line, LINE_NO, "correct line selected");
       is(ch, COL_NO, "correct column selected");
 
@@ -42,6 +42,5 @@ function runTests()
       finish();
     });
   });
-
   gUI.selectStyleSheet(gUI.editors[1].styleSheet.href, LINE_NO);
 }

@@ -85,6 +85,26 @@ static inline uint32_t sMin(uint32_t l, uint32_t r) {
 // of the two representations are consistent.
 class StackEntry : public js::ProfileEntry
 {
+public:
+
+  bool isCopyLabel() const volatile {
+    return !((uintptr_t)stackAddress() & 0x1);
+  }
+
+  void setStackAddressCopy(void *sparg, bool copy) volatile {
+    // Tagged pointer. Less significant bit used to track if mLabel needs a
+    // copy. Note that we don't need the last bit of the stack address for
+    // proper ordering. This is optimized for encoding within the JS engine's
+    // instrumentation, so we do the extra work here of encoding a bit.
+    // Last bit 1 = Don't copy, Last bit 0 = Copy.
+    if (copy) {
+      setStackAddress(reinterpret_cast<void*>(
+                        reinterpret_cast<uintptr_t>(sparg) & ~NoCopyBit));
+    } else {
+      setStackAddress(reinterpret_cast<void*>(
+                        reinterpret_cast<uintptr_t>(sparg) | NoCopyBit));
+    }
+  }
 };
 
 class ProfilerMarkerPayload;
@@ -343,25 +363,23 @@ public:
     return mPendingMarkers.getPendingMarkers();
   }
 
-  void push(const char *aName, void *aStackAddress, uint32_t line, bool aCopy)
+  void push(const char *aName, uint32_t line)
+  {
+    push(aName, nullptr, false, line);
+  }
+
+  void push(const char *aName, void *aStackAddress, bool aCopy, uint32_t line)
   {
     if (size_t(mStackPointer) >= mozilla::ArrayLength(mStack)) {
       mStackPointer++;
       return;
     }
 
-    volatile StackEntry &entry = mStack[mStackPointer];
-
     // Make sure we increment the pointer after the name has
     // been written such that mStack is always consistent.
-    entry.setLabel(aName);
-    entry.setCppFrame(aStackAddress, line);
-
-    // Track if mLabel needs a copy.
-    if (aCopy)
-      entry.setFlag(js::ProfileEntry::FRAME_LABEL_COPY);
-    else
-      entry.unsetFlag(js::ProfileEntry::FRAME_LABEL_COPY);
+    mStack[mStackPointer].setLabel(aName);
+    mStack[mStackPointer].setStackAddressCopy(aStackAddress, aCopy);
+    mStack[mStackPointer].setLine(line);
 
     // Prevent the optimizer from re-ordering these instructions
     STORE_SEQUENCER();

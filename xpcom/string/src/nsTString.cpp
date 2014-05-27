@@ -5,14 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 nsTAdoptingString_CharT&
-nsTAdoptingString_CharT::operator=( const self_type& str )
+nsTAdoptingString_CharT::operator=(const self_type& str)
 {
   // This'll violate the constness of this argument, that's just
   // the nature of this class...
   self_type* mutable_str = const_cast<self_type*>(&str);
 
-  if (str.mFlags & F_OWNED)
-  {
+  if (str.mFlags & F_OWNED) {
     // We want to do what Adopt() does, but without actually incrementing
     // the Adopt count.  Note that we can be a little more straightforward
     // about this than Adopt() is, because we know that str.mData is
@@ -24,10 +23,8 @@ nsTAdoptingString_CharT::operator=( const self_type& str )
     SetDataFlags(F_TERMINATED | F_OWNED);
 
     // Make str forget the buffer we just took ownership of.
-    new (mutable_str) self_type();
-  }
-  else
-  {
+    new(mutable_str) self_type();
+  } else {
     Assign(str);
 
     mutable_str->Truncate();
@@ -37,7 +34,7 @@ nsTAdoptingString_CharT::operator=( const self_type& str )
 }
 
 void
-nsTString_CharT::Rebind( const char_type* data, size_type length )
+nsTString_CharT::Rebind(const char_type* data, size_type length)
 {
   // If we currently own a buffer, release it.
   Finalize();

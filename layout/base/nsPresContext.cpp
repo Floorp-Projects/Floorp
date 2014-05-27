@@ -1642,7 +1642,11 @@ nsPresContext::IsTopLevelWindowInactive()
 
   nsCOMPtr<nsIDocShellTreeItem> rootItem;
   treeItem->GetRootTreeItem(getter_AddRefs(rootItem));
-  nsCOMPtr<nsPIDOMWindow> domWindow(do_GetInterface(rootItem));
+  if (!rootItem) {
+    return false;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> domWindow = rootItem->GetWindow();
 
   return domWindow && !domWindow->IsActive();
 }
@@ -1778,31 +1782,44 @@ nsPresContext::UIResolutionChangedInternal()
     chromeWindow->GetMessageManager(getter_AddRefs(windowMM));
   }
   if (windowMM) {
-    uint32_t tabChildCount = 0;
-    windowMM->GetChildCount(&tabChildCount);
-    for (uint32_t j = 0; j < tabChildCount; ++j) {
-      nsCOMPtr<nsIMessageListenerManager> childMM;
-      windowMM->GetChildAt(j, getter_AddRefs(childMM));
-      if (!childMM) {
-        continue;
-      }
-      nsCOMPtr<nsIMessageSender> tabMM = do_QueryInterface(childMM);
-
-      mozilla::dom::ipc::MessageManagerCallback* cb =
-       static_cast<nsFrameMessageManager*>(tabMM.get())->GetCallback();
-      if (cb) {
-        nsFrameLoader* fl = static_cast<nsFrameLoader*>(cb);
-        PBrowserParent* remoteBrowser = fl->GetRemoteBrowser();
-        TabParent* remote = static_cast<TabParent*>(remoteBrowser);
-        if (remote) {
-          remote->UIResolutionChanged();
-        }
-      }
-    }
+    NotifyUIResolutionChanged(windowMM);
   }
 
   mDocument->EnumerateSubDocuments(UIResolutionChangedSubdocumentCallback,
                                    nullptr);
+}
+
+void
+nsPresContext::NotifyUIResolutionChanged(nsIMessageBroadcaster* aManager)
+{
+  uint32_t tabChildCount = 0;
+  aManager->GetChildCount(&tabChildCount);
+  for (uint32_t j = 0; j < tabChildCount; ++j) {
+    nsCOMPtr<nsIMessageListenerManager> childMM;
+    aManager->GetChildAt(j, getter_AddRefs(childMM));
+    if (!childMM) {
+      continue;
+    }
+
+    nsCOMPtr<nsIMessageBroadcaster> nonLeafMM = do_QueryInterface(childMM);
+    if (nonLeafMM) {
+      NotifyUIResolutionChanged(nonLeafMM);
+      continue;
+    }
+
+    nsCOMPtr<nsIMessageSender> tabMM = do_QueryInterface(childMM);
+
+    mozilla::dom::ipc::MessageManagerCallback* cb =
+     static_cast<nsFrameMessageManager*>(tabMM.get())->GetCallback();
+    if (cb) {
+      nsFrameLoader* fl = static_cast<nsFrameLoader*>(cb);
+      PBrowserParent* remoteBrowser = fl->GetRemoteBrowser();
+      TabParent* remote = static_cast<TabParent*>(remoteBrowser);
+      if (remote) {
+        remote->UIResolutionChanged();
+      }
+    }
+  }
 }
 
 void

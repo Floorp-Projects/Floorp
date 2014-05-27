@@ -1336,7 +1336,7 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
   if (theCount == 0) {
     // Ensure that the buffer is not empty. Because none of the DTDs care
     // about leading whitespace, this doesn't change the result.
-    theContext.AssignLiteral(" ");
+    theContext.Assign(' ');
   }
 
   // First, parse the context to build up the DTD's tag stack. Note that we

@@ -423,7 +423,7 @@ class LifoAlloc
         }
 
       public:
-        Enum(LifoAlloc &alloc)
+        explicit Enum(LifoAlloc &alloc)
           : alloc_(&alloc),
             chunk_(alloc.first),
             position_(static_cast<char *>(alloc.first ? alloc.first->start() : nullptr))
@@ -513,7 +513,7 @@ class LifoAllocPolicy
     LifoAlloc &alloc_;
 
   public:
-    LifoAllocPolicy(LifoAlloc &alloc)
+    MOZ_IMPLICIT LifoAllocPolicy(LifoAlloc &alloc)
       : alloc_(alloc)
     {}
     void *malloc_(size_t bytes) {

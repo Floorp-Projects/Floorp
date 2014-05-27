@@ -661,6 +661,8 @@ public:
 #endif
 
 protected:
+    virtual already_AddRefed<gfxFont> GetSmallCapsFont();
+
     virtual bool ShapeText(gfxContext      *aContext,
                            const char16_t *aText,
                            uint32_t         aOffset,
@@ -668,12 +670,6 @@ protected:
                            int32_t          aScript,
                            gfxShapedText   *aShapedText,
                            bool             aPreferPlatformShaping);
-
-    bool InitGlyphRunWithPango(const char16_t *aString,
-                               uint32_t         aOffset,
-                               uint32_t         aLength,
-                               int32_t          aScript,
-                               gfxShapedText   *aShapedText);
 
 private:
     gfxFcFont(cairo_scaled_font_t *aCairoFont, gfxFcFontEntry *aFontEntry,
@@ -1599,6 +1595,41 @@ gfxFcFont::~gfxFcFont()
                                     &sGfxFontKey,
                                     nullptr,
                                     nullptr);
+}
+
+already_AddRefed<gfxFont>
+gfxFcFont::GetSmallCapsFont()
+{
+    gfxFontStyle style(*GetStyle());
+    style.size *= SMALL_CAPS_SCALE_FACTOR;
+    style.smallCaps = false;
+    gfxFcFontEntry* fe = static_cast<gfxFcFontEntry*>(GetFontEntry());
+    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(fe, &style);
+    if (font) {
+        return font.forget();
+    }
+
+    cairo_matrix_t fontMatrix;
+    cairo_scaled_font_get_font_matrix(mScaledFont, &fontMatrix);
+    cairo_matrix_scale(&fontMatrix,
+                       SMALL_CAPS_SCALE_FACTOR, SMALL_CAPS_SCALE_FACTOR);
+
+    cairo_matrix_t ctm;
+    cairo_scaled_font_get_ctm(mScaledFont, &ctm);
+
+    cairo_font_options_t *options = cairo_font_options_create();
+    cairo_scaled_font_get_font_options(mScaledFont, options);
+
+    cairo_scaled_font_t *smallFont =
+        cairo_scaled_font_create(cairo_scaled_font_get_font_face(mScaledFont),
+                                 &fontMatrix, &ctm, options);
+    cairo_font_options_destroy(options);
+
+    font = new gfxFcFont(smallFont, fe, &style);
+    gfxFontCache::GetCache()->AddNew(font);
+    cairo_scaled_font_destroy(smallFont);
+
+    return font.forget();
 }
 
 bool

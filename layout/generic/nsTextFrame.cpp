@@ -1834,7 +1834,6 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   gfxSkipChars skipChars;
 
   const void* textPtr = aTextBuffer;
-  bool anySmallcapsStyle = false;
   bool anyTextTransformStyle = false;
   bool anyMathMLStyling = false;
   uint8_t sstyScriptLevel = 0;
@@ -1912,9 +1911,6 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
       textFlags |= gfxTextRunFactory::TEXT_ENABLE_SPACING;
     }
     fontStyle = f->StyleFont();
-    if (NS_STYLE_FONT_VARIANT_SMALL_CAPS == fontStyle->mFont.variant) {
-      anySmallcapsStyle = true;
-    }
     if (NS_MATHML_MATHVARIANT_NONE != fontStyle->mMathVariant) {
       anyMathMLStyling = true;
     } else if (mLineContainer->GetStateBits() & NS_FRAME_IS_IN_SINGLE_CHAR_MI) {
@@ -2079,9 +2075,6 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
 
   // Setup factory chain
   nsAutoPtr<nsTransformingTextRunFactory> transformingFactory;
-  if (anySmallcapsStyle) {
-    transformingFactory = new nsFontVariantTextRunFactory();
-  }
   if (anyTextTransformStyle) {
     transformingFactory =
       new nsCaseTransformTextRunFactory(transformingFactory.forget());

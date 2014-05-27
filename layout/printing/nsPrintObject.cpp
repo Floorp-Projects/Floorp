@@ -78,7 +78,7 @@ nsPrintObject::Init(nsIDocShell* aDocShell, nsIDOMDocument* aDoc,
   if (mParent) {
     nsCOMPtr<nsPIDOMWindow> window = doc->GetWindow();
     if (window) {
-      mContent = do_QueryInterface(window->GetFrameElementInternal());
+      mContent = window->GetFrameElementInternal();
     }
     mDocument = doc;
     return NS_OK;

@@ -12,9 +12,9 @@ var CastingApps = {
     }
 
     // Register a service target
-    SimpleServiceDiscovery.registerTarget("roku:ecp", function(aService, aApp) {
+    SimpleServiceDiscovery.registerTarget("roku:ecp", function(aService) {
       Cu.import("resource://gre/modules/RokuApp.jsm");
-      return new RokuApp(aService, "FirefoxTest");
+      return new RokuApp(aService);
     });
 
     // Search for devices continuously every 120 seconds
@@ -361,7 +361,7 @@ var CastingApps = {
         return;
 
       // Make sure we have a player app for the given service
-      let app = SimpleServiceDiscovery.findAppForService(aService, "video-sharing");
+      let app = SimpleServiceDiscovery.findAppForService(aService);
       if (!app)
         return;
 

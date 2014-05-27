@@ -28,7 +28,7 @@ import android.view.ViewGroup;
  */
 public class RemoteTabsContainerPanel extends GeckoSwipeRefreshLayout
                                  implements TabsPanel.PanelView {
-    private static final String[] STAGES_TO_SYNC_ON_REFRESH = new String[] { "tabs" };
+    private static final String[] STAGES_TO_SYNC_ON_REFRESH = new String[] { "clients", "tabs" };
 
     /**
      * Refresh indicators (the swipe-to-refresh "laser show" and the spinning

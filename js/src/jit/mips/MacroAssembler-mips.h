@@ -889,8 +889,6 @@ public:
         ma_or(frameSizeReg, frameSizeReg, Imm32(type));
     }
 
-    void linkExitFrame();
-    void linkParallelExitFrame(Register pt);
     void handleFailureWithHandler(void *handler);
     void handleFailureWithHandlerTail();
 
