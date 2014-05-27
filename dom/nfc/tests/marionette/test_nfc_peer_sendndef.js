@@ -23,12 +23,12 @@ function sendNDEF(techType, sessionToken) {
     emulator.run(cmd, function(result) {
       is(result.pop(), "OK", "check SNEP PUT result");
       NDEF.compare(ndef, NDEF.parseString(result.pop()));
-      toggleNFC(false, runNextTest);
+      toggleNFC(false).then(runNextTest);
     });
   };
   req.onerror = function() {
     ok(false, "Failed to send NDEF message, error \'" + this.error + "\'");
-    toggleNFC(false, runNextTest);
+    toggleNFC(false).then(runNextTest);
   };
 }
 
@@ -40,19 +40,11 @@ function handleTechnologyDiscoveredRE0(msg) {
   sendNDEF(msg.techList[index], msg.sessionToken);
 }
 
-function activateRE0() {
-  let cmd = "nfc nci rf_intf_activated_ntf 0";
-  log("Executing \'" + cmd + "\'");
-  emulator.run(cmd, function(result) {
-    is(result.pop(), "OK", "check activation of RE0");
-  });
-}
-
 function testOnPeerReadyRE0() {
   log("Running \'testOnPeerReadyRE0\'");
   window.navigator.mozSetMessageHandler(
     "nfc-manager-tech-discovered", handleTechnologyDiscoveredRE0);
-  toggleNFC(true, activateRE0);
+  toggleNFC(true).then(enableRE0);
 }
 
 let tests = [
