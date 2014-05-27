@@ -11,6 +11,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Home", "resource://gre/modules/Home.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry", "resource://gre/modules/UITelemetry.jsm");
+
 
 XPCOMUtils.defineLazyGetter(this, "gEncoder", function() { return new gChromeWin.TextEncoder(); });
 XPCOMUtils.defineLazyGetter(this, "gDecoder", function() { return new gChromeWin.TextDecoder(); });
@@ -202,11 +204,13 @@ function updateBanner(messages) {
       onclick: function() {
         let parentId = gChromeWin.BrowserApp.selectedTab.id;
         gChromeWin.BrowserApp.addTab(message.url, { parentId: parentId });
+        UITelemetry.addEvent("action.1", "banner", null, id);
       },
       ondismiss: function() {
         // Remove this snippet from the banner, and store its id so we'll never show it again.
         Home.banner.remove(id);
         removeSnippet(message.id);
+        UITelemetry.addEvent("cancel.1", "banner", null, id);
       },
       onshown: function() {
         // 10% of the time, record the snippet id and a timestamp
@@ -355,11 +359,15 @@ function loadSyncPromoBanner() {
           // Remove the message, so that it won't show again for the rest of the app lifetime.
           Home.banner.remove(id);
           Accounts.launchSetup();
+
+          UITelemetry.addEvent("action.1", "banner", null, id);
         },
         ondismiss: function() {
           // Remove the sync promo message from the banner and never try to show it again.
           Home.banner.remove(id);
           Services.prefs.setBoolPref("browser.snippets.syncPromo.enabled", false);
+
+          UITelemetry.addEvent("cancel.1", "banner", null, id);
         }
       });
     },
