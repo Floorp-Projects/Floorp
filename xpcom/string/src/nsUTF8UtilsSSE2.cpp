@@ -17,7 +17,7 @@ LossyConvertEncoding16to8::write_sse2(const char16_t* aSource,
   uint32_t i = 0;
   uint32_t alignLen =
     XPCOM_MIN<uint32_t>(aSourceLength, uint32_t(-NS_PTR_TO_INT32(aSource) & 0xf) / sizeof(char16_t));
-  for (; i < alignLen; i++) {
+  for (; i < alignLen; ++i) {
     dest[i] = static_cast<unsigned char>(aSource[i]);
   }
 
@@ -51,7 +51,7 @@ LossyConvertEncoding16to8::write_sse2(const char16_t* aSource,
   }
 
   // Finish up the rest.
-  for (; i < aSourceLength; i++) {
+  for (; i < aSourceLength; ++i) {
     dest[i] = static_cast<unsigned char>(aSource[i]);
   }
 
@@ -62,7 +62,7 @@ void
 LossyConvertEncoding8to16::write_sse2(const char* aSource,
                                       uint32_t aSourceLength)
 {
-  char16_t *dest = mDestination;
+  char16_t* dest = mDestination;
 
   // Align source to a 16-byte boundary.  We choose to align source rather than
   // dest because we'd rather have our loads than our stores be fast. You have
@@ -70,7 +70,7 @@ LossyConvertEncoding8to16::write_sse2(const char* aSource,
   // store.
   uint32_t i = 0;
   uint32_t alignLen = XPCOM_MIN(aSourceLength, uint32_t(-NS_PTR_TO_INT32(aSource) & 0xf));
-  for (; i < alignLen; i++) {
+  for (; i < alignLen; ++i) {
     dest[i] = static_cast<unsigned char>(aSource[i]);
   }
 
@@ -93,7 +93,7 @@ LossyConvertEncoding8to16::write_sse2(const char* aSource,
   }
 
   // Finish up whatever's left.
-  for (; i < aSourceLength; i++) {
+  for (; i < aSourceLength; ++i) {
     dest[i] = static_cast<unsigned char>(aSource[i]);
   }
 
