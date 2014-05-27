@@ -2262,7 +2262,7 @@ Element::DescribeAttribute(uint32_t index, nsAString& aOutDescription) const
       value.Insert(char16_t('\\'), uint32_t(i));
   }
   aOutDescription.Append(value);
-  aOutDescription.AppendLiteral("\"");
+  aOutDescription.Append('"');
 }
 
 #ifdef DEBUG

@@ -21,7 +21,7 @@ class nsTString_CharT : public nsTSubstring_CharT
 {
 public:
 
-  typedef nsTString_CharT    self_type;
+  typedef nsTString_CharT self_type;
 
 public:
 
@@ -30,53 +30,79 @@ public:
    */
 
   nsTString_CharT()
-    : substring_type() {}
-
-  explicit
-  nsTString_CharT( const char_type* data, size_type length = size_type(-1) )
     : substring_type()
   {
-    Assign(data, length);
+  }
+
+  explicit
+  nsTString_CharT(const char_type* aData, size_type aLength = size_type(-1))
+    : substring_type()
+  {
+    Assign(aData, aLength);
   }
 
 #if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
   explicit
-  nsTString_CharT( char16ptr_t data, size_type length = size_type(-1) )
+  nsTString_CharT(char16ptr_t aStr, size_type aLength = size_type(-1))
     : substring_type()
   {
-    Assign(static_cast<const char16_t*>(data), length);
+    Assign(static_cast<const char16_t*>(aStr), aLength);
   }
 #endif
 
-  nsTString_CharT( const self_type& str )
+  nsTString_CharT(const self_type& aStr)
     : substring_type()
   {
-    Assign(str);
+    Assign(aStr);
   }
 
-  MOZ_IMPLICIT nsTString_CharT( const substring_tuple_type& tuple )
+  MOZ_IMPLICIT nsTString_CharT(const substring_tuple_type& aTuple)
     : substring_type()
   {
-    Assign(tuple);
+    Assign(aTuple);
   }
 
   explicit
-  nsTString_CharT( const substring_type& readable )
+  nsTString_CharT(const substring_type& aReadable)
     : substring_type()
   {
-    Assign(readable);
+    Assign(aReadable);
   }
 
 
   // |operator=| does not inherit, so we must define our own
-  self_type& operator=( char_type c )                       { Assign(c);     return *this; }
-  self_type& operator=( const char_type* data )             { Assign(data);  return *this; }
-  self_type& operator=( const self_type& str )              { Assign(str);   return *this; }
+  self_type& operator=(char_type aChar)
+  {
+    Assign(aChar);
+    return *this;
+  }
+  self_type& operator=(const char_type* aData)
+  {
+    Assign(aData);
+    return *this;
+  }
+  self_type& operator=(const self_type& aStr)
+  {
+    Assign(aStr);
+    return *this;
+  }
 #if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
-  self_type& operator=( const char16ptr_t data )            { Assign(static_cast<const char16_t*>(data)); return *this; }
+  self_type& operator=(const char16ptr_t aStr)
+  {
+    Assign(static_cast<const char16_t*>(aStr));
+    return *this;
+  }
 #endif
-  self_type& operator=( const substring_type& str )         { Assign(str);   return *this; }
-  self_type& operator=( const substring_tuple_type& tuple ) { Assign(tuple); return *this; }
+  self_type& operator=(const substring_type& aStr)
+  {
+    Assign(aStr);
+    return *this;
+  }
+  self_type& operator=(const substring_tuple_type& aTuple)
+  {
+    Assign(aTuple);
+    return *this;
+  }
 
   /**
    * returns the null-terminated string
@@ -99,15 +125,15 @@ public:
    *       the null terminator character.
    */
 
-  char_type CharAt( index_type i ) const
+  char_type CharAt(index_type aIndex) const
   {
-    NS_ASSERTION(i <= mLength, "index exceeds allowable range");
-    return mData[i];
+    NS_ASSERTION(aIndex <= mLength, "index exceeds allowable range");
+    return mData[aIndex];
   }
 
-  char_type operator[]( index_type i ) const
+  char_type operator[](index_type aIndex) const
   {
-    return CharAt(i);
+    return CharAt(aIndex);
   }
 
 
@@ -125,14 +151,19 @@ public:
    *  @return  offset in string, or kNotFound
    */
 
-  int32_t Find( const nsCString& aString, bool aIgnoreCase=false, int32_t aOffset=0, int32_t aCount=-1 ) const;
-  int32_t Find( const char* aString, bool aIgnoreCase=false, int32_t aOffset=0, int32_t aCount=-1 ) const;
+  int32_t Find(const nsCString& aString, bool aIgnoreCase = false,
+               int32_t aOffset = 0, int32_t aCount = -1) const;
+  int32_t Find(const char* aString, bool aIgnoreCase = false,
+               int32_t aOffset = 0, int32_t aCount = -1) const;
 
 #ifdef CharT_is_PRUnichar
-  int32_t Find( const nsAFlatString& aString, int32_t aOffset=0, int32_t aCount=-1 ) const;
-  int32_t Find( const char16_t* aString, int32_t aOffset=0, int32_t aCount=-1 ) const;
+  int32_t Find(const nsAFlatString& aString, int32_t aOffset = 0,
+               int32_t aCount = -1) const;
+  int32_t Find(const char16_t* aString, int32_t aOffset = 0,
+               int32_t aCount = -1) const;
 #ifdef MOZ_USE_CHAR16_WRAPPER
-  int32_t Find( char16ptr_t aString, int32_t aOffset=0, int32_t aCount=-1 ) const
+  int32_t Find(char16ptr_t aString, int32_t aOffset = 0,
+               int32_t aCount = -1) const
   {
     return Find(static_cast<const char16_t*>(aString), aOffset, aCount);
   }
@@ -152,12 +183,16 @@ public:
    * @return  offset in string, or kNotFound
    */
 
-  int32_t RFind( const nsCString& aString, bool aIgnoreCase=false, int32_t aOffset=-1, int32_t aCount=-1 ) const;
-  int32_t RFind( const char* aCString, bool aIgnoreCase=false, int32_t aOffset=-1, int32_t aCount=-1 ) const;
+  int32_t RFind(const nsCString& aString, bool aIgnoreCase = false,
+                int32_t aOffset = -1, int32_t aCount = -1) const;
+  int32_t RFind(const char* aCString, bool aIgnoreCase = false,
+                int32_t aOffset = -1, int32_t aCount = -1) const;
 
 #ifdef CharT_is_PRUnichar
-  int32_t RFind( const nsAFlatString& aString, int32_t aOffset=-1, int32_t aCount=-1 ) const;
-  int32_t RFind( const char16_t* aString, int32_t aOffset=-1, int32_t aCount=-1 ) const;
+  int32_t RFind(const nsAFlatString& aString, int32_t aOffset = -1,
+                int32_t aCount = -1) const;
+  int32_t RFind(const char16_t* aString, int32_t aOffset = -1,
+                int32_t aCount = -1) const;
 #endif
 
 
@@ -172,7 +207,8 @@ public:
    */
 
   // int32_t FindChar( char16_t aChar, int32_t aOffset=0, int32_t aCount=-1 ) const;
-  int32_t RFindChar( char16_t aChar, int32_t aOffset=-1, int32_t aCount=-1 ) const;
+  int32_t RFindChar(char16_t aChar, int32_t aOffset = -1,
+                    int32_t aCount = -1) const;
 
 
   /**
@@ -185,14 +221,14 @@ public:
    * @return offset in string, or kNotFound
    */
 
-  int32_t FindCharInSet( const char* aString, int32_t aOffset=0 ) const;
-  int32_t FindCharInSet( const self_type& aString, int32_t aOffset=0 ) const
+  int32_t FindCharInSet(const char* aString, int32_t aOffset = 0) const;
+  int32_t FindCharInSet(const self_type& aString, int32_t aOffset = 0) const
   {
     return FindCharInSet(aString.get(), aOffset);
   }
 
 #ifdef CharT_is_PRUnichar
-  int32_t FindCharInSet( const char16_t* aString, int32_t aOffset=0 ) const;
+  int32_t FindCharInSet(const char16_t* aString, int32_t aOffset = 0) const;
 #endif
 
 
@@ -206,8 +242,8 @@ public:
    * @return offset in string, or kNotFound
    */
 
-  int32_t RFindCharInSet( const char_type* aString, int32_t aOffset=-1 ) const;
-  int32_t RFindCharInSet( const self_type& aString, int32_t aOffset=-1 ) const
+  int32_t RFindCharInSet(const char_type* aString, int32_t aOffset = -1) const;
+  int32_t RFindCharInSet(const self_type& aString, int32_t aOffset = -1) const
   {
     return RFindCharInSet(aString.get(), aOffset);
   }
@@ -223,7 +259,8 @@ public:
    */
 
 #ifdef CharT_is_char
-  int32_t Compare( const char* aString, bool aIgnoreCase=false, int32_t aCount=-1 ) const;
+  int32_t Compare(const char* aString, bool aIgnoreCase = false,
+                  int32_t aCount = -1) const;
 #endif
 
 
@@ -236,11 +273,12 @@ public:
    * @return  boolean
    */
 #ifdef CharT_is_char
-  bool EqualsIgnoreCase( const char* aString, int32_t aCount=-1 ) const {
+  bool EqualsIgnoreCase(const char* aString, int32_t aCount = -1) const
+  {
     return Compare(aString, true, aCount) == 0;
   }
 #else
-  bool EqualsIgnoreCase( const char* aString, int32_t aCount=-1 ) const;
+  bool EqualsIgnoreCase(const char* aString, int32_t aCount = -1) const;
 
 
 #endif // !CharT_is_PRUnichar
@@ -251,7 +289,7 @@ public:
    * @param   aErrorCode will contain error if one occurs
    * @return  double-precision float rep of string value
    */
-  double ToDouble( nsresult* aErrorCode ) const;
+  double ToDouble(nsresult* aErrorCode) const;
 
   /**
    * Perform string to single-precision float conversion.
@@ -259,7 +297,8 @@ public:
    * @param   aErrorCode will contain error if one occurs
    * @return  single-precision float rep of string value
    */
-  float ToFloat( nsresult* aErrorCode ) const {
+  float ToFloat(nsresult* aErrorCode) const
+  {
     return (float)ToDouble(aErrorCode);
   }
 
@@ -270,7 +309,7 @@ public:
    * @param   aRadix tells us which radix to assume; kAutoDetect tells us to determine the radix for you.
    * @return  int rep of string value, and possible (out) error code
    */
-  int32_t ToInteger( nsresult* aErrorCode, uint32_t aRadix=kRadix10 ) const;
+  int32_t ToInteger(nsresult* aErrorCode, uint32_t aRadix = kRadix10) const;
 
   /**
    * Perform string to 64-bit int conversion.
@@ -278,7 +317,7 @@ public:
    * @param   aRadix tells us which radix to assume; kAutoDetect tells us to determine the radix for you.
    * @return  64-bit int rep of string value, and possible (out) error code
    */
-  int64_t ToInteger64( nsresult* aErrorCode, uint32_t aRadix=kRadix10 ) const;
+  int64_t ToInteger64(nsresult* aErrorCode, uint32_t aRadix = kRadix10) const;
 
 
   /**
@@ -298,14 +337,14 @@ public:
    * aWritable = Substring(aReadable, 0, 17);
    */
 
-  size_type Mid( self_type& aResult, uint32_t aStartPos, uint32_t aCount ) const;
+  size_type Mid(self_type& aResult, uint32_t aStartPos, uint32_t aCount) const;
 
-  size_type Left( self_type& aResult, size_type aCount ) const
+  size_type Left(self_type& aResult, size_type aCount) const
   {
     return Mid(aResult, 0, aCount);
   }
 
-  size_type Right( self_type& aResult, size_type aCount ) const
+  size_type Right(self_type& aResult, size_type aCount) const
   {
     aCount = XPCOM_MIN(mLength, aCount);
     return Mid(aResult, mLength - aCount, aCount);
@@ -320,7 +359,7 @@ public:
    * @return TRUE if successful
    */
 
-  bool SetCharAt( char16_t aChar, uint32_t aIndex );
+  bool SetCharAt(char16_t aChar, uint32_t aIndex);
 
 
   /**
@@ -329,7 +368,7 @@ public:
    *
    *  @param  aSet -- characters to be cut from this
    */
-  void StripChars( const char* aSet );
+  void StripChars(const char* aSet);
 
 
   /**
@@ -342,13 +381,13 @@ public:
    *  swaps occurence of 1 string for another
    */
 
-  void ReplaceChar( char_type aOldChar, char_type aNewChar );
-  void ReplaceChar( const char* aSet, char_type aNewChar );
+  void ReplaceChar(char_type aOldChar, char_type aNewChar);
+  void ReplaceChar(const char* aSet, char_type aNewChar);
 #ifdef CharT_is_PRUnichar
-  void ReplaceChar( const char16_t* aSet, char16_t aNewChar );
+  void ReplaceChar(const char16_t* aSet, char16_t aNewChar);
 #endif
-  void ReplaceSubstring( const self_type& aTarget, const self_type& aNewValue);
-  void ReplaceSubstring( const char_type* aTarget, const char_type* aNewValue);
+  void ReplaceSubstring(const self_type& aTarget, const self_type& aNewValue);
+  void ReplaceSubstring(const char_type* aTarget, const char_type* aNewValue);
 
 
   /**
@@ -361,7 +400,8 @@ public:
    *  @param   aIgnoreQuotes -- if true, causes surrounding quotes to be ignored
    *  @return  this
    */
-  void Trim( const char* aSet, bool aEliminateLeading=true, bool aEliminateTrailing=true, bool aIgnoreQuotes=false );
+  void Trim(const char* aSet, bool aEliminateLeading = true,
+            bool aEliminateTrailing = true, bool aIgnoreQuotes = false);
 
   /**
    *  This method strips whitespace from string.
@@ -371,15 +411,17 @@ public:
    *  @param   aEliminateLeading controls stripping of leading ws
    *  @param   aEliminateTrailing controls stripping of trailing ws
    */
-  void CompressWhitespace( bool aEliminateLeading=true, bool aEliminateTrailing=true );
+  void CompressWhitespace(bool aEliminateLeading = true,
+                          bool aEliminateTrailing = true);
 
 
   /**
    * assign/append/insert with _LOSSY_ conversion
    */
 
-  void AssignWithConversion( const nsTAString_IncompatibleCharT& aString );
-  void AssignWithConversion( const incompatible_char_type* aData, int32_t aLength=-1 );
+  void AssignWithConversion(const nsTAString_IncompatibleCharT& aString);
+  void AssignWithConversion(const incompatible_char_type* aData,
+                            int32_t aLength = -1);
 
 #endif // !MOZ_STRING_WITH_OBSOLETE_API
 
@@ -388,7 +430,7 @@ public:
    * until the string is rebound or mutated; the caller
    * must ensure that the buffer outlives the string.
    */
-  void Rebind( const char_type* data, size_type length );
+  void Rebind(const char_type* aData, size_type aLength);
 
   /**
    * verify restrictions for dependent strings
@@ -397,19 +439,25 @@ public:
   {
     NS_ASSERTION(mData, "nsTDependentString must wrap a non-NULL buffer");
     NS_ASSERTION(mLength != size_type(-1), "nsTDependentString has bogus length");
-    NS_ASSERTION(mData[mLength] == 0, "nsTDependentString must wrap only null-terminated strings. You are probably looking for nsTDependentSubstring.");
+    NS_ASSERTION(mData[mLength] == 0,
+                 "nsTDependentString must wrap only null-terminated strings. "
+                 "You are probably looking for nsTDependentSubstring.");
   }
 
 
 protected:
 
   explicit
-  nsTString_CharT( uint32_t flags )
-    : substring_type(flags) {}
+  nsTString_CharT(uint32_t aFlags)
+    : substring_type(aFlags)
+  {
+  }
 
   // allow subclasses to initialize fields directly
-  nsTString_CharT( char_type* data, size_type length, uint32_t flags )
-    : substring_type(data, length, flags) {}
+  nsTString_CharT(char_type* aData, size_type aLength, uint32_t aFlags)
+    : substring_type(aData, aLength, aFlags)
+  {
+  }
 };
 
 
@@ -417,48 +465,67 @@ class nsTFixedString_CharT : public nsTString_CharT
 {
 public:
 
-  typedef nsTFixedString_CharT    self_type;
-  typedef nsTFixedString_CharT    fixed_string_type;
+  typedef nsTFixedString_CharT self_type;
+  typedef nsTFixedString_CharT fixed_string_type;
 
 public:
 
   /**
-   * @param data
+   * @param aData
    *        fixed-size buffer to be used by the string (the contents of
    *        this buffer may be modified by the string)
-   * @param storageSize
+   * @param aStorageSize
    *        the size of the fixed buffer
-   * @param length (optional)
+   * @param aLength (optional)
    *        the length of the string already contained in the buffer
    */
 
-  nsTFixedString_CharT( char_type* data, size_type storageSize )
-    : string_type(data, uint32_t(char_traits::length(data)), F_TERMINATED | F_FIXED | F_CLASS_FIXED)
-    , mFixedCapacity(storageSize - 1)
-    , mFixedBuf(data)
-  {}
+  nsTFixedString_CharT(char_type* aData, size_type aStorageSize)
+    : string_type(aData, uint32_t(char_traits::length(aData)),
+                  F_TERMINATED | F_FIXED | F_CLASS_FIXED)
+    , mFixedCapacity(aStorageSize - 1)
+    , mFixedBuf(aData)
+  {
+  }
 
-  nsTFixedString_CharT( char_type* data, size_type storageSize, size_type length )
-    : string_type(data, length, F_TERMINATED | F_FIXED | F_CLASS_FIXED)
-    , mFixedCapacity(storageSize - 1)
-    , mFixedBuf(data)
+  nsTFixedString_CharT(char_type* aData, size_type aStorageSize,
+                       size_type aLength)
+    : string_type(aData, aLength, F_TERMINATED | F_FIXED | F_CLASS_FIXED)
+    , mFixedCapacity(aStorageSize - 1)
+    , mFixedBuf(aData)
   {
     // null-terminate
-    mFixedBuf[length] = char_type(0);
+    mFixedBuf[aLength] = char_type(0);
   }
 
   // |operator=| does not inherit, so we must define our own
-  self_type& operator=( char_type c )                       { Assign(c);     return *this; }
-  self_type& operator=( const char_type* data )             { Assign(data);  return *this; }
-  self_type& operator=( const substring_type& str )         { Assign(str);   return *this; }
-  self_type& operator=( const substring_tuple_type& tuple ) { Assign(tuple); return *this; }
+  self_type& operator=(char_type aChar)
+  {
+    Assign(aChar);
+    return *this;
+  }
+  self_type& operator=(const char_type* aData)
+  {
+    Assign(aData);
+    return *this;
+  }
+  self_type& operator=(const substring_type& aStr)
+  {
+    Assign(aStr);
+    return *this;
+  }
+  self_type& operator=(const substring_tuple_type& aTuple)
+  {
+    Assign(aTuple);
+    return *this;
+  }
 
 protected:
 
   friend class nsTSubstring_CharT;
 
   size_type  mFixedCapacity;
-  char_type *mFixedBuf;
+  char_type* mFixedBuf;
 };
 
 
@@ -478,7 +545,7 @@ class nsTAutoString_CharT : public nsTFixedString_CharT
 {
 public:
 
-  typedef nsTAutoString_CharT    self_type;
+  typedef nsTAutoString_CharT self_type;
 
 public:
 
@@ -488,59 +555,88 @@ public:
 
   nsTAutoString_CharT()
     : fixed_string_type(mStorage, kDefaultStorageSize, 0)
-  {}
-
-  explicit
-  nsTAutoString_CharT( char_type c )
-    : fixed_string_type(mStorage, kDefaultStorageSize, 0)
   {
-    Assign(c);
   }
 
   explicit
-  nsTAutoString_CharT( const char_type* data, size_type length = size_type(-1) )
+  nsTAutoString_CharT(char_type aChar)
     : fixed_string_type(mStorage, kDefaultStorageSize, 0)
   {
-    Assign(data, length);
+    Assign(aChar);
+  }
+
+  explicit
+  nsTAutoString_CharT(const char_type* aData, size_type aLength = size_type(-1))
+    : fixed_string_type(mStorage, kDefaultStorageSize, 0)
+  {
+    Assign(aData, aLength);
   }
 
 #if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
   explicit
-  nsTAutoString_CharT( char16ptr_t data, size_type length = size_type(-1) )
-    : nsTAutoString_CharT(static_cast<const char16_t*>(data), length)
-  {}
+  nsTAutoString_CharT(char16ptr_t aData, size_type aLength = size_type(-1))
+    : nsTAutoString_CharT(static_cast<const char16_t*>(aData), aLength)
+  {
+  }
 #endif
 
-  nsTAutoString_CharT( const self_type& str )
+  nsTAutoString_CharT(const self_type& aStr)
     : fixed_string_type(mStorage, kDefaultStorageSize, 0)
   {
-    Assign(str);
+    Assign(aStr);
   }
 
   explicit
-  nsTAutoString_CharT( const substring_type& str )
+  nsTAutoString_CharT(const substring_type& aStr)
     : fixed_string_type(mStorage, kDefaultStorageSize, 0)
   {
-    Assign(str);
+    Assign(aStr);
   }
 
-  MOZ_IMPLICIT nsTAutoString_CharT( const substring_tuple_type& tuple )
+  MOZ_IMPLICIT nsTAutoString_CharT(const substring_tuple_type& aTuple)
     : fixed_string_type(mStorage, kDefaultStorageSize, 0)
   {
-    Assign(tuple);
+    Assign(aTuple);
   }
 
   // |operator=| does not inherit, so we must define our own
-  self_type& operator=( char_type c )                       { Assign(c);     return *this; }
-  self_type& operator=( const char_type* data )             { Assign(data);  return *this; }
+  self_type& operator=(char_type aChar)
+  {
+    Assign(aChar);
+    return *this;
+  }
+  self_type& operator=(const char_type* aData)
+  {
+    Assign(aData);
+    return *this;
+  }
 #if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
-  self_type& operator=( char16ptr_t data )                  { Assign(data);  return *this; }
+  self_type& operator=(char16ptr_t aStr)
+  {
+    Assign(aStr);
+    return *this;
+  }
 #endif
-  self_type& operator=( const self_type& str )              { Assign(str);   return *this; }
-  self_type& operator=( const substring_type& str )         { Assign(str);   return *this; }
-  self_type& operator=( const substring_tuple_type& tuple ) { Assign(tuple); return *this; }
+  self_type& operator=(const self_type& aStr)
+  {
+    Assign(aStr);
+    return *this;
+  }
+  self_type& operator=(const substring_type& aStr)
+  {
+    Assign(aStr);
+    return *this;
+  }
+  self_type& operator=(const substring_tuple_type& aTuple)
+  {
+    Assign(aTuple);
+    return *this;
+  }
 
-  enum { kDefaultStorageSize = 64 };
+  enum
+  {
+    kDefaultStorageSize = 64
+  };
 
 private:
 
@@ -555,23 +651,26 @@ private:
 //
 template<class E> class nsTArrayElementTraits;
 template<>
-class nsTArrayElementTraits<nsTAutoString_CharT> {
+class nsTArrayElementTraits<nsTAutoString_CharT>
+{
 public:
   template<class A> struct Dont_Instantiate_nsTArray_of;
   template<class A> struct Instead_Use_nsTArray_of;
 
-  static Dont_Instantiate_nsTArray_of<nsTAutoString_CharT> *
-  Construct(Instead_Use_nsTArray_of<nsTString_CharT> *e) {
+  static Dont_Instantiate_nsTArray_of<nsTAutoString_CharT>*
+  Construct(Instead_Use_nsTArray_of<nsTString_CharT>* aE)
+  {
     return 0;
   }
   template<class A>
-  static Dont_Instantiate_nsTArray_of<nsTAutoString_CharT> *
-  Construct(Instead_Use_nsTArray_of<nsTString_CharT> *e,
-            const A &arg) {
+  static Dont_Instantiate_nsTArray_of<nsTAutoString_CharT>*
+  Construct(Instead_Use_nsTArray_of<nsTString_CharT>* aE, const A& aArg)
+  {
     return 0;
   }
-  static Dont_Instantiate_nsTArray_of<nsTAutoString_CharT> *
-  Destruct(Instead_Use_nsTArray_of<nsTString_CharT> *e) {
+  static Dont_Instantiate_nsTArray_of<nsTAutoString_CharT>*
+  Destruct(Instead_Use_nsTArray_of<nsTString_CharT>* aE)
+  {
     return 0;
   }
 };
@@ -592,18 +691,20 @@ class nsTXPIDLString_CharT : public nsTString_CharT
 {
 public:
 
-  typedef nsTXPIDLString_CharT    self_type;
+  typedef nsTXPIDLString_CharT self_type;
 
 public:
 
   nsTXPIDLString_CharT()
-    : string_type(char_traits::sEmptyBuffer, 0, F_TERMINATED | F_VOIDED) {}
-
-  // copy-constructor required to avoid default
-  nsTXPIDLString_CharT( const self_type& str )
     : string_type(char_traits::sEmptyBuffer, 0, F_TERMINATED | F_VOIDED)
   {
-    Assign(str);
+  }
+
+  // copy-constructor required to avoid default
+  nsTXPIDLString_CharT(const self_type& aStr)
+    : string_type(char_traits::sEmptyBuffer, 0, F_TERMINATED | F_VOIDED)
+  {
+    Assign(aStr);
   }
 
   // return nullptr if we are voided
@@ -624,17 +725,37 @@ public:
   }
 
   // need this to diambiguous operator[int]
-  char_type operator[]( int32_t i ) const
+  char_type operator[](int32_t aIndex) const
   {
-    return CharAt(index_type(i));
+    return CharAt(index_type(aIndex));
   }
 
   // |operator=| does not inherit, so we must define our own
-  self_type& operator=( char_type c )                       { Assign(c);     return *this; }
-  self_type& operator=( const char_type* data )             { Assign(data);  return *this; }
-  self_type& operator=( const self_type& str )              { Assign(str);   return *this; }
-  self_type& operator=( const substring_type& str )         { Assign(str);   return *this; }
-  self_type& operator=( const substring_tuple_type& tuple ) { Assign(tuple); return *this; }
+  self_type& operator=(char_type aChar)
+  {
+    Assign(aChar);
+    return *this;
+  }
+  self_type& operator=(const char_type* aStr)
+  {
+    Assign(aStr);
+    return *this;
+  }
+  self_type& operator=(const self_type& aStr)
+  {
+    Assign(aStr);
+    return *this;
+  }
+  self_type& operator=(const substring_type& aStr)
+  {
+    Assign(aStr);
+    return *this;
+  }
+  self_type& operator=(const substring_tuple_type& aTuple)
+  {
+    Assign(aTuple);
+    return *this;
+  }
 };
 
 
@@ -655,8 +776,11 @@ class MOZ_STACK_CLASS nsTGetterCopies_CharT
 public:
   typedef CharT char_type;
 
-  explicit nsTGetterCopies_CharT(nsTSubstring_CharT& str)
-    : mString(str), mData(nullptr) {}
+  explicit nsTGetterCopies_CharT(nsTSubstring_CharT& aStr)
+    : mString(aStr)
+    , mData(nullptr)
+  {
+  }
 
   ~nsTGetterCopies_CharT()
   {
@@ -669,13 +793,12 @@ public:
   }
 
 private:
-  nsTSubstring_CharT&      mString;
-  char_type*            mData;
+  nsTSubstring_CharT& mString;
+  char_type* mData;
 };
 
-inline
-nsTGetterCopies_CharT
-getter_Copies( nsTSubstring_CharT& aString )
+inline nsTGetterCopies_CharT
+getter_Copies(nsTSubstring_CharT& aString)
 {
   return nsTGetterCopies_CharT(aString);
 }
@@ -693,36 +816,47 @@ class nsTAdoptingString_CharT : public nsTXPIDLString_CharT
 {
 public:
 
-  typedef nsTAdoptingString_CharT    self_type;
+  typedef nsTAdoptingString_CharT self_type;
 
 public:
 
-  explicit nsTAdoptingString_CharT() {}
-  explicit nsTAdoptingString_CharT(char_type* str, size_type length = size_type(-1))
+  explicit nsTAdoptingString_CharT()
   {
-    Adopt(str, length);
+  }
+  explicit nsTAdoptingString_CharT(char_type* aStr,
+                                   size_type aLength = size_type(-1))
+  {
+    Adopt(aStr, aLength);
   }
 
   // copy-constructor required to adopt on copy. Note that this
-  // will violate the constness of |str| in the operator=()
-  // call. |str| will be truncated as a side-effect of this
+  // will violate the constness of |aStr| in the operator=()
+  // call. |aStr| will be truncated as a side-effect of this
   // constructor.
-  nsTAdoptingString_CharT( const self_type& str )
+  nsTAdoptingString_CharT(const self_type& aStr)
   {
-    *this = str;
+    *this = aStr;
   }
 
   // |operator=| does not inherit, so we must define our own
-  self_type& operator=( const substring_type& str )         { Assign(str);   return *this; }
-  self_type& operator=( const substring_tuple_type& tuple ) { Assign(tuple); return *this; }
+  self_type& operator=(const substring_type& aStr)
+  {
+    Assign(aStr);
+    return *this;
+  }
+  self_type& operator=(const substring_tuple_type& aTuple)
+  {
+    Assign(aTuple);
+    return *this;
+  }
 
   // Adopt(), if possible, when assigning to a self_type&. Note
-  // that this violates the constness of str, str is always
+  // that this violates the constness of aStr, aStr is always
   // truncated when this operator is called.
-  self_type& operator=( const self_type& str );
+  self_type& operator=(const self_type& aStr);
 
 private:
-  self_type& operator=( const char_type* data ) MOZ_DELETE;
-  self_type& operator=( char_type* data ) MOZ_DELETE;
+  self_type& operator=(const char_type* aData) MOZ_DELETE;
+  self_type& operator=(char_type* aData) MOZ_DELETE;
 };
 

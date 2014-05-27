@@ -97,7 +97,7 @@ void genProfileEntry(/*MODIFIED*/UnwinderThreadBuffer* utb,
       // Cast to *((void**) to pass the text data to a void*
       utb__addEntry( utb, ProfileEntry('d', *((void**)(&text[0]))) );
     }
-    if (entry.isJs()) {
+    if (entry.js()) {
       if (!entry.pc()) {
         // The JIT only allows the top-most entry to have a nullptr pc
         MOZ_ASSERT(&entry == &stack->mStack[stack->stackSize() - 1]);
@@ -227,7 +227,7 @@ void populateBuffer(UnwinderThreadBuffer* utb, TickSample* sample,
       MOZ_CRASH();
   }
 
-  if (recordSample) {
+  if (recordSample) {    
     // add a "flush now" hint
     utb__addEntry( utb, ProfileEntry('h'/*hint*/, 'F'/*flush*/) );
   }

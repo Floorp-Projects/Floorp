@@ -37,18 +37,22 @@ class nsCaseInsensitiveCStringComparator
   : public nsCStringComparator
 {
 public:
-  nsCaseInsensitiveCStringComparator() {}
+  nsCaseInsensitiveCStringComparator()
+  {
+  }
   typedef char char_type;
 
-  virtual int operator()( const char_type*, const char_type*, uint32_t, uint32_t ) const;
+  virtual int operator()(const char_type*, const char_type*,
+                         uint32_t, uint32_t) const;
 };
 
 class nsCaseInsensitiveCStringArrayComparator
 {
 public:
   template<class A, class B>
-  bool Equals(const A& a, const B& b) const {
-    return a.Equals(b, nsCaseInsensitiveCStringComparator());
+  bool Equals(const A& aStrA, const B& aStrB) const
+  {
+    return aStrA.Equals(aStrB, nsCaseInsensitiveCStringComparator());
   }
 };
 

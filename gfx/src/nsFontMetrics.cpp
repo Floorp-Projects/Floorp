@@ -122,6 +122,7 @@ nsFontMetrics::Init(const nsFont& aFont, nsIAtom* aLanguage,
                        aFont.sizeAdjust,
                        aFont.systemFont,
                        mDeviceContext->IsPrinterSurface(),
+                       aFont.variant == NS_STYLE_FONT_VARIANT_SMALL_CAPS,
                        aFont.languageOverride);
 
     aFont.AddFontFeaturesToStyle(&style);

@@ -128,7 +128,7 @@ class JitCompileOptions
 {
   public:
     JitCompileOptions();
-    JitCompileOptions(JSContext *cx);
+    explicit JitCompileOptions(JSContext *cx);
 
     bool cloneSingletons() const {
         return cloneSingletons_;

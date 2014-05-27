@@ -89,7 +89,14 @@ invoke_copy_to_stack(uint32_t* d, uint32_t paramCount, nsXPTCVariant* s)
 	if (regCount < 5) regCount++;
         if(l_s->IsPtrData())
         {
-            *((void**)l_d) = l_s->ptr;
+            if(l_s->type == nsXPTType::T_JSVAL)
+            {
+              // On SPARC, we need to pass a pointer to HandleValue
+              *((void**)l_d) = &l_s->ptr;
+            } else
+            {
+              *((void**)l_d) = l_s->ptr;
+            }
             continue;
         }
         switch(l_s->type)

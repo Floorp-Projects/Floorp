@@ -597,7 +597,7 @@ class MOZ_STACK_CLASS TokenStream
         //
         // This class is explicity ignored by the analysis, so don't add any
         // more pointers to GC things here!
-        Position(AutoKeepAtoms&) { }
+        explicit Position(AutoKeepAtoms&) { }
       private:
         Position(const Position&) MOZ_DELETE;
         friend class TokenStream;

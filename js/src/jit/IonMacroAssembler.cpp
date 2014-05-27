@@ -39,7 +39,7 @@ class TypeWrapper {
     types::Type t_;
 
   public:
-    TypeWrapper(types::Type t) : t_(t) {}
+    explicit TypeWrapper(types::Type t) : t_(t) {}
 
     inline bool unknown() const {
         return t_.isUnknown();
@@ -890,6 +890,24 @@ MacroAssembler::checkInterruptFlagPar(Register tempReg, Label *fail)
 #else
     MOZ_ASSUME_UNREACHABLE("JSRuntime::interruptPar doesn't exist on non-threadsafe builds.");
 #endif
+}
+
+// Save an exit frame (which must be aligned to the stack pointer) to
+// PerThreadData::jitTop of the main thread.
+void
+MacroAssembler::linkExitFrame()
+{
+    AbsoluteAddress jitTop(GetIonContext()->runtime->addressOfJitTop());
+    storePtr(StackPointer, jitTop);
+}
+
+// Save an exit frame to the thread data of the current thread, given a
+// register that holds a PerThreadData *.
+void
+MacroAssembler::linkParallelExitFrame(Register pt)
+{
+    Address jitTop(pt, offsetof(PerThreadData, jitTop));
+    storePtr(StackPointer, jitTop);
 }
 
 static void
@@ -1924,10 +1942,10 @@ MacroAssembler::spsMarkJit(SPSProfiler *p, Register framePtr, Register temp)
     // and won't be regenerated when SPS state changes.
     spsProfileEntryAddressSafe(p, 0, temp, &stackFull);
 
-    storePtr(ImmPtr(enterJitLabel), Address(temp, ProfileEntry::offsetOfLabel()));
-    storePtr(framePtr,              Address(temp, ProfileEntry::offsetOfSpOrScript()));
-    store32(Imm32(ProfileEntry::NullPCOffset), Address(temp, ProfileEntry::offsetOfLineOrPc()));
-    store32(Imm32(ProfileEntry::IS_CPP_ENTRY), Address(temp, ProfileEntry::offsetOfFlags()));
+    storePtr(ImmPtr(enterJitLabel), Address(temp, ProfileEntry::offsetOfString()));
+    storePtr(framePtr,              Address(temp, ProfileEntry::offsetOfStackAddress()));
+    storePtr(ImmWord(uintptr_t(0)), Address(temp, ProfileEntry::offsetOfScript()));
+    store32(Imm32(ProfileEntry::NullPCIndex), Address(temp, ProfileEntry::offsetOfPCIdx()));
 
     /* Always increment the stack size, whether or not we actually pushed. */
     bind(&stackFull);

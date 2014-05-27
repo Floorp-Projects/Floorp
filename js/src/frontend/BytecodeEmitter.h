@@ -31,7 +31,7 @@ class TokenStream;
 class CGConstList {
     Vector<Value> list;
   public:
-    CGConstList(ExclusiveContext *cx) : list(cx) {}
+    explicit CGConstList(ExclusiveContext *cx) : list(cx) {}
     bool append(Value v) { JS_ASSERT_IF(v.isString(), v.toString()->isAtom()); return list.append(v); }
     size_t length() const { return list.length(); }
     void finish(ConstArray *array);
@@ -51,7 +51,7 @@ struct CGObjectList {
 
 struct CGTryNoteList {
     Vector<JSTryNote> list;
-    CGTryNoteList(ExclusiveContext *cx) : list(cx) {}
+    explicit CGTryNoteList(ExclusiveContext *cx) : list(cx) {}
 
     bool append(JSTryNoteKind kind, uint32_t stackDepth, size_t start, size_t end);
     size_t length() const { return list.length(); }
@@ -60,7 +60,7 @@ struct CGTryNoteList {
 
 struct CGBlockScopeList {
     Vector<BlockScopeNote> list;
-    CGBlockScopeList(ExclusiveContext *cx) : list(cx) {}
+    explicit CGBlockScopeList(ExclusiveContext *cx) : list(cx) {}
 
     bool append(uint32_t scopeObject, uint32_t offset, uint32_t parent);
     uint32_t findEnclosingScope(uint32_t index);
