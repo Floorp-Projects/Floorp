@@ -27,15 +27,15 @@ let test = asyncTest(function*() {
   info("Selecting the test node");
   yield selectNode("#testElement", inspector);
 
-  yield testRuleView(view);
+  yield testRuleView(view, inspector.selection.nodeFront);
 
   info("Opening the computed view");
   let {toolbox, inspector, view} = yield openComputedView();
 
-  yield testComputedView(view);
+  yield testComputedView(view, inspector.selection.nodeFront);
 });
 
-function* testRuleView(ruleView) {
+function* testRuleView(ruleView, nodeFront) {
   info("Testing font-family tooltips in the rule view");
 
   let panel = ruleView.previewTooltip.panel;
@@ -55,11 +55,15 @@ function* testRuleView(ruleView) {
   // And verify that the tooltip gets shown on this property
   yield assertHoverTooltipOn(ruleView.previewTooltip, valueSpan);
 
-  let description = panel.getElementsByTagName("description")[0];
-  is(description.style.fontFamily, "Arial", "Tooltips contains correct font-family style");
+  let images = panel.getElementsByTagName("image");
+  is(images.length, 1, "Tooltip contains an image");
+  ok(images[0].getAttribute("src").startsWith("data:"), "Tooltip contains a data-uri image as expected");
+
+  let dataURL = yield getFontFamilyDataURL(valueSpan.textContent, nodeFront);
+  is(images[0].getAttribute("src"), dataURL, "Tooltip contains the correct data-uri image");
 }
 
-function* testComputedView(computedView) {
+function* testComputedView(computedView, nodeFront) {
   info("Testing font-family tooltips in the computed view");
 
   let panel = computedView.tooltip.panel;
@@ -67,6 +71,10 @@ function* testComputedView(computedView) {
 
   yield assertHoverTooltipOn(computedView.tooltip, valueSpan);
 
-  let description = panel.getElementsByTagName("description")[0];
-  is(description.style.fontFamily, "Arial", "Tooltips contains correct font-family style");
+  let images = panel.getElementsByTagName("image");
+  is(images.length, 1, "Tooltip contains an image");
+  ok(images[0].getAttribute("src").startsWith("data:"), "Tooltip contains a data-uri image as expected");
+
+  let dataURL = yield getFontFamilyDataURL(valueSpan.textContent, nodeFront);
+  is(images[0].getAttribute("src"), dataURL, "Tooltip contains the correct data-uri image");
 }

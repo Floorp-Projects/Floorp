@@ -184,14 +184,6 @@
   margin-bottom: -4px;
 }
 
-/* Tooltip: Font Family Previewer Text */
-.devtools-tooltip-font-previewer-text {
-  max-width: 400px;
-  line-height: 1.5;
-  font-size: 150%;
-  text-align: center;
-}
-
 /* Tooltip: Alert Icon */
 
 .devtools-tooltip-alert-icon {
