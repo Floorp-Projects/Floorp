@@ -3,4 +3,4 @@ skip-if(B2G&&browserIsRemote) != textbox-multiline-resize.xul textbox-multiline-
 skip-if(B2G&&browserIsRemote) == popup-explicit-size.xul popup-explicit-size-ref.xul
 random-if(Android) skip-if(B2G&&browserIsRemote) == image-size.xul image-size-ref.xul
 skip-if(B2G&&browserIsRemote) == image-scaling-min-height-1.xul image-scaling-min-height-1-ref.xul
-== textbox-text-transform.xul textbox-text-transform-ref.xul
+skip-if(B2G&&browserIsRemote) == textbox-text-transform.xul textbox-text-transform-ref.xul

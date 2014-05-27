@@ -13,7 +13,8 @@
     "public_upload_files": [
         "{objdir}/dist/b2g-*.crashreporter-symbols.zip",
         "{objdir}/dist/b2g-*.tar.gz",
-        "{workdir}/sources.xml"
+        "{workdir}/sources.xml",
+        "{objdir}/dist/b2g-update/*.mar"
     ],
     "zip_files": [
         ["{workdir}/out/target/product/mako/*.img", "out/target/product/mako/"],
