@@ -12,6 +12,7 @@ import sys
 import time
 import traceback
 import random
+import re
 import mozinfo
 import moznetwork
 import xml.dom.minidom as dom
@@ -222,6 +223,7 @@ class MarionetteTestResult(unittest._TextTestResult, TestResultCollection):
             self.stream.writeln(self.separator2)
             lastline = None
             fail_present = None
+            test_name = self.getInfo(error)
             for line in err:
                 if not line.startswith('\t') and line != '':
                     lastline = line
@@ -229,11 +231,15 @@ class MarionetteTestResult(unittest._TextTestResult, TestResultCollection):
                     fail_present = True
             for line in err:
                 if line != lastline or fail_present:
-                    if error.reason != TIMEOUT_MESSAGE:
+                    if re.match('.*\.js', test_name):
+                        if error.reason != TIMEOUT_MESSAGE:
+                            self.stream.writeln("%s" % line)
+                    else:
                         self.stream.writeln("%s" % line)
+
                 else:
                     self.stream.writeln("TEST-UNEXPECTED-FAIL | %s | %s" %
-                                        (self.getInfo(error), error.reason))
+                                        (test_name, error.reason))
 
     def stopTest(self, *args, **kwargs):
         unittest._TextTestResult.stopTest(self, *args, **kwargs)
