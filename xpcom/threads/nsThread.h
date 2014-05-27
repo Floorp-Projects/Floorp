@@ -18,8 +18,9 @@
 #include "nsAutoPtr.h"
 
 // A native thread
-class nsThread : public nsIThreadInternal,
-                 public nsISupportsPriority
+class nsThread
+  : public nsIThreadInternal
+  , public nsISupportsPriority
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -28,7 +29,8 @@ public:
   NS_DECL_NSITHREADINTERNAL
   NS_DECL_NSISUPPORTSPRIORITY
 
-  enum MainThreadFlag {
+  enum MainThreadFlag
+  {
     MAIN_THREAD,
     NOT_MAIN_THREAD
   };
@@ -42,14 +44,23 @@ public:
   nsresult InitCurrentThread();
 
   // The PRThread corresponding to this thread.
-  PRThread *GetPRThread() { return mThread; }
+  PRThread* GetPRThread()
+  {
+    return mThread;
+  }
 
   // If this flag is true, then the nsThread was created using
   // nsIThreadManager::NewThread.
-  bool ShutdownRequired() { return mShutdownRequired; }
+  bool ShutdownRequired()
+  {
+    return mShutdownRequired;
+  }
 
   // Clear the observer list.
-  void ClearObservers() { mEventObservers.Clear(); }
+  void ClearObservers()
+  {
+    mEventObservers.Clear();
+  }
 
   static nsresult
   SetMainThreadObserver(nsIThreadObserver* aObserver);
@@ -66,59 +77,72 @@ protected:
 
   virtual ~nsThread();
 
-  bool ShuttingDown() { return mShutdownContext != nullptr; }
+  bool ShuttingDown()
+  {
+    return mShutdownContext != nullptr;
+  }
 
-  static void ThreadFunc(void *arg);
+  static void ThreadFunc(void* aArg);
 
   // Helper
-  already_AddRefed<nsIThreadObserver> GetObserver() {
-    nsIThreadObserver *obs;
+  already_AddRefed<nsIThreadObserver> GetObserver()
+  {
+    nsIThreadObserver* obs;
     nsThread::GetObserver(&obs);
     return already_AddRefed<nsIThreadObserver>(obs);
   }
 
   // Wrappers for event queue methods:
-  bool GetEvent(bool mayWait, nsIRunnable **event) {
-    return mEvents->GetEvent(mayWait, event);
+  bool GetEvent(bool aMayWait, nsIRunnable** aEvent)
+  {
+    return mEvents->GetEvent(aMayWait, aEvent);
   }
-  nsresult PutEvent(nsIRunnable *event, nsNestedEventTarget *target);
+  nsresult PutEvent(nsIRunnable* aEvent, nsNestedEventTarget* aTarget);
 
-  nsresult DispatchInternal(nsIRunnable *event, uint32_t flags,
-                            nsNestedEventTarget *target);
+  nsresult DispatchInternal(nsIRunnable* aEvent, uint32_t aFlags,
+                            nsNestedEventTarget* aTarget);
 
   // Wrapper for nsEventQueue that supports chaining.
-  class nsChainedEventQueue {
+  class nsChainedEventQueue
+  {
   public:
     nsChainedEventQueue()
-      : mNext(nullptr) {
+      : mNext(nullptr)
+    {
     }
 
-    bool GetEvent(bool mayWait, nsIRunnable **event) {
-      return mQueue.GetEvent(mayWait, event);
+    bool GetEvent(bool aMayWait, nsIRunnable** aEvent)
+    {
+      return mQueue.GetEvent(aMayWait, aEvent);
     }
 
-    void PutEvent(nsIRunnable *event) {
-      mQueue.PutEvent(event);
+    void PutEvent(nsIRunnable* aEvent)
+    {
+      mQueue.PutEvent(aEvent);
     }
 
-    bool HasPendingEvent() {
+    bool HasPendingEvent()
+    {
       return mQueue.HasPendingEvent();
     }
 
-    nsChainedEventQueue *mNext;
+    nsChainedEventQueue* mNext;
     nsRefPtr<nsNestedEventTarget> mEventTarget;
 
   private:
     nsEventQueue mQueue;
   };
 
-  class nsNestedEventTarget MOZ_FINAL : public nsIEventTarget {
+  class nsNestedEventTarget MOZ_FINAL : public nsIEventTarget
+  {
   public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIEVENTTARGET
 
-    nsNestedEventTarget(nsThread *thread, nsChainedEventQueue *queue)
-      : mThread(thread), mQueue(queue) {
+    nsNestedEventTarget(nsThread* aThread, nsChainedEventQueue* aQueue)
+      : mThread(aThread)
+      , mQueue(aQueue)
+    {
     }
 
     nsRefPtr<nsThread> mThread;
@@ -127,7 +151,9 @@ protected:
     nsChainedEventQueue* mQueue;
 
   private:
-    ~nsNestedEventTarget() {}
+    ~nsNestedEventTarget()
+    {
+    }
   };
 
   // This lock protects access to mObserver, mEvents and mEventsAreDoomed.
@@ -142,15 +168,15 @@ protected:
   // Only accessed on the target thread.
   nsAutoTObserverArray<nsCOMPtr<nsIThreadObserver>, 2> mEventObservers;
 
-  nsChainedEventQueue *mEvents;   // never null
+  nsChainedEventQueue* mEvents;  // never null
   nsChainedEventQueue  mEventsRoot;
 
   int32_t   mPriority;
-  PRThread *mThread;
+  PRThread* mThread;
   uint32_t  mRunningEvent;  // counter
   uint32_t  mStackSize;
 
-  struct nsThreadShutdownContext *mShutdownContext;
+  struct nsThreadShutdownContext* mShutdownContext;
 
   bool mShutdownRequired;
   // Set to true when events posted to this thread will never run.
@@ -160,17 +186,23 @@ protected:
 
 //-----------------------------------------------------------------------------
 
-class nsThreadSyncDispatch : public nsRunnable {
+class nsThreadSyncDispatch : public nsRunnable
+{
 public:
-  nsThreadSyncDispatch(nsIThread *origin, nsIRunnable *task)
-    : mOrigin(origin), mSyncTask(task), mResult(NS_ERROR_NOT_INITIALIZED) {
+  nsThreadSyncDispatch(nsIThread* aOrigin, nsIRunnable* aTask)
+    : mOrigin(aOrigin)
+    , mSyncTask(aTask)
+    , mResult(NS_ERROR_NOT_INITIALIZED)
+  {
   }
 
-  bool IsPending() {
+  bool IsPending()
+  {
     return mSyncTask != nullptr;
   }
 
-  nsresult Result() {
+  nsresult Result()
+  {
     return mResult;
   }
 

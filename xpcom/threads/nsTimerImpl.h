@@ -23,7 +23,7 @@
 #endif
 
 #if defined(PR_LOGGING)
-extern PRLogModuleInfo *GetTimerLog();
+extern PRLogModuleInfo* GetTimerLog();
 #define DEBUG_TIMERS 1
 #else
 #undef DEBUG_TIMERS
@@ -37,7 +37,8 @@ extern PRLogModuleInfo *GetTimerLog();
     {0x84, 0x27, 0xfb, 0xab, 0x44, 0xf2, 0x9b, 0xc8} \
 }
 
-enum {
+enum
+{
   CALLBACK_TYPE_UNKNOWN   = 0,
   CALLBACK_TYPE_INTERFACE = 1,
   CALLBACK_TYPE_FUNC      = 2,
@@ -64,7 +65,10 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMER
 
-  int32_t GetGeneration() { return mGeneration; }
+  int32_t GetGeneration()
+  {
+    return mGeneration;
+  }
 
 #ifdef MOZ_TASK_TRACER
   void DispatchTracedTask()
@@ -83,33 +87,37 @@ private:
     // sure that we don't recurse into ReleaseCallback in case
     // the callback's destructor calls Cancel() or similar.
     uint8_t cbType = mCallbackType;
-    mCallbackType = CALLBACK_TYPE_UNKNOWN; 
+    mCallbackType = CALLBACK_TYPE_UNKNOWN;
 
-    if (cbType == CALLBACK_TYPE_INTERFACE)
+    if (cbType == CALLBACK_TYPE_INTERFACE) {
       NS_RELEASE(mCallback.i);
-    else if (cbType == CALLBACK_TYPE_OBSERVER)
+    } else if (cbType == CALLBACK_TYPE_OBSERVER) {
       NS_RELEASE(mCallback.o);
+    }
   }
 
-  bool IsRepeating() const {
+  bool IsRepeating() const
+  {
     PR_STATIC_ASSERT(TYPE_ONE_SHOT < TYPE_REPEATING_SLACK);
     PR_STATIC_ASSERT(TYPE_REPEATING_SLACK < TYPE_REPEATING_PRECISE);
     PR_STATIC_ASSERT(TYPE_REPEATING_PRECISE < TYPE_REPEATING_PRECISE_CAN_SKIP);
     return mType >= TYPE_REPEATING_SLACK;
   }
 
-  bool IsRepeatingPrecisely() const {
+  bool IsRepeatingPrecisely() const
+  {
     return mType >= TYPE_REPEATING_PRECISE;
   }
 
   nsCOMPtr<nsIEventTarget> mEventTarget;
 
-  void *                mClosure;
+  void*                 mClosure;
 
-  union CallbackUnion {
+  union CallbackUnion
+  {
     nsTimerCallbackFunc c;
-    nsITimerCallback *  i;
-    nsIObserver *       o;
+    nsITimerCallback*   i;
+    nsIObserver*        o;
   } mCallback;
 
   // Some callers expect to be able to access the callback while the

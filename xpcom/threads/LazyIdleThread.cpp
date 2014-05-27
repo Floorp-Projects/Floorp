@@ -34,18 +34,18 @@ LazyIdleThread::LazyIdleThread(uint32_t aIdleTimeoutMS,
                                const nsCSubstring& aName,
                                ShutdownMethod aShutdownMethod,
                                nsIObserver* aIdleObserver)
-: mMutex("LazyIdleThread::mMutex"),
-  mOwningThread(NS_GetCurrentThread()),
-  mIdleObserver(aIdleObserver),
-  mQueuedRunnables(nullptr),
-  mIdleTimeoutMS(aIdleTimeoutMS),
-  mPendingEventCount(0),
-  mIdleNotificationCount(0),
-  mShutdownMethod(aShutdownMethod),
-  mShutdown(false),
-  mThreadIsShuttingDown(false),
-  mIdleTimeoutEnabled(true),
-  mName(aName)
+  : mMutex("LazyIdleThread::mMutex")
+  , mOwningThread(NS_GetCurrentThread())
+  , mIdleObserver(aIdleObserver)
+  , mQueuedRunnables(nullptr)
+  , mIdleTimeoutMS(aIdleTimeoutMS)
+  , mPendingEventCount(0)
+  , mIdleNotificationCount(0)
+  , mShutdownMethod(aShutdownMethod)
+  , mShutdown(false)
+  , mThreadIsShuttingDown(false)
+  , mIdleTimeoutEnabled(true)
+  , mName(aName)
 {
   MOZ_ASSERT(mOwningThread, "Need owning thread!");
 }
@@ -147,26 +147,31 @@ LazyIdleThread::EnsureThread()
   if (mShutdownMethod == AutomaticShutdown && NS_IsMainThread()) {
     nsCOMPtr<nsIObserverService> obs =
       do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-    if (NS_WARN_IF(NS_FAILED(rv)))
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
 
     rv = obs->AddObserver(this, "xpcom-shutdown-threads", false);
-    if (NS_WARN_IF(NS_FAILED(rv)))
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
   }
 
   mIdleTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-  if (NS_WARN_IF(!mIdleTimer))
+  if (NS_WARN_IF(!mIdleTimer)) {
     return NS_ERROR_UNEXPECTED;
+  }
 
   nsCOMPtr<nsIRunnable> runnable =
     NS_NewRunnableMethod(this, &LazyIdleThread::InitThread);
-  if (NS_WARN_IF(!runnable))
+  if (NS_WARN_IF(!runnable)) {
     return NS_ERROR_UNEXPECTED;
+  }
 
   rv = NS_NewThread(getter_AddRefs(mThread), runnable);
-  if (NS_WARN_IF(NS_FAILED(rv)))
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
 
   return NS_OK;
 }
@@ -273,14 +278,16 @@ LazyIdleThread::ShutdownThread()
 
     nsCOMPtr<nsIRunnable> runnable =
       NS_NewRunnableMethod(this, &LazyIdleThread::CleanupThread);
-    if (NS_WARN_IF(!runnable))
+    if (NS_WARN_IF(!runnable)) {
       return NS_ERROR_UNEXPECTED;
+    }
 
     PreDispatch();
 
     rv = mThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
-    if (NS_WARN_IF(NS_FAILED(rv)))
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
 
     // Put the temporary queue in place before calling Shutdown().
     mQueuedRunnables = &queuedRunnables;
@@ -306,8 +313,9 @@ LazyIdleThread::ShutdownThread()
 
   if (mIdleTimer) {
     rv = mIdleTimer->Cancel();
-    if (NS_WARN_IF(NS_FAILED(rv)))
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
 
     mIdleTimer = nullptr;
   }
@@ -384,8 +392,9 @@ LazyIdleThread::Dispatch(nsIRunnable* aEvent,
   ASSERT_OWNING_THREAD();
 
   // LazyIdleThread can't always support synchronous dispatch currently.
-  if (NS_WARN_IF(aFlags != NS_DISPATCH_NORMAL))
+  if (NS_WARN_IF(aFlags != NS_DISPATCH_NORMAL)) {
     return NS_ERROR_NOT_IMPLEMENTED;
+  }
 
   // If our thread is shutting down then we can't actually dispatch right now.
   // Queue this runnable for later.
@@ -395,8 +404,9 @@ LazyIdleThread::Dispatch(nsIRunnable* aEvent,
   }
 
   nsresult rv = EnsureThread();
-  if (NS_WARN_IF(NS_FAILED(rv)))
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
 
   PreDispatch();
 
@@ -437,8 +447,9 @@ LazyIdleThread::Shutdown()
 
   mIdleObserver = nullptr;
 
-  if (NS_WARN_IF(NS_FAILED(rv)))
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
 
   return NS_OK;
 }
@@ -478,8 +489,9 @@ LazyIdleThread::Notify(nsITimer* aTimer)
   }
 
   nsresult rv = ShutdownThread();
-  if (NS_WARN_IF(NS_FAILED(rv)))
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
 
   return NS_OK;
 }
@@ -528,12 +540,14 @@ LazyIdleThread::AfterProcessNextEvent(nsIThreadInternal* /* aThread */,
   if (shouldNotifyIdle) {
     nsCOMPtr<nsIRunnable> runnable =
       NS_NewRunnableMethod(this, &LazyIdleThread::ScheduleTimer);
-    if (NS_WARN_IF(!runnable))
+    if (NS_WARN_IF(!runnable)) {
       return NS_ERROR_UNEXPECTED;
+    }
 
     nsresult rv = mOwningThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
-    if (NS_WARN_IF(NS_FAILED(rv)))
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
   }
 
   return NS_OK;
