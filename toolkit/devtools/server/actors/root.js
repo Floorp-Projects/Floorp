@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
+const { Ci, Cu } = require("chrome");
 const Services = require("Services");
 const { ActorPool, appendExtraActors, createExtraActors } = require("devtools/server/actors/common");
 const { DebuggerServer } = require("devtools/server/main");
@@ -294,7 +294,7 @@ RootActor.prototype = {
      * Request packets are frozen. Copy aRequest, so that
      * DebuggerServerConnection.onPacket can attach a 'from' property.
      */
-    return JSON.parse(JSON.stringify(aRequest));
+    return Cu.cloneInto(aRequest, {});
   },
 
   onProtocolDescription: dumpProtocolSpec,

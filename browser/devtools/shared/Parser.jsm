@@ -429,7 +429,7 @@ let ParserHelpers = {
           parentType == "FunctionExpression") {
         // e.g. "function foo() {}" or "{ bar: function foo() {} }"
         // The location is unavailable for the identifier node "foo".
-        let loc = JSON.parse(JSON.stringify(parentLocation));
+        let loc = Cu.cloneInto(parentLocation, {});
         loc.end.line = loc.start.line;
         loc.end.column = loc.start.column + aNode.name.length;
         return loc;
@@ -437,7 +437,7 @@ let ParserHelpers = {
       if (parentType == "MemberExpression") {
         // e.g. "foo.bar"
         // The location is unavailable for the identifier node "bar".
-        let loc = JSON.parse(JSON.stringify(parentLocation));
+        let loc = Cu.cloneInto(parentLocation, {});
         loc.start.line = loc.end.line;
         loc.start.column = loc.end.column - aNode.name.length;
         return loc;
@@ -445,7 +445,7 @@ let ParserHelpers = {
       if (parentType == "LabeledStatement") {
         // e.g. label: ...
         // The location is unavailable for the identifier node "label".
-        let loc = JSON.parse(JSON.stringify(parentLocation));
+        let loc = Cu.cloneInto(parentLocation, {});
         loc.end.line = loc.start.line;
         loc.end.column = loc.start.column + aNode.name.length;
         return loc;
@@ -453,7 +453,7 @@ let ParserHelpers = {
       if (parentType == "ContinueStatement") {
         // e.g. continue label
         // The location is unavailable for the identifier node "label".
-        let loc = JSON.parse(JSON.stringify(parentLocation));
+        let loc = Cu.cloneInto(parentLocation, {});
         loc.start.line = loc.end.line;
         loc.start.column = loc.end.column - aNode.name.length;
         return loc;
@@ -463,7 +463,7 @@ let ParserHelpers = {
         // e.g. "let foo = 42"
         // The location incorrectly spans across the whole variable declaration,
         // not just the identifier node "foo".
-        let loc = JSON.parse(JSON.stringify(nodeLocation));
+        let loc = Cu.cloneInto(nodeLocation, {});
         loc.end.line = loc.start.line;
         loc.end.column = loc.start.column + aNode.name.length;
         return loc;

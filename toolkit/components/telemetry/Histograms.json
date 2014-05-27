@@ -6072,5 +6072,29 @@
     "kind": "enumerated",
     "n_values": 512,
     "description": "Certificate pinning test results by host for Mozilla operational sites"
+  },
+  "WEAVE_CONFIGURED": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "If any version of Firefox Sync is configured for this device"
+  },
+  "WEAVE_CONFIGURED_MASTER_PASSWORD": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "If both Firefox Sync and Master Password are configured for this device"
+  },
+  "WEAVE_START_COUNT": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 10,
+    "description": "The number of times a sync started in this session"
+  },
+  "WEAVE_COMPLETE_SUCCESS_COUNT": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 10,
+    "description": "The number of times a sync successfully completed in this session"
   }
 }
