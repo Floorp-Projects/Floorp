@@ -792,19 +792,21 @@ Navigator::Vibrate(const nsTArray<uint32_t>& aPattern)
     return false;
   }
 
-  if (aPattern.Length() > sMaxVibrateListLen) {
-    return false;
+  nsTArray<uint32_t> pattern(aPattern);
+
+  if (pattern.Length() > sMaxVibrateListLen) {
+    pattern.SetLength(sMaxVibrateMS);
   }
 
-  for (size_t i = 0; i < aPattern.Length(); ++i) {
-    if (aPattern[i] > sMaxVibrateMS) {
-      return false;
+  for (size_t i = 0; i < pattern.Length(); ++i) {
+    if (pattern[i] > sMaxVibrateMS) {
+      pattern[i] = sMaxVibrateMS;
     }
   }
 
   // The spec says we check sVibratorEnabled after we've done the sanity
   // checking on the pattern.
-  if (aPattern.IsEmpty() || !sVibratorEnabled) {
+  if (pattern.IsEmpty() || !sVibratorEnabled) {
     return true;
   }
 
@@ -822,7 +824,7 @@ Navigator::Vibrate(const nsTArray<uint32_t>& aPattern)
   }
   gVibrateWindowListener = new VibrateWindowListener(mWindow, doc);
 
-  hal::Vibrate(aPattern, mWindow);
+  hal::Vibrate(pattern, mWindow);
   return true;
 }
 
