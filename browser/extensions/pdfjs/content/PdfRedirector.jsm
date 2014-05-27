@@ -131,3 +131,4 @@ PdfRedirector.prototype = {
     // Do nothing
   }
 };
+

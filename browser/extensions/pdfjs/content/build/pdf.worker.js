@@ -21,8 +21,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.0.162';
-PDFJS.build = 'abc924b';
+PDFJS.version = '1.0.248';
+PDFJS.build = '6f39d78';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -182,7 +182,8 @@ var OPS = PDFJS.OPS = {
   paintInlineImageXObjectGroup: 87,
   paintImageXObjectRepeat: 88,
   paintImageMaskXObjectRepeat: 89,
-  paintSolidColorImageMask: 90
+  paintSolidColorImageMask: 90,
+  constructPath: 91
 };
 
 // A notice for devs. These are good for things that are helpful to devs, such
@@ -502,11 +503,6 @@ var Util = PDFJS.Util = (function UtilClosure() {
     return 'rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ')';
   };
 
-  Util.makeCssCmyk = function Util_makeCssCmyk(cmyk) {
-    var rgb = ColorSpace.singletons.cmyk.getRgb(cmyk, 0);
-    return Util.makeCssRgb(rgb);
-  };
-
   // Concatenates two transformation matrices together and returns the result.
   Util.transform = function Util_transform(m1, m2) {
     return [
@@ -706,7 +702,22 @@ var Util = PDFJS.Util = (function UtilClosure() {
   return Util;
 })();
 
+/**
+ * PDF page viewport created based on scale, rotation and offset.
+ * @class
+ * @alias PDFJS.PageViewport
+ */
 var PageViewport = PDFJS.PageViewport = (function PageViewportClosure() {
+  /**
+   * @constructor
+   * @private
+   * @param viewBox {Array} xMin, yMin, xMax and yMax coordinates.
+   * @param scale {number} scale of the viewport.
+   * @param rotation {number} rotations of the viewport in degrees.
+   * @param offsetX {number} offset X
+   * @param offsetY {number} offset Y
+   * @param dontFlip {boolean} if true, axis Y will not be flipped.
+   */
   function PageViewport(viewBox, scale, rotation, offsetX, offsetY, dontFlip) {
     this.viewBox = viewBox;
     this.scale = scale;
@@ -770,7 +781,14 @@ var PageViewport = PDFJS.PageViewport = (function PageViewportClosure() {
     this.height = height;
     this.fontScale = scale;
   }
-  PageViewport.prototype = {
+  PageViewport.prototype = /** @lends PDFJS.PageViewport.prototype */ {
+    /**
+     * Clones viewport with additional properties.
+     * @param args {Object} (optional) If specified, may contain the 'scale' or
+     * 'rotation' properties to override the corresponding properties in
+     * the cloned viewport.
+     * @returns {PDFJS.PageViewport} Cloned viewport.
+     */
     clone: function PageViewPort_clone(args) {
       args = args || {};
       var scale = 'scale' in args ? args.scale : this.scale;
@@ -778,15 +796,41 @@ var PageViewport = PDFJS.PageViewport = (function PageViewportClosure() {
       return new PageViewport(this.viewBox.slice(), scale, rotation,
                               this.offsetX, this.offsetY, args.dontFlip);
     },
+    /**
+     * Converts PDF point to the viewport coordinates. For examples, useful for
+     * converting PDF location into canvas pixel coordinates.
+     * @param x {number} X coordinate.
+     * @param y {number} Y coordinate.
+     * @returns {Object} Object that contains 'x' and 'y' properties of the
+     * point in the viewport coordinate space.
+     * @see {@link convertToPdfPoint}
+     * @see {@link convertToViewportRectangle}
+     */
     convertToViewportPoint: function PageViewport_convertToViewportPoint(x, y) {
       return Util.applyTransform([x, y], this.transform);
     },
+    /**
+     * Converts PDF rectangle to the viewport coordinates.
+     * @param rect {Array} xMin, yMin, xMax and yMax coordinates.
+     * @returns {Array} Contains corresponding coordinates of the rectangle
+     * in the viewport coordinate space.
+     * @see {@link convertToViewportPoint}
+     */
     convertToViewportRectangle:
       function PageViewport_convertToViewportRectangle(rect) {
       var tl = Util.applyTransform([rect[0], rect[1]], this.transform);
       var br = Util.applyTransform([rect[2], rect[3]], this.transform);
       return [tl[0], tl[1], br[0], br[1]];
     },
+    /**
+     * Converts viewport coordinates to the PDF location. For examples, useful
+     * for converting canvas pixel location into PDF one.
+     * @param x {number} X coordinate.
+     * @param y {number} Y coordinate.
+     * @returns {Object} Object that contains 'x' and 'y' properties of the
+     * point in the PDF coordinate space.
+     * @see {@link convertToViewportPoint}
+     */
     convertToPdfPoint: function PageViewport_convertToPdfPoint(x, y) {
       return Util.applyInverseTransform([x, y], this.transform);
     }
@@ -891,20 +935,6 @@ function isRef(v) {
   return v instanceof Ref;
 }
 
-function isPDFFunction(v) {
-  var fnDict;
-  if (typeof v != 'object') {
-    return false;
-  } else if (isDict(v)) {
-    fnDict = v;
-  } else if (isStream(v)) {
-    fnDict = v.dict;
-  } else {
-    return false;
-  }
-  return fnDict.has('FunctionType');
-}
-
 /**
  * Promise Capability object.
  *
@@ -916,6 +946,8 @@ function isPDFFunction(v) {
 
 /**
  * Creates a promise capability object.
+ * @alias PDFJS.createPromiseCapability
+ *
  * @return {PromiseCapability} A capability object contains:
  * - a Promise, resolve and reject methods.
  */
@@ -932,7 +964,7 @@ PDFJS.createPromiseCapability = createPromiseCapability;
 
 /**
  * Polyfill for Promises:
- * The following promise implementation tries to generally implment the
+ * The following promise implementation tries to generally implement the
  * Promise/A+ spec. Some notable differences from other promise libaries are:
  * - There currently isn't a seperate deferred and promise object.
  * - Unhandled rejections eventually show an error if they aren't handled.
@@ -976,6 +1008,11 @@ PDFJS.createPromiseCapability = createPromiseCapability;
         return new globalScope.Promise(function (resolve, reject) {
           reject(reason);
         });
+      };
+    }
+    if (typeof globalScope.Promise.prototype.catch !== 'function') {
+      globalScope.Promise.prototype.catch = function (onReject) {
+        return globalScope.Promise.prototype.then(undefined, onReject);
       };
     }
     return;
@@ -1084,7 +1121,7 @@ function MessageHandler(name, comObj) {
   this.comObj = comObj;
   this.callbackIndex = 1;
   this.postMessageTransfers = true;
-  var callbacks = this.callbacks = {};
+  var callbacksCapabilities = this.callbacksCapabilities = {};
   var ah = this.actionHandler = {};
 
   ah['console_log'] = [function ahConsoleLog(data) {
@@ -1101,35 +1138,40 @@ function MessageHandler(name, comObj) {
     var data = event.data;
     if (data.isReply) {
       var callbackId = data.callbackId;
-      if (data.callbackId in callbacks) {
-        var callback = callbacks[callbackId];
-        delete callbacks[callbackId];
-        callback(data.data);
+      if (data.callbackId in callbacksCapabilities) {
+        var callback = callbacksCapabilities[callbackId];
+        delete callbacksCapabilities[callbackId];
+        if ('error' in data) {
+          callback.reject(data.error);
+        } else {
+          callback.resolve(data.data);
+        }
       } else {
         error('Cannot resolve callback ' + callbackId);
       }
     } else if (data.action in ah) {
       var action = ah[data.action];
       if (data.callbackId) {
-        var deferred = {};
-        var promise = new Promise(function (resolve, reject) {
-          deferred.resolve = resolve;
-          deferred.reject = reject;
-        });
-        deferred.promise = promise;
-        promise.then(function(resolvedData) {
+        Promise.resolve().then(function () {
+          return action[0].call(action[1], data.data);
+        }).then(function (result) {
           comObj.postMessage({
             isReply: true,
             callbackId: data.callbackId,
-            data: resolvedData
+            data: result
+          });
+        }, function (reason) {
+          comObj.postMessage({
+            isReply: true,
+            callbackId: data.callbackId,
+            error: reason
           });
         });
-        action[0].call(action[1], data.data, deferred);
       } else {
         action[0].call(action[1], data.data);
       }
     } else {
-      error('Unkown action from worker: ' + data.action);
+      error('Unknown action from worker: ' + data.action);
     }
   };
 }
@@ -1146,19 +1188,47 @@ MessageHandler.prototype = {
    * Sends a message to the comObj to invoke the action with the supplied data.
    * @param {String} actionName Action to call.
    * @param {JSON} data JSON data to send.
-   * @param {function} [callback] Optional callback that will handle a reply.
    * @param {Array} [transfers] Optional list of transfers/ArrayBuffers
    */
-  send: function messageHandlerSend(actionName, data, callback, transfers) {
+  send: function messageHandlerSend(actionName, data, transfers) {
     var message = {
       action: actionName,
       data: data
     };
-    if (callback) {
-      var callbackId = this.callbackIndex++;
-      this.callbacks[callbackId] = callback;
-      message.callbackId = callbackId;
+    this.postMessage(message, transfers);
+  },
+  /**
+   * Sends a message to the comObj to invoke the action with the supplied data.
+   * Expects that other side will callback with the response.
+   * @param {String} actionName Action to call.
+   * @param {JSON} data JSON data to send.
+   * @param {Array} [transfers] Optional list of transfers/ArrayBuffers.
+   * @returns {Promise} Promise to be resolved with response data.
+   */
+  sendWithPromise:
+    function messageHandlerSendWithPromise(actionName, data, transfers) {
+    var callbackId = this.callbackIndex++;
+    var message = {
+      action: actionName,
+      data: data,
+      callbackId: callbackId
+    };
+    var capability = createPromiseCapability();
+    this.callbacksCapabilities[callbackId] = capability;
+    try {
+      this.postMessage(message, transfers);
+    } catch (e) {
+      capability.reject(e);
     }
+    return capability.promise;
+  },
+  /**
+   * Sends raw message to the comObj.
+   * @private
+   * @param message {Object} Raw message.
+   * @param transfers List of transfers/ArrayBuffers, or undefined.
+   */
+  postMessage: function (message, transfers) {
     if (transfers && this.postMessageTransfers) {
       this.comObj.postMessage(message, transfers);
     } else {
@@ -1174,1632 +1244,6 @@ function loadJpegStream(id, imageUrl, objs) {
   });
   img.src = imageUrl;
 }
-
-
-var ColorSpace = (function ColorSpaceClosure() {
-  // Constructor should define this.numComps, this.defaultColor, this.name
-  function ColorSpace() {
-    error('should not call ColorSpace constructor');
-  }
-
-  ColorSpace.prototype = {
-    /**
-     * Converts the color value to the RGB color. The color components are
-     * located in the src array starting from the srcOffset. Returns the array
-     * of the rgb components, each value ranging from [0,255].
-     */
-    getRgb: function ColorSpace_getRgb(src, srcOffset) {
-      var rgb = new Uint8Array(3);
-      this.getRgbItem(src, srcOffset, rgb, 0);
-      return rgb;
-    },
-    /**
-     * Converts the color value to the RGB color, similar to the getRgb method.
-     * The result placed into the dest array starting from the destOffset.
-     */
-    getRgbItem: function ColorSpace_getRgbItem(src, srcOffset,
-                                               dest, destOffset) {
-      error('Should not call ColorSpace.getRgbItem');
-    },
-    /**
-     * Converts the specified number of the color values to the RGB colors.
-     * The colors are located in the src array starting from the srcOffset.
-     * The result is placed into the dest array starting from the destOffset.
-     * The src array items shall be in [0,2^bits) range, the dest array items
-     * will be in [0,255] range. alpha01 indicates how many alpha components
-     * there are in the dest array; it will be either 0 (RGB array) or 1 (RGBA
-     * array).
-     */
-    getRgbBuffer: function ColorSpace_getRgbBuffer(src, srcOffset, count,
-                                                   dest, destOffset, bits,
-                                                   alpha01) {
-      error('Should not call ColorSpace.getRgbBuffer');
-    },
-    /**
-     * Determines the number of bytes required to store the result of the
-     * conversion done by the getRgbBuffer method. As in getRgbBuffer,
-     * |alpha01| is either 0 (RGB output) or 1 (RGBA output).
-     */
-    getOutputLength: function ColorSpace_getOutputLength(inputLength,
-                                                         alpha01) {
-      error('Should not call ColorSpace.getOutputLength');
-    },
-    /**
-     * Returns true if source data will be equal the result/output data.
-     */
-    isPassthrough: function ColorSpace_isPassthrough(bits) {
-      return false;
-    },
-    /**
-     * Fills in the RGB colors in the destination buffer.  alpha01 indicates
-     * how many alpha components there are in the dest array; it will be either
-     * 0 (RGB array) or 1 (RGBA array).
-     */
-    fillRgb: function ColorSpace_fillRgb(dest, originalWidth,
-                                         originalHeight, width, height,
-                                         actualHeight, bpc, comps, alpha01) {
-      var count = originalWidth * originalHeight;
-      var rgbBuf = null;
-      var numComponentColors = 1 << bpc;
-      var needsResizing = originalHeight != height || originalWidth != width;
-      var i, ii;
-
-      if (this.isPassthrough(bpc)) {
-        rgbBuf = comps;
-      } else if (this.numComps === 1 && count > numComponentColors &&
-          this.name !== 'DeviceGray' && this.name !== 'DeviceRGB') {
-        // Optimization: create a color map when there is just one component and
-        // we are converting more colors than the size of the color map. We
-        // don't build the map if the colorspace is gray or rgb since those
-        // methods are faster than building a map. This mainly offers big speed
-        // ups for indexed and alternate colorspaces.
-        //
-        // TODO it may be worth while to cache the color map. While running
-        // testing I never hit a cache so I will leave that out for now (perhaps
-        // we are reparsing colorspaces too much?).
-        var allColors = bpc <= 8 ? new Uint8Array(numComponentColors) :
-                                   new Uint16Array(numComponentColors);
-        var key;
-        for (i = 0; i < numComponentColors; i++) {
-          allColors[i] = i;
-        }
-        var colorMap = new Uint8Array(numComponentColors * 3);
-        this.getRgbBuffer(allColors, 0, numComponentColors, colorMap, 0, bpc,
-                          /* alpha01 = */ 0);
-
-        var destPos, rgbPos;
-        if (!needsResizing) {
-          // Fill in the RGB values directly into |dest|.
-          destPos = 0;
-          for (i = 0; i < count; ++i) {
-            key = comps[i] * 3;
-            dest[destPos++] = colorMap[key];
-            dest[destPos++] = colorMap[key + 1];
-            dest[destPos++] = colorMap[key + 2];
-            destPos += alpha01;
-          }
-        } else {
-          rgbBuf = new Uint8Array(count * 3);
-          rgbPos = 0;
-          for (i = 0; i < count; ++i) {
-            key = comps[i] * 3;
-            rgbBuf[rgbPos++] = colorMap[key];
-            rgbBuf[rgbPos++] = colorMap[key + 1];
-            rgbBuf[rgbPos++] = colorMap[key + 2];
-          }
-        }
-      } else {
-        if (!needsResizing) {
-          // Fill in the RGB values directly into |dest|.
-          this.getRgbBuffer(comps, 0, width * actualHeight, dest, 0, bpc,
-                            alpha01);
-        } else {
-          rgbBuf = new Uint8Array(count * 3);
-          this.getRgbBuffer(comps, 0, count, rgbBuf, 0, bpc,
-                            /* alpha01 = */ 0);
-        }
-      }
-
-      if (rgbBuf) {
-        if (needsResizing) {
-          PDFImage.resize(rgbBuf, bpc, 3, originalWidth, originalHeight, width,
-                          height, dest, alpha01);
-        } else {
-          rgbPos = 0;
-          destPos = 0;
-          for (i = 0, ii = width * actualHeight; i < ii; i++) {
-            dest[destPos++] = rgbBuf[rgbPos++];
-            dest[destPos++] = rgbBuf[rgbPos++];
-            dest[destPos++] = rgbBuf[rgbPos++];
-            destPos += alpha01;
-          }
-        }
-      }
-    },
-    /**
-     * True if the colorspace has components in the default range of [0, 1].
-     * This should be true for all colorspaces except for lab color spaces
-     * which are [0,100], [-128, 127], [-128, 127].
-     */
-    usesZeroToOneRange: true
-  };
-
-  ColorSpace.parse = function ColorSpace_parse(cs, xref, res) {
-    var IR = ColorSpace.parseToIR(cs, xref, res);
-    if (IR instanceof AlternateCS) {
-      return IR;
-    }
-    return ColorSpace.fromIR(IR);
-  };
-
-  ColorSpace.fromIR = function ColorSpace_fromIR(IR) {
-    var name = isArray(IR) ? IR[0] : IR;
-    var whitePoint, blackPoint;
-
-    switch (name) {
-      case 'DeviceGrayCS':
-        return this.singletons.gray;
-      case 'DeviceRgbCS':
-        return this.singletons.rgb;
-      case 'DeviceCmykCS':
-        return this.singletons.cmyk;
-      case 'CalGrayCS':
-        whitePoint = IR[1].WhitePoint;
-        blackPoint = IR[1].BlackPoint;
-        var gamma = IR[1].Gamma;
-        return new CalGrayCS(whitePoint, blackPoint, gamma);
-      case 'PatternCS':
-        var basePatternCS = IR[1];
-        if (basePatternCS) {
-          basePatternCS = ColorSpace.fromIR(basePatternCS);
-        }
-        return new PatternCS(basePatternCS);
-      case 'IndexedCS':
-        var baseIndexedCS = IR[1];
-        var hiVal = IR[2];
-        var lookup = IR[3];
-        return new IndexedCS(ColorSpace.fromIR(baseIndexedCS), hiVal, lookup);
-      case 'AlternateCS':
-        var numComps = IR[1];
-        var alt = IR[2];
-        var tintFnIR = IR[3];
-
-        return new AlternateCS(numComps, ColorSpace.fromIR(alt),
-                                PDFFunction.fromIR(tintFnIR));
-      case 'LabCS':
-        whitePoint = IR[1].WhitePoint;
-        blackPoint = IR[1].BlackPoint;
-        var range = IR[1].Range;
-        return new LabCS(whitePoint, blackPoint, range);
-      default:
-        error('Unkown name ' + name);
-    }
-    return null;
-  };
-
-  ColorSpace.parseToIR = function ColorSpace_parseToIR(cs, xref, res) {
-    if (isName(cs)) {
-      var colorSpaces = res.get('ColorSpace');
-      if (isDict(colorSpaces)) {
-        var refcs = colorSpaces.get(cs.name);
-        if (refcs) {
-          cs = refcs;
-        }
-      }
-    }
-
-    cs = xref.fetchIfRef(cs);
-    var mode;
-
-    if (isName(cs)) {
-      mode = cs.name;
-      this.mode = mode;
-
-      switch (mode) {
-        case 'DeviceGray':
-        case 'G':
-          return 'DeviceGrayCS';
-        case 'DeviceRGB':
-        case 'RGB':
-          return 'DeviceRgbCS';
-        case 'DeviceCMYK':
-        case 'CMYK':
-          return 'DeviceCmykCS';
-        case 'Pattern':
-          return ['PatternCS', null];
-        default:
-          error('unrecognized colorspace ' + mode);
-      }
-    } else if (isArray(cs)) {
-      mode = cs[0].name;
-      this.mode = mode;
-      var numComps, params;
-
-      switch (mode) {
-        case 'DeviceGray':
-        case 'G':
-          return 'DeviceGrayCS';
-        case 'DeviceRGB':
-        case 'RGB':
-          return 'DeviceRgbCS';
-        case 'DeviceCMYK':
-        case 'CMYK':
-          return 'DeviceCmykCS';
-        case 'CalGray':
-          params = cs[1].getAll();
-          return ['CalGrayCS', params];
-        case 'CalRGB':
-          return 'DeviceRgbCS';
-        case 'ICCBased':
-          var stream = xref.fetchIfRef(cs[1]);
-          var dict = stream.dict;
-          numComps = dict.get('N');
-          if (numComps == 1) {
-            return 'DeviceGrayCS';
-          } else if (numComps == 3) {
-            return 'DeviceRgbCS';
-          } else if (numComps == 4) {
-            return 'DeviceCmykCS';
-          }
-          break;
-        case 'Pattern':
-          var basePatternCS = cs[1];
-          if (basePatternCS) {
-            basePatternCS = ColorSpace.parseToIR(basePatternCS, xref, res);
-          }
-          return ['PatternCS', basePatternCS];
-        case 'Indexed':
-        case 'I':
-          var baseIndexedCS = ColorSpace.parseToIR(cs[1], xref, res);
-          var hiVal = cs[2] + 1;
-          var lookup = xref.fetchIfRef(cs[3]);
-          if (isStream(lookup)) {
-            lookup = lookup.getBytes();
-          }
-          return ['IndexedCS', baseIndexedCS, hiVal, lookup];
-        case 'Separation':
-        case 'DeviceN':
-          var name = cs[1];
-          numComps = 1;
-          if (isName(name)) {
-            numComps = 1;
-          } else if (isArray(name)) {
-            numComps = name.length;
-          }
-          var alt = ColorSpace.parseToIR(cs[2], xref, res);
-          var tintFnIR = PDFFunction.getIR(xref, xref.fetchIfRef(cs[3]));
-          return ['AlternateCS', numComps, alt, tintFnIR];
-        case 'Lab':
-          params = cs[1].getAll();
-          return ['LabCS', params];
-        default:
-          error('unimplemented color space object "' + mode + '"');
-      }
-    } else {
-      error('unrecognized color space object: "' + cs + '"');
-    }
-    return null;
-  };
-  /**
-   * Checks if a decode map matches the default decode map for a color space.
-   * This handles the general decode maps where there are two values per
-   * component. e.g. [0, 1, 0, 1, 0, 1] for a RGB color.
-   * This does not handle Lab, Indexed, or Pattern decode maps since they are
-   * slightly different.
-   * @param {Array} decode Decode map (usually from an image).
-   * @param {Number} n Number of components the color space has.
-   */
-  ColorSpace.isDefaultDecode = function ColorSpace_isDefaultDecode(decode, n) {
-    if (!decode) {
-      return true;
-    }
-
-    if (n * 2 !== decode.length) {
-      warn('The decode map is not the correct length');
-      return true;
-    }
-    for (var i = 0, ii = decode.length; i < ii; i += 2) {
-      if (decode[i] !== 0 || decode[i + 1] != 1) {
-        return false;
-      }
-    }
-    return true;
-  };
-
-  ColorSpace.singletons = {
-    get gray() {
-      return shadow(this, 'gray', new DeviceGrayCS());
-    },
-    get rgb() {
-      return shadow(this, 'rgb', new DeviceRgbCS());
-    },
-    get cmyk() {
-      return shadow(this, 'cmyk', new DeviceCmykCS());
-    }
-  };
-
-  return ColorSpace;
-})();
-
-/**
- * Alternate color space handles both Separation and DeviceN color spaces.  A
- * Separation color space is actually just a DeviceN with one color component.
- * Both color spaces use a tinting function to convert colors to a base color
- * space.
- */
-var AlternateCS = (function AlternateCSClosure() {
-  function AlternateCS(numComps, base, tintFn) {
-    this.name = 'Alternate';
-    this.numComps = numComps;
-    this.defaultColor = new Float32Array(numComps);
-    for (var i = 0; i < numComps; ++i) {
-      this.defaultColor[i] = 1;
-    }
-    this.base = base;
-    this.tintFn = tintFn;
-  }
-
-  AlternateCS.prototype = {
-    getRgb: ColorSpace.prototype.getRgb,
-    getRgbItem: function AlternateCS_getRgbItem(src, srcOffset,
-                                                dest, destOffset) {
-      var baseNumComps = this.base.numComps;
-      var input = 'subarray' in src ?
-        src.subarray(srcOffset, srcOffset + this.numComps) :
-        Array.prototype.slice.call(src, srcOffset, srcOffset + this.numComps);
-      var tinted = this.tintFn(input);
-      this.base.getRgbItem(tinted, 0, dest, destOffset);
-    },
-    getRgbBuffer: function AlternateCS_getRgbBuffer(src, srcOffset, count,
-                                                    dest, destOffset, bits,
-                                                    alpha01) {
-      var tintFn = this.tintFn;
-      var base = this.base;
-      var scale = 1 / ((1 << bits) - 1);
-      var baseNumComps = base.numComps;
-      var usesZeroToOneRange = base.usesZeroToOneRange;
-      var isPassthrough = (base.isPassthrough(8) || !usesZeroToOneRange) &&
-                          alpha01 === 0;
-      var pos = isPassthrough ? destOffset : 0;
-      var baseBuf = isPassthrough ? dest : new Uint8Array(baseNumComps * count);
-      var numComps = this.numComps;
-
-      var scaled = new Float32Array(numComps);
-      var i, j;
-      for (i = 0; i < count; i++) {
-        for (j = 0; j < numComps; j++) {
-          scaled[j] = src[srcOffset++] * scale;
-        }
-        var tinted = tintFn(scaled);
-        if (usesZeroToOneRange) {
-          for (j = 0; j < baseNumComps; j++) {
-            baseBuf[pos++] = tinted[j] * 255;
-          }
-        } else {
-          base.getRgbItem(tinted, 0, baseBuf, pos);
-          pos += baseNumComps;
-        }
-      }
-      if (!isPassthrough) {
-        base.getRgbBuffer(baseBuf, 0, count, dest, destOffset, 8, alpha01);
-      }
-    },
-    getOutputLength: function AlternateCS_getOutputLength(inputLength,
-                                                          alpha01) {
-      return this.base.getOutputLength(inputLength *
-                                       this.base.numComps / this.numComps,
-                                       alpha01);
-    },
-    isPassthrough: ColorSpace.prototype.isPassthrough,
-    fillRgb: ColorSpace.prototype.fillRgb,
-    isDefaultDecode: function AlternateCS_isDefaultDecode(decodeMap) {
-      return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
-    },
-    usesZeroToOneRange: true
-  };
-
-  return AlternateCS;
-})();
-
-var PatternCS = (function PatternCSClosure() {
-  function PatternCS(baseCS) {
-    this.name = 'Pattern';
-    this.base = baseCS;
-  }
-  PatternCS.prototype = {};
-
-  return PatternCS;
-})();
-
-var IndexedCS = (function IndexedCSClosure() {
-  function IndexedCS(base, highVal, lookup) {
-    this.name = 'Indexed';
-    this.numComps = 1;
-    this.defaultColor = new Uint8Array([0]);
-    this.base = base;
-    this.highVal = highVal;
-
-    var baseNumComps = base.numComps;
-    var length = baseNumComps * highVal;
-    var lookupArray;
-
-    if (isStream(lookup)) {
-      lookupArray = new Uint8Array(length);
-      var bytes = lookup.getBytes(length);
-      lookupArray.set(bytes);
-    } else if (isString(lookup)) {
-      lookupArray = new Uint8Array(length);
-      for (var i = 0; i < length; ++i) {
-        lookupArray[i] = lookup.charCodeAt(i);
-      }
-    } else if (lookup instanceof Uint8Array || lookup instanceof Array) {
-      lookupArray = lookup;
-    } else {
-      error('Unrecognized lookup table: ' + lookup);
-    }
-    this.lookup = lookupArray;
-  }
-
-  IndexedCS.prototype = {
-    getRgb: ColorSpace.prototype.getRgb,
-    getRgbItem: function IndexedCS_getRgbItem(src, srcOffset,
-                                              dest, destOffset) {
-      var numComps = this.base.numComps;
-      var start = src[srcOffset] * numComps;
-      this.base.getRgbItem(this.lookup, start, dest, destOffset);
-    },
-    getRgbBuffer: function IndexedCS_getRgbBuffer(src, srcOffset, count,
-                                                  dest, destOffset, bits,
-                                                  alpha01) {
-      var base = this.base;
-      var numComps = base.numComps;
-      var outputDelta = base.getOutputLength(numComps, alpha01);
-      var lookup = this.lookup;
-
-      for (var i = 0; i < count; ++i) {
-        var lookupPos = src[srcOffset++] * numComps;
-        base.getRgbBuffer(lookup, lookupPos, 1, dest, destOffset, 8, alpha01);
-        destOffset += outputDelta;
-      }
-    },
-    getOutputLength: function IndexedCS_getOutputLength(inputLength, alpha01) {
-      return this.base.getOutputLength(inputLength * this.base.numComps,
-                                       alpha01);
-    },
-    isPassthrough: ColorSpace.prototype.isPassthrough,
-    fillRgb: ColorSpace.prototype.fillRgb,
-    isDefaultDecode: function IndexedCS_isDefaultDecode(decodeMap) {
-      // indexed color maps shouldn't be changed
-      return true;
-    },
-    usesZeroToOneRange: true
-  };
-  return IndexedCS;
-})();
-
-var DeviceGrayCS = (function DeviceGrayCSClosure() {
-  function DeviceGrayCS() {
-    this.name = 'DeviceGray';
-    this.numComps = 1;
-    this.defaultColor = new Float32Array([0]);
-  }
-
-  DeviceGrayCS.prototype = {
-    getRgb: ColorSpace.prototype.getRgb,
-    getRgbItem: function DeviceGrayCS_getRgbItem(src, srcOffset,
-                                                 dest, destOffset) {
-      var c = (src[srcOffset] * 255) | 0;
-      c = c < 0 ? 0 : c > 255 ? 255 : c;
-      dest[destOffset] = dest[destOffset + 1] = dest[destOffset + 2] = c;
-    },
-    getRgbBuffer: function DeviceGrayCS_getRgbBuffer(src, srcOffset, count,
-                                                     dest, destOffset, bits,
-                                                     alpha01) {
-      var scale = 255 / ((1 << bits) - 1);
-      var j = srcOffset, q = destOffset;
-      for (var i = 0; i < count; ++i) {
-        var c = (scale * src[j++]) | 0;
-        dest[q++] = c;
-        dest[q++] = c;
-        dest[q++] = c;
-        q += alpha01;
-      }
-    },
-    getOutputLength: function DeviceGrayCS_getOutputLength(inputLength,
-                                                           alpha01) {
-      return inputLength * (3 + alpha01);
-    },
-    isPassthrough: ColorSpace.prototype.isPassthrough,
-    fillRgb: ColorSpace.prototype.fillRgb,
-    isDefaultDecode: function DeviceGrayCS_isDefaultDecode(decodeMap) {
-      return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
-    },
-    usesZeroToOneRange: true
-  };
-  return DeviceGrayCS;
-})();
-
-var DeviceRgbCS = (function DeviceRgbCSClosure() {
-  function DeviceRgbCS() {
-    this.name = 'DeviceRGB';
-    this.numComps = 3;
-    this.defaultColor = new Float32Array([0, 0, 0]);
-  }
-  DeviceRgbCS.prototype = {
-    getRgb: ColorSpace.prototype.getRgb,
-    getRgbItem: function DeviceRgbCS_getRgbItem(src, srcOffset,
-                                                dest, destOffset) {
-      var r = (src[srcOffset] * 255) | 0;
-      var g = (src[srcOffset + 1] * 255) | 0;
-      var b = (src[srcOffset + 2] * 255) | 0;
-      dest[destOffset] = r < 0 ? 0 : r > 255 ? 255 : r;
-      dest[destOffset + 1] = g < 0 ? 0 : g > 255 ? 255 : g;
-      dest[destOffset + 2] = b < 0 ? 0 : b > 255 ? 255 : b;
-    },
-    getRgbBuffer: function DeviceRgbCS_getRgbBuffer(src, srcOffset, count,
-                                                    dest, destOffset, bits,
-                                                    alpha01) {
-      if (bits === 8 && alpha01 === 0) {
-        dest.set(src.subarray(srcOffset, srcOffset + count * 3), destOffset);
-        return;
-      }
-      var scale = 255 / ((1 << bits) - 1);
-      var j = srcOffset, q = destOffset;
-      for (var i = 0; i < count; ++i) {
-        dest[q++] = (scale * src[j++]) | 0;
-        dest[q++] = (scale * src[j++]) | 0;
-        dest[q++] = (scale * src[j++]) | 0;
-        q += alpha01;
-      }
-    },
-    getOutputLength: function DeviceRgbCS_getOutputLength(inputLength,
-                                                          alpha01) {
-      return (inputLength * (3 + alpha01) / 3) | 0;
-    },
-    isPassthrough: function DeviceRgbCS_isPassthrough(bits) {
-      return bits == 8;
-    },
-    fillRgb: ColorSpace.prototype.fillRgb,
-    isDefaultDecode: function DeviceRgbCS_isDefaultDecode(decodeMap) {
-      return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
-    },
-    usesZeroToOneRange: true
-  };
-  return DeviceRgbCS;
-})();
-
-var DeviceCmykCS = (function DeviceCmykCSClosure() {
-  // The coefficients below was found using numerical analysis: the method of
-  // steepest descent for the sum((f_i - color_value_i)^2) for r/g/b colors,
-  // where color_value is the tabular value from the table of sampled RGB colors
-  // from CMYK US Web Coated (SWOP) colorspace, and f_i is the corresponding
-  // CMYK color conversion using the estimation below:
-  //   f(A, B,.. N) = Acc+Bcm+Ccy+Dck+c+Fmm+Gmy+Hmk+Im+Jyy+Kyk+Ly+Mkk+Nk+255
-  function convertToRgb(src, srcOffset, srcScale, dest, destOffset) {
-    var c = src[srcOffset + 0] * srcScale;
-    var m = src[srcOffset + 1] * srcScale;
-    var y = src[srcOffset + 2] * srcScale;
-    var k = src[srcOffset + 3] * srcScale;
-
-    var r =
-      (c * (-4.387332384609988 * c + 54.48615194189176 * m +
-            18.82290502165302 * y + 212.25662451639585 * k +
-            -285.2331026137004) +
-       m * (1.7149763477362134 * m - 5.6096736904047315 * y +
-            -17.873870861415444 * k - 5.497006427196366) +
-       y * (-2.5217340131683033 * y - 21.248923337353073 * k +
-            17.5119270841813) +
-       k * (-21.86122147463605 * k - 189.48180835922747) + 255) | 0;
-    var g =
-      (c * (8.841041422036149 * c + 60.118027045597366 * m +
-            6.871425592049007 * y + 31.159100130055922 * k +
-            -79.2970844816548) +
-       m * (-15.310361306967817 * m + 17.575251261109482 * y +
-            131.35250912493976 * k - 190.9453302588951) +
-       y * (4.444339102852739 * y + 9.8632861493405 * k - 24.86741582555878) +
-       k * (-20.737325471181034 * k - 187.80453709719578) + 255) | 0;
-    var b =
-      (c * (0.8842522430003296 * c + 8.078677503112928 * m +
-            30.89978309703729 * y - 0.23883238689178934 * k +
-            -14.183576799673286) +
-       m * (10.49593273432072 * m + 63.02378494754052 * y +
-            50.606957656360734 * k - 112.23884253719248) +
-       y * (0.03296041114873217 * y + 115.60384449646641 * k +
-            -193.58209356861505) +
-       k * (-22.33816807309886 * k - 180.12613974708367) + 255) | 0;
-
-    dest[destOffset] = r > 255 ? 255 : r < 0 ? 0 : r;
-    dest[destOffset + 1] = g > 255 ? 255 : g < 0 ? 0 : g;
-    dest[destOffset + 2] = b > 255 ? 255 : b < 0 ? 0 : b;
-  }
-
-  function DeviceCmykCS() {
-    this.name = 'DeviceCMYK';
-    this.numComps = 4;
-    this.defaultColor = new Float32Array([0, 0, 0, 1]);
-  }
-  DeviceCmykCS.prototype = {
-    getRgb: ColorSpace.prototype.getRgb,
-    getRgbItem: function DeviceCmykCS_getRgbItem(src, srcOffset,
-                                                 dest, destOffset) {
-      convertToRgb(src, srcOffset, 1, dest, destOffset);
-    },
-    getRgbBuffer: function DeviceCmykCS_getRgbBuffer(src, srcOffset, count,
-                                                     dest, destOffset, bits,
-                                                     alpha01) {
-      var scale = 1 / ((1 << bits) - 1);
-      for (var i = 0; i < count; i++) {
-        convertToRgb(src, srcOffset, scale, dest, destOffset);
-        srcOffset += 4;
-        destOffset += 3 + alpha01;
-      }
-    },
-    getOutputLength: function DeviceCmykCS_getOutputLength(inputLength,
-                                                           alpha01) {
-      return (inputLength / 4 * (3 + alpha01)) | 0;
-    },
-    isPassthrough: ColorSpace.prototype.isPassthrough,
-    fillRgb: ColorSpace.prototype.fillRgb,
-    isDefaultDecode: function DeviceCmykCS_isDefaultDecode(decodeMap) {
-      return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
-    },
-    usesZeroToOneRange: true
-  };
-
-  return DeviceCmykCS;
-})();
-
-//
-// CalGrayCS: Based on "PDF Reference, Sixth Ed", p.245
-//
-var CalGrayCS = (function CalGrayCSClosure() {
-  function CalGrayCS(whitePoint, blackPoint, gamma) {
-    this.name = 'CalGray';
-    this.numComps = 1;
-    this.defaultColor = new Float32Array([0]);
-
-    if (!whitePoint) {
-      error('WhitePoint missing - required for color space CalGray');
-    }
-    blackPoint = blackPoint || [0, 0, 0];
-    gamma = gamma || 1;
-
-    // Translate arguments to spec variables.
-    this.XW = whitePoint[0];
-    this.YW = whitePoint[1];
-    this.ZW = whitePoint[2];
-
-    this.XB = blackPoint[0];
-    this.YB = blackPoint[1];
-    this.ZB = blackPoint[2];
-
-    this.G = gamma;
-
-    // Validate variables as per spec.
-    if (this.XW < 0 || this.ZW < 0 || this.YW !== 1) {
-      error('Invalid WhitePoint components for ' + this.name +
-            ', no fallback available');
-    }
-
-    if (this.XB < 0 || this.YB < 0 || this.ZB < 0) {
-      info('Invalid BlackPoint for ' + this.name + ', falling back to default');
-      this.XB = this.YB = this.ZB = 0;
-    }
-
-    if (this.XB !== 0 || this.YB !== 0 || this.ZB !== 0) {
-      warn(this.name + ', BlackPoint: XB: ' + this.XB + ', YB: ' + this.YB +
-           ', ZB: ' + this.ZB + ', only default values are supported.');
-    }
-
-    if (this.G < 1) {
-      info('Invalid Gamma: ' + this.G + ' for ' + this.name +
-           ', falling back to default');
-      this.G = 1;
-    }
-  }
-
-  function convertToRgb(cs, src, srcOffset, dest, destOffset, scale) {
-    // A represents a gray component of a calibrated gray space.
-    // A <---> AG in the spec
-    var A = src[srcOffset] * scale;
-    var AG = Math.pow(A, cs.G);
-
-    // Computes L as per spec. ( = cs.YW * AG )
-    // Except if other than default BlackPoint values are used.
-    var L = cs.YW * AG;
-    // http://www.poynton.com/notes/colour_and_gamma/ColorFAQ.html, Ch 4.
-    // Convert values to rgb range [0, 255].
-    var val = Math.max(295.8 * Math.pow(L, 0.333333333333333333) - 40.8, 0) | 0;
-    dest[destOffset] = val;
-    dest[destOffset + 1] = val;
-    dest[destOffset + 2] = val;
-  }
-
-  CalGrayCS.prototype = {
-    getRgb: ColorSpace.prototype.getRgb,
-    getRgbItem: function CalGrayCS_getRgbItem(src, srcOffset,
-                                              dest, destOffset) {
-      convertToRgb(this, src, srcOffset, dest, destOffset, 1);
-    },
-    getRgbBuffer: function CalGrayCS_getRgbBuffer(src, srcOffset, count,
-                                                  dest, destOffset, bits,
-                                                  alpha01) {
-      var scale = 1 / ((1 << bits) - 1);
-
-      for (var i = 0; i < count; ++i) {
-        convertToRgb(this, src, srcOffset, dest, destOffset, scale);
-        srcOffset += 1;
-        destOffset += 3 + alpha01;
-      }
-    },
-    getOutputLength: function CalGrayCS_getOutputLength(inputLength, alpha01) {
-      return inputLength * (3 + alpha01);
-    },
-    isPassthrough: ColorSpace.prototype.isPassthrough,
-    fillRgb: ColorSpace.prototype.fillRgb,
-    isDefaultDecode: function CalGrayCS_isDefaultDecode(decodeMap) {
-      return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
-    },
-    usesZeroToOneRange: true
-  };
-  return CalGrayCS;
-})();
-
-//
-// LabCS: Based on "PDF Reference, Sixth Ed", p.250
-//
-var LabCS = (function LabCSClosure() {
-  function LabCS(whitePoint, blackPoint, range) {
-    this.name = 'Lab';
-    this.numComps = 3;
-    this.defaultColor = new Float32Array([0, 0, 0]);
-
-    if (!whitePoint) {
-      error('WhitePoint missing - required for color space Lab');
-    }
-    blackPoint = blackPoint || [0, 0, 0];
-    range = range || [-100, 100, -100, 100];
-
-    // Translate args to spec variables
-    this.XW = whitePoint[0];
-    this.YW = whitePoint[1];
-    this.ZW = whitePoint[2];
-    this.amin = range[0];
-    this.amax = range[1];
-    this.bmin = range[2];
-    this.bmax = range[3];
-
-    // These are here just for completeness - the spec doesn't offer any
-    // formulas that use BlackPoint in Lab
-    this.XB = blackPoint[0];
-    this.YB = blackPoint[1];
-    this.ZB = blackPoint[2];
-
-    // Validate vars as per spec
-    if (this.XW < 0 || this.ZW < 0 || this.YW !== 1) {
-      error('Invalid WhitePoint components, no fallback available');
-    }
-
-    if (this.XB < 0 || this.YB < 0 || this.ZB < 0) {
-      info('Invalid BlackPoint, falling back to default');
-      this.XB = this.YB = this.ZB = 0;
-    }
-
-    if (this.amin > this.amax || this.bmin > this.bmax) {
-      info('Invalid Range, falling back to defaults');
-      this.amin = -100;
-      this.amax = 100;
-      this.bmin = -100;
-      this.bmax = 100;
-    }
-  }
-
-  // Function g(x) from spec
-  function fn_g(x) {
-    if (x >= 6 / 29) {
-      return x * x * x;
-    } else {
-      return (108 / 841) * (x - 4 / 29);
-    }
-  }
-
-  function decode(value, high1, low2, high2) {
-    return low2 + (value) * (high2 - low2) / (high1);
-  }
-
-  // If decoding is needed maxVal should be 2^bits per component - 1.
-  function convertToRgb(cs, src, srcOffset, maxVal, dest, destOffset) {
-    // XXX: Lab input is in the range of [0, 100], [amin, amax], [bmin, bmax]
-    // not the usual [0, 1]. If a command like setFillColor is used the src
-    // values will already be within the correct range. However, if we are
-    // converting an image we have to map the values to the correct range given
-    // above.
-    // Ls,as,bs <---> L*,a*,b* in the spec
-    var Ls = src[srcOffset];
-    var as = src[srcOffset + 1];
-    var bs = src[srcOffset + 2];
-    if (maxVal !== false) {
-      Ls = decode(Ls, maxVal, 0, 100);
-      as = decode(as, maxVal, cs.amin, cs.amax);
-      bs = decode(bs, maxVal, cs.bmin, cs.bmax);
-    }
-
-    // Adjust limits of 'as' and 'bs'
-    as = as > cs.amax ? cs.amax : as < cs.amin ? cs.amin : as;
-    bs = bs > cs.bmax ? cs.bmax : bs < cs.bmin ? cs.bmin : bs;
-
-    // Computes intermediate variables X,Y,Z as per spec
-    var M = (Ls + 16) / 116;
-    var L = M + (as / 500);
-    var N = M - (bs / 200);
-
-    var X = cs.XW * fn_g(L);
-    var Y = cs.YW * fn_g(M);
-    var Z = cs.ZW * fn_g(N);
-
-    var r, g, b;
-    // Using different conversions for D50 and D65 white points,
-    // per http://www.color.org/srgb.pdf
-    if (cs.ZW < 1) {
-      // Assuming D50 (X=0.9642, Y=1.00, Z=0.8249)
-      r = X * 3.1339 + Y * -1.6170 + Z * -0.4906;
-      g = X * -0.9785 + Y * 1.9160 + Z * 0.0333;
-      b = X * 0.0720 + Y * -0.2290 + Z * 1.4057;
-    } else {
-      // Assuming D65 (X=0.9505, Y=1.00, Z=1.0888)
-      r = X * 3.2406 + Y * -1.5372 + Z * -0.4986;
-      g = X * -0.9689 + Y * 1.8758 + Z * 0.0415;
-      b = X * 0.0557 + Y * -0.2040 + Z * 1.0570;
-    }
-    // clamp color values to [0,1] range then convert to [0,255] range.
-    dest[destOffset] = r <= 0 ? 0 : r >= 1 ? 255 : Math.sqrt(r) * 255 | 0;
-    dest[destOffset + 1] = g <= 0 ? 0 : g >= 1 ? 255 : Math.sqrt(g) * 255 | 0;
-    dest[destOffset + 2] = b <= 0 ? 0 : b >= 1 ? 255 : Math.sqrt(b) * 255 | 0;
-  }
-
-  LabCS.prototype = {
-    getRgb: ColorSpace.prototype.getRgb,
-    getRgbItem: function LabCS_getRgbItem(src, srcOffset, dest, destOffset) {
-      convertToRgb(this, src, srcOffset, false, dest, destOffset);
-    },
-    getRgbBuffer: function LabCS_getRgbBuffer(src, srcOffset, count,
-                                              dest, destOffset, bits,
-                                              alpha01) {
-      var maxVal = (1 << bits) - 1;
-      for (var i = 0; i < count; i++) {
-        convertToRgb(this, src, srcOffset, maxVal, dest, destOffset);
-        srcOffset += 3;
-        destOffset += 3 + alpha01;
-      }
-    },
-    getOutputLength: function LabCS_getOutputLength(inputLength, alpha01) {
-      return (inputLength * (3 + alpha01) / 3) | 0;
-    },
-    isPassthrough: ColorSpace.prototype.isPassthrough,
-    isDefaultDecode: function LabCS_isDefaultDecode(decodeMap) {
-      // XXX: Decoding is handled with the lab conversion because of the strange
-      // ranges that are used.
-      return true;
-    },
-    usesZeroToOneRange: false
-  };
-  return LabCS;
-})();
-
-
-
-var PDFFunction = (function PDFFunctionClosure() {
-  var CONSTRUCT_SAMPLED = 0;
-  var CONSTRUCT_INTERPOLATED = 2;
-  var CONSTRUCT_STICHED = 3;
-  var CONSTRUCT_POSTSCRIPT = 4;
-
-  return {
-    getSampleArray: function PDFFunction_getSampleArray(size, outputSize, bps,
-                                                       str) {
-      var i, ii;
-      var length = 1;
-      for (i = 0, ii = size.length; i < ii; i++) {
-        length *= size[i];
-      }
-      length *= outputSize;
-
-      var array = [];
-      var codeSize = 0;
-      var codeBuf = 0;
-      // 32 is a valid bps so shifting won't work
-      var sampleMul = 1.0 / (Math.pow(2.0, bps) - 1);
-
-      var strBytes = str.getBytes((length * bps + 7) / 8);
-      var strIdx = 0;
-      for (i = 0; i < length; i++) {
-        while (codeSize < bps) {
-          codeBuf <<= 8;
-          codeBuf |= strBytes[strIdx++];
-          codeSize += 8;
-        }
-        codeSize -= bps;
-        array.push((codeBuf >> codeSize) * sampleMul);
-        codeBuf &= (1 << codeSize) - 1;
-      }
-      return array;
-    },
-
-    getIR: function PDFFunction_getIR(xref, fn) {
-      var dict = fn.dict;
-      if (!dict) {
-        dict = fn;
-      }
-
-      var types = [this.constructSampled,
-                   null,
-                   this.constructInterpolated,
-                   this.constructStiched,
-                   this.constructPostScript];
-
-      var typeNum = dict.get('FunctionType');
-      var typeFn = types[typeNum];
-      if (!typeFn) {
-        error('Unknown type of function');
-      }
-
-      return typeFn.call(this, fn, dict, xref);
-    },
-
-    fromIR: function PDFFunction_fromIR(IR) {
-      var type = IR[0];
-      switch (type) {
-        case CONSTRUCT_SAMPLED:
-          return this.constructSampledFromIR(IR);
-        case CONSTRUCT_INTERPOLATED:
-          return this.constructInterpolatedFromIR(IR);
-        case CONSTRUCT_STICHED:
-          return this.constructStichedFromIR(IR);
-        //case CONSTRUCT_POSTSCRIPT:
-        default:
-          return this.constructPostScriptFromIR(IR);
-      }
-    },
-
-    parse: function PDFFunction_parse(xref, fn) {
-      var IR = this.getIR(xref, fn);
-      return this.fromIR(IR);
-    },
-
-    constructSampled: function PDFFunction_constructSampled(str, dict) {
-      function toMultiArray(arr) {
-        var inputLength = arr.length;
-        var out = [];
-        var index = 0;
-        for (var i = 0; i < inputLength; i += 2) {
-          out[index] = [arr[i], arr[i + 1]];
-          ++index;
-        }
-        return out;
-      }
-      var domain = dict.get('Domain');
-      var range = dict.get('Range');
-
-      if (!domain || !range) {
-        error('No domain or range');
-      }
-
-      var inputSize = domain.length / 2;
-      var outputSize = range.length / 2;
-
-      domain = toMultiArray(domain);
-      range = toMultiArray(range);
-
-      var size = dict.get('Size');
-      var bps = dict.get('BitsPerSample');
-      var order = dict.get('Order') || 1;
-      if (order !== 1) {
-        // No description how cubic spline interpolation works in PDF32000:2008
-        // As in poppler, ignoring order, linear interpolation may work as good
-        info('No support for cubic spline interpolation: ' + order);
-      }
-
-      var encode = dict.get('Encode');
-      if (!encode) {
-        encode = [];
-        for (var i = 0; i < inputSize; ++i) {
-          encode.push(0);
-          encode.push(size[i] - 1);
-        }
-      }
-      encode = toMultiArray(encode);
-
-      var decode = dict.get('Decode');
-      if (!decode) {
-        decode = range;
-      } else {
-        decode = toMultiArray(decode);
-      }
-
-      var samples = this.getSampleArray(size, outputSize, bps, str);
-
-      return [
-        CONSTRUCT_SAMPLED, inputSize, domain, encode, decode, samples, size,
-        outputSize, Math.pow(2, bps) - 1, range
-      ];
-    },
-
-    constructSampledFromIR: function PDFFunction_constructSampledFromIR(IR) {
-      // See chapter 3, page 109 of the PDF reference
-      function interpolate(x, xmin, xmax, ymin, ymax) {
-        return ymin + ((x - xmin) * ((ymax - ymin) / (xmax - xmin)));
-      }
-
-      return function constructSampledFromIRResult(args) {
-        // See chapter 3, page 110 of the PDF reference.
-        var m = IR[1];
-        var domain = IR[2];
-        var encode = IR[3];
-        var decode = IR[4];
-        var samples = IR[5];
-        var size = IR[6];
-        var n = IR[7];
-        //var mask = IR[8];
-        var range = IR[9];
-
-        if (m != args.length) {
-          error('Incorrect number of arguments: ' + m + ' != ' +
-                args.length);
-        }
-
-        var x = args;
-
-        // Building the cube vertices: its part and sample index
-        // http://rjwagner49.com/Mathematics/Interpolation.pdf
-        var cubeVertices = 1 << m;
-        var cubeN = new Float64Array(cubeVertices);
-        var cubeVertex = new Uint32Array(cubeVertices);
-        var i, j;
-        for (j = 0; j < cubeVertices; j++) {
-          cubeN[j] = 1;
-        }
-
-        var k = n, pos = 1;
-        // Map x_i to y_j for 0 <= i < m using the sampled function.
-        for (i = 0; i < m; ++i) {
-          // x_i' = min(max(x_i, Domain_2i), Domain_2i+1)
-          var domain_2i = domain[i][0];
-          var domain_2i_1 = domain[i][1];
-          var xi = Math.min(Math.max(x[i], domain_2i), domain_2i_1);
-
-          // e_i = Interpolate(x_i', Domain_2i, Domain_2i+1,
-          //                   Encode_2i, Encode_2i+1)
-          var e = interpolate(xi, domain_2i, domain_2i_1,
-                              encode[i][0], encode[i][1]);
-
-          // e_i' = min(max(e_i, 0), Size_i - 1)
-          var size_i = size[i];
-          e = Math.min(Math.max(e, 0), size_i - 1);
-
-          // Adjusting the cube: N and vertex sample index
-          var e0 = e < size_i - 1 ? Math.floor(e) : e - 1; // e1 = e0 + 1;
-          var n0 = e0 + 1 - e; // (e1 - e) / (e1 - e0);
-          var n1 = e - e0; // (e - e0) / (e1 - e0);
-          var offset0 = e0 * k;
-          var offset1 = offset0 + k; // e1 * k
-          for (j = 0; j < cubeVertices; j++) {
-            if (j & pos) {
-              cubeN[j] *= n1;
-              cubeVertex[j] += offset1;
-            } else {
-              cubeN[j] *= n0;
-              cubeVertex[j] += offset0;
-            }
-          }
-
-          k *= size_i;
-          pos <<= 1;
-        }
-
-        var y = new Float64Array(n);
-        for (j = 0; j < n; ++j) {
-          // Sum all cube vertices' samples portions
-          var rj = 0;
-          for (i = 0; i < cubeVertices; i++) {
-            rj += samples[cubeVertex[i] + j] * cubeN[i];
-          }
-
-          // r_j' = Interpolate(r_j, 0, 2^BitsPerSample - 1,
-          //                    Decode_2j, Decode_2j+1)
-          rj = interpolate(rj, 0, 1, decode[j][0], decode[j][1]);
-
-          // y_j = min(max(r_j, range_2j), range_2j+1)
-          y[j] = Math.min(Math.max(rj, range[j][0]), range[j][1]);
-        }
-
-        return y;
-      };
-    },
-
-    constructInterpolated: function PDFFunction_constructInterpolated(str,
-                                                                      dict) {
-      var c0 = dict.get('C0') || [0];
-      var c1 = dict.get('C1') || [1];
-      var n = dict.get('N');
-
-      if (!isArray(c0) || !isArray(c1)) {
-        error('Illegal dictionary for interpolated function');
-      }
-
-      var length = c0.length;
-      var diff = [];
-      for (var i = 0; i < length; ++i) {
-        diff.push(c1[i] - c0[i]);
-      }
-
-      return [CONSTRUCT_INTERPOLATED, c0, diff, n];
-    },
-
-    constructInterpolatedFromIR:
-      function PDFFunction_constructInterpolatedFromIR(IR) {
-      var c0 = IR[1];
-      var diff = IR[2];
-      var n = IR[3];
-
-      var length = diff.length;
-
-      return function constructInterpolatedFromIRResult(args) {
-        var x = n == 1 ? args[0] : Math.pow(args[0], n);
-
-        var out = [];
-        for (var j = 0; j < length; ++j) {
-          out.push(c0[j] + (x * diff[j]));
-        }
-
-        return out;
-
-      };
-    },
-
-    constructStiched: function PDFFunction_constructStiched(fn, dict, xref) {
-      var domain = dict.get('Domain');
-
-      if (!domain) {
-        error('No domain');
-      }
-
-      var inputSize = domain.length / 2;
-      if (inputSize != 1) {
-        error('Bad domain for stiched function');
-      }
-
-      var fnRefs = dict.get('Functions');
-      var fns = [];
-      for (var i = 0, ii = fnRefs.length; i < ii; ++i) {
-        fns.push(PDFFunction.getIR(xref, xref.fetchIfRef(fnRefs[i])));
-      }
-
-      var bounds = dict.get('Bounds');
-      var encode = dict.get('Encode');
-
-      return [CONSTRUCT_STICHED, domain, bounds, encode, fns];
-    },
-
-    constructStichedFromIR: function PDFFunction_constructStichedFromIR(IR) {
-      var domain = IR[1];
-      var bounds = IR[2];
-      var encode = IR[3];
-      var fnsIR = IR[4];
-      var fns = [];
-
-      for (var i = 0, ii = fnsIR.length; i < ii; i++) {
-        fns.push(PDFFunction.fromIR(fnsIR[i]));
-      }
-
-      return function constructStichedFromIRResult(args) {
-        var clip = function constructStichedFromIRClip(v, min, max) {
-          if (v > max) {
-            v = max;
-          } else if (v < min) {
-            v = min;
-          }
-          return v;
-        };
-
-        // clip to domain
-        var v = clip(args[0], domain[0], domain[1]);
-        // calulate which bound the value is in
-        for (var i = 0, ii = bounds.length; i < ii; ++i) {
-          if (v < bounds[i]) {
-            break;
-          }
-        }
-
-        // encode value into domain of function
-        var dmin = domain[0];
-        if (i > 0) {
-          dmin = bounds[i - 1];
-        }
-        var dmax = domain[1];
-        if (i < bounds.length) {
-          dmax = bounds[i];
-        }
-
-        var rmin = encode[2 * i];
-        var rmax = encode[2 * i + 1];
-
-        var v2 = rmin + (v - dmin) * (rmax - rmin) / (dmax - dmin);
-
-        // call the appropriate function
-        return fns[i]([v2]);
-      };
-    },
-
-    constructPostScript: function PDFFunction_constructPostScript(fn, dict,
-                                                                  xref) {
-      var domain = dict.get('Domain');
-      var range = dict.get('Range');
-
-      if (!domain) {
-        error('No domain.');
-      }
-
-      if (!range) {
-        error('No range.');
-      }
-
-      var lexer = new PostScriptLexer(fn);
-      var parser = new PostScriptParser(lexer);
-      var code = parser.parse();
-
-      return [CONSTRUCT_POSTSCRIPT, domain, range, code];
-    },
-
-    constructPostScriptFromIR: function PDFFunction_constructPostScriptFromIR(
-                                          IR) {
-      var domain = IR[1];
-      var range = IR[2];
-      var code = IR[3];
-      var numOutputs = range.length / 2;
-      var evaluator = new PostScriptEvaluator(code);
-      // Cache the values for a big speed up, the cache size is limited though
-      // since the number of possible values can be huge from a PS function.
-      var cache = new FunctionCache();
-      return function constructPostScriptFromIRResult(args) {
-        var initialStack = [];
-        for (var i = 0, ii = (domain.length / 2); i < ii; ++i) {
-          initialStack.push(args[i]);
-        }
-
-        var key = initialStack.join('_');
-        if (cache.has(key)) {
-          return cache.get(key);
-        }
-
-        var stack = evaluator.execute(initialStack);
-        var transformed = [];
-        for (i = numOutputs - 1; i >= 0; --i) {
-          var out = stack.pop();
-          var rangeIndex = 2 * i;
-          if (out < range[rangeIndex]) {
-            out = range[rangeIndex];
-          } else if (out > range[rangeIndex + 1]) {
-            out = range[rangeIndex + 1];
-          }
-          transformed[i] = out;
-        }
-        cache.set(key, transformed);
-        return transformed;
-      };
-    }
-  };
-})();
-
-var FunctionCache = (function FunctionCacheClosure() {
-  // Of 10 PDF's with type4 functions the maxium number of distinct values seen
-  // was 256. This still may need some tweaking in the future though.
-  var MAX_CACHE_SIZE = 1024;
-  function FunctionCache() {
-    this.cache = {};
-    this.total = 0;
-  }
-  FunctionCache.prototype = {
-    has: function FunctionCache_has(key) {
-      return key in this.cache;
-    },
-    get: function FunctionCache_get(key) {
-      return this.cache[key];
-    },
-    set: function FunctionCache_set(key, value) {
-      if (this.total < MAX_CACHE_SIZE) {
-        this.cache[key] = value;
-        this.total++;
-      }
-    }
-  };
-  return FunctionCache;
-})();
-
-var PostScriptStack = (function PostScriptStackClosure() {
-  var MAX_STACK_SIZE = 100;
-  function PostScriptStack(initialStack) {
-    this.stack = initialStack || [];
-  }
-
-  PostScriptStack.prototype = {
-    push: function PostScriptStack_push(value) {
-      if (this.stack.length >= MAX_STACK_SIZE) {
-        error('PostScript function stack overflow.');
-      }
-      this.stack.push(value);
-    },
-    pop: function PostScriptStack_pop() {
-      if (this.stack.length <= 0) {
-        error('PostScript function stack underflow.');
-      }
-      return this.stack.pop();
-    },
-    copy: function PostScriptStack_copy(n) {
-      if (this.stack.length + n >= MAX_STACK_SIZE) {
-        error('PostScript function stack overflow.');
-      }
-      var stack = this.stack;
-      for (var i = stack.length - n, j = n - 1; j >= 0; j--, i++) {
-        stack.push(stack[i]);
-      }
-    },
-    index: function PostScriptStack_index(n) {
-      this.push(this.stack[this.stack.length - n - 1]);
-    },
-    // rotate the last n stack elements p times
-    roll: function PostScriptStack_roll(n, p) {
-      var stack = this.stack;
-      var l = stack.length - n;
-      var r = stack.length - 1, c = l + (p - Math.floor(p / n) * n), i, j, t;
-      for (i = l, j = r; i < j; i++, j--) {
-        t = stack[i]; stack[i] = stack[j]; stack[j] = t;
-      }
-      for (i = l, j = c - 1; i < j; i++, j--) {
-        t = stack[i]; stack[i] = stack[j]; stack[j] = t;
-      }
-      for (i = c, j = r; i < j; i++, j--) {
-        t = stack[i]; stack[i] = stack[j]; stack[j] = t;
-      }
-    }
-  };
-  return PostScriptStack;
-})();
-var PostScriptEvaluator = (function PostScriptEvaluatorClosure() {
-  function PostScriptEvaluator(operators) {
-    this.operators = operators;
-  }
-  PostScriptEvaluator.prototype = {
-    execute: function PostScriptEvaluator_execute(initialStack) {
-      var stack = new PostScriptStack(initialStack);
-      var counter = 0;
-      var operators = this.operators;
-      var length = operators.length;
-      var operator, a, b;
-      while (counter < length) {
-        operator = operators[counter++];
-        if (typeof operator == 'number') {
-          // Operator is really an operand and should be pushed to the stack.
-          stack.push(operator);
-          continue;
-        }
-        switch (operator) {
-          // non standard ps operators
-          case 'jz': // jump if false
-            b = stack.pop();
-            a = stack.pop();
-            if (!a) {
-              counter = b;
-            }
-            break;
-          case 'j': // jump
-            a = stack.pop();
-            counter = a;
-            break;
-
-          // all ps operators in alphabetical order (excluding if/ifelse)
-          case 'abs':
-            a = stack.pop();
-            stack.push(Math.abs(a));
-            break;
-          case 'add':
-            b = stack.pop();
-            a = stack.pop();
-            stack.push(a + b);
-            break;
-          case 'and':
-            b = stack.pop();
-            a = stack.pop();
-            if (isBool(a) && isBool(b)) {
-              stack.push(a && b);
-            } else {
-              stack.push(a & b);
-            }
-            break;
-          case 'atan':
-            a = stack.pop();
-            stack.push(Math.atan(a));
-            break;
-          case 'bitshift':
-            b = stack.pop();
-            a = stack.pop();
-            if (a > 0) {
-              stack.push(a << b);
-            } else {
-              stack.push(a >> b);
-            }
-            break;
-          case 'ceiling':
-            a = stack.pop();
-            stack.push(Math.ceil(a));
-            break;
-          case 'copy':
-            a = stack.pop();
-            stack.copy(a);
-            break;
-          case 'cos':
-            a = stack.pop();
-            stack.push(Math.cos(a));
-            break;
-          case 'cvi':
-            a = stack.pop() | 0;
-            stack.push(a);
-            break;
-          case 'cvr':
-            // noop
-            break;
-          case 'div':
-            b = stack.pop();
-            a = stack.pop();
-            stack.push(a / b);
-            break;
-          case 'dup':
-            stack.copy(1);
-            break;
-          case 'eq':
-            b = stack.pop();
-            a = stack.pop();
-            stack.push(a == b);
-            break;
-          case 'exch':
-            stack.roll(2, 1);
-            break;
-          case 'exp':
-            b = stack.pop();
-            a = stack.pop();
-            stack.push(Math.pow(a, b));
-            break;
-          case 'false':
-            stack.push(false);
-            break;
-          case 'floor':
-            a = stack.pop();
-            stack.push(Math.floor(a));
-            break;
-          case 'ge':
-            b = stack.pop();
-            a = stack.pop();
-            stack.push(a >= b);
-            break;
-          case 'gt':
-            b = stack.pop();
-            a = stack.pop();
-            stack.push(a > b);
-            break;
-          case 'idiv':
-            b = stack.pop();
-            a = stack.pop();
-            stack.push((a / b) | 0);
-            break;
-          case 'index':
-            a = stack.pop();
-            stack.index(a);
-            break;
-          case 'le':
-            b = stack.pop();
-            a = stack.pop();
-            stack.push(a <= b);
-            break;
-          case 'ln':
-            a = stack.pop();
-            stack.push(Math.log(a));
-            break;
-          case 'log':
-            a = stack.pop();
-            stack.push(Math.log(a) / Math.LN10);
-            break;
-          case 'lt':
-            b = stack.pop();
-            a = stack.pop();
-            stack.push(a < b);
-            break;
-          case 'mod':
-            b = stack.pop();
-            a = stack.pop();
-            stack.push(a % b);
-            break;
-          case 'mul':
-            b = stack.pop();
-            a = stack.pop();
-            stack.push(a * b);
-            break;
-          case 'ne':
-            b = stack.pop();
-            a = stack.pop();
-            stack.push(a != b);
-            break;
-          case 'neg':
-            a = stack.pop();
-            stack.push(-a);
-            break;
-          case 'not':
-            a = stack.pop();
-            if (isBool(a)) {
-              stack.push(!a);
-            } else {
-              stack.push(~a);
-            }
-            break;
-          case 'or':
-            b = stack.pop();
-            a = stack.pop();
-            if (isBool(a) && isBool(b)) {
-              stack.push(a || b);
-            } else {
-              stack.push(a | b);
-            }
-            break;
-          case 'pop':
-            stack.pop();
-            break;
-          case 'roll':
-            b = stack.pop();
-            a = stack.pop();
-            stack.roll(a, b);
-            break;
-          case 'round':
-            a = stack.pop();
-            stack.push(Math.round(a));
-            break;
-          case 'sin':
-            a = stack.pop();
-            stack.push(Math.sin(a));
-            break;
-          case 'sqrt':
-            a = stack.pop();
-            stack.push(Math.sqrt(a));
-            break;
-          case 'sub':
-            b = stack.pop();
-            a = stack.pop();
-            stack.push(a - b);
-            break;
-          case 'true':
-            stack.push(true);
-            break;
-          case 'truncate':
-            a = stack.pop();
-            a = a < 0 ? Math.ceil(a) : Math.floor(a);
-            stack.push(a);
-            break;
-          case 'xor':
-            b = stack.pop();
-            a = stack.pop();
-            if (isBool(a) && isBool(b)) {
-              stack.push(a != b);
-            } else {
-              stack.push(a ^ b);
-            }
-            break;
-          default:
-            error('Unknown operator ' + operator);
-            break;
-        }
-      }
-      return stack.stack;
-    }
-  };
-  return PostScriptEvaluator;
-})();
 
 
 var DEFAULT_ICON_SIZE = 22; // px
@@ -2886,24 +1330,30 @@ var Annotation = (function AnnotationClosure() {
 
       // TODO: implement proper support for annotations with line dash patterns.
       var dashArray = borderArray[3];
-      if (data.borderWidth > 0 && dashArray && isArray(dashArray)) {
-        var dashArrayLength = dashArray.length;
-        if (dashArrayLength > 0) {
-          // According to the PDF specification: the elements in a dashArray
-          // shall be numbers that are nonnegative and not all equal to zero.
-          var isInvalid = false;
-          var numPositive = 0;
-          for (var i = 0; i < dashArrayLength; i++) {
-            var validNumber = (+dashArray[i] >= 0);
-            if (!validNumber) {
-              isInvalid = true;
-              break;
-            } else if (dashArray[i] > 0) {
-              numPositive++;
+      if (data.borderWidth > 0 && dashArray) {
+        if (!isArray(dashArray)) {
+          // Ignore the border if dashArray is not actually an array,
+          // this is consistent with the behaviour in Adobe Reader. 
+          data.borderWidth = 0;
+        } else {
+          var dashArrayLength = dashArray.length;
+          if (dashArrayLength > 0) {
+            // According to the PDF specification: the elements in a dashArray
+            // shall be numbers that are nonnegative and not all equal to zero.
+            var isInvalid = false;
+            var numPositive = 0;
+            for (var i = 0; i < dashArrayLength; i++) {
+              var validNumber = (+dashArray[i] >= 0);
+              if (!validNumber) {
+                isInvalid = true;
+                break;
+              } else if (dashArray[i] > 0) {
+                numPositive++;
+              }
             }
-          }
-          if (isInvalid || numPositive === 0) {
-            data.borderWidth = 0;
+            if (isInvalid || numPositive === 0) {
+              data.borderWidth = 0;
+            }
           }
         }
       }
@@ -2994,11 +1444,9 @@ var Annotation = (function AnnotationClosure() {
     },
 
     getOperatorList: function Annotation_getOperatorList(evaluator) {
-      var capability = createPromiseCapability();
 
       if (!this.appearance) {
-        capability.resolve(new OperatorList());
-        return capability.promise;
+        return Promise.resolve(new OperatorList());
       }
 
       var data = this.data;
@@ -3017,18 +1465,18 @@ var Annotation = (function AnnotationClosure() {
       var bbox = appearanceDict.get('BBox') || [0, 0, 1, 1];
       var matrix = appearanceDict.get('Matrix') || [1, 0, 0, 1, 0 ,0];
       var transform = getTransformMatrix(data.rect, bbox, matrix);
+      var self = this;
 
-      resourcesPromise.then(function(resources) {
-        var opList = new OperatorList();
-        opList.addOp(OPS.beginAnnotation, [data.rect, transform, matrix]);
-        evaluator.getOperatorList(this.appearance, resources, opList);
-        opList.addOp(OPS.endAnnotation, []);
-        capability.resolve(opList);
-
-        this.appearance.reset();
-      }.bind(this), capability.reject);
-
-      return capability.promise;
+      return resourcesPromise.then(function(resources) {
+          var opList = new OperatorList();
+          opList.addOp(OPS.beginAnnotation, [data.rect, transform, matrix]);
+          return evaluator.getOperatorList(self.appearance, resources, opList).
+            then(function () {
+              opList.addOp(OPS.endAnnotation, []);
+              self.appearance.reset();
+              return opList;
+            });
+        });
     }
   };
 
@@ -3282,45 +1730,15 @@ var TextWidgetAnnotation = (function TextWidgetAnnotationClosure() {
 
       // Even if there is an appearance stream, ignore it. This is the
       // behaviour used by Adobe Reader.
-
-      var defaultAppearance = data.defaultAppearance;
-      if (!defaultAppearance) {
+      if (!data.defaultAppearance) {
         return Promise.resolve(opList);
       }
 
-      // Include any font resources found in the default appearance
-
-      var stream = new Stream(stringToBytes(defaultAppearance));
-      evaluator.getOperatorList(stream, this.fieldResources, opList);
-      var appearanceFnArray = opList.fnArray;
-      var appearanceArgsArray = opList.argsArray;
-      var fnArray = [];
-
-      // TODO(mack): Add support for stroke color
-      data.rgb = [0, 0, 0];
-      // TODO THIS DOESN'T MAKE ANY SENSE SINCE THE fnArray IS EMPTY!
-      for (var i = 0, n = fnArray.length; i < n; ++i) {
-        var fnId = appearanceFnArray[i];
-        var args = appearanceArgsArray[i];
-
-        if (fnId === OPS.setFont) {
-          data.fontRefName = args[0];
-          var size = args[1];
-          if (size < 0) {
-            data.fontDirection = -1;
-            data.fontSize = -size;
-          } else {
-            data.fontDirection = 1;
-            data.fontSize = size;
-          }
-        } else if (fnId === OPS.setFillRGBColor) {
-          data.rgb = args;
-        } else if (fnId === OPS.setFillGray) {
-          var rgbValue = args[0] * 255;
-          data.rgb = [rgbValue, rgbValue, rgbValue];
-        }
-      }
-      return Promise.resolve(opList);
+      var stream = new Stream(stringToBytes(data.defaultAppearance));
+      return evaluator.getOperatorList(stream, this.fieldResources, opList).
+        then(function () {
+          return opList;
+        });
     }
   });
 
@@ -3744,6 +2162,10 @@ var ChunkedStream = (function ChunkedStreamClosure() {
 
     get length() {
       return this.end - this.start;
+    },
+
+    get isEmpty() {
+      return this.length === 0;
     },
 
     getByte: function ChunkedStream_getByte() {
@@ -4472,13 +2894,6 @@ var Page = (function PageClosure() {
 
     getOperatorList: function Page_getOperatorList(handler, intent) {
       var self = this;
-      var capability = createPromiseCapability();
-
-      function reject(e) {
-        capability.reject(e);
-      }
-
-      var pageListCapability = createPromiseCapability();
 
       var pdfManager = this.pdfManager;
       var contentStreamPromise = pdfManager.ensure(this, 'getContentStream',
@@ -4500,9 +2915,8 @@ var Page = (function PageClosure() {
                                                   this.idCounters,
                                                   this.fontCache);
 
-      var dataPromises = Promise.all([contentStreamPromise, resourcesPromise],
-                                     reject);
-      dataPromises.then(function(data) {
+      var dataPromises = Promise.all([contentStreamPromise, resourcesPromise]);
+      var pageListPromise = dataPromises.then(function(data) {
         var contentStream = data[0];
         var opList = new OperatorList(intent, handler, self.pageIndex);
 
@@ -4511,31 +2925,30 @@ var Page = (function PageClosure() {
           pageIndex: self.pageIndex,
           intent: intent
         });
-        partialEvaluator.getOperatorList(contentStream, self.resources, opList);
-        pageListCapability.resolve(opList);
+        return partialEvaluator.getOperatorList(contentStream, self.resources,
+          opList).then(function () {
+            return opList;
+          });
       });
 
       var annotationsPromise = pdfManager.ensure(this, 'annotations');
-      Promise.all([pageListCapability.promise, annotationsPromise]).then(
+      return Promise.all([pageListPromise, annotationsPromise]).then(
           function(datas) {
         var pageOpList = datas[0];
         var annotations = datas[1];
 
         if (annotations.length === 0) {
           pageOpList.flush(true);
-          capability.resolve(pageOpList);
-          return;
+          return pageOpList;
         }
 
         var annotationsReadyPromise = Annotation.appendToOperatorList(
           annotations, pageOpList, pdfManager, partialEvaluator, intent);
-        annotationsReadyPromise.then(function () {
+        return annotationsReadyPromise.then(function () {
           pageOpList.flush(true);
-          capability.resolve(pageOpList);
-        }, reject);
-      }, reject);
-
-      return capability.promise;
+          return pageOpList;
+        });
+      });
     },
 
     extractTextContent: function Page_extractTextContent() {
@@ -5248,7 +3661,7 @@ var Catalog = (function CatalogClosure() {
       var xref = this.xref;
       var dests = {}, nameTreeRef, nameDictionaryRef;
       var obj = this.catDict.get('Names');
-      if (obj) {
+      if (obj && obj.has('Dests')) {
         nameTreeRef = obj.getRaw('Dests');
       } else if (this.catDict.has('Dests')) {
         nameDictionaryRef = this.catDict.get('Dests');
@@ -5278,7 +3691,7 @@ var Catalog = (function CatalogClosure() {
     },
     get attachments() {
       var xref = this.xref;
-      var attachments, nameTreeRef;
+      var attachments = null, nameTreeRef;
       var obj = this.catDict.get('Names');
       if (obj) {
         nameTreeRef = obj.getRaw('EmbeddedFiles');
@@ -5336,11 +3749,17 @@ var Catalog = (function CatalogClosure() {
     },
 
     cleanup: function Catalog_cleanup() {
-      this.fontCache.forEach(function (font) {
-        delete font.sent;
-        delete font.translated;
+      var promises = [];
+      this.fontCache.forEach(function (promise) {
+        promises.push(promise);
       });
-      this.fontCache.clear();
+      return Promise.all(promises).then(function (translatedFonts) {
+        for (var i = 0, ii = translatedFonts.length; i < ii; i++) {
+          var font = translatedFonts[i].dict;
+          delete font.translated;
+        }
+        this.fontCache.clear();
+      }.bind(this));
     },
 
     getPage: function Catalog_getPage(pageIndex) {
@@ -13430,6 +11849,1644 @@ var CIDToUnicodeMaps = {
 
 
 
+var PDFFunction = (function PDFFunctionClosure() {
+  var CONSTRUCT_SAMPLED = 0;
+  var CONSTRUCT_INTERPOLATED = 2;
+  var CONSTRUCT_STICHED = 3;
+  var CONSTRUCT_POSTSCRIPT = 4;
+
+  return {
+    getSampleArray: function PDFFunction_getSampleArray(size, outputSize, bps,
+                                                       str) {
+      var i, ii;
+      var length = 1;
+      for (i = 0, ii = size.length; i < ii; i++) {
+        length *= size[i];
+      }
+      length *= outputSize;
+
+      var array = [];
+      var codeSize = 0;
+      var codeBuf = 0;
+      // 32 is a valid bps so shifting won't work
+      var sampleMul = 1.0 / (Math.pow(2.0, bps) - 1);
+
+      var strBytes = str.getBytes((length * bps + 7) / 8);
+      var strIdx = 0;
+      for (i = 0; i < length; i++) {
+        while (codeSize < bps) {
+          codeBuf <<= 8;
+          codeBuf |= strBytes[strIdx++];
+          codeSize += 8;
+        }
+        codeSize -= bps;
+        array.push((codeBuf >> codeSize) * sampleMul);
+        codeBuf &= (1 << codeSize) - 1;
+      }
+      return array;
+    },
+
+    getIR: function PDFFunction_getIR(xref, fn) {
+      var dict = fn.dict;
+      if (!dict) {
+        dict = fn;
+      }
+
+      var types = [this.constructSampled,
+                   null,
+                   this.constructInterpolated,
+                   this.constructStiched,
+                   this.constructPostScript];
+
+      var typeNum = dict.get('FunctionType');
+      var typeFn = types[typeNum];
+      if (!typeFn) {
+        error('Unknown type of function');
+      }
+
+      return typeFn.call(this, fn, dict, xref);
+    },
+
+    fromIR: function PDFFunction_fromIR(IR) {
+      var type = IR[0];
+      switch (type) {
+        case CONSTRUCT_SAMPLED:
+          return this.constructSampledFromIR(IR);
+        case CONSTRUCT_INTERPOLATED:
+          return this.constructInterpolatedFromIR(IR);
+        case CONSTRUCT_STICHED:
+          return this.constructStichedFromIR(IR);
+        //case CONSTRUCT_POSTSCRIPT:
+        default:
+          return this.constructPostScriptFromIR(IR);
+      }
+    },
+
+    parse: function PDFFunction_parse(xref, fn) {
+      var IR = this.getIR(xref, fn);
+      return this.fromIR(IR);
+    },
+
+    constructSampled: function PDFFunction_constructSampled(str, dict) {
+      function toMultiArray(arr) {
+        var inputLength = arr.length;
+        var out = [];
+        var index = 0;
+        for (var i = 0; i < inputLength; i += 2) {
+          out[index] = [arr[i], arr[i + 1]];
+          ++index;
+        }
+        return out;
+      }
+      var domain = dict.get('Domain');
+      var range = dict.get('Range');
+
+      if (!domain || !range) {
+        error('No domain or range');
+      }
+
+      var inputSize = domain.length / 2;
+      var outputSize = range.length / 2;
+
+      domain = toMultiArray(domain);
+      range = toMultiArray(range);
+
+      var size = dict.get('Size');
+      var bps = dict.get('BitsPerSample');
+      var order = dict.get('Order') || 1;
+      if (order !== 1) {
+        // No description how cubic spline interpolation works in PDF32000:2008
+        // As in poppler, ignoring order, linear interpolation may work as good
+        info('No support for cubic spline interpolation: ' + order);
+      }
+
+      var encode = dict.get('Encode');
+      if (!encode) {
+        encode = [];
+        for (var i = 0; i < inputSize; ++i) {
+          encode.push(0);
+          encode.push(size[i] - 1);
+        }
+      }
+      encode = toMultiArray(encode);
+
+      var decode = dict.get('Decode');
+      if (!decode) {
+        decode = range;
+      } else {
+        decode = toMultiArray(decode);
+      }
+
+      var samples = this.getSampleArray(size, outputSize, bps, str);
+
+      return [
+        CONSTRUCT_SAMPLED, inputSize, domain, encode, decode, samples, size,
+        outputSize, Math.pow(2, bps) - 1, range
+      ];
+    },
+
+    constructSampledFromIR: function PDFFunction_constructSampledFromIR(IR) {
+      // See chapter 3, page 109 of the PDF reference
+      function interpolate(x, xmin, xmax, ymin, ymax) {
+        return ymin + ((x - xmin) * ((ymax - ymin) / (xmax - xmin)));
+      }
+
+      return function constructSampledFromIRResult(args) {
+        // See chapter 3, page 110 of the PDF reference.
+        var m = IR[1];
+        var domain = IR[2];
+        var encode = IR[3];
+        var decode = IR[4];
+        var samples = IR[5];
+        var size = IR[6];
+        var n = IR[7];
+        //var mask = IR[8];
+        var range = IR[9];
+
+        if (m != args.length) {
+          error('Incorrect number of arguments: ' + m + ' != ' +
+                args.length);
+        }
+
+        var x = args;
+
+        // Building the cube vertices: its part and sample index
+        // http://rjwagner49.com/Mathematics/Interpolation.pdf
+        var cubeVertices = 1 << m;
+        var cubeN = new Float64Array(cubeVertices);
+        var cubeVertex = new Uint32Array(cubeVertices);
+        var i, j;
+        for (j = 0; j < cubeVertices; j++) {
+          cubeN[j] = 1;
+        }
+
+        var k = n, pos = 1;
+        // Map x_i to y_j for 0 <= i < m using the sampled function.
+        for (i = 0; i < m; ++i) {
+          // x_i' = min(max(x_i, Domain_2i), Domain_2i+1)
+          var domain_2i = domain[i][0];
+          var domain_2i_1 = domain[i][1];
+          var xi = Math.min(Math.max(x[i], domain_2i), domain_2i_1);
+
+          // e_i = Interpolate(x_i', Domain_2i, Domain_2i+1,
+          //                   Encode_2i, Encode_2i+1)
+          var e = interpolate(xi, domain_2i, domain_2i_1,
+                              encode[i][0], encode[i][1]);
+
+          // e_i' = min(max(e_i, 0), Size_i - 1)
+          var size_i = size[i];
+          e = Math.min(Math.max(e, 0), size_i - 1);
+
+          // Adjusting the cube: N and vertex sample index
+          var e0 = e < size_i - 1 ? Math.floor(e) : e - 1; // e1 = e0 + 1;
+          var n0 = e0 + 1 - e; // (e1 - e) / (e1 - e0);
+          var n1 = e - e0; // (e - e0) / (e1 - e0);
+          var offset0 = e0 * k;
+          var offset1 = offset0 + k; // e1 * k
+          for (j = 0; j < cubeVertices; j++) {
+            if (j & pos) {
+              cubeN[j] *= n1;
+              cubeVertex[j] += offset1;
+            } else {
+              cubeN[j] *= n0;
+              cubeVertex[j] += offset0;
+            }
+          }
+
+          k *= size_i;
+          pos <<= 1;
+        }
+
+        var y = new Float64Array(n);
+        for (j = 0; j < n; ++j) {
+          // Sum all cube vertices' samples portions
+          var rj = 0;
+          for (i = 0; i < cubeVertices; i++) {
+            rj += samples[cubeVertex[i] + j] * cubeN[i];
+          }
+
+          // r_j' = Interpolate(r_j, 0, 2^BitsPerSample - 1,
+          //                    Decode_2j, Decode_2j+1)
+          rj = interpolate(rj, 0, 1, decode[j][0], decode[j][1]);
+
+          // y_j = min(max(r_j, range_2j), range_2j+1)
+          y[j] = Math.min(Math.max(rj, range[j][0]), range[j][1]);
+        }
+
+        return y;
+      };
+    },
+
+    constructInterpolated: function PDFFunction_constructInterpolated(str,
+                                                                      dict) {
+      var c0 = dict.get('C0') || [0];
+      var c1 = dict.get('C1') || [1];
+      var n = dict.get('N');
+
+      if (!isArray(c0) || !isArray(c1)) {
+        error('Illegal dictionary for interpolated function');
+      }
+
+      var length = c0.length;
+      var diff = [];
+      for (var i = 0; i < length; ++i) {
+        diff.push(c1[i] - c0[i]);
+      }
+
+      return [CONSTRUCT_INTERPOLATED, c0, diff, n];
+    },
+
+    constructInterpolatedFromIR:
+      function PDFFunction_constructInterpolatedFromIR(IR) {
+      var c0 = IR[1];
+      var diff = IR[2];
+      var n = IR[3];
+
+      var length = diff.length;
+
+      return function constructInterpolatedFromIRResult(args) {
+        var x = n == 1 ? args[0] : Math.pow(args[0], n);
+
+        var out = [];
+        for (var j = 0; j < length; ++j) {
+          out.push(c0[j] + (x * diff[j]));
+        }
+
+        return out;
+
+      };
+    },
+
+    constructStiched: function PDFFunction_constructStiched(fn, dict, xref) {
+      var domain = dict.get('Domain');
+
+      if (!domain) {
+        error('No domain');
+      }
+
+      var inputSize = domain.length / 2;
+      if (inputSize != 1) {
+        error('Bad domain for stiched function');
+      }
+
+      var fnRefs = dict.get('Functions');
+      var fns = [];
+      for (var i = 0, ii = fnRefs.length; i < ii; ++i) {
+        fns.push(PDFFunction.getIR(xref, xref.fetchIfRef(fnRefs[i])));
+      }
+
+      var bounds = dict.get('Bounds');
+      var encode = dict.get('Encode');
+
+      return [CONSTRUCT_STICHED, domain, bounds, encode, fns];
+    },
+
+    constructStichedFromIR: function PDFFunction_constructStichedFromIR(IR) {
+      var domain = IR[1];
+      var bounds = IR[2];
+      var encode = IR[3];
+      var fnsIR = IR[4];
+      var fns = [];
+
+      for (var i = 0, ii = fnsIR.length; i < ii; i++) {
+        fns.push(PDFFunction.fromIR(fnsIR[i]));
+      }
+
+      return function constructStichedFromIRResult(args) {
+        var clip = function constructStichedFromIRClip(v, min, max) {
+          if (v > max) {
+            v = max;
+          } else if (v < min) {
+            v = min;
+          }
+          return v;
+        };
+
+        // clip to domain
+        var v = clip(args[0], domain[0], domain[1]);
+        // calulate which bound the value is in
+        for (var i = 0, ii = bounds.length; i < ii; ++i) {
+          if (v < bounds[i]) {
+            break;
+          }
+        }
+
+        // encode value into domain of function
+        var dmin = domain[0];
+        if (i > 0) {
+          dmin = bounds[i - 1];
+        }
+        var dmax = domain[1];
+        if (i < bounds.length) {
+          dmax = bounds[i];
+        }
+
+        var rmin = encode[2 * i];
+        var rmax = encode[2 * i + 1];
+
+        var v2 = rmin + (v - dmin) * (rmax - rmin) / (dmax - dmin);
+
+        // call the appropriate function
+        return fns[i]([v2]);
+      };
+    },
+
+    constructPostScript: function PDFFunction_constructPostScript(fn, dict,
+                                                                  xref) {
+      var domain = dict.get('Domain');
+      var range = dict.get('Range');
+
+      if (!domain) {
+        error('No domain.');
+      }
+
+      if (!range) {
+        error('No range.');
+      }
+
+      var lexer = new PostScriptLexer(fn);
+      var parser = new PostScriptParser(lexer);
+      var code = parser.parse();
+
+      return [CONSTRUCT_POSTSCRIPT, domain, range, code];
+    },
+
+    constructPostScriptFromIR: function PDFFunction_constructPostScriptFromIR(
+                                          IR) {
+      var domain = IR[1];
+      var range = IR[2];
+      var code = IR[3];
+      var numOutputs = range.length >> 1;
+      var numInputs = domain.length >> 1;
+      var evaluator = new PostScriptEvaluator(code);
+      // Cache the values for a big speed up, the cache size is limited though
+      // since the number of possible values can be huge from a PS function.
+      var cache = {};
+      // The MAX_CACHE_SIZE is set to ~4x the maximum number of distinct values
+      // seen in our tests.
+      var MAX_CACHE_SIZE = 2048 * 4;
+      var cache_available = MAX_CACHE_SIZE;
+      return function constructPostScriptFromIRResult(args) {
+        var i, value;
+        var key = '';
+        var input = new Array(numInputs);
+        for (i = 0; i < numInputs; i++) {
+          value = args[i];
+          input[i] = value;
+          key += value + '_';
+        }
+
+        var cachedValue = cache[key];
+        if (cachedValue !== undefined) {
+          return cachedValue;
+        }
+
+        var output = new Array(numOutputs);
+        var stack = evaluator.execute(input);
+        var stackIndex = stack.length - numOutputs;
+        for (i = 0; i < numOutputs; i++) {
+          value = stack[stackIndex + i];
+          var bound = range[i * 2];
+          if (value < bound) {
+            value = bound;
+          } else {
+            bound = range[i * 2 +1];
+            if (value > bound) {
+              value = bound;
+            }
+          }
+          output[i] = value;
+        }
+        if (cache_available > 0) {
+          cache_available--;
+          cache[key] = output;
+        }
+        return output;
+      };
+    }
+  };
+})();
+
+function isPDFFunction(v) {
+  var fnDict;
+  if (typeof v != 'object') {
+    return false;
+  } else if (isDict(v)) {
+    fnDict = v;
+  } else if (isStream(v)) {
+    fnDict = v.dict;
+  } else {
+    return false;
+  }
+  return fnDict.has('FunctionType');
+}
+
+var PostScriptStack = (function PostScriptStackClosure() {
+  var MAX_STACK_SIZE = 100;
+  function PostScriptStack(initialStack) {
+    this.stack = initialStack || [];
+  }
+
+  PostScriptStack.prototype = {
+    push: function PostScriptStack_push(value) {
+      if (this.stack.length >= MAX_STACK_SIZE) {
+        error('PostScript function stack overflow.');
+      }
+      this.stack.push(value);
+    },
+    pop: function PostScriptStack_pop() {
+      if (this.stack.length <= 0) {
+        error('PostScript function stack underflow.');
+      }
+      return this.stack.pop();
+    },
+    copy: function PostScriptStack_copy(n) {
+      if (this.stack.length + n >= MAX_STACK_SIZE) {
+        error('PostScript function stack overflow.');
+      }
+      var stack = this.stack;
+      for (var i = stack.length - n, j = n - 1; j >= 0; j--, i++) {
+        stack.push(stack[i]);
+      }
+    },
+    index: function PostScriptStack_index(n) {
+      this.push(this.stack[this.stack.length - n - 1]);
+    },
+    // rotate the last n stack elements p times
+    roll: function PostScriptStack_roll(n, p) {
+      var stack = this.stack;
+      var l = stack.length - n;
+      var r = stack.length - 1, c = l + (p - Math.floor(p / n) * n), i, j, t;
+      for (i = l, j = r; i < j; i++, j--) {
+        t = stack[i]; stack[i] = stack[j]; stack[j] = t;
+      }
+      for (i = l, j = c - 1; i < j; i++, j--) {
+        t = stack[i]; stack[i] = stack[j]; stack[j] = t;
+      }
+      for (i = c, j = r; i < j; i++, j--) {
+        t = stack[i]; stack[i] = stack[j]; stack[j] = t;
+      }
+    }
+  };
+  return PostScriptStack;
+})();
+var PostScriptEvaluator = (function PostScriptEvaluatorClosure() {
+  function PostScriptEvaluator(operators) {
+    this.operators = operators;
+  }
+  PostScriptEvaluator.prototype = {
+    execute: function PostScriptEvaluator_execute(initialStack) {
+      var stack = new PostScriptStack(initialStack);
+      var counter = 0;
+      var operators = this.operators;
+      var length = operators.length;
+      var operator, a, b;
+      while (counter < length) {
+        operator = operators[counter++];
+        if (typeof operator == 'number') {
+          // Operator is really an operand and should be pushed to the stack.
+          stack.push(operator);
+          continue;
+        }
+        switch (operator) {
+          // non standard ps operators
+          case 'jz': // jump if false
+            b = stack.pop();
+            a = stack.pop();
+            if (!a) {
+              counter = b;
+            }
+            break;
+          case 'j': // jump
+            a = stack.pop();
+            counter = a;
+            break;
+
+          // all ps operators in alphabetical order (excluding if/ifelse)
+          case 'abs':
+            a = stack.pop();
+            stack.push(Math.abs(a));
+            break;
+          case 'add':
+            b = stack.pop();
+            a = stack.pop();
+            stack.push(a + b);
+            break;
+          case 'and':
+            b = stack.pop();
+            a = stack.pop();
+            if (isBool(a) && isBool(b)) {
+              stack.push(a && b);
+            } else {
+              stack.push(a & b);
+            }
+            break;
+          case 'atan':
+            a = stack.pop();
+            stack.push(Math.atan(a));
+            break;
+          case 'bitshift':
+            b = stack.pop();
+            a = stack.pop();
+            if (a > 0) {
+              stack.push(a << b);
+            } else {
+              stack.push(a >> b);
+            }
+            break;
+          case 'ceiling':
+            a = stack.pop();
+            stack.push(Math.ceil(a));
+            break;
+          case 'copy':
+            a = stack.pop();
+            stack.copy(a);
+            break;
+          case 'cos':
+            a = stack.pop();
+            stack.push(Math.cos(a));
+            break;
+          case 'cvi':
+            a = stack.pop() | 0;
+            stack.push(a);
+            break;
+          case 'cvr':
+            // noop
+            break;
+          case 'div':
+            b = stack.pop();
+            a = stack.pop();
+            stack.push(a / b);
+            break;
+          case 'dup':
+            stack.copy(1);
+            break;
+          case 'eq':
+            b = stack.pop();
+            a = stack.pop();
+            stack.push(a == b);
+            break;
+          case 'exch':
+            stack.roll(2, 1);
+            break;
+          case 'exp':
+            b = stack.pop();
+            a = stack.pop();
+            stack.push(Math.pow(a, b));
+            break;
+          case 'false':
+            stack.push(false);
+            break;
+          case 'floor':
+            a = stack.pop();
+            stack.push(Math.floor(a));
+            break;
+          case 'ge':
+            b = stack.pop();
+            a = stack.pop();
+            stack.push(a >= b);
+            break;
+          case 'gt':
+            b = stack.pop();
+            a = stack.pop();
+            stack.push(a > b);
+            break;
+          case 'idiv':
+            b = stack.pop();
+            a = stack.pop();
+            stack.push((a / b) | 0);
+            break;
+          case 'index':
+            a = stack.pop();
+            stack.index(a);
+            break;
+          case 'le':
+            b = stack.pop();
+            a = stack.pop();
+            stack.push(a <= b);
+            break;
+          case 'ln':
+            a = stack.pop();
+            stack.push(Math.log(a));
+            break;
+          case 'log':
+            a = stack.pop();
+            stack.push(Math.log(a) / Math.LN10);
+            break;
+          case 'lt':
+            b = stack.pop();
+            a = stack.pop();
+            stack.push(a < b);
+            break;
+          case 'mod':
+            b = stack.pop();
+            a = stack.pop();
+            stack.push(a % b);
+            break;
+          case 'mul':
+            b = stack.pop();
+            a = stack.pop();
+            stack.push(a * b);
+            break;
+          case 'ne':
+            b = stack.pop();
+            a = stack.pop();
+            stack.push(a != b);
+            break;
+          case 'neg':
+            a = stack.pop();
+            stack.push(-a);
+            break;
+          case 'not':
+            a = stack.pop();
+            if (isBool(a)) {
+              stack.push(!a);
+            } else {
+              stack.push(~a);
+            }
+            break;
+          case 'or':
+            b = stack.pop();
+            a = stack.pop();
+            if (isBool(a) && isBool(b)) {
+              stack.push(a || b);
+            } else {
+              stack.push(a | b);
+            }
+            break;
+          case 'pop':
+            stack.pop();
+            break;
+          case 'roll':
+            b = stack.pop();
+            a = stack.pop();
+            stack.roll(a, b);
+            break;
+          case 'round':
+            a = stack.pop();
+            stack.push(Math.round(a));
+            break;
+          case 'sin':
+            a = stack.pop();
+            stack.push(Math.sin(a));
+            break;
+          case 'sqrt':
+            a = stack.pop();
+            stack.push(Math.sqrt(a));
+            break;
+          case 'sub':
+            b = stack.pop();
+            a = stack.pop();
+            stack.push(a - b);
+            break;
+          case 'true':
+            stack.push(true);
+            break;
+          case 'truncate':
+            a = stack.pop();
+            a = a < 0 ? Math.ceil(a) : Math.floor(a);
+            stack.push(a);
+            break;
+          case 'xor':
+            b = stack.pop();
+            a = stack.pop();
+            if (isBool(a) && isBool(b)) {
+              stack.push(a != b);
+            } else {
+              stack.push(a ^ b);
+            }
+            break;
+          default:
+            error('Unknown operator ' + operator);
+            break;
+        }
+      }
+      return stack.stack;
+    }
+  };
+  return PostScriptEvaluator;
+})();
+
+
+var ColorSpace = (function ColorSpaceClosure() {
+  // Constructor should define this.numComps, this.defaultColor, this.name
+  function ColorSpace() {
+    error('should not call ColorSpace constructor');
+  }
+
+  ColorSpace.prototype = {
+    /**
+     * Converts the color value to the RGB color. The color components are
+     * located in the src array starting from the srcOffset. Returns the array
+     * of the rgb components, each value ranging from [0,255].
+     */
+    getRgb: function ColorSpace_getRgb(src, srcOffset) {
+      var rgb = new Uint8Array(3);
+      this.getRgbItem(src, srcOffset, rgb, 0);
+      return rgb;
+    },
+    /**
+     * Converts the color value to the RGB color, similar to the getRgb method.
+     * The result placed into the dest array starting from the destOffset.
+     */
+    getRgbItem: function ColorSpace_getRgbItem(src, srcOffset,
+                                               dest, destOffset) {
+      error('Should not call ColorSpace.getRgbItem');
+    },
+    /**
+     * Converts the specified number of the color values to the RGB colors.
+     * The colors are located in the src array starting from the srcOffset.
+     * The result is placed into the dest array starting from the destOffset.
+     * The src array items shall be in [0,2^bits) range, the dest array items
+     * will be in [0,255] range. alpha01 indicates how many alpha components
+     * there are in the dest array; it will be either 0 (RGB array) or 1 (RGBA
+     * array).
+     */
+    getRgbBuffer: function ColorSpace_getRgbBuffer(src, srcOffset, count,
+                                                   dest, destOffset, bits,
+                                                   alpha01) {
+      error('Should not call ColorSpace.getRgbBuffer');
+    },
+    /**
+     * Determines the number of bytes required to store the result of the
+     * conversion done by the getRgbBuffer method. As in getRgbBuffer,
+     * |alpha01| is either 0 (RGB output) or 1 (RGBA output).
+     */
+    getOutputLength: function ColorSpace_getOutputLength(inputLength,
+                                                         alpha01) {
+      error('Should not call ColorSpace.getOutputLength');
+    },
+    /**
+     * Returns true if source data will be equal the result/output data.
+     */
+    isPassthrough: function ColorSpace_isPassthrough(bits) {
+      return false;
+    },
+    /**
+     * Fills in the RGB colors in the destination buffer.  alpha01 indicates
+     * how many alpha components there are in the dest array; it will be either
+     * 0 (RGB array) or 1 (RGBA array).
+     */
+    fillRgb: function ColorSpace_fillRgb(dest, originalWidth,
+                                         originalHeight, width, height,
+                                         actualHeight, bpc, comps, alpha01) {
+      var count = originalWidth * originalHeight;
+      var rgbBuf = null;
+      var numComponentColors = 1 << bpc;
+      var needsResizing = originalHeight != height || originalWidth != width;
+      var i, ii;
+
+      if (this.isPassthrough(bpc)) {
+        rgbBuf = comps;
+      } else if (this.numComps === 1 && count > numComponentColors &&
+          this.name !== 'DeviceGray' && this.name !== 'DeviceRGB') {
+        // Optimization: create a color map when there is just one component and
+        // we are converting more colors than the size of the color map. We
+        // don't build the map if the colorspace is gray or rgb since those
+        // methods are faster than building a map. This mainly offers big speed
+        // ups for indexed and alternate colorspaces.
+        //
+        // TODO it may be worth while to cache the color map. While running
+        // testing I never hit a cache so I will leave that out for now (perhaps
+        // we are reparsing colorspaces too much?).
+        var allColors = bpc <= 8 ? new Uint8Array(numComponentColors) :
+                                   new Uint16Array(numComponentColors);
+        var key;
+        for (i = 0; i < numComponentColors; i++) {
+          allColors[i] = i;
+        }
+        var colorMap = new Uint8Array(numComponentColors * 3);
+        this.getRgbBuffer(allColors, 0, numComponentColors, colorMap, 0, bpc,
+                          /* alpha01 = */ 0);
+
+        var destPos, rgbPos;
+        if (!needsResizing) {
+          // Fill in the RGB values directly into |dest|.
+          destPos = 0;
+          for (i = 0; i < count; ++i) {
+            key = comps[i] * 3;
+            dest[destPos++] = colorMap[key];
+            dest[destPos++] = colorMap[key + 1];
+            dest[destPos++] = colorMap[key + 2];
+            destPos += alpha01;
+          }
+        } else {
+          rgbBuf = new Uint8Array(count * 3);
+          rgbPos = 0;
+          for (i = 0; i < count; ++i) {
+            key = comps[i] * 3;
+            rgbBuf[rgbPos++] = colorMap[key];
+            rgbBuf[rgbPos++] = colorMap[key + 1];
+            rgbBuf[rgbPos++] = colorMap[key + 2];
+          }
+        }
+      } else {
+        if (!needsResizing) {
+          // Fill in the RGB values directly into |dest|.
+          this.getRgbBuffer(comps, 0, width * actualHeight, dest, 0, bpc,
+                            alpha01);
+        } else {
+          rgbBuf = new Uint8Array(count * 3);
+          this.getRgbBuffer(comps, 0, count, rgbBuf, 0, bpc,
+                            /* alpha01 = */ 0);
+        }
+      }
+
+      if (rgbBuf) {
+        if (needsResizing) {
+          PDFImage.resize(rgbBuf, bpc, 3, originalWidth, originalHeight, width,
+                          height, dest, alpha01);
+        } else {
+          rgbPos = 0;
+          destPos = 0;
+          for (i = 0, ii = width * actualHeight; i < ii; i++) {
+            dest[destPos++] = rgbBuf[rgbPos++];
+            dest[destPos++] = rgbBuf[rgbPos++];
+            dest[destPos++] = rgbBuf[rgbPos++];
+            destPos += alpha01;
+          }
+        }
+      }
+    },
+    /**
+     * True if the colorspace has components in the default range of [0, 1].
+     * This should be true for all colorspaces except for lab color spaces
+     * which are [0,100], [-128, 127], [-128, 127].
+     */
+    usesZeroToOneRange: true
+  };
+
+  ColorSpace.parse = function ColorSpace_parse(cs, xref, res) {
+    var IR = ColorSpace.parseToIR(cs, xref, res);
+    if (IR instanceof AlternateCS) {
+      return IR;
+    }
+    return ColorSpace.fromIR(IR);
+  };
+
+  ColorSpace.fromIR = function ColorSpace_fromIR(IR) {
+    var name = isArray(IR) ? IR[0] : IR;
+    var whitePoint, blackPoint;
+
+    switch (name) {
+      case 'DeviceGrayCS':
+        return this.singletons.gray;
+      case 'DeviceRgbCS':
+        return this.singletons.rgb;
+      case 'DeviceCmykCS':
+        return this.singletons.cmyk;
+      case 'CalGrayCS':
+        whitePoint = IR[1].WhitePoint;
+        blackPoint = IR[1].BlackPoint;
+        var gamma = IR[1].Gamma;
+        return new CalGrayCS(whitePoint, blackPoint, gamma);
+      case 'PatternCS':
+        var basePatternCS = IR[1];
+        if (basePatternCS) {
+          basePatternCS = ColorSpace.fromIR(basePatternCS);
+        }
+        return new PatternCS(basePatternCS);
+      case 'IndexedCS':
+        var baseIndexedCS = IR[1];
+        var hiVal = IR[2];
+        var lookup = IR[3];
+        return new IndexedCS(ColorSpace.fromIR(baseIndexedCS), hiVal, lookup);
+      case 'AlternateCS':
+        var numComps = IR[1];
+        var alt = IR[2];
+        var tintFnIR = IR[3];
+
+        return new AlternateCS(numComps, ColorSpace.fromIR(alt),
+                                PDFFunction.fromIR(tintFnIR));
+      case 'LabCS':
+        whitePoint = IR[1].WhitePoint;
+        blackPoint = IR[1].BlackPoint;
+        var range = IR[1].Range;
+        return new LabCS(whitePoint, blackPoint, range);
+      default:
+        error('Unkown name ' + name);
+    }
+    return null;
+  };
+
+  ColorSpace.parseToIR = function ColorSpace_parseToIR(cs, xref, res) {
+    if (isName(cs)) {
+      var colorSpaces = res.get('ColorSpace');
+      if (isDict(colorSpaces)) {
+        var refcs = colorSpaces.get(cs.name);
+        if (refcs) {
+          cs = refcs;
+        }
+      }
+    }
+
+    cs = xref.fetchIfRef(cs);
+    var mode;
+
+    if (isName(cs)) {
+      mode = cs.name;
+      this.mode = mode;
+
+      switch (mode) {
+        case 'DeviceGray':
+        case 'G':
+          return 'DeviceGrayCS';
+        case 'DeviceRGB':
+        case 'RGB':
+          return 'DeviceRgbCS';
+        case 'DeviceCMYK':
+        case 'CMYK':
+          return 'DeviceCmykCS';
+        case 'Pattern':
+          return ['PatternCS', null];
+        default:
+          error('unrecognized colorspace ' + mode);
+      }
+    } else if (isArray(cs)) {
+      mode = cs[0].name;
+      this.mode = mode;
+      var numComps, params;
+
+      switch (mode) {
+        case 'DeviceGray':
+        case 'G':
+          return 'DeviceGrayCS';
+        case 'DeviceRGB':
+        case 'RGB':
+          return 'DeviceRgbCS';
+        case 'DeviceCMYK':
+        case 'CMYK':
+          return 'DeviceCmykCS';
+        case 'CalGray':
+          params = cs[1].getAll();
+          return ['CalGrayCS', params];
+        case 'CalRGB':
+          return 'DeviceRgbCS';
+        case 'ICCBased':
+          var stream = xref.fetchIfRef(cs[1]);
+          var dict = stream.dict;
+          numComps = dict.get('N');
+          if (numComps == 1) {
+            return 'DeviceGrayCS';
+          } else if (numComps == 3) {
+            return 'DeviceRgbCS';
+          } else if (numComps == 4) {
+            return 'DeviceCmykCS';
+          }
+          break;
+        case 'Pattern':
+          var basePatternCS = cs[1];
+          if (basePatternCS) {
+            basePatternCS = ColorSpace.parseToIR(basePatternCS, xref, res);
+          }
+          return ['PatternCS', basePatternCS];
+        case 'Indexed':
+        case 'I':
+          var baseIndexedCS = ColorSpace.parseToIR(cs[1], xref, res);
+          var hiVal = cs[2] + 1;
+          var lookup = xref.fetchIfRef(cs[3]);
+          if (isStream(lookup)) {
+            lookup = lookup.getBytes();
+          }
+          return ['IndexedCS', baseIndexedCS, hiVal, lookup];
+        case 'Separation':
+        case 'DeviceN':
+          var name = cs[1];
+          numComps = 1;
+          if (isName(name)) {
+            numComps = 1;
+          } else if (isArray(name)) {
+            numComps = name.length;
+          }
+          var alt = ColorSpace.parseToIR(cs[2], xref, res);
+          var tintFnIR = PDFFunction.getIR(xref, xref.fetchIfRef(cs[3]));
+          return ['AlternateCS', numComps, alt, tintFnIR];
+        case 'Lab':
+          params = cs[1].getAll();
+          return ['LabCS', params];
+        default:
+          error('unimplemented color space object "' + mode + '"');
+      }
+    } else {
+      error('unrecognized color space object: "' + cs + '"');
+    }
+    return null;
+  };
+  /**
+   * Checks if a decode map matches the default decode map for a color space.
+   * This handles the general decode maps where there are two values per
+   * component. e.g. [0, 1, 0, 1, 0, 1] for a RGB color.
+   * This does not handle Lab, Indexed, or Pattern decode maps since they are
+   * slightly different.
+   * @param {Array} decode Decode map (usually from an image).
+   * @param {Number} n Number of components the color space has.
+   */
+  ColorSpace.isDefaultDecode = function ColorSpace_isDefaultDecode(decode, n) {
+    if (!decode) {
+      return true;
+    }
+
+    if (n * 2 !== decode.length) {
+      warn('The decode map is not the correct length');
+      return true;
+    }
+    for (var i = 0, ii = decode.length; i < ii; i += 2) {
+      if (decode[i] !== 0 || decode[i + 1] != 1) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  ColorSpace.singletons = {
+    get gray() {
+      return shadow(this, 'gray', new DeviceGrayCS());
+    },
+    get rgb() {
+      return shadow(this, 'rgb', new DeviceRgbCS());
+    },
+    get cmyk() {
+      return shadow(this, 'cmyk', new DeviceCmykCS());
+    }
+  };
+
+  return ColorSpace;
+})();
+
+/**
+ * Alternate color space handles both Separation and DeviceN color spaces.  A
+ * Separation color space is actually just a DeviceN with one color component.
+ * Both color spaces use a tinting function to convert colors to a base color
+ * space.
+ */
+var AlternateCS = (function AlternateCSClosure() {
+  function AlternateCS(numComps, base, tintFn) {
+    this.name = 'Alternate';
+    this.numComps = numComps;
+    this.defaultColor = new Float32Array(numComps);
+    for (var i = 0; i < numComps; ++i) {
+      this.defaultColor[i] = 1;
+    }
+    this.base = base;
+    this.tintFn = tintFn;
+  }
+
+  AlternateCS.prototype = {
+    getRgb: ColorSpace.prototype.getRgb,
+    getRgbItem: function AlternateCS_getRgbItem(src, srcOffset,
+                                                dest, destOffset) {
+      var baseNumComps = this.base.numComps;
+      var input = 'subarray' in src ?
+        src.subarray(srcOffset, srcOffset + this.numComps) :
+        Array.prototype.slice.call(src, srcOffset, srcOffset + this.numComps);
+      var tinted = this.tintFn(input);
+      this.base.getRgbItem(tinted, 0, dest, destOffset);
+    },
+    getRgbBuffer: function AlternateCS_getRgbBuffer(src, srcOffset, count,
+                                                    dest, destOffset, bits,
+                                                    alpha01) {
+      var tinted;
+      var tintFn = this.tintFn;
+      var base = this.base;
+      var scale = 1 / ((1 << bits) - 1);
+      var baseNumComps = base.numComps;
+      var usesZeroToOneRange = base.usesZeroToOneRange;
+      var isPassthrough = (base.isPassthrough(8) || !usesZeroToOneRange) &&
+                          alpha01 === 0;
+      var pos = isPassthrough ? destOffset : 0;
+      var baseBuf = isPassthrough ? dest : new Uint8Array(baseNumComps * count);
+      var numComps = this.numComps;
+
+      var scaled = new Float32Array(numComps);
+      var i, j;
+      if (usesZeroToOneRange) {
+        for (i = 0; i < count; i++) {
+          for (j = 0; j < numComps; j++) {
+            scaled[j] = src[srcOffset++] * scale;
+          }
+          tinted = tintFn(scaled);
+          for (j = 0; j < baseNumComps; j++) {
+            baseBuf[pos++] = tinted[j] * 255;
+          }
+        }
+      } else {
+        for (i = 0; i < count; i++) {
+          for (j = 0; j < numComps; j++) {
+            scaled[j] = src[srcOffset++] * scale;
+          }
+          tinted = tintFn(scaled);
+          base.getRgbItem(tinted, 0, baseBuf, pos);
+          pos += baseNumComps;
+        }
+      }
+      if (!isPassthrough) {
+        base.getRgbBuffer(baseBuf, 0, count, dest, destOffset, 8, alpha01);
+      }
+    },
+    getOutputLength: function AlternateCS_getOutputLength(inputLength,
+                                                          alpha01) {
+      return this.base.getOutputLength(inputLength *
+                                       this.base.numComps / this.numComps,
+                                       alpha01);
+    },
+    isPassthrough: ColorSpace.prototype.isPassthrough,
+    fillRgb: ColorSpace.prototype.fillRgb,
+    isDefaultDecode: function AlternateCS_isDefaultDecode(decodeMap) {
+      return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
+    },
+    usesZeroToOneRange: true
+  };
+
+  return AlternateCS;
+})();
+
+var PatternCS = (function PatternCSClosure() {
+  function PatternCS(baseCS) {
+    this.name = 'Pattern';
+    this.base = baseCS;
+  }
+  PatternCS.prototype = {};
+
+  return PatternCS;
+})();
+
+var IndexedCS = (function IndexedCSClosure() {
+  function IndexedCS(base, highVal, lookup) {
+    this.name = 'Indexed';
+    this.numComps = 1;
+    this.defaultColor = new Uint8Array([0]);
+    this.base = base;
+    this.highVal = highVal;
+
+    var baseNumComps = base.numComps;
+    var length = baseNumComps * highVal;
+    var lookupArray;
+
+    if (isStream(lookup)) {
+      lookupArray = new Uint8Array(length);
+      var bytes = lookup.getBytes(length);
+      lookupArray.set(bytes);
+    } else if (isString(lookup)) {
+      lookupArray = new Uint8Array(length);
+      for (var i = 0; i < length; ++i) {
+        lookupArray[i] = lookup.charCodeAt(i);
+      }
+    } else if (lookup instanceof Uint8Array || lookup instanceof Array) {
+      lookupArray = lookup;
+    } else {
+      error('Unrecognized lookup table: ' + lookup);
+    }
+    this.lookup = lookupArray;
+  }
+
+  IndexedCS.prototype = {
+    getRgb: ColorSpace.prototype.getRgb,
+    getRgbItem: function IndexedCS_getRgbItem(src, srcOffset,
+                                              dest, destOffset) {
+      var numComps = this.base.numComps;
+      var start = src[srcOffset] * numComps;
+      this.base.getRgbItem(this.lookup, start, dest, destOffset);
+    },
+    getRgbBuffer: function IndexedCS_getRgbBuffer(src, srcOffset, count,
+                                                  dest, destOffset, bits,
+                                                  alpha01) {
+      var base = this.base;
+      var numComps = base.numComps;
+      var outputDelta = base.getOutputLength(numComps, alpha01);
+      var lookup = this.lookup;
+
+      for (var i = 0; i < count; ++i) {
+        var lookupPos = src[srcOffset++] * numComps;
+        base.getRgbBuffer(lookup, lookupPos, 1, dest, destOffset, 8, alpha01);
+        destOffset += outputDelta;
+      }
+    },
+    getOutputLength: function IndexedCS_getOutputLength(inputLength, alpha01) {
+      return this.base.getOutputLength(inputLength * this.base.numComps,
+                                       alpha01);
+    },
+    isPassthrough: ColorSpace.prototype.isPassthrough,
+    fillRgb: ColorSpace.prototype.fillRgb,
+    isDefaultDecode: function IndexedCS_isDefaultDecode(decodeMap) {
+      // indexed color maps shouldn't be changed
+      return true;
+    },
+    usesZeroToOneRange: true
+  };
+  return IndexedCS;
+})();
+
+var DeviceGrayCS = (function DeviceGrayCSClosure() {
+  function DeviceGrayCS() {
+    this.name = 'DeviceGray';
+    this.numComps = 1;
+    this.defaultColor = new Float32Array([0]);
+  }
+
+  DeviceGrayCS.prototype = {
+    getRgb: ColorSpace.prototype.getRgb,
+    getRgbItem: function DeviceGrayCS_getRgbItem(src, srcOffset,
+                                                 dest, destOffset) {
+      var c = (src[srcOffset] * 255) | 0;
+      c = c < 0 ? 0 : c > 255 ? 255 : c;
+      dest[destOffset] = dest[destOffset + 1] = dest[destOffset + 2] = c;
+    },
+    getRgbBuffer: function DeviceGrayCS_getRgbBuffer(src, srcOffset, count,
+                                                     dest, destOffset, bits,
+                                                     alpha01) {
+      var scale = 255 / ((1 << bits) - 1);
+      var j = srcOffset, q = destOffset;
+      for (var i = 0; i < count; ++i) {
+        var c = (scale * src[j++]) | 0;
+        dest[q++] = c;
+        dest[q++] = c;
+        dest[q++] = c;
+        q += alpha01;
+      }
+    },
+    getOutputLength: function DeviceGrayCS_getOutputLength(inputLength,
+                                                           alpha01) {
+      return inputLength * (3 + alpha01);
+    },
+    isPassthrough: ColorSpace.prototype.isPassthrough,
+    fillRgb: ColorSpace.prototype.fillRgb,
+    isDefaultDecode: function DeviceGrayCS_isDefaultDecode(decodeMap) {
+      return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
+    },
+    usesZeroToOneRange: true
+  };
+  return DeviceGrayCS;
+})();
+
+var DeviceRgbCS = (function DeviceRgbCSClosure() {
+  function DeviceRgbCS() {
+    this.name = 'DeviceRGB';
+    this.numComps = 3;
+    this.defaultColor = new Float32Array([0, 0, 0]);
+  }
+  DeviceRgbCS.prototype = {
+    getRgb: ColorSpace.prototype.getRgb,
+    getRgbItem: function DeviceRgbCS_getRgbItem(src, srcOffset,
+                                                dest, destOffset) {
+      var r = (src[srcOffset] * 255) | 0;
+      var g = (src[srcOffset + 1] * 255) | 0;
+      var b = (src[srcOffset + 2] * 255) | 0;
+      dest[destOffset] = r < 0 ? 0 : r > 255 ? 255 : r;
+      dest[destOffset + 1] = g < 0 ? 0 : g > 255 ? 255 : g;
+      dest[destOffset + 2] = b < 0 ? 0 : b > 255 ? 255 : b;
+    },
+    getRgbBuffer: function DeviceRgbCS_getRgbBuffer(src, srcOffset, count,
+                                                    dest, destOffset, bits,
+                                                    alpha01) {
+      if (bits === 8 && alpha01 === 0) {
+        dest.set(src.subarray(srcOffset, srcOffset + count * 3), destOffset);
+        return;
+      }
+      var scale = 255 / ((1 << bits) - 1);
+      var j = srcOffset, q = destOffset;
+      for (var i = 0; i < count; ++i) {
+        dest[q++] = (scale * src[j++]) | 0;
+        dest[q++] = (scale * src[j++]) | 0;
+        dest[q++] = (scale * src[j++]) | 0;
+        q += alpha01;
+      }
+    },
+    getOutputLength: function DeviceRgbCS_getOutputLength(inputLength,
+                                                          alpha01) {
+      return (inputLength * (3 + alpha01) / 3) | 0;
+    },
+    isPassthrough: function DeviceRgbCS_isPassthrough(bits) {
+      return bits == 8;
+    },
+    fillRgb: ColorSpace.prototype.fillRgb,
+    isDefaultDecode: function DeviceRgbCS_isDefaultDecode(decodeMap) {
+      return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
+    },
+    usesZeroToOneRange: true
+  };
+  return DeviceRgbCS;
+})();
+
+var DeviceCmykCS = (function DeviceCmykCSClosure() {
+  // The coefficients below was found using numerical analysis: the method of
+  // steepest descent for the sum((f_i - color_value_i)^2) for r/g/b colors,
+  // where color_value is the tabular value from the table of sampled RGB colors
+  // from CMYK US Web Coated (SWOP) colorspace, and f_i is the corresponding
+  // CMYK color conversion using the estimation below:
+  //   f(A, B,.. N) = Acc+Bcm+Ccy+Dck+c+Fmm+Gmy+Hmk+Im+Jyy+Kyk+Ly+Mkk+Nk+255
+  function convertToRgb(src, srcOffset, srcScale, dest, destOffset) {
+    var c = src[srcOffset + 0] * srcScale;
+    var m = src[srcOffset + 1] * srcScale;
+    var y = src[srcOffset + 2] * srcScale;
+    var k = src[srcOffset + 3] * srcScale;
+
+    var r =
+      (c * (-4.387332384609988 * c + 54.48615194189176 * m +
+            18.82290502165302 * y + 212.25662451639585 * k +
+            -285.2331026137004) +
+       m * (1.7149763477362134 * m - 5.6096736904047315 * y +
+            -17.873870861415444 * k - 5.497006427196366) +
+       y * (-2.5217340131683033 * y - 21.248923337353073 * k +
+            17.5119270841813) +
+       k * (-21.86122147463605 * k - 189.48180835922747) + 255) | 0;
+    var g =
+      (c * (8.841041422036149 * c + 60.118027045597366 * m +
+            6.871425592049007 * y + 31.159100130055922 * k +
+            -79.2970844816548) +
+       m * (-15.310361306967817 * m + 17.575251261109482 * y +
+            131.35250912493976 * k - 190.9453302588951) +
+       y * (4.444339102852739 * y + 9.8632861493405 * k - 24.86741582555878) +
+       k * (-20.737325471181034 * k - 187.80453709719578) + 255) | 0;
+    var b =
+      (c * (0.8842522430003296 * c + 8.078677503112928 * m +
+            30.89978309703729 * y - 0.23883238689178934 * k +
+            -14.183576799673286) +
+       m * (10.49593273432072 * m + 63.02378494754052 * y +
+            50.606957656360734 * k - 112.23884253719248) +
+       y * (0.03296041114873217 * y + 115.60384449646641 * k +
+            -193.58209356861505) +
+       k * (-22.33816807309886 * k - 180.12613974708367) + 255) | 0;
+
+    dest[destOffset] = r > 255 ? 255 : r < 0 ? 0 : r;
+    dest[destOffset + 1] = g > 255 ? 255 : g < 0 ? 0 : g;
+    dest[destOffset + 2] = b > 255 ? 255 : b < 0 ? 0 : b;
+  }
+
+  function DeviceCmykCS() {
+    this.name = 'DeviceCMYK';
+    this.numComps = 4;
+    this.defaultColor = new Float32Array([0, 0, 0, 1]);
+  }
+  DeviceCmykCS.prototype = {
+    getRgb: ColorSpace.prototype.getRgb,
+    getRgbItem: function DeviceCmykCS_getRgbItem(src, srcOffset,
+                                                 dest, destOffset) {
+      convertToRgb(src, srcOffset, 1, dest, destOffset);
+    },
+    getRgbBuffer: function DeviceCmykCS_getRgbBuffer(src, srcOffset, count,
+                                                     dest, destOffset, bits,
+                                                     alpha01) {
+      var scale = 1 / ((1 << bits) - 1);
+      for (var i = 0; i < count; i++) {
+        convertToRgb(src, srcOffset, scale, dest, destOffset);
+        srcOffset += 4;
+        destOffset += 3 + alpha01;
+      }
+    },
+    getOutputLength: function DeviceCmykCS_getOutputLength(inputLength,
+                                                           alpha01) {
+      return (inputLength / 4 * (3 + alpha01)) | 0;
+    },
+    isPassthrough: ColorSpace.prototype.isPassthrough,
+    fillRgb: ColorSpace.prototype.fillRgb,
+    isDefaultDecode: function DeviceCmykCS_isDefaultDecode(decodeMap) {
+      return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
+    },
+    usesZeroToOneRange: true
+  };
+
+  return DeviceCmykCS;
+})();
+
+//
+// CalGrayCS: Based on "PDF Reference, Sixth Ed", p.245
+//
+var CalGrayCS = (function CalGrayCSClosure() {
+  function CalGrayCS(whitePoint, blackPoint, gamma) {
+    this.name = 'CalGray';
+    this.numComps = 1;
+    this.defaultColor = new Float32Array([0]);
+
+    if (!whitePoint) {
+      error('WhitePoint missing - required for color space CalGray');
+    }
+    blackPoint = blackPoint || [0, 0, 0];
+    gamma = gamma || 1;
+
+    // Translate arguments to spec variables.
+    this.XW = whitePoint[0];
+    this.YW = whitePoint[1];
+    this.ZW = whitePoint[2];
+
+    this.XB = blackPoint[0];
+    this.YB = blackPoint[1];
+    this.ZB = blackPoint[2];
+
+    this.G = gamma;
+
+    // Validate variables as per spec.
+    if (this.XW < 0 || this.ZW < 0 || this.YW !== 1) {
+      error('Invalid WhitePoint components for ' + this.name +
+            ', no fallback available');
+    }
+
+    if (this.XB < 0 || this.YB < 0 || this.ZB < 0) {
+      info('Invalid BlackPoint for ' + this.name + ', falling back to default');
+      this.XB = this.YB = this.ZB = 0;
+    }
+
+    if (this.XB !== 0 || this.YB !== 0 || this.ZB !== 0) {
+      warn(this.name + ', BlackPoint: XB: ' + this.XB + ', YB: ' + this.YB +
+           ', ZB: ' + this.ZB + ', only default values are supported.');
+    }
+
+    if (this.G < 1) {
+      info('Invalid Gamma: ' + this.G + ' for ' + this.name +
+           ', falling back to default');
+      this.G = 1;
+    }
+  }
+
+  function convertToRgb(cs, src, srcOffset, dest, destOffset, scale) {
+    // A represents a gray component of a calibrated gray space.
+    // A <---> AG in the spec
+    var A = src[srcOffset] * scale;
+    var AG = Math.pow(A, cs.G);
+
+    // Computes L as per spec. ( = cs.YW * AG )
+    // Except if other than default BlackPoint values are used.
+    var L = cs.YW * AG;
+    // http://www.poynton.com/notes/colour_and_gamma/ColorFAQ.html, Ch 4.
+    // Convert values to rgb range [0, 255].
+    var val = Math.max(295.8 * Math.pow(L, 0.333333333333333333) - 40.8, 0) | 0;
+    dest[destOffset] = val;
+    dest[destOffset + 1] = val;
+    dest[destOffset + 2] = val;
+  }
+
+  CalGrayCS.prototype = {
+    getRgb: ColorSpace.prototype.getRgb,
+    getRgbItem: function CalGrayCS_getRgbItem(src, srcOffset,
+                                              dest, destOffset) {
+      convertToRgb(this, src, srcOffset, dest, destOffset, 1);
+    },
+    getRgbBuffer: function CalGrayCS_getRgbBuffer(src, srcOffset, count,
+                                                  dest, destOffset, bits,
+                                                  alpha01) {
+      var scale = 1 / ((1 << bits) - 1);
+
+      for (var i = 0; i < count; ++i) {
+        convertToRgb(this, src, srcOffset, dest, destOffset, scale);
+        srcOffset += 1;
+        destOffset += 3 + alpha01;
+      }
+    },
+    getOutputLength: function CalGrayCS_getOutputLength(inputLength, alpha01) {
+      return inputLength * (3 + alpha01);
+    },
+    isPassthrough: ColorSpace.prototype.isPassthrough,
+    fillRgb: ColorSpace.prototype.fillRgb,
+    isDefaultDecode: function CalGrayCS_isDefaultDecode(decodeMap) {
+      return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
+    },
+    usesZeroToOneRange: true
+  };
+  return CalGrayCS;
+})();
+
+//
+// LabCS: Based on "PDF Reference, Sixth Ed", p.250
+//
+var LabCS = (function LabCSClosure() {
+  function LabCS(whitePoint, blackPoint, range) {
+    this.name = 'Lab';
+    this.numComps = 3;
+    this.defaultColor = new Float32Array([0, 0, 0]);
+
+    if (!whitePoint) {
+      error('WhitePoint missing - required for color space Lab');
+    }
+    blackPoint = blackPoint || [0, 0, 0];
+    range = range || [-100, 100, -100, 100];
+
+    // Translate args to spec variables
+    this.XW = whitePoint[0];
+    this.YW = whitePoint[1];
+    this.ZW = whitePoint[2];
+    this.amin = range[0];
+    this.amax = range[1];
+    this.bmin = range[2];
+    this.bmax = range[3];
+
+    // These are here just for completeness - the spec doesn't offer any
+    // formulas that use BlackPoint in Lab
+    this.XB = blackPoint[0];
+    this.YB = blackPoint[1];
+    this.ZB = blackPoint[2];
+
+    // Validate vars as per spec
+    if (this.XW < 0 || this.ZW < 0 || this.YW !== 1) {
+      error('Invalid WhitePoint components, no fallback available');
+    }
+
+    if (this.XB < 0 || this.YB < 0 || this.ZB < 0) {
+      info('Invalid BlackPoint, falling back to default');
+      this.XB = this.YB = this.ZB = 0;
+    }
+
+    if (this.amin > this.amax || this.bmin > this.bmax) {
+      info('Invalid Range, falling back to defaults');
+      this.amin = -100;
+      this.amax = 100;
+      this.bmin = -100;
+      this.bmax = 100;
+    }
+  }
+
+  // Function g(x) from spec
+  function fn_g(x) {
+    if (x >= 6 / 29) {
+      return x * x * x;
+    } else {
+      return (108 / 841) * (x - 4 / 29);
+    }
+  }
+
+  function decode(value, high1, low2, high2) {
+    return low2 + (value) * (high2 - low2) / (high1);
+  }
+
+  // If decoding is needed maxVal should be 2^bits per component - 1.
+  function convertToRgb(cs, src, srcOffset, maxVal, dest, destOffset) {
+    // XXX: Lab input is in the range of [0, 100], [amin, amax], [bmin, bmax]
+    // not the usual [0, 1]. If a command like setFillColor is used the src
+    // values will already be within the correct range. However, if we are
+    // converting an image we have to map the values to the correct range given
+    // above.
+    // Ls,as,bs <---> L*,a*,b* in the spec
+    var Ls = src[srcOffset];
+    var as = src[srcOffset + 1];
+    var bs = src[srcOffset + 2];
+    if (maxVal !== false) {
+      Ls = decode(Ls, maxVal, 0, 100);
+      as = decode(as, maxVal, cs.amin, cs.amax);
+      bs = decode(bs, maxVal, cs.bmin, cs.bmax);
+    }
+
+    // Adjust limits of 'as' and 'bs'
+    as = as > cs.amax ? cs.amax : as < cs.amin ? cs.amin : as;
+    bs = bs > cs.bmax ? cs.bmax : bs < cs.bmin ? cs.bmin : bs;
+
+    // Computes intermediate variables X,Y,Z as per spec
+    var M = (Ls + 16) / 116;
+    var L = M + (as / 500);
+    var N = M - (bs / 200);
+
+    var X = cs.XW * fn_g(L);
+    var Y = cs.YW * fn_g(M);
+    var Z = cs.ZW * fn_g(N);
+
+    var r, g, b;
+    // Using different conversions for D50 and D65 white points,
+    // per http://www.color.org/srgb.pdf
+    if (cs.ZW < 1) {
+      // Assuming D50 (X=0.9642, Y=1.00, Z=0.8249)
+      r = X * 3.1339 + Y * -1.6170 + Z * -0.4906;
+      g = X * -0.9785 + Y * 1.9160 + Z * 0.0333;
+      b = X * 0.0720 + Y * -0.2290 + Z * 1.4057;
+    } else {
+      // Assuming D65 (X=0.9505, Y=1.00, Z=1.0888)
+      r = X * 3.2406 + Y * -1.5372 + Z * -0.4986;
+      g = X * -0.9689 + Y * 1.8758 + Z * 0.0415;
+      b = X * 0.0557 + Y * -0.2040 + Z * 1.0570;
+    }
+    // clamp color values to [0,1] range then convert to [0,255] range.
+    dest[destOffset] = r <= 0 ? 0 : r >= 1 ? 255 : Math.sqrt(r) * 255 | 0;
+    dest[destOffset + 1] = g <= 0 ? 0 : g >= 1 ? 255 : Math.sqrt(g) * 255 | 0;
+    dest[destOffset + 2] = b <= 0 ? 0 : b >= 1 ? 255 : Math.sqrt(b) * 255 | 0;
+  }
+
+  LabCS.prototype = {
+    getRgb: ColorSpace.prototype.getRgb,
+    getRgbItem: function LabCS_getRgbItem(src, srcOffset, dest, destOffset) {
+      convertToRgb(this, src, srcOffset, false, dest, destOffset);
+    },
+    getRgbBuffer: function LabCS_getRgbBuffer(src, srcOffset, count,
+                                              dest, destOffset, bits,
+                                              alpha01) {
+      var maxVal = (1 << bits) - 1;
+      for (var i = 0; i < count; i++) {
+        convertToRgb(this, src, srcOffset, maxVal, dest, destOffset);
+        srcOffset += 3;
+        destOffset += 3 + alpha01;
+      }
+    },
+    getOutputLength: function LabCS_getOutputLength(inputLength, alpha01) {
+      return (inputLength * (3 + alpha01) / 3) | 0;
+    },
+    isPassthrough: ColorSpace.prototype.isPassthrough,
+    isDefaultDecode: function LabCS_isDefaultDecode(decodeMap) {
+      // XXX: Decoding is handled with the lab conversion because of the strange
+      // ranges that are used.
+      return true;
+    },
+    usesZeroToOneRange: false
+  };
+  return LabCS;
+})();
+
+
+
 var ARCFourCipher = (function ARCFourCipherClosure() {
   function ARCFourCipher(key) {
     this.a = 0;
@@ -14936,6 +14993,28 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
     this.fontCache = fontCache;
   }
 
+  // Trying to minimize Date.now() usage and check every 100 time
+  var TIME_SLOT_DURATION_MS = 20;
+  var CHECK_TIME_EVERY = 100;
+  function TimeSlotManager() {
+    this.reset();
+  }
+  TimeSlotManager.prototype = {
+    check: function TimeSlotManager_check() {
+      if (++this.checked < CHECK_TIME_EVERY) {
+        return false;
+      }
+      this.checked = 0;
+      return this.endTime <= Date.now();
+    },
+    reset: function TimeSlotManager_reset() {
+      this.endTime = Date.now() + TIME_SLOT_DURATION_MS;
+      this.checked = 0;
+    }
+  };
+
+  var deferred = Promise.resolve();
+
   var TILING_PATTERN = 1, SHADING_PATTERN = 2;
 
   PartialEvaluator.prototype = {
@@ -15007,25 +15086,33 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         };
 
         var groupSubtype = group.get('S');
+        var colorSpace;
         if (isName(groupSubtype) && groupSubtype.name === 'Transparency') {
           groupOptions.isolated = (group.get('I') || false);
           groupOptions.knockout = (group.get('K') || false);
-          var colorSpace = group.get('CS');
-          groupOptions.colorSpace = (colorSpace ?
-            ColorSpace.parseToIR(colorSpace, this.xref, resources) : null);
+          colorSpace = (group.has('CS') ?
+            ColorSpace.parse(group.get('CS'), this.xref, resources) : null);
         }
+
+        if (smask && smask.backdrop) {
+          colorSpace = colorSpace || ColorSpace.singletons.rgb;
+          smask.backdrop = colorSpace.getRgb(smask.backdrop, 0);
+        }
+
         operatorList.addOp(OPS.beginGroup, [groupOptions]);
       }
 
       operatorList.addOp(OPS.paintFormXObjectBegin, [matrix, bbox]);
 
-      this.getOperatorList(xobj, (xobj.dict.get('Resources') || resources),
-                           operatorList, initialState);
-      operatorList.addOp(OPS.paintFormXObjectEnd, []);
+      return this.getOperatorList(xobj,
+        (xobj.dict.get('Resources') || resources), operatorList, initialState).
+        then(function () {
+          operatorList.addOp(OPS.paintFormXObjectEnd, []);
 
-      if (group) {
-        operatorList.addOp(OPS.endGroup, [groupOptions]);
-      }
+          if (group) {
+            operatorList.addOp(OPS.endGroup, [groupOptions]);
+          }
+        });
     },
 
     buildPaintImageXObject:
@@ -15112,7 +15199,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         then(function(imageObj) {
           var imgData = imageObj.createImageData(/* forceRGBA = */ false);
           self.handler.send('obj', [objId, self.pageIndex, 'Image', imgData],
-            null, [imgData.data.buffer]);
+            [imgData.data.buffer]);
         }).then(null, function (reason) {
           warn('Unable to decode image: ' + reason);
           self.handler.send('obj', [objId, self.pageIndex, 'Image', null]);
@@ -15134,7 +15221,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         subtype: smask.get('S').name,
         backdrop: smask.get('BC')
       };
-      this.buildFormXObject(resources, smaskContent, smaskOptions,
+      return this.buildFormXObject(resources, smaskContent, smaskOptions,
                             operatorList, stateManager.state.clone());
     },
 
@@ -15143,15 +15230,18 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                                                    pattern, patternDict,
                                                    operatorList) {
       // Create an IR of the pattern code.
-      var tilingOpList = this.getOperatorList(pattern,
-        (patternDict.get('Resources') || resources));
-      // Add the dependencies to the parent operator list so they are resolved
-      // before sub operator list is executed synchronously.
-      operatorList.addDependencies(tilingOpList.dependencies);
-      operatorList.addOp(fn, getTilingPatternIR({
-                               fnArray: tilingOpList.fnArray,
-                               argsArray: tilingOpList.argsArray
-                             }, patternDict, args));
+      var tilingOpList = new OperatorList();
+      return this.getOperatorList(pattern,
+        (patternDict.get('Resources') || resources), tilingOpList).
+        then(function () {
+          // Add the dependencies to the parent operator list so they are
+          // resolved before sub operator list is executed synchronously.
+          operatorList.addDependencies(tilingOpList.dependencies);
+          operatorList.addOp(fn, getTilingPatternIR({
+            fnArray: tilingOpList.fnArray,
+            argsArray: tilingOpList.argsArray
+          }, patternDict, args));
+        });
     },
 
     handleSetFont:
@@ -15163,36 +15253,31 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         fontArgs = fontArgs.slice();
         fontName = fontArgs[0].name;
       }
+
       var self = this;
-      var font = this.loadFont(fontName, fontRef, this.xref, resources,
-                               operatorList);
-      state.font = font;
-      var loadedName = font.loadedName;
-      if (!font.sent) {
-        var fontData = font.translated.exportData();
-
-        self.handler.send('commonobj', [
-          loadedName,
-          'Font',
-          fontData
-        ]);
-        font.sent = true;
-      }
-
-      return loadedName;
+      return this.loadFont(fontName, fontRef, this.xref, resources).then(
+          function (translated) {
+        if (!translated.font.isType3Font) {
+          return translated;
+        }
+        return translated.loadType3Data(self, resources, operatorList).then(
+            function () {
+          return translated;
+        });
+      }).then(function (translated) {
+        state.font = translated.font;
+        translated.send(self.handler);
+        return translated.loadedName;
+      });
     },
 
     handleText: function PartialEvaluator_handleText(chars, state) {
-      var font = state.font.translated;
+      var font = state.font;
       var glyphs = font.charsToGlyphs(chars);
       var isAddToPathSet = !!(state.textRenderingMode &
                               TextRenderingMode.ADD_TO_PATH_FLAG);
       if (font.data && (isAddToPathSet || PDFJS.disableFontFace)) {
-        for (var i = 0; i < glyphs.length; i++) {
-          if (glyphs[i] === null) {
-            continue;
-          }
-          var fontChar = glyphs[i].fontChar;
+        var buildPath = function (fontChar) {
           if (!font.renderer.hasBuiltPath(fontChar)) {
             var path = font.renderer.getPathJs(fontChar);
             this.handler.send('commonobj', [
@@ -15200,6 +15285,21 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
               'FontPath',
               path
             ]);
+          }
+        }.bind(this);
+
+        for (var i = 0, ii = glyphs.length; i < ii; i++) {
+          var glyph = glyphs[i];
+          if (glyph === null) {
+            continue;
+          }
+          buildPath(glyph.fontChar);
+
+          // If the glyph has an accent we need to build a path for its
+          // fontChar too, otherwise CanvasGraphics_paintChar will fail.
+          var accent = glyph.accent;
+          if (accent && accent.fontChar) {
+            buildPath(accent.fontChar);
           }
         }
       }
@@ -15211,7 +15311,6 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                                                    operatorList, xref,
                                                    stateManager) {
 
-      var self = this;
       // TODO(mack): This should be rewritten so that this function returns
       // what should be added to the queue during each iteration
       function setGStateForKey(gStateObj, key, value) {
@@ -15230,11 +15329,14 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             gStateObj.push([key, value]);
             break;
           case 'Font':
-            var loadedName = self.handleSetFont(resources, null, value[0],
-                                                operatorList,
-                                                stateManager.state);
-            operatorList.addDependency(loadedName);
-            gStateObj.push([key, [loadedName, value[1]]]);
+            promise = promise.then(function () {
+              return self.handleSetFont(resources, null, value[0],
+                                        operatorList, stateManager.state).
+                then(function (loadedName) {
+                  operatorList.addDependency(loadedName);
+                  gStateObj.push([key, [loadedName, value[1]]]);
+                });
+            });
             break;
           case 'BM':
             gStateObj.push([key, value]);
@@ -15246,7 +15348,10 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             }
             var dict = xref.fetchIfRef(value);
             if (isDict(dict)) {
-              self.handleSMask(dict, resources, operatorList, stateManager);
+              promise = promise.then(function () {
+                return self.handleSMask(dict, resources, operatorList,
+                                        stateManager);
+              });
               gStateObj.push([key, true]);
             } else {
               warn('Unsupported SMask type');
@@ -15281,25 +15386,24 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
       // This array holds the converted/processed state data.
       var gStateObj = [];
       var gStateMap = gState.map;
+      var self = this;
+      var promise = Promise.resolve();
       for (var key in gStateMap) {
         var value = gStateMap[key];
         setGStateForKey(gStateObj, key, value);
       }
-
-      operatorList.addOp(OPS.setGState, [gStateObj]);
+      return promise.then(function () {
+        operatorList.addOp(OPS.setGState, [gStateObj]);
+      });
     },
 
     loadFont: function PartialEvaluator_loadFont(fontName, font, xref,
-                                                 resources,
-                                                 parentOperatorList) {
+                                                 resources) {
 
       function errorFont() {
-        return {
-          translated: new ErrorFont('Font ' + fontName + ' is not available'),
-          loadedName: 'g_font_error'
-        };
+        return Promise.resolve(new TranslatedFont('g_font_error',
+          new ErrorFont('Font ' + fontName + ' is not available'), font));
       }
-
       var fontRef;
       if (font) { // Loading by ref.
         assert(isRef(font));
@@ -15322,6 +15426,14 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         return errorFont();
       }
 
+      // We are holding font.translated references just for fontRef that are not
+      // dictionaries (Dict). See explanation below.
+      if (font.translated) {
+        return font.translated;
+      }
+
+      var fontCapability = createPromiseCapability();
+
       var preEvaluatedFont = this.preEvaluateFont(font, xref);
       var descriptor = preEvaluatedFont.descriptor;
       var fontID = fontRef.num + '_' + fontRef.gen;
@@ -15336,8 +15448,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
           var aliasFontRef = fontAliases[hash].aliasRef;
           if (aliasFontRef && this.fontCache.has(aliasFontRef)) {
             this.fontCache.putAlias(fontRef, aliasFontRef);
-            var cachedFont = this.fontCache.get(fontRef);
-            return cachedFont;
+            return this.fontCache.get(fontRef);
           }
         }
 
@@ -15358,7 +15469,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
       // fontName in font.loadedName below.
       var fontRefIsDict = isDict(fontRef);
       if (!fontRefIsDict) {
-        this.fontCache.put(fontRef, font);
+        this.fontCache.put(fontRef, fontCapability.promise);
       }
 
       // Keep track of each font we translated so the caller can
@@ -15366,38 +15477,70 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
       font.loadedName = 'g_font_' + (fontRefIsDict ?
         fontName.replace(/\W/g, '') : fontID);
 
-      if (!font.translated) {
-        var translated;
-        try {
-          translated = this.translateFont(preEvaluatedFont, xref);
-        } catch (e) {
-          UnsupportedManager.notify(UNSUPPORTED_FEATURES.font);
-          translated = new ErrorFont(e instanceof Error ? e.message : e);
-        }
-        font.translated = translated;
+      font.translated = fontCapability.promise;
+
+      // TODO move promises into translate font
+      var translatedPromise;
+      try {
+        translatedPromise = Promise.resolve(
+          this.translateFont(preEvaluatedFont, xref));
+      } catch (e) {
+        translatedPromise = Promise.reject(e);
       }
 
-      if (font.translated.loadCharProcs) {
-        var charProcs = font.get('CharProcs').getAll();
-        var fontResources = (font.get('Resources') || resources);
-        var charProcKeys = Object.keys(charProcs);
-        var charProcOperatorList = {};
-        for (var i = 0, n = charProcKeys.length; i < n; ++i) {
-          var key = charProcKeys[i];
-          var glyphStream = charProcs[key];
-          var operatorList = this.getOperatorList(glyphStream, fontResources);
-          charProcOperatorList[key] = operatorList.getIR();
-          if (!parentOperatorList) {
-            continue;
-          }
-          // Add the dependencies to the parent operator list so they are
-          // resolved before sub operator list is executed synchronously.
-          parentOperatorList.addDependencies(charProcOperatorList.dependencies);
-        }
-        font.translated.charProcOperatorList = charProcOperatorList;
+      translatedPromise.then(function (translatedFont) {
+        fontCapability.resolve(new TranslatedFont(font.loadedName,
+          translatedFont, font));
+      }, function (reason) {
+        // TODO fontCapability.reject?
+        UnsupportedManager.notify(UNSUPPORTED_FEATURES.font);
+        fontCapability.resolve(new TranslatedFont(font.loadedName,
+          new ErrorFont(reason instanceof Error ? reason.message : reason),
+          font));
+      });
+      return fontCapability.promise;
+    },
+
+    buildPath: function PartialEvaluator_buildPath(operatorList, fn, args) {
+      var lastIndex = operatorList.length - 1;
+      if (lastIndex < 0 ||
+          operatorList.fnArray[lastIndex] !== OPS.constructPath) {
+        operatorList.addOp(OPS.constructPath, [[fn], args]);
+      } else {
+        var opArgs = operatorList.argsArray[lastIndex];
+        opArgs[0].push(fn);
+        Array.prototype.push.apply(opArgs[1], args);
       }
-      font.loaded = true;
-      return font;
+    },
+
+    handleColorN: function PartialEvaluator_handleColorN(operatorList, fn, args,
+          cs, patterns, resources, xref) {
+      // compile tiling patterns
+      var patternName = args[args.length - 1];
+      // SCN/scn applies patterns along with normal colors
+      var pattern;
+      if (isName(patternName) &&
+          (pattern = patterns.get(patternName.name))) {
+        var dict = (isStream(pattern) ? pattern.dict : pattern);
+        var typeNum = dict.get('PatternType');
+
+        if (typeNum == TILING_PATTERN) {
+          var color = cs.base ? cs.base.getRgb(args, 0) : null;
+          return this.handleTilingType(fn, color, resources, pattern,
+                                       dict, operatorList);
+        } else if (typeNum == SHADING_PATTERN) {
+          var shading = dict.get('Shading');
+          var matrix = dict.get('Matrix');
+          pattern = Pattern.parseShading(shading, matrix, xref, resources);
+          operatorList.addOp(fn, pattern.getIR());
+          return Promise.resolve();
+        } else {
+          return Promise.reject('Unknown PatternType: ' + typeNum);
+        }
+      }
+      // TODO shall we fail here?
+      operatorList.addOp(fn, args);
+      return Promise.resolve();
     },
 
     getOperatorList: function PartialEvaluator_getOperatorList(stream,
@@ -15409,174 +15552,229 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
       var xref = this.xref;
       var imageCache = {};
 
-      operatorList = (operatorList || new OperatorList());
+      assert(operatorList);
 
       resources = (resources || Dict.empty);
       var xobjs = (resources.get('XObject') || Dict.empty);
       var patterns = (resources.get('Pattern') || Dict.empty);
       var stateManager = new StateManager(initialState || new EvalState());
       var preprocessor = new EvaluatorPreprocessor(stream, xref, stateManager);
+      var timeSlotManager = new TimeSlotManager();
 
-      var operation, i, ii;
-      while ((operation = preprocessor.read())) {
-        var args = operation.args;
-        var fn = operation.fn;
-        var shading;
+      return new Promise(function next(resolve, reject) {
+        timeSlotManager.reset();
+        var stop, operation, i, ii, cs;
+        while (!(stop = timeSlotManager.check()) &&
+               (operation = preprocessor.read())) {
+          var args = operation.args;
+          var fn = operation.fn;
 
-        switch (fn) {
-          case OPS.setStrokeColorN:
-          case OPS.setFillColorN:
-            if (args[args.length - 1].code) {
-              break;
-            }
-            // compile tiling patterns
-            var patternName = args[args.length - 1];
-            // SCN/scn applies patterns along with normal colors
-            var pattern;
-            if (isName(patternName) &&
-                (pattern = patterns.get(patternName.name))) {
-              var dict = (isStream(pattern) ? pattern.dict : pattern);
-              var typeNum = dict.get('PatternType');
-
-              if (typeNum == TILING_PATTERN) {
-                self.handleTilingType(fn, args, resources, pattern, dict,
-                                      operatorList);
+          switch (fn | 0) {
+            case OPS.paintXObject:
+              if (args[0].code) {
+                break;
+              }
+              // eagerly compile XForm objects
+              var name = args[0].name;
+              if (imageCache.key === name) {
+                operatorList.addOp(imageCache.fn, imageCache.args);
                 args = [];
                 continue;
-              } else if (typeNum == SHADING_PATTERN) {
-                shading = dict.get('Shading');
-                var matrix = dict.get('Matrix');
-                pattern = Pattern.parseShading(shading, matrix, xref,
-                                               resources);
-                args = pattern.getIR();
-              } else {
-                error('Unkown PatternType ' + typeNum);
               }
-            }
-            break;
-          case OPS.paintXObject:
-            if (args[0].code) {
+
+              var xobj = xobjs.get(name);
+              if (xobj) {
+                assert(isStream(xobj), 'XObject should be a stream');
+
+                var type = xobj.dict.get('Subtype');
+                assert(isName(type),
+                  'XObject should have a Name subtype');
+
+                if ('Form' == type.name) {
+                  stateManager.save();
+                  return self.buildFormXObject(resources, xobj, null,
+                                               operatorList,
+                                               stateManager.state.clone()).
+                    then(function () {
+                      stateManager.restore();
+                      next(resolve, reject);
+                    }, reject);
+                } else if ('Image' == type.name) {
+                  self.buildPaintImageXObject(resources, xobj, false,
+                    operatorList, name, imageCache);
+                  args = [];
+                  continue;
+                } else {
+                  error('Unhandled XObject subtype ' + type.name);
+                }
+              }
               break;
-            }
-            // eagerly compile XForm objects
-            var name = args[0].name;
-            if (imageCache.key === name) {
-              operatorList.addOp(imageCache.fn, imageCache.args);
+            case OPS.setFont:
+              var fontSize = args[1];
+              // eagerly collect all fonts
+              return self.handleSetFont(resources, args, null,
+                                        operatorList, stateManager.state).
+                then(function (loadedName) {
+                  operatorList.addDependency(loadedName);
+                  operatorList.addOp(OPS.setFont, [loadedName, fontSize]);
+                  next(resolve, reject);
+                }, reject);
+            case OPS.endInlineImage:
+              var cacheKey = args[0].cacheKey;
+              if (cacheKey && imageCache.key === cacheKey) {
+                operatorList.addOp(imageCache.fn, imageCache.args);
+                args = [];
+                continue;
+              }
+              self.buildPaintImageXObject(resources, args[0], true,
+                operatorList, cacheKey, imageCache);
               args = [];
               continue;
-            }
-
-            var xobj = xobjs.get(name);
-            if (xobj) {
-              assert(isStream(xobj), 'XObject should be a stream');
-
-              var type = xobj.dict.get('Subtype');
-              assert(isName(type),
-                'XObject should have a Name subtype');
-
-              if ('Form' == type.name) {
-                stateManager.save();
-                self.buildFormXObject(resources, xobj, null, operatorList,
-                                      stateManager.state.clone());
-                args = [];
-                stateManager.restore();
-                continue;
-              } else if ('Image' == type.name) {
-                self.buildPaintImageXObject(resources, xobj, false,
-                                            operatorList, name, imageCache);
-                args = [];
-                continue;
-              } else {
-                error('Unhandled XObject subtype ' + type.name);
-              }
-            }
-            break;
-          case OPS.setFont:
-            // eagerly collect all fonts
-            var loadedName = self.handleSetFont(resources, args, null,
-                                                operatorList,
-                                                stateManager.state);
-            operatorList.addDependency(loadedName);
-            args[0] = loadedName;
-            break;
-          case OPS.endInlineImage:
-            var cacheKey = args[0].cacheKey;
-            if (cacheKey && imageCache.key === cacheKey) {
-              operatorList.addOp(imageCache.fn, imageCache.args);
-              args = [];
-              continue;
-            }
-            self.buildPaintImageXObject(resources, args[0], true,
-                                        operatorList, cacheKey, imageCache);
-            args = [];
-            continue;
-          case OPS.showText:
-            args[0] = this.handleText(args[0], stateManager.state);
-            break;
-          case OPS.showSpacedText:
-            var arr = args[0];
-            var arrLength = arr.length;
-            for (i = 0; i < arrLength; ++i) {
-              if (isString(arr[i])) {
-                arr[i] = this.handleText(arr[i], stateManager.state);
-              }
-            }
-            break;
-          case OPS.nextLineShowText:
-            args[0] = this.handleText(args[0], stateManager.state);
-            break;
-          case OPS.nextLineSetSpacingShowText:
-            args[2] = this.handleText(args[2], stateManager.state);
-            break;
-          case OPS.setTextRenderingMode:
-            stateManager.state.textRenderingMode = args[0];
-            break;
-          // Parse the ColorSpace data to a raw format.
-          case OPS.setFillColorSpace:
-          case OPS.setStrokeColorSpace:
-            args = [ColorSpace.parseToIR(args[0], xref, resources)];
-            break;
-          case OPS.shadingFill:
-            var shadingRes = resources.get('Shading');
-            if (!shadingRes) {
-              error('No shading resource found');
-            }
-
-            shading = shadingRes.get(args[0].name);
-            if (!shading) {
-              error('No shading object found');
-            }
-
-            var shadingFill = Pattern.parseShading(shading, null, xref,
-                                                   resources);
-            var patternIR = shadingFill.getIR();
-            args = [patternIR];
-            fn = OPS.shadingFill;
-            break;
-          case OPS.setGState:
-            var dictName = args[0];
-            var extGState = resources.get('ExtGState');
-
-            if (!isDict(extGState) || !extGState.has(dictName.name)) {
+            case OPS.showText:
+              args[0] = self.handleText(args[0], stateManager.state);
               break;
-            }
+            case OPS.showSpacedText:
+              var arr = args[0];
+              var arrLength = arr.length;
+              for (i = 0; i < arrLength; ++i) {
+                if (isString(arr[i])) {
+                  arr[i] = self.handleText(arr[i], stateManager.state);
+                }
+              }
+              break;
+            case OPS.nextLineShowText:
+              args[0] = self.handleText(args[0], stateManager.state);
+              break;
+            case OPS.nextLineSetSpacingShowText:
+              args[2] = self.handleText(args[2], stateManager.state);
+              break;
+            case OPS.setTextRenderingMode:
+              stateManager.state.textRenderingMode = args[0];
+              break;
 
-            var gState = extGState.get(dictName.name);
-            self.setGState(resources, gState, operatorList, xref,
-                           stateManager);
-            args = [];
-            continue;
+            case OPS.setFillColorSpace:
+              stateManager.state.fillColorSpace =
+                ColorSpace.parse(args[0], xref, resources);
+              continue;
+            case OPS.setStrokeColorSpace:
+              stateManager.state.strokeColorSpace =
+                ColorSpace.parse(args[0], xref, resources);
+              continue;
+            case OPS.setFillColor:
+              cs = stateManager.state.fillColorSpace;
+              args = cs.getRgb(args, 0);
+              fn = OPS.setFillRGBColor;
+              break;
+            case OPS.setStrokeColor:
+              cs = stateManager.state.strokeColorSpace;
+              args = cs.getRgb(args, 0);
+              fn = OPS.setStrokeRGBColor;
+              break;
+            case OPS.setFillGray:
+              stateManager.state.fillColorSpace = ColorSpace.singletons.gray;
+              args = ColorSpace.singletons.gray.getRgb(args, 0);
+              fn = OPS.setFillRGBColor;
+              break;
+            case OPS.setStrokeGray:
+              stateManager.state.strokeColorSpace = ColorSpace.singletons.gray;
+              args = ColorSpace.singletons.gray.getRgb(args, 0);
+              fn = OPS.setStrokeRGBColor;
+              break;
+            case OPS.setFillCMYKColor:
+              stateManager.state.fillColorSpace = ColorSpace.singletons.cmyk;
+              args = ColorSpace.singletons.cmyk.getRgb(args, 0);
+              fn = OPS.setFillRGBColor;
+              break;
+            case OPS.setStrokeCMYKColor:
+              stateManager.state.strokeColorSpace = ColorSpace.singletons.cmyk;
+              args = ColorSpace.singletons.cmyk.getRgb(args, 0);
+              fn = OPS.setStrokeRGBColor;
+              break;
+            case OPS.setFillRGBColor:
+              stateManager.state.fillColorSpace = ColorSpace.singletons.rgb;
+              args = ColorSpace.singletons.rgb.getRgb(args, 0);
+              break;
+            case OPS.setStrokeRGBColor:
+              stateManager.state.strokeColorSpace = ColorSpace.singletons.rgb;
+              args = ColorSpace.singletons.rgb.getRgb(args, 0);
+              break;
+            case OPS.setFillColorN:
+              cs = stateManager.state.fillColorSpace;
+              if (cs.name === 'Pattern') {
+                return self.handleColorN(operatorList, OPS.setFillColorN,
+                  args, cs, patterns, resources, xref).then(function() {
+                    next(resolve, reject);
+                  }, reject);
+              }
+              args = cs.getRgb(args, 0);
+              fn = OPS.setFillRGBColor;
+              break;
+            case OPS.setStrokeColorN:
+              cs = stateManager.state.strokeColorSpace;
+              if (cs.name === 'Pattern') {
+                return self.handleColorN(operatorList, OPS.setStrokeColorN,
+                  args, cs, patterns, resources, xref).then(function() {
+                    next(resolve, reject);
+                  }, reject);
+              }
+              args = cs.getRgb(args, 0);
+              fn = OPS.setStrokeRGBColor;
+              break;
+
+            case OPS.shadingFill:
+              var shadingRes = resources.get('Shading');
+              if (!shadingRes) {
+                error('No shading resource found');
+              }
+
+              var shading = shadingRes.get(args[0].name);
+              if (!shading) {
+                error('No shading object found');
+              }
+
+              var shadingFill = Pattern.parseShading(shading, null, xref,
+                resources);
+              var patternIR = shadingFill.getIR();
+              args = [patternIR];
+              fn = OPS.shadingFill;
+              break;
+            case OPS.setGState:
+              var dictName = args[0];
+              var extGState = resources.get('ExtGState');
+
+              if (!isDict(extGState) || !extGState.has(dictName.name)) {
+                break;
+              }
+
+              var gState = extGState.get(dictName.name);
+              return self.setGState(resources, gState, operatorList, xref,
+                stateManager).then(function() {
+                  next(resolve, reject);
+                }, reject);
+            case OPS.moveTo:
+            case OPS.lineTo:
+            case OPS.curveTo:
+            case OPS.curveTo2:
+            case OPS.curveTo3:
+            case OPS.closePath:
+              self.buildPath(operatorList, fn, args);
+              continue;
+          }
+          operatorList.addOp(fn, args);
         }
-        operatorList.addOp(fn, args);
-      }
-
-      // Some PDFs don't close all restores inside object/form.
-      // Closing those for them.
-      for (i = 0, ii = preprocessor.savedStatesDepth; i < ii; i++) {
-        operatorList.addOp(OPS.restore, []);
-      }
-
-      return operatorList;
+        if (stop) {
+          deferred.then(function () {
+            next(resolve, reject);
+          });
+          return;
+        }
+        // Some PDFs don't close all restores inside object/form.
+        // Closing those for them.
+        for (i = 0, ii = preprocessor.savedStatesDepth; i < ii; i++) {
+          operatorList.addOp(OPS.restore, []);
+        }
+        resolve();
+      });
     },
 
     getTextContent: function PartialEvaluator_getTextContent(stream, resources,
@@ -15634,10 +15832,12 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
       }
 
       function handleSetFont(fontName, fontRef) {
-        var font = textState.font = self.loadFont(fontName, fontRef, xref,
-                                                  resources, null).translated;
-        textState.fontMatrix = font.fontMatrix ? font.fontMatrix :
-                                 FONT_IDENTITY_MATRIX;
+        return self.loadFont(fontName, fontRef, xref, resources).
+          then(function (translated) {
+            textState.font = translated.font;
+            textState.fontMatrix = translated.font.fontMatrix ||
+              FONT_IDENTITY_MATRIX;
+          });
       }
 
       function buildTextGeometry(chars, textChunk) {
@@ -15732,171 +15932,192 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         return textChunk;
       }
 
-      while ((operation = preprocessor.read())) {
-        textState = stateManager.state;
-        var fn = operation.fn;
-        var args = operation.args;
-        switch (fn) {
-          case OPS.setFont:
-            handleSetFont(args[0].name);
-            textState.fontSize = args[1];
-            break;
-          case OPS.setTextRise:
-            textState.textRise = args[0];
-            break;
-          case OPS.setHScale:
-            textState.textHScale = args[0] / 100;
-            break;
-          case OPS.setLeading:
-            textState.leading = args[0];
-            break;
-          case OPS.moveText:
-            textState.translateTextLineMatrix(args[0], args[1]);
-            textState.textMatrix = textState.textLineMatrix.slice();
-            break;
-          case OPS.setLeadingMoveText:
-            textState.leading = -args[1];
-            textState.translateTextLineMatrix(args[0], args[1]);
-            textState.textMatrix = textState.textLineMatrix.slice();
-            break;
-          case OPS.nextLine:
-            textState.carriageReturn();
-            break;
-          case OPS.setTextMatrix:
-            textState.setTextMatrix(args[0], args[1], args[2], args[3],
-                                    args[4], args[5]);
-            textState.setTextLineMatrix(args[0], args[1], args[2], args[3],
-                                        args[4], args[5]);
-            break;
-          case OPS.setCharSpacing:
-            textState.charSpacing = args[0];
-            break;
-          case OPS.setWordSpacing:
-            textState.wordSpacing = args[0];
-            break;
-          case OPS.beginText:
-            textState.textMatrix = IDENTITY_MATRIX.slice();
-            textState.textLineMatrix = IDENTITY_MATRIX.slice();
-            break;
-          case OPS.showSpacedText:
-            var items = args[0];
-            var textChunk = newTextChunk();
-            var offset;
-            for (var j = 0, jj = items.length; j < jj; j++) {
-              if (typeof items[j] === 'string') {
-                buildTextGeometry(items[j], textChunk);
-              } else {
-                var val = items[j] / 1000;
-                if (!textState.font.vertical) {
-                  offset = -val * textState.fontSize * textState.textHScale *
-                           textState.textMatrix[0];
-                  textState.translateTextMatrix(offset, 0);
-                  textChunk.width += offset;
+      var timeSlotManager = new TimeSlotManager();
+
+      return new Promise(function next(resolve, reject) {
+        timeSlotManager.reset();
+        var stop;
+        while (!(stop = timeSlotManager.check()) &&
+               (operation = preprocessor.read())) {
+          textState = stateManager.state;
+          var fn = operation.fn;
+          var args = operation.args;
+          switch (fn | 0) {
+            case OPS.setFont:
+              textState.fontSize = args[1];
+              return handleSetFont(args[0].name).then(function() {
+                next(resolve, reject);
+              }, reject);
+            case OPS.setTextRise:
+              textState.textRise = args[0];
+              break;
+            case OPS.setHScale:
+              textState.textHScale = args[0] / 100;
+              break;
+            case OPS.setLeading:
+              textState.leading = args[0];
+              break;
+            case OPS.moveText:
+              textState.translateTextLineMatrix(args[0], args[1]);
+              textState.textMatrix = textState.textLineMatrix.slice();
+              break;
+            case OPS.setLeadingMoveText:
+              textState.leading = -args[1];
+              textState.translateTextLineMatrix(args[0], args[1]);
+              textState.textMatrix = textState.textLineMatrix.slice();
+              break;
+            case OPS.nextLine:
+              textState.carriageReturn();
+              break;
+            case OPS.setTextMatrix:
+              textState.setTextMatrix(args[0], args[1], args[2], args[3],
+                args[4], args[5]);
+              textState.setTextLineMatrix(args[0], args[1], args[2], args[3],
+                args[4], args[5]);
+              break;
+            case OPS.setCharSpacing:
+              textState.charSpacing = args[0];
+              break;
+            case OPS.setWordSpacing:
+              textState.wordSpacing = args[0];
+              break;
+            case OPS.beginText:
+              textState.textMatrix = IDENTITY_MATRIX.slice();
+              textState.textLineMatrix = IDENTITY_MATRIX.slice();
+              break;
+            case OPS.showSpacedText:
+              var items = args[0];
+              var textChunk = newTextChunk();
+              var offset;
+              for (var j = 0, jj = items.length; j < jj; j++) {
+                if (typeof items[j] === 'string') {
+                  buildTextGeometry(items[j], textChunk);
                 } else {
-                  offset = -val * textState.fontSize * textState.textMatrix[3];
-                  textState.translateTextMatrix(0, offset);
-                  textChunk.height += offset;
-                }
-                if (items[j] < 0 && textState.font.spaceWidth > 0) {
-                  var fakeSpaces = -items[j] / textState.font.spaceWidth;
-                  if (fakeSpaces > MULTI_SPACE_FACTOR) {
-                    fakeSpaces = Math.round(fakeSpaces);
-                    while (fakeSpaces--) {
+                  var val = items[j] / 1000;
+                  if (!textState.font.vertical) {
+                    offset = -val * textState.fontSize * textState.textHScale *
+                      textState.textMatrix[0];
+                    textState.translateTextMatrix(offset, 0);
+                    textChunk.width += offset;
+                  } else {
+                    offset = -val * textState.fontSize *
+                      textState.textMatrix[3];
+                    textState.translateTextMatrix(0, offset);
+                    textChunk.height += offset;
+                  }
+                  if (items[j] < 0 && textState.font.spaceWidth > 0) {
+                    var fakeSpaces = -items[j] / textState.font.spaceWidth;
+                    if (fakeSpaces > MULTI_SPACE_FACTOR) {
+                      fakeSpaces = Math.round(fakeSpaces);
+                      while (fakeSpaces--) {
+                        textChunk.str += ' ';
+                      }
+                    } else if (fakeSpaces > SPACE_FACTOR) {
                       textChunk.str += ' ';
                     }
-                  } else if (fakeSpaces > SPACE_FACTOR) {
-                    textChunk.str += ' ';
                   }
                 }
               }
-            }
-            bidiTexts.push(runBidi(textChunk));
-            break;
-          case OPS.showText:
-            bidiTexts.push(runBidi(buildTextGeometry(args[0])));
-            break;
-          case OPS.nextLineShowText:
-            textState.carriageReturn();
-            bidiTexts.push(runBidi(buildTextGeometry(args[0])));
-            break;
-          case OPS.nextLineSetSpacingShowText:
-            textState.wordSpacing = args[0];
-            textState.charSpacing = args[1];
-            textState.carriageReturn();
-            bidiTexts.push(runBidi(buildTextGeometry(args[2])));
-            break;
-          case OPS.paintXObject:
-            if (args[0].code) {
+              bidiTexts.push(runBidi(textChunk));
               break;
-            }
+            case OPS.showText:
+              bidiTexts.push(runBidi(buildTextGeometry(args[0])));
+              break;
+            case OPS.nextLineShowText:
+              textState.carriageReturn();
+              bidiTexts.push(runBidi(buildTextGeometry(args[0])));
+              break;
+            case OPS.nextLineSetSpacingShowText:
+              textState.wordSpacing = args[0];
+              textState.charSpacing = args[1];
+              textState.carriageReturn();
+              bidiTexts.push(runBidi(buildTextGeometry(args[2])));
+              break;
+            case OPS.paintXObject:
+              if (args[0].code) {
+                break;
+              }
 
-            if (!xobjs) {
-              xobjs = (resources.get('XObject') || Dict.empty);
-            }
+              if (!xobjs) {
+                xobjs = (resources.get('XObject') || Dict.empty);
+              }
 
-            var name = args[0].name;
-            if (xobjsCache.key === name) {
-              if (xobjsCache.texts) {
-                Util.concatenateToArray(bidiTexts, xobjsCache.texts.items);
-                Util.extendObj(textContent.styles, xobjsCache.texts.styles);
+              var name = args[0].name;
+              if (xobjsCache.key === name) {
+                if (xobjsCache.texts) {
+                  Util.concatenateToArray(bidiTexts, xobjsCache.texts.items);
+                  Util.extendObj(textContent.styles, xobjsCache.texts.styles);
+                }
+                break;
+              }
+
+              var xobj = xobjs.get(name);
+              if (!xobj) {
+                break;
+              }
+              assert(isStream(xobj), 'XObject should be a stream');
+
+              var type = xobj.dict.get('Subtype');
+              assert(isName(type),
+                'XObject should have a Name subtype');
+
+              if ('Form' !== type.name) {
+                xobjsCache.key = name;
+                xobjsCache.texts = null;
+                break;
+              }
+
+              stateManager.save();
+              var matrix = xobj.dict.get('Matrix');
+              if (isArray(matrix) && matrix.length === 6) {
+                stateManager.transform(matrix);
+              }
+
+              return self.getTextContent(xobj,
+                xobj.dict.get('Resources') || resources, stateManager).
+                then(function (formTextContent) {
+                  Util.concatenateToArray(bidiTexts, formTextContent.items);
+                  Util.extendObj(textContent.styles, formTextContent.styles);
+                  stateManager.restore();
+
+                  xobjsCache.key = name;
+                  xobjsCache.texts = formTextContent;
+
+                  next(resolve, reject);
+                }, reject);
+            case OPS.setGState:
+              var dictName = args[0];
+              var extGState = resources.get('ExtGState');
+
+              if (!isDict(extGState) || !extGState.has(dictName.name)) {
+                break;
+              }
+
+              var gsStateMap = extGState.get(dictName.name);
+              var gsStateFont = null;
+              for (var key in gsStateMap) {
+                if (key === 'Font') {
+                  assert(!gsStateFont);
+                  gsStateFont = gsStateMap[key];
+                }
+              }
+              if (gsStateFont) {
+                textState.fontSize = gsStateFont[1];
+                return handleSetFont(gsStateFont[0]).then(function() {
+                  next(resolve, reject);
+                }, reject);
               }
               break;
-            }
-
-            var xobj = xobjs.get(name);
-            if (!xobj) {
-              break;
-            }
-            assert(isStream(xobj), 'XObject should be a stream');
-
-            var type = xobj.dict.get('Subtype');
-            assert(isName(type),
-              'XObject should have a Name subtype');
-
-            if ('Form' !== type.name) {
-              xobjsCache.key = name;
-              xobjsCache.texts = null;
-              break;
-            }
-
-            stateManager.save();
-            var matrix = xobj.dict.get('Matrix');
-            if (isArray(matrix) && matrix.length === 6) {
-              stateManager.transform(matrix);
-            }
-
-            var formTextContent = this.getTextContent(
-              xobj,
-              xobj.dict.get('Resources') || resources,
-              stateManager
-            );
-            Util.concatenateToArray(bidiTexts, formTextContent.items);
-            Util.extendObj(textContent.styles, formTextContent.styles);
-            stateManager.restore();
-
-            xobjsCache.key = name;
-            xobjsCache.texts = formTextContent;
-            break;
-          case OPS.setGState:
-            var dictName = args[0];
-            var extGState = resources.get('ExtGState');
-
-            if (!isDict(extGState) || !extGState.has(dictName.name)) {
-              break;
-            }
-
-            var gsState = extGState.get(dictName.name);
-
-            for (var i = 0; i < gsState.length; i++) {
-              if (gsState[i] === 'Font') {
-                handleSetFont(args[0].name);
-              }
-            }
-            break;
-        } // switch
-      } // while
-
-      return textContent;
+          } // switch
+        } // while
+        if (stop) {
+          deferred.then(function () {
+            next(resolve, reject);
+          });
+          return;
+        }
+        resolve(textContent);
+      });
     },
 
     extractDataStructures: function
@@ -16389,7 +16610,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
       this.extractWidths(dict, xref, descriptor, properties);
 
       if (type.name === 'Type3') {
-        properties.coded = true;
+        properties.isType3Font = true;
       }
 
       return new Font(fontName.name, fontFile, properties);
@@ -16397,6 +16618,64 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
   };
 
   return PartialEvaluator;
+})();
+
+var TranslatedFont = (function TranslatedFontClosure() {
+  function TranslatedFont(loadedName, font, dict) {
+    this.loadedName = loadedName;
+    this.font = font;
+    this.dict = dict;
+    this.type3Loaded = null;
+    this.sent = false;
+  }
+  TranslatedFont.prototype = {
+    send: function (handler) {
+      if (this.sent) {
+        return;
+      }
+      var fontData = this.font.exportData();
+      handler.send('commonobj', [
+        this.loadedName,
+        'Font',
+        fontData
+      ]);
+      this.sent = true;
+    },
+    loadType3Data: function (evaluator, resources, parentOperatorList) {
+      assert(this.font.isType3Font);
+
+      if (this.type3Loaded) {
+        return this.type3Loaded;
+      }
+
+      var translatedFont = this.font;
+      var loadCharProcsPromise = Promise.resolve();
+      var charProcs = this.dict.get('CharProcs').getAll();
+      var fontResources = this.dict.get('Resources') || resources;
+      var charProcKeys = Object.keys(charProcs);
+      var charProcOperatorList = {};
+      for (var i = 0, n = charProcKeys.length; i < n; ++i) {
+        loadCharProcsPromise = loadCharProcsPromise.then(function (key) {
+          var glyphStream = charProcs[key];
+          var operatorList = new OperatorList();
+          return evaluator.getOperatorList(glyphStream, fontResources,
+            operatorList).
+            then(function () {
+              charProcOperatorList[key] = operatorList.getIR();
+
+              // Add the dependencies to the parent operator list so they are
+              // resolved before sub operator list is executed synchronously.
+              parentOperatorList.addDependencies(operatorList.dependencies);
+            });
+        }.bind(this, charProcKeys[i]));
+      }
+      this.type3Loaded = loadCharProcsPromise.then(function () {
+        translatedFont.charProcOperatorList = charProcOperatorList;
+      });
+      return this.type3Loaded;
+    }
+  };
+  return TranslatedFont;
 })();
 
 var OperatorList = (function OperatorListClosure() {
@@ -16490,7 +16769,7 @@ var OperatorList = (function OperatorListClosure() {
         },
         pageIndex: this.pageIndex,
         intent: this.intent
-      }, null, transfers);
+      }, transfers);
       this.dependencies = {};
       this.fnArray.length = 0;
       this.argsArray.length = 0;
@@ -16585,6 +16864,8 @@ var EvalState = (function EvalStateClosure() {
     this.ctm = new Float32Array(IDENTITY_MATRIX);
     this.font = null;
     this.textRenderingMode = TextRenderingMode.FILL;
+    this.fillColorSpace = ColorSpace.singletons.gray;
+    this.strokeColorSpace = ColorSpace.singletons.gray;
   }
   EvalState.prototype = {
     clone: function CanvasExtraState_clone() {
@@ -16713,6 +16994,7 @@ var EvaluatorPreprocessor = (function EvaluatorPreprocessorClosure() {
     // dictionary
     this.parser = new Parser(new Lexer(stream, OP_MAP), false, xref);
     this.stateManager = stateManager;
+    this.nonProcessedArgs = [];
   }
 
   EvaluatorPreprocessor.prototype = {
@@ -16745,6 +17027,17 @@ var EvaluatorPreprocessor = (function EvaluatorPreprocessorClosure() {
         }
 
         var fn = opSpec.id;
+
+        // Some post script commands can be nested, e.g. /F2 /GS2 gs 5.711 Tf
+        if (!opSpec.variableArgs && args.length !== opSpec.numArgs) {
+          while (args.length > opSpec.numArgs) {
+            this.nonProcessedArgs.push(args.shift());
+          }
+
+          while (args.length < opSpec.numArgs && this.nonProcessedArgs.length) {
+            args.unshift(this.nonProcessedArgs.pop());
+          }
+        }
 
         // Validate the number of arguments for the command
         if (opSpec.variableArgs) {
@@ -20047,23 +20340,23 @@ function adjustWidths(properties) {
 }
 
 var Glyph = (function GlyphClosure() {
-  function Glyph(fontChar, unicode, accent, width, vmetric, operatorList) {
+  function Glyph(fontChar, unicode, accent, width, vmetric, operatorListId) {
     this.fontChar = fontChar;
     this.unicode = unicode;
     this.accent = accent;
     this.width = width;
     this.vmetric = vmetric;
-    this.operatorList = operatorList;
+    this.operatorListId = operatorListId;
   }
 
   Glyph.prototype.matchesForCache =
-      function(fontChar, unicode, accent, width, vmetric, operatorList) {
+      function(fontChar, unicode, accent, width, vmetric, operatorListId) {
     return this.fontChar === fontChar &&
            this.unicode === unicode &&
            this.accent === accent &&
            this.width === width &&
            this.vmetric === vmetric &&
-           this.operatorList === operatorList;
+           this.operatorListId === operatorListId;
   };
 
   return Glyph;
@@ -20083,8 +20376,7 @@ var Font = (function FontClosure() {
 
     this.name = name;
     this.loadedName = properties.loadedName;
-    this.coded = properties.coded;
-    this.loadCharProcs = properties.coded;
+    this.isType3Font = properties.isType3Font;
     this.sizes = [];
 
     this.glyphCache = {};
@@ -20133,7 +20425,13 @@ var Font = (function FontClosure() {
       this.defaultVMetrics = properties.defaultVMetrics;
     }
 
-    if (!file) {
+    if (!file || file.isEmpty) {
+      if (file) {
+        // Some bad PDF generators will include empty font files,
+        // attempting to recover by assuming that no file exists.
+        warn('Font file is empty in "' + name + '" (' + this.loadedName + ')');
+      }
+
       this.missingFile = true;
       // The file data is not specified. Trying to fix the font name
       // to be used with the canvas.font.
@@ -22299,7 +22597,7 @@ var Font = (function FontClosure() {
     },
 
     charToGlyph: function Font_charToGlyph(charcode) {
-      var fontCharCode, width, operatorList;
+      var fontCharCode, width, operatorListId;
 
       var widthCode = charcode;
       if (this.cMap && charcode in this.cMap.map) {
@@ -22321,9 +22619,9 @@ var Font = (function FontClosure() {
         fontCharCode = mapSpecialUnicodeValues(fontCharCode);
       }
 
-      if (this.type === 'Type3') {
+      if (this.isType3Font) {
         // Font char code in this case is actually a glyph name.
-        operatorList = this.charProcOperatorList[fontCharCode];
+        operatorListId = fontCharCode;
       }
 
       var accent = null;
@@ -22341,9 +22639,9 @@ var Font = (function FontClosure() {
       var glyph = this.glyphCache[charcode];
       if (!glyph ||
           !glyph.matchesForCache(fontChar, unicode, accent, width, vmetric,
-                                 operatorList)) {
+                                 operatorListId)) {
         glyph = new Glyph(fontChar, unicode, accent, width, vmetric,
-                          operatorList);
+                          operatorListId);
         this.glyphCache[charcode] = glyph;
       }
       return glyph;
@@ -22408,6 +22706,8 @@ var Font = (function FontClosure() {
 var ErrorFont = (function ErrorFontClosure() {
   function ErrorFont(error) {
     this.error = error;
+    this.loadedName = 'g_font_error';
+    this.loading = false;
   }
 
   ErrorFont.prototype = {
@@ -29831,14 +30131,11 @@ var PDFImage = (function PDFImageClosure() {
       var colorSpace = dict.get('ColorSpace', 'CS');
       colorSpace = ColorSpace.parse(colorSpace, xref, res);
       var numComps = colorSpace.numComps;
-      var resolvePromise;
-      handler.send('JpegDecode', [image.getIR(), numComps], function(message) {
+      var decodePromise = handler.sendWithPromise('JpegDecode',
+                                                  [image.getIR(), numComps]);
+      return decodePromise.then(function (message) {
         var data = message.data;
-        var stream = new Stream(data, 0, data.length, image.dict);
-        resolvePromise(stream);
-      });
-      return new Promise(function (resolve) {
-        resolvePromise = resolve;
+        return new Stream(data, 0, data.length, image.dict);
       });
     } else {
       return Promise.resolve(image);
@@ -33390,7 +33687,7 @@ var Metrics = {
 var EOF = {};
 
 function isEOF(v) {
-  return (v == EOF);
+  return (v === EOF);
 }
 
 var Parser = (function ParserClosure() {
@@ -33421,55 +33718,58 @@ var Parser = (function ParserClosure() {
       }
     },
     getObj: function Parser_getObj(cipherTransform) {
-      if (isCmd(this.buf1, 'BI')) { // inline image
-        this.shift();
-        return this.makeInlineImage(cipherTransform);
-      }
-      if (isCmd(this.buf1, '[')) { // array
-        this.shift();
-        var array = [];
-        while (!isCmd(this.buf1, ']') && !isEOF(this.buf1)) {
-          array.push(this.getObj(cipherTransform));
-        }
-        if (isEOF(this.buf1)) {
-          error('End of file inside array');
-        }
-        this.shift();
-        return array;
-      }
-      if (isCmd(this.buf1, '<<')) { // dictionary or stream
-        this.shift();
-        var dict = new Dict(this.xref);
-        while (!isCmd(this.buf1, '>>') && !isEOF(this.buf1)) {
-          if (!isName(this.buf1)) {
-            info('Malformed dictionary: key must be a name object');
+      var buf1 = this.buf1;
+      this.shift();
+
+      if (buf1 instanceof Cmd) {
+        switch (buf1.cmd) {
+          case 'BI': // inline image
+            return this.makeInlineImage(cipherTransform);
+          case '[': // array
+            var array = [];
+            while (!isCmd(this.buf1, ']') && !isEOF(this.buf1)) {
+              array.push(this.getObj(cipherTransform));
+            }
+            if (isEOF(this.buf1)) {
+              error('End of file inside array');
+            }
             this.shift();
-            continue;
-          }
+            return array;
+          case '<<': // dictionary or stream
+            var dict = new Dict(this.xref);
+            while (!isCmd(this.buf1, '>>') && !isEOF(this.buf1)) {
+              if (!isName(this.buf1)) {
+                info('Malformed dictionary: key must be a name object');
+                this.shift();
+                continue;
+              }
 
-          var key = this.buf1.name;
-          this.shift();
-          if (isEOF(this.buf1)) {
-            break;
-          }
-          dict.set(key, this.getObj(cipherTransform));
-        }
-        if (isEOF(this.buf1)) {
-          error('End of file inside dictionary');
-        }
+              var key = this.buf1.name;
+              this.shift();
+              if (isEOF(this.buf1)) {
+                break;
+              }
+              dict.set(key, this.getObj(cipherTransform));
+            }
+            if (isEOF(this.buf1)) {
+              error('End of file inside dictionary');
+            }
 
-        // Stream objects are not allowed inside content streams or
-        // object streams.
-        if (isCmd(this.buf2, 'stream')) {
-          return (this.allowStreams ?
-                  this.makeStream(dict, cipherTransform) : dict);
+            // Stream objects are not allowed inside content streams or
+            // object streams.
+            if (isCmd(this.buf2, 'stream')) {
+              return (this.allowStreams ?
+                      this.makeStream(dict, cipherTransform) : dict);
+            }
+            this.shift();
+            return dict;
+          default: // simple object
+            return buf1;
         }
-        this.shift();
-        return dict;
       }
-      if (isInt(this.buf1)) { // indirect reference or integer
-        var num = this.buf1;
-        this.shift();
+
+      if (isInt(buf1)) { // indirect reference or integer
+        var num = buf1;
         if (isInt(this.buf1) && isCmd(this.buf2, 'R')) {
           var ref = new Ref(num, this.buf1);
           this.shift();
@@ -33478,9 +33778,9 @@ var Parser = (function ParserClosure() {
         }
         return num;
       }
-      if (isString(this.buf1)) { // string
-        var str = this.buf1;
-        this.shift();
+
+      if (isString(buf1)) { // string
+        var str = buf1;
         if (cipherTransform) {
           str = cipherTransform.decryptString(str);
         }
@@ -33488,9 +33788,7 @@ var Parser = (function ParserClosure() {
       }
 
       // simple object
-      var obj = this.buf1;
-      this.shift();
-      return obj;
+      return buf1;
     },
     makeInlineImage: function Parser_makeInlineImage(cipherTransform) {
       var lexer = this.lexer;
@@ -33995,7 +34293,7 @@ var Lexer = (function LexerClosure() {
           var x = toHexDigit(ch);
           if (x != -1) {
             var x2 = toHexDigit(this.nextChar());
-            if (x2 == -1) {
+            if (x2 === -1) {
               error('Illegal digit in hex char in name: ' + x2);
             }
             strBuf.push(String.fromCharCode((x << 4) | x2));
@@ -34061,7 +34359,7 @@ var Lexer = (function LexerClosure() {
           return EOF;
         }
         if (comment) {
-          if (ch === 0x0A || ch == 0x0D) { // LF, CR
+          if (ch === 0x0A || ch === 0x0D) { // LF, CR
             comment = false;
           }
         } else if (ch === 0x25) { // '%'
@@ -34128,19 +34426,19 @@ var Lexer = (function LexerClosure() {
         if (knownCommandFound && !(possibleCommand in knownCommands)) {
           break;
         }
-        if (str.length == 128) {
+        if (str.length === 128) {
           error('Command token too long: ' + str.length);
         }
         str = possibleCommand;
         knownCommandFound = knownCommands && (str in knownCommands);
       }
-      if (str == 'true') {
+      if (str === 'true') {
         return true;
       }
-      if (str == 'false') {
+      if (str === 'false') {
         return false;
       }
-      if (str == 'null') {
+      if (str === 'null') {
         return null;
       }
       return Cmd.get(str);
@@ -34451,6 +34749,9 @@ var Stream = (function StreamClosure() {
     get length() {
       return this.end - this.start;
     },
+    get isEmpty() {
+      return this.length === 0;
+    },
     getByte: function Stream_getByte() {
       if (this.pos >= this.end) {
         return -1;
@@ -34544,6 +34845,12 @@ var DecodeStream = (function DecodeStreamClosure() {
   }
 
   DecodeStream.prototype = {
+    get isEmpty() {
+      while (!this.eof && this.bufferLength === 0) {
+        this.readBlock();
+      }
+      return this.bufferLength === 0;
+    },
     ensureBuffer: function DecodeStream_ensureBuffer(requested) {
       var buffer = this.buffer;
       var current;
@@ -34560,8 +34867,8 @@ var DecodeStream = (function DecodeStreamClosure() {
         size *= 2;
       }
       var buffer2 = new Uint8Array(size);
-      for (var i = 0; i < current; ++i) {
-        buffer2[i] = buffer[i];
+      if (buffer) {
+        buffer2.set(buffer);
       }
       return (this.buffer = buffer2);
     },
@@ -34629,7 +34936,7 @@ var DecodeStream = (function DecodeStreamClosure() {
       }
       return new Stream(this.buffer, start, length, dict);
     },
-    skip: function Stream_skip(n) {
+    skip: function DecodeStream_skip(n) {
       if (!n) {
         n = 1;
       }
@@ -37067,81 +37374,64 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
       }, onFailure);
     });
 
-    handler.on('GetPageRequest', function wphSetupGetPage(data) {
-      var pageIndex = data.pageIndex;
-      pdfManager.getPage(pageIndex).then(function(page) {
+    handler.on('GetPage', function wphSetupGetPage(data) {
+      return pdfManager.getPage(data.pageIndex).then(function(page) {
         var rotatePromise = pdfManager.ensure(page, 'rotate');
         var refPromise = pdfManager.ensure(page, 'ref');
         var viewPromise = pdfManager.ensure(page, 'view');
 
-        Promise.all([rotatePromise, refPromise, viewPromise]).then(
+        return Promise.all([rotatePromise, refPromise, viewPromise]).then(
             function(results) {
-          var page = {
-            pageIndex: data.pageIndex,
+          return {
             rotate: results[0],
             ref: results[1],
             view: results[2]
           };
-
-          handler.send('GetPage', { pageInfo: page });
         });
       });
     });
 
-    handler.on('GetPageIndex', function wphSetupGetPageIndex(data, deferred) {
+    handler.on('GetPageIndex', function wphSetupGetPageIndex(data) {
       var ref = new Ref(data.ref.num, data.ref.gen);
       var catalog = pdfManager.pdfDocument.catalog;
-      catalog.getPageIndex(ref).then(function (pageIndex) {
-        deferred.resolve(pageIndex);
-      }, deferred.reject);
+      return catalog.getPageIndex(ref);
     });
 
     handler.on('GetDestinations',
-      function wphSetupGetDestinations(data, deferred) {
-        pdfManager.ensureCatalog('destinations').then(function(destinations) {
-          deferred.resolve(destinations);
-        });
+      function wphSetupGetDestinations(data) {
+        return pdfManager.ensureCatalog('destinations');
       }
     );
 
     handler.on('GetAttachments',
-      function wphSetupGetAttachments(data, deferred) {
-        pdfManager.ensureCatalog('attachments').then(function(attachments) {
-          deferred.resolve(attachments);
-        }, deferred.reject);
+      function wphSetupGetAttachments(data) {
+        return pdfManager.ensureCatalog('attachments');
       }
     );
 
     handler.on('GetJavaScript',
-      function wphSetupGetJavaScript(data, deferred) {
-        pdfManager.ensureCatalog('javaScript').then(function (js) {
-          deferred.resolve(js);
-        }, deferred.reject);
+      function wphSetupGetJavaScript(data) {
+        return pdfManager.ensureCatalog('javaScript');
       }
     );
 
     handler.on('GetOutline',
-      function wphSetupGetOutline(data, deferred) {
-        pdfManager.ensureCatalog('documentOutline').then(function (outline) {
-          deferred.resolve(outline);
-        }, deferred.reject);
+      function wphSetupGetOutline(data) {
+        return pdfManager.ensureCatalog('documentOutline');
       }
     );
 
     handler.on('GetMetadata',
-      function wphSetupGetMetadata(data, deferred) {
-        Promise.all([pdfManager.ensureDoc('documentInfo'),
-                     pdfManager.ensureCatalog('metadata')]).then(
-            function (results) {
-          deferred.resolve(results);
-        }, deferred.reject);
+      function wphSetupGetMetadata(data) {
+        return Promise.all([pdfManager.ensureDoc('documentInfo'),
+                            pdfManager.ensureCatalog('metadata')]);
       }
     );
 
-    handler.on('GetData', function wphSetupGetData(data, deferred) {
+    handler.on('GetData', function wphSetupGetData(data) {
       pdfManager.requestLoadedStream();
-      pdfManager.onLoadedStream().then(function(stream) {
-        deferred.resolve(stream.bytes);
+      return pdfManager.onLoadedStream().then(function(stream) {
+        return stream.bytes;
       });
     });
 
@@ -37149,16 +37439,9 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
       pdfManager.updatePassword(data);
     });
 
-    handler.on('GetAnnotationsRequest', function wphSetupGetAnnotations(data) {
-      pdfManager.getPage(data.pageIndex).then(function(page) {
-        pdfManager.ensure(page, 'getAnnotationsData', []).then(
-          function(annotationsData) {
-            handler.send('GetAnnotations', {
-              pageIndex: data.pageIndex,
-              annotations: annotationsData
-            });
-          }
-        );
+    handler.on('GetAnnotations', function wphSetupGetAnnotations(data) {
+      return pdfManager.getPage(data.pageIndex).then(function(page) {
+        return pdfManager.ensure(page, 'getAnnotationsData', []);
       });
     });
 
@@ -37207,29 +37490,24 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
       });
     }, this);
 
-    handler.on('GetTextContent', function wphExtractText(data, deferred) {
-      pdfManager.getPage(data.pageIndex).then(function(page) {
+    handler.on('GetTextContent', function wphExtractText(data) {
+      return pdfManager.getPage(data.pageIndex).then(function(page) {
         var pageNum = data.pageIndex + 1;
         var start = Date.now();
-        page.extractTextContent().then(function(textContent) {
-          deferred.resolve(textContent);
+        return page.extractTextContent().then(function(textContent) {
           info('text indexing: page=' + pageNum + ' - time=' +
                (Date.now() - start) + 'ms');
-        }, function (e) {
-          // Skip errored pages
-          deferred.reject(e);
+          return textContent;
         });
       });
     });
 
-    handler.on('Cleanup', function wphCleanup(data, deferred) {
-      pdfManager.cleanup();
-      deferred.resolve(true);
+    handler.on('Cleanup', function wphCleanup(data) {
+      return pdfManager.cleanup();
     });
 
-    handler.on('Terminate', function wphTerminate(data, deferred) {
+    handler.on('Terminate', function wphTerminate(data) {
       pdfManager.terminate();
-      deferred.resolve();
     });
   }
 };
@@ -40332,7 +40610,7 @@ var Jbig2Image = (function Jbig2ImageClosure() {
       if (id in this) {
         return this[id];
       }
-      return (this[id] = new Int8Array(1<<16));
+      return (this[id] = new Int8Array(1 << 16));
     }
   };
 
@@ -40357,69 +40635,32 @@ var Jbig2Image = (function Jbig2ImageClosure() {
   // A.2 Procedure for decoding values
   function decodeInteger(contextCache, procedure, decoder) {
     var contexts = contextCache.getContexts(procedure);
-
     var prev = 1;
-    var state = 1, v = 0, s;
-    var toRead = 32, offset = 4436; // defaults for state 7
-    while (state) {
-      var bit = decoder.readBit(contexts, prev);
-      prev = (prev < 256 ? (prev << 1) | bit :
-              (((prev << 1) | bit) & 511) | 256);
-      switch (state) {
-        case 1:
-          s = !!bit;
-          break;
-        case 2:
-          if (bit) {
-            break;
-          }
-          state = 7;
-          toRead = 2;
-          offset = 0;
-          break;
-        case 3:
-          if (bit) {
-            break;
-          }
-          state = 7;
-          toRead = 4;
-          offset = 4;
-          break;
-        case 4:
-          if (bit) {
-            break;
-          }
-          state = 7;
-          toRead = 6;
-          offset = 20;
-          break;
-        case 5:
-          if (bit) {
-            break;
-          }
-          state = 7;
-          toRead = 8;
-          offset = 84;
-          break;
-        case 6:
-          if (bit) {
-            break;
-          }
-          state = 7;
-          toRead = 12;
-          offset = 340;
-          break;
-        default:
-          v = ((v << 1) | bit) >>> 0;
-          if (--toRead === 0) {
-            state = 0;
-          }
-          continue;
+
+    function readBits(length) {
+      var v = 0;
+      for (var i = 0; i < length; i++) {
+        var bit = decoder.readBit(contexts, prev);
+        prev = (prev < 256 ? (prev << 1) | bit :
+                (((prev << 1) | bit) & 511) | 256);
+        v = (v << 1) | bit;
       }
-      state++;
+      return v >>> 0;
     }
-    v += offset;
-    return (!s ? v : (v > 0 ? -v : null));
+
+    var sign = readBits(1);
+    var value = readBits(1) ?
+                  (readBits(1) ?
+                    (readBits(1) ?
+                      (readBits(1) ?
+                        (readBits(1) ?
+                          (readBits(32) + 4436) :
+                        readBits(12) + 340) :
+                      readBits(8) + 84) :
+                    readBits(6) + 20) :
+                  readBits(4) + 4) :
+                readBits(2);
+    return (sign === 0 ? value : (value > 0 ? -value : null));
   }
 
   // A.3 The IAID decoding procedure
