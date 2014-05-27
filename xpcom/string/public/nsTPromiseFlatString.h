@@ -62,37 +62,37 @@ class nsTPromiseFlatString_CharT : public nsTString_CharT
 {
 public:
 
-  typedef nsTPromiseFlatString_CharT    self_type;
+  typedef nsTPromiseFlatString_CharT self_type;
 
 private:
 
-  void Init( const substring_type& );
+  void Init(const substring_type&);
 
   // NOT TO BE IMPLEMENTED
-  void operator=( const self_type& ) MOZ_DELETE;
+  void operator=(const self_type&) MOZ_DELETE;
 
   // NOT TO BE IMPLEMENTED
   nsTPromiseFlatString_CharT() MOZ_DELETE;
 
   // NOT TO BE IMPLEMENTED
-  nsTPromiseFlatString_CharT( const string_type& str ) MOZ_DELETE;
+  nsTPromiseFlatString_CharT(const string_type& aStr) MOZ_DELETE;
 
 public:
 
   explicit
-  nsTPromiseFlatString_CharT( const substring_type& str )
+  nsTPromiseFlatString_CharT(const substring_type& aStr)
     : string_type()
   {
-    Init(str);
+    Init(aStr);
   }
 
   explicit
-  nsTPromiseFlatString_CharT( const substring_tuple_type& tuple )
+  nsTPromiseFlatString_CharT(const substring_tuple_type& aTuple)
     : string_type()
   {
     // nothing else to do here except assign the value of the tuple
     // into ourselves.
-    Assign(tuple);
+    Assign(aTuple);
   }
 };
 
@@ -100,7 +100,7 @@ public:
 // parameter. This allows us to reject attempts to promise a flat flat string.
 template<class T>
 const nsTPromiseFlatString_CharT
-TPromiseFlatString_CharT( const T& string )
+TPromiseFlatString_CharT(const T& aString)
 {
-  return nsTPromiseFlatString_CharT(string);
+  return nsTPromiseFlatString_CharT(aString);
 }

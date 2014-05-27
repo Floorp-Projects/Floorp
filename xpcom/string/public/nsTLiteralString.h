@@ -19,7 +19,7 @@ class nsTLiteralString_CharT : public nsTString_CharT
 {
 public:
 
-  typedef nsTLiteralString_CharT    self_type;
+  typedef nsTLiteralString_CharT self_type;
 
 public:
 
@@ -28,8 +28,8 @@ public:
    */
 
   template<size_type N>
-  nsTLiteralString_CharT( const char_type (&str)[N] )
-    : string_type(const_cast<char_type*>(str), N - 1, F_TERMINATED | F_LITERAL)
+  nsTLiteralString_CharT(const char_type (&aStr)[N])
+    : string_type(const_cast<char_type*>(aStr), N - 1, F_TERMINATED | F_LITERAL)
   {
   }
 
@@ -37,5 +37,5 @@ private:
 
   // NOT TO BE IMPLEMENTED
   template<size_type N>
-  nsTLiteralString_CharT( char_type (&str)[N] ) MOZ_DELETE;
+  nsTLiteralString_CharT(char_type (&aStr)[N]) MOZ_DELETE;
 };
