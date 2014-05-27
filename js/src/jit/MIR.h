@@ -3685,6 +3685,11 @@ class MRsh : public MShiftInstruction
         return getOperand(0);
     }
     void computeRange(TempAllocator &alloc);
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return specialization_ < MIRType_Object;
+    }
 };
 
 class MUrsh : public MShiftInstruction

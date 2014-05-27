@@ -88,6 +88,25 @@ function rlsh_object(i) {
     return i;
 }
 
+var uceFault_rsh_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_rsh_number'));
+function rrsh_number(i) {
+    var x = i >> 1;
+    if (uceFault_rsh_number(i) || uceFault_rsh_number(i))
+        assertEq(x, 49  /* = 99 >> 1 */);
+    return i;
+}
+
+var uceFault_rsh_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_rsh_object'));
+function rrsh_object(i) {
+    var t = i;
+    var o = { valueOf: function () { return t; } };
+    var x = o >> 1; /* computed with t == i, not 1000 */
+    t = 1000;
+    if (uceFault_rsh_object(i) || uceFault_rsh_object(i))
+        assertEq(x, 49  /* = 99 >> 1 */);
+    return i;
+}
+
 var uceFault_ursh_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_ursh_number'));
 function rursh_number(i) {
     var x = i >>> 1;
@@ -153,6 +172,8 @@ for (i = 0; i < 100; i++) {
     rbitxor_object(i);
     rlsh_number(i);
     rlsh_object(i);
+    rrsh_number(i);
+    rrsh_object(i);
     rursh_number(i);
     rursh_object(i);
     radd_number(i);
