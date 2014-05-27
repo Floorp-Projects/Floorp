@@ -137,10 +137,6 @@ function defineLazyRegExp(obj, name, pattern) {
 function NetworkManager() {
   this.networkInterfaces = {};
   Services.obs.addObserver(this, TOPIC_INTERFACE_STATE_CHANGED, true);
-#ifdef MOZ_B2G_RIL
-  Services.obs.addObserver(this, TOPIC_INTERFACE_REGISTERED, true);
-  Services.obs.addObserver(this, TOPIC_INTERFACE_UNREGISTERED, true);
-#endif
   Services.obs.addObserver(this, TOPIC_XPCOM_SHUTDOWN, false);
   Services.obs.addObserver(this, TOPIC_MOZSETTINGS_CHANGED, false);
 
@@ -302,27 +298,6 @@ NetworkManager.prototype = {
                                      this.convertConnectionType(network));
 #endif
         break;
-#ifdef MOZ_B2G_RIL
-      case TOPIC_INTERFACE_REGISTERED:
-        let regNetwork = subject.QueryInterface(Ci.nsINetworkInterface);
-        // Add extra host route. For example, mms proxy or mmsc.
-        this.setExtraHostRoute(regNetwork);
-        // Dun type is a special case where we add the default route to a
-        // secondary table.
-        if (regNetwork.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN) {
-          this.setSecondaryDefaultRoute(regNetwork);
-        }
-        break;
-      case TOPIC_INTERFACE_UNREGISTERED:
-        let unregNetwork = subject.QueryInterface(Ci.nsINetworkInterface);
-        // Remove extra host route. For example, mms proxy or mmsc.
-        this.removeExtraHostRoute(unregNetwork);
-        // Remove secondary default route for dun.
-        if (unregNetwork.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN) {
-          this.removeSecondaryDefaultRoute(unregNetwork);
-        }
-        break;
-#endif
       case TOPIC_MOZSETTINGS_CHANGED:
         let setting = JSON.parse(data);
         this.handle(setting.key, setting.value);
@@ -335,10 +310,6 @@ NetworkManager.prototype = {
       case TOPIC_XPCOM_SHUTDOWN:
         Services.obs.removeObserver(this, TOPIC_XPCOM_SHUTDOWN);
         Services.obs.removeObserver(this, TOPIC_MOZSETTINGS_CHANGED);
-#ifdef MOZ_B2G_RIL
-        Services.obs.removeObserver(this, TOPIC_INTERFACE_REGISTERED);
-        Services.obs.removeObserver(this, TOPIC_INTERFACE_UNREGISTERED);
-#endif
         Services.obs.removeObserver(this, TOPIC_INTERFACE_STATE_CHANGED);
 #ifdef MOZ_B2G_RIL
         this.dunConnectTimer.cancel();
@@ -415,16 +386,7 @@ NetworkManager.prototype = {
                                  Cr.NS_ERROR_INVALID_ARG);
     }
     this.networkInterfaces[networkId] = network;
-#ifdef MOZ_B2G_RIL
-    // Add host route for data calls
-    if (this.isNetworkTypeMobile(network.type)) {
-      gNetworkService.addHostRoute(network);
-    }
-#endif
-    // Remove pre-created default route and let setAndConfigureActive()
-    // to set default route only on preferred network
-    gNetworkService.removeDefaultRoute(network);
-    this.setAndConfigureActive();
+
     Services.obs.notifyObservers(network, TOPIC_INTERFACE_REGISTERED, null);
     debug("Network '" + networkId + "' registered.");
   },
@@ -440,13 +402,7 @@ NetworkManager.prototype = {
                                  Cr.NS_ERROR_INVALID_ARG);
     }
     delete this.networkInterfaces[networkId];
-#ifdef MOZ_B2G_RIL
-    // Remove host route for data calls
-    if (this.isNetworkTypeMobile(network.type)) {
-      gNetworkService.removeHostRoute(network);
-    }
-#endif
-    this.setAndConfigureActive();
+
     Services.obs.notifyObservers(network, TOPIC_INTERFACE_UNREGISTERED, null);
     debug("Network '" + networkId + "' unregistered.");
   },
@@ -506,8 +462,7 @@ NetworkManager.prototype = {
 
       network = network.QueryInterface(Ci.nsIRilNetworkInterface);
 
-      debug("Network '" + network.name + "' registered, " +
-            "adding mmsproxy and/or mmsc route");
+      debug("Adding mmsproxy and/or mmsc route for " + network.name);
 
       let hostToResolve = network.mmsProxy;
       // Workaround an xpconnect issue with undefined string objects.
@@ -535,8 +490,7 @@ NetworkManager.prototype = {
 
       network = network.QueryInterface(Ci.nsIRilNetworkInterface);
 
-      debug("Network '" + network.name + "' unregistered, " +
-            "removing mmsproxy and/or mmsc route");
+      debug("Removing mmsproxy and/or mmsc route for " + network.name);
 
       let hostToResolve = network.mmsProxy;
       // Workaround an xpconnect issue with undefined string objects.
