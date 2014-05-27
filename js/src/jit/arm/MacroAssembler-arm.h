@@ -1427,9 +1427,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void addPtr(ImmPtr imm, const Register dest) {
         addPtr(ImmWord(uintptr_t(imm.value)), dest);
     }
-    void mulBy3(const Register &src, const Register &dest) {
-        as_add(dest, src, lsl(src, 1));
-    }
 
     void setStackArg(Register reg, uint32_t arg);
 

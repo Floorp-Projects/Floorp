@@ -581,9 +581,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void subPtr(Register src, const Address &dest) {
         subl(src, Operand(dest));
     }
-    void mulBy3(const Register &src, const Register &dest) {
-        lea(Operand(src, src, TimesTwo), dest);
-    }
 
     void branch32(Condition cond, AbsoluteAddress lhs, Imm32 rhs, Label *label) {
         cmpl(Operand(lhs), rhs);
