@@ -175,12 +175,18 @@ add_task(function test_shutdown_when_provider_manager_errors() {
   let reporter = yield getHealthReporter("shutdown_when_provider_manager_errors",
                                        DUMMY_URI, true);
 
+  let error = new Error("Fake error during provider manager initialization.");
   reporter.onInitializeProviderManagerFinished = function () {
     print("Throwing fake error.");
-    throw new Error("Fake error during provider manager initialization.");
+    throw error;
   };
 
-  reporter.init();
+  try {
+    yield reporter.init();
+    do_throw("The error was not reported by init()");
+  } catch (ex if ex == error) {
+    do_print("The error was reported by init()");
+  }
 
   // This will hang if shutdown logic is busted.
   yield reporter._promiseShutdown;
