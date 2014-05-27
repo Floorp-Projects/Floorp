@@ -168,15 +168,15 @@
             </div>
           </div>
           <div class="csscoverage-report-optimize">
-            <h2>&csscoverage.optimize;</h2>
+            <h2>&csscoverage.optimize.header;</h2>
             <p>
-              &csscoverage.preload1;
+              &csscoverage.optimize.body1;
               <code>&lt;link ...></code>
-              &csscoverage.preload2;
+              &csscoverage.optimize.body2;
               <code>&lt;style>...</code>
-              &csscoverage.preload3;
+              &csscoverage.optimize.body3;
             </p>
-            <div if="${preload.length == 0}">&csscoverage.noPreload;</div>
+            <div if="${preload.length == 0}">&csscoverage.optimize.bodyX;</div>
             <div if="${preload.length > 0}">
               <div foreach="page in ${preload}">
                 <h3>${page.url}</h3>
