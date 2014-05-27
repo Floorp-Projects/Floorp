@@ -269,8 +269,6 @@ class TabsTray extends TwoWayView
             Drawable thumbnailImage = tab.getThumbnail();
             if (thumbnailImage != null) {
                 row.thumbnail.setImageDrawable(thumbnailImage);
-            } else if (AboutPages.isAboutHome(tab.getURL())) {
-                row.thumbnail.setImageResource(R.drawable.abouthome_thumbnail);
             } else {
                 row.thumbnail.setImageResource(R.drawable.tab_thumbnail_default);
             }
