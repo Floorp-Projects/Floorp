@@ -1572,7 +1572,11 @@ nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup)
     // only allow popups in active windows
     nsCOMPtr<nsIDocShellTreeItem> root;
     dsti->GetRootTreeItem(getter_AddRefs(root));
-    nsCOMPtr<nsIDOMWindow> rootWin = do_GetInterface(root);
+    if (!root) {
+      return false;
+    }
+
+    nsCOMPtr<nsIDOMWindow> rootWin = root->GetWindow();
 
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     if (!fm || !rootWin)

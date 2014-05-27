@@ -89,7 +89,7 @@ class PropertyTree
         MAX_HEIGHT_WITH_ELEMENTS_ACCESS = 128
     };
 
-    PropertyTree(JSCompartment *comp)
+    explicit PropertyTree(JSCompartment *comp)
         : compartment_(comp)
     {
     }

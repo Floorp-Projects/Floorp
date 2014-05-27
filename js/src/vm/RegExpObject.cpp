@@ -936,7 +936,7 @@ RegExpCompartment::createMatchResultTemplateObject(JSContext *cx)
     JS_ASSERT(shape->slot() == 1 &&
               shape->propidRef() == NameToId(cx->names().input));
 
-    matchResultTemplateObject_ = templateObject;
+    matchResultTemplateObject_.set(templateObject);
 
     return matchResultTemplateObject_;
 }
@@ -984,7 +984,7 @@ RegExpCompartment::sweep(JSRuntime *rt)
     if (matchResultTemplateObject_ &&
         IsObjectAboutToBeFinalized(matchResultTemplateObject_.unsafeGet()))
     {
-        matchResultTemplateObject_ = nullptr;
+        matchResultTemplateObject_.set(nullptr);
     }
 }
 

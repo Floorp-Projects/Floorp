@@ -14,6 +14,7 @@
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/gfx/Rect.h"           // for RoundedIn
 #include "mozilla/mozalloc.h"           // for operator new
+#include "mozilla/FloatingPoint.h"      // for FuzzyEqualsAdditive
 #include "nsMathUtils.h"                // for NS_lround
 #include "nsThreadUtils.h"              // for NS_DispatchToMainThread, etc
 #include "nscore.h"                     // for NS_IMETHOD
@@ -24,31 +25,40 @@ namespace layers {
 
 Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
   : mPos(0),
+    mPosTimeMs(0),
     mVelocity(0.0f),
     mAxisLocked(false),
-    mAsyncPanZoomController(aAsyncPanZoomController)
+    mAsyncPanZoomController(aAsyncPanZoomController),
+    mOverscroll(0)
 {
 }
 
-void Axis::UpdateWithTouchAtDevicePoint(int32_t aPos, const TimeDuration& aTimeDelta) {
-  float newVelocity = mAxisLocked ? 0 : (mPos - aPos) / aTimeDelta.ToMilliseconds();
+void Axis::UpdateWithTouchAtDevicePoint(int32_t aPos, uint32_t aTimestampMs) {
+  if (aTimestampMs == mPosTimeMs) {
+    // Duplicate event?
+    return;
+  }
+
+  float newVelocity = mAxisLocked ? 0 : (float)(mPos - aPos) / (float)(aTimestampMs - mPosTimeMs);
   if (gfxPrefs::APZMaxVelocity() > 0.0f) {
     newVelocity = std::min(newVelocity, gfxPrefs::APZMaxVelocity() * APZCTreeManager::GetDPI());
   }
 
   mVelocity = newVelocity;
   mPos = aPos;
+  mPosTimeMs = aTimestampMs;
 
   // Limit queue size pased on pref
-  mVelocityQueue.AppendElement(mVelocity);
+  mVelocityQueue.AppendElement(std::make_pair(aTimestampMs, mVelocity));
   if (mVelocityQueue.Length() > gfxPrefs::APZMaxVelocityQueueSize()) {
     mVelocityQueue.RemoveElementAt(0);
   }
 }
 
-void Axis::StartTouch(int32_t aPos) {
+void Axis::StartTouch(int32_t aPos, uint32_t aTimestampMs) {
   mStartPos = aPos;
   mPos = aPos;
+  mPosTimeMs = aTimestampMs;
   mAxisLocked = false;
 }
 
@@ -60,8 +70,19 @@ float Axis::AdjustDisplacement(float aDisplacement, float& aOverscrollAmountOut)
 
   float displacement = aDisplacement;
 
-  // If this displacement will cause an overscroll, throttle it. Can potentially
-  // bring it to 0 even if the velocity is high.
+  // First consume any overscroll in the opposite direction along this axis.
+  if (mOverscroll > 0 && aDisplacement < 0) {
+    float consumedOverscroll = std::min(mOverscroll, -aDisplacement);
+    mOverscroll -= consumedOverscroll;
+    displacement += consumedOverscroll;
+  } else if (mOverscroll < 0 && aDisplacement > 0) {
+    float consumedOverscroll = std::min(-mOverscroll, aDisplacement);
+    mOverscroll += consumedOverscroll;
+    displacement -= consumedOverscroll;
+  }
+
+  // Split the requested displacement into an allowed displacement that does
+  // not overscroll, and an overscroll amount.
   if (DisplacementWillOverscroll(displacement) != OVERSCROLL_NONE) {
     // No need to have a velocity along this axis anymore; it won't take us
     // anywhere, so we're just spinning needlessly.
@@ -72,6 +93,84 @@ float Axis::AdjustDisplacement(float aDisplacement, float& aOverscrollAmountOut)
   return displacement;
 }
 
+float Axis::ApplyResistance(float aRequestedOverscroll) const {
+  // 'resistanceFactor' is a value between 0 and 1, which:
+  //   - tends to 1 as the existing overscroll tends to 0
+  //   - tends to 0 as the existing overscroll tends to the composition length
+  // The actual overscroll is the requested overscroll multiplied by this
+  // factor; this should prevent overscrolling by more than the composition
+  // length.
+  float resistanceFactor = 1 - fabsf(mOverscroll) / GetCompositionLength();
+  return resistanceFactor < 0 ? 0 : aRequestedOverscroll * resistanceFactor;
+}
+
+void Axis::OverscrollBy(float aOverscroll) {
+  MOZ_ASSERT(CanScroll());
+  aOverscroll = ApplyResistance(aOverscroll);
+  if (aOverscroll > 0) {
+    MOZ_ASSERT(FuzzyEqualsAdditive(GetCompositionEnd(), GetPageEnd(), COORDINATE_EPSILON));
+    MOZ_ASSERT(mOverscroll >= 0);
+  } else if (aOverscroll < 0) {
+    MOZ_ASSERT(FuzzyEqualsAdditive(GetOrigin(), GetPageStart(), COORDINATE_EPSILON));
+    MOZ_ASSERT(mOverscroll <= 0);
+  }
+  mOverscroll += aOverscroll;
+}
+
+float Axis::GetOverscroll() const {
+  return mOverscroll;
+}
+
+void Axis::StartSnapBack() {
+  float initialSnapBackVelocity = gfxPrefs::APZSnapBackInitialVelocity();
+  if (mOverscroll > 0) {
+    mVelocity = -initialSnapBackVelocity;
+  } else {
+    mVelocity = initialSnapBackVelocity;
+  }
+}
+
+bool Axis::SampleSnapBack(const TimeDuration& aDelta) {
+  // Accelerate the snap-back as time goes on.
+  // Note: this method of acceleration isn't perfectly smooth, as it assumes
+  // a constant velocity over 'aDelta', instead of an accelerating velocity.
+  // (The way we applying friction to flings has the same issue.)
+  mVelocity *= pow(1.0f + gfxPrefs::APZSnapBackAcceleration(), float(aDelta.ToMilliseconds()));
+  float screenDisplacement = mVelocity * aDelta.ToMilliseconds();
+  float cssDisplacement = screenDisplacement / GetFrameMetrics().GetZoom().scale;
+  if (mOverscroll > 0) {
+    if (cssDisplacement > 0) {
+      NS_WARNING("Overscroll snap-back animation is moving in the wrong direction!");
+      return false;
+    }
+    mOverscroll = std::max(mOverscroll + cssDisplacement, 0.0f);
+    // Overscroll relieved, do not continue animation.
+    if (mOverscroll == 0) {
+      mVelocity = 0;
+      return false;
+    }
+    return true;
+  } else if (mOverscroll < 0) {
+    if (cssDisplacement < 0) {
+      NS_WARNING("Overscroll snap-back animation is moving in the wrong direction!");
+      return false;
+    }
+    mOverscroll = std::min(mOverscroll + cssDisplacement, 0.0f);
+    // Overscroll relieved, do not continue animation.
+    if (mOverscroll == 0) {
+      mVelocity = 0;
+      return false;
+    }
+    return true;
+  }
+  // No overscroll on this axis, do not continue animation.
+  return false;
+}
+
+bool Axis::IsOverscrolled() const {
+  return mOverscroll != 0;
+}
+
 float Axis::PanDistance() {
   return fabsf(mPos - mStartPos);
 }
@@ -80,15 +179,18 @@ float Axis::PanDistance(float aPos) {
   return fabsf(aPos - mStartPos);
 }
 
-void Axis::EndTouch() {
-  // Calculate the mean velocity and empty the queue.
-  int count = mVelocityQueue.Length();
-  if (count) {
-    mVelocity = 0;
-    while (!mVelocityQueue.IsEmpty()) {
-      mVelocity += mVelocityQueue[0];
-      mVelocityQueue.RemoveElementAt(0);
+void Axis::EndTouch(uint32_t aTimestampMs) {
+  mVelocity = 0;
+  int count = 0;
+  while (!mVelocityQueue.IsEmpty()) {
+    uint32_t timeDelta = (aTimestampMs - mVelocityQueue[0].first);
+    if (timeDelta < gfxPrefs::APZVelocityRelevanceTime()) {
+      count++;
+      mVelocity += mVelocityQueue[0].second;
     }
+    mVelocityQueue.RemoveElementAt(0);
+  }
+  if (count > 1) {
     mVelocity /= count;
   }
 }
@@ -100,11 +202,12 @@ void Axis::CancelTouch() {
   }
 }
 
-bool Axis::Scrollable() {
-    if (mAxisLocked) {
-        return false;
-    }
-    return GetCompositionLength() < GetPageLength();
+bool Axis::CanScroll() const {
+  return GetCompositionLength() < GetPageLength();
+}
+
+bool Axis::CanScrollNow() const {
+  return !mAxisLocked && CanScroll();
 }
 
 bool Axis::FlingApplyFrictionOrCancel(const TimeDuration& aDelta) {
@@ -118,35 +221,6 @@ bool Axis::FlingApplyFrictionOrCancel(const TimeDuration& aDelta) {
     mVelocity *= pow(1.0f - gfxPrefs::APZFlingFriction(), float(aDelta.ToMilliseconds()));
   }
   return true;
-}
-
-Axis::Overscroll Axis::GetOverscroll() {
-  // If the current pan takes the window to the left of or above the current
-  // page rect.
-  bool minus = GetOrigin() < GetPageStart();
-  // If the current pan takes the window to the right of or below the current
-  // page rect.
-  bool plus = GetCompositionEnd() > GetPageEnd();
-  if (minus && plus) {
-    return OVERSCROLL_BOTH;
-  }
-  if (minus) {
-    return OVERSCROLL_MINUS;
-  }
-  if (plus) {
-    return OVERSCROLL_PLUS;
-  }
-  return OVERSCROLL_NONE;
-}
-
-float Axis::GetExcess() {
-  switch (GetOverscroll()) {
-  case OVERSCROLL_MINUS: return GetOrigin() - GetPageStart();
-  case OVERSCROLL_PLUS: return GetCompositionEnd() - GetPageEnd();
-  case OVERSCROLL_BOTH: return (GetCompositionEnd() - GetPageEnd()) +
-                               (GetPageStart() - GetOrigin());
-  default: return 0;
-  }
 }
 
 Axis::Overscroll Axis::DisplacementWillOverscroll(float aDisplacement) {
@@ -216,27 +290,26 @@ float Axis::GetPageEnd() const {
 }
 
 float Axis::GetOrigin() const {
-  CSSPoint origin = mAsyncPanZoomController->GetFrameMetrics().GetScrollOffset();
+  CSSPoint origin = GetFrameMetrics().GetScrollOffset();
   return GetPointOffset(origin);
 }
 
 float Axis::GetCompositionLength() const {
-  const FrameMetrics& metrics = mAsyncPanZoomController->GetFrameMetrics();
-  return GetRectLength(metrics.CalculateCompositedRectInCssPixels());
+  return GetRectLength(GetFrameMetrics().CalculateCompositedRectInCssPixels());
 }
 
 float Axis::GetPageStart() const {
-  CSSRect pageRect = mAsyncPanZoomController->GetFrameMetrics().GetExpandedScrollableRect();
+  CSSRect pageRect = GetFrameMetrics().GetExpandedScrollableRect();
   return GetRectOffset(pageRect);
 }
 
 float Axis::GetPageLength() const {
-  CSSRect pageRect = mAsyncPanZoomController->GetFrameMetrics().GetExpandedScrollableRect();
+  CSSRect pageRect = GetFrameMetrics().GetExpandedScrollableRect();
   return GetRectLength(pageRect);
 }
 
 bool Axis::ScaleWillOverscrollBothSides(float aScale) {
-  const FrameMetrics& metrics = mAsyncPanZoomController->GetFrameMetrics();
+  const FrameMetrics& metrics = GetFrameMetrics();
 
   CSSToParentLayerScale scale(metrics.GetZoomToParent().scale * aScale);
   CSSRect cssCompositionBounds = metrics.mCompositionBounds / scale;
@@ -244,9 +317,8 @@ bool Axis::ScaleWillOverscrollBothSides(float aScale) {
   return GetRectLength(metrics.GetExpandedScrollableRect()) < GetRectLength(cssCompositionBounds);
 }
 
-bool Axis::HasRoomToPan() const {
-  return GetOrigin() > GetPageStart()
-      || GetCompositionEnd() < GetPageEnd();
+const FrameMetrics& Axis::GetFrameMetrics() const {
+  return mAsyncPanZoomController->GetFrameMetrics();
 }
 
 
