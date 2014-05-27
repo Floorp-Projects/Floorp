@@ -158,7 +158,7 @@ struct PropDesc {
     /* Or maybe this represents a property's absence, and it's undefined. */
     bool isUndefined_ : 1;
 
-    PropDesc(const Value &v)
+    explicit PropDesc(const Value &v)
       : pd_(UndefinedValue()),
         value_(v),
         get_(UndefinedValue()), set_(UndefinedValue()),
@@ -410,7 +410,7 @@ struct ShapeTable {
                                            object */
     js::Shape       **entries;          /* table of ptrs to shared tree nodes */
 
-    ShapeTable(uint32_t nentries)
+    explicit ShapeTable(uint32_t nentries)
       : hashShift(HASH_BITS - MIN_SIZE_LOG2),
         entryCount(nentries),
         removedCount(0),
@@ -651,7 +651,7 @@ class BaseShape : public gc::BarrieredCell<BaseShape>
         this->compartment_ = comp;
     }
 
-    inline BaseShape(const StackBaseShape &base);
+    explicit inline BaseShape(const StackBaseShape &base);
 
     /* Not defined: BaseShapes must not be stack allocated. */
     ~BaseShape();
@@ -832,7 +832,7 @@ struct StackBaseShape
 
     inline StackBaseShape(ThreadSafeContext *cx, const Class *clasp,
                           JSObject *parent, JSObject *metadata, uint32_t objectFlags);
-    inline StackBaseShape(Shape *shape);
+    explicit inline StackBaseShape(Shape *shape);
 
     void updateGetterSetter(uint8_t attrs, PropertyOp rawGetter, StrictPropertyOp rawSetter) {
         flags &= ~(BaseShape::HAS_GETTER_OBJECT | BaseShape::HAS_SETTER_OBJECT);
@@ -1015,7 +1015,7 @@ class Shape : public gc::BarrieredCell<Shape>
             JS_STATIC_ASSERT(allowGC == CanGC);
         }
 
-        Range(Shape *shape) : cursor((ExclusiveContext *) nullptr, shape) {
+        explicit Range(Shape *shape) : cursor((ExclusiveContext *) nullptr, shape) {
             JS_STATIC_ASSERT(allowGC == NoGC);
         }
 
@@ -1470,7 +1470,7 @@ struct StackShape
         JS_ASSERT(slot <= SHAPE_INVALID_SLOT);
     }
 
-    StackShape(Shape *shape)
+    explicit StackShape(Shape *shape)
       : base(shape->base()->unowned()),
         propid(shape->propidRef()),
         slot_(shape->maybeSlot()),

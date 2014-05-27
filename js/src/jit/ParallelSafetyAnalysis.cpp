@@ -92,7 +92,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     }
 
   public:
-    ParallelSafetyVisitor(MIRGraph &graph)
+    explicit ParallelSafetyVisitor(MIRGraph &graph)
       : graph_(graph),
         unsafe_(false),
         cx_(nullptr)

@@ -28,7 +28,7 @@ class BitSet : private TempObject
     }
 
   private:
-    BitSet(unsigned int numBits) :
+    explicit BitSet(unsigned int numBits) :
         bits_(nullptr),
         numBits_(numBits) {}
 
@@ -144,7 +144,7 @@ class BitSet::Iterator
     }
 
   public:
-    Iterator(BitSet &set) :
+    explicit Iterator(BitSet &set) :
       set_(set),
       index_(0),
       word_(0),

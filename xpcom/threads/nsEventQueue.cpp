@@ -14,12 +14,13 @@
 using namespace mozilla;
 
 #ifdef PR_LOGGING
-static PRLogModuleInfo *
+static PRLogModuleInfo*
 GetLog()
 {
-  static PRLogModuleInfo *sLog;
-  if (!sLog)
+  static PRLogModuleInfo* sLog;
+  if (!sLog) {
     sLog = PR_NewLogModule("nsEventQueue");
+  }
   return sLog;
 }
 #endif
@@ -41,35 +42,38 @@ nsEventQueue::~nsEventQueue()
 {
   // It'd be nice to be able to assert that no one else is holding the monitor,
   // but NSPR doesn't really expose APIs for it.
-  NS_ASSERTION(IsEmpty(), "Non-empty event queue being destroyed; events being leaked.");
+  NS_ASSERTION(IsEmpty(),
+               "Non-empty event queue being destroyed; events being leaked.");
 
-  if (mHead)
+  if (mHead) {
     FreePage(mHead);
+  }
 }
 
 bool
-nsEventQueue::GetEvent(bool mayWait, nsIRunnable **result)
+nsEventQueue::GetEvent(bool aMayWait, nsIRunnable** aResult)
 {
   {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    
+
     while (IsEmpty()) {
-      if (!mayWait) {
-        if (result)
-          *result = nullptr;
+      if (!aMayWait) {
+        if (aResult) {
+          *aResult = nullptr;
+        }
         return false;
       }
-      LOG(("EVENTQ(%p): wait begin\n", this)); 
+      LOG(("EVENTQ(%p): wait begin\n", this));
       mon.Wait();
-      LOG(("EVENTQ(%p): wait end\n", this)); 
+      LOG(("EVENTQ(%p): wait end\n", this));
     }
-    
-    if (result) {
-      *result = mHead->mEvents[mOffsetHead++];
-      
+
+    if (aResult) {
+      *aResult = mHead->mEvents[mOffsetHead++];
+
       // Check if mHead points to empty Page
       if (mOffsetHead == EVENTS_PER_PAGE) {
-        Page *dead = mHead;
+        Page* dead = mHead;
         mHead = mHead->mNext;
         FreePage(dead);
         mOffsetHead = 0;

@@ -107,7 +107,7 @@ BluetoothManager::BluetoothManager(nsPIDOMWindow *aWindow)
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(IsDOMBinding());
 
-  mPath.AssignLiteral("/");
+  mPath.Assign('/');
 
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE_VOID(bs);
