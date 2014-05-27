@@ -263,7 +263,7 @@ EverySecondTelemetryCallback_s(nsAutoPtr<RTCStatsQueries> aQueryList) {
 
   for (auto q = aQueryList->begin(); q != aQueryList->end(); ++q) {
     PeerConnectionImpl::ExecuteStatsQuery_s(*q);
-    auto& r = (*q)->report;
+    auto& r = *(*q)->report;
     if (r.mInboundRTPStreamStats.WasPassed()) {
       auto& array = r.mInboundRTPStreamStats.Value();
       for (uint32_t i = 0; i < array.Length(); i++) {
