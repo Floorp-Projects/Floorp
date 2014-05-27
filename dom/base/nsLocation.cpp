@@ -54,8 +54,10 @@ GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString& aCharset)
 
 nsLocation::nsLocation(nsIDocShell *aDocShell)
 {
+  MOZ_ASSERT(aDocShell);
+
   mDocShell = do_GetWeakReference(aDocShell);
-  nsCOMPtr<nsIDOMWindow> outer = do_GetInterface(aDocShell);
+  nsCOMPtr<nsIDOMWindow> outer = aDocShell->GetWindow();
   mOuter = do_GetWeakReference(outer);
 }
 
@@ -535,7 +537,8 @@ nsLocation::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
           // Now check to make sure that the script is running in our window,
           // since we only want to replace if the location is set by a
           // <script> tag in the same window.  See bug 178729.
-          nsCOMPtr<nsIScriptGlobalObject> ourGlobal(do_GetInterface(docShell));
+          nsCOMPtr<nsIScriptGlobalObject> ourGlobal =
+            docShell ? docShell->GetScriptGlobalObject() : nullptr;
           inScriptTag = (ourGlobal == scriptContext->GetGlobalObject());
         }
       }  
@@ -786,7 +789,7 @@ nsLocation::Reload(bool aForceget)
   nsresult rv;
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
-  nsCOMPtr<nsPIDOMWindow> window(do_GetInterface(docShell));
+  nsCOMPtr<nsPIDOMWindow> window = docShell ? docShell->GetWindow() : nullptr;
 
   if (window && window->IsHandlingResizeEvent()) {
     // location.reload() was called on a window that is handling a
@@ -901,7 +904,7 @@ nsLocation::GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL)
   // the docshell. If that fails, just return null and hope that the caller passed
   // an absolute URI.
   if (!sgo && GetDocShell()) {
-    sgo = do_GetInterface(GetDocShell());
+    sgo = GetDocShell()->GetScriptGlobalObject();
   }
   NS_ENSURE_TRUE(sgo, NS_OK);
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(sgo);

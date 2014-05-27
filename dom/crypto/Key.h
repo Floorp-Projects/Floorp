@@ -113,6 +113,7 @@ public:
   void SetAlgorithm(KeyAlgorithm* aAlgorithm);
   void ClearUsages();
   nsresult AddUsage(const nsString& aUsage);
+  nsresult AddUsageIntersecting(const nsString& aUsage, uint32_t aUsageMask);
   void AddUsage(KeyUsage aUsage);
   bool HasUsage(KeyUsage aUsage);
   bool HasUsageOtherThan(uint32_t aUsages);

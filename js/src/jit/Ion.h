@@ -50,7 +50,7 @@ class IonContext
     IonContext(JSContext *cx, TempAllocator *temp);
     IonContext(ExclusiveContext *cx, TempAllocator *temp);
     IonContext(CompileRuntime *rt, CompileCompartment *comp, TempAllocator *temp);
-    IonContext(CompileRuntime *rt);
+    explicit IonContext(CompileRuntime *rt);
     ~IonContext();
 
     // Running context when executing on the main thread. Not available during

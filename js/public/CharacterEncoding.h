@@ -151,7 +151,7 @@ class ConstTwoByteChars : public mozilla::RangedPtr<const jschar>
 {
   public:
     ConstTwoByteChars(const ConstTwoByteChars &s) : ConstCharPtr(s) {}
-    ConstTwoByteChars(const mozilla::RangedPtr<const jschar> &s) : ConstCharPtr(s) {}
+    MOZ_IMPLICIT ConstTwoByteChars(const mozilla::RangedPtr<const jschar> &s) : ConstCharPtr(s) {}
     ConstTwoByteChars(const jschar *s, size_t len) : ConstCharPtr(s, len) {}
     ConstTwoByteChars(const jschar *pos, const jschar *start, size_t len)
       : ConstCharPtr(pos, start, len)

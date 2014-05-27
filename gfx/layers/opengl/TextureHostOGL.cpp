@@ -121,7 +121,8 @@ WrapMode(gl::GLContext *aGl, TextureFlags aFlags)
 {
   if ((aFlags & TextureFlags::ALLOW_REPEAT) &&
       (aGl->IsExtensionSupported(GLContext::ARB_texture_non_power_of_two) ||
-       aGl->IsExtensionSupported(GLContext::OES_texture_npot))) {
+       aGl->IsExtensionSupported(GLContext::OES_texture_npot) ||
+       aGl->IsExtensionSupported(GLContext::IMG_texture_npot))) {
     return LOCAL_GL_REPEAT;
   }
   return LOCAL_GL_CLAMP_TO_EDGE;

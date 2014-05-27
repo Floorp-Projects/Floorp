@@ -108,6 +108,12 @@ interface Key {
   [Cached, Constant, Frozen] readonly attribute sequence<KeyUsage> usages;
 };
 
+[Pref="dom.webcrypto.enabled"]
+interface KeyPair {
+  readonly attribute Key publicKey;
+  readonly attribute Key privateKey;
+};
+
 typedef DOMString KeyFormat;
 typedef (ArrayBufferView or ArrayBuffer) CryptoOperationData;
 typedef (ArrayBufferView or ArrayBuffer) KeyData;

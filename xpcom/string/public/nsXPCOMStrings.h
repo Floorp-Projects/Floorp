@@ -107,7 +107,7 @@ class nsStringContainer;
 struct nsStringContainer_base
 {
 protected:
-  void *d1;
+  void* d1;
   uint32_t d2;
   uint32_t d3;
 };
@@ -115,7 +115,8 @@ protected:
 /**
  * Flags that may be OR'd together to pass to NS_StringContainerInit2:
  */
-enum {
+enum
+{
   /* Data passed into NS_StringContainerInit2 is not copied; instead, the
    * string references the passed in data pointer directly.  The caller must
    * ensure that the data is valid for the lifetime of the string container.
@@ -142,8 +143,7 @@ enum {
  * This function may allocate additional memory for aContainer.  When
  * aContainer is no longer needed, NS_StringContainerFinish should be called.
  */
-XPCOM_API(nsresult)
-NS_StringContainerInit(nsStringContainer &aContainer);
+XPCOM_API(nsresult) NS_StringContainerInit(nsStringContainer& aContainer);
 
 /**
  * NS_StringContainerInit2
@@ -164,10 +164,10 @@ NS_StringContainerInit(nsStringContainer &aContainer);
  * NOTE: NS_StringContainerInit2(container, nullptr, 0, 0) is equivalent to
  * NS_StringContainerInit(container).
  */
-XPCOM_API(nsresult)
-NS_StringContainerInit2
-  (nsStringContainer &aContainer, const char16_t *aData = nullptr,
-   uint32_t aDataLength = UINT32_MAX, uint32_t aFlags = 0);
+XPCOM_API(nsresult) NS_StringContainerInit2(nsStringContainer& aContainer,
+                                            const char16_t* aData = nullptr,
+                                            uint32_t aDataLength = UINT32_MAX,
+                                            uint32_t aFlags = 0);
 
 /**
  * NS_StringContainerFinish
@@ -176,8 +176,7 @@ NS_StringContainerInit2
  *
  * This function frees any memory owned by aContainer.
  */
-XPCOM_API(void)
-NS_StringContainerFinish(nsStringContainer &aContainer);
+XPCOM_API(void) NS_StringContainerFinish(nsStringContainer& aContainer);
 
 /* ------------------------------------------------------------------------- */
 
@@ -196,10 +195,9 @@ NS_StringContainerFinish(nsStringContainer &aContainer);
  *                      terminated
  * @return              length of aStr's internal buffer
  */
-XPCOM_API(uint32_t)
-NS_StringGetData
-  (const nsAString &aStr, const char16_t **aData,
-   bool *aTerminated = nullptr);
+XPCOM_API(uint32_t) NS_StringGetData(const nsAString& aStr,
+                                     const char16_t** aData,
+                                     bool* aTerminated = nullptr);
 
 /**
  * NS_StringGetMutableData
@@ -228,9 +226,9 @@ NS_StringGetData
  * string, aStr.  If aStr is a reference to a nsStringContainer, then its data
  * will be null-terminated by this function.
  */
-XPCOM_API(uint32_t)
-NS_StringGetMutableData
-  (nsAString &aStr, uint32_t aDataLength, char16_t **aData);
+XPCOM_API(uint32_t) NS_StringGetMutableData(nsAString& aStr,
+                                            uint32_t aDataLength,
+                                            char16_t** aData);
 
 /**
  * NS_StringCloneData
@@ -242,9 +240,7 @@ NS_StringGetMutableData
  * @return              null-terminated copy of the string's internal buffer
  *                      (it must be free'd using using nsMemory::Free)
  */
-XPCOM_API(char16_t *)
-NS_StringCloneData
-  (const nsAString &aStr);
+XPCOM_API(char16_t*) NS_StringCloneData(const nsAString& aStr);
 
 /**
  * NS_StringSetData
@@ -263,10 +259,8 @@ NS_StringCloneData
  * string, aStr.  If aStr is a reference to a nsStringContainer, then its data
  * will be null-terminated by this function.
  */
-XPCOM_API(nsresult)
-NS_StringSetData
-  (nsAString &aStr, const char16_t *aData,
-   uint32_t aDataLength = UINT32_MAX);
+XPCOM_API(nsresult) NS_StringSetData(nsAString& aStr, const char16_t* aData,
+                                     uint32_t aDataLength = UINT32_MAX);
 
 /**
  * NS_StringSetDataRange
@@ -294,10 +288,10 @@ NS_StringSetData
  * string, aStr.  If aStr is a reference to a nsStringContainer, then its data
  * will be null-terminated by this function.
  */
-XPCOM_API(nsresult)
-NS_StringSetDataRange
-  (nsAString &aStr, uint32_t aCutOffset, uint32_t aCutLength,
-   const char16_t *aData, uint32_t aDataLength = UINT32_MAX);
+XPCOM_API(nsresult) NS_StringSetDataRange(nsAString& aStr,
+                                          uint32_t aCutOffset, uint32_t aCutLength,
+                                          const char16_t* aData,
+                                          uint32_t aDataLength = UINT32_MAX);
 
 /**
  * NS_StringCopy
@@ -314,9 +308,8 @@ NS_StringSetDataRange
  * abstract string, aDestStr.  If aDestStr is a reference to a
  * nsStringContainer, then its data will be null-terminated by this function.
  */
-XPCOM_API(nsresult)
-NS_StringCopy
-  (nsAString &aDestStr, const nsAString &aSrcStr);
+XPCOM_API(nsresult) NS_StringCopy(nsAString& aDestStr,
+                                  const nsAString& aSrcStr);
 
 /**
  * NS_StringAppendData
@@ -335,7 +328,7 @@ NS_StringCopy
  * terminated by this function.
  */
 inline NS_HIDDEN_(nsresult)
-NS_StringAppendData(nsAString &aStr, const char16_t *aData,
+NS_StringAppendData(nsAString& aStr, const char16_t* aData,
                     uint32_t aDataLength = UINT32_MAX)
 {
   return NS_StringSetDataRange(aStr, UINT32_MAX, 0, aData, aDataLength);
@@ -360,7 +353,7 @@ NS_StringAppendData(nsAString &aStr, const char16_t *aData,
  * terminated by this function.
  */
 inline NS_HIDDEN_(nsresult)
-NS_StringInsertData(nsAString &aStr, uint32_t aOffset, const char16_t *aData,
+NS_StringInsertData(nsAString& aStr, uint32_t aOffset, const char16_t* aData,
                     uint32_t aDataLength = UINT32_MAX)
 {
   return NS_StringSetDataRange(aStr, aOffset, 0, aData, aDataLength);
@@ -378,7 +371,7 @@ NS_StringInsertData(nsAString &aStr, uint32_t aOffset, const char16_t *aData,
  * @return              NS_OK if function succeeded
  */
 inline NS_HIDDEN_(nsresult)
-NS_StringCutData(nsAString &aStr, uint32_t aCutOffset, uint32_t aCutLength)
+NS_StringCutData(nsAString& aStr, uint32_t aCutOffset, uint32_t aCutLength)
 {
   return NS_StringSetDataRange(aStr, aCutOffset, aCutLength, nullptr, 0);
 }
@@ -389,8 +382,7 @@ NS_StringCutData(nsAString &aStr, uint32_t aCutOffset, uint32_t aCutLength)
  * This function marks a string as being a "void string".  Any data in the
  * string will be lost.
  */
-XPCOM_API(void)
-NS_StringSetIsVoid(nsAString& aStr, const bool aIsVoid);
+XPCOM_API(void) NS_StringSetIsVoid(nsAString& aStr, const bool aIsVoid);
 
 /**
  * NS_StringGetIsVoid
@@ -398,8 +390,7 @@ NS_StringSetIsVoid(nsAString& aStr, const bool aIsVoid);
  * This function provides a way to test if a string is a "void string", as
  * marked by NS_StringSetIsVoid.
  */
-XPCOM_API(bool)
-NS_StringGetIsVoid(const nsAString& aStr);
+XPCOM_API(bool) NS_StringGetIsVoid(const nsAString& aStr);
 
 /* ------------------------------------------------------------------------- */
 
@@ -420,7 +411,8 @@ class nsCStringContainer;
 /**
  * Flags that may be OR'd together to pass to NS_StringContainerInit2:
  */
-enum {
+enum
+{
   /* Data passed into NS_CStringContainerInit2 is not copied; instead, the
    * string references the passed in data pointer directly.  The caller must
    * ensure that the data is valid for the lifetime of the string container.
@@ -447,8 +439,7 @@ enum {
  * This function may allocate additional memory for aContainer.  When
  * aContainer is no longer needed, NS_CStringContainerFinish should be called.
  */
-XPCOM_API(nsresult)
-NS_CStringContainerInit(nsCStringContainer &aContainer);
+XPCOM_API(nsresult) NS_CStringContainerInit(nsCStringContainer& aContainer);
 
 /**
  * NS_CStringContainerInit2
@@ -469,10 +460,10 @@ NS_CStringContainerInit(nsCStringContainer &aContainer);
  * NOTE: NS_CStringContainerInit2(container, nullptr, 0, 0) is equivalent to
  * NS_CStringContainerInit(container).
  */
-XPCOM_API(nsresult)
-NS_CStringContainerInit2
-  (nsCStringContainer &aContainer, const char *aData = nullptr,
-   uint32_t aDataLength = UINT32_MAX, uint32_t aFlags = 0);
+XPCOM_API(nsresult) NS_CStringContainerInit2(nsCStringContainer& aContainer,
+                                             const char* aData = nullptr,
+                                             uint32_t aDataLength = UINT32_MAX,
+                                             uint32_t aFlags = 0);
 
 /**
  * NS_CStringContainerFinish
@@ -481,8 +472,7 @@ NS_CStringContainerInit2
  *
  * This function frees any memory owned by aContainer.
  */
-XPCOM_API(void)
-NS_CStringContainerFinish(nsCStringContainer &aContainer);
+XPCOM_API(void) NS_CStringContainerFinish(nsCStringContainer& aContainer);
 
 /* ------------------------------------------------------------------------- */
 
@@ -501,10 +491,9 @@ NS_CStringContainerFinish(nsCStringContainer &aContainer);
  *                      terminated
  * @return              length of aStr's internal buffer
  */
-XPCOM_API(uint32_t)
-NS_CStringGetData
-  (const nsACString &aStr, const char **aData,
-   bool *aTerminated = nullptr);
+XPCOM_API(uint32_t) NS_CStringGetData(const nsACString& aStr,
+                                      const char** aData,
+                                      bool* aTerminated = nullptr);
 
 /**
  * NS_CStringGetMutableData
@@ -533,9 +522,9 @@ NS_CStringGetData
  * string, aStr.  If aStr is a reference to a nsStringContainer, then its data
  * will be null-terminated by this function.
  */
-XPCOM_API(uint32_t)
-NS_CStringGetMutableData
-  (nsACString &aStr, uint32_t aDataLength, char **aData);
+XPCOM_API(uint32_t) NS_CStringGetMutableData(nsACString& aStr,
+                                             uint32_t aDataLength,
+                                             char** aData);
 
 /**
  * NS_CStringCloneData
@@ -547,9 +536,7 @@ NS_CStringGetMutableData
  * @return              null-terminated copy of the string's internal buffer
  *                      (it must be free'd using using nsMemory::Free)
  */
-XPCOM_API(char *)
-NS_CStringCloneData
-  (const nsACString &aStr);
+XPCOM_API(char*) NS_CStringCloneData(const nsACString& aStr);
 
 /**
  * NS_CStringSetData
@@ -568,10 +555,8 @@ NS_CStringCloneData
  * string, aStr.  If aStr is a reference to a nsStringContainer, then its data
  * will be null-terminated by this function.
  */
-XPCOM_API(nsresult)
-NS_CStringSetData
-  (nsACString &aStr, const char *aData,
-   uint32_t aDataLength = UINT32_MAX);
+XPCOM_API(nsresult) NS_CStringSetData(nsACString& aStr, const char* aData,
+                                      uint32_t aDataLength = UINT32_MAX);
 
 /**
  * NS_CStringSetDataRange
@@ -599,10 +584,11 @@ NS_CStringSetData
  * string, aStr.  If aStr is a reference to a nsStringContainer, then its data
  * will be null-terminated by this function.
  */
-XPCOM_API(nsresult)
-NS_CStringSetDataRange
-  (nsACString &aStr, uint32_t aCutOffset, uint32_t aCutLength,
-   const char *aData, uint32_t aDataLength = UINT32_MAX);
+XPCOM_API(nsresult) NS_CStringSetDataRange(nsACString& aStr,
+                                           uint32_t aCutOffset,
+                                           uint32_t aCutLength,
+                                           const char* aData,
+                                           uint32_t aDataLength = UINT32_MAX);
 
 /**
  * NS_CStringCopy
@@ -619,9 +605,8 @@ NS_CStringSetDataRange
  * abstract string, aDestStr.  If aDestStr is a reference to a
  * nsStringContainer, then its data will be null-terminated by this function.
  */
-XPCOM_API(nsresult)
-NS_CStringCopy
-  (nsACString &aDestStr, const nsACString &aSrcStr);
+XPCOM_API(nsresult) NS_CStringCopy(nsACString& aDestStr,
+                                   const nsACString& aSrcStr);
 
 /**
  * NS_CStringAppendData
@@ -640,7 +625,7 @@ NS_CStringCopy
  * terminated by this function.
  */
 inline NS_HIDDEN_(nsresult)
-NS_CStringAppendData(nsACString &aStr, const char *aData,
+NS_CStringAppendData(nsACString& aStr, const char* aData,
                      uint32_t aDataLength = UINT32_MAX)
 {
   return NS_CStringSetDataRange(aStr, UINT32_MAX, 0, aData, aDataLength);
@@ -665,7 +650,7 @@ NS_CStringAppendData(nsACString &aStr, const char *aData,
  * terminated by this function.
  */
 inline NS_HIDDEN_(nsresult)
-NS_CStringInsertData(nsACString &aStr, uint32_t aOffset, const char *aData,
+NS_CStringInsertData(nsACString& aStr, uint32_t aOffset, const char* aData,
                      uint32_t aDataLength = UINT32_MAX)
 {
   return NS_CStringSetDataRange(aStr, aOffset, 0, aData, aDataLength);
@@ -683,7 +668,7 @@ NS_CStringInsertData(nsACString &aStr, uint32_t aOffset, const char *aData,
  * @return              NS_OK if function succeeded
  */
 inline NS_HIDDEN_(nsresult)
-NS_CStringCutData(nsACString &aStr, uint32_t aCutOffset, uint32_t aCutLength)
+NS_CStringCutData(nsACString& aStr, uint32_t aCutOffset, uint32_t aCutLength)
 {
   return NS_CStringSetDataRange(aStr, aCutOffset, aCutLength, nullptr, 0);
 }
@@ -694,8 +679,7 @@ NS_CStringCutData(nsACString &aStr, uint32_t aCutOffset, uint32_t aCutLength)
  * This function marks a string as being a "void string".  Any data in the
  * string will be lost.
  */
-XPCOM_API(void)
-NS_CStringSetIsVoid(nsACString& aStr, const bool aIsVoid);
+XPCOM_API(void) NS_CStringSetIsVoid(nsACString& aStr, const bool aIsVoid);
 
 /**
  * NS_CStringGetIsVoid
@@ -703,15 +687,15 @@ NS_CStringSetIsVoid(nsACString& aStr, const bool aIsVoid);
  * This function provides a way to test if a string is a "void string", as
  * marked by NS_CStringSetIsVoid.
  */
-XPCOM_API(bool)
-NS_CStringGetIsVoid(const nsACString& aStr);
+XPCOM_API(bool) NS_CStringGetIsVoid(const nsACString& aStr);
 
 /* ------------------------------------------------------------------------- */
 
 /**
  * Encodings that can be used with the following conversion routines.
  */
-enum nsCStringEncoding {
+enum nsCStringEncoding
+{
   /* Conversion between ASCII and UTF-16 assumes that all bytes in the source
    * string are 7-bit ASCII and can be inflated to UTF-16 by inserting null
    * bytes.  Reverse conversion is done by truncating every other byte.  The
@@ -740,9 +724,9 @@ enum nsCStringEncoding {
  * @param aSrcEncoding  character encoding of the source string
  * @param aDest         abstract string reference to hold the result
  */
-XPCOM_API(nsresult)
-NS_CStringToUTF16(const nsACString &aSource, nsCStringEncoding aSrcEncoding,
-                  nsAString &aDest);
+XPCOM_API(nsresult) NS_CStringToUTF16(const nsACString& aSource,
+                                      nsCStringEncoding aSrcEncoding,
+                                      nsAString& aDest);
 
 /**
  * NS_UTF16ToCString
@@ -757,8 +741,8 @@ NS_CStringToUTF16(const nsACString &aSource, nsCStringEncoding aSrcEncoding,
  * @param aDestEncoding character encoding of the resulting string
  * @param aDest         abstract string reference to hold the result
  */
-XPCOM_API(nsresult)
-NS_UTF16ToCString(const nsAString &aSource, nsCStringEncoding aDestEncoding,
-                  nsACString &aDest);
+XPCOM_API(nsresult) NS_UTF16ToCString(const nsAString& aSource,
+                                      nsCStringEncoding aDestEncoding,
+                                      nsACString& aDest);
 
 #endif // nsXPCOMStrings_h__

@@ -12,15 +12,15 @@
   <!--original fetch url was https://git.mozilla.org/releases-->
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
   <!-- B2G specific things. -->
-  <project name="platform_build" path="build" remote="b2g" revision="e6383e6e785cc3ea237e902beb1092f9aa88e29d">
+  <project name="platform_build" path="build" remote="b2g" revision="42c224f4304c10166739fd9e25b2db1036410bd8">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="e83bd91c8f7c66f95d55cb741299e12bc8f7b429"/>
-  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="996b5c6a2fd2b8a0124c0eab80eb72a4daece7bc"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="bc6f07c149770c6e6dfbea941ac65138dc364a15"/>
+  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="87ee480405c4a109c01f68dd64de625f1ff819d9"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="ce95d372e6d285725b96490afdaaf489ad8f9ca9"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="6c8ce047653af40a32b23744cc77cd25929b6b21"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="df6b6315b7217522ae03151449a841f0c382c888"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
   <!-- Stock Android things -->
@@ -127,7 +127,7 @@
   <project name="device-mako" path="device/lge/mako" remote="b2g" revision="78d17f0c117f0c66dd55ee8d5c5dde8ccc93ecba"/>
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="3a9a17613cc685aa232432566ad6cc607eab4ec1"/>
   <project name="device/lge/mako-kernel" path="device/lge/mako-kernel" revision="d1729e53d71d711c8fde25eab8728ff2b9b4df0e"/>
-  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="1997f7f20aebbe95fb10111465c0db945bd041fe"/>
+  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="56e7fe044cb6a0ad689b96ad7a3636d65e769b34"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="7d33aaf740bbf6c7c6e9c34a92b371eda311b66b"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="0e56e450367cd802241b27164a2979188242b95f"/>
   <project name="platform/hardware/broadcom/wlan" path="hardware/broadcom/wlan" revision="0e1929fa3aa38bf9d40e9e953d619fab8164c82e"/>

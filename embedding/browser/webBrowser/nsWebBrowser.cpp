@@ -363,13 +363,9 @@ NS_IMETHODIMP nsWebBrowser::SetParentURIContentListener(nsIURIContentListener*
 NS_IMETHODIMP nsWebBrowser::GetContentDOMWindow(nsIDOMWindow **_retval)
 {
     NS_ENSURE_STATE(mDocShell);
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIDOMWindow> retval = do_GetInterface(mDocShell, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    *_retval = retval;
-    NS_ADDREF(*_retval);
-    return rv;
+    nsCOMPtr<nsIDOMWindow> retval = mDocShell->GetWindow();
+    retval.forget(_retval);
+    return *_retval ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsWebBrowser::GetIsActive(bool *rv)
@@ -510,6 +506,18 @@ NS_IMETHODIMP nsWebBrowser::FindItemWithName(const char16_t *aName,
    return mDocShell->FindItemWithName(aName, 
       static_cast<nsIDocShellTreeOwner*>(mDocShellTreeOwner),
       aOriginalRequestor, _retval);
+}
+
+nsIDocument*
+nsWebBrowser::GetDocument()
+{
+  return mDocShell ? mDocShell->GetDocument() : nullptr;
+}
+
+nsPIDOMWindow*
+nsWebBrowser::GetWindow()
+{
+  return mDocShell ? mDocShell->GetWindow() : nullptr;
 }
 
 NS_IMETHODIMP nsWebBrowser::GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner)
@@ -1482,7 +1490,7 @@ NS_IMETHODIMP nsWebBrowser::GetMainWidget(nsIWidget** mainWidget)
 
 NS_IMETHODIMP nsWebBrowser::SetFocus()
 {
-  nsCOMPtr<nsIDOMWindow> window = do_GetInterface(mDocShell);
+  nsCOMPtr<nsIDOMWindow> window = GetWindow();
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
@@ -1647,9 +1655,9 @@ static void DrawThebesLayer(ThebesLayer* aLayer,
 void nsWebBrowser::WindowRaised(nsIWidget* aWidget)
 {
 #if defined(DEBUG_smaug)
-  nsCOMPtr<nsIDOMDocument> domDocument = do_GetInterface(mDocShell);
+  nsCOMPtr<nsIDocument> document = mDocShell->GetDocument();
   nsAutoString documentURI;
-  domDocument->GetDocumentURI(documentURI);
+  document->GetDocumentURI(documentURI);
   printf("nsWebBrowser::NS_ACTIVATE %p %s\n", (void*)this,
          NS_ConvertUTF16toUTF8(documentURI).get());
 #endif
@@ -1659,9 +1667,9 @@ void nsWebBrowser::WindowRaised(nsIWidget* aWidget)
 void nsWebBrowser::WindowLowered(nsIWidget* aWidget)
 {
 #if defined(DEBUG_smaug)
-  nsCOMPtr<nsIDOMDocument> domDocument = do_GetInterface(mDocShell);
+  nsCOMPtr<nsIDocument> document = mDocShell->GetDocument();
   nsAutoString documentURI;
-  domDocument->GetDocumentURI(documentURI);
+  document->GetDocumentURI(documentURI);
   printf("nsWebBrowser::NS_DEACTIVATE %p %s\n", (void*)this,
          NS_ConvertUTF16toUTF8(documentURI).get());
 #endif
@@ -1698,7 +1706,7 @@ NS_IMETHODIMP nsWebBrowser::GetPrimaryContentWindow(nsIDOMWindow** aDOMWindow)
   docShell = do_QueryInterface(item);
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
   
-  nsCOMPtr<nsIDOMWindow> domWindow = do_GetInterface(docShell);
+  nsCOMPtr<nsIDOMWindow> domWindow = docShell->GetWindow();
   NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
 
   *aDOMWindow = domWindow;
@@ -1714,7 +1722,7 @@ NS_IMETHODIMP nsWebBrowser::GetPrimaryContentWindow(nsIDOMWindow** aDOMWindow)
 NS_IMETHODIMP nsWebBrowser::Activate(void)
 {
   nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
-  nsCOMPtr<nsIDOMWindow> window = do_GetInterface(mDocShell);
+  nsCOMPtr<nsIDOMWindow> window = GetWindow();
   if (fm && window)
     return fm->WindowRaised(window);
   return NS_OK;
@@ -1724,7 +1732,7 @@ NS_IMETHODIMP nsWebBrowser::Activate(void)
 NS_IMETHODIMP nsWebBrowser::Deactivate(void)
 {
   nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
-  nsCOMPtr<nsIDOMWindow> window = do_GetInterface(mDocShell);
+  nsCOMPtr<nsIDOMWindow> window = GetWindow();
   if (fm && window)
     return fm->WindowLowered(window);
   return NS_OK;
@@ -1748,7 +1756,9 @@ NS_IMETHODIMP nsWebBrowser::GetFocusedWindow(nsIDOMWindow * *aFocusedWindow)
   NS_ENSURE_ARG_POINTER(aFocusedWindow);
   *aFocusedWindow = nullptr;
 
-  nsCOMPtr<nsIDOMWindow> window = do_GetInterface(mDocShell);
+  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMWindow> window = mDocShell->GetWindow();
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMElement> focusedElement;
@@ -1767,8 +1777,9 @@ NS_IMETHODIMP nsWebBrowser::SetFocusedWindow(nsIDOMWindow * aFocusedWindow)
 NS_IMETHODIMP nsWebBrowser::GetFocusedElement(nsIDOMElement * *aFocusedElement)
 {
   NS_ENSURE_ARG_POINTER(aFocusedElement);
+  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMWindow> window = do_GetInterface(mDocShell);
+  nsCOMPtr<nsIDOMWindow> window = mDocShell->GetWindow();
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);

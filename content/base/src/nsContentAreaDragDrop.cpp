@@ -406,8 +406,7 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
   // if set, serialize the content under this node
   nsCOMPtr<nsIContent> nodeToSerialize;
 
-  nsCOMPtr<nsIWebNavigation> webnav = do_GetInterface(mWindow);
-  nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(webnav);
+  nsCOMPtr<nsIDocShellTreeItem> dsti = mWindow->GetDocShell();
   const bool isChromeShell =
     dsti && dsti->ItemType() == nsIDocShellTreeItem::typeChrome;
 

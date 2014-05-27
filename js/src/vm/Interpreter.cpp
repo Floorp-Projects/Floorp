@@ -425,7 +425,7 @@ js::RunScript(JSContext *cx, RunState &state)
 struct AutoGCIfNeeded
 {
     JSContext *cx_;
-    AutoGCIfNeeded(JSContext *cx) : cx_(cx) {}
+    explicit AutoGCIfNeeded(JSContext *cx) : cx_(cx) {}
     ~AutoGCIfNeeded() { js::gc::GCIfNeeded(cx_); }
 };
 

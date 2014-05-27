@@ -16,8 +16,9 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
 
-class nsThreadPool MOZ_FINAL : public nsIThreadPool,
-                               public nsIRunnable
+class nsThreadPool MOZ_FINAL
+  : public nsIThreadPool
+  , public nsIRunnable
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -30,8 +31,8 @@ public:
 private:
   ~nsThreadPool();
 
-  void ShutdownThread(nsIThread *thread);
-  nsresult PutEvent(nsIRunnable *event);
+  void ShutdownThread(nsIThread* aThread);
+  nsresult PutEvent(nsIRunnable* aEvent);
 
   nsCOMArray<nsIThread> mThreads;
   nsEventQueue          mEvents;

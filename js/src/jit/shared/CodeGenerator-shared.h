@@ -649,7 +649,7 @@ class StoreRegisterTo
     Register out_;
 
   public:
-    StoreRegisterTo(Register out)
+    explicit StoreRegisterTo(Register out)
       : out_(out)
     { }
 
@@ -669,7 +669,7 @@ class StoreFloatRegisterTo
     FloatRegister out_;
 
   public:
-    StoreFloatRegisterTo(FloatRegister out)
+    explicit StoreFloatRegisterTo(FloatRegister out)
       : out_(out)
     { }
 
@@ -690,7 +690,7 @@ class StoreValueTo_
     Output out_;
 
   public:
-    StoreValueTo_(const Output &out)
+    explicit StoreValueTo_(const Output &out)
       : out_(out)
     { }
 
@@ -803,7 +803,7 @@ class OutOfLinePropagateAbortPar : public OutOfLineCode
     LInstruction *lir_;
 
   public:
-    OutOfLinePropagateAbortPar(LInstruction *lir)
+    explicit OutOfLinePropagateAbortPar(LInstruction *lir)
       : lir_(lir)
     { }
 

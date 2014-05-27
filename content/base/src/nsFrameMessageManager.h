@@ -173,10 +173,10 @@ public:
     NS_ASSERTION(!mIsBroadcaster || !mCallback,
                  "Broadcasters cannot have callbacks!");
     // This is a bit hackish. When parent manager is global, we want
-    // to attach the window message manager to it immediately.
+    // to attach the message manager to it immediately.
     // Is it just the frame message manager which waits until the
     // content process is running.
-    if (mParentManager && (mCallback || IsWindowLevel())) {
+    if (mParentManager && (mCallback || IsBroadcaster())) {
       mParentManager->AddChildManager(this);
     }
     if (mOwnsCallback) {
@@ -258,7 +258,7 @@ public:
     mParentManager = aParent;
   }
   bool IsGlobal() { return mGlobal; }
-  bool IsWindowLevel() { return mParentManager && mParentManager->IsGlobal(); }
+  bool IsBroadcaster() { return mIsBroadcaster; }
 
   static nsFrameMessageManager* GetParentProcessManager()
   {
@@ -296,6 +296,9 @@ protected:
   nsFrameMessageManager* mParentManager;
   nsTArray<nsString> mPendingScripts;
   nsTArray<bool> mPendingScriptsGlobalStates;
+
+  void LoadPendingScripts(nsFrameMessageManager* aManager,
+                          nsFrameMessageManager* aChildMM);
 public:
   static nsFrameMessageManager* sParentProcessManager;
   static nsFrameMessageManager* sChildProcessManager;

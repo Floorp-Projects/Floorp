@@ -283,7 +283,7 @@ BrowserElementParent::OpenWindowInProcess(nsIDOMWindow* aOpenerWindow,
   frameLoader->GetDocShell(getter_AddRefs(docshell));
   NS_ENSURE_TRUE(docshell, BrowserElementParent::OPEN_WINDOW_IGNORED);
 
-  nsCOMPtr<nsIDOMWindow> window = do_GetInterface(docshell);
+  nsCOMPtr<nsIDOMWindow> window = docshell->GetWindow();
   window.forget(aReturnWindow);
 
   return !!*aReturnWindow ? opened : BrowserElementParent::OPEN_WINDOW_CANCELLED;

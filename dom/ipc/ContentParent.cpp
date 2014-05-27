@@ -826,7 +826,7 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
         aFrameElement->GetAttr(kNameSpaceID_None,
                                nsGkAtoms::parentapp, parentAppManifestURL);
         nsAdoptingString systemAppManifestURL =
-            Preferences::GetString("browser.manifestURL");
+            Preferences::GetString("b2g.system_manifest_url");
         nsCOMPtr<nsIAppsService> appsService =
             do_GetService(APPS_SERVICE_CONTRACTID);
         if (!parentAppManifestURL.IsEmpty() &&

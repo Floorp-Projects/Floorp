@@ -5,15 +5,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 void
-nsTDependentSubstring_CharT::Rebind( const substring_type& str, uint32_t startPos, uint32_t length )
+nsTDependentSubstring_CharT::Rebind(const substring_type& str,
+                                    uint32_t startPos, uint32_t length)
 {
   // If we currently own a buffer, release it.
   Finalize();
 
   size_type strLength = str.Length();
 
-  if (startPos > strLength)
+  if (startPos > strLength) {
     startPos = strLength;
+  }
 
   mData = const_cast<char_type*>(static_cast<const char_type*>(str.Data())) + startPos;
   mLength = XPCOM_MIN(length, strLength - startPos);
@@ -22,7 +24,7 @@ nsTDependentSubstring_CharT::Rebind( const substring_type& str, uint32_t startPo
 }
 
 void
-nsTDependentSubstring_CharT::Rebind( const char_type* data, size_type length )
+nsTDependentSubstring_CharT::Rebind(const char_type* data, size_type length)
 {
   NS_ASSERTION(data, "nsTDependentSubstring must wrap a non-NULL buffer");
 

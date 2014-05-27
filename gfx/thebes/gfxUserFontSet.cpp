@@ -333,13 +333,15 @@ private:
 static ots::TableAction
 OTSTableAction(uint32_t aTag, void *aUserData)
 {
-    // preserve Graphite and SVG tables
+    // preserve Graphite, color glyph and SVG tables
     if (aTag == TRUETYPE_TAG('S', 'i', 'l', 'f') ||
         aTag == TRUETYPE_TAG('S', 'i', 'l', 'l') ||
         aTag == TRUETYPE_TAG('G', 'l', 'o', 'c') ||
         aTag == TRUETYPE_TAG('G', 'l', 'a', 't') ||
         aTag == TRUETYPE_TAG('F', 'e', 'a', 't') ||
-        aTag == TRUETYPE_TAG('S', 'V', 'G', ' ')) {
+        aTag == TRUETYPE_TAG('S', 'V', 'G', ' ') ||
+        aTag == TRUETYPE_TAG('C', 'O', 'L', 'R') ||
+        aTag == TRUETYPE_TAG('C', 'P', 'A', 'L')) {
         return ots::TABLE_ACTION_PASSTHRU;
     }
     return ots::TABLE_ACTION_DEFAULT;

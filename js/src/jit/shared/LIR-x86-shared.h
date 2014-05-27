@@ -192,7 +192,7 @@ class LPowHalfD : public LInstructionHelper<1, 1, 0>
 {
   public:
     LIR_HEADER(PowHalfD)
-    LPowHalfD(const LAllocation &input) {
+    explicit LPowHalfD(const LAllocation &input) {
         setOperand(0, input);
     }
 
@@ -274,7 +274,7 @@ class LGuardShape : public LInstructionHelper<0, 1, 0>
   public:
     LIR_HEADER(GuardShape)
 
-    LGuardShape(const LAllocation &in) {
+    explicit LGuardShape(const LAllocation &in) {
         setOperand(0, in);
     }
     const MGuardShape *mir() const {
@@ -287,7 +287,7 @@ class LGuardObjectType : public LInstructionHelper<0, 1, 0>
   public:
     LIR_HEADER(GuardObjectType)
 
-    LGuardObjectType(const LAllocation &in) {
+    explicit LGuardObjectType(const LAllocation &in) {
         setOperand(0, in);
     }
     const MGuardObjectType *mir() const {

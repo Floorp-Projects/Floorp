@@ -2303,7 +2303,7 @@ nsHTMLEditor::GetElementOrParentByTagName(const nsAString& aTagName,
   bool getLink = IsLinkTag(tagName);
   bool getNamedAnchor = IsNamedAnchorTag(tagName);
   if (getLink || getNamedAnchor) {
-    tagName.AssignLiteral("a");
+    tagName.Assign('a');
   }
   bool findTableCell = tagName.EqualsLiteral("td");
   bool findList = tagName.EqualsLiteral("list");
@@ -2577,7 +2577,7 @@ nsHTMLEditor::CreateElementWithDefaults(const nsAString& aTagName)
   nsAutoString realTagName;
 
   if (IsLinkTag(tagName) || IsNamedAnchorTag(tagName)) {
-    realTagName.AssignLiteral("a");
+    realTagName.Assign('a');
   } else {
     realTagName = tagName;
   }

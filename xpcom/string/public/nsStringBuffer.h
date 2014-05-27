@@ -45,7 +45,7 @@ public:
    *
    * @return new string buffer or null if out of memory.
    */
-  static already_AddRefed<nsStringBuffer> Alloc(size_t storageSize);
+  static already_AddRefed<nsStringBuffer> Alloc(size_t aStorageSize);
 
   /**
    * Resizes the given string buffer to the specified storage size.  This
@@ -58,7 +58,7 @@ public:
    *
    * @see IsReadonly
    */
-  static nsStringBuffer* Realloc(nsStringBuffer* buf, size_t storageSize);
+  static nsStringBuffer* Realloc(nsStringBuffer* aBuf, size_t aStorageSize);
 
   /**
    * Increment the reference count on this string buffer.
@@ -76,9 +76,9 @@ public:
    * pointer.  The data pointer must have been returned previously by a
    * call to the nsStringBuffer::Data method.
    */
-  static nsStringBuffer* FromData(void* data)
+  static nsStringBuffer* FromData(void* aData)
   {
-    return reinterpret_cast<nsStringBuffer*> (data) - 1;
+    return reinterpret_cast<nsStringBuffer*>(aData) - 1;
   }
 
   /**
@@ -86,7 +86,7 @@ public:
    */
   void* Data() const
   {
-    return const_cast<char*> (reinterpret_cast<const char*> (this + 1));
+    return const_cast<char*>(reinterpret_cast<const char*>(this + 1));
   }
 
   /**
@@ -120,8 +120,8 @@ public:
    * the returned string buffer must have its reference count incremented
    * via a call to the AddRef method.
    */
-  static nsStringBuffer* FromString(const nsAString &str);
-  static nsStringBuffer* FromString(const nsACString &str);
+  static nsStringBuffer* FromString(const nsAString& aStr);
+  static nsStringBuffer* FromString(const nsACString& aStr);
 
   /**
    * The ToString methods assign this string buffer to a given string
@@ -137,10 +137,8 @@ public:
    *       however, string length is always measured in storage units
    *       (2-byte units for wide strings).
    */
-  void ToString(uint32_t len, nsAString &str,
-                bool aMoveOwnership = false);
-  void ToString(uint32_t len, nsACString &str,
-                bool aMoveOwnership = false);
+  void ToString(uint32_t aLen, nsAString& aStr, bool aMoveOwnership = false);
+  void ToString(uint32_t aLen, nsACString& aStr, bool aMoveOwnership = false);
 
   /**
    * This measures the size.  It should only be used if the StringBuffer is

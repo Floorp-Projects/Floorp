@@ -350,7 +350,7 @@ BaselineCompiler::emitPrologue()
 
     // Record the offset of the prologue, because Ion can bailout before
     // the scope chain is initialized.
-    prologueOffset_ = masm.currentOffset();
+    prologueOffset_ = CodeOffsetLabel(masm.currentOffset());
 
     // Initialize the scope chain before any operation that may
     // call into the VM and trigger a GC.
@@ -380,7 +380,7 @@ BaselineCompiler::emitEpilogue()
 {
     // Record the offset of the epilogue, so we can do early return from
     // Debugger handlers during on-stack recompile.
-    epilogueOffset_ = masm.currentOffset();
+    epilogueOffset_ = CodeOffsetLabel(masm.currentOffset());
 
     masm.bind(&return_);
 
@@ -454,7 +454,7 @@ BaselineCompiler::emitIC(ICStub *stub, ICEntry::Kind kind)
 
     CodeOffsetLabel patchOffset;
     EmitCallIC(&patchOffset, masm);
-    entry->setReturnOffset(masm.currentOffset());
+    entry->setReturnOffset(CodeOffsetLabel(masm.currentOffset()));
     if (!addICLoadLabel(patchOffset))
         return false;
 
@@ -550,7 +550,7 @@ BaselineCompiler::emitDebugPrologue()
         masm.bind(&done);
     }
 
-    postDebugPrologueOffset_ = masm.currentOffset();
+    postDebugPrologueOffset_ = CodeOffsetLabel(masm.currentOffset());
 
     return true;
 }
@@ -726,7 +726,7 @@ BaselineCompiler::emitDebugTrap()
 
     // Add an IC entry for the return offset -> pc mapping.
     ICEntry icEntry(script->pcToOffset(pc), ICEntry::Kind_DebugTrap);
-    icEntry.setReturnOffset(masm.currentOffset());
+    icEntry.setReturnOffset(CodeOffsetLabel(masm.currentOffset()));
     if (!icEntries_.append(icEntry))
         return false;
 

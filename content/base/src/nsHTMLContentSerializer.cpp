@@ -157,9 +157,9 @@ nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
     nsDependentAtomString nameStr(attrName);
     nsAutoString prefix;
     if (namespaceID == kNameSpaceID_XML) {
-      prefix.AssignLiteral("xml");
+      prefix.AssignLiteral(MOZ_UTF16("xml"));
     } else if (namespaceID == kNameSpaceID_XLink) {
-      prefix.AssignLiteral("xlink");
+      prefix.AssignLiteral(MOZ_UTF16("xlink"));
     }
 
     // Expand shorthand attribute.

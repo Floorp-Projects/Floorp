@@ -370,7 +370,7 @@ struct AsmJSParallelTask
     jit::LIRGraph *lir;     // Passed from worker to main thread.
     unsigned compileTime;
 
-    AsmJSParallelTask(size_t defaultChunkSize)
+    explicit AsmJSParallelTask(size_t defaultChunkSize)
       : runtime(nullptr), lifo(defaultChunkSize), func(nullptr), mir(nullptr), lir(nullptr), compileTime(0)
     { }
 

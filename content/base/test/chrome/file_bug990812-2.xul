@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=990812
+-->
+<window title="Mozilla Bug 990812"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="start();">
+  <label value="Mozilla Bug 990812"/>
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+    var FRAME_SCRIPT = "data:,sendAsyncMessage('test')";
+    var order = ["group", "window", "global"];
+
+    var Cc = Components.classes;
+    var Ci = Components.interfaces;
+    var globalMM = Cc["@mozilla.org/globalmessagemanager;1"]
+                     .getService(Ci.nsIMessageListenerManager);
+
+    function is(val, exp, msg) {
+      opener.wrappedJSObject.is(val, exp, msg);
+    }
+
+    function promiseMessage(type, mm) {
+      return new Promise(function (resolve) {
+        mm.addMessageListener("test", function onMessage() {
+          mm.removeMessageListener("test", onMessage);
+          is(type, order.shift(), "correct type " + type);
+          resolve();
+        });
+      });
+    }
+
+    /**
+     * Tests that async messages sent by frame scripts bubble up as expected,
+     * passing the group, window, and global message managers in that order.
+     */
+    function start() {
+      var global = promiseMessage("global", globalMM);
+      var window = promiseMessage("window", messageManager);
+      var group = promiseMessage("group", getGroupMessageManager("test"));
+
+      var browser = document.querySelector("browser");
+      browser.messageManager.loadFrameScript(FRAME_SCRIPT, true);
+
+      Promise.all([global, window, group]).then(function () {
+        opener.setTimeout("next()");
+        window.close();
+      });
+    }
+
+  ]]></script>
+
+  <browser messagemanagergroup="test" type="content-targetable" src="about:mozilla" />
+
+</window>

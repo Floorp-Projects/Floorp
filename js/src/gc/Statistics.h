@@ -75,7 +75,7 @@ enum Stat {
 class StatisticsSerializer;
 
 struct Statistics {
-    Statistics(JSRuntime *rt);
+    explicit Statistics(JSRuntime *rt);
     ~Statistics();
 
     void beginPhase(Phase phase);

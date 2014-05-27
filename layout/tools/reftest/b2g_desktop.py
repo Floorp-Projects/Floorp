@@ -105,8 +105,8 @@ class B2GDesktopReftest(RefTest):
         prefs = {}
         # Turn off the locale picker screen
         prefs["browser.firstrun.show.localepicker"] = False
-        prefs["browser.homescreenURL"] = "app://test-container.gaiamobile.org/index.html"
-        prefs["browser.manifestURL"] = "app://test-container.gaiamobile.org/manifest.webapp"
+        prefs["b2g.system_startup_url"] = "app://test-container.gaiamobile.org/index.html"
+        prefs["b2g.system_manifest_url"] = "app://test-container.gaiamobile.org/manifest.webapp"
         prefs["browser.tabs.remote"] = False
         prefs["dom.ipc.tabs.disabled"] = False
         prefs["dom.mozBrowserFramesEnabled"] = True

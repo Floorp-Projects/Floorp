@@ -20,7 +20,9 @@
 #include "jsfriendapi.h"
 #include "js/OldDebugAPI.h"
 #include "nsContentUtils.h"
+#include "nsGlobalWindow.h"
 #include "nsIDOMGlobalPropertyInitializer.h"
+#include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
 #include "nsIXPConnect.h"
 #include "WrapperFactory.h"
@@ -2226,6 +2228,28 @@ bool
 EnumerateGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj)
 {
   return JS_EnumerateStandardClasses(aCx, aObj);
+}
+
+bool
+CheckPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[])
+{
+  JS::Rooted<JSObject*> rootedObj(aCx, aObj);
+  nsPIDOMWindow* window = xpc::WindowGlobalOrNull(rootedObj);
+  if (!window) {
+    return false;
+  }
+
+  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+  NS_ENSURE_TRUE(permMgr, false);
+
+  do {
+    uint32_t permission = nsIPermissionManager::DENY_ACTION;
+    permMgr->TestPermissionFromWindow(window, *aPermissions, &permission);
+    if (permission == nsIPermissionManager::ALLOW_ACTION) {
+      return true;
+    }
+  } while (*(++aPermissions));
+  return false;
 }
 
 bool

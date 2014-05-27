@@ -637,7 +637,7 @@ nsCopySupport::FireClipboardEvent(int32_t aType, int32_t aClipboardType, nsIPres
   if (!nsContentUtils::IsSafeToRunScript())
     return false;
 
-  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(piWindow);
+  nsCOMPtr<nsIDocShell> docShell = piWindow->GetDocShell();
   const bool chromeShell =
     docShell && docShell->ItemType() == nsIDocShellTreeItem::typeChrome;
 

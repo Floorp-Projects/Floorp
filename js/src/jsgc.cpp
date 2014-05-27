@@ -4350,7 +4350,7 @@ class AutoCopyFreeListToArenasForGC
     JSRuntime *runtime;
 
   public:
-    AutoCopyFreeListToArenasForGC(JSRuntime *rt) : runtime(rt) {
+    explicit AutoCopyFreeListToArenasForGC(JSRuntime *rt) : runtime(rt) {
         JS_ASSERT(rt->currentThreadHasExclusiveAccess());
         for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
             zone->allocator.arenas.copyFreeListsToArenas();
@@ -4433,7 +4433,7 @@ namespace {
 
 class AutoGCSlice {
   public:
-    AutoGCSlice(JSRuntime *rt);
+    explicit AutoGCSlice(JSRuntime *rt);
     ~AutoGCSlice();
 
   private:
@@ -4773,7 +4773,7 @@ class AutoDisableStoreBuffer
     bool prior;
 
   public:
-    AutoDisableStoreBuffer(GCRuntime *gc) : sb(gc->storeBuffer) {
+    explicit AutoDisableStoreBuffer(GCRuntime *gc) : sb(gc->storeBuffer) {
         prior = sb.isEnabled();
         sb.disable();
     }

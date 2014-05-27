@@ -43,6 +43,16 @@ ProcessGlobal.prototype = {
     switch (topic) {
     case 'app-startup': {
       Services.obs.addObserver(this, 'console-api-log-event', false);
+      let inParent = Cc["@mozilla.org/xre/app-info;1"]
+                       .getService(Ci.nsIXULRuntime)
+                       .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+      if (inParent) {
+        let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
+                     .getService(Ci.nsIMessageListenerManager);
+        ppmm.addMessageListener("getProfD", function(message) {
+          return Services.dirsvc.get("ProfD", Ci.nsIFile).path;
+        });
+      }
       break;
     }
     case 'console-api-log-event': {

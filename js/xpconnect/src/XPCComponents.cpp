@@ -2146,7 +2146,7 @@ nsXPCConstructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,JSContext *
 
     JS::Rooted<JS::Value> arg(cx, ObjectValue(*iidObj));
     RootedValue rval(cx);
-    if (!JS_CallFunctionName(cx, cidObj, "createInstance", arg, &rval) ||
+    if (!JS_CallFunctionName(cx, cidObj, "createInstance", JS::HandleValueArray(arg), &rval) ||
         rval.isPrimitive()) {
         // createInstance will have thrown an exception
         *_retval = false;
@@ -3371,7 +3371,7 @@ nsXPCComponents_Utils::GetIncumbentGlobal(HandleValue aCallback,
     // Invoke the callback, if passed.
     if (aCallback.isObject()) {
         RootedValue ignored(aCx);
-        if (!JS_CallFunctionValue(aCx, JS::NullPtr(), aCallback, globalVal, &ignored))
+        if (!JS_CallFunctionValue(aCx, JS::NullPtr(), aCallback, JS::HandleValueArray(globalVal), &ignored))
             return NS_ERROR_FAILURE;
     }
 

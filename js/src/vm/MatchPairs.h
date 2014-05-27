@@ -124,7 +124,7 @@ class ScopedMatchPairs : public MatchPairs
 
   public:
     /* Constructs an implicit LifoAllocScope. */
-    ScopedMatchPairs(LifoAlloc *lifoAlloc)
+    explicit ScopedMatchPairs(LifoAlloc *lifoAlloc)
       : lifoScope_(lifoAlloc)
     { }
 

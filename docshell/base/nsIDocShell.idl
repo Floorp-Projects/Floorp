@@ -45,7 +45,7 @@ interface nsIScrollObserver;
 
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(e46d924d-c20f-4add-8cf5-1e1c817b2181)]
+[scriptable, builtinclass, uuid(3ca96c12-b69d-4b54-83c5-25a18d32a22b)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**

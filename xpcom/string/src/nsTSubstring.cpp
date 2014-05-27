@@ -9,13 +9,13 @@
 using double_conversion::DoubleToStringConverter;
 
 #ifdef XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
-nsTSubstring_CharT::nsTSubstring_CharT( char_type *data, size_type length,
-                                        uint32_t flags)
-  : mData(data),
-    mLength(length),
-    mFlags(flags)
+nsTSubstring_CharT::nsTSubstring_CharT(char_type* aData, size_type aLength,
+                                       uint32_t aFlags)
+  : mData(aData),
+    mLength(aLength),
+    mFlags(aFlags)
 {
-  if (flags & F_OWNED) {
+  if (aFlags & F_OWNED) {
     STRING_STAT_INCREMENT(Adopt);
 #ifdef NS_BUILD_REFCNT_LOGGING
     NS_LogCtor(mData, "StringAdopt", 1);
@@ -28,9 +28,9 @@ nsTSubstring_CharT::nsTSubstring_CharT( char_type *data, size_type length,
  * helper function for down-casting a nsTSubstring to a nsTFixedString.
  */
 inline const nsTFixedString_CharT*
-AsFixedString( const nsTSubstring_CharT* s )
+AsFixedString(const nsTSubstring_CharT* aStr)
 {
-  return static_cast<const nsTFixedString_CharT*>(s);
+  return static_cast<const nsTFixedString_CharT*>(aStr);
 }
 
 
@@ -42,24 +42,25 @@ AsFixedString( const nsTSubstring_CharT* s )
  * the old data must be released by the caller.
  */
 bool
-nsTSubstring_CharT::MutatePrep( size_type capacity, char_type** oldData, uint32_t* oldFlags )
+nsTSubstring_CharT::MutatePrep(size_type aCapacity, char_type** aOldData,
+                               uint32_t* aOldFlags)
 {
   // initialize to no old data
-  *oldData = nullptr;
-  *oldFlags = 0;
+  *aOldData = nullptr;
+  *aOldFlags = 0;
 
   size_type curCapacity = Capacity();
 
-  // If |capacity > kMaxCapacity|, then our doubling algorithm may not be
+  // If |aCapacity > kMaxCapacity|, then our doubling algorithm may not be
   // able to allocate it.  Just bail out in cases like that.  We don't want
   // to be allocating 2GB+ strings anyway.
   PR_STATIC_ASSERT((sizeof(nsStringBuffer) & 0x1) == 0);
   const size_type kMaxCapacity =
-    (size_type(-1)/2 - sizeof(nsStringBuffer)) / sizeof(char_type) - 2;
-  if (capacity > kMaxCapacity) {
-    // Also assert for |capacity| equal to |size_type(-1)|, since we used to
+    (size_type(-1) / 2 - sizeof(nsStringBuffer)) / sizeof(char_type) - 2;
+  if (aCapacity > kMaxCapacity) {
+    // Also assert for |aCapacity| equal to |size_type(-1)|, since we used to
     // use that value to flag immutability.
-    NS_ASSERTION(capacity != size_type(-1), "Bogus capacity");
+    NS_ASSERTION(aCapacity != size_type(-1), "Bogus capacity");
     return false;
   }
 
@@ -67,20 +68,20 @@ nsTSubstring_CharT::MutatePrep( size_type capacity, char_type** oldData, uint32_
   // need to allocate a new buffer. We cannot use the existing buffer even
   // though it might be large enough.
 
-  if (curCapacity != 0)
-  {
-    if (capacity <= curCapacity) {
+  if (curCapacity != 0) {
+    if (aCapacity <= curCapacity) {
       mFlags &= ~F_VOIDED;  // mutation clears voided flag
       return true;
     }
 
     // Use doubling algorithm when forced to increase available capacity.
     size_type temp = curCapacity;
-    while (temp < capacity)
+    while (temp < aCapacity) {
       temp <<= 1;
-    NS_ASSERTION(XPCOM_MIN(temp, kMaxCapacity) >= capacity,
+    }
+    NS_ASSERTION(XPCOM_MIN(temp, kMaxCapacity) >= aCapacity,
                  "should have hit the early return at the top");
-    capacity = XPCOM_MIN(temp, kMaxCapacity);
+    aCapacity = XPCOM_MIN(temp, kMaxCapacity);
   }
 
   //
@@ -95,20 +96,19 @@ nsTSubstring_CharT::MutatePrep( size_type capacity, char_type** oldData, uint32_
   // a new buffer complicates things just a bit ;-)
   //
 
-  size_type storageSize = (capacity + 1) * sizeof(char_type);
+  size_type storageSize = (aCapacity + 1) * sizeof(char_type);
 
   // case #1
-  if (mFlags & F_SHARED)
-  {
+  if (mFlags & F_SHARED) {
     nsStringBuffer* hdr = nsStringBuffer::FromData(mData);
-    if (!hdr->IsReadonly())
-    {
-      nsStringBuffer *newHdr = nsStringBuffer::Realloc(hdr, storageSize);
-      if (!newHdr)
-        return false; // out-of-memory (original header left intact)
+    if (!hdr->IsReadonly()) {
+      nsStringBuffer* newHdr = nsStringBuffer::Realloc(hdr, storageSize);
+      if (!newHdr) {
+        return false;  // out-of-memory (original header left intact)
+      }
 
       hdr = newHdr;
-      mData = (char_type*) hdr->Data();
+      mData = (char_type*)hdr->Data();
       mFlags &= ~F_VOIDED;  // mutation clears voided flag
       return true;
     }
@@ -119,29 +119,28 @@ nsTSubstring_CharT::MutatePrep( size_type capacity, char_type** oldData, uint32_
 
   // if we have a fixed buffer of sufficient size, then use it.  this helps
   // avoid heap allocations.
-  if ((mFlags & F_CLASS_FIXED) && (capacity < AsFixedString(this)->mFixedCapacity))
-  {
+  if ((mFlags & F_CLASS_FIXED) &&
+      (aCapacity < AsFixedString(this)->mFixedCapacity)) {
     newData = AsFixedString(this)->mFixedBuf;
     newDataFlags = F_TERMINATED | F_FIXED;
-  }
-  else
-  {
+  } else {
     // if we reach here then, we must allocate a new buffer.  we cannot
     // make use of our F_OWNED or F_FIXED buffers because they are not
     // large enough.
 
     nsStringBuffer* newHdr =
       nsStringBuffer::Alloc(storageSize).take();
-    if (!newHdr)
-      return false; // we are still in a consistent state
+    if (!newHdr) {
+      return false;  // we are still in a consistent state
+    }
 
-    newData = (char_type*) newHdr->Data();
+    newData = (char_type*)newHdr->Data();
     newDataFlags = F_TERMINATED | F_SHARED;
   }
 
   // save old data and flags
-  *oldData = mData;
-  *oldFlags = mFlags;
+  *aOldData = mData;
+  *aOldFlags = mFlags;
 
   mData = newData;
   SetDataFlags(newDataFlags);
@@ -162,55 +161,50 @@ nsTSubstring_CharT::Finalize()
 }
 
 bool
-nsTSubstring_CharT::ReplacePrepInternal(index_type cutStart, size_type cutLen,
-                                        size_type fragLen, size_type newLen)
+nsTSubstring_CharT::ReplacePrepInternal(index_type aCutStart, size_type aCutLen,
+                                        size_type aFragLen, size_type aNewLen)
 {
   char_type* oldData;
   uint32_t oldFlags;
-  if (!MutatePrep(newLen, &oldData, &oldFlags))
-    return false; // out-of-memory
+  if (!MutatePrep(aNewLen, &oldData, &oldFlags)) {
+    return false;  // out-of-memory
+  }
 
-  if (oldData)
-  {
+  if (oldData) {
     // determine whether or not we need to copy part of the old string
     // over to the new string.
 
-    if (cutStart > 0)
-    {
+    if (aCutStart > 0) {
       // copy prefix from old string
-      char_traits::copy(mData, oldData, cutStart);
+      char_traits::copy(mData, oldData, aCutStart);
     }
 
-    if (cutStart + cutLen < mLength)
-    {
+    if (aCutStart + aCutLen < mLength) {
       // copy suffix from old string to new offset
-      size_type from = cutStart + cutLen;
+      size_type from = aCutStart + aCutLen;
       size_type fromLen = mLength - from;
-      uint32_t to = cutStart + fragLen;
+      uint32_t to = aCutStart + aFragLen;
       char_traits::copy(mData + to, oldData + from, fromLen);
     }
 
     ::ReleaseData(oldData, oldFlags);
-  }
-  else
-  {
+  } else {
     // original data remains intact
 
     // determine whether or not we need to move part of the existing string
     // to make room for the requested hole.
-    if (fragLen != cutLen && cutStart + cutLen < mLength)
-    {
-      uint32_t from = cutStart + cutLen;
+    if (aFragLen != aCutLen && aCutStart + aCutLen < mLength) {
+      uint32_t from = aCutStart + aCutLen;
       uint32_t fromLen = mLength - from;
-      uint32_t to = cutStart + fragLen;
+      uint32_t to = aCutStart + aFragLen;
       char_traits::move(mData + to, mData + from, fromLen);
     }
   }
 
   // add null terminator (mutable mData always has room for the null-
   // terminator).
-  mData[newLen] = char_type(0);
-  mLength = newLen;
+  mData[aNewLen] = char_type(0);
+  mLength = aNewLen;
 
   return true;
 }
@@ -221,30 +215,23 @@ nsTSubstring_CharT::Capacity() const
   // return 0 to indicate an immutable or 0-sized buffer
 
   size_type capacity;
-  if (mFlags & F_SHARED)
-  {
+  if (mFlags & F_SHARED) {
     // if the string is readonly, then we pretend that it has no capacity.
     nsStringBuffer* hdr = nsStringBuffer::FromData(mData);
-    if (hdr->IsReadonly())
+    if (hdr->IsReadonly()) {
       capacity = 0;
-    else {
+    } else {
       capacity = (hdr->StorageSize() / sizeof(char_type)) - 1;
     }
-  }
-  else if (mFlags & F_FIXED)
-  {
+  } else if (mFlags & F_FIXED) {
     capacity = AsFixedString(this)->mFixedCapacity;
-  }
-  else if (mFlags & F_OWNED)
-  {
+  } else if (mFlags & F_OWNED) {
     // we don't store the capacity of an adopted buffer because that would
     // require an additional member field.  the best we can do is base the
     // capacity on our length.  remains to be seen if this is the right
     // trade-off.
     capacity = mLength;
-  }
-  else
-  {
+  } else {
     capacity = 0;
   }
 
@@ -252,212 +239,222 @@ nsTSubstring_CharT::Capacity() const
 }
 
 bool
-nsTSubstring_CharT::EnsureMutable( size_type newLen )
+nsTSubstring_CharT::EnsureMutable(size_type aNewLen)
 {
-  if (newLen == size_type(-1) || newLen == mLength)
-  {
-    if (mFlags & (F_FIXED | F_OWNED))
+  if (aNewLen == size_type(-1) || aNewLen == mLength) {
+    if (mFlags & (F_FIXED | F_OWNED)) {
       return true;
-    if ((mFlags & F_SHARED) && !nsStringBuffer::FromData(mData)->IsReadonly())
+    }
+    if ((mFlags & F_SHARED) &&
+        !nsStringBuffer::FromData(mData)->IsReadonly()) {
       return true;
+    }
 
-    newLen = mLength;
+    aNewLen = mLength;
   }
-  return SetLength(newLen, fallible_t());
+  return SetLength(aNewLen, fallible_t());
 }
 
 // ---------------------------------------------------------------------------
 
 // This version of Assign is optimized for single-character assignment.
 void
-nsTSubstring_CharT::Assign( char_type c )
+nsTSubstring_CharT::Assign(char_type aChar)
 {
-  if (!ReplacePrep(0, mLength, 1))
+  if (!ReplacePrep(0, mLength, 1)) {
     NS_ABORT_OOM(mLength);
+  }
 
-  *mData = c;
+  *mData = aChar;
 }
 
 bool
-nsTSubstring_CharT::Assign( char_type c, const fallible_t& )
+nsTSubstring_CharT::Assign(char_type aChar, const fallible_t&)
 {
-  if (!ReplacePrep(0, mLength, 1))
+  if (!ReplacePrep(0, mLength, 1)) {
     return false;
+  }
 
-  *mData = c;
+  *mData = aChar;
   return true;
 }
 
 void
-nsTSubstring_CharT::Assign( const char_type* data )
+nsTSubstring_CharT::Assign(const char_type* aData)
 {
-  if (!Assign(data, size_type(-1), fallible_t()))
-    NS_ABORT_OOM(char_traits::length(data));
+  if (!Assign(aData, size_type(-1), fallible_t())) {
+    NS_ABORT_OOM(char_traits::length(aData));
+  }
 }
 
 void
-nsTSubstring_CharT::Assign( const char_type* data, size_type length )
+nsTSubstring_CharT::Assign(const char_type* aData, size_type aLength)
 {
-  if (!Assign(data, length, fallible_t()))
-    NS_ABORT_OOM(length);
+  if (!Assign(aData, aLength, fallible_t())) {
+    NS_ABORT_OOM(aLength);
+  }
 }
 
 bool
-nsTSubstring_CharT::Assign( const char_type* data, size_type length, const fallible_t& )
+nsTSubstring_CharT::Assign(const char_type* aData, size_type aLength,
+                           const fallible_t&)
 {
-  if (!data || length == 0)
-  {
+  if (!aData || aLength == 0) {
     Truncate();
     return true;
   }
 
-  if (length == size_type(-1))
-    length = char_traits::length(data);
-
-  if (IsDependentOn(data, data + length))
-  {
-    return Assign(string_type(data, length), fallible_t());
+  if (aLength == size_type(-1)) {
+    aLength = char_traits::length(aData);
   }
 
-  if (!ReplacePrep(0, mLength, length))
-    return false;
+  if (IsDependentOn(aData, aData + aLength)) {
+    return Assign(string_type(aData, aLength), fallible_t());
+  }
 
-  char_traits::copy(mData, data, length);
+  if (!ReplacePrep(0, mLength, aLength)) {
+    return false;
+  }
+
+  char_traits::copy(mData, aData, aLength);
   return true;
 }
 
 void
-nsTSubstring_CharT::AssignASCII( const char* data, size_type length )
+nsTSubstring_CharT::AssignASCII(const char* aData, size_type aLength)
 {
-  if (!AssignASCII(data, length, fallible_t()))
-    NS_ABORT_OOM(length);
+  if (!AssignASCII(aData, aLength, fallible_t())) {
+    NS_ABORT_OOM(aLength);
+  }
 }
 
 bool
-nsTSubstring_CharT::AssignASCII( const char* data, size_type length, const fallible_t& )
+nsTSubstring_CharT::AssignASCII(const char* aData, size_type aLength,
+                                const fallible_t&)
 {
   // A Unicode string can't depend on an ASCII string buffer,
   // so this dependence check only applies to CStrings.
 #ifdef CharT_is_char
-  if (IsDependentOn(data, data + length))
-  {
-    return Assign(string_type(data, length), fallible_t());
+  if (IsDependentOn(aData, aData + aLength)) {
+    return Assign(string_type(aData, aLength), fallible_t());
   }
 #endif
 
-  if (!ReplacePrep(0, mLength, length))
+  if (!ReplacePrep(0, mLength, aLength)) {
     return false;
+  }
 
-  char_traits::copyASCII(mData, data, length);
+  char_traits::copyASCII(mData, aData, aLength);
   return true;
 }
 
 void
-nsTSubstring_CharT::AssignLiteral( const char_type* data, size_type length )
+nsTSubstring_CharT::AssignLiteral(const char_type* aData, size_type aLength)
 {
   ::ReleaseData(mData, mFlags);
-  mData = const_cast<char_type*>(data);
-  mLength = length;
+  mData = const_cast<char_type*>(aData);
+  mLength = aLength;
   SetDataFlags(F_TERMINATED | F_LITERAL);
 }
 
 void
-nsTSubstring_CharT::Assign( const self_type& str )
+nsTSubstring_CharT::Assign(const self_type& aStr)
 {
-  if (!Assign(str, fallible_t()))
-    NS_ABORT_OOM(str.Length());
+  if (!Assign(aStr, fallible_t())) {
+    NS_ABORT_OOM(aStr.Length());
+  }
 }
 
 bool
-nsTSubstring_CharT::Assign( const self_type& str, const fallible_t& )
+nsTSubstring_CharT::Assign(const self_type& aStr, const fallible_t&)
 {
-  // |str| could be sharable.  we need to check its flags to know how to
+  // |aStr| could be sharable. We need to check its flags to know how to
   // deal with it.
 
-  if (&str == this)
-    return true;
-
-  if (!str.mLength)
-  {
-    Truncate();
-    mFlags |= str.mFlags & F_VOIDED;
+  if (&aStr == this) {
     return true;
   }
 
-  if (str.mFlags & F_SHARED)
-  {
+  if (!aStr.mLength) {
+    Truncate();
+    mFlags |= aStr.mFlags & F_VOIDED;
+    return true;
+  }
+
+  if (aStr.mFlags & F_SHARED) {
     // nice! we can avoid a string copy :-)
 
-    // |str| should be null-terminated
-    NS_ASSERTION(str.mFlags & F_TERMINATED, "shared, but not terminated");
+    // |aStr| should be null-terminated
+    NS_ASSERTION(aStr.mFlags & F_TERMINATED, "shared, but not terminated");
 
     ::ReleaseData(mData, mFlags);
 
-    mData = str.mData;
-    mLength = str.mLength;
+    mData = aStr.mData;
+    mLength = aStr.mLength;
     SetDataFlags(F_TERMINATED | F_SHARED);
 
     // get an owning reference to the mData
     nsStringBuffer::FromData(mData)->AddRef();
     return true;
-  }
-  else if (str.mFlags & F_LITERAL)
-  {
-    NS_ABORT_IF_FALSE(str.mFlags & F_TERMINATED, "Unterminated literal");
+  } else if (aStr.mFlags & F_LITERAL) {
+    NS_ABORT_IF_FALSE(aStr.mFlags & F_TERMINATED, "Unterminated literal");
 
-    AssignLiteral(str.mData, str.mLength);
+    AssignLiteral(aStr.mData, aStr.mLength);
     return true;
   }
 
   // else, treat this like an ordinary assignment.
-  return Assign(str.Data(), str.Length(), fallible_t());
+  return Assign(aStr.Data(), aStr.Length(), fallible_t());
 }
 
 void
-nsTSubstring_CharT::Assign( const substring_tuple_type& tuple )
+nsTSubstring_CharT::Assign(const substring_tuple_type& aTuple)
 {
-  if (!Assign(tuple, fallible_t()))
-    NS_ABORT_OOM(tuple.Length());
+  if (!Assign(aTuple, fallible_t())) {
+    NS_ABORT_OOM(aTuple.Length());
+  }
 }
 
 bool
-nsTSubstring_CharT::Assign( const substring_tuple_type& tuple, const fallible_t& )
+nsTSubstring_CharT::Assign(const substring_tuple_type& aTuple,
+                           const fallible_t&)
 {
-  if (tuple.IsDependentOn(mData, mData + mLength))
-  {
+  if (aTuple.IsDependentOn(mData, mData + mLength)) {
     // take advantage of sharing here...
-    return Assign(string_type(tuple), fallible_t());
+    return Assign(string_type(aTuple), fallible_t());
   }
 
-  size_type length = tuple.Length();
+  size_type length = aTuple.Length();
 
   // don't use ReplacePrep here because it changes the length
   char_type* oldData;
   uint32_t oldFlags;
-  if (!MutatePrep(length, &oldData, &oldFlags))
+  if (!MutatePrep(length, &oldData, &oldFlags)) {
     return false;
+  }
 
-  if (oldData)
+  if (oldData) {
     ::ReleaseData(oldData, oldFlags);
+  }
 
-  tuple.WriteTo(mData, length);
+  aTuple.WriteTo(mData, length);
   mData[length] = 0;
   mLength = length;
   return true;
 }
 
 void
-nsTSubstring_CharT::Adopt( char_type* data, size_type length )
+nsTSubstring_CharT::Adopt(char_type* aData, size_type aLength)
 {
-  if (data)
-  {
+  if (aData) {
     ::ReleaseData(mData, mFlags);
 
-    if (length == size_type(-1))
-      length = char_traits::length(data);
+    if (aLength == size_type(-1)) {
+      aLength = char_traits::length(aData);
+    }
 
-    mData = data;
-    mLength = length;
+    mData = aData;
+    mLength = aLength;
     SetDataFlags(F_TERMINATED | F_OWNED);
 
     STRING_STAT_INCREMENT(Adopt);
@@ -466,9 +463,7 @@ nsTSubstring_CharT::Adopt( char_type* data, size_type length )
     // tracking purposes.
     NS_LogCtor(mData, "StringAdopt", 1);
 #endif // NS_BUILD_REFCNT_LOGGING
-  }
-  else
-  {
+  } else {
     SetIsVoid(true);
   }
 }
@@ -476,135 +471,147 @@ nsTSubstring_CharT::Adopt( char_type* data, size_type length )
 
 // This version of Replace is optimized for single-character replacement.
 void
-nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, char_type c )
+nsTSubstring_CharT::Replace(index_type aCutStart, size_type aCutLength,
+                            char_type aChar)
 {
-  cutStart = XPCOM_MIN(cutStart, Length());
+  aCutStart = XPCOM_MIN(aCutStart, Length());
 
-  if (ReplacePrep(cutStart, cutLength, 1))
-    mData[cutStart] = c;
+  if (ReplacePrep(aCutStart, aCutLength, 1)) {
+    mData[aCutStart] = aChar;
+  }
 }
 
 bool
-nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, char_type c, const mozilla::fallible_t& )
+nsTSubstring_CharT::Replace(index_type aCutStart, size_type aCutLength,
+                            char_type aChar,
+                            const mozilla::fallible_t&)
 {
-  cutStart = XPCOM_MIN(cutStart, Length());
+  aCutStart = XPCOM_MIN(aCutStart, Length());
 
-  if (!ReplacePrep(cutStart, cutLength, 1))
+  if (!ReplacePrep(aCutStart, aCutLength, 1)) {
     return false;
+  }
 
-  mData[cutStart] = c;
+  mData[aCutStart] = aChar;
 
   return true;
 }
 
 void
-nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, const char_type* data, size_type length )
+nsTSubstring_CharT::Replace(index_type aCutStart, size_type aCutLength,
+                            const char_type* aData, size_type aLength)
 {
-  if (!Replace(cutStart, cutLength, data, length, mozilla::fallible_t()))
-  {
-    NS_ABORT_OOM(Length() - cutLength + 1);
+  if (!Replace(aCutStart, aCutLength, aData, aLength,
+               mozilla::fallible_t())) {
+    NS_ABORT_OOM(Length() - aCutLength + 1);
   }
 }
 
 bool
-nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, const char_type* data, size_type length, const mozilla::fallible_t& )
+nsTSubstring_CharT::Replace(index_type aCutStart, size_type aCutLength,
+                            const char_type* aData, size_type aLength,
+                            const mozilla::fallible_t&)
 {
   // unfortunately, some callers pass null :-(
-  if (!data)
-  {
-    length = 0;
-  }
-  else
-  {
-    if (length == size_type(-1))
-      length = char_traits::length(data);
+  if (!aData) {
+    aLength = 0;
+  } else {
+    if (aLength == size_type(-1)) {
+      aLength = char_traits::length(aData);
+    }
 
-    if (IsDependentOn(data, data + length))
-    {
-      nsTAutoString_CharT temp(data, length);
-      return Replace(cutStart, cutLength, temp, mozilla::fallible_t());
+    if (IsDependentOn(aData, aData + aLength)) {
+      nsTAutoString_CharT temp(aData, aLength);
+      return Replace(aCutStart, aCutLength, temp, mozilla::fallible_t());
     }
   }
 
-  cutStart = XPCOM_MIN(cutStart, Length());
+  aCutStart = XPCOM_MIN(aCutStart, Length());
 
-  bool ok = ReplacePrep(cutStart, cutLength, length);
-  if (!ok)
+  bool ok = ReplacePrep(aCutStart, aCutLength, aLength);
+  if (!ok) {
     return false;
+  }
 
-  if (length > 0)
-    char_traits::copy(mData + cutStart, data, length);
+  if (aLength > 0) {
+    char_traits::copy(mData + aCutStart, aData, aLength);
+  }
 
   return true;
 }
 
 void
-nsTSubstring_CharT::ReplaceASCII( index_type cutStart, size_type cutLength, const char* data, size_type length )
+nsTSubstring_CharT::ReplaceASCII(index_type aCutStart, size_type aCutLength,
+                                 const char* aData, size_type aLength)
 {
-  if (length == size_type(-1))
-    length = strlen(data);
+  if (aLength == size_type(-1)) {
+    aLength = strlen(aData);
+  }
 
   // A Unicode string can't depend on an ASCII string buffer,
   // so this dependence check only applies to CStrings.
 #ifdef CharT_is_char
-  if (IsDependentOn(data, data + length))
-  {
-    nsTAutoString_CharT temp(data, length);
-    Replace(cutStart, cutLength, temp);
+  if (IsDependentOn(aData, aData + aLength)) {
+    nsTAutoString_CharT temp(aData, aLength);
+    Replace(aCutStart, aCutLength, temp);
     return;
   }
 #endif
 
-  cutStart = XPCOM_MIN(cutStart, Length());
+  aCutStart = XPCOM_MIN(aCutStart, Length());
 
-  if (ReplacePrep(cutStart, cutLength, length) && length > 0)
-    char_traits::copyASCII(mData + cutStart, data, length);
+  if (ReplacePrep(aCutStart, aCutLength, aLength) && aLength > 0) {
+    char_traits::copyASCII(mData + aCutStart, aData, aLength);
+  }
 }
 
 void
-nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, const substring_tuple_type& tuple )
+nsTSubstring_CharT::Replace(index_type aCutStart, size_type aCutLength,
+                            const substring_tuple_type& aTuple)
 {
-  if (tuple.IsDependentOn(mData, mData + mLength))
-  {
-    nsTAutoString_CharT temp(tuple);
-    Replace(cutStart, cutLength, temp);
+  if (aTuple.IsDependentOn(mData, mData + mLength)) {
+    nsTAutoString_CharT temp(aTuple);
+    Replace(aCutStart, aCutLength, temp);
     return;
   }
 
-  size_type length = tuple.Length();
+  size_type length = aTuple.Length();
 
-  cutStart = XPCOM_MIN(cutStart, Length());
+  aCutStart = XPCOM_MIN(aCutStart, Length());
 
-  if (ReplacePrep(cutStart, cutLength, length) && length > 0)
-    tuple.WriteTo(mData + cutStart, length);
+  if (ReplacePrep(aCutStart, aCutLength, length) && length > 0) {
+    aTuple.WriteTo(mData + aCutStart, length);
+  }
 }
 
 void
-nsTSubstring_CharT::ReplaceLiteral( index_type cutStart, size_type cutLength, const char_type* data, size_type length )
+nsTSubstring_CharT::ReplaceLiteral(index_type aCutStart, size_type aCutLength,
+                                   const char_type* aData, size_type aLength)
 {
-  cutStart = XPCOM_MIN(cutStart, Length());
+  aCutStart = XPCOM_MIN(aCutStart, Length());
 
-  if (!cutStart && cutLength == Length())
-    AssignLiteral(data, length);
-  else if (ReplacePrep(cutStart, cutLength, length) && length > 0)
-    char_traits::copy(mData + cutStart, data, length);
+  if (!aCutStart && aCutLength == Length()) {
+    AssignLiteral(aData, aLength);
+  } else if (ReplacePrep(aCutStart, aCutLength, aLength) && aLength > 0) {
+    char_traits::copy(mData + aCutStart, aData, aLength);
+  }
 }
 
 void
-nsTSubstring_CharT::SetCapacity( size_type capacity )
+nsTSubstring_CharT::SetCapacity(size_type aCapacity)
 {
-  if (!SetCapacity(capacity, fallible_t()))
-    NS_ABORT_OOM(capacity);
+  if (!SetCapacity(aCapacity, fallible_t())) {
+    NS_ABORT_OOM(aCapacity);
+  }
 }
 
 bool
-nsTSubstring_CharT::SetCapacity( size_type capacity, const fallible_t& )
+nsTSubstring_CharT::SetCapacity(size_type aCapacity, const fallible_t&)
 {
   // capacity does not include room for the terminating null char
 
   // if our capacity is reduced to zero, then free our buffer.
-  if (capacity == 0)
-  {
+  if (aCapacity == 0) {
     ::ReleaseData(mData, mFlags);
     mData = char_traits::sEmptyBuffer;
     mLength = 0;
@@ -614,158 +621,169 @@ nsTSubstring_CharT::SetCapacity( size_type capacity, const fallible_t& )
 
   char_type* oldData;
   uint32_t oldFlags;
-  if (!MutatePrep(capacity, &oldData, &oldFlags))
-    return false; // out-of-memory
+  if (!MutatePrep(aCapacity, &oldData, &oldFlags)) {
+    return false;  // out-of-memory
+  }
 
   // compute new string length
-  size_type newLen = XPCOM_MIN(mLength, capacity);
+  size_type newLen = XPCOM_MIN(mLength, aCapacity);
 
-  if (oldData)
-  {
+  if (oldData) {
     // preserve old data
-    if (mLength > 0)
+    if (mLength > 0) {
       char_traits::copy(mData, oldData, newLen);
+    }
 
     ::ReleaseData(oldData, oldFlags);
   }
 
   // adjust mLength if our buffer shrunk down in size
-  if (newLen < mLength)
+  if (newLen < mLength) {
     mLength = newLen;
+  }
 
   // always null-terminate here, even if the buffer got longer.  this is
   // for backwards compat with the old string implementation.
-  mData[capacity] = char_type(0);
+  mData[aCapacity] = char_type(0);
 
   return true;
 }
 
 void
-nsTSubstring_CharT::SetLength( size_type length )
+nsTSubstring_CharT::SetLength(size_type aLength)
 {
-  SetCapacity(length);
-  mLength = length;
+  SetCapacity(aLength);
+  mLength = aLength;
 }
 
 bool
-nsTSubstring_CharT::SetLength( size_type length, const fallible_t& )
+nsTSubstring_CharT::SetLength(size_type aLength, const fallible_t&)
 {
-  if (!SetCapacity(length, fallible_t()))
+  if (!SetCapacity(aLength, fallible_t())) {
     return false;
+  }
 
-  mLength = length;
+  mLength = aLength;
   return true;
 }
 
 void
-nsTSubstring_CharT::SetIsVoid( bool val )
+nsTSubstring_CharT::SetIsVoid(bool aVal)
 {
-  if (val)
-  {
+  if (aVal) {
     Truncate();
     mFlags |= F_VOIDED;
-  }
-  else
-  {
+  } else {
     mFlags &= ~F_VOIDED;
   }
 }
 
 bool
-nsTSubstring_CharT::Equals( const self_type& str ) const
+nsTSubstring_CharT::Equals(const self_type& aStr) const
 {
-  return mLength == str.mLength && char_traits::compare(mData, str.mData, mLength) == 0;
+  return mLength == aStr.mLength &&
+         char_traits::compare(mData, aStr.mData, mLength) == 0;
 }
 
 bool
-nsTSubstring_CharT::Equals( const self_type& str, const comparator_type& comp ) const
+nsTSubstring_CharT::Equals(const self_type& aStr,
+                           const comparator_type& aComp) const
 {
-  return mLength == str.mLength && comp(mData, str.mData, mLength, str.mLength) == 0;
+  return mLength == aStr.mLength &&
+         aComp(mData, aStr.mData, mLength, aStr.mLength) == 0;
 }
 
 bool
-nsTSubstring_CharT::Equals( const char_type* data ) const
+nsTSubstring_CharT::Equals(const char_type* aData) const
 {
   // unfortunately, some callers pass null :-(
-  if (!data)
-  {
+  if (!aData) {
     NS_NOTREACHED("null data pointer");
     return mLength == 0;
   }
 
   // XXX avoid length calculation?
-  size_type length = char_traits::length(data);
-  return mLength == length && char_traits::compare(mData, data, mLength) == 0;
+  size_type length = char_traits::length(aData);
+  return mLength == length &&
+         char_traits::compare(mData, aData, mLength) == 0;
 }
 
 bool
-nsTSubstring_CharT::Equals( const char_type* data, const comparator_type& comp ) const
+nsTSubstring_CharT::Equals(const char_type* aData,
+                           const comparator_type& aComp) const
 {
   // unfortunately, some callers pass null :-(
-  if (!data)
-  {
+  if (!aData) {
     NS_NOTREACHED("null data pointer");
     return mLength == 0;
   }
 
   // XXX avoid length calculation?
-  size_type length = char_traits::length(data);
-  return mLength == length && comp(mData, data, mLength, length) == 0;
+  size_type length = char_traits::length(aData);
+  return mLength == length && aComp(mData, aData, mLength, length) == 0;
 }
 
 bool
-nsTSubstring_CharT::EqualsASCII( const char* data, size_type len ) const
+nsTSubstring_CharT::EqualsASCII(const char* aData, size_type aLen) const
 {
-  return mLength == len && char_traits::compareASCII(mData, data, len) == 0;
+  return mLength == aLen &&
+         char_traits::compareASCII(mData, aData, aLen) == 0;
 }
 
 bool
-nsTSubstring_CharT::EqualsASCII( const char* data ) const
+nsTSubstring_CharT::EqualsASCII(const char* aData) const
 {
-  return char_traits::compareASCIINullTerminated(mData, mLength, data) == 0;
+  return char_traits::compareASCIINullTerminated(mData, mLength, aData) == 0;
 }
 
 bool
-nsTSubstring_CharT::LowerCaseEqualsASCII( const char* data, size_type len ) const
+nsTSubstring_CharT::LowerCaseEqualsASCII(const char* aData,
+                                         size_type aLen) const
 {
-  return mLength == len && char_traits::compareLowerCaseToASCII(mData, data, len) == 0;
+  return mLength == aLen &&
+         char_traits::compareLowerCaseToASCII(mData, aData, aLen) == 0;
 }
 
 bool
-nsTSubstring_CharT::LowerCaseEqualsASCII( const char* data ) const
+nsTSubstring_CharT::LowerCaseEqualsASCII(const char* aData) const
 {
-  return char_traits::compareLowerCaseToASCIINullTerminated(mData, mLength, data) == 0;
+  return char_traits::compareLowerCaseToASCIINullTerminated(mData,
+                                                            mLength,
+                                                            aData) == 0;
 }
 
 nsTSubstring_CharT::size_type
-nsTSubstring_CharT::CountChar( char_type c ) const
+nsTSubstring_CharT::CountChar(char_type aChar) const
 {
-  const char_type *start = mData;
-  const char_type *end   = mData + mLength;
+  const char_type* start = mData;
+  const char_type* end   = mData + mLength;
 
-  return NS_COUNT(start, end, c);
+  return NS_COUNT(start, end, aChar);
 }
 
 int32_t
-nsTSubstring_CharT::FindChar( char_type c, index_type offset ) const
+nsTSubstring_CharT::FindChar(char_type aChar, index_type aOffset) const
 {
-  if (offset < mLength)
-  {
-    const char_type* result = char_traits::find(mData + offset, mLength - offset, c);
-    if (result)
+  if (aOffset < mLength) {
+    const char_type* result = char_traits::find(mData + aOffset,
+                                                mLength - aOffset, aChar);
+    if (result) {
       return result - mData;
+    }
   }
   return -1;
 }
 
 void
-nsTSubstring_CharT::StripChar( char_type aChar, int32_t aOffset )
+nsTSubstring_CharT::StripChar(char_type aChar, int32_t aOffset)
 {
-  if (mLength == 0 || aOffset >= int32_t(mLength))
+  if (mLength == 0 || aOffset >= int32_t(mLength)) {
     return;
+  }
 
-  if (!EnsureMutable()) // XXX do this lazily?
+  if (!EnsureMutable()) { // XXX do this lazily?
     NS_ABORT_OOM(mLength);
+  }
 
   // XXX(darin): this code should defer writing until necessary.
 
@@ -773,24 +791,26 @@ nsTSubstring_CharT::StripChar( char_type aChar, int32_t aOffset )
   char_type* from = mData + aOffset;
   char_type* end  = mData + mLength;
 
-  while (from < end)
-  {
+  while (from < end) {
     char_type theChar = *from++;
-    if (aChar != theChar)
+    if (aChar != theChar) {
       *to++ = theChar;
+    }
   }
   *to = char_type(0); // add the null
   mLength = to - mData;
 }
 
 void
-nsTSubstring_CharT::StripChars( const char_type* aChars, uint32_t aOffset )
+nsTSubstring_CharT::StripChars(const char_type* aChars, uint32_t aOffset)
 {
-  if (aOffset >= uint32_t(mLength))
+  if (aOffset >= uint32_t(mLength)) {
     return;
+  }
 
-  if (!EnsureMutable()) // XXX do this lazily?
+  if (!EnsureMutable()) { // XXX do this lazily?
     NS_ABORT_OOM(mLength);
+  }
 
   // XXX(darin): this code should defer writing until necessary.
 
@@ -798,8 +818,7 @@ nsTSubstring_CharT::StripChars( const char_type* aChars, uint32_t aOffset )
   char_type* from = mData + aOffset;
   char_type* end  = mData + mLength;
 
-  while (from < end)
-  {
+  while (from < end) {
     char_type theChar = *from++;
     const char_type* test = aChars;
 
@@ -815,43 +834,47 @@ nsTSubstring_CharT::StripChars( const char_type* aChars, uint32_t aOffset )
 }
 
 int
-nsTSubstring_CharT::AppendFunc(void* arg, const char* s, uint32_t len)
+nsTSubstring_CharT::AppendFunc(void* aArg, const char* aStr, uint32_t aLen)
 {
-  self_type* self = static_cast<self_type*>(arg);
+  self_type* self = static_cast<self_type*>(aArg);
 
   // NSPR sends us the final null terminator even though we don't want it
-  if (len && s[len - 1] == '\0') {
-    --len;
+  if (aLen && aStr[aLen - 1] == '\0') {
+    --aLen;
   }
 
-  self->AppendASCII(s, len);
+  self->AppendASCII(aStr, aLen);
 
-  return len;
+  return aLen;
 }
 
-void nsTSubstring_CharT::AppendPrintf( const char* format, ...)
+void
+nsTSubstring_CharT::AppendPrintf(const char* aFormat, ...)
 {
   va_list ap;
-  va_start(ap, format);
-  uint32_t r = PR_vsxprintf(AppendFunc, this, format, ap);
-  if (r == (uint32_t) -1)
+  va_start(ap, aFormat);
+  uint32_t r = PR_vsxprintf(AppendFunc, this, aFormat, ap);
+  if (r == (uint32_t)-1) {
     NS_RUNTIMEABORT("Allocation or other failure in PR_vsxprintf");
+  }
   va_end(ap);
 }
 
-void nsTSubstring_CharT::AppendPrintf( const char* format, va_list ap )
+void
+nsTSubstring_CharT::AppendPrintf(const char* aFormat, va_list aAp)
 {
-  uint32_t r = PR_vsxprintf(AppendFunc, this, format, ap);
-  if (r == (uint32_t) -1)
+  uint32_t r = PR_vsxprintf(AppendFunc, this, aFormat, aAp);
+  if (r == (uint32_t)-1) {
     NS_RUNTIMEABORT("Allocation or other failure in PR_vsxprintf");
+  }
 }
 
 /* hack to make sure we define FormatWithoutTrailingZeros only once */
 #ifdef CharT_is_PRUnichar
-// Returns the length of the formatted aDouble in buf.
+// Returns the length of the formatted aDouble in aBuf.
 static int
-FormatWithoutTrailingZeros(char (& buf)[40], double aDouble,
-                           int precision)
+FormatWithoutTrailingZeros(char (&aBuf)[40], double aDouble,
+                           int aPrecision)
 {
   static const DoubleToStringConverter converter(DoubleToStringConverter::UNIQUE_ZERO |
                                                  DoubleToStringConverter::EMIT_POSITIVE_EXPONENT_SIGN,
@@ -860,23 +883,23 @@ FormatWithoutTrailingZeros(char (& buf)[40], double aDouble,
                                                  'e',
                                                  -6, 21,
                                                  6, 1);
-  double_conversion::StringBuilder builder(buf, sizeof(buf));
+  double_conversion::StringBuilder builder(aBuf, sizeof(aBuf));
   bool exponential_notation = false;
-  converter.ToPrecision(aDouble, precision, &exponential_notation, &builder);
+  converter.ToPrecision(aDouble, aPrecision, &exponential_notation, &builder);
   int length = builder.position();
   char* formattedDouble = builder.Finalize();
 
-  // If we have a shorter string than precision, it means we have a special
+  // If we have a shorter string than aPrecision, it means we have a special
   // value (NaN or Infinity).  All other numbers will be formatted with at
-  // least precision digits.
-  if (length <= precision) {
+  // least aPrecision digits.
+  if (length <= aPrecision) {
     return length;
   }
 
   char* end = formattedDouble + length;
-  char* decimalPoint = strchr(buf, '.');
+  char* decimalPoint = strchr(aBuf, '.');
   // No trailing zeros to remove.
-  if (decimalPoint == nullptr) {
+  if (!decimalPoint) {
     return length;
   }
 
@@ -884,13 +907,13 @@ FormatWithoutTrailingZeros(char (& buf)[40], double aDouble,
     // We need to check for cases like 1.00000e-10 (yes, this is
     // disgusting).
     char* exponent = end - 1;
-    for ( ; ; --exponent) {
+    for (; ; --exponent) {
       if (*exponent == 'e') {
         break;
       }
     }
     char* zerosBeforeExponent = exponent - 1;
-    for ( ; zerosBeforeExponent != decimalPoint; --zerosBeforeExponent) {
+    for (; zerosBeforeExponent != decimalPoint; --zerosBeforeExponent) {
       if (*zerosBeforeExponent != '0') {
         break;
       }
@@ -905,7 +928,7 @@ FormatWithoutTrailingZeros(char (& buf)[40], double aDouble,
     length -= exponent - (zerosBeforeExponent + 1);
   } else {
     char* trailingZeros = end - 1;
-    for ( ; trailingZeros != decimalPoint; --trailingZeros) {
+    for (; trailingZeros != decimalPoint; --trailingZeros) {
       if (*trailingZeros != '0') {
         break;
       }
@@ -921,7 +944,7 @@ FormatWithoutTrailingZeros(char (& buf)[40], double aDouble,
 #endif /* CharT_is_PRUnichar */
 
 void
-nsTSubstring_CharT::AppendFloat( float aFloat )
+nsTSubstring_CharT::AppendFloat(float aFloat)
 {
   char buf[40];
   int length = FormatWithoutTrailingZeros(buf, aFloat, 6);
@@ -929,7 +952,7 @@ nsTSubstring_CharT::AppendFloat( float aFloat )
 }
 
 void
-nsTSubstring_CharT::AppendFloat( double aFloat )
+nsTSubstring_CharT::AppendFloat(double aFloat)
 {
   char buf[40];
   int length = FormatWithoutTrailingZeros(buf, aFloat, 15);
@@ -938,14 +961,14 @@ nsTSubstring_CharT::AppendFloat( double aFloat )
 
 size_t
 nsTSubstring_CharT::SizeOfExcludingThisMustBeUnshared(
-    mozilla::MallocSizeOf mallocSizeOf) const
+    mozilla::MallocSizeOf aMallocSizeOf) const
 {
   if (mFlags & F_SHARED) {
     return nsStringBuffer::FromData(mData)->
-      SizeOfIncludingThisMustBeUnshared(mallocSizeOf);
+      SizeOfIncludingThisMustBeUnshared(aMallocSizeOf);
   }
   if (mFlags & F_OWNED) {
-    return mallocSizeOf(mData);
+    return aMallocSizeOf(mData);
   }
 
   // If we reach here, exactly one of the following must be true:
@@ -961,54 +984,55 @@ nsTSubstring_CharT::SizeOfExcludingThisMustBeUnshared(
 
 size_t
 nsTSubstring_CharT::SizeOfExcludingThisIfUnshared(
-    mozilla::MallocSizeOf mallocSizeOf) const
+    mozilla::MallocSizeOf aMallocSizeOf) const
 {
   // This is identical to SizeOfExcludingThisMustBeUnshared except for the
   // F_SHARED case.
   if (mFlags & F_SHARED) {
     return nsStringBuffer::FromData(mData)->
-           SizeOfIncludingThisIfUnshared(mallocSizeOf);
+           SizeOfIncludingThisIfUnshared(aMallocSizeOf);
   }
   if (mFlags & F_OWNED) {
-    return mallocSizeOf(mData);
+    return aMallocSizeOf(mData);
   }
   return 0;
 }
 
 size_t
 nsTSubstring_CharT::SizeOfExcludingThisEvenIfShared(
-    mozilla::MallocSizeOf mallocSizeOf) const
+    mozilla::MallocSizeOf aMallocSizeOf) const
 {
   // This is identical to SizeOfExcludingThisMustBeUnshared except for the
   // F_SHARED case.
   if (mFlags & F_SHARED) {
     return nsStringBuffer::FromData(mData)->
-      SizeOfIncludingThisEvenIfShared(mallocSizeOf);
+      SizeOfIncludingThisEvenIfShared(aMallocSizeOf);
   }
   if (mFlags & F_OWNED) {
-    return mallocSizeOf(mData);
+    return aMallocSizeOf(mData);
   }
   return 0;
 }
 
 size_t
 nsTSubstring_CharT::SizeOfIncludingThisMustBeUnshared(
-    mozilla::MallocSizeOf mallocSizeOf) const
+    mozilla::MallocSizeOf aMallocSizeOf) const
 {
-  return mallocSizeOf(this) + SizeOfExcludingThisMustBeUnshared(mallocSizeOf);
+  return aMallocSizeOf(this) +
+         SizeOfExcludingThisMustBeUnshared(aMallocSizeOf);
 }
 
 size_t
 nsTSubstring_CharT::SizeOfIncludingThisIfUnshared(
-    mozilla::MallocSizeOf mallocSizeOf) const
+    mozilla::MallocSizeOf aMallocSizeOf) const
 {
-  return mallocSizeOf(this) + SizeOfExcludingThisIfUnshared(mallocSizeOf);
+  return aMallocSizeOf(this) + SizeOfExcludingThisIfUnshared(aMallocSizeOf);
 }
 
 size_t
 nsTSubstring_CharT::SizeOfIncludingThisEvenIfShared(
-    mozilla::MallocSizeOf mallocSizeOf) const
+    mozilla::MallocSizeOf aMallocSizeOf) const
 {
-  return mallocSizeOf(this) + SizeOfExcludingThisEvenIfShared(mallocSizeOf);
+  return aMallocSizeOf(this) + SizeOfExcludingThisEvenIfShared(aMallocSizeOf);
 }
 
