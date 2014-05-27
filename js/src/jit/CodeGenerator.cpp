@@ -859,9 +859,9 @@ static const VMFunctionsModal PrimitiveToStringInfo = VMFunctionsModal(
     FunctionInfo<PrimitiveToStringParFn>(PrimitiveToStringPar));
 
 bool
-CodeGenerator::visitValueToString(LValueToString *lir)
+CodeGenerator::visitPrimitiveToString(LPrimitiveToString *lir)
 {
-    ValueOperand input = ToValue(lir, LValueToString::Input);
+    ValueOperand input = ToValue(lir, LPrimitiveToString::Input);
     Register output = ToRegister(lir->output());
 
     OutOfLineCode *ool = oolCallVM(PrimitiveToStringInfo, lir, (ArgList(), input),
@@ -931,18 +931,9 @@ CodeGenerator::visitValueToString(LValueToString *lir)
         masm.bind(&notBoolean);
     }
 
-    // Object
-    if (lir->mir()->input()->mightBeType(MIRType_Object)) {
-        // Bail.
-        JS_ASSERT(lir->mir()->fallible());
-        Label bail;
-        masm.branchTestObject(Assembler::Equal, tag, &bail);
-        if (!bailoutFrom(&bail, lir->snapshot()))
-            return false;
-    }
-
 #ifdef DEBUG
-    masm.assumeUnreachable("Unexpected type for MValueToString.");
+    // Objects are not supported or we see a type that wasn't accounted for.
+    masm.assumeUnreachable("Unexpected type for MPrimitiveToString.");
 #endif
 
     masm.bind(&done);

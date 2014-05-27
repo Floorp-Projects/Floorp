@@ -416,13 +416,21 @@ ConvertToStringPolicy<Op>::staticAdjustInputs(TempAllocator &alloc, MInstruction
     if (in->type() == MIRType_String)
         return true;
 
-    MToString *replace = MToString::New(alloc, in);
+    MInstruction *replace;
+    if (in->mightBeType(MIRType_Object)) {
+        if (in->type() != MIRType_Value)
+            in = boxAt(alloc, ins, in);
+
+        replace = MUnbox::New(alloc, in, MIRType_String, MUnbox::Fallible);
+    } else {
+        // TODO remove these two lines once 966957 has landed
+        EnsureOperandNotFloat32(alloc, ins, Op);
+        in = ins->getOperand(Op);
+        replace = MToString::New(alloc, in);
+    }
+
     ins->block()->insertBefore(ins, replace);
     ins->replaceOperand(Op, replace);
-
-    if (!ToStringPolicy::staticAdjustInputs(alloc, replace))
-        return false;
-
     return true;
 }
 
@@ -606,22 +614,6 @@ ToInt32Policy::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins)
       default:
         break;
     }
-
-    return true;
-}
-
-bool
-ToStringPolicy::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins)
-{
-    JS_ASSERT(ins->isToString());
-
-    if (ins->getOperand(0)->type() == MIRType_Object) {
-        ins->replaceOperand(0, boxAt(alloc, ins, ins->getOperand(0)));
-        return true;
-    }
-
-    // TODO remove the following line once 966957 has landed
-    EnsureOperandNotFloat32(alloc, ins, 0);
 
     return true;
 }

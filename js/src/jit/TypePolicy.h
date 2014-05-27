@@ -120,7 +120,7 @@ class StringPolicy : public BoxInputsPolicy
 
 // Expect a string for operand Op. Else a ToString instruction is inserted.
 template <unsigned Op>
-class ConvertToStringPolicy : public TypePolicy
+class ConvertToStringPolicy : public BoxInputsPolicy
 {
   public:
     static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
@@ -213,16 +213,6 @@ class ToDoublePolicy : public BoxInputsPolicy
 
 // Box objects, strings and undefined as input to a ToInt32 instruction.
 class ToInt32Policy : public BoxInputsPolicy
-{
-  public:
-    static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
-    bool adjustInputs(TempAllocator &alloc, MInstruction *def) {
-        return staticAdjustInputs(alloc, def);
-    }
-};
-
-// Box objects as input to a ToString instruction.
-class ToStringPolicy : public BoxInputsPolicy
 {
   public:
     static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
