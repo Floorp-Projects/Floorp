@@ -8,11 +8,11 @@ import android.graphics.Bitmap;
 import android.util.Log;
 import org.mozilla.gecko.favicons.Favicons;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Implements a Least-Recently-Used cache for Favicons, keyed by Favicon URL.
@@ -107,10 +107,10 @@ public class FaviconCache {
     // Since favicons may be container formats holding multiple icons, the underlying type holds a
     // sorted list of bitmap payloads in ascending order of size. The underlying type may be queried
     // for the least larger payload currently present.
-    private final ConcurrentHashMap<String, FaviconsForURL> backingMap = new ConcurrentHashMap<String, FaviconsForURL>();
+    private final HashMap<String, FaviconsForURL> backingMap = new HashMap<String, FaviconsForURL>();
 
     // And the same, but never evicted.
-    private final ConcurrentHashMap<String, FaviconsForURL> permanentBackingMap = new ConcurrentHashMap<String, FaviconsForURL>();
+    private final HashMap<String, FaviconsForURL> permanentBackingMap = new HashMap<String, FaviconsForURL>();
 
     // A linked list used to implement a queue, defining the LRU properties of the cache. Elements
     // contained within the various FaviconsForURL objects are held here, the least recently used
@@ -129,61 +129,40 @@ public class FaviconCache {
     // The maximum quantity, in bytes, of bitmap data which may be stored in the cache.
     private final int maxSizeBytes;
 
-    // Tracks the number of ongoing read operations. Enables the first one in to lock writers out and
-    // the last one out to let them in.
-    private final AtomicInteger ongoingReads = new AtomicInteger(0);
+    // This object is used to guard modification to the ordering map. This allows for read transactions
+    // to update the most-recently-used value without needing to take out the write lock.
+    private final Object reorderingLock = new Object();
 
-    // Used to ensure transaction fairness - each txn acquires and releases this as the first operation.
-    // The effect is an orderly, inexpensive ordering enforced on txns to prevent writer starvation.
-    private final Semaphore turnSemaphore = new Semaphore(1);
-
-    // A deviation from the usual MRSW solution - this semaphore is used to guard modification to the
-    // ordering map. This allows for read transactions to update the most-recently-used value without
-    // needing to take out the write lock.
-    private final Semaphore reorderingSemaphore = new Semaphore(1);
-
-    // The semaphore one must acquire in order to perform a write.
-    private final Semaphore writeLock = new Semaphore(1);
+    // This Reader/Writer lock is to ensure synchronization of reads/writes on both permanent
+    // and non-permanent backing maps. It's created unfair for greater performance.
+    private final ReentrantReadWriteLock backingMapsLock = new ReentrantReadWriteLock(false);
 
     /**
-     * Called by txns performing only reads as they start. Prevents writer starvation with a turn
-     * semaphore and locks writers out if this is the first concurrent reader txn starting up.
+     * Called by transactions performing only reads as they start.
      */
     private void startRead() {
-        turnSemaphore.acquireUninterruptibly();
-        turnSemaphore.release();
-
-        if (ongoingReads.incrementAndGet() == 1) {
-            // First one in. Wait for writers to finish and lock them out.
-            writeLock.acquireUninterruptibly();
-        }
+        backingMapsLock.readLock().lock();
     }
 
     /**
-     * Called by transactions performing only reads as they finish. Ensures that if this is the last
-     * concluding read transaction then then writers are subsequently allowed in.
+     * Called by transactions performing only reads as they finish.
      */
     private void finishRead() {
-        if (ongoingReads.decrementAndGet() == 0) {
-            writeLock.release();
-        }
+        backingMapsLock.readLock().unlock();
     }
 
     /**
-     * Called by writer transactions upon start. Ensures fairness and then obtains the write lock.
-     * Upon return, no other txns will be executing concurrently.
+     * Called by writer transactions upon start.
      */
     private void startWrite() {
-        turnSemaphore.acquireUninterruptibly();
-        writeLock.acquireUninterruptibly();
+        backingMapsLock.writeLock().lock();
     }
 
     /**
      * Called by a concluding write transaction - unlocks the structure.
      */
     private void finishWrite() {
-        turnSemaphore.release();
-        writeLock.release();
+        backingMapsLock.writeLock().unlock();
     }
 
     public FaviconCache(int maxSize, int maxWidthToCache) {
@@ -472,13 +451,10 @@ public class FaviconCache {
      * @return true if this element already existed in the list, false otherwise. (Useful for preventing multiple-insertion.)
      */
     private boolean setMostRecentlyUsedWithinRead(FaviconCacheElement element) {
-        reorderingSemaphore.acquireUninterruptibly();
-        try {
+        synchronized(reorderingLock) {
             boolean contained = ordering.remove(element);
             ordering.offer(element);
             return contained;
-        } finally {
-            reorderingSemaphore.release();
         }
     }
 
