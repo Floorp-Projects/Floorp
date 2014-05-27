@@ -166,9 +166,6 @@ HTMLListBulletAccessible::Name(nsString &aName)
   nsBlockFrame* blockFrame = do_QueryFrame(mContent->GetPrimaryFrame());
   if (blockFrame) {
     blockFrame->GetBulletText(aName);
-
-    // Append space otherwise bullets are jammed up against list text.
-    aName.Append(' ');
   }
 
   return eNameOK;
