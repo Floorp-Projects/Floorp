@@ -400,9 +400,6 @@ AudioContext::CreatePeriodicWave(const Float32Array& aRealData,
                                  const Float32Array& aImagData,
                                  ErrorResult& aRv)
 {
-  aRealData.ComputeLengthAndData();
-  aImagData.ComputeLengthAndData();
-
   if (aRealData.Length() != aImagData.Length() ||
       aRealData.Length() == 0 ||
       aRealData.Length() > 4096) {
@@ -436,8 +433,6 @@ AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
   AutoJSAPI jsapi;
   JSContext* cx = jsapi.cx();
   JSAutoCompartment ac(cx, aBuffer.Obj());
-
-  aBuffer.ComputeLengthAndData();
 
   // Neuter the array buffer
   size_t length = aBuffer.Length();

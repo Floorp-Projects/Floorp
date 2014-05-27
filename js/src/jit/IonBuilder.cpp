@@ -35,7 +35,6 @@ using namespace js::jit;
 
 using mozilla::DebugOnly;
 using mozilla::Maybe;
-using mozilla::SafeCast;
 
 class jit::BaselineFrameInspector
 {
@@ -7081,13 +7080,9 @@ IonBuilder::getElemTryTypedStatic(bool *emitted, MDefinition *obj, MDefinition *
         return true;
 
     TypedArrayObject *tarr = &tarrObj->as<TypedArrayObject>();
-
-    types::TypeObjectKey *tarrType = types::TypeObjectKey::get(tarr);
-    if (tarrType->unknownProperties())
-        return true;
+    ArrayBufferView::ViewType viewType = (ArrayBufferView::ViewType) tarr->type();
 
     // LoadTypedArrayElementStatic currently treats uint32 arrays as int32.
-    ArrayBufferView::ViewType viewType = (ArrayBufferView::ViewType) tarr->type();
     if (viewType == ArrayBufferView::TYPE_UINT32)
         return true;
 
@@ -7096,7 +7091,6 @@ IonBuilder::getElemTryTypedStatic(bool *emitted, MDefinition *obj, MDefinition *
         return true;
 
     // Emit LoadTypedArrayElementStatic.
-    tarrType->watchStateChangeForTypedArrayData(constraints());
 
     obj->setImplicitlyUsedUnchecked();
     index->setImplicitlyUsedUnchecked();
@@ -7439,14 +7433,21 @@ IonBuilder::jsop_getelem_dense(MDefinition *obj, MDefinition *index)
     return pushTypeBarrier(load, types, barrier);
 }
 
-void
-IonBuilder::addTypedArrayLengthAndData(MDefinition *obj,
-                                       BoundsChecking checking,
-                                       MDefinition **index,
-                                       MInstruction **length, MInstruction **elements)
+MInstruction *
+IonBuilder::getTypedArrayLength(MDefinition *obj)
 {
-    MOZ_ASSERT((index != nullptr) == (elements != nullptr));
+    if (obj->isConstant() && obj->toConstant()->value().isObject()) {
+        TypedArrayObject *tarr = &obj->toConstant()->value().toObject().as<TypedArrayObject>();
+        int32_t length = (int32_t) tarr->length();
+        obj->setImplicitlyUsedUnchecked();
+        return MConstant::New(alloc(), Int32Value(length));
+    }
+    return MTypedArrayLength::New(alloc(), obj);
+}
 
+MInstruction *
+IonBuilder::getTypedArrayElements(MDefinition *obj)
+{
     if (obj->isConstant() && obj->toConstant()->value().isObject()) {
         TypedArrayObject *tarr = &obj->toConstant()->value().toObject().as<TypedArrayObject>();
         void *data = tarr->viewData();
@@ -7462,36 +7463,14 @@ IonBuilder::addTypedArrayLengthAndData(MDefinition *obj,
             // (ArrayBufferObject::changeContents).
             types::TypeObjectKey *tarrType = types::TypeObjectKey::get(tarr);
             if (!tarrType->unknownProperties()) {
-                tarrType->watchStateChangeForTypedArrayData(constraints());
+                tarrType->watchStateChangeForTypedArrayBuffer(constraints());
 
                 obj->setImplicitlyUsedUnchecked();
-
-                int32_t len = SafeCast<int32_t>(tarr->length());
-                *length = MConstant::New(alloc(), Int32Value(len));
-                current->add(*length);
-
-                if (index) {
-                    if (checking == DoBoundsCheck)
-                        *index = addBoundsCheck(*index, *length);
-
-                    *elements = MConstantElements::New(alloc(), data);
-                    current->add(*elements);
-                }
-                return;
+                return MConstantElements::New(alloc(), data);
             }
         }
     }
-
-    *length = MTypedArrayLength::New(alloc(), obj);
-    current->add(*length);
-
-    if (index) {
-        if (checking == DoBoundsCheck)
-            *index = addBoundsCheck(*index, *length);
-
-        *elements = MTypedArrayElements::New(alloc(), obj);
-        current->add(*elements);
-    }
+    return MTypedArrayElements::New(alloc(), obj);
 }
 
 MDefinition *
@@ -7583,10 +7562,16 @@ IonBuilder::jsop_getelem_typed(MDefinition *obj, MDefinition *index,
         // uint32 reads that may produce either doubles or integers.
         MIRType knownType = MIRTypeForTypedArrayRead(arrayType, allowDouble);
 
-        // Get length, bounds-check, then get elements, and add all instructions.
-        MInstruction *length;
-        MInstruction *elements;
-        addTypedArrayLengthAndData(obj, DoBoundsCheck, &index, &length, &elements);
+        // Get the length.
+        MInstruction *length = getTypedArrayLength(obj);
+        current->add(length);
+
+        // Bounds check.
+        index = addBoundsCheck(index, length);
+
+        // Get the elements vector.
+        MInstruction *elements = getTypedArrayElements(obj);
+        current->add(elements);
 
         // Load the element.
         MLoadTypedArrayElement *load = MLoadTypedArrayElement::New(alloc(), elements, index, arrayType);
@@ -7785,18 +7770,13 @@ IonBuilder::setElemTryTypedStatic(bool *emitted, MDefinition *object,
         return true;
 #endif
 
-    types::TypeObjectKey *tarrType = types::TypeObjectKey::get(tarr);
-    if (tarrType->unknownProperties())
-        return true;
-
     ArrayBufferView::ViewType viewType = (ArrayBufferView::ViewType) tarr->type();
+
     MDefinition *ptr = convertShiftToMaskForStaticTypedArray(index, viewType);
     if (!ptr)
         return true;
 
     // Emit StoreTypedArrayElementStatic.
-    tarrType->watchStateChangeForTypedArrayData(constraints());
-
     object->setImplicitlyUsedUnchecked();
     index->setImplicitlyUsedUnchecked();
 
@@ -8064,13 +8044,18 @@ IonBuilder::jsop_setelem_typed(ScalarTypeDescr::Type arrayType,
     current->add(idInt32);
     id = idInt32;
 
-    // Get length, bounds-check, then get elements, and add all instructions.
-    MInstruction *length;
-    MInstruction *elements;
-    BoundsChecking checking = (!expectOOB && safety == SetElem_Normal)
-                              ? DoBoundsCheck
-                              : SkipBoundsCheck;
-    addTypedArrayLengthAndData(obj, checking, &id, &length, &elements);
+    // Get the length.
+    MInstruction *length = getTypedArrayLength(obj);
+    current->add(length);
+
+    if (!expectOOB && safety == SetElem_Normal) {
+        // Bounds check.
+        id = addBoundsCheck(id, length);
+    }
+
+    // Get the elements vector.
+    MInstruction *elements = getTypedArrayElements(obj);
+    current->add(elements);
 
     // Clamp value to [0, 255] for Uint8ClampedArray.
     MDefinition *toWrite = value;
@@ -8171,7 +8156,8 @@ IonBuilder::jsop_length_fastPath()
 
         if (objTypes && objTypes->getTypedArrayType() != ScalarTypeDescr::TYPE_MAX) {
             current->pop();
-            MInstruction *length = addTypedArrayLength(obj);
+            MInstruction *length = getTypedArrayLength(obj);
+            current->add(length);
             current->push(length);
             return true;
         }

@@ -1596,26 +1596,23 @@ class ConstraintDataFreezeObjectForNewScriptTemplate
     }
 };
 
-// Constraint which triggers recompilation when a typed array's data becomes
-// invalid.
-class ConstraintDataFreezeObjectForTypedArrayData
+// Constraint which triggers recompilation when the underlying data pointer for
+// a typed array changes.
+class ConstraintDataFreezeObjectForTypedArrayBuffer
 {
     void *viewData;
-    uint32_t length;
 
   public:
-    explicit ConstraintDataFreezeObjectForTypedArrayData(TypedArrayObject &tarray)
-      : viewData(tarray.viewData()),
-        length(tarray.length())
+    explicit ConstraintDataFreezeObjectForTypedArrayBuffer(void *viewData)
+      : viewData(viewData)
     {}
 
-    const char *kind() { return "freezeObjectForTypedArrayData"; }
+    const char *kind() { return "freezeObjectForTypedArrayBuffer"; }
 
     bool invalidateOnNewType(Type type) { return false; }
     bool invalidateOnNewPropertyState(TypeSet *property) { return false; }
     bool invalidateOnNewObjectState(TypeObject *object) {
-        TypedArrayObject &tarray = object->singleton()->as<TypedArrayObject>();
-        return tarray.viewData() != viewData || tarray.length() != length;
+        return object->singleton()->as<TypedArrayObject>().viewData() != viewData;
     }
 
     bool constraintHolds(JSContext *cx,
@@ -1655,15 +1652,15 @@ TypeObjectKey::watchStateChangeForNewScriptTemplate(CompilerConstraintList *cons
 }
 
 void
-TypeObjectKey::watchStateChangeForTypedArrayData(CompilerConstraintList *constraints)
+TypeObjectKey::watchStateChangeForTypedArrayBuffer(CompilerConstraintList *constraints)
 {
-    TypedArrayObject &tarray = asSingleObject()->as<TypedArrayObject>();
+    void *viewData = asSingleObject()->as<TypedArrayObject>().viewData();
     HeapTypeSetKey objectProperty = property(JSID_EMPTY);
     LifoAlloc *alloc = constraints->alloc();
 
-    typedef CompilerConstraintInstance<ConstraintDataFreezeObjectForTypedArrayData> T;
+    typedef CompilerConstraintInstance<ConstraintDataFreezeObjectForTypedArrayBuffer> T;
     constraints->add(alloc->new_<T>(alloc, objectProperty,
-                                    ConstraintDataFreezeObjectForTypedArrayData(tarray)));
+                                    ConstraintDataFreezeObjectForTypedArrayBuffer(viewData)));
 }
 
 static void
