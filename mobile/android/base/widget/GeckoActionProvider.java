@@ -88,7 +88,7 @@ public class GeckoActionProvider {
         // Create the view and set its data model.
         ActivityChooserModel dataModel = ActivityChooserModel.get(mContext, mHistoryFileName);
         MenuItemActionView view = new MenuItemActionView(mContext, null);
-        view.setActionButtonClickListener(mCallbacks);
+        view.addActionButtonClickListener(mCallbacks);
 
         final PackageManager packageManager = mContext.getPackageManager();
         int historySize = dataModel.getDistinctActivityCountInHistory();
