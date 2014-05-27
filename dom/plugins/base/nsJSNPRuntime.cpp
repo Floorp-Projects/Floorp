@@ -65,6 +65,10 @@ typedef js::HashMap<nsJSObjWrapperKey,
                     js::SystemAllocPolicy> JSObjWrapperTable;
 static JSObjWrapperTable sJSObjWrappers;
 
+// Whether it's safe to iterate sJSObjWrappers.  Set to true when sJSObjWrappers
+// has been initialized and is not currently being enumerated.
+static bool sJSObjWrappersAccessible = false;
+
 // Hash of NPObject wrappers that wrap NPObjects as JSObjects.
 static PLDHashTable sNPObjWrappers;
 
@@ -258,12 +262,13 @@ OnWrapperDestroyed()
   NS_ASSERTION(sWrapperCount, "Whaaa, unbalanced created/destroyed calls!");
 
   if (--sWrapperCount == 0) {
-    if (sJSObjWrappers.initialized()) {
+    if (sJSObjWrappersAccessible) {
       MOZ_ASSERT(sJSObjWrappers.count() == 0);
 
       // No more wrappers, and our hash was initialized. Finish the
       // hash to prevent leaking it.
       sJSObjWrappers.finish();
+      sJSObjWrappersAccessible = false;
     }
 
     if (sNPObjWrappers.ops) {
@@ -513,12 +518,6 @@ nsJSObjWrapper::~nsJSObjWrapper()
   OnWrapperDestroyed();
 }
 
-void
-nsJSObjWrapper::ClearJSObject() {
-  // Forget our reference to the JSObject.
-  mJSObj = nullptr;
-}
-
 // static
 NPObject *
 nsJSObjWrapper::NP_Allocate(NPP npp, NPClass *aClass)
@@ -545,12 +544,16 @@ nsJSObjWrapper::NP_Invalidate(NPObject *npobj)
 
   if (jsnpobj && jsnpobj->mJSObj) {
 
-    // Remove the wrapper from the hash
-    MOZ_ASSERT(sJSObjWrappers.initialized());
-    nsJSObjWrapperKey key(jsnpobj->mJSObj, jsnpobj->mNpp);
-    sJSObjWrappers.remove(key);
+    if (sJSObjWrappersAccessible) {
+      // Remove the wrapper from the hash
+      nsJSObjWrapperKey key(jsnpobj->mJSObj, jsnpobj->mNpp);
+      JSObjWrapperTable::Ptr ptr = sJSObjWrappers.lookup(key);
+      MOZ_ASSERT(ptr.found());
+      sJSObjWrappers.remove(ptr);
+    }
 
-    jsnpobj->ClearJSObject();
+    // Forget our reference to the JSObject.
+    jsnpobj->mJSObj = nullptr;
   }
 }
 
@@ -932,6 +935,7 @@ nsJSObjWrapper::NP_Construct(NPObject *npobj, const NPVariant *args,
 static void
 JSObjWrapperKeyMarkCallback(JSTracer *trc, JSObject *obj, void *data) {
   NPP npp = static_cast<NPP>(data);
+  MOZ_ASSERT(sJSObjWrappersAccessible);
   if (!sJSObjWrappers.initialized())
     return;
 
@@ -1000,7 +1004,9 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JS::Handle<JSObject*> obj)
 
       return nullptr;
     }
+    sJSObjWrappersAccessible = true;
   }
+  MOZ_ASSERT(sJSObjWrappersAccessible);
 
   JSObjWrapperTable::Ptr p = sJSObjWrappers.lookupForAdd(nsJSObjWrapperKey(obj, npp));
   if (p) {
@@ -1849,16 +1855,26 @@ NPObjWrapperPluginDestroyedCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
 void
 nsJSNPRuntime::OnPluginDestroy(NPP npp)
 {
-  if (sJSObjWrappers.initialized()) {
+  if (sJSObjWrappersAccessible) {
+
+    // Prevent modification of sJSObjWrappers table if we go reentrant.
+    sJSObjWrappersAccessible = false;
+
     for (JSObjWrapperTable::Enum e(sJSObjWrappers); !e.empty(); e.popFront()) {
       nsJSObjWrapper *npobj = e.front().value();
       MOZ_ASSERT(npobj->_class == &nsJSObjWrapper::sJSObjWrapperNPClass);
       if (npobj->mNpp == npp) {
-        npobj->ClearJSObject();
+        if (npobj->_class && npobj->_class->invalidate) {
+          npobj->_class->invalidate(npobj);
+        }
+
         _releaseobject(npobj);
+
         e.removeFront();
       }
     }
+
+    sJSObjWrappersAccessible = true;
   }
 
   // Use the safe JSContext here as we're not always able to find the
