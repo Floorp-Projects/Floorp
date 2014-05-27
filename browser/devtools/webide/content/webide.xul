@@ -24,6 +24,7 @@
         persist="screenX screenY width height">
 
   <script type="application/javascript" src="webide.js"></script>
+  <script type="application/javascript" src="cli.js"></script>
 
   <commandset id="mainCommandSet">
     <commandset id="editMenuCommands"/>
