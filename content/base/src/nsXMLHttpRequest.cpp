@@ -3586,15 +3586,11 @@ nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, uint64
   // So, try to remove the headers, if possible.
   bool lengthComputable = (aProgressMax != UINT64_MAX);
   if (upload) {
-    uint64_t loaded = aProgress;
-    uint64_t total = aProgressMax;
+    mUploadTransferred = aProgress;
     if (lengthComputable) {
-      uint64_t headerSize = aProgressMax - mUploadTotal;
-      loaded -= headerSize;
-      total -= headerSize;
+      mUploadTransferred = aProgressMax - mUploadTotal;
     }
     mUploadLengthComputable = lengthComputable;
-    mUploadTransferred = loaded;
     mProgressSinceLastProgressEvent = true;
 
     MaybeDispatchProgressEvents(false);
