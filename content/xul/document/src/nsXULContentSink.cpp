@@ -566,7 +566,7 @@ XULContentSinkImpl::HandleEndElement(const char16_t *aName)
             script->mOutOfLine = false;
             if (doc)
                 script->Compile(mText, mTextLength, mDocumentURL,
-                                script->mLineNo, doc, mPrototype);
+                                script->mLineNo, doc);
         }
 
         FlushText(false);
