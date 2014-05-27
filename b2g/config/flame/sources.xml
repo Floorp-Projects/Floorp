@@ -18,7 +18,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="e6dd9744778e26241bd65dda51f3db43ec9e40c4"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="1eecf837144a5d4d6f3dbda7c6ea9b1260bc6179"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="87ee480405c4a109c01f68dd64de625f1ff819d9"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="ce95d372e6d285725b96490afdaaf489ad8f9ca9"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="69523cbb9d42ad531d418743c4f6137708111250"/>
@@ -120,7 +120,7 @@
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="e8a318f7690092e639ba88891606f4183e846d3f"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="34ed8345250bb97262d70a052217a92e83444ede"/>
   <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="1b3322cfd1179ea11fa5083d600717b65e5923e6"/>
-  <project name="kernel/msm" path="kernel" revision="d53af82d7013c7121470a245420e42808b8ff531"/>
+  <project name="kernel/msm" path="kernel" revision="228d59147ff524e90774c566eef03260cc6857b8"/>
   <project name="platform/bootable/recovery" path="bootable/recovery" revision="f2914eacee9120680a41463708bb6ee8291749fc"/>
   <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="81c4a859d75d413ad688067829d21b7ba9205f81"/>
   <project name="platform/external/bluetooth/bluez" path="external/bluetooth/bluez" revision="f0689ac1914cdbc59e53bdc9edd9013dc157c299"/>
@@ -132,7 +132,7 @@
   <project name="platform/frameworks/base" path="frameworks/base" revision="655ac07f6574d279c759c6983ed4389369a9c96c"/>
   <project name="platform/frameworks/native" path="frameworks/native" revision="33a2b51f78416536e1bfba0c0b7776db307f3a4f"/>
   <project name="platform/hardware/libhardware" path="hardware/libhardware" revision="484802559ed106bac4811bd01c024ca64f741e60"/>
-  <project name="platform/hardware/qcom/audio" path="hardware/qcom/audio" revision="d30227d7ae5cbe8bac8775358b472f44504a20d2"/>
+  <project name="platform/hardware/qcom/audio" path="hardware/qcom/audio" revision="83f363a26069e9c188d2aaef5b9ef63e84ad1511"/>
   <project name="platform/hardware/qcom/camera" path="hardware/qcom/camera" revision="81afa7f775b7559da52f468150d1fe090c3fbdc5"/>
   <project name="platform/hardware/qcom/display" path="hardware/qcom/display" revision="e38444b6ce12c7c25883272a439800376d5308eb"/>
   <project name="platform/hardware/qcom/gps" path="hardware/qcom/gps" revision="5dc48bd46f9589653f8bf297be5d73676f2e2867"/>
