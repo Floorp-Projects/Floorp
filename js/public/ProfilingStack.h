@@ -8,7 +8,7 @@
 #define js_ProfilingStack_h
 
 #include "mozilla/NullPtr.h"
-
+ 
 #include "jsbytecode.h"
 #include "jstypes.h"
 
@@ -34,97 +34,67 @@ class ProfileEntry
     // If the size modification were somehow reordered before the stores, then
     // if a sample were taken it would be examining bogus information.
     //
-    // A ProfileEntry represents both a C++ profile entry and a JS one.
-
-    // Descriptive string of this entry.
-    const char * volatile string;
-
-    // Stack pointer for non-JS entries, the script pointer otherwise.
-    void * volatile spOrScript;
-
-    // Line number for non-JS entries, the bytecode offset otherwise.
-    int32_t volatile lineOrPc;
-
-    // General purpose storage describing this frame.
-    uint32_t volatile flags;
+    // A ProfileEntry represents both a C++ profile entry and a JS one. Both use
+    // the string as a description, but JS uses the sp as nullptr or (void*)1 to
+    // indicate that it is a JS entry. The script_ is then only ever examined for
+    // a JS entry, and the idx is used by both, but with different meanings.
+    //
+    const char * volatile string; // Descriptive string of this entry
+    void * volatile sp;           // Relevant stack pointer for the entry,
+                                  // less than or equal to SCRIPT_OPT_STACKPOINTER for js
+                                  // script entries, greater for non-js entries.
+    JSScript * volatile script_;  // if js(), non-null script which is running - low bit
+                                  // indicates if script is optimized or not.
+    int32_t volatile idx;         // if js(), idx of pc, otherwise line number
 
   public:
-    ProfileEntry(void) : flags(0) {}
-
-    // These traits are bit masks. Make sure they're powers of 2.
-    enum Flags {
-        // Indicate whether a profile entry represents a CPP frame. If not set,
-        // a JS frame is assumed by default. You're not allowed to publicly
-        // change the frame type. Instead, call `setJsFrame` or `setCppFrame`.
-        IS_CPP_ENTRY = 0x01,
-
-        // Indicate that copying the frame label is not necessary when taking a
-        // sample of the pseudostack.
-        FRAME_LABEL_COPY = 0x02
-    };
+    static const uintptr_t SCRIPT_OPT_STACKPOINTER = 0x1;
 
     // All of these methods are marked with the 'volatile' keyword because SPS's
     // representation of the stack is stored such that all ProfileEntry
     // instances are volatile. These methods would not be available unless they
     // were marked as volatile as well.
 
-    bool isCpp() const volatile { return hasFlag(IS_CPP_ENTRY); }
-    bool isJs() const volatile { return !isCpp(); }
+    bool js() const volatile {
+        MOZ_ASSERT_IF(uintptr_t(sp) <= SCRIPT_OPT_STACKPOINTER, script_ != nullptr);
+        return uintptr_t(sp) <= SCRIPT_OPT_STACKPOINTER;
+    }
 
-    bool isCopyLabel() const volatile { return hasFlag(FRAME_LABEL_COPY); };
-
-    void setLabel(const char *aString) volatile { string = aString; }
+    uint32_t line() const volatile { MOZ_ASSERT(!js()); return idx; }
+    JSScript *script() const volatile { MOZ_ASSERT(js()); return script_; }
+    bool scriptIsOptimized() const volatile {
+        MOZ_ASSERT(js());
+        return uintptr_t(sp) <= SCRIPT_OPT_STACKPOINTER;
+    }
+    void *stackAddress() const volatile {
+        if (js())
+            return nullptr;
+        return sp;
+    }
     const char *label() const volatile { return string; }
 
-    void setJsFrame(JSScript *aScript, jsbytecode *aPc) volatile {
-        flags &= ~IS_CPP_ENTRY;
-        spOrScript = aScript;
-        setPC(aPc);
-    }
-    void setCppFrame(void *aSp, uint32_t aLine) volatile {
-        flags |= IS_CPP_ENTRY;
-        spOrScript = aSp;
-        lineOrPc = aLine;
-    }
-
-    void setFlag(Flags flag) volatile {
-        MOZ_ASSERT(flag != IS_CPP_ENTRY);
-        flags |= flag;
-    }
-    void unsetFlag(Flags flag) volatile {
-        MOZ_ASSERT(flag != IS_CPP_ENTRY);
-        flags &= ~flag;
-    }
-    bool hasFlag(Flags flag) const volatile {
-        return bool(flags & uint32_t(flag));
-    }
-
-    void *stackAddress() const volatile {
-        MOZ_ASSERT(!isJs());
-        return spOrScript;
-    }
-    JSScript *script() const volatile {
-        MOZ_ASSERT(isJs());
-        return (JSScript *)spOrScript;
-    }
-    uint32_t line() const volatile {
-        MOZ_ASSERT(!isJs());
-        return lineOrPc;
-    }
+    void setLine(uint32_t aLine) volatile { MOZ_ASSERT(!js()); idx = aLine; }
+    void setLabel(const char *aString) volatile { string = aString; }
+    void setStackAddress(void *aSp) volatile { sp = aSp; }
+    void setScript(JSScript *aScript) volatile { script_ = aScript; }
 
     // We can't know the layout of JSScript, so look in vm/SPSProfiler.cpp.
     JS_FRIEND_API(jsbytecode *) pc() const volatile;
     JS_FRIEND_API(void) setPC(jsbytecode *pc) volatile;
 
-    // The offset of a pc into a script's code can actually be 0, so to
-    // signify a nullptr pc, use a -1 index. This is checked against in
-    // pc() and setPC() to set/get the right pc.
-    static const int32_t NullPCOffset = -1;
+    static size_t offsetOfString() { return offsetof(ProfileEntry, string); }
+    static size_t offsetOfStackAddress() { return offsetof(ProfileEntry, sp); }
+    static size_t offsetOfPCIdx() { return offsetof(ProfileEntry, idx); }
+    static size_t offsetOfScript() { return offsetof(ProfileEntry, script_); }
 
-    static size_t offsetOfLabel() { return offsetof(ProfileEntry, string); }
-    static size_t offsetOfSpOrScript() { return offsetof(ProfileEntry, spOrScript); }
-    static size_t offsetOfLineOrPc() { return offsetof(ProfileEntry, lineOrPc); }
-    static size_t offsetOfFlags() { return offsetof(ProfileEntry, flags); }
+    // The index used in the entry can either be a line number or the offset of
+    // a pc into a script's code. To signify a nullptr pc, use a -1 index. This
+    // is checked against in pc() and setPC() to set/get the right pc.
+    static const int32_t NullPCIndex = -1;
+
+    // This bit is added to the stack address to indicate that copying the
+    // frame label is not necessary when taking a sample of the pseudostack.
+    static const uintptr_t NoCopyBit = 1;
 };
 
 JS_FRIEND_API(void)
