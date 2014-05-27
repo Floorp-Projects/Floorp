@@ -175,16 +175,31 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
         return -1;
     }
 
-    private View getActionView(PromptListItem item) {
-        GeckoActionProvider provider = GeckoActionProvider.getForType(item.getIntent().getType(), getContext());
+    private View getActionView(PromptListItem item, final ListView list, final int position) {
+        final GeckoActionProvider provider = GeckoActionProvider.getForType(item.getIntent().getType(), getContext());
         provider.setIntent(item.getIntent());
-        return provider.onCreateActionView();
+
+        final MenuItemActionView view = (MenuItemActionView) provider.onCreateActionView();
+        // If a quickshare button is clicked, we need to close the dialog.
+        view.addActionButtonClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ListView.OnItemClickListener listener = list.getOnItemClickListener();
+                if (listener != null) {
+                    listener.onItemClick(list, view, position, position);
+                }
+            }
+        });
+
+        return view;
     }
 
     private void updateActionView(final PromptListItem item, final MenuItemActionView view, final ListView list, final int position) {
         view.setTitle(item.label);
         view.setIcon(item.getIcon());
         view.setSubMenuIndicator(item.isParent);
+
+        // If the share button is clicked, we need to close the dialog and then show an intent chooser
         view.setMenuItemClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -221,7 +236,7 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
 
         if (convertView == null) {
             if (type == VIEW_TYPE_ACTIONS) {
-                convertView = getActionView(item);
+                convertView = getActionView(item, (ListView) parent, position);
             } else {
                 int resourceId = mResourceId;
                 if (item.isGroup) {
