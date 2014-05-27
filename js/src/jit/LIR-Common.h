@@ -3182,12 +3182,12 @@ class LDoubleToString : public LInstructionHelper<1, 1, 1>
 };
 
 // Convert a primitive to a string with a function call.
-class LPrimitiveToString : public LInstructionHelper<1, BOX_PIECES, 1>
+class LValueToString : public LInstructionHelper<1, BOX_PIECES, 1>
 {
   public:
-    LIR_HEADER(PrimitiveToString)
+    LIR_HEADER(ValueToString)
 
-    explicit LPrimitiveToString(const LDefinition &tempToUnbox)
+    LValueToString(const LDefinition &tempToUnbox)
     {
         setTemp(0, tempToUnbox);
     }
