@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=990812
+-->
+<window title="Mozilla Bug 990812"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="start();">
+  <label value="Mozilla Bug 990812"/>
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+    var FRAME_SCRIPT_GLOBAL = "data:,sendSyncMessage('test', 'global')";
+    var FRAME_SCRIPT_WINDOW = "data:,sendSyncMessage('test', 'window')";
+    var FRAME_SCRIPT_GROUP  = "data:,sendSyncMessage('test', 'group')";
+
+    var Cc = Components.classes;
+    var Ci = Components.interfaces;
+    var globalMM = Cc["@mozilla.org/globalmessagemanager;1"]
+                     .getService(Ci.nsIMessageListenerManager);
+
+    function is(val, exp, msg) {
+      opener.wrappedJSObject.is(val, exp, msg);
+    }
+
+    /**
+     * Ensures that delayed frame scripts are loaded in the expected order.
+     * Global frame scripts will be loaded before delayed frame scripts from
+     * window message managers. The latter will be loaded before group message
+     * manager frame scripts.
+     */
+    function start() {
+      globalMM.loadFrameScript(FRAME_SCRIPT_GLOBAL, true);
+      messageManager.loadFrameScript(FRAME_SCRIPT_WINDOW, true);
+      getGroupMessageManager("test").loadFrameScript(FRAME_SCRIPT_GROUP, true);
+
+      var order = ["global", "window", "group"];
+
+      messageManager.addMessageListener("test", function onMessage(msg) {
+        var next = order.shift();
+        opener.wrappedJSObject.is(msg.data, next, "received test:" + next);
+
+        if (order.length == 0) {
+          opener.setTimeout("next()");
+          window.close();
+        }
+      });
+
+      var browser = document.createElement("browser");
+      browser.setAttribute("messagemanagergroup", "test");
+      browser.setAttribute("src", "about:mozilla");
+      browser.setAttribute("type", "content-targetable");
+      document.documentElement.appendChild(browser);
+
+      globalMM.removeDelayedFrameScript(FRAME_SCRIPT_GLOBAL);
+      messageManager.removeDelayedFrameScript(FRAME_SCRIPT_WINDOW);
+      getGroupMessageManager("test").removeDelayedFrameScript(FRAME_SCRIPT_GROUP);
+    }
+
+  ]]></script>
+
+</window>

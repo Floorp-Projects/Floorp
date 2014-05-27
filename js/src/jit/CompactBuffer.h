@@ -51,7 +51,7 @@ class CompactBufferReader
       : buffer_(start),
         end_(end)
     { }
-    inline CompactBufferReader(const CompactBufferWriter &writer);
+    inline explicit CompactBufferReader(const CompactBufferWriter &writer);
     uint8_t readByte() {
         JS_ASSERT(buffer_ < end_);
         return *buffer_++;

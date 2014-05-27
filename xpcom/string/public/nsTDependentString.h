@@ -20,7 +20,7 @@ class nsTDependentString_CharT : public nsTString_CharT
 {
 public:
 
-  typedef nsTDependentString_CharT    self_type;
+  typedef nsTDependentString_CharT self_type;
 
 public:
 
@@ -28,45 +28,53 @@ public:
    * constructors
    */
 
-  nsTDependentString_CharT( const char_type* start, const char_type* end )
-    : string_type(const_cast<char_type*>(start), uint32_t(end - start), F_TERMINATED)
+  nsTDependentString_CharT(const char_type* aStart, const char_type* aEnd)
+    : string_type(const_cast<char_type*>(aStart),
+                  uint32_t(aEnd - aStart), F_TERMINATED)
   {
     AssertValidDepedentString();
   }
 
-  nsTDependentString_CharT( const char_type* data, uint32_t length )
-    : string_type(const_cast<char_type*>(data), length, F_TERMINATED)
-  {
-    AssertValidDepedentString();
-  }
-
-#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
-  nsTDependentString_CharT( char16ptr_t data, uint32_t length )
-    : nsTDependentString_CharT(static_cast<const char16_t*>(data), length) {}
-#endif
-
-  explicit
-  nsTDependentString_CharT( const char_type* data )
-    : string_type(const_cast<char_type*>(data), uint32_t(char_traits::length(data)), F_TERMINATED)
+  nsTDependentString_CharT(const char_type* aData, uint32_t aLength)
+    : string_type(const_cast<char_type*>(aData), aLength, F_TERMINATED)
   {
     AssertValidDepedentString();
   }
 
 #if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
-  explicit
-  nsTDependentString_CharT( char16ptr_t data )
-    : nsTDependentString_CharT( static_cast<const char16_t*>(data)) {}
+  nsTDependentString_CharT(char16ptr_t aData, uint32_t aLength)
+    : nsTDependentString_CharT(static_cast<const char16_t*>(aData), aLength)
+  {
+  }
 #endif
 
-  nsTDependentString_CharT( const string_type& str, uint32_t startPos )
+  explicit
+  nsTDependentString_CharT(const char_type* aData)
+    : string_type(const_cast<char_type*>(aData),
+                  uint32_t(char_traits::length(aData)), F_TERMINATED)
+  {
+    AssertValidDepedentString();
+  }
+
+#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
+  explicit
+  nsTDependentString_CharT(char16ptr_t aData)
+    : nsTDependentString_CharT(static_cast<const char16_t*>(aData))
+  {
+  }
+#endif
+
+  nsTDependentString_CharT(const string_type& aStr, uint32_t aStartPos)
     : string_type()
   {
-    Rebind(str, startPos);
+    Rebind(aStr, aStartPos);
   }
 
   // Create a nsTDependentSubstring to be bound later
   nsTDependentString_CharT()
-    : string_type() {}
+    : string_type()
+  {
+  }
 
   // XXX are you sure??
   // auto-generated copy-constructor OK
@@ -79,20 +87,20 @@ public:
    */
 
   using nsTString_CharT::Rebind;
-  void Rebind( const char_type* data )
+  void Rebind(const char_type* aData)
   {
-    Rebind(data, uint32_t(char_traits::length(data)));
+    Rebind(aData, uint32_t(char_traits::length(aData)));
   }
 
-  void Rebind( const char_type* start, const char_type* end )
+  void Rebind(const char_type* aStart, const char_type* aEnd)
   {
-    Rebind(start, uint32_t(end - start));
+    Rebind(aStart, uint32_t(aEnd - aStart));
   }
 
-  void Rebind( const string_type&, uint32_t startPos );
+  void Rebind(const string_type&, uint32_t aStartPos);
 
 private:
 
   // NOT USED
-  nsTDependentString_CharT( const substring_tuple_type& ) MOZ_DELETE;
+  nsTDependentString_CharT(const substring_tuple_type&) MOZ_DELETE;
 };

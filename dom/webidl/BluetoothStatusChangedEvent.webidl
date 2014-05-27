@@ -6,7 +6,7 @@
 
 [Constructor(DOMString type,
              optional BluetoothStatusChangedEventInit eventInitDict),
- Func="Navigator::HasBluetoothSupport"]
+ CheckPermissions="bluetooth"]
 interface BluetoothStatusChangedEvent : Event
 {
   readonly attribute DOMString address;

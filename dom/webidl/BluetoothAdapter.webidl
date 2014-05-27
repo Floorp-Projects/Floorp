@@ -32,7 +32,7 @@ dictionary MediaPlayStatus
   DOMString   playStatus = "";
 };
 
-[Func="Navigator::HasBluetoothSupport"]
+[CheckPermissions="bluetooth"]
 interface BluetoothAdapter : EventTarget {
   readonly attribute DOMString      address;
   readonly attribute unsigned long  class;

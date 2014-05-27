@@ -566,19 +566,23 @@ nsDocumentViewer::LoadStart(nsIDocument* aDocument)
 nsresult
 nsDocumentViewer::SyncParentSubDocMap()
 {
-  nsCOMPtr<nsIDocShellTreeItem> item(mContainer);
-  nsCOMPtr<nsPIDOMWindow> pwin(do_GetInterface(item));
-  nsCOMPtr<nsIContent> content;
-
-  if (mDocument && pwin) {
-    content = do_QueryInterface(pwin->GetFrameElementInternal());
+  nsCOMPtr<nsIDocShell> docShell(mContainer);
+  if (!docShell) {
+    return NS_OK;
   }
 
-  if (content) {
-    nsCOMPtr<nsIDocShellTreeItem> parent;
-    item->GetParent(getter_AddRefs(parent));
+  nsCOMPtr<nsPIDOMWindow> pwin(docShell->GetWindow());
+  nsCOMPtr<Element> element;
 
-    nsCOMPtr<nsIDOMWindow> parent_win(do_GetInterface(parent));
+  if (mDocument && pwin) {
+    element = pwin->GetFrameElementInternal();
+  }
+
+  if (element) {
+    nsCOMPtr<nsIDocShellTreeItem> parent;
+    docShell->GetParent(getter_AddRefs(parent));
+
+    nsCOMPtr<nsIDOMWindow> parent_win = parent ? parent->GetWindow() : nullptr;
 
     if (parent_win) {
       nsCOMPtr<nsIDOMDocument> dom_doc;
@@ -588,11 +592,11 @@ nsDocumentViewer::SyncParentSubDocMap()
 
       if (parent_doc) {
         if (mDocument &&
-            parent_doc->GetSubDocumentFor(content) != mDocument) {
+            parent_doc->GetSubDocumentFor(element) != mDocument) {
           mDocument->SuppressEventHandling(nsIDocument::eEvents,
                                            parent_doc->EventHandlingSuppressed());
         }
-        return parent_doc->SetSubDocumentFor(content->AsElement(), mDocument);
+        return parent_doc->SetSubDocumentFor(element, mDocument);
       }
     }
   }
@@ -1795,7 +1799,7 @@ nsDocumentViewer::SetDocumentInternal(nsIDocument* aDocument,
 
     // Set the script global object on the new document
     nsCOMPtr<nsPIDOMWindow> window =
-      do_GetInterface(static_cast<nsIDocShell*>(mContainer.get()));
+      mContainer ? mContainer->GetWindow() : nullptr;
     if (window) {
       window->SetNewDocument(aDocument, nullptr, aForceReuseInnerWindow);
     }
@@ -2453,21 +2457,19 @@ nsDocumentViewer::FindContainerView()
   nsView* containerView = nullptr;
 
   if (mContainer) {
-    nsCOMPtr<nsIDocShellTreeItem> docShellItem(mContainer);
-    nsCOMPtr<nsPIDOMWindow> pwin(do_GetInterface(docShellItem));
+    nsCOMPtr<nsIDocShell> docShell(mContainer);
+    nsCOMPtr<nsPIDOMWindow> pwin(docShell->GetWindow());
     if (pwin) {
-      nsCOMPtr<nsIContent> containerElement = do_QueryInterface(pwin->GetFrameElementInternal());
+      nsCOMPtr<Element> containerElement = pwin->GetFrameElementInternal();
       if (!containerElement) {
         return nullptr;
       }
       nsCOMPtr<nsIPresShell> parentPresShell;
-      if (docShellItem) {
-        nsCOMPtr<nsIDocShellTreeItem> parentDocShellItem;
-        docShellItem->GetParent(getter_AddRefs(parentDocShellItem));
-        if (parentDocShellItem) {
-          nsCOMPtr<nsIDocShell> parentDocShell = do_QueryInterface(parentDocShellItem);
-          parentPresShell = parentDocShell->GetPresShell();
-        }
+      nsCOMPtr<nsIDocShellTreeItem> parentDocShellItem;
+      docShell->GetParent(getter_AddRefs(parentDocShellItem));
+      if (parentDocShellItem) {
+        nsCOMPtr<nsIDocShell> parentDocShell = do_QueryInterface(parentDocShellItem);
+        parentPresShell = parentDocShell->GetPresShell();
       }
       if (!parentPresShell) {
         nsCOMPtr<nsIDocument> parentDoc = containerElement->GetCurrentDoc();
@@ -4330,10 +4332,11 @@ nsDocumentViewer::OnDonePrinting()
     // We are done printing, now cleanup 
     if (mDeferredWindowClose) {
       mDeferredWindowClose = false;
-      nsCOMPtr<nsIDOMWindow> win =
-        do_GetInterface(static_cast<nsIDocShell*>(mContainer));
-      if (win)
-        win->Close();
+      if (mContainer) {
+        nsCOMPtr<nsIDOMWindow> win = mContainer->GetWindow();
+        if (win)
+          win->Close();
+      }
     } else if (mClosingWhilePrinting) {
       if (mDocument) {
         mDocument->SetScriptGlobalObject(nullptr);

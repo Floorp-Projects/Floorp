@@ -1797,10 +1797,11 @@ class MemberCondition:
     None, they should be strings that have the pref name (for "pref")
     or function name (for "func" and "available").
     """
-    def __init__(self, pref, func, available=None):
+    def __init__(self, pref, func, available=None, checkPermissions=None):
         assert pref is None or isinstance(pref, str)
         assert func is None or isinstance(func, str)
         assert available is None or isinstance(available, str)
+        assert checkPermissions is None or isinstance(checkPermissions, int)
         self.pref = pref
 
         def toFuncPtr(val):
@@ -1809,10 +1810,15 @@ class MemberCondition:
             return "&" + val
         self.func = toFuncPtr(func)
         self.available = toFuncPtr(available)
+        if checkPermissions is None:
+            self.checkPermissions = "nullptr"
+        else:
+            self.checkPermissions = "permissions_%i" % checkPermissions
 
     def __eq__(self, other):
         return (self.pref == other.pref and self.func == other.func and
-                self.available == other.available)
+                self.available == other.available and
+                self.checkPermissions == other.checkPermissions)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -1875,12 +1881,13 @@ class PropertyDefiner:
         return attr[0]
 
     @staticmethod
-    def getControllingCondition(interfaceMember):
+    def getControllingCondition(interfaceMember, descriptor):
         return MemberCondition(PropertyDefiner.getStringAttr(interfaceMember,
                                                              "Pref"),
                                PropertyDefiner.getStringAttr(interfaceMember,
                                                              "Func"),
-                               getAvailableInTestFunc(interfaceMember))
+                               getAvailableInTestFunc(interfaceMember),
+                               descriptor.checkPermissionsIndicesForMembers.get(interfaceMember.identifier.name))
 
     def generatePrefableArray(self, array, name, specTemplate, specTerminator,
                               specType, getCondition, getDataTuple, doIdArrays):
@@ -1912,12 +1919,12 @@ class PropertyDefiner:
         # pref control is added to members while still allowing us to define all
         # the members in the smallest number of JSAPI calls.
         assert len(array) != 0
-        lastCondition = getCondition(array[0])  # So we won't put a specTerminator
-                                                # at the very front of the list.
+        lastCondition = getCondition(array[0], self.descriptor)  # So we won't put a specTerminator
+                                                                 # at the very front of the list.
         specs = []
         prefableSpecs = []
 
-        prefableTemplate = '  { true, %s, %s, &%s[%d] }'
+        prefableTemplate = '  { true, %s, %s, %s, &%s[%d] }'
         prefCacheTemplate = '&%s[%d].enabled'
 
         def switchToCondition(props, condition):
@@ -1931,12 +1938,13 @@ class PropertyDefiner:
             prefableSpecs.append(prefableTemplate %
                                  (condition.func,
                                   condition.available,
+                                  condition.checkPermissions,
                                   name + "_specs", len(specs)))
 
         switchToCondition(self, lastCondition)
 
         for member in array:
-            curCondition = getCondition(member)
+            curCondition = getCondition(member, self.descriptor)
             if lastCondition != curCondition:
                 # Terminate previous list
                 specs.append(specTerminator)
@@ -2049,7 +2057,7 @@ class MethodDefiner(PropertyDefiner):
                 "methodInfo": not m.isStatic(),
                 "length": methodLength(m),
                 "flags": "JSPROP_ENUMERATE",
-                "condition": PropertyDefiner.getControllingCondition(m),
+                "condition": PropertyDefiner.getControllingCondition(m, descriptor),
                 "allowCrossOriginThis": m.getExtendedAttribute("CrossOriginCallable"),
                 "returnsPromise": m.returnsPromise()
             }
@@ -2077,7 +2085,7 @@ class MethodDefiner(PropertyDefiner):
                     "nativeName": stringifier.identifier.name,
                     "length": 0,
                     "flags": "JSPROP_ENUMERATE",
-                    "condition": PropertyDefiner.getControllingCondition(stringifier)
+                    "condition": PropertyDefiner.getControllingCondition(stringifier, descriptor)
                 }
                 if isChromeOnly(stringifier):
                     self.chrome.append(toStringDesc)
@@ -2090,7 +2098,7 @@ class MethodDefiner(PropertyDefiner):
                     "nativeName": jsonifier.identifier.name,
                     "length": 0,
                     "flags": "JSPROP_ENUMERATE",
-                    "condition": PropertyDefiner.getControllingCondition(jsonifier)
+                    "condition": PropertyDefiner.getControllingCondition(jsonifier, descriptor)
                 }
                 if isChromeOnly(jsonifier):
                     self.chrome.append(toJSONDesc)
@@ -2120,7 +2128,7 @@ class MethodDefiner(PropertyDefiner):
         if len(array) == 0:
             return ""
 
-        def condition(m):
+        def condition(m, d):
             return m["condition"]
 
         def specData(m):
@@ -2712,6 +2720,9 @@ class CGConstructorEnabled(CGAbstractMethod):
         availableIn = getAvailableInTestFunc(iface)
         if availableIn:
             conditions.append("%s(aCx, aObj)" % availableIn)
+        checkPermissions = self.descriptor.checkPermissionsIndex
+        if checkPermissions is not None:
+            conditions.append("CheckPermissions(aCx, aObj, permissions_%i)" % checkPermissions)
         # We should really have some conditions
         assert len(conditions)
         return CGWrapper(CGList((CGGeneric(cond) for cond in conditions),
@@ -10267,6 +10278,15 @@ class CGDescriptor(CGThing):
             # Always have a finalize hook, regardless of whether the class
             # wants a custom hook.
             cgThings.append(CGClassFinalizeHook(descriptor))
+
+        if len(descriptor.permissions):
+            for (k, v) in sorted(descriptor.permissions.items()):
+                perms = CGList((CGGeneric('"%s",' % p) for p in k), joiner="\n")
+                perms.append(CGGeneric("nullptr"))
+                cgThings.append(CGWrapper(CGIndenter(perms),
+                                          pre="static const char* const permissions_%i[] = {\n" % v,
+                                          post="\n};\n",
+                                          defineOnly=True))
 
         properties = PropertyArrays(descriptor)
         cgThings.append(CGGeneric(define=str(properties)))

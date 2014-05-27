@@ -138,7 +138,7 @@ LIRGeneratorShared::buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKi
             *payload = LConstantIndex::Bogus();
         } else if (ins->type() != MIRType_Value) {
             *type = LConstantIndex::Bogus();
-            *payload = use(ins, LUse::KEEPALIVE);
+            *payload = use(ins, LUse(LUse::KEEPALIVE));
         } else {
             *type = useType(ins, LUse::KEEPALIVE);
             *payload = usePayload(ins, LUse::KEEPALIVE);

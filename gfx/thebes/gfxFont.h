@@ -60,6 +60,8 @@ class nsILanguageAtomService;
 
 #define NO_FONT_LANGUAGE_OVERRIDE      0
 
+#define SMALL_CAPS_SCALE_FACTOR        0.8
+
 struct FontListSizes;
 struct gfxTextRunDrawCallbacks;
 
@@ -74,7 +76,7 @@ struct gfxFontStyle {
     gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
                  gfxFloat aSize, nsIAtom *aLanguage,
                  float aSizeAdjust, bool aSystemFont,
-                 bool aPrinterFont,
+                 bool aPrinterFont, bool aSmallCaps,
                  const nsString& aLanguageOverride);
     gfxFontStyle(const gfxFontStyle& aStyle);
 
@@ -139,6 +141,10 @@ struct gfxFontStyle {
     // Used to imitate -webkit-font-smoothing: antialiased
     bool useGrayscaleAntialiasing : 1;
 
+    // Font should render as small-caps, using OT feature if available,
+    // otherwise using a synthetic small-caps implementation
+    bool smallCaps : 1;
+
     // The style of font (normal, italic, oblique)
     uint8_t style : 2;
 
@@ -163,6 +169,7 @@ struct gfxFontStyle {
             (*reinterpret_cast<const uint64_t*>(&size) ==
              *reinterpret_cast<const uint64_t*>(&other.size)) &&
             (style == other.style) &&
+            (smallCaps == other.smallCaps) &&
             (systemFont == other.systemFont) &&
             (printerFont == other.printerFont) &&
             (useGrayscaleAntialiasing == other.useGrayscaleAntialiasing) &&
@@ -389,6 +396,11 @@ public:
     bool     GetMathVariantsParts(uint32_t aGlyphID, bool aVertical,
                                   uint32_t aGlyphs[4]);
 
+    bool     TryGetColorGlyphs();
+    bool     GetColorLayersInfo(uint32_t aGlyphId,
+                                nsTArray<uint16_t>& layerGlyphs,
+                                nsTArray<mozilla::gfx::Color>& layerColors);
+
     virtual bool MatchesGenericFamily(const nsACString& aGeneric) const {
         return true;
     }
@@ -531,6 +543,7 @@ public:
     bool             mCheckedForGraphiteTables : 1;
     bool             mHasCmapTable : 1;
     bool             mGrFaceInitialized : 1;
+    bool             mCheckedForColorGlyph : 1;
 
     // bitvector of substitution space features per script, one each
     // for default and non-default features
@@ -550,6 +563,10 @@ public:
     nsAutoPtr<gfxMathTable> mMathTable;
     nsTArray<gfxFontFeature> mFeatureSettings;
     uint32_t         mLanguageOverride;
+
+    // Color Layer font support
+    hb_blob_t*       mCOLR;
+    hb_blob_t*       mCPAL;
 
 protected:
     friend class gfxPlatformFontList;
@@ -1791,6 +1808,22 @@ public:
         return mFontEntry->GetUVSGlyph(aCh, aVS); 
     }
 
+    bool InitSmallCapsRun(gfxContext     *aContext,
+                          gfxTextRun     *aTextRun,
+                          const uint8_t  *aText,
+                          uint32_t        aOffset,
+                          uint32_t        aLength,
+                          uint8_t         aMatchType,
+                          int32_t         aScript);
+
+    bool InitSmallCapsRun(gfxContext     *aContext,
+                          gfxTextRun     *aTextRun,
+                          const char16_t *aText,
+                          uint32_t        aOffset,
+                          uint32_t        aLength,
+                          uint8_t         aMatchType,
+                          int32_t         aScript);
+
     // call the (virtual) InitTextRun method to do glyph generation/shaping,
     // limiting the length of text passed by processing the run in multiple
     // segments if necessary
@@ -1899,6 +1932,13 @@ public:
     }
 
 protected:
+    // Return a font that is a "clone" of this one, but reduced to 80% size
+    // (and with the smallCaps style set to false).
+    // Default implementation relies on gfxFontEntry::CreateFontInstance;
+    // backends that don't implement that will need to override this and use
+    // an alternative technique. (gfxPangoFonts, I'm looking at you...)
+    virtual already_AddRefed<gfxFont> GetSmallCapsFont();
+
     // subclasses may provide (possibly hinted) glyph widths (in font units);
     // if they do not override this, harfbuzz will use unhinted widths
     // derived from the font tables
@@ -2134,6 +2174,14 @@ protected:
                         uint32_t aGlyphId, gfxTextContextPaint *aContextPaint,
                         gfxTextRunDrawCallbacks *aCallbacks,
                         bool& aEmittedGlyphs);
+
+    bool RenderColorGlyph(gfxContext* aContext, gfxPoint& point, uint32_t aGlyphId);
+    bool RenderColorGlyph(gfxContext* aContext,
+                          mozilla::gfx::ScaledFont* scaledFont,
+                          mozilla::gfx::GlyphRenderingOptions* renderingOptions,
+                          mozilla::gfx::DrawOptions drawOptions,
+                          const mozilla::gfx::Point& aPoint,
+                          uint32_t aGlyphId);
 
     // Bug 674909. When synthetic bolding text by drawing twice, need to
     // render using a pixel offset in device pixels, otherwise text

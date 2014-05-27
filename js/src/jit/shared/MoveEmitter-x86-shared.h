@@ -51,7 +51,7 @@ class MoveEmitterX86
     void completeCycle(const MoveOperand &to, MoveOp::Type type);
 
   public:
-    MoveEmitterX86(MacroAssemblerSpecific &masm);
+    explicit MoveEmitterX86(MacroAssemblerSpecific &masm);
     ~MoveEmitterX86();
     void emit(const MoveResolver &moves);
     void finish();

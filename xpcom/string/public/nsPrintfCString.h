@@ -25,12 +25,12 @@ class nsPrintfCString : public nsFixedCString
   typedef nsCString string_type;
 
 public:
-  explicit nsPrintfCString( const char_type* format, ... )
+  explicit nsPrintfCString(const char_type* aFormat, ...)
     : nsFixedCString(mLocalBuffer, kLocalBufferSize, 0)
   {
     va_list ap;
-    va_start(ap, format);
-    AppendPrintf(format, ap);
+    va_start(ap, aFormat);
+    AppendPrintf(aFormat, ap);
     va_end(ap);
   }
 

@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=990812
+-->
+<window title="Mozilla Bug 990812"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="start();">
+  <label value="Mozilla Bug 990812"/>
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+    var FRAME_SCRIPT1 = "data:,addMessageListener('test', function () {" +
+                        "sendSyncMessage('test', 'group1')})";
+    var FRAME_SCRIPT2 = "data:,addMessageListener('test', function () {" +
+                        "sendSyncMessage('test', 'group2')})";
+
+    var Cc = Components.classes;
+    var Ci = Components.interfaces;
+    var globalMM = Cc["@mozilla.org/globalmessagemanager;1"]
+                     .getService(Ci.nsIMessageListenerManager);
+
+    function is(val, exp, msg) {
+      opener.wrappedJSObject.is(val, exp, msg);
+    }
+
+    function promiseTwoMessages(type, mm) {
+      var numLeft = 2;
+
+      return new Promise(function (resolve) {
+        mm.addMessageListener("test", function onMessage(msg) {
+          is(msg.data, type, "correct message " + type);
+
+          if (--numLeft == 0) {
+            mm.removeMessageListener("test", onMessage);
+            resolve();
+          }
+        });
+      });
+    }
+
+    /**
+     * This test ensures that having multiple message manager groups with
+     * multiple frame loaders in those works as expected. For a specific
+     * group message manager, frame scripts should only be loaded by its
+     * descendants and messages should only be received by and from those
+     * child message managers.
+     */
+    function start() {
+      var gmm1 = getGroupMessageManager("test1");
+      gmm1.loadFrameScript(FRAME_SCRIPT1, true);
+
+      var gmm2 = getGroupMessageManager("test2");
+      gmm2.loadFrameScript(FRAME_SCRIPT2, true);
+
+      var promise1 = promiseTwoMessages("group1", gmm1);
+      var promise2 = promiseTwoMessages("group2", gmm2);
+
+      messageManager.broadcastAsyncMessage("test");
+
+      Promise.all([promise1, promise2]).then(function () {
+        opener.setTimeout("next()");
+        window.close();
+      });
+    }
+
+  ]]></script>
+
+  <browser messagemanagergroup="test1" type="content-targetable" src="about:mozilla" />
+  <browser messagemanagergroup="test1" type="content-targetable" src="about:mozilla" />
+
+  <browser messagemanagergroup="test2" type="content-targetable" src="about:mozilla" />
+  <browser messagemanagergroup="test2" type="content-targetable" src="about:mozilla" />
+
+</window>

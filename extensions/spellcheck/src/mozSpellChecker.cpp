@@ -319,7 +319,7 @@ NS_IMETHODIMP
 mozSpellChecker::GetCurrentDictionary(nsAString &aDictionary)
 {
   if (!mSpellCheckingEngine) {
-    aDictionary.AssignLiteral("");
+    aDictionary.Truncate();
     return NS_OK;
   }
 

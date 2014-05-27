@@ -153,7 +153,10 @@ nsHistory::Go(int32_t aDelta, ErrorResult& aRv)
   }
 
   if (!aDelta) {
-    nsCOMPtr<nsPIDOMWindow> window(do_GetInterface(GetDocShell()));
+    nsCOMPtr<nsPIDOMWindow> window;
+    if (nsIDocShell* docShell = GetDocShell()) {
+      window = docShell->GetWindow();
+    }
 
     if (window && window->IsHandlingResizeEvent()) {
       // history.go(0) (aka location.reload()) was called on a window

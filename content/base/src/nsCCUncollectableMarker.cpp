@@ -94,6 +94,56 @@ MarkUserDataHandler(void* aNode, nsIAtom* aKey, void* aValue, void* aData)
 }
 
 static void
+MarkChildMessageManagers(nsIMessageBroadcaster* aMM)
+{
+  aMM->MarkForCC();
+
+  uint32_t tabChildCount = 0;
+  aMM->GetChildCount(&tabChildCount);
+  for (uint32_t j = 0; j < tabChildCount; ++j) {
+    nsCOMPtr<nsIMessageListenerManager> childMM;
+    aMM->GetChildAt(j, getter_AddRefs(childMM));
+    if (!childMM) {
+      continue;
+    }
+
+    nsCOMPtr<nsIMessageBroadcaster> strongNonLeafMM = do_QueryInterface(childMM);
+    nsIMessageBroadcaster* nonLeafMM = strongNonLeafMM;
+
+    nsCOMPtr<nsIMessageSender> strongTabMM = do_QueryInterface(childMM);
+    nsIMessageSender* tabMM = strongTabMM;
+
+    strongNonLeafMM = nullptr;
+    strongTabMM = nullptr;
+    childMM = nullptr;
+
+    if (nonLeafMM) {
+      MarkChildMessageManagers(nonLeafMM);
+      continue;
+    }
+
+    tabMM->MarkForCC();
+
+    //XXX hack warning, but works, since we know that
+    //    callback is frameloader.
+    mozilla::dom::ipc::MessageManagerCallback* cb =
+      static_cast<nsFrameMessageManager*>(tabMM)->GetCallback();
+    if (cb) {
+      nsFrameLoader* fl = static_cast<nsFrameLoader*>(cb);
+      EventTarget* et = fl->GetTabChildGlobalAsEventTarget();
+      if (!et) {
+        continue;
+      }
+      static_cast<nsInProcessTabChildGlobal*>(et)->MarkForCC();
+      EventListenerManager* elm = et->GetExistingListenerManager();
+      if (elm) {
+        elm->MarkForCC();
+      }
+    }
+  }
+}
+
+static void
 MarkMessageManagers()
 {
   // The global message manager only exists in the root process.
@@ -107,52 +157,8 @@ MarkMessageManagers()
   }
   nsIMessageBroadcaster* globalMM = strongGlobalMM;
   strongGlobalMM = nullptr;
+  MarkChildMessageManagers(globalMM);
 
-  globalMM->MarkForCC();
-  uint32_t childCount = 0;
-  globalMM->GetChildCount(&childCount);
-  for (uint32_t i = 0; i < childCount; ++i) {
-    nsCOMPtr<nsIMessageListenerManager> childMM;
-    globalMM->GetChildAt(i, getter_AddRefs(childMM));
-    if (!childMM) {
-      continue;
-    }
-    nsCOMPtr<nsIMessageBroadcaster> strongWindowMM = do_QueryInterface(childMM);
-    nsIMessageBroadcaster* windowMM = strongWindowMM;
-    childMM = nullptr;
-    strongWindowMM = nullptr;
-    windowMM->MarkForCC();
-    uint32_t tabChildCount = 0;
-    windowMM->GetChildCount(&tabChildCount);
-    for (uint32_t j = 0; j < tabChildCount; ++j) {
-      nsCOMPtr<nsIMessageListenerManager> childMM;
-      windowMM->GetChildAt(j, getter_AddRefs(childMM));
-      if (!childMM) {
-        continue;
-      }
-      nsCOMPtr<nsIMessageSender> strongTabMM = do_QueryInterface(childMM);
-      nsIMessageSender* tabMM = strongTabMM;
-      childMM = nullptr;
-      strongTabMM = nullptr;
-      tabMM->MarkForCC();
-      //XXX hack warning, but works, since we know that
-      //    callback is frameloader.
-      mozilla::dom::ipc::MessageManagerCallback* cb =
-        static_cast<nsFrameMessageManager*>(tabMM)->GetCallback();
-      if (cb) {
-        nsFrameLoader* fl = static_cast<nsFrameLoader*>(cb);
-        EventTarget* et = fl->GetTabChildGlobalAsEventTarget();
-        if (!et) {
-          continue;
-        }
-        static_cast<nsInProcessTabChildGlobal*>(et)->MarkForCC();
-        EventListenerManager* elm = et->GetExistingListenerManager();
-        if (elm) {
-          elm->MarkForCC();
-        }
-      }
-    }
-  }
   if (nsFrameMessageManager::sParentProcessManager) {
     nsFrameMessageManager::sParentProcessManager->MarkForCC();
     uint32_t childCount = 0;

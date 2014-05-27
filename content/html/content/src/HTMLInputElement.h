@@ -304,21 +304,6 @@ public:
   void SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker);
 
   /**
-   * Returns the filter which should be used for the file picker according to
-   * the accept attribute value.
-   *
-   * See:
-   * http://dev.w3.org/html5/spec/forms.html#attr-input-accept
-   *
-   * @return Filter to use on the file picker with AppendFilters, 0 if none.
-   *
-   * @note You should not call this function if the element has no @accept.
-   * @note This will only filter for one type of file. If more than one filter
-   * is specified by the accept attribute they will *all* be ignored.
-   */
-  int32_t GetFilterFromAccept();
-
-  /**
    * The form might need to request an update of the UI bits
    * (BF_CAN_SHOW_INVALID_UI and BF_CAN_SHOW_VALID_UI) when an invalid form
    * submission is tried.

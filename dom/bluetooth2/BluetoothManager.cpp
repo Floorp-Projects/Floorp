@@ -107,7 +107,7 @@ BluetoothManager::BluetoothManager(nsPIDOMWindow *aWindow)
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(IsDOMBinding());
 
-  mPath.AssignLiteral("/");
+  mPath.Assign('/');
 
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE_VOID(bs);
@@ -192,24 +192,6 @@ BluetoothManager::Create(nsPIDOMWindow* aWindow)
 
   nsRefPtr<BluetoothManager> manager = new BluetoothManager(aWindow);
   return manager.forget();
-}
-
-// static
-bool
-BluetoothManager::CheckPermission(nsPIDOMWindow* aWindow)
-{
-  NS_ASSERTION(aWindow, "Null pointer!");
-
-  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
-  NS_ENSURE_TRUE(permMgr, false);
-
-  uint32_t permission;
-  nsresult rv =
-    permMgr->TestPermissionFromWindow(aWindow, "bluetooth",
-                                      &permission);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  return permission == nsIPermissionManager::ALLOW_ACTION;
 }
 
 void

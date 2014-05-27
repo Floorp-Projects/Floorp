@@ -80,7 +80,7 @@ TestShellCommandParent::RunCallback(const nsString& aResponse)
 
   JS::Rooted<JS::Value> rval(mCx);
   JS::Rooted<JS::Value> callback(mCx, mCallback);
-  bool ok = JS_CallFunctionValue(mCx, global, callback, strVal, &rval);
+  bool ok = JS_CallFunctionValue(mCx, global, callback, JS::HandleValueArray(strVal), &rval);
   NS_ENSURE_TRUE(ok, false);
 
   return true;

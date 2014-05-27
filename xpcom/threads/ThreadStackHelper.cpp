@@ -184,7 +184,8 @@ ThreadStackHelper::SigAction(int aSignal, siginfo_t* aInfo, void* aContext)
 #endif // XP_LINUX
 
 bool
-ThreadStackHelper::PrepareStackBuffer(Stack& aStack) {
+ThreadStackHelper::PrepareStackBuffer(Stack& aStack)
+{
   // Return false to skip getting the stack and return an empty stack
   aStack.clear();
 #ifdef MOZ_ENABLE_PROFILER_SPS
@@ -208,7 +209,8 @@ ThreadStackHelper::PrepareStackBuffer(Stack& aStack) {
 }
 
 void
-ThreadStackHelper::FillStackBuffer() {
+ThreadStackHelper::FillStackBuffer()
+{
 #ifdef MOZ_ENABLE_PROFILER_SPS
   size_t reservedSize = mMaxStackSize;
 

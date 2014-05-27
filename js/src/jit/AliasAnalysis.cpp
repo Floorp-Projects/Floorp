@@ -64,7 +64,7 @@ class AliasSetIterator
     unsigned pos;
 
   public:
-    AliasSetIterator(AliasSet set)
+    explicit AliasSetIterator(AliasSet set)
       : flags(set.flags()), pos(0)
     {
         while (flags && (flags & 1) == 0) {

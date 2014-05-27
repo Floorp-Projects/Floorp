@@ -3,7 +3,7 @@
  * You can obtain at http://mozilla.org/MPL/2.0/. */
 
 [JSImplementation="@mozilla.org/permissionSettings;1",
- Func="Navigator::HasPermissionSettingsSupport",
+ CheckPermissions="permissions",
  Pref="dom.mozPermissionSettings.enabled",
  NavigatorProperty="mozPermissionSettings"]
 interface PermissionSettings

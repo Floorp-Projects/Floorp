@@ -1905,7 +1905,7 @@ static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref)
     regKey->Create(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
                    NS_ConvertUTF8toUTF16(regPath),
                    nsIWindowsRegKey::ACCESS_SET_VALUE);
-    regPath.AppendLiteral("\\");
+    regPath.Append('\\');
   }
 
   // Create appName key
@@ -1913,7 +1913,7 @@ static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref)
   regKey->Create(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
                  NS_ConvertUTF8toUTF16(regPath),
                  nsIWindowsRegKey::ACCESS_SET_VALUE);
-  regPath.AppendLiteral("\\");
+  regPath.Append('\\');
 
   // Create Crash Reporter key
   regPath.AppendLiteral("Crash Reporter");

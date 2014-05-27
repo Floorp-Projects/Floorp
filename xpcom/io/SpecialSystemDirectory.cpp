@@ -166,7 +166,7 @@ GetLibrarySaveToPath(int aFallbackFolderId, REFKNOWNFOLDERID aFolderId,
     if (SUCCEEDED(savePath->GetDisplayName(SIGDN_FILESYSPATH, &str))) {
       nsAutoString path;
       path.Assign(str);
-      path.AppendLiteral("\\");
+      path.Append('\\');
       nsresult rv =
         NS_NewLocalFile(path, false, aFile);
       CoTaskMemFree(str);

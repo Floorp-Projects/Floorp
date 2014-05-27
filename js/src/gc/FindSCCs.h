@@ -64,7 +64,7 @@ template<class Node>
 class ComponentFinder
 {
   public:
-    ComponentFinder(uintptr_t sl)
+    explicit ComponentFinder(uintptr_t sl)
       : clock(1),
         stack(nullptr),
         firstComponent(nullptr),

@@ -21,6 +21,8 @@ namespace jit {
     _(BitNot)                                   \
     _(BitOr)                                    \
     _(BitXor)                                   \
+    _(Lsh)                                      \
+    _(Rsh)                                      \
     _(Ursh)                                     \
     _(Add)                                      \
     _(NewObject)                                \
@@ -67,7 +69,7 @@ class RInstruction
 #define RINSTRUCTION_HEADER_(op)                                        \
   private:                                                              \
     friend class RInstruction;                                          \
-    R##op(CompactBufferReader &reader);                                 \
+    explicit R##op(CompactBufferReader &reader);                        \
                                                                         \
   public:                                                               \
     Opcode opcode() const {                                             \
@@ -120,6 +122,30 @@ class RBitXor MOZ_FINAL : public RInstruction
 {
   public:
     RINSTRUCTION_HEADER_(BitXor)
+
+    virtual uint32_t numOperands() const {
+        return 2;
+    }
+
+    bool recover(JSContext *cx, SnapshotIterator &iter) const;
+};
+
+class RLsh MOZ_FINAL : public RInstruction
+{
+  public:
+    RINSTRUCTION_HEADER_(Lsh)
+
+    virtual uint32_t numOperands() const {
+        return 2;
+    }
+
+    bool recover(JSContext *cx, SnapshotIterator &iter) const;
+};
+
+class RRsh MOZ_FINAL : public RInstruction
+{
+  public:
+    RINSTRUCTION_HEADER_(Rsh)
 
     virtual uint32_t numOperands() const {
         return 2;

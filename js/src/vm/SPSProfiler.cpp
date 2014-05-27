@@ -162,11 +162,11 @@ SPSProfiler::enter(JSScript *script, JSFunction *maybeFun)
     if (*size_ > 0 && *size_ - 1 < max_) {
         size_t start = (*size_ > 4) ? *size_ - 4 : 0;
         for (size_t i = start; i < *size_ - 1; i++)
-            MOZ_ASSERT_IF(stack_[i].isJs(), stack_[i].pc() != nullptr);
+            MOZ_ASSERT_IF(stack_[i].js(), stack_[i].pc() != nullptr);
     }
 #endif
 
-    push(str, nullptr, script, script->code(), /* copy = */ true);
+    push(str, nullptr, script, script->code());
     return true;
 }
 
@@ -183,18 +183,18 @@ SPSProfiler::exit(JSScript *script, JSFunction *maybeFun)
         JS_ASSERT(str != nullptr);
 
         // Bug 822041
-        if (!stack_[*size_].isJs()) {
+        if (!stack_[*size_].js()) {
             fprintf(stderr, "--- ABOUT TO FAIL ASSERTION ---\n");
             fprintf(stderr, " stack=%p size=%d/%d\n", (void*) stack_, *size_, max_);
             for (int32_t i = *size_; i >= 0; i--) {
-                if (stack_[i].isJs())
+                if (stack_[i].js())
                     fprintf(stderr, "  [%d] JS %s\n", i, stack_[i].label());
                 else
                     fprintf(stderr, "  [%d] C line %d %s\n", i, stack_[i].line(), stack_[i].label());
             }
         }
 
-        JS_ASSERT(stack_[*size_].isJs());
+        JS_ASSERT(stack_[*size_].js());
         JS_ASSERT(stack_[*size_].script() == script);
         JS_ASSERT(strcmp((const char*) stack_[*size_].label(), str) == 0);
         stack_[*size_].setLabel(nullptr);
@@ -214,17 +214,16 @@ SPSProfiler::enterNative(const char *string, void *sp)
     JS_ASSERT(enabled());
     if (current < max_) {
         stack[current].setLabel(string);
-        stack[current].setCppFrame(sp, 0);
+        stack[current].setStackAddress(sp);
+        stack[current].setScript(nullptr);
+        stack[current].setLine(0);
     }
     *size = current + 1;
 }
 
 void
-SPSProfiler::push(const char *string, void *sp, JSScript *script, jsbytecode *pc, bool copy)
+SPSProfiler::push(const char *string, void *sp, JSScript *script, jsbytecode *pc)
 {
-    JS_ASSERT_IF(sp != nullptr, script == nullptr && pc == nullptr);
-    JS_ASSERT_IF(sp == nullptr, script != nullptr && pc != nullptr);
-
     /* these operations cannot be re-ordered, so volatile-ize operations */
     volatile ProfileEntry *stack = stack_;
     volatile uint32_t *size = size_;
@@ -232,19 +231,10 @@ SPSProfiler::push(const char *string, void *sp, JSScript *script, jsbytecode *pc
 
     JS_ASSERT(installed());
     if (current < max_) {
-        volatile ProfileEntry &entry = stack[current];
-        entry.setLabel(string);
-
-        if (sp != nullptr)
-            entry.setCppFrame(sp, 0);
-        else
-            entry.setJsFrame(script, pc);
-
-        // Track if mLabel needs a copy.
-        if (copy)
-            entry.setFlag(js::ProfileEntry::FRAME_LABEL_COPY);
-        else
-            entry.unsetFlag(js::ProfileEntry::FRAME_LABEL_COPY);
+        stack[current].setLabel(string);
+        stack[current].setStackAddress(sp);
+        stack[current].setScript(script);
+        stack[current].setPC(pc);
     }
     *size = current + 1;
 }
@@ -323,8 +313,9 @@ SPSEntryMarker::SPSEntryMarker(JSRuntime *rt
         return;
     }
     size_before = *profiler->size_;
-    profiler->push("js::RunScript", this, nullptr, nullptr, /* copy = */ false);
+    profiler->pushNoCopy("js::RunScript", this, nullptr, nullptr);
 }
+
 SPSEntryMarker::~SPSEntryMarker()
 {
     if (profiler != nullptr) {
@@ -336,15 +327,13 @@ SPSEntryMarker::~SPSEntryMarker()
 JS_FRIEND_API(jsbytecode*)
 ProfileEntry::pc() const volatile
 {
-    MOZ_ASSERT(isJs());
-    return lineOrPc == NullPCOffset ? nullptr : script()->offsetToPC(lineOrPc);
+    return idx == NullPCIndex ? nullptr : script()->offsetToPC(idx);
 }
 
 JS_FRIEND_API(void)
 ProfileEntry::setPC(jsbytecode *pc) volatile
 {
-    MOZ_ASSERT(isJs());
-    lineOrPc = pc == nullptr ? NullPCOffset : script()->pcToOffset(pc);
+    idx = pc == nullptr ? NullPCIndex : script()->pcToOffset(pc);
 }
 
 JS_FRIEND_API(void)

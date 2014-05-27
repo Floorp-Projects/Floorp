@@ -970,8 +970,10 @@ ArrayBufferViewObject::bufferObject(JSContext *cx, Handle<ArrayBufferViewObject 
         Rooted<TypedArrayObject *> typedArray(cx, &thisObject->as<TypedArrayObject>());
         if (!TypedArrayObject::ensureHasBuffer(cx, typedArray))
             return nullptr;
+        return thisObject->as<TypedArrayObject>().buffer();
     }
-    return &thisObject->getFixedSlot(BUFFER_SLOT).toObject().as<ArrayBufferObject>();
+    MOZ_ASSERT(thisObject->is<DataViewObject>());
+    return &thisObject->as<DataViewObject>().arrayBuffer();
 }
 
 /* JS Friend API */

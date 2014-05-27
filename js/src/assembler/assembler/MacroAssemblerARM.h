@@ -727,7 +727,7 @@ public:
         load16(left, ARMRegisters::S0);
         move(right, ARMRegisters::S1);
         m_assembler.cmp_r(ARMRegisters::S0, ARMRegisters::S1);
-        return m_assembler.jmp(ARMCondition(cond));
+        return Jump(m_assembler.jmp(ARMCondition(cond)));
     }
 
     Jump branchTest8(Condition cond, Address address, Imm32 mask = Imm32(-1))

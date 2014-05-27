@@ -17,7 +17,7 @@ class EffectiveAddressAnalysis
     MIRGraph &graph_;
 
   public:
-    EffectiveAddressAnalysis(MIRGraph &graph)
+    explicit EffectiveAddressAnalysis(MIRGraph &graph)
       : graph_(graph)
     {}
 

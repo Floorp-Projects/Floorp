@@ -270,7 +270,7 @@ nsPluginArray::Observe(nsISupports *aSubject, const char *aTopic,
 bool
 nsPluginArray::AllowPlugins() const
 {
-  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(mWindow);
+  nsCOMPtr<nsIDocShell> docShell = mWindow ? mWindow->GetDocShell() : nullptr;
 
   return docShell && docShell->PluginsAllowedInCurrentDoc();
 }
