@@ -144,13 +144,33 @@ static const std::string strSampleSdpAudioVideoNoIce =
   "a=candidate:1 1 UDP 2130706431 192.168.2.3 50007 typ host\r\n"
   "a=candidate:2 2 UDP 2130706431 192.168.2.4 50008 typ host\r\n";
 
-
 static const std::string strSampleCandidate =
   "a=candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host\r\n";
 
 static const std::string strSampleMid = "";
 
 static const unsigned short nSamplelevel = 2;
+
+static const std::string strG711SdpOffer =
+    "v=0\r\n"
+    "o=- 1 1 IN IP4 148.147.200.251\r\n"
+    "s=-\r\n"
+    "b=AS:64\r\n"
+    "t=0 0\r\n"
+    "a=fingerprint:sha-256 F3:FA:20:C0:CD:48:C4:5F:02:5F:A5:D3:21:D0:2D:48:"
+      "7B:31:60:5C:5A:D8:0D:CD:78:78:6C:6D:CE:CC:0C:67\r\n"
+    "m=audio 9000 RTP/AVP 0 8 126\r\n"
+    "c=IN IP4 148.147.200.251\r\n"
+    "b=TIAS:64000\r\n"
+    "a=rtpmap:0 PCMU/8000\r\n"
+    "a=rtpmap:8 PCMA/8000\r\n"
+    "a=rtpmap:126 telephone-event/8000\r\n"
+    "a=candidate:0 1 udp 2130706432 148.147.200.251 9000 typ host\r\n"
+    "a=candidate:0 2 udp 2130706432 148.147.200.251 9005 typ host\r\n"
+    "a=ice-ufrag:cYuakxkEKH+RApYE\r\n"
+    "a=ice-pwd:bwtpzLZD+3jbu8vQHvEa6Xuq\r\n"
+    "a=sendrecv\r\n";
+
 
 enum sdpTestFlags
 {
@@ -2160,25 +2180,7 @@ TEST_F(SignalingTest, AudioOnlyG711Call)
   EnsureInit();
 
   sipcc::MediaConstraints constraints;
-  std::string offer =
-    "v=0\r\n"
-    "o=- 1 1 IN IP4 148.147.200.251\r\n"
-    "s=-\r\n"
-    "b=AS:64\r\n"
-    "t=0 0\r\n"
-    "a=fingerprint:sha-256 F3:FA:20:C0:CD:48:C4:5F:02:5F:A5:D3:21:D0:2D:48:"
-      "7B:31:60:5C:5A:D8:0D:CD:78:78:6C:6D:CE:CC:0C:67\r\n"
-    "m=audio 9000 RTP/AVP 0 8 126\r\n"
-    "c=IN IP4 148.147.200.251\r\n"
-    "b=TIAS:64000\r\n"
-    "a=rtpmap:0 PCMU/8000\r\n"
-    "a=rtpmap:8 PCMA/8000\r\n"
-    "a=rtpmap:126 telephone-event/8000\r\n"
-    "a=candidate:0 1 udp 2130706432 148.147.200.251 9000 typ host\r\n"
-    "a=candidate:0 2 udp 2130706432 148.147.200.251 9005 typ host\r\n"
-    "a=ice-ufrag:cYuakxkEKH+RApYE\r\n"
-    "a=ice-pwd:bwtpzLZD+3jbu8vQHvEa6Xuq\r\n"
-    "a=sendrecv\r\n";
+  const std::string& offer(strG711SdpOffer);
 
   std::cout << "Setting offer to:" << std::endl << indent(offer) << std::endl;
   a2_->SetRemote(TestObserver::OFFER, offer);
@@ -2751,6 +2753,48 @@ TEST_F(SignalingAgentTest, CreateOfferSetLocalTrickleTestServer) {
   ASSERT_LE(2U, agent(0)->MatchingCandidates(kBogusSrflxAddress));
 
   // Verify that the candidates appear in the offer.
+  size_t match;
+  match = agent(0)->getLocalDescription().find(kBogusSrflxAddress);
+  ASSERT_LT(0U, match);
+}
+
+
+TEST_F(SignalingAgentTest, CreateAnswerSetLocalTrickleTestServer) {
+  TestStunServer::GetInstance()->SetActive(false);
+  TestStunServer::GetInstance()->SetResponseAddr(
+      kBogusSrflxAddress, kBogusSrflxPort);
+
+  CreateAgent(
+      TestStunServer::GetInstance()->addr(),
+      TestStunServer::GetInstance()->port(),
+      false);
+
+  std::string offer(strG711SdpOffer);
+  agent(0)->SetRemote(TestObserver::OFFER, offer, true,
+                 PCImplSignalingState::SignalingHaveRemoteOffer);
+  ASSERT_EQ(agent(0)->pObserver->lastStatusCode,
+            sipcc::PeerConnectionImpl::kNoError);
+
+  sipcc::MediaConstraints constraints;
+  agent(0)->CreateAnswer(constraints, offer, ANSWER_AUDIO, DONT_CHECK_AUDIO);
+
+  // Verify that the bogus addr is not there.
+  ASSERT_FALSE(agent(0)->AnswerContains(kBogusSrflxAddress));
+
+  // Now enable the STUN server.
+  TestStunServer::GetInstance()->SetActive(true);
+  agent(0)->WaitForGather();
+
+  // There shouldn't be any candidates until SetLocal.
+  ASSERT_EQ(0U, agent(0)->MatchingCandidates(kBogusSrflxAddress));
+
+  agent(0)->SetLocal(TestObserver::ANSWER, agent(0)->answer());
+  PR_Sleep(1000); // Give time for the message queues.
+
+  // Verify that we got our candidates.
+  ASSERT_LE(2U, agent(0)->MatchingCandidates(kBogusSrflxAddress));
+
+  // Verify that the candidates appear in the answer.
   size_t match;
   match = agent(0)->getLocalDescription().find(kBogusSrflxAddress);
   ASSERT_LT(0U, match);
