@@ -28,12 +28,10 @@ public:
   uint8_t* Assign(const OwningArrayBufferViewOrArrayBuffer& aData);
 
   template<typename T,
-           JSObject* UnwrapArray(JSObject*),
-           void GetLengthAndData(JSObject*, uint32_t*, T**)>
-  uint8_t* Assign(const TypedArray_base<T, UnwrapArray, GetLengthAndData>& aArray)
+         JSObject* UnboxArray(JSObject*, uint32_t*, T**)>
+  uint8_t* Assign(const TypedArray_base<T, UnboxArray>& aData)
   {
-    aArray.ComputeLengthAndData();
-    return Assign(aArray.Data(), aArray.Length());
+    return Assign(aData.Data(), aData.Length());
   }
 
 
