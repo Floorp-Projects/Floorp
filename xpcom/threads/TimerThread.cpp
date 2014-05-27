@@ -50,9 +50,10 @@ namespace {
 class TimerObserverRunnable : public nsRunnable
 {
 public:
-  TimerObserverRunnable(nsIObserver* observer)
-    : mObserver(observer)
-  { }
+  TimerObserverRunnable(nsIObserver* aObserver)
+    : mObserver(aObserver)
+  {
+  }
 
   NS_DECL_NSIRUNNABLE
 
@@ -76,13 +77,16 @@ TimerObserverRunnable::Run()
 
 } // anonymous namespace
 
-nsresult TimerThread::Init()
+nsresult
+TimerThread::Init()
 {
-  PR_LOG(GetTimerLog(), PR_LOG_DEBUG, ("TimerThread::Init [%d]\n", mInitialized));
+  PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
+         ("TimerThread::Init [%d]\n", mInitialized));
 
   if (mInitialized) {
-    if (!mThread)
+    if (!mThread) {
       return NS_ERROR_FAILURE;
+    }
 
     return NS_OK;
   }
@@ -92,13 +96,11 @@ nsresult TimerThread::Init()
     nsresult rv = NS_NewThread(getter_AddRefs(mThread), this);
     if (NS_FAILED(rv)) {
       mThread = nullptr;
-    }
-    else {
+    } else {
       nsRefPtr<TimerObserverRunnable> r = new TimerObserverRunnable(this);
       if (NS_IsMainThread()) {
         r->Run();
-      }
-      else {
+      } else {
         NS_DispatchToMainThread(r);
       }
     }
@@ -108,29 +110,32 @@ nsresult TimerThread::Init()
       mInitialized = true;
       mMonitor.NotifyAll();
     }
-  }
-  else {
+  } else {
     MonitorAutoLock lock(mMonitor);
     while (!mInitialized) {
       mMonitor.Wait();
     }
   }
 
-  if (!mThread)
+  if (!mThread) {
     return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
 
-nsresult TimerThread::Shutdown()
+nsresult
+TimerThread::Shutdown()
 {
   PR_LOG(GetTimerLog(), PR_LOG_DEBUG, ("TimerThread::Shutdown begin\n"));
 
-  if (!mThread)
+  if (!mThread) {
     return NS_ERROR_NOT_INITIALIZED;
+  }
 
   nsTArray<nsTimerImpl*> timers;
-  {   // lock scope
+  {
+    // lock scope
     MonitorAutoLock lock(mMonitor);
 
     mShutdown = true;
@@ -153,7 +158,7 @@ nsresult TimerThread::Shutdown()
 
   uint32_t timersCount = timers.Length();
   for (uint32_t i = 0; i < timersCount; i++) {
-    nsTimerImpl *timer = timers[i];
+    nsTimerImpl* timer = timers[i];
     timer->ReleaseCallback();
     ReleaseTimerInternal(timer);
   }
@@ -169,13 +174,14 @@ nsresult TimerThread::Shutdown()
 #endif
 
 /* void Run(); */
-NS_IMETHODIMP TimerThread::Run()
+NS_IMETHODIMP
+TimerThread::Run()
 {
   PR_SetCurrentThreadName("Timer");
 
 #ifdef MOZ_NUWA_PROCESS
   if (IsNuwaProcess()) {
-    NS_ASSERTION(NuwaMarkCurrentThread != nullptr,
+    NS_ASSERTION(NuwaMarkCurrentThread,
                  "NuwaMarkCurrentThread is undefined!");
     NuwaMarkCurrentThread(nullptr, nullptr);
   }
@@ -187,18 +193,20 @@ NS_IMETHODIMP TimerThread::Run()
   // is platform-dependent, we calculate it at runtime now.
   // First we find a value such that PR_MicrosecondsToInterval(high) = 1
   int32_t low = 0, high = 1;
-  while (PR_MicrosecondsToInterval(high) == 0)
+  while (PR_MicrosecondsToInterval(high) == 0) {
     high <<= 1;
+  }
   // We now have
   //    PR_MicrosecondsToInterval(low)  = 0
   //    PR_MicrosecondsToInterval(high) = 1
   // and we can proceed to find the critical value using binary search
-  while (high-low > 1) {
-    int32_t mid = (high+low) >> 1;
-    if (PR_MicrosecondsToInterval(mid) == 0)
+  while (high - low > 1) {
+    int32_t mid = (high + low) >> 1;
+    if (PR_MicrosecondsToInterval(mid) == 0) {
       low = mid;
-    else
+    } else {
       high = mid;
+    }
   }
 
   // Half of the amount of microseconds needed to get positive PRIntervalTime.
@@ -222,7 +230,7 @@ NS_IMETHODIMP TimerThread::Run()
     } else {
       waitFor = PR_INTERVAL_NO_TIMEOUT;
       TimeStamp now = TimeStamp::Now();
-      nsTimerImpl *timer = nullptr;
+      nsTimerImpl* timer = nullptr;
 
       if (!mTimers.IsEmpty()) {
         timer = mTimers[0];
@@ -273,8 +281,9 @@ NS_IMETHODIMP TimerThread::Run()
             timer = nullptr;
           }
 
-          if (mShutdown)
+          if (mShutdown) {
             break;
+          }
 
           // Update now, as PostTimerEvent plus the locking may have taken a
           // tick or two, and we may goto next below.
@@ -294,7 +303,7 @@ NS_IMETHODIMP TimerThread::Run()
         // resolution. We use halfMicrosecondsIntervalResolution, calculated
         // before, to do the optimal rounding (i.e., of how to decide what
         // interval is so small we should not wait at all).
-        double microseconds = (timeout - now).ToMilliseconds()*1000;
+        double microseconds = (timeout - now).ToMilliseconds() * 1000;
 
         if (ChaosMode::isActive()) {
           // The mean value of sFractions must be 1 to ensure that
@@ -303,7 +312,8 @@ NS_IMETHODIMP TimerThread::Run()
           static const float sFractions[] = {
             0.0f, 0.25f, 0.5f, 0.75f, 1.0f, 1.75f, 2.75f
           };
-          microseconds *= sFractions[ChaosMode::randomUint32LessThan(ArrayLength(sFractions))];
+          microseconds *=
+            sFractions[ChaosMode::randomUint32LessThan(ArrayLength(sFractions))];
           forceRunNextTimer = true;
         }
 
@@ -311,9 +321,11 @@ NS_IMETHODIMP TimerThread::Run()
           forceRunNextTimer = false;
           goto next; // round down; execute event now
         }
-        waitFor = PR_MicrosecondsToInterval(static_cast<uint32_t>(microseconds)); // Floor is accurate enough.
-        if (waitFor == 0)
-          waitFor = 1; // round up, wait the minimum time we can wait
+        waitFor = PR_MicrosecondsToInterval(
+          static_cast<uint32_t>(microseconds)); // Floor is accurate enough.
+        if (waitFor == 0) {
+          waitFor = 1;  // round up, wait the minimum time we can wait
+        }
       }
 
 #ifdef DEBUG_TIMERS
@@ -340,14 +352,16 @@ NS_IMETHODIMP TimerThread::Run()
   return NS_OK;
 }
 
-nsresult TimerThread::AddTimer(nsTimerImpl *aTimer)
+nsresult
+TimerThread::AddTimer(nsTimerImpl* aTimer)
 {
   MonitorAutoLock lock(mMonitor);
 
   // Add the timer to our list.
   int32_t i = AddTimerInternal(aTimer);
-  if (i < 0)
+  if (i < 0) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   // Awaken the timer thread.
   if (mWaiting && i == 0) {
@@ -358,7 +372,8 @@ nsresult TimerThread::AddTimer(nsTimerImpl *aTimer)
   return NS_OK;
 }
 
-nsresult TimerThread::TimerDelayChanged(nsTimerImpl *aTimer)
+nsresult
+TimerThread::TimerDelayChanged(nsTimerImpl* aTimer)
 {
   MonitorAutoLock lock(mMonitor);
 
@@ -367,8 +382,9 @@ nsresult TimerThread::TimerDelayChanged(nsTimerImpl *aTimer)
   RemoveTimerInternal(aTimer);
 
   int32_t i = AddTimerInternal(aTimer);
-  if (i < 0)
+  if (i < 0) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   // Awaken the timer thread.
   if (mWaiting && i == 0) {
@@ -379,7 +395,8 @@ nsresult TimerThread::TimerDelayChanged(nsTimerImpl *aTimer)
   return NS_OK;
 }
 
-nsresult TimerThread::RemoveTimer(nsTimerImpl *aTimer)
+nsresult
+TimerThread::RemoveTimer(nsTimerImpl* aTimer)
 {
   MonitorAutoLock lock(mMonitor);
 
@@ -390,8 +407,9 @@ nsresult TimerThread::RemoveTimer(nsTimerImpl *aTimer)
   // TimerThread::Run, must wait for the mMonitor auto-lock here, and during the
   // wait Run drops the only remaining ref to aTimer via RemoveTimerInternal.
 
-  if (!RemoveTimerInternal(aTimer))
+  if (!RemoveTimerInternal(aTimer)) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
   // Awaken the timer thread.
   if (mWaiting) {
@@ -403,18 +421,21 @@ nsresult TimerThread::RemoveTimer(nsTimerImpl *aTimer)
 }
 
 // This function must be called from within a lock
-int32_t TimerThread::AddTimerInternal(nsTimerImpl *aTimer)
+int32_t
+TimerThread::AddTimerInternal(nsTimerImpl* aTimer)
 {
-  if (mShutdown)
+  if (mShutdown) {
     return -1;
+  }
 
   TimeStamp now = TimeStamp::Now();
 
   TimerAdditionComparator c(now, aTimer);
   nsTimerImpl** insertSlot = mTimers.InsertElementSorted(aTimer, c);
 
-  if (!insertSlot)
+  if (!insertSlot) {
     return -1;
+  }
 
   aTimer->mArmed = true;
   NS_ADDREF(aTimer);
@@ -426,32 +447,37 @@ int32_t TimerThread::AddTimerInternal(nsTimerImpl *aTimer)
   return insertSlot - mTimers.Elements();
 }
 
-bool TimerThread::RemoveTimerInternal(nsTimerImpl *aTimer)
+bool
+TimerThread::RemoveTimerInternal(nsTimerImpl* aTimer)
 {
-  if (!mTimers.RemoveElement(aTimer))
+  if (!mTimers.RemoveElement(aTimer)) {
     return false;
+  }
 
   ReleaseTimerInternal(aTimer);
   return true;
 }
 
-void TimerThread::ReleaseTimerInternal(nsTimerImpl *aTimer)
+void
+TimerThread::ReleaseTimerInternal(nsTimerImpl* aTimer)
 {
   // Order is crucial here -- see nsTimerImpl::Release.
   aTimer->mArmed = false;
   NS_RELEASE(aTimer);
 }
 
-void TimerThread::DoBeforeSleep()
+void
+TimerThread::DoBeforeSleep()
 {
   mSleeping = true;
 }
 
-void TimerThread::DoAfterSleep()
+void
+TimerThread::DoAfterSleep()
 {
   mSleeping = true; // wake may be notified without preceding sleep notification
   for (uint32_t i = 0; i < mTimers.Length(); i ++) {
-    nsTimerImpl *timer = mTimers[i];
+    nsTimerImpl* timer = mTimers[i];
     // get and set the delay to cause its timeout to be recomputed
     uint32_t delay;
     timer->GetDelay(&delay);
@@ -464,14 +490,16 @@ void TimerThread::DoAfterSleep()
 
 /* void observe (in nsISupports aSubject, in string aTopic, in wstring aData); */
 NS_IMETHODIMP
-TimerThread::Observe(nsISupports* /* aSubject */, const char *aTopic, const char16_t* /* aData */)
+TimerThread::Observe(nsISupports* /* aSubject */, const char* aTopic,
+                     const char16_t* /* aData */)
 {
   if (strcmp(aTopic, "sleep_notification") == 0 ||
-      strcmp(aTopic, "suspend_process_notification") == 0)
+      strcmp(aTopic, "suspend_process_notification") == 0) {
     DoBeforeSleep();
-  else if (strcmp(aTopic, "wake_notification") == 0 ||
-           strcmp(aTopic, "resume_process_notification") == 0)
+  } else if (strcmp(aTopic, "wake_notification") == 0 ||
+             strcmp(aTopic, "resume_process_notification") == 0) {
     DoAfterSleep();
+  }
 
   return NS_OK;
 }

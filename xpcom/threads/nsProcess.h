@@ -31,8 +31,9 @@
 {0x7b4eeb20, 0xd781, 0x11d4, \
    {0x8A, 0x83, 0x00, 0x10, 0xa4, 0xe0, 0xc9, 0xca}}
 
-class nsProcess MOZ_FINAL : public nsIProcess,
-                            public nsIObserver
+class nsProcess MOZ_FINAL
+  : public nsIProcess
+  , public nsIObserver
 {
 public:
 
@@ -44,17 +45,17 @@ public:
 
 private:
   ~nsProcess();
-  static void Monitor(void *arg);
+  static void Monitor(void* aArg);
   void ProcessComplete();
-  nsresult CopyArgsAndRunProcess(bool blocking, const char** args,
-                                 uint32_t count, nsIObserver* observer,
-                                 bool holdWeak);
-  nsresult CopyArgsAndRunProcessw(bool blocking, const char16_t** args,
-                                  uint32_t count, nsIObserver* observer,
-                                  bool holdWeak);
+  nsresult CopyArgsAndRunProcess(bool aBlocking, const char** aArgs,
+                                 uint32_t aCount, nsIObserver* aObserver,
+                                 bool aHoldWeak);
+  nsresult CopyArgsAndRunProcessw(bool aBlocking, const char16_t** aArgs,
+                                  uint32_t aCount, nsIObserver* aObserver,
+                                  bool aHoldWeak);
   // The 'args' array is null-terminated.
-  nsresult RunProcess(bool blocking, char **args, nsIObserver* observer,
-                      bool holdWeak, bool argsUTF8);
+  nsresult RunProcess(bool aBlocking, char** aArgs, nsIObserver* aObserver,
+                      bool aHoldWeak, bool aArgsUTF8);
 
   PRThread* mThread;
   mozilla::Mutex mLock;
@@ -73,7 +74,7 @@ private:
 #if defined(PROCESSMODEL_WINAPI)
   HANDLE mProcess;
 #elif !defined(XP_MACOSX)
-  PRProcess *mProcess;
+  PRProcess* mProcess;
 #endif
 };
 
