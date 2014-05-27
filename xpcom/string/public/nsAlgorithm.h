@@ -10,68 +10,66 @@
 #include "nsCharTraits.h"  // for |nsCharSourceTraits|, |nsCharSinkTraits|
 
 template <class T>
-inline
-T
-NS_ROUNDUP( const T& a, const T& b )
+inline T
+NS_ROUNDUP(const T& aA, const T& aB)
 {
-  return ((a + (b - 1)) / b) * b;
+  return ((aA + (aB - 1)) / aB) * aB;
 }
 
 // We use these instead of std::min/max because we can't include the algorithm
 // header in all of XPCOM because the stl wrappers will error out when included
 // in parts of XPCOM. These functions should never be used outside of XPCOM.
 template <class T>
-inline
-const T&
-XPCOM_MIN( const T& a, const T& b )
+inline const T&
+XPCOM_MIN(const T& aA, const T& aB)
 {
-  return b < a ? b : a;
+  return aB < aA ? aB : aA;
 }
 
 // Must return b when a == b in case a is -0
 template <class T>
-inline
-const T&
-XPCOM_MAX( const T& a, const T& b )
+inline const T&
+XPCOM_MAX(const T& aA, const T& aB)
 {
-  return a > b ? a : b;
+  return aA > aB ? aA : aB;
 }
 
 namespace mozilla {
 
 template <class T>
-inline
-const T&
-clamped( const T& a, const T& min, const T& max )
+inline const T&
+clamped(const T& aA, const T& aMin, const T& aMax)
 {
-  NS_ABORT_IF_FALSE(max >= min, "clamped(): max must be greater than or equal to min");
-  return XPCOM_MIN(XPCOM_MAX(a, min), max);
+  NS_ABORT_IF_FALSE(aMax >= aMin,
+                    "clamped(): aMax must be greater than or equal to aMin");
+  return XPCOM_MIN(XPCOM_MAX(aA, aMin), aMax);
 }
 
 }
 
 template <class InputIterator, class T>
-inline
-uint32_t
-NS_COUNT( InputIterator& first, const InputIterator& last, const T& value )
+inline uint32_t
+NS_COUNT(InputIterator& aFirst, const InputIterator& aLast, const T& aValue)
 {
   uint32_t result = 0;
-  for ( ; first != last; ++first )
-    if ( *first == value )
+  for (; aFirst != aLast; ++aFirst)
+    if (*aFirst == aValue) {
       ++result;
+    }
   return result;
 }
 
 template <class InputIterator, class OutputIterator>
-inline
-OutputIterator&
-copy_string( const InputIterator& first, const InputIterator& last, OutputIterator& result )
+inline OutputIterator&
+copy_string(const InputIterator& aFirst, const InputIterator& aLast,
+            OutputIterator& aResult)
 {
   typedef nsCharSourceTraits<InputIterator> source_traits;
   typedef nsCharSinkTraits<OutputIterator>  sink_traits;
 
-  sink_traits::write(result, source_traits::read(first), source_traits::readable_distance(first, last));
-  return result;
+  sink_traits::write(aResult, source_traits::read(aFirst),
+                     source_traits::readable_distance(aFirst, aLast));
+  return aResult;
 }
 
 #endif // !defined(nsAlgorithm_h___)
