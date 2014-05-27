@@ -57,7 +57,7 @@ static void OnStatsReport_m(
   // Reports for the currently active PeerConnections
   for (auto q = aQueryList->begin(); q != aQueryList->end(); ++q) {
     MOZ_ASSERT(*q);
-    report.mReports.Value().AppendElement((*q)->report);
+    report.mReports.Value().AppendElement(*(*q)->report);
   }
 
   PeerConnectionCtx* ctx = GetPeerConnectionCtx();
@@ -240,11 +240,11 @@ static void StoreLongTermICEStatisticsImpl_m(
 
   if (NS_FAILED(result) ||
       !query->error.empty() ||
-      !query->report.mIceCandidateStats.WasPassed()) {
+      !query->report->mIceCandidateStats.WasPassed()) {
     return;
   }
 
-  query->report.mClosed.Construct(true);
+  query->report->mClosed.Construct(true);
 
   // First, store stuff in telemetry
   enum {
@@ -267,10 +267,10 @@ static void StoreLongTermICEStatisticsImpl_m(
 
   // Build list of streams, and whether or not they failed.
   for (size_t i = 0;
-       i < query->report.mIceCandidatePairStats.Value().Length();
+       i < query->report->mIceCandidatePairStats.Value().Length();
        ++i) {
     const RTCIceCandidatePairStats &pair =
-      query->report.mIceCandidatePairStats.Value()[i];
+      query->report->mIceCandidatePairStats.Value()[i];
 
     if (!pair.mState.WasPassed() || !pair.mComponentId.WasPassed()) {
       MOZ_CRASH();
@@ -288,10 +288,10 @@ static void StoreLongTermICEStatisticsImpl_m(
   }
 
   for (size_t i = 0;
-       i < query->report.mIceCandidateStats.Value().Length();
+       i < query->report->mIceCandidateStats.Value().Length();
        ++i) {
     const RTCIceCandidateStats &cand =
-      query->report.mIceCandidateStats.Value()[i];
+      query->report->mIceCandidateStats.Value()[i];
 
     if (!cand.mType.WasPassed() ||
         !cand.mCandidateType.WasPassed() ||
@@ -344,7 +344,7 @@ static void StoreLongTermICEStatisticsImpl_m(
 
   PeerConnectionCtx *ctx = GetPeerConnectionCtx();
   if (ctx) {
-    ctx->mStatsForClosedPeerConnections.AppendElement(query->report);
+    ctx->mStatsForClosedPeerConnections.AppendElement(*query->report);
   }
 }
 
