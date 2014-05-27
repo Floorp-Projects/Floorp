@@ -313,10 +313,14 @@ WaveShaperNode::SetCurve(const Nullable<Float32Array>& aCurve)
 {
   nsTArray<float> curve;
   if (!aCurve.IsNull()) {
-    mCurve = aCurve.Value().Obj();
+    const Float32Array& floats = aCurve.Value();
 
-    curve.SetLength(aCurve.Value().Length());
-    PodCopy(curve.Elements(), aCurve.Value().Data(), aCurve.Value().Length());
+    mCurve = floats.Obj();
+
+    floats.ComputeLengthAndData();
+
+    curve.SetLength(floats.Length());
+    PodCopy(curve.Elements(), floats.Data(), floats.Length());
   } else {
     mCurve = nullptr;
   }

@@ -26,12 +26,14 @@ CryptoBuffer::Assign(const SECItem* aItem)
 uint8_t*
 CryptoBuffer::Assign(const ArrayBuffer& aData)
 {
+  aData.ComputeLengthAndData();
   return Assign(aData.Data(), aData.Length());
 }
 
 uint8_t*
 CryptoBuffer::Assign(const ArrayBufferView& aData)
 {
+  aData.ComputeLengthAndData();
   return Assign(aData.Data(), aData.Length());
 }
 
