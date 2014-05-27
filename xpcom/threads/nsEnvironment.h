@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,17 +19,18 @@
 class nsEnvironment MOZ_FINAL : public nsIEnvironment
 {
 public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSIENVIRONMENT
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIENVIRONMENT
 
-    static nsresult Create(nsISupports *aOuter, REFNSIID aIID,
-                           void **aResult);
+  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
 private:
-    nsEnvironment() : mLock("nsEnvironment.mLock") { }
-    ~nsEnvironment();
+  nsEnvironment() : mLock("nsEnvironment.mLock")
+  {
+  }
+  ~nsEnvironment();
 
-    mozilla::Mutex mLock;
+  mozilla::Mutex mLock;
 };
 
 #endif /* !nsEnvironment_h__ */
