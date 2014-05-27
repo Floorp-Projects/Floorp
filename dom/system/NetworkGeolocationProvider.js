@@ -195,25 +195,26 @@ WifiGeoPositionProvider.prototype = {
   updateMobileInfo: function() {
     LOG("updateMobileInfo called");
     try {
-      let radio = Cc["@mozilla.org/ril;1"]
-            .getService(Ci.nsIRadioInterfaceLayer)
-            .getRadioInterface(0);
+      let radioService = Cc["@mozilla.org/ril;1"]
+                    .getService(Ci.nsIRadioInterfaceLayer);
+      let numInterfaces = radioService.numRadioInterfaces;
+      let result = [];
+      for (let i = 0; i < numInterfaces; i++) {
+        LOG("Looking for SIM in slot:" + i + " of " + numInterfaces);
+        let radio = radioService.getRadioInterface(i);
+        let iccInfo = radio.rilContext.iccInfo;
+        let cell = radio.rilContext.voice.cell;
 
-      let iccInfo = radio.rilContext.iccInfo;
-      let cell = radio.rilContext.voice.cell;
-
-      LOG("mcc: " + iccInfo.mcc);
-      LOG("mnc: " + iccInfo.mnc);
-      LOG("cid: " + cell.gsmCellId);
-      LOG("lac: " + cell.gsmLocationAreaCode);
-
-      gCellResults = [{
-        "radio": "gsm",
-        "mobileCountryCode": iccInfo.mcc,
-        "mobileNetworkCode": iccInfo.mnc,
-        "locationAreaCode": cell.gsmLocationAreaCode,
-        "cellId": cell.gsmCellId,
-      }];
+        if (iccInfo && cell) {
+          // TODO type and signal strength
+          result.push({ radio: "gsm",
+                      mobileCountryCode: iccInfo.mcc,
+                      mobileNetworkCode: iccInfo.mnc,
+                      locationAreaCode: cell.gsmLocationAreaCode,
+                      cellId: cell.gsmCellId });
+        }
+      }
+      return result;
     } catch (e) {
       gCellResults = null;
     }
