@@ -18,6 +18,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
                                   "resource://gre/modules/Deprecated.jsm");
 
@@ -58,7 +60,8 @@ function LivemarkService()
   PlacesUtils.addLazyBookmarkObserver(this, true);
 
   // Asynchronously build the livemarks cache.
-  this._ensureAsynchronousCache();
+  this._cacheReadyPromise =
+    this._ensureAsynchronousCache().then(null, Cu.reportError);
 }
 
 LivemarkService.prototype = {
@@ -87,72 +90,32 @@ LivemarkService.prototype = {
          +   "AND n.name = :feedURI_anno ";
   },
 
-  _ensureAsynchronousCache: function LS__ensureAsynchronousCache()
-  {
-    let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                                .DBConnection;
-    let stmt = db.createAsyncStatement(this._populateCacheSQL);
-    stmt.params.folder_type = Ci.nsINavBookmarksService.TYPE_FOLDER;
-    stmt.params.feedURI_anno = PlacesUtils.LMANNO_FEEDURI;
-    stmt.params.siteURI_anno = PlacesUtils.LMANNO_SITEURI;
-
-    let livemarkSvc = this;
-    this._pendingStmt = stmt.executeAsync({
-      handleResult: function LS_handleResult(aResults)
-      {
-        for (let row = aResults.getNextRow(); row; row = aResults.getNextRow()) {
-          let id = row.getResultByName("id");
-          let siteURL = row.getResultByName("siteURI");
-          let guid = row.getResultByName("guid");
-          livemarkSvc._livemarks[id] =
-            new Livemark({ id: id,
-                           guid: guid,
-                           title: row.getResultByName("title"),
-                           parentId: row.getResultByName("parent"),
-                           index: row.getResultByName("position"),
-                           lastModified: row.getResultByName("lastModified"),
-                           feedURI: NetUtil.newURI(row.getResultByName("feedURI")),
-                           siteURI: siteURL ? NetUtil.newURI(siteURL) : null,
-            });
-          livemarkSvc._guids[guid] = id;
-        }
-      },
-      handleError: function LS_handleError(aErr)
-      {
-        Cu.reportError("AsyncStmt error (" + aErr.result + "): '" + aErr.message);
-      },
-      handleCompletion: function LS_handleCompletion() {
-        livemarkSvc._pendingStmt = null;
-      }
-    });
-    stmt.finalize();
-  },
+  _ensureAsynchronousCache: Task.async(function* () {
+    let conn = yield PlacesUtils.promiseDBConnection();
+    yield conn.executeCached(this._populateCacheSQL,
+      { folder_type: Ci.nsINavBookmarksService.TYPE_FOLDER,
+        feedURI_anno: PlacesUtils.LMANNO_FEEDURI,
+        siteURI_anno: PlacesUtils.LMANNO_SITEURI },
+      row => {
+        let id = row.getResultByName("id");
+        let guid = row.getResultByName("guid");
+        let siteURL = row.getResultByName("siteURI");
+        this._livemarks[id] =
+          new Livemark({ id: id,
+                         guid: guid,
+                         title: row.getResultByName("title"),
+                         parentId: row.getResultByName("parent"),
+                         index: row.getResultByName("position"),
+                         lastModified: row.getResultByName("lastModified"),
+                         feedURI: NetUtil.newURI(row.getResultByName("feedURI")),
+                         siteURI: siteURL ? NetUtil.newURI(siteURL) : null });
+        this._guids[guid] = id;
+      });
+  }),
 
   _onCacheReady: function LS__onCacheReady(aCallback)
   {
-    if (this._pendingStmt) {
-      // The cache is still being populated, so enqueue the job to the Storage
-      // async thread.  Ideally this should just dispatch a runnable to it,
-      // that would call back on the main thread, but bug 608142 made that
-      // impossible.  Thus just enqueue the cheapest query possible.
-      let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                                  .DBConnection;
-      let stmt = db.createAsyncStatement("PRAGMA encoding");
-      stmt.executeAsync({
-        handleError: function () {},
-        handleResult: function () {},
-        handleCompletion: function ETAT_handleCompletion()
-        {
-          aCallback();
-        }
-      });
-      stmt.finalize();
-    }
-    else {
-      // The callbacks should always be enqueued per the interface.
-      // Just enque on the main thread.
-      Services.tm.mainThread.dispatch(aCallback, Ci.nsIThread.DISPATCH_NORMAL);
-    }
+    this._cacheReadyPromise.then(aCallback);
   },
 
   _reloading: false,
