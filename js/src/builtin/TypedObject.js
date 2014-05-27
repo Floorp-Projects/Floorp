@@ -58,8 +58,9 @@
 function TypedObjectGet(descr, typedObj, offset) {
   assert(IsObject(descr) && ObjectIsTypeDescr(descr),
          "get() called with bad type descr");
-  assert(TypedObjectIsAttached(typedObj),
-         "get() called with unattached typedObj");
+
+  if (!TypedObjectIsAttached(typedObj))
+    ThrowError(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
 
   switch (DESCR_KIND(descr)) {
   case JS_TYPEREPR_SCALAR_KIND:
@@ -186,7 +187,8 @@ function TypedObjectGetX4(descr, typedObj, offset) {
 // it to `descr` as needed. This is the most general entry point
 // and works for any type.
 function TypedObjectSet(descr, typedObj, offset, fromValue) {
-  assert(TypedObjectIsAttached(typedObj), "set() called with unattached typedObj");
+  if (!TypedObjectIsAttached(typedObj))
+    ThrowError(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
 
   // Fast path: `fromValue` is a typed object with same type
   // representation as the destination. In that case, we can just do a
