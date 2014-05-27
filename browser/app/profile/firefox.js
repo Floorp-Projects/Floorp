@@ -1464,7 +1464,7 @@ pref("browser.newtabpage.rows", 3);
 // number of columns of newtab grid
 pref("browser.newtabpage.columns", 3);
 
-pref("browser.newtabpage.directorySource", "chrome://global/content/directoryLinks.json");
+pref("browser.newtabpage.directory.source", "chrome://global/content/directoryLinks.json");
 
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);
