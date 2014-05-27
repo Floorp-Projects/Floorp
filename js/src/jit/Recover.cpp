@@ -244,6 +244,33 @@ RLsh::recover(JSContext *cx, SnapshotIterator &iter) const
 }
 
 bool
+MRsh::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_Rsh));
+    return true;
+}
+
+RRsh::RRsh(CompactBufferReader &reader)
+{ }
+
+bool
+RRsh::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue lhs(cx, iter.read());
+    RootedValue rhs(cx, iter.read());
+    MOZ_ASSERT(!lhs.isObject() && !rhs.isObject());
+
+    int32_t result;
+    if (!js::BitRsh(cx, lhs, rhs, &result))
+        return false;
+
+    RootedValue rootedResult(cx, js::Int32Value(result));
+    iter.storeInstructionResult(rootedResult);
+    return true;
+}
+
+bool
 MUrsh::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
