@@ -257,7 +257,7 @@ function String_sup() {
 function EscapeAttributeValue(v) {
     var inputStr = ToString(v);
     var inputLen = inputStr.length;
-    var outputStr = "";
+    var outputStr = '';
     var chunkStart = 0;
     for (var i = 0; i < inputLen; i++) {
         if (inputStr[i] === '"') {

@@ -3362,13 +3362,17 @@ class MTruncateToInt32 : public MUnaryInstruction
 };
 
 // Converts any type to a string
-class MToString :
-  public MUnaryInstruction,
-  public ToStringPolicy
+class MToString : public MUnaryInstruction
 {
     explicit MToString(MDefinition *def)
       : MUnaryInstruction(def)
     {
+        // Converting an object to a string might be effectful.
+        JS_ASSERT(!def->mightBeType(MIRType_Object));
+
+        // NOP
+        JS_ASSERT(def->type() != MIRType_String);
+
         setResultType(MIRType_String);
         setMovable();
     }
@@ -3382,20 +3386,12 @@ class MToString :
 
     MDefinition *foldsTo(TempAllocator &alloc, bool useValueNumbers);
 
-    TypePolicy *typePolicy() {
-        return this;
-    }
-
     bool congruentTo(const MDefinition *ins) const {
         return congruentIfOperandsEqual(ins);
     }
-
     AliasSet getAliasSet() const {
+        JS_ASSERT(!input()->mightBeType(MIRType_Object));
         return AliasSet::None();
-    }
-
-    bool fallible() const {
-        return input()->mightBeType(MIRType_Object);
     }
 };
 

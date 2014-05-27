@@ -736,7 +736,6 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineHaveSameClass(CallInfo &callInfo);
     InliningStatus inlineToObject(CallInfo &callInfo);
     InliningStatus inlineToInteger(CallInfo &callInfo);
-    InliningStatus inlineToString(CallInfo &callInfo);
     InliningStatus inlineDump(CallInfo &callInfo);
     InliningStatus inlineHasClass(CallInfo &callInfo, const Class *clasp) {
         return inlineHasClasses(callInfo, clasp, nullptr);
