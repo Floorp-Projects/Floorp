@@ -68,7 +68,7 @@ fails-if(B2G&&browserIsRemote) == t1204-reset-02-c-o-test.html t1204-reset-02-c-
 == counter-ua-limits-list-00.html counter-ua-limits-list-00-ref.html
 == counter-ua-limits-list-01.html counter-ua-limits-list-01-ref.html
 == multiple-thai-counters.html multiple-thai-counters-ref.html
-fails-if(B2G) == counter-suffix.html counter-suffix-ref.html # B2G kerning
+== counter-suffix.html counter-suffix-ref.html
 == counter-cjk-decimal.html counter-cjk-decimal-ref.html
 == counter-japanese-informal.html counter-japanese-informal-ref.html
 == counter-japanese-formal.html counter-japanese-formal-ref.html
