@@ -6,7 +6,7 @@
 
 [Constructor(DOMString type,
              optional BluetoothDiscoveryStateChangedEventInit eventInitDict),
- Func="Navigator::HasBluetoothSupport"]
+ CheckPermissions="bluetooth"]
 interface BluetoothDiscoveryStateChangedEvent : Event
 {
     readonly attribute boolean discovering;

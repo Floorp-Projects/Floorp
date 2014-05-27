@@ -221,11 +221,11 @@ var shell = {
         return homeSrc;
     } catch (e) {}
 
-    return Services.prefs.getCharPref('browser.homescreenURL');
+    return Services.prefs.getCharPref('b2g.system_startup_url');
   },
 
   get manifestURL() {
-    return Services.prefs.getCharPref('browser.manifestURL');
+    return Services.prefs.getCharPref('b2g.system_manifest_url');
   },
 
   _started: false,
@@ -358,9 +358,6 @@ var shell = {
     ppmm.addMessageListener("sms-handler", this);
     ppmm.addMessageListener("mail-handler", this);
     ppmm.addMessageListener("file-picker", this);
-    ppmm.addMessageListener("getProfD", function(message) {
-      return Services.dirsvc.get("ProfD", Ci.nsIFile).path;
-    });
   },
 
   stop: function shell_stop() {

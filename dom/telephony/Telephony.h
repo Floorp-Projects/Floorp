@@ -176,7 +176,8 @@ private:
   DialInternal(uint32_t aServiceId, const nsAString& aNumber, bool isEmergency);
 
   already_AddRefed<TelephonyCall>
-  CreateNewDialingCall(uint32_t aServiceId, const nsAString& aNumber);
+  CreateNewDialingCall(uint32_t aServiceId, const nsAString& aNumber,
+                       uint32_t aCallIndex);
 
   nsresult
   NotifyCallsChanged(TelephonyCall* aCall);
