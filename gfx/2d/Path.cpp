@@ -278,6 +278,9 @@ FindInflectionApproximationRange(BezierControlPoints aControlPoints,
 
     if (cp21.x == 0 && cp21.y == 0) {
       // In this case s3 becomes lim[n->0] (cp41.x * n) / n - (cp41.y * n) / n = cp41.x - cp41.y.
+
+      // Use the absolute value so that Min and Max will correspond with the
+      // minimum and maximum of the range.
       *aMin = aT - CubicRoot(abs(aTolerance / (cp41.x - cp41.y)));
       *aMax = aT + CubicRoot(abs(aTolerance / (cp41.x - cp41.y)));
       return;
