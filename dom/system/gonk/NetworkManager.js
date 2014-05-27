@@ -218,7 +218,8 @@ NetworkManager.prototype = {
     switch (topic) {
       case TOPIC_INTERFACE_STATE_CHANGED:
         let network = subject.QueryInterface(Ci.nsINetworkInterface);
-        debug("Network " + network.name + " changed state to " + network.state);
+        debug("Network " + network.type + "/" + network.name +
+              " changed state to " + network.state);
         switch (network.state) {
           case Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED:
 #ifdef MOZ_B2G_RIL
@@ -388,6 +389,19 @@ NetworkManager.prototype = {
     }
   },
 
+  getNetworkId: function(network) {
+    let id = "device";
+    if (this.isNetworkTypeMobile(network.type)) {
+      if (!(network instanceof Ci.nsIRilNetworkInterface)) {
+        throw Components.Exception("Mobile network not an nsIRilNetworkInterface",
+                                   Cr.NS_ERROR_INVALID_ARG);
+      }
+      id = "ril" + network.serviceId;
+    }
+
+    return id + "-" + network.type;
+  },
+
   // nsINetworkManager
 
   registerNetworkInterface: function(network) {
@@ -395,11 +409,12 @@ NetworkManager.prototype = {
       throw Components.Exception("Argument must be nsINetworkInterface.",
                                  Cr.NS_ERROR_INVALID_ARG);
     }
-    if (network.name in this.networkInterfaces) {
-      throw Components.Exception("Network with that name already registered!",
+    let networkId = this.getNetworkId(network);
+    if (networkId in this.networkInterfaces) {
+      throw Components.Exception("Network with that type already registered!",
                                  Cr.NS_ERROR_INVALID_ARG);
     }
-    this.networkInterfaces[network.name] = network;
+    this.networkInterfaces[networkId] = network;
 #ifdef MOZ_B2G_RIL
     // Add host route for data calls
     if (this.isNetworkTypeMobile(network.type)) {
@@ -411,7 +426,7 @@ NetworkManager.prototype = {
     gNetworkService.removeDefaultRoute(network);
     this.setAndConfigureActive();
     Services.obs.notifyObservers(network, TOPIC_INTERFACE_REGISTERED, null);
-    debug("Network '" + network.name + "' registered.");
+    debug("Network '" + networkId + "' registered.");
   },
 
   unregisterNetworkInterface: function(network) {
@@ -419,11 +434,12 @@ NetworkManager.prototype = {
       throw Components.Exception("Argument must be nsINetworkInterface.",
                                  Cr.NS_ERROR_INVALID_ARG);
     }
-    if (!(network.name in this.networkInterfaces)) {
-      throw Components.Exception("No network with that name registered.",
+    let networkId = this.getNetworkId(network);
+    if (!(networkId in this.networkInterfaces)) {
+      throw Components.Exception("No network with that type registered.",
                                  Cr.NS_ERROR_INVALID_ARG);
     }
-    delete this.networkInterfaces[network.name];
+    delete this.networkInterfaces[networkId];
 #ifdef MOZ_B2G_RIL
     // Remove host route for data calls
     if (this.isNetworkTypeMobile(network.type)) {
@@ -432,7 +448,7 @@ NetworkManager.prototype = {
 #endif
     this.setAndConfigureActive();
     Services.obs.notifyObservers(network, TOPIC_INTERFACE_UNREGISTERED, null);
-    debug("Network '" + network.name + "' unregistered.");
+    debug("Network '" + networkId + "' unregistered.");
   },
 
   _manageOfflineStatus: true,
