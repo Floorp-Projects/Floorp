@@ -52,17 +52,16 @@ public:
   };
 
   /**
-   * Notify this Axis that a new touch has been received, including a time delta
-   * indicating how long it has been since the previous one. This triggers a
-   * recalculation of velocity.
+   * Notify this Axis that a new touch has been received, including a timestamp
+   * for when the touch was received. This triggers a recalculation of velocity.
    */
-  void UpdateWithTouchAtDevicePoint(int32_t aPos, const TimeDuration& aTimeDelta);
+  void UpdateWithTouchAtDevicePoint(int32_t aPos, uint32_t aTimestampMs);
 
   /**
    * Notify this Axis that a touch has begun, i.e. the user has put their finger
    * on the screen but has not yet tried to pan.
    */
-  void StartTouch(int32_t aPos);
+  void StartTouch(int32_t aPos, uint32_t aTimestampMs);
 
   /**
    * Notify this Axis that a touch has ended gracefully. This may perform
@@ -211,6 +210,7 @@ public:
 
 protected:
   int32_t mPos;
+  uint32_t mPosTimeMs;
   int32_t mStartPos;
   float mVelocity;
   bool mAxisLocked;     // Whether movement on this axis is locked.

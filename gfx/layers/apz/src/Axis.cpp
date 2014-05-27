@@ -25,6 +25,7 @@ namespace layers {
 
 Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
   : mPos(0),
+    mPosTimeMs(0),
     mVelocity(0.0f),
     mAxisLocked(false),
     mAsyncPanZoomController(aAsyncPanZoomController),
@@ -32,14 +33,20 @@ Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
 {
 }
 
-void Axis::UpdateWithTouchAtDevicePoint(int32_t aPos, const TimeDuration& aTimeDelta) {
-  float newVelocity = mAxisLocked ? 0 : (mPos - aPos) / aTimeDelta.ToMilliseconds();
+void Axis::UpdateWithTouchAtDevicePoint(int32_t aPos, uint32_t aTimestampMs) {
+  if (aTimestampMs == mPosTimeMs) {
+    // Duplicate event?
+    return;
+  }
+
+  float newVelocity = mAxisLocked ? 0 : (float)(mPos - aPos) / (float)(aTimestampMs - mPosTimeMs);
   if (gfxPrefs::APZMaxVelocity() > 0.0f) {
     newVelocity = std::min(newVelocity, gfxPrefs::APZMaxVelocity() * APZCTreeManager::GetDPI());
   }
 
   mVelocity = newVelocity;
   mPos = aPos;
+  mPosTimeMs = aTimestampMs;
 
   // Limit queue size pased on pref
   mVelocityQueue.AppendElement(mVelocity);
@@ -48,9 +55,10 @@ void Axis::UpdateWithTouchAtDevicePoint(int32_t aPos, const TimeDuration& aTimeD
   }
 }
 
-void Axis::StartTouch(int32_t aPos) {
+void Axis::StartTouch(int32_t aPos, uint32_t aTimestampMs) {
   mStartPos = aPos;
   mPos = aPos;
+  mPosTimeMs = aTimestampMs;
   mAxisLocked = false;
 }
 

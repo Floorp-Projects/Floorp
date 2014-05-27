@@ -727,8 +727,6 @@ private:
   // The last time the compositor has sampled the content transform for this
   // frame.
   TimeStamp mLastSampleTime;
-  // The last time a touch event came through on the UI thread.
-  uint32_t mLastEventTime;
 
   // Stores the previous focus point if there is a pinch gesture happening. Used
   // to allow panning by moving multiple fingers (thus moving the focus point).
