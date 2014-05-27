@@ -4305,14 +4305,6 @@ RilObject.prototype = {
         continue;
       }
 
-      if (updatedDataCall && !updatedDataCall.ifname) {
-        delete this.currentDataCalls[currentDataCall.cid];
-        currentDataCall.state = GECKO_NETWORK_STATE_UNKNOWN;
-        currentDataCall.rilMessageType = "datacallstatechange";
-        this.sendChromeMessage(currentDataCall);
-        continue;
-      }
-
       this._setDataCallGeckoState(updatedDataCall);
       if (updatedDataCall.state != currentDataCall.state) {
         if (updatedDataCall.state == GECKO_NETWORK_STATE_DISCONNECTED) {
@@ -6049,7 +6041,7 @@ RilObject.prototype[REQUEST_DEACTIVATE_DATA_CALL] = function REQUEST_DEACTIVATE_
 
   let datacall = this.currentDataCalls[options.cid];
   delete this.currentDataCalls[options.cid];
-  datacall.state = GECKO_NETWORK_STATE_UNKNOWN;
+  datacall.state = GECKO_NETWORK_STATE_DISCONNECTED;
   datacall.rilMessageType = "datacallstatechange";
   this.sendChromeMessage(datacall);
 };
