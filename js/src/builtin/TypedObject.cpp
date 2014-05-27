@@ -2480,7 +2480,7 @@ TypedObject::constructUnsized(JSContext *cx, unsigned int argc, Value *vp)
         Rooted<ArrayBufferObject*> buffer(cx);
         buffer = &args[0].toObject().as<ArrayBufferObject>();
 
-        if (callee->opaque()) {
+        if (callee->opaque() || buffer->isNeutered()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage,
                                  nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
             return false;
@@ -2531,12 +2531,6 @@ TypedObject::constructUnsized(JSContext *cx, unsigned int argc, Value *vp)
             }
 
             length = maximumLength;
-        }
-
-        if (buffer->isNeutered()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage,
-                                 nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
-            return false;
         }
 
         Rooted<TypedObject*> obj(cx);
