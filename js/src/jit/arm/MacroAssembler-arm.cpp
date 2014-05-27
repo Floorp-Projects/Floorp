@@ -4229,9 +4229,10 @@ MacroAssemblerARMCompat::ceil(FloatRegister input, Register output, Label *bail)
     ma_vcvt_U32_F64(ScratchFloatReg, ScratchFloatReg);
     compareDouble(ScratchFloatReg, input);
     ma_add(output, Imm32(1), output, NoSetCond, NotEqual);
-    // Bail out if the add overflowed or the result is negative
+    // Bail out if the add overflowed or the result is non positive
     ma_mov(output, output, SetCond);
     ma_b(bail, Signed);
+    ma_b(bail, Zero);
 
     bind(&fin);
 }
@@ -4280,9 +4281,10 @@ MacroAssemblerARMCompat::ceilf(FloatRegister input, Register output, Label *bail
     ma_vcvt_U32_F32(ScratchFloatReg, ScratchFloatReg);
     compareFloat(ScratchFloatReg, input);
     ma_add(output, Imm32(1), output, NoSetCond, NotEqual);
-    // Bail out if the add overflowed or the result is negative
+    // Bail out if the add overflowed or the result is non positive
     ma_mov(output, output, SetCond);
     ma_b(bail, Signed);
+    ma_b(bail, Zero);
 
     bind(&fin);
 }
