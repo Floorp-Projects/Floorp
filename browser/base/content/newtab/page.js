@@ -217,6 +217,7 @@ let gPage = {
       }
     }
 
+    DirectoryLinksProvider.reportShownCount(directoryCount);
     // Record how many directory sites were shown, but place counts over the
     // default 9 in the same bucket
     for (let type of Object.keys(directoryCount)) {
