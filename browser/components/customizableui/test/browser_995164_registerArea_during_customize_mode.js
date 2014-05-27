@@ -96,7 +96,12 @@ add_task(function*() {
     },
     onWindowClosed: function(aWindow) {
       if (aWindow == otherWin) {
+        info("Got window closed notification for correct window.");
         windowClosed = aWindow;
+      } else {
+        info("Other window was closed!");
+        info("Other window title: " + (aWindow.document && aWindow.document.title));
+        info("Our window title: " + (otherWin.document && otherWin.document.title));
       }
     },
   };
@@ -105,7 +110,6 @@ add_task(function*() {
 
   is(windowClosed, otherWin, "Window should have sent onWindowClosed notification.");
   ok(wasInformedCorrectlyOfAreaDisappearing, "Should be told about window closing.");
-  CustomizableUI.removeListener(listener);
   // Closing the other window should not be counted against this window's customize mode:
   is(syncButton.parentNode.localName, "toolbarpaletteitem", "Sync button's parent node should still be a wrapper.");
   isnot(gCustomizeMode.areas.indexOf(toolbar), -1, "Toolbar should still be a customizable area for this customize mode instance.");
@@ -114,6 +118,7 @@ add_task(function*() {
 
   yield endCustomizing();
 
+  CustomizableUI.removeListener(listener);
   wasInformedCorrectlyOfAreaDisappearing = false;
   listener = {
     onAreaNodeUnregistered: function(aArea, aNode, aReason) {
