@@ -58,6 +58,7 @@ static bool GetX4Lane(JSContext *cx, unsigned argc, Value *vp) {
         return false;
     }
 
+    MOZ_ASSERT(!typedObj.owner().isNeutered());
     Elem *data = reinterpret_cast<Elem *>(typedObj.typedMem());
     Type32x4::setReturn(args, data[lane]);
     return true;
@@ -100,6 +101,7 @@ static bool SignMask(JSContext *cx, unsigned argc, Value *vp) {
         return false;
     }
 
+    MOZ_ASSERT(!typedObj.owner().isNeutered());
     Elem *data = reinterpret_cast<Elem *>(typedObj.typedMem());
     int32_t mx = data[0] < 0.0 ? 1 : 0;
     int32_t my = data[1] < 0.0 ? 1 : 0;
@@ -274,6 +276,7 @@ X4TypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
     if (!result)
         return false;
 
+    MOZ_ASSERT(!result->owner().isNeutered());
     switch (descr->type()) {
 #define STORE_LANES(_constant, _type, _name)                                  \
       case _constant:                                                         \
@@ -406,7 +409,9 @@ template<typename Elem>
 static Elem
 TypedObjectMemory(HandleValue v)
 {
-    return reinterpret_cast<Elem>(v.toObject().as<TypedObject>().typedMem());
+    TypedObject &obj = v.toObject().as<TypedObject>();
+    MOZ_ASSERT(!obj.owner().isNeutered());
+    return reinterpret_cast<Elem>(obj.typedMem());
 }
 
 template<typename V>
@@ -421,6 +426,7 @@ js::Create(JSContext *cx, typename V::Elem *data)
     if (!result)
         return nullptr;
 
+    MOZ_ASSERT(!result->owner().isNeutered());
     Elem *resultMem = reinterpret_cast<Elem *>(result->typedMem());
     memcpy(resultMem, data, sizeof(Elem) * V::lanes);
     return result;
