@@ -20,6 +20,7 @@ import org.mozilla.gecko.widget.IconTabWidget;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Rect;
+import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.util.AttributeSet;
@@ -34,6 +35,7 @@ import android.widget.RelativeLayout;
 public class TabsPanel extends LinearLayout
                        implements LightweightTheme.OnChangeListener,
                                   IconTabWidget.OnTabChangedListener {
+    @SuppressWarnings("unused")
     private static final String LOGTAG = "Gecko" + TabsPanel.class.getSimpleName();
 
     public static enum Panel {
@@ -141,8 +143,12 @@ public class TabsPanel extends LinearLayout
         mTabWidget.addTab(R.drawable.tabs_private, R.string.tabs_private);
 
         if (!GeckoProfile.get(mContext).inGuestMode()) {
-            // n.b.: the animation does not start automatically.
             mTabWidget.addTab(R.drawable.tabs_synced_animation, R.string.tabs_synced);
+            // The animation does not start automatically, except on Android 4.4.2, when it does.
+            final Drawable iconDrawable = getIconDrawable(Panel.REMOTE_TABS);
+            if (iconDrawable instanceof AnimationDrawable) {
+                ((AnimationDrawable) iconDrawable).stop();
+            }
         }
 
         mTabWidget.setTabSelectionListener(this);

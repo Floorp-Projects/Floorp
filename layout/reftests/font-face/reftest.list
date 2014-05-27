@@ -158,3 +158,8 @@ HTTP(..) == font-redirect.html order-1-ref.html
 == dynamic-duplicate-rule-1a.html dynamic-duplicate-rule-1-ref.html
 == dynamic-duplicate-rule-1b.html dynamic-duplicate-rule-1-ref.html
 == dynamic-duplicate-rule-1c.html dynamic-duplicate-rule-1-ref.html
+
+# Test for COLR and CPAL support
+HTTP(..) == color-1a.html color-1-ref.html
+HTTP(..) != color-1a.html color-1-notref.html
+HTTP(..) == color-1b.html color-1-ref.html

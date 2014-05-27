@@ -325,7 +325,7 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
                                 getter_Copies(appName));
     } else {
       NS_WARNING("brand.properties not present, using default application name");
-      appName.AssignLiteral("Gecko");
+      appName.AssignLiteral(MOZ_UTF16("Gecko"));
     }
 
     char* empty[] = { "" };

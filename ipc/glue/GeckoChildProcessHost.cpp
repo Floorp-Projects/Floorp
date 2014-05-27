@@ -310,7 +310,7 @@ void GeckoChildProcessHost::InitWindowsGroupID()
     if (isSupported && NS_SUCCEEDED(taskbarInfo->GetDefaultGroupId(appId))) {
       mGroupId.Append(appId);
     } else {
-      mGroupId.AssignLiteral("-");
+      mGroupId.Assign('-');
     }
   }
 }

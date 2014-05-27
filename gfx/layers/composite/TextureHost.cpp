@@ -675,6 +675,9 @@ TextureParent::SendFenceHandleIfPresent()
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
   if (mTextureHost) {
     TextureHostOGL* hostOGL = mTextureHost->AsHostOGL();
+    if (!hostOGL) {
+      return;
+    }
     android::sp<android::Fence> fence = hostOGL->GetAndResetReleaseFence();
     if (fence.get() && fence->isValid()) {
       // HWC might not provide Fence.

@@ -19,6 +19,11 @@ window.sawEvent = function(event, isattr) {
 
 registerCleanupFunction(() => {
   delete window.sawEvent;
+
+  // Ensure sidebar is hidden after each test:
+  if (!document.getElementById("sidebar-box").hidden) {
+    toggleSidebar("", false);
+  }
 });
 
 function checkExpectedEvents(expected) {
@@ -84,7 +89,7 @@ add_task(function*() {
   document.getElementById("customizationui-widget-panel").hidePopup();
   yield subviewHiddenPromise;
 
-  yield resetCustomization();
+  return resetCustomization();
 });
 
 function add_sidebar_task(description, setup, teardown) {

@@ -104,7 +104,7 @@ PointerEvent::GetPointerType(nsAString& aPointerType)
       aPointerType.AssignLiteral("touch");
       break;
     case nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN:
-      aPointerType.AssignLiteral("");
+      aPointerType.Truncate();
       break;
   }
 }

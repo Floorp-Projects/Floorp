@@ -249,7 +249,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         if (!obj)
             return nullptr;
 
-        types::TypeObject *type = cx->getNewType(obj->getClass(), proto.get());
+        types::TypeObject *type = cx->getNewType(obj->getClass(), TaggedProto(proto.get()));
         if (!type)
             return nullptr;
         obj->setType(type);
@@ -896,13 +896,13 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     infallibleValueToNative(const Value &v)
     {
         if (v.isInt32())
-            return v.toInt32();
+            return NativeType(v.toInt32());
         if (v.isDouble())
             return doubleToNative(v.toDouble());
         if (v.isBoolean())
-            return v.toBoolean();
+            return NativeType(v.toBoolean());
         if (v.isNull())
-            return 0;
+            return NativeType(0);
 
         MOZ_ASSERT(v.isUndefined());
         return ArrayTypeIsFloatingPoint() ? NativeType(GenericNaN()) : NativeType(0);

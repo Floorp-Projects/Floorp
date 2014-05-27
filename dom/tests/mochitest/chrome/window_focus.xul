@@ -1566,7 +1566,7 @@ function doFrameHistoryTests()
   }, true);
 
   // make sure that loading a new page and then going back maintains the focus
-  gChildWindow.location = "data:text/html,<script>window.onload=function() {setTimeout(function () {window.back();}, 0);}</script>";
+  gChildWindow.location = "data:text/html,<script>window.onload=function() {setTimeout(function () {SpecialPowers.wrap(window).back();}, 0);}</script>";
 }
 
 function addFrameSwitchingListeners(frame)

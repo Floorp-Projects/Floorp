@@ -149,7 +149,7 @@ namespace crash {
 class Stack : private CrashStack
 {
 public:
-    Stack(uint64_t id);
+    explicit Stack(uint64_t id);
 
     bool snapshot();
 };
@@ -169,7 +169,7 @@ Stack::snapshot()
 class Ring : private CrashRing
 {
 public:
-    Ring(uint64_t id);
+    explicit Ring(uint64_t id);
 
     void push(uint64_t tag, void *data, size_t size);
 

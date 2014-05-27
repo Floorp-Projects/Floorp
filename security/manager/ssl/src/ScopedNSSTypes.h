@@ -16,6 +16,7 @@
 #include "cert.h"
 #include "cms.h"
 #include "keyhi.h"
+#include "cryptohi.h"
 #include "pk11pub.h"
 #include "sechash.h"
 #include "secpkcs7.h"
@@ -120,11 +121,27 @@ PK11_DestroyContext_true(PK11Context * ctx) {
   PK11_DestroyContext(ctx, true);
 }
 
+inline void
+SGN_DestroyContext_true(SGNContext* ctx) {
+  SGN_DestroyContext(ctx, true);
+}
+
+inline void
+VFY_DestroyContext_true(VFYContext * ctx) {
+  VFY_DestroyContext(ctx, true);
+}
+
 } // namespace mozilla::psm
 
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPK11Context,
                                           PK11Context,
                                           mozilla::psm::PK11_DestroyContext_true)
+MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSGNContext,
+                                          SGNContext,
+                                          mozilla::psm::SGN_DestroyContext_true)
+MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedVFYContext,
+                                          VFYContext,
+                                          mozilla::psm::VFY_DestroyContext_true)
 
 /** A more convenient way of dealing with digests calculated into
  *  stack-allocated buffers. NSS must be initialized on the main thread before

@@ -30,20 +30,20 @@ namespace mozilla {
 class SyncRunnable : public nsRunnable
 {
 public:
-  SyncRunnable(nsIRunnable* r)
-    : mRunnable(r)
+  SyncRunnable(nsIRunnable* aRunnable)
+    : mRunnable(aRunnable)
     , mMonitor("SyncRunnable")
     , mDone(false)
-  { }
+  {
+  }
 
-  void DispatchToThread(nsIEventTarget* thread,
-                        bool forceDispatch = false)
+  void DispatchToThread(nsIEventTarget* aThread, bool aForceDispatch = false)
   {
     nsresult rv;
     bool on;
 
-    if (!forceDispatch) {
-      rv = thread->IsOnCurrentThread(&on);
+    if (!aForceDispatch) {
+      rv = aThread->IsOnCurrentThread(&on);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
       if (NS_SUCCEEDED(rv) && on) {
         mRunnable->Run();
@@ -51,7 +51,7 @@ public:
       }
     }
 
-    rv = thread->Dispatch(this, NS_DISPATCH_NORMAL);
+    rv = aThread->Dispatch(this, NS_DISPATCH_NORMAL);
     if (NS_SUCCEEDED(rv)) {
       mozilla::MonitorAutoLock lock(mMonitor);
       while (!mDone) {
@@ -60,12 +60,12 @@ public:
     }
   }
 
-  static void DispatchToThread(nsIEventTarget* thread,
-                               nsIRunnable* r,
-                               bool forceDispatch = false)
+  static void DispatchToThread(nsIEventTarget* aThread,
+                               nsIRunnable* aRunnable,
+                               bool aForceDispatch = false)
   {
-    nsRefPtr<SyncRunnable> s(new SyncRunnable(r));
-    s->DispatchToThread(thread, forceDispatch);
+    nsRefPtr<SyncRunnable> s(new SyncRunnable(aRunnable));
+    s->DispatchToThread(aThread, aForceDispatch);
   }
 
 protected:

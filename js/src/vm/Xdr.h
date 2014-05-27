@@ -27,7 +27,7 @@ static const uint32_t XDR_BYTECODE_VERSION = uint32_t(0xb973c0de - 172);
 
 class XDRBuffer {
   public:
-    XDRBuffer(JSContext *cx)
+    explicit XDRBuffer(JSContext *cx)
       : context(cx), base(nullptr), cursor(nullptr), limit(nullptr) { }
 
     JSContext *cx() const {
@@ -97,7 +97,7 @@ class XDRState {
   protected:
     JSPrincipals *originPrincipals_;
 
-    XDRState(JSContext *cx)
+    explicit XDRState(JSContext *cx)
       : buf(cx), originPrincipals_(nullptr) {
     }
 
@@ -233,7 +233,7 @@ class XDRState {
 
 class XDREncoder : public XDRState<XDR_ENCODE> {
   public:
-    XDREncoder(JSContext *cx)
+    explicit XDREncoder(JSContext *cx)
       : XDRState<XDR_ENCODE>(cx) {
     }
 

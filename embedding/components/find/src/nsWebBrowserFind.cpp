@@ -156,8 +156,10 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(bool *outDidFind)
 
         if (doFind)
         {
-            searchFrame = do_GetInterface(curItem, &rv);
-            if (NS_FAILED(rv)) break;
+            searchFrame = curItem->GetWindow();
+            if (!searchFrame) {
+              break;
+            }
 
             OnStartSearchFrame(searchFrame);
 
@@ -201,8 +203,11 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(bool *outDidFind)
         curItem = do_QueryInterface(curSupports, &rv);
         if (NS_FAILED(rv)) break;
 
-        searchFrame = do_GetInterface(curItem, &rv);
-        if (NS_FAILED(rv)) break;
+        searchFrame = curItem->GetWindow();
+        if (!searchFrame) {
+          rv = NS_ERROR_FAILURE;
+          break;
+        }
 
         if (curItem.get() == startingItem.get())
         {

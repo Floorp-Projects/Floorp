@@ -175,7 +175,7 @@ class AutoSetHandlingSignal
     JSRuntime *rt;
 
   public:
-    AutoSetHandlingSignal(JSRuntime *rt)
+    explicit AutoSetHandlingSignal(JSRuntime *rt)
       : rt(rt)
     {
         JS_ASSERT(!rt->handlingSignal);
