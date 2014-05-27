@@ -556,9 +556,6 @@ CompositorOGL::PrepareViewport(const gfx::IntSize& aSize,
   viewMatrix.Translate(-1.0, 1.0);
   viewMatrix.Scale(2.0f / float(aSize.width), 2.0f / float(aSize.height));
   viewMatrix.Scale(1.0f, -1.0f);
-  if (!mTarget) {
-    viewMatrix.Translate(mRenderOffset.x, mRenderOffset.y);
-  }
 
   viewMatrix = aWorldTransform * viewMatrix;
 
@@ -727,7 +724,17 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   TexturePoolOGL::Fill(gl());
 #endif
 
+  // Make sure the render offset is respected. We ignore this when we have a
+  // target to stop tests failing - this is only used by the Android browser
+  // UI for its dynamic toolbar.
+  IntPoint origin;
+  if (!mTarget) {
+    origin.x = -mRenderOffset.x;
+    origin.y = -mRenderOffset.y;
+  }
+
   mCurrentRenderTarget = CompositingRenderTargetOGL::RenderTargetForWindow(this,
+                            origin,
                             IntSize(width, height),
                             aTransform);
   mCurrentRenderTarget->BindRenderTarget();
@@ -963,12 +970,8 @@ CompositorOGL::DrawQuad(const Rect& aRect,
   PROFILER_LABEL("CompositorOGL", "DrawQuad");
   MOZ_ASSERT(mFrameInProgress, "frame not started");
 
-  Rect clipRect = aClipRect;
-  if (!mTarget) {
-    clipRect.MoveBy(mRenderOffset.x, mRenderOffset.y);
-  }
   IntRect intClipRect;
-  clipRect.ToIntRect(&intClipRect);
+  aClipRect.ToIntRect(&intClipRect);
 
   gl()->fScissor(intClipRect.x, FlipY(intClipRect.y + intClipRect.height),
                  intClipRect.width, intClipRect.height);
