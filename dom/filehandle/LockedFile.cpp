@@ -756,6 +756,7 @@ already_AddRefed<nsIInputStream>
 LockedFile::GetInputStream(const ArrayBuffer& aValue, uint64_t* aInputLength,
                            ErrorResult& aRv)
 {
+  aValue.ComputeLengthAndData();
   const char* data = reinterpret_cast<const char*>(aValue.Data());
   uint32_t length = aValue.Length();
 
