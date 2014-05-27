@@ -94,6 +94,8 @@ MOZ_BEGIN_ENUM_CLASS(GLFeature)
     framebuffer_blit,
     framebuffer_multisample,
     framebuffer_object,
+    get_integer_indexed,
+    get_integer64_indexed,
     get_query_object_iv,
     gpu_shader4,
     instanced_arrays,
@@ -385,6 +387,7 @@ public:
         EXT_color_buffer_half_float,
         EXT_copy_texture,
         EXT_draw_buffers,
+        EXT_draw_buffers2,
         EXT_draw_instanced,
         EXT_draw_range_elements,
         EXT_frag_depth,
@@ -2788,6 +2791,12 @@ public:
         AFTER_GL_CALL;
     }
 
+    void fGetInteger64i_v(GLenum target, GLuint index, GLint64* data) {
+        ASSERT_SYMBOL_PRESENT(fGetInteger64i_v);
+        BEFORE_GL_CALL;
+        mSymbols.fGetInteger64i_v(target, index, data);
+        AFTER_GL_CALL;
+    }
 
 // -----------------------------------------------------------------------------
 // Package XXX_vertex_array_object
