@@ -2279,9 +2279,6 @@ RilObject.prototype = {
     Buf.writeString(options.cid);
     Buf.writeString(options.reason || DATACALL_DEACTIVATE_NO_REASON);
     Buf.sendParcel();
-
-    datacall.state = GECKO_NETWORK_STATE_DISCONNECTING;
-    this.sendChromeMessage(datacall);
   },
 
   /**
