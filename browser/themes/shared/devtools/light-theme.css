@@ -358,10 +358,6 @@ div.CodeMirror span.eval-text {
   border-bottom: 1px solid #d9e1e8;
 }
 
-.theme-tooltip-panel .devtools-tooltip-font-previewer-text {
-  color: black;
-}
-
 .theme-tooltip-panel .devtools-tooltip-simple-text:last-child {
   border-bottom: 0;
 }
