@@ -81,6 +81,15 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
+        "copy_buffer",
+        310, // OpenGL version
+        300, // OpenGL ES version
+        GLContext::ARB_copy_buffer,
+        {
+            GLContext::Extensions_End
+        }
+    },
+    {
         "depth_texture",
         200, // OpenGL version
         300, // OpenGL ES version
