@@ -22,6 +22,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm")
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
+XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => {
+  return new TextDecoder();
+});
 
 // The filename where directory links are stored locally
 const DIRECTORY_LINKS_FILE = "directoryLinks.json";
@@ -137,38 +140,6 @@ let DirectoryLinksProvider = {
     }
   },
 
-  /**
-   * Fetches the current set of directory links.
-   * @param aCallback a callback that is provided a set of links.
-   */
-  _fetchLinks: function DirectoryLinksProvider_fetchLinks(aCallback) {
-    try {
-      NetUtil.asyncFetch(this._linksURL, (aInputStream, aResult, aRequest) => {
-        let output;
-        if (Components.isSuccessCode(aResult)) {
-          try {
-            let json = NetUtil.readInputStreamToString(aInputStream,
-                                                       aInputStream.available(),
-                                                       {charset: "UTF-8"});
-            let locale = this.locale;
-            output = JSON.parse(json)[locale];
-          }
-          catch (e) {
-            Cu.reportError(e);
-          }
-        }
-        else {
-          Cu.reportError(new Error("the fetch of " + this._linksURL + "was unsuccessful"));
-        }
-        aCallback(output || []);
-      });
-    }
-    catch (e) {
-      Cu.reportError(e);
-      aCallback([]);
-    }
-  },
-
   _fetchAndCacheLinks: function DirectoryLinksProvider_fetchAndCacheLinks(uri) {
     let deferred = Promise.defer();
     let xmlHttp = new XMLHttpRequest();
@@ -246,6 +217,29 @@ let DirectoryLinksProvider = {
   },
 
   /**
+   * Reads directory links file and parses its content
+   * @return a promise resolved to valid list of links or [] if read or parse fails
+   */
+  _readDirectoryLinksFile: function DirectoryLinksProvider_readDirectoryLinksFile() {
+    return OS.File.read(this._directoryFilePath).then(binaryData => {
+      let output;
+      try {
+        let locale = this.locale;
+        let json = gTextDecoder.decode(binaryData);
+        output = JSON.parse(json)[locale];
+      }
+      catch (e) {
+        Cu.reportError(e);
+      }
+      return output || [];
+    },
+    error => {
+      Cu.reportError(error);
+      return [];
+    });
+  },
+
+  /**
    * Submits counts of shown directory links for each type and
    * triggers directory download if sponsored link was shown
    *
@@ -266,7 +260,7 @@ let DirectoryLinksProvider = {
    * @param aCallback The function that the array of links is passed to.
    */
   getLinks: function DirectoryLinksProvider_getLinks(aCallback) {
-    this._fetchLinks(rawLinks => {
+    this._readDirectoryLinksFile().then(rawLinks => {
       // all directory links have a frecency of DIRECTORY_FRECENCY
       aCallback(rawLinks.map((link, position) => {
         link.frecency = DIRECTORY_FRECENCY;

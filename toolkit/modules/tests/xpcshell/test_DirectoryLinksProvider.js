@@ -289,7 +289,15 @@ add_task(function test_DirectoryLinksProvider__prefObserver_url() {
   yield promiseDirectoryDownloadOnPrefChange(kSourceUrlPref, exampleUrl);
   do_check_eq(DirectoryLinksProvider._linksURL, exampleUrl);
 
+  // since the download fail, the directory file must remain the same
   let newLinks = yield fetchData();
+  isIdentical(newLinks, expectedData);
+
+  // now remove the file, and re-download
+  yield cleanJsonFile();
+  yield promiseDirectoryDownloadOnPrefChange(kSourceUrlPref, exampleUrl + " ");
+  // we now should see empty links
+  newLinks = yield fetchData();
   isIdentical(newLinks, []);
 
   yield promiseCleanDirectoryLinksProvider();
@@ -406,6 +414,18 @@ add_task(function test_DirectoryLinksProvider_fetchDirectoryOnInit() {
   yield DirectoryLinksProvider.init();
   let data = yield readJsonFile();
   isIdentical(data, kURLData);
+
+  yield promiseCleanDirectoryLinksProvider();
+});
+
+add_task(function test_DirectoryLinksProvider_getLinksFromCorruptedFile() {
+  yield promiseSetupDirectoryLinksProvider();
+
+  // write bogus json to a file and attempt to fetch from it
+  let directoryLinksFilePath = OS.Path.join(OS.Constants.Path.profileDir, DIRECTORY_LINKS_FILE);
+  yield OS.File.writeAtomic(directoryLinksFilePath, '{"en-US":');
+  let data = yield fetchData();
+  isIdentical(data, []);
 
   yield promiseCleanDirectoryLinksProvider();
 });
