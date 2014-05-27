@@ -1916,14 +1916,10 @@ LIRGenerator::visitToString(MToString *ins)
         return assignSafepoint(lir, ins);
       }
 
-      case MIRType_String:
-        return redefine(ins, ins->input());
-
       case MIRType_Value: {
-        LValueToString *lir = new(alloc()) LValueToString(tempToUnbox());
-        if (!useBox(lir, LValueToString::Input, opd))
-            return false;
-        if (ins->fallible() && !assignSnapshot(lir))
+        JS_ASSERT(!opd->mightBeType(MIRType_Object));
+        LPrimitiveToString *lir = new(alloc()) LPrimitiveToString(tempToUnbox());
+        if (!useBox(lir, LPrimitiveToString::Input, opd))
             return false;
         if (!define(lir, ins))
             return false;
@@ -1931,7 +1927,7 @@ LIRGenerator::visitToString(MToString *ins)
       }
 
       default:
-        // Float32 and objects are not supported.
+        // Objects might be effectful. (see ToPrimitive)
         MOZ_ASSUME_UNREACHABLE("unexpected type");
     }
 }
