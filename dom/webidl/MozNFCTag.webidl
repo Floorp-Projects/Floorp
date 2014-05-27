@@ -38,6 +38,4 @@ interface MozNFCTag {
 partial interface MozNFCTag {
   [ChromeOnly]
   attribute DOMString session;
-  [ChromeOnly]
-  void setSessionToken(DOMString sessionToken);
 };
