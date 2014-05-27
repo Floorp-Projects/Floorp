@@ -51,14 +51,14 @@ MediaEngineDefaultVideoSource::~MediaEngineDefaultVideoSource()
 void
 MediaEngineDefaultVideoSource::GetName(nsAString& aName)
 {
-  aName.AssignLiteral(MOZ_UTF16("Default Video Device"));
+  aName.AssignLiteral("Default Video Device");
   return;
 }
 
 void
 MediaEngineDefaultVideoSource::GetUUID(nsAString& aUUID)
 {
-  aUUID.AssignLiteral(MOZ_UTF16("1041FCBD-3F12-4F7B-9E9B-1EC556DD5676"));
+  aUUID.AssignLiteral("1041FCBD-3F12-4F7B-9E9B-1EC556DD5676");
   return;
 }
 
@@ -362,14 +362,14 @@ MediaEngineDefaultAudioSource::~MediaEngineDefaultAudioSource()
 void
 MediaEngineDefaultAudioSource::GetName(nsAString& aName)
 {
-  aName.AssignLiteral(MOZ_UTF16("Default Audio Device"));
+  aName.AssignLiteral("Default Audio Device");
   return;
 }
 
 void
 MediaEngineDefaultAudioSource::GetUUID(nsAString& aUUID)
 {
-  aUUID.AssignLiteral(MOZ_UTF16("B7CBD7C1-53EF-42F9-8353-73F61C70C092"));
+  aUUID.AssignLiteral("B7CBD7C1-53EF-42F9-8353-73F61C70C092");
   return;
 }
 
