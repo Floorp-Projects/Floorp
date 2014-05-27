@@ -191,7 +191,7 @@ ConnectionData::Notify(nsITimer *aTimer)
 
     mTimer = nullptr;
 
-    mStatus.AssignLiteral(MOZ_UTF16("NS_ERROR_NET_TIMEOUT"));
+    mStatus.AssignLiteral("NS_ERROR_NET_TIMEOUT");
     nsCOMPtr<nsIRunnable> event =
         NS_NewRunnableMethodWithArg<nsRefPtr<ConnectionData> >
         (mDashboard, &Dashboard::GetConnectionStatus, this);
@@ -754,19 +754,19 @@ HttpConnInfo::SetHTTP1ProtocolVersion(uint8_t pv)
 {
     switch (pv) {
     case NS_HTTP_VERSION_0_9:
-        protocolVersion.AssignLiteral(MOZ_UTF16("http/0.9"));
+        protocolVersion.AssignLiteral("http/0.9");
         break;
     case NS_HTTP_VERSION_1_0:
-        protocolVersion.AssignLiteral(MOZ_UTF16("http/1.0"));
+        protocolVersion.AssignLiteral("http/1.0");
         break;
     case NS_HTTP_VERSION_1_1:
-        protocolVersion.AssignLiteral(MOZ_UTF16("http/1.1"));
+        protocolVersion.AssignLiteral("http/1.1");
         break;
     case NS_HTTP_VERSION_2_0:
-        protocolVersion.AssignLiteral(MOZ_UTF16("http/2.0"));
+        protocolVersion.AssignLiteral("http/2.0");
         break;
     default:
-        protocolVersion.AssignLiteral(MOZ_UTF16("unknown protocol version"));
+        protocolVersion.AssignLiteral("unknown protocol version");
     }
 }
 
@@ -774,9 +774,9 @@ void
 HttpConnInfo::SetHTTP2ProtocolVersion(uint8_t pv)
 {
     if (pv == SPDY_VERSION_3) {
-        protocolVersion.AssignLiteral(MOZ_UTF16("spdy/3"));
+        protocolVersion.AssignLiteral("spdy/3");
     } else if (pv == SPDY_VERSION_31) {
-        protocolVersion.AssignLiteral(MOZ_UTF16("spdy/3.1"));
+        protocolVersion.AssignLiteral("spdy/3.1");
     } else {
         MOZ_ASSERT (pv == NS_HTTP2_DRAFT_VERSION);
         protocolVersion.Assign(NS_LITERAL_STRING(NS_HTTP2_DRAFT_TOKEN));

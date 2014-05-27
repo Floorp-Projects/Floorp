@@ -382,7 +382,7 @@ NS_IMPL_ISUPPORTS(nsMIMEInfoAndroid::SystemChooser, nsIHandlerApp)
 
 
 nsresult nsMIMEInfoAndroid::SystemChooser::GetName(nsAString & aName) {
-  aName.AssignLiteral(MOZ_UTF16("Android chooser"));
+  aName.AssignLiteral("Android chooser");
   return NS_OK;
 }
 
@@ -393,7 +393,7 @@ nsMIMEInfoAndroid::SystemChooser::SetName(const nsAString&) {
 
 nsresult
 nsMIMEInfoAndroid::SystemChooser::GetDetailedDescription(nsAString & aDesc) {
-  aDesc.AssignLiteral(MOZ_UTF16("Android's default handler application chooser"));
+  aDesc.AssignLiteral("Android's default handler application chooser");
   return NS_OK;
 }
 
