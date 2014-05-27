@@ -18,6 +18,7 @@ PARALLEL_DIRS += [
     'shell',
     'sidebar',
     'tabview',
+    'translation',
     'migration',
 ]
 
