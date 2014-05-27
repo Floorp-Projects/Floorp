@@ -22,6 +22,7 @@ namespace jit {
     _(BitOr)                                    \
     _(BitXor)                                   \
     _(Lsh)                                      \
+    _(Rsh)                                      \
     _(Ursh)                                     \
     _(Add)                                      \
     _(NewObject)                                \
@@ -133,6 +134,18 @@ class RLsh MOZ_FINAL : public RInstruction
 {
   public:
     RINSTRUCTION_HEADER_(Lsh)
+
+    virtual uint32_t numOperands() const {
+        return 2;
+    }
+
+    bool recover(JSContext *cx, SnapshotIterator &iter) const;
+};
+
+class RRsh MOZ_FINAL : public RInstruction
+{
+  public:
+    RINSTRUCTION_HEADER_(Rsh)
 
     virtual uint32_t numOperands() const {
         return 2;
