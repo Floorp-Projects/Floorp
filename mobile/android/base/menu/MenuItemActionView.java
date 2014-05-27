@@ -22,13 +22,14 @@ import android.widget.LinearLayout;
 import android.os.Build;
 
 public class MenuItemActionView extends LinearLayout
-                                implements GeckoMenuItem.Layout {
+                                implements GeckoMenuItem.Layout,
+                                           View.OnClickListener {
     private static final String LOGTAG = "GeckoMenuItemActionView";
 
     private MenuItemDefault mMenuItem;
     private MenuItemActionBar mMenuButton;
     private List<ImageButton> mActionButtons;
-    private View.OnClickListener mActionButtonListener;
+    private List<View.OnClickListener> mActionButtonListeners = new ArrayList<View.OnClickListener>();
 
     public MenuItemActionView(Context context) {
         this(context, null);
@@ -101,12 +102,8 @@ public class MenuItemActionView extends LinearLayout
         mMenuButton.setOnClickListener(listener);
     }
 
-    public void setActionButtonClickListener(View.OnClickListener listener) {
-        mActionButtonListener = listener;
-
-        for (ImageButton button : mActionButtons) {
-            button.setOnClickListener(listener);
-        }
+    public void addActionButtonClickListener(View.OnClickListener listener) {
+        mActionButtonListeners.add(listener);
     }
 
     @Override
@@ -143,7 +140,7 @@ public class MenuItemActionView extends LinearLayout
         if (drawable != null) {
             ImageButton button = new ImageButton(getContext(), null, R.attr.menuItemShareActionButtonStyle);
             button.setImageDrawable(drawable);
-            button.setOnClickListener(mActionButtonListener);
+            button.setOnClickListener(this);
             button.setTag(count);
 
             final int height = (int) (getResources().getDimension(R.dimen.menu_item_row_height));
@@ -154,6 +151,13 @@ public class MenuItemActionView extends LinearLayout
             // Fill in the action-buttons to the left of the actual menu button.
             mActionButtons.add(button);
             addView(button, count);
+        }
+    }
+
+    @Override
+    public void onClick(View view) {
+        for (View.OnClickListener listener : mActionButtonListeners) {
+            listener.onClick(view);
         }
     }
 }
