@@ -983,6 +983,7 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask, const bool
     bool initializeDepthBuffer = 0 != (mask & LOCAL_GL_DEPTH_BUFFER_BIT);
     bool initializeStencilBuffer = 0 != (mask & LOCAL_GL_STENCIL_BUFFER_BIT);
     bool drawBuffersIsEnabled = IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers);
+    bool shouldOverrideDrawBuffers = false;
 
     GLenum currentDrawBuffers[WebGLContext::kMaxColorAttachments];
 
@@ -1008,9 +1009,13 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask, const bool
                 if (colorAttachmentsMask[i]) {
                     drawBuffersCommand[i] = LOCAL_GL_COLOR_ATTACHMENT0 + i;
                 }
+                if (currentDrawBuffers[i] != drawBuffersCommand[i])
+                    shouldOverrideDrawBuffers = true;
             }
-
-            gl->fDrawBuffers(mGLMaxDrawBuffers, drawBuffersCommand);
+            // calling draw buffers can cause resolves on adreno drivers so
+            // we try to avoid calling it
+            if (shouldOverrideDrawBuffers)
+                gl->fDrawBuffers(mGLMaxDrawBuffers, drawBuffersCommand);
         }
 
         gl->fColorMask(1, 1, 1, 1);
@@ -1047,7 +1052,7 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask, const bool
 
     // Restore GL state after clearing.
     if (initializeColorBuffer) {
-        if (drawBuffersIsEnabled) {
+        if (shouldOverrideDrawBuffers) {
             gl->fDrawBuffers(mGLMaxDrawBuffers, currentDrawBuffers);
         }
 
