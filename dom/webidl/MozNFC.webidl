@@ -46,7 +46,9 @@ interface MozNFCManager {
  NavigatorProperty="mozNfc",
  Func="Navigator::HasNFCSupport"]
 interface MozNFC : EventTarget {
+   [Throws]
    MozNFCTag getNFCTag(DOMString sessionId);
+   [Throws]
    MozNFCPeer getNFCPeer(DOMString sessionId);
 
    [CheckPermissions="nfc-write"]

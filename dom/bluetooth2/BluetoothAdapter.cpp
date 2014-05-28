@@ -169,6 +169,7 @@ BluetoothAdapter::BluetoothAdapter(nsPIDOMWindow* aWindow,
   , mPairable(false)
   , mPowered(false)
   , mIsRooted(false)
+  , mState(BluetoothAdapterState::Disabled)
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(IsDOMBinding());
@@ -667,6 +668,21 @@ BluetoothAdapter::SetPairingConfirmation(const nsAString& aDeviceAddress,
   }
 
   return request.forget();
+}
+
+/*
+ * TODO: Implement Enable/Disable functions
+ */
+already_AddRefed<Promise>
+BluetoothAdapter::Enable()
+{
+  return nullptr;
+}
+
+already_AddRefed<Promise>
+BluetoothAdapter::Disable()
+{
+  return nullptr;
 }
 
 already_AddRefed<DOMRequest>

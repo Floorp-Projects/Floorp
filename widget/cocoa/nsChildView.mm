@@ -64,6 +64,7 @@
 #include "GLContextCGL.h"
 #include "GLUploadHelpers.h"
 #include "ScopedGLHelpers.h"
+#include "HeapCopyOfStackArray.h"
 #include "mozilla/layers/GLManager.h"
 #include "mozilla/layers/CompositorOGL.h"
 #include "mozilla/layers/BasicCompositor.h"
@@ -2790,8 +2791,12 @@ GLPresenter::GLPresenter(GLContext* aContext)
     /* Then quad texcoords */
     0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
   };
-  mGLContext->fBufferData(LOCAL_GL_ARRAY_BUFFER, sizeof(vertices), vertices, LOCAL_GL_STATIC_DRAW);
-  mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
+  HeapCopyOfStackArray<GLfloat> verticesOnHeap(vertices);
+  mGLContext->fBufferData(LOCAL_GL_ARRAY_BUFFER,
+                          verticesOnHeap.ByteLength(),
+                          verticesOnHeap.Data(),
+                          LOCAL_GL_STATIC_DRAW);
+   mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
 }
 
 GLPresenter::~GLPresenter()
@@ -2810,18 +2815,24 @@ GLPresenter::BindAndDrawQuad(ShaderProgramOGL *aProgram,
 {
   mGLContext->MakeCurrent();
 
-  aProgram->SetLayerRect(aLayerRect);
-  aProgram->SetTextureRect(aTextureRect);
+  gfx::Rect layerRects[4];
+  gfx::Rect textureRects[4];
+
+  layerRects[0] = aLayerRect;
+  textureRects[0] = aTextureRect;
+
+  aProgram->SetLayerRects(layerRects);
+  aProgram->SetTextureRects(textureRects);
 
   GLuint vertAttribIndex = aProgram->AttribLocation(ShaderProgramOGL::VertexCoordAttrib);
   GLuint texCoordAttribIndex = aProgram->AttribLocation(ShaderProgramOGL::TexCoordAttrib);
 
   mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mQuadVBO);
-  mGLContext->fVertexAttribPointer(vertAttribIndex, 2,
+  mGLContext->fVertexAttribPointer(vertAttribIndex, 4,
                                    LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
                                    (GLvoid*)0);
   mGLContext->fEnableVertexAttribArray(vertAttribIndex);
-  mGLContext->fVertexAttribPointer(texCoordAttribIndex, 2,
+  mGLContext->fVertexAttribPointer(texCoordAttribIndex, 4,
                                    LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
                                    (GLvoid*) (sizeof(float)*4*2));
   mGLContext->fEnableVertexAttribArray(texCoordAttribIndex);

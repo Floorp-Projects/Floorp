@@ -14,7 +14,7 @@
         "{objdir}/dist/b2g-*.crashreporter-symbols.zip",
         "{objdir}/dist/b2g-*.tar.gz",
         "{workdir}/sources.xml",
-        "{workdir}/out/target/product/hamachi/fota-update.mar"
+        "{workdir}/out/target/product/hamachi/*.mar"
     ],
     "env": {
         "VARIANT": "user",
