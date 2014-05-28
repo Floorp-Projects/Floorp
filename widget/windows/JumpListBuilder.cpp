@@ -126,9 +126,6 @@ NS_IMETHODIMP JumpListBuilder::InitListBuild(nsIMutableArray *removedItems, bool
 
   IObjectArray *objArray;
 
-  // The returned objArray of removed items are for manually removed items.
-  // This does not return items which are removed because they were previously
-  // part of the jump list but are no longer part of the jump list.
   if (SUCCEEDED(mJumpListMgr->BeginList(&mMaxItems, IID_PPV_ARGS(&objArray)))) {
     if (objArray) {
       TransferIObjectArrayToIMutableArray(objArray, removedItems);
@@ -382,12 +379,6 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray *items,
       hr = mJumpListMgr->AppendCategory(reinterpret_cast<const wchar_t*>(catName.BeginReading()), pArray);
       if (SUCCEEDED(hr))
         *_retval = true;
-
-      // Get rid of the old icons
-      nsCOMPtr<nsIRunnable> event =
-        new mozilla::widget::AsyncDeleteAllFaviconsFromDisk(true);
-      mIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
-
       return NS_OK;
     }
     break;
