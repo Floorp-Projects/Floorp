@@ -188,7 +188,7 @@ nsDebugImpl::GetIsDebuggerAttached(bool* aResult)
     1,
 #endif
   };
-  size_t mibSize = sizeof(mib) / sizeof(int);
+  u_int mibSize = sizeof(mib) / sizeof(int);
 
   KINFO_PROC info;
   size_t infoSize = sizeof(info);
