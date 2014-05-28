@@ -123,6 +123,7 @@ gfxFontEntry::gfxFontEntry() :
     mHasSpaceFeaturesNonKerning(false),
     mSkipDefaultFeatureSpaceCheck(false),
     mCheckedForGraphiteTables(false),
+    mCheckedForGraphiteSmallCaps(false),
     mHasCmapTable(false),
     mGrFaceInitialized(false),
     mCheckedForColorGlyph(false),
@@ -156,6 +157,7 @@ gfxFontEntry::gfxFontEntry(const nsAString& aName, bool aIsStandardFace) :
     mHasSpaceFeaturesNonKerning(false),
     mSkipDefaultFeatureSpaceCheck(false),
     mCheckedForGraphiteTables(false),
+    mCheckedForGraphiteSmallCaps(false),
     mHasCmapTable(false),
     mGrFaceInitialized(false),
     mCheckedForColorGlyph(false),
@@ -947,6 +949,19 @@ gfxFontEntry::SupportsOpenTypeSmallCaps(int32_t aScript)
     mSmallCapsSupport->Put(uint32_t(aScript), result);
 
     return result;
+}
+
+bool
+gfxFontEntry::SupportsGraphiteSmallCaps()
+{
+    if (!mCheckedForGraphiteSmallCaps) {
+        gr_face* face = GetGrFace();
+        mHasGraphiteSmallCaps =
+            gr_face_find_fref(face, TRUETYPE_TAG('s','m','c','p')) != nullptr;
+        ReleaseGrFace(face);
+        mCheckedForGraphiteSmallCaps = true;
+    }
+    return mHasGraphiteSmallCaps;
 }
 
 bool
@@ -2687,8 +2702,7 @@ bool
 gfxFont::SupportsSmallCaps(int32_t aScript)
 {
     if (mGraphiteShaper && gfxPlatform::GetPlatform()->UseGraphiteShaping()) {
-        // we don't currently support real small caps via graphite
-        return false;
+        return GetFontEntry()->SupportsGraphiteSmallCaps();
     }
 
     return GetFontEntry()->SupportsOpenTypeSmallCaps(aScript);
