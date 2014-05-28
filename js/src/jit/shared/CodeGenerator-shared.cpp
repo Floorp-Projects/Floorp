@@ -52,7 +52,8 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph, Mac
     sps_(&GetIonContext()->runtime->spsProfiler(), &lastPC_),
     osrEntryOffset_(0),
     skipArgCheckEntryOffset_(0),
-    frameDepth_(graph->paddedLocalSlotsSize() + graph->argumentsSize())
+    frameDepth_(graph->paddedLocalSlotsSize() + graph->argumentsSize()),
+    frameInitialAdjustment_(0)
 {
     if (!gen->compilingAsmJS())
         masm.setInstrumentation(&sps_);
@@ -72,10 +73,12 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph, Mac
 #else
         bool forceAlign = false;
 #endif
-        if (gen->performsAsmJSCall() || forceAlign) {
+        if (gen->needsInitialStackAlignment() || forceAlign) {
             unsigned alignmentAtCall = AlignmentMidPrologue + frameDepth_;
-            if (unsigned rem = alignmentAtCall % StackAlignment)
+            if (unsigned rem = alignmentAtCall % StackAlignment) {
                 frameDepth_ += StackAlignment - rem;
+                frameInitialAdjustment_ = rem;
+            }
         }
 
         // FrameSizeClass is only used for bailing, which cannot happen in
