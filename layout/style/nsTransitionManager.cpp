@@ -52,7 +52,7 @@ ElementPropertyTransition::ValuePortionFor(TimeStamp aRefreshTime) const
   // Set |timePortion| to the portion of the way we are through the time
   // input to the transition's timing function (always within the range
   // 0-1).
-  double duration = mIterationDuration.ToSeconds();
+  double duration = mTiming.mIterationDuration.ToSeconds();
   NS_ABORT_IF_FALSE(duration >= 0.0, "negative duration forbidden");
   double timePortion;
   if (IsRemovedSentinel()) {
@@ -696,10 +696,10 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
 
   pt->mStartTime = mostRecentRefresh;
   pt->mDelay = TimeDuration::FromMilliseconds(delay);
-  pt->mIterationDuration = TimeDuration::FromMilliseconds(duration);
-  pt->mIterationCount = 1;
-  pt->mDirection = NS_STYLE_ANIMATION_DIRECTION_NORMAL;
-  pt->mFillMode = NS_STYLE_ANIMATION_FILL_MODE_BACKWARDS;
+  pt->mTiming.mIterationDuration = TimeDuration::FromMilliseconds(duration);
+  pt->mTiming.mIterationCount = 1;
+  pt->mTiming.mDirection = NS_STYLE_ANIMATION_DIRECTION_NORMAL;
+  pt->mTiming.mFillMode = NS_STYLE_ANIMATION_FILL_MODE_BACKWARDS;
   pt->mPlayState = NS_STYLE_ANIMATION_PLAY_STATE_RUNNING;
   pt->mPauseStart = TimeStamp();
 
@@ -963,8 +963,8 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
           if (aFlags == Can_Throttle) {
             et->mAnimations.RemoveElementAt(i);
           }
-        } else if (pt->mStartTime + pt->mDelay + pt->mIterationDuration <=
-                   now) {
+        } else if (pt->mStartTime + pt->mDelay +
+                   pt->mTiming.mIterationDuration <= now) {
           MOZ_ASSERT(pt->mProperties.Length() == 1,
                      "Should have one animation property for a transition");
           nsCSSProperty prop = pt->mProperties[0].mProperty;
@@ -976,7 +976,8 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
           NS_NAMED_LITERAL_STRING(before, "::before");
           NS_NAMED_LITERAL_STRING(after, "::after");
           events.AppendElement(
-            TransitionEventInfo(et->mElement, prop, pt->mIterationDuration,
+            TransitionEventInfo(et->mElement, prop,
+                                pt->mTiming.mIterationDuration,
                                 ep == nsGkAtoms::transitionsProperty ?
                                   EmptyString() :
                                   ep == nsGkAtoms::transitionsOfBeforeProperty ?

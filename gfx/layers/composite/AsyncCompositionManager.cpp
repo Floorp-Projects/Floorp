@@ -430,29 +430,36 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
       continue;
     }
 
-    double numIterations = animation.numIterations() != -1 ?
-      animation.numIterations() : NS_IEEEPositiveInfinity();
-    double positionInIteration =
-      ElementAnimations::GetPositionInIteration(elapsedDuration,
-                                                animation.duration(),
-                                                numIterations,
-                                                animation.direction());
+    AnimationTiming timing;
+    timing.mIterationDuration = animation.duration();
+    timing.mIterationCount = animation.iterationCount();
+    timing.mDirection = animation.direction();
+    // Animations typically only run on the compositor during their active
+    // interval but if we end up sampling them outside that range (for
+    // example, while they are waiting to be removed) we currently just
+    // assume that we should fill.
+    timing.mFillMode = NS_STYLE_ANIMATION_FILL_MODE_BOTH;
 
-    NS_ABORT_IF_FALSE(0.0 <= positionInIteration &&
-                      positionInIteration <= 1.0,
-                      "position should be in [0-1]");
+    ComputedTiming computedTiming =
+      ElementAnimation::GetComputedTimingAt(elapsedDuration, timing);
+
+    NS_ABORT_IF_FALSE(0.0 <= computedTiming.mTimeFraction &&
+                      computedTiming.mTimeFraction <= 1.0,
+                      "time fraction should be in [0-1]");
 
     int segmentIndex = 0;
     AnimationSegment* segment = animation.segments().Elements();
-    while (segment->endPortion() < positionInIteration) {
+    while (segment->endPortion() < computedTiming.mTimeFraction) {
       ++segment;
       ++segmentIndex;
     }
 
-    double positionInSegment = (positionInIteration - segment->startPortion()) /
-                                 (segment->endPortion() - segment->startPortion());
+    double positionInSegment =
+      (computedTiming.mTimeFraction - segment->startPortion()) /
+      (segment->endPortion() - segment->startPortion());
 
-    double portion = animData.mFunctions[segmentIndex]->GetValue(positionInSegment);
+    double portion =
+      animData.mFunctions[segmentIndex]->GetValue(positionInSegment);
 
     // interpolate the property
     Animatable interpolatedValue;

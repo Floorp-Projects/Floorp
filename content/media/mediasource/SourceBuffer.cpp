@@ -250,12 +250,16 @@ SourceBuffer::SetAppendWindowEnd(double aAppendWindowEnd, ErrorResult& aRv)
 void
 SourceBuffer::AppendBuffer(const ArrayBuffer& aData, ErrorResult& aRv)
 {
+  aData.ComputeLengthAndData();
+
   AppendData(aData.Data(), aData.Length(), aRv);
 }
 
 void
 SourceBuffer::AppendBuffer(const ArrayBufferView& aData, ErrorResult& aRv)
 {
+  aData.ComputeLengthAndData();
+
   AppendData(aData.Data(), aData.Length(), aRv);
 }
 

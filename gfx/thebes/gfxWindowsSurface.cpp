@@ -149,6 +149,11 @@ gfxWindowsSurface::CreateSimilarSurface(gfxContentType aContent,
     }
 
     nsRefPtr<gfxASurface> result = Wrap(surface);
+    if (mForPrinting) {
+      MOZ_ASSERT(result->GetType() == gfxSurfaceType::Recording);
+      gfxUnknownSurface *unknown = static_cast<gfxUnknownSurface*>(result.get());
+      unknown->SetSize(aSize);
+    }
     cairo_surface_destroy(surface);
     return result.forget();
 }

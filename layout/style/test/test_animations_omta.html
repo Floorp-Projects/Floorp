@@ -1845,6 +1845,28 @@ addAsyncTest(function *() {
   dyn_sheet = null;
 });
 
+/*
+ * Bug 1004361 - CSS animations with short duration sometimes don't dispatch
+ * a start event
+ */
+addAsyncTest(function *() {
+  new_div("animation: anim2 1s 0.1s");
+  listen();
+  yield waitForPaints();
+  advance_clock(0); // Trigger animation
+  advance_clock(1200); // Skip past end of animation's entire active duration
+  check_events([{ type: 'animationstart', target: gDiv,
+                  // Bug 1007513 - elapsedTime should be 0 below
+                  animationName: 'anim2', elapsedTime: 1.1,
+                  pseudoElement: "" },
+                { type: 'animationend', target: gDiv,
+                  // Bug 1007513 - elapsedTime should be 1 below
+                  animationName: 'anim2', elapsedTime: 1.1,
+                  pseudoElement: "" }],
+               "events after skipping over animation interval");
+  done_div();
+});
+
 //----------------------------------------------------------------------
 //
 // Helper functions from test_animations.html

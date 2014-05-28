@@ -64,7 +64,7 @@ case "$target" in
 
         kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
 
-        for version in $android_gnu_compiler_version 4.7 4.6 4.4.3 ; do
+        for version in $android_gnu_compiler_version 4.8 4.7 4.6 4.4.3; do
             case "$target_cpu" in
             arm)
                 target_name=arm-linux-androideabi-$version

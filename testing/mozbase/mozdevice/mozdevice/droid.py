@@ -6,12 +6,14 @@ import StringIO
 import moznetwork
 import re
 import threading
+import time
 
 from Zeroconf import Zeroconf, ServiceBrowser
 from devicemanager import ZeroconfListener
 from devicemanagerADB import DeviceManagerADB
 from devicemanagerSUT import DeviceManagerSUT
 from devicemanager import DMError
+from distutils.version import StrictVersion
 
 class DroidMixin(object):
     """Mixin to extend DeviceManager with Android-specific functionality"""
@@ -119,11 +121,34 @@ class DroidMixin(object):
 
     def stopApplication(self, appName):
         """
-        Stops the specified application (only works on Android 3.0+).
+        Stops the specified application
+
+        For Android 3.0+, we use the "am force-stop" to do this, which is
+        reliable and does not require root. For earlier versions of Android,
+        we simply try to manually kill the processes started by the app
+        repeatedly until none is around any more. This is less reliable and
+        does require root.
 
         :param appName: Name of application (e.g. `com.android.chrome`)
         """
-        self.shellCheckOutput([ "am", "force-stop", appName ], root=self._stopApplicationNeedsRoot)
+        version = self.shellCheckOutput(["getprop", "ro.build.version.release"])
+        if StrictVersion(version) >= StrictVersion('3.0'):
+            self.shellCheckOutput([ "am", "force-stop", appName ], root=self._stopApplicationNeedsRoot)
+        else:
+            num_tries = 0
+            max_tries = 5
+            while self.processExist(appName):
+                if num_tries > max_tries:
+                    raise DMError("Couldn't successfully kill %s after %s "
+                                  "tries" % (appName, max_tries))
+                self.killProcess(appName)
+                num_tries += 1
+
+                # sleep for a short duration to make sure there are no
+                # additional processes in the process of being launched
+                # (this is not 100% guaranteed to work since it is inherently
+                # racey, but it's the best we can do)
+                time.sleep(1)
 
 class DroidADB(DeviceManagerADB, DroidMixin):
 

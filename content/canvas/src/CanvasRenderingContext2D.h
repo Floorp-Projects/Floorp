@@ -551,7 +551,7 @@ protected:
                              JSObject** aRetval);
 
   nsresult PutImageData_explicit(int32_t x, int32_t y, uint32_t w, uint32_t h,
-                                 unsigned char *aData, uint32_t aDataLen,
+                                 dom::Uint8ClampedArray* aArray,
                                  bool hasDirtyRect, int32_t dirtyX, int32_t dirtyY,
                                  int32_t dirtyWidth, int32_t dirtyHeight);
 
