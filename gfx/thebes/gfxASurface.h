@@ -10,6 +10,7 @@
 #include "gfxTypes.h"
 #include "mozilla/Scoped.h"
 #include "nscore.h"
+#include "nsSize.h"
 
 #ifdef MOZILLA_INTERNAL_API
 #include "nsStringFwd.h"
@@ -22,7 +23,6 @@ struct nsIntPoint;
 struct nsIntRect;
 struct gfxRect;
 struct gfxPoint;
-struct nsIntSize;
 
 template <typename T>
 struct already_AddRefed;
@@ -274,11 +274,18 @@ protected:
  */
 class gfxUnknownSurface : public gfxASurface {
 public:
-    gfxUnknownSurface(cairo_surface_t *surf) {
+    gfxUnknownSurface(cairo_surface_t *surf)
+        : mSize(-1, -1)
+    {
         Init(surf, true);
     }
 
     virtual ~gfxUnknownSurface() { }
+    virtual const nsIntSize GetSize() const { return mSize; }
+    void SetSize(const nsIntSize& aSize) { mSize = aSize; }
+
+private:
+    nsIntSize mSize;
 };
 
 #endif /* GFX_ASURFACE_H */
