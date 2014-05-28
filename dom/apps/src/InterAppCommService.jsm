@@ -465,6 +465,67 @@ this.InterAppCommService = {
                                oid: aOuterWindowID, requestID: aRequestID });
   },
 
+  /**
+   * Fetch the subscribers that are currently allowed to connect.
+   *
+   * @param aKeyword           The connection's keyword.
+   * @param aPubAppManifestURL The manifest URL of the publisher.
+   *
+   * @param return an array of manifest URLs of the subscribers.
+   */
+  _getAllowedSubAppManifestURLs: function(aKeyword, aPubAppManifestURL) {
+    let allowedPubAppManifestURLs = this._allowedConnections[aKeyword];
+    if (!allowedPubAppManifestURLs) {
+      return [];
+    }
+
+    let allowedSubAppManifestURLs =
+      allowedPubAppManifestURLs[aPubAppManifestURL];
+    if (!allowedSubAppManifestURLs) {
+      return [];
+    }
+
+    return allowedSubAppManifestURLs;
+  },
+
+  /**
+   * Add the newly selected apps into the allowed connections and return the
+   * aggregated allowed connections.
+   *
+   * @param aKeyword           The connection's keyword.
+   * @param aPubAppManifestURL The manifest URL of the publisher.
+   * @param aSelectedApps      An array of the subscribers' information.
+   *
+   * @param return an array of manifest URLs of the subscribers.
+   */
+  _addSelectedApps: function(aKeyword, aPubAppManifestURL, aSelectedApps) {
+    let allowedPubAppManifestURLs = this._allowedConnections[aKeyword];
+
+    // Add a new entry for |aKeyword|.
+    if (!allowedPubAppManifestURLs) {
+      allowedPubAppManifestURLs = this._allowedConnections[aKeyword] = {};
+    }
+
+    let allowedSubAppManifestURLs =
+      allowedPubAppManifestURLs[aPubAppManifestURL];
+
+    // Add a new entry for |aPubAppManifestURL|.
+    if (!allowedSubAppManifestURLs) {
+      allowedSubAppManifestURLs =
+        allowedPubAppManifestURLs[aPubAppManifestURL] = [];
+    }
+
+    // Add the selected apps into the existing set of allowed connections.
+    aSelectedApps.forEach(function(aSelectedApp) {
+      let allowedSubAppManifestURL = aSelectedApp.manifestURL;
+      if (allowedSubAppManifestURLs.indexOf(allowedSubAppManifestURL) == -1) {
+        allowedSubAppManifestURLs.push(allowedSubAppManifestURL);
+      }
+    });
+
+    return allowedSubAppManifestURLs;
+  },
+
   _connect: function(aMessage, aTarget) {
     let keyword = aMessage.keyword;
     let pubRules = aMessage.rules;
@@ -482,15 +543,11 @@ this.InterAppCommService = {
       return;
     }
 
-    // Fetch the apps that used to be allowed to connect before, so that
-    // users don't need to select/allow them again. That is, we only pop up
-    // the prompt UI for the *new* connections.
-    let allowedSubAppManifestURLs = [];
-    let allowedPubAppManifestURLs = this._allowedConnections[keyword];
-    if (allowedPubAppManifestURLs &&
-        allowedPubAppManifestURLs[pubAppManifestURL]) {
-      allowedSubAppManifestURLs = allowedPubAppManifestURLs[pubAppManifestURL];
-    }
+    // Fetch the apps that are currently allowed to connect, so that users
+    // don't need to select/allow them again, which means we only pop up the
+    // prompt UI for the *new* connections.
+    let allowedSubAppManifestURLs =
+      this._getAllowedSubAppManifestURLs(keyword, pubAppManifestURL);
 
     // Check rules to see if a subscribed app is allowed to connect.
     let appsToSelect = [];
@@ -799,38 +856,31 @@ this.InterAppCommService = {
     let requestID = caller.requestID;
     let target = caller.target;
 
-    let manifestURL = aData.manifestURL;
+    let pubAppManifestURL = aData.manifestURL;
     let keyword = aData.keyword;
     let selectedApps = aData.selectedApps;
 
+    let allowedSubAppManifestURLs;
     if (selectedApps.length == 0) {
-      if (DEBUG) debug("No apps are selected to connect.")
-      this._dispatchMessagePorts(keyword, manifestURL, [],
-                                 target, outerWindowID, requestID);
-      return;
-    }
+      // Only do the connections for the existing allowed subscribers because
+      // no new apps are selected to connect.
+      if (DEBUG) debug("No new apps are selected to connect.")
 
-    // Find the entry of allowed connections to add the selected apps.
-    let allowedPubAppManifestURLs = this._allowedConnections[keyword];
-    if (!allowedPubAppManifestURLs) {
-      allowedPubAppManifestURLs = this._allowedConnections[keyword] = {};
-    }
-    let allowedSubAppManifestURLs = allowedPubAppManifestURLs[manifestURL];
-    if (!allowedSubAppManifestURLs) {
-      allowedSubAppManifestURLs = allowedPubAppManifestURLs[manifestURL] = [];
-    }
+      allowedSubAppManifestURLs =
+        this._getAllowedSubAppManifestURLs(keyword, pubAppManifestURL);
+    } else {
+      // Do connections for for the existing allowed subscribers and the newly
+      // selected subscribers.
+      if (DEBUG) debug("Some new apps are selected to connect.")
 
-    // Add the selected app into the existing set of allowed connections.
-    selectedApps.forEach(function(aSelectedApp) {
-      let allowedSubAppManifestURL = aSelectedApp.manifestURL;
-      if (allowedSubAppManifestURLs.indexOf(allowedSubAppManifestURL) == -1) {
-        allowedSubAppManifestURLs.push(allowedSubAppManifestURL);
-      }
-    });
+      allowedSubAppManifestURLs =
+        this._addSelectedApps(keyword, pubAppManifestURL, selectedApps);
+    }
 
     // Finally, dispatch the message ports for the allowed connections,
     // including the old connections and the newly selected connection.
-    this._dispatchMessagePorts(keyword, manifestURL, allowedSubAppManifestURLs,
+    this._dispatchMessagePorts(keyword, pubAppManifestURL,
+                               allowedSubAppManifestURLs,
                                target, outerWindowID, requestID);
   },
 

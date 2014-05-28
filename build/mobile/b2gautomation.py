@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import datetime
 import mozcrash
 import threading
 import os
@@ -9,6 +10,7 @@ import posixpath
 import Queue
 import re
 import shutil
+import signal
 import tempfile
 import time
 import traceback
@@ -152,6 +154,19 @@ class B2GRemoteAutomation(Automation):
                 self.log.info("TEST-UNEXPECTED-FAIL | %s | application timed "
                               "out after %d seconds with no output",
                               self.lastTestSeen, int(timeout))
+                self._devicemanager.killProcess('/system/b2g/b2g', sig=signal.SIGABRT)
+
+                timeout = 10 # seconds
+                starttime = datetime.datetime.now()
+                while datetime.datetime.now() - starttime < datetime.timedelta(seconds=timeout):
+                    if not self._devicemanager.processExist('/system/b2g/b2g'):
+                        break
+                    time.sleep(1)
+                else:
+                    print "timed out after %d seconds waiting for b2g process to exit" % timeout
+                    return 1
+
+                self.checkForCrashes(None, symbolsPath)
                 return 1
 
     def getDeviceStatus(self, serial=None):

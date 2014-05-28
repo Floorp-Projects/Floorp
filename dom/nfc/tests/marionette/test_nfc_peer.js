@@ -85,9 +85,22 @@ function testCheckP2PRegFailure() {
   toggleNFC(true).then(() => activateRE(0));
 }
 
+function testCheckNfcPeerObjForInvalidToken() {
+  try {
+    // Use a'fakeSessionToken'
+    let peer = nfc.getNFCPeer("fakeSessionToken");
+    ok(false, "Should not get a NFCPeer object.");
+  } catch (ex) {
+    ok(true, "Exception expected");
+  }
+
+  toggleNFC(false).then(runNextTest);
+}
+
 let tests = [
   testPeerReady,
-  testCheckP2PRegFailure
+  testCheckP2PRegFailure,
+  testCheckNfcPeerObjForInvalidToken
 ];
 
 SpecialPowers.pushPermissions(

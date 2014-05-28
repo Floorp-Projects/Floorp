@@ -549,7 +549,14 @@ pref("app.update.staging.enabled", true);
 pref("app.update.service.enabled", true);
 
 // The URL hosting the update manifest.
+// Temporary hack to only put Flame builds on aus4. 18 is Jelly Bean (4.3).
+// This needs to be changed if Flame upgrades to 19 (Kit Kat) before other devices
+// move to aus4.
+#if ANDROID_VERSION == 18
+pref("app.update.url", "https://aus4.mozilla.org/update/3/%PRODUCT%/%VERSION%/%BUILD_ID%/%PRODUCT_DEVICE%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml");
+#else
 pref("app.update.url", "http://update.boot2gecko.org/%CHANNEL%/update.xml");
+#endif
 pref("app.update.channel", "@MOZ_UPDATE_CHANNEL@");
 
 // Interval at which update manifest is fetched.  In units of seconds.
