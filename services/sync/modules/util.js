@@ -150,6 +150,22 @@ this.Utils = {
     };
   },
 
+  runInTransaction: function(db, callback, thisObj) {
+    let hasTransaction = false;
+    try {
+      db.beginTransaction();
+      hasTransaction = true;
+    } catch(e) { /* om nom nom exceptions */ }
+
+    try {
+      return callback.call(thisObj);
+    } finally {
+      if (hasTransaction) {
+        db.commitTransaction();
+      }
+    }
+  },
+
   /**
    * GUIDs are 9 random bytes encoded with base64url (RFC 4648).
    * That makes them 12 characters long with 72 bits of entropy.

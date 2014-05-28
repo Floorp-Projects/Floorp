@@ -125,11 +125,7 @@ LoginManager.prototype = {
 
 
     _initStorage : function () {
-#ifdef ANDROID
         var contractID = "@mozilla.org/login-manager/storage/mozStorage;1";
-#else
-        var contractID = "@mozilla.org/login-manager/storage/json;1";
-#endif
         try {
             var catMan = Cc["@mozilla.org/categorymanager;1"].
                          getService(Ci.nsICategoryManager);
