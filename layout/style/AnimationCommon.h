@@ -295,10 +295,6 @@ struct ElementAnimation
     return nullptr;
   }
 
-  nsString mName; // empty string for 'none'
-  AnimationTiming mTiming;
-  uint8_t mPlayState;
-
   bool IsPaused() const {
     return mPlayState == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED;
   }
@@ -323,12 +319,15 @@ struct ElementAnimation
   static ComputedTiming GetComputedTimingAt(TimeDuration aElapsedDuration,
                                             const AnimationTiming& aTiming);
 
+  nsString mName; // empty string for 'none'
+  AnimationTiming mTiming;
   // The beginning of the delay period.  This is also used by
   // ElementPropertyTransition in its IsRemovedSentinel and
   // SetRemovedSentinel methods.
   mozilla::TimeStamp mStartTime;
   mozilla::TimeStamp mPauseStart;
   mozilla::TimeDuration mDelay;
+  uint8_t mPlayState;
   bool mIsRunningOnCompositor;
 
   enum {
