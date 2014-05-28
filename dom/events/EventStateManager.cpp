@@ -558,6 +558,17 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     break;
   }
   case NS_MOUSE_EXIT:
+    // If this is a remote frame, we receive NS_MOUSE_EXIT from the parent
+    // the mouse exits our content. Since the parent may update the cursor
+    // while the mouse is outside our frame, and since PuppetWidget caches the
+    // current cursor internally, re-entering our content (say from over a
+    // window edge) wont update the cursor if the cached value and the current
+    // cursor match. So when the mouse exits a remote frame, clear the cached
+    // widget cursor so a proper update will occur when the mouse re-enters.
+    if (XRE_GetProcessType() == GeckoProcessType_Content) {
+      ClearCachedWidgetCursor(mCurrentTarget);
+    }
+
     // If the event is not a top-level window exit, then it's not
     // really an exit --- we may have traversed widget boundaries but
     // we're still in our toplevel window.
@@ -3327,6 +3338,19 @@ EventStateManager::UpdateCursor(nsPresContext* aPresContext,
   if (mLockCursor || NS_STYLE_CURSOR_AUTO != cursor) {
     *aStatus = nsEventStatus_eConsumeDoDefault;
   }
+}
+
+void
+EventStateManager::ClearCachedWidgetCursor(nsIFrame* aTargetFrame)
+{
+  if (!aTargetFrame) {
+    return;
+  }
+  nsIWidget* aWidget = aTargetFrame->GetNearestWidget();
+  if (!aWidget) {
+    return;
+  }
+  aWidget->ClearCachedCursor();
 }
 
 nsresult
