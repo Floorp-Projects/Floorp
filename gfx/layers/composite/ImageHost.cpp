@@ -106,11 +106,25 @@ ImageHost::Composite(EffectChain& aEffectChain,
   gfx::Rect pictureRect(0, 0,
                         mPictureRect.width,
                         mPictureRect.height);
-  //XXX: We might have multiple texture sources here (e.g. 3 YCbCr textures), and we're
-  // only iterating over the tiles of the first one. Are we assuming that the tiling
-  // will be identical? Can we ensure that somehow?
   BigImageIterator* it = source->AsBigImageIterator();
   if (it) {
+
+    // This iteration does not work if we have multiple texture sources here
+    // (e.g. 3 YCbCr textures). There's nothing preventing the different
+    // planes from having different resolutions or tile sizes. For example, a
+    // YCbCr frame could have Cb and Cr planes that are half the resolution of
+    // the Y plane, in such a way that the Y plane overflows the maximum
+    // texture size and the Cb and Cr planes do not. Then the Y plane would be
+    // split into multiple tiles and the Cb and Cr planes would just be one
+    // tile each.
+    // To handle the general case correctly, we'd have to create a grid of
+    // intersected tiles over all planes, and then draw each grid tile using
+    // the corresponding source tiles from all planes, with appropriate
+    // per-plane per-tile texture coords.
+    // DrawQuad currently assumes that all planes use the same texture coords.
+    MOZ_ASSERT(it->GetTileCount() == 1 || !source->GetNextSibling(),
+               "Can't handle multi-plane BigImages");
+
     it->BeginBigImageIteration();
     do {
       nsIntRect tileRect = it->GetTileRect();
