@@ -140,7 +140,7 @@ private:
   bool     ShouldCacheChunk(uint32_t aIndex);
   bool     MustKeepCachedChunk(uint32_t aIndex);
 
-  nsresult RemoveChunk(CacheFileChunk *aChunk);
+  nsresult DeactivateChunk(CacheFileChunk *aChunk);
   void     RemoveChunkInternal(CacheFileChunk *aChunk, bool aCacheChunk);
 
   int64_t  BytesFromChunk(uint32_t aIndex);
