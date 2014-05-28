@@ -40,6 +40,7 @@ using namespace mozilla::gfx;
 ClientLayerManager::ClientLayerManager(nsIWidget* aWidget)
   : mPhase(PHASE_NONE)
   , mWidget(aWidget)
+  , mLatestTransactionId(0)
   , mTargetRotation(ROTATION_0)
   , mRepeatTransaction(false)
   , mIsRepeatTransaction(false)
@@ -54,6 +55,9 @@ ClientLayerManager::ClientLayerManager(nsIWidget* aWidget)
 
 ClientLayerManager::~ClientLayerManager()
 {
+  if (mTransactionIdAllocator) {
+    DidComposite(mLatestTransactionId);
+  }
   ClearCachedResources();
   // Stop receiveing AsyncParentMessage at Forwarder.
   // After the call, the message is directly handled by LayerTransactionChild. 
@@ -422,13 +426,13 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
 {
   mPhase = PHASE_FORWARD;
 
-  uint64_t pendingTransactionId = mTransactionIdAllocator->GetTransactionId();
+  mLatestTransactionId = mTransactionIdAllocator->GetTransactionId();
 
   // forward this transaction's changeset to our LayerManagerComposite
   bool sent;
   AutoInfallibleTArray<EditReply, 10> replies;
   if (HasShadowManager() && mForwarder->EndTransaction(&replies, mRegionToClear,
-        pendingTransactionId, aScheduleComposite, mPaintSequenceNumber, &sent)) {
+        mLatestTransactionId, aScheduleComposite, mPaintSequenceNumber, &sent)) {
     for (nsTArray<EditReply>::size_type i = 0; i < replies.Length(); ++i) {
       const EditReply& reply = replies[i];
 
@@ -486,7 +490,7 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
       // Clear the transaction id so that it doesn't get returned
       // unless we forwarded to somewhere that doesn't actually
       // have a compositor.
-      mTransactionIdAllocator->RevokeTransactionId(pendingTransactionId);
+      mTransactionIdAllocator->RevokeTransactionId(mLatestTransactionId);
     }
   } else if (HasShadowManager()) {
     NS_WARNING("failed to forward Layers transaction");
