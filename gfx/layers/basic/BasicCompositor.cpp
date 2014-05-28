@@ -291,7 +291,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
     transformBounds.MoveTo(0, 0);
   }
 
-  newTransform.Translate(-offset.x, -offset.y);
+  newTransform.PostTranslate(-offset.x, -offset.y);
   buffer->SetTransform(newTransform);
 
   RefPtr<SourceSurface> sourceMask;
