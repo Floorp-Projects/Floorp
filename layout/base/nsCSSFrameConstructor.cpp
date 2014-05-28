@@ -319,6 +319,15 @@ IsAnonymousFlexOrGridItem(const nsIFrame* aFrame)
          pseudoType == nsCSSAnonBoxes::anonymousGridItem;
 }
 
+// Returns true if aFrame is a flex/grid container.
+static inline bool
+IsFlexOrGridContainer(const nsIFrame* aFrame)
+{
+  const nsIAtom* t = aFrame->GetType();
+  return t == nsGkAtoms::flexContainerFrame ||
+         t == nsGkAtoms::gridContainerFrame;
+}
+
 #if DEBUG
 static void
 AssertAnonymousFlexOrGridItemParent(const nsIFrame* aChild,
@@ -395,8 +404,7 @@ ShouldSuppressFloatingOfDescendants(nsIFrame* aFrame)
 {
   return aFrame->IsFrameOfType(nsIFrame::eMathML) ||
     aFrame->IsBoxFrame() ||
-    aFrame->GetType() == nsGkAtoms::flexContainerFrame ||
-    aFrame->GetType() == nsGkAtoms::gridContainerFrame;
+    ::IsFlexOrGridContainer(aFrame);
 }
 
 /**
@@ -8926,15 +8934,12 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
   FrameConstructionItemList& aItems,
   nsIFrame* aParentFrame)
 {
-  if (aItems.IsEmpty()) {
-    return;
-  }
-  nsIAtom* containerType = aParentFrame->GetType();
-  if (containerType != nsGkAtoms::flexContainerFrame &&
-      containerType != nsGkAtoms::gridContainerFrame) {
+  if (aItems.IsEmpty() ||
+      !::IsFlexOrGridContainer(aParentFrame)) {
     return;
   }
 
+  nsIAtom* containerType = aParentFrame->GetType();
   FCItemIterator iter(aItems);
   do {
     // Advance iter past children that don't want to be wrapped
@@ -10828,9 +10833,10 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
 
   nsIFrame* nextSibling = ::GetInsertNextSibling(aFrame, aPrevSibling);
 
-  // Situation #2 is a flex container frame into which we're inserting new
-  // inline non-replaced children, adjacent to an existing anonymous flex item.
-  if (aFrame->GetType() == nsGkAtoms::flexContainerFrame) {
+  // Situation #2 is a flex or grid container frame into which we're inserting
+  // new inline non-replaced children, adjacent to an existing anonymous
+  // flex or grid item.
+  if (::IsFlexOrGridContainer(aFrame)) {
     FCItemIterator iter(aItems);
 
     // Check if we're adding to-be-wrapped content right *after* an existing
