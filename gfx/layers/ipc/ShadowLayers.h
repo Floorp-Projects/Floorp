@@ -295,6 +295,7 @@ public:
    */
   bool EndTransaction(InfallibleTArray<EditReply>* aReplies,
                       const nsIntRegion& aRegionToClear,
+                      uint64_t aId,
                       bool aScheduleComposite,
                       uint32_t aPaintSequenceNumber,
                       bool* aSent);
