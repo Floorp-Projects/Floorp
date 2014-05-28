@@ -27,7 +27,7 @@ function test() {
 
     // Check only valid tabs are shown
     let tabs = addonDebugger.frame.contentDocument.getElementById("toolbox-tabs").children;
-    let expectedTabs = ["options", "webconsole", "jsdebugger", "scratchpad"];
+    let expectedTabs = ["webconsole", "jsdebugger", "scratchpad"];
 
     is(tabs.length, expectedTabs.length, "displaying only " + expectedTabs.length + " tabs in addon debugger");
     Array.forEach(tabs, (tab, i) => {
