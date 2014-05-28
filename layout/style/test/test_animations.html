@@ -1539,6 +1539,25 @@ dyn_sheet_elt.parentNode.removeChild(dyn_sheet_elt);
 dyn_sheet_elt = null;
 dyn_sheet = null;
 
+/*
+ * Bug 1004361 - CSS animations with short duration sometimes don't dispatch
+ * a start event
+ */
+new_div("animation: anim2 1s 0.1s");
+listen();
+advance_clock(0); // Trigger animation
+advance_clock(1200); // Skip past end of animation's entire active duration
+check_events([{ type: 'animationstart', target: div,
+                // Bug 1007513 - elapsedTime should be 0 below
+                animationName: 'anim2', elapsedTime: 1.1,
+                pseudoElement: "" },
+              { type: 'animationend', target: div,
+                // Bug 1007513 - elapsedTime should be 1 below
+                animationName: 'anim2', elapsedTime: 1.1,
+                pseudoElement: "" }],
+             "events after skipping over animation interval");
+done_div();
+
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
 
 </script>
