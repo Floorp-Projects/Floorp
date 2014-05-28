@@ -62,6 +62,7 @@ using namespace mozilla;
 using namespace mozilla::css;
 using namespace mozilla::layers;
 using namespace mozilla::dom;
+using namespace mozilla::layout;
 typedef FrameMetrics::ViewID ViewID;
 
 static inline nsIFrame*
@@ -1364,6 +1365,8 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
       flags = LayerManager::END_NO_REMOTE_COMPOSITE;
     }
   }
+
+  MaybeSetupTransactionIdAllocator(layerManager, view);
 
   layerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer,
                                aBuilder, flags);

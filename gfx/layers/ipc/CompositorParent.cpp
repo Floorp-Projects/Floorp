@@ -778,6 +778,8 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
     mApzcTreeManager->UpdatePanZoomControllerTree(this, root, aIsFirstPaint,
         mRootLayerTreeID, aPaintSequenceNumber);
   }
+
+  MOZ_ASSERT(aTransactionId > mPendingTransaction);
   mPendingTransaction = aTransactionId;
 
   if (root) {
