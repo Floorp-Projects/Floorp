@@ -953,16 +953,16 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
                                       otherAtom->GetUTF16String() };
         rv = nsContentUtils::FormatLocalizedString(
           nsContentUtils::eHTMLPARSER_PROPERTIES, msgId, params, message);
-        NS_ENSURE_SUCCESS(rv, NS_OK);
+        NS_ENSURE_SUCCESS(rv, rv);
       } else if (atom) {
         const char16_t* params[] = { atom->GetUTF16String() };
         rv = nsContentUtils::FormatLocalizedString(
           nsContentUtils::eHTMLPARSER_PROPERTIES, msgId, params, message);
-        NS_ENSURE_SUCCESS(rv, NS_OK);
+        NS_ENSURE_SUCCESS(rv, rv);
       } else {
         rv = nsContentUtils::GetLocalizedString(
           nsContentUtils::eHTMLPARSER_PROPERTIES, msgId, message);
-        NS_ENSURE_SUCCESS(rv, NS_OK);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
 
       nsAutoString title;
