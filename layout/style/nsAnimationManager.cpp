@@ -54,6 +54,7 @@ ElementAnimations::GetPositionInIteration(TimeDuration aElapsedDuration,
                                           TimeDuration aIterationDuration,
                                           double aIterationCount,
                                           uint32_t aDirection,
+                                          uint8_t aFillMode,
                                           ElementAnimation* aAnimation,
                                           ElementAnimations* aEa,
                                           EventArray* aEventsToDispatch)
@@ -74,33 +75,22 @@ ElementAnimations::GetPositionInIteration(TimeDuration aElapsedDuration,
                               aElapsedDuration, aEa->PseudoElement());
         aEventsToDispatch->AppendElement(ei);
       }
-
-      if (!aAnimation->FillsForwards()) {
-        // No animation data.
-        return -1;
-      }
-    } else {
-      // If aAnimation is null, that means we're on the compositor
-      // thread.  We want to just keep filling forwards until the main
-      // thread gets around to updating the compositor thread (which
-      // might take a little while).  So just assume we fill fowards and
-      // move on.
+    }
+    if (aFillMode != NS_STYLE_ANIMATION_FILL_MODE_BOTH &&
+        aFillMode != NS_STYLE_ANIMATION_FILL_MODE_FORWARDS) {
+      // The animation isn't active or filling at this time.
+      return -1;
     }
     currentIterationCount = aIterationCount;
+  } else if (currentIterationCount < 0.0) {
+    if (aFillMode != NS_STYLE_ANIMATION_FILL_MODE_BOTH &&
+        aFillMode != NS_STYLE_ANIMATION_FILL_MODE_BACKWARDS) {
+      // The animation isn't active or filling at this time.
+      return -1;
+    }
+    currentIterationCount = 0.0;
   } else {
-    if (aAnimation && !aAnimation->IsPaused()) {
-      aEa->mNeedsRefreshes = true;
-    }
-    if (currentIterationCount < 0.0) {
-      NS_ASSERTION(aAnimation, "Should not run animation that hasn't started yet on the compositor");
-      if (!aAnimation->FillsBackwards()) {
-        // No animation data.
-        return -1;
-      }
-      currentIterationCount = 0.0;
-    } else {
-      dispatchStartOrIteration = aAnimation && !aAnimation->IsPaused();
-    }
+    dispatchStartOrIteration = aAnimation && !aAnimation->IsPaused();
   }
 
   // Set |positionInIteration| to the position from 0% to 100% along
@@ -163,7 +153,6 @@ ElementAnimations::GetPositionInIteration(TimeDuration aElapsedDuration,
 
 void
 ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
-                                      EventArray& aEventsToDispatch,
                                       bool aIsThrottled)
 {
   if (!mNeedsRefreshes) {
@@ -181,32 +170,33 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
     for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
       ElementAnimation* anim = mAnimations[animIdx];
 
-      if (anim->mProperties.Length() == 0 ||
+      if (anim->mProperties.IsEmpty() ||
           anim->mIterationDuration.ToMilliseconds() <= 0.0) {
         continue;
       }
 
-      uint32_t oldLastNotification = anim->mLastNotification;
-
-      // We need to call GetPositionInIteration here to populate
-      // aEventsToDispatch.
       // The ElapsedDurationAt() call here handles pausing.  But:
       // FIXME: avoid recalculating every time when paused.
-      GetPositionInIteration(anim->ElapsedDurationAt(aRefreshTime),
-                             anim->mIterationDuration, anim->mIterationCount,
-                             anim->mDirection, anim, this, &aEventsToDispatch);
+      double positionInIteration =
+        GetPositionInIteration(anim->ElapsedDurationAt(aRefreshTime),
+                               anim->mIterationDuration, anim->mIterationCount,
+                               anim->mDirection,
+                               NS_STYLE_ANIMATION_FILL_MODE_BOTH);
 
-      // GetPositionInIteration just adjusted mLastNotification; check
-      // its new value against the value before we called
-      // GetPositionInIteration.
       // XXX We shouldn't really be using mLastNotification as a general
       // indicator that the animation has finished, it should be reserved for
       // events. If we use it differently in the future this use might need
       // changing.
+      // XXX This shouldn't be checking for positionInIteration >= 1.0, but
+      // rather, checking that we're in the after phase (since we can get
+      // positionInIteration == 1.0 when we have a direction that goes
+      // backwards). We'll fix this in a subsequent patch when we introduce
+      // phases but for now the result is we'll sometimes skip throttling when
+      // we could have throttled the sample.
       if (!anim->mIsRunningOnCompositor ||
-          (anim->mLastNotification != oldLastNotification &&
-           anim->mLastNotification ==
-           ElementAnimation::LAST_NOTIFICATION_END)) {
+          (positionInIteration >= 1.0 &&
+           anim->mLastNotification != ElementAnimation::LAST_NOTIFICATION_END))
+      {
         aIsThrottled = false;
         break;
       }
@@ -233,9 +223,9 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
     for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
       ElementAnimation* anim = mAnimations[animIdx];
 
-      if (anim->mProperties.Length() == 0 ||
+      if (anim->mProperties.IsEmpty() ||
           anim->mIterationDuration.ToMilliseconds() <= 0.0) {
-        // No animation data.
+        // The animation isn't active or filling at this time.
         continue;
       }
 
@@ -244,8 +234,15 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
       double positionInIteration =
         GetPositionInIteration(anim->ElapsedDurationAt(aRefreshTime),
                                anim->mIterationDuration, anim->mIterationCount,
-                               anim->mDirection, anim, this,
-                               &aEventsToDispatch);
+                               anim->mDirection, anim->mFillMode);
+      // XXX Only set mNeedsRefreshes to true when we are either in the before
+      // or active phase (the reason we test for <= 1 rather than <1 is to cover
+      // cases where we have an alternating direction which can produce a value
+      // of 1 while we're still in the active phase). We will fix this when we
+      // introduce phases.
+      if (positionInIteration <= 1 && !anim->IsPaused()) {
+        mNeedsRefreshes = true;
+      }
 
       // The position is -1 when we don't have fill data for the current time,
       // so we shouldn't animate.
@@ -326,6 +323,29 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
   }
 }
 
+void
+ElementAnimations::GetEventsAt(TimeStamp aRefreshTime,
+                               EventArray& aEventsToDispatch)
+{
+  for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
+    ElementAnimation* anim = mAnimations[animIdx];
+
+    // We should *not* skip animations with zero duration (bug 1004365) or
+    // those with no keyframes (bug 1004377).
+    // We will fix this separately but for now this is necessary since
+    // GetPositionInIteration does not yet handle zero-duration iterations.
+    if (anim->mProperties.IsEmpty() ||
+        anim->mIterationDuration.ToMilliseconds() <= 0.0) {
+      // The animation isn't active or filling at this time.
+      continue;
+    }
+
+    GetPositionInIteration(anim->ElapsedDurationAt(aRefreshTime),
+                           anim->mIterationDuration, anim->mIterationCount,
+                           anim->mDirection, anim->mFillMode,
+                           anim, this, &aEventsToDispatch);
+  }
+}
 
 bool
 ElementAnimations::HasAnimationOfProperty(nsCSSProperty aProperty) const
@@ -455,11 +475,11 @@ nsAnimationManager::GetElementAnimations(dom::Element *aElement,
 
 
 void
-nsAnimationManager::EnsureStyleRuleFor(ElementAnimations* aET)
+nsAnimationManager::EnsureStyleRuleFor(ElementAnimations* aEA)
 {
-  aET->EnsureStyleRuleFor(mPresContext->RefreshDriver()->MostRecentRefresh(),
-                          mPendingEvents,
-                          false);
+  TimeStamp refreshTime = mPresContext->RefreshDriver()->MostRecentRefresh();
+  aEA->EnsureStyleRuleFor(refreshTime, false);
+  aEA->GetEventsAt(refreshTime, mPendingEvents);
   CheckNeedsRefresh();
 }
 
@@ -622,7 +642,8 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     ea->mAnimations.SwapElements(newAnimations);
     ea->mNeedsRefreshes = true;
 
-    ea->EnsureStyleRuleFor(refreshTime, mPendingEvents, false);
+    ea->EnsureStyleRuleFor(refreshTime, false);
+    ea->GetEventsAt(refreshTime, mPendingEvents);
     CheckNeedsRefresh();
     // We don't actually dispatch the mPendingEvents now.  We'll either
     // dispatch them the next time we get a refresh driver notification
@@ -1051,7 +1072,8 @@ nsAnimationManager::FlushAnimations(FlushFlags aFlags)
       ea->CanThrottleAnimation(now);
 
     nsRefPtr<css::AnimValuesStyleRule> oldStyleRule = ea->mStyleRule;
-    ea->EnsureStyleRuleFor(now, mPendingEvents, canThrottleTick);
+    ea->EnsureStyleRuleFor(now, canThrottleTick);
+    ea->GetEventsAt(now, mPendingEvents);
     CheckNeedsRefresh();
     if (oldStyleRule != ea->mStyleRule) {
       ea->PostRestyleForAnimation(mPresContext);
