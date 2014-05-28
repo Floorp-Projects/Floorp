@@ -54,13 +54,13 @@ public:
     GetChildList().AppendIfNonempty(aLists, aListID);
   }
 
-  nsresult SetInitialChildList(nsIFrame*       aDelegatingFrame,
+  void SetInitialChildList(nsIFrame*       aDelegatingFrame,
                                ChildListID     aListID,
                                nsFrameList&    aChildList);
-  nsresult AppendFrames(nsIFrame*      aDelegatingFrame,
+  void AppendFrames(nsIFrame*      aDelegatingFrame,
                         ChildListID    aListID,
                         nsFrameList&   aFrameList);
-  nsresult InsertFrames(nsIFrame*      aDelegatingFrame,
+  void InsertFrames(nsIFrame*      aDelegatingFrame,
                         ChildListID    aListID,
                         nsIFrame*      aPrevFrame,
                         nsFrameList&   aFrameList);

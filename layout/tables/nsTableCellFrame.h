@@ -63,12 +63,12 @@ public:
   // table cells contain a block frame which does most of the work, and
   // so these functions should never be called. They assert and return
   // NS_ERROR_NOT_IMPLEMENTED
-  virtual nsresult AppendFrames(ChildListID     aListID,
+  virtual void AppendFrames(ChildListID     aListID,
                                 nsFrameList&    aFrameList) MOZ_OVERRIDE;
-  virtual nsresult InsertFrames(ChildListID     aListID,
+  virtual void InsertFrames(ChildListID     aListID,
                                 nsIFrame*       aPrevFrame,
                                 nsFrameList&    aFrameList) MOZ_OVERRIDE;
-  virtual nsresult RemoveFrame(ChildListID     aListID,
+  virtual void RemoveFrame(ChildListID     aListID,
                                nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
   virtual nsContainerFrame* GetContentInsertionFrame() MOZ_OVERRIDE {

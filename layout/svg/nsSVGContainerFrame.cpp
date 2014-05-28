@@ -41,14 +41,14 @@ NS_NewSVGContainerFrame(nsIPresShell* aPresShell,
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGContainerFrame)
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGDisplayContainerFrame)
 
-nsresult
+void
 nsSVGContainerFrame::AppendFrames(ChildListID  aListID,
                                   nsFrameList& aFrameList)
 {
-  return InsertFrames(aListID, mFrames.LastChild(), aFrameList);  
+  InsertFrames(aListID, mFrames.LastChild(), aFrameList);  
 }
 
-nsresult
+void
 nsSVGContainerFrame::InsertFrames(ChildListID aListID,
                                   nsIFrame* aPrevFrame,
                                   nsFrameList& aFrameList)
@@ -58,18 +58,15 @@ nsSVGContainerFrame::InsertFrames(ChildListID aListID,
                "inserting after sibling frame with different parent");
 
   mFrames.InsertFrames(this, aPrevFrame, aFrameList);
-
-  return NS_OK;
 }
 
-nsresult
+void
 nsSVGContainerFrame::RemoveFrame(ChildListID aListID,
                                  nsIFrame* aOldFrame)
 {
   NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
 
   mFrames.DestroyFrame(aOldFrame);
-  return NS_OK;
 }
 
 bool
@@ -154,7 +151,7 @@ nsSVGDisplayContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   return BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists);
 }
 
-nsresult
+void
 nsSVGDisplayContainerFrame::InsertFrames(ChildListID aListID,
                                          nsIFrame* aPrevFrame,
                                          nsFrameList& aFrameList)
@@ -194,11 +191,9 @@ nsSVGDisplayContainerFrame::InsertFrames(ChildListID aListID,
       }
     }
   }
-
-  return NS_OK;
 }
 
-nsresult
+void
 nsSVGDisplayContainerFrame::RemoveFrame(ChildListID aListID,
                                         nsIFrame* aOldFrame)
 {
@@ -211,13 +206,11 @@ nsSVGDisplayContainerFrame::RemoveFrame(ChildListID aListID,
   PresContext()->RestyleManager()->PostRestyleEvent(
     mContent->AsElement(), nsRestyleHint(0), nsChangeHint_UpdateOverflow);
 
-  nsresult rv = nsSVGContainerFrame::RemoveFrame(aListID, aOldFrame);
+  nsSVGContainerFrame::RemoveFrame(aListID, aOldFrame);
 
   if (!(GetStateBits() & (NS_FRAME_IS_NONDISPLAY | NS_STATE_IS_OUTER_SVG))) {
     nsSVGUtils::NotifyAncestorsOfFilterRegionChange(this);
   }
-
-  return rv;
 }
 
 bool

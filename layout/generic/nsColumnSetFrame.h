@@ -14,7 +14,7 @@ public:
 
   nsColumnSetFrame(nsStyleContext* aContext);
 
-  virtual nsresult SetInitialChildList(ChildListID     aListID,
+  virtual void SetInitialChildList(ChildListID     aListID,
                                        nsFrameList&    aChildList) MOZ_OVERRIDE;
 
   virtual void Reflow(nsPresContext* aPresContext,
@@ -22,12 +22,12 @@ public:
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus& aStatus) MOZ_OVERRIDE;
 
-  virtual nsresult  AppendFrames(ChildListID     aListID,
+  virtual void  AppendFrames(ChildListID     aListID,
                                  nsFrameList&    aFrameList) MOZ_OVERRIDE;
-  virtual nsresult  InsertFrames(ChildListID     aListID,
+  virtual void  InsertFrames(ChildListID     aListID,
                                  nsIFrame*       aPrevFrame,
                                  nsFrameList&    aFrameList) MOZ_OVERRIDE;
-  virtual nsresult  RemoveFrame(ChildListID     aListID,
+  virtual void  RemoveFrame(ChildListID     aListID,
                                 nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;

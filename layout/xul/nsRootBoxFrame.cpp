@@ -58,12 +58,12 @@ public:
   virtual nsresult AddTooltipSupport(nsIContent* aNode) MOZ_OVERRIDE;
   virtual nsresult RemoveTooltipSupport(nsIContent* aNode) MOZ_OVERRIDE;
 
-  virtual nsresult AppendFrames(ChildListID     aListID,
+  virtual void AppendFrames(ChildListID     aListID,
                                 nsFrameList&    aFrameList) MOZ_OVERRIDE;
-  virtual nsresult InsertFrames(ChildListID     aListID,
+  virtual void InsertFrames(ChildListID     aListID,
                                 nsIFrame*       aPrevFrame,
                                 nsFrameList&    aFrameList) MOZ_OVERRIDE;
-  virtual nsresult RemoveFrame(ChildListID     aListID,
+  virtual void RemoveFrame(ChildListID     aListID,
                                nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
   virtual void Reflow(nsPresContext*          aPresContext,
@@ -123,63 +123,36 @@ nsRootBoxFrame::nsRootBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext):
   SetLayoutManager(layout);
 }
 
-nsresult
+void
 nsRootBoxFrame::AppendFrames(ChildListID     aListID,
                              nsFrameList&    aFrameList)
 {
-  nsresult  rv;
-
-  NS_ASSERTION(aListID == kPrincipalList, "unexpected child list ID");
-  NS_PRECONDITION(mFrames.IsEmpty(), "already have a child frame");
-  if (aListID != kPrincipalList) {
-    // We only support the principal child list.
-    rv = NS_ERROR_INVALID_ARG;
-  } else if (!mFrames.IsEmpty()) {
-    // We only allow a single child frame.
-    rv = NS_ERROR_FAILURE;
-  } else {
-    rv = nsBoxFrame::AppendFrames(aListID, aFrameList);
-  }
-
-  return rv;
+  MOZ_ASSERT(aListID == kPrincipalList, "unexpected child list ID");
+  MOZ_ASSERT(mFrames.IsEmpty(), "already have a child frame");
+  nsBoxFrame::AppendFrames(aListID, aFrameList);
 }
 
-nsresult
+void
 nsRootBoxFrame::InsertFrames(ChildListID     aListID,
                              nsIFrame*       aPrevFrame,
                              nsFrameList&    aFrameList)
 {
-  nsresult  rv;
-
   // Because we only support a single child frame inserting is the same
   // as appending.
-  NS_PRECONDITION(!aPrevFrame, "unexpected previous sibling frame");
-  if (aPrevFrame) {
-    rv = NS_ERROR_UNEXPECTED;
-  } else {
-    rv = AppendFrames(aListID, aFrameList);
-  }
-
-  return rv;
+  MOZ_ASSERT(!aPrevFrame, "unexpected previous sibling frame");
+  AppendFrames(aListID, aFrameList);
 }
 
-nsresult
+void
 nsRootBoxFrame::RemoveFrame(ChildListID     aListID,
                             nsIFrame*       aOldFrame)
 {
-  nsresult  rv;
-
   NS_ASSERTION(aListID == kPrincipalList, "unexpected child list ID");
-  if (aListID != kPrincipalList) {
-    // We only support the principal child list.
-    rv = NS_ERROR_INVALID_ARG;
-  } else if (aOldFrame == mFrames.FirstChild()) {
-    rv = nsBoxFrame::RemoveFrame(aListID, aOldFrame);
+  if (aOldFrame == mFrames.FirstChild()) {
+    nsBoxFrame::RemoveFrame(aListID, aOldFrame);
   } else {
-    rv = NS_ERROR_FAILURE;
+    MOZ_CRASH("unknown aOldFrame");
   }
-
-  return rv;
 }
 
 #ifdef DEBUG_REFLOW

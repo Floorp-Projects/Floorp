@@ -348,21 +348,21 @@ nsFrameManager::ClearAllUndisplayedContentIn(nsIContent* aParentContent)
 }
 
 //----------------------------------------------------------------------
-nsresult
+void
 nsFrameManager::AppendFrames(nsContainerFrame* aParentFrame,
                              ChildListID       aListID,
                              nsFrameList&      aFrameList)
 {
   if (aParentFrame->IsAbsoluteContainer() &&
       aListID == aParentFrame->GetAbsoluteListID()) {
-    return aParentFrame->GetAbsoluteContainingBlock()->
-           AppendFrames(aParentFrame, aListID, aFrameList);
+    aParentFrame->GetAbsoluteContainingBlock()->
+      AppendFrames(aParentFrame, aListID, aFrameList);
   } else {
-    return aParentFrame->AppendFrames(aListID, aFrameList);
+    aParentFrame->AppendFrames(aListID, aFrameList);
   }
 }
 
-nsresult
+void
 nsFrameManager::InsertFrames(nsContainerFrame* aParentFrame,
                              ChildListID       aListID,
                              nsIFrame*         aPrevFrame,
@@ -375,14 +375,14 @@ nsFrameManager::InsertFrames(nsContainerFrame* aParentFrame,
 
   if (aParentFrame->IsAbsoluteContainer() &&
       aListID == aParentFrame->GetAbsoluteListID()) {
-    return aParentFrame->GetAbsoluteContainingBlock()->
-           InsertFrames(aParentFrame, aListID, aPrevFrame, aFrameList);
+    aParentFrame->GetAbsoluteContainingBlock()->
+      InsertFrames(aParentFrame, aListID, aPrevFrame, aFrameList);
   } else {
-    return aParentFrame->InsertFrames(aListID, aPrevFrame, aFrameList);
+    aParentFrame->InsertFrames(aListID, aPrevFrame, aFrameList);
   }
 }
 
-nsresult
+void
 nsFrameManager::RemoveFrame(ChildListID     aListID,
                             nsIFrame*       aOldFrame)
 {
@@ -404,19 +404,16 @@ nsFrameManager::RemoveFrame(ChildListID     aListID,
   NS_ASSERTION(!(aOldFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW &&
                  GetPlaceholderFrameFor(aOldFrame)),
                "Must call RemoveFrame on placeholder for out-of-flows.");
-  nsresult rv = NS_OK;
   nsContainerFrame* parentFrame = aOldFrame->GetParent();
   if (parentFrame->IsAbsoluteContainer() &&
       aListID == parentFrame->GetAbsoluteListID()) {
     parentFrame->GetAbsoluteContainingBlock()->
       RemoveFrame(parentFrame, aListID, aOldFrame);
   } else {
-    rv = parentFrame->RemoveFrame(aListID, aOldFrame);
+    parentFrame->RemoveFrame(aListID, aOldFrame);
   }
 
   mIsDestroyingFrames = wasDestroyingFrames;
-
-  return rv;
 }
 
 //----------------------------------------------------------------------

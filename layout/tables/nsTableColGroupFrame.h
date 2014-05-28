@@ -43,7 +43,7 @@ public:
   /** Initialize the colgroup frame with a set of children.
     * @see nsIFrame::SetInitialChildList
     */
-  virtual nsresult SetInitialChildList(ChildListID     aListID,
+  virtual void SetInitialChildList(ChildListID     aListID,
                                        nsFrameList&    aChildList) MOZ_OVERRIDE;
 
   /**
@@ -83,12 +83,12 @@ public:
 
   /** @see nsIFrame::AppendFrames, InsertFrames, RemoveFrame
     */
-  virtual nsresult AppendFrames(ChildListID     aListID,
+  virtual void AppendFrames(ChildListID     aListID,
                                 nsFrameList&    aFrameList) MOZ_OVERRIDE;
-  virtual nsresult InsertFrames(ChildListID     aListID,
+  virtual void InsertFrames(ChildListID     aListID,
                                 nsIFrame*       aPrevFrame,
                                 nsFrameList&    aFrameList) MOZ_OVERRIDE;
-  virtual nsresult RemoveFrame(ChildListID     aListID,
+  virtual void RemoveFrame(ChildListID     aListID,
                                nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
   /** remove the column aChild from the column group, if requested renumber
