@@ -113,6 +113,11 @@ function PasswordStore(name, engine) {
   Store.call(this, name, engine);
   this._nsLoginInfo = new Components.Constructor(
     "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
+
+  XPCOMUtils.defineLazyGetter(this, "DBConnection", function() {
+    return Services.logins.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.mozIStorageConnection);
+  });
 }
 PasswordStore.prototype = {
   __proto__: Store.prototype,
@@ -155,6 +160,21 @@ PasswordStore.prototype = {
       this._log.trace("No items matching " + id + " found. Ignoring");
     }
     return null;
+  },
+
+  applyIncomingBatch: function applyIncomingBatch(records) {
+    if (!this.DBConnection) {
+      return Store.prototype.applyIncomingBatch.call(this, records);
+    }
+
+    return Utils.runInTransaction(this.DBConnection, function() {
+      return Store.prototype.applyIncomingBatch.call(this, records);
+    }, this);
+  },
+
+  applyIncoming: function applyIncoming(record) {
+    Store.prototype.applyIncoming.call(this, record);
+    this._sleep(0); // Yield back to main thread after synchronous operation.
   },
 
   getAllIDs: function PasswordStore__getAllIDs() {

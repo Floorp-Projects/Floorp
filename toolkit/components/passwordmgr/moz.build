@@ -23,31 +23,18 @@ XPIDL_MODULE = 'loginmgr'
 EXTRA_COMPONENTS += [
     'crypto-SDR.js',
     'nsLoginInfo.js',
+    'nsLoginManager.js',
     'nsLoginManagerPrompter.js',
+    'passwordmgr.manifest',
 ]
 
 EXTRA_PP_COMPONENTS += [
-    'nsLoginManager.js',
-    'passwordmgr.manifest',
+    'storage-mozStorage.js',
 ]
 
 EXTRA_JS_MODULES += [
     'InsecurePasswordUtils.jsm',
-    'LoginHelper.jsm',
     'LoginManagerContent.jsm',
 ]
-
-if CONFIG['OS_TARGET'] == 'Android':
-    EXTRA_COMPONENTS += [
-        'storage-mozStorage.js',
-    ]
-else:
-    EXTRA_COMPONENTS += [
-        'storage-json.js',
-    ]
-    EXTRA_JS_MODULES += [
-        'LoginImport.jsm',
-        'LoginStore.jsm',
-    ]
 
 JAR_MANIFESTS += ['jar.mn']
