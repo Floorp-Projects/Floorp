@@ -118,14 +118,17 @@ class MIRGenerator
     bool performsCall() const {
         return performsCall_;
     }
+    void setNeedsInitialStackAlignment() {
+        needsInitialStackAlignment_ = true;
+    }
+    bool needsInitialStackAlignment() const {
+        JS_ASSERT(compilingAsmJS());
+        return needsInitialStackAlignment_;
+    }
     void setPerformsAsmJSCall() {
         JS_ASSERT(compilingAsmJS());
         setPerformsCall();
-        performsAsmJSCall_ = true;
-    }
-    bool performsAsmJSCall() const {
-        JS_ASSERT(compilingAsmJS());
-        return performsAsmJSCall_;
+        setNeedsInitialStackAlignment();
     }
     void noteMinAsmJSHeapLength(uint32_t len) {
         minAsmJSHeapLength_ = len;
@@ -154,7 +157,7 @@ class MIRGenerator
 
     uint32_t maxAsmJSStackArgBytes_;
     bool performsCall_;
-    bool performsAsmJSCall_;
+    bool needsInitialStackAlignment_;
     uint32_t minAsmJSHeapLength_;
 
     // Keep track of whether frame arguments are modified during execution.
