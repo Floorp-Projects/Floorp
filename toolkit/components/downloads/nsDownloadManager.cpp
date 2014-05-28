@@ -2644,6 +2644,13 @@ NS_IMETHODIMP nsDownload::SetSignatureInfo(nsIArray* aSignatureInfo) {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDownload::SetRedirects(nsIArray* aRedirects) {
+  MOZ_ASSERT(NS_IsMainThread(), "Must call SetRedirects on main thread");
+  // This will be used later to query the application reputation service.
+  mRedirects = aRedirects;
+  return NS_OK;
+}
+
 #ifdef MOZ_ENABLE_GIO
 static void gio_set_metadata_done(GObject *source_obj, GAsyncResult *res, gpointer user_data)
 {
