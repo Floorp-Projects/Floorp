@@ -4661,25 +4661,23 @@ nsBlockFrame::RemovePushedFloats()
 //////////////////////////////////////////////////////////////////////
 // Frame list manipulation routines
 
-nsresult
+void
 nsBlockFrame::AppendFrames(ChildListID  aListID,
                            nsFrameList& aFrameList)
 {
   if (aFrameList.IsEmpty()) {
-    return NS_OK;
+    return;
   }
   if (aListID != kPrincipalList) {
     if (kAbsoluteList == aListID) {
-      return nsContainerFrame::AppendFrames(aListID, aFrameList);
+      nsContainerFrame::AppendFrames(aListID, aFrameList);
+      return;
     }
-    else if (kFloatList == aListID) {
+    if (kFloatList == aListID) {
       mFloats.AppendFrames(nullptr, aFrameList);
-      return NS_OK;
+      return;
     }
-    else {
-      NS_ERROR("unexpected child list");
-      return NS_ERROR_INVALID_ARG;
-    }
+    MOZ_CRASH("unexpected child list");
   }
 
   // Find the proper last-child for where the append should go
@@ -4703,10 +4701,9 @@ nsBlockFrame::AppendFrames(ChildListID  aListID,
   PresContext()->PresShell()->
     FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                      NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
-  return NS_OK;
 }
 
-nsresult
+void
 nsBlockFrame::InsertFrames(ChildListID aListID,
                            nsIFrame* aPrevFrame,
                            nsFrameList& aFrameList)
@@ -4716,16 +4713,14 @@ nsBlockFrame::InsertFrames(ChildListID aListID,
 
   if (aListID != kPrincipalList) {
     if (kAbsoluteList == aListID) {
-      return nsContainerFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
+      nsContainerFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
+      return;
     }
-    else if (kFloatList == aListID) {
+    if (kFloatList == aListID) {
       mFloats.InsertFrames(this, aPrevFrame, aFrameList);
-      return NS_OK;
+      return;
     }
-    else if (kNoReflowPrincipalList != aListID) {
-      NS_ERROR("unexpected child list");
-      return NS_ERROR_INVALID_ARG;
-    }
+    MOZ_ASSERT(kNoReflowPrincipalList == aListID, "unexpected child list");
   }
 
 #ifdef NOISY_REFLOW_REASON
@@ -4745,7 +4740,6 @@ nsBlockFrame::InsertFrames(ChildListID aListID,
     PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                        NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
-  return NS_OK;
 }
 
 static bool
@@ -4987,12 +4981,10 @@ static bool BlockHasAnyFloats(nsIFrame* aFrame)
   return false;
 }
 
-nsresult
+void
 nsBlockFrame::RemoveFrame(ChildListID aListID,
                           nsIFrame* aOldFrame)
 {
-  nsresult rv = NS_OK;
-
 #ifdef NOISY_REFLOW_REASON
   ListTag(stdout);
   printf(": remove ");
@@ -5002,14 +4994,14 @@ nsBlockFrame::RemoveFrame(ChildListID aListID,
 
   if (aListID == kPrincipalList) {
     bool hasFloats = BlockHasAnyFloats(aOldFrame);
-    rv = DoRemoveFrame(aOldFrame, REMOVE_FIXED_CONTINUATIONS);
+    DoRemoveFrame(aOldFrame, REMOVE_FIXED_CONTINUATIONS);
     if (hasFloats) {
       MarkSameFloatManagerLinesDirty(this);
     }
   }
   else if (kAbsoluteList == aListID) {
     nsContainerFrame::RemoveFrame(aListID, aOldFrame);
-    return NS_OK;
+    return;
   }
   else if (kFloatList == aListID) {
     // Make sure to mark affected lines dirty for the float frame
@@ -5026,19 +5018,16 @@ nsBlockFrame::RemoveFrame(ChildListID aListID,
   }
   else if (kNoReflowPrincipalList == aListID) {
     // Skip the call to |FrameNeedsReflow| below by returning now.
-    return DoRemoveFrame(aOldFrame, REMOVE_FIXED_CONTINUATIONS);
+    DoRemoveFrame(aOldFrame, REMOVE_FIXED_CONTINUATIONS);
+    return;
   }
   else {
-    NS_ERROR("unexpected child list");
-    rv = NS_ERROR_INVALID_ARG;
+    MOZ_CRASH("unexpected child list");
   }
 
-  if (NS_SUCCEEDED(rv)) {
-    PresContext()->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eTreeChange,
-                       NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
-  }
-  return rv;
+  PresContext()->PresShell()->
+    FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                     NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
 }
 
 void
@@ -5292,16 +5281,16 @@ nsBlockInFlowLineIterator::FindValidLine()
   }
 }
 
-static nsresult RemoveBlockChild(nsIFrame* aFrame,
-                                 bool      aRemoveOnlyFluidContinuations)
+static void RemoveBlockChild(nsIFrame* aFrame,
+                             bool      aRemoveOnlyFluidContinuations)
 {
-  if (!aFrame)
-    return NS_OK;
-
+  if (!aFrame) {
+    return;
+  }
   nsBlockFrame* nextBlock = nsLayoutUtils::GetAsBlock(aFrame->GetParent());
   NS_ASSERTION(nextBlock,
                "Our child's continuation's parent is not a block?");
-  return nextBlock->DoRemoveFrame(aFrame,
+  nextBlock->DoRemoveFrame(aFrame,
       (aRemoveOnlyFluidContinuations ? 0 : nsBlockFrame::REMOVE_FIXED_CONTINUATIONS));
 }
 
@@ -5312,7 +5301,7 @@ static nsresult RemoveBlockChild(nsIFrame* aFrame,
 // aDeletedFrame and remove aDeletedFrame from that line. But here we
 // start by locating aDeletedFrame and then scanning from that point
 // on looking for continuations.
-nsresult
+void
 nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, uint32_t aFlags)
 {
   // Clear our line cursor, since our lines may change.
@@ -5329,7 +5318,7 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, uint32_t aFlags)
       nsContainerFrame::DeleteNextInFlowChild(aDeletedFrame,
                                               (aFlags & FRAMES_ARE_EMPTY) != 0);
     }
-    return NS_OK;
+    return;
   }
 
   // Find the line that contains deletedFrame
@@ -5353,7 +5342,7 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, uint32_t aFlags)
 
   if (line == line_end) {
     NS_ERROR("can't find deleted frame in lines");
-    return NS_ERROR_FAILURE;
+    return;
   }
   
   if (!(aFlags & FRAMES_ARE_EMPTY)) {
@@ -5542,7 +5531,7 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, uint32_t aFlags)
 #endif
 
   // Advance to next flow block if the frame has more continuations
-  return RemoveBlockChild(aDeletedFrame, !(aFlags & REMOVE_FIXED_CONTINUATIONS));
+  RemoveBlockChild(aDeletedFrame, !(aFlags & REMOVE_FIXED_CONTINUATIONS));
 }
 
 static bool
@@ -6437,7 +6426,7 @@ nsBlockFrame::Init(nsIContent*       aContent,
   }
 }
 
-nsresult
+void
 nsBlockFrame::SetInitialChildList(ChildListID     aListID,
                                   nsFrameList&    aChildList)
 {
@@ -6545,8 +6534,6 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
       }
     }
   }
-
-  return NS_OK;
 }
 
 bool
