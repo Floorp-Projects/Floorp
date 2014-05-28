@@ -271,6 +271,15 @@ protected:
    */
   static int32_t GetAccessModifierMaskFor(nsISupports* aDocShell);
 
+  /*
+   * If aTargetFrame's widget has a cached cursor value, resets the cursor
+   * such that the next call to SetCursor on the widget will force an update
+   * of the native cursor. For use in getting puppet widget to update its
+   * cursor between mouse exit / enter transitions. This call basically wraps
+   * nsIWidget ClearCachedCursor.
+   */
+  void ClearCachedWidgetCursor(nsIFrame* aTargetFrame);
+
   void UpdateCursor(nsPresContext* aPresContext,
                     WidgetEvent* aEvent,
                     nsIFrame* aTargetFrame,
@@ -783,7 +792,6 @@ protected:
                                  nsFrameLoader* aRemote,
                                  nsEventStatus *aStatus);
   bool HandleCrossProcessEvent(WidgetEvent* aEvent,
-                               nsIFrame* aTargetFrame,
                                nsEventStatus* aStatus);
 
   void ReleaseCurrentIMEContentObserver();

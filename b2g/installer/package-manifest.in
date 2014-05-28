@@ -627,7 +627,11 @@
 
 ; [Default Preferences]
 ; All the pref files must be part of base to prevent migration bugs
+#ifdef MOZ_MULET
+@BINPATH@/defaults/pref/b2g.js
+#else
 @BINPATH@/@PREF_DIR@/b2g.js
+#endif
 @BINPATH@/@PREF_DIR@/channel-prefs.js
 @BINPATH@/greprefs.js
 @BINPATH@/defaults/autoconfig/platform.js

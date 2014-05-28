@@ -349,10 +349,6 @@ div.CodeMirror span.eval-text {
   border-bottom: 1px solid #434850;
 }
 
-.theme-tooltip-panel .devtools-tooltip-font-previewer-text {
-  color: white;
-}
-
 .theme-tooltip-panel .devtools-tooltip-simple-text:last-child {
   border-bottom: 0;
 }

@@ -376,7 +376,7 @@ BookmarksObserver.prototype = {
     this._rootEvents.removeListener(aEvent, aListener);
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarksObserver,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarkObserver,
                                          Ci.nsISupportsWeakReference])
 };
 
@@ -495,7 +495,7 @@ Bookmark.prototype = {
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.fuelIBookmark,
-                                         Ci.nsINavBookmarksObserver,
+                                         Ci.nsINavBookmarkObserver,
                                          Ci.nsISupportsWeakReference])
 };
 
@@ -667,7 +667,7 @@ BookmarkFolder.prototype = {
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.fuelIBookmarkFolder,
-                                         Ci.nsINavBookmarksObserver,
+                                         Ci.nsINavBookmarkObserver,
                                          Ci.nsISupportsWeakReference])
 };
 
