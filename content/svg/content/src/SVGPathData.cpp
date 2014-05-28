@@ -38,6 +38,7 @@ SVGPathData::CopyFrom(const SVGPathData& rhs)
     // Yes, we do want fallible alloc here
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  mCachedPath = nullptr;
   mData = rhs.mData;
   return NS_OK;
 }
@@ -72,6 +73,7 @@ SVGPathData::SetValueFromString(const nsAString& aValue)
   // the first error. We still return any error though so that callers know if
   // there's a problem.
 
+  mCachedPath = nullptr;
   nsSVGPathDataParser pathParser(aValue, this);
   return pathParser.Parse() ? NS_OK : NS_ERROR_DOM_SYNTAX_ERR;
 }
@@ -84,6 +86,8 @@ SVGPathData::AppendSeg(uint32_t aType, ...)
   if (!mData.SetLength(newLength)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  mCachedPath = nullptr;
+
   mData[oldLength] = SVGPathSegUtils::EncodeType(aType);
   va_list args;
   va_start(args, aType);
@@ -817,7 +821,11 @@ SVGPathData::ToPathForLengthOrPositionMeasuring() const
   // pass as aStrokeWidth doesn't matter (since it's only used to determine the
   // length of those extra little lines).
 
-  return BuildPath(FillRule::FILL_WINDING, NS_STYLE_STROKE_LINECAP_BUTT, 0);
+  if (!mCachedPath) {
+    mCachedPath = BuildPath(FillRule::FILL_WINDING, NS_STYLE_STROKE_LINECAP_BUTT, 0);
+  }
+
+  return mCachedPath;
 }
 
 static double
