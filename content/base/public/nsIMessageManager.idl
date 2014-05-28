@@ -39,6 +39,8 @@ interface nsIPrincipal;
  *  - "frame message managers" which correspond to frame elements
  *  - "window message managers" which correspond to top-level chrome
  *    windows
+ *  - "group message managers" which correspond to named message
+ *    managers with a specific window MM as the parent
  *  - the "global message manager", on the parent side.  See below.
  *
  * The DOM-realm message managers can communicate in the ways shown by
@@ -54,6 +56,16 @@ interface nsIPrincipal;
  *   |    +-->frame MMp1_1<------------>frame MMc1_1
  *   |    |
  *   |    +-->frame MMp1_2<------------>frame MMc1_2
+ *   |    |
+ *   |    +-->group MMgr1
+ *   |    |    |
+ *   |    |    +-->frame MMp2_1<------->frame MMc2_1
+ *   |    |    |
+ *   |    |    +-->frame MMp2_2<------->frame MMc2_2
+ *   |    |
+ *   |    +-->group MMgr2
+ *   |    |    ...
+ *   |    |
  *   |    ...
  *   |
  *   +-->window MMw2
@@ -64,17 +76,23 @@ interface nsIPrincipal;
  * message managers in the hierarchy above MMp1_1, in this diagram
  * MMw1 and MMg, will also notify their message listeners when the
  * message arrives.
+ *
+ * A message sent from MMc2_1 will be sent to MMp2_1 and also notify
+ * all message managers in the hierarchy above that, including the
+ * group message manager MMgr1.
 
  * For example: a message broadcast through the global MMg on the
  * parent side would be broadcast to MMw1, which would transitively
- * broadcast it to MMp1_1, MM1p_2".  The message would next be
- * broadcast to MMw2, and so on down the hierarchy.
+ * broadcast it to MMp1_1, MM1p_2.  The message would next be
+ * broadcast to MMgr1, which would broadcast it to MMp2_1 and MMp2_2.
+ * After that it would broadcast to MMgr2 and then to MMw2, and so
+ * on down the hierarchy.
  *
  *   ***** PERFORMANCE AND SECURITY WARNING *****
- * Messages broadcast through the global MM and window MMs can result
- * in messages being dispatched across many OS processes, and to many
- * processes with different permissions.  Great care should be taken
- * when broadcasting.
+ * Messages broadcast through the global MM and window or group MMs
+ * can result in messages being dispatched across many OS processes,
+ * and to many processes with different permissions.  Great care
+ * should be taken when broadcasting.
  *
  * Interfaces
  * ----------

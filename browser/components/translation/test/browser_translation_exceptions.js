@@ -7,14 +7,17 @@
 Components.utils.import("resource:///modules/translation/Translation.jsm");
 
 const kLanguagesPref = "browser.translation.neverForLanguages";
+const kShowUIPref = "browser.translation.ui.show";
 
 function test() {
   waitForExplicitFinish();
 
+  Services.prefs.setBoolPref(kShowUIPref, true);
   let tab = gBrowser.addTab();
   gBrowser.selectedTab = tab;
   registerCleanupFunction(function () {
     gBrowser.removeTab(tab);
+    Services.prefs.clearUserPref(kShowUIPref);
   });
   tab.linkedBrowser.addEventListener("load", function onload() {
     tab.linkedBrowser.removeEventListener("load", onload, true);

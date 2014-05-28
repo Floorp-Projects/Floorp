@@ -34,7 +34,7 @@
             <xul:hbox flex="1" class="browserSidebarContainer">
               <xul:vbox flex="1" class="browserContainer">
                 <xul:stack flex="1" class="browserStack" anonid="browserStack">
-                  <xul:browser anonid="initialBrowser" type="content-primary" message="true"
+                  <xul:browser anonid="initialBrowser" type="content-primary" message="true" messagemanagergroup="browsers"
                                xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu,autocompletepopup,selectpopup"/>
                 </xul:stack>
               </xul:vbox>
@@ -1529,6 +1529,7 @@
                                              "browser");
             b.setAttribute("type", "content-targetable");
             b.setAttribute("message", "true");
+            b.setAttribute("messagemanagergroup", "browsers");
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
 
@@ -3336,11 +3337,8 @@
       <handler event="overflow"><![CDATA[
         if (event.detail == 0)
           return; // Ignore vertical events
-        var tabs = document.getBindingParent(this);
-        var numberOfTabs = tabs.tabbrowser.visibleTabs.length;
-        if (numberOfTabs == 1)
-          return;
 
+        var tabs = document.getBindingParent(this);
         tabs.setAttribute("overflow", "true");
         tabs._positionPinnedTabs();
         tabs._handleTabSelect(false);
@@ -3860,14 +3858,12 @@
 
               TabsInTitlebar.updateAppearance();
 
-              if (this.tabbrowser.visibleTabs.length > 1) {
-                var width = this.mTabstrip.boxObject.width;
-                if (width != this.mTabstripWidth) {
-                  this.adjustTabstrip();
-                  this._fillTrailingGap();
-                  this._handleTabSelect();
-                  this.mTabstripWidth = width;
-                }
+              var width = this.mTabstrip.boxObject.width;
+              if (width != this.mTabstripWidth) {
+                this.adjustTabstrip();
+                this._fillTrailingGap();
+                this._handleTabSelect();
+                this.mTabstripWidth = width;
               }
 
               this.tabbrowser.updateWindowResizers();

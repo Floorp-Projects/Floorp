@@ -27,6 +27,15 @@ GetUserMediaLog()
 }
 #endif
 
+static PRLogModuleInfo*
+GetWebrtcTraceLog()
+{
+  static PRLogModuleInfo *sLog;
+  if (!sLog)
+    sLog = PR_NewLogModule("webrtc_trace");
+  return sLog;
+}
+
 #include "MediaEngineWebRTC.h"
 #include "ImageContainer.h"
 #include "nsIComponentRegistrar.h"
@@ -63,6 +72,14 @@ MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs &aPrefs)
 #endif
   // XXX
   gFarendObserver = new AudioOutputObserver();
+}
+
+void
+MediaEngineWebRTC::Print(webrtc::TraceLevel level, const char* message, int length)
+{
+  PRLogModuleInfo *log = GetWebrtcTraceLog();
+  // XXX look at log level?
+  PR_LOG(log, PR_LOG_DEBUG, ("%s", message));
 }
 
 void
@@ -130,7 +147,7 @@ MediaEngineWebRTC::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSourc
     }
   }
 
-  PRLogModuleInfo *logs = GetWebRTCLogInfo();
+  PRLogModuleInfo *logs = GetWebrtcTraceLog();
   if (!gWebrtcTraceLoggingOn && logs && logs->level > 0) {
     // no need to a critical section or lock here
     gWebrtcTraceLoggingOn = 1;
@@ -143,7 +160,11 @@ MediaEngineWebRTC::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSourc
     LOG(("%s Logging webrtc to %s level %d", __FUNCTION__, file, logs->level));
 
     mVideoEngine->SetTraceFilter(logs->level);
-    mVideoEngine->SetTraceFile(file);
+    if (strcmp(file, "nspr") == 0) {
+      mVideoEngine->SetTraceCallback(this);
+    } else {
+      mVideoEngine->SetTraceFile(file);
+    }
   }
 
   ptrViEBase = webrtc::ViEBase::GetInterface(mVideoEngine);
@@ -263,7 +284,7 @@ MediaEngineWebRTC::EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSourc
     }
   }
 
-  PRLogModuleInfo *logs = GetWebRTCLogInfo();
+  PRLogModuleInfo *logs = GetWebrtcTraceLog();
   if (!gWebrtcTraceLoggingOn && logs && logs->level > 0) {
     // no need to a critical section or lock here
     gWebrtcTraceLoggingOn = 1;
@@ -276,7 +297,11 @@ MediaEngineWebRTC::EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSourc
     LOG(("Logging webrtc to %s level %d", __FUNCTION__, file, logs->level));
 
     mVoiceEngine->SetTraceFilter(logs->level);
-    mVoiceEngine->SetTraceFile(file);
+    if (strcmp(file, "nspr") == 0) {
+      mVoiceEngine->SetTraceCallback(this);
+    } else {
+      mVoiceEngine->SetTraceFile(file);
+    }
   }
 
   ptrVoEBase = webrtc::VoEBase::GetInterface(mVoiceEngine);
@@ -340,13 +365,16 @@ MediaEngineWebRTC::Shutdown()
   // This is likely paranoia
   MutexAutoLock lock(mMutex);
 
+  // Clear callbacks before we go away since the engines may outlive us
   if (mVideoEngine) {
     mVideoSources.Clear();
+    mVideoEngine->SetTraceCallback(nullptr);
     webrtc::VideoEngine::Delete(mVideoEngine);
   }
 
   if (mVoiceEngine) {
     mAudioSources.Clear();
+    mVoiceEngine->SetTraceCallback(nullptr);
     webrtc::VoiceEngine::Delete(mVoiceEngine);
   }
 

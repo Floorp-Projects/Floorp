@@ -48,6 +48,7 @@ class TraceImpl : public Trace {
   static TraceImpl* CreateInstance();
   static TraceImpl* GetTrace(const TraceLevel level = kTraceAll);
 
+  void AllocateTraceBuffers();
   int32_t SetTraceFileImpl(const char* file_name, const bool add_file_counter);
   int32_t TraceFileImpl(char file_name[FileWrapper::kMaxFileNameSize]);
 

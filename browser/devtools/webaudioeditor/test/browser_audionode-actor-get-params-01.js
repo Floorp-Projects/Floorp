@@ -23,12 +23,7 @@ function spawnTest () {
   nodeTypes.forEach((type, i) => {
     let params = allNodeParams[i];
     params.forEach(({param, value, flags}) => {
-      ok(~NODE_PROPERTIES[type].indexOf(param), "expected parameter for " + type);
-
-      // Skip over some properties that are undefined by default
-      if (!/buffer|loop|smoothing|curve|cone/.test(param)) {
-        ok(value != undefined, param + " is not undefined");
-      }
+      ok(param in NODE_DEFAULT_VALUES[type], "expected parameter for " + type);
 
       ok(typeof flags === "object", type + " has a flags object");
 

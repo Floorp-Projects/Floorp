@@ -36,7 +36,8 @@ def test(mod, path, entity = None):
     if (re.match(r"browser\.search\.order\.[1-9]", entity) or
         re.match(r"browser\.contentHandlers\.types\.[0-5]", entity) or
         re.match(r"gecko\.handlerService\.schemes\.", entity) or
-      re.match(r"gecko\.handlerService\.defaultHandlersVersion", entity)):
+        re.match(r"gecko\.handlerService\.defaultHandlersVersion", entity) or
+        re.match(r"browser\.suggestedsites\.", entity)):
       return "ignore"
 
   return "error"
