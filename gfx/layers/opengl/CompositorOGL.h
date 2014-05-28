@@ -346,6 +346,9 @@ private:
                             GLuint aSourceFrameBuffer,
                             GLuint *aFBO, GLuint *aTexture);
 
+  void BindQuadVBO();
+  void QuadVBOVerticesAttrib(GLuint aAttribIndex);
+  void QuadVBOTexCoordsAttrib(GLuint aAttribIndex);
   void BindAndDrawQuads(ShaderProgramOGL *aProg,
                         int aQuads,
                         const gfx::Rect* aLayerRect,
