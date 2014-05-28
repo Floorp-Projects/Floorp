@@ -58,7 +58,6 @@ public:
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify) MOZ_OVERRIDE;
 
-  bool PassesConditionalProcessingTests();
   const nsAttrValue* GetAnimAttr(nsIAtom* aName) const;
   bool GetAnimAttr(nsIAtom* aAttName, nsAString& aResult) const;
   bool HasAnimAttr(nsIAtom* aAttName) const;

@@ -7,10 +7,6 @@ dist_dest   = $(DIST)/$(MOZ_MACBUNDLE_NAME)
 PREF_JS_EXPORTS = $(srcdir)/profile/firefox.js \
 		  $(NULL)
 
-ifdef MOZ_MULET
-PREF_JS_EXPORTS += $(topsrcdir)/b2g/app/b2g.js
-endif
-
 # hardcode en-US for the moment
 AB_CD = en-US
 

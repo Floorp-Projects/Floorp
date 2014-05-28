@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const TIMEUPDATE_TIMEOUT_LENGTH = 10000;
-const ENDED_TIMEOUT_LENGTH = 10000;
+const ENDED_TIMEOUT_LENGTH = 30000;
 
 /* Time we wait for the canplaythrough event to fire
  * Note: this needs to be at least 30s because the

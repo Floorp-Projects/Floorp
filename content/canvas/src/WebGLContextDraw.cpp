@@ -128,7 +128,7 @@ WebGLContext::DrawArrays(GLenum mode, GLint first, GLsizei count)
     if (!DrawArrays_check(first, count, 1, "drawArrays"))
         return;
 
-    SetupContextLossTimer();
+    RunContextLossTimer();
     gl->fDrawArrays(mode, first, count);
 
     Draw_cleanup();
@@ -149,7 +149,7 @@ WebGLContext::DrawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsiz
     if (!DrawInstanced_check("drawArraysInstanced"))
         return;
 
-    SetupContextLossTimer();
+    RunContextLossTimer();
     gl->fDrawArraysInstanced(mode, first, count, primcount);
 
     Draw_cleanup();
@@ -296,7 +296,7 @@ WebGLContext::DrawElements(GLenum mode, GLsizei count, GLenum type,
         return;
     }
 
-    SetupContextLossTimer();
+    RunContextLossTimer();
 
     if (gl->IsSupported(gl::GLFeature::draw_range_elements)) {
         gl->fDrawRangeElements(mode, 0, upperBound,
@@ -324,7 +324,7 @@ WebGLContext::DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
     if (!DrawInstanced_check("drawElementsInstanced"))
         return;
 
-    SetupContextLossTimer();
+    RunContextLossTimer();
     gl->fDrawElementsInstanced(mode, count, type, reinterpret_cast<GLvoid*>(byteOffset), primcount);
 
     Draw_cleanup();

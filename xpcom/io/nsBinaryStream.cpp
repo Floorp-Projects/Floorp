@@ -18,17 +18,26 @@
  * @See nsIBinaryInputStream
  * @See nsIBinaryOutputStream
  */
+#include <algorithm>
 #include <string.h>
+
 #include "nsBinaryStream.h"
+
+#include "mozilla/Endian.h"
+#include "mozilla/PodOperations.h"
+#include "mozilla/Scoped.h"
+
 #include "nsCRT.h"
 #include "nsString.h"
 #include "nsISerializable.h"
 #include "nsIClassInfo.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIURI.h" // for NS_IURI_IID
-#include "mozilla/Endian.h"
 
 #include "jsfriendapi.h"
+
+using mozilla::PodCopy;
+using mozilla::ScopedDeleteArray;
 
 NS_IMPL_ISUPPORTS(nsBinaryOutputStream,
                   nsIObjectOutputStream,
@@ -822,19 +831,50 @@ nsBinaryInputStream::ReadArrayBuffer(uint32_t aLength,
     return NS_ERROR_FAILURE;
   }
   JS::RootedObject buffer(aCx, &aBuffer.toObject());
-  if (!JS_IsArrayBufferObject(buffer) ||
-      JS_GetArrayBufferByteLength(buffer) < aLength) {
+  if (!JS_IsArrayBufferObject(buffer)) {
     return NS_ERROR_FAILURE;
   }
-  uint8_t* data = JS_GetStableArrayBufferData(aCx, buffer);
+
+  uint32_t bufferLength = JS_GetArrayBufferByteLength(buffer);
+  if (bufferLength < aLength) {
+    return NS_ERROR_FAILURE;
+  }
+
+  char* data = reinterpret_cast<char*>(JS_GetStableArrayBufferData(aCx, buffer));
   if (!data) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = Read(reinterpret_cast<char*>(data), aLength, rLength);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  uint32_t bufSize = std::min<uint32_t>(aLength, 4096);
+  ScopedDeleteArray<char> buf(new char[bufSize]);
+
+  uint32_t remaining = aLength;
+  *rLength = 0;
+  do {
+    // Read data into temporary buffer.
+    uint32_t bytesRead;
+    uint32_t amount = std::min(remaining, bufSize);
+    nsresult rv = Read(buf, amount, &bytesRead);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    MOZ_ASSERT(bytesRead <= amount);
+
+    if (bytesRead == 0) {
+      break;
+    }
+
+    // Copy data into actual buffer.
+    if (bufferLength != JS_GetArrayBufferByteLength(buffer)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    *rLength += bytesRead;
+    PodCopy(data, buf.get(), bytesRead);
+
+    remaining -= bytesRead;
+    data += bytesRead;
+  } while (remaining > 0);
 
   return NS_OK;
 }

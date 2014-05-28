@@ -83,17 +83,20 @@ WebGLMemoryPressureObserver::Observe(nsISupports* aSubject,
 
     if (!mContext->mCanLoseContextInForeground &&
         ProcessPriorityManager::CurrentProcessIsForeground())
+    {
         wantToLoseContext = false;
-    else if (!nsCRT::strcmp(aSomeData,
-                            MOZ_UTF16("heap-minimize")))
+    } else if (!nsCRT::strcmp(aSomeData,
+                              MOZ_UTF16("heap-minimize")))
+    {
         wantToLoseContext = mContext->mLoseContextOnHeapMinimize;
+    }
 
-    if (wantToLoseContext)
+    if (wantToLoseContext) {
         mContext->ForceLoseContext();
+    }
 
     return NS_OK;
 }
-
 
 WebGLContextOptions::WebGLContextOptions()
     : alpha(true), depth(true), stencil(false),
@@ -168,12 +171,12 @@ WebGLContext::WebGLContext()
 
     WebGLMemoryTracker::AddWebGLContext(this);
 
-    mAllowRestore = true;
+    mAllowContextRestore = true;
+    mLastLossWasSimulated = false;
     mContextLossTimerRunning = false;
-    mDrawSinceContextLossTimerSet = false;
+    mRunContextLossTimerAgain = false;
     mContextRestorer = do_CreateInstance("@mozilla.org/timer;1");
     mContextStatus = ContextNotLost;
-    mContextLostErrorSet = false;
     mLoseContextOnHeapMinimize = false;
     mCanLoseContextInForeground = true;
 
@@ -571,11 +574,8 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
     mResetLayer = true;
     mOptionsFrozen = true;
 
-    mHasRobustness = gl->HasRobustness();
-
     // increment the generation number
     ++mGeneration;
-
 #if 0
     if (mGeneration > 0) {
         // XXX dispatch context lost event
@@ -1110,6 +1110,96 @@ WebGLContext::DummyFramebufferOperation(const char *info)
         ErrorInvalidFramebufferOperation("%s: incomplete framebuffer", info);
 }
 
+static bool
+CheckContextLost(GLContext* gl, bool* out_isGuilty)
+{
+    MOZ_ASSERT(gl);
+    MOZ_ASSERT(out_isGuilty);
+
+    bool isEGL = gl->GetContextType() == gl::GLContextType::EGL;
+
+    GLenum resetStatus = LOCAL_GL_NO_ERROR;
+    if (gl->HasRobustness()) {
+        gl->MakeCurrent();
+        resetStatus = gl->fGetGraphicsResetStatus();
+    } else if (isEGL) {
+        // Simulate a ARB_robustness guilty context loss for when we
+        // get an EGL_CONTEXT_LOST error. It may not actually be guilty,
+        // but we can't make any distinction.
+        if (!gl->MakeCurrent(true) && gl->IsContextLost()) {
+            resetStatus = LOCAL_GL_UNKNOWN_CONTEXT_RESET_ARB;
+        }
+    }
+
+    if (resetStatus == LOCAL_GL_NO_ERROR) {
+        *out_isGuilty = false;
+        return false;
+    }
+
+    // Assume guilty unless we find otherwise!
+    bool isGuilty = true;
+    switch (resetStatus) {
+    case LOCAL_GL_INNOCENT_CONTEXT_RESET_ARB:
+        // Either nothing wrong, or not our fault.
+        isGuilty = false;
+        break;
+    case LOCAL_GL_GUILTY_CONTEXT_RESET_ARB:
+        NS_WARNING("WebGL content on the page definitely caused the graphics"
+                   " card to reset.");
+        break;
+    case LOCAL_GL_UNKNOWN_CONTEXT_RESET_ARB:
+        NS_WARNING("WebGL content on the page might have caused the graphics"
+                   " card to reset");
+        // If we can't tell, assume guilty.
+        break;
+    default:
+        MOZ_ASSERT(false, "Unreachable.");
+        // If we do get here, let's pretend to be guilty as an escape plan.
+        break;
+    }
+
+    if (isGuilty) {
+        NS_WARNING("WebGL context on this page is considered guilty, and will"
+                   " not be restored.");
+    }
+
+    *out_isGuilty = isGuilty;
+    return true;
+}
+
+bool
+WebGLContext::TryToRestoreContext()
+{
+    if (NS_FAILED(SetDimensions(mWidth, mHeight)))
+        return false;
+
+    return true;
+}
+
+class UpdateContextLossStatusTask : public nsRunnable
+{
+    WebGLContext* const mContext;
+
+public:
+    UpdateContextLossStatusTask(WebGLContext* context)
+        : mContext(context)
+    {
+    }
+
+    NS_IMETHOD Run() {
+        mContext->UpdateContextLossStatus();
+
+        return NS_OK;
+    }
+};
+
+void
+WebGLContext::EnqueueUpdateContextLossStatus()
+{
+    nsCOMPtr<nsIRunnable> task = new UpdateContextLossStatusTask(this);
+    NS_DispatchToCurrentThread(task);
+}
+
 // We use this timer for many things. Here are the things that it is activated for:
 // 1) If a script is using the MOZ_WEBGL_lose_context extension.
 // 2) If we are using EGL and _NOT ANGLE_, we query periodically to see if the
@@ -1125,137 +1215,123 @@ WebGLContext::DummyFramebufferOperation(const char *info)
 // At a bare minimum, from context lost to context restores, it would take 3
 // full timer iterations: detection, webglcontextlost, webglcontextrestored.
 void
-WebGLContext::RobustnessTimerCallback(nsITimer* timer)
+WebGLContext::UpdateContextLossStatus()
 {
-    TerminateContextLossTimer();
-
     if (!mCanvasElement) {
         // the canvas is gone. That happens when the page was closed before we got
         // this timer event. In this case, there's nothing to do here, just don't crash.
         return;
     }
+    if (mContextStatus == ContextNotLost) {
+        // We don't know that we're lost, but we might be, so we need to
+        // check. If we're guilty, don't allow restores, though.
 
-    // If the context has been lost and we're waiting for it to be restored, do
-    // that now.
+        bool isGuilty = true;
+        bool isContextLost = CheckContextLost(gl, &isGuilty);
+
+        if (isContextLost) {
+            if (isGuilty)
+                mAllowContextRestore = false;
+
+            ForceLoseContext();
+        }
+
+        // Fall through.
+    }
+
     if (mContextStatus == ContextLostAwaitingEvent) {
-        bool defaultAction;
+        // The context has been lost and we haven't yet triggered the
+        // callback, so do that now.
+
+        bool useDefaultHandler;
         nsContentUtils::DispatchTrustedEvent(mCanvasElement->OwnerDoc(),
                                              static_cast<nsIDOMHTMLCanvasElement*>(mCanvasElement),
                                              NS_LITERAL_STRING("webglcontextlost"),
                                              true,
                                              true,
-                                             &defaultAction);
+                                             &useDefaultHandler);
+        // We sent the callback, so we're just 'regular lost' now.
+        mContextStatus = ContextLost;
+        // If we're told to use the default handler, it means the script
+        // didn't bother to handle the event. In this case, we shouldn't
+        // auto-restore the context.
+        if (useDefaultHandler)
+            mAllowContextRestore = false;
 
-        // If the script didn't handle the event, we don't allow restores.
-        if (defaultAction)
-            mAllowRestore = false;
+        // Fall through.
+    }
 
-        // If the script handled the event and we are allowing restores, then
-        // mark it to be restored. Otherwise, leave it as context lost
-        // (unusable).
-        if (!defaultAction && mAllowRestore) {
-            ForceRestoreContext();
-            // Restart the timer so that it will be restored on the next
-            // callback.
-            SetupContextLossTimer();
-        } else {
+    if (mContextStatus == ContextLost) {
+        // Context is lost, and we've already sent the callback. We
+        // should try to restore the context if we're both allowed to,
+        // and supposed to.
+
+        // Are we allowed to restore the context?
+        if (!mAllowContextRestore)
+            return;
+
+        // If we're only simulated-lost, we shouldn't auto-restore, and
+        // instead we should wait for restoreContext() to be called.
+        if (mLastLossWasSimulated)
+            return;
+
+        ForceRestoreContext();
+        return;
+    }
+
+    if (mContextStatus == ContextLostAwaitingRestore) {
+        // Context is lost, but we should try to restore it.
+
+        if (!mAllowContextRestore) {
+            // We might decide this after thinking we'd be OK restoring
+            // the context, so downgrade.
             mContextStatus = ContextLost;
-        }
-    } else if (mContextStatus == ContextLostAwaitingRestore) {
-        // Try to restore the context. If it fails, try again later.
-        if (NS_FAILED(SetDimensions(mWidth, mHeight))) {
-            SetupContextLossTimer();
             return;
         }
+
+        if (!TryToRestoreContext()) {
+            // Failed to restore. Try again later.
+            RunContextLossTimer();
+            return;
+        }
+
+        // Revival!
         mContextStatus = ContextNotLost;
         nsContentUtils::DispatchTrustedEvent(mCanvasElement->OwnerDoc(),
                                              static_cast<nsIDOMHTMLCanvasElement*>(mCanvasElement),
                                              NS_LITERAL_STRING("webglcontextrestored"),
                                              true,
                                              true);
-        // Set all flags back to the state they were in before the context was
-        // lost.
         mEmitContextLostErrorOnce = true;
-        mAllowRestore = true;
-    }
-
-    MaybeRestoreContext();
-    return;
-}
-
-void
-WebGLContext::MaybeRestoreContext()
-{
-    // Don't try to handle it if we already know it's busted.
-    if (mContextStatus != ContextNotLost || gl == nullptr)
         return;
-
-    bool isEGL = gl->GetContextType() == gl::GLContextType::EGL,
-         isANGLE = gl->IsANGLE();
-
-    GLContext::ContextResetARB resetStatus = GLContext::CONTEXT_NO_ERROR;
-    if (mHasRobustness) {
-        gl->MakeCurrent();
-        resetStatus = (GLContext::ContextResetARB) gl->fGetGraphicsResetStatus();
-    } else if (isEGL) {
-        // Simulate a ARB_robustness guilty context loss for when we
-        // get an EGL_CONTEXT_LOST error. It may not actually be guilty,
-        // but we can't make any distinction, so we must assume the worst
-        // case.
-        if (!gl->MakeCurrent(true) && gl->IsContextLost()) {
-            resetStatus = GLContext::CONTEXT_GUILTY_CONTEXT_RESET_ARB;
-        }
-    }
-
-    if (resetStatus != GLContext::CONTEXT_NO_ERROR) {
-        // It's already lost, but clean up after it and signal to JS that it is
-        // lost.
-        ForceLoseContext();
-    }
-
-    switch (resetStatus) {
-        case GLContext::CONTEXT_NO_ERROR:
-            // If there has been activity since the timer was set, it's possible
-            // that we did or are going to miss something, so clear this flag and
-            // run it again some time later.
-            if (mDrawSinceContextLossTimerSet)
-                SetupContextLossTimer();
-            break;
-        case GLContext::CONTEXT_GUILTY_CONTEXT_RESET_ARB:
-            NS_WARNING("WebGL content on the page caused the graphics card to reset; not restoring the context");
-            mAllowRestore = false;
-            break;
-        case GLContext::CONTEXT_INNOCENT_CONTEXT_RESET_ARB:
-            break;
-        case GLContext::CONTEXT_UNKNOWN_CONTEXT_RESET_ARB:
-            NS_WARNING("WebGL content on the page might have caused the graphics card to reset");
-            if (isEGL && isANGLE) {
-                // If we're using ANGLE, we ONLY get back UNKNOWN context resets, including for guilty contexts.
-                // This means that we can't restore it or risk restoring a guilty context. Should this ever change,
-                // we can get rid of the whole IsANGLE() junk from GLContext.h since, as of writing, this is the
-                // only use for it. See ANGLE issue 261.
-                mAllowRestore = false;
-            }
-            break;
     }
 }
 
 void
 WebGLContext::ForceLoseContext()
 {
-    if (mContextStatus == ContextLostAwaitingEvent)
-        return;
-
+    printf_stderr("WebGL(%p)::ForceLoseContext\n", this);
+    MOZ_ASSERT(!IsContextLost());
     mContextStatus = ContextLostAwaitingEvent;
-    // Queue up a task to restore the event.
-    SetupContextLossTimer();
+    mContextLostErrorSet = false;
+    mLastLossWasSimulated = false;
+
+    // Burn it all!
     DestroyResourcesAndContext();
+
+    // Queue up a task, since we know the status changed.
+    EnqueueUpdateContextLossStatus();
 }
 
 void
 WebGLContext::ForceRestoreContext()
 {
+    printf_stderr("WebGL(%p)::ForceRestoreContext\n", this);
     mContextStatus = ContextLostAwaitingRestore;
+    mAllowContextRestore = true; // Hey, you did say 'force'.
+
+    // Queue up a task, since we know the status changed.
+    EnqueueUpdateContextLossStatus();
 }
 
 void

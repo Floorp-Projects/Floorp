@@ -12,6 +12,7 @@ import sys
 import time
 import traceback
 import random
+import re
 import mozinfo
 import moznetwork
 import xml.dom.minidom as dom
@@ -222,6 +223,7 @@ class MarionetteTestResult(unittest._TextTestResult, TestResultCollection):
             self.stream.writeln(self.separator2)
             lastline = None
             fail_present = None
+            test_name = self.getInfo(error)
             for line in err:
                 if not line.startswith('\t') and line != '':
                     lastline = line
@@ -229,11 +231,15 @@ class MarionetteTestResult(unittest._TextTestResult, TestResultCollection):
                     fail_present = True
             for line in err:
                 if line != lastline or fail_present:
-                    if error.reason != TIMEOUT_MESSAGE:
+                    if re.match('.*\.js', test_name):
+                        if error.reason != TIMEOUT_MESSAGE:
+                            self.stream.writeln("%s" % line)
+                    else:
                         self.stream.writeln("%s" % line)
+
                 else:
                     self.stream.writeln("TEST-UNEXPECTED-FAIL | %s | %s" %
-                                        (self.getInfo(error), error.reason))
+                                        (test_name, error.reason))
 
     def stopTest(self, *args, **kwargs):
         unittest._TextTestResult.stopTest(self, *args, **kwargs)
@@ -664,7 +670,9 @@ class BaseMarionetteTestRunner(object):
     def reset_test_stats(self):
         self.passed = 0
         self.failed = 0
+        self.unexpected_successes = 0
         self.todo = 0
+        self.skipped = 0
         self.failures = []
 
     def start_httpd(self, need_external_ip):
@@ -814,8 +822,14 @@ class BaseMarionetteTestRunner(object):
             counter -= 1
         self.logger.info('\nSUMMARY\n-------')
         self.logger.info('passed: %d' % self.passed)
-        self.logger.info('failed: %d' % self.failed)
-        self.logger.info('todo: %d' % self.todo)
+        if self.unexpected_successes == 0:
+            self.logger.info('failed: %d' % self.failed)
+        else:
+            self.logger.info('failed: %d (unexpected sucesses: %d)', self.failed, self.unexpected_successes)
+        if self.skipped == 0:
+            self.logger.info('todo: %d', self.todo)
+        else:
+            self.logger.info('todo: %d (skipped: %d)', self.todo, self.skipped)
 
         if self.failed > 0:
             self.logger.info('\nFAILED TESTS\n-------')
@@ -982,16 +996,18 @@ class BaseMarionetteTestRunner(object):
 
             self.failed += len(results.failures) + len(results.errors)
             if hasattr(results, 'skipped'):
+                self.skipped += len(results.skipped)
                 self.todo += len(results.skipped)
             self.passed += results.passed
             for failure in results.failures + results.errors:
                 self.failures.append((results.getInfo(failure), failure.output, 'TEST-UNEXPECTED-FAIL'))
             if hasattr(results, 'unexpectedSuccesses'):
                 self.failed += len(results.unexpectedSuccesses)
+                self.unexpected_successes += len(results.unexpectedSuccesses)
                 for failure in results.unexpectedSuccesses:
                     self.failures.append((results.getInfo(failure), 'TEST-UNEXPECTED-PASS'))
             if hasattr(results, 'expectedFailures'):
-                self.passed += len(results.expectedFailures)
+                self.todo += len(results.expectedFailures)
 
     def run_test_set(self, tests):
         if self.shuffle:
