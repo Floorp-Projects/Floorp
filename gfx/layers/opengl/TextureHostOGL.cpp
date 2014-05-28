@@ -262,7 +262,6 @@ TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,
                                      size,
                                      gfx::ContentForFormat(aSurface->GetFormat()),
                                      LOCAL_GL_CLAMP_TO_EDGE,
-                                     WrapMode(mGL, mFlags),
                                      FlagsToGLFlags(mFlags),
                                      SurfaceFormatToImageFormat(aSurface->GetFormat()));
     }
