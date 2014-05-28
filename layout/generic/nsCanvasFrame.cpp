@@ -82,6 +82,7 @@ nsCanvasFrame::SetHasFocus(bool aHasFocus)
   return NS_OK;
 }
 
+#ifdef DEBUG
 void
 nsCanvasFrame::SetInitialChildList(ChildListID     aListID,
                                    nsFrameList&    aChildList)
@@ -96,31 +97,12 @@ void
 nsCanvasFrame::AppendFrames(ChildListID     aListID,
                             nsFrameList&    aFrameList)
 {
-  NS_ASSERTION(aListID == kPrincipalList ||
-               aListID == kAbsoluteList, "unexpected child list ID");
-  NS_PRECONDITION(aListID != kAbsoluteList ||
-                  mFrames.IsEmpty(), "already have a child frame");
-  if (aListID != kPrincipalList) {
-    // We only support the Principal and Absolute child lists.
-    return;  // XXX what about abs.pos. frames?
-  }
-
-  if (!mFrames.IsEmpty()) {
-    // We only allow a single principal child frame.
-    return; // XXX can we MOZ_ASSERT that?
-  }
-
-  // Insert the new frames
-  NS_ASSERTION(aFrameList.FirstChild() == aFrameList.LastChild(),
-               "Only one principal child frame allowed");
-#ifdef DEBUG
+  MOZ_ASSERT(aListID == kPrincipalList, "unexpected child list");
+  MOZ_ASSERT(mFrames.IsEmpty(), "already have a child frame");
+  MOZ_ASSERT(aFrameList.FirstChild() == aFrameList.LastChild(),
+             "Only one principal child frame allowed");
   nsFrame::VerifyDirtyBitSet(aFrameList);
-#endif
-  mFrames.AppendFrames(nullptr, aFrameList);
-
-  PresContext()->PresShell()->
-    FrameNeedsReflow(this, nsIPresShell::eTreeChange,
-                     NS_FRAME_HAS_DIRTY_CHILDREN);
+  nsContainerFrame::AppendFrames(aListID, aFrameList);
 }
 
 void
@@ -138,18 +120,11 @@ void
 nsCanvasFrame::RemoveFrame(ChildListID     aListID,
                            nsIFrame*       aOldFrame)
 {
-  MOZ_ASSERT(aListID == kPrincipalList || aListID == kAbsoluteList,
-             "unexpected child list");
-  if (aOldFrame != mFrames.FirstChild())
-    return; // XXX can we MOZ_ASSERT that?
-
-  // Remove the frame and destroy it
-  mFrames.DestroyFrame(aOldFrame);
-
-  PresContext()->PresShell()->
-    FrameNeedsReflow(this, nsIPresShell::eTreeChange,
-                     NS_FRAME_HAS_DIRTY_CHILDREN);
+  MOZ_ASSERT(aListID == kPrincipalList, "unexpected child list");
+  MOZ_ASSERT(aOldFrame == mFrames.FirstChild(), "unknown aOldFrame");
+  nsContainerFrame::RemoveFrame(aListID, aOldFrame);
 }
+#endif
 
 nsRect nsCanvasFrame::CanvasArea() const
 {
