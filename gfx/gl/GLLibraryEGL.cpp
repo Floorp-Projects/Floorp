@@ -210,7 +210,7 @@ GLLibraryEGL::EnsureInitialized()
     }
 
     GLLibraryLoader::SymLoadStruct optionalSymbols[] = {
-        // On Android 4.2 and up, certain features like ANDROID_native_fence_sync
+        // On Android 4.3 and up, certain features like ANDROID_native_fence_sync
         // can only be queried by using a special eglQueryString.
         { (PRFuncPtr*) &mSymbols.fQueryStringImplementationANDROID,
           { "_Z35eglQueryStringImplementationANDROIDPvi", nullptr } },
@@ -219,7 +219,7 @@ GLLibraryEGL::EnsureInitialized()
 
     GLLibraryLoader::LoadSymbols(mEGLLibrary, &optionalSymbols[0]);
 
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
     MOZ_RELEASE_ASSERT(mSymbols.fQueryStringImplementationANDROID,
                        "Couldn't find eglQueryStringImplementationANDROID");
 #endif

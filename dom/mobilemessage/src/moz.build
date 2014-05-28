@@ -37,6 +37,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
     ]
 
 EXPORTS.mozilla.dom += [
+    'DOMMobileMessageError.h',
     'MmsMessage.h',
     'MobileMessageManager.h',
     'SmsFilter.h',
@@ -46,6 +47,7 @@ EXPORTS.mozilla.dom += [
 
 UNIFIED_SOURCES += [
     'Constants.cpp',
+    'DOMMobileMessageError.cpp',
     'ipc/SmsChild.cpp',
     'ipc/SmsIPCService.cpp',
     'ipc/SmsParent.cpp',

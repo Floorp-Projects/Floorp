@@ -61,16 +61,16 @@ Events
 Events capture key occurrences. They should be brief and simple, and should not contain sensitive or excess information. Context for events should come from the session (scope). An event can be created with four fields (via ``Telemetry.sendUIEvent``): ``action``, ``method``, ``extras``, and ``timestamp``.
 
 ``action``
-  The name of the event. Should be brief and lowercase. If needed, you can make use of namespacing with a '``.``' separator. Example event names: ``panel.switch``, ``panel.enable``, ``panel.disable``, ``panel.install``. 
+  The name of the event. Should be brief and lowercase. If needed, you can make use of namespacing with a '``.``' separator. Example event names: ``panel.switch``, ``panel.enable``, ``panel.disable``, ``panel.install``.
 
 ``method`` (Optional)
-  Used for user actions that can be performed in many ways. This field specifies the method by which the action was performed. For example, users can add an item to their reading list either by long-tapping the reader icon in the address bar, or from within reader mode. We would use the same event name for both user actions but specify two methods: ``addressbar`` and ``readermode``. 
+  Used for user actions that can be performed in many ways. This field specifies the method by which the action was performed. For example, users can add an item to their reading list either by long-tapping the reader icon in the address bar, or from within reader mode. We would use the same event name for both user actions but specify two methods: ``addressbar`` and ``readermode``.
 
 ``extras`` (Optional)
-  For extra information that may be useful in understanding the event. Make an effort to keep this brief. 
+  For extra information that may be useful in understanding the event. Make an effort to keep this brief.
 
 ``timestamp`` (Optional)
-  The time at which the event occurred. If not specified, this field defaults to the current value of the realtime clock. 
+  The time at which the event occurred. If not specified, this field defaults to the current value of the realtime clock.
 
 Versioning
 ========
@@ -83,23 +83,28 @@ Clock
 
 Times are relative to either elapsed realtime (an arbitrary monotonically increasing clock that continues to tick when the device is asleep), or elapsed uptime (which doesn't tick when the device is in deep sleep). We default to elapsed realtime.
 
-See the documentation in `the source <http://mxr.mozilla.org/mozilla-central/source/mobile/android/base/Telemetry.java>`_ for more details. 
+See the documentation in `the source <http://mxr.mozilla.org/mozilla-central/source/mobile/android/base/Telemetry.java>`_ for more details.
 
 Dictionary
 ==========
 
 Events
 ------
+``action.1``
+  Generic action, usually for tracking menu and toolbar actions.
 
-``policynotification.success.1:true``
-  Sent when a user has accepted the data notification policy. Can be ``false``
-  instead of ``true`` if an error occurs.
-
-``pin.1``, ``unpin.1``
-  Sent when the user pinned or unpinned a top site.
+``cancel.1``
+  Cancel a state, action, etc.
 
 ``edit.1``
   Sent when the user edits a top site.
+
+``launch.1``
+  Launching (opening) an external application.
+  Note: Only used in JavaScript for now.
+
+``loadurl.1``
+  Loading a URL.
 
 ``locale.browser.reset.1``
   When the user chooses "System default" in the browser locale picker.
@@ -113,8 +118,35 @@ Events
   event is fired with the previous locale as the extra. If the previous locale
   could not be determined, "unknown" is provided.
 
+``setdefault.1``
+  Set default home panel.
+
+``pin.1``, ``unpin.1``
+  Sent when the user pinned or unpinned a top site.
+
+``policynotification.success.1:true``
+  Sent when a user has accepted the data notification policy. Can be ``false``
+  instead of ``true`` if an error occurs.
+
 ``sanitize.1``
   Sent when the user chooses to clear private data.
 
+``save.1`` ``unsave.1``
+  Saving or unsaving a resource (reader, bookmark, etc.) for viewing later.
+  Note: Only used in JavaScript for now.
+
+``share.1``
+  Sharing content.
+
 ``setdefault.1``
   Sent when the user makes a choice of default home panel.
+
+Methods
+-------
+``banner``
+  Action triggered from a banner (such as HomeBanner).
+  Note: Only used in JavaScript for now.
+
+Sessions
+--------
+

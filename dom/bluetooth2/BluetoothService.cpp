@@ -233,12 +233,6 @@ RemoveObserversExceptBluetoothManager
   return PL_DHASH_NEXT;
 }
 
-void
-BluetoothService::RemoveObserverFromTable(const nsAString& key)
-{
-  mBluetoothSignalObserverTable.Remove(key);
-}
-
 // static
 BluetoothService*
 BluetoothService::Create()

@@ -468,6 +468,22 @@ function hasSideBarTab(inspector, id) {
   return !!inspector.sidebar.getWindowForTab(id);
 }
 
+/**
+ * Get the dataURL for the font family tooltip.
+ * @param {String} font The font family value.
+ * @param {object} nodeFront
+ *        The NodeActor that will used to retrieve the dataURL for the
+ *        font family tooltip contents.
+ */
+let getFontFamilyDataURL = Task.async(function*(font, nodeFront) {
+  let fillStyle = (Services.prefs.getCharPref("devtools.theme") === "light") ?
+      "black" : "white";
+
+  let {data} = yield nodeFront.getFontFamilyDataURL(font, fillStyle);
+  let dataURL = yield data.string();
+  return dataURL;
+});
+
 /* *********************************************
  * RULE-VIEW
  * *********************************************

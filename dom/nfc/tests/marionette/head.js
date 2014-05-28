@@ -159,5 +159,15 @@ var NfcUtils = {
       buf[i] = str.charCodeAt(i);
     }
     return buf;
+  },
+  toUTF8: function(array) {
+    if (!array) {
+      return null;
+    }
+    let str = "";
+    for (var i = 0; i < array.length; i++) {
+      str += String.fromCharCode(array[i]);
+    }
+    return str;
   }
 };

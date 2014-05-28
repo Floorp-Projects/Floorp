@@ -977,3 +977,4 @@ PdfStreamConverter.prototype = {
     delete this.binaryStream;
   }
 };
+

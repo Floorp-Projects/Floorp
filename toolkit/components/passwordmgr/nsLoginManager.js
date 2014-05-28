@@ -541,7 +541,7 @@ LoginManager.prototype = {
      */
     fillForm : function (form) {
         log("fillForm processing form[ id:", form.id, "]");
-        return LoginManagerContent._fillForm(form, true, true, false, null)[0];
+        return LoginManagerContent._fillForm(form, true, true, false, false, null)[0];
     },
 
 }; // end of LoginManager implementation
