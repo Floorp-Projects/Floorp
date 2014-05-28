@@ -60,9 +60,9 @@ public:
   /** @see nsIFrame::DidSetStyleContext */
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) MOZ_OVERRIDE;
 
-  // table cells contain a block frame which does most of the work, and
-  // so these functions should never be called. They assert and return
-  // NS_ERROR_NOT_IMPLEMENTED
+#ifdef DEBUG
+  // Our anonymous block frame is the content insertion frame so these
+  // methods should never be called:
   virtual void AppendFrames(ChildListID     aListID,
                             nsFrameList&    aFrameList) MOZ_OVERRIDE;
   virtual void InsertFrames(ChildListID     aListID,
@@ -70,6 +70,7 @@ public:
                             nsFrameList&    aFrameList) MOZ_OVERRIDE;
   virtual void RemoveFrame(ChildListID     aListID,
                            nsIFrame*       aOldFrame) MOZ_OVERRIDE;
+#endif
 
   virtual nsContainerFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
     return GetFirstPrincipalChild()->GetContentInsertionFrame();
