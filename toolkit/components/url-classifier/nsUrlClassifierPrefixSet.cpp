@@ -142,7 +142,7 @@ nsUrlClassifierPrefixSet::GetPrefixes(uint32_t* aCount,
   NS_ENSURE_ARG_POINTER(aPrefixes);
   *aPrefixes = nullptr;
 
-  uint32_t itemCount = mIndexStarts.Length() + mDeltas.Length();
+  uint64_t itemCount = mIndexStarts.Length() + mDeltas.Length();
   uint32_t* prefixArray = static_cast<uint32_t*>(nsMemory::Alloc(itemCount * sizeof(uint32_t)));
   NS_ENSURE_TRUE(prefixArray, NS_ERROR_OUT_OF_MEMORY);
 
@@ -154,7 +154,7 @@ nsUrlClassifierPrefixSet::GetPrefixes(uint32_t* aCount,
     uint32_t start = mIndexStarts[i];
     uint32_t end = (i == (prefixIdxLength - 1)) ? mDeltas.Length()
                                                 : mIndexStarts[i + 1];
-    if (end > mDeltas.Length()) {
+    if (end > mDeltas.Length() || (start > end)) {
       return NS_ERROR_FILE_CORRUPTED;
     }
 
@@ -312,6 +312,9 @@ nsUrlClassifierPrefixSet::LoadFromFd(AutoFDClose& fileFd)
     NS_ENSURE_TRUE(read == toRead, NS_ERROR_FILE_CORRUPTED);
     read = PR_Read(fileFd, mIndexStarts.Elements(), toRead);
     NS_ENSURE_TRUE(read == toRead, NS_ERROR_FILE_CORRUPTED);
+    if (indexSize != 0 && mIndexStarts[0] != 0) {
+      return NS_ERROR_FILE_CORRUPTED;
+    }
     if (deltaSize > 0) {
       toRead = deltaSize*sizeof(uint16_t);
       read = PR_Read(fileFd, mDeltas.Elements(), toRead);
