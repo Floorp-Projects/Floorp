@@ -783,7 +783,6 @@ protected:
                                  nsFrameLoader* aRemote,
                                  nsEventStatus *aStatus);
   bool HandleCrossProcessEvent(WidgetEvent* aEvent,
-                               nsIFrame* aTargetFrame,
                                nsEventStatus* aStatus);
 
   void ReleaseCurrentIMEContentObserver();
