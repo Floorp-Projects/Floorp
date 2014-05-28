@@ -355,7 +355,7 @@ private:
   // True if Tick() was skipped because of mWaitingForTransaction and
   // we should schedule a new Tick immediately when resumed instead
   // of waiting until the next interval.
-  bool mSkippedPaint;
+  uint32_t mSkippedPaints;
 
   int64_t mMostRecentRefreshEpochTime;
   mozilla::TimeStamp mMostRecentRefresh;
