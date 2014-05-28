@@ -198,7 +198,7 @@ public:
   uint8_t GetShadowStyle();
 
   virtual void SetInitialChildList(ChildListID  aListID,
-                                       nsFrameList& aChildList) MOZ_OVERRIDE;
+                                   nsFrameList& aChildList) MOZ_OVERRIDE;
 
   virtual bool IsLeaf() const MOZ_OVERRIDE;
 

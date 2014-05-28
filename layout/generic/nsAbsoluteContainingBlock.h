@@ -55,15 +55,15 @@ public:
   }
 
   void SetInitialChildList(nsIFrame*       aDelegatingFrame,
-                               ChildListID     aListID,
-                               nsFrameList&    aChildList);
+                           ChildListID     aListID,
+                           nsFrameList&    aChildList);
   void AppendFrames(nsIFrame*      aDelegatingFrame,
-                        ChildListID    aListID,
-                        nsFrameList&   aFrameList);
+                    ChildListID    aListID,
+                    nsFrameList&   aFrameList);
   void InsertFrames(nsIFrame*      aDelegatingFrame,
-                        ChildListID    aListID,
-                        nsIFrame*      aPrevFrame,
-                        nsFrameList&   aFrameList);
+                    ChildListID    aListID,
+                    nsIFrame*      aPrevFrame,
+                    nsFrameList&   aFrameList);
   void RemoveFrame(nsIFrame*      aDelegatingFrame,
                    ChildListID    aListID,
                    nsIFrame*      aOldFrame);

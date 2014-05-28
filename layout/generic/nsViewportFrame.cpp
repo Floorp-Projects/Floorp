@@ -44,16 +44,6 @@ ViewportFrame::Init(nsIContent*       aContent,
 }
 
 void
-ViewportFrame::SetInitialChildList(ChildListID     aListID,
-                                   nsFrameList&    aChildList)
-{
-#ifdef DEBUG
-  nsFrame::VerifyDirtyBitSet(aChildList);
-#endif
-  nsContainerFrame::SetInitialChildList(aListID, aChildList);
-}
-
-void
 ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists)
@@ -67,6 +57,16 @@ ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // frame's background becomes our own background and therefore appears
   // below negative z-index elements.
   BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+}
+
+void
+ViewportFrame::SetInitialChildList(ChildListID     aListID,
+                                   nsFrameList&    aChildList)
+{
+#ifdef DEBUG
+  nsFrame::VerifyDirtyBitSet(aChildList);
+#endif
+  nsContainerFrame::SetInitialChildList(aListID, aChildList);
 }
 
 void
