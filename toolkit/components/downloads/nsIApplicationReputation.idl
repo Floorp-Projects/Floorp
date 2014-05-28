@@ -81,6 +81,11 @@ interface nsIApplicationReputationQuery : nsISupports {
    * binary, if it is signed.
    */
   readonly attribute nsIArray signatureInfo;
+
+  /*
+   * The nsIArray of nsIPrincipal of redirects that lead to this download.
+   */
+  readonly attribute nsIArray redirects;
 };
 
 [scriptable, function, uuid(9a228470-cfe5-11e2-8b8b-0800200c9a66)]
