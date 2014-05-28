@@ -60,8 +60,8 @@ struct ElementAnimations MOZ_FINAL
   ElementAnimations(mozilla::dom::Element *aElement, nsIAtom *aElementProperty,
                     nsAnimationManager *aAnimationManager, TimeStamp aNow);
 
-  // This function takes as input the start time, duration, direction, and fill
-  // mode of an animation and returns the position in the current iteration.
+  // This function takes as input the timing parameters of an animation and
+  // returns the position in the current iteration.
   //
   // When this function is called from the main thread with an actual
   // ElementAnimation* pointer, animation events are also queued.
@@ -71,10 +71,7 @@ struct ElementAnimations MOZ_FINAL
   // After calling GetPositionInIteration with non-null aAnimation and aEa, be
   // sure to call CheckNeedsRefresh on the animation manager afterwards.
   static double GetPositionInIteration(TimeDuration aElapsedDuration,
-                                       TimeDuration aIterationDuration,
-                                       double aIterationCount,
-                                       uint32_t aDirection,
-                                       uint8_t aFillMode,
+                                       const mozilla::AnimationTiming& aTiming,
                                        mozilla::ElementAnimation* aAnimation =
                                          nullptr,
                                        ElementAnimations* aEa = nullptr,
