@@ -688,15 +688,15 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     dest->mTiming.mIterationCount = src.GetIterationCount();
     dest->mTiming.mDirection = src.GetDirection();
     dest->mTiming.mFillMode = src.GetFillMode();
-    dest->mPlayState = src.GetPlayState();
 
-    dest->mDelay = TimeDuration::FromMilliseconds(src.GetDelay());
     dest->mStartTime = now;
+    dest->mPlayState = src.GetPlayState();
     if (dest->IsPaused()) {
       dest->mPauseStart = now;
     } else {
       dest->mPauseStart = TimeStamp();
     }
+    dest->mDelay = TimeDuration::FromMilliseconds(src.GetDelay());
 
     nsCSSKeyframesRule* rule =
       mPresContext->StyleSet()->KeyframesRuleForName(mPresContext,
