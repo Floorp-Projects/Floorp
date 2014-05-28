@@ -5055,7 +5055,10 @@
 5109a8383,8384
 > Kingsley
 > Kingsly/M
-5112a8388
+5112c8387,8388
+< Kinko's
+---
+> Kinko/M
 > Kinna/M
 5113a8390,8391
 > Kinnie/M
@@ -9083,648 +9086,2220 @@
 10488a16295,16296
 > absorbance/S
 > absorbancy/M
-10665a16474
+10516,10517c16324
+< abuse's
+< abuse/EGVDS
+---
+> abuse/EGVDSM
+10665a16473
 > acknowledgement/MS
-10824c16633
+10709,10710c16517
+< act's
+< act/ASDGV
+---
+> act/ASDGVM
+10721,10722c16528
+< active's
+< active/IKY
+---
+> active/IKYSM
+10724d16529
+< actives
+10727,10728c16532
+< activity's/I
+< activity/AS
+---
+> activity/ASIM
+10774,10775c16578
+< address's
+< address/AGDS
+---
+> address/AGDSM
+10824c16627
 < admin/S
 ---
 > admin/MS
-10936a16746
+10936a16740
 > advocator/SM
-11045c16855
+10979,10980c16783
+< affect's
+< affect/EGVDS
+---
+> affect/EGVDSM
+10990,10991c16793
+< affiliate's
+< affiliate/EGNDS
+---
+> affiliate/EGNDSM
+11045c16847
 < afterward
 ---
 > afterward/S
-11073a16884
+11073a16876
 > aggregator/SM
-11393d17203
+11393d17195
 < altho
-11579a17390
+11579a17382
 > analyses
-11631c17442
+11631c17434
 < anecdotal
 ---
 > anecdotal/Y
-11750a17562,17563
+11750a17554,17555
 > anonymization/SM
 > anonymize/DSG
-11804c17617
+11804c17609
 < anthropomorphizing
 ---
 > anthropomorphize/DSG
-11983c17796
+11983c17788
 < app/S
 ---
 > app/MS
-12137a17951
+12035,12036c17840
+< appointment's/A
+< appointment/ESM
+---
+> appointment/ESMA
+12137a17942
 > archaeology/M
-12152c17966
+12152c17957
 < archeological
 ---
 > archeological/Y
-12432c18246
+12214,12215c18019
+< arm's
+< arm/EAGDS
+---
+> arm/EAGDSM
+12255,12256c18059
+< arrangement's/E
+< arrangement/ASM
+---
+> arrangement/ASME
+12427,12428c18230
+< assign's
+< assign/ALGDS
+---
+> assign/ALGDSM
+12432c18234
 < assignees
 ---
 > assignee/MS
-12685c18499
+12446,12447c18248
+< associate's
+< associate/EDSGNV
+---
+> associate/EDSGNVM
+12584,12585c18385
+< attempt's
+< attempt/ASDG
+---
+> attempt/ASDGM
+12685c18485
 < auteur
 ---
 > auteur/MS
-12713a18528
+12713a18514
 > autocomplete/S
-12754a18570
+12754a18556
 > avant-garde
-12827d18642
+12827d18628
 < awol
-12829a18645
+12829a18631
 > axe/M
-12969c18785
+12969c18771
 < badge/MZDRS
 ---
 > badge/MZDRSG
-13864a19681
+13018,13019c18820
+< balance's
+< balance/UDSG
+---
+> balance/UDSGM
+13079,13080c18880
+< band's
+< band/ESGD
+---
+> band/ESGDM
+13149,13150c18949
+< bar's
+< bar/ECUTS
+---
+> bar/ECUTSM
+13195,13196c18994
+< bark's
+< bark/CSGD
+---
+> bark/CSGDM
+13249,13250c19047
+< base's
+< base/CDRSLTG
+---
+> base/CDRSLTGM
+13843,13844c19640
+< bind's
+< bind/AUGS
+---
+> bind/AUGSM
+13864a19661
 > biodiesel/M
-14179a19997,19999
+14118,14119c19915
+< block's
+< block/UGDS
+---
+> block/UGDSM
+14179a19976,19978
 > bloviate/SGD
 > bloviation
 > bloviator/SM
-14210d20029
+14210d20008
 < blueing's
-14434a20254
+14356,14357c20154
+< bolt's
+< bolt/USGD
+---
+> bolt/USGDM
+14434a20232
 > bookselling
-14841c20661
+14455,14456c20253
+< boot's
+< boot/ASGD
+---
+> boot/ASGDM
+14501,14502c20298
+< bosom's
+< bosom/US
+---
+> bosom/USM
+14785,14786c20581
+< brief's
+< brief/CSDTGJ
+---
+> brief/CSDTGJM
+14841c20636
 < broadcast/AMGS
 ---
 > broadcast/AMGSD
-15039,15040c20859
+14956,14957c20751
+< buckle's
+< buckle/UDSG
+---
+> buckle/UDSGM
+14986,14987c20780
+< bug's
+< bug/CS
+---
+> bug/CSM
+15039,15040c20832
 < bullshitter's
 < bullshitter/S!
 ---
 > bullshitter/SM!
-15230d21048
+15078,15079c20870
+< bunk's
+< bunk/CDGS
+---
+> bunk/CDGSM
+15093,15094c20884
+< burden's
+< burden/USGD
+---
+> burden/USGDM
+15211,15212c21001
+< button's
+< button/USDG
+---
+> button/USDGM
+15230d21018
 < byelaw/SM
-15383d21200
+15383d21170
 < callisthenics/M
-15460a21278,21280
+15430,15431c21217
+< camp's
+< camp/CSTGD
+---
+> camp/CSTGDM
+15460a21247,21249
 > cancelled/U
 > canceller/M
 > cancelling
-15559a21380
+15518,15519c21307
+< cant's
+< cant/CZRDGS
+---
+> cant/CZRDGSM
+15559a21348
 > capita
-15629,15630d21449
+15609c21398
+< caravanserai's
+---
+> caravanserai/M
+15629,15630d21417
 < carburetter/SM
 < carburettor/SM
-15701a21521
+15701a21489
 > carnitas
-15788d21607
+15788d21575
 < cashpoint/S
-15797d21615
+15797d21583
 < cassino/M
-15832a21651
+15832a21619
 > catalyses
-15940d21758
+15940d21726
 < caviare/M
-16277c22095
+16013,16014c21799
+< cent's
+< cent/AR
+---
+> cent/ARM
+16098,16099c21883
+< chain's
+< chain/UGDS
+---
+> chain/UGDSM
+16231,16232c22015
+< charter's
+< charter/ASGD
+---
+> charter/ASGDM
+16277c22060
 < check/AGMDS
 ---
 > check/AGMDSU
-16327c22145
+16327c22110
 < chemistry/M
 ---
 > chemistry/MS
-16372c22190
+16372c22155
 < chickenshit/S!
 ---
 > chickenshit/SM!
-16404c22222
+16404c22187
 < children
 ---
 > children/M
-16488d22305
+16488d22270
 < chlorophyl/M
-16629,16630c22446
+16629,16630c22411
 < cider's
 < cider/S
 ---
 > cider/MS
-16652a22469
+16651,16652c22432,22433
+< cipher's
+< cipher/CGDS
+---
+> cipher/CGDSM
 > ciphertext/S
-17072d22888
+16702,16703c22483
+< cite's
+< cite/IAGSD
+---
+> cite/IAGSDM
+16733,16735c22513
+< claim's
+< claim/CKEAGDS
+< claimable
+---
+> claim/CKEAGDSMB
+16783,16784c22561
+< clasp's
+< clasp/UGDS
+---
+> clasp/UGDSM
+16794,16796c22571
+< classified's
+< classified/U
+< classifieds
+---
+> classified/MSU
+16918,16919c22693
+< cloak's
+< cloak/USDG
+---
+> cloak/USDGM
+16930,16931c22704
+< clog's
+< clog/US
+---
+> clog/USM
+16944,16946c22717
+< close's
+< close/EIGTSD
+< closeable
+---
+> close/EIGTSDMB
+17072d22842
 < cocain/M
-17102,17103c22918
+17102,17103c22872
 < cocksucker's
 < cocksucker/S!
 ---
 > cocksucker/SM!
-17301a23117,23118
+17117,17118c22886
+< code's
+< code/CAGDS
+---
+> code/CAGDSM
+17195,17196c22963
+< coil's/A
+< coil/UADGS
+---
+> coil/UADGSM
+17245,17246c23012
+< collect's
+< collect/ASGVD
+---
+> collect/ASGVDM
+17301a23068,23069
 > colonoscope/SM
 > colonoscopy/SM
-17755c23572
+17304,17305c23072
+< color's
+< color/AEGDS
+---
+> color/AEGDSM
+17311,17313c23078
+< colored's
+< colored/U
+< coloreds
+---
+> colored/MSU
+17351,17352c23116
+< combine's
+< combine/ADSG
+---
+> combine/ADSGM
+17371c23135
+< comer's
+---
+> comer/M
+17376,17377c23140
+< comfit's
+< comfit/ES
+---
+> comfit/ESM
+17428,17429c23191
+< commission's
+< commission/ACGSD
+---
+> commission/ACGSDM
+17442,17443c23204
+< commode's
+< commode/EIS
+---
+> commode/EISM
+17447,17448c23208
+< common's
+< common/UPRYT
+---
+> common/UPRYTM
+17537,17538c23297
+< compilation's
+< compilation/AS
+---
+> compilation/ASM
+17597,17598c23356
+< compress's
+< compress/CGVDS
+---
+> compress/CGVDSM
+17657,17658c23415
+< concert's
+< concert/ESDG
+---
+> concert/ESDGM
+17719,17720c23476
+< condition's
+< condition/AGSD
+---
+> condition/AGSDM
+17755c23511
 < confer/S
 ---
 > confer/SB
-17800a23618
+17800a23557
 > conformant
-18151d23968
+17986,17987c23743
+< construct's
+< construct/CADVGS
+---
+> construct/CADVGSM
+17991,17992c23747
+< constructionist's
+< constructionist/CS
+---
+> constructionist/CSM
+18122,18123c23877
+< control's
+< control/CS
+---
+> control/CSM
+18151d23904
 < convenor/S
-18206c24023
+18169,18170c23922
+< convert's
+< convert/AGSD
+---
+> convert/AGSDM
+18199,18200c23951
+< cook's
+< cook/ADGS
+---
+> cook/ADGSM
+18206c23957
 < cookie/M
 ---
 > cookie/SM
-18375a24193,24194
+18294,18295c24045
+< cork's
+< cork/UDGS
+---
+> cork/UDGSM
+18375a24126,24127
 > corrigibility/IM
 > corrigible/I
-18389a24209
+18389a24142
 > corruptibly/I
-18467a24288
+18467a24221
 > could've
-18999a24821
+18487,18488c24241
+< countenance's
+< countenance/EGDS
+---
+> countenance/EGDSM
+18542,18543c24295
+< coup's
+< coup/AS
+---
+> coup/ASM
+18545,18546c24297
+< couple's
+< couple/CUDSG
+---
+> couple/CUDSGM
+18581,18582c24332
+< cover's
+< cover/AEUGDS
+---
+> cover/AEUGDSM
+18585,18586c24335
+< covering's
+< coverings
+---
+> covering/MS
+18739,18740c24488
+< creation's/K
+< creation/ASM
+---
+> creation/ASMK
+18880,18881c24628
+< cross's
+< cross/AUGTSD
+---
+> cross/AUGTSDM
+18972,18973c24719
+< crust's
+< crust/ISDG
+---
+> crust/ISDGM
+18988,18989c24734
+< crypt's
+< crypt/CS
+---
+> crypt/CSM
+18999a24745
 > cryptologist/MS
-19000a24823
+19000a24747
 > cryptosystem/S
-19035a24859
+19035a24783
 > cul-de-sac
-19246c25070
+19104,19105c24852
+< cure's
+< cure/KZGBDRS
+---
+> cure/KZGBDRSM
+19119,19120c24866
+< curl's
+< curl/UDGS
+---
+> curl/UDGSM
+19131,19133c24877
+< current's
+< current/FAY
+< currents
+---
+> current/FAYSM
+19142,19143c24886
+< cursive's
+< cursive/EAY
+---
+> cursive/EAYM
+19167,19168c24910
+< cuss's
+< cuss/FEGSD
+---
+> cuss/FEGSDM
+19246c24988
 < cysteine
 ---
 > cysteine/M
-19536a25361
+19536a25279
 > decertify/DSGNX
-19935a25761
+19935a25679
 > dequeue/DSG
-20196,20197c26022,26023
+20196,20197c25940,25941
 < dialog/SM
 < dialogue/SM
 ---
 > dialog/SMGD
 > dialogue/SMRGD
-20220a26047
+20220a25965
 > diatomaceous
-20481a26309
+20481a26227
 > disclose/DSG
-20633a26462
+20633a26380
 > dissentious
-20830c26659
+20695,20696c26442
+< district's
+< district/AS
+---
+> district/ASM
+20768c26514
+< djinn's
+---
+> djinn/M
+20830c26576
 < dogie/M
 ---
 > dogie/SM
-20895a26725
+20850,20851c26596
+< dole's
+< dole/FGDS
+---
+> dole/FGDSM
+20895a26641
 > donator/MS
-21367a27198
+20918,20919c26664
+< door's
+< door/IS
+---
+> door/ISM
+20975,20976c26720
+< double's
+< double/ADSG
+---
+> double/ADSGM
+21067,21068c26811
+< draft's
+< draft/ASDG
+---
+> draft/ASDGM
+21282,21283c27025
+< duct's
+< duct/CIFDG
+---
+> duct/CIFDGM
+21291,21292c27033
+< due's
+< due/IS
+---
+> due/ISM
+21355,21356c27096
+< duplicate's
+< duplicate/AGNDS
+---
+> duplicate/AGNDSM
+21367a27108
 > durian/SM
-21820a27652
+21468,21469c27209
+< earth's
+< earth/UDYG
+---
+> earth/UDYGM
+21523,21524c27263
+< echo's
+< echo/ADG
+---
+> echo/ADGM
+21587,21588c27326
+< edit's
+< edit/ADGS
+---
+> edit/ADGSM
+21735,21736c27473
+< elect's
+< elect/ASDGV
+---
+> elect/ASDGVM
+21820a27558
 > elicitor/MS
-22071a27904
+21864,21865c27602
+< em's
+< em/S
+---
+> em/SM
+21992,21993c27729
+< employ's
+< employ/ADGLS
+---
+> employ/ADGLSM
+22071a27808
 > encyclopaedia
-22196a28030
+22196a27934
 > enqueue/DSG
-22508a28343,28344
+22508a28247,28248
 > eschatological
 > eschatologist/SM
-22556a28393
+22556a28297
 > estoppel
-22638c28475
+22638c28379
 < euthanize
 ---
 > euthanize/DSG
-22719a28557
+22719a28461
 > exabyte/MS
-22947a28786
+22947a28690
 > experimentalism
-23207,23208d29045
+23165,23166c28908
+< face's
+< face/ACSDG
+---
+> face/ACSDGM
+23207,23208d28948
 < faecal
 < faeces/M
-23215c29052
+23215c28955
 < faggoting's
 ---
 > faggot/SMG
-23418a29256
+23238,23239c28978
+< faithful's
+< faithful/UPY
+---
+> faithful/UPYM
+23278,23279c29017
+< fame's
+< fame/D
+---
+> fame/DM
+23418a29157
 > faux
-23701a29540
+23589,23590c29328
+< fetter's
+< fetter/USGD
+---
+> fetter/USGDM
+23690,23691c29428
+< figure's
+< figure/FEGSD
+---
+> figure/FEGSDM
+23699,23700c29436
+< file's/KC
+< file/CAKGDS
+---
+> file/CAKGDSM
+23701a29438
 > filesystem/MS
-24155c29994
+23708,23711c29445,29446
+< filing's
+< filings
+< fill's
+< fill/AIDGS
+---
+> filing/SM
+> fill/AIDGSM
+23715,23716c29450
+< filling's
+< filling/S
+---
+> filling/SM
+23733,23734c29467
+< filtrate's
+< filtrate/IGNDS
+---
+> filtrate/IGNDSM
+23745,23746c29478
+< finance's
+< finance/ADSG
+---
+> finance/ADSGM
+23755,23756c29487
+< fine's/F
+< fine/CAFTGDS
+---
+> fine/CAFTGDSM
+23776,23777c29507
+< finish's
+< finish/ADSG
+---
+> finish/ADSGM
+24131,24132c29861
+< flower's
+< flower/CSDG
+---
+> flower/CSDGM
+24155c29884
 < fluidized
 ---
 > fluidize/DSG
-24216a30056
+24185,24186c29914
+< flux's
+< flux/ADG
+---
+> flux/ADGM
+24217,24218c29945,29946
+< focus's
+< focus/ADSG
+---
 > foci
-24736d30575
+> focus/ADSGM
+24223,24224c29951
+< fog's
+< fog/CS
+---
+> fog/CSM
+24238,24239c29965
+< fold's
+< fold/IAUSGD
+---
+> fold/IAUSGDM
+24414,24415c30140
+< forest's
+< forest/ACGDS
+---
+> forest/ACGDSM
+24464,24465c30189
+< form's
+< form/CAIFDGS
+---
+> form/CAIFDGSM
+24609,24610c30333
+< franchise's
+< franchise/EDSG
+---
+> franchise/EDSGM
+24633,24634c30356
+< fraud's
+< fraud/S
+---
+> fraud/SM
+24639,24640c30361
+< fray's
+< fray/CDGS
+---
+> fray/CDGSM
+24681,24682c30402
+< freeze's
+< freeze/UAGS
+---
+> freeze/UAGSM
+24684c30404
+< freezing's
+---
+> freezing/M
+24733,24734c30453
+< friendly's
+< friendly/UTPR
+---
+> friendly/UTPRM
+24736d30454
 < frier/M
-24855,24856c30694,30695
+24752,24753c30470
+< fringe's
+< fringe/IDSG
+---
+> fringe/IDSGM
+24771,24772c30488
+< frock's
+< frock/CUS
+---
+> frock/CUSM
+24786,24787c30502
+< front's
+< front/FSDG
+---
+> front/FSDGM
+24800,24801c30515
+< frost's
+< frost/CSDG
+---
+> frost/CSDGM
+24855,24856c30569,30570
 < fucker/M!
 < fuckhead/S!
 ---
 > fucker/SM!
 > fuckhead/SM!
-24953d30791
+24860,24861c30574
+< fuel's
+< fuel/ADGS
+---
+> fuel/ADGSM
+24941,24942c30654
+< furl's
+< furl/UDGS
+---
+> furl/UDGSM
+24953d30664
 < furore/MS
-25125c30963
+24969,24970c30680
+< fuse's/A
+< fuse/CAIFGDS
+---
+> fuse/CAIFGDSM
+25038,25039c30748
+< gain's
+< gain/ADGS
+---
+> gain/ADGSM
+25051,25052c30760
+< gale's
+< gale/AS
+---
+> gale/ASM
+25125c30833
 < gaolbird/S
 ---
 > gaolbirds
-25180d31017
+25169,25170c30877
+< gas's
+< gas/CS
+---
+> gas/CSM
+25180d30886
 < gasolene/M
-25190a31028
+25190a30897
 > gastroenterologist/M
-25262c31100
+25262c30969
 < geezer/M
 ---
 > geezer/MS
-25327c31165
+25297,25298c31004
+< generation's/C
+< generation/ASM
+---
+> generation/ASMC
+25327c31033
 < genomic
 ---
 > genomic/S
-25462a31301
+25462a31169
 > gigabit/MS
-25464a31304,31306
+25464a31172,31174
 > gigajoule/MS
 > gigapixel/MS
 > gigawatt/MS
-25560d31401
+25560d31269
 < glamourize/DSG
-25674c31515
+25674c31383
 < glycerine's
 ---
 > glycerine/M
-25905c31746
+25816,25817c31525
+< gorge's
+< gorge/EDSG
+---
+> gorge/EDSGM
+25884,25885c31592
+< grade's
+< grade/CADSG
+---
+> grade/CADSGM
+25905c31612
 < gram/MS
 ---
 > gram/KMS
-25909d31749
+25909d31615
 < gramme/SM
-26063c31903,31904
+26063c31769,31770
 < greybeard
 ---
 > grey/MDRTGSP
 > greybeard/SM
-26066c31907
+26066c31773
 < greyness
 ---
 > greyness/M
-26246,26247d32086
+26246,26247d31952
 < guerilla's
 < guerillas
-26432,26436d32270
+26403,26404c32108
+< habit's
+< habit/ISB
+---
+> habit/ISBM
+26432,26436d32135
 < haemoglobin's
 < haemophilia/M
 < haemorrhage/DSMG
 < haemorrhoid/S
 < haemorrhoids/M
-27167c33001
+26555,26556c32254
+< hand's
+< hand/UDGS
+---
+> hand/UDGSM
+26702,26703c32400
+< harness's
+< harness/UDSG
+---
+> harness/UDSGM
+26888,26889c32585
+< hearse's
+< hearse/AS
+---
+> hearse/ASM
+26915,26916c32611
+< heat's
+< heat/ADGS
+---
+> heat/ADGSM
+27167c32862
 < hexane
 ---
 > hexane/SM
-27273a33108
+27256,27257c32951
+< hinge's
+< hinge/UDSG
+---
+> hinge/UDSGM
+27273a32968
 > hippopotami
-27875d33709
+27276,27277c32971
+< hire's
+< hire/AGDS
+---
+> hire/AGDSM
+27302,27303c32996
+< hitch's
+< hitch/UDSG
+---
+> hitch/UDSGM
+27512,27513c33205
+< hook's
+< hook/UDSG
+---
+> hook/UDSGM
+27575,27576c33267
+< horse's
+< horse/UDSG
+---
+> horse/UDSGM
+27666,27667c33357
+< house's
+< house/ADSG
+---
+> house/ADSGM
+27841c33531
+< hurrah's
+---
+> hurrah/M
+27875d33564
 < hyaena/SM
-28017c33851
+27883,27884c33572
+< hydrate's
+< hydrate/CGNDS
+---
+> hydrate/CGNDSM
+28017c33705
 < iPod/M
 ---
 > iPod/MS
-28105a33940
+28029,28030c33717
+< ice's
+< ice/CDSG
+---
+> ice/CDSGM
+28105a33793
 > idolator/SM
-28227c34062
+28227c33915
 < immerse/XDSGN
 ---
 > immerse/XDSGNV
-28513c34348
+28513c34201
 < inbound
 ---
 > inbound/s
-28590,28591c34425
+28531,28532c34219
+< incentive's
+< incentive/ES
+---
+> incentive/ESM
+28560,28561c34247
+< incline's
+< incline/EGDS
+---
+> incline/EGDSM
+28590,28591c34276
 < incorrigibility/M
 < incorrigible
 ---
 > incorrigibleness
-28593d34426
+28593d34277
 < incorruptibly
-28650a34484
+28650a34335
 > indices
-28812d34645
+28812d34496
 < inflexion/SM
-29204a35038
+28981,28982c34665
+< insert's
+< insert/AGSD
+---
+> insert/AGSDM
+29204a34888
 > intermediacy/S
-29206c35040,35042
+29206c34890,34892
 < intermediate/SMY
 ---
 > intermediate/SMYPGD
 > intermediation/SE
 > intermediator/SM
-29216a35053
+29216a34903
 > intern/GDL
-29266a35104
+29266a34954
 > interruptible/U
-29272a35111,35114
+29272a34961,34964
 > intersex
 > intersexual/MS
 > intersexualism
 > intersexuality
-29724c35566
+29724c35416
 < jewellery's
 ---
 > jewellery/M
-29870a35713
+29733,29734c35425
+< jig's
+< jig/AS
+---
+> jig/ASM
+29736,29737c35427
+< jigger's
+< jigger/ASDG
+---
+> jigger/ASDGM
+29799,29800c35489
+< join's
+< join/AFDSG
+---
+> join/AFDSGM
+29803,29804c35492
+< joint's
+< joint/EGSD
+---
+> joint/EGSDM
+29869,29870c35557,35558
+< judge's
+< judge/ADSG
+---
+> judge/ADSGM
 > judgement/MS
-30066c35909
+30066c35754
 < kiddie/M
 ---
 > kiddie/SM
-30262,30263c36105
+30102,30103c35790
+< kind's
+< kind/UPRYT
+---
+> kind/UPRYTM
+30262,30263c35949
 < kraut's
 < kraut/S!
 ---
 > kraut/MS!
-30665a36508
+30283,30284c35969
+< label's
+< label/ASDG
+---
+> label/ASDGM
+30302,30303c35987
+< lace's
+< lace/UGDS
+---
+> lace/UGDSM
+30497,30498c36181
+< latch's
+< latch/UDSG
+---
+> latch/UDSGM
+30637c36320
+< learning's
+---
+> learning/M
+30643,30644c36326
+< leash's
+< leash/UDSG
+---
+> leash/UDSGM
+30665a36348
 > lector/MS
-31031c36874
+30700c36383
+< legation's/AC
+---
+> legation/ACM
+30927,30928c36610
+< light's/C
+< light/CASTGD
+---
+> light/CASTGDM
+30938c36620
+< lighting's
+---
+> lighting/M
+30981,30982c36663
+< limit's
+< limit/CSZGDR
+---
+> limit/CSZGDRM
+30986c36667
+< limiter's
+---
+> limiter/M
+31031c36712
 < linguini's
 ---
 > linguini/M
-31034c36877
+31034c36715
 < linguistically
 ---
 > linguistical/Y
-31151,31152c36994
+31047,31048c36728
+< lint's
+< lint/CDSG
+---
+> lint/CDSGM
+31151,31152c36831
 < liver's
 < liver/S
 ---
 > liver/MS
-31639a37482
+31170,31171c36849
+< load's
+< load/AUGSD
+---
+> load/AUGSDM
+31211,31212c36889
+< location's/A
+< location/ESM
+---
+> location/ESMA
+31291,31292c36968
+< long's
+< long/KDSTG
+---
+> long/KDSTGM
+31379,31380c37055
+< louse's
+< louse/CDSG
+---
+> louse/CDSGM
+31639a37315
 > mage/SM
-32230c38073
+31741,31742c37417
+< make's/A
+< make/UAGS
+---
+> make/UAGSM
+31822,31823c37497
+< man's/F
+< man/USY
+---
+> man/USYMF
+31924,31925c37598
+< mantle's
+< mantle/EGDS
+---
+> mantle/EGDSM
+31940,31941c37613
+< map's
+< map/AS
+---
+> map/ASM
+32061,32062c37733
+< mask's
+< mask/UDSG
+---
+> mask/UDSGM
+32084,32085c37755
+< master's
+< master/ADGS
+---
+> master/ADGSM
+32230c37900
 < meanie/M
 ---
 > meanie/MS
-32317,32318c38160
+32246,32247c37916
+< measure's
+< measure/ADSG
+---
+> measure/ADSGM
+32317,32318c37986
 < megadeath/M
 < megadeaths
 ---
 > megadeath/SM
-32320c38162
+32320c37988
 < megajoules
 ---
 > megajoule/SM
-32329c38171
+32329c37997
 < megapixel/S
 ---
 > megapixel/MS
-32708a38551
+32361,32362c38029
+< melt's
+< melt/ADSG
+---
+> melt/ADSGM
+32365,32366c38032
+< member's
+< member/EAS
+---
+> member/EASM
+32708a38375
 > might've
-32717a38561
+32717a38385
 > migrator/SM
-32760a38605
+32760a38429
 > millennia
-32777d38621
+32777d38445
 < millionnaire/M
-32934a38779
+32806,32807c38474
+< mind's
+< mind/ADRSZG
+---
+> mind/ADRSZGM
+32934a38602
 > miscommunication/S
-32991a38837
+32991a38660
 > misjudgement/MS
-33784a39631
+33027,33028c38696
+< miss's
+< miss/EDSGV
+---
+> miss/EDSGVM
+33051,33052c38719
+< mist's
+< mist/CDRSZG
+---
+> mist/CDRSZGM
+33056c38723
+< mister's
+---
+> mister/M
+33107,33108c38774
+< mob's
+< mob/CS
+---
+> mob/CSM
+33448,33449c39114
+< mortgage's
+< mortgage/AGDS
+---
+> mortgage/AGDSM
+33471,33472c39136
+< mote's
+< mote/KCXSVN
+---
+> mote/KCXSVNM
+33539,33540c39203
+< mounting's
+< mountings
+---
+> mounting/MS
+33784a39448
 > must've
-33963c39810
+33887,33888c39551
+< name's
+< name/AGDS
+---
+> name/AGDSM
+33963c39626
 < native/MS
 ---
 > native/MSY
-34169,34171c40016,40017
+33970,33971c39633
+< natural's
+< natural/UPY
+---
+> natural/UPYM
+33979,33980c39641
+< nature's
+< nature/CS
+---
+> nature/CSM
+34133,34134c39794
+< nerve's
+< nerve/UDSG
+---
+> nerve/UDSGM
+34169,34171c39829,39830
 < neurone/S
 < neurophysiology
 < neuroscience
 ---
 > neurophysiology/M
 > neuroscience/MS
-34275c40121
+34275c39934
 < nightie/M
 ---
 > nightie/SM
-35104a40951
+34388,34389c40047
+< nomination's/A
+< nomination/CSM
+---
+> nomination/CSMA
+34755,34756c40413
+< note's
+< note/FCSDG
+---
+> note/FCSDGM
+34840,34841c40497
+< number's
+< number/ASDG
+---
+> number/ASDGM
+35104a40761
 > octopi
-35219d41065
+35137,35138c40794
+< offensive's
+< offensive/IYP
+---
+> offensive/IYPM
+35219d40874
 < oleomargarin/M
-35226a41073
+35226a40882
 > oligo
-35345c41192
+35345c41001
 < oppose/DSG
 ---
 > oppose/DSGRB
-35913c41760
+35452,35453c41108
+< orient's
+< orient/AEDGS
+---
+> orient/AEDGSM
+35913c41568
 < oversize/D
 ---
 > oversize
-36056,36059d41902
+36031,36032c41686
+< pack's
+< pack/UADSG
+---
+> pack/UADSGM
+36034,36035c41688
+< package's
+< package/AGDS
+---
+> package/AGDSM
+36041c41694
+< packing's
+---
+> packing/M
+36056,36059d41708
 < paederast/S
 < paediatrician's
 < paediatricians
 < paediatrics/M
-36291a42135
+36291a41941
 > paralyses
-36377a42222
+36377a42028
 > parkour
-36403d42247
+36403d42053
 < parrakeet/MS
-36449d42292
+36418,36419c42068
+< part's
+< part/CDSG
+---
+> part/CDSGM
+36445,36447c42094
+< partition's
+< partition/ADG
+< partitions
+---
+> partition/ADGMS
+36449d42095
 < partizan/SM
-37093a42937
+36621,36622c42267
+< pay's
+< pay/ASGBL
+---
+> pay/ASGBLM
+37093a42739
 > petabyte/MS
-37102c42946
+37102c42748
 < petitioner/M
 ---
 > petitioner/MS
-37221a43066,43067
+37221a42868,42869
 > phlebotomist/SM
 > phlebotomize/SGD
-37264a43111
+37264a42913
 > phosphorylate/DSGN
-37316d43162
+37310,37311c42959
+< phrase's
+< phrase/AGDS
+---
+> phrase/AGDSM
+37316d42963
 < phrenetic
-37630a43477
+37469,37470c43116
+< pine's
+< pine/AGDS
+---
+> pine/AGDSM
+37596,37597c43242
+< place's
+< place/EAGLDS
+---
+> place/EAGLDSM
+37630a43276
 > plaintext
-37796a43644
+37636,37637c43282
+< plane's
+< plane/CGDS
+---
+> plane/CGDSM
+37786,37787c43431
+< ploy's
+< ploy/S
+---
+> ploy/SM
+37792,37793c43436
+< plug's
+< plug/US
+---
+> plug/USM
+37796a43440
 > plugin/MS
-37987c43835
+37987c43631
 < polypeptide/S
 ---
 > polypeptide/MS
-38291d44138
+38106,38107c43750
+< port's
+< port/CAEGDS
+---
+> port/CAEGDSM
+38134,38135c43777
+< pose's/A
+< pose/CAKEGDS
+---
+> pose/CAKEGDSM
+38140,38141c43782
+< position's/KC
+< position/ACKES
+---
+> position/ACKESM
+38260,38261c43901
+< pound's
+< pound/KDSG
+---
+> pound/KDSGM
+38291d43930
 < practise's
-38451a44299
+38451a44091
 > prejudgement/MS
-38805a44654
+38568,38569c44208
+< press's
+< press/ACGSD
+---
+> press/ACGSDM
+38638,38639c44277
+< price's
+< price/AGDS
+---
+> price/AGDSM
+38756,38757c44394
+< process's
+< process/AGDS
+---
+> process/AGDSM
+38780,38781c44417
+< produce's
+< produce/AZGDRS
+---
+> produce/AZGDRSM
+38805a44442
 > profiler/SM
-38835a44685
+38835a44473
 > programmatically
-38891a44742,44743
+38891a44530,44531
 > pronate/DSGN
 > pronator/MS
-38951c44803
+38951c44591
 < proprietorship/M
 ---
 > proprietorship/MS
-39039a44892
+39039a44680
 > provender/M
-39095a44949
+39095a44737
 > pseudorandom/Y
-39564a45419
+39564a45207
 > quinoa
-39873a45729,45730
+39581,39582c45224
+< quire's
+< quire/IAS
+---
+> quire/IASM
+39614,39615c45256
+< quote's
+< quote/UDSG
+---
+> quote/UDSGM
+39653,39654c45294
+< racoon's
+< racoons
+---
+> racoon/MS
+39738,39739c45378
+< rail's
+< rail/CGDS
+---
+> rail/CGDSM
+39816,39817c45455
+< range's
+< range/CGDS
+---
+> range/CGDSM
+39873a45512,45513
 > rasterization/M
 > rasterize/SGDR
-40036a45894
+39925,39926c45565
+< ravel's
+< ravel/UDSG
+---
+> ravel/UDSGM
+40036a45676
 > recency
-40140a45999
+40140a45781
 > recurse/DGSV
-40141a46001
+40141a45783
 > recuse/DGS
-40208a46069
+40204,40205c45846
+< reel's
+< reel/UGDS
+---
+> reel/UGDSM
+40208a45850
 > refactor/SMDG
-40244d46104
+40244d45885
 < reflexion/SM
-40659d46518
+40659d46299
 < resizing
-40829c46688
+40829c46469
 < reverie/M
 ---
 > reverie/MS
-40895a46755,46757
+40895a46536,46538
 > rheumatological
 > rheumatology/M
 > rheumatologist/SM
-41415a47278
+40944,40945c46587
+< ride's
+< ride/CZGS
+---
+> ride/CZGSM
+41104,41105c46746
+< robe's
+< robe/EGDS
+---
+> robe/EGDSM
+41132,41133c46773
+< rogue's
+< rogue/KS
+---
+> rogue/KSM
+41258,41259c46898
+< route's
+< route/ADSG
+---
+> route/ADSGM
+41415a47055
 > sabre/MS
-41914c47777
+41447,41448c47087
+< saddle's
+< saddle/UDSG
+---
+> saddle/UDSGM
+41463,41464c47102
+< safe's
+< safe/UYTPR
+---
+> safe/UYTPRM
+41544,41545c47182
+< salt's
+< salt/CTGDS
+---
+> salt/CTGDSM
+41765,41766c47402
+< say's
+< say/USG
+---
+> say/USGM
+41787,41788c47423
+< scale's
+< scale/ACSDG
+---
+> scale/ACSDGM
+41806,41807c47441
+< scan's
+< scan/AS
+---
+> scan/ASM
+41880,41881c47514
+< schedule's
+< schedule/ADSG
+---
+> schedule/ADSGM
+41914c47547
 < schnaps's
 ---
 > schnaps/M
-41949c47812
+41949c47582
 < schrod's
 ---
 > schrod/SM
-41998a47862
+41998a47632
 > scot-free
-42883,42885c48747
+42016,42017c47650
+< scramble's
+< scramble/UGDS
+---
+> scramble/UGDSM
+42055,42056c47688
+< screw's
+< screw/UDSG
+---
+> screw/UDSGM
+42065,42066c47697
+< scribe's
+< scribe/IKCGSD
+---
+> scribe/IKCGSDM
+42170,42171c47801
+< seal's
+< seal/AUSDG
+---
+> seal/AUSDGM
+42204,42205c47834
+< seat's
+< seat/UGDS
+---
+> seat/UGDSM
+42288,42289c47917
+< seed's
+< seed/AGDS
+---
+> seed/AGDSM
+42365,42367c47993,47994
+< sell's
+< sell/AZGRS
+< seller's
+---
+> sell/AZGRSM
+> seller/M
+42524c48151
+< seraphim's
+---
+> seraphim/M
+42558,42559c48185
+< serve's/AF
+< serve/FACGDS
+---
+> serve/FACGDSM
+42574,42575c48200
+< serving's
+< servings
+---
+> serving/MS
+42594,42595c48219
+< settle's
+< settle/AUGDS
+---
+> settle/AUGDSM
+42647,42648c48271
+< shackle's
+< shackle/UGDS
+---
+> shackle/UGDSM
+42716,42717c48339
+< shape's
+< shape/AGDS
+---
+> shape/AGDSM
+42851,42852c48473
+< ship's
+< ship/ALS
+---
+> ship/ALSM
+42883,42885c48504
 < shit's
 < shit/S!
 < shite/S!
 ---
 > shit/MS!
-42887,42888c48749,48750
+42887,42888c48506,48507
 < shithead/S!
 < shitload/!
 ---
 > shithead/MS!
 > shitload/MS!
-42891c48753
+42891c48510
 < shitty/RT!
 ---
 > shitty/TR!
-42976a48839
+42976a48596
 > should've
-43008c48871
+43008c48628
 < showtime
 ---
 > showtime/MS
-43328c49191
+43090,43091c48710
+< side's
+< side/AGDS
+---
+> side/AGDSM
+43143,43144c48762
+< sign's
+< sign/AFCGDS
+---
+> sign/AFCGDSM
+43163,43164c48781
+< signing's/C
+< signings
+---
+> signing/MCS
+43328c48945
 < size/MGBDRS
 ---
 > size/AMGBDRS
-43724,43726c49587
+43368,43369c48985
+< skill's
+< skill/CSD
+---
+> skill/CSDM
+43724,43726c49340
 < smoulder's
 < smouldered
 < smoulders
 ---
 > smoulder/GSMD
-43766a49628,49629
+43752,43753c49366
+< snap's
+< snap/US
+---
+> snap/USM
+43767,43768c49380,49382
+< snarl's
+< snarl/USDG
+---
 > snarkily
 > snarky/TR
-44041a49905
+> snarl/USDGM
+44012,44013c49626
+< solute's
+< solute/XN
+---
+> solute/XNM
+44015c49628
+< solution's/EA
+---
+> solution/EAM
+44021c49634
+< solver's
+---
+> solver/M
+44041a49655
 > sommelier/SM
-44062c49926
+44062c49676
 < sonofabitch
 ---
 > sonofabitch/!
-44346a50211
+44177,44178c49791
+< sow's
+< sow/ASGD
+---
+> sow/ASGDM
+44346a49960
 > spelled
-44348a50214
+44348a49963
 > spelt
-44371a50238
+44371a49987
 > spick/S!
-44383c50250
+44383c49999
 < spik/S
 ---
 > spik/S!
-46106a51974
+44413,44414c50029
+< spire's
+< spire/IFAS
+---
+> spire/IFASM
+44416,44417c50031
+< spirit's
+< spirit/ISGD
+---
+> spirit/ISGDM
+44475,44476c50089
+< spoil's
+< spoil/CSDRZG
+---
+> spoil/CSDRZGM
+44549,44550c50162
+< spray's
+< spray/ASDG
+---
+> spray/ASDGM
+44688,44689c50300
+< staff's
+< staff/ASDG
+---
+> staff/ASDGM
+44729,44730c50340
+< stall's
+< stall/SDG
+---
+> stall/SDGM
+44985,44986c50595
+< still's
+< still/ITGSD
+---
+> still/ITGSDM
+45024,45025c50633
+< stitch's
+< stitch/ADSG
+---
+> stitch/ADSGM
+45030,45031c50638
+< stock's
+< stock/AGSD
+---
+> stock/AGSDM
+45090,45091c50697
+< stop's
+< stop/US
+---
+> stop/USM
+45105,45106c50711
+< store's
+< store/ADSG
+---
+> store/ADSGM
+45148,45149c50753
+< strain's
+< strain/FADSG
+---
+> strain/FADSGM
+45164,45165c50768
+< strap's
+< strap/US
+---
+> strap/USM
+45290,45291c50893
+< structure's
+< structure/AGDS
+---
+> structure/AGDSM
+45330,45331c50932
+< study's
+< study/AGDS
+---
+> study/AGDSM
+45368,45369c50969
+< style's
+< style/ADSG
+---
+> style/ADSGM
+45455,45456c51055
+< submission's
+< submission/AS
+---
+> submission/ASM
+45872,45873c51471
+< surface's
+< surface/AGDS
+---
+> surface/AGDSM
+45918,45919c51516
+< survey's
+< survey/ADGS
+---
+> survey/ADGSM
+46106a51704
 > syllabi
-46160c52028
+46160c51758
 < synch/GMD
 ---
 > synch/GMDS
-46167d52034
+46167d51764
 < synchs
-46178a52046,52048
+46178a51776,51778
 > synesthesia
 > synesthete/S
 > synesthetic
-46203,46204c52073,52074
+46203,46204c51803,51804
 < sysadmin/S
 < sysop/S
 ---
 > sysadmin/MS
 > sysop/MS
-46632a52503,52504
+46363,46364c51963
+< tangle's
+< tangle/UDSG
+---
+> tangle/UDSGM
+46632a52232,52233
 > teleport/SGD
 > teleportation
-46752a52625
+46675,46676c52276
+< template's
+< template/S
+---
+> template/SM
+46752a52353
 > terabit/MS
-46753a52627,52628
+46753a52355,52356
 > terahertz/M
 > terapixel/MS
-46817a52693
+46806,46807c52409
+< test's/AFK
+< test/AKFCDGS
+---
+> test/AKFCDGSM
+46817a52420
 > testcase/MS
-46831a52708
+46831a52435
 > testsuite/MS
-46845a52723
+46845a52450
 > textbox/SM
-46925a52804
+46925a52531
 > theremin/MS
-47455c53334
+46999c52605
+< thinking's
+---
+> thinking/M
+47095,47096c52701
+< throne's
+< throne/CDS
+---
+> throne/CDSM
+47188,47189c52793
+< tie's
+< tie/AUSD
+---
+> tie/AUSDM
+47213,47214c52817
+< till's
+< till/EDRZGS
+---
+> till/EDRZGSM
+47303,47304c52906
+< tire's
+< tire/AGDS
+---
+> tire/AGDSM
+47433,47434c53035
+< tone's
+< tone/IZGDRS
+---
+> tone/IZGDRSM
+47453,47455c53054,53055
+< tool's
+< tool/ADGS
 < toolbar
 ---
+> tool/ADGSM
 > toolbar/MS
-47644a53524
+47540,47541c53140
+< tort's
+< tort/FEAS
+---
+> tort/FEASM
+47644a53244
 > traceur/SM
-47755a53636
+47657,47658c53257
+< tract's
+< tract/CEKFAS
+---
+> tract/CEKFASM
+47755a53355
 > transfect/DSMG
-47774a53656,53657
+47774a53375,53376
 > transgenderism
 > transgene/MS
-47951c53834
+47807,47808c53409
+< transmission's
+< transmission/AS
+---
+> transmission/ASM
+47928,47929c53529
+< trench's
+< trench/AIGSD
+---
+> trench/AIGSDM
+47951c53551
 < triage/M
 ---
 > triage/MGS
-48869a54753
+47976,47977c53576
+< tribute's
+< tribute/FS
+---
+> tribute/FSM
+48165,48166c53764
+< trust's/E
+< trust/IESGD
+---
+> trust/IESGDM
+48180,48181c53778
+< try's
+< try/AGDS
+---
+> try/AGDSM
+48371,48372c53968
+< twist's
+< twist/USDG
+---
+> twist/USDGM
+48396,48397c53992
+< type's
+< type/AGDS
+---
+> type/AGDSM
+48869a54465
 > unlikeable
-49211c55095
+49163,49164c54759
+< usual's
+< usual/UY
+---
+> usual/UYM
+49211c54806
 < vagina/M
 ---
 > vagina/MS
-49368,49369c55252
+49249,49250c54844
+< value's
+< value/CAGSD
+---
+> value/CAGSDM
+49292,49293c54886
+< variant's
+< variant/IS
+---
+> variant/ISM
+49356,49357c54949
+< veil's
+< veil/UDGS
+---
+> veil/UDGSM
+49368,49369c54960
 < velour's
 < velours's
 ---
 > velour/MS
-49478a55362
+49398,49399c54989
+< vent's
+< vent/DGS
+---
+> vent/DGSM
+49435,49436c55025
+< verge's
+< verge/FDSG
+---
+> verge/FDSGM
+49478a55068
 > vertices
-50148a56033
+49488,49489c55078
+< vest's
+< vest/ILDGS
+---
+> vest/ILDGSM
+49681,49682c55270
+< visit's
+< visit/ASGD
+---
+> visit/ASGDM
+49807,49808c55395
+< vote's
+< vote/CGVDS
+---
+> vote/CGVDSM
+50148a55736
 > weaponize/DSG
-50260,50261d56144
+50215,50216c55803
+< weigh's
+< weigh/AGD
+---
+> weigh/AGDM
+50260,50261d55846
 < werwolf/M
 < werwolves
-50728c56611
+50555,50556c56140
+< wind's
+< wind/UASG
+---
+> wind/UASGM
+50626,50627c56210
+< wire's
+< wire/AGDS
+---
+> wire/AGDSM
+50728c56311
 < women
 ---
 > women/M
-50794c56677
+50794,50796c56377,56378
 < wop/S!
+< word's
+< word/AJDSG
 ---
 > wop/MS!
+> word/AJDSGM
+50801c56383
+< wording's
+---
+> wording/M
+50808,50809c56390
+< work's
+< work/ADJSG
+---
+> work/ADJSGM
+50824c56405
+< working's
+---
+> working/M
+50884,50885c56465
+< worthy's
+< worthy/UPRT
+---
+> worthy/UPRTM
+50903,50904c56483
+< wrap's
+< wrap/US
+---
+> wrap/USM
+50945c56524
+< writing's
+---
+> writing/M
+51118,51119c56697
+< yoke's
+< yoke/UGDS
+---
+> yoke/UGDSM
+51212,51213c56790
+< zip's
+< zip/US
+---
+> zip/USM
+51228,51229c56805
+< zone's
+< zone/AGDS
+---
+> zone/AGDSM
