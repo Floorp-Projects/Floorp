@@ -31,7 +31,6 @@
 #include "nsThreadUtils.h"              // for nsRunnable
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType
 #include "nscore.h"                     // for NS_IMETHOD
-#include "VBOArena.h"                   // for gl::VBOArena
 #ifdef MOZ_WIDGET_GONK
 #include <ui/GraphicBuffer.h>
 #endif
@@ -301,11 +300,6 @@ private:
    * coords and texcoords.
    */
   GLuint mQuadVBO;
-
-  /**
-   * When we can't use mQuadVBO, we allocate VBOs from this arena instead.
-   */
-  gl::VBOArena mVBOs;
 
   bool mHasBGRA;
 
