@@ -362,6 +362,10 @@ ComputedTimingFunction::GetValue(double aPortion) const
 
 } /* end sub-namespace css */
 
+// In the Web Animations model, the time fraction can be outside the range
+// [0.0, 1.0] but it shouldn't be Infinity.
+const double ComputedTiming::kNullTimeFraction = NS_IEEEPositiveInfinity();
+
 bool
 ElementAnimation::IsRunningAt(TimeStamp aTime) const
 {
