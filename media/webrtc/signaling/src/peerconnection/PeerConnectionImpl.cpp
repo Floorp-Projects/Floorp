@@ -2109,7 +2109,7 @@ PeerConnectionImpl::IceGatheringStateChange_m(PCImplIceGatheringState aState)
       STAMP_TIMECARD(mTimeCard, "Ice gathering state: gathering");
       break;
     case PCImplIceGatheringState::Complete:
-      STAMP_TIMECARD(mTimeCard, "Ice state: complete");
+      STAMP_TIMECARD(mTimeCard, "Ice gathering state: complete");
       break;
   }
 
