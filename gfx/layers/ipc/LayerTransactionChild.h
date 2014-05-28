@@ -39,6 +39,9 @@ public:
 
   bool IPCOpen() const { return mIPCOpen; }
 
+  void SetHasNoCompositor() { mHasNoCompositor = true; }
+  bool HasNoCompositor() { return mHasNoCompositor; }
+
   void SetForwarder(ShadowLayerForwarder* aForwarder)
   {
     mForwarder = aForwarder;
@@ -46,9 +49,10 @@ public:
 
 protected:
   LayerTransactionChild()
-    : mIPCOpen(false)
+    : mForwarder(nullptr)
+    , mIPCOpen(false)
     , mDestroyed(false)
-    , mForwarder(nullptr)
+    , mHasNoCompositor(false)
   {}
   ~LayerTransactionChild() { }
 
@@ -80,9 +84,10 @@ protected:
   friend class CompositorChild;
   friend class layout::RenderFrameChild;
 
+  ShadowLayerForwarder* mForwarder;
   bool mIPCOpen;
   bool mDestroyed;
-  ShadowLayerForwarder* mForwarder;
+  bool mHasNoCompositor;
 };
 
 } // namespace layers
