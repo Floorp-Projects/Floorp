@@ -64,6 +64,7 @@
 #include "GLContextCGL.h"
 #include "GLUploadHelpers.h"
 #include "ScopedGLHelpers.h"
+#include "HeapCopyOfStackArray.h"
 #include "mozilla/layers/GLManager.h"
 #include "mozilla/layers/CompositorOGL.h"
 #include "mozilla/layers/BasicCompositor.h"
@@ -2790,8 +2791,13 @@ GLPresenter::GLPresenter(GLContext* aContext)
     /* Then quad texcoords */
     0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
   };
-  mGLContext->fBufferData(LOCAL_GL_ARRAY_BUFFER, sizeof(vertices), vertices, LOCAL_GL_STATIC_DRAW);
-  mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
+  HeapCopyOfStackArray<GLfloat> verticesOnHeap(vertices);
+  mGLContext->fBufferData(LOCAL_GL_ARRAY_BUFFER,
+                          verticesOnHeap.ByteLength(),
+                          verticesOnHeap.Data(),
+                          LOCAL_GL_STATIC_DRAW);
+   mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
+
 }
 
 GLPresenter::~GLPresenter()
