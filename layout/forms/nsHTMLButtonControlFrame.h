@@ -51,15 +51,15 @@ public:
   virtual void SetAdditionalStyleContext(int32_t aIndex, 
                                          nsStyleContext* aStyleContext) MOZ_OVERRIDE;
  
+#ifdef DEBUG
   virtual void AppendFrames(ChildListID     aListID,
                             nsFrameList&    aFrameList) MOZ_OVERRIDE;
-
   virtual void InsertFrames(ChildListID     aListID,
                             nsIFrame*       aPrevFrame,
                             nsFrameList&    aFrameList) MOZ_OVERRIDE;
-
   virtual void RemoveFrame(ChildListID     aListID,
                            nsIFrame*       aOldFrame) MOZ_OVERRIDE;
+#endif
 
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
