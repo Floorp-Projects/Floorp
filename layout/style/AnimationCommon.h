@@ -323,12 +323,12 @@ struct ElementAnimation
   bool mIsRunningOnCompositor;
 
   enum {
-    LAST_NOTIFICATION_NONE = uint32_t(-1),
-    LAST_NOTIFICATION_END = uint32_t(-2)
+    LAST_NOTIFICATION_NONE = uint64_t(-1),
+    LAST_NOTIFICATION_END = uint64_t(-2)
   };
   // One of the above constants, or an integer for the iteration
   // whose start we last notified on.
-  uint32_t mLastNotification;
+  uint64_t mLastNotification;
 
   InfallibleTArray<AnimationProperty> mProperties;
 

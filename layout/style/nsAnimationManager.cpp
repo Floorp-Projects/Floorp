@@ -49,7 +49,7 @@ ElementAnimationsPropertyDtor(void           *aObject,
   delete ea;
 }
 
-double
+ComputedTiming
 ElementAnimations::GetPositionInIteration(TimeDuration aElapsedDuration,
                                           const AnimationTiming& aTiming,
                                           ElementAnimation* aAnimation,
@@ -58,11 +58,15 @@ ElementAnimations::GetPositionInIteration(TimeDuration aElapsedDuration,
 {
   MOZ_ASSERT(!aAnimation == !aEa && !aAnimation == !aEventsToDispatch);
 
+  // Always return the same object to benefit from return-value optimization.
+  ComputedTiming result;
+
   // Set |currentIterationCount| to the (fractional) number of
   // iterations we've completed up to the current position.
   double currentIterationCount = aElapsedDuration / aTiming.mIterationDuration;
   bool dispatchStartOrIteration = false;
   if (currentIterationCount >= aTiming.mIterationCount) {
+    result.mPhase = ComputedTiming::AnimationPhase_After;
     if (aAnimation) {
       // Dispatch 'animationend' when needed.
       if (aAnimation->mLastNotification !=
@@ -75,30 +79,45 @@ ElementAnimations::GetPositionInIteration(TimeDuration aElapsedDuration,
     }
     if (!aTiming.FillsForwards()) {
       // The animation isn't active or filling at this time.
-      return -1;
+      result.mTimeFraction = ComputedTiming::kNullTimeFraction;
+      return result;
     }
     currentIterationCount = aTiming.mIterationCount;
   } else if (currentIterationCount < 0.0) {
+    result.mPhase = ComputedTiming::AnimationPhase_Before;
     if (!aTiming.FillsBackwards()) {
       // The animation isn't active or filling at this time.
-      return -1;
+      result.mTimeFraction = ComputedTiming::kNullTimeFraction;
+      return result;
     }
     currentIterationCount = 0.0;
   } else {
+    result.mPhase = ComputedTiming::AnimationPhase_Active;
     dispatchStartOrIteration = aAnimation && !aAnimation->IsPaused();
   }
 
   // Set |positionInIteration| to the position from 0% to 100% along
   // the keyframes.
   NS_ABORT_IF_FALSE(currentIterationCount >= 0.0, "must be positive");
-  double whichIteration = floor(currentIterationCount);
-  if (whichIteration == aTiming.mIterationCount && whichIteration != 0.0) {
+  double positionInIteration = fmod(currentIterationCount, 1);
+
+  // Set |whichIteration| to the integral index of the current iteration.
+  // Casting to an integer here gives us floor(currentIterationCount).
+  // We don't check for overflow here since the range of an unsigned 64-bit
+  // integer is more than enough (i.e. we could handle an animation that
+  // iterates every *microsecond* for about 580,000 years).
+  uint64_t whichIteration = static_cast<uint64_t>(currentIterationCount);
+
+  // Check for the end of the final iteration.
+  if (whichIteration != 0 &&
+      result.mPhase == ComputedTiming::AnimationPhase_After &&
+      aTiming.mIterationCount == floor(aTiming.mIterationCount)) {
     // When the animation's iteration count is an integer (as it
-    // normally is), we need to end at 100% of its last iteration
+    // normally is), we need to end at 100% of its final iteration
     // rather than 0% of the next one (unless it's zero).
-    whichIteration -= 1.0;
+    whichIteration -= 1;
+    positionInIteration = 1.0;
   }
-  double positionInIteration = currentIterationCount - whichIteration;
 
   bool thisIterationReverse = false;
   switch (aTiming.mDirection) {
@@ -113,11 +132,11 @@ ElementAnimations::GetPositionInIteration(TimeDuration aElapsedDuration,
       // whichIteration is that large, we've already lost and we're just
       // guessing.  But the animation is presumably oscillating so fast
       // it doesn't matter anyway.
-      thisIterationReverse = (uint64_t(whichIteration) & 1) == 1;
+      thisIterationReverse = (whichIteration & 1) == 1;
       break;
     case NS_STYLE_ANIMATION_DIRECTION_ALTERNATE_REVERSE:
       // see as previous case
-      thisIterationReverse = (uint64_t(whichIteration) & 1) == 0;
+      thisIterationReverse = (whichIteration & 1) == 0;
       break;
   }
   if (thisIterationReverse) {
@@ -143,7 +162,9 @@ ElementAnimations::GetPositionInIteration(TimeDuration aElapsedDuration,
     aEventsToDispatch->AppendElement(ei);
   }
 
-  return positionInIteration;
+  result.mTimeFraction = positionInIteration;
+  result.mCurrentIteration = whichIteration;
+  return result;
 }
 
 void
@@ -174,21 +195,15 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
       // FIXME: avoid recalculating every time when paused.
       AnimationTiming timing = anim->mTiming;
       timing.mFillMode = NS_STYLE_ANIMATION_FILL_MODE_BOTH;
-      double positionInIteration =
+      ComputedTiming computedTiming =
         GetPositionInIteration(anim->ElapsedDurationAt(aRefreshTime), timing);
 
       // XXX We shouldn't really be using mLastNotification as a general
       // indicator that the animation has finished, it should be reserved for
       // events. If we use it differently in the future this use might need
       // changing.
-      // XXX This shouldn't be checking for positionInIteration >= 1.0, but
-      // rather, checking that we're in the after phase (since we can get
-      // positionInIteration == 1.0 when we have a direction that goes
-      // backwards). We'll fix this in a subsequent patch when we introduce
-      // phases but for now the result is we'll sometimes skip throttling when
-      // we could have throttled the sample.
       if (!anim->mIsRunningOnCompositor ||
-          (positionInIteration >= 1.0 &&
+          (computedTiming.mPhase == ComputedTiming::AnimationPhase_After &&
            anim->mLastNotification != ElementAnimation::LAST_NOTIFICATION_END))
       {
         aIsThrottled = false;
@@ -225,26 +240,24 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
 
       // The ElapsedDurationAt() call here handles pausing.  But:
       // FIXME: avoid recalculating every time when paused.
-      double positionInIteration =
+      ComputedTiming computedTiming =
         GetPositionInIteration(anim->ElapsedDurationAt(aRefreshTime),
                                anim->mTiming);
-      // XXX Only set mNeedsRefreshes to true when we are either in the before
-      // or active phase (the reason we test for <= 1 rather than <1 is to cover
-      // cases where we have an alternating direction which can produce a value
-      // of 1 while we're still in the active phase). We will fix this when we
-      // introduce phases.
-      if (positionInIteration <= 1 && !anim->IsPaused()) {
+
+      if ((computedTiming.mPhase == ComputedTiming::AnimationPhase_Before ||
+           computedTiming.mPhase == ComputedTiming::AnimationPhase_Active) &&
+          !anim->IsPaused()) {
         mNeedsRefreshes = true;
       }
 
-      // The position is -1 when we don't have fill data for the current time,
-      // so we shouldn't animate.
-      if (positionInIteration == -1)
+      // If the time fraction is null, we don't have fill data for the current
+      // time so we shouldn't animate.
+      if (computedTiming.mTimeFraction == ComputedTiming::kNullTimeFraction)
         continue;
 
-      NS_ABORT_IF_FALSE(0.0 <= positionInIteration &&
-                          positionInIteration <= 1.0,
-                        "position should be in [0-1]");
+      NS_ABORT_IF_FALSE(0.0 <= computedTiming.mTimeFraction &&
+                        computedTiming.mTimeFraction <= 1.0,
+                        "timing fraction should be in [0-1]");
 
       for (uint32_t propIdx = 0, propEnd = anim->mProperties.Length();
            propIdx != propEnd; ++propIdx)
@@ -270,12 +283,12 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
         // FIXME: Maybe cache the current segment?
         const AnimationPropertySegment *segment = prop.mSegments.Elements(),
                                *segmentEnd = segment + prop.mSegments.Length();
-        while (segment->mToKey < positionInIteration) {
+        while (segment->mToKey < computedTiming.mTimeFraction) {
           NS_ABORT_IF_FALSE(segment->mFromKey < segment->mToKey,
                             "incorrect keys");
           ++segment;
           if (segment == segmentEnd) {
-            NS_ABORT_IF_FALSE(false, "incorrect positionInIteration");
+            NS_ABORT_IF_FALSE(false, "incorrect time fraction");
             break; // in order to continue in outer loop (just below)
           }
           NS_ABORT_IF_FALSE(segment->mFromKey == (segment-1)->mToKey,
@@ -296,8 +309,9 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
           mStyleRule = new css::AnimValuesStyleRule();
         }
 
-        double positionInSegment = (positionInIteration - segment->mFromKey) /
-                                   (segment->mToKey - segment->mFromKey);
+        double positionInSegment =
+          (computedTiming.mTimeFraction - segment->mFromKey) /
+          (segment->mToKey - segment->mFromKey);
         double valuePosition =
           segment->mTimingFunction.GetValue(positionInSegment);
 
