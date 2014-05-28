@@ -120,7 +120,7 @@
   <project name="platform/system/security" path="system/security" revision="583374f69f531ba68fc3dcbff1f74893d2a96406"/>
   <project name="platform/system/vold" path="system/vold" revision="d4455b8cf361f8353e8aebac15ffd64b4aedd2b9"/>
   <project name="platform/external/icu4c" path="external/icu4c" remote="aosp" revision="b4c6379528887dc25ca9991a535a8d92a61ad6b6"/>
-  <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="6c67114dfa109f31d37e880b9c009f2965a22261"/>
+  <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="9c6cb3231dd096df10a11b4d76be3727bdeec08d"/>
   <project name="platform_system_core" path="system/core" remote="b2g" revision="9395eb5aa885cf6d305a202de6e9694a58a89717"/>
   <default remote="caf" revision="refs/tags/android-4.4.2_r1" sync-j="4"/>
   <!-- Emulator specific things -->
