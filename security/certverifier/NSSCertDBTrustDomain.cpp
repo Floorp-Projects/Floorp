@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include "ExtendedValidation.h"
+#include "NSSErrorsService.h"
 #include "OCSPRequestor.h"
 #include "certdb.h"
 #include "mozilla/Telemetry.h"
@@ -461,7 +462,7 @@ NSSCertDBTrustDomain::IsChainValid(const CERTCertList* certChain) {
   if (chainOK) {
     return SECSuccess;
   }
-  PR_SetError(SEC_ERROR_APPLICATION_CALLBACK_ERROR, 0);
+  PR_SetError(PSM_ERROR_KEY_PINNING_FAILURE, 0);
   return SECFailure;
 }
 

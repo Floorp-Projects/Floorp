@@ -51,6 +51,7 @@
 #include "nsNSSShutDown.h"
 #include "GeneratedEvents.h"
 #include "SharedSSLState.h"
+#include "NSSErrorsService.h"
 
 #include "nss.h"
 #include "ssl.h"
@@ -1279,6 +1280,8 @@ nsNSSComponent::InitializeNSS()
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
   LaunchSmartCardThreads();
 #endif
+
+  RegisterPSMErrorTable();
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
   return NS_OK;

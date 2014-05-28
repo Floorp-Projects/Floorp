@@ -156,7 +156,7 @@ VerifyEntryContentDigest(nsIZipReader * zip, const nsACString & aFilename,
 
   ScopedPK11Context digestContext(PK11_CreateDigestContext(SEC_OID_SHA1));
   if (!digestContext) {
-    return PRErrorCode_to_nsresult(PR_GetError());
+    return mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
   }
 
   rv = MapSECStatus(PK11_DigestBegin(digestContext));
