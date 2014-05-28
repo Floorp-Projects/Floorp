@@ -2481,18 +2481,12 @@ GetDPI(NSWindow* aWindow)
     [[[screen deviceDescription] objectForKey:@"NSScreenNumber"] intValue];
   CGFloat heightMM = ::CGDisplayScreenSize(displayID).height;
   size_t heightPx = ::CGDisplayPixelsHigh(displayID);
-  CGFloat scaleFactor = [aWindow userSpaceScaleFactor];
-  if (scaleFactor < 0.01 || heightMM < 1 || heightPx < 1) {
+  if (heightMM < 1 || heightPx < 1) {
     // Something extremely bogus is going on
     return 96.0f;
   }
 
-  // Currently we don't do our own scaling to take account
-  // of userSpaceScaleFactor, so every "pixel" we draw is actually
-  // userSpaceScaleFactor screen pixels. So divide the screen height
-  // by userSpaceScaleFactor to get the number of "device pixels"
-  // available.
-  float dpi = (heightPx / scaleFactor) / (heightMM / MM_PER_INCH_FLOAT);
+  float dpi = heightPx / (heightMM / MM_PER_INCH_FLOAT);
 
   // Account for HiDPI mode where Cocoa's "points" do not correspond to real
   // device pixels

@@ -159,7 +159,7 @@
           </div>
           <div class="csscoverage-report-unused">
             <h2>&csscoverage.unused;</h2>
-            <p>&csscoverage.noMatch;</p>
+            <p>&csscoverage.noMatches;</p>
             <div foreach="page in ${unused}">
               <h3>${page.url}</h3>
               <code foreach="rule in ${page.rules}"

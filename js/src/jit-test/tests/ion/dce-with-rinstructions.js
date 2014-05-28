@@ -163,6 +163,35 @@ function radd_object(i) {
     return i;
 }
 
+var uceFault_sub_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_sub_number'));
+function rsub_number(i) {
+    var x = 1 - i;
+    if (uceFault_sub_number(i) || uceFault_sub_number(i))
+        assertEq(x, -98  /* = 1 - 99 */);
+    return i;
+}
+
+var uceFault_sub_float = eval(uneval(uceFault).replace('uceFault', 'uceFault_sub_float'));
+function rsub_float(i) {
+    var t = Math.fround(1/3);
+    var fi = Math.fround(i);
+    var x = Math.fround(Math.fround(Math.fround(Math.fround(t - fi) - t) - fi) - t);
+    if (uceFault_sub_float(i) || uceFault_sub_float(i))
+        assertEq(x, -198.3333282470703); /* != -198.33333334326744 (when computed with double subtractions) */
+    return i;
+}
+
+var uceFault_sub_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_sub_object'));
+function rsub_object(i) {
+    var t = i;
+    var o = { valueOf: function () { return t; } };
+    var x = o - i; /* computed with t == i, not 1000 */
+    t = 1000;
+    if (uceFault_sub_object(i) || uceFault_sub_object(i))
+        assertEq(x, 0);
+    return i;
+}
+
 for (i = 0; i < 100; i++) {
     rbitnot_number(i);
     rbitnot_object(i);
@@ -180,6 +209,9 @@ for (i = 0; i < 100; i++) {
     radd_float(i);
     radd_string(i);
     radd_object(i);
+    rsub_number(i);
+    rsub_float(i);
+    rsub_object(i);
 }
 
 // Test that we can refer multiple time to the same recover instruction, as well

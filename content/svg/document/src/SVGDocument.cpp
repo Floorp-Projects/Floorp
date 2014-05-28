@@ -140,7 +140,11 @@ SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded()
     }
   }
 
-  EnsureOnDemandBuiltInUASheet(nsLayoutStylesheetCache::NumberControlSheet());
+  nsCSSStyleSheet* sheet = nsLayoutStylesheetCache::NumberControlSheet();
+  if (sheet) {
+    // number-control.css can be behind a pref
+    EnsureOnDemandBuiltInUASheet(sheet);
+  }
   EnsureOnDemandBuiltInUASheet(nsLayoutStylesheetCache::FormsSheet());
   EnsureOnDemandBuiltInUASheet(nsLayoutStylesheetCache::HTMLSheet());
   EnsureOnDemandBuiltInUASheet(nsLayoutStylesheetCache::UASheet());
