@@ -313,6 +313,11 @@ SVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
     SVGAnimationElementBase::AfterSetAttr(aNamespaceID, aName, aValue,
                                           aNotify);
 
+  if (SVGTests::IsConditionalProcessingAttribute(aName) &&
+      mTimedElement.SetIsDisabled(!PassesConditionalProcessingTests())) {
+    AnimationNeedsResample();
+  }
+
   if (aNamespaceID != kNameSpaceID_XLink || aName != nsGkAtoms::href)
     return rv;
 
