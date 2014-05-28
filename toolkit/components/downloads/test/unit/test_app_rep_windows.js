@@ -216,10 +216,10 @@ add_task(function test_setup()
     let blob = "this is not a serialized protocol buffer";
     // We can't actually parse the protocol buffer here, so just switch on the
     // length instead of inspecting the contents.
-    if (buf.length == 45) {
+    if (buf.length == 65) {
       // evil.com
       blob = createVerdict(true);
-    } else if (buf.length == 48) {
+    } else if (buf.length == 71) {
       // mozilla.com
       blob = createVerdict(false);
     }
