@@ -14,13 +14,31 @@ function testSendFailed(aCause, aServiceId) {
     sendParameters = { serviceId: aServiceId };
   }
 
-  let mmsParameters = { subject: "Test",
-                        receivers: ["+0987654321"],
+  let testSubject = "Test";
+  let testReceivers = ["+0987654321"];
+
+  let mmsParameters = { subject: testSubject,
+                        receivers: testReceivers,
                         attachments: [] };
 
   return sendMmsWithFailure(mmsParameters, sendParameters)
     .then((result) => {
       is(result.error.name, aCause, "Checking failure cause.");
+
+      let domMessage = result.error.data;
+      is(domMessage.id, result.message.id, "Checking message id.");
+      is(domMessage.subject, testSubject, "Checking subject.");
+      is(domMessage.receivers.length, testReceivers.length, "Checking no. of receivers.");
+      for (let i = 0; i < testReceivers.length; i++) {
+        is(domMessage.receivers[i], testReceivers[i], "Checking receiver address.");
+      }
+
+      let deliveryInfo = domMessage.deliveryInfo;
+      is(deliveryInfo.length, testReceivers.length, "Checking no. of deliveryInfo.");
+      for (let i = 0; i < deliveryInfo.length; i++) {
+        is(deliveryInfo[i].receiver, testReceivers[i], "Checking receiver address.");
+        is(deliveryInfo[i].deliveryStatus, "error", "Checking deliveryStatus.");
+      }
     });
 }
 
