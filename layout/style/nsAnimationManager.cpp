@@ -233,9 +233,6 @@ ElementAnimations::GetEventsAt(TimeStamp aRefreshTime,
     ComputedTiming computedTiming =
       ElementAnimation::GetComputedTimingAt(elapsedDuration, anim->mTiming);
 
-    // FIXME: Bug 1004361: If our active duration is sufficiently short and our
-    // samples are sufficiently infrequent we will end up skipping the start
-    // event and jumping straight to the end event.
     switch (computedTiming.mPhase) {
       case ComputedTiming::AnimationPhase_Before:
         // Do nothing
@@ -262,6 +259,18 @@ ElementAnimations::GetEventsAt(TimeStamp aRefreshTime,
         break;
 
       case ComputedTiming::AnimationPhase_After:
+        // If we skipped the animation interval entirely, dispatch
+        // 'animationstart' first
+        if (anim->mLastNotification ==
+            ElementAnimation::LAST_NOTIFICATION_NONE) {
+          // Notifying for start of 0th iteration.
+          // (This is overwritten below but we set it here to maintain
+          // internal consistency.)
+          anim->mLastNotification = 0;
+          AnimationEventInfo ei(mElement, anim->mName, NS_ANIMATION_START,
+                                elapsedDuration, PseudoElement());
+          aEventsToDispatch.AppendElement(ei);
+        }
         // Dispatch 'animationend' when needed.
         if (anim->mLastNotification !=
             ElementAnimation::LAST_NOTIFICATION_END) {
