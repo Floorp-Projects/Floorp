@@ -2441,126 +2441,126 @@ ContentParent::DeallocPBrowserParent(PBrowserParent* frame)
 PDeviceStorageRequestParent*
 ContentParent::AllocPDeviceStorageRequestParent(const DeviceStorageParams& aParams)
 {
-  nsRefPtr<DeviceStorageRequestParent> result = new DeviceStorageRequestParent(aParams);
-  if (!result->EnsureRequiredPermissions(this)) {
-      return nullptr;
-  }
-  result->Dispatch();
-  return result.forget().take();
+    nsRefPtr<DeviceStorageRequestParent> result = new DeviceStorageRequestParent(aParams);
+    if (!result->EnsureRequiredPermissions(this)) {
+        return nullptr;
+    }
+    result->Dispatch();
+    return result.forget().take();
 }
 
 bool
 ContentParent::DeallocPDeviceStorageRequestParent(PDeviceStorageRequestParent* doomed)
 {
-  DeviceStorageRequestParent *parent = static_cast<DeviceStorageRequestParent*>(doomed);
-  NS_RELEASE(parent);
-  return true;
+    DeviceStorageRequestParent *parent = static_cast<DeviceStorageRequestParent*>(doomed);
+    NS_RELEASE(parent);
+    return true;
 }
 
 PFileSystemRequestParent*
 ContentParent::AllocPFileSystemRequestParent(const FileSystemParams& aParams)
 {
-  nsRefPtr<FileSystemRequestParent> result = new FileSystemRequestParent();
-  if (!result->Dispatch(this, aParams)) {
-    return nullptr;
-  }
-  return result.forget().take();
+    nsRefPtr<FileSystemRequestParent> result = new FileSystemRequestParent();
+    if (!result->Dispatch(this, aParams)) {
+        return nullptr;
+    }
+    return result.forget().take();
 }
 
 bool
 ContentParent::DeallocPFileSystemRequestParent(PFileSystemRequestParent* doomed)
 {
-  FileSystemRequestParent* parent = static_cast<FileSystemRequestParent*>(doomed);
-  NS_RELEASE(parent);
-  return true;
+    FileSystemRequestParent* parent = static_cast<FileSystemRequestParent*>(doomed);
+    NS_RELEASE(parent);
+    return true;
 }
 
 PBlobParent*
 ContentParent::AllocPBlobParent(const BlobConstructorParams& aParams)
 {
-  return BlobParent::Create(this, aParams);
+    return BlobParent::Create(this, aParams);
 }
 
 bool
 ContentParent::DeallocPBlobParent(PBlobParent* aActor)
 {
-  delete aActor;
-  return true;
+    delete aActor;
+    return true;
 }
 
 BlobParent*
 ContentParent::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aBlob);
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(aBlob);
 
-  // If the blob represents a remote blob for this ContentParent then we can
-  // simply pass its actor back here.
-  if (nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(aBlob)) {
-    if (BlobParent* actor = static_cast<BlobParent*>(
-          static_cast<PBlobParent*>(remoteBlob->GetPBlob()))) {
-      if (static_cast<ContentParent*>(actor->Manager()) == this) {
-        return actor;
-      }
+    // If the blob represents a remote blob for this ContentParent then we can
+    // simply pass its actor back here.
+    if (nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(aBlob)) {
+        if (BlobParent* actor = static_cast<BlobParent*>(
+              static_cast<PBlobParent*>(remoteBlob->GetPBlob()))) {
+            if (static_cast<ContentParent*>(actor->Manager()) == this) {
+              return actor;
+            }
+        }
     }
-  }
 
-  // All blobs shared between processes must be immutable.
-  nsCOMPtr<nsIMutable> mutableBlob = do_QueryInterface(aBlob);
-  if (!mutableBlob || NS_FAILED(mutableBlob->SetMutable(false))) {
-    NS_WARNING("Failed to make blob immutable!");
-    return nullptr;
-  }
-
-  // XXX This is only safe so long as all blob implementations in our tree
-  //     inherit nsDOMFileBase. If that ever changes then this will need to grow
-  //     a real interface or something.
-  const auto* blob = static_cast<nsDOMFileBase*>(aBlob);
-
-  ChildBlobConstructorParams params;
-
-  if (blob->IsSizeUnknown() || blob->IsDateUnknown()) {
-    // We don't want to call GetSize or GetLastModifiedDate
-    // yet since that may stat a file on the main thread
-    // here. Instead we'll learn the size lazily from the
-    // other process.
-    params = MysteryBlobConstructorParams();
-  }
-  else {
-    nsString contentType;
-    nsresult rv = aBlob->GetType(contentType);
-    NS_ENSURE_SUCCESS(rv, nullptr);
-
-    uint64_t length;
-    rv = aBlob->GetSize(&length);
-    NS_ENSURE_SUCCESS(rv, nullptr);
-
-    nsCOMPtr<nsIDOMFile> file = do_QueryInterface(aBlob);
-    if (file) {
-      FileBlobConstructorParams fileParams;
-
-      rv = file->GetMozLastModifiedDate(&fileParams.modDate());
-      NS_ENSURE_SUCCESS(rv, nullptr);
-
-      rv = file->GetName(fileParams.name());
-      NS_ENSURE_SUCCESS(rv, nullptr);
-
-      fileParams.contentType() = contentType;
-      fileParams.length() = length;
-
-      params = fileParams;
-    } else {
-      NormalBlobConstructorParams blobParams;
-      blobParams.contentType() = contentType;
-      blobParams.length() = length;
-      params = blobParams;
+    // All blobs shared between processes must be immutable.
+    nsCOMPtr<nsIMutable> mutableBlob = do_QueryInterface(aBlob);
+    if (!mutableBlob || NS_FAILED(mutableBlob->SetMutable(false))) {
+        NS_WARNING("Failed to make blob immutable!");
+        return nullptr;
     }
-  }
 
-  BlobParent* actor = BlobParent::Create(this, aBlob);
-  NS_ENSURE_TRUE(actor, nullptr);
+    // XXX This is only safe so long as all blob implementations in our tree
+    //     inherit nsDOMFileBase. If that ever changes then this will need to grow
+    //     a real interface or something.
+    const auto* blob = static_cast<nsDOMFileBase*>(aBlob);
 
-  return SendPBlobConstructor(actor, params) ? actor : nullptr;
+    ChildBlobConstructorParams params;
+
+    if (blob->IsSizeUnknown() || blob->IsDateUnknown()) {
+        // We don't want to call GetSize or GetLastModifiedDate
+        // yet since that may stat a file on the main thread
+        // here. Instead we'll learn the size lazily from the
+        // other process.
+        params = MysteryBlobConstructorParams();
+    }
+    else {
+        nsString contentType;
+        nsresult rv = aBlob->GetType(contentType);
+        NS_ENSURE_SUCCESS(rv, nullptr);
+
+        uint64_t length;
+        rv = aBlob->GetSize(&length);
+        NS_ENSURE_SUCCESS(rv, nullptr);
+
+        nsCOMPtr<nsIDOMFile> file = do_QueryInterface(aBlob);
+        if (file) {
+            FileBlobConstructorParams fileParams;
+
+            rv = file->GetMozLastModifiedDate(&fileParams.modDate());
+            NS_ENSURE_SUCCESS(rv, nullptr);
+
+            rv = file->GetName(fileParams.name());
+            NS_ENSURE_SUCCESS(rv, nullptr);
+
+            fileParams.contentType() = contentType;
+            fileParams.length() = length;
+
+            params = fileParams;
+        } else {
+            NormalBlobConstructorParams blobParams;
+            blobParams.contentType() = contentType;
+            blobParams.length() = length;
+            params = blobParams;
+        }
+    }
+
+    BlobParent* actor = BlobParent::Create(this, aBlob);
+    NS_ENSURE_TRUE(actor, nullptr);
+
+    return SendPBlobConstructor(actor, params) ? actor : nullptr;
 }
 
 void
@@ -2631,9 +2631,9 @@ ContentParent::AllocPCrashReporterParent(const NativeThreadId& tid,
                                          const uint32_t& processType)
 {
 #ifdef MOZ_CRASHREPORTER
-  return new CrashReporterParent();
+    return new CrashReporterParent();
 #else
-  return nullptr;
+    return nullptr;
 #endif
 }
 
@@ -2642,15 +2642,15 @@ ContentParent::RecvPCrashReporterConstructor(PCrashReporterParent* actor,
                                              const NativeThreadId& tid,
                                              const uint32_t& processType)
 {
-  static_cast<CrashReporterParent*>(actor)->SetChildData(tid, processType);
-  return true;
+    static_cast<CrashReporterParent*>(actor)->SetChildData(tid, processType);
+    return true;
 }
 
 bool
 ContentParent::DeallocPCrashReporterParent(PCrashReporterParent* crashreporter)
 {
-  delete crashreporter;
-  return true;
+    delete crashreporter;
+    return true;
 }
 
 hal_sandbox::PHalParent*
@@ -2669,37 +2669,37 @@ ContentParent::DeallocPHalParent(hal_sandbox::PHalParent* aHal)
 PIndexedDBParent*
 ContentParent::AllocPIndexedDBParent()
 {
-  return new IndexedDBParent(this);
+    return new IndexedDBParent(this);
 }
 
 bool
 ContentParent::DeallocPIndexedDBParent(PIndexedDBParent* aActor)
 {
-  delete aActor;
-  return true;
+    delete aActor;
+    return true;
 }
 
 bool
 ContentParent::RecvPIndexedDBConstructor(PIndexedDBParent* aActor)
 {
-  nsRefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::GetOrCreate();
-  NS_ENSURE_TRUE(mgr, false);
+    nsRefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::GetOrCreate();
+    NS_ENSURE_TRUE(mgr, false);
 
-  if (!IndexedDatabaseManager::IsMainProcess()) {
-    NS_RUNTIMEABORT("Not supported yet!");
-  }
+    if (!IndexedDatabaseManager::IsMainProcess()) {
+        NS_RUNTIMEABORT("Not supported yet!");
+    }
 
-  nsRefPtr<IDBFactory> factory;
-  nsresult rv = IDBFactory::Create(this, getter_AddRefs(factory));
-  NS_ENSURE_SUCCESS(rv, false);
+    nsRefPtr<IDBFactory> factory;
+    nsresult rv = IDBFactory::Create(this, getter_AddRefs(factory));
+    NS_ENSURE_SUCCESS(rv, false);
 
-  NS_ASSERTION(factory, "This should never be null!");
+    NS_ASSERTION(factory, "This should never be null!");
 
-  IndexedDBParent* actor = static_cast<IndexedDBParent*>(aActor);
-  actor->mFactory = factory;
-  actor->mASCIIOrigin = factory->GetASCIIOrigin();
+    IndexedDBParent* actor = static_cast<IndexedDBParent*>(aActor);
+    actor->mFactory = factory;
+    actor->mASCIIOrigin = factory->GetASCIIOrigin();
 
-  return true;
+    return true;
 }
 
 PMemoryReportRequestParent*
@@ -2707,15 +2707,15 @@ ContentParent::AllocPMemoryReportRequestParent(const uint32_t& generation,
                                                const bool &minimizeMemoryUsage,
                                                const nsString &aDMDDumpIdent)
 {
-  MemoryReportRequestParent* parent = new MemoryReportRequestParent();
-  return parent;
+    MemoryReportRequestParent* parent = new MemoryReportRequestParent();
+    return parent;
 }
 
 bool
 ContentParent::DeallocPMemoryReportRequestParent(PMemoryReportRequestParent* actor)
 {
-  delete actor;
-  return true;
+    delete actor;
+    return true;
 }
 
 PCycleCollectWithLogsParent*
@@ -2747,14 +2747,14 @@ ContentParent::CycleCollectWithLogs(bool aDumpAllTraces,
 PTestShellParent*
 ContentParent::AllocPTestShellParent()
 {
-  return new TestShellParent();
+    return new TestShellParent();
 }
 
 bool
 ContentParent::DeallocPTestShellParent(PTestShellParent* shell)
 {
-  delete shell;
-  return true;
+    delete shell;
+    return true;
 }
 
 PNeckoParent*
@@ -2923,14 +2923,14 @@ ContentParent::AllocPAsmJSCacheEntryParent(
                                     const asmjscache::WriteParams& aWriteParams,
                                     const IPC::Principal& aPrincipal)
 {
-  return asmjscache::AllocEntryParent(aOpenMode, aWriteParams, aPrincipal);
+    return asmjscache::AllocEntryParent(aOpenMode, aWriteParams, aPrincipal);
 }
 
 bool
 ContentParent::DeallocPAsmJSCacheEntryParent(PAsmJSCacheEntryParent* aActor)
 {
-  asmjscache::DeallocEntryParent(aActor);
-  return true;
+    asmjscache::DeallocEntryParent(aActor);
+    return true;
 }
 
 PSpeechSynthesisParent*
@@ -2968,29 +2968,29 @@ bool
 ContentParent::RecvSpeakerManagerGetSpeakerStatus(bool* aValue)
 {
 #ifdef MOZ_WIDGET_GONK
-  *aValue = false;
-  nsRefPtr<SpeakerManagerService> service =
-    SpeakerManagerService::GetSpeakerManagerService();
-  if (service) {
-    *aValue = service->GetSpeakerStatus();
-  }
-  return true;
+    *aValue = false;
+    nsRefPtr<SpeakerManagerService> service =
+      SpeakerManagerService::GetSpeakerManagerService();
+    if (service) {
+        *aValue = service->GetSpeakerStatus();
+    }
+    return true;
 #endif
-  return false;
+    return false;
 }
 
 bool
 ContentParent::RecvSpeakerManagerForceSpeaker(const bool& aEnable)
 {
 #ifdef MOZ_WIDGET_GONK
-  nsRefPtr<SpeakerManagerService> service =
-    SpeakerManagerService::GetSpeakerManagerService();
-  if (service) {
-    service->ForceSpeaker(aEnable, mChildID);
-  }
-  return true;
+    nsRefPtr<SpeakerManagerService> service =
+      SpeakerManagerService::GetSpeakerManagerService();
+    if (service) {
+        service->ForceSpeaker(aEnable, mChildID);
+    }
+    return true;
 #endif
-  return false;
+    return false;
 }
 
 bool
@@ -3063,15 +3063,15 @@ ContentParent::RecvGetRandomValues(const uint32_t& length,
 bool
 ContentParent::RecvGetSystemMemory(const uint64_t& aGetterId)
 {
-  uint32_t memoryTotal = 0;
+    uint32_t memoryTotal = 0;
 
 #if defined(XP_LINUX)
-  memoryTotal = mozilla::hal::GetTotalSystemMemoryLevel();
+    memoryTotal = mozilla::hal::GetTotalSystemMemoryLevel();
 #endif
 
-  unused << SendSystemMemoryAvailable(aGetterId, memoryTotal);
+    unused << SendSystemMemoryAvailable(aGetterId, memoryTotal);
 
-  return true;
+    return true;
 }
 
 
@@ -3140,21 +3140,21 @@ ContentParent::RecvSyncMessage(const nsString& aMsg,
                                const IPC::Principal& aPrincipal,
                                InfallibleTArray<nsString>* aRetvals)
 {
-  nsIPrincipal* principal = aPrincipal;
-  if (!Preferences::GetBool("dom.testing.ignore_ipc_principal", false) &&
-      principal && !AssertAppPrincipal(this, principal)) {
-    return false;
-  }
+    nsIPrincipal* principal = aPrincipal;
+    if (!Preferences::GetBool("dom.testing.ignore_ipc_principal", false) &&
+        principal && !AssertAppPrincipal(this, principal)) {
+        return false;
+    }
 
-  nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
-  if (ppm) {
-    StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
-    CpowIdHolder cpows(GetCPOWManager(), aCpows);
+    nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
+    if (ppm) {
+        StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
+        CpowIdHolder cpows(GetCPOWManager(), aCpows);
 
-    ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
-                        aMsg, true, &cloneData, &cpows, aPrincipal, aRetvals);
-  }
-  return true;
+        ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
+                            aMsg, true, &cloneData, &cpows, aPrincipal, aRetvals);
+    }
+    return true;
 }
 
 bool
@@ -3164,20 +3164,20 @@ ContentParent::AnswerRpcMessage(const nsString& aMsg,
                                 const IPC::Principal& aPrincipal,
                                 InfallibleTArray<nsString>* aRetvals)
 {
-  nsIPrincipal* principal = aPrincipal;
-  if (!Preferences::GetBool("dom.testing.ignore_ipc_principal", false) &&
-      principal && !AssertAppPrincipal(this, principal)) {
-    return false;
-  }
+    nsIPrincipal* principal = aPrincipal;
+    if (!Preferences::GetBool("dom.testing.ignore_ipc_principal", false) &&
+        principal && !AssertAppPrincipal(this, principal)) {
+        return false;
+    }
 
-  nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
-  if (ppm) {
-    StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
-    CpowIdHolder cpows(GetCPOWManager(), aCpows);
-    ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
-                        aMsg, true, &cloneData, &cpows, aPrincipal, aRetvals);
-  }
-  return true;
+    nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
+    if (ppm) {
+        StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
+        CpowIdHolder cpows(GetCPOWManager(), aCpows);
+        ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
+                            aMsg, true, &cloneData, &cpows, aPrincipal, aRetvals);
+    }
+    return true;
 }
 
 bool
@@ -3186,20 +3186,20 @@ ContentParent::RecvAsyncMessage(const nsString& aMsg,
                                 const InfallibleTArray<CpowEntry>& aCpows,
                                 const IPC::Principal& aPrincipal)
 {
-  nsIPrincipal* principal = aPrincipal;
-  if (!Preferences::GetBool("dom.testing.ignore_ipc_principal", false) &&
-      principal && !AssertAppPrincipal(this, principal)) {
-    return false;
-  }
+    nsIPrincipal* principal = aPrincipal;
+    if (!Preferences::GetBool("dom.testing.ignore_ipc_principal", false) &&
+        principal && !AssertAppPrincipal(this, principal)) {
+        return false;
+    }
 
-  nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
-  if (ppm) {
-    StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
-    CpowIdHolder cpows(GetCPOWManager(), aCpows);
-    ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
-                        aMsg, false, &cloneData, &cpows, aPrincipal, nullptr);
-  }
-  return true;
+    nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
+    if (ppm) {
+        StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
+        CpowIdHolder cpows(GetCPOWManager(), aCpows);
+        ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
+                            aMsg, false, &cloneData, &cpows, aPrincipal, nullptr);
+    }
+    return true;
 }
 
 bool
@@ -3224,18 +3224,18 @@ ContentParent::RecvFilePathUpdateNotify(const nsString& aType,
 static int32_t
 AddGeolocationListener(nsIDOMGeoPositionCallback* watcher, bool highAccuracy)
 {
-  nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
-  if (!geo) {
-    return -1;
-  }
+    nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
+    if (!geo) {
+        return -1;
+    }
 
-  PositionOptions* options = new PositionOptions();
-  options->mTimeout = 0;
-  options->mMaximumAge = 0;
-  options->mEnableHighAccuracy = highAccuracy;
-  int32_t retval = 1;
-  geo->WatchPosition(watcher, nullptr, options, &retval);
-  return retval;
+    PositionOptions* options = new PositionOptions();
+    options->mTimeout = 0;
+    options->mMaximumAge = 0;
+    options->mEnableHighAccuracy = highAccuracy;
+    int32_t retval = 1;
+    geo->WatchPosition(watcher, nullptr, options, &retval);
+    return retval;
 }
 
 bool
@@ -3243,53 +3243,53 @@ ContentParent::RecvAddGeolocationListener(const IPC::Principal& aPrincipal,
                                           const bool& aHighAccuracy)
 {
 #ifdef MOZ_CHILD_PERMISSIONS
-  if (!Preferences::GetBool("dom.testing.ignore_ipc_principal", false)) {
-    uint32_t permission = mozilla::CheckPermission(this, aPrincipal,
-                                                   "geolocation");
-    if (permission != nsIPermissionManager::ALLOW_ACTION) {
-      return true;
+    if (!Preferences::GetBool("dom.testing.ignore_ipc_principal", false)) {
+        uint32_t permission = mozilla::CheckPermission(this, aPrincipal,
+                                                       "geolocation");
+        if (permission != nsIPermissionManager::ALLOW_ACTION) {
+            return true;
+        }
     }
-  }
 #endif /* MOZ_CHILD_PERMISSIONS */
 
-  // To ensure no geolocation updates are skipped, we always force the
-  // creation of a new listener.
-  RecvRemoveGeolocationListener();
-  mGeolocationWatchID = AddGeolocationListener(this, aHighAccuracy);
-  return true;
+    // To ensure no geolocation updates are skipped, we always force the
+    // creation of a new listener.
+    RecvRemoveGeolocationListener();
+    mGeolocationWatchID = AddGeolocationListener(this, aHighAccuracy);
+    return true;
 }
 
 bool
 ContentParent::RecvRemoveGeolocationListener()
 {
-  if (mGeolocationWatchID != -1) {
-    nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
-    if (!geo) {
-      return true;
+    if (mGeolocationWatchID != -1) {
+        nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
+        if (!geo) {
+            return true;
+        }
+        geo->ClearWatch(mGeolocationWatchID);
+        mGeolocationWatchID = -1;
     }
-    geo->ClearWatch(mGeolocationWatchID);
-    mGeolocationWatchID = -1;
-  }
-  return true;
+    return true;
 }
 
 bool
 ContentParent::RecvSetGeolocationHigherAccuracy(const bool& aEnable)
 {
-  // This should never be called without a listener already present,
-  // so this check allows us to forgo securing privileges.
-  if (mGeolocationWatchID != -1) {
-    RecvRemoveGeolocationListener();
-    mGeolocationWatchID = AddGeolocationListener(this, aEnable);
-  }
-  return true;
+    // This should never be called without a listener already present,
+    // so this check allows us to forgo securing privileges.
+    if (mGeolocationWatchID != -1) {
+        RecvRemoveGeolocationListener();
+        mGeolocationWatchID = AddGeolocationListener(this, aEnable);
+    }
+    return true;
 }
 
 NS_IMETHODIMP
 ContentParent::HandleEvent(nsIDOMGeoPosition* postion)
 {
-  unused << SendGeolocationUpdate(GeoPosition(postion));
-  return NS_OK;
+    unused << SendGeolocationUpdate(GeoPosition(postion));
+    return NS_OK;
 }
 
 nsConsoleService *
@@ -3312,14 +3312,14 @@ ContentParent::GetConsoleService()
 bool
 ContentParent::RecvConsoleMessage(const nsString& aMessage)
 {
-  nsRefPtr<nsConsoleService> consoleService = GetConsoleService();
-  if (!consoleService) {
+    nsRefPtr<nsConsoleService> consoleService = GetConsoleService();
+    if (!consoleService) {
+        return true;
+    }
+
+    nsRefPtr<nsConsoleMessage> msg(new nsConsoleMessage(aMessage.get()));
+    consoleService->LogMessageWithMode(msg, nsConsoleService::SuppressLog);
     return true;
-  }
-  
-  nsRefPtr<nsConsoleMessage> msg(new nsConsoleMessage(aMessage.get()));
-  consoleService->LogMessageWithMode(msg, nsConsoleService::SuppressLog);
-  return true;
 }
 
 bool
@@ -3331,38 +3331,38 @@ ContentParent::RecvScriptError(const nsString& aMessage,
                                       const uint32_t& aFlags,
                                       const nsCString& aCategory)
 {
-  nsRefPtr<nsConsoleService> consoleService = GetConsoleService();
-  if (!consoleService) {
-    return true;
-  }
+    nsRefPtr<nsConsoleService> consoleService = GetConsoleService();
+    if (!consoleService) {
+        return true;
+    }
 
-  nsCOMPtr<nsIScriptError> msg(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
-  nsresult rv = msg->Init(aMessage, aSourceName, aSourceLine,
-                          aLineNumber, aColNumber, aFlags, aCategory.get());
-  if (NS_FAILED(rv))
-    return true;
+    nsCOMPtr<nsIScriptError> msg(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
+    nsresult rv = msg->Init(aMessage, aSourceName, aSourceLine,
+                            aLineNumber, aColNumber, aFlags, aCategory.get());
+    if (NS_FAILED(rv))
+        return true;
 
-  consoleService->LogMessageWithMode(msg, nsConsoleService::SuppressLog);
-  return true;
+    consoleService->LogMessageWithMode(msg, nsConsoleService::SuppressLog);
+    return true;
 }
 
 bool
 ContentParent::RecvPrivateDocShellsExist(const bool& aExist)
 {
-  if (!sPrivateContent)
-    sPrivateContent = new nsTArray<ContentParent*>();
-  if (aExist) {
-    sPrivateContent->AppendElement(this);
-  } else {
-    sPrivateContent->RemoveElement(this);
-    if (!sPrivateContent->Length()) {
-      nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-      obs->NotifyObservers(nullptr, "last-pb-context-exited", nullptr);
-      delete sPrivateContent;
-      sPrivateContent = nullptr;
+    if (!sPrivateContent)
+        sPrivateContent = new nsTArray<ContentParent*>();
+    if (aExist) {
+        sPrivateContent->AppendElement(this);
+    } else {
+        sPrivateContent->RemoveElement(this);
+        if (!sPrivateContent->Length()) {
+            nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+            obs->NotifyObservers(nullptr, "last-pb-context-exited", nullptr);
+            delete sPrivateContent;
+            sPrivateContent = nullptr;
+        }
     }
-  }
-  return true;
+    return true;
 }
 
 bool
@@ -3372,39 +3372,39 @@ ContentParent::DoSendAsyncMessage(JSContext* aCx,
                                   JS::Handle<JSObject *> aCpows,
                                   nsIPrincipal* aPrincipal)
 {
-  ClonedMessageData data;
-  if (!BuildClonedMessageDataForParent(this, aData, data)) {
-    return false;
-  }
-  InfallibleTArray<CpowEntry> cpows;
-  if (aCpows && !GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
-    return false;
-  }
-  return SendAsyncMessage(nsString(aMessage), data, cpows, aPrincipal);
+    ClonedMessageData data;
+    if (!BuildClonedMessageDataForParent(this, aData, data)) {
+        return false;
+    }
+    InfallibleTArray<CpowEntry> cpows;
+    if (aCpows && !GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
+        return false;
+    }
+    return SendAsyncMessage(nsString(aMessage), data, cpows, aPrincipal);
 }
 
 bool
 ContentParent::CheckPermission(const nsAString& aPermission)
 {
-  return AssertAppProcessPermission(this, NS_ConvertUTF16toUTF8(aPermission).get());
+    return AssertAppProcessPermission(this, NS_ConvertUTF16toUTF8(aPermission).get());
 }
 
 bool
 ContentParent::CheckManifestURL(const nsAString& aManifestURL)
 {
-  return AssertAppProcessManifestURL(this, NS_ConvertUTF16toUTF8(aManifestURL).get());
+    return AssertAppProcessManifestURL(this, NS_ConvertUTF16toUTF8(aManifestURL).get());
 }
 
 bool
 ContentParent::CheckAppHasPermission(const nsAString& aPermission)
 {
-  return AssertAppHasPermission(this, NS_ConvertUTF16toUTF8(aPermission).get());
+    return AssertAppHasPermission(this, NS_ConvertUTF16toUTF8(aPermission).get());
 }
 
 bool
 ContentParent::CheckAppHasStatus(unsigned short aStatus)
 {
-  return AssertAppHasStatus(this, aStatus);
+    return AssertAppHasStatus(this, aStatus);
 }
 
 bool
@@ -3418,15 +3418,15 @@ bool
 ContentParent::RecvCreateFakeVolume(const nsString& fsName, const nsString& mountPoint)
 {
 #ifdef MOZ_WIDGET_GONK
-  nsresult rv;
-  nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID, &rv);
-  if (vs) {
-    vs->CreateFakeVolume(fsName, mountPoint);
-  }
-  return true;
+    nsresult rv;
+    nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID, &rv);
+    if (vs) {
+        vs->CreateFakeVolume(fsName, mountPoint);
+    }
+    return true;
 #else
-  NS_WARNING("ContentParent::RecvCreateFakeVolume shouldn't be called when MOZ_WIDGET_GONK is not defined");
-  return false;
+    NS_WARNING("ContentParent::RecvCreateFakeVolume shouldn't be called when MOZ_WIDGET_GONK is not defined");
+    return false;
 #endif
 }
 
@@ -3434,15 +3434,15 @@ bool
 ContentParent::RecvSetFakeVolumeState(const nsString& fsName, const int32_t& fsState)
 {
 #ifdef MOZ_WIDGET_GONK
-  nsresult rv;
-  nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID, &rv);
-  if (vs) {
-    vs->SetFakeVolumeState(fsName, fsState);
-  }
-  return true;
+    nsresult rv;
+    nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID, &rv);
+    if (vs) {
+        vs->SetFakeVolumeState(fsName, fsState);
+    }
+    return true;
 #else
-  NS_WARNING("ContentParent::RecvSetFakeVolumeState shouldn't be called when MOZ_WIDGET_GONK is not defined");
-  return false;
+    NS_WARNING("ContentParent::RecvSetFakeVolumeState shouldn't be called when MOZ_WIDGET_GONK is not defined");
+    return false;
 #endif
 }
 
@@ -3450,42 +3450,42 @@ bool
 ContentParent::RecvKeywordToURI(const nsCString& aKeyword, OptionalInputStreamParams* aPostData,
                                 OptionalURIParams* aURI)
 {
-  nsCOMPtr<nsIURIFixup> fixup = do_GetService(NS_URIFIXUP_CONTRACTID);
-  if (!fixup) {
+    nsCOMPtr<nsIURIFixup> fixup = do_GetService(NS_URIFIXUP_CONTRACTID);
+    if (!fixup) {
+        return true;
+    }
+
+    nsCOMPtr<nsIInputStream> postData;
+    nsCOMPtr<nsIURI> uri;
+    if (NS_FAILED(fixup->KeywordToURI(aKeyword, getter_AddRefs(postData),
+                                      getter_AddRefs(uri)))) {
+        return true;
+    }
+
+    nsTArray<mozilla::ipc::FileDescriptor> fds;
+    SerializeInputStream(postData, *aPostData, fds);
+    MOZ_ASSERT(fds.IsEmpty());
+
+    SerializeURI(uri, *aURI);
     return true;
-  }
-
-  nsCOMPtr<nsIInputStream> postData;
-  nsCOMPtr<nsIURI> uri;
-  if (NS_FAILED(fixup->KeywordToURI(aKeyword, getter_AddRefs(postData),
-                                    getter_AddRefs(uri)))) {
-    return true;
-  }
-
-  nsTArray<mozilla::ipc::FileDescriptor> fds;
-  SerializeInputStream(postData, *aPostData, fds);
-  MOZ_ASSERT(fds.IsEmpty());
-
-  SerializeURI(uri, *aURI);
-  return true;
 }
 
 bool
 ContentParent::ShouldContinueFromReplyTimeout()
 {
-  // The only time ContentParent sends blocking messages is for CPOWs, so
-  // timeouts should only ever occur in electrolysis-enabled sessions.
-  MOZ_ASSERT(BrowserTabsRemote());
-  return false;
+    // The only time ContentParent sends blocking messages is for CPOWs, so
+    // timeouts should only ever occur in electrolysis-enabled sessions.
+    MOZ_ASSERT(BrowserTabsRemote());
+    return false;
 }
 
 bool
 ContentParent::ShouldSandboxContentProcesses()
 {
 #ifdef MOZ_CONTENT_SANDBOX
-  return !PR_GetEnv("MOZ_DISABLE_CONTENT_SANDBOX");
+    return !PR_GetEnv("MOZ_DISABLE_CONTENT_SANDBOX");
 #else
-  return true;
+    return true;
 #endif
 }
 
@@ -3534,33 +3534,33 @@ ContentParent::RecvGetGraphicsFeatureStatus(const int32_t& aFeature,
 bool
 ContentParent::RecvAddIdleObserver(const uint64_t& aObserver, const uint32_t& aIdleTimeInS)
 {
-  nsresult rv;
-  nsCOMPtr<nsIIdleService> idleService =
-    do_GetService("@mozilla.org/widget/idleservice;1", &rv);
-  NS_ENSURE_SUCCESS(rv, false);
+    nsresult rv;
+    nsCOMPtr<nsIIdleService> idleService =
+      do_GetService("@mozilla.org/widget/idleservice;1", &rv);
+    NS_ENSURE_SUCCESS(rv, false);
 
-  nsRefPtr<ParentIdleListener> listener = new ParentIdleListener(this, aObserver);
-  mIdleListeners.Put(aObserver, listener);
-  idleService->AddIdleObserver(listener, aIdleTimeInS);
-  return true;
+    nsRefPtr<ParentIdleListener> listener = new ParentIdleListener(this, aObserver);
+    mIdleListeners.Put(aObserver, listener);
+    idleService->AddIdleObserver(listener, aIdleTimeInS);
+    return true;
 }
 
 bool
 ContentParent::RecvRemoveIdleObserver(const uint64_t& aObserver, const uint32_t& aIdleTimeInS)
 {
-  nsresult rv;
-  nsCOMPtr<nsIIdleService> idleService =
-    do_GetService("@mozilla.org/widget/idleservice;1", &rv);
-  NS_ENSURE_SUCCESS(rv, false);
+    nsresult rv;
+    nsCOMPtr<nsIIdleService> idleService =
+      do_GetService("@mozilla.org/widget/idleservice;1", &rv);
+    NS_ENSURE_SUCCESS(rv, false);
 
-  nsRefPtr<ParentIdleListener> listener;
-  bool found = mIdleListeners.Get(aObserver, &listener);
-  if (found) {
-    mIdleListeners.Remove(aObserver);
-    idleService->RemoveIdleObserver(listener, aIdleTimeInS);
-  }
+    nsRefPtr<ParentIdleListener> listener;
+    bool found = mIdleListeners.Get(aObserver, &listener);
+    if (found) {
+        mIdleListeners.Remove(aObserver);
+        idleService->RemoveIdleObserver(listener, aIdleTimeInS);
+    }
 
-  return true;
+    return true;
 }
 
 bool
@@ -3573,7 +3573,7 @@ ContentParent::RecvBackUpXResources(const FileDescriptor& aXSocketFd)
                       "Already backed up X resources??");
     mChildXSocketFdDup.forget();
     if (aXSocketFd.IsValid()) {
-      mChildXSocketFdDup.reset(aXSocketFd.PlatformHandle());
+        mChildXSocketFdDup.reset(aXSocketFd.PlatformHandle());
     }
 #endif
     return true;
@@ -3599,8 +3599,8 @@ NS_IMPL_ISUPPORTS(ParentIdleListener, nsIObserver)
 
 NS_IMETHODIMP
 ParentIdleListener::Observe(nsISupports*, const char* aTopic, const char16_t* aData) {
-  mozilla::unused << mParent->SendNotifyIdleObserver(mObserver,
-                                                     nsDependentCString(aTopic),
-                                                     nsDependentString(aData));
-  return NS_OK;
+    mozilla::unused << mParent->SendNotifyIdleObserver(mObserver,
+                                                       nsDependentCString(aTopic),
+                                                       nsDependentString(aData));
+    return NS_OK;
 }
