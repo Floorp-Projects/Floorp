@@ -59,13 +59,12 @@ ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
 }
 
+#ifdef DEBUG
 void
 ViewportFrame::SetInitialChildList(ChildListID     aListID,
                                    nsFrameList&    aChildList)
 {
-#ifdef DEBUG
   nsFrame::VerifyDirtyBitSet(aChildList);
-#endif
   nsContainerFrame::SetInitialChildList(aListID, aChildList);
 }
 
@@ -73,10 +72,8 @@ void
 ViewportFrame::AppendFrames(ChildListID     aListID,
                             nsFrameList&    aFrameList)
 {
-  NS_ASSERTION(aListID == kPrincipalList ||
-               aListID == GetAbsoluteListID(), "unexpected child list");
-  NS_ASSERTION(aListID != GetAbsoluteListID() ||
-               GetChildList(aListID).IsEmpty(), "Shouldn't have any kids!");
+  NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
+  NS_ASSERTION(GetChildList(aListID).IsEmpty(), "Shouldn't have any kids!");
   nsContainerFrame::AppendFrames(aListID, aFrameList);
 }
 
@@ -85,10 +82,8 @@ ViewportFrame::InsertFrames(ChildListID     aListID,
                             nsIFrame*       aPrevFrame,
                             nsFrameList&    aFrameList)
 {
-  NS_ASSERTION(aListID == kPrincipalList ||
-               aListID == GetAbsoluteListID(), "unexpected child list");
-  NS_ASSERTION(aListID != GetAbsoluteListID() ||
-               GetChildList(aListID).IsEmpty(), "Shouldn't have any kids!");
+  NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
+  NS_ASSERTION(GetChildList(aListID).IsEmpty(), "Shouldn't have any kids!");
   nsContainerFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
 }
 
@@ -96,10 +91,10 @@ void
 ViewportFrame::RemoveFrame(ChildListID     aListID,
                            nsIFrame*       aOldFrame)
 {
-  NS_ASSERTION(aListID == kPrincipalList ||
-               aListID == GetAbsoluteListID(), "unexpected child list");
+  NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
   nsContainerFrame::RemoveFrame(aListID, aOldFrame);
 }
+#endif
 
 /* virtual */ nscoord
 ViewportFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
