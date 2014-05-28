@@ -1308,29 +1308,19 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                              const nsRect&           aDirtyRect,
                              const nsDisplayListSet& aLists)
 {
-  bool forceLayer = false;
-  uint32_t flags = 0;
-  mozilla::layers::FrameMetrics::ViewID scrollTargetId =
-    mozilla::layers::FrameMetrics::NULL_SCROLL_ID;
+  // forcelayer is only supported on XUL elements with box layout
+  bool forceLayer =
+    GetContent()->HasAttr(kNameSpaceID_None, nsGkAtoms::layer) &&
+    GetContent()->IsXUL();
 
+  // Check for frames that are marked as a part of the region used
+  // in calculating glass margins on Windows.
   if (GetContent()->IsXUL()) {
-    // forcelayer is only supported on XUL elements with box layout
-    if (GetContent()->HasAttr(kNameSpaceID_None, nsGkAtoms::layer)) {
-      forceLayer = true;
-    } else {
-      nsIFrame* parent = GetParentBox(this);
-      if (parent && parent->GetType() == nsGkAtoms::sliderFrame) {
-        forceLayer = true;
-        aBuilder->GetScrollbarInfo(&scrollTargetId, &flags);
+      const nsStyleDisplay* styles = StyleDisplay();
+      if (styles && styles->mAppearance == NS_THEME_WIN_EXCLUDE_GLASS) {
+        nsRect rect = nsRect(aBuilder->ToReferenceFrame(this), GetSize());
+        aBuilder->AddExcludedGlassRegion(rect);
       }
-    }
-    // Check for frames that are marked as a part of the region used
-    // in calculating glass margins on Windows.
-    const nsStyleDisplay* styles = StyleDisplay();
-    if (styles && styles->mAppearance == NS_THEME_WIN_EXCLUDE_GLASS) {
-      nsRect rect = nsRect(aBuilder->ToReferenceFrame(this), GetSize());
-      aBuilder->AddExcludedGlassRegion(rect);
-    }
   }
 
   nsDisplayListCollection tempLists;
@@ -1365,10 +1355,9 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     masterList.AppendToTop(tempLists.Content());
     masterList.AppendToTop(tempLists.PositionedDescendants());
     masterList.AppendToTop(tempLists.Outlines());
-
     // Wrap the list to make it its own layer
     aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayOwnLayer(aBuilder, this, &masterList, flags, scrollTargetId));
+      nsDisplayOwnLayer(aBuilder, this, &masterList));
   }
 }
 
