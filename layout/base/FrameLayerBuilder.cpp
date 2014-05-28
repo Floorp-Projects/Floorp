@@ -1840,6 +1840,9 @@ AddTransformedBoundsToRegion(const nsIntRegion& aRegion,
                              nsIntRegion* aDest)
 {
   nsIntRect bounds = aRegion.GetBounds();
+  if (bounds.IsEmpty()) {
+    return;
+  }
   gfxRect transformed =
     aTransform.TransformBounds(gfxRect(bounds.x, bounds.y, bounds.width, bounds.height));
   transformed.RoundOut();
