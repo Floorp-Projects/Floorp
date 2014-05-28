@@ -1,6 +1,6 @@
 skip-if(B2G) fails-if(Android) == resize.html resize-ref.html
 # an offset seems to apply to the native resizer on windows so skip this test for now
-skip-if(B2G) fails-if(Android) skip-if(winWidget) == resize-background.html resize-background-ref.html
+skip-if(B2G) fails-if(Android) skip-if(winWidget) fuzzy-if(cocoaWidget,1,33) == resize-background.html resize-background-ref.html
 skip-if(B2G) fails-if(Android) != ltr.html rtl.html
 skip-if(B2G) fails-if(Android) != ltr-scrollbar.html rtl-scrollbar.html
 skip-if(B2G) fails-if(Android) != in-ltr-doc-scrollbar.html in-rtl-doc-scrollbar.html
