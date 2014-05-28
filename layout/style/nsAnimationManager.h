@@ -60,17 +60,6 @@ struct ElementAnimations MOZ_FINAL
   ElementAnimations(mozilla::dom::Element *aElement, nsIAtom *aElementProperty,
                     nsAnimationManager *aAnimationManager, TimeStamp aNow);
 
-  // This function takes as input the timing parameters of an animation and
-  // returns a ComputedTiming struct representing the animation's progress at
-  // the given moment.
-  //
-  // This function returns ComputedTiming::kNullTimeFraction for the
-  // mTimeFraction member of the return value if the animation should not be
-  // run (because it is not currently active and is not filling at this time).
-  static mozilla::ComputedTiming GetPositionInIteration(
-    TimeDuration aElapsedDuration,
-    const mozilla::AnimationTiming& aTiming);
-
   // After calling this, be sure to call CheckNeedsRefresh on the animation
   // manager afterwards.
   void EnsureStyleRuleFor(TimeStamp aRefreshTime, bool aIsThrottled);

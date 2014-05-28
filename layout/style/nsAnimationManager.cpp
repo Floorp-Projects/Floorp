@@ -49,88 +49,6 @@ ElementAnimationsPropertyDtor(void           *aObject,
   delete ea;
 }
 
-ComputedTiming
-ElementAnimations::GetPositionInIteration(TimeDuration aElapsedDuration,
-                                          const AnimationTiming& aTiming)
-{
-  // Always return the same object to benefit from return-value optimization.
-  ComputedTiming result;
-
-  // Set |currentIterationCount| to the (fractional) number of
-  // iterations we've completed up to the current position.
-  double currentIterationCount = aElapsedDuration / aTiming.mIterationDuration;
-  if (currentIterationCount >= aTiming.mIterationCount) {
-    result.mPhase = ComputedTiming::AnimationPhase_After;
-    if (!aTiming.FillsForwards()) {
-      // The animation isn't active or filling at this time.
-      result.mTimeFraction = ComputedTiming::kNullTimeFraction;
-      return result;
-    }
-    currentIterationCount = aTiming.mIterationCount;
-  } else if (currentIterationCount < 0.0) {
-    result.mPhase = ComputedTiming::AnimationPhase_Before;
-    if (!aTiming.FillsBackwards()) {
-      // The animation isn't active or filling at this time.
-      result.mTimeFraction = ComputedTiming::kNullTimeFraction;
-      return result;
-    }
-    currentIterationCount = 0.0;
-  } else {
-    result.mPhase = ComputedTiming::AnimationPhase_Active;
-  }
-
-  // Set |positionInIteration| to the position from 0% to 100% along
-  // the keyframes.
-  NS_ABORT_IF_FALSE(currentIterationCount >= 0.0, "must be positive");
-  double positionInIteration = fmod(currentIterationCount, 1);
-
-  // Set |whichIteration| to the integral index of the current iteration.
-  // Casting to an integer here gives us floor(currentIterationCount).
-  // We don't check for overflow here since the range of an unsigned 64-bit
-  // integer is more than enough (i.e. we could handle an animation that
-  // iterates every *microsecond* for about 580,000 years).
-  uint64_t whichIteration = static_cast<uint64_t>(currentIterationCount);
-
-  // Check for the end of the final iteration.
-  if (whichIteration != 0 &&
-      result.mPhase == ComputedTiming::AnimationPhase_After &&
-      aTiming.mIterationCount == floor(aTiming.mIterationCount)) {
-    // When the animation's iteration count is an integer (as it
-    // normally is), we need to end at 100% of its final iteration
-    // rather than 0% of the next one (unless it's zero).
-    whichIteration -= 1;
-    positionInIteration = 1.0;
-  }
-
-  bool thisIterationReverse = false;
-  switch (aTiming.mDirection) {
-    case NS_STYLE_ANIMATION_DIRECTION_NORMAL:
-      thisIterationReverse = false;
-      break;
-    case NS_STYLE_ANIMATION_DIRECTION_REVERSE:
-      thisIterationReverse = true;
-      break;
-    case NS_STYLE_ANIMATION_DIRECTION_ALTERNATE:
-      // uint64_t has more integer precision than double does, so if
-      // whichIteration is that large, we've already lost and we're just
-      // guessing.  But the animation is presumably oscillating so fast
-      // it doesn't matter anyway.
-      thisIterationReverse = (whichIteration & 1) == 1;
-      break;
-    case NS_STYLE_ANIMATION_DIRECTION_ALTERNATE_REVERSE:
-      // see as previous case
-      thisIterationReverse = (whichIteration & 1) == 0;
-      break;
-  }
-  if (thisIterationReverse) {
-    positionInIteration = 1.0 - positionInIteration;
-  }
-
-  result.mTimeFraction = positionInIteration;
-  result.mCurrentIteration = whichIteration;
-  return result;
-}
-
 void
 ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
                                       bool aIsThrottled)
@@ -157,10 +75,11 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
 
       // The ElapsedDurationAt() call here handles pausing.  But:
       // FIXME: avoid recalculating every time when paused.
+      TimeDuration elapsedDuration = anim->ElapsedDurationAt(aRefreshTime);
       AnimationTiming timing = anim->mTiming;
       timing.mFillMode = NS_STYLE_ANIMATION_FILL_MODE_BOTH;
       ComputedTiming computedTiming =
-        GetPositionInIteration(anim->ElapsedDurationAt(aRefreshTime), timing);
+        ElementAnimation::GetComputedTimingAt(elapsedDuration, timing);
 
       // XXX We shouldn't really be using mLastNotification as a general
       // indicator that the animation has finished, it should be reserved for
@@ -204,9 +123,9 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
 
       // The ElapsedDurationAt() call here handles pausing.  But:
       // FIXME: avoid recalculating every time when paused.
+      TimeDuration elapsedDuration = anim->ElapsedDurationAt(aRefreshTime);
       ComputedTiming computedTiming =
-        GetPositionInIteration(anim->ElapsedDurationAt(aRefreshTime),
-                               anim->mTiming);
+        ElementAnimation::GetComputedTimingAt(elapsedDuration, anim->mTiming);
 
       if ((computedTiming.mPhase == ComputedTiming::AnimationPhase_Before ||
            computedTiming.mPhase == ComputedTiming::AnimationPhase_Active) &&
@@ -304,7 +223,8 @@ ElementAnimations::GetEventsAt(TimeStamp aRefreshTime,
     // We should *not* skip animations with zero duration (bug 1004365) or
     // those with no keyframes (bug 1004377).
     // We will fix this separately but for now this is necessary since
-    // GetPositionInIteration does not yet handle zero-duration iterations.
+    // ElementAnimation::GetComputedTimingAt does not yet handle
+    // zero-duration iterations.
     if (anim->mProperties.IsEmpty() ||
         anim->mTiming.mIterationDuration.ToMilliseconds() <= 0.0) {
       // The animation isn't active or filling at this time.
@@ -313,7 +233,7 @@ ElementAnimations::GetEventsAt(TimeStamp aRefreshTime,
 
     TimeDuration elapsedDuration = anim->ElapsedDurationAt(aRefreshTime);
     ComputedTiming computedTiming =
-      GetPositionInIteration(elapsedDuration, anim->mTiming);
+      ElementAnimation::GetComputedTimingAt(elapsedDuration, anim->mTiming);
 
     // FIXME: Bug 1004361: If our active duration is sufficiently short and our
     // samples are sufficiently infrequent we will end up skipping the start

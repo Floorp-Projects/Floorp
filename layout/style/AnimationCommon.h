@@ -314,6 +314,15 @@ struct ElementAnimation
     return (IsPaused() ? mPauseStart : aTime) - mStartTime - mDelay;
   }
 
+  // This function takes as input the timing parameters of an animation and
+  // returns the computed timing at the specified moment.
+  //
+  // This function returns ComputedTiming::kNullTimeFraction for the
+  // mTimeFraction member of the return value if the animation should not be
+  // run (because it is not currently active and is not filling at this time).
+  static ComputedTiming GetComputedTimingAt(TimeDuration aElapsedDuration,
+                                            const AnimationTiming& aTiming);
+
   // The beginning of the delay period.  This is also used by
   // ElementPropertyTransition in its IsRemovedSentinel and
   // SetRemovedSentinel methods.
