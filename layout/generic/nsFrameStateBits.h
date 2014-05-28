@@ -405,11 +405,6 @@ FRAME_STATE_BIT(Text, 60, TEXT_IN_UNINFLATED_TEXTRUN_USER_DATA)
 
 FRAME_STATE_BIT(Text, 61, TEXT_HAS_FONT_INFLATION)
 
-// If true, then this frame is being removed due to a SetLength() on a
-// previous continuation and the style context of that previous
-// continuation is the same as this frame's
-FRAME_STATE_BIT(Text, 62, TEXT_STYLE_MATCHES_PREV_CONTINUATION)
-
 // Whether this frame is cached in the Offset Frame Cache
 // (OffsetToFrameProperty)
 FRAME_STATE_BIT(Text, 63, TEXT_IN_OFFSET_CACHE)

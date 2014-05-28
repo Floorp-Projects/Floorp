@@ -468,6 +468,10 @@ public:
   gfxTextRun* GetUninflatedTextRun();
   void SetTextRun(gfxTextRun* aTextRun, TextRunType aWhichTextRun,
                   float aInflation);
+  bool IsInTextRunUserData() const {
+    return GetStateBits() &
+      (TEXT_IN_TEXTRUN_USER_DATA | TEXT_IN_UNINFLATED_TEXTRUN_USER_DATA);
+  }
   /**
    * Notify the frame that it should drop its pointer to a text run.
    * Returns whether the text run was removed (i.e., whether it was
@@ -491,6 +495,11 @@ public:
       ClearTextRun(nullptr, nsTextFrame::eNotInflated);
     }
   }
+
+  /**
+   * Wipe out references to textrun(s) without deleting the textruns.
+   */
+  void DisconnectTextRuns();
 
   // Get the DOM content range mapped by this frame after excluding
   // whitespace subject to start-of-line and end-of-line trimming.
