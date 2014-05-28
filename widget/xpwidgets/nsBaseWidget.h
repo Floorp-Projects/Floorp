@@ -115,6 +115,7 @@ public:
   NS_IMETHOD              SetCursor(nsCursor aCursor);
   NS_IMETHOD              SetCursor(imgIContainer* aCursor,
                                     uint32_t aHotspotX, uint32_t aHotspotY);
+  virtual void            ClearCachedCursor() { mUpdateCursor = true; }
   virtual void            SetTransparencyMode(nsTransparencyMode aMode);
   virtual nsTransparencyMode GetTransparencyMode();
   virtual void            GetWindowClipRegion(nsTArray<nsIntRect>* aRects);
@@ -402,6 +403,7 @@ protected:
   nsRefPtr<CompositorParent> mCompositorParent;
   nsRefPtr<WidgetShutdownObserver> mShutdownObserver;
   nsCursor          mCursor;
+  bool              mUpdateCursor;
   nsBorderStyle     mBorderStyle;
   bool              mUseLayersAcceleration;
   bool              mForceLayersAcceleration;
