@@ -36,14 +36,7 @@ const BDADDR_ALL   = "ff:ff:ff:ff:ff:ff";
 const BDADDR_LOCAL = "ff:ff:ff:00:00:00";
 
 // A user friendly name for remote BT device.
-const REMOTE_DEVICE_NAME = "Remote_BT_Device";
-
-// A system message signature of pairing request event
-const BT_PAIRING_REQ = "bluetooth-pairing-request";
-
-// Passkey and pincode used to reply pairing requst
-const BT_PAIRING_PASSKEY = 123456;
-const BT_PAIRING_PINCODE = "ABCDEFG";
+const REMOTE_DEVICE_NAME = "Remote BT Device";
 
 let Promise =
   SpecialPowers.Cu.import("resource://gre/modules/Promise.jsm").Promise;
@@ -82,33 +75,6 @@ function runEmulatorCmdSafe(aCommand) {
       log("Fail to execute emulator command: [" + aCommand + "]");
       deferred.reject(aResult);
     }
-  });
-
-  return deferred.promise;
-}
-
-/**
- * Wrap DOMRequest onsuccess/onerror events to Promise resolve/reject.
- *
- * Fulfill params: A DOMEvent.
- * Reject params: A DOMEvent.
- *
- * @param aRequest
- *        A DOMRequest instance.
- *
- * @return A deferred promise.
- */
-function wrapDomRequestAsPromise(aRequest) {
-  let deferred = Promise.defer();
-
-  ok(aRequest instanceof DOMRequest,
-     "aRequest is instanceof " + aRequest.constructor);
-
-  aRequest.addEventListener("success", function(aEvent) {
-    deferred.resolve(aEvent);
-  });
-  aRequest.addEventListener("error", function(aEvent) {
-    deferred.reject(aEvent);
   });
 
   return deferred.promise;
@@ -241,19 +207,23 @@ function getEmulatorDeviceProperty(aAddress, aPropertyName) {
  * @return A deferred promise.
  */
 function startDiscovery(aAdapter) {
-  let request = aAdapter.startDiscovery();
+  let deferred = Promise.defer();
 
-  return wrapDomRequestAsPromise(request)
-    .then(function resolve() {
-      // TODO (bug 892207): Make Bluetooth APIs available for 3rd party apps.
-      //     Currently, discovering state wouldn't change immediately here.
-      //     We would turn on this check when the redesigned API are landed.
-      // is(aAdapter.discovering, false, "BluetoothAdapter.discovering");
-      log("  Start discovery - Success");
-    }, function reject(aEvent) {
-      ok(false, "Start discovery - Fail");
-      return aEvent.target.error;
-    });
+  let request = aAdapter.startDiscovery();
+  request.onsuccess = function () {
+    log("  Start discovery - Success");
+    // TODO (bug 892207): Make Bluetooth APIs available for 3rd party apps.
+    //     Currently, discovering state wouldn't change immediately here.
+    //     We would turn on this check when the redesigned API are landed.
+    // is(aAdapter.discovering, true, "BluetoothAdapter.discovering");
+    deferred.resolve();
+  }
+  request.onerror = function (aEvent) {
+    ok(false, "Start discovery - Fail");
+    deferred.reject(aEvent.target.error);
+  }
+
+  return deferred.promise;
 }
 
 /**
@@ -270,102 +240,22 @@ function startDiscovery(aAdapter) {
  * @return A deferred promise.
  */
 function stopDiscovery(aAdapter) {
+  let deferred = Promise.defer();
+
   let request = aAdapter.stopDiscovery();
-
-  return wrapDomRequestAsPromise(request)
-    .then(function resolve() {
-      // TODO (bug 892207): Make Bluetooth APIs available for 3rd party apps.
-      //     Currently, discovering state wouldn't change immediately here.
-      //     We would turn on this check when the redesigned API are landed.
-      // is(aAdapter.discovering, false, "BluetoothAdapter.discovering");
-      log("  Stop discovery - Success");
-    }, function reject(aEvent) {
-      ok(false, "Stop discovery - Fail");
-      return aEvent.target.error;
-    });
-}
-
-/**
- * Start pairing a remote device.
- *
- * Start pairing a remote device with the device's adapter.
- *
- * Fulfill params: (none)
- * Reject params: a DOMError
- *
- * @param aAdapter
- *        A BluetoothAdapter which is used to interact with local BT dev
- * @param aDeviceAddress
- *        The string of remote Bluetooth address with format xx:xx:xx:xx:xx:xx.
- *
- * @return A deferred promise.
- */
-function pair(aAdapter, aDeviceAddress) {
-  let request = aAdapter.pair(aDeviceAddress);
-
-  return wrapDomRequestAsPromise(request)
-    .then(function resolve() {
-      log("  Pair - Success");
-    }, function reject(aEvent) {
-      ok(false, "Pair - Fail");
-      return aEvent.target.error;
-    });
-}
-
-/**
- * Remove the paired device from the paired device list.
- *
- * Remove the paired device from the paired device list of the device's adapter.
- *
- * Fulfill params: (none)
- * Reject params: a DOMError
- *
- * @param aAdapter
- *        A BluetoothAdapter which is used to interact with local BT dev
- * @param aDeviceAddress
- *        The string of remote Bluetooth address with format xx:xx:xx:xx:xx:xx.
- *
- * @return A deferred promise.
- */
-function unpair(aAdapter, aDeviceAddress) {
-  let request = aAdapter.unpair(aDeviceAddress);
-
-  return wrapDomRequestAsPromise(request)
-    .then(function resolve() {
-      log("  Unpair - Success");
-    }, function reject(aEvent) {
-      ok(false, "Unpair - Fail");
-      return aEvent.target.error;
-    });
-}
-
-/**
- * Get paried Bluetooth devices.
- *
- * The getPairedDevices method is used to retrieve the full list of all devices
- * paired with the device's adapter.
- *
- * Fulfill params: a shallow copy of the Array of paired BluetoothDevice
- *                 objects.
- * Reject params: a DOMError
- *
- * @param aAdapter
- *        A BluetoothAdapter which is used to interact with local BT dev
- *
- * @return A deferred promise.
- */
-function getPairedDevices(aAdapter) {
-  let request = aAdapter.getPairedDevices();
-
-  return wrapDomRequestAsPromise(request)
-    .then(function resolve() {
-      log("  getPairedDevices - Success");
-      let pairedDevices = request.result.slice();
-      return pairedDevices;
-    }, function reject(aEvent) {
-      ok(false, "getPairedDevices - Fail");
-      return aEvent.target.error;
-    });
+  request.onsuccess = function () {
+    log("  Stop discovery - Success");
+    // TODO (bug 892207): Make Bluetooth APIs available for 3rd party apps.
+    //     Currently, discovering state wouldn't change immediately here.
+    //     We would turn on this check when the redesigned API are landed.
+    // is(aAdapter.discovering, false, "BluetoothAdapter.discovering");
+    deferred.resolve();
+  }
+  request.onerror = function (aEvent) {
+    ok(false, "Stop discovery - Fail");
+    deferred.reject(aEvent.target.error);
+  }
+  return deferred.promise;
 }
 
 /**
@@ -384,15 +274,19 @@ function getPairedDevices(aAdapter) {
  * @return A deferred promise.
  */
 function getSettings(aKey) {
-  let request = navigator.mozSettings.createLock().get(aKey);
+  let deferred = Promise.defer();
 
-  return wrapDomRequestAsPromise(request)
-    .then(function resolve() {
-      ok(true, "getSettings(" + aKey + ")");
-    }, function reject(aEvent) {
-      ok(false, "getSettings(" + aKey + ")");
-      return aEvent.target.error;
-    });
+  let request = navigator.mozSettings.createLock().get(aKey);
+  request.addEventListener("success", function(aEvent) {
+    ok(true, "getSettings(" + aKey + ")");
+    deferred.resolve(aEvent.target.result[aKey]);
+  });
+  request.addEventListener("error", function() {
+    ok(false, "getSettings(" + aKey + ")");
+    deferred.reject();
+  });
+
+  return deferred.promise;
 }
 
 /**
@@ -409,15 +303,19 @@ function getSettings(aKey) {
  * @return A deferred promise.
  */
 function setSettings(aSettings) {
-  let request = navigator.mozSettings.createLock().set(aSettings);
+  let deferred = Promise.defer();
 
-  return wrapDomRequestAsPromise(request)
-    .then(function resolve() {
-      ok(true, "setSettings(" + JSON.stringify(aSettings) + ")");
-    }, function reject(aEvent) {
-      ok(false, "setSettings(" + JSON.stringify(aSettings) + ")");
-      return aEvent.target.error;
-    });
+  let request = navigator.mozSettings.createLock().set(aSettings);
+  request.addEventListener("success", function() {
+    ok(true, "setSettings(" + JSON.stringify(aSettings) + ")");
+    deferred.resolve();
+  });
+  request.addEventListener("error", function() {
+    ok(false, "setSettings(" + JSON.stringify(aSettings) + ")");
+    deferred.reject();
+  });
+
+  return deferred.promise;
 }
 
 /**
