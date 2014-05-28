@@ -610,12 +610,6 @@ ApplyAsyncTransformToScrollbarForContent(TimeStamp aCurrentFrame, ContainerLayer
                                          Layer* aContent, bool aScrollbarIsChild)
 {
   ContainerLayer* content = aContent->AsContainerLayer();
-
-  // We only apply the transform if the scroll-target layer has non-container
-  // children (i.e. when it has some possibly-visible content). This is to
-  // avoid moving scroll-bars in the situation that only a scroll information
-  // layer has been built for a scroll frame, as this would result in a
-  // disparity between scrollbars and visible content.
   if (!LayerHasNonContainerDescendants(content)) {
     return;
   }
@@ -689,32 +683,6 @@ ApplyAsyncTransformToScrollbarForContent(TimeStamp aCurrentFrame, ContainerLayer
   aScrollbar->AsLayerComposite()->SetShadowTransform(transform);
 }
 
-static Layer*
-FindScrolledLayerForScrollbar(ContainerLayer* aLayer, bool* aOutIsAncestor)
-{
-  // Search all siblings of aLayer and of its ancestors.
-  for (Layer* ancestor = aLayer; ancestor; ancestor = ancestor->GetParent()) {
-    for (Layer* scrollTarget = ancestor;
-         scrollTarget;
-         scrollTarget = scrollTarget->GetPrevSibling()) {
-      if (scrollTarget != aLayer &&
-          LayerIsContainerForScrollbarTarget(scrollTarget, aLayer)) {
-        *aOutIsAncestor = (scrollTarget == ancestor);
-        return scrollTarget;
-      }
-    }
-    for (Layer* scrollTarget = ancestor->GetNextSibling();
-         scrollTarget;
-         scrollTarget = scrollTarget->GetNextSibling()) {
-      if (LayerIsContainerForScrollbarTarget(scrollTarget, aLayer)) {
-        *aOutIsAncestor = false;
-        return scrollTarget;
-      }
-    }
-  }
-  return nullptr;
-}
-
 void
 AsyncCompositionManager::ApplyAsyncTransformToScrollbar(TimeStamp aCurrentFrame, ContainerLayer* aLayer)
 {
@@ -725,11 +693,25 @@ AsyncCompositionManager::ApplyAsyncTransformToScrollbar(TimeStamp aCurrentFrame,
   // Note that it is possible that the content layer is no longer there; in
   // this case we don't need to do anything because there can't be an async
   // transform on the content.
-  bool isAncestor = false;
-  Layer* scrollTarget = FindScrolledLayerForScrollbar(aLayer, &isAncestor);
-  if (scrollTarget) {
-    ApplyAsyncTransformToScrollbarForContent(aCurrentFrame, aLayer, scrollTarget,
-                                             isAncestor);
+  // We only apply the transform if the scroll-target layer has non-container
+  // children (i.e. when it has some possibly-visible content). This is to
+  // avoid moving scroll-bars in the situation that only a scroll information
+  // layer has been built for a scroll frame, as this would result in a
+  // disparity between scrollbars and visible content.
+  for (Layer* scrollTarget = aLayer->GetPrevSibling();
+       scrollTarget;
+       scrollTarget = scrollTarget->GetPrevSibling()) {
+    if (LayerIsContainerForScrollbarTarget(scrollTarget, aLayer)) {
+      // Found a sibling that matches our criteria
+      ApplyAsyncTransformToScrollbarForContent(aCurrentFrame, aLayer, scrollTarget, false);
+      return;
+    }
+  }
+
+  // If we didn't find a sibling, look for a parent
+  Layer* scrollTarget = aLayer->GetParent();
+  if (scrollTarget && LayerIsContainerForScrollbarTarget(scrollTarget, aLayer)) {
+    ApplyAsyncTransformToScrollbarForContent(aCurrentFrame, aLayer, scrollTarget, true);
   }
 }
 
