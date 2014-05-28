@@ -208,6 +208,9 @@ function process_log(contents) {
   gTestItems = [];
   for (var j in lines) {
     var line = lines[j];
+    // Ignore duplicated output in logcat.
+    if (line.match(/^I\/Gecko/))
+      continue;
     var match = line.match(/^.*?REFTEST (.*)$/);
     if (!match)
       continue;
