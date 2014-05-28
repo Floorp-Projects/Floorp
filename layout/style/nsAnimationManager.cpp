@@ -49,121 +49,8 @@ ElementAnimationsPropertyDtor(void           *aObject,
   delete ea;
 }
 
-double
-ElementAnimations::GetPositionInIteration(TimeDuration aElapsedDuration,
-                                          TimeDuration aIterationDuration,
-                                          double aIterationCount,
-                                          uint32_t aDirection,
-                                          ElementAnimation* aAnimation,
-                                          ElementAnimations* aEa,
-                                          EventArray* aEventsToDispatch)
-{
-  MOZ_ASSERT(!aAnimation == !aEa && !aAnimation == !aEventsToDispatch);
-
-  // Set |currentIterationCount| to the (fractional) number of
-  // iterations we've completed up to the current position.
-  double currentIterationCount = aElapsedDuration / aIterationDuration;
-  bool dispatchStartOrIteration = false;
-  if (currentIterationCount >= aIterationCount) {
-    if (aAnimation) {
-      // Dispatch 'animationend' when needed.
-      if (aAnimation->mLastNotification !=
-          ElementAnimation::LAST_NOTIFICATION_END) {
-        aAnimation->mLastNotification = ElementAnimation::LAST_NOTIFICATION_END;
-        AnimationEventInfo ei(aEa->mElement, aAnimation->mName, NS_ANIMATION_END,
-                              aElapsedDuration, aEa->PseudoElement());
-        aEventsToDispatch->AppendElement(ei);
-      }
-
-      if (!aAnimation->FillsForwards()) {
-        // No animation data.
-        return -1;
-      }
-    } else {
-      // If aAnimation is null, that means we're on the compositor
-      // thread.  We want to just keep filling forwards until the main
-      // thread gets around to updating the compositor thread (which
-      // might take a little while).  So just assume we fill fowards and
-      // move on.
-    }
-    currentIterationCount = aIterationCount;
-  } else {
-    if (aAnimation && !aAnimation->IsPaused()) {
-      aEa->mNeedsRefreshes = true;
-    }
-    if (currentIterationCount < 0.0) {
-      NS_ASSERTION(aAnimation, "Should not run animation that hasn't started yet on the compositor");
-      if (!aAnimation->FillsBackwards()) {
-        // No animation data.
-        return -1;
-      }
-      currentIterationCount = 0.0;
-    } else {
-      dispatchStartOrIteration = aAnimation && !aAnimation->IsPaused();
-    }
-  }
-
-  // Set |positionInIteration| to the position from 0% to 100% along
-  // the keyframes.
-  NS_ABORT_IF_FALSE(currentIterationCount >= 0.0, "must be positive");
-  double whichIteration = floor(currentIterationCount);
-  if (whichIteration == aIterationCount && whichIteration != 0.0) {
-    // When the animation's iteration count is an integer (as it
-    // normally is), we need to end at 100% of its last iteration
-    // rather than 0% of the next one (unless it's zero).
-    whichIteration -= 1.0;
-  }
-  double positionInIteration = currentIterationCount - whichIteration;
-
-  bool thisIterationReverse = false;
-  switch (aDirection) {
-    case NS_STYLE_ANIMATION_DIRECTION_NORMAL:
-      thisIterationReverse = false;
-      break;
-    case NS_STYLE_ANIMATION_DIRECTION_REVERSE:
-      thisIterationReverse = true;
-      break;
-    case NS_STYLE_ANIMATION_DIRECTION_ALTERNATE:
-      // uint64_t has more integer precision than double does, so if
-      // whichIteration is that large, we've already lost and we're just
-      // guessing.  But the animation is presumably oscillating so fast
-      // it doesn't matter anyway.
-      thisIterationReverse = (uint64_t(whichIteration) & 1) == 1;
-      break;
-    case NS_STYLE_ANIMATION_DIRECTION_ALTERNATE_REVERSE:
-      // see as previous case
-      thisIterationReverse = (uint64_t(whichIteration) & 1) == 0;
-      break;
-  }
-  if (thisIterationReverse) {
-    positionInIteration = 1.0 - positionInIteration;
-  }
-
-  // Dispatch 'animationstart' or 'animationiteration' when needed.
-  if (aAnimation && dispatchStartOrIteration &&
-      whichIteration != aAnimation->mLastNotification) {
-    // Notify 'animationstart' even if a negative delay puts us
-    // past the first iteration.
-    // Note that when somebody changes the animation-duration
-    // dynamically, this will fire an extra iteration event
-    // immediately in many cases.  It's not clear to me if that's the
-    // right thing to do.
-    uint32_t message =
-      aAnimation->mLastNotification == ElementAnimation::LAST_NOTIFICATION_NONE
-        ? NS_ANIMATION_START : NS_ANIMATION_ITERATION;
-
-    aAnimation->mLastNotification = whichIteration;
-    AnimationEventInfo ei(aEa->mElement, aAnimation->mName, message,
-                          aElapsedDuration, aEa->PseudoElement());
-    aEventsToDispatch->AppendElement(ei);
-  }
-
-  return positionInIteration;
-}
-
 void
 ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
-                                      EventArray& aEventsToDispatch,
                                       bool aIsThrottled)
 {
   if (!mNeedsRefreshes) {
@@ -181,32 +68,25 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
     for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
       ElementAnimation* anim = mAnimations[animIdx];
 
-      if (anim->mProperties.Length() == 0 ||
-          anim->mIterationDuration.ToMilliseconds() <= 0.0) {
+      if (anim->mProperties.IsEmpty() ||
+          anim->mTiming.mIterationDuration.ToMilliseconds() <= 0.0) {
         continue;
       }
 
-      uint32_t oldLastNotification = anim->mLastNotification;
-
-      // We need to call GetPositionInIteration here to populate
-      // aEventsToDispatch.
       // The ElapsedDurationAt() call here handles pausing.  But:
       // FIXME: avoid recalculating every time when paused.
-      GetPositionInIteration(anim->ElapsedDurationAt(aRefreshTime),
-                             anim->mIterationDuration, anim->mIterationCount,
-                             anim->mDirection, anim, this, &aEventsToDispatch);
+      TimeDuration elapsedDuration = anim->ElapsedDurationAt(aRefreshTime);
+      ComputedTiming computedTiming =
+        ElementAnimation::GetComputedTimingAt(elapsedDuration, anim->mTiming);
 
-      // GetPositionInIteration just adjusted mLastNotification; check
-      // its new value against the value before we called
-      // GetPositionInIteration.
       // XXX We shouldn't really be using mLastNotification as a general
       // indicator that the animation has finished, it should be reserved for
       // events. If we use it differently in the future this use might need
       // changing.
       if (!anim->mIsRunningOnCompositor ||
-          (anim->mLastNotification != oldLastNotification &&
-           anim->mLastNotification ==
-           ElementAnimation::LAST_NOTIFICATION_END)) {
+          (computedTiming.mPhase == ComputedTiming::AnimationPhase_After &&
+           anim->mLastNotification != ElementAnimation::LAST_NOTIFICATION_END))
+      {
         aIsThrottled = false;
         break;
       }
@@ -233,28 +113,32 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
     for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
       ElementAnimation* anim = mAnimations[animIdx];
 
-      if (anim->mProperties.Length() == 0 ||
-          anim->mIterationDuration.ToMilliseconds() <= 0.0) {
-        // No animation data.
+      if (anim->mProperties.IsEmpty() ||
+          anim->mTiming.mIterationDuration.ToMilliseconds() <= 0.0) {
+        // The animation isn't active or filling at this time.
         continue;
       }
 
       // The ElapsedDurationAt() call here handles pausing.  But:
       // FIXME: avoid recalculating every time when paused.
-      double positionInIteration =
-        GetPositionInIteration(anim->ElapsedDurationAt(aRefreshTime),
-                               anim->mIterationDuration, anim->mIterationCount,
-                               anim->mDirection, anim, this,
-                               &aEventsToDispatch);
+      TimeDuration elapsedDuration = anim->ElapsedDurationAt(aRefreshTime);
+      ComputedTiming computedTiming =
+        ElementAnimation::GetComputedTimingAt(elapsedDuration, anim->mTiming);
 
-      // The position is -1 when we don't have fill data for the current time,
-      // so we shouldn't animate.
-      if (positionInIteration == -1)
+      if ((computedTiming.mPhase == ComputedTiming::AnimationPhase_Before ||
+           computedTiming.mPhase == ComputedTiming::AnimationPhase_Active) &&
+          !anim->IsPaused()) {
+        mNeedsRefreshes = true;
+      }
+
+      // If the time fraction is null, we don't have fill data for the current
+      // time so we shouldn't animate.
+      if (computedTiming.mTimeFraction == ComputedTiming::kNullTimeFraction)
         continue;
 
-      NS_ABORT_IF_FALSE(0.0 <= positionInIteration &&
-                          positionInIteration <= 1.0,
-                        "position should be in [0-1]");
+      NS_ABORT_IF_FALSE(0.0 <= computedTiming.mTimeFraction &&
+                        computedTiming.mTimeFraction <= 1.0,
+                        "timing fraction should be in [0-1]");
 
       for (uint32_t propIdx = 0, propEnd = anim->mProperties.Length();
            propIdx != propEnd; ++propIdx)
@@ -280,12 +164,12 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
         // FIXME: Maybe cache the current segment?
         const AnimationPropertySegment *segment = prop.mSegments.Elements(),
                                *segmentEnd = segment + prop.mSegments.Length();
-        while (segment->mToKey < positionInIteration) {
+        while (segment->mToKey < computedTiming.mTimeFraction) {
           NS_ABORT_IF_FALSE(segment->mFromKey < segment->mToKey,
                             "incorrect keys");
           ++segment;
           if (segment == segmentEnd) {
-            NS_ABORT_IF_FALSE(false, "incorrect positionInIteration");
+            NS_ABORT_IF_FALSE(false, "incorrect time fraction");
             break; // in order to continue in outer loop (just below)
           }
           NS_ABORT_IF_FALSE(segment->mFromKey == (segment-1)->mToKey,
@@ -306,8 +190,9 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
           mStyleRule = new css::AnimValuesStyleRule();
         }
 
-        double positionInSegment = (positionInIteration - segment->mFromKey) /
-                                   (segment->mToKey - segment->mFromKey);
+        double positionInSegment =
+          (computedTiming.mTimeFraction - segment->mFromKey) /
+          (segment->mToKey - segment->mFromKey);
         double valuePosition =
           segment->mTimingFunction.GetValue(positionInSegment);
 
@@ -326,6 +211,78 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
   }
 }
 
+void
+ElementAnimations::GetEventsAt(TimeStamp aRefreshTime,
+                               EventArray& aEventsToDispatch)
+{
+  for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
+    ElementAnimation* anim = mAnimations[animIdx];
+
+    // We should *not* skip animations with zero duration (bug 1004365) or
+    // those with no keyframes (bug 1004377).
+    // We will fix this separately but for now this is necessary since
+    // ElementAnimation::GetComputedTimingAt does not yet handle
+    // zero-duration iterations.
+    if (anim->mProperties.IsEmpty() ||
+        anim->mTiming.mIterationDuration.ToMilliseconds() <= 0.0) {
+      // The animation isn't active or filling at this time.
+      continue;
+    }
+
+    TimeDuration elapsedDuration = anim->ElapsedDurationAt(aRefreshTime);
+    ComputedTiming computedTiming =
+      ElementAnimation::GetComputedTimingAt(elapsedDuration, anim->mTiming);
+
+    switch (computedTiming.mPhase) {
+      case ComputedTiming::AnimationPhase_Before:
+        // Do nothing
+        break;
+
+      case ComputedTiming::AnimationPhase_Active:
+        // Dispatch 'animationstart' or 'animationiteration' when needed.
+        if (computedTiming.mCurrentIteration != anim->mLastNotification) {
+          // Notify 'animationstart' even if a negative delay puts us
+          // past the first iteration.
+          // Note that when somebody changes the animation-duration
+          // dynamically, this will fire an extra iteration event
+          // immediately in many cases.  It's not clear to me if that's the
+          // right thing to do.
+          uint32_t message =
+            anim->mLastNotification == ElementAnimation::LAST_NOTIFICATION_NONE
+              ? NS_ANIMATION_START : NS_ANIMATION_ITERATION;
+
+          anim->mLastNotification = computedTiming.mCurrentIteration;
+          AnimationEventInfo ei(mElement, anim->mName, message,
+                                elapsedDuration, PseudoElement());
+          aEventsToDispatch.AppendElement(ei);
+        }
+        break;
+
+      case ComputedTiming::AnimationPhase_After:
+        // If we skipped the animation interval entirely, dispatch
+        // 'animationstart' first
+        if (anim->mLastNotification ==
+            ElementAnimation::LAST_NOTIFICATION_NONE) {
+          // Notifying for start of 0th iteration.
+          // (This is overwritten below but we set it here to maintain
+          // internal consistency.)
+          anim->mLastNotification = 0;
+          AnimationEventInfo ei(mElement, anim->mName, NS_ANIMATION_START,
+                                elapsedDuration, PseudoElement());
+          aEventsToDispatch.AppendElement(ei);
+        }
+        // Dispatch 'animationend' when needed.
+        if (anim->mLastNotification !=
+            ElementAnimation::LAST_NOTIFICATION_END) {
+          anim->mLastNotification = ElementAnimation::LAST_NOTIFICATION_END;
+          AnimationEventInfo ei(mElement, anim->mName, NS_ANIMATION_END,
+                                elapsedDuration, PseudoElement());
+          aEventsToDispatch.AppendElement(ei);
+        }
+        break;
+    }
+  }
+}
 
 bool
 ElementAnimations::HasAnimationOfProperty(nsCSSProperty aProperty) const
@@ -455,11 +412,11 @@ nsAnimationManager::GetElementAnimations(dom::Element *aElement,
 
 
 void
-nsAnimationManager::EnsureStyleRuleFor(ElementAnimations* aET)
+nsAnimationManager::EnsureStyleRuleFor(ElementAnimations* aEA)
 {
-  aET->EnsureStyleRuleFor(mPresContext->RefreshDriver()->MostRecentRefresh(),
-                          mPendingEvents,
-                          false);
+  TimeStamp refreshTime = mPresContext->RefreshDriver()->MostRecentRefresh();
+  aEA->EnsureStyleRuleFor(refreshTime, false);
+  aEA->GetEventsAt(refreshTime, mPendingEvents);
   CheckNeedsRefresh();
 }
 
@@ -622,7 +579,8 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     ea->mAnimations.SwapElements(newAnimations);
     ea->mNeedsRefreshes = true;
 
-    ea->EnsureStyleRuleFor(refreshTime, mPendingEvents, false);
+    ea->EnsureStyleRuleFor(refreshTime, false);
+    ea->GetEventsAt(refreshTime, mPendingEvents);
     CheckNeedsRefresh();
     // We don't actually dispatch the mPendingEvents now.  We'll either
     // dispatch them the next time we get a refresh driver notification
@@ -733,21 +691,21 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
       *aAnimations.AppendElement(new ElementAnimation());
 
     dest->mName = src.GetName();
-    dest->mIterationCount = src.GetIterationCount();
-    dest->mDirection = src.GetDirection();
-    dest->mFillMode = src.GetFillMode();
-    dest->mPlayState = src.GetPlayState();
 
-    dest->mDelay = TimeDuration::FromMilliseconds(src.GetDelay());
+    dest->mTiming.mIterationDuration =
+      TimeDuration::FromMilliseconds(src.GetDuration());
+    dest->mTiming.mIterationCount = src.GetIterationCount();
+    dest->mTiming.mDirection = src.GetDirection();
+    dest->mTiming.mFillMode = src.GetFillMode();
+
     dest->mStartTime = now;
+    dest->mPlayState = src.GetPlayState();
     if (dest->IsPaused()) {
       dest->mPauseStart = now;
     } else {
       dest->mPauseStart = TimeStamp();
     }
-
-    dest->mIterationDuration =
-      TimeDuration::FromMilliseconds(src.GetDuration());
+    dest->mDelay = TimeDuration::FromMilliseconds(src.GetDelay());
 
     nsCSSKeyframesRule* rule =
       mPresContext->StyleSet()->KeyframesRuleForName(mPresContext,
@@ -1051,7 +1009,8 @@ nsAnimationManager::FlushAnimations(FlushFlags aFlags)
       ea->CanThrottleAnimation(now);
 
     nsRefPtr<css::AnimValuesStyleRule> oldStyleRule = ea->mStyleRule;
-    ea->EnsureStyleRuleFor(now, mPendingEvents, canThrottleTick);
+    ea->EnsureStyleRuleFor(now, canThrottleTick);
+    ea->GetEventsAt(now, mPendingEvents);
     CheckNeedsRefresh();
     if (oldStyleRule != ea->mStyleRule) {
       ea->PostRestyleForAnimation(mPresContext);

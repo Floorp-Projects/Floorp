@@ -542,9 +542,27 @@ class IonBuilder : public MIRGenerator
                                             TypeDescrSet elemTypeReprs,
                                             int32_t elemSize);
 
-    // Typed array helpers.
-    MInstruction *getTypedArrayLength(MDefinition *obj);
-    MInstruction *getTypedArrayElements(MDefinition *obj);
+    enum BoundsChecking { DoBoundsCheck, SkipBoundsCheck };
+
+    // Add instructions to compute a typed array's length and data.  Also
+    // optionally convert |*index| into a bounds-checked definition, if
+    // requested.
+    //
+    // If you only need the array's length, use addTypedArrayLength below.
+    void addTypedArrayLengthAndData(MDefinition *obj,
+                                    BoundsChecking checking,
+                                    MDefinition **index,
+                                    MInstruction **length, MInstruction **elements);
+
+    // Add an instruction to compute a typed array's length to the current
+    // block.  If you also need the typed array's data, use the above method
+    // instead.
+    MInstruction *addTypedArrayLength(MDefinition *obj) {
+        MInstruction *length;
+        addTypedArrayLengthAndData(obj, SkipBoundsCheck, nullptr, &length, nullptr);
+        return length;
+    }
+
 
     MDefinition *getCallee();
 
@@ -717,6 +735,7 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineIsCallable(CallInfo &callInfo);
     InliningStatus inlineHaveSameClass(CallInfo &callInfo);
     InliningStatus inlineToObject(CallInfo &callInfo);
+    InliningStatus inlineToInteger(CallInfo &callInfo);
     InliningStatus inlineDump(CallInfo &callInfo);
     InliningStatus inlineHasClass(CallInfo &callInfo, const Class *clasp) {
         return inlineHasClasses(callInfo, clasp, nullptr);

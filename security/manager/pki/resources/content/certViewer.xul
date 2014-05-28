@@ -10,8 +10,7 @@
 <?xul-overlay href="chrome://pippki/content/viewCertDetails.xul"?>
 <?xul-overlay href="chrome://pippki/content/certDump.xul"?>
 
-
-<dialog id="certDetails" 
+<dialog id="certDetails"
   title="&certmgr.certdetail.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   buttons="accept"
@@ -24,14 +23,14 @@
 <script type="application/javascript" src="chrome://pippki/content/viewCertDetails.js"/>
 <script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
 
-  <tabbox>
+  <tabbox flex="1">
     <tabs>
       <tab id="general_tab" label="&certmgr.detail.general_tab.title;"
            accesskey="&certmgr.detail.general_tab.accesskey;"/>
       <tab id="prettyprint_tab" label="&certmgr.detail.prettyprint_tab.title;"
            accesskey="&certmgr.detail.prettyprint_tab.accesskey;"/>
     </tabs>
-    <tabpanels>
+    <tabpanels flex="1">
       <vbox id="general_info"/>
       <vbox id="certPrettyPrint"/>
     </tabpanels>

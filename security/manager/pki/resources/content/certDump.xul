@@ -5,32 +5,32 @@
 
 <!DOCTYPE overlay SYSTEM "chrome://pippki/locale/certManager.dtd">
 
-<overlay id="certDumpOverlay" 
-         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
-         xmlns:cert="http://netscape.com/rdf-cert#" 
+<overlay id="certDumpOverlay"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:cert="http://netscape.com/rdf-cert#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <vbox class="box-padded" id="certPrettyPrint" flex="1">
   <label class="header" value="&certmgr.hierarchy.label;"/>
-  <tree id="treesetDump" onselect="updateCertDump();"
-        hidecolumnpicker="true" style="height: 8em;">
+  <tree id="treesetDump" onselect="updateCertDump();" flex="1"
+        hidecolumnpicker="true" style="min-height: 8em;">
     <treecols>
       <treecol id="dumpCol" flex="1" primary="true" hideheader="true"/>
     </treecols>
   </tree>
-  
+
   <label class="header" value="&certmgr.details.label;"/>
-  <tree id="prettyDumpTree" style="height: 15em" treelines="true"
+  <tree id="prettyDumpTree" style="min-height: 15em" treelines="true" flex="1"
             onselect="displaySelected();" hidecolumnpicker="true">
     <treecols>
       <treecol flex="1" id="certDataCol" primary="true" hideheader="true"/>
     </treecols>
     <treechildren/>
   </tree>
-  
+
   <label class="header" value="&certmgr.fields.label;"/>
-  <textbox id="certDumpVal"  multiline="true" rows="8"
-           readonly="true" style="font-family: -moz-fixed;"/>
-  
+  <textbox id="certDumpVal" multiline="true" flex="1"
+           readonly="true" style="min-height: 11em; font-family: -moz-fixed;"/>
+
   <separator class="thin"/>
   <hbox>
     <button id="export_cert" class="normal" label="&certmgr.export.label;"
