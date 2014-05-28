@@ -105,13 +105,13 @@ const PREF_PLUGINS_NOTIFYUSER = "plugins.update.notifyUser";
 const PREF_PLUGINS_UPDATEURL  = "plugins.update.url";
 
 // Seconds of idle before trying to create a bookmarks backup.
-const BOOKMARKS_BACKUP_IDLE_TIME_SEC = 10 * 60;
+const BOOKMARKS_BACKUP_IDLE_TIME_SEC = 8 * 60;
 // Minimum interval between backups.  We try to not create more than one backup
 // per interval.
 const BOOKMARKS_BACKUP_MIN_INTERVAL_DAYS = 1;
 // Maximum interval between backups.  If the last backup is older than these
 // days we will try to create a new one more aggressively.
-const BOOKMARKS_BACKUP_MAX_INTERVAL_DAYS = 5;
+const BOOKMARKS_BACKUP_MAX_INTERVAL_DAYS = 3;
 
 // Factory object
 const BrowserGlueServiceFactory = {

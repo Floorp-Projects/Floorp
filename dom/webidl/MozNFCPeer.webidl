@@ -18,6 +18,4 @@ interface MozNFCPeer {
 partial interface MozNFCPeer {
   [ChromeOnly]
   attribute DOMString session;
-  [ChromeOnly]
-  void setSessionToken(DOMString sessionToken);
 };
