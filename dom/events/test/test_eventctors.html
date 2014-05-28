@@ -559,6 +559,9 @@ is(receivedEvent, e, "Wrong event!");
 
 // StorageEvent
 
+e = document.createEvent("StorageEvent");
+ok(e, "Should have created an event!");
+
 try {
   e = new StorageEvent();
 } catch(exp) {

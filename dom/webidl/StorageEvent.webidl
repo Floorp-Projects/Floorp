@@ -19,6 +19,17 @@ interface StorageEvent : Event
   readonly attribute DOMString? newValue;
   readonly attribute DOMString? url;
   readonly attribute Storage? storageArea;
+
+  // Bug 1016053 - This is not spec compliant.
+  [Throws]
+  void initStorageEvent(DOMString type,
+                        boolean canBubble,
+                        boolean cancelable,
+                        DOMString? key,
+                        DOMString? oldValue,
+                        DOMString? newValue,
+                        DOMString? url,
+                        Storage? storageArea);
 };
 
 dictionary StorageEventInit : EventInit
