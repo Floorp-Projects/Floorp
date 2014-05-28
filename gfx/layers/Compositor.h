@@ -238,7 +238,15 @@ public:
    * If this method is not used, or we pass in nullptr, we target the compositor's
    * usual swap chain and render to the screen.
    */
-  virtual void SetTargetContext(gfx::DrawTarget* aTarget) = 0;
+  void SetTargetContext(gfx::DrawTarget* aTarget, const nsIntRect& aRect)
+  {
+    mTarget = aTarget;
+    mTargetBounds = aRect;
+  }
+  void ClearTargetContext()
+  {
+    mTarget = nullptr;
+  }
 
   typedef uint32_t MakeCurrentFlags;
   static const MakeCurrentFlags ForceMakeCurrent = 0x1;
@@ -521,6 +529,9 @@ protected:
   ScreenRotation mScreenRotation;
 
   virtual gfx::IntSize GetWidgetSize() const = 0;
+
+  RefPtr<gfx::DrawTarget> mTarget;
+  nsIntRect mTargetBounds;
 
 private:
   static LayersBackend sBackend;

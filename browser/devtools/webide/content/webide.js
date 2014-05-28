@@ -24,6 +24,11 @@ const Strings = Services.strings.createBundle("chrome://webide/content/webide.pr
 const HTML = "http://www.w3.org/1999/xhtml";
 const HELP_URL = "https://developer.mozilla.org/Firefox_OS/Using_the_App_Manager#Troubleshooting";
 
+// See bug 989619
+console.log = console.log.bind(console);
+console.warn = console.warn.bind(console);
+console.error = console.error.bind(console);
+
 window.addEventListener("load", function onLoad() {
   window.removeEventListener("load", onLoad);
   UI.init();
@@ -50,19 +55,19 @@ let UI = {
     this.onfocus = this.onfocus.bind(this);
     window.addEventListener("focus", this.onfocus, true);
 
-    try {
+    AppProjects.load().then(() => {
       let lastProjectLocation = Services.prefs.getCharPref("devtools.webide.lastprojectlocation");
-      AppProjects.load().then(() => {
+      if (lastProjectLocation) {
         let lastProject = AppProjects.get(lastProjectLocation);
         if (lastProject) {
           AppManager.selectedProject = lastProject;
         } else {
           AppManager.selectedProject = null;
         }
-      });
-    } catch(e) {
-      AppManager.selectedProject = null;
-    }
+      } else {
+        AppManager.selectedProject = null;
+      }
+    });
   },
 
   uninit: function() {
@@ -144,6 +149,7 @@ let UI = {
   },
 
   busy: function() {
+    this.hidePanels();
     document.querySelector("window").classList.add("busy")
     this.updateCommands();
   },
@@ -157,7 +163,6 @@ let UI = {
     // Freeze the UI until the promise is resolved. A 30s timeout
     // will unfreeze the UI, just in case the promise never gets
     // resolved.
-    this.hidePanels();
     let timeout = setTimeout(() => {
       this.unbusy();
       UI.reportError("error_operationTimeout", operationDescription);

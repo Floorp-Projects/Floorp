@@ -149,8 +149,6 @@ function toggleDebugTest (pref, consoleListener) {
 let test = maketest("Main", function main(test) {
   return Task.spawn(function() {
     SimpleTest.waitForExplicitFinish();
-    yield test_constants();
-    yield test_path();
     yield test_stat();
     yield test_debug();
     yield test_info_features_detect();
@@ -169,31 +167,6 @@ let test = maketest("Main", function main(test) {
  */
 let EXISTING_FILE = OS.Path.join("chrome", "toolkit", "components",
   "osfile", "tests", "mochi", "main_test_osfile_async.js");
-
-/**
- * Test that OS.Constants is defined correctly.
- */
-let test_constants = maketest("constants", function constants(test) {
-  return Task.spawn(function() {
-    test.isnot(OS.Constants, null, "OS.Constants exists");
-    test.ok(OS.Constants.Win || OS.Constants.libc, "OS.Constants.Win exists or OS.Constants.Unix exists");
-    test.isnot(OS.Constants.Path, null, "OS.Constants.Path exists");
-    test.isnot(OS.Constants.Sys, null, "OS.Constants.Sys exists");
-  });
-});
-
-/**
- * Test that OS.Constants.Path paths are consistent.
- */
-let test_path = maketest("path",  function path(test) {
-  return Task.spawn(function() {
-    test.ok(OS.Path, "OS.Path exists");
-    test.ok(OS.Constants.Path, "OS.Constants.Path exists");
-    test.is(OS.Constants.Path.tmpDir, Services.dirsvc.get("TmpD", Components.interfaces.nsIFile).path, "OS.Constants.Path.tmpDir is correct");
-    test.is(OS.Constants.Path.profileDir, Services.dirsvc.get("ProfD", Components.interfaces.nsIFile).path, "OS.Constants.Path.profileDir is correct");
-    test.is(OS.Constants.Path.localProfileDir, Services.dirsvc.get("ProfLD", Components.interfaces.nsIFile).path, "OS.Constants.Path.localProfileDir is correct");
-  });
-});
 
 /**
  * Test OS.File.stat and OS.File.prototype.stat

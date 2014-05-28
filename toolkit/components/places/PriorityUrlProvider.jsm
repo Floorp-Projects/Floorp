@@ -67,7 +67,7 @@ let SearchEnginesProvider = {
       return;
     }
     let match = { token: token,
-                  // TODO (bug 557665): searchForm should provide an usable
+                  // TODO (bug 990799): searchForm should provide an usable
                   // url with affiliate code, if available.
                   url: engine.searchForm,
                   title: engine.name,

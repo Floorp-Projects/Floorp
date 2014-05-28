@@ -2716,14 +2716,11 @@ OffThreadScriptReceiverCallback(void *aToken, void *aCallbackData)
 
 nsresult
 nsXULPrototypeScript::Compile(JS::SourceBufferHolder& aSrcBuf,
-                              nsIURI* aURI,
-                              uint32_t aLineNo,
+                              nsIURI* aURI, uint32_t aLineNo,
                               nsIDocument* aDocument,
-                              nsXULPrototypeDocument* aProtoDoc,
                               nsIOffThreadScriptReceiver *aOffThreadReceiver /* = nullptr */)
 {
     // We'll compile the script in the compilation scope.
-    NS_ENSURE_STATE(aProtoDoc);
     NS_ENSURE_TRUE(xpc::GetCompilationScope(), NS_ERROR_UNEXPECTED);
     AutoSafeJSContext cx;
     JSAutoCompartment ac(cx, xpc::GetCompilationScope());
@@ -2770,12 +2767,11 @@ nsXULPrototypeScript::Compile(const char16_t* aText,
                               nsIURI* aURI,
                               uint32_t aLineNo,
                               nsIDocument* aDocument,
-                              nsXULPrototypeDocument* aProtoDoc,
                               nsIOffThreadScriptReceiver *aOffThreadReceiver /* = nullptr */)
 {
   JS::SourceBufferHolder srcBuf(aText, aTextLength,
                                 JS::SourceBufferHolder::NoOwnership);
-  return Compile(srcBuf, aURI, aLineNo, aDocument, aProtoDoc, aOffThreadReceiver);
+  return Compile(srcBuf, aURI, aLineNo, aDocument, aOffThreadReceiver);
 }
 
 void

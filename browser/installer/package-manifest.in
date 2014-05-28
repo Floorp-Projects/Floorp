@@ -866,5 +866,7 @@ bin/libfreebl_32int64_3.so
 
 
 #ifdef MOZ_ASAN
+#ifdef CLANG_CXX
 @BINPATH@/llvm-symbolizer
+#endif
 #endif
