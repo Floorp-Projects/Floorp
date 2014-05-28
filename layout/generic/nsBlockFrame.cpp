@@ -4708,15 +4708,11 @@ nsBlockFrame::AppendFrames(ChildListID  aListID,
     return;
   }
   if (aListID != kPrincipalList) {
-    if (kAbsoluteList == aListID) {
-      nsContainerFrame::AppendFrames(aListID, aFrameList);
-      return;
-    }
     if (kFloatList == aListID) {
       mFloats.AppendFrames(nullptr, aFrameList);
       return;
     }
-    MOZ_CRASH("unexpected child list");
+    MOZ_ASSERT(kNoReflowPrincipalList == aListID, "unexpected child list");
   }
 
   // Find the proper last-child for where the append should go
@@ -4724,7 +4720,6 @@ nsBlockFrame::AppendFrames(ChildListID  aListID,
   NS_ASSERTION((mLines.empty() ? nullptr : mLines.back()->LastChild()) ==
                lastKid, "out-of-sync mLines / mFrames");
 
-  // Add frames after the last child
 #ifdef NOISY_REFLOW_REASON
   ListTag(stdout);
   printf(": append ");
@@ -4737,9 +4732,11 @@ nsBlockFrame::AppendFrames(ChildListID  aListID,
 #endif
 
   AddFrames(aFrameList, lastKid);
-  PresContext()->PresShell()->
-    FrameNeedsReflow(this, nsIPresShell::eTreeChange,
-                     NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
+  if (aListID != kNoReflowPrincipalList) {
+    PresContext()->PresShell()->
+      FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                       NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
+  }
 }
 
 void
@@ -4751,10 +4748,6 @@ nsBlockFrame::InsertFrames(ChildListID aListID,
                "inserting after sibling frame with different parent");
 
   if (aListID != kPrincipalList) {
-    if (kAbsoluteList == aListID) {
-      nsContainerFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
-      return;
-    }
     if (kFloatList == aListID) {
       mFloats.InsertFrames(this, aPrevFrame, aFrameList);
       return;
@@ -4774,11 +4767,11 @@ nsBlockFrame::InsertFrames(ChildListID aListID,
 #endif
 
   AddFrames(aFrameList, aPrevFrame);
-
-  if (aListID != kNoReflowPrincipalList)
+  if (aListID != kNoReflowPrincipalList) {
     PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                        NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
+  }
 }
 
 void
@@ -4798,10 +4791,6 @@ nsBlockFrame::RemoveFrame(ChildListID aListID,
     if (hasFloats) {
       MarkSameFloatManagerLinesDirty(this);
     }
-  }
-  else if (kAbsoluteList == aListID) {
-    nsContainerFrame::RemoveFrame(aListID, aOldFrame);
-    return;
   }
   else if (kFloatList == aListID) {
     // Make sure to mark affected lines dirty for the float frame
