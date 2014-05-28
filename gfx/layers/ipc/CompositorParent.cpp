@@ -418,6 +418,7 @@ CompositorParent::PauseComposition()
     mPaused = true;
 
     mCompositor->Pause();
+    DidComposite();
   }
 
   // if anyone's waiting to make sure that composition really got paused, tell them
@@ -627,6 +628,7 @@ CompositorParent::CompositeToTarget(DrawTarget* aTarget, const nsIntRect* aRect)
   mLastCompose = TimeStamp::Now();
 
   if (!CanComposite()) {
+    DidComposite();
     return;
   }
 
@@ -783,6 +785,9 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
   }
   if (aScheduleComposite) {
     ScheduleComposition();
+    if (mPaused) {
+      DidComposite();
+    }
     // When testing we synchronously update the shadow tree with the animated
     // values to avoid race conditions when calling GetAnimationTransform etc.
     // (since the above SetShadowProperties will remove animation effects).
@@ -795,6 +800,8 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
         mCompositionManager->TransformShadowTree(mTestTime);
       if (!requestNextFrame) {
         CancelCurrentCompositeTask();
+        // Pretend we composited in case someone is wating for this event.
+        DidComposite();
       }
     }
   }
@@ -824,6 +831,8 @@ CompositorParent::SetTestSampleTime(LayerTransactionParent* aLayerTree,
     bool requestNextFrame = mCompositionManager->TransformShadowTree(aTime);
     if (!requestNextFrame) {
       CancelCurrentCompositeTask();
+      // Pretend we composited in case someone is wating for this event.
+      DidComposite();
     }
   }
 
