@@ -144,11 +144,6 @@ class CodeGeneratorShared : public LInstructionVisitor
     // spills.
     int32_t frameDepth_;
 
-    // In some cases, we force stack alignment to platform boundaries, see
-    // also CodeGeneratorShared constructor. This value records the adjustment
-    // we've done.
-    int32_t frameInitialAdjustment_;
-
     // Frame class this frame's size falls into (see IonFrame.h).
     FrameSizeClass frameClass_;
 
@@ -166,7 +161,7 @@ class CodeGeneratorShared : public LInstructionVisitor
 
     inline int32_t SlotToStackOffset(int32_t slot) const {
         JS_ASSERT(slot > 0 && slot <= int32_t(graph.localSlotCount()));
-        int32_t offset = masm.framePushed() - frameInitialAdjustment_ - slot;
+        int32_t offset = masm.framePushed() - slot;
         JS_ASSERT(offset >= 0);
         return offset;
     }
@@ -174,10 +169,10 @@ class CodeGeneratorShared : public LInstructionVisitor
         // See: SlotToStackOffset. This is used to convert pushed arguments
         // to a slot index that safepoints can use.
         //
-        // offset = framePushed - frameInitialAdjustment - slot
-        // offset + slot = framePushed - frameInitialAdjustment
-        // slot = framePushed - frameInitialAdjustement - offset
-        return masm.framePushed() - frameInitialAdjustment_ - offset;
+        // offset = framePushed - slot
+        // offset + slot = framePushed
+        // slot = framePushed - offset
+        return masm.framePushed() - offset;
     }
 
     // For argument construction for calls. Argslots are Value-sized.
