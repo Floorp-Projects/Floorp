@@ -63,6 +63,10 @@
 <!ENTITY num_tabs2 "&formatD; tabs">
 <!ENTITY new_tab_opened "New tab opened">
 <!ENTITY new_private_tab_opened "New private tab opened">
+<!-- Localization note (switch_button_message): This string should be as short
+     as possible because it's shown as a label in a toast.  Ideally, this string
+     is upper-case, to match Google and Android's convention. -->
+<!ENTITY switch_button_message "SWITCH">
 
 <!ENTITY settings "Settings">
 <!ENTITY settings_title "Settings">
