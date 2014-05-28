@@ -1012,12 +1012,6 @@ nsRefreshDriver::ArrayFor(mozFlushType aFlushType)
 }
 
 /*
- * nsISupports implementation
- */
-
-NS_IMPL_ISUPPORTS(nsRefreshDriver, nsISupports)
-
-/*
  * nsITimerCallback implementation
  */
 
