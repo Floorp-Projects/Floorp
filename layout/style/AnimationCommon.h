@@ -232,6 +232,15 @@ struct AnimationTiming
   float mIterationCount; // NS_IEEEPositiveInfinity() means infinite
   uint8_t mDirection;
   uint8_t mFillMode;
+
+  bool FillsForwards() const {
+    return mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BOTH ||
+           mFillMode == NS_STYLE_ANIMATION_FILL_MODE_FORWARDS;
+  }
+  bool FillsBackwards() const {
+    return mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BOTH ||
+           mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BACKWARDS;
+  }
 };
 
 /**
@@ -258,15 +267,6 @@ struct ElementAnimation
   nsString mName; // empty string for 'none'
   AnimationTiming mTiming;
   uint8_t mPlayState;
-
-  bool FillsForwards() const {
-    return mTiming.mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BOTH ||
-           mTiming.mFillMode == NS_STYLE_ANIMATION_FILL_MODE_FORWARDS;
-  }
-  bool FillsBackwards() const {
-    return mTiming.mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BOTH ||
-           mTiming.mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BACKWARDS;
-  }
 
   bool IsPaused() const {
     return mPlayState == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED;
