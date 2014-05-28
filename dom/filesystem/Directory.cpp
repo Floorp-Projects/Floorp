@@ -112,9 +112,11 @@ Directory::CreateFile(const nsAString& aPath, const CreateFileOptions& aOptions)
                                str.Length());
     } else if (data.IsArrayBuffer()) {
       ArrayBuffer& buffer = data.GetAsArrayBuffer();
+      buffer.ComputeLengthAndData();
       arrayData.AppendElements(buffer.Data(), buffer.Length());
     } else if (data.IsArrayBufferView()){
       ArrayBufferView& view = data.GetAsArrayBufferView();
+      view.ComputeLengthAndData();
       arrayData.AppendElements(view.Data(), view.Length());
     } else {
       blobData = data.GetAsBlob();

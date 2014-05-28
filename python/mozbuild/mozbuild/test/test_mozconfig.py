@@ -29,6 +29,7 @@ class TestMozconfigLoader(unittest.TestCase):
     def setUp(self):
         self._old_env = dict(os.environ)
         os.environ.pop('MOZCONFIG', None)
+        os.environ.pop('MOZ_OBJDIR', None)
         os.environ.pop('CC', None)
         os.environ.pop('CXX', None)
         self._temp_dirs = set()
@@ -315,6 +316,22 @@ class TestMozconfigLoader(unittest.TestCase):
             self.assertEqual(result['topobjdir'], '/foo/bar')
             self.assertEqual(result['make_flags'], '-j8')
             self.assertEqual(result['make_extra'], ['FOO=BAR BAZ', 'BIZ=1'])
+
+    def test_read_empty_mozconfig_objdir_environ(self):
+        os.environ[b'MOZ_OBJDIR'] = b'obj-firefox'
+        with NamedTemporaryFile(mode='w') as mozconfig:
+            result = self.get_loader().read_mozconfig(mozconfig.name)
+            self.assertEqual(result['topobjdir'], 'obj-firefox')
+
+    def test_read_capture_mk_options_objdir_environ(self):
+        """Ensures mk_add_options calls are captured and override the environ."""
+        os.environ[b'MOZ_OBJDIR'] = b'obj-firefox'
+        with NamedTemporaryFile(mode='w') as mozconfig:
+            mozconfig.write('mk_add_options MOZ_OBJDIR=/foo/bar\n')
+            mozconfig.flush()
+
+            result = self.get_loader().read_mozconfig(mozconfig.name)
+            self.assertEqual(result['topobjdir'], '/foo/bar')
 
     def test_read_moz_objdir_substitution(self):
         """Ensure @TOPSRCDIR@ substitution is recognized in MOZ_OBJDIR."""

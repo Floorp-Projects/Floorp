@@ -238,13 +238,11 @@ public:
     nsresult Compile(JS::SourceBufferHolder& aSrcBuf,
                      nsIURI* aURI, uint32_t aLineNo,
                      nsIDocument* aDocument,
-                     nsXULPrototypeDocument* aProtoDoc,
                      nsIOffThreadScriptReceiver *aOffThreadReceiver = nullptr);
 
     nsresult Compile(const char16_t* aText, int32_t aTextLength,
                      nsIURI* aURI, uint32_t aLineNo,
                      nsIDocument* aDocument,
-                     nsXULPrototypeDocument* aProtoDoc,
                      nsIOffThreadScriptReceiver *aOffThreadReceiver = nullptr);
 
     void UnlinkJSObjects();

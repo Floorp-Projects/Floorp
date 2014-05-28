@@ -765,7 +765,7 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_addstream,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_removestream,
     /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_addcandidate,
-    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_default
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_foundcandidate
     },
 
 /* FSMDEF_S_HAVE_LOCAL_PRANSWER  -------------------------------------------- */
@@ -4253,14 +4253,16 @@ fsmdef_ev_foundcandidate(sm_event_t *event) {
         return (SM_RC_END);
     }
 
-    /* Distinguish between the following two cases:
+    /* Distinguish between the following three cases:
 
        1. CreateOffer() has been called but SetLocalDesc() has not.
        2. We are mid-call.
+       3. We have a remote offer and CreateAnswer() has been called
+          but SetLocalDesc() has not
 
-       Both of these are in state STABLE but only in one do we
-       pass up trickle candidates. In the other we buffer them
-       and send them later.
+       The first two of these are in state STABLE but only in
+       the second do pass up trickle candidates. In the other
+       two we buffer them and send them later.
     */
     /* Smuggle the entire candidate structure in a string */
     PR_snprintf(candidate_tmp, sizeof(candidate_tmp), "%d\t%s\t%s",
@@ -4268,27 +4270,26 @@ fsmdef_ev_foundcandidate(sm_event_t *event) {
                 (char *)msg->data.candidate.mid,
                 (char *)msg->data.candidate.candidate);
 
-    if (fcb->state == FSMDEF_S_STABLE) {
-        if (!dcb->sdp->dest_sdp) {
-            fsmdef_candidate_t *buffered_cand = NULL;
+    if ((fcb->state == FSMDEF_S_STABLE && !dcb->sdp->dest_sdp)
+        || fcb->state == FSMDEF_S_HAVE_REMOTE_OFFER) {
+        fsmdef_candidate_t *buffered_cand = NULL;
 
-            FSM_DEBUG_SM(DEB_F_PREFIX"dcb->sdp->dest_sdp is null."
-                         "assuming CreateOffer called but not SetLocal...\n",
-                         DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
+        FSM_DEBUG_SM(DEB_F_PREFIX"dcb->sdp->dest_sdp is null."
+                     "assuming CreateOffer called but not SetLocal...\n",
+                     DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
 
-            buffered_cand = (fsmdef_candidate_t *)cpr_malloc(sizeof(fsmdef_candidate_t));
-            if (!buffered_cand)
-                return SM_RC_END;
-
-            buffered_cand->candidate = strlib_malloc(candidate_tmp, -1);
-
-            if (sll_lite_link_head(&dcb->candidate_list,
-                                   (sll_lite_node_t *)buffered_cand) != SLL_LITE_RET_SUCCESS)
-                return SM_RC_END;
-
-            /* Don't notify upward */
+        buffered_cand = (fsmdef_candidate_t *)cpr_malloc(sizeof(fsmdef_candidate_t));
+        if (!buffered_cand)
             return SM_RC_END;
-        }
+
+        buffered_cand->candidate = strlib_malloc(candidate_tmp, -1);
+
+        if (sll_lite_link_head(&dcb->candidate_list,
+                               (sll_lite_node_t *)buffered_cand) != SLL_LITE_RET_SUCCESS)
+            return SM_RC_END;
+
+        /* Don't notify upward */
+        return SM_RC_END;
     }
 
     ui_ice_candidate_found(evFoundIceCandidate, fcb->state, line, call_id,

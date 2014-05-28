@@ -637,15 +637,18 @@ TLSFilterTransaction::TakeSubTransactions(
     return NS_ERROR_UNEXPECTED;
   }
 
-  outTransactions.AppendElement(mTransaction);
+  if (mTransaction->TakeSubTransactions(outTransactions) == NS_ERROR_NOT_IMPLEMENTED) {
+    outTransactions.AppendElement(mTransaction);
+  }
   mTransaction = nullptr;
+
   return NS_OK;
 }
 
 nsresult
-TLSFilterTransaction::AddTransaction(nsAHttpTransaction *aTrans)
+TLSFilterTransaction::SetProxiedTransaction(nsAHttpTransaction *aTrans)
 {
-  LOG(("TLSFilterTransaction::AddTransaction [this=%p] aTrans=%p\n",
+  LOG(("TLSFilterTransaction::SetProxiedTransaction [this=%p] aTrans=%p\n",
        this, aTrans));
 
   mTransaction = aTrans;
@@ -657,6 +660,20 @@ TLSFilterTransaction::AddTransaction(nsAHttpTransaction *aTrans)
   }
 
   return NS_OK;
+}
+
+// AddTransaction is for adding pipelined subtransactions
+nsresult
+TLSFilterTransaction::AddTransaction(nsAHttpTransaction *aTrans)
+{
+  LOG(("TLSFilterTransaction::AddTransaction passing on subtransaction "
+       "[this=%p] aTrans=%p ,mTransaction=%p\n", this, aTrans, mTransaction.get()));
+
+  if (!mTransaction) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mTransaction->AddTransaction(aTrans);
 }
 
 uint32_t
@@ -673,7 +690,7 @@ nsresult
 TLSFilterTransaction::SetPipelinePosition(int32_t aPosition)
 {
   if (!mTransaction) {
-    return NS_ERROR_UNEXPECTED;
+    return NS_OK;
   }
 
   return mTransaction->SetPipelinePosition(aPosition);
@@ -683,12 +700,47 @@ int32_t
 TLSFilterTransaction::PipelinePosition()
 {
   if (!mTransaction) {
-    return 0;
+    return 1;
   }
 
   return mTransaction->PipelinePosition();
 }
 
+nsHttpPipeline *
+TLSFilterTransaction::QueryPipeline()
+{
+  if (!mTransaction) {
+    return nullptr;
+  }
+  return mTransaction->QueryPipeline();
+}
+
+bool
+TLSFilterTransaction::IsNullTransaction()
+{
+  if (!mTransaction) {
+    return false;
+  }
+  return mTransaction->IsNullTransaction();
+}
+
+nsHttpTransaction *
+TLSFilterTransaction::QueryHttpTransaction()
+{
+  if (!mTransaction) {
+    return nullptr;
+  }
+  return mTransaction->QueryHttpTransaction();
+}
+
+SpdyConnectTransaction *
+TLSFilterTransaction::QuerySpdyConnectTransaction()
+{
+  if (!mTransaction) {
+    return nullptr;
+  }
+  return mTransaction->QuerySpdyConnectTransaction();
+}
 
 class SocketTransportShim : public nsISocketTransport
 {
