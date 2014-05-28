@@ -551,10 +551,27 @@ var commandsDataChannel = [
     }
   ],
   [
+    'SEND_MESSAGE_BACK_THROUGH_FIRST_CHANNEL',
+    function (test) {
+      var message = "Return a message also through 1st channel";
+      var options = {
+        sourceChannel: test.pcRemote.dataChannels[0],
+        targetChannel: test.pcLocal.dataChannels[0]
+      };
+
+      test.send(message, function (channel, data) {
+        is(test.pcLocal.dataChannels.indexOf(channel), 0, "1st channel used");
+        is(data, message, "Return message has the correct content.");
+
+        test.next();
+      }, options);
+    }
+  ],
+  [
     'CREATE_NEGOTIATED_DATA_CHANNEL',
     function (test) {
       var options = {negotiated:true, id: 5, protocol:"foo/bar", ordered:false,
-		     maxRetransmits:500};
+        maxRetransmits:500};
       test.createDataChannel(options, function (sourceChannel2, targetChannel2) {
         is(sourceChannel2.readyState, "open", sourceChannel2 + " is in state: 'open'");
         is(targetChannel2.readyState, "open", targetChannel2 + " is in state: 'open'");
@@ -564,10 +581,11 @@ var commandsDataChannel = [
 
         if (options.id != undefined) {
           is(sourceChannel2.id, options.id, sourceChannel2 + " id is:" + sourceChannel2.id);
-	} else {
-	  options.id = sourceChannel2.id;
-	}
-	var reliable = !options.ordered ? false : (options.maxRetransmits || options.maxRetransmitTime);
+        }
+        else {
+          options.id = sourceChannel2.id;
+        }
+        var reliable = !options.ordered ? false : (options.maxRetransmits || options.maxRetransmitTime);
         is(sourceChannel2.protocol, options.protocol, sourceChannel2 + " protocol is:" + sourceChannel2.protocol);
         is(sourceChannel2.reliable, reliable, sourceChannel2 + " reliable is:" + sourceChannel2.reliable);
 /*
