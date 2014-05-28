@@ -251,6 +251,9 @@ TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,
       (mTexImage->GetSize() != size && !aSrcOffset) ||
       mTexImage->GetContentType() != gfx::ContentForFormat(aSurface->GetFormat())) {
     if (mFlags & TextureFlags::DISALLOW_BIGIMAGE) {
+      // Explicitly use CreateBasicTextureImage instead of CreateTextureImage,
+      // because CreateTextureImage may still create a tiled texture image
+      // if the maximum texture size is exceeded.
       mTexImage = CreateBasicTextureImage(mGL, size,
                                           gfx::ContentForFormat(aSurface->GetFormat()),
                                           WrapMode(mGL, mFlags),
