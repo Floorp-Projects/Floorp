@@ -192,16 +192,19 @@ void
 nsTableOuterFrame::SetInitialChildList(ChildListID     aListID,
                                        nsFrameList&    aChildList)
 {
+  MOZ_ASSERT(kCaptionList == aListID || aListID == kPrincipalList,
+             "unexpected child list");
+  MOZ_ASSERT(GetChildList(aListID).IsEmpty(),
+             "already have child frames in SetInitialChildList");
+
   if (kCaptionList == aListID) {
     // the frame constructor already checked for table-caption display type
     mCaptionFrames.SetFrames(aChildList);
-  }
-  else {
-    NS_ASSERTION(aListID == kPrincipalList, "wrong childlist");
-    NS_ASSERTION(mFrames.IsEmpty(), "Frame leak!");
-    NS_ASSERTION(aChildList.FirstChild() &&
-                 nsGkAtoms::tableFrame == aChildList.FirstChild()->GetType(),
-                 "expected a table frame");
+  } else {
+    MOZ_ASSERT(aChildList.FirstChild() &&
+               aChildList.FirstChild() == aChildList.LastChild() &&
+               nsGkAtoms::tableFrame == aChildList.FirstChild()->GetType(),
+               "expected a single table frame");
     mFrames.SetFrames(aChildList);
   }
 }
@@ -213,9 +216,9 @@ nsTableOuterFrame::AppendFrames(ChildListID     aListID,
   // We only have two child frames: the inner table and a caption frame.
   // The inner frame is provided when we're initialized, and it cannot change
   MOZ_ASSERT(kCaptionList == aListID, "unexpected child list");
-  NS_ASSERTION(aFrameList.IsEmpty() ||
-               aFrameList.FirstChild()->GetType() == nsGkAtoms::tableCaptionFrame,
-               "appending non-caption frame to captionList");
+  MOZ_ASSERT(aFrameList.IsEmpty() ||
+             aFrameList.FirstChild()->GetType() == nsGkAtoms::tableCaptionFrame,
+             "appending non-caption frame to captionList");
   mCaptionFrames.AppendFrames(this, aFrameList);
 
   // Reflow the new caption frame. It's already marked dirty, so
@@ -230,25 +233,19 @@ nsTableOuterFrame::InsertFrames(ChildListID     aListID,
                                 nsIFrame*       aPrevFrame,
                                 nsFrameList&    aFrameList)
 {
-  if (kCaptionList == aListID) {
-    NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
-                 "inserting after sibling frame with different parent");
-    NS_ASSERTION(aFrameList.IsEmpty() ||
-                 aFrameList.FirstChild()->GetType() == nsGkAtoms::tableCaptionFrame,
-                 "inserting non-caption frame into captionList");
-    mCaptionFrames.InsertFrames(nullptr, aPrevFrame, aFrameList);
+  MOZ_ASSERT(kCaptionList == aListID, "unexpected child list");
+  MOZ_ASSERT(aFrameList.IsEmpty() ||
+             aFrameList.FirstChild()->GetType() == nsGkAtoms::tableCaptionFrame,
+             "inserting non-caption frame into captionList");
+  MOZ_ASSERT(!aPrevFrame || aPrevFrame->GetParent() == this,
+             "inserting after sibling frame with different parent");
+  mCaptionFrames.InsertFrames(nullptr, aPrevFrame, aFrameList);
 
-    // Reflow the new caption frame. It's already marked dirty, so
-    // just tell the pres shell.
-    PresContext()->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eTreeChange,
-                       NS_FRAME_HAS_DIRTY_CHILDREN);
-  }
-  else {
-    // XXX this block is dead code? (AppendFrames only handles kCaptionList)
-    NS_PRECONDITION(!aPrevFrame, "invalid previous frame");
-    AppendFrames(aListID, aFrameList);
-  }
+  // Reflow the new caption frame. It's already marked dirty, so
+  // just tell the pres shell.
+  PresContext()->PresShell()->
+    FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                     NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
 void
