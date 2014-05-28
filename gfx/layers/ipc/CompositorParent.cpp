@@ -66,6 +66,7 @@ CompositorParent::LayerTreeState::LayerTreeState()
   : mParent(nullptr)
   , mLayerManager(nullptr)
   , mCrossProcessParent(nullptr)
+  , mLayerTree(nullptr)
 {
 }
 
@@ -193,6 +194,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
   : mWidget(aWidget)
   , mCurrentCompositeTask(nullptr)
   , mIsTesting(false)
+  , mPendingTransaction(0)
   , mPaused(false)
   , mUseExternalSurfaceSize(aUseExternalSurfaceSize)
   , mEGLSurfaceSize(aSurfaceWidth, aSurfaceHeight)
@@ -200,7 +202,6 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
   , mResumeCompositionMonitor("ResumeCompositionMonitor")
   , mOverrideComposeReadiness(false)
   , mForceCompositionTask(nullptr)
-  , mWantDidCompositeEvent(false)
 {
   NS_ABORT_IF_FALSE(sCompositorThread != nullptr || sCompositorThreadID,
                     "The compositor thread must be Initialized before instanciating a COmpositorParent.");
@@ -443,7 +444,7 @@ CompositorParent::ResumeComposition()
 
   mPaused = false;
 
-  Composite();
+  CompositeToTarget(nullptr);
 
   // if anyone's waiting to make sure that composition really got resumed, tell them
   lock.NotifyAll();
@@ -541,8 +542,6 @@ CompositorParent::NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstPaint,
   if (aScheduleComposite) {
     ScheduleComposition();
   }
-
-  mWantDidCompositeEvent = true;
 }
 
 // Used when layout.frame_rate is -1. Needs to be kept in sync with
@@ -585,7 +584,7 @@ CompositorParent::ScheduleComposition()
     rate == 0 ? 0.0 : std::max(0.0, 1000.0 / rate));
 
 
-  mCurrentCompositeTask = NewRunnableMethod(this, &CompositorParent::Composite);
+  mCurrentCompositeTask = NewRunnableMethod(this, &CompositorParent::CompositeCallback);
 
   if (!initialComposition && delta < minFrameDelta) {
     TimeDuration delay = minFrameDelta - delta;
@@ -602,8 +601,9 @@ CompositorParent::ScheduleComposition()
 }
 
 void
-CompositorParent::Composite()
+CompositorParent::CompositeCallback()
 {
+  mCurrentCompositeTask = nullptr;
   CompositeToTarget(nullptr);
 }
 
@@ -623,11 +623,6 @@ CompositorParent::CompositeToTarget(DrawTarget* aTarget, const nsIntRect* aRect)
                   scheduleDelta.ToMilliseconds());
   }
 #endif
-
-  if (mCurrentCompositeTask) {
-    mCurrentCompositeTask->Cancel();
-    mCurrentCompositeTask = nullptr;
-  }
 
   mLastCompose = TimeStamp::Now();
 
@@ -672,9 +667,8 @@ CompositorParent::CompositeToTarget(DrawTarget* aTarget, const nsIntRect* aRect)
   mLayerManager->SetDebugOverlayWantsNextFrame(false);
   mLayerManager->EndEmptyTransaction();
 
-  if (!aTarget && mWantDidCompositeEvent) {
+  if (!aTarget) {
     DidComposite();
-    mWantDidCompositeEvent = false;
   }
 
   if (mLayerManager->DebugOverlayWantsNextFrame()) {
@@ -702,20 +696,6 @@ CompositorParent::CompositeToTarget(DrawTarget* aTarget, const nsIntRect* aRect)
   }
 
   profiler_tracing("Paint", "Composite", TRACING_INTERVAL_END);
-}
-
-void
-CompositorParent::DidComposite()
-{
-  unused << SendDidComposite(0);
-
-  for (LayerTreeMap::iterator it = sIndirectLayerTrees.begin();
-       it != sIndirectLayerTrees.end(); it++) {
-    LayerTreeState* lts = &it->second;
-    if (lts->mParent == this && lts->mCrossProcessParent) {
-      unused << lts->mCrossProcessParent->SendDidComposite(it->first);
-    }
-  }
 }
 
 void
@@ -773,6 +753,7 @@ CompositorParent::ScheduleRotationOnCompositorThread(const TargetConfig& aTarget
 
 void
 CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
+                                      const uint64_t& aTransactionId,
                                       const TargetConfig& aTargetConfig,
                                       bool aIsFirstPaint,
                                       bool aScheduleComposite,
@@ -795,6 +776,7 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
     mApzcTreeManager->UpdatePanZoomControllerTree(this, root, aIsFirstPaint,
         mRootLayerTreeID, aPaintSequenceNumber);
   }
+  mPendingTransaction = aTransactionId;
 
   if (root) {
     SetShadowProperties(root);
@@ -817,7 +799,6 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
     }
   }
   mLayerManager->NotifyShadowTreeTransaction();
-  mWantDidCompositeEvent = true;
 }
 
 void
@@ -1151,6 +1132,7 @@ public:
   virtual bool DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers) MOZ_OVERRIDE;
 
   virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
+                                   const uint64_t& aTransactionId,
                                    const TargetConfig& aTargetConfig,
                                    bool aIsFirstPaint,
                                    bool aScheduleComposite,
@@ -1164,6 +1146,7 @@ public:
 
   virtual AsyncCompositionManager* GetCompositionManager(LayerTransactionParent* aParent) MOZ_OVERRIDE;
 
+  void DidComposite(uint64_t aId);
 private:
   // Private destructor, to discourage deletion outside of Release():
   virtual ~CrossProcessCompositorParent();
@@ -1178,6 +1161,23 @@ private:
   // Child side's process Id.
   base::ProcessId mChildProcessId;
 };
+
+void
+CompositorParent::DidComposite()
+{
+  if (mPendingTransaction) {
+    unused << SendDidComposite(0, mPendingTransaction);
+    mPendingTransaction = 0;
+  }
+
+  for (LayerTreeMap::iterator it = sIndirectLayerTrees.begin();
+       it != sIndirectLayerTrees.end(); it++) {
+    LayerTreeState* lts = &it->second;
+    if (lts->mParent == this && lts->mCrossProcessParent) {
+      static_cast<CrossProcessCompositorParent*>(lts->mCrossProcessParent)->DidComposite(it->first);
+    }
+  }
+}
 
 static void
 OpenCompositor(CrossProcessCompositorParent* aCompositor,
@@ -1279,6 +1279,7 @@ CrossProcessCompositorParent::AllocPLayerTransactionParent(const nsTArray<Layers
     *aSuccess = true;
     LayerTransactionParent* p = new LayerTransactionParent(lm, this, aId, mChildProcessId);
     p->AddIPDLReference();
+    sIndirectLayerTrees[aId].mLayerTree = p;
     return p;
   }
 
@@ -1316,6 +1317,7 @@ CrossProcessCompositorParent::RecvNotifyChildCreated(const uint64_t& child)
 void
 CrossProcessCompositorParent::ShadowLayersUpdated(
   LayerTransactionParent* aLayerTree,
+  const uint64_t& aTransactionId,
   const TargetConfig& aTargetConfig,
   bool aIsFirstPaint,
   bool aScheduleComposite,
@@ -1340,6 +1342,17 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
 
   state->mParent->NotifyShadowTreeTransaction(id, aIsFirstPaint, aScheduleComposite,
       aPaintSequenceNumber);
+  aLayerTree->SetPendingTransactionId(aTransactionId);
+}
+
+void
+CrossProcessCompositorParent::DidComposite(uint64_t aId)
+{
+  LayerTransactionParent *layerTree = sIndirectLayerTrees[aId].mLayerTree;
+  if (layerTree && layerTree->GetPendingTransactionId()) {
+    unused << SendDidComposite(aId, layerTree->GetPendingTransactionId());
+    layerTree->SetPendingTransactionId(0);
+  }
 }
 
 void

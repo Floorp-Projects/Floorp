@@ -285,7 +285,7 @@ ClientLayerManager::Composite()
 }
 
 void
-ClientLayerManager::DidComposite()
+ClientLayerManager::DidComposite(uint64_t aTransactionId)
 {
   MOZ_ASSERT(mWidget);
   nsIWidgetListener *listener = mWidget->GetWidgetListener();
@@ -421,11 +421,13 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
 {
   mPhase = PHASE_FORWARD;
 
+  uint64_t pendingTransactionId = 1;
+
   // forward this transaction's changeset to our LayerManagerComposite
   bool sent;
   AutoInfallibleTArray<EditReply, 10> replies;
   if (HasShadowManager() && mForwarder->EndTransaction(&replies, mRegionToClear,
-        aScheduleComposite, mPaintSequenceNumber, &sent)) {
+        pendingTransactionId, aScheduleComposite, mPaintSequenceNumber, &sent)) {
     for (nsTArray<EditReply>::size_type i = 0; i < replies.Length(); ++i) {
       const EditReply& reply = replies[i];
 

@@ -124,15 +124,15 @@ CompositorChild::RecvInvalidateAll()
 }
 
 bool
-CompositorChild::RecvDidComposite(const uint64_t& aId)
+CompositorChild::RecvDidComposite(const uint64_t& aId, const uint64_t& aTransactionId)
 {
   if (mLayerManager) {
     MOZ_ASSERT(aId == 0);
-    mLayerManager->DidComposite();
+    mLayerManager->DidComposite(aTransactionId);
   } else if (aId != 0) {
     dom::TabChild *child = dom::TabChild::GetFrom(aId);
     if (child) {
-      child->DidComposite();
+      child->DidComposite(aTransactionId);
     }
   }
   return true;

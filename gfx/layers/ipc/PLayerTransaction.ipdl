@@ -52,9 +52,14 @@ parent:
 
   // The isFirstPaint flag can be used to indicate that this is the first update
   // for a particular document.
-  sync Update(Edit[] cset, TargetConfig targetConfig, bool isFirstPaint,
+  sync Update(Edit[] cset, uint64_t id, TargetConfig targetConfig, bool isFirstPaint,
               bool scheduleComposite, uint32_t paintSequenceNumber)
     returns (EditReply[] reply);
+  
+  // We don't need to send a sync transaction if
+  // no transaction operate require a swap.
+  async UpdateNoSwap(Edit[] cset, uin64_t id, TargetConfig targetConfig, bool isFirstPaint,
+                     bool scheduleComposite, uint32_t paintSequenceNumber);
 
   // Testing APIs
 
@@ -77,11 +82,6 @@ parent:
   // CSS pixels.
   // Useful for testing rendering of async scrolling.
   async SetAsyncScrollOffset(PLayer layer, int32_t x, int32_t y);
-
-  // We don't need to send a sync transaction if
-  // no transaction operate require a swap.
-  async UpdateNoSwap(Edit[] cset, TargetConfig targetConfig, bool isFirstPaint,
-                     bool scheduleComposite, uint32_t paintSequenceNumber);
 
   // Drop any front buffers that might be retained on the compositor
   // side.
