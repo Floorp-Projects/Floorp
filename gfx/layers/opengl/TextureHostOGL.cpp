@@ -251,9 +251,15 @@ TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,
       (mTexImage->GetSize() != size && !aSrcOffset) ||
       mTexImage->GetContentType() != gfx::ContentForFormat(aSurface->GetFormat())) {
     if (mFlags & TextureFlags::DISALLOW_BIGIMAGE) {
+      GLint maxTextureSize;
+      mGL->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &maxTextureSize);
+      if (size.width > maxTextureSize || size.height > maxTextureSize) {
+        NS_WARNING("Texture exceeds maximum texture size, refusing upload");
+        return false;
+      }
       // Explicitly use CreateBasicTextureImage instead of CreateTextureImage,
-      // because CreateTextureImage may still create a tiled texture image
-      // if the maximum texture size is exceeded.
+      // because CreateTextureImage might still choose to create a tiled
+      // texture image.
       mTexImage = CreateBasicTextureImage(mGL, size,
                                           gfx::ContentForFormat(aSurface->GetFormat()),
                                           WrapMode(mGL, mFlags),
