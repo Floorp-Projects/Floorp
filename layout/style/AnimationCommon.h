@@ -220,6 +220,21 @@ struct AnimationProperty
 };
 
 /**
+ * Input timing parameters.
+ *
+ * Eventually this will represent all the input timing parameters specified
+ * by content but for now it encapsulates just the subset of those
+ * parameters passed to GetPositionInIteration.
+ */
+struct AnimationTiming
+{
+  mozilla::TimeDuration mIterationDuration;
+  float mIterationCount; // NS_IEEEPositiveInfinity() means infinite
+  uint8_t mDirection;
+  uint8_t mFillMode;
+};
+
+/**
  * Data about one animation (i.e., one of the values of
  * 'animation-name') running on an element.
  */
@@ -241,18 +256,16 @@ struct ElementAnimation
   }
 
   nsString mName; // empty string for 'none'
-  float mIterationCount; // NS_IEEEPositiveInfinity() means infinite
-  uint8_t mDirection;
-  uint8_t mFillMode;
+  AnimationTiming mTiming;
   uint8_t mPlayState;
 
   bool FillsForwards() const {
-    return mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BOTH ||
-           mFillMode == NS_STYLE_ANIMATION_FILL_MODE_FORWARDS;
+    return mTiming.mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BOTH ||
+           mTiming.mFillMode == NS_STYLE_ANIMATION_FILL_MODE_FORWARDS;
   }
   bool FillsBackwards() const {
-    return mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BOTH ||
-           mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BACKWARDS;
+    return mTiming.mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BOTH ||
+           mTiming.mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BACKWARDS;
   }
 
   bool IsPaused() const {
@@ -276,7 +289,6 @@ struct ElementAnimation
   mozilla::TimeStamp mStartTime;
   mozilla::TimeStamp mPauseStart;
   mozilla::TimeDuration mDelay;
-  mozilla::TimeDuration mIterationDuration;
   bool mIsRunningOnCompositor;
 
   enum {
