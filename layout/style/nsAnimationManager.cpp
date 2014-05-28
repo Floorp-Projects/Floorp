@@ -315,16 +315,15 @@ ElementAnimations::GetEventsAt(TimeStamp aRefreshTime,
     ComputedTiming computedTiming =
       GetPositionInIteration(elapsedDuration, anim->mTiming);
 
-    if (computedTiming.mPhase == ComputedTiming::AnimationPhase_After) {
-      // Dispatch 'animationend' when needed.
-      if (anim->mLastNotification != ElementAnimation::LAST_NOTIFICATION_END) {
-        anim->mLastNotification = ElementAnimation::LAST_NOTIFICATION_END;
-        AnimationEventInfo ei(mElement, anim->mName, NS_ANIMATION_END,
-                              elapsedDuration, PseudoElement());
-        aEventsToDispatch.AppendElement(ei);
-      }
-    } else if (computedTiming.mPhase == ComputedTiming::AnimationPhase_Active) {
-      if (!anim->IsPaused()) {
+    // FIXME: Bug 1004361: If our active duration is sufficiently short and our
+    // samples are sufficiently infrequent we will end up skipping the start
+    // event and jumping straight to the end event.
+    switch (computedTiming.mPhase) {
+      case ComputedTiming::AnimationPhase_Before:
+        // Do nothing
+        break;
+
+      case ComputedTiming::AnimationPhase_Active:
         // Dispatch 'animationstart' or 'animationiteration' when needed.
         if (computedTiming.mCurrentIteration != anim->mLastNotification) {
           // Notify 'animationstart' even if a negative delay puts us
@@ -342,7 +341,18 @@ ElementAnimations::GetEventsAt(TimeStamp aRefreshTime,
                                 elapsedDuration, PseudoElement());
           aEventsToDispatch.AppendElement(ei);
         }
-      }
+        break;
+
+      case ComputedTiming::AnimationPhase_After:
+        // Dispatch 'animationend' when needed.
+        if (anim->mLastNotification !=
+            ElementAnimation::LAST_NOTIFICATION_END) {
+          anim->mLastNotification = ElementAnimation::LAST_NOTIFICATION_END;
+          AnimationEventInfo ei(mElement, anim->mName, NS_ANIMATION_END,
+                                elapsedDuration, PseudoElement());
+          aEventsToDispatch.AppendElement(ei);
+        }
+        break;
     }
   }
 }
