@@ -277,6 +277,32 @@ protected:
     void UnwrapImpl();
 };
 
+struct ScopedVertexAttribPointer
+    : public ScopedGLWrapper<ScopedVertexAttribPointer>
+{
+    friend struct ScopedGLWrapper<ScopedVertexAttribPointer>;
+
+protected:
+    GLuint mAttribIndex;
+    GLint mAttribEnabled;
+    GLint mAttribSize;
+    GLint mAttribStride;
+    GLint mAttribType;
+    GLint mAttribNormalized;
+    GLint mAttribBufferBinding;
+    void* mAttribPointer;
+    GLuint mBoundBuffer;
+
+public:
+    ScopedVertexAttribPointer(GLContext* aGL, GLuint index, GLint size, GLenum type, realGLboolean normalized,
+                              GLsizei stride, GLuint buffer, const GLvoid* pointer);
+    explicit ScopedVertexAttribPointer(GLContext* aGL, GLuint index);
+
+protected:
+    void WrapImpl(GLuint index);
+    void UnwrapImpl();
+};
+
 } /* namespace gl */
 } /* namespace mozilla */
 
