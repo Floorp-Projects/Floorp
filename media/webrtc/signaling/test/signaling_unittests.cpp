@@ -265,8 +265,6 @@ public:
   NS_IMETHODIMP OnSetRemoteDescriptionSuccess(ER&);
   NS_IMETHODIMP OnSetLocalDescriptionError(uint32_t code, const char *msg, ER&);
   NS_IMETHODIMP OnSetRemoteDescriptionError(uint32_t code, const char *msg, ER&);
-  NS_IMETHODIMP NotifyConnection(ER&);
-  NS_IMETHODIMP NotifyClosedConnection(ER&);
   NS_IMETHODIMP NotifyDataChannel(nsIDOMDataChannel *channel, ER&);
   NS_IMETHODIMP OnStateChange(PCObserverStateType state_type, ER&, void*);
   NS_IMETHODIMP OnAddStream(nsIDOMMediaStream *stream, ER&);
@@ -355,20 +353,6 @@ TestObserver::OnSetRemoteDescriptionError(uint32_t code, const char *message, ER
   state = stateError;
   std::cout << name << ": onSetRemoteDescriptionError = " << code
             << " (" << message << ")" << std::endl;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TestObserver::NotifyConnection(ER&)
-{
-  std::cout << name << ": NotifyConnection" << std::endl;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TestObserver::NotifyClosedConnection(ER&)
-{
-  std::cout << name << ": NotifyClosedConnection" << std::endl;
   return NS_OK;
 }
 

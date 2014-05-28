@@ -307,8 +307,6 @@ RTCPeerConnection.prototype = {
     this.makeGetterSetterEH("onsignalingstatechange");
     this.makeGetterSetterEH("onremovestream");
     this.makeGetterSetterEH("ondatachannel");
-    this.makeGetterSetterEH("onconnection");
-    this.makeGetterSetterEH("onclosedconnection");
     this.makeGetterSetterEH("oniceconnectionstatechange");
     this.makeGetterSetterEH("onidentityresult");
     this.makeGetterSetterEH("onpeeridentity");
@@ -1279,14 +1277,6 @@ PeerConnectionObserver.prototype = {
   notifyDataChannel: function(channel) {
     this.dispatchEvent(new this._dompc._win.RTCDataChannelEvent("datachannel",
                                                                 { channel: channel }));
-  },
-
-  notifyConnection: function() {
-    this.dispatchEvent(new this._dompc._win.Event("connection"));
-  },
-
-  notifyClosedConnection: function() {
-    this.dispatchEvent(new this._dompc._win.Event("closedconnection"));
   },
 
   getSupportedConstraints: function(dict) {
