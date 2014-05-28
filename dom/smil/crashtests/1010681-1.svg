@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     class="reftest-wait">
+<script>
+<![CDATA[
+
+function boom()
+{
+  var animate =
+    document.createElementNS("http://www.w3.org/2000/svg", "animate");
+  animate.setAttribute("dur", "2s");
+  document.documentElement.appendChild(animate);
+  animate.targetElement;
+  animate.requiredFeatures.insertItemBefore(0, 0);
+  document.documentElement.setCurrentTime(4);
+  document.documentElement.setCurrentTime(0);
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("load", boom, false);
+
+]]>
+</script></svg>
