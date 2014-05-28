@@ -68,7 +68,7 @@ public:
   void AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
                            const nsRect&           aDirtyRect,
                            const nsDisplayListSet& aLists,
-                           bool&                   aCreateLayer,
+                           bool                    aCreateLayer,
                            bool                    aPositioned);
 
   bool GetBorderRadii(const nsSize& aFrameSize, const nsSize& aBorderArea,
