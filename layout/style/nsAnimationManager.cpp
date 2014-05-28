@@ -73,15 +73,13 @@ ElementAnimations::GetPositionInIteration(TimeDuration aElapsedDuration,
         aEventsToDispatch->AppendElement(ei);
       }
     }
-    if (aTiming.mFillMode != NS_STYLE_ANIMATION_FILL_MODE_BOTH &&
-        aTiming.mFillMode != NS_STYLE_ANIMATION_FILL_MODE_FORWARDS) {
+    if (!aTiming.FillsForwards()) {
       // The animation isn't active or filling at this time.
       return -1;
     }
     currentIterationCount = aTiming.mIterationCount;
   } else if (currentIterationCount < 0.0) {
-    if (aTiming.mFillMode != NS_STYLE_ANIMATION_FILL_MODE_BOTH &&
-        aTiming.mFillMode != NS_STYLE_ANIMATION_FILL_MODE_BACKWARDS) {
+    if (!aTiming.FillsBackwards()) {
       // The animation isn't active or filling at this time.
       return -1;
     }
