@@ -832,6 +832,10 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     return NS_NewDOMMozSmsEvent(aDOMEvent, aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("mozmmsevent"))
     return NS_NewDOMMozMmsEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+  if (aEventType.LowerCaseEqualsLiteral("storageevent")) {
+    return NS_NEWDOMStorageEvent(aDOMEvent, aOwner);
+  }
+
 
   // NEW EVENT TYPES SHOULD NOT BE ADDED HERE; THEY SHOULD USE ONLY EVENT
   // CONSTRUCTORS
