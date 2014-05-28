@@ -1778,6 +1778,10 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
       mCallIds.Clear();
       LOG(("Releasing MediaManager singleton and thread"));
       sSingleton = nullptr;
+      if (mMediaThread) {
+        mMediaThread->Shutdown();
+        mMediaThread = nullptr;
+      }
     }
 
     return NS_OK;
