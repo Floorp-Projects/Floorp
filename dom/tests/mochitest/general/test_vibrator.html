@@ -23,29 +23,36 @@ function expectSuccess(param) {
   is(result, true, 'vibrate(' + param + ') must succeed.');
 }
 
-function testFailures() {
+function tests() {
+  // Some edge cases that the bindings should handle for us.
   expectSuccess(null);
   expectSuccess(undefined);
-  expectFailure(-1);
+  // -1 will be converted to the highest unsigned long then clamped.
+  expectSuccess(-1);
   expectSuccess('a');
-  expectFailure([100, -1]);
+  // -1 will be converted to the highest unsigned long then clamped.
+  expectSuccess([100, -1]);
   expectSuccess([100, 'a']);
 
   var maxVibrateMs = SpecialPowers.getIntPref('dom.vibrator.max_vibrate_ms');
   var maxVibrateListLen = SpecialPowers.getIntPref('dom.vibrator.max_vibrate_list_len');
 
-  // Make sure that these preferences are respected.
-  expectFailure(maxVibrateMs + 1);
-  expectFailure([maxVibrateMs + 1]);
+  // If we pass a vibration pattern with a value higher than max_vibrate_ms or a
+  // pattern longer than max_vibrate_list_len, the call should succeed but the
+  // pattern should be modified to match the restrictions.
+
+  // Values will be clamped to dom.vibrator.max_vibrate_ms.
+  expectSuccess(maxVibrateMs + 1);
+  expectSuccess([maxVibrateMs + 1]);
 
   var arr = [];
   for (var i = 0; i < maxVibrateListLen + 1; i++) {
     arr[i] = 0;
   }
-  expectFailure(arr);
-}
+  // The array will be truncated to have a length equal to dom.vibrator.max_vibrate_list_len.
+  expectSuccess(arr);
 
-function testSuccesses() {
+
   expectSuccess(0);
   expectSuccess([]);
   expectSuccess('1000');
@@ -68,15 +75,13 @@ var origVibratorEnabled = SpecialPowers.getBoolPref('dom.vibrator.enabled');
 // Test with the vibrator pref enabled.
 try {
   SpecialPowers.setBoolPref('dom.vibrator.enabled', true);
-  testFailures();
-  testSuccesses();
+  tests();
 
   // Everything should be the same when the vibrator is disabled -- in
   // particular, a disabled vibrator shouldn't eat failures we'd otherwise
   // observe.
   SpecialPowers.setBoolPref('dom.vibrator.enabled', false);
-  testFailures();
-  testSuccesses();
+  tests();
 }
 finally {
   SpecialPowers.setBoolPref('dom.vibrator.enabled', origVibratorEnabled);

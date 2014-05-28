@@ -149,13 +149,33 @@ static const std::string strSampleSdpAudioVideoNoIce =
   "a=candidate:1 1 UDP 2130706431 192.168.2.3 50007 typ host\r\n"
   "a=candidate:2 2 UDP 2130706431 192.168.2.4 50008 typ host\r\n";
 
-
 static const std::string strSampleCandidate =
   "a=candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host\r\n";
 
 static const std::string strSampleMid = "";
 
 static const unsigned short nSamplelevel = 2;
+
+static const std::string strG711SdpOffer =
+    "v=0\r\n"
+    "o=- 1 1 IN IP4 148.147.200.251\r\n"
+    "s=-\r\n"
+    "b=AS:64\r\n"
+    "t=0 0\r\n"
+    "a=fingerprint:sha-256 F3:FA:20:C0:CD:48:C4:5F:02:5F:A5:D3:21:D0:2D:48:"
+      "7B:31:60:5C:5A:D8:0D:CD:78:78:6C:6D:CE:CC:0C:67\r\n"
+    "m=audio 9000 RTP/AVP 0 8 126\r\n"
+    "c=IN IP4 148.147.200.251\r\n"
+    "b=TIAS:64000\r\n"
+    "a=rtpmap:0 PCMU/8000\r\n"
+    "a=rtpmap:8 PCMA/8000\r\n"
+    "a=rtpmap:126 telephone-event/8000\r\n"
+    "a=candidate:0 1 udp 2130706432 148.147.200.251 9000 typ host\r\n"
+    "a=candidate:0 2 udp 2130706432 148.147.200.251 9005 typ host\r\n"
+    "a=ice-ufrag:cYuakxkEKH+RApYE\r\n"
+    "a=ice-pwd:bwtpzLZD+3jbu8vQHvEa6Xuq\r\n"
+    "a=sendrecv\r\n";
+
 
 enum sdpTestFlags
 {
@@ -1494,26 +1514,22 @@ private:
 
     switch(flags & VIDEO_FLAGS) {
       case 0:
-            ASSERT_EQ(sdp.find("a=rtpmap:120 VP8/90000"), std::string::npos);
+            AssertWildCardExpressionNotExists(sdp, "m=video*a=rtpmap");
         break;
       case SHOULD_CHECK_VIDEO:
-            ASSERT_NE(sdp.find("a=rtpmap:120 VP8/90000"), std::string::npos);
+            AssertWildCardExpressionExists(sdp, "m=video*a=rtpmap");
         break;
       case SHOULD_SEND_VIDEO:
-            ASSERT_NE(sdp.find("a=rtpmap:120 VP8/90000\r\na=sendonly"),
-                  std::string::npos);
+            AssertWildCardExpressionExists(sdp, "m=video*a=sendonly");
         break;
       case SHOULD_RECV_VIDEO:
-            ASSERT_NE(sdp.find("a=rtpmap:120 VP8/90000\r\na=recvonly"),
-                  std::string::npos);
+            AssertWildCardExpressionExists(sdp, "m=video*a=recvonly");
         break;
       case SHOULD_SENDRECV_VIDEO:
-            ASSERT_NE(sdp.find("a=rtpmap:120 VP8/90000\r\na=sendrecv"),
-                  std::string::npos);
+            AssertWildCardExpressionExists(sdp, "m=video*a=sendrecv");
         break;
       case SHOULD_INACTIVE_VIDEO:
-            ASSERT_NE(sdp.find("a=rtpmap:120 VP8/90000\r\na=inactive"),
-                      std::string::npos);
+            AssertWildCardExpressionExists(sdp, "m=video*a=inactive");
         break;
       case SHOULD_REJECT_VIDEO:
             ASSERT_NE(sdp.find("m=video 0 "), std::string::npos);
@@ -1532,6 +1548,22 @@ private:
     } else if (!(flags & DONT_CHECK_DATA)) {
       ASSERT_EQ(sdp.find("m=application"), std::string::npos);
     }
+  }
+
+  void AssertWildCardExpressionExists(std::string sdp, std::string expr)
+  {
+    int wildcard_pos=expr.find("*");
+    size_t firstPart=sdp.find(expr.substr(0, wildcard_pos));
+    size_t secondPart=sdp.find(expr.substr(wildcard_pos+1));
+    ASSERT_TRUE(firstPart != std::string::npos && secondPart != std::string::npos);
+  }
+
+  void AssertWildCardExpressionNotExists(std::string sdp, std::string expr)
+  {
+    int wildcard_pos=expr.find("*");
+    size_t firstPart=sdp.find(expr.substr(0, wildcard_pos));
+    size_t secondPart=sdp.find(expr.substr(wildcard_pos+1));
+    ASSERT_FALSE(firstPart == std::string::npos && secondPart == std::string::npos);
   }
 };
 
@@ -2459,25 +2491,7 @@ TEST_F(SignalingTest, AudioOnlyG711Call)
   EnsureInit();
 
   sipcc::MediaConstraints constraints;
-  std::string offer =
-    "v=0\r\n"
-    "o=- 1 1 IN IP4 148.147.200.251\r\n"
-    "s=-\r\n"
-    "b=AS:64\r\n"
-    "t=0 0\r\n"
-    "a=fingerprint:sha-256 F3:FA:20:C0:CD:48:C4:5F:02:5F:A5:D3:21:D0:2D:48:"
-      "7B:31:60:5C:5A:D8:0D:CD:78:78:6C:6D:CE:CC:0C:67\r\n"
-    "m=audio 9000 RTP/AVP 0 8 126\r\n"
-    "c=IN IP4 148.147.200.251\r\n"
-    "b=TIAS:64000\r\n"
-    "a=rtpmap:0 PCMU/8000\r\n"
-    "a=rtpmap:8 PCMA/8000\r\n"
-    "a=rtpmap:126 telephone-event/8000\r\n"
-    "a=candidate:0 1 udp 2130706432 148.147.200.251 9000 typ host\r\n"
-    "a=candidate:0 2 udp 2130706432 148.147.200.251 9005 typ host\r\n"
-    "a=ice-ufrag:cYuakxkEKH+RApYE\r\n"
-    "a=ice-pwd:bwtpzLZD+3jbu8vQHvEa6Xuq\r\n"
-    "a=sendrecv\r\n";
+  const std::string& offer(strG711SdpOffer);
 
   std::cout << "Setting offer to:" << std::endl << indent(offer) << std::endl;
   a2_->SetRemote(TestObserver::OFFER, offer);
@@ -2763,7 +2777,8 @@ TEST_F(SignalingTest, OfferAnswerCheckDescriptions)
   std::cout << "Callee's Remote Description: " << std::endl
             << indent(a2_->getRemoteDescription()) << std::endl << std::endl;
 
-  ASSERT_EQ(a1_->getLocalDescription(),a2_->getRemoteDescription());
+  // bug 1014486
+  //ASSERT_EQ(a1_->getLocalDescription(),a2_->getRemoteDescription());
   ASSERT_EQ(a2_->getLocalDescription(),a1_->getRemoteDescription());
 }
 
@@ -3088,6 +3103,48 @@ TEST_F(SignalingAgentTest, CreateOfferSetLocalTrickleTestServer) {
   ASSERT_LE(2U, agent(0)->MatchingCandidates(kBogusSrflxAddress));
 
   // Verify that the candidates appear in the offer.
+  size_t match;
+  match = agent(0)->getLocalDescription().find(kBogusSrflxAddress);
+  ASSERT_LT(0U, match);
+}
+
+
+TEST_F(SignalingAgentTest, CreateAnswerSetLocalTrickleTestServer) {
+  TestStunServer::GetInstance()->SetActive(false);
+  TestStunServer::GetInstance()->SetResponseAddr(
+      kBogusSrflxAddress, kBogusSrflxPort);
+
+  CreateAgent(
+      TestStunServer::GetInstance()->addr(),
+      TestStunServer::GetInstance()->port(),
+      false);
+
+  std::string offer(strG711SdpOffer);
+  agent(0)->SetRemote(TestObserver::OFFER, offer, true,
+                 PCImplSignalingState::SignalingHaveRemoteOffer);
+  ASSERT_EQ(agent(0)->pObserver->lastStatusCode,
+            sipcc::PeerConnectionImpl::kNoError);
+
+  sipcc::MediaConstraints constraints;
+  agent(0)->CreateAnswer(constraints, offer, ANSWER_AUDIO, DONT_CHECK_AUDIO);
+
+  // Verify that the bogus addr is not there.
+  ASSERT_FALSE(agent(0)->AnswerContains(kBogusSrflxAddress));
+
+  // Now enable the STUN server.
+  TestStunServer::GetInstance()->SetActive(true);
+  agent(0)->WaitForGather();
+
+  // There shouldn't be any candidates until SetLocal.
+  ASSERT_EQ(0U, agent(0)->MatchingCandidates(kBogusSrflxAddress));
+
+  agent(0)->SetLocal(TestObserver::ANSWER, agent(0)->answer());
+  PR_Sleep(1000); // Give time for the message queues.
+
+  // Verify that we got our candidates.
+  ASSERT_LE(2U, agent(0)->MatchingCandidates(kBogusSrflxAddress));
+
+  // Verify that the candidates appear in the answer.
   size_t match;
   match = agent(0)->getLocalDescription().find(kBogusSrflxAddress);
   ASSERT_LT(0U, match);
@@ -3938,6 +3995,292 @@ TEST_F(SignalingTest, MaxFsFrCallerCodec)
 
   ASSERT_EQ(video_conduit->SendingMaxFs(), (unsigned short) 600);
   ASSERT_EQ(video_conduit->SendingMaxFr(), (unsigned short) 60);
+}
+
+// Validate offer with multiple video codecs
+TEST_F(SignalingTest, ValidateMultipleVideoCodecsInOffer)
+{
+  EnsureInit();
+  sipcc::MediaConstraints constraints;
+
+  a1_->CreateOffer(constraints, OFFER_AV, SHOULD_SENDRECV_AV);
+  std::string offer = a1_->offer();
+
+  ASSERT_NE(offer.find("RTP/SAVPF 120 126 97"), std::string::npos);
+  ASSERT_NE(offer.find("a=rtpmap:120 VP8/90000"), std::string::npos);
+  ASSERT_NE(offer.find("a=rtpmap:126 H264/90000"), std::string::npos);
+  ASSERT_NE(offer.find("a=rtpmap:97 H264/90000"), std::string::npos);
+  ASSERT_NE(offer.find("a=fmtp:126 profile-level-id="), std::string::npos);
+  ASSERT_NE(offer.find("a=fmtp:97 profile-level-id="), std::string::npos);
+  ASSERT_NE(offer.find("a=rtcp-fb:120 nack"), std::string::npos);
+  ASSERT_NE(offer.find("a=rtcp-fb:120 nack pli"), std::string::npos);
+  ASSERT_NE(offer.find("a=rtcp-fb:120 ccm fir"), std::string::npos);
+  ASSERT_NE(offer.find("a=rtcp-fb:126 nack"), std::string::npos);
+  ASSERT_NE(offer.find("a=rtcp-fb:126 nack pli"), std::string::npos);
+  ASSERT_NE(offer.find("a=rtcp-fb:126 ccm fir"), std::string::npos);
+  ASSERT_NE(offer.find("a=rtcp-fb:97 nack"), std::string::npos);
+  ASSERT_NE(offer.find("a=rtcp-fb:97 nack pli"), std::string::npos);
+  ASSERT_NE(offer.find("a=rtcp-fb:97 ccm fir"), std::string::npos);
+}
+
+// Remove VP8 from offer and check that answer negotiates H264 P1 correctly
+TEST_F(SignalingTest, RemoveVP8FromOfferWithP1First)
+{
+  EnsureInit();
+
+  sipcc::MediaConstraints constraints;
+  size_t match;
+
+  a1_->CreateOffer(constraints, OFFER_AV, SHOULD_SENDRECV_AV);
+
+  // Remove VP8 from offer
+  std::string offer = a1_->offer();
+  offer.replace(match = offer.find("RTP/SAVPF 120"),
+    strlen("RTP/SAVPF 126"), "RTP/SAVPF");
+  ParsedSDP sdpWrapper(offer);
+  sdpWrapper.DeleteAllLines("a=rtcp-fb:120");
+  sdpWrapper.DeleteLine("a=rtpmap:120");
+
+  std::cout << "Modified SDP " << std::endl
+            << indent(sdpWrapper.getSdp()) << std::endl;
+
+  // P1 should be offered first
+  ASSERT_NE(offer.find("RTP/SAVPF 126"), std::string::npos);
+
+  a1_->SetLocal(TestObserver::OFFER, sdpWrapper.getSdp());
+  a2_->SetRemote(TestObserver::OFFER, sdpWrapper.getSdp(), false);
+  a2_->CreateAnswer(constraints, sdpWrapper.getSdp(),
+                   OFFER_AV|ANSWER_AV, SHOULD_SENDRECV_AV);
+
+  std::string answer(a2_->answer());
+
+  // Validate answer SDP
+  ASSERT_NE(answer.find("RTP/SAVPF 126"), std::string::npos);
+  ASSERT_NE(answer.find("a=rtpmap:126 H264/90000"), std::string::npos);
+  ASSERT_NE(answer.find("a=rtcp-fb:126 nack"), std::string::npos);
+  ASSERT_NE(answer.find("a=rtcp-fb:126 nack pli"), std::string::npos);
+  ASSERT_NE(answer.find("a=rtcp-fb:126 ccm fir"), std::string::npos);
+  // Ensure VP8 and P0 removed
+  ASSERT_EQ(answer.find("a=rtpmap:97 H264/90000"), std::string::npos);
+  ASSERT_EQ(answer.find("a=rtpmap:120 VP8/90000"), std::string::npos);
+  ASSERT_EQ(answer.find("a=rtcp-fb:120"), std::string::npos);
+  ASSERT_EQ(answer.find("a=rtcp-fb:97"), std::string::npos);
+}
+
+// Insert H.264 before VP8 in Offer, check answer selects H.264
+TEST_F(SignalingTest, OfferWithH264BeforeVP8)
+{
+  EnsureInit();
+
+  sipcc::MediaConstraints constraints;
+  size_t match;
+
+  a1_->CreateOffer(constraints, OFFER_AV, SHOULD_SENDRECV_AV);
+
+  // Swap VP8 and P1 in offer
+  std::string offer = a1_->offer();
+  offer.replace(match = offer.find("RTP/SAVPF 120 126 97"),
+    strlen("RTP/SAVPF 126 120 97"), "RTP/SAVPF 126 120 97");
+
+  offer.replace(match = offer.find("a=rtpmap:126 H264/90000"),
+    strlen("a=rtpmap:120 VP8/90000"), "a=rtpmap:120 VP8/90000");
+  offer.replace(match = offer.find("a=rtpmap:120 VP8/90000"),
+    strlen("a=rtpmap:126 H264/90000"), "a=rtpmap:126 H264/90000");
+
+  offer.replace(match = offer.find("a=rtcp-fb:126 nack"),
+    strlen("a=rtcp-fb:120 nack"), "a=rtcp-fb:120 nack");
+  offer.replace(match = offer.find("a=rtcp-fb:126 nack pli"),
+    strlen("a=rtcp-fb:120 nack pli"), "a=rtcp-fb:120 nack pli");
+  offer.replace(match = offer.find("a=rtcp-fb:126 ccm fir"),
+    strlen("a=rtcp-fb:120 ccm fir"), "a=rtcp-fb:120 ccm fir");
+
+  offer.replace(match = offer.find("a=rtcp-fb:120 nack"),
+    strlen("a=rtcp-fb:126 nack"), "a=rtcp-fb:126 nack");
+  offer.replace(match = offer.find("a=rtcp-fb:120 nack pli"),
+    strlen("a=rtcp-fb:126 nack pli"), "a=rtcp-fb:126 nack pli");
+  offer.replace(match = offer.find("a=rtcp-fb:120 ccm fir"),
+    strlen("a=rtcp-fb:126 ccm fir"), "a=rtcp-fb:126 ccm fir");
+
+  std::cout << "Modified SDP " << std::endl
+            << indent(offer) << std::endl;
+
+  // P1 should be offered first
+  ASSERT_NE(offer.find("RTP/SAVPF 126 120 97"), std::string::npos);
+
+  a1_->SetLocal(TestObserver::OFFER, offer);
+  a2_->SetRemote(TestObserver::OFFER, offer, false);
+  a2_->CreateAnswer(constraints, offer,
+                   OFFER_AV|ANSWER_AV, SHOULD_SENDRECV_AV);
+
+  std::string answer(a2_->answer());
+
+  // Validate answer SDP
+  ASSERT_NE(answer.find("RTP/SAVPF 126"), std::string::npos);
+  ASSERT_NE(answer.find("a=rtpmap:126 H264/90000"), std::string::npos);
+  ASSERT_NE(answer.find("a=rtcp-fb:126 nack"), std::string::npos);
+  ASSERT_NE(answer.find("a=rtcp-fb:126 nack pli"), std::string::npos);
+  ASSERT_NE(answer.find("a=rtcp-fb:126 ccm fir"), std::string::npos);
+  // VP8 and P0 removed
+  ASSERT_EQ(answer.find("a=rtpmap:97 H264/90000"), std::string::npos);
+  ASSERT_EQ(answer.find("a=rtpmap:120 VP8/90000"), std::string::npos);
+  ASSERT_EQ(answer.find("a=rtcp-fb:120"), std::string::npos);
+  ASSERT_EQ(answer.find("a=rtcp-fb:97"), std::string::npos);
+}
+
+// Remove H.264 P1 and VP8 from offer, check answer negotiates H.264 P0
+TEST_F(SignalingTest, OfferWithOnlyH264P0)
+{
+  EnsureInit();
+
+  sipcc::MediaConstraints constraints;
+  size_t match;
+
+  a1_->CreateOffer(constraints, OFFER_AV, SHOULD_SENDRECV_AV);
+
+  // Remove VP8 from offer
+  std::string offer = a1_->offer();
+  offer.replace(match = offer.find("RTP/SAVPF 120 126"),
+    strlen("RTP/SAVPF 120 126"), "RTP/SAVPF");
+  ParsedSDP sdpWrapper(offer);
+  sdpWrapper.DeleteAllLines("a=rtcp-fb:120");
+  sdpWrapper.DeleteLine("a=rtpmap:120");
+  sdpWrapper.DeleteAllLines("a=rtcp-fb:126");
+  sdpWrapper.DeleteLine("a=rtpmap:126");
+  sdpWrapper.DeleteLine("a=fmtp:126");
+
+  std::cout << "Modified SDP " << std::endl
+            << indent(sdpWrapper.getSdp()) << std::endl;
+
+  // Offer shouldn't have P1 or VP8 now
+  offer = sdpWrapper.getSdp();
+  ASSERT_EQ(offer.find("a=rtpmap:126 H264/90000"), std::string::npos);
+  ASSERT_EQ(offer.find("a=rtpmap:120 VP8/90000"), std::string::npos);
+
+  // P0 should be offered first
+  ASSERT_NE(offer.find("RTP/SAVPF 97"), std::string::npos);
+
+  a1_->SetLocal(TestObserver::OFFER, offer);
+  a2_->SetRemote(TestObserver::OFFER, offer, false);
+  a2_->CreateAnswer(constraints, offer,
+                   OFFER_AV|ANSWER_AV, SHOULD_SENDRECV_AV);
+
+  std::string answer(a2_->answer());
+
+  // validate answer SDP
+  ASSERT_NE(answer.find("RTP/SAVPF 97"), std::string::npos);
+  ASSERT_NE(answer.find("a=rtpmap:97 H264/90000"), std::string::npos);
+  ASSERT_NE(answer.find("a=rtcp-fb:97 nack"), std::string::npos);
+  ASSERT_NE(answer.find("a=rtcp-fb:97 nack pli"), std::string::npos);
+  ASSERT_NE(answer.find("a=rtcp-fb:97 ccm fir"), std::string::npos);
+  // Ensure VP8 and P1 removed
+  ASSERT_EQ(answer.find("a=rtpmap:126 H264/90000"), std::string::npos);
+  ASSERT_EQ(answer.find("a=rtpmap:120 VP8/90000"), std::string::npos);
+  ASSERT_EQ(answer.find("a=rtcp-fb:120"), std::string::npos);
+  ASSERT_EQ(answer.find("a=rtcp-fb:126"), std::string::npos);
+}
+
+// Test negotiating an answer which has only H.264 P1
+// Which means replace VP8 with H.264 P1 in answer
+TEST_F(SignalingTest, AnswerWithoutVP8)
+{
+  EnsureInit();
+
+  sipcc::MediaConstraints constraints;
+
+  a1_->CreateOffer(constraints, OFFER_AV, SHOULD_SENDRECV_AV);
+  a1_->SetLocal(TestObserver::OFFER, a1_->offer());
+  a2_->SetRemote(TestObserver::OFFER, a1_->offer(), false);
+  a2_->CreateAnswer(constraints, a1_->offer(),
+                   OFFER_AV|ANSWER_AV, SHOULD_SENDRECV_AV);
+
+  std::string answer(a2_->answer());
+
+  // Ensure answer has VP8
+  ASSERT_NE(answer.find("\r\na=rtpmap:120 VP8/90000"), std::string::npos);
+
+  // Replace VP8 with H.264 P1
+  ParsedSDP sdpWrapper(a2_->answer());
+  sdpWrapper.AddLine("a=fmtp:126 profile-level-id=42E00C;packetization-mode=1\r\n");
+  answer = sdpWrapper.getSdp();
+  answer.replace(answer.find("RTP/SAVPF 120"), strlen("RTP/SAVPF 120"), "RTP/SAVPF 126");
+  answer.replace(answer.find("\r\na=rtpmap:120 VP8/90000"),
+    strlen("\r\na=rtpmap:126 H264/90000"), "\r\na=rtpmap:126 H264/90000");
+  answer.replace(answer.find("\r\na=rtcp-fb:120 nack"),
+    strlen("\r\na=rtcp-fb:126 nack"), "\r\na=rtcp-fb:126 nack");
+  answer.replace(answer.find("\r\na=rtcp-fb:120 nack pli"),
+    strlen("\r\na=rtcp-fb:126 nack pli"), "\r\na=rtcp-fb:126 nack pli");
+  answer.replace(answer.find("\r\na=rtcp-fb:120 ccm fir"),
+    strlen("\r\na=rtcp-fb:126 ccm fir"), "\r\na=rtcp-fb:126 ccm fir");
+  std::cout << "Modified SDP " << std::endl << indent(answer) << std::endl;
+
+  a2_->SetLocal(TestObserver::ANSWER, answer, false);
+
+  ASSERT_EQ(a2_->pObserver->lastStatusCode,
+            sipcc::PeerConnectionImpl::kNoError);
+
+  a1_->SetRemote(TestObserver::ANSWER, answer, false);
+
+  ASSERT_EQ(a1_->pObserver->lastStatusCode,
+            sipcc::PeerConnectionImpl::kNoError);
+
+  ASSERT_TRUE_WAIT(a1_->IceCompleted() == true, kDefaultTimeout);
+  ASSERT_TRUE_WAIT(a2_->IceCompleted() == true, kDefaultTimeout);
+
+  a1_->CloseSendStreams();
+  a2_->CloseReceiveStreams();
+}
+
+// Test using a non preferred dynamic video payload type on answer negotiation
+TEST_F(SignalingTest, UseNonPrefferedPayloadTypeOnAnswer)
+{
+  EnsureInit();
+
+  sipcc::MediaConstraints constraints;
+  a1_->CreateOffer(constraints, OFFER_AV, SHOULD_SENDRECV_AV);
+  a1_->SetLocal(TestObserver::OFFER, a1_->offer());
+  a2_->SetRemote(TestObserver::OFFER, a1_->offer(), false);
+  a2_->CreateAnswer(constraints, a1_->offer(),
+                   OFFER_AV|ANSWER_AV, SHOULD_SENDRECV_AV);
+
+  std::string answer(a2_->answer());
+
+  // Ensure answer has VP8
+  ASSERT_NE(answer.find("\r\na=rtpmap:120 VP8/90000"), std::string::npos);
+
+  // Replace VP8 Payload Type with a non preferred value
+  answer.replace(answer.find("RTP/SAVPF 120"),
+    strlen("RTP/SAVPF 121"), "RTP/SAVPF 121");
+  answer.replace(answer.find("\r\na=rtpmap:120 VP8/90000"),
+    strlen("\r\na=rtpmap:121 VP8/90000"), "\r\na=rtpmap:121 VP8/90000");
+  answer.replace(answer.find("\r\na=rtcp-fb:120 nack"),
+    strlen("\r\na=rtcp-fb:121 nack"), "\r\na=rtcp-fb:121 nack");
+  answer.replace(answer.find("\r\na=rtcp-fb:120 nack pli"),
+    strlen("\r\na=rtcp-fb:121 nack pli"), "\r\na=rtcp-fb:121 nack pli");
+  answer.replace(answer.find("\r\na=rtcp-fb:120 ccm fir"),
+    strlen("\r\na=rtcp-fb:121 ccm fir"), "\r\na=rtcp-fb:121 ccm fir");
+
+  std::cout << "Modified SDP " << std::endl
+            << indent(answer) << std::endl;
+
+  a2_->SetLocal(TestObserver::ANSWER, answer, false);
+
+  ASSERT_EQ(a2_->pObserver->lastStatusCode,
+            sipcc::PeerConnectionImpl::kNoError);
+
+  a1_->SetRemote(TestObserver::ANSWER, answer, false);
+
+  ASSERT_EQ(a1_->pObserver->lastStatusCode,
+            sipcc::PeerConnectionImpl::kNoError);
+
+  ASSERT_TRUE_WAIT(a1_->IceCompleted() == true, kDefaultTimeout);
+  ASSERT_TRUE_WAIT(a2_->IceCompleted() == true, kDefaultTimeout);
+
+  // Wait for some data to get written
+  ASSERT_TRUE_WAIT(a1_->GetPacketsSent(0) >= 40 &&
+                   a2_->GetPacketsReceived(0) >= 40, kDefaultTimeout * 2);
+
+  a1_->CloseSendStreams();
+  a2_->CloseReceiveStreams();
 }
 
 } // End namespace test.

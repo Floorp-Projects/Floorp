@@ -240,6 +240,18 @@ public:
   void Rewind();
 
   /**
+   * Marks this element as disabled or not. If the element is disabled, it
+   * will ignore any future samples and discard any accumulated timing state.
+   *
+   * This is used by SVG to "turn off" timed elements when the associated
+   * animation element has failing conditional processing tests.
+   *
+   * Returns true if the disabled state of the timed element was changed
+   * as a result of this call (i.e. it was not a redundant call).
+   */
+  bool SetIsDisabled(bool aIsDisabled);
+
+  /**
    * Attempts to set an attribute on this timed element.
    *
    * @param aAttribute  The name of the attribute to set. The namespace of this
@@ -422,6 +434,28 @@ protected:
    * This state is described in SMIL 3.0, section 5.4.3, Resetting element state
    */
   void Reset();
+
+  /**
+   * Clears all accumulated timing state except for those instance times for
+   * which aRemove does not return true.
+   *
+   * Unlike the Reset method which only clears instance times, this clears the
+   * element's state, intervals (including current interval), and tells the
+   * client animation function to stop applying a result. In effect, it returns
+   * the element to its initial state but preserves any instance times excluded
+   * by the passed-in function.
+   */
+  void ClearTimingState(RemovalTestFunction aRemove);
+
+  /**
+   * Recreates timing state by re-applying begin/end attributes specified on
+   * the associated animation element.
+   *
+   * Note that this does not completely restore the information cleared by
+   * ClearTimingState since it leaves the element in the startup state.
+   * The element state will be updated on the next sample.
+   */
+  void RebuildTimingState(RemovalTestFunction aRemove);
 
   /**
    * Completes a seek operation by sending appropriate events and, in the case
@@ -616,6 +650,7 @@ protected:
   bool mDeferIntervalUpdates;
   bool mDoDeferredUpdate; // Set if an update to the current interval was
                           // requested while mDeferIntervalUpdates was set
+  bool mIsDisabled;
 
   // Stack-based helper class to call UpdateCurrentInterval when it is destroyed
   class AutoIntervalUpdater;

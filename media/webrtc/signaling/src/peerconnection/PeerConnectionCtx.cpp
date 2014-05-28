@@ -27,6 +27,7 @@
 #ifdef MOZILLA_INTERNAL_API
 #include "mozilla/dom/RTCPeerConnectionBinding.h"
 #include "mozilla/Preferences.h"
+#include <mozilla/Types.h>
 #endif
 
 #include "nsNetCID.h" // NS_SOCKETTRANSPORTSERVICE_CONTRACTID
@@ -252,6 +253,28 @@ typedef Vector<nsAutoPtr<RTCStatsQuery>> RTCStatsQueries;
 // - containers that are only safe on main thread, with members only safe on STS,
 // - hence the there and back again approach.
 
+static auto
+FindId(const Sequence<RTCInboundRTPStreamStats>& aArray,
+       const nsString &aId) -> decltype(aArray.Length()) {
+  for (decltype(aArray.Length()) i = 0; i < aArray.Length(); i++) {
+    if (aArray[i].mId.Value() == aId) {
+      return i;
+    }
+  }
+  return aArray.NoIndex;
+}
+
+static auto
+FindId(const nsTArray<nsAutoPtr<RTCStatsReportInternal>>& aArray,
+       const nsString &aId) -> decltype(aArray.Length()) {
+  for (decltype(aArray.Length()) i = 0; i < aArray.Length(); i++) {
+    if (aArray[i]->mPcid == aId) {
+      return i;
+    }
+  }
+  return aArray.NoIndex;
+}
+
 static void
 FreeOnMain_m(nsAutoPtr<RTCStatsQueries> aQueryList) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -260,15 +283,28 @@ FreeOnMain_m(nsAutoPtr<RTCStatsQueries> aQueryList) {
 static void
 EverySecondTelemetryCallback_s(nsAutoPtr<RTCStatsQueries> aQueryList) {
   using namespace Telemetry;
+ 
+  if(!PeerConnectionCtx::isActive()) {
+    return;
+  }
+  PeerConnectionCtx *ctx = PeerConnectionCtx::GetInstance();
 
   for (auto q = aQueryList->begin(); q != aQueryList->end(); ++q) {
     PeerConnectionImpl::ExecuteStatsQuery_s(*q);
-    auto& r = (*q)->report;
+    auto& r = *(*q)->report;
     if (r.mInboundRTPStreamStats.WasPassed()) {
+      // First, get reports from a second ago, if any, for calculations below
+      const Sequence<RTCInboundRTPStreamStats> *lastInboundStats = nullptr;
+      {
+        auto i = FindId(ctx->mLastReports, r.mPcid);
+        if (i != ctx->mLastReports.NoIndex) {
+          lastInboundStats = &ctx->mLastReports[i]->mInboundRTPStreamStats.Value();
+        }
+      }
+      // Then, look for the things we want telemetry on
       auto& array = r.mInboundRTPStreamStats.Value();
-      for (uint32_t i = 0; i < array.Length(); i++) {
+      for (decltype(array.Length()) i = 0; i < array.Length(); i++) {
         auto& s = array[i];
-        MOZ_ASSERT(s.mId.WasPassed());
         bool isAudio = (s.mId.Value().Find("audio") != -1);
         if (s.mPacketsLost.WasPassed()) {
           Accumulate(s.mIsRemote?
@@ -292,8 +328,33 @@ EverySecondTelemetryCallback_s(nsAutoPtr<RTCStatsQueries> aQueryList) {
                               WEBRTC_VIDEO_QUALITY_OUTBOUND_RTT,
                       s.mMozRtt.Value());
         }
+        if (lastInboundStats && s.mBytesReceived.WasPassed()) {
+          auto& laststats = *lastInboundStats;
+          auto i = FindId(laststats, s.mId.Value());
+          if (i != laststats.NoIndex) {
+            auto& lasts = laststats[i];
+            if (lasts.mBytesReceived.WasPassed()) {
+              auto delta_ms = int32_t(s.mTimestamp.Value() -
+                                      lasts.mTimestamp.Value());
+              if (delta_ms > 0 && delta_ms < 60000) {
+                Accumulate(s.mIsRemote?
+                           (isAudio? WEBRTC_AUDIO_QUALITY_OUTBOUND_BANDWIDTH_KBITS :
+                                     WEBRTC_VIDEO_QUALITY_OUTBOUND_BANDWIDTH_KBITS) :
+                           (isAudio? WEBRTC_AUDIO_QUALITY_INBOUND_BANDWIDTH_KBITS :
+                                     WEBRTC_VIDEO_QUALITY_INBOUND_BANDWIDTH_KBITS),
+                           ((s.mBytesReceived.Value() -
+                             lasts.mBytesReceived.Value()) * 8) / delta_ms);
+              }
+            }
+          }
+        }
       }
     }
+  }
+  // Steal and hang on to reports for the next second
+  ctx->mLastReports.Clear();
+  for (auto q = aQueryList->begin(); q != aQueryList->end(); ++q) {
+    ctx->mLastReports.AppendElement((*q)->report.forget()); // steal avoids copy
   }
   // Container must be freed back on main thread
   NS_DispatchToMainThread(WrapRunnableNM(&FreeOnMain_m, aQueryList),
@@ -359,6 +420,9 @@ nsresult PeerConnectionCtx::Initialize() {
   if (Preferences::GetBool("media.peerconnection.video.h264_enabled")) {
     codecMask |= VCM_CODEC_RESOURCE_H264;
   }
+#else
+  // Outside MOZILLA_INTERNAL_API ensures H.264 available in unit tests
+  codecMask |= VCM_CODEC_RESOURCE_H264;
 #endif
 
   codecMask |= VCM_CODEC_RESOURCE_VP8;
@@ -390,8 +454,8 @@ nsresult PeerConnectionCtx::Initialize() {
   PR_NotifyAllCondVar(ccAppReadyToStartCond);
   PR_Unlock(ccAppReadyToStartLock);
 
-  mConnectionCounter = 0;
 #ifdef MOZILLA_INTERNAL_API
+  mConnectionCounter = 0;
   Telemetry::GetHistogramById(Telemetry::WEBRTC_CALL_COUNT)->Add(0);
 
   mTelemetryTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
@@ -415,9 +479,11 @@ nsresult PeerConnectionCtx::Cleanup() {
 PeerConnectionCtx::~PeerConnectionCtx() {
     // ensure mTelemetryTimer ends on main thread
   MOZ_ASSERT(NS_IsMainThread());
+#ifdef MOZILLA_INTERNAL_API
   if (mTelemetryTimer) {
     mTelemetryTimer->Cancel();
   }
+#endif
 };
 
 CSF::CC_CallPtr PeerConnectionCtx::createCall() {

@@ -453,12 +453,25 @@ AutoMounter::UpdateState()
     Volume::STATE   volState = vol->State();
 
     if (vol->State() == nsIVolume::STATE_MOUNTED) {
-      LOG("UpdateState: Volume %s is %s and %s @ %s gen %d locked %d sharing %c",
+      LOG("UpdateState: Volume %s is %s and %s @ %s gen %d locked %d sharing %s",
           vol->NameStr(), vol->StateStr(),
           vol->MediaPresent() ? "inserted" : "missing",
           vol->MountPoint().get(), vol->MountGeneration(),
           (int)vol->IsMountLocked(),
-          vol->CanBeShared() ? (vol->IsSharingEnabled() ? 'y' : 'n') : 'x');
+          vol->CanBeShared() ? (vol->IsSharingEnabled() ? (vol->IsSharing() ? "en-y" : "en-n") : "dis") : "x");
+      if (vol->IsSharing() && !usbCablePluggedIn) {
+        // We call SetIsSharing(true) below to indicate intent to share. This
+        // causes a state change which notifys apps, and they'll close any
+        // open files, which will initiate the change away from the mounted
+        // state and into the sharing state. Normally, when the volume
+        // transitions back to the mounted state, then vol->mIsSharing gets set
+        // to false. However, if the user pulls the USB cable before we
+        // actually start sharing, then the volume never actually leaves
+        // the mounted state (and hence never transitions from
+        // sharing -> mounted), and mIsSharing never gets set back to false.
+        // So we clear mIsSharing here.
+        vol->SetIsSharing(false);
+      }
     } else {
       LOG("UpdateState: Volume %s is %s and %s", vol->NameStr(), vol->StateStr(),
           vol->MediaPresent() ? "inserted" : "missing");

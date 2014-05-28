@@ -19,6 +19,8 @@ if CONFIG['MOZ_WEBAPP_RUNTIME']:
 add_tier_dir('app', 'b2g/chrome')
 add_tier_dir('app', 'b2g/components')
 
+add_tier_dir('app', 'b2g/dev/app')
+
 # Never add tier dirs after browser because they apparently won't get
 # packaged properly on Mac.
 add_tier_dir('app', 'browser')

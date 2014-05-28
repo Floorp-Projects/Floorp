@@ -784,7 +784,8 @@ var gBrowserInit = {
     gPageStyleMenu.init();
     LanguageDetectionListener.init();
 
-    messageManager.loadFrameScript("chrome://browser/content/content.js", true);
+    let mm = window.getGroupMessageManager("browsers");
+    mm.loadFrameScript("chrome://browser/content/content.js", true);
 
     // initialize observers and listeners
     // and give C++ access to gBrowser

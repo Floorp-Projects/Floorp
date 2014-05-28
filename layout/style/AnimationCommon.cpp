@@ -362,16 +362,22 @@ ComputedTimingFunction::GetValue(double aPortion) const
 
 } /* end sub-namespace css */
 
+// In the Web Animations model, the time fraction can be outside the range
+// [0.0, 1.0] but it shouldn't be Infinity.
+const double ComputedTiming::kNullTimeFraction = NS_IEEEPositiveInfinity();
+
 bool
 ElementAnimation::IsRunningAt(TimeStamp aTime) const
 {
-  if (IsPaused() || mIterationDuration.ToMilliseconds() <= 0.0 ||
+  if (IsPaused() || mTiming.mIterationDuration.ToMilliseconds() <= 0.0 ||
       mStartTime.IsNull()) {
     return false;
   }
 
-  double iterationsElapsed = ElapsedDurationAt(aTime) / mIterationDuration;
-  return 0.0 <= iterationsElapsed && iterationsElapsed < mIterationCount;
+  double iterationsElapsed =
+    ElapsedDurationAt(aTime) / mTiming.mIterationDuration;
+  return 0.0 <= iterationsElapsed &&
+         iterationsElapsed < mTiming.mIterationCount;
 }
 
 bool
@@ -384,6 +390,88 @@ ElementAnimation::HasAnimationOfProperty(nsCSSProperty aProperty) const
     }
   }
   return false;
+}
+
+ComputedTiming
+ElementAnimation::GetComputedTimingAt(TimeDuration aElapsedDuration,
+                                      const AnimationTiming& aTiming)
+{
+  // Always return the same object to benefit from return-value optimization.
+  ComputedTiming result;
+
+  // Set |currentIterationCount| to the (fractional) number of
+  // iterations we've completed up to the current position.
+  double currentIterationCount = aElapsedDuration / aTiming.mIterationDuration;
+  if (currentIterationCount >= aTiming.mIterationCount) {
+    result.mPhase = ComputedTiming::AnimationPhase_After;
+    if (!aTiming.FillsForwards()) {
+      // The animation isn't active or filling at this time.
+      result.mTimeFraction = ComputedTiming::kNullTimeFraction;
+      return result;
+    }
+    currentIterationCount = aTiming.mIterationCount;
+  } else if (currentIterationCount < 0.0) {
+    result.mPhase = ComputedTiming::AnimationPhase_Before;
+    if (!aTiming.FillsBackwards()) {
+      // The animation isn't active or filling at this time.
+      result.mTimeFraction = ComputedTiming::kNullTimeFraction;
+      return result;
+    }
+    currentIterationCount = 0.0;
+  } else {
+    result.mPhase = ComputedTiming::AnimationPhase_Active;
+  }
+
+  // Set |positionInIteration| to the position from 0% to 100% along
+  // the keyframes.
+  NS_ABORT_IF_FALSE(currentIterationCount >= 0.0, "must be positive");
+  double positionInIteration = fmod(currentIterationCount, 1);
+
+  // Set |whichIteration| to the integral index of the current iteration.
+  // Casting to an integer here gives us floor(currentIterationCount).
+  // We don't check for overflow here since the range of an unsigned 64-bit
+  // integer is more than enough (i.e. we could handle an animation that
+  // iterates every *microsecond* for about 580,000 years).
+  uint64_t whichIteration = static_cast<uint64_t>(currentIterationCount);
+
+  // Check for the end of the final iteration.
+  if (whichIteration != 0 &&
+      result.mPhase == ComputedTiming::AnimationPhase_After &&
+      aTiming.mIterationCount == floor(aTiming.mIterationCount)) {
+    // When the animation's iteration count is an integer (as it
+    // normally is), we need to end at 100% of its final iteration
+    // rather than 0% of the next one (unless it's zero).
+    whichIteration -= 1;
+    positionInIteration = 1.0;
+  }
+
+  bool thisIterationReverse = false;
+  switch (aTiming.mDirection) {
+    case NS_STYLE_ANIMATION_DIRECTION_NORMAL:
+      thisIterationReverse = false;
+      break;
+    case NS_STYLE_ANIMATION_DIRECTION_REVERSE:
+      thisIterationReverse = true;
+      break;
+    case NS_STYLE_ANIMATION_DIRECTION_ALTERNATE:
+      // uint64_t has more integer precision than double does, so if
+      // whichIteration is that large, we've already lost and we're just
+      // guessing.  But the animation is presumably oscillating so fast
+      // it doesn't matter anyway.
+      thisIterationReverse = (whichIteration & 1) == 1;
+      break;
+    case NS_STYLE_ANIMATION_DIRECTION_ALTERNATE_REVERSE:
+      // see as previous case
+      thisIterationReverse = (whichIteration & 1) == 0;
+      break;
+  }
+  if (thisIterationReverse) {
+    positionInIteration = 1.0 - positionInIteration;
+  }
+
+  result.mTimeFraction = positionInIteration;
+  result.mCurrentIteration = whichIteration;
+  return result;
 }
 
 namespace css {

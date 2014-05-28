@@ -672,8 +672,8 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "aus4.mozilla.org", true, true, true, 3, &kPinset_mozilla },
   { "blog.torproject.org", true, true, false, -1, &kPinset_tor },
   { "business.twitter.com", true, false, false, -1, &kPinset_twitterCom },
-  { "cdn.mozilla.net", true, true, true, -1, &kPinset_mozilla },
-  { "cdn.mozilla.org", true, true, true, -1, &kPinset_mozilla },
+  { "cdn.mozilla.net", true, false, true, -1, &kPinset_mozilla },
+  { "cdn.mozilla.org", true, false, true, -1, &kPinset_mozilla },
   { "chart.apis.google.com", true, true, false, -1, &kPinset_google_root_pems },
   { "check.torproject.org", true, true, false, -1, &kPinset_tor },
   { "checkout.google.com", true, true, false, -1, &kPinset_google_root_pems },
@@ -936,7 +936,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "liberty.lavabit.com", true, true, false, -1, &kPinset_lavabit },
   { "mail.google.com", true, true, false, -1, &kPinset_google_root_pems },
   { "market.android.com", true, true, false, -1, &kPinset_google_root_pems },
-  { "media.mozilla.com", true, true, true, -1, &kPinset_mozilla },
+  { "media.mozilla.com", true, false, true, -1, &kPinset_mozilla },
   { "mobile.twitter.com", true, false, false, -1, &kPinset_twitterCom },
   { "oauth.twitter.com", true, false, false, -1, &kPinset_twitterCom },
   { "pinningtest.appspot.com", true, false, false, -1, &kPinset_test },
@@ -988,4 +988,4 @@ static const int kPublicKeyPinningPreloadListLength = 322;
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1411681083658000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1412099175458000);

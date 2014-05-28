@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test conditional processing tests applied to animations</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" width="120px" height="120px"
+     onload="this.pauseAnimations()">
+  <circle r="50" fill="blue" id="circle">
+    <set attributeName="cy" to="100" begin="0s" dur="100s" id="a"/>
+    <set attributeName="cx" to="100" begin="a.end" dur="100s" id="b"/>
+  </circle>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var svg = document.getElementById("svg"),
+    a = document.getElementById("a"),
+    b = document.getElementById("b"),
+    circle = document.getElementById("circle");
+
+// Check initial state
+svg.setCurrentTime(50);
+is(a.getStartTime(), 0, "a has resolved start time at start");
+is(circle.cy.animVal.value, 100, "a is in effect at start");
+is(b.getStartTime(), 100, "b has resolved start time at start");
+
+// Add a failing conditional processing test
+a.setAttribute("requiredFeatures",
+               "http://www.w3.org/TR/SVGX/feature#SharksWithLasers");
+ok(hasUnresolvedStartTime(a),
+   "a has unresolved start time with failing conditional processing test");
+is(circle.cy.animVal.value, 0,
+   "a is not in effect with failing conditional processing test");
+ok(hasUnresolvedStartTime(b),
+   "b has unresolved start time with failing conditional processing test on a");
+
+// Remove failing conditional processing test
+a.removeAttribute("requiredFeatures");
+is(a.getStartTime(), 0, "a has resolved start time after removing test");
+is(circle.cy.animVal.value, 100, "a is in effect after removing test");
+is(b.getStartTime(), 100, "b has resolved start time after removing test on a");
+
+// Add another failing conditional processing test
+// According to the spec, if a null string or empty string value is set for
+// the 'requiredFeatures' attribute, the attribute returns "false".
+a.setAttribute("requiredFeatures", "");
+
+// Fast forward until |a| would have finished
+var endEventsReceived = 0;
+a.addEventListener("endEvent", function() { endEventsReceived++; });
+svg.setCurrentTime(150);
+is(endEventsReceived, 0,
+   "a does not dispatch end events with failing condition processing test");
+is(circle.cx.animVal.value, 0,
+   "b is not in effect with failing conditional processing test on a");
+
+// Make test pass
+a.setAttribute("requiredFeatures",
+               "http://www.w3.org/TR/SVG11/feature#Animation");
+is(circle.cx.animVal.value, 100,
+   "b is in effect with passing conditional processing test on a");
+
+function hasUnresolvedStartTime(anim) {
+  // getStartTime throws INVALID_STATE_ERR when there is no current interval
+  try {
+    anim.getStartTime();
+    return false;
+  } catch(e) {
+    return true;
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

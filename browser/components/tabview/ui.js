@@ -174,7 +174,7 @@ let UI = {
       });
 
       // ___ setup DOMWillOpenModalDialog message handler
-      let mm = gWindow.messageManager;
+      let mm = gWindow.getGroupMessageManager("browsers");
       let callback = this._onDOMWillOpenModalDialog.bind(this);
       mm.addMessageListener("Panorama:DOMWillOpenModalDialog", callback);
 
@@ -235,7 +235,7 @@ let UI = {
 
       // ___ load frame script
       let frameScript = "chrome://browser/content/tabview-content.js";
-      gWindow.messageManager.loadFrameScript(frameScript, true);
+      mm.loadFrameScript(frameScript, true);
 
       // ___ Done
       this._frameInitialized = true;
