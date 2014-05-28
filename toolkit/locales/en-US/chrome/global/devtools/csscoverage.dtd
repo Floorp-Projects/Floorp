@@ -16,12 +16,12 @@
   -  Text on the button to go back to the main style editor -->
 <!ENTITY csscoverage.backButton "Back">
 
-<!-- LOCALIZATION NOTE (csscoverage.unused, csscoverage.noMatch):
+<!-- LOCALIZATION NOTE (csscoverage.unused, csscoverage.noMatches):
   -  This is the heading and body text for the CSS usage part of the report -->
 <!ENTITY csscoverage.unused "Unused Rules">
-<!ENTITY csscoverage.noMatch "No matches found for the following rules:">
+<!ENTITY csscoverage.noMatches "No matches found for the following rules:">
 
-<!-- LOCALIZATION NOTE (csscoverage.optimize):
+<!-- LOCALIZATION NOTE (csscoverage.optimize.header):
   -  This is the heading for the CSS optimization part of the report -->
 <!ENTITY csscoverage.optimize.header "Optimizable Pages">
 
@@ -33,7 +33,7 @@
 <!ENTITY csscoverage.optimize.body2 "tags to the bottom of the page and creating a new inline">
 <!ENTITY csscoverage.optimize.body3 "element with the styles needed before the 'load' event to the top. Here are the style blocks you need:">
 
-<!-- LOCALIZATION NOTE (csscoverage.noPreload):
+<!-- LOCALIZATION NOTE (csscoverage.optimize.bodyX):
   -  This is what we say when we have no optimization suggestions -->
 <!ENTITY csscoverage.optimize.bodyX "All rules are inlined.">
 

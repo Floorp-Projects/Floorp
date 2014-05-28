@@ -152,7 +152,10 @@ AudioStream::AudioStream()
   , mAudioClock(MOZ_THIS_IN_INITIALIZER_LIST())
   , mLatencyRequest(HighLatency)
   , mReadPoint(0)
-  , mLostFrames(0)
+  , mWrittenFramesPast(0)
+  , mLostFramesPast(0)
+  , mWrittenFramesLast(0)
+  , mLostFramesLast(0)
   , mDumpFile(nullptr)
   , mVolume(1.0)
   , mBytesPerFrame(0)
@@ -780,9 +783,28 @@ AudioStream::GetPositionInFramesUnlocked()
 
   // Adjust the reported position by the number of silent frames written
   // during stream underruns.
+  // Since frames sent to DataCallback is not consumed by the backend immediately,
+  // it will be an over adjustment if we return |position - mLostFramesPast - mLostFramesLast|.
+  // On the other hand, we need to keep the whole history of frames sent to DataCallback
+  // in order to adjust position correctly which will require more storage.
+  // We choose a simple way to store the history where |mWrittenFramesPast| and
+  // |mLostFramesPast| are the sum of frames from 1th to |N-1|th callbacks, and
+  // |mWrittenFramesLast| and |mLostFramesLast| represent the frames sent in last callback.
+  // When |position| lies in
+  // [mWrittenFramesPast+mLostFramesPast, mWrittenFramesPast+mLostFramesPast+mWrittenFramesLast+mLostFramesLast],
+  // we will be able to adjust position precisely which should be the major case.
+  // If |position| falls in [0, mWrittenFramesPast+mLostFramesPast), there will be an
+  // error in the adjustment. However that is fine as long as we can ensure the
+  // adjusted position is mono-increasing to avoid audio clock going backward.
   uint64_t adjustedPosition = 0;
-  if (position >= mLostFrames) {
-    adjustedPosition = position - mLostFrames;
+  if (position <= mWrittenFramesPast) {
+    adjustedPosition = position;
+  } else if (position <= mWrittenFramesPast + mLostFramesPast) {
+    adjustedPosition = mWrittenFramesPast;
+  } else if (position <= mWrittenFramesPast + mLostFramesPast + mWrittenFramesLast) {
+    adjustedPosition = position - mLostFramesPast;
+  } else {
+    adjustedPosition = mWrittenFramesPast + mWrittenFramesLast;
   }
   return std::min<uint64_t>(adjustedPosition, INT64_MAX);
 }
@@ -929,6 +951,9 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
   uint32_t servicedFrames = 0;
   int64_t insertTime;
 
+  mWrittenFramesPast += mWrittenFramesLast;
+  mLostFramesPast += mLostFramesLast;
+
   // NOTE: wasapi (others?) can call us back *after* stop()/Shutdown() (mState == SHUTDOWN)
   // Bug 996162
 
@@ -992,6 +1017,8 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
   }
 
   underrunFrames = aFrames - servicedFrames;
+  mWrittenFramesLast = servicedFrames;
+  mLostFramesLast = underrunFrames;
 
   if (mState != DRAINING) {
     uint8_t* rpos = static_cast<uint8_t*>(aBuffer) + FramesToBytes(aFrames - underrunFrames);
@@ -1000,7 +1027,6 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
       PR_LOG(gAudioStreamLog, PR_LOG_WARNING,
              ("AudioStream %p lost %d frames", this, underrunFrames));
     }
-    mLostFrames += underrunFrames;
     servicedFrames += underrunFrames;
   }
 

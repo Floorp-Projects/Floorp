@@ -51,26 +51,17 @@
 
   <notificationbox id="toolbox-notificationbox" flex="1">
     <toolbar class="devtools-tabbar">
-#ifdef XP_MACOSX
-      <hbox id="toolbox-controls">
-        <toolbarbutton id="toolbox-close"
-                       class="devtools-closebutton"
-                       tooltiptext="&toolboxCloseButton.tooltip;"/>
-        <hbox id="toolbox-dock-buttons"/>
-      </hbox>
-#endif
-      <hbox id="toolbox-tabs" flex="1">
-      </hbox>
+      <hbox id="toolbox-picker-container" />
+      <hbox id="toolbox-tabs" flex="1" />
       <hbox id="toolbox-buttons" pack="end"/>
-#ifndef XP_MACOSX
       <vbox id="toolbox-controls-separator"/>
+      <hbox id="toolbox-option-container"/>
       <hbox id="toolbox-controls">
         <hbox id="toolbox-dock-buttons"/>
         <toolbarbutton id="toolbox-close"
                        class="devtools-closebutton"
                        tooltiptext="&toolboxCloseButton.tooltip;"/>
       </hbox>
-#endif
     </toolbar>
     <vbox flex="1">
       <deck id="toolbox-deck" flex="1" minheight="75" />
