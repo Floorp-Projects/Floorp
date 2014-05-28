@@ -365,13 +365,15 @@ ComputedTimingFunction::GetValue(double aPortion) const
 bool
 ElementAnimation::IsRunningAt(TimeStamp aTime) const
 {
-  if (IsPaused() || mIterationDuration.ToMilliseconds() <= 0.0 ||
+  if (IsPaused() || mTiming.mIterationDuration.ToMilliseconds() <= 0.0 ||
       mStartTime.IsNull()) {
     return false;
   }
 
-  double iterationsElapsed = ElapsedDurationAt(aTime) / mIterationDuration;
-  return 0.0 <= iterationsElapsed && iterationsElapsed < mIterationCount;
+  double iterationsElapsed =
+    ElapsedDurationAt(aTime) / mTiming.mIterationDuration;
+  return 0.0 <= iterationsElapsed &&
+         iterationsElapsed < mTiming.mIterationCount;
 }
 
 bool
