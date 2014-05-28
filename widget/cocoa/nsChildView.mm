@@ -2797,7 +2797,6 @@ GLPresenter::GLPresenter(GLContext* aContext)
                           verticesOnHeap.Data(),
                           LOCAL_GL_STATIC_DRAW);
    mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
-
 }
 
 GLPresenter::~GLPresenter()
