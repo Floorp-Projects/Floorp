@@ -89,7 +89,7 @@
   <color name="url_bar_blockedtext">#b14646</color>
   <color name="url_bar_shadow">#12000000</color>
 
-  <color name="home_last_tab_bar_bg">#FFF5F7F9</color>
+  <color name="home_button_bar_bg">#FFF5F7F9</color>
 
   <color name="panel_image_item_background">#D1D9E1</color>
 
