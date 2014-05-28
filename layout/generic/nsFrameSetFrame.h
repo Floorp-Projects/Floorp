@@ -77,7 +77,7 @@ public:
                     nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
 
   virtual void SetInitialChildList(ChildListID  aListID,
-                                       nsFrameList& aChildList) MOZ_OVERRIDE;
+                                   nsFrameList& aChildList) MOZ_OVERRIDE;
 
   static bool    gDragInProgress;
 

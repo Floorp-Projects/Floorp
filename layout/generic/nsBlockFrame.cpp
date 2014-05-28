@@ -63,6 +63,62 @@ using namespace mozilla;
 using namespace mozilla::css;
 using namespace mozilla::layout;
 
+static void MarkAllDescendantLinesDirty(nsBlockFrame* aBlock)
+{
+  nsLineList::iterator line = aBlock->begin_lines();
+  nsLineList::iterator endLine = aBlock->end_lines();
+  while (line != endLine) {
+    if (line->IsBlock()) {
+      nsIFrame* f = line->mFirstChild;
+      nsBlockFrame* bf = nsLayoutUtils::GetAsBlock(f);
+      if (bf) {
+        MarkAllDescendantLinesDirty(bf);
+      }
+    }
+    line->MarkDirty();
+    ++line;
+  }
+}
+
+static void MarkSameFloatManagerLinesDirty(nsBlockFrame* aBlock)
+{
+  nsBlockFrame* blockWithFloatMgr = aBlock;
+  while (!(blockWithFloatMgr->GetStateBits() & NS_BLOCK_FLOAT_MGR)) {
+    nsBlockFrame* bf = nsLayoutUtils::GetAsBlock(blockWithFloatMgr->GetParent());
+    if (!bf) {
+      break;
+    }
+    blockWithFloatMgr = bf;
+  }
+    
+  // Mark every line at and below the line where the float was
+  // dirty, and mark their lines dirty too. We could probably do
+  // something more efficient --- e.g., just dirty the lines that intersect
+  // the float vertically.
+  MarkAllDescendantLinesDirty(blockWithFloatMgr);
+}
+
+/**
+ * Returns true if aFrame is a block that has one or more float children.
+ */
+static bool BlockHasAnyFloats(nsIFrame* aFrame)
+{
+  nsBlockFrame* block = nsLayoutUtils::GetAsBlock(aFrame);
+  if (!block)
+    return false;
+  if (block->GetFirstChild(nsIFrame::kFloatList))
+    return true;
+    
+  nsLineList::iterator line = block->begin_lines();
+  nsLineList::iterator endLine = block->end_lines();
+  while (line != endLine) {
+    if (line->IsBlock() && BlockHasAnyFloats(line->mFirstChild))
+      return true;
+    ++line;
+  }
+  return false;
+}
+
 #ifdef DEBUG
 #include "nsBlockDebugFlags.h"
 
@@ -2446,23 +2502,6 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 #endif
 }
 
-static void MarkAllDescendantLinesDirty(nsBlockFrame* aBlock)
-{
-  nsLineList::iterator line = aBlock->begin_lines();
-  nsLineList::iterator endLine = aBlock->end_lines();
-  while (line != endLine) {
-    if (line->IsBlock()) {
-      nsIFrame* f = line->mFirstChild;
-      nsBlockFrame* bf = nsLayoutUtils::GetAsBlock(f);
-      if (bf) {
-        MarkAllDescendantLinesDirty(bf);
-      }
-    }
-    line->MarkDirty();
-    ++line;
-  }
-}
-
 void
 nsBlockFrame::MarkLineDirtyForInterrupt(nsLineBox* aLine)
 {
@@ -4742,6 +4781,55 @@ nsBlockFrame::InsertFrames(ChildListID aListID,
                        NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
 }
 
+void
+nsBlockFrame::RemoveFrame(ChildListID aListID,
+                          nsIFrame* aOldFrame)
+{
+#ifdef NOISY_REFLOW_REASON
+  ListTag(stdout);
+  printf(": remove ");
+  nsFrame::ListTag(stdout, aOldFrame);
+  printf("\n");
+#endif
+
+  if (aListID == kPrincipalList) {
+    bool hasFloats = BlockHasAnyFloats(aOldFrame);
+    DoRemoveFrame(aOldFrame, REMOVE_FIXED_CONTINUATIONS);
+    if (hasFloats) {
+      MarkSameFloatManagerLinesDirty(this);
+    }
+  }
+  else if (kAbsoluteList == aListID) {
+    nsContainerFrame::RemoveFrame(aListID, aOldFrame);
+    return;
+  }
+  else if (kFloatList == aListID) {
+    // Make sure to mark affected lines dirty for the float frame
+    // we are removing; this way is a bit messy, but so is the rest of the code.
+    // See bug 390762.
+    NS_ASSERTION(!aOldFrame->GetPrevContinuation(),
+                 "RemoveFrame should not be called on pushed floats.");
+    for (nsIFrame* f = aOldFrame;
+         f && !(f->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER);
+         f = f->GetNextContinuation()) {
+      MarkSameFloatManagerLinesDirty(static_cast<nsBlockFrame*>(f->GetParent()));
+    }
+    DoRemoveOutOfFlowFrame(aOldFrame);
+  }
+  else if (kNoReflowPrincipalList == aListID) {
+    // Skip the call to |FrameNeedsReflow| below by returning now.
+    DoRemoveFrame(aOldFrame, REMOVE_FIXED_CONTINUATIONS);
+    return;
+  }
+  else {
+    MOZ_CRASH("unexpected child list");
+  }
+
+  PresContext()->PresShell()->
+    FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                     NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
+}
+
 static bool
 ShouldPutNextSiblingOnNewLine(nsIFrame* aLastFrame)
 {
@@ -4940,94 +5028,6 @@ nsBlockFrame::RemoveFloat(nsIFrame* aFloat)
       return;
     }
   }
-}
-
-static void MarkSameFloatManagerLinesDirty(nsBlockFrame* aBlock)
-{
-  nsBlockFrame* blockWithFloatMgr = aBlock;
-  while (!(blockWithFloatMgr->GetStateBits() & NS_BLOCK_FLOAT_MGR)) {
-    nsBlockFrame* bf = nsLayoutUtils::GetAsBlock(blockWithFloatMgr->GetParent());
-    if (!bf) {
-      break;
-    }
-    blockWithFloatMgr = bf;
-  }
-    
-  // Mark every line at and below the line where the float was
-  // dirty, and mark their lines dirty too. We could probably do
-  // something more efficient --- e.g., just dirty the lines that intersect
-  // the float vertically.
-  MarkAllDescendantLinesDirty(blockWithFloatMgr);
-}
-
-/**
- * Returns true if aFrame is a block that has one or more float children.
- */
-static bool BlockHasAnyFloats(nsIFrame* aFrame)
-{
-  nsBlockFrame* block = nsLayoutUtils::GetAsBlock(aFrame);
-  if (!block)
-    return false;
-  if (block->GetFirstChild(nsIFrame::kFloatList))
-    return true;
-    
-  nsLineList::iterator line = block->begin_lines();
-  nsLineList::iterator endLine = block->end_lines();
-  while (line != endLine) {
-    if (line->IsBlock() && BlockHasAnyFloats(line->mFirstChild))
-      return true;
-    ++line;
-  }
-  return false;
-}
-
-void
-nsBlockFrame::RemoveFrame(ChildListID aListID,
-                          nsIFrame* aOldFrame)
-{
-#ifdef NOISY_REFLOW_REASON
-  ListTag(stdout);
-  printf(": remove ");
-  nsFrame::ListTag(stdout, aOldFrame);
-  printf("\n");
-#endif
-
-  if (aListID == kPrincipalList) {
-    bool hasFloats = BlockHasAnyFloats(aOldFrame);
-    DoRemoveFrame(aOldFrame, REMOVE_FIXED_CONTINUATIONS);
-    if (hasFloats) {
-      MarkSameFloatManagerLinesDirty(this);
-    }
-  }
-  else if (kAbsoluteList == aListID) {
-    nsContainerFrame::RemoveFrame(aListID, aOldFrame);
-    return;
-  }
-  else if (kFloatList == aListID) {
-    // Make sure to mark affected lines dirty for the float frame
-    // we are removing; this way is a bit messy, but so is the rest of the code.
-    // See bug 390762.
-    NS_ASSERTION(!aOldFrame->GetPrevContinuation(),
-                 "RemoveFrame should not be called on pushed floats.");
-    for (nsIFrame* f = aOldFrame;
-         f && !(f->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER);
-         f = f->GetNextContinuation()) {
-      MarkSameFloatManagerLinesDirty(static_cast<nsBlockFrame*>(f->GetParent()));
-    }
-    DoRemoveOutOfFlowFrame(aOldFrame);
-  }
-  else if (kNoReflowPrincipalList == aListID) {
-    // Skip the call to |FrameNeedsReflow| below by returning now.
-    DoRemoveFrame(aOldFrame, REMOVE_FIXED_CONTINUATIONS);
-    return;
-  }
-  else {
-    MOZ_CRASH("unexpected child list");
-  }
-
-  PresContext()->PresShell()->
-    FrameNeedsReflow(this, nsIPresShell::eTreeChange,
-                     NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
 }
 
 void

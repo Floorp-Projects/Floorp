@@ -46,12 +46,12 @@ public:
     nsPoint aPt, const nsRect& aDirtyRect, uint32_t aBGFlags);
 
   virtual void AppendFrames(ChildListID    aListID,
-                                nsFrameList&   aFrameList) MOZ_OVERRIDE;
+                            nsFrameList&   aFrameList) MOZ_OVERRIDE;
   virtual void InsertFrames(ChildListID    aListID,
-                                nsIFrame*      aPrevFrame,
-                                nsFrameList&   aFrameList) MOZ_OVERRIDE;
+                            nsIFrame*      aPrevFrame,
+                            nsFrameList&   aFrameList) MOZ_OVERRIDE;
   virtual void RemoveFrame(ChildListID    aListID,
-                               nsIFrame*      aOldFrame) MOZ_OVERRIDE;
+                           nsIFrame*      aOldFrame) MOZ_OVERRIDE;
 
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
   virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
@@ -70,7 +70,7 @@ public:
 
 #ifdef DEBUG
   virtual void SetInitialChildList(ChildListID    aListID,
-                                       nsFrameList&   aChildList) MOZ_OVERRIDE;
+                                   nsFrameList&   aChildList) MOZ_OVERRIDE;
 #endif
 
 #ifdef DEBUG_FRAME_DUMP
