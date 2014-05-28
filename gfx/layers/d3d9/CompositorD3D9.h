@@ -32,11 +32,6 @@ public:
   virtual bool CanUseCanvasLayerForSize(const gfx::IntSize &aSize) MOZ_OVERRIDE;
   virtual int32_t GetMaxTextureSize() const MOZ_FINAL;
 
-  virtual void SetTargetContext(gfx::DrawTarget *aTarget) MOZ_OVERRIDE
-  {
-    mTarget = aTarget;
-  }
-
   virtual void MakeCurrent(MakeCurrentFlags aFlags = 0) MOZ_OVERRIDE {}
 
   virtual TemporaryRef<CompositingRenderTarget>
@@ -167,11 +162,6 @@ private:
 
   /* Widget associated with this layer manager */
   nsIWidget *mWidget;
-
-  /*
-   * Context target, nullptr when drawing directly to our swap chain.
-   */
-  RefPtr<gfx::DrawTarget> mTarget;
 
   RefPtr<CompositingRenderTargetD3D9> mDefaultRT;
   RefPtr<CompositingRenderTargetD3D9> mCurrentRT;

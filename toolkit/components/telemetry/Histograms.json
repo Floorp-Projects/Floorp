@@ -5156,6 +5156,34 @@
     "n_buckets": 1000,
     "description": "The delay (in milliseconds) when video is behind audio. Zero delay is not counted. Measured every second of a call."
   },
+  "WEBRTC_VIDEO_QUALITY_INBOUND_BANDWIDTH_KBITS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000000,
+    "n_buckets": 1000,
+    "description": "Locally measured data rate of inbound video (kbit/s). Computed every second of a call."
+  },
+  "WEBRTC_AUDIO_QUALITY_INBOUND_BANDWIDTH_KBITS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000000,
+    "n_buckets": 1000,
+    "description": "Locally measured data rate on inbound audio (kbit/s). Computed every second of a call."
+  },
+  "WEBRTC_VIDEO_QUALITY_OUTBOUND_BANDWIDTH_KBITS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000000,
+    "n_buckets": 1000,
+    "description": "Data rate deduced from RTCP from remote recipient of outbound video (kbit/s). Computed every second of a call (for easy comparison)."
+  },
+  "WEBRTC_AUDIO_QUALITY_OUTBOUND_BANDWIDTH_KBITS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000000,
+    "n_buckets": 1000,
+    "description": "Data rate deduced from RTCP from remote recipient of outbound audio (kbit/s). Computed every second of a call (for easy comparison)."
+  },
   "WEBRTC_VIDEO_QUALITY_INBOUND_PACKETLOSS": {
     "expires_in_version": "never",
     "kind": "exponential",
