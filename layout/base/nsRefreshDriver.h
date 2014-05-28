@@ -272,6 +272,33 @@ public:
 
   bool IsInRefresh() { return mInRefresh; }
 
+  /**
+   * Allocate a unique id number for the current refresh tick, can
+   * only be called while IsInRefresh().
+   *
+   * If too many id's are allocated without being returned then
+   * the refresh driver will suspend until they catch up.
+   */
+  uint64_t GetTransactionId();
+
+  /**
+   * Notify that all work (including asynchronous composites)
+   * for a given transaction id has been completed.
+   *
+   * If the refresh driver has been suspended because
+   * of having too many outstanding id's, then this may
+   * resume it.
+   */
+  void NotifyTransactionCompleted(uint64_t aTransactionId);
+
+  /**
+   * Revoke a transaction id that isn't needed to track
+   * completion of asynchronous work. This is similar
+   * to NotifyTransactionCompleted except avoids
+   * return ordering issues.
+   */
+  void RevokeTransactionId(uint64_t aTransactionId);
+
 private:
   typedef nsTObserverArray<nsARefreshObserver*> ObserverArray;
   typedef nsTHashtable<nsISupportsHashKey> RequestTable;
@@ -314,6 +341,8 @@ private:
     return mFrameRequestCallbackDocs.Length() != 0;
   }
 
+  void FinishedWaitingForTransaction();
+
   mozilla::RefreshDriverTimer* ChooseTimer() const;
   mozilla::RefreshDriverTimer *mActiveTimer;
 
@@ -323,12 +352,25 @@ private:
   nsPresContext *mPresContext; // weak; pres context passed in constructor
                                // and unset in Disconnect
 
+  // The most recently allocated transaction id.
+  uint64_t mPendingTransaction;
+  // The most recently completed transaction id.
+  uint64_t mCompletedTransaction;
+
   uint32_t mFreezeCount;
   bool mThrottled;
   bool mTestControllingRefreshes;
   bool mViewManagerFlushIsPending;
   bool mRequestedHighPrecision;
   bool mInRefresh;
+
+  // True if the refresh driver is suspended waiting for transaction
+  // id's to be returned and shouldn't do any work during Tick().
+  bool mWaitingForTransaction;
+  // True if Tick() was skipped because of mWaitingForTransaction and
+  // we should schedule a new Tick immediately when resumed instead
+  // of waiting until the next interval.
+  bool mSkippedPaint;
 
   int64_t mMostRecentRefreshEpochTime;
   mozilla::TimeStamp mMostRecentRefresh;
