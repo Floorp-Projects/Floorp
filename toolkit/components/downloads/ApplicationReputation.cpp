@@ -569,7 +569,8 @@ PendingLookup::AddRedirects(nsIArray* aRedirects)
     rv = principal->GetURI(getter_AddRefs(uri));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Add the spec to our list of local lookups.
+    // Add the spec to our list of local lookups. The most recent redirect is
+    // the last element.
     nsCString spec;
     rv = uri->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
