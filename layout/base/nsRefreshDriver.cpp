@@ -686,6 +686,7 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
     mReflowCause(nullptr),
     mStyleCause(nullptr),
     mPresContext(aPresContext),
+    mRootRefresh(nullptr),
     mPendingTransaction(0),
     mCompletedTransaction(0),
     mFreezeCount(0),
@@ -707,6 +708,10 @@ nsRefreshDriver::~nsRefreshDriver()
                     "observers should have unregistered");
   NS_ABORT_IF_FALSE(!mActiveTimer, "timer should be gone");
   
+  if (mRootRefresh) {
+    mRootRefresh->RemoveRefreshObserver(this, Flush_Style);
+    mRootRefresh = nullptr;
+  }
   for (uint32_t i = 0; i < mPresShellsToInvalidateIfHidden.Length(); i++) {
     mPresShellsToInvalidateIfHidden[i]->InvalidatePresShellIfHidden();
   }
@@ -1065,13 +1070,17 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   mMostRecentRefresh = aNowTime;
   mMostRecentRefreshEpochTime = aNowEpoch;
 
-  if (mWaitingForTransaction) {
+  if (IsWaitingForPaint()) {
     // We're currently suspended waiting for earlier Tick's to
     // be completed (on the Compositor). Mark that we missed the paint
     // and keep waiting.
-    mSkippedPaint = true;
     return;
   }
+  if (mRootRefresh) {
+    mRootRefresh->RemoveRefreshObserver(this, Flush_Style);
+    mRootRefresh = nullptr;
+  }
+  mSkippedPaint = false;
 
   nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
   if (!presShell || (ObserverCount() == 0 && ImageRequestCount() == 0)) {
@@ -1422,6 +1431,49 @@ nsRefreshDriver::NotifyTransactionCompleted(uint64_t aTransactionId)
       mCompletedTransaction = aTransactionId;
     }
   }
+}
+
+void
+nsRefreshDriver::WillRefresh(mozilla::TimeStamp aTime)
+{
+  mRootRefresh->RemoveRefreshObserver(this, Flush_Style);
+  mRootRefresh = nullptr;
+  if (mSkippedPaint) {
+    DoRefresh();
+  }
+}
+
+bool
+nsRefreshDriver::IsWaitingForPaint()
+{
+  if (mTestControllingRefreshes) {
+    return false;
+  }
+  if (mWaitingForTransaction) {
+    mSkippedPaint = true;
+    return true;
+  }
+
+  // Try find the 'root' refresh driver for the current window and check
+  // if that is waiting for a paint.
+  nsPresContext *displayRoot = PresContext()->GetDisplayRootPresContext();
+  if (displayRoot) {
+    nsRefreshDriver *rootRefresh = displayRoot->GetRootPresContext()->RefreshDriver();
+    if (rootRefresh && rootRefresh != this) {
+      if (rootRefresh->IsWaitingForPaint()) {
+        if (mRootRefresh != rootRefresh) {
+          if (mRootRefresh) {
+            mRootRefresh->RemoveRefreshObserver(this, Flush_Style);
+          }
+          rootRefresh->AddRefreshObserver(this, Flush_Style);
+          mRootRefresh = rootRefresh;
+        }
+        mSkippedPaint = true;
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 void
