@@ -100,3 +100,12 @@
    fun:_ZN22nsComponentManagerImpl17ManifestComponentERNS_25ManifestProcessingContextEiPKPc
    ...
 }
+{
+   Bug 1017112
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:PK11_InitPin
+   fun:_ZN11nsPK11Token12InitPasswordEPKDs
+   ...
+}

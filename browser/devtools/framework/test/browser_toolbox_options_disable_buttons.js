@@ -58,7 +58,7 @@ function testSelectTool(aToolbox) {
 
 function testPreferenceAndUIStateIsConsistent() {
   let checkNodes = [...panelWin.document.querySelectorAll("#enabled-toolbox-buttons-box > checkbox")];
-  let toolboxButtonNodes = [...doc.querySelectorAll("#toolbox-buttons > toolbarbutton")];
+  let toolboxButtonNodes = [...doc.querySelectorAll(".command-button")];
   let toggleableTools = toolbox.toolboxButtons;
 
   for (let tool of toggleableTools) {
@@ -74,7 +74,7 @@ function testPreferenceAndUIStateIsConsistent() {
 
 function testToggleToolboxButtons() {
   let checkNodes = [...panelWin.document.querySelectorAll("#enabled-toolbox-buttons-box > checkbox")];
-  let toolboxButtonNodes = [...doc.querySelectorAll("#toolbox-buttons > toolbarbutton")];
+  let toolboxButtonNodes = [...doc.querySelectorAll(".command-button")];
   let visibleButtons = toolboxButtonNodes.filter(button=>!button.hasAttribute("hidden"));
   let toggleableTools = toolbox.toolboxButtons;
 

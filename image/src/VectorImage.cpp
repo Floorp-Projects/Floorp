@@ -412,7 +412,7 @@ VectorImage::HeapSizeOfVectorImageDocument(nsACString* aDocURL) const
   }
 
   nsWindowSizes windowSizes(WindowsMallocSizeOf);
-  doc->DocAddSizeOfExcludingThis(&windowSizes);
+  doc->DocAddSizeOfIncludingThis(&windowSizes);
   return windowSizes.getTotalSize();
 }
 
