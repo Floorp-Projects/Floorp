@@ -8463,10 +8463,10 @@ CodeGenerator::visitAsmJSCall(LAsmJSCall *ins)
     }
 #endif
 
-    if (mir->spIncrement())
+   if (mir->spIncrement())
         masm.freeStack(mir->spIncrement());
 
-    JS_ASSERT((AlignmentAtPrologue + masm.framePushed()) % StackAlignment == 0);
+   JS_ASSERT((AlignmentAtPrologue +  masm.framePushed()) % StackAlignment == 0);
 
 #ifdef DEBUG
     Label ok;

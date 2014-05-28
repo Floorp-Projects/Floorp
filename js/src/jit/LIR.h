@@ -1554,7 +1554,7 @@ class LIRGraph
         // Round to StackAlignment, but also round to at least sizeof(Value) in
         // case that's greater, because StackOffsetOfPassedArg rounds argument
         // slots to 8-byte boundaries.
-        size_t Alignment = Max(size_t(StackAlignment), sizeof(Value));
+        size_t Alignment = Max(sizeof(StackAlignment), sizeof(Value));
         return AlignBytes(localSlotCount(), Alignment);
     }
     size_t paddedLocalSlotsSize() const {
