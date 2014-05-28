@@ -32,13 +32,31 @@ dictionary MediaPlayStatus
   DOMString   playStatus = "";
 };
 
+enum BluetoothAdapterState
+{
+  "disabled",
+  "disabling",
+  "enabled",
+  "enabling"
+};
+
+enum BluetoothAdapterAttribute
+{
+  "unknown",
+  "state",
+  "address",
+  "name",
+  "discoverable",
+  "discovering"
+};
+
+[CheckPermissions="bluetooth"]
 interface BluetoothAdapter : EventTarget {
-  readonly attribute DOMString      address;
-  readonly attribute unsigned long  class;
-  readonly attribute boolean        discovering;
-  readonly attribute DOMString      name;
-  readonly attribute boolean        discoverable;
-  readonly attribute unsigned long  discoverableTimeout; // in seconds
+  readonly attribute BluetoothAdapterState  state;
+  readonly attribute DOMString              address;
+  readonly attribute DOMString              name;
+  readonly attribute boolean                discoverable;
+  readonly attribute boolean                discovering;
 
   // array of type BluetoothDevice[]
   [GetterThrows]
@@ -65,12 +83,13 @@ interface BluetoothAdapter : EventTarget {
   // Fired when remote devices query current media play status
            attribute EventHandler   onrequestmediaplaystatus;
 
+  // Fired when attributes of BluetoothAdapter changed
+           attribute EventHandler   onattributechanged;
+
   [NewObject, Throws]
   DOMRequest setName(DOMString name);
   [NewObject, Throws]
   DOMRequest setDiscoverable(boolean discoverable);
-  [NewObject, Throws]
-  DOMRequest setDiscoverableTimeout(unsigned long timeout);
   [NewObject, Throws]
   DOMRequest startDiscovery();
   [NewObject, Throws]
@@ -89,6 +108,18 @@ interface BluetoothAdapter : EventTarget {
   DOMRequest setPasskey(DOMString deviceAddress, unsigned long passkey);
   [NewObject, Throws]
   DOMRequest setPairingConfirmation(DOMString deviceAddress, boolean confirmation);
+
+  /**
+   * Enable/Disable a local bluetooth adapter by asynchronus methods and return
+   * its result through a Promise.
+   * Several onattributechanged event would be triggered during processing the
+   * request, and the last one would indicate adapter.state becomes
+   * enabled/disabled.
+   */
+  // Promise<void>
+  Promise enable();
+  // Promise<void>
+  Promise disable();
 
   /**
    * Connect/Disconnect to a specific service of a target remote device.
