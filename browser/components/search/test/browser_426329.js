@@ -63,7 +63,7 @@ function test() {
       is(gBrowser.tabs.length, preTabNo, "Return key did not open new tab");
       is(event.originalTarget, preSelectedBrowser.contentDocument,
          "Return key loaded results in current tab");
-      is(event.originalTarget.URL, expectedURL(searchBar.value), "Check URL of search page opened");
+      is(event.originalTarget.URL, expectedURL(searchBar.value), "testReturn opened correct search page");
 
       testAltReturn();
     });
@@ -79,7 +79,7 @@ function test() {
             "Alt+Return key loaded results in new tab");
       is(event.originalTarget, gBrowser.contentDocument,
          "Alt+Return key loaded results in foreground tab");
-      is(event.originalTarget.URL, expectedURL(searchBar.value), "Check URL of search page opened");
+      is(event.originalTarget.URL, expectedURL(searchBar.value), "testAltReturn opened correct search page");
 
       //Shift key has no effect for now, so skip it
       //testShiftAltReturn();
@@ -97,7 +97,7 @@ function test() {
             "Shift+Alt+Return key loaded results in new tab");
       isnot(event.originalTarget, gBrowser.contentDocument,
             "Shift+Alt+Return key loaded results in background tab");
-      is(event.originalTarget.URL, expectedURL(searchBar.value), "Check URL of search page opened");
+      is(event.originalTarget.URL, expectedURL(searchBar.value), "testShiftAltReturn opened correct search page");
 
       testLeftClick();
     });
@@ -111,7 +111,7 @@ function test() {
       is(gBrowser.tabs.length, preTabNo, "LeftClick did not open new tab");
       is(event.originalTarget, preSelectedBrowser.contentDocument,
          "LeftClick loaded results in current tab");
-      is(event.originalTarget.URL, expectedURL(searchBar.value), "Check URL of search page opened");
+      is(event.originalTarget.URL, expectedURL(searchBar.value), "testLeftClick opened correct search page");
 
       testMiddleClick();
     });
@@ -127,7 +127,7 @@ function test() {
             "MiddleClick loaded results in new tab");
       is(event.originalTarget, gBrowser.contentDocument,
          "MiddleClick loaded results in foreground tab");
-      is(event.originalTarget.URL, expectedURL(searchBar.value), "Check URL of search page opened");
+      is(event.originalTarget.URL, expectedURL(searchBar.value), "testMiddleClick opened correct search page");
 
       testShiftMiddleClick();
     });
@@ -143,7 +143,7 @@ function test() {
             "Shift+MiddleClick loaded results in new tab");
       isnot(event.originalTarget, gBrowser.contentDocument,
             "Shift+MiddleClick loaded results in background tab");
-      is(event.originalTarget.URL, expectedURL(searchBar.value), "Check URL of search page opened");
+      is(event.originalTarget.URL, expectedURL(searchBar.value), "testShiftMiddleClick opened correct search page");
 
       testDropText();
      });
