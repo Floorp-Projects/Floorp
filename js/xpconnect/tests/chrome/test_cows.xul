@@ -29,6 +29,7 @@ var test_utils = window.QueryInterface(Ci.nsIInterfaceRequestor).
 function getCOW(x) {
   if (typeof x != 'object' && typeof x != 'function')
     return x;
+  x = Cu.waiveXrays(x);
   var rval = {};
   if (typeof x == "function")
     rval = eval(uneval(x));
