@@ -274,6 +274,7 @@ public:
     bool IgnoreGSUB() const { return mIgnoreGSUB; }
 
     bool SupportsOpenTypeSmallCaps(int32_t aScript);
+    bool SupportsGraphiteSmallCaps();
 
     virtual bool IsSymbolFont();
 
@@ -543,6 +544,8 @@ public:
     bool             mSkipDefaultFeatureSpaceCheck : 1;
     bool             mHasGraphiteTables : 1;
     bool             mCheckedForGraphiteTables : 1;
+    bool             mHasGraphiteSmallCaps : 1;
+    bool             mCheckedForGraphiteSmallCaps : 1;
     bool             mHasCmapTable : 1;
     bool             mGrFaceInitialized : 1;
     bool             mCheckedForColorGlyph : 1;
