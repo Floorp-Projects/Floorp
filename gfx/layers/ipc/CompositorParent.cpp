@@ -328,11 +328,10 @@ CompositorParent::RecvResume()
 
 bool
 CompositorParent::RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
-                                   SurfaceDescriptor* aOutSnapshot)
+                                   const nsIntRect& aRect)
 {
   RefPtr<DrawTarget> target = GetDrawTargetForDescriptor(aInSnapshot, gfx::BackendType::CAIRO);
-  ForceComposeToTarget(target);
-  *aOutSnapshot = aInSnapshot;
+  ForceComposeToTarget(target, &aRect);
   return true;
 }
 
@@ -609,7 +608,7 @@ CompositorParent::Composite()
 }
 
 void
-CompositorParent::CompositeToTarget(DrawTarget* aTarget)
+CompositorParent::CompositeToTarget(DrawTarget* aTarget, const nsIntRect* aRect)
 {
   profiler_tracing("Paint", "Composite", TRACING_INTERVAL_START);
   PROFILER_LABEL("CompositorParent", "Composite");
@@ -639,7 +638,7 @@ CompositorParent::CompositeToTarget(DrawTarget* aTarget)
   AutoResolveRefLayers resolve(mCompositionManager);
 
   if (aTarget) {
-    mLayerManager->BeginTransactionWithDrawTarget(aTarget);
+    mLayerManager->BeginTransactionWithDrawTarget(aTarget, *aRect);
   } else {
     mLayerManager->BeginTransaction();
   }
@@ -720,13 +719,13 @@ CompositorParent::DidComposite()
 }
 
 void
-CompositorParent::ForceComposeToTarget(DrawTarget* aTarget)
+CompositorParent::ForceComposeToTarget(DrawTarget* aTarget, const nsIntRect* aRect)
 {
   PROFILER_LABEL("CompositorParent", "ForceComposeToTarget");
   AutoRestore<bool> override(mOverrideComposeReadiness);
   mOverrideComposeReadiness = true;
 
-  CompositeToTarget(aTarget);
+  CompositeToTarget(aTarget, aRect);
 }
 
 bool
@@ -1136,7 +1135,7 @@ public:
   virtual bool RecvResume() MOZ_OVERRIDE { return true; }
   virtual bool RecvNotifyChildCreated(const uint64_t& child) MOZ_OVERRIDE;
   virtual bool RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
-                                SurfaceDescriptor* aOutSnapshot)
+                                const nsIntRect& aRect)
   { return true; }
   virtual bool RecvFlushRendering() MOZ_OVERRIDE { return true; }
   virtual bool RecvNotifyRegionInvalidated(const nsIntRegion& aRegion) { return true; }
