@@ -69,36 +69,33 @@ public:
 
   // Overloaded nsTableFrame methods
 
-  virtual nsresult
+  virtual void
   SetInitialChildList(ChildListID  aListID,
                       nsFrameList& aChildList) MOZ_OVERRIDE;
 
-  virtual nsresult
+  virtual void
   AppendFrames(ChildListID  aListID,
                nsFrameList& aFrameList) MOZ_OVERRIDE
   {
-    nsresult rv = nsTableFrame::AppendFrames(aListID, aFrameList);
+    nsTableFrame::AppendFrames(aListID, aFrameList);
     RestyleTable();
-    return rv;
   }
 
-  virtual nsresult
+  virtual void
   InsertFrames(ChildListID aListID,
                nsIFrame* aPrevFrame,
                nsFrameList& aFrameList) MOZ_OVERRIDE
   {
-    nsresult rv = nsTableFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
+    nsTableFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
     RestyleTable();
-    return rv;
   }
 
-  virtual nsresult
+  virtual void
   RemoveFrame(ChildListID aListID,
               nsIFrame* aOldFrame) MOZ_OVERRIDE
   {
-    nsresult rv = nsTableFrame::RemoveFrame(aListID, aOldFrame);
+    nsTableFrame::RemoveFrame(aListID, aOldFrame);
     RestyleTable();
-    return rv;
   }
 
   virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
@@ -133,32 +130,29 @@ public:
                    nsIAtom* aAttribute,
                    int32_t  aModType) MOZ_OVERRIDE;
 
-  virtual nsresult
+  virtual void
   AppendFrames(ChildListID  aListID,
                nsFrameList& aFrameList) MOZ_OVERRIDE
   {
-    nsresult rv = nsTableRowFrame::AppendFrames(aListID, aFrameList);
+    nsTableRowFrame::AppendFrames(aListID, aFrameList);
     RestyleTable();
-    return rv;
   }
 
-  virtual nsresult
+  virtual void
   InsertFrames(ChildListID aListID,
                nsIFrame* aPrevFrame,
                nsFrameList& aFrameList) MOZ_OVERRIDE
   {
-    nsresult rv = nsTableRowFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
+    nsTableRowFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
     RestyleTable();
-    return rv;
   }
 
-  virtual nsresult
+  virtual void
   RemoveFrame(ChildListID aListID,
               nsIFrame* aOldFrame) MOZ_OVERRIDE
   {
-    nsresult rv = nsTableRowFrame::RemoveFrame(aListID, aOldFrame);
+    nsTableRowFrame::RemoveFrame(aListID, aOldFrame);
     RestyleTable();
-    return rv;
   }
 
   virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE

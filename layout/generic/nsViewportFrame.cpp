@@ -43,15 +43,14 @@ ViewportFrame::Init(nsIContent*       aContent,
   }
 }
 
-nsresult
+void
 ViewportFrame::SetInitialChildList(ChildListID     aListID,
                                    nsFrameList&    aChildList)
 {
-  // See which child list to add the frames to
 #ifdef DEBUG
   nsFrame::VerifyDirtyBitSet(aChildList);
 #endif
-  return nsContainerFrame::SetInitialChildList(aListID, aChildList);
+  nsContainerFrame::SetInitialChildList(aListID, aChildList);
 }
 
 void
@@ -70,7 +69,7 @@ ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
 }
 
-nsresult
+void
 ViewportFrame::AppendFrames(ChildListID     aListID,
                             nsFrameList&    aFrameList)
 {
@@ -78,10 +77,10 @@ ViewportFrame::AppendFrames(ChildListID     aListID,
                aListID == GetAbsoluteListID(), "unexpected child list");
   NS_ASSERTION(aListID != GetAbsoluteListID() ||
                GetChildList(aListID).IsEmpty(), "Shouldn't have any kids!");
-  return nsContainerFrame::AppendFrames(aListID, aFrameList);
+  nsContainerFrame::AppendFrames(aListID, aFrameList);
 }
 
-nsresult
+void
 ViewportFrame::InsertFrames(ChildListID     aListID,
                             nsIFrame*       aPrevFrame,
                             nsFrameList&    aFrameList)
@@ -90,16 +89,16 @@ ViewportFrame::InsertFrames(ChildListID     aListID,
                aListID == GetAbsoluteListID(), "unexpected child list");
   NS_ASSERTION(aListID != GetAbsoluteListID() ||
                GetChildList(aListID).IsEmpty(), "Shouldn't have any kids!");
-  return nsContainerFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
+  nsContainerFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
 }
 
-nsresult
+void
 ViewportFrame::RemoveFrame(ChildListID     aListID,
                            nsIFrame*       aOldFrame)
 {
   NS_ASSERTION(aListID == kPrincipalList ||
                aListID == GetAbsoluteListID(), "unexpected child list");
-  return nsContainerFrame::RemoveFrame(aListID, aOldFrame);
+  nsContainerFrame::RemoveFrame(aListID, aOldFrame);
 }
 
 /* virtual */ nscoord

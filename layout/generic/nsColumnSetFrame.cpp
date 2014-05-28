@@ -120,12 +120,14 @@ nsColumnSetFrame::PaintColumnRule(nsRenderingContext* aCtx,
   }
 }
 
-nsresult
+void
 nsColumnSetFrame::SetInitialChildList(ChildListID     aListID,
                                       nsFrameList&    aChildList)
 {
   if (aListID == kAbsoluteList) {
-    return nsContainerFrame::SetInitialChildList(aListID, aChildList);
+    // XXX uhm, but nsContainerFrame can't handle kAbsoluteList
+    nsContainerFrame::SetInitialChildList(aListID, aChildList);
+    return;
   }
 
   NS_ASSERTION(aListID == kPrincipalList,
@@ -133,7 +135,7 @@ nsColumnSetFrame::SetInitialChildList(ChildListID     aListID,
   NS_ASSERTION(aChildList.OnlyChild(),
                "initial child list must have exaisRevertingctly one child");
   // Queue up the frames for the content frame
-  return nsContainerFrame::SetInitialChildList(kPrincipalList, aChildList);
+  nsContainerFrame::SetInitialChildList(kPrincipalList, aChildList);
 }
 
 static nscoord
@@ -1039,39 +1041,30 @@ nsColumnSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 }
 
-nsresult
+// XXX The methods below are all dead code? (nsContainerFrame only deals with
+// kPrincipalList and kNoReflowPrincipalList)
+
+void
 nsColumnSetFrame::AppendFrames(ChildListID     aListID,
                                nsFrameList&    aFrameList)
 {
-  if (aListID == kAbsoluteList) {
-    return nsContainerFrame::AppendFrames(aListID, aFrameList);
-  }
-
-  NS_ERROR("unexpected child list");
-  return NS_ERROR_INVALID_ARG;
+  MOZ_ASSERT(aListID == kAbsoluteList, "unexpected child list");
+  nsContainerFrame::AppendFrames(aListID, aFrameList);
 }
 
-nsresult
+void
 nsColumnSetFrame::InsertFrames(ChildListID     aListID,
                                nsIFrame*       aPrevFrame,
                                nsFrameList&    aFrameList)
 {
-  if (aListID == kAbsoluteList) {
-    return nsContainerFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
-  }
-
-  NS_ERROR("unexpected child list");
-  return NS_ERROR_INVALID_ARG;
+  MOZ_ASSERT(aListID == kAbsoluteList, "unexpected child list");
+  nsContainerFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
 }
 
-nsresult
+void
 nsColumnSetFrame::RemoveFrame(ChildListID     aListID,
                               nsIFrame*       aOldFrame)
 {
-  if (aListID == kAbsoluteList) {
-    return nsContainerFrame::RemoveFrame(aListID, aOldFrame);
-  }
-
-  NS_ERROR("unexpected child list");
-  return NS_ERROR_INVALID_ARG;
+  MOZ_ASSERT(aListID == kAbsoluteList, "unexpected child list");
+  nsContainerFrame::RemoveFrame(aListID, aOldFrame);
 }

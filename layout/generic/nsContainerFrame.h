@@ -94,7 +94,7 @@ public:
    *            child list.
    * @see     #Init()
    */
-  virtual nsresult SetInitialChildList(ChildListID aListID,
+  virtual void SetInitialChildList(ChildListID aListID,
                                        nsFrameList& aChildList);
 
   /**
@@ -112,7 +112,7 @@ public:
    *            aFrameList in the process of moving the frames over to its own
    *            child list.
    */
-  virtual nsresult AppendFrames(ChildListID aListID, nsFrameList& aFrameList);
+  virtual void AppendFrames(ChildListID aListID, nsFrameList& aFrameList);
 
   /**
    * This method is responsible for inserting frames into the frame
@@ -130,7 +130,7 @@ public:
    *            aFrameList in the process of moving the frames over to its own
    *            child list.
    */
-  virtual nsresult InsertFrames(ChildListID  aListID,
+  virtual void InsertFrames(ChildListID  aListID,
                                 nsIFrame*    aPrevFrame,
                                 nsFrameList& aFrameList);
 
@@ -149,7 +149,7 @@ public:
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
    *          NS_OK otherwise
    */
-  virtual nsresult RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame);
+  virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame);
 
   /**
    * Helper method to create next-in-flows if necessary. If aFrame

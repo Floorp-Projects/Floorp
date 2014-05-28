@@ -197,7 +197,7 @@ public:
   nsresult CreateWidgetForView(nsView* aView);
   uint8_t GetShadowStyle();
 
-  virtual nsresult SetInitialChildList(ChildListID  aListID,
+  virtual void SetInitialChildList(ChildListID  aListID,
                                        nsFrameList& aChildList) MOZ_OVERRIDE;
 
   virtual bool IsLeaf() const MOZ_OVERRIDE;

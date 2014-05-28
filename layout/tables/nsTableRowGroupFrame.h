@@ -74,14 +74,14 @@ public:
   /** @see nsIFrame::DidSetStyleContext */
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) MOZ_OVERRIDE;
   
-  virtual nsresult AppendFrames(ChildListID     aListID,
+  virtual void AppendFrames(ChildListID     aListID,
                                 nsFrameList&    aFrameList) MOZ_OVERRIDE;
 
-  virtual nsresult InsertFrames(ChildListID     aListID,
+  virtual void InsertFrames(ChildListID     aListID,
                                 nsIFrame*       aPrevFrame,
                                 nsFrameList&    aFrameList) MOZ_OVERRIDE;
 
-  virtual nsresult RemoveFrame(ChildListID     aListID,
+  virtual void RemoveFrame(ChildListID     aListID,
                                nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
   virtual nsMargin GetUsedMargin() const MOZ_OVERRIDE;

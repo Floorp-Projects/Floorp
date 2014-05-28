@@ -735,40 +735,32 @@ nsMathMLContainerFrame::ChildListChanged(int32_t aModType)
   return ReLayoutChildren(frame);
 }
 
-nsresult
+void
 nsMathMLContainerFrame::AppendFrames(ChildListID     aListID,
                                      nsFrameList&    aFrameList)
 {
-  if (aListID != kPrincipalList) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  MOZ_ASSERT(aListID == kPrincipalList);
   mFrames.AppendFrames(this, aFrameList);
-  return ChildListChanged(nsIDOMMutationEvent::ADDITION);
+  ChildListChanged(nsIDOMMutationEvent::ADDITION);
 }
 
-nsresult
+void
 nsMathMLContainerFrame::InsertFrames(ChildListID     aListID,
                                      nsIFrame*       aPrevFrame,
                                      nsFrameList&    aFrameList)
 {
-  if (aListID != kPrincipalList) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  // Insert frames after aPrevFrame
+  MOZ_ASSERT(aListID == kPrincipalList);
   mFrames.InsertFrames(this, aPrevFrame, aFrameList);
-  return ChildListChanged(nsIDOMMutationEvent::ADDITION);
+  ChildListChanged(nsIDOMMutationEvent::ADDITION);
 }
 
-nsresult
+void
 nsMathMLContainerFrame::RemoveFrame(ChildListID     aListID,
                                     nsIFrame*       aOldFrame)
 {
-  if (aListID != kPrincipalList) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  // remove the child frame
+  MOZ_ASSERT(aListID == kPrincipalList);
   mFrames.DestroyFrame(aOldFrame);
-  return ChildListChanged(nsIDOMMutationEvent::REMOVAL);
+  ChildListChanged(nsIDOMMutationEvent::REMOVAL);
 }
 
 nsresult

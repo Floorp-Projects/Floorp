@@ -659,14 +659,12 @@ nsMathMLmtableFrame::~nsMathMLmtableFrame()
 {
 }
 
-nsresult
+void
 nsMathMLmtableFrame::SetInitialChildList(ChildListID  aListID,
                                          nsFrameList& aChildList)
 {
-  nsresult rv = nsTableFrame::SetInitialChildList(aListID, aChildList);
-  if (NS_FAILED(rv)) return rv;
+  nsTableFrame::SetInitialChildList(aListID, aChildList);
   MapAllAttributesIntoCSS(this);
-  return rv;
 }
 
 void

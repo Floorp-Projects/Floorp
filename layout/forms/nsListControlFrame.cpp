@@ -895,7 +895,7 @@ nsListControlFrame::HandleEvent(nsPresContext* aPresContext,
 
 
 //---------------------------------------------------------
-nsresult
+void
 nsListControlFrame::SetInitialChildList(ChildListID    aListID,
                                         nsFrameList&   aChildList)
 {
@@ -905,7 +905,7 @@ nsListControlFrame::SetInitialChildList(ChildListID    aListID,
     mIsAllFramesHere    = false;
     mHasBeenInitialized = false;
   }
-  nsresult rv = nsHTMLScrollFrame::SetInitialChildList(aListID, aChildList);
+  nsHTMLScrollFrame::SetInitialChildList(aListID, aChildList);
 
   // If all the content is here now check
   // to see if all the frames have been created
@@ -917,8 +917,6 @@ nsListControlFrame::SetInitialChildList(ChildListID    aListID,
       mHasBeenInitialized = true;
     }
   }*/
-
-  return rv;
 }
 
 //---------------------------------------------------------

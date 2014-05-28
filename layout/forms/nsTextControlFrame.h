@@ -87,7 +87,7 @@ public:
 
   // Utility methods to set current widget state
 
-  virtual nsresult SetInitialChildList(ChildListID     aListID,
+  virtual void SetInitialChildList(ChildListID     aListID,
                                        nsFrameList&    aChildList) MOZ_OVERRIDE;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,

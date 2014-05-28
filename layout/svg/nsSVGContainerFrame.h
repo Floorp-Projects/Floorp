@@ -73,12 +73,12 @@ public:
   }
 
   // nsIFrame:
-  virtual nsresult AppendFrames(ChildListID     aListID,
+  virtual void AppendFrames(ChildListID     aListID,
                                 nsFrameList&    aFrameList) MOZ_OVERRIDE;
-  virtual nsresult InsertFrames(ChildListID     aListID,
+  virtual void InsertFrames(ChildListID     aListID,
                                 nsIFrame*       aPrevFrame,
                                 nsFrameList&    aFrameList) MOZ_OVERRIDE;
-  virtual nsresult RemoveFrame(ChildListID     aListID,
+  virtual void RemoveFrame(ChildListID     aListID,
                                nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
@@ -128,10 +128,10 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   // nsIFrame:
-  virtual nsresult InsertFrames(ChildListID     aListID,
+  virtual void InsertFrames(ChildListID     aListID,
                                 nsIFrame*       aPrevFrame,
                                 nsFrameList&    aFrameList) MOZ_OVERRIDE;
-  virtual nsresult RemoveFrame(ChildListID     aListID,
+  virtual void RemoveFrame(ChildListID     aListID,
                                nsIFrame*       aOldFrame) MOZ_OVERRIDE;
  virtual void Init(nsIContent*       aContent,
                    nsContainerFrame* aParent,
