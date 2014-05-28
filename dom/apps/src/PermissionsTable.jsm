@@ -52,6 +52,11 @@ this.PermissionsTable =  { geolocation: {
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
+                           "udp-socket": {
+                             app: DENY_ACTION,
+                             privileged: ALLOW_ACTION,
+                             certified: ALLOW_ACTION
+                           },
                            "network-events": {
                              app: DENY_ACTION,
                              privileged: DENY_ACTION,
