@@ -2,18 +2,20 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:id="@+id/toast"
               style="@style/Toast">
 
     <TextView android:id="@+id/toast_message"
+        android:text="New tab opened"
               style="@style/ToastMessage" />
 
-    <ImageView android:id="@+id/toast_divider"
-               style="@style/ToastDivider" />
+    <View android:id="@+id/toast_divider"
+          style="@style/ToastDivider" />
 
     <Button android:id="@+id/toast_button"
+        android:drawableLeft="@drawable/switch_button_icon"
+        android:text="SWITCH"
             style="@style/ToastButton" />
 
 </LinearLayout>

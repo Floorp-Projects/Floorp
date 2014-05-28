@@ -86,7 +86,6 @@
     <dimen name="validation_message_margin_top">6dp</dimen>
     <dimen name="forward_default_offset">-13dip</dimen>
     <dimen name="url_bar_offset_left">32dp</dimen>
-    <dimen name="toast_button_padding">8dp</dimen>
     <dimen name="history_tab_indicator_height">50dp</dimen>
 
     <!-- We need to maintain height for the tab widget on History Page
@@ -110,4 +109,7 @@
 
     <!-- PanelItemView dimensions -->
     <dimen name="panel_article_item_height">95dp</dimen>
+
+    <!-- Button toast dimenstions. -->
+    <dimen name="toast_button_corner_radius">2dp</dimen>
 </resources>
