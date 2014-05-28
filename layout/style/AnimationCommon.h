@@ -244,6 +244,37 @@ struct AnimationTiming
 };
 
 /**
+ * Stores the results of calculating the timing properties of an animation
+ * at a given sample time.
+ */
+struct ComputedTiming
+{
+  ComputedTiming()
+  : mTimeFraction(kNullTimeFraction),
+    mCurrentIteration(0)
+  { }
+
+  static const double kNullTimeFraction;
+
+  // Will be kNullTimeFraction if the animation is neither animating nor
+  // filling at the sampled time.
+  double mTimeFraction;
+
+  // Zero-based iteration index (meaningless if mTimeFraction is
+  // kNullTimeFraction).
+  uint64_t mCurrentIteration;
+
+  enum {
+    // Sampled prior to the start of the active interval
+    AnimationPhase_Before,
+    // Sampled within the active interval
+    AnimationPhase_Active,
+    // Sampled after (or at) the end of the active interval
+    AnimationPhase_After
+  } mPhase;
+};
+
+/**
  * Data about one animation (i.e., one of the values of
  * 'animation-name') running on an element.
  */
