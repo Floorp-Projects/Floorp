@@ -56,6 +56,12 @@ const static OCSPResponseName kOCSPResponseNameList[] = {
   { "unauthorized",    ORTUnauthorized},   // the responder does not know about
                                            //   the cert
   { "bad-signature",   ORTBadSignature},   // the response has a bad signature
+  { "longvalidityalmostold", ORTLongValidityAlmostExpired}, // the response is
+                                           // still valid, but the generation
+                                           // is almost a year old
+  { "ancientstillvalid", ORTAncientAlmostExpired}, // The response is still
+                                           // valid but the generation is almost
+                                           // two years old
 };
 
 
