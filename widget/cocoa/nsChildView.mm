@@ -2824,15 +2824,21 @@ GLPresenter::BindAndDrawQuad(ShaderProgramOGL *aProgram,
   aProgram->SetLayerRects(layerRects);
   aProgram->SetTextureRects(textureRects);
 
-  const GLuint coordAttribIndex = 0;
+  GLuint vertAttribIndex = aProgram->AttribLocation(ShaderProgramOGL::VertexCoordAttrib);
+  GLuint texCoordAttribIndex = aProgram->AttribLocation(ShaderProgramOGL::TexCoordAttrib);
 
   mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mQuadVBO);
-  mGLContext->fVertexAttribPointer(coordAttribIndex, 4,
+  mGLContext->fVertexAttribPointer(vertAttribIndex, 4,
                                    LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
                                    (GLvoid*)0);
-  mGLContext->fEnableVertexAttribArray(coordAttribIndex);
+  mGLContext->fEnableVertexAttribArray(vertAttribIndex);
+  mGLContext->fVertexAttribPointer(texCoordAttribIndex, 4,
+                                   LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
+                                   (GLvoid*) (sizeof(float)*4*2));
+  mGLContext->fEnableVertexAttribArray(texCoordAttribIndex);
   mGLContext->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
-  mGLContext->fDisableVertexAttribArray(coordAttribIndex);
+  mGLContext->fDisableVertexAttribArray(vertAttribIndex);
+  mGLContext->fDisableVertexAttribArray(texCoordAttribIndex);
 }
 
 void
