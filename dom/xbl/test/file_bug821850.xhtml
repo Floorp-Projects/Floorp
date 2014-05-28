@@ -169,9 +169,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
     bound.prop = "someOtherVal";
     is(bound.prop, "set:someOtherVal", "Can set properties from content");
 
-    // Make sure we can't pass JS objects to the XBL scope.
+    // Make sure that XBL scopes get opaque wrappers.
+    //
+    // Note: Now that we have object Xrays, we have to pass in a more obscure
+    // ES type that we don't Xray to test this.
     var proto = bound.__proto__;
-    proto.passMeAJSObject({prop: 2});
+    var nonXrayableObject = new WeakMap();
+    nonXrayableObject.prop = 2;
+    proto.passMeAJSObject(nonXrayableObject);
 
     //
     // Try sticking a bunch of stuff on the prototype object.

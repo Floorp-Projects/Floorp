@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=658560
       const Cu = Components.utils;
       var sandbox = new Cu.Sandbox("about:blank");
       var contentObj = Cu.evalInSandbox("({ get foo() { return 42 } })", sandbox);
-      var propdesc = Object.getOwnPropertyDescriptor(contentObj, "foo");
+      var propdesc = Object.getOwnPropertyDescriptor(Cu.waiveXrays(contentObj), "foo");
       is(typeof propdesc, "object", "got a property descriptor back");
       ok("get" in propdesc, "getter exists");
 
