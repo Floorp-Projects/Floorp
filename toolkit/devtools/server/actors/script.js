@@ -3646,7 +3646,18 @@ DebuggerServer.ObjectActorPreviewers = {
 
     let raw = obj.unsafeDereference();
     let items = aGrip.preview.items = [];
-    for (let item of Set.prototype.values.call(raw)) {
+    // We currently lack XrayWrappers for Set, so when we iterate over
+    // the values, the temporary iterator objects get created in the target
+    // compartment. However, we _do_ have Xrays to Object now, so we end up
+    // Xraying those temporary objects, and filtering access to |it.value|
+    // based on whether or not it's Xrayable and/or callable, which breaks
+    // the for/of iteration.
+    //
+    // This code is designed to handle untrusted objects, so we can safely
+    // waive Xrays on the iterable, and relying on the Debugger machinery to
+    // make sure we handle the resulting objects carefully.
+    for (let item of Cu.waiveXrays(Set.prototype.values.call(raw))) {
+      item = Cu.unwaiveXrays(item);
       item = makeDebuggeeValueIfNeeded(obj, item);
       items.push(threadActor.createValueGrip(item));
       if (items.length == OBJECT_PREVIEW_MAX_ITEMS) {
