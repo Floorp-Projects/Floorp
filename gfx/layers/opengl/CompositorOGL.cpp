@@ -1250,7 +1250,7 @@ CompositorOGL::EndFrame()
       mWidget->GetBounds(rect);
     }
     RefPtr<DrawTarget> target = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(IntSize(rect.width, rect.height), SurfaceFormat::B8G8R8A8);
-    CopyToTarget(target, mCurrentRenderTarget->GetTransform());
+    CopyToTarget(target, nsIntPoint(), mCurrentRenderTarget->GetTransform());
 
     WriteSnapshotToDumpFile(this, target);
   }
@@ -1261,7 +1261,7 @@ CompositorOGL::EndFrame()
   LayerScope::EndFrame(mGLContext);
 
   if (mTarget) {
-    CopyToTarget(mTarget, mCurrentRenderTarget->GetTransform());
+    CopyToTarget(mTarget, mTargetBounds.TopLeft(), mCurrentRenderTarget->GetTransform());
     mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
     mCurrentRenderTarget = nullptr;
     return;
@@ -1360,7 +1360,7 @@ CompositorOGL::EndFrameForExternalComposition(const gfx::Matrix& aTransform)
   // This lets us reftest and screenshot content rendered externally
   if (mTarget) {
     MakeCurrent();
-    CopyToTarget(mTarget, aTransform);
+    CopyToTarget(mTarget, mTargetBounds.TopLeft(), aTransform);
     mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
   }
   if (mTexturePool) {
@@ -1388,7 +1388,7 @@ CompositorOGL::SetDestinationSurfaceSize(const gfx::IntSize& aSize)
 }
 
 void
-CompositorOGL::CopyToTarget(DrawTarget *aTarget, const gfx::Matrix& aTransform)
+CompositorOGL::CopyToTarget(DrawTarget* aTarget, const nsIntPoint& aTopLeft, const gfx::Matrix& aTransform)
 {
   IntRect rect;
   if (mUseExternalSurfaceSize) {
@@ -1422,6 +1422,8 @@ CompositorOGL::CopyToTarget(DrawTarget *aTarget, const gfx::Matrix& aTransform)
   glToCairoTransform.Invert();
   glToCairoTransform.Scale(1.0, -1.0);
   glToCairoTransform.Translate(0.0, -height);
+
+  glToCairoTransform.PostTranslate(-aTopLeft.x, -aTopLeft.y);
 
   Matrix oldMatrix = aTarget->GetTransform();
   aTarget->SetTransform(glToCairoTransform);
