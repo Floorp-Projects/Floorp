@@ -8,6 +8,8 @@ include protocol PSms;
 include protocol PBlob;
 include SmsTypes;
 
+using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
+
 namespace mozilla {
 namespace dom {
 namespace mobilemessage {
@@ -28,9 +30,16 @@ struct ReplyMessageSend
   MobileMessageData messageData;
 };
 
+union OptionalMobileMessageData
+{
+  void_t;
+  MobileMessageData;
+};
+
 struct ReplyMessageSendFail
 {
   int32_t error;
+  OptionalMobileMessageData messageData;
 };
 
 struct ReplyGetMessage

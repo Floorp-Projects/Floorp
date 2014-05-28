@@ -6,7 +6,6 @@
 
 DEFINES['_GLIBCXX_OS_DEFINES'] = True
 DEFINES['ANDROID_SMP'] = 0
-DEFINES['FAKE_LOG_DEVICE'] = True
 DEFINES['LOG_NDEBUG'] = 0
 
 if CONFIG['_MSC_VER']:
@@ -44,6 +43,17 @@ else:
                      '-Wno-incompatible-pointer-types-discards-qualifiers'
         ]
 
+if CONFIG['OS_TARGET'] != 'Android':
+    DEFINES['FAKE_LOG_DEVICE'] = True
+    SOURCES += [
+        'system/core/liblog/fake_log_device.c',
+    ]
+    UNIFIED_SOURCES += [
+        'system/core/libcutils/strdup16to8.c',
+        'system/core/liblog/logd_write.c',
+        'system/core/liblog/logprint.c',
+    ]
+
 EXPORTS.mp4_demuxer += [
     'binding/include/mp4_demuxer/DecoderData.h',
     'binding/include/mp4_demuxer/mp4_demuxer.h',
@@ -52,7 +62,6 @@ EXPORTS.mp4_demuxer += [
 SOURCES += [
     'frameworks/av/media/libstagefright/foundation/hexdump.cpp',
     'frameworks/av/media/libstagefright/MetaData.cpp',
-    'system/core/liblog/fake_log_device.c',
     'system/core/libutils/RefBase.cpp',
     'system/core/libutils/String16.cpp',
     'system/core/libutils/String8.cpp',
@@ -79,9 +88,6 @@ UNIFIED_SOURCES += [
     'frameworks/av/media/libstagefright/SampleIterator.cpp',
     'frameworks/av/media/libstagefright/SampleTable.cpp',
     'frameworks/av/media/libstagefright/Utils.cpp',
-    'system/core/libcutils/strdup16to8.c',
-    'system/core/liblog/logd_write.c',
-    'system/core/liblog/logprint.c',
     'system/core/libutils/SharedBuffer.cpp',
     'system/core/libutils/Static.cpp',
     'system/core/libutils/Unicode.cpp',

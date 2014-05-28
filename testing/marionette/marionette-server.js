@@ -504,13 +504,25 @@ MarionetteServerConnection.prototype = {
     this.scriptTimeout = 10000;
 
     function waitForWindow() {
-      let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
       let win = this.getCurrentWindow();
-      if (!win ||
-          (appName == "Firefox" && !win.gBrowser) ||
-          (appName == "Fennec" && !win.BrowserApp)) {
+      if (!win) {
+        // If the window isn't even created, just poll wait for it
+        let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
         checkTimer.initWithCallback(waitForWindow.bind(this), 100,
                                     Ci.nsITimer.TYPE_ONE_SHOT);
+      }
+      else if (win.document.readyState != "complete") {
+        // Otherwise, wait for it to be fully loaded before proceeding
+        let listener = (evt) => {
+          // ensure that we proceed, on the top level document load event
+          // (not an iframe one...)
+          if (evt.target != win.document) {
+            return;
+          }
+          win.removeEventListener("load", listener);
+          waitForWindow.call(this);
+        };
+        win.addEventListener("load", listener, true);
       }
       else {
         this.startBrowser(win, true);
