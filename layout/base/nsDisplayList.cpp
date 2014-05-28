@@ -329,10 +329,7 @@ AddAnimationForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
 
   animation->startTime() = ea->mStartTime + ea->mDelay;
   animation->duration() = ea->mTiming.mIterationDuration;
-  animation->numIterations() =
-    ea->mTiming.mIterationCount != NS_IEEEPositiveInfinity() ?
-    ea->mTiming.mIterationCount :
-    -1;
+  animation->iterationCount() = ea->mTiming.mIterationCount;
   animation->direction() = ea->mTiming.mDirection;
   animation->property() = aProperty;
   animation->data() = aData;
