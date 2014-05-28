@@ -43,16 +43,6 @@ nsFieldSetFrame::GetType() const
   return nsGkAtoms::fieldSetFrame;
 }
 
-#ifdef DEBUG
-void
-nsFieldSetFrame::SetInitialChildList(ChildListID    aListID,
-                                     nsFrameList&   aChildList)
-{
-  nsContainerFrame::SetInitialChildList(kPrincipalList, aChildList);
-  MOZ_ASSERT(GetInner());
-}
-#endif
-
 nsRect
 nsFieldSetFrame::VisualBorderRectRelativeToSelf() const
 {
@@ -555,6 +545,14 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
 }
 
+#ifdef DEBUG
+void
+nsFieldSetFrame::SetInitialChildList(ChildListID    aListID,
+                                     nsFrameList&   aChildList)
+{
+  nsContainerFrame::SetInitialChildList(kPrincipalList, aChildList);
+  MOZ_ASSERT(GetInner());
+}
 void
 nsFieldSetFrame::AppendFrames(ChildListID    aListID,
                               nsFrameList&   aFrameList)
@@ -576,6 +574,7 @@ nsFieldSetFrame::RemoveFrame(ChildListID    aListID,
 {
   MOZ_CRASH("nsFieldSetFrame::RemoveFrame not supported");
 }
+#endif
 
 #ifdef ACCESSIBILITY
 a11y::AccType
