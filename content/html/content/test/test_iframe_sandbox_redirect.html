@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=985135
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 985135</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 985135 **/
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(function() {
+    try {
+      var doc = frames[0].document;
+      ok(false, "Should not be able to get the document");
+      isnot(doc.body.textContent.slice(0, -1), "I have been redirected",
+            "Should not happen");
+      SimpleTest.finish();
+    } catch (e) {
+      // Check that we got the right document
+      window.onmessage = function(event) {
+        is(event.data, "who are you? redirect target",
+           "Should get the message we expect");
+        SimpleTest.finish();
+      }
+
+      frames[0].postMessage("who are you?", "*");
+    }
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=985135">Mozilla Bug 985135</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe src="file_iframe_sandbox_redirect.html" sandbox="allow-scripts"></iframe>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
