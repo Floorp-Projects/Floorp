@@ -22,6 +22,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "GeckoProfiler.h"
+#include "mozilla/layers/TransactionIdAllocator.h"
 
 class nsPresContext;
 class nsIPresShell;
@@ -62,16 +63,13 @@ public:
   virtual void DidRefresh() = 0;
 };
 
-class nsRefreshDriver MOZ_FINAL : public nsISupports {
+class nsRefreshDriver MOZ_FINAL : public mozilla::layers::TransactionIdAllocator {
 public:
   nsRefreshDriver(nsPresContext *aPresContext);
   ~nsRefreshDriver();
 
   static void InitializeStatics();
   static void Shutdown();
-
-  // nsISupports implementation
-  NS_DECL_ISUPPORTS
 
   /**
    * Methods for testing, exposed via nsIDOMWindowUtils.  See
@@ -272,32 +270,10 @@ public:
 
   bool IsInRefresh() { return mInRefresh; }
 
-  /**
-   * Allocate a unique id number for the current refresh tick, can
-   * only be called while IsInRefresh().
-   *
-   * If too many id's are allocated without being returned then
-   * the refresh driver will suspend until they catch up.
-   */
-  uint64_t GetTransactionId();
-
-  /**
-   * Notify that all work (including asynchronous composites)
-   * for a given transaction id has been completed.
-   *
-   * If the refresh driver has been suspended because
-   * of having too many outstanding id's, then this may
-   * resume it.
-   */
-  void NotifyTransactionCompleted(uint64_t aTransactionId);
-
-  /**
-   * Revoke a transaction id that isn't needed to track
-   * completion of asynchronous work. This is similar
-   * to NotifyTransactionCompleted except avoids
-   * return ordering issues.
-   */
-  void RevokeTransactionId(uint64_t aTransactionId);
+  // mozilla::layers::TransactionIdAllocator
+  virtual uint64_t GetTransactionId() MOZ_OVERRIDE;
+  void NotifyTransactionCompleted(uint64_t aTransactionId) MOZ_OVERRIDE;
+  void RevokeTransactionId(uint64_t aTransactionId) MOZ_OVERRIDE;
 
 private:
   typedef nsTObserverArray<nsARefreshObserver*> ObserverArray;
