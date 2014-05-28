@@ -98,8 +98,20 @@ const DELIVERY_STATUS_NOT_APPLICABLE = "not-applicable";
 const PREF_SEND_RETRY_COUNT =
   Services.prefs.getIntPref("dom.mms.sendRetryCount");
 
-const PREF_SEND_RETRY_INTERVAL =
-  Services.prefs.getIntPref("dom.mms.sendRetryInterval");
+const PREF_SEND_RETRY_INTERVAL = (function () {
+  let intervals =
+    Services.prefs.getCharPref("dom.mms.sendRetryInterval").split(",");
+  for (let i = 0; i < PREF_SEND_RETRY_COUNT; ++i) {
+    intervals[i] = parseInt(intervals[i], 10);
+    // If one of the intervals isn't valid (e.g., 0 or NaN),
+    // assign a 1-minute interval to it as a default.
+    if (!intervals[i]) {
+      intervals[i] = 60000;
+    }
+  }
+  intervals.length = PREF_SEND_RETRY_COUNT;
+  return intervals;
+})();
 
 const PREF_RETRIEVAL_RETRY_COUNT =
   Services.prefs.getIntPref("dom.mms.retrievalRetryCount");
@@ -1266,14 +1278,12 @@ SendTransaction.prototype = Object.create(CancellableTransaction.prototype, {
               MMS.MMS_PDU_ERROR_PERMANENT_FAILURE == mmsStatus) &&
             this.retryCount < PREF_SEND_RETRY_COUNT) {
           if (DEBUG) {
-            debug("Fail to send. Will retry after: " + PREF_SEND_RETRY_INTERVAL);
+            debug("Fail to send. Will retry after: " + PREF_SEND_RETRY_INTERVAL[this.retryCount]);
           }
 
           if (this.timer == null) {
             this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
           }
-
-          this.retryCount++;
 
           // the input stream may be read in the previous failure request so
           // we have to re-compose it.
@@ -1283,8 +1293,9 @@ SendTransaction.prototype = Object.create(CancellableTransaction.prototype, {
           }
 
           this.timer.initWithCallback(this.send.bind(this, retryCallback),
-                                      PREF_SEND_RETRY_INTERVAL,
+                                      PREF_SEND_RETRY_INTERVAL[this.retryCount],
                                       Ci.nsITimer.TYPE_ONE_SHOT);
+          this.retryCount++;
           return;
         }
 

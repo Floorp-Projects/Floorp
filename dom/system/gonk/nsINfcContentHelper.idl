@@ -24,13 +24,13 @@ interface nsINfcPeerCallback : nsISupports
                          in DOMString sessionToken);
 };
 
-[scriptable, uuid(10b2eb1b-3fe0-4c98-9c67-9e4c2274cd78)]
+[scriptable, uuid(26e8123f-ba00-4708-ac77-d1902457168c)]
 interface nsINfcContentHelper : nsISupports
 {
   const long NFC_EVENT_PEER_READY = 0x01;
   const long NFC_EVENT_PEER_LOST  = 0x02;
 
-  void setSessionToken(in DOMString sessionToken);
+  boolean setSessionToken(in DOMString sessionToken);
 
   nsIDOMDOMRequest getDetailsNDEF(in nsIDOMWindow window, in DOMString sessionToken);
   nsIDOMDOMRequest readNDEF(in nsIDOMWindow window, in DOMString sessionToken);

@@ -55,15 +55,7 @@ MozNFCTag.prototype = {
 
   initialize: function(aWindow, aSessionToken) {
     this._window = aWindow;
-    this.setSessionToken(aSessionToken);
-  },
-
-  // ChromeOnly interface
-  setSessionToken: function setSessionToken(aSessionToken) {
-    debug("Setting session token.");
     this.session = aSessionToken;
-    // report to NFC worker:
-    this._nfcContentHelper.setSessionToken(aSessionToken);
   },
 
   _techTypesMap: null,
@@ -110,15 +102,7 @@ MozNFCPeer.prototype = {
 
   initialize: function(aWindow, aSessionToken) {
     this._window = aWindow;
-    this.setSessionToken(aSessionToken);
-  },
-
-  // ChromeOnly interface
-  setSessionToken: function setSessionToken(aSessionToken) {
-    debug("Setting session token.");
     this.session = aSessionToken;
-    // report to NFC worker:
-    return this._nfcContentHelper.setSessionToken(aSessionToken);
   },
 
   // NFCPeer interface:
@@ -200,26 +184,22 @@ mozNfc.prototype = {
 
   getNFCTag: function getNFCTag(sessionToken) {
     let obj = new MozNFCTag();
-    let nfcTag = this._window.MozNFCTag._create(this._window, obj);
-    if (nfcTag) {
-      obj.initialize(this._window, sessionToken);
-      return nfcTag;
-    } else {
-      debug("Error: Unable to create NFCTag");
-      return null;
+    obj.initialize(this._window, sessionToken);
+    if (this._nfcContentHelper.setSessionToken(sessionToken)) {
+      return this._window.MozNFCTag._create(this._window, obj);
     }
+    throw new Error("Unable to create NFCTag object, Reason:  Bad SessionToken " +
+                     sessionToken);
   },
 
   getNFCPeer: function getNFCPeer(sessionToken) {
     let obj = new MozNFCPeer();
-    let nfcPeer = this._window.MozNFCPeer._create(this._window, obj);
-    if (nfcPeer) {
-      obj.initialize(this._window, sessionToken);
-      return nfcPeer;
-    } else {
-      debug("Error: Unable to create NFCPeer");
-      return null;
+    obj.initialize(this._window, sessionToken);
+    if (this._nfcContentHelper.setSessionToken(sessionToken)) {
+      return this._window.MozNFCPeer._create(this._window, obj);
     }
+    throw new Error("Unable to create NFCPeer object, Reason:  Bad SessionToken " +
+                     sessionToken);
   },
 
   // get/set onpeerready
