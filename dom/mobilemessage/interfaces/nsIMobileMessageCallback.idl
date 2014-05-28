@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 #include "nsIDOMSmsSegmentInfo.idl"
 
-[scriptable, uuid(41db87b0-b0a1-11e3-a04f-cf487d837ee3)]
+[scriptable, uuid(0e6f8ace-cc59-11e3-aad5-e32847abfda1)]
 interface nsIMobileMessageCallback : nsISupports
 {
   /**
@@ -30,7 +30,7 @@ interface nsIMobileMessageCallback : nsISupports
    * |message| can be nsIDOMMoz{Mms,Sms}Message.
    */
   void notifyMessageSent(in nsISupports message);
-  void notifySendMessageFailed(in long error);
+  void notifySendMessageFailed(in long error, in nsISupports message);
 
   /**
    * |message| can be nsIDOMMoz{Mms,Sms}Message.
