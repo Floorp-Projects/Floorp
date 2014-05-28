@@ -51,32 +51,16 @@ ElementAnimationsPropertyDtor(void           *aObject,
 
 ComputedTiming
 ElementAnimations::GetPositionInIteration(TimeDuration aElapsedDuration,
-                                          const AnimationTiming& aTiming,
-                                          ElementAnimation* aAnimation,
-                                          ElementAnimations* aEa,
-                                          EventArray* aEventsToDispatch)
+                                          const AnimationTiming& aTiming)
 {
-  MOZ_ASSERT(!aAnimation == !aEa && !aAnimation == !aEventsToDispatch);
-
   // Always return the same object to benefit from return-value optimization.
   ComputedTiming result;
 
   // Set |currentIterationCount| to the (fractional) number of
   // iterations we've completed up to the current position.
   double currentIterationCount = aElapsedDuration / aTiming.mIterationDuration;
-  bool dispatchStartOrIteration = false;
   if (currentIterationCount >= aTiming.mIterationCount) {
     result.mPhase = ComputedTiming::AnimationPhase_After;
-    if (aAnimation) {
-      // Dispatch 'animationend' when needed.
-      if (aAnimation->mLastNotification !=
-          ElementAnimation::LAST_NOTIFICATION_END) {
-        aAnimation->mLastNotification = ElementAnimation::LAST_NOTIFICATION_END;
-        AnimationEventInfo ei(aEa->mElement, aAnimation->mName, NS_ANIMATION_END,
-                              aElapsedDuration, aEa->PseudoElement());
-        aEventsToDispatch->AppendElement(ei);
-      }
-    }
     if (!aTiming.FillsForwards()) {
       // The animation isn't active or filling at this time.
       result.mTimeFraction = ComputedTiming::kNullTimeFraction;
@@ -93,7 +77,6 @@ ElementAnimations::GetPositionInIteration(TimeDuration aElapsedDuration,
     currentIterationCount = 0.0;
   } else {
     result.mPhase = ComputedTiming::AnimationPhase_Active;
-    dispatchStartOrIteration = aAnimation && !aAnimation->IsPaused();
   }
 
   // Set |positionInIteration| to the position from 0% to 100% along
@@ -141,25 +124,6 @@ ElementAnimations::GetPositionInIteration(TimeDuration aElapsedDuration,
   }
   if (thisIterationReverse) {
     positionInIteration = 1.0 - positionInIteration;
-  }
-
-  // Dispatch 'animationstart' or 'animationiteration' when needed.
-  if (aAnimation && dispatchStartOrIteration &&
-      whichIteration != aAnimation->mLastNotification) {
-    // Notify 'animationstart' even if a negative delay puts us
-    // past the first iteration.
-    // Note that when somebody changes the animation-duration
-    // dynamically, this will fire an extra iteration event
-    // immediately in many cases.  It's not clear to me if that's the
-    // right thing to do.
-    uint32_t message =
-      aAnimation->mLastNotification == ElementAnimation::LAST_NOTIFICATION_NONE
-        ? NS_ANIMATION_START : NS_ANIMATION_ITERATION;
-
-    aAnimation->mLastNotification = whichIteration;
-    AnimationEventInfo ei(aEa->mElement, aAnimation->mName, message,
-                          aElapsedDuration, aEa->PseudoElement());
-    aEventsToDispatch->AppendElement(ei);
   }
 
   result.mTimeFraction = positionInIteration;
@@ -347,8 +311,39 @@ ElementAnimations::GetEventsAt(TimeStamp aRefreshTime,
       continue;
     }
 
-    GetPositionInIteration(anim->ElapsedDurationAt(aRefreshTime),
-                           anim->mTiming, anim, this, &aEventsToDispatch);
+    TimeDuration elapsedDuration = anim->ElapsedDurationAt(aRefreshTime);
+    ComputedTiming computedTiming =
+      GetPositionInIteration(elapsedDuration, anim->mTiming);
+
+    if (computedTiming.mPhase == ComputedTiming::AnimationPhase_After) {
+      // Dispatch 'animationend' when needed.
+      if (anim->mLastNotification != ElementAnimation::LAST_NOTIFICATION_END) {
+        anim->mLastNotification = ElementAnimation::LAST_NOTIFICATION_END;
+        AnimationEventInfo ei(mElement, anim->mName, NS_ANIMATION_END,
+                              elapsedDuration, PseudoElement());
+        aEventsToDispatch.AppendElement(ei);
+      }
+    } else if (computedTiming.mPhase == ComputedTiming::AnimationPhase_Active) {
+      if (!anim->IsPaused()) {
+        // Dispatch 'animationstart' or 'animationiteration' when needed.
+        if (computedTiming.mCurrentIteration != anim->mLastNotification) {
+          // Notify 'animationstart' even if a negative delay puts us
+          // past the first iteration.
+          // Note that when somebody changes the animation-duration
+          // dynamically, this will fire an extra iteration event
+          // immediately in many cases.  It's not clear to me if that's the
+          // right thing to do.
+          uint32_t message =
+            anim->mLastNotification == ElementAnimation::LAST_NOTIFICATION_NONE
+              ? NS_ANIMATION_START : NS_ANIMATION_ITERATION;
+
+          anim->mLastNotification = computedTiming.mCurrentIteration;
+          AnimationEventInfo ei(mElement, anim->mName, message,
+                                elapsedDuration, PseudoElement());
+          aEventsToDispatch.AppendElement(ei);
+        }
+      }
+    }
   }
 }
 

@@ -64,21 +64,15 @@ struct ElementAnimations MOZ_FINAL
   // returns a ComputedTiming struct representing the animation's progress at
   // the given moment.
   //
-  // When this function is called from the main thread with an actual
-  // ElementAnimation* pointer, animation events are also queued.
   // This function returns ComputedTiming::kNullTimeFraction for the
   // mTimeFraction member of the return value if the animation should not be
-  // run (because it is not currently active and has no fill behavior).
-  //
-  // After calling GetPositionInIteration with non-null aAnimation and aEa, be
-  // sure to call CheckNeedsRefresh on the animation manager afterwards.
+  // run (because it is not currently active and is not filling at this time).
   static mozilla::ComputedTiming GetPositionInIteration(
     TimeDuration aElapsedDuration,
-    const mozilla::AnimationTiming& aTiming,
-    mozilla::ElementAnimation* aAnimation = nullptr,
-    ElementAnimations* aEa = nullptr,
-    EventArray* aEventsToDispatch = nullptr);
+    const mozilla::AnimationTiming& aTiming);
 
+  // After calling this, be sure to call CheckNeedsRefresh on the animation
+  // manager afterwards.
   void EnsureStyleRuleFor(TimeStamp aRefreshTime, bool aIsThrottled);
   void GetEventsAt(TimeStamp aRefreshTime, EventArray &aEventsToDispatch);
 
