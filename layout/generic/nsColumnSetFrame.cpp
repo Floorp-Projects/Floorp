@@ -120,24 +120,6 @@ nsColumnSetFrame::PaintColumnRule(nsRenderingContext* aCtx,
   }
 }
 
-void
-nsColumnSetFrame::SetInitialChildList(ChildListID     aListID,
-                                      nsFrameList&    aChildList)
-{
-  if (aListID == kAbsoluteList) {
-    // XXX uhm, but nsContainerFrame can't handle kAbsoluteList
-    nsContainerFrame::SetInitialChildList(aListID, aChildList);
-    return;
-  }
-
-  NS_ASSERTION(aListID == kPrincipalList,
-               "Only default child list supported");
-  NS_ASSERTION(aChildList.OnlyChild(),
-               "initial child list must have exaisRevertingctly one child");
-  // Queue up the frames for the content frame
-  nsContainerFrame::SetInitialChildList(kPrincipalList, aChildList);
-}
-
 static nscoord
 GetAvailableContentWidth(const nsHTMLReflowState& aReflowState)
 {
@@ -1041,15 +1023,22 @@ nsColumnSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 }
 
-// XXX The methods below are all dead code? (nsContainerFrame only deals with
-// kPrincipalList and kNoReflowPrincipalList)
+#ifdef DEBUG
+void
+nsColumnSetFrame::SetInitialChildList(ChildListID     aListID,
+                                      nsFrameList&    aChildList)
+{
+  MOZ_ASSERT(aListID == kPrincipalList, "unexpected child list");
+  MOZ_ASSERT(aChildList.OnlyChild(),
+             "initial child list must have exactly one child");
+  nsContainerFrame::SetInitialChildList(kPrincipalList, aChildList);
+}
 
 void
 nsColumnSetFrame::AppendFrames(ChildListID     aListID,
                                nsFrameList&    aFrameList)
 {
-  MOZ_ASSERT(aListID == kAbsoluteList, "unexpected child list");
-  nsContainerFrame::AppendFrames(aListID, aFrameList);
+  MOZ_CRASH("unsupported operation");
 }
 
 void
@@ -1057,14 +1046,13 @@ nsColumnSetFrame::InsertFrames(ChildListID     aListID,
                                nsIFrame*       aPrevFrame,
                                nsFrameList&    aFrameList)
 {
-  MOZ_ASSERT(aListID == kAbsoluteList, "unexpected child list");
-  nsContainerFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
+  MOZ_CRASH("unsupported operation");
 }
 
 void
 nsColumnSetFrame::RemoveFrame(ChildListID     aListID,
                               nsIFrame*       aOldFrame)
 {
-  MOZ_ASSERT(aListID == kAbsoluteList, "unexpected child list");
-  nsContainerFrame::RemoveFrame(aListID, aOldFrame);
+  MOZ_CRASH("unsupported operation");
 }
+#endif
