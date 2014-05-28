@@ -465,8 +465,9 @@ public final class Distribution {
     }
 
     /**
-     * The provided <code>Runnable</code> will be executed after the distribution
-     * is ready, or discarded if the distribution has already been processed.
+     * The provided <code>Runnable</code> will be queued for execution after
+     * the distribution is ready, or queued for immediate execution if the
+     * distribution has already been processed.
      *
      * Each <code>Runnable</code> will be executed on the background thread.
      */

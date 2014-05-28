@@ -263,6 +263,6 @@ add_task(function test_healthreporter_integration () {
       do_check_true("org.mozilla.appInfo.versions" in measurements);
     }
   } finally {
-    reporter._shutdown();
+    yield reporter._shutdown();
   }
 });

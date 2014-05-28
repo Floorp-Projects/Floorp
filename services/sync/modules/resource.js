@@ -380,7 +380,8 @@ Resource.prototype = {
     function callback(error, ret) {
       if (error)
         cb.throw(error);
-      cb(ret);
+      else
+        cb(ret);
     }
 
     // The channel listener might get a failure code

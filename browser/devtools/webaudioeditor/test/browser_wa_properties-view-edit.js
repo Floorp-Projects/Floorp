@@ -31,7 +31,7 @@ function spawnTest() {
   let setAndCheck = setAndCheckVariable(panelWin, gVars);
 
   checkVariableView(gVars, 0, {
-    "type": "\"sine\"",
+    "type": "sine",
     "frequency": 440,
     "detune": 0
   }, "default loaded string");
@@ -44,7 +44,7 @@ function spawnTest() {
 
   click(panelWin, findGraphNode(panelWin, nodeIds[1]));
   yield once(panelWin, EVENTS.UI_INSPECTOR_NODE_SET);
-  yield setAndCheck(0, "type", "square", "\"square\"", "sets string as string");
+  yield setAndCheck(0, "type", "square", "square", "sets string as string");
 
   click(panelWin, findGraphNode(panelWin, nodeIds[2]));
   yield once(panelWin, EVENTS.UI_INSPECTOR_NODE_SET);

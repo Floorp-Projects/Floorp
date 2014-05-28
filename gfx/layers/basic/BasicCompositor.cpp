@@ -291,7 +291,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
     transformBounds.MoveTo(0, 0);
   }
 
-  newTransform.Translate(-offset.x, -offset.y);
+  newTransform.PostTranslate(-offset.x, -offset.y);
   buffer->SetTransform(newTransform);
 
   RefPtr<SourceSurface> sourceMask;
@@ -412,7 +412,7 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
     return;
   }
 
-  if (mCopyTarget) {
+  if (mTarget) {
     // If we have a copy target, then we don't have a widget-provided mDrawTarget (currently). Create a dummy
     // placeholder so that CreateRenderTarget() works.
     mDrawTarget = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(IntSize(1,1), SurfaceFormat::B8G8R8A8);
@@ -424,7 +424,7 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
   }
 
   // Setup an intermediate render target to buffer all compositing. We will
-  // copy this into mDrawTarget (the widget), and/or mCopyTarget in EndFrame()
+  // copy this into mDrawTarget (the widget), and/or mTarget in EndFrame()
   RefPtr<CompositingRenderTarget> target = CreateRenderTarget(mInvalidRect, INIT_MODE_CLEAR);
   SetRenderTarget(target);
 
@@ -471,7 +471,9 @@ BasicCompositor::EndFrame()
   // Note: Most platforms require us to buffer drawing to the widget surface.
   // That's why we don't draw to mDrawTarget directly.
   RefPtr<SourceSurface> source = mRenderTarget->mDrawTarget->Snapshot();
-  RefPtr<DrawTarget> dest(mCopyTarget ? mCopyTarget : mDrawTarget);
+  RefPtr<DrawTarget> dest(mTarget ? mTarget : mDrawTarget);
+
+  nsIntPoint offset = mTarget ? mTargetBounds.TopLeft() : nsIntPoint();
   
   // The source DrawTarget is clipped to the invalidation region, so we have
   // to copy the individual rectangles in the region or else we'll draw blank
@@ -480,9 +482,9 @@ BasicCompositor::EndFrame()
   for (const nsIntRect *r = iter.Next(); r; r = iter.Next()) {
     dest->CopySurface(source,
                       IntRect(r->x - mInvalidRect.x, r->y - mInvalidRect.y, r->width, r->height),
-                      IntPoint(r->x, r->y));
+                      IntPoint(r->x - offset.x, r->y - offset.y));
   }
-  if (!mCopyTarget) {
+  if (!mTarget) {
     mWidget->EndRemoteDrawing();
   }
 

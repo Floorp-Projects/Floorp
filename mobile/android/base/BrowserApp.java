@@ -1805,31 +1805,30 @@ abstract public class BrowserApp extends GeckoApp
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d(LOGTAG, "onActivityResult: " + requestCode + ", " + resultCode + ", " + data);
         switch (requestCode) {
-        case ACTIVITY_REQUEST_PREFERENCES:
-            // We just returned from preferences. If our locale changed,
-            // we need to redisplay at this point, and do any other browser-level
-            // bookkeeping that we associate with a locale change.
-            if (resultCode != GeckoPreferences.RESULT_CODE_LOCALE_DID_CHANGE) {
-                Log.d(LOGTAG, "No locale change returning from preferences; nothing to do.");
-                return;
-            }
-
-            ThreadUtils.postToBackgroundThread(new Runnable() {
-                @Override
-                public void run() {
-                    final LocaleManager localeManager = BrowserLocaleManager.getInstance();
-                    final Locale locale = localeManager.getCurrentLocale(getApplicationContext());
-                    Log.d(LOGTAG, "Read persisted locale " + locale);
-                    if (locale == null) {
-                        return;
-                    }
-                    onLocaleChanged(BrowserLocaleManager.getLanguageTag(locale));
+            case ACTIVITY_REQUEST_PREFERENCES:
+                // We just returned from preferences. If our locale changed,
+                // we need to redisplay at this point, and do any other browser-level
+                // bookkeeping that we associate with a locale change.
+                if (resultCode != GeckoPreferences.RESULT_CODE_LOCALE_DID_CHANGE) {
+                    Log.d(LOGTAG, "No locale change returning from preferences; nothing to do.");
+                    return;
                 }
-            });
 
-            return;
-        default:
-            return;
+                ThreadUtils.postToBackgroundThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        final LocaleManager localeManager = BrowserLocaleManager.getInstance();
+                        final Locale locale = localeManager.getCurrentLocale(getApplicationContext());
+                        Log.d(LOGTAG, "Read persisted locale " + locale);
+                        if (locale == null) {
+                            return;
+                        }
+                        onLocaleChanged(BrowserLocaleManager.getLanguageTag(locale));
+                    }
+                });
+                break;
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
         }
     }
 
