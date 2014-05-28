@@ -118,7 +118,6 @@ public:
   typedef mozilla::DisplayListClipState DisplayListClipState;
   typedef nsIWidget::ThemeGeometry ThemeGeometry;
   typedef mozilla::layers::Layer Layer;
-  typedef mozilla::layers::FrameMetrics FrameMetrics;
   typedef mozilla::layers::FrameMetrics::ViewID ViewID;
 
   /**
@@ -258,15 +257,6 @@ public:
    * Get the ViewID of the nearest scrolling ancestor frame.
    */
   ViewID GetCurrentScrollParentId() const { return mCurrentScrollParentId; }
-  /**
-   * Get the ViewID and the scrollbar flags corresponding to the scrollbar for
-   * which we are building display items at the moment.
-   */
-  void GetScrollbarInfo(ViewID* aOutScrollbarTarget, uint32_t* aOutScrollbarFlags)
-  {
-    *aOutScrollbarTarget = mCurrentScrollbarTarget;
-    *aOutScrollbarFlags = mCurrentScrollbarFlags;
-  }
   /**
    * Calling this setter makes us include all out-of-flow descendant
    * frames in the display list, wherever they may be positioned (even
@@ -640,29 +630,6 @@ public:
     ViewID                mOldValue;
   };
 
-  /**
-   * A helper class to temporarily set the value of mCurrentScrollbarTarget
-   * and mCurrentScrollbarFlags.
-   */
-  class AutoCurrentScrollbarInfoSetter;
-  friend class AutoCurrentScrollbarInfoSetter;
-  class AutoCurrentScrollbarInfoSetter {
-  public:
-    AutoCurrentScrollbarInfoSetter(nsDisplayListBuilder* aBuilder, ViewID aScrollTargetID,
-                                   uint32_t aScrollbarFlags)
-     : mBuilder(aBuilder) {
-      aBuilder->mCurrentScrollbarTarget = aScrollTargetID;
-      aBuilder->mCurrentScrollbarFlags = aScrollbarFlags;
-    }
-    ~AutoCurrentScrollbarInfoSetter() {
-      // No need to restore old values because scrollbars cannot be nested.
-      mBuilder->mCurrentScrollbarTarget = FrameMetrics::NULL_SCROLL_ID;
-      mBuilder->mCurrentScrollbarFlags = 0;
-    }
-  private:
-    nsDisplayListBuilder* mBuilder;
-  };
-
   // Helpers for tables
   nsDisplayTableItem* GetCurrentTableItem() { return mCurrentTableItem; }
   void SetCurrentTableItem(nsDisplayTableItem* aTableItem) { mCurrentTableItem = aTableItem; }
@@ -774,8 +741,6 @@ private:
   nsTArray<DisplayItemClip*>     mDisplayItemClipsToDestroy;
   Mode                           mMode;
   ViewID                         mCurrentScrollParentId;
-  ViewID                         mCurrentScrollbarTarget;
-  uint32_t                       mCurrentScrollbarFlags;
   BlendModeSet                   mContainedBlendModes;
   bool                           mBuildCaret;
   bool                           mIgnoreSuppression;
