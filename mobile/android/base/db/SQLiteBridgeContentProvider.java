@@ -50,7 +50,7 @@ public abstract class SQLiteBridgeContentProvider extends ContentProvider {
         }
 
         synchronized (this) {
-            for (SQLiteBridge bridge : mDatabasePerProfile.values()){
+            for (SQLiteBridge bridge : mDatabasePerProfile.values()) {
                 if (bridge != null) {
                     try {
                         bridge.close();
