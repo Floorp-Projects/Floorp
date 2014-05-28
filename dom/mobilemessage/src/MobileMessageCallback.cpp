@@ -16,10 +16,56 @@
 #include "xpcpublic.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArrayHelpers.h"
+#include "DOMMobileMessageError.h"
 
 namespace mozilla {
 namespace dom {
 namespace mobilemessage {
+
+static nsAutoString
+ConvertErrorCodeToErrorString(int32_t aError)
+{
+  nsAutoString errorStr;
+  switch (aError) {
+    case nsIMobileMessageCallback::NO_SIGNAL_ERROR:
+      errorStr = NS_LITERAL_STRING("NoSignalError");
+      break;
+    case nsIMobileMessageCallback::NOT_FOUND_ERROR:
+      errorStr = NS_LITERAL_STRING("NotFoundError");
+      break;
+    case nsIMobileMessageCallback::UNKNOWN_ERROR:
+      errorStr = NS_LITERAL_STRING("UnknownError");
+      break;
+    case nsIMobileMessageCallback::INTERNAL_ERROR:
+      errorStr = NS_LITERAL_STRING("InternalError");
+      break;
+    case nsIMobileMessageCallback::NO_SIM_CARD_ERROR:
+      errorStr = NS_LITERAL_STRING("NoSimCardError");
+      break;
+    case nsIMobileMessageCallback::RADIO_DISABLED_ERROR:
+      errorStr = NS_LITERAL_STRING("RadioDisabledError");
+      break;
+    case nsIMobileMessageCallback::INVALID_ADDRESS_ERROR:
+      errorStr = NS_LITERAL_STRING("InvalidAddressError");
+      break;
+    case nsIMobileMessageCallback::FDN_CHECK_ERROR:
+      errorStr = NS_LITERAL_STRING("FdnCheckError");
+      break;
+    case nsIMobileMessageCallback::NON_ACTIVE_SIM_CARD_ERROR:
+      errorStr = NS_LITERAL_STRING("NonActiveSimCardError");
+      break;
+    case nsIMobileMessageCallback::STORAGE_FULL_ERROR:
+      errorStr = NS_LITERAL_STRING("StorageFullError");
+      break;
+    case nsIMobileMessageCallback::SIM_NOT_MATCHED_ERROR:
+      errorStr = NS_LITERAL_STRING("SimNotMatchedError");
+      break;
+    default: // SUCCESS_NO_ERROR is handled above.
+      MOZ_CRASH("Should never get here!");
+  }
+
+  return errorStr;
+}
 
 NS_IMPL_ADDREF(MobileMessageCallback)
 NS_IMPL_RELEASE(MobileMessageCallback)
@@ -78,56 +124,26 @@ MobileMessageCallback::NotifySuccess(nsISupports *aMessage, bool aAsync)
 }
 
 nsresult
-MobileMessageCallback::NotifyError(int32_t aError, bool aAsync)
+MobileMessageCallback::NotifyError(int32_t aError, DOMError *aDetailedError, bool aAsync)
 {
-  nsAutoString errorStr;
-  switch (aError) {
-    case nsIMobileMessageCallback::NO_SIGNAL_ERROR:
-      errorStr = NS_LITERAL_STRING("NoSignalError");
-      break;
-    case nsIMobileMessageCallback::NOT_FOUND_ERROR:
-      errorStr = NS_LITERAL_STRING("NotFoundError");
-      break;
-    case nsIMobileMessageCallback::UNKNOWN_ERROR:
-      errorStr = NS_LITERAL_STRING("UnknownError");
-      break;
-    case nsIMobileMessageCallback::INTERNAL_ERROR:
-      errorStr = NS_LITERAL_STRING("InternalError");
-      break;
-    case nsIMobileMessageCallback::NO_SIM_CARD_ERROR:
-      errorStr = NS_LITERAL_STRING("NoSimCardError");
-      break;
-    case nsIMobileMessageCallback::RADIO_DISABLED_ERROR:
-      errorStr = NS_LITERAL_STRING("RadioDisabledError");
-      break;
-    case nsIMobileMessageCallback::INVALID_ADDRESS_ERROR:
-      errorStr = NS_LITERAL_STRING("InvalidAddressError");
-      break;
-    case nsIMobileMessageCallback::FDN_CHECK_ERROR:
-      errorStr = NS_LITERAL_STRING("FdnCheckError");
-      break;
-    case nsIMobileMessageCallback::NON_ACTIVE_SIM_CARD_ERROR:
-      errorStr = NS_LITERAL_STRING("NonActiveSimCardError");
-      break;
-    case nsIMobileMessageCallback::STORAGE_FULL_ERROR:
-      errorStr = NS_LITERAL_STRING("StorageFullError");
-      break;
-    case nsIMobileMessageCallback::SIM_NOT_MATCHED_ERROR:
-      errorStr = NS_LITERAL_STRING("SimNotMatchedError");
-      break;
-    default: // SUCCESS_NO_ERROR is handled above.
-      MOZ_CRASH("Should never get here!");
-  }
-
   if (aAsync) {
+    NS_ASSERTION(!aDetailedError,
+      "No Support to FireDetailedErrorAsync() in nsIDOMRequestService!");
+
     nsCOMPtr<nsIDOMRequestService> rs =
       do_GetService(DOMREQUEST_SERVICE_CONTRACTID);
     NS_ENSURE_TRUE(rs, NS_ERROR_FAILURE);
 
-    return rs->FireErrorAsync(mDOMRequest, errorStr);
+    return rs->FireErrorAsync(mDOMRequest,
+                              ConvertErrorCodeToErrorString(aError));
   }
 
-  mDOMRequest->FireError(errorStr);
+  if (aDetailedError) {
+    mDOMRequest->FireDetailedError(aDetailedError);
+  } else {
+    mDOMRequest->FireError(ConvertErrorCodeToErrorString(aError));
+  }
+
   return NS_OK;
 }
 
@@ -138,9 +154,25 @@ MobileMessageCallback::NotifyMessageSent(nsISupports *aMessage)
 }
 
 NS_IMETHODIMP
-MobileMessageCallback::NotifySendMessageFailed(int32_t aError)
+MobileMessageCallback::NotifySendMessageFailed(int32_t aError, nsISupports *aMessage)
 {
-  return NotifyError(aError);
+  nsRefPtr<DOMMobileMessageError> domMobileMessageError;
+  if (aMessage) {
+    nsAutoString errorStr = ConvertErrorCodeToErrorString(aError);
+    nsCOMPtr<nsIDOMMozSmsMessage> smsMsg = do_QueryInterface(aMessage);
+    if (smsMsg) {
+      domMobileMessageError =
+        new DOMMobileMessageError(mDOMRequest->GetOwner(), errorStr, smsMsg);
+    }
+    else {
+      nsCOMPtr<nsIDOMMozMmsMessage> mmsMsg = do_QueryInterface(aMessage);
+      domMobileMessageError =
+        new DOMMobileMessageError(mDOMRequest->GetOwner(), errorStr, mmsMsg);
+    }
+    NS_ASSERTION(domMobileMessageError, "Invalid DOMMobileMessageError!");
+  }
+
+  return NotifyError(aError, domMobileMessageError);
 }
 
 NS_IMETHODIMP
@@ -211,7 +243,7 @@ MobileMessageCallback::NotifySegmentInfoForTextGot(nsIDOMMozSmsSegmentInfo *aInf
 NS_IMETHODIMP
 MobileMessageCallback::NotifyGetSegmentInfoForTextFailed(int32_t aError)
 {
-  return NotifyError(aError, true);
+  return NotifyError(aError, nullptr, true);
 }
 
 NS_IMETHODIMP

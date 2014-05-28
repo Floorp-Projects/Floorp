@@ -83,13 +83,26 @@ add_task(function* checkFirstMetadata() {
   testserver = new HttpServer();
   testserver.registerDirectory("/data/", do_get_file("data"));
   testserver.registerDirectory("/addons/", do_get_file("addons"));
-  testserver.start(4444);
+  testserver.start(-1);
+  gPort = testserver.identity.primaryPort;
+  const BASE_URL  = "http://localhost:" + gPort;
+  const GETADDONS_RESULTS = BASE_URL + "/data/test_AddonRepository_cache.xml";
+  Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, GETADDONS_RESULTS);
+
+  // Put an add-on in our profile so the metadata check will have something to do
+  var min1max2 = {
+    id: "min1max2@tests.mozilla.org",
+    version: "1.0",
+    name: "Test addon compatible with v1->v2",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "2"
+    }]
+  };
+  writeInstallRDFForExtension(min1max2, profileDir);
 
   startupManager();
-
-  // Load up an add-on
-  yield promiseInstallAllFiles([do_get_addon("min1max2")]);
-  yield promiseRestartManager();
 
   // Make sure that updating metadata for the first time sets the lastUpdate preference
   yield AddonRepository.repopulateCache();

@@ -100,8 +100,8 @@ typedef void* nsNativeWidget;
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0x91944a4b, 0xbc29, 0x44aa, \
-  { 0x99, 0x21, 0x42, 0xeb, 0x1f, 0xbb, 0xa6, 0x89 } }
+{ 0x5b27abd6, 0x9e53, 0x4a0a, \
+  { 0x86, 0xf, 0x77, 0x5c, 0xc5, 0x69, 0x35, 0xf } };
 
 /*
  * Window shadow styles
@@ -1164,6 +1164,13 @@ class nsIWidget : public nsISupports {
      */
 
     NS_IMETHOD SetCursor(nsCursor aCursor) = 0;
+
+    /**
+     * If a cursor type is currently cached locally for this widget, clear the
+     * cached cursor to force an update on the next SetCursor call.
+     */
+
+    virtual void ClearCachedCursor() = 0;
 
     /**
      * Sets an image as the cursor for this widget.

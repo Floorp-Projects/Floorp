@@ -21,6 +21,7 @@ const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Sqlite.jsm");
+Cu.import("resource://gre/modules/AsyncShutdown.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/utils.js");
@@ -684,6 +685,14 @@ this.MetricsStorageBackend = function (path) {
   });
 };
 
+// Expose an asynchronous barrier `shutdown` that clients may use to
+// perform last minute cleanup and shutdown requests before this module
+// is shut down.
+// See the documentation of AsyncShutdown.Barrier for more details.
+let shutdown = new AsyncShutdown.Barrier("Metrics Storage Backend");
+this.MetricsStorageBackend.shutdown = shutdown.client;
+Sqlite.shutdown.addBlocker("Metrics Storage: Shutting down",
+  () => shutdown.wait());
 
 /**
  * Manages storage of metrics data in a SQLite database.
@@ -811,7 +820,8 @@ MetricsStorageSqliteBackend.prototype = Object.freeze({
    * This should be called on all instances or the SQLite layer may complain
    * loudly. After this has been called, the connection cannot be used.
    *
-   * @return Promise<>
+   * @return Promise<> A promise fulfilled once the connection is closed.
+   * This promise never rejects.
    */
   close: function () {
     return Task.spawn(function doClose() {

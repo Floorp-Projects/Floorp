@@ -126,6 +126,40 @@ GetParamsFromSendMmsMessageRequest(JSContext* aCx,
   return true;
 }
 
+static bool
+GetMobileMessageDataFromMessage(ContentParent* aParent,
+                                nsISupports *aMsg,
+                                MobileMessageData &aData)
+{
+  if (!aMsg) {
+    NS_WARNING("Invalid message to convert!");
+    return false;
+  }
+
+  nsCOMPtr<nsIDOMMozMmsMessage> mmsMsg = do_QueryInterface(aMsg);
+  if (mmsMsg) {
+    if (!aParent) {
+      NS_ERROR("Invalid ContentParent to convert MMS Message!");
+      return false;
+    }
+    MmsMessageData data;
+    if (!static_cast<MmsMessage*>(mmsMsg.get())->GetData(aParent, data)) {
+      return false;
+    }
+    aData = data;
+    return true;
+  }
+
+  nsCOMPtr<nsIDOMMozSmsMessage> smsMsg = do_QueryInterface(aMsg);
+  if (smsMsg) {
+    aData = static_cast<SmsMessage*>(smsMsg.get())->GetData();
+    return true;
+  }
+
+  NS_WARNING("Cannot get MobileMessageData");
+  return false;
+}
+
 NS_IMPL_ISUPPORTS(SmsParent, nsIObserver)
 
 SmsParent::SmsParent()
@@ -172,9 +206,11 @@ NS_IMETHODIMP
 SmsParent::Observe(nsISupports* aSubject, const char* aTopic,
                    const char16_t* aData)
 {
+  ContentParent *parent = static_cast<ContentParent*>(Manager());
+
   if (!strcmp(aTopic, kSmsReceivedObserverTopic)) {
     MobileMessageData msgData;
-    if (!GetMobileMessageDataFromMessage(aSubject, msgData)) {
+    if (!GetMobileMessageDataFromMessage(parent, aSubject, msgData)) {
       NS_ERROR("Got a 'sms-received' topic without a valid message!");
       return NS_OK;
     }
@@ -185,7 +221,7 @@ SmsParent::Observe(nsISupports* aSubject, const char* aTopic,
 
   if (!strcmp(aTopic, kSmsRetrievingObserverTopic)) {
     MobileMessageData msgData;
-    if (!GetMobileMessageDataFromMessage(aSubject, msgData)) {
+    if (!GetMobileMessageDataFromMessage(parent, aSubject, msgData)) {
       NS_ERROR("Got a 'sms-retrieving' topic without a valid message!");
       return NS_OK;
     }
@@ -196,7 +232,7 @@ SmsParent::Observe(nsISupports* aSubject, const char* aTopic,
 
   if (!strcmp(aTopic, kSmsSendingObserverTopic)) {
     MobileMessageData msgData;
-    if (!GetMobileMessageDataFromMessage(aSubject, msgData)) {
+    if (!GetMobileMessageDataFromMessage(parent, aSubject, msgData)) {
       NS_ERROR("Got a 'sms-sending' topic without a valid message!");
       return NS_OK;
     }
@@ -207,7 +243,7 @@ SmsParent::Observe(nsISupports* aSubject, const char* aTopic,
 
   if (!strcmp(aTopic, kSmsSentObserverTopic)) {
     MobileMessageData msgData;
-    if (!GetMobileMessageDataFromMessage(aSubject, msgData)) {
+    if (!GetMobileMessageDataFromMessage(parent, aSubject, msgData)) {
       NS_ERROR("Got a 'sms-sent' topic without a valid message!");
       return NS_OK;
     }
@@ -218,7 +254,7 @@ SmsParent::Observe(nsISupports* aSubject, const char* aTopic,
 
   if (!strcmp(aTopic, kSmsFailedObserverTopic)) {
     MobileMessageData msgData;
-    if (!GetMobileMessageDataFromMessage(aSubject, msgData)) {
+    if (!GetMobileMessageDataFromMessage(parent, aSubject, msgData)) {
       NS_ERROR("Got a 'sms-failed' topic without a valid message!");
       return NS_OK;
     }
@@ -229,7 +265,7 @@ SmsParent::Observe(nsISupports* aSubject, const char* aTopic,
 
   if (!strcmp(aTopic, kSmsDeliverySuccessObserverTopic)) {
     MobileMessageData msgData;
-    if (!GetMobileMessageDataFromMessage(aSubject, msgData)) {
+    if (!GetMobileMessageDataFromMessage(parent, aSubject, msgData)) {
       NS_ERROR("Got a 'sms-sending' topic without a valid message!");
       return NS_OK;
     }
@@ -240,7 +276,7 @@ SmsParent::Observe(nsISupports* aSubject, const char* aTopic,
 
   if (!strcmp(aTopic, kSmsDeliveryErrorObserverTopic)) {
     MobileMessageData msgData;
-    if (!GetMobileMessageDataFromMessage(aSubject, msgData)) {
+    if (!GetMobileMessageDataFromMessage(parent, aSubject, msgData)) {
       NS_ERROR("Got a 'sms-delivery-error' topic without a valid message!");
       return NS_OK;
     }
@@ -267,10 +303,9 @@ SmsParent::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
-
   if (!strcmp(aTopic, kSmsReadSuccessObserverTopic)) {
     MobileMessageData msgData;
-    if (!GetMobileMessageDataFromMessage(aSubject, msgData)) {
+    if (!GetMobileMessageDataFromMessage(parent, aSubject, msgData)) {
       NS_ERROR("Got a 'sms-read-success' topic without a valid message!");
       return NS_OK;
     }
@@ -281,7 +316,7 @@ SmsParent::Observe(nsISupports* aSubject, const char* aTopic,
 
   if (!strcmp(aTopic, kSmsReadErrorObserverTopic)) {
     MobileMessageData msgData;
-    if (!GetMobileMessageDataFromMessage(aSubject, msgData)) {
+    if (!GetMobileMessageDataFromMessage(parent, aSubject, msgData)) {
       NS_ERROR("Got a 'sms-read-error' topic without a valid message!");
       return NS_OK;
     }
@@ -292,31 +327,6 @@ SmsParent::Observe(nsISupports* aSubject, const char* aTopic,
 
 
   return NS_OK;
-}
-
-bool
-SmsParent::GetMobileMessageDataFromMessage(nsISupports *aMsg,
-                                           MobileMessageData &aData)
-{
-  nsCOMPtr<nsIDOMMozMmsMessage> mmsMsg = do_QueryInterface(aMsg);
-  if (mmsMsg) {
-    MmsMessageData data;
-    ContentParent *parent = static_cast<ContentParent*>(Manager());
-    if (!static_cast<MmsMessage*>(mmsMsg.get())->GetData(parent, data)) {
-      return false;
-    }
-    aData = data;
-    return true;
-  }
-
-  nsCOMPtr<nsIDOMMozSmsMessage> smsMsg = do_QueryInterface(aMsg);
-  if (smsMsg) {
-    aData = static_cast<SmsMessage*>(smsMsg.get())->GetData();
-    return true;
-  }
-
-  NS_WARNING("Cannot get MobileMessageData");
-  return false;
 }
 
 bool
@@ -619,30 +629,27 @@ SmsRequestParent::NotifyMessageSent(nsISupports *aMessage)
 {
   NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMMozMmsMessage> mms = do_QueryInterface(aMessage);
-  if (mms) {
-    MmsMessage *msg = static_cast<MmsMessage*>(mms.get());
-    ContentParent *parent = static_cast<ContentParent*>(Manager()->Manager());
-    MmsMessageData data;
-    if (!msg->GetData(parent, data)) {
-      return NS_ERROR_FAILURE;
-    }
-    return SendReply(ReplyMessageSend(MobileMessageData(data)));
-  }
-
-  nsCOMPtr<nsIDOMMozSmsMessage> sms = do_QueryInterface(aMessage);
-  if (sms) {
-    SmsMessage* msg = static_cast<SmsMessage*>(sms.get());
-    return SendReply(ReplyMessageSend(MobileMessageData(msg->GetData())));
+  ContentParent *parent = static_cast<ContentParent*>(Manager()->Manager());
+  MobileMessageData data;
+  if (GetMobileMessageDataFromMessage(parent, aMessage, data)) {
+    return SendReply(ReplyMessageSend(data));
   }
 
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-SmsRequestParent::NotifySendMessageFailed(int32_t aError)
+SmsRequestParent::NotifySendMessageFailed(int32_t aError, nsISupports *aMessage)
 {
-  return SendReply(ReplyMessageSendFail(aError));
+  NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
+
+  ContentParent *parent = static_cast<ContentParent*>(Manager()->Manager());
+  MobileMessageData data;
+  if (!GetMobileMessageDataFromMessage(parent, aMessage, data)) {
+    return SendReply(ReplyMessageSendFail(aError, OptionalMobileMessageData(void_t())));
+  }
+
+  return SendReply(ReplyMessageSendFail(aError, OptionalMobileMessageData(data)));
 }
 
 NS_IMETHODIMP
@@ -650,21 +657,10 @@ SmsRequestParent::NotifyMessageGot(nsISupports *aMessage)
 {
   NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMMozMmsMessage> mms = do_QueryInterface(aMessage);
-  if (mms) {
-    MmsMessage *msg = static_cast<MmsMessage*>(mms.get());
-    ContentParent *parent = static_cast<ContentParent*>(Manager()->Manager());
-    MmsMessageData data;
-    if (!msg->GetData(parent, data)) {
-      return NS_ERROR_FAILURE;
-    }
-    return SendReply(ReplyGetMessage(MobileMessageData(data)));
-  }
-
-  nsCOMPtr<nsIDOMMozSmsMessage> sms = do_QueryInterface(aMessage);
-  if (sms) {
-    SmsMessage* msg = static_cast<SmsMessage*>(sms.get());
-    return SendReply(ReplyGetMessage(MobileMessageData(msg->GetData())));
+  ContentParent *parent = static_cast<ContentParent*>(Manager()->Manager());
+  MobileMessageData data;
+  if (GetMobileMessageDataFromMessage(parent, aMessage, data)) {
+    return SendReply(ReplyGetMessage(data));
   }
 
   return NS_ERROR_FAILURE;

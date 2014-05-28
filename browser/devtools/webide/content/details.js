@@ -83,7 +83,10 @@ function updateUI() {
     document.querySelector("#type").classList.remove("hidden");
 
     if (project.type == "runtimeApp") {
+      let manifest = AppManager.getProjectManifestURL(project);
       document.querySelector("#type").textContent = manifest.type || "web";
+      document.querySelector("#manifestURLHeader").classList.remove("hidden");
+      document.querySelector("#manifestURL").textContent = manifest;
     } else {
       document.querySelector("#type").textContent = project.type + " " + (manifest.type || "web");
     }

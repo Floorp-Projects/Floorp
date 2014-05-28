@@ -308,9 +308,6 @@ public:
   bool
   IsToggling() const;
 
-  void
-  RemoveObserverFromTable(const nsAString& key);
-
   /**
    * Below 2 function/variable are used for ensuring event 'AdapterAdded' will
    * be fired after event 'Enabled'.

@@ -37,7 +37,6 @@ const SPECTRUM_FRAME = "chrome://browser/content/devtools/spectrum-frame.xhtml";
 const ESCAPE_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE;
 const RETURN_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_RETURN;
 const POPUP_EVENTS = ["shown", "hidden", "showing", "hiding"];
-const FONT_FAMILY_PREVIEW_TEXT = "(ABCabc123&@%)";
 
 /**
  * Tooltip widget.
@@ -636,7 +635,9 @@ Tooltip.prototype = {
    *        it was resized, if if was resized before this function was called.
    *        If not provided, will be measured on the loaded image.
    *        - maxDim : if the image should be resized before being shown, pass
-   *        a number here
+   *        a number here.
+   *        - hideDimensionLabel : if the dimension label should be appended
+   *        after the image.
    */
   setImageContent: function(imageUrl, options={}) {
     if (!imageUrl) {
@@ -656,25 +657,28 @@ Tooltip.prototype = {
     }
     vbox.appendChild(image);
 
-    // Dimension label
-    let label = this.doc.createElement("label");
-    label.classList.add("devtools-tooltip-caption");
-    label.classList.add("theme-comment");
-    if (options.naturalWidth && options.naturalHeight) {
-      label.textContent = this._getImageDimensionLabel(options.naturalWidth,
-        options.naturalHeight);
-    } else {
-      // If no dimensions were provided, load the image to get them
-      label.textContent = l10n.strings.GetStringFromName("previewTooltip.image.brokenImage");
-      let imgObj = new this.doc.defaultView.Image();
-      imgObj.src = imageUrl;
-      imgObj.onload = () => {
-        imgObj.onload = null;
-        label.textContent = this._getImageDimensionLabel(imgObj.naturalWidth,
-          imgObj.naturalHeight);
+    if (!options.hideDimensionLabel) {
+      let label = this.doc.createElement("label");
+      label.classList.add("devtools-tooltip-caption");
+      label.classList.add("theme-comment");
+
+      if (options.naturalWidth && options.naturalHeight) {
+        label.textContent = this._getImageDimensionLabel(options.naturalWidth,
+          options.naturalHeight);
+      } else {
+        // If no dimensions were provided, load the image to get them
+        label.textContent = l10n.strings.GetStringFromName("previewTooltip.image.brokenImage");
+        let imgObj = new this.doc.defaultView.Image();
+        imgObj.src = imageUrl;
+        imgObj.onload = () => {
+          imgObj.onload = null;
+            label.textContent = this._getImageDimensionLabel(imgObj.naturalWidth,
+              imgObj.naturalHeight);
+        }
       }
+
+      vbox.appendChild(label);
     }
-    vbox.appendChild(label);
 
     this.content = vbox;
   },
@@ -777,26 +781,30 @@ Tooltip.prototype = {
    * This is based on Lea Verou's Dablet. See https://github.com/LeaVerou/dabblet
    * for more info.
    * @param {String} font The font family value.
+   * @param {object} nodeFront
+   *        The NodeActor that will used to retrieve the dataURL for the font
+   *        family tooltip contents.
+   * @return A promise that resolves when the font tooltip content is ready, or
+   *         rejects if no font is provided
    */
-  setFontFamilyContent: function(font) {
-    if (!font) {
-      return;
+  setFontFamilyContent: Task.async(function*(font, nodeFront) {
+    if (!font || !nodeFront) {
+      throw "Missing font";
     }
 
-    // Main container
-    let vbox = this.doc.createElement("vbox");
-    vbox.setAttribute("flex", "1");
+    if (typeof nodeFront.getFontFamilyDataURL === "function") {
+      font = font.replace(/"/g, "'");
+      font = font.replace("!important", "");
+      font = font.trim();
 
-    // Display the font family previewer
-    let previewer = this.doc.createElement("description");
-    previewer.setAttribute("flex", "1");
-    previewer.style.fontFamily = font;
-    previewer.classList.add("devtools-tooltip-font-previewer-text");
-    previewer.textContent = FONT_FAMILY_PREVIEW_TEXT;
-    vbox.appendChild(previewer);
+      let fillStyle = (Services.prefs.getCharPref("devtools.theme") === "light") ?
+        "black" : "white";
 
-    this.content = vbox;
-  }
+      let {data, size} = yield nodeFront.getFontFamilyDataURL(font, fillStyle);
+      let str = yield data.string();
+      this.setImageContent(str, { hideDimensionLabel: true, maxDim: size });
+    }
+  })
 };
 
 /**

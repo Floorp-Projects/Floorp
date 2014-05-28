@@ -226,7 +226,16 @@ parent:
      */
     sync GetWidgetNativeData() returns (WindowsHandle value);
 
-    SetCursor(uint32_t value);
+    /**
+     * Set the native cursor.
+     * @param value
+     *   The widget cursor to set.
+     * @param force
+     *   Invalidate any locally cached cursor settings and force an
+     *   update.
+     */
+    SetCursor(uint32_t value, bool force);
+
     SetBackgroundColor(nscolor color);
 
     /**
