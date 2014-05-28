@@ -278,7 +278,7 @@
   margin: 0 4px;
   min-width: 16px;
   width: 16px;
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 .devtools-closebutton > image {
@@ -302,10 +302,6 @@
 }
 
 .devtools-closebutton:hover {
-  opacity: 0.8;
-}
-
-.devtools-closebutton:hover:active {
   opacity: 1;
 }
 
@@ -457,10 +453,6 @@
  * Rules that apply to the global toolbox like command buttons,
  * devtools tabs, docking buttons, etc. */
 
-#toolbox-controls {
-  margin: 0 4px;
-}
-
 #toolbox-controls > toolbarbutton,
 #toolbox-dock-buttons > toolbarbutton {
   -moz-appearance: none;
@@ -500,7 +492,7 @@
 #toolbox-dock-window,
 #toolbox-dock-bottom,
 #toolbox-dock-side {
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 #toolbox-dock-window:hover,
@@ -510,14 +502,16 @@
 }
 
 #toolbox-controls-separator {
-  width: 3px;
+  width: 2px;
   background-image: linear-gradient(hsla(204,45%,98%,0), hsla(204,45%,98%,.1), hsla(204,45%,98%,0)),
                     linear-gradient(hsla(206,37%,4%,0), hsla(206,37%,4%,.6), hsla(206,37%,4%,0)),
                     linear-gradient(hsla(204,45%,98%,0), hsla(204,45%,98%,.1), hsla(204,45%,98%,0));
   background-size: 1px 100%;
   background-repeat: no-repeat;
   background-position: 0, 1px, 2px;
-  -moz-margin-start: 8px;
+}
+#toolbox-controls-separator[invisible] {
+  visibility: hidden;
 }
 
 /* Command buttons */
@@ -650,7 +644,9 @@
   max-width: 127px;
   margin: 0;
   padding: 0;
-  -moz-border-start: 1px solid;
+  border-style: solid;
+  border-width: 0;
+  -moz-border-start-width: 1px;
   -moz-box-align: center;
 }
 
@@ -691,18 +687,6 @@
   background-color: rgba(44, 187, 15, .2);
 }
 
-.devtools-tab:first-child {
-  -moz-border-start-width: 0;
-}
-
-.theme-light .devtools-tab:last-child {
-  -moz-border-end: 1px solid #aaa;
-}
-
-.theme-dark .devtools-tab:last-child {
-  -moz-border-end: 1px solid #42484f;
-}
-
 .devtools-tab > image {
   border: none;
   -moz-margin-end: 0;
@@ -710,10 +694,6 @@
   opacity: 0.6;
   max-height: 16px;
   width: 16px; /* Prevents collapse during theme switching */
-}
-
-#toolbox-tab-options > image {
-  margin: 0 8px;
 }
 
 .devtools-tab > label {
@@ -729,7 +709,7 @@
   opacity: 1;
 }
 
-.theme-dark #toolbox-tabs .devtools-tab[selected] {
+.theme-dark .devtools-tab[selected] {
   color: #f5f7fa;
   background-color: #1a4666;
   box-shadow: 0 2px 0 #d7f1ff inset,
@@ -737,7 +717,7 @@
               0 -2px 0 rgba(0,0,0,.2) inset;
 }
 
-.theme-light #toolbox-tabs .devtools-tab[selected] {
+.theme-light .devtools-tab[selected] {
   color: #f5f7fa;
   background-color: #4c9ed9;
   box-shadow: 0 2px 0 #d7f1ff inset,
@@ -745,27 +725,49 @@
               0 -2px 0 rgba(0,0,0,.06) inset;
 }
 
-.devtools-tab[selected]:not(:first-child),
-.devtools-tab[highlighted]:not(:first-child) {
+#toolbox-tabs .devtools-tab[selected]:not(:first-child),
+#toolbox-tabs .devtools-tab[highlighted]:not(:first-child) {
   border-width: 0;
   -moz-padding-start: 1px;
 }
 
-.devtools-tab[selected]:last-child,
-.devtools-tab[highlighted]:last-child {
+#toolbox-tabs .devtools-tab[selected]:last-child,
+#toolbox-tabs .devtools-tab[highlighted]:last-child {
   -moz-padding-end: 1px;
 }
 
-.devtools-tab[selected] + .devtools-tab,
-.devtools-tab[highlighted] + .devtools-tab {
+#toolbox-tabs .devtools-tab[selected] + .devtools-tab,
+#toolbox-tabs .devtools-tab[highlighted] + .devtools-tab {
   -moz-border-start-width: 0;
   -moz-padding-start: 1px;
+}
+
+#toolbox-tabs .devtools-tab:first-child[selected] {
+  -moz-border-start-width: 0;
+}
+
+#toolbox-tabs .devtools-tab:last-child {
+  -moz-border-end-width: 1px;
 }
 
 .devtools-tab:not([highlighted]) > .highlighted-icon,
 .devtools-tab[selected] > .highlighted-icon,
 .devtools-tab:not([selected])[highlighted] > .default-icon {
   visibility: collapse;
+}
+
+/* The options tab is special - it doesn't have the same parent
+   as the other tabs (toolbox-option-container vs toolbox-tabs) */
+#toolbox-option-container .devtools-tab:not([selected]) {
+  background-color: transparent;
+}
+#toolbox-option-container .devtools-tab {
+  border-color: transparent;
+  border-width: 0;
+  -moz-padding-start: 1px;
+}
+#toolbox-tab-options > image {
+  margin: 0 8px;
 }
 
 /* Invert the colors of certain dark theme images for displaying

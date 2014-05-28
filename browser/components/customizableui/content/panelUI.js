@@ -328,6 +328,9 @@ const PanelUI = {
       tempPanel.setAttribute("type", "arrow");
       tempPanel.setAttribute("id", "customizationui-widget-panel");
       tempPanel.setAttribute("class", "cui-widget-panel");
+      if (this._disableAnimations) {
+        tempPanel.setAttribute("animate", "false");
+      }
       tempPanel.setAttribute("context", "");
       document.getElementById(CustomizableUI.AREA_NAVBAR).appendChild(tempPanel);
       // If the view has a footer, set a convenience class on the panel.
@@ -361,6 +364,19 @@ const PanelUI = {
 
       tempPanel.openPopup(iconAnchor || aAnchor, "bottomcenter topright");
     }
+  },
+
+  /**
+   * NB: The enable- and disableSingleSubviewPanelAnimations methods only
+   * affect the hiding/showing animations of single-subview panels (tempPanel
+   * in the showSubView method).
+   */
+  disableSingleSubviewPanelAnimations: function() {
+    this._disableAnimations = true;
+  },
+
+  enableSingleSubviewPanelAnimations: function() {
+    this._disableAnimations = false;
   },
 
   onWidgetAfterDOMChange: function(aNode, aNextNode, aContainer, aWasRemoval) {
