@@ -52,10 +52,10 @@ public:
 
     LayerTransform = 0,
     MaskTransform,
-    LayerRect,
+    LayerRects,
     MatrixProj,
     TextureTransform,
-    TextureRect,
+    TextureRects,
     RenderTargetOffset,
     LayerOpacity,
     Texture,
@@ -322,9 +322,12 @@ public:
     SetMatrixUniform(KnownUniform::MaskTransform, aMatrix);
   }
 
-  void SetLayerRect(const gfx::Rect& aRect) {
-    float vals[4] = { float(aRect.x), float(aRect.y), float(aRect.width), float(aRect.height) };
-    SetUniform(KnownUniform::LayerRect, 4, vals);
+  void SetLayerRects(const gfx::Rect* aRects) {
+    float vals[16] = { aRects[0].x, aRects[0].y, aRects[0].width, aRects[0].height,
+                       aRects[1].x, aRects[1].y, aRects[1].width, aRects[1].height,
+                       aRects[2].x, aRects[2].y, aRects[2].width, aRects[2].height,
+                       aRects[3].x, aRects[3].y, aRects[3].width, aRects[3].height };
+    SetUniform(KnownUniform::LayerRects, 16, vals);
   }
 
   void SetProjectionMatrix(const gfx::Matrix4x4& aMatrix) {
@@ -336,9 +339,12 @@ public:
     SetMatrixUniform(KnownUniform::TextureTransform, aMatrix);
   }
 
-  void SetTextureRect(const gfx::Rect& aRect) {
-    float vals[4] = { float(aRect.x), float(aRect.y), float(aRect.width), float(aRect.height) };
-    SetUniform(KnownUniform::TextureRect, 4, vals);
+  void SetTextureRects(const gfx::Rect* aRects) {
+    float vals[16] = { aRects[0].x, aRects[0].y, aRects[0].width, aRects[0].height,
+                       aRects[1].x, aRects[1].y, aRects[1].width, aRects[1].height,
+                       aRects[2].x, aRects[2].y, aRects[2].width, aRects[2].height,
+                       aRects[3].x, aRects[3].y, aRects[3].width, aRects[3].height };
+    SetUniform(KnownUniform::TextureRects, 16, vals);
   }
 
   void SetRenderOffset(const nsIntPoint& aOffset) {
@@ -471,6 +477,7 @@ protected:
       case 2: mGL->fUniform2fv(ku.mLocation, 1, ku.mValue.f16v); break;
       case 3: mGL->fUniform3fv(ku.mLocation, 1, ku.mValue.f16v); break;
       case 4: mGL->fUniform4fv(ku.mLocation, 1, ku.mValue.f16v); break;
+      case 16: mGL->fUniform4fv(ku.mLocation, 4, ku.mValue.f16v); break;
       default:
         NS_NOTREACHED("Bogus aLength param");
       }
