@@ -135,8 +135,12 @@
          value="&paneAdvanced.title;"/>
 </hbox>
 
-<tabbox id="advancedPrefs" flex="1"
-        data-category="paneAdvanced" hidden="true"
+<tabbox id="advancedPrefs"
+        handleCtrlTab="false"
+        handleCtrlPageUpDown="false"
+        flex="1"
+        data-category="paneAdvanced"
+        hidden="true"
         onselect="gAdvancedPane.tabSelectionChanged();">
 
   <tabs id="tabsElement">
