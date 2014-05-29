@@ -9,7 +9,8 @@ var expect = chai.expect;
 describe("loop.shared.models", function() {
   "use strict";
 
-  var sandbox, fakeXHR, requests = [];
+  var sharedModels = loop.shared.models,
+      sandbox, fakeXHR, requests = [];
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
@@ -29,7 +30,7 @@ describe("loop.shared.models", function() {
     var conversation, fakeSessionData, fakeBaseServerUrl;
 
     beforeEach(function() {
-      conversation = new loop.shared.models.ConversationModel();
+      conversation = new sharedModels.ConversationModel();
       fakeSessionData = {
         sessionId:    "sessionId",
         sessionToken: "sessionToken",
@@ -39,7 +40,6 @@ describe("loop.shared.models", function() {
     });
 
     describe("#initiate", function() {
-
       it("should throw an Error if no baseServerUrl argument is passed",
         function () {
           expect(function() {
@@ -69,8 +69,8 @@ describe("loop.shared.models", function() {
       it("should update conversation session information from server data",
         function() {
           conversation.set("loopToken", "fakeToken");
-
           conversation.initiate(fakeBaseServerUrl);
+
           requests[0].respond(200, {"Content-Type": "application/json"},
                                    JSON.stringify(fakeSessionData));
 
@@ -122,4 +122,3 @@ describe("loop.shared.models", function() {
     });
   });
 });
-

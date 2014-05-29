@@ -4,8 +4,6 @@
 
 /* global loop:true */
 
-// XXX This file needs unit tests.
-
 var loop = loop || {};
 loop.shared = loop.shared || {};
 loop.shared.views = (function(TB) {
@@ -42,15 +40,23 @@ loop.shared.views = (function(TB) {
   var ConversationView = BaseView.extend({
     el: "#conversation",
 
-    initialize: function() {
-      this.videoStyles = { width: "100%", height: "100%" };
+    videoStyles: { width: "100%", height: "100%" },
 
-      // XXX this feels like to be moved to the ConversationModel, but as it's
+    /**
+     * Establishes webrtc communication using TB sdk.
+     */
+    initialize: function(options) {
+      options = options || {};
+      if (!options.sdk) {
+        throw new Error("missing required sdk");
+      }
+      this.sdk = options.sdk;
+      // XXX: this feels like to be moved to the ConversationModel, but as it's
       // tighly coupled with the DOM (element ids to receive streams), we'd need
       // an abstraction we probably don't want yet.
-      this.session   = TB.initSession(this.model.get("sessionId"));
-      this.publisher = TB.initPublisher(this.model.get("apiKey"), "outgoing",
-                                        this.videoStyles);
+      this.session   = this.sdk.initSession(this.model.get("sessionId"));
+      this.publisher = this.sdk.initPublisher(this.model.get("apiKey"),
+                                              "outgoing", this.videoStyles);
 
       this.session.connect(this.model.get("apiKey"),
                            this.model.get("sessionToken"));
@@ -85,8 +91,59 @@ loop.shared.views = (function(TB) {
     }
   });
 
+  /**
+   * Notification view.
+   */
+  var NotificationView = Backbone.View.extend({
+    template: _.template([
+      '<div class="alert alert-<%- level %>">',
+      '  <button class="close"></button>',
+      '  <p class="message"><%- message %></p>',
+      '</div>'
+    ].join("")),
+
+    events: {
+      "click .close": "dismiss"
+    },
+
+    dismiss: function(event) {
+      event.preventDefault();
+      this.$el.addClass("fade-out");
+      setTimeout(function() {
+        this.collection.remove(this.model);
+        this.remove();
+      }.bind(this), 500); // XXX make timeout value configurable
+    },
+
+    render: function() {
+      this.$el.html(this.template(this.model.toJSON()));
+      return this;
+    }
+  });
+
+  /**
+   * Notification list view.
+   */
+  var NotificationListView = Backbone.View.extend({
+    initialize: function() {
+      this.listenTo(this.collection, "reset add remove", this.render);
+    },
+
+    render: function() {
+      this.$el.html(this.collection.map(function(notification) {
+        return new NotificationView({
+          model: notification,
+          collection: this.collection
+        }).render().$el;
+      }.bind(this)));
+      return this;
+    }
+  });
+
   return {
     BaseView: BaseView,
-    ConversationView: ConversationView
+    ConversationView: ConversationView,
+    NotificationListView: NotificationListView,
+    NotificationView: NotificationView
   };
 })(window.TB);

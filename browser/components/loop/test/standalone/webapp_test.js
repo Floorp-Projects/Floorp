@@ -9,7 +9,8 @@ var expect = chai.expect;
 describe("loop.webapp", function() {
   "use strict";
 
-  var sandbox;
+  var sharedModels = loop.shared.models,
+      sandbox;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
@@ -19,11 +20,11 @@ describe("loop.webapp", function() {
     sandbox.restore();
   });
 
-  describe("Router", function() {
+  describe("WebappRouter", function() {
     var conversation, fakeSessionData;
 
     beforeEach(function() {
-      conversation = new loop.shared.models.ConversationModel();
+      conversation = new sharedModels.ConversationModel();
       fakeSessionData = {
         sessionId:    "sessionId",
         sessionToken: "sessionToken",
@@ -34,14 +35,14 @@ describe("loop.webapp", function() {
     describe("#constructor", function() {
       it("should require a ConversationModel instance", function() {
         expect(function() {
-          new loop.webapp.Router();
+          new loop.webapp.WebappRouter();
         }).to.Throw(Error, /missing required conversation/);
       });
 
       it("should load the HomeView", function() {
-        sandbox.stub(loop.webapp.Router.prototype, "loadView");
+        sandbox.stub(loop.webapp.WebappRouter.prototype, "loadView");
 
-        var router = new loop.webapp.Router({conversation: conversation});
+        var router = new loop.webapp.WebappRouter({conversation: conversation});
 
         sinon.assert.calledOnce(router.loadView);
         sinon.assert.calledWithMatch(router.loadView,
@@ -53,7 +54,7 @@ describe("loop.webapp", function() {
       var router;
 
       beforeEach(function() {
-        router = new loop.webapp.Router({conversation: conversation});
+        router = new loop.webapp.WebappRouter({conversation: conversation});
       });
 
       describe("#loadView", function() {
@@ -66,7 +67,7 @@ describe("loop.webapp", function() {
       var router;
 
       beforeEach(function() {
-        router = new loop.webapp.Router({conversation: conversation});
+        router = new loop.webapp.WebappRouter({conversation: conversation});
         sandbox.stub(router, "loadView");
       });
 
@@ -132,8 +133,10 @@ describe("loop.webapp", function() {
     describe("Events", function() {
       it("should navigate to call/ongoing once the call session is ready",
         function() {
-          sandbox.stub(loop.webapp.Router.prototype, "navigate");
-          var router = new loop.webapp.Router({conversation: conversation});
+          sandbox.stub(loop.webapp.WebappRouter.prototype, "navigate");
+          var router = new loop.webapp.WebappRouter({
+            conversation: conversation
+          });
 
           conversation.setReady(fakeSessionData);
 
@@ -143,40 +146,12 @@ describe("loop.webapp", function() {
     });
   });
 
-  describe("Router", function() {
-    var router, conversation;
-
-    beforeEach(function() {
-      conversation = new loop.shared.models.ConversationModel({
-        loopToken: "fake"
-      });
-      router = new loop.webapp.Router({conversation: conversation});
-    });
-
-    describe("#constructor", function() {
-      it("should define a default active view", function() {
-        expect(router.activeView).to.be.an.instanceOf(loop.webapp.HomeView);
-      });
-    });
-
-    describe("#loadView", function() {
-      it("should set the active view", function() {
-        router.loadView(new loop.webapp.ConversationFormView({
-          model: conversation
-        }));
-
-        expect(router.activeView).to.be.an.instanceOf(
-          loop.webapp.ConversationFormView);
-      });
-    });
-  });
-
   describe("ConversationFormView", function() {
     describe("#initiate", function() {
       var conversation, initiate, view, fakeSubmitEvent;
 
       beforeEach(function() {
-        conversation = new loop.shared.models.ConversationModel();
+        conversation = new sharedModels.ConversationModel();
         view = new loop.webapp.ConversationFormView({model: conversation});
         fakeSubmitEvent = {preventDefault: sinon.spy()};
       });
