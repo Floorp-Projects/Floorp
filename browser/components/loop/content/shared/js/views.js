@@ -6,7 +6,7 @@
 
 var loop = loop || {};
 loop.shared = loop.shared || {};
-loop.shared.views = (function(TB) {
+loop.shared.views = (function(OT) {
   "use strict";
 
   var sharedModels = loop.shared.models;
@@ -47,7 +47,7 @@ loop.shared.views = (function(TB) {
     videoStyles: { width: "100%", height: "auto" },
 
     /**
-     * Establishes webrtc communication using TB sdk.
+     * Establishes webrtc communication using OT sdk.
      */
     initialize: function(options) {
       options = options || {};
@@ -179,4 +179,4 @@ loop.shared.views = (function(TB) {
     NotificationListView: NotificationListView,
     NotificationView: NotificationView
   };
-})(window.TB);
+})(window.OT);

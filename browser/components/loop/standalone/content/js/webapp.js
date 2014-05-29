@@ -5,7 +5,7 @@
 /* global loop:true */
 
 var loop = loop || {};
-loop.webapp = (function($, TB, webl10n) {
+loop.webapp = (function($, OT, webl10n) {
   "use strict";
 
   /**
@@ -202,7 +202,7 @@ loop.webapp = (function($, TB, webl10n) {
         }
       }
       this.loadView(new sharedViews.ConversationView({
-        sdk: TB,
+        sdk: OT,
         model: this._conversation
       }));
     }
@@ -227,4 +227,4 @@ loop.webapp = (function($, TB, webl10n) {
     init: init,
     WebappRouter: WebappRouter
   };
-})(jQuery, window.TB, document.webL10n);
+})(jQuery, window.OT, document.webL10n);
