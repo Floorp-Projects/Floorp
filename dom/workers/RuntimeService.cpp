@@ -781,8 +781,6 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
     }
   }
 
-  JS_SetIsWorkerRuntime(aRuntime);
-
   JS_SetNativeStackQuota(aRuntime, WORKER_CONTEXT_NATIVE_STACK_LIMIT);
 
   // Security policy:
@@ -842,8 +840,7 @@ public:
   // call to JS_SetGCParameter inside CreateJSContextForWorker.
   WorkerJSRuntime(JSRuntime* aParentRuntime, WorkerPrivate* aWorkerPrivate)
     : CycleCollectedJSRuntime(aParentRuntime,
-                              WORKER_DEFAULT_RUNTIME_HEAPSIZE,
-                              JS_NO_HELPER_THREADS),
+                              WORKER_DEFAULT_RUNTIME_HEAPSIZE),
     mWorkerPrivate(aWorkerPrivate)
   {
   }
