@@ -21,9 +21,10 @@ describe("loop.webapp", function() {
   });
 
   describe("WebappRouter", function() {
-    var conversation, fakeSessionData;
+    var conversation, notifier, fakeSessionData;
 
     beforeEach(function() {
+      notifier = {notify: sandbox.spy()};
       conversation = new sharedModels.ConversationModel();
       fakeSessionData = {
         sessionId:    "sessionId",
@@ -37,6 +38,12 @@ describe("loop.webapp", function() {
         expect(function() {
           new loop.webapp.WebappRouter();
         }).to.Throw(Error, /missing required conversation/);
+      });
+
+      it("should require a notifier", function() {
+        expect(function() {
+          new loop.webapp.WebappRouter({conversation: {}});
+        }).to.Throw(Error, /missing required notifier/);
       });
     });
 
@@ -57,7 +64,10 @@ describe("loop.webapp", function() {
       var router;
 
       beforeEach(function() {
-        router = new loop.webapp.WebappRouter({conversation: conversation});
+        router = new loop.webapp.WebappRouter({
+          conversation: conversation,
+          notifier: notifier
+        });
         sandbox.stub(router, "loadView");
       });
 
@@ -125,7 +135,8 @@ describe("loop.webapp", function() {
         function() {
           sandbox.stub(loop.webapp.WebappRouter.prototype, "navigate");
           var router = new loop.webapp.WebappRouter({
-            conversation: conversation
+            conversation: conversation,
+            notifier: notifier
           });
 
           conversation.setReady(fakeSessionData);
@@ -137,12 +148,30 @@ describe("loop.webapp", function() {
   });
 
   describe("ConversationFormView", function() {
+    describe("#initialize", function() {
+      it("should require a conversation option", function() {
+        expect(function() {
+          new loop.webapp.WebappRouter();
+        }).to.Throw(Error, /missing required conversation/);
+      });
+
+      it("should require a notifier option", function() {
+        expect(function() {
+          new loop.webapp.WebappRouter({conversation: {}});
+        }).to.Throw(Error, /missing required notifier/);
+      });
+    });
+
     describe("#initiate", function() {
-      var conversation, initiate, view, fakeSubmitEvent;
+      var notifier, conversation, initiate, view, fakeSubmitEvent;
 
       beforeEach(function() {
+        notifier = {notify: sandbox.spy()};
         conversation = new sharedModels.ConversationModel();
-        view = new loop.webapp.ConversationFormView({model: conversation});
+        view = new loop.webapp.ConversationFormView({
+          model: conversation,
+          notifier: notifier
+        });
         fakeSubmitEvent = {preventDefault: sinon.spy()};
       });
 
@@ -154,12 +183,36 @@ describe("loop.webapp", function() {
 
         sinon.assert.calledOnce(fakeSubmitEvent.preventDefault);
         sinon.assert.calledOnce(initiate);
-        // XXX host should be configurable
-        //     see https://bugzilla.mozilla.org/show_bug.cgi?id=987086
         sinon.assert.calledWith(initiate, {
-          baseServerUrl: "http://localhost:5000",
+          baseServerUrl: loop.webapp.baseServerUrl,
           outgoing: true
         });
+      });
+    });
+
+    describe("Events", function() {
+      var notifier, conversation, view;
+
+      beforeEach(function() {
+        notifier = {notify: sandbox.spy()};
+        conversation = new sharedModels.ConversationModel({
+          loopToken: "fake"
+        });
+        view = new loop.webapp.ConversationFormView({
+          model: conversation,
+          notifier: notifier
+        });
+      });
+
+      it("should trigger a notication when a session:error model event is " +
+         " received", function() {
+        conversation.trigger("session:error", "tech error");
+
+        sinon.assert.calledOnce(notifier.notify);
+        // XXX We should test for the actual message content, but webl10n gets
+        //     in the way as translated messages are all empty because matching
+        //     DOM elements are missing.
+        sinon.assert.calledWithMatch(notifier.notify, {level: "error"});
       });
     });
   });
