@@ -293,14 +293,6 @@ LIRGeneratorShared::useOrConstant(MDefinition *mir)
 }
 
 LAllocation
-LIRGeneratorShared::useOrConstantAtStart(MDefinition *mir)
-{
-    if (mir->isConstant())
-        return LAllocation(mir->toConstant()->vp());
-    return useAtStart(mir);
-}
-
-LAllocation
 LIRGeneratorShared::useRegisterOrConstant(MDefinition *mir)
 {
     if (mir->isConstant())
