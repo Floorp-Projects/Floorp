@@ -27,6 +27,8 @@
 #include "webrtc/system_wrappers/interface/thread_wrapper.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
+#include "AndroidJNIWrapper.h"
+
 namespace webrtc {
 
 JavaVM* AudioTrackJni::globalJvm = NULL;
@@ -39,35 +41,26 @@ int32_t AudioTrackJni::SetAndroidAudioDeviceObjects(void* javaVM, void* env,
   assert(env);
   globalJvm = reinterpret_cast<JavaVM*>(javaVM);
   globalJNIEnv = reinterpret_cast<JNIEnv*>(env);
-  // Get java class type (note path to class packet).
-  jclass javaScClassLocal = globalJNIEnv->FindClass(
-      "org/webrtc/voiceengine/WebRtcAudioTrack");
-  if (!javaScClassLocal) {
-    WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
-                 "%s: could not find java class", __FUNCTION__);
-    return -1; // exception thrown
-  }
 
-  // Create a global reference to the class (to tell JNI that we are
-  // referencing it after this function has returned).
-  globalScClass = reinterpret_cast<jclass> (
-      globalJNIEnv->NewGlobalRef(javaScClassLocal));
+  // Check if we already got a reference
   if (!globalScClass) {
-    WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
-                 "%s: could not create reference", __FUNCTION__);
-    return -1;
+    // Get java class type (note path to class packet).
+    globalScClass = jsjni_GetGlobalClassRef("org/webrtc/voiceengine/WebRtcAudioTrack");
+    if (!globalScClass) {
+      WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
+                   "%s: could not find java class", __FUNCTION__);
+      return -1; // exception thrown
+    }
   }
-
-  globalContext = globalJNIEnv->NewGlobalRef(
-      reinterpret_cast<jobject>(context));
   if (!globalContext) {
-    WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
-                 "%s: could not create context reference", __FUNCTION__);
-    return -1;
+    globalContext = jsjni_GetGlobalContextRef();
+    if (!globalContext) {
+      WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
+                   "%s: could not create context reference", __FUNCTION__);
+      return -1;
+    }
   }
 
-  // Delete local class ref, we only use the global ref
-  globalJNIEnv->DeleteLocalRef(javaScClassLocal);
   return 0;
 }
 
@@ -82,7 +75,8 @@ void AudioTrackJni::ClearAndroidAudioDeviceObjects() {
     return;
   }
 
-  globalJNIEnv->DeleteGlobalRef(globalContext);
+  // No need to delete the shared global context ref.
+  // globalJNIEnv->DeleteGlobalRef(globalContext);
   globalContext = reinterpret_cast<jobject>(NULL);
 
   globalJNIEnv->DeleteGlobalRef(globalScClass);

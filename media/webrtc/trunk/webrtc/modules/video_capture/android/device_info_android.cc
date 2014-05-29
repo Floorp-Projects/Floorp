@@ -20,6 +20,8 @@
 #include "webrtc/system_wrappers/interface/ref_count.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
+#include "AndroidJNIWrapper.h"
+
 namespace webrtc
 {
 
@@ -92,8 +94,11 @@ void DeviceInfoAndroid::Initialize(JNIEnv* jni) {
 
   g_camera_info = new std::vector<AndroidCameraInfo>();
   jclass j_info_class =
-      jni->FindClass("org/webrtc/videoengine/VideoCaptureDeviceInfoAndroid");
+    jsjni_GetGlobalClassRef("org/webrtc/videoengine/VideoCaptureDeviceInfoAndroid");
+  jclass j_cap_class =
+    jsjni_GetGlobalClassRef("org/webrtc/videoengine/CaptureCapabilityAndroid");
   assert(j_info_class);
+  assert(j_cap_class);
   jmethodID j_initialize = jni->GetStaticMethodID(
     j_info_class, "getDeviceInfo",
     "()[Lorg/webrtc/videoengine/CaptureCapabilityAndroid;");
@@ -157,6 +162,9 @@ void DeviceInfoAndroid::Initialize(JNIEnv* jni) {
     jni->ReleaseIntArrayElements(widthResArray, widths, JNI_ABORT);
     jni->ReleaseIntArrayElements(heightResArray, heights, JNI_ABORT);
   }
+
+  jni->DeleteGlobalRef(j_info_class);
+  jni->DeleteGlobalRef(j_cap_class);
 }
 
 VideoCaptureModule::DeviceInfo* VideoCaptureImpl::CreateDeviceInfo(
