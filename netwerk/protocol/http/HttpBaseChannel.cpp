@@ -19,6 +19,7 @@
 #include "nsITimedChannel.h"
 #include "nsIEncodedChannel.h"
 #include "nsIApplicationCacheChannel.h"
+#include "nsIMutableArray.h"
 #include "nsEscape.h"
 #include "nsStreamListenerWrapper.h"
 #include "nsISecurityConsoleMessage.h"
@@ -160,6 +161,7 @@ NS_INTERFACE_MAP_BEGIN(HttpBaseChannel)
   NS_INTERFACE_MAP_ENTRY(nsIEncodedChannel)
   NS_INTERFACE_MAP_ENTRY(nsIHttpChannel)
   NS_INTERFACE_MAP_ENTRY(nsIHttpChannelInternal)
+  NS_INTERFACE_MAP_ENTRY(nsIRedirectHistory)
   NS_INTERFACE_MAP_ENTRY(nsIUploadChannel)
   NS_INTERFACE_MAP_ENTRY(nsIUploadChannel2)
   NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
@@ -1588,6 +1590,13 @@ HttpBaseChannel::SetResponseTimeoutEnabled(bool aEnable)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HttpBaseChannel::AddRedirect(nsIPrincipal *aRedirect)
+{
+  mRedirects.AppendObject(aRedirect);
+  return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsISupportsPriority
 //-----------------------------------------------------------------------------
@@ -1651,6 +1660,60 @@ HttpBaseChannel::GetEntityID(nsACString& aEntityID)
 
   aEntityID = entityID;
 
+  return NS_OK;
+}
+
+nsIPrincipal *
+HttpBaseChannel::GetPrincipal(bool requireAppId)
+{
+  if (mPrincipal) {
+      if (requireAppId && mPrincipal->GetUnknownAppId()) {
+        LOG(("HttpBaseChannel::GetPrincipal: No app id [this=%p]", this));
+        return nullptr;
+      }
+      return mPrincipal;
+  }
+
+  nsIScriptSecurityManager *securityManager =
+      nsContentUtils::GetSecurityManager();
+
+  if (!securityManager) {
+      LOG(("HttpBaseChannel::GetPrincipal: No security manager [this=%p]",
+           this));
+      return nullptr;
+  }
+
+  securityManager->GetChannelPrincipal(this, getter_AddRefs(mPrincipal));
+  if (!mPrincipal) {
+      LOG(("HttpBaseChannel::GetPrincipal: No channel principal [this=%p]",
+           this));
+      return nullptr;
+  }
+
+  // principals with unknown app ids do not work with the permission manager
+  if (requireAppId && mPrincipal->GetUnknownAppId()) {
+      LOG(("HttpBaseChannel::GetPrincipal: No app id [this=%p]", this));
+      return nullptr;
+  }
+
+  return mPrincipal;
+}
+
+// nsIRedirectHistory
+NS_IMETHODIMP
+HttpBaseChannel::GetRedirects(nsIArray * *aRedirects)
+{
+  nsresult rv;
+  nsCOMPtr<nsIMutableArray> redirects =
+    do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (int i = 0; i < mRedirects.Count(); ++i) {
+    rv = redirects->AppendElement(mRedirects[i], false);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  *aRedirects = redirects;
+  NS_IF_ADDREF(*aRedirects);
   return NS_OK;
 }
 
@@ -1899,6 +1962,25 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
              "[this=%p] transferring chain of redirect cache-keys", this));
         httpInternal->SetCacheKeysRedirectChain(mRedirectedCachekeys.forget());
     }
+    // Transfer existing redirect information. Add all of our existing
+    // redirects to the new channel.
+    for (int32_t i = 0; i < mRedirects.Count(); ++i) {
+#ifdef PR_LOGGING
+      nsCOMPtr<nsIURI> uri;
+      mRedirects[i]->GetURI(getter_AddRefs(uri));
+      nsCString spec;
+      uri->GetSpec(spec);
+      LOG(("HttpBaseChannel::SetupReplacementChannel adding redirect %s "
+           "[this=%p]", spec.get(), this));
+#endif
+      httpInternal->AddRedirect(mRedirects[i]);
+    }
+
+    // Add our own principal to the redirect information on the new channel. If
+    // the redirect is vetoed, then newChannel->AsyncOpen won't be called.
+    // However, the new channel's redirect chain will still be complete.
+    nsCOMPtr<nsIPrincipal> principal = GetPrincipal(false);
+    httpInternal->AddRedirect(principal);
   }
 
   // transfer application cache information
