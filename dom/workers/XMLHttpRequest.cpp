@@ -954,6 +954,7 @@ Proxy::Teardown()
       }
 
       mWorkerPrivate = nullptr;
+      mSyncLoopTarget = nullptr;
       mOutstandingSendCount = 0;
     }
 
@@ -1106,6 +1107,7 @@ LoadStartDetectionRunnable::Run()
                                   mXMLHttpRequestPrivate, mChannelId);
       if (runnable->Dispatch(nullptr)) {
         mProxy->mWorkerPrivate = nullptr;
+        mProxy->mSyncLoopTarget = nullptr;
         mProxy->mOutstandingSendCount--;
       }
     }
