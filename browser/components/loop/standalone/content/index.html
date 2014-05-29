@@ -23,7 +23,9 @@
       <p data-l10n-id="welcome">Welcome to the Loop web client.</p>
     </div>
 
-    <form id="conversation-form" class="hide">
+    <!-- The autocomplete attribute is set to "off" to prevent keeping the state
+         of the disabled button across reloads  -->
+    <form id="conversation-form" autocomplete="off" class="hide">
       <p>
         <button class="btn btn-success" data-l10n-id="start_call">Start call</button>
       </p>
