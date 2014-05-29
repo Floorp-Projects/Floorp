@@ -807,6 +807,11 @@ public:
               const nsACString& aSharedWorkerName,
               LoadInfo* aLoadInfo, ErrorResult& aRv);
 
+  static already_AddRefed<WorkerPrivate>
+  Constructor(JSContext* aCx, const nsAString& aScriptURL, bool aIsChromeWorker,
+              WorkerType aWorkerType, const nsACString& aSharedWorkerName,
+              LoadInfo* aLoadInfo, ErrorResult& aRv);
+
   static bool
   WorkerAvailable(JSContext* /* unused */, JSObject* /* unused */);
 
