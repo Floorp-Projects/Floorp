@@ -265,8 +265,6 @@ public:
   NS_IMETHODIMP OnSetRemoteDescriptionSuccess(ER&);
   NS_IMETHODIMP OnSetLocalDescriptionError(uint32_t code, const char *msg, ER&);
   NS_IMETHODIMP OnSetRemoteDescriptionError(uint32_t code, const char *msg, ER&);
-  NS_IMETHODIMP NotifyConnection(ER&);
-  NS_IMETHODIMP NotifyClosedConnection(ER&);
   NS_IMETHODIMP NotifyDataChannel(nsIDOMDataChannel *channel, ER&);
   NS_IMETHODIMP OnStateChange(PCObserverStateType state_type, ER&, void*);
   NS_IMETHODIMP OnAddStream(nsIDOMMediaStream *stream, ER&);
@@ -359,20 +357,6 @@ TestObserver::OnSetRemoteDescriptionError(uint32_t code, const char *message, ER
 }
 
 NS_IMETHODIMP
-TestObserver::NotifyConnection(ER&)
-{
-  std::cout << name << ": NotifyConnection" << std::endl;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TestObserver::NotifyClosedConnection(ER&)
-{
-  std::cout << name << ": NotifyClosedConnection" << std::endl;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 TestObserver::NotifyDataChannel(nsIDOMDataChannel *channel, ER&)
 {
   std::cout << name << ": NotifyDataChannel" << std::endl;
@@ -383,7 +367,6 @@ NS_IMETHODIMP
 TestObserver::OnStateChange(PCObserverStateType state_type, ER&, void*)
 {
   nsresult rv;
-  PCImplReadyState gotready;
   PCImplIceConnectionState gotice;
   PCImplIceGatheringState goticegathering;
   PCImplSipccState gotsipcc;
@@ -393,14 +376,6 @@ TestObserver::OnStateChange(PCObserverStateType state_type, ER&, void*)
 
   switch (state_type)
   {
-  case PCObserverStateType::ReadyState:
-    MOZ_ASSERT(NS_IsMainThread());
-    rv = pc->ReadyState(&gotready);
-    NS_ENSURE_SUCCESS(rv, rv);
-    std::cout << "Ready State: "
-              << PCImplReadyStateValues::strings[int(gotready)].value
-              << std::endl;
-    break;
   case PCObserverStateType::IceConnectionState:
     MOZ_ASSERT(NS_IsMainThread());
     rv = pc->IceConnectionState(&gotice);
