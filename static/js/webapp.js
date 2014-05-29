@@ -25,121 +25,14 @@ loop.webapp = (function($, TB) {
 
   /**
    * Current conversation model instance.
-   * @type {loop.webapp.ConversationModel}
+   * @type {loop.shared.models.ConversationModel}
    */
   var conversation;
 
   /**
-   * Conversation model.
-   */
-  var ConversationModel = Backbone.Model.extend({
-    defaults: {
-      loopToken:    undefined, // Loop conversation token
-      sessionId:    undefined, // TB session id
-      sessionToken: undefined, // TB session token
-      apiKey:       undefined  // TB api key
-    },
-
-    /**
-     * Initiates a conversation, requesting call session information to the Loop
-     * server and updates appropriately the current model attributes with the
-     * data.
-     *
-     * Triggered events:
-     *
-     * - `session:ready` when the session information have been succesfully
-     *   retrieved from the server;
-     * - `session:error` when the request failed.
-     *
-     * @param  {Object} options Conversation options.
-     * @throws {Error} If no conversation token is set
-     */
-    initiate: function(options) {
-      options = options || {};
-
-      if (!this.get("loopToken")) {
-        throw new Error("missing required attribute loopToken");
-      }
-
-      // Check if the session is already set
-      if (this.isSessionReady()) {
-        return this.trigger("session:ready", this);
-      }
-
-      var request = $.ajax({
-        url:         baseApiUrl + "/calls/" + this.get("loopToken"),
-        method:      "POST",
-        contentType: "application/json",
-        data:        JSON.stringify({}),
-        dataType:    "json"
-      });
-
-      request.done(this.setReady.bind(this));
-
-      request.fail(function(xhr, _, statusText) {
-        var serverError = xhr.status + " " + statusText;
-        if (typeof xhr.responseJSON === "object" && xhr.responseJSON.error) {
-          serverError += "; " + xhr.responseJSON.error;
-        }
-        this.trigger("session:error", new Error(
-          "Retrieval of session information failed: HTTP " + serverError));
-      }.bind(this));
-    },
-
-    /**
-     * Checks that the session is ready.
-     *
-     * @return {Boolean}
-     */
-    isSessionReady: function() {
-      return !!this.get("sessionId");
-    },
-
-    /**
-     * Sets session information and triggers the `session:ready` event.
-     *
-     * @param {Object} sessionData Conversation session information.
-     */
-    setReady: function(sessionData) {
-      // Explicit property assignment to prevent later "surprises"
-      this.set({
-        sessionId:    sessionData.sessionId,
-        sessionToken: sessionData.sessionToken,
-        apiKey:       sessionData.apiKey
-      }).trigger("session:ready", this);
-      return this;
-    }
-  });
-
-  /**
-   * Base Backbone view.
-   */
-  var BaseView = Backbone.View.extend({
-    /**
-     * Hides view element.
-     *
-     * @return {BaseView}
-     */
-    hide: function() {
-      this.$el.hide();
-      return this;
-    },
-
-    /**
-     * Shows view element.
-     *
-     * @return {BaseView}
-     */
-    show: function() {
-      this.$el.show();
-      return this;
-    }
-  });
-
-  /**
    * Homepage view.
    */
-  var HomeView = BaseView.extend({
+  var HomeView = loop.shared.views.BaseView.extend({
     el: "#home"
   });
 
@@ -147,7 +40,7 @@ loop.webapp = (function($, TB) {
    * Conversation launcher view. A ConversationModel is associated and attached
    * as a `model` property.
    */
-  var ConversationFormView = BaseView.extend({
+  var ConversationFormView = loop.shared.views.BaseView.extend({
     el: "#conversation-form",
 
     events: {
@@ -164,58 +57,7 @@ loop.webapp = (function($, TB) {
 
     initiate: function(event) {
       event.preventDefault();
-      this.model.initiate();
-    }
-  });
-
-  /**
-   * Conversation view.
-   */
-  var ConversationView = BaseView.extend({
-    el: "#conversation",
-
-    /**
-     * Establishes webrtc communication using TB sdk.
-     */
-    initialize: function() {
-      this.videoStyles = { width: "100%", height: "100%" };
-      // XXX: this feels like to be moved to the ConversationModel, but as it's
-      // tighly coupled with the DOM (element ids to receive streams), we'd need
-      // an abstraction we probably don't want yet.
-      this.session   = TB.initSession(this.model.get("sessionId"));
-      this.publisher = TB.initPublisher(this.model.get("apiKey"), "outgoing",
-                                        this.videoStyles);
-
-      this.session.connect(this.model.get("apiKey"),
-                           this.model.get("sessionToken"));
-
-      this.listenTo(this.session, "sessionConnected", this._sessionConnected);
-      this.listenTo(this.session, "streamCreated", this._streamCreated);
-      this.listenTo(this.session, "connectionDestroyed", this._sessionEnded);
-    },
-
-    _sessionConnected: function(event) {
-      this.session.publish(this.publisher);
-      this._subscribeToStreams(event.streams);
-    },
-
-    _streamCreated: function(event) {
-      this._subscribeToStreams(event.streams);
-    },
-
-    _sessionEnded: function(event) {
-      // XXX: better end user notification
-      alert("Your session has ended. Reason: " + event.reason);
-      this.model.trigger("session:ended");
-    },
-
-    _subscribeToStreams: function(streams) {
-      streams.forEach(function(stream) {
-        if (stream.connection.connectionId !==
-            this.session.connection.connectionId) {
-          this.session.subscribe(stream, "incoming", this.videoStyles);
-        }
-      }.bind(this));
+      this.model.initiate(baseApiUrl);
     }
   });
 
@@ -265,7 +107,7 @@ loop.webapp = (function($, TB) {
     /**
      * Loads and render current active view.
      *
-     * @param {BaseView} view View.
+     * @param {loop.shared.BaseView} view View.
      */
     loadView : function(view) {
       if (this.activeView) {
@@ -306,7 +148,8 @@ loop.webapp = (function($, TB) {
           return this.navigate("home", {trigger: true});
         }
       }
-      this.loadView(new ConversationView({model: this._conversation}));
+      this.loadView(
+        new loop.shared.views.ConversationView({model: this._conversation}));
     }
   });
 
@@ -314,16 +157,13 @@ loop.webapp = (function($, TB) {
    * App initialization.
    */
   function init() {
-    conversation = new ConversationModel();
+    conversation = new loop.shared.models.ConversationModel();
     router = new Router({conversation: conversation});
     Backbone.history.start();
   }
 
   return {
-    BaseView: BaseView,
     ConversationFormView: ConversationFormView,
-    ConversationModel: ConversationModel,
-    ConversationView: ConversationView,
     HomeView: HomeView,
     init: init,
     Router: Router
