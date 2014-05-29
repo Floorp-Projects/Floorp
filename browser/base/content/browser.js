@@ -172,6 +172,9 @@ let gInitialPages = [
 #include browser-feeds.js
 #include browser-fullScreen.js
 #include browser-fullZoom.js
+#ifdef MOZ_LOOP
+#include browser-loop.js
+#endif
 #include browser-places.js
 #include browser-plugins.js
 #include browser-safebrowsing.js

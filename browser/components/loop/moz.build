@@ -5,3 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 JAR_MANIFESTS += ['jar.mn']
+
+JS_MODULES_PATH = 'modules/loop'
+
+XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
+
+EXTRA_JS_MODULES += [
+    'MozLoopAPI.jsm',
+    'MozLoopService.jsm',
+]
