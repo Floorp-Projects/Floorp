@@ -40,16 +40,33 @@ CodeGeneratorMIPS::CodeGeneratorMIPS(MIRGenerator *gen, LIRGraph *graph, MacroAs
 bool
 CodeGeneratorMIPS::generatePrologue()
 {
-    if (gen->compilingAsmJS()) {
-        masm.Push(ra);
-        // Note that this automatically sets MacroAssembler::framePushed().
-        masm.reserveStack(frameDepth_);
-    } else {
-        // Note that this automatically sets MacroAssembler::framePushed().
-        masm.reserveStack(frameSize());
-        masm.checkStackAlignment();
+    MOZ_ASSERT(!gen->compilingAsmJS());
+    // Note that this automatically sets MacroAssembler::framePushed().
+    masm.reserveStack(frameSize());
+    masm.checkStackAlignment();
+    return true;
+}
+
+bool
+CodeGeneratorMIPS::generateAsmJSPrologue(Label *stackOverflowLabel)
+{
+    JS_ASSERT(gen->compilingAsmJS());
+
+    masm.Push(ra);
+
+    // The asm.js over-recursed handler wants to be able to assume that SP
+    // points to the return address, so perform the check after pushing ra but
+    // before pushing frameDepth.
+    if (!omitOverRecursedCheck()) {
+        masm.branchPtr(Assembler::AboveOrEqual,
+                       AsmJSAbsoluteAddress(AsmJSImm_StackLimit),
+                       StackPointer,
+                       stackOverflowLabel);
     }
 
+    // Note that this automatically sets MacroAssembler::framePushed().
+    masm.reserveStack(frameDepth_);
+    masm.checkStackAlignment();
     return true;
 }
 
@@ -1994,7 +2011,7 @@ CodeGeneratorMIPS::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
     }
     masm.bind(&done);
 
-    return gen->noteHeapAccess(AsmJSHeapAccess(bo.getOffset()));
+    return masm.append(AsmJSHeapAccess(bo.getOffset()));
 }
 
 bool
@@ -2070,7 +2087,7 @@ CodeGeneratorMIPS::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
     }
     masm.bind(&rejoin);
 
-    return gen->noteHeapAccess(AsmJSHeapAccess(bo.getOffset()));
+    return masm.append(AsmJSHeapAccess(bo.getOffset()));
 }
 
 bool
