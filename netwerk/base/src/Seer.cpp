@@ -1920,7 +1920,7 @@ Seer::AddSubresource(QueryType queryType, const int32_t parentId,
 // top-level load
 void
 Seer::UpdateSubresource(QueryType queryType, const SubresourceInfo &info,
-                        const PRTime now)
+                        const PRTime now, const int32_t parentCount)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "UpdateSubresource called on main thread.");
 
@@ -1939,8 +1939,12 @@ Seer::UpdateSubresource(QueryType queryType, const SubresourceInfo &info,
   }
   mozStorageStatementScoper scope(stmt);
 
+  // Make sure the hit count can't be more that its parent
+  int32_t hitCount = std::min((info.hitCount + 1), parentCount);
+
   nsresult rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("hit_count"),
-                                      info.hitCount + 1);
+                                      hitCount);
+
   RETURN_IF_FAILED(rv);
 
   rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("now"), now);
@@ -1988,14 +1992,14 @@ Seer::LearnForSubresource(const UriInfo &targetURI, const UriInfo &sourceURI)
   }
 
   if (haveResource) {
-    UpdateSubresource(QUERY_PAGE, resourceInfo, pageInfo.lastLoad);
+    UpdateSubresource(QUERY_PAGE, resourceInfo, pageInfo.lastLoad, pageInfo.loadCount);
   } else if (havePage) {
     AddSubresource(QUERY_PAGE, pageInfo.id, targetURI.spec, pageInfo.lastLoad);
   }
   // Can't add a subresource to a page we don't have in our db.
 
   if (haveHost) {
-    UpdateSubresource(QUERY_ORIGIN, hostInfo, originInfo.lastLoad);
+    UpdateSubresource(QUERY_ORIGIN, hostInfo, originInfo.lastLoad, originInfo.loadCount);
   } else if (haveOrigin) {
     AddSubresource(QUERY_ORIGIN, originInfo.id, targetURI.origin, originInfo.lastLoad);
   }

@@ -145,7 +145,8 @@ private:
                       const nsACString &key, PRTime now);
   void UpdateSubresource(QueryType queryType,
                          const SubresourceInfo &info,
-                         PRTime now);
+                         const PRTime now,
+                         const int32_t parentCount);
 
   void MaybeLearnForStartup(const UriInfo &uri, const PRTime now);
 
