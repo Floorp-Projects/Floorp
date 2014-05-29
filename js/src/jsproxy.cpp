@@ -88,6 +88,7 @@ BaseProxyHandler::BaseProxyHandler(const void *family)
 
 BaseProxyHandler::~BaseProxyHandler()
 {
+    MOZ_RELEASE_ASSERT(!JSRuntime::hasLiveRuntimes(), "Proxy handler destructor called with live runtimes?");
 }
 
 bool
@@ -742,7 +743,6 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler
 {
   public:
     ScriptedIndirectProxyHandler();
-    virtual ~ScriptedIndirectProxyHandler();
 
     /* ES5 Harmony fundamental proxy traps. */
     virtual bool preventExtensions(JSContext *cx, HandleObject proxy) MOZ_OVERRIDE;
@@ -801,10 +801,6 @@ static const char sScriptedIndirectProxyHandlerFamily = 0;
 
 ScriptedIndirectProxyHandler::ScriptedIndirectProxyHandler()
         : BaseProxyHandler(&sScriptedIndirectProxyHandlerFamily)
-{
-}
-
-ScriptedIndirectProxyHandler::~ScriptedIndirectProxyHandler()
 {
 }
 
@@ -1060,7 +1056,6 @@ ScriptedIndirectProxyHandler ScriptedIndirectProxyHandler::singleton;
 class ScriptedDirectProxyHandler : public DirectProxyHandler {
   public:
     ScriptedDirectProxyHandler();
-    virtual ~ScriptedDirectProxyHandler();
 
     /* ES5 Harmony fundamental proxy traps. */
     virtual bool preventExtensions(JSContext *cx, HandleObject proxy) MOZ_OVERRIDE;
@@ -1656,10 +1651,6 @@ ArrayToIdVector(JSContext *cx, HandleObject proxy, HandleObject target, HandleVa
 
 ScriptedDirectProxyHandler::ScriptedDirectProxyHandler()
         : DirectProxyHandler(&sScriptedDirectProxyHandlerFamily)
-{
-}
-
-ScriptedDirectProxyHandler::~ScriptedDirectProxyHandler()
 {
 }
 
