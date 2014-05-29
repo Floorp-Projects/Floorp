@@ -8,6 +8,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+let console = (Cu.import("resource://gre/modules/devtools/Console.jsm", {})).console;
 
 this.EXPORTED_SYMBOLS = ["MozLoopService"];
 
@@ -328,25 +329,39 @@ let MozLoopServiceInternal = {
   },
 
   /**
-   * Callback from the registation xhr. Checks the registration result.
+   * Callback from the registration xhr. Checks the registration result.
    */
   onLoopRegistered: function() {
     if (this.loopXhr.readyState != Ci.nsIXMLHttpRequest.DONE)
       return;
 
     let status = this.loopXhr.status;
-
     if (status != 200) {
       // XXX Bubble the precise details up to the UI somehow (bug 1013248).
       Cu.reportError("Failed to register with the loop server. Code: " +
         status + " Text: " + this.loopXhr.statusText);
-    }
-    else {
-      // Otherwise we registered just fine.
-      this.registeredLoopServer = true;
+      this.endRegistration(status);
+      return;
     }
 
-    this.endRegistration(status == 200 ? null : status);
+    let sessionToken = this.loopXhr.getResponseHeader("Hawk-Session-Token");
+    if (sessionToken !== null) {
+
+      // XXX should do more validation here
+      if (sessionToken.length === 64) {
+
+        Services.prefs.setCharPref("loop.hawk-session-token", sessionToken);
+      } else {
+        // XXX Bubble the precise details up to the UI somehow (bug 1013248).
+        console.warn("Loop server sent an invalid session token");
+        this.endRegistration("session-token-wrong-size");
+        return;
+      }
+    }
+
+    // if we made it this far, we registered just fine.
+    this.registeredLoopServer = true;
+    this.endRegistration(null);
   },
 
   /**
