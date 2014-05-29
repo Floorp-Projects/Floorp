@@ -28,10 +28,16 @@ void JNICALL ProvideCameraFrame(
     jobject,
     jbyteArray javaCameraFrame,
     jint length,
-    jlong context) {
+    jlong context,
+    jint rotation_deg) {
   webrtc::videocapturemodule::VideoCaptureAndroid* captureModule =
       reinterpret_cast<webrtc::videocapturemodule::VideoCaptureAndroid*>(
           context);
+  VideoCaptureRotation rotation;
+  if (!videocapturemodule::VideoCaptureImpl::RotationFromDegrees(
+      static_cast<int>(rotation_deg), &rotation)) {
+      captureModule->SetCaptureRotation(rotation);
+  }
   jbyte* cameraFrame = env->GetByteArrayElements(javaCameraFrame, NULL);
   captureModule->OnIncomingFrame(
       reinterpret_cast<uint8_t*>(cameraFrame), length, 0);
@@ -52,7 +58,7 @@ int32_t SetCaptureAndroidVM(JavaVM* javaVM) {
   assert(g_java_capturer_class);
 
   JNINativeMethod native_method = {
-    "ProvideCameraFrame", "([BIJ)V",
+    "ProvideCameraFrame", "([BIJI)V",
     reinterpret_cast<void*>(&ProvideCameraFrame)
   };
   if (ats.env()->RegisterNatives(g_java_capturer_class, &native_method, 1) != 0)
@@ -183,21 +189,11 @@ int32_t VideoCaptureAndroid::CaptureSettings(
 
 int32_t VideoCaptureAndroid::SetCaptureRotation(
     VideoCaptureRotation rotation) {
-  CriticalSectionScoped cs(&_apiCs);
-  if (VideoCaptureImpl::SetCaptureRotation(rotation) != 0)
-    return 0;
-
-  AttachThreadScoped ats(g_jvm);
-  JNIEnv* env = ats.env();
-
-  jmethodID j_spr =
-      env->GetMethodID(g_java_capturer_class, "setPreviewRotation", "(I)V");
-  assert(j_spr);
-  int rotation_degrees;
-  if (RotationInDegrees(rotation, &rotation_degrees) != 0) {
-    assert(false);
-  }
-  env->CallVoidMethod(_jCapturer, j_spr, rotation_degrees);
+  // Our only caller is ProvideCameraFrame, which is called
+  // from a synchronized Java method. If we'd take this lock,
+  // any call going from C++ to Java will deadlock.
+  // CriticalSectionScoped cs(&_apiCs);
+  VideoCaptureImpl::SetCaptureRotation(rotation);
   return 0;
 }
 
