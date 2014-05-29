@@ -1066,6 +1066,7 @@ function TreeNode(aUnsafeName, aUnits, aIsDegenerate)
   // - _amount
   // - _description
   // - _hideKids (only defined if true)
+  // - _maxAbsDescendant (on-demand, only when gIsDiff is set)
 }
 
 TreeNode.prototype = {
@@ -1080,6 +1081,32 @@ TreeNode.prototype = {
     return undefined;
   },
 
+  // When gIsDiff is false, tree operations -- sorting and determining if a
+  // sub-tree is significant -- are straightforward. But when gIsDiff is true,
+  // the combination of positive and negative values within a tree complicates
+  // things. So for a non-leaf node, instead of just looking at _amount, we
+  // instead look at the maximum absolute value of the node and all of its
+  // descendants.
+  maxAbsDescendant: function() {
+    if (!this._kids) {
+      // No kids? Just return the absolute value of the amount.
+      return max = Math.abs(this._amount);
+    }
+
+    if ('_maxAbsDescendant' in this) {
+      // We've computed this before? Return the saved value.
+      return this._maxAbsDescendant;
+    }
+
+    // Compute the maximum absolute value of all descendants.
+    let max = Math.abs(this._amount);
+    for (let i = 0; i < this._kids.length; i++) {
+      max = Math.max(max, this._kids[i].maxAbsDescendant());
+    }
+    this._maxAbsDescendant = max;
+    return max;
+  },
+
   toString: function() {
     switch (this._units) {
       case UNITS_BYTES:            return formatBytes(this._amount);
@@ -1092,14 +1119,14 @@ TreeNode.prototype = {
   }
 };
 
-// Sort TreeNodes first by size, then by name.  This is particularly important
-// for the about:memory tests, which need a predictable ordering of reporters
-// which have the same amount.
+// Sort TreeNodes first by size, then by name.  The latter is important for the
+// about:memory tests, which need a predictable ordering of reporters which
+// have the same amount.
 TreeNode.compareAmounts = function(aA, aB) {
   let a, b;
   if (gIsDiff) {
-    a = Math.abs(aA._amount);
-    b = Math.abs(aB._amount);
+    a = aA.maxAbsDescendant();
+    b = aB.maxAbsDescendant();
   } else {
     a = aA._amount;
     b = aB._amount;
@@ -1234,8 +1261,13 @@ function sortTreeAndInsertAggregateNodes(aTotalBytes, aT)
 
   function isInsignificant(aT)
   {
-    return !gVerbose.checked &&
-           (100 * aT._amount / aTotalBytes) < kSignificanceThresholdPerc;
+    if (gVerbose.checked)
+      return false;
+
+    let perc = gIsDiff
+             ? 100 * aT.maxAbsDescendant() / Math.abs(aTotalBytes)
+             : 100 * aT._amount / aTotalBytes;
+    return perc < kSignificanceThresholdPerc;
   }
 
   if (!aT._kids) {
