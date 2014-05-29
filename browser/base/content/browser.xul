@@ -643,7 +643,11 @@
              aria-label="&navbarCmd.label;"
              fullscreentoolbar="true" mode="icons" customizable="true"
              iconsize="small"
+#ifdef MOZ_LOOP
+             defaultset="urlbar-container,search-container,webrtc-status-button,bookmarks-menu-button,downloads-button,home-button,loop-call-button,social-share-button,social-toolbar-item"
+#else
              defaultset="urlbar-container,search-container,webrtc-status-button,bookmarks-menu-button,downloads-button,home-button,social-share-button,social-toolbar-item"
+#endif
              customizationtarget="nav-bar-customization-target"
              overflowable="true"
              overflowbutton="nav-bar-overflow-button"
@@ -777,13 +781,12 @@
         </toolbarbutton>
 
 #ifdef MOZ_LOOP
-        <!-- XXX Bug 1008116 will do the initial L10n for these -->
+        <!-- XXX Bug 1013989 will provide a label for the button -->
         <toolbarbutton id="loop-call-button"
                        class="toolbarbutton-1 chromeclass-toolbar-additional"
                        persist="class"
                        removable="true"
-                       label="Loop"
-                       tooltiptext="Start a conversation"
+                       tooltiptext="&loopCallButton.tooltip;"
                        oncommand="LoopUI.openCallPanel(event);"
                        cui-areatype="toolbar"
                        overflows="false"
