@@ -26,7 +26,13 @@ loop.conversation = (function(OT, mozL10n) {
    * @type {loop.shared.views.BaseView}
    */
   var EndedCallView = sharedViews.BaseView.extend({
-    el: "#call-ended",
+    template: _.template([
+      '<p>',
+      '  <button class="btn btn-info" data-l10n-id="close_window"></button>',
+      '</p>'
+    ].join("")),
+
+    className: "call-ended",
 
     events: {
       "click button": "closeWindow"
