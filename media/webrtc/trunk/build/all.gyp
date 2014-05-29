@@ -104,7 +104,7 @@
             }],
           ],
         }],
-        ['toolkit_uses_gtk==1', {
+        ['(toolkit_uses_gtk==1) and (build_with_mozilla==0)', {
           'dependencies': [
             '../tools/gtk_clipboard_dump/gtk_clipboard_dump.gyp:*',
             '../tools/xdisplaycheck/xdisplaycheck.gyp:*',
