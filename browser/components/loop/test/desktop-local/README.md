@@ -6,10 +6,16 @@ and the Chai Assertion Library's [BDD interface][2].
 [1]: http://visionmedia.github.io/mocha/
 [2]: http://chaijs.com/api/bdd/
 
-Aim your browser at the index.html in this directory on your localhost using a file: or HTTP URL to run the tests.
+Aim your browser at the index.html in this directory on your localhost using
+a file: or HTTP URL to run the tests.  Alternately, from the top-level of your
+Gecko source directory, execute:
+
+```
+./mach marionette-test browser/components/loop/test/manifest.ini
+```
 
 Next steps:
-* hook up to Marionette test suite so that they can be run by Tbpl
-* run via mach command-line
-* run using JS http server so the property security context for DOM elements is used
+
+* run using JS http server so the property security context for DOM elements
+is used
 
