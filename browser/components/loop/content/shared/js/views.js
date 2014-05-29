@@ -15,20 +15,28 @@ loop.shared.views = (function(_, OT, l10n) {
    * L10n view. Translates resulting view DOM fragment once rendered.
    */
   var L10nView = (function() {
-    var L10nViewImpl = Backbone.View.extend(),
-        extend       = L10nViewImpl.extend;
+    var L10nViewImpl   = Backbone.View.extend(), // Original View constructor
+        originalExtend = L10nViewImpl.extend;    // Original static extend fn
 
-    // Patches View extend() method so we can hook and patch any declared render
-    // method.
+    /**
+     * Patches View extend() method so we can hook and patch any declared render
+     * method.
+     *
+     * @return {Backbone.View} Extended view with patched render() method.
+     */
     L10nViewImpl.extend = function() {
-      var ExtendedView = extend.apply(this, arguments),
-          render       = ExtendedView.prototype.render;
+      var ExtendedView   = originalExtend.apply(this, arguments),
+          originalRender = ExtendedView.prototype.render;
 
-      // Wraps original render() method to translate contents once they're
-      // rendered.
+      /**
+       * Wraps original render() method to translate contents once they're
+       * rendered.
+       *
+       * @return {Backbone.View} Extended view instance.
+       */
       ExtendedView.prototype.render = function() {
-        if (render) {
-          render.apply(this, arguments);
+        if (originalRender) {
+          originalRender.apply(this, arguments);
           l10n.translate(this.el);
         }
         return this;
@@ -118,102 +126,64 @@ loop.shared.views = (function(_, OT, l10n) {
       }
       this.sdk = options.sdk;
 
-      // XXX: this feels like to be moved to the ConversationModel, but as it's
-      // tighly coupled with the DOM (element ids to receive streams), we'd need
-      // an abstraction we probably don't want yet.
-      this.session = this.sdk.initSession(this.model.get("sessionId"));
-      this.session.connect(this.model.get("apiKey"),
-                           this.model.get("sessionToken"));
+      this.model.startSession();
 
-      this.listenTo(this.session, "sessionConnected", this._sessionConnected);
-      this.listenTo(this.session, "streamCreated", this._streamCreated);
-      this.listenTo(this.session, "connectionDestroyed",
-                                  this._connectionDestroyed);
-      this.listenTo(this.session, "sessionDisconnected",
-                                  this._sessionDisconnected);
-      this.listenTo(this.session, "networkDisconnected",
-                                  this._networkDisconnected);
-    },
-
-    hangup: function(event) {
-      event.preventDefault();
-      this.session.disconnect();
+      this.listenTo(this.model, "session:connected", this.publish);
+      this.listenTo(this.model, "session:stream-created", this._streamCreated);
+      this.listenTo(this.model, ["session:peer-hungup",
+                                 "session:network-disconnected",
+                                 "session:ended"].join(" "), this.unpublish);
     },
 
     /**
-     * Session is created.
-     * http://tokbox.com/opentok/libraries/client/js/reference/SessionConnectEvent.html
+     * Subscribes and attaches each created stream to a DOM element.
      *
-     * @param  {SessionConnectEvent} event
-     */
-    _sessionConnected: function(event) {
-      this.publisher = this.sdk.initPublisher(this.$(".outgoing").get(0),
-                                              this.videoStyles);
-      this.session.publish(this.publisher);
-    },
-
-    /**
-     * New created streams are available.
+     * XXX: for now we only support a single remote stream, hence a singe DOM
+     *      element.
+     *
      * http://tokbox.com/opentok/libraries/client/js/reference/StreamEvent.html
      *
      * @param  {StreamEvent} event
      */
     _streamCreated: function(event) {
-      this._subscribeToStreams(event.streams);
-    },
-
-    /**
-     * Local user hung up.
-     * http://tokbox.com/opentok/libraries/client/js/reference/SessionDisconnectEvent.html
-     *
-     * @param  {SessionDisconnectEvent} event
-     */
-    _sessionDisconnected: function(event) {
-      this.model.trigger("session:ended");
-    },
-
-    /**
-     * Peer hung up. Disconnects local session.
-     * http://tokbox.com/opentok/libraries/client/js/reference/ConnectionEvent.html
-     *
-     * @param  {ConnectionEvent} event
-     */
-    _connectionDestroyed: function(event) {
-      this.model.trigger("session:peer-hungup", {
-        connectionId: event.connection.connectionId
-      });
-      this.session.unpublish(this.publisher);
-      this.session.disconnect();
-    },
-
-    /**
-     * Network was disconnected.
-     * http://tokbox.com/opentok/libraries/client/js/reference/ConnectionEvent.html
-     *
-     * @param {ConnectionEvent} event
-     */
-    _networkDisconnected: function(event) {
-      this.model.trigger("session:network-disconnected");
-      this.session.unpublish(this.publisher);
-      this.session.disconnect();
-    },
-
-    /**
-     * Subscribes and attaches each available stream to a DOM element.
-     *
-     * XXX: for now we only support a single remote stream, hence a singe DOM
-     *      element.
-     *
-     * @param  {Array} streams A list of media streams.
-     */
-    _subscribeToStreams: function(streams) {
-      var incomingContainer = this.$(".incoming").get(0);
-      streams.forEach(function(stream) {
+      var incoming = this.$(".incoming").get(0);
+      event.streams.forEach(function(stream) {
         if (stream.connection.connectionId !==
-            this.session.connection.connectionId) {
-          this.session.subscribe(stream, incomingContainer, this.videoStyles);
+            this.model.session.connection.connectionId) {
+          this.model.session.subscribe(stream, incoming, this.videoStyles);
         }
       }.bind(this));
+    },
+
+    /**
+     * Hangs up current conversation.
+     *
+     * @param  {MouseEvent} event
+     */
+    hangup: function(event) {
+      event.preventDefault();
+      this.unpublish();
+      this.model.endSession();
+    },
+
+    /**
+     * Publishes remote streams available once a session is connected.
+     *
+     * http://tokbox.com/opentok/libraries/client/js/reference/SessionConnectEvent.html
+     *
+     * @param  {SessionConnectEvent} event
+     */
+    publish: function(event) {
+      var outgoing = this.$(".outgoing").get(0);
+      this.publisher = this.sdk.initPublisher(outgoing, this.videoStyles);
+      this.model.session.publish(this.publisher);
+    },
+
+    /**
+     * Unpublishes local stream.
+     */
+    unpublish: function() {
+      this.model.session.unpublish(this.publisher);
     },
 
     /**

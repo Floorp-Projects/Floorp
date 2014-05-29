@@ -68,7 +68,7 @@ describe("loop.shared.router", function() {
       });
       conversation = new loop.shared.models.ConversationModel({
         loopToken: "fakeToken"
-      });
+      }, {sdk: {}});
       notifier = {
         notify: sandbox.spy(),
         warn: sandbox.spy(),
