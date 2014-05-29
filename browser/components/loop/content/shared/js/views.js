@@ -112,7 +112,6 @@ loop.shared.views = (function(OT) {
      */
     _sessionDisconnected: function(event) {
       this.model.trigger("session:ended");
-      this.session.unpublish(this.publisher);
     },
 
     /**

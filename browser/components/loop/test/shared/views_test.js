@@ -68,12 +68,6 @@ describe("loop.shared.views", function() {
 
             fakeSession.trigger("sessionDisconnected", {reason: "ko"});
           });
-
-          it("should unpublish current stream publisher", function() {
-            fakeSession.trigger("sessionDisconnected", {reason: "ko"});
-
-            sinon.assert.calledOnce(fakeSession.unpublish);
-          });
         });
 
         describe("connectionDestroyed event received", function() {
