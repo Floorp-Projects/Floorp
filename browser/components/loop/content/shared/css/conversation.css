@@ -50,3 +50,8 @@
 .conversation .OT_video-container {
   position: inherit;
 }
+
+/* Call ended view */
+.call-ended p {
+  text-align: center;
+}

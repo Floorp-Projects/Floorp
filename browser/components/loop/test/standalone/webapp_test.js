@@ -33,33 +33,6 @@ describe("loop.webapp", function() {
       conversation = new sharedModels.ConversationModel();
     });
 
-    describe("#constructor", function() {
-      it("should require a ConversationModel instance", function() {
-        expect(function() {
-          new loop.webapp.WebappRouter();
-        }).to.Throw(Error, /missing required conversation/);
-      });
-
-      it("should require a notifier", function() {
-        expect(function() {
-          new loop.webapp.WebappRouter({conversation: {}});
-        }).to.Throw(Error, /missing required notifier/);
-      });
-    });
-
-    describe("constructed", function() {
-      var router;
-
-      beforeEach(function() {
-        router = new loop.webapp.WebappRouter({conversation: conversation});
-      });
-
-      describe("#loadView", function() {
-        // XXX hard to test as hell… functional?
-        it("should load the passed view");
-      });
-    });
-
     describe("Routes", function() {
       var router;
 
@@ -162,23 +135,11 @@ describe("loop.webapp", function() {
         sinon.assert.calledWithMatch(router.navigate, "call/fakeToken");
       });
 
-      it("should warn the user when peer hangs up", function() {
-        conversation.trigger("session:peer-hungup");
-
-        sinon.assert.calledOnce(notifier.warn);
-      });
-
       it("should navigate to call/{token} when peer hangs up", function() {
         conversation.trigger("session:peer-hungup");
 
         sinon.assert.calledOnce(router.navigate);
         sinon.assert.calledWithMatch(router.navigate, "call/fakeToken");
-      });
-
-      it("should warn the user when network disconnects", function() {
-        conversation.trigger("session:network-disconnected");
-
-        sinon.assert.calledOnce(notifier.warn);
       });
 
       it("should navigate to call/{token} when network disconnects",
