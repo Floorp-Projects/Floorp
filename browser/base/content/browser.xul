@@ -269,14 +269,10 @@
 
 #ifdef MOZ_LOOP
     <panel id="loop-panel"
-           class="loop-panel"
+           class="loop-panel social-panel"
            type="arrow"
            orient="horizontal"
-           hidden="true">
-      <iframe id="loop-panel-frame"
-              type="content"
-      />
-    </panel>
+           hidden="true"/>
 #endif
 
     <menupopup id="toolbar-context-menu"
