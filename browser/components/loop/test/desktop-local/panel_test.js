@@ -9,7 +9,7 @@ var expect = chai.expect;
 describe("loop.panel", function() {
   "use strict";
 
-  var sandbox, fakeXHR, requests = [];
+  var sandbox, notifier, fakeXHR, requests = [];
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
@@ -19,6 +19,14 @@ describe("loop.panel", function() {
     fakeXHR.xhr.onCreate = function (xhr) {
       requests.push(xhr);
     };
+    notifier = {
+      clear: sandbox.spy(),
+      notify: sandbox.spy(),
+      warn: sandbox.spy(),
+      warnL10n: sandbox.spy(),
+      error: sandbox.spy(),
+      errorL10n: sandbox.spy()
+    };
   });
 
   afterEach(function() {
@@ -26,34 +34,46 @@ describe("loop.panel", function() {
     sandbox.restore();
   });
 
+  describe("loop.panel.PanelRouter", function() {
+    describe("#constructor", function() {
+      it("should require a notifier", function() {
+        expect(function() {
+          new loop.panel.PanelRouter();
+        }).to.Throw(Error, /missing required notifier/);
+      });
+    });
+
+    describe("constructed", function() {
+      var router;
+
+      beforeEach(function() {
+        router = new loop.panel.PanelRouter({notifier: notifier});
+        sandbox.stub(router, "loadView");
+      });
+
+      describe("#home", function() {
+        it("should load the PanelView", function() {
+          router.home();
+
+          sinon.assert.calledOnce(router.loadView);
+          sinon.assert.calledWithExactly(router.loadView,
+            sinon.match.instanceOf(loop.panel.PanelView));
+        });
+      });
+    });
+  });
+
   describe("loop.panel.PanelView", function() {
     beforeEach(function() {
-      $("#fixtures").append([
-        '<div id="default-view" class="share generate-url">',
-        '  <div class="description">',
-        '    <p>Get a link to share with a friend to Video Chat.</p>',
-        '  </div>',
-        '  <div class="action">',
-        '    <div class="messages"></div>',
-        '    <p class="invite">',
-        '      <input type="text" placeholder="Nickname of the future caller"',
-        '             name="caller" value="foo"/>',
-        '      <a class="get-url" href="">Get a call url</a>',
-        '    </p>',
-        '    <p class="result hide">',
-        '      <input id="call-url" type="url" readonly>',
-        '      <a class="get-url" href="">Renew</a>',
-        '    </p>',
-        '  </div>',
-        '</div>'
-      ].join(""));
+      $("#fixtures").append('<div id="messages"></div><div id="main"></div>');
     });
 
     describe("#getCallUrl", function() {
       it("should request a call url to the server", function() {
         var requestCallUrl = sandbox.stub(loop.shared.Client.prototype,
                                           "requestCallUrl");
-        var view = new loop.panel.PanelView();
+        var view = new loop.panel.PanelView({notifier: notifier});
+        sandbox.stub(view, "getNickname").returns("foo");
 
         view.getCallUrl({preventDefault: sandbox.spy()});
 
@@ -66,8 +86,7 @@ describe("loop.panel", function() {
           loop.shared.Client.prototype, "requestCallUrl", function(_, cb) {
             cb("fake error");
           });
-        var view = new loop.panel.PanelView();
-        sandbox.stub(view.notifier, "errorL10n");
+        var view = new loop.panel.PanelView({notifier: notifier});
 
         view.getCallUrl({preventDefault: sandbox.spy()});
 
@@ -79,7 +98,7 @@ describe("loop.panel", function() {
 
     describe("#onCallUrlReceived", function() {
       it("should update the text field with the call url", function() {
-        var view = new loop.panel.PanelView();
+        var view = new loop.panel.PanelView({notifier: notifier});
         view.render();
 
         view.onCallUrlReceived("http://call.me/");
@@ -88,8 +107,7 @@ describe("loop.panel", function() {
       });
 
       it("should reset all pending notifications", function() {
-        var view = new loop.panel.PanelView().render();
-        sandbox.stub(view.notifier, "clear");
+        var view = new loop.panel.PanelView({notifier: notifier}).render();
 
         view.onCallUrlReceived("http://call.me/");
 

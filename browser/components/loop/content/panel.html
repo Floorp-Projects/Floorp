@@ -9,29 +9,11 @@
     <link rel="stylesheet" type="text/css" href="shared/css/common.css">
     <link rel="stylesheet" type="text/css" href="shared/css/panel.css">
   </head>
-  <body onload="loop.panel.init();">
-    <!-- XXX (n1k0): i10n tbd later as these are temporary texts. -->
-    <div id="default-view" class="share generate-url">
-      <div class="description">
-        <p data-l10n-id="get_link_to_share">
-          Get a link to share with a friend to Video Chat.
-        </p>
-      </div>
-      <div class="action">
-        <div class="messages"></div>
-        <p class="invite">
-          <input type="text" name="caller" data-l10n-id="caller">
-          <a class="get-url btn btn-success disabled" href=""
-             data-l10n-id="get_a_call_url">Get a call url</a>
-        </p>
-        <p class="result hide">
-          <input id="call-url" type="url" readonly>
-          <a class="go-back btn btn-info" href="" data-l10n-id="new_url">
-            New url
-          </a>
-        </p>
-      </div>
-    </div>
+  <body class="panel" onload="loop.panel.init();">
+
+    <div id="messages"></div>
+
+    <div id="main"></div>
 
     <!-- XXX (adam): Should we import our own version of Webl10n?
          What we have here is a copy of the version from pdf.js
@@ -46,6 +28,7 @@
     <script type="text/javascript" src="shared/libs/backbone-1.1.2.js"></script>
     <script type="text/javascript" src="shared/js/client.js"></script>
     <script type="text/javascript" src="shared/js/models.js"></script>
+    <script type="text/javascript" src="shared/js/router.js"></script>
     <script type="text/javascript" src="shared/js/views.js"></script>
     <script type="text/javascript" src="js/panel.js"></script>
   </body>
