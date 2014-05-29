@@ -92,6 +92,17 @@ ArrayBufferInputStream::ReadSegments(nsWriteSegmentFun writer, void *closure,
   }
 
   uint32_t remaining = mBufferLength - mPos;
+  if (!mArrayBuffer.isUndefined()) {
+    JSObject* buf = &mArrayBuffer.toObject();
+    uint32_t byteLength = JS_GetArrayBufferByteLength(buf);
+    if (byteLength == 0 && remaining != 0) {
+      mClosed = true;
+      return NS_BASE_STREAM_CLOSED;
+    }
+  } else {
+    MOZ_ASSERT(remaining == 0, "stream inited incorrectly");
+  }
+
   if (!remaining) {
     *result = 0;
     return NS_OK;
