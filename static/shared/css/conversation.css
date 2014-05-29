@@ -41,3 +41,12 @@
 .conversation .media.side-by-side .local {
   width: 50%;
 }
+
+/**
+ * Overriden SDK styles; .OT_video-container is using absolute positioning
+ * therefore moves the video elements it contains outside of the current
+ * viewport.
+ */
+.conversation .OT_video-container {
+  position: inherit;
+}
