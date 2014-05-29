@@ -50,16 +50,15 @@ USING_BLUETOOTH_NAMESPACE
 static nsString sAdapterBdAddress;
 static nsString sAdapterBdName;
 static InfallibleTArray<nsString> sAdapterBondedAddressArray;
-static InfallibleTArray<BluetoothNamedValue> sRemoteDevicesPack;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sBondingRunnableArray;
-static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sGetDeviceRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sUnbondingRunnableArray;
-static nsTArray<int> sRequestedDeviceCountArray;
 
 // Static variables below should only be used on *main thread*
 static const bt_interface_t* sBtInterface;
 static nsTArray<nsRefPtr<BluetoothProfileController> > sControllerArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sSetPropertyRunnableArray;
+static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sGetDeviceRunnableArray;
+static nsTArray<int> sRequestedDeviceCountArray;
 
 // Static variables below should only be used on *callback thread*
 
@@ -410,6 +409,60 @@ AdapterPropertiesCallback(bt_status_t aStatus, int aNumProperties,
   NS_DispatchToMainThread(new AdapterPropertiesCallbackTask());
 }
 
+class RemoteDevicePropertiesCallbackTask : public nsRunnable
+{
+  const InfallibleTArray<BluetoothNamedValue> mProps;
+  nsString mRemoteDeviceBdAddress;
+public:
+  RemoteDevicePropertiesCallbackTask(
+    const InfallibleTArray<BluetoothNamedValue>& aProps,
+    const nsAString& aRemoteDeviceBdAddress)
+  : mProps(aProps)
+  , mRemoteDeviceBdAddress(aRemoteDeviceBdAddress)
+  { }
+
+  NS_IMETHOD
+  Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (sRequestedDeviceCountArray.IsEmpty()) {
+      // This is possible because the callback would be called after turning
+      // Bluetooth on.
+      return NS_OK;
+    }
+
+    // Update to registered BluetoothDevice objects
+    BluetoothSignal signal(NS_LITERAL_STRING("PropertyChanged"),
+                           mRemoteDeviceBdAddress, mProps);
+    nsRefPtr<DistributeBluetoothSignalTask>
+      t = new DistributeBluetoothSignalTask(signal);
+    if (NS_FAILED(NS_DispatchToMainThread(t))) {
+      BT_WARNING("Failed to dispatch to main thread!");
+      return NS_OK;
+    }
+
+    static InfallibleTArray<BluetoothNamedValue> sRemoteDevicesPack;
+
+    // Use address as the index
+    sRemoteDevicesPack.AppendElement(
+      BluetoothNamedValue(mRemoteDeviceBdAddress, mProps));
+
+    if (--sRequestedDeviceCountArray[0] == 0) {
+      if (!sGetDeviceRunnableArray.IsEmpty()) {
+        DispatchBluetoothReply(sGetDeviceRunnableArray[0],
+                               sRemoteDevicesPack, EmptyString());
+        sGetDeviceRunnableArray.RemoveElementAt(0);
+      }
+
+      sRequestedDeviceCountArray.RemoveElementAt(0);
+      sRemoteDevicesPack.Clear();
+    }
+
+    return NS_OK;
+  }
+};
+
 /**
  * RemoteDevicePropertiesCallback will be called, as the following conditions:
  * 1. When BT is turning on, bluedroid automatically execute this callback
@@ -420,13 +473,6 @@ RemoteDevicePropertiesCallback(bt_status_t aStatus, bt_bdaddr_t *aBdAddress,
                                int aNumProperties, bt_property_t *aProperties)
 {
   MOZ_ASSERT(!NS_IsMainThread());
-
-  if (sRequestedDeviceCountArray.IsEmpty()) {
-    MOZ_ASSERT(sGetDeviceRunnableArray.IsEmpty());
-    return;
-  }
-
-  sRequestedDeviceCountArray[0]--;
 
   InfallibleTArray<BluetoothNamedValue> props;
 
@@ -452,36 +498,9 @@ RemoteDevicePropertiesCallback(bt_status_t aStatus, bt_bdaddr_t *aBdAddress,
     }
   }
 
-  // Update to registered BluetoothDevice objects
-  BluetoothSignal signal(NS_LITERAL_STRING("PropertyChanged"),
-                         remoteDeviceBdAddress, props);
-  nsRefPtr<DistributeBluetoothSignalTask>
-    t = new DistributeBluetoothSignalTask(signal);
-  if (NS_FAILED(NS_DispatchToMainThread(t))) {
-    BT_WARNING("Failed to dispatch to main thread!");
-  }
-
-  // Use address as the index
-  sRemoteDevicesPack.AppendElement(
-    BluetoothNamedValue(remoteDeviceBdAddress, props));
-
-  if (sRequestedDeviceCountArray[0] == 0) {
-    MOZ_ASSERT(!sGetDeviceRunnableArray.IsEmpty());
-
-    if (sGetDeviceRunnableArray.IsEmpty()) {
-      BT_LOGR("No runnable to return");
-      return;
-    }
-
-    DispatchBluetoothReply(sGetDeviceRunnableArray[0],
-                           sRemoteDevicesPack, EmptyString());
-
-    // After firing it, clean up cache
-    sRemoteDevicesPack.Clear();
-
-    sRequestedDeviceCountArray.RemoveElementAt(0);
-    sGetDeviceRunnableArray.RemoveElementAt(0);
-  }
+  // Redirect to main thread to avoid racing problem
+  NS_DispatchToMainThread(
+    new RemoteDevicePropertiesCallbackTask(props, remoteDeviceBdAddress));
 }
 
 static void
