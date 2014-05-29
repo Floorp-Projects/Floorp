@@ -111,7 +111,8 @@ loop.webapp = (function($, _, OT) {
   var WebappRouter = loop.shared.router.BaseConversationRouter.extend({
     routes: {
       "":                    "home",
-      "unsupported":         "unsupported",
+      "unsupportedDevice":   "unsupportedDevice",
+      "unsupportedBrowser":  "unsupportedBrowser",
       "call/ongoing/:token": "loadConversation",
       "call/:token":         "initiate"
     },
@@ -153,8 +154,12 @@ loop.webapp = (function($, _, OT) {
       this.loadView(new HomeView());
     },
 
-    unsupported: function() {
-      this.loadView(new sharedViews.UnsupportedView());
+    unsupportedDevice: function() {
+      this.loadView(new sharedViews.UnsupportedDeviceView());
+    },
+
+    unsupportedBrowser: function() {
+      this.loadView(new sharedViews.UnsupportedBrowserView());
     },
 
     /**
@@ -193,22 +198,38 @@ loop.webapp = (function($, _, OT) {
   });
 
   /**
+   * Local helpers.
+   */
+  function WebappHelper() {
+    this._iOSRegex = /^(iPad|iPhone|iPod)/;
+  }
+
+  WebappHelper.prototype.isIOS = function isIOS(platform) {
+    return this._iOSRegex.test(platform);
+  };
+
+  /**
    * App initialization.
    */
   function init() {
+    var helper = new WebappHelper();
     router = new WebappRouter({
       conversation: new sharedModels.ConversationModel({}, {sdk: OT}),
       notifier: new sharedViews.NotificationListView({el: "#messages"})
     });
     Backbone.history.start();
-    if (!OT.checkSystemRequirements())
-      router.navigate("unsupported", {trigger: true});
+    if (helper.isIOS(navigator.platform)) {
+      router.navigate("unsupportedDevice", {trigger: true});
+    } else if (!OT.checkSystemRequirements()) {
+      router.navigate("unsupportedBrowser", {trigger: true});
+    }
   }
 
   return {
     baseServerUrl: baseServerUrl,
     ConversationFormView: ConversationFormView,
     HomeView: HomeView,
+    WebappHelper: WebappHelper,
     init: init,
     WebappRouter: WebappRouter
   };

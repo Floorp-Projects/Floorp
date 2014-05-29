@@ -332,7 +332,7 @@ loop.shared.views = (function(_, OT, l10n) {
   /**
    * Unsupported Browsers view.
    */
-  var UnsupportedView = BaseView.extend({
+  var UnsupportedBrowserView = BaseView.extend({
     template: _.template([
       '<div>',
       '  <h2 data-l10n-id="incompatible_browser"></h2>',
@@ -344,12 +344,26 @@ loop.shared.views = (function(_, OT, l10n) {
     ].join(""))
   });
 
+  /**
+   * Unsupported Browsers view.
+   */
+  var UnsupportedDeviceView = BaseView.extend({
+    template: _.template([
+      '<div>',
+      '  <h2 data-l10n-id="incompatible_device"></h2>',
+      '  <p data-l10n-id="sorry_device_unsupported"></p>',
+      '  <p data-l10n-id="use_firefox_windows_mac_linux"></p>',
+      '</div>'
+    ].join(""))
+  });
+
   return {
     L10nView: L10nView,
     BaseView: BaseView,
     ConversationView: ConversationView,
     NotificationListView: NotificationListView,
     NotificationView: NotificationView,
-    UnsupportedView: UnsupportedView
+    UnsupportedBrowserView: UnsupportedBrowserView,
+    UnsupportedDeviceView: UnsupportedDeviceView
   };
 })(_, window.OT, document.webL10n || document.mozL10n);
