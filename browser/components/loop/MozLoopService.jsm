@@ -19,6 +19,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Chat", "resource:///modules/Chat.jsm");
 /**
  * We don't have push notifications on desktop currently, so this is a
  * workaround to get them going for us.
+ *
+ * XXX Handle auto-reconnections if connection fails for whatever reason
+ * (bug 1013248).
  */
 let PushHandlerHack = {
   // This is the uri of the push server.
@@ -33,14 +36,23 @@ let PushHandlerHack = {
    * connection, it will automatically say hello and register the channel
    * id with the server.
    *
+   * Register callback parameters:
+   * - {String|null} err: Encountered error, if any
+   * - {String} url: The push url obtained from the server
+   *
    * @param {Function} registerCallback Callback to be called once we are
    *                     registered.
    * @param {Function} notificationCallback Callback to be called when a
    *                     push notification is received.
    */
   initialize: function(registerCallback, notificationCallback) {
-    this.registerCallback = registerCallback;
-    this.notificationCallback = notificationCallback;
+    if (Services.io.offline) {
+      registerCallback("offline");
+      return;
+    }
+
+    this._registerCallback = registerCallback;
+    this._notificationCallback = notificationCallback;
 
     this.websocket = Cc["@mozilla.org/network/protocol;1?name=wss"]
                        .createInstance(Ci.nsIWebSocketChannel);
@@ -108,12 +120,12 @@ let PushHandlerHack = {
         break;
       case "register":
         this.pushUrl = msg.pushEndpoint;
-        this.registerCallback(this.pushUrl);
+        this._registerCallback(null, this.pushUrl);
         break;
       case "notification":
         msg.updates.forEach(function(update) {
           if (update.channelID === this.channelID) {
-            this.notificationCallback(update.version);
+            this._notificationCallback(update.version);
           }
         }.bind(this));
         break;
@@ -133,18 +145,22 @@ let PushHandlerHack = {
 
 /**
  * Internal helper methods and state
+ *
+ * The registration is a two-part process. First we need to connect to
+ * and register with the push server. Then we need to take the result of that
+ * and register with the Loop server.
  */
 let MozLoopServiceInternal = {
   // The uri of the Loop server.
   loopServerUri: Services.prefs.getCharPref("loop.server"),
 
   /**
-   * The initial delay for push registration.
+   * The initial delay for registration.
    *
    * XXX We keep this short at the moment, as we don't handle delayed
    * registrations from the user perspective. Bug 994151 will extend this.
    */
-  pushRegistrationDelay: 100,
+  initialRegistrationDelay: 100,
 
   /**
    * Starts the initialization of the service, which goes and registers
@@ -160,16 +176,57 @@ let MozLoopServiceInternal = {
     // this ensures we're not doing too much straight after the browser's finished
     // starting up.
     this.initializeTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    this.initializeTimer.initWithCallback(this.registerPushHandler.bind(this),
-      this.pushRegistrationDelay, Ci.nsITimer.TYPE_ONE_SHOT);
+    this.initializeTimer.initWithCallback(function() {
+        this.registerWithServers();
+      }.bind(this),
+      this.initialRegistrationDelay, Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
   /**
-   * Starts registration of Loop with the push server.
+   * Starts registration of Loop with the push server, and then will register
+   * with the Loop server. It will return early if already registered.
+   *
+   * Callback parameters:
+   * - err null on successful registration, non-null otherwise.
+   *
+   * @param {Function} callback Called when the registration process finishes.
    */
-  registerPushHandler: function() {
+  registerWithServers: function(callback) {
+    // If we've already registered, return straight away, but save the callback
+    // so we can let the caller know.
+    if (this.registeredLoopServer) {
+      callback(null);
+      return;
+    }
+
+    // We need to register, so save the callback.
+    this.registrationCompleteCallback = callback;
+
+    // If we're already in progress, just return straight away.
+    if (this.registrationInProgress) {
+      return;
+    }
+
+    this.registrationInProgress = true;
+
     PushHandlerHack.initialize(this.onPushRegistered.bind(this),
                                this.onHandleNotification.bind(this));
+  },
+
+  /**
+   * Handles the end of the registration process.
+   *
+   * @param {Object|null} err null on success, non-null otherwise.
+   */
+  endRegistration: function(err) {
+    // Reset the in progress flag
+    this.registrationInProgress = false;
+
+    // Call the callback if there is one, and then release it.
+    if (this.registrationCompleteCallback) {
+      this.registrationCompleteCallback(err);
+      this.registrationCompleteCallback = null;
+    }
   },
 
   /**
@@ -178,21 +235,26 @@ let MozLoopServiceInternal = {
    *
    * @param {String} pushUrl The push url given by the push server.
    */
-  onPushRegistered: function(pushUrl) {
-    this.registerXhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
+  onPushRegistered: function(err, pushUrl) {
+    if (err) {
+      this.endRegistration(err);
+      return;
+    }
+
+    this.loopXhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
       .createInstance(Ci.nsIXMLHttpRequest);
 
-    this.registerXhr.open('POST', MozLoopServiceInternal.loopServerUri + "/registration",
+    this.loopXhr.open('POST', MozLoopServiceInternal.loopServerUri + "/registration",
                           true);
-    this.registerXhr.setRequestHeader('Content-Type', 'application/json');
+    this.loopXhr.setRequestHeader('Content-Type', 'application/json');
 
-    this.registerXhr.channel.loadFlags = Ci.nsIChannel.INHIBIT_CACHING
+    this.loopXhr.channel.loadFlags = Ci.nsIChannel.INHIBIT_CACHING
       | Ci.nsIChannel.LOAD_BYPASS_CACHE
       | Ci.nsIChannel.LOAD_EXPLICIT_CREDENTIALS;
 
-    this.registerXhr.onreadystatechange = this.onRegistrationResult.bind(this);
+    this.loopXhr.onreadystatechange = this.onLoopRegistered.bind(this);
 
-    this.registerXhr.sendAsBinary(JSON.stringify({
+    this.loopXhr.sendAsBinary(JSON.stringify({
       simple_push_url: pushUrl
     }));
   },
@@ -210,21 +272,23 @@ let MozLoopServiceInternal = {
   /**
    * Callback from the registation xhr. Checks the registration result.
    */
-  onRegistrationResult: function() {
-    if (this.registerXhr.readyState != Ci.nsIXMLHttpRequest.DONE)
+  onLoopRegistered: function() {
+    if (this.loopXhr.readyState != Ci.nsIXMLHttpRequest.DONE)
       return;
 
-    if (this.registerXhr.status != 200) {
-      // XXX Bubble this up to the UI somehow, bug 994151 will handle some of this
+    let status = this.loopXhr.status;
+
+    if (status != 200) {
+      // XXX Bubble the precise details up to the UI somehow (bug 1013248).
       Cu.reportError("Failed to register with the loop server. Code: " +
-        this.registerXhr.status + " Text: " + this.registerXhr.statusText);
-      return;
+        status + " Text: " + this.loopXhr.statusText);
+    }
+    else {
+      // Otherwise we registered just fine.
+      this.registeredLoopServer = true;
     }
 
-    // Otherwise we registered just fine.
-    // XXX For now, we'll just save this fact, bug 994151 (again) will make use of
-    // this more.
-    this.registeredLoopServer = true;
+    this.endRegistration(status == 200 ? null : status);
   },
 
   /**
@@ -307,6 +371,19 @@ this.MozLoopService = {
    */
   initialize: function() {
     MozLoopServiceInternal.initialize();
+  },
+
+  /**
+   * Starts registration of Loop with the push server, and then will register
+   * with the Loop server. It will return early if already registered.
+   *
+   * Callback parameters:
+   * - err null on successful registration, non-null otherwise.
+   *
+   * @param {Function} callback Called when the registration process finishes.
+   */
+  register: function(callback) {
+    MozLoopServiceInternal.registerWithServers(callback);
   },
 
   /**
