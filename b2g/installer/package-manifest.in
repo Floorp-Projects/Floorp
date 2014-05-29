@@ -405,6 +405,8 @@
 @BINPATH@/components/DOMWifiManager.manifest
 @BINPATH@/components/DOMWifiP2pManager.js
 @BINPATH@/components/DOMWifiP2pManager.manifest
+@BINPATH@/components/EthernetManager.js
+@BINPATH@/components/EthernetManager.manifest
 @BINPATH@/components/NetworkInterfaceListService.js
 @BINPATH@/components/NetworkInterfaceListService.manifest
 @BINPATH@/components/NetworkManager.js
