@@ -81,10 +81,7 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
   nsIGlobalObject* globalObject = nullptr;
 
   {
-    // Bug 955660: we cannot do "proper" rooting here because we need the
-    // global to get a context. Everything here is simple getters that cannot
-    // GC, so just paper over the necessary dataflow inversion.
-    JS::AutoSuppressGCAnalysis nogc;
+    JS::AutoAssertNoGC nogc;
     if (mIsMainThread) {
       // Now get the global and JSContext for this callback.
       nsGlobalWindow* win = xpc::WindowGlobalOrNull(realCallback);
