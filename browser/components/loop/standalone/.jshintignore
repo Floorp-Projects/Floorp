@@ -1,4 +1,4 @@
 node_modules
-static/libs
+static/shared/libs
 test/vendor
 
