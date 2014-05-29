@@ -206,18 +206,26 @@
             'cpu_features_android.c',
           ],
           'conditions': [
-            ['android_webview_build == 1', {
-              'libraries': [
-                'cpufeatures.a'
+            ['include_ndk_cpu_features==1', {
+              'conditions': [
+                ['android_webview_build == 1', {
+                  'libraries': [
+                    'cpufeatures.a'
+                  ],
+                }, {
+                  'dependencies': [
+                    '<(android_ndk_root)/android_tools_ndk.gyp:cpu_features',
+                  ],
+                }],
               ],
-            }, {
-              'dependencies': [
-                '<(android_ndk_root)/android_tools_ndk.gyp:cpu_features',
-              ],
-            }],
-          ],
-        },
-      ],
+         }, {
+           'sources': [
+             'droid-cpu-features.c',
+             'droid-cpu-features.h',
+           ],
+         }],
+        ],
+      }],
     }],
   ], # conditions
 }
