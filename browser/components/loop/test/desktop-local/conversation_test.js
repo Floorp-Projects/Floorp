@@ -33,20 +33,6 @@ describe("loop.conversation", function() {
       conversation = new loop.shared.models.ConversationModel();
     });
 
-    describe("#constructor", function() {
-      it("should require a ConversationModel instance", function() {
-        expect(function() {
-          new ConversationRouter();
-        }).to.Throw(Error, /missing required conversation/);
-      });
-
-      it("should require a notifier", function() {
-        expect(function() {
-          new ConversationRouter({conversation: conversation});
-        }).to.Throw(Error, /missing required notifier/);
-      });
-    });
-
     describe("Routes", function() {
       var router;
 
@@ -110,13 +96,7 @@ describe("loop.conversation", function() {
       describe("#ended", function() {
         // XXX When the call is ended gracefully, we should check that we
         // close connections nicely
-        it("should close the window", function() {
-          sandbox.stub(window, "close");
-
-          router.ended();
-
-          sinon.assert.calledOnce(window.close);
-        });
+        it("should close the window");
       });
     });
 
@@ -154,23 +134,11 @@ describe("loop.conversation", function() {
           sinon.assert.calledWith(router.navigate, "call/ended");
         });
 
-      it("should warn the user when peer hangs up", function() {
-        conversation.trigger("session:peer-hung");
-
-        sinon.assert.calledOnce(notifier.warn);
-      });
-
       it("should navigate to call/ended when peer hangs up", function() {
-        conversation.trigger("session:peer-hung");
+        conversation.trigger("session:peer-hungup");
 
         sinon.assert.calledOnce(router.navigate);
         sinon.assert.calledWith(router.navigate, "call/ended");
-      });
-
-      it("should warn the user when network disconnects", function() {
-        conversation.trigger("session:network-disconnected");
-
-        sinon.assert.calledOnce(notifier.warn);
       });
 
       it("should navigate to call/{token} when network disconnects",
@@ -181,6 +149,18 @@ describe("loop.conversation", function() {
           sinon.assert.calledWith(router.navigate, "call/ended");
         });
     });
+  });
 
+  describe("EndedCallView", function() {
+    describe("#closeWindow", function() {
+      it("should close the conversation window", function() {
+        sandbox.stub(window, "close");
+        var view = new loop.conversation.EndedCallView();
+
+        view.closeWindow({preventDefault: sandbox.spy()});
+
+        sinon.assert.calledOnce(window.close);
+      });
+    });
   });
 });
