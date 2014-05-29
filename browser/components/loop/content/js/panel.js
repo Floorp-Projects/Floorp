@@ -7,21 +7,42 @@
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 var loop = loop || {};
-loop.panel = (function(mozL10n) {
+loop.panel = (function(_, mozL10n) {
   "use strict";
 
   var baseServerUrl = Services.prefs.getCharPref("loop.server"),
-      panelView,
+      sharedViews = loop.shared.views,
       // aliasing translation function as __ for concision
       __ = mozL10n.get;
 
   /**
-   * Panel view.
-   *
-   * XXX view layout changes should be handled by a router really.
+   * Panel router.
+   * @type {loop.shared.router.BaseRouter}
    */
-  var PanelView = Backbone.View.extend({
-    el: "#default-view",
+  var router;
+
+  /**
+   * Panel view.
+   */
+  var PanelView = sharedViews.BaseView.extend({
+    template: _.template([
+      '<div class="description">',
+      '  <p data-l10n-id="get_link_to_share"></p>',
+      '</div>',
+      '<div class="action">',
+      '  <p class="invite">',
+      '    <input type="text" name="caller" data-l10n-id="caller">',
+      '    <a class="get-url btn btn-success disabled" href=""',
+      '       data-l10n-id="get_a_call_url"></a>',
+      '  </p>',
+      '  <p class="result hide">',
+      '    <input id="call-url" type="url" readonly>',
+      '    <a class="go-back btn btn-info" href="" data-l10n-id="new_url"></a>',
+      '  </p>',
+      '</div>',
+    ].join("")),
+
+    className: "share generate-url",
 
     events: {
       "keyup input[name=caller]": "changeButtonState",
@@ -29,18 +50,23 @@ loop.panel = (function(mozL10n) {
       "click a.go-back": "goBack"
     },
 
-    initialize: function() {
+    initialize: function(options) {
+      options = options || {};
+      if (!options.notifier) {
+        throw new Error("missing required notifier");
+      }
+      this.notifier = options.notifier;
       this.client = new loop.shared.Client({
         baseServerUrl: baseServerUrl
       });
-      this.notifier = new loop.shared.views.NotificationListView({
-        el: this.$(".messages")
-      }).render();
+    },
+
+    getNickname: function() {
+      return this.$("input[name=caller]").val();
     },
 
     getCallUrl: function(event) {
       event.preventDefault();
-      var nickname = this.$("input[name=caller]").val();
       var callback = function(err, callUrl) {
         if (err) {
           this.notifier.errorL10n("unable_retrieve_url");
@@ -49,7 +75,7 @@ loop.panel = (function(mozL10n) {
         this.onCallUrlReceived(callUrl);
       }.bind(this);
 
-      this.client.requestCallUrl(nickname, callback);
+      this.client.requestCallUrl(this.getNickname(), callback);
     },
 
     goBack: function(event) {
@@ -76,16 +102,29 @@ loop.panel = (function(mozL10n) {
     }
   });
 
+  var PanelRouter = loop.shared.router.BaseRouter.extend({
+    routes: {
+      "": "home"
+    },
+
+    home: function() {
+      this.loadView(new PanelView({notifier: this._notifier}));
+    }
+  });
+
   /**
    * Panel initialisation.
    */
   function init() {
-    panelView = new PanelView();
-    panelView.render();
+    router = new PanelRouter({
+      notifier: new sharedViews.NotificationListView({el: "#messages"})
+    });
+    Backbone.history.start();
   }
 
   return {
     init: init,
-    PanelView: PanelView
+    PanelView: PanelView,
+    PanelRouter: PanelRouter
   };
-})(document.mozL10n);
+})(_, document.mozL10n);
