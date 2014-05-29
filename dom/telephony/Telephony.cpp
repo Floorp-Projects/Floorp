@@ -486,7 +486,7 @@ Telephony::EventListenerAdded(nsIAtom* aType)
 NS_IMETHODIMP
 Telephony::CallStateChanged(uint32_t aServiceId, uint32_t aCallIndex,
                             uint16_t aCallState, const nsAString& aNumber,
-                            bool aIsActive, bool aIsOutgoing, bool aIsEmergency,
+                            bool aIsOutgoing, bool aIsEmergency,
                             bool aIsConference, bool aIsSwitchable, bool aIsMergeable)
 {
   nsRefPtr<TelephonyCall> modifiedCall
@@ -498,7 +498,7 @@ Telephony::CallStateChanged(uint32_t aServiceId, uint32_t aCallIndex,
     modifiedCall->UpdateMergeable(aIsMergeable);
 
     if (!aIsConference) {
-      UpdateActiveCall(modifiedCall, aIsActive);
+      UpdateActiveCall(modifiedCall, IsActiveState(aCallState));
     }
 
     if (modifiedCall->CallState() != aCallState) {
@@ -580,7 +580,7 @@ Telephony::EnumerateCallStateComplete()
 NS_IMETHODIMP
 Telephony::EnumerateCallState(uint32_t aServiceId, uint32_t aCallIndex,
                               uint16_t aCallState, const nsAString& aNumber,
-                              bool aIsActive, bool aIsOutgoing, bool aIsEmergency,
+                              bool aIsOutgoing, bool aIsEmergency,
                               bool aIsConference, bool aIsSwitchable, bool aIsMergeable)
 {
   nsRefPtr<TelephonyCall> call;
