@@ -38,7 +38,7 @@ const BUCKET_TIMESTEPS    = [
 ];
 
 // Time after which seen Page IDs expire.
-const SEENPAGEID_EXPIRY  = 2 * 7 * 24 * 60 * 60 * 1000; // 2 weeks.
+const SEENPAGEID_EXPIRY  = 8 * 7 * 24 * 60 * 60 * 1000; // 8 weeks.
 
 
 this.UITour = {
