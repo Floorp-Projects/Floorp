@@ -32,17 +32,16 @@ describe("loop.webapp", function() {
   describe("#init", function() {
     it("should navigate to the unsupported route if the sdk detects the" +
        "browser is unsupported", function() {
-         var WebappRouter = loop.webapp.WebappRouter;
-         sandbox.stub(window.OT, "checkSystemRequirements").returns(false);
-         sandbox.stub(WebappRouter.prototype, "navigate");
+      var WebappRouter = loop.webapp.WebappRouter;
+      sandbox.stub(window.OT, "checkSystemRequirements").returns(false);
+      sandbox.stub(WebappRouter.prototype, "navigate");
 
-         loop.webapp.init();
+      loop.webapp.init();
 
-         sinon.assert.calledOnce(WebappRouter.prototype.navigate);
-         sinon.assert.calledWithExactly(WebappRouter.prototype.navigate,
-                                        "unsupported", {trigger: true});
-       });
-
+      sinon.assert.calledOnce(WebappRouter.prototype.navigate);
+      sinon.assert.calledWithExactly(WebappRouter.prototype.navigate,
+                                     "unsupported", {trigger: true});
+    });
   });
 
   describe("WebappRouter", function() {
