@@ -14,6 +14,7 @@ loop.shared.models = (function() {
    */
   var ConversationModel = Backbone.Model.extend({
     defaults: {
+      callerId:     undefined, // Loop caller id
       loopToken:    undefined, // Loop conversation token
       sessionId:    undefined, // TB session id
       sessionToken: undefined, // TB session token
@@ -31,12 +32,11 @@ loop.shared.models = (function() {
      *   retrieved from the server;
      * - `session:error` when the request failed.
      *
-     * @param  {Object} baseServerUrl The server URL
-     * @throws {Error} If no baseServerUrl is given
-     * @throws {Error} If no conversation token is set
+     * @param  {String} baseServerUrl The server URL
+     * @throws {Error}  If no baseServerUrl is given
+     * @throws {Error}  If no conversation token is set
      */
     initiate: function(baseServerUrl) {
-
       if (!baseServerUrl) {
         throw new Error("baseServerUrl arg must be passed to initiate()");
       }
@@ -95,7 +95,26 @@ loop.shared.models = (function() {
     }
   });
 
+  /**
+   * Notification model.
+   */
+  var NotificationModel = Backbone.Model.extend({
+    defaults: {
+      level: "info",
+      message: ""
+    }
+  });
+
+  /**
+   * Notification collection
+   */
+  var NotificationCollection = Backbone.Collection.extend({
+    model: NotificationModel
+  });
+
   return {
-    ConversationModel: ConversationModel
+    ConversationModel: ConversationModel,
+    NotificationCollection: NotificationCollection,
+    NotificationModel: NotificationModel
   };
 })();

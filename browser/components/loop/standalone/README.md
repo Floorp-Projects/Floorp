@@ -20,11 +20,11 @@ For development, run a local static file server:
 
 Then point your browser at:
 
-- `http://localhost:3000/static/` for public web contents,
+- `http://localhost:3000/content/` for all public webapp contents,
 - `http://localhost:3000/test/` for tests.
 
-**Note:** the provided static file server is **not** intended for production
-use.
+**Note:** the provided static file server for web contents is **not** intended
+for production use.
 
 Code linting
 ------------
