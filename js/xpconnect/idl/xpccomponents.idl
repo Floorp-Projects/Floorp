@@ -574,7 +574,7 @@ interface nsIXPCComponents_Utils : nsISupports
     /*
      * Clone an object into a scope.
      * The 3rd argument is an optional options object:
-     * - cloneFunction: boolean. If true, any function in the value is are
+     * - cloneFunctions: boolean. If true, functions in the value are
      *   wrapped in a function forwarder that appears to be a native function in
      *   the content scope.
      */
