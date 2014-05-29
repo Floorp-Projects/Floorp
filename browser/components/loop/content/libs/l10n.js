@@ -1,16 +1,20 @@
 /* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
-/* globals FirefoxCom */
 
 'use strict';
 
-// Small subset of the webL10n API by Fabien Cazenave for pdf.js extension.
+// This is a modified version of l10n.js that the pdf.js extension uses.
+// It uses an explicitly passed object for the strings/locale functionality,
+// and does not automatically translate on DOMContentLoaded, but requires
+// initialize to be called. This improves testability and helps to avoid race
+// conditions.
 (function(window) {
+  var gL10nDetails;
   var gLanguage = '';
 
   // fetch an l10n objects
   function getL10nData(key) {
-    var response = FirefoxCom.requestSync('getStrings', key);
+    var response = gL10nDetails.getStrings(key);
     var data = JSON.parse(response);
     if (!data)
       console.warn('[l10n] #' + key + ' missing for [' + gLanguage + ']');
@@ -79,20 +83,22 @@
       translateElement(element);
   }
 
-  window.addEventListener('DOMContentLoaded', function() {
-    gLanguage = FirefoxCom.requestSync('getLocale', null);
-
-    translateFragment();
-
-    // fire a 'localized' DOM event
-    var evtObject = document.createEvent('Event');
-    evtObject.initEvent('localized', false, false);
-    evtObject.language = gLanguage;
-    window.dispatchEvent(evtObject);
-  });
-
   // Public API
   document.mozL10n = {
+    /**
+     * Called to do the initial translation, this should be called
+     * when DOMContentLoaded is fired, or the equivalent time.
+     *
+     * @param {Object} l10nDetails An object implementing the locale attribute
+     *                             and getStrings(key) function.
+     */
+    initialize: function(l10nDetails) {
+      gL10nDetails = l10nDetails;
+      gLanguage = gL10nDetails.locale;
+
+      translateFragment();
+    },
+
     // get a localized string
     get: translateString,
 
@@ -111,4 +117,3 @@
     translate: translateFragment
   };
 })(this);
-

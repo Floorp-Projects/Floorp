@@ -4,20 +4,17 @@
 
 /* global loop:true */
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-
 var loop = loop || {};
 loop.conversation = (function(OT, mozL10n) {
   "use strict";
 
   var sharedViews = loop.shared.views,
-      baseServerUrl = Services.prefs.getCharPref("loop.server"),
       // aliasing translation function as __ for concision
       __ = mozL10n.get;
 
   /**
    * App router.
-   * @type {loop.webapp.Router}
+   * @type {loop.desktopRouter.DesktopConversationRouter}
    */
   var router;
 
@@ -54,7 +51,7 @@ loop.conversation = (function(OT, mozL10n) {
    *
    * @type {loop.shared.router.BaseConversationRouter}
    */
-  var ConversationRouter = loop.shared.router.BaseConversationRouter.extend({
+  var ConversationRouter = loop.desktopRouter.DesktopConversationRouter.extend({
     routes: {
       "start/:version": "start",
       "call/ongoing": "conversation",
@@ -87,7 +84,7 @@ loop.conversation = (function(OT, mozL10n) {
       // will implement the follow-ups.
       this._conversation.set({loopVersion: loopVersion});
       this._conversation.initiate({
-        baseServerUrl: baseServerUrl,
+        baseServerUrl: window.navigator.mozLoop.serverUrl,
         outgoing: false
       });
     },
@@ -123,6 +120,10 @@ loop.conversation = (function(OT, mozL10n) {
    * Panel initialisation.
    */
   function init() {
+    // Do the initial L10n setup, we do this before anything
+    // else to ensure the L10n environment is setup correctly.
+    mozL10n.initialize(window.navigator.mozLoop);
+
     router = new ConversationRouter({
       conversation: new loop.shared.models.ConversationModel({}, {sdk: OT}),
       notifier: new sharedViews.NotificationListView({el: "#messages"})

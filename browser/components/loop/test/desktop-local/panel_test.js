@@ -9,7 +9,7 @@ var expect = chai.expect;
 describe("loop.panel", function() {
   "use strict";
 
-  var sandbox, notifier, fakeXHR, requests = [];
+  var sandbox, notifier, fakeXHR, requests = [], savedMozLoop;
 
   function createTestRouter(fakeDocument) {
     return new loop.panel.PanelRouter({
@@ -34,9 +34,23 @@ describe("loop.panel", function() {
       error: sandbox.spy(),
       errorL10n: sandbox.spy()
     };
+
+    window.navigator.mozLoop = {
+      get serverUrl() {
+        return "http://example.com";
+      },
+      getStrings: function() {
+        return "{}";
+      },
+      get locale() {
+        return "en-US";
+      }
+    };
+    document.mozL10n.initialize(window.navigator.mozLoop);
   });
 
   afterEach(function() {
+    delete window.navigator.mozLoop;
     $("#fixtures").empty();
     sandbox.restore();
   });
@@ -64,6 +78,7 @@ describe("loop.panel", function() {
           hidden: true,
           addEventListener: sandbox.spy()
         });
+
         sandbox.stub(router, "loadView");
       });
 
