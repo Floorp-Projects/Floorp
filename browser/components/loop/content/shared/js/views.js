@@ -110,7 +110,11 @@ loop.shared.views = (function(_, OT, l10n) {
 
     // height set to "auto" to fix video layout on Google Chrome
     // @see https://bugzilla.mozilla.org/show_bug.cgi?id=991122
-    videoStyles: { width: "100%", height: "auto" },
+    videoStyles: {
+      width: "100%",
+      height: "auto",
+      style: { "bugDisplayMode": "off" }
+    },
 
     events: {
       'click .btn.stop': 'hangup'
