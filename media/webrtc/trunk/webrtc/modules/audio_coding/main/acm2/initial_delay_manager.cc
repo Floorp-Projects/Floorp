@@ -12,6 +12,8 @@
 
 namespace webrtc {
 
+namespace acm2 {
+
 InitialDelayManager::InitialDelayManager(int initial_delay_ms,
                                          int late_packet_threshold)
     : last_packet_type_(kUndefinedPacket),
@@ -22,7 +24,12 @@ InitialDelayManager::InitialDelayManager(int initial_delay_ms,
       buffered_audio_ms_(0),
       buffering_(true),
       playout_timestamp_(0),
-      late_packet_threshold_(late_packet_threshold) {}
+      late_packet_threshold_(late_packet_threshold) {
+  last_packet_rtp_info_.header.payloadType = kInvalidPayloadType;
+  last_packet_rtp_info_.header.ssrc = 0;
+  last_packet_rtp_info_.header.sequenceNumber = 0;
+  last_packet_rtp_info_.header.timestamp = 0;
+}
 
 void InitialDelayManager::UpdateLastReceivedPacket(
     const WebRtcRTPHeader& rtp_info,
@@ -53,7 +60,9 @@ void InitialDelayManager::UpdateLastReceivedPacket(
     return;
   }
 
-  if (new_codec) {
+  // Either if it is a new packet or the first packet record and set variables.
+  if (new_codec ||
+      last_packet_rtp_info_.header.payloadType == kInvalidPayloadType) {
     timestamp_step_ = 0;
     if (type == kAudioPacket)
       audio_payload_type_ = rtp_info.header.payloadType;
@@ -219,5 +228,7 @@ void InitialDelayManager::UpdatePlayoutTimestamp(
   playout_timestamp_ = current_header.timestamp - static_cast<uint32_t>(
       initial_delay_ms_ * sample_rate_hz / 1000);
 }
+
+}  // namespace acm2
 
 }  // namespace webrtc

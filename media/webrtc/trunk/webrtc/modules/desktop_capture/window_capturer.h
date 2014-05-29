@@ -14,15 +14,18 @@
 #include <vector>
 #include <string>
 
+#include "webrtc/modules/desktop_capture/desktop_capture_types.h"
 #include "webrtc/modules/desktop_capture/desktop_capturer.h"
 #include "webrtc/system_wrappers/interface/constructor_magic.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
 
+class DesktopCaptureOptions;
+
 class WindowCapturer : public DesktopCapturer {
  public:
-  typedef intptr_t WindowId;
+  typedef webrtc::WindowId WindowId;
 
   struct Window {
     WindowId id;
@@ -33,6 +36,9 @@ class WindowCapturer : public DesktopCapturer {
 
   typedef std::vector<Window> WindowList;
 
+  static WindowCapturer* Create(const DesktopCaptureOptions& options);
+
+  // TODO(sergeyu): Remove this method. crbug.com/172183
   static WindowCapturer* Create();
 
   virtual ~WindowCapturer() {}

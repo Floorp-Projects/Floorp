@@ -15,13 +15,16 @@
         ['build_with_mozilla==1', {
           # Mozilla provides its own build of the opus library.
           'include_dirs': [
-            '/media/libopus/include',
+            '$(DIST)/include/opus',
            ]
         }, {
           'dependencies': [
             '<(DEPTH)/third_party/opus/opus.gyp:opus'
           ],
         }],
+      ],
+      'include_dirs': [
+        '<(webrtc_root)',
       ],
       'sources': [
         'interface/opus_interface.h',

@@ -15,9 +15,6 @@
 #include "webrtc/voice_engine/test/auto_test/voe_standard_test.h"
 #include "webrtc/voice_engine/test/auto_test/voe_test_interface.h"
 
-static const int kDefaultRtpPort = 8000;
-static const int kDefaultRtcpPort = 8001;
-
 class NetworkTest : public AfterStreamingFixture {
 };
 

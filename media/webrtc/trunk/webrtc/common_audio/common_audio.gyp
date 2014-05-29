@@ -103,7 +103,7 @@
             'signal_processing/spl_sqrt_floor.c',
           ],
           'conditions': [
-            ['armv7==1', {
+            ['arm_version==7', {
               'dependencies': ['common_audio_neon',],
               'sources': [
                 'signal_processing/filter_ar_fast_q12_armv7.S',
@@ -155,14 +155,13 @@
             'resampler/sinc_resampler_sse.cc',
           ],
           'cflags': ['-msse2',],
-          'cflags_mozilla': ['-msse2',],
           'xcode_settings': {
             'OTHER_CFLAGS': ['-msse2',],
           },
         },
       ],  # targets
     }],
-    ['(target_arch=="arm" and armv7==1) or target_arch=="armv7"', {
+    ['(target_arch=="arm" and arm_version==7) or target_arch=="armv7"', {
       'targets': [
         {
           'target_name': 'common_audio_neon',
@@ -237,10 +236,10 @@
               'target_name': 'common_audio_unittests_run',
               'type': 'none',
               'dependencies': [
-                '<(import_isolate_path):import_isolate_gypi',
                 'common_audio_unittests',
               ],
               'includes': [
+                '../build/isolate.gypi',
                 'common_audio_unittests.isolate',
               ],
               'sources': [

@@ -22,7 +22,6 @@ LOCAL_SRC_FILES:= \
     vie_autotest_base.cc \
     vie_autotest_capture.cc \
     vie_autotest_codec.cc \
-    vie_autotest_encryption.cc \
     vie_autotest_file.cc \
     vie_autotest_image_process.cc \
     vie_autotest_loopback.cc \

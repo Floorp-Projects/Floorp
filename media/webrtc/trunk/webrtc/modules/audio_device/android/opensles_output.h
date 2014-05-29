@@ -15,11 +15,9 @@
 #include <SLES/OpenSLES_Android.h>
 #include <SLES/OpenSLES_AndroidConfiguration.h>
 
-#if !defined(WEBRTC_GONK)
 #include "webrtc/modules/audio_device/android/audio_manager_jni.h"
-#endif
 #include "webrtc/modules/audio_device/android/low_latency_event.h"
-#include "webrtc/modules/audio_device/android/opensles_common.h"
+#include "webrtc/modules/audio_device/android/audio_common.h"
 #include "webrtc/modules/audio_device/include/audio_device_defines.h"
 #include "webrtc/modules/audio_device/include/audio_device.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
@@ -35,10 +33,15 @@ class ThreadWrapper;
 // OpenSL implementation that facilitate playing PCM data to an android device.
 // This class is Thread-compatible. I.e. Given an instance of this class, calls
 // to non-const methods require exclusive access to the object.
-class OpenSlesOutput : public webrtc_opensl::PlayoutDelayProvider {
+class OpenSlesOutput : public PlayoutDelayProvider {
  public:
   explicit OpenSlesOutput(const int32_t id);
   virtual ~OpenSlesOutput();
+
+  static int32_t SetAndroidAudioDeviceObjects(void* javaVM,
+                                              void* env,
+                                              void* context);
+  static void ClearAndroidAudioDeviceObjects();
 
   // Main initializaton and termination
   int32_t Init();
@@ -56,6 +59,9 @@ class OpenSlesOutput : public webrtc_opensl::PlayoutDelayProvider {
   int32_t SetPlayoutDevice(uint16_t index);
   int32_t SetPlayoutDevice(
       AudioDeviceModule::WindowsDeviceType device) { return 0; }
+
+  // No-op
+  int32_t SetPlayoutSampleRate(uint32_t sample_rate_hz) { return 0; }
 
   // Audio transport initialization
   int32_t PlayoutIsAvailable(bool& available);  // NOLINT
@@ -135,7 +141,7 @@ class OpenSlesOutput : public webrtc_opensl::PlayoutDelayProvider {
     // there will be jitter in audio pipe line due to the acquisition of locks.
     // Note: The buffers in the OpenSL queue do not count towards the 10ms of
     // frames needed since OpenSL needs to have them ready for playout.
-    kNum10MsToBuffer = 4,
+    kNum10MsToBuffer = 6,
   };
 
   bool InitSampleRate();
@@ -183,10 +189,8 @@ class OpenSlesOutput : public webrtc_opensl::PlayoutDelayProvider {
   // Thread-compatible.
   bool CbThreadImpl();
 
-#if !defined(WEBRTC_GONK)
   // Java API handle
   AudioManagerJni audio_manager_;
-#endif
 
   int id_;
   bool initialized_;
@@ -233,22 +237,6 @@ class OpenSlesOutput : public webrtc_opensl::PlayoutDelayProvider {
 
   // Audio status
   uint16_t playout_delay_;
-
-  // dlopen for OpenSLES
-  void *opensles_lib_;
-  typedef SLresult (*slCreateEngine_t)(SLObjectItf *,
-                                       SLuint32,
-                                       const SLEngineOption *,
-                                       SLuint32,
-                                       const SLInterfaceID *,
-                                       const SLboolean *);
-  slCreateEngine_t f_slCreateEngine;
-  SLInterfaceID SL_IID_ENGINE_;
-  SLInterfaceID SL_IID_BUFFERQUEUE_;
-  SLInterfaceID SL_IID_ANDROIDCONFIGURATION_;
-  SLInterfaceID SL_IID_PLAY_;
-  SLInterfaceID SL_IID_ANDROIDSIMPLEBUFFERQUEUE_;
-  SLInterfaceID SL_IID_VOLUME_;
 };
 
 }  // namespace webrtc

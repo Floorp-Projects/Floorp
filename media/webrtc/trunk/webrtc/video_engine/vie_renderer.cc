@@ -104,6 +104,11 @@ int32_t ViERenderer::SetExternalRenderer(
                                                   incoming_external_callback_);
 }
 
+int32_t ViERenderer::SetVideoRenderCallback(int32_t render_id,
+                                            VideoRenderCallback* callback) {
+  return render_module_.AddExternalRenderCallback(render_id, callback);
+}
+
 ViERenderer::ViERenderer(const int32_t render_id,
                          const int32_t engine_id,
                          VideoRender& render_module,

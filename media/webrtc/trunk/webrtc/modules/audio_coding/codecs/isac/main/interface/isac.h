@@ -14,7 +14,7 @@
 /*
  * Define the fixed-point numeric formats
  */
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 
 typedef struct WebRtcISACStruct    ISACStruct;
 

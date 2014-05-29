@@ -20,6 +20,8 @@
 
 namespace webrtc {
 
+namespace acm2 {
+
 #ifndef WEBRTC_CODEC_CELT
 
 ACMCELT::ACMCELT(int16_t /* codec_id */)
@@ -187,5 +189,7 @@ int16_t ACMCELT::SetBitRateSafe(const int32_t rate) {
 }
 
 #endif
+
+}  // namespace acm2
 
 }  // namespace webrtc

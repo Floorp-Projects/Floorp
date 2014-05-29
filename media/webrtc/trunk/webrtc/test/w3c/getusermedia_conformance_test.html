@@ -1,7 +1,16 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<!--
+Copyright (c) 2013 The WebRTC project authors. All Rights Reserved.
+
+Use of this source code is governed by a BSD-style license
+that can be found in the LICENSE file in the root of the source
+tree. An additional intellectual property rights grant can be found
+in the file PATENTS.  All contributing project authors may
+be found in the AUTHORS file in the root of the source tree.
+-->
 <html>
 <head>
-  <title>GetUserMedia Browser Conformance Test</title>
+  <title>getUserMedia Browser Conformance Test</title>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta charset="utf-8">
 </head>
@@ -18,328 +27,37 @@ Notice that this requires the site you're browsing to use HTTPS.
   <p>This page contains a foundation of conformance tests that can be expanded
   to cover most things in the W3C specification of the Media Capture and Streams
   API.</p>
-  <p>VERSION: These tests are based on the W3C Editor's Draft of 25 September
-  2012.
+  <p>VERSION: These tests are based on the W3C Editor's Draft of August 24th,
+  2013
+  (<a href="http://dev.w3.org/2011/webrtc/editor/archives/20130824/getusermedia.html">http://dev.w3.org/2011/webrtc/editor/archives/20130824/getusermedia.html</a>)
   <p>STATUS: In its current state, it only performs simple checks on the various
   attributes and methods of the objects exposed by the API. There's not much
-  functionality tested so far.</p>
-  <p>PREREQUISITES: You must have a webcam available on the machine that the
-  test is executed at.</p>
-  <p>PREFIX: These tests currently utilizes the <pre>webkit</pre> prefix, so
-  that will have to changed in order to to test conformance with the actual
-  standard!</p>
-  <p>SPEC: <a href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html">
-      http://dev.w3.org/2011/webrtc/editor/getusermedia.html</a></p>
+  functionality tested so far. The spec doesn't define if an attribute shall be
+  owned by the object itself (<code>assert_own_propety</code>) or if it shall be
+  inherited (<code>assert_inherits</code>). Since testharness.js doesn't offer
+  any generic function that covers both, the method for verification is
+  currently chosen according to the current Chrome implementation.</p>
+  <p>PREFIXES: These tests currently utilizes the <code>adapter.js</code>
+  script, which handle the prefixes used by different browsers.</p>
+  <p>HOW TO RUN: The easiest way is to tell your browser to:
+  <ul>
+  <li>Provide a fake webcam (<code>--use-fake-ui-for-media-stream</code> in
+  Chrome)</li>
+  <li>Automatically allow access to the webcam
+  (<code>--use-fake-device-for-media-stream</code> in Chrome)</li>
+  <li>Allow loading HTML files from disk
+  (<code>--allow-file-access-from-files</code> in Chrome)</li>
+  </ul>
+  Then just load this HTML file to execute the tests.</p>
 
   <div id="log"></div>
+  <video width="320" height="240" id="local-view" autoplay="autoplay"
+      muted="true"></video>
+
   <script src="https://w3c-test.org/resources/testharness.js"></script>
+  <!-- Load the polyfill to switch-hit between Chrome and Firefox -->
+  <script src="https://webrtc.googlecode.com/svn/stable/webrtc/test/manual/adapter.js"></script>
 
-  <script type="text/javascript">
-  setup({timeout:10000});
-
-  // Helper functions to minimize code duplication.
-  function failedCallback(test) {
-    return test.step_func(function (error) {
-      assert_unreached('Should not get an error callback');
-    });
-  }
-  function invokeGetUserMedia(test, okCallback) {
-    navigator.webkitGetUserMedia({ video: true, audio: true }, okCallback,
-        failedCallback(test));
-  }
-
-  // MediaStream.
-  var mediaStreamTest = async_test('4.2 MediaStream');
-  function verifyMediaStream(stream) {
-    test(function () {
-      assert_own_property(stream, 'label');
-      assert_true(typeof stream.label === 'string');
-      assert_readonly(stream, 'label');
-    }, "MediaStream label attribute");
-
-    test(function () {
-      assert_own_property(stream, 'audioTracks');
-      assert_true(typeof stream.audioTracks === 'object',
-          'audioTracks is a MediaStreamTrackList');
-      assert_readonly(stream, 'audioTracks');
-    }, "MediaStream audioTracks attribute");
-
-    test(function () {
-      assert_own_property(stream, 'videoTracks');
-      assert_true(typeof stream.videoTracks === 'object',
-          'videoTracks is a MediaStreamTrackList');
-      assert_readonly(stream, 'videoTracks');
-    }, "MediaStream videoTracks attribute");
-
-    test(function () {
-      assert_own_property(stream, 'ended');
-      assert_true(typeof stream.ended === 'boolean');
-      assert_false(stream.ended);
-    }, "MediaStream ended attribute");
-
-    test(function () {
-      assert_own_property(stream, 'onended');
-      assert_true(stream.onended === null);
-    }, "MediaStream onended EventHandler");
-  }
-  mediaStreamTest.step(function() {
-    var okCallback = mediaStreamTest.step_func(function (localStream) {
-      verifyMediaStream(localStream);
-
-      // Verify event handlers are working.
-      localStream.onended = onendedCallback
-      assert_false(localStream.ended);
-      localStream.stop();
-    });
-    var onendedCallback = mediaStreamTest.step_func(function () {
-      assert_true(localStream.ended);
-      mediaStreamTest.done();
-    });
-    invokeGetUserMedia(mediaStreamTest, okCallback);;
-  });
-
-  // LocalMediaStream.
-  var localMediaStreamTest = async_test('4.3 LocalMediaStream');
-  localMediaStreamTest.step(function() {
-    var okCallback = localMediaStreamTest.step_func(function (localStream) {
-      assert_own_property(localStream, 'stop');
-      assert_true(typeof localStream.stop === 'function');
-      localMediaStreamTest.done();
-    });
-    invokeGetUserMedia(localMediaStreamTest, okCallback);
-  });
-
-  // MediaStreamTrack.
-  var mediaStreamTrackTest = async_test('4.4 MediaStreamTrack');
-  function verifyTrack(type, track) {
-    test(function () {
-      assert_own_property(track, 'kind');
-      assert_readonly(track, 'kind');
-    }, 'MediaStreamTrack (' + type + ') kind attribute');
-
-    test(function () {
-      assert_own_property(track, 'label');
-      assert_true(typeof track.label === 'string',
-          'label is an object (DOMString)');
-      assert_readonly(track, 'label');
-    }, 'MediaStreamTrack (' + type + ') label attribute');
-
-    test(function () {
-      assert_own_property(track, 'enabled');
-      assert_true(typeof track.enabled === 'boolean',
-          'enabled is an object (DOMString)');
-      assert_true(track.enabled, 'enabled property must be true initially');
-    }, 'MediaStreamTrack (' + type + ') enabled attribute');
-
-    test(function () {
-      assert_own_property(track, 'readyState');
-      assert_true(typeof track.readyState === 'number');
-      assert_readonly(track, 'readyState');
-      assert_equals(track.readyState, track.LIVE,
-          'readyState must be LIVE initially');
-    }, 'MediaStreamTrack (' + type + ') readyState attribute');
-
-    test(function () {
-      assert_own_property(track, 'onmute');
-      assert_true(track.onmute === null);
-    }, 'MediaStreamTrack (' + type + ') onmute EventHandler');
-
-    test(function () {
-      assert_own_property(track, 'onunmute');
-      assert_true(track.onunmute === null);
-    }, 'MediaStreamTrack (' + type + ') onunmute EventHandler');
-
-    test(function () {
-      assert_own_property(track, 'onended');
-      assert_true(track.onended === null);
-    }, 'MediaStreamTrack (' + type + ') onended EventHandler');
-  }
-  mediaStreamTrackTest.step(function() {
-    var okCallback = mediaStreamTrackTest.step_func(function (localStream) {
-      verifyTrack('audio', localStream.audioTracks[0]);
-      verifyTrack('video', localStream.videoTracks[0]);
-      mediaStreamTrackTest.done();
-    });
-    invokeGetUserMedia(mediaStreamTrackTest, okCallback);
-  });
-
-  // URL tests.
-  var createObjectURLTest = async_test('4.5 URL createObjectURL method');
-  createObjectURLTest.step(function() {
-    var okCallback = createObjectURLTest.step_func(function (localStream) {
-      var url = webkitURL.createObjectURL(localStream);
-      assert_true(typeof url === 'string');
-      createObjectURLTest.done();
-    });
-    invokeGetUserMedia(createObjectURLTest, okCallback);
-  });
-
-  // MediaStreamTrackList tests.
-  var mediaStreamTrackListTest = async_test('4.6 MediaStreamTrackList');
-  function verifyTrackList(type, trackList) {
-    test(function () {
-      assert_own_property(trackList, 'length');
-      assert_true(typeof trackList.length === 'number');
-      assert_true(trackList.length === 1);
-    }, 'MediaStreamTrackList (' + type + ') length attribute');
-
-    test(function () {
-      assert_own_property(trackList, 'item');
-      assert_true(typeof trackList.item === 'function');
-      assert_true(trackList.item(0) !== null);
-    }, 'MediaStreamTrackList (' + type + ') item() method');
-
-    test(function () {
-      assert_own_property(trackList, 'add');
-      assert_true(typeof trackList.add === 'function');
-    }, 'MediaStreamTrackList (' + type + ') add() method');
-
-    test(function () {
-      assert_own_property(trackList, 'remove');
-      assert_true(typeof trackList.remove === 'function');
-    }, 'MediaStreamTrackList (' + type + ') remove() method');
-
-    test(function () {
-      assert_own_property(trackList, 'onaddtrack');
-      assert_true(trackList.onaddtrack === null);
-    }, 'MediaStreamTrackList (' + type + ') onaddtrack EventHandler');
-
-    test(function () {
-      assert_own_property(trackList, 'onremovetrack');
-      assert_true(trackList.onremovetrack === null);
-    }, 'MediaStreamTrackList (' + type + ') onremovetrack EventHandler');
-  }
-  mediaStreamTrackListTest.step(function() {
-    var okCallback = mediaStreamTrackListTest.step_func(function (localStream) {
-      verifyTrackList('audioTracks', localStream.audioTracks);
-      verifyTrackList('videoTracks', localStream.videoTracks);
-      mediaStreamTrackListTest.done();
-    });
-    invokeGetUserMedia(mediaStreamTrackListTest, okCallback);
-  });
-
-  // MediaStreams as Media Elements.
-  var mediaElementsTest = async_test('4.7 MediaStreams as Media Elements');
-  mediaElementsTest.step(function() {
-    var okCallback = mediaElementsTest.step_func(function (localStream) {
-      var url = webkitURL.createObjectURL(localStream);
-      var videoTag = document.getElementById('local-view');
-      videoTag.src = url;
-      assert_equals(videoTag.currentSrc, url);
-      assert_false(videoTag.preload);
-      assert_equals(videoTag.buffered.length, 1);
-      assert_equals(videoTag.buffered.start(0), 0);
-      assert_equals(videoTag.buffered.end(0), 0);
-      // Attempts to alter currentTime shall be ignored.
-      assert_true(videoTag.currentTime >= 0);
-      var time = videoTag.currentTime;
-      videoTag.currentTime = time - 100;
-      assert_true(videoTag.currentTime >= time);
-
-      assert_equals(videoTag.duration, infinity);
-      assert_false(videoTag.seeking);
-      assert_equals(videoTag.defaultPlaybackRate, 1.0);
-      // Attempts to alter defaultPlaybackRate shall fail.
-      assert_throws(videoTag.defaultPlaybackRate = 2.0);
-
-      assert_equals(videoTag.playbackRate, 1.0);
-      // Attempts to alter playbackRate shall fail.
-      assert_throws(videoTag.playbackRate = 2.0);
-
-      assert_equals(videoTag.played.length, 1);
-      assert_equals(videoTag.played.start(0), 0);
-      assert_true(videoTag.played.end(0) >= videoTag.currentTime);
-      assert_equals(videoTag.seekable.length, 0);
-      assert_equals(videoTag.seekable.start(), videoTag.currentTime);
-      assert_equals(videoTag.seekable.end(), videoTag.currentTime);
-      assert_equals(videoTag.startOffsetTime, NaN);
-      assert_false(videoTag.loop);
-      mediaElementsTest.done();
-    });
-    invokeGetUserMedia(mediaElementsTest, okCallback);
-  });
-
-  // NavigatorUserMedia.
-  var getUserMediaTest = async_test('5.1 NavigatorUserMedia');
-  getUserMediaTest.step(function() {
-    var okCallback = getUserMediaTest.step_func(function (localStream) {
-      assert_true(localStream !== null);
-      getUserMediaTest.done();
-    });
-
-    // boolean parameters, without failure callback:
-    navigator.webkitGetUserMedia({ video: true, audio: true }, okCallback);
-    navigator.webkitGetUserMedia({ video: true, audio: false }, okCallback);
-    navigator.webkitGetUserMedia({ video: false, audio: true }, okCallback);
-
-    // boolean parameters, with failure callback:
-    navigator.webkitGetUserMedia({ video: true, audio: true }, okCallback,
-        failedCallback(getUserMediaTest));
-    navigator.webkitGetUserMedia({ video: true, audio: false }, okCallback,
-        failedCallback(getUserMediaTest));
-    navigator.webkitGetUserMedia({ video: false, audio: true }, okCallback,
-        failedCallback(getUserMediaTest));
-  });
-
-  // MediaStreamConstraints.
-  var constraintsTest =
-    async_test('5.2 MediaStreamConstraints');
-  constraintsTest.step(function() {
-    var okCallback = constraintsTest.step_func(function (localStream) {
-      assert_true(localStream !== null);
-      constraintsTest.done();
-    });
-
-    // Constraints on video.
-    // See http://code.google.com/p/webrtc-samples/source/browse/trunk/demos/html/constraints-and-stats.html
-    // for more examples of constraints.
-    var constraints = {};
-    constraints.audio = true;
-    constraints.video = { mandatory: {}, optional: [] };
-    constraints.video.mandatory.minWidth = 640;
-    constraints.video.mandatory.minHeight = 480;
-    constraints.video.mandatory.minFrameRate = 15;
-
-    navigator.webkitGetUserMedia(constraints, okCallback,
-        failedCallback(constraintsTest));
-  });
-
-  // NavigatorUserMediaSuccessCallback.
-  var successCallbackTest =
-    async_test('5.3 NavigatorUserMediaSuccessCallback');
-  successCallbackTest.step(function() {
-    var okCallback = successCallbackTest.step_func(function (localStream) {
-      assert_true(localStream !== null);
-      assert_own_property(localStream, 'stop');
-      successCallbackTest.done();
-    });
-    invokeGetUserMedia(successCallbackTest, okCallback);
-  });
-
-  // NavigatorUserMediaError and NavigatorUserMediaErrorCallback.
-  var errorCallbackTest =
-    async_test('5.4 NavigatorUserMediaError and ' +
-        'NavigatorUserMediaErrorCallback');
-  errorCallbackTest.step(function() {
-    var okCallback = errorCallbackTest.step_func(function (localStream) {
-      assert_unreached('Should not get a success callback');
-    });
-    var errorCallback = errorCallbackTest.step_func(function (error) {
-      assert_own_property(error, 'PERMISSION_DENIED');
-      assert_readonly(error.PERMISSION_DENIED);
-      assert_true(typeof error.PERMISSION_DENIED === 'number');
-      assert_own_property(error, 'code');
-      assert_readonly(error.code);
-      assert_true(typeof error.code === 'number');
-
-    });
-    // Setting both audio and video to false triggers an error callback.
-    // TODO(kjellander): Figure out if there's a way in the spec to trigger an
-    // error callback.
-    navigator.webkitGetUserMedia({ video: false, audio: false }, okCallback,
-        errorCallback);
-  });
-  </script>
-  <video width="640" height="480" id="local-view" autoplay="autoplay"></video>
+  <script src="getusermedia_conformance_test.js"></script>
 </body>
 </html>

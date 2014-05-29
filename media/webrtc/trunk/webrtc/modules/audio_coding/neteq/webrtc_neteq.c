@@ -1104,14 +1104,6 @@ int WebRtcNetEQ_GetSpeechOutputType(void *inst, enum WebRtcNetEQOutputType *outp
         /* If CN or internal CNG */
         *outputType = kOutputCNG;
 
-#ifdef NETEQ_VAD
-    }
-    else if ( NetEqMainInst->DSPinst.VADInst.VADDecision == 0 )
-    {
-        /* post-decode VAD says passive speaker */
-        *outputType = kOutputVADPassive;
-#endif /* NETEQ_VAD */
-
     }
     else if ((NetEqMainInst->DSPinst.w16_mode == MODE_EXPAND)
         && (NetEqMainInst->DSPinst.ExpandInst.w16_expandMuteFactor == 0))
@@ -1124,6 +1116,14 @@ int WebRtcNetEQ_GetSpeechOutputType(void *inst, enum WebRtcNetEQOutputType *outp
     {
         /* PLC mode */
         *outputType = kOutputPLC;
+
+#ifdef NETEQ_VAD
+    }
+    else if ( NetEqMainInst->DSPinst.VADInst.VADDecision == 0 )
+    {
+        /* post-decode VAD says passive speaker */
+        *outputType = kOutputVADPassive;
+#endif /* NETEQ_VAD */
 
     }
     else

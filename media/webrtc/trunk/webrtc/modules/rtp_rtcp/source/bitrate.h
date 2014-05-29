@@ -27,7 +27,9 @@ class CriticalSectionWrapper;
 
 class Bitrate {
  public:
-  explicit Bitrate(Clock* clock);
+  class Observer;
+  Bitrate(Clock* clock, Observer* observer);
+  virtual ~Bitrate();
 
   // Calculates rates.
   void Process();
@@ -46,6 +48,14 @@ class Bitrate {
 
   int64_t time_last_rate_update() const;
 
+  class Observer {
+   public:
+    Observer() {}
+    virtual ~Observer() {}
+
+    virtual void BitrateUpdated(const BitrateStatistics& stats) = 0;
+  };
+
  protected:
   Clock* clock_;
 
@@ -60,6 +70,7 @@ class Bitrate {
   int64_t time_last_rate_update_;
   uint32_t bytes_count_;
   uint32_t packet_count_;
+  Observer* const observer_;
 };
 
 }  // namespace webrtc

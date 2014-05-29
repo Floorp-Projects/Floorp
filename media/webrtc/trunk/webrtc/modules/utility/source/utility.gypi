@@ -17,22 +17,11 @@
         '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
-      'include_dirs': [
-        '../interface',
-        '../../interface',
-        '../../media_file/interface',
-      ],
-      'direct_dependent_settings': {
-        'include_dirs': [
-          '../interface',
-          '../../interface',
-          '../../audio_coding/main/interface',
-        ],
-      },
       'sources': [
         '../interface/audio_frame_operations.h',
         '../interface/file_player.h',
         '../interface/file_recorder.h',
+        '../interface/helpers_android.h',
         '../interface/process_thread.h',
         '../interface/rtp_dump.h',
         'audio_frame_operations.cc',
@@ -42,6 +31,7 @@
         'file_player_impl.h',
         'file_recorder_impl.cc',
         'file_recorder_impl.h',
+        'helpers_android.cc',
         'process_thread_impl.cc',
         'process_thread_impl.h',
         'rtp_dump_impl.cc',
@@ -49,15 +39,8 @@
       ],
       'conditions': [
         ['enable_video==1', {
-          # Adds support for video recording.
-          'defines': [
-            'WEBRTC_MODULE_UTILITY_VIDEO',
-          ],
           'dependencies': [
             'webrtc_video_coding',
-          ],
-          'include_dirs': [
-            '../../video_coding/main/interface',
           ],
           'sources': [
             'frame_scaler.cc',

@@ -80,6 +80,8 @@ typedef struct
      contained special information */
     uint16_t lastSeqNo; /* sequence number for last packet received */
     uint32_t lastTimeStamp; /* timestamp for the last packet received */
+    int firstPacketReceived; /* set to zero implicitly when the instance is
+     filled with zeros */
     int32_t sampleMemory; /* memory position for keeping track of how many
      samples we cut during expand */
     int16_t prevTimeScale; /* indicates that the last mode was an accelerate

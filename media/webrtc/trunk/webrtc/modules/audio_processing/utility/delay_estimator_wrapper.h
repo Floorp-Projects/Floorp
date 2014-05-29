@@ -123,6 +123,35 @@ void* WebRtc_CreateDelayEstimator(void* farend_handle, int lookahead);
 //
 int WebRtc_InitDelayEstimator(void* handle);
 
+// Sets the |allowed_offset| used in the robust validation scheme.  If the
+// delay estimator is used in an echo control component, this parameter is
+// related to the filter length.  In principle |allowed_offset| should be set to
+// the echo control filter length minus the expected echo duration, i.e., the
+// delay offset the echo control can handle without quality regression.  The
+// default value, used if not set manually, is zero.  Note that |allowed_offset|
+// has to be non-negative.
+// Inputs:
+//  - handle            : Pointer to the delay estimation instance.
+//  - allowed_offset    : The amount of delay offset, measured in partitions,
+//                        the echo control filter can handle.
+int WebRtc_set_allowed_offset(void* handle, int allowed_offset);
+
+// Returns the |allowed_offset| in number of partitions.
+int WebRtc_get_allowed_offset(const void* handle);
+
+// TODO(bjornv): Implement this functionality.  Currently, enabling it has no
+// impact, hence this is an empty API.
+// Enables/Disables a robust validation functionality in the delay estimation.
+// This is by default set to disabled at create time.  The state is preserved
+// over a reset.
+// Inputs:
+//      - handle        : Pointer to the delay estimation instance.
+//      - enable        : Enable (1) or disable (0) this feature.
+int WebRtc_enable_robust_validation(void* handle, int enable);
+
+// Returns 1 if robust validation is enabled and 0 if disabled.
+int WebRtc_is_robust_validation_enabled(const void* handle);
+
 // Estimates and returns the delay between the far-end and near-end blocks. The
 // value will be offset by the lookahead (i.e. the lookahead should be
 // subtracted from the returned value).

@@ -8,24 +8,24 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "TestFEC.h"
+#include "webrtc/modules/audio_coding/main/test/TestFEC.h"
 
 #include <assert.h>
-
 #include <iostream>
 
-#include "audio_coding_module_typedefs.h"
-#include "common_types.h"
-#include "engine_configurations.h"
-#include "trace.h"
-#include "utility.h"
+#include "webrtc/common.h"
+#include "webrtc/common_types.h"
+#include "webrtc/engine_configurations.h"
+#include "webrtc/modules/audio_coding/main/interface/audio_coding_module_typedefs.h"
+#include "webrtc/modules/audio_coding/main/test/utility.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
 
-TestFEC::TestFEC()
-    : _acmA(AudioCodingModule::Create(0)),
-      _acmB(AudioCodingModule::Create(1)),
+TestFEC::TestFEC(const Config& config)
+    : _acmA(config.Get<AudioCodingModuleFactory>().Create(0)),
+      _acmB(config.Get<AudioCodingModuleFactory>().Create(1)),
       _channelA2B(NULL),
       _testCntr(0) {
 }

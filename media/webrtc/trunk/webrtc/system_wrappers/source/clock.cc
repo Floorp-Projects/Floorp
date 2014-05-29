@@ -15,7 +15,7 @@
 #include <Windows.h>
 #include <WinSock.h>
 #include <MMSystem.h>
-#elif ((defined WEBRTC_LINUX) || (defined WEBRTC_BSD) || (defined WEBRTC_MAC))
+#elif ((defined WEBRTC_LINUX) || (defined WEBRTC_MAC))
 #include <sys/time.h>
 #include <time.h>
 #endif
@@ -209,7 +209,7 @@ class WindowsRealTimeClock : public RealTimeClock {
   WindowsHelpTimer* _helpTimer;
 };
 
-#elif ((defined WEBRTC_LINUX) || (defined WEBRTC_BSD) || (defined WEBRTC_MAC))
+#elif ((defined WEBRTC_LINUX) || (defined WEBRTC_MAC))
 class UnixRealTimeClock : public RealTimeClock {
  public:
   UnixRealTimeClock() {}
@@ -233,28 +233,14 @@ class UnixRealTimeClock : public RealTimeClock {
 // Keeps the global state for the Windows implementation of RtpRtcpClock.
 // Note that this is a POD. Only PODs are allowed to have static storage
 // duration according to the Google Style guide.
-//
-// Note that on Windows, GetSystemTimeAsFileTime has poorer (up to 15 ms)
-// resolution than the media timers, hence the WindowsHelpTimer context
-// object and Synchronize API.
-//
-// We only sync up once, which means that on Windows, our realtime clock
-// wont respond to system time/date changes without a program restart.
-// TODO: We could attempt to detect 1+ minute jumps and resync for parity
-// with other platforms.
-
-static WindowsHelpTimer *SyncGlobalHelpTimer() {
-  static WindowsHelpTimer global_help_timer = {0, 0, {{ 0, 0}, 0}, 0};
-  Synchronize(&global_help_timer);
-  return &global_help_timer;
-}
+static WindowsHelpTimer global_help_timer = {0, 0, {{ 0, 0}, 0}, 0};
 #endif
 
 Clock* Clock::GetRealTimeClock() {
 #if defined(_WIN32)
-  static WindowsRealTimeClock clock(SyncGlobalHelpTimer());
+  static WindowsRealTimeClock clock(&global_help_timer);
   return &clock;
-#elif ((defined WEBRTC_LINUX) || (defined WEBRTC_BSD) || (defined WEBRTC_MAC))
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
   static UnixRealTimeClock clock;
   return &clock;
 #else

@@ -77,6 +77,8 @@ RTCPSender::FeedbackState::FeedbackState(ModuleRtpRtcpImpl* module)
   last_rr_ntp_frac = last_ntp_frac;
   remote_sr = last_remote_sr;
 
+  has_last_xr_rr = module->LastReceivedXrReferenceTimeInfo(&last_xr_rr);
+
   uint32_t send_bitrate = 0, tmp;
   module->BitrateSent(&send_bitrate, &tmp, &tmp, &tmp);
   this->send_bitrate = send_bitrate;
@@ -90,7 +92,8 @@ RTCPSender::FeedbackState::FeedbackState()
       send_bitrate(0),
       last_rr_ntp_secs(0),
       last_rr_ntp_frac(0),
-      remote_sr(0) {}
+      remote_sr(0),
+      has_last_xr_rr(false) {}
 
 RTCPSender::RTCPSender(const int32_t id,
                        const bool audio,
@@ -127,8 +130,8 @@ RTCPSender::RTCPSender(const int32_t id,
 
     _lastSendReport(),
     _lastRTCPTime(),
-    _lastSRPacketCount(),
-    _lastSROctetCount(),
+
+    last_xr_rr_(),
 
     _CSRCs(0),
     _CSRC(),
@@ -150,6 +153,8 @@ RTCPSender::RTCPSender(const int32_t id,
     _appName(),
     _appData(NULL),
     _appLength(0),
+
+    xrSendReceiverReferenceTimeEnabled_(false),
     _xrSendVoIPMetric(false),
     _xrVoIPMetric(),
     _nackCount(0),
@@ -159,8 +164,6 @@ RTCPSender::RTCPSender(const int32_t id,
     memset(_CNAME, 0, sizeof(_CNAME));
     memset(_lastSendReport, 0, sizeof(_lastSendReport));
     memset(_lastRTCPTime, 0, sizeof(_lastRTCPTime));
-    memset(_lastSRPacketCount, 0, sizeof(_lastSRPacketCount));
-    memset(_lastSROctetCount, 0, sizeof(_lastSROctetCount));
 
     WEBRTC_TRACE(kTraceMemory, kTraceRtpRtcp, id, "%s created", __FUNCTION__);
 }
@@ -226,14 +229,15 @@ RTCPSender::Init()
     }
     _appLength = 0;
 
+    xrSendReceiverReferenceTimeEnabled_ = false;
+
     _xrSendVoIPMetric = false;
 
     memset(&_xrVoIPMetric, 0, sizeof(_xrVoIPMetric));
     memset(_CNAME, 0, sizeof(_CNAME));
     memset(_lastSendReport, 0, sizeof(_lastSendReport));
     memset(_lastRTCPTime, 0, sizeof(_lastRTCPTime));
-    memset(_lastSRPacketCount, 0, sizeof(_lastSRPacketCount));
-    memset(_lastSROctetCount, 0, sizeof(_lastSROctetCount));
+    last_xr_rr_.clear();
 
     _nackCount = 0;
     _pliCount = 0;
@@ -575,32 +579,41 @@ RTCPSender::LastSendReport( uint32_t& lastRTCPTime)
     return _lastSendReport[0];
 }
 
-bool
-RTCPSender::GetSendReportMetadata(const uint32_t sendReport,
-                                  uint32_t *timeOfSend,
-                                  uint32_t *packetCount,
-                                  uint64_t *octetCount)
+uint32_t
+RTCPSender::SendTimeOfSendReport(const uint32_t sendReport)
 {
     CriticalSectionScoped lock(_criticalSectionRTCPSender);
 
     // This is only saved when we are the sender
     if((_lastSendReport[0] == 0) || (sendReport == 0))
     {
-        return false;
+        return 0; // will be ignored
     } else
     {
         for(int i = 0; i < RTCP_NUMBER_OF_SR; ++i)
         {
             if( _lastSendReport[i] == sendReport)
             {
-                *timeOfSend = _lastRTCPTime[i];
-                *packetCount = _lastSRPacketCount[i];
-                *octetCount = _lastSROctetCount[i];
-                return true;
+                return _lastRTCPTime[i];
             }
         }
     }
+    return 0;
+}
+
+bool RTCPSender::SendTimeOfXrRrReport(uint32_t mid_ntp,
+                                      int64_t* time_ms) const {
+  CriticalSectionScoped lock(_criticalSectionRTCPSender);
+
+  if (last_xr_rr_.empty()) {
     return false;
+  }
+  std::map<uint32_t, int64_t>::const_iterator it = last_xr_rr_.find(mid_ntp);
+  if (it == last_xr_rr_.end()) {
+    return false;
+  }
+  *time_ms = it->second;
+  return true;
 }
 
 int32_t RTCPSender::AddExternalReportBlock(
@@ -676,14 +689,10 @@ int32_t RTCPSender::BuildSR(const FeedbackState& feedback_state,
         // shift old
         _lastSendReport[i+1] = _lastSendReport[i];
         _lastRTCPTime[i+1] =_lastRTCPTime[i];
-        _lastSRPacketCount[i+1] = _lastSRPacketCount[i];
-        _lastSROctetCount[i+1] = _lastSROctetCount[i];
     }
 
     _lastRTCPTime[0] = Clock::NtpToMs(NTPsec, NTPfrac);
     _lastSendReport[0] = (NTPsec << 16) + (NTPfrac >> 16);
-    _lastSRPacketCount[0] = feedback_state.packet_count_sent;
-    _lastSROctetCount[0] = feedback_state.byte_count_sent;
 
     // The timestamp of this RTCP packet should be estimated as the timestamp of
     // the frame being captured at this moment. We are calculating that
@@ -1518,6 +1527,107 @@ RTCPSender::BuildBYE(uint8_t* rtcpbuffer, int& pos)
     return 0;
 }
 
+int32_t RTCPSender::BuildReceiverReferenceTime(uint8_t* buffer,
+                                               int& pos,
+                                               uint32_t ntp_sec,
+                                               uint32_t ntp_frac) {
+  const int kRrTimeBlockLength = 20;
+  if (pos + kRrTimeBlockLength >= IP_PACKET_SIZE) {
+    return -2;
+  }
+
+  if (last_xr_rr_.size() >= RTCP_NUMBER_OF_SR) {
+    last_xr_rr_.erase(last_xr_rr_.begin());
+  }
+  last_xr_rr_.insert(std::pair<uint32_t, int64_t>(
+      RTCPUtility::MidNtp(ntp_sec, ntp_frac),
+      Clock::NtpToMs(ntp_sec, ntp_frac)));
+
+  // Add XR header.
+  buffer[pos++] = 0x80;
+  buffer[pos++] = 207;
+  buffer[pos++] = 0;  // XR packet length.
+  buffer[pos++] = 4;  // XR packet length.
+
+  // Add our own SSRC.
+  ModuleRTPUtility::AssignUWord32ToBuffer(buffer + pos, _SSRC);
+  pos += 4;
+
+  //    0                   1                   2                   3
+  //    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+  //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  //   |     BT=4      |   reserved    |       block length = 2        |
+  //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  //   |              NTP timestamp, most significant word             |
+  //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  //   |             NTP timestamp, least significant word             |
+  //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+  // Add Receiver Reference Time Report block.
+  buffer[pos++] = 4;  // BT.
+  buffer[pos++] = 0;  // Reserved.
+  buffer[pos++] = 0;  // Block length.
+  buffer[pos++] = 2;  // Block length.
+
+  // NTP timestamp.
+  ModuleRTPUtility::AssignUWord32ToBuffer(buffer + pos, ntp_sec);
+  pos += 4;
+  ModuleRTPUtility::AssignUWord32ToBuffer(buffer + pos, ntp_frac);
+  pos += 4;
+
+  return 0;
+}
+
+int32_t RTCPSender::BuildDlrr(uint8_t* buffer,
+                              int& pos,
+                              const RtcpReceiveTimeInfo& info) {
+  const int kDlrrBlockLength = 24;
+  if (pos + kDlrrBlockLength >= IP_PACKET_SIZE) {
+    return -2;
+  }
+
+  // Add XR header.
+  buffer[pos++] = 0x80;
+  buffer[pos++] = 207;
+  buffer[pos++] = 0;  // XR packet length.
+  buffer[pos++] = 5;  // XR packet length.
+
+  // Add our own SSRC.
+  ModuleRTPUtility::AssignUWord32ToBuffer(buffer + pos, _SSRC);
+  pos += 4;
+
+  //   0                   1                   2                   3
+  //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+  //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  //  |     BT=5      |   reserved    |         block length          |
+  //  +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
+  //  |                 SSRC_1 (SSRC of first receiver)               | sub-
+  //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ block
+  //  |                         last RR (LRR)                         |   1
+  //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  //  |                   delay since last RR (DLRR)                  |
+  //  +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
+  //  |                 SSRC_2 (SSRC of second receiver)              | sub-
+  //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ block
+  //  :                               ...                             :   2
+
+  // Add DLRR sub block.
+  buffer[pos++] = 5;  // BT.
+  buffer[pos++] = 0;  // Reserved.
+  buffer[pos++] = 0;  // Block length.
+  buffer[pos++] = 3;  // Block length.
+
+  // NTP timestamp.
+  ModuleRTPUtility::AssignUWord32ToBuffer(buffer + pos, info.sourceSSRC);
+  pos += 4;
+  ModuleRTPUtility::AssignUWord32ToBuffer(buffer + pos, info.lastRR);
+  pos += 4;
+  ModuleRTPUtility::AssignUWord32ToBuffer(buffer + pos, info.delaySinceLastRR);
+  pos += 4;
+
+  return 0;
+}
+
 int32_t
 RTCPSender::BuildVoIPMetric(uint8_t* rtcpbuffer, int& pos)
 {
@@ -1668,7 +1778,17 @@ int RTCPSender::PrepareRTCP(const FeedbackState& feedback_state,
       rtcpPacketTypeFlags |= kRtcpTmmbn;
       _sendTMMBN = false;
   }
-
+  if (rtcpPacketTypeFlags & kRtcpReport)
+  {
+      if (xrSendReceiverReferenceTimeEnabled_ && !_sending)
+      {
+          rtcpPacketTypeFlags |= kRtcpXrReceiverReferenceTime;
+      }
+      if (feedback_state.has_last_xr_rr)
+      {
+          rtcpPacketTypeFlags |= kRtcpXrDlrrReportBlock;
+      }
+  }
   if(_method == kRtcpCompound)
   {
       if(_sending)
@@ -1743,7 +1863,6 @@ int RTCPSender::PrepareRTCP(const FeedbackState& feedback_state,
       if (_IJ && !statisticians.empty()) {
         rtcpPacketTypeFlags |= kRtcpTransmissionTimeOffset;
       }
-      _lastRTCPTime[0] = Clock::NtpToMs(NTPsec, NTPfrac);
     }
   }
 
@@ -1909,6 +2028,27 @@ int RTCPSender::PrepareRTCP(const FeedbackState& feedback_state,
         return position;
       }
   }
+  if (rtcpPacketTypeFlags & kRtcpXrReceiverReferenceTime)
+  {
+      buildVal = BuildReceiverReferenceTime(rtcp_buffer,
+                                            position,
+                                            NTPsec,
+                                            NTPfrac);
+      if (buildVal == -1) {
+        return -1;
+      } else if (buildVal == -2) {
+        return position;
+      }
+  }
+  if (rtcpPacketTypeFlags & kRtcpXrDlrrReportBlock)
+  {
+      buildVal = BuildDlrr(rtcp_buffer, position, feedback_state.last_xr_rr);
+      if (buildVal == -1) {
+        return -1;
+      } else if (buildVal == -2) {
+        return position;
+      }
+  }
   return position;
 }
 
@@ -1924,7 +2064,7 @@ bool RTCPSender::PrepareReport(const FeedbackState& feedback_state,
                                RTCPReportBlock* report_block,
                                uint32_t* ntp_secs, uint32_t* ntp_frac) {
   // Do we have receive statistics to send?
-  StreamStatistician::Statistics stats;
+  RtcpStatistics stats;
   if (!statistician->GetStatistics(&stats, true))
     return false;
   report_block->fractionLost = stats.fraction_lost;
@@ -2034,6 +2174,16 @@ RTCPSender::SetRTCPVoIPMetrics(const RTCPVoIPMetric* VoIPMetric)
 
     _xrSendVoIPMetric = true;
     return 0;
+}
+
+void RTCPSender::SendRtcpXrReceiverReferenceTime(bool enable) {
+  CriticalSectionScoped lock(_criticalSectionRTCPSender);
+  xrSendReceiverReferenceTimeEnabled_ = enable;
+}
+
+bool RTCPSender::RtcpXrReceiverReferenceTime() const {
+  CriticalSectionScoped lock(_criticalSectionRTCPSender);
+  return xrSendReceiverReferenceTimeEnabled_;
 }
 
 // called under critsect _criticalSectionRTCPSender

@@ -31,7 +31,7 @@ int16_t WebRtcG711_EncodeA(void* state,
   for (n = 0; n < len; n++) {
     tempVal = (uint16_t) linear_to_alaw(speechIn[n]);
 
-#ifdef WEBRTC_BIG_ENDIAN
+#ifdef WEBRTC_ARCH_BIG_ENDIAN
     if ((n & 0x1) == 1) {
       encoded[n >> 1] |= ((uint16_t) tempVal);
     } else {
@@ -69,7 +69,7 @@ int16_t WebRtcG711_EncodeU(void* state,
   for (n = 0; n < len; n++) {
     tempVal = (uint16_t) linear_to_ulaw(speechIn[n]);
 
-#ifdef WEBRTC_BIG_ENDIAN
+#ifdef WEBRTC_ARCH_BIG_ENDIAN
     if ((n & 0x1) == 1) {
       encoded[n >> 1] |= ((uint16_t) tempVal);
     } else {
@@ -103,7 +103,7 @@ int16_t WebRtcG711_DecodeA(void* state,
   }
 
   for (n = 0; n < len; n++) {
-#ifdef WEBRTC_BIG_ENDIAN
+#ifdef WEBRTC_ARCH_BIG_ENDIAN
     if ((n & 0x1) == 1) {
       tempVal = ((uint16_t) encoded[n >> 1] & 0xFF);
     } else {
@@ -140,7 +140,7 @@ int16_t WebRtcG711_DecodeU(void* state,
   }
 
   for (n = 0; n < len; n++) {
-#ifdef WEBRTC_BIG_ENDIAN
+#ifdef WEBRTC_ARCH_BIG_ENDIAN
     if ((n & 0x1) == 1) {
       tempVal = ((uint16_t) encoded[n >> 1] & 0xFF);
     } else {

@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef VPM_CONTENT_ANALYSIS_H
-#define VPM_CONTENT_ANALYSIS_H
+#ifndef WEBRTC_MODULES_VIDEO_PROCESSING_MAIN_SOURCE_CONTENT_ANALYSIS_H
+#define WEBRTC_MODULES_VIDEO_PROCESSING_MAIN_SOURCE_CONTENT_ANALYSIS_H
 
 #include "webrtc/common_video/interface/i420_video_frame.h"
 #include "webrtc/modules/interface/module_common_types.h"
@@ -18,75 +18,71 @@
 
 namespace webrtc {
 
-class VPMContentAnalysis
-{
-public:
-    // When |runtime_cpu_detection| is true, runtime selection of an optimized
-    // code path is allowed.
-    VPMContentAnalysis(bool runtime_cpu_detection);
-    ~VPMContentAnalysis();
+class VPMContentAnalysis {
+ public:
+  // When |runtime_cpu_detection| is true, runtime selection of an optimized
+  // code path is allowed.
+  explicit VPMContentAnalysis(bool runtime_cpu_detection);
+  ~VPMContentAnalysis();
 
-    // Initialize ContentAnalysis - should be called prior to
-    //  extractContentFeature
-    // Inputs:         width, height
-    // Return value:   0 if OK, negative value upon error
-    int32_t Initialize(int width, int height);
+  // Initialize ContentAnalysis - should be called prior to
+  //  extractContentFeature
+  // Inputs:         width, height
+  // Return value:   0 if OK, negative value upon error
+  int32_t Initialize(int width, int height);
 
-    // Extract content Feature - main function of ContentAnalysis
-    // Input:           new frame
-    // Return value:    pointer to structure containing content Analysis
-    //                  metrics or NULL value upon error
-    VideoContentMetrics* ComputeContentMetrics(const I420VideoFrame&
-                                               inputFrame);
+  // Extract content Feature - main function of ContentAnalysis
+  // Input:           new frame
+  // Return value:    pointer to structure containing content Analysis
+  //                  metrics or NULL value upon error
+  VideoContentMetrics* ComputeContentMetrics(const I420VideoFrame&
+                                             inputFrame);
 
-    // Release all allocated memory
-    // Output: 0 if OK, negative value upon error
-    int32_t Release();
+  // Release all allocated memory
+  // Output: 0 if OK, negative value upon error
+  int32_t Release();
 
-private:
+ private:
+  // return motion metrics
+  VideoContentMetrics* ContentMetrics();
 
-    // return motion metrics
-    VideoContentMetrics* ContentMetrics();
+  // Normalized temporal difference metric: for motion magnitude
+  typedef int32_t (VPMContentAnalysis::*TemporalDiffMetricFunc)();
+  TemporalDiffMetricFunc TemporalDiffMetric;
+  int32_t TemporalDiffMetric_C();
 
-    // Normalized temporal difference metric: for motion magnitude
-    typedef int32_t (VPMContentAnalysis::*TemporalDiffMetricFunc)();
-    TemporalDiffMetricFunc TemporalDiffMetric;
-    int32_t TemporalDiffMetric_C();
+  // Motion metric method: call 2 metrics (magnitude and size)
+  int32_t ComputeMotionMetrics();
 
-    // Motion metric method: call 2 metrics (magnitude and size)
-    int32_t ComputeMotionMetrics();
-
-    // Spatial metric method: computes the 3 frame-average spatial
-    //  prediction errors (1x2,2x1,2x2)
-    typedef int32_t (VPMContentAnalysis::*ComputeSpatialMetricsFunc)();
-    ComputeSpatialMetricsFunc ComputeSpatialMetrics;
-    int32_t ComputeSpatialMetrics_C();
+  // Spatial metric method: computes the 3 frame-average spatial
+  //  prediction errors (1x2,2x1,2x2)
+  typedef int32_t (VPMContentAnalysis::*ComputeSpatialMetricsFunc)();
+  ComputeSpatialMetricsFunc ComputeSpatialMetrics;
+  int32_t ComputeSpatialMetrics_C();
 
 #if defined(WEBRTC_ARCH_X86_FAMILY)
-    int32_t ComputeSpatialMetrics_SSE2();
-    int32_t TemporalDiffMetric_SSE2();
+  int32_t ComputeSpatialMetrics_SSE2();
+  int32_t TemporalDiffMetric_SSE2();
 #endif
 
-    const uint8_t*       _origFrame;
-    uint8_t*             _prevFrame;
-    int                        _width;
-    int                        _height;
-    int                        _skipNum;
-    int                        _border;
+  const uint8_t* orig_frame_;
+  uint8_t* prev_frame_;
+  int width_;
+  int height_;
+  int skip_num_;
+  int border_;
 
-    // Content Metrics:
-    // stores the local average of the metrics
-    float                  _motionMagnitude;    // motion class
-    float                  _spatialPredErr;     // spatial class
-    float                  _spatialPredErrH;    // spatial class
-    float                  _spatialPredErrV;    // spatial class
-    bool                   _firstFrame;
-    bool                   _CAInit;
+  // Content Metrics: Stores the local average of the metrics.
+  float motion_magnitude_;   // motion class
+  float spatial_pred_err_;   // spatial class
+  float spatial_pred_err_h_;  // spatial class
+  float spatial_pred_err_v_;  // spatial class
+  bool first_frame_;
+  bool ca_Init_;
 
-    VideoContentMetrics*   _cMetrics;
+  VideoContentMetrics*   content_metrics_;
+};
 
-}; // end of VPMContentAnalysis class definition
+}  // namespace webrtc
 
-}  // namespace
-
-#endif
+#endif  // WEBRTC_MODULES_VIDEO_PROCESSING_MAIN_SOURCE_CONTENT_ANALYSIS_H

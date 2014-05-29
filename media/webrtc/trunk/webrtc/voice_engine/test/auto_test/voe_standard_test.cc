@@ -14,11 +14,11 @@
 #include <string.h>
 
 #include "webrtc/engine_configurations.h"
+#include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
 #include "webrtc/voice_engine/include/voe_neteq_stats.h"
 #include "webrtc/voice_engine/test/auto_test/automated_mode.h"
 #include "webrtc/voice_engine/test/auto_test/voe_cpu_test.h"
-#include "webrtc/voice_engine/test/auto_test/voe_extended_test.h"
 #include "webrtc/voice_engine/test/auto_test/voe_stress_test.h"
 #include "webrtc/voice_engine/test/auto_test/voe_test_defines.h"
 #include "webrtc/voice_engine/test/auto_test/voe_unit_test.h"
@@ -30,6 +30,8 @@ DEFINE_bool(include_timing_dependent_tests, true,
 DEFINE_bool(automated, false,
             "If true, we'll run the automated tests we have in noninteractive "
             "mode.");
+DEFINE_bool(use_acm_version_2, false,
+            "If true, we'll run the tests with Audio Coding Module version 2.");
 
 using namespace webrtc;
 
@@ -100,151 +102,6 @@ void SubAPIManager::DisplayStatus() const {
   ANL();
 }
 
-bool SubAPIManager::GetExtendedMenuSelection(ExtendedSelection& sel) {
-  printf("------------------------------------------------\n");
-  printf("Select extended test\n\n");
-  printf(" (0)  None\n");
-  printf("- - - - - - - - - - - - - - - - - - - - - - - - \n");
-  printf(" (1)  Base");
-  if (_base)
-    printf("\n");
-  else
-    printf(" (NA)\n");
-  printf(" (2)  CallReport");
-  if (_callReport)
-    printf("\n");
-  else
-    printf(" (NA)\n");
-  printf(" (3)  Codec");
-  if (_codec)
-    printf("\n");
-  else
-    printf(" (NA)\n");
-  printf(" (4)  Dtmf");
-  if (_dtmf)
-    printf("\n");
-  else
-    printf(" (NA)\n");
-  printf(" (5)  Encryption");
-  if (_encryption)
-    printf("\n");
-  else
-    printf(" (NA)\n");
-  printf(" (6)  VoEExternalMedia");
-  if (_externalMedia)
-    printf("\n");
-  else
-    printf(" (NA)\n");
-  printf(" (7)  File");
-  if (_file)
-    printf("\n");
-  else
-    printf(" (NA)\n");
-  printf(" (8)  Hardware");
-  if (_hardware)
-    printf("\n");
-  else
-    printf(" (NA)\n");
-  printf(" (9) NetEqStats");
-  if (_netEqStats)
-    printf("\n");
-  else
-    printf(" (NA)\n");
-  printf(" (10) Network");
-  if (_network)
-    printf("\n");
-  else
-    printf(" (NA)\n");
-  printf(" (11) RTP_RTCP");
-  if (_rtp_rtcp)
-    printf("\n");
-  else
-    printf(" (NA)\n");
-  printf(" (12) VideoSync");
-  if (_videoSync)
-    printf("\n");
-  else
-    printf(" (NA)\n");
-  printf(" (13) VolumeControl");
-  if (_volumeControl)
-    printf("\n");
-  else
-    printf(" (NA)\n");
-  printf("\n: ");
-
-  ExtendedSelection xsel(XSEL_Invalid);
-  int selection(0);
-  dummy = scanf("%d", &selection);
-
-  switch (selection) {
-    case 0:
-      xsel = XSEL_None;
-      break;
-    case 1:
-      if (_base)
-        xsel = XSEL_Base;
-      break;
-    case 2:
-      if (_callReport)
-        xsel = XSEL_CallReport;
-      break;
-    case 3:
-      if (_codec)
-        xsel = XSEL_Codec;
-      break;
-    case 4:
-      if (_dtmf)
-        xsel = XSEL_DTMF;
-      break;
-    case 5:
-      if (_encryption)
-        xsel = XSEL_Encryption;
-      break;
-    case 6:
-      if (_externalMedia)
-        xsel = XSEL_ExternalMedia;
-      break;
-    case 7:
-      if (_file)
-        xsel = XSEL_File;
-      break;
-    case 8:
-      if (_hardware)
-        xsel = XSEL_Hardware;
-      break;
-    case 9:
-      if (_netEqStats)
-        xsel = XSEL_NetEqStats;
-      break;
-    case 10:
-      if (_network)
-        xsel = XSEL_Network;
-      break;
-    case 11:
-      if (_rtp_rtcp)
-        xsel = XSEL_RTP_RTCP;
-      break;
-    case 12:
-      if (_videoSync)
-        xsel = XSEL_VideoSync;
-      break;
-    case 13:
-      if (_volumeControl)
-        xsel = XSEL_VolumeControl;
-      break;
-    default:
-      xsel = XSEL_Invalid;
-      break;
-  }
-  if (xsel == XSEL_Invalid)
-    printf("Invalid selection!\n");
-
-  sel = xsel;
-  _xsel = xsel;
-
-  return (xsel != XSEL_Invalid);
-}
-
 VoETestManager::VoETestManager()
     : initialized_(false),
       voice_engine_(NULL),
@@ -263,8 +120,7 @@ VoETestManager::VoETestManager()
       voe_rtp_rtcp_(0),
       voe_vsync_(0),
       voe_volume_control_(0),
-      voe_apm_(0)
-{
+      voe_apm_(0) {
 }
 
 VoETestManager::~VoETestManager() {
@@ -282,7 +138,12 @@ bool VoETestManager::Init() {
     return false;
   }
 
-  voice_engine_ = VoiceEngine::Create();
+  // TODO(minyue): Remove when the old ACM is removed (latest 2014-04-01).
+  config_.Set<AudioCodingModuleFactory>(FLAGS_use_acm_version_2 ?
+      new NewAudioCodingModuleFactory() :
+      new AudioCodingModuleFactory());
+  voice_engine_ = VoiceEngine::Create(config_);
+
   if (!voice_engine_) {
     TEST_LOG("Failed to create VoiceEngine\n");
     return false;
@@ -409,7 +270,7 @@ int VoETestManager::ReleaseInterfaces() {
   return (releaseOK == true) ? 0 : -1;
 }
 
-int run_auto_test(TestType test_type, ExtendedSelection ext_selection) {
+int run_auto_test(TestType test_type) {
   assert(test_type != Standard);
 
   SubAPIManager api_manager;
@@ -424,80 +285,8 @@ int run_auto_test(TestType test_type, ExtendedSelection ext_selection) {
   }
   test_manager.GetInterfaces();
 
-  int result(-1);
-  if (test_type == Extended) {
-    VoEExtendedTest xtend(test_manager);
-
-    result = 0;
-    while (ext_selection != XSEL_None) {
-      if (ext_selection == XSEL_Base || ext_selection == XSEL_All) {
-        if ((result = xtend.TestBase()) == -1)
-          break;
-        xtend.TestPassed("Base");
-      }
-      if (ext_selection == XSEL_CallReport || ext_selection == XSEL_All) {
-        if ((result = xtend.TestCallReport()) == -1)
-          break;
-        xtend.TestPassed("CallReport");
-      }
-      if (ext_selection == XSEL_Codec || ext_selection == XSEL_All) {
-        if ((result = xtend.TestCodec()) == -1)
-          break;
-        xtend.TestPassed("Codec");
-      }
-      if (ext_selection == XSEL_DTMF || ext_selection == XSEL_All) {
-        if ((result = xtend.TestDtmf()) == -1)
-          break;
-        xtend.TestPassed("Dtmf");
-      }
-      if (ext_selection == XSEL_Encryption || ext_selection == XSEL_All) {
-        if ((result = xtend.TestEncryption()) == -1)
-          break;
-        xtend.TestPassed("Encryption");
-      }
-      if (ext_selection == XSEL_ExternalMedia || ext_selection == XSEL_All) {
-        if ((result = xtend.TestExternalMedia()) == -1)
-          break;
-        xtend.TestPassed("ExternalMedia");
-      }
-      if (ext_selection == XSEL_File || ext_selection == XSEL_All) {
-        if ((result = xtend.TestFile()) == -1)
-          break;
-        xtend.TestPassed("File");
-      }
-      if (ext_selection == XSEL_Hardware || ext_selection == XSEL_All) {
-        if ((result = xtend.TestHardware()) == -1)
-          break;
-        xtend.TestPassed("Hardware");
-      }
-      if (ext_selection == XSEL_NetEqStats || ext_selection == XSEL_All) {
-        if ((result = xtend.TestNetEqStats()) == -1)
-          break;
-        xtend.TestPassed("NetEqStats");
-      }
-      if (ext_selection == XSEL_Network || ext_selection == XSEL_All) {
-        if ((result = xtend.TestNetwork()) == -1)
-          break;
-        xtend.TestPassed("Network");
-      }
-      if (ext_selection == XSEL_RTP_RTCP || ext_selection == XSEL_All) {
-        if ((result = xtend.TestRTP_RTCP()) == -1)
-          break;
-        xtend.TestPassed("RTP_RTCP");
-      }
-      if (ext_selection == XSEL_VideoSync || ext_selection == XSEL_All) {
-        if ((result = xtend.TestVideoSync()) == -1)
-          break;
-        xtend.TestPassed("VideoSync");
-      }
-      if (ext_selection == XSEL_VolumeControl || ext_selection == XSEL_All) {
-        if ((result = xtend.TestVolumeControl()) == -1)
-          break;
-        xtend.TestPassed("VolumeControl");
-      }
-      api_manager.GetExtendedMenuSelection(ext_selection);
-    }  // while (extendedSel != XSEL_None)
-  } else if (test_type == Stress) {
+  int result = -1;
+  if (test_type == Stress) {
     VoEStressTest stressTest(test_manager);
     result = stressTest.DoTest();
   } else if (test_type == Unit) {
@@ -536,19 +325,16 @@ int RunInManualMode() {
   printf("Select type of test\n\n");
   printf(" (0)  Quit\n");
   printf(" (1)  Standard test\n");
-  printf(" (2)  Extended test(s)...\n");
+  printf(" (2)  [OBSOLETE: Extended test(s)...]\n");
   printf(" (3)  Stress test(s)...\n");
   printf(" (4)  Unit test(s)...\n");
   printf(" (5)  CPU & memory reference test [Windows]...\n");
   printf("\n: ");
 
   int selection(0);
-
   dummy = scanf("%d", &selection);
 
-  ExtendedSelection ext_selection = XSEL_Invalid;
   TestType test_type = Invalid;
-
   switch (selection) {
     case 0:
       return 0;
@@ -556,9 +342,6 @@ int RunInManualMode() {
       test_type = Standard;
       break;
     case 2:
-      test_type = Extended;
-      while (!api_manager.GetExtendedMenuSelection(ext_selection))
-        continue;
       break;
     case 3:
       test_type = Stress;
@@ -582,7 +365,7 @@ int RunInManualMode() {
   }
 
   // Function that can be called from other entry functions.
-  return run_auto_test(test_type, ext_selection);
+  return run_auto_test(test_type);
 }
 
 // ----------------------------------------------------------------------------

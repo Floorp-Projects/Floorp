@@ -32,10 +32,6 @@ public:
     // Statistics
     RTCPReportBlock remoteReceiveBlock;
     uint32_t        remoteMaxJitter;
-    uint32_t        remotePacketsReceived;
-    uint64_t        remoteOctetsReceived;
-    uint32_t        lastReceivedRRNTPsecs;
-    uint32_t        lastReceivedRRNTPfrac;
 
     // RTT
     uint16_t    RTT;
@@ -84,6 +80,8 @@ public:
     uint32_t ntp_frac;
     uint32_t rtp_timestamp;
 
+    uint32_t xr_originator_ssrc;
+    bool xr_dlrr_item;
     RTCPVoIPMetric*  VoIPMetric;
 
 private:

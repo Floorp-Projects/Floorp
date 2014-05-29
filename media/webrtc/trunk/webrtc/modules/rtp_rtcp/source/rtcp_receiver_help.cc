@@ -34,6 +34,8 @@ RTCPPacketInformation::RTCPPacketInformation()
       ntp_secs(0),
       ntp_frac(0),
       rtp_timestamp(0),
+      xr_originator_ssrc(0),
+      xr_dlrr_item(false),
       VoIPMetric(NULL) {
 }
 
@@ -101,10 +103,6 @@ RTCPPacketInformation::AddReportInfo(
 RTCPReportBlockInformation::RTCPReportBlockInformation():
     remoteReceiveBlock(),
     remoteMaxJitter(0),
-    remotePacketsReceived(0),
-    remoteOctetsReceived(0),
-    lastReceivedRRNTPsecs(0),
-    lastReceivedRRNTPfrac(0),
     RTT(0),
     minRTT(0),
     maxRTT(0),

@@ -11,7 +11,7 @@
 #ifndef WEBRTC_SYSTEM_WRAPPERS_INTERFACE_ASM_DEFINES_H_
 #define WEBRTC_SYSTEM_WRAPPERS_INTERFACE_ASM_DEFINES_H_
 
-#if (defined(__linux__) || defined(__FreeBSD__)) && defined(__ELF__)
+#if defined(__linux__) && defined(__ELF__)
 .section .note.GNU-stack,"",%progbits
 #endif
 
@@ -56,4 +56,4 @@ strheq \reg1, \reg2, \num
 
 .text
 
-#endif  // WEBRTC_SYSTEM_WRAPPERS_INTERFACE_COMPILE_ASSERT_H_
+#endif  // WEBRTC_SYSTEM_WRAPPERS_INTERFACE_ASM_DEFINES_H_

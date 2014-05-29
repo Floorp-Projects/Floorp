@@ -22,7 +22,6 @@
 
 namespace webrtc {
 
-const int kRembTimeOutThresholdMs = 2000;
 const int kRembSendIntervallMs = 1000;
 const unsigned int kRembMinimumBitrateKbps = 50;
 
