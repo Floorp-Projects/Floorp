@@ -173,10 +173,10 @@ describe("loop.webapp", function() {
           notifier: notifier
         });
         fakeSubmitEvent = {preventDefault: sinon.spy()};
+        initiate = sinon.stub(conversation, "initiate");
       });
 
       it("should start the conversation establishment process", function() {
-        initiate = sinon.stub(conversation, "initiate");
         conversation.set("loopToken", "fake");
 
         view.initiate(fakeSubmitEvent);
@@ -187,6 +187,15 @@ describe("loop.webapp", function() {
           baseServerUrl: loop.webapp.baseServerUrl,
           outgoing: true
         });
+      });
+
+      it("should disable current form once session is initiated", function() {
+        sandbox.stub(view, "disableForm");
+        conversation.set("loopToken", "fake");
+
+        view.initiate(fakeSubmitEvent);
+
+        sinon.assert.calledOnce(view.disableForm);
       });
     });
 

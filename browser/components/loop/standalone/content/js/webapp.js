@@ -86,12 +86,22 @@ loop.webapp = (function($, TB, webl10n) {
       });
     },
 
+    /**
+     * Disables this form to prevent multiple submissions.
+     *
+     * @see  https://bugzilla.mozilla.org/show_bug.cgi?id=991126
+     */
+    disableForm: function() {
+      this.$("button").attr("disabled", "disabled");
+    },
+
     initiate: function(event) {
       event.preventDefault();
       this.model.initiate({
         baseServerUrl: baseServerUrl,
         outgoing: true
       });
+      this.disableForm();
     }
   });
 

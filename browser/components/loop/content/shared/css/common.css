@@ -85,7 +85,7 @@ img {
   background: #d9534f;
 }
 
-.disabled {
+.disabled, button[disabled] {
     cursor: not-allowed;
     pointer-events: none;
     opacity: 0.65;
