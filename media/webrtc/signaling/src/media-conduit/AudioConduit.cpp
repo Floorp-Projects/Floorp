@@ -751,7 +751,8 @@ WebrtcAudioConduit::ReceivedRTPPacket(const void *data, int len)
     }
 #endif
 
-    if(mPtrVoENetwork->ReceivedRTPPacket(mChannel,data,len) == -1)
+    // XXX we need to get passed the time the packet was received
+    if(mPtrVoENetwork->ReceivedRTPPacket(mChannel, data, len) == -1)
     {
       int error = mPtrVoEBase->LastError();
       CSFLogError(logTag, "%s RTP Processing Error %d", __FUNCTION__, error);

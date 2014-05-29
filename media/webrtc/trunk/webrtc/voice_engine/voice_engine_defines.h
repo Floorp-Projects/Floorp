@@ -287,9 +287,16 @@ inline int VoEChannelId(int moduleId)
 
   // Always excluded for Android builds
   #undef WEBRTC_CODEC_ISAC
-  #undef WEBRTC_VOE_EXTERNAL_REC_AND_PLAYOUT
+  // We need WEBRTC_VOE_EXTERNAL_REC_AND_PLAYOUT to make things work on Android.
+  // Motivation for the commented-out undef below is unclear.
+  //
+  // #undef WEBRTC_VOE_EXTERNAL_REC_AND_PLAYOUT
 
-  #define ANDROID_NOT_SUPPORTED(stat) NOT_SUPPORTED(stat)
+  // This macro used to cause the calling function to set an error code and return.
+  // However, not doing that seems to cause the unit tests to pass / behave reasonably,
+  // so it's disabled for now; see bug 819856.
+  #define ANDROID_NOT_SUPPORTED(stat)
+  //#define ANDROID_NOT_SUPPORTED(stat) NOT_SUPPORTED(stat)
 
 #else // LINUX PC
 
@@ -308,9 +315,11 @@ inline int VoEChannelId(int moduleId)
 // *** WEBRTC_MAC ***
 // including iPhone
 
-#ifdef WEBRTC_MAC
+#if defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
 
+#if !defined(WEBRTC_BSD)
 #include <AudioUnit/AudioUnit.h>
+#endif
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -326,13 +335,14 @@ inline int VoEChannelId(int moduleId)
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#if !defined(WEBRTC_IOS)
+#if !defined(WEBRTC_BSD) && !defined(WEBRTC_IOS)
   #include <CoreServices/CoreServices.h>
   #include <CoreAudio/CoreAudio.h>
   #include <AudioToolbox/DefaultAudioOutput.h>
   #include <AudioToolbox/AudioConverter.h>
   #include <CoreAudio/HostTime.h>
 #endif
+
 
 #define DWORD unsigned long int
 #define WINAPI
@@ -388,6 +398,6 @@ inline int VoEChannelId(int moduleId)
 
 #else
 #define IPHONE_NOT_SUPPORTED(stat)
-#endif  // #ifdef WEBRTC_MAC
+#endif  // #if defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
 
 #endif // WEBRTC_VOICE_ENGINE_VOICE_ENGINE_DEFINES_H

@@ -473,5 +473,11 @@ bool VideoSender::VideoSuspended() const {
   CriticalSectionScoped cs(_sendCritSect);
   return _mediaOpt.IsVideoSuspended();
 }
+
+void VideoSender::SetCPULoadState(CPULoadState state) {
+  CriticalSectionScoped cs(_sendCritSect);
+  _mediaOpt.SetCPULoadState(state);
+}
+
 }  // namespace vcm
 }  // namespace webrtc

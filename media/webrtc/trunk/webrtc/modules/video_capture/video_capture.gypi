@@ -16,6 +16,9 @@
         '<(webrtc_root)/common_video/common_video.gyp:common_video',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
+      'cflags_mozilla': [
+        '$(NSPR_CFLAGS)',
+      ],
       'sources': [
         'device_info_impl.cc',
         'device_info_impl.h',
@@ -36,7 +39,7 @@
           ],
         }, {  # include_internal_video_capture == 1
           'conditions': [
-            ['OS=="linux"', {
+            ['include_v4l2_video_capture==1', {
               'sources': [
                 'linux/device_info_linux.cc',
                 'linux/device_info_linux.h',
@@ -66,8 +69,12 @@
               },
             }],  # mac
             ['OS=="win"', {
-              'dependencies': [
-                '<(DEPTH)/third_party/winsdk_samples/winsdk_samples.gyp:directshow_baseclasses',
+              'conditions': [
+                ['build_with_mozilla==0', {
+                  'dependencies': [
+                    '<(DEPTH)/third_party/winsdk_samples/winsdk_samples.gyp:directshow_baseclasses',
+                  ],
+                }],
               ],
               'sources': [
                 'windows/device_info_ds.cc',
@@ -83,6 +90,10 @@
                 'windows/video_capture_factory_windows.cc',
                 'windows/video_capture_mf.cc',
                 'windows/video_capture_mf.h',
+                'windows/BasePin.cpp',
+                'windows/BaseFilter.cpp',
+                'windows/BaseInputPin.cpp',
+                'windows/MediaType.cpp',
               ],
               'link_settings': {
                 'libraries': [
@@ -146,7 +157,7 @@
             'test/video_capture_main_mac.mm',
           ],
           'conditions': [
-            ['OS=="mac" or OS=="linux"', {
+            ['OS!="win" and OS!="android"', {
               'cflags': [
                 '-Wno-write-strings',
               ],
@@ -154,11 +165,15 @@
                 '-lpthread -lm',
               ],
             }],
+            ['include_v4l2_video_capture==1', {
+              'libraries': [
+                '-lXext',
+                '-lX11',
+              ],
+            }],
             ['OS=="linux"', {
               'libraries': [
                 '-lrt',
-                '-lXext',
-                '-lX11',
               ],
             }],
             ['OS=="mac"', {

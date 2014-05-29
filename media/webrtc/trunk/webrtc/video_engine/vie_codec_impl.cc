@@ -132,6 +132,22 @@ int ViECodecImpl::SetSendCodec(const int video_channel,
                  video_codec.codecSpecific.VP8.numberOfTemporalLayers,
                  video_codec.codecSpecific.VP8.keyFrameInterval);
   }
+  if (video_codec.codecType == kVideoCodecH264) {
+    WEBRTC_TRACE(kTraceInfo, kTraceVideo,
+                 ViEId(shared_data_->instance_id(), video_channel),
+                 "profile: 0x%02x, constraints: 0x%02x, level 0x%02x (%1.1f), "
+                 "packetizationMode: %u, frameDropping %d, "
+                 "keyFrameInterval %d, SPS len %d, PPS len %d",
+                 video_codec.codecSpecific.H264.profile,
+                 video_codec.codecSpecific.H264.constraints,
+                 video_codec.codecSpecific.H264.level,
+                 video_codec.codecSpecific.H264.level/10.0,
+                 video_codec.codecSpecific.H264.packetizationMode,
+                 video_codec.codecSpecific.H264.frameDroppingOn,
+                 video_codec.codecSpecific.H264.keyFrameInterval,
+                 video_codec.codecSpecific.H264.spsLen,
+                 video_codec.codecSpecific.H264.ppsLen);
+  }
   if (!CodecValid(video_codec)) {
     // Error logged.
     shared_data_->SetLastError(kViECodecInvalidCodec);
@@ -780,6 +796,8 @@ bool ViECodecImpl::CodecValid(const VideoCodec& video_codec) {
     return false;
   } else if ((video_codec.codecType == kVideoCodecVP8 &&
               strncmp(video_codec.plName, "VP8", 4) == 0) ||
+             (video_codec.codecType == kVideoCodecH264 &&
+              strncmp(video_codec.plName, "H264", 4) == 0) ||
              (video_codec.codecType == kVideoCodecI420 &&
               strncmp(video_codec.plName, "I420", 4) == 0)) {
     // OK.

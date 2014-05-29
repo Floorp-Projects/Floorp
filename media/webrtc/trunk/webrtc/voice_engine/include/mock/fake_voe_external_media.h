@@ -43,6 +43,9 @@ class FakeVoEExternalMedia : public VoEExternalMedia {
   WEBRTC_STUB(ExternalPlayoutGetData,
       (int16_t speechData10ms[], int samplingFreqHz,
        int current_delay_ms, int& lengthSamples));
+  WEBRTC_STUB(ExternalPlayoutData,
+      (int16_t speechData10ms[], int samplingFreqHz,
+       int num_channels, int current_delay_ms, int& lengthSamples));
   WEBRTC_STUB(GetAudioFrame, (int channel, int desired_sample_rate_hz,
                               AudioFrame* frame));
   WEBRTC_STUB(SetExternalMixing, (int channel, bool enable));

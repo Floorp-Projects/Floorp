@@ -16,7 +16,9 @@
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 
 
+#ifdef USE_X11
 #include <X11/Xlib.h>
+#endif
 #include <alsa/asoundlib.h>
 #include <sys/ioctl.h>
 #include <sys/soundcard.h>
@@ -167,7 +169,9 @@ private:
                            const bool playback,
                            const int32_t enumDeviceNo = 0,
                            char* enumDeviceName = NULL,
-                           const int32_t ednLen = 0) const;
+                           const int32_t ednLen = 0,
+                           char* enumDeviceID = NULL,
+                           const int32_t ediLen = 0) const;
     int32_t ErrorRecovery(int32_t error, snd_pcm_t* deviceHandle);
 
 private:
@@ -233,6 +237,7 @@ private:
 private:
     bool _initialized;
     bool _recording;
+    bool _firstRecord;
     bool _playing;
     bool _recIsInitialized;
     bool _playIsInitialized;
@@ -250,7 +255,9 @@ private:
     uint16_t _playBufDelayFixed;            // fixed playback delay
 
     char _oldKeyState[32];
+#ifdef USE_X11
     Display* _XDisplay;
+#endif
 };
 
 }
