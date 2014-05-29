@@ -151,6 +151,8 @@ class Registers
         (1 << Registers::t6) |
         (1 << Registers::t7);
 
+    // We use this constant to save registers when entering functions. This
+    // is why $ra is added here even though it is not "Non Volatile".
     static const uint32_t NonVolatileMask =
         (1 << Registers::s0) |
         (1 << Registers::s1) |
@@ -159,7 +161,8 @@ class Registers
         (1 << Registers::s4) |
         (1 << Registers::s5) |
         (1 << Registers::s6) |
-        (1 << Registers::s7);
+        (1 << Registers::s7) |
+        (1 << Registers::ra);
 
     static const uint32_t WrapperMask =
         VolatileMask |         // = arguments
