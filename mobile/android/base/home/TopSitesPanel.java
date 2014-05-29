@@ -419,6 +419,16 @@ public class TopSitesPanel extends HomeFragment {
         mList.setHeaderDividersEnabled(c != null && c.getCount() > mMaxGridEntries);
     }
 
+    private void updateUiWithThumbnails(Map<String, Bitmap> thumbnails) {
+        if (mGridAdapter != null) {
+            mGridAdapter.updateThumbnails(thumbnails);
+        }
+
+        // Once thumbnails have finished loading, the UI is ready. Reset
+        // Gecko to normal priority.
+        ThreadUtils.resetGeckoPriority();
+    }
+
     private static class TopSitesLoader extends SimpleCursorLoader {
         // Max number of search results
         private static final int SEARCH_LIMIT = 30;
@@ -638,9 +648,9 @@ public class TopSitesPanel extends HomeFragment {
             do {
                 final String url = c.getString(col);
 
-                // Only try to fetch thumbnails for URLs that don't have an
-                // associated suggested image URL.
-                if (BrowserDB.hasSuggestedImageUrl(url)) {
+                // Only try to fetch thumbnails for non-empty URLs that
+                // don't have an associated suggested image URL.
+                if (TextUtils.isEmpty(url) || BrowserDB.hasSuggestedImageUrl(url)) {
                     continue;
                 }
 
@@ -648,6 +658,8 @@ public class TopSitesPanel extends HomeFragment {
             } while (i++ < mMaxGridEntries && c.moveToNext());
 
             if (urls.isEmpty()) {
+                // Short-circuit empty results to the UI.
+                updateUiWithThumbnails(new HashMap<String, Bitmap>());
                 return;
             }
 
@@ -785,13 +797,7 @@ public class TopSitesPanel extends HomeFragment {
 
         @Override
         public void onLoadFinished(Loader<Map<String, Bitmap>> loader, Map<String, Bitmap> thumbnails) {
-            if (mGridAdapter != null) {
-                mGridAdapter.updateThumbnails(thumbnails);
-            }
-
-            // Once thumbnails have finished loading, the UI is ready. Reset
-            // Gecko to normal priority.
-            ThreadUtils.resetGeckoPriority();
+            updateUiWithThumbnails(thumbnails);
         }
 
         @Override
