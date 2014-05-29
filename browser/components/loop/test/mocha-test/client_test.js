@@ -43,7 +43,7 @@ describe("loop.Client", function() {
 
       it("should request for a call url", function() {
         var callback = sinon.spy();
-        client.requestCallUrl("fakeSimplepushUrl", callback);
+        client.requestCallUrl("foo", callback);
 
         expect(requests).to.have.length.of(1);
 
@@ -54,7 +54,7 @@ describe("loop.Client", function() {
 
       it("should send an error when the request fails", function() {
         var callback = sinon.spy();
-        client.requestCallUrl("fakeSimplepushUrl", callback);
+        client.requestCallUrl("foo", callback);
 
         expect(requests).to.have.length.of(1);
 
