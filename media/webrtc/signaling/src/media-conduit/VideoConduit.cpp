@@ -245,12 +245,10 @@ MediaConduitErrorCode WebrtcVideoConduit::Init(WebrtcVideoConduit *other)
   } else {
 
 #ifdef MOZ_WIDGET_ANDROID
-    jobject context = jsjni_GetGlobalContextRef();
-
     // get the JVM
     JavaVM *jvm = jsjni_GetVM();
 
-    if (webrtc::VideoEngine::SetAndroidObjects(jvm, (void*)context) != 0) {
+    if (webrtc::VideoEngine::SetAndroidObjects(jvm) != 0) {
       CSFLogError(logTag,  "%s: could not set Android objects", __FUNCTION__);
       return kMediaConduitSessionNotInited;
     }
