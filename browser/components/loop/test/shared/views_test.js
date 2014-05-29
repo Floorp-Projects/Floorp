@@ -111,26 +111,79 @@ describe("loop.shared.views", function() {
   });
 
   describe("NotificationListView", function() {
-    describe("Collection events", function() {
-      var coll, testNotif, view;
+    var coll, notifData, testNotif;
+
+    beforeEach(function() {
+      notifData = {level: "error", message: "plop"};
+      testNotif = new sharedModels.NotificationModel(notifData);
+      coll = new sharedModels.NotificationCollection();
+    });
+
+    describe("#initialize", function() {
+      it("should accept a collection option", function() {
+        var view = new sharedViews.NotificationListView({collection: coll});
+
+        expect(view.collection).to.be.an.instanceOf(
+          sharedModels.NotificationCollection);
+      });
+
+      it("should set a default collection when none is passed", function() {
+        var view = new sharedViews.NotificationListView();
+
+        expect(view.collection).to.be.an.instanceOf(
+          sharedModels.NotificationCollection);
+      });
+    });
+
+    describe("#clear", function() {
+      it("should clear all notifications from the collection", function() {
+        var view = new sharedViews.NotificationListView();
+        view.notify(testNotif);
+
+        view.clear();
+
+        expect(coll).to.have.length.of(0);
+      });
+    });
+
+    describe("#notify", function() {
+      var view;
 
       beforeEach(function() {
-        sandbox.stub(sharedViews.NotificationListView.prototype, "render");
-        testNotif = new sharedModels.NotificationModel({
-          level: "error",
-          message: "plop"
-        });
-        coll = new sharedModels.NotificationCollection();
         view = new sharedViews.NotificationListView({collection: coll});
       });
 
-      it("should render on notification added to the collection", function() {
-        coll.add(testNotif);
+      describe("adds a new notification to the stack", function() {
+        it("using a plain object", function() {
+          view.notify(notifData);
 
-        sinon.assert.calledOnce(view.render);
+          expect(coll).to.have.length.of(1);
+        });
+
+        it("using a NotificationModel instance", function() {
+          view.notify(testNotif);
+
+          expect(coll).to.have.length.of(1);
+        });
+      });
+    });
+
+    describe("Collection events", function() {
+      var view;
+
+      beforeEach(function() {
+        sandbox.stub(sharedViews.NotificationListView.prototype, "render");
+        view = new sharedViews.NotificationListView({collection: coll});
       });
 
-      it("should render on notification removed from the collection",
+      it("should render when a notification is added to the collection",
+        function() {
+          coll.add(testNotif);
+
+          sinon.assert.calledOnce(view.render);
+        });
+
+      it("should render when a notification is removed from the collection",
         function() {
           coll.add(testNotif);
           coll.remove(testNotif);
@@ -138,12 +191,11 @@ describe("loop.shared.views", function() {
           sinon.assert.calledTwice(view.render);
         });
 
-      it("should render on collection reset",
-        function() {
-          coll.reset();
+      it("should render when the collection is reset", function() {
+        coll.reset();
 
-          sinon.assert.calledOnce(view.render);
-        });
+        sinon.assert.calledOnce(view.render);
+      });
     });
   });
 });
