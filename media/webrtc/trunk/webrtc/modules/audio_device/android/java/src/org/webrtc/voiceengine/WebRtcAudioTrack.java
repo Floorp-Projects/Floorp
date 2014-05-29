@@ -297,7 +297,7 @@ class WebRtcAudioTrack {
         return level;
     }
 
-    final String logTag = "WebRTC AD java";
+    final String logTag = "WebRTC AT java";
 
     private void DoLog(String msg) {
         Log.d(logTag, msg);

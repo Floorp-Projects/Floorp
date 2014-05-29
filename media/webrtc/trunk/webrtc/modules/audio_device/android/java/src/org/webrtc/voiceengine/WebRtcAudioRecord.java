@@ -48,7 +48,11 @@ class WebRtcAudioRecord {
 
     @SuppressWarnings("unused")
     private int InitRecording(int audioSource, int sampleRate) {
-        audioSource = AudioSource.VOICE_COMMUNICATION;
+        if(android.os.Build.VERSION.SDK_INT>=11) {
+            audioSource = AudioSource.VOICE_COMMUNICATION;
+        } else {
+            audioSource = AudioSource.DEFAULT;
+        }
         // get the minimum buffer size that can be used
         int minRecBufSize = AudioRecord.getMinBufferSize(
             sampleRate,
@@ -185,7 +189,7 @@ class WebRtcAudioRecord {
         return _bufferedRecSamples;
     }
 
-    final String logTag = "WebRTC AD java";
+    final String logTag = "WebRTC AR java";
 
     private void DoLog(String msg) {
         Log.d(logTag, msg);
