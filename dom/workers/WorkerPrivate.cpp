@@ -879,7 +879,11 @@ private:
     }
 
     JSAutoCompartment ac(aCx, global);
-    return scriptloader::LoadWorkerScript(aCx);
+    bool result = scriptloader::LoadWorkerScript(aCx);
+    if (result) {
+      aWorkerPrivate->SetWorkerScriptExecutedSuccessfully();
+    }
+    return result;
   }
 };
 
@@ -3558,7 +3562,8 @@ WorkerPrivate::WorkerPrivate(JSContext* aCx,
   mRunningExpiredTimeouts(false), mCloseHandlerStarted(false),
   mCloseHandlerFinished(false), mMemoryReporterRunning(false),
   mBlockedForMemoryReporter(false), mCancelAllPendingRunnables(false),
-  mPeriodicGCTimerRunning(false), mIdleGCTimerRunning(false)
+  mPeriodicGCTimerRunning(false), mIdleGCTimerRunning(false),
+  mWorkerScriptExecutedSuccessfully(false)
 #ifdef DEBUG
   , mPRThread(nullptr)
 #endif
