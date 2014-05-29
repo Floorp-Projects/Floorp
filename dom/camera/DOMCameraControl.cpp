@@ -1309,6 +1309,24 @@ nsDOMCameraControl::OnUserError(CameraControlListener::UserContext aContext, nsr
       errorCb = mStartRecordingOnErrorCb.forget();
       break;
 
+    case CameraControlListener::kInStartFaceDetection:
+      // This method doesn't have any callbacks, so all we can do is log the
+      // failure. This only happens after the hardware has been released.
+      NS_WARNING("Failed to start face detection");
+      return;
+
+    case CameraControlListener::kInStopFaceDetection:
+      // This method doesn't have any callbacks, so all we can do is log the
+      // failure. This only happens after the hardware has been released.
+      NS_WARNING("Failed to stop face detection");
+      return;
+
+    case CameraControlListener::kInResumeContinuousFocus:
+      // This method doesn't have any callbacks, so all we can do is log the
+      // failure. This only happens after the hardware has been released.
+      NS_WARNING("Failed to resume continuous focus");
+      return;
+
     case CameraControlListener::kInStopRecording:
       // This method doesn't have any callbacks, so all we can do is log the
       // failure. This only happens after the hardware has been released.
