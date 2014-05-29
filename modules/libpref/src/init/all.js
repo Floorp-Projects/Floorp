@@ -371,6 +371,9 @@ pref("apz.printtree", false);
 // Layerize scrollable subframes to allow async panning
 pref("apz.subframe.enabled", false);
 
+// APZ testing (bug 961289)
+pref("apz.test.logging_enabled", false);
+
 #ifdef XP_MACOSX
 // Whether to run in native HiDPI mode on machines with "Retina"/HiDPI display;
 //   <= 0 : hidpi mode disabled, display will just use pixel-based upscaling
