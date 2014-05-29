@@ -56,16 +56,28 @@ loop.shared.Client = (function($) {
      *
      * @param {Function} cb Callback(err)
      * @param jqXHR See jQuery docs
-     * @param testStatus See jQuery docs
+     * @param textStatus See jQuery docs
      * @param errorThrown See jQuery docs
      */
-    _failureHandler: function(cb, jqXHR, testStatus, errorThrown) {
-      var error = "Unknown error.";
-      if (jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.error) {
-        error = jqXHR.responseJSON.error;
+    _failureHandler: function(cb, jqXHR, textStatus, errorThrown) {
+      var error = "Unknown error.",
+          jsonRes = jqXHR && jqXHR.responseJSON || {};
+      // Received error response format:
+      // { "status": "errors",
+      //   "errors": [{
+      //      "location": "url",
+      //      "name": "token",
+      //      "description": "invalid token"
+      // }]}
+      if (jsonRes.status === "errors" && Array.isArray(jsonRes.errors)) {
+        error = "Details: " + jsonRes.errors.map(function(err) {
+          return Object.keys(err).map(function(field) {
+            return field + ": " + err[field];
+          }).join(", ");
+        }).join("; ");
       }
-      var message = "HTTP error " + jqXHR.status + ": " +
-        errorThrown + "; " + error;
+      var message = "HTTP " + jqXHR.status + " " + errorThrown +
+          "; " + error;
       console.error(message);
       cb(new Error(message));
     },
