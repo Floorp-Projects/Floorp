@@ -32,11 +32,16 @@
       return [];
     },
   };
+  window.Components = {fake: true, utils: {import: function(){}}};
+  window.Services = {fake: true, prefs: {getCharPref: function() {
+    return "http://example.com";
+  }}};
   </script>
   <script src="../../content/libs/l10n.js"></script>
   <script src="../../content/shared/libs/jquery-2.1.0.js"></script>
   <script src="../../content/shared/libs/lodash-2.4.1.js"></script>
   <script src="../../content/shared/libs/backbone-1.1.2.js"></script>
+
   <!-- test dependencies -->
   <script src="../shared/vendor/mocha-1.17.1.js"></script>
   <script src="../shared/vendor/chai-1.9.0.js"></script>
@@ -45,16 +50,22 @@
     chai.Assertion.includeStack = true;
     mocha.setup('bdd');
   </script>
+
   <!-- App scripts -->
-  <script src="../../content/js/client.js"></script>
+  <script src="../../content/shared/js/client.js"></script>
+  <script src="../../content/shared/js/models.js"></script>
+  <script src="../../content/shared/js/router.js"></script>
+  <script src="../../content/shared/js/views.js"></script>
+  <script src="../../content/js/conversation.js"></script>
   <script src="../../content/js/panel.js"></script>
+
   <!-- Test scripts -->
+  <script src="conversation_test.js"></script>
   <script src="panel_test.js"></script>
-  <script src="client_test.js"></script>
   <script>
     mocha.run(function () {
       $("#mocha").append("<p>Complete.</p>");
     });
-</script>
+  </script>
 </body>
 </html>

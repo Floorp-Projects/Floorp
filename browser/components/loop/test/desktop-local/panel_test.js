@@ -106,7 +106,7 @@ describe("loop.panel", function() {
 
     describe("#getCallurl", function() {
       it("should request a call url to the server", function() {
-        var requestCallUrl = sandbox.stub(loop.Client.prototype,
+        var requestCallUrl = sandbox.stub(loop.shared.Client.prototype,
                                           "requestCallUrl");
         var view = new loop.panel.PanelView();
 
