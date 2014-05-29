@@ -80,10 +80,7 @@ loop.webapp = (function($, OT, webl10n) {
 
     _onSessionError: function(error) {
       console.error(error);
-      this.notifier.notify({
-        message: __("unable_retrieve_call_info"),
-        level: "error"
-      });
+      this.notifier.error(__("unable_retrieve_call_info"));
     },
 
     /**
@@ -143,10 +140,22 @@ loop.webapp = (function($, OT, webl10n) {
       this._notifier = options.notifier;
 
       this.listenTo(this._conversation, "session:ready", this._onSessionReady);
-      this.listenTo(this._conversation, "session:ended", this._onSessionEnded);
+      this.listenTo(this._conversation, "session:ended", this._endCall);
+      this.listenTo(this._conversation, "session:peer-hungup",
+                                        this._onPeerHungup);
+      this.listenTo(this._conversation, "session:network-disconnected",
+                                        this._onNetworkDisconnected);
 
       // Load default view
       this.loadView(new HomeView());
+    },
+
+    _endCall: function() {
+      var route = "home";
+      if (this._conversation.get("loopToken")) {
+        route = "call/" + this._conversation.get("loopToken");
+      }
+      this.navigate(route, {trigger: true});
     },
 
     /**
@@ -157,10 +166,26 @@ loop.webapp = (function($, OT, webl10n) {
     },
 
     /**
-     * Navigates back to initiate when the call session has ended.
+     * Peer hung up. Navigates back to call initiation so the user can start
+     * calling again.
+     *
+     * Event properties:
+     * - {String} connectionId: OT session id
+     *
+     * @param {Object} event
      */
-    _onSessionEnded: function() {
-      this.navigate("call/" + this._conversation.get("token"), {trigger: true});
+    _onPeerHungup: function(event) {
+      this._notifier.warn(__("peer_ended_conversation"));
+      this._endCall();
+    },
+
+    /**
+     * Network disconnected. Navigates back to call initiation so the user can
+     * start calling again.
+     */
+    _onNetworkDisconnected: function() {
+      this._notifier.warn(__("network_disconnected"));
+      this._endCall();
     },
 
     /**
@@ -194,10 +219,7 @@ loop.webapp = (function($, OT, webl10n) {
         if (loopToken) {
           return this.navigate("call/" + loopToken, {trigger: true});
         } else {
-          this._notifier.notify({
-            message: __("Missing conversation information"),
-            level: "error"
-          });
+          this._notifier.error(__("Missing conversation information"));
           return this.navigate("home", {trigger: true});
         }
       }

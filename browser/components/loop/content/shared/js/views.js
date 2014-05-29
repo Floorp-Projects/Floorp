@@ -46,6 +46,10 @@ loop.shared.views = (function(OT) {
     // @see https://bugzilla.mozilla.org/show_bug.cgi?id=991122
     videoStyles: { width: "100%", height: "auto" },
 
+    events: {
+      'click .btn.stop': 'hangup'
+    },
+
     /**
      * Establishes webrtc communication using OT sdk.
      */
@@ -67,24 +71,84 @@ loop.shared.views = (function(OT) {
 
       this.listenTo(this.session, "sessionConnected", this._sessionConnected);
       this.listenTo(this.session, "streamCreated", this._streamCreated);
-      this.listenTo(this.session, "connectionDestroyed", this._sessionEnded);
+      this.listenTo(this.session, "connectionDestroyed",
+                                  this._connectionDestroyed);
+      this.listenTo(this.session, "sessionDisconnected",
+                                  this._sessionDisconnected);
+      this.listenTo(this.session, "networkDisconnected",
+                                  this._networkDisconnected);
     },
 
+    hangup: function(event) {
+      event.preventDefault();
+      this.session.disconnect();
+    },
+
+    /**
+     * Session is created.
+     * http://tokbox.com/opentok/libraries/client/js/reference/SessionConnectEvent.html
+     *
+     * @param  {SessionConnectEvent} event
+     */
     _sessionConnected: function(event) {
       this.session.publish(this.publisher);
-      this._subscribeToStreams(event.streams);
     },
 
+    /**
+     * New created streams are available.
+     * http://tokbox.com/opentok/libraries/client/js/reference/StreamEvent.html
+     *
+     * @param  {StreamEvent} event
+     */
     _streamCreated: function(event) {
       this._subscribeToStreams(event.streams);
     },
 
-    _sessionEnded: function(event) {
-      // XXX: better end user notification
-      alert("Your session has ended. Reason: " + event.reason);
+    /**
+     * Local user hung up.
+     * http://tokbox.com/opentok/libraries/client/js/reference/SessionDisconnectEvent.html
+     *
+     * @param  {SessionDisconnectEvent} event
+     */
+    _sessionDisconnected: function(event) {
       this.model.trigger("session:ended");
+      this.session.unpublish(this.publisher);
     },
 
+    /**
+     * Peer hung up. Disconnects local session.
+     * http://tokbox.com/opentok/libraries/client/js/reference/ConnectionEvent.html
+     *
+     * @param  {ConnectionEvent} event
+     */
+    _connectionDestroyed: function(event) {
+      this.model.trigger("session:peer-hungup", {
+        connectionId: event.connection.connectionId
+      });
+      this.session.unpublish(this.publisher);
+      this.session.disconnect();
+    },
+
+    /**
+     * Network was disconnected.
+     * http://tokbox.com/opentok/libraries/client/js/reference/ConnectionEvent.html
+     *
+     * @param {ConnectionEvent} event
+     */
+    _networkDisconnected: function(event) {
+      this.model.trigger("session:network-disconnected");
+      this.session.unpublish(this.publisher);
+      this.session.disconnect();
+    },
+
+    /**
+     * Subscribes and attaches each available stream to a DOM element.
+     *
+     * XXX: for now we only support a single remote stream, hence a singe DOM
+     *      element.
+     *
+     * @param  {Array} streams A list of media streams.
+     */
     _subscribeToStreams: function(streams) {
       streams.forEach(function(stream) {
         if (stream.connection.connectionId !==
@@ -162,6 +226,29 @@ loop.shared.views = (function(OT) {
       this.collection.add(notification);
     },
 
+    /**
+     * Adds a warning notification to the stack and renders it.
+     *
+     * @return {String} message
+     */
+    warn: function(message) {
+      this.notify({level: "warning", message: message});
+    },
+
+    /**
+     * Adds an error notification to the stack and renders it.
+     *
+     * @return {String} message
+     */
+    error: function(message) {
+      this.notify({level: "error", message: message});
+    },
+
+    /**
+     * Renders this view.
+     *
+     * @return {loop.shared.views.NotificationListView}
+     */
     render: function() {
       this.$el.html(this.collection.map(function(notification) {
         return new NotificationView({
