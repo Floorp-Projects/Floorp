@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global loop:true */
+/* global loop:true, hawk, deriveHawkCredentials */
 
 var loop = loop || {};
 loop.shared = loop.shared || {};
@@ -20,6 +20,15 @@ loop.shared.Client = (function($) {
         !settings.baseServerUrl) {
       throw new Error("missing required baseServerUrl");
     }
+
+    // allowing an |in| test rather than a more type || allows us to dependency
+    // inject a non-existent mozLoop
+    if ("mozLoop" in settings) {
+      this.mozLoop = settings.mozLoop;
+    } else {
+      this.mozLoop = navigator.mozLoop;
+    }
+
     this.settings = settings;
   }
 
@@ -104,6 +113,46 @@ loop.shared.Client = (function($) {
     },
 
     /**
+     * Ensures that the client picks up the hawk-session-token
+     * put in preferences by the LoopService registration code,
+     * derives hawk credentials from them, and saves them in
+     * this._credentials.
+     *
+     * @param {Function} cb Callback(err)
+     *  if err is set to null in the callback, that indicates that the
+     *  credentials have been successfully attached to this object.
+     *
+     * @private
+     *
+     * @note That as currently written, this is only ever expected to be called
+     * from browser UI code (ie it relies on mozLoop).
+     */
+    _ensureCredentials: function(cb) {
+      if (this._credentials) {
+        cb(null);
+        return;
+      }
+
+      var hawkSessionToken =
+        this.mozLoop.getLoopCharPref("hawk-session-token");
+      if (!hawkSessionToken) {
+        var msg = "loop.hawk-session-token pref not found";
+        console.warn(msg);
+        cb(new Error(msg));
+        return;
+      }
+
+      // XXX do we want to use any of the other hawk params (eg to track clock
+      // skew, etc)?
+      var serverDerivedKeyLengthInBytes = 2 * 32;
+      deriveHawkCredentials(hawkSessionToken, "sessionToken",
+        serverDerivedKeyLengthInBytes, function (hawkCredentials) {
+          this._credentials = hawkCredentials;
+          cb(null);
+        }.bind(this));
+    },
+
+    /**
      * Internal handler for requesting a call url from the server.
      *
      * Callback parameters:
@@ -120,17 +169,37 @@ loop.shared.Client = (function($) {
       var endpoint = this.settings.baseServerUrl + "/call-url/",
           reqData  = {callerId: nickname};
 
-      var req = $.post(endpoint, reqData, function(callUrlData) {
-        try {
-          cb(null, this._validate(callUrlData, ["call_url", "expiresAt"]));
+      var req = $.ajax({
+        type: "POST",
+        url: endpoint,
+        data: reqData,
+        xhrFields: {
+          withCredentials: false
+        },
+        crossDomain: true,
+        beforeSend: function (xhr, settings) {
+          try {
+            this._attachAnyServerCreds(xhr, settings);
+          } catch (ex) {
+            cb(ex);
+            return false;
+          }
+          return true;
+        }.bind(this),
+        success: function(callUrlData) {
+          // XXX split this out into two functions for better readability
+          try {
+            cb(null, this._validate(callUrlData, ["call_url", "expiresAt"]));
 
-          var expiresHours = this._hoursToSeconds(callUrlData.expiresAt);
-          navigator.mozLoop.noteCallUrlExpiry(expiresHours);
-        } catch (err) {
-          console.log("Error requesting call info", err);
-          cb(err);
-        }
-      }.bind(this), "json");
+            var expiresHours = this._hoursToSeconds(callUrlData.expiresAt);
+            navigator.mozLoop.noteCallUrlExpiry(expiresHours);
+          } catch (err) {
+            console.log("Error requesting call info", err);
+            cb(err);
+          }
+        }.bind(this),
+        dataType: "json"
+      });
 
       req.fail(this._failureHandler.bind(this, cb));
     },
@@ -156,8 +225,14 @@ loop.shared.Client = (function($) {
           cb(err);
           return;
         }
-
-        this._requestCallUrlInternal(nickname, cb);
+        this._ensureCredentials(function (err) {
+          if (err) {
+            console.log("Error setting up credentials: " + err);
+            cb(err);
+            return;
+          }
+          this._requestCallUrlInternal(nickname, cb);
+        }.bind(this));
       }.bind(this));
     },
 
@@ -170,6 +245,17 @@ loop.shared.Client = (function($) {
      * @param  {Function} cb Callback(err, calls)
      */
     requestCallsInfo: function(version, cb) {
+      this._ensureCredentials(function (err) {
+        if (err) {
+          console.log("Error setting up credentials: " + err);
+          cb(err);
+          return;
+        }
+        this._requestCallsInfoInternal(version, cb);
+      }.bind(this));
+    },
+
+    _requestCallsInfoInternal: function(version, cb) {
       if (!version) {
         throw new Error("missing required parameter version");
       }
@@ -180,14 +266,32 @@ loop.shared.Client = (function($) {
       // opens the chat window, but we'll need to decide that once we make a
       // decision on chrome versus content, and know if we're going with
       // LoopService or a frameworker.
-      var req = $.get(endpoint + "?version=" + version, function(callsData) {
-        try {
-          cb(null, this._validate(callsData, ["calls"]));
-        } catch (err) {
-          console.log("Error requesting calls info", err);
-          cb(err);
-        }
-      }.bind(this), "json");
+      var req = $.ajax({
+        type: "GET",
+        url: endpoint + "?version=" + version,
+        xhrFields: {
+          withCredentials: false
+        },
+        crossDomain: true,
+        beforeSend: function (xhr, settings) {
+          try {
+            this._attachAnyServerCreds(xhr, settings);
+          } catch (ex) {
+            cb(ex);
+            return false;
+          }
+          return true;
+        }.bind(this),
+        success: function(callsData) {
+          try {
+            cb(null, this._validate(callsData, ["calls"]));
+          } catch (err) {
+            console.log("Error requesting calls info", err);
+            cb(err);
+          }
+        }.bind(this),
+        dataType: "json"
+      });
 
       req.fail(this._failureHandler.bind(this, cb));
     },
@@ -224,6 +328,33 @@ loop.shared.Client = (function($) {
       }.bind(this));
 
       req.fail(this._failureHandler.bind(this, cb));
+    },
+
+    /**
+     * If this._credentials is set, adds a hawk Authorization header based
+     * based on those credentials to the passed-in XHR.
+     *
+     * @param xhr        request to add any header to
+     * @param settings   settings object passed to jQuery.ajax()
+     * @private
+     */
+    _attachAnyServerCreds: function(xhr, settings) {
+      // if the server needs credentials and didn't get them, it will
+      // return failure for us, so if we don't have any creds, don't try to
+      // attach them.
+      if (!this._credentials) {
+        return;
+      }
+
+      var header = hawk.client.header(settings.url, settings.type,
+        { credentials: this._credentials });
+      if (header.err) {
+        throw new Error(header.err);
+      }
+
+      xhr.setRequestHeader("Authorization", header.field);
+
+      return;
     }
   };
 
