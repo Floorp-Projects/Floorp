@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WrapperOwner.h"
+#include "JavaScriptLogging.h"
 #include "mozilla/unused.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "jsfriendapi.h"
@@ -111,6 +112,8 @@ WrapperOwner::preventExtensions(JSContext *cx, HandleObject proxy)
     if (!CallPreventExtensions(objId, &status))
         return ipcfail(cx);
 
+    LOG_STACK();
+
     return ok(cx, status);
 }
 
@@ -135,6 +138,9 @@ WrapperOwner::getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId 
     PPropertyDescriptor result;
     if (!CallGetPropertyDescriptor(objId, idstr, &status, &result))
         return ipcfail(cx);
+
+    LOG_STACK();
+
     if (!ok(cx, status))
         return false;
 
@@ -162,6 +168,9 @@ WrapperOwner::getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, Handle
     PPropertyDescriptor result;
     if (!CallGetOwnPropertyDescriptor(objId, idstr, &status, &result))
         return ipcfail(cx);
+
+    LOG_STACK();
+
     if (!ok(cx, status))
         return false;
 
@@ -192,6 +201,8 @@ WrapperOwner::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
     ReturnStatus status;
     if (!CallDefineProperty(objId, idstr, descriptor, &status))
         return ipcfail(cx);
+
+    LOG_STACK();
 
     return ok(cx, status);
 }
@@ -227,6 +238,8 @@ WrapperOwner::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
     if (!CallDelete(objId, idstr, &status, bp))
         return ipcfail(cx);
 
+    LOG_STACK();
+
     return ok(cx, status);
 }
 
@@ -261,6 +274,8 @@ WrapperOwner::has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
     if (!CallHas(objId, idstr, &status, bp))
         return ipcfail(cx);
 
+    LOG_STACK();
+
     return ok(cx, status);
 }
 
@@ -282,6 +297,8 @@ WrapperOwner::hasOwn(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
     ReturnStatus status;
     if (!CallHasOwn(objId, idstr, &status, bp))
         return ipcfail(cx);
+
+    LOG_STACK();
 
     return !!ok(cx, status);
 }
@@ -308,6 +325,8 @@ WrapperOwner::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
     ReturnStatus status;
     if (!CallGet(objId, receiverId, idstr, &status, &val))
         return ipcfail(cx);
+
+    LOG_STACK();
 
     if (!ok(cx, status))
         return false;
@@ -342,6 +361,8 @@ WrapperOwner::set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiv
     if (!CallSet(objId, receiverId, idstr, strict, val, &status, &result))
         return ipcfail(cx);
 
+    LOG_STACK();
+
     if (!ok(cx, status))
         return false;
 
@@ -374,6 +395,8 @@ WrapperOwner::isExtensible(JSContext *cx, HandleObject proxy, bool *extensible)
     ReturnStatus status;
     if (!CallIsExtensible(objId, &status, extensible))
         return ipcfail(cx);
+
+    LOG_STACK();
 
     return ok(cx, status);
 }
@@ -424,6 +447,9 @@ WrapperOwner::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
     InfallibleTArray<JSParam> outparams;
     if (!CallCall(objId, vals, &status, &result, &outparams))
         return ipcfail(cx);
+
+    LOG_STACK();
+
     if (!ok(cx, status))
         return false;
 
@@ -470,6 +496,8 @@ WrapperOwner::objectClassIs(JSContext *cx, HandleObject proxy, js::ESClassValue 
     if (!CallObjectClassIs(objId, classValue, &result))
         return false;
 
+    LOG_STACK();
+
     return result;
 }
 
@@ -490,6 +518,8 @@ WrapperOwner::className(JSContext *cx, HandleObject proxy)
     nsString name;
     if (!CallClassName(objId, &name))
         return "<error>";
+
+    LOG_STACK();
 
     return ToNewCString(name);
 }
@@ -529,6 +559,9 @@ WrapperOwner::getPropertyNames(JSContext *cx, HandleObject proxy, uint32_t flags
     InfallibleTArray<nsString> names;
     if (!CallGetPropertyNames(objId, flags, &status, &names))
         return ipcfail(cx);
+
+    LOG_STACK();
+
     if (!ok(cx, status))
         return false;
 
@@ -596,6 +629,8 @@ WrapperOwner::domInstanceOf(JSContext *cx, JSObject *obj, int prototypeID, int d
     ReturnStatus status;
     if (!CallDOMInstanceOf(objId, prototypeID, depth, &status, bp))
         return ipcfail(cx);
+
+    LOG_STACK();
 
     return ok(cx, status);
 }
