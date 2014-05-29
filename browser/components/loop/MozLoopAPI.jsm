@@ -66,8 +66,27 @@ function injectLoopAPI(targetWindow) {
       value: function(key) {
         return MozLoopService.getStrings(key);
       }
-    }
+    },
 
+    /**
+     * Call to ensure that any necessary registrations for the Loop Service
+     * have taken place.
+     *
+     * Callback parameters:
+     * - err null on successful registration, non-null otherwise.
+     *
+     * @param {Function} callback Will be called once registration is complete,
+     *                            or straight away if registration has already
+     *                            happened.
+     */
+    ensureRegistered: {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: function(callback) {
+        return MozLoopService.register(callback);
+      }
+    }
   };
 
   let contentObj = Cu.createObjectIn(targetWindow);
