@@ -11,6 +11,13 @@ describe("loop.panel", function() {
 
   var sandbox, notifier, fakeXHR, requests = [];
 
+  function createTestRouter(fakeDocument) {
+    return new loop.panel.PanelRouter({
+      notifier: notifier,
+      document: fakeDocument
+    });
+  }
+
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
     fakeXHR = sandbox.useFakeXMLHttpRequest();
@@ -41,24 +48,96 @@ describe("loop.panel", function() {
           new loop.panel.PanelRouter();
         }).to.Throw(Error, /missing required notifier/);
       });
+
+      it("should require a document", function() {
+        expect(function() {
+          new loop.panel.PanelRouter({notifier: notifier});
+        }).to.Throw(Error, /missing required document/);
+      });
     });
 
     describe("constructed", function() {
       var router;
 
       beforeEach(function() {
-        router = new loop.panel.PanelRouter({notifier: notifier});
+        router = createTestRouter({
+          hidden: true,
+          addEventListener: sandbox.spy()
+        });
         sandbox.stub(router, "loadView");
       });
 
       describe("#home", function() {
-        it("should load the PanelView", function() {
+        it("should reset the PanelView", function() {
+          sandbox.stub(router, "reset");
+
           router.home();
+
+          sinon.assert.calledOnce(router.reset);
+        });
+      });
+
+      describe("#reset", function() {
+        it("should clear all pending notifications", function() {
+          router.reset();
+
+          sinon.assert.calledOnce(notifier.clear);
+        });
+
+        it("should load the home view", function() {
+          router.reset();
 
           sinon.assert.calledOnce(router.loadView);
           sinon.assert.calledWithExactly(router.loadView,
             sinon.match.instanceOf(loop.panel.PanelView));
         });
+      });
+
+      describe("Events", function() {
+        it("should listen to document visibility changes", function() {
+          var fakeDocument = {
+            hidden: true,
+            addEventListener: sandbox.spy()
+          };
+
+          var router = createTestRouter(fakeDocument);
+
+          sinon.assert.calledOnce(fakeDocument.addEventListener);
+          sinon.assert.calledWith(fakeDocument.addEventListener,
+                                  "visibilitychange");
+        });
+
+        it("should trigger panel:open when the panel document is visible",
+          function(done) {
+            var router = createTestRouter({
+              hidden: false,
+              addEventListener: function(name, cb) {
+                setTimeout(function() {
+                  cb({currentTarget: {hidden: false}});
+                }, 0);
+              }
+            });
+
+            router.once("panel:open", function() {
+              done();
+            });
+          });
+
+        it("should trigger panel:closed when the panel document is hidden",
+          function(done) {
+            var router = createTestRouter({
+              addEventListener: function(name, cb) {
+                hidden: true,
+                setTimeout(function() {
+                  cb({currentTarget: {hidden: true}});
+                }, 0);
+              }
+            });
+
+            router.once("panel:closed", function() {
+              done();
+            });
+          });
       });
     });
   });
