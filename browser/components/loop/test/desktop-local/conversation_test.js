@@ -15,7 +15,11 @@ describe("loop.conversation", function() {
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
-    notifier = {notify: sandbox.spy()};
+    notifier = {
+      notify: sandbox.spy(),
+      warn: sandbox.spy(),
+      error: sandbox.spy()
+    };
   });
 
   afterEach(function() {
@@ -99,7 +103,7 @@ describe("loop.conversation", function() {
           function() {
             router.conversation();
 
-            sinon.assert.calledOnce(router._notifier.notify);
+            sinon.assert.calledOnce(router._notifier.error);
         });
       });
 
@@ -117,7 +121,7 @@ describe("loop.conversation", function() {
     });
 
     describe("Events", function() {
-      var fakeSessionData;
+      var router, fakeSessionData;
 
       beforeEach(function() {
         fakeSessionData = {
@@ -125,16 +129,17 @@ describe("loop.conversation", function() {
           sessionToken: "sessionToken",
           apiKey:       "apiKey"
         };
+        sandbox.stub(loop.conversation.ConversationRouter.prototype,
+                     "navigate");
+        conversation.set("loopToken", "fakeToken");
+        router = new loop.conversation.ConversationRouter({
+          conversation: conversation,
+          notifier: notifier
+        });
       });
 
       it("should navigate to call/ongoing once the call session is ready",
         function() {
-          sandbox.stub(ConversationRouter.prototype, "navigate");
-          var router = new ConversationRouter({
-            conversation: conversation,
-            notifier: notifier
-          });
-
           conversation.setReady(fakeSessionData);
 
           sinon.assert.calledOnce(router.navigate);
@@ -143,13 +148,34 @@ describe("loop.conversation", function() {
 
       it("should navigate to call/ended when the call session ends",
         function() {
-          sandbox.stub(ConversationRouter.prototype, "navigate");
-          var router = new ConversationRouter({
-            conversation: conversation,
-            notifier: notifier
-          });
-
           conversation.trigger("session:ended");
+
+          sinon.assert.calledOnce(router.navigate);
+          sinon.assert.calledWith(router.navigate, "call/ended");
+        });
+
+      it("should warn the user when peer hangs up", function() {
+        conversation.trigger("session:peer-hung");
+
+        sinon.assert.calledOnce(notifier.warn);
+      });
+
+      it("should navigate to call/ended when peer hangs up", function() {
+        conversation.trigger("session:peer-hung");
+
+        sinon.assert.calledOnce(router.navigate);
+        sinon.assert.calledWith(router.navigate, "call/ended");
+      });
+
+      it("should warn the user when network disconnects", function() {
+        conversation.trigger("session:network-disconnected");
+
+        sinon.assert.calledOnce(notifier.warn);
+      });
+
+      it("should navigate to call/{token} when network disconnects",
+        function() {
+          conversation.trigger("session:network-disconnected");
 
           sinon.assert.calledOnce(router.navigate);
           sinon.assert.calledWith(router.navigate, "call/ended");
