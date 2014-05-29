@@ -154,32 +154,90 @@ let MozLoopServiceInternal = {
   // The uri of the Loop server.
   loopServerUri: Services.prefs.getCharPref("loop.server"),
 
+  // Any callbacks needed when the registration process completes.
+  registrationCallbacks: [],
+
   /**
-   * The initial delay for registration.
-   *
-   * XXX We keep this short at the moment, as we don't handle delayed
-   * registrations from the user perspective. Bug 994151 will extend this.
+   * The initial delay for push registration. This ensures we don't start
+   * kicking off straight after browser startup, just a few seconds later.
    */
-  initialRegistrationDelay: 100,
+  get initialRegistrationDelayMilliseconds() {
+    // Default to 5 seconds
+    let initialDelay = 5000;
+    try {
+      // Let a pref override this for developer & testing use.
+      initialDelay = Services.prefs.getIntPref("loop.initialDelay");
+    } catch (x) {
+      // It is ok for the pref not to exist.
+    }
+    return initialDelay;
+  },
+
+  /**
+   * Gets the current latest expiry time for urls.
+   *
+   * In seconds since epoch.
+   */
+  get expiryTimeSeconds() {
+    let expiryTimeSeconds = 0;
+    try {
+      expiryTimeSeconds = Services.prefs.getIntPref("loop.urlsExpiryTimeSeconds");
+    } catch (x) {
+      // It is ok for the pref not to exist.
+    }
+
+    return expiryTimeSeconds;
+  },
+
+  /**
+   * Sets the expiry time to either the specified time, or keeps it the same
+   * depending on which is latest.
+   */
+  set expiryTimeSeconds(time) {
+    if (time > this.expiryTimeSeconds) {
+      Services.prefs.setIntPref("loop.urlsExpiryTimeSeconds", time);
+    }
+  },
 
   /**
    * Starts the initialization of the service, which goes and registers
    * with the push server and the loop server.
+   *
+   * Callback parameters:
+   * - err null on successful initialization and registration,
+   *       false if initialization is complete, but registration has not taken
+   *             place,
+   *       <other> anything else if registration has failed.
+   *
+   * @param {Function} callback Optional, called when initialization finishes.
    */
-  initialize: function() {
-    if (this.initialized)
+  initialize: function(callback) {
+    if (this.registeredPushServer || this.initalizeTimer || this.registrationInProgress) {
+      if (callback)
+        callback(this.registeredPushServer ? null : false);
       return;
+    }
 
-    this.initialized = true;
+    function secondsToMilli(value) {
+      return value * 1000;
+    }
 
-    // Kick off the push notification service into registering after a timeout
-    // this ensures we're not doing too much straight after the browser's finished
-    // starting up.
-    this.initializeTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    this.initializeTimer.initWithCallback(function() {
-        this.registerWithServers();
+    // If expiresTime is in the future then kick-off registration.
+    if (secondsToMilli(this.expiryTimeSeconds) > Date.now()) {
+      // Kick off the push notification service into registering after a timeout
+      // this ensures we're not doing too much straight after the browser's finished
+      // starting up.
+      this.initializeTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      this.initializeTimer.initWithCallback(function() {
+        this.registerWithServers(callback);
+        this.initializeTimer = null;
       }.bind(this),
-      this.initialRegistrationDelay, Ci.nsITimer.TYPE_ONE_SHOT);
+      this.initialRegistrationDelayMilliseconds, Ci.nsITimer.TYPE_ONE_SHOT);
+    }
+    else if (callback) {
+      // Callback with false as we haven't needed to do registration.
+      callback(false);
+    }
   },
 
   /**
@@ -200,7 +258,7 @@ let MozLoopServiceInternal = {
     }
 
     // We need to register, so save the callback.
-    this.registrationCompleteCallback = callback;
+    this.registrationCallbacks.push(callback);
 
     // If we're already in progress, just return straight away.
     if (this.registrationInProgress) {
@@ -222,11 +280,11 @@ let MozLoopServiceInternal = {
     // Reset the in progress flag
     this.registrationInProgress = false;
 
-    // Call the callback if there is one, and then release it.
-    if (this.registrationCompleteCallback) {
-      this.registrationCompleteCallback(err);
-      this.registrationCompleteCallback = null;
-    }
+    // Call any callbacks, then release them.
+    this.registrationCallbacks.forEach(function(callback) {
+      callback(err);
+    });
+    this.registrationCallbacks.length = 0;
   },
 
   /**
@@ -368,9 +426,17 @@ this.MozLoopService = {
   /**
    * Initialized the loop service, and starts registration with the
    * push and loop servers.
+   *
+   * Callback parameters:
+   * - err null on successful initialization and registration,
+   *       false if initialization is complete, but registration has not taken
+   *             place,
+   *       <other> anything else if registration has failed.
+   *
+   * @param {Function} callback Optional, called when initialization finishes.
    */
-  initialize: function() {
-    MozLoopServiceInternal.initialize();
+  initialize: function(callback) {
+    MozLoopServiceInternal.initialize(callback);
   },
 
   /**
@@ -384,6 +450,22 @@ this.MozLoopService = {
    */
   register: function(callback) {
     MozLoopServiceInternal.registerWithServers(callback);
+  },
+
+  /**
+   * Used to note a call url expiry time. If the time is later than the current
+   * latest expiry time, then the stored expiry time is increased. For times
+   * sooner, this function is a no-op; this ensures we always have the latest
+   * expiry time for a url.
+   *
+   * This is used to deterimine whether or not we should be registering with the
+   * push server on start.
+   *
+   * @param {Integer} expiryTimeSeconds The seconds since epoch of the expiry time
+   *                                    of the url.
+   */
+  noteCallUrlExpiry: function(expiryTimeSeconds) {
+    MozLoopServiceInternal.expiryTimeSeconds = expiryTimeSeconds;
   },
 
   /**
