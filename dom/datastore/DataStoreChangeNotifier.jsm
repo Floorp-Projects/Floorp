@@ -12,9 +12,6 @@ function debug(s) {
   //dump('DEBUG DataStoreChangeNotifier: ' + s + '\n');
 }
 
-// DataStoreServiceInternal should not be converted into a lazy getter as it
-// runs code during initialization.
-Cu.import('resource://gre/modules/DataStoreServiceInternal.jsm');
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
