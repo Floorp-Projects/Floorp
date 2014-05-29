@@ -11,7 +11,7 @@ test:
 	@echo "Not implemented yet."
 
 lint:
-	@$(NODE_LOCAL_BIN)/jshint *.js static test
+	@$(NODE_LOCAL_BIN)/jshint *.js content test
 
 runserver:
 	@node server.js

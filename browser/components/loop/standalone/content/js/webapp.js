@@ -15,11 +15,15 @@ loop.webapp = (function($, TB) {
    *
    * @type {String}
    */
-  var baseApiUrl = "http://localhost:5000";
+  var sharedModels = loop.shared.models,
+      sharedViews = loop.shared.views,
+      // XXX this one should be configurable
+      //     see https://bugzilla.mozilla.org/show_bug.cgi?id=987086
+      baseServerUrl = "http://localhost:5000";
 
   /**
    * App router.
-   * @type {loop.webapp.Router}
+   * @type {loop.webapp.WebappRouter}
    */
   var router;
 
@@ -32,7 +36,7 @@ loop.webapp = (function($, TB) {
   /**
    * Homepage view.
    */
-  var HomeView = loop.shared.views.BaseView.extend({
+  var HomeView = sharedViews.BaseView.extend({
     el: "#home"
   });
 
@@ -40,7 +44,7 @@ loop.webapp = (function($, TB) {
    * Conversation launcher view. A ConversationModel is associated and attached
    * as a `model` property.
    */
-  var ConversationFormView = loop.shared.views.BaseView.extend({
+  var ConversationFormView = sharedViews.BaseView.extend({
     el: "#conversation-form",
 
     events: {
@@ -57,18 +61,18 @@ loop.webapp = (function($, TB) {
 
     initiate: function(event) {
       event.preventDefault();
-      this.model.initiate(baseApiUrl);
+      this.model.initiate(baseServerUrl);
     }
   });
 
   /**
-   * App Router. Allows defining a main active view and ease toggling it when
-   * the active route changes.
+   * Webapp Router. Allows defining a main active view and easily toggling it
+   * when the active route changes.
+   *
    * @link http://mikeygee.com/blog/backbone.html
    */
-  var Router = Backbone.Router.extend({
+  var WebappRouter = loop.shared.router.BaseRouter.extend({
     _conversation: undefined,
-    activeView: undefined,
 
     routes: {
       "": "home",
@@ -105,18 +109,6 @@ loop.webapp = (function($, TB) {
     },
 
     /**
-     * Loads and render current active view.
-     *
-     * @param {loop.shared.BaseView} view View.
-     */
-    loadView : function(view) {
-      if (this.activeView) {
-        this.activeView.hide();
-      }
-      this.activeView = view.render().show();
-    },
-
-    /**
      * Default entry point.
      */
     home: function() {
@@ -149,7 +141,10 @@ loop.webapp = (function($, TB) {
         }
       }
       this.loadView(
-        new loop.shared.views.ConversationView({model: this._conversation}));
+        new sharedViews.ConversationView({
+          sdk: TB,
+          model: this._conversation
+        }));
     }
   });
 
@@ -157,8 +152,8 @@ loop.webapp = (function($, TB) {
    * App initialization.
    */
   function init() {
-    conversation = new loop.shared.models.ConversationModel();
-    router = new Router({conversation: conversation});
+    conversation = new sharedModels.ConversationModel();
+    router = new WebappRouter({conversation: conversation});
     Backbone.history.start();
   }
 
@@ -166,6 +161,6 @@ loop.webapp = (function($, TB) {
     ConversationFormView: ConversationFormView,
     HomeView: HomeView,
     init: init,
-    Router: Router
+    WebappRouter: WebappRouter
   };
 })(jQuery, window.TB);
