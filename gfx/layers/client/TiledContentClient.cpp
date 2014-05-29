@@ -888,16 +888,17 @@ TransformCompositionBounds(const ParentLayerRect& aCompositionBounds,
                            const CSSToParentLayerScale& aZoom,
                            const ParentLayerPoint& aScrollOffset,
                            const CSSToParentLayerScale& aResolution,
-                           const gfx3DMatrix& aTransformParentLayerToLayoutDevice)
+                           const gfx3DMatrix& aTransformDisplayPortToLayoutDevice)
 {
-  // Transform the current composition bounds into ParentLayer coordinates
-  // by compensating for the difference in resolution and subtracting the
+  // Transform the composition bounds from the space of the displayport ancestor
+  // layer into the LayoutDevice space of this layer. Do this by
+  // compensating for the difference in resolution and subtracting the
   // old composition bounds origin.
   ParentLayerRect offsetViewportRect = (aCompositionBounds / aZoom) * aResolution;
   offsetViewportRect.MoveBy(-aScrollOffset);
 
   gfxRect transformedViewport =
-    aTransformParentLayerToLayoutDevice.TransformBounds(
+    aTransformDisplayPortToLayoutDevice.TransformBounds(
       gfxRect(offsetViewportRect.x, offsetViewportRect.y,
               offsetViewportRect.width, offsetViewportRect.height));
 
@@ -967,12 +968,9 @@ ClientTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInval
     }
   }
 
-  // Transform the composition bounds, which is in the ParentLayer coordinates
-  // of the nearest ContainerLayer with a valid displayport to LayoutDevice
-  // coordinates relative to this layer.
   LayoutDeviceRect transformedCompositionBounds =
     TransformCompositionBounds(compositionBounds, zoom, aPaintData->mScrollOffset,
-                               aPaintData->mResolution, aPaintData->mTransformParentLayerToLayoutDevice);
+                               aPaintData->mResolution, aPaintData->mTransformDisplayPortToLayoutDevice);
 
   // Paint tiles that have stale content or that intersected with the screen
   // at the time of issuing the draw command in a single transaction first.
