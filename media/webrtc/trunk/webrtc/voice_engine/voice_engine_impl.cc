@@ -153,13 +153,20 @@ int VoiceEngine::SetAndroidObjects(void* javaVM, void* env, void* context)
 #ifdef WEBRTC_ANDROID_OPENSLES
   typedef AudioDeviceTemplate<OpenSlesInput, OpenSlesOutput>
       AudioDeviceInstance;
-#else
+#endif
+#if !defined(WEBRTC_GONK) && defined(ANDROID)
   typedef AudioDeviceTemplate<AudioRecordJni, AudioTrackJni>
-      AudioDeviceInstance;
+      AudioDeviceInstanceJni;
 #endif
   if (javaVM && env && context) {
+#if !defined(WEBRTC_GONK) && defined(ANDROID)
+    AudioDeviceInstanceJni::SetAndroidAudioDeviceObjects(javaVM, env, context);
+#endif
     AudioDeviceInstance::SetAndroidAudioDeviceObjects(javaVM, env, context);
   } else {
+#if !defined(WEBRTC_GONK) && defined(ANDROID)
+    AudioDeviceInstanceJni::ClearAndroidAudioDeviceObjects();
+#endif
     AudioDeviceInstance::ClearAndroidAudioDeviceObjects();
   }
   return 0;
