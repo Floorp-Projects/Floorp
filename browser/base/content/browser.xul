@@ -226,7 +226,7 @@
       <hbox id="UITourTooltipButtons" flex="1" align="center"/>
      </vbox>
     </panel>
-    <!-- type="default" forces frames to be created so that the panel's size can be determined --> 
+    <!-- type="default" forces frames to be created so that the panel's size can be determined -->
     <panel id="UITourHighlightContainer"
            type="default"
            hidden="true"
@@ -266,6 +266,18 @@
            rolluponmousewheel="true"
            noautofocus="true"
            position="topcenter topright"/>
+
+#ifdef MOZ_LOOP
+    <panel id="loop-panel"
+           class="loop-panel"
+           type="arrow"
+           orient="horizontal"
+           hidden="true">
+      <iframe id="loop-panel-frame"
+              type="content"
+      />
+    </panel>
+#endif
 
     <menupopup id="toolbar-context-menu"
                onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('viewToolbarsMenuSeparator'));">
@@ -767,6 +779,21 @@
                      onpopuphiding="WebrtcIndicator.clearPopup(this);"
                      oncommand="WebrtcIndicator.menuCommand(event.target);"/>
         </toolbarbutton>
+
+#ifdef MOZ_LOOP
+        <!-- XXX Bug 1008116 will do the initial L10n for these -->
+        <toolbarbutton id="loop-call-button"
+                       class="toolbarbutton-1 chromeclass-toolbar-additional"
+                       persist="class"
+                       removable="true"
+                       label="Loop"
+                       tooltiptext="Start a conversation"
+                       oncommand="LoopUI.openCallPanel(event);"
+                       cui-areatype="toolbar"
+                       overflows="false"
+                       >
+        </toolbarbutton>
+#endif
 
         <toolbarbutton id="bookmarks-menu-button"
                        class="toolbarbutton-1 chromeclass-toolbar-additional"
