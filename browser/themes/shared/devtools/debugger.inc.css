@@ -111,6 +111,24 @@
   display: none;
 }
 
+/* Debugger unblackbox button */
+
+#black-boxed-message-button > .button-box > .button-icon {
+  width: 16px;
+  height: 16px;
+  background-image: url(debugger-blackbox.png);
+  background-position: 0 0;
+  background-size: 32px 16px;
+  background-repeat: no-repeat;
+  -moz-margin-end: 5px;
+}
+
+@media (min-resolution: 2dppx) {
+  #black-boxed-message-button > .button-box > .button-icon {
+    background-image: url(debugger-blackbox@2x.png);
+  }
+}
+
 /* Black box message and source progress meter */
 
 #black-boxed-message,
