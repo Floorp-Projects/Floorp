@@ -208,6 +208,9 @@ function process_log(contents) {
   gTestItems = [];
   for (var j in lines) {
     var line = lines[j];
+    // Ignore duplicated output in logcat.
+    if (line.match(/^I\/Gecko/))
+      continue;
     var match = line.match(/^.*?REFTEST (.*)$/);
     if (!match)
       continue;
@@ -226,14 +229,16 @@ function process_log(contents) {
           random: (random == "(EXPECTED RANDOM)"),
           skip: (extra == " (SKIP)"),
           url: url,
-          images: []
+          images: [],
+          imageLabels: []
         });
       continue;
     }
-    match = line.match(/^  IMAGE[^:]*: (.*)$/);
+    match = line.match(/^  IMAGE([^:]*): (.*)$/);
     if (match) {
       var item = gTestItems[gTestItems.length - 1];
-      item.images.push(match[1]);
+      item.images.push(match[2]);
+      item.imageLabels.push(match[1]);
     }
   }
 
@@ -332,6 +337,9 @@ function show_images(i) {
     ID("image2").setAttributeNS(XLINK_NS, "xlink:href", item.images[1]);
     // Making the href be #image2 doesn't seem to work
     ID("feimage2").setAttributeNS(XLINK_NS, "xlink:href", item.images[1]);
+
+    ID("label1").textContent = 'Image ' + item.imageLabels[0];
+    ID("label2").textContent = 'Image ' + item.imageLabels[1];
   }
 
   cell.style.display = "";
@@ -502,8 +510,8 @@ function show_pixelinfo(x, y, pix1rgb, pix1hex, pix2rgb, pix2hex) {
   <div id="itemlist"></div>
   <div id="images" style="display:none">
     <form id="imgcontrols">
-    <label title="1"><input id="radio1" type="radio" name="which" value="0" onchange="show_image(1)" checked="checked" />Image 1</label>
-    <label title="2"><input id="radio2" type="radio" name="which" value="1" onchange="show_image(2)" />Image 2</label>
+    <input id="radio1" type="radio" name="which" value="0" onchange="show_image(1)" checked="checked" /><label id="label1" title="1" for="radio1">Image 1</label>
+    <input id="radio2" type="radio" name="which" value="1" onchange="show_image(2)"                   /><label id="label2" title="2" for="radio2">Image 2</label>
     <label><input type="checkbox" onchange="show_differences(this)" />Circle differences</label>
     </form>
     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="800px" height="1000px" viewBox="0 0 800 1000" id="svg">

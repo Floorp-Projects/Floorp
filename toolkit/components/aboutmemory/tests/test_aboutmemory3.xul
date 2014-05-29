@@ -64,13 +64,13 @@
 
   // Load the given file into the frame, then copy+paste the entire frame and
   // check that the cut text matches what we expect.
-  function test(aFilename, aFilename2, aExpected, aDumpFirst, aNext) {
+  function test(aFilename, aFilename2, aExpected, aDumpFirst, aVerbose, aNext) {
     let frame = document.getElementById("amFrame");
     frame.focus();
 
     let doc = frame.contentWindow.document;
     let verbosity = doc.getElementById("verbose");
-    verbosity.checked = true;
+    verbosity.checked = aVerbose;
 
     function getFilePath(aFilename) {
       let file = Cc["@mozilla.org/file/directory_service;1"]
@@ -174,7 +174,7 @@
   function chain(aPieces) {
     let x = aPieces.shift();
     if (x) {
-      return function() { test(x.filename, x.filename2, x.expected, x.dumpFirst, chain(aPieces)); }
+      return function() { test(x.filename, x.filename2, x.expected, x.dumpFirst, x.verbose, chain(aPieces)); }
     } else {
       return function() { finish(); };
     }
@@ -265,8 +265,81 @@ End of Main Process (pid NNN)\n\
 Invalid memory report(s): missing 'hasMozMallocUsableSize' property\
 ";
 
-  // This is the output for a diff.
-  let expectedDiff =
+  // This is the output for a non-verbose diff.
+  let expectedDiffNonVerbose =
+"\
+P\n\
+\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
+Explicit Allocations\n\
+\n\
+-0.01 MB (100.0%) -- explicit\n\
+├──-0.01 MB (99.95%) ── storage/prefixset/goog-phish-shavar\n\
+└──-0.00 MB (00.05%) ++ (2 tiny)\n\
+\n\
+Other Measurements\n\
+\n\
+0.96 MB (100.0%) -- a\n\
+├──0.95 MB (99.80%) ── b\n\
+├──0.00 MB (00.10%) -- c\n\
+│  ├──-0.95 MB (-99.70%) ── e\n\
+│  ├──0.95 MB (99.60%) ── d\n\
+│  └──0.00 MB (00.20%) ++ (2 tiny)\n\
+└──0.00 MB (00.10%) ── h\n\
+\n\
+ 0.00 MB ── canvas-2d-pixel-bytes [2] [+]\n\
+-0.00 MB ── foobar [-]\n\
+\n\
+End of P\n\
+P2 (pid NNN)\n\
+Other Measurements\n\
+\n\
+0.00 MB ── z-moz-nullprincipal:{NNNNNNNN-NNNN-NNNN-NNNN-NNNNNNNNNNNN} 0xNNN\n\
+\n\
+End of P2 (pid NNN)\n\
+P3\n\
+Other Measurements\n\
+\n\
+-0.00 MB ── p3 [-]\n\
+\n\
+End of P3\n\
+P4\n\
+Other Measurements\n\
+\n\
+0.00 MB ── p4 [+]\n\
+\n\
+End of P4\n\
+P7\n\
+Other Measurements\n\
+\n\
+0.00 MB (100.0%) -- p7\n\
+├──0.00 MB (57.14%) ── c [+]\n\
+└──0.00 MB (42.86%) ── b [+]\n\
+\n\
+-0.00 MB ── p7 [-]\n\
+\n\
+End of P7\n\
+P8\n\
+Other Measurements\n\
+\n\
+-0.00 MB (100.0%) -- p8\n\
+└──-0.00 MB (100.0%) -- a\n\
+   ├──-0.00 MB (50.00%) -- b\n\
+   │  ├──-0.00 MB (31.82%) -- c\n\
+   │  │  ├──-0.00 MB (18.18%) ── e [-]\n\
+   │  │  └──-0.00 MB (13.64%) ── d [-]\n\
+   │  ├──-0.00 MB (22.73%) ── f [-]\n\
+   │  └───0.00 MB (-4.55%) ── (fake child) [!]\n\
+   └──-0.00 MB (50.00%) -- g\n\
+      ├──-0.00 MB (31.82%) ── i [-]\n\
+      ├──-0.00 MB (27.27%) ── h [-]\n\
+      └───0.00 MB (-9.09%) ── (fake child) [!]\n\
+\n\
+End of P8\n\
+";
+
+  // This is the output for a verbose diff.
+  let expectedDiffVerbose =
 "\
 P\n\
 \n\
@@ -279,6 +352,15 @@ Explicit Allocations\n\
 └────────1 B (-0.01%) ── xpcom/category-manager\n\
 \n\
 Other Measurements\n\
+\n\
+1,002,000 B (100.0%) -- a\n\
+├──1,000,000 B (99.80%) ── b\n\
+├──────1,000 B (00.10%) -- c\n\
+│      ├──-999,000 B (-99.70%) ── e\n\
+│      ├──998,000 B (99.60%) ── d\n\
+│      ├──1,000 B (00.10%) ── f\n\
+│      └──1,000 B (00.10%) ── g\n\
+└──────1,000 B (00.10%) ── h\n\
 \n\
 3,000 B ── canvas-2d-pixel-bytes [2] [+]\n\
  -100 B ── foobar [-]\n\
@@ -333,16 +415,19 @@ End of P8\n\
 
   let frames = [
     // This loads a pre-existing file that is valid.
-    { filename: "memory-reports-good.json", expected: expectedGood, dumpFirst: false },
+    { filename: "memory-reports-good.json", expected: expectedGood, dumpFirst: false, verbose: true },
 
     // This dumps to a file and then reads it back in.
-    { filename: "memory-reports-dumped.json.gz", expected: expectedGood2, dumpFirst: true },
+    { filename: "memory-reports-dumped.json.gz", expected: expectedGood2, dumpFirst: true, verbose: true },
 
     // This loads a pre-existing file that is invalid.
-    { filename: "memory-reports-bad.json",  expected: expectedBad, dumpFirst: false },
+    { filename: "memory-reports-bad.json",  expected: expectedBad, dumpFirst: false, verbose: true },
 
     // This loads a pre-existing diff file.
-    { filename: "memory-reports-diff1.json", filename2: "memory-reports-diff2.json",  expected: expectedDiff, dumpFirst: false }
+    { filename: "memory-reports-diff1.json", filename2: "memory-reports-diff2.json",  expected: expectedDiffNonVerbose, dumpFirst: false, verbose: false },
+
+    // Ditto
+    { filename: "memory-reports-diff1.json", filename2: "memory-reports-diff2.json",  expected: expectedDiffVerbose, dumpFirst: false, verbose: true }
   ];
 
   SimpleTest.waitForFocus(chain(frames));

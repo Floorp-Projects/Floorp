@@ -15,10 +15,13 @@ import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
@@ -47,6 +50,9 @@ public class MostRecentPanel extends HomeFragment {
 
     // The view shown by the fragment.
     private HomeListView mList;
+
+    // The button view for clearing browsing history.
+    private View mClearHistoryButton;
 
     // Reference to the View to display when there are no results.
     private View mEmptyView;
@@ -127,6 +133,40 @@ public class MostRecentPanel extends HomeFragment {
             }
         });
         registerForContextMenu(mList);
+
+        mClearHistoryButton = view.findViewById(R.id.clear_history_button);
+        mClearHistoryButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final Context context = getActivity();
+
+                final AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(context);
+                dialogBuilder.setMessage(R.string.home_clear_history_confirm);
+
+                dialogBuilder.setNegativeButton(R.string.button_cancel, new AlertDialog.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialog, final int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+                dialogBuilder.setPositiveButton(R.string.button_yes, new AlertDialog.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialog, final int which) {
+                        dialog.dismiss();
+                        ThreadUtils.postToBackgroundThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                final ContentResolver cr = context.getContentResolver();
+                                BrowserDB.clearHistory(cr);
+                            }
+                        });
+                    }
+                });
+
+                dialogBuilder.show();
+            }
+        });
     }
 
     @Override
@@ -134,6 +174,7 @@ public class MostRecentPanel extends HomeFragment {
         super.onDestroyView();
         mList = null;
         mEmptyView = null;
+        mClearHistoryButton = null;
     }
 
     @Override
@@ -171,10 +212,14 @@ public class MostRecentPanel extends HomeFragment {
 
     private void updateUiFromCursor(Cursor c) {
         if (c != null && c.getCount() > 0) {
+            mClearHistoryButton.setVisibility(View.VISIBLE);
             return;
         }
 
-        // Cursor is empty, so set the empty view if it hasn't been set already.
+        // Cursor is empty, so hide the "Clear browsing history" button,
+        // and set the empty view if it hasn't been set already.
+        mClearHistoryButton.setVisibility(View.GONE);
+
         if (mEmptyView == null) {
             // Set empty panel view. We delay this so that the empty view won't flash.
             final ViewStub emptyViewStub = (ViewStub) getView().findViewById(R.id.home_empty_view_stub);

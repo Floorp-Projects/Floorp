@@ -5,34 +5,37 @@
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <style name="ToastMessage">
-        <item name="android:textSize">16sp</item>
-        <item name="android:fontFamily">sans-serif-condensed</item>
-        <item name="android:textColor">#ffffff</item>
-        <item name="android:shadowColor">#BB000000</item>
-        <item name="android:shadowRadius">2.75</item>
-        <item name="android:layout_width">0dp</item>
-        <item name="android:layout_weight">1</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_gravity">center_vertical</item>
-        <item name="android:paddingLeft">@dimen/toast_button_padding</item>
+    <style name="Toast" parent="ToastBase">
         <item name="android:layout_marginLeft">8dp</item>
-        <item name="android:ellipsize">end</item>
-        <item name="android:maxLines">1</item>
+        <item name="android:layout_marginRight">8dp</item>
     </style>
 
-    <style name="ToastButton">
-        <item name="android:background">@drawable/toast_button</item>
+    <style name="ToastElementBase">
+        <item name="android:background">@null</item>
+        <item name="android:paddingLeft">24dp</item>
+        <item name="android:paddingRight">24dp</item>
+        <item name="android:paddingTop">18dp</item>
+        <item name="android:paddingBottom">18dp</item>
+	  </style>
+
+    <style name="ToastDivider" parent="ToastDividerBase">
+	<item name="android:layout_marginTop">12dp</item>
+        <item name="android:layout_marginBottom">12dp</item>
+    </style>
+
+    <style name="ToastMessage" parent="ToastMessageBase">
         <item name="android:textSize">16sp</item>
         <item name="android:fontFamily">sans-serif-condensed</item>
-        <item name="android:textColor">#ffffff</item>
         <item name="android:shadowColor">#BB000000</item>
         <item name="android:shadowRadius">2.75</item>
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">match_parent</item>
-        <item name="android:paddingLeft">16dp</item>
-        <item name="android:maxWidth">160dp</item>
-        <item name="android:layout_gravity">center_vertical</item>
+    </style>
+
+    <style name="ToastButton" parent="ToastButtonBase">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFamily">sans-serif-condensed</item>
+        <item name="android:shadowColor">#BB000000</item>
+        <item name="android:shadowRadius">2.75</item>
     </style>
 
 </resources>

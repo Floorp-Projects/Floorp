@@ -765,9 +765,11 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
         createOrUpdateAllSpecialFolders(db);
 
-        // Create distribution bookmarks before our own default bookmarks
-        int pos = createDistributionBookmarks(db);
-        createDefaultBookmarks(db, pos);
+        int offset = createDefaultBookmarks(db, 0);
+
+        // We'd like to create distribution bookmarks before our own default bookmarks,
+        // but we won't necessarily have loaded the distribution yet. Oh well.
+        enqueueDistributionBookmarkLoad(db, offset);
 
         createReadingListTable(db);
     }
@@ -794,18 +796,46 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         return bookmark.getString(property);
     }
 
-    // Returns the number of bookmarks inserted in the db
-    private int createDistributionBookmarks(SQLiteDatabase db) {
-        JSONArray bookmarks = Distribution.getBookmarks(mContext);
+    // We can't rely on the distribution file having been loaded,
+    // so we delegate that work to the distribution handler.
+    private void enqueueDistributionBookmarkLoad(final SQLiteDatabase db, final int start) {
+        final Distribution distribution = Distribution.getInstance(mContext);
+        distribution.addOnDistributionReadyCallback(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(LOGTAG, "Running post-distribution task: bookmarks.");
+                if (!distribution.exists()) {
+                    return;
+                }
+
+                // This runnable is always executed on the background thread,
+                // thanks to Distribution's guarantees.
+                // Yes, the user might have added a bookmark in the interim,
+                // in which case `start` will be wrong. Sync will need to fix
+                // up the indices.
+                createDistributionBookmarks(distribution, db, start);
+            }
+        });
+    }
+
+    /**
+     * Fetch distribution bookmarks and insert them into the database.
+     *
+     * @param db the destination database.
+     * @param start the initial index at which to insert.
+     * @return the number of inserted bookmarks.
+     */
+    private int createDistributionBookmarks(Distribution distribution, SQLiteDatabase db, int start) {
+        JSONArray bookmarks = distribution.getBookmarks();
         if (bookmarks == null) {
             return 0;
         }
 
         Locale locale = Locale.getDefault();
-        int pos = 0;
+        int pos = start;
         Integer mobileFolderId = getMobileFolderId(db);
         if (mobileFolderId == null) {
-            Log.e(LOGTAG, "Error creating distribution bookmarks: mobileFolderId is null");
+            Log.e(LOGTAG, "Error creating distribution bookmarks: mobileFolderId is null.");
             return 0;
         }
 
@@ -826,38 +856,31 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                             createBookmark(db, title, url, pos, Bookmarks.FIXED_PINNED_LIST_ID);
                         }
                     } catch (JSONException e) {
-                        Log.e(LOGTAG, "Error pinning bookmark to top sites", e);
+                        Log.e(LOGTAG, "Error pinning bookmark to top sites.", e);
                     }
                 }
 
                 pos++;
 
-                // return early if there is no icon for this bookmark
+                // Return early if there is no icon for this bookmark.
                 if (!bookmark.has("icon")) {
                     continue;
                 }
 
-                // create icons in a separate thread to avoid blocking about:home on startup
-                ThreadUtils.postToBackgroundThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        SQLiteDatabase db = getWritableDatabase();
-                        try {
-                            String iconData = bookmark.getString("icon");
-                            Bitmap icon = BitmapUtils.getBitmapFromDataURI(iconData);
-                            if (icon != null) {
-                                createFavicon(db, url, icon);
-                            }
-                        } catch (JSONException e) {
-                            Log.e(LOGTAG, "Error creating distribution bookmark icon", e);
-                        }
+                try {
+                    final String iconData = bookmark.getString("icon");
+                    final Bitmap icon = BitmapUtils.getBitmapFromDataURI(iconData);
+                    if (icon != null) {
+                        createFavicon(db, url, icon);
                     }
-                });
+                } catch (JSONException e) {
+                    Log.e(LOGTAG, "Error creating distribution bookmark icon.", e);
+                }
             } catch (JSONException e) {
-                Log.e(LOGTAG, "Error creating distribution bookmark", e);
+                Log.e(LOGTAG, "Error creating distribution bookmark.", e);
             }
         }
-        return pos;
+        return pos - start;
     }
 
     private void createReadingListTable(SQLiteDatabase db) {
@@ -881,8 +904,14 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                 + ReadingListItems.GUID + ")");
     }
 
-    // Inserts default bookmarks, starting at a specified position
-    private void createDefaultBookmarks(SQLiteDatabase db, int pos) {
+    /**
+     * Insert default bookmarks into the database.
+     *
+     * @param db the destination database.
+     * @param start the initial index at which to insert.
+     * @return the number of inserted bookmarks.
+     */
+    private int createDefaultBookmarks(SQLiteDatabase db, int start) {
         Class<?> stringsClass = R.string.class;
         Field[] fields = stringsClass.getFields();
         Pattern p = Pattern.compile("^bookmarkdefaults_title_");
@@ -890,8 +919,10 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         Integer mobileFolderId = getMobileFolderId(db);
         if (mobileFolderId == null) {
             Log.e(LOGTAG, "Error creating default bookmarks: mobileFolderId is null");
-            return;
+            return 0;
         }
+
+        int pos = start;
 
         for (int i = 0; i < fields.length; i++) {
             final String name = fields[i].getName();
@@ -908,7 +939,7 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                 final String url = mContext.getString(urlId);
                 createBookmark(db, title, url, pos, mobileFolderId);
 
-                // create icons in a separate thread to avoid blocking about:home on startup
+                // Create icons in a separate thread to avoid blocking about:home on startup.
                 ThreadUtils.postToBackgroundThread(new Runnable() {
                     @Override
                     public void run() {
@@ -929,6 +960,8 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                 Log.e(LOGTAG, "Can't create bookmark " + name, ex);
             }
         }
+
+        return pos - start;
     }
 
     private void createBookmark(SQLiteDatabase db, String title, String url, int pos, int parent) {
@@ -1722,8 +1755,13 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         // From Honeycomb on, it's possible to run several db
         // commands in parallel using multiple connections.
         if (Build.VERSION.SDK_INT >= 11) {
-            db.enableWriteAheadLogging();
-            db.setLockingEnabled(false);
+            // Modern Android allows WAL to be enabled through a mode flag.
+            if (Build.VERSION.SDK_INT < 16) {
+                db.enableWriteAheadLogging();
+
+                // This does nothing on 16+.
+                db.setLockingEnabled(false);
+            }
         } else {
             // Pre-Honeycomb, we can do some lesser optimizations.
             cursor = null;

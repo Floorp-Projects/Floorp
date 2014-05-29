@@ -374,8 +374,10 @@ CertVerifier::MozillaPKIXVerifyCert(
     : !mOCSPStrict              ? NSSCertDBTrustDomain::FetchOCSPForDVSoftFail
                                 : NSSCertDBTrustDomain::FetchOCSPForDVHardFail;
 
-  SECStatus rv;
+  ocsp_get_config ocspGETConfig = mOCSPGETEnabled ? ocsp_get_enabled
+                                                  : ocsp_get_disabled;
 
+  SECStatus rv;
   // TODO(bug 970750): anyExtendedKeyUsage
   // TODO: encipherOnly/decipherOnly
   // S/MIME Key Usage: http://tools.ietf.org/html/rfc3850#section-4.4.2
@@ -390,7 +392,7 @@ CertVerifier::MozillaPKIXVerifyCert(
       // XXX: We don't really have a trust bit for SSL client authentication so
       // just use trustEmail as it is the closest alternative.
       NSSCertDBTrustDomain trustDomain(trustEmail, ocspFetching, mOCSPCache,
-                                       pinArg);
+                                       pinArg, ocspGETConfig);
       rv = BuildCertChain(trustDomain, cert, time,
                           EndEntityOrCA::MustBeEndEntity, KU_DIGITAL_SIGNATURE,
                           KeyPurposeId::id_kp_clientAuth,
@@ -415,7 +417,7 @@ CertVerifier::MozillaPKIXVerifyCert(
                       ocspFetching == NSSCertDBTrustDomain::NeverFetchOCSP
                         ? NSSCertDBTrustDomain::LocalOnlyOCSPForEV
                         : NSSCertDBTrustDomain::FetchOCSPForEV,
-                      mOCSPCache, pinArg, &callbackContainer);
+                      mOCSPCache, pinArg, ocspGETConfig, &callbackContainer);
         rv = BuildCertChainForOneKeyUsage(trustDomain, cert, time,
                                           KU_DIGITAL_SIGNATURE, // ECDHE/DHE
                                           KU_KEY_ENCIPHERMENT, // RSA
@@ -441,7 +443,8 @@ CertVerifier::MozillaPKIXVerifyCert(
 
       // Now try non-EV.
       NSSCertDBTrustDomain trustDomain(trustSSL, ocspFetching, mOCSPCache,
-                                       pinArg, &callbackContainer);
+                                       pinArg, ocspGETConfig,
+                                       &callbackContainer);
       rv = BuildCertChainForOneKeyUsage(trustDomain, cert, time,
                                         KU_DIGITAL_SIGNATURE, // ECDHE/DHE
                                         KU_KEY_ENCIPHERMENT, // RSA
@@ -454,7 +457,7 @@ CertVerifier::MozillaPKIXVerifyCert(
 
     case certificateUsageSSLCA: {
       NSSCertDBTrustDomain trustDomain(trustSSL, ocspFetching, mOCSPCache,
-                                       pinArg);
+                                       pinArg, ocspGETConfig);
       rv = BuildCertChain(trustDomain, cert, time, EndEntityOrCA::MustBeCA,
                           KU_KEY_CERT_SIGN, KeyPurposeId::id_kp_serverAuth,
                           CertPolicyId::anyPolicy,
@@ -464,7 +467,7 @@ CertVerifier::MozillaPKIXVerifyCert(
 
     case certificateUsageEmailSigner: {
       NSSCertDBTrustDomain trustDomain(trustEmail, ocspFetching, mOCSPCache,
-                                       pinArg);
+                                       pinArg, ocspGETConfig);
       rv = BuildCertChain(trustDomain, cert, time,
                           EndEntityOrCA::MustBeEndEntity, KU_DIGITAL_SIGNATURE,
                           KeyPurposeId::id_kp_emailProtection,
@@ -478,7 +481,7 @@ CertVerifier::MozillaPKIXVerifyCert(
       // usage it is trying to verify for, and base its algorithm choices
       // based on the result of the verification(s).
       NSSCertDBTrustDomain trustDomain(trustEmail, ocspFetching, mOCSPCache,
-                                       pinArg);
+                                       pinArg, ocspGETConfig);
       rv = BuildCertChainForOneKeyUsage(trustDomain, cert, time,
                                         KU_KEY_ENCIPHERMENT, // RSA
                                         KU_KEY_AGREEMENT, // ECDH/DH
@@ -491,7 +494,7 @@ CertVerifier::MozillaPKIXVerifyCert(
 
     case certificateUsageObjectSigner: {
       NSSCertDBTrustDomain trustDomain(trustObjectSigning, ocspFetching,
-                                       mOCSPCache, pinArg);
+                                       mOCSPCache, pinArg, ocspGETConfig);
       rv = BuildCertChain(trustDomain, cert, time,
                           EndEntityOrCA::MustBeEndEntity, KU_DIGITAL_SIGNATURE,
                           KeyPurposeId::id_kp_codeSigning,
@@ -520,20 +523,20 @@ CertVerifier::MozillaPKIXVerifyCert(
       }
 
       NSSCertDBTrustDomain sslTrust(trustSSL, ocspFetching, mOCSPCache,
-                                    pinArg);
+                                    pinArg, ocspGETConfig);
       rv = BuildCertChain(sslTrust, cert, time, endEntityOrCA,
                           keyUsage, eku, CertPolicyId::anyPolicy,
                           stapledOCSPResponse, builtChain);
       if (rv == SECFailure && PR_GetError() == SEC_ERROR_UNKNOWN_ISSUER) {
         NSSCertDBTrustDomain emailTrust(trustEmail, ocspFetching, mOCSPCache,
-                                        pinArg);
+                                        pinArg, ocspGETConfig);
         rv = BuildCertChain(emailTrust, cert, time, endEntityOrCA, keyUsage,
                             eku, CertPolicyId::anyPolicy,
                             stapledOCSPResponse, builtChain);
         if (rv == SECFailure && SEC_ERROR_UNKNOWN_ISSUER) {
           NSSCertDBTrustDomain objectSigningTrust(trustObjectSigning,
                                                   ocspFetching, mOCSPCache,
-                                                  pinArg);
+                                                  pinArg, ocspGETConfig);
           rv = BuildCertChain(objectSigningTrust, cert, time, endEntityOrCA,
                               keyUsage, eku, CertPolicyId::anyPolicy,
                               stapledOCSPResponse, builtChain);

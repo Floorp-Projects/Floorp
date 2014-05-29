@@ -55,7 +55,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     obj.foo = 2;
     var withProto = iwin.Object.create(obj);
     is(global(withProto), iwin, "correct global for withProto");
-    is(withProto.foo, 2, "Inherits properly");
+    is(Cu.waiveXrays(withProto).foo, 2, "Inherits properly");
 
     // Test Function.
     var primitiveFun = new iwin.Function('return 2');
@@ -99,7 +99,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     var toEval = "({a: 2, b: {foo: 'bar'}, f: function() { return window; }})";
     is(global(iwin.eval(toEval)), iwin, "eval creates objects in the correct global");
     is(iwin.eval(toEval).b.foo, 'bar', "eval-ed object looks right");
-    is(iwin.eval(toEval).f(), iwin, "evaled function works right");
+    is(Cu.waiveXrays(iwin.eval(toEval)).f(), Cu.waiveXrays(iwin), "evaled function works right");
 
     testDate();
 

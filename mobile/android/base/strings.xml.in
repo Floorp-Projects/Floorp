@@ -237,6 +237,7 @@
   <string name="close_tab">&close_tab;</string>
   <string name="new_tab_opened">&new_tab_opened;</string>
   <string name="new_private_tab_opened">&new_private_tab_opened;</string>
+  <string name="switch_button_message">&switch_button_message;</string>
   <string name="one_tab">&one_tab;</string>
   <string name="num_tabs">&num_tabs2;</string>
   <string name="addons">&addons;</string>
@@ -309,6 +310,8 @@
   <string name="home_top_sites_title">&home_top_sites_title;</string>
   <string name="home_top_sites_add">&home_top_sites_add;</string>
   <string name="home_history_title">&home_history_title;</string>
+  <string name="home_clear_history_button">&home_clear_history_button;</string>
+  <string name="home_clear_history_confirm">&home_clear_history_confirm;</string>
   <string name="home_bookmarks_empty">&home_bookmarks_empty;</string>
   <string name="home_last_tabs_title">&home_last_tabs_title;</string>
   <string name="home_last_tabs_open">&home_last_tabs_open;</string>

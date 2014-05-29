@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1016960
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1016960</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1016960 **/
+
+  var chromeWindow = window.open("chrome://mochitests/content/chrome/dom/base/test/file_empty.html", "1016960", "chrome");
+  ok(chromeWindow instanceof ChromeWindow, "A chrome window should return true for |instanceof ChromeWindow|.");
+  chromeWindow.close();
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1016960">Mozilla Bug 1016960</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

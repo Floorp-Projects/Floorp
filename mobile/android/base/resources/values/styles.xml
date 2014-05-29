@@ -585,60 +585,74 @@
         <item name="@android:windowExitAnimation">@anim/popup_hide</item>
     </style>
 
-    <style name="Toast">
+    <style name="ToastBase">
+        <item name="android:background">@drawable/toast_background</item>
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_alignParentBottom">true</item>
-        <item name="android:layout_gravity">bottom</item>
-        <item name="android:layout_marginLeft">8dp</item>
-        <item name="android:layout_marginRight">8dp</item>
+        <item name="android:layout_centerHorizontal">true</item>
+        <item name="android:layout_gravity">bottom|center_horizontal</item>
         <item name="android:layout_marginBottom">64dp</item>
         <item name="android:layout_marginTop">0dp</item>
         <item name="android:orientation">horizontal</item>
-        <item name="android:background">@drawable/toast</item>
         <item name="android:clickable">true</item>
-        <item name="android:showDividers">middle</item>
-        <item name="android:dividerPadding">16dp</item>
-
-        <item name="android:paddingTop">0dp</item>
-        <item name="android:paddingBottom">0dp</item>
-        <item name="android:paddingLeft">0dp</item>
-        <item name="android:paddingRight">0dp</item>
     </style>
 
-    <style name="ToastDivider">
-        <item name="android:src">@drawable/toast_divider</item>
-        <item name="android:layout_width">wrap_content</item>
+    <style name="Toast" parent="ToastBase">
+        <item name="android:layout_marginLeft">16dp</item>
+        <item name="android:layout_marginRight">16dp</item>
+    </style>
+
+    <style name="ToastElementBase">
+        <item name="android:background">@null</item>
+        <item name="android:paddingLeft">12dp</item>
+        <item name="android:paddingRight">12dp</item>
+        <item name="android:paddingTop">20dp</item>
+        <item name="android:paddingBottom">20dp</item>
+    </style>
+
+    <style name="ToastDividerBase">
+        <item name="android:background">@color/toast_button_divider</item>
+        <item name="android:layout_width">1dp</item>
         <item name="android:layout_height">match_parent</item>
     </style>
 
-    <style name="ToastMessage">
+    <style name="ToastMessageBase" parent="ToastElementBase">
+        <item name="android:textColor">@color/toast_button_text</item>
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_weight">1</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_gravity">center_vertical</item>
-        <item name="android:textColor">#fff</item>
-        <item name="android:textAppearance">?android:textAppearanceSmall</item>
-        <item name="android:paddingTop">0dp</item>
-        <item name="android:paddingBottom">0dp</item>
-        <item name="android:paddingLeft">@dimen/toast_button_padding</item>
-        <item name="android:paddingRight">0dp</item>
-        <item name="android:layout_marginTop">0dp</item>
-        <item name="android:layout_marginBottom">0dp</item>
-        <item name="android:layout_marginLeft">8dp</item>
-        <item name="android:layout_marginRight">0dp</item>
         <item name="android:ellipsize">end</item>
         <item name="android:maxLines">1</item>
+        <item name="android:clickable">false</item>
+        <item name="android:focusable">false</item>
     </style>
 
-    <style name="ToastButton">
-        <item name="android:background">@drawable/toast_button</item>
-        <item name="android:textAppearance">?android:textAppearanceSmall</item>
+    <style name="ToastButtonBase" parent="ToastElementBase">
+        <item name="android:background">@drawable/toast_button_background</item>
+        <item name="android:textColor">@color/toast_button_text</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:minWidth">0dp</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:maxWidth">160dp</item>
-        <item name="android:textColor">#fff</item>
         <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:drawablePadding">12dp</item>
+        <item name="android:maxWidth">160dp</item>
+    </style>
+
+    <style name="ToastDivider" parent="ToastDividerBase">
+        <item name="android:layout_marginTop">14dp</item>
+        <item name="android:layout_marginBottom">14dp</item>
+    </style>
+
+    <style name="ToastMessage" parent="ToastMessageBase">
+        <item name="android:textAppearance">?android:textAppearanceSmall</item>
+    </style>
+
+    <style name="ToastButton" parent="ToastButtonBase">
+        <item name="android:textAppearance">?android:textAppearanceSmall</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
     <style name="GeckoActionBar">

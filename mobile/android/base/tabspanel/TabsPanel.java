@@ -20,7 +20,6 @@ import org.mozilla.gecko.widget.IconTabWidget;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Rect;
-import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.util.AttributeSet;
@@ -143,12 +142,10 @@ public class TabsPanel extends LinearLayout
         mTabWidget.addTab(R.drawable.tabs_private, R.string.tabs_private);
 
         if (!GeckoProfile.get(mContext).inGuestMode()) {
-            mTabWidget.addTab(R.drawable.tabs_synced_animation, R.string.tabs_synced);
-            // The animation does not start automatically, except on Android 4.4.2, when it does.
-            final Drawable iconDrawable = getIconDrawable(Panel.REMOTE_TABS);
-            if (iconDrawable instanceof AnimationDrawable) {
-                ((AnimationDrawable) iconDrawable).stop();
-            }
+            // The initial icon is not the animated icon, because on Android
+            // 4.4.2, the animation starts immediately (and can start at other
+            // unpredictable times). See Bug 1015974.
+            mTabWidget.addTab(R.drawable.tabs_synced, R.string.tabs_synced);
         }
 
         mTabWidget.setTabSelectionListener(this);
@@ -477,5 +474,9 @@ public class TabsPanel extends LinearLayout
      */
     public Drawable getIconDrawable(Panel panel) {
         return mTabWidget.getIconDrawable(panel.ordinal());
+    }
+
+    public void setIconDrawable(Panel panel, int resource) {
+        mTabWidget.setIconDrawable(panel.ordinal(), resource);
     }
 }

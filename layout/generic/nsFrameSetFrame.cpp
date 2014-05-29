@@ -392,7 +392,7 @@ nsHTMLFramesetFrame::Init(nsIContent*       aContent,
   mNonBorderChildCount = mChildCount;
 }
 
-nsresult
+void
 nsHTMLFramesetFrame::SetInitialChildList(ChildListID  aListID,
                                          nsFrameList& aChildList)
 {
@@ -401,10 +401,10 @@ nsHTMLFramesetFrame::SetInitialChildList(ChildListID  aListID,
   // and null list name after the frame constructor is done creating us.  So
   // just ignore that call.
   if (aListID == kPrincipalList && aChildList.IsEmpty()) {
-    return NS_OK;
+    return;
   }
 
-  return nsContainerFrame::SetInitialChildList(aListID, aChildList);
+  nsContainerFrame::SetInitialChildList(aListID, aChildList);
 }
 
 // XXX should this try to allocate twips based on an even pixel boundary?

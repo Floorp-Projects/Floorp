@@ -35,8 +35,14 @@
     function testCpowMessage(message) {
       ok(message.json.check == "ok", "correct json");
 
+      ok(!Components.utils.isCrossProcessWrapper(message.json), "not everything is a CPOW");
+
       let data = message.objects.data;
       let document = message.objects.document;
+      if (test_state == "remote") {
+        ok(Components.utils.isCrossProcessWrapper(data), "got a CPOW");
+        ok(Components.utils.isCrossProcessWrapper(document), "got a CPOW");
+      }
       ok(data.i === 5, "integer property");
       ok(data.b === true, "boolean property");
       ok(data.s === "hello", "string property");

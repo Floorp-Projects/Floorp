@@ -116,13 +116,7 @@ public class ButtonToast {
         // Our toast is re-used, so we update all fields to clear any old values.
         mMessageView.setText(null != t.message ? t.message : "");
         mButton.setText(null != t.buttonMessage ? t.buttonMessage : "");
-        if (null != t.buttonDrawable) {
-            mButton.setCompoundDrawablePadding(mView.getContext().getResources().getDimensionPixelSize(R.dimen.toast_button_padding));
-            mButton.setCompoundDrawablesWithIntrinsicBounds(t.buttonDrawable, null, null, null);
-        } else {
-            mButton.setCompoundDrawablePadding(0);
-            mButton.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
-        }
+        mButton.setCompoundDrawablesWithIntrinsicBounds(t.buttonDrawable, null, null, null);
 
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, TOAST_DURATION);

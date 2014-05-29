@@ -668,7 +668,7 @@ GetProperty(JNIEnv* env, jobject instance, jstring name,
             JS_GetUCProperty(cx, object, strName, strName.Length(), &val))) {
         return typename Property::Type();
     }
-    if (val.isUndefined()) {
+    if (val.isUndefined() || val.isNull()) {
         if (option == FallbackOption::THROW) {
             AndroidBridge::ThrowException(env,
                 "java/lang/IllegalArgumentException",

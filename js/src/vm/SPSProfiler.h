@@ -128,13 +128,7 @@ class SPSProfiler
     void                (*eventMarker_)(const char *);
 
     const char *allocProfileString(JSScript *script, JSFunction *function);
-    void push(const char *string, void *sp, JSScript *script, jsbytecode *pc);
-    void pushNoCopy(const char *string, void *sp,
-                    JSScript *script, jsbytecode *pc) {
-        push(string, reinterpret_cast<void*>(
-            reinterpret_cast<uintptr_t>(sp) | ProfileEntry::NoCopyBit),
-            script, pc);
-    }
+    void push(const char *string, void *sp, JSScript *script, jsbytecode *pc, bool copy);
     void pop();
 
   public:
@@ -437,7 +431,7 @@ class SPSInstrumentation
             return;
 
         if (!inlinedFunction)
-            masm.spsUpdatePCIdx(profiler_, ProfileEntry::NullPCIndex, scratch);
+            masm.spsUpdatePCIdx(profiler_, ProfileEntry::NullPCOffset, scratch);
 
         setPushed(script);
     }
@@ -478,8 +472,8 @@ class SPSInstrumentation
         if (frame->skipNext) {
             frame->skipNext = false;
         } else {
-             if (!inlinedFunction)
-                 masm.spsUpdatePCIdx(profiler_, ProfileEntry::NullPCIndex, scratch);
+            if (!inlinedFunction)
+                masm.spsUpdatePCIdx(profiler_, ProfileEntry::NullPCOffset, scratch);
         }
     }
 

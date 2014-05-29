@@ -1735,7 +1735,7 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
                     // FIXME Limit this to chrome by checking xpc::AccessCheck::isChrome(obj).
                     nsISupports* native =
                       nsContentUtils::XPConnect()->GetNativeOfWrapper(cx,
-                                                                      js::UncheckedUnwrap(instance));
+                                                                      js::UncheckedUnwrap(instance, /* stopAtOuter = */ false));
                     nsCOMPtr<nsIDOM${name}> qiResult = do_QueryInterface(native);
                     *bp = !!qiResult;
                     return true;
@@ -1746,7 +1746,7 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
 
         hasInstanceCode = dedent("""
 
-            const DOMClass* domClass = GetDOMClass(js::UncheckedUnwrap(instance));
+            const DOMClass* domClass = GetDOMClass(js::UncheckedUnwrap(instance, /* stopAtOuter = */ false));
             *bp = false;
             if (!domClass) {
               // Not a DOM object, so certainly not an instance of this interface
@@ -1754,7 +1754,7 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
             }
             """)
         if self.descriptor.interface.identifier.name == "ChromeWindow":
-            setBp = "*bp = UnwrapDOMObject<nsGlobalWindow>(js::UncheckedUnwrap(instance))->IsChromeWindow()"
+            setBp = "*bp = UnwrapDOMObject<nsGlobalWindow>(js::UncheckedUnwrap(instance, /* stopAtOuter = */ false))->IsChromeWindow()"
         else:
             setBp = "*bp = true"
         # Sort interaces implementing self by name so we get stable output.

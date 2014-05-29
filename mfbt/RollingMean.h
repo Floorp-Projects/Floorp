@@ -12,9 +12,7 @@
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Vector.h"
 
-#include <algorithm>
 #include <stddef.h>
-#include <stdint.h>
 
 namespace mozilla {
 

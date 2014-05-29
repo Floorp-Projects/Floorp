@@ -142,7 +142,11 @@ public class RemoteTabsContainerPanel extends GeckoSwipeRefreshLayout
                 public void run() {
                     lastSyncStarted = System.currentTimeMillis();
 
-                    // Get the sync icon and start the drawable's animation.
+                    // Replace the static sync icon with an animated icon, and
+                    // start the animation. This works around an Android 4.4.2
+                    // bug, which makes animating the animated icon unreliable.
+                    // See Bug 1015974.
+                    panel.setIconDrawable(Panel.REMOTE_TABS, R.drawable.tabs_synced_animated);
                     final Drawable iconDrawable = panel.getIconDrawable(Panel.REMOTE_TABS);
                     if (iconDrawable instanceof AnimationDrawable) {
                         ((AnimationDrawable) iconDrawable).start();
@@ -173,11 +177,10 @@ public class RemoteTabsContainerPanel extends GeckoSwipeRefreshLayout
                 public void run() {
                     setRefreshing(false);
 
-                    // Get the sync icon and stop the drawable's animation.
-                    final Drawable iconDrawable = panel.getIconDrawable(Panel.REMOTE_TABS);
-                    if (iconDrawable instanceof AnimationDrawable) {
-                        ((AnimationDrawable) iconDrawable).stop();
-                    }
+                    // Replace the animated sync icon with the static sync icon.
+                    // This works around an Android 4.4.2 bug, which makes
+                    // animating the animated icon unreliable. See Bug 1015974.
+                    panel.setIconDrawable(Panel.REMOTE_TABS, R.drawable.tabs_synced);
                 }
             }, delay);
         }

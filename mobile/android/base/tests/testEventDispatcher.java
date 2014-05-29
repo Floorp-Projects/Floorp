@@ -294,5 +294,20 @@ public class testEventDispatcher extends UITest
             null, object.optStringArray("stringArray", null));
         fAssertSame("optStringArray returns fallback value if nonexistent",
             null, object.optStringArray("nonexistent_stringArray", null));
+
+        fAssertEquals("Native has(null) is false", false, object.has("null"));
+        fAssertEquals("Native has(emptyString) is true", true, object.has("emptyString"));
+
+        fAssertEquals("Native optBoolean returns fallback value if null",
+            true, object.optBoolean("null", true));
+        fAssertEquals("Native optInt returns fallback value if null",
+            42, object.optInt("null", 42));
+        fAssertEquals("Native optDouble returns fallback value if null",
+            -3.1415926535, object.optDouble("null", -3.1415926535));
+        fAssertEquals("Native optString returns fallback value if null",
+            "baz", object.optString("null", "baz"));
+
+        fAssertNotEquals("Native optString does not return fallback value if emptyString",
+            "baz", object.optString("emptyString", "baz"));
     }
 }
