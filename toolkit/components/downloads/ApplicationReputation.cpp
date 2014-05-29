@@ -104,6 +104,10 @@ private:
     SERVER_RESPONSE_INVALID = 2,
   };
 
+  // Number of blocklist and allowlist hits we have seen.
+  uint32_t mBlocklistCount;
+  uint32_t mAllowlistCount;
+
   // The query containing metadata about the downloaded file.
   nsCOMPtr<nsIApplicationReputationQuery> mQuery;
 
@@ -243,7 +247,7 @@ nsresult
 PendingDBLookup::LookupSpec(const nsACString& aSpec,
                             bool aAllowlistOnly)
 {
-  LOG(("Checking principal %s", aSpec.Data()));
+  LOG(("Checking principal %s [this=%p]", aSpec.Data(), this));
   mSpec = aSpec;
   mAllowlistOnly = aAllowlistOnly;
   nsresult rv = LookupSpecInternal(aSpec);
@@ -298,12 +302,13 @@ NS_IMETHODIMP
 PendingDBLookup::HandleEvent(const nsACString& tables)
 {
   // HandleEvent is guaranteed to call either:
-  // 1) PendingLookup::OnComplete if the URL can be classified locally, or
-  // 2) PendingLookup::LookupNext if the URL can be cannot classified locally.
+  // 1) PendingLookup::OnComplete if the URL matches the blocklist, or
+  // 2) PendingLookup::LookupNext if the URL does not match the blocklist.
   // Blocklisting trumps allowlisting.
   nsAutoCString blockList;
   Preferences::GetCString(PREF_DOWNLOAD_BLOCK_TABLE, &blockList);
   if (!mAllowlistOnly && FindInReadable(blockList, tables)) {
+    mPendingLookup->mBlocklistCount++;
     Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_LOCAL, BLOCK_LIST);
     LOG(("Found principal %s on blocklist [this = %p]", mSpec.get(), this));
     return mPendingLookup->OnComplete(true, NS_OK);
@@ -312,13 +317,15 @@ PendingDBLookup::HandleEvent(const nsACString& tables)
   nsAutoCString allowList;
   Preferences::GetCString(PREF_DOWNLOAD_ALLOW_TABLE, &allowList);
   if (FindInReadable(allowList, tables)) {
+    mPendingLookup->mAllowlistCount++;
     Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_LOCAL, ALLOW_LIST);
     LOG(("Found principal %s on allowlist [this = %p]", mSpec.get(), this));
-    return mPendingLookup->OnComplete(false, NS_OK);
+    // Don't call onComplete, since blocklisting trumps allowlisting
+  } else {
+    LOG(("Didn't find principal %s on any list [this = %p]", mSpec.get(),
+         this));
+    Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_LOCAL, NO_LIST);
   }
-
-  LOG(("Didn't find principal %s on any list [this = %p]", mSpec.get(), this));
-  Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_LOCAL, NO_LIST);
   return mPendingLookup->LookupNext();
 }
 
@@ -328,6 +335,8 @@ NS_IMPL_ISUPPORTS(PendingLookup,
 
 PendingLookup::PendingLookup(nsIApplicationReputationQuery* aQuery,
                              nsIApplicationReputationCallback* aCallback) :
+  mBlocklistCount(0),
+  mAllowlistCount(0),
   mQuery(aQuery),
   mCallback(aCallback)
 {
@@ -371,27 +380,36 @@ nsresult
 PendingLookup::LookupNext()
 {
   // We must call LookupNext or SendRemoteQuery upon return.
-  // Look up all of the URLs that could whitelist this download.
-  // Blacklist first.
+  // Look up all of the URLs that could allow or block this download.
+  // Blocklist first.
+  if (mBlocklistCount > 0) {
+    return OnComplete(true, NS_OK);
+  }
   int index = mAnylistSpecs.Length() - 1;
   nsCString spec;
-  bool allowlistOnly = false;
   if (index >= 0) {
-    // Check the source URI and referrer.
+    // Check the source URI, referrer and redirect chain.
     spec = mAnylistSpecs[index];
     mAnylistSpecs.RemoveElementAt(index);
-  } else {
-    // Check the allowlists next.
-    index = mAllowlistSpecs.Length() - 1;
-    if (index >= 0) {
-      allowlistOnly = true;
-      spec = mAllowlistSpecs[index];
-      mAllowlistSpecs.RemoveElementAt(index);
-    }
-  }
-  if (index >= 0) {
     nsRefPtr<PendingDBLookup> lookup(new PendingDBLookup(this));
-    return lookup->LookupSpec(spec, allowlistOnly);
+    return lookup->LookupSpec(spec, false);
+  }
+  // If any of mAnylistSpecs matched the blocklist, go ahead and block.
+  if (mBlocklistCount > 0) {
+    return OnComplete(true, NS_OK);
+  }
+  // If any of mAnylistSpecs matched the allowlist, go ahead and pass.
+  if (mAllowlistCount > 0) {
+    return OnComplete(false, NS_OK);
+  }
+  // Only binary signatures remain.
+  index = mAllowlistSpecs.Length() - 1;
+  if (index >= 0) {
+    spec = mAllowlistSpecs[index];
+    LOG(("PendingLookup::LookupNext: checking %s on allowlist", spec.get()));
+    mAllowlistSpecs.RemoveElementAt(index);
+    nsRefPtr<PendingDBLookup> lookup(new PendingDBLookup(this));
+    return lookup->LookupSpec(spec, true);
   }
 #ifdef XP_WIN
   // There are no more URIs to check against local list. If the file is not
@@ -407,6 +425,7 @@ PendingLookup::LookupNext()
   }
   return NS_OK;
 #else
+  LOG(("PendingLookup: Nothing left to check [this=%p]", this));
   return OnComplete(false, NS_OK);
 #endif
 }
@@ -630,7 +649,7 @@ PendingLookup::DoLookupInternal()
   if (redirects) {
     AddRedirects(redirects);
   } else {
-    LOG(("ApplicationReputation: Got no redirects"));
+    LOG(("ApplicationReputation: Got no redirects [this=%p]", this));
   }
 
   // Extract the signature and parse certificates so we can use it to check
@@ -976,7 +995,7 @@ NS_IMETHODIMP
 ApplicationReputationService::QueryReputation(
     nsIApplicationReputationQuery* aQuery,
     nsIApplicationReputationCallback* aCallback) {
-  LOG(("Starting application reputation check"));
+  LOG(("Starting application reputation check [query=%p]", aQuery));
   NS_ENSURE_ARG_POINTER(aQuery);
   NS_ENSURE_ARG_POINTER(aCallback);
 
