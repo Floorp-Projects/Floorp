@@ -1873,11 +1873,11 @@ PeerConnectionWrapper.prototype = {
 
               if (res.type == "outboundrtp") {
                 ok(res.packetsSent !== undefined, "Rtp packetsSent");
-                // minimum fragment is 8 (from RFC 791)
-                ok(res.bytesSent >= res.packetsSent * 8, "Rtp bytesSent");
+                // We assume minimum payload to be 1 byte (guess from RFC 3550)
+                ok(res.bytesSent >= res.packetsSent, "Rtp bytesSent");
               } else {
                 ok(res.packetsReceived !== undefined, "Rtp packetsReceived");
-                ok(res.bytesReceived >= res.packetsReceived * 8, "Rtp bytesReceived");
+                ok(res.bytesReceived >= res.packetsReceived, "Rtp bytesReceived");
               }
               if (res.remoteId) {
                 var rem = stats[res.remoteId];
@@ -1888,7 +1888,7 @@ PeerConnectionWrapper.prototype = {
                   ok(rem.packetsReceived !== undefined, "Rtcp packetsReceived");
                   ok(rem.packetsReceived <= res.packetsSent, "No more than sent");
                   ok(rem.packetsLost !== undefined, "Rtcp packetsLost");
-                  ok(rem.bytesReceived >= rem.packetsReceived * 8, "Rtcp bytesReceived");
+                  ok(rem.bytesReceived >= rem.packetsReceived, "Rtcp bytesReceived");
                   ok(rem.bytesReceived <= res.bytesSent, "No more than sent bytes");
                   ok(rem.jitter !== undefined, "Rtcp jitter");
                   ok(rem.mozRtt !== undefined, "Rtcp rtt");
@@ -1898,7 +1898,7 @@ PeerConnectionWrapper.prototype = {
                   ok(rem.type == "outboundrtp", "Rtcp is outbound");
                   ok(rem.packetsSent !== undefined, "Rtcp packetsSent");
                   // We may have received more than outdated Rtcp packetsSent
-                  ok(rem.bytesSent >= rem.packetsSent * 8, "Rtcp bytesSent");
+                  ok(rem.bytesSent >= rem.packetsSent, "Rtcp bytesSent");
                 }
                 ok(rem.ssrc == res.ssrc, "Remote ssrc match");
               } else {
