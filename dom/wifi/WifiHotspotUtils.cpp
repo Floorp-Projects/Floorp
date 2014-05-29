@@ -77,9 +77,18 @@ WifiHotspotUtils::sendCommand(struct wpa_ctrl *ctrl, const char *cmd,
   } else if (ret < 0 || strncmp(reply, "FAIL", 4) == 0) {
     return -1;
   }
-  if (strncmp(cmd, "PING", 4) == 0) {
-    reply[*reply_len] = '\0';
+
+  // Make the reply printable.
+  reply[*reply_len] = '\0';
+  if (strncmp(cmd, "STA-FIRST", 9) == 0 ||
+      strncmp(cmd, "STA-NEXT", 8) == 0) {
+    char *pos = reply;
+
+    while (*pos && *pos != '\n')
+      pos++;
+    *pos = '\0';
   }
+
   return 0;
 }
 
