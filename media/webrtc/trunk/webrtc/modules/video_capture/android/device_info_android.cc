@@ -11,11 +11,10 @@
 #include "webrtc/modules/video_capture/android/device_info_android.h"
 
 #include <algorithm>
+#include <string>
 #include <sstream>
 #include <vector>
 
-#include "json/json.h"
-#include "third_party/icu/source/common/unicode/unistr.h"
 #include "webrtc/modules/video_capture/android/video_capture_android.h"
 #include "webrtc/system_wrappers/interface/logging.h"
 #include "webrtc/system_wrappers/interface/ref_count.h"
@@ -96,41 +95,67 @@ void DeviceInfoAndroid::Initialize(JNIEnv* jni) {
       jni->FindClass("org/webrtc/videoengine/VideoCaptureDeviceInfoAndroid");
   assert(j_info_class);
   jmethodID j_initialize = jni->GetStaticMethodID(
-      j_info_class, "getDeviceInfo", "()Ljava/lang/String;");
-  jstring j_json_info = static_cast<jstring>(
-      jni->CallStaticObjectMethod(j_info_class, j_initialize));
+    j_info_class, "getDeviceInfo",
+    "()[Lorg/webrtc/videoengine/CaptureCapabilityAndroid;");
+  jarray j_camera_caps = static_cast<jarray>(
+    jni->CallStaticObjectMethod(j_info_class, j_initialize));
 
-  const jchar* jchars = jni->GetStringChars(j_json_info, NULL);
-  icu::UnicodeString ustr(jchars, jni->GetStringLength(j_json_info));
-  jni->ReleaseStringChars(j_json_info, jchars);
-  std::string json_info;
-  ustr.toUTF8String(json_info);
+  const jsize capLength = jni->GetArrayLength(j_camera_caps);
 
-  Json::Value cameras;
-  Json::Reader reader(Json::Features::strictMode());
-  bool parsed = reader.parse(json_info, cameras);
-  if (!parsed) {
-    std::stringstream stream;
-    stream << "Failed to parse configuration:\n"
-           << reader.getFormattedErrorMessages();
-    assert(false);
+  jfieldID widthField = jni->GetFieldID(j_cap_class, "width", "[I");
+  jfieldID heightField = jni->GetFieldID(j_cap_class, "height", "[I");
+  jfieldID maxFpsField = jni->GetFieldID(j_cap_class, "maxMilliFPS", "I");
+  jfieldID minFpsField = jni->GetFieldID(j_cap_class, "minMilliFPS", "I");
+  jfieldID orientationField = jni->GetFieldID(j_cap_class, "orientation", "I");
+  jfieldID frontFacingField = jni->GetFieldID(j_cap_class, "frontFacing", "Z");
+  jfieldID nameField =
+      jni->GetFieldID(j_cap_class, "name", "Ljava/lang/String;");
+  if (widthField == NULL
+      || heightField == NULL
+      || maxFpsField == NULL
+      || minFpsField == NULL
+      || orientationField == NULL
+      || frontFacingField == NULL
+      || nameField == NULL) {
+    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
+                 "%s: Failed to get field Id.", __FUNCTION__);
     return;
   }
-  for (Json::ArrayIndex i = 0; i < cameras.size(); ++i) {
-    const Json::Value& camera = cameras[i];
+
+  for (jsize i = 0; i < capLength; i++) {
+    jobject capabilityElement = jni->GetObjectArrayElement(
+        (jobjectArray) j_camera_caps,
+        i);
+
     AndroidCameraInfo info;
-    info.name = camera["name"].asString();
-    info.min_mfps = camera["min_mfps"].asInt();
-    info.max_mfps = camera["max_mfps"].asInt();
-    info.front_facing = camera["front_facing"].asBool();
-    info.orientation = camera["orientation"].asInt();
-    Json::Value sizes = camera["sizes"];
-    for (Json::ArrayIndex j = 0; j < sizes.size(); ++j) {
-      const Json::Value& size = sizes[j];
-      info.resolutions.push_back(std::make_pair(
-          size["width"].asInt(), size["height"].asInt()));
+    jstring camName = static_cast<jstring>(jni->GetObjectField(capabilityElement,
+                                                               nameField));
+    const char* camChars = jni->GetStringUTFChars(camName, nullptr);
+    info.name = std::string(camChars);
+    jni->ReleaseStringUTFChars(camName, camChars);
+
+    info.min_mfps = jni->GetIntField(capabilityElement, minFpsField);
+    info.max_mfps = jni->GetIntField(capabilityElement, maxFpsField);
+    info.orientation = jni->GetIntField(capabilityElement, orientationField);
+    info.front_facing = jni->GetBooleanField(capabilityElement, frontFacingField);
+
+    jintArray widthResArray =
+        static_cast<jintArray>(jni->GetObjectField(capabilityElement, widthField));
+    jintArray heightResArray =
+        static_cast<jintArray>(jni->GetObjectField(capabilityElement, heightField));
+
+    const jsize numRes = jni->GetArrayLength(widthResArray);
+
+    jint *widths = jni->GetIntArrayElements(widthResArray, nullptr);
+    jint *heights = jni->GetIntArrayElements(heightResArray, nullptr);
+
+    for (jsize j = 0; j < numRes; ++j) {
+        info.resolutions.push_back(std::make_pair(widths[j], heights[j]));
     }
     g_camera_info->push_back(info);
+
+    jni->ReleaseIntArrayElements(widthResArray, widths, JNI_ABORT);
+    jni->ReleaseIntArrayElements(heightResArray, heights, JNI_ABORT);
   }
 }
 
