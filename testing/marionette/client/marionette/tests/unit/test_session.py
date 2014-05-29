@@ -23,10 +23,8 @@ class TestSession(marionette_test.MarionetteTestCase):
         self.assertIn("platformVersion", caps)
 
         # Optional capabilities we want Marionette to support
-        self.assertIn("cssSelectorsEnabled", caps)
         self.assertIn("device", caps)
         self.assertIn("handlesAlerts", caps)
-        self.assertIn("javascriptEnabled", caps)
         self.assertIn("rotatable", caps)
         self.assertIn("takesScreenshot", caps)
         self.assertIn("version", caps)
