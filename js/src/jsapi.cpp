@@ -633,7 +633,7 @@ JS_FRIEND_API(bool) JS::isGCEnabled() { return true; }
 #endif
 
 JS_PUBLIC_API(JSRuntime *)
-JS_NewRuntime(uint32_t maxbytes, JSUseHelperThreads useHelperThreads, JSRuntime *parentRuntime)
+JS_NewRuntime(uint32_t maxbytes, JSRuntime *parentRuntime)
 {
     MOZ_ASSERT(jsInitState == Running,
                "must call JS_Init prior to creating any JSRuntimes");
@@ -644,7 +644,7 @@ JS_NewRuntime(uint32_t maxbytes, JSUseHelperThreads useHelperThreads, JSRuntime 
     // for the main runtime in the process.
     JS_ASSERT_IF(parentRuntime, !parentRuntime->parentRuntime);
 
-    JSRuntime *rt = js_new<JSRuntime>(parentRuntime, useHelperThreads);
+    JSRuntime *rt = js_new<JSRuntime>(parentRuntime);
     if (!rt)
         return nullptr;
 
