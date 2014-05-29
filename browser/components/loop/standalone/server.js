@@ -5,6 +5,9 @@
 var express = require('express');
 var app = express();
 
+// This lets /test/ be mapped to the right place for running tests
+app.use(express.static(__dirname + '/../'));
+// This lets /content/ be mappy right for the static contents.
 app.use(express.static(__dirname + '/'));
 
 app.listen(3000);
