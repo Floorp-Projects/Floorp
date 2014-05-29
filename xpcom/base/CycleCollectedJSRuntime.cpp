@@ -66,7 +66,11 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollector.h"
 #include "nsDOMJSUtils.h"
+
+#ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
+#endif
+
 #include "nsIException.h"
 #include "nsThreadUtils.h"
 #include "xpcpublic.h"
