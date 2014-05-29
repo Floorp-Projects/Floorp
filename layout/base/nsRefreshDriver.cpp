@@ -686,16 +686,12 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
     mReflowCause(nullptr),
     mStyleCause(nullptr),
     mPresContext(aPresContext),
-    mPendingTransaction(0),
-    mCompletedTransaction(0),
     mFreezeCount(0),
     mThrottled(false),
     mTestControllingRefreshes(false),
     mViewManagerFlushIsPending(false),
     mRequestedHighPrecision(false),
-    mInRefresh(false),
-    mWaitingForTransaction(false),
-    mSkippedPaint(false)
+    mInRefresh(false)
 {
   mMostRecentRefreshEpochTime = JS_Now();
   mMostRecentRefresh = TimeStamp::Now();
@@ -729,11 +725,6 @@ nsRefreshDriver::AdvanceTimeAndRefresh(int64_t aMilliseconds)
     mMostRecentRefresh = TimeStamp::Now();
 
     mTestControllingRefreshes = true;
-    if (mWaitingForTransaction) {
-      // Disable any refresh driver throttling when entering test mode
-      mWaitingForTransaction = false;
-      mSkippedPaint = false;
-    }
   }
 
   mMostRecentRefreshEpochTime += aMilliseconds * 1000;
@@ -748,7 +739,6 @@ nsRefreshDriver::RestoreNormalRefresh()
 {
   mTestControllingRefreshes = false;
   EnsureTimerStarted(false);
-  mCompletedTransaction = mPendingTransaction;
 }
 
 TimeStamp
@@ -1071,14 +1061,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   mMostRecentRefresh = aNowTime;
   mMostRecentRefreshEpochTime = aNowEpoch;
 
-  if (mWaitingForTransaction) {
-    // We're currently suspended waiting for earlier Tick's to
-    // be completed (on the Compositor). Mark that we missed the paint
-    // and keep waiting.
-    mSkippedPaint = true;
-    return;
-  }
-
   nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
   if (!presShell || (ObserverCount() == 0 && ImageRequestCount() == 0)) {
     // Things are being destroyed, or we no longer have any observers.
@@ -1374,58 +1356,6 @@ nsRefreshDriver::Thaw()
       // Thus MostRecentRefresh() will lie between now and the DoRefresh.
       NS_DispatchToCurrentThread(NS_NewRunnableMethod(this, &nsRefreshDriver::DoRefresh));
       EnsureTimerStarted(false);
-    }
-  }
-}
-
-void
-nsRefreshDriver::FinishedWaitingForTransaction()
-{
-  mWaitingForTransaction = false;
-  if (mSkippedPaint && (ObserverCount() || ImageRequestCount())) {
-    MOZ_ASSERT(!IsInRefresh());
-    DoRefresh();
-  }
-  mSkippedPaint = false;
-}
-
-uint64_t
-nsRefreshDriver::GetTransactionId()
-{
-  ++mPendingTransaction;
-
-  if (mPendingTransaction == mCompletedTransaction + 2 &&
-      !mWaitingForTransaction &&
-      !mTestControllingRefreshes) {
-    mWaitingForTransaction = true;
-    mSkippedPaint = false;
-  }
-
-  return mPendingTransaction;
-}
-
-void
-nsRefreshDriver::RevokeTransactionId(uint64_t aTransactionId)
-{
-  MOZ_ASSERT(aTransactionId == mPendingTransaction);
-  if (mPendingTransaction == mCompletedTransaction + 2 &&
-      mWaitingForTransaction) {
-    MOZ_ASSERT(!mSkippedPaint, "How did we skip a paint when we're in the middle of one?");
-    FinishedWaitingForTransaction();
-  }
-  mPendingTransaction--;
-}
-
-void
-nsRefreshDriver::NotifyTransactionCompleted(uint64_t aTransactionId)
-{
-  if (aTransactionId > mCompletedTransaction) {
-    if (mPendingTransaction > mCompletedTransaction + 1 &&
-        mWaitingForTransaction) {
-      mCompletedTransaction = aTransactionId;
-      FinishedWaitingForTransaction();
-    } else {
-      mCompletedTransaction = aTransactionId;
     }
   }
 }
