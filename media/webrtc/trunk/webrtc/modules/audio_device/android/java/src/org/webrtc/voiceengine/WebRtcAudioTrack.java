@@ -20,6 +20,9 @@ import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.util.Log;
 
+import org.mozilla.gecko.mozglue.WebRTCJNITarget;
+
+@WebRTCJNITarget
 class WebRtcAudioTrack {
     private AudioTrack _audioTrack = null;
 
