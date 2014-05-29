@@ -45,21 +45,28 @@ class AudioManagerAndroid {
 
     mNativeOutputSampleRate = DEFAULT_SAMPLING_RATE;
     mAudioLowLatencyOutputFrameSize = DEFAULT_FRAMES_PER_BUFFER;
+    mAudioLowLatencySupported = context.getPackageManager().hasSystemFeature(
+      PackageManager.FEATURE_AUDIO_LOW_LATENCY);
     if (android.os.Build.VERSION.SDK_INT >=
-        android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
-      String sampleRateString = audioManager.getProperty(
-          AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
-      if (sampleRateString != null) {
-        mNativeOutputSampleRate = Integer.parseInt(sampleRateString);
-      }
-      String framesPerBuffer = audioManager.getProperty(
-          AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
-      if (framesPerBuffer != null) {
+        17 /*android.os.Build.VERSION_CODES.JELLY_BEAN_MR1*/) {
+      try {
+        Method getProperty = AudioManager.class.getMethod("getProperty", String.class);
+        Field sampleRateField = AudioManager.class.getField("PROPERTY_OUTPUT_SAMPLE_RATE");
+        Field framePerBufferField = AudioManager.class.getField("PROPERTY_OUTPUT_FRAMES_PER_BUFFER");
+        String sampleRateKey = (String)sampleRateField.get(null);
+        String framePerBufferKey = (String)framePerBufferField.get(null);
+        String sampleRateString = (String)getProperty.invoke(audioManager, sampleRateKey);
+        if (sampleRateString != null) {
+          mNativeOutputSampleRate = Integer.parseInt(sampleRateString);
+        }
+        String framesPerBuffer = (String)getProperty.invoke(audioManager, sampleRateKey);
+        if (framesPerBuffer != null) {
           mAudioLowLatencyOutputFrameSize = Integer.parseInt(framesPerBuffer);
+        }
+      } catch (Exception ex) {
+        Log.w("WebRTC", "error getting low latency params", ex);
       }
     }
-    mAudioLowLatencySupported = context.getPackageManager().hasSystemFeature(
-        PackageManager.FEATURE_AUDIO_LOW_LATENCY);
   }
 
     @SuppressWarnings("unused")
