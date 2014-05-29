@@ -75,11 +75,6 @@ loop.shared.models = (function() {
      * @param {Object} options Options object
      */
     initiate: function(options) {
-      // Check if the session is already set
-      if (this.isSessionReady()) {
-        return this.trigger("session:ready", this);
-      }
-
       var client = new loop.shared.Client({
         baseServerUrl: options.baseServerUrl
       });
@@ -144,7 +139,6 @@ loop.shared.models = (function() {
         throw new Error("Can't start session as it's not ready");
       }
       this.session = this.sdk.initSession(this.get("sessionId"));
-      this.session.connect(this.get("apiKey"), this.get("sessionToken"));
       this.listenTo(this.session, "sessionConnected", this._sessionConnected);
       this.listenTo(this.session, "streamCreated", this._streamCreated);
       this.listenTo(this.session, "connectionDestroyed",
@@ -153,6 +147,7 @@ loop.shared.models = (function() {
                                   this._sessionDisconnected);
       this.listenTo(this.session, "networkDisconnected",
                                   this._networkDisconnected);
+      this.session.connect(this.get("apiKey"), this.get("sessionToken"));
     },
 
     /**
@@ -160,6 +155,7 @@ loop.shared.models = (function() {
      */
     endSession: function() {
       this.session.disconnect();
+      this.once("session:ended", this.stopListening, this);
       this.set("ongoing", false);
     },
 
@@ -192,7 +188,7 @@ loop.shared.models = (function() {
      */
     _sessionDisconnected: function(event) {
       this.trigger("session:ended");
-      this.endSession();
+      this.set("ongoing", false);
     },
 
     /**
