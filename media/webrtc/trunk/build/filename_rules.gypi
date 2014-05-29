@@ -66,7 +66,7 @@
         ['exclude', '(^|/)x11_[^/]*\\.(h|cc)$'],
       ],
     }],
-    ['<(toolkit_uses_gtk)!=1 or >(nacl_untrusted_build)==1', {
+    ['(<(toolkit_uses_gtk)!=1 or >(nacl_untrusted_build)==1) and (build_with_mozilla==0)', {
       'sources/': [
         ['exclude', '_gtk(_browsertest|_unittest)?\\.(h|cc)$'],
         ['exclude', '(^|/)gtk/'],
