@@ -30,17 +30,38 @@ describe("loop.webapp", function() {
   });
 
   describe("#init", function() {
-    it("should navigate to the unsupported route if the sdk detects the" +
-       "browser is unsupported", function() {
-      var WebappRouter = loop.webapp.WebappRouter;
-      sandbox.stub(window.OT, "checkSystemRequirements").returns(false);
+    var WebappRouter;
+
+    beforeEach(function() {
+      WebappRouter = loop.webapp.WebappRouter;
       sandbox.stub(WebappRouter.prototype, "navigate");
+    });
+
+    afterEach(function() {
+      Backbone.history.stop();
+    });
+
+    it("should navigate to the unsupportedDevice route if the sdk detects " +
+       "the device is running iOS", function() {
+      sandbox.stub(loop.webapp.WebappHelper.prototype, "isIOS").returns(true);
 
       loop.webapp.init();
 
       sinon.assert.calledOnce(WebappRouter.prototype.navigate);
       sinon.assert.calledWithExactly(WebappRouter.prototype.navigate,
-                                     "unsupported", {trigger: true});
+                                     "unsupportedDevice", {trigger: true});
+    });
+
+    it("should navigate to the unsupportedBrowser route if the sdk detects " +
+       "the browser is unsupported", function() {
+      sandbox.stub(loop.webapp.WebappHelper.prototype, "isIOS").returns(false);
+      sandbox.stub(window.OT, "checkSystemRequirements").returns(false);
+
+      loop.webapp.init();
+
+      sinon.assert.calledOnce(WebappRouter.prototype.navigate);
+      sinon.assert.calledWithExactly(WebappRouter.prototype.navigate,
+                                     "unsupportedBrowser", {trigger: true});
     });
   });
 
@@ -160,13 +181,23 @@ describe("loop.webapp", function() {
           });
       });
 
-      describe("#unsupported", function() {
-        it("should load the UnsupportedView", function() {
-          router.unsupported();
+      describe("#unsupportedDevice", function() {
+        it("should load the UnsupportedDeviceView", function() {
+          router.unsupportedDevice();
 
           sinon.assert.calledOnce(router.loadView);
           sinon.assert.calledWith(router.loadView,
-            sinon.match.instanceOf(sharedViews.UnsupportedView));
+            sinon.match.instanceOf(sharedViews.UnsupportedDeviceView));
+        });
+      });
+
+      describe("#unsupportedBrowser", function() {
+        it("should load the UnsupportedBrowserView", function() {
+          router.unsupportedBrowser();
+
+          sinon.assert.calledOnce(router.loadView);
+          sinon.assert.calledWith(router.loadView,
+            sinon.match.instanceOf(sharedViews.UnsupportedBrowserView));
         });
       });
     });
@@ -286,6 +317,27 @@ describe("loop.webapp", function() {
         sinon.assert.calledOnce(notifier.errorL10n);
         sinon.assert.calledWithExactly(notifier.errorL10n,
                                        "unable_retrieve_call_info");
+      });
+    });
+  });
+
+  describe("WebappHelper", function() {
+    var helper;
+
+    beforeEach(function() {
+      helper = new loop.webapp.WebappHelper();
+    });
+
+    describe("#isIOS", function() {
+      it("should detect iOS", function() {
+        expect(helper.isIOS("iPad")).eql(true);
+        expect(helper.isIOS("iPod")).eql(true);
+        expect(helper.isIOS("iPhone")).eql(true);
+        expect(helper.isIOS("iPhone Simulator")).eql(true);
+      });
+
+      it("shouldn't detect iOS with other platforms", function() {
+        expect(helper.isIOS("MacIntel")).eql(false);
       });
     });
   });
