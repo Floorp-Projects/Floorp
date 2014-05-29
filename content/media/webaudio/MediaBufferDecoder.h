@@ -76,7 +76,7 @@ class MediaBufferDecoder
 {
 public:
   void AsyncDecodeMedia(const char* aContentType, uint8_t* aBuffer,
-                        uint32_t aLength, WebAudioDecodeJob& aDecodeJob);
+                        void* aRawBuffer, uint32_t aLength, WebAudioDecodeJob& aDecodeJob);
 
   bool SyncDecodeMedia(const char* aContentType, uint8_t* aBuffer,
                        uint32_t aLength, WebAudioDecodeJob& aDecodeJob);
