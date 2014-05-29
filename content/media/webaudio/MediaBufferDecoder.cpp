@@ -89,11 +89,12 @@ class MediaDecodeTask : public nsRunnable
 {
 public:
   MediaDecodeTask(const char* aContentType, uint8_t* aBuffer,
-                  uint32_t aLength,
+                  void* aRawBuffer, uint32_t aLength,
                   WebAudioDecodeJob& aDecodeJob,
                   nsIThreadPool* aThreadPool)
     : mContentType(aContentType)
     , mBuffer(aBuffer)
+    , mRawBuffer(aRawBuffer)
     , mLength(aLength)
     , mDecodeJob(aDecodeJob)
     , mPhase(PhaseEnum::Decode)
@@ -142,12 +143,13 @@ private:
     // Destruct MediaDecoderReader first.
     mDecoderReader = nullptr;
     mBufferDecoder = nullptr;
-    JS_free(nullptr, mBuffer);
+    JS_free(nullptr, mRawBuffer);
   }
 
 private:
   nsCString mContentType;
   uint8_t* mBuffer;
+  void* mRawBuffer;
   uint32_t mLength;
   WebAudioDecodeJob& mDecodeJob;
   PhaseEnum mPhase;
@@ -450,7 +452,7 @@ WebAudioDecodeJob::AllocateBuffer()
 
 void
 MediaBufferDecoder::AsyncDecodeMedia(const char* aContentType, uint8_t* aBuffer,
-                                     uint32_t aLength,
+                                     void* aRawBuffer, uint32_t aLength,
                                      WebAudioDecodeJob& aDecodeJob)
 {
   // Do not attempt to decode the media if we were not successful at sniffing
@@ -477,7 +479,7 @@ MediaBufferDecoder::AsyncDecodeMedia(const char* aContentType, uint8_t* aBuffer,
   MOZ_ASSERT(mThreadPool);
 
   nsRefPtr<MediaDecodeTask> task =
-    new MediaDecodeTask(aContentType, aBuffer, aLength, aDecodeJob, mThreadPool);
+    new MediaDecodeTask(aContentType, aBuffer, aRawBuffer, aLength, aDecodeJob, mThreadPool);
   if (!task->CreateReader()) {
     nsCOMPtr<nsIRunnable> event =
       new ReportResultTask(aDecodeJob,
@@ -502,7 +504,7 @@ MediaBufferDecoder::SyncDecodeMedia(const char* aContentType, uint8_t* aBuffer,
   }
 
   nsRefPtr<MediaDecodeTask> task =
-    new MediaDecodeTask(aContentType, aBuffer, aLength, aDecodeJob, nullptr);
+    new MediaDecodeTask(aContentType, aBuffer, nullptr, aLength, aDecodeJob, nullptr);
   if (!task->CreateReader()) {
     return false;
   }
