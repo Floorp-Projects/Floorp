@@ -111,8 +111,7 @@ typedef nsDataHashtable<nsUint64HashKey, TabChild*> TabChildMap;
 static TabChildMap* sTabChildren;
 
 TabChildBase::TabChildBase()
-  : mOldViewportWidth(0.0f)
-  , mContentDocumentIsDisplayed(false)
+  : mContentDocumentIsDisplayed(false)
   , mTabChildGlobal(nullptr)
   , mInnerSize(0, 0)
 {
@@ -151,7 +150,7 @@ TabChildBase::InitializeRootMetrics()
 void
 TabChildBase::SetCSSViewport(const CSSSize& aSize)
 {
-  mOldViewportWidth = aSize.width;
+  mOldViewportSize = aSize;
 
   if (mContentDocumentIsDisplayed) {
     nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
@@ -221,10 +220,10 @@ TabChildBase::HandlePossibleViewportChange()
     return false;
   }
 
-  float oldBrowserWidth = mOldViewportWidth;
+  CSSSize oldBrowserSize = mOldViewportSize;
   mLastRootMetrics.mViewport.SizeTo(viewport);
-  if (!oldBrowserWidth) {
-    oldBrowserWidth = kDefaultViewportSize.width;
+  if (oldBrowserSize == CSSSize()) {
+    oldBrowserSize = kDefaultViewportSize;
   }
   SetCSSViewport(viewport);
 
@@ -241,9 +240,11 @@ TabChildBase::HandlePossibleViewportChange()
     return false;
   }
 
-  float oldScreenWidth = mLastRootMetrics.mCompositionBounds.width;
-  if (!oldScreenWidth) {
-    oldScreenWidth = mInnerSize.width;
+  ScreenIntSize oldScreenSize = ViewAs<ScreenPixel>(
+      mLastRootMetrics.mCompositionBounds.Size(),
+      PixelCastJustification::ScreenToParentLayerForRoot);
+  if (oldScreenSize == ScreenIntSize()) {
+    oldScreenSize = mInnerSize;
   }
 
   FrameMetrics metrics(mLastRootMetrics);
@@ -266,7 +267,9 @@ TabChildBase::HandlePossibleViewportChange()
   // In all of these cases, we maintain how much actual content is visible
   // within the screen width. Note that "actual content" may be different with
   // respect to CSS pixels because of the CSS viewport size changing.
-  float oldIntrinsicScale = oldScreenWidth / oldBrowserWidth;
+  float oldIntrinsicScale =
+      std::max(oldScreenSize.width / oldBrowserSize.width,
+               oldScreenSize.height / oldBrowserSize.height);
   metrics.ZoomBy(metrics.CalculateIntrinsicScale().scale / oldIntrinsicScale);
 
   // Changing the zoom when we're not doing a first paint will get ignored

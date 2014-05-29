@@ -187,7 +187,9 @@ public:
   // into its composition bounds.
   CSSToScreenScale CalculateIntrinsicScale() const
   {
-    return CSSToScreenScale(float(mCompositionBounds.width) / float(mViewport.width));
+    return CSSToScreenScale(
+        std::max(float(mCompositionBounds.width) / mViewport.width,
+                 float(mCompositionBounds.height) / mViewport.height));
   }
 
   // Return the scale factor for converting from CSS pixels (for this layer)
