@@ -46,9 +46,7 @@ using namespace mozilla;
 using namespace mozilla::ipc;
 USING_BLUETOOTH_NAMESPACE
 
-/**
- *  Static variables
- */
+// TODO: Non-thread safe variables
 static bluetooth_device_t* sBtDevice;
 static const bt_interface_t* sBtInterface;
 static bool sAdapterDiscoverable = false;
@@ -60,9 +58,13 @@ static InfallibleTArray<BluetoothNamedValue> sRemoteDevicesPack;
 static nsTArray<nsRefPtr<BluetoothProfileController> > sControllerArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sBondingRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sGetDeviceRunnableArray;
-static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sSetPropertyRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sUnbondingRunnableArray;
 static nsTArray<int> sRequestedDeviceCountArray;
+
+// Static variables below should only be used on *main thread*
+static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sSetPropertyRunnableArray;
+
+// Static variables below should only be used on *callback thread*
 
 /**
  *  Classes only used in this file
@@ -305,6 +307,24 @@ AdapterStateChangeCallback(bt_state_t aStatus)
   }
 }
 
+class AdapterPropertiesCallbackTask MOZ_FINAL : public nsRunnable
+{
+public:
+  NS_IMETHOD
+  Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!sSetPropertyRunnableArray.IsEmpty()) {
+      DispatchBluetoothReply(sSetPropertyRunnableArray[0],
+                             BluetoothValue(true), EmptyString());
+      sSetPropertyRunnableArray.RemoveElementAt(0);
+    }
+
+    return NS_OK;
+  }
+};
+
 /**
  * AdapterPropertiesCallback will be called after enable() but before
  * AdapterStateChangeCallback is called. At that moment, both
@@ -384,12 +404,8 @@ AdapterPropertiesCallback(bt_status_t aStatus, int aNumProperties,
     BT_WARNING("Failed to dispatch to main thread!");
   }
 
-  // bluedroid BTU task was stored in the task queue, see GKI_send_msg
-  if (!sSetPropertyRunnableArray.IsEmpty()) {
-    DispatchBluetoothReply(sSetPropertyRunnableArray[0], BluetoothValue(true),
-                           EmptyString());
-    sSetPropertyRunnableArray.RemoveElementAt(0);
-  }
+  // Redirect to main thread to avoid racing problem
+  NS_DispatchToMainThread(new AdapterPropertiesCallbackTask());
 }
 
 /**
