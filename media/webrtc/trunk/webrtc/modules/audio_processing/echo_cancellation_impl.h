@@ -34,7 +34,7 @@ class EchoCancellationImpl : public EchoCancellationImplWrapper {
 
   // ProcessingComponent implementation.
   virtual int Initialize() OVERRIDE;
-  virtual void SetExtraOptions(const Config& config) OVERRIDE;
+  // virtual void SetExtraOptions(const Config& config) OVERRIDE;
 
  private:
   // EchoCancellation implementation.

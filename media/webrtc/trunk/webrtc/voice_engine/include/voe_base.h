@@ -85,6 +85,7 @@ public:
     // receives callbacks for generated trace messages.
     static int SetTraceCallback(TraceCallback* callback);
 
+    static int SetAndroidObjects(void* javaVM, void* context);
     static int SetAndroidObjects(void* javaVM, void* env, void* context);
 
 protected:

@@ -18,6 +18,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
+#include "webrtc/common_types.h"
 #include "webrtc/common_video/interface/native_handle.h"
 #include "webrtc/video_engine/include/vie_errors.h"
 
@@ -1025,7 +1026,8 @@ WebrtcVideoConduit::ReceivedRTPPacket(const void *data, int len)
   if(mEngineReceiving)
   {
     // let the engine know of a RTP packet to decode
-    if(mPtrViENetwork->ReceivedRTPPacket(mChannel,data,len) == -1)
+    // XXX we need to get passed the time the packet was received
+    if(mPtrViENetwork->ReceivedRTPPacket(mChannel, data, len, webrtc::PacketTime()) == -1)
     {
       int error = mPtrViEBase->LastError();
       CSFLogError(logTag, "%s RTP Processing Failed %d ", __FUNCTION__, error);

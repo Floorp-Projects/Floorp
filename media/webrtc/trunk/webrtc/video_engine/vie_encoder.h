@@ -39,6 +39,7 @@ class ViEEffectFilter;
 class ViEEncoderObserver;
 class VideoCodingModule;
 class ViEPacedSenderCallback;
+class ViECPULoadStateObserver;
 
 class ViEEncoder
     : public RtcpIntraFrameObserver,
@@ -49,6 +50,7 @@ class ViEEncoder
  public:
   friend class ViEBitrateObserver;
   friend class ViEPacedSenderCallback;
+  friend class ViECPULoadStateObserver;
 
   ViEEncoder(int32_t engine_id,
              int32_t channel_id,
@@ -156,6 +158,9 @@ class ViEEncoder
   // Effect filter.
   int32_t RegisterEffectFilter(ViEEffectFilter* effect_filter);
 
+  // Load Management
+  void SetLoadManager(CPULoadStateCallbackInvoker* load_manager);
+
   // Enables recording of debugging information.
   virtual int StartDebugRecording(const char* fileNameUTF8);
 
@@ -182,6 +187,9 @@ class ViEEncoder
                         const uint8_t fraction_lost,
                         const uint32_t round_trip_time_ms);
 
+  // Called by CPULoadStateObserver
+  void onLoadStateChanged(CPULoadState load_state);
+
   // Called by PacedSender.
   bool TimeToSendPacket(uint32_t ssrc, uint16_t sequence_number,
                         int64_t capture_time_ms, bool retransmission);
@@ -200,9 +208,12 @@ class ViEEncoder
   scoped_ptr<CriticalSectionWrapper> data_cs_;
   scoped_ptr<BitrateObserver> bitrate_observer_;
   scoped_ptr<PacedSender> paced_sender_;
+  scoped_ptr<webrtc::CPULoadStateObserver> loadstate_observer_;
   scoped_ptr<ViEPacedSenderCallback> pacing_callback_;
 
   BitrateController* bitrate_controller_;
+  // Owned by PeerConnection, not ViEEncoder
+  CPULoadStateCallbackInvoker* load_manager_;
 
   int64_t time_of_last_incoming_frame_ms_;
   bool send_padding_;

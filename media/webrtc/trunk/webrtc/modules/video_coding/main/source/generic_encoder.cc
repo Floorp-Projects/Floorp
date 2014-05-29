@@ -37,6 +37,10 @@ void CopyCodecSpecific(const CodecSpecificInfo* info, RTPVideoHeader** rtp) {
       (*rtp)->simulcastIdx = info->codecSpecific.VP8.simulcastIdx;
       return;
     }
+    case kVideoCodecH264:
+      (*rtp)->codec = kRtpVideoH264;
+      (*rtp)->simulcastIdx = info->codecSpecific.H264.simulcastIdx;
+      return;
     case kVideoCodecGeneric:
       (*rtp)->codec = kRtpVideoGeneric;
       (*rtp)->simulcastIdx = info->codecSpecific.generic.simulcast_idx;

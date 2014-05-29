@@ -82,6 +82,9 @@ class MediaOptimization {
                                 uint32_t timestamp,
                                 FrameType encoded_frame_type);
 
+  // Informs Media Optimization of CPU Load state
+  void SetCPULoadState(CPULoadState state);
+
   uint32_t InputFrameRate();
   uint32_t SentFrameRate();
   uint32_t SentBitRate();
@@ -155,6 +158,7 @@ class MediaOptimization {
   bool video_suspended_;
   int suspension_threshold_bps_;
   int suspension_window_bps_;
+  CPULoadState loadstate_;
 };
 }  // namespace media_optimization
 }  // namespace webrtc

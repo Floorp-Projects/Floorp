@@ -32,6 +32,10 @@ public:
     // Statistics
     RTCPReportBlock remoteReceiveBlock;
     uint32_t        remoteMaxJitter;
+    uint32_t        remotePacketsReceived;
+    uint64_t        remoteOctetsReceived;
+    uint32_t        lastReceivedRRNTPsecs;
+    uint32_t        lastReceivedRRNTPfrac;
 
     // RTT
     uint16_t    RTT;

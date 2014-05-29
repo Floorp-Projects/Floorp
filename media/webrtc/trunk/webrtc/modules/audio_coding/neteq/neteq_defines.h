@@ -69,6 +69,8 @@
  * decoded signal is at 32 kHz.
  * NETEQ_ISAC_FB_CODEC            Enable iSAC-FB
  *
+ * NETEQ_OPUS_CODEC               Enable Opus
+ *
  * NETEQ_G722_CODEC               Enable G.722
  *
  * NETEQ_G729_CODEC               Enable G.729
@@ -303,6 +305,9 @@
     #define NETEQ_32KHZ_WIDEBAND
     #define NETEQ_G722_1C_CODEC
     #define NETEQ_CELT_CODEC
+
+    /* hack in 48 kHz support */
+    #define NETEQ_48KHZ_WIDEBAND
 
     /* Fullband 48 kHz codecs */
     #define NETEQ_OPUS_CODEC

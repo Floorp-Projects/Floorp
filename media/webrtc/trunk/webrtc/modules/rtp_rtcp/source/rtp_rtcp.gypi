@@ -82,6 +82,8 @@
         'rtp_sender_video.cc',
         'rtp_sender_video.h',
         'video_codec_information.h',
+        'rtp_format_h264.cc',
+        'rtp_format_h264.h',
         'rtp_format_vp8.cc',
         'rtp_format_vp8.h',
         'rtp_format_video_generic.h',

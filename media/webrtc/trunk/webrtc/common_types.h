@@ -11,6 +11,7 @@
 #ifndef WEBRTC_COMMON_TYPES_H_
 #define WEBRTC_COMMON_TYPES_H_
 
+#include <stddef.h> // size_t
 #include "webrtc/typedefs.h"
 
 #if defined(_MSC_VER)
@@ -434,7 +435,7 @@ enum NsModes    // type of Noise Suppression
     kNsLowSuppression,  // lowest suppression
     kNsModerateSuppression,
     kNsHighSuppression,
-    kNsVeryHighSuppression,     // highest suppression
+    kNsVeryHighSuppression     // highest suppression
 };
 
 enum AgcModes                  // type of Automatic Gain Control
@@ -459,7 +460,7 @@ enum EcModes                   // type of Echo Control
     kEcDefault,                // platform default
     kEcConference,             // conferencing default (aggressive AEC)
     kEcAec,                    // Acoustic Echo Cancellation
-    kEcAecm,                   // AEC mobile
+    kEcAecm                    // AEC mobile
 };
 
 // AECM modes
@@ -511,7 +512,7 @@ enum NetEqModes             // NetEQ playout configurations
     kNetEqFax = 2,
     // Minimal buffer management. Inserts zeros for lost packets and during
     // buffer increases.
-    kNetEqOff = 3,
+    kNetEqOff = 3
 };
 
 enum OnHoldModes            // On Hold direction
@@ -525,7 +526,7 @@ enum AmrMode
 {
     kRfc3267BwEfficient = 0,
     kRfc3267OctetAligned = 1,
-    kRfc3267FileStorage = 2,
+    kRfc3267FileStorage = 2
 };
 
 // ==================================================================
@@ -598,10 +599,27 @@ struct VideoCodecVP8
     int                  keyFrameInterval;
 };
 
+// H264 specific
+struct VideoCodecH264
+{
+    uint8_t        profile;
+    uint8_t        constraints;
+    uint8_t        level;
+    uint8_t        packetizationMode; // 0 or 1
+    bool           frameDroppingOn;
+    int            keyFrameInterval;
+    // These are null/0 if not externally negotiated
+    const uint8_t* spsData;
+    size_t         spsLen;
+    const uint8_t* ppsData;
+    size_t         ppsLen;
+};
+
 // Video codec types
 enum VideoCodecType
 {
     kVideoCodecVP8,
+    kVideoCodecH264,
     kVideoCodecI420,
     kVideoCodecRED,
     kVideoCodecULPFEC,
@@ -612,6 +630,7 @@ enum VideoCodecType
 union VideoCodecUnion
 {
     VideoCodecVP8       VP8;
+    VideoCodecH264      H264;
 };
 
 
@@ -686,6 +705,25 @@ struct OverUseDetectorOptions {
   double initial_avg_noise;
   double initial_var_noise;
   double initial_threshold;
+};
+
+enum CPULoadState {
+  kLoadRelaxed,
+  kLoadNormal,
+  kLoadStressed
+};
+
+class CPULoadStateObserver {
+public:
+  virtual void onLoadStateChanged(CPULoadState aNewState) = 0;
+  virtual ~CPULoadStateObserver() {};
+};
+
+class CPULoadStateCallbackInvoker {
+public:
+    virtual void AddObserver(CPULoadStateObserver* aObserver) = 0;
+    virtual void RemoveObserver(CPULoadStateObserver* aObserver) = 0;
+    virtual ~CPULoadStateCallbackInvoker() {};
 };
 
 // This structure will have the information about when packet is actually

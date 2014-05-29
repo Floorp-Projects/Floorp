@@ -17,6 +17,7 @@
 #include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
 #include "webrtc/modules/rtp_rtcp/source/producer_fec.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_format_video_generic.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_format_h264.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_format_vp8.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
@@ -92,6 +93,8 @@ int32_t RTPSenderVideo::RegisterVideoPayload(
   RtpVideoCodecTypes videoType = kRtpVideoGeneric;
   if (ModuleRTPUtility::StringCompare(payloadName, "VP8",3)) {
     videoType = kRtpVideoVp8;
+  } else if (ModuleRTPUtility::StringCompare(payloadName, "H264", 4))  {
+    videoType = kRtpVideoH264;
   } else if (ModuleRTPUtility::StringCompare(payloadName, "I420", 4)) {
     videoType = kRtpVideoGeneric;
   } else {
@@ -285,53 +288,60 @@ RTPSenderVideo::SendVideo(const RtpVideoCodecTypes videoType,
                           const uint32_t payloadSize,
                           const RTPFragmentationHeader* fragmentation,
                           VideoCodecInformation* codecInfo,
-                          const RTPVideoTypeHeader* rtpTypeHdr)
-{
-    if( payloadSize == 0)
-    {
-        return -1;
-    }
+                          const RTPVideoTypeHeader* rtpTypeHdr) {
+  if( payloadSize == 0) {
+      return -1;
+  }
 
-    if (frameType == kVideoFrameKey) {
-      producer_fec_.SetFecParameters(&key_fec_params_,
-                                     _numberFirstPartition);
-    } else {
-      producer_fec_.SetFecParameters(&delta_fec_params_,
-                                     _numberFirstPartition);
-    }
+  if (frameType == kVideoFrameKey) {
+    producer_fec_.SetFecParameters(&key_fec_params_,
+                                   _numberFirstPartition);
+  } else {
+    producer_fec_.SetFecParameters(&delta_fec_params_,
+                                   _numberFirstPartition);
+  }
 
-    // Default setting for number of first partition packets:
-    // Will be extracted in SendVP8 for VP8 codec; other codecs use 0
-    _numberFirstPartition = 0;
+  // Default setting for number of first partition packets:
+  // Will be extracted in SendVP8 for VP8 codec; other codecs use 0
+  _numberFirstPartition = 0;
 
-    int32_t retVal = -1;
-    switch(videoType)
-    {
-    case kRtpVideoGeneric:
-        retVal = SendGeneric(frameType, payloadType, captureTimeStamp,
-                             capture_time_ms, payloadData, payloadSize);
-        break;
-    case kRtpVideoVp8:
-        retVal = SendVP8(frameType,
-                         payloadType,
-                         captureTimeStamp,
-                         capture_time_ms,
-                         payloadData,
-                         payloadSize,
-                         fragmentation,
-                         rtpTypeHdr);
-        break;
-    default:
-        assert(false);
-        break;
-    }
-    if(retVal <= 0)
-    {
-        return retVal;
-    }
-    WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, _id, "%s(timestamp:%u)",
-                 __FUNCTION__, captureTimeStamp);
-    return 0;
+  int32_t retVal = -1;
+  switch(videoType) {
+  case kRtpVideoGeneric:
+    retVal = SendGeneric(frameType, payloadType, captureTimeStamp,
+                         capture_time_ms, payloadData, payloadSize);
+      break;
+  case kRtpVideoVp8:
+    retVal = SendVP8(frameType,
+                     payloadType,
+                     captureTimeStamp,
+                     capture_time_ms,
+                     payloadData,
+                     payloadSize,
+                     fragmentation,
+                     rtpTypeHdr);
+    break;
+  case kRtpVideoH264:
+    retVal = SendH264(frameType,
+                      payloadType,
+                      captureTimeStamp,
+                      capture_time_ms,
+                      payloadData,
+                      payloadSize,
+                      fragmentation,
+                      rtpTypeHdr);
+    break;
+  default:
+    assert(false);
+    break;
+  }
+
+  if(retVal <= 0) {
+    return retVal;
+  }
+  WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, _id, "%s(timestamp:%u)",
+               __FUNCTION__, captureTimeStamp);
+  return 0;
 }
 
 int32_t RTPSenderVideo::SendGeneric(const FrameType frame_type,
@@ -484,6 +494,52 @@ RTPSenderVideo::SendVP8(const FrameType frameType,
     TRACE_EVENT_ASYNC_END1("webrtc", "Video", capture_time_ms,
                            "timestamp", _rtpSender.Timestamp());
     return 0;
+}
+
+int32_t RTPSenderVideo::SendH264(const FrameType frameType,
+                                 const int8_t payloadType,
+                                 const uint32_t captureTimeStamp,
+                                 int64_t capture_time_ms,
+                                 const uint8_t* payloadData,
+                                 const uint32_t payloadSize,
+                                 const RTPFragmentationHeader* fragmentation,
+                                 const RTPVideoTypeHeader* rtpTypeHdr) {
+  const uint16_t rtpHeaderLength = _rtpSender.RTPHeaderLength();
+  int32_t payloadBytesToSend = payloadSize;
+  const uint8_t* data = payloadData;
+  uint16_t maxPayloadLengthH264 = _rtpSender.MaxDataPayloadLength();
+
+  RtpFormatH264 packetizer(data, payloadBytesToSend, maxPayloadLengthH264);
+
+  StorageType storage = kAllowRetransmission;
+  bool protect = (frameType == kVideoFrameKey);
+  bool last = false;
+
+  while (!last) {
+    // Write H264 Payload
+    uint8_t dataBuffer[IP_PACKET_SIZE] = {0};
+    int payloadBytesInPacket = 0;
+    int ret_val = packetizer.NextPacket(&dataBuffer[rtpHeaderLength],
+                                        &payloadBytesInPacket, &last);
+    if (ret_val < 0) {
+        return -1;
+    }
+
+    // Write RTP header.
+    // Set marker bit true if this is the last packet in frame.
+    _rtpSender.BuildRTPheader(dataBuffer, payloadType, last,
+                              captureTimeStamp, capture_time_ms);
+    if (-1 == SendVideoPacket(dataBuffer, payloadBytesInPacket,
+                              rtpHeaderLength, captureTimeStamp,
+                              capture_time_ms, storage, protect)) {
+    }
+
+    if (ret_val == 0) {
+      // single NAL unit
+      last = true;
+    }
+  }
+  return 0;
 }
 
 void RTPSenderVideo::ProcessBitrate() {
