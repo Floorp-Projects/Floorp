@@ -1,43 +1,59 @@
 /**
- * @license  OpenTok JavaScript Library v2.0.18.1
+ * @license  OpenTok JavaScript Library v2.2.4.1
  * http://www.tokbox.com/
  *
  * Copyright (c) 2013 TokBox, Inc.
  *
- * Date: March 18 06:20:17 2014
+ * Date: March 27 05:49:25 2014
  */
 
 (function(window) {
-if (!window.OT) window.OT = {};
+  if (!window.OT) window.OT = {};
 
-OT.properties = {
-  version: "v2.0.18.1",         // The current version (eg. v2.0.4) (This is replaced by gradle)
-  build: "7333ca3",    // The current build hash (This is replaced by gradle)
+  OT.properties = {
+    version: 'v2.2.4.1',         // The current version (eg. v2.0.4) (This is replaced by gradle)
+    build: 'e42c038',    // The current build hash (This is replaced by gradle)
 
-  debug: "false",      // Whether or not to turn on debug logging by default
-  websiteURL: "http://www.tokbox.com",      // The URL of the tokbox website
+    // Whether or not to turn on debug logging by default
+    debug: 'false',
+    // The URL of the tokbox website
+    websiteURL: 'http://www.tokbox.com',
 
-  cdnURL: "http://static.opentok.com",        // The URL of the CDN
-  loggingURL: "http://hlg.tokbox.com/prod",   // The URL to use for logging
-  apiURL: "http://anvil.opentok.com",          // The anvil API URL
+    // The URL of the CDN
+    cdnURL: 'http://static.opentok.com',
+    // The URL to use for logging
+    loggingURL: 'http://hlg.tokbox.com/prod',
+    // The anvil API URL
+    apiURL: 'http://anvil.opentok.com',
 
-  messagingProtocol: "wss",         // What protocol to use when connecting to the rumor web socket
-  messagingPort: 443,               // What port to use when connection to the rumor web socket
+    // What protocol to use when connecting to the rumor web socket
+    messagingProtocol: 'wss',
+    // What port to use when connection to the rumor web socket
+    messagingPort: 443,
 
-  supportSSL: "true",           // If this environment supports SSL
-  cdnURLSSL: "https://static.opentok.com",         // The CDN to use if we're using SSL
-  loggingURLSSL: "https://hlg.tokbox.com/prod",    // The loggging URL to use if we're using SSL
-  apiURLSSL: "https://anvil.opentok.com"             // The anvil API URL to use if we're using SSL
-};
+    // If this environment supports SSL
+    supportSSL: 'true',
+    // The CDN to use if we're using SSL
+    cdnURLSSL: 'https://static.opentok.com',
+    // The loggging URL to use if we're using SSL
+    loggingURLSSL: 'https://hlg.tokbox.com/prod',
+    // The anvil API URL to use if we're using SSL
+    apiURLSSL: 'https://anvil.opentok.com',
+
+    minimumVersion: {
+      firefox: parseFloat('26'),
+      chrome: parseFloat('32')
+    }
+  };
 
 })(window);
 /**
- * @license  Common JS Helpers on OpenTok 0.1.0 628a0b9 master
+ * @license  Common JS Helpers on OpenTok 0.2.0 da024f2 master
  * http://www.tokbox.com/
  *
  * Copyright (c) 2014 TokBox, Inc.
  *
- * Date: January 08 04:13:37 2014
+ * Date: March 17 02:18:55 2014
  *
  */
 
@@ -61,47 +77,170 @@ OT.properties = {
 !(function(window, undefined) {
 
 
-var OTHelpers = function(domId) {
+  var OTHelpers = function(domId) {
     return document.getElementById(domId);
-};
+  };
 
-var previousOTHelpers = window.OTHelpers;
+  var previousOTHelpers = window.OTHelpers;
 
-window.OTHelpers = OTHelpers;
+  window.OTHelpers = OTHelpers;
 
-OTHelpers.noConflict = function() {
+  OTHelpers.keys = Object.keys || function(object) {
+    var keys = [], hasOwnProperty = Object.prototype.hasOwnProperty;
+    for(var key in object) {
+      if(hasOwnProperty.call(object, key)) {
+        keys.push(key);
+      }
+    }
+    return keys;
+  };
+
+  var _each = Array.prototype.forEach || function(iter, ctx) {
+    for(var idx = 0, count = this.length || 0; idx < count; ++idx) {
+      if(idx in this) {
+        iter.call(ctx, this[idx], idx);
+      }
+    }
+  };
+
+  OTHelpers.forEach = function(array, iter) {
+    return _each.call(array, iter);
+  };
+
+  var _map = Array.prototype.map || function(iter, ctx) {
+    var collect = [];
+    _each.call(this, function(item, idx) {
+      collect.push(iter.call(ctx, item, idx));
+    });
+    return collect;
+  };
+
+  OTHelpers.map = function(array, iter) {
+    return _map.call(array, iter);
+  };
+
+  var _filter = Array.prototype.filter || function(iter, ctx) {
+    var collect = [];
+    _each.call(this, function(item, idx) {
+      if(iter.call(ctx, item, idx)) {
+        collect.push(item);
+      }
+    });
+    return collect;
+  };
+
+  OTHelpers.filter = function(array, iter, ctx) {
+    return _filter.call(array, iter, ctx);
+  };
+
+  var _some = Array.prototype.some || function(iter, ctx) {
+    var any = false;
+    for(var idx = 0, count = this.length || 0; idx < count; ++idx) {
+      if(idx in this) {
+        if(iter.call(ctx, this[idx], idx)) {
+          any = true;
+          break;
+        }
+      }
+    }
+    return any;
+  };
+
+  OTHelpers.some = function(array, iter, ctx) {
+    return _some.call(array, iter, ctx);
+  };
+
+  var _indexOf = Array.prototype.indexOf || function(searchElement, fromIndex) {
+    var i,
+        pivot = (fromIndex) ? fromIndex : 0,
+        length;
+
+    if (!this) {
+      throw new TypeError();
+    }
+
+    length = this.length;
+
+    if (length === 0 || pivot >= length) {
+      return -1;
+    }
+
+    if (pivot < 0) {
+      pivot = length - Math.abs(pivot);
+    }
+
+    for (i = pivot; i < length; i++) {
+      if (this[i] === searchElement) {
+        return i;
+      }
+    }
+    return -1;
+  };
+
+  OTHelpers.arrayIndexOf = function(array, searchElement, fromIndex) {
+    return _indexOf.call(array, searchElement, fromIndex);
+  };
+
+  var _bind = Function.prototype.bind || function() {
+    var args = Array.prototype.slice.call(arguments),
+        ctx = args.shift(),
+        fn = this;
+    return function() {
+      return fn.apply(ctx, args.concat(Array.prototype.slice.call(arguments)));
+    };
+  };
+
+  OTHelpers.bind = function() {
+    var args = Array.prototype.slice.call(arguments),
+        fn = args.shift();
+    return _bind.apply(fn, args);
+  };
+
+  var _trim = String.prototype.trim || function() {
+    return this.replace(/^\s+|\s+$/g, '');
+  };
+
+  OTHelpers.trim = function(str) {
+    return _trim.call(str);
+  };
+
   OTHelpers.noConflict = function() {
+    OTHelpers.noConflict = function() {
+      return OTHelpers;
+    };
+    window.OTHelpers = previousOTHelpers;
     return OTHelpers;
   };
-  window.OTHelpers = previousOTHelpers;
-  return OTHelpers;
-};
 
+  OTHelpers.isNone = function(obj) {
+    return obj === undefined || obj === null;
+  };
 
-OTHelpers.isEmpty = function(obj) {
-  if (obj === null || obj === undefined) return true;
-  if (Array.isArray(obj) || typeof(obj) === 'string') return obj.length === 0;
+  OTHelpers.isObject = function(obj) {
+    return obj === Object(obj);
+  };
 
-  // Objects without enumerable owned properties are empty.
-  for (var key in obj) {
-    if (obj.hasOwnProperty(key)) return false;
-  }
+  OTHelpers.isFunction = function(obj) {
+    return !!obj && (obj.toString().indexOf('()') !== -1 ||
+      Object.prototype.toString.call(obj) === '[object Function]');
+  };
 
-  return true;
-};
+  OTHelpers.isArray = OTHelpers.isFunction(Array.isArray) && Array.isArray ||
+    function (vArg) {
+      return Object.prototype.toString.call(vArg) === '[object Array]';
+    };
 
-OTHelpers.isNone = function(obj) {
-  return obj === undefined || obj === null;
-};
+  OTHelpers.isEmpty = function(obj) {
+    if (obj === null || obj === undefined) return true;
+    if (OTHelpers.isArray(obj) || typeof(obj) === 'string') return obj.length === 0;
 
-OTHelpers.isObject = function(obj) {
-  return obj === Object(obj);
-};
+    // Objects without enumerable owned properties are empty.
+    for (var key in obj) {
+      if (obj.hasOwnProperty(key)) return false;
+    }
 
-
-OTHelpers.isFunction = function(obj) {
-    return typeof obj === 'function';
-};
+    return true;
+  };
 
 // Extend a target object with the properties from one or
 // more source objects
@@ -109,18 +248,18 @@ OTHelpers.isFunction = function(obj) {
 // @example:
 //    dest = OTHelpers.extend(dest, source1, source2, source3);
 //
-OTHelpers.extend = function(/* dest, source1[, source2, ..., , sourceN]*/) {
+  OTHelpers.extend = function(/* dest, source1[, source2, ..., , sourceN]*/) {
     var sources = Array.prototype.slice.call(arguments),
         dest = sources.shift();
 
-    sources.forEach(function(source) {
-        for (var key in source) {
-            dest[key] = source[key];
-        }
+    OTHelpers.forEach(sources, function(source) {
+      for (var key in source) {
+        dest[key] = source[key];
+      }
     });
 
     return dest;
-};
+  };
 
 // Ensures that the target object contains certain defaults.
 //
@@ -129,41 +268,40 @@ OTHelpers.extend = function(/* dest, source1[, source2, ..., , sourceN]*/) {
 //     loading: true     // loading by default
 //   });
 //
-OTHelpers.defaults = function(/* dest, defaults1[, defaults2, ..., , defaultsN]*/) {
+  OTHelpers.defaults = function(/* dest, defaults1[, defaults2, ..., , defaultsN]*/) {
     var sources = Array.prototype.slice.call(arguments),
         dest = sources.shift();
 
-    sources.forEach(function(source) {
-        for (var key in source) {
-            if (dest[key] === void 0) dest[key] = source[key];
-        }
+    OTHelpers.forEach(sources, function(source) {
+      for (var key in source) {
+        if (dest[key] === void 0) dest[key] = source[key];
+      }
     });
 
     return dest;
-};
+  };
 
-//
-OTHelpers.clone = function(obj) {
+  OTHelpers.clone = function(obj) {
     if (!OTHelpers.isObject(obj)) return obj;
-    return Array.isArray(obj) ? obj.slice() : OTHelpers.extend({}, obj);
-};
+    return OTHelpers.isArray(obj) ? obj.slice() : OTHelpers.extend({}, obj);
+  };
 
 
 
 // Handy do nothing function
-OTHelpers.noop = function() {};
+  OTHelpers.noop = function() {};
 
 // Returns true if the client supports WebSockets, false otherwise.
-OTHelpers.supportsWebSockets = function() {
+  OTHelpers.supportsWebSockets = function() {
     return 'WebSocket' in window;
-};
+  };
 
 // Returns the number of millisceonds since the the UNIX epoch, this is functionally
 // equivalent to executing new Date().getTime().
 //
 // Where available, we use 'performance.now' which is more accurate and reliable,
 // otherwise we default to new Date().getTime().
-OTHelpers.now = (function() {
+  OTHelpers.now = (function() {
     var performance = window.performance || {},
         navigationStart,
         now =  performance.now       ||
@@ -173,51 +311,88 @@ OTHelpers.now = (function() {
                performance.webkitNow;
 
     if (now) {
-        now = now.bind(performance);
-        navigationStart = performance.timing.navigationStart;
+      now = OTHelpers.bind(now, performance);
+      navigationStart = performance.timing.navigationStart;
 
-        return  function() { return navigationStart + now(); };
+      return  function() { return navigationStart + now(); };
+    } else {
+      return function() { return new Date().getTime(); };
     }
-    else {
-        return function() { return new Date().getTime(); };
-    }
-})();
+  })();
 
-OTHelpers.browser = function() {
+  var _browser = function() {
     var userAgent = window.navigator.userAgent.toLowerCase(),
+        appName = window.navigator.appName,
         navigatorVendor,
-        browser = 'Unknown';
+        browser = 'unknown',
+        version = -1;
 
-    if (userAgent.indexOf('firefox') > -1)   {
-        browser = 'Firefox';
+    if (userAgent.indexOf('opera') > -1 || userAgent.indexOf('opr') > -1) {
+      browser = 'Opera';
+
+      if (/opr\/([0-9]{1,}[\.0-9]{0,})/.exec(userAgent) !== null) {
+        version = parseFloat( RegExp.$1 );
+      }
+
+    } else if (userAgent.indexOf('firefox') > -1)   {
+      browser = 'Firefox';
+
+      if (/firefox\/([0-9]{1,}[\.0-9]{0,})/.exec(userAgent) !== null) {
+        version = parseFloat( RegExp.$1 );
+      }
+
+    } else if (appName === 'Microsoft Internet Explorer') {
+      // IE 10 and below
+      browser = 'IE';
+
+      if (/msie ([0-9]{1,}[\.0-9]{0,})/.exec(userAgent) !== null) {
+        version = parseFloat( RegExp.$1 );
+      }
+
+    } else if (appName === 'Netscape' && userAgent.indexOf('trident') > -1) {
+      // IE 11+
+
+      browser = 'IE';
+
+      if (/trident\/.*rv:([0-9]{1,}[\.0-9]{0,})/.exec(userAgent) !== null) {
+        version = parseFloat( RegExp.$1 );
+      }
+
+    } else if (userAgent.indexOf('chrome') > -1) {
+      browser = 'Chrome';
+
+      if (/chrome\/([0-9]{1,}[\.0-9]{0,})/.exec(userAgent) !== null) {
+        version = parseFloat( RegExp.$1 );
+      }
+
+    } else if ((navigatorVendor = window.navigator.vendor) &&
+      navigatorVendor.toLowerCase().indexOf('apple') > -1) {
+      browser = 'Safari';
+
+      if (/version\/([0-9]{1,}[\.0-9]{0,})/.exec(userAgent) !== null) {
+        version = parseFloat( RegExp.$1 );
+      }
     }
-    if (userAgent.indexOf('opera') > -1)   {
-        browser = 'Opera';
-    }
-    else if (userAgent.indexOf("msie") > -1) {
-        browser = "IE";
-    }
-    else if (userAgent.indexOf("chrome") > -1) {
-        browser = "Chrome";
-    }
 
-    if ((navigatorVendor = window.navigator.vendor) && navigatorVendor.toLowerCase().indexOf("apple") > -1) {
-        browser = "Safari";
-    }
+    return {browser: browser, version: version};
+  }();
 
-    userAgent = null;
-    OTHelpers.browser = function() { return browser; };
-    return browser;
-};
+  OTHelpers.browser = function() {
+    return _browser.browser;
+  };
+
+  OTHelpers.browserVersion = function() {
+    return _browser;
+  };
 
 
-OTHelpers.canDefineProperty = true;
+  OTHelpers.canDefineProperty = true;
 
-try {
+  try {
     Object.defineProperty({}, 'x', {});
-} catch (err) {
+  } catch (err) {
     OTHelpers.canDefineProperty = false;
-}
+  }
 
 // A helper for defining a number of getters at once.
 //
@@ -226,68 +401,97 @@ try {
 //     apiKey: function() { return _apiKey; },
 //     token: function() { return _token; },
 //     connected: function() { return this.is('connected'); },
-//     connection: function() { return _socket && _socket.id ? this.connections.get(_socket.id) : null; },
 //     capabilities: function() { return _socket.capabilities; },
 //     sessionId: function() { return _sessionId; },
 //     id: function() { return _sessionId; }
 //   });
 //
-OTHelpers.defineGetters = function(self, getters, enumerable) {
-  var propsDefinition = {};
+  OTHelpers.defineGetters = function(self, getters, enumerable) {
+    var propsDefinition = {};
 
-  if (enumerable === void 0) enumerable = false;
+    if (enumerable === void 0) enumerable = false;
 
-  for (var key in getters) {
-    propsDefinition[key] = {
-      get: getters[key],
-      enumerable: enumerable
-    };
-  }
+    for (var key in getters) {
+      propsDefinition[key] = {
+        get: getters[key],
+        enumerable: enumerable
+      };
+    }
 
-  Object.defineProperties(self, propsDefinition);
-};
+    Object.defineProperties(self, propsDefinition);
+  };
+
+  var generatePropertyFunction = function(object, getter, setter) {
+    if(getter && !setter) {
+      return function() {
+        return getter.call(object);
+      };
+    } else if(getter && setter) {
+      return function(value) {
+        if(value !== void 0) {
+          setter.call(object, value);
+        }
+        return getter.call(object);
+      };
+    } else {
+      return function(value) {
+        if(value !== void 0) {
+          setter.call(object, value);
+        }
+      };
+    }
+  };
+
+  OTHelpers.defineProperties = function(object, getterSetters) {
+    for (var key in getterSetters) {
+      object[key] = generatePropertyFunction(object, getterSetters[key].get,
+        getterSetters[key].set);
+    }
+  };
 
 
 // Polyfill Object.create for IE8
 //
 // See https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Object/create
 //
-if (!Object.create) {
+  if (!Object.create) {
     Object.create = function (o) {
-        if (arguments.length > 1) {
-            throw new Error('Object.create implementation only accepts the first parameter.');
-        }
-        function F() {}
-        F.prototype = o;
-        return new F();
+      if (arguments.length > 1) {
+        throw new Error('Object.create implementation only accepts the first parameter.');
+      }
+      function F() {}
+      F.prototype = o;
+      return new F();
     };
-}
-
-OTHelpers.setCookie = function(key, value) {
-  try {
-    localStorage.setItem(key, value);
-  } catch (err) {
-    // Store in browser cookie
-    var date = new Date();
-    date.setTime(date.getTime()+(365*24*60*60*1000));
-    var expires = "; expires="+date.toGMTString();
-    document.cookie = key+"="+value+expires+"; path=/";
   }
-};
 
-OTHelpers.getCookie = function(key) {
+  OTHelpers.setCookie = function(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch (err) {
+      // Store in browser cookie
+      var date = new Date();
+      date.setTime(date.getTime()+(365*24*60*60*1000));
+      var expires = '; expires=' + date.toGMTString();
+      document.cookie = key + '=' + value + expires + '; path=/';
+    }
+  };
+
+  OTHelpers.getCookie = function(key) {
     var value;
 
     try {
-      value = localStorage.getItem("opentok_client_id");
+      value = localStorage.getItem('opentok_client_id');
       return value;
     } catch (err) {
       // Check browser cookies
-      var nameEQ = key + "=";
+      var nameEQ = key + '=';
       var ca = document.cookie.split(';');
       for(var i=0;i < ca.length;i++) {
         var c = ca[i];
-        while (c.charAt(0)==' ') c = c.substring(1,c.length);
+        while (c.charAt(0) === ' ') {
+          c = c.substring(1,c.length);
+        }
         if (c.indexOf(nameEQ) === 0) {
           value = c.substring(nameEQ.length,c.length);
         }
@@ -299,7 +503,7 @@ OTHelpers.getCookie = function(key) {
     }
 
     return null;
-};
+  };
 
 
 /// Stolen from Underscore, this needs replacing
@@ -316,24 +520,25 @@ OTHelpers.getCookie = function(key) {
   // List of HTML entities for escaping.
   var entityMap = {
     escape: {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#x27;',
-      '/': '&#x2F;'
+      '&':  '&amp;',
+      '<':  '&lt;',
+      '>':  '&gt;',
+      '"':  '&quot;',
+      '\'': '&#x27;',
+      '/':  '&#x2F;'
     }
   };
+
   entityMap.unescape = OTHelpers.invert(entityMap.escape);
 
   // Regexes containing the keys and values listed immediately above.
   var entityRegexes = {
-    escape:   new RegExp('[' + Object.keys(entityMap.escape).join('') + ']', 'g'),
-    unescape: new RegExp('(' + Object.keys(entityMap.unescape).join('|') + ')', 'g')
+    escape:   new RegExp('[' + OTHelpers.keys(entityMap.escape).join('') + ']', 'g'),
+    unescape: new RegExp('(' + OTHelpers.keys(entityMap.unescape).join('|') + ')', 'g')
   };
 
   // Functions for escaping and unescaping strings to/from HTML interpolation.
-  ['escape', 'unescape'].forEach(function(method) {
+  OTHelpers.forEach(['escape', 'unescape'], function(method) {
     OTHelpers[method] = function(string) {
       if (string === null || string === undefined) return '';
       return ('' + string).replace(entityRegexes[method], function(match) {
@@ -344,158 +549,162 @@ OTHelpers.getCookie = function(key) {
 
 // By default, Underscore uses ERB-style template delimiters, change the
 // following template settings to use alternative delimiters.
-OTHelpers.templateSettings = {
-  evaluate    : /<%([\s\S]+?)%>/g,
-  interpolate : /<%=([\s\S]+?)%>/g,
-  escape      : /<%-([\s\S]+?)%>/g
-};
+  OTHelpers.templateSettings = {
+    evaluate    : /<%([\s\S]+?)%>/g,
+    interpolate : /<%=([\s\S]+?)%>/g,
+    escape      : /<%-([\s\S]+?)%>/g
+  };
 
 // When customizing `templateSettings`, if you don't want to define an
 // interpolation, evaluation or escaping regex, we need one that is
 // guaranteed not to match.
-var noMatch = /(.)^/;
+  var noMatch = /(.)^/;
 
 // Certain characters need to be escaped so that they can be put into a
 // string literal.
-var escapes = {
-  "'":      "'",
-  '\\':     '\\',
-  '\r':     'r',
-  '\n':     'n',
-  '\t':     't',
-  '\u2028': 'u2028',
-  '\u2029': 'u2029'
-};
+  var escapes = {
+    '\'':     '\'',
+    '\\':     '\\',
+    '\r':     'r',
+    '\n':     'n',
+    '\t':     't',
+    '\u2028': 'u2028',
+    '\u2029': 'u2029'
+  };
 
-var escaper = /\\|'|\r|\n|\t|\u2028|\u2029/g;
+  var escaper = /\\|'|\r|\n|\t|\u2028|\u2029/g;
 
 // JavaScript micro-templating, similar to John Resig's implementation.
 // Underscore templating handles arbitrary delimiters, preserves whitespace,
 // and correctly escapes quotes within interpolated code.
-OTHelpers.template = function(text, data, settings) {
-  var render;
-  settings = OTHelpers.defaults({}, settings, OTHelpers.templateSettings);
+  OTHelpers.template = function(text, data, settings) {
+    var render;
+    settings = OTHelpers.defaults({}, settings, OTHelpers.templateSettings);
 
-  // Combine delimiters into one regular expression via alternation.
-  var matcher = new RegExp([
-    (settings.escape || noMatch).source,
-    (settings.interpolate || noMatch).source,
-    (settings.evaluate || noMatch).source
-  ].join('|') + '|$', 'g');
+    // Combine delimiters into one regular expression via alternation.
+    var matcher = new RegExp([
+      (settings.escape || noMatch).source,
+      (settings.interpolate || noMatch).source,
+      (settings.evaluate || noMatch).source
+    ].join('|') + '|$', 'g');
 
-  // Compile the template source, escaping string literals appropriately.
-  var index = 0;
-  var source = "__p+='";
-  text.replace(matcher, function(match, escape, interpolate, evaluate, offset) {
-    source += text.slice(index, offset)
-      .replace(escaper, function(match) { return '\\' + escapes[match]; });
+    // Compile the template source, escaping string literals appropriately.
+    var index = 0;
+    var source = '__p+=\'';
+    text.replace(matcher, function(match, escape, interpolate, evaluate, offset) {
+      source += text.slice(index, offset)
+        .replace(escaper, function(match) { return '\\' + escapes[match]; });
 
-    if (escape) {
-      source += "'+\n((__t=(" + escape + "))==null?'':OTHelpers.escape(__t))+\n'";
+      if (escape) {
+        source += '\'+\n((__t=(' + escape + '))==null?\'\':OTHelpers.escape(__t))+\n\'';
+      }
+      if (interpolate) {
+        source += '\'+\n((__t=(' + interpolate + '))==null?\'\':__t)+\n\'';
+      }
+      if (evaluate) {
+        source += '\';\n' + evaluate + '\n__p+=\'';
+      }
+      index = offset + match.length;
+      return match;
+    });
+    source += '\';\n';
+
+    // If a variable is not specified, place data values in local scope.
+    if (!settings.variable) source = 'with(obj||{}){\n' + source + '}\n';
+
+    source = 'var __t,__p=\'\',__j=Array.prototype.join,' +
+      'print=function(){__p+=__j.call(arguments,\'\');};\n' +
+      source + 'return __p;\n';
+
+    try {
+      // evil is necessary for the new Function line
+      /*jshint evil:true */
+      render = new Function(settings.variable || 'obj', source);
+    } catch (e) {
+      e.source = source;
+      throw e;
     }
-    if (interpolate) {
-      source += "'+\n((__t=(" + interpolate + "))==null?'':__t)+\n'";
-    }
-    if (evaluate) {
-      source += "';\n" + evaluate + "\n__p+='";
-    }
-    index = offset + match.length;
-    return match;
-  });
-  source += "';\n";
 
-  // If a variable is not specified, place data values in local scope.
-  if (!settings.variable) source = 'with(obj||{}){\n' + source + '}\n';
+    if (data) return render(data);
+    var template = function(data) {
+      return render.call(this, data);
+    };
 
-  source = "var __t,__p='',__j=Array.prototype.join," +
-    "print=function(){__p+=__j.call(arguments,'');};\n" +
-    source + "return __p;\n";
+    // Provide the compiled function source as a convenience for precompilation.
+    template.source = 'function(' + (settings.variable || 'obj') + '){\n' + source + '}';
 
-
-  try {
-    // evil is necessary for the new Function line
-    /*jshint evil:true */
-    render = new Function(settings.variable || 'obj', source);
-  } catch (e) {
-    e.source = source;
-    throw e;
-  }
-
-  if (data) return render(data);
-  var template = function(data) {
-    return render.call(this, data);
+    return template;
   };
 
-  // Provide the compiled function source as a convenience for precompilation.
-  template.source = 'function(' + (settings.variable || 'obj') + '){\n' + source + '}';
-
-  return template;
-};
-
 })(window);
+
 /*jshint browser:true, smarttabs:true*/
 
 // tb_require('../../helpers.js')
 
 (function(window, OTHelpers, undefined) {
 
-OTHelpers.statable = function(self, possibleStates, initialState, stateChanged, stateChangedFailed) {
-  var previousState,
-      currentState = initialState;
+  OTHelpers.statable = function(self, possibleStates, initialState, stateChanged,
+    stateChangedFailed) {
+    var previousState,
+        currentState = initialState;
 
-  var setState = function(state) {
-    if (currentState !== state) {
-        if (possibleStates.indexOf(state) === -1) {
-          if (stateChangedFailed && OTHelpers.isFunction(stateChangedFailed)) stateChangedFailed('invalidState', state);
+    var setState = function(state) {
+      if (currentState !== state) {
+        if (OTHelpers.arrayIndexOf(possibleStates, state) === -1) {
+          if (stateChangedFailed && OTHelpers.isFunction(stateChangedFailed)) {
+            stateChangedFailed('invalidState', state);
+          }
           return;
         }
 
         previousState = currentState;
         currentState = state;
         if (stateChanged && OTHelpers.isFunction(stateChanged)) stateChanged(state, previousState);
-    }
+      }
+    };
+
+
+    // Returns a number of states and returns true if the current state
+    // is any of them.
+    //
+    // @example
+    // if (this.is('connecting', 'connected')) {
+    //   // do some stuff
+    // }
+    //
+    self.is = function (/* state0:String, state1:String, ..., stateN:String */) {
+      return OTHelpers.arrayIndexOf(arguments, currentState) !== -1;
+    };
+
+
+    // Returns a number of states and returns true if the current state
+    // is none of them.
+    //
+    // @example
+    // if (this.isNot('connecting', 'connected')) {
+    //   // do some stuff
+    // }
+    //
+    self.isNot = function (/* state0:String, state1:String, ..., stateN:String */) {
+      return OTHelpers.arrayIndexOf(arguments, currentState) === -1;
+    };
+
+    Object.defineProperties(self, {
+      state: {
+        get: function() { return currentState; }
+      },
+
+      previousState: {
+        get: function() { return previousState; }
+      }
+    });
+
+    return setState;
   };
-
-
-  // Returns a number of states and returns true if the current state
-  // is any of them.
-  //
-  // @example
-  // if (this.is('connecting', 'connected')) {
-  //   // do some stuff
-  // }
-  //
-  self.is = function (/* state0:String, state1:String, ..., stateN:String */) {
-    return Array.prototype.indexOf.call(arguments, currentState) !== -1;
-  };
-
-
-  // Returns a number of states and returns true if the current state
-  // is none of them.
-  //
-  // @example
-  // if (this.isNot('connecting', 'connected')) {
-  //   // do some stuff
-  // }
-  //
-  self.isNot = function (/* state0:String, state1:String, ..., stateN:String */) {
-    return Array.prototype.indexOf.call(arguments, currentState) === -1;
-  };
-
-  Object.defineProperties(self, {
-    state: {
-      get: function() { return currentState; }
-    },
-
-    previousState: {
-      get: function() { return previousState; }
-    }
-  });
-
-  return setState;
-};
 
 })(window, window.OTHelpers);
+
 /*!
  *  This is a modified version of Robert Kieffer awesome uuid.js library.
  *  The only modifications we've made are to remove the Node.js specific
@@ -637,85 +846,6 @@ OTHelpers.statable = function(self, possibleStates, initialState, stateChanged, 
   OTHelpers.uuid = uuid;
 
 }(window, window.OTHelpers));
-// AJAX helpers
-
-/*jshint browser:true, smarttabs:true*/
-/*global ActiveXObject:true*/
-
-// tb_require('../helpers.js')
-
-(function(window, OTHelpers, undefined) {
-
-// Shim up XML support for IE8
-function shimXMLForIE8(xml) {
-    // https://developer.mozilla.org/en/DOM/Element.firstElementChild
-    Object.defineProperty(xml.prototype, "firstElementChild", {
-        "get" : function() {
-            var node = this;
-            node = node.firstChild;
-            while(node && node.nodeType != 1) node = node.nextSibling;
-            return node;
-        }
-    });
-
-    // https://developer.mozilla.org/En/DOM/Element.lastElementChild
-    Object.defineProperty(xml.prototype, "lastElementChild", {
-        "get" : function() {
-            var node = this;
-            node = node.lastChild;
-            while(node && node.nodeType != 1) node = node.previousSibling;
-            return node;
-        }
-    });
-
-    // https://developer.mozilla.org/En/DOM/Element.nextElementSibling
-    Object.defineProperty(xml.prototype, "nextElementSibling", {
-        "get" : function() {
-            var node = this;
-            while(!OTHelpers.isNone(node = node.nextSibling)) {
-                if(node.nodeType == 1) break;
-            }
-
-            return node;
-        }
-    });
-
-    // https://developer.mozilla.org/En/DOM/Element.previousElementSibling
-    Object.defineProperty(xml.prototype, "previousElementSibling", {
-        "get" : function() {
-            var node = this;
-            while(!OTHelpers.isNone(node = node.previousSibling)) {
-                if(node.nodeType == 1) break;
-            }
-            return node;
-        }
-    });
-}
-
-OTHelpers.parseXML = function(xmlString) {
-    var root, xml;
-
-    if (window.DOMParser) { // Standard IE9 + everyone else
-        xml = (new DOMParser()).parseFromString(xmlString, "text/xml");
-    } else { // <= IE8
-        xml = new ActiveXObject("Microsoft.XMLDOM");
-        xml.async = "false";
-        xml.loadXML(xmlString);
-
-        shimXMLForIE8(xml);
-    }
-
-    root = xml.documentElement;
-
-    if (!root || !root.nodeName || root.nodeName === "parsererror") {
-        // Badly formed XML
-        return null;
-    }
-
-    return xml;
-};
-
-})(window, window.OTHelpers);
 /*jshint browser:true, smarttabs:true*/
 
 // tb_require('../helpers.js')
@@ -735,6 +865,17 @@ OTHelpers.useLogHelpers = function(on){
     var _logLevel = on.NONE,
         _logs = [];
 
+    // Some objects can't be logged in the console, mostly these are certain
+    // types of native objects that are exposed to JS. This is only really a
+    // problem with IE, hence only the IE version does anything.
+    var makeLogArgumentsSafe = function(args) { return args; };
+
+    if (OTHelpers.browser() === 'IE') {
+        makeLogArgumentsSafe = function(args) {
+            return [toDebugString(Array.prototype.slice.apply(args))];
+        };
+    }
+
     // Generates a logging method for a particular method and log level.
     //
     // Attempts to handle the following cases:
@@ -746,9 +887,12 @@ OTHelpers.useLogHelpers = function(on){
     function generateLoggingMethod(method, level, fallback) {
         return function() {
             if (on.shouldLog(level)) {
-                var cons = window.console;
+                var cons = window.console,
+                    args = makeLogArgumentsSafe(arguments);
 
                 // In IE, window.console may not exist if the developer tools aren't open
+                // This also means that cons and cons[method] can appear at any moment
+                // hence why we retest this every time.
                 if (cons && cons[method]) {
                     // the desired console method isn't a real object, which means
                     // that we can't use apply on it. We force it to be a real object
@@ -758,25 +902,25 @@ OTHelpers.useLogHelpers = function(on){
                             cons[method] = Function.prototype.bind.call(cons[method], cons);
                         }
 
-                        cons[method].apply(cons, arguments);
+                        cons[method].apply(cons, args);
                     }
                     else {
                         // This isn't the same result as the above, but it's better
                         // than nothing.
-                        cons[method](
-                            Array.prototype.slice.apply(arguments).join(' ')
-                        );
+                        cons[method](args);
                     }
                 }
                 else if (fallback) {
-                    fallback.apply(on, arguments);
+                    fallback.apply(on, args);
+
+                    // Skip appendToLogs, we delegate entirely to the fallback
+                    return;
                 }
 
-                appendToLogs(method, arguments);
+                appendToLogs(method, makeLogArgumentsSafe(arguments));
             }
         };
     }
-
 
     on.log = generateLoggingMethod('log', on.LOG);
 
@@ -789,7 +933,7 @@ OTHelpers.useLogHelpers = function(on){
 
     on.setLogLevel = function(level) {
         _logLevel = typeof(level) === 'number' ? level : 0;
-        on.debug("TB.setLogLevel(" + _logLevel + ")");
+        on.debug("OT.setLogLevel(" + _logLevel + ")");
         return _logLevel;
     };
 
@@ -809,32 +953,74 @@ OTHelpers.useLogHelpers = function(on){
         return now.toLocaleTimeString() + now.getMilliseconds();
     }
 
+    function toJson(object) {
+        try {
+            return JSON.stringify(object);
+        } catch(e) {
+            return object.toString();
+        }
+    }
+
+    function toDebugString(object) {
+        var components = [];
+
+        if (typeof(object) === 'undefined') {
+            // noop
+        }
+        else if (object === null) {
+            components.push('NULL');
+        }
+        else if (OTHelpers.isArray(object)) {
+            for (var i=0; i<object.length; ++i) {
+                components.push(toJson(object[i]));
+            }
+        }
+        else if (OTHelpers.isObject(object)) {
+            for (var key in object) {
+                var stringValue;
+
+                if (!OTHelpers.isFunction(object[key])) {
+                    stringValue = toJson(object[key]);
+                }
+                else if (object.hasOwnProperty(key)) {
+                    stringValue = 'function ' + key + '()';
+                }
+
+                components.push(key + ': ' + stringValue);
+            }
+        }
+        else if (OTHelpers.isFunction(object)) {
+            try {
+                components.push(object.toString());
+            } catch(e) {
+                components.push('function()');
+            }
+        }
+        else  {
+            components.push(object.toString());
+        }
+
+        return components.join(", ");
+    }
 
     // Append +args+ to logs, along with the current log level and the a date stamp.
     function appendToLogs(level, args) {
         if (!args) return;
 
-        var message;
-
-        try {
-            message = JSON.stringify(args);
-        } catch(e) {
-            message = args.toString();
-        }
-
+        var message = toDebugString(args);
         if (message.length <= 2) return;
 
         _logs.push(
             [level, formatDateStamp(), message]
         );
     }
-
 };
 
 OTHelpers.useLogHelpers(OTHelpers);
 OTHelpers.setLogLevel(OTHelpers.ERROR);
 
 })(window, window.OTHelpers);
+
 /*jshint browser:true, smarttabs:true*/
 
 // tb_require('../helpers.js')
@@ -858,434 +1044,648 @@ OTHelpers.roundFloat = function(value, places) {
 
 (function(window, OTHelpers, undefined) {
 
-var timeouts = [],
-    messageName = "OTHelpers." + OTHelpers.uuid.v4() + ".zero-timeout";
+  var timeouts = [],
+      messageName = 'OTHelpers.' + OTHelpers.uuid.v4() + '.zero-timeout';
 
-var handleMessage = function(event) {
-// XXX In chrome windows, event.source is not defined, so the full check
-// doesn't work. I'm not even convinced they need the window check anyway.
-//    if (event.source == window && event.data == messageName) {
-    if (event.data == messageName) {
+  var handleMessage = function(event) {
+    if (event.data === messageName) {
+      if(OTHelpers.isFunction(event.stopPropagation)) {
         event.stopPropagation();
-        if (timeouts.length > 0) {
-            var args = timeouts.shift(),
-                fn = args.shift();
+      }
+      event.cancelBubble = true;
+      if (timeouts.length > 0) {
+        var args = timeouts.shift(),
+            fn = args.shift();
 
-            fn.apply(null, args);
-        }
+        fn.apply(null, args);
+      }
     }
-};
+  };
 
-window.addEventListener("message", handleMessage, true);
+  if(window.addEventListener) {
+    window.addEventListener('message', handleMessage, true);
+  } else if(window.attachEvent) {
+    window.attachEvent('onmessage', handleMessage);
+  }
 
-// Calls the function +fn+ asynchronously with the current execution.
-// This is most commonly used to execute something straight after
-// the current function.
-//
-// Any arguments in addition to +fn+ will be passed to +fn+ when it's
-// called.
-//
-// You would use this inplace of setTimeout(fn, 0) type constructs. callAsync
-// is preferable as it executes in a much more predictable time window,
-// unlike setTimeout which could execute anywhere from 2ms to several thousand
-// depending on the browser/context.
-//
-OTHelpers.callAsync = function (/* fn, [arg1, arg2, ..., argN] */) {
+  // Calls the function +fn+ asynchronously with the current execution.
+  // This is most commonly used to execute something straight after
+  // the current function.
+  //
+  // Any arguments in addition to +fn+ will be passed to +fn+ when it's
+  // called.
+  //
+  // You would use this inplace of setTimeout(fn, 0) type constructs. callAsync
+  // is preferable as it executes in a much more predictable time window,
+  // unlike setTimeout which could execute anywhere from 2ms to several thousand
+  // depending on the browser/context.
+  //
+  OTHelpers.callAsync = function (/* fn, [arg1, arg2, ..., argN] */) {
     timeouts.push(Array.prototype.slice.call(arguments));
-    window.postMessage(messageName, "*");
-};
+    window.postMessage(messageName, '*');
+  };
 
 
-// Wraps +handler+ in a function that will execute it asynchronously
-// so that it doesn't interfere with it's exceution context if it raises
-// an exception.
-OTHelpers.createAsyncHandler = function(handler) {
+  // Wraps +handler+ in a function that will execute it asynchronously
+  // so that it doesn't interfere with it's exceution context if it raises
+  // an exception.
+  OTHelpers.createAsyncHandler = function(handler) {
     return function() {
-        var args = Array.prototype.slice.call(arguments);
+      var args = Array.prototype.slice.call(arguments);
 
-        OTHelpers.callAsync(function() {
-          handler.apply(null, args);
-        });
+      OTHelpers.callAsync(function() {
+        handler.apply(null, args);
+      });
     };
-};
+  };
 
 })(window, window.OTHelpers);
+
 /*jshint browser:true, smarttabs:true*/
 /*global jasmine:true*/
 
 // tb_require('../../helpers.js')
 // tb_require('../callbacks.js')
 
-
 (function(window, OTHelpers, undefined) {
 
 /**
-* This base class defines the <code>addEventListener()</code> and <code>removeEventListner()</code> methods of objects
-* that can dispatch events.
+* This base class defines the <code>on</code>, <code>once</code>, and <code>off</code>
+* methods of objects that can dispatch events.
 *
 * @class EventDispatcher
 */
-OTHelpers.eventing = function(self, syncronous) {
-  var _events = {};
+  OTHelpers.eventing = function(self, syncronous) {
+    var _events = {};
 
 
-  // Call the defaultAction, passing args
-  function executeDefaultAction(defaultAction, args) {
-    if (!defaultAction) return;
+    // Call the defaultAction, passing args
+    function executeDefaultAction(defaultAction, args) {
+      if (!defaultAction) return;
 
-    defaultAction.apply(null, args.slice());
-  }
+      defaultAction.apply(null, args.slice());
+    }
 
-  // Execute each handler in +listeners+ with +args+.
-  //
-  // Each handler will be executed async. On completion the defaultAction
-  // handler will be executed with the args.
-  //
-  // @param [Array] listeners
-  //    An array of functions to execute. Each will be passed args.
-  //
-  // @param [Array] args
-  //    An array of arguments to execute each function in  +listeners+ with.
-  //
-  // @param [String] name
-  //    The name of this event.
-  //
-  // @param [Function, Null, Undefined] defaultAction
-  //    An optional function to execute after every other handler. This will execute even
-  //    if +listeners+ is empty. +defaultAction+ will be passed args as a normal
-  //    handler would.
-  //
-  // @return Undefined
-  //
-  function executeListenersAsyncronously(name, args, defaultAction) {
-    var listeners = _events[name];
-    if (!listeners || listeners.length === 0) return;
+    // Execute each handler in +listeners+ with +args+.
+    //
+    // Each handler will be executed async. On completion the defaultAction
+    // handler will be executed with the args.
+    //
+    // @param [Array] listeners
+    //    An array of functions to execute. Each will be passed args.
+    //
+    // @param [Array] args
+    //    An array of arguments to execute each function in  +listeners+ with.
+    //
+    // @param [String] name
+    //    The name of this event.
+    //
+    // @param [Function, Null, Undefined] defaultAction
+    //    An optional function to execute after every other handler. This will execute even
+    //    if +listeners+ is empty. +defaultAction+ will be passed args as a normal
+    //    handler would.
+    //
+    // @return Undefined
+    //
+    function executeListenersAsyncronously(name, args, defaultAction) {
+      var listeners = _events[name];
+      if (!listeners || listeners.length === 0) return;
 
-    var listenerAcks = listeners.length;
+      var listenerAcks = listeners.length;
 
-    listeners.forEach(function(listener) { // , index
-      function filterHandlerAndContext(_listener) {
-        return _listener.context === listener.context && _listener.handler === listener.handler;
-      }
-
-      // We run this asynchronously so that it doesn't interfere with execution if an error happens
-      OTHelpers.callAsync(function() {
-        try {
-          // have to check if the listener has not been removed
-          if (_events[name] && _events[name].some(filterHandlerAndContext)) {
-            (listener.closure || listener.handler).apply(listener.context || null, args);
-          }
+      OTHelpers.forEach(listeners, function(listener) { // , index
+        function filterHandlerAndContext(_listener) {
+          return _listener.context === listener.context && _listener.handler === listener.handler;
         }
-        finally {
-          listenerAcks--;
 
-          if (listenerAcks === 0) {
-            executeDefaultAction(defaultAction, args);
-          }
-        }
-      });
-    });
-  }
-
-
-  // This is identical to executeListenersAsyncronously except that handlers will
-  // be executed syncronously.
-  //
-  // On completion the defaultAction handler will be executed with the args.
-  //
-  // @param [Array] listeners
-  //    An array of functions to execute. Each will be passed args.
-  //
-  // @param [Array] args
-  //    An array of arguments to execute each function in  +listeners+ with.
-  //
-  // @param [String] name
-  //    The name of this event.
-  //
-  // @param [Function, Null, Undefined] defaultAction
-  //    An optional function to execute after every other handler. This will execute even
-  //    if +listeners+ is empty. +defaultAction+ will be passed args as a normal
-  //    handler would.
-  //
-  // @return Undefined
-  //
-  function executeListenersSyncronously(name, args) { // defaultAction is not used
-    var listeners = _events[name];
-    if (!listeners || listeners.length === 0) return;
-
-    listeners.forEach(function(listener) { // index
-      (listener.closure || listener.handler).apply(listener.context || null, args);
-    });
-  }
-
-  var executeListeners = syncronous === true ? executeListenersSyncronously : executeListenersAsyncronously;
-
-
-  var removeAllListenersNamed = function (eventName, context) {
-    if (_events[eventName]) {
-      if (context) {
-        // We are removing by context, get only events that don't
-        // match that context
-        _events[eventName] = _events[eventName].filter(function(listener){
-          return listener.context !== context;
-        });
-      }
-      else {
-        delete _events[eventName];
-      }
-    }
-  };
-
-  var addListeners = function (eventNames, handler, context, closure) {
-    var listener = {handler: handler};
-    if (context) listener.context = context;
-    if (closure) listener.closure = closure;
-
-    eventNames.forEach(function(name) {
-      if (!_events[name]) _events[name] = [];
-      _events[name].push(listener);
-    });
-  }.bind(self);
-
-
-  var removeListeners = function (eventNames, handler, context) {
-    function filterHandlerAndContext(listener) {
-      return !(listener.handler === handler && listener.context === context);
-    }
-
-    eventNames.forEach(function(name) {
-      if (_events[name]) {
-        _events[name] = _events[name].filter(filterHandlerAndContext);
-        if (_events[name].length === 0) delete _events[name];
-      }
-    });
-  }.bind(self);
-
-
-  // Execute any listeners bound to the +event+ Event.
-  //
-  // Each handler will be executed async. On completion the defaultAction
-  // handler will be executed with the args.
-  //
-  // @param [Event] event
-  //    An Event object.
-  //
-  // @param [Function, Null, Undefined] defaultAction
-  //    An optional function to execute after every other handler. This will execute even
-  //    if there are listeners bound to this event. +defaultAction+ will be passed
-  //    args as a normal handler would.
-  //
-  // @return this
-  //
-  self.dispatchEvent = function(event, defaultAction) {
-    if (!event.type) {
-      OTHelpers.error("OTHelpers.Eventing.dispatchEvent: Event has no type");
-      OTHelpers.error(event);
-
-      throw new Error("OTHelpers.Eventing.dispatchEvent: Event has no type");
-    }
-
-    if (!event.target) {
-      event.target = this;
-    }
-
-    if (!_events[event.type] || _events[event.type].length === 0) {
-      executeDefaultAction(defaultAction, [event]);
-      return;
-    }
-
-    executeListeners(event.type, [event], defaultAction);
-
-    return this;
-  };
-
-  // Execute each handler for the event called +name+.
-  //
-  // Each handler will be executed async, and any exceptions that they throw will
-  // be caught and logged
-  //
-  // How to pass these?
-  //  * defaultAction
-  //
-  // @example
-  //  foo.on('bar', function(name, message) {
-  //    alert("Hello " + name + ": " + message);
-  //  });
-  //
-  //  foo.trigger('OpenTok', 'asdf');     // -> Hello OpenTok: asdf
-  //
-  //
-  // @param [String] eventName
-  //    The name of this event.
-  //
-  // @param [Array] arguments
-  //    Any additional arguments beyond +eventName+ will be passed to the handlers.
-  //
-  // @return this
-  //
-  self.trigger = function(eventName) {
-    if (!_events[eventName] || _events[eventName].length === 0) {
-      return;
-    }
-
-    var args = Array.prototype.slice.call(arguments);
-
-    // Remove the eventName arg
-    args.shift();
-
-    executeListeners(eventName, args);
-
-    return this;
-  };
-
-  self.on = function(eventNames, handler_or_context, context) {
-    if (typeof(eventNames) === "string" && handler_or_context) {
-      addListeners(eventNames.split(' '), handler_or_context, context);
-    }
-    else {
-      for (var name in eventNames) {
-        if (eventNames.hasOwnProperty(name)) {
-          addListeners([name], eventNames[name], handler_or_context);
-        }
-      }
-    }
-
-    return this;
-  };
-
- self.off = function(eventNames, handler_or_context, context) {
-    if (typeof(eventNames) === "string") {
-      if (handler_or_context && OTHelpers.isFunction(handler_or_context)) {
-        removeListeners(eventNames.split(' '), handler_or_context, context);
-      }
-      else {
-        eventNames.split(' ').forEach(function(name) {
-          removeAllListenersNamed(name, handler_or_context);
-        }, this);
-      }
-    }
-    else if (!eventNames) {
-      // remove all bound events
-      _events = {};
-    }
-    else {
-      for (var name in eventNames) {
-        if (eventNames.hasOwnProperty(name)) {
-          removeListeners([name], eventNames[name], handler_or_context);
-        }
-      }
-    }
-
-    return this;
-  };
-
-
-  self.once = function(eventNames, handler, context) {
-    var names = eventNames.split(' '),
-        fun = function() {
-          var result = handler.apply(context || null, arguments);
-          removeListeners(names, handler, context);
-
-          return result;
-        }.bind(this);
-
-    addListeners(names, handler, context, fun);
-    return this;
-  };
-
-
-  /**
-  * This method registers a method as an event listener for a specific event.
-  * <p>
-  *
-  * <p>
-  *   If a handler is not registered for an event, the event is ignored locally. If the event listener function does not exist,
-  *   the event is ignored locally.
-  * </p>
-  * <p>
-  *   Throws an exception if the <code>listener</code> name is invalid.
-  * </p>
-  *
-  * @param {String} type The string identifying the type of event.
-  *
-  * @param {Function} listener The function to be invoked when the object dispatches the event.
-  *
-  * @memberOf EventDispatcher
-  * @method #addEventListener
-  * @see <a href="#events">Events</a>
-  */
-  // See 'on' for usage.
-  // @depreciated will become a private helper function in the future.
-  self.addEventListener = function(eventName, handler, context) {
-    addListeners([eventName], handler, context);
-  };
-
-
-  /**
-  * Removes an event listener for a specific event.
-  * <p>
-  *
-  * <p>
-  *   Throws an exception if the <code>listener</code> name is invalid.
-  * </p>
-  *
-  * @param {String} type The string identifying the type of event.
-  *
-  * @param {Function} listener The event listener function to remove.
-  *
-  * @memberOf EventDispatcher
-  * @method #removeEventListener
-  * @see <a href="#events">Events</a>
-  */
-  // See 'off' for usage.
-  // @depreciated will become a private helper function in the future.
-  self.removeEventListener = function(eventName, handler, context) {
-    removeListeners([eventName], handler, context);
-  };
-
-
-
-
-
-  return self;
-};
-
-OTHelpers.eventing.Event = function() {
-
-    return function (type, cancelable) {
-        this.type = type;
-        this.cancelable = cancelable !== undefined ? cancelable : true;
-
-        var _defaultPrevented = false,
-            _target = null;
-
-        this.preventDefault = function() {
-            if (this.cancelable) {
-                _defaultPrevented = true;
-            } else {
-                OTHelpers.warn("Event.preventDefault :: Trying to preventDefault on an Event that isn't cancelable");
+        // We run this asynchronously so that it doesn't interfere with execution if an
+        // error happens
+        OTHelpers.callAsync(function() {
+          try {
+            // have to check if the listener has not been removed
+            if (_events[name] && OTHelpers.some(_events[name], filterHandlerAndContext)) {
+              (listener.closure || listener.handler).apply(listener.context || null, args);
             }
-        };
+          }
+          finally {
+            listenerAcks--;
 
-        this.isDefaultPrevented = function() {
-            return _defaultPrevented;
-        };
+            if (listenerAcks === 0) {
+              executeDefaultAction(defaultAction, args);
+            }
+          }
+        });
+      });
+    }
 
-        if (OTHelpers.canDefineProperty) {
-            Object.defineProperty(this, 'target', {
-                set: function(target) {
-                    _target = target;
-                },
 
-                get: function() {
-                    return _target;
-                }
-            });
+    // This is identical to executeListenersAsyncronously except that handlers will
+    // be executed syncronously.
+    //
+    // On completion the defaultAction handler will be executed with the args.
+    //
+    // @param [Array] listeners
+    //    An array of functions to execute. Each will be passed args.
+    //
+    // @param [Array] args
+    //    An array of arguments to execute each function in  +listeners+ with.
+    //
+    // @param [String] name
+    //    The name of this event.
+    //
+    // @param [Function, Null, Undefined] defaultAction
+    //    An optional function to execute after every other handler. This will execute even
+    //    if +listeners+ is empty. +defaultAction+ will be passed args as a normal
+    //    handler would.
+    //
+    // @return Undefined
+    //
+    function executeListenersSyncronously(name, args) { // defaultAction is not used
+      var listeners = _events[name];
+      if (!listeners || listeners.length === 0) return;
+
+      OTHelpers.forEach(listeners, function(listener) { // index
+        (listener.closure || listener.handler).apply(listener.context || null, args);
+      });
+    }
+
+    var executeListeners = syncronous === true ?
+      executeListenersSyncronously : executeListenersAsyncronously;
+
+
+    var removeAllListenersNamed = function (eventName, context) {
+      if (_events[eventName]) {
+        if (context) {
+          // We are removing by context, get only events that don't
+          // match that context
+          _events[eventName] = OTHelpers.filter(_events[eventName], function(listener){
+            return listener.context !== context;
+          });
         }
+        else {
+          delete _events[eventName];
+        }
+      }
     };
 
-};
+    var addListeners = OTHelpers.bind(function (eventNames, handler, context, closure) {
+      var listener = {handler: handler};
+      if (context) listener.context = context;
+      if (closure) listener.closure = closure;
+
+      OTHelpers.forEach(eventNames, function(name) {
+        if (!_events[name]) _events[name] = [];
+        _events[name].push(listener);
+      });
+    }, self);
+
+
+    var removeListeners = function (eventNames, handler, context) {
+      function filterHandlerAndContext(listener) {
+        return !(listener.handler === handler && listener.context === context);
+      }
+
+      OTHelpers.forEach(eventNames, OTHelpers.bind(function(name) {
+        if (_events[name]) {
+          _events[name] = OTHelpers.filter(_events[name], filterHandlerAndContext);
+          if (_events[name].length === 0) delete _events[name];
+        }
+      }, self));
+
+    };
+
+    // Execute any listeners bound to the +event+ Event.
+    //
+    // Each handler will be executed async. On completion the defaultAction
+    // handler will be executed with the args.
+    //
+    // @param [Event] event
+    //    An Event object.
+    //
+    // @param [Function, Null, Undefined] defaultAction
+    //    An optional function to execute after every other handler. This will execute even
+    //    if there are listeners bound to this event. +defaultAction+ will be passed
+    //    args as a normal handler would.
+    //
+    // @return this
+    //
+    self.dispatchEvent = function(event, defaultAction) {
+      if (!event.type) {
+        OTHelpers.error('OTHelpers.Eventing.dispatchEvent: Event has no type');
+        OTHelpers.error(event);
+
+        throw new Error('OTHelpers.Eventing.dispatchEvent: Event has no type');
+      }
+
+      if (!event.target) {
+        event.target = this;
+      }
+
+      if (!_events[event.type] || _events[event.type].length === 0) {
+        executeDefaultAction(defaultAction, [event]);
+        return;
+      }
+
+      executeListeners(event.type, [event], defaultAction);
+
+      return this;
+    };
+
+    // Execute each handler for the event called +name+.
+    //
+    // Each handler will be executed async, and any exceptions that they throw will
+    // be caught and logged
+    //
+    // How to pass these?
+    //  * defaultAction
+    //
+    // @example
+    //  foo.on('bar', function(name, message) {
+    //    alert("Hello " + name + ": " + message);
+    //  });
+    //
+    //  foo.trigger('OpenTok', 'asdf');     // -> Hello OpenTok: asdf
+    //
+    //
+    // @param [String] eventName
+    //    The name of this event.
+    //
+    // @param [Array] arguments
+    //    Any additional arguments beyond +eventName+ will be passed to the handlers.
+    //
+    // @return this
+    //
+    self.trigger = function(eventName) {
+      if (!_events[eventName] || _events[eventName].length === 0) {
+        return;
+      }
+
+      var args = Array.prototype.slice.call(arguments);
+
+      // Remove the eventName arg
+      args.shift();
+
+      executeListeners(eventName, args);
+
+      return this;
+    };
+
+   /**
+    * Adds an event handler function for one or more events.
+    *
+    * <p>
+    * The following code adds an event handler for one event:
+    * </p>
+    *
+    * <pre>
+    * obj.on("eventName", function (event) {
+    *     // This is the event handler.
+    * });
+    * </pre>
+    *
+    * <p>If you pass in multiple event names and a handler method, the handler is
+    * registered for each of those events:</p>
+    *
+    * <pre>
+    * obj.on("eventName1 eventName2",
+    *        function (event) {
+    *            // This is the event handler.
+    *        });
+    * </pre>
+    *
+    * <p>You can also pass in a third <code>context</code> parameter (which is optional) to
+    * define the value of <code>this</code> in the handler method:</p>
+    *
+    * <pre>obj.on("eventName",
+    *        function (event) {
+    *            // This is the event handler.
+    *        },
+    *        obj);
+    * </pre>
+    *
+    * <p>
+    * The method also supports an alternate syntax, in which the first parameter is an object
+    * that is a hash map of event names and handler functions and the second parameter (optional)
+    * is the context for this in each handler:
+    * </p>
+    * <pre>
+    * obj.on(
+    *    {
+    *       eventName1: function (event) {
+    *               // This is the handler for eventName1.
+    *           },
+    *       eventName2:  function (event) {
+    *               // This is the handler for eventName2.
+    *           }
+    *    },
+    *    obj);
+    * </pre>
+    *
+    * <p>
+    * If you do not add a handler for an event, the event is ignored locally.
+    * </p>
+    *
+    * @param {String} type The string identifying the type of event. You can specify multiple event
+    * names in this string, separating them with a space. The event handler will process each of
+    * the events.
+    * @param {Function} handler The handler function to process the event. This function takes
+    * the event object as a parameter.
+    * @param {Object} context (Optional) Defines the value of <code>this</code> in the event
+    * handler function.
+    *
+    * @returns {EventDispatcher} The EventDispatcher object.
+    *
+    * @memberOf EventDispatcher
+    * @method #on
+    * @see <a href="#off">off()</a>
+    * @see <a href="#once">once()</a>
+    * @see <a href="#events">Events</a>
+    */
+    self.on = function(eventNames, handlerOrContext, context) {
+      if (typeof(eventNames) === 'string' && handlerOrContext) {
+        addListeners(eventNames.split(' '), handlerOrContext, context);
+      }
+      else {
+        for (var name in eventNames) {
+          if (eventNames.hasOwnProperty(name)) {
+            addListeners([name], eventNames[name], handlerOrContext);
+          }
+        }
+      }
+
+      return this;
+    };
+
+   /**
+    * Removes an event handler or handlers.
+    *
+    * <p>If you pass in one event name and a handler method, the handler is removed for that
+    * event:</p>
+    *
+    * <pre>obj.off("eventName", eventHandler);</pre>
+    *
+    * <p>If you pass in multiple event names and a handler method, the handler is removed for
+    * those events:</p>
+    *
+    * <pre>obj.off("eventName1 eventName2", eventHandler);</pre>
+    *
+    * <p>If you pass in an event name (or names) and <i>no</i> handler method, all handlers are
+    * removed for those events:</p>
+    *
+    * <pre>obj.off("event1Name event2Name");</pre>
+    *
+    * <p>If you pass in no arguments, <i>all</i> event handlers are removed for all events
+    * dispatched by the object:</p>
+    *
+    * <pre>obj.off();</pre>
+    *
+    * <p>
+    * The method also supports an alternate syntax, in which the first parameter is an object that
+    * is a hash map of event names and handler functions and the second parameter (optional) is
+    * the context for this in each handler:
+    * </p>
+    * <pre>
+    * obj.off(
+    *    {
+    *       eventName1: event1Handler,
+    *       eventName2: event2Handler
+    *    });
+    * </pre>
+    *
+    * @param {String} type (Optional) The string identifying the type of event. You can
+    * use a space to specify multiple events, as in "accessAllowed accessDenied
+    * accessDialogClosed". If you pass in no <code>type</code> value (or other arguments),
+    * all event handlers are removed for the object.
+    * @param {Function} handler (Optional) The event handler function to remove. The handler
+    * must be the same function object as was passed into <code>on()</code>. Be careful with
+    * helpers like <code>bind()</code> that return a new function when called. If you pass in
+    * no <code>handler</code>, all event handlers are removed for the specified event
+    * <code>type</code>.
+    * @param {Object} context (Optional) If you specify a <code>context</code>, the event handler
+    * is removed for all specified events and handlers that use the specified context. (The
+    * context must match the context passed into <code>on()</code>.)
+    *
+    * @returns {Object} The object that dispatched the event.
+    *
+    * @memberOf EventDispatcher
+    * @method #off
+    * @see <a href="#on">on()</a>
+    * @see <a href="#once">once()</a>
+    * @see <a href="#events">Events</a>
+    */
+    self.off = function(eventNames, handlerOrContext, context) {
+      if (typeof eventNames === 'string') {
+        if (handlerOrContext && OTHelpers.isFunction(handlerOrContext)) {
+          removeListeners(eventNames.split(' '), handlerOrContext, context);
+        }
+        else {
+          OTHelpers.forEach(eventNames.split(' '), function(name) {
+            removeAllListenersNamed(name, handlerOrContext);
+          }, this);
+        }
+
+      } else if (!eventNames) {
+        // remove all bound events
+        _events = {};
+
+      } else {
+        for (var name in eventNames) {
+          if (eventNames.hasOwnProperty(name)) {
+            removeListeners([name], eventNames[name], handlerOrContext);
+          }
+        }
+      }
+
+      return this;
+    };
+
+
+   /**
+    * Adds an event handler function for one or more events. Once the handler is called,
+    * the specified handler method is removed as a handler for this event. (When you use
+    * the <code>on()</code> method to add an event handler, the handler is <i>not</i>
+    * removed when it is called.) The <code>once()</code> method is the equivilent of
+    * calling the <code>on()</code>
+    * method and calling <code>off()</code> the first time the handler is invoked.
+    *
+    * <p>
+    * The following code adds a one-time event handler for the <code>accessAllowed</code> event:
+    * </p>
+    *
+    * <pre>
+    * obj.once("eventName", function (event) {
+    *    // This is the event handler.
+    * });
+    * </pre>
+    *
+    * <p>If you pass in multiple event names and a handler method, the handler is registered
+    * for each of those events:</p>
+    *
+    * <pre>obj.once("eventName1 eventName2"
+    *          function (event) {
+    *              // This is the event handler.
+    *          });
+    * </pre>
+    *
+    * <p>You can also pass in a third <code>context</code> parameter (which is optional) to define
+    * the value of
+    * <code>this</code> in the handler method:</p>
+    *
+    * <pre>obj.once("eventName",
+    *          function (event) {
+    *              // This is the event handler.
+    *          },
+    *          obj);
+    * </pre>
+    *
+    * <p>
+    * The method also supports an alternate syntax, in which the first parameter is an object that
+    * is a hash map of event names and handler functions and the second parameter (optional) is the
+    * context for this in each handler:
+    * </p>
+    * <pre>
+    * obj.once(
+    *    {
+    *       eventName1: function (event) {
+    *                  // This is the event handler for eventName1.
+    *           },
+    *       eventName2:  function (event) {
+    *                  // This is the event handler for eventName1.
+    *           }
+    *    },
+    *    obj);
+    * </pre>
+    *
+    * @param {String} type The string identifying the type of event. You can specify multiple
+    * event names in this string, separating them with a space. The event handler will process
+    * the first occurence of the events. After the first event, the handler is removed (for
+    * all specified events).
+    * @param {Function} handler The handler function to process the event. This function takes
+    * the event object as a parameter.
+    * @param {Object} context (Optional) Defines the value of <code>this</code> in the event
+    * handler function.
+    *
+    * @returns {Object} The object that dispatched the event.
+    *
+    * @memberOf EventDispatcher
+    * @method #once
+    * @see <a href="#on">on()</a>
+    * @see <a href="#off">off()</a>
+    * @see <a href="#events">Events</a>
+    */
+    self.once = function(eventNames, handler, context) {
+      var names = eventNames.split(' '),
+          fun = OTHelpers.bind(function() {
+            var result = handler.apply(context || null, arguments);
+            removeListeners(names, handler, context);
+
+            return result;
+          }, this);
+
+      addListeners(names, handler, context, fun);
+      return this;
+    };
+
+
+    /**
+    * Deprecated; use <a href="#on">on()</a> or <a href="#once">once()</a> instead.
+    * <p>
+    * This method registers a method as an event listener for a specific event.
+    * <p>
+    *
+    * <p>
+    *   If a handler is not registered for an event, the event is ignored locally. If the
+    *   event listener function does not exist, the event is ignored locally.
+    * </p>
+    * <p>
+    *   Throws an exception if the <code>listener</code> name is invalid.
+    * </p>
+    *
+    * @param {String} type The string identifying the type of event.
+    *
+    * @param {Function} listener The function to be invoked when the object dispatches the event.
+    *
+    * @param {Object} context (Optional) Defines the value of <code>this</code> in the event
+    * handler function.
+    *
+    * @memberOf EventDispatcher
+    * @method #addEventListener
+    * @see <a href="#on">on()</a>
+    * @see <a href="#once">once()</a>
+    * @see <a href="#events">Events</a>
+    */
+    // See 'on' for usage.
+    // @depreciated will become a private helper function in the future.
+    self.addEventListener = function(eventName, handler, context) {
+      OTHelpers.warn('The addEventListener() method is deprecated. Use on() or once() instead.');
+      addListeners([eventName], handler, context);
+    };
+
+
+    /**
+    * Deprecated; use <a href="#on">on()</a> or <a href="#once">once()</a> instead.
+    * <p>
+    * Removes an event listener for a specific event.
+    * <p>
+    *
+    * <p>
+    *   Throws an exception if the <code>listener</code> name is invalid.
+    * </p>
+    *
+    * @param {String} type The string identifying the type of event.
+    *
+    * @param {Function} listener The event listener function to remove.
+    *
+    * @param {Object} context (Optional) If you specify a <code>context</code>, the event
+    * handler is removed for all specified events and event listeners that use the specified
+    context. (The context must match the context passed into
+    * <code>addEventListener()</code>.)
+    *
+    * @memberOf EventDispatcher
+    * @method #removeEventListener
+    * @see <a href="#off">off()</a>
+    * @see <a href="#events">Events</a>
+    */
+    // See 'off' for usage.
+    // @depreciated will become a private helper function in the future.
+    self.removeEventListener = function(eventName, handler, context) {
+      OTHelpers.warn('The removeEventListener() method is deprecated. Use off() instead.');
+      removeListeners([eventName], handler, context);
+    };
+
+
+
+
+
+    return self;
+  };
+
+  OTHelpers.eventing.Event = function() {
+
+    return function (type, cancelable) {
+      this.type = type;
+      this.cancelable = cancelable !== undefined ? cancelable : true;
+
+      var _defaultPrevented = false;
+
+      this.preventDefault = function() {
+        if (this.cancelable) {
+          _defaultPrevented = true;
+        } else {
+          OTHelpers.warn('Event.preventDefault :: Trying to preventDefault ' +
+            'on an Event that isn\'t cancelable');
+        }
+      };
+
+      this.isDefaultPrevented = function() {
+        return _defaultPrevented;
+      };
+    };
+
+  };
+  
 })(window, window.OTHelpers);
+
 /*jshint browser:true, smarttabs:true*/
 
 // tb_require('../helpers.js')
@@ -1468,21 +1868,21 @@ OTHelpers.observeStyleChanges = function(element, stylesToObserve, onChange) {
         };
 
     // get the inital values
-    stylesToObserve.forEach(function(style) {
+    OTHelpers.forEach(stylesToObserve, function(style) {
         oldStyles[style] = getStyle(style);
     });
 
     var observer = new MutationObserver(function(mutations) {
         var changeSet = {};
 
-        mutations.forEach(function(mutation) {
+        OTHelpers.forEach(mutations, function(mutation) {
             if (mutation.attributeName !== 'style') return;
 
             var isHidden = OTHelpers.isDisplayNone(element);
 
-            stylesToObserve.forEach(function(style) {
+            OTHelpers.forEach(stylesToObserve, function(style) {
                 if(isHidden && (style == 'width' || style == 'height')) return;
-
+                
                 var newValue = getStyle(style);
 
                 if (newValue !== oldStyles[style]) {
@@ -1525,7 +1925,7 @@ OTHelpers.observeStyleChanges = function(element, stylesToObserve, onChange) {
 //  // observe changings to the width and height of object
 //  nodeObserver = OTHelpers.observeNodeOrChildNodeRemoval(object, function(removedNodes) {
 //      OT.debug("Some child nodes were removed");
-//      removedNodes.forEach(function(node) {
+//      OTHelpers.forEach(removedNodes, function(node) {
 //          OT.debug(node);
 //      });
 //  });
@@ -1539,7 +1939,7 @@ OTHelpers.observeNodeOrChildNodeRemoval = function(element, onChange) {
     var observer = new MutationObserver(function(mutations) {
         var removedNodes = [];
 
-        mutations.forEach(function(mutation) {
+        OTHelpers.forEach(mutations, function(mutation) {
             if (mutation.removedNodes.length) {
                 removedNodes = removedNodes.concat(Array.prototype.slice.call(mutation.removedNodes));
             }
@@ -1564,6 +1964,7 @@ OTHelpers.observeNodeOrChildNodeRemoval = function(element, onChange) {
 };
 
 })(window, window.OTHelpers);
+
 
 /*jshint browser:true, smarttabs:true*/
 
@@ -1642,7 +2043,7 @@ OTHelpers.addClass = function(element, value) {
         return;
     }
 
-    var classNames = value.trim().split(/\s+/),
+    var classNames = OTHelpers.trim(value).split(/\s+/),
         i, l;
 
     if (OTHelpers.supportsClassList()) {
@@ -1667,7 +2068,7 @@ OTHelpers.addClass = function(element, value) {
             }
         }
 
-        element.className = setClass.trim();
+        element.className = OTHelpers.trim(setClass);
     }
 
     return this;
@@ -1681,7 +2082,7 @@ OTHelpers.removeClass = function(element, value) {
         return;
     }
 
-    var newClasses = value.trim().split(/\s+/),
+    var newClasses = OTHelpers.trim(value).split(/\s+/),
         i, l;
 
     if (OTHelpers.supportsClassList()) {
@@ -1698,7 +2099,7 @@ OTHelpers.removeClass = function(element, value) {
         className = className.replace(' ' + newClasses[i] + ' ', ' ');
     }
 
-    element.className = className.trim();
+    element.className = OTHelpers.trim(className);
 
     return this;
 };
@@ -1773,6 +2174,7 @@ OTHelpers.centerElement = function(element, width, height) {
 };
 
 })(window, window.OTHelpers);
+
 // CSS helpers helpers
 
 /*jshint browser:true, smarttabs:true*/
@@ -1791,7 +2193,7 @@ var defaultDisplayValueForElement = function(element) {
     }
 
     if (!defaultDisplays[element.ownerDocument]) defaultDisplays[element.ownerDocument] = {};
-
+    
     // We need to know what display value to use for this node. The easiest way
     // is to actually create a node and read it out.
     var testNode = element.ownerDocument.createElement(element.nodeName),
@@ -1812,7 +2214,7 @@ var isHidden = function(element) {
 };
 
 OTHelpers.show = function(element) {
-    var display = element.style.display;
+    var display = element.style.display; 
         //,
         // computedStyle = element.ownerDocument.defaultView.getComputedStyle(element, null),
         // computedDisplay = computedStyle.getPropertyValue('display');
@@ -1823,7 +2225,7 @@ OTHelpers.show = function(element) {
     }
 
     if (isHidden(element)) {
-        // It's still hidden so there's probably a stylesheet that declares this
+        // It's still hidden so there's probably a stylesheet that declares this 
         // element as display:none;
         displayStateCache[element] = 'none';
 
@@ -1905,7 +2307,7 @@ OTHelpers.applyCSS = function(element, styles, callback) {
 
 // Make +element+ visible while executing +callback+.
 OTHelpers.makeVisibleAndYield = function(element, callback) {
-    // find whether it's the element or an ancester that's display none and
+    // find whether it's the element or an ancester that's display none and 
     // then apply to whichever it is
     var targetElement = OTHelpers.findElementWithDisplayNone(element);
     if (!targetElement) return;
@@ -1924,397 +2326,322 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
 /*jshint browser:true, smarttabs:true*/
 
 // tb_require('../helpers.js')
-// tb_require('./xml.js')
 
 (function(window, OTHelpers, undefined) {
 
-function formatPostData(data) { //, contentType
+  function formatPostData(data) { //, contentType
     // If it's a string, we assume it's properly encoded
     if (typeof(data) === 'string') return data;
 
     var queryString = [];
 
     for (var key in data) {
-        queryString.push(
-            encodeURIComponent(key) + '=' + encodeURIComponent(data[key])
-        );
+      queryString.push(
+        encodeURIComponent(key) + '=' + encodeURIComponent(data[key])
+      );
     }
 
-    return queryString.join('&').replace(/\+/g, "%20");
-}
+    return queryString.join('&').replace(/\+/g, '%20');
+  }
 
-OTHelpers.getXML = function(url, options) {
-    var callerSuccessCb = options && options.success,
+  OTHelpers.getJSON = function(url, options, callback) {
+    options = options || {};
 
-        isValidXMLDocument = function(xmlDocument) {
-            var root;
+    var done = function(error, event) {
+      if(error) {
+        callback(error);
+      } else {
+        var response;
 
-            if (!xmlDocument) {
-                // Badly formed XML
-                return false;
-            }
-
-            // If we got some XML back, attempt to infer if the XML is badly formed
-            root = xmlDocument.documentElement;
-
-            if (!root || !root.nodeName || root.nodeName === "parsererror") {
-                // Badly formed XML
-                return false;
-            }
-
-            return true;
-        },
-
-        onSuccess = function(event) {
-            var response = event.target.responseXML;
-
-            if (isValidXMLDocument(response)) {
-                if (callerSuccessCb) callerSuccessCb(response, event, event.target);
-            }
-            else if (options && options.error) {
-                options.error(event, event.target);
-            }
-        };
-
-    var extendedHeaders = OTHelpers.extend(options.headers || {}, {
-            'Content-Type': 'application/xml'
-        });
-
-    OTHelpers.get(url, OTHelpers.extend(options || {}, {
-        success: onSuccess,
-        headers: extendedHeaders
-    }));
-};
-
-OTHelpers.getJSON = function(url, options) {
-    var callerSuccessCb = options && options.success,
-        onSuccess = function(event) {
-            var response;
-
-            try {
-                response = JSON.parse(event.target.responseText);
-            } catch(e) {
-                // Badly formed JSON
-                if (options && options.error) options.error(event, event.target);
-                return;
-            }
-
-            if (callerSuccessCb) callerSuccessCb(response, event, event.target);
-        };
-
-    OTHelpers.get(url, OTHelpers.extend(options || {}, {
-        success: onSuccess,
-        headers: {
-            'Content-Type': 'application/json'
+        try {
+          response = JSON.parse(event.target.responseText);
+        } catch(e) {
+          // Badly formed JSON
+          callback(e);
+          return;
         }
-    }));
-};
 
-OTHelpers.get = function(url, options) {
-    var request = new XMLHttpRequest(),
-        _options = options || {};
-
-    bindToSuccessAndErrorCallbacks(request, _options.success, _options.error);
-    if (_options.process) request.addEventListener("progress", _options.progress, false);
-    if (_options.cancelled) request.addEventListener("abort", _options.cancelled, false);
-
-
-    request.open('GET', url, true);
-
-    if (!_options.headers) _options.headers = {};
-
-    for (var name in _options.headers) {
-        request.setRequestHeader(name, _options.headers[name]);
-    }
-
-    request.send();
-};
-
-OTHelpers.post = function(url, options) {
-    var request = new XMLHttpRequest(),
-        _options = options || {};
-
-    bindToSuccessAndErrorCallbacks(request, _options.success, _options.error);
-
-    if (_options.process) request.addEventListener("progress", _options.progress, false);
-    if (_options.cancelled) request.addEventListener("abort", _options.cancelled, false);
-
-    request.open('POST', url, true);
-
-    if (!_options.headers) _options.headers = {};
-
-    for (var name in _options.headers) {
-        request.setRequestHeader(name, _options.headers[name]);
-    }
-
-    request.send(formatPostData(_options.data));
-};
-
-OTHelpers.postFormData = function(url, data, options) {
-    if (!data) {
-        throw new Error("OTHelpers.postFormData must be passed a data options.");
-    }
-
-    var formData = new FormData();
-
-    for (var key in data) {
-        formData.append(key, data[key]);
-    }
-
-    OTHelpers.post(url, OTHelpers.extend(options || {}, {
-        data: formData
-    }));
-};
-
-
-// Make a GET request via JSONP.
-//
-// @example Make a request to 'http://tokbox.com:9999/session/foo' with success and error callbacks
-//
-//  OTHelpers.getJSONP('http://tokbox.com:9999/session/foo', {
-//      success: successCallback,
-//      error: errorCallback
-//  });
-//
-OTHelpers.getJSONP = function(url, options) {
-    var _loadTimeout = 30000,
-        _script,
-        _head = document.head || document.getElementsByTagName('head')[0],
-        _waitUntilTimeout,
-        _urlWithCallback = url,
-        _options = OTHelpers.extend(options || {}, {
-            callbackParameter: 'callback'
-        }),
-
-        _clearTimeout = function() {
-            if (_waitUntilTimeout) {
-                clearTimeout(_waitUntilTimeout);
-                _waitUntilTimeout = null;
-            }
-        },
-
-        _cleanup = function() {
-            _clearTimeout();
-
-            if (_script) {
-                _script.onload = _script.onreadystatechange = null;
-
-                OTHelpers.removeElement( _script );
-
-                _script = undefined;
-            }
-        },
-
-        _onLoad = function() {
-            if (_script.readyState && !/loaded|complete/.test( _script.readyState )) {
-                // Yeah, we're not ready yet...
-                return;
-            }
-
-            _clearTimeout();
-        },
-
-        _onLoadTimeout = function() {
-            _cleanup();
-
-            OTHelpers.error("The JSONP request to " + _urlWithCallback + " timed out after " + _loadTimeout + "ms.");
-            if (_options.error) _options.error("The JSONP request to " + url + " timed out after " + _loadTimeout + "ms.", _urlWithCallback,  _options);
-        },
-
-        _generateCallbackName = function() {
-            return 'jsonp_callback_' + (+new Date());
-        };
-
-
-    _options.callbackName = _generateCallbackName();
-    this.jsonp_callbacks[_options.callbackName] = function(response) {
-        _cleanup();
-
-        if (_options.success) _options.success(response);
+        callback(null, response, event);
+      }
     };
 
-    // This doesn't handle URLs like "http://www.google.com?blah=1#something". The callback name
-    // will be incorrectly appended after the #.
-    _urlWithCallback += ((/\?/).test(_urlWithCallback) ? "&" : "?") + _options.callbackParameter + '=' + _options.callbackName;
+    if(options.xdomainrequest) {
+      OTHelpers.xdomainRequest(url, { method: 'GET' }, done);
+    } else {
+      var extendedHeaders = OTHelpers.extend({
+        'Accept': 'application/json'
+      }, options.headers || {});
 
-    _script = OTHelpers.createElement('script', {
-        async: 'async',
-        src: _urlWithCallback,
-        onload: _onLoad,
-        onreadystatechange: _onLoad
-    });
-    _head.appendChild(_script);
+      OTHelpers.get(url, OTHelpers.extend(options || {}, {
+        headers: extendedHeaders
+      }), done);
+    }
 
-    _waitUntilTimeout = setTimeout(function() { _onLoadTimeout(); }, _loadTimeout);
-};
+  };
 
-// Private helper method used (by OTHelpers.get and OTHelpers.post among others) to setup
-// callbacks to correctly respond to success and error callbacks. This includes
-// interpreting the responses HTTP status, which XmlHttpRequest seems to ignore
-// by default.
-var bindToSuccessAndErrorCallbacks = function(request, success, error) {
-    request.addEventListener("load", function(event) {
+  OTHelpers.xdomainRequest = function(url, options, callback) {
+    /*global XDomainRequest*/
+    var xdr = new XDomainRequest(),
+        _options = options || {},
+        _method = _options.method;
+
+    if(!_method) {
+      callback(new Error('No HTTP method specified in options'));
+      return;
+    }
+
+    _method = _method.toUpperCase();
+
+    if(!(_method === 'GET' || _method === 'POST')) {
+      callback(new Error('HTTP method can only be '));
+      return;
+    }
+
+    function done(err, event) {
+      xdr.onload = xdr.onerror = xdr.ontimeout = function() {};
+      xdr = void 0;
+      callback(err, event);
+    }
+
+
+    xdr.onload = function() {
+      done(null, {
+        target: {
+          responseText: xdr.responseText,
+          headers: {
+            'content-type': xdr.contentType
+          }
+        }
+      });
+    };
+
+    xdr.onerror = function() {
+      done(new Error('XDomainRequest of ' + url + ' failed'));
+    };
+
+    xdr.ontimeout = function() {
+      done(new Error('XDomainRequest of ' + url + ' timed out'));
+    };
+
+    xdr.open(_method, url);
+    xdr.send(options.body && formatPostData(options.body));
+
+  };
+
+  OTHelpers.request = function(url, options, callback) {
+    var request = new XMLHttpRequest(),
+        _options = options || {},
+        _method = _options.method;
+
+    if(!_method) {
+      callback(new Error('No HTTP method specified in options'));
+      return;
+    }
+
+    // Setup callbacks to correctly respond to success and error callbacks. This includes
+    // interpreting the responses HTTP status, which XmlHttpRequest seems to ignore
+    // by default.
+    if(callback) {
+      request.addEventListener('load', function(event) {
         var status = event.target.status;
 
         // We need to detect things that XMLHttpRequest considers a success,
         // but we consider to be failures.
         if ( status >= 200 && status < 300 || status === 304 ) {
-            if (success) success.apply(null, arguments);
+          callback(null, event);
+        } else {
+          callback(event);
         }
-        else if (error) {
-            error(event);
-        }
-    }, false);
+      }, false);
 
-
-    if (error) {
-        request.addEventListener("error", error, false);
+      request.addEventListener('error', callback, false);
     }
-};
+
+    request.open(options.method, url, true);
+
+    if (!_options.headers) _options.headers = {};
+
+    for (var name in _options.headers) {
+      request.setRequestHeader(name, _options.headers[name]);
+    }
+
+    request.send(options.body && formatPostData(options.body));
+  };
+
+  OTHelpers.get = function(url, options, callback) {
+    var _options = OTHelpers.extend(options || {}, {
+      method: 'GET'
+    });
+    OTHelpers.request(url, _options, callback);
+  };
+
+  OTHelpers.post = function(url, options, callback) {
+    var _options = OTHelpers.extend(options || {}, {
+      method: 'POST'
+    });
+
+    if(_options.xdomainrequest) {
+      OTHelpers.xdomainRequest(url, _options, callback);
+    } else {
+      OTHelpers.request(url, _options, callback);
+    }
+  };
 
 })(window, window.OTHelpers);
 !(function(window) {
 
-if (!window.OT) window.OT = {};
+  /* global OTHelpers */
 
-// Bring OTHelpers in as OT.$
-OT.$ = OTHelpers.noConflict();
+  if (!window.OT) window.OT = {};
 
-// Allow events to be bound on OT
-OT.$.eventing(OT);
+  // Bring OTHelpers in as OT.$
+  OT.$ = OTHelpers.noConflict();
 
-// OT.$.Modal was OT.Modal before the great common-js-helpers move
-OT.Modal = OT.$.Modal;
+  // Allow events to be bound on OT
+  OT.$.eventing(OT);
 
-// Add logging methods
-OT.$.useLogHelpers(OT);
-var _debugHeaderLogged = false;
-var _setLogLevel = OT.setLogLevel;
+  // OT.$.Modal was OT.Modal before the great common-js-helpers move
+  OT.Modal = OT.$.Modal;
 
-// On the first time log level is set to DEBUG (or higher) show version info.
-OT.setLogLevel = function(level) {
+  // Add logging methods
+  OT.$.useLogHelpers(OT);
+
+  var _debugHeaderLogged = false,
+      _setLogLevel = OT.setLogLevel;
+
+  // On the first time log level is set to DEBUG (or higher) show version info.
+  OT.setLogLevel = function(level) {
     // Set OT.$ to the same log level
     OT.$.setLogLevel(level);
     var retVal = _setLogLevel.call(OT, level);
     if (OT.shouldLog(OT.DEBUG) && !_debugHeaderLogged) {
-        OT.debug("OpenTok JavaScript library " + OT.properties.version);
-        OT.debug("Release notes: " + OT.properties.websiteURL  +"/opentok/webrtc/docs/js/release-notes.html");
-        OT.debug("Known issues: " + OT.properties.websiteURL + "/opentok/webrtc/docs/js/release-notes.html#knownIssues");
-        _debugHeaderLogged = true;
+      OT.debug('OpenTok JavaScript library ' + OT.properties.version);
+      OT.debug('Release notes: ' + OT.properties.websiteURL +
+        '/opentok/webrtc/docs/js/release-notes.html');
+      OT.debug('Known issues: ' + OT.properties.websiteURL +
+        '/opentok/webrtc/docs/js/release-notes.html#knownIssues');
+      _debugHeaderLogged = true;
     }
-    OT.debug("TB.setLogLevel(" + retVal + ")");
+    OT.debug('OT.setLogLevel(' + retVal + ')');
     return retVal;
-};
+  };
 
-OT.setLogLevel(OT.properties.debug ? OT.DEBUG : OT.ERROR);
+  OT.setLogLevel(OT.properties.debug ? OT.DEBUG : OT.ERROR);
 
-/**
-* Sets the API log level.
-* <p>
-* Calling <code>TB.setLogLevel()</code> sets the log level for runtime log messages that are the OpenTok library generates.
-* The default value for the log level is <code>TB.ERROR</code>.
-* </p>
-* <p>
-* The OpenTok JavaScript library displays log messages in the debugger console (such as Firebug), if one exists.
-* </p>
-* <p>
-* The following example logs the session ID to the console, by calling <code>TB.log()</code>. The code also logs
-* an error message when it attempts to publish a stream before the Session object dispatches a
-* <code>sessionConnected</code> event.
-* </p>
-* <pre>
-* TB.setLogLevel(TB.LOG);
-* session = TB.initSession(sessionId);
-* TB.log(sessionId);
-* publisher = TB.initPublisher(API_KEY, "publishContainer");
-* session.publish(publisher);
-* </pre>
-*
-* @param {Number} logLevel The degree of logging desired by the developer:
-*
-* <p>
-* <ul>
-*   <li>
-*     <code>TB.NONE</code> &#151; API logging is disabled.
-*   </li>
-*   <li>
-*     <code>TB.ERROR</code> &#151; Logging of errors only.
-*   </li>
-*   <li>
-*     <code>TB.WARN</code> &#151; Logging of warnings and errors.
-*   </li>
-*   <li>
-*     <code>TB.INFO</code> &#151; Logging of other useful information, in addition to warnings and errors.
-*   </li>
-*   <li>
-*     <code>TB.LOG</code> &#151; Logging of <code>TB.log()</code> messages, in addition to OpenTok info, warning,
-*     and error messages.
-*   </li>
-*   <li>
-*     <code>TB.DEBUG</code> &#151; Fine-grained logging of all API actions, as well as <code>TB.log()</code> messages.
-*   </li>
-* </ul>
-* </p>
-*
-* @name TB.setLogLevel
-* @memberof TB
-* @function
-* @see <a href="#log">TB.log()</a>
-*/
+  /**
+  * Sets the API log level.
+  * <p>
+  * Calling <code>OT.setLogLevel()</code> sets the log level for runtime log messages that
+  * are the OpenTok library generates. The default value for the log level is <code>OT.ERROR</code>.
+  * </p>
+  * <p>
+  * The OpenTok JavaScript library displays log messages in the debugger console (such as
+  * Firebug), if one exists.
+  * </p>
+  * <p>
+  * The following example logs the session ID to the console, by calling <code>OT.log()</code>.
+  * The code also logs an error message when it attempts to publish a stream before the Session
+  * object dispatches a <code>sessionConnected</code> event.
+  * </p>
+  * <pre>
+  * OT.setLogLevel(OT.LOG);
+  * session = OT.initSession(sessionId);
+  * OT.log(sessionId);
+  * publisher = OT.initPublisher("publishContainer");
+  * session.publish(publisher);
+  * </pre>
+  *
+  * @param {Number} logLevel The degree of logging desired by the developer:
+  *
+  * <p>
+  * <ul>
+  *   <li>
+  *     <code>OT.NONE</code> &#151; API logging is disabled.
+  *   </li>
+  *   <li>
+  *     <code>OT.ERROR</code> &#151; Logging of errors only.
+  *   </li>
+  *   <li>
+  *     <code>OT.WARN</code> &#151; Logging of warnings and errors.
+  *   </li>
+  *   <li>
+  *     <code>OT.INFO</code> &#151; Logging of other useful information, in addition to
+  *     warnings and errors.
+  *   </li>
+  *   <li>
+  *     <code>OT.LOG</code> &#151; Logging of <code>OT.log()</code> messages, in addition
+  *     to OpenTok info, warning,
+  *     and error messages.
+  *   </li>
+  *   <li>
+  *     <code>OT.DEBUG</code> &#151; Fine-grained logging of all API actions, as well as
+  *     <code>OT.log()</code> messages.
+  *   </li>
+  * </ul>
+  * </p>
+  *
+  * @name OT.setLogLevel
+  * @memberof OT
+  * @function
+  * @see <a href="#log">OT.log()</a>
+  */
 
-/**
-* Sends a string to the the debugger console (such as Firebug), if one exists. However, the function
-* only logs to the console if you have set the log level to <code>TB.LOG</code> or <code>TB.DEBUG</code>,
-* by calling <code>TB.setLogLevel(TB.LOG)</code> or <code>TB.setLogLevel(TB.DEBUG)</code>.
-*
-* @param {String} message The string to log.
-*
-* @name TB.log
-* @memberof TB
-* @function
-* @see <a href="#setLogLevel">TB.setLogLevel()</a>
-*/
+  /**
+  * Sends a string to the the debugger console (such as Firebug), if one exists.
+  * However, the function only logs to the console if you have set the log level
+  * to <code>OT.LOG</code> or <code>OT.DEBUG</code>,
+  * by calling <code>OT.setLogLevel(OT.LOG)</code> or <code>OT.setLogLevel(OT.DEBUG)</code>.
+  *
+  * @param {String} message The string to log.
+  *
+  * @name OT.log
+  * @memberof OT
+  * @function
+  * @see <a href="#setLogLevel">OT.setLogLevel()</a>
+  */
 
 })(window);
-(function(window) {
+!(function(window) {
 
-// IMPORTANT This file should be included straight after helpers.js
-if (!window.OT) window.OT = {};
+  // IMPORTANT This file should be included straight after helpers.js
+  if (!window.OT) window.OT = {};
 
-if (!OT.properties) {
-	throw new Error("OT.properties does not exist, please ensure that you include a valid properties file.");
-}
+  if (!OT.properties) {
+    throw new Error('OT.properties does not exist, please ensure that you include a valid ' +
+      'properties file.');
+  }
 
-// Consumes and overwrites OT.properties. Makes it better and stronger!
-OT.properties = function(properties) {
+  // Consumes and overwrites OT.properties. Makes it better and stronger!
+  OT.properties = function(properties) {
     var props = OT.$.clone(properties);
 
     props.debug = properties.debug === 'true' || properties.debug === true;
     props.supportSSL = properties.supportSSL === 'true' || properties.supportSSL === true;
 
-    if (props.supportSSL && (window.location.protocol.indexOf("https") >= 0 || window.location.protocol.indexOf("chrome-extension") >= 0)) {
-        props.assetURL = props.cdnURLSSL + "/webrtc/" + props.version;
-        props.loggingURL = props.loggingURLSSL;
-        props.apiURL = props.apiURLSSL;
+    if (props.supportSSL && (window.location.protocol.indexOf('https') >= 0 ||
+      window.location.protocol.indexOf('chrome-extension') >= 0)) {
+      props.assetURL = props.cdnURLSSL + '/webrtc/' + props.version;
+      props.loggingURL = props.loggingURLSSL;
+      props.apiURL = props.apiURLSSL;
     } else {
-        props.assetURL = props.cdnURL + "/webrtc/" + props.version;
+      props.assetURL = props.cdnURL + '/webrtc/' + props.version;
     }
 
-    props.configURL = props.assetURL + "/js/dynamic_config.min.js";
-    props.cssURL = props.assetURL + "/css/ot.min.css";
+    props.configURL = props.assetURL + '/js/dynamic_config.min.js';
+    props.cssURL = props.assetURL + '/css/ot.min.css';
 
     return props;
-}(OT.properties);
+  }(OT.properties);
 
 })(window);
-(function(window) {
+!(function() {
 
 //--------------------------------------
 // JS Dynamic Config
 //--------------------------------------
 
 
-OT.Config = (function() {
+  OT.Config = (function() {
     var _loaded = false,
         _global = {},
         _partners = {},
@@ -2323,133 +2650,140 @@ OT.Config = (function() {
         _loadTimer,
 
         _clearTimeout = function() {
-            if (_loadTimer) {
-                clearTimeout(_loadTimer);
-                _loadTimer = null;
-            }
+          if (_loadTimer) {
+            clearTimeout(_loadTimer);
+            _loadTimer = null;
+          }
         },
 
         _cleanup = function() {
-            _clearTimeout();
+          _clearTimeout();
 
-            if (_script) {
-                _script.onload = _script.onreadystatechange = null;
+          if (_script) {
+            _script.onload = _script.onreadystatechange = null;
 
-                if ( _head && _script.parentNode ) {
-                    _head.removeChild( _script );
-                }
-
-                _script = undefined;
+            if ( _head && _script.parentNode ) {
+              _head.removeChild( _script );
             }
+
+            _script = undefined;
+          }
         },
 
         _onLoad = function() {
-            // Only IE and Opera actually support readyState on Script elements.
-            if (_script.readyState && !/loaded|complete/.test( _script.readyState )) {
-                // Yeah, we're not ready yet...
-                return;
-            }
+          // Only IE and Opera actually support readyState on Script elements.
+          if (_script.readyState && !/loaded|complete/.test( _script.readyState )) {
+              // Yeah, we're not ready yet...
+            return;
+          }
 
-            _clearTimeout();
+          _clearTimeout();
 
-            if (!_loaded) {
-                // Our config script is loaded but there is not config (as
-                // replaceWith wasn't called). Something went wrong. Possibly
-                // the file we loaded wasn't actually a valid config file.
-                _this._onLoadTimeout();
-            }
+          if (!_loaded) {
+            // Our config script is loaded but there is not config (as
+            // replaceWith wasn't called). Something went wrong. Possibly
+            // the file we loaded wasn't actually a valid config file.
+            _this._onLoadTimeout();
+          }
         },
 
         _getModule = function(moduleName, apiKey) {
-            if (apiKey && _partners[apiKey] && _partners[apiKey][moduleName]) {
-                return _partners[apiKey][moduleName];
-            }
+          if (apiKey && _partners[apiKey] && _partners[apiKey][moduleName]) {
+            return _partners[apiKey][moduleName];
+          }
 
-            return _global[moduleName];
+          return _global[moduleName];
         },
 
-        _this = {
-            // In ms
-            loadTimeout: 4000,
+        _this;
 
-            load: function(configUrl) {
-                if (!configUrl) throw new Error("You must pass a valid configUrl to Config.load");
+    _this = {
+      // In ms
+      loadTimeout: 4000,
 
-                _loaded = false;
+      load: function(configUrl) {
+        if (!configUrl) throw new Error('You must pass a valid configUrl to Config.load');
 
-                setTimeout(function() {
-                    _script = document.createElement( "script" );
-                    _script.async = "async";
-                    _script.src = configUrl;
-                    _script.onload = _script.onreadystatechange = _onLoad.bind(this);
-                    _head.appendChild(_script);
-                },1);
+        _loaded = false;
 
-                _loadTimer = setTimeout(function() {
-                    _this._onLoadTimeout();
-                }, this.loadTimeout);
-            },
+        setTimeout(function() {
+          _script = document.createElement( 'script' );
+          _script.async = 'async';
+          _script.src = configUrl;
+          _script.onload = _script.onreadystatechange = _onLoad.bind(this);
+          _head.appendChild(_script);
+        },1);
 
-            _onLoadTimeout: function() {
-                _cleanup();
+        _loadTimer = setTimeout(function() {
+          _this._onLoadTimeout();
+        }, this.loadTimeout);
+      },
 
-                OT.warn("TB DynamicConfig failed to load in " + _this.loadTimeout + " ms");
-                this.trigger('dynamicConfigLoadFailed');
-            },
+      _onLoadTimeout: function() {
+        _cleanup();
 
-            isLoaded: function() {
-                return _loaded;
-            },
+        OT.warn('TB DynamicConfig failed to load in ' + _this.loadTimeout + ' ms');
+        this.trigger('dynamicConfigLoadFailed');
+      },
 
-            reset: function() {
-                _cleanup();
-                _loaded = false;
-                _global = {};
-                _partners = {};
-            },
+      isLoaded: function() {
+        return _loaded;
+      },
 
-            // This is public so that the dynamic config file can load itself.
-            // Using it for other purposes is discouraged, but not forbidden.
-            replaceWith: function(config) {
-                _cleanup();
+      reset: function() {
+        _cleanup();
+        _loaded = false;
+        _global = {};
+        _partners = {};
+      },
 
-                if (!config) config = {};
+      // This is public so that the dynamic config file can load itself.
+      // Using it for other purposes is discouraged, but not forbidden.
+      replaceWith: function(config) {
+        _cleanup();
 
-                _global = config.global || {};
-                _partners = config.partners || {};
+        if (!config) config = {};
 
-                if (!_loaded) _loaded = true;
-                this.trigger('dynamicConfigChanged');
-            },
+        _global = config.global || {};
+        _partners = config.partners || {};
 
-            // @example Get the value that indicates whether exceptionLogging is enabled
-            //  OT.Config.get('exceptionLogging', 'enabled');
-            //
-            // @example Get a key for a specific partner, fallback to the default if there is
-            // no key for that partner
-            //  OT.Config.get('exceptionLogging', 'enabled', 'apiKey');
-            //
-            get: function(moduleName, key, apiKey) {
-                var module = _getModule(moduleName, apiKey);
-                return module ? module[key] : null;
-            }
-        };
+        if (!_loaded) _loaded = true;
+        this.trigger('dynamicConfigChanged');
+      },
+
+      // @example Get the value that indicates whether exceptionLogging is enabled
+      //  OT.Config.get('exceptionLogging', 'enabled');
+      //
+      // @example Get a key for a specific partner, fallback to the default if there is
+      // no key for that partner
+      //  OT.Config.get('exceptionLogging', 'enabled', 'apiKey');
+      //
+      get: function(moduleName, key, apiKey) {
+        var module = _getModule(moduleName, apiKey);
+        return module ? module[key] : null;
+      }
+    };
 
     OT.$.eventing(_this);
 
     return _this;
-})();
+  })();
 
 })(window);
-(function(window) {
+!(function() {
+/*global OT:true */
 
-var defaultAspectRatio = 4.0/3.0;
+  var defaultAspectRatio = 4.0/3.0,
+      miniWidth = 128,
+      miniHeight = 128,
+      microWidth = 64,
+      microHeight = 64;
 
-// This code positions the video element so that we don't get any letterboxing.
-// It will take into consideration aspect ratios other than 4/3 but only when
-// the video element is first created. If the aspect ratio changes at a later point
-// this calculation will become incorrect.
-function fixAspectRatio(element, width, height, desiredAspectRatio, rotated) {
+  // This code positions the video element so that we don't get any letterboxing.
+  // It will take into consideration aspect ratios other than 4/3 but only when
+  // the video element is first created. If the aspect ratio changes at a later point
+  // this calculation will become incorrect.
+  function fixAspectRatio(element, width, height, desiredAspectRatio, rotated) {
     if (!width) width = parseInt(OT.$.width(element.parentNode), 10);
     else width = parseInt(width, 10);
 
@@ -2461,96 +2795,114 @@ function fixAspectRatio(element, width, height, desiredAspectRatio, rotated) {
     if (!desiredAspectRatio) desiredAspectRatio = defaultAspectRatio;
 
     var actualRatio = (width + 0.0)/height,
-        props = {
-            width: '100%',
-            height: '100%',
-            left: 0,
-            top: 0
-        };
+        props;
+
+    props = {
+      width: '100%',
+      height: '100%',
+      left: 0,
+      top: 0
+    };
 
     if (actualRatio > desiredAspectRatio) {
         // Width is largest so we blow up the height so we don't have letterboxing
-        var newHeight = (actualRatio / desiredAspectRatio) * 100;
+      var newHeight = (actualRatio / desiredAspectRatio) * 100;
 
-        props.height = newHeight + '%';
-        props.top = '-' + ((newHeight - 100) / 2) + '%';
+      props.height = newHeight + '%';
+      props.top = '-' + ((newHeight - 100) / 2) + '%';
     } else if (actualRatio < desiredAspectRatio) {
-        // Height is largest, blow up the width
-        var newWidth = (desiredAspectRatio / actualRatio) * 100;
+      // Height is largest, blow up the width
+      var newWidth = (desiredAspectRatio / actualRatio) * 100;
 
-        props.width = newWidth + '%';
-        props.left = '-' + ((newWidth - 100) / 2) + '%';
+      props.width = newWidth + '%';
+      props.left = '-' + ((newWidth - 100) / 2) + '%';
     }
 
     OT.$.css(element, props);
 
     var video = element.querySelector('video');
     if(video) {
-        if(rotated) {
-            var w = element.offsetWidth,
-                h = element.offsetHeight,
-                props = { width: h + 'px', height: w + 'px', marginTop: '', marginLeft: '' },
-                diff = w - h;
-                props.marginLeft = (diff / 2) + 'px';
-                props.marginTop = -(diff / 2) + 'px';
-                OT.$.css(video, props);
-        } else {
-            OT.$.css(video, { width: '', height: '', marginTop: '', marginLeft: ''});
-        }
+      if(rotated) {
+        var w = element.offsetWidth,
+            h = element.offsetHeight,
+            diff = w - h;
+        props = {
+          width: h + 'px',
+          height: w + 'px',
+          marginTop: -(diff / 2) + 'px',
+          marginLeft: (diff / 2) + 'px'
+        };
+        OT.$.css(video, props);
+      } else {
+        OT.$.css(video, { width: '', height: '', marginTop: '', marginLeft: ''});
+      }
     }
+  }
 
-}
+  function fixMini(container, width, height) {
+    var w = parseInt(width, 10),
+        h = parseInt(height, 10);
 
-var getOrCreateContainer = function getOrCreateContainer(elementOrDomId, insertMode) {
+    if(w < microWidth || h < microHeight) {
+      OT.$.addClass(container, 'OT_micro');
+    } else {
+      OT.$.removeClass(container, 'OT_micro');
+    }
+    if(w < miniWidth || h < miniHeight) {
+      OT.$.addClass(container, 'OT_mini');
+    } else {
+      OT.$.removeClass(container, 'OT_mini');
+    }
+  }
+
+  var getOrCreateContainer = function getOrCreateContainer(elementOrDomId, insertMode) {
     var container,
         domId;
 
     if (elementOrDomId && elementOrDomId.nodeName) {
-        // It looks like we were given a DOM element. Grab the id or generate
-        // one if it doesn't have one.
-        container = elementOrDomId;
-        if (!container.getAttribute('id') || container.getAttribute('id').length === 0) {
-            container.setAttribute('id', 'OT_' + OT.$.uuid());
-        }
+      // It looks like we were given a DOM element. Grab the id or generate
+      // one if it doesn't have one.
+      container = elementOrDomId;
+      if (!container.getAttribute('id') || container.getAttribute('id').length === 0) {
+        container.setAttribute('id', 'OT_' + OT.$.uuid());
+      }
 
-        domId = container.getAttribute('id');
-    }
-    else {
-        // We may have got an id, try and get it's DOM element.
-        container = OT.$(elementOrDomId);
-        domId = elementOrDomId || ('OT_' + OT.$.uuid());
+      domId = container.getAttribute('id');
+    } else {
+      // We may have got an id, try and get it's DOM element.
+      container = OT.$(elementOrDomId);
+      domId = elementOrDomId || ('OT_' + OT.$.uuid());
     }
 
     if (!container) {
-        container = OT.$.createElement('div', {id: domId});
-        container.style.backgroundColor = "#000000";
-        document.body.appendChild(container);
-    }
-    else {
+      container = OT.$.createElement('div', {id: domId});
+      container.style.backgroundColor = '#000000';
+      document.body.appendChild(container);
+    } else {
+      if(!(insertMode == null || insertMode === 'replace')) {
+        var placeholder = document.createElement('div');
+        placeholder.id = ('OT_' + OT.$.uuid());
+        if(insertMode === 'append') {
+          container.appendChild(placeholder);
+          container = placeholder;
+        } else if(insertMode === 'before') {
+          container.parentNode.insertBefore(placeholder, container);
+          container = placeholder;
+        } else if(insertMode === 'after') {
+          container.parentNode.insertBefore(placeholder, container.nextSibling);
+          container = placeholder;
+        }
+      } else {
         OT.$.emptyElement(container);
-    }
-
-    if(!(insertMode == null || insertMode == 'replace')) {
-      var placeholder = document.createElement('div');
-      placeholder.id = ('OT_' + OT.$.uuid());
-      if(insertMode == 'append') {
-        container.appendChild(placeholder);
-        container = placeholder;
-      } else if(insertMode == 'before') {
-        container.parentNode.insertBefore(placeholder, container);
-        container = placeholder;
-      } else if(insertMode == 'after') {
-        container.parentNode.insertBefore(placeholder, container.nextSibling);
-        container = placeholder;
       }
     }
 
     return container;
-};
+  };
 
-// Creates the standard container that the Subscriber and Publisher use to hold
-// their video element and other chrome.
-OT.WidgetView = function(targetElement, properties) {
+  // Creates the standard container that the Subscriber and Publisher use to hold
+  // their video element and other chrome.
+  OT.WidgetView = function(targetElement, properties) {
     var container = getOrCreateContainer(targetElement, properties && properties.insertMode),
         videoContainer = document.createElement('div'),
         oldContainerStyles = {},
@@ -2559,29 +2911,34 @@ OT.WidgetView = function(targetElement, properties) {
         videoObserver,
         posterContainer,
         loadingContainer,
+        width,
+        height,
         loading = true;
 
     if (properties) {
-        width = properties.width;
-        height = properties.height;
+      width = properties.width;
+      height = properties.height;
 
-        if (width) {
-            if (typeof(width) == "number") {
-                width = width + "px";
-            }
+      if (width) {
+        if (typeof(width) === 'number') {
+          width = width + 'px';
         }
+      }
 
-        if (height) {
-            if (typeof(height) == "number") {
-                height = height + "px";
-            }
+      if (height) {
+        if (typeof(height) === 'number') {
+          height = height + 'px';
         }
+      }
 
-        container.style.width = width ? width : "264px";
-        container.style.height = height ? height : "198px";
-        container.style.overflow = "hidden";
+      container.style.width = width ? width : '264px';
+      container.style.height = height ? height : '198px';
+      container.style.overflow = 'hidden';
+      fixMini(container, width || '264px', height || '198px');
 
-        if (properties.mirror === undefined || properties.mirror) OT.$.addClass(container, 'OT_mirrored');
+      if (properties.mirror === undefined || properties.mirror) {
+        OT.$.addClass(container, 'OT_mirrored');
+      }
     }
 
     if (properties.classNames) OT.$.addClass(container, properties.classNames);
@@ -2594,206 +2951,237 @@ OT.WidgetView = function(targetElement, properties) {
     container.appendChild(videoContainer);
     fixAspectRatio(videoContainer, container.offsetWidth, container.offsetHeight);
 
-    loadingContainer = document.createElement("div");
-    OT.$.addClass(loadingContainer, "OT_video-loading");
+    loadingContainer = document.createElement('div');
+    OT.$.addClass(loadingContainer, 'OT_video-loading');
     videoContainer.appendChild(loadingContainer);
 
-    posterContainer = document.createElement("div");
-    OT.$.addClass(posterContainer, "OT_video-poster");
+    posterContainer = document.createElement('div');
+    OT.$.addClass(posterContainer, 'OT_video-poster');
     videoContainer.appendChild(posterContainer);
 
     oldContainerStyles.width = container.offsetWidth;
     oldContainerStyles.height = container.offsetHeight;
 
     // Observe changes to the width and height and update the aspect ratio
-    dimensionsObserver = OT.$.observeStyleChanges(container, ['width', 'height'], function(changeSet) {
-        var width = changeSet.width ? changeSet.width[1] : container.offsetWidth,
-            height = changeSet.height ? changeSet.height[1] : container.offsetHeight;
-
-        fixAspectRatio(videoContainer, width, height, videoElement ? videoElement.aspectRatio : null);
+    dimensionsObserver = OT.$.observeStyleChanges(container, ['width', 'height'],
+      function(changeSet) {
+      var width = changeSet.width ? changeSet.width[1] : container.offsetWidth,
+          height = changeSet.height ? changeSet.height[1] : container.offsetHeight;
+      fixMini(container, width, height);
+      fixAspectRatio(videoContainer, width, height, videoElement ?
+        videoElement.aspectRatio : null);
     });
 
 
-    // @todo observe if the video container or the video element get removed, if they do we should do some cleanup
+    // @todo observe if the video container or the video element get removed
+    // if they do we should do some cleanup
     videoObserver = OT.$.observeNodeOrChildNodeRemoval(container, function(removedNodes) {
-        if (!videoElement) return;
+      if (!videoElement) return;
 
-        // This assumes a video element being removed is the main video element. This may
-        // not be the case.
-        var videoRemoved = removedNodes.some(function(node) { return node === videoContainer || node.nodeName === 'VIDEO'; });
+      // This assumes a video element being removed is the main video element. This may
+      // not be the case.
+      var videoRemoved = removedNodes.some(function(node) {
+        return node === videoContainer || node.nodeName === 'VIDEO';
+      });
 
-        if (videoRemoved) {
-            videoElement.destroy();
-            videoElement = null;
-        }
+      if (videoRemoved) {
+        videoElement.destroy();
+        videoElement = null;
+      }
 
-        if (videoContainer) {
-            OT.$.removeElement(videoContainer);
-            videoContainer = null;
-        }
+      if (videoContainer) {
+        OT.$.removeElement(videoContainer);
+        videoContainer = null;
+      }
 
-        if (dimensionsObserver) {
-            dimensionsObserver.disconnect();
-            dimensionsObserver = null;
-        }
+      if (dimensionsObserver) {
+        dimensionsObserver.disconnect();
+        dimensionsObserver = null;
+      }
 
-        if (videoObserver) {
-            videoObserver.disconnect();
-            videoObserver = null;
-        }
+      if (videoObserver) {
+        videoObserver.disconnect();
+        videoObserver = null;
+      }
     });
 
     this.destroy = function() {
-        if (dimensionsObserver) {
-            dimensionsObserver.disconnect();
-            dimensionsObserver = null;
-        }
+      if (dimensionsObserver) {
+        dimensionsObserver.disconnect();
+        dimensionsObserver = null;
+      }
 
-        if (videoObserver) {
-            videoObserver.disconnect();
-            videoObserver = null;
-        }
+      if (videoObserver) {
+        videoObserver.disconnect();
+        videoObserver = null;
+      }
 
-        if (videoElement) {
-            videoElement.destroy();
-            videoElement = null;
-        }
+      if (videoElement) {
+        videoElement.destroy();
+        videoElement = null;
+      }
 
-        if (container) {
-            OT.$.removeElement(container);
-            container = null;
-        }
+      if (container) {
+        OT.$.removeElement(container);
+        container = null;
+      }
     };
 
     Object.defineProperties(this, {
 
-        showPoster: {
-            get: function() {
-                return !OT.$.isDisplayNone(posterContainer);
-            },
-            set: function(shown) {
-                if(shown) {
-                    OT.$.show(posterContainer);
-                }
-                else {
-                    OT.$.hide(posterContainer);
-                }
-            }
+      showPoster: {
+        get: function() {
+          return !OT.$.isDisplayNone(posterContainer);
         },
-
-        poster: {
-            get: function() {
-                return OT.$.css(posterContainer, "backgroundImage");
-            },
-            set: function(src) {
-                OT.$.css(posterContainer, "backgroundImage", "url(" + src + ")");
-            }
-        },
-
-        loading: {
-            get: function() { return loading; },
-            set: function(l) {
-                loading = l;
-
-                if (loading) {
-                    OT.$.addClass(container, 'OT_loading');
-                }
-                else {
-                    OT.$.removeClass(container, 'OT_loading');
-                }
-            }
-        },
-
-        video: {
-            get: function() { return videoElement; },
-            set: function(video) {
-                // remove the old video element if it exists
-                // @todo this might not be safe, publishers/subscribers use this as well...
-                if (videoElement) videoElement.destroy();
-
-                video.appendTo(videoContainer);
-                videoElement = video;
-
-                videoElement.on({
-                    orientationChanged: function(){
-                        fixAspectRatio(videoContainer, container.offsetWidth, container.offsetHeight, videoElement.aspectRatio, videoElement.isRotated);
-                    }
-                });
-
-                fixAspectRatio(videoContainer, container.offsetWidth, container.offsetHeight, videoElement ? videoElement.aspectRatio : null, videoElement ? videoElement.isRotated : null);
-            }
-        },
-
-        domElement: {
-            get: function() { return container; }
-        },
-
-        domId: {
-          get: function() { return container.getAttribute('id'); }
+        set: function(shown) {
+          if(shown) {
+            OT.$.show(posterContainer);
+          } else {
+            OT.$.hide(posterContainer);
+          }
         }
+      },
+
+      poster: {
+        get: function() {
+          return OT.$.css(posterContainer, 'backgroundImage');
+        },
+        set: function(src) {
+          OT.$.css(posterContainer, 'backgroundImage', 'url(' + src + ')');
+        }
+      },
+
+      loading: {
+        get: function() { return loading; },
+        set: function(l) {
+          loading = l;
+
+          if (loading) {
+            OT.$.addClass(container, 'OT_loading');
+          } else {
+            OT.$.removeClass(container, 'OT_loading');
+          }
+        }
+      },
+
+      video: {
+        get: function() { return videoElement; },
+        set: function(video) {
+          // remove the old video element if it exists
+          // @todo this might not be safe, publishers/subscribers use this as well...
+          if (videoElement) videoElement.destroy();
+
+          video.appendTo(videoContainer);
+          videoElement = video;
+
+          videoElement.on({
+            orientationChanged: function(){
+              fixAspectRatio(videoContainer, container.offsetWidth, container.offsetHeight,
+                videoElement.aspectRatio, videoElement.isRotated);
+            }
+          });
+
+          if (videoElement) {
+            var fix = function() {
+              fixAspectRatio(videoContainer, container.offsetWidth, container.offsetHeight,
+                videoElement ? videoElement.aspectRatio : null,
+                videoElement ? videoElement.isRotated : null);
+            };
+            if(isNaN(videoElement.aspectRatio)) {
+              videoElement.on('streamBound', fix);
+            } else {
+              fix();
+            }
+          }
+        }
+      },
+
+      domElement: {
+        get: function() { return container; }
+      },
+
+      domId: {
+        get: function() { return container.getAttribute('id'); }
+      }
     });
 
-    this.addError = function(errorMsg) {
-        container.innerHTML = "<p>" + errorMsg + "<p>";
-        OT.$.addClass(container, "OT_subscriber_error");
+    this.addError = function(errorMsg, helpMsg) {
+      container.innerHTML = '<p>' + errorMsg +
+        ' <span class="ot-help-message">' + helpMsg + '</span></p>';
+      OT.$.addClass(container, 'OT_subscriber_error');
+      if(container.querySelector('p').offsetHeight > container.offsetHeight) {
+        container.querySelector('span').style.display = 'none';
+      }
     };
-};
+  };
 
 })(window);
 // Web OT Helpers
-(function(window) {
+!(function(window) {
 
-// Handy cross-browser getUserMedia shim. Inspired by some code from Adam Barth
-var getUserMedia = (function() {
+  /* global mozRTCPeerConnection */
+
+  var nativeGetUserMedia,
+      mozToW3CErrors,
+      chromeToW3CErrors,
+      gumNamesToMessages,
+      mapVendorErrorName,
+      parseErrorEvent,
+      areInvalidConstraints;
+
+  // Handy cross-browser getUserMedia shim. Inspired by some code from Adam Barth
+  nativeGetUserMedia = (function() {
     if (navigator.getUserMedia) {
-        return navigator.getUserMedia.bind(navigator);
+      return navigator.getUserMedia.bind(navigator);
     } else if (navigator.mozGetUserMedia) {
-        return navigator.mozGetUserMedia.bind(navigator);
+      return navigator.mozGetUserMedia.bind(navigator);
     } else if (navigator.webkitGetUserMedia) {
-        return navigator.webkitGetUserMedia.bind(navigator);
+      return navigator.webkitGetUserMedia.bind(navigator);
     }
-})();
+  })();
 
 
-if (navigator.webkitGetUserMedia) {
+  if (navigator.webkitGetUserMedia) {
+    /*global webkitMediaStream, webkitRTCPeerConnection*/
     // Stub for getVideoTracks for Chrome < 26
     if (!webkitMediaStream.prototype.getVideoTracks) {
-        webkitMediaStream.prototype.getVideoTracks = function() {
-            return this.videoTracks;
-        };
+      webkitMediaStream.prototype.getVideoTracks = function() {
+        return this.videoTracks;
+      };
     }
 
     // Stubs for getAudioTracks for Chrome < 26
     if (!webkitMediaStream.prototype.getAudioTracks) {
-        webkitMediaStream.prototype.getAudioTracks = function() {
-            return this.audioTracks;
-        };
+      webkitMediaStream.prototype.getAudioTracks = function() {
+        return this.audioTracks;
+      };
     }
 
     if (!webkitRTCPeerConnection.prototype.getLocalStreams) {
-        webkitRTCPeerConnection.prototype.getLocalStreams = function() {
-          return this.localStreams;
-        };
+      webkitRTCPeerConnection.prototype.getLocalStreams = function() {
+        return this.localStreams;
+      };
     }
 
     if (!webkitRTCPeerConnection.prototype.getRemoteStreams) {
-        webkitRTCPeerConnection.prototype.getRemoteStreams = function() {
-          return this.remoteStreams;
-        };
+      webkitRTCPeerConnection.prototype.getRemoteStreams = function() {
+        return this.remoteStreams;
+      };
     }
-}
-else if (navigator.mozGetUserMedia) {
+
+  } else if (navigator.mozGetUserMedia) {
     // Firefox < 23 doesn't support get Video/Audio tracks, we'll just stub them out for now.
+    /* global MediaStream */
     if (!MediaStream.prototype.getVideoTracks) {
-        MediaStream.prototype.getVideoTracks = function() {
-            return [];
-        };
+      MediaStream.prototype.getVideoTracks = function() {
+        return [];
+      };
     }
 
     if (!MediaStream.prototype.getAudioTracks) {
-        MediaStream.prototype.getAudioTracks = function() {
-            return [];
-        };
+      MediaStream.prototype.getAudioTracks = function() {
+        return [];
+      };
     }
 
     // This won't work as mozRTCPeerConnection is a weird internal Firefox
@@ -2811,359 +3199,410 @@ else if (navigator.mozGetUserMedia) {
     //         return this.remoteStreams;
     //     };
     // }
-}
+  }
 
 
-// Mozilla error strings and the equivalent W3C names. NOT_SUPPORTED_ERROR does not
-// exist in the spec right now, so we'll include Mozilla's error description.
-var mozToW3CErrors = {
-    PERMISSION_DENIED: 'PERMISSION_DENIED',
-    NOT_SUPPORTED_ERROR: "A constraint specified is not supported by the browser.",
-    MANDATORY_UNSATISFIED_ERROR: 'CONSTRAINT_NOT_SATISFIED'
-};
+  // Mozilla error strings and the equivalent W3C names. NOT_SUPPORTED_ERROR does not
+  // exist in the spec right now, so we'll include Mozilla's error description.
+  mozToW3CErrors = {
+    PERMISSION_DENIED: 'PermissionDeniedError',
+    NOT_SUPPORTED_ERROR: 'NotSupportedError',
+    MANDATORY_UNSATISFIED_ERROR: ' ConstraintNotSatisfiedError',
+    NO_DEVICES_FOUND: 'NoDevicesFoundError',
+    HARDWARE_UNAVAILABLE: 'HardwareUnavailableError'
+  };
 
-// Chrome only seems to expose a single error with a code of 1 right now.
-var chromeToW3CErrors = {
-    1: 'PERMISSION_DENIED'
-};
+  // Chrome only seems to expose a single error with a code of 1 right now.
+  chromeToW3CErrors = {
+    1: 'PermissionDeniedError'
+  };
 
-
-var gumNamesToMessages = {
-    PERMISSION_DENIED: "User denied permission for scripts from this origin to access the media device.",
-    CONSTRAINT_NOT_SATISFIED: "One of the mandatory constraints could not be satisfied."
-};
+  gumNamesToMessages = {
+    PermissionDeniedError: 'User denied permission for scripts from this origin to ' +
+      'access the media device.',
+    NotSupportedError: 'A constraint specified is not supported by the browser.',
+    ConstraintNotSatisfiedError: 'One of the mandatory constraints could not be satisfied.',
+    OverconstrainedError: 'Due to changes in the environment, one or more mandatory ' +
+      'constraints can no longer be satisfied.',
+    NoDevicesFoundError: 'No video or audio input devices are available on this machine.',
+    HardwareUnavailableError: 'The selected audio or video input devices are not available, ' +
+      'possibly because they are in use by another application.'
+  };
 
 // Map vendor error strings to names and messages
-var mapVendorErrorName = function mapVendorErrorName (vendorErrorName, vendorErrors) {
+  mapVendorErrorName = function mapVendorErrorName (vendorErrorName, vendorErrors) {
     var errorName = vendorErrors[vendorErrorName],
         errorMessage = gumNamesToMessages[errorName];
 
     if (!errorMessage) {
-        // This doesn't map to a known error from the Media Capture spec, it's
-        // probably a custom vendor error message.
-        errorMessage = eventName;
-        errorName = vendorErrorName;
+      // This doesn't map to a known error from the Media Capture spec, it's
+      // probably a custom vendor error message.
+      errorMessage = null; // This is undefined?
+      errorName = vendorErrorName;
     }
 
     return {
-        name: errorName,
-        message: errorMessage
+      name: errorName,
+      message: errorMessage
     };
-};
+  };
 
-// Parse and normalise a getUserMedia error event from Chrome or Mozilla
-//
-// @ref http://dev.w3.org/2011/webrtc/editor/getusermedia.html#idl-def-NavigatorUserMediaError
-//
-var parseErrorEvent = function parseErrorObject (event) {
+  // Parse and normalise a getUserMedia error event from Chrome or Mozilla
+  // @ref http://dev.w3.org/2011/webrtc/editor/getusermedia.html#idl-def-NavigatorUserMediaError
+  parseErrorEvent = function parseErrorObject (event) {
     var error;
 
     if (OT.$.isObject(event) && event.name) {
-        error = {
-            name: event.name,
-            message: event.message,
-            constraintName: event.constraintName
-        };
-    }
-    else if (OT.$.isObject(event)) {
-        error = mapVendorErrorName(event.code, chromeToW3CErrors);
+      error = {
+        name: event.name,
+        message: event.message || gumNamesToMessages[event.name],
+        constraintName: event.constraintName
+      };
 
-        // message and constraintName are probably missing if the
-        // property is also omitted, but just in case they aren't.
-        if (event.message) error.message = event.message;
-        if (event.constraintName) error.constraintName = event.constraintName;
-    }
-    else if (event && mozToW3CErrors.hasOwnProperty(event)) {
-        error = mapVendorErrorName(event, mozToW3CErrors);
-    }
-    else {
-        error = {
-            message: "Unknown Error while getting user media"
-        };
-    }
+    } else if (OT.$.isObject(event)) {
+      error = mapVendorErrorName(event.code, chromeToW3CErrors);
 
+      // message and constraintName are probably missing if the
+      // property is also omitted, but just in case they aren't.
+      if (event.message) error.message = event.message;
+      if (event.constraintName) error.constraintName = event.constraintName;
+
+    } else if (event && mozToW3CErrors.hasOwnProperty(event)) {
+      error = mapVendorErrorName(event, mozToW3CErrors);
+
+    } else {
+      error = {
+        message: 'Unknown Error while getting user media'
+      };
+    }
 
     return error;
-};
+  };
 
-
-
-// Validates a Hash of getUserMedia constraints. Currently we only
-// check to see if there is at least one non-false constraint.
-var areInvalidConstraints = function(constraints) {
+  // Validates a Hash of getUserMedia constraints. Currently we only
+  // check to see if there is at least one non-false constraint.
+  areInvalidConstraints = function(constraints) {
     if (!constraints || !OT.$.isObject(constraints)) return true;
 
     for (var key in constraints) {
-        if (constraints[key]) return false;
+      if (constraints[key]) return false;
     }
 
     return true;
-};
+  };
 
-
-
-
-
-// Returns true if the client supports Web RTC, false otherwise.
-//
-// Chrome Issues:
-// * The explicit prototype.addStream check is because webkitRTCPeerConnection was
-// partially implemented, but not functional, in Chrome 22.
-//
-// Firefox Issues:
-// * No real support before Firefox 19
-// * Firefox 19 has issues with generating Offers.
-// * Firefox 20 doesn't interoperate with Chrome.
-//
-OT.$.supportsWebRTC = function() {
+  // Returns true if the client supports Web RTC, false otherwise.
+  //
+  // Chrome Issues:
+  // * The explicit prototype.addStream check is because webkitRTCPeerConnection was
+  // partially implemented, but not functional, in Chrome 22.
+  //
+  // Firefox Issues:
+  // * No real support before Firefox 19
+  // * Firefox 19 has issues with generating Offers.
+  // * Firefox 20 doesn't interoperate with Chrome.
+  //
+  OT.$.supportsWebRTC = function() {
     var _supportsWebRTC = false;
 
-    if (navigator.webkitGetUserMedia) {
-        _supportsWebRTC = typeof(webkitRTCPeerConnection) === 'function' && !!webkitRTCPeerConnection.prototype.addStream;
-    }
-    else if (navigator.mozGetUserMedia) {
-        var firefoxVersion = window.navigator.userAgent.toLowerCase().match(/Firefox\/([0-9\.]+)/i);
-        _supportsWebRTC = typeof(mozRTCPeerConnection) === 'function' && (firefoxVersion !== null && parseFloat(firefoxVersion[1], 10) > 20.0);
-        if (_supportsWebRTC) {
-            try {
-                new mozRTCPeerConnection();
-                _supportsWebRTC = true;
-            } catch (err) {
-                _supportsWebRTC = false;
-            }
+    var browser = OT.$.browserVersion(),
+        minimumVersions = OT.properties.minimumVersion || {},
+        minimumVersion = minimumVersions[browser.browser.toLowerCase()];
+
+    if(minimumVersion && minimumVersion > browser.version) {
+      OT.debug('Support for', browser.browser, 'is disabled because we require',
+        minimumVersion, 'but this is', browser.version);
+      _supportsWebRTC = false;
+
+    } else if (navigator.webkitGetUserMedia) {
+      _supportsWebRTC = typeof(webkitRTCPeerConnection) === 'function' &&
+        !!webkitRTCPeerConnection.prototype.addStream;
+
+    } else if (navigator.mozGetUserMedia) {
+      if (typeof(mozRTCPeerConnection) === 'function' && browser.version > 20.0) {
+        try {
+          new mozRTCPeerConnection();
+          _supportsWebRTC = true;
+        } catch (err) {
+          _supportsWebRTC = false;
         }
+      }
     }
 
     OT.$.supportsWebRTC = function() {
-        return _supportsWebRTC;
+      return _supportsWebRTC;
     };
 
     return _supportsWebRTC;
-};
+  };
 
-// Returns a String representing the supported WebRTC crypto scheme. The possible
-// values are SDES_SRTP, DTLS_SRTP, and NONE;
-//
-// Broadly:
-// * Firefox only supports DTLS
-// * Older versions of Chrome (<= 24) only support SDES
-// * Newer versions of Chrome (>= 25) support DTLS and SDES
-//
-OT.$.supportedCryptoScheme = function() {
+  // Returns a String representing the supported WebRTC crypto scheme. The possible
+  // values are SDES_SRTP, DTLS_SRTP, and NONE;
+  //
+  // Broadly:
+  // * Firefox only supports DTLS
+  // * Older versions of Chrome (<= 24) only support SDES
+  // * Newer versions of Chrome (>= 25) support DTLS and SDES
+  //
+  OT.$.supportedCryptoScheme = function() {
     if (!OT.$.supportsWebRTC()) return 'NONE';
 
     var chromeVersion = window.navigator.userAgent.toLowerCase().match(/chrome\/([0-9\.]+)/i);
     return chromeVersion && parseFloat(chromeVersion[1], 10) < 25 ? 'SDES_SRTP' : 'DTLS_SRTP';
-};
+  };
 
-// Returns true if the browser supports bundle
-//
-// Broadly:
-// * Firefox doesn't support bundle
-// * Chrome support bundle
-//
-OT.$.supportsBundle = function() {
+  // Returns true if the browser supports bundle
+  //
+  // Broadly:
+  // * Firefox doesn't support bundle
+  // * Chrome support bundle
+  //
+  OT.$.supportsBundle = function() {
     return OT.$.supportsWebRTC() && OT.$.browser() === 'Chrome';
-};
+  };
 
-// Returns true if the browser supports rtcp mux
-//
-// Broadly:
-// * Older versions of Firefox (<= 25) don't support rtcp mux
-// * Older versions of Firefox (>= 26) support rtcp mux (not tested yet)
-// * Chrome support bundle
-//
-OT.$.supportsRtcpMux = function() {
+  // Returns true if the browser supports rtcp mux
+  //
+  // Broadly:
+  // * Older versions of Firefox (<= 25) don't support rtcp mux
+  // * Older versions of Firefox (>= 26) support rtcp mux (not tested yet)
+  // * Chrome support bundle
+  //
+  OT.$.supportsRtcpMux = function() {
     return OT.$.supportsWebRTC() && OT.$.browser() === 'Chrome';
-};
+  };
 
-// A wrapper for the builtin navigator.getUserMedia. In addition to the usual
-// getUserMedia behaviour, this helper method also accepts a accessDialogOpened
-// and accessDialogClosed callback.
-//
-// @memberof TB.$
-// @private
-//
-// @param {Object} constraints
-//      A dictionary of constraints to pass to getUserMedia. See <a href='http://dev.w3.org/2011/webrtc/editor/getusermedia.html#idl-def-MediaStreamConstraints'>MediaStreamConstraints</a> in the Media Capture and Streams spec for more info.
-//
-// @param {function} success
-//      Called when getUserMedia completes successfully. The callback will be passed a WebRTC Stream object.
-//
-// @param {function} failure
-//      Called when getUserMedia fails to access a user stream. It will be passed an object with a code property representing the error that occurred.
-//
-// @param {function} accessDialogOpened
-//      Called when the access allow/deny dialog is opened.
-//
-// @param {function} accessDialogClosed
-//      Called when the access allow/deny dialog is closed.
-//
-// @param {function} accessDenied
-//      Called when access is denied to the camera/mic. This will be either because
-//      the user has clicked deny or because a particular origin is permanently denied.
-//
-OT.$.getUserMedia = function(constraints, success, failure, accessDialogOpened, accessDialogClosed, accessDenied) {
+  // A wrapper for the builtin navigator.getUserMedia. In addition to the usual
+  // getUserMedia behaviour, this helper method also accepts a accessDialogOpened
+  // and accessDialogClosed callback.
+  //
+  // @memberof OT.$
+  // @private
+  //
+  // @param {Object} constraints
+  //      A dictionary of constraints to pass to getUserMedia. See
+  //      http://dev.w3.org/2011/webrtc/editor/getusermedia.html#idl-def-MediaStreamConstraints
+  //      in the Media Capture and Streams spec for more info.
+  //
+  // @param {function} success
+  //      Called when getUserMedia completes successfully. The callback will be passed a WebRTC
+  //      Stream object.
+  //
+  // @param {function} failure
+  //      Called when getUserMedia fails to access a user stream. It will be passed an object
+  //      with a code property representing the error that occurred.
+  //
+  // @param {function} accessDialogOpened
+  //      Called when the access allow/deny dialog is opened.
+  //
+  // @param {function} accessDialogClosed
+  //      Called when the access allow/deny dialog is closed.
+  //
+  // @param {function} accessDenied
+  //      Called when access is denied to the camera/mic. This will be either because
+  //      the user has clicked deny or because a particular origin is permanently denied.
+  //
+
+  OT.$.getUserMedia = function(constraints, success, failure, accessDialogOpened,
+    accessDialogClosed, accessDenied, customGetUserMedia) {
+
+    var getUserMedia = nativeGetUserMedia;
+
+    if(OT.$.isFunction(customGetUserMedia)) {
+      getUserMedia = customGetUserMedia;
+    }
+
     // All constraints are false, we don't allow this. This may be valid later
     // depending on how/if we integrate data channels.
     if (areInvalidConstraints(constraints)) {
-        OT.error("Couldn't get UserMedia: All constraints were false");
-        // Using a ugly dummy-code for now.
-        failure.call(null, {
-            name: 'NO_VALID_CONSTRAINTS',
-            message: "Video and Audio was disabled, you need to enabled at least one"
-        });
+      OT.error('Couldn\'t get UserMedia: All constraints were false');
+      // Using a ugly dummy-code for now.
+      failure.call(null, {
+        name: 'NO_VALID_CONSTRAINTS',
+        message: 'Video and Audio was disabled, you need to enabled at least one'
+      });
 
-        return;
+      return;
     }
 
     var triggerOpenedTimer = null,
         displayedPermissionDialog = false,
 
         finaliseAccessDialog = function() {
-            if (triggerOpenedTimer) {
-                clearTimeout(triggerOpenedTimer);
-            }
+          if (triggerOpenedTimer) {
+            clearTimeout(triggerOpenedTimer);
+          }
 
-            if (displayedPermissionDialog && accessDialogClosed) accessDialogClosed();
+          if (displayedPermissionDialog && accessDialogClosed) accessDialogClosed();
         },
 
         triggerOpened = function() {
-            triggerOpenedTimer = null;
-            displayedPermissionDialog = true;
+          triggerOpenedTimer = null;
+          displayedPermissionDialog = true;
 
-            if (accessDialogOpened) accessDialogOpened();
+          if (accessDialogOpened) accessDialogOpened();
         },
 
         onStream = function(stream) {
-            finaliseAccessDialog();
-            success.call(null, stream);
+          finaliseAccessDialog();
+          success.call(null, stream);
         },
 
         onError = function(event) {
-            finaliseAccessDialog();
-            var error = parseErrorEvent(event);
+          finaliseAccessDialog();
+          var error = parseErrorEvent(event);
 
-            if (error.name === 'PERMISSION_DENIED' || error.name === 'PermissionDeniedError') {
-                accessDenied.call(null, error);
+          // The error name 'PERMISSION_DENIED' is from an earlier version of the spec
+          if (error.name === 'PermissionDeniedError') {
+            var MST = window.MediaStreamTrack;
+            if(MST != null && OT.$.isFunction(MST.getSources)) {
+              window.MediaStreamTrack.getSources(function(sources) {
+                if(sources.length > 0) {
+                  accessDenied.call(null, error);
+                } else {
+                  failure.call(null, {
+                    name: 'NoDevicesFoundError',
+                    message: gumNamesToMessages.NoDevicesFoundError
+                  });
+                }
+              });
+            } else {
+              accessDenied.call(null, error);
             }
-            else {
-                failure.call(null, error);
-            }
+
+          } else {
+            failure.call(null, error);
+          }
         };
 
     try {
-        getUserMedia(constraints, onStream, onError);
+      getUserMedia(constraints, onStream, onError);
     } catch (e) {
-        OT.error("Couldn't get UserMedia: " + e.toString());
-        onError();
-        return;
+      OT.error('Couldn\'t get UserMedia: ' + e.toString());
+      onError();
+      return;
     }
 
-    // The "remember me" functionality of WebRTC only functions over HTTPS, if
+    // The 'remember me' functionality of WebRTC only functions over HTTPS, if
     // we aren't on HTTPS then we should definitely be displaying the access
     // dialog.
     //
     // If we are on HTTPS, we'll wait 500ms to see if we get a stream
-    // immediately. If we do then the user had clicked "remember me". Otherwise
+    // immediately. If we do then the user had clicked 'remember me'. Otherwise
     // we assume that the accessAllowed dialog is visible.
     //
     // @todo benchmark and see if 500ms is a reasonable number. It seems like
     // we should know a lot quicker.
     //
     if (location.protocol.indexOf('https') === -1) {
-        // Execute after, this gives the client a chance to bind to the
-        // accessDialogOpened event.
-        triggerOpenedTimer = setTimeout(triggerOpened, 100);
-    }
-    else {
-        // wait a second and then trigger accessDialogOpened
-        triggerOpenedTimer = setTimeout(triggerOpened, 500);
-    }
-};
+      // Execute after, this gives the client a chance to bind to the
+      // accessDialogOpened event.
+      triggerOpenedTimer = setTimeout(triggerOpened, 100);
 
-OT.$.createPeerConnection = function (config, options) {
-  var NativeRTCPeerConnection = (window.webkitRTCPeerConnection || window.mozRTCPeerConnection);
-  return new NativeRTCPeerConnection(config, options);
-};
-
+    } else {
+      // wait a second and then trigger accessDialogOpened
+      triggerOpenedTimer = setTimeout(triggerOpened, 500);
+    }
+  };
+  
+  OT.$.createPeerConnection = function (config, options) {
+    var NativeRTCPeerConnection = (window.webkitRTCPeerConnection || window.mozRTCPeerConnection);
+    return new NativeRTCPeerConnection(config, options);
+  };
 
 })(window);
-(function(window) {
+!(function(window) {
 
-OT.VideoOrientation = {
-    ROTATED_NORMAL: "OTVideoOrientationRotatedNormal",
-    ROTATED_LEFT: "OTVideoOrientationRotatedLeft",
-    ROTATED_RIGHT: "OTVideoOrientationRotatedRight",
-    ROTATED_UPSIDE_DOWN: "OTVideoOrientationRotatedUpsideDown"
-};
+  var _videoErrorCodes = {},
+      VideoOrientationTransforms;
 
-//
-//
-//   var _videoElement = new OT.VideoElement({
-//     fallbackText: 'blah'
-//   });
-//
-//   _videoElement.on({
-//     streamBound: function() {...},
-//     loadError: function() {...},
-//     error: function() {...}
-//   });
-//
-//   _videoElement.bindToStream(webRtcStream);      // => VideoElement
-//   _videoElement.appendTo(DOMElement)             // => VideoElement
-//
-//   _videoElement.stream                           // => Web RTC stream
-//   _videoElement.domElement                       // => DomNode
-//   _videoElement.parentElement                    // => DomNode
-//
-//   _videoElement.imgData                          // => PNG Data string
-//
-//   _videoElement.orientation = OT.VideoOrientation.ROTATED_LEFT;
-//
-//   _videoElement.unbindStream();
-//   _videoElement.destroy()                        // => Completely cleans up and removes the video element
-//
-//
-OT.VideoElement = function(options) {
+  VideoOrientationTransforms = {
+    0: 'rotate(0deg)',
+    270: 'rotate(90deg)',
+    90: 'rotate(-90deg)',
+    180: 'rotate(180deg)'
+  };
+
+  OT.VideoOrientation = {
+    ROTATED_NORMAL: 0,
+    ROTATED_LEFT: 270,
+    ROTATED_RIGHT: 90,
+    ROTATED_UPSIDE_DOWN: 180
+  };
+
+  //   var _videoElement = new OT.VideoElement({
+  //     fallbackText: 'blah'
+  //   });
+  //
+  //   _videoElement.on({
+  //     streamBound: function() {...},
+  //     loadError: function() {...},
+  //     error: function() {...}
+  //   });
+  //
+  //   _videoElement.bindToStream(webRtcStream);      // => VideoElement
+  //   _videoElement.appendTo(DOMElement)             // => VideoElement
+  //
+  //   _videoElement.stream                           // => Web RTC stream
+  //   _videoElement.domElement                       // => DomNode
+  //   _videoElement.parentElement                    // => DomNode
+  //
+  //   _videoElement.imgData                          // => PNG Data string
+  //
+  //   _videoElement.orientation = OT.VideoOrientation.ROTATED_LEFT;
+  //
+  //   _videoElement.unbindStream();
+  //   _videoElement.destroy()                        // => Completely cleans up and
+  //                                                  // removes the video element
+  //
+  //
+  OT.VideoElement = function(options) {
     var _stream,
         _domElement,
         _parentElement,
         _streamBound = false,
         _videoElementMovedWarning = false,
-        _options = OT.$.defaults(options || {}, {
-            fallbackText: 'Sorry, Web RTC is not available in your browser'
-        });
+        _options,
+        _onVideoError,
+        _onStreamBound,
+        _onStreamBoundError,
+        _playVideoOnPause;
 
+    _options = OT.$.defaults(options || {}, {
+      fallbackText: 'Sorry, Web RTC is not available in your browser'
+    });
 
     OT.$.eventing(this);
 
     /// Private API
-    var _onVideoError = function(event) {
-            var reason = "There was an unexpected problem with the Video Stream: " + videoElementErrorCodeToStr(event.target.error.code);
-            this.trigger('error', null, reason, this);
-        }.bind(this),
+    _onVideoError = function(event) {
+      var reason = 'There was an unexpected problem with the Video Stream: ' +
+        videoElementErrorCodeToStr(event.target.error.code);
+      this.trigger('error', null, reason, this, 'VideoElement');
+    }.bind(this);
 
-        _onStreamBound = function() {
-            _streamBound = true;
-            _domElement.addEventListener('error', _onVideoError, false);
-            this.trigger('streamBound', this);
-        }.bind(this),
+    _onStreamBound = function() {
+      _streamBound = true;
+      _domElement.addEventListener('error', _onVideoError, false);
+      this.trigger('streamBound', this);
+    }.bind(this);
 
-        _onStreamBoundError = function(reason) {
-            this.trigger('loadError', OT.ExceptionCodes.P2P_CONNECTION_FAILED, reason, this);
-        }.bind(this),
+    _onStreamBoundError = function(reason) {
+      this.trigger('loadError', OT.ExceptionCodes.P2P_CONNECTION_FAILED, reason, this,
+        'VideoElement');
+    }.bind(this);
 
-        // The video element pauses itself when it's reparented, this is
-        // unfortunate. This function plays the video again and is triggered
-        // on the pause event.
-        _playVideoOnPause = function() {
-            if(!_videoElementMovedWarning) {
-                OT.warn("Video element paused, auto-resuming. If you intended to do this, use publishVideo(false) or subscribeToVideo(false) instead.");
-                _videoElementMovedWarning = true;
-            }
-            _domElement.play();
-        };
+    // The video element pauses itself when it's reparented, this is
+    // unfortunate. This function plays the video again and is triggered
+    // on the pause event.
+    _playVideoOnPause = function() {
+      if(!_videoElementMovedWarning) {
+        OT.warn('Video element paused, auto-resuming. If you intended to do this, use ' +
+          'publishVideo(false) or subscribeToVideo(false) instead.');
+        _videoElementMovedWarning = true;
+      }
+      _domElement.play();
+    };
 
 
     _domElement = createVideoElement(_options.fallbackText, _options.attributes);
@@ -3172,14 +3611,26 @@ OT.VideoElement = function(options) {
 
     /// Public Properties
     Object.defineProperties(this, {
-        stream: {get: function() {return _stream; }},
-        domElement: {get: function() {return _domElement; }},
-        parentElement: {get: function() {return _parentElement; }},
-        isBoundToStream: {get: function() { return _streamBound; }},
-        poster: {
-            get: function() { return _domElement.getAttribute('poster'); },
-            set: function(src) { _domElement.setAttribute('poster', src); }
+      stream: {
+        get: function() {return _stream; }
+      },
+      domElement: {
+        get: function() {return _domElement; }
+      },
+      parentElement: {
+        get: function() {return _parentElement; }
+      },
+      isBoundToStream: {
+        get: function() { return _streamBound; }
+      },
+      poster: {
+        get: function() {
+          return _domElement.getAttribute('poster');
+        },
+        set: function(src) {
+          _domElement.setAttribute('poster', src);
         }
+      }
     });
 
 
@@ -3187,594 +3638,596 @@ OT.VideoElement = function(options) {
 
     // Append the Video DOM element to a parent node
     this.appendTo = function(parentDomElement) {
-        _parentElement = parentDomElement;
-        _parentElement.appendChild(_domElement);
+      _parentElement = parentDomElement;
+      _parentElement.appendChild(_domElement);
 
-        return this;
+      return this;
     };
 
     // Bind a stream to the video element.
     this.bindToStream = function(webRtcStream) {
-        _streamBound = false;
-        _stream = webRtcStream;
+      _streamBound = false;
+      _stream = webRtcStream;
 
-        bindStreamToVideoElement(_domElement, _stream, _onStreamBound, _onStreamBoundError);
+      bindStreamToVideoElement(_domElement, _stream, _onStreamBound, _onStreamBoundError);
 
-        return this;
+      return this;
     };
 
     // Unbind the currently bound stream from the video element.
     this.unbindStream = function() {
-        if (!_stream) return this;
+      if (!_stream) return this;
 
-        if (_domElement) {
-            if (!navigator.mozGetUserMedia) {
-                // The browser would have released this on unload anyway, but
-                // we're being a good citizen.
-                window.URL.revokeObjectURL(_domElement.src);
-            }
-            else {
-                _domElement.mozSrcObject = null;
-            }
+      if (_domElement) {
+        if (!navigator.mozGetUserMedia) {
+          // The browser would have released this on unload anyway, but
+          // we're being a good citizen.
+          window.URL.revokeObjectURL(_domElement.src);
+        } else {
+          _domElement.mozSrcObject = null;
         }
+      }
 
-        _stream = null;
+      _stream = null;
 
-        return this;
+      return this;
     };
 
     this.setAudioVolume = function(value) {
-        if (_domElement) _domElement.volume = OT.$.roundFloat(value / 100, 2);
+      if (_domElement) _domElement.volume = OT.$.roundFloat(value / 100, 2);
     };
 
     this.getAudioVolume = function() {
-        // Return the actual volume of the DOM element
-        if (_domElement) return parseInt(_domElement.volume * 100, 10);
-        return 50;
+      // Return the actual volume of the DOM element
+      if (_domElement) return parseInt(_domElement.volume * 100, 10);
+      return 50;
     };
 
     this.whenTimeIncrements = function(callback, context) {
-        if(_domElement) {
-            var lastTime, handler = function() {
-                if(!lastTime || lastTime >= _domElement.currentTime) {
-                    lastTime = _domElement.currentTime;
-                } else {
-                    _domElement.removeEventListener('timeupdate', handler, false);
-                    callback.call(context, this);
-                }
-            }.bind(this);
-            _domElement.addEventListener('timeupdate', handler, false);
-        }
+      if(_domElement) {
+        var lastTime, handler;
+        handler = function() {
+          if(!lastTime || lastTime >= _domElement.currentTime) {
+            lastTime = _domElement.currentTime;
+          } else {
+            _domElement.removeEventListener('timeupdate', handler, false);
+            callback.call(context, this);
+          }
+        }.bind(this);
+        _domElement.addEventListener('timeupdate', handler, false);
+      }
     };
 
     this.destroy = function() {
-        // unbind all events so they don't fire after the object is dead
-        this.off();
+      // unbind all events so they don't fire after the object is dead
+      this.off();
 
-        this.unbindStream();
+      this.unbindStream();
 
-        if (_domElement) {
-            // Unbind this first, otherwise it will trigger when the
-            // video element is removed from the DOM.
-            _domElement.removeEventListener('pause', _playVideoOnPause);
+      if (_domElement) {
+        // Unbind this first, otherwise it will trigger when the
+        // video element is removed from the DOM.
+        _domElement.removeEventListener('pause', _playVideoOnPause);
 
-            OT.$.removeElement(_domElement);
-            _domElement = null;
-        }
+        OT.$.removeElement(_domElement);
+        _domElement = null;
+      }
 
-        _parentElement = null;
+      _parentElement = null;
 
-        return undefined;
+      return undefined;
     };
-};
+  };
 
-
-// Checking for window.defineProperty for IE compatibility, just so we don't throw exceptions when the script is included
-if (OT.$.canDefineProperty) {
+  // Checking for window.defineProperty for IE compatibility,
+  // just so we don't throw exceptions when the script is included
+  if (OT.$.canDefineProperty) {
     // Extracts a snapshot from a video element and returns it's as a PNG Data string.
     Object.defineProperties(OT.VideoElement.prototype, {
-        imgData: {
-            get: function() {
-                var canvas = OT.$.createElement('canvas', {
-                        width: this.domElement.videoWidth,
-                        height: this.domElement.videoHeight,
-                        style: {
-                            display: 'none'
-                        }
-                    });
-
-                document.body.appendChild(canvas);
-                try {
-                    canvas.getContext('2d').drawImage(this.domElement, 0, 0, canvas.width, canvas.height);
-                } catch(err) {
-                    OT.warn("Cannot get image data yet");
-                    return null;
-                }
-                var imgData = canvas.toDataURL('image/png');
-
-                OT.$.removeElement(canvas);
-
-                return imgData.replace("data:image/png;base64,", "").trim();
-            }
-        },
-
-        videoWidth: {
-            get: function() {
-                if(this._orientation && this._orientation.width) {
-                    return this._orientation.width;
-                }
-                return this.domElement['video' + (this.isRotated ? 'Height' : 'Width')];
-            }
-        },
-
-        videoHeight: {
-            get: function() {
-                if(this._orientation && this._orientation.height) {
-                    return this._orientation.height;
-                }
-                return this.domElement['video' + (this.isRotated ? 'Width' : 'Height')];
-            }
-        },
-
-        aspectRatio: {
-            get: function() {
-                return (this.videoWidth + 0.0) / this.videoHeight;
-            }
-        },
-
-        isRotated: {
-            get: function() {
-                return this._orientation && (this._orientation.videoOrientation == 'OTVideoOrientationRotatedLeft' || this._orientation.videoOrientation == 'OTVideoOrientationRotatedRight');
-            }
-        }
-    });
-}
-
-
-var VideoOrientationTransforms = {
-    OTVideoOrientationRotatedNormal: "rotate(0deg)",
-    OTVideoOrientationRotatedLeft: "rotate(90deg)",
-    OTVideoOrientationRotatedRight: "rotate(-90deg)",
-    OTVideoOrientationRotatedUpsideDown: "rotate(180deg)"
-};
-
-// Checking for window.defineProperty for IE compatibility, just so we don't throw exceptions when the script is included
-if (OT.$.canDefineProperty) {
-    Object.defineProperty(OT.VideoElement.prototype,'orientation', {
+      imgData: {
         get: function() {
-            return this._orientation;
-        },
-        set: function(orientation) {
-            this._orientation = orientation;
+          var canvas,
+              imgData;
 
-            var transform = VideoOrientationTransforms[orientation.videoOrientation] || VideoOrientationTransforms.ROTATED_NORMAL;
-
-            switch(OT.$.browser()) {
-                case 'Chrome':
-                case 'Safari':
-                    this.domElement.style.webkitTransform = transform;
-                    break;
-
-                case 'IE':
-                    this.domElement.style.msTransform = transform;
-                    break;
-
-                default:
-                    // The standard version, just Firefox, Opera, and IE > 9
-                    this.domElement.style.transform = transform;
+          canvas = OT.$.createElement('canvas', {
+            width: this.domElement.videoWidth,
+            height: this.domElement.videoHeight,
+            style: {
+              display: 'none'
             }
+          });
 
-            this.trigger('orientationChanged');
+          document.body.appendChild(canvas);
+
+          try {
+            canvas.getContext('2d').drawImage(this.domElement, 0, 0, canvas.width, canvas.height);
+          } catch(err) {
+            OT.warn('Cannot get image data yet');
+            return null;
+          }
+
+          imgData = canvas.toDataURL('image/png');
+
+          OT.$.removeElement(canvas);
+
+          return imgData.replace('data:image/png;base64,', '').trim();
         }
+      },
+
+      videoWidth: {
+        get: function() {
+          return this.domElement['video' + (this.isRotated ? 'Height' : 'Width')];
+        }
+      },
+
+      videoHeight: {
+        get: function() {
+          return this.domElement['video' + (this.isRotated ? 'Width' : 'Height')];
+        }
+      },
+
+      aspectRatio: {
+        get: function() {
+          return (this.videoWidth + 0.0) / this.videoHeight;
+        }
+      },
+
+      isRotated: {
+        get: function() {
+          return this._orientation && (
+            this._orientation.videoOrientation === 270 ||
+            this._orientation.videoOrientation === 90
+          );
+        }
+      },
+
+      orientation: {
+        get: function() { return this._orientation; },
+        set: function(orientation) {
+          var transform = VideoOrientationTransforms[orientation.videoOrientation] ||
+              VideoOrientationTransforms.ROTATED_NORMAL;
+
+          this._orientation = orientation;
+
+          switch(OT.$.browser()) {
+            case 'Chrome':
+            case 'Safari':
+              this.domElement.style.webkitTransform = transform;
+              break;
+
+            case 'IE':
+              this.domElement.style.msTransform = transform;
+              break;
+
+            default:
+              // The standard version, just Firefox, Opera, and IE > 9
+              this.domElement.style.transform = transform;
+          }
+
+          this.trigger('orientationChanged');
+        }
+      }
     });
-}
-
-
+  }
 
 /// Private Helper functions
 
-function createVideoElement(fallbackText, attributes) {
+  function createVideoElement(fallbackText, attributes) {
     var videoElement = document.createElement('video');
     videoElement.setAttribute('autoplay', '');
     videoElement.innerHTML = fallbackText;
 
     if (attributes) {
-        if (attributes.muted === true) {
-            delete attributes.muted;
-            videoElement.muted = 'true';
-        }
+      if (attributes.muted === true) {
+        delete attributes.muted;
+        videoElement.muted = 'true';
+      }
 
-        for (var key in attributes) {
-            videoElement.setAttribute(key, attributes[key]);
-        }
+      for (var key in attributes) {
+        videoElement.setAttribute(key, attributes[key]);
+      }
     }
 
     return videoElement;
-}
+  }
 
 
-// See http://www.w3.org/TR/2010/WD-html5-20101019/video.html#error-codes
-var _videoErrorCodes = {};
-// Checking for window.MediaError for IE compatibility, just so we don't throw exceptions when the script is included
-if (window.MediaError) {
-    _videoErrorCodes[window.MediaError.MEDIA_ERR_ABORTED] = "The fetching process for the media resource was aborted by the user agent at the user's request.";
-    _videoErrorCodes[window.MediaError.MEDIA_ERR_NETWORK] = "A network error of some description caused the user agent to stop fetching the media resource, after the resource was established to be usable.";
-    _videoErrorCodes[window.MediaError.MEDIA_ERR_DECODE] = "An error of some description occurred while decoding the media resource, after the resource was established to be usable.";
-    _videoErrorCodes[window.MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED] = "The media resource indicated by the src attribute was not suitable. ";
-}
+  // See http://www.w3.org/TR/2010/WD-html5-20101019/video.html#error-codes
+  // Checking for window.MediaError for IE compatibility, just so we don't throw
+  // exceptions when the script is included
+  if (window.MediaError) {
+    _videoErrorCodes[window.MediaError.MEDIA_ERR_ABORTED] = 'The fetching process for the media ' +
+      'resource was aborted by the user agent at the user\'s request.';
+    _videoErrorCodes[window.MediaError.MEDIA_ERR_NETWORK] = 'A network error of some description ' +
+      'caused the user agent to stop fetching the media resource, after the resource was ' +
+      'established to be usable.';
+    _videoErrorCodes[window.MediaError.MEDIA_ERR_DECODE] = 'An error of some description ' +
+      'occurred while decoding the media resource, after the resource was established to be ' +
+      ' usable.';
+    _videoErrorCodes[window.MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED] = 'The media resource ' +
+      'indicated by the src attribute was not suitable.';
+  }
 
-function videoElementErrorCodeToStr(errorCode) {
-    return _videoErrorCodes[parseInt(errorCode, 10)] || "An unknown error occurred.";
-}
+  function videoElementErrorCodeToStr(errorCode) {
+    return _videoErrorCodes[parseInt(errorCode, 10)] || 'An unknown error occurred.';
+  }
 
+  function bindStreamToVideoElement(videoElement, webRTCStream, onStreamBound, onStreamBoundError) {
+    var cleanup,
+        onLoad,
+        onError,
+        onStoppedLoading,
+        timeout;
 
-function bindStreamToVideoElement(videoElement, webRTCStream, onStreamBound, onStreamBoundError) {
     // Note: onloadedmetadata doesn't fire in Chrome for audio only crbug.com/110938
-    if (navigator.mozGetUserMedia || (webRTCStream.getVideoTracks().length > 0 && webRTCStream.getVideoTracks()[0].enabled)) {
+    if (navigator.mozGetUserMedia || (
+      webRTCStream.getVideoTracks().length > 0 && webRTCStream.getVideoTracks()[0].enabled)) {
 
-        var cleanup = function cleanup () {
-                clearTimeout(timeout);
-                videoElement.removeEventListener('loadedmetadata', onLoad, false);
-                videoElement.removeEventListener('error', onError, false);
-            },
+      cleanup = function cleanup () {
+        clearTimeout(timeout);
+        videoElement.removeEventListener('loadedmetadata', onLoad, false);
+        videoElement.removeEventListener('error', onError, false);
+        webRTCStream.onended = null;
+      };
 
-            onLoad = function onLoad (event) {
-                cleanup();
-                onStreamBound();
-            },
-
-            onError = function onError (event) {
-                cleanup();
-                onStreamBoundError("There was an unexpected problem with the Video Stream: " + videoElementErrorCodeToStr(event.target.error.code));
-            },
-
-            onStoppedLoading = function onStoppedLoading () {
-                // The stream ended before we fully bound it. Maybe the other end called
-                // stop on it or something else went wrong.
-                cleanup();
-                onStreamBoundError("Stream ended while trying to bind it to a video element.");
-            },
-
-            // Timeout if it takes too long
-            timeout = setTimeout(function() {
-                if (videoElement.currentTime === 0) {
-                    onStreamBoundError("The video stream failed to connect. Please notify the site owner if this continues to happen.");
-                } else {
-                    // This should never happen
-                    OT.warn("Never got the loadedmetadata event but currentTime > 0");
-                    onStreamBound();
-                }
-            }.bind(this), 30000);
-
-
-        videoElement.addEventListener('loadedmetadata', onLoad, false);
-        videoElement.addEventListener('error', onError, false);
-        webRTCStream.onended = onStoppedLoading;
-    } else {
+      onLoad = function onLoad () {
+        cleanup();
         onStreamBound();
+      };
+
+      onError = function onError (event) {
+        cleanup();
+        onStreamBoundError('There was an unexpected problem with the Video Stream: ' +
+          videoElementErrorCodeToStr(event.target.error.code));
+      };
+
+      onStoppedLoading = function onStoppedLoading () {
+        // The stream ended before we fully bound it. Maybe the other end called
+        // stop on it or something else went wrong.
+        cleanup();
+        onStreamBoundError('Stream ended while trying to bind it to a video element.');
+      };
+
+      // Timeout if it takes too long
+      timeout = setTimeout(function() {
+        if (videoElement.currentTime === 0) {
+          onStreamBoundError('The video stream failed to connect. Please notify the site ' +
+            'owner if this continues to happen.');
+        } else {
+          // This should never happen
+          OT.warn('Never got the loadedmetadata event but currentTime > 0');
+          onStreamBound();
+        }
+      }.bind(this), 30000);
+
+
+      videoElement.addEventListener('loadedmetadata', onLoad, false);
+      videoElement.addEventListener('error', onError, false);
+      webRTCStream.onended = onStoppedLoading;
+    } else {
+      onStreamBound();
     }
 
     // The official spec way is 'srcObject', we are slowly converging there.
     if (videoElement.srcObject !== void 0) {
-        videoElement.srcObject = webRTCStream;
-    }
-    else if (videoElement.mozSrcObject !== void 0) {
-        videoElement.mozSrcObject = webRTCStream;
-    }
-    else {
-        videoElement.src = window.URL.createObjectURL(webRTCStream);
+      videoElement.srcObject = webRTCStream;
+    } else if (videoElement.mozSrcObject !== void 0) {
+      videoElement.mozSrcObject = webRTCStream;
+    } else {
+      videoElement.src = window.URL.createObjectURL(webRTCStream);
     }
 
     videoElement.play();
-}
-
+  }
 
 })(window);
-(function(window) {
+!(function(window) {
 
-// Singleton interval
-var logQueue = [],
-    queueRunning = false;
+  // Singleton interval
+  var logQueue = [],
+      queueRunning = false;
 
 
-OT.Analytics = function() {
+  OT.Analytics = function() {
 
-    var endPoint = OT.properties.loggingURL + "/logging/ClientEvent",
-        endPointQos = OT.properties.loggingURL + "/logging/ClientQos",
+    var endPoint = OT.properties.loggingURL + '/logging/ClientEvent',
+        endPointQos = OT.properties.loggingURL + '/logging/ClientQos',
 
         reportedErrors = {},
 
         // Map of camel-cased keys to underscored
-        camelCasedKeys = {
-            payloadType: 'payload_type',
-            partnerId: 'partner_id',
-            streamId: 'stream_id',
-            sessionId: 'session_id',
-            connectionId: 'connection_id',
-            widgetType: 'widget_type',
-            widgetId: 'widget_id',
-            avgAudioBitrate: 'avg_audio_bitrate',
-            avgVideoBitrate: 'avg_video_bitrate',
-            localCandidateType: 'local_candidate_type',
-            remoteCandidateType: 'remote_candidate_type',
-            transportType: 'transport_type'
-        },
+        camelCasedKeys,
 
-        send = function(data, isQos, onSuccess, onError) {
-            OT.$.post(isQos ? endPointQos : endPoint, {
-                success: onSuccess,
-                error: onError,
-                data: data,
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                }
-            });
+        send = function(data, isQos, callback) {
+          OT.$.post(isQos ? endPointQos : endPoint, {
+            body: data,
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          }, callback);
         },
 
         throttledPost = function() {
-            // Throttle logs so that they only happen 1 at a time
-            if (!queueRunning && logQueue.length > 0) {
-                queueRunning = true;
-                var curr = logQueue[0];
+          // Throttle logs so that they only happen 1 at a time
+          if (!queueRunning && logQueue.length > 0) {
+            queueRunning = true;
+            var curr = logQueue[0];
 
-                // Remove the current item and send the next log
-                var processNextItem = function() {
-                    logQueue.shift();
-                    queueRunning = false;
-                    throttledPost();
-                };
+            // Remove the current item and send the next log
+            var processNextItem = function() {
+              logQueue.shift();
+              queueRunning = false;
+              throttledPost();
+            };
 
-                if (curr) {
-                    send(curr.data, curr.isQos, function() {
-                        curr.onComplete();
-                        setTimeout(processNextItem, 50);
-                    }, function() {
-                        OT.debug("Failed to send ClientEvent, moving on to the next item.");
-
-                        // There was an error, move onto the next item
-                        setTimeout(processNextItem, 50);
-                    });
+            if (curr) {
+              send(curr.data, curr.isQos, function(err) {
+                if(err) {
+                  OT.debug('Failed to send ClientEvent, moving on to the next item.');
+                } else {
+                  curr.onComplete();
                 }
+                setTimeout(processNextItem, 50);
+              });
             }
+          }
         },
 
         post = function(data, onComplete, isQos) {
-            logQueue.push({
-                data: data,
-                onComplete: onComplete,
-                isQos: isQos
-            });
+          logQueue.push({
+            data: data,
+            onComplete: onComplete,
+            isQos: isQos
+          });
 
-            throttledPost();
+          throttledPost();
         },
 
         shouldThrottleError = function(code, type, partnerId) {
-            if (!partnerId) return false;
+          if (!partnerId) return false;
 
-            var errKey = [partnerId, type, code].join('_'),
-                //msgLimit = DynamicConfig.get('exceptionLogging', 'messageLimitPerPartner', partnerId);
-                msgLimit = 100;
-            if (msgLimit === null || msgLimit === undefined) return false;
-
-            return (reportedErrors[errKey] || 0) <= msgLimit;
+          var errKey = [partnerId, type, code].join('_'),
+          //msgLimit = DynamicConfig.get('exceptionLogging', 'messageLimitPerPartner', partnerId);
+            msgLimit = 100;
+          if (msgLimit === null || msgLimit === undefined) return false;
+          return (reportedErrors[errKey] || 0) <= msgLimit;
         };
 
-        // Log an error via ClientEvents.
-        //
-        // @param [String] code
-        // @param [String] type
-        // @param [String] message
-        // @param [Hash] details additional error details
-        //
-        // @param [Hash] options the options to log the client event with.
-        // @option options [String] action The name of the Event that we are logging. E.g. "TokShowLoaded". Required.
-        // @option options [String] variation Usually used for Split A/B testing, when you have multiple variations of the +_action+.
-        // @option options [String] payloadType A text description of the payload. Required.
-        // @option options [String] payload The payload. Required.
-        // @option options [String] sessionId The active OpenTok session, if there is one
-        // @option options [String] connectionId The active OpenTok connectionId, if there is one
-        // @option options [String] partnerId
-        // @option options [String] guid ...
-        // @option options [String] widgetId ...
-        // @option options [String] streamId ...
-        // @option options [String] section ...
-        // @option options [String] build ...
-        //
-        // Reports will be throttled to X reports (see exceptionLogging.messageLimitPerPartner
-        // from the dynamic config for X) of each error type for each partner. Reports can be
-        // disabled/enabled globally or on a per partner basis (per partner settings
-        // take precedence) using exceptionLogging.enabled.
-        //
-        this.logError = function(code, type, message, details, options) {
-            if (!options) options = {};
-            var partnerId = options.partnerId;
+    camelCasedKeys = {
+      payloadType: 'payload_type',
+      partnerId: 'partner_id',
+      streamId: 'stream_id',
+      sessionId: 'session_id',
+      connectionId: 'connection_id',
+      widgetType: 'widget_type',
+      widgetId: 'widget_id',
+      avgAudioBitrate: 'avg_audio_bitrate',
+      avgVideoBitrate: 'avg_video_bitrate',
+      localCandidateType: 'local_candidate_type',
+      remoteCandidateType: 'remote_candidate_type',
+      transportType: 'transport_type'
+    };
 
-            if (OT.Config.get('exceptionLogging', 'enabled', partnerId) !== true) {
-                return;
-            }
+    // Log an error via ClientEvents.
+    //
+    // @param [String] code
+    // @param [String] type
+    // @param [String] message
+    // @param [Hash] details additional error details
+    //
+    // @param [Hash] options the options to log the client event with.
+    // @option options [String] action The name of the Event that we are logging. E.g. 
+    //  'TokShowLoaded'. Required.
+    // @option options [String] variation Usually used for Split A/B testing, when you 
+    //  have multiple variations of the +_action+.
+    // @option options [String] payloadType A text description of the payload. Required.
+    // @option options [String] payload The payload. Required.
+    // @option options [String] sessionId The active OpenTok session, if there is one
+    // @option options [String] connectionId The active OpenTok connectionId, if there is one
+    // @option options [String] partnerId
+    // @option options [String] guid ...
+    // @option options [String] widgetId ...
+    // @option options [String] streamId ...
+    // @option options [String] section ...
+    // @option options [String] build ...
+    //
+    // Reports will be throttled to X reports (see exceptionLogging.messageLimitPerPartner
+    // from the dynamic config for X) of each error type for each partner. Reports can be
+    // disabled/enabled globally or on a per partner basis (per partner settings
+    // take precedence) using exceptionLogging.enabled.
+    //
+    this.logError = function(code, type, message, details, options) {
+      if (!options) options = {};
+      var partnerId = options.partnerId;
 
-            if (shouldThrottleError(code, type, partnerId)) {
-                //OT.log("ClientEvents.error has throttled an error of type " + type + "." + code + " for partner " + (partnerId || 'No Partner Id'));
-                return;
-            }
+      if (OT.Config.get('exceptionLogging', 'enabled', partnerId) !== true) {
+        return;
+      }
 
-            var errKey = [partnerId, type, code].join('_'),
+      if (shouldThrottleError(code, type, partnerId)) {
+        //OT.log('ClientEvents.error has throttled an error of type ' + type + '.' + 
+        // code + ' for partner ' + (partnerId || 'No Partner Id'));
+        return;
+      }
 
-                payload = this.escapePayload(OT.$.extend(details || {}, {
-                    message: payload,
-                    userAgent: navigator.userAgent
-                }));
+      var errKey = [partnerId, type, code].join('_'),
+
+      payload = this.escapePayload(OT.$.extend(details || {}, {
+        message: payload,
+        userAgent: navigator.userAgent
+      }));
 
 
-            reportedErrors[errKey] = typeof(reportedErrors[errKey]) !== 'undefined' ?
-                                            reportedErrors[errKey] + 1 :
-                                            1;
+      reportedErrors[errKey] = typeof(reportedErrors[errKey]) !== 'undefined' ?
+        reportedErrors[errKey] + 1 : 1;
 
-            return this.logEvent(OT.$.extend(options, {
-                action: type + '.' + code,
-                payloadType: payload[0],
-                payload: payload[1]
-            }));
-        };
+      return this.logEvent(OT.$.extend(options, {
+        action: type + '.' + code,
+        payloadType: payload[0],
+        payload: payload[1]
+      }));
+    };
 
-        // Log a client event to the analytics backend.
-        //
-        // @example Logs a client event called 'foo'
-        //  OT.ClientEvents.log({
-        //      action: 'foo',
-        //      payload_type: "foo's payload",
-        //      payload: 'bar',
-        //      session_id: sessionId,
-        //      connection_id: connectionId
-        //  })
-        //
-        // @param [Hash] options the options to log the client event with.
-        // @option options [String] action The name of the Event that we are logging. E.g. "TokShowLoaded". Required.
-        // @option options [String] variation Usually used for Split A/B testing, when you have multiple variations of the +_action+.
-        // @option options [String] payloadType A text description of the payload. Required.
-        // @option options [String] payload The payload. Required.
-        // @option options [String] session_id The active OpenTok session, if there is one
-        // @option options [String] connection_id The active OpenTok connectionId, if there is one
-        // @option options [String] partner_id
-        // @option options [String] guid ...
-        // @option options [String] widget_id ...
-        // @option options [String] stream_id ...
-        // @option options [String] section ...
-        // @option options [String] build ...
-        //
-        this.logEvent = function(options) {
-            var partnerId = options.partnerId;
+    // Log a client event to the analytics backend.
+    //
+    // @example Logs a client event called 'foo'
+    //  OT.ClientEvents.log({
+    //      action: 'foo',
+    //      payload_type: 'foo's payload',
+    //      payload: 'bar',
+    //      session_id: sessionId,
+    //      connection_id: connectionId
+    //  })
+    //
+    // @param [Hash] options the options to log the client event with.
+    // @option options [String] action The name of the Event that we are logging. 
+    //  E.g. 'TokShowLoaded'. Required.
+    // @option options [String] variation Usually used for Split A/B testing, when 
+    //  you have multiple variations of the +_action+.
+    // @option options [String] payloadType A text description of the payload. Required.
+    // @option options [String] payload The payload. Required.
+    // @option options [String] session_id The active OpenTok session, if there is one
+    // @option options [String] connection_id The active OpenTok connectionId, if there is one
+    // @option options [String] partner_id
+    // @option options [String] guid ...
+    // @option options [String] widget_id ...
+    // @option options [String] stream_id ...
+    // @option options [String] section ...
+    // @option options [String] build ...
+    //
+    this.logEvent = function(options) {
+      var partnerId = options.partnerId;
 
-            if (!options) options = {};
+      if (!options) options = {};
 
-            // Set a bunch of defaults
-            var data = OT.$.extend({
-                    "variation" : "",
-                    'guid' : this.getClientGuid(),
-                    'widget_id' : "",
-                    'session_id': '',
-                    'connection_id': '',
-                    'stream_id' : "",
-                    'partner_id' : partnerId,
-                    'source' : window.location.href,
-                    'section' : "",
-                    'build' : ""
-                }, options),
+      // Set a bunch of defaults
+      var data = OT.$.extend({
+        'variation' : '',
+        'guid' : this.getClientGuid(),
+        'widget_id' : '',
+        'session_id': '',
+        'connection_id': '',
+        'stream_id' : '',
+        'partner_id' : partnerId,
+        'source' : window.location.href,
+        'section' : '',
+        'build' : ''
+      }, options),
 
-                onComplete = function(){
-                //  OT.log("logged: " + "{action: " + data["action"] + ", variation: " + data["variation"] + ", payload_type: " + data["payload_type"] + ", payload: " + data["payload"] + "}");
-                };
+      onComplete = function(){
+        //  OT.log('logged: ' + '{action: ' + data['action'] + ', variation: ' + data['variation']
+        //  + ', payload_type: ' + data['payload_type'] + ', payload: ' + data['payload'] + '}');
+      };
 
-            // We camel-case our names, but the ClientEvents backend wants them
-            // underscored...
-            for (var key in camelCasedKeys) {
-                if (camelCasedKeys.hasOwnProperty(key) && data[key]) {
-                    data[camelCasedKeys[key]] = data[key];
-                    delete data[key];
-                }
-            }
+      // We camel-case our names, but the ClientEvents backend wants them
+      // underscored...
+      for (var key in camelCasedKeys) {
+        if (camelCasedKeys.hasOwnProperty(key) && data[key]) {
+          data[camelCasedKeys[key]] = data[key];
+          delete data[key];
+        }
+      }
 
-            post(data, onComplete, false);
-        };
+      post(data, onComplete, false);
+    };
 
-        // Log a client QOS to the analytics backend.
-        //
-        this.logQOS = function(options) {
-            var partnerId = options.partnerId;
+    // Log a client QOS to the analytics backend.
+    //
+    this.logQOS = function(options) {
+      var partnerId = options.partnerId;
 
-            if (!options) options = {};
+      if (!options) options = {};
 
-            // Set a bunch of defaults
-            var data = OT.$.extend({
-                    'guid' : this.getClientGuid(),
-                    'widget_id' : "",
-                    'session_id': '',
-                    'connection_id': '',
-                    'stream_id' : "",
-                    'partner_id' : partnerId,
-                    'source' : window.location.href,
-                    'build' : "",
-                    'duration' : 0 //in milliseconds
-                }, options),
+      // Set a bunch of defaults
+      var data = OT.$.extend({
+        'guid' : this.getClientGuid(),
+        'widget_id' : '',
+        'session_id': '',
+        'connection_id': '',
+        'stream_id' : '',
+        'partner_id' : partnerId,
+        'source' : window.location.href,
+        'build' : '',
+        'duration' : 0 //in milliseconds
+      }, options),
 
-                onComplete = function(){
-                    //OT.log("logged: " + "{action: " + data["action"] + ", variation: " + data["variation"] + ", payload_type: " + data["payload_type"] + ", payload: " + data["payload"] + "}");
-                };
+      onComplete = function(){
+        // OT.log('logged: ' + '{action: ' + data['action'] + ', variation: ' + data['variation']
+        //  + ', payload_type: ' + data['payload_type'] + ', payload: ' + data['payload'] + '}');
+      };
 
-            // We camel-case our names, but the ClientEvents backend wants them
-            // underscored...
-            for (var key in camelCasedKeys) {
-                if (camelCasedKeys.hasOwnProperty(key) && data[key]) {
-                    data[camelCasedKeys[key]] = data[key];
-                    delete data[key];
-                }
-            }
+      // We camel-case our names, but the ClientEvents backend wants them
+      // underscored...
+      for (var key in camelCasedKeys) {
+        if (camelCasedKeys.hasOwnProperty(key) && data[key]) {
+          data[camelCasedKeys[key]] = data[key];
+          delete data[key];
+        }
+      }
 
-            post(data, onComplete, true);
-        };
+      post(data, onComplete, true);
+    };
 
-        // Converts +payload+ to two pipe seperated strings. Doesn't currently handle
-        // edgecases, e.g. escaping "\\|" will break stuff.
-        //
-        // *Note:* It strip any keys that have null values.
-        this.escapePayload = function(payload) {
-            var escapedPayload = [],
-                escapedPayloadDesc = [];
+    // Converts +payload+ to two pipe seperated strings. Doesn't currently handle
+    // edgecases, e.g. escaping '\\|' will break stuff.
+    //
+    // *Note:* It strip any keys that have null values.
+    this.escapePayload = function(payload) {
+      var escapedPayload = [],
+          escapedPayloadDesc = [];
 
-            for (var key in payload) {
-                if (payload.hasOwnProperty(key) && payload[key] !== null && payload[key] !== undefined) {
-                    escapedPayload.push( payload[key] ? payload[key].toString().replace('|', '\\|') : '' );
-                    escapedPayloadDesc.push( key.toString().replace('|', '\\|') );
-                }
-            }
+      for (var key in payload) {
+        if (payload.hasOwnProperty(key) && payload[key] !== null && payload[key] !== undefined) {
+          escapedPayload.push( payload[key] ? payload[key].toString().replace('|', '\\|') : '' );
+          escapedPayloadDesc.push( key.toString().replace('|', '\\|') );
+        }
+      }
 
-            return [
-                escapedPayloadDesc.join('|'),
-                escapedPayload.join('|')
-            ];
-        };
-        // Uses HTML5 local storage to save a client ID.
-        this.getClientGuid = function() {
-            var  guid = OT.$.getCookie("opentok_client_id");
-            if (!guid) {
-                guid = OT.$.uuid();
-                OT.$.setCookie("opentok_client_id", guid);
-            }
-            return guid;
-        };
-}
+      return [
+        escapedPayloadDesc.join('|'),
+        escapedPayload.join('|')
+      ];
+    };
+
+    // Uses HTML5 local storage to save a client ID.
+    this.getClientGuid = function() {
+      var  guid = OT.$.getCookie('opentok_client_id');
+      if (!guid) {
+        guid = OT.$.uuid();
+        OT.$.setCookie('opentok_client_id', guid);
+      }
+      return guid;
+    };
+  };
 
 })(window);
-(function(window) {
+!(function(window) {
 
-// This is not obvious, so to prevent end-user frustration we'll let them know
-// explicitly rather than failing with a bunch of permission errors. We don't
-// handle this using an OT Exception as it's really only a development thing.
-if (location.protocol === 'file:') {
-  alert("You cannot test a page using WebRTC through the file system due to browser permissions. You must run it over a web server.");
-}
+  // This is not obvious, so to prevent end-user frustration we'll let them know
+  // explicitly rather than failing with a bunch of permission errors. We don't
+  // handle this using an OT Exception as it's really only a development thing.
+  if (location.protocol === 'file:') {
+    /*global alert*/
+    alert('You cannot test a page using WebRTC through the file system due to browser ' +
+      'permissions. You must run it over a web server.');
+  }
 
-if (!window.OT) window.OT = {};
+  if (!window.OT) window.OT = {};
 
-if (!window.URL && window.webkitURL) {
+  if (!window.URL && window.webkitURL) {
     window.URL = window.webkitURL;
-}
+  }
 
-var _publisherCount = 0,
-
-    // Global parameters used by upgradeSystemRequirements
-    _intervalId,
-    _lastHash = document.location.hash,
-
-    // Cached DeviceManager
-    _deviceManager;
+  var // Global parameters used by upgradeSystemRequirements
+      _intervalId,
+      _lastHash = document.location.hash;
 
 
 /**
-* The first step in using the OpenTok API is to call the <code>TB.initSession()</code> method. Other methods of the TB object
-* check for system requirements and set up error logging.
+* The first step in using the OpenTok API is to call the <code>OT.initSession()</code>
+* method. Other methods of the OT object check for system requirements and set up error logging.
 *
-* @class TB
+* @class OT
 */
 
 /**
@@ -3783,8 +4236,8 @@ var _publisherCount = 0,
 * </p>
 * <p>
 * You connect to an OpenTok session using the <code>connect()</code> method
-* of the Session object returned by the <code>TB.initSession()</code> method.
-* Note that calling <code>TB.initSession()</code> does not initiate communications
+* of the Session object returned by the <code>OT.initSession()</code> method.
+* Note that calling <code>OT.initSession()</code> does not initiate communications
 * with the cloud. It simply initializes the Session object that you can use to
 * connect (and to perform other operations once connected).
 * </p>
@@ -3793,22 +4246,31 @@ var _publisherCount = 0,
 *    For an example, see <a href="Session.html#connect">Session.connect()</a>.
 *  </p>
 *
-* @method TB.initSession
-* @memberof TB
-* @param {String} sessionId The session ID identifying the OpenTok session. For more information, see
-* <a href="/opentok/tutorials/create-session/">Session creation</a>.
-* @returns {Session} The session object through which all further interactions with the session will occur.
+* @method OT.initSession
+* @memberof OT
+* @param {String} apiKey Your OpenTok API key (see <a href="https://dashboard.tokbox.com">the
+* OpenTok dashboard</a>).
+* @param {String} sessionId The session ID identifying the OpenTok session. For more
+* information, see <a href="/opentok/tutorials/create-session/">Session creation</a>.
+* @returns {Session} The session object through which all further interactions with
+* the session will occur.
 */
-OT.initSession = function(sessionId) {
+  OT.initSession = function(apiKey, sessionId) {
+
+    if(sessionId == null) {
+      sessionId = apiKey;
+      apiKey = null;
+    }
+
     var session = OT.sessions.get(sessionId);
 
     if (!session) {
-        session = new OT.Session(sessionId);
-        OT.sessions.add(session);
+      session = new OT.Session(apiKey, sessionId);
+      OT.sessions.add(session);
     }
 
     return session;
-};
+  };
 
 /**
 * <p class="mSummary">
@@ -3816,28 +4278,51 @@ OT.initSession = function(sessionId) {
 *   object to <code>Session.publish()</code> to publish a stream to a session.
 * </p>
 * <p>
-*   <i>Note:</i> If you intend to reuse a Publisher object created using <code>TB.initPublisher()</code>
-*   to publish to different sessions sequentially, call either <code>Session.disconnect()</code> or
-*   <code>Session.unpublish()</code>. Do not call both. Then call the <code>preventDefault()</code> method
-*   of the <code>streamDestroyed</code> or <code>sessionDisconnected</code> event object to prevent the
+*   <i>Note:</i> If you intend to reuse a Publisher object created using
+*   <code>OT.initPublisher()</code> to publish to different sessions sequentially,
+*   call either <code>Session.disconnect()</code> or <code>Session.unpublish()</code>.
+*   Do not call both. Then call the <code>preventDefault()</code> method of the
+*   <code>streamDestroyed</code> or <code>sessionDisconnected</code> event object to prevent the
 *   Publisher object from being removed from the page.
 * </p>
-* @param {String} apiKey The API key that TokBox provided you when you
-* <a href="https://dashboard.tokbox.com/users/sign_in">signed up</a> for an OpenTok account.
-* @param {String} targetElement The
-* <code>id</code> attribute of the existing DOM element that the Publisher video replaces.
-* If you do not specify a <code>targetElement</code>, the application
-* appends a new DOM element to the HTML <code>body</code>.
+*
+* @param {Object} targetElement (Optional) The DOM element or the <code>id</code> attribute of the
+* existing DOM element used to determine the location of the Publisher video in the HTML DOM. See
+* the <code>insertMode</code> property of the <code>properties</code> parameter. If you do not
+* specify a <code>targetElement</code>, the application appends a new DOM element to the HTML
+* <code>body</code>.
 *
 * <p>
-*       The application throws an error if an element with an ID set to the <code>targetElement</code>
-*       value does not exist in the HTML DOM.
+*       The application throws an error if an element with an ID set to the
+*       <code>targetElement</code> value does not exist in the HTML DOM.
 * </p>
 *
-* @param {Object} properties This is
-* an <em>optional</em> object that contains the following properties (each of which are optional):
+* @param {Object} properties (Optional) This object contains the following properties (each of which
+* are optional):
 * </p>
 * <ul>
+* <li>
+*   <strong>frameRate</strong> (Number) &#151; The desired frame rate, in frames per second,
+*   of the video. Valid values are 30, 15, 7, and 1. The published stream will use the closest
+*   value supported on the publishing client. The frame rate can differ slightly from the value
+*   you set, depending on the browser of the client. And the video will only use the desired
+*   frame rate if the client configuration supports it.
+*   <br><br><p>If the publisher specifies a frame rate, the actual frame rate of the video stream
+*   is set as the <code>frameRate</code> property of the Stream object, though the actual frame rate
+*   will vary based on changing network and system conditions. If the developer does not specify a
+*   frame rate, this property is undefined.
+*   <p>
+*   For OpenTok cloud-enabled sessions, lowering the frame rate or lowering the resolution reduces
+*   the maximum bandwidth the stream can use. However, in peer-to-peer sessions, lowering the frame 
+*   rate or resolution may not reduce the stream's bandwidth.
+*   </p>
+*   <p>
+*   You can also restrict the frame rate of a Subscriber's video stream. To restrict the frame rate
+*   a Subscriber, call the <code>restrictFrameRate()</code> method of the subscriber, passing in
+*   <code>true</code>.
+*   (See <a href="Subscriber.html#restrictFrameRate">Subscriber.restrictFrameRate()</a>.)
+*   </p>
+* </li>
 * <li>
 *   <strong>height</strong> (Number) &#151; The desired height, in pixels, of the
 *   displayed Publisher video stream (default: 198). <i>Note:</i> Use the
@@ -3846,15 +4331,33 @@ OT.initSession = function(sessionId) {
 *   (using CSS).
 * </li>
 * <li>
+*   <strong>insertMode</strong> (String) &#151; Specifies how the Publisher object will be
+*   inserted in the HTML DOM. See the <code>targetElement</code> parameter. This string can
+*   have the following values:
+*   <ul>
+*     <li><code>"replace"</code> &#151; The Publisher object replaces contents of the
+*       targetElement. This is the default.</li>
+*     <li><code>"after"</code> &#151; The Publisher object is a new element inserted after
+*       the targetElement in the HTML DOM. (Both the Publisher and targetElement have the
+*       same parent element.)</li>
+*     <li><code>"before"</code> &#151; The Publisher object is a new element inserted before
+*       the targetElement in the HTML DOM. (Both the Publisher and targetElement have the same
+*       parent element.)</li>
+*     <li><code>"append"</code> &#151; The Publisher object is a new element added as a child
+*       of the targetElement. If there are other child elements, the Publisher is appended as
+*       the last child element of the targetElement.</li>
+*   </ul>
+* </li>
+* <li>
 *   <strong>mirror</strong> (Boolean) &#151; Whether the publisher's video image
 *   is mirrored in the publisher's page<. The default value is <code>true</code>
 *   (the video image is mirrored). This property does not affect the display
 *   on other subscribers' web pages.
 * </li>
 * <li>
-*   <strong>name</strong> (String) &#151; The name for this stream. The name appears at the bottom of
-*   Subscriber videos. The default value is "" (an empty string). Setting this to a string longer than
-*   1000 characters results in an runtime exception.
+*   <strong>name</strong> (String) &#151; The name for this stream. The name appears at
+*   the bottom of Subscriber videos. The default value is "" (an empty string). Setting
+*   this to a string longer than 1000 characters results in an runtime exception.
 * </li>
 * <li>
 *   <strong>publishAudio</strong> (Boolean) &#151; Whether to initially publish audio
@@ -3867,12 +4370,62 @@ OT.initSession = function(sessionId) {
 *   the Publisher object in a call to the <code>Session.publish()</code> method.
 * </li>
 * <li>
+*   <strong>resolution</strong> (String) &#151; The desired resolution of the video. The format
+*   of the string is <code>"widthxheight"</code>, where the width and height are represented in
+*   pixels. Valid values are <code>"1280x720"</code>, <code>"640x480"</code>, and
+*   <code>"320x240"</code>. The published video will only use the desired resolution if the
+*   client configuration supports it.
+*   <br><br><p>
+*   The requested resolution of a video stream is set as the <code>videoDimensions.width</code> and
+*   <code>videoDimensions.height</code> properties of the Stream object.
+*   </p>
+*   <p>
+*   The default resolution for a stream (if you do not specify a resolution) is 640x480 pixels.
+*   If the client system cannot support the resolution you requested, the the stream will use the 
+*   next largest setting supported.
+*   </p>
+*   <p>
+*   The actual resolution used by the Publisher is set as the <code>videoHeight</code> and 
+*   <code>videoWidth</code> properties of the Publisher object. The actual resolution of a
+*   Subscriber video stream is set as the <code>videoWidth</code> and <code>videoHeight</code> 
+*   properties of the Subscriber object. These may differ from the values of the 
+*   <code>resolution</code> property passed in as the <code>properties</code> property of the
+*   <code>OT.initPublisher()</code> method, if the browser does not support the requested
+*   resolution.
+*   </p>
+*   <p>
+*   For OpenTok cloud-enabled sessions, lowering the frame rate or lowering the resolution reduces
+*   the maximum bandwidth the stream can use. However, in peer-to-peer sessions, lowering the frame
+*   rate or resolution may not reduce the stream's bandwidth.
+*   </p>
+* </li>
+* <li>
 *   <strong>style</strong> (Object) &#151; An object containing properties that define the initial
-*   appearance of user interface controls of the Publisher. Currently, the <code>style</code> object
-*   includes one property: <code>nameDisplayMode</code>. Possible values for the <code>style.nameDisplayMode</code>
-*   property are: <code>"auto"</code> (the name is displayed when the stream is first displayed
-*   and when the user mouses over the display), <code>"off"</code> (the name is not displayed),
-*   and <code>"on"</code> (the name is displayed).</li>
+*   appearance of user interface controls of the Publisher. The <code>style</code> object includes
+*   the following properties:
+*     <ul>
+*       <li><code>backgroundImageURI</code> (String) &mdash; A URI for an image to display as
+*       the background image when a video is not displayed. (A video may not be displayed if
+*       you call <code>publishVideo(false)</code> on the Publisher object). You can pass an http
+*       or https URI to a PNG, JPEG, or non-animated GIF file location. You can also use the
+*       <code>data</code> URI scheme (instead of http or https) and pass in base-64-encrypted
+*       PNG data, such as that obtained from the
+*       <a href="Publisher.html#getImgData">Publisher.getImgData()</a> method. For example,
+*       you could set the property to <code>"data:VBORw0KGgoAA..."</code>, where the portion of the
+*       string after <code>"data:"</code> is the result of a call to
+*       <code>Publisher.getImgData()</code>. If the URL or the image data is invalid, the property
+*       is ignored (the attempt to set the image fails silently).</li>
+*
+*       <li><code>buttonDisplayMode</code> (String) &mdash; How to display the microphone controls
+*       Possible values are: <code>"auto"</code> (controls are displayed when the stream is first
+*       displayed and when the user mouses over the display), <code>"off"</code> (controls are not
+*       displayed), and <code>"on"</code> (controls are always displayed).</li>
+*
+*       <li><code>nameDisplayMode</code> (String) &#151; Whether to display the stream name.
+*       Possible values are: <code>"auto"</code> (the name is displayed when the stream is first
+*       displayed and when the user mouses over the display), <code>"off"</code> (the name is not
+*       displayed), and <code>"on"</code> (the name is always displayed).</li>
+*   </ul>
 * </li>
 * <li>
 *   <strong>width</strong> (Number) &#151; The desired width, in pixels, of the
@@ -3882,159 +4435,225 @@ OT.initSession = function(sessionId) {
 *   (using CSS).
 * </li>
 * </ul>
+* @param {Function} completionHandler (Optional) A function to be called when the method succeeds
+* or fails in initializing a Publisher object. This function takes one parameter &mdash;
+* <code>error</code>. On success, the <code>error</code> object is set to <code>null</code>. On
+* failure, the <code>error</code> object has two properties: <code>code</code> (an integer) and
+* <code>message</code> (a string), which identify the cause of the failure. The method succeeds
+* when the user grants access to the camera and microphone. The method fails if the user denies
+* access to the camera and microphone. The <code>completionHandler</code> function is called
+* before the Publisher dispatches an <code>accessAllowed</code> (success) event or an
+* <code>accessDenied</code> (failure) event.
+* <p>
+* The following code adds a <code>completionHandler</code> when calling the
+* <code>OT.initPublisher()</code> method:
+* </p>
+* <pre>
+* var publisher = OT.initPublisher('publisher', null, function (error) {
+*   if (error) {
+*     console.log(error);
+*   } else {
+*     console.log("Publisher initialized.");
+*   }
+* });
+* </pre>
 *
 * @returns {Publisher} The Publisher object.
-* @see Session#publish
-* @method TB.initPublisher
-* @memberof TB
+* @see <a href="Session#publish>Session.publish()</a>
+* @method OT.initPublisher
+* @memberof OT
 */
-OT.initPublisher = function(apiKey, targetElement, properties, completionHandler) {
-    OT.debug("TB.initPublisher("+targetElement+")");
+  OT.initPublisher = function(targetElement, properties, completionHandler) {
+    OT.debug('OT.initPublisher('+targetElement+')');
 
-    var publisher = new OT.Publisher();;
+    if(targetElement != null && !(
+      (typeof targetElement === 'object' && targetElement.nodeType === Node.ELEMENT_NODE) ||
+      (typeof targetElement === 'string' && document.getElementById(targetElement))) &&
+      typeof targetElement !== 'function') {
+      targetElement = properties;
+      properties = completionHandler;
+      completionHandler = arguments[3];
+    }
+    
+    if(typeof targetElement === 'function') {
+      completionHandler = targetElement;
+      properties = undefined;
+      targetElement = undefined;
+    }
+
+    if(typeof properties === 'function') {
+      completionHandler = properties;
+      properties = undefined;
+    }
+
+    var publisher = new OT.Publisher();
     OT.publishers.add(publisher);
 
-    if (completionHandler && OT.$.isFunction(completionHandler)) {
-        var removeHandlersAndCallComplete = function removeHandlersAndCallComplete (error) {
-            publisher.off('initSuccess', removeHandlersAndCallComplete);
-            publisher.off('publishComplete', removeHandlersAndCallComplete);
+    var triggerCallback = function triggerCallback (err) {
+      if (err) {
+        OT.dispatchError(err.code, err.message, completionHandler, publisher.session);
+      } else if (completionHandler && OT.$.isFunction(completionHandler)) {
+        completionHandler.apply(null, arguments);
+      }
+    },
 
-            completionHandler.apply(null, arguments);
-        };
+    removeInitSuccessAndCallComplete = function removeInitSuccessAndCallComplete (err) {
+      publisher.off('publishComplete', removeHandlersAndCallComplete);
+      triggerCallback(err);
+    },
 
-        publisher.once('initSuccess', removeHandlersAndCallComplete);
-        publisher.once('publishComplete', removeHandlersAndCallComplete);
-    }
+    removeHandlersAndCallComplete = function removeHandlersAndCallComplete (err) {
+      publisher.off('initSuccess', removeInitSuccessAndCallComplete);
+
+      // We're only handling the error case here as we're just
+      // initing the publisher, not actually attempting to publish.
+      if (err) triggerCallback(err);
+    };
+
+
+    publisher.once('initSuccess', removeInitSuccessAndCallComplete);
+    publisher.once('publishComplete', removeHandlersAndCallComplete);
 
     publisher.publish(targetElement, properties);
 
     return publisher;
-};
+  };
 
 
 
 /**
 * Checks if the system supports OpenTok for WebRTC.
 * @return {Number} Whether the system supports OpenTok for WebRTC (1) or not (0).
-* @see <a href="#upgradeSystemRequirements">TB.upgradeSystemRequirements()</a>
-* @method TB.checkSystemRequirements
-* @memberof TB
+* @see <a href="#upgradeSystemRequirements">OT.upgradeSystemRequirements()</a>
+* @method OT.checkSystemRequirements
+* @memberof OT
 */
-OT.checkSystemRequirements = function() {
-    OT.debug("TB.checkSystemRequirements()");
+  OT.checkSystemRequirements = function() {
+    OT.debug('OT.checkSystemRequirements()');
 
-    var systemRequirementsMet = OT.$.supportsWebSockets() && OT.$.supportsWebRTC() ? this.HAS_REQUIREMENTS : this.NOT_HAS_REQUIREMENTS;
+    var systemRequirementsMet = OT.$.supportsWebSockets() && OT.$.supportsWebRTC() ?
+      this.HAS_REQUIREMENTS : this.NOT_HAS_REQUIREMENTS;
 
     OT.checkSystemRequirements = function() {
-      OT.debug("TB.checkSystemRequirements()");
+      OT.debug('OT.checkSystemRequirements()');
       return systemRequirementsMet;
     };
 
     return systemRequirementsMet;
-};
+  };
 
 
 /**
-* Displays information about system requirments for OpenTok for WebRTC. This information is displayed
-* in an iframe element that fills the browser window.
+* Displays information about system requirments for OpenTok for WebRTC. This
+* information is displayed in an iframe element that fills the browser window.
 * <p>
-* <i>Note:</i> this information is displayed automatically when you call the <code>TB.initSession()</code>
-* or the <code>TB.initPublisher()</code> method if the client does not support OpenTok for WebRTC.
+* <i>Note:</i> this information is displayed automatically when you call the
+* <code>OT.initSession()</code> or the <code>OT.initPublisher()</code> method
+* if the client does not support OpenTok for WebRTC.
 * </p>
-* @see <a href="#checkSystemRequirements">TB.checkSystemRequirements()</a>
-* @method TB.upgradeSystemRequirements
-* @memberof TB
+* @see <a href="#checkSystemRequirements">OT.checkSystemRequirements()</a>
+* @method OT.upgradeSystemRequirements
+* @memberof OT
 */
-OT.upgradeSystemRequirements = function(){
-    // trigger after the TB environment has loaded
+  OT.upgradeSystemRequirements = function(){
+    // trigger after the OT environment has loaded
     OT.onLoad( function() {
-        var id = '_upgradeFlash';
+      var id = '_upgradeFlash';
 
          // Load the iframe over the whole page.
-         document.body.appendChild((function(){
-             var d = document.createElement('iframe');
-             d.id = id;
-             d.style.position = 'absolute';
-             d.style.position = 'fixed';
-             d.style.height = '100%';
-             d.style.width = '100%';
-             d.style.top = '0px';
-             d.style.left = '0px';
-             d.style.right = '0px';
-             d.style.bottom = '0px';
-             d.style.zIndex = 1000;
-             try {
-                 d.style.backgroundColor = "rgba(0,0,0,0.2)";
-             } catch (err) {
-                 // Old IE browsers don't support rgba and we still want to show the upgrade message
-                 // but we just make the background of the iframe completely transparent.
-                 d.style.backgroundColor = "transparent";
-                 d.setAttribute("allowTransparency", "true");
-             }
-             d.setAttribute("frameBorder", "0");
-             d.frameBorder = "0";
-             d.scrolling = "no";
-             d.setAttribute("scrolling", "no");
-             d.src = OT.properties.assetURL + "/html/upgradeFlash.html#"+encodeURIComponent(document.location.href);
-             return d;
-         })());
+      document.body.appendChild((function() {
+        var d = document.createElement('iframe');
+        d.id = id;
+        d.style.position = 'absolute';
+        d.style.position = 'fixed';
+        d.style.height = '100%';
+        d.style.width = '100%';
+        d.style.top = '0px';
+        d.style.left = '0px';
+        d.style.right = '0px';
+        d.style.bottom = '0px';
+        d.style.zIndex = 1000;
+        try {
+          d.style.backgroundColor = 'rgba(0,0,0,0.2)';
+        } catch (err) {
+          // Old IE browsers don't support rgba and we still want to show the upgrade message
+          // but we just make the background of the iframe completely transparent.
+          d.style.backgroundColor = 'transparent';
+          d.setAttribute('allowTransparency', 'true');
+        }
+        d.setAttribute('frameBorder', '0');
+        d.frameBorder = '0';
+        d.scrolling = 'no';
+        d.setAttribute('scrolling', 'no');
+        var browser = OT.$.browserVersion(),
+            isSupportedButOld = OT.properties.minimumVersion[browser.browser.toLowerCase()];
+        d.src = OT.properties.assetURL + '/html/upgrade.html#' +
+                          encodeURIComponent(isSupportedButOld ? 'true' : 'false') + ',' +
+                          encodeURIComponent(JSON.stringify(OT.properties.minimumVersion)) + '|' +
+                          encodeURIComponent(document.location.href);
+        return d;
+      })());
 
-         // Now we need to listen to the event handler if the user closes this dialog.
-         // Since this is from an IFRAME within another domain we are going to listen to hash changes.
-         // The best cross browser solution is to poll for a change in the hashtag.
-         if (_intervalId) clearInterval(_intervalId);
-         _intervalId = setInterval(function(){
-             var hash = document.location.hash,
-                 re = /^#?\d+&/;
-             if (hash !== _lastHash && re.test(hash)) {
-                 _lastHash = hash;
-                 if( hash.replace(re, '') === 'close_window'){
-                     document.body.removeChild(document.getElementById(id));
-                     document.location.hash = '';
-                 }
-             }
-         }, 100);
+      // Now we need to listen to the event handler if the user closes this dialog.
+      // Since this is from an IFRAME within another domain we are going to listen to hash
+      // changes. The best cross browser solution is to poll for a change in the hashtag.
+      if (_intervalId) clearInterval(_intervalId);
+      _intervalId = setInterval(function(){
+        var hash = document.location.hash,
+            re = /^#?\d+&/;
+        if (hash !== _lastHash && re.test(hash)) {
+          _lastHash = hash;
+          if (hash.replace(re, '') === 'close_window'){
+            document.body.removeChild(document.getElementById(id));
+            document.location.hash = '';
+          }
+        }
+      }, 100);
     });
-};
+  };
 
 
-OT.reportIssue = function(){
-    OT.warn("ToDo: haven't yet implemented TB.reportIssue");
-};
+  OT.reportIssue = function(){
+    OT.warn('ToDo: haven\'t yet implemented OT.reportIssue');
+  };
 
-OT.components = {};
-OT.sessions = {};
+  OT.components = {};
+  OT.sessions = {};
 
-// namespaces
-OT.rtc = {};
+  // namespaces
+  OT.rtc = {};
 
 // Define the APIKEY this is a global parameter which should not change
-OT.APIKEY = (function(){
+  OT.APIKEY = (function(){
     // Script embed
-    var script_src = (function(){
-        var s = document.getElementsByTagName('script');
-        s = s[s.length - 1];
-        s = s.getAttribute('src') || s.src;
-        return s;
+    var scriptSrc = (function(){
+      var s = document.getElementsByTagName('script');
+      s = s[s.length - 1];
+      s = s.getAttribute('src') || s.src;
+      return s;
     })();
 
-    var m = script_src.match(/[\?\&]apikey=([^&]+)/i);
+    var m = scriptSrc.match(/[\?\&]apikey=([^&]+)/i);
     return m ? m[1] : '';
-})();
+  })();
 
-OT.HAS_REQUIREMENTS = 1;
-OT.NOT_HAS_REQUIREMENTS = 0;
+  OT.HAS_REQUIREMENTS = 1;
+  OT.NOT_HAS_REQUIREMENTS = 0;
 
 /**
-* Registers a method as an event listener for a specific event. Note that this is a static method of the TB class.
+* This method is deprecated. Use <a href="#on">on()</a> or <a href="#once">once()</a> instead.
+* 
+* <p>
+* Registers a method as an event listener for a specific event.
+* </p>
 *
 * <p>
-* The TB object dispatches one type of event &#151; an <code>exception</code> event. The following code adds an event
-* listener for the <code>exception</code> event:
+* The OT object dispatches one type of event &#151; an <code>exception</code> event. The
+* following code adds an event listener for the <code>exception</code> event:
 * </p>
 *
 * <pre>
-* TB.addEventListener("exception", exceptionHandler);
+* OT.addEventListener("exception", exceptionHandler);
 *
 * function exceptionHandler(event) {
 *    alert("exception event. \n  code == " + event.code + "\n  message == " + event.message);
@@ -4042,541 +4661,710 @@ OT.NOT_HAS_REQUIREMENTS = 0;
 * </pre>
 *
 * <p>
-* 	If a handler is not registered for an event, the event is ignored locally. If the event listener function does not exist,
-* 	the event is ignored locally.
+*   If a handler is not registered for an event, the event is ignored locally. If the event
+*   listener function does not exist, the event is ignored locally.
 * </p>
 * <p>
-* 	Throws an exception if the <code>listener</code> name is invalid.
+*   Throws an exception if the <code>listener</code> name is invalid.
 * </p>
 *
 * @param {String} type The string identifying the type of event.
 *
-* @param {Function} listener The function to be invoked when the TB object dispatches the event.
-* @memberOf TB
+* @param {Function} listener The function to be invoked when the OT object dispatches the event.
+* @see <a href="#on">on()</a>
+* @see <a href="#once">once()</a>
+* @memberof OT
 * @method addEventListener
 */
 
 /**
-* Removes an event listener for a specific event. Note that this is a static method of the TB class.
+* This method is deprecated. Use <a href="#off">off()</a> instead.
+* 
+* <p>
+* Removes an event listener for a specific event.
+* </p>
 *
 * <p>
-* 	Throws an exception if the <code>listener</code> name is invalid.
+*   Throws an exception if the <code>listener</code> name is invalid.
 * </p>
 *
 * @param {String} type The string identifying the type of event.
 *
 * @param {Function} listener The event listener function to remove.
 *
-* @memberOf TB
+* @see <a href="#off">off()</a>
+* @memberof OT
 * @method removeEventListener
 */
 
+
 /**
- * Dispatched by the TB class when the app encounters an exception.
+* Adds an event handler function for one or more events.
+*
+* <p>
+* The OT object dispatches one type of event &#151; an <code>exception</code> event. The following 
+* code adds an event
+* listener for the <code>exception</code> event:
+* </p>
+*
+* <pre>
+* OT.on("exception", function (event) {
+*   // This is the event handler.
+* });
+* </pre>
+*
+* <p>You can also pass in a third <code>context</code> parameter (which is optional) to define the 
+* value of
+* <code>this</code> in the handler method:</p>
+*
+* <pre>
+* OT.on("exception",
+*   function (event) {
+*     // This is the event handler.
+*   }),
+*   session
+* );
+* </pre>
+*
+* <p>
+* If you do not add a handler for an event, the event is ignored locally.
+* </p>
+*
+* @param {String} type The string identifying the type of event.
+* @param {Function} handler The handler function to process the event. This function takes the event
+* object as a parameter.
+* @param {Object} context (Optional) Defines the value of <code>this</code> in the event handler 
+* function.
+*
+* @memberof OT
+* @method on
+* @see <a href="#off">off()</a>
+* @see <a href="#once">once()</a>
+* @see <a href="#events">Events</a>
+*/
+
+/**
+* Adds an event handler function for an event. Once the handler is called, the specified handler 
+* method is
+* removed as a handler for this event. (When you use the <code>OT.on()</code> method to add an event
+* handler, the handler
+* is <i>not</i> removed when it is called.) The <code>OT.once()</code> method is the equivilent of 
+* calling the <code>OT.on()</code>
+* method and calling <code>OT.off()</code> the first time the handler is invoked.
+*
+* <p>
+* The following code adds a one-time event handler for the <code>exception</code> event:
+* </p>
+*
+* <pre>
+* OT.once("exception", function (event) {
+*   console.log(event);
+* }
+* </pre>
+*
+* <p>You can also pass in a third <code>context</code> parameter (which is optional) to define the 
+* value of
+* <code>this</code> in the handler method:</p>
+*
+* <pre>
+* OT.once("exception",
+*   function (event) {
+*     // This is the event handler.
+*   },
+*   session
+* );
+* </pre>
+*
+* <p>
+* The method also supports an alternate syntax, in which the first parameter is an object that is a 
+* hash map of
+* event names and handler functions and the second parameter (optional) is the context for this in 
+* each handler:
+* </p>
+* <pre>
+* OT.once(
+*   {exeption: function (event) {
+*     // This is the event handler.
+*     }
+*   },
+*   session
+* );
+* </pre>
+*
+* @param {String} type The string identifying the type of event. You can specify multiple event 
+* names in this string,
+* separating them with a space. The event handler will process the first occurence of the events. 
+* After the first event,
+* the handler is removed (for all specified events).
+* @param {Function} handler The handler function to process the event. This function takes the event
+* object as a parameter.
+* @param {Object} context (Optional) Defines the value of <code>this</code> in the event handler 
+* function.
+*
+* @memberof OT
+* @method once
+* @see <a href="#on">on()</a>
+* @see <a href="#once">once()</a>
+* @see <a href="#events">Events</a>
+*/
+
+
+/**
+* Removes an event handler.
+*
+* <p>Pass in an event name and a handler method, the handler is removed for that event:</p>
+*
+* <pre>OT.off("exceptionEvent", exceptionEventHandler);</pre>
+*
+* <p>If you pass in an event name and <i>no</i> handler method, all handlers are removed for that 
+* events:</p>
+*
+* <pre>OT.off("exceptionEvent");</pre>
+*
+* <p>
+* The method also supports an alternate syntax, in which the first parameter is an object that is a 
+* hash map of
+* event names and handler functions and the second parameter (optional) is the context for matching 
+* handlers:
+* </p>
+* <pre>
+* OT.off(
+*   {
+*     exceptionEvent: exceptionEventHandler
+*   },
+*   this
+* );
+* </pre>
+*
+* @param {String} type (Optional) The string identifying the type of event. You can use a space to 
+* specify multiple events, as in "eventName1 eventName2 eventName3". If you pass in no
+* <code>type</code> value (or other arguments), all event handlers are removed for the object.
+* @param {Function} handler (Optional) The event handler function to remove. If you pass in no 
+* <code>handler</code>, all event handlers are removed for the specified event <code>type</code>.
+* @param {Object} context (Optional) If you specify a <code>context</code>, the event handler is 
+* removed for all specified events and handlers that use the specified context.
+*
+* @memberof OT
+* @method off
+* @see <a href="#on">on()</a>
+* @see <a href="#once">once()</a>
+* @see <a href="#events">Events</a>
+*/
+
+/**
+ * Dispatched by the OT class when the app encounters an exception.
  * Note that you set up an event handler for the <code>exception</code> event by calling the
- * <code>TB.addEventListener()</code> method, which is a <i>static</i> method.
+ * <code>OT.on()</code> method.
  *
  * @name exception
  * @event
  * @borrows ExceptionEvent#message as this.message
- * @memberof TB
+ * @memberof OT
  * @see ExceptionEvent
  */
 
-if (!window.OT) window.OT = OT;
-if (!window.TB) window.TB = OT;
+  if (!window.OT) window.OT = OT;
+  if (!window.TB) window.TB = OT;
 
 })(window);
-(function(global) {
+!(function() {
 
-OT.Collection = function(idField) {
-  var _models = [],
-      _byId = {},
-      _idField = idField || 'id';
+  OT.Collection = function(idField) {
+    var _models = [],
+        _byId = {},
+        _idField = idField || 'id';
 
-  OT.$.eventing(this, true);
+    OT.$.eventing(this, true);
 
-  var onModelUpdate = function onModelUpdate (event) {
-        this.trigger('update', event);
-        this.trigger('update:'+event.target.id, event);
-      }.bind(this),
+    var onModelUpdate = function onModelUpdate (event) {
+          this.trigger('update', event);
+          this.trigger('update:'+event.target.id, event);
+        }.bind(this),
 
-      onModelIdUpdate = function onModelIdUpdate (oldId, newId) {
-        if (_byId[oldId] === void 0) return;
+        onModelIdUpdate = function onModelIdUpdate (oldId, newId) {
+          if (_byId[oldId] === void 0) return;
 
-        // Match their old index to their new id and remove any
-        // reference to the old one.
-        var index = _byId[oldId];
-        delete _byId[oldId];
-        _byId[newId] = index;
-      }.bind(this),
+          // Match their old index to their new id and remove any
+          // reference to the old one.
+          var index = _byId[oldId];
+          delete _byId[oldId];
+          _byId[newId] = index;
+        }.bind(this),
 
-      onModelDestroy = function onModelDestroyed (event) {
-        this.remove(event.target, event.reason);
-      }.bind(this);
+        onModelDestroy = function onModelDestroyed (event) {
+          this.remove(event.target, event.reason);
+        }.bind(this);
 
 
-  this.reset = function() {
-    // Stop listening on the models, they are no longer our problem
-    _models.forEach(function(model) {
-      model.off('updated', onModelUpdate, this);
-      model.off('destroyed', onModelDestroy, this)
-      model.off('idUpdated', onModelIdUpdate, this);
-    }, this);
+    this.reset = function() {
+      // Stop listening on the models, they are no longer our problem
+      _models.forEach(function(model) {
+        model.off('updated', onModelUpdate, this);
+        model.off('destroyed', onModelDestroy, this);
+        model.off('idUpdated', onModelIdUpdate, this);
+      }, this);
 
-    _models = [];
-    _byId = {};
-  };
+      _models = [];
+      _byId = {};
+    };
 
-  this.destroy = function() {
-    _models.forEach(function(model) {
-      model.destroy(void 0, true);
-    });
+    this.destroy = function() {
+      _models.forEach(function(model) {
+        if(model && typeof model.destroy === 'function') {
+          model.destroy(void 0, true);
+        }
+      });
 
-    this.reset();
-    this.off();
-  };
+      this.reset();
+      this.off();
+    };
 
-  this.get = function(id) { return id && _byId[id] !== void 0 ? _models[_byId[id]] : void 0; };
-  this.has = function(id) { return id && _byId[id] !== void 0; };
+    this.get = function(id) { return id && _byId[id] !== void 0 ? _models[_byId[id]] : void 0; };
+    this.has = function(id) { return id && _byId[id] !== void 0; };
 
-  this.toString = function() { return _models.toString(); };
+    this.toString = function() { return _models.toString(); };
 
-  // Return only models filtered by either a dict of properties
-  // or a filter function.
-  //
-  // @example Return all publishers with a streamId of 1
-  //   OT.publishers.where({streamId: 1})
-  //
-  // @example The same thing but filtering using a filter function
-  //   OT.publishers.where(function(publisher) {
-  //     return publisher.stream.id === 4;
-  //   });
-  //
-  // @example The same thing but filtering using a filter function
-  //          executed with a specific this
-  //   OT.publishers.where(function(publisher) {
-  //     return publisher.stream.id === 4;
-  //   }, self);
-  //
-  this.where = function(attrsOrFilterFn, context) {
-    if (OT.$.isFunction(attrsOrFilterFn)) return _models.filter(attrsOrFilterFn, context);
+    // Return only models filtered by either a dict of properties
+    // or a filter function.
+    //
+    // @example Return all publishers with a streamId of 1
+    //   OT.publishers.where({streamId: 1})
+    //
+    // @example The same thing but filtering using a filter function
+    //   OT.publishers.where(function(publisher) {
+    //     return publisher.stream.id === 4;
+    //   });
+    //
+    // @example The same thing but filtering using a filter function
+    //          executed with a specific this
+    //   OT.publishers.where(function(publisher) {
+    //     return publisher.stream.id === 4;
+    //   }, self);
+    //
+    this.where = function(attrsOrFilterFn, context) {
+      if (OT.$.isFunction(attrsOrFilterFn)) return _models.filter(attrsOrFilterFn, context);
 
-    return _models.filter(function(model) {
-      for (var key in attrsOrFilterFn) {
-        if (model[key] !== attrsOrFilterFn[key]) return false;
-      }
-
-      return true;
-    });
-  };
-
-  // Similar to where in behaviour, except that it only returns
-  // the first match.
-  this.find = function(attrsOrFilterFn, context) {
-    var filterFn;
-
-    if (OT.$.isFunction(attrsOrFilterFn)) {
-      filterFn = attrsOrFilterFn;
-    }
-    else {
-      filterFn = function(model) {
+      return _models.filter(function(model) {
         for (var key in attrsOrFilterFn) {
           if (model[key] !== attrsOrFilterFn[key]) return false;
         }
 
         return true;
-      };
-    }
+      });
+    };
 
-    filterFn = filterFn.bind(context);
+    // Similar to where in behaviour, except that it only returns
+    // the first match.
+    this.find = function(attrsOrFilterFn, context) {
+      var filterFn;
 
-    for (var i=0; i<_models.length; ++i) {
-      if (filterFn(_models[i]) === true) return _models[i];
-    }
+      if (OT.$.isFunction(attrsOrFilterFn)) {
+        filterFn = attrsOrFilterFn;
+      }
+      else {
+        filterFn = function(model) {
+          for (var key in attrsOrFilterFn) {
+            if (model[key] !== attrsOrFilterFn[key]) return false;
+          }
 
-    return null;
-  };
+          return true;
+        };
+      }
 
-  this.add = function(model) {
-    var id = model[_idField];
+      filterFn = filterFn.bind(context);
 
-    if (this.has(id)) {
-      OT.warn("Model " + id + ' is already in the collection', _models);
+      for (var i=0; i<_models.length; ++i) {
+        if (filterFn(_models[i]) === true) return _models[i];
+      }
+
+      return null;
+    };
+
+    this.add = function(model) {
+      var id = model[_idField];
+
+      if (this.has(id)) {
+        OT.warn('Model ' + id + ' is already in the collection', _models);
+        return this;
+      }
+
+      _byId[id] = _models.push(model) - 1;
+
+      model.on('updated', onModelUpdate, this);
+      model.on('destroyed', onModelDestroy, this);
+      model.on('idUpdated', onModelIdUpdate, this);
+
+      this.trigger('add', model);
+      this.trigger('add:'+id, model);
+
       return this;
-    }
+    };
 
-    _byId[id] = _models.push(model) - 1;
+    this.remove = function(model, reason) {
+      var id = model[_idField];
 
-    model.on('updated', onModelUpdate, this);
-    model.on('destroyed', onModelDestroy, this)
-    model.on('idUpdated', onModelIdUpdate, this);
+      _models.splice(_byId[id], 1);
 
-    this.trigger('add', model);
-    this.trigger('add:'+id, model);
+      // Shuffle everyone down one
+      for (var i=_byId[id]; i<_models.length; ++i) {
+        _byId[_models[i][_idField]] = i;
+      }
 
-    return this;
+      delete _byId[id];
+
+      model.off('updated', onModelUpdate, this);
+      model.off('destroyed', onModelDestroy, this);
+      model.off('idUpdated', onModelIdUpdate, this);
+
+      this.trigger('remove', model, reason);
+      this.trigger('remove:'+id, model, reason);
+
+      return this;
+    };
+
+    // Used by session connecto fire add events after adding listeners
+    this._triggerAddEvents = function() {
+      var models = this.where.apply(this, arguments);
+      models.forEach(function(model) {
+        this.trigger('add', model);
+        this.trigger('add:' + model[_idField], model);
+      }, this);
+    };
+
+    OT.$.defineGetters(this, {
+      length: function() { return _models.length; }
+    });
   };
-
-  this.remove = function(model, reason) {
-    var id = model[_idField];
-
-    _models.splice(_byId[id], 1);
-
-    // Shuffle everyone down one
-    for (var i=_byId[id]; i<_models.length; ++i) {
-      _byId[_models[i][_idField]] = i
-    }
-
-    delete _byId[id];
-
-    model.off('updated', onModelUpdate, this);
-    model.off('destroyed', onModelDestroy, this)
-    model.off('idUpdated', onModelIdUpdate, this);
-
-    this.trigger('remove', model, reason);
-    this.trigger('remove:'+id, model, reason);
-
-    return this;
-  };
-
-  OT.$.defineGetters(this, {
-    length: function() { return _models.length; }
-  });
-};
 
 }(this));
-(function(window) {
+!(function() {
 
-/**
- * The Event object defines the basic OpenTok event object that is passed to
- * event listeners. Other OpenTok event classes implement the properties and methods of
- * the Event object.</p>
- *
- * <p>For example, the Stream object dispatches a <code>streamPropertyChanged</code> event when
- * the stream's properties are updated. You register an event listener using the <code>addEventListener()</code>
- * method of the Stream object:</p>
- *
- * <pre>
- * stream.addEventListener("streamPropertyChanged", streamPropertyChangedHandler);
- *
- * function streamPropertyChangedHandler(event) {
- *     alert("Properties changed for stream " + event.target.streamId);
- * }</pre>
- *
- * @class Event
- * @property {Boolean} cancelable Whether the event has a default behavior that is cancelable (<code>true</code>)
- * or not (<code>false</code>). You can cancel the default behavior by calling the <code>preventDefault()</code> method
- * of the Event object in the event listener function. (See <a href="#preventDefault">preventDefault()</a>.)
- *
- * @property {Object} target The object that dispatched the event.
- *
- * @property {String} type  The type of event.
- */
-OT.Event = OT.$.eventing.Event();
-/**
-* Prevents the default behavior associated with the event from taking place.
-*
-* <p>To see whether an event has a default behavior, check the <code>cancelable</code> property of the event object. </p>
-*
-* <p>Call the <code>preventDefault()</code> method in the event listener function for the event.</p>
-*
-* <p>The following events have default behaviors:</p>
-*
-* <ul>
-*
-*   <li><code>sessionDisconnect</code> &#151; See <a href="SessionDisconnectEvent.html#preventDefault">
-*   SessionDisconnectEvent.preventDefault()</a>.</li>
-*
-*   <li><code>streamDestroyed</code> &#151; See <a href="StreamEvent.html#preventDefault">
-*   StreamEvent.preventDefault()</a>.</li>
-*
-* </ul>
-*
-* @method #preventDefault
-* @memberof Event
-*/
-/**
-* Whether the default event behavior has been prevented via a call to <code>preventDefault()</code> (<code>true</code>)
-* or not (<code>false</code>). See <a href="#preventDefault">preventDefault()</a>.
-* @method #isDefaultPrevented
-* @return {Boolean}
-* @memberof Event
-*/
+  /**
+   * The Event object defines the basic OpenTok event object that is passed to
+   * event listeners. Other OpenTok event classes implement the properties and methods of
+   * the Event object.</p>
+   *
+   * <p>For example, the Stream object dispatches a <code>streamPropertyChanged</code> event when
+   * the stream's properties are updated. You add a callback for an event using the
+   * <code>on()</code> method of the Stream object:</p>
+   *
+   * <pre>
+   * stream.on("streamPropertyChanged", function (event) {
+   *     alert("Properties changed for stream " + event.target.streamId);
+   * });</pre>
+   *
+   * @class Event
+   * @property {Boolean} cancelable Whether the event has a default behavior that is cancelable
+   * (<code>true</code>) or not (<code>false</code>). You can cancel the default behavior by
+   * calling the <code>preventDefault()</code> method of the Event object in the callback
+   * function. (See <a href="#preventDefault">preventDefault()</a>.)
+   *
+   * @property {Object} target The object that dispatched the event.
+   *
+   * @property {String} type  The type of event.
+   */
+  OT.Event = OT.$.eventing.Event();
+  /**
+  * Prevents the default behavior associated with the event from taking place.
+  *
+  * <p>To see whether an event has a default behavior, check the <code>cancelable</code> property
+  * of the event object. </p>
+  *
+  * <p>Call the <code>preventDefault()</code> method in the callback function for the event.</p>
+  *
+  * <p>The following events have default behaviors:</p>
+  *
+  * <ul>
+  *
+  *   <li><code>sessionDisconnect</code> &#151; See
+  *   <a href="SessionDisconnectEvent.html#preventDefault">
+  *   SessionDisconnectEvent.preventDefault()</a>.</li>
+  *
+  *   <li><code>streamDestroyed</code> &#151; See <a href="StreamEvent.html#preventDefault">
+  *   StreamEvent.preventDefault()</a>.</li>
+  *
+  * </ul>
+  *
+  * @method #preventDefault
+  * @memberof Event
+  */
+  /**
+  * Whether the default event behavior has been prevented via a call to
+  * <code>preventDefault()</code> (<code>true</code>) or not (<code>false</code>).
+  * See <a href="#preventDefault">preventDefault()</a>.
+  * @method #isDefaultPrevented
+  * @return {Boolean}
+  * @memberof Event
+  */
 
-// Event names lookup
-OT.Event.names = {
+  // Event names lookup
+  OT.Event.names = {
     // Activity Status for cams/mics
-    ACTIVE: "active",
-    INACTIVE: "inactive",
-    UNKNOWN: "unknown",
+    ACTIVE: 'active',
+    INACTIVE: 'inactive',
+    UNKNOWN: 'unknown',
 
     // Archive types
-    PER_SESSION: "perSession",
-    PER_STREAM: "perStream",
+    PER_SESSION: 'perSession',
+    PER_STREAM: 'perStream',
 
-    // TB Events
-    EXCEPTION: "exception",
-    ISSUE_REPORTED: "issueReported",
+    // OT Events
+    EXCEPTION: 'exception',
+    ISSUE_REPORTED: 'issueReported',
 
     // Session Events
-    SESSION_CONNECTED: "sessionConnected",
-    SESSION_DISCONNECTED: "sessionDisconnected",
-    STREAM_CREATED: "streamCreated",
-    STREAM_DESTROYED: "streamDestroyed",
-    CONNECTION_CREATED: "connectionCreated",
-    CONNECTION_DESTROYED: "connectionDestroyed",
-    SIGNAL: "signal",
-    STREAM_PROPERTY_CHANGED: "streamPropertyChanged",
-    MICROPHONE_LEVEL_CHANGED: "microphoneLevelChanged",
+    SESSION_CONNECTED: 'sessionConnected',
+    SESSION_DISCONNECTED: 'sessionDisconnected',
+    STREAM_CREATED: 'streamCreated',
+    STREAM_DESTROYED: 'streamDestroyed',
+    CONNECTION_CREATED: 'connectionCreated',
+    CONNECTION_DESTROYED: 'connectionDestroyed',
+    SIGNAL: 'signal',
+    STREAM_PROPERTY_CHANGED: 'streamPropertyChanged',
+    MICROPHONE_LEVEL_CHANGED: 'microphoneLevelChanged',
 
 
     // Publisher Events
-    RESIZE: "resize",
-    SETTINGS_BUTTON_CLICK: "settingsButtonClick",
-    DEVICE_INACTIVE: "deviceInactive",
-    INVALID_DEVICE_NAME: "invalidDeviceName",
-    ACCESS_ALLOWED: "accessAllowed",
-    ACCESS_DENIED: "accessDenied",
+    RESIZE: 'resize',
+    SETTINGS_BUTTON_CLICK: 'settingsButtonClick',
+    DEVICE_INACTIVE: 'deviceInactive',
+    INVALID_DEVICE_NAME: 'invalidDeviceName',
+    ACCESS_ALLOWED: 'accessAllowed',
+    ACCESS_DENIED: 'accessDenied',
     ACCESS_DIALOG_OPENED: 'accessDialogOpened',
     ACCESS_DIALOG_CLOSED: 'accessDialogClosed',
-    ECHO_CANCELLATION_MODE_CHANGED: "echoCancellationModeChanged",
+    ECHO_CANCELLATION_MODE_CHANGED: 'echoCancellationModeChanged',
     PUBLISHER_DESTROYED: 'destroyed',
 
     // Subscriber Events
     SUBSCRIBER_DESTROYED: 'destroyed',
 
     // DeviceManager Events
-    DEVICES_DETECTED: "devicesDetected",
+    DEVICES_DETECTED: 'devicesDetected',
 
     // DevicePanel Events
-    DEVICES_SELECTED: "devicesSelected",
-    CLOSE_BUTTON_CLICK: "closeButtonClick",
+    DEVICES_SELECTED: 'devicesSelected',
+    CLOSE_BUTTON_CLICK: 'closeButtonClick',
 
     MICLEVEL : 'microphoneActivityLevel',
     MICGAINCHANGED : 'microphoneGainChanged',
 
     // Environment Loader
     ENV_LOADED: 'envLoaded'
-};
+  };
 
-OT.ValueEvent = function (type,value){
-    OT.Event.call(this, type);
-    this.value = value;
+  OT.ExceptionCodes = {
+    JS_EXCEPTION: 2000,
+    AUTHENTICATION_ERROR: 1004,
+    INVALID_SESSION_ID: 1005,
+    CONNECT_FAILED: 1006,
+    CONNECT_REJECTED: 1007,
+    CONNECTION_TIMEOUT: 1008,
+    NOT_CONNECTED: 1010,
+    P2P_CONNECTION_FAILED: 1013,
+    API_RESPONSE_FAILURE: 1014,
+    UNABLE_TO_PUBLISH: 1500,
+    UNABLE_TO_SUBSCRIBE: 1501,
+    UNABLE_TO_SIGNAL: 1510,
+    UNABLE_TO_FORCE_DISCONNECT: 1520,
+    UNABLE_TO_FORCE_UNPUBLISH: 1530
+  };
 
-};
-
-OT.ExceptionCodes = {
-  JS_EXCEPTION: 2000,
-  AUTHENTICATION_ERROR: 1004,
-  INVALID_SESSION_ID: 1005,
-  CONNECT_FAILED: 1006,
-  CONNECT_REJECTED: 1007,
-  CONNECTION_TIMEOUT: 1008,
-  NOT_CONNECTED: 1010,
-  P2P_CONNECTION_FAILED: 1013,
-  API_RESPONSE_FAILURE: 1014,
-  UNABLE_TO_PUBLISH: 1500,
-  UNABLE_TO_SIGNAL: 1510,
-  UNABLE_TO_FORCE_DISCONNECT: 1520,
-  UNABLE_TO_FORCE_UNPUBLISH: 1530
-};
-
-/**
-* The {@link TB} class dispatches <code>exception</code> events when the OpenTok API encounters
-* an exception (error). The ExceptionEvent object defines the properties of the event
-* object that is dispatched.
-*
-* <p>Note that you set up an event handler for the <code>exception</code> event by calling the
-* <code>TB.addEventListener()</code> method, which is a <i>static</i> method.</p>
-*
-* @class ExceptionEvent
-* @property {Number} code The error code. The following is a list of error codes:</p>
-*
-* <table class="docs_table">
-*  <tbody><tr>
-*   <td>
-*   <b>code</b>
-*
-*   </td>
-*   <td>
-*   <b>title</b>
-*   </td>
-*  </tr>
-*  <tr>
-*   <td>
-*   1000
-*
-*   </td>
-*   <td>
-*   Failed To Load
-*   </td>
-*  </tr>
-*
-*  <tr>
-*   <td>
-*   1004
-*
-*   </td>
-*   <td>
-*   Authentication error
-*   </td>
-*  </tr>
-*
-*  <tr>
-*   <td>
-*   1005
-*
-*   </td>
-*   <td>
-*   Invalid Session ID
-*   </td>
-*  </tr>
-*  <tr>
-*   <td>
-*   1006
-*
-*   </td>
-*   <td>
-*   Connect Failed
-*   </td>
-*  </tr>
-*  <tr>
-*   <td>
-*   1007
-*
-*   </td>
-*   <td>
-*   Connect Rejected
-*   </td>
-*  </tr>
-*  <tr>
-*   <td>
-*   1008
-*
-*   </td>
-*   <td>
-*   Connect Time-out
-*   </td>
-*  </tr>
-*  <tr>
-*   <td>
-*   1009
-*
-*   </td>
-*   <td>
-*   Security Error
-*   </td>
-*  </tr>
-*   <tr>
-*    <td>
-*    1010
-*
-*    </td>
-*    <td>
-*    Not Connected
-*    </td>
-*   </tr>
-*   <tr>
-*    <td>
-*    1011
-*
-*    </td>
-*    <td>
-*    Invalid Parameter
-*    </td>
-*   </tr>
-*   <tr>
-*    <td>
-*    1013
-*    </td>
-*    <td>
-*    Connection Failed
-*    </td>
-*   </tr>
-*   <tr>
-*    <td>
-*    1014
-*    </td>
-*    <td>
-*    API Response Failure
-*    </td>
-*   </tr>
-*
-*  <tr>
-*    <td>
-*    1500
-*    </td>
-*    <td>
-*    Unable to Publish
-*    </td>
-*   </tr>
-*
-*  <tr>
-*    <td>
-*    1510
-*    </td>
-*    <td>
-*    Unable to Signal
-*    </td>
-*   </tr>
-*
-*  <tr>
-*    <td>
-*    1520
-*    </td>
-*    <td>
-*    Unable to Force Disconnect
-*    </td>
-*   </tr>
-*
-*  <tr>
-*    <td>
-*    1530
-*    </td>
-*    <td>
-*    Unable to Force Unpublish
-*    </td>
-*   </tr>
-*  <tr>
-*    <td>
-*    1535
-*    </td>
-*    <td>
-*    Force Unpublish on Invalid Stream
-*    </td>
-*   </tr>
-*
-*  <tr>
-*    <td>
-*    2000
-*
-*    </td>
-*    <td>
-*    Internal Error
-*    </td>
-*  </tr>
-*
-*  <tr>
-*    <td>
-*    2010
-*
-*    </td>
-*    <td>
-*    Report Issue Failure
-*    </td>
-*  </tr>
-*
-*
-*  </tbody></table>
-*
-*  <p>Check the <code>message</code> property for more details about the error.</p>
-*
-* @property {String} message The error message.
-* @property {String} title The error title.
-* @augments Event
-*/
-OT.ExceptionEvent = function (type, message, title, code, component, target) {
+  /**
+  * The {@link OT} class dispatches <code>exception</code> events when the OpenTok API encounters
+  * an exception (error). The ExceptionEvent object defines the properties of the event
+  * object that is dispatched.
+  *
+  * <p>Note that you set up a callback for the <code>exception</code> event by calling the
+  * <code>OT.on()</code> method.</p>
+  *
+  * @class ExceptionEvent
+  * @property {Number} code The error code. The following is a list of error codes:</p>
+  *
+  * <table class="docs_table">
+  *  <tbody><tr>
+  *   <td>
+  *   <b>code</b>
+  *
+  *   </td>
+  *   <td>
+  *   <b>title</b>
+  *   </td>
+  *  </tr>
+  *  <tr>
+  *   <td>
+  *   1000
+  *
+  *   </td>
+  *   <td>
+  *   Failed To Load
+  *   </td>
+  *  </tr>
+  *
+  *  <tr>
+  *   <td>
+  *   1004
+  *
+  *   </td>
+  *   <td>
+  *   Authentication error
+  *   </td>
+  *  </tr>
+  *
+  *  <tr>
+  *   <td>
+  *   1005
+  *
+  *   </td>
+  *   <td>
+  *   Invalid Session ID
+  *   </td>
+  *  </tr>
+  *  <tr>
+  *   <td>
+  *   1006
+  *
+  *   </td>
+  *   <td>
+  *   Connect Failed
+  *   </td>
+  *  </tr>
+  *  <tr>
+  *   <td>
+  *   1007
+  *
+  *   </td>
+  *   <td>
+  *   Connect Rejected
+  *   </td>
+  *  </tr>
+  *  <tr>
+  *   <td>
+  *   1008
+  *
+  *   </td>
+  *   <td>
+  *   Connect Time-out
+  *   </td>
+  *  </tr>
+  *  <tr>
+  *   <td>
+  *   1009
+  *
+  *   </td>
+  *   <td>
+  *   Security Error
+  *   </td>
+  *  </tr>
+  *   <tr>
+  *    <td>
+  *    1010
+  *
+  *    </td>
+  *    <td>
+  *    Not Connected
+  *    </td>
+  *   </tr>
+  *   <tr>
+  *    <td>
+  *    1011
+  *
+  *    </td>
+  *    <td>
+  *    Invalid Parameter
+  *    </td>
+  *   </tr>
+  *   <tr>
+  *    <td>
+  *    1013
+  *    </td>
+  *    <td>
+  *    Connection Failed
+  *    </td>
+  *   </tr>
+  *   <tr>
+  *    <td>
+  *    1014
+  *    </td>
+  *    <td>
+  *    API Response Failure
+  *    </td>
+  *   </tr>
+  *
+  *  <tr>
+  *    <td>
+  *    1500
+  *    </td>
+  *    <td>
+  *    Unable to Publish
+  *    </td>
+  *   </tr>
+  *
+  *  <tr>
+  *    <td>
+  *    1510
+  *    </td>
+  *    <td>
+  *    Unable to Signal
+  *    </td>
+  *   </tr>
+  *
+  *  <tr>
+  *    <td>
+  *    1520
+  *    </td>
+  *    <td>
+  *    Unable to Force Disconnect
+  *    </td>
+  *   </tr>
+  *
+  *  <tr>
+  *    <td>
+  *    1530
+  *    </td>
+  *    <td>
+  *    Unable to Force Unpublish
+  *    </td>
+  *   </tr>
+  *  <tr>
+  *    <td>
+  *    1535
+  *    </td>
+  *    <td>
+  *    Force Unpublish on Invalid Stream
+  *    </td>
+  *   </tr>
+  *
+  *  <tr>
+  *    <td>
+  *    2000
+  *
+  *    </td>
+  *    <td>
+  *    Internal Error
+  *    </td>
+  *  </tr>
+  *
+  *  <tr>
+  *    <td>
+  *    2010
+  *
+  *    </td>
+  *    <td>
+  *    Report Issue Failure
+  *    </td>
+  *  </tr>
+  *
+  *
+  *  </tbody></table>
+  *
+  *  <p>Check the <code>message</code> property for more details about the error.</p>
+  *
+  * @property {String} message The error message.
+  * @property {String} title The error title.
+  * @augments Event
+  */
+  OT.ExceptionEvent = function (type, message, title, code, component, target) {
     OT.Event.call(this, type);
 
     this.message = message;
@@ -4584,23 +5372,26 @@ OT.ExceptionEvent = function (type, message, title, code, component, target) {
     this.code = code;
     this.component = component;
     this.target = target;
-};
+  };
 
 
-OT.IssueReportedEvent = function (type, issueId) {
+  OT.IssueReportedEvent = function (type, issueId) {
     OT.Event.call(this, type);
-
     this.issueId = issueId;
-};
+  };
 
-// Triggered when the JS dynamic config and the DOM have loaded.
-OT.EnvLoadedEvent = function (type) {
+  // Triggered when the JS dynamic config and the DOM have loaded.
+  OT.EnvLoadedEvent = function (type) {
     OT.Event.call(this, type);
-};
+  };
 
 
 /**
- * The Session object dispatches a ConnectionEvent object when a connection is created or destroyed.
+ * Connection event is an event that can have type "connectionCreated" or "connectionDestroyed".
+ * These events are dispatched by the Session object when another client connects to or
+ * disconnects from a {@link Session}. For the local client, the Session object dispatches a
+ * "sessionConnected" or "sessionDisconnected" event, defined by the SessionConnectEvent and
+ * SessionDisconnectEvent classes.
  *
  * <h5><a href="example"></a>Example</h5>
  *
@@ -4615,26 +5406,20 @@ OT.EnvLoadedEvent = function (type) {
  *                 // See https://dashboard.tokbox.com/projects
  * var connectionCount = 0;
  *
- * var session = TB.initSession(sessionID);
- * session.addEventListener("sessionConnected", sessionConnectedHandler);
- * session.addEventListener("connectionCreated", connectionCreatedHandler);
- * session.addEventListener("connectionDestroyed", connectionDestroyedHandler);
- * session.connect(apiKey, token);
- *
- * function sessionConnectedHandler(event) {
- *    connectionCount = event.connections.length;
+ * var session = OT.initSession(apiKey, sessionID);
+ * session.on("sessionConnected", function(event) {
+ *    connectionCount = 1; // This represent's your client's connection to the session
  *    displayConnectionCount();
- * }
- *
- * function connectionCreatedHandler(event) {
- *    connectionCount += event.connections.length;
+ * });
+ * session.on("connectionCreated", function(event) {
+ *    connectionCount += 1;
  *    displayConnectionCount();
- * }
- *
- * function connectionDestroyedHandler(event) {
- *    connectionCount -= event.connections.length;
+ * });
+ * session.on("connectionDestroyed", function(event) {
+ *    connectionCount -= 1;
  *    displayConnectionCount();
- * }
+ * });
+ * session.connect(token);
  *
  * function displayConnectionCount() {
  *     document.getElementById("connectionCountField").value = connectionCount.toString();
@@ -4646,9 +5431,12 @@ OT.EnvLoadedEvent = function (type) {
  * <pre>&lt;input type="text" id="connectionCountField" value="0"&gt;&lt;/input&gt;</pre>
  *
  *
- * @property {Array} connections An array of Connection objects for the connections that were created or deleted.
- * You can compare the <code>connectionId</code> property to that of the <code>connection</code> property of the
- * Session object to see if a connection refers to the local web page.
+ * @property {Connection} connection A Connection objects for the connections that was
+ * created or deleted.
+ *
+ * @property {Array} connections Deprecated. Use the <code>connection</code> property. A
+ * <code>connectionCreated</code> or <code>connectionDestroyed</code> event is dispatched
+ * for each connection created and destroyed in the session.
  *
  * @property {String} reason For a <code>connectionDestroyed</code> event,
  *  a description of why the connection ended. This property can have two values:
@@ -4658,12 +5446,12 @@ OT.EnvLoadedEvent = function (type) {
  *     the <code>disconnect()</code> method of the Session object or by closing the browser.
  *     (See <a href="Session.html#disconnect">Session.disconnect()</a>.)</li>
  *
- *  <li><code>"forceDisconnected"</code> &#151; A moderator has disconnected the publisher from the session,
- *      by calling the <code>forceDisconnect()</code> method of the Session object.
- *      (See <a href="Session.html#forceDisconnect">Session.forceDisconnect()</a>.)</li>
+ *  <li><code>"forceDisconnected"</code> &#151; A moderator has disconnected the publisher
+ *      from the session, by calling the <code>forceDisconnect()</code> method of the Session
+ *      object. (See <a href="Session.html#forceDisconnect">Session.forceDisconnect()</a>.)</li>
  *
- *  <li><code>"networkDisconnected"</code> &#151; The network connection terminated abruptly (for example,
- *      the client lost their internet connection).</li>
+ *  <li><code>"networkDisconnected"</code> &#151; The network connection terminated abruptly
+ *      (for example, the client lost their internet connection).</li>
  * </ul>
  *
  * <p>Depending on the context, this description may allow the developer to refine
@@ -4674,88 +5462,97 @@ OT.EnvLoadedEvent = function (type) {
  * @class ConnectionEvent
  * @augments Event
  */
-OT.ConnectionEvent = function (type, connections, reason) {
-    OT.Event.call(this, type);
+  var connectionEventPluralDeprecationWarningShown = false;
+  OT.ConnectionEvent = function (type, connection, reason) {
+    OT.Event.call(this, type, false);
 
-    this.connections = connections;
+    if (OT.$.canDefineProperty) {
+      Object.defineProperty(this, 'connections', {
+        get: function() {
+          if(!connectionEventPluralDeprecationWarningShown) {
+            OT.warn('OT.ConnectionEvent connections property is deprecated, ' +
+              'use connection instead.');
+            connectionEventPluralDeprecationWarningShown = true;
+          }
+          return [connection];
+        }
+      });
+    } else {
+      this.connections = [connection];
+    }
+    
+    this.connection = connection;
     this.reason = reason;
-};
+  };
 
 /**
- * StreamEvent is an event that can have type "streamCreated" or "streamDestroyed". These events are dispatched when a client
- * starts or stops publishing to a {@link Session}. This includes remote clients publishing on the session as well as the local
- * client publishing to the session.
+ * StreamEvent is an event that can have the type "streamCreated" or "streamDestroyed".
+ * These events are dispatched by the Session object when another client starts or
+ * stops publishing a stream to a {@link Session}. For a local client's stream, the
+ * Publisher object dispatches the event.
  *
- * <h4><a href="example_streamCreated"></a>Example &#151; streamCreated event</h4>
+ * <h4><a href="example_streamCreated"></a>Example &#151; streamCreated event dispatched
+ * by the Session object</h4>
  *  <p>The following code initializes a session and sets up an event listener for when
- *    a stream is created:</p>
+ *    a stream published by another client is created:</p>
  *
- * <pre>var apiKey = ""; // Replace with your API key. See https://dashboard.tokbox.com/projects
- * var sessionID = ""; // Replace with your own session ID.
- *                     // See https://dashboard.tokbox.com/projects
- * var token = ""; // Replace with a generated token that has been assigned the moderator role.
- *                 // See https://dashboard.tokbox.com/projects
+ * <pre>
+ * session.on("streamCreated", function(event) {
+ *   // streamContainer is a DOM element
+ *   subscriber = session.subscribe(event.stream, streamContainer);
+ * }).connect(token);
+ * </pre>
  *
- * var session = TB.initSession(sessionID);
- * session.addEventListener("streamCreated", streamCreatedHandler);
- * session.connect(apiKey, token);
+ *  <h4><a href="example_streamDestroyed"></a>Example &#151; streamDestroyed event dispatched
+ * by the Session object</h4>
  *
- * function streamCreatedHandler(event) {
- *     for (var i = 0; i &lt; event.streams.length; i++) {
- *         // Only display others' streams, not those that the client publishes.
- *         if (event.streams[i].connection.connectionId != event.target.connection.connectionId) {
- *                displayStream(stream);
- *         }
- *     }
- * }
+ *    <p>The following code initializes a session and sets up an event listener for when
+ *       other clients' streams end:</p>
  *
- * function displayStream(stream) {
- *     var div = document.createElement('div');
- *     div.setAttribute('id', 'stream' + stream.streamId);
+ * <pre>
+ * session.on("streamDestroyed", function(event) {
+ *     console.log("Stream " + event.stream.name + " ended. " + event.reason);
+ * }).connect(token);
+ * </pre>
  *
- *     var streamsContainer = document.getElementById('streamsContainer');
- *     streamsContainer.appendChild(div);
+ * <h4><a href="example_streamCreated_publisher"></a>Example &#151; streamCreated event dispatched
+ * by a Publisher object</h4>
+ *  <p>The following code publishes a stream and adds an event listener for when the streaming
+ * starts</p>
  *
- *     subscriber = session.subscribe(stream, 'stream' + stream.streamId);
- * }</pre>
+ * <pre>
+ * var publisher = session.publish(publisherContainer)
+ *   .on("streamCreated", function(event) {
+ *     console.log("Publisher started streaming.");
+ *   );
+ * </pre>
  *
- *  <p>For this example, in addition to the event handler for the <code>streamCreated</code>
- *  event, you would probably want to create an event handler for the <code>sessionConnected</code>
- *  event. This event handler can display the streams that are present when the session first
- *  connects. See {@link SessionConnectEvent}.</p>
+ *  <h4><a href="example_streamDestroyed_publisher"></a>Example &#151; streamDestroyed event
+ * dispatched by a Publisher object</h4>
  *
- *  <h4><a href="example_streamDestroyed"></a>Example &#151; streamDestroyed event</h4>
+ *  <p>The following code publishes a stream, and leaves the Publisher in the HTML DOM
+ * when the streaming stops:</p>
  *
- *    <p>The following code initializes a session and sets up an event listener for when a
- *       stream ends:</p>
- *
- * <pre>var apiKey = ""; // Replace with your API key. See https://dashboard.tokbox.com/projects
- * var sessionID = ""; // Replace with your own session ID.
- *                     // See https://dashboard.tokbox.com/projects
- * var token = ""; // Replace with a generated token that has been assigned the moderator role.
- *                 // See https://dashboard.tokbox.com/projects
- *
- * var session = TB.initSession(sessionID);
- * session.addEventListener("streamDestroyed", streamDestroyedHandler);
- * session.connect(apiKey, token);
- *
- * function streamDestroyedHandler(event) {
- *     for (var i = 0; i &lt; event.streams.length; i++) {
- *         var stream = event.streams[i];
- *         alert("Stream " + stream.name + " ended. " + event.reason);
- *     }
- * }</pre>
+ * <pre>
+ * var publisher = session.publish(publisherContainer)
+ *   .on("streamDestroyed", function(event) {
+ *     event.preventDefault();
+ *     console.log("Publisher stopped streaming.");
+ *   );
+ * </pre>
  *
  * @class StreamEvent
- * @property {Array} streams An array of Stream objects
- * corresponding to the streams to which this event refers. This is usually an array containing only
- * one Stream object, corresponding to the stream that was added (in the case of a <code>streamCreated</code>
- * event) or deleted (in the case of a <code>streamDestroyed</code> event). However, the array may contain
- * multiple Stream objects if multiple streams were added or deleted. A stream may be published by the local client
- * or another client connected to the session.
+ * @property {Stream} stream A Stream object corresponding to the stream that was added (in the
+ * case of a <code>streamCreated</code> event) or deleted (in the case of a
+ * <code>streamDestroyed</code> event).
+ *
+ * @property {Array} streams Deprecated. Use the <code>stream</code> property. A
+ * <code>streamCreated</code> or <code>streamDestroyed</code> event is dispatched for
+ * each stream added or destroyed.
  *
  * @property {String} reason For a <code>streamDestroyed</code> event,
- *  a description of why the session disconnected. This property can have one of the following values:
+ *  a description of why the session disconnected. This property can have one of the following
+ *  values:
  * </p>
  * <ul>
  *  <li><code>"clientDisconnected"</code> &#151; A client disconnected from the session by calling
@@ -4763,15 +5560,15 @@ OT.ConnectionEvent = function (type, connections, reason) {
  *     (See <a href="Session.html#disconnect">Session.disconnect()</a>.)</li>
  *
  *  <li><code>"forceDisconnected"</code> &#151; A moderator has disconnected the publisher of the
- *   	stream from the session, by calling the <code>forceDisconnect()</code> method of the Session object.
- *      (See <a href="Session.html#forceDisconnect">Session.forceDisconnect()</a>.)</li>
+ *    stream from the session, by calling the <code>forceDisconnect()</code> method of the Session
+*     object. (See <a href="Session.html#forceDisconnect">Session.forceDisconnect()</a>.)</li>
  *
- *  <li><code>"forceUnpublished"</code> &#151; A moderator has forced the publisher of the stream to stop
- *   	publishing the stream, by calling the <code>forceUnpublish()</code> method of the Session object.
- *      (See <a href="Session.html#forceUnpublish">Session.forceUnpublish()</a>.)</li>
+ *  <li><code>"forceUnpublished"</code> &#151; A moderator has forced the publisher of the stream
+ *    to stop publishing the stream, by calling the <code>forceUnpublish()</code> method of the
+ *    Session object. (See <a href="Session.html#forceUnpublish">Session.forceUnpublish()</a>.)</li>
  *
- *  <li><code>"networkDisconnected"</code> &#151; The network connection terminated abruptly (for example,
- *      the client lost their internet connection).</li>
+ *  <li><code>"networkDisconnected"</code> &#151; The network connection terminated abruptly (for
+ *      example, the client lost their internet connection).</li>
  *
  * </ul>
  *
@@ -4781,38 +5578,57 @@ OT.ConnectionEvent = function (type, connections, reason) {
  * <p>For a <code>streamCreated</code> event, this string is undefined.</p>
  *
  *
- * @property {Boolean} cancelable 	Whether the event has a default behavior that is cancelable (<code>true</code>) or not (<code>false</code>).
- *  You can cancel the default behavior by calling the <code>preventDefault()</code> method of
- *  the StreamEvent object in the event listener function. The <code>streamDestroyed</code>
+ * @property {Boolean} cancelable   Whether the event has a default behavior that is cancelable
+ *  (<code>true</code>) or not (<code>false</code>). You can cancel the default behavior by calling
+ *  the <code>preventDefault()</code> method of the StreamEvent object in the event listener
+ *  function. The <code>streamDestroyed</code>
  *  event is cancelable. (See <a href="#preventDefault">preventDefault()</a>.)
  * @augments Event
  */
-OT.StreamEvent = function (type, streams, reason, cancelable) {
+
+  var streamEventPluralDeprecationWarningShown = false;
+  OT.StreamEvent = function (type, stream, reason, cancelable) {
     OT.Event.call(this, type, cancelable);
 
-    this.streams = streams;
+    if (OT.$.canDefineProperty) {
+      Object.defineProperty(this, 'streams', {
+        get: function() {
+          if(!streamEventPluralDeprecationWarningShown) {
+            OT.warn('OT.StreamEvent streams property is deprecated, use stream instead.');
+            streamEventPluralDeprecationWarningShown = true;
+          }
+          return [stream];
+        }
+      });
+    } else {
+      this.streams = [stream];
+    }
+
+    this.stream = stream;
     this.reason = reason;
-};
+  };
 
 /**
 * Prevents the default behavior associated with the event from taking place.
 *
-* <p>For the <code>streamDestroyed</code> event, if the <code>reason</code> is set to <code>"forceDisconnected"</code>
-* or <code>networkDisconnected</code>, the default behavior is that all Subscriber objects that are
-* subscribed to the stream are unsubscribed (and removed from the HTML DOM). If you call the <code>preventDefault()</code>
-* method in the event listener for the <code>streamDestroyed</code> event, the default behavior is prevented and
-* you can, optionally, clean up Subscriber objects using your own code. See
+* <p>For the <code>streamDestroyed</code> event dispatched by the Session object,
+* the default behavior is that all Subscriber objects that are subscribed to the stream are
+* unsubscribed and removed from the HTML DOM. Each Subscriber object dispatches a
+* <code>destroyed</code> event when the element is removed from the HTML DOM. If you call the
+* <code>preventDefault()</code> method in the event listener for the <code>streamDestroyed</code>
+* event, the default behavior is prevented and you can clean up Subscriber objects using your
+* own code. See
 * <a href="Session.html#getSubscribersForStream">Session.getSubscribersForStream()</a>.</p>
-*
-* <p>If the <code>reason</code> property is set to <code>"forceUnpublished"</code>, the default behavior
-* is that the associated Subscriber or Publisher objects corresponding with the stream are unsubscribed
-* or unpublished (and removed from the HTML DOM). If you call the <code>preventDefault()</code> method in the
-* event listener for the <code>streamDestroyed</code> event, the default behavior is prevented and
-* you can, optionally, clean up Subscriber or Publisher objects using your own code. See
-* <a href="Session.html#getPublisherForStream">Session.getPublisherForStream()</a> and
-* <a href="Session.html#getSubscribersForStream">Session.getSubscribersForStream()</a>.</p>
-*
-* <p>To see whether an event has a default behavior, check the <code>cancelable</code> property of the event object. </p>
+* <p>
+* For the <code>streamDestroyed</code> event dispatched by a Publisher object, the default
+* behavior is that the Publisher object is removed from the HTML DOM. The Publisher object
+* dispatches a <code>destroyed</code> event when the element is removed from the HTML DOM.
+* If you call the <code>preventDefault()</code> method in the event listener for the
+* <code>streamDestroyed</code> event, the default behavior is prevented, and you can
+* retain the Publisher for reuse or clean it up using your own code.
+*</p>
+* <p>To see whether an event has a default behavior, check the <code>cancelable</code> property of
+* the event object. </p>
 *
 * <p>Call the <code>preventDefault()</code> method in the event listener function for the event.</p>
 *
@@ -4820,39 +5636,100 @@ OT.StreamEvent = function (type, streams, reason, cancelable) {
 * @memberof StreamEvent
 */
 
-
 /**
- * The Session object dispatches SessionConnectEvent object when a session has successfully connected in response to a call to
- * the <code>connect()</code> method of the Session object.
- *
- *  <p>
- *  For an example, see <a href="Session.html#connect">Session.connect()</a>.
- *  </p>
+ * The Session object dispatches SessionConnectEvent object when a session has successfully
+ * connected in response to a call to the <code>connect()</code> method of the Session object.
+ * <p>
+ * In version 2.2, the completionHandler of the <code>Session.connect()</code> method
+ * indicates success or failure in connecting to the session.
  *
  * @class SessionConnectEvent
- * @property {Array} connections An array of Connection objects, representing connections to the session.
- * (Note that each connection can publish multiple streams.)
- * @property {Array} streams An array of Stream objects corresponding to the streams currently available in the session that has connected.
+ * @property {Array} connections Deprecated in version 2.2 (and set to an empty array). In
+ * version 2.2, listen for the <code>connectionCreated</code> event dispatched by the Session
+ * object. In version 2.2, the Session object dispatches a <code>connectionCreated</code> event
+ * for each connection other than that of your client. This includes connections
+ * present when you first connect to the session.
+ *
+ * @property {Array} streams Deprecated in version 2.2 (and set to an empty array). In version
+ * 2.2, listen for the <code>streamCreated</code> event dispatched by the Session object. In
+ * version 2.2, the Session object dispatches a <code>streamCreated</code> event for each stream
+ * other than those published by your client. This includes streams
+ * present when you first connect to the session.
+ *
+ * @see <a href="Session.html#connect">Session.connect()</a></p>
  * @augments Event
  */
-OT.SessionConnectEvent = function (type, connections, streams, archives) {
-    OT.Event.call(this, type);
 
-    this.connections = connections;
-    this.streams = streams;
-    this.archives = archives;
-    this.groups = []; // Deprecated in OpenTok v0.91.48
-};
+  var sessionConnectedConnectionsDeprecationWarningShown = false;
+  var sessionConnectedStreamsDeprecationWarningShown = false;
+  var sessionConnectedArchivesDeprecationWarningShown = false;
+  var sessionConnectedGroupsDeprecationWarningShown = false;
+
+  OT.SessionConnectEvent = function (type) {
+    OT.Event.call(this, type, false);
+    if (OT.$.canDefineProperty) {
+      Object.defineProperties(this, {
+        connections: {
+          get: function() {
+            if(!sessionConnectedConnectionsDeprecationWarningShown) {
+              OT.warn('OT.SessionConnectedEvent no longer includes connections. Listen ' +
+                'for connectionCreated events instead.');
+              sessionConnectedConnectionsDeprecationWarningShown = true;
+            }
+            return [];
+          }
+        },
+        streams: {
+          get: function() {
+            if(!sessionConnectedStreamsDeprecationWarningShown) {
+              OT.warn('OT.SessionConnectedEvent no longer includes streams. Listen for ' +
+                'streamCreated events instead.');
+              sessionConnectedConnectionsDeprecationWarningShown = true;
+            }
+            return [];
+          }
+        },
+        archives: {
+          get: function() {
+            if(!sessionConnectedArchivesDeprecationWarningShown) {
+              OT.warn('OT.SessionConnectedEvent no longer includes archives. Listen for ' +
+                'archiveStarted events instead.');
+              sessionConnectedArchivesDeprecationWarningShown = true;
+            }
+            return [];
+          }
+        },
+        groups: {
+          get: function() {
+            if(!sessionConnectedGroupsDeprecationWarningShown) {
+              OT.error('OT.SessionConnectedEvent no longer includes groups. There is no ' +
+                'equivelant in OpenTok v2.2');
+              sessionConnectedGroupsDeprecationWarningShown = true;
+            }
+            return [];
+          }
+        }
+      });
+    } else {
+      this.connections = [];
+      this.streams = [];
+      this.archives = [];
+      // Deprecated in OpenTok v0.91.48
+      this.groups = [];
+    }
+  };
 
 /**
- * The Session object dispatches SessionDisconnectEvent object when a session has disconnected. This event may be dispatched asynchronously in
- * response to a successful call to the <code>disconnect()</code> method of the session object.
+ * The Session object dispatches SessionDisconnectEvent object when a session has disconnected. 
+ * This event may be dispatched asynchronously in response to a successful call to the 
+ * <code>disconnect()</code> method of the session object.
  *
  *  <h4>
- *  	<a href="example"></a>Example
+ *    <a href="example"></a>Example
  *  </h4>
  *  <p>
- *  	The following code initializes a session and sets up an event listener for when a session is disconnected.
+ *    The following code initializes a session and sets up an event listener for when a session is 
+ * disconnected.
  *  </p>
  * <pre>var apiKey = ""; // Replace with your API key. See https://dashboard.tokbox.com/projects
  *  var sessionID = ""; // Replace with your own session ID.
@@ -4860,47 +5737,47 @@ OT.SessionConnectEvent = function (type, connections, streams, archives) {
  *  var token = ""; // Replace with a generated token that has been assigned the moderator role.
  *                  // See https://dashboard.tokbox.com/projects
  *
- *  var session = TB.initSession(sessionID);
- *  session.addEventListener("sessionDisconnected", sessionDisconnectedHandler);
- *  session.connect(apiKey, token);
- *
- *  function sessionDisConnectedHandler(event) {
+ *  var session = OT.initSession(apiKey, sessionID);
+ *  session.on("sessionDisconnected", function(event) {
  *      alert("The session disconnected. " + event.reason);
- *  }
+ *  });
+ *  session.connect(token);
  *  </pre>
  *
  * @property {String} reason A description of why the session disconnected.
  *   This property can have two values:
  *  </p>
  *  <ul>
- *  	<li><code>"clientDisconnected"</code> &#151; A client disconnected from the session by calling
- *  	 the <code>disconnect()</code> method of the Session object or by closing the browser.
+ *    <li><code>"clientDisconnected"</code> &#151; A client disconnected from the session by calling
+ *     the <code>disconnect()</code> method of the Session object or by closing the browser.
  *      ( See <a href="Session.html#disconnect">Session.disconnect()</a>.)</li>
- *  	<li><code>"forceDisconnected"</code> &#151; A moderator has disconnected you from the session
- *   	 by calling the <code>forceDisconnect()</code> method of the Session object. (See
+ *    <li><code>"forceDisconnected"</code> &#151; A moderator has disconnected you from the session
+ *     by calling the <code>forceDisconnect()</code> method of the Session object. (See
  *       <a href="Session.html#forceDisconnect">Session.forceDisconnect()</a>.)</li>
- *  	<li><code>"networkDisconnected"</code> &#151; The network connection terminated abruptly (for example,
- *       the client lost their internet connection).</li>
+ *    <li><code>"networkDisconnected"</code> &#151; The network connection terminated abruptly 
+ *       (for example, the client lost their internet connection).</li>
  *  </ul>
  *
  * @class SessionDisconnectEvent
  * @augments Event
  */
-OT.SessionDisconnectEvent = function (type, reason, cancelable) {
+  OT.SessionDisconnectEvent = function (type, reason, cancelable) {
     OT.Event.call(this, type, cancelable);
-
     this.reason = reason;
-};
+  };
 
 /**
 * Prevents the default behavior associated with the event from taking place.
 *
-* <p>For the <code>sessionDisconnectEvent</code>, the default behavior is: all Subscriber objects are unsubscribed,
-* and Publisher objects are destroyed. If you call the <code>preventDefault()</code> method in the
-* event listener for the <code>sessionDisconnect</code> event, the default behavior is prevented (and
-* you can, optionally, clean up Subscriber and Publisher objects using your own code).
+* <p>For the <code>sessionDisconnectEvent</code>, the default behavior is that all Subscriber
+* objects are unsubscribed and removed from the HTML DOM. Each Subscriber object dispatches a
+* <code>destroyed</code> event when the element is removed from the HTML DOM. If you call the
+* <code>preventDefault()</code> method in the event listener for the <code>sessionDisconnect</code> 
+* event, the default behavior is prevented, and you can, optionally, clean up Subscriber objects 
+* using your own code).
 *
-* <p>To see whether an event has a default behavior, check the <code>cancelable</code> property of the event object. </p>
+* <p>To see whether an event has a default behavior, check the <code>cancelable</code> property of 
+* the event object. </p>
 *
 * <p>Call the <code>preventDefault()</code> method in the event listener function for the event.</p>
 *
@@ -4908,56 +5785,25 @@ OT.SessionDisconnectEvent = function (type, reason, cancelable) {
 * @memberof SessionDisconnectEvent
 */
 
-OT.VolumeEvent = function (type, streamId, volume) {
-    OT.Event.call(this, type);
-
-    this.streamId = streamId;
-    this.volume = volume;
-};
-
-
-OT.DeviceEvent = function (type, camera, microphone) {
-    OT.Event.call(this, type);
-
-    this.camera = camera;
-    this.microphone = microphone;
-};
-
-OT.DeviceStatusEvent = function (type, cameras, microphones, selectedCamera, selectedMicrophone) {
-    OT.Event.call(this, type);
-
-    this.cameras = cameras;
-    this.microphones = microphones;
-    this.selectedCamera = selectedCamera;
-    this.selectedMicrophone = selectedMicrophone;
-};
-
-OT.ResizeEvent = function (type, widthFrom, widthTo, heightFrom, heightTo) {
-    OT.Event.call(this, type);
-
-    this.widthFrom = widthFrom;
-    this.widthTo = widthTo;
-    this.heightFrom = heightFrom;
-    this.heightTo = heightTo;
-};
-
 /**
- * The Session object dispatches a <code>streamPropertyChanged</code> event in the following circumstances:
+ * The Session object dispatches a <code>streamPropertyChanged</code> event in the 
+ * following circumstances:
  *
  * <ul>
  *
- * 	<li>When a publisher starts or stops publishing audio or video. This change causes the <code>hasAudio</code>
- * 	or <code>hasVideo</code> property of the Stream object to change. This change results from a call to the
- * 	<code>publishAudio()</code> or <code>publishVideo()</code> methods of the Publish object.</li>
+ *  <li>When a publisher starts or stops publishing audio or video. This change causes 
+ *  the <code>hasAudio</code> or <code>hasVideo</code> property of the Stream object to 
+ *  change. This change results from a call to the <code>publishAudio()</code> or 
+ *  <code>publishVideo()</code> methods of the Publish object.</li>
  *
- * 	<li>When the <code>videoDimensions</code> property of a stream changes. For more information,
- * 	see <a href="Stream.html#properties">Stream.videoDimensions</a>.</li>
+ *  <li>When the <code>videoDimensions</code> property of a stream changes. For more information,
+ *  see <a href="Stream.html#properties">Stream.videoDimensions</a>.</li>
  *
  * </ul>
  *
  * @class StreamPropertyChangedEvent
- * @property {String} changedProperty The property of the stream that changed. This value is either <code>"hasAudio"</code>,
- * <code>"hasVideo"</code>, or <code>"videoDimensions"</code>.
+ * @property {String} changedProperty The property of the stream that changed. This value 
+ * is either <code>"hasAudio"</code>, <code>"hasVideo"</code>, or <code>"videoDimensions"</code>.
  * @property {Stream} stream The Stream object for which a property has changed.
  * @property {Object} newValue The new value of the property (after the change).
  * @property {Object} oldValue The old value of the property (before the change).
@@ -4967,82 +5813,68 @@ OT.ResizeEvent = function (type, widthFrom, widthTo, heightFrom, heightTo) {
  * @see <a href="Stream.html#properties">Stream.videoDimensions</a></p>
  * @augments Event
  */
-OT.StreamPropertyChangedEvent = function (type, stream, changedProperty, oldValue, newValue) {
-    OT.Event.call(this, type);
-
+  OT.StreamPropertyChangedEvent = function (type, stream, changedProperty, oldValue, newValue) {
+    OT.Event.call(this, type, false);
     this.type = type;
     this.stream = stream;
     this.changedProperty = changedProperty;
     this.oldValue = oldValue;
     this.newValue = newValue;
-};
+  };
 
-OT.ArchiveEvent = function (type, archives) {
-    OT.Event.call(this, type);
-
-    this.archives = archives;
-};
-
-OT.ArchiveStreamEvent = function (type, archive, streams) {
-    OT.Event.call(this, type);
-
+  OT.ArchiveEvent = function (type, archive) {
+    OT.Event.call(this, type, false);
+    this.type = type;
+    this.id = archive.id;
+    this.name = archive.name;
+    this.status = archive.status;
     this.archive = archive;
-    this.streams = streams;
-};
+  };
 
-OT.StateChangedEvent = function (type, changedValues) {
-    OT.Event.call(this, type);
-
-    this.changedValues = changedValues;
-};
-
-OT.ChangeFailedEvent = function (type, reasonCode, reason, failedValues) {
-    OT.Event.call(this, type);
-
-    this.reasonCode = reasonCode;
-    this.reason = reason;
-    this.failedValues = failedValues;
-};
+  OT.ArchiveUpdatedEvent = function (stream, key, oldValue, newValue) {
+    OT.Event.call(this, 'updated', false);
+    this.target = stream;
+    this.changedProperty = key;
+    this.oldValue = oldValue;
+    this.newValue = newValue;
+  };
 
 /**
  * The Session object dispatches a signal event when the client receives a signal from the session.
  *
  * @class SignalEvent
- * @property {String} type The type assigned to the signal (if there is one). Use the type to filter signals
- * received (by adding an event handler for signal:type1 or signal:type2, etc.)
- * @property {Object} data The data payload sent with the signal (if there is one).
+ * @property {String} type The type assigned to the signal (if there is one). Use the type to 
+ * filter signals received (by adding an event handler for signal:type1 or signal:type2, etc.)
+ * @property {String} data The data string sent with the signal (if there is one).
  * @property {Connection} from The Connection corresponding to the client that sent with the signal.
  *
  * @see <a href="Session.html#signal">Session.signal()</a></p>
  * @see <a href="Session.html#events">Session events (signal and signal:type)</a></p>
  * @augments Event
  */
-OT.SignalEvent = function(type, data, from) {
-    OT.Event.call(this, type ? "signal:" + type : OT.Event.names.SIGNAL, false);
-
+  OT.SignalEvent = function(type, data, from) {
+    OT.Event.call(this, type ? 'signal:' + type : OT.Event.names.SIGNAL, false);
     this.data = data;
     this.from = from;
-};
+  };
 
 
-OT.StreamUpdatedEvent = function (stream, key, oldValue, newValue) {
-    OT.Event.call(this, 'updated');
-
+  OT.StreamUpdatedEvent = function (stream, key, oldValue, newValue) {
+    OT.Event.call(this, 'updated', false);
     this.target = stream;
     this.changedProperty = key;
     this.oldValue = oldValue;
     this.newValue = newValue;
-};
+  };
 
-OT.DestroyedEvent = function(type, target, reason) {
+  OT.DestroyedEvent = function(type, target, reason) {
     OT.Event.call(this, type, false);
-
     this.target = target;
     this.reason = reason;
-};
-
+  };
 
 })(window);
+/* jshint ignore:start */
 // https://code.google.com/p/stringencoding/
 // An implementation of http://encoding.spec.whatwg.org/#api
 //
@@ -7500,643 +8332,706 @@ OT.DestroyedEvent = function(type, target, reason) {
   global['TextEncoder'] = global['TextEncoder'] || TextEncoder;
   global['TextDecoder'] = global['TextDecoder'] || TextDecoder;
 }(this));
-(function(global) {
+/* jshint ignore:end */
+!(function() {
 
-// Rumor Messaging for JS
-//
-// https://tbwiki.tokbox.com/index.php/Rumor_:_Messaging_FrameWork
-//
-// @todo Rumor {
-//     Add error codes for all the error cases
-//     Add Dependability commands
-// }
+  // Rumor Messaging for JS
+  //
+  // https://tbwiki.tokbox.com/index.php/Rumor_:_Messaging_FrameWork
+  //
+  // @todo Rumor {
+  //     Add error codes for all the error cases
+  //     Add Dependability commands
+  // }
 
-OT.Rumor = {
-  MessageType: {
-    // This is used to subscribe to address/addresses. The address/addresses the
-    // client specifies here is registered on the server. Once any message is sent to
-    // that address/addresses, the client receives that message.
-    SUBSCRIBE: 0,
+  OT.Rumor = {
+    MessageType: {
+      // This is used to subscribe to address/addresses. The address/addresses the
+      // client specifies here is registered on the server. Once any message is sent to
+      // that address/addresses, the client receives that message.
+      SUBSCRIBE: 0,
 
-    // This is used to unsubscribe to address / addresses. Once the client unsubscribe
-    // to an address, it will stop getting messages sent to that address.
-    UNSUBSCRIBE: 1,
+      // This is used to unsubscribe to address / addresses. Once the client unsubscribe
+      // to an address, it will stop getting messages sent to that address.
+      UNSUBSCRIBE: 1,
 
-    // This is used to send messages to arbitrary address/ addresses. Messages can be
-    // anything and Rumor will not care about what is included.
-    MESSAGE: 2,
+      // This is used to send messages to arbitrary address/ addresses. Messages can be
+      // anything and Rumor will not care about what is included.
+      MESSAGE: 2,
 
-    // This will be the first message that the client sends to the server. It includes
-    // the uniqueId for that client connection and a disconnect_notify address that will
-    // be notified once the client disconnects.
-    CONNECT: 3,
+      // This will be the first message that the client sends to the server. It includes
+      // the uniqueId for that client connection and a disconnect_notify address that will
+      // be notified once the client disconnects.
+      CONNECT: 3,
 
-    // This will be the message used by the server to notify an address that a client disconnected.
-    DISCONNECT: 4,
+      // This will be the message used by the server to notify an address that a
+      // client disconnected.
+      DISCONNECT: 4,
 
-    //Enhancements to support Keepalives
-    PING: 7,
-    PONG: 8,
-    STATUS: 9
-  }
-};
+      //Enhancements to support Keepalives
+      PING: 7,
+      PONG: 8,
+      STATUS: 9
+    }
+  };
 
 }(this));
-(function(global) {
+!(function() {
 
-var BUFFER_DRAIN_INTERVAL = 100,        // The interval between polling the websocket's send buffer
-    BUFFER_DRAIN_MAX_RETRIES = 10,      // The total number of times to retest the websocket's send buffer
-    WEB_SOCKET_KEEP_ALIVE_INTERVAL = 9000,
+  // The interval between polling the websocket's send buffer
+  var BUFFER_DRAIN_INTERVAL = 100,
+      // The total number of times to retest the websocket's send buffer
+      BUFFER_DRAIN_MAX_RETRIES = 10,
 
-    // Magic Connectivity Timeout Constant: We wait 3*the keep alive interval,
-    // on the third keep alive we trigger the timeout if we haven't received the
-    // server pong.
-    WEB_SOCKET_CONNECTIVITY_TIMEOUT = 5*WEB_SOCKET_KEEP_ALIVE_INTERVAL - 100
+      WEB_SOCKET_KEEP_ALIVE_INTERVAL = 9000,
 
+      // Magic Connectivity Timeout Constant: We wait 9*the keep alive interval,
+      // on the third keep alive we trigger the timeout if we haven't received the
+      // server pong.
+      WEB_SOCKET_CONNECTIVITY_TIMEOUT = 5*WEB_SOCKET_KEEP_ALIVE_INTERVAL - 100,
 
-
-// https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent#Close_codes
-// http://docs.oracle.com/javaee/7/api/javax/websocket/CloseReason.CloseCodes.html
-var wsCloseErrorCodes = {
-  1002:  "The endpoint is terminating the connection due to a protocol error. (CLOSE_PROTOCOL_ERROR)",
-  1003:  "The connection is being terminated because the endpoint received data of a type it cannot accept (for example, a text-only endpoint received binary data). (CLOSE_UNSUPPORTED)",
-  1004:  "The endpoint is terminating the connection because a data frame was received that is too large. (CLOSE_TOO_LARGE)",
-  1005:  "Indicates that no status code was provided even though one was expected. (CLOSE_NO_STATUS)",
-  1006:  "Used to indicate that a connection was closed abnormally (that is, with no close frame being sent) when a status code is expected. (CLOSE_ABNORMAL)",
-  1007: "Indicates that an endpoint is terminating the connection because it has received data within a message that was not consistent with the type of the message (e.g., non-UTF-8 [RFC3629] data within a text message)",
-  1008: "Indicates that an endpoint is terminating the connection because it has received a message that violates its policy.  This is a generic status code that can be returned when there is no other more suitable status code (e.g., 1003 or 1009) or if there is a need to hide specific details about the policy",
-  1009: "Indicates that an endpoint is terminating the connection because it has received a message that is too big for it to process",
-  1011: "Indicates that a server is terminating the connection because it encountered an unexpected condition that prevented it from fulfilling the request",
-
-  // .... codes in the 4000-4999 range are available for use by applications.
-  4001:   "Connectivity loss was detected as it was too long since the socket received the last PONG message"
-};
-
-OT.Rumor.SocketError = function(code, message) {
-  this.code = code;
-  this.message = message;
-};
-
-// The NativeSocket bit is purely to make testing simpler, it defaults to WebSocket
-// so in normal operation you would omit it.
-OT.Rumor.Socket = function(messagingServer, notifyDisconnectAddress, NativeSocket) {
-  var server = messagingServer,
-      webSocket,
-      id,
-      onOpen,
-      onError,
-      onClose,
-      onMessage,
-      connectCallback,
-      bufferDrainTimeout,           // Timer to poll whether th send buffer has been drained
-      connectTimeout,
-      lastMessageTimestamp,         // The timestamp of the last message received
-      keepAliveTimer;               // Timer for the connectivity checks
+      wsCloseErrorCodes;
 
 
-  //// Private API
-  var stateChanged = function(newState) {
-        switch (newState) {
-          case 'disconnected':
-          case 'error':
-            webSocket = null;
-            if (onClose) {
-              var error;
-              if(hasLostConnectivity()) {
-                error = new Error(wsCloseErrorCodes[4001]);
-                error.code = 4001;
+
+  // https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent#Close_codes
+  // http://docs.oracle.com/javaee/7/api/javax/websocket/CloseReason.CloseCodes.html
+  wsCloseErrorCodes = {
+    1002:  'The endpoint is terminating the connection due to a protocol error. ' +
+      '(CLOSE_PROTOCOL_ERROR)',
+    1003:  'The connection is being terminated because the endpoint received data of ' +
+      'a type it cannot accept (for example, a text-only endpoint received binary data). ' +
+      '(CLOSE_UNSUPPORTED)',
+    1004:  'The endpoint is terminating the connection because a data frame was received ' +
+      'that is too large. (CLOSE_TOO_LARGE)',
+    1005:  'Indicates that no status code was provided even though one was expected. ' +
+    '(CLOSE_NO_STATUS)',
+    1006:  'Used to indicate that a connection was closed abnormally (that is, with no ' +
+      'close frame being sent) when a status code is expected. (CLOSE_ABNORMAL)',
+    1007: 'Indicates that an endpoint is terminating the connection because it has received ' +
+      'data within a message that was not consistent with the type of the message (e.g., ' +
+      'non-UTF-8 [RFC3629] data within a text message)',
+    1008: 'Indicates that an endpoint is terminating the connection because it has received a ' +
+      'message that violates its policy.  This is a generic status code that can be returned ' +
+      'when there is no other more suitable status code (e.g., 1003 or 1009) or if there is a ' +
+      'need to hide specific details about the policy',
+    1009: 'Indicates that an endpoint is terminating the connection because it has received a ' +
+      'message that is too big for it to process',
+    1011: 'Indicates that a server is terminating the connection because it encountered an ' +
+      'unexpected condition that prevented it from fulfilling the request',
+
+    // .... codes in the 4000-4999 range are available for use by applications.
+    4001:   'Connectivity loss was detected as it was too long since the socket received the ' +
+      'last PONG message'
+  };
+
+  OT.Rumor.SocketError = function(code, message) {
+    this.code = code;
+    this.message = message;
+  };
+
+  // The NativeSocket bit is purely to make testing simpler, it defaults to WebSocket
+  // so in normal operation you would omit it.
+  OT.Rumor.Socket = function(messagingServer, notifyDisconnectAddress, NativeSocket) {
+    var states = ['disconnected',  'error', 'connected', 'connecting', 'disconnecting'],
+        server = messagingServer,
+        webSocket,
+        id,
+        onOpen,
+        onError,
+        onClose,
+        onMessage,
+        connectCallback,
+        bufferDrainTimeout,           // Timer to poll whether th send buffer has been drained
+        connectTimeout,
+        lastMessageTimestamp,         // The timestamp of the last message received
+        keepAliveTimer;               // Timer for the connectivity checks
+
+
+    //// Private API
+    var stateChanged = function(newState) {
+          switch (newState) {
+            case 'disconnected':
+            case 'error':
+              webSocket = null;
+              if (onClose) {
+                var error;
+                if(hasLostConnectivity()) {
+                  error = new Error(wsCloseErrorCodes[4001]);
+                  error.code = 4001;
+                }
+                onClose(error);
               }
-              onClose(error);
-            }
-            break;
-        }
-      },
-
-      setState = OT.$.statable(this, ['disconnected',  'error', 'connected', 'connecting', 'disconnecting'], 'disconnected', stateChanged),
-
-      validateCallback = function validateCallback (name, callback) {
-        if (callback === null || !OT.$.isFunction(callback) ) {
-          throw new Error("The Rumor.Socket " + name + " callback must be a valid function or null");
-        }
-      },
-
-      error = function error (errorMessage) {
-        OT.error("Rumor.Socket: " + errorMessage);
-
-        var error = new OT.Rumor.SocketError(null, errorMessage || "Unknown Socket Error");
-
-        if (connectTimeout) clearTimeout(connectTimeout);
-
-        setState('error');
-
-        if (this.previousState === 'connecting' && connectCallback) {
-          connectCallback(error, null);
-          connectCallback = null;
-        }
-
-        if (onError) onError(error);
-      }.bind(this),
-
-      // Immediately close the socket, only used by disconnectWhenSendBufferIsDrained
-      close = function close() {
-        setState('disconnecting');
-
-        if (bufferDrainTimeout) {
-          clearTimeout(bufferDrainTimeout);
-          bufferDrainTimeout = null;
-        }
-        console.info("CALLED CLOSE ON WEBSOCKET");
-        webSocket.close();
-      },
-
-      // Ensure that the WebSocket send buffer is fully drained before disconnecting
-      // the socket. If the buffer doesn't drain after a certain length of time
-      // we give up and close it anyway.
-      disconnectWhenSendBufferIsDrained = function disconnectWhenSendBufferIsDrained (bufferDrainRetries) {
-        if (!webSocket) return;
-
-        if (bufferDrainRetries === void 0) bufferDrainRetries = 0;
-        if (bufferDrainTimeout) clearTimeout(bufferDrainTimeout);
-
-        if (webSocket.bufferedAmount > 0 && (bufferDrainRetries + 1) <= BUFFER_DRAIN_MAX_RETRIES) {
-          bufferDrainTimeout = setTimeout(disconnectWhenSendBufferIsDrained, BUFFER_DRAIN_INTERVAL, bufferDrainRetries+1);
-        }
-        else {
-          close();
-        }
-      },
-
-      hasLostConnectivity = function hasLostConnectivity () {
-        if (!lastMessageTimestamp) return false;
-
-        return (OT.$.now() - lastMessageTimestamp) >= WEB_SOCKET_CONNECTIVITY_TIMEOUT;
-      },
-
-      sendKeepAlive = function sendKeepAlive () {
-        if (!this.is('connected')) return;
-
-        if ( hasLostConnectivity() ) {
-          webSocketDisconnected({code: 4001});
-        }
-        else  {
-          webSocket.send(OT.Rumor.Message.Ping().serialize());
-          keepAliveTimer = setTimeout(sendKeepAlive.bind(this), WEB_SOCKET_KEEP_ALIVE_INTERVAL);
-        }
-      }.bind(this);
-
-
-  //// Private Event Handlers
-  var webSocketConnected = function webSocketConnected () {
-        if (connectTimeout) clearTimeout(connectTimeout);
-
-        // Connect to Rumor by registering our connection id and the
-        // app server address to notify if we disconnect.
-        //
-        // We don't need to wait for a reply to this message.
-        webSocket.send(OT.Rumor.Message.Connect(id, notifyDisconnectAddress).serialize());
-
-        setState('connected');
-        if (connectCallback) {
-          connectCallback(null, id);
-          connectCallback = null;
-        }
-
-        if (onOpen) onOpen(id);
-
-        setTimeout(function() {
-          lastMessageTimestamp = OT.$.now();
-          sendKeepAlive();
-        }, WEB_SOCKET_KEEP_ALIVE_INTERVAL);
-      },
-
-      webSocketConnectTimedOut = function webSocketConnectTimedOut () {
-        error("Timed out while waiting for the Rumor socket to connect.");
-      },
-
-      webSocketError = function webSocketError (errorEvent) {
-        var errorMessage = "Unknown Socket Error";      // @fixme We MUST be able to do better than this!
-
-        // All errors seem to result in disconnecting the socket, the close event
-        // has a close reason and code which gives some error context. This,
-        // combined with the fact that the errorEvent argument contains no
-        // error info at all, means we'll delay triggering the error handlers
-        // until the socket is closed.
-        // error(errorMessage);
-      },
-
-      webSocketDisconnected = function webSocketDisconnected (closeEvent) {
-        if (connectTimeout) clearTimeout(connectTimeout);
-        if (keepAliveTimer) clearTimeout(keepAliveTimer);
-
-        if (closeEvent.code !== 1000 && closeEvent.code !== 1001) {
-          var reason = closeEvent.reason || closeEvent.message;
-          if (!reason && wsCloseErrorCodes.hasOwnProperty(closeEvent.code)) reason = wsCloseErrorCodes[closeEvent.code];
-
-          error("Rumor Socket Disconnected: " + reason);
-        }
-
-        if (this.isNot('error')) setState('disconnected');
-      }.bind(this),
-
-      webSocketReceivedMessage = function webSocketReceivedMessage (message) {
-        lastMessageTimestamp = OT.$.now();
-
-        if (onMessage) {
-          var msg = OT.Rumor.Message.deserialize(message.data);
-
-          if (msg.type !== OT.Rumor.MessageType.PONG) {
-            onMessage(msg.toAddress, msg.data);
+              break;
           }
-        }
-      };
+        },
+
+        setState = OT.$.statable(this, states, 'disconnected', stateChanged),
+
+        validateCallback = function validateCallback (name, callback) {
+          if (callback === null || !OT.$.isFunction(callback) ) {
+            throw new Error('The Rumor.Socket ' + name +
+              ' callback must be a valid function or null');
+          }
+        },
+
+        error = function error (errorMessage) {
+          OT.error('Rumor.Socket: ' + errorMessage);
+
+          var socketError = new OT.Rumor.SocketError(null, errorMessage || 'Unknown Socket Error');
+
+          if (connectTimeout) clearTimeout(connectTimeout);
+
+          setState('error');
+
+          if (this.previousState === 'connecting' && connectCallback) {
+            connectCallback(socketError, null);
+            connectCallback = null;
+          }
+
+          if (onError) onError(socketError);
+        }.bind(this),
+
+        // Immediately close the socket, only used by disconnectWhenSendBufferIsDrained
+        close = function close() {
+          setState('disconnecting');
+
+          if (bufferDrainTimeout) {
+            clearTimeout(bufferDrainTimeout);
+            bufferDrainTimeout = null;
+          }
+
+          webSocket.close();
+        },
+
+        // Ensure that the WebSocket send buffer is fully drained before disconnecting
+        // the socket. If the buffer doesn't drain after a certain length of time
+        // we give up and close it anyway.
+        disconnectWhenSendBufferIsDrained =
+          function disconnectWhenSendBufferIsDrained (bufferDrainRetries) {
+          if (!webSocket) return;
+
+          if (bufferDrainRetries === void 0) bufferDrainRetries = 0;
+          if (bufferDrainTimeout) clearTimeout(bufferDrainTimeout);
+
+          if (webSocket.bufferedAmount > 0 &&
+            (bufferDrainRetries + 1) <= BUFFER_DRAIN_MAX_RETRIES) {
+            bufferDrainTimeout = setTimeout(disconnectWhenSendBufferIsDrained,
+              BUFFER_DRAIN_INTERVAL, bufferDrainRetries+1);
+          }
+          else {
+            close();
+          }
+        },
+
+        hasLostConnectivity = function hasLostConnectivity () {
+          if (!lastMessageTimestamp) return false;
+
+          return (OT.$.now() - lastMessageTimestamp) >= WEB_SOCKET_CONNECTIVITY_TIMEOUT;
+        },
+
+        sendKeepAlive = function sendKeepAlive () {
+          if (!this.is('connected')) return;
+
+          if ( hasLostConnectivity() ) {
+            webSocketDisconnected({code: 4001});
+          }
+          else  {
+            webSocket.send(OT.Rumor.Message.Ping().serialize());
+            keepAliveTimer = setTimeout(sendKeepAlive.bind(this), WEB_SOCKET_KEEP_ALIVE_INTERVAL);
+          }
+        }.bind(this);
 
 
-  //// Public API
+    //// Private Event Handlers
+    var webSocketConnected = function webSocketConnected () {
+          if (connectTimeout) clearTimeout(connectTimeout);
 
-  this.publish = function (topics, message) {
-    webSocket.send(OT.Rumor.Message.Publish(topics, message).serialize());
-  };
+          // Connect to Rumor by registering our connection id and the
+          // app server address to notify if we disconnect.
+          //
+          // We don't need to wait for a reply to this message.
+          webSocket.send(OT.Rumor.Message.Connect(id, notifyDisconnectAddress).serialize());
 
-  this.subscribe = function(topics) {
-    webSocket.send(OT.Rumor.Message.Subscribe(topics).serialize());
-  };
+          setState('connected');
+          if (connectCallback) {
+            connectCallback(null, id);
+            connectCallback = null;
+          }
 
-  this.unsubscribe = function(topics) {
-    webSocket.send(OT.Rumor.Message.Unsubscribe(topics).serialize());
-  };
+          if (onOpen) onOpen(id);
 
-  this.connect = function (connectionId, complete) {
-    if (this.is('connecting', 'connected')) {
-      complete(new OT.Rumor.SocketError(null, "Rumor.Socket cannot connect when it is already connecting or connected."));
-      return;
-    }
+          setTimeout(function() {
+            lastMessageTimestamp = OT.$.now();
+            sendKeepAlive();
+          }, WEB_SOCKET_KEEP_ALIVE_INTERVAL);
+        },
 
-    id = connectionId;
-    connectCallback = complete;
+        webSocketConnectTimedOut = function webSocketConnectTimedOut () {
+          error('Timed out while waiting for the Rumor socket to connect.');
+        },
 
-    try {
-      setState('connecting');
+        webSocketError = function webSocketError () {},
+          // var errorMessage = 'Unknown Socket Error';
+          // @fixme We MUST be able to do better than this!
 
-      webSocket = new (NativeSocket || WebSocket)(server);
-      webSocket.binaryType = 'arraybuffer';
+          // All errors seem to result in disconnecting the socket, the close event
+          // has a close reason and code which gives some error context. This,
+          // combined with the fact that the errorEvent argument contains no
+          // error info at all, means we'll delay triggering the error handlers
+          // until the socket is closed.
+          // error(errorMessage);
 
-      webSocket.onopen = webSocketConnected;
-      webSocket.onclose = webSocketDisconnected;
-      webSocket.onerror = webSocketError;
-      webSocket.onmessage = webSocketReceivedMessage;
+        webSocketDisconnected = function webSocketDisconnected (closeEvent) {
+          if (connectTimeout) clearTimeout(connectTimeout);
+          if (keepAliveTimer) clearTimeout(keepAliveTimer);
 
-      connectTimeout = setTimeout(webSocketConnectTimedOut, OT.Rumor.Socket.CONNECT_TIMEOUT);
-    }
-    catch(e) {
-      OT.error(e);
+          if (closeEvent.code !== 1000 && closeEvent.code !== 1001) {
+            var reason = closeEvent.reason || closeEvent.message;
+            if (!reason && wsCloseErrorCodes.hasOwnProperty(closeEvent.code)) {
+              reason = wsCloseErrorCodes[closeEvent.code];
+            }
 
-      // @todo add an actual error message
-      error("Could not connect to the Rumor socket, possibly because of a blocked port.")
-    }
-  };
+            error('Rumor Socket Disconnected: ' + reason);
+          }
 
-  this.disconnect = function() {
-    if (connectTimeout) clearTimeout(connectTimeout);
-    if (keepAliveTimer) clearTimeout(keepAliveTimer);
+          if (this.isNot('error')) setState('disconnected');
+        }.bind(this),
 
-    if (!webSocket) {
-      if (this.isNot('error')) setState('disconnected');
-      return;
-    }
+        webSocketReceivedMessage = function webSocketReceivedMessage (message) {
+          lastMessageTimestamp = OT.$.now();
 
-    if (webSocket.readyState === 3/* CLOSED */) {
-      if (this.isNot('error')) setState('disconnected');
-    }
-    else {
-      if (this.is('connected')) {
-        // Look! We are nice to the rumor server ;-)
-        webSocket.send(OT.Rumor.Message.Disconnect().serialize());
+          if (onMessage) {
+
+            var msg = OT.Rumor.Message.deserialize(message.data);
+
+            if (msg.type !== OT.Rumor.MessageType.PONG) {
+              onMessage(msg);
+            }
+          }
+        };
+
+
+    //// Public API
+
+    this.publish = function (topics, message, headers) {
+      webSocket.send(OT.Rumor.Message.Publish(topics, message, headers).serialize());
+    };
+
+    this.subscribe = function(topics) {
+      webSocket.send(OT.Rumor.Message.Subscribe(topics).serialize());
+    };
+
+    this.unsubscribe = function(topics) {
+      webSocket.send(OT.Rumor.Message.Unsubscribe(topics).serialize());
+    };
+
+    this.connect = function (connectionId, complete) {
+      if (this.is('connecting', 'connected')) {
+        complete(new OT.Rumor.SocketError(null,
+            'Rumor.Socket cannot connect when it is already connecting or connected.'));
+        return;
       }
 
-      // Wait until the socket is ready to close
-      disconnectWhenSendBufferIsDrained();
+      id = connectionId;
+      connectCallback = complete;
+
+      try {
+        setState('connecting');
+
+        var TheWebSocket = NativeSocket || WebSocket;
+        webSocket = new TheWebSocket(server);
+        webSocket.binaryType = 'arraybuffer';
+
+        webSocket.onopen = webSocketConnected;
+        webSocket.onclose = webSocketDisconnected;
+        webSocket.onerror = webSocketError;
+        webSocket.onmessage = webSocketReceivedMessage;
+
+        connectTimeout = setTimeout(webSocketConnectTimedOut, OT.Rumor.Socket.CONNECT_TIMEOUT);
+      }
+      catch(e) {
+        OT.error(e);
+
+        // @todo add an actual error message
+        error('Could not connect to the Rumor socket, possibly because of a blocked port.');
+      }
+    };
+
+    this.disconnect = function() {
+      if (connectTimeout) clearTimeout(connectTimeout);
+      if (keepAliveTimer) clearTimeout(keepAliveTimer);
+
+      if (!webSocket) {
+        if (this.isNot('error')) setState('disconnected');
+        return;
+      }
+
+      if (webSocket.readyState === 3/* CLOSED */) {
+        if (this.isNot('error')) setState('disconnected');
+      }
+      else {
+        if (this.is('connected')) {
+          // Look! We are nice to the rumor server ;-)
+          webSocket.send(OT.Rumor.Message.Disconnect().serialize());
+        }
+
+        // Wait until the socket is ready to close
+        disconnectWhenSendBufferIsDrained();
+      }
+    };
+
+
+
+    Object.defineProperties(this, {
+      id: {
+        get: function() { return id; }
+      },
+
+      onOpen: {
+        set: function(callback) {
+          validateCallback('onOpen', callback);
+          onOpen = callback;
+        },
+
+        get: function() { return onOpen; }
+      },
+
+      onError: {
+        set: function(callback) {
+          validateCallback('onError', callback);
+          onError = callback;
+        },
+
+        get: function() { return onError; }
+      },
+
+      onClose: {
+        set: function(callback) {
+          validateCallback('onClose', callback);
+          onClose = callback;
+        },
+
+        get: function() { return onClose; }
+      },
+
+      onMessage: {
+        set: function(callback) {
+          validateCallback('onMessage', callback);
+          onMessage = callback;
+        },
+
+        get: function() { return onMessage; }
+      }
+    });
+  };
+
+  // The number of ms to wait for the websocket to connect
+  OT.Rumor.Socket.CONNECT_TIMEOUT = 15000;
+
+}(this));
+!(function() {
+
+  /*global TextEncoder, TextDecoder */
+
+  //
+  //
+  // @references
+  // * https://tbwiki.tokbox.com/index.php/Rumor_Message_Packet
+  // * https://tbwiki.tokbox.com/index.php/Rumor_Protocol
+  //
+  OT.Rumor.Message = function (type, toAddress, headers, data) {
+    this.type = type;
+    this.toAddress = toAddress;
+    this.headers = headers;
+    this.data = data;
+
+    this.transactionId = this.headers['TRANSACTION-ID'];
+    this.status = this.headers.STATUS;
+    this.isError = !(this.status && this.status[0] === '2');
+  };
+
+  OT.Rumor.Message.prototype.serialize = function () {
+    var offset = 8,
+        cBuf = 7,
+        address = [],
+        headerKey = [],
+        headerVal = [],
+        strArray,
+        dataView,
+        i,
+        j;
+
+    // The number of addresses
+    cBuf++;
+
+    // Write out the address.
+    for (i = 0; i < this.toAddress.length; i++) {
+      /*jshint newcap:false */
+      address.push(new TextEncoder('utf-8').encode(this.toAddress[i]));
+      cBuf += 2;
+      cBuf += address[i].length;
     }
+
+    // The number of parameters
+    cBuf++;
+
+    // Write out the params
+    i = 0;
+
+    for (var key in this.headers) {
+      headerKey.push(new TextEncoder('utf-8').encode(key));
+      headerVal.push(new TextEncoder('utf-8').encode(this.headers[key]));
+      cBuf += 4;
+      cBuf += headerKey[i].length;
+      cBuf += headerVal[i].length;
+
+      i++;
+    }
+
+    dataView = new TextEncoder('utf-8').encode(this.data);
+    cBuf += dataView.length;
+
+    // Let's allocate a binary blob of this size
+    var buffer = new ArrayBuffer(cBuf);
+    var uint8View = new Uint8Array(buffer, 0, cBuf);
+
+    // We don't include the header in the lenght.
+    cBuf -= 4;
+
+    // Write out size (in network order)
+    uint8View[0] = (cBuf & 0xFF000000) >>> 24;
+    uint8View[1] = (cBuf & 0x00FF0000) >>> 16;
+    uint8View[2] = (cBuf & 0x0000FF00) >>>  8;
+    uint8View[3] = (cBuf & 0x000000FF) >>>  0;
+
+    // Write out reserved bytes
+    uint8View[4] = 0;
+    uint8View[5] = 0;
+
+    // Write out message type
+    uint8View[6] = this.type;
+    uint8View[7] = this.toAddress.length;
+
+    // Now just copy over the encoded values..
+    for (i = 0; i < address.length; i++) {
+      strArray = address[i];
+      uint8View[offset++] = strArray.length >> 8 & 0xFF;
+      uint8View[offset++] = strArray.length >> 0 & 0xFF;
+      for (j = 0; j < strArray.length; j++) {
+        uint8View[offset++] = strArray[j];
+      }
+    }
+
+    uint8View[offset++] = headerKey.length;
+
+    // Write out the params
+    for (i = 0; i < headerKey.length; i++) {
+      strArray = headerKey[i];
+      uint8View[offset++] = strArray.length >> 8 & 0xFF;
+      uint8View[offset++] = strArray.length >> 0 & 0xFF;
+      for (j = 0; j < strArray.length; j++) {
+        uint8View[offset++] = strArray[j];
+      }
+
+      strArray = headerVal[i];
+      uint8View[offset++] = strArray.length >> 8 & 0xFF;
+      uint8View[offset++] = strArray.length >> 0 & 0xFF;
+      for (j = 0; j < strArray.length; j++) {
+        uint8View[offset++] = strArray[j];
+      }
+    }
+
+    // And finally the data
+    for (i = 0; i < dataView.length; i++) {
+      uint8View[offset++] = dataView[i];
+    }
+
+    return buffer;
+  };
+
+  function toArrayBuffer(buffer) {
+    var ab = new ArrayBuffer(buffer.length);
+    var view = new Uint8Array(ab);
+    for (var i = 0; i < buffer.length; ++i) {
+      view[i] = buffer[i];
+    }
+    return ab;
+  }
+
+  OT.Rumor.Message.deserialize = function (buffer) {
+
+    if(typeof Buffer !== 'undefined' &&
+      Buffer.isBuffer(buffer)) {
+      buffer = toArrayBuffer(buffer);
+    }
+    var cBuf = 0,
+        type,
+        offset = 8,
+        uint8View = new Uint8Array(buffer),
+        strView,
+        headerlen,
+        headers,
+        keyStr,
+        valStr,
+        length,
+        i;
+
+    // Write out size (in network order)
+    cBuf += uint8View[0] << 24;
+    cBuf += uint8View[1] << 16;
+    cBuf += uint8View[2] <<  8;
+    cBuf += uint8View[3] <<  0;
+
+    type = uint8View[6];
+    var address = [];
+
+    for (i = 0; i < uint8View[7]; i++) {
+      length = uint8View[offset++] << 8;
+      length += uint8View[offset++];
+      strView = new Uint8Array(buffer, offset, length);
+      /*jshint newcap:false */
+      address[i] = new TextDecoder('utf-8').decode(strView);
+      offset += length;
+    }
+
+    headerlen = uint8View[offset++];
+    headers = {};
+
+    for (i = 0; i < headerlen; i++) {
+      length = uint8View[offset++] << 8;
+      length += uint8View[offset++];
+      strView = new Uint8Array(buffer, offset, length);
+      keyStr = new TextDecoder('utf-8').decode(strView);
+      offset += length;
+
+      length = uint8View[offset++] << 8;
+      length += uint8View[offset++];
+      strView = new Uint8Array(buffer, offset, length);
+      valStr = new TextDecoder('utf-8').decode(strView);
+      headers[keyStr] = valStr;
+      offset += length;
+    }
+
+    var dataView = new Uint8Array(buffer, offset);
+    var data = new TextDecoder('utf-8').decode(dataView);
+
+    return new OT.Rumor.Message(type, address, headers, data);
   };
 
 
+  OT.Rumor.Message.Connect = function (uniqueId, notifyDisconnectAddress) {
+    var headers = {
+      uniqueId: uniqueId,
+      notifyDisconnectAddress: notifyDisconnectAddress
+    };
 
-  Object.defineProperties(this, {
-    id: {
-      get: function() { return id; }
-    },
+    return new OT.Rumor.Message(OT.Rumor.MessageType.CONNECT, [], headers, '');
+  };
 
-    onOpen: {
-      set: function(callback) {
-        validateCallback('onOpen', callback);
-        onOpen = callback;
-      },
+  OT.Rumor.Message.Disconnect = function () {
+    return new OT.Rumor.Message(OT.Rumor.MessageType.DISCONNECT, [], [], '');
+  };
 
-      get: function() { return onOpen; }
-    },
+  OT.Rumor.Message.Subscribe = function(topics) {
+    return new OT.Rumor.Message(OT.Rumor.MessageType.SUBSCRIBE, topics, [], '');
+  };
 
-    onError: {
-      set: function(callback) {
-        validateCallback('onError', callback);
-        onError = callback;
-      },
+  OT.Rumor.Message.Unsubscribe = function(topics) {
+    return new OT.Rumor.Message(OT.Rumor.MessageType.UNSUBSCRIBE, topics, [], '');
+  };
 
-      get: function() { return onError; }
-    },
+  OT.Rumor.Message.Publish = function(topics, message, headers) {
+    return new OT.Rumor.Message(OT.Rumor.MessageType.MESSAGE, topics, headers||[], message);
+  };
 
-    onClose: {
-      set: function(callback) {
-        validateCallback('onClose', callback);
-        onClose = callback;
-      },
-
-      get: function() { return onClose; }
-    },
-
-    onMessage: {
-      set: function(callback) {
-        validateCallback('onMessage', callback);
-        onMessage = callback;
-      },
-
-      get: function() { return onMessage; }
-    }
-  });
-};
-
-// The number of ms to wait for the websocket to connect
-OT.Rumor.Socket.CONNECT_TIMEOUT = 15000;
+  // This message is used to implement keepalives on the persistent
+  // socket connection between the client and server. Every time the
+  // client sends a PING to the server, the server will respond with
+  // a PONG.
+  OT.Rumor.Message.Ping = function() {
+    return new OT.Rumor.Message(OT.Rumor.MessageType.PING, [], [], '');
+  };
 
 }(this));
-(function(global) {
+!(function() {
 
-//
-//
-// @references
-// * https://tbwiki.tokbox.com/index.php/Rumor_Message_Packet
-// * https://tbwiki.tokbox.com/index.php/Rumor_Protocol
-//
-OT.Rumor.Message = function (type, toAddress, headers, data) {
-  this.type = type;
-  this.toAddress = toAddress;
-  this.headers = headers;
-  this.data = data;
-};
+  // Rumor Messaging for JS
+  //
+  // https://tbwiki.tokbox.com/index.php/Raptor_Messages_(Sent_as_a_RumorMessage_payload_in_JSON)
+  //
+  // @todo Raptor {
+  //     Look at disconnection cleanup: i.e. subscriber + publisher cleanup
+  //     Add error codes for all the error cases
+  //     Write unit tests for SessionInfo
+  //     Write unit tests for Session
+  //     Make use of the new DestroyedEvent
+  //     Remove dependency on OT.properties
+  //     OT.Capabilities must be part of the Raptor namespace
+  //     Add Dependability commands
+  //     Think about noConflict, or whether we should just use the OT namespace
+  //     Think about how to expose OT.publishers, OT.subscribers, and OT.sessions if messaging was
+  //        being included as a component
+  //     Another solution to the problem of having publishers/subscribers/etc would be to make
+  //        Raptor Socket a separate component from Dispatch (dispatch being more business logic)
+  //     Look at the coupling of OT.sessions to OT.Raptor.Socket
+  // }
+  //
+  // @todo Raptor Docs {
+  //   Document payload formats for incoming messages (what are the payloads for 
+  //    STREAM CREATED/MODIFIED for example)
+  //   Document how keepalives work
+  //   Document all the Raptor actions and types
+  //   Document the session connect flow (including error cases)
+  // }
 
+  OT.Raptor = {
+    Actions: {
+      //General
+      CONNECT: 100,
+      CREATE: 101,
+      UPDATE: 102,
+      DELETE: 103,
+      STATE: 104,
 
-OT.Rumor.Message.prototype.serialize = function () {
-  var bitStream = '',
-      str = "",
-      offset = 8,
-      cBuf = 7,
-      address = new Array(this.toAddress.length),
-      headerKey = new Array(this.headers.length),
-      headerVal = new Array(this.headers.length),
-      dataView;
+      //Moderation
+      FORCE_DISCONNECT: 105,
+      FORCE_UNPUBLISH: 106,
+      SIGNAL: 107,
 
-  // The number of addresses
-  cBuf++;
+      //Archives
+      CREATE_ARCHIVE: 108,
+      CLOSE_ARCHIVE: 109,
+      START_RECORDING_SESSION: 110,
+      STOP_RECORDING_SESSION: 111,
+      START_RECORDING_STREAM: 112,
+      STOP_RECORDING_STREAM: 113,
+      LOAD_ARCHIVE: 114,
+      START_PLAYBACK: 115,
+      STOP_PLAYBACK: 116,
 
-  // Write out the address.
-  for (var i = 0; i < this.toAddress.length; i++) {
-    address[i] = new TextEncoder('utf-8').encode(this.toAddress[i]);
-    cBuf += 2;
-    cBuf += address[i].length;
-  }
+      //AppState
+      APPSTATE_PUT: 117,
+      APPSTATE_DELETE: 118,
 
-  // The number of parameters
-  cBuf++;
+      // JSEP
+      OFFER: 119,
+      ANSWER: 120,
+      PRANSWER: 121,
+      CANDIDATE: 122,
+      SUBSCRIBE: 123,
+      UNSUBSCRIBE: 124,
+      QUERY: 125,
+      SDP_ANSWER: 126,
 
-  // Write out the params
-  for (var i = 0; i < this.headers.length; i++) {
-    headerKey[i] = new TextEncoder('utf-8').encode(this.headers[i].key);
-    headerVal[i] = new TextEncoder('utf-8').encode(this.headers[i].val);
-    cBuf += 4;
-    cBuf += headerKey[i].length;
-    cBuf += headerVal[i].length;
-  }
+      //KeepAlive
+      PONG: 127,
+      REGISTER: 128, //Used for registering streams.
 
-  dataView = new TextEncoder('utf-8').encode(this.data);
-  cBuf += dataView.length;
+      QUALITY_CHANGED: 129
+    },
 
-  // Let's allocate a binary blob of this size
-  var buffer = new ArrayBuffer(cBuf);
-  var uint8View = new Uint8Array(buffer, 0, cBuf);
-
-  // We don't include the header in the lenght.
-  cBuf -= 4;
-
-  // Write out size (in network order)
-  uint8View[0] = (cBuf & 0xFF000000) >>> 24;
-  uint8View[1] = (cBuf & 0x00FF0000) >>> 16;
-  uint8View[2] = (cBuf & 0x0000FF00) >>>  8;
-  uint8View[3] = (cBuf & 0x000000FF) >>>  0;
-
-  // Write out reserved bytes
-  uint8View[4] = 0;
-  uint8View[5] = 0;
-
-  // Write out message type
-  uint8View[6] = this.type;
-  uint8View[7] = this.toAddress.length;
-
-  // Now just copy over the encoded values..
-  for (var i = 0; i < address.length; i++) {
-    strArray = address[i];
-    uint8View[offset++] = strArray.length >> 8 & 0xFF;
-    uint8View[offset++] = strArray.length >> 0 & 0xFF;
-    for (var j = 0; j < strArray.length; j++) {
-      uint8View[offset++] = strArray[j];
-    }
-  }
-
-  uint8View[offset++] = headerKey.length;
-
-  // Write out the params
-  for (var i = 0; i < headerKey.length; i++) {
-    strArray = headerKey[i];
-    uint8View[offset++] = strArray.length >> 8 & 0xFF;
-    uint8View[offset++] = strArray.length >> 0 & 0xFF;
-    for (var j = 0; j < strArray.length; j++) {
-      uint8View[offset++] = strArray[j];
-    }
-
-    strArray = headerVal[i];
-    uint8View[offset++] = strArray.length >> 8 & 0xFF;
-    uint8View[offset++] = strArray.length >> 0 & 0xFF;
-    for (var j = 0; j < strArray.length; j++) {
-      uint8View[offset++] = strArray[j];
-    }
-  }
-
-  // And finally the data
-  for (var i = 0; i < dataView.length; i++) {
-    uint8View[offset++] = dataView[i];
-  }
-
-  return buffer;
-};
-
-OT.Rumor.Message.deserialize = function (buffer) {
-  var cBuf = 0;
-  var type;
-  var offset = 8;
-  var uint8View = new Uint8Array(buffer);
-
-  // Write out size (in network order)
-  cBuf += uint8View[0] << 24;
-  cBuf += uint8View[1] << 16;
-  cBuf += uint8View[2] <<  8;
-  cBuf += uint8View[3] <<  0;
-
-  type = uint8View[6];
-  var address = [];
-
-  for (var i = 0; i < uint8View[7]; i++) {
-    length = uint8View[offset++] << 8;
-    length += uint8View[offset++];
-    var strView = new Uint8Array(buffer, offset, length);
-    address[i] = new TextDecoder('utf-8').decode(strView);
-    offset += length;
-  }
-
-  var headerlen = uint8View[offset++];
-  var headers = [];
-
-  for (var i = 0; i < headerlen; i++) {
-    length = uint8View[offset++] << 8;
-    length += uint8View[offset++];
-    var strView = new Uint8Array(buffer, offset, length);
-    var keyStr = new TextDecoder('utf-8').decode(strView);
-    offset += length;
-
-    length = uint8View[offset++] << 8;
-    length += uint8View[offset++];
-    strView = new Uint8Array(buffer, offset, length);
-    var valStr = new TextDecoder('utf-8').decode(strView);
-    headers[i] =  { key : keyStr, val : valStr };
-    offset += length;
-  }
-
-  var dataView = new Uint8Array(buffer, offset);
-  var data = new TextDecoder('utf-8').decode(dataView);
-
- return new OT.Rumor.Message(type, address, headers, data);
-};
-
-
-OT.Rumor.Message.Connect = function (uniqueId, notifyDisconnectAddress) {
-  var headers = [
-    {key: 'uniqueId', val: uniqueId},
-    {key: 'notifyDisconnectAddress', val: notifyDisconnectAddress}
-  ];
-
-  return new OT.Rumor.Message(OT.Rumor.MessageType.CONNECT, [], headers, "");
-};
-
-OT.Rumor.Message.Disconnect = function () {
-  return new OT.Rumor.Message(OT.Rumor.MessageType.DISCONNECT, [], [], "");
-};
-
-OT.Rumor.Message.Subscribe = function(topics) {
-  return new OT.Rumor.Message(OT.Rumor.MessageType.SUBSCRIBE, topics, [], "");
-};
-
-OT.Rumor.Message.Unsubscribe = function(topics) {
-  return new OT.Rumor.Message(OT.Rumor.MessageType.UNSUBSCRIBE, topics, [], "");
-};
-
-OT.Rumor.Message.Publish = function(topics, message, headers) {
-  return new OT.Rumor.Message(OT.Rumor.MessageType.MESSAGE, topics, [], message);
-};
-
-// This message is used to implement keepalives on the persistent
-// socket connection between the client and server. Every time the
-// client sends a PING to the server, the server will respond with
-// a PONG.
-OT.Rumor.Message.Ping = function() {
-  return new OT.Rumor.Message(OT.Rumor.MessageType.PING, [], [], "");
-};
-
-}(this));
-(function(global) {
-
-// Rumor Messaging for JS
-//
-// https://tbwiki.tokbox.com/index.php/Raptor_Messages_(Sent_as_a_RumorMessage_payload_in_JSON)
-//
-// @todo Raptor {
-//     Look at disconnection cleanup: i.e. subscriber + publisher cleanup
-//     Add error codes for all the error cases
-//     Write unit tests for SessionInfo
-//     Write unit tests for Session
-//     Make use of the new DestroyedEvent
-//     Move Analytics out of Raptor into Session
-//     Remove dependency on OT.properties
-//     OT.Capabilities must be part of the Raptor namespace
-//     Add Dependability commands
-//     Think about noConflict, or whether we should just use the OT namespace
-//     Think about how to expose OT.publishers, OT.subscribers, and OT.sessions if messaging was
-//        being included as a component
-//     Another solution to the problem of having publishers/subscribers/etc would be to make
-//        Raptor Socket a separate component from Dispatch (dispatch being more business logic)
-//     Look at the coupling of OT.sessions to OT.Raptor.Socket
-// }
-//
-// @todo Raptor Docs {
-//   Document payload formats for incoming messages (what are the payloads for STREAM CREATED/MODIFIED for example)
-//   Document how keepalives work
-//   Document all the Raptor actions and types
-//   Document the session connect flow (including error cases)
-// }
-
-
-OT.Raptor = {
-  Actions: {
-    //General
-    CONNECT: 100,
-    CREATE: 101,
-    UPDATE: 102,
-    DELETE: 103,
-    STATE: 104,
-
-    //Moderation
-    FORCE_DISCONNECT: 105,
-    FORCE_UNPUBLISH: 106,
-    SIGNAL: 107,
-
-    //Archives
-    CREATE_ARCHIVE: 108,
-    CLOSE_ARCHIVE: 109,
-    START_RECORDING_SESSION: 110,
-    STOP_RECORDING_SESSION: 111,
-    START_RECORDING_STREAM: 112,
-    STOP_RECORDING_STREAM: 113,
-    LOAD_ARCHIVE: 114,
-    START_PLAYBACK: 115,
-    STOP_PLAYBACK: 116,
-
-    //AppState
-    APPSTATE_PUT: 117,
-    APPSTATE_DELETE: 118,
-
-    // JSEP
-    OFFER: 119,
-    ANSWER: 120,
-    PRANSWER: 121,
-    CANDIDATE: 122,
-    SUBSCRIBE: 123,
-    UNSUBSCRIBE: 124,
-    QUERY: 125,
-    SDP_ANSWER: 126,
-
-    //KeepAlive
-    PONG: 127,
-    REGISTER: 128, //Used for registering streams.
-
-    QUALITY_CHANGED: 129
-  },
-
-  Types: {
+    Types: {
       //RPC
       RPC_REQUEST: 100,
       RPC_RESPONSE: 101,
@@ -8153,1327 +9048,1744 @@ OT.Raptor = {
 
       //JSEP Protocol
       JSEP: 109
-  }
-};
-
-
-}(this));
-(function(global) {
-
-//// Some helper functions that are used for debugging and logging
-
-var typeToName = {},
-    actionToName = {};
-
-// Create a lookup table of Raptor message types (integer) to a human readable strings
-var messageTypes = OT.Raptor.Types;
-for (var name in messageTypes) {
-  typeToName[messageTypes[name]] = name;
-}
-
-// Create a lookup table of  Raptor message actions (integer) to a human readable strings
-var messageActions = OT.Raptor.Actions;
-for (var name in messageActions) {
-  actionToName[messageActions[name]] = name;
-}
-
-
-OT.Raptor.serializeMessage = function (message) {
-    return JSON.stringify(message);
-};
-
-
-// Deserialising a Raptor message mainly means doing a JSON.parse on it.
-// We do decorate the final message with a few extra helper properies though.
-//
-// These include:
-// * typeName: A human readable version of the Raptor type. E.g. STREAM instead of 102
-// * actionName: A human readable version of the Raptor action. E.g. CREATE instead of 101
-// * signature: typeName and actionName combined. This is mainly for debugging. E.g. A type
-//    of 102 and an action of 101 would result in a signature of "STREAM:CREATE"
-//
-OT.Raptor.deserializeMessage = function (msg) {
-  var message = JSON.parse(msg);
-
-  if (message.type) {
-    message.type = parseInt(message.type, 10);
-    message.typeName = typeToName[message.type] || null;
-  }
-
-  if (message.action) {
-    message.action = parseInt(message.action, 10);
-    message.actionName = actionToName[message.action] || null;
-  }
-
-  message.signature = message.typeName + ':' + message.actionName;
-
-  return message;
-};
-
-
-OT.Raptor.Message = {};
-OT.Raptor.Message.connect = function (widgetId, connectionId, sessionId, apiKey, token, p2pEnabled) {
-  var payload = {
-        credentials: {
-          connectionId: connectionId,
-          soAccessState: 2,
-          supportsWebRTC: true,
-          p2pEnabled: p2pEnabled,
-          GUID: widgetId,
-          widgetId: widgetId,
-          partnerId: apiKey
-        },
-        sessionId: sessionId,
-        params: {
-            tokenPermissions: {
-                apiKey: apiKey
-            },
-            token: token
-        },
-        uniqueId: connectionId
-      };
-
-  return OT.Raptor.serializeMessage({
-    id: OT.$.uuid(),
-    type: OT.Raptor.Types.RPC_REQUEST,
-    action: OT.Raptor.Actions.CONNECT,
-    payload: payload,
-    replyTo: connectionId
-  });
-};
-
-
-OT.Raptor.Message.getSessionState = function (connectionId, sessionId, connectionsRequired) {
-  return OT.Raptor.serializeMessage({
-    id: OT.$.uuid(),
-    type: OT.Raptor.Types.RPC_REQUEST,
-    action: OT.Raptor.Actions.STATE,
-    payload: {
-      sessionId: sessionId,
-      connectionsRequired: connectionsRequired || true
-    },
-    replyTo: connectionId
-  });
-};
-
-
-OT.Raptor.Message.forceDisconnect = function (fromConnectionId, connectionIdToDisconnect, sessionId) {
-  return OT.Raptor.serializeMessage({
-    id: fromConnectionId,
-    type: OT.Raptor.Types.RPC_REQUEST,
-    action: OT.Raptor.Actions.FORCE_DISCONNECT,
-    payload: {
-      connectionId: connectionIdToDisconnect,
-      sessionId: sessionId
-    },
-    replyTo: fromConnectionId
-  });
-};
-
-
-
-OT.Raptor.Message.streamCreate = function (connectionId, sessionId, publisherId, name, videoOrientation, videoWidth, videoHeight, hasAudio, hasVideo, p2pEnabled) {
-  var payload = {
-    key: sessionId,
-    value: {
-      p2pEnabled: p2pEnabled || false,
-      publisherId: publisherId,
-      connection: {
-          connectionId: connectionId
-      },
-      type: "WebRTC",
-      name: name || '',
-      creationTime: Date.now(),   // Unix timestamp, time in milliseconds since 1970 UTC
-      orientation: {
-          width: videoWidth,
-          height: videoHeight,
-          videoOrientation: videoOrientation || "OTVideoOrientationRotatedNormal"
-      },
-      hasAudio: hasAudio !== void 0 ? hasAudio : true,
-      hasVideo: hasVideo !== void 0 ? hasVideo : true
     }
   };
 
-  return OT.Raptor.serializeMessage({
-    id: connectionId, // HACK until buf fixed in symphony
-    type: OT.Raptor.Types.STREAM,
-    action: OT.Raptor.Actions.CREATE,
-    payload: payload,
-    replyTo: ''
-  });
-};
+}(this));
+!(function() {
 
 
-OT.Raptor.Message.streamDestroy = function (connectionId, sessionId, streamId) {
-  return OT.Raptor.serializeMessage({
-    id: connectionId,
-    type: OT.Raptor.Types.STREAM,
-    action: OT.Raptor.Actions.DELETE,
-    payload: {
-      key: sessionId + "/STREAMS/" + streamId
-    },
-    replyTo: connectionId
-  });
-};
-
-
-OT.Raptor.Message.streamModify = function (connectionId, sessionId, streamId, key, value) {
-  return OT.Raptor.serializeMessage({
-    id: connectionId,
-    type: OT.Raptor.Types.STREAM,
-    action: OT.Raptor.Actions.UPDATE,
-    payload: {
-      key: [sessionId, 'STREAMS', streamId, key].join('/'),
-      value: value
-    },
-    replyTo: connectionId
-  });
-};
-
-OT.Raptor.Message.forceUnpublish = function (fromConnectionId, sessionId, streamIdToUnpublish) {
-  return OT.Raptor.serializeMessage({
-    id: fromConnectionId,
-    type: OT.Raptor.Types.RPC_REQUEST,
-    action: OT.Raptor.Actions.FORCE_UNPUBLISH,
-    payload: {
-      sessionId: sessionId,
-      connectionId: fromConnectionId,
-      streamId: streamIdToUnpublish,
-      webRTCStream: true
-    },
-    replyTo: fromConnectionId
-  });
-};
-
-
-OT.Raptor.Message.jsepOffer = function (fromConnectionId, toConnectionId, streamId, sdp) {
-  return OT.Raptor.serializeMessage({
-    id: fromConnectionId,
-    type: OT.Raptor.Types.JSEP,
-    action: OT.Raptor.Actions.OFFER,
-    payload: {
-      fromAddress: fromConnectionId,
-      toAddresses: toConnectionId,
-      sdp: sdp,
-      streamId: streamId
-    },
-    replyTo: fromConnectionId
-  });
-};
-
-
-OT.Raptor.Message.jsepAnswer = function (fromConnectionId, toConnectionId, streamId, sdp) {
-  return OT.Raptor.serializeMessage({
-    id: fromConnectionId,
-    type: OT.Raptor.Types.JSEP,
-    action: OT.Raptor.Actions.ANSWER,
-    payload: {
-      fromAddress: fromConnectionId,
-      toAddresses: toConnectionId,
-      sdp: sdp,
-      streamId: streamId
-    },
-    replyTo: fromConnectionId
-  });
-};
-
-OT.Raptor.Message.jsepSubscribe = function (fromConnectionId, toConnectionId, streamId, subscribeToVideo, subscribeToAudio) {
-  return OT.Raptor.serializeMessage({
-    id: fromConnectionId,
-    type: OT.Raptor.Types.JSEP,
-    action: OT.Raptor.Actions.SUBSCRIBE,
-    payload: {
-      keyManagemenMethod: OT.$.supportedCryptoScheme(),
-      bundleSupport: OT.$.supportsBundle(),
-      rtcpMuxSupport: OT.$.supportsRtcpMux(),
-      fromAddress: fromConnectionId,
-      toAddresses: toConnectionId,
-      streamId: streamId,
-      hasVideo: subscribeToVideo,
-      hasAudio: subscribeToAudio
-    },
-    replyTo: fromConnectionId
-  });
-};
-
-
-
-OT.Raptor.Message.jsepUnsubscribe = function (fromConnectionId, toConnectionId, streamId) {
-  return OT.Raptor.serializeMessage({
-    id: fromConnectionId,
-    type: OT.Raptor.Types.JSEP,
-    action: OT.Raptor.Actions.UNSUBSCRIBE,
-    payload: {
-      fromAddress: fromConnectionId,
-      toAddresses: toConnectionId,
-      streamId: streamId
-    },
-    replyTo: fromConnectionId
-  });
-};
-
-OT.Raptor.Message.jsepCandidate = function (fromConnectionId, toConnectionId, streamId, candidate) {
-  return OT.Raptor.serializeMessage({
-    id: fromConnectionId,
-    type: OT.Raptor.Types.JSEP,
-    action: OT.Raptor.Actions.CANDIDATE,
-    payload: {
-      fromAddress: fromConnectionId,
-      toAddresses: toConnectionId,
-      candidate: candidate,
-      streamId: streamId
-    },
-    replyTo: fromConnectionId
-  });
-};
-
-OT.Raptor.Message.subscriberModify = function (connectionId, sessionId, streamId, subscriberId, key, value) {
-  return OT.Raptor.serializeMessage({
-    id: OT.$.uuid(),
-    type: OT.Raptor.Types.SUBSCRIBER,
-    action: OT.Raptor.Actions.UPDATE,
-    payload: {
-      key: [sessionId, 'SUBSCRIBER', streamId, connectionId, key].join('/'),
-      value: value
-    },
-    replyTo: connectionId
-  });
-};
-
-
-OT.Raptor.Message.signal = function(connectionId, sessionId, type, to, data) {
-  var payload = {
-    id: OT.$.uuid(),
-    fromAddress: connectionId
+  OT.Raptor.serializeMessage = function (message) {
+    return JSON.stringify(message);
   };
 
-  // Massage the to field into an array and default it to the session id
-  // if we're sending to no one
-  if (to && !Array.isArray(to)) {
-    payload.toAddresses = [to];
-  }
-  else if (!to || to.length === 0) {
-    // if it was omitted then we'll send the signal to the entire session.
-    payload.toAddresses = [sessionId];
-  }
-  else {
-    payload.toAddresses = to;
-  }
 
-  if (type !== void 0) payload.type = type;
-  if (data !== void 0) payload.data = data;
+  // Deserialising a Raptor message mainly means doing a JSON.parse on it.
+  // We do decorate the final message with a few extra helper properies though.
+  //
+  // These include:
+  // * typeName: A human readable version of the Raptor type. E.g. STREAM instead of 102
+  // * actionName: A human readable version of the Raptor action. E.g. CREATE instead of 101
+  // * signature: typeName and actionName combined. This is mainly for debugging. E.g. A type
+  //    of 102 and an action of 101 would result in a signature of "STREAM:CREATE"
+  //
+  OT.Raptor.deserializeMessage = function (msg) {
+    if (msg.length === 0) return {};
 
-  return OT.Raptor.serializeMessage({
-    id: connectionId,
-    type: OT.Raptor.Types.SIGNAL,
-    action: OT.Raptor.Actions.SIGNAL,
-    payload: payload,
-    replyTo: connectionId
-  });
-};
+    var message = JSON.parse(msg),
+        bits = message.uri.substr(1).split('/');
 
-}(this));
-(function(global) {
+    // Remove the Raptor protocol version
+    bits.shift();
+    if (bits[bits.length-1] === '') bits.pop();
 
-var MAX_SIGNAL_DATA_LENGTH = 8192;
-var MAX_SIGNAL_TYPE_LENGTH = 128;
+    message.params = {};
+    for (var i=0, numBits=bits.length ; i<numBits-1; i+=2) {
+      message.params[bits[i]] = bits[i+1];
+    }
 
-//
-// Error Codes:
-// 413 - Type too long
-// 400 - Type is invalid
-// 413 - Data too long
-// 400 - Data is invalid (can't be parsed as JSON)
-// 429 - Rate limit exceeded
-// 500 - Websocket connection is down
-// 404 - To connection does not exist
-// 400 - To is invalid
-//
-OT.Signal = function(sessionId, fromConnectionId, options) {
-  var isInvalidType = function(type) {
-      // Our format matches the unreserved characters from the URI RFC: http://www.ietf.org/rfc/rfc3986
-      return !/^[a-zA-Z0-9\-\._~]+$/.exec(type);
-    },
-
-    validateTo = function(toAddress) {
-      if (!toAddress) {
-        return {code: 400, reason: "The signal type was null or an empty String. Either set it to a non-empty String value or omit it"};
+    // extract the resource name. We special case 'channel' slightly, as
+    // 'subscriber_channel' or 'stream_channel' is more useful for us
+    // than 'channel' alone.
+    if (bits.length % 2 === 0) {
+      if (bits[bits.length-2] === 'channel' && bits.length > 6) {
+        message.resource = bits[bits.length-4] + '_' + bits[bits.length-2];
+      } else {
+        message.resource = bits[bits.length-2];
       }
-      else if ( !Array.isArray(toAddress) ) {
-        return {code: 400, reason: "The To field was invalid"};
+    }
+    else {
+      if (bits[bits.length-1] === 'channel' && bits.length > 5) {
+        message.resource = bits[bits.length-3] + '_' + bits[bits.length-1];
+      } else {
+        message.resource = bits[bits.length-1];
       }
+    }
 
-      for (var i=0; i<toAddress.length; i++) {
-        if ( !(toAddress[i] instanceof OT.Connection || toAddress[i] instanceof OT.Session) ) {
-          return {code: 400, reason: "The To field was invalid"};
-        }
+    message.signature = message.resource + '#' + message.method;
+    return message;
+  };
+
+  OT.Raptor.unboxFromRumorMessage = function (rumorMessage) {
+    var message = OT.Raptor.deserializeMessage(rumorMessage.data);
+    message.transactionId = rumorMessage.transactionId;
+    message.fromAddress = rumorMessage.headers['X-TB-FROM-ADDRESS'];
+
+    return message;
+  };
+
+
+  OT.Raptor.Message = {};
+
+
+  OT.Raptor.Message.connections = {};
+
+  OT.Raptor.Message.connections.create = function (apiKey, sessionId, connectionId) {
+    return OT.Raptor.serializeMessage({
+      method: 'create',
+      uri: '/v2/partner/' + apiKey + '/session/' + sessionId + '/connection/' + connectionId,
+      content: {
+        userAgent: navigator.userAgent
       }
+    });
+  };
 
-      return null;
-    },
-
-    validateType = function(type) {
-      var error = null;
-
-      if (type === null || type === void 0) {
-        error = {code: 400, reason: "The signal type was null or undefined. Either set it to a String value or omit it"};
-      }
-      else if (type.length > MAX_SIGNAL_TYPE_LENGTH) {
-        error = {code: 413, reason: "The signal type was too long, the maximum length of it is " + MAX_SIGNAL_TYPE_LENGTH + " characters"};
-      }
-      else if ( isInvalidType(type) ) {
-        error = {code: 400, reason: "The signal type was invalid, it can only contain letters, numbers, '-', '_', and '~'."};
-      }
-
-      return error;
-    },
-
-    validateData = function(data) {
-      var error = null;
-      if (data === null || data === void 0) {
-        error = {code: 400, reason: "The signal data was null or undefined. Either set it to a String value or omit it"};
-      }
-      else {
-        try {
-          if (JSON.stringify(data).length > MAX_SIGNAL_DATA_LENGTH) {
-            error = {code: 413, reason: "The data field was too long, the maximum size of it is " + MAX_SIGNAL_DATA_LENGTH + " characters"};
-          }
-        }
-        catch(e) {
-          error = {code: 400, reason: "The data field was not valid JSON"};
-        }
-      }
-
-      return error;
-    };
+  OT.Raptor.Message.connections.destroy = function (apiKey, sessionId, connectionId) {
+    return OT.Raptor.serializeMessage({
+      method: 'delete',
+      uri: '/v2/partner/' + apiKey + '/session/' + sessionId + '/connection/' + connectionId,
+      content: {}
+    });
+  };
 
 
-  this.toRaptorMessage = function() {
-    var to;
+  OT.Raptor.Message.sessions = {};
 
-    if (this.to) {
-      to = this.to.map(function(thing) {
-        return typeof(thing) === 'string' ? thing : thing.id;
+  OT.Raptor.Message.sessions.get = function (apiKey, sessionId) {
+    return OT.Raptor.serializeMessage({
+      method: 'read',
+      uri: '/v2/partner/' + apiKey + '/session/' + sessionId,
+      content: {}
+    });
+  };
+
+
+  OT.Raptor.Message.streams = {};
+
+  OT.Raptor.Message.streams.get = function (apiKey, sessionId, streamId) {
+    return OT.Raptor.serializeMessage({
+      method: 'read',
+      uri: '/v2/partner/' + apiKey + '/session/' + sessionId + '/stream/' + streamId,
+      content: {}
+    });
+  };
+
+  OT.Raptor.Message.streams.create = function (apiKey, sessionId, streamId, name, videoOrientation,
+    videoWidth, videoHeight, hasAudio, hasVideo, frameRate, minBitrate, maxBitrate) {
+    var channels = [];
+
+    if (hasAudio !== void 0) {
+      channels.push({
+        id: 'audio1',
+        type: 'audio',
+        active: hasAudio
       });
     }
 
-    return OT.Raptor.Message.signal(fromConnectionId, sessionId, this.type, to, this.data);
+    if (hasVideo !== void 0) {
+      var channel = {
+        id: 'video1',
+        type: 'video',
+        active: hasVideo,
+        width: videoWidth,
+        height: videoHeight,
+        orientation: videoOrientation
+      };
+      if (frameRate) channel.frameRate = frameRate;
+      channels.push(channel);
+    }
+    
+    var messageContent = {
+      id: streamId,
+      name: name,
+      channel: channels
+    };
+    
+    if (minBitrate) messageContent.minBitrate = minBitrate;
+    if (maxBitrate) messageContent.maxBitrate = maxBitrate;
+
+    return OT.Raptor.serializeMessage({
+      method: 'create',
+      uri: '/v2/partner/' + apiKey + '/session/' + sessionId + '/stream/' + streamId,
+      content: messageContent
+    });
   };
 
-  this.toHash = function() {
-    var h = OT.$.clone(options);
-    if (h.to === void 0) h.to = null;
-    if (h.data === void 0) h.data = null;
+  OT.Raptor.Message.streams.destroy = function (apiKey, sessionId, streamId) {
+    return OT.Raptor.serializeMessage({
+      method: 'delete',
+      uri: '/v2/partner/' + apiKey + '/session/' + sessionId + '/stream/' + streamId,
+      content: {}
+    });
+  };
 
-    return h;
+  OT.Raptor.Message.streams.offer = function (apiKey, sessionId, streamId, offerSdp) {
+    return OT.Raptor.serializeMessage({
+      method: 'offer',
+      uri: '/v2/partner/' + apiKey + '/session/' + sessionId + '/stream/' + streamId,
+      content: {
+        sdp: offerSdp
+      }
+    });
+  };
+
+  OT.Raptor.Message.streams.answer = function (apiKey, sessionId, streamId, answerSdp) {
+    return OT.Raptor.serializeMessage({
+      method: 'answer',
+      uri: '/v2/partner/' + apiKey + '/session/' + sessionId + '/stream/' + streamId,
+      content: {
+        sdp: answerSdp
+      }
+    });
+  };
+
+  OT.Raptor.Message.streams.candidate = function (apiKey, sessionId, streamId, candidate) {
+    return OT.Raptor.serializeMessage({
+      method: 'candidate',
+      uri: '/v2/partner/' + apiKey + '/session/' + sessionId + '/stream/' + streamId,
+      content: candidate
+    });
+  };
+
+  OT.Raptor.Message.streamChannels = {};
+  OT.Raptor.Message.streamChannels.update =
+    function (apiKey, sessionId, streamId, channelId, attributes) {
+    return OT.Raptor.serializeMessage({
+      method: 'update',
+      uri: '/v2/partner/' + apiKey + '/session/' + sessionId + '/stream/' +
+        streamId + '/channel/' + channelId,
+      content: attributes
+    });
   };
 
 
-  this.error = null;
+  OT.Raptor.Message.subscribers = {};
 
-  if (options) {
-    if (options.hasOwnProperty('data')) {
-      this.data = OT.$.clone(options.data);
-      this.error = validateData(this.data);
-    }
+  OT.Raptor.Message.subscribers.create =
+    function (apiKey, sessionId, streamId, subscriberId, connectionId, channelsToSubscribeTo) {
+    var content = {
+      id: subscriberId,
+      connection: connectionId,
+      keyManagementMethod: OT.$.supportedCryptoScheme(),
+      bundleSupport: OT.$.supportsBundle(),
+      rtcpMuxSupport: OT.$.supportsRtcpMux()
+    };
+    if (channelsToSubscribeTo) content.channel = channelsToSubscribeTo;
 
-    if (options.hasOwnProperty('to')) {
-      if (!Array.isArray(options.to)) {
-        this.to = [options.to];
+    return OT.Raptor.serializeMessage({
+      method: 'create',
+      uri: '/v2/partner/' + apiKey + '/session/' + sessionId +
+        '/stream/' + streamId + '/subscriber/' + subscriberId,
+      content: content
+    });
+  };
+
+  OT.Raptor.Message.subscribers.destroy = function (apiKey, sessionId, streamId, subscriberId) {
+    return OT.Raptor.serializeMessage({
+      method: 'delete',
+      uri: '/v2/partner/' + apiKey + '/session/' + sessionId +
+        '/stream/' + streamId + '/subscriber/' + subscriberId,
+      content: {}
+    });
+  };
+
+  OT.Raptor.Message.subscribers.update =
+    function (apiKey, sessionId, streamId, subscriberId, attributes) {
+    return OT.Raptor.serializeMessage({
+      method: 'update',
+      uri: '/v2/partner/' + apiKey + '/session/' + sessionId +
+      '/stream/' + streamId + '/subscriber/' + subscriberId,
+      content: attributes
+    });
+  };
+
+
+  OT.Raptor.Message.subscribers.candidate =
+    function (apiKey, sessionId, streamId, subscriberId, candidate) {
+    return OT.Raptor.serializeMessage({
+      method: 'candidate',
+      uri: '/v2/partner/' + apiKey + '/session/' + sessionId +
+        '/stream/' + streamId + '/subscriber/' + subscriberId,
+      content: candidate
+    });
+  };
+
+  OT.Raptor.Message.subscribers.offer =
+    function (apiKey, sessionId, streamId, subscriberId, offerSdp) {
+    return OT.Raptor.serializeMessage({
+      method: 'offer',
+      uri: '/v2/partner/' + apiKey + '/session/' + sessionId +
+        '/stream/' + streamId + '/subscriber/' + subscriberId,
+      content: {
+        sdp: offerSdp
       }
-      else {
-        this.to = OT.$.clone(options.to);
+    });
+  };
+
+  OT.Raptor.Message.subscribers.answer =
+    function (apiKey, sessionId, streamId, subscriberId, answerSdp) {
+    return OT.Raptor.serializeMessage({
+      method: 'answer',
+      uri: '/v2/partner/' + apiKey + '/session/' + sessionId +
+      '/stream/' + streamId + '/subscriber/' + subscriberId,
+      content: {
+        sdp: answerSdp
       }
+    });
+  };
 
-      if (!this.error) this.error = validateTo(this.to)
-    }
 
-    if (options.hasOwnProperty('type')) {
-      if (!this.error) this.error = validateType(options.type)
-      this.type = options.type;
-    }
-  }
+  OT.Raptor.Message.subscriberChannels = {};
 
-  this.valid = this.error === null;
-};
+  OT.Raptor.Message.subscriberChannels.update =
+    function (apiKey, sessionId, streamId, subscriberId, channelId, attributes) {
+    return OT.Raptor.serializeMessage({
+      method: 'update',
+      uri: '/v2/partner/' + apiKey + '/session/' + sessionId +
+      '/stream/' + streamId + '/subscriber/' + subscriberId + '/channel/' + channelId,
+      content: attributes
+    });
+  };
+
+
+  OT.Raptor.Message.signals = {};
+
+  OT.Raptor.Message.signals.create = function (apiKey, sessionId, toAddress, type, data) {
+    var content = {};
+    if (type !== void 0) content.type = type;
+    if (data !== void 0) content.data = data;
+
+    return OT.Raptor.serializeMessage({
+      method: 'signal',
+      uri: '/v2/partner/' + apiKey + '/session/' + sessionId +
+        (toAddress !== void 0 ? '/connection/' + toAddress : '') + '/signal/' + OT.$.uuid(),
+      content: content
+    });
+  };
 
 }(this));
-(function(global) {
+!(function() {
 
+  var MAX_SIGNAL_DATA_LENGTH = 8192,
+      MAX_SIGNAL_TYPE_LENGTH = 128;
 
-function SignalError(code, reason, signal) {
-    this.code = code;
-    this.reason = reason;
-    this.signal = signal;
-}
-
-// The Dispatcher bit is purely to make testing simpler, it defaults to OT.Raptor.Dispatcher
-// so in normal operation you would omit it. Note: it takes a constructor, not an instance.
-OT.Raptor.Socket = function(widgetId, messagingServer, Dispatcher) {
-  var _socketUrl = OT.properties.messagingProtocol + "://" + messagingServer + ":" + OT.properties.messagingPort + "/rumorwebsocketsv2",
-      _symphony = "symphony." + messagingServer,
-      _sessionId,
-      _rumor,
-      _dispatcher,
-      _completion,
-      _capabilities = new OT.Capabilities([]),
-      _analytics = new OT.Analytics();
-
-
-  //// Private API
-  var setState = OT.$.statable(this, ['disconnected', 'connecting', 'connected', 'error', 'disconnecting'], 'disconnected'),
-
-      logAnalyticsEvent = function logAnalyticsEvent (variation, payloadType, payload, options) {
-        var event = {
-          action: 'Connect',
-          variation: variation,
-          payload_type: payloadType,
-          payload: payload,
-          session_id: _sessionId,
-          partner_id: OT.APIKEY,
-          widget_id: widgetId,
-          widget_type: 'Controller'
-        };
-
-        if (options) event = OT.$.extend(options, event);
-        _analytics.logEvent(event);
+  //
+  // Error Codes:
+  // 413 - Type too long
+  // 400 - Type is invalid
+  // 413 - Data too long
+  // 400 - Data is invalid (can't be parsed as JSON)
+  // 429 - Rate limit exceeded
+  // 500 - Websocket connection is down
+  // 404 - To connection does not exist
+  // 400 - To is invalid
+  //
+  OT.Signal = function(sessionId, fromConnectionId, options) {
+    var isInvalidType = function(type) {
+        // Our format matches the unreserved characters from the URI RFC:
+        // http://www.ietf.org/rfc/rfc3986
+        return !/^[a-zA-Z0-9\-\._~]+$/.exec(type);
       },
 
-      onConnectComplete = function onConnectComplete (error, sessionState, prefix) {
-        if (error) {
-          logAnalyticsEvent('Failure', "reason|webSocketServerUrl", prefix + error.code + ':' + error.message + '|' + _socketUrl);
+      validateTo = function(toAddress) {
+        if (!toAddress) {
+          return {
+            code: 400,
+            reason: 'The signal type was null or an empty String. Either set it to a non-empty ' +
+              'String value or omit it'
+          };
+        }
 
-          setState('error');
+        if ( !(toAddress instanceof OT.Connection || toAddress instanceof OT.Session) ) {
+          return {
+            code: 400,
+            reason: 'The To field was invalid'
+          };
+        }
+
+        return null;
+      },
+
+      validateType = function(type) {
+        var error = null;
+
+        if (type === null || type === void 0) {
+          error = {
+            code: 400,
+            reason: 'The signal type was null or undefined. Either set it to a String value or ' +
+              'omit it'
+          };
+        }
+        else if (type.length > MAX_SIGNAL_TYPE_LENGTH) {
+          error = {
+            code: 413,
+            reason: 'The signal type was too long, the maximum length of it is ' +
+              MAX_SIGNAL_TYPE_LENGTH + ' characters'
+          };
+        }
+        else if ( isInvalidType(type) ) {
+          error = {
+            code: 400,
+            reason: 'The signal type was invalid, it can only contain letters, ' +
+              'numbers, \'-\', \'_\', and \'~\'.'
+          };
+        }
+
+        return error;
+      },
+
+      validateData = function(data) {
+        var error = null;
+        if (data === null || data === void 0) {
+          error = {
+            code: 400,
+            reason: 'The signal data was null or undefined. Either set it to a String value or ' +
+              'omit it'
+          };
         }
         else {
-          logAnalyticsEvent('Success', "webSocketServerUrl", _socketUrl, {connectionId: _rumor.id});
-
-          setState('connected');
-          _capabilities = new OT.Capabilities(sessionState.permissions);
+          try {
+            if (JSON.stringify(data).length > MAX_SIGNAL_DATA_LENGTH) {
+              error = {
+                code: 413,
+                reason: 'The data field was too long, the maximum size of it is ' +
+                  MAX_SIGNAL_DATA_LENGTH + ' characters'
+              };
+            }
+          }
+          catch(e) {
+            error = {code: 400, reason: 'The data field was not valid JSON'};
+          }
         }
 
-        _completion.apply(null, arguments);
-      },
-
-      onClose = function onClose (err) {
-        var session = OT.sessions.get(_sessionId),
-            connection = session.connection,
-            reason = this.is('disconnecting') ? "clientDisconnected" : "networkDisconnected";
-
-        if(err && err.code == 4001) {
-          reason = "networkTimedout";
-        }
-
-        setState('disconnected');
-
-        if (!connection) return;
-
-        if (connection.destroyedReason) {
-          console.debug("OT.Raptor.Socket: Socket was closed but the connection had already been destroyed. Reason: " + connection.destroyedReason);
-          return;
-        }
-
-        connection.destroy( reason );
-      }.bind(this),
-
-      onError = function onError () {
-        // @todo what does having an error mean? Are they always fatal? Are we disconnected now?
+        return error;
       };
 
 
-  //// Public API
+    this.toRaptorMessage = function() {
+      var to = this.to;
+
+      if (to && typeof(to) !== 'string') {
+        to = to.id;
+      }
+
+      return OT.Raptor.Message.signals.create(OT.APIKEY, sessionId, to, this.type, this.data);
+    };
+
+    this.toHash = function() {
+      return options;
+    };
 
 
-  // Check whether this socket connection has permissions to perform a particular
-  // action.
-  this.permittedTo = function (action) {
-      return _capabilities[action] === 1;
-  };
+    this.error = null;
 
-  this.connect = function (token, sessionInfo, completion) {
-    if (!this.is('disconnected', 'error')) {
-      OT.warn("Cannot connect the Raptor Socket as it is currently connected. You should disconnect first.");
-      return;
+    if (options) {
+      if (options.hasOwnProperty('data')) {
+        this.data = OT.$.clone(options.data);
+        this.error = validateData(this.data);
+      }
+
+      if (options.hasOwnProperty('to')) {
+        this.to = options.to;
+
+        if (!this.error) {
+          this.error = validateTo(this.to);
+        }
+      }
+
+      if (options.hasOwnProperty('type')) {
+        if (!this.error) {
+          this.error = validateType(options.type);
+        }
+        this.type = options.type;
+      }
     }
 
-    setState('connecting');
-    _sessionId = sessionInfo.sessionId;
-    _completion = completion;
+    this.valid = this.error === null;
+  };
 
-    var connectionId = OT.$.uuid(),
-        session = OT.sessions.get(_sessionId);
+}(this));
+!(function() {
+
+  function SignalError(code, reason) {
+    this.code = code;
+    this.reason = reason;
+  }
+
+  // The Dispatcher bit is purely to make testing simpler, it defaults to a new OT.Raptor.Dispatcher
+  // so in normal operation you would omit it.
+  OT.Raptor.Socket = function(widgetId, messagingSocketUrl, symphonyUrl, dispatcher) {
+    var _states = ['disconnected', 'connecting', 'connected', 'error', 'disconnecting'],
+        _sessionId,
+        _token,
+        _rumor,
+        _dispatcher,
+        _completion;
 
 
-    var analyticsPayload = [_socketUrl, navigator.userAgent, OT.properties.version, window.externalHost ? "yes" : "no"];
-    logAnalyticsEvent(
-      'Attempt',
-      "webSocketServerUrl|userAgent|sdkVersion|chromeFrame",
-      analyticsPayload.map(function(e) { return e.replace('|', '\\|'); }).join('|')
-    );
+    //// Private API
+    var setState = OT.$.statable(this, _states, 'disconnected'),
 
-    _rumor = new OT.Rumor.Socket(_socketUrl, _symphony);
-    _rumor.onClose = onClose;
-    _rumor.onMessage = _dispatcher.dispatch.bind(_dispatcher);
+        onConnectComplete = function onConnectComplete (error) {
+          if (error) {
+            setState('error');
+          }
+          else {
+            setState('connected');
+          }
 
-    _rumor.connect(connectionId, function(error) {
-      if (error) {
-        onConnectComplete(error, null, "RumorConnection:");
+          _completion.apply(null, arguments);
+        },
+
+        onClose = function onClose (err) {
+          var reason = this.is('disconnecting') ? 'clientDisconnected' : 'networkDisconnected';
+
+          if(err && err.code === 4001) {
+            reason = 'networkTimedout';
+          }
+
+          setState('disconnected');
+
+          _dispatcher.onClose(reason);
+
+        }.bind(this),
+
+        onError = function onError () {};
+        // @todo what does having an error mean? Are they always fatal? Are we disconnected now?
+
+
+    //// Public API
+
+    this.connect = function (token, sessionInfo, completion) {
+      if (!this.is('disconnected', 'error')) {
+        OT.warn('Cannot connect the Raptor Socket as it is currently connected. You should ' +
+          'disconnect first.');
         return;
       }
 
-      // we do this here to avoid getting connect errors twice
-      _rumor.onError = onError;
+      setState('connecting');
+      _sessionId = sessionInfo.sessionId;
+      _token = token;
+      _completion = completion;
 
-      OT.debug("Raptor Socket connected to " + _sessionId + " on " + messagingServer);
+      var connectionId = OT.$.uuid(),
+          rumorChannel = '/v2/partner/' + OT.APIKEY + '/session/' + _sessionId;
 
-      _rumor.subscribe([_sessionId]);
+      _rumor = new OT.Rumor.Socket(messagingSocketUrl, symphonyUrl);
+      _rumor.onClose = onClose;
+      _rumor.onMessage = _dispatcher.dispatch.bind(_dispatcher);
 
-      //connect to session
-      var connectMessage = OT.Raptor.Message.connect(widgetId, _rumor.id, _sessionId, OT.APIKEY, token, sessionInfo.p2pEnabled);
-      this.publish(connectMessage);
-    }.bind(this));
-  };
+      _rumor.connect(connectionId, function(error) {
+        if (error) {
+          error.message = 'WebSocketConnection:' + error.code + ':' + error.message;
+          onConnectComplete(error);
+          return;
+        }
 
+        // we do this here to avoid getting connect errors twice
+        _rumor.onError = onError;
 
-  this.disconnect = function () {
-    if (this.is('disconnected')) return;
+        OT.debug('Raptor Socket connected. Subscribing to ' +
+          rumorChannel + ' on ' + messagingSocketUrl);
 
-    setState('disconnecting');
-    _rumor.disconnect();
-  };
+        _rumor.subscribe([rumorChannel]);
 
-  // Publishs +message+ to the Symphony app server.
-  this.publish = function (message) {
-    if (_rumor.isNot('connected')) {
-      OT.error("OT.Raptor.Socket: cannot publish until the socket is connected." + message);
-      return;
-    }
+        //connect to session
+        var connectMessage = OT.Raptor.Message.connections.create(OT.APIKEY, _sessionId, _rumor.id);
+        this.publish(connectMessage, {'X-TB-TOKEN-AUTH': _token}, function(error) {
+          if (error) {
+            error.message = 'ConnectToSession:' + error.code +
+                ':Received error response to connection create message.';
+            onConnectComplete(error);
+            return;
+          }
 
-    OT.debug("OT.Raptor.Socket Publish: " + message);
-    _rumor.publish([_symphony], message);
-  };
+          this.publish( OT.Raptor.Message.sessions.get(OT.APIKEY, _sessionId),
+            function (error) {
+            if (error) error.message = 'GetSessionState:' + error.code +
+                      ':Received error response to session read';
+            onConnectComplete.apply(null, arguments);
+          });
+        }.bind(this));
 
-  // Register a new stream against _sessionId
-  this.createStream = function(publisherId, name, orientation, encodedWidth, encodedHeight, hasAudio, hasVideo) {
-    var session = OT.sessions.get(_sessionId),
-        message = OT.Raptor.Message.streamCreate( _rumor.id,
-                                                  _sessionId,
-                                                  publisherId,
-                                                  name,
-                                                  orientation,
-                                                  encodedWidth,
-                                                  encodedHeight,
-                                                  hasAudio,
-                                                  hasVideo,
-                                                  session.sessionInfo.p2pEnabled );
-
-    this.publish(message);
-  };
-
-  this.updateStream = function(streamId, key, value) {
-    this.publish( OT.Raptor.Message.streamModify(_rumor.id, _sessionId, streamId, key, value) );
-  };
-
-  this.destroyStream = function(streamId) {
-    this.publish( OT.Raptor.Message.streamDestroy(_rumor.id, _sessionId, streamId) );
-  };
-
-  this.modifySubscriber = function(subscriber, key, value) {
-    this.publish( OT.Raptor.Message.subscriberModify(_rumor.id, _sessionId, subscriber.streamId, subscriber.widgetId, key, value) );
-  };
-
-  this.forceDisconnect = function(connectionIdToDisconnect) {
-    this.publish( OT.Raptor.Message.forceDisconnect(_rumor.id, connectionIdToDisconnect, _sessionId) );
-  };
-
-  this.forceUnpublish = function(streamId) {
-    this.publish( OT.Raptor.Message.forceUnpublish(_rumor.id, _sessionId, streamId) );
-  };
-
-  this.jsepSubscribe = function(toConnectionId, streamId, subscribeToVideo, subscribeToAudio) {
-    this.publish( OT.Raptor.Message.jsepSubscribe(_rumor.id, toConnectionId, streamId, subscribeToVideo, subscribeToAudio) );
-  };
-
-  this.jsepUnsubscribe = function(toConnectionId, streamId) {
-    this.publish( OT.Raptor.Message.jsepUnsubscribe(_rumor.id, toConnectionId, streamId) );
-  };
-
-  this.jsepCandidate = function(toConnectionId, streamId, candidate) {
-    this.publish( OT.Raptor.Message.jsepCandidate(_rumor.id, toConnectionId, streamId, candidate) );
-  };
-
-  this.jsepOffer = function(toConnectionId, streamId, offerSDP) {
-    this.publish( OT.Raptor.Message.jsepOffer(_rumor.id, toConnectionId, streamId, offerSDP) );
-  };
-
-  this.jsepAnswer = function(toConnectionId, streamId, answerSDP) {
-    this.publish( OT.Raptor.Message.jsepAnswer(_rumor.id, toConnectionId, streamId, answerSDP) );
-  };
+      }.bind(this));
+    };
 
 
-  this.signal = function(options, completion) {
-    var signal = new OT.Signal(_sessionId, _rumor.id, options || {});
+    this.disconnect = function () {
+      if (this.is('disconnected')) return;
 
-    if (!signal.valid) {
-      if (completion && OT.$.isFunction(completion)) {
-        completion( new SignalError(signal.error.code, signal.error.reason, signal.toHash()) );
+      setState('disconnecting');
+      _rumor.disconnect();
+    };
+
+    // Publishs +message+ to the Symphony app server.
+    //
+    // The completion handler is optional, as is the headers
+    // dict, but if you provide the completion handler it must
+    // be the last argument.
+    //
+    this.publish = function (message, headers, completion) {
+      if (_rumor.isNot('connected')) {
+        OT.error('OT.Raptor.Socket: cannot publish until the socket is connected.' + message);
+        return;
       }
 
-      return;
+      var transactionId = OT.$.uuid(),
+          _headers = {},
+          _completion;
+
+      // Work out if which of the optional arguments (headers, completion)
+      // have been provided.
+      if (headers) {
+        if (OT.$.isFunction(headers)) {
+          _headers = {};
+          _completion = headers;
+        }
+        else {
+          _headers = headers;
+        }
+      }
+      if (!_completion && completion && OT.$.isFunction(completion)) _completion = completion;
+
+
+      if (_completion) _dispatcher.registerCallback(transactionId, _completion);
+
+      OT.debug('OT.Raptor.Socket Publish (ID:' + transactionId + ') ');
+      OT.debug(message);
+
+      _rumor.publish([symphonyUrl], message, OT.$.extend(_headers, {
+        'Content-Type': 'application/x-raptor+v2',
+        'TRANSACTION-ID': transactionId,
+        'X-TB-FROM-ADDRESS': _rumor.id
+      }));
+
+      return transactionId;
+    };
+
+    // Register a new stream against _sessionId
+    this.streamCreate = function(name, orientation, encodedWidth, encodedHeight,
+      hasAudio, hasVideo, frameRate, minBitrate, maxBitrate, completion) {
+      var streamId = OT.$.uuid(),
+          message = OT.Raptor.Message.streams.create( OT.APIKEY,
+                                                      _sessionId,
+                                                      streamId,
+                                                      name,
+                                                      orientation,
+                                                      encodedWidth,
+                                                      encodedHeight,
+                                                      hasAudio,
+                                                      hasVideo,
+                                                      frameRate,
+                                                      minBitrate,
+                                                      maxBitrate);
+
+      this.publish(message, function(error) {
+        completion(error, streamId);
+      });
+    };
+
+    this.streamDestroy = function(streamId) {
+      this.publish( OT.Raptor.Message.streams.destroy(OT.APIKEY, _sessionId, streamId) );
+    };
+
+    this.streamChannelUpdate = function(streamId, channelId, attributes) {
+      this.publish( OT.Raptor.Message.streamChannels.update(OT.APIKEY, _sessionId,
+        streamId, channelId, attributes) );
+    };
+
+    this.subscriberCreate = function(streamId, subscriberId, channelsToSubscribeTo, completion) {
+      this.publish( OT.Raptor.Message.subscribers.create(OT.APIKEY, _sessionId,
+        streamId, subscriberId, _rumor.id, channelsToSubscribeTo), completion );
+    };
+
+    this.subscriberDestroy = function(streamId, subscriberId) {
+      this.publish( OT.Raptor.Message.subscribers.destroy(OT.APIKEY, _sessionId,
+        streamId, subscriberId) );
+    };
+
+    this.subscriberUpdate = function(streamId, subscriberId, attributes) {
+      this.publish( OT.Raptor.Message.subscribers.update(OT.APIKEY, _sessionId,
+        streamId, subscriberId, attributes) );
+    };
+
+    this.subscriberChannelUpdate = function(streamId, subscriberId, channelId, attributes) {
+      this.publish( OT.Raptor.Message.subscriberChannels.update(OT.APIKEY, _sessionId,
+        streamId, subscriberId, channelId, attributes) );
+    };
+
+    this.forceDisconnect = function(connectionIdToDisconnect, completion) {
+      this.publish( OT.Raptor.Message.connections.destroy(OT.APIKEY, _sessionId,
+        connectionIdToDisconnect), completion );
+    };
+
+    this.forceUnpublish = function(streamIdToUnpublish, completion) {
+      this.publish( OT.Raptor.Message.streams.destroy(OT.APIKEY, _sessionId,
+        streamIdToUnpublish), completion );
+    };
+
+    this.jsepCandidate = function(streamId, candidate) {
+      this.publish(
+        OT.Raptor.Message.streams.candidate(OT.APIKEY, _sessionId, streamId, candidate)
+      );
+    };
+
+    this.jsepCandidateP2p = function(streamId, subscriberId, candidate) {
+      this.publish(
+        OT.Raptor.Message.subscribers.candidate(OT.APIKEY, _sessionId, streamId,
+          subscriberId, candidate)
+      );
+    };
+
+    this.jsepOffer = function(streamId, offerSdp) {
+      this.publish( OT.Raptor.Message.streams.offer(OT.APIKEY, _sessionId, streamId, offerSdp) );
+    };
+
+    this.jsepOfferP2p = function(streamId, subscriberId, offerSdp) {
+      this.publish( OT.Raptor.Message.subscribers.offer(OT.APIKEY, _sessionId, streamId,
+        subscriberId, offerSdp) );
+    };
+
+    this.jsepAnswer = function(streamId, answerSdp) {
+      this.publish( OT.Raptor.Message.streams.answer(OT.APIKEY, _sessionId, streamId, answerSdp) );
+    };
+
+    this.jsepAnswerP2p = function(streamId, subscriberId, answerSdp) {
+      this.publish( OT.Raptor.Message.subscribers.answer(OT.APIKEY, _sessionId, streamId,
+        subscriberId, answerSdp) );
+    };
+
+    this.signal = function(options, completion) {
+      var signal = new OT.Signal(_sessionId, _rumor.id, options || {});
+
+      if (!signal.valid) {
+        if (completion && OT.$.isFunction(completion)) {
+          completion( new SignalError(signal.error.code, signal.error.reason), signal.toHash() );
+        }
+
+        return;
+      }
+
+      this.publish( signal.toRaptorMessage(), function(err) {
+        var error;
+        if (err) error = new SignalError(err.code, err.message);
+
+        if (completion && OT.$.isFunction(completion)) completion(error, signal.toHash());
+      });
+    };
+
+    OT.$.defineGetters(this, {
+      id: function() {
+        return _rumor && _rumor.id;
+      },
+      sessionId: function() {
+        return _sessionId;
+      },
+      dispatcher: function() {
+        return _dispatcher;
+      }
+    });
+
+    if(dispatcher == null) {
+      dispatcher = new OT.Raptor.Dispatcher();
     }
-
-    this.publish( signal.toRaptorMessage() );
-    if (completion && OT.$.isFunction(completion)) completion(null, signal.toHash());
+    _dispatcher = dispatcher;
   };
-
-  OT.$.defineGetters(this, {
-    id: function() { return _rumor.id; },
-    capabilities: function() { return _capabilities; },
-    sessionId: function() { return _sessionId; }
-  });
-
-  _dispatcher = new (Dispatcher || OT.Raptor.Dispatcher)(this, function (error, sessionState) {
-    onConnectComplete.call(this, error, sessionState, "ConnectToSession:");
-  });
-};
-
 
 }(this));
-(function(global) {
+!(function() {
+  /*global EventEmitter, util*/
 
-// Connect error codes and reasons that Raptor can return.
-var connectErrorReasons = {
-  409: "This P2P session already has 2 participants.",
-  410: "The session already has four participants.",
-  1004: "The token passed is invalid."
-};
+  // Connect error codes and reasons that Raptor can return.
+  var connectErrorReasons;
+
+  connectErrorReasons = {
+    409: 'This P2P session already has 2 participants.',
+    410: 'The session already has four participants.',
+    1004: 'The token passed is invalid.'
+  };
 
 
-// @todo hide these
-OT.publishers = new OT.Collection('guid');          // Publishers are id'd by their guid
-OT.subscribers = new OT.Collection('widgetId');     // Subscribers are id'd by their widgetId
-OT.sessions = new OT.Collection();
+  OT.Raptor.Dispatcher = function () {
 
-function parseStream(dict, session) {
-  var stream = new OT.Stream( dict.streamId,
-                              session.connections.get(dict.connection.connectionId),
-                              dict.name,
-                              dict.streamData,
-                              dict.type,
-                              dict.creationTime,
-                              dict.hasAudio,
-                              dict.hasVideo,
-                              dict.orientation ? dict.orientation.videoOrientation : null,
-                              dict.peerId,
-                              dict.quality,
-                              dict.orientation ? dict.orientation.width : null,
-                              dict.orientation ? dict.orientation.height : null );
+    if(typeof EventEmitter !== 'undefined') {
+      EventEmitter.call(this);
+    } else {
+      OT.$.eventing(this, true);
+      this.emit = this.trigger;
+    }
 
-  // This is a code smell, but it's necessary for now as the part of the code
-  // that re-parents streams to publishers is in a different object that cannot
-  // access the raw stream packet
-  if (dict.publisherId) {
-    stream.publisherId = dict.publisherId;
+    this.callbacks = {};
+  };
+
+  if(typeof EventEmitter !== 'undefined') {
+    util.inherits(OT.Raptor.Dispatcher, EventEmitter);
   }
 
-  return stream;
-}
+  OT.Raptor.Dispatcher.prototype.registerCallback = function (transactionId, completion) {
+    this.callbacks[transactionId] = completion;
+  };
 
-function parseAndAddStreamToSession(dict, session) {
-  if (session.streams.has(dict.streamId)) return;
+  OT.Raptor.Dispatcher.prototype.triggerCallback = function (transactionId) {
+    /*, arg1, arg2, argN-1, argN*/
+    if (!transactionId) return;
 
-  var stream = parseStream(dict, session);
-  session.streams.add( stream );
+    var completion = this.callbacks[transactionId];
 
-  return stream;
-}
+    if (completion && OT.$.isFunction(completion)) {
+      var args = Array.prototype.slice.call(arguments);
+      args.shift();
 
+      completion.apply(null, args);
+    }
 
-OT.Raptor.Dispatcher = function (socket, connectionCompletion) {
-  this.socket = socket;
-  this.connectionCompletion = connectionCompletion;
-};
+    delete this.callbacks[transactionId];
+  };
 
-OT.Raptor.Dispatcher.prototype.dispatch = function(addresses, encodedMessage) {
-  var message = OT.Raptor.deserializeMessage(encodedMessage);
-
-  if (!message.typeName) {
-    OT.error("OT.Raptor.dispatch: Invalid message type (" + message.type + ")");
-    return;
-  }
-
-  if (!message.actionName) {
-    OT.error("OT.Raptor.dispatch: Invalid action (" + message.action + ") for " + message.typeName);
-    OT.error(message);
-    return;
-  }
-
-  OT.debug("OT.Raptor.dispatch " + message.signature + ": " + encodedMessage);
-
-  switch(message.type) {
-    case OT.Raptor.Types.RPC_RESPONSE:
-      this.dispatchRPCResponse(message);
-      break;
-
-    case OT.Raptor.Types.CONNECTION:
-      this.dispatchConnection(message);
-      break;
-
-    case OT.Raptor.Types.CONNECTIONCOUNT:
-      this.dispatchConnectionCount(message);
-      break;
-
-    case OT.Raptor.Types.STREAM:
-      this.dispatchStream(message);
-      break;
-
-    case OT.Raptor.Types.SUBSCRIBER:
-      this.dispatchSubscriber(message);
-      break;
-
-    case OT.Raptor.Types.MODERATION:
-      this.dispatchModeration(message);
-      break;
-
-    case OT.Raptor.Types.JSEP:
-      this.dispatchJsep(message);
-      break;
-
-    case OT.Raptor.Types.SIGNAL:
-      this.dispatchSignal(message);
-      break;
+  OT.Raptor.Dispatcher.prototype.onClose = function(reason) {
+    this.trigger('close', reason);
+  };
 
 
+  OT.Raptor.Dispatcher.prototype.dispatch = function(rumorMessage) {
+    // The special casing of STATUS messages is ugly. Need to think about
+    // how to better integrate this.
 
-    default:
-      OT.warn("OT.Raptor.dispatch: Type " + message.typeName + " is not currently implemented");
-  }
-};
+    if (rumorMessage.type === OT.Rumor.MessageType.STATUS) {
+      OT.debug('OT.Raptor.dispatch: STATUS');
+      OT.debug(rumorMessage);
 
+      var error;
 
-OT.Raptor.Dispatcher.prototype.dispatchRPCResponse = function (message) {
-  switch (message.action) {
-    case OT.Raptor.Actions.CONNECT:
-      if (message.payload.connectSuccess == false) {
-        var error = new OT.Error(OT.ExceptionCodes.CONNECT_REJECTED, connectErrorReasons[message.payload.reason] || "Failed to connect");
-        this.connectionCompletion.call(null, error);
+      if (rumorMessage.isError) {
+        // error = new OT.Error(OT.ExceptionCodes.CONNECT_REJECTED,
+        //   connectErrorReasons[message.payload.reason] || "Failed to connect");
+        // @todo This is wrong. We don't know what operation was actually failing,
+        //        we can only blindly trigger the completion handler
+        error = new OT.Error(rumorMessage.status);
       }
-      else {
-        this.socket.publish(OT.Raptor.Message.getSessionState(this.socket.id, message.payload.sessionId, true));
+
+      this.triggerCallback(rumorMessage.transactionId, error, rumorMessage);
+
+      return;
+    }
+
+    var message = OT.Raptor.unboxFromRumorMessage(rumorMessage);
+    OT.debug('OT.Raptor.dispatch ' + message.signature);
+    OT.debug(message);
+
+    switch(message.resource) {
+      case 'session':
+        this.dispatchSession(message);
+        break;
+
+      case 'connection':
+        this.dispatchConnection(message);
+        break;
+
+      case 'stream':
+        this.dispatchStream(message);
+        break;
+
+      case 'stream_channel':
+        this.dispatchStreamChannel(message);
+        break;
+
+      case 'subscriber':
+        this.dispatchSubscriber(message);
+        break;
+
+      case 'subscriber_channel':
+        this.dispatchSubscriberChannel(message);
+        break;
+
+      case 'signal':
+        this.dispatchSignal(message);
+        break;
+
+      case 'archive':
+        this.dispatchArchive(message);
+        break;
+
+      default:
+        OT.warn('OT.Raptor.dispatch: Type ' + message.resource + ' is not currently implemented');
+    }
+  };
+
+  OT.Raptor.Dispatcher.prototype.dispatchSession = function (message) {
+    switch (message.method) {
+      case 'read':
+
+        this.emit('session#read', message.content, message.transactionId);
+        break;
+
+
+      default:
+        OT.warn('OT.Raptor.dispatch: ' + message.signature + ' is not currently implemented');
+    }
+  };
+
+  OT.Raptor.Dispatcher.prototype.dispatchConnection = function (message) {
+
+    switch (message.method) {
+      case 'created':
+        this.emit('connection#created', message.content);
+        break;
+
+
+      case 'deleted':
+        this.emit('connection#deleted', message.params.connection, message.reason);
+        break;
+
+      default:
+        OT.warn('OT.Raptor.dispatch: ' + message.signature + ' is not currently implemented');
+    }
+  };
+
+  OT.Raptor.Dispatcher.prototype.dispatchStream = function (message) {
+
+    switch (message.method) {
+      case 'created':
+        this.emit('stream#created', message.content, message.transactionId);
+        break;
+
+      case 'deleted':
+        this.emit('stream#deleted', message.params.stream,
+          message.reason);
+        break;
+
+
+      case 'updated':
+        this.emit('stream#updated', message.params.stream,
+          message.content);
+        break;
+
+
+      // The JSEP process
+      case 'generateoffer':
+      case 'answer':
+      case 'pranswer':
+      case 'offer':
+      case 'candidate':
+        this.dispatchJsep(message.method, message);
+        break;
+
+      default:
+        OT.warn('OT.Raptor.dispatch: ' + message.signature + ' is not currently implemented');
+    }
+  };
+
+  OT.Raptor.Dispatcher.prototype.dispatchStreamChannel = function (message) {
+    switch (message.method) {
+      case 'updated':
+        this.emit('streamChannel#updated', message.params.stream,
+          message.params.channel, message.content);
+        break;
+
+      default:
+        OT.warn('OT.Raptor.dispatch: ' + message.signature + ' is not currently implemented');
+    }
+  };
+
+  // Dispatch JSEP messages
+  //
+  // generateoffer:
+  // Request to generate a offer for another Peer (or Prism). This kicks
+  // off the JSEP process.
+  //
+  // answer:
+  // generate a response to another peers offer, this contains our constraints
+  // and requirements.
+  //
+  // pranswer:
+  // a provisional answer, i.e. not the final one.
+  //
+  // candidate
+  //
+  //
+  OT.Raptor.Dispatcher.prototype.dispatchJsep = function (method, message) {
+    this.emit('jsep#' + method, message.params.stream, message.fromAddress, message);
+  };
+
+
+  OT.Raptor.Dispatcher.prototype.dispatchSubscriberChannel = function (message) {
+    switch (message.method) {
+      case 'updated':
+        this.emit('subscriberChannel#updated', message.params.stream,
+          message.params.channel, message.content);
+        break;
+
+
+      case 'update': // subscriberId, streamId, content
+        this.emit('subscriberChannel#update', message.params.subscriber,
+          message.params.stream, message.content);
+        break;
+
+
+      default:
+        OT.warn('OT.Raptor.dispatch: ' + message.signature + ' is not currently implemented');
+    }
+  };
+
+  OT.Raptor.Dispatcher.prototype.dispatchSubscriber = function (message) {
+
+    switch (message.method) {
+      case 'created':
+        this.emit('subscriber#created', message.params.stream, message.fromAddress,
+          message.content.id);
+        break;
+
+
+      case 'deleted':
+        this.dispatchJsep('unsubscribe', message);
+        this.emit('subscriber#deleted', message.params.stream,
+          message.fromAddress);
+        break;
+
+
+      // The JSEP process
+      case 'generateoffer':
+      case 'answer':
+      case 'pranswer':
+      case 'offer':
+      case 'candidate':
+        this.dispatchJsep(message.method, message);
+        break;
+
+
+      default:
+        OT.warn('OT.Raptor.dispatch: ' + message.signature + ' is not currently implemented');
+    }
+  };
+
+  OT.Raptor.Dispatcher.prototype.dispatchSignal = function (message) {
+    if (message.method !== 'signal') {
+      OT.warn('OT.Raptor.dispatch: ' + message.signature + ' is not currently implemented');
+      return;
+    }
+    this.emit('signal', message.fromAddress, message.content.type,
+      message.content.data);
+  };
+
+  OT.Raptor.Dispatcher.prototype.dispatchArchive = function (message) {
+    switch (message.method) {
+      case 'create':
+        this.emit('archive#create', message.content);
+        break;
+      
+      case 'updated':
+        this.emit('archive#updated', message.params.archive, message.content);
+        break;
+    }
+  };
+
+}(this));
+(function(window) {
+
+  // @todo hide these
+  OT.publishers = new OT.Collection('guid');          // Publishers are id'd by their guid
+  OT.subscribers = new OT.Collection('widgetId');     // Subscribers are id'd by their widgetId
+  OT.sessions = new OT.Collection();
+
+  function parseStream(dict, session) {
+    var channel = dict.channel.map(function(channel) {
+      return new OT.StreamChannel(channel);
+    });
+
+    return  new OT.Stream(  dict.id,
+                            dict.name,
+                            dict.creationTime,
+                            session.connections.get(dict.connection.id),
+                            session,
+                            channel );
+  }
+
+  function parseAndAddStreamToSession(dict, session) {
+    if (session.streams.has(dict.id)) return;
+
+    var stream = parseStream(dict, session);
+    session.streams.add( stream );
+
+    return stream;
+  }
+
+  function parseArchive(dict) {
+    return new OT.Archive( dict.id,
+                           dict.name,
+                           dict.status );
+  }
+
+  function parseAndAddArchiveToSession(dict, session) {
+    if (session.archives.has(dict.id)) return;
+
+    var archive = parseArchive(dict);
+    session.archives.add(archive);
+
+    return archive;
+  }
+
+  window.OT.SessionDispatcher = function(session) {
+
+    var dispatcher = new OT.Raptor.Dispatcher();
+
+    dispatcher.on('close', function(reason) {
+
+      var connection = session.connection;
+
+      if (!connection) {
+        return;
       }
-      break;
 
+      if (connection.destroyedReason) {
+        OT.debug('OT.Raptor.Socket: Socket was closed but the connection had already ' +
+          'been destroyed. Reason: ' + connection.destroyedReason);
+        return;
+      }
 
-    case OT.Raptor.Actions.STATE:
-      var state = message.payload.value,
-          session = OT.sessions.get(message.payload.key),
+      connection.destroy( reason );
+
+    });
+
+    dispatcher.on('session#read', function(content, transactionId) {
+
+      var state = {},
           connection;
 
       state.streams = [];
       state.connections = [];
       state.archives = [];
 
-      if (state.hasOwnProperty("CONNECTIONS")) {
-        for (var id in state.CONNECTIONS) {
-          var connection = OT.Connection.fromHash(state.CONNECTIONS[id]);
-          state.connections.push(connection);
-          session.connections.add(connection)
-        }
+      content.connection.forEach(function(connectionParams) {
+        connection = OT.Connection.fromHash(connectionParams);
+        state.connections.push(connection);
+        session.connections.add(connection);
+      });
 
-        delete state.CONNECTIONS;
+      content.stream.forEach(function(streamParams) {
+        state.streams.push( parseAndAddStreamToSession(streamParams, session) );
+      });
+      
+      content.archives.forEach(function(archiveParams) {
+        state.archives.push( parseAndAddArchiveToSession(archiveParams, session) );
+      });
+
+      session._.subscriberMap = {};
+
+      dispatcher.triggerCallback(transactionId, null, state);
+    });
+
+    dispatcher.on('connection#created', function(connection) {
+      connection = OT.Connection.fromHash(connection);
+      if (session.connection && connection.id !== session.connection.id) {
+        session.connections.add( connection );
+      }
+    });
+
+    dispatcher.on('connection#deleted', function(connection, reason) {
+      connection = session.connections.get(connection);
+      connection.destroy(reason);
+    });
+
+    dispatcher.on('stream#created', function(stream, transactionId) {
+      stream = parseAndAddStreamToSession(stream, session);
+
+      if (stream.publisher) {
+        stream.publisher.stream = stream;
       }
 
-      if (state.hasOwnProperty("STREAMS")) {
-        for (var id in state.STREAMS) {
-          state.streams.push( parseAndAddStreamToSession(state.STREAMS[id], session) );
-        }
+      dispatcher.triggerCallback(transactionId, null, stream);
+    });
 
-        delete state.STREAMS;
-      }
-
-
-      this.connectionCompletion.call(null, null, state);
-      break;
-
-
-    default:
-      OT.warn("OT.Raptor.dispatch: " + message.signature + " is not currently implemented");
-  }
-};
-
-
-OT.Raptor.Dispatcher.prototype.dispatchConnection = function (message) {
-  var session = OT.sessions.get(message.payload.value.sessionId),
-      connection;
-
-  if (!session) {
-    OT.error("OT.Raptor.dispatch: Unable to determine session for " + message.payload.value.sessionId + ' on ' + message.signature + " message!");
-    // @todo error
-    return;
-  }
-
-  switch (message.action) {
-    case OT.Raptor.Actions.CREATE:
-      connection = OT.Connection.fromHash(message.payload.value);
-      if (session.connection && connection.id !== session.connection.id) session.connections.add( connection );
-      break;
-
-
-    case OT.Raptor.Actions.DELETE:
-      connection = session.connections.get(message.payload.value.connectionId);
-      connection.destroy(message.payload.reason);
-      break;
-
-
-    default:
-      OT.warn("OT.Raptor.dispatch: " + message.signature + " is not currently implemented");
-  }
-};
-
-OT.Raptor.Dispatcher.prototype.dispatchConnectionCount = function (message) {
-  // Note: we don't use any of this in the client right now.
-
-  // switch (message.action) {
-  //   case OT.Raptor.Actions.UPDATE:
-  //     connectionCount = message.payload.value;
-  //     OT.debug("OT.Raptor.dispatch: Connection count: " + connectionCount);
-  //     break;
-
-
-  //   default:
-  //     OT.warn("OT.Raptor.dispatch: " + message.signature + " is not currently implemented");
-  // }
-};
-
-
-OT.Raptor.Dispatcher.prototype.dispatchStream = function (message) {
-  var key = message.payload.key.split('/'),
-      sessionId = key[0],
-      session,
-      stream;
-
-
-  if (sessionId) session = OT.sessions.get(sessionId);
-
-  if (!session) {
-    OT.error("OT.Raptor.dispatch: Unable to determine sessionId, or the session does not exist, for " + message.signature + " message!");
-    // @todo error
-    return;
-  }
-
-  switch (message.action) {
-    case OT.Raptor.Actions.REGISTER:
-      stream = parseStream(message.payload.value, session);
-
-      // @todo refactor this later
-      if (stream.publisherId) {
-        var publisher = OT.publishers.get(stream.publisherId);
-
-        if (publisher) {
-          publisher._.streamRegisteredHandler(stream);
-        }
-        else {
-          OT.warn("OT.Raptor.dispatch: Could find a publisher " + stream.publisherId + " for " + message.signature);
-        }
-      }
-      break;
-
-
-    case OT.Raptor.Actions.CREATE:
-      parseAndAddStreamToSession(message.payload.value, session)
-      break;
-
-
-    case OT.Raptor.Actions.UPDATE:
-      if (key[1]) stream = session.streams.get(key[1]);
+    dispatcher.on('stream#deleted', function(streamId, reason) {
+      var stream = session.streams.get(streamId);
 
       if (!stream) {
-        OT.error("OT.Raptor.dispatch: Unable to determine streamId, or the stream does not exist, for " + message.signature + " message!");
+        OT.error('OT.Raptor.dispatch: A stream does not exist with the id of ' +
+          streamId + ', for stream#deleted message!');
         // @todo error
         return;
       }
 
-      stream.update(key[2], message.payload.value);
-      break;
+      stream.destroy(reason);
+    });
 
-
-    case OT.Raptor.Actions.DELETE:
-      if (key[2]) stream = session.streams.get(key[2]);
+    dispatcher.on('stream#updated', function(streamId, content) {
+      var stream = session.streams.get(streamId);
 
       if (!stream) {
-        OT.error("OT.Raptor.dispatch: Unable to determine streamId, or the stream does not exist, for " + message.signature + " message!");
+        OT.error('OT.Raptor.dispatch: A stream does not exist with the id of ' +
+          streamId + ', for stream#updated message!');
         // @todo error
         return;
       }
 
-      stream.destroy(message.payload.reason);
-      break;
+      stream._.update(content);
+
+    });
+
+    dispatcher.on('streamChannel#updated', function(streamId, channelId, content) {
+      var stream;
+      if (!(streamId && (stream = session.streams.get(streamId)))) {
+        OT.error('OT.Raptor.dispatch: Unable to determine streamId, or the stream does not ' +
+          'exist, for streamChannel message!');
+        // @todo error
+        return;
+      }
+      stream._.updateChannel(channelId, content);
+    });
+
+    // Dispatch JSEP messages
+    //
+    // generateoffer:
+    // Request to generate a offer for another Peer (or Prism). This kicks
+    // off the JSEP process.
+    //
+    // answer:
+    // generate a response to another peers offer, this contains our constraints
+    // and requirements.
+    //
+    // pranswer:
+    // a provisional answer, i.e. not the final one.
+    //
+    // candidate
+    //
+    //
+    var jsepHandler = function(method, streamId, fromAddress, message) {
+
+      var fromConnection,
+          actors;
+
+      switch (method) {
+        // Messages for Subscribers
+        case 'offer':
+          actors = [];
+          var subscriber = OT.subscribers.find({streamId: streamId});
+          if (subscriber) actors.push(subscriber);
+          break;
 
 
-    default:
-      OT.warn("OT.Raptor.dispatch: " + message.signature + " is not currently implemented");
-  }
-};
+        // Messages for Publishers
+        case 'answer':
+        case 'pranswer':
+        case 'generateoffer':
+        case 'unsubscribe':
+          console.warn('generateoffer maybe?');
+          actors = OT.publishers.where({streamId: streamId});
+          break;
 
 
-
-OT.Raptor.Dispatcher.prototype.dispatchModeration = function (message) {
-  // Force disconnect and unpublish are handled in CONNECTION:DELETE and STREAM:DELETE respectively.
-  return;
-
-  // var session = OT.sessions.get(this.socket.sessionId);
-
-  // if (!session) {
-  //     OT.error("OT.Raptor.dispatch: " + message.signature + " ERROR - sessionId must be provided and be valid");
-  //     return;
-  // }
-
-  // switch (message.action) {
-  //   case OT.Raptor.Actions.FORCE_DISCONNECT:
-  //     if (!message.payload.connectionId) {
-  //         OT.error("OT.Raptor.dispatch: " + message.signature + " ERROR - connectionId must be provided");
-  //         return;
-  //     }
-
-  //     var connection = session.connections.get(message.payload.connectionId);
-  //     connection.destroy("forceDisconnected");
-  //     break;
+        // Messages for Publishers and Subscribers
+        case 'candidate':
+          // send to whichever of your publisher or subscribers are
+          // subscribing/publishing that stream
+          actors = OT.publishers.where({streamId: streamId})
+            .concat(OT.subscribers.where({streamId: streamId}));
+          break;
 
 
-  //   case OT.Raptor.Actions.FORCE_UNPUBLISH:
-  //     if (!message.payload.streamId) {
-  //         OT.error("OT.Raptor.dispatch " + message.signature + " ERROR - streamId must be provided");
-  //         return;
-  //     }
+        default:
+          OT.warn('OT.Raptor.dispatch: jsep#' + method +
+            ' is not currently implemented');
+          return;
+      }
 
-  //     var stream = session.streams.get(message.payload.streamId);
-  //     stream.destroy("forceUnpublished");
-  //     break;
+      if (actors.length === 0) return;
 
+      // This is a bit hacky. We don't have the session in the message so we iterate
+      // until we find the actor that the message relates to this stream, and then
+      // we grab the session from it.
+      fromConnection = actors[0].session.connections.get(fromAddress);
+      if(!fromConnection && fromAddress.match(/^symphony\./)) {
+        fromConnection = OT.Connection.fromHash({
+          id: fromAddress,
+          creationTime: Date.now()
+        });
 
-  //   default:
-  //     OT.warn("OT.Raptor.dispatch: " + message.signature + " is not currently implemented");
-  // }
-};
+        actors[0].session.connections.add(fromConnection);
+      } else if(!fromConnection) {
+        OT.warn('OT.Raptor.dispatch: Messsage comes from a connection (' +
+          fromAddress + ') that we do not know about. The message was ignored.');
+        return;
+      }
 
+      actors.forEach(function(actor) {
+        actor.processMessage(method, fromConnection, message);
+      });
+    };
 
+    dispatcher.on('jsep#offer', jsepHandler.bind(null, 'offer'));
+    dispatcher.on('jsep#answer', jsepHandler.bind(null, 'answer'));
+    dispatcher.on('jsep#pranswer', jsepHandler.bind(null, 'pranswer'));
+    dispatcher.on('jsep#generateoffer', jsepHandler.bind(null, 'generateoffer'));
+    dispatcher.on('jsep#unsubscribe', jsepHandler.bind(null, 'unsubscribe'));
+    dispatcher.on('jsep#candidate', jsepHandler.bind(null, 'candidate'));
 
-OT.Raptor.Dispatcher.prototype.dispatchJsep = function (message) {
-  var fromConnection,
-      streamId = message.payload.streamId,
-      actors;
+    dispatcher.on('subscriberChannel#updated', function(streamId, channelId, content) {
 
-  switch (message.action) {
-    // Messages for Subscribers
-    case OT.Raptor.Actions.OFFER:
-      actors = [];
-      var subscriber = OT.subscribers.find({streamId: streamId});
-      if (subscriber) actors.push(subscriber);
-      break;
+      if (!streamId || !session.streams.has(streamId)) {
+        OT.error('OT.Raptor.dispatch: Unable to determine streamId, or the stream does not ' +
+          'exist, for subscriberChannel#updated message!');
+        // @todo error
+        return;
+      }
 
+      session.streams.get(streamId)._
+        .updateChannel(channelId, content);
 
-    // Messages for Publishers
-    case OT.Raptor.Actions.ANSWER:
-    case OT.Raptor.Actions.PRANSWER:
-    case OT.Raptor.Actions.SUBSCRIBE:
-    case OT.Raptor.Actions.UNSUBSCRIBE:
-      actors = OT.publishers.where({streamId: streamId});
-      break;
+    });
 
+    dispatcher.on('subscriberChannel#update', function(subscriberId, streamId, content) {
 
-    // Messages for Publishers and Subscribers
-    case OT.Raptor.Actions.CANDIDATE:
-      // send to whichever of your publisher or subscribers are subscribing/publishing that stream
-      actors = OT.publishers.where({streamId: streamId}).concat(OT.subscribers.where({streamId: streamId}));
-      break;
+      if (!streamId || !session.streams.has(streamId)) {
+        OT.error('OT.Raptor.dispatch: Unable to determine streamId, or the stream does not ' +
+          'exist, for subscriberChannel#update message!');
+        // @todo error
+        return;
+      }
 
+      // Hint to update for congestion control from the Media Server
+      if (!OT.subscribers.has(subscriberId)) {
+        OT.error('OT.Raptor.dispatch: Unable to determine subscriberId, or the subscriber ' +
+          'does not exist, for subscriberChannel#update message!');
+        // @todo error
+        return;
+      }
 
-    default:
-      OT.warn("OT.Raptor.dispatch: " + message.signature + " is not currently implemented");
-      return;
-  }
+      // We assume that an update on a Subscriber channel is to disableVideo
+      // we may need to be more specific in the future
+      OT.subscribers.get(subscriberId).disableVideo(content.active);
 
-  if (actors.length) {
-    // This is a bit hacky. We don't have the session in the message so we iterate
-    // until we find the actor that the message relates to this stream, and then
-    // we grab the session from it.
-    fromConnection = actors[0].session.connections.get(message.payload.fromAddress);
-    if(!fromConnection && message.payload.fromAddress.match(/^symphony\./)) {
-      fromConnection = new OT.Connection(message.payload.fromAddress,
-          Date.now(), null, { supportsWebRTC: true });
-      actors[0].session.connections.add(fromConnection);
-    } else if(!fromConnection) {
-      OT.warn("Messsage comes from a connection (" + message.payload.fromAddress + ") that we do not know about.");
-    }
-  }
+    });
 
-  actors.forEach(function(actor) {
-    actor.processMessage(message.action, fromConnection, message.payload);
-  });
-};
+    dispatcher.on('subscriber#created', function(streamId, fromAddress, subscriberId) {
 
+      var stream = streamId ? session.streams.get(streamId) : null;
 
-// The payload is:
-//    key:    "{session_id}}/SUBSCRIBER/{stream_id}/{subscriber_id}"
-//    value:  Integer                 { Value between 0 and some non-zero max ( Max not decided yet )  }*
-//
-// * The complete range need not be used but this provision is just so that future facing we might need to have more granularity.
-//
-OT.Raptor.Dispatcher.prototype.dispatchSubscriber = function (message) {
-  var key = message.payload.key.split('/'),
-      session = OT.sessions.get(key[0]),
-      subscriber,
-      stream;
+      if (!stream) {
+        OT.error('OT.Raptor.dispatch: Unable to determine streamId, or the stream does ' +
+          'not exist, for subscriber#created message!');
+        // @todo error
+        return;
+      }
 
-  if (!session) {
-    OT.error("OT.Raptor.dispatch: Unable to determine sessionId, or the session does not exist, for " + message.signature + " message!");
-    // @todo error
-    return;
-  }
+      session._.subscriberMap[fromAddress + '_' + stream.id] = subscriberId;
+    });
 
-  stream = key[2] ? session.streams.get(key[2]) : null;
+    dispatcher.on('subscriber#deleted', function(streamId, fromAddress) {
+      var stream = streamId ? session.streams.get(streamId) : null;
 
-  if (!stream) {
-    OT.error("OT.Raptor.dispatch: Unable to determine streamId, or the stream does not exist, for " + message.signature + " message!");
-    // @todo error
-    return;
-  }
+      if (!stream) {
+        OT.error('OT.Raptor.dispatch: Unable to determine streamId, or the stream does ' +
+          'not exist, for subscriber#created message!');
+        // @todo error
+        return;
+      }
 
-  // Find the subscriber that matches this stream, connection, and session
-  subscriber = OT.subscribers.find(function(subscriber) {
-                  return subscriber.streamId === stream.id
-                          && subscriber.session.id === session.id
-                });
+      delete session._.subscriberMap[fromAddress + '_' + stream.id];
+    });
 
-  if (!subscriber) {
-    OT.error("OT.Raptor.dispatch: Unable to determine subscriberId, or the subscriber does not exist, for " + message.signature + " message!");
-    // @todo error
-    return;
-  }
+    dispatcher.on('signal', function(fromAddress, signalType, data) {
+      session._.dispatchSignal(session.connections.get(fromAddress),
+                               signalType, data);
+    });
 
+    dispatcher.on('archive#create', function(archive) {
+      parseAndAddArchiveToSession(archive, session);
+    });
 
-  switch (message.action) {
-    case OT.Raptor.Actions.QUALITY_CHANGED:
-      subscriber.updateQuality(parseInt(message.payload.value, 10));
-      break;
+    dispatcher.on('archive#updated', function(archiveId, update) {
+      var archive = session.archives.get(archiveId);
 
+      if (!archive) {
+        OT.error('OT.Raptor.dispatch: An archive does not exist with the id of ' +
+          archiveId + ', for archive#updated message!');
+        // @todo error
+        return;
+      }
 
-    default:
-      OT.warn("OT.Raptor.dispatch: " + message.signature + " is not currently implemented");
-  }
-};
+      archive._.update(update);
+    });
 
+    return dispatcher;
 
-OT.Raptor.Dispatcher.prototype.dispatchSignal = function (message) {
-  if (message.action !== OT.Raptor.Actions.SIGNAL) {
-    OT.warn("OT.Raptor.dispatch: " + message.signature + " is not currently implemented");
-    return;
-  }
+  };
 
-  var session = OT.sessions.get(this.socket.sessionId);
+})(window);
+!(function(window) {
 
-  if (!session) {
-      OT.error("OT.Raptor.dispatch: " + message.signature + " ERROR - sessionId must be provided and be valid");
-      return;
-  }
-
-  session._.dispatchSignal( session.connections.get(message.payload.fromAddress),
-                            message.payload.type,
-                            message.payload.data);
-};
-
-}(this));
-(function(window) {
-
-// Helper to synchronise several startup tasks and then dispatch a unified
-// 'envLoaded' event.
-//
-// This depends on:
-// * OT
-// * OT.Config
-//
-function EnvironmentLoader() {
+  // Helper to synchronise several startup tasks and then dispatch a unified
+  // 'envLoaded' event.
+  //
+  // This depends on:
+  // * OT
+  // * OT.Config
+  //
+  function EnvironmentLoader() {
     var _configReady = false,
         _domReady = false,
 
         isReady = function() {
-            return _domReady && _configReady;
+          return _domReady && _configReady;
         },
 
         onLoaded = function() {
-            if (isReady()) {
-                OT.dispatchEvent(new OT.EnvLoadedEvent(OT.Event.names.ENV_LOADED));
-            }
+          if (isReady()) {
+            OT.dispatchEvent(new OT.EnvLoadedEvent(OT.Event.names.ENV_LOADED));
+          }
         },
 
         onDomReady = function() {
-            _domReady = true;
+          _domReady = true;
 
-            // This is making an assumption about there being only one "window"
-            // that we care about.
-            OT.$.on(window, "unload", function() {
-                OT.publishers.destroy();
-                OT.subscribers.destroy();
-                OT.sessions.destroy();
-            });
+          // This is making an assumption about there being only one "window"
+          // that we care about.
+          OT.$.on(window, 'unload', function() {
+            OT.publishers.destroy();
+            OT.subscribers.destroy();
+            OT.sessions.destroy();
+          });
 
-            // The Dynamic Config won't load until the DOM is ready
-            OT.Config.load(OT.properties.configURL);
+          // The Dynamic Config won't load until the DOM is ready
+          OT.Config.load(OT.properties.configURL);
 
-            onLoaded();
+          onLoaded();
         },
 
         configLoaded = function() {
-            _configReady = true;
-            OT.Config.off('dynamicConfigChanged', configLoaded);
-            OT.Config.off('dynamicConfigLoadFailed', configLoadFailed);
+          _configReady = true;
+          OT.Config.off('dynamicConfigChanged', configLoaded);
+          OT.Config.off('dynamicConfigLoadFailed', configLoadFailed);
 
-            onLoaded();
+          onLoaded();
         },
 
         configLoadFailed = function() {
-            configLoaded();
+          configLoaded();
         };
 
     OT.Config.on('dynamicConfigChanged', configLoaded);
     OT.Config.on('dynamicConfigLoadFailed', configLoadFailed);
-    if (document.readyState == "complete" || (document.readyState == "interactive" && document.body)) {
-        onDomReady();
+    if (document.readyState === 'complete' ||
+      (document.readyState === 'interactive' && document.body)) {
+      onDomReady();
     } else {
-        if (document.addEventListener) {
-            document.addEventListener("DOMContentLoaded", onDomReady, false);
-        } else if (document.attachEvent) {
-            // This is so onLoad works in IE, primarily so we can show the upgrade to Chrome popup
-            document.attachEvent("onreadystatechange", function() {
-                if (document.readyState == "complete") onDomReady();
-            });
-        }
+      if (document.addEventListener) {
+        document.addEventListener('DOMContentLoaded', onDomReady, false);
+      } else if (document.attachEvent) {
+        // This is so onLoad works in IE, primarily so we can show the upgrade to Chrome popup
+        document.attachEvent('onreadystatechange', function() {
+          if (document.readyState === 'complete') onDomReady();
+        });
+      }
     }
 
     this.onLoad = function(cb) {
-        if (isReady()) {
-            cb();
-            return;
-        }
+      if (isReady()) {
+        cb();
+        return;
+      }
 
-        OT.on(OT.Event.names.ENV_LOADED, cb);
+      OT.on(OT.Event.names.ENV_LOADED, cb);
     };
-}
+  }
 
-var EnvLoader = new EnvironmentLoader();
+  var EnvLoader = new EnvironmentLoader();
 
-OT.onLoad = function(cb, context) {
+  OT.onLoad = function(cb, context) {
     if (!context) {
-        EnvLoader.onLoad(cb);
+      EnvLoader.onLoad(cb);
+    } else {
+      EnvLoader.onLoad(
+        cb.bind(context)
+      );
     }
-    else {
-        EnvLoader.onLoad(
-            cb.bind(context)
-        );
-    }
-};
+  };
 
 })(window);
-(function(window) {
+!(function() {
 
-OT.Error = function(code, message) {
+  /**
+   * The Error class is used to define the error object passed into completion handlers.
+   * Each of the following methods, which execute asynchronously, includes a
+   * <code>completionHandler</code> parameter:
+   *
+   * <ul>
+   *   <li><a href="Session.html#connect">Session.connect()</a></li>
+   *   <li><a href="Session.html#forceDisconnect">Session.forceDisconnect()</a></li>
+   *   <li><a href="Session.html#forceUnpublish">Session.forceUnpublish()</a></li>
+   *   <li><a href="Session.html#publish">Session.publish()</a></li>
+   *   <li><a href="Session.html#subscribe">Session.subscribe()</a></li>
+   *   <li><a href="OT.html#initPublisher">OT.initPublisher()</a></li>
+   * </ul>
+   *
+   * <p>
+   * The <code>completionHandler</code> parameter is a function that is called when the call to
+   * the asynchronous method succeeds or fails. If the asynchronous call fails, the completion
+   * handler function is passes an error object (defined by the Error class). The <code>code</code>
+   * and <code>message</code> properties of the error object provide details about the error.
+   *
+   * @property {Number} code The error code, defining the error.
+   *
+   *   <p>
+   *   In the event of an error, the <code>code</code> value of the <code>error</code> parameter can
+   *   have one of the following values:
+   * </p>
+   *
+   * <p>Errors when calling <code>Session.connect()</code>:</p>
+   *
+   * <table class="docs_table"><tbody>
+   * <tr>
+   *   <td><b><code>code</code></b></td>
+   *   <td><b>Description</b></td>
+   * </tr>
+   * <tr>
+   *   <td>1004</td>
+   *   <td>Authentication error. Check the error message for details. This error can result if you
+   *     in an expired token when trying to connect to a session. It can also occur if you pass
+   *     in an invalid token or API key. Make sure that you are generating the token using the
+   *     current version of one of the
+   *     <a href="(http://tokbox.com/opentok/libraries/server">OpenTok server SDKs</a>.</td>
+   * </tr>
+   * <tr>
+   *   <td>1005</td>
+   *   <td>Invalid Session ID. Make sure you generate the session ID using the current version of
+   *     one of the <a href="(http://tokbox.com/opentok/libraries/server">OpenTok server
+   *     SDKs</a>.</td>
+   * </tr>
+   * <tr>
+   *   <td>1006</td>
+   *   <td>Connect Failed. Unable to connect to the session. You may want to have the client check
+   *     the network connection.</td>
+   * </tr>
+   * </tbody></table>
+   *
+   * <p>Errors when calling <code>Session.forceDisconnect()</code>:</p>
+   *
+   * <table class="docs_table"><tbody>
+   * <tr>
+   *   <td><b>
+   *       <code>code</code>
+   *     </b></td>
+   *   <td><b>Description</b></td>
+   * </tr>
+   * <tr>
+   *   <td>1520</td>
+   *   <td>Unable to force disconnect. The client's token does not have the role set to moderator.
+   *     Once the client has connected to the session, the <code>capabilities</code> property of
+   *     the Session object lists the client's capabilities.</td>
+   * </tr>
+   * </tbody></table>
+   *
+   * <p>Errors when calling <code>Session.forceUnpublish()</code>:</p>
+   *
+   * <table class="docs_table"><tbody>
+   * <tr>
+   *   <td><b><code>code</code></b></td>
+   *   <td><b>Description</b></td>
+   * </tr>
+   * <tr>
+   *   <td>1530</td>
+   *   <td>Unable to force unpublish. The client's token does not have the role set to moderator.
+   *     Once the client has connected to the session, the <code>capabilities</code> property of
+   *     the Session object lists the client's capabilities.</td>
+   * </tr>
+   * <tr>
+   *   <td>1535</td>
+   *   <td>Force Unpublish on an invalid stream. Make sure that the stream has not left the
+   *     session before you call the <code>forceUnpublish()</code> method.</td>
+   * </tr>
+   * </tbody></table>
+   *
+   * <p>Errors when calling <code>Session.publish()</code>:</p>
+   *
+   * <table class="docs_table"><tbody>
+   * <tr>
+   *   <td><b><code>code</code></b></td>
+   *   <td><b>Description</b></td>
+   * </tr>
+   * <tr>
+   *   <td>1010</td>
+   *   <td>Cannot publish: the client is not connected to the OpenTok session. Check that your
+   *     application makes the client connect successfully before trying to publish. And check
+   *     that the client has not disconnected before trying to publish.</td>
+   * </tr>
+   * <tr>
+   *   <td>1500</td>
+   *   <td>Unable to Publish. The client's token does not have the role set to to publish or
+   *     moderator. Once the client has connected to the session, the <code>capabilities</code>
+   *     property of the Session object lists the client's capabilities.</td>
+   * </tr>
+   * <tr>
+   *   <td>1601</td>
+   *   <td>Internal error -- WebRTC publisher error. Try republishing or reconnecting to the
+   *     session.</td>
+   * </tr>
+   * </tbody></table>
+   *
+   * <p>Errors when calling <code>Session.signal()</code>:</p>
+   *
+   * <table class="docs_table" style="width:100%"><tbody>
+   * <tr>
+   *   <td><b><code>code</code></b></td>
+   *   <td><b>Description</b></td>
+   * </tr>
+   * <tr>
+   *   <td>1510</td>
+   *   <td>Unable to signal. Check that the <code>to</code> property of the signal parameter is
+   *     set to a valid Connection object. Also, make sure that you are connected to the
+   *     session.</td>
+   * </tr>
+   * </tbody></table>
+   *
+   * <p>Errors when calling <code>Session.subscribe()</code>:</p>
+   *
+   * <table class="docs_table" style="width:100%"><tbody>
+   * <tr>
+   *   <td><b>
+   *       Errors when calling <code>Session.subscribe()</code>:
+   *     </b></td>
+   * </tr>
+   * <tr>
+   *   <td><b>
+   *       <code>code</code>
+   *     </b></td>
+   *   <td><b>Description</b></td>
+   * </tr>
+   * <tr>
+   *   <td>1600</td>
+   *   <td>Internal error -- WebRTC subscriber error. Try resubscribing to the stream or
+   *     reconnecting to the session.</td>
+   * </tr>
+   * </tbody></table>
+   *
+   * <p>Errors when calling <code>TB.initPublisher()</code>:</p>
+   *
+   * <table class="docs_table"><tbody>
+   * <tr>
+   *   <td><b><code>code</code></b></td>
+   *   <td><b>Description</b></td>
+   * </tr>
+   * <tr>
+   *   <td>1004</td>
+   *   <td>Authentication error. Check the error message for details. This error can result if you
+   *     pass in an expired token when trying to connect to a session. It can also occur if you
+   *     pass in an invalid token or API key. Make sure that you are generating the token using
+   *     the current version of one of the
+   *     <a href="(http://tokbox.com/opentok/libraries/server">OpenTok server SDKs</a>.</td>
+   * </tr>
+   * </tbody></table>
+   *
+   * <p>General errors that can occur when calling any method:</p>
+   *
+   * <table class="docs_table" style="width:100%"><tbody>
+   * <tr>
+   *   <td><b><code>code</code></b></td>
+   *   <td><b>Description</b></td>
+   * </tr>
+   * <tr>
+   *   <td>1011</td>
+   *   <td>Invalid Parameter. Check that you have passed valid parameter values into the method
+   *     call.</td>
+   * </tr>
+   * <tr>
+   *   <td>2000</td>
+   *   <td>Internal Error. Try reconnecting to the OpenTok session and trying the action again.</td>
+   * </tr>
+   * </tbody></table>
+   *
+   * @property {String} message The message string provides details about the error.
+   *
+   * @class Error
+   * @augments Event
+   */
+  OT.Error = function(code, message) {
     this.code = code;
     this.message = message;
-};
+  };
 
-var errorsCodesToTitle = {
-    1000: "Failed To Load",
-    1004: "Authentication error",
-    1005: "Invalid Session ID",
-    1006: "Connect Failed",
-    1007: "Connect Rejected",
-    1008: "Connect Time-out",
-    1009: "Security Error",
-    1010: "Not Connected",
-    1011: "Invalid Parameter",
-    1012: "Peer-to-peer Stream Play Failed",
-    1013: "Connection Failed",
-    1014: "API Response Failure",
-    1500: "Unable to Publish",
-    1510: "Unable to Signal",
-    1520: "Unable to Force Disconnect",
-    1530: "Unable to Force Unpublish",
-    1540: "Unable to record archive",
-    1550: "Unable to play back archive",
-    1560: "Unable to create archive",
-    1570: "Unable to load archive",
-    2000: "Internal Error",
-    2001: "Embed Failed",
-    3000: "Archive load exception",
-    3001: "Archive create exception",
-    3002: "Playback stop exception",
-    3003: "Playback start exception",
-    3004: "Record start exception",
-    3005: "Record stop exception",
-    3006: "Archive load exception",
-    3007: "Session recording in progress",
-    3008: "Archive recording internal failure",
-    4000: "WebSocket Connection Failed",
-    4001: "WebSocket Network Disconnected"
-};
+  var errorsCodesToTitle = {
+    1000: 'Failed To Load',
+    1004: 'Authentication error',
+    1005: 'Invalid Session ID',
+    1006: 'Connect Failed',
+    1007: 'Connect Rejected',
+    1008: 'Connect Time-out',
+    1009: 'Security Error',
+    1010: 'Not Connected',
+    1011: 'Invalid Parameter',
+    1012: 'Peer-to-peer Stream Play Failed',
+    1013: 'Connection Failed',
+    1014: 'API Response Failure',
+    1500: 'Unable to Publish',
+    1510: 'Unable to Signal',
+    1520: 'Unable to Force Disconnect',
+    1530: 'Unable to Force Unpublish',
+    1540: 'Unable to record archive',
+    1550: 'Unable to play back archive',
+    1560: 'Unable to create archive',
+    1570: 'Unable to load archive',
+    2000: 'Internal Error',
+    2001: 'Embed Failed',
+    3000: 'Archive load exception',
+    3001: 'Archive create exception',
+    3002: 'Playback stop exception',
+    3003: 'Playback start exception',
+    3004: 'Record start exception',
+    3005: 'Record stop exception',
+    3006: 'Archive load exception',
+    3007: 'Session recording in progress',
+    3008: 'Archive recording internal failure',
+    4000: 'WebSocket Connection Failed',
+    4001: 'WebSocket Network Disconnected'
+  };
 
-var analytics;
+  var analytics;
 
-function _exceptionHandler(component, msg, errorCode, context) {
+  function _exceptionHandler(component, msg, errorCode, context) {
     var title = errorsCodesToTitle[errorCode],
         contextCopy = context ? OT.$.clone(context) : {};
 
-    OT.error("TB.exception :: title: " + title + " (" + errorCode + ") msg: " + msg);
+    OT.error('OT.exception :: title: ' + title + ' (' + errorCode + ') msg: ' + msg);
 
     if (!contextCopy.partnerId) contextCopy.partnerId = OT.APIKEY;
 
     try {
-        if (!analytics) analytics = new OT.Analytics();
-        analytics.logError(errorCode, 'tb.exception', title, {details:msg}, contextCopy);
+      if (!analytics) analytics = new OT.Analytics();
+      analytics.logError(errorCode, 'tb.exception', title, {details:msg}, contextCopy);
 
-        OT.dispatchEvent(
-            new OT.ExceptionEvent(OT.Event.names.EXCEPTION, msg, title, errorCode, component, component)
-        );
+      OT.dispatchEvent(
+        new OT.ExceptionEvent(OT.Event.names.EXCEPTION, msg, title, errorCode, component, component)
+      );
     } catch(err) {
-        OT.error("TB.exception :: Failed to dispatch exception - " + err.toString());
-        // Don't throw an error because this is asynchronous
-        // don't do an exceptionHandler because that would be recursive
+      OT.error('OT.exception :: Failed to dispatch exception - ' + err.toString());
+      // Don't throw an error because this is asynchronous
+      // don't do an exceptionHandler because that would be recursive
     }
-}
+  }
 
 // @todo redo this when we have time to tidy up
 //
 // @example
 //
-//  TB.handleJsException("Descriptive error message", 2000, {
+//  OT.handleJsException("Descriptive error message", 2000, {
 //      session: session,
 //      target: stream|publisher|subscriber|session|etc
 //  });
 //
-OT.handleJsException = function(errorMsg, code, options) {
+  OT.handleJsException = function(errorMsg, code, options) {
     options = options || {};
 
     var context,
         session = options.session;
 
     if (session) {
-        context = {
-            sessionId: session.sessionId
-        };
+      context = {
+        sessionId: session.sessionId
+      };
 
-        if (session.connected) context.connectionId = session.connection.connectionId;
-        if (!options.target) options.target = session;
-    }
-    else if (options.sessionId) {
-        context = {
-            sessionId: options.sessionId
-        };
+      if (session.connected) context.connectionId = session.connection.connectionId;
+      if (!options.target) options.target = session;
 
-        if (!options.target) options.target = null;
+    } else if (options.sessionId) {
+      context = {
+        sessionId: options.sessionId
+      };
+
+      if (!options.target) options.target = null;
     }
 
     _exceptionHandler(options.target, errorMsg, code, context);
-};
+  };
 
 
 // @todo redo this when we have time to tidy up
@@ -9481,221 +10793,405 @@ OT.handleJsException = function(errorMsg, code, options) {
 // Public callback for exceptions from Flash.
 //
 // Called from Flash like:
-//  TB.exceptionHandler('publisher_1234,1234', "Descriptive Error Message", "Error Title", 2000, contextObj)
+//  OT.exceptionHandler('publisher_1234,1234',
+//  "Descriptive Error Message", "Error Title", 2000, contextObj)
 //
-OT.exceptionHandler = function(componentId, msg, errorTitle, errorCode, context) {
+  OT.exceptionHandler = function(componentId, msg, errorTitle, errorCode, context) {
     var target;
 
     if (componentId) {
-        target = OT.components[componentId];
+      target = OT.components[componentId];
 
-        if (!target) {
-            OT.warn("Could not find the component with component ID " + componentId);
-        }
+      if (!target) {
+        OT.warn('Could not find the component with component ID ' + componentId);
+      }
     }
 
     _exceptionHandler(target, msg, errorCode, context);
-};
+  };
+
+
+  // This is a placeholder until error handling can be rewritten
+  OT.dispatchError = function (code, message, completionHandler, session) {
+    OT.error(code, message);
+
+    if (completionHandler && OT.$.isFunction(completionHandler)) {
+      completionHandler.call(null, new OT.Error(code, message));
+    }
+
+    OT.handleJsException(message, code, {
+      session: session
+    });
+  };
 
 })(window);
-(function(window) {
+!(function() {
 
-OT.ConnectionCapabilities = function(capabilitiesHash) {
+  OT.ConnectionCapabilities = function(capabilitiesHash) {
     // Private helper methods
     var castCapabilities = function(capabilitiesHash) {
-            capabilitiesHash.supportsWebRTC = OT.$.castToBoolean(capabilitiesHash.supportsWebRTC);
-
-            return capabilitiesHash;
-        };
-
+      capabilitiesHash.supportsWebRTC = OT.$.castToBoolean(capabilitiesHash.supportsWebRTC);
+      return capabilitiesHash;
+    };
 
     // Private data
     var _caps = castCapabilities(capabilitiesHash);
-
-
     this.supportsWebRTC = _caps.supportsWebRTC;
-};
+  };
 
 })(window);
-(function(window) {
+!(function() {
 
-/**
- * The Connection object represents a connection to an OpenTok session.
- * The Session object has a <code>connection</code> property that is a Connection object.
- * It represents the local client's connection. (A client only has a connection once the
- * client has successfully called the <code>connect()</code> method of the {@link Session} object.)
- * The Stream object has a <code>connection</code> property that is a Connection object.
- * It represents the stream publisher's connection.
- *
- * @class Connection
- * @property {String} id The ID of this connection.
- * @property {Number} creationTime The timestamp for the creation of the connection. This value is calculated in milliseconds.
-	You can convert this value to a Date object by calling <code>new Date(creationTime)</code>, where <code>creationTime</code>
-	is the <code>creationTime</code> property of the Connection object.
- * @property {String} data 	A string containing metadata describing the
-	connection. When you generate a user token string pass the connection data string to the
-	<code>generate_token()</code> method of our
-	<a href="/opentok/libraries/server/">server-side libraries</a>. You can also generate a token and define connection data on the
-	<a href="https://dashboard.tokbox.com/projects">Dashboard</a> page.
- */
-OT.Connection = function(id, creationTime, data, capabilitiesHash) {
+  /**
+   * The Connection object represents a connection to an OpenTok session. Each client that connects
+   * to a session has a unique connection, with a unique connection ID (represented by the
+   * <code>id</code> property of the Connection object for the client).
+   * <p>
+   * The Session object has a <code>connection</code> property that is a Connection object.
+   * It represents the local client's connection. (A client only has a connection once the
+   * client has successfully called the <code>connect()</code> method of the {@link Session}
+   * object.)
+   * <p>
+   * The Session object dispatches a <code>connectionCreated</code> event when each client (other
+   * than your own) connects to a session (and for clients that are present in the session when you
+   * connect). The <code>connectionCreated</code> event object has a <code>connection</code>
+   * property, which is a Connection object corresponding to the client the event pertains to.
+   * <p>
+   * The Stream object has a <code>connection</code> property that is a Connection object.
+   * It represents the connection of the client that is publishing the stream.
+   *
+   * @class Connection
+   * @property {String} connectionId The ID of this connection.
+   * @property {Number} creationTime The timestamp for the creation of the connection. This
+   * value is calculated in milliseconds.
+   * You can convert this value to a Date object by calling <code>new Date(creationTime)</code>,
+   * where <code>creationTime</code>
+   * is the <code>creationTime</code> property of the Connection object.
+   * @property {String} data A string containing metadata describing the
+   * connection. When you generate a user token string pass the connection data string to the
+   * <code>generate_token()</code> method of our
+   * <a href="/opentok/libraries/server/">server-side libraries</a>. You can also generate a token
+   * and define connection data on the
+   * <a href="https://dashboard.tokbox.com/projects">Dashboard</a> page.
+   */
+  OT.Connection = function(id, creationTime, data, capabilitiesHash, permissionsHash) {
     var destroyedReason;
 
     this.id = this.connectionId = id;
     this.creationTime = creationTime ? Number(creationTime) : null;
     this.data = data;
     this.capabilities = new OT.ConnectionCapabilities(capabilitiesHash);
+    this.permissions = new OT.Capabilities(permissionsHash);
     this.quality = null;
 
     OT.$.eventing(this);
 
     this.destroy = function(reason, quiet) {
-        destroyedReason = reason || 'clientDisconnected';
+      destroyedReason = reason || 'clientDisconnected';
 
-        if (quiet !== true) {
-            this.dispatchEvent(
-              new OT.DestroyedEvent(
-                'destroyed',      // This should be OT.Event.names.CONNECTION_DESTROYED, but
-                                  // the value of that is currently shared with Session
-                this,
-                destroyedReason
-              )
-            );
-        }
+      if (quiet !== true) {
+        this.dispatchEvent(
+          new OT.DestroyedEvent(
+            'destroyed',      // This should be OT.Event.names.CONNECTION_DESTROYED, but
+                              // the value of that is currently shared with Session
+            this,
+            destroyedReason
+          )
+        );
+      }
     }.bind(this);
 
     Object.defineProperties(this, {
-        destroyed: {
-            get: function() { return destroyedReason !== void 0; },
-            enumerable: true
-        },
+      destroyed: {
+        get: function() { return destroyedReason !== void 0; },
+        enumerable: true
+      },
 
-        destroyedReason: {
-            get: function() { return destroyedReason; },
-            enumerable: true
-        }
+      destroyedReason: {
+        get: function() { return destroyedReason; },
+        enumerable: true
+      }
     });
-};
+  };
 
-OT.Connection.fromHash = function(hash) {
-  return new OT.Connection(hash.connectionId,
-                            hash.creationTime,
-                            hash.data,
-                            { supportsWebRTC: hash.supportsWebRTC } );
-
-};
+  OT.Connection.fromHash = function(hash) {
+    return new OT.Connection(hash.id,
+                             hash.creationTime,
+                             hash.data,
+                             OT.$.extend(hash.capablities || {}, { supportsWebRTC: true }),
+                             hash.permissions || [] );
+  };
 
 })(window);
-(function(window) {
+!(function() {
 
-var validPropertyNames = ['hasAudio', 'hasVideo', 'quality', 'name', 'videoDimensions', 'orientation'];
+  // id: String                           | mandatory | immutable
+  // type: String {video/audio/data/...}  | mandatory | immutable
+  // active: Boolean                      | mandatory | mutable
+  // orientation: Integer?                | optional  | mutable
+  // frameRate: Float                     | optional  | mutable
+  // height: Integer                      | optional  | mutable
+  // width: Integer                       | optional  | mutable
+  OT.StreamChannel = function(options) {
+    this.id = options.id;
+    this.type = options.type;
+    this.active = OT.$.castToBoolean(options.active);
+    this.orientation = options.orientation || OT.VideoOrientation.ROTATED_NORMAL;
+    if (options.frameRate) this.frameRate = parseFloat(options.frameRate, 10);
+    this.width = parseInt(options.width, 10);
+    this.height = parseInt(options.height, 10);
 
+    OT.$.eventing(this, true);
+
+    // Returns true if a property was updated.
+    this.update = function(attributes) {
+      var videoDimensions = {},
+          oldVideoDimensions = {};
+
+      for (var key in attributes) {
+        // we shouldn't really read this before we know the key is valid
+        var oldValue = this[key];
+
+        switch(key) {
+          case 'active':
+            this.active = OT.$.castToBoolean(attributes[key]);
+            break;
+
+          case 'frameRate':
+            this.frameRate = parseFloat(attributes[key], 10);
+            break;
+
+          case 'width':
+          case 'height':
+            this[key] = parseInt(attributes[key], 10);
+
+            videoDimensions[key] = this[key];
+            oldVideoDimensions[key] = oldValue;
+            break;
+
+          case 'orientation':
+            this[key] = attributes[key];
+
+            videoDimensions[key] = this[key];
+            oldVideoDimensions[key] = oldValue;
+            break;
+
+          default:
+            OT.warn('Tried to update unknown key ' + key + ' on ' + this.type +
+              ' channel ' + this.id);
+            return;
+        }
+
+        this.trigger('update', this, key, oldValue, this[key]);
+      }
+
+      if (Object.keys(videoDimensions).length) {
+        // To make things easier for the public API, we broadcast videoDimensions changes,
+        // which is an aggregate of width, height, and orientation changes.
+        this.trigger('update', this, 'videoDimensions', oldVideoDimensions, videoDimensions);
+      }
+
+      return true;
+    };
+  };
+
+})(window);
+!(function() {
+
+  var validPropertyNames = ['name', 'archiving'];
 
 /**
- * Specifies a stream. A stream is a representation of a published stream in a session. When a client calls the
- * <a href="Session.html#publish">Session.publish() method</a>, a new stream is created. Properties of the Stream
- * object provide information about the stream.
+ * Specifies a stream. A stream is a representation of a published stream in a session. When a
+ * client calls the <a href="Session.html#publish">Session.publish() method</a>, a new stream is
+ * created. Properties of the Stream object provide information about the stream.
  *
- *  <p>When a stream is added to a session, the Session object dispatches a <code>streamCreatedEvent</code>.
- *  When a stream is destroyed, the Session object dispatches a <code>streamDestroyed</code> event. The
- *  StreamEvent object, which defines these event objects, has a <code>stream</code> property, which is an
- *  array of Stream object. For details and a code example, see {@link StreamEvent}.</p>
+ *  <p>When a stream is added to a session, the Session object dispatches a
+ * <code>streamCreatedEvent</code>. When a stream is destroyed, the Session object dispatches a
+ * <code>streamDestroyed</code> event. The StreamEvent object, which defines these event objects,
+ * has a <code>stream</code> property, which is an array of Stream object. For details and a code
+ * example, see {@link StreamEvent}.</p>
  *
- *  <p>When a connection to a session is made, the Session object dispatches a <code>sessionConnected</code>
- *  event, defined by the SessionConnectEvent object. The SessionConnectEvent object has a <code>streams</code>
- *  property, which is an array of Stream objects pertaining to the streams in the session at that time.
- *  For details and a code example, see {@link SessionConnectEvent}.</p>
+ *  <p>When a connection to a session is made, the Session object dispatches a
+ * <code>sessionConnected</code> event, defined by the SessionConnectEvent object. The
+ * SessionConnectEvent object has a <code>streams</code> property, which is an array of Stream
+ * objects pertaining to the streams in the session at that time. For details and a code example,
+ * see {@link SessionConnectEvent}.</p>
  *
  * @class Stream
  * @property {Connection} connection The Connection object corresponding
- * to the connection that is publishing the stream. You can compare this to to the <code>connection</code>
- * property of the Session object to see if the stream is being published by the local web page.
+ * to the connection that is publishing the stream. You can compare this to to the
+ * <code>connection</code> property of the Session object to see if the stream is being published
+ * by the local web page.
  *
  * @property {Number} creationTime The timestamp for the creation
  * of the stream. This value is calculated in milliseconds. You can convert this value to a
- * Date object by calling <code>new Date(creationTime)</code>, where <code>creationTime</code> is the
- * <code>creationTime</code> property of the Stream object.
+ * Date object by calling <code>new Date(creationTime)</code>, where <code>creationTime</code> is
+ * the <code>creationTime</code> property of the Stream object.
  *
- * @property {Boolean} hasAudio Whether the stream has audio. This property can change if the publisher
- * turns on or off audio (by calling <a href="Publisher.html#publishAudio">Publisher.publishAudio()</a>).
- * When this occurs, the {@link Session} object dispatches a <code>streamPropertyChanged</code> event
- * (see {@link StreamPropertyChangedEvent}.)
+ * @property {Number} fps The frame rate of the video stream.
  *
- * @property {Boolean} hasVideo Whether the stream has video. This property can change if the publisher
- * turns on or off video (by calling <a href="Publisher.html#publishVideo">Publisher.publishVideo()</a>).
- * When this occurs, the {@link Session} object dispatches a <code>streamPropertyChanged</code> event
- * (see {@link StreamPropertyChangedEvent}.)
- *
- * @property {Object} videoDimensions This object has two properties: <code>width</code> and <code>height</code>. Both are
- * numbers. The <code>width</code> property is the width of the encoded stream; the <code>height</code> property is the
- * height of the encoded stream. (These are independent of the actual width of Publisher and Subscriber objects corresponding
- * to the stream.) This property can change if a stream published from an iOS device resizes, based on a change in the device
- * orientation. When this occurs, the {@link Session} object dispatches a <code>streamPropertyChanged</code> event (see
+ * @property {Boolean} hasAudio Whether the stream has audio. This property can change if the
+ * publisher turns on or off audio (by calling
+ * <a href="Publisher.html#publishAudio">Publisher.publishAudio()</a>). When this occurs, the
+ * {@link Session} object dispatches a <code>streamPropertyChanged</code> event (see
  * {@link StreamPropertyChangedEvent}.)
  *
- * @property {String} name The name of the stream. Publishers can specify a name when publishing a stream
- * (using the <code>publish()</code> method of the publisher's Session object).
+ * @property {Boolean} hasVideo Whether the stream has video. This property can change if the
+ * publisher turns on or off video (by calling
+ * <a href="Publisher.html#publishVideo">Publisher.publishVideo()</a>). When this occurs, the
+ * {@link Session} object dispatches a <code>streamPropertyChanged</code> event (see
+ * {@link StreamPropertyChangedEvent}.)
+ *
+ * @property {Object} videoDimensions This object has two properties: <code>width</code> and
+ * <code>height</code>. Both are numbers. The <code>width</code> property is the width of the
+ * encoded stream; the <code>height</code> property is the height of the encoded stream. (These
+ * are independent of the actual width of Publisher and Subscriber objects corresponding to the
+ * stream.) The height and width of the <code>videoDimensions</code> of a Stream object may differ
+ * from the <code>videoHeight</code> dimensions of a Subcriber object using the stream, if the
+ * browser does not support the resolution of the stream. This property can change if a stream
+ * published from an iOS device resizes, based on a change in the device orientation. When this
+ * occurs, the {@link Session} object dispatches a <code>streamPropertyChanged</code> event (see
+ * {@link StreamPropertyChangedEvent}.)
+ *
+ * @property {String} name The name of the stream. Publishers can specify a name when publishing
+ * a stream (using the <code>publish()</code> method of the publisher's Session object).
+ *
+ * @property {String} streamId The unique ID of the stream.
  */
-OT.Stream = function(id, connection, name, data, type, creationTime, hasAudio, hasVideo, orientation, peerId, quality, width, height) {
-  var destroyedReason;
 
-  this.id = this.streamId = id;
-  this.connection = connection;
-  this.name = name;
-  this.data = data;
-  this.type = type || 'basic';
-  this.creationTime = creationTime ? Number(creationTime) : null;
-  this.hasAudio = OT.$.castToBoolean(hasAudio, true);
-  this.hasVideo = OT.$.castToBoolean(hasVideo, true);
-  this.peerId = peerId;
-  this.quality = quality;
-  this.videoDimensions = { width: (width || 640), height: (height || 480), orientation: (orientation || OT.VideoOrientation.ROTATED_NORMAL) };
 
-  OT.$.eventing(this);
+  OT.Stream = function(id, name, creationTime, connection, session, channel) {
+    var destroyedReason;
 
-  // Confusingly, this should not be called when you want to change
-  // the stream properties. This is used by Raptor dispatch to notify
-  // the stream that it's properies have been successfully updated
-  //
-  // @todo make this sane. Perhaps use setters for the properties that can
-  // send the appropriate Raptor message. This would require that Streams
-  // have access to their session.
-  //
-  this.update = function(key, value) {
-    if (validPropertyNames.indexOf(key) === -1) {
-      OT.warn('Unknown stream property "' + key + '" was modified to "' + value + '".');
-      return;
+    this.id = this.streamId = id;
+    this.name = name;
+    this.creationTime = Number(creationTime);
+
+    this.connection = connection;
+    this.channel = channel;
+    this.publisher = OT.publishers.find({streamId: this.id});
+    this.publisherId = this.publisher ? this.publisher.id : null;
+
+    OT.$.eventing(this);
+
+    var onChannelUpdate = function(channel, key, oldValue, newValue) {
+      var _key = key;
+
+      switch(_key) {
+        case 'active':
+          _key = channel.type === 'audio' ? 'hasAudio' : 'hasVideo';
+          this[_key] = newValue;
+          break;
+
+        case 'orientation':
+        case 'width':
+        case 'height':
+          this.videoDimensions = {
+            width: channel.width,
+            height: channel.height,
+            orientation: channel.orientation
+          };
+
+          // We dispatch this via the videoDimensions key instead
+          return;
+      }
+
+      this.dispatchEvent( new OT.StreamUpdatedEvent(this, _key, oldValue, newValue) );
+    }.bind(this);
+
+    var associatedWidget = function() {
+      if(this.publisher) {
+        return this.publisher;
+      } else {
+        return OT.subscribers.find(function(subscriber) {
+          return subscriber.streamId === this.id &&
+            subscriber.session.id === session.id;
+        });
+      }
+    }.bind(this);
+
+    // Returns all channels that have a type of +type+.
+    this.getChannelsOfType = function (type) {
+      return this.channel.filter(function(channel) {
+        return channel.type === type;
+      });
+    };
+
+    this.getChannel = function (id) {
+      for (var i=0; i<this.channel.length; ++i) {
+        if (this.channel[i].id === id) return this.channel[i];
+      }
+
+      return null;
+    };
+
+
+    //// implement the following using the channels
+    // hasAudio
+    // hasVideo
+    // videoDimensions
+
+    var audioChannel = this.getChannelsOfType('audio')[0],
+        videoChannel = this.getChannelsOfType('video')[0];
+
+    // @todo this should really be: "has at least one video/audio track" instead of 
+    // "the first video/audio track"
+    this.hasAudio = audioChannel != null && audioChannel.active;
+    this.hasVideo = videoChannel != null && videoChannel.active;
+
+    this.videoDimensions = {};
+    if (videoChannel) {
+      this.videoDimensions.width = videoChannel.width;
+      this.videoDimensions.height = videoChannel.height;
+      this.videoDimensions.orientation = videoChannel.orientation;
+
+      videoChannel.on('update', onChannelUpdate);
     }
 
-    var oldValue = this[key],
-        newValue = value;
-
-    switch(key) {
-      case 'hasAudio':
-      case 'hasVideo':
-        newValue = OT.$.castToBoolean(newValue, true);
-        this[key] = newValue;
-        break;
-
-      case 'quality':
-      case 'name':
-        this[key] = newValue;
-        break;
-
-      case 'orientation':
-        this.videoDimensions = { width: newValue.width, height: newValue.height, orientation: newValue.videoOrientation };
+    if (audioChannel) {
+      audioChannel.on('update', onChannelUpdate);
     }
 
-    // We map the 'orientation' key (that comes from Raptor) to 'videoDimensions' when
-    // dispatching the updated event, as this is actual property that is modified on the stream
-    var event = new OT.StreamUpdatedEvent(this, key, oldValue, newValue);
-    this.dispatchEvent(event);
-  };
+    this.setChannelActiveState = function(channelType, activeState, activeReason) {
+      var attributes = {
+        active: activeState
+      };
+      if (activeReason) {
+        attributes.activeReason = activeReason;
+      }
+      updateChannelsOfType(channelType, attributes);
+    };
 
-  this.destroy = function(reason, quiet) {
-    destroyedReason = reason || 'clientDisconnected';
+    this.setRestrictFrameRate = function(restrict) {
+      updateChannelsOfType('video', {
+        restrictFrameRate: restrict
+      });
+    };
 
-    if (quiet !== true) {
+    var updateChannelsOfType = function(channelType, attributes) {
+      var setChannelActiveState;
+      if (!this.publisher) {
+        var subscriber = OT.subscribers.find(function(subscriber) {
+          return subscriber.streamId === this.id &&
+            subscriber.session.id === session.id;
+        }, this);
+
+        setChannelActiveState = function(channel) {
+          session._.subscriberChannelUpdate(this, subscriber, channel, attributes);
+        };
+      } else {
+        setChannelActiveState = function(channel) {
+          session._.streamChannelUpdate(this, channel, attributes);
+        };
+      }
+
+      this.getChannelsOfType(channelType).forEach(setChannelActiveState.bind(this));
+    }.bind(this);
+
+    this.destroy = function(reason, quiet) {
+      destroyedReason = reason || 'clientDisconnected';
+
+      if (quiet !== true) {
         this.dispatchEvent(
           new OT.DestroyedEvent(
             'destroyed',      // This should be OT.Event.names.STREAM_DESTROYED, but
@@ -9704,94 +11200,174 @@ OT.Stream = function(id, connection, name, data, type, creationTime, hasAudio, h
             destroyedReason
           )
         );
-    }
-  };
+      }
+    };
 
-  Object.defineProperties(this, {
+    Object.defineProperties(this, {
       destroyed: {
-          get: function() { return destroyedReason !== void 0; },
-          enumerable: true
+        get: function() { return destroyedReason !== void 0; },
+        enumerable: true
       },
 
       destroyedReason: {
-          get: function() { return destroyedReason; },
-          enumerable: true
-      }
-  });
-};
+        get: function() { return destroyedReason; },
+        enumerable: true
+      },
 
+      frameRate: {
+        get: function() { return this.getChannelsOfType('video')[0].frameRate; },
+        enumerable: true
+      }
+    });
+
+    /// PRIVATE STUFF CALLED BY Raptor.Dispatcher
+
+    // Confusingly, this should not be called when you want to change
+    // the stream properties. This is used by Raptor dispatch to notify
+    // the stream that it's properies have been successfully updated
+    //
+    // @todo make this sane. Perhaps use setters for the properties that can
+    // send the appropriate Raptor message. This would require that Streams
+    // have access to their session.
+    //
+    this._ = {};
+    this._.updateProperty = function (key, value) {
+      if (validPropertyNames.indexOf(key) === -1) {
+        OT.warn('Unknown stream property "' + key + '" was modified to "' + value + '".');
+        return;
+      }
+
+      var oldValue = this[key],
+          newValue = value;
+
+      switch(key) {
+        case 'name':
+          this[key] = newValue;
+          break;
+
+        case 'archiving':
+          var widget = associatedWidget();
+          if(widget) {
+            widget._.archivingStatus(newValue);
+          }
+          this[key] = newValue;
+          break;
+      }
+
+      var event = new OT.StreamUpdatedEvent(this, key, oldValue, newValue);
+      this.dispatchEvent(event);
+    }.bind(this);
+
+    // Mass update, called by Raptor.Dispatcher
+    this._.update = function (attributes) {
+      for (var key in attributes) {
+        this._.updateProperty(key, attributes[key]);
+      }
+    }.bind(this);
+
+    this._.updateChannel = function (channelId, attributes) {
+      this.getChannel(channelId).update(attributes);
+    }.bind(this);
+  };
 
 })(window);
-(function(window) {
+!(function() {
+  
 
-// Normalise these
-var NativeRTCSessionDescription = (window.mozRTCSessionDescription || window.RTCSessionDescription); // order is very important: "RTCSessionDescription" defined in Firefox Nighly but useless
-var NativeRTCIceCandidate = (window.mozRTCIceCandidate || window.RTCIceCandidate);
+  OT.Archive = function(id, name, status) {
+    
+    this.id = id;
+    this.name = name;
+    this.status = status;
+    
+    this._ = {};
 
-// Helper function to forward Ice Candidates via +messageDelegate+
-var iceCandidateForwarder = function(messageDelegate) {
+    OT.$.eventing(this);
+    
+    // Mass update, called by Raptor.Dispatcher
+    this._.update = function (attributes) {
+      for (var key in attributes) {
+        var oldValue = this[key];
+        this[key] = attributes[key];
+        
+        var event = new OT.ArchiveUpdatedEvent(this, key, oldValue, this[key]);
+        this.dispatchEvent(event);
+        
+      }
+    }.bind(this);
+
+    this.destroy = function() {};
+
+  };
+
+})(window);
+!(function(window) {
+
+  // order is very important: "RTCSessionDescription" defined in Firefox Nighly but useless
+  var NativeRTCSessionDescription = (window.mozRTCSessionDescription ||
+    window.RTCSessionDescription);
+  var NativeRTCIceCandidate = (window.mozRTCIceCandidate || window.RTCIceCandidate);
+
+  // Helper function to forward Ice Candidates via +messageDelegate+
+  var iceCandidateForwarder = function(messageDelegate) {
     return function(event) {
-        OT.debug("IceCandidateForwarder: Ice Candidate");
-
-        if (event.candidate) {
-            messageDelegate(OT.Raptor.Actions.CANDIDATE, event.candidate);
-        }
-        else {
-            OT.debug("IceCandidateForwarder: No more ICE candidates.");
-        }
+      if (event.candidate) {
+        messageDelegate(OT.Raptor.Actions.CANDIDATE, event.candidate);
+      } else {
+        OT.debug('IceCandidateForwarder: No more ICE candidates.');
+      }
     };
-};
+  };
 
 
-// Process incoming Ice Candidates from a remote connection (which have been
-// forwarded via iceCandidateForwarder). The Ice Candidates cannot be processed
-// until a PeerConnection is available. Once a PeerConnection becomes available
-// the pending PeerConnections can be processed by calling processPending.
-//
-// @example
-//
-//  var iceProcessor = new IceCandidateProcessor();
-//  iceProcessor.process(iceMessage1);
-//  iceProcessor.process(iceMessage2);
-//  iceProcessor.process(iceMessage3);
-//
-//  iceProcessor.peerConnection = peerConnection;
-//  iceProcessor.processPending();
-//
-var IceCandidateProcessor = function() {
+  // Process incoming Ice Candidates from a remote connection (which have been
+  // forwarded via iceCandidateForwarder). The Ice Candidates cannot be processed
+  // until a PeerConnection is available. Once a PeerConnection becomes available
+  // the pending PeerConnections can be processed by calling processPending.
+  //
+  // @example
+  //
+  //  var iceProcessor = new IceCandidateProcessor();
+  //  iceProcessor.process(iceMessage1);
+  //  iceProcessor.process(iceMessage2);
+  //  iceProcessor.process(iceMessage3);
+  //
+  //  iceProcessor.peerConnection = peerConnection;
+  //  iceProcessor.processPending();
+  //
+  var IceCandidateProcessor = function() {
     var _pendingIceCandidates = [],
         _peerConnection = null;
 
 
     Object.defineProperty(this, 'peerConnection', {
-        set: function(peerConnection) {
-            _peerConnection = peerConnection;
-        }
+      set: function(peerConnection) {
+        _peerConnection = peerConnection;
+      }
     });
 
     this.process = function(message) {
-        var iceCandidate = new NativeRTCIceCandidate(message.candidate);
+      var iceCandidate = new NativeRTCIceCandidate(message.content);
 
-        if (_peerConnection) {
-            _peerConnection.addIceCandidate(iceCandidate);
-        }
-        else {
-            _pendingIceCandidates.push(iceCandidate);
-        }
+      if (_peerConnection) {
+        _peerConnection.addIceCandidate(iceCandidate);
+      } else {
+        _pendingIceCandidates.push(iceCandidate);
+      }
     };
 
     this.processPending = function() {
-        while(_pendingIceCandidates.length) {
-            _peerConnection.addIceCandidate(_pendingIceCandidates.shift());
-        }
+      while(_pendingIceCandidates.length) {
+        _peerConnection.addIceCandidate(_pendingIceCandidates.shift());
+      }
     };
-};
+  };
 
-// Removes all Confort Noise from +sdp+.
-//
-// See https://jira.tokbox.com/browse/OPENTOK-7176
-//
-var removeComfortNoise = function removeComfortNoise (sdp) {
+  // Removes all Confort Noise from +sdp+.
+  //
+  // See https://jira.tokbox.com/browse/OPENTOK-7176
+  //
+  var removeComfortNoise = function removeComfortNoise (sdp) {
     // a=rtpmap:<payload type> <encoding name>/<clock rate> [/<encoding parameters>]
     var matcher = /a=rtpmap:(\d+) CN\/\d+/i,
         payloadTypes = [],
@@ -9804,168 +11380,182 @@ var removeComfortNoise = function removeComfortNoise (sdp) {
     //   1. extract all the payload types from the rtpmap CN lines
     //   2. find the index of the audio media line
     //
-    sdpLines = sdp.split("\r\n").filter(function(line, index) {
-        if (line.indexOf('m=audio') !== -1) audioMediaLineIndex = index;
+    sdpLines = sdp.split('\r\n').filter(function(line, index) {
+      if (line.indexOf('m=audio') !== -1) audioMediaLineIndex = index;
 
-        match = line.match(matcher);
-        if (match !== null) {
-            payloadTypes.push(match[1]);
+      match = line.match(matcher);
+      if (match !== null) {
+        payloadTypes.push(match[1]);
 
-            // remove this line as it contains CN
-            return false;
-        }
+        // remove this line as it contains CN
+        return false;
+      }
 
-        return true;
+      return true;
     });
 
     if (payloadTypes.length && audioMediaLineIndex) {
-        // Remove all CN payload types from the audio media line.
-        sdpLines[audioMediaLineIndex] = sdpLines[audioMediaLineIndex].replace( new RegExp(payloadTypes.join('|'), 'ig') , '').replace(/\s+/g, ' ');
+      // Remove all CN payload types from the audio media line.
+      sdpLines[audioMediaLineIndex] = sdpLines[audioMediaLineIndex].replace(
+        new RegExp(payloadTypes.join('|'), 'ig') , '').replace(/\s+/g, ' ');
     }
 
-    return sdpLines.join("\r\n");
-};
+    return sdpLines.join('\r\n');
+  };
 
-// Attempt to completely process +offer+. This will:
-// * set the offer as the remote description
-// * create an answer and
-// * set the new answer as the location description
-//
-// If there are no issues, the +success+ callback will be executed on completion.
-// Errors during any step will result in the +failure+ callback being executed.
-//
-var offerProcessor = function(peerConnection, offer, success, failure) {
-    var generateErrorCallback = function(message) {
-            return function(errorReason) {
-                if (failure) failure(message, errorReason);
-            };
-        },
+  // Attempt to completely process +offer+. This will:
+  // * set the offer as the remote description
+  // * create an answer and
+  // * set the new answer as the location description
+  //
+  // If there are no issues, the +success+ callback will be executed on completion.
+  // Errors during any step will result in the +failure+ callback being executed.
+  //
+  var offerProcessor = function(peerConnection, offer, success, failure) {
+    var generateErrorCallback,
+        setLocalDescription,
+        createAnswer;
 
-        setLocalDescription = function(answer) {
-            answer.sdp = removeComfortNoise(answer.sdp);
+    generateErrorCallback = function(message, prefix) {
+      return function(errorReason) {
+        OT.error(message);
+        OT.error(errorReason);
 
-            peerConnection.setLocalDescription(
-                answer,
+        if (failure) failure(message, errorReason, prefix);
+      };
+    };
 
-                // Success
-                function() {
-                    success(answer);
-                },
+    setLocalDescription = function(answer) {
+      answer.sdp = removeComfortNoise(answer.sdp);
 
-                // Failure
-                generateErrorCallback('SetLocalDescription:Error while setting LocalDescription')
-            );
-        },
-
-        createAnswer = function(onSuccess) {
-            peerConnection.createAnswer(
-                // Success
-                setLocalDescription,
-
-                // Failure
-                generateErrorCallback('CreateAnswer:Error while setting createAnswer'),
-
-                null, // MediaConstraints
-                false // createProvisionalAnswer
-            );
-        };
-
-    // Workaround for a Chrome issue. Add in the SDES crypto line into offers
-    // from Firefox
-    if (offer.sdp.indexOf('a=crypto') === -1) {
-        var crypto_line = "a=crypto:1 AES_CM_128_HMAC_SHA1_80 inline:FakeFakeFakeFakeFakeFakeFakeFakeFakeFake\\r\\n";
-
-        // insert the fake crypto line for every M line
-        offer.sdp = offer.sdp.replace(/^c=IN(.*)$/gmi, "c=IN$1\r\n"+crypto_line);
-    }
-
-    if (offer.sdp.indexOf('a=rtcp-fb') === -1) {
-        var rtcp_fb_line = "a=rtcp-fb:* ccm fir\r\na=rtcp-fb:* nack ";
-
-        // insert the fake crypto line for every M line
-        offer.sdp = offer.sdp.replace(/^m=video(.*)$/gmi, "m=video$1\r\n"+rtcp_fb_line);
-    }
-
-    peerConnection.setRemoteDescription(
-        offer,
+      peerConnection.setLocalDescription(
+        answer,
 
         // Success
-        createAnswer,
+        function() {
+          success(answer);
+        },
 
         // Failure
-        generateErrorCallback('SetRemoteDescription:Error while setting RemoteDescription')
-    );
+        generateErrorCallback('Error while setting LocalDescription', 'SetLocalDescription')
+      );
+    };
 
-};
-
-// Attempt to completely process a subscribe message. This will:
-// * create an Offer
-// * set the new offer as the location description
-//
-// If there are no issues, the +success+ callback will be executed on completion.
-// Errors during any step will result in the +failure+ callback being executed.
-//
-var suscribeProcessor = function(peerConnection, success, failure) {
-    var constraints = {
-            mandatory: {},
-            optional: []
-        },
-
-        generateErrorCallback = function(message) {
-            return function(errorReason) {
-                if (failure) failure(message, errorReason);
-            };
-        },
-
-        setLocalDescription = function(offer) {
-            offer.sdp = removeComfortNoise(offer.sdp);
-
-            peerConnection.setLocalDescription(
-                offer,
-
-                // Success
-                function() {
-                    success(offer);
-                },
-
-                // Failure
-                generateErrorCallback('SetLocalDescription:Error while setting LocalDescription')
-            );
-        };
-
-
-    // For interop with FireFox. Disable Data Channel in createOffer.
-    if (navigator.mozGetUserMedia) {
-        constraints.mandatory.MozDontOfferDataChannel = true;
-    }
-
-    peerConnection.createOffer(
+    createAnswer = function() {
+      peerConnection.createAnswer(
         // Success
         setLocalDescription,
 
         // Failure
-        generateErrorCallback('CreateOffer:Error while creating Offer'),
+        generateErrorCallback('Error while setting createAnswer', 'CreateAnswer'),
 
-        constraints
+        null, // MediaConstraints
+        false // createProvisionalAnswer
+      );
+    };
+
+    // Workaround for a Chrome issue. Add in the SDES crypto line into offers
+    // from Firefox
+    if (offer.sdp.indexOf('a=crypto') === -1) {
+      var cryptoLine = 'a=crypto:1 AES_CM_128_HMAC_SHA1_80 ' +
+        'inline:FakeFakeFakeFakeFakeFakeFakeFakeFakeFake\\r\\n';
+
+        // insert the fake crypto line for every M line
+      offer.sdp = offer.sdp.replace(/^c=IN(.*)$/gmi, 'c=IN$1\r\n'+cryptoLine);
+    }
+
+    if (offer.sdp.indexOf('a=rtcp-fb') === -1) {
+      var rtcpFbLine = 'a=rtcp-fb:* ccm fir\r\na=rtcp-fb:* nack ';
+
+      // insert the fake crypto line for every M line
+      offer.sdp = offer.sdp.replace(/^m=video(.*)$/gmi, 'm=video$1\r\n'+rtcpFbLine);
+    }
+
+    peerConnection.setRemoteDescription(
+      offer,
+
+      // Success
+      createAnswer,
+
+      // Failure
+      generateErrorCallback('Error while setting RemoteDescription', 'SetRemoteDescription')
     );
-};
 
-/**
- * Negotiates a WebRTC PeerConnection.
- *
- * Responsible for:
- * * offer-answer exchange
- * * iceCandidates
- * * notification of remote streams being added/removed
- *
- */
-OT.PeerConnection = function(config) {
+  };
+
+  // Attempt to completely process a subscribe message. This will:
+  // * create an Offer
+  // * set the new offer as the location description
+  //
+  // If there are no issues, the +success+ callback will be executed on completion.
+  // Errors during any step will result in the +failure+ callback being executed.
+  //
+  var suscribeProcessor = function(peerConnection, success, failure) {
+    var constraints,
+        generateErrorCallback,
+        setLocalDescription;
+
+    constraints = {
+      mandatory: {},
+      optional: []
+    },
+
+    generateErrorCallback = function(message, prefix) {
+      return function(errorReason) {
+        OT.error(message);
+        OT.error(errorReason);
+
+        if (failure) failure(message, errorReason, prefix);
+      };
+    };
+
+    setLocalDescription = function(offer) {
+      offer.sdp = removeComfortNoise(offer.sdp);
+
+      peerConnection.setLocalDescription(
+        offer,
+
+        // Success
+        function() {
+          success(offer);
+        },
+
+        // Failure
+        generateErrorCallback('Error while setting LocalDescription', 'SetLocalDescription')
+      );
+    };
+
+    // For interop with FireFox. Disable Data Channel in createOffer.
+    if (navigator.mozGetUserMedia) {
+      constraints.mandatory.MozDontOfferDataChannel = true;
+    }
+
+    peerConnection.createOffer(
+      // Success
+      setLocalDescription,
+
+      // Failure
+      generateErrorCallback('Error while creating Offer', 'CreateOffer'),
+
+      constraints
+    );
+  };
+
+  /**
+   * Negotiates a WebRTC PeerConnection.
+   *
+   * Responsible for:
+   * * offer-answer exchange
+   * * iceCandidates
+   * * notification of remote streams being added/removed
+   *
+   */
+  OT.PeerConnection = function(config) {
     var _peerConnection,
         _iceProcessor = new IceCandidateProcessor(),
         _offer,
         _answer,
         _state = 'new',
-        _iceCandidatesGathered = false,
         _messageDelegates = [],
         _gettingStats,
         _createTime = OT.$.now();
@@ -9979,147 +11569,133 @@ OT.PeerConnection = function(config) {
 
     // Private methods
     var delegateMessage = function(type, messagePayload) {
-            if (_messageDelegates.length) {
-                // We actually only ever send to the first delegate. This is because
-                // each delegate actually represents a Publisher/Subscriber that
-                // shares a single PeerConnection. If we sent to all delegates it
-                // would result in each message being processed multiple times by
-                // each PeerConnection.
-                _messageDelegates[0](type, messagePayload);
-            }
+          if (_messageDelegates.length) {
+            // We actually only ever send to the first delegate. This is because
+            // each delegate actually represents a Publisher/Subscriber that
+            // shares a single PeerConnection. If we sent to all delegates it
+            // would result in each message being processed multiple times by
+            // each PeerConnection.
+            _messageDelegates[0](type, messagePayload);
+          }
         }.bind(this),
 
-
         setupPeerConnection = function() {
-            if (!_peerConnection) {
-                try {
-                    OT.debug("Creating peer connection config \"" + JSON.stringify(config) + "\".");
+          if (!_peerConnection) {
+            try {
+              OT.debug('Creating peer connection config "' + JSON.stringify(config) + '".');
 
-
-                    _peerConnection = OT.$.createPeerConnection(config, {
-                        optional: [
-                            {DtlsSrtpKeyAgreement: true}
-                        ]
-                    });
-                } catch(e) {
-                    triggerError("NewPeerConnection: " + e.message);
-                    return null;
-                }
-
-                _iceProcessor.peerConnection = _peerConnection;
-
-                _peerConnection.onicecandidate = iceCandidateForwarder(delegateMessage);
-                _peerConnection.onaddstream = onRemoteStreamAdded.bind(this);
-                _peerConnection.onremovestream = onRemoteStreamRemoved.bind(this);
-
-                if (_peerConnection.onsignalingstatechange !== undefined) {
-                    _peerConnection.onsignalingstatechange = routeStateChanged.bind(this);
-                } else if (_peerConnection.onstatechange !== undefined) {
-                    _peerConnection.onstatechange = routeStateChanged.bind(this);
-                }
+              _peerConnection = OT.$.createPeerConnection(config, {
+                optional: [
+                  { DtlsSrtpKeyAgreement: true }
+                ]
+              });
+            } catch(e) {
+              triggerError('Failed to create PeerConnection, exception: ' +
+                  e.message, 'NewPeerConnection');
+              return null;
             }
 
-            return _peerConnection;
+            _peerConnection.onicecandidate = iceCandidateForwarder(delegateMessage);
+            _peerConnection.onaddstream = onRemoteStreamAdded.bind(this);
+            _peerConnection.onremovestream = onRemoteStreamRemoved.bind(this);
+
+            if (_peerConnection.onsignalingstatechange !== undefined) {
+              _peerConnection.onsignalingstatechange = routeStateChanged.bind(this);
+            } else if (_peerConnection.onstatechange !== undefined) {
+              _peerConnection.onstatechange = routeStateChanged.bind(this);
+            }
+            
+            if (_peerConnection.oniceconnectionstatechange !== undefined) {
+              var failedStateTimer;
+              _peerConnection.oniceconnectionstatechange = function (event) {
+                if (event.target.iceConnectionState === 'failed') {
+                  if (failedStateTimer) {
+                    clearTimeout(failedStateTimer);
+                  }
+                  // We wait 5 seconds and make sure that it's still in the failed state
+                  // before we trigger the error. This is because we sometimes see
+                  // 'failed' and then 'connected' afterwards.
+                  setTimeout(function () {
+                    if (event.target.iceConnectionState === 'failed') {
+                      triggerError('The stream was unable to connect due to a network error.' +
+                       ' Make sure your connection isn\'t blocked by a firewall.', 'ICEWorkflow');
+                    }
+                  }, 5000);
+                }
+              };
+            }
+          }
+
+          return _peerConnection;
         }.bind(this),
 
         // Clean up the Peer Connection and trigger the close event.
         // This function can be called safely multiple times, it will
         // only trigger the close event once (per PeerConnection object)
         tearDownPeerConnection = function() {
-            // Our connection is dead, stop processing ICE candidates
-            if (_iceProcessor) _iceProcessor.peerConnection = null;
+          // Our connection is dead, stop processing ICE candidates
+          if (_iceProcessor) _iceProcessor.peerConnection = null;
 
-            if (_peerConnection !== null) {
-                _peerConnection = null;
-                this.trigger('close');
-            }
+          if (_peerConnection !== null) {
+            _peerConnection = null;
+            this.trigger('close');
+          }
         },
 
         routeStateChanged = function(event) {
-            var newState;
+          var newState;
 
-            if (typeof(event) === 'string') {
-                // The newest version of the API
-                newState = event;
+          if (typeof(event) === 'string') {
+            // The newest version of the API
+            newState = event;
+
+          } else if (event.target && event.target.signalingState) {
+            // The slightly older version
+            newState = event.target.signalingState;
+
+          } else {
+            // At least six months old version. Positively ancient, yeah?
+            newState = event.target.readyState;
+          }
+
+          OT.debug('PeerConnection.stateChange: ' + newState);
+          if (newState && newState.toLowerCase() !== _state) {
+            _state = newState.toLowerCase();
+            OT.debug('PeerConnection.stateChange: ' + _state);
+
+            switch(_state) {
+              case 'closed':
+                tearDownPeerConnection.call(this);
+                break;
             }
-            else if (event.target && event.target.signalingState) {
-                // The slightly older version
-                newState = event.target.signalingState;
-            }
-            else {
-                // At least six months old version. Positively ancient, yeah?
-                newState = event.target.readyState;
-            }
-
-
-            OT.debug('PeerConnection.stateChange: ' + newState);
-            if (newState && newState.toLowerCase() !== _state) {
-                _state = newState.toLowerCase();
-                OT.debug('PeerConnection.stateChange: ' + _state);
-
-                switch(_state) {
-                    case 'closed':
-                        tearDownPeerConnection.call(this);
-
-                        break;
-                    case 'failed':
-                      triggerError('ICEWorkflow: Ice state failed');
-                      break;
-                }
-            }
-        },
-
-        getLocalStreams = function() {
-            var streams;
-
-            if (_peerConnection.getLocalStreams) {
-                streams = _peerConnection.getLocalStreams();
-            }
-            else if (_peerConnection.localStreams) {
-                streams = _peerConnection.localStreams;
-            }
-            else {
-                throw new Error("Invalid Peer Connection object implements no method for retrieving local streams");
-            }
-
-            // Force streams to be an Array, rather than a "Sequence" object,
-            // which is browser dependent and does not behaviour like an Array
-            // in every case.
-            return Array.prototype.slice.call(streams);
+          }
         },
 
         getRemoteStreams = function() {
-            var streams;
+          var streams;
 
-            if (_peerConnection.getRemoteStreams) {
-                streams = _peerConnection.getRemoteStreams();
-            }
-            else if (_peerConnection.remoteStreams) {
-                streams = _peerConnection.remoteStreams;
-            }
-            else {
-                throw new Error("Invalid Peer Connection object implements no method for retrieving remote streams");
-            }
+          if (_peerConnection.getRemoteStreams) {
+            streams = _peerConnection.getRemoteStreams();
+          } else if (_peerConnection.remoteStreams) {
+            streams = _peerConnection.remoteStreams;
+          } else {
+            throw new Error('Invalid Peer Connection object implements no ' +
+              'method for retrieving remote streams');
+          }
 
-            // Force streams to be an Array, rather than a "Sequence" object,
-            // which is browser dependent and does not behaviour like an Array
-            // in every case.
-            return Array.prototype.slice.call(streams);
-        },
-
-        generateErrorCallback = function(forMethod, message) {
-            return function(errorReason) {
-                triggerError.call(this, "PeerConnection." + forMethod + ": " + message + ": " + errorReason);
-            }.bind(this);
+          // Force streams to be an Array, rather than a "Sequence" object,
+          // which is browser dependent and does not behaviour like an Array
+          // in every case.
+          return Array.prototype.slice.call(streams);
         },
 
         /// PeerConnection signaling
         onRemoteStreamAdded = function(event) {
-            this.trigger('streamAdded', event.stream);
+          this.trigger('streamAdded', event.stream);
         },
 
         onRemoteStreamRemoved = function(event) {
-            this.trigger('streamRemoved', event.stream);
+          this.trigger('streamRemoved', event.stream);
         },
 
         // ICE Negotiation messages
@@ -10128,141 +11704,145 @@ OT.PeerConnection = function(config) {
         // Relays a SDP payload (+sdp+), that is part of a message of type +messageType+
         // via the registered message delegators
         relaySDP = function(messageType, sdp) {
-            delegateMessage(messageType, sdp);
+          delegateMessage(messageType, sdp);
         },
 
         // Process an offer that
         processOffer = function(message) {
-            var offer = new NativeRTCSessionDescription(message.sdp),
+          var offer = new NativeRTCSessionDescription({type: 'offer', sdp: message.content.sdp}),
 
-                // Relays +answer+ Answer
-                relayAnswer = function(answer) {
-                    relaySDP(OT.Raptor.Actions.ANSWER, answer);
-                },
+              // Relays +answer+ Answer
+              relayAnswer = function(answer) {
+                _iceProcessor.peerConnection = _peerConnection;
+                _iceProcessor.processPending();
+                relaySDP(OT.Raptor.Actions.ANSWER, answer);
+              },
 
-                reportError = function(message, errorReason) {
-                    triggerError(message + ":" + errorReason + ":PeerConnection.offerProcessor");
-                };
+              reportError = function(message, errorReason, prefix) {
+                triggerError('PeerConnection.offerProcessor ' + message + ': ' +
+                  errorReason, prefix);
+              };
 
-            setupPeerConnection();
+          setupPeerConnection();
 
-            _remoteDescriptionType = offer.type;
-            _remoteDescription = offer;
-
-            offerProcessor(
-                _peerConnection,
-                offer,
-                relayAnswer,
-                reportError
-            );
+          offerProcessor(
+            _peerConnection,
+            offer,
+            relayAnswer,
+            reportError
+          );
         },
 
         processAnswer = function(message) {
-            if (!message.sdp) {
-                OT.error("PeerConnection.processMessage: Weird message, no SDP.");
-                return;
+          if (!message.content.sdp) {
+            OT.error('PeerConnection.processMessage: Weird answer message, no SDP.');
+            return;
+          }
+
+          _answer = new NativeRTCSessionDescription({type: 'answer', sdp: message.content.sdp});
+
+          _peerConnection.setRemoteDescription(_answer,
+              function () {
+                OT.debug('setRemoteDescription Success');
+              }, function (errorReason) {
+                triggerError('Error while setting RemoteDescription ' + errorReason,
+                  'SetRemoteDescription');
+              });
+
+          _iceProcessor.peerConnection = _peerConnection;
+          _iceProcessor.processPending();
+        },
+
+        processSubscribe = function() {
+          OT.debug('PeerConnection.processSubscribe: Sending offer to subscriber.');
+
+          setupPeerConnection();
+
+          suscribeProcessor(
+            _peerConnection,
+
+            // Success: Relay Offer
+            function(offer) {
+              _offer = offer;
+              relaySDP(OT.Raptor.Actions.OFFER, _offer);
+            },
+
+            // Failure
+            function(message, errorReason, prefix) {
+              triggerError('PeerConnection.suscribeProcessor ' + message + ': ' +
+                errorReason, prefix);
             }
-
-            _answer = new NativeRTCSessionDescription(message.sdp);
-
-            _remoteDescriptionType = _answer.type;
-            _remoteDescription = _answer;
-
-            _peerConnection.setRemoteDescription(_answer, function () {
-              OT.debug("setRemoteDescription succeeded");
-            }, function (errReason) {
-              triggerError("SetRemoteDescription:Error while setting RemoteDescription: " + errReason);
-            });
-            _iceProcessor.processPending();
+          );
         },
 
-        processSubscribe = function(message) {
-            OT.debug("PeerConnection.processSubscribe: Sending offer to subscriber.");
-
-            setupPeerConnection();
-
-            suscribeProcessor(
-                _peerConnection,
-
-                // Success: Relay Offer
-                function(offer) {
-                    _offer = offer;
-                    relaySDP(OT.Raptor.Actions.OFFER, _offer);
-                },
-
-                // Failure
-                function(message, errorReason) {
-                    triggerError(message + ":" + errorReason + ": PeerConnection.suscribeProcessor");
-                }
-            );
-        },
-
-        triggerError = function(errorReason) {
-            OT.error(errorReason);
-            this.trigger('error', errorReason);
+        triggerError = function(errorReason, prefix) {
+          OT.error(errorReason);
+          this.trigger('error', errorReason, prefix);
         }.bind(this);
 
     this.addLocalStream = function(webRTCStream) {
-        setupPeerConnection();
-        _peerConnection.addStream(webRTCStream);
+      setupPeerConnection();
+      _peerConnection.addStream(webRTCStream);
     };
 
     this.disconnect = function() {
-        _iceProcessor = null;
+      _iceProcessor = null;
 
-        if (_peerConnection) {
-            var currentState = (_peerConnection.signalingState || _peerConnection.readyState);
-            if (currentState && currentState.toLowerCase() !== 'closed') _peerConnection.close();
+      if (_peerConnection) {
+        var currentState = (_peerConnection.signalingState || _peerConnection.readyState);
+        if (currentState && currentState.toLowerCase() !== 'closed') _peerConnection.close();
 
-            // In theory, calling close on the PeerConnection should trigger a statechange
-            // event with 'close'. For some reason I'm not seeing this in FF, hence we're
-            // calling it manually below
-            tearDownPeerConnection.call(this);
-        }
+          // In theory, calling close on the PeerConnection should trigger a statechange
+          // event with 'close'. For some reason I'm not seeing this in FF, hence we're
+          // calling it manually below
+        tearDownPeerConnection.call(this);
+      }
 
-        this.off();
+      this.off();
     };
 
     this.processMessage = function(type, message) {
-        OT.debug("PeerConnection.processMessage: Received " + type + " from " + message.fromAddress);
-        OT.debug(message);
+      OT.debug('PeerConnection.processMessage: Received ' +
+        type + ' from ' + message.fromAddress);
+      OT.debug(message);
 
-        switch(type) {
-            case OT.Raptor.Actions.SUBSCRIBE:
-                processSubscribe.call(this, message);
-                break;
+      switch(type) {
+        case 'generateoffer':
+          processSubscribe.call(this, message);
+          break;
 
-            case OT.Raptor.Actions.OFFER:
-                processOffer.call(this, message);
-                break;
+        case 'offer':
+          processOffer.call(this, message);
+          break;
 
-            case OT.Raptor.Actions.ANSWER:
-            // case OT.Raptor.Actions.PRANSWER:
-                processAnswer.call(this, message);
-                break;
+        case 'answer':
+        case 'pranswer':
+          processAnswer.call(this, message);
+          break;
 
-            case OT.Raptor.Actions.CANDIDATE:
-                _iceProcessor.process(message);
-                break;
+        case 'candidate':
+          _iceProcessor.process(message);
+          break;
 
-            default:
-                OT.debug("PeerConnection.processMessage: Received an unexpected message of type " + type + " from " + message.fromAddress + ": " + JSON.stringify(message));
-        }
+        default:
+          OT.debug('PeerConnection.processMessage: Received an unexpected message of type ' +
+            type + ' from ' + message.fromAddress + ': ' + JSON.stringify(message));
+      }
 
-        return this;
+      return this;
     };
 
     this.registerMessageDelegate = function(delegateFn) {
-        return _messageDelegates.push(delegateFn);
+      return _messageDelegates.push(delegateFn);
     };
 
     this.unregisterMessageDelegate = function(delegateFn) {
-        var index = _messageDelegates.indexOf(delegateFn);
+      var index = _messageDelegates.indexOf(delegateFn);
 
-        if ( index !== -1 ) {
-            _messageDelegates.splice(index, 1);
-        }
-        return _messageDelegates.length;
+      if ( index !== -1 ) {
+        _messageDelegates.splice(index, 1);
+      }
+      return _messageDelegates.length;
     };
 
     /**
@@ -10278,403 +11858,472 @@ OT.PeerConnection = function(config) {
      * if there is presently no stats.
      */
     this.getStats = function(prevStats, callback) {
-        // need to make sure that this isn't called again when in the middle of processing
-        if (_gettingStats == true) {
-            OT.warn("PeerConnection.getStats: Already getting the stats!");
-            return;
+      var parsedStats = {},
+          now,
+          timeDifference,
+          parseAvgVideoBitrate,
+          parseAvgAudioBitrate,
+          parseFrameRate,
+          parseStatsReports,
+          parseStats,
+          needsNewGetStats;
+
+      // need to make sure that this isn't called again when in the middle of processing
+      if (_gettingStats === true) {
+        OT.warn('PeerConnection.getStats: Already getting the stats!');
+        return;
+      }
+
+      // locking this function
+      _gettingStats = true;
+
+      // get the previous timestamp (seconds)
+      now = OT.$.now();
+      timeDifference = (now - prevStats.timeStamp) / 1000; // how many seconds has passed
+
+      // now update the date
+      prevStats.timeStamp = now;
+
+      /* this parses a result if there it contains the video bitrate */
+      parseAvgVideoBitrate = function(result) {
+        var lastBytesSent = prevStats.videoBytesTransferred || 0;
+
+        if (result.bytesSent || result.bytesReceived) {
+          prevStats.videoBytesTransferred = result.bytesSent || result.bytesReceived;
+          return Math.round((prevStats.videoBytesTransferred - lastBytesSent) * 8 / timeDifference);
+
+        } else if (result.stat('googFrameHeightSent')) {
+          prevStats.videoBytesTransferred = result.stat('bytesSent');
+          return Math.round((prevStats.videoBytesTransferred - lastBytesSent) * 8 / timeDifference);
+
+        } else if (result.stat('googFrameHeightReceived')) {
+          prevStats.videoBytesTransferred = result.stat('bytesReceived');
+          return Math.round((prevStats.videoBytesTransferred - lastBytesSent) * 8 / timeDifference);
+
+        } else {
+          return NaN;
         }
 
-        // locking this function
-        _gettingStats = true;
-
-        // get the previous timestamp (seconds)
-        var now = OT.$.now();
-        var time_difference = (now - prevStats["timeStamp"]) / 1000; // how many seconds has passed
-
-        // now update the date
-        prevStats["timeStamp"] = now;
-
-        /* this parses a result if there it contains the video bitrate */
-        var parseAvgVideoBitrate = function(result) {
-            var last_bytesSent = prevStats["videoBytesTransferred"] || 0;
-
-            if (result.stat("googFrameHeightSent")) {
-                prevStats["videoBytesTransferred"] = result.stat("bytesSent");
-                return Math.round((prevStats["videoBytesTransferred"] - last_bytesSent) * 8 / time_difference);
-            } else if (result.stat("googFrameHeightReceived")) {
-                prevStats["videoBytesTransferred"] = result.stat("bytesReceived");
-                return Math.round((prevStats["videoBytesTransferred"] - last_bytesSent) * 8 / time_difference);
-            } else {
-                return NaN;
-            }
-        };
+      };
 
         /* this parses a result if there it contains the audio bitrate */
-        var parseAvgAudioBitrate = function(result) {
-            var last_bytesSent = prevStats["audioBytesTransferred"] || 0;
+      parseAvgAudioBitrate = function(result) {
+        var lastBytesSent = prevStats.audioBytesTransferred || 0;
 
-            if (result.stat("audioInputLevel")) {
-                prevStats["audioBytesTransferred"] = result.stat("bytesSent");
-                return Math.round((prevStats["audioBytesTransferred"] - last_bytesSent) * 8 / time_difference);
-            } else if (result.stat("audioOutputLevel")) {
-                prevStats["audioBytesTransferred"] = result.stat("bytesReceived");
-                return Math.round((prevStats["audioBytesTransferred"] - last_bytesSent) * 8 / time_difference);
-            } else {
-                return NaN;
-            }
-        };
+        if (result.bytesSent || result.bytesReceived) {
+          prevStats.audioBytesTransferred = result.bytesSent || result.bytesReceived;
+          return Math.round((prevStats.audioBytesTransferred - lastBytesSent) * 8 / timeDifference);
 
-        var parsed_stats = {};
-        var parseStatsReports = function(stats) {
-            if (stats.result) {
-                var result_list = stats.result();
-                for (var result_index = 0; result_index < result_list.length; result_index++) {
-                    var report = {};
-                    var result = result_list[result_index];
-                    if (result.stat) {
+        } else if (result.stat('audioInputLevel')) {
+          prevStats.audioBytesTransferred = result.stat('bytesSent');
+          return Math.round((prevStats.audioBytesTransferred - lastBytesSent) * 8 / timeDifference);
 
-                        if(result.stat("googActiveConnection") === 'true') {
-                            parsed_stats.localCandidateType = result.stat('googLocalCandidateType');
-                            parsed_stats.remoteCandidateType = result.stat('googRemoteCandidateType');
-                            parsed_stats.transportType = result.stat('googTransportType');
-                        }
+        } else if (result.stat('audioOutputLevel')) {
+          prevStats.audioBytesTransferred = result.stat('bytesReceived');
+          return Math.round((prevStats.audioBytesTransferred - lastBytesSent) * 8 / timeDifference);
 
-                        var avgVideoBitrate = parseAvgVideoBitrate(result);
-                        if (!isNaN(avgVideoBitrate)) {
-                            parsed_stats["avgVideoBitrate"] = avgVideoBitrate;
-                        }
-
-                        var avgAudioBitrate = parseAvgAudioBitrate(result);
-                        if (!isNaN(avgAudioBitrate)) {
-                            parsed_stats["avgAudioBitrate"] = avgAudioBitrate;
-                        }
-                    }
-                }
-            }
-
-            _gettingStats = false;
-            callback(parsed_stats);
-        }
-        parsed_stats["duration"] = Math.round(now - _createTime);
-
-        var parseStats = function(stats) {
-            for (var key in stats) {
-                if (stats.hasOwnProperty(key) &&
-                    (stats[key].type === 'outboundrtp' || stats[key].type === 'inboundrtp')) {
-                    var res = stats[key];
-                    // Find the bandwidth info for video
-                    if (res.id.indexOf('video') !== -1) {
-                        var avgVideoBitrate = parseAvgVideoBitrate(res);
-                        if(!isNaN(avgVideoBitrate)) {
-                            parsed_stats.avgVideoBitrate = avgVideoBitrate;
-                        }
-
-                    } else if (res.id.indexOf('audio') !== -1) {
-                        var avgAudioBitrate = parseAvgAudioBitrate(res);
-                        if(!isNaN(avgAudioBitrate)) {
-                            parsed_stats.avgAudioBitrate = avgAudioBitrate;
-                        }
-                    }
-                }
-            }
-
-            _gettingStats = false;
-            callback(parsed_stats);
-        }
-
-
-        var needsNewGetStats = function() {
-            var firefoxVersion = window.navigator.userAgent.toLowerCase()
-            .match(/Firefox\/([0-9\.]+)/i);
-            var needs = (firefoxVersion !== null && parseFloat(firefoxVersion[1], 10) >= 27.0);
-            needsNewGetStats = function() { return needs; };
-            return needs;
-        };
-
-        if (_peerConnection && _peerConnection.getStats) {
-            if(needsNewGetStats()) {
-                _peerConnection.getStats(null, parseStats, function(err) {
-                    OT.warn('Error collecting stats', err);
-                    _gettingStats = false;
-                });
-            } else {
-                _peerConnection.getStats(parseStatsReports);
-            }
         } else {
-            // there was no peer connection yet or getStats isn't implemented in this enviroment
-            _gettingStats = false;
-            callback(parsed_stats);
+          return NaN;
         }
+
+      };
+        
+      parseFrameRate = function(result) {
+        if (result.stat('googFrameRateSent')) {
+          return result.stat('googFrameRateSent');
+        } else if (result.stat('googFrameRateReceived')) {
+          return result.stat('googFrameRateReceived');
+        }
+        return null;
+      };
+
+      parseStatsReports = function(stats) {
+        if (stats.result) {
+          var resultList = stats.result();
+          for (var resultIndex = 0; resultIndex < resultList.length; resultIndex++) {
+            var result = resultList[resultIndex];
+            if (result.stat) {
+
+              if(result.stat('googActiveConnection') === 'true') {
+                parsedStats.localCandidateType = result.stat('googLocalCandidateType');
+                parsedStats.remoteCandidateType = result.stat('googRemoteCandidateType');
+                parsedStats.transportType = result.stat('googTransportType');
+              }
+
+              var avgVideoBitrate = parseAvgVideoBitrate(result);
+              if (!isNaN(avgVideoBitrate)) {
+                parsedStats.avgVideoBitrate = avgVideoBitrate;
+              }
+
+              var avgAudioBitrate = parseAvgAudioBitrate(result);
+              if (!isNaN(avgAudioBitrate)) {
+                parsedStats.avgAudioBitrate = avgAudioBitrate;
+              }
+              var frameRate = parseFrameRate(result);
+              if (frameRate != null) {
+                parsedStats.frameRate = frameRate;
+              }
+            }
+          }
+        }
+
+        _gettingStats = false;
+        callback(parsedStats);
+      };
+      parsedStats.duration = Math.round(now - _createTime);
+
+      parseStats = function(stats) {
+        for (var key in stats) {
+          if (stats.hasOwnProperty(key) &&
+            (stats[key].type === 'outboundrtp' || stats[key].type === 'inboundrtp')) {
+            var res = stats[key];
+            // Find the bandwidth info for video
+            if (res.id.indexOf('video') !== -1) {
+
+              var avgVideoBitrate = parseAvgVideoBitrate(res);
+              if(!isNaN(avgVideoBitrate)) {
+                parsedStats.avgVideoBitrate = avgVideoBitrate;
+              }
+
+            } else if (res.id.indexOf('audio') !== -1) {
+
+              var avgAudioBitrate = parseAvgAudioBitrate(res);
+              if(!isNaN(avgAudioBitrate)) {
+                parsedStats.avgAudioBitrate = avgAudioBitrate;
+              }
+
+            }
+          }
+        }
+
+        _gettingStats = false;
+        callback(parsedStats);
+      };
+
+      needsNewGetStats = function() {
+        var firefoxVersion = window.navigator.userAgent.toLowerCase()
+        .match(/Firefox\/([0-9\.]+)/i);
+        var needs = (firefoxVersion !== null && parseFloat(firefoxVersion[1], 10) >= 27.0);
+        needsNewGetStats = function() { return needs; };
+        return needs;
+      };
+
+      if (_peerConnection && _peerConnection.getStats) {
+        if(needsNewGetStats()) {
+          _peerConnection.getStats(null, parseStats, function(err) {
+            OT.warn('Error collecting stats', err);
+            _gettingStats = false;
+          });
+        } else {
+          _peerConnection.getStats(parseStatsReports);
+        }
+      } else {
+        // there was no peer connection yet or getStats isn't implemented in this enviroment
+        _gettingStats = false;
+        callback(parsedStats);
+      }
     };
 
     Object.defineProperty(this, 'remoteStreams', {
-        get: function() {
-            return _peerConnection ? getRemoteStreams() : [];
-        }
+      get: function() {
+        return _peerConnection ? getRemoteStreams() : [];
+      }
     });
-};
+  };
 
 })(window);
-(function(window) {
+!(function() {
 
-var _peerConnections = {};
+  var _peerConnections = {};
 
-OT.PeerConnections = {
-    add: function(remoteConnection, stream, config) {
-        var key = remoteConnection.id + "_" + stream.id,
-            ref = _peerConnections[key];
+  OT.PeerConnections = {
+    add: function(remoteConnection, streamId, config) {
+      var key = remoteConnection.id + '_' + streamId,
+          ref = _peerConnections[key];
 
-        if (!ref) {
-            ref = _peerConnections[key] = {
-                count: 0,
-                pc: new OT.PeerConnection(config)
-            };
-        }
+      if (!ref) {
+        ref = _peerConnections[key] = {
+          count: 0,
+          pc: new OT.PeerConnection(config)
+        };
+      }
 
-        // increase the PCs ref count by 1
-        ref.count += 1;
+      // increase the PCs ref count by 1
+      ref.count += 1;
 
-        return ref.pc;
+      return ref.pc;
     },
 
-    remove: function(remoteConnection, stream) {
-        var key = remoteConnection.id + "_" + stream.id,
-            ref = _peerConnections[key];
+    remove: function(remoteConnection, streamId) {
+      var key = remoteConnection.id + '_' + streamId,
+          ref = _peerConnections[key];
 
-        if (ref) {
-            ref.count -= 1;
+      if (ref) {
+        ref.count -= 1;
 
-            if (ref.count === 0) {
-                ref.pc.disconnect();
-                delete _peerConnections[key];
-            }
+        if (ref.count === 0) {
+          ref.pc.disconnect();
+          delete _peerConnections[key];
         }
+      }
     }
-};
-
+  };
 
 })(window);
-(function(window) {
+!(function() {
 
-/**
- * Abstracts PeerConnection related stuff away from OT.Publisher.
- *
- * Responsible for:
- * * setting up the underlying PeerConnection (delegates to OT.PeerConnections)
- * * triggering a connected event when the Peer connection is opened
- * * triggering a disconnected event when the Peer connection is closed
- * * providing a destroy method
- * * providing a processMessage method
- *
- * Once the PeerConnection is connected and the video element playing it triggers the connected event
- *
- * Triggers the following events
- * * connected
- * * disconnected
- */
-OT.PublisherPeerConnection = function(remoteConnection, session, stream, webRTCStream) {
+  /**
+   * Abstracts PeerConnection related stuff away from OT.Publisher.
+   *
+   * Responsible for:
+   * * setting up the underlying PeerConnection (delegates to OT.PeerConnections)
+   * * triggering a connected event when the Peer connection is opened
+   * * triggering a disconnected event when the Peer connection is closed
+   * * providing a destroy method
+   * * providing a processMessage method
+   *
+   * Once the PeerConnection is connected and the video element playing it triggers 
+   * the connected event
+   *
+   * Triggers the following events
+   * * connected
+   * * disconnected
+   */
+  OT.PublisherPeerConnection = function(remoteConnection, session, streamId, webRTCStream) {
     var _peerConnection,
-        _hasRelayCandidates = false;
+        _hasRelayCandidates = false,
+        _subscriberId = session._.subscriberMap[remoteConnection.id + '_' + streamId],
+        _onPeerClosed,
+        _onPeerError,
+        _relayMessageToPeer;
 
     // Private
-    var _onPeerClosed = function() {
-            this.destroy();
-            this.trigger('disconnected', this);
-        },
+    _onPeerClosed = function() {
+      this.destroy();
+      this.trigger('disconnected', this);
+    };
 
-        // Note: All Peer errors are fatal right now.
-        _onPeerError = function(errorReason) {
-            this.trigger('error', null, errorReason, this);
-            this.destroy();
-        },
+    // Note: All Peer errors are fatal right now.
+    _onPeerError = function(errorReason, prefix) {
+      this.trigger('error', null, errorReason, this, prefix);
+      this.destroy();
+    };
 
-        _relayMessageToPeer = function(type, payload) {
-            if (!_hasRelayCandidates){
-                var extractCandidates = type === OT.Raptor.Actions.CANDIDATE ||
-                                        type === OT.Raptor.Actions.OFFER ||
-                                        type === OT.Raptor.Actions.ANSWER ||
-                                        type === OT.Raptor.Actions.PRANSWER ;
+    _relayMessageToPeer = function(type, payload) {
+      if (!_hasRelayCandidates){
+        var extractCandidates = type === OT.Raptor.Actions.CANDIDATE ||
+                                type === OT.Raptor.Actions.OFFER ||
+                                type === OT.Raptor.Actions.ANSWER ||
+                                type === OT.Raptor.Actions.PRANSWER ;
 
-                if (extractCandidates) {
-                    var message = (type === OT.Raptor.Actions.CANDIDATE) ? payload.candidate : payload.sdp;
-                    _hasRelayCandidates = message.indexOf('typ relay') !== -1;
-                }
-            }
+        if (extractCandidates) {
+          var message = (type === OT.Raptor.Actions.CANDIDATE) ? payload.candidate : payload.sdp;
+          _hasRelayCandidates = message.indexOf('typ relay') !== -1;
+        }
+      }
 
-            switch(type) {
-            case OT.Raptor.Actions.ANSWER:
-            case OT.Raptor.Actions.PRANSWER:
-                session._.jsepAnswer(remoteConnection.id, stream, payload);
-                break;
+      switch(type) {
+        case OT.Raptor.Actions.ANSWER:
+        case OT.Raptor.Actions.PRANSWER:
+          if (session.sessionInfo.p2pEnabled) {
+            session._.jsepAnswerP2p(streamId, _subscriberId, payload.sdp);
+          } else {
+            session._.jsepAnswer(streamId, payload.sdp);
+          }
 
-            case OT.Raptor.Actions.OFFER:
-                this.trigger('connected');
-                session._.jsepOffer(remoteConnection.id, stream, payload);
-                break;
+          break;
 
-            case OT.Raptor.Actions.CANDIDATE:
-                session._.jsepCandidate(remoteConnection.id, stream, payload);
-            }
-        }.bind(this);
+        case OT.Raptor.Actions.OFFER:
+          this.trigger('connected');
 
+          if (session.sessionInfo.p2pEnabled) {
+            session._.jsepOfferP2p(streamId, _subscriberId, payload.sdp);
+
+          } else {
+            session._.jsepOffer(streamId, payload.sdp);
+          }
+
+          break;
+
+        case OT.Raptor.Actions.CANDIDATE:
+          if (session.sessionInfo.p2pEnabled) {
+            session._.jsepCandidateP2p(streamId, _subscriberId, payload);
+
+          } else {
+            session._.jsepCandidate(streamId, payload);
+          }
+      }
+    }.bind(this);
 
     OT.$.eventing(this);
 
     // Public
     this.destroy = function() {
-        // Clean up our PeerConnection
-        if (_peerConnection) {
-            OT.PeerConnections.remove(remoteConnection, stream);
-        }
+      // Clean up our PeerConnection
+      if (_peerConnection) {
+        OT.PeerConnections.remove(remoteConnection, streamId);
+      }
 
-        _peerConnection.off();
-        _peerConnection = null;
+      _peerConnection.off();
+      _peerConnection = null;
     };
 
     this.processMessage = function(type, message) {
-        _peerConnection.processMessage(type, message);
+      _peerConnection.processMessage(type, message);
     };
 
     this.getStats = function(prevStats, callback) {
-        _peerConnection.getStats(prevStats, callback);
-    }
+      _peerConnection.getStats(prevStats, callback);
+    };
 
     // Init
     this.init = function() {
-        var iceServers = session.sessionInfo.iceServers.map(function(is) {
-            var iceServer = OT.$.clone(is);
+      var iceServers = session.sessionInfo.iceServers.map(function(is) {
+        var iceServer = OT.$.clone(is);
 
-            if (iceServer.url.trim().substr(0, 5) === 'turn:') {
-                // Make the username sessionId:connectionId:streamId for tracking purposes.
-                iceServer.username = session.id + '.' + session.connection.id + '.' + stream.id;
-            }
+        if (iceServer.url.trim().substr(0, 5) === 'turn:') {
+          // Make the username sessionId:connectionId:streamId for tracking purposes.
+          iceServer.username = session.id + '.' + session.connection.id + '.' + streamId;
+        }
 
-            return iceServer;
-        });
+        return iceServer;
+      });
 
-        _peerConnection = OT.PeerConnections.add(remoteConnection, stream, {
-            iceServers: iceServers
-        });
+      _peerConnection = OT.PeerConnections.add(remoteConnection, streamId, {
+        iceServers: iceServers
+      });
 
-        _peerConnection.on({
-            close: _onPeerClosed,
-            error: _onPeerError
-        }, this);
+      _peerConnection.on({
+        close: _onPeerClosed,
+        error: _onPeerError
+      }, this);
 
-        _peerConnection.registerMessageDelegate(_relayMessageToPeer);
-        _peerConnection.addLocalStream(webRTCStream);
+      _peerConnection.registerMessageDelegate(_relayMessageToPeer);
+      _peerConnection.addLocalStream(webRTCStream);
 
-        Object.defineProperty(this, 'remoteConnection', {value: remoteConnection});
+      Object.defineProperty(this, 'remoteConnection', {
+        value: remoteConnection
+      });
 
-        Object.defineProperty(this, 'hasRelayCandidates', {
-            get: function() { return _hasRelayCandidates; }
-        });
-    }
-};
+      Object.defineProperty(this, 'hasRelayCandidates', {
+        get: function() { return _hasRelayCandidates; }
+      });
+    };
+  };
 
 })(window);
-(function(window) {
+!(function() {
 
-/**
- * Abstracts PeerConnection related stuff away from OT.Subscriber.
- *
- * Responsible for:
- * * setting up the underlying PeerConnection (delegates to OT.PeerConnections)
- * * triggering a connected event when the Peer connection is opened
- * * triggering a disconnected event when the Peer connection is closed
- * * creating a video element when a stream is added
- * * responding to stream removed intelligently
- * * providing a destroy method
- * * providing a processMessage method
- *
- * Once the PeerConnection is connected and the video element playing it triggers the connected event
- *
- * Triggers the following events
- * * connected
- * * disconnected
- * * remoteStreamAdded
- * * remoteStreamRemoved
- * * error
- *
- */
+  /**
+   * Abstracts PeerConnection related stuff away from OT.Subscriber.
+   *
+   * Responsible for:
+   * * setting up the underlying PeerConnection (delegates to OT.PeerConnections)
+   * * triggering a connected event when the Peer connection is opened
+   * * triggering a disconnected event when the Peer connection is closed
+   * * creating a video element when a stream is added
+   * * responding to stream removed intelligently
+   * * providing a destroy method
+   * * providing a processMessage method
+   *
+   * Once the PeerConnection is connected and the video element playing it
+   * triggers the connected event
+   *
+   * Triggers the following events
+   * * connected
+   * * disconnected
+   * * remoteStreamAdded
+   * * remoteStreamRemoved
+   * * error
+   *
+   */
 
-OT.SubscriberPeerConnection = function(remoteConnection, session, stream, properties) {
+  OT.SubscriberPeerConnection = function(remoteConnection, session, stream,
+    subscriber, properties) {
     var _peerConnection,
-        _hasRelayCandidates = false;
+        _hasRelayCandidates = false,
+        _onPeerClosed,
+        _onRemoteStreamAdded,
+        _onRemoteStreamRemoved,
+        _onPeerError,
+        _relayMessageToPeer,
+        _setEnabledOnStreamTracksCurry;
 
     // Private
-    var _onPeerClosed = function() {
-            this.destroy();
-            this.trigger('disconnected', this);
-        },
+    _onPeerClosed = function() {
+      this.destroy();
+      this.trigger('disconnected', this);
+    };
 
-        _onRemoteStreamAdded = function(remoteRTCStream) {
-            this.trigger('remoteStreamAdded', remoteRTCStream, this);
-        },
+    _onRemoteStreamAdded = function(remoteRTCStream) {
+      this.trigger('remoteStreamAdded', remoteRTCStream, this);
+    };
 
-        _onRemoteStreamRemoved = function(remoteRTCStream) {
-            this.trigger('remoteStreamRemoved', remoteRTCStream, this);
-        },
+    _onRemoteStreamRemoved = function(remoteRTCStream) {
+      this.trigger('remoteStreamRemoved', remoteRTCStream, this);
+    };
 
-        // Note: All Peer errors are fatal right now.
-        _onPeerError = function(errorReason) {
-            this.trigger('error', null, errorReason, this);
-        },
+    // Note: All Peer errors are fatal right now.
+    _onPeerError = function(errorReason, prefix) {
+      this.trigger('error', null, errorReason, this, prefix);
+    };
 
-        _relayMessageToPeer = function(type, payload) {
-            if (!_hasRelayCandidates){
-                var extractCandidates = type === OT.Raptor.Actions.CANDIDATE ||
-                                        type === OT.Raptor.Actions.OFFER ||
-                                        type === OT.Raptor.Actions.ANSWER ||
-                                        type === OT.Raptor.Actions.PRANSWER ;
+    _relayMessageToPeer = function(type, payload) {
+      if (!_hasRelayCandidates){
+        var extractCandidates = type === OT.Raptor.Actions.CANDIDATE ||
+                                type === OT.Raptor.Actions.OFFER ||
+                                type === OT.Raptor.Actions.ANSWER ||
+                                type === OT.Raptor.Actions.PRANSWER ;
 
-                if (extractCandidates) {
-                    var message = (type === OT.Raptor.Actions.CANDIDATE) ? payload.candidate : payload.sdp;
-                    _hasRelayCandidates = message.indexOf('typ relay') !== -1;
-                }
-            }
+        if (extractCandidates) {
+          var message = (type === OT.Raptor.Actions.CANDIDATE) ? payload.candidate : payload.sdp;
+          _hasRelayCandidates = message.indexOf('typ relay') !== -1;
+        }
+      }
 
-            switch(type) {
-            case OT.Raptor.Actions.ANSWER:
-            case OT.Raptor.Actions.PRANSWER:
-                this.trigger('connected');
-                session._.jsepAnswer(remoteConnection.id, stream, payload);
-                break;
+      switch(type) {
+        case OT.Raptor.Actions.ANSWER:
+        case OT.Raptor.Actions.PRANSWER:
+          this.trigger('connected');
 
-            case OT.Raptor.Actions.OFFER:
-                session._.jsepOffer(remoteConnection.id, stream, payload);
-                break;
+          session._.jsepAnswerP2p(stream.id, subscriber.widgetId, payload.sdp);
+          break;
 
-            case OT.Raptor.Actions.CANDIDATE:
-                session._.jsepCandidate(remoteConnection.id, stream, payload);
-            }
-        }.bind(this),
+        case OT.Raptor.Actions.OFFER:
+          session._.jsepOfferP2p(stream.id, subscriber.widgetId, payload.sdp);
+          break;
 
-        // Helper method used by subscribeToAudio/subscribeToVideo
-        _setEnabledOnStreamTracksCurry = function(isVideo) {
-            var method = 'get' + (isVideo ? 'Video' : 'Audio') + 'Tracks';
+        case OT.Raptor.Actions.CANDIDATE:
+          session._.jsepCandidateP2p(stream.id, subscriber.widgetId, payload);
+          break;
+      }
+    }.bind(this);
 
-            return function(enabled) {
-                var remoteStreams = _peerConnection.remoteStreams,
-                    tracks,
-                    stream;
+    // Helper method used by subscribeToAudio/subscribeToVideo
+    _setEnabledOnStreamTracksCurry = function(isVideo) {
+      var method = 'get' + (isVideo ? 'Video' : 'Audio') + 'Tracks';
 
-                if (remoteStreams.length === 0 || !remoteStreams[0][method]) {
-                    // either there is no remote stream or we are in a browser that doesn't
-                    // expose the media tracks (Firefox)
-                    return;
-                }
+      return function(enabled) {
+        var remoteStreams = _peerConnection.remoteStreams,
+            tracks,
+            stream;
 
-                for (var i=0, num=remoteStreams.length; i<num; ++i) {
-                    stream = remoteStreams[i];
-                    tracks = stream[method]();
+        if (remoteStreams.length === 0 || !remoteStreams[0][method]) {
+          // either there is no remote stream or we are in a browser that doesn't
+          // expose the media tracks (Firefox)
+          return;
+        }
 
-                    for (var k=0, numTracks=tracks.length; k < numTracks; ++k){
-                        tracks[k].enabled=enabled;
-                    }
-                }
-            };
-        };
+        for (var i=0, num=remoteStreams.length; i<num; ++i) {
+          stream = remoteStreams[i];
+          tracks = stream[method]();
+
+          for (var k=0, numTracks=tracks.length; k < numTracks; ++k){
+            tracks[k].enabled=enabled;
+          }
+        }
+      };
+    };
 
 
     OT.$.eventing(this);
@@ -10683,15 +12332,15 @@ OT.SubscriberPeerConnection = function(remoteConnection, session, stream, proper
     this.destroy = function() {
       if (_peerConnection) {
         var numDelegates = _peerConnection.unregisterMessageDelegate(_relayMessageToPeer);
-
+        
         // Only clean up the PeerConnection if there isn't another Subscriber using it
         if (numDelegates === 0) {
           // Unsubscribe us from the stream, if it hasn't already been destroyed
           if (session && session.connected && stream && !stream.destroyed) {
               // Notify the server components
-              session._.jsepUnsubscribe(stream);
+            session._.subscriberDestroy(stream, subscriber);
           }
-
+          
           // Ref: OPENTOK-2458 disable all audio tracks before removing it.
           this.subscribeToAudio(false);
         }
@@ -10702,108 +12351,135 @@ OT.SubscriberPeerConnection = function(remoteConnection, session, stream, proper
     };
 
     this.processMessage = function(type, message) {
-        _peerConnection.processMessage(type, message);
+      _peerConnection.processMessage(type, message);
     };
 
     this.getStats = function(prevStats, callback) {
-        _peerConnection.getStats(prevStats, callback);
+      _peerConnection.getStats(prevStats, callback);
     };
 
     this.subscribeToAudio = _setEnabledOnStreamTracksCurry(false);
     this.subscribeToVideo = _setEnabledOnStreamTracksCurry(true);
 
     Object.defineProperty(this, 'hasRelayCandidates', {
-        get: function() { return _hasRelayCandidates; }
+      get: function() { return _hasRelayCandidates; }
     });
-
 
     // Init
     this.init = function() {
-        var iceServers = session.sessionInfo.iceServers.map(function(is) {
-            var iceServer = OT.$.clone(is);
+      var iceServers = session.sessionInfo.iceServers.map(function(is) {
+        var iceServer = OT.$.clone(is);
 
-            if (iceServer.url.trim().substr(0, 5) === 'turn:') {
-                // Make the username sessionId:connectionId:streamId for tracking purposes.
-                iceServer.username = session.id + '.' + session.connection.id + '.' + stream.id;
-            }
+        if (iceServer.url.trim().substr(0, 5) === 'turn:') {
+          // Make the username sessionId:connectionId:streamId for tracking purposes.
+          iceServer.username = session.id + '.' + session.connection.id + '.' + stream.id;
+        }
 
-            return iceServer;
-        });
+        return iceServer;
+      });
 
-        _peerConnection = OT.PeerConnections.add(remoteConnection, stream.streamId, {
-            iceServers: iceServers
-        });
+      _peerConnection = OT.PeerConnections.add(remoteConnection, stream.streamId, {
+        iceServers: iceServers
+      });
 
-        _peerConnection.on({
-            close: _onPeerClosed,
-            streamAdded: _onRemoteStreamAdded,
-            streamRemoved: _onRemoteStreamRemoved,
-            error: _onPeerError
-        }, this);
+      _peerConnection.on({
+        close: _onPeerClosed,
+        streamAdded: _onRemoteStreamAdded,
+        streamRemoved: _onRemoteStreamRemoved,
+        error: _onPeerError
+      }, this);
 
-        var numDelegates = _peerConnection.registerMessageDelegate(_relayMessageToPeer);
+      var numDelegates = _peerConnection.registerMessageDelegate(_relayMessageToPeer);
 
         // If there are already remoteStreams, add them immediately
-        if (_peerConnection.remoteStreams.length > 0) {
-            _peerConnection.remoteStreams.forEach(_onRemoteStreamAdded, this);
+      if (_peerConnection.remoteStreams.length > 0) {
+        _peerConnection.remoteStreams.forEach(_onRemoteStreamAdded, this);
+      } else if (numDelegates === 1) {
+        // We only bother with the PeerConnection negotiation if we don't already
+        // have a remote stream.
+
+        var channelsToSubscribeTo;
+
+        if (properties.subscribeToVideo || properties.subscribeToAudio) {
+          var audio = stream.getChannelsOfType('audio'),
+              video = stream.getChannelsOfType('video');
+
+          channelsToSubscribeTo = audio.map(function(channel) {
+            return {
+              id: channel.id,
+              type: channel.type,
+              active: properties.subscribeToAudio
+            };
+          }).concat(video.map(function(channel) {
+            return {
+              id: channel.id,
+              type: channel.type,
+              active: properties.subscribeToVideo,
+              restrictFrameRate: properties.restrictFrameRate !== void 0 ?
+                properties.restrictFrameRate : false
+            };
+          }));
         }
-        else if (numDelegates === 1) {
-            // We only bother with the PeerConnection negotiation if we are the only delegate.
-            session._.jsepSubscribe(stream, properties.subscribeToVideo, properties.subscribeToAudio);
-        }
+
+        session._.subscriberCreate(stream, subscriber, channelsToSubscribeTo, function(err) {
+          if (err) {
+            this.trigger('error', null, err.message, this, 'Subscribe');
+          }
+        }.bind(this));
+      }
     };
-};
+  };
 
 })(window);
-(function(window) {
+!(function() {
 
 // Manages N Chrome elements
-OT.Chrome = function(properties) {
+  OT.Chrome = function(properties) {
     var _visible = false,
         _widgets = {},
 
         // Private helper function
         _set = function(name, widget) {
-            widget.parent = this;
-            widget.appendTo(properties.parent);
+          widget.parent = this;
+          widget.appendTo(properties.parent);
 
-            _widgets[name] = widget;
+          _widgets[name] = widget;
 
-            Object.defineProperty(this, name, {
-                get: function() { return _widgets[name]; }
-            });
+          Object.defineProperty(this, name, {
+            get: function() { return _widgets[name]; }
+          });
         };
 
     if (!properties.parent) {
-        // @todo raise an exception
-        return;
+      // @todo raise an exception
+      return;
     }
 
     OT.$.eventing(this);
 
     this.destroy = function() {
-        this.off();
-        this.hide();
+      this.off();
+      this.hide();
 
-        for (var name in _widgets) {
-            _widgets[name].destroy();
-        }
+      for (var name in _widgets) {
+        _widgets[name].destroy();
+      }
     };
 
     this.show = function() {
-        _visible = true;
+      _visible = true;
 
-        for (var name in _widgets) {
-            _widgets[name].show();
-        }
+      for (var name in _widgets) {
+        _widgets[name].show();
+      }
     };
 
     this.hide = function() {
-        _visible = false;
+      _visible = false;
 
-        for (var name in _widgets) {
-            _widgets[name].hide();
-        }
+      for (var name in _widgets) {
+        _widgets[name].hide();
+      }
     };
 
 
@@ -10822,31 +12498,31 @@ OT.Chrome = function(properties) {
     //  chrome.foo.setDisplayMode('on');
     //
     this.set = function(widgetName, widget) {
-        if (typeof(widgetName) === "string" && widget) {
-            _set.call(this, widgetName, widget);
-        }
-        else {
-          for (var name in widgetName) {
-            if (widgetName.hasOwnProperty(name)) {
-              _set.call(this, name, widgetName[name]);
-            }
+      if (typeof(widgetName) === 'string' && widget) {
+        _set.call(this, widgetName, widget);
+
+      } else {
+        for (var name in widgetName) {
+          if (widgetName.hasOwnProperty(name)) {
+            _set.call(this, name, widgetName[name]);
           }
         }
-
-        return this;
+      }
+      return this;
     };
-};
+
+  };
 
 })(window);
-(function(window) {
+!(function() {
 
-if (!OT.Chrome.Behaviour) OT.Chrome.Behaviour = {};
+  if (!OT.Chrome.Behaviour) OT.Chrome.Behaviour = {};
 
-// A mixin to encapsulate the basic widget behaviour. This needs a better name,
-// it's not actually a widget. It's actually "Behaviour that can be applied to
-// an object to make it support the basic Chrome widget workflow"...but that would
-// probably been too long a name.
-OT.Chrome.Behaviour.Widget = function(widget, options) {
+  // A mixin to encapsulate the basic widget behaviour. This needs a better name,
+  // it's not actually a widget. It's actually "Behaviour that can be applied to
+  // an object to make it support the basic Chrome widget workflow"...but that would
+  // probably been too long a name.
+  OT.Chrome.Behaviour.Widget = function(widget, options) {
     var _options = options || {},
         _mode,
         _previousMode;
@@ -10856,645 +12532,753 @@ OT.Chrome.Behaviour.Widget = function(widget, options) {
     //      'on', 'off', or 'auto'
     //
     widget.setDisplayMode = function(mode) {
-        var newMode = mode || 'auto';
-        if (_mode === newMode) return;
+      var newMode = mode || 'auto';
+      if (_mode === newMode) return;
 
-        OT.$.removeClass(this.domElement, 'OT_mode-' + _mode);
-        OT.$.addClass(this.domElement, 'OT_mode-' + newMode);
+      OT.$.removeClass(this.domElement, 'OT_mode-' + _mode);
+      OT.$.addClass(this.domElement, 'OT_mode-' + newMode);
 
-        _previousMode = _mode;
-        _mode = newMode;
+      _previousMode = _mode;
+      _mode = newMode;
     };
 
     widget.show = function() {
-        this.setDisplayMode(_previousMode);
-        if (_options.onShow) _options.onShow();
+      this.setDisplayMode(_previousMode);
+      if (_options.onShow) _options.onShow();
 
-        return this;
+      return this;
     };
 
     widget.hide = function() {
-        this.setDisplayMode('off');
-        if (_options.onHide) _options.onHide();
+      this.setDisplayMode('off');
+      if (_options.onHide) _options.onHide();
 
-        return this;
+      return this;
     };
 
     widget.destroy = function() {
-        if (_options.onDestroy) _options.onDestroy(this.domElement);
-        if (this.domElement) OT.$.removeElement(this.domElement);
+      if (_options.onDestroy) _options.onDestroy(this.domElement);
+      if (this.domElement) OT.$.removeElement(this.domElement);
 
-        return widget;
+      return widget;
     };
 
     widget.appendTo = function(parent) {
-        // create the element under parent
-        this.domElement = OT.$.createElement(_options.nodeName || 'div',
-                                            _options.htmlAttributes,
-                                            _options.htmlContent);
+      // create the element under parent
+      this.domElement = OT.$.createElement(_options.nodeName || 'div',
+                                          _options.htmlAttributes,
+                                          _options.htmlContent);
 
-        if (_options.onCreate) _options.onCreate(this.domElement);
+      if (_options.onCreate) _options.onCreate(this.domElement);
 
-        // if the mode isn't auto, then we can directly set it
-        if (_options.mode != "auto") {
-            widget.setDisplayMode(_options.mode);
-        } else {
-            // we set it to on at first, and then apply the desired mode
-            // this will let the proper widgets nicely fade away
-            widget.setDisplayMode('on');
-            setTimeout(function() {
-                widget.setDisplayMode(_options.mode);
-            }, 2000);
-        }
+      // if the mode isn't auto, then we can directly set it
+      if (_options.mode !== 'auto') {
+        widget.setDisplayMode(_options.mode);
+      } else {
+        // we set it to on at first, and then apply the desired mode
+        // this will let the proper widgets nicely fade away
+        widget.setDisplayMode('on');
+        setTimeout(function() {
+          widget.setDisplayMode(_options.mode);
+        }, 2000);
+      }
 
-        // add the widget to the parent
-        parent.appendChild(this.domElement);
+      // add the widget to the parent
+      parent.appendChild(this.domElement);
 
-        return widget;
+      return widget;
     };
-};
+  };
 
 })(window);
-(function(window) {
+!(function() {
 
-// NamePanel Chrome Widget
-//
-// mode (String)
-// Whether to display the name. Possible values are: "auto" (the name is displayed
-// when the stream is first displayed and when the user mouses over the display),
-// "off" (the name is not displayed), and "on" (the name is displayed).
-//
-// displays a name
-// can be shown/hidden
-// can be destroyed
-OT.Chrome.NamePanel = function(options) {
-    var _name = options.name;
+  // BackingBar Chrome Widget
+  //
+  // nameMode (String)
+  // Whether or not the name panel is being displayed
+  // Possible values are: "auto" (the name is displayed
+  // when the stream is first displayed and when the user mouses over the display),
+  // "off" (the name is not displayed), and "on" (the name is displayed).
+  //
+  // muteMode (String)
+  // Whether or not the mute button is being displayed
+  // Possible values are: "auto" (the mute button is displayed
+  // when the stream is first displayed and when the user mouses over the display),
+  // "off" (the mute button is not displayed), and "on" (the mute button is displayed).
+  //
+  // displays a backing bar
+  // can be shown/hidden
+  // can be destroyed
+  OT.Chrome.BackingBar = function(options) {
+    var _nameMode = options.nameMode,
+        _muteMode = options.muteMode,
+        _domElement;
+
+    // This behaviour must be implemented to make the widget behaviour work.
+    // @fixme This is a nasty code smell
+    Object.defineProperty(this, 'domElement', {
+      get: function() { return _domElement; },
+      set: function(domElement) {
+        _domElement = domElement;
+      }
+    });
+
+    function getDisplayMode() {
+      if(_nameMode === 'on' || _muteMode === 'on') {
+        return 'on';
+      } else if(_nameMode === 'mini' || _muteMode === 'mini') {
+        return 'mini';
+      } else if(_nameMode === 'mini-auto' || _muteMode === 'mini-auto') {
+        return 'mini-auto';
+      } else if(_nameMode === 'auto' || _muteMode === 'auto') {
+        return 'auto';
+      } else {
+        return 'off';
+      }
+    }
+
+    // Mixin common widget behaviour
+    OT.Chrome.Behaviour.Widget(this, {
+      mode: getDisplayMode(),
+      nodeName: 'div',
+      htmlContent: '',
+      htmlAttributes: {
+        className: 'OT_bar OT_edge-bar-item'
+      }
+    });
+
+    this.setNameMode = function(nameMode) {
+      _nameMode = nameMode;
+      this.setDisplayMode(getDisplayMode());
+    };
+
+    this.setMuteMode = function(muteMode) {
+      _muteMode = muteMode;
+      this.setDisplayMode(getDisplayMode());
+    };
+
+  };
+
+})(window);
+!(function() {
+
+  // NamePanel Chrome Widget
+  //
+  // mode (String)
+  // Whether to display the name. Possible values are: "auto" (the name is displayed
+  // when the stream is first displayed and when the user mouses over the display),
+  // "off" (the name is not displayed), and "on" (the name is displayed).
+  //
+  // displays a name
+  // can be shown/hidden
+  // can be destroyed
+  OT.Chrome.NamePanel = function(options) {
+    var _name = options.name,
+        _bugMode = options.bugMode,
+        _domElement;
 
     if (!_name || _name.trim().length === '') {
-        _name = null;
+      _name = null;
 
-        // THere's no name, just flip the mode off
-        options.mode = 'off';
+      // THere's no name, just flip the mode off
+      options.mode = 'off';
     }
 
     // This behaviour must be implemented to make the widget behaviour work.
     // @fixme This is a nasty code smell
-    var _domElement;
     Object.defineProperty(this, 'domElement', {
-        get: function() { return _domElement; },
-        set: function(domElement) { _domElement = domElement; }
-    })
-
-    // Mixin common widget behaviour
-    OT.Chrome.Behaviour.Widget(this, {
-        mode: options.mode,
-        nodeName: 'h1',
-        htmlContent: _name,
-        htmlAttributes: {className: 'OT_name'}
+      get: function() { return _domElement; },
+      set: function(domElement) {
+        _domElement = domElement;
+      }
     });
 
     Object.defineProperty(this, 'name', {
-        set: function(name) {
-            if (!_name) this.setDisplayMode('auto');
-
-            _name = name;
-            _domElement.innerHTML = _name;
-        }.bind(this)
+      set: function(name) {
+        if (!_name) this.setDisplayMode('auto');
+        _name = name;
+        _domElement.innerHTML = _name;
+      }.bind(this)
     });
-};
+
+    this.setBugMode = function(bugMode) {
+      _bugMode = bugMode;
+      if(bugMode === 'off') {
+        OT.$.addClass(_domElement, 'OT_name-no-bug');
+      } else {
+        OT.$.removeClass(_domElement, 'OT_name-no-bug');
+      }
+    };
+
+    // Mixin common widget behaviour
+    OT.Chrome.Behaviour.Widget(this, {
+      mode: options.mode,
+      nodeName: 'h1',
+      htmlContent: _name,
+      htmlAttributes: {
+        className: 'OT_name OT_edge-bar-item'
+      },
+      onCreate: function() {
+        this.setBugMode(_bugMode);
+      }.bind(this)
+    });
+
+  };
 
 })(window);
-(function(window) {
+!(function() {
 
-OT.Chrome.MuteButton = function(options) {
+  OT.Chrome.MuteButton = function(options) {
     var _onClickCb,
-        _muted = options.muted || false;
+        _muted = options.muted || false,
+        _domElement,
+        updateClasses,
+        attachEvents,
+        detachEvents,
+        onClick;
 
     // This behaviour must be implemented to make the widget behaviour work.
     // @fixme This is a nasty code smell
-    var _domElement;
     Object.defineProperty(this, 'domElement', {
-        get: function() { return _domElement; },
-        set: function(domElement) { _domElement = domElement; }
-    })
+      get: function() { return _domElement; },
+      set: function(domElement) {
+        _domElement = domElement;
+      }
+    });
+
+    updateClasses = function() {
+      if (_muted) {
+        OT.$.addClass(_domElement, 'OT_active');
+      } else {
+        OT.$.removeClass(_domElement, 'OT_active ');
+      }
+    };
 
     // Private Event Callbacks
-    var attachEvents = function(elem) {
-            _onClickCb = onClick.bind(this);
-            elem.addEventListener('click', _onClickCb, false);
-        },
+    attachEvents = function(elem) {
+      _onClickCb = onClick.bind(this);
+      elem.addEventListener('click', _onClickCb, false);
+    };
 
-        detachEvents = function(elem) {
-            _onClickCb = null;
-            elem.removeEventListener('click', _onClickCb, false);
-        },
+    detachEvents = function(elem) {
+      _onClickCb = null;
+      elem.removeEventListener('click', _onClickCb, false);
+    };
 
-        onClick = function(event) {
-            _muted = !_muted;
+    onClick = function() {
+      _muted = !_muted;
 
-            if (_muted) {
-                OT.$.addClass(_domElement, 'OT_active');
-                this.parent.trigger('muted', this);
-            }
-            else {
-                OT.$.removeClass(_domElement, 'OT_active');
-                this.parent.trigger('unmuted', this);
-            }
+      updateClasses();
 
-            return false;
-        };
+      if (_muted) {
+        this.parent.trigger('muted', this);
+      } else {
+        this.parent.trigger('unmuted', this);
+      }
+
+      return false;
+    };
+
+    Object.defineProperty(this, 'muted', {
+      get: function() { return _muted; },
+      set: function(muted) {
+        _muted = muted;
+        updateClasses();
+      }
+    });
 
     // Mixin common widget behaviour
-    var classNames = _muted ? 'OT_mute OT_active' : 'OT_mute';
+    var classNames = _muted ? 'OT_edge-bar-item OT_mute OT_active' : 'OT_edge-bar-item OT_mute';
     OT.Chrome.Behaviour.Widget(this, {
-        mode: options.mode,
-        nodeName: 'button',
-        htmlContent: 'Mute',
-        htmlAttributes: {className: classNames},
-        onCreate: attachEvents.bind(this),
-        onDestroy: detachEvents.bind(this)
+      mode: options.mode,
+      nodeName: 'button',
+      htmlContent: 'Mute',
+      htmlAttributes: {
+        className: classNames
+      },
+      onCreate: attachEvents.bind(this),
+      onDestroy: detachEvents.bind(this)
     });
-};
+  };
 
 
 })(window);
-(function(window) {
+!(function() {
 
-OT.Chrome.MicVolume = function(options) {
-    var _onClickCb,
-        _muted = options.muted || false;
+  OT.Chrome.OpenTokButton = function(options) {
 
     // This behaviour must be implemented to make the widget behaviour work.
     // @fixme This is a nasty code smell
     var _domElement;
     Object.defineProperty(this, 'domElement', {
-        get: function() { return _domElement; },
-        set: function(domElement) { _domElement = domElement; }
-    })
-
-    // Private Event Callbacks
-    var attachEvents = function(elem) {
-            _onClickCb = onClick.bind(this);
-            elem.addEventListener('click', _onClickCb, false);
-        },
-
-        detachEvents = function(elem) {
-            _onClickCb = null;
-            elem.removeEventListener('click', _onClickCb, false);
-        },
-
-        onClick = function(event) {
-            _muted = !_muted;
-
-            if (_muted) {
-                OT.$.addClass(_domElement, 'active');
-                this.parent.trigger('muted', this);
-            }
-            else {
-                OT.$.removeClass(_domElement, 'active');
-                this.parent.trigger('unmuted', this);
-            }
-
-            return false;
-        };
+      get: function() { return _domElement; },
+      set: function(domElement) {
+        _domElement = domElement;
+      }
+    });
 
     // Mixin common widget behaviour
     OT.Chrome.Behaviour.Widget(this, {
-        mode: options.mode,
-        nodeName: 'button',
-        htmlContent: 'Mute',
-        htmlAttributes: {className: 'OT_mic-volume'},
-        onCreate: attachEvents.bind(this),
-        onDestroy: detachEvents.bind(this)
+      mode: options ? options.mode : null,
+      nodeName: 'span',
+      htmlContent: 'OpenTok',
+      htmlAttributes: {
+        className: 'OT_opentok OT_edge-bar-item'
+      }
     });
-};
 
+  };
 
 })(window);
-(function(window) {
+!(function() {
 
-OT.Chrome.SettingsPanelButton = function(options) {
-    var _onClickCb;
+  // Archving Chrome Widget
+  //
+  // mode (String)
+  // Whether to display the archving widget. Possible values are: "on" (the status is displayed
+  // when archiving and briefly when archving ends) and "off" (the status is not displayed)
 
-    // Private Event Callbacks
-    var attachEvents = function(elem) {
-            _onClickCb = onClick.bind(this);
-            elem.addEventListener('click', _onClickCb, false);
-        },
-
-        detachEvents = function(elem) {
-            _onClickCb = null;
-            elem.removeEventListener('click', _onClickCb, false);
-        },
-
-        onClick = function(event) {
-            this.parent.trigger('SettingsPanel:open', this);
-            return false;
-        };
-
+  // Whether to display the archving widget. Possible values are: "auto" (the name is displayed
+  // when the status is first displayed and when the user mouses over the display),
+  // "off" (the name is not displayed), and "on" (the name is displayed).
+  //
+  // displays a name
+  // can be shown/hidden
+  // can be destroyed
+  OT.Chrome.Archiving = function(options) {
+    var _archiving = options.archiving,
+        _archivingStarted = options.archivingStarted || 'Archiving on',
+        _archivingEnded = options.archivingEnded || 'Archiving off',
+        _initialState = true,
+        _lightBox,
+        _light,
+        _text,
+        _domElement,
+        renderStageDelayedAction,
+        renderText,
+        renderStage;
 
     // This behaviour must be implemented to make the widget behaviour work.
     // @fixme This is a nasty code smell
-    var _domElement;
     Object.defineProperty(this, 'domElement', {
-        get: function() { return _domElement; },
-        set: function(domElement) { _domElement = domElement; }
-    })
+      get: function() { return _domElement; },
+      set: function(domElement) {
+        _domElement = domElement;
+      }
+    });
+
+    renderText = function(text) {
+      _text.innerText = text;
+      _lightBox.setAttribute('title', text);
+    };
+
+    renderStage = function() {
+      if(renderStageDelayedAction) {
+        clearTimeout(renderStageDelayedAction);
+        renderStageDelayedAction = null;
+      }
+
+      if(_archiving) {
+        OT.$.addClass(_light, 'OT_active');
+      } else {
+        OT.$.removeClass(_light, 'OT_active');
+      }
+
+      OT.$.removeClass(_domElement, 'OT_archiving-' + (!_archiving ? 'on' : 'off'));
+      OT.$.addClass(_domElement, 'OT_archiving-' + (_archiving ? 'on' : 'off'));
+      if(options.show && _archiving) {
+        renderText(_archivingStarted);
+        OT.$.addClass(_text, 'OT_mode-on');
+        OT.$.removeClass(_text, 'OT_mode-auto');
+        this.setDisplayMode('on');
+        renderStageDelayedAction = setTimeout(function() {
+          OT.$.addClass(_text, 'OT_mode-auto');
+          OT.$.removeClass(_text, 'OT_mode-on');
+        }.bind(this), 5000);
+      } else if(options.show && !_initialState) {
+        OT.$.addClass(_text, 'OT_mode-on');
+        OT.$.removeClass(_text, 'OT_mode-auto');
+        this.setDisplayMode('on');
+        renderText(_archivingEnded);
+        renderStageDelayedAction = setTimeout(function() {
+          this.setDisplayMode('off');
+        }.bind(this), 5000);
+      } else {
+        this.setDisplayMode('off');
+      }
+    }.bind(this);
 
     // Mixin common widget behaviour
     OT.Chrome.Behaviour.Widget(this, {
-        mode: options.mode,
-        nodeName: 'button',
-        htmlContent: 'Settings',
-        htmlAttributes: {className: 'OT_settings-panel'},
-        onCreate: attachEvents.bind(this),
-        onDestroy: detachEvents.bind(this)
+      mode: _archiving && options.show && 'on' || 'off',
+      nodeName: 'h1',
+      htmlAttributes: {className: 'OT_archiving OT_edge-bar-item OT_edge-bottom'},
+      onCreate: function() {
+        _lightBox = OT.$.createElement('div', {
+          className: 'OT_archiving-light-box'
+        }, '');
+        _light = OT.$.createElement('div', {
+          className: 'OT_archiving-light'
+        }, '');
+        _lightBox.appendChild(_light);
+        _text = OT.$.createElement('div', {
+          className: 'OT_archiving-status OT_mode-on OT_edge-bar-item OT_edge-bottom'
+        }, '');
+        _domElement.appendChild(_lightBox);
+        _domElement.appendChild(_text);
+        renderStage();
+      }
     });
-};
+
+    this.setShowArchiveStatus = function(show) {
+      options.show = show;
+      if(_domElement) {
+        renderStage.call(this);
+      }
+    };
+
+    this.setArchiving = function(status) {
+      _archiving = status;
+      _initialState = false;
+      if(_domElement) {
+        renderStage.call(this);
+      }
+    };
+
+  };
 
 })(window);
-(function(window) {
-
-OT.Chrome.SettingsPanel = function(options) {
-    if (!options.stream) {
-        // @todo raise error
-        return;
-    }
-
-    var webRTCStream = options.stream;
-
-    // This behaviour must be implemented to make the widget behaviour work.
-    // @fixme This is a nasty code smell
-    var _domElement;
-    Object.defineProperty(this, 'domElement', {
-        get: function() { return _domElement; },
-        set: function(domElement) { _domElement = domElement; }
-    })
-
-    var renderDialog = function() {
-            var camLabel = webRTCStream.getVideoTracks().length ? webRTCStream.getVideoTracks()[0].label : "None",
-                micLabel = webRTCStream.getAudioTracks().length ? webRTCStream.getAudioTracks()[0].label : "None";
-
-            _domElement.innerHTML = "<dl>\
-                                        <dt>Cam</dt>\
-                                        <dd>" + camLabel + "</dd>\
-                                        <dt>Mic</dt>\
-                                        <dd>" + micLabel + "</dd>\
-                                    </dl>";
-
-
-            var closeButton  = OT.$.createButton('Close', {
-                className: 'OT_close'
-            }, {
-                click: onClose.bind(this)
-            });
-
-            _domElement.appendChild(closeButton);
-        },
-
-        onShow = function() {
-            renderDialog.call(this);
-        },
-
-        onClose = function() {
-            this.parent.trigger('SettingsPanel:close', this);
-            return false;
-        };
-
-
-    // Mixin common widget behaviour
-    OT.Chrome.Behaviour.Widget(this, {
-        mode: options.mode,
-        nodeName: 'section',
-        htmlContent: 'Settings',
-        htmlAttributes: {className: 'OT_settings-panel'},
-        onCreate: renderDialog.bind(this),
-        onShow: onShow.bind(this)
-    });
-};
-
-})(window);
-(function(window) {
-
-OT.Chrome.OpenTokButton = function(options) {
-    // This behaviour must be implemented to make the widget behaviour work.
-    // @fixme This is a nasty code smell
-    var _domElement;
-    this.__defineGetter__("domElement", function() { return _domElement; });
-    this.__defineSetter__("domElement", function(domElement) { _domElement = domElement; });
-
-    // Mixin common widget behaviour
-    OT.Chrome.Behaviour.Widget(this, {
-        mode: options ? options.mode : null,
-        nodeName: 'span',
-        htmlContent: 'OpenTok',
-        htmlAttributes: {
-            className: 'OT_opentok'
-        }
-    });
-};
-
-})(window);
-(function(window) {
+(function() {
 /* Stylable Notes
+ * RTC doesn't need to wait until anything is loaded
+ * Some bits are controlled by multiple flags, i.e. buttonDisplayMode and nameDisplayMode.
+ * When there are multiple flags how is the final setting chosen?
+ * When some style bits are set updates will need to be pushed through to the Chrome
+ */
 
-* RTC doesn't need to wait until anything is loaded (flash needs to wait until the Flash component loads)
-* Some bits are controlled by multiple flags, i.e. buttonDisplayMode and nameDisplayMode.
-* When there are multiple flags how is the final setting chosen?
-* When some style bits are set updates will need to be pushed through to the Chrome
-*/
-
-// Mixes the StylableComponent behaviour into the +self+ object. It will
-// also set the default styles to +initialStyles+.
-//
-// @note This Mixin is dependent on OT.Eventing.
-//
-//
-// @example
-//
-//  function SomeObject {
-//      OT.StylableComponent(this, {
-//          name: 'SomeObject',
-//          foo: 'bar'
-//      });
-//  }
-//
-//  var obj = new SomeObject();
-//  obj.getStyle('foo');        // => 'bar'
-//  obj.setStyle('foo', 'baz')
-//  obj.getStyle('foo');        // => 'baz'
-//  obj.getStyle();             // => {name: 'SomeObject', foo: 'baz'}
-//
-OT.StylableComponent = function(self, initalStyles) {
+  // Mixes the StylableComponent behaviour into the +self+ object. It will
+  // also set the default styles to +initialStyles+.
+  //
+  // @note This Mixin is dependent on OT.Eventing.
+  //
+  //
+  // @example
+  //
+  //  function SomeObject {
+  //      OT.StylableComponent(this, {
+  //          name: 'SomeObject',
+  //          foo: 'bar'
+  //      });
+  //  }
+  //
+  //  var obj = new SomeObject();
+  //  obj.getStyle('foo');        // => 'bar'
+  //  obj.setStyle('foo', 'baz')
+  //  obj.getStyle('foo');        // => 'baz'
+  //  obj.getStyle();             // => {name: 'SomeObject', foo: 'baz'}
+  //
+  OT.StylableComponent = function(self, initalStyles) {
     if (!self.trigger) {
-        throw new Error("OT.StylableComponent is dependent on the mixin OT.$.eventing. Ensure that this is included in the object before StylableComponent.");
+      throw new Error('OT.StylableComponent is dependent on the mixin OT.$.eventing. ' +
+        'Ensure that this is included in the object before StylableComponent.');
     }
 
     // Broadcast style changes as the styleValueChanged event
     var onStyleChange = function(key, value, oldValue) {
-        if (oldValue) {
-            self.trigger('styleValueChanged', key, value, oldValue);
-        }
-        else {
-            self.trigger('styleValueChanged', key, value);
-        }
+      if (oldValue) {
+        self.trigger('styleValueChanged', key, value, oldValue);
+      } else {
+        self.trigger('styleValueChanged', key, value);
+      }
     };
 
     var _style = new Style(initalStyles, onStyleChange);
 
-    /**
-    * Returns an object that has the properties that define the current user interface controls of the Publisher.
-    * You can modify the properties of this object and pass the object to the <code>setStyle()</code> method of the
-    * Publisher object. (See the documentation for <a href="#setStyle">setStyle()</a> to see the styles that define
-    * this object.)
-    * @return {Object} The object that defines the styles of the Publisher.
-    * @see <a href="#setStyle">setStyle()</a>
-    * @method #getStyle
-    * @memberOf Publisher
-    */
+  /**
+   * Returns an object that has the properties that define the current user interface controls of 
+   * the Publisher. You can modify the properties of this object and pass the object to the 
+   * <code>setStyle()</code> method of thePublisher object. (See the documentation for 
+   * <a href="#setStyle">setStyle()</a> to see the styles that define this object.)
+   * @return {Object} The object that defines the styles of the Publisher.
+   * @see <a href="#setStyle">setStyle()</a>
+   * @method #getStyle
+   * @memberOf Publisher
+   */
 
 	/**
-	* Returns an object that has the properties that define the current user interface controls of the Subscriber.
-	* You can modify the properties of this object and pass the object to the <code>setStyle()</code> method of the
-	* Subscriber object. (See the documentation for <a href="#setStyle">setStyle()</a> to see the styles that define
-	* this object.)
-	* @return {Object} The object that defines the styles of the Subscriber.
-	* @see <a href="#setStyle">setStyle()</a>
-	* @method #getStyle
-	* @memberOf Subscriber
-	*/
+	 * Returns an object that has the properties that define the current user interface controls of 
+   * the Subscriber. You can modify the properties of this object and pass the object to the 
+   * <code>setStyle()</code> method of the Subscriber object. (See the documentation for 
+   * <a href="#setStyle">setStyle()</a> to see the styles that define this object.)
+	 * @return {Object} The object that defines the styles of the Subscriber.
+	 * @see <a href="#setStyle">setStyle()</a>
+	 * @method #getStyle
+	 * @memberOf Subscriber
+	 */
     // If +key+ is falsly then all styles will be returned.
     self.getStyle = function(key) {
-        return _style.get(key);
+      return _style.get(key);
     };
 
-    /**
-    * Sets properties that define the appearance of some user interface controls of the Publisher.
-    *
-    * <p>You can either pass one parameter or two parameters to this method.</p>
-    *
-    * <p>If you pass one parameter, <code>style</code>, it is an object that has one property: <code>nameDisplayMode</code>.
-    * Possible values for the <code>style.nameDisplayMode</code> property are: "auto" (the name is displayed when the stream
-    * is first displayed and when the user mouses over the display), "off" (the name is not displayed), and "on"
-    * (the name is displayed).
-    *
-    * <p>For example, the following code passes one parameter to the method:</p>
-    *
-    * <pre>myPublisher.setStyle({nameDisplayMode: "off"});</pre>
-    *
-    * <p>If you pass two parameters, <code>style</code> and <code>value</code>, they are key-value pair that
-    * define one property of the display style. For example, the following code passes two parameter values
-    * to the method:</p>
-    *
-    * <pre>myPublisher.setStyle("nameDisplayMode", "off");</pre>
-    *
-    * <p>You can set the initial settings when you call the <code>Session.publish()</code>
-    * or <code>TB.initPublisher()</code> method. Pass a <code>style</code> property as part of the
-    * <code>properties</code> parameter of the method.</p>
-    *
-    * <p>The TB object dispatches an <code>exception</code> event if you pass in an invalid style to the method.
-    * The <code>code</code> property of the ExceptionEvent object is set to 1011.</p>
-    *
-    * @param {Object} style Either an object containing properties that define the style, or a String defining this
-    * single style property to set.
-    * @param {String} value The value to set for the <code>style</code> passed in. Pass a value for this parameter
-    * only if the value of the <code>style</code> parameter is a String.</p>
-    *
-    * @see <a href="#getStyle">getStyle()</a>
-    * @return {Publisher} The Publisher object
-    * @see <a href="#setStyle">setStyle()</a>
-    *
-    * @see <a href="Session.html#subscribe">Session.publish()</a>
-    * @see <a href="TB.html#initPublisher">TB.initPublisher()</a>
-    * @method #setStyle
-    * @memberOf Publisher
-    */
+  /**
+   * Sets properties that define the appearance of some user interface controls of the Publisher.
+   *
+   * <p>You can either pass one parameter or two parameters to this method.</p>
+   *
+   * <p>If you pass one parameter, <code>style</code>, it is an object that has the following
+   * properties:
+   *
+   *     <ul>
+   *       <li><code>backgroundImageURI</code> (String) &mdash; A URI for an image to display as
+   *       the background image when a video is not displayed. (A video may not be displayed if
+   *       you call <code>publishVideo(false)</code> on the Publisher object). You can pass an http
+   *       or https URI to a PNG, JPEG, or non-animated GIF file location. You can also use the
+   *       <code>data</code> URI scheme (instead of http or https) and pass in base-64-encrypted
+   *       PNG data, such as that obtained from the
+   *       <a href="Publisher.html#getImgData">Publisher.getImgData()</a> method. For example,
+   *       you could set the property to <code>"data:VBORw0KGgoAA..."</code>, where the portion of
+   *       the string after <code>"data:"</code> is the result of a call to
+   *       <code>Publisher.getImgData()</code>. If the URL or the image data is invalid, the
+   *       property is ignored (the attempt to set the image fails silently).</li>
+   *
+   *       <li><code>buttonDisplayMode</code> (String) &mdash; How to display the microphone
+   *       controls. Possible values are: <code>"auto"</code> (controls are displayed when the
+   *       stream is first displayed and when the user mouses over the display), <code>"off"</code>
+   *       (controls are not displayed), and <code>"on"</code> (controls are always displayed).</li>
+   *
+   *       <li><code>nameDisplayMode</code> (String) &#151; Whether to display the stream name.
+   *       Possible values are: <code>"auto"</code> (the name is displayed when the stream is first
+   *       displayed and when the user mouses over the display), <code>"off"</code> (the name is not
+   *       displayed), and <code>"on"</code> (the name is always displayed).</li>
+   *   </ul>
+   * </p>
+   *
+   * <p>For example, the following code passes one parameter to the method:</p>
+   *
+   * <pre>myPublisher.setStyle({nameDisplayMode: "off"});</pre>
+   *
+   * <p>If you pass two parameters, <code>style</code> and <code>value</code>, they are 
+   * key-value pair that define one property of the display style. For example, the following 
+   * code passes two parameter values to the method:</p>
+   *
+   * <pre>myPublisher.setStyle("nameDisplayMode", "off");</pre>
+   *
+   * <p>You can set the initial settings when you call the <code>Session.publish()</code>
+   * or <code>OT.initPublisher()</code> method. Pass a <code>style</code> property as part of the
+   * <code>properties</code> parameter of the method.</p>
+   *
+   * <p>The OT object dispatches an <code>exception</code> event if you pass in an invalid style 
+   * to the method. The <code>code</code> property of the ExceptionEvent object is set to 1011.</p>
+   *
+   * @param {Object} style Either an object containing properties that define the style, or a 
+   * String defining this single style property to set.
+   * @param {String} value The value to set for the <code>style</code> passed in. Pass a value 
+   * for this parameter only if the value of the <code>style</code> parameter is a String.</p>
+   *
+   * @see <a href="#getStyle">getStyle()</a>
+   * @return {Publisher} The Publisher object
+   * @see <a href="#setStyle">setStyle()</a>
+   *
+   * @see <a href="Session.html#subscribe">Session.publish()</a>
+   * @see <a href="OT.html#initPublisher">OT.initPublisher()</a>
+   * @method #setStyle
+   * @memberOf Publisher
+   */
 
-    /**
-    * Sets properties that define the appearance of some user interface controls of the Subscriber.
-    *
-    * <p>You can either pass one parameter or two parameters to this method.</p>
-    *
-    * <p>If you pass one parameter, <code>style</code>, it is an object that has one property: <code>nameDisplayMode</code>.
-    * Possible values for the <code>style.nameDisplayMode</code> property are: "auto" (the name is displayed when the stream
-    * is first displayed and when the user mouses over the display), "off" (the name is not displayed), and "on"
-    * (the name is displayed).
-    *
-    * <p>For example, the following code passes one parameter to the method:</p>
-    *
-    * <pre>mySubscriber.setStyle({nameDisplayMode: "off"});</pre>
-    *
-    * <p>If you pass two parameters, <code>style</code> and <code>value</code>, they are key-value pair that
-    * define one property of the display style. For example, the following code passes two parameter values
-    * to the method:</p>
-    *
-    * <pre>mySubscriber.setStyle("nameDisplayMode", "off");</pre>
-    *
-    * <p>You can set the initial settings when you call the <code>Session.subscribe()</code> method.
-    * Pass a <code>style</code> property as part of the <code>properties</code> parameter of the method.</p>
-    *
-    * <p>The TB object dispatches an <code>exception</code> event if you pass in an invalid style to the method.
-    * The <code>code</code> property of the ExceptionEvent object is set to 1011.</p>
-    *
-    * @param {Object} style Either an object containing properties that define the style, or a String defining this
-    * single style property to set.
-    * @param {String} value The value to set for the <code>style</code> passed in. Pass a value for this parameter
-    * only if the value of the <code>style</code> parameter is a String.</p>
-    *
-    * @returns {Subscriber} The Subscriber object.
-    *
-    * @see <a href="#getStyle">getStyle()</a>
-    * @see <a href="#setStyle">setStyle()</a>
-    *
-    * @see <a href="Session.html#subscribe">Session.subscribe()</a>
-    * @method #setStyle
-    * @memberOf Subscriber
-    */
+  /**
+   * Sets properties that define the appearance of some user interface controls of the Subscriber.
+   *
+   * <p>You can either pass one parameter or two parameters to this method.</p>
+   *
+   * <p>If you pass one parameter, <code>style</code>, it is an object that has the following
+   * properties:
+   *
+   *     <ul>
+   *       <li><code>backgroundImageURI</code> (String) &mdash; A URI for an image to display as
+   *       the background image when a video is not displayed. (A video may not be displayed if
+   *       you call <code>subscribeToVideo(false)</code> on the Publisher object). You can pass an
+   *       http or https URI to a PNG, JPEG, or non-animated GIF file location. You can also use the
+   *       <code>data</code> URI scheme (instead of http or https) and pass in base-64-encrypted
+   *       PNG data, such as that obtained from the
+   *       <a href="Subscriber.html#getImgData">Subscriber.getImgData()</a> method. For example,
+   *       you could set the property to <code>"data:VBORw0KGgoAA..."</code>, where the portion of
+   *       the string after <code>"data:"</code> is the result of a call to
+   *       <code>Publisher.getImgData()</code>. If the URL or the image data is invalid, the
+   *       property is ignored (the attempt to set the image fails silently).</li>
+   *
+   *       <li><code>buttonDisplayMode</code> (String) &mdash; How to display the speaker
+   *       controls. Possible values are: <code>"auto"</code> (controls are displayed when the
+   *       stream is first displayed and when the user mouses over the display), <code>"off"</code>
+   *       (controls are not displayed), and <code>"on"</code> (controls are always displayed).</li>
+   *
+   *       <li><code>nameDisplayMode</code> (String) &#151; Whether to display the stream name.
+   *       Possible values are: <code>"auto"</code> (the name is displayed when the stream is first
+   *       displayed and when the user mouses over the display), <code>"off"</code> (the name is not
+   *       displayed), and <code>"on"</code> (the name is always displayed).</li>
+   *   </ul>
+   * </p>
+   *
+   * <p>For example, the following code passes one parameter to the method:</p>
+   *
+   * <pre>mySubscriber.setStyle({nameDisplayMode: "off"});</pre>
+   *
+   * <p>If you pass two parameters, <code>style</code> and <code>value</code>, they are key-value 
+   * pair that define one property of the display style. For example, the following code passes 
+   * two parameter values to the method:</p>
+   *
+   * <pre>mySubscriber.setStyle("nameDisplayMode", "off");</pre>
+   *
+   * <p>You can set the initial settings when you call the <code>Session.subscribe()</code> method.
+   * Pass a <code>style</code> property as part of the <code>properties</code> parameter of the 
+   * method.</p>
+   *
+   * <p>The OT object dispatches an <code>exception</code> event if you pass in an invalid style 
+   * to the method. The <code>code</code> property of the ExceptionEvent object is set to 1011.</p>
+   *
+   * @param {Object} style Either an object containing properties that define the style, or a 
+   * String defining this single style property to set.
+   * @param {String} value The value to set for the <code>style</code> passed in. Pass a value 
+   * for this parameter only if the value of the <code>style</code> parameter is a String.</p>
+   *
+   * @returns {Subscriber} The Subscriber object.
+   *
+   * @see <a href="#getStyle">getStyle()</a>
+   * @see <a href="#setStyle">setStyle()</a>
+   *
+   * @see <a href="Session.html#subscribe">Session.subscribe()</a>
+   * @method #setStyle
+   * @memberOf Subscriber
+   */
     self.setStyle = function(keyOrStyleHash, value, silent) {
-        if (typeof(keyOrStyleHash) !== 'string') {
-            _style.setAll(keyOrStyleHash, silent);
-        }
-        else {
-            _style.set(keyOrStyleHash, value);
-        }
-
-        return this;
+      if (typeof(keyOrStyleHash) !== 'string') {
+        _style.setAll(keyOrStyleHash, silent);
+      } else {
+        _style.set(keyOrStyleHash, value);
+      }
+      return this;
     };
-};
+  };
 
-var Style = function(initalStyles, onStyleChange) {
-    var _COMPONENT_STYLES = [
-            "showMicButton",
-            "showSpeakerButton",
-            "showSettingsButton",
-            "showCameraToggleButton",
-            "nameDisplayMode",
-            "buttonDisplayMode",
-            "showSaveButton",
-            "showRecordButton",
-            "showRecordStopButton",
-            "showReRecordButton",
-            "showPauseButton",
-            "showPlayButton",
-            "showPlayStopButton",
-            "showStopButton",
-            "backgroundImageURI",
-            "showControlPanel",
-            "showRecordCounter",
-            "showPlayCounter",
-            "showControlBar",
-            "showPreviewTime"
-        ],
+  var Style = function(initalStyles, onStyleChange) {
+    var _style = {},
+        _COMPONENT_STYLES,
+        _validStyleValues,
+        isValidStyle,
+        castValue;
 
-        _validStyleValues = {
-            buttonDisplayMode: ["auto", "off", "on"],
-            nameDisplayMode: ["auto", "off", "on"],
-            showSettingsButton: [true, false],
-            showMicButton: [true, false],
-            showCameraToggleButton: [true, false],
-            showSaveButton: [true, false],
-            backgroundImageURI: null,
-            showControlBar: [true, false],
-            showPlayCounter: [true, false],
-            showRecordCounter: [true, false],
-            showPreviewTime: [true, false]
-        },
+    _COMPONENT_STYLES = [
+      'showMicButton',
+      'showSpeakerButton',
+      'nameDisplayMode',
+      'buttonDisplayMode',
+      'backgroundImageURI',
+      'bugDisplayMode'
+    ];
 
-        _style = {},
+    _validStyleValues = {
+      buttonDisplayMode: ['auto', 'mini', 'mini-auto', 'off', 'on'],
+      nameDisplayMode: ['auto', 'off', 'on'],
+      bugDisplayMode: ['auto', 'off', 'on'],
+      showSettingsButton: [true, false],
+      showMicButton: [true, false],
+      backgroundImageURI: null,
+      showControlBar: [true, false],
+      showArchiveStatus: [true, false]
+    };
 
 
-        // Validates the style +key+ and also whether +value+ is valid for +key+
-        isValidStyle = function(key, value) {
-            return key === 'backgroundImageURI' ||
-                    (   _validStyleValues.hasOwnProperty(key) &&
-                        _validStyleValues[key].indexOf(value) !== -1 );
-        },
+    // Validates the style +key+ and also whether +value+ is valid for +key+
+    isValidStyle = function(key, value) {
+      return key === 'backgroundImageURI' ||
+        (   _validStyleValues.hasOwnProperty(key) &&
+        _validStyleValues[key].indexOf(value) !== -1 );
+    };
 
-        castValue = function(value) {
-            switch(value) {
-                case 'true':
-                    return true;
-                case 'false':
-                    return false;
-                default:
-                    return value;
-            }
-        };
-
+    castValue = function(value) {
+      switch(value) {
+        case 'true':
+          return true;
+        case 'false':
+          return false;
+        default:
+          return value;
+      }
+    };
 
     // Returns a shallow copy of the styles.
     this.getAll = function() {
-        var style = OT.$.clone(_style);
+      var style = OT.$.clone(_style);
 
-        for (var i in style) {
-            if (_COMPONENT_STYLES.indexOf(i) < 0) {
-                // Strip unnecessary properties out, should this happen on Set?
-                delete style[i];
-            }
+      for (var i in style) {
+        if (_COMPONENT_STYLES.indexOf(i) < 0) {
+          // Strip unnecessary properties out, should this happen on Set?
+          delete style[i];
         }
+      }
 
-        return style;
+      return style;
     };
 
     this.get = function(key) {
-        if (key) {
-            return _style[key];
-        }
+      if (key) {
+        return _style[key];
+      }
 
-        // We haven't been asked for any specific key, just return the lot
-        return this.getAll();
+      // We haven't been asked for any specific key, just return the lot
+      return this.getAll();
     };
 
     // *note:* this will not trigger onStyleChange if +silent+ is truthy
     this.setAll = function(newStyles, silent) {
-        var oldValue, newValue;
+      var oldValue, newValue;
 
-        for (var key in newStyles) {
-            newValue = castValue(newStyles[key]);
+      for (var key in newStyles) {
+        newValue = castValue(newStyles[key]);
 
-            if (isValidStyle(key, newValue)) {
-                oldValue = _style[key];
+        if (isValidStyle(key, newValue)) {
+          oldValue = _style[key];
 
-                if (newValue !== oldValue) {
-                    _style[key] = newValue;
-                    if (!silent) onStyleChange(key, newValue, oldValue);
-                }
-            }
-            else {
-                OT.warn("Style.setAll::Invalid style property passed " + key + " : " + newValue);
-            }
+          if (newValue !== oldValue) {
+            _style[key] = newValue;
+            if (!silent) onStyleChange(key, newValue, oldValue);
+          }
+
+        } else {
+          OT.warn('Style.setAll::Invalid style property passed ' + key + ' : ' + newValue);
         }
+      }
 
-        return this;
+      return this;
     };
 
     this.set = function(key, value) {
-        OT.debug("Publisher.setStyle: " + key.toString());
+      OT.debug('Publisher.setStyle: ' + key.toString());
 
-        var newValue = castValue(value),
-            oldValue;
+      var newValue = castValue(value),
+          oldValue;
 
-        if (!isValidStyle(key, newValue)) {
-            OT.warn("Style.set::Invalid style property passed " + key + " : " + newValue);
-            return this;
-        }
-
-        oldValue = _style[key];
-        if (newValue !== oldValue) {
-            _style[key] = newValue;
-
-            onStyleChange(key, value, oldValue);
-        }
-
+      if (!isValidStyle(key, newValue)) {
+        OT.warn('Style.set::Invalid style property passed ' + key + ' : ' + newValue);
         return this;
+      }
+
+      oldValue = _style[key];
+      if (newValue !== oldValue) {
+        _style[key] = newValue;
+
+        onStyleChange(key, value, oldValue);
+      }
+
+      return this;
     };
 
 
     if (initalStyles) this.setAll(initalStyles, true);
-};
+  };
 
 })(window);
-(function(window) {
+!(function() {
 
 /**
  * A Publishers Microphone.
@@ -11502,128 +13286,128 @@ var Style = function(initalStyles, onStyleChange) {
  * TODO
  * * bind to changes in mute/unmute/volume/etc and respond to them
  */
-OT.Microphone = function(webRTCStream, muted) {
+  OT.Microphone = function(webRTCStream, muted) {
     var _muted,
         _gain = 50;
 
 
     Object.defineProperty(this, 'muted', {
-        get: function() { return _muted; },
-        set: function(muted) {
-            if (_muted === muted) return;
+      get: function() { return _muted; },
+      set: function(muted) {
+        if (_muted === muted) return;
 
-            _muted = muted;
+        _muted = muted;
 
-            var audioTracks = webRTCStream.getAudioTracks();
+        var audioTracks = webRTCStream.getAudioTracks();
 
-            for (var i=0, num=audioTracks.length; i<num; ++i) {
-                audioTracks[i].enabled = !_muted;
-            }
+        for (var i=0, num=audioTracks.length; i<num; ++i) {
+          audioTracks[i].enabled = !_muted;
         }
+      }
     });
 
     Object.defineProperty(this, 'gain', {
-        get: function() { return _gain; },
-
-        set: function(gain) {
-            OT.warn("OT.Microphone.gain IS NOT YET IMPLEMENTED");
-
-            _gain = gain;
-        }
+      get: function() { return _gain; },
+      set: function(gain) {
+        OT.warn('OT.Microphone.gain IS NOT YET IMPLEMENTED');
+        _gain = gain;
+      }
     });
 
     // Set the initial value
     if (muted !== undefined) {
-        this.muted = muted === true;
+      this.muted = muted === true;
+
+    } else if (webRTCStream.getAudioTracks().length) {
+      this.muted = !webRTCStream.getAudioTracks()[0].enabled;
+
+    } else {
+      this.muted = false;
     }
-    else if (webRTCStream.getAudioTracks().length) {
-        this.muted = !webRTCStream.getAudioTracks()[0].enabled;
-    }
-    else {
-        this.muted = false;
-    }
-};
 
-})(window);
-(function(window) {
-
-// A Factory method for generating simple state machine classes.
-//
-// @usage
-//    var StateMachine = OT.generateSimpleStateMachine('start', ['start', 'middle', 'end', {
-//      start: ['middle'],
-//      middle: ['end'],
-//      end: ['start']
-//    }]);
-//
-//    var states = new StateMachine();
-//    state.current;            // <-- start
-//    state.set('middle');
-//
-OT.generateSimpleStateMachine = function(initialState, states, transitions) {
-  var validStates = states.slice(),
-      validTransitions = OT.$.clone(transitions);
-
-  var isValidState = function (state) {
-    return validStates.indexOf(state) !== -1;
-  }
-
-  var isValidTransition = function(fromState, toState) {
-    return validTransitions[fromState] && validTransitions[fromState].indexOf(toState) !== -1;
   };
 
-  return function(stateChangeFailed) {
-    var currentState = initialState,
-        previousState = null;
+})(window);
+!(function() {
 
-    function signalChangeFailed(message, newState) {
+  // A Factory method for generating simple state machine classes.
+  //
+  // @usage
+  //    var StateMachine = OT.generateSimpleStateMachine('start', ['start', 'middle', 'end', {
+  //      start: ['middle'],
+  //      middle: ['end'],
+  //      end: ['start']
+  //    }]);
+  //
+  //    var states = new StateMachine();
+  //    state.current;            // <-- start
+  //    state.set('middle');
+  //
+  OT.generateSimpleStateMachine = function(initialState, states, transitions) {
+    var validStates = states.slice(),
+        validTransitions = OT.$.clone(transitions);
+
+    var isValidState = function (state) {
+      return validStates.indexOf(state) !== -1;
+    };
+
+    var isValidTransition = function(fromState, toState) {
+      return validTransitions[fromState] && validTransitions[fromState].indexOf(toState) !== -1;
+    };
+
+    return function(stateChangeFailed) {
+      var currentState = initialState,
+          previousState = null;
+
+      function signalChangeFailed(message, newState) {
         stateChangeFailed({
           message: message,
           newState: newState,
           currentState: currentState,
           previousState: previousState
         });
-    }
-
-    // Validates +newState+. If it's invalid it triggers stateChangeFailed and returns false.
-    function handleInvalidStateChanges(newState) {
-      if (!isValidState(newState)) {
-        signalChangeFailed("'" + newState + "' is not a valid state", newState)
-
-        return false;
       }
 
-      if (!isValidTransition(currentState, newState)) {
-        signalChangeFailed("'" + currentState + "' cannot transition to '" + newState + "'", newState)
+      // Validates +newState+. If it's invalid it triggers stateChangeFailed and returns false.
+      function handleInvalidStateChanges(newState) {
+        if (!isValidState(newState)) {
+          signalChangeFailed('\'' + newState + '\' is not a valid state', newState);
 
-        return false;
+          return false;
+        }
+
+        if (!isValidTransition(currentState, newState)) {
+          signalChangeFailed('\'' + currentState + '\' cannot transition to \'' +
+            newState + '\'', newState);
+
+          return false;
+        }
+
+        return true;
       }
 
-      return true;
-    }
 
+      this.set = function(newState) {
+        if (!handleInvalidStateChanges(newState)) return;
 
-    this.set = function(newState) {
-      if (!handleInvalidStateChanges(newState)) return;
+        previousState = currentState;
+        currentState = newState;
+      };
 
-      previousState = currentState;
-      currentState = newState;
+      Object.defineProperties(this, {
+        current: {
+          get: function() { return currentState; }
+        },
+
+        subscribing: {
+          get: function() { return currentState === 'Subscribing'; }
+        }
+      });
     };
-
-    Object.defineProperties(this, {
-      current: {
-        get: function() { return currentState; }
-      },
-
-      subscribing: {
-        get: function() { return currentState === 'Subscribing'; }
-      }
-    });
   };
-};
 
 })(window);
-(function(window) {
+!(function() {
 
 // Models a Subscriber's subscribing State
 //
@@ -11631,9 +13415,11 @@ OT.generateSimpleStateMachine = function(initialState, states, transitions) {
 //     NotSubscribing            (the initial state
 //     Init                      (basic setup of DOM
 //     ConnectingToPeer          (Failure Cases -> No Route, Bad Offer, Bad Answer
-//     BindingRemoteStream       (Failure Cases -> Anything to do with the media being invalid, the media never plays
+//     BindingRemoteStream       (Failure Cases -> Anything to do with the media being 
+//                               (invalid, the media never plays
 //     Subscribing               (this is 'onLoad'
-//     Failed                    (terminal state, with a reason that maps to one of the failure cases above
+//     Failed                    (terminal state, with a reason that maps to one of the 
+//                               (failure cases above
 //
 //
 // Valid Transitions:
@@ -11642,7 +13428,8 @@ OT.generateSimpleStateMachine = function(initialState, states, transitions) {
 //
 //     Init ->
 //             ConnectingToPeer
-//           | BindingRemoteStream         (if we are subscribing to ourselves and we alreay have a stream
+//           | BindingRemoteStream         (if we are subscribing to ourselves and we alreay 
+//                                         (have a stream
 //           | NotSubscribing              (destroy()
 //
 //     ConnectingToPeer ->
@@ -11658,7 +13445,8 @@ OT.generateSimpleStateMachine = function(initialState, states, transitions) {
 //
 //     Subscribing ->
 //             NotSubscribing              (unsubscribe
-//           | Failed                      (probably a peer connection failure after we began subscribing
+//           | Failed                      (probably a peer connection failure after we began 
+//                                         (subscribing
 //
 //     Failed ->                           (terminal error state)
 //
@@ -11674,28 +13462,34 @@ OT.generateSimpleStateMachine = function(initialState, states, transitions) {
 //     state.set('Subscribing');      -> triggers stateChangeFailed and logs out the error message
 //
 //
+  var validStates,
+      validTransitions,
+      initialState = 'NotSubscribing';
 
-var validStates = [ 'NotSubscribing', 'Init', 'ConnectingToPeer', 'BindingRemoteStream', 'Subscribing', 'Failed' ],
+  validStates = [
+    'NotSubscribing', 'Init', 'ConnectingToPeer', 'BindingRemoteStream', 'Subscribing', 'Failed'
+  ];
 
-    validTransitions = {
-      NotSubscribing: ['NotSubscribing', 'Init'],
-      Init: ['NotSubscribing', 'ConnectingToPeer', 'BindingRemoteStream'],
-      ConnectingToPeer: ['NotSubscribing', 'BindingRemoteStream', 'Failed'],
-      BindingRemoteStream: ['NotSubscribing', 'Subscribing', 'Failed'],
-      Subscribing: ['NotSubscribing', 'Failed'],
-      Failed: []
-    },
+  validTransitions = {
+    NotSubscribing: ['NotSubscribing', 'Init'],
+    Init: ['NotSubscribing', 'ConnectingToPeer', 'BindingRemoteStream'],
+    ConnectingToPeer: ['NotSubscribing', 'BindingRemoteStream', 'Failed'],
+    BindingRemoteStream: ['NotSubscribing', 'Subscribing', 'Failed'],
+    Subscribing: ['NotSubscribing', 'Failed'],
+    Failed: []
+  };
 
-    initialState = 'NotSubscribing';
+  OT.SubscribingState = OT.generateSimpleStateMachine(initialState, validStates, validTransitions);
 
-OT.SubscribingState = OT.generateSimpleStateMachine(initialState, validStates, validTransitions);
-
-Object.defineProperty(OT.SubscribingState.prototype, 'attemptingToSubscribe', {
-  get: function() { return [ 'Init', 'ConnectingToPeer', 'BindingRemoteStream' ].indexOf(this.current) !== -1; }
-});
+  Object.defineProperty(OT.SubscribingState.prototype, 'attemptingToSubscribe', {
+    get: function() {
+      return [ 'Init', 'ConnectingToPeer', 'BindingRemoteStream' ]
+        .indexOf(this.current) !== -1;
+    }
+  });
 
 })(window);
-(function(window) {
+!(function() {
 
 // Models a Publisher's publishing State
 //
@@ -11715,37 +13509,45 @@ Object.defineProperty(OT.SubscribingState.prototype, 'attemptingToSubscribe', {
 //
 //    GetUserMedia ->
 //        BindingMedia
-//      | Failed                      (Failure Reasons -> stream error, constraints, permission denied
+//      | Failed                      (Failure Reasons -> stream error, constraints,
+//                                    (permission denied
 //      | NotPublishing               (destroy()
 //
 //
 //    BindingMedia ->
 //        MediaBound
-//      | Failed                      (Failure Reasons -> Anything to do with the media being invalid, the media never plays
+//      | Failed                      (Failure Reasons -> Anything to do with the media
+//                                    (being invalid, the media never plays
 //      | NotPublishing               (destroy()
 //
 //    MediaBound ->
-//        PublishingToSession         (MediaBound could transition to PublishingToSession if a stand-alone publish is bound to a session
+//        PublishingToSession         (MediaBound could transition to PublishingToSession
+//                                    (if a stand-alone publish is bound to a session
 //      | Failed                      (Failure Reasons -> media issues with a stand-alone publisher
 //      | NotPublishing               (destroy()
 //
 //    PublishingToSession
 //        Publishing
-//      | Failed                      (Failure Reasons -> timeout while waiting for ack of stream registered. We do not do this right now
+//      | Failed                      (Failure Reasons -> timeout while waiting for ack of
+//                                    (stream registered. We do not do this right now
 //      | NotPublishing               (destroy()
 //
 //
 //    Publishing ->
 //        NotPublishing               (Unpublish
-//      | Failed                      (Failure Reasons -> loss of network, media error, anything that causes *all* Peer Connections to fail (less than all failing is just an error, all is failure)
+//      | Failed                      (Failure Reasons -> loss of network, media error, anything
+//                                    (that causes *all* Peer Connections to fail (less than all
+//                                    (failing is just an error, all is failure)
 //      | NotPublishing               (destroy()
 //
 //    Failed ->                       (Terminal state
 //
 //
 
-
-var validStates = [ 'NotPublishing', 'GetUserMedia', 'BindingMedia', 'MediaBound', 'PublishingToSession', 'Publishing', 'Failed' ],
+  var validStates = [
+      'NotPublishing', 'GetUserMedia', 'BindingMedia', 'MediaBound',
+      'PublishingToSession', 'Publishing', 'Failed'
+    ],
 
     validTransitions = {
       NotPublishing: ['NotPublishing', 'GetUserMedia'],
@@ -11759,81 +13561,94 @@ var validStates = [ 'NotPublishing', 'GetUserMedia', 'BindingMedia', 'MediaBound
 
     initialState = 'NotPublishing';
 
-OT.PublishingState = OT.generateSimpleStateMachine(initialState, validStates, validTransitions);
+  OT.PublishingState = OT.generateSimpleStateMachine(initialState, validStates, validTransitions);
 
-Object.defineProperties(OT.PublishingState.prototype, {
-  attemptingToPublish: {
-    get: function() { return [ 'GetUserMedia', 'BindingMedia', 'MediaBound', 'PublishingToSession' ].indexOf(this.current) !== -1; }
-  },
+  Object.defineProperties(OT.PublishingState.prototype, {
+    attemptingToPublish: {
+      get: function() {
+        return [ 'GetUserMedia', 'BindingMedia', 'MediaBound', 'PublishingToSession' ]
+          .indexOf(this.current) !== -1;
+      }
+    },
 
-  publishing: {
-    get: function() { return this.current === 'Publishing'; }
-  }
-});
+    publishing: {
+      get: function() { return this.current === 'Publishing'; }
+    }
+  });
 
 
 })(window);
-(function(window) {
+!(function() {
 
-// The default constraints
-var defaultConstraints = {
+  // The default constraints
+  var defaultConstraints = {
     audio: true,
     video: true
-};
+  };
 
 /**
  * The Publisher object  provides the mechanism through which control of the
- * published stream is accomplished. Calling the <code>TB.initPublisher</code> method of a
- *  Session object creates a Publisher object. </p>
+ * published stream is accomplished. Calling the <code>OT.initPublisher()</code> method
+ * creates a Publisher object. </p>
  *
  *  <p>The following code instantiates a session, and publishes an audio-video stream
  *  upon connection to the session: </p>
  *
  *  <pre>
- *  var API_KEY = ""; // Replace with your API key. See https://dashboard.tokbox.com/projects
+ *  var apiKey = ""; // Replace with your API key. See https://dashboard.tokbox.com/projects
  *  var sessionID = ""; // Replace with your own session ID.
  *                      // See https://dashboard.tokbox.com/projects
  *  var token = ""; // Replace with a generated token that has been assigned the moderator role.
  *                  // See https://dashboard.tokbox.com/projects
  *
- *  var session = TB.initSession(sessionID);
- *  session.addEventListener("sessionConnected", sessionConnectHandler);
- *  session.connect(API_KEY, token);
- *
- *  function sessionConnectHandler(event) {
- *      var div = document.createElement('div');
- *      div.setAttribute('id', 'publisher');
+ *  var session = OT.initSession(apiKey, sessionID);
+ *  session.on("sessionConnected", function(event) {
  *
  *      var publisherContainer = document.getElementById('publisherContainer');
  *          // This example assumes that a publisherContainer div exists
- *      publisherContainer.appendChild(div);
  *
  *      var publisherProperties = {width: 400, height:300, name:"Bob's stream"};
- *      publisher = TB.initPublisher(API_KEY, 'publisher', publisherProperties);
+ *      publisher = OT.initPublisher(publisherContainer, publisherProperties);
  *      session.publish(publisher);
- *  }
+ *  });
+ *  session.connect(token);
  *  </pre>
  *
- *      <p>This example creates a Publisher object and adds its video to a DOM element named <code>publisher</code>
- *      by calling the <code>TB.initPublisher()</code> method. It then publishes a stream to the session by calling
+ *      <p>This example creates a Publisher object and adds its video to a DOM element
+ *      named <code>publisherContainer</code> by calling the <code>OT.initPublisher()</code>
+ *      method. It then publishes a stream to the session by calling
  *      the <code>publish()</code> method of the Session object.</p>
  *
- * @property id The DOM ID of the Publisher.
- * @property stream The {@link Stream} object corresponding the the stream of the Publihser.
- * @property session The {@link Session} to which the Publisher belongs.
+ * @property {Boolean} accessAllowed Whether the user has granted access to the camera
+ * and microphone. The Publisher object dispatches an <code>accessAllowed</code> event when
+ * the user grants access. The Publisher object dispatches an <code>accessDenied</code> event
+ * when the user denies access.
+ * @property {Element} element The HTML DOM element containing the Publisher.
+ * @property {String} id The DOM ID of the Publisher.
+ * @property {Stream} stream The {@link Stream} object corresponding the the stream of
+ * the Publihser.
+ * @property {Session} session The {@link Session} to which the Publisher belongs.
+ * @property {Number} videoHeight The height, in pixels, of the Publisher video. This may
+ * differ from the <code>resolution</code> property passed in as the <code>properties</code>
+ * property of the <code>OT.initPublisher()</code> method, if the browser does not support
+ * the requested resolution.
+ * @property {Number} videoWidth The width, in pixels, of the Publisher video. This may differ
+ * from the <code>resolution</code> property passed in as the <code>properties</code> property
+ * of the <code>OT.initPublisher()</code> method, if the browser does not support the requested
+ * resolution.
  *
- * @see <a href="TB.html#initPublisher">TB.initPublisher</a>
+ * @see <a href="OT.html#initPublisher">OT.initPublisher</a>
  * @see <a href="Session.html#publish">Session.publish()</a>
  *
  * @class Publisher
  * @augments EventDispatcher
  */
-OT.Publisher = function() {
+  OT.Publisher = function() {
     // Check that the client meets the minimum requirements, if they don't the upgrade
     // flow will be triggered.
     if (!OT.checkSystemRequirements()) {
-        OT.upgradeSystemRequirements();
-        return;
+      OT.upgradeSystemRequirements();
+      return;
     }
 
     var _guid = OT.Publisher.nextId(),
@@ -11841,340 +13656,339 @@ OT.Publisher = function() {
         _container,
         _targetElement,
         _stream,
+        _streamId,
         _webRTCStream,
         _session,
         _peerConnections = {},
         _loaded = false,
         _publishProperties,
         _publishStartTime,
-        _streamCreatedTimeout,
         _microphone,
         _chrome,
         _analytics = new OT.Analytics(),
-        _validResolutions = [
-            {width: 320, height: 240},
-            {width: 640, height: 480},
-            {width: 1280, height: 720}
-        ],
+        _validResolutions,
+        _validFrameRates = [ 1, 7, 15, 30 ],
         _qosIntervals = {},
-        _gettingStats = 0,
-        _prevStats = {
-            "timeStamp" : OT.$.now()
-        },
+        _prevStats,
         _state;
+
+    _validResolutions = {
+      '320x240': {width: 320, height: 240},
+      '640x480': {width: 640, height: 480},
+      '1280x720': {width: 1280, height: 720}
+    };
+
+    _prevStats = {
+      'timeStamp' : OT.$.now()
+    };
 
     OT.$.eventing(this);
 
     OT.StylableComponent(this, {
-        showMicButton: true,
-        showSettingsButton: true,
-        showCameraToggleButton: true,
-        nameDisplayMode: "auto",
-        buttonDisplayMode: "auto",
-        backgroundImageURI: null
+      showMicButton: true,
+      showArchiveStatus: true,
+      nameDisplayMode: 'auto',
+      buttonDisplayMode: 'auto',
+      bugDisplayMode: 'auto',
+      backgroundImageURI: null
     });
 
         /// Private Methods
     var logAnalyticsEvent = function(action, variation, payloadType, payload) {
-            _analytics.logEvent({
-                action: action,
-                variation: variation,
-                payload_type: payloadType,
-                payload: payload,
-                session_id: _session ? _session.sessionId : null,
-                connection_id: _session && _session.connected ? _session.connection.connectionId : null,
-                partner_id: _session ? _session.apiKey : OT.APIKEY,
-                streamId: _stream ? _stream.id : null,
-                widget_id: _guid,
-                widget_type: 'Publisher'
-            });
+          _analytics.logEvent({
+            action: action,
+            variation: variation,
+            'payload_type': payloadType,
+            payload: payload,
+            'session_id': _session ? _session.sessionId : null,
+            'connection_id': _session &&
+              _session.connected ? _session.connection.connectionId : null,
+            'partner_id': _session ? _session.apiKey : OT.APIKEY,
+            streamId: _stream ? _stream.id : null,
+            'widget_id': _guid,
+            'widget_type': 'Publisher'
+          });
         },
 
-        isValidResolution = function(width, height) {
-            for (var i=0; i<_validResolutions.length; ++i) {
-                if (_validResolutions[i].width == width && _validResolutions[i].height == height) {
-                    return true;
-                }
+        recordQOS = function(connectionId) {
+          var QoSBlob = {
+            'widget_type': 'Publisher',
+            'stream_type': 'WebRTC',
+            sessionId: _session ? _session.sessionId : null,
+            connectionId: _session && _session.connected ? _session.connection.connectionId : null,
+            partnerId: _session ? _session.apiKey : OT.APIKEY,
+            streamId: _stream ? _stream.id : null,
+            widgetId: _guid,
+            version: OT.properties.version,
+            'media_server_name': _session ? _session.sessionInfo.messagingServer : null,
+            p2pFlag: _session ? _session.sessionInfo.p2pEnabled : false,
+            duration: _publishStartTime ? new Date().getTime() - _publishStartTime.getTime() : 0,
+            'remote_connection_id': connectionId
+          };
+
+          // get stats for each connection id
+          _peerConnections[connectionId].getStats(_prevStats, function(stats) {
+            var statIndex;
+            if (stats) {
+              for (statIndex in stats) {
+                QoSBlob[statIndex] = stats[statIndex];
+              }
             }
-            return false;
-        },
-
-        recordQOS = function(connection_id) {
-            var QoS_blob = {
-                widget_type: 'Publisher',
-                stream_type : 'WebRTC',
-                sessionId: _session ? _session.sessionId : null,
-                connectionId: _session && _session.connected ? _session.connection.connectionId : null,
-                partnerId: _session ? _session.apiKey : OT.APIKEY,
-                streamId: _stream ? _stream.id : null,
-                widgetId: _guid,
-                version: OT.properties.version,
-                media_server_name: _session ? _session.sessionInfo.messagingServer : null,
-                p2pFlag: _session ? _session.sessionInfo.p2pEnabled : false,
-                duration: new Date().getTime() -_publishStartTime.getTime(),
-                remote_connection_id: connection_id
-            };
-
-            // get stats for each connection id
-            _peerConnections[connection_id].getStats(_prevStats, function(stats) {
-                if (stats) {
-                    for (var stat_index in stats) {
-                        QoS_blob[stat_index] = stats[stat_index];
-                    }
-                }
-                _analytics.logQOS(QoS_blob);
-            });
+            _analytics.logQOS(QoSBlob);
+          });
         },
 
         /// Private Events
 
         stateChangeFailed = function(changeFailed) {
-            OT.error("Publisher State Change Failed: ", changeFailed.message);
-            OT.debug(changeFailed);
+          OT.error('Publisher State Change Failed: ', changeFailed.message);
+          OT.debug(changeFailed);
         },
 
         onLoaded = function() {
-            OT.debug("OT.Publisher.onLoaded");
+          OT.debug('OT.Publisher.onLoaded');
 
-            _state.set('MediaBound');
-            _container.loading = false;
-            _loaded = true;
+          _state.set('MediaBound');
+          _container.loading = false;
+          _loaded = true;
 
-            _createChrome.call(this);
+          _createChrome.call(this);
 
-            this.trigger('initSuccess', this);
-            this.trigger('loaded', this);
+          this.trigger('initSuccess');
+          this.trigger('loaded', this);
         },
 
         onLoadFailure = function(reason) {
-            logAnalyticsEvent('publish', 'Failure', 'reason', "Publisher PeerConnection Error: " + reason);
+          logAnalyticsEvent('publish', 'Failure', 'reason',
+            'Publisher PeerConnection Error: ' + reason);
 
-            _state.set('Failed');
-            this.trigger('publishError', "Publisher PeerConnection Error: " + reason);
+          _state.set('Failed');
+          this.trigger('publishComplete', new OT.Error(OT.ExceptionCodes.P2P_CONNECTION_FAILED,
+            'Publisher PeerConnection Error: ' + reason));
 
-            OT.handleJsException("Publisher PeerConnection Error: " + reason, OT.ExceptionCodes.P2P_CONNECTION_FAILED, {
-                session: _session,
-                target: this
-            });
+          OT.handleJsException('Publisher PeerConnection Error: ' + reason,
+            OT.ExceptionCodes.P2P_CONNECTION_FAILED, {
+            session: _session,
+            target: this
+          });
         },
 
         onStreamAvailable = function(webOTStream) {
-            OT.debug("OT.Publisher.onStreamAvailable");
+          OT.debug('OT.Publisher.onStreamAvailable');
 
-            _state.set('BindingMedia');
+          _state.set('BindingMedia');
 
-            cleanupLocalStream();
-            _webRTCStream = webOTStream;
+          cleanupLocalStream();
+          _webRTCStream = webOTStream;
 
-            _microphone = new OT.Microphone(_webRTCStream, !_publishProperties.publishAudio);
-            this.publishVideo(_publishProperties.publishVideo);
+          _microphone = new OT.Microphone(_webRTCStream, !_publishProperties.publishAudio);
+          this.publishVideo(_publishProperties.publishVideo &&
+            _webRTCStream.getVideoTracks().length > 0);
 
-            this.dispatchEvent(
-                new OT.Event(OT.Event.names.ACCESS_ALLOWED, false)
-            );
+          this.dispatchEvent(
+            new OT.Event(OT.Event.names.ACCESS_ALLOWED, false)
+          );
 
-            _targetElement = new OT.VideoElement({
-                attributes: {muted:true}
-            });
+          _targetElement = new OT.VideoElement({
+            attributes: {muted:true}
+          });
 
-            _targetElement.on({
-                    streamBound: onLoaded,
-                    loadError: onLoadFailure,
-                    error: onVideoError
-                }, this)
-                .bindToStream(_webRTCStream);
+          _targetElement.on({
+            streamBound: onLoaded,
+            loadError: onLoadFailure,
+            error: onVideoError
+          }, this)
+            .bindToStream(_webRTCStream);
 
-            _container.video = _targetElement;
+          _container.video = _targetElement;
         },
 
         onStreamAvailableError = function(error) {
-            OT.error('OT.Publisher.onStreamAvailableError ' + error.name + ': ' + error.message);
+          OT.error('OT.Publisher.onStreamAvailableError ' + error.name + ': ' + error.message);
 
-            _state.set('Failed');
-            this.trigger('publishError', error.message);
+          _state.set('Failed');
+          this.trigger('publishComplete', new OT.Error(OT.ExceptionCodes.UNABLE_TO_PUBLISH,
+              error.message));
 
-            if (_container) _container.destroy();
+          if (_container) _container.destroy();
 
-            logAnalyticsEvent('publish', 'Failure', 'reason', "Publisher failed to access camera/mic: " + error.message);
+          logAnalyticsEvent('publish', 'Failure', 'reason',
+            'GetUserMedia:Publisher failed to access camera/mic: ' + error.message);
 
-            OT.handleJsException("Publisher failed to access camera/mic: " + error.message, 2000, {
-                session: _session,
-                target: this
-            });
+          OT.handleJsException('Publisher failed to access camera/mic: ' + error.message,
+          OT.ExceptionCodes.UNABLE_TO_PUBLISH, {
+            session: _session,
+            target: this
+          });
         },
 
-        // The user has clicked the 'deny' button the the allow access dialog (or it's set to always deny)
+        // The user has clicked the 'deny' button the the allow access dialog
+        // (or it's set to always deny)
         onAccessDenied = function(error) {
-            OT.error('OT.Publisher.onStreamAvailableError Permission Denied');
+          OT.error('OT.Publisher.onStreamAvailableError Permission Denied');
 
-            _state.set('Failed');
-            this.trigger('publishError', error.message);
+          _state.set('Failed');
+          this.trigger('publishComplete', new OT.Error(OT.ExceptionCodes.UNABLE_TO_PUBLISH,
+              'Publisher Access Denied: Permission Denied' +
+                  (error.message ? ': ' + error.message : '')));
 
-            logAnalyticsEvent('publish', 'Failure', 'reason', 'Publisher Access Denied: Permission Denied');
+          logAnalyticsEvent('publish', 'Failure', 'reason',
+            'GetUserMedia:Publisher Access Denied: Permission Denied');
 
-            var event = new OT.Event(OT.Event.names.ACCESS_DENIED),
-                defaultAction = function() {
-                    if (!event.isDefaultPrevented() && _container) _container.destroy();
-                };
+          var event = new OT.Event(OT.Event.names.ACCESS_DENIED),
+            defaultAction = function() {
+              if (!event.isDefaultPrevented() && _container) _container.destroy();
+            };
 
-            this.dispatchEvent(event, defaultAction);
+          this.dispatchEvent(event, defaultAction);
         },
 
         onAccessDialogOpened = function() {
-            logAnalyticsEvent('accessDialog', 'Opened', '', '');
+          logAnalyticsEvent('accessDialog', 'Opened', '', '');
 
-            this.dispatchEvent(
-                new OT.Event(OT.Event.names.ACCESS_DIALOG_OPENED, false)
-            );
+          this.dispatchEvent(
+            new OT.Event(OT.Event.names.ACCESS_DIALOG_OPENED, false)
+          );
         },
 
         onAccessDialogClosed = function() {
-            logAnalyticsEvent('accessDialog', 'Closed', '', '');
+          logAnalyticsEvent('accessDialog', 'Closed', '', '');
 
-            this.dispatchEvent(
-                new OT.Event(OT.Event.names.ACCESS_DIALOG_CLOSED, false)
-            );
+          this.dispatchEvent(
+            new OT.Event(OT.Event.names.ACCESS_DIALOG_CLOSED, false)
+          );
         },
 
         onVideoError = function(errorCode, errorReason) {
-            OT.error('OT.Publisher.onVideoError');
+          OT.error('OT.Publisher.onVideoError');
 
-            var message = errorReason + (errorCode ? ' (' + errorCode + ')' : '');
-            logAnalyticsEvent('stream', null, 'reason', "Publisher while playing stream: " + message);
+          var message = errorReason + (errorCode ? ' (' + errorCode + ')' : '');
+          logAnalyticsEvent('stream', null, 'reason',
+            'Publisher while playing stream: ' + message);
 
-            _state.set('Failed');
+          _state.set('Failed');
 
-            if (_state.attemptingToPublish) {
-                this.trigger('publishError', message);
-            }
-            else {
-                this.trigger('error', message);
-            }
+          if (_state.attemptingToPublish) {
+            this.trigger('publishComplete', new OT.Error(OT.ExceptionCodes.UNABLE_TO_PUBLISH,
+                message));
+          } else {
+            this.trigger('error', message);
+          }
 
-            OT.handleJsException("Publisher error playing stream: " + message, 2000, {
-                session: _session,
-                target: this
-            });
+          OT.handleJsException('Publisher error playing stream: ' + message,
+          OT.ExceptionCodes.UNABLE_TO_PUBLISH, {
+            session: _session,
+            target: this
+          });
         },
 
         onPeerDisconnected = function(peerConnection) {
-            OT.debug("OT.Subscriber has been disconnected from the Publisher's PeerConnection");
+          OT.debug('OT.Subscriber has been disconnected from the Publisher\'s PeerConnection');
 
-            this.cleanupSubscriber(peerConnection.remoteConnection.id);
+          this.cleanupSubscriber(peerConnection.remoteConnection.id);
         },
 
-        onPeerConnectionFailure = function(code, reason, peerConnection) {
-            logAnalyticsEvent('publish', 'Failure', 'reason|hasRelayCandidates', [
-                reason + ": Publisher PeerConnection with connection " + (peerConnection && peerConnection.remoteConnection && peerConnection.remoteConnection.id)  + " failed",
-                peerConnection.hasRelayCandidates
-                ].join('|'));
+        onPeerConnectionFailure = function(code, reason, peerConnection, prefix) {
+          logAnalyticsEvent('publish', 'Failure', 'reason|hasRelayCandidates',
+            (prefix ? prefix : '') + [':Publisher PeerConnection with connection ' +
+              (peerConnection && peerConnection.remoteConnection &&
+              peerConnection.remoteConnection.id)  + ' failed: ' +
+              reason, peerConnection.hasRelayCandidates
+          ].join('|'));
 
-            OT.handleJsException("Publisher PeerConnection Error: " + reason, 2000, {
-                session: _session,
-                target: this
-            });
+          OT.handleJsException('Publisher PeerConnection Error: ' + reason,
+          OT.ExceptionCodes.UNABLE_TO_PUBLISH, {
+            session: _session,
+            target: this
+          });
 
-            // We don't call cleanupSubscriber as it also logs a
-            // disconnected analytics event, which we don't want in this
-            // instance. The duplication is crufty though and should
-            // be tidied up.
-            if (peerConnection.remoteConnection) {
-                clearInterval(_qosIntervals[peerConnection.remoteConnection.id]);
-                delete _qosIntervals[peerConnection.remoteConnection.id]
+          // We don't call cleanupSubscriber as it also logs a
+          // disconnected analytics event, which we don't want in this
+          // instance. The duplication is crufty though and should
+          // be tidied up.
+          clearInterval(_qosIntervals[peerConnection.remoteConnection.id]);
+          delete _qosIntervals[peerConnection.remoteConnection.id];
 
-                delete _peerConnections[peerConnection.remoteConnection.id];
-            }
-            peerConnection.off();
-        },
-
-        getStats = function(callback) {
-            if (_gettingStats > 0) {
-                OT.debug("Still getting stats");
-                return;
-            }
-
-            var getStatsBlob = {};
-
-            // loops through all the peer connections get get the stats for them
-            for (var conn_id in _peerConnections) {
-
-                // this locks the getStats function so it isn't accidentally called
-                // again while already in the middle of getting stats
-                _gettingStats++;
-
-                getStatsBlob[conn_id] = null;
-
-                // just so we don't lose the connection id
-                (function(connection_id) {
-                    _peerConnections[connection_id].getStats(function(parsed_stats) {
-
-                        // one down
-                        _gettingStats--;
-
-                        if (parsed_stats) {
-                            getStatsBlob[connection_id] = parsed_stats;
-                        }
-
-                        // if this reaches zero, that means all of the peer connections
-                        // have returned their stats reports
-                        if (_gettingStats == 0) {
-                            callback(getStatsBlob);
-                        }
-                    });
-                })(conn_id);
-            }
+          delete _peerConnections[peerConnection.remoteConnection.id];
         },
 
         /// Private Helpers
 
+        // Assigns +stream+ to this publisher. The publisher listens
+        // for a bunch of events on the stream so it can respond to
+        // changes.
+        assignStream = function(stream) {
+          _stream = stream;
+          _stream.on('destroyed', this.disconnect, this);
+
+          var oldGuid = _guid;
+          _guid = OT.Publisher.nextId();
+
+          // Our publisher has changed guids, let people that rely
+          // on the GUID be non-volatile know.
+          if (oldGuid) {
+            this.trigger('idUpdated', oldGuid, _guid);
+          }
+
+          _state.set('Publishing');
+          _publishStartTime = new Date();
+
+          this.trigger('publishComplete', null, this);
+      
+          this.dispatchEvent(new OT.StreamEvent('streamCreated', stream, null, false));
+          
+          logAnalyticsEvent('publish', 'Success', 'streamType:streamId', 'WebRTC:' + _streamId);
+        }.bind(this),
+
         // Clean up our LocalMediaStream
         cleanupLocalStream = function() {
-            if (_webRTCStream) {
-                // Stop revokes our access cam and mic access for this instance
-                // of localMediaStream.
-                _webRTCStream.stop();
-                _webRTCStream = null;
-            }
+          if (_webRTCStream) {
+            // Stop revokes our access cam and mic access for this instance
+            // of localMediaStream.
+            _webRTCStream.stop();
+            _webRTCStream = null;
+          }
         },
 
         createPeerConnectionForRemote = function(remoteConnection) {
-            var peerConnection = _peerConnections[remoteConnection.id];
+          var peerConnection = _peerConnections[remoteConnection.id];
 
-            if (!peerConnection) {
-                var startConnectingTime = OT.$.now();
+          if (!peerConnection) {
+            var startConnectingTime = OT.$.now();
 
-                logAnalyticsEvent('createPeerConnection', 'Attempt', '', '');
+            logAnalyticsEvent('createPeerConnection', 'Attempt', '', '');
 
-                // Cleanup our subscriber when they disconnect
-                remoteConnection.on('destroyed', this.cleanupSubscriber.bind(this, remoteConnection.id));
+            // Cleanup our subscriber when they disconnect
+            remoteConnection.on('destroyed',
+              this.cleanupSubscriber.bind(this, remoteConnection.id));
 
-                peerConnection = _peerConnections[remoteConnection.id] = new OT.PublisherPeerConnection(
-                    remoteConnection,
-                    _session,
-                    _stream,
-                    _webRTCStream
-                );
+            peerConnection = _peerConnections[remoteConnection.id] = new OT.PublisherPeerConnection(
+              remoteConnection,
+              _session,
+              _streamId,
+              _webRTCStream
+            );
 
-                peerConnection.on({
-                    connected: function() {
-                        logAnalyticsEvent('createPeerConnection', 'Success', 'pcc|hasRelayCandidates', [
-                            parseInt(OT.$.now() - startConnectingTime, 10),
-                            peerConnection.hasRelayCandidates
-                        ].join('|'));
+            peerConnection.on({
+              connected: function() {
+                logAnalyticsEvent('createPeerConnection', 'Success', 'pcc|hasRelayCandidates', [
+                  parseInt(OT.$.now() - startConnectingTime, 10),
+                  peerConnection.hasRelayCandidates
+                ].join('|'));
 
-                        // start recording the QoS for this peer connection
-                        _qosIntervals[remoteConnection.id] = setInterval(function() {
-                            recordQOS(remoteConnection.id)
-                        }, 30000);
-                    },
-                    disconnected: onPeerDisconnected,
-                    error: onPeerConnectionFailure
-                }, this);
+                // start recording the QoS for this peer connection
+                _qosIntervals[remoteConnection.id] = setInterval(function() {
+                  recordQOS(remoteConnection.id);
+                }, 30000);
+              },
+              disconnected: onPeerDisconnected,
+              error: onPeerConnectionFailure
+            }, this);
 
-                peerConnection.init();
-            }
+            peerConnection.init();
+          }
 
-            return peerConnection;
+          return peerConnection;
         },
 
         /// Chrome
@@ -12183,174 +13997,208 @@ OT.Publisher = function() {
         // definitely display  the button, but we'll defer the model to the
         // Publishers buttonDisplayMode style property.
         chromeButtonMode = function(mode) {
-            if (mode === false) return 'off';
+          if (mode === false) return 'off';
 
-            var defaultMode = this.getStyle('buttonDisplayMode');
+          var defaultMode = this.getStyle('buttonDisplayMode');
 
-            // The default model is false, but it's overridden by +mode+ being true
-            if (defaultMode === false) return 'on';
+          // The default model is false, but it's overridden by +mode+ being true
+          if (defaultMode === false) return 'on';
 
-            // defaultMode is either true or auto.
-            return defaultMode;
+          // defaultMode is either true or auto.
+          return defaultMode;
         },
 
-        updateChromeForStyleChange = function(key, value, oldValue) {
-            if (!_chrome) return;
+        updateChromeForStyleChange = function(key, value) {
+          if (!_chrome) return;
 
-            switch(key) {
-                case 'nameDisplayMode':
-                    _chrome.name.setDisplayMode(value);
-                    break;
+          switch(key) {
+            case 'nameDisplayMode':
+              _chrome.name.setDisplayMode(value);
+              _chrome.backingBar.nameMode = value;
+              break;
 
-                case 'buttonDisplayMode':
-                case 'showMicButton':
-                case 'showSettingsButton':
-                    // _chrome.settingsPanelButton.setDisplayMode(
-                    //     chromeButtonMode.call(this, this.getStyle('showSettingsButton'))
-                    // );
+            case 'showArchiveStatus':
+              logAnalyticsEvent('showArchiveStatus', 'styleChange', 'mode', value);
+              _chrome.archive.setShowArchiveStatus(value);
+              break;
 
-                    // _chrome.muteButton.setDisplayMode(
-                    //     chromeButtonMode.call(this, this.getStyle('showMicButton'))
-                    // );
-            }
+            case 'buttonDisplayMode':
+            case 'showMicButton':
+              // _chrome.muteButton.setDisplayMode(
+              //     chromeButtonMode.call(this, this.getStyle('showMicButton'))
+              // );
+            case 'bugDisplayMode':
+              // _chrome.name.bugMode = value;
+          }
         },
 
         _createChrome = function() {
-            _chrome = new OT.Chrome({
-                parent: _container.domElement
-            }).set({
-                name: new OT.Chrome.NamePanel({
-                    name: _publishProperties.name,
-                    mode: this.getStyle('nameDisplayMode')
-                }),
+          if(this.getStyle('bugDisplayMode') === 'off') {
+            logAnalyticsEvent('bugDisplayMode', 'createChrome', 'mode', 'off');
+          }
+          if(this.getStyle('showArchiveStatus') === 'off') {
+            logAnalyticsEvent('showArchiveStatus', 'createChrome', 'mode', 'off');
+          }
+          _chrome = new OT.Chrome({
+            parent: _container.domElement
+          }).set({
 
-                // settingsPanelButton: new OT.Chrome.SettingsPanelButton({
-                //     mode: chromeButtonMode.call(this, this.getStyle('showSettingsButton'))
-                // }),
+            backingBar: new OT.Chrome.BackingBar({
+              nameMode: this.getStyle('nameDisplayMode'),
+              muteMode: chromeButtonMode.call(this, this.getStyle('showMicButton'))
+            }),
 
-                // Disabled until we can change the mic Volume through WebRTC
-                muteButton: new OT.Chrome.MuteButton({
-                    muted: _publishProperties.publishAudio === false,
-                    mode: chromeButtonMode.call(this, this.getStyle('showMicButton'))
-                }),
+            name: new OT.Chrome.NamePanel({
+              name: _publishProperties.name,
+              mode: this.getStyle('nameDisplayMode'),
+              bugMode: this.getStyle('bugDisplayMode')
+            }),
 
-                opentokButton: new OT.Chrome.OpenTokButton()
-            }).on({
-                // 'SettingsPanel:open': function() {
-                //     if (!_chrome.settingsPanel) {
-                //         // Add the settings panel, hide it initially
-                //         _chrome.set(
-                //             'settingsPanel',
-                //             new OT.Chrome.SettingsPanel({
-                //                 stream: _webRTCStream,
-                //                 mode: 'on'
-                //             })
-                //         );
-                //     }
-                //     else {
-                //         _chrome.settingsPanel.setDisplayMode('on');
-                //     }
+            muteButton: new OT.Chrome.MuteButton({
+              muted: _publishProperties.publishAudio === false,
+              mode: chromeButtonMode.call(this, this.getStyle('showMicButton'))
+            }),
 
-                //     OT.$.addClass(_container, 'OT_reversed');
-                // },
+            opentokButton: new OT.Chrome.OpenTokButton({
+              mode: this.getStyle('bugDisplayMode')
+            }),
 
-                // 'SettingsPanel:close': function() {
-                //     OT.$.removeClass(_container, 'OT_reversed');
+            archive: new OT.Chrome.Archiving({
+              show: this.getStyle('showArchiveStatus'),
+              archiving: false
+            })
 
-                //     // Hide the settings panel after our animation is complete
-                //     setTimeout(function() {
-                //         _chrome.settingsPanel.setDisplayMode('off');
-                //     }, 3000);
-                // },
-
-
-                muted: this.publishAudio.bind(this, false),
-                unmuted: this.publishAudio.bind(this, true)
-            });
+          }).on({
+            muted: this.publishAudio.bind(this, false),
+            unmuted: this.publishAudio.bind(this, true)
+          });
         },
 
         reset = function() {
-            if (_chrome) {
-              _chrome.destroy();
-              _chrome = null;
-            }
+          if (_chrome) {
+            _chrome.destroy();
+            _chrome = null;
+          }
 
-            this.disconnect();
+          this.disconnect();
 
-            _microphone = null;
+          _microphone = null;
 
-            if (_targetElement) {
-                _targetElement.destroy();
-                _targetElement = null;
-            }
+          if (_targetElement) {
+            _targetElement.destroy();
+            _targetElement = null;
+          }
 
-            cleanupLocalStream();
+          cleanupLocalStream();
 
-            if (_container) {
-                _container.destroy();
-                _container = null;
-            }
+          if (_container) {
+            _container.destroy();
+            _container = null;
+          }
 
-            if (this.session) this._.unpublishFromSession(this.session);
+          if (this.session) {
+            this._.unpublishFromSession(this.session, 'reset');
+          }
 
-            // clear all the intervals
-            for (var conn_id in _qosIntervals) {
-                clearInterval(_qosIntervals[conn_id]);
-                delete _qosIntervals[conn_id];
-            }
+          // clear all the intervals
+          for (var connId in _qosIntervals) {
+            clearInterval(_qosIntervals[connId]);
+            delete _qosIntervals[connId];
+          }
 
-            _domId = null;
-            _stream = null;
-            _loaded = false;
+          _domId = null;
+          _stream = null;
+          _loaded = false;
 
-            _session = null;
-            _properties = null;
-
-            _state.set('NotPublishing');
+          _session = null;
+          
+          _state.set('NotPublishing');
         }.bind(this);
 
-
     this.publish = function(targetElement, properties) {
-        OT.debug("OT.Publisher: publish");
+      OT.debug('OT.Publisher: publish');
 
-        if ( _state.attemptingToPublish || _state.publishing ) reset();
-        _state.set('GetUserMedia');
+      if ( _state.attemptingToPublish || _state.publishing ) reset();
+      _state.set('GetUserMedia');
 
-        _publishProperties = OT.$.defaults(properties || {}, {
-            publishAudio : true,
-            publishVideo : true,
-            mirror: true
-        });
-
-        _publishProperties.constraints = OT.$.defaults(_publishProperties.constraints || {}, defaultConstraints);
-
-        if (_publishProperties.style) {
-            this.setStyle(_publishProperties.style, null, true);
+      _publishProperties = OT.$.defaults(properties || {}, {
+        publishAudio : true,
+        publishVideo : true,
+        mirror: true
+      });
+        
+      if (!_publishProperties.constraints) {
+        _publishProperties.constraints = OT.$.clone(defaultConstraints);
+        if (_publishProperties.resolution) {
+          if (_publishProperties.resolution !== void 0 &&
+            !_validResolutions.hasOwnProperty(_publishProperties.resolution)) {
+            OT.warn('Invalid resolution passed to the Publisher. Got: ' +
+              _publishProperties.resolution + ' expecting one of "' +
+              Object.keys(_validResolutions).join('","') + '"');
+          } else {
+            _publishProperties.videoDimensions = _validResolutions[_publishProperties.resolution];
+            _publishProperties.constraints.video = {
+              mandatory: {},
+              optional: [
+                {minWidth: _publishProperties.videoDimensions.width},
+                {maxWidth: _publishProperties.videoDimensions.width},
+                {minHeight: _publishProperties.videoDimensions.height},
+                {maxHeight: _publishProperties.videoDimensions.height}
+              ]
+            };
+          }
         }
-
-        if (_publishProperties.name) {
-            _publishProperties.name = _publishProperties.name.toString();
+    
+        if (_publishProperties.frameRate !== void 0 &&
+          _validFrameRates.indexOf(_publishProperties.frameRate) === -1) {
+          OT.warn('Invalid frameRate passed to the publisher got: ' +
+            _publishProperties.frameRate + ' expecting one of ' + _validFrameRates.join(','));
+          delete _publishProperties.frameRate;
+        } else if (_publishProperties.frameRate) {
+          if (!_publishProperties.constraints.video.optional) {
+            if (typeof _publishProperties.constraints.video !== 'object') {
+              _publishProperties.constraints.video = {};
+            }
+            _publishProperties.constraints.video.optional = [];
+          }
+          _publishProperties.constraints.video.optional.push({
+            minFrameRate: _publishProperties.frameRate
+          });
+          _publishProperties.constraints.video.optional.push({
+            maxFrameRate: _publishProperties.frameRate
+          });
         }
+      } else {
+        OT.warn('You have passed your own constraints not using ours');
+      }
 
-        _publishProperties.classNames = 'OT_root OT_publisher';
+      if (_publishProperties.style) {
+        this.setStyle(_publishProperties.style, null, true);
+      }
 
-        // Defer actually creating the publisher DOM nodes until we know
-        // the DOM is actually loaded.
-        OT.onLoad(function() {
-            _container = new OT.WidgetView(targetElement, _publishProperties);
-            _domId = _container.domId;
+      if (_publishProperties.name) {
+        _publishProperties.name = _publishProperties.name.toString();
+      }
 
-            OT.$.getUserMedia(
-                _publishProperties.constraints,
-                onStreamAvailable.bind(this),
-                onStreamAvailableError.bind(this),
-                onAccessDialogOpened.bind(this),
-                onAccessDialogClosed.bind(this),
-                onAccessDenied.bind(this)
-            );
-        }, this);
+      _publishProperties.classNames = 'OT_root OT_publisher';
 
-        return this;
+      // Defer actually creating the publisher DOM nodes until we know
+      // the DOM is actually loaded.
+      OT.onLoad(function() {
+        _container = new OT.WidgetView(targetElement, _publishProperties);
+        _domId = _container.domId;
+
+        OT.$.getUserMedia(
+          _publishProperties.constraints,
+          onStreamAvailable.bind(this),
+          onStreamAvailableError.bind(this),
+          onAccessDialogOpened.bind(this),
+          onAccessDialogClosed.bind(this),
+          onAccessDenied.bind(this)
+        );
+      }, this);
+
+      return this;
     };
 
  /**
@@ -12361,23 +14209,28 @@ OT.Publisher = function() {
   * @param {Boolean} value Whether to start publishing audio (<code>true</code>)
   * or not (<code>false</code>).
   *
-  * @see <a href="TB.html#initPublisher">TB.initPublisher()</a>
+  * @see <a href="OT.html#initPublisher">OT.initPublisher()</a>
   * @see <a href="Stream.html#hasAudio">Stream.hasAudio</a>
   * @see StreamPropertyChangedEvent
   * @method #publishAudio
   * @memberOf Publisher
   */
     this.publishAudio = function(value) {
-        _publishProperties.publishAudio = value;
+      _publishProperties.publishAudio = value;
 
-        if (_microphone) {
-            _microphone.muted = !value;
-        }
+      if (_microphone) {
+        _microphone.muted = !value;
+      }
+      
+      if (_chrome) {
+        _chrome.muteButton.muted = !value;
+      }
 
-        if (_session && _stream) {
-            _session._.modifyStream(_stream.streamId, "hasAudio", value);
-        }
-        return this;
+      if (_session && _stream) {
+        _stream.setChannelActiveState('audio', value);
+      }
+
+      return this;
     };
 
 
@@ -12389,66 +14242,69 @@ OT.Publisher = function() {
   * @param {Boolean} value Whether to start publishing video (<code>true</code>)
   * or not (<code>false</code>).
   *
-  * @see <a href="TB.html#initPublisher">TB.initPublisher()</a>
+  * @see <a href="OT.html#initPublisher">OT.initPublisher()</a>
   * @see <a href="Stream.html#hasVideo">Stream.hasVideo</a>
   * @see StreamPropertyChangedEvent
   * @method #publishVideo
   * @memberOf Publisher
   */
     this.publishVideo = function(value) {
-        var oldValue = _publishProperties.publishVideo;
-        _publishProperties.publishVideo = value;
+      var oldValue = _publishProperties.publishVideo;
+      _publishProperties.publishVideo = value;
 
-        if (_session && _stream && _publishProperties.publishVideo !== oldValue) {
-            _session._.modifyStream(_stream.streamId, "hasVideo", value);
+      if (_session && _stream && _publishProperties.publishVideo !== oldValue) {
+        _stream.setChannelActiveState('video', value);
+      }
+
+      // We currently do this event if the value of publishVideo has not changed
+      // This is because the state of the video tracks enabled flag may not match
+      // the value of publishVideo at this point. This will be tidied up shortly.
+      if (_webRTCStream) {
+        var videoTracks = _webRTCStream.getVideoTracks();
+        for (var i=0, num=videoTracks.length; i<num; ++i) {
+          videoTracks[i].enabled = value;
         }
+      }
 
-        // We currently do this event if the value of publishVideo has not changed
-        // This is because the state of the video tracks enabled flag may not match
-        // the value of publishVideo at this point. This will be tidied up shortly.
-        if (_webRTCStream) {
-            var videoTracks = _webRTCStream.getVideoTracks();
-            for (var i=0, num=videoTracks.length; i<num; ++i) {
-                videoTracks[i].enabled = value;
-            }
-        }
+      if(_container) {
+        _container.showPoster = !value;
+      }
 
-        if(_container) {
-            _container.showPoster = !value;
-        }
-
-        return this;
+      return this;
     };
 
     this.recordQOS = function() {
-
-        // have to record QoS for every peer connection
-        for (var conn_id in _peerConnections) {
-            recordQOS(conn_id);
-        }
+      // have to record QoS for every peer connection
+      for (var connId in _peerConnections) {
+        recordQOS(connId);
+      }
     };
 
     /**
     * Deletes the Publisher object and removes it from the HTML DOM.
+    * <p>
+    * The Publisher object dispatches a <code>destroyed</code> event when the DOM
+    * element is removed.
+    * </p>
     * @method #destroy
     * @memberOf Publisher
     * @return {Publisher} The Publisher.
     */
     this.destroy = function(/* unused */ reason, quiet) {
-        reset();
+      reset();
 
-        if (quiet !== true) {
-            this.dispatchEvent(
-              new OT.DestroyedEvent(
-                OT.Event.names.PUBLISHER_DESTROYED,
-                this,
-                reason
-              ),
-              this.off.bind(this)
-            );
-        }
+      if (quiet !== true) {
+        this.dispatchEvent(
+          new OT.DestroyedEvent(
+            OT.Event.names.PUBLISHER_DESTROYED,
+            this,
+            reason
+          ),
+          this.off.bind(this)
+        );
+      }
 
-        return this;
+      return this;
     };
 
     /**
@@ -12456,40 +14312,41 @@ OT.Publisher = function() {
     * @private
     */
     this.disconnect = function() {
-        // Close the connection to each of our subscribers
-        for (var fromConnectionId in _peerConnections) {
-            this.cleanupSubscriber(fromConnectionId);
-        }
+      // Close the connection to each of our subscribers
+      for (var fromConnectionId in _peerConnections) {
+        this.cleanupSubscriber(fromConnectionId);
+      }
     };
 
     this.cleanupSubscriber = function(fromConnectionId) {
-        var pc = _peerConnections[fromConnectionId];
+      var pc = _peerConnections[fromConnectionId];
 
-        clearInterval(_qosIntervals[fromConnectionId]);
-        delete _qosIntervals[fromConnectionId];
+      clearInterval(_qosIntervals[fromConnectionId]);
+      delete _qosIntervals[fromConnectionId];
 
-        if (pc) {
-            pc.destroy();
-            delete _peerConnections[fromConnectionId];
+      if (pc) {
+        pc.destroy();
+        delete _peerConnections[fromConnectionId];
 
-            logAnalyticsEvent('disconnect', 'PeerConnection', 'subscriberConnection', fromConnectionId);
-        }
+        logAnalyticsEvent('disconnect', 'PeerConnection',
+          'subscriberConnection', fromConnectionId);
+      }
     };
 
 
     this.processMessage = function(type, fromConnection, message) {
-        OT.debug("OT.Publisher.processMessage: Received " + type + " from " + fromConnection.id);
-        OT.debug(message);
+      OT.debug('OT.Publisher.processMessage: Received ' + type + ' from ' + fromConnection.id);
+      OT.debug(message);
 
-        switch (type) {
-            case OT.Raptor.Actions.UNSUBSCRIBE:
-                this.cleanupSubscriber(fromConnection.id);
-                break;
+      switch (type) {
+        case 'unsubscribe':
+          this.cleanupSubscriber(message.content.connection.id);
+          break;
 
-            default:
-                var peerConnection = createPeerConnectionForRemote.call(this, fromConnection);
-                peerConnection.processMessage(type, message);
-        }
+        default:
+          var peerConnection = createPeerConnectionForRemote.call(this, fromConnection);
+          peerConnection.processMessage(type, message);
+      }
     };
 
     /**
@@ -12514,185 +14371,227 @@ OT.Publisher = function() {
     */
 
     this.getImgData = function() {
-        if (!_loaded) {
-            OT.error("OT.Publisher.getImgData: Cannot getImgData before the Publisher is publishing.");
+      if (!_loaded) {
+        OT.error('OT.Publisher.getImgData: Cannot getImgData before the Publisher is publishing.');
 
-            return null;
-        }
+        return null;
+      }
 
-        return _targetElement.imgData;
+      return _targetElement.imgData;
     };
 
 
     // API Compatibility layer for Flash Publisher, this could do with some tidyup.
     this._ = {
-        publishToSession: function(session) {
-            // Add session property to Publisher
-            this.session = session;
+      publishToSession: function(session) {
+        // Add session property to Publisher
+        this.session = session;
 
-            var createStream = function() {
-                // Bail if this.session is gone, it means we were unpublished
-                // before createStream could finish.
-                if (!this.session) return;
+        var createStream = function() {
 
-                _state.set('PublishingToSession');
+          var streamWidth,
+              streamHeight;
 
-                if (_streamCreatedTimeout) {
-                  clearTimeout(_streamCreatedTimeout);
-                }
-                _streamCreatedTimeout = setTimeout(function () {
-                  logAnalyticsEvent('publish', 'Failure', 'reason', 'StreamCreated: Timed out waiting for streamRegistered');
-                  this.trigger('publishError', "StreamCreated: Timed out waiting for streamRegistered");
-                }.bind(this), 30000);
+          // Bail if this.session is gone, it means we were unpublished
+          // before createStream could finish.
+          if (!this.session) return;
 
-                session._.createStream( this.guid,
-                                        _publishProperties && _publishProperties.name ? _publishProperties.name : "",
-                                        OT.VideoOrientation.ROTATED_NORMAL,
-                                        _targetElement.videoWidth,                      // actual width and height
-                                        _targetElement.videoHeight,                     // of the video stream.
-                                        _publishProperties.publishAudio,
-                                        _publishProperties.publishVideo );
-            };
+          _state.set('PublishingToSession');
 
-            if (_loaded) createStream.call(this);
-            else this.on("initSuccess", createStream, this);
-
-            logAnalyticsEvent('publish', 'Attempt', 'streamType', 'WebRTC');
-
-            return this;
-        }.bind(this),
-
-        unpublishFromSession: function(session) {
-            if (!this.session || session.id !== this.session.id) {
-                OT.warn("The publisher " + this.guid + " is trying to unpublish from a session " + session.id + " it is not attached to");
-                return this;
+          var onStreamRegistered = function(err, streamId) {
+            if (err) {
+              // @todo we should respect err.code here and translate it to the local
+              // client equivalent.
+              logAnalyticsEvent('publish', 'Failure', 'reason',
+                'Publish:' + OT.ExceptionCodes.UNABLE_TO_PUBLISH + ':' + err.message);
+              if (_state.attemptingToPublish) {
+                this.trigger('publishComplete', new OT.Error(OT.ExceptionCodes.UNABLE_TO_PUBLISH,
+                  err.message));
+              }
+              return;
             }
 
-            if (session.connected && this.stream) {
-                session._.destroyStream(this.stream.id);
+            _streamId = streamId;
+          }.bind(this);
+              
+          // We set the streamWidth and streamHeight to be the minimum of the requested
+          // resolution and the actual resolution.
+          if (_publishProperties.videoDimensions) {
+            streamWidth = Math.min(_publishProperties.videoDimensions.width,
+              _targetElement.videoWidth || 640);
+            streamHeight = Math.min(_publishProperties.videoDimensions.height,
+              _targetElement.videoHeight || 480);
+          } else {
+            streamWidth = _targetElement.videoWidth || 640;
+            streamHeight = _targetElement.videoHeight || 480;
+          }
+
+          session._.streamCreate(
+            _publishProperties && _publishProperties.name ? _publishProperties.name : '',
+            OT.VideoOrientation.ROTATED_NORMAL,
+            streamWidth,
+            streamHeight,
+            _publishProperties.publishAudio,
+            _publishProperties.publishVideo,
+            _publishProperties.frameRate,
+            onStreamRegistered
+          );
+        };
+
+        if (_loaded) createStream.call(this);
+        else this.on('initSuccess', createStream, this);
+
+        logAnalyticsEvent('publish', 'Attempt', 'streamType', 'WebRTC');
+
+        return this;
+      }.bind(this),
+
+      unpublishFromSession: function(session, reason) {
+        if (!this.session || session.id !== this.session.id) {
+          OT.warn('The publisher ' + this.guid + ' is trying to unpublish from a session ' +
+            session.id + ' it is not attached to (' +
+            (this.session && this.session.id || 'no this.session') + ')');
+          return this;
+        }
+
+        if (session.connected && this.stream) {
+          session._.streamDestroy(this.stream.id);
+        }
+
+        // Disconnect immediately, rather than wait for the WebSocket to
+        // reply to our destroyStream message.
+        this.disconnect();
+        this.session = null;
+
+        // We're back to being a stand-alone publisher again.
+        _state.set('MediaBound');
+
+        logAnalyticsEvent('unpublish', 'Success', 'sessionId', session.id);
+
+        this._.streamDestroyed(reason);
+
+        return this;
+      }.bind(this),
+      
+      streamDestroyed: function(reason) {
+        if(['reset'].indexOf(reason) < 0) {
+          var event = new OT.StreamEvent('streamDestroyed', _stream, reason, true);
+          var defaultAction = function() {
+            if(!event.isDefaultPrevented()) {
+              this.destroy();
             }
+          }.bind(this);
+          this.dispatchEvent(event, defaultAction);
+        }
+      }.bind(this),
 
-            // Disconnect immediately, rather than wait for the WebSocket to
-            // reply to our destroyStream message.
-            this.disconnect();
-            this.session = null;
-
-            // We're back to being a stand-alone publisher again.
-            _state.set('MediaBound');
-
-            logAnalyticsEvent('unpublish', 'Success', 'sessionId', session.id);
-
-            return this;
-        }.bind(this),
-
-        // Called once our stream has been ack'd as created by the session
-        streamRegisteredHandler: function(stream) {
-            clearTimeout(_streamCreatedTimeout);
-            _streamCreatedTimeout = null;
-
-            logAnalyticsEvent('publish', 'Success', 'streamType', 'WebRTC');
-
-            this.stream = stream;
-            this.stream.on('destroyed', this.disconnect, this);
-
-            var oldGuid = _guid;
-            _guid = OT.Publisher.nextId();
-
-            // Our publisher has changed guids, let people that rely
-            // on the GUID be non-volatile know.
-            if (oldGuid) {
-                this.trigger('idUpdated', oldGuid, _guid);
-            }
-
-            _state.set('Publishing');
-            _publishStartTime = new Date();
-
-            this.trigger('publishSuccess');
-        }.bind(this)
+      archivingStatus: function(status) {
+        if(_chrome) {
+          _chrome.archive.setArchiving(status);
+        }
+        return status;
+      }.bind(this)
     };
 
     this.detectDevices = function() {
-        OT.warn("Fixme: Haven't implemented detectDevices");
+      OT.warn('Fixme: Haven\'t implemented detectDevices');
     };
 
     this.detectMicActivity = function() {
-        OT.warn("Fixme: Haven't implemented detectMicActivity");
+      OT.warn('Fixme: Haven\'t implemented detectMicActivity');
     };
 
     this.getEchoCancellationMode = function() {
-        OT.warn("Fixme: Haven't implemented getEchoCancellationMode");
-        return "fullDuplex";
+      OT.warn('Fixme: Haven\'t implemented getEchoCancellationMode');
+      return 'fullDuplex';
     };
 
-    this.setMicrophoneGain = function(value) {
-        OT.warn("Fixme: Haven't implemented setMicrophoneGain");
+    this.setMicrophoneGain = function() {
+      OT.warn('Fixme: Haven\'t implemented setMicrophoneGain');
     };
 
     this.getMicrophoneGain = function() {
-        OT.warn("Fixme: Haven't implemented getMicrophoneGain");
-        return 0.5;
+      OT.warn('Fixme: Haven\'t implemented getMicrophoneGain');
+      return 0.5;
     };
 
-    this.setCamera = function(value) {
-        OT.warn("Fixme: Haven't implemented setCamera");
+    this.setCamera = function() {
+      OT.warn('Fixme: Haven\'t implemented setCamera');
     };
 
-    this.setMicrophone = function(value) {
-        OT.warn("Fixme: Haven't implemented setMicrophone");
+    this.setMicrophone = function() {
+      OT.warn('Fixme: Haven\'t implemented setMicrophone');
     };
 
 
     Object.defineProperties(this, {
-        id: {
-            get: function() { return _domId; },
-            enumerable: true
+      id: {
+        get: function() { return _domId; },
+        enumerable: true
+      },
+        
+      element: {
+        get: function() { return _container.domElement; },
+        enumerable: true
+      },
+
+      guid: {
+        get: function() { return _guid; },
+        enumerable: true
+      },
+
+      stream: {
+        get: function() { return _stream; },
+        set: function(stream) {
+          assignStream(stream);
         },
+        enumerable: true
+      },
 
-        guid: {
-            get: function() { return _guid; },
-            enumerable: true
+      streamId: {
+        get: function() { return _streamId; },
+        enumerable: true
+      },
+
+      targetElement: {
+        get: function() { return _targetElement.domElement; }
+      },
+
+      domId: {
+        get: function() { return _domId; }
+      },
+
+      session: {
+        get: function() { return _session; },
+        set: function(session) {
+          _session = session;
         },
+        enumerable: true
+      },
 
-        stream: {
-            get: function() { return _stream; },
-            set: function(stream) { _stream = stream; },
-            enumerable: true
-        },
+      isWebRTC: {
+        get: function() { return true; }
+      },
 
-        streamId: {
-            get: function() {
-                if (!_stream) return null;
-
-                return _stream.id;
-            },
-            enumerable: true
-        },
-
-        targetElement: {
-            get: function() { return _targetElement.domElement; }
-        },
-
-        domId: {
-            get: function() { return _domId; }
-        },
-
-        session: {
-            get: function() { return _session; },
-            set: function(session) { _session = session; },
-            enumerable: true
-        },
-
-        isWebRTC: {
-            get: function() { return true; }
-        },
-
-        loading: {
-            get: function(){ return _container && _container.loading }
+      loading: {
+        get: function(){
+          return _container && _container.loading;
         }
+      },
+        
+      videoWidth: {
+        get: function() { return _targetElement.videoWidth; },
+        enumerable: true
+      },
+        
+      videoHeight: {
+        get: function() { return _targetElement.videoHeight; },
+        enumerable: true
+      }
     });
 
     Object.defineProperty(this._, 'webRtcStream', {
-        get: function() { return _webRTCStream; }
+      get: function() { return _webRTCStream; }
     });
 
     this.on('styleValueChanged', updateChromeForStyleChange, this);
@@ -12701,7 +14600,10 @@ OT.Publisher = function() {
 
 	/**
 	* Dispatched when the user has clicked the Allow button, granting the
-	* app access to the camera and microphone.
+	* app access to the camera and microphone. The Publisher object has an
+	* <code>accessAllowed</code> property which indicates whether the user
+	* has granted access to the camera and microphone.
+	* @see Event
 	* @name accessAllowed
 	* @event
 	* @memberof Publisher
@@ -12710,47 +14612,87 @@ OT.Publisher = function() {
 	/**
 	* Dispatched when the user has clicked the Deny button, preventing the
 	* app from having access to the camera and microphone.
+	* @see Event
 	* @name accessDenied
 	* @event
 	* @memberof Publisher
 	*/
 
 	/**
-	* Dispatched when the Allow/Deny dialog box is opened. (This is the dialog box in which the user can grant
-	* the app access to the camera and microphone.)
+	* Dispatched when the Allow/Deny dialog box is opened. (This is the dialog box in which
+	* the user can grant the app access to the camera and microphone.)
+	* @see Event
 	* @name accessDialogOpened
 	* @event
 	* @memberof Publisher
 	*/
 
 	/**
-	* Dispatched when the Allow/Deny box is closed. (This is the dialog box in which the user can grant
-	* the app access to the camera and microphone.)
+	* Dispatched when the Allow/Deny box is closed. (This is the dialog box in which the
+	* user can grant the app access to the camera and microphone.)
+	* @see Event
 	* @name accessDialogClosed
 	* @event
 	* @memberof Publisher
 	*/
 
-};
+	/**
+	 * The publisher has started streaming to the session.
+	 * @name streamCreated
+	 * @event
+	 * @memberof Publisher
+	 * @see StreamEvent
+	 * @see <a href="Session.html#publish">Session.publish()</a>
+	 */
 
-// Helper function to generate unique publisher ids
-OT.Publisher.nextId = OT.$.uuid;
+	/**
+	 * The publisher has stopped streaming to the session. The default behavior is that
+	 * the Publisher object is removed from the HTML DOM). The Publisher object dispatches a 
+	 * <code>destroyed</code> event when the element is removed from the HTML DOM. If you call the 
+	 * <code>preventDefault()</code> method in the event listener for the 
+	 * <code>streamDestroyed</code> event, the default behavior is prevented, and you 
+	 * can, optionally, retain the Publisher for reuse or clean it up using your own code.
+	 * @name streamDestroyed
+	 * @event
+	 * @memberof Publisher
+	 * @see StreamEvent
+	 */
+
+	/**
+	* Dispatched when the Publisher element is removed from the HTML DOM. When this event
+  * is dispatched, you may choose to adjust or remove HTML DOM elements related to the publisher.
+	* @name destroyed
+	* @event
+	* @memberof Publisher
+	*/
+  };
+
+  // Helper function to generate unique publisher ids
+  OT.Publisher.nextId = OT.$.uuid;
 
 })(window);
-(function(window) {
-
+!(function(window) {
 
 /**
- * The Subscriber object is a representation of the local video element that is playing back a remote stream.
- * The Subscriber object includes methods that let you disable and enable local audio playback for the subscribed stream.
- * The <code>subscribe()</code> method of the {@link Session} object returns a Subscriber object.
+ * The Subscriber object is a representation of the local video element that is playing back
+ * a remote stream. The Subscriber object includes methods that let you disable and enable
+ * local audio playback for the subscribed stream. The <code>subscribe()</code> method of the
+ * {@link Session} object returns a Subscriber object.
  *
+ * @property {Element} element The HTML DOM element containing the Subscriber.
  * @property {String} id The DOM ID of the Subscriber.
  * @property {Stream} stream The stream to which you are subscribing.
+ * @property {Number} videoHeight The height, in pixels, of the Subscriber video in the HTML DOM.
+ * This may differ from the <code>videoHeight</code> dimensions of the Stream object, if the
+ * browser does not support the resolution of the stream.
+ * @property {Number} videoWidth The width, in pixels, of the Subscriber video in the HTML DOM.
+ * This may differ from the <code>videoWidth</code> dimensions of the Stream object, if the
+ * browser does not support the resolution of the stream.
+ *
  * @class Subscriber
  * @augments EventDispatcher
  */
-OT.Subscriber = function(targetElement, options) {
+  OT.Subscriber = function(targetElement, options) {
     var _widgetId = OT.$.uuid(),
         _domId = targetElement || _widgetId,
         _container,
@@ -12766,509 +14708,595 @@ OT.Subscriber = function(targetElement, options) {
         _properties = OT.$.clone(options),
         _analytics = new OT.Analytics(),
         _audioVolume = 50,
-        _gettingStats = 0,
         _state,
         _subscribeAudioFalseWorkaround, // OPENTOK-6844
-        _prevStats = {
-            "timeStamp" : OT.$.now()
-        };
+        _prevStats,
+        _lastSubscribeToVideoReason;
 
+    _prevStats = {
+      timeStamp: OT.$.now()
+    };
 
     if (!_session) {
-        OT.handleJsException("Subscriber must be passed a session option", 2000, {
-            session: _session,
-            target: this
-        });
+      OT.handleJsException('Subscriber must be passed a session option', 2000, {
+        session: _session,
+        target: this
+      });
 
-        return;
+      return;
     }
 
     OT.$.eventing(this);
 
     OT.StylableComponent(this, {
-        nameDisplayMode: "auto",
-        buttonDisplayMode: "auto",
-        backgroundImageURI: null
+      nameDisplayMode: 'auto',
+      buttonDisplayMode: 'auto',
+      backgroundImageURI: null,
+      showArchiveStatus: true,
+      showMicButton: true
     });
 
     var logAnalyticsEvent = function(action, variation, payloadType, payload) {
-            _analytics.logEvent({
-                action: action,
-                variation: variation,
-                payload_type: payloadType,
-                payload: payload,
-                stream_id: _stream ? _stream.id : null,
-                session_id: _session ? _session.sessionId : null,
-                connection_id: _session && _session.connected ? _session.connection.connectionId : null,
-                partner_id: _session && _session.connected ? _session.sessionInfo.partnerId : null,
-                widget_id: _widgetId,
-                widget_type: 'Subscriber'
-            });
+          /* jshint camelcase:false*/
+          _analytics.logEvent({
+            action: action,
+            variation: variation,
+            payload_type: payloadType,
+            payload: payload,
+            stream_id: _stream ? _stream.id : null,
+            session_id: _session ? _session.sessionId : null,
+            connection_id: _session && _session.connected ? _session.connection.connectionId : null,
+            partner_id: _session && _session.connected ? _session.sessionInfo.partnerId : null,
+            widget_id: _widgetId,
+            widget_type: 'Subscriber'
+          });
         },
 
         recordQOS = function() {
-            if(_state.subscribing && _session && _session.connected) {
-                var QoS_blob = {
-                    widget_type: 'Subscriber',
-                    stream_type : 'WebRTC',
-                    session_id: _session ? _session.sessionId : null,
-                    connectionId: _session ? _session.connection.connectionId : null,
-                    media_server_name: _session ? _session.sessionInfo.messagingServer : null,
-                    p2pFlag: _session ? _session.sessionInfo.p2pEnabled : false,
-                    partner_id: _session ? _session.apiKey : null,
-                    stream_id: _stream.id,
-                    widget_id: _widgetId,
-                    version: OT.properties.version,
-                    duration: parseInt(OT.$.now() - _subscribeStartTime, 10),
-                    remote_connection_id: _stream.connection.connectionId
-                };
+          if(_state.subscribing && _session && _session.connected) {
+            /*jshint camelcase:false */
+            var QoSBlob = {
+              widget_type: 'Subscriber',
+              stream_type : 'WebRTC',
+              session_id: _session ? _session.sessionId : null,
+              connectionId: _session ? _session.connection.connectionId : null,
+              media_server_name: _session ? _session.sessionInfo.messagingServer : null,
+              p2pFlag: _session ? _session.sessionInfo.p2pEnabled : false,
+              partner_id: _session ? _session.apiKey : null,
+              stream_id: _stream.id,
+              widget_id: _widgetId,
+              version: OT.properties.version,
+              duration: parseInt(OT.$.now() - _subscribeStartTime, 10),
+              remote_connection_id: _stream.connection.connectionId
+            };
 
-
-                // get stats for each connection id
-                _peerConnection.getStats(_prevStats, function(stats) {
-                    if (stats) {
-                        for (stat_index in stats) {
-                            QoS_blob[stat_index] = stats[stat_index];
-                        }
-                    }
-                    _analytics.logQOS(QoS_blob);
-                });
-            }
+            // get stats for each connection id
+            _peerConnection.getStats(_prevStats, function(stats) {
+              var statIndex;
+              if (stats) {
+                for (statIndex in stats) {
+                  QoSBlob[statIndex] = stats[statIndex];
+                }
+              }
+              _analytics.logQOS(QoSBlob);
+            });
+          }
         },
 
         stateChangeFailed = function(changeFailed) {
-            OT.error("Subscriber State Change Failed: ", changeFailed.message);
-            OT.debug(changeFailed);
+          OT.error('Subscriber State Change Failed: ', changeFailed.message);
+          OT.debug(changeFailed);
         },
 
         onLoaded = function() {
-            if (_state.subscribing || !_streamContainer) return;
+          if (_state.subscribing || !_streamContainer) return;
 
-            OT.debug("OT.Subscriber.onLoaded");
+          OT.debug('OT.Subscriber.onLoaded');
 
-            _state.set('Subscribing');
-            _subscribeStartTime = OT.$.now();
+          _state.set('Subscribing');
+          _subscribeStartTime = OT.$.now();
 
-            logAnalyticsEvent('createPeerConnection', 'Success', 'pcc|hasRelayCandidates', [
-                parseInt(_subscribeStartTime - _startConnectingTime, 10),
-                _peerConnection && _peerConnection.hasRelayCandidates
-            ].join('|'));
+          logAnalyticsEvent('createPeerConnection', 'Success', 'pcc|hasRelayCandidates', [
+            parseInt(_subscribeStartTime - _startConnectingTime, 10),
+            _peerConnection && _peerConnection.hasRelayCandidates
+          ].join('|'));
 
-            _qosInterval = setInterval(recordQOS, 30000);
+          _qosInterval = setInterval(recordQOS, 30000);
 
-            if(_subscribeAudioFalseWorkaround) {
-                _subscribeAudioFalseWorkaround = null;
-                this.subscribeToVideo(false);
-            }
+          if(_subscribeAudioFalseWorkaround) {
+            _subscribeAudioFalseWorkaround = null;
+            this.subscribeToVideo(false);
+          }
 
-            _container.loading = false;
+          _container.loading = false;
 
-            _createChrome.call(this);
+          _createChrome.call(this);
 
-            this.trigger('subscribeSuccess', this);
-            this.trigger('loaded', this);
+          this.trigger('subscribeComplete', null, this);
+          this.trigger('loaded', this);
 
-
-            logAnalyticsEvent('subscribe', 'Success', 'streamId', _stream.id);
+          logAnalyticsEvent('subscribe', 'Success', 'streamId', _stream.id);
         },
 
         onDisconnected = function() {
-            OT.debug("OT.Subscriber has been disconnected from the Publisher's PeerConnection");
+          OT.debug('OT.Subscriber has been disconnected from the Publisher\'s PeerConnection');
 
-            if (_state.attemptingToSubscribe) {
-                // subscribing error
-                _state.set('Failed');
-                this.trigger('subscribeError', "ClientDisconnected");
-            }
-            else if (_state.subscribing) {
-                _state.set('Failed');
+          if (_state.attemptingToSubscribe) {
+            // subscribing error
+            _state.set('Failed');
+            this.trigger('subscribeComplete', new OT.Error(null, 'ClientDisconnected'));
 
-                // we were disconnected after we were already subscribing
-                // probably do nothing?
-            }
+          } else if (_state.subscribing) {
+            _state.set('Failed');
 
-            this.disconnect();
+            // we were disconnected after we were already subscribing
+            // probably do nothing?
+          }
+
+          this.disconnect();
         },
 
+        onPeerConnectionFailure = function(code, reason, peerConnection, prefix) {
+          if (_state.attemptingToSubscribe) {
+            // We weren't subscribing yet so this was a failure in setting
+            // up the PeerConnection or receiving the initial stream.
+            logAnalyticsEvent('createPeerConnection', 'Failure', 'reason|hasRelayCandidates', [
+              'Subscriber PeerConnection Error: ' + reason,
+              _peerConnection && _peerConnection.hasRelayCandidates
+            ].join('|'));
 
-        onPeerConnectionFailure = function(code, reason) {
-            if (_state.attemptingToSubscribe) {
-                // We weren't subscribing yet so this was a failure in setting
-                // up the PeerConnection or receiving the initial stream.
-                logAnalyticsEvent('createPeerConnection', 'Failure', 'reason|hasRelayCandidates', [
-                    "Subscriber PeerConnection Error: " + reason,
-                    _peerConnection && _peerConnection.hasRelayCandidates
-                ].join('|'));
+            _state.set('Failed');
+            this.trigger('subscribeComplete', new OT.Error(null, reason));
 
-                _state.set('Failed');
-                this.trigger('subscribeError', reason);
+          } else if (_state.subscribing) {
+            // we were disconnected after we were already subscribing
+            _state.set('Failed');
+            this.trigger('error', reason);
+          }
+
+          this.disconnect();
+
+          logAnalyticsEvent('subscribe', 'Failure', 'reason',
+            (prefix ? prefix : '') + ':Subscriber PeerConnection Error: ' + reason);
+
+          OT.handleJsException('Subscriber PeerConnection Error: ' + reason,
+            OT.ExceptionCodes.P2P_CONNECTION_FAILED, {
+              session: _session,
+              target: this
             }
-            else if (_state.subscribing) {
-                // we were disconnected after we were already subscribing
-                _state.set('Failed');
-                this.trigger('error', reason);
-            }
-
-            this.disconnect();
-
-            logAnalyticsEvent('subscribe', 'Failure', 'reason', reason + ":Subscriber PeerConnection Error");
-
-            OT.handleJsException("Subscriber PeerConnection Error: " + reason, OT.ExceptionCodes.P2P_CONNECTION_FAILED, {
-                session: _session,
-                target: this
-            });
-            _showError.call(this, reason);
+          );
+          _showError.call(this, reason);
         },
 
         onRemoteStreamAdded = function(webOTStream) {
-            OT.debug("OT.Subscriber.onRemoteStreamAdded");
+          OT.debug('OT.Subscriber.onRemoteStreamAdded');
 
-            _state.set('BindingRemoteStream');
+          _state.set('BindingRemoteStream');
 
-            // Disable the audio/video, if needed
-            this.subscribeToAudio(_properties.subscribeToAudio);
+          // Disable the audio/video, if needed
+          this.subscribeToAudio(_properties.subscribeToAudio);
 
-            var preserver = _subscribeAudioFalseWorkaround;
-            this.subscribeToVideo(_properties.subscribeToVideo);
-            _subscribeAudioFalseWorkaround = preserver;
+          var preserver = _subscribeAudioFalseWorkaround;
+          this.subscribeToVideo(_properties.subscribeToVideo);
+          _subscribeAudioFalseWorkaround = preserver;
 
-            var streamElement = new OT.VideoElement();
+          var streamElement = new OT.VideoElement();
 
-            // Initialize the audio volume
-            streamElement.setAudioVolume(_audioVolume);
-            streamElement.on({
-                    streamBound: onLoaded,
-                    loadError: onPeerConnectionFailure,
-                    error: onPeerConnectionFailure
-                }, this);
+          // Initialize the audio volume
+          streamElement.setAudioVolume(_audioVolume);
+          streamElement.on({
+            streamBound: onLoaded,
+            loadError: onPeerConnectionFailure,
+            error: onPeerConnectionFailure
+          }, this);
 
-            streamElement.bindToStream(webOTStream);
-             _container.video = streamElement;
+          streamElement.bindToStream(webOTStream);
+          _container.video = streamElement;
 
-            _streamContainer = streamElement;
+          _streamContainer = streamElement;
 
-            _streamContainer.orientation = {
-                width: _stream.videoDimensions.width,
-                height: _stream.videoDimensions.height,
-                videoOrientation: _stream.videoDimensions.orientation
-            };
+          _streamContainer.orientation = {
+            width: _stream.videoDimensions.width,
+            height: _stream.videoDimensions.height,
+            videoOrientation: _stream.videoDimensions.orientation
+          };
 
-            logAnalyticsEvent('createPeerConnection', 'StreamAdded', '', '');
-            this.trigger('streamAdded', this);
+          logAnalyticsEvent('createPeerConnection', 'StreamAdded', '', '');
+          this.trigger('streamAdded', this);
         },
 
         onRemoteStreamRemoved = function(webOTStream) {
-            OT.debug("OT.Subscriber.onStreamRemoved");
+          OT.debug('OT.Subscriber.onStreamRemoved');
 
-            if (_streamContainer.stream == webOTStream) {
-                _streamContainer.destroy();
-                _streamContainer = null;
-            }
+          if (_streamContainer.stream === webOTStream) {
+            _streamContainer.destroy();
+            _streamContainer = null;
+          }
 
 
-            this.trigger('streamRemoved', this);
+          this.trigger('streamRemoved', this);
+        },
+
+        streamDestroyed = function () {
+          this.disconnect();
         },
 
         streamUpdated = function(event) {
-            switch(event.changedProperty) {
-                case 'orientation':
-                    _streamContainer.orientation = {
-                        width: _stream.videoDimensions.width,
-                        height: _stream.videoDimensions.height,
-                        videoOrientation: _stream.videoDimensions.orientation
-                    };
-                    break;
 
-                case 'hasVideo':
-                    if(_container) {
-                        _container.showPoster = !(_stream.hasVideo && _properties.subscribeToVideo);
-                    }
+          switch(event.changedProperty) {
+            case 'videoDimensions':
+              _streamContainer.orientation = {
+                width: event.newValue.width,
+                height: event.newValue.height,
+                videoOrientation: event.newValue.orientation
+              };
+              break;
 
-                    break;
+            case 'hasVideo':
+              if(_container) {
+                _container.showPoster = !(_stream.hasVideo && _properties.subscribeToVideo);
+              }
+              break;
 
-                case 'hasAudio':
-                    // noop
-            }
+            case 'hasAudio':
+              // noop
+          }
         },
 
         /// Chrome
 
-        updateChromeForStyleChange = function(key, value, oldValue) {
-            if (!_chrome) return;
+        // If mode is false, then that is the mode. If mode is true then we'll
+        // definitely display  the button, but we'll defer the model to the
+        // Publishers buttonDisplayMode style property.
+        chromeButtonMode = function(mode) {
+          if (mode === false) return 'off';
 
-            switch(key) {
-                case 'nameDisplayMode':
-                    _chrome.name.setDisplayMode(value);
-                    break;
+          var defaultMode = this.getStyle('buttonDisplayMode');
 
-                case 'buttonDisplayMode':
-                    // _chrome.muteButton.setDisplayMode(value);
-            }
+          // The default model is false, but it's overridden by +mode+ being true
+          if (defaultMode === false) return 'on';
+
+          // defaultMode is either true or auto.
+          return defaultMode;
+        },
+
+        updateChromeForStyleChange = function(key, value/*, oldValue*/) {
+          if (!_chrome) return;
+
+          switch(key) {
+            case 'nameDisplayMode':
+              _chrome.name.setDisplayMode(value);
+              break;
+
+            case 'showArchiveStatus':
+              _chrome.archive.setShowArchiveStatus(value);
+              break;
+
+            case 'buttonDisplayMode':
+              // _chrome.muteButton.setDisplayMode(value);
+
+            case 'bugDisplayMode':
+              // _chrome.name.bugMode = value;
+          }
         },
 
         _createChrome = function() {
-            _chrome = new OT.Chrome({
-                parent: _container.domElement
-            }).set({
-                name: new OT.Chrome.NamePanel({
-                    name: _properties.name,
-                    mode: this.getStyle('nameDisplayMode')
-                }),
+          if(this.getStyle('bugDisplayMode') === 'off') {
+            logAnalyticsEvent('bugDisplayMode', 'createChrome', 'mode', 'off');
+          }
+          _chrome = new OT.Chrome({
+            parent: _container.domElement
+          }).set({
 
-                // // Disabled until we can change the mic Volume through WebRTC
-                // muteButton: new OT.Chrome.MicVolume({
-                //     muted: false,
-                //     mode: this.getStyle('buttonDisplayMode')
-                // }),
+            backingBar: new OT.Chrome.BackingBar({
+              nameMode: this.getStyle('nameDisplayMode'),
+              muteMode: chromeButtonMode.call(this, this.getStyle('showMuteButton'))
+            }),
 
-                opentokButton: new OT.Chrome.OpenTokButton()
-            }).on({
-                muted: function() {
-                    // @todo turn off audio on the web rtc stream
-                },
+            name: new OT.Chrome.NamePanel({
+              name: _properties.name,
+              mode: this.getStyle('nameDisplayMode'),
+              bugMode: this.getStyle('bugDisplayMode')
+            }),
 
-                unmuted: function() {
-                    // @todo turn on audio on the web rtc stream
-                }
-            });
+            muteButton: new OT.Chrome.MuteButton({
+              muted: _properties.muted,
+              mode: chromeButtonMode.call(this, this.getStyle('showMuteButton'))
+            }),
+
+            opentokButton: new OT.Chrome.OpenTokButton({
+              mode: this.getStyle('bugDisplayMode')
+            }),
+
+            archive: new OT.Chrome.Archiving({
+              show: this.getStyle('showArchiveStatus'),
+              archiving: false
+            })
+
+          }).on({
+            muted: function() {
+              muteAudio.call(this, true);
+            },
+
+            unmuted: function() {
+              muteAudio.call(this, false);
+            }
+          }, this);
         },
 
-        _showError = function(errorMsg) {
-            // Display the error message inside the container, assuming it's
-            // been created by now.
-            if (_container) _container.addError(errorMsg);
+        _showError = function() {
+          // Display the error message inside the container, assuming it's
+          // been created by now.
+          if (_container) {
+            _container.addError(
+              'The stream was unable to connect due to a network error.',
+              'Make sure your connection isn\'t blocked by a firewall.'
+            );
+          }
         };
 
 
     this.recordQOS = function() {
-        recordQOS();
+      recordQOS();
     };
+
 
     this.subscribe = function(stream) {
-        OT.debug("OT.Subscriber: subscribe to " + stream.id);
+      OT.debug('OT.Subscriber: subscribe to ' + stream.id);
 
-        if (_state.subscribing) {
-            // @todo error
-            OT.error("OT.Subscriber.Subscribe: Cannot subscribe, already subscribing.");
-            return false;
-        }
+      if (_state.subscribing) {
+        // @todo error
+        OT.error('OT.Subscriber.Subscribe: Cannot subscribe, already subscribing.');
+        return false;
+      }
 
-        _state.set('Init');
+      _state.set('Init');
 
-        if (!stream) {
-            // @todo error
-            OT.error("OT.Subscriber: No stream parameter.");
-            return false;
-        }
+      if (!stream) {
+        // @todo error
+        OT.error('OT.Subscriber: No stream parameter.');
+        return false;
+      }
 
-        if (_stream) {
-            // @todo error
-            OT.error("OT.Subscriber: Already subscribed");
-            return false;
-        }
+      if (_stream) {
+        // @todo error
+        OT.error('OT.Subscriber: Already subscribed');
+        return false;
+      }
 
-        _stream = stream;
-        _stream.on({
-            updated: streamUpdated,
-            destroyed: this.disconnect
+      _stream = stream;
+      _stream.on({
+        updated: streamUpdated,
+        destroyed: streamDestroyed
+      }, this);
+
+      _fromConnectionId = stream.connection.id;
+      _properties.name = _properties.name || _stream.name;
+      _properties.classNames = 'OT_root OT_subscriber';
+
+      if (_properties.style) {
+        this.setStyle(_properties.style, null, true);
+      }
+      if (_properties.audioVolume) {
+        this.setAudioVolume(_properties.audioVolume);
+      }
+
+      _properties.subscribeToAudio = OT.$.castToBoolean(_properties.subscribeToAudio, true);
+      _properties.subscribeToVideo = OT.$.castToBoolean(_properties.subscribeToVideo, true);
+
+      _container = new OT.WidgetView(targetElement, _properties);
+      _domId = _container.domId;
+
+      if(!_properties.subscribeToVideo && OT.$.browser() === 'Chrome') {
+        _subscribeAudioFalseWorkaround = true;
+        _properties.subscribeToVideo = true;
+      }
+
+      _startConnectingTime = OT.$.now();
+
+      if (_stream.connection.id !== _session.connection.id) {
+        logAnalyticsEvent('createPeerConnection', 'Attempt', '', '');
+
+        _state.set('ConnectingToPeer');
+
+        _peerConnection = new OT.SubscriberPeerConnection(_stream.connection, _session,
+          _stream, this, _properties);
+
+        _peerConnection.on({
+          disconnected: onDisconnected,
+          error: onPeerConnectionFailure,
+          remoteStreamAdded: onRemoteStreamAdded,
+          remoteStreamRemoved: onRemoteStreamRemoved
         }, this);
 
-        _fromConnectionId = stream.connection.connectionId;
-        _properties.name = _stream.name;
-        _properties.classNames = 'OT_root OT_subscriber';
+        // initialize the peer connection AFTER we've added the event listeners
+        _peerConnection.init();
+      } else {
+        logAnalyticsEvent('createPeerConnection', 'Attempt', '', '');
 
-        if (_properties.style) {
-            this.setStyle(_properties.style, null, true);
-        }
-        if (_properties.audioVolume) {
-            this.setAudioVolume(_properties.audioVolume);
-        }
-
-        _properties.subscribeToAudio = OT.$.castToBoolean(_properties.subscribeToAudio, true);
-        _properties.subscribeToVideo = OT.$.castToBoolean(_properties.subscribeToVideo, true);
-
-        _container = new OT.WidgetView(targetElement, _properties);
-        _domId = _container.domId;
-
-        if(!_properties.subscribeToVideo && OT.$.browser() == 'Chrome') {
-            _subscribeAudioFalseWorkaround = true;
-            _properties.subscribeToVideo = true;
+        var publisher = _session.getPublisherForStream(_stream);
+        if(!(publisher && publisher._.webRtcStream)) {
+          this.trigger('subscribeComplete', new OT.Error(null, 'InvalidStreamID'));
+          return this;
         }
 
-        _startConnectingTime = OT.$.now();
+        // Subscribe to yourself edge-case
+        onRemoteStreamAdded.call(this, _session.getPublisherForStream(_stream)._.webRtcStream);
+      }
 
-        if (_stream.connection.id !== _session.connection.id) {
-            logAnalyticsEvent('createPeerConnection', 'Attempt', '', '');
+      logAnalyticsEvent('subscribe', 'Attempt', 'streamId', _stream.id);
 
-            _state.set('ConnectingToPeer');
-
-            _peerConnection = new OT.SubscriberPeerConnection(_stream.connection, _session, _stream, _properties);
-
-            _peerConnection.on({
-                disconnected: onDisconnected,
-                error: onPeerConnectionFailure,
-                remoteStreamAdded: onRemoteStreamAdded,
-                remoteStreamRemoved: onRemoteStreamRemoved
-            }, this);
-
-            // initialize the peer connection AFTER we've added the event listeners
-            _peerConnection.init();
-        }
-        else {
-            logAnalyticsEvent('createPeerConnection', 'Attempt', '', '');
-
-            // Subscribe to yourself edge-case
-            onRemoteStreamAdded.call(this, _session.getPublisherForStream(_stream)._.webRtcStream);
-        }
-
-        logAnalyticsEvent('subscribe', 'Attempt', 'streamId', _stream.id);
-
-        return this;
+      return this;
     };
 
-    this.destroy = function(/* unused */ reason, quiet) {
-        clearInterval(_qosInterval);
-        _qosInterval = null;
+    this.destroy = function(reason, quiet) {
 
-        this.disconnect();
-
-        if (_chrome) {
-            _chrome.destroy();
-            _chrome = null;
+      if(reason === 'streamDestroyed') {
+        if (_state.attemptingToSubscribe) {
+          // We weren't subscribing yet so the stream was destroyed before we setup
+          // the PeerConnection or receiving the initial stream.
+          this.trigger('subscribeComplete', new OT.Error(null, 'InvalidStreamID'));
         }
+      }
 
-        if (_container) {
-            _container.destroy();
-            _container = null;
-        }
+      clearInterval(_qosInterval);
+      _qosInterval = null;
 
-        if (_stream && !_stream.destroyed) logAnalyticsEvent('unsubscribe', null, 'streamId', _stream.id);
+      this.disconnect();
 
-        _domId = null;
-        _stream = null;
+      if (_chrome) {
+        _chrome.destroy();
+        _chrome = null;
+      }
 
-        _session = null;
-        _properties = null;
+      if (_container) {
+        _container.destroy();
+        _container = null;
+      }
 
-        if (quiet !== true) {
-            this.dispatchEvent(
-              new OT.DestroyedEvent(
-                OT.Event.names.SUBSCRIBER_DESTROYED,
-                this,
-                reason
-              ),
-              this.off.bind(this)
-            );
-        }
+      if (_stream && !_stream.destroyed) {
+        logAnalyticsEvent('unsubscribe', null, 'streamId', _stream.id);
+      }
 
-        return this;
+      _domId = null;
+      _stream = null;
+
+      _session = null;
+      _properties = null;
+
+      if (quiet !== true) {
+        this.dispatchEvent(
+          new OT.DestroyedEvent(
+            OT.Event.names.SUBSCRIBER_DESTROYED,
+            this,
+            reason
+          ),
+          this.off.bind(this)
+        );
+      }
+
+      return this;
     };
-
 
     this.disconnect = function() {
-        _state.set('NotSubscribing');
+      _state.set('NotSubscribing');
 
-        if (_streamContainer) {
-            _streamContainer.destroy();
-            _streamContainer = null;
-        }
+      if (_streamContainer) {
+        _streamContainer.destroy();
+        _streamContainer = null;
+      }
 
-        if (_peerConnection) {
-            _peerConnection.destroy();
-            _peerConnection = null;
+      if (_peerConnection) {
+        _peerConnection.destroy();
+        _peerConnection = null;
 
-            logAnalyticsEvent('disconnect', 'PeerConnection', 'streamId', _stream.id);
-        }
+        logAnalyticsEvent('disconnect', 'PeerConnection', 'streamId', _stream.id);
+      }
     };
 
     this.processMessage = function(type, fromConnection, message) {
-        OT.debug("OT.Subscriber.processMessage: Received " + type + " message from " + fromConnection.id);
-        OT.debug(message);
+      OT.debug('OT.Subscriber.processMessage: Received ' + type + ' message from ' +
+        fromConnection.id);
+      OT.debug(message);
 
-        if (_fromConnectionId != fromConnection.id) {
-            _fromConnectionId = fromConnection.id;
-        }
+      if (_fromConnectionId !== fromConnection.id) {
+        _fromConnectionId = fromConnection.id;
+      }
 
-        if (_peerConnection) {
-          _peerConnection.processMessage(type, message);
-        }
+      if (_peerConnection) {
+        _peerConnection.processMessage(type, message);
+      }
     };
 
-    this.updateQuality = function(quality) {
-        // Currently, this only disables the video and disregards
-        // the quality.
-        OT.warn("Due to high packet loss and low bandwidth, video has been disabled");
-        this.subscribeToVideo(false);
-        this.dispatchEvent(new OT.Event("videoDisabled"));
+    this.disableVideo = function(active) {
+      if (!active) {
+        OT.warn('Due to high packet loss and low bandwidth, video has been disabled');
+      } else {
+        if (_lastSubscribeToVideoReason === 'auto') {
+          OT.info('Video has been re-enabled');
+        } else {
+          OT.info('Video was not re-enabled because it was manually disabled');
+          return;
+        }
+      }
+      this.subscribeToVideo(active, 'auto');
+      this.dispatchEvent(new OT.Event(active ? 'videoEnabled' : 'videoDisabled'));
+      logAnalyticsEvent('updateQuality', 'video', active ? 'videoEnabled' : 'videoDisabled', true);
     };
 
     /**
-    * Return the base-64-encoded string of PNG data representing the Subscriber video.
-    *
-    *  <p>You can use the string as the value for a data URL scheme passed to the src parameter of
-    *  an image file, as in the following:</p>
-    *
-    *  <pre>
-    *  var imgData = subscriber.getImgData();
-    *
-    *  var img = document.createElement("img");
-    *  img.setAttribute("src", "data:image/png;base64," + imgData);
-    *  var imgWin = window.open("about:blank", "Screenshot");
-    *  imgWin.document.write("&lt;body&gt;&lt;/body&gt;");
-    *  imgWin.document.body.appendChild(img);
-    *  </pre>
-    * @method #getImgData
-    * @memberOf Subscriber
-    * @return {String} The base-64 encoded string. Returns an empty string if there is no video.
-    */
+     * Return the base-64-encoded string of PNG data representing the Subscriber video.
+     *
+     *  <p>You can use the string as the value for a data URL scheme passed to the src parameter of
+     *  an image file, as in the following:</p>
+     *
+     *  <pre>
+     *  var imgData = subscriber.getImgData();
+     *
+     *  var img = document.createElement("img");
+     *  img.setAttribute("src", "data:image/png;base64," + imgData);
+     *  var imgWin = window.open("about:blank", "Screenshot");
+     *  imgWin.document.write("&lt;body&gt;&lt;/body&gt;");
+     *  imgWin.document.body.appendChild(img);
+     *  </pre>
+     * @method #getImgData
+     * @memberOf Subscriber
+     * @return {String} The base-64 encoded string. Returns an empty string if there is no video.
+     */
     this.getImgData = function() {
-        if (!this.subscribing) {
-            OT.error("OT.Subscriber.getImgData: Cannot getImgData before the Subscriber is subscribing.");
-            return null;
-        }
+      if (!this.subscribing) {
+        OT.error('OT.Subscriber.getImgData: Cannot getImgData before the Subscriber ' +
+          'is subscribing.');
+        return null;
+      }
 
-        return _streamContainer.imgData;
+      return _streamContainer.imgData;
     };
 
     /**
-    * Sets the audio volume, between 0 and 100, of the Subscriber.
-    *
-    * <p>You can set the initial volume when you call the <code>Session.subscribe()</code>
-    * method. Pass a <code>audioVolume</code> property of the <code>properties</code> parameter
-    * of the method.</p>
-    *
-    * @param {Number} value The audio volume, between 0 and 100.
-    *
-    * @return {Subscriber} The Subscriber object. This lets you chain method calls, as in the following:
-    *
-    * <pre>mySubscriber.setAudioVolume(50).setStyle(newStyle);</pre>
-    *
-    * @see <a href="#getAudioVolume">getAudioVolume()</a>
-    * @see <a href="Session.html#subscribe">Session.subscribe()</a>
-    * @method #setAudioVolume
-    * @memberOf Subscriber
-    */
+     * Sets the audio volume, between 0 and 100, of the Subscriber.
+     *
+     * <p>You can set the initial volume when you call the <code>Session.subscribe()</code>
+     * method. Pass a <code>audioVolume</code> property of the <code>properties</code> parameter
+     * of the method.</p>
+     *
+     * @param {Number} value The audio volume, between 0 and 100.
+     *
+     * @return {Subscriber} The Subscriber object. This lets you chain method calls, as in the 
+     * following:
+     *
+     * <pre>mySubscriber.setAudioVolume(50).setStyle(newStyle);</pre>
+     *
+     * @see <a href="#getAudioVolume">getAudioVolume()</a>
+     * @see <a href="Session.html#subscribe">Session.subscribe()</a>
+     * @method #setAudioVolume
+     * @memberOf Subscriber
+     */
     this.setAudioVolume = function(value) {
-        value = parseInt(value, 10);
-        if (isNaN(value)) {
-            OT.error("OT.Subscriber.setAudioVolume: value should be an integer between 0 and 100");
-            return this;
-        }
-        _audioVolume = Math.max(0, Math.min(100, value));
-        if (_audioVolume != value) {
-            OT.warn("OT.Subscriber.setAudioVolume: value should be an integer between 0 and 100");
-        }
-        if (_streamContainer) {
-            _streamContainer.setAudioVolume(_audioVolume);
-        }
-
+      value = parseInt(value, 10);
+      if (isNaN(value)) {
+        OT.error('OT.Subscriber.setAudioVolume: value should be an integer between 0 and 100');
         return this;
+      }
+      _audioVolume = Math.max(0, Math.min(100, value));
+      if (_audioVolume !== value) {
+        OT.warn('OT.Subscriber.setAudioVolume: value should be an integer between 0 and 100');
+      }
+      if(_properties.muted && _audioVolume > 0) {
+        _properties.premuteVolume = value;
+        muteAudio.call(this, false);
+      }
+      if (_streamContainer) {
+        _streamContainer.setAudioVolume(_audioVolume);
+      }
+      return this;
     };
 
     /**
     * Returns the audio volume, between 0 and 100, of the Subscriber.
     *
-    * <p>Generally you use this method in conjunction with the <code>setAudioVolume()</code> method.</p>
+    * <p>Generally you use this method in conjunction with the <code>setAudioVolume()</code> 
+    * method.</p>
     *
     * @return {Number} The audio volume, between 0 and 100, of the Subscriber.
     * @see <a href="#setAudioVolume">setAudioVolume()</a>
@@ -13276,23 +15304,29 @@ OT.Subscriber = function(targetElement, options) {
     * @memberOf Subscriber
     */
     this.getAudioVolume = function() {
-        if (_streamContainer) return _streamContainer.getAudioVolume();
-        else return _audioVolume;
+      if(_properties.muted) {
+        return 0;
+      }
+      if (_streamContainer) return _streamContainer.getAudioVolume();
+      else return _audioVolume;
     };
 
     /**
-    * Toggles audio on and off. Starts subscribing to audio (if it is available and currently not being
-    * subscribed to) when the <code>value</code> is <code>true</code>; stops subscribing to audio
-    * (if it is currently being subscribed to) when the <code>value</code> is <code>false</code>.
+    * Toggles audio on and off. Starts subscribing to audio (if it is available and currently 
+    * not being subscribed to) when the <code>value</code> is <code>true</code>; stops 
+    * subscribing to audio (if it is currently being subscribed to) when the <code>value</code> 
+    * is <code>false</code>.
     * <p>
-    * <i>Note:</i> This method only affects the local playback of audio. It has no impact on the audio
-    * for other connections subscribing to the same stream. If the Publsher is not publishing audio,
-    * enabling the Subscriber audio will have no practical effect.
+    * <i>Note:</i> This method only affects the local playback of audio. It has no impact on the 
+    * audio for other connections subscribing to the same stream. If the Publsher is not 
+    * publishing audio, enabling the Subscriber audio will have no practical effect.
     * </p>
     *
-    * @param {Boolean} value Whether to start subscribing to audio (<code>true</code>) or not (<code>false</code>).
+    * @param {Boolean} value Whether to start subscribing to audio (<code>true</code>) or not 
+    * (<code>false</code>).
     *
-    * @return {Subscriber} The Subscriber object. This lets you chain method calls, as in the following:
+    * @return {Subscriber} The Subscriber object. This lets you chain method calls, as in the 
+    * following:
     *
     * <pre>mySubscriber.subscribeToAudio(true).subscribeToVideo(false);</pre>
     *
@@ -13303,36 +15337,61 @@ OT.Subscriber = function(targetElement, options) {
     * @method #subscribeToAudio
     * @memberOf Subscriber
     */
-    this.subscribeToAudio = function(p_value) {
-        var value = OT.$.castToBoolean(p_value, true);
+    this.subscribeToAudio = function(pValue) {
+      var value = OT.$.castToBoolean(pValue, true);
 
-        if (_peerConnection) {
-            _peerConnection.subscribeToAudio(value);
+      if (_peerConnection) {
+        _peerConnection.subscribeToAudio(value && !_properties.subscribeMute);
 
-            if (_session && _stream && value !== _properties.subscribeToAudio) {
-                _session._.modifySubscriber(this, "hasAudio", value);
-            }
+        if (_session && _stream && value !== _properties.subscribeToAudio) {
+          _stream.setChannelActiveState('audio', value && !_properties.subscribeMute);
         }
+      }
 
-        _properties.subscribeToAudio = value;
+      _properties.subscribeToAudio = value;
 
-        return this;
+      return this;
+    };
+
+    var muteAudio = function(_mute) {
+      _chrome.muteButton.muted = _mute;
+
+      if(_mute === _properties.mute) {
+        return;
+      }
+      if (window.navigator.userAgent.toLowerCase().indexOf('chrome') >= 0) {
+        _properties.subscribeMute = _properties.muted = _mute;
+        this.subscribeToAudio(_properties.subscribeToAudio);
+      } else {
+        if(_mute) {
+          _properties.premuteVolume = this.getAudioVolume();
+          _properties.muted = true;
+          this.setAudioVolume(0);
+        } else if(_properties.premuteVolume || _properties.audioVolume) {
+          _properties.muted = false;
+          this.setAudioVolume(_properties.premuteVolume || _properties.audioVolume);
+        }
+      }
+      _properties.mute = _properties.mute;
     };
 
 
     /**
-    * Toggles video on and off. Starts subscribing to video (if it is available and currently not being
-    * subscribed to) when the <code>value</code> is <code>true</code>; stops subscribing to video
-    * (if it is currently being subscribed to) when the <code>value</code> is <code>false</code>.
+    * Toggles video on and off. Starts subscribing to video (if it is available and 
+    * currently not being subscribed to) when the <code>value</code> is <code>true</code>; 
+    * stops subscribing to video (if it is currently being subscribed to) when the 
+    * <code>value</code> is <code>false</code>.
     * <p>
-    * <i>Note:</i> This method only affects the local playback of video. It has no impact on the video
-    * for other connections subscribing to the same stream. If the Publsher is not publishing video,
-    * enabling the Subscriber video will have no practical video.
+    * <i>Note:</i> This method only affects the local playback of video. It has no impact on 
+    * the video for other connections subscribing to the same stream. If the Publsher is not 
+    * publishing video, enabling the Subscriber video will have no practical video.
     * </p>
     *
-    * @param {Boolean} value Whether to start subscribing to video (<code>true</code>) or not (<code>false</code>).
+    * @param {Boolean} value Whether to start subscribing to video (<code>true</code>) or not 
+    * (<code>false</code>).
     *
-    * @return {Subscriber} The Subscriber object. This lets you chain method calls, as in the following:
+    * @return {Subscriber} The Subscriber object. This lets you chain method calls, as in the 
+    * following:
     *
     * <pre>mySubscriber.subscribeToVideo(true).subscribeToAudio(false);</pre>
     *
@@ -13343,85 +15402,158 @@ OT.Subscriber = function(targetElement, options) {
     * @method #subscribeToVideo
     * @memberOf Subscriber
     */
-    this.subscribeToVideo = function(p_value) {
-        if(_subscribeAudioFalseWorkaround && p_value == true) {
-            // Turn off the workaround if they enable the video
-            _subscribeAudioFalseWorkaround = false;
-            return;
+    this.subscribeToVideo = function(pValue, reason) {
+      if(_subscribeAudioFalseWorkaround && pValue === true) {
+        // Turn off the workaround if they enable the video
+        _subscribeAudioFalseWorkaround = false;
+        return;
+      }
+
+      var value = OT.$.castToBoolean(pValue, true);
+
+      if(_container) {
+        _container.showPoster = !(value && _stream.hasVideo);
+        if(value && _container.video) {
+          _container.loading = value;
+          _container.video.whenTimeIncrements(function(){
+            _container.loading = false;
+          }, this);
         }
+      }
 
-        var value = OT.$.castToBoolean(p_value, true);
+      if (_peerConnection) {
+        _peerConnection.subscribeToVideo(value);
 
-        if(_container) {
-            _container.showPoster = !(value && _stream.hasVideo);
-            if(value && _container.video) {
-                _container.loading = value;
-                _container.video.whenTimeIncrements(function(){
-                    _container.loading = false;
-                }, this);
-            }
+        if (_session && _stream && (value !== _properties.subscribeToVideo ||
+            reason !== _lastSubscribeToVideoReason)) {
+          _stream.setChannelActiveState('video', value, reason);
         }
+      }
 
-        if (_peerConnection) {
-            _peerConnection.subscribeToVideo(value);
+      _properties.subscribeToVideo = value;
+      _lastSubscribeToVideoReason = reason;
 
-            if (_session && _stream && value !== _properties.subscribeToVideo) {
-                _session._.modifySubscriber(this, "hasVideo", value);
-            }
-        }
-
-        _properties.subscribeToVideo = value;
-
-        return this;
+      return this;
     };
 
     Object.defineProperties(this, {
-        id: {
-            get: function() { return _domId; },
-            enumerable: true
+      id: {
+        get: function() { return _domId; },
+        enumerable: true
+      },
+        
+      element: {
+        get: function() { return _container.domElement; },
+        enumerable: true
+      },
+
+      widgetId: {
+        get: function() { return _widgetId; }
+      },
+
+      stream: {
+        get: function() { return _stream; },
+        enumerable: true
+      },
+
+      streamId: {
+        get: function() {
+          if (!_stream) return null;
+          return _stream.id;
         },
+        enumerable: true
+      },
 
-        widgetId: {
-            get: function() { return _widgetId; }
-        },
+      targetElement: {
+        get: function() { return _streamContainer ? _streamContainer.domElement : null; }
+      },
 
-        stream: {
-            get: function() { return _stream; },
-            enumerable: true
-        },
+      subscribing: {
+        get: function() { return _state.subscribing; },
+        enumerable: true
+      },
 
-        streamId: {
-            get: function() {
-                if (!_stream) return null;
+      isWebRTC: {
+        get: function() { return true; }
+      },
 
-                return _stream.id;
-            },
-            enumerable: true
-        },
+      loading: {
+        get: function(){ return _container && _container.loading; }
+      },
 
-        targetElement: {
-            get: function() { return _streamContainer ? _streamContainer.domElement : null; }
-        },
+      session: {
+        get: function() { return _session; }
+      },
 
-        subscribing: {
-            get: function() { return _state.subscribing; },
-            enumerable: true
-        },
+      videoWidth: {
+        get: function() { return _streamContainer.videoWidth; },
+        enumerable: true
+      },
 
-        isWebRTC: {
-            get: function() { return true; }
-        },
-
-        loading: {
-            get: function(){ return _container && _container.loading }
-        },
-
-        session: {
-            get: function() { return _session; }
-        }
+      videoHeight: {
+        get: function() { return _streamContainer.videoHeight; },
+        enumerable: true
+      }
     });
 
+    /**
+    * Restricts the frame rate of the Subscriber's video stream, when you pass in 
+    * <code>true</code>. When you pass in <code>false</code>, the frame rate of the video stream 
+    * is not restricted. 
+    * <p>
+    * When the frame rate is restricted, the Subscriber video frame will update once or less per 
+    * second.
+    * <p>
+    * This feature is only available in sessions that use the OpenTok media server, not in 
+    * peer-to-peer sessions. In peer-to-peer sessions, calling this method has no effect.
+    * <p>
+    * Restricting the subscriber frame rate has the following benefits:
+    * <ul>
+    *    <li>It reduces CPU usage.</li>
+    *    <li>It reduces the network bandwidth consumed.</li>
+    *    <li>It lets you subscribe to more streams simultaneously.</li>
+    * </ul>
+    * <p>
+    * Reducing a subscriber's frame rate has no effect on the frame rate of the video in
+    * other clients.
+    *
+    * @param {Boolean} value Whether to restrict the Subscriber's video frame rate 
+    * (<code>true</code>) or not (<code>false</code>).
+    *
+    * @return {Subscriber} The Subscriber object. This lets you chain method calls, as in the 
+    * following:
+    *
+    * <pre>mySubscriber.restrictFrameRate(false).subscribeToAudio(true);</pre>
+    *
+    * @method #restrictFrameRate
+    * @memberOf Subscriber
+    */
+    this.restrictFrameRate = function(val) {
+      OT.debug('OT.Subscriber.restrictFrameRate(' + val + ')');
+
+      logAnalyticsEvent('restrictFrameRate', val.toString(), 'streamId', _stream.id);
+
+      if (_session.sessionInfo.p2pEnabled) {
+        OT.warn('OT.Subscriber.restrictFrameRate: Cannot restrictFrameRate on a P2P session');
+      }
+
+      if (typeof val !== 'boolean') {
+        OT.error('OT.Subscriber.restrictFrameRate: expected a boolean value got a ' + typeof val);
+      } else {
+        _stream.setRestrictFrameRate(val);
+      }
+      return this;
+    };
+
     this.on('styleValueChanged', updateChromeForStyleChange, this);
+
+    this._ = {
+      archivingStatus: function(status) {
+        if(_chrome) {
+          _chrome.archive.setArchiving(status);
+        }
+      }
+    };
 
     _state = new OT.SubscribingState(stateChangeFailed);
 
@@ -13431,266 +15563,224 @@ OT.Subscriber = function(targetElement, options) {
 	* when connectivity degrades. The subscriber continues to receive the audio stream,
 	* if there is one. This feature is only available in sessions that use the OpenTok
 	* media server, not in peer-to-peer sessions.
+	* @see Event
 	* @name videoDisabled
 	* @event
 	* @memberof Subscriber
 	*/
 
-};
+	/**
+	* Dispatched when the Subscriber element is removed from the HTML DOM. When this event is
+	* dispatched, you may choose to adjust or remove HTML DOM elements related to the subscriber.
+	* @see Event
+	* @name destroyed
+	* @event
+	* @memberof Subscriber
+	*/
+  };
 
 })(window);
-(function(window) {
-    OT.SessionInfo = function(xmlDocument) {
-        var sessionXML = null;
+!(function() {
 
-        this.sessionId = null;
-        this.partnerId = null;
-        this.sessionStatus = null;
-        this.p2pEnabled = false;
+  var parseErrorFromJSONDocument,
+      onGetResponseCallback,
+      onGetErrorCallback,
+      normaliseIceServers;
 
-        this.messagingServer = null;
-        this.iceServers = null;
+  OT.SessionInfo = function(jsonDocument) {
+    var sessionJSON = jsonDocument[0];
 
-        OT.log("SessionInfo Response:")
-        OT.log(xmlDocument);
+    OT.log('SessionInfo Response:');
+    OT.log(jsonDocument);
 
-        if (xmlDocument && xmlDocument.documentElement && xmlDocument.documentElement.firstElementChild !== null) {
-            sessionXML = xmlDocument.documentElement.firstElementChild;
-        }
+    /*jshint camelcase:false*/
 
-        var element = sessionXML.firstElementChild;
-        do {
-            switch (element.localName) {
-            case "session_id":
-                this.sessionId = element.textContent;
-                break;
+    this.sessionId = sessionJSON.session_id;
+    this.partnerId = sessionJSON.partner_id;
+    this.sessionStatus = sessionJSON.session_status;
 
-            case "partner_id":
-                this.partnerId = element.textContent;
-                break;
+    this.messagingServer = sessionJSON.messaging_server_url;
 
-            case "session_status":
-                this.sessionStatus = element.textContent;
-                break;
+    this.messagingURL = sessionJSON.messaging_url;
+    this.symphonyAddress = sessionJSON.symphony_address;
 
-            case "messaging_server_url":
-                this.messagingServer = element.textContent;
-                break;
+    this.p2pEnabled = sessionJSON.properties &&
+      sessionJSON.properties.p2p &&
+      sessionJSON.properties.p2p.preference &&
+      sessionJSON.properties.p2p.preference.value === 'enabled';
 
-            case "ice_servers":
-                // <ice_servers>
-                //     <ice_server url="foo.com" />
-                //     <ice_server url="bar.com" credential="xxx" />
-                // </ice_servers>
+    this.iceServers = sessionJSON.ice_servers ? normaliseIceServers(sessionJSON.ice_servers) : [];
 
-                this.iceServers = normaliseIceServers( parseIceServersXml(element.childNodes) );
-                break;
+    if(this.iceServers.length === 0) {
+      // We haven't got any ICE Servers from Anvil, default to something
+      OT.warn('SessionInfo contained not ICE Servers, using the default');
+      this.iceServers = [ {'url': 'stun:stun.l.google.com:19302'} ];
+    }
+  };
 
-            case "properties":
-                var property = element.firstElementChild;
-                if (property) {
-                    do {
-                        if (property.localName === "p2p" && property.firstElementChild !== null) {
-                            this.p2pEnabled = (property.firstElementChild.textContent === "enabled");
-                            break;
-                        }
-                    } while (property = property.nextElementSibling);
-                }
-
-                break;
-
-            default:
-                // OT.debug("OT.SessionInfo element was not handled (" + element.localName + ")");
-                break;
-            }
-
-        } while (element = element.nextElementSibling);
-
-        if (!this.iceServers || this.iceServers.length === 0) {
-            // We haven't got any ICE Servers from Anvil, default to something
-            OT.warn("SessionInfo contained not ICE Servers, using the default");
-            this.iceServers = [ {"url": "stun:stun.l.google.com:19302"} ];
-        }
-
-        //we've parsed the XML into the object
-
-        sessionXML = null;
-    };
-
-
-// Retrieves Session Info for +session+. The SessionInfo object will be passed
-// to the +onSuccess+ callback. The +onFailure+ callback will be passed an error
-// object and the DOMEvent that relates to the error.
-OT.SessionInfo.get = function(session, onSuccess, onFailure) {
-    var sessionInfoURL = OT.properties.apiURL + '/session/' + session.id + "?extended=true",
+  // Retrieves Session Info for +session+. The SessionInfo object will be passed
+  // to the +onSuccess+ callback. The +onFailure+ callback will be passed an error
+  // object and the DOMEvent that relates to the error.
+  OT.SessionInfo.get = function(session, onSuccess, onFailure) {
+    var sessionInfoURL = OT.properties.apiURL + '/session/' + session.id + '?extended=true',
 
         startTime = OT.$.now(),
 
         validateRawSessionInfo = function(sessionInfo) {
-            session.logEvent('Instrumentation', null, 'gsi', OT.$.now() - startTime);
-
-            var error = parseErrorFromXMLDocument(sessionInfo);
-
-            if (error === false) {
-                onGetResponseCallback(session, onSuccess, sessionInfo);
-            }
-            else {
-                onGetErrorCallback(session, onFailure, error);
-            }
+          session.logEvent('Instrumentation', null, 'gsi', OT.$.now() - startTime);
+          var error = parseErrorFromJSONDocument(sessionInfo);
+          if (error === false) {
+            onGetResponseCallback(session, onSuccess, sessionInfo);
+          } else {
+            onGetErrorCallback(session, onFailure, error);
+          }
         };
 
     session.logEvent('getSessionInfo', 'Attempt', 'api_url', OT.properties.apiURL);
 
-    OT.$.getXML(sessionInfoURL, {
-        headers: {"X-TB-TOKEN-AUTH": session.token, "X-TB-VERSION": 1},
-
-        success: validateRawSessionInfo,
-
-        error: function(event) {
-            onGetErrorCallback(session, onFailure, parseErrorFromXMLDocument(event.target.responseXML));
-        }
+    OT.$.getJSON(sessionInfoURL, {
+      headers: {
+        'X-TB-TOKEN-AUTH': session.token,
+        'X-TB-VERSION': 1
+      }
+    }, function(error, sessionInfo) {
+      if(error) {
+        console.log('getJSON said error:', error);
+        onGetErrorCallback(session, onFailure,
+          new OT.Error(error.target && error.target.status, error.message ||
+            'Could not connect to the OpenTok API Server.'));
+      } else {
+        validateRawSessionInfo(sessionInfo);
+      }
     });
-};
+  };
 
-var messageServerToClientErrorCodes = {};
-messageServerToClientErrorCodes['404'] = OT.ExceptionCodes.INVALID_SESSION_ID;
-messageServerToClientErrorCodes['403'] = OT.ExceptionCodes.AUTHENTICATION_ERROR;
+  var messageServerToClientErrorCodes = {};
+  messageServerToClientErrorCodes['404'] = OT.ExceptionCodes.INVALID_SESSION_ID;
+  messageServerToClientErrorCodes['409'] = OT.ExceptionCodes.INVALID_SESSION_ID;
+  messageServerToClientErrorCodes['400'] = OT.ExceptionCodes.INVALID_SESSION_ID;
+  messageServerToClientErrorCodes['403'] = OT.ExceptionCodes.AUTHENTICATION_ERROR;
 
-// Return the error in +xmlDocument+, if there is one. Otherwise it will return
-// false.
-parseErrorFromXMLDocument = function(xmlDocument) {
-    if (xmlDocument && xmlDocument.documentElement && xmlDocument.documentElement.firstElementChild !== null) {
-        var errorNodes = xmlDocument.evaluate('//error', xmlDocument.documentElement, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null ),
-            numErrorNodes = errorNodes.snapshotLength;
+  // Return the error in +jsonDocument+, if there is one. Otherwise it will return
+  // false.
+  parseErrorFromJSONDocument = function(jsonDocument) {
+    if(Array.isArray(jsonDocument)) {
+      var errors = jsonDocument.filter(function(node) {
+        return node.error != null;
+      });
 
-        if (numErrorNodes === 0) return false;
+      var numErrorNodes = errors.length;
+      if(numErrorNodes === 0) {
+        return false;
+      }
 
-        for (var i=0; i<numErrorNodes; ++i) {
-            var errorNode = errorNodes.snapshotItem(i);
+      var errorCode = errors[0].error.code;
+      if (messageServerToClientErrorCodes[errorCode.toString()]) {
+        errorCode = messageServerToClientErrorCodes[errorCode];
+      }
 
-            return {
-                code: errorNode.getAttribute('code'),
-                message: errorNode.firstElementChild.getAttribute('message')
-            };
-        }
-    }
-
-    // There was an error, but we couldn't find the error info.
-    return {
+      return {
+        code: errorCode,
+        message: errors[0].error.errorMessage && errors[0].error.errorMessage.message
+      };
+    } else {
+      return {
         code: null,
-        message: "Unknown error: getSessionInfo XML response was badly formed " +
-          (xmlDocument && xmlDocument.documentElement && xmlDocument.documentElement.innerHTML)
-    };
-};
-
-onGetResponseCallback = function(session, onSuccess, rawSessionInfo) {
-  session.logEvent('getSessionInfo', 'Success', 'api_url', OT.properties.apiURL);
-
-  onSuccess( new OT.SessionInfo(rawSessionInfo) );
-};
-
-onGetErrorCallback = function(session, onFailure, error) {
-    TB.handleJsException("TB.SessionInfoError :: Unable to get session info " + error.message, messageServerToClientErrorCodes[error.code], {
-        session: session
-    });
-
-    session.logEvent('Connect', 'Failure', 'errorMessage', "GetSessionInfo:" + error.code + ": Unable to get session info " + error.message);
-    onFailure(error, session);
-};
-
-parseIceServersXml = function (nodes) {
-    var iceServers = [],
-        iceServer,
-        attributes;
-
-    for (var i=0, numNodes=nodes.length; i<numNodes; ++i) {
-        if (nodes[i].localName === 'ice_server') {
-            // @todo parse either a URL node, or a URL and credentials
-            attributes = nodes[i].attributes;
-            iceServer = {
-                url: attributes.getNamedItem('url').nodeValue
-            };
-
-            if (attributes.getNamedItem('credential') && attributes.getNamedItem('credential').nodeValue.length) {
-                iceServer.credential = attributes.getNamedItem('credential').nodeValue;
-            }
-
-            iceServers.push(iceServer);
-        }
+        message: 'Unknown error: getSessionInfo JSON response was badly formed ' +
+            jsonDocument.toString.substring(0, 1000)
+      };
     }
+  };
 
-    return iceServers;
-};
+  onGetResponseCallback = function(session, onSuccess, rawSessionInfo) {
+    session.logEvent('getSessionInfo', 'Success', 'api_url', OT.properties.apiURL);
 
-// This is ugly. Here we are handling the following:
-// 1. Firefox doesn't support TURN until version 25. We fallback to STUN
-// in previous versions.
-//
-// 2. In FF >= 23 the new syntax for declaring Ice Servers with credentials
-// is used. i.e. url, credential, and username as opposed to just url and credential.
-//
-// 3. FF >= 27 supports the TURN transport parameter, in older versions we need
-// to strip it out.
-//
-normaliseIceServers = function (iceServers) {
-    var userAgent = navigator.userAgent.match(/(Firefox)\/([0-9]+\.[0-9]+)/),
+    onSuccess( new OT.SessionInfo(rawSessionInfo) );
+  };
+
+  onGetErrorCallback = function(session, onFailure, error) {
+    session.logEvent('Connect', 'Failure', 'errorMessage',
+      'GetSessionInfo:' + error.code + ':' + error.message);
+
+    onFailure(error, session);
+  };
+
+  // This is ugly. Here we are handling the following:
+  // 1. Firefox doesn't support TURN until version 25. We fallback to STUN
+  // in previous versions.
+  //
+  // 2. In FF >= 23 the new syntax for declaring Ice Servers with credentials
+  // is used. i.e. url, credential, and username as opposed to just url and credential.
+  //
+  // 3. FF >= 27 supports the TURN transport parameter, in older versions we need
+  // to strip it out.
+  //
+  normaliseIceServers = function (iceServers) {
+    if (!iceServers) return [];
+
+    var userAgent = (typeof navigator !== 'undefined') &&
+          navigator.userAgent.match(/(Firefox)\/([0-9]+\.[0-9]+)/),
         firefoxVersion = userAgent ? parseFloat(userAgent[2], 10) : void 0,
         bits;
 
     return iceServers.map(function(iceServer) {
-        // We don't need to normalise STUN, just pass it on through
-        if (iceServer.url.trim().substr(0, 5) !== 'turn:') {
-            return iceServer;
+      // We don't need to normalise STUN, just pass it on through
+      if (iceServer.url.trim().substr(0, 5) !== 'turn:') {
+        return iceServer;
+      }
+
+      if (userAgent !== null) {
+        // TURN is broken in these versions of FF: Fallback to STUN.
+        if (firefoxVersion < 25) {
+          return {url: iceServer.url.replace('turn:', 'stun:')};
         }
 
-        if (userAgent !== null) {
-            // TURN is broken in these versions of FF: Fallback to STUN.
-            if (firefoxVersion < 25) {
-                return {url: iceServer.url.replace("turn:", "stun:")};
-            }
-
-            // FF < 27 doesn't support the TURN transport parameter, so we strip it out
-            if (firefoxVersion < 27 && iceServer.url.indexOf('?') !== -1) {
-                iceServer.url = iceServer.url.trim().split('?')[0];
-            }
+        // FF < 27 doesn't support the TURN transport parameter, so we strip it out
+        if (firefoxVersion < 27 && iceServer.url.indexOf('?') !== -1) {
+          iceServer.url = iceServer.url.trim().split('?')[0];
         }
+      }
 
-        bits = iceServer.url.trim().split(/[:@]/);
+      bits = iceServer.url.trim().split(/[:@]/);
 
-        return {
-            username: bits[1],
-            credential: iceServer.credential,
-            url: bits[0] + ':' + bits[2] + (bits.length === 4 ? ':' + bits[3] : '')
-        };
+      return {
+        username: bits[1],
+        credential: iceServer.credential,
+        url: bits[0] + ':' + bits[2]
+      };
     });
-};
+  };
 
 })(window);
-(function(window) {
+!(function() {
 	/**
 	 * A class defining properties of the <code>capabilities</code> property of a
-     * Session object. See <a href="Session.html#capabilites">Session.capabilities</a>.
+   * Session object. See <a href="Session.html#properties">Session.capabilities</a>.
 	 * <p>
 	 * All Capabilities properties are undefined until you have connected to a session
 	 * and the Session object has dispatched the <code>sessionConnected</code> event.
 	 * <p>
-	 * For more information on token roles, see the <a href="server_side_libraries.html#generate_token">generate_token()</a>
-     * method of the OpenTok server-side libraries.
+	 * For more information on token roles, see the
+   * <a href="server_side_libraries.html#generate_token">generate_token()</a>
+   * method of the OpenTok server-side libraries.
 	 *
 	 * @class Capabilities
 	 *
 	 * @property {Number} forceDisconnect Specifies whether you can call
-     the <code>Session.forceDisconnect()</code> method (1) or not (0). To call the <code>Session.forceDisconnect()</code> method,
-     the user must have a token that is assigned the role of moderator.
+   * the <code>Session.forceDisconnect()</code> method (1) or not (0). To call the
+   * <code>Session.forceDisconnect()</code> method,
+   * the user must have a token that is assigned the role of moderator.
 	 * @property {Number} forceUnpublish Specifies whether you can call
-     the <code>Session.forceUnpublish()</code> method (1) or not (0). To call the <code>Session.forceUnpublish()</code> method,
-     the user must have a token that is assigned the role of moderator.
+   * the <code>Session.forceUnpublish()</code> method (1) or not (0). To call the
+   * <code>Session.forceUnpublish()</code> method, the user must have a token that
+   * is assigned the role of moderator.
 	 * @property {Number} publish Specifies whether you can publish to the session (1) or not (0).
-     The ability to publish is based on a few factors. To publish, the user must have a token that
-     is assigned a role that supports publishing. There must be a connected camera and microphone.
+   * The ability to publish is based on a few factors. To publish, the user must have a token that
+   * is assigned a role that supports publishing. There must be a connected camera and microphone.
 	 * @property {Number} subscribe Specifies whether you can subscribe to streams
-     in the session (1) or not (0). Currently, this capability is available for all users on all platforms.
-	 * @property {Number} supportsWebRTC Whether the client supports WebRTC (1) or not (0).
+   * in the session (1) or not (0). Currently, this capability is available for all users on all
+   * platforms.
+   * @property {Number} supportsWebRTC Whether the client supports WebRTC (1) or not (0).
 	 */
 	OT.Capabilities = function(permissions) {
 	    this.publish = permissions.indexOf('publish') !== -1 ? 1 : 0;
@@ -13698,399 +15788,451 @@ normaliseIceServers = function (iceServers) {
 	    this.forceUnpublish = permissions.indexOf('forceunpublish') !== -1 ? 1 : 0;
 	    this.forceDisconnect = permissions.indexOf('forcedisconnect') !== -1 ? 1 : 0;
 	    this.supportsWebRTC = OT.$.supportsWebRTC() ? 1 : 0;
+
+      this.permittedTo = function(action) {
+        return this.hasOwnProperty(action) && this[action] === 1;
+      };
     };
 
 })(window);
-(function(window) {
-
-// Wraps up some common error handling for implementing callbacks
-// for work requests made to the OT backend via the Messenger.
-var RemoteWork = function RemoteWork (parent, success, error, options) {
-  var REQUEST_TIMEOUT = 30000,
-      timeoutInterval,
-      exceptionCodesIndicatingFailure = {};
-
-  var destroy = function() {
-        clearTimeout(timeoutInterval);
-        parent.off('exception', onException);
-      },
-
-      onException = function(event) {
-        if (!exceptionCodesIndicatingFailure.hasOwnProperty(event.code)) return;
-
-        // We don't even know if this relates to this particular forceDisconnct...
-        this.failed(exceptionCodesIndicatingFailure[event.code]);
-      },
-
-      onTimeout = function() {
-        var reason = options && options.timeoutMessage ? options.timeoutMessage : "Timed out while waiting for the server to respond.";
-        this.failed(reason);
-      };
-
-
-  this.failsOnExceptionCodes = function(codes) {
-    exceptionCodesIndicatingFailure = codes;
-  };
-
-  this.succeeded = function() {
-    destroy();
-    if (completionHandler) OT.$.callAsync(completionHandler, null);
-  };
-
-  this.failed = function(reason) {
-    destroy();
-    if (completionHandler) OT.$.callAsync(completionHandler, new OT.Error(null, reason));
-  };
-
-  parent.on('exception', onException, this);
-  timeoutInterval = setTimeout(onTimeout.bind(this), REQUEST_TIMEOUT);
-};
+!(function(window) {
 
 
 /**
- * The Session object returned by the <code>TB.initSession()</code> method provides access to much of the OpenTok functionality.
+ * The Session object returned by the <code>OT.initSession()</code> method provides access to
+ * much of the OpenTok functionality.
  *
  * @class Session
  * @augments EventDispatcher
  *
- * @property {Capabilities} capabilities A {@link Capabilities} object that includes information about the capabilities of the client.
- * All properties of the <code>capabilities</code> object are undefined until you have connected to a session
- * and the Session object has dispatched the <code>sessionConnected</code> event.
- * @property {Connection} connection The {@link Connection} object for this session. The connection property is only available once the
- * Session object dispatches the sessionConnected event. The Session object asynchronously dispatches a sessionConnected event in response
- * to a successful call to the connect() method. See: <a href="Session#connect">connect</a> and {@link Connection}.
- * @property {String} sessionId The session ID for this session. You pass this value into the <code>TB.initSession()</code> method when you create
- * the Session object. (Note: a Session object is not connected to the OpenTok server until you
- * call the connect() method of the object and the object dispatches a connected event. See {@link TB.initSession} and {@link connect}).
- * 	For more information on sessions and session IDs, see
+ * @property {Capabilities} capabilities A {@link Capabilities} object that includes information
+ * about the capabilities of the client. All properties of the <code>capabilities</code> object
+ * are undefined until you have connected to a session and the Session object has dispatched the
+ * <code>sessionConnected</code> event.
+ * @property {Connection} connection The {@link Connection} object for this session. The
+ * connection property is only available once the Session object dispatches the sessionConnected
+ * event. The Session object asynchronously dispatches a sessionConnected event in response
+ * to a successful call to the connect() method. See: <a href="Session#connect">connect</a> and
+ * {@link Connection}.
+ * @property {String} sessionId The session ID for this session. You pass this value into the
+ * <code>OT.initSession()</code> method when you create the Session object. (Note: a Session
+ * object is not connected to the OpenTok server until you call the connect() method of the
+ * object and the object dispatches a connected event. See {@link OT.initSession} and
+ * {@link connect}).
+ *  For more information on sessions and session IDs, see
  * <a href="/opentok/tutorials/create-session/">Session creation</a>.
  */
-OT.Session = function(sessionId) {
-  // Check that the client meets the minimum requirements, if they don't the upgrade
-  // flow will be triggered.
-  if (!OT.checkSystemRequirements()) {
+  OT.Session = function(apiKey, sessionId) {
+    // Check that the client meets the minimum requirements, if they don't the upgrade
+    // flow will be triggered.
+    if (!OT.checkSystemRequirements()) {
       OT.upgradeSystemRequirements();
       return;
-  }
+    }
 
-  var _initialConnection = true,
-      _apiKey,
-      _token,
-      _sessionId = sessionId,
-      _socket,
-      _widgetId = OT.$.uuid(),
-      _analytics = new OT.Analytics(),
-      _connectionId,
-      _callbacks = {
-        forceDisconnect: {},
-        forceUnpublish: {}
-      };
+    if(sessionId == null) {
+      sessionId = apiKey;
+      apiKey = null;
+    }
+
+    var _initialConnection = true,
+        _apiKey = apiKey,
+        _token,
+        _sessionId = sessionId,
+        _socket,
+        _widgetId = OT.$.uuid(),
+        _connectionId,
+        _analytics = new OT.Analytics(),
+        sessionConnectFailed,
+        sessionDisconnectedHandler,
+        connectionCreatedHandler,
+        connectionDestroyedHandler,
+        streamCreatedHandler,
+        streamPropertyModifiedHandler,
+        streamDestroyedHandler,
+        archiveCreatedHandler,
+        archiveDestroyedHandler,
+        archiveUpdatedHandler,
+        reset,
+        disconnectComponents,
+        destroyPublishers,
+        destroySubscribers,
+        connectMessenger,
+        getSessionInfo,
+        onSessionInfoResponse,
+        permittedTo,
+        dispatchError;
 
 
-  OT.$.eventing(this);
-  var setState = OT.$.statable(this, ['disconnected', 'connecting', 'connected', 'disconnecting'], 'disconnected');
+    OT.$.eventing(this);
+    var setState = OT.$.statable(this, [
+      'disconnected', 'connecting', 'connected', 'disconnecting'
+    ], 'disconnected');
 
-  this.connections = new OT.Collection();
-  this.streams = new OT.Collection();
+    this.connections = new OT.Collection();
+    this.streams = new OT.Collection();
+    this.archives = new OT.Collection();
 
 
-	//--------------------------------------
-	//  MESSAGE HANDLERS
-	//--------------------------------------
+  //--------------------------------------
+  //  MESSAGE HANDLERS
+  //--------------------------------------
 
-	var
   // The duplication of this and sessionConnectionFailed will go away when
   // session and messenger are refactored
-  sessionConnectFailed = function(reason, code) {
-    setState('disconnected');
+    sessionConnectFailed = function(reason, code) {
+      setState('disconnected');
 
-    OT.error(reason);
+      OT.error(reason);
 
-    this.trigger('sessionConnectFailed', reason);
+      this.trigger('sessionConnectFailed',
+        new OT.Error(code || OT.ExceptionCodes.CONNECT_FAILED, reason));
 
-    TB.handleJsException(reason, code || OT.ExceptionCodes.CONNECT_FAILED, {
-      session: this
-    });
-  },
+      OT.handleJsException(reason, code || OT.ExceptionCodes.CONNECT_FAILED, {
+        session: this
+      });
+    };
 
-	sessionDisconnectedHandler = function(event) {
-    var reason = event.reason;
-    if(reason == "networkTimedout") {
-      reason = "networkDisconnected";
-      this.logEvent('Connect', 'TimeOutDisconnect', "reason", event.reason);
-    } else {
-      this.logEvent('Connect', 'Disconnected', "reason", event.reason);
-    }
+    sessionDisconnectedHandler = function(event) {
+      var reason = event.reason;
+      if(reason === 'networkTimedout') {
+        reason = 'networkDisconnected';
+        this.logEvent('Connect', 'TimeOutDisconnect', 'reason', event.reason);
+      } else {
+        this.logEvent('Connect', 'Disconnected', 'reason', event.reason);
+      }
 
-		var publicEvent = new OT.SessionDisconnectEvent('sessionDisconnected', reason);
+      var publicEvent = new OT.SessionDisconnectEvent('sessionDisconnected', reason);
 
-    reset.call(this);
-    disconnectComponents.call(this);
+      reset.call(this);
+      disconnectComponents.call(this, reason);
 
-		var defaultAction = function() {
-      if (!publicEvent.isDefaultPrevented()) destroyComponents.call(this, publicEvent.reason);
-		}.bind(this);
+      var defaultAction = function() {
+        // Publishers handle preventDefault'ing themselves
+        destroyPublishers.call(this, publicEvent.reason);
+        // Subscriers don't, destroy 'em if needed
+        if (!publicEvent.isDefaultPrevented()) destroySubscribers.call(this, publicEvent.reason);
+      }.bind(this);
 
-		this.dispatchEvent(publicEvent, defaultAction);
-	},
+      this.dispatchEvent(publicEvent, defaultAction);
+    };
 
-  connectionCreatedHandler = function(connection) {
-    // We don't broadcast events for the symphony connection
-    if (connection.id.match(/^symphony\./)) return;
+    connectionCreatedHandler = function(connection) {
+      // We don't broadcast events for the symphony connection
+      if (connection.id.match(/^symphony\./)) return;
 
-    this.dispatchEvent(new OT.ConnectionEvent(
+      this.dispatchEvent(new OT.ConnectionEvent(
         OT.Event.names.CONNECTION_CREATED,
-        [connection]
-    ));
-  },
+        connection
+      ));
+    };
 
-	connectionDestroyedHandler = function(connection, reason) {
-    // We don't broadcast events for the symphony connection
-    if (connection.id.match(/^symphony\./)) return;
+    connectionDestroyedHandler = function(connection, reason) {
+      // We don't broadcast events for the symphony connection
+      if (connection.id.match(/^symphony\./)) return;
 
-    // Don't delete the connection if it's ours. This only happens when
-    // we're about to receive a session disconnected and session disconnected
-    // will also clean up our connection.
-    if (connection.id === _socket.id) return;
+      // Don't delete the connection if it's ours. This only happens when
+      // we're about to receive a session disconnected and session disconnected
+      // will also clean up our connection.
+      if (connection.id === _socket.id) return;
 
-    // Handle success callbacks
-    if (_callbacks.forceDisconnect[connection.id]) {
-      var callback = _callbacks.forceDisconnect[connection.id];
-      delete _callbacks.forceDisconnect[connection.id];
+      this.dispatchEvent(
+        new OT.ConnectionEvent(
+          OT.Event.names.CONNECTION_DESTROYED,
+          connection,
+          reason
+        )
+      );
+    };
 
+    streamCreatedHandler = function(stream) {
+      if(stream.connection.id !== this.connection.id) {
+        this.dispatchEvent(new OT.StreamEvent(
+          OT.Event.names.STREAM_CREATED,
+          stream,
+          null,
+          false
+        ));
+      }
+    };
 
-      if (reason !== 'forceDisconnected') {
-        OT.warn("Expected a forceDisconnect for connection " + connection.id + ", but a " + reason + " was received instead.");
+    streamPropertyModifiedHandler = function(event) {
+      var stream = event.target,
+          propertyName = event.changedProperty,
+          newValue = event.newValue;
+
+      if (propertyName === 'orientation') {
+        propertyName = 'videoDimensions';
+        newValue = {width: newValue.width, height: newValue.height};
       }
 
-      callback.succeeded();
-    }
+      this.dispatchEvent(new OT.StreamPropertyChangedEvent(
+        OT.Event.names.STREAM_PROPERTY_CHANGED,
+        stream,
+        propertyName,
+        event.oldValue,
+        newValue
+      ));
+    };
 
-    this.dispatchEvent(
-      new OT.ConnectionEvent(
-        OT.Event.names.CONNECTION_DESTROYED,
-        [connection],
-        reason
-      )
-    );
-	},
+    streamDestroyedHandler = function(stream, reason) {
 
-  streamCreatedHandler = function(stream) {
-    this.dispatchEvent(new OT.StreamEvent(
-      OT.Event.names.STREAM_CREATED,
-      [stream]
-    ));
-  },
-
-  streamPropertyModifiedHandler = function(event) {
-    var stream = event.target,
-        propertyName = event.changedProperty,
-        newValue = event.newValue;
-
-    if (propertyName === 'orientation') {
-      propertyName = 'videoDimensions';
-      newValue = {width: newValue.width, height: newValue.height};
-    }
-
-    this.dispatchEvent(new OT.StreamPropertyChangedEvent(
-      OT.Event.names.STREAM_PROPERTY_CHANGED,
-      stream,
-      propertyName,
-      event.oldValue,
-      newValue
-    ));
-  },
-
-	streamDestroyedHandler = function(stream, reason) {
-    // Handle success callbacks
-    if (_callbacks.forceUnpublish[stream.id]) {
-      var callback = _callbacks.forceUnpublish[stream.id];
-      delete _callbacks.forceUnpublish[stream.id];
-
-      if (reason !== 'forceUnpublished') {
-        OT.warn("Expected a forceUnpublish for stream " + stream.id + ", but a " + reason + " destroyed was received instead.");
-      }
-
-      callback.succeeded();
-    }
-
-    var event = new OT.StreamEvent('streamDestroyed', [stream], reason);
-
-    var defaultAction = function() {
-      if (!event.isDefaultPrevented()) {
-        // If the stream is one of ours then we need to cleanup
-        // a publisher.
-        var publisher = OT.publishers.where({streamId: stream.id})[0];
-        if (publisher) {
-          publisher._.unpublishFromSession(this);
-          publisher.destroy();
-        }
-
-        // If we are subscribed to any of the streams we should unsubscribe
-        OT.subscribers.where({streamId: stream.id}).forEach(function(subscriber) {
-          if (subscriber.session.id === this.id) {
-            this.unsubscribe(subscriber);
-          }
-        }, this);
-      }
-		}.bind(this);
-
-		this.dispatchEvent(event, defaultAction);
-	},
-
-
-	// Put ourselves into a pristine state
-	reset = function() {
-    _apiKey = null;
-    _token = null;
-    setState('disconnected');
-
-    this.connections.destroy();
-    this.streams.destroy();
-	},
-
-  disconnectComponents = function() {
-    OT.publishers.where({session: this}).forEach(function(publisher) {
-      publisher.disconnect();
-    });
-
-    OT.subscribers.where({session: this}).forEach(function(subscriber) {
-      subscriber.disconnect();
-    });
-  },
-
-  destroyComponents = function(reason) {
-    OT.publishers.where({session: this}).forEach(function(publisher) {
-      publisher.destroy(reason);
-    });
-
-    OT.subscribers.where({session: this}).forEach(function(subscriber) {
-      subscriber.destroy(reason);
-    });
-  },
-
-	connectMessenger = function() {
-    TB.debug("OT.Session: connecting to Raptor");
-
-    _socket = new OT.Raptor.Socket(_widgetId, this.sessionInfo.messagingServer);
-    _socket.connect(_token, this.sessionInfo, function(error, sessionState) {
-      if (error) {
-        sessionConnectFailed.call(this, error.reason, error.code);
+      // if the stream is one of ours we delegate handling
+      // to the publisher itself.
+      if(stream.connection.id === this.connection.id) {
+        OT.publishers.where({ streamId: stream.id }).forEach(function(publisher) {
+          publisher._.unpublishFromSession(this, reason);
+        }.bind(this));
         return;
       }
 
-      OT.debug("OT.Session: Received session state from Raptor", sessionState);
+      var event = new OT.StreamEvent('streamDestroyed', stream, reason, true);
 
-      _connectionId = this.connection.id;
-      setState('connected');
+      var defaultAction = function() {
+        if (!event.isDefaultPrevented()) {
+          // If we are subscribed to any of the streams we should unsubscribe
+          OT.subscribers.where({streamId: stream.id}).forEach(function(subscriber) {
+            if (subscriber.session.id === this.id) {
+              if(subscriber.stream) {
+                subscriber.destroy('streamDestroyed');
+              }
+            }
+          }, this);
+        } else {
+          // @TODO Add a one time warning that this no longer cleans up the publisher
+        }
+      }.bind(this);
 
-      // Listen for our own connection's destroyed event so we know when we've been disconnected.
-      this.connection.on('destroyed', sessionDisconnectedHandler, this);
+      this.dispatchEvent(event, defaultAction);
+    };
 
-      // Listen for connection updates
-      this.connections.on({
-        add: connectionCreatedHandler,
-        remove: connectionDestroyedHandler
-      }, this);
+    archiveCreatedHandler = function(archive) {
+      this.dispatchEvent(new OT.ArchiveEvent('archiveStarted', archive));
+    };
 
-      // Listen for stream updates
-      this.streams.on({
-        add: streamCreatedHandler,
-        remove: streamDestroyedHandler,
-        update: streamPropertyModifiedHandler
-      }, this);
+    archiveDestroyedHandler = function(archive) {
+      this.dispatchEvent(new OT.ArchiveEvent('archiveDestroyed', archive));
+    };
 
-      this.dispatchEvent(new OT.SessionConnectEvent(
-        OT.Event.names.SESSION_CONNECTED,
-        sessionState.connections,
-        sessionState.streams,
-        sessionState.archives
-      ));
-    }.bind(this));
-	},
+    archiveUpdatedHandler = function(event) {
+      var archive = event.target,
+        propertyName = event.changedProperty,
+        newValue = event.newValue;
 
-  getSessionInfo = function() {
-    if (this.is('connecting')) {
-      OT.SessionInfo.get(
-        this,
-        onSessionInfoResponse.bind(this),
-        function(error) {
-          sessionConnectFailed.call(this, error.message + (error.code ? ' (' + error.code + ')' : ''));
-        }.bind(this)
-      );
-    }
-  },
+      if(propertyName === 'status' && newValue === 'stopped') {
+        this.dispatchEvent(new OT.ArchiveEvent('archiveStopped', archive));
+      } else {
+        this.dispatchEvent(new OT.ArhiveEvent('archiveUpdated', archive));
+      }
+    };
 
-  onSessionInfoResponse = function(sessionInfo) {
-    if (this.is('connecting')) {
-      this.sessionInfo = sessionInfo;
-      if (this.sessionInfo.partnerId && this.sessionInfo.partnerId != _apiKey) {
+    // Put ourselves into a pristine state
+    reset = function() {
+      _token = null;
+      setState('disconnected');
+
+      this.connections.destroy();
+      this.streams.destroy();
+      this.archives.destroy();
+    };
+
+    disconnectComponents = function(reason) {
+      OT.publishers.where({session: this}).forEach(function(publisher) {
+        publisher.disconnect(reason);
+      });
+
+      OT.subscribers.where({session: this}).forEach(function(subscriber) {
+        subscriber.disconnect();
+      });
+    };
+
+    destroyPublishers = function(reason) {
+      OT.publishers.where({session: this}).forEach(function(publisher) {
+        publisher._.streamDestroyed(reason);
+      });
+    };
+
+    destroySubscribers = function(reason) {
+      OT.subscribers.where({session: this}).forEach(function(subscriber) {
+        subscriber.destroy(reason);
+      });
+    };
+
+    connectMessenger = function() {
+      OT.debug('OT.Session: connecting to Raptor');
+
+      var socketUrl = OT.properties.messagingProtocol + '://' + this.sessionInfo.messagingServer +
+            ':' + OT.properties.messagingPort + '/rumorwebsocketsv2',
+          symphonyUrl = OT.properties.symphonyAddresss || 'symphony.' +
+            this.sessionInfo.messagingServer;
+
+      _socket = new OT.Raptor.Socket(_widgetId, socketUrl, symphonyUrl,
+        OT.SessionDispatcher(this));
+
+      var analyticsPayload = [
+        socketUrl, navigator.userAgent, OT.properties.version,
+        window.externalHost ? 'yes' : 'no'
+      ];
+
+      _socket.connect(_token, this.sessionInfo, function(error, sessionState) {
+        if (error) {
+          analyticsPayload.splice(0,0,error.message);
+          this.logEvent('Connect', 'Failure',
+            'reason|webSocketServerUrl|userAgent|sdkVersion|chromeFrame',
+            analyticsPayload.map(function(e) { return e.replace('|', '\\|'); }).join('|'));
+
+          sessionConnectFailed.call(this, error.message, error.code);
+          return;
+        }
+
+        OT.debug('OT.Session: Received session state from Raptor', sessionState);
+
+        setState('connected');
+
+        this.logEvent('Connect', 'Success',
+          'webSocketServerUrl|userAgent|sdkVersion|chromeFrame',
+          analyticsPayload.map(function(e) {
+            return e.replace('|', '\\|');
+          }).join('|'), {connectionId: this.connection.id});
+
+        // Listen for our own connection's destroyed event so we know when we've been disconnected.
+        this.connection.on('destroyed', sessionDisconnectedHandler, this);
+
+        // Listen for connection updates
+        this.connections.on({
+          add: connectionCreatedHandler,
+          remove: connectionDestroyedHandler
+        }, this);
+
+        // Listen for stream updates
+        this.streams.on({
+          add: streamCreatedHandler,
+          remove: streamDestroyedHandler,
+          update: streamPropertyModifiedHandler
+        }, this);
+
+        this.archives.on({
+          add: archiveCreatedHandler,
+          remove: archiveDestroyedHandler,
+          update: archiveUpdatedHandler
+        }, this);
+
+        this.dispatchEvent(
+          new OT.SessionConnectEvent(OT.Event.names.SESSION_CONNECTED), function() {
+            this.connections._triggerAddEvents(); // { id: this.connection.id }
+            this.streams._triggerAddEvents(); // { id: this.stream.id }
+            this.archives._triggerAddEvents();
+          }.bind(this)
+        );
+
+      }.bind(this));
+    };
+
+    getSessionInfo = function() {
+      if (this.is('connecting')) {
+        OT.SessionInfo.get(
+          this,
+          onSessionInfoResponse.bind(this),
+          function(error) {
+            sessionConnectFailed.call(this, error.message +
+              (error.code ? ' (' + error.code + ')' : ''), error.code);
+          }.bind(this)
+        );
+      }
+    };
+
+    onSessionInfoResponse = function(sessionInfo) {
+      if (this.is('connecting')) {
+        this.sessionInfo = sessionInfo;
+        if (this.sessionInfo.partnerId && this.sessionInfo.partnerId !== _apiKey) {
           _apiKey = this.sessionInfo.partnerId;
 
-          var reason = 'Authentication Error: The apiKey passed into the session.connect ' +
-            'method does not match the apiKey in the token or session you are trying to ' +
-            'connect to.';
+          var reason = 'Authentication Error: The API key does not match the token or session.';
 
           this.logEvent('Connect', 'Failure', 'reason', 'GetSessionInfo:' +
             OT.ExceptionCodes.AUTHENTICATION_ERROR + ':' + reason);
 
           sessionConnectFailed.call(this, reason, OT.ExceptionCodes.AUTHENTICATION_ERROR);
-      } else {
+        } else {
           connectMessenger.call(this);
+        }
       }
-    }
-  },
-
-  // Check whether we have permissions to perform the action.
-  permittedTo = function(action) {
-      return _socket && _socket.permittedTo(action);
-  };
-
-  this.logEvent = function(action, variation, payload_type, payload) {
-    var event = {
-      action: action,
-      variation: variation,
-      payload_type: payload_type,
-      payload: payload,
-      session_id: _sessionId,
-      partner_id: _apiKey,
-      widget_id: _widgetId,
-      widget_type: 'Controller'
     };
-    if (this.connection && this.connection.id) event.connection_id = this.connection.id;
-    else if (_connectionId) event.connection_id = _connectionId;
-    _analytics.logEvent(event);
-  };
+
+    // Check whether we have permissions to perform the action.
+    permittedTo = function(action) {
+      return this.capabilities.permittedTo(action);
+    }.bind(this);
+
+    dispatchError = function(code, message, completionHandler) {
+      OT.dispatchError(code, message, completionHandler, this);
+    }.bind(this);
+
+    this.logEvent = function(action, variation, payloadType, payload, options) {
+      /* jshint camelcase:false */
+      var event = {
+        action: action,
+        variation: variation,
+        payload_type: payloadType,
+        payload: payload,
+        session_id: _sessionId,
+        partner_id: _apiKey,
+        widget_id: _widgetId,
+        widget_type: 'Controller'
+      };
+      if (this.connection && this.connection.id) _connectionId = event.connection_id =
+        this.connection.id;
+      else if (_connectionId) event.connection_id = _connectionId;
+
+      if (options) event = OT.$.extend(options, event);
+      _analytics.logEvent(event);
+    };
 
  /**
- * Connects to an OpenTok session. Pass your API key as the <code>apiKey</code> parameter. You get an API key when you
- * <a href="https://dashboard.tokbox.com/users/sign_in">sign up</a> for an OpenTok account. Pass a token string as
- * the <code>token</code> parameter. You generate a token using the
- * <a href="/opentok/api/tools/documentation/api/server_side_libraries.html">OpenTok server-side libraries</a>
- * or the <a href="https://dashboard.tokbox.com/projects">Dashboard</a> page. For more information, see
- * <a href="/opentok/tutorials/create-token/">Connection token creation</a>.
- *  <p>
- *  	Upon a successful connection, the Session object dispatches a <code>sessionConnected</code> event. Call the
- * <code>addEventListener()</code> method to set up an event listener to process this event before calling other methods of the Session object.
+ * Connects to an OpenTok session. Pass your API key as the <code>apiKey</code> parameter.
+ * You get an API key when you <a href="https://dashboard.tokbox.com/users/sign_in">sign up</a>
+ * for an OpenTok account. Pass a token string as the <code>token</code> parameter. You generate
+ * a token using the
+ * <a href="/opentok/api/tools/documentation/api/server_side_libraries.html">OpenTok server-side
+ * libraries</a> or the <a href="https://dashboard.tokbox.com/projects">Dashboard</a> page. For
+ * more information, see <a href="/opentok/tutorials/create-token/">Connection token creation</a>.
+ * <p>
+ * Upon a successful connection, the Session object dispatches a <code>sessionConnected</code>
+ * event. Call the <code>on()</code> method to set up an event handler to process this event before
+ * calling other methods of the Session object.
  *  </p>
  *  <p>
- *  	The Session object dispatches a <code>connectionCreated</code> event when other clients create connections to the session.
+ *    The Session object dispatches a <code>connectionCreated</code> event when other clients
+ *    create connections to the session.
  *  </p>
  *  <p>
- *  	The TB object dispatches an <code>exception</code> event if the session ID,
+ *    The OT object dispatches an <code>exception</code> event if the session ID,
  *    API key, or token string are invalid. See <a href="ExceptionEvent.html">ExceptionEvent</a>
- *    and <a href="TB.html#addEventListener">TB.addEventListener()</a>.
+ *    and <a href="OT.html#on">OT.on()</a>.
  *  </p>
  *  <p>
- *  	The application throws an error if the system requirements are not met
- *    (see <a href="TB.html#checkSystemRequirements">TB.checkSystemRequirements()</a>).
+ *    The application throws an error if the system requirements are not met
+ *    (see <a href="OT.html#checkSystemRequirements">OT.checkSystemRequirements()</a>).
+ *    The application also throws an error if the session has peer-to-peer streaming enabled
+ *    and two clients are already connected to the session (see our
+ *    <a href="/opentok/libraries/server/">server-side libraries</a>).
  *  </p>
+ *
+ * <p>
+ *  With the peer-to-peer option enabled for a session, the session supports two connections.
+ *  Without the peer-to-peer option enabled, the session supports up to four connections. On
+ *  clients that attempt to a session that already has the maximum number of connections, the
+ *  OT object dispatches an `exception` event (with the `code` property set to 1007). See
+ *  <a href="/opentok/tutorials/create-session/">Session Creation documentation</a>.
+ * </p>
+ *
  *
  *  <h5>
  *  Example
  *  </h5>
  *  <p>
- *  The following code initializes a session and sets up an event listener for when the session connects:
+ *  The following code initializes a session and sets up an event listener for when the session
+ *  connects:
  *  </p>
  *  <pre>
  *  var apiKey = ""; // Replace with your API key. See https://dashboard.tokbox.com/projects
@@ -14099,17 +16241,16 @@ OT.Session = function(sessionId) {
  *  var token = ""; // Replace with a generated token that has been assigned the moderator role.
  *                  // See https://dashboard.tokbox.com/projects
  *
- *  var session = TB.initSession(sessionID);
- *  session.addEventListener("sessionConnected", sessionConnectHandler);
- *  session.connect(apiKey, token);
- *
- *  function sessionConnectHandler(sessionConnectEvent) {
+ *  var session = OT.initSession(apiKey, sessionID);
+ *  session.on("sessionConnected", function(sessionConnectEvent) {
  *      //
- *  }
+ *  });
+ *  session.connect(token);
  *  </pre>
  *  <p>
  *  <p>
- *  	In this example, the <code>sessionConnectHandler()</code> function is passed an event object of type {@link SessionConnectEvent}.
+ *    In this example, the <code>sessionConnectHandler()</code> function is passed an event
+ *    object of type {@link SessionConnectEvent}.
  *  </p>
  *
  *  <h5>
@@ -14117,174 +16258,240 @@ OT.Session = function(sessionId) {
  *  </h5>
  *
  *  <p>
- *  	<code>exception</code> (<a href="ExceptionEvent.html">ExceptionEvent</a>) &#151; Dispatched by the TB class
- *  	locally in the event of an error.
+ *    <code>exception</code> (<a href="ExceptionEvent.html">ExceptionEvent</a>) &#151; Dispatched
+ *    by the OT class locally in the event of an error.
  *  </p>
  *  <p>
- *  	<code>connectionCreated</code> (<a href="ConnectionEvent.html">ConnectionEvent</a>) &#151;
+ *    <code>connectionCreated</code> (<a href="ConnectionEvent.html">ConnectionEvent</a>) &#151;
  *      Dispatched by the Session object on all clients connected to the session.
  *  </p>
  *  <p>
- *  	<code>sessionConnected</code> (<a href="SessionConnectEvent.html">SessionConnectEvent</a>) &#151;
- *      Dispatched locally by the Session object when the connection is established.
+ *    <code>sessionConnected</code> (<a href="SessionConnectEvent.html">SessionConnectEvent</a>)
+ *      &#151; Dispatched locally by the Session object when the connection is established.
  *  </p>
  *
-  * @param {String} apiKey The API key that TokBox provided you when you registered for the OpenTok API.
-  *
   * @param {String} token The session token. You generate a session token using our
   * <a href="/opentok/libraries/server/">server-side libraries</a> or the
   * <a href="https://dashboard.tokbox.com/projects">Dashboard</a> page. For more information, see
   * <a href="/opentok/tutorials/create-token/">Connection token creation</a>.
   *
+  * @param {Function} completionHandler (Optional) A function to be called when the call to the
+  * <code>connect()</code> method succeeds or fails. This function takes one parameter &mdash;
+  * <code>error</code>. On success, the <code>completionHandler</code> function is not passed any
+  * arguments. On error, the function is passed an <code>error</code> object parameter. The
+  * <code>error</code> object has two properties: <code>code</code> (an integer) and
+  * <code>message</code> (a string), which identify the cause of the failure. The following
+  * code adds a <code>completionHandler</code> when calling the <code>connect()</code> method:
+  * <pre>
+  * session.connect(token, function (error) {
+  *   if (error) {
+  *       console.log(error.message);
+  *   } else {
+  *     console.log("Connected to session.");
+  *   }
+  * });
+  * </pre>
+  * <p>
+  * Note that upon connecting to the session, the Session object dispatches a
+  * <code>sessionConnected</code> event in addition to calling the <code>completionHandler</code>.
+  * The SessionConnectEvent object, which defines the <code>sessionConnected</code> event,
+  * includes <code>connections</code> and <code>streams</code> properties, which
+  * list the connections and streams in the session when you connect.
+  * </p>
+  *
+  * @see SessionConnectEvent
   * @method #connect
   * @memberOf Session
   */
-  this.connect = function(apiKey, token, completionHandler) {
-    if (this.is('connecting', 'connected')) {
-      OT.warn("OT.Session: Cannot connect, the session is already " + this.state);
-      return;
-    }
+    this.connect = function(token) {
 
-    reset.call(this);
-    setState('connecting');
-    _token = token;
+      if(apiKey == null && arguments.length > 1 &&
+        (typeof arguments[0] === 'string' || typeof arguments[0] === 'number') &&
+        typeof arguments[1] === 'string') {
+        _apiKey = token.toString();
+        token = arguments[1];
+      }
 
-    // Get a new widget ID when reconnecting.
-    if (_initialConnection) {
-      _initialConnection = false;
-    } else {
-      _widgetId = OT.$.uuid();
-    }
+      // The completion handler is always the last argument.
+      var completionHandler = arguments[arguments.length - 1];
 
-    _apiKey = apiKey.toString();
+      if (this.is('connecting', 'connected')) {
+        OT.warn('OT.Session: Cannot connect, the session is already ' + this.state);
+        return this;
+      }
 
-    // Ugly hack, make sure OT.APIKEY is set
-    if (OT.APIKEY.length === 0) {
+      reset.call(this);
+      setState('connecting');
+      _token = !OT.$.isFunction(token) && token;
+
+      // Get a new widget ID when reconnecting.
+      if (_initialConnection) {
+        _initialConnection = false;
+      } else {
+        _widgetId = OT.$.uuid();
+      }
+
+      if (completionHandler && OT.$.isFunction(completionHandler)) {
+        this.once('sessionConnected', completionHandler.bind(null, null));
+        this.once('sessionConnectFailed', completionHandler);
+      }
+
+      if(_apiKey == null || OT.$.isFunction(_apiKey)) {
+        setTimeout(sessionConnectFailed.bind(this,
+          'API Key is undefined. You must pass an API Key to initSession.',
+          OT.ExceptionCodes.AUTHENTICATION_ERROR));
+        return this;
+      }
+      
+      if (!_sessionId) {
+        setTimeout(sessionConnectFailed.bind(this,
+            'SessionID is undefined. You must pass a sessionID to initSession.',
+          OT.ExceptionCodes.INVALID_SESSION_ID));
+        return this;
+      }
+
+      _apiKey = _apiKey.toString();
+
+      // Ugly hack, make sure OT.APIKEY is set
+      if (OT.APIKEY.length === 0) {
         OT.APIKEY = _apiKey;
-    }
+      }
 
-    if (completionHandler && OT.$.isFunction(completionHandler)) {
-      this.once(OT.Event.names.SESSION_CONNECTED, completionHandler.bind(null, null));
-      this.once('sessionConnectFailed', completionHandler);
-    }
+      var analyticsPayload = [
+        navigator.userAgent, OT.properties.version,
+        window.externalHost ? 'yes' : 'no'
+      ];
+      this.logEvent( 'Connect', 'Attempt',
+        'userAgent|sdkVersion|chromeFrame',
+        analyticsPayload.map(function(e) { return e.replace('|', '\\|'); }).join('|')
+      );
 
-    var analyticsPayload = [
-      navigator.userAgent, OT.properties.version,
-      window.externalHost ? 'yes' : 'no'
-    ];
-    this.logEvent( 'Connect', 'Attempt',
-      'userAgent|sdkVersion|chromeFrame',
-      analyticsPayload.map(function(e) { return e.replace('|', '\\|'); }).join('|')
-    );
-
-    getSessionInfo.call(this);
-  };
+      getSessionInfo.call(this);
+      return this;
+    };
 
  /**
   * Disconnects from the OpenTok session.
   *
   * <p>
-  * Calling the <code>disconnect()</code> method ends your connection with the session. In the course of terminating your connection,
-  * it also ceases publishing any stream(s) you were publishing.
+  * Calling the <code>disconnect()</code> method ends your connection with the session. In the
+  * course of terminating your connection, it also ceases publishing any stream(s) you were
+  * publishing.
   * </p>
   * <p>
-  * Session objects on remote clients dispatch <code>streamDestroyed</code> events for any stream you were publishing.
-  * The Session object dispatches a <code>sessionDisconnected</code> event locally. The Session objects on remote clients dispatch
-  * <code>connectionDestroyed</code> events, letting other connections know you have left the session. The {@link SessionDisconnectEvent}
-  * and {@link StreamEvent} objects that define the <code>sessionDisconnect</code> and <code>connectionDestroyed</code> events each have
-  * a <code>reason</code> property. The <code>reason</code> property lets the developer determine whether the connection is being
-  * terminated voluntarily and whether any streams are being destroyed as a byproduct of the underlying connection's voluntary destruction.
+  * Session objects on remote clients dispatch <code>streamDestroyed</code> events for any
+  * stream you were publishing. The Session object dispatches a <code>sessionDisconnected</code>
+  * event locally. The Session objects on remote clients dispatch <code>connectionDestroyed</code>
+  * events, letting other connections know you have left the session. The
+  * {@link SessionDisconnectEvent} and {@link StreamEvent} objects that define the
+  * <code>sessionDisconnect</code> and <code>connectionDestroyed</code> events each have a
+  * <code>reason</code> property. The <code>reason</code> property lets the developer determine
+  * whether the connection is being terminated voluntarily and whether any streams are being
+  * destroyed as a byproduct of the underlying connection's voluntary destruction.
   * </p>
   * <p>
   * If the session is not currently connected, calling this method causes a warning to be logged.
-  * See <a "href=TB.html#setLogLevel">TB.setLogLevel()</a>.
+  * See <a "href=OT.html#setLogLevel">OT.setLogLevel()</a>.
   * </p>
   *
   * <p>
-  * <i>Note:</i> If you intend to reuse a Publisher object created using <code>TB.initPublisher()</code>
-  * to publish to different sessions sequentially, call either <code>Session.disconnect()</code> or
-  * <code>Session.unpublish()</code>. Do not call both. Then call the <code>preventDefault()</code> method
-  * of the <code>streamDestroyed</code> or <code>sessionDisconnected</code> event object to prevent the
-  * Publisher object from being removed from the page. Be sure to call <code>preventDefault()</code> only
-  * if the <code>connection.connectionId</code> property of the Stream object in the event matches the
-  * <code>connection.connectionId</code> property of your Session object (to ensure that you are preventing
-  * the default behavior for your published streams, not for other streams that you subscribe to).
+  * <i>Note:</i> If you intend to reuse a Publisher object created using
+  * <code>OT.initPublisher()</code> to publish to different sessions sequentially, call either
+  * <code>Session.disconnect()</code> or <code>Session.unpublish()</code>. Do not call both.
+  * Then call the <code>preventDefault()</code> method of the <code>streamDestroyed</code> or
+  * <code>sessionDisconnected</code> event object to prevent the Publisher object from being
+  * removed from the page. Be sure to call <code>preventDefault()</code> only if the
+  * <code>connection.connectionId</code> property of the Stream object in the event matches the
+  * <code>connection.connectionId</code> property of your Session object (to ensure that you are
+  * preventing the default behavior for your published streams, not for other streams that you
+  * subscribe to).
   * </p>
   *
   * <h5>
   * Events dispatched:
   * </h5>
   * <p>
-  * <code>sessionDisconnected</code> (<a href="SessionDisconnectEvent.html">SessionDisconnectEvent</a>)
+  * <code>sessionDisconnected</code>
+  * (<a href="SessionDisconnectEvent.html">SessionDisconnectEvent</a>)
   * &#151; Dispatched locally when the connection is disconnected.
   * </p>
   * <p>
   * <code>connectionDestroyed</code> (<a href="ConnectionEvent.html">ConnectionEvent</a>) &#151;
-  * Dispatched on other connections, along with the <code>streamDestroyed</code> event (as warranted).
+  * Dispatched on other clients, along with the <code>streamDestroyed</code> event (as warranted).
   * </p>
   *
   * <p>
   * <code>streamDestroyed</code> (<a href="StreamEvent.html">StreamEvent</a>) &#151;
-  * Dispatched if streams are lost as a result of the session disconnecting.
+  * Dispatched on other clients if streams are lost as a result of the session disconnecting.
   * </p>
   *
   * @method #disconnect
   * @memberOf Session
   */
-  this.disconnect = function() {
-    if (_socket && _socket.isNot('disconnected')) {
-      setState('disconnecting');
-      _socket.disconnect();
-    }
-    else {
-      reset.call(this);
-    }
-  };
+    this.disconnect = function() {
+      if (_socket && _socket.isNot('disconnected')) {
+        setState('disconnecting');
+        _socket.disconnect();
+      }
+      else {
+        reset.call(this);
+      }
+    };
 
-  this.destroy = function(reason, quiet) {
-    this.streams.destroy();
-    this.connections.destroy();
-    this.disconnect();
-  };
+    this.destroy = function(/*reason, quiet*/) {
+      this.streams.destroy();
+      this.connections.destroy();
+      this.archives.destroy();
+      this.disconnect();
+    };
 
  /**
   * The <code>publish()</code> method starts publishing an audio-video stream to the session.
-  * The audio-video stream is captured from a local microphone and webcam. Upon successful publishing,
-  * the Session objects on all connected clients dispatch the <code>streamCreated</code> event.
+  * The audio-video stream is captured from a local microphone and webcam. Upon successful
+  * publishing, the Session objects on all connected clients dispatch the
+  * <code>streamCreated</code> event.
   * </p>
   *
   * <!--JS-ONLY-->
-  * <p>You pass a Publisher object as the one parameter of the method. You can initialize a Publisher object by calling the
-  * <a href="TB.html#initPublisher">TB.initPublisher()</a> method. Before calling <code>Session.publish()</code>.
+  * <p>You pass a Publisher object as the one parameter of the method. You can initialize a
+  * Publisher object by calling the <a href="OT.html#initPublisher">OT.initPublisher()</a>
+  * method. Before calling <code>Session.publish()</code>.
   * </p>
   *
-  * <p>This method takes an alternate form: <code>publish([targetElement:String, properties:Object]):Publisher</code> &#151;
-  * In this form, you do <i>not</i> pass a Publisher object into the function. Instead, you pass in a <code>targetElement</code>
-  * (the ID of the DOM element that the Publisher will replace) and a <code>properties</code> object that defines
-  * options for the Publisher (see <a href="TB.html#initPublisher">TB.initPublisher()</a>.) The method
-  * returns a new Publisher object, which starts sending an audio-video stream to the session.
-  * The remainder of this documentation describes the form that takes a single Publisher object as a parameter.
+  * <p>This method takes an alternate form: <code>publish([targetElement:String,
+  * properties:Object]):Publisher</code> &#151; In this form, you do <i>not</i> pass a Publisher
+  * object into the function. Instead, you pass in a <code>targetElement</code> (the ID of the
+  * DOM element that the Publisher will replace) and a <code>properties</code> object that
+  * defines options for the Publisher (see <a href="OT.html#initPublisher">OT.initPublisher()</a>.)
+  * The method returns a new Publisher object, which starts sending an audio-video stream to the
+  * session. The remainder of this documentation describes the form that takes a single Publisher
+  * object as a parameter.
   *
   * <p>
-  * 	A local display of the published stream is created on the web page by replacing
+  *   A local display of the published stream is created on the web page by replacing
   *         the specified element in the DOM with a streaming video display. The video stream
   *         is automatically mirrored horizontally so that users see themselves and movement
   *         in their stream in a natural way. If the width and height of the display do not match
-  *         the 4:3 aspect ratio of the video signal, the video stream is cropped to fit the display.
+  *         the 4:3 aspect ratio of the video signal, the video stream is cropped to fit the
+  *         display.
   * </p>
   *
   * <p>
-  * 	If calling this method creates a new Publisher object and the OpenTok library does not have access to
-  * 	the camera or microphone, the web page alerts the user to grant access to the camera and microphone.
+  *   If calling this method creates a new Publisher object and the OpenTok library does not
+  *   have access to the camera or microphone, the web page alerts the user to grant access
+  *   to the camera and microphone.
   * </p>
   *
   * <p>
-  * The TB object dispatches an <code>exception</code> event if the user's role does not
+  * The OT object dispatches an <code>exception</code> event if the user's role does not
   * include permissions required to publish. For example, if the user's role is set to subscriber,
-  * then they cannot publish. You define a user's role when you create the user token using the <code>generate_token()</code> method
-  * of our <a href="/opentok/libraries/server/">server-side libraries</a> or the <a href="https://dashboard.tokbox.com/projects">Dashboard</a> page.
-  * You pass the token string as a parameter of the <code>connect()</code> method of the Session object.
-  * See <a href="ExceptionEvent.html">ExceptionEvent</a> and <a href="TB.html#addEventListener">TB.addEventListener()</a>.
+  * then they cannot publish. You define a user's role when you create the user token using the
+  * <code>generate_token()</code> method of the
+  * <a href="/opentok/api/tools/documentation/api/server_side_libraries.html">OpenTok server-side
+  * libraries</a> or the <a href="https://dashboard.tokbox.com/projects">Dashboard</a> page.
+  * You pass the token string as a parameter of the <code>connect()</code> method of the Session
+  * object. See <a href="ExceptionEvent.html">ExceptionEvent</a> and
+  * <a href="OT.html#on">OT.on()</a>.
   * </p>
   *     <p>
   *     The application throws an error if the session is not connected.
@@ -14292,11 +16499,12 @@ OT.Session = function(sessionId) {
   *
   * <h5>Events dispatched:</h5>
   * <p>
-  * <code>exception</code> (<a href="ExceptionEvent.html">ExceptionEvent</a>) &#151; Dispatched by the TB object. This
-  * can occur when user's role does not allow publishing (the <code>code</code> property of event object is set to 1500);
-  * it can also occur if the connection fails to connect (the <code>code</code> property of event object is set to 1013).
-  * WebRTC is a peer-to-peer protocol, and it is possible that connections will fail to connect. The most common cause
-  * for failure is a firewall that the protocol cannot traverse.</li>
+  * <code>exception</code> (<a href="ExceptionEvent.html">ExceptionEvent</a>) &#151; Dispatched
+  * by the OT object. This can occur when user's role does not allow publishing (the
+  * <code>code</code> property of event object is set to 1500); it can also occur if the c
+  * onnection fails to connect (the <code>code</code> property of event object is set to 1013).
+  * WebRTC is a peer-to-peer protocol, and it is possible that connections will fail to connect.
+  * The most common cause for failure is a firewall that the protocol cannot traverse.</li>
   * </p>
   * <p>
   * <code>streamCreated</code> (<a href="StreamEvent.html">StreamEvent</a>) &#151;
@@ -14307,135 +16515,180 @@ OT.Session = function(sessionId) {
   * <h5>Example</h5>
   *
   * <p>
-  * 	The following example publishes a video once the session connects:
+  *   The following example publishes a video once the session connects:
   * </p>
   * <pre>
-  * var apiKey = ""; // Replace with your API key. See https://dashboard.tokbox.com/projects
   * var sessionId = ""; // Replace with your own session ID.
   *                     // See https://dashboard.tokbox.com/projects
   * var token = ""; // Replace with a generated token that has been assigned the moderator role.
   *                 // See https://dashboard.tokbox.com/projects
-  * var session = TB.initSession(sessionID);
-  * session.addEventListener("sessionConnected", sessionConnectHandler);
-  * session.connect(apiKey, token);
-  *
-  * function sessionConnectHandler(event) {
+  * var session = OT.initSession(apiKey, sessionID);
+  * session.on("sessionConnected", function (event) {
   *     var divProps = {width: 400, height:300, name:"Bob's stream"};
-  *     publisher = TB.initPublisher(apiKey, 'publisher', divProps);
-  *                       // This assumes that there is a DOM element with the ID 'publisher'.
+  *     // This assumes that there is a DOM element with the ID 'publisher':
+  *     publisher = OT.initPublisher('publisher', divProps);
   *     session.publish(publisher);
-  * }
+  * });
+  * session.connect(token);
   * </pre>
   *
-  * @param publisher A Publisher object, which you initialize by calling the <a href="TB.html#initPublisher">TB.initPublisher()</a>
-  * method.
+  * @param {Publisher} publisher A Publisher object, which you initialize by calling the
+  * <a href="OT.html#initPublisher">OT.initPublisher()</a> method.
+  *
+  * @param {Function} completionHandler (Optional) A function to be called when the call to the
+  * <code>publish()</code> method succeeds or fails. This function takes one parameter &mdash;
+  * <code>error</code>. On success, the <code>completionHandler</code> function is not passed any
+  * arguments. On error, the function is passed an <code>error</code> object parameter. The
+  * <code>error</code> object has two properties: <code>code</code> (an integer) and
+  * <code>message</code> (a string), which identify the cause of the failure. Calling
+  * <code>publish()</code> fails if the role assigned to your token is not "publisher" or
+  * "moderator"; in this case <code>error.code</code> is set to 1500. Calling
+  * <code>publish()</code> also fails the client fails to connect; in this case
+  * <code>error.code</code> is set to 1013. The following code adds a
+  * <code>completionHandler</code> when calling the <code>publish()</code> method:
+  * <pre>
+  * session.publish(publisher, null, function (error) {
+  *   if (error) {
+  *     console.log(error.message);
+  *   } else {
+  *     console.log("Publishing a stream.");
+  *   }
+  * });
+  * </pre>
   *
   * @returns The Publisher object for this stream.
   *
   * @method #publish
   * @memberOf Session
   */
-  this.publish = function(publisher, properties, completionHandler) {
-    var errorMsg;
+    this.publish = function(publisher, properties, completionHandler) {
+      if(typeof publisher === 'function') {
+        completionHandler = publisher;
+        publisher = undefined;
+      }
+      if(typeof properties === 'function') {
+        completionHandler = properties;
+        properties = undefined;
+      }
+      if (this.isNot('connected')) {
+        /*jshint camelcase:false*/
+        _analytics.logError(1010, 'OT.exception',
+          'We need to be connected before you can publish', null, {
+          action: 'publish',
+          variation: 'Failure',
+          payload_type: 'reason',
+          payload: 'We need to be connected before you can publish',
+          session_id: _sessionId,
+          partner_id: _apiKey,
+          widgetId: _widgetId,
+          widget_type: 'Controller'
+        });
 
-    if (this.isNot('connected')) {
-      _analytics.logError(1010, 'tb.exception', "We need to be connected before you can publish", null, {
-        action: 'publish',
-        variation: 'Failure',
-        payload_type: "reason",
-        payload: "We need to be connected before you can publish",
-        session_id: _sessionId,
-        partner_id: _apiKey,
-        widgetId: _widgetId,
-        widget_type: 'Controller'
-      });
+        if (completionHandler && OT.$.isFunction(completionHandler)) {
+          dispatchError(OT.ExceptionCodes.NOT_CONNECTED,
+            'We need to be connected before you can publish', completionHandler);
+        }
 
-      if (completionHandler && OT.$.isFunction(completionHandler)) {
-        errorMsg = "We need to be connected before you can publish";
-        OT.$.callAsync(completionHandler, new OT.Error(OT.ExceptionCodes.NOT_CONNECTED, errorMsg));
+        return null;
       }
 
-      return null;
-    }
-
-    if (!permittedTo("publish")) {
-      this.logEvent('publish', 'Failure', 'reason', 'This token does not allow publishing. The role must be at least `publisher` to enable this functionality');
-
-      TB.handleJsException("This token does not allow publishing. The role must be at least `publisher` to enable this functionality", OT.ExceptionCodes.UNABLE_TO_PUBLISH, {
-        session: this
-      });
-      return null;
-    }
-
-    // If the user has passed in an ID of a element then we create a new publisher.
-    if (!publisher || typeof(publisher)==='string' || publisher.nodeType == Node.ELEMENT_NODE){
-      // Initiate a new Publisher with the new session credentials
-     publisher = OT.initPublisher(this.apiKey, publisher, properties);
-    }
-    else if (publisher instanceof OT.Publisher){
-
-      // If the publisher already has a session attached to it we can
-      if( "session" in publisher && publisher.session && "sessionId" in publisher.session ){
-        // send a warning message that we can't publish again.
-        if( publisher.session.sessionId === this.sessionId){
-          OT.warn("Cannot publish " + publisher.guid + " again to " + this.sessionId + ". Please call session.unpublish(publisher) first.");
-        }
-        else {
-          OT.warn("Cannot publish " + publisher.guid + " publisher already attached to " + publisher.session.sessionId+ ". Please call session.unpublish(publisher) first.");
-        }
+      if (!permittedTo('publish')) {
+        this.logEvent('publish', 'Failure', 'reason',
+          'This token does not allow publishing. The role must be at least `publisher` ' +
+          'to enable this functionality');
+        dispatchError(OT.ExceptionCodes.UNABLE_TO_PUBLISH,
+          'This token does not allow publishing. The role must be at least `publisher` ' +
+          'to enable this functionality', completionHandler);
+        return null;
       }
-    }
-    else {
-      errorMsg = "Session.publish :: First parameter passed in is neither a string nor an instance of the Publisher";
-      OT.error(errorMsg);
-      throw new Error(errorMsg);
-    }
 
-    if (completionHandler && OT.$.isFunction(completionHandler)) publisher.once('publishComplete', completionHandler);
+      // If the user has passed in an ID of a element then we create a new publisher.
+      if (!publisher || typeof(publisher)==='string' || publisher.nodeType === Node.ELEMENT_NODE) {
+        // Initiate a new Publisher with the new session credentials
+        publisher = OT.initPublisher(publisher, properties);
 
-    // Add publisher reference to the session
-    publisher._.publishToSession(this);
+      } else if (publisher instanceof OT.Publisher){
 
-    // return the embed publisher
-    return publisher;
-  };
+        // If the publisher already has a session attached to it we can
+        if ('session' in publisher && publisher.session && 'sessionId' in publisher.session) {
+          // send a warning message that we can't publish again.
+          if( publisher.session.sessionId === this.sessionId){
+            OT.warn('Cannot publish ' + publisher.guid + ' again to ' +
+              this.sessionId + '. Please call session.unpublish(publisher) first.');
+          } else {
+            OT.warn('Cannot publish ' + publisher.guid + ' publisher already attached to ' +
+              publisher.session.sessionId+ '. Please call session.unpublish(publisher) first.');
+          }
+        }
+
+      } else {
+        dispatchError(OT.ExceptionCodes.UNABLE_TO_PUBLISH,
+          'Session.publish :: First parameter passed in is neither a ' +
+          'string nor an instance of the Publisher',
+          completionHandler);
+        return;
+      }
+
+      publisher.once('publishComplete', function(err) {
+        if (err) {
+          dispatchError(OT.ExceptionCodes.UNABLE_TO_PUBLISH,
+            'Session.publish :: ' + err.message,
+            completionHandler);
+          return;
+        }
+
+        if (completionHandler && OT.$.isFunction(completionHandler)) {
+          completionHandler.apply(null, arguments);
+        }
+      });
+
+      // Add publisher reference to the session
+      publisher._.publishToSession(this);
+
+      // return the embed publisher
+      return publisher;
+    };
 
  /**
   * Ceases publishing the specified publisher's audio-video stream
-  * to the session. By default, the local representation of the audio-video stream is removed from the
-  * web page.< Upon successful termination, the Session object on every connected
-  * web page dispatches
+  * to the session. By default, the local representation of the audio-video stream is
+  * removed from the web page. Upon successful termination, the Session object on every
+  * connected web page dispatches
   * a <code>streamDestroyed</code> event.
   * </p>
   *
   * <p>
   * To prevent the Publisher from being removed from the DOM, add an event listener for the
-  * <code>streamDestroyed</code> event and call the <code>preventDefault()</code> method of the event object.
+  * <code>streamDestroyed</code> event dispatched by the Publisher object and call the
+  * <code>preventDefault()</code> method of the event object.
   * </p>
   *
   * <p>
-  * <i>Note:</i> If you intend to reuse a Publisher object created using <code>TB.initPublisher()</code>
-  * to publish to different sessions sequentially, call either <code>Session.disconnect()</code> or
-  * <code>Session.unpublish()</code>. Do not call both. Then call the <code>preventDefault()</code> method
-  * of the <code>streamDestroyed</code> or <code>sessionDisconnected</code> event object to prevent the
-  * Publisher object from being removed from the page. Be sure to call <code>preventDefault()</code> only
-  * if the <code>connection.connectionId</code> property of the Stream object in the event matches the
-  * <code>connection.connectionId</code> property of your Session object (to ensure that you are preventing
-  * the default behavior for your published streams, not for other streams that you subscribe to).
+  * <i>Note:</i> If you intend to reuse a Publisher object created using
+  * <code>OT.initPublisher()</code> to publish to different sessions sequentially, call
+  * either <code>Session.disconnect()</code> or <code>Session.unpublish()</code>. Do not call
+  * both. Then call the <code>preventDefault()</code> method of the <code>streamDestroyed</code>
+  * or <code>sessionDisconnected</code> event object to prevent the Publisher object from being
+  * removed from the page. Be sure to call <code>preventDefault()</code> only if the
+  * <code>connection.connectionId</code> property of the Stream object in the event matches the
+  * <code>connection.connectionId</code> property of your Session object (to ensure that you are
+  * preventing the default behavior for your published streams, not for other streams that you
+  * subscribe to).
   * </p>
   *
   * <h5>Events dispatched:</h5>
   *
   * <p>
   * <code>streamDestroyed</code> (<a href="StreamEvent.html">StreamEvent</a>) &#151;
-  * The stream associated with the Publisher has been destroyed. Dispatched on
-  * the Publisher's browser and on the browser for all connections subscribing
-  * to the publisher's stream.
-  *                </p>
+  * The stream associated with the Publisher has been destroyed. Dispatched on by the
+  * Publisher on on the Publisher's browser. Dispatched by the Session object on
+  * all other connections subscribing to the publisher's stream.
+  * </p>
   *
   * <h5>Example</h5>
   *
-  * The following example publishes a stream to a session and adds a Disconnect link to the web page. Clicking this link causes the stream to stop being published.
+  * The following example publishes a stream to a session and adds a Disconnect link to the
+  * web page. Clicking this link causes the stream to stop being published.
   *
   * <pre>
   * &lt;script&gt;
@@ -14443,17 +16696,16 @@ OT.Session = function(sessionId) {
   *     var sessionID = ""; // Replace with your own session ID.
   *                      // See https://dashboard.tokbox.com/projects
   *     var token = "Replace with the TokBox token string provided to you."
-  *     var session = TB.initSession(sessionID);
-  *     session.addEventListener("sessionConnected", sessionConnectHandler);
-  *     session.connect(apiKey, token);
+  *     var session = OT.initSession(apiKey, sessionID);
+  *     session.on("sessionConnected", function sessionConnectHandler(event) {
+  *         // This assumes that there is a DOM element with the ID 'publisher':
+  *         publisher = OT.initPublisher('publisher');
+  *         session.publish(publisher);
+  *     });
+  *     session.connect(token);
   *     var publisher;
   *
-  *     function sessionConnectHandler(event) {
-  *         publisher = TB.initPublisher(apiKey, 'publisher');
-  *                         // This assumes that there is a DOM element with the ID 'publisher'.
-  *         session.publish(publisher);
-  *     }
-  *     function unpublsh() {
+  *     function unpublish() {
   *         session.unpublish(publisher);
   *     }
   * &lt;/script&gt;
@@ -14478,27 +16730,30 @@ OT.Session = function(sessionId) {
   * @method #unpublish
   * @memberOf Session
   */
-  this.unpublish = function(publisher) {
-    if (!publisher) {
-      OT.error('OT.Session.unpublish: publisher parameter missing.');
-      return;
-    }
+    this.unpublish = function(publisher) {
+      if (!publisher) {
+        OT.error('OT.Session.unpublish: publisher parameter missing.');
+        return;
+      }
 
-    // Unpublish the localMedia publisher
-    publisher._.unpublishFromSession(this);
-  };
+      // Unpublish the localMedia publisher
+      publisher._.unpublishFromSession(this, 'unpublished');
+    };
 
 
  /**
   * Subscribes to a stream that is available to the session. You can get an array of
   * available streams from the <code>streams</code> property of the <code>sessionConnected</code>
-  * and <code>streamCreated</code> events (see <a href="SessionConnectEvent.html">SessionConnectEvent</a> and
+  * and <code>streamCreated</code> events (see
+  * <a href="SessionConnectEvent.html">SessionConnectEvent</a> and
   * <a href="StreamEvent.html">StreamEvent</a>).
   * </p>
   * <p>
-  * The subscribed stream is displayed on the local web page by replacing the specified element in the DOM with a streaming video display.
-  * If the width and height of the display do not match the 4:3 aspect ratio of the video signal, the video stream is cropped to fit
-  * the display. If the stream lacks a video component, a blank screen with an audio indicator is displayed in place of the video stream.
+  * The subscribed stream is displayed on the local web page by replacing the specified element
+  * in the DOM with a streaming video display. If the width and height of the display do not
+  * match the 4:3 aspect ratio of the video signal, the video stream is cropped to fit
+  * the display. If the stream lacks a video component, a blank screen with an audio indicator
+  * is displayed in place of the video stream.
   * </p>
   *
   * <p>
@@ -14508,59 +16763,37 @@ OT.Session = function(sessionId) {
   *
   * <h5>Example</h5>
   *
-  * The following code subscribes to available streams at the time that a session is connected
+  * The following code subscribes to other clients streams:
   *
   * <pre>
   * var apiKey = ""; // Replace with your API key. See https://dashboard.tokbox.com/projects
   * var sessionID = ""; // Replace with your own session ID.
   *                     // See https://dashboard.tokbox.com/projects
   *
-  * var session = TB.initSession(sessionID);
-  * session.addEventListener("sessionConnected", sessionConnectHandler);
-  * session.connect(apiKey, token);
-  *
-  * function sessionConnectHandler(event) {
-  *     for (var i = 0; i &lt; event.streams.length; i++) {
-  *         var stream = event.streams[i];
-  *         displayStream(stream);
-  *     }
-  * }
-  *
-  * function displayStream(stream) {
-  *     var div = document.createElement('div');
-  *     div.setAttribute('id', 'stream' + stream.streamId);
-  *     var streamsContainer = document.getElementById('streamsContainer');
-  *     streamsContainer.appendChild(div);
-  *     subscriber = session.subscribe(stream, 'stream' + stream.streamId);
-  * }
-  * </pre>
-  * <p>
-  * You can also add an event listener for the <code>streamCreated</code> event. The Session object dispatches this event when a new stream is created.
-  * </p>
-  * <pre>
-  * session.addEventListener("streamCreated", streamCreatedHandler);
-  *
-  * function streamCreatedHandler(event) {
-  *     for (var i = 0; i &lt; event.streams.length; i++) {
-  *         var stream = event.streams[i];
-  *         displayStream(stream);
-  *     }
-  * }
+  * var session = OT.initSession(apiKey, sessionID);
+  * session.on("streamCreated", function(event) {
+  *   subscriber = session.subscribe(streamContainer);
+  * });
+  * session.connect(token);
   * </pre>
   *
-  * @param {Stream} stream The Stream object representing the stream to which we are trying to subscribe.
+  * @param {Stream} stream The Stream object representing the stream to which we are trying to
+  * subscribe.
   *
-  * @param {String} targetElement The ID of the existing DOM element
-  * that the Subscriber replaces. If you do not specify a <code>targetElement</code>, the application
-  * appends a new DOM element to the HTML <code>body</code>.
+  * @param {Object} targetElement (Optional) The DOM element or the <code>id</code> attribute of
+  * the existing DOM element used to determine the location of the Subscriber video in the HTML
+  * DOM. See the <code>insertMode</code> property of the <code>properties</code> parameter. If
+  * you do not specify a <code>targetElement</code>, the application appends a new DOM element
+  * to the HTML <code>body</code>.
   *
   * @param {Object} properties This is an object that contains the following properties:
   *    <ul>
-  *       <li><code>audioVolume</code> (Number) &#151; The desired audio volume, between 0 and 100, when the Subscriber
-  *       is first opened (default: 50). After you subscribe to the stream, you can adjust the volume by calling
-  *       the <a href="Subscriber.html#setAudioVolume"><code>setAudioVolume()</code> method</a> of the Subscriber
-  *       object. This volume setting affects local playback only; it does not affect the stream's volume on other
-  *       clients.</li>
+  *       <li><code>audioVolume</code> (Number) &#151; The desired audio volume, between 0 and
+  *       100, when the Subscriber is first opened (default: 50). After you subscribe to the
+  *       stream, you can adjust the volume by calling the
+  *       <a href="Subscriber.html#setAudioVolume"><code>setAudioVolume()</code> method</a> of the
+  *       Subscriber object. This volume setting affects local playback only; it does not affect
+  *       the stream's volume on other clients.</li>
   *
   *       <li><code>height</code> (Number) &#151; The desired height, in pixels, of the
   *        displayed Subscriber video stream (default: 198). <i>Note:</i> Use the
@@ -14568,10 +16801,53 @@ OT.Session = function(sessionId) {
   *       of the Subscriber video; do not set the height and width of the DOM element
   *       (using CSS).</li>
   *
-  *       <li><code>style.nameDisplayMode</code> (String) &#151; This property determines whether to display the
-  *       stream name. Possible values are: <code>"auto"</code> (the name is displayed when the stream is first
-  *       displayed and when the user mouses over the display), <code>"off"</code> (the name is not displayed),
-  *       and <code>"on"</code> (the name is displayed).</li>
+  *       <li>
+  *         <code>insertMode</code> (String) &#151; Specifies how the Subscriber object will
+  *         be inserted in the HTML DOM. See the <code>targetElement</code> parameter. This
+  *         string can have the following values:
+  *         <ul>
+  *           <li><code>"replace"</code> &#151; The Subscriber object replaces contents of the
+  *             targetElement. This is the default.</li>
+  *           <li><code>"after"</code> &#151; The Subscriber object is a new element inserted
+  *             after the targetElement in the HTML DOM. (Both the Subscriber and targetElement
+  *             have the same parent element.)</li>
+  *           <li><code>"before"</code> &#151; The Subscriber object is a new element inserted
+  *             before the targetElement in the HTML DOM. (Both the Subsciber and targetElement
+  *             have the same parent element.)</li>
+  *           <li><code>"append"</code> &#151; The Subscriber object is a new element added as a
+  *             child of the targetElement. If there are other child elements, the Subscriber is
+  *             appended as the last child element of the targetElement.</li>
+  *         </ul>
+  *       </li>
+  *
+  *   <li>
+  *   <code>style</code> (Object) &#151; An object containing properties that define the initial
+  *   appearance of user interface controls of the Subscriber. The <code>style</code> object
+  *   includes the following properties:
+  *     <ul>
+  *       <li><code>backgroundImageURI</code> (String) &mdash; A URI for an image to display as
+  *       the background image when a video is not displayed. (A video may not be displayed if
+  *       you call <code>subscribeToVideo(false)</code> on the Subscriber object). You can pass an
+  *       http or https URI to a PNG, JPEG, or non-animated GIF file location. You can also use the
+  *       <code>data</code> URI scheme (instead of http or https) and pass in base-64-encrypted
+  *       PNG data, such as that obtained from the
+  *       <a href="Subscriber.html#getImgData">Subscriber.getImgData()</a> method. For example,
+  *       you could set the property to <code>"data:VBORw0KGgoAA..."</code>, where the portion of
+  *       the string after <code>"data:"</code> is the result of a call to
+  *       <code>Subscriber.getImgData()</code>. If the URL or the image data is invalid, the
+  *       property is ignored (the attempt to set the image fails silently).</li>
+  *
+  *       <li><code>buttonDisplayMode</code> (String) &mdash; How to display the speaker controls
+  *       Possible values are: <code>"auto"</code> (controls are displayed when the stream is first
+  *       displayed and when the user mouses over the display), <code>"off"</code> (controls are not
+  *       displayed), and <code>"on"</code> (controls are always displayed).</li>
+  *
+  *       <li><code>nameDisplayMode</code> (String) &#151; Whether to display the stream name.
+  *       Possible values are: <code>"auto"</code> (the name is displayed when the stream is first
+  *       displayed and when the user mouses over the display), <code>"off"</code> (the name is not
+  *       displayed), and <code>"on"</code> (the name is always displayed).</li>
+  *   </ul>
+  *   </li>
   *
   *       <li><code>subscribeToAudio</code> (Boolean) &#151; Whether to initially subscribe to audio
   *       (if available) for the stream (default: <code>true</code>).</li>
@@ -14587,50 +16863,93 @@ OT.Session = function(sessionId) {
   *
   *    </ul>
   *
-  * @signature subscribe(stream, targetElement, properties)
-  * @returns {Subscriber} The Subscriber object for this stream. Stream control functions are exposed through the Subscriber object.
+  * @param {Function} completionHandler (Optional) A function to be called when the call to the
+  * <code>subscribe()</code> method succeeds or fails. This function takes one parameter &mdash;
+  * <code>error</code>. On success, the <code>completionHandler</code> function is not passed any
+  * arguments. On error, the function is passed an <code>error</code> object, defined by the
+  * <a href="Error.html">Error</a> class, has two properties: <code>code</code> (an integer) and
+  * <code>message</code> (a string), which identify the cause of the failure. The following
+  * code adds a <code>completionHandler</code> when calling the <code>subscribe()</code> method:
+  * <pre>
+  * session.subscribe(stream, "subscriber", null, function (error) {
+  *   if (error) {
+  *     console.log(error.message);
+  *   } else {
+  *     console.log("Subscribed to stream: " + stream.id);
+  *   }
+  * });
+  * </pre>
+  *
+  * @signature subscribe(stream, targetElement, properties, completionHandler)
+  * @returns {Subscriber} The Subscriber object for this stream. Stream control functions
+  * are exposed through the Subscriber object.
   * @method #subscribe
   * @memberOf Session
   */
-  this.subscribe = function(stream, targetElement, properties, completionHandler) {
-    var errorMsg;
+    this.subscribe = function(stream, targetElement, properties, completionHandler) {
 
-    if (!this.connection || !this.connection.connectionId) {
-      errorMsg = "Session.subscribe :: Connection required to subscribe";
-      OT.error(errorMsg);
-      throw new Error(errorMsg);
-    }
+      if (!this.connection || !this.connection.connectionId) {
+        dispatchError(OT.ExceptionCodes.UNABLE_TO_SUBSCRIBE,
+                      'Session.subscribe :: Connection required to subscribe',
+                      completionHandler);
+        return;
+      }
 
-    if (!stream) {
-      errorMsg = "Session.subscribe :: stream cannot be null";
-      OT.error(errorMsg);
-      throw new Error(errorMsg);
-    }
+      if (!stream) {
+        dispatchError(OT.ExceptionCodes.UNABLE_TO_SUBSCRIBE,
+                      'Session.subscribe :: stream cannot be null',
+                      completionHandler);
+        return;
+      }
 
-    if (!stream.hasOwnProperty("streamId")) {
-      errorMsg = "Session.subscribe :: invalid stream object";
-      OT.error(errorMsg);
-      throw new Error(errorMsg);
-    }
+      if (!stream.hasOwnProperty('streamId')) {
+        dispatchError(OT.ExceptionCodes.UNABLE_TO_SUBSCRIBE,
+                      'Session.subscribe :: invalid stream object',
+                      completionHandler);
+        return;
+      }
 
-    var subscriber = new OT.Subscriber(targetElement, OT.$.extend(properties || {}, {
+      if(typeof targetElement === 'function') {
+        completionHandler = targetElement;
+        targetElement = undefined;
+      }
+
+      if(typeof properties === 'function') {
+        completionHandler = properties;
+        properties = undefined;
+      }
+
+      var subscriber = new OT.Subscriber(targetElement, OT.$.extend(properties || {}, {
         session: this
-    }));
+      }));
 
-    if (completionHandler && OT.$.isFunction(completionHandler)) subscriber.once('subscribeComplete', completionHandler);
+      subscriber.once('subscribeComplete', function(err) {
+        if (err) {
+          dispatchError(OT.ExceptionCodes.UNABLE_TO_SUBSCRIBE,
+                'Session.subscribe :: ' + err.message,
+                completionHandler);
 
-    OT.subscribers.add(subscriber);
-    subscriber.subscribe(stream);
+          return;
+        }
 
-    return subscriber;
-  };
+        if (completionHandler && OT.$.isFunction(completionHandler)) {
+          completionHandler.apply(null, arguments);
+        }
+      });
+
+      OT.subscribers.add(subscriber);
+      subscriber.subscribe(stream);
+
+      return subscriber;
+    };
 
  /**
-  * Stops subscribing to a stream in the session. the display of the audio-video stream is removed from the local web page.
+  * Stops subscribing to a stream in the session. the display of the audio-video stream is
+  * removed from the local web page.
   *
   * <h5>Example</h5>
   * <p>
-  * The following code subscribes to available streams at the time that a session is connected. For each stream, the code also
+  * The following code subscribes to other clients' streams. For each stream, the code also
   * adds an Unsubscribe link.
   * </p>
   * <pre>
@@ -14639,26 +16958,19 @@ OT.Session = function(sessionId) {
   *                     // See https://dashboard.tokbox.com/projects
   * var streams = [];
   *
-  * var session = TB.initSession(sessionID);
-  * session.addEventListener("sessionConnected", sessionConnectHandler);
-  * session.connect(apiKey, token);
-  *
-  * function sessionConnectHandler(event) {
-  *     for (var i = 0; i &lt; event.streams.length; i++) {
-  *         var stream = event.streams[i];
-  *         displayStream(stream);
-  *     }
-  * }
+  * var session = OT.initSession(apiKey, sessionID);
+  * session.on("streamCreated", function(event) {
+  *     var stream = event.stream;
+  *     displayStream(stream);
+  * });
+  * session.connect(token);
   *
   * function displayStream(stream) {
   *     var div = document.createElement('div');
   *     div.setAttribute('id', 'stream' + stream.streamId);
   *
-  *
-  *
-  *     var subscriber = session.subscribe(stream, 'stream' + stream.streamId);
+  *     var subscriber = session.subscribe(stream, div);
   *     subscribers.push(subscriber);
-  *
   *
   *     var aLink = document.createElement('a');
   *     aLink.setAttribute('href', 'javascript: unsubscribe("' + subscriber.id + '")');
@@ -14689,24 +17001,24 @@ OT.Session = function(sessionId) {
   * @method #unsubscribe
   * @memberOf Session
   */
-  this.unsubscribe = function(subscriber) {
-    if (!subscriber) {
-      var errorMsg = "OT.Session.unsubscribe: subscriber cannot be null";
-      OT.error(errorMsg);
-      throw new Error(errorMsg);
-    }
+    this.unsubscribe = function(subscriber) {
+      if (!subscriber) {
+        var errorMsg = 'OT.Session.unsubscribe: subscriber cannot be null';
+        OT.error(errorMsg);
+        throw new Error(errorMsg);
+      }
 
-    if (!subscriber.stream) {
-        OT.warn("OT.Session.unsubscribe:: tried to unsubscribe a subscriber that had no stream");
+      if (!subscriber.stream) {
+        OT.warn('OT.Session.unsubscribe:: tried to unsubscribe a subscriber that had no stream');
         return false;
-    }
+      }
 
-    OT.debug("OT.Session.unsubscribe: subscriber " + subscriber.id);
+      OT.debug('OT.Session.unsubscribe: subscriber ' + subscriber.id);
 
-    subscriber.destroy();
+      subscriber.destroy();
 
-    return true;
-  };
+      return true;
+    };
 
  /**
   * Returns an array of local Subscriber objects for a given stream.
@@ -14721,16 +17033,17 @@ OT.Session = function(sessionId) {
   * @method #getSubscribersForStream
   * @memberOf Session
   */
-  this.getSubscribersForStream = function(stream) {
-    return OT.subscribers.where({streamId: stream.id});
-  };
+    this.getSubscribersForStream = function(stream) {
+      return OT.subscribers.where({streamId: stream.id});
+    };
 
  /**
   * Returns the local Publisher object for a given stream.
   *
   * @param {Stream} stream The stream for which you want to find the Publisher.
   *
-  * @returns {Publisher} A Publisher object for the specified stream. Returns <code>null</code> if there is no local Publisher object
+  * @returns {Publisher} A Publisher object for the specified stream. Returns
+  * <code>null</code> if there is no local Publisher object
   * for the specified stream.
   *
   * @see <a href="#forceUnpublish">forceUnpublish()</a>
@@ -14740,93 +17053,111 @@ OT.Session = function(sessionId) {
   * @method #getPublisherForStream
   * @memberOf Session
   */
-  this.getPublisherForStream = function(stream) {
-    var streamId;
+    this.getPublisherForStream = function(stream) {
+      var streamId,
+          errorMsg;
 
-    if (typeof(stream) == "string") {
-      streamId = stream;
-    } else if (typeof(stream) == "object" && stream && stream.hasOwnProperty("id")) {
-      streamId = stream.id;
-    } else {
-      errorMsg = "Session.getPublisherForStream :: Invalid stream type";
-      OT.error(errorMsg);
-      throw new Error(errorMsg);
-    }
-
-    return OT.publishers.where({streamId: streamId})[0];
-  };
-
-
-  // Private Session API: for internal OT use only
-  this._ = {
-    jsepSubscribe: function(stream, subscribeToVideo, subscribeToAudio) {
-      return _socket.jsepSubscribe(stream.connection.id, stream.id, subscribeToVideo, subscribeToAudio);
-    }.bind(this),
-
-    jsepUnsubscribe: function(stream) {
-      return _socket.jsepUnsubscribe(stream.connection.id, stream.id);
-    }.bind(this),
-
-    jsepCandidate: function(toConnectionId, stream, candidate) {
-      return _socket.jsepCandidate(toConnectionId, stream.id, candidate);
-    }.bind(this),
-
-    jsepOffer: function(toConnectionId, stream, offerSDP) {
-      return _socket.jsepOffer(toConnectionId, stream.id, offerSDP);
-    }.bind(this),
-
-    jsepAnswer: function(toConnectionId, stream, answerSDP) {
-      return _socket.jsepAnswer(toConnectionId, stream.id, answerSDP);
-    }.bind(this),
-
-    // session.on("signal", function(SignalEvent))
-    // session.on("signal:{type}", function(SignalEvent))
-    dispatchSignal: function(fromConnection, type, data) {
-      var event = new OT.SignalEvent(type, data, fromConnection);
-      event.target = this;
-
-      // signal a "signal" event
-      // NOTE: trigger doesn't support defaultAction, and therefore preventDefault.
-      this.trigger(OT.Event.names.SIGNAL, event);
-
-      // signal an "signal:{type}" event" if there was a custom type
-      if (type) this.dispatchEvent(event);
-    }.bind(this),
-
-    modifySubscriber: function(subscriber, key, value) {
-      return _socket.modifySubscriber(subscriber, key, value);
-    }.bind(this),
-
-    createStream: function(publisherId, name, orientation, encodedWidth, encodedHeight, hasAudio, hasVideo) {
-      _socket.createStream(publisherId, name, orientation, encodedWidth, encodedHeight, hasAudio, hasVideo);
-    }.bind(this),
-
-    modifyStream: function(streamId, key, value) {
-      if (!streamId || !key || value === void 0) {
-        OT.error('OT.Session.modifyStream: must provide streamId, key and value to modify a stream property.');
-        return;
+      if (typeof stream === 'string') {
+        streamId = stream;
+      } else if (typeof stream === 'object' && stream && stream.hasOwnProperty('id')) {
+        streamId = stream.id;
+      } else {
+        errorMsg = 'Session.getPublisherForStream :: Invalid stream type';
+        OT.error(errorMsg);
+        throw new Error(errorMsg);
       }
 
-      _socket.updateStream(streamId, key, value);
-    }.bind(this),
+      return OT.publishers.where({streamId: streamId})[0];
+    };
 
-    destroyStream: function(streamId) {
-      _socket.destroyStream(streamId);
-    }.bind(this)
-  };
+
+    // Private Session API: for internal OT use only
+    this._ = {
+      jsepCandidateP2p: function(streamId, subscriberId, candidate) {
+        return _socket.jsepCandidateP2p(streamId, subscriberId, candidate);
+      }.bind(this),
+
+      jsepCandidate: function(streamId, candidate) {
+        return _socket.jsepCandidate(streamId, candidate);
+      }.bind(this),
+
+      jsepOffer: function(streamId, offerSdp) {
+        return _socket.jsepOffer(streamId, offerSdp);
+      }.bind(this),
+
+      jsepOfferP2p: function(streamId, subscriberId, offerSdp) {
+        return _socket.jsepOfferP2p(streamId, subscriberId, offerSdp);
+      }.bind(this),
+
+      jsepAnswer: function(streamId, answerSdp) {
+        return _socket.jsepAnswer(streamId, answerSdp);
+      }.bind(this),
+
+      jsepAnswerP2p: function(streamId, subscriberId, answerSdp) {
+        return _socket.jsepAnswerP2p(streamId, subscriberId, answerSdp);
+      }.bind(this),
+
+      // session.on("signal", function(SignalEvent))
+      // session.on("signal:{type}", function(SignalEvent))
+      dispatchSignal: function(fromConnection, type, data) {
+        var event = new OT.SignalEvent(type, data, fromConnection);
+        event.target = this;
+
+        // signal a "signal" event
+        // NOTE: trigger doesn't support defaultAction, and therefore preventDefault.
+        this.trigger(OT.Event.names.SIGNAL, event);
+
+        // signal an "signal:{type}" event" if there was a custom type
+        if (type) this.dispatchEvent(event);
+      }.bind(this),
+
+      subscriberCreate: function(stream, subscriber, channelsToSubscribeTo, completion) {
+        return _socket.subscriberCreate(stream.id, subscriber.widgetId,
+          channelsToSubscribeTo, completion);
+      }.bind(this),
+
+      subscriberDestroy: function(stream, subscriber) {
+        return _socket.subscriberDestroy(stream.id, subscriber.widgetId);
+      }.bind(this),
+
+      subscriberUpdate: function(stream, subscriber, attributes) {
+        return _socket.subscriberUpdate(stream.id, subscriber.widgetId, attributes);
+      }.bind(this),
+
+      subscriberChannelUpdate: function(stream, subscriber, channel, attributes) {
+        return _socket.subscriberChannelUpdate(stream.id, subscriber.widgetId, channel.id,
+          attributes);
+      }.bind(this),
+
+      streamCreate: function(name, orientation, encodedWidth, encodedHeight, hasAudio, hasVideo,
+        frameRate, completion) {
+        _socket.streamCreate(name, orientation, encodedWidth, encodedHeight, hasAudio, hasVideo,
+          frameRate, OT.Config.get('bitrates', 'min', OT.APIKEY),
+          OT.Config.get('bitrates', 'max', OT.APIKEY), completion);
+      }.bind(this),
+
+      streamDestroy: function(streamId) {
+        _socket.streamDestroy(streamId);
+      }.bind(this),
+
+      streamChannelUpdate: function(stream, channel, attributes) {
+        _socket.streamChannelUpdate(stream.id, channel.id, attributes);
+      }.bind(this)
+    };
 
 
  /**
-  * Sends a signal to each client or specified clients in the session. Specify a <code>connections</code> property
-  * of the <code>signal</code> parameter to limit the recipients of the signal; otherwise the signal is sent to
-  * each client connected to the session.
+  * Sends a signal to each client or specified clients in the session. Specify a
+  * <code>connections</code> property of the <code>signal</code> parameter to limit the
+  * recipients of the signal; otherwise the signal is sent to each client connected to
+  * the session.
   * <p>
-  * The following example sends a signal of type "foo" with a specified data payload to all clients connected to
-  * the session:
+  * The following example sends a signal of type "foo" with a specified data payload to all
+  * clients connected to the session:
   * <pre>
   * session.signal({
   *     type: "foo",
-  *     data: {messageString:"hello", scores:[7, 14, 23]},
+  *     data: "hello"
   *   },
   *   function(error) {
   *     if (error) {
@@ -14838,17 +17169,18 @@ OT.Session = function(sessionId) {
   * );
   * </pre>
   * <p>
-  * Calling this method without limiting the set of recipient clients will result in multiple signals sent (one to
-  * each client in the session). For information on charges for signaling, see the <a href="http://tokbox.com/pricing">OpenTok
+  * Calling this method without limiting the set of recipient clients will result in
+  * multiple signals sent (one to each client in the session). For information on charges
+  * for signaling, see the <a href="http://tokbox.com/pricing">OpenTok
   * pricing</a> page.
   * <p>
-  * The following example sends a signal of type "foo" with a specified data payload to two specific clients
-  * connected to the session:
+  * The following example sends a signal of type "foo" with a specified data payload to two
+  * specific clients connected to the session:
   * <pre>
   * session.signal({
   *     type: "foo",
   *     to: [connection1, connection2]; // connection1 and 2 are Connection objects
-  *     data: {messageString:"hello"}
+  *     data: "hello"
   *   },
   *   function(error) {
   *     if (error) {
@@ -14860,51 +17192,50 @@ OT.Session = function(sessionId) {
   * );
   * </pre>
   * <p>
-  * Each of the properties of the object you pass into the <code>signal()</code> method is optional.
-  * <p>
-  * Add an event handler for the <code>signal</code> event to listen for all signals sent in the session.
-  * Add an event handler for the <code>signal:type</code> event to listen for signals of a specified type
-  * only (replace <code>type</code>, in <code>signal:type</code>, with the type of signal to listen for). The
-  * Session object dispatches these events. (See <a href="#events">events</a>.)
-  * <p>
-  * Each property is optional. If you set none of the properties, you will send a signal with no data or type to
-  * each client connected to the session.</p>
+  * Add an event handler for the <code>signal</code> event to listen for all signals sent in
+  * the session. Add an event handler for the <code>signal:type</code> event to listen for
+  * signals of a specified type only (replace <code>type</code>, in <code>signal:type</code>,
+  * with the type of signal to listen for). The Session object dispatches these events. (See
+  * <a href="#events">events</a>.)
   *
   * @param {Object} signal An object that contains the following properties defining the signal:
   * <ul>
-  *   <li><code>to</code> &mdash; (Array) An array of <a href="Connection.html">Connection</a> objects, corresponding
-  *      to clients that the message is to be sent to. If you do not specify this property, the signal is sent to all
-  *      clients connected to the session.</li>
-  *   <li><code>data</code> &mdash; (Object) The data to send. Valid types for data are a JSON-parsable object,
-  *     a JSON-parsable array, a string, a number, a Boolean value, or <code>null</code>. Numbers cannot be NaN or Infinity.
-  *     The limit to the size of data is 8kB.</li>
-  *   <li><code>type</code> &mdash; (String) The type of the signal. You can use the type to filter signals when setting an
-  *     event handler for the <code>signal:type</code> event (where you replace <code>type</code> with the type string).
-  *     The maximum length of the <code>type</code> string is 128 characters, and it must contain only letters (A-Z and a-z),
+  *   <li><code>to</code> &mdash; (Array) An array of <a href="Connection.html">Connection</a>
+  *      objects, corresponding to clients that the message is to be sent to. If you do not
+  *      specify this property, the signal is sent to all clients connected to the session.</li>
+  *   <li><code>data</code> &mdash; (Signal) The data to send. The limit to the size of data
+  *     string is 8kB.</li>
+  *   <li><code>type</code> &mdash; (String) The type of the signal. You can use the type to
+  *     filter signals when setting an event handler for the <code>signal:type</code> event
+  *     (where you replace <code>type</code> with the type string). The maximum length of the
+  *     <code>type</code> string is 128 characters, and it must contain only letters (A-Z and a-z),
   *     numbers (0-9), '-', '_', and '~'.</li>
   *   </li>
   * </ul>
   *
-  * <p>Each property is optional. If you set none of the properties, you will send a signal with no data or type to
-  * each client connected to the session.</p>
+  * <p>Each property is optional. If you set none of the properties, you will send a signal
+  * with no data or type to each client connected to the session.</p>
   *
-  * @param {Function} completionHandler A function that is called when sending the signal succeeds or fails. This
-  * function takes one parameter, <code>error</code>, which is set to <code>null</code> if sending the signal succeeds;
-  * otherwise the <code>error</code> object has the following properties:
+  * @param {Function} completionHandler A function that is called when sending the signal
+  * succeeds or fails. This function takes one parameter &mdash; <code>error</code>.
+  * On success, the <code>completionHandler</code> function is not passed any
+  * arguments. On error, the function is passed an <code>error</code> object, defined by the
+  * <a href="Error.html">Error</a> class. The <code>error</code> object has the following
+  * properties:
   *
   * <ul>
   *   <li><code>code</code> &mdash; (Number) An error code, which can be one of the following:
   *     <table style="width:100%">
   *         <tr>
-  *           <td>400</td> <td>One of the signal properties &mdash; data, type, or to &mdash; is invalid.
-  *                         Or the data cannot be parsed as JSON.</td>
+  *           <td>400</td> <td>One of the signal properties &mdash; data, type, or to &mdash;
+  *                         is invalid. Or the data cannot be parsed as JSON.</td>
   *         </tr>
   *         <tr>
   *           <td>404</td> <td>The to connection does not exist.</td>
   *         </tr>
   *         <tr>
-  *           <td>413</td> <td>The type string exceeds the maximum length (128 characters),
-  *                        or the data property exceeds the maximum size (8kB).</td>
+  *           <td>413</td> <td>The type string exceeds the maximum length (128 bytes),
+  *                        or the data string exceeds the maximum size (8 kB).</td>
   *         </tr>
   *         <tr>
   *           <td>500</td> <td>The WebSocket connection is down.</td>
@@ -14912,109 +17243,147 @@ OT.Session = function(sessionId) {
   *      </table>
   *   </li>
   *   <li><code>reason</code> &mdash; (String) A description of the error.</li>
-  *   <li><code>signal</code> &mdash; (Object) An object with properties corresponding to the values passed
-  *     into the <code>signal()</code> method &mdash; <code>data</code>, <code>to</code>, and <code>type</code>.
+  *   <li><code>signal</code> &mdash; (Object) An object with properties corresponding to the
+  *     values passed into the <code>signal()</code> method &mdash; <code>data</code>,
+  *     <code>to</code>, and <code>type</code>.
   *   </li>
   * </ul>
   *
-  * <p>Note that the <code>completionHandler</code> success result (<code>error == null</code>) indicates that the
-  * options passed into the <code>Session.signal()</code> method are valid and the signal was sent. It does
-  * <i>not</i> indicate that the signal was successfully received by any of the intended recipients.
+  * <p>Note that the <code>completionHandler</code> success result (<code>error == null</code>)
+  * indicates that the options passed into the <code>Session.signal()</code> method are valid
+  * and the signal was sent. It does <i>not</i> indicate that the signal was sucessfully
+  * received by any of the intended recipients.
   *
   * @method #signal
   * @memberOf Session
   * @see <a href="#event:signal">signal</a> and <a href="#event:signal:type">signal:type</a> events
   */
-  this.signal = function(options, completion) {
-    _socket.signal(options, completion);
-  };
+    this.signal = function(options, completion) {
+      var _options = options,
+          _completion = completion;
+
+      if (OT.$.isFunction(_options)) {
+        _completion = _options;
+        _options = null;
+      }
+
+      _socket.signal(_options, _completion);
+      if (options && options.data && (typeof(options.data) !== 'string')) {
+        OT.warn('Signaling of anything other than Strings is deprecated. ' +
+                'Please update the data property to be a string.');
+      }
+      this.logEvent('signal', 'send', 'type',
+        (options && options.data) ? typeof(options.data) : 'null');
+    };
 
  /**
-  * 	Forces a remote connection to leave the session.
+  *   Forces a remote connection to leave the session.
   *
   * <p>
-  * 	The <code>forceDisconnect()</code> method is normally used as a moderation tool
+  *   The <code>forceDisconnect()</code> method is normally used as a moderation tool
   *        to remove users from an ongoing session.
   * </p>
   * <p>
-  * 	When a connection is terminated using the <code>forceDisconnect()</code>,
+  *   When a connection is terminated using the <code>forceDisconnect()</code>,
   *        <code>sessionDisconnected</code>, <code>connectionDestroyed</code> and
   *        <code>streamDestroyed</code> events are dispatched in the same way as they
-  *        would be if the connection had terminated itself using the <code>disconnect()</code> method. However,
-  *        the <code>reason</code> property of a {@link ConnectionEvent} or {@link StreamEvent} object specifies
-  *        <code>"forceDisconnected"</code> as the reason for the destruction of the connection and stream(s).
+  *        would be if the connection had terminated itself using the <code>disconnect()</code>
+  *        method. However, the <code>reason</code> property of a {@link ConnectionEvent} or
+  *        {@link StreamEvent} object specifies <code>"forceDisconnected"</code> as the reason
+  *        for the destruction of the connection and stream(s).
   * </p>
   * <p>
-  * 	While you can use the <code>forceDisconnect()</code> method to terminate your own connection,
+  *   While you can use the <code>forceDisconnect()</code> method to terminate your own connection,
   *        calling the <code>disconnect()</code> method is simpler.
   * </p>
   * <p>
-  * 	The TB object dispatches an <code>exception</code> event if the user's role
-  * 	does not include permissions required to force other users to disconnect.
-  *        You define a user's role when you create the user token using the <code>generate_token()</code>
-  *        method using our <a href="/opentok/libraries/server/">server-side libraries</a> or the <a href="https://dashboard.tokbox.com/projects">Dashboard</a> page.
-  * 	See <a href="ExceptionEvent.html">ExceptionEvent</a> and <a href="TB.html#addEventListener">TB.addEventListener()</a>.
+  *   The OT object dispatches an <code>exception</code> event if the user's role
+  *   does not include permissions required to force other users to disconnect.
+  *   You define a user's role when you create the user token using the
+  *   <code>generate_token()</code> method using
+  *   <a href="/opentok/api/tools/documentation/api/server_side_libraries.html">OpenTok
+  *   server-side libraries</a> or the
+  *   <a href="https://dashboard.tokbox.com/projects">Dashboard</a> page.
+  *   See <a href="ExceptionEvent.html">ExceptionEvent</a> and <a href="OT.html#on">OT.on()</a>.
   * </p>
   * <p>
-  * 	The application throws an error if the session is not connected.
+  *   The application throws an error if the session is not connected.
   * </p>
   *
   * <h5>Events dispatched:</h5>
   *
   * <p>
-  * 	<code>connectionDestroyed</code> (<a href="ConnectionEvent.html">ConnectionEvent</a>) &#151;
+  *   <code>connectionDestroyed</code> (<a href="ConnectionEvent.html">ConnectionEvent</a>) &#151;
   *     On clients other than which had the connection terminated.
   * </p>
   * <p>
-  * 	<code>exception</code> (<a href="ExceptionEvent.html">ExceptionEvent</a>) &#151;
-  *     The user's role does not allow forcing other user's to disconnect (<code>event.code = 1530</code>),
-  * 	or the specified stream is not publishing to the session (<code>event.code = 1535</code>).
+  *   <code>exception</code> (<a href="ExceptionEvent.html">ExceptionEvent</a>) &#151;
+  *     The user's role does not allow forcing other user's to disconnect (<code>event.code =
+  *     1530</code>),
+  *   or the specified stream is not publishing to the session (<code>event.code = 1535</code>).
   * </p>
   * <p>
-  * 	<code>sessionDisconnected</code> (<a href="SessionDisconnectEvent.html">SessionDisconnectEvent</a>) &#151;
+  *   <code>sessionDisconnected</code>
+  *   (<a href="SessionDisconnectEvent.html">SessionDisconnectEvent</a>) &#151;
   *     On the client which has the connection terminated.
   * </p>
   * <p>
-  * 	<code>streamDestroyed</code> (<a href="StreamEvent.html">StreamEvent</a>) &#151;
+  *   <code>streamDestroyed</code> (<a href="StreamEvent.html">StreamEvent</a>) &#151;
   *     If streams are stopped as a result of the connection ending.
   * </p>
   *
   * @param {Connection} connection The connection to be disconnected from the session.
-  * This value can either be a <a href="Connection.html">Connection</a> object or a connection ID (which can be
-  * obtained from the <code>connectionId</code> property of the Connection object).
+  * This value can either be a <a href="Connection.html">Connection</a> object or a connection
+  * ID (which can be obtained from the <code>connectionId</code> property of the Connection object).
+  *
+  * @param {Function} completionHandler (Optional) A function to be called when the call to the
+  * <code>forceDiscononnect()</code> method succeeds or fails. This function takes one parameter
+  * &mdash; <code>error</code>. On success, the <code>completionHandler</code> function is
+  * not passed any arguments. On error, the function is passed an <code>error</code> object
+  * parameter. The <code>error</code> object, defined by the <a href="Error.html">Error</a>
+  * class, has two properties: <code>code</code> (an integer)
+  * and <code>message</code> (a string), which identify the cause of the failure.
+  * Calling <code>forceDisconnect()</code> fails if the role assigned to your
+  * token is not "moderator"; in this case <code>error.code</code> is set to 1520. The following
+  * code adds a <code>completionHandler</code> when calling the <code>forceDisconnect()</code>
+  * method:
+  * <pre>
+  * session.forceDisconnect(connection, function (error) {
+  *   if (error) {
+  *       console.log(error);
+  *     } else {
+  *       console.log("Connection forced to disconnect: " + connection.id);
+  *     }
+  *   });
+  * </pre>
   *
   * @method #forceDisconnect
   * @memberOf Session
   */
 
-  this.forceDisconnect = function(connectionOrConnectionId, completionHandler) {
-    var notPermittedErrorMsg = "This token does not allow forceDisconnect. The role must be at least `moderator` to enable this functionality";
+    this.forceDisconnect = function(connectionOrConnectionId, completionHandler) {
+      var notPermittedErrorMsg = 'This token does not allow forceDisconnect. ' +
+        'The role must be at least `moderator` to enable this functionality';
 
-    if (permittedTo("forceDisconnect")) {
-      var connectionId = typeof(connectionOrConnectionId) === 'string' ? connectionOrConnectionId : connectionOrConnectionId.id;
+      if (permittedTo('forceDisconnect')) {
+        var connectionId = typeof connectionOrConnectionId === 'string' ?
+          connectionOrConnectionId : connectionOrConnectionId.id;
 
-      if (completionHandler) {
-        var work = new RemoteWork(this, completionHandler, {
-          timeoutMessage: "Timed out while waiting for connection " + connectionId + " to be force Disconnected."
+        _socket.forceDisconnect(connectionId, function(err) {
+          if (err) {
+            dispatchError(OT.ExceptionCodes.UNABLE_TO_FORCE_DISCONNECT,
+              notPermittedErrorMsg, completionHandler);
+
+          } else if (completionHandler && OT.$.isFunction(completionHandler)) {
+            completionHandler.apply(null, arguments);
+          }
         });
-
-        work.failsOnExceptionCodes({
-          1520: notPermittedErrorMsg
-        });
-
-        _callbacks.forceDisconnect[connectionId] = work;
+      } else {
+        // if this throws an error the handleJsException won't occur
+        dispatchError(OT.ExceptionCodes.UNABLE_TO_FORCE_DISCONNECT,
+          notPermittedErrorMsg, completionHandler);
       }
-
-      _socket.forceDisconnect(connectionId);
-    } else {
-      // if this throws an error the handleJsException won't occur
-      if (completionHandler) OT.$.callAsync(completionHandler, new OT.Error(null, notPermittedErrorMsg));
-
-      TB.handleJsException(notPermittedErrorMsg, OT.ExceptionCodes.UNABLE_TO_FORCE_DISCONNECT, {
-        session: this
-      });
-    }
-  };
+    };
 
  /**
   * Forces the publisher of the specified stream to stop publishing the stream.
@@ -15026,128 +17395,175 @@ OT.Session = function(sessionId) {
   * set to <code>"forceUnpublished"</code>.
   * </p>
   * <p>
-  * The TB object dispatches an <code>exception</code> event if the user's role
+  * The OT object dispatches an <code>exception</code> event if the user's role
   * does not include permissions required to force other users to unpublish.
   * You define a user's role when you create the user token using the <code>generate_token()</code>
-  * method using our <a href="/opentok/libraries/server/">server-side libraries</a> or the <a href="https://dashboard.tokbox.com/projects">Dashboard</a> page page.
-  * You pass the token string as a parameter of the <code>connect()</code> method of the Session object.
-  * See <a href="ExceptionEvent.html">ExceptionEvent</a> and <a href="TB.html#addEventListener">TB.addEventListener()</a>.
+  * method using the
+  * <a href="/opentok/api/tools/documentation/api/server_side_libraries.html">OpenTok
+  * server-side libraries</a> or the <a href="https://dashboard.tokbox.com/projects">Dashboard</a>
+  * page.
+  * You pass the token string as a parameter of the <code>connect()</code> method of the Session
+  * object. See <a href="ExceptionEvent.html">ExceptionEvent</a> and
+  * <a href="OT.html#on">OT.on()</a>.
   * </p>
   *
   * <h5>Events dispatched:</h5>
   *
   * <p>
-  * 	<code>exception</code> (<a href="ExceptionEvent.html">ExceptionEvent</a>) &#151;
+  *   <code>exception</code> (<a href="ExceptionEvent.html">ExceptionEvent</a>) &#151;
   *     The user's role does not allow forcing other users to unpublish.
   * </p>
   * <p>
-  * 	<code>streamDestroyed</code> (<a href="StreamEvent.html">StreamEvent</a>) &#151;
+  *   <code>streamDestroyed</code> (<a href="StreamEvent.html">StreamEvent</a>) &#151;
   *     The stream has been unpublished. The Session object dispatches this on all clients
   *     subscribed to the stream, as well as on the publisher's client.
   * </p>
   *
   * @param {Stream} stream The stream to be unpublished.
   *
+  * @param {Function} completionHandler (Optional) A function to be called when the call to the
+  * <code>forceUnpublish()</code> method succeeds or fails. This function takes one parameter
+  * &mdash; <code>error</code>. On success, the <code>completionHandler</code> function is
+  * not passed any arguments. On error, the function is passed an <code>error</code> object
+  * parameter. The <code>error</code> object, defined by the <a href="Error.html">Error</a>
+  * class, has two properties: <code>code</code> (an integer)
+  * and <code>message</code> (a string), which identify the cause of the failure. Calling
+  * <code>forceUnpublish()</code> fails if the role assigned to your token is not "moderator";
+  * in this case <code>error.code</code> is set to 1530. The following code adds a
+  * <code>completionHandler</code> when calling the <code>forceUnpublish()</code> method:
+  * <pre>
+  * session.forceUnpublish(stream, function (error) {
+  *   if (error) {
+  *       console.log(error);
+  *     } else {
+  *       console.log("Connection forced to disconnect: " + connection.id);
+  *     }
+  *   });
+  * </pre>
+  *
   * @method #forceUnpublish
   * @memberOf Session
   */
-  this.forceUnpublish = function(streamOrStreamId, completionHandler) {
-    var notPermittedErrorMsg = "This token does not allow forceUnpublish. The role must be at least `moderator` to enable this functionality";
+    this.forceUnpublish = function(streamOrStreamId, completionHandler) {
+      var notPermittedErrorMsg = 'This token does not allow forceUnpublish. ' +
+        'The role must be at least `moderator` to enable this functionality';
 
-    if (permittedTo("forceUnpublish")) {
-      var stream = typeof(streamOrStreamId) === 'string' ? this.streams.get(streamOrStreamId) : streamOrStreamId;
+      if (permittedTo('forceUnpublish')) {
+        var stream = typeof streamOrStreamId === 'string' ?
+          this.streams.get(streamOrStreamId) : streamOrStreamId;
 
-      if (completionHandler) {
-        var work = new RemoteWork(this, completionHandler, {
-          timeoutMessage: "Timed out while waiting for stream " + stream.id + " to be force unpublished."
+        _socket.forceUnpublish(stream.id, function(err) {
+          if (err) {
+            dispatchError(OT.ExceptionCodes.UNABLE_TO_FORCE_UNPUBLISH,
+              notPermittedErrorMsg, completionHandler);
+          } else if (completionHandler && OT.$.isFunction(completionHandler)) {
+            completionHandler.apply(null, arguments);
+          }
         });
-
-        work.failsOnExceptionCodes({
-          1530: notPermittedErrorMsg
-        });
-
-        _callbacks.forceUnpublish[stream.id] = work;
+      } else {
+        // if this throws an error the handleJsException won't occur
+        dispatchError(OT.ExceptionCodes.UNABLE_TO_FORCE_UNPUBLISH,
+          notPermittedErrorMsg, completionHandler);
       }
+    };
 
-      _socket.forceUnpublish(stream.id);
-    } else {
-      // if this throws an error the handleJsException won't occur
-      if (completionHandler) OT.$.callAsync(completionHandler, new OT.Error(null, notPermittedErrorMsg));
+    this.getStateManager = function() {
+      OT.warn('Fixme: Have not implemented session.getStateManager');
+    };
 
-      TB.handleJsException(notPermittedErrorMsg, OT.ExceptionCodes.UNABLE_TO_FORCE_UNPUBLISH, {
-        session: this
-      });
-    }
-  };
+    OT.$.defineGetters(this, {
+      apiKey: function() { return _apiKey; },
+      token: function() { return _token; },
+      connected: function() { return this.is('connected'); },
+      connection: function() {
+        return _socket && _socket.id ? this.connections.get(_socket.id) : null;
+      },
+      sessionId: function() { return _sessionId; },
+      id: function() { return _sessionId; },
+      capabilities: function() {
+        var connection =  this.connection;
+        return connection ? connection.permissions : new OT.Capabilities([]);
+      }.bind(this)
+    }, true);
 
-  this.getStateManager = function() {
-      OT.warn("Fixme: Have not implemented session.getStateManager");
-  };
 
-  OT.$.defineGetters(this, {
-    apiKey: function() { return _apiKey; },
-    token: function() { return _token; },
-    connected: function() { return this.is('connected'); },
-    connection: function() { return _socket && _socket.id ? this.connections.get(_socket.id) : null; },
-    capabilities: function() { return _socket ? _socket.capabilities : new OT.Capabilities([]); },
-    sessionId: function() { return _sessionId; },
-    id: function() { return _sessionId; }
-  }, true);
+  /**
+   * A new client, other than your own, has connected to the session.
+   * @name connectionCreated
+   * @event
+   * @memberof Session
+   * @see ConnectionEvent
+   * @see <a href="OT.html#initSession">OT.initSession()</a>
+   */
 
+  /**
+   * A client, other than your own, has disconnected from the session.
+   * @name connectionDestroyed
+   * @event
+   * @memberof Session
+   * @see ConnectionEvent
+   */
+
+  /**
+   * The page has connected to an OpenTok session. This event is dispatched asynchronously
+   * in response to a successful call to the <code>connect()</code> method of a Session
+   * object. Before calling the <code>connect()</code> method, initialize the session by
+   * calling the <code>OT.initSession()</code> method. For a code example and more details,
+   * see <a href="#connect">Session.connect()</a>.
+   * @name sessionConnected
+   * @event
+   * @memberof Session
+   * @see SessionConnectEvent
+   * @see <a href="#connect">Session.connect()</a>
+   * @see <a href="OT.html#initSession">OT.initSession()</a>
+   */
+
+  /**
+   * The client has disconnected from the session. This event may be dispatched asynchronously
+   * in response to a successful call to the <code>disconnect()</code> method of the Session object.
+   * The event may also be disptached if a session connection is lost inadvertantly, as in the case
+   * of a lost network connection.
+   * <p>
+   * The default behavior is that all Subscriber objects are unsubscribed and removed from the
+   * HTML DOM. Each Subscriber object dispatches a <code>destroyed</code> event when the element is
+   * removed from the HTML DOM. If you call the <code>preventDefault()</code> method in the event
+   * listener for the <code>sessionDisconnect</code> event, the default behavior is prevented, and
+   * you can, optionally, clean up Subscriber objects using your own code.
+*
+   * @name sessionDisconnected
+   * @event
+   * @memberof Session
+   * @see <a href="#disconnect">Session.disconnect()</a>
+   * @see <a href="#disconnect">Session.forceDisconnect()</a>
+   * @see SessionDisconnectEvent
+   */
+
+  /**
+   * A new stream, published by another client, has been created on this session. For streams
+   * published by your own client, the Publisher object dispatches a <code>streamCreated</code>
+   * event. For a code example and more details, see {@link StreamEvent}.
+   * @name streamCreated
+   * @event
+   * @memberof Session
+   * @see StreamEvent
+   * @see <a href="Session.html#publish">Session.publish()</a>
+   */
 
 	/**
-	 * A new connection to this session has been created.
-	 * @name connectionCreated
-	 * @event
-	 * @memberof Session
-	 * @see ConnectionEvent
-	 * @see <a href="TB.html#initSession">TB.initSession()</a>
-	 */
-
-	/**
-	 * A connection to this session has ended.
-	 * @name connectionDestroyed
-	 * @event
-	 * @memberof Session
-	 * @see ConnectionEvent
-	 */
-
-	/**
-	 * The page has connected to an OpenTok session. This event is dispatched asynchronously in response to
-	 * a successful call to the <code>connect()</code> method of a Session object. Before calling the <code>connect()</code>
-	 * method, initialize the session by calling the <code>TB.initSession()</code> method. For a code example and more details,
-	 * see <a href="#connect">Session.connect()</a>.
-	 * @name sessionConnected
-	 * @event
-	 * @memberof Session
-	 * @see SessionConnectEvent
-	 * @see <a href="#connect">Session.connect()</a>
-	 * @see <a href="TB.html#initSession">TB.initSession()</a>
-	 */
-
-	/**
-	 * The session has disconnected. This event may be dispatched asynchronously in response to a successful call to the
-	 * <code>disconnect()</code> method of the Session object. The event may also be disptached if a session connection is lost
-	 * inadvertantly, as in the case of a lost network connection.
-	 * @name sessionDisconnected
-	 * @event
-	 * @memberof Session
-	 * @see <a href="#disconnect">Session.disconnect()</a>
-	 * @see <a href="#disconnect">Session.forceDisconnect()</a>
-	 * @see SessionDisconnectEvent
-	 */
-
-	/**
-	 * A new stream has been created on this session. For a code example and more details, see {@link StreamEvent}.
-	 * @name streamCreated
-	 * @event
-	 * @memberof Session
-	 * @see StreamEvent
-	 * @see <a href="Session.html#publish">Session.publish()</a>
-	 */
-
-	/**
-	 * A stream has closed on this connection. For a code example and more details, see {@link StreamEvent}.
+	 * A stream from another client has stopped publishing to the session.
+	 * <p>
+	 * The default behavior is that all Subscriber objects that are subscribed to the stream are
+	 * unsubscribed and removed from the HTML DOM. Each Subscriber object dispatches a
+	 * <code>destroyed</code> event when the element is removed from the HTML DOM. If you call the
+	 * <code>preventDefault()</code> method in the event listener for the
+	 * <code>streamDestroyed</code> event, the default behavior is prevented and you can clean up
+	 * Subscriber objects using your own code. See
+	 * <a href="Session.html#getSubscribersForStream">Session.getSubscribersForStream()</a>.
+	 * <p>
+	 * For streams published by your own client, the Publisher object dispatches a
+	 * <code>streamDestroyed</code> event.
+	 * <p>
+	 * For a code example and more details, see {@link StreamEvent}.
 	 * @name streamDestroyed
 	 * @event
 	 * @memberof Session
@@ -15155,8 +17571,10 @@ OT.Session = function(sessionId) {
 	 */
 
 	/**
-	 * A stream has started or stopped publishing audio or video (see <a href="Publisher.html#publishAudio">Publisher.publishAudio()</a> and
-	 * <a href="Publisher.html#publishVideo">Publisher.publishVideo()</a>); or the <code>videoDimensions</code> property of the Stream
+	 * A stream has started or stopped publishing audio or video (see
+	 * <a href="Publisher.html#publishAudio">Publisher.publishAudio()</a> and
+	 * <a href="Publisher.html#publishVideo">Publisher.publishVideo()</a>); or the
+	 * <code>videoDimensions</code> property of the Stream
 	 * object has changed (see <a href="Stream.html#"videoDimensions>Stream.videoDimensions</a>).
 	 * @name streamPropertyChanged
 	 * @event
@@ -15170,24 +17588,29 @@ OT.Session = function(sessionId) {
 	 */
 
 	/**
-	 * A signal was received from the session. The <a href="SignalEvent.html">SignalEvent</a> class defines this event object.
-	 * It includes the following properties:
+	 * A signal was received from the session. The <a href="SignalEvent.html">SignalEvent</a>
+	 * class defines this event object. It includes the following properties:
 	 * <ul>
-	 *   <li><code>data</code> &mdash; (Object) The data payload sent with the signal (if there is one).</li>
-	 *   <li><code>from</code> &mdash; (<a href="Connection.html">Connection</a>) The Connection corresponding to the
-	 *   client that sent with the signal.</li>
-	 *   <li><code>type</code> &mdash; (String) The type assigned to the signal (if there is one).</li>
+	 *   <li><code>data</code> &mdash; (String) The data string sent with the signal (if there
+	 *       is one).</li>
+	 *   <li><code>from</code> &mdash; (<a href="Connection.html">Connection</a>) The Connection
+	 *       corresponding to the client that sent with the signal.</li>
+	 *   <li><code>type</code> &mdash; (String) The type assigned to the signal (if there is
+	 *       one).</li>
 	 * </ul>
 	 * <p>
-	 * You can register to receive all signals sent in the session, by adding an event handler for the <code>signal</code>
-	 * event. For example, the following code adds an event handler to process all signals sent in the session:
+	 * You can register to receive all signals sent in the session, by adding an event handler
+	 * for the <code>signal</code> event. For example, the following code adds an event handler
+	 * to process all signals sent in the session:
 	 * <pre>
-	 * session.addEventListener("signal", function(event) {
-	 *   console.log("Signal sent from connection " + event.from.id);
+	 * session.on("signal", function(event) {
+	 *   console.log("Signal sent from connection: " + event.from.id);
+	 *   console.log("Signal data: " + event.data);
 	 * });
 	 * </pre>
-	 * <p>You can register for signals of a specfied type by adding an event handler for the <code>signal:type</code>
-	 * event (replacing <code>type</code> with the actual type string to filter on).
+	 * <p>You can register for signals of a specfied type by adding an event handler for the
+	 * <code>signal:type</code> event (replacing <code>type</code> with the actual type string
+	 * to filter on).
 	 *
 	 * @name signal
 	 * @event
@@ -15198,27 +17621,30 @@ OT.Session = function(sessionId) {
 	 */
 
 	/**
-	 * A signal of the specified type was received from the session. The <a href="SignalEvent.html">SignalEvent</a> class
-	 * defines this event object.
+	 * A signal of the specified type was received from the session. The
+	 * <a href="SignalEvent.html">SignalEvent</a> class defines this event object.
 	 * It includes the following properties:
 	 * <ul>
-	 *   <li><code>data</code> &mdash; (Object) The data payload sent with the signal.</li>
-	 *   <li><code>from</code> &mdash; (<a href="Connection.html">Connection</a>) The Connection corresponding to the
-	 *   client that sent with the signal.</li>
-	 *   <li><code>type</code> &mdash; (String) The type assigned to the signal (if there is one).</li>
+	 *   <li><code>data</code> &mdash; (String) The data string sent with the signal.</li>
+	 *   <li><code>from</code> &mdash; (<a href="Connection.html">Connection</a>) The Connection
+	 *   corresponding to the client that sent with the signal.</li>
+	 *   <li><code>type</code> &mdash; (String) The type assigned to the signal (if there is one).
+	 *   </li>
 	 * </ul>
 	 * <p>
-	 * You can register for signals of a specfied type by adding an event handler for the <code>signal:type</code>
-	 * event (replacing <code>type</code> with the actual type string to filter on). For example, the following code adds
-	 * an event handler for signals of type "foo":
+	 * You can register for signals of a specfied type by adding an event handler for the
+	 * <code>signal:type</code> event (replacing <code>type</code> with the actual type string
+	 * to filter on). For example, the following code adds an event handler for signals of
+	 * type "foo":
 	 * <pre>
-	 * session.addEventListener("signal:foo", function(event) {
+	 * session.on("signal:foo", function(event) {
 	 *   console.log("foo signal sent from connection " + event.from.id);
+	 *   console.log("Signal data: " + event.data);
 	 * });
 	 * </pre>
 	 * <p>
-	 * You can register to receive <i>all</i> signals sent in the session, by adding an event handler for the
-	 * <code>signal</code> event.
+	 * You can register to receive <i>all</i> signals sent in the session, by adding an event
+	 * handler for the <code>signal</code> event.
 	 *
 	 * @name signal:type
 	 * @event
@@ -15227,12 +17653,10 @@ OT.Session = function(sessionId) {
 	 * @see SignalEvent
 	 * @see <a href="#event:signal">signal</a> event
 	 */
-
-
-};
+  };
 
 })(window);
-(function(window) {
+!(function() {
   var style = document.createElement('link');
   style.type = 'text/css';
   style.media = 'screen';
@@ -15241,7 +17665,8 @@ OT.Session = function(sessionId) {
   var head = document.head || document.getElementsByTagName('head')[0];
   head.appendChild(style);
 })(window);
-(function(window){
+!(function(){
+/*global define*/
 
 // Register as a named AMD module, since TokBox could be concatenated with other
 // files that may use define, but not via a proper concatenation script that
@@ -15249,8 +17674,8 @@ OT.Session = function(sessionId) {
 // way to register. Uppercase TB is used because AMD module names are
 // derived from file names, and OpenTok is normally delivered in an uppercase
 // file name.
-if ( typeof define === "function" && define.amd ) {
-  define( "TB", [], function () { return TB; } );
-}
+  if (typeof define === 'function' && define.amd) {
+    define( 'TB', [], function () { return TB; } );
+  }
 
 })(window);

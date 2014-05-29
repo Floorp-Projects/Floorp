@@ -20,9 +20,9 @@ loop.shared.models = (function() {
                                // is the version received from the push
                                // notification and is used by the server to
                                // determine the pending calls
-      sessionId:    undefined, // TB session id
-      sessionToken: undefined, // TB session token
-      apiKey:       undefined  // TB api key
+      sessionId:    undefined, // OT session id
+      sessionToken: undefined, // OT session token
+      apiKey:       undefined  // OT api key
     },
 
     /**
