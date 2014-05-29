@@ -259,7 +259,9 @@ let MozLoopServiceInternal = {
     }
 
     // We need to register, so save the callback.
-    this.registrationCallbacks.push(callback);
+    if (callback) {
+      this.registrationCallbacks.push(callback);
+    }
 
     // If we're already in progress, just return straight away.
     if (this.registrationInProgress) {
