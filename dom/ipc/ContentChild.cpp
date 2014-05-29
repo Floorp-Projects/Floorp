@@ -142,7 +142,6 @@
 #include "nsDeviceStorage.h"
 #include "AudioChannelService.h"
 #include "JavaScriptChild.h"
-#include "mozilla/dom/DataStoreService.h"
 #include "mozilla/dom/telephony/PTelephonyChild.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
 #include "mozilla/net/NeckoMessageUtils.h"
@@ -767,24 +766,6 @@ ContentChild::RecvAudioChannelNotify()
         service->Notify();
     }
     return true;
-}
-
-bool
-ContentChild::RecvDataStoreNotify(const uint32_t& aAppId,
-                                  const nsString& aName,
-                                  const nsString& aManifestURL)
-{
-  nsRefPtr<DataStoreService> service = DataStoreService::GetOrCreate();
-  if (NS_WARN_IF(!service)) {
-    return false;
-  }
-
-  nsresult rv = service->EnableDataStore(aAppId, aName, aManifestURL);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  return true;
 }
 
 bool
