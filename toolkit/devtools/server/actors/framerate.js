@@ -82,7 +82,7 @@ let FramerateActor = exports.FramerateActor = protocol.ActorClass({
       let frameCount = 0;
       while (ticks[pivotTick++] < bucketTime) frameCount++;
 
-      let framerate = 1000 / (bucketTime / frameCount);
+      let framerate = 1000 / (resolution / frameCount);
       timeline[bucketTime] = framerate;
     }
 

@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let TargetFactory = devtools.TargetFactory;
 let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+let TargetFactory = devtools.TargetFactory;
 
 gDevTools.testing = true;
 SimpleTest.registerCleanupFunction(() => {
@@ -30,6 +30,12 @@ function addTab(aURL, aCallback)
   }
 
   browser.addEventListener("load", onTabLoad, true);
+}
+
+function promiseTab(aURL) {
+  let deferred = Promise.defer();
+  addTab(aURL, deferred.resolve);
+  return deferred.promise;
 }
 
 registerCleanupFunction(function tearDown() {
@@ -124,4 +130,17 @@ function oneTimeObserve(name, callback) {
     callback();
   };
   Services.obs.addObserver(func, name, false);
+}
+
+function* createHost(type = "bottom", src = "data:text/html;charset=utf-8,") {
+  let host = new Hosts[type](gBrowser.selectedTab);
+  let iframe = yield host.create();
+
+  let loaded = Promise.defer();
+  let domHelper = new DOMHelpers(iframe.contentWindow);
+  iframe.setAttribute("src", src);
+  domHelper.onceDOMReady(loaded.resolve);
+  yield loaded.promise;
+
+  return [host, iframe.contentWindow, iframe.contentDocument];
 }
