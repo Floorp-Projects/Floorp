@@ -24,7 +24,6 @@
 #include "nsRect.h"                     // for nsIntRect
 #include "nsTArray.h"                   // for nsTArray
 #include "nscore.h"                     // for nsAString
-#include "mozilla/layers/TransactionIdAllocator.h"
 
 class nsIWidget;
 
@@ -167,7 +166,7 @@ public:
   virtual bool RequestOverfill(mozilla::dom::OverfillCallback* aCallback) MOZ_OVERRIDE;
   virtual void RunOverfillCallback(const uint32_t aOverfill) MOZ_OVERRIDE;
 
-  virtual void DidComposite(uint64_t aTransactionId);
+  virtual void DidComposite();
 
   virtual bool SupportsMixBlendModes(EnumSet<gfx::CompositionOp>& aMixBlendModes) MOZ_OVERRIDE
   {
@@ -207,8 +206,6 @@ public:
 
   // Get a copy of the compositor-side APZ test data for our layers ID.
   void GetCompositorSideAPZTestData(APZTestData* aData) const;
-
-  void SetTransactionIdAllocator(TransactionIdAllocator* aAllocator) { mTransactionIdAllocator = aAllocator; }
 
 protected:
   enum TransactionPhase {
@@ -255,9 +252,6 @@ private:
   // being drawn to the default target, and then copy those pixels
   // back to mShadowTarget.
   nsRefPtr<gfxContext> mShadowTarget;
-
-  nsRefPtr<TransactionIdAllocator> mTransactionIdAllocator;
-  uint64_t mLatestTransactionId;
 
   // Sometimes we draw to targets that don't natively support
   // landscape/portrait orientation.  When we need to implement that

@@ -276,6 +276,33 @@ this.WifiCommand = function(aControlMessage, aInterface, aSdkVersion) {
     });
   };
 
+  command.connectToHostapd = function(callback) {
+    voidControlMessage("connect_to_hostapd", callback);
+  };
+
+  command.closeHostapdConnection = function(callback) {
+    voidControlMessage("close_hostapd_connection", callback);
+  };
+
+  command.hostapdCommand = function (callback, request) {
+    var msg = { cmd:     "hostapd_command",
+                request: request,
+                iface:   aInterface };
+
+    aControlMessage(msg, function(data) {
+      callback(data.status ? null : data.reply);
+    });
+  };
+
+  command.hostapdGetStations = function (callback) {
+    var msg = { cmd:     "hostapd_get_stations",
+                iface:   aInterface };
+
+    aControlMessage(msg, function(data) {
+      callback(data.status);
+    });
+  };
+
   command.setPowerModeICS = function (mode, callback) {
     doBooleanCommand("DRIVER POWERMODE " + (mode === "AUTO" ? 0 : 1), "OK", callback);
   };

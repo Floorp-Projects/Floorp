@@ -1,0 +1,19 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEvent.idl"
+
+[scriptable, builtinclass, uuid(97dc8040-d5c9-11e3-9c1a-0800200c9a66)]
+interface nsIDOMMozWifiStationInfoEvent : nsIDOMEvent
+{
+    /**
+     * The number of wifi stations connected to wifi hotspot.
+     */
+    readonly attribute short station;
+
+    [noscript] void initMozWifiStationInfoEvent(in DOMString aType,
+                                                in boolean aCanBubble,
+                                                in boolean aCancelable,
+                                                in short station);
+};

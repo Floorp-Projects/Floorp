@@ -35,8 +35,8 @@ function runTests() {
   scrollTopBefore = doc.body.scrollTop;
   // send up arrow key event
   sendKey("UP");
-  
-  window.requestAnimationFrame(finish);
+
+  setTimeout("finish();", 20);
 }
 
 function finish() {

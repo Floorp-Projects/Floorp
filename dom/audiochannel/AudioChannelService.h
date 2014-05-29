@@ -75,6 +75,12 @@ public:
   virtual bool ContentOrNormalChannelIsActive();
 
   /**
+   * Return true if there is a telephony channel active in this process
+   * or one of its subprocesses.
+   */
+  virtual bool TelephonyChannelIsActive();
+
+  /**
    * Return true if a normal or content channel is active for the given
    * process ID.
    */
