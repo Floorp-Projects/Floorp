@@ -17,11 +17,15 @@
       <h1>Loop</h1>
     </header>
 
-    <div id="call-launcher">
-      <p><button class="btn">Call</button></p>
+    <div id="home">
+      <p data-l10n-id="welcome">Welcome to the Loop web client.</p>
     </div>
 
-    <div id="call" class="conversation">
+    <div id="call-launcher" class="hide">
+      <p><button class="btn btn-success" data-l10n-id="start_call">Start call</button></p>
+    </div>
+
+    <div id="call" class="conversation hide">
       <nav class="controls">
         <button class="btn" data-l10n-id="start">Start</button>
         <button class="btn" data-l10n-id="stop">Stop</button>
