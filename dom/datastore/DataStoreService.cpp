@@ -10,17 +10,21 @@
 #include "DataStoreDB.h"
 #include "DataStoreRevision.h"
 #include "mozilla/dom/DataStore.h"
+#include "mozilla/dom/DataStoreBinding.h"
+#include "mozilla/dom/DataStoreImplBinding.h"
 #include "nsIDataStore.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DOMError.h"
-#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/indexedDB/IDBCursor.h"
 #include "mozilla/dom/indexedDB/IDBObjectStore.h"
-#include "mozilla/dom/DataStoreBinding.h"
-#include "mozilla/dom/DataStoreImplBinding.h"
+#include "mozilla/dom/PermissionMessageUtils.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/unused.h"
 
 #include "mozIApplication.h"
 #include "mozIApplicationClearPrivateDataParams.h"
@@ -44,7 +48,7 @@
 
 #define ASSERT_PARENT_PROCESS()                                             \
   AssertIsInMainProcess();                                                  \
-  if (NS_WARN_IF(XRE_GetProcessType() != GeckoProcessType_Default)) {       \
+  if (NS_WARN_IF(!IsMainProcess())) {                                       \
     return NS_ERROR_FAILURE;                                                \
   }
 
@@ -57,17 +61,32 @@ using namespace indexedDB;
 class DataStoreInfo
 {
 public:
+  DataStoreInfo()
+    : mReadOnly(true)
+    , mEnabled(false)
+  {}
+
   DataStoreInfo(const nsAString& aName,
                 const nsAString& aOriginURL,
                 const nsAString& aManifestURL,
                 bool aReadOnly,
                 bool aEnabled)
-    : mName(aName)
-    , mOriginURL(aOriginURL)
-    , mManifestURL(aManifestURL)
-    , mReadOnly(aReadOnly)
-    , mEnabled(aEnabled)
-  {}
+  {
+    Init(aName, aOriginURL, aManifestURL, aReadOnly, aEnabled);
+  }
+
+  void Init(const nsAString& aName,
+            const nsAString& aOriginURL,
+            const nsAString& aManifestURL,
+            bool aReadOnly,
+            bool aEnabled)
+  {
+    mName = aName;
+    mOriginURL = aOriginURL;
+    mManifestURL = aManifestURL;
+    mReadOnly = aReadOnly;
+    mEnabled = aEnabled;
+  }
 
   void Update(const nsAString& aName,
               const nsAString& aOriginURL,
@@ -341,10 +360,10 @@ GetDataStoreInfosEnumerator(const uint32_t& aAppId,
   }
 
   bool readOnly = aInfo->mReadOnly || accessInfo->mReadOnly;
-  DataStoreInfo accessStore(aInfo->mName, aInfo->mOriginURL,
-                            aInfo->mManifestURL, readOnly,
-                            aInfo->mEnabled);
-  data->mStores.AppendElement(accessStore);
+  DataStoreInfo* accessStore = data->mStores.AppendElement();
+  accessStore->Init(aInfo->mName, aInfo->mOriginURL,
+                    aInfo->mManifestURL, readOnly,
+                    aInfo->mEnabled);
 
   return PL_DHASH_NEXT;
 }
@@ -428,15 +447,14 @@ AddAccessPermissionsEnumerator(const uint32_t& aAppId,
 class PendingRequest
 {
 public:
-  PendingRequest(nsPIDOMWindow* aWindow,
-                 Promise* aPromise,
-                 const nsTArray<DataStoreInfo>& aStores,
-                 const nsTArray<nsString>& aPendingDataStores)
-    : mWindow(aWindow)
-    , mPromise(aPromise)
-    , mStores(aStores)
-    , mPendingDataStores(aPendingDataStores)
+  void Init(nsPIDOMWindow* aWindow, Promise* aPromise,
+            const nsTArray<DataStoreInfo>& aStores,
+            const nsTArray<nsString>& aPendingDataStores)
   {
+    mWindow = aWindow;
+    mPromise = aPromise;
+    mStores = aStores;
+    mPendingDataStores = aPendingDataStores;
   }
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
@@ -856,15 +874,17 @@ DataStoreService::GetDataStores(nsIDOMWindow* aWindow,
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(window);
   nsRefPtr<Promise> promise = new Promise(global);
 
+  nsCOMPtr<nsIDocument> document = window->GetDoc();
+  MOZ_ASSERT(document);
+
+  nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
+  MOZ_ASSERT(principal);
+
+  nsTArray<DataStoreInfo> stores;
+
   // If this request comes from the main process, we have access to the
   // window, so we can skip the ipc communication.
   if (IsMainProcess()) {
-    nsCOMPtr<nsIDocument> document = window->GetDoc();
-    MOZ_ASSERT(document);
-
-    nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
-    MOZ_ASSERT(principal);
-
     uint32_t appId;
     nsresult rv = principal->GetAppId(&appId);
     if (NS_FAILED(rv)) {
@@ -873,25 +893,37 @@ DataStoreService::GetDataStores(nsIDOMWindow* aWindow,
       return NS_OK;
     }
 
-    nsTArray<DataStoreInfo> stores;
     rv = GetDataStoreInfos(aName, appId, stores);
     if (NS_FAILED(rv)) {
       RejectPromise(window, promise, rv);
       promise.forget(aDataStores);
       return NS_OK;
     }
-
-    GetDataStoresCreate(window, promise, stores);
-    promise.forget(aDataStores);
-    return NS_OK;
   }
 
   else {
     // This method can be called in the child so we need to send a request
     // to the parent and create DataStore object here.
-    // TODO
+    ContentChild* contentChild = ContentChild::GetSingleton();
+
+    nsTArray<DataStoreSetting> array;
+    if (!contentChild->SendDataStoreGetStores(nsAutoString(aName),
+                                              IPC::Principal(principal),
+                                              &array)) {
+      RejectPromise(window, promise, NS_ERROR_FAILURE);
+      promise.forget(aDataStores);
+      return NS_OK;
+    }
+
+    for (uint32_t i = 0; i < array.Length(); ++i) {
+      DataStoreInfo* info = stores.AppendElement();
+      info->Init(array[i].name(), array[i].originURL(),
+                 array[i].manifestURL(), array[i].readOnly(),
+                 array[i].enabled());
+    }
   }
 
+  GetDataStoresCreate(window, promise, stores);
   promise.forget(aDataStores);
   return NS_OK;
 }
@@ -900,7 +932,6 @@ void
 DataStoreService::GetDataStoresCreate(nsPIDOMWindow* aWindow, Promise* aPromise,
                                       const nsTArray<DataStoreInfo>& aStores)
 {
-  AssertIsInMainProcess();
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!aStores.Length()) {
@@ -926,8 +957,8 @@ DataStoreService::GetDataStoresCreate(nsPIDOMWindow* aWindow, Promise* aPromise,
     mPendingRequests.Put(aStores[0].mName, requests);
   }
 
-  PendingRequest request(aWindow, aPromise, aStores, pendingDataStores);
-  requests->AppendElement(request);
+  PendingRequest* request = requests->AppendElement();
+  request->Init(aWindow, aPromise, aStores, pendingDataStores);
 }
 
 void
@@ -935,7 +966,6 @@ DataStoreService::GetDataStoresResolve(nsPIDOMWindow* aWindow,
                                        Promise* aPromise,
                                        const nsTArray<DataStoreInfo>& aStores)
 {
-  AssertIsInMainProcess();
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!aStores.Length()) {
@@ -1045,9 +1075,9 @@ DataStoreService::GetDataStoreInfos(const nsAString& aName,
 
   DataStoreInfo* info = nullptr;
   if (apps->Get(aAppId, &info)) {
-    DataStoreInfo owned(info->mName, info->mOriginURL, info->mManifestURL,
-                        false, info->mEnabled);
-    aStores.AppendElement(owned);
+    DataStoreInfo* owned = aStores.AppendElement();
+    owned->Init(info->mName, info->mOriginURL, info->mManifestURL, false,
+                info->mEnabled);
   }
 
   GetDataStoreInfosData data(mAccessStores, aName, aAppId, aStores);
@@ -1195,6 +1225,18 @@ DataStoreService::EnableDataStore(uint32_t aAppId, const nsAString& aName,
     }
   }
 
+  // Notify the child processes.
+  if (IsMainProcess()) {
+    nsTArray<ContentParent*> children;
+    ContentParent::GetAll(children);
+    for (uint32_t i = 0; i < children.Length(); i++) {
+      if (children[i]->NeedsDataStoreInfos()) {
+        unused << children[i]->SendDataStoreNotify(aAppId, nsAutoString(aName),
+                                                   nsAutoString(aManifestURL));
+      }
+    }
+  }
+
   // Maybe we have some pending request waiting for this DataStore.
   PendingRequests* requests;
   if (!mPendingRequests.Get(aName, &requests)) {
@@ -1231,7 +1273,6 @@ DataStoreService::EnableDataStore(uint32_t aAppId, const nsAString& aName,
 already_AddRefed<RetrieveRevisionsCounter>
 DataStoreService::GetCounter(uint32_t aId) const
 {
-  AssertIsInMainProcess();
   MOZ_ASSERT(NS_IsMainThread());
 
   nsRefPtr<RetrieveRevisionsCounter> counter;
@@ -1242,10 +1283,40 @@ DataStoreService::GetCounter(uint32_t aId) const
 void
 DataStoreService::RemoveCounter(uint32_t aId)
 {
-  AssertIsInMainProcess();
+  MOZ_ASSERT(NS_IsMainThread());
+  mPendingCounters.Remove(aId);
+}
+
+nsresult
+DataStoreService::GetDataStoresFromIPC(const nsAString& aName,
+                                       nsIPrincipal* aPrincipal,
+                                       nsTArray<DataStoreSetting>* aValue)
+{
+  MOZ_ASSERT(IsMainProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
-  mPendingCounters.Remove(aId);
+  uint32_t appId;
+  nsresult rv = aPrincipal->GetAppId(&appId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsTArray<DataStoreInfo> stores;
+  rv = GetDataStoreInfos(aName, appId, stores);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  for (uint32_t i = 0; i < stores.Length(); ++i) {
+    DataStoreSetting* data = aValue->AppendElement();
+    data->name() = stores[i].mName;
+    data->originURL() = stores[i].mOriginURL;
+    data->manifestURL() = stores[i].mManifestURL;
+    data->readOnly() = stores[i].mReadOnly;
+    data->enabled() = stores[i].mEnabled;
+  }
+
+  return NS_OK;
 }
 
 nsresult
