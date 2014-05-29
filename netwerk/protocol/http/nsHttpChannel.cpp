@@ -3010,6 +3010,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
             if (mDidReval) {
                 // Make the request unconditional again.
                 mRequestHead.ClearHeader(nsHttp::If_Modified_Since);
+                mRequestHead.ClearHeader(nsHttp::If_None_Match);
                 mRequestHead.ClearHeader(nsHttp::ETag);
                 mDidReval = false;
             }
