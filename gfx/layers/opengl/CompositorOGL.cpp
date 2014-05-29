@@ -738,10 +738,11 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
     origin.y = -mRenderOffset.y;
   }
 
-  mCurrentRenderTarget = CompositingRenderTargetOGL::RenderTargetForWindow(this,
-                            origin,
-                            IntSize(width, height),
-                            aTransform);
+  mCurrentRenderTarget =
+    CompositingRenderTargetOGL::RenderTargetForWindow(this,
+                                                      origin,
+                                                      IntSize(width, height),
+                                                      aTransform);
   mCurrentRenderTarget->BindRenderTarget();
 #ifdef DEBUG
   mWindowRenderTarget = mCurrentRenderTarget;
@@ -1498,25 +1499,6 @@ CompositorOGL::MakeCurrent(MakeCurrentFlags aFlags) {
 }
 
 void
-CompositorOGL::BindQuadVBO() {
-  mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mQuadVBO);
-}
-
-void
-CompositorOGL::QuadVBOVerticesAttrib(GLuint aAttribIndex) {
-  mGLContext->fVertexAttribPointer(aAttribIndex, 4,
-                                   LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
-                                   (GLvoid*) 0);
-}
-
-void
-CompositorOGL::QuadVBOTexCoordsAttrib(GLuint aAttribIndex) {
-  mGLContext->fVertexAttribPointer(aAttribIndex, 4,
-                                   LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
-                                   (GLvoid*) 0);
-}
-
-void
 CompositorOGL::BindAndDrawQuads(ShaderProgramOGL *aProg,
                                 int aQuads,
                                 const Rect* aLayerRects,
@@ -1524,22 +1506,19 @@ CompositorOGL::BindAndDrawQuads(ShaderProgramOGL *aProg,
 {
   NS_ASSERTION(aProg->HasInitialized(), "Shader program not correctly initialized");
 
+  const GLuint coordAttribIndex = 0;
+
+  mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mQuadVBO);
+  mGLContext->fVertexAttribPointer(coordAttribIndex, 4,
+                                   LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
+                                   (GLvoid*) 0);
+  mGLContext->fEnableVertexAttribArray(coordAttribIndex);
+
   aProg->SetLayerRects(aLayerRects);
-
-  GLuint vertAttribIndex = aProg->AttribLocation(ShaderProgramOGL::VertexCoordAttrib);
-  GLuint texCoordAttribIndex = aProg->AttribLocation(ShaderProgramOGL::TexCoordAttrib);
-
-  BindQuadVBO();
-  QuadVBOVerticesAttrib(vertAttribIndex);
-
-  if (texCoordAttribIndex != GLuint(-1)) {
-    QuadVBOTexCoordsAttrib(texCoordAttribIndex);
-    mGLContext->fEnableVertexAttribArray(texCoordAttribIndex);
-
+  if (aProg->GetTextureCount() > 0) {
     aProg->SetTextureRects(aTextureRects);
   }
 
-  mGLContext->fEnableVertexAttribArray(vertAttribIndex);
   mGLContext->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4 * aQuads);
 }
 
