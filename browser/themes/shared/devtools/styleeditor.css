@@ -104,8 +104,15 @@
   background-repeat: no-repeat;
   background-clip: content-box;
   background-position: 0 8px;
+  background-size: 48px 24px;
   width: 24px;
   height: 40px;
+}
+
+@media (min-resolution: 2dppx) {
+  .stylesheet-enabled {
+    background-image: url(itemToggle@2x.png);
+  }
 }
 
 .disabled > .stylesheet-enabled {
@@ -193,11 +200,11 @@ h3 {
 }
 
 .theme-light .csscoverage-report {
-  background: url(background-noise-toolbar.png), #f0f1f2; /* Toolbars */
+  background-color: #f0f1f2; /* Toolbars */
 }
 
 .theme-dark .csscoverage-report {
-  background: url(background-noise-toolbar.png), #343c45; /* Toolbars */
+  background-color: #343c45; /* Toolbars */
 }
 
 .csscoverage-report-container {
