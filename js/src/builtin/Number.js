@@ -38,3 +38,28 @@ function Number_toLocaleString() {
     // Step 5.
     return intl_FormatNumber(numberFormat, x);
 }
+
+// ES6 draft ES6 20.1.2.5
+function Number_isSafeInteger(number) {
+    // Step 1.
+    if (typeof number !== 'number')
+        return false;
+
+    // Step 2.
+    if (!std_isFinite(number))
+        return false;
+
+    // Step 3.
+    var integer = ToInteger(number);
+
+    // Step 4.
+    if (integer !== number)
+        return false;
+
+    // Step 5. If abs(integer) <= 2**53 - 1, return true.
+    if (std_Math_abs(integer) <= 9007199254740991)
+        return true;
+
+    // Step 6.
+    return false;
+}
