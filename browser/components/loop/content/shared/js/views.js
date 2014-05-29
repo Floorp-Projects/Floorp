@@ -6,15 +6,44 @@
 
 var loop = loop || {};
 loop.shared = loop.shared || {};
-loop.shared.views = (function(OT) {
+loop.shared.views = (function(_, OT, l10n) {
   "use strict";
 
   var sharedModels = loop.shared.models;
 
   /**
-   * Base Backbone view.
+   * L10n view. Translates resulting view DOM fragment once rendered.
    */
-  var BaseView = Backbone.View.extend({
+  var L10nView = (function() {
+    var L10nViewImpl = Backbone.View.extend(),
+        extend       = L10nViewImpl.extend;
+
+    // Patches View extend() method so we can hook and patch any declared render
+    // method.
+    L10nViewImpl.extend = function() {
+      var ExtendedView = extend.apply(this, arguments),
+          render       = ExtendedView.prototype.render;
+
+      // Wraps original render() method to translate contents once they're
+      // rendered.
+      ExtendedView.prototype.render = function() {
+        if (render) {
+          render.apply(this, arguments);
+          l10n.translate(this.el);
+        }
+        return this;
+      };
+
+      return ExtendedView;
+    };
+
+    return L10nViewImpl;
+  })();
+
+  /**
+   * Base view.
+   */
+  var BaseView = L10nView.extend({
     /**
      * Hides view element.
      *
@@ -33,6 +62,21 @@ loop.shared.views = (function(OT) {
     show: function() {
       this.$el.show();
       return this;
+    },
+
+    /**
+     * Base render implementation: renders an attached template if available.
+     *
+     * Note: You need to override this if you want to do fancier stuff, eg.
+     *       rendering the template using model data.
+     *
+     * @return {BaseView}
+     */
+    render: function() {
+      if (this.template) {
+        this.$el.html(this.template());
+      }
+      return this;
     }
   });
 
@@ -40,7 +84,21 @@ loop.shared.views = (function(OT) {
    * Conversation view.
    */
   var ConversationView = BaseView.extend({
-    el: "#conversation",
+    className: "conversation",
+
+    template: _.template([
+      '<nav class="controls">',
+      '  <button class="btn stop" data-l10n-id="stop"></button>',
+      '</nav>',
+      '<div class="media nested">',
+      // Both these wrappers are required by the SDK; this is fragile and
+      // will break if a future version of the SDK updates this generated DOM,
+      // especially as the SDK seems to actually move wrapped contents into
+      // their own generated stuff.
+      '  <div class="remote"><div class="incoming"></div></div>',
+      '  <div class="local"><div class="outgoing"></div></div>',
+      '</div>'
+    ].join("")),
 
     // height set to "auto" to fix video layout on Google Chrome
     // @see https://bugzilla.mozilla.org/show_bug.cgi?id=991122
@@ -59,13 +117,11 @@ loop.shared.views = (function(OT) {
         throw new Error("missing required sdk");
       }
       this.sdk = options.sdk;
+
       // XXX: this feels like to be moved to the ConversationModel, but as it's
       // tighly coupled with the DOM (element ids to receive streams), we'd need
       // an abstraction we probably don't want yet.
-      this.session   = this.sdk.initSession(this.model.get("sessionId"));
-      this.publisher = this.sdk.initPublisher(this.model.get("apiKey"),
-                                              "outgoing", this.videoStyles);
-
+      this.session = this.sdk.initSession(this.model.get("sessionId"));
       this.session.connect(this.model.get("apiKey"),
                            this.model.get("sessionToken"));
 
@@ -91,6 +147,8 @@ loop.shared.views = (function(OT) {
      * @param  {SessionConnectEvent} event
      */
     _sessionConnected: function(event) {
+      this.publisher = this.sdk.initPublisher(this.$(".outgoing").get(0),
+                                              this.videoStyles);
       this.session.publish(this.publisher);
     },
 
@@ -149,19 +207,30 @@ loop.shared.views = (function(OT) {
      * @param  {Array} streams A list of media streams.
      */
     _subscribeToStreams: function(streams) {
+      var incomingContainer = this.$(".incoming").get(0);
       streams.forEach(function(stream) {
         if (stream.connection.connectionId !==
             this.session.connection.connectionId) {
-          this.session.subscribe(stream, "incoming", this.videoStyles);
+          this.session.subscribe(stream, incomingContainer, this.videoStyles);
         }
       }.bind(this));
+    },
+
+    /**
+     * Renders this view.
+     *
+     * @return {ConversationView}
+     */
+    render: function() {
+      this.$el.html(this.template(this.model.toJSON()));
+      return this;
     }
   });
 
   /**
    * Notification view.
    */
-  var NotificationView = Backbone.View.extend({
+  var NotificationView = BaseView.extend({
     template: _.template([
       '<div class="alert alert-<%- level %>">',
       '  <button class="close"></button>',
@@ -260,9 +329,10 @@ loop.shared.views = (function(OT) {
   });
 
   return {
+    L10nView: L10nView,
     BaseView: BaseView,
     ConversationView: ConversationView,
     NotificationListView: NotificationListView,
     NotificationView: NotificationView
   };
-})(window.OT);
+})(_, window.OT, document.webL10n || document.mozL10n);

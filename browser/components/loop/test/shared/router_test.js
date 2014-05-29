@@ -20,24 +20,41 @@ describe("loop.shared.router", function() {
   });
 
   describe("BaseRouter", function() {
-    var router;
+    var router, view;
 
     beforeEach(function() {
       router = new loop.shared.router.BaseRouter();
+      $("#fixtures").html('<div id="main"></div>');
+      var TestView = loop.shared.views.BaseView.extend({
+        template: _.template("<p>plop</p>")
+      });
+      view = new TestView();
+    });
+
+    afterEach(function() {
+      $("#fixtures").empty();
     });
 
     describe("#loadView", function() {
       it("should set the active view", function() {
-        var TestView = loop.shared.views.BaseView.extend({});
-        var view = new TestView();
-
         router.loadView(view);
 
         expect(router.activeView).eql(view);
       });
 
-      // XXX hard to test as hell… functional?
-      it("should load the passed view");
+      it("should load and render the passed view", function() {
+        router.loadView(view);
+
+        expect($("#main p").text()).eql("plop");
+      });
+    });
+
+    describe("#updateView", function() {
+      it("should update the main element with provided contents", function() {
+        router.updateView($("<p>plip</p>"));
+
+        expect($("#main p").text()).eql("plip");
+      });
     });
   });
 
