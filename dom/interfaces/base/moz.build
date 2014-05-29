@@ -31,7 +31,6 @@ XPIDL_SOURCES += [
     'nsIFrameRequestCallback.idl',
     'nsIIdleObserver.idl',
     'nsIQueryContentEventResult.idl',
-    'nsIServiceWorkerManager.idl',
     'nsIStructuredCloneContainer.idl',
     'nsITabChild.idl',
     'nsITabParent.idl',
