@@ -5,14 +5,18 @@ package org.mozilla.gecko.browser.tests;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.test.mock.MockContext;
 import android.test.mock.MockResources;
+import android.test.RenamingDelegatingContext;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -21,19 +25,40 @@ import org.json.JSONObject;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.SuggestedSites;
+import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.RawResource;
 
 public class TestSuggestedSites extends BrowserTestCase {
-    private static class TestContext extends MockContext {
-        private final Resources resources;
+    private static class TestContext extends RenamingDelegatingContext {
+        private static final String PREFIX = "TestSuggestedSites-";
 
-        public TestContext() {
+        private final Resources resources;
+        private final Set<String> usedPrefs;
+
+        public TestContext(Context context) {
+            super(context, PREFIX);
             resources = new TestResources();
+            usedPrefs = Collections.synchronizedSet(new HashSet<String>());
         }
 
         @Override
         public Resources getResources() {
             return resources;
+        }
+
+        @Override
+        public SharedPreferences getSharedPreferences(String name, int mode) {
+            usedPrefs.add(name);
+            return super.getSharedPreferences(PREFIX + name, mode);
+        }
+
+        public void clearUsedPrefs() {
+            for (String prefsName : usedPrefs) {
+                getSharedPreferences(prefsName, 0).edit().clear().commit();
+            }
+
+            usedPrefs.clear();
         }
     }
 
@@ -91,8 +116,12 @@ public class TestSuggestedSites extends BrowserTestCase {
     }
 
     protected void setUp() {
-        context = new TestContext();
+        context = new TestContext(getApplicationContext());
         resources = (TestResources) context.getResources();
+    }
+
+    protected void tearDown() {
+        context.clearUsedPrefs();
     }
 
     public void testCount() {
@@ -165,6 +194,24 @@ public class TestSuggestedSites extends BrowserTestCase {
             assertTrue(includedUrls.contains(url));
         }
 
+        c.close();
+    }
+
+    public void testDisabledState() {
+        resources.setSuggestedSitesResource(generateSites(3));
+
+        Cursor c = new SuggestedSites(context).get(DEFAULT_LIMIT);
+        assertEquals(3, c.getCount());
+        c.close();
+
+        // Disable suggested sites
+        GeckoSharedPrefs.forApp(context).edit()
+                                        .putBoolean(GeckoPreferences.PREFS_SUGGESTED_SITES, false)
+                                        .commit();
+
+        c = new SuggestedSites(context).get(DEFAULT_LIMIT);
+        assertNotNull(c);
+        assertEquals(0, c.getCount());
         c.close();
     }
 }
