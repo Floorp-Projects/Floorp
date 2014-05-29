@@ -9,7 +9,19 @@ var expect = chai.expect;
 describe("loop.shared.Client", function() {
   "use strict";
 
-  var sandbox, fakeXHR, requests = [], callback;
+  var sandbox,
+      fakeXHR,
+      requests = [],
+      callback;
+
+  var fakeErrorRes = JSON.stringify({
+      status: "errors",
+      errors: [{
+        location: "url",
+        name: "token",
+        description: "invalid token"
+      }]
+    });
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
@@ -68,9 +80,9 @@ describe("loop.shared.Client", function() {
         expect(requests).to.have.length.of(1);
 
         requests[0].respond(400, {"Content-Type": "application/json"},
-                            '{"error": "my error"}');
+                            fakeErrorRes);
         sinon.assert.calledWithMatch(callback, sinon.match(function(err) {
-          return /400.*my error/.test(err.message);
+          return /400.*invalid token/.test(err.message);
         }));
       });
 
@@ -115,9 +127,9 @@ describe("loop.shared.Client", function() {
         client.requestCallsInfo(42, callback);
 
         requests[0].respond(400, {"Content-Type": "application/json"},
-                                 '{"error": "my error"}');
+                                 fakeErrorRes);
         sinon.assert.calledWithMatch(callback, sinon.match(function(err) {
-          return /400.*my error/.test(err.message);
+          return /400.*invalid token/.test(err.message);
         }));
       });
 
@@ -172,9 +184,9 @@ describe("loop.shared.Client", function() {
         client.requestCallInfo("fake", callback);
 
         requests[0].respond(400, {"Content-Type": "application/json"},
-                            '{"error": "my error"}');
+                            fakeErrorRes);
         sinon.assert.calledWithMatch(callback, sinon.match(function(err) {
-          return /400.*my error/.test(err.message);
+          return /400.*invalid token/.test(err.message);
         }));
       });
 
