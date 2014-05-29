@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1010784
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1010784</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1010784">Mozilla Bug 1010784</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+  var worker = new Worker("file_bug1010784_worker.js");
+
+  worker.onmessage = function(event) {
+    is(event.data, "done", "Got correct result");
+    SimpleTest.finish();
+  }
+
+  worker.postMessage("testXHR.txt");
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
