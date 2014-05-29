@@ -55,7 +55,6 @@ EXPORTS += [
     'SurfaceStream.h',
     'SurfaceTypes.h',
     'TextureGarbageBin.h',
-    'VBOArena.h',
 ]
 
 if CONFIG['MOZ_X11']:
@@ -140,7 +139,6 @@ UNIFIED_SOURCES += [
     'SurfaceTypes.cpp',
     'TextureGarbageBin.cpp',
     'TextureImageEGL.cpp',
-    'VBOArena.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

@@ -63,7 +63,6 @@ private:
 
   void StoreDiskCacheCapacity();
   void AttachToPreferences();
-  void SchduleAutoDelete();
 
   static uint32_t sUseNewCache;
   static bool sUseMemoryCache;

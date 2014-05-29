@@ -74,12 +74,10 @@ typedef STAILQ_HEAD(nr_turn_permission_head_, nr_turn_permission_)
 typedef struct nr_turn_client_ctx_ {
   int state;
 #define NR_TURN_CLIENT_STATE_INITTED         1
-#define NR_TURN_CLIENT_STATE_CONNECTED       2
-#define NR_TURN_CLIENT_STATE_ALLOCATION_WAIT 3
-#define NR_TURN_CLIENT_STATE_ALLOCATING      4
-#define NR_TURN_CLIENT_STATE_ALLOCATED       5
-#define NR_TURN_CLIENT_STATE_FAILED          6
-#define NR_TURN_CLIENT_STATE_CANCELLED       7
+#define NR_TURN_CLIENT_STATE_ALLOCATING      2
+#define NR_TURN_CLIENT_STATE_ALLOCATED       3
+#define NR_TURN_CLIENT_STATE_FAILED          4
+#define NR_TURN_CLIENT_STATE_CANCELLED       5
 
   char *label;
   nr_socket *sock;

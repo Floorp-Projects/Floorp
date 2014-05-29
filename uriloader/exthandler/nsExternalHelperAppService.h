@@ -329,6 +329,10 @@ protected:
    */
   nsCOMPtr<nsIArray> mSignatureInfo;
   /**
+   * Stores the redirect information associated with the channel.
+   */
+  nsCOMPtr<nsIArray> mRedirects;
+  /**
    * Creates the temporary file for the download and an output stream for it.
    * Upon successful return, both mTempFile and mSaver will be valid.
    */

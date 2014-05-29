@@ -1,0 +1,25 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/**
+ * Allows keeping track of channel redirects. Currently nsHttpChannel is the
+ * only implementor.
+ */
+#include "nsISupports.idl"
+
+interface nsIArray;
+interface nsIPrincipal;
+
+[scriptable, uuid(ab87eabf-d0c4-40a9-b4b2-a1191108d4c0)]
+interface nsIRedirectHistory : nsISupports
+{
+  /**
+   * An array of nsIPrincipal that store the redirects associated with this
+   * channel. This array is filled whether or not the channel has ever been
+   * opened. The last element of the array is associated with the most recent
+   * channel.
+   */
+  readonly attribute nsIArray redirects;
+};

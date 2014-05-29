@@ -36,7 +36,13 @@ function checkState(tab) {
     }
     else if (popStateCount == 1) {
       popStateCount++;
-      is(aEvent.state.obj3.toString(), '/^a$/', "second popstate object.");
+      // When content fires a PopStateEvent and we observe it from a chrome event
+      // listener (as we do here, and, thankfully, nowhere else in the tree), the
+      // state object will be a cross-compartment wrapper to an object that was
+      // deserialized in the content scope. And in this case, since RegExps are
+      // not currently Xrayable (see bug 1014991), trying to pull |obj3| (a RegExp)
+      // off of an Xrayed Object won't work. So we need to waive.
+      is(Cu.waiveXrays(aEvent.state).obj3.toString(), '/^a$/', "second popstate object.");
 
       // Make sure that the new-elem node is present in the document.  If it's
       // not, then this history entry has a different doc identifier than the

@@ -61,6 +61,8 @@ class WrapperOwner : public virtual JavaScriptShared
 
     nsresult instanceOf(JSObject *obj, const nsID *id, bool *bp);
 
+    bool toString(JSContext *cx, JS::HandleObject callee, JS::CallArgs &args);
+
     /*
      * Check that |obj| is a DOM wrapper whose prototype chain contains
      * |prototypeID| at depth |depth|.

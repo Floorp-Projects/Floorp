@@ -1483,6 +1483,11 @@ this.DownloadCopySaver.prototype = {
   _signatureInfo: null,
 
   /**
+   * Save the redirects chain as an nsIArray of nsIPrincipal.
+   */
+  _redirects: null,
+
+  /**
    * True if the associated download has already been added to browsing history.
    */
   alreadyAddedToHistory: false,
@@ -1559,6 +1564,7 @@ this.DownloadCopySaver.prototype = {
                 // Save the hash before freeing backgroundFileSaver.
                 this._sha256Hash = aSaver.sha256Hash;
                 this._signatureInfo = aSaver.signatureInfo;
+                this._redirects = aSaver.redirects;
                 deferSaveComplete.resolve();
               } else {
                 // Infer the origin of the error from the failure code, because
@@ -1817,6 +1823,14 @@ this.DownloadCopySaver.prototype = {
   getSignatureInfo: function ()
   {
     return this._signatureInfo;
+  },
+
+  /*
+   * Implements DownloadSaver.getRedirects.
+   */
+  getRedirects: function ()
+  {
+    return this._redirects;
   }
 };
 
@@ -1871,6 +1885,11 @@ this.DownloadLegacySaver.prototype = {
    * unless BackgroundFileSaver has successfully completed saving the file.
    */
   _signatureInfo: null,
+
+  /**
+   * Save the redirect chain as an nsIArray of nsIPrincipal.
+   */
+  _redirects: null,
 
   /**
    * nsIRequest object associated to the status and progress updates we
@@ -2166,6 +2185,26 @@ this.DownloadLegacySaver.prototype = {
   setSignatureInfo: function (signatureInfo)
   {
     this._signatureInfo = signatureInfo;
+  },
+
+  /**
+   * Implements "DownloadSaver.getRedirects".
+   */
+  getRedirects: function ()
+  {
+    if (this.copySaver) {
+      return this.copySaver.getRedirects();
+    }
+    return this._redirects;
+  },
+
+  /**
+   * Called by the nsITransfer implementation when the redirect chain is
+   * available.
+   */
+  setRedirects: function (redirects)
+  {
+    this._redirects = redirects;
   },
 };
 

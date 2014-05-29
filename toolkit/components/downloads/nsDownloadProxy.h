@@ -160,6 +160,12 @@ public:
     return mInner->SetSignatureInfo(aSignatureInfo);
   }
 
+  NS_IMETHODIMP SetRedirects(nsIArray* aRedirects)
+  {
+    NS_ENSURE_TRUE(mInner, NS_ERROR_NOT_INITIALIZED);
+    return mInner->SetRedirects(aRedirects);
+  }
+
 private:
   nsCOMPtr<nsIDownload> mInner;
 };

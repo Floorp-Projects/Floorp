@@ -24,7 +24,7 @@ interface nsIMIMEInfo;
  *       nsIDownloadManager::DOWNLOAD_DIRTY 
  *       nsIDownloadManager::DOWNLOAD_BLOCKED_POLICY 
  */
-[scriptable, uuid(b02be33b-d47c-4bd3-afd9-402a942426b0)]
+[scriptable, uuid(2258f465-656e-4566-87cb-f791dbaf0322)]
 interface nsIDownload : nsITransfer {
     
     /**
