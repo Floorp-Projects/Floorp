@@ -54,9 +54,7 @@ public class SuggestedSites {
     private static final String[] COLUMNS = new String[] {
         BrowserContract.SuggestedSites._ID,
         BrowserContract.SuggestedSites.URL,
-        BrowserContract.SuggestedSites.TITLE,
-        BrowserContract.SuggestedSites.IMAGE_URL,
-        BrowserContract.SuggestedSites.BG_COLOR
+        BrowserContract.SuggestedSites.TITLE
     };
 
     private static final String JSON_KEY_URL = "url";
@@ -214,8 +212,6 @@ public class SuggestedSites {
             row.add(-1);
             row.add(site.url);
             row.add(site.title);
-            row.add(site.imageUrl);
-            row.add(site.bgColor);
         }
 
         cursor.setNotificationUri(context.getContentResolver(),

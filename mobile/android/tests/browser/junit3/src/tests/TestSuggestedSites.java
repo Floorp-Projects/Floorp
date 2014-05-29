@@ -161,12 +161,6 @@ public class TestSuggestedSites extends BrowserTestCase {
 
             String title = c.getString(c.getColumnIndexOrThrow(BrowserContract.SuggestedSites.TITLE));
             assertEquals("title" + position, title);
-
-            String imageUrl = c.getString(c.getColumnIndexOrThrow(BrowserContract.SuggestedSites.IMAGE_URL));
-            assertEquals("imageUrl" + position, imageUrl);
-
-            String bgColor = c.getString(c.getColumnIndexOrThrow(BrowserContract.SuggestedSites.BG_COLOR));
-            assertEquals("bgColor" + position, bgColor);
         }
 
         c.close();
