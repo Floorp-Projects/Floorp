@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -501,7 +500,7 @@ ReportExceptionIfPending(JSContext *cx)
 }
 
 nsJSObjWrapper::nsJSObjWrapper(NPP npp)
-  : mNpp(npp)
+  : mJSObj(GetJSContext(npp)), mNpp(npp)
 {
   MOZ_COUNT_CTOR(nsJSObjWrapper);
   OnWrapperCreated();
@@ -1030,19 +1029,6 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JS::Handle<JSObject*> obj)
   if (!sJSObjWrappers.putNew(key, wrapper)) {
     // Out of memory, free the wrapper we created.
     _releaseobject(wrapper);
-    return nullptr;
-  }
-
-  NS_ASSERTION(wrapper->mNpp == npp, "nsJSObjWrapper::mNpp not initialized!");
-
-  // Root the JSObject, its lifetime is now tied to that of the
-  // NPObject.
-  if (!::JS_AddNamedObjectRoot(cx, &wrapper->mJSObj, "nsJSObjWrapper::mJSObject")) {
-    NS_ERROR("Failed to root JSObject!");
-
-    sJSObjWrappers.remove(key);
-    _releaseobject(wrapper);
-
     return nullptr;
   }
 
