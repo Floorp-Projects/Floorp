@@ -93,4 +93,18 @@ public class IconTabWidget extends TabWidget {
         }
         return null;
     }
+
+    public void setIconDrawable(int index, int resource) {
+        if (!mIsIcon) {
+            return;
+        }
+        // We can have multiple views in the tray for each child. This finds the
+        // first view corresponding to the given tab. This varies by Android
+        // version. The first view should always be our ImageButton, but let's
+        // be safe.
+        final View view = getChildTabViewAt(index);
+        if (view instanceof ImageButton) {
+            ((ImageButton) view).setImageResource(resource);
+        }
+    }
 }
