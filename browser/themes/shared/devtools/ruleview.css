@@ -8,10 +8,23 @@
 
 .ruleview-rule-source {
   -moz-padding-start: 5px;
-  cursor: pointer;
   text-align: right;
   float: right;
   -moz-user-select: none;
+}
+
+.ruleview-rule-source,
+.ruleview-rule-source > label {
+  cursor: pointer;
+}
+
+.ruleview-rule-source[unselectable],
+.ruleview-rule-source[unselectable] > label {
+  cursor: default;
+}
+
+.ruleview-rule-source:not([unselectable]):hover {
+  text-decoration: underline;
 }
 
 .ruleview-header {
@@ -32,13 +45,40 @@
   border-left: solid 10px;
 }
 
-.ruleview-rule-source:hover {
-  text-decoration: underline;
-}
-
 .ruleview-rule,
 #noResults {
   padding: 2px 4px;
+}
+
+/* User agent styles are not editable, display them differently */
+.theme-light .ruleview-rule[uneditable=true] {
+  background: #ebeced; /* Tab Toolbar */
+}
+
+.theme-dark .ruleview-rule[uneditable=true] {
+  background: #252c33; /* Tab Toolbar */
+}
+
+.ruleview-rule[uneditable=true] :focus {
+  outline: none;
+}
+
+.ruleview-rule[uneditable=true] .theme-link {
+  color: #5f88b0; /* Blue - Grey */
+}
+
+.ruleview-rule[uneditable=true] .ruleview-enableproperty {
+  visibility: hidden;
+}
+
+.ruleview-rule[uneditable=true] .ruleview-colorswatch {
+  cursor: default;
+}
+
+
+.ruleview-rule[uneditable=true] .ruleview-namecontainer > .ruleview-propertyname,
+.ruleview-rule[uneditable=true] .ruleview-propertycontainer > .ruleview-propertyvalue {
+  border-bottom-color: transparent;
 }
 
 #noResults {
@@ -113,6 +153,7 @@
 }
 
 .ruleview-colorswatch {
+  cursor: pointer;
   border-radius: 50%;
   width: 1em;
   height: 1em;

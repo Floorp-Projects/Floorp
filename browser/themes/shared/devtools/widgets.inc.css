@@ -908,6 +908,154 @@
   visibility: hidden;
 }
 
+/* Canvas graphs */
+
+.graph-widget-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.graph-widget-canvas[input=hovering-background] {
+  cursor: text;
+}
+
+.graph-widget-canvas[input=hovering-region] {
+  cursor: pointer;
+}
+
+.graph-widget-canvas[input=hovering-selection-start-boundary],
+.graph-widget-canvas[input=hovering-selection-end-boundary],
+.graph-widget-canvas[input=adjusting-selection-boundary] {
+  cursor: col-resize;
+}
+
+.graph-widget-canvas[input=hovering-selection-contents] {
+  cursor: grab;
+}
+
+.graph-widget-canvas[input=dragging-selection-contents] {
+  cursor: grabbing;
+}
+
+.graph-widget-canvas ~ * {
+  pointer-events: none;
+}
+
+/* Line graph widget */
+
+.line-graph-widget-container {
+  position: relative;
+}
+
+.line-graph-widget-canvas {
+  background: #0088cc;
+}
+
+.line-graph-widget-gutter {
+  position: absolute;
+  background: rgba(255,255,255,0.75);
+  width: 10px;
+  height: 100%;
+  top: 0;
+  left: 0;
+  border-right: 1px solid rgba(255,255,255,0.25);
+}
+
+.line-graph-widget-gutter-line {
+  position: absolute;
+  width: 100%;
+  border-top: 1px solid;
+  transform: translateY(-1px);
+}
+
+.line-graph-widget-gutter-line[type=maximum] {
+  border-color: #2cbb0f;
+}
+
+.line-graph-widget-gutter-line[type=minimum] {
+  border-color: #ed2655;
+}
+
+.line-graph-widget-gutter-line[type=average] {
+  border-color: #d97e00;
+}
+
+.line-graph-widget-tooltip {
+  position: absolute;
+  background: rgba(255,255,255,0.75);
+  box-shadow: 0 2px 1px rgba(0,0,0,0.1);
+  border-radius: 2px;
+  line-height: 15px;
+  -moz-padding-start: 6px;
+  -moz-padding-end: 6px;
+  transform: translateY(-50%);
+  font-size: 80%;
+  z-index: 1;
+}
+
+.line-graph-widget-tooltip::before {
+  content: "";
+  position: absolute;
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  top: calc(50% - 3px);
+}
+
+.line-graph-widget-tooltip[arrow=start]::before {
+  -moz-border-end: 3px solid rgba(255,255,255,0.75);
+  left: -3px;
+}
+
+.line-graph-widget-tooltip[arrow=end]::before {
+  -moz-border-start: 3px solid rgba(255,255,255,0.75);
+  right: -3px;
+}
+
+.line-graph-widget-tooltip[type=maximum] {
+  left: calc(10px + 6px);
+}
+
+.line-graph-widget-tooltip[type=minimum] {
+  left: calc(10px + 6px);
+}
+
+.line-graph-widget-tooltip[type=average] {
+  right: 6px;
+}
+
+.line-graph-widget-tooltip > [text=info] {
+  color: #18191a;
+}
+
+.line-graph-widget-tooltip > [text=value] {
+  -moz-margin-start: 3px;
+}
+
+.line-graph-widget-tooltip > [text=metric] {
+  -moz-margin-start: 1px;
+  color: #667380;
+}
+
+.line-graph-widget-tooltip > [text=value],
+.line-graph-widget-tooltip > [text=metric] {
+  text-shadow: 1px  0px rgba(255,255,255,0.6),
+              -1px  0px rgba(255,255,255,0.6),
+               0px -1px rgba(255,255,255,0.6),
+               0px  1px rgba(255,255,255,0.6);
+}
+
+.line-graph-widget-tooltip[type=maximum] > [text=value] {
+  color: #2cbb0f;
+}
+
+.line-graph-widget-tooltip[type=minimum] > [text=value] {
+  color: #ed2655;
+}
+
+.line-graph-widget-tooltip[type=average] > [text=value] {
+  color: #d97e00;
+}
+
 /* Charts */
 
 .generic-chart-container {

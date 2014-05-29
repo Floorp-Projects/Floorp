@@ -207,7 +207,8 @@
                     label="&setDefault.label;" accesskey="&setDefault.accesskey;"
                     oncommand="gAdvancedPane.setDefaultBrowser();"
                     preference="pref.general.disable_button.default_browser"/>
-            <description>&isDefault.label;</description>
+            <label id="isDefaultLabel"
+                   value="&isDefault.label;"/>
           </deck>
         </hbox>
       </groupbox>

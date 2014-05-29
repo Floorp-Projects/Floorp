@@ -14,10 +14,10 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.IOException;
-import java.lang.ref.SoftReference;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,8 +41,7 @@ import org.mozilla.gecko.util.RawResource;
  *
  * Under the hood, {@code SuggestedSites} keeps reference to the
  * parsed list of sites to avoid reparsing the JSON file on every
- * {@code get()} call. This cached list is a soft reference and can
- * garbage collected at any moment.
+ * {@code get()} call.
  *
  * The default list of suggested sites is stored in a raw Android
  * resource ({@code R.raw.suggestedsites}) which is dynamically
@@ -55,9 +54,7 @@ public class SuggestedSites {
     private static final String[] COLUMNS = new String[] {
         BrowserContract.SuggestedSites._ID,
         BrowserContract.SuggestedSites.URL,
-        BrowserContract.SuggestedSites.TITLE,
-        BrowserContract.SuggestedSites.IMAGE_URL,
-        BrowserContract.SuggestedSites.BG_COLOR
+        BrowserContract.SuggestedSites.TITLE
     };
 
     private static final String JSON_KEY_URL = "url";
@@ -88,11 +85,10 @@ public class SuggestedSites {
     }
 
     private final Context context;
-    private SoftReference<List<Site>> cachedSites;
+    private Map<String, Site> cachedSites;
 
     public SuggestedSites(Context appContext) {
         context = appContext;
-        cachedSites = new SoftReference<List<Site>>(null);
     }
 
     private String loadFromFile() {
@@ -113,7 +109,7 @@ public class SuggestedSites {
      * source or standard file location. This will be called on every
      * cache miss during a {@code get()} call.
      */
-    private List<Site> refresh() {
+    private void refresh() {
         Log.d(LOGTAG, "Refreshing tiles from file");
 
         String jsonString = loadFromFile();
@@ -122,40 +118,46 @@ public class SuggestedSites {
             jsonString = loadFromResource();
         }
 
-        List<Site> sites = null;
+        Map<String, Site> sites = null;
 
         try {
             final JSONArray jsonSites = new JSONArray(jsonString);
-            sites = new ArrayList<Site>(jsonSites.length());
+            sites = new LinkedHashMap<String, Site>(jsonSites.length());
 
             final int count = jsonSites.length();
             for (int i = 0; i < count; i++) {
                 final JSONObject jsonSite = (JSONObject) jsonSites.get(i);
+                final String url = jsonSite.getString(JSON_KEY_URL);
 
-                final Site site = new Site(jsonSite.getString(JSON_KEY_URL),
+                final Site site = new Site(url,
                                            jsonSite.getString(JSON_KEY_TITLE),
                                            jsonSite.getString(JSON_KEY_IMAGE_URL),
                                            jsonSite.getString(JSON_KEY_BG_COLOR));
 
-                sites.add(site);
+                sites.put(url, site);
             }
 
             Log.d(LOGTAG, "Successfully parsed suggested sites.");
         } catch (Exception e) {
             Log.e(LOGTAG, "Failed to refresh suggested sites", e);
-            return null;
+            return;
         }
 
         // Update cached list of sites
-        cachedSites = new SoftReference<List<Site>>(Collections.unmodifiableList(sites));
-
-        // Return the refreshed list
-        return sites;
+        cachedSites = Collections.unmodifiableMap(sites);
     }
 
     private boolean isEnabled() {
         final SharedPreferences prefs = GeckoSharedPrefs.forApp(context);
         return prefs.getBoolean(GeckoPreferences.PREFS_SUGGESTED_SITES, true);
+    }
+
+    private Site getSiteForUrl(String url) {
+        if (cachedSites == null) {
+            return null;
+        }
+
+        return cachedSites.get(url);
     }
 
     /**
@@ -182,24 +184,25 @@ public class SuggestedSites {
             return cursor;
         }
 
-        List<Site> sites = cachedSites.get();
-        if (sites == null) {
+        if (cachedSites == null) {
             Log.d(LOGTAG, "No cached sites, refreshing.");
-            sites = refresh();
+            refresh();
         }
 
         // Return empty cursor if there was an error when
         // loading the suggested sites or the list is empty.
-        if (sites == null || sites.isEmpty()) {
+        if (cachedSites == null || cachedSites.isEmpty()) {
             return cursor;
         }
 
-        final int sitesCount = sites.size();
+        final int sitesCount = cachedSites.size();
         Log.d(LOGTAG, "Number of suggested sites: " + sitesCount);
 
-        final int count = Math.min(limit, sitesCount);
-        for (int i = 0; i < count; i++) {
-            final Site site = sites.get(i);
+        final int maxCount = Math.min(limit, sitesCount);
+        for (Site site : cachedSites.values()) {
+            if (cursor.getCount() == maxCount) {
+                break;
+            }
 
             if (excludeUrls != null && excludeUrls.contains(site.url)) {
                 continue;
@@ -209,13 +212,25 @@ public class SuggestedSites {
             row.add(-1);
             row.add(site.url);
             row.add(site.title);
-            row.add(site.imageUrl);
-            row.add(site.bgColor);
         }
 
         cursor.setNotificationUri(context.getContentResolver(),
                                   BrowserContract.SuggestedSites.CONTENT_URI);
 
         return cursor;
+    }
+
+    public boolean contains(String url) {
+        return (getSiteForUrl(url) != null);
+    }
+
+    public String getImageUrlForUrl(String url) {
+        final Site site = getSiteForUrl(url);
+        return (site != null ? site.imageUrl : null);
+    }
+
+    public String getBackgroundColorForUrl(String url) {
+        final Site site = getSiteForUrl(url);
+        return (site != null ? site.bgColor : null);
     }
 }

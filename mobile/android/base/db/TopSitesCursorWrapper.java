@@ -41,8 +41,6 @@ public class TopSitesCursorWrapper implements Cursor {
         TopSites.BOOKMARK_ID,
         TopSites.HISTORY_ID,
         TopSites.DISPLAY,
-        TopSites.IMAGE_URL,
-        TopSites.BG_COLOR,
         TopSites.TYPE
     };
 
