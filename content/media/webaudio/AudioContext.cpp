@@ -469,7 +469,7 @@ AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
   nsRefPtr<WebAudioDecodeJob> job(
     new WebAudioDecodeJob(contentType, this,
                           &aSuccessCallback, failureCallback));
-  mDecoder.AsyncDecodeMedia(contentType.get(), data, length, *job);
+  mDecoder.AsyncDecodeMedia(contentType.get(), data, dummy, length, *job);
   // Transfer the ownership to mDecodeJobs
   mDecodeJobs.AppendElement(job);
 }
