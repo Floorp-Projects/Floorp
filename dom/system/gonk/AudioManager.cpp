@@ -47,12 +47,13 @@ using namespace mozilla::dom::bluetooth;
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "AudioManager" , ## args)
 
-#define HEADPHONES_STATUS_HEADSET   MOZ_UTF16("headset")
-#define HEADPHONES_STATUS_HEADPHONE MOZ_UTF16("headphone")
-#define HEADPHONES_STATUS_OFF       MOZ_UTF16("off")
-#define HEADPHONES_STATUS_UNKNOWN   MOZ_UTF16("unknown")
-#define HEADPHONES_STATUS_CHANGED   "headphones-status-changed"
-#define MOZ_SETTINGS_CHANGE_ID      "mozsettings-changed"
+#define HEADPHONES_STATUS_HEADSET     MOZ_UTF16("headset")
+#define HEADPHONES_STATUS_HEADPHONE   MOZ_UTF16("headphone")
+#define HEADPHONES_STATUS_OFF         MOZ_UTF16("off")
+#define HEADPHONES_STATUS_UNKNOWN     MOZ_UTF16("unknown")
+#define HEADPHONES_STATUS_CHANGED     "headphones-status-changed"
+#define MOZ_SETTINGS_CHANGE_ID        "mozsettings-changed"
+#define AUDIO_CHANNEL_PROCESS_CHANGED "audio-channel-process-changed"
 
 static void BinderDeadCallback(status_t aErr);
 static void InternalSetAudioRoutes(SwitchState aState);
@@ -280,6 +281,32 @@ AudioManager::HandleBluetoothStatusChanged(nsISupports* aSubject,
 #endif
 }
 
+void
+AudioManager::HandleAudioChannelProcessChanged()
+{
+  // Note: If the user answers a VoIP call (e.g. WebRTC calls) during the
+  // telephony call (GSM/CDMA calls) the audio manager won't set the
+  // PHONE_STATE_IN_COMMUNICATION audio state. Once the telephony call finishes
+  // the RIL plumbing sets the PHONE_STATE_NORMAL audio state. This seems to be
+  // an issue for the VoIP call but it is not. Once the RIL plumbing sets the
+  // the PHONE_STATE_NORMAL audio state the AudioManager::mPhoneAudioAgent
+  // member will call the StopPlaying() method causing that this function will
+  // be called again and therefore the audio manager sets the
+  // PHONE_STATE_IN_COMMUNICATION audio state.
+
+  if ((mPhoneState == PHONE_STATE_IN_CALL) ||
+      (mPhoneState == PHONE_STATE_RINGTONE)) {
+    return;
+  }
+
+  AudioChannelService *service = AudioChannelService::GetAudioChannelService();
+  NS_ENSURE_TRUE_VOID(service);
+
+  bool telephonyChannelIsActive = service->TelephonyChannelIsActive();
+  telephonyChannelIsActive ? SetPhoneState(PHONE_STATE_IN_COMMUNICATION) :
+                             SetPhoneState(PHONE_STATE_NORMAL);
+}
+
 nsresult
 AudioManager::Observe(nsISupports* aSubject,
                       const char* aTopic,
@@ -295,6 +322,11 @@ AudioManager::Observe(nsISupports* aSubject,
     }
 
     HandleBluetoothStatusChanged(aSubject, aTopic, address);
+    return NS_OK;
+  }
+
+  else if (!strcmp(aTopic, AUDIO_CHANNEL_PROCESS_CHANGED)) {
+    HandleAudioChannelProcessChanged();
     return NS_OK;
   }
 
@@ -429,6 +461,9 @@ AudioManager::AudioManager()
   if (NS_FAILED(obs->AddObserver(this, MOZ_SETTINGS_CHANGE_ID, false))) {
     NS_WARNING("Failed to add mozsettings-changed observer!");
   }
+  if (NS_FAILED(obs->AddObserver(this, AUDIO_CHANNEL_PROCESS_CHANGED, false))) {
+    NS_WARNING("Failed to add audio-channel-process-changed observer!");
+  }
 
 #ifdef MOZ_B2G_RIL
   char value[PROPERTY_VALUE_MAX];
@@ -455,6 +490,9 @@ AudioManager::~AudioManager() {
   }
   if (NS_FAILED(obs->RemoveObserver(this, MOZ_SETTINGS_CHANGE_ID))) {
     NS_WARNING("Failed to remove mozsettings-changed observer!");
+  }
+  if (NS_FAILED(obs->RemoveObserver(this,  AUDIO_CHANNEL_PROCESS_CHANGED))) {
+    NS_WARNING("Failed to remove audio-channel-process-changed!");
   }
 }
 
