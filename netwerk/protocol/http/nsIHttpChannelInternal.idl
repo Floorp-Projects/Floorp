@@ -13,12 +13,13 @@ class nsCString;
 [ptr] native StringArray(nsTArray<nsCString>);
 [ref] native securityMessagesArray(nsCOMArray<nsISecurityConsoleMessage>);
 
-interface nsISocketTransport;
 interface nsIAsyncInputStream;
 interface nsIAsyncOutputStream;
-interface nsIURI;
+interface nsIPrincipal;
 interface nsIProxyInfo;
 interface nsISecurityConsoleMessage;
+interface nsISocketTransport;
+interface nsIURI;
 
 /**
  * The callback interface for nsIHttpChannelInternal::HTTPUpgrade()
@@ -37,7 +38,7 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(b733194f-6751-4876-a444-bca4ba3f2fcb)]
+[scriptable, uuid(a4bf4fc5-b5a9-4098-bd20-409d71bf18e6)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -192,4 +193,10 @@ interface nsIHttpChannelInternal : nsISupports
      * May return null when redirectTo() has not been called.
      */
     readonly attribute nsIURI apiRedirectToURI;
+
+    /**
+     * Add a new nsIPrincipal to the redirect chain. This is the only way to
+     * write to nsIRedirectHistory.redirects.
+     */
+    void addRedirect(in nsIPrincipal aPrincipal);
 };

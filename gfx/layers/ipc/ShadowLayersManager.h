@@ -19,6 +19,7 @@ class ShadowLayersManager
 {
 public:
     virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
+                                     const uint64_t& aTransactionId,
                                      const TargetConfig& aTargetConfig,
                                      bool aIsFirstPaint,
                                      bool aScheduleComposite,
