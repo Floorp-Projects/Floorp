@@ -82,7 +82,7 @@
 #endif
 
 #include "nsIDOMGlobalPropertyInitializer.h"
-#include "nsIDataStoreService.h"
+#include "mozilla/dom/DataStoreService.h"
 #include "nsJSUtils.h"
 
 #include "nsScriptNameSpaceManager.h"
@@ -1466,8 +1466,7 @@ Navigator::GetDataStores(nsPIDOMWindow* aWindow,
     return nullptr;
   }
 
-  nsCOMPtr<nsIDataStoreService> service =
-    do_GetService("@mozilla.org/datastore-service;1");
+  nsRefPtr<DataStoreService> service = DataStoreService::GetOrCreate();
   if (!service) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
