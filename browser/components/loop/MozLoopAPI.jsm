@@ -86,6 +86,27 @@ function injectLoopAPI(targetWindow) {
       value: function(callback) {
         return MozLoopService.register(callback);
       }
+    },
+
+    /**
+     * Used to note a call url expiry time. If the time is later than the current
+     * latest expiry time, then the stored expiry time is increased. For times
+     * sooner, this function is a no-op; this ensures we always have the latest
+     * expiry time for a url.
+     *
+     * This is used to deterimine whether or not we should be registering with the
+     * push server on start.
+     *
+     * @param {Integer} expiryTimeSeconds The seconds since epoch of the expiry time
+     *                                    of the url.
+     */
+    noteCallUrlExpiry: {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: function(expiryTimeSeconds) {
+        MozLoopService.noteCallUrlExpiry(expiryTimeSeconds);
+      }
     }
   };
 

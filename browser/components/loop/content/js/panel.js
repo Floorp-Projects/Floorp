@@ -65,13 +65,13 @@ loop.panel = (function(_, mozL10n) {
     getCallUrl: function(event) {
       this.notifier.clear();
       event.preventDefault();
-      var callback = function(err, callUrl) {
+      var callback = function(err, callUrlData) {
         this.clearPending();
         if (err) {
           this.notifier.errorL10n("unable_retrieve_url");
           return;
         }
-        this.onCallUrlReceived(callUrl);
+        this.onCallUrlReceived(callUrlData);
       }.bind(this);
 
       this.setPending();
@@ -86,11 +86,11 @@ loop.panel = (function(_, mozL10n) {
       this.changeButtonState();
     },
 
-    onCallUrlReceived: function(callUrl) {
+    onCallUrlReceived: function(callUrlData) {
       this.notifier.clear();
       this.$(".action .invite").hide();
       this.$(".action .invite input").val("");
-      this.$(".action .result input").val(callUrl);
+      this.$(".action .result input").val(callUrlData.call_url);
       this.$(".action .result").show();
       this.$(".description p").text(__("share_link_url"));
     },

@@ -228,11 +228,20 @@ describe("loop.panel", function() {
     });
 
     describe("#onCallUrlReceived", function() {
+      var callUrlData;
+
+      beforeEach(function() {
+        callUrlData = {
+          call_url: "http://call.me/",
+          expiresAt: 1000
+        };
+      });
+
       it("should update the text field with the call url", function() {
         var view = new loop.panel.PanelView({notifier: notifier});
         view.render();
 
-        view.onCallUrlReceived("http://call.me/");
+        view.onCallUrlReceived(callUrlData);
 
         expect(view.$("#call-url").val()).eql("http://call.me/");
       });
@@ -240,7 +249,7 @@ describe("loop.panel", function() {
       it("should reset all pending notifications", function() {
         var view = new loop.panel.PanelView({notifier: notifier}).render();
 
-        view.onCallUrlReceived("http://call.me/");
+        view.onCallUrlReceived(callUrlData);
 
         sinon.assert.calledOnce(view.notifier.clear);
       });
