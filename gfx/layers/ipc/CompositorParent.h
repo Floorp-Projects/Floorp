@@ -96,7 +96,6 @@ public:
   virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
   virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
-                                   const uint64_t& aTransactionId,
                                    const TargetConfig& aTargetConfig,
                                    bool aIsFirstPaint,
                                    bool aScheduleComposite,
@@ -227,7 +226,6 @@ public:
     PCompositorParent* mCrossProcessParent;
     TargetConfig mTargetConfig;
     APZTestData mApzTestData;
-    LayerTransactionParent* mLayerTree;
   };
 
   /**
@@ -255,7 +253,7 @@ private:
                                  bool* aSuccess) MOZ_OVERRIDE;
   virtual bool DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers) MOZ_OVERRIDE;
   virtual void ScheduleTask(CancelableTask*, int);
-  void CompositeCallback();
+  void Composite();
   void CompositeToTarget(gfx::DrawTarget* aTarget, const nsIntRect* aRect = nullptr);
   void ForceComposeToTarget(gfx::DrawTarget* aTarget, const nsIntRect* aRect = nullptr);
 
@@ -329,8 +327,6 @@ private:
   TimeStamp mExpectedComposeStartTime;
 #endif
 
-  uint64_t mPendingTransaction;
-
   bool mPaused;
 
   bool mUseExternalSurfaceSize;
@@ -346,6 +342,8 @@ private:
   CancelableTask* mForceCompositionTask;
 
   nsRefPtr<APZCTreeManager> mApzcTreeManager;
+
+  bool mWantDidCompositeEvent;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };
