@@ -212,6 +212,8 @@ class CodeGeneratorMIPS : public CodeGeneratorShared
     virtual bool visitMathF(LMathF *math);
     virtual bool visitFloor(LFloor *lir);
     virtual bool visitFloorF(LFloorF *lir);
+    virtual bool visitCeil(LCeil *lir);
+    virtual bool visitCeilF(LCeilF *lir);
     virtual bool visitRound(LRound *lir);
     virtual bool visitRoundF(LRoundF *lir);
     virtual bool visitTruncateDToInt32(LTruncateDToInt32 *ins);
