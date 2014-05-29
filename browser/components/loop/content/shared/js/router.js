@@ -27,9 +27,19 @@ loop.shared.router = (function(l10n) {
      */
     loadView : function(view) {
       if (this.activeView) {
-        this.activeView.hide();
+        this.activeView.remove();
       }
       this.activeView = view.render().show();
+      this.updateView(this.activeView.$el);
+    },
+
+    /**
+     * Updates main div element with provided contents.
+     *
+     * @param  {jQuery} $el Element.
+     */
+    updateView: function($el) {
+      $("#main").html($el);
     }
   });
 

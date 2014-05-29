@@ -10,6 +10,7 @@ describe("loop.webapp", function() {
   "use strict";
 
   var sharedModels = loop.shared.models,
+      sharedViews = loop.shared.views,
       sandbox,
       notifier;
 
@@ -49,36 +50,40 @@ describe("loop.webapp", function() {
           router.home();
 
           sinon.assert.calledOnce(router.loadView);
-          sinon.assert.calledWithMatch(router.loadView,
-                                       {$el: {selector: "#home"}});
+          sinon.assert.calledWith(router.loadView, sinon.match(function(obj) {
+            return obj instanceof loop.webapp.HomeView;
+          }));
         });
       });
 
       describe("#initiate", function() {
-        it("should load the ConversationFormView and set the token",
-          function() {
-            router.initiate("fakeToken");
+        it("should set the token to the conversation model", function() {
+          router.initiate("fakeToken");
 
-            sinon.assert.calledOnce(router.loadView);
-            sinon.assert.calledWithMatch(router.loadView, {
-              $el: {selector: "#conversation-form"},
-              model: {attributes: {loopToken: "fakeToken"}}
-            });
-          });
+          expect(conversation.get("loopToken")).eql("fakeToken");
+        });
+
+        it("should load the ConversationFormView", function() {
+          router.initiate("fakeToken");
+
+          sinon.assert.calledOnce(router.loadView);
+          sinon.assert.calledWith(router.loadView, sinon.match(function(obj) {
+            return obj instanceof loop.webapp.ConversationFormView;
+          }));
+        });
       });
 
       describe("#conversation", function() {
         it("should load the ConversationView if session is set", function() {
-          sandbox.stub(loop.shared.views.ConversationView.prototype,
-            "initialize");
+          sandbox.stub(sharedViews.ConversationView.prototype, "initialize");
           conversation.set("sessionId", "fakeSessionId");
 
           router.conversation();
 
           sinon.assert.calledOnce(router.loadView);
-          sinon.assert.calledWithMatch(router.loadView, {
-            $el: {selector: "#conversation"}
-          });
+          sinon.assert.calledWith(router.loadView, sinon.match(function(obj) {
+            return obj instanceof sharedViews.ConversationView;
+          }));
         });
 
         it("should redirect to #call/{token} if session isn't ready",
