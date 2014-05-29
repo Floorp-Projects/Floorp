@@ -63,8 +63,10 @@ loop.panel = (function(_, mozL10n) {
     },
 
     getCallUrl: function(event) {
+      this.notifier.clear();
       event.preventDefault();
       var callback = function(err, callUrl) {
+        this.clearPending();
         if (err) {
           this.notifier.errorL10n("unable_retrieve_url");
           return;
@@ -72,14 +74,16 @@ loop.panel = (function(_, mozL10n) {
         this.onCallUrlReceived(callUrl);
       }.bind(this);
 
-      this.client.requestCallUrl(this.getNickname(), callback);
       this.setPending();
+      this.client.requestCallUrl(this.getNickname(), callback);
     },
 
     goBack: function(event) {
+      event.preventDefault();
       this.$(".action .result").hide();
       this.$(".action .invite").show();
       this.$(".description p").text(__("get_link_to_share"));
+      this.changeButtonState();
     },
 
     onCallUrlReceived: function(callUrl) {
@@ -96,12 +100,18 @@ loop.panel = (function(_, mozL10n) {
       this.$(".get-url").addClass("disabled").attr("disabled", "disabled");
     },
 
+    clearPending: function() {
+      this.$("[name=caller]").removeClass("pending");
+      this.changeButtonState();
+    },
+
     changeButtonState: function() {
       var enabled = !!this.$("input[name=caller]").val();
       if (enabled) {
-        this.$(".get-url").removeClass("disabled");
+        this.$(".get-url").removeClass("disabled")
+            .removeAttr("disabled", "disabled");
       } else {
-        this.$(".get-url").addClass("disabled");
+        this.$(".get-url").addClass("disabled").attr("disabled", "disabled");
       }
     }
   });

@@ -163,6 +163,16 @@ describe("loop.panel", function() {
     });
 
     describe("#getCallUrl", function() {
+      it("should reset all pending notifications", function() {
+        var requestCallUrl = sandbox.stub(loop.shared.Client.prototype,
+                                          "requestCallUrl");
+        var view = new loop.panel.PanelView({notifier: notifier}).render();
+
+        view.getCallUrl({preventDefault: sandbox.spy()});
+
+        sinon.assert.calledOnce(view.notifier.clear, "clear");
+      });
+
       it("should request a call url to the server", function() {
         var requestCallUrl = sandbox.stub(loop.shared.Client.prototype,
                                           "requestCallUrl");
@@ -178,14 +188,29 @@ describe("loop.panel", function() {
       it("should set the call url form in a pending state", function() {
         var requestCallUrl = sandbox.stub(loop.shared.Client.prototype,
                                           "requestCallUrl");
-        var setPending = sandbox.stub(loop.panel.PanelView.prototype,
-                                      "setPending");
+        sandbox.stub(loop.panel.PanelView.prototype, "setPending");
+
         var view = new loop.panel.PanelView({notifier: notifier});
 
         view.getCallUrl({preventDefault: sandbox.spy()});
 
         sinon.assert.calledOnce(view.setPending);
       });
+
+      it("should clear the pending state when a response is received",
+        function() {
+          sandbox.stub(loop.panel.PanelView.prototype,
+                       "clearPending");
+          var requestCallUrl = sandbox.stub(
+            loop.shared.Client.prototype, "requestCallUrl", function(_, cb) {
+              cb("fake error");
+            });
+          var view = new loop.panel.PanelView({notifier: notifier});
+
+          view.getCallUrl({preventDefault: sandbox.spy()});
+
+          sinon.assert.calledOnce(view.clearPending);
+        });
 
       it("should notify the user when the operation failed", function() {
         var requestCallUrl = sandbox.stub(
@@ -217,7 +242,18 @@ describe("loop.panel", function() {
 
         view.onCallUrlReceived("http://call.me/");
 
-        sinon.assert.calledOnce(view.notifier.clear, "clear");
+        sinon.assert.calledOnce(view.notifier.clear);
+      });
+    });
+
+    describe("events", function() {
+      describe("goBack", function() {
+        it("should update the button state");
+      });
+
+      describe("changeButtonState", function() {
+         it("should do set the disabled state if there is no text");
+         it("should do set the enabled state if there is text");
       });
     });
   });
