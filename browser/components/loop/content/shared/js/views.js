@@ -40,7 +40,9 @@ loop.shared.views = (function(TB) {
   var ConversationView = BaseView.extend({
     el: "#conversation",
 
-    videoStyles: { width: "100%", height: "100%" },
+    // height set to "auto" to fix video layout on Google Chrome
+    // @see https://bugzilla.mozilla.org/show_bug.cgi?id=991122
+    videoStyles: { width: "100%", height: "auto" },
 
     /**
      * Establishes webrtc communication using TB sdk.
