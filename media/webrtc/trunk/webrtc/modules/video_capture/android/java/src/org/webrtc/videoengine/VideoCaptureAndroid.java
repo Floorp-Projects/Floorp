@@ -139,7 +139,11 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
     }
     Throwable error = null;
     try {
-      camera = Camera.open(id);
+      if(android.os.Build.VERSION.SDK_INT>8) {
+        camera = Camera.open(id);
+      } else {
+        camera = Camera.open();
+      }
 
       localPreview = ViERenderer.GetLocalRenderer();
       if (localPreview != null) {
@@ -149,28 +153,43 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
           camera.setPreviewDisplay(localPreview);
         }
       } else {
-        // No local renderer (we only care about onPreviewFrame() buffers, not a
-        // directly-displayed UI element).  Camera won't capture without
-        // setPreview{Texture,Display}, so we create a dummy SurfaceTexture and
-        // hand it over to Camera, but never listen for frame-ready callbacks,
-        // and never call updateTexImage on it.
-        try {
-          // "42" because http://goo.gl/KaEn8
-          dummySurfaceTexture = new SurfaceTexture(42);
-          camera.setPreviewTexture(dummySurfaceTexture);
-        } catch (IOException e) {
-          throw new RuntimeException(e);
+        if(android.os.Build.VERSION.SDK_INT>10) {
+          // No local renderer (we only care about onPreviewFrame() buffers, not a
+          // directly-displayed UI element).  Camera won't capture without
+          // setPreview{Texture,Display}, so we create a dummy SurfaceTexture and
+          // hand it over to Camera, but never listen for frame-ready callbacks,
+          // and never call updateTexImage on it.
+          try {
+            // "42" because http://goo.gl/KaEn8
+            dummySurfaceTexture = new SurfaceTexture(42);
+            camera.setPreviewTexture(dummySurfaceTexture);
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        } else {
+          throw new RuntimeException("No preview surface for Camera.");
         }
       }
 
       Camera.Parameters parameters = camera.getParameters();
-      Log.d(TAG, "isVideoStabilizationSupported: " +
-          parameters.isVideoStabilizationSupported());
-      if (parameters.isVideoStabilizationSupported()) {
-        parameters.setVideoStabilization(true);
+      // This wasn't added until ICS MR1.
+      if(android.os.Build.VERSION.SDK_INT>14) {
+        Log.d(TAG, "isVideoStabilizationSupported: " +
+              parameters.isVideoStabilizationSupported());
+        if (parameters.isVideoStabilizationSupported()) {
+          parameters.setVideoStabilization(true);
+        }
+      }
+      List<String> focusModeList = parameters.getSupportedFocusModes();
+      if (focusModeList.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)) {
+        parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
       }
       parameters.setPreviewSize(width, height);
-      parameters.setPreviewFpsRange(min_mfps, max_mfps);
+      if (android.os.Build.VERSION.SDK_INT>8) {
+          parameters.setPreviewFpsRange(min_mfps, max_mfps);
+      } else {
+          parameters.setPreviewFrameRate(max_mfps / 1000);
+      }
       int format = ImageFormat.NV21;
       parameters.setPreviewFormat(format);
       camera.setParameters(parameters);
@@ -216,7 +235,9 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         localPreview.removeCallback(this);
         camera.setPreviewDisplay(null);
       } else {
-        camera.setPreviewTexture(null);
+        if(android.os.Build.VERSION.SDK_INT>10) {
+          camera.setPreviewTexture(null);
+        }
       }
       camera.release();
       camera = null;
