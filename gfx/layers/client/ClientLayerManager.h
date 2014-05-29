@@ -257,7 +257,6 @@ private:
   nsRefPtr<gfxContext> mShadowTarget;
 
   nsRefPtr<TransactionIdAllocator> mTransactionIdAllocator;
-  uint64_t mLatestTransactionId;
 
   // Sometimes we draw to targets that don't natively support
   // landscape/portrait orientation.  When we need to implement that

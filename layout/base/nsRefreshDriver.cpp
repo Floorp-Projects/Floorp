@@ -1385,9 +1385,8 @@ void
 nsRefreshDriver::FinishedWaitingForTransaction()
 {
   mWaitingForTransaction = false;
-  if (mSkippedPaint &&
-      !IsInRefresh() &&
-      (ObserverCount() || ImageRequestCount())) {
+  if (mSkippedPaint && (ObserverCount() || ImageRequestCount())) {
+    MOZ_ASSERT(!IsInRefresh());
     DoRefresh();
   }
   mSkippedPaint = false;
