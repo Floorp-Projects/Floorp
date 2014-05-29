@@ -121,7 +121,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(c9b6f5a0-cfe8-11e3-9c1a-0800200c9a66)]
+[scriptable, uuid(a485ba50-e208-11e3-8b68-0800200c9a66)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -409,6 +409,11 @@ interface nsIXPCComponents_Utils : nsISupports
      * reading/writing a property).
      */
     bool isDeadWrapper(in jsval obj);
+
+    /**
+     * Determines whether this object is a cross-process wrapper.
+     */
+    bool isCrossProcessWrapper(in jsval obj);
 
     /*
      * To be called from JS only. This is for Gecko internal use only, and may
