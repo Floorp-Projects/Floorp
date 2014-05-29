@@ -91,6 +91,8 @@ describe("loop.panel", function() {
         '  <div class="action">',
         '    <div class="messages"></div>',
         '    <p class="invite">',
+        '      <input type="text" placeholder="Nickname of the future caller"',
+        '             name="caller" value="foo"/>',
         '      <a class="get-url" href="">Get a call url</a>',
         '    </p>',
         '    <p class="result hide">',
@@ -111,6 +113,7 @@ describe("loop.panel", function() {
         view.getCallUrl({preventDefault: sandbox.spy()});
 
         sinon.assert.calledOnce(requestCallUrl);
+        sinon.assert.calledWith(requestCallUrl, "foo");
       });
     });
 
@@ -121,7 +124,7 @@ describe("loop.panel", function() {
 
         view.onCallUrlReceived("http://call.me/");
 
-        expect(view.$("input").val()).eql("http://call.me/");
+        expect(view.$("#call-url").val()).eql("http://call.me/");
       });
     });
   });

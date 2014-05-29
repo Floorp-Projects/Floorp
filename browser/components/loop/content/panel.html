@@ -20,12 +20,15 @@
       <div class="action">
         <div class="messages"></div>
         <p class="invite">
-          <a class="get-url btn btn-success" href=""
+          <input type="text" name="caller" data-l10n-id="caller">
+          <a class="get-url btn btn-success disabled" href=""
              data-l10n-id="get_a_call_url">Get a call url</a>
         </p>
         <p class="result hide">
           <input id="call-url" type="url" readonly>
-          <a class="get-url btn btn-info" href="" data-l10n-id="renew">Renew</a>
+          <a class="go-back btn btn-info" href="" data-l10n-id="new_url">
+            New url
+          </a>
         </p>
       </div>
     </div>

@@ -25,11 +25,13 @@ loop.Client = (function($) {
     /**
      * Requests a call URL to the Loop server.
      *
+     * @param  {String} simplepushUrl a registered Simple Push URL
+     * @param  {string} nickname the nickname of the future caller
      * @param  {Function} cb Callback(err, callUrl)
      */
-    requestCallUrl: function(simplepushUrl, cb) {
+    requestCallUrl: function(nickname, cb) {
       var endpoint = this.settings.baseApiUrl + "/call-url/",
-          reqData = {simplepushUrl: simplepushUrl};
+          reqData  = {callerId: nickname};
 
       function validate(callUrlData) {
         if (typeof callUrlData !== "object" ||

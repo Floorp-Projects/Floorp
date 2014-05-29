@@ -92,7 +92,9 @@ loop.panel = (function(_, __) {
     el: "#default-view",
 
     events: {
-      "click a.get-url": "getCallUrl"
+      "keyup input[name=caller]": "changeButtonState",
+      "click a.get-url": "getCallUrl",
+      "click a.go-back": "goBack"
     },
 
     initialize: function() {
@@ -116,22 +118,39 @@ loop.panel = (function(_, __) {
 
     getCallUrl: function(event) {
       event.preventDefault();
-      var simplepushUrl = "http://fake.url/"; // XXX: send a real simplepush url
-      this.client.requestCallUrl(simplepushUrl, function(err, callUrl) {
+      var nickname = this.$("input[name=caller]").val();
+      var callback = function(err, callUrl) {
         if (err) {
           this.notify(__("unable_retrieve_url"), "error");
           return;
         }
         this.onCallUrlReceived(callUrl);
-      }.bind(this));
+      }.bind(this);
+
+      this.client.requestCallUrl(nickname, callback);
+    },
+
+    goBack: function(event) {
+      this.$(".action .result").hide();
+      this.$(".action .invite").show();
+      this.$(".description p").text(__("get_link_to_share"));
     },
 
     onCallUrlReceived: function(callUrl) {
       this.notificationCollection.reset();
       this.$(".action .invite").hide();
+      this.$(".action .invite input").val("");
       this.$(".action .result input").val(callUrl);
       this.$(".action .result").show();
       this.$(".description p").text(__("share_link_url"));
+    },
+
+    changeButtonState: function() {
+      var enabled = !!this.$("input[name=caller]").val();
+      if (enabled)
+        this.$("a.get-url").removeClass("disabled");
+      else
+        this.$("a.get-url").addClass("disabled");
     }
   });
 
