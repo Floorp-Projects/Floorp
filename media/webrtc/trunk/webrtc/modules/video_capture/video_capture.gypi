@@ -102,10 +102,6 @@
               },
             }],  # win
             ['OS=="android"', {
-              'dependencies': [
-                '<(DEPTH)/third_party/icu/icu.gyp:icuuc',
-                '<(DEPTH)/third_party/jsoncpp/jsoncpp.gyp:jsoncpp',
-              ],
               'sources': [
                 'android/device_info_android.cc',
                 'android/device_info_android.h',
