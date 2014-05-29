@@ -23,6 +23,16 @@ XPCOMUtils.defineLazyModuleGetter(this, "MozLoopService", "resource:///modules/l
       let anchor = event.target;
       let iframe = document.getElementById("loop-panel-frame");
 
+      if (!iframe) {
+        // XXX This should be using SharedFrame (bug 1011392 may do this).
+        iframe = document.createElement("iframe");
+        iframe.setAttribute("id", "loop-panel-frame");
+        iframe.setAttribute("type", "content");
+        iframe.setAttribute("class", "loop-frame social-panel-frame");
+        iframe.setAttribute("flex", "1");
+        panel.appendChild(iframe);
+      }
+
       // We inject in DOMContentLoaded as that is before any scripts have tun.
       iframe.addEventListener("DOMContentLoaded", function documentDOMLoaded() {
         iframe.removeEventListener("DOMContentLoaded", documentDOMLoaded, true);
@@ -35,7 +45,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "MozLoopService", "resource:///modules/l
             iframe.contentWindow.removeEventListener("loopPanelInitialized",
                                                      documentLoaded, true);
             // XXX We end up with the wrong size here, so this
-            // needs investigation (bug 1007601).
+            // needs further investigation (bug 1011394).
             sizeSocialPanelToContent(panel, iframe);
           }, true);
 
