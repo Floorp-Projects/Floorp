@@ -43,10 +43,7 @@ loop.panel = (function(mozL10n) {
       var nickname = this.$("input[name=caller]").val();
       var callback = function(err, callUrl) {
         if (err) {
-          this.notifier.notify({
-            message: __("unable_retrieve_url"),
-            level: "error"
-          });
+          this.notifier.errorL10n("unable_retrieve_url");
           return;
         }
         this.onCallUrlReceived(callUrl);

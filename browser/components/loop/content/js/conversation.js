@@ -100,7 +100,7 @@ loop.conversation = (function(OT, mozL10n) {
       if (!this._conversation.isSessionReady()) {
         console.error("Error: navigated to conversation route without " +
           "the start route to initialise the call first");
-        this._notifier.error(__("cannot_start_call_session_not_ready"));
+        this._notifier.errorL10n("cannot_start_call_session_not_ready");
         return;
       }
 

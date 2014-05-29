@@ -18,7 +18,9 @@ describe("loop.conversation", function() {
     notifier = {
       notify: sandbox.spy(),
       warn: sandbox.spy(),
-      error: sandbox.spy()
+      warnL10n: sandbox.spy(),
+      error: sandbox.spy(),
+      errorL10n: sandbox.spy()
     };
   });
 
@@ -73,9 +75,8 @@ describe("loop.conversation", function() {
           router.conversation();
 
           sinon.assert.calledOnce(router.loadView);
-          sinon.assert.calledWith(router.loadView, sinon.match(function(obj) {
-            return obj instanceof loop.shared.views.ConversationView;
-          }));
+          sinon.assert.calledWith(router.loadView,
+            sinon.match.instanceOf(loop.shared.views.ConversationView));
         });
 
         it("should not load the ConversationView if session is not set",
@@ -89,7 +90,9 @@ describe("loop.conversation", function() {
           function() {
             router.conversation();
 
-            sinon.assert.calledOnce(router._notifier.error);
+            sinon.assert.calledOnce(router._notifier.errorL10n);
+            sinon.assert.calledWithExactly(router._notifier.errorL10n,
+              "cannot_start_call_session_not_ready");
         });
       });
 
