@@ -50,9 +50,25 @@
 }
 
 .share .action input {
+  border: 1px solid #ccc; /* Overriding background style for a text input (see
+                             below) resets its borders to a weird beveled style;
+                             defining a default 1px border solves the issue. */
   font-size: .9em;
   width: 60%;
-  padding: .4em;
+  padding: .5em;
+}
+
+.share .action input.pending {
+  background-image: url(../img/loading-icon.gif);
+  background-repeat: no-repeat;
+  background-position: right;
+}
+
+/* For some reason, buttons have a bigger default font size in FF; we're
+   reducing a bit for graphical consistency here. */
+.share .action button {
+  font-size: .9em;
+  padding-top: 6px;
 }
 
 /* Specific cases */
