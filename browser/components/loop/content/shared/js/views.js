@@ -330,11 +330,27 @@ loop.shared.views = (function(_, OT, l10n) {
     }
   });
 
+  /**
+   * Unsupported Browsers view.
+   */
+  var UnsupportedView = BaseView.extend({
+    template: _.template([
+      '<div>',
+        '<h2 data-l10n-id="incompatible_browser"></h2>',
+        '<p data-l10n-id="powered_by_webrtc"></p>',
+        '<p data-l10n-id="use_latest_firefox" ',
+          'data-l10n-args=\'{"ff_url": "https://www.mozilla.org/firefox/"}\'>',
+        '</p>',
+      '</div>'
+    ].join(""))
+  });
+
   return {
     L10nView: L10nView,
     BaseView: BaseView,
     ConversationView: ConversationView,
     NotificationListView: NotificationListView,
-    NotificationView: NotificationView
+    NotificationView: NotificationView,
+    UnsupportedView: UnsupportedView
   };
 })(_, window.OT, document.webL10n || document.mozL10n);
