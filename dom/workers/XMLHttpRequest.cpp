@@ -564,6 +564,7 @@ private:
   MainThreadRun() MOZ_OVERRIDE
   {
     mProxy->Teardown();
+    MOZ_ASSERT(!mProxy->mSyncLoopTarget);
     return NS_OK;
   }
 };
@@ -953,14 +954,27 @@ Proxy::Teardown()
         NS_RUNTIMEABORT("We're going to hang at shutdown anyways.");
       }
 
+      if (mSyncLoopTarget) {
+        // We have an unclosed sync loop.  Fix that now.
+        nsRefPtr<MainThreadStopSyncLoopRunnable> runnable =
+          new MainThreadStopSyncLoopRunnable(mWorkerPrivate,
+                                             mSyncLoopTarget.forget(),
+                                             false);
+        if (!runnable->Dispatch(nullptr)) {
+          NS_RUNTIMEABORT("We're going to hang at shutdown anyways.");
+        }
+      }
+
       mWorkerPrivate = nullptr;
-      mSyncLoopTarget = nullptr;
       mOutstandingSendCount = 0;
     }
 
     mXHRUpload = nullptr;
     mXHR = nullptr;
   }
+
+  MOZ_ASSERT(!mWorkerPrivate);
+  MOZ_ASSERT(!mSyncLoopTarget);
 }
 
 bool
