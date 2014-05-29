@@ -310,6 +310,60 @@ CPOWProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
     FORWARD(get, (cx, proxy, receiver, id, vp));
 }
 
+static bool
+CPOWToString(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject callee(cx, &args.callee());
+    RootedValue cpowValue(cx);
+    if (!JS_LookupProperty(cx, callee, "__cpow__", &cpowValue))
+        return false;
+
+    if (!cpowValue.isObject() || !IsCPOW(&cpowValue.toObject())) {
+        JS_ReportError(cx, "CPOWToString called on an incompatible object");
+        return false;
+    }
+
+    RootedObject proxy(cx, &cpowValue.toObject());
+    FORWARD(toString, (cx, proxy, args));
+}
+
+bool
+WrapperOwner::toString(JSContext *cx, HandleObject cpow, JS::CallArgs &args)
+{
+    // Ask the other side to call its toString method. Update the callee so that
+    // it points to the CPOW and not to the synthesized CPOWToString function.
+    args.setCallee(ObjectValue(*cpow));
+    if (!call(cx, cpow, args))
+        return false;
+
+    if (!args.rval().isString())
+        return true;
+
+    RootedString cpowResult(cx, args.rval().toString());
+    nsDependentJSString toStringResult;
+    if (!toStringResult.init(cx, cpowResult))
+        return false;
+
+    // We don't want to wrap toString() results for things like the location
+    // object, where toString() is supposed to return a URL and nothing else.
+    nsAutoString result;
+    if (toStringResult[0] == '[') {
+        result.AppendLiteral("[object CPOW ");
+        result += toStringResult;
+        result.AppendLiteral("]");
+    } else {
+        result += toStringResult;
+    }
+
+    JSString *str = JS_NewUCStringCopyN(cx, result.get(), result.Length());
+    if (!str)
+        return false;
+
+    args.rval().setString(str);
+    return true;
+}
+
 bool
 WrapperOwner::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
 		  HandleId id, MutableHandleValue vp)
@@ -331,7 +385,23 @@ WrapperOwner::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
     if (!ok(cx, status))
         return false;
 
-    return fromVariant(cx, val, vp);
+    if (!fromVariant(cx, val, vp))
+        return false;
+
+    if (idstr.EqualsLiteral("toString")) {
+        RootedFunction toString(cx, JS_NewFunction(cx, CPOWToString, 0, 0, proxy, "toString"));
+        if (!toString)
+            return false;
+
+        RootedObject toStringObj(cx, JS_GetFunctionObject(toString));
+
+        if (!JS_DefineProperty(cx, toStringObj, "__cpow__", vp, JSPROP_PERMANENT | JSPROP_READONLY))
+            return false;
+
+        vp.set(ObjectValue(*toStringObj));
+    }
+
+    return true;
 }
 
 bool
