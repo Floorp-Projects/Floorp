@@ -224,7 +224,7 @@ public class SQLiteBridge {
     }
 
     // Do an SQL query, substituting the parameters in the query with the passed
-    // parameters. The parameters are subsituded in order, so named parameters
+    // parameters. The parameters are substituted in order: named parameters
     // are not supported.
     private Cursor internalQuery(String aQuery, String[] aParams)
         throws SQLiteBridgeException {
@@ -237,16 +237,23 @@ public class SQLiteBridge {
     }
 
     /*
-     * The second two parameters here are just provided for compatbility with SQLiteDatabase
-     * Support for them is not currently implemented
+     * The second two parameters here are just provided for compatibility with SQLiteDatabase
+     * Support for them is not currently implemented.
     */
     public static SQLiteBridge openDatabase(String path, SQLiteDatabase.CursorFactory factory, int flags)
         throws SQLiteException {
+        if (factory != null) {
+            throw new RuntimeException("factory not supported.");
+        }
+        if (flags != 0) {
+            throw new RuntimeException("flags not supported.");
+        }
+
         SQLiteBridge bridge = null;
         try {
             bridge = new SQLiteBridge(path);
             bridge.mDbPointer = SQLiteBridge.openDatabase(path);
-        } catch(SQLiteBridgeException ex) {
+        } catch (SQLiteBridgeException ex) {
             // catch and rethrow as a SQLiteException to match SQLiteDatabase
             throw new SQLiteException(ex.getMessage());
         }

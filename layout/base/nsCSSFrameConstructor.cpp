@@ -319,6 +319,15 @@ IsAnonymousFlexOrGridItem(const nsIFrame* aFrame)
          pseudoType == nsCSSAnonBoxes::anonymousGridItem;
 }
 
+// Returns true if aFrame is a flex/grid container.
+static inline bool
+IsFlexOrGridContainer(const nsIFrame* aFrame)
+{
+  const nsIAtom* t = aFrame->GetType();
+  return t == nsGkAtoms::flexContainerFrame ||
+         t == nsGkAtoms::gridContainerFrame;
+}
+
 #if DEBUG
 static void
 AssertAnonymousFlexOrGridItemParent(const nsIFrame* aChild,
@@ -395,8 +404,7 @@ ShouldSuppressFloatingOfDescendants(nsIFrame* aFrame)
 {
   return aFrame->IsFrameOfType(nsIFrame::eMathML) ||
     aFrame->IsBoxFrame() ||
-    aFrame->GetType() == nsGkAtoms::flexContainerFrame ||
-    aFrame->GetType() == nsGkAtoms::gridContainerFrame;
+    ::IsFlexOrGridContainer(aFrame);
 }
 
 /**
@@ -1269,16 +1277,15 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
   // if the containing block hasn't been reflowed yet (so NS_FRAME_FIRST_REFLOW
   // is set) and doesn't have any frames in the aChildListID child list yet.
   const nsFrameList& childList = containingBlock->GetChildList(aChildListID);
-  DebugOnly<nsresult> rv = NS_OK;
   if (childList.IsEmpty() &&
       (containingBlock->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
     // If we're injecting absolutely positioned frames, inject them on the
     // absolute containing block
     if (aChildListID == containingBlock->GetAbsoluteListID()) {
-      rv = containingBlock->GetAbsoluteContainingBlock()->
-           SetInitialChildList(containingBlock, aChildListID, aFrameItems);
+      containingBlock->GetAbsoluteContainingBlock()->
+        SetInitialChildList(containingBlock, aChildListID, aFrameItems);
     } else {
-      rv = containingBlock->SetInitialChildList(aChildListID, aFrameItems);
+      containingBlock->SetInitialChildList(aChildListID, aFrameItems);
     }
   } else {
     // Note that whether the frame construction context is doing an append or
@@ -1310,7 +1317,7 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
                                            notCommonAncestor ?
                                              containingBlock : nullptr) < 0) {
       // no lastChild, or lastChild comes before the new children, so just append
-      rv = mFrameManager->AppendFrames(containingBlock, aChildListID, aFrameItems);
+      mFrameManager->AppendFrames(containingBlock, aChildListID, aFrameItems);
     } else {
       // Try the other children. First collect them to an array so that a
       // reasonable fast binary search can be used to find the insertion point.
@@ -1356,17 +1363,12 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
           break;
         }
       }
-      rv = mFrameManager->InsertFrames(containingBlock, aChildListID,
-                                       insertionPoint, aFrameItems);
+      mFrameManager->InsertFrames(containingBlock, aChildListID,
+                                  insertionPoint, aFrameItems);
     }
   }
 
   NS_POSTCONDITION(aFrameItems.IsEmpty(), "How did that happen?");
-
-  // XXXbz And if NS_FAILED(rv), what?  I guess we need to clean up the list
-  // and deal with all the placeholders... but what if the placeholders aren't
-  // in the document yet?  Could that happen?
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Frames getting lost!");
 }
 
 
@@ -5964,7 +5966,8 @@ nsCSSFrameConstructor::AppendFramesToParent(nsFrameConstructorState&       aStat
   }
 
   // Insert the frames after our aPrevSibling
-  return InsertFrames(aParentFrame, kPrincipalList, aPrevSibling, aFrameList);
+  InsertFrames(aParentFrame, kPrincipalList, aPrevSibling, aFrameList);
+  return NS_OK;
 }
 
 #define UNSET_DISPLAY 255
@@ -7722,9 +7725,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
       NS_ASSERTION(childFrame, "Missing placeholder frame for out of flow.");
       parentFrame = childFrame->GetParent();
     }
-    rv = RemoveFrame(nsLayoutUtils::GetChildListNameFor(childFrame),
-                     childFrame);
-    //XXXfr NS_ENSURE_SUCCESS(rv, rv) ?
+    RemoveFrame(nsLayoutUtils::GetChildListNameFor(childFrame), childFrame);
 
     if (isRoot) {
       mRootElementFrame = nullptr;
@@ -8933,15 +8934,12 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
   FrameConstructionItemList& aItems,
   nsIFrame* aParentFrame)
 {
-  if (aItems.IsEmpty()) {
-    return;
-  }
-  nsIAtom* containerType = aParentFrame->GetType();
-  if (containerType != nsGkAtoms::flexContainerFrame &&
-      containerType != nsGkAtoms::gridContainerFrame) {
+  if (aItems.IsEmpty() ||
+      !::IsFlexOrGridContainer(aParentFrame)) {
     return;
   }
 
+  nsIAtom* containerType = aParentFrame->GetType();
   FCItemIterator iter(aItems);
   do {
     // Advance iter past children that don't want to be wrapped
@@ -10835,9 +10833,10 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
 
   nsIFrame* nextSibling = ::GetInsertNextSibling(aFrame, aPrevSibling);
 
-  // Situation #2 is a flex container frame into which we're inserting new
-  // inline non-replaced children, adjacent to an existing anonymous flex item.
-  if (aFrame->GetType() == nsGkAtoms::flexContainerFrame) {
+  // Situation #2 is a flex or grid container frame into which we're inserting
+  // new inline non-replaced children, adjacent to an existing anonymous
+  // flex or grid item.
+  if (::IsFlexOrGridContainer(aFrame)) {
     FCItemIterator iter(aItems);
 
     // Check if we're adding to-be-wrapped content right *after* an existing

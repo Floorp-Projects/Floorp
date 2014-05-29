@@ -530,4 +530,5 @@ load 973701-2.xhtml
 load 986899.html
 load 1001233.html
 load 1001258-1.html
+pref(layout.css.grid.enabled,true) load 1015562.html
 load outline-on-frameset.xhtml

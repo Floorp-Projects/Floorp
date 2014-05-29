@@ -27,6 +27,9 @@ class JavaScriptParent : public JavaScriptBase<PJavaScriptParent>
 
     mozilla::ipc::IProtocol*
     CloneProtocol(Channel* aChannel, ProtocolCloneContext* aCtx) MOZ_OVERRIDE;
+
+  protected:
+    virtual bool isParent() { return true; }
 };
 
 } // jsipc

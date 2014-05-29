@@ -204,7 +204,7 @@ var gDatabaseEnsured = false;
  * Creates the database schema.
  */
 function createDatabase(db) {
-  return Task.spawn(function create_database_task() {
+  return Task.spawn(function* () {
     yield db.execute(SQL.createItemsTable);
   });
 }
@@ -213,7 +213,7 @@ function createDatabase(db) {
  * Migrates the database schema to a new version.
  */
 function upgradeDatabase(db, oldVersion, newVersion) {
-  return Task.spawn(function upgrade_database_task() {
+  return Task.spawn(function* () {
     for (let v = oldVersion + 1; v <= newVersion; v++) {
       switch(v) {
         case 2:
@@ -236,7 +236,7 @@ function upgradeDatabase(db, oldVersion, newVersion) {
  * @resolves Handle on an opened SQLite database.
  */
 function getDatabaseConnection() {
-  return Task.spawn(function get_database_connection_task() {
+  return Task.spawn(function* () {
     let db = yield Sqlite.openConnection({ path: DB_PATH });
     if (gDatabaseEnsured) {
       throw new Task.Result(db);
@@ -335,7 +335,7 @@ HomeStorage.prototype = {
         ": you cannot save more than " + MAX_SAVE_COUNT + " items at once";
     }
 
-    return Task.spawn(function save_task() {
+    return Task.spawn(function* () {
       let db = yield getDatabaseConnection();
       try {
         yield db.executeTransaction(function save_transaction() {
@@ -375,7 +375,7 @@ HomeStorage.prototype = {
    * @resolves When the operation has completed.
    */
   deleteAll: function() {
-    return Task.spawn(function delete_all_task() {
+    return Task.spawn(function* () {
       let db = yield getDatabaseConnection();
       try {
         let params = { dataset_id: this.datasetId };

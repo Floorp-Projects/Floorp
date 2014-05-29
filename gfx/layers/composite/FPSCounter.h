@@ -13,7 +13,6 @@
 #include "mozilla/RefPtr.h"             // for TemporaryRef, RefCounted
 #include "mozilla/TimeStamp.h"          // for TimeStamp, TimeDuration
 #include "nsTArray.h"                   // for nsAutoTArray, nsTArray_Impl, etc
-#include "VBOArena.h"                   // for gl::VBOArena
 #include "prio.h"                       // for NSPR file i/o
 
 namespace mozilla {

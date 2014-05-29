@@ -121,7 +121,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(c9b6f5a0-cfe8-11e3-9c1a-0800200c9a66)]
+[scriptable, uuid(a485ba50-e208-11e3-8b68-0800200c9a66)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -410,6 +410,11 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     bool isDeadWrapper(in jsval obj);
 
+    /**
+     * Determines whether this object is a cross-process wrapper.
+     */
+    bool isCrossProcessWrapper(in jsval obj);
+
     /*
      * To be called from JS only. This is for Gecko internal use only, and may
      * disappear at any moment.
@@ -574,7 +579,7 @@ interface nsIXPCComponents_Utils : nsISupports
     /*
      * Clone an object into a scope.
      * The 3rd argument is an optional options object:
-     * - cloneFunction: boolean. If true, any function in the value is are
+     * - cloneFunctions: boolean. If true, functions in the value are
      *   wrapped in a function forwarder that appears to be a native function in
      *   the content scope.
      */
