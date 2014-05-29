@@ -15,7 +15,7 @@ const {require} = devtools;
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const {AppProjects} = require("devtools/app-manager/app-projects");
 const {Connection} = require("devtools/client/connection-manager");
-const {AppManager} = require("devtools/app-manager");
+const {AppManager} = require("devtools/webide/app-manager");
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const ProjectEditor = require("projecteditor/projecteditor");
 
@@ -210,37 +210,28 @@ let UI = {
   updateRuntimeList: function() {
     let USBListNode = document.querySelector("#runtime-panel-usbruntime");
     let simulatorListNode = document.querySelector("#runtime-panel-simulators");
-    while (USBListNode.hasChildNodes()) {
-      USBListNode.firstChild.remove();
-    }
+    let customListNode = document.querySelector("#runtime-panel-custom");
 
-    for (let runtime of AppManager.runtimeList.usb) {
-      let panelItemNode = document.createElement("toolbarbutton");
-      panelItemNode.className = "panel-item runtime-panel-item-usbruntime";
-      panelItemNode.setAttribute("label", runtime.getName());
-      USBListNode.appendChild(panelItemNode);
-      let r = runtime;
-      panelItemNode.addEventListener("click", () => {
-        this.hidePanels();
-        this.connectToRuntime(r);
-      }, true);
+    for (let [type, parent] of [
+      ["usb", USBListNode],
+      ["simulator", simulatorListNode],
+      ["custom", customListNode],
+    ]) {
+      while (parent.hasChildNodes()) {
+        parent.firstChild.remove();
+      }
+      for (let runtime of AppManager.runtimeList[type]) {
+        let panelItemNode = document.createElement("toolbarbutton");
+        panelItemNode.className = "panel-item runtime-panel-item-" + type;
+        panelItemNode.setAttribute("label", runtime.getName());
+        parent.appendChild(panelItemNode);
+        let r = runtime;
+        panelItemNode.addEventListener("click", () => {
+          this.hidePanels();
+          this.connectToRuntime(r);
+        }, true);
+      }
     }
-
-    while (simulatorListNode.hasChildNodes()) {
-      simulatorListNode.firstChild.remove();
-    }
-    for (let runtime of AppManager.runtimeList.simulator) {
-      let panelItemNode = document.createElement("toolbarbutton");
-      panelItemNode.className = "panel-item runtime-panel-item-simulator";
-      panelItemNode.setAttribute("label", runtime.getName());
-      simulatorListNode.appendChild(panelItemNode);
-      let r = runtime;
-      panelItemNode.addEventListener("click", () => {
-        this.hidePanels();
-        this.connectToRuntime(r);
-      }, true);
-    }
-
   },
 
   connectToRuntime: function(runtime) {

@@ -16,7 +16,7 @@ const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).de
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm");
 const {AppProjects} = require("devtools/app-manager/app-projects");
 const APP_CREATOR_LIST = "devtools.webide.templatesURL";
-const {AppManager} = require("devtools/app-manager");
+const {AppManager} = require("devtools/webide/app-manager");
 
 let gTemplateList = null;
 
