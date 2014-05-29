@@ -13,9 +13,9 @@ Cu.import("resource://gre/modules/systemlibs.js");
 
 const NETWORKMANAGER_CONTRACTID = "@mozilla.org/network/manager;1";
 const NETWORKMANAGER_CID =
-  Components.ID("{33901e46-33b8-11e1-9869-f46d04d25bcc}");
+  Components.ID("{1ba9346b-53b5-4660-9dc6-58f0b258d0a6}");
 
-const DEFAULT_PREFERRED_NETWORK_TYPE = Ci.nsINetworkInterface.NETWORK_TYPE_WIFI;
+const DEFAULT_PREFERRED_NETWORK_TYPE = Ci.nsINetworkInterface.NETWORK_TYPE_ETHERNET;
 
 XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
                                    "@mozilla.org/settingsService;1",
@@ -276,7 +276,8 @@ NetworkManager.prototype = {
             if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
               gNetworkService.resetRoutingTable(network);
 #ifdef MOZ_B2G_RIL
-            } else if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE) {
+            } else if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE ||
+                       network.type == Ci.nsINetworkInterface.NETWORK_TYPE_ETHERNET) {
               gNetworkService.removeDefaultRoute(network);
 #endif
             }
@@ -367,7 +368,9 @@ NetworkManager.prototype = {
   getNetworkId: function(network) {
     let id = "device";
 #ifdef MOZ_B2G_RIL
-    if (this.isNetworkTypeMobile(network.type)) {
+    if (this.isNetworkTypeEthernet(network.type)) {
+      id = network.name.substring(3);
+    } else if (this.isNetworkTypeMobile(network.type)) {
       if (!(network instanceof Ci.nsIRilNetworkInterface)) {
         throw Components.Exception("Mobile network not an nsIRilNetworkInterface",
                                    Cr.NS_ERROR_INVALID_ARG);
@@ -419,17 +422,51 @@ NetworkManager.prototype = {
 
   _dataDefaultServiceId: null,
 
+  _networkTypePriorityList: [Ci.nsINetworkInterface.NETWORK_TYPE_ETHERNET,
+                             Ci.nsINetworkInterface.NETWORK_TYPE_WIFI,
+                             Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE],
+  get networkTypePriorityList() {
+    return this._networkTypePriorityList;
+  },
+  set networkTypePriorityList(val) {
+    if (val.length != this._networkTypePriorityList.length) {
+      throw "Priority list length should equal to " +
+            this._networkTypePriorityList.length;
+    }
+
+    // Check if types in new priority list are valid and also make sure there
+    // are no duplicate types.
+    let list = [Ci.nsINetworkInterface.NETWORK_TYPE_ETHERNET,
+                Ci.nsINetworkInterface.NETWORK_TYPE_WIFI,
+                Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE];
+    while (list.length) {
+      let type = list.shift();
+      if (val.indexOf(type) == -1) {
+        throw "There is missing network type";
+      }
+    }
+
+    this._networkTypePriorityList = val;
+  },
+
+  getPriority: function(type) {
+    if (this._networkTypePriorityList.indexOf(type) == -1) {
+      // 0 indicates the lowest priority.
+      return 0;
+    }
+
+    return this._networkTypePriorityList.length -
+           this._networkTypePriorityList.indexOf(type);
+  },
+
   _preferredNetworkType: DEFAULT_PREFERRED_NETWORK_TYPE,
   get preferredNetworkType() {
     return this._preferredNetworkType;
   },
   set preferredNetworkType(val) {
-#ifdef MOZ_B2G_RIL
     if ([Ci.nsINetworkInterface.NETWORK_TYPE_WIFI,
-         Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE].indexOf(val) == -1) {
-#else
-    if (val != Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
-#endif
+         Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE,
+         Ci.nsINetworkInterface.NETWORK_TYPE_ETHERNET].indexOf(val) == -1) {
       throw "Invalid network type";
     }
     this._preferredNetworkType = val;
@@ -459,6 +496,10 @@ NetworkManager.prototype = {
   isNetworkTypeMobile: function(type) {
     return (type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE ||
             this.isNetworkTypeSecondaryMobile(type));
+  },
+
+  isNetworkTypeEthernet: function(type) {
+    return (type == Ci.nsINetworkInterface.NETWORK_TYPE_ETHERNET);
   },
 
   setExtraHostRoute: function(network) {
@@ -601,10 +642,22 @@ NetworkManager.prototype = {
         defaultDataNetwork = network;
       }
 #endif
-      this.active = network;
       if (network.type == this.preferredNetworkType) {
+        this.active = network;
         debug("Found our preferred type of network: " + network.name);
         break;
+      }
+
+      // Initialize the active network with the first connected network.
+      if (!this.active) {
+        this.active = network;
+        continue;
+      }
+
+      // Compare the prioriy between two network types. If found incoming
+      // network with higher priority, replace the active network.
+      if (this.getPriority(this.active.type) < this.getPriority(network.type)) {
+        this.active = network;
       }
     }
     if (this.active) {
@@ -680,7 +733,8 @@ NetworkManager.prototype = {
     // the function will return null so that it won't trigger type change event
     // in NetworkInformation API.
     if (network.type != Ci.nsINetworkInterface.NETWORK_TYPE_WIFI &&
-        network.type != Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE) {
+        network.type != Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE &&
+        network.type != Ci.nsINetworkInterface.NETWORK_TYPE_ETHERNET) {
       return null;
     }
 
@@ -693,6 +747,8 @@ NetworkManager.prototype = {
         return CONNECTION_TYPE_WIFI;
       case Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE:
         return CONNECTION_TYPE_CULLULAR;
+      case Ci.nsINetworkInterface.NETWORK_TYPE_ETHERNET:
+        return CONNECTION_TYPE_ETHERNET;
     }
   },
 
