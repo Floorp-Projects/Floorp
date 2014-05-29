@@ -203,13 +203,13 @@ function updateBanner(messages) {
       onclick: function() {
         let parentId = gChromeWin.BrowserApp.selectedTab.id;
         gChromeWin.BrowserApp.addTab(message.url, { parentId: parentId });
-        UITelemetry.addEvent("action.1", "banner", null, id);
+        UITelemetry.addEvent("action.1", "banner", null, message.id);
       },
       ondismiss: function() {
         // Remove this snippet from the banner, and store its id so we'll never show it again.
         Home.banner.remove(id);
         removeSnippet(message.id);
-        UITelemetry.addEvent("cancel.1", "banner", null, id);
+        UITelemetry.addEvent("cancel.1", "banner", null, message.id);
       },
       onshown: function() {
         // 10% of the time, record the snippet id and a timestamp
@@ -359,14 +359,14 @@ function loadSyncPromoBanner() {
           Home.banner.remove(id);
           Accounts.launchSetup();
 
-          UITelemetry.addEvent("action.1", "banner", null, id);
+          UITelemetry.addEvent("action.1", "banner", null, "syncpromo");
         },
         ondismiss: function() {
           // Remove the sync promo message from the banner and never try to show it again.
           Home.banner.remove(id);
           Services.prefs.setBoolPref("browser.snippets.syncPromo.enabled", false);
 
-          UITelemetry.addEvent("cancel.1", "banner", null, id);
+          UITelemetry.addEvent("cancel.1", "banner", null, "syncpromo");
         }
       });
     },
