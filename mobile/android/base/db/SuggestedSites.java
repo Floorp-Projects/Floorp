@@ -16,8 +16,9 @@ import android.util.Log;
 import java.io.IOException;
 import java.lang.ref.SoftReference;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -88,11 +89,11 @@ public class SuggestedSites {
     }
 
     private final Context context;
-    private SoftReference<List<Site>> cachedSites;
+    private SoftReference<Map<String, Site>> cachedSites;
 
     public SuggestedSites(Context appContext) {
         context = appContext;
-        cachedSites = new SoftReference<List<Site>>(null);
+        cachedSites = new SoftReference<Map<String, Site>>(null);
     }
 
     private String loadFromFile() {
@@ -113,7 +114,7 @@ public class SuggestedSites {
      * source or standard file location. This will be called on every
      * cache miss during a {@code get()} call.
      */
-    private List<Site> refresh() {
+    private Map<String, Site> refresh() {
         Log.d(LOGTAG, "Refreshing tiles from file");
 
         String jsonString = loadFromFile();
@@ -122,22 +123,23 @@ public class SuggestedSites {
             jsonString = loadFromResource();
         }
 
-        List<Site> sites = null;
+        Map<String, Site> sites = null;
 
         try {
             final JSONArray jsonSites = new JSONArray(jsonString);
-            sites = new ArrayList<Site>(jsonSites.length());
+            sites = new LinkedHashMap<String, Site>(jsonSites.length());
 
             final int count = jsonSites.length();
             for (int i = 0; i < count; i++) {
                 final JSONObject jsonSite = (JSONObject) jsonSites.get(i);
+                final String url = jsonSite.getString(JSON_KEY_URL);
 
-                final Site site = new Site(jsonSite.getString(JSON_KEY_URL),
+                final Site site = new Site(url,
                                            jsonSite.getString(JSON_KEY_TITLE),
                                            jsonSite.getString(JSON_KEY_IMAGE_URL),
                                            jsonSite.getString(JSON_KEY_BG_COLOR));
 
-                sites.add(site);
+                sites.put(url, site);
             }
 
             Log.d(LOGTAG, "Successfully parsed suggested sites.");
@@ -147,7 +149,7 @@ public class SuggestedSites {
         }
 
         // Update cached list of sites
-        cachedSites = new SoftReference<List<Site>>(Collections.unmodifiableList(sites));
+        cachedSites = new SoftReference<Map<String, Site>>(Collections.unmodifiableMap(sites));
 
         // Return the refreshed list
         return sites;
@@ -182,7 +184,7 @@ public class SuggestedSites {
             return cursor;
         }
 
-        List<Site> sites = cachedSites.get();
+        Map<String, Site> sites = cachedSites.get();
         if (sites == null) {
             Log.d(LOGTAG, "No cached sites, refreshing.");
             sites = refresh();
@@ -197,9 +199,11 @@ public class SuggestedSites {
         final int sitesCount = sites.size();
         Log.d(LOGTAG, "Number of suggested sites: " + sitesCount);
 
-        final int count = Math.min(limit, sitesCount);
-        for (int i = 0; i < count; i++) {
-            final Site site = sites.get(i);
+        final int maxCount = Math.min(limit, sitesCount);
+        for (Site site : sites.values()) {
+            if (cursor.getCount() == maxCount) {
+                break;
+            }
 
             if (excludeUrls != null && excludeUrls.contains(site.url)) {
                 continue;
