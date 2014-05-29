@@ -10,10 +10,24 @@
     <link rel="stylesheet" type="text/css" href="shared/css/conversation.css">
  </head>
   <body onload="loop.conversation.init();">
+    <div id="conversation" class="conversation">
+      <div class="media nested">
+        <div class="remote">
+          <div id="incoming"></div>
+        </div>
+        <div class="local">
+          <div id="outgoing"></div>
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript" src="shared/libs/sdk.js"></script>
     <script type="text/javascript" src="shared/libs/jquery-2.1.0.js"></script>
     <script type="text/javascript" src="shared/libs/lodash-2.4.1.js"></script>
     <script type="text/javascript" src="shared/libs/backbone-1.1.2.js"></script>
-    <script type="text/javascript" src="js/client.js"></script>
+    <script type="text/javascript" src="shared/js/client.js"></script>
+    <script type="text/javascript" src="shared/js/models.js"></script>
+    <script type="text/javascript" src="shared/js/router.js"></script>
+    <script type="text/javascript" src="shared/js/views.js"></script>
     <script type="text/javascript" src="js/conversation.js"></script>
   </body>
 </html>
