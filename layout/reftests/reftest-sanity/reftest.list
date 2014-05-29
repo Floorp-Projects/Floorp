@@ -160,4 +160,9 @@ fails fuzzy-if(false,2,1) random-if(Android) == fuzzy.html fuzzy-ref.html
 fails == reftest-no-paint.html reftest-no-paint-ref.html
 
 skip-if(!browserIsRemote) == async-scroll-1a.html async-scroll-1-ref.html
+
+# Disable low-res painting for this test as it will cause more to
+# be drawn than we want.
+default-preferences pref(layers.low-precision-buffer,false)
 skip-if(!browserIsRemote) != async-scroll-1b.html async-scroll-1-ref.html
+default-preferences
