@@ -160,6 +160,15 @@ public class SuggestedSites {
         return prefs.getBoolean(GeckoPreferences.PREFS_SUGGESTED_SITES, true);
     }
 
+    private Site getSiteForUrl(String url) {
+        Map<String, Site> sites = cachedSites.get();
+        if (sites == null) {
+            return null;
+        }
+
+        return sites.get(url);
+    }
+
     /**
      * Returns a {@code Cursor} with the list of suggested websites.
      *
@@ -221,5 +230,19 @@ public class SuggestedSites {
                                   BrowserContract.SuggestedSites.CONTENT_URI);
 
         return cursor;
+    }
+
+    public boolean contains(String url) {
+        return (getSiteForUrl(url) != null);
+    }
+
+    public String getImageUrlForUrl(String url) {
+        final Site site = getSiteForUrl(url);
+        return (site != null ? site.imageUrl : null);
+    }
+
+    public String getBackgroundColorForUrl(String url) {
+        final Site site = getSiteForUrl(url);
+        return (site != null ? site.bgColor : null);
     }
 }
