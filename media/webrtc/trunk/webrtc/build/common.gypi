@@ -129,6 +129,8 @@
 
         # lazily allocate the ~4MB of trace message buffers if set
         'enable_lazy_trace_alloc%': 0,
+
+        'include_ndk_cpu_features%': 0,
       }, {  # Settings for the standalone (not-in-Chromium) build.
         # TODO(andrew): For now, disable the Chrome plugins, which causes a
         # flood of chromium-style warnings. Investigate enabling them:
@@ -139,6 +141,7 @@
         'include_internal_audio_device%': 1,
         'include_internal_video_capture%': 1,
         'include_internal_video_render%': 1,
+        'include_ndk_cpu_features%': 0,
       }],
       ['build_with_libjingle==1', {
         'include_tests%': 0,
