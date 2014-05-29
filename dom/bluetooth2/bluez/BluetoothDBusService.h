@@ -51,15 +51,16 @@ public:
 
   virtual nsresult StopInternal() MOZ_OVERRIDE;
 
-  virtual nsresult GetDefaultAdapterPathInternal(
-                                             BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  virtual nsresult
+  GetAdaptersInternal(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
-  virtual nsresult GetConnectedDevicePropertiesInternal(uint16_t aServiceUuid,
-                                             BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  virtual nsresult
+  GetConnectedDevicePropertiesInternal(uint16_t aServiceUuid,
+                                       BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
-  virtual nsresult GetPairedDevicePropertiesInternal(
-                                     const nsTArray<nsString>& aDeviceAddresses,
-                                     BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  virtual nsresult
+  GetPairedDevicePropertiesInternal(const nsTArray<nsString>& aDeviceAddresses,
+                                    BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
   virtual nsresult StartDiscoveryInternal(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
