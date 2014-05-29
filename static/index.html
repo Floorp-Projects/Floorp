@@ -27,18 +27,21 @@
       </p>
     </form>
 
-    <div id="call" class="conversation hide">
+    <div id="conversation" class="conversation hide">
       <nav class="controls">
         <button class="btn" data-l10n-id="start">Start</button>
         <button class="btn" data-l10n-id="stop">Stop</button>
       </nav>
-      <div class="media nested">
-        <video class="remote" src="http://v2v.cc/~j/theora_testsuite/320x240.ogg"></video>
-        <video class="local" src="http://v2v.cc/~j/theora_testsuite/320x240.ogg"></video>
+      <!-- XXX: We really want .nested instead of .side-by-side, but partner SDK
+                makes it rather difficult. To be investigated later. -->
+      <div class="media side-by-side">
+        <div id="incoming" class="remote"></div>
+        <div id="outgoing" class="local"></div>
       </div>
     </div>
 
     <!-- libs -->
+    <script src="http://static.opentok.com/webrtc/v2.0/js/TB.min.js"></script>
     <script type="text/javascript" src="shared/libs/webl10n-20130617.js"></script>
     <script type="text/javascript" src="shared/libs/jquery-2.1.0.js"></script>
     <script type="text/javascript" src="shared/libs/lodash-2.4.1.js"></script>
