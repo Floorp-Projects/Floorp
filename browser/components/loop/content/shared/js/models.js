@@ -14,6 +14,7 @@ loop.shared.models = (function() {
    */
   var ConversationModel = Backbone.Model.extend({
     defaults: {
+      ongoing:      false,     // Ongoing call flag
       callerId:     undefined, // Loop caller id
       loopToken:    undefined, // Loop conversation token
       loopVersion:  undefined, // Loop version for /calls/ information. This
@@ -23,6 +24,35 @@ loop.shared.models = (function() {
       sessionId:    undefined, // OT session id
       sessionToken: undefined, // OT session token
       apiKey:       undefined  // OT api key
+    },
+
+    /**
+     * SDK object.
+     * @type {OT}
+     */
+    sdk: undefined,
+
+    /**
+     * SDK session object.
+     * @type {XXX}
+     */
+    session: undefined,
+
+    /**
+     * Constructor.
+     *
+     * Required options:
+     * - {OT} sdk: SDK object.
+     *
+     * @param  {Object} attributes Attributes object.
+     * @param  {Object} options    Options object.
+     */
+    initialize: function(attributes, options) {
+      options = options || {};
+      if (!options.sdk) {
+        throw new Error("missing required sdk");
+      }
+      this.sdk = options.sdk;
     },
 
     /**
@@ -104,7 +134,90 @@ loop.shared.models = (function() {
         apiKey:       sessionData.apiKey
       }).trigger("session:ready", this);
       return this;
-    }
+    },
+
+    /**
+     * Starts a SDK session and subscribe to call events.
+     */
+    startSession: function() {
+      if (!this.isSessionReady()) {
+        throw new Error("Can't start session as it's not ready");
+      }
+      this.session = this.sdk.initSession(this.get("sessionId"));
+      this.session.connect(this.get("apiKey"), this.get("sessionToken"));
+      this.listenTo(this.session, "sessionConnected", this._sessionConnected);
+      this.listenTo(this.session, "streamCreated", this._streamCreated);
+      this.listenTo(this.session, "connectionDestroyed",
+                                  this._connectionDestroyed);
+      this.listenTo(this.session, "sessionDisconnected",
+                                  this._sessionDisconnected);
+      this.listenTo(this.session, "networkDisconnected",
+                                  this._networkDisconnected);
+    },
+
+    /**
+     * Ends current session.
+     */
+    endSession: function() {
+      this.session.disconnect();
+      this.set("ongoing", false);
+    },
+
+    /**
+     * Session is created.
+     * http://tokbox.com/opentok/libraries/client/js/reference/SessionConnectEvent.html
+     *
+     * @param  {SessionConnectEvent} event
+     */
+    _sessionConnected: function(event) {
+      this.trigger("session:connected", event);
+      this.set("ongoing", true);
+    },
+
+    /**
+     * New created streams are available.
+     * http://tokbox.com/opentok/libraries/client/js/reference/StreamEvent.html
+     *
+     * @param  {StreamEvent} event
+     */
+    _streamCreated: function(event) {
+      this.trigger("session:stream-created", event);
+    },
+
+    /**
+     * Local user hung up.
+     * http://tokbox.com/opentok/libraries/client/js/reference/SessionDisconnectEvent.html
+     *
+     * @param  {SessionDisconnectEvent} event
+     */
+    _sessionDisconnected: function(event) {
+      this.trigger("session:ended");
+      this.endSession();
+    },
+
+    /**
+     * Peer hung up. Disconnects local session.
+     * http://tokbox.com/opentok/libraries/client/js/reference/ConnectionEvent.html
+     *
+     * @param  {ConnectionEvent} event
+     */
+    _connectionDestroyed: function(event) {
+      this.trigger("session:peer-hungup", {
+        connectionId: event.connection.connectionId
+      });
+      this.endSession();
+    },
+
+    /**
+     * Network was disconnected.
+     * http://tokbox.com/opentok/libraries/client/js/reference/ConnectionEvent.html
+     *
+     * @param {ConnectionEvent} event
+     */
+    _networkDisconnected: function(event) {
+      this.trigger("session:network-disconnected");
+      this.endSession();
+    },
   });
 
   /**

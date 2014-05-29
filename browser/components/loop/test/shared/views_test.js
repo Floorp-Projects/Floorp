@@ -41,112 +41,133 @@ describe("loop.shared.views", function() {
   });
 
   describe("ConversationView", function() {
-    var fakeSDK, fakeSession;
+    var fakeSDK, fakeSessionData, fakeSession, model;
 
     beforeEach(function() {
+      fakeSessionData = {
+        sessionId:    "sessionId",
+        sessionToken: "sessionToken",
+        apiKey:       "apiKey"
+      };
       fakeSession = _.extend({
+        connection: {connectionId: 42},
         connect: sandbox.spy(),
         disconnect: sandbox.spy(),
-        unpublish: sandbox.spy()
+        publish: sandbox.spy(),
+        unpublish: sandbox.spy(),
+        subscribe: sandbox.spy()
       }, Backbone.Events);
       fakeSDK = {
         initPublisher: sandbox.spy(),
         initSession: sandbox.stub().returns(fakeSession)
       };
+      model = new sharedModels.ConversationModel(fakeSessionData, {
+        sdk: fakeSDK
+      });
     });
 
     describe("#initialize", function() {
-      it("should require an sdk object", function() {
+      it("should require a sdk object", function() {
         expect(function() {
           new sharedViews.ConversationView();
         }).to.Throw(Error, /sdk/);
       });
 
-      describe("constructed", function() {
-        var model, view;
+      it("should start a session", function() {
+        sandbox.stub(model, "startSession");
 
-        beforeEach(function() {
-          model = new sharedModels.ConversationModel();
-          view = new sharedViews.ConversationView({
-            sdk: fakeSDK,
-            model: model
-          });
-        });
+        new sharedViews.ConversationView({sdk: fakeSDK, model: model});
 
-        it("should initiate a session", function() {
-          sinon.assert.calledOnce(fakeSession.connect);
-        });
-
-        describe("sessionDisconnected event received", function() {
-          it("should trigger a session:ended event", function(done) {
-            model.once("session:ended", function() {
-              done();
-            });
-
-            fakeSession.trigger("sessionDisconnected", {reason: "ko"});
-          });
-        });
-
-        describe("connectionDestroyed event received", function() {
-          var fakeEvent = {reason: "ko", connection: {connectionId: 42}};
-
-          it("should trigger a session:peer-hungup model event",
-            function(done) {
-              model.once("session:peer-hungup", function(event) {
-                expect(event.connectionId).eql(42);
-                done();
-              });
-
-              fakeSession.trigger("connectionDestroyed", fakeEvent);
-            });
-
-          it("should disconnect the session", function() {
-            fakeSession.trigger("connectionDestroyed", fakeEvent);
-
-            sinon.assert.calledOnce(fakeSession.unpublish);
-          });
-
-          it("should unpublish current stream publisher", function() {
-            fakeSession.trigger("connectionDestroyed", fakeEvent);
-
-            sinon.assert.calledOnce(fakeSession.unpublish);
-          });
-        });
-
-        describe("networkDisconnected event received", function() {
-          it("should trigger a session:network-disconnected event",
-            function(done) {
-              model.once("session:network-disconnected", function() {
-                done();
-              });
-
-              fakeSession.trigger("networkDisconnected");
-            });
-
-          it("should disconnect the session", function() {
-            fakeSession.trigger("networkDisconnected", {reason: "ko"});
-
-            sinon.assert.calledOnce(fakeSession.unpublish);
-          });
-
-          it("should unpublish current stream publisher", function() {
-            fakeSession.trigger("networkDisconnected", {reason: "ko"});
-
-            sinon.assert.calledOnce(fakeSession.unpublish);
-          });
-        });
+        sinon.assert.calledOnce(model.startSession);
       });
     });
 
-    describe("#hangup", function() {
-      it("should disconnect the session", function() {
-        var model = new sharedModels.ConversationModel();
-        var view = new sharedViews.ConversationView({
-          sdk: fakeSDK,
-          model: model
+    describe("constructed", function() {
+      describe("#hangup", function() {
+        it("should disconnect the session", function() {
+          var view = new sharedViews.ConversationView({
+            sdk: fakeSDK,
+            model: model
+          });
+          sandbox.stub(model, "endSession");
+
+          view.hangup({preventDefault: function() {}});
+
+          sinon.assert.calledOnce(model.endSession);
         });
-        view.hangup({preventDefault: function() {}});
-        sinon.assert.calledOnce(fakeSession.disconnect);
+      });
+
+      describe("#publish", function() {
+        it("should publish local stream", function() {
+          var view = new sharedViews.ConversationView({
+            sdk: fakeSDK,
+            model: model
+          });
+
+          view.publish();
+
+          sinon.assert.calledOnce(fakeSDK.initPublisher);
+          sinon.assert.calledOnce(fakeSession.publish);
+        });
+      });
+
+      describe("#unpublish", function() {
+        it("should unpublish local stream", function() {
+          var view = new sharedViews.ConversationView({
+            sdk: fakeSDK,
+            model: model
+          });
+
+          view.unpublish();
+
+          sinon.assert.calledOnce(fakeSession.unpublish);
+        });
+      });
+
+      describe("Model events", function() {
+        var view;
+
+        beforeEach(function() {
+          sandbox.stub(sharedViews.ConversationView.prototype, "publish");
+          sandbox.stub(sharedViews.ConversationView.prototype, "unpublish");
+          view = new sharedViews.ConversationView({sdk: fakeSDK, model: model});
+        });
+
+        it("should publish local stream on session:connected", function() {
+          model.trigger("session:connected");
+
+          sinon.assert.calledOnce(view.publish);
+        });
+
+        it("should publish remote streams on session:stream-created",
+          function() {
+            var s1 = {connection: {connectionId: 42}};
+            var s2 = {connection: {connectionId: 43}};
+
+            model.trigger("session:stream-created", {streams: [s1, s2]});
+
+            sinon.assert.calledOnce(fakeSession.subscribe);
+            sinon.assert.calledWith(fakeSession.subscribe, s2);
+          });
+
+        it("should unpublish local stream on session:ended", function() {
+          model.trigger("session:ended");
+
+          sinon.assert.calledOnce(view.unpublish);
+        });
+
+        it("should unpublish local stream on session:peer-hungup", function() {
+          model.trigger("session:peer-hungup");
+
+          sinon.assert.calledOnce(view.unpublish);
+        });
+
+        it("should unpublish local stream on session:network-disconnected",
+          function() {
+            model.trigger("session:network-disconnected");
+
+            sinon.assert.calledOnce(view.unpublish);
+          });
       });
     });
   });
