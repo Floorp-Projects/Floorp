@@ -16,7 +16,35 @@ loop.shared.router = (function(l10n) {
    * @link http://mikeygee.com/blog/backbone.html
    */
   var BaseRouter = Backbone.Router.extend({
-    activeView: undefined,
+    /**
+     * Active view.
+     * @type {loop.shared.views.BaseView}
+     */
+    _activeView: undefined,
+
+    /**
+     * Notifications dispatcher.
+     * @type {loop.shared.views.NotificationListView}
+     */
+    _notifier: undefined,
+
+    /**
+     * Constructor.
+     *
+     * Required options:
+     * - {loop.shared.views.NotificationListView} notifier Notifier view.
+     *
+     * @param  {Object} options Options object.
+     */
+    constructor: function(options) {
+      options = options || {};
+      if (!options.notifier) {
+        throw new Error("missing required notifier");
+      }
+      this._notifier = options.notifier;
+
+      Backbone.Router.apply(this, arguments);
+    },
 
     /**
      * Loads and render current active view.
@@ -24,11 +52,11 @@ loop.shared.router = (function(l10n) {
      * @param {loop.shared.views.BaseView} view View.
      */
     loadView : function(view) {
-      if (this.activeView) {
-        this.activeView.remove();
+      if (this._activeView) {
+        this._activeView.remove();
       }
-      this.activeView = view.render().show();
-      this.updateView(this.activeView.$el);
+      this._activeView = view.render().show();
+      this.updateView(this._activeView.$el);
     },
 
     /**
@@ -53,19 +81,12 @@ loop.shared.router = (function(l10n) {
     _conversation: undefined,
 
     /**
-     * Notifications dispatcher.
-     * @type {loop.shared.views.NotificationListView}
-     */
-    _notifier: undefined,
-
-    /**
      * Constructor. Defining it as `constructor` allows implementing an
      * `initialize` method in child classes without needing calling this parent
      * one. See http://backbonejs.org/#Model-constructor (same for Router)
      *
      * Required options:
      * - {loop.shared.model.ConversationModel}    model    Conversation model.
-     * - {loop.shared.views.NotificationListView} notifier Notifier component.
      *
      * @param {Object} options Options object.
      */
@@ -75,11 +96,6 @@ loop.shared.router = (function(l10n) {
         throw new Error("missing required conversation");
       }
       this._conversation = options.conversation;
-
-      if (!options.notifier) {
-        throw new Error("missing required notifier");
-      }
-      this._notifier = options.notifier;
 
       this.listenTo(this._conversation, "session:ready", this._onSessionReady);
       this.listenTo(this._conversation, "session:ended", this._onSessionEnded);
