@@ -138,7 +138,7 @@ loop.shared.views = (function(_, OT, l10n) {
     /**
      * Subscribes and attaches each created stream to a DOM element.
      *
-     * XXX: for now we only support a single remote stream, hence a singe DOM
+     * XXX: for now we only support a single remote stream, hence a single DOM
      *      element.
      *
      * http://tokbox.com/opentok/libraries/client/js/reference/StreamEvent.html
@@ -265,6 +265,20 @@ loop.shared.views = (function(_, OT, l10n) {
     },
 
     /**
+     * Adds a new notification to the stack using an l10n message identifier,
+     * triggering rendering of it.
+     *
+     * @param  {String} messageId L10n message id
+     * @param  {String} level     Notification level
+     */
+    notifyL10n: function(messageId, level) {
+      this.notify({
+        message: l10n.get(messageId),
+        level: level
+      });
+    },
+
+    /**
      * Adds a warning notification to the stack and renders it.
      *
      * @return {String} message
@@ -274,12 +288,30 @@ loop.shared.views = (function(_, OT, l10n) {
     },
 
     /**
+     * Adds a l10n warning notification to the stack and renders it.
+     *
+     * @param  {String} messageId L10n message id
+     */
+    warnL10n: function(messageId) {
+      this.warn(l10n.get(messageId));
+    },
+
+    /**
      * Adds an error notification to the stack and renders it.
      *
      * @return {String} message
      */
     error: function(message) {
       this.notify({level: "error", message: message});
+    },
+
+    /**
+     * Adds a l10n rror notification to the stack and renders it.
+     *
+     * @param  {String} messageId L10n message id
+     */
+    errorL10n: function(messageId) {
+      this.error(l10n.get(messageId));
     },
 
     /**

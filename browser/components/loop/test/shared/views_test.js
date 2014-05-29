@@ -215,6 +215,9 @@ describe("loop.shared.views", function() {
     var coll, notifData, testNotif;
 
     beforeEach(function() {
+      sandbox.stub(l10n, "get", function(x) {
+        return "translated:" + x;
+      });
       notifData = {level: "error", message: "plop"};
       testNotif = new sharedModels.NotificationModel(notifData);
       coll = new sharedModels.NotificationCollection();
@@ -269,6 +272,33 @@ describe("loop.shared.views", function() {
       });
     });
 
+    describe("#notifyL10n", function() {
+      var view;
+
+      beforeEach(function() {
+        view = new sharedViews.NotificationListView({collection: coll});
+      });
+
+      it("should translate a message string identifier", function() {
+        view.notifyL10n("fakeId", "warning");
+
+        sinon.assert.calledOnce(l10n.get);
+        sinon.assert.calledWithExactly(l10n.get, "fakeId");
+      });
+
+      it("should notify end user with the provided message", function() {
+        sandbox.stub(view, "notify");
+
+        view.notifyL10n("fakeId", "warning");
+
+        sinon.assert.calledOnce(view.notify);
+        sinon.assert.calledWithExactly(view.notify, {
+          message: "translated:fakeId",
+          level: "warning"
+        });
+      });
+    });
+
     describe("#warn", function() {
       it("should add a warning notification to the stack", function() {
         var view = new sharedViews.NotificationListView({collection: coll});
@@ -281,6 +311,21 @@ describe("loop.shared.views", function() {
       });
     });
 
+    describe("#warnL10n", function() {
+      it("should warn using a l10n string id", function() {
+        var view = new sharedViews.NotificationListView({collection: coll});
+        sandbox.stub(view, "notify");
+
+        view.warnL10n("fakeId");
+
+        sinon.assert.called(view.notify);
+        sinon.assert.calledWithExactly(view.notify, {
+          message: "translated:fakeId",
+          level: "warning"
+        });
+      });
+    });
+
     describe("#error", function() {
       it("should add an error notification to the stack", function() {
         var view = new sharedViews.NotificationListView({collection: coll});
@@ -290,6 +335,21 @@ describe("loop.shared.views", function() {
         expect(coll).to.have.length.of(1);
         expect(coll.at(0).get("level")).eql("error");
         expect(coll.at(0).get("message")).eql("wrong");
+      });
+    });
+
+    describe("#errorL10n", function() {
+      it("should notify an error using a l10n string id", function() {
+        var view = new sharedViews.NotificationListView({collection: coll});
+        sandbox.stub(view, "notify");
+
+        view.errorL10n("fakeId");
+
+        sinon.assert.called(view.notify);
+        sinon.assert.calledWithExactly(view.notify, {
+          message: "translated:fakeId",
+          level: "error"
+        });
       });
     });
 

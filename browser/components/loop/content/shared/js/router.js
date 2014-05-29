@@ -9,8 +9,6 @@ loop.shared = loop.shared || {};
 loop.shared.router = (function(l10n) {
   "use strict";
 
-  var __ = l10n.get;
-
   /**
    * Base Router. Allows defining a main active view and ease toggling it when
    * the active route changes.
@@ -114,7 +112,7 @@ loop.shared.router = (function(l10n) {
      * Session has ended. Notifies the user and ends the call.
      */
     _onSessionEnded: function() {
-      this._notifier.warn(__("call_has_ended"));
+      this._notifier.warnL10n("call_has_ended");
       this.endCall();
     },
 
@@ -127,7 +125,7 @@ loop.shared.router = (function(l10n) {
      * @param {Object} event
      */
     _onPeerHungup: function() {
-      this._notifier.warn(__("peer_ended_conversation"));
+      this._notifier.warnL10n("peer_ended_conversation");
       this.endCall();
     },
 
@@ -135,7 +133,7 @@ loop.shared.router = (function(l10n) {
      * Network disconnected. Notifies the user and ends the call.
      */
     _onNetworkDisconnected: function() {
-      this._notifier.warn(__("network_disconnected"));
+      this._notifier.warnL10n("network_disconnected");
       this.endCall();
     }
   });

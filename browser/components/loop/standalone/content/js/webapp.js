@@ -80,7 +80,7 @@ loop.webapp = (function($, OT, webl10n) {
 
     _onSessionError: function(error) {
       console.error(error);
-      this.notifier.error(__("unable_retrieve_call_info"));
+      this.notifier.errorL10n("unable_retrieve_call_info");
     },
 
     /**
@@ -127,7 +127,7 @@ loop.webapp = (function($, OT, webl10n) {
      */
     startCall: function() {
       if (!this._conversation.get("loopToken")) {
-        this._notifier.error(__("missing_conversation_info"));
+        this._notifier.errorL10n("missing_conversation_info");
         this.navigate("home", {trigger: true});
       } else {
         this.navigate("call/ongoing/" + this._conversation.get("loopToken"), {
