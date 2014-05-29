@@ -218,39 +218,13 @@ struct ProgramProfileOGL
    */
   static ProgramProfileOGL GetProfileFor(ShaderConfigOGL aConfig);
 
-  /**
-   * These two methods lookup the location of a uniform and attribute,
-   * respectively. Returns -1 if the named uniform/attribute does not
-   * have a location for the shaders represented by this profile.
-   */
-  GLint LookupAttributeLocation(const char* aName)
-  {
-    for (uint32_t i = 0; i < mAttributes.Length(); ++i) {
-      if (strcmp(mAttributes[i].mName, aName) == 0) {
-        return mAttributes[i].mLocation;
-      }
-    }
-
-    return -1;
-  }
-
-  // represents the name and location of a uniform or attribute
-  struct Argument
-  {
-    Argument(const char* aName) :
-      mName(aName) {}
-    const char* mName;
-    GLint mLocation;
-  };
-
   // the source code for the program's shaders
   std::string mVertexShaderString;
   std::string mFragmentShaderString;
 
   KnownUniform mUniforms[KnownUniform::KnownUniformCount];
-  nsTArray<Argument> mAttributes;
   nsTArray<const char *> mDefines;
-  uint32_t mTextureCount;
+  size_t mTextureCount;
 
   ProgramProfileOGL() :
     mTextureCount(0)
@@ -301,13 +275,6 @@ public:
    */
   bool CreateProgram(const char *aVertexShaderString,
                      const char *aFragmentShaderString);
-
-  /**
-   * Lookup the location of an attribute
-   */
-  GLint AttribLocation(const char* aName) {
-    return mProfile.LookupAttributeLocation(aName);
-  }
 
   /**
    * The following set of methods set a uniform argument to the shader program.
@@ -414,9 +381,9 @@ public:
     SetUniform(KnownUniform::TexturePass2, aFlag ? 1 : 0);
   }
 
-  // the names of attributes
-  static const char* const VertexCoordAttrib;
-  static const char* const TexCoordAttrib;
+  size_t GetTextureCount() const {
+    return mProfile.mTextureCount;
+  }
 
 protected:
   RefPtr<GLContext> mGL;
