@@ -67,12 +67,13 @@ describe("loop.panel", function() {
             cb("fake error");
           });
         var view = new loop.panel.PanelView();
-        sandbox.stub(view.notifier, "notify");
+        sandbox.stub(view.notifier, "errorL10n");
 
         view.getCallUrl({preventDefault: sandbox.spy()});
 
-        sinon.assert.calledOnce(view.notifier.notify);
-        sinon.assert.calledWithMatch(view.notifier.notify, {level: "error"});
+        sinon.assert.calledOnce(view.notifier.errorL10n);
+        sinon.assert.calledWithExactly(view.notifier.errorL10n,
+                                       "unable_retrieve_url");
       });
     });
 
