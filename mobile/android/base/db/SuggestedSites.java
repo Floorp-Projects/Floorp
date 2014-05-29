@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.json.JSONArray;
@@ -86,6 +87,7 @@ public class SuggestedSites {
 
     private final Context context;
     private Map<String, Site> cachedSites;
+    private Locale cachedLocale;
 
     public SuggestedSites(Context appContext) {
         context = appContext;
@@ -145,6 +147,7 @@ public class SuggestedSites {
 
         // Update cached list of sites
         cachedSites = Collections.unmodifiableMap(sites);
+        cachedLocale = Locale.getDefault();
     }
 
     private boolean isEnabled() {
@@ -166,7 +169,17 @@ public class SuggestedSites {
      * @param limit maximum number of suggested sites.
      */
     public Cursor get(int limit) {
-        return get(limit, null);
+        return get(limit, Locale.getDefault());
+    }
+
+    /**
+     * Returns a {@code Cursor} with the list of suggested websites.
+     *
+     * @param limit maximum number of suggested sites.
+     * @param locale the target locale.
+     */
+    public Cursor get(int limit, Locale locale) {
+        return get(limit, locale, null);
     }
 
     /**
@@ -176,6 +189,17 @@ public class SuggestedSites {
      * @param excludeUrls list of URLs to be excluded from the list.
      */
     public Cursor get(int limit, List<String> excludeUrls) {
+        return get(limit, Locale.getDefault(), excludeUrls);
+    }
+
+    /**
+     * Returns a {@code Cursor} with the list of suggested websites.
+     *
+     * @param limit maximum number of suggested sites.
+     * @param locale the target locale.
+     * @param excludeUrls list of URLs to be excluded from the list.
+     */
+    public Cursor get(int limit, Locale locale, List<String> excludeUrls) {
         final MatrixCursor cursor = new MatrixCursor(COLUMNS);
 
         // Return an empty cursor if suggested sites have been
@@ -184,7 +208,7 @@ public class SuggestedSites {
             return cursor;
         }
 
-        if (cachedSites == null) {
+        if (cachedSites == null || !locale.equals(cachedLocale)) {
             Log.d(LOGTAG, "No cached sites, refreshing.");
             refresh();
         }
