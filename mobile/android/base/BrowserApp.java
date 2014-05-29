@@ -235,14 +235,6 @@ abstract public class BrowserApp extends GeckoApp
             case SELECTED:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     updateHomePagerForTab(tab);
-
-                    final TabsPanel.Panel panel = tab.isPrivate()
-                                                ? TabsPanel.Panel.PRIVATE_TABS
-                                                : TabsPanel.Panel.NORMAL_TABS;
-
-                    if (areTabsShown() && mTabsPanel.getCurrentPanel() != panel) {
-                        showTabs(panel);
-                    }
                 }
                 break;
             case START:

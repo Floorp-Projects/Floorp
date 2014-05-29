@@ -2720,7 +2720,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
     image-rendering: -moz-crisp-edges;
   }
 
-  .tab-throbber {
+  .tab-throbber[busy] {
     list-style-image: url("chrome://browser/skin/tabbrowser/connecting@2x.png");
   }
 
