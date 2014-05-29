@@ -504,10 +504,6 @@ CheckAllocatorState(ThreadSafeContext *cx, AllocKind kind)
     JS_ASSERT(rt->gc.isAllocAllowed());
 #endif
 
-    // Crash if we perform a GC action when it is not safe.
-    if (allowGC && !rt->mainThread.suppressGC)
-        JS::AutoAssertOnGC::VerifyIsSafeToGC(rt);
-
     // For testing out of memory conditions
     if (!PossiblyFail()) {
         js_ReportOutOfMemory(cx);
