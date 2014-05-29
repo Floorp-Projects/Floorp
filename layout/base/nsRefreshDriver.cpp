@@ -1096,8 +1096,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     }
 
     if (i == 0) {
-      // This is the Flush_Style case.
-
       // Grab all of our frame request callbacks up front.
       nsTArray<DocumentFrameCallbacks>
         frameRequestCallbacks(mFrameRequestCallbackDocs.Length());
@@ -1139,6 +1137,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
       }
       profiler_tracing("Paint", "Scripts", TRACING_INTERVAL_END);
 
+      // This is the Flush_Style case.
       if (mPresContext && mPresContext->GetPresShell()) {
         bool tracingStyleFlush = false;
         nsAutoTArray<nsIPresShell*, 16> observers;
@@ -1167,10 +1166,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
         if (tracingStyleFlush) {
           profiler_tracing("Paint", "Styles", TRACING_INTERVAL_END);
         }
-      }
-
-      if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
-        mPresContext->TickLastStyleUpdateForAllAnimations();
       }
     } else if  (i == 1) {
       // This is the Flush_Layout case.
