@@ -85,6 +85,12 @@ img {
   background: #d9534f;
 }
 
+.disabled {
+    cursor: not-allowed;
+    pointer-events: none;
+    opacity: 0.65;
+}
+
 /* Alerts */
 .alert {
   background: #eee;
