@@ -33,7 +33,7 @@ loop.webapp = (function($, OT, webl10n) {
    * Homepage view.
    */
   var HomeView = sharedViews.BaseView.extend({
-    el: "#home"
+    template: _.template('<p data-l10n-id="welcome"></p>')
   });
 
   /**
@@ -41,7 +41,13 @@ loop.webapp = (function($, OT, webl10n) {
    * as a `model` property.
    */
   var ConversationFormView = sharedViews.BaseView.extend({
-    el: "#conversation-form",
+    template: _.template([
+      '<form>',
+      '  <p>',
+      '    <button class="btn btn-success" data-l10n-id="start_call"></button>',
+      '  </p>',
+      '</form>'
+    ].join("")),
 
     events: {
       "submit": "initiate"
@@ -86,6 +92,11 @@ loop.webapp = (function($, OT, webl10n) {
       this.$("button").attr("disabled", "disabled");
     },
 
+    /**
+     * Initiates the call.
+     *
+     * @param {SubmitEvent} event
+     */
     initiate: function(event) {
       event.preventDefault();
       this.model.initiate({
@@ -160,7 +171,7 @@ loop.webapp = (function($, OT, webl10n) {
         if (loopToken) {
           return this.navigate("call/" + loopToken, {trigger: true});
         } else {
-          this._notifier.error(__("Missing conversation information"));
+          this._notifier.error(__("missing_conversation_info"));
           return this.navigate("home", {trigger: true});
         }
       }

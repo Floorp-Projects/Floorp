@@ -5,6 +5,7 @@
 /* global loop, sinon */
 
 var expect = chai.expect;
+var l10n = document.webL10n || document.mozL10n;
 
 describe("loop.shared.views", function() {
   "use strict";
@@ -21,6 +22,22 @@ describe("loop.shared.views", function() {
   afterEach(function() {
     $("#fixtures").empty();
     sandbox.restore();
+  });
+
+  describe("L10nView", function() {
+    beforeEach(function() {
+      sandbox.stub(l10n, "translate");
+    });
+
+    it("should translate generated contents on render()", function() {
+      var TestView = loop.shared.views.L10nView.extend();
+
+      var view = new TestView();
+      view.render();
+
+      sinon.assert.calledOnce(l10n.translate);
+      sinon.assert.calledWithExactly(l10n.translate, view.el);
+    });
   });
 
   describe("ConversationView", function() {

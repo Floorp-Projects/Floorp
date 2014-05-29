@@ -19,35 +19,7 @@
 
     <div id="messages"></div>
 
-    <div id="home">
-      <p data-l10n-id="welcome">Welcome to the Loop web client.</p>
-    </div>
-
-    <!-- The autocomplete attribute is set to "off" to prevent keeping the state
-         of the disabled button across reloads  -->
-    <form id="conversation-form" autocomplete="off" class="hide">
-      <p>
-        <button class="btn btn-success" data-l10n-id="start_call">Start call</button>
-      </p>
-    </form>
-
-    <div id="conversation" class="conversation hide">
-      <nav class="controls">
-        <button class="btn stop" data-l10n-id="stop"></button>
-      </nav>
-      <div class="media nested">
-        <!-- both these wrappers are required by the SDK; this is fragile and
-             will break if a future version of SDK updates this generated DOM,
-             especially as the SDK seems to actually move wrapped contents into
-             their own generated stuff -->
-        <div class="remote">
-          <div id="incoming"></div>
-        </div>
-        <div class="local">
-          <div id="outgoing"></div>
-        </div>
-      </div>
-    </div>
+    <div id="main"></div>
 
     <!-- libs -->
     <script src="https://static.opentok.com/webrtc/v2.2/js/opentok.min.js"></script>
