@@ -55,8 +55,8 @@ let tests = [
     let data = JSON.stringify([
       ["savedID1", { lastSeen: Date.now() }],
       ["savedID2", { lastSeen: Date.now() }],
-      // 3 weeks ago, should auto expire.
-      ["savedID3", { lastSeen: Date.now() - 3 * 7 * 24 * 60 * 60 * 1000 }],
+      // 9 weeks ago, should auto expire.
+      ["savedID3", { lastSeen: Date.now() - 9 * 7 * 24 * 60 * 60 * 1000 }],
     ]);
     Services.prefs.setCharPref("browser.uitour.seenPageIDs",
                                data);
