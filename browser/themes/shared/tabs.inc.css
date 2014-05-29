@@ -88,7 +88,7 @@
   }
 }
 
-.tab-throbber {
+.tab-throbber[busy] {
   list-style-image: url("chrome://browser/skin/tabbrowser/connecting.png");
   animation-duration: 960ms;
   animation-iteration-count: infinite;
