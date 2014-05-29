@@ -446,7 +446,7 @@ public:
     static TabChild* GetFrom(nsIPresShell* aPresShell);
     static TabChild* GetFrom(uint64_t aLayersId);
 
-    void DidComposite(uint64_t aTransactionId);
+    void DidComposite();
 
     static inline TabChild*
     GetFrom(nsIDOMWindow* aWindow)

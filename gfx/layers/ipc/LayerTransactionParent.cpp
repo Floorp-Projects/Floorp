@@ -148,7 +148,6 @@ LayerTransactionParent::LayerTransactionParent(LayerManagerComposite* aManager,
   : mLayerManager(aManager)
   , mShadowLayersManager(aLayersManager)
   , mId(aId)
-  , mPendingTransaction(0)
   , mChildProcessId(aOtherProcess)
   , mDestroyed(false)
   , mIPCOpen(false)
@@ -180,19 +179,17 @@ LayerTransactionParent::GetCompositorBackendType() const
 
 bool
 LayerTransactionParent::RecvUpdateNoSwap(const InfallibleTArray<Edit>& cset,
-                                         const uint64_t& aTransactionId,
                                          const TargetConfig& targetConfig,
                                          const bool& isFirstPaint,
                                          const bool& scheduleComposite,
                                          const uint32_t& paintSequenceNumber)
 {
-  return RecvUpdate(cset, aTransactionId, targetConfig, isFirstPaint,
-                    scheduleComposite, paintSequenceNumber, nullptr);
+  return RecvUpdate(cset, targetConfig, isFirstPaint, scheduleComposite,
+      paintSequenceNumber, nullptr);
 }
 
 bool
 LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
-                                   const uint64_t& aTransactionId,
                                    const TargetConfig& targetConfig,
                                    const bool& isFirstPaint,
                                    const bool& scheduleComposite,
@@ -552,8 +549,8 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   // other's buffer contents.
   LayerManagerComposite::PlatformSyncBeforeReplyUpdate();
 
-  mShadowLayersManager->ShadowLayersUpdated(this, aTransactionId, targetConfig,
-                                            isFirstPaint, scheduleComposite, paintSequenceNumber);
+  mShadowLayersManager->ShadowLayersUpdated(this, targetConfig, isFirstPaint,
+      scheduleComposite, paintSequenceNumber);
 
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
   int compositeTime = (int)(mozilla::TimeStamp::Now() - updateStart).ToMilliseconds();
