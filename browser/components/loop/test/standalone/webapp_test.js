@@ -10,10 +10,16 @@ describe("loop.webapp", function() {
   "use strict";
 
   var sharedModels = loop.shared.models,
-      sandbox;
+      sandbox,
+      notifier;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
+    notifier = {
+      notify: sandbox.spy(),
+      warn: sandbox.spy(),
+      error: sandbox.spy()
+    };
   });
 
   afterEach(function() {
@@ -21,16 +27,10 @@ describe("loop.webapp", function() {
   });
 
   describe("WebappRouter", function() {
-    var conversation, notifier, fakeSessionData;
+    var conversation;
 
     beforeEach(function() {
-      notifier = {notify: sandbox.spy()};
       conversation = new sharedModels.ConversationModel();
-      fakeSessionData = {
-        sessionId:    "sessionId",
-        sessionToken: "sessionToken",
-        apiKey:       "apiKey"
-      };
     });
 
     describe("#constructor", function() {
@@ -131,18 +131,62 @@ describe("loop.webapp", function() {
     });
 
     describe("Events", function() {
+      var router, fakeSessionData;
+
+      beforeEach(function() {
+        fakeSessionData = {
+          sessionId:    "sessionId",
+          sessionToken: "sessionToken",
+          apiKey:       "apiKey"
+        };
+        sandbox.stub(loop.webapp.WebappRouter.prototype, "navigate");
+        conversation.set("loopToken", "fakeToken");
+        router = new loop.webapp.WebappRouter({
+          conversation: conversation,
+          notifier: notifier
+        });
+      });
+
       it("should navigate to call/ongoing once the call session is ready",
         function() {
-          sandbox.stub(loop.webapp.WebappRouter.prototype, "navigate");
-          var router = new loop.webapp.WebappRouter({
-            conversation: conversation,
-            notifier: notifier
-          });
-
-          conversation.setReady(fakeSessionData);
+          conversation.trigger("session:ready");
 
           sinon.assert.calledOnce(router.navigate);
           sinon.assert.calledWith(router.navigate, "call/ongoing");
+        });
+
+      it("should navigate to call/{token} when conversation ended", function() {
+        conversation.trigger("session:ended");
+
+        sinon.assert.calledOnce(router.navigate);
+        sinon.assert.calledWithMatch(router.navigate, "call/fakeToken");
+      });
+
+      it("should warn the user when peer hangs up", function() {
+        conversation.trigger("session:peer-hungup");
+
+        sinon.assert.calledOnce(notifier.warn);
+      });
+
+      it("should navigate to call/{token} when peer hangs up", function() {
+        conversation.trigger("session:peer-hungup");
+
+        sinon.assert.calledOnce(router.navigate);
+        sinon.assert.calledWithMatch(router.navigate, "call/fakeToken");
+      });
+
+      it("should warn the user when network disconnects", function() {
+        conversation.trigger("session:network-disconnected");
+
+        sinon.assert.calledOnce(notifier.warn);
+      });
+
+      it("should navigate to call/{token} when network disconnects",
+        function() {
+          conversation.trigger("session:network-disconnected");
+
+          sinon.assert.calledOnce(router.navigate);
+          sinon.assert.calledWithMatch(router.navigate, "call/fakeToken");
         });
     });
   });
@@ -163,10 +207,9 @@ describe("loop.webapp", function() {
     });
 
     describe("#initiate", function() {
-      var notifier, conversation, initiate, view, fakeSubmitEvent;
+      var conversation, initiate, view, fakeSubmitEvent;
 
       beforeEach(function() {
-        notifier = {notify: sandbox.spy()};
         conversation = new sharedModels.ConversationModel();
         view = new loop.webapp.ConversationFormView({
           model: conversation,
@@ -200,10 +243,9 @@ describe("loop.webapp", function() {
     });
 
     describe("Events", function() {
-      var notifier, conversation, view;
+      var conversation, view;
 
       beforeEach(function() {
-        notifier = {notify: sandbox.spy()};
         conversation = new sharedModels.ConversationModel({
           loopToken: "fake"
         });
@@ -217,11 +259,10 @@ describe("loop.webapp", function() {
          " received", function() {
         conversation.trigger("session:error", "tech error");
 
-        sinon.assert.calledOnce(notifier.notify);
         // XXX We should test for the actual message content, but webl10n gets
         //     in the way as translated messages are all empty because matching
         //     DOM elements are missing.
-        sinon.assert.calledWithMatch(notifier.notify, {level: "error"});
+        sinon.assert.calledOnce(notifier.error);
       });
     });
   });

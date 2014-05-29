@@ -28,7 +28,9 @@ describe("loop.shared.views", function() {
 
     beforeEach(function() {
       fakeSession = _.extend({
-        connect: sandbox.spy()
+        connect: sandbox.spy(),
+        disconnect: sandbox.spy(),
+        unpublish: sandbox.spy()
       }, Backbone.Events);
       fakeSDK = {
         initPublisher: sandbox.spy(),
@@ -36,38 +38,105 @@ describe("loop.shared.views", function() {
       };
     });
 
-    describe("initialize", function() {
+    describe("#initialize", function() {
       it("should require an sdk object", function() {
         expect(function() {
           new sharedViews.ConversationView();
         }).to.Throw(Error, /sdk/);
       });
 
-      it("should initiate a session", function() {
-        new sharedViews.ConversationView({
-          sdk: fakeSDK,
-          model: new sharedModels.ConversationModel()
-        });
+      describe("constructed", function() {
+        var model, view;
 
-        sinon.assert.calledOnce(fakeSession.connect);
-      });
-
-      it("should trigger a session:ended model event when connectionDestroyed" +
-         " event is received/", function(done) {
-          // XXX remove when we implement proper notifications
-          sandbox.stub(window, "alert");
-          var model = new sharedModels.ConversationModel();
-          new sharedViews.ConversationView({
+        beforeEach(function() {
+          model = new sharedModels.ConversationModel();
+          view = new sharedViews.ConversationView({
             sdk: fakeSDK,
             model: model
           });
+        });
 
-          model.once("session:ended", function() {
-            done();
+        it("should initiate a session", function() {
+          sinon.assert.calledOnce(fakeSession.connect);
+        });
+
+        describe("sessionDisconnected event received", function() {
+          it("should trigger a session:ended event", function(done) {
+            model.once("session:ended", function() {
+              done();
+            });
+
+            fakeSession.trigger("sessionDisconnected", {reason: "ko"});
           });
 
-          fakeSession.trigger("connectionDestroyed", {reason: "ko"});
+          it("should unpublish current stream publisher", function() {
+            fakeSession.trigger("sessionDisconnected", {reason: "ko"});
+
+            sinon.assert.calledOnce(fakeSession.unpublish);
+          });
         });
+
+        describe("connectionDestroyed event received", function() {
+          var fakeEvent = {reason: "ko", connection: {connectionId: 42}};
+
+          it("should trigger a session:peer-hungup model event",
+            function(done) {
+              model.once("session:peer-hungup", function(event) {
+                expect(event.connectionId).eql(42);
+                done();
+              });
+
+              fakeSession.trigger("connectionDestroyed", fakeEvent);
+            });
+
+          it("should disconnect the session", function() {
+            fakeSession.trigger("connectionDestroyed", fakeEvent);
+
+            sinon.assert.calledOnce(fakeSession.unpublish);
+          });
+
+          it("should unpublish current stream publisher", function() {
+            fakeSession.trigger("connectionDestroyed", fakeEvent);
+
+            sinon.assert.calledOnce(fakeSession.unpublish);
+          });
+        });
+
+        describe("networkDisconnected event received", function() {
+          it("should trigger a session:network-disconnected event",
+            function(done) {
+              model.once("session:network-disconnected", function() {
+                done();
+              });
+
+              fakeSession.trigger("networkDisconnected");
+            });
+
+          it("should disconnect the session", function() {
+            fakeSession.trigger("networkDisconnected", {reason: "ko"});
+
+            sinon.assert.calledOnce(fakeSession.unpublish);
+          });
+
+          it("should unpublish current stream publisher", function() {
+            fakeSession.trigger("networkDisconnected", {reason: "ko"});
+
+            sinon.assert.calledOnce(fakeSession.unpublish);
+          });
+        });
+      });
+    });
+
+    describe("#hangup", function() {
+      it("should disconnect the session", function() {
+        var model = new sharedModels.ConversationModel();
+        var view = new sharedViews.ConversationView({
+          sdk: fakeSDK,
+          model: model
+        });
+        view.hangup({preventDefault: function() {}});
+        sinon.assert.calledOnce(fakeSession.disconnect);
+      });
     });
   });
 
@@ -165,6 +234,30 @@ describe("loop.shared.views", function() {
 
           expect(coll).to.have.length.of(1);
         });
+      });
+    });
+
+    describe("#warn", function() {
+      it("should add a warning notification to the stack", function() {
+        var view = new sharedViews.NotificationListView({collection: coll});
+
+        view.warn("watch out");
+
+        expect(coll).to.have.length.of(1);
+        expect(coll.at(0).get("level")).eql("warning");
+        expect(coll.at(0).get("message")).eql("watch out");
+      });
+    });
+
+    describe("#error", function() {
+      it("should add an error notification to the stack", function() {
+        var view = new sharedViews.NotificationListView({collection: coll});
+
+        view.error("wrong");
+
+        expect(coll).to.have.length.of(1);
+        expect(coll.at(0).get("level")).eql("error");
+        expect(coll.at(0).get("message")).eql("wrong");
       });
     });
 

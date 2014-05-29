@@ -157,9 +157,13 @@
   <h2>Alerts</h2>
 
   <div class="alert alert-error">
-    <button class="close"
-            onclick="var el=this.parentNode;el.classList.add('fade-out');setTimeout(el.remove.bind(el), 500);"></button>
+    <button class="close"></button>
     <p class="message">Oops! Something went really wrong.</p>
+  </div>
+
+  <div class="alert alert-warning">
+    <button class="close"></button>
+    <p class="message">Oops! This is a warning.</p>
   </div>
 
   <script>
@@ -167,7 +171,7 @@
     [].forEach.call(document.querySelectorAll("video"), function(video) {
       video.setAttribute("src", "http://v2v.cc/~j/theora_testsuite/320x240.ogg");
     });
-  }
+  };
   </script>
 </body>
 </html>
