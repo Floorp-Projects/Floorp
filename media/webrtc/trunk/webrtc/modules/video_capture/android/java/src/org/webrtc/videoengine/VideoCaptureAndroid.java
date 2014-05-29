@@ -12,6 +12,7 @@ package org.webrtc.videoengine;
 
 import java.io.IOException;
 import java.util.Locale;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
 import android.graphics.ImageFormat;
@@ -22,8 +23,12 @@ import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
 import android.util.Log;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
+
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoAppShell.AppStateListener;
 
 // Wrapper for android Camera, with support for direct local preview rendering.
 // Threading notes: this class is called from ViE C++ code, and from Camera &
@@ -36,8 +41,8 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
   private final static String TAG = "WEBRTC-JC";
 
   private Camera camera;  // Only non-null while capturing.
+  private Camera.CameraInfo info = null;
   private final int id;
-  private final Camera.CameraInfo info;
   private final long native_capturer;  // |VideoCaptureAndroid*| in C++.
   private SurfaceHolder localPreview;
   private SurfaceTexture dummySurfaceTexture;
@@ -45,12 +50,79 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
   // lower number means more sensitivity to processing time in the client (and
   // potentially stalling the capturer if it runs out of buffers to write to).
   private final int numCaptureBuffers = 3;
+  // Needed to start/stop/rotate camera.
+  private AppStateListener mAppStateListener = null;
+  private int mCaptureRotation = 0;
+  private int mCaptureWidth = 0;
+  private int mCaptureHeight = 0;
+  private int mCaptureMinFPS = 0;
+  private int mCaptureMaxFPS = 0;
+  // Are we being told to start/stop the camera, or just suspending/resuming
+  // due to the application being backgrounded.
+  private boolean mResumeCapture = false;
 
   public VideoCaptureAndroid(int id, long native_capturer) {
     this.id = id;
     this.native_capturer = native_capturer;
-    this.info = new Camera.CameraInfo();
-    Camera.getCameraInfo(id, info);
+    if(android.os.Build.VERSION.SDK_INT>8) {
+      this.info = new Camera.CameraInfo();
+      Camera.getCameraInfo(id, info);
+    }
+    mCaptureRotation = GetRotateAmount();
+  }
+
+  private void LinkAppStateListener() {
+    mAppStateListener = new AppStateListener() {
+      @Override
+      public void onPause() {
+        if (camera != null) {
+          mResumeCapture = true;
+          stopCapture();
+        }
+      }
+      @Override
+      public void onResume() {
+        if (mResumeCapture) {
+          startCapture(mCaptureWidth, mCaptureHeight, mCaptureMinFPS, mCaptureMaxFPS);
+          mResumeCapture = false;
+        }
+      }
+      @Override
+      public void onOrientationChanged() {
+        mCaptureRotation = GetRotateAmount();
+      }
+    };
+    GeckoAppShell.getGeckoInterface().addAppStateListener(mAppStateListener);
+  }
+
+  private void RemoveAppStateListener() {
+      GeckoAppShell.getGeckoInterface().removeAppStateListener(mAppStateListener);
+  }
+
+  public int GetRotateAmount() {
+    int rotation = GeckoAppShell.getGeckoInterface().getActivity().getWindowManager().getDefaultDisplay().getRotation();
+    int degrees = 0;
+    switch (rotation) {
+      case Surface.ROTATION_0: degrees = 0; break;
+      case Surface.ROTATION_90: degrees = 90; break;
+      case Surface.ROTATION_180: degrees = 180; break;
+      case Surface.ROTATION_270: degrees = 270; break;
+    }
+    if(android.os.Build.VERSION.SDK_INT>8) {
+      int result;
+      if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+        result = (info.orientation + degrees) % 360;
+      } else {  // back-facing
+        result = (info.orientation - degrees + 360) % 360;
+      }
+      return result;
+    } else {
+      // Assume 90deg orientation for Froyo devices.
+      // Only back-facing cameras are supported in Froyo.
+      int orientation = 90;
+      int result = (orientation - degrees + 360) % 360;
+      return result;
+    }
   }
 
   // Called by native code.  Returns true if capturer is started.
@@ -62,6 +134,9 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
       int width, int height, int min_mfps, int max_mfps) {
     Log.d(TAG, "startCapture: " + width + "x" + height + "@" +
         min_mfps + ":" + max_mfps);
+    if (!mResumeCapture) {
+      ViERenderer.CreateLocalRenderer();
+    }
     Throwable error = null;
     try {
       camera = Camera.open(id);
@@ -105,6 +180,15 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
       }
       camera.setPreviewCallbackWithBuffer(this);
       camera.startPreview();
+      // Remember parameters we were started with.
+      mCaptureWidth = width;
+      mCaptureHeight = height;
+      mCaptureMinFPS = min_mfps;
+      mCaptureMaxFPS = max_mfps;
+      // If we are resuming a paused capture, the listener is already active.
+      if (!mResumeCapture) {
+        LinkAppStateListener();
+      }
       return true;
     } catch (IOException e) {
       error = e;
@@ -126,8 +210,8 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
     }
     Throwable error = null;
     try {
-      camera.stopPreview();
       camera.setPreviewCallbackWithBuffer(null);
+      camera.stopPreview();
       if (localPreview != null) {
         localPreview.removeCallback(this);
         camera.setPreviewDisplay(null);
@@ -136,6 +220,11 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
       }
       camera.release();
       camera = null;
+      // If we want to resume after onResume, keep the listener in place.
+      if (!mResumeCapture) {
+        RemoveAppStateListener();
+        ViERenderer.DestroyLocalRenderer();
+      }
       return true;
     } catch (IOException e) {
       error = e;
@@ -147,33 +236,13 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
   }
 
   private native void ProvideCameraFrame(
-      byte[] data, int length, long captureObject);
+    byte[] data, int length, long captureObject, int rotation);
 
   public synchronized void onPreviewFrame(byte[] data, Camera camera) {
-    ProvideCameraFrame(data, data.length, native_capturer);
-    camera.addCallbackBuffer(data);
-  }
-
-  // Sets the rotation of the preview render window.
-  // Does not affect the captured video image.
-  // Called by native code.
-  private synchronized void setPreviewRotation(int rotation) {
-    Log.v(TAG, "setPreviewRotation:" + rotation);
-
-    if (camera == null) {
-      return;
+    if (data != null) {
+      ProvideCameraFrame(data, data.length, native_capturer, mCaptureRotation);
+      camera.addCallbackBuffer(data);
     }
-
-    int resultRotation = 0;
-    if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-      // This is a front facing camera.  SetDisplayOrientation will flip
-      // the image horizontally before doing the rotation.
-      resultRotation = ( 360 - rotation ) % 360; // Compensate for the mirror.
-    } else {
-      // Back-facing camera.
-      resultRotation = rotation;
-    }
-    camera.setDisplayOrientation(resultRotation);
   }
 
   public synchronized void surfaceChanged(
