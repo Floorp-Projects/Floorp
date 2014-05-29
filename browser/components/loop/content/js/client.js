@@ -49,12 +49,58 @@ loop.Client = (function($) {
         }
       }, "json");
 
-      req.fail(function(xhr, type, err) {
+      req.fail(function(jqXHR, testStatus, errorThrown) {
         var error = "Unknown error.";
-        if (xhr && xhr.responseJSON && xhr.responseJSON.error) {
-          error = xhr.responseJSON.error;
+        if (jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.error) {
+          error = jqXHR.responseJSON.error;
         }
-        var message = "HTTP error " + xhr.status + ": " + err + "; " + error;
+        var message = "HTTP error " + jqXHR.status + ": " +
+          errorThrown + "; " + error;
+        console.error(message);
+        cb(new Error(message));
+      });
+    },
+
+    /**
+     * Requests call information from the server
+     *
+     * @param  {Function} cb Callback(err, calls)
+     */
+    requestCallsInfo: function(cb) {
+      var endpoint = this.settings.baseApiUrl + "/calls";
+
+      // We do a basic validation here that we have an object,
+      // and pass the full information back.
+      function validate(callsData) {
+        if (typeof callsData !== "object" ||
+            !callsData.hasOwnProperty("calls")) {
+          var message = "Invalid calls data received";
+          console.error(message, callsData);
+          throw new Error(message);
+        }
+        return callsData.calls;
+      }
+
+      // XXX We'll want to figure out a way to store the version from each
+      // request here. As this is typically the date, we just need to store the
+      // time last requested.
+      // XXX It is likely that we'll want to move some of this to whatever
+      // opens the chat window.
+      var req = $.get(endpoint + "?version=0", function(callsData) {
+        try {
+          cb(null, validate(callsData));
+        } catch (err) {
+          cb(err);
+        }
+      }, "json");
+
+      req.fail(function(jqXHR, testStatus, errorThrown) {
+        var error = "Unknown error.";
+        if (jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.error) {
+          error = jqXHR.responseJSON.error;
+        }
+        var message = "HTTP error " + jqXHR.status + ": " +
+          errorThrown + "; " + error;
         console.error(message);
         cb(new Error(message));
       });
