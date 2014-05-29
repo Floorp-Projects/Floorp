@@ -19,7 +19,9 @@ describe("loop.webapp", function() {
     notifier = {
       notify: sandbox.spy(),
       warn: sandbox.spy(),
-      error: sandbox.spy()
+      warnL10n: sandbox.spy(),
+      error: sandbox.spy(),
+      errorL10n: sandbox.spy(),
     };
   });
 
@@ -51,8 +53,9 @@ describe("loop.webapp", function() {
       it("should notify the user if session token is missing", function() {
         router.startCall();
 
-        sinon.assert.calledOnce(notifier.error);
-        // XXX test for message contents (needs stubbing L10n)
+        sinon.assert.calledOnce(notifier.errorL10n);
+        sinon.assert.calledWithExactly(notifier.errorL10n,
+                                       "missing_conversation_info");
       });
 
       it("should navigate to call/ongoing/:token if session token is available",
@@ -188,17 +191,17 @@ describe("loop.webapp", function() {
   });
 
   describe("ConversationFormView", function() {
+    var conversation;
+
+    beforeEach(function() {
+      conversation = new sharedModels.ConversationModel({}, {sdk: {}});
+    });
+
     describe("#initialize", function() {
       it("should require a conversation option", function() {
         expect(function() {
           new loop.webapp.WebappRouter();
         }).to.Throw(Error, /missing required conversation/);
-      });
-
-      it("should require a notifier option", function() {
-        expect(function() {
-          new loop.webapp.WebappRouter({conversation: {}});
-        }).to.Throw(Error, /missing required notifier/);
       });
     });
 
@@ -255,10 +258,9 @@ describe("loop.webapp", function() {
          " received", function() {
         conversation.trigger("session:error", "tech error");
 
-        // XXX We should test for the actual message content, but webl10n gets
-        //     in the way as translated messages are all empty because matching
-        //     DOM elements are missing.
-        sinon.assert.calledOnce(notifier.error);
+        sinon.assert.calledOnce(notifier.errorL10n);
+        sinon.assert.calledWithExactly(notifier.errorL10n,
+                                       "unable_retrieve_call_info");
       });
     });
   });

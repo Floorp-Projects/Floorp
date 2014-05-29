@@ -5,7 +5,7 @@
 /* global loop:true */
 
 var loop = loop || {};
-loop.webapp = (function($, OT, webl10n) {
+loop.webapp = (function($, _, OT) {
   "use strict";
 
   /**
@@ -19,9 +19,7 @@ loop.webapp = (function($, OT, webl10n) {
       sharedViews = loop.shared.views,
       // XXX this one should be configurable
       //     see https://bugzilla.mozilla.org/show_bug.cgi?id=987086
-      baseServerUrl = "http://localhost:5000",
-      // aliasing translation function as __ for concision
-      __ = webl10n.get;
+      baseServerUrl = "http://localhost:5000";
 
   /**
    * App router.
@@ -207,4 +205,4 @@ loop.webapp = (function($, OT, webl10n) {
     init: init,
     WebappRouter: WebappRouter
   };
-})(jQuery, window.OT, document.webL10n);
+})(jQuery, _, window.OT);
