@@ -63,6 +63,28 @@ this.TabCrashReporter = {
     }
   },
 
+  reloadCrashedTabs: function () {
+    let enumerator = Services.wm.getEnumerator("navigator:browser");
+    while (enumerator.hasMoreElements()) {
+      let window = enumerator.getNext();
+      if (!window.gMultiProcessBrowser)
+        continue;
+
+      for (let browser of window.gBrowser.browsers) {
+        if (browser.isRemoteBrowser)
+          continue;
+
+        let doc = browser.contentDocument;
+        if (!doc.documentURI.startsWith("about:tabcrashed"))
+          continue;
+
+        let url = browser.currentURI.spec;
+        window.gBrowser.updateBrowserRemoteness(browser, url);
+        browser.loadURIWithFlags(url, Ci.nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
+      }
+    }
+  },
+
   onAboutTabCrashedLoad: function (aBrowser) {
     if (!this.childMap)
       return;
