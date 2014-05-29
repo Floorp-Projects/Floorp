@@ -94,7 +94,7 @@ class Logging
         const char *side, *objDesc;
 
         if (local == incoming) {
-            RootedObject obj(cx);
+            JS::RootedObject obj(cx);
             obj = shared->findObjectById(id);
             if (obj) {
                 JSAutoCompartment ac(cx, obj);
