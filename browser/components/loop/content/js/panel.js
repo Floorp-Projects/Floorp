@@ -103,11 +103,58 @@ loop.panel = (function(_, mozL10n) {
   });
 
   var PanelRouter = loop.shared.router.BaseRouter.extend({
+    /**
+     * DOM document object.
+     * @type {HTMLDocument}
+     */
+    document: undefined,
+
     routes: {
       "": "home"
     },
 
+    initialize: function(options) {
+      options = options || {};
+      if (!options.document) {
+        throw new Error("missing required document");
+      }
+      this.document = options.document;
+
+      this._registerVisibilityChangeEvent();
+
+      this.on("panel:open panel:closed", this.reset, this);
+    },
+
+    /**
+     * Register the DOM visibility API event for the whole document, and trigger
+     * appropriate events accordingly:
+     *
+     * - `panel:opened` when the panel is open
+     * - `panel:closed` when the panel is closed
+     *
+     * @link  http://www.w3.org/TR/page-visibility/
+     */
+    _registerVisibilityChangeEvent: function() {
+      this.document.addEventListener("visibilitychange", function(event) {
+        this.trigger(event.currentTarget.hidden ? "panel:closed"
+                                                : "panel:open");
+      }.bind(this));
+    },
+
+    /**
+     * Default entry point.
+     */
     home: function() {
+      this.reset();
+    },
+
+    /**
+     * Resets this router to its initial state.
+     */
+    reset: function() {
+      // purge pending notifications
+      this._notifier.clear();
+      // reset home view
       this.loadView(new PanelView({notifier: this._notifier}));
     }
   });
@@ -117,6 +164,7 @@ loop.panel = (function(_, mozL10n) {
    */
   function init() {
     router = new PanelRouter({
+      document: document,
       notifier: new sharedViews.NotificationListView({el: "#messages"})
     });
     Backbone.history.start();
