@@ -95,7 +95,8 @@ if CONFIG['MOZ_WEBRTC']:
     ]
     wrjar.sources += [
         audio_root + 'AudioManagerAndroid.java',
-        audio_root + 'WebRTCAudioDevice.java',
+        audio_root + 'WebRtcAudioRecord.java',
+        audio_root + 'WebRtcAudioTrack.java',
     ]
     wrjar.extra_jars = [
         'gecko-R.jar',
