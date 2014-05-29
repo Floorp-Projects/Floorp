@@ -172,11 +172,11 @@ nsMathMLmactionFrame::GetSelectedFrame()
   return mSelectedFrame;
 }
 
-nsresult
+void
 nsMathMLmactionFrame::SetInitialChildList(ChildListID     aListID,
                                           nsFrameList&    aChildList)
 {
-  nsresult rv = nsMathMLSelectedFrame::SetInitialChildList(aListID, aChildList);
+  nsMathMLSelectedFrame::SetInitialChildList(aListID, aChildList);
 
   if (!mSelectedFrame) {
     mActionType = NS_MATHML_ACTION_TYPE_NONE;
@@ -192,7 +192,6 @@ nsMathMLmactionFrame::SetInitialChildList(ChildListID     aListID,
     mContent->AddSystemEventListener(NS_LITERAL_STRING("mouseout"), mListener,
                                      false, false);
   }
-  return rv;
 }
 
 nsresult

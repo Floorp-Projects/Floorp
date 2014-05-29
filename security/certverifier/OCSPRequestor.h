@@ -7,13 +7,15 @@
 #ifndef mozilla_psm_OCSPRequestor_h
 #define mozilla_psm_OCSPRequestor_h
 
+#include "CertVerifier.h"
 #include "secmodt.h"
 
 namespace mozilla { namespace psm {
 
 // The memory returned is owned by the given arena.
 SECItem* DoOCSPRequest(PLArenaPool* arena, const char* url,
-                       const SECItem* encodedRequest, PRIntervalTime timeout);
+                       const SECItem* encodedRequest, PRIntervalTime timeout,
+                       bool useGET);
 
 } } // namespace mozilla::psm
 

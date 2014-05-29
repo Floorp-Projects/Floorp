@@ -56,16 +56,14 @@ nsMathMLSelectedFrame::ChildListChanged(int32_t aModType)
   return nsMathMLContainerFrame::ChildListChanged(aModType);
 }
 
-nsresult
+void
 nsMathMLSelectedFrame::SetInitialChildList(ChildListID     aListID,
                                            nsFrameList&    aChildList)
 {
-  nsresult rv = nsMathMLContainerFrame::SetInitialChildList(aListID,
-                                                            aChildList);
+  nsMathMLContainerFrame::SetInitialChildList(aListID, aChildList);
   // This very first call to GetSelectedFrame() will cause us to be marked as an
   // embellished operator if the selected child is an embellished operator
   GetSelectedFrame();
-  return rv;
 }
 
 //  Only paint the selected child...

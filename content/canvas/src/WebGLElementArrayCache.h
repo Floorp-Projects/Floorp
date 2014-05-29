@@ -7,6 +7,8 @@
 #define WEBGLELEMENTARRAYCACHE_H
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Scoped.h"
+#include "nsTArray.h"
 #include <stdint.h>
 #include "nscore.h"
 #include "GLDefs.h"
@@ -30,7 +32,7 @@ struct WebGLElementArrayCacheTree;
 class WebGLElementArrayCache {
 
 public:
-  bool BufferData(const void* ptr, size_t byteSize);
+  bool BufferData(const void* ptr, size_t byteLength);
   bool BufferSubData(size_t pos, const void* ptr, size_t updateByteSize);
 
   bool Validate(GLenum type, uint32_t maxAllowed, size_t first, size_t count,
@@ -39,13 +41,7 @@ public:
   template<typename T>
   T Element(size_t i) const { return Elements<T>()[i]; }
 
-  WebGLElementArrayCache()
-    : mUntypedData(nullptr)
-    , mByteSize(0)
-    , mUint8Tree(nullptr)
-    , mUint16Tree(nullptr)
-    , mUint32Tree(nullptr)
-  {}
+  WebGLElementArrayCache();
 
   ~WebGLElementArrayCache();
 
@@ -57,14 +53,10 @@ private:
   bool Validate(uint32_t maxAllowed, size_t first, size_t count,
                 uint32_t* out_upperBound);
 
-  size_t ByteSize() const {
-    return mByteSize;
-  }
-
   template<typename T>
-  const T* Elements() const { return static_cast<const T*>(mUntypedData); }
+  const T* Elements() const { return reinterpret_cast<const T*>(mBytes.Elements()); }
   template<typename T>
-  T* Elements() { return static_cast<T*>(mUntypedData); }
+  T* Elements() { return reinterpret_cast<T*>(mBytes.Elements()); }
 
   bool UpdateTrees(size_t firstByte, size_t lastByte);
 
@@ -73,11 +65,10 @@ private:
   template<typename T>
   friend struct TreeForType;
 
-  void* mUntypedData;
-  size_t mByteSize;
-  WebGLElementArrayCacheTree<uint8_t>* mUint8Tree;
-  WebGLElementArrayCacheTree<uint16_t>* mUint16Tree;
-  WebGLElementArrayCacheTree<uint32_t>* mUint32Tree;
+  FallibleTArray<uint8_t> mBytes;
+  ScopedDeletePtr<WebGLElementArrayCacheTree<uint8_t>> mUint8Tree;
+  ScopedDeletePtr<WebGLElementArrayCacheTree<uint16_t>> mUint16Tree;
+  ScopedDeletePtr<WebGLElementArrayCacheTree<uint32_t>> mUint32Tree;
 };
 
 
