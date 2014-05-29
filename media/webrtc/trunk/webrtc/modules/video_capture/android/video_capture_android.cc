@@ -45,16 +45,16 @@ void JNICALL ProvideCameraFrame(
 }
 
 int32_t SetCaptureAndroidVM(JavaVM* javaVM) {
+  if (g_java_capturer_class)
+    return 0;
+
   g_jvm = javaVM;
   AttachThreadScoped ats(g_jvm);
 
   videocapturemodule::DeviceInfoAndroid::Initialize(ats.env());
 
-  jclass j_capture_class =
-      ats.env()->FindClass("org/webrtc/videoengine/VideoCaptureAndroid");
-  assert(j_capture_class);
   g_java_capturer_class =
-      reinterpret_cast<jclass>(ats.env()->NewGlobalRef(j_capture_class));
+    jsjni_GetGlobalClassRef("org/webrtc/videoengine/VideoCaptureAndroid");
   assert(g_java_capturer_class);
 
   JNINativeMethod native_method = {
