@@ -1774,7 +1774,9 @@ MacroAssemblerMIPSCompat::movePtr(ImmPtr imm, Register dest)
 void
 MacroAssemblerMIPSCompat::movePtr(AsmJSImmPtr imm, Register dest)
 {
-    MOZ_ASSUME_UNREACHABLE("NYI");
+    enoughMemory_ &= append(AsmJSAbsoluteLink(CodeOffsetLabel(nextOffset().getOffset()),
+                                              imm.kind()));
+    ma_liPatchable(dest, Imm32(-1));
 }
 
 void
@@ -2907,6 +2909,14 @@ MacroAssemblerMIPSCompat::storeTypeTag(ImmTag tag, Register base, Register index
     as_sw(ScratchRegister, SecondScratchReg, TAG_OFFSET);
 }
 
+void
+MacroAssemblerMIPS::ma_callIonNoPush(const Register r)
+{
+    // This is a MIPS hack to push return address during jalr delay slot.
+    as_jalr(r);
+    as_sw(ra, StackPointer, 0);
+}
+
 // This macrosintruction calls the ion code and pushes the return address to
 // the stack in the case when stack is alligned.
 void
@@ -2927,6 +2937,21 @@ MacroAssemblerMIPS::ma_callIonHalfPush(const Register r)
     as_addiu(StackPointer, StackPointer, -sizeof(intptr_t));
     as_jalr(r);
     as_sw(ra, StackPointer, 0);
+}
+
+void
+MacroAssemblerMIPS::ma_callAndStoreRet(const Register r, uint32_t stackArgBytes)
+{
+    // Note: this function stores the return address to sp[16]. The caller
+    // must anticipate this by reserving additional space on the stack.
+    // The ABI does not provide space for a return address so this function
+    // stores 'ra' before any ABI arguments.
+    // This function may only be called if there are 4 or less arguments.
+    JS_ASSERT(stackArgBytes == 4 * sizeof(uintptr_t));
+
+    // This is a MIPS hack to push return address during jalr delay slot.
+    as_jalr(r);
+    as_sw(ra, StackPointer, 4 * sizeof(uintptr_t));
 }
 
 void

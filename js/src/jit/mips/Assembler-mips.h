@@ -114,6 +114,21 @@ static MOZ_CONSTEXPR_VAR FloatRegister SecondScratchFloatReg = { FloatRegisters:
 
 static MOZ_CONSTEXPR_VAR FloatRegister NANReg = { FloatRegisters::f30 };
 
+// Registers used in the GenerateFFIIonExit Enable Activation block.
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegCallee = t0;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE0 = a0;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE1 = a1;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE2 = a2;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE3 = a3;
+
+// Registers used in the GenerateFFIIonExit Disable Activation block.
+// None of these may be the second scratch register (t8).
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnData = JSReturnReg_Data;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnType = JSReturnReg_Type;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD0 = a0;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD1 = a1;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD2 = a2;
+
 static MOZ_CONSTEXPR_VAR FloatRegister f0  = {FloatRegisters::f0};
 static MOZ_CONSTEXPR_VAR FloatRegister f2  = {FloatRegisters::f2};
 static MOZ_CONSTEXPR_VAR FloatRegister f4  = {FloatRegisters::f4};
@@ -925,6 +940,7 @@ class Assembler : public AssemblerShared
 
     BufferOffset as_abss(FloatRegister fd, FloatRegister fs);
     BufferOffset as_absd(FloatRegister fd, FloatRegister fs);
+    BufferOffset as_negs(FloatRegister fd, FloatRegister fs);
     BufferOffset as_negd(FloatRegister fd, FloatRegister fs);
 
     BufferOffset as_muls(FloatRegister fd, FloatRegister fs, FloatRegister ft);
