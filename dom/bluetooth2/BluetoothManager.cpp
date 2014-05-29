@@ -61,6 +61,7 @@ class GetAdaptersTask : public BluetoothReplyRunnable
 
     const InfallibleTArray<BluetoothNamedValue>& adaptersPropertiesArray =
       adaptersProperties.get_ArrayOfBluetoothNamedValue();
+    BT_API2_LOGR("GetAdaptersTask: len[%d]", adaptersPropertiesArray.Length());
 
     // Append a BluetoothAdapter into adapters array for each properties array
     uint32_t numAdapters = adaptersPropertiesArray.Length();
@@ -94,6 +95,7 @@ BluetoothManager::BluetoothManager(nsPIDOMWindow *aWindow)
   MOZ_ASSERT(IsDOMBinding());
 
   ListenToBluetoothSignal(true);
+  BT_API2_LOGR("aWindow %p", aWindow);
 
   // Query adapters list from bluetooth backend
   BluetoothService* bs = BluetoothService::Get();
@@ -131,7 +133,9 @@ BluetoothManager::ListenToBluetoothSignal(bool aStart)
 BluetoothAdapter*
 BluetoothManager::GetDefaultAdapter()
 {
-  return (DefaultAdapterExists()) ? mAdapters[mDefaultAdapterIndex] : nullptr;
+  BT_API2_LOGR("mDefaultAdapterIndex: %d", mDefaultAdapterIndex);
+
+  return DefaultAdapterExists() ? mAdapters[mDefaultAdapterIndex] : nullptr;
 }
 
 void
@@ -175,6 +179,7 @@ void
 BluetoothManager::HandleAdapterAdded(const BluetoothValue& aValue)
 {
   MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
+  BT_API2_LOGR();
 
   AppendAdapter(aValue);
 
@@ -218,6 +223,8 @@ BluetoothManager::ReselectDefaultAdapter()
 {
   // Select the first of existing/remaining adapters as default adapter
   mDefaultAdapterIndex = mAdapters.IsEmpty() ? -1 : 0;
+  BT_API2_LOGR("mAdapters length: %d => NEW mDefaultAdapterIndex: %d",
+               mAdapters.Length(), mDefaultAdapterIndex);
 
   // Notify application of default adapter change
   DispatchAttributeEvent();
@@ -227,9 +234,10 @@ void
 BluetoothManager::DispatchAdapterEvent(const nsAString& aType,
                                        const BluetoothAdapterEventInit& aInit)
 {
+  BT_API2_LOGR("aType (%s)", NS_ConvertUTF16toUTF8(aType).get());
+
   nsRefPtr<BluetoothAdapterEvent> event =
     BluetoothAdapterEvent::Constructor(this, aType, aInit);
-
   DispatchTrustedEvent(event);
 }
 
@@ -237,6 +245,7 @@ void
 BluetoothManager::DispatchAttributeEvent()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  BT_API2_LOGR();
 
   // Wrap default adapter
   AutoJSContext cx;
@@ -255,6 +264,8 @@ BluetoothManager::DispatchAttributeEvent()
       JS_ClearPendingException(cx);
       return;
     }
+
+    BT_API2_LOGR("Default adapter is wrapped");
   }
 
   // Notify application of default adapter change
