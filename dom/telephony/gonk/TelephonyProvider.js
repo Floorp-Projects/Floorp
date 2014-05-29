@@ -241,19 +241,16 @@ TelephonyProvider.prototype = {
       case nsITelephonyProvider.CALL_STATE_DIALING: // Fall through...
       case nsITelephonyProvider.CALL_STATE_ALERTING:
       case nsITelephonyProvider.CALL_STATE_CONNECTED:
-        aCall.isActive = true;
         this._activeCall = new SingleCall(aCall);
         this._updateCallAudioState(aCall);
         break;
 
       case nsITelephonyProvider.CALL_STATE_INCOMING:
-        aCall.isActive = false;
         this._updateCallAudioState(aCall);
         break;
 
       case nsITelephonyProvider.CALL_STATE_HELD: // Fall through...
       case nsITelephonyProvider.CALL_STATE_DISCONNECTED:
-        aCall.isActive = false;
         if (this._matchActiveSingleCall(aCall)) {
           // Previously active call is not active now.
           this._activeCall = null;
@@ -359,7 +356,6 @@ TelephonyProvider.prototype = {
       for (let call of response.calls) {
         call.clientId = aClientId;
         call.state = this._convertRILCallState(call.state);
-        call.isActive = this._matchActiveSingleCall(call);
         call.isSwitchable = true;
         call.isMergeable = true;
 
@@ -404,8 +400,7 @@ TelephonyProvider.prototype = {
       for (let i = 0, indexes = Object.keys(calls); i < indexes.length; ++i) {
         let call = calls[indexes[i]];
         aListener.enumerateCallState(call.clientId, call.callIndex,
-                                     call.state, call.number,
-                                     call.isActive, call.isOutgoing,
+                                     call.state, call.number, call.isOutgoing,
                                      call.isEmergency, call.isConference,
                                      call.isSwitchable, call.isMergeable);
       }
@@ -774,7 +769,6 @@ TelephonyProvider.prototype = {
                                                     aCall.callIndex,
                                                     aCall.state,
                                                     aCall.number,
-                                                    aCall.isActive,
                                                     aCall.isOutgoing,
                                                     aCall.isEmergency,
                                                     aCall.isConference,
@@ -828,7 +822,6 @@ TelephonyProvider.prototype = {
       call.state = aCall.state;
       call.isConference = aCall.isConference;
       call.isEmergency = aCall.isEmergency;
-      call.isActive = aCall.isActive;
       call.isSwitchable = aCall.isSwitchable != null ?
                           aCall.isSwitchable : call.isSwitchable;
       call.isMergeable = aCall.isMergeable != null ?
@@ -847,7 +840,6 @@ TelephonyProvider.prototype = {
                                                   call.callIndex,
                                                   call.state,
                                                   call.number,
-                                                  call.isActive,
                                                   call.isOutgoing,
                                                   call.isEmergency,
                                                   call.isConference,
