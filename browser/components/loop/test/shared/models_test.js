@@ -27,52 +27,75 @@ describe("loop.shared.models", function() {
   });
 
   describe("ConversationModel", function() {
-    var conversation, fakeSessionData, fakeBaseServerUrl;
+    var conversation, reqCallInfoStub, reqCallsInfoStub,
+      fakeSessionData, fakeBaseServerUrl;
 
     beforeEach(function() {
       conversation = new sharedModels.ConversationModel();
+      conversation.set("loopToken", "fakeToken");
       fakeSessionData = {
         sessionId:    "sessionId",
         sessionToken: "sessionToken",
         apiKey:       "apiKey"
       };
       fakeBaseServerUrl = "http://fakeBaseServerUrl";
+      reqCallInfoStub = sandbox.stub(loop.shared.Client.prototype,
+        "requestCallInfo");
+      reqCallsInfoStub = sandbox.stub(loop.shared.Client.prototype,
+        "requestCallsInfo");
     });
 
     describe("#initiate", function() {
-      it("should throw an Error if no baseServerUrl argument is passed",
-        function () {
-          expect(function() {
-            conversation.initiate();
-          }).to.Throw(Error, /baseServerUrl/);
+      it("call requestCallInfo on the client for outgoing calls",
+        function() {
+          conversation.initiate({
+            baseServerUrl: fakeBaseServerUrl,
+            outgoing: true
+          });
+
+          sinon.assert.calledOnce(reqCallInfoStub);
+          sinon.assert.calledWith(reqCallInfoStub, "fakeToken");
         });
 
-      it("should prevent launching a conversation when token is missing",
+      it("should not call requestCallsInfo on the client for outgoing calls",
         function() {
-          expect(function() {
-            conversation.initiate(fakeBaseServerUrl);
-          }).to.Throw(Error, /missing required attribute loopToken/);
+          conversation.initiate({
+            baseServerUrl: fakeBaseServerUrl,
+            outgoing: true
+          });
+
+          sinon.assert.notCalled(reqCallsInfoStub);
         });
 
-      it("should make one ajax POST to a correctly constructed URL",
+      it("call requestCallsInfo on the client for incoming calls",
         function() {
-          conversation.set("loopToken", "fakeToken");
+          conversation.initiate({
+            baseServerUrl: fakeBaseServerUrl,
+            outgoing: false
+          });
 
-          conversation.initiate(fakeBaseServerUrl);
+          sinon.assert.calledOnce(reqCallsInfoStub);
+          sinon.assert.calledWith(reqCallsInfoStub);
+        });
 
-          expect(requests).to.have.length.of(1);
-          expect(requests[0].method.toLowerCase()).to.equal("post");
-          expect(requests[0].url).to.match(
-            new RegExp("^" + fakeBaseServerUrl + "/calls/fakeToken"));
+      it("should not call requestCallInfo on the client for incoming calls",
+        function() {
+          conversation.initiate({
+            baseServerUrl: fakeBaseServerUrl,
+            outgoing: false
+          });
+
+          sinon.assert.notCalled(reqCallInfoStub);
         });
 
       it("should update conversation session information from server data",
         function() {
-          conversation.set("loopToken", "fakeToken");
-          conversation.initiate(fakeBaseServerUrl);
+          reqCallInfoStub.callsArgWith(1, null, fakeSessionData);
 
-          requests[0].respond(200, {"Content-Type": "application/json"},
-                                   JSON.stringify(fakeSessionData));
+          conversation.initiate({
+            baseServerUrl: fakeBaseServerUrl,
+            outgoing: true
+          });
 
           expect(conversation.get("sessionId")).eql("sessionId");
           expect(conversation.get("sessionToken")).eql("sessionToken");
@@ -81,27 +104,29 @@ describe("loop.shared.models", function() {
 
       it("should trigger session:ready without fetching session data over "+
          "HTTP when already set", function(done) {
-          sandbox.stub(jQuery, "ajax");
-          conversation.set("loopToken", "fakeToken");
           conversation.set(fakeSessionData);
 
           conversation.on("session:ready", function() {
-            sinon.assert.notCalled($.ajax);
+            sinon.assert.notCalled(reqCallInfoStub);
             done();
-          }).initiate(fakeBaseServerUrl);
+          }).initiate({
+            baseServerUrl: fakeBaseServerUrl,
+            outgoing: true
+          });
+
         });
 
       it("should trigger a `session:error` on failure", function(done) {
-        conversation.set("loopToken", "fakeToken");
-        conversation.initiate(fakeBaseServerUrl);
+        reqCallInfoStub.callsArgWith(1,
+          new Error("failed: HTTP 400 Bad Request; fake"));
 
         conversation.on("session:error", function(err) {
           expect(err.message).to.match(/failed: HTTP 400 Bad Request; fake/);
           done();
+        }).initiate({
+          baseServerUrl: fakeBaseServerUrl,
+          outgoing: true
         });
-
-        requests[0].respond(400, {"Content-Type": "application/json"},
-                                  JSON.stringify({error: "fake"}));
       });
     });
 

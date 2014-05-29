@@ -38,16 +38,6 @@ describe("loop.webapp", function() {
           new loop.webapp.WebappRouter();
         }).to.Throw(Error, /missing required conversation/);
       });
-
-      it("should load the HomeView", function() {
-        sandbox.stub(loop.webapp.WebappRouter.prototype, "loadView");
-
-        var router = new loop.webapp.WebappRouter({conversation: conversation});
-
-        sinon.assert.calledOnce(router.loadView);
-        sinon.assert.calledWithMatch(router.loadView,
-                                     {$el: {selector: "#home"}});
-      });
     });
 
     describe("constructed", function() {
@@ -164,6 +154,12 @@ describe("loop.webapp", function() {
 
         sinon.assert.calledOnce(fakeSubmitEvent.preventDefault);
         sinon.assert.calledOnce(initiate);
+        // XXX host should be configurable
+        //     see https://bugzilla.mozilla.org/show_bug.cgi?id=987086
+        sinon.assert.calledWith(initiate, {
+          baseServerUrl: "http://localhost:5000",
+          outgoing: true
+        });
       });
     });
   });

@@ -16,6 +16,10 @@ loop.shared.models = (function() {
     defaults: {
       callerId:     undefined, // Loop caller id
       loopToken:    undefined, // Loop conversation token
+      loopVersion:  undefined, // Loop version for /calls/ information. This
+                               // is the version received from the push
+                               // notification and is used by the server to
+                               // determine the pending calls
       sessionId:    undefined, // TB session id
       sessionToken: undefined, // TB session token
       apiKey:       undefined  // TB api key
@@ -26,48 +30,56 @@ loop.shared.models = (function() {
      * server and updates appropriately the current model attributes with the
      * data.
      *
+     * Available options:
+     *
+     * - {String} baseServerUrl The server URL
+     * - {Boolean} outgoing Set to true if this model represents the
+     *                            outgoing call.
+     *
      * Triggered events:
      *
      * - `session:ready` when the session information have been successfully
      *   retrieved from the server;
      * - `session:error` when the request failed.
      *
-     * @param  {String} baseServerUrl The server URL
-     * @throws {Error}  If no baseServerUrl is given
-     * @throws {Error}  If no conversation token is set
+     * @param {Object} options Options object
      */
-    initiate: function(baseServerUrl) {
-      if (!baseServerUrl) {
-        throw new Error("baseServerUrl arg must be passed to initiate()");
-      }
-
-      if (!this.get("loopToken")) {
-        throw new Error("missing required attribute loopToken");
-      }
-
+    initiate: function(options) {
       // Check if the session is already set
       if (this.isSessionReady()) {
         return this.trigger("session:ready", this);
       }
 
-      var request = $.ajax({
-        url:         baseServerUrl + "/calls/" + this.get("loopToken"),
-        method:      "POST",
-        contentType: "application/json",
-        data:        JSON.stringify({}),
-        dataType:    "json"
+      var client = new loop.shared.Client({
+        baseServerUrl: options.baseServerUrl
       });
 
-      request.done(this.setReady.bind(this));
-
-      request.fail(function(xhr, _, statusText) {
-        var serverError = xhr.status + " " + statusText;
-        if (typeof xhr.responseJSON === "object" && xhr.responseJSON.error) {
-          serverError += "; " + xhr.responseJSON.error;
+      function handleResult(err, sessionData) {
+        /*jshint validthis:true */
+        if (err) {
+          this.trigger("session:error", new Error(
+            "Retrieval of session information failed: HTTP " + err));
+          return;
         }
-        this.trigger("session:error", new Error(
-          "Retrieval of session information failed: HTTP " + serverError));
-      }.bind(this));
+
+        // XXX For incoming calls we might have more than one call queued.
+        // For now, we'll just assume the first call is the right information.
+        // We'll probably really want to be getting this data from the
+        // background worker on the desktop client.
+        // Bug 990714 should fix this.
+        if (!options.outgoing)
+          sessionData = sessionData[0];
+
+        this.setReady(sessionData);
+      }
+
+      if (options.outgoing) {
+        client.requestCallInfo(this.get("loopToken"), handleResult.bind(this));
+      }
+      else {
+        client.requestCallsInfo(this.get("loopVersion"),
+          handleResult.bind(this));
+      }
     },
 
     /**
