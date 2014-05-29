@@ -3943,7 +3943,7 @@ CanvasRenderingContext2D::PutImageData(ImageData& imageData, double dx,
 
   error = PutImageData_explicit(JS_DoubleToInt32(dx), JS_DoubleToInt32(dy),
                                 imageData.Width(), imageData.Height(),
-                                arr.Data(), arr.Length(), false, 0, 0, 0, 0);
+                                &arr, false, 0, 0, 0, 0);
 }
 
 void
@@ -3957,7 +3957,7 @@ CanvasRenderingContext2D::PutImageData(ImageData& imageData, double dx,
 
   error = PutImageData_explicit(JS_DoubleToInt32(dx), JS_DoubleToInt32(dy),
                                 imageData.Width(), imageData.Height(),
-                                arr.Data(), arr.Length(), true,
+                                &arr, true,
                                 JS_DoubleToInt32(dirtyX),
                                 JS_DoubleToInt32(dirtyY),
                                 JS_DoubleToInt32(dirtyWidth),
@@ -3969,7 +3969,7 @@ CanvasRenderingContext2D::PutImageData(ImageData& imageData, double dx,
 
 nsresult
 CanvasRenderingContext2D::PutImageData_explicit(int32_t x, int32_t y, uint32_t w, uint32_t h,
-                                                unsigned char *aData, uint32_t aDataLen,
+                                                dom::Uint8ClampedArray* aArray,
                                                 bool hasDirtyRect, int32_t dirtyX, int32_t dirtyY,
                                                 int32_t dirtyWidth, int32_t dirtyHeight)
 {
@@ -4022,8 +4022,12 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t x, int32_t y, uint32_t w
     return NS_OK;
   }
 
+  aArray->ComputeLengthAndData();
+
+  uint32_t dataLen = aArray->Length();
+
   uint32_t len = w * h * 4;
-  if (aDataLen != len) {
+  if (dataLen != len) {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
@@ -4034,7 +4038,7 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t x, int32_t y, uint32_t w
     return NS_ERROR_FAILURE;
   }
 
-  uint8_t *src = aData;
+  uint8_t *src = aArray->Data();
   uint8_t *dst = imgsurf->Data();
 
   for (uint32_t j = 0; j < h; j++) {

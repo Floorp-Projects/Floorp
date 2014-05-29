@@ -25,7 +25,7 @@ struct TypedArrayObjectStorage : AllTypedArraysBase {
 protected:
   JSObject* mObj;
 
-  TypedArrayObjectStorage()
+  TypedArrayObjectStorage(JSObject *obj) : mObj(obj)
   {
   }
 
@@ -48,23 +48,32 @@ private:
  * or array buffer object.
  */
 template<typename T,
-         JSObject* UnboxArray(JSObject*, uint32_t*, T**)>
+         JSObject* UnwrapArray(JSObject*),
+         void GetLengthAndData(JSObject*, uint32_t*, T**)>
 struct TypedArray_base : public TypedArrayObjectStorage {
   typedef T element_type;
 
   TypedArray_base(JSObject* obj)
+    : TypedArrayObjectStorage(obj),
+      mData(nullptr),
+      mLength(0),
+      mComputed(false)
   {
-    DoInit(obj);
+    MOZ_ASSERT(obj != nullptr);
   }
 
   TypedArray_base()
+    : TypedArrayObjectStorage(nullptr),
+      mData(nullptr),
+      mLength(0),
+      mComputed(false)
   {
-    mObj = nullptr;
   }
 
 private:
-  T* mData;
-  uint32_t mLength;
+  mutable T* mData;
+  mutable uint32_t mLength;
+  mutable bool mComputed;
 
 public:
   inline bool Init(JSObject* obj)
@@ -79,12 +88,12 @@ public:
   }
 
   inline T *Data() const {
-    MOZ_ASSERT(inited());
+    MOZ_ASSERT(mComputed);
     return mData;
   }
 
   inline uint32_t Length() const {
-    MOZ_ASSERT(inited());
+    MOZ_ASSERT(mComputed);
     return mLength;
   }
 
@@ -99,10 +108,26 @@ public:
       JS::MutableHandle<JSObject*>::fromMarkedLocation(&mObj));
   }
 
+  inline void ComputeLengthAndData() const
+  {
+    MOZ_ASSERT(inited());
+    MOZ_ASSERT(!mComputed);
+    GetLengthAndData(mObj, &mLength, &mData);
+    mComputed = true;
+  }
+
 protected:
   inline void DoInit(JSObject* obj)
   {
-    mObj = UnboxArray(obj, &mLength, &mData);
+    mObj = UnwrapArray(obj);
+  }
+
+  inline void ComputeData() const {
+    MOZ_ASSERT(inited());
+    if (!mComputed) {
+      GetLengthAndData(mObj, &mLength, &mData);
+      mComputed = true;
+    }
   }
 
 private:
@@ -111,16 +136,17 @@ private:
 
 
 template<typename T,
+         JSObject* UnwrapArray(JSObject*),
          T* GetData(JSObject*),
-         JSObject* UnboxArray(JSObject*, uint32_t*, T**),
+         void GetLengthAndData(JSObject*, uint32_t*, T**),
          JSObject* CreateNew(JSContext*, uint32_t)>
-struct TypedArray : public TypedArray_base<T,UnboxArray> {
+struct TypedArray : public TypedArray_base<T, UnwrapArray, GetLengthAndData> {
   TypedArray(JSObject* obj) :
-    TypedArray_base<T,UnboxArray>(obj)
+    TypedArray_base<T, UnwrapArray, GetLengthAndData>(obj)
   {}
 
   TypedArray() :
-    TypedArray_base<T,UnboxArray>()
+    TypedArray_base<T, UnwrapArray, GetLengthAndData>()
   {}
 
   static inline JSObject*
@@ -164,37 +190,37 @@ private:
   TypedArray(const TypedArray&) MOZ_DELETE;
 };
 
-typedef TypedArray<int8_t, JS_GetInt8ArrayData, JS_GetObjectAsInt8Array,
-                   JS_NewInt8Array>
+typedef TypedArray<int8_t, js::UnwrapInt8Array, JS_GetInt8ArrayData,
+                   js::GetInt8ArrayLengthAndData, JS_NewInt8Array>
         Int8Array;
-typedef TypedArray<uint8_t, JS_GetUint8ArrayData,
-                   JS_GetObjectAsUint8Array, JS_NewUint8Array>
+typedef TypedArray<uint8_t, js::UnwrapUint8Array, JS_GetUint8ArrayData,
+                   js::GetUint8ArrayLengthAndData, JS_NewUint8Array>
         Uint8Array;
-typedef TypedArray<uint8_t, JS_GetUint8ClampedArrayData,
-                   JS_GetObjectAsUint8ClampedArray, JS_NewUint8ClampedArray>
+typedef TypedArray<uint8_t, js::UnwrapUint8ClampedArray, JS_GetUint8ClampedArrayData,
+                   js::GetUint8ClampedArrayLengthAndData, JS_NewUint8ClampedArray>
         Uint8ClampedArray;
-typedef TypedArray<int16_t, JS_GetInt16ArrayData,
-                   JS_GetObjectAsInt16Array, JS_NewInt16Array>
+typedef TypedArray<int16_t, js::UnwrapInt16Array, JS_GetInt16ArrayData,
+                   js::GetInt16ArrayLengthAndData, JS_NewInt16Array>
         Int16Array;
-typedef TypedArray<uint16_t, JS_GetUint16ArrayData,
-                   JS_GetObjectAsUint16Array, JS_NewUint16Array>
+typedef TypedArray<uint16_t, js::UnwrapUint16Array, JS_GetUint16ArrayData,
+                   js::GetUint16ArrayLengthAndData, JS_NewUint16Array>
         Uint16Array;
-typedef TypedArray<int32_t, JS_GetInt32ArrayData,
-                   JS_GetObjectAsInt32Array, JS_NewInt32Array>
+typedef TypedArray<int32_t, js::UnwrapInt32Array, JS_GetInt32ArrayData,
+                   js::GetInt32ArrayLengthAndData, JS_NewInt32Array>
         Int32Array;
-typedef TypedArray<uint32_t, JS_GetUint32ArrayData,
-                   JS_GetObjectAsUint32Array, JS_NewUint32Array>
+typedef TypedArray<uint32_t, js::UnwrapUint32Array, JS_GetUint32ArrayData,
+                   js::GetUint32ArrayLengthAndData, JS_NewUint32Array>
         Uint32Array;
-typedef TypedArray<float, JS_GetFloat32ArrayData,
-                   JS_GetObjectAsFloat32Array, JS_NewFloat32Array>
+typedef TypedArray<float, js::UnwrapFloat32Array, JS_GetFloat32ArrayData,
+                   js::GetFloat32ArrayLengthAndData, JS_NewFloat32Array>
         Float32Array;
-typedef TypedArray<double, JS_GetFloat64ArrayData,
-                   JS_GetObjectAsFloat64Array, JS_NewFloat64Array>
+typedef TypedArray<double, js::UnwrapFloat64Array, JS_GetFloat64ArrayData,
+                   js::GetFloat64ArrayLengthAndData, JS_NewFloat64Array>
         Float64Array;
-typedef TypedArray_base<uint8_t, JS_GetObjectAsArrayBufferView>
+typedef TypedArray_base<uint8_t, js::UnwrapArrayBufferView, js::GetArrayBufferViewLengthAndData>
         ArrayBufferView;
-typedef TypedArray<uint8_t, JS_GetArrayBufferData,
-                   JS_GetObjectAsArrayBuffer, JS_NewArrayBuffer>
+typedef TypedArray<uint8_t, js::UnwrapArrayBuffer, JS_GetArrayBufferData,
+                   js::GetArrayBufferLengthAndData, JS_NewArrayBuffer>
         ArrayBuffer;
 
 // A class for converting an nsTArray to a TypedArray
