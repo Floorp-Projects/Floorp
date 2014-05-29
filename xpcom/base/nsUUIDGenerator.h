@@ -29,7 +29,7 @@ private:
 protected:
 
   mozilla::Mutex mLock;
-#if !defined(XP_WIN) && !defined(XP_MACOSX) && !defined(ANDROID)
+#if !defined(XP_WIN) && !defined(XP_MACOSX) && !defined(HAVE_ARC4RANDOM)
   char mState[128];
   char* mSavedState;
   uint8_t mRBytes;
