@@ -181,6 +181,12 @@ uint32_t MediaOptimization::SetTargetRates(
     uint32_t round_trip_time_ms,
     VCMProtectionCallback* protection_callback,
     VCMQMSettingsCallback* qmsettings_callback) {
+  WEBRTC_TRACE(webrtc::kTraceDebug,
+               webrtc::kTraceVideoCoding,
+               id_,
+               "SetTargetRates: %u bps %u%% loss %dms RTT",
+               target_bitrate, fraction_lost, round_trip_time_ms);
+
   // TODO(holmer): Consider putting this threshold only on the video bitrate,
   // and not on protection.
   if (max_bit_rate_ > 0 &&
@@ -276,6 +282,15 @@ uint32_t MediaOptimization::SetTargetRates(
   frame_dropper_->SetRates(target_video_bitrate_kbps, incoming_frame_rate_);
 
   if (enable_qm_ && qmsettings_callback) {
+    WEBRTC_TRACE(webrtc::kTraceDebug,
+                 webrtc::kTraceVideoCoding,
+                 id_,
+                 "SetTargetRates/enable_qm: %f bps %f kbps %f fps %d loss",
+                 target_video_bitrate_kbps,
+                 sent_video_rate_kbps,
+                 incoming_frame_rate_,
+                 fraction_lost_);
+
     // Update QM with rates.
     qm_resolution_->UpdateRates(target_video_bitrate_kbps,
                                 sent_video_rate_kbps,
@@ -435,6 +450,9 @@ int32_t MediaOptimization::SelectQuality(
 
   // Update QM will long-term averaged content metrics.
   qm_resolution_->UpdateContent(content_->LongTermAvgData());
+
+  // Update QM with current CPU load
+  qm_resolution_->SetCPULoadState(loadstate_);
 
   // Select quality mode.
   VCMResolutionScale* qm = NULL;
@@ -598,6 +616,10 @@ void MediaOptimization::ProcessIncomingFrameRate(int64_t now) {
       incoming_frame_rate_ = nr_of_frames * 1000.0f / static_cast<float>(diff);
     }
   }
+}
+
+void MediaOptimization::SetCPULoadState(CPULoadState state) {
+    loadstate_ = state;
 }
 
 void MediaOptimization::CheckSuspendConditions() {

@@ -429,3 +429,4 @@ void WebRtcAec_InitAec_SSE2(void) {
   WebRtcAec_FilterAdaptation = FilterAdaptationSSE2;
   WebRtcAec_OverdriveAndSuppress = OverdriveAndSuppressSSE2;
 }
+

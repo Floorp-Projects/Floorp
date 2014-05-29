@@ -122,7 +122,7 @@ AudioRecordJni::AudioRecordJni(
       _recError(0),
       _delayRecording(0),
       _AGC(false),
-      _samplingFreqIn((N_REC_SAMPLES_PER_SEC/1000)),
+      _samplingFreqIn((N_REC_SAMPLES_PER_SEC)),
       _recAudioSource(1) { // 1 is AudioSource.MIC which is our default
   memset(_recBuffer, 0, sizeof(_recBuffer));
 }
@@ -419,17 +419,11 @@ int32_t AudioRecordJni::InitRecording() {
   jmethodID initRecordingID = env->GetMethodID(_javaScClass, "InitRecording",
                                                "(II)I");
 
-  int samplingFreq = 44100;
-  if (_samplingFreqIn != 44)
-  {
-    samplingFreq = _samplingFreqIn * 1000;
-  }
-
   int retVal = -1;
 
   // call java sc object method
   jint res = env->CallIntMethod(_javaScObj, initRecordingID, _recAudioSource,
-                                samplingFreq);
+                                _samplingFreqIn);
   if (res < 0)
   {
     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
@@ -438,7 +432,7 @@ int32_t AudioRecordJni::InitRecording() {
   else
   {
     // Set the audio device buffer sampling rate
-    _ptrAudioBuffer->SetRecordingSampleRate(_samplingFreqIn * 1000);
+    _ptrAudioBuffer->SetRecordingSampleRate(_samplingFreqIn);
 
     // the init rec function returns a fixed delay
     _delayRecording = res / _samplingFreqIn;
@@ -790,14 +784,7 @@ int32_t AudioRecordJni::SetRecordingSampleRate(const uint32_t samplesPerSec) {
   }
 
   // set the recording sample rate to use
-  if (samplesPerSec == 44100)
-  {
-    _samplingFreqIn = 44;
-  }
-  else
-  {
-    _samplingFreqIn = samplesPerSec / 1000;
-  }
+  _samplingFreqin = samplesPerSec;
 
   // Update the AudioDeviceBuffer
   _ptrAudioBuffer->SetRecordingSampleRate(samplesPerSec);
@@ -997,11 +984,7 @@ int32_t AudioRecordJni::InitSampleRate() {
   if (_samplingFreqIn > 0)
   {
     // read the configured sampling rate
-    samplingFreq = 44100;
-    if (_samplingFreqIn != 44)
-    {
-      samplingFreq = _samplingFreqIn * 1000;
-    }
+    samplingFreq = _samplingFreqIn;
     WEBRTC_TRACE(kTraceStateInfo, kTraceAudioDevice, _id,
                  "  Trying configured recording sampling rate %d",
                  samplingFreq);
@@ -1042,14 +1025,7 @@ int32_t AudioRecordJni::InitSampleRate() {
   }
 
   // set the recording sample rate to use
-  if (samplingFreq == 44100)
-  {
-    _samplingFreqIn = 44;
-  }
-  else
-  {
-    _samplingFreqIn = samplingFreq / 1000;
-  }
+  _samplingFreqIn = samplingFreq;
 
   WEBRTC_TRACE(kTraceStateInfo, kTraceAudioDevice, _id,
                "Recording sample rate set to (%d)", _samplingFreqIn);
@@ -1141,7 +1117,7 @@ bool AudioRecordJni::RecThreadProcess()
 
   if (_recording)
   {
-    uint32_t samplesToRec = _samplingFreqIn * 10;
+    uint32_t samplesToRec = _samplingFreqIn / 100;
 
     // Call java sc object method to record data to direct buffer
     // Will block until data has been recorded (see java sc class),
@@ -1158,7 +1134,7 @@ bool AudioRecordJni::RecThreadProcess()
     }
     else
     {
-      _delayRecording = recDelayInSamples / _samplingFreqIn;
+      _delayRecording = (recDelayInSamples * 1000) / _samplingFreqIn;
     }
     Lock();
 

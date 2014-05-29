@@ -17,7 +17,7 @@
 // For access to standard POSIXish features, use WEBRTC_POSIX instead of a
 // more specific macro.
 #if defined(WEBRTC_MAC) || defined(WEBRTC_LINUX) || \
-    defined(WEBRTC_ANDROID)
+    defined(WEBRTC_ANDROID) || defined(WEBRTC_BSD)
 #define WEBRTC_POSIX
 #endif
 
@@ -45,9 +45,90 @@
 //#define WEBRTC_ARCH_ARMEL
 #define WEBRTC_ARCH_32_BITS
 #define WEBRTC_ARCH_LITTLE_ENDIAN
-#elif defined(__MIPSEL__)
-#define WEBRTC_ARCH_32_BITS
+#elif defined(__powerpc64__)
+#define WEBRTC_ARCH_PPC64 1
+#define WEBRTC_ARCH_64_BITS 1
+#ifdef __LITTLE_ENDIAN__
 #define WEBRTC_ARCH_LITTLE_ENDIAN
+#define WEBRTC_LITTLE_ENDIAN
+#else
+#define WEBRTC_ARCH_BIG_ENDIAN
+#define WEBRTC_BIG_ENDIAN
+#endif
+#elif defined(__ppc__) || defined(__powerpc__)
+#define WEBRTC_ARCH_PPC 1
+#define WEBRTC_ARCH_32_BITS 1
+#ifdef __LITTLE_ENDIAN__
+#define WEBRTC_ARCH_LITTLE_ENDIAN
+#define WEBRTC_LITTLE_ENDIAN
+#else
+#define WEBRTC_ARCH_BIG_ENDIAN
+#define WEBRTC_BIG_ENDIAN
+#endif
+#elif defined(__sparc64__)
+#define WEBRTC_ARCH_SPARC 1
+#define WEBRTC_ARCH_64_BITS 1
+#define WEBRTC_ARCH_BIG_ENDIAN
+#define WEBRTC_BIG_ENDIAN
+#elif defined(__sparc__)
+#define WEBRTC_ARCH_SPARC 1
+#define WEBRTC_ARCH_32_BITS 1
+#define WEBRTC_ARCH_BIG_ENDIAN
+#define WEBRTC_BIG_ENDIAN
+#elif defined(__mips__)
+#define WEBRTC_ARCH_MIPS 1
+#if defined(_ABI64) && _MIPS_SIM == _ABI64
+#define WEBRTC_ARCH_64_BITS 1
+#else
+#define WEBRTC_ARCH_32_BITS 1
+#endif
+#if defined(__MIPSEB__)
+#define WEBRTC_ARCH_BIG_ENDIAN
+#define WEBRTC_BIG_ENDIAN
+#else
+#define WEBRTC_ARCH_LITTLE_ENDIAN
+#define WEBRTC_LITTLE_ENDIAN
+#endif
+#elif defined(__hppa__)
+#define WEBRTC_ARCH_HPPA 1
+#define WEBRTC_ARCH_32_BITS 1
+#define WEBRTC_ARCH_BIG_ENDIAN
+#define WEBRTC_BIG_ENDIAN
+#elif defined(__ia64__)
+#define WEBRTC_ARCH_IA64 1
+#define WEBRTC_ARCH_64_BITS 1
+#define WEBRTC_ARCH_LITTLE_ENDIAN
+#define WEBRTC_LITTLE_ENDIAN
+#elif defined(__s390x__)
+#define WEBRTC_ARCH_S390X 1
+#define WEBRTC_ARCH_64_BITS 1
+#define WEBRTC_ARCH_BIG_ENDIAN
+#define WEBRTC_BIG_ENDIAN
+#elif defined(__s390__)
+#define WEBRTC_ARCH_S390 1
+#define WEBRTC_ARCH_32_BITS 1
+#define WEBRTC_ARCH_BIG_ENDIAN
+#define WEBRTC_BIG_ENDIAN
+#elif defined(__aarch64__)
+#define WEBRTC_ARCH_AARCH64 1
+#define WEBRTC_ARCH_64_BITS 1
+#if defined(__AARCH64EL__)
+#define WEBRTC_ARCH_LITTLE_ENDIAN
+#define WEBRTC_LITTLE_ENDIAN
+#elif defined(__AARCH64EB__)
+#define WEBRTC_ARCH_BIG_ENDIAN
+#define WEBRTC_BIG_ENDIAN
+#endif
+#elif defined(__alpha__)
+#define WEBRTC_ARCH_ALPHA 1
+#define WEBRTC_ARCH_64_BITS 1
+#define WEBRTC_ARCH_LITTLE_ENDIAN
+#define WEBRTC_LITTLE_ENDIAN
+#elif defined(__avr32__)
+#define WEBRTC_ARCH_AVR32 1
+#define WEBRTC_ARCH_32_BITS 1
+#define WEBRTC_ARCH_BIG_ENDIAN
+#define WEBRTC_BIG_ENDIAN
 #else
 #error Please add support for your architecture in typedefs.h
 #endif

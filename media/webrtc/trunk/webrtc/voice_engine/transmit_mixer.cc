@@ -1175,6 +1175,8 @@ bool TransmitMixer::IsRecordingMic()
 }
 
 // TODO(andrew): use RemixAndResample for this.
+// Note that if drift compensation is done here, a buffering stage will be
+// needed and this will need to switch to non-fixed resamples.
 int TransmitMixer::GenerateAudioFrame(const int16_t audio[],
                                       int samples_per_channel,
                                       int num_channels,

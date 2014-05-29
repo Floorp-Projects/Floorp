@@ -8,6 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#if defined(_MSC_VER)
+#include <windows.h>
+#endif
+
 #include "webrtc/modules/audio_device/android/single_rw_fifo.h"
 
 static int UpdatePos(int pos, int capacity) {
@@ -18,7 +22,19 @@ namespace webrtc {
 
 namespace subtle {
 
-#if defined(__ARMEL__)
+// Start with compiler support, then processor-specific hacks
+#if defined(__GNUC__) || defined(__clang__)
+// Available on GCC and clang - others?
+inline void MemoryBarrier() {
+  __sync_synchronize();
+}
+
+#elif defined(_MSC_VER)
+inline void MemoryBarrier() {
+  ::MemoryBarrier();
+}
+
+#elif defined(__ARMEL__)
 // From http://src.chromium.org/viewvc/chrome/trunk/src/base/atomicops_internals_arm_gcc.h
 // Note that it is only the MemoryBarrier function that makes this class arm
 // specific. Borrowing other MemoryBarrier implementations, this class could

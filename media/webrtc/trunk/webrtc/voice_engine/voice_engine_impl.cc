@@ -10,8 +10,10 @@
 
 #if defined(WEBRTC_ANDROID)
 #include "webrtc/modules/audio_device/android/audio_device_template.h"
+#if !defined(WEBRTC_GONK)
 #include "webrtc/modules/audio_device/android/audio_record_jni.h"
 #include "webrtc/modules/audio_device/android/audio_track_jni.h"
+#endif
 #include "webrtc/modules/audio_device/android/opensles_input.h"
 #include "webrtc/modules/audio_device/android/opensles_output.h"
 #endif
