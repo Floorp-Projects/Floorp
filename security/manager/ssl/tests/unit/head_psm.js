@@ -441,7 +441,7 @@ function getFailingHttpServer(serverPort, serverIdentities) {
 //   what is the expected base path of the OCSP request.
 function startOCSPResponder(serverPort, identity, invalidIdentities,
                             nssDBLocation, expectedCertNames,
-                            expectedBasePaths) {
+                            expectedBasePaths, expectedMethods) {
   let httpServer = new HttpServer();
   httpServer.registerPrefixHandler("/",
     function handleServerCallback(aRequest, aResponse) {
@@ -453,6 +453,9 @@ function startOCSPResponder(serverPort, identity, invalidIdentities,
         do_check_eq(basePath, expectedBasePaths.shift());
       }
       do_check_true(expectedCertNames.length >= 1);
+      if (expectedMethods && expectedMethods.length >= 1) {
+        do_check_eq(aRequest.method, expectedMethods.shift());
+      }
       let expectedNick = expectedCertNames.shift();
       do_print("Generating ocsp response for '" + expectedNick + "(" +
                basePath + ")'");
@@ -471,6 +474,12 @@ function startOCSPResponder(serverPort, identity, invalidIdentities,
   return {
     stop: function(callback) {
       do_check_eq(expectedCertNames.length, 0);
+      if (expectedMethods) {
+        do_check_eq(expectedMethods.length, 0);
+      }
+      if (expectedBasePaths) {
+        do_check_eq(expectedBasePaths.length, 0);
+      }
       httpServer.stop(callback);
     }
   };

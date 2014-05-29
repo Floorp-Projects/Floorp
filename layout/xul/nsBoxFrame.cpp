@@ -138,22 +138,16 @@ nsBoxFrame::~nsBoxFrame()
 {
 }
 
-nsresult
+void
 nsBoxFrame::SetInitialChildList(ChildListID     aListID,
                                 nsFrameList&    aChildList)
 {
-  nsresult r = nsContainerFrame::SetInitialChildList(aListID, aChildList);
-  if (r == NS_OK) {
-    // initialize our list of infos.
-    nsBoxLayoutState state(PresContext());
-    CheckBoxOrder();
-    if (mLayoutManager)
-      mLayoutManager->ChildrenSet(this, state, mFrames.FirstChild());
-  } else {
-    NS_WARNING("Warning add child failed!!\n");
-  }
-
-  return r;
+  nsContainerFrame::SetInitialChildList(aListID, aChildList);
+  // initialize our list of infos.
+  nsBoxLayoutState state(PresContext());
+  CheckBoxOrder();
+  if (mLayoutManager)
+    mLayoutManager->ChildrenSet(this, state, mFrames.FirstChild());
 }
 
 /* virtual */ void
@@ -999,7 +993,7 @@ nsBoxFrame::MarkIntrinsicWidthsDirty()
   // IsBoxWrapped check.
 }
 
-nsresult
+void
 nsBoxFrame::RemoveFrame(ChildListID     aListID,
                         nsIFrame*       aOldFrame)
 {
@@ -1021,10 +1015,9 @@ nsBoxFrame::RemoveFrame(ChildListID     aListID,
   PresContext()->PresShell()->
     FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                      NS_FRAME_HAS_DIRTY_CHILDREN);
-  return NS_OK;
 }
 
-nsresult
+void
 nsBoxFrame::InsertFrames(ChildListID     aListID,
                          nsIFrame*       aPrevFrame,
                          nsFrameList&    aFrameList)
@@ -1059,11 +1052,10 @@ nsBoxFrame::InsertFrames(ChildListID     aListID,
    PresContext()->PresShell()->
      FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                       NS_FRAME_HAS_DIRTY_CHILDREN);
-   return NS_OK;
 }
 
 
-nsresult
+void
 nsBoxFrame::AppendFrames(ChildListID     aListID,
                          nsFrameList&    aFrameList)
 {
@@ -1095,7 +1087,6 @@ nsBoxFrame::AppendFrames(ChildListID     aListID,
        FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                         NS_FRAME_HAS_DIRTY_CHILDREN);
    }
-   return NS_OK;
 }
 
 /* virtual */ nsContainerFrame*

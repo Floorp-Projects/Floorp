@@ -43,6 +43,7 @@ class RemoteRunner(Runner):
         self.dm = devicemanager
         self.last_test = None
         self.remote_test_root = remote_test_root or self.dm.getDeviceRoot()
+        self.log.info('using %s as test_root' % self.remote_test_root)
         self.remote_profile = posixpath.join(self.remote_test_root, 'profile')
         self.restore = restore
         self.added_files = set()
@@ -109,6 +110,9 @@ class B2GRunner(RemoteRunner):
                  test_script=None, test_script_args=None,
                  marionette_port=None, emulator=None, **kwargs):
 
+        remote_test_root = kwargs.get('remote_test_root')
+        if not remote_test_root:
+            kwargs['remote_test_root'] = '/data/local'
         RemoteRunner.__init__(self, profile, devicemanager, **kwargs)
         self.log = mozlog.getLogger('B2GRunner')
 

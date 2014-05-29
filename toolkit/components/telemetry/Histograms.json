@@ -2704,6 +2704,14 @@
     "extended_statistics_ok": true,
     "description": "Time spent (ms) during showdown deleting disk cache for 'clear private data' option"
   },
+  "NETWORK_DISK_CACHE2_SHUTDOWN_CLEAR_PRIVATE": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Time spent (ms) during showdown deleting disk cache v2 for 'clear private data' option"
+  },
   "NETWORK_DISK_CACHE_REVALIDATION": {
     "expires_in_version": "never",
     "kind": "exponential",

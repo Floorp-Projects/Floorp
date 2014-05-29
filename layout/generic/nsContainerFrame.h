@@ -85,17 +85,10 @@ public:
    *            NS_FRAME_IS_DIRTY bit set.  Must not be empty.
    *            This method cannot handle the child list returned by
    *            GetAbsoluteListID().
-   * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
-   *            name,
-   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame or if the
-   *            initial list of frames has already been set for that child list,
-   *          NS_OK otherwise.  In this case, SetInitialChildList empties out
-   *            aChildList in the process of moving the frames over to its own
-   *            child list.
    * @see     #Init()
    */
-  virtual nsresult SetInitialChildList(ChildListID aListID,
-                                       nsFrameList& aChildList);
+  virtual void SetInitialChildList(ChildListID aListID,
+                                   nsFrameList& aChildList);
 
   /**
    * This method is responsible for appending frames to the frame
@@ -105,14 +98,8 @@ public:
    * @param   aListID the child list identifier.
    * @param   aFrameList list of child frames to append. Each of the frames has
    *            its NS_FRAME_IS_DIRTY bit set.  Must not be empty.
-   * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
-   *            name,
-   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
-   *          NS_OK otherwise.  In this case, AppendFrames empties out
-   *            aFrameList in the process of moving the frames over to its own
-   *            child list.
    */
-  virtual nsresult AppendFrames(ChildListID aListID, nsFrameList& aFrameList);
+  virtual void AppendFrames(ChildListID aListID, nsFrameList& aFrameList);
 
   /**
    * This method is responsible for inserting frames into the frame
@@ -123,16 +110,10 @@ public:
    * @param   aPrevFrame the frame to insert frames <b>after</b>
    * @param   aFrameList list of child frames to insert <b>after</b> aPrevFrame.
    *            Each of the frames has its NS_FRAME_IS_DIRTY bit set
-   * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
-   *            name,
-   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
-   *          NS_OK otherwise.  In this case, InsertFrames empties out
-   *            aFrameList in the process of moving the frames over to its own
-   *            child list.
    */
-  virtual nsresult InsertFrames(ChildListID  aListID,
-                                nsIFrame*    aPrevFrame,
-                                nsFrameList& aFrameList);
+  virtual void InsertFrames(ChildListID  aListID,
+                            nsIFrame*    aPrevFrame,
+                            nsFrameList& aFrameList);
 
   /**
    * This method is responsible for removing a frame in the frame
@@ -142,14 +123,8 @@ public:
    *
    * @param   aListID the child list identifier.
    * @param   aOldFrame the frame to remove
-   * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
-   *            name,
-   *          NS_ERROR_FAILURE if the child frame is not in the specified
-   *            child list,
-   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
-   *          NS_OK otherwise
    */
-  virtual nsresult RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame);
+  virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame);
 
   /**
    * Helper method to create next-in-flows if necessary. If aFrame
