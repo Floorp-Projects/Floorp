@@ -1899,14 +1899,23 @@ XPCOMUtils.defineLazyGetter(this, "bundle", function() {
          createBundle(PLACES_STRING_BUNDLE_URI);
 });
 
-XPCOMUtils.defineLazyGetter(this, "gAsyncDBConnPromised",
-  () => Sqlite.cloneStorageConnection({
+XPCOMUtils.defineLazyGetter(this, "gAsyncDBConnPromised", () => {
+  let connPromised = Sqlite.cloneStorageConnection({
     connection: PlacesUtils.history.DBConnection,
-    readOnly: true }).then(conn => {
-      PlacesUtils.registerShutdownFunction(() => conn.close());
-      return conn;
-    })
-);
+    readOnly:   true });
+  connPromised.then(conn => {
+    try {
+      Sqlite.shutdown.addBlocker("Places DB readonly connection closing",
+                                 conn.close.bind(conn));
+    }
+    catch(ex) {
+      // It's too late to block shutdown, just close the connection.
+      return conn.close();
+    }
+    return Promise.resolve();
+  }).then(null, Cu.reportError);
+  return connPromised;
+});
 
 // Sometime soon, likely as part of the transition to mozIAsyncBookmarks,
 // itemIds will be deprecated in favour of GUIDs, which play much better
