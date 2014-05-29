@@ -1131,23 +1131,27 @@ class OrderedHashTableRef : public gc::BufferableRef
 };
 #endif
 
-static void
-WriteBarrierPost(JSRuntime *rt, ValueMap *map, const HashableValue &key)
+inline static void
+WriteBarrierPost(JSRuntime *rt, ValueMap *map, const Value &key)
 {
 #ifdef JSGC_GENERATIONAL
     typedef OrderedHashMap<Value, Value, UnbarrieredHashPolicy, RuntimeAllocPolicy> UnbarrieredMap;
-    rt->gc.storeBuffer.putGeneric(OrderedHashTableRef<UnbarrieredMap>(
-                reinterpret_cast<UnbarrieredMap *>(map), key.get()));
+    if (MOZ_UNLIKELY(key.isObject() && IsInsideNursery(&key.toObject()))) {
+        rt->gc.storeBuffer.putGeneric(OrderedHashTableRef<UnbarrieredMap>(
+                    reinterpret_cast<UnbarrieredMap *>(map), key));
+    }
 #endif
 }
 
-static void
-WriteBarrierPost(JSRuntime *rt, ValueSet *set, const HashableValue &key)
+inline static void
+WriteBarrierPost(JSRuntime *rt, ValueSet *set, const Value &key)
 {
 #ifdef JSGC_GENERATIONAL
     typedef OrderedHashSet<Value, UnbarrieredHashPolicy, RuntimeAllocPolicy> UnbarrieredSet;
-    rt->gc.storeBuffer.putGeneric(OrderedHashTableRef<UnbarrieredSet>(
-                reinterpret_cast<UnbarrieredSet *>(set), key.get()));
+    if (MOZ_UNLIKELY(key.isObject() && IsInsideNursery(&key.toObject()))) {
+        rt->gc.storeBuffer.putGeneric(OrderedHashTableRef<UnbarrieredSet>(
+                    reinterpret_cast<UnbarrieredSet *>(set), key));
+    }
 #endif
 }
 
@@ -1213,7 +1217,7 @@ MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
                 js_ReportOutOfMemory(cx);
                 return false;
             }
-            WriteBarrierPost(cx->runtime(), map, hkey);
+            WriteBarrierPost(cx->runtime(), map, key);
         }
     }
 
@@ -1310,7 +1314,7 @@ MapObject::set_impl(JSContext *cx, CallArgs args)
         js_ReportOutOfMemory(cx);
         return false;
     }
-    WriteBarrierPost(cx->runtime(), &map, key);
+    WriteBarrierPost(cx->runtime(), &map, key.get());
     args.rval().setUndefined();
     return true;
 }
@@ -1703,7 +1707,7 @@ SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
                 js_ReportOutOfMemory(cx);
                 return false;
             }
-            WriteBarrierPost(cx->runtime(), set, key);
+            WriteBarrierPost(cx->runtime(), set, keyVal);
         }
     }
 
@@ -1772,7 +1776,7 @@ SetObject::add_impl(JSContext *cx, CallArgs args)
         js_ReportOutOfMemory(cx);
         return false;
     }
-    WriteBarrierPost(cx->runtime(), &set, key);
+    WriteBarrierPost(cx->runtime(), &set, key.get());
     args.rval().setUndefined();
     return true;
 }
