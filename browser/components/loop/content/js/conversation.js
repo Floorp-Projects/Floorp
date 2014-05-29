@@ -7,7 +7,7 @@
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 var loop = loop || {};
-loop.conversation = (function(TB, mozL10n) {
+loop.conversation = (function(OT, mozL10n) {
   "use strict";
 
   var sharedViews = loop.shared.views,
@@ -22,10 +22,22 @@ loop.conversation = (function(TB, mozL10n) {
   var router;
 
   /**
-   * Current conversation model instance.
-   * @type {loop.webapp.ConversationModel}
+   * Call ended view.
+   * @type {loop.shared.views.BaseView}
    */
-  var conversation;
+  var EndedCallView = sharedViews.BaseView.extend({
+    el: "#call-ended",
+
+    events: {
+      "click button": "closeWindow"
+    },
+
+    closeWindow: function(event) {
+      event.preventDefault();
+      // XXX For now, we just close the window.
+      window.close();
+    }
+  });
 
   /**
    * Conversation router.
@@ -33,79 +45,27 @@ loop.conversation = (function(TB, mozL10n) {
    * Required options:
    * - {loop.shared.models.ConversationModel} conversation Conversation model.
    * - {loop.shared.components.Notifier}      notifier     Notifier component.
+   *
+   * @type {loop.shared.router.BaseConversationRouter}
    */
-  var ConversationRouter = loop.shared.router.BaseRouter.extend({
-    /**
-     * Current conversation.
-     * @type {loop.shared.models.ConversationModel}
-     */
-    _conversation: undefined,
-
-    /**
-     * Notifications dispatcher.
-     * @type {loop.shared.views.NotificationListView}
-     */
-    _notifier: undefined,
-
+  var ConversationRouter = loop.shared.router.BaseConversationRouter.extend({
     routes: {
       "start/:version": "start",
       "call/ongoing": "conversation",
       "call/ended": "ended"
     },
 
-    initialize: function(options) {
-      options = options || {};
-      if (!options.conversation) {
-        throw new Error("missing required conversation");
-      }
-      this._conversation = options.conversation;
-
-      if (!options.notifier) {
-        throw new Error("missing required notifier");
-      }
-      this._notifier = options.notifier;
-
-      this.listenTo(this._conversation, "session:ready", this._onSessionReady);
-      this.listenTo(this._conversation, "session:ended", this._onSessionEnded);
-      this.listenTo(this._conversation, "session:peer-hung", this._onPeerHung);
-      this.listenTo(this._conversation, "session:network-disconnected",
-                                        this._onNetworkDisconnected);
-    },
-
     /**
-     * Navigates to conversation when the call session is ready.
+     * @override {loop.shared.router.BaseConversationRouter.startCall}
      */
-    _onSessionReady: function() {
+    startCall: function() {
       this.navigate("call/ongoing", {trigger: true});
     },
 
     /**
-     * Navigates to ended state when the call has ended.
+     * @override {loop.shared.router.BaseConversationRouter.endCall}
      */
-    _onSessionEnded: function() {
-      this.navigate("call/ended", {trigger: true});
-    },
-
-    /**
-     * Peer hung up. Navigates back to call initiation so the user can start
-     * calling again.
-     *
-     * Event properties:
-     * - {String} connectionId: OT session id
-     *
-     * @param {Object} event
-     */
-    _onPeerHung: function(event) {
-      this._notifier.warn(__("peer_ended_conversation"));
-      this.navigate("call/ended", {trigger: true});
-    },
-
-    /**
-     * Network disconnected. Navigates back to call initiation so the user can
-     * start calling again.
-     */
-    _onNetworkDisconnected: function() {
-      this._notifier.warn(__("network_disconnected"));
+    endCall: function() {
       this.navigate("call/ended", {trigger: true});
     },
 
@@ -140,17 +100,16 @@ loop.conversation = (function(TB, mozL10n) {
 
       this.loadView(
         new loop.shared.views.ConversationView({
-          sdk: TB,
+          sdk: OT,
           model: this._conversation
       }));
     },
 
     /**
-     * ended does any necessary work to end the call.
+     * XXX: load a view with a close button for now?
      */
     ended: function() {
-      // XXX Later we implement the end-of call here (bug 974873)
-      window.close();
+      this.loadView(new EndedCallView());
     }
   });
 
@@ -158,9 +117,8 @@ loop.conversation = (function(TB, mozL10n) {
    * Panel initialisation.
    */
   function init() {
-    conversation = new loop.shared.models.ConversationModel();
     router = new ConversationRouter({
-      conversation: conversation,
+      conversation: new loop.shared.models.ConversationModel(),
       notifier: new sharedViews.NotificationListView({el: "#messages"})
     });
     Backbone.history.start();
@@ -168,6 +126,7 @@ loop.conversation = (function(TB, mozL10n) {
 
   return {
     ConversationRouter: ConversationRouter,
+    EndedCallView: EndedCallView,
     init: init
   };
-})(window.TB, document.mozL10n);
+})(window.OT, document.mozL10n);
