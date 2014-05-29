@@ -433,6 +433,13 @@ AudioChannelService::ContentOrNormalChannelIsActive()
 }
 
 bool
+AudioChannelService::TelephonyChannelIsActive()
+{
+  return !mChannelCounters[AUDIO_CHANNEL_INT_TELEPHONY].IsEmpty() ||
+         !mChannelCounters[AUDIO_CHANNEL_INT_TELEPHONY_HIDDEN].IsEmpty();
+}
+
+bool
 AudioChannelService::ProcessContentOrNormalChannelIsActive(uint64_t aChildID)
 {
   return mChannelCounters[AUDIO_CHANNEL_INT_CONTENT].Contains(aChildID) ||
