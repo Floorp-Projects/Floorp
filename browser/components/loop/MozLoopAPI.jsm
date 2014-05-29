@@ -26,15 +26,14 @@ this.EXPORTED_SYMBOLS = ["injectLoopAPI"];
 function injectLoopAPI(targetWindow) {
   let api = {
     /**
-     * Returns the uri for the Loop server from preferences.
+     * Returns the url for the Loop server from preferences.
      *
-     * @return {String} The Loop server uri
+     * @return {String} The Loop server url
      */
-    loopServer: {
+    serverUrl: {
       enumerable: true,
       configurable: true,
-      writable: false,
-      value: function() {
+      get: function() {
         return Services.prefs.getCharPref("loop.server");
       }
     },
@@ -44,11 +43,10 @@ function injectLoopAPI(targetWindow) {
      *
      * @returns {String} The locale string
      */
-    getLocale: {
+    locale: {
       enumerable: true,
       configurable: true,
-      writable: false,
-      value: function() {
+      get: function() {
         return MozLoopService.locale;
       }
     },
@@ -64,7 +62,7 @@ function injectLoopAPI(targetWindow) {
     getStrings: {
       enumerable: true,
       configurable: true,
-      writable: false,
+      writable: true,
       value: function(key) {
         return MozLoopService.getStrings(key);
       }

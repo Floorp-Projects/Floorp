@@ -22,9 +22,16 @@ describe("loop.conversation", function() {
       error: sandbox.spy(),
       errorL10n: sandbox.spy()
     };
+
+    window.navigator.mozLoop = {
+      get serverUrl() {
+        return "http://example.com";
+      }
+    };
   });
 
   afterEach(function() {
+    delete window.navigator.mozLoop;
     sandbox.restore();
   });
 
@@ -33,6 +40,7 @@ describe("loop.conversation", function() {
 
     beforeEach(function() {
       conversation = new loop.shared.models.ConversationModel({}, {sdk: {}});
+      sandbox.stub(conversation, "initiate");
     });
 
     describe("Routes", function() {
@@ -54,8 +62,6 @@ describe("loop.conversation", function() {
         });
 
         it("should initiate the conversation", function() {
-          sandbox.stub(conversation, "initiate");
-
           router.start("fakeVersion");
 
           sinon.assert.calledOnce(conversation.initiate);

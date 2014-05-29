@@ -4,20 +4,17 @@
 
 /* global loop:true */
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-
 var loop = loop || {};
 loop.panel = (function(_, mozL10n) {
   "use strict";
 
-  var baseServerUrl = Services.prefs.getCharPref("loop.server"),
-      sharedViews = loop.shared.views,
+  var sharedViews = loop.shared.views,
       // aliasing translation function as __ for concision
       __ = mozL10n.get;
 
   /**
    * Panel router.
-   * @type {loop.shared.router.BaseRouter}
+   * @type {loop.desktopRouter.DesktopRouter}
    */
   var router;
 
@@ -57,7 +54,7 @@ loop.panel = (function(_, mozL10n) {
       }
       this.notifier = options.notifier;
       this.client = new loop.shared.Client({
-        baseServerUrl: baseServerUrl
+        baseServerUrl: window.navigator.mozLoop.serverUrl
       });
     },
 
@@ -109,7 +106,7 @@ loop.panel = (function(_, mozL10n) {
     }
   });
 
-  var PanelRouter = loop.shared.router.BaseRouter.extend({
+  var PanelRouter = loop.desktopRouter.DesktopRouter.extend({
     /**
      * DOM document object.
      * @type {HTMLDocument}
@@ -170,11 +167,20 @@ loop.panel = (function(_, mozL10n) {
    * Panel initialisation.
    */
   function init() {
+    // Do the initial L10n setup, we do this before anything
+    // else to ensure the L10n environment is setup correctly.
+    mozL10n.initialize(window.navigator.mozLoop);
+
     router = new PanelRouter({
       document: document,
       notifier: new sharedViews.NotificationListView({el: "#messages"})
     });
     Backbone.history.start();
+
+    // Notify the window that we've finished initalization and initial layout
+    var evtObject = document.createEvent('Event');
+    evtObject.initEvent('loopPanelInitialized', true, false);
+    window.dispatchEvent(evtObject);
   }
 
   return {
