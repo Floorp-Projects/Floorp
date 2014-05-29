@@ -8,45 +8,33 @@
 using namespace mozilla;
 
 /* static */ void
-WebGLContext::ContextLossCallbackStatic(nsITimer* timer, void* thisPointer)
-{
-    (void)timer;
-    WebGLContext* context = static_cast<WebGLContext*>(thisPointer);
-
-    context->TerminateContextLossTimer();
-
-    context->UpdateContextLossStatus();
+WebGLContext::RobustnessTimerCallbackStatic(nsITimer* timer, void *thisPointer) {
+    static_cast<WebGLContext*>(thisPointer)->RobustnessTimerCallback(timer);
 }
 
 void
-WebGLContext::RunContextLossTimer()
-{
+WebGLContext::SetupContextLossTimer() {
     // If the timer was already running, don't restart it here. Instead,
     // wait until the previous call is done, then fire it one more time.
-    // This is an optimization to prevent unnecessary
-    // cross-communication between threads.
+    // This is an optimization to prevent unnecessary cross-communication
+    // between threads.
     if (mContextLossTimerRunning) {
-        mRunContextLossTimerAgain = true;
+        mDrawSinceContextLossTimerSet = true;
         return;
     }
-    mContextRestorer->InitWithFuncCallback(ContextLossCallbackStatic,
-                                           static_cast<void*>(this),
-                                           1000,
-                                           nsITimer::TYPE_ONE_SHOT);
+
+    mContextRestorer->InitWithFuncCallback(RobustnessTimerCallbackStatic,
+                                            static_cast<void*>(this),
+                                            1000,
+                                            nsITimer::TYPE_ONE_SHOT);
     mContextLossTimerRunning = true;
-    mRunContextLossTimerAgain = false;
+    mDrawSinceContextLossTimerSet = false;
 }
 
 void
-WebGLContext::TerminateContextLossTimer()
-{
-    if (!mContextLossTimerRunning)
-        return;
-
-    mContextRestorer->Cancel();
-    mContextLossTimerRunning = false;
-
-    if (mRunContextLossTimerAgain) {
-        RunContextLossTimer();
+WebGLContext::TerminateContextLossTimer() {
+    if (mContextLossTimerRunning) {
+        mContextRestorer->Cancel();
+        mContextLossTimerRunning = false;
     }
 }
