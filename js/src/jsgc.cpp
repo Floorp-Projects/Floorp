@@ -188,6 +188,7 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsobj.h"
+#include "jsprf.h"
 #include "jsscript.h"
 #include "jstypes.h"
 #include "jsutil.h"
@@ -1114,13 +1115,14 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     mallocBytes(0),
     mallocGCTriggered(false),
     scriptAndCountsVector(nullptr),
+    helperState(rt),
     alwaysPreserveCode(false),
 #ifdef DEBUG
     noGCOrAllocationCheck(0),
 #endif
     lock(nullptr),
     lockOwner(nullptr),
-    helperState(rt)
+    inUnsafeRegion(0)
 {
 }
 
@@ -4332,6 +4334,9 @@ AutoGCSession::AutoGCSession(GCRuntime *gc)
     // It's ok if threads other than the main thread have suppressGC set, as
     // they are operating on zones which will not be collected from here.
     JS_ASSERT(!gc->rt->mainThread.suppressGC);
+
+    // Assert if this is a GC unsafe region.
+    JS::AutoAssertOnGC::VerifyIsSafeToGC(gc->rt);
 }
 
 AutoGCSession::~AutoGCSession()
@@ -5621,32 +5626,50 @@ JS::GetGCNumber()
         return 0;
     return rt->gc.number;
 }
+#endif
 
-JS::AutoAssertNoGC::AutoAssertNoGC()
+JS::AutoAssertOnGC::AutoAssertOnGC()
   : runtime(nullptr), gcNumber(0)
 {
     js::PerThreadData *data = js::TlsPerThreadData.get();
     if (data) {
         /*
          * GC's from off-thread will always assert, so off-thread is implicitly
-         * AutoAssertNoGC. We still need to allow AutoAssertNoGC to be used in
+         * AutoAssertOnGC. We still need to allow AutoAssertOnGC to be used in
          * code that works from both threads, however. We also use this to
          * annotate the off thread run loops.
          */
         runtime = data->runtimeIfOnOwnerThread();
-        if (runtime)
+        if (runtime) {
             gcNumber = runtime->gc.number;
+            ++runtime->gc.inUnsafeRegion;
+        }
     }
 }
 
-JS::AutoAssertNoGC::AutoAssertNoGC(JSRuntime *rt)
+JS::AutoAssertOnGC::AutoAssertOnGC(JSRuntime *rt)
   : runtime(rt), gcNumber(rt->gc.number)
 {
+    ++rt->gc.inUnsafeRegion;
 }
 
-JS::AutoAssertNoGC::~AutoAssertNoGC()
+JS::AutoAssertOnGC::~AutoAssertOnGC()
 {
-    if (runtime)
-        MOZ_ASSERT(gcNumber == runtime->gc.number, "GC ran inside an AutoAssertNoGC scope.");
+    if (runtime) {
+        --runtime->gc.inUnsafeRegion;
+        MOZ_ASSERT(runtime->gc.inUnsafeRegion >= 0);
+
+        /*
+         * The following backstop assertion should never fire: if we bumped the
+         * gcNumber, we should have asserted because inUnsafeRegion was true.
+         */
+        MOZ_ASSERT(gcNumber == runtime->gc.number, "GC ran inside an AutoAssertOnGC scope.");
+    }
 }
-#endif
+
+/* static */ void
+JS::AutoAssertOnGC::VerifyIsSafeToGC(JSRuntime *rt)
+{
+    if (rt->gc.inUnsafeRegion > 0)
+        MOZ_CRASH("[AutoAssertOnGC] possible GC in GC-unsafe region");
+}
