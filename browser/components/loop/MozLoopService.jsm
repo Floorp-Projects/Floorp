@@ -216,7 +216,7 @@ let MozLoopServiceInternal = {
 
     if (this.registerXhr.status != 200) {
       // XXX Bubble this up to the UI somehow, bug 994151 will handle some of this
-      Cu.reportError("Failed to register with push server. Code: " +
+      Cu.reportError("Failed to register with the loop server. Code: " +
         this.registerXhr.status + " Text: " + this.registerXhr.statusText);
       return;
     }
