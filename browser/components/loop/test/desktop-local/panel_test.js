@@ -160,6 +160,18 @@ describe("loop.panel", function() {
         sinon.assert.calledWith(requestCallUrl, "foo");
       });
 
+      it("should set the call url form in a pending state", function() {
+        var requestCallUrl = sandbox.stub(loop.shared.Client.prototype,
+                                          "requestCallUrl");
+        var setPending = sandbox.stub(loop.panel.PanelView.prototype,
+                                      "setPending");
+        var view = new loop.panel.PanelView({notifier: notifier});
+
+        view.getCallUrl({preventDefault: sandbox.spy()});
+
+        sinon.assert.calledOnce(view.setPending);
+      });
+
       it("should notify the user when the operation failed", function() {
         var requestCallUrl = sandbox.stub(
           loop.shared.Client.prototype, "requestCallUrl", function(_, cb) {
