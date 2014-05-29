@@ -146,25 +146,13 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const nsIntRect& 
 
             ScopedBindTextureUnit autoTexUnit(mGL, LOCAL_GL_TEXTURE0);
             ScopedBindTexture autoTex(mGL, aSrc->GetTextureID());
-
-            mGL->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
-
-            mGL->fVertexAttribPointer(0, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, rects.vertCoords().Elements());
-            mGL->fVertexAttribPointer(1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, rects.texCoords().Elements());
-
-            mGL->fEnableVertexAttribArray(0);
-            mGL->fEnableVertexAttribArray(1);
+            ScopedVertexAttribPointer autoAttrib0(mGL, 0, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, 0, rects.vertCoords().Elements());
+            ScopedVertexAttribPointer autoAttrib1(mGL, 1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, 0, rects.texCoords().Elements());
 
             mGL->fDrawArrays(LOCAL_GL_TRIANGLES, 0, rects.elements());
 
-            mGL->fDisableVertexAttribArray(0);
-            mGL->fDisableVertexAttribArray(1);
-
         } while (aSrc->NextTile());
     } while (aDst->NextTile());
-
-    mGL->fVertexAttribPointer(0, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, nullptr);
-    mGL->fVertexAttribPointer(1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, nullptr);
 
     // unbind the previous texture from the framebuffer
     SetBlitFramebufferForDestTexture(0);
