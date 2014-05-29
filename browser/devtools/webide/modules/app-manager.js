@@ -472,8 +472,8 @@ exports.AppManager = AppManager = {
         yield AppProjects.update(project);
       }
 
-      if (this.selectedProject === project) {
-        this.update("project-validated");
+      if (AppManager.selectedProject === project) {
+        AppManager.update("project-validated");
       }
     });
   },
