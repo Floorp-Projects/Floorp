@@ -51,7 +51,31 @@ describe("loop.shared.Client", function() {
       var client;
 
       beforeEach(function() {
-        client = new loop.shared.Client({baseServerUrl: "http://fake.api"});
+        window.navigator.mozLoop = {
+          ensureRegistered: sinon.stub().callsArgWith(0, null)
+        };
+        client = new loop.shared.Client(
+          {baseServerUrl: "http://fake.api"}
+        );
+      });
+
+      afterEach(function() {
+        delete window.navigator.mozLoop;
+      });
+
+      it("should ensure loop is registered", function() {
+        client.requestCallUrl("foo", callback);
+
+        sinon.assert.calledOnce(navigator.mozLoop.ensureRegistered);
+      });
+
+      it("should send an error when registration fails", function() {
+        navigator.mozLoop.ensureRegistered.callsArgWith(0, "offline");
+
+        client.requestCallUrl("foo", callback);
+
+        sinon.assert.calledOnce(callback);
+        sinon.assert.calledWithExactly(callback, "offline");
       });
 
       it("should post to /call-url/", function() {

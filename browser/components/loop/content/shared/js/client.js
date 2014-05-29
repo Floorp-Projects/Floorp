@@ -83,13 +83,30 @@ loop.shared.Client = (function($) {
     },
 
     /**
-     * Requests a call URL from the Loop server.
+     * Ensures the client is registered with the push server.
      *
+     * Callback parameters:
+     * - err null on successful registration, non-null otherwise.
+     *
+     * @param {Function} cb Callback(err)
+     */
+    _ensureRegistered: function(cb) {
+      navigator.mozLoop.ensureRegistered(function(err) {
+        cb(err);
+      }.bind(this));
+    },
+
+    /**
+     * Internal handler for requesting a call url from the server.
+     *
+     * Callback parameters:
+     * - err null on successful registration, non-null otherwise.
+     * - callUrl the obtained call url if successful
      * @param  {String} simplepushUrl a registered Simple Push URL
      * @param  {string} nickname the nickname of the future caller
      * @param  {Function} cb Callback(err, callUrl)
      */
-    requestCallUrl: function(nickname, cb) {
+    _requestCallUrlInternal: function(nickname, cb) {
       var endpoint = this.settings.baseServerUrl + "/call-url/",
           reqData  = {callerId: nickname};
 
@@ -103,6 +120,29 @@ loop.shared.Client = (function($) {
       }.bind(this), "json");
 
       req.fail(this._failureHandler.bind(this, cb));
+    },
+
+    /**
+     * Requests a call URL from the Loop server.
+     *
+     * Callback parameters:
+     * - err null on successful registration, non-null otherwise.
+     * - callUrl the obtained call url if successful
+     *
+     * @param  {String} simplepushUrl a registered Simple Push URL
+     * @param  {string} nickname the nickname of the future caller
+     * @param  {Function} cb Callback(err, callUrl)
+     */
+    requestCallUrl: function(nickname, cb) {
+      this._ensureRegistered(function(err) {
+        if (err) {
+          console.log("Error registering with Loop server, code: " + err);
+          cb(err);
+          return;
+        }
+
+        this._requestCallUrlInternal(nickname, cb);
+      }.bind(this));
     },
 
     /**
