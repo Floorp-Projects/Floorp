@@ -119,20 +119,6 @@ describe("loop.shared.models", function() {
             sinon.assert.calledWith(conversation.setReady, fakeSessionData);
           });
 
-        it("should trigger session:ready without fetching session data over " +
-           "HTTP when already set", function(done) {
-            conversation.set(fakeSessionData);
-
-            conversation.on("session:ready", function() {
-              sinon.assert.notCalled(reqCallInfoStub);
-              done();
-            }).initiate({
-              baseServerUrl: fakeBaseServerUrl,
-              outgoing: true
-            });
-
-          });
-
         it("should trigger a `session:error` on failure", function(done) {
           reqCallInfoStub.callsArgWith(1,
             new Error("failed: HTTP 400 Bad Request; fake"));
@@ -188,6 +174,16 @@ describe("loop.shared.models", function() {
           it("should trigger a session:ended event on sessionDisconnected",
             function(done) {
               model.once("session:ended", function(){ done(); });
+
+              fakeSession.trigger("sessionDisconnected", {reason: "ko"});
+            });
+
+          it("should set the ongoing attribute to false on sessionDisconnected",
+            function(done) {
+              model.once("session:ended", function() {
+                expect(model.get("ongoing")).eql(false);
+                done();
+              });
 
               fakeSession.trigger("sessionDisconnected", {reason: "ko"});
             });
@@ -256,6 +252,16 @@ describe("loop.shared.models", function() {
 
           expect(model.get("ongoing")).eql(false);
         });
+
+        it("should stop listening to session events once the session is " +
+           "actually disconnected", function() {
+            sandbox.stub(model, "stopListening");
+
+            model.endSession();
+            model.trigger("session:ended");
+
+            sinon.assert.calledOnce(model.stopListening);
+          });
       });
     });
   });

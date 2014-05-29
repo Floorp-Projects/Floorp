@@ -126,13 +126,12 @@ loop.shared.views = (function(_, OT, l10n) {
       }
       this.sdk = options.sdk;
 
-      this.model.startSession();
-
       this.listenTo(this.model, "session:connected", this.publish);
       this.listenTo(this.model, "session:stream-created", this._streamCreated);
       this.listenTo(this.model, ["session:peer-hungup",
                                  "session:network-disconnected",
                                  "session:ended"].join(" "), this.unpublish);
+      this.model.startSession();
     },
 
     /**
