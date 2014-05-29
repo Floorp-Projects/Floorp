@@ -437,7 +437,7 @@ ArrayBufferObject::changeContents(JSContext *cx, ObjectElements *newHeader)
         // Watch out for NULL data pointers in views. This means that the view
         // is not fully initialized (in which case it'll be initialized later
         // with the correct pointer).
-        uint8_t *viewDataPointer = static_cast<uint8_t*>(view->getPrivate());
+        uint8_t *viewDataPointer = view->dataPointer();
         if (viewDataPointer) {
             viewDataPointer += newDataPointer - oldDataPointer;
             view->setPrivate(viewDataPointer);
@@ -707,18 +707,21 @@ JSObject *
 ArrayBufferObject::createSlice(JSContext *cx, Handle<ArrayBufferObject*> arrayBuffer,
                                uint32_t begin, uint32_t end)
 {
-    JS_ASSERT(begin <= arrayBuffer->byteLength());
-    JS_ASSERT(end <= arrayBuffer->byteLength());
-    JS_ASSERT(begin <= end);
+    uint32_t bufLength = arrayBuffer->byteLength();
+    if (begin > bufLength || end > bufLength || begin > end) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_TYPE_ERR_BAD_ARGS);
+        return nullptr;
+    }
+
     uint32_t length = end - begin;
 
     if (!arrayBuffer->hasData())
         return create(cx, 0);
 
-    JSObject *slice = create(cx, length, false);
+    ArrayBufferObject *slice = create(cx, length, false);
     if (!slice)
         return nullptr;
-    memcpy(slice->as<ArrayBufferObject>().dataPointer(), arrayBuffer->dataPointer() + begin, length);
+    memcpy(slice->dataPointer(), arrayBuffer->dataPointer() + begin, length);
     return slice;
 }
 
@@ -1233,6 +1236,14 @@ JS_IsArrayBufferViewObject(JSObject *obj)
     return obj ? obj->is<ArrayBufferViewObject>() : false;
 }
 
+JS_FRIEND_API(JSObject *)
+js::UnwrapArrayBufferView(JSObject *obj)
+{
+    if (JSObject *unwrapped = CheckedUnwrap(obj))
+        return unwrapped->is<ArrayBufferViewObject>() ? unwrapped : nullptr;
+    return nullptr;
+}
+
 JS_FRIEND_API(uint32_t)
 JS_GetArrayBufferByteLength(JSObject *obj)
 {
@@ -1375,6 +1386,14 @@ JS_IsArrayBufferObject(JSObject *obj)
     return obj ? obj->is<ArrayBufferObject>() : false;
 }
 
+JS_FRIEND_API(JSObject *)
+js::UnwrapArrayBuffer(JSObject *obj)
+{
+    if (JSObject *unwrapped = CheckedUnwrap(obj))
+        return unwrapped->is<ArrayBufferObject>() ? unwrapped : nullptr;
+    return nullptr;
+}
+
 JS_PUBLIC_API(bool)
 JS_StealArrayBufferContents(JSContext *cx, HandleObject objArg, void **contents, uint8_t **data)
 {
@@ -1442,6 +1461,20 @@ JS_GetObjectAsArrayBufferView(JSObject *obj, uint32_t *length, uint8_t **data)
     return obj;
 }
 
+JS_FRIEND_API(void)
+js::GetArrayBufferViewLengthAndData(JSObject *obj, uint32_t *length, uint8_t **data)
+{
+    MOZ_ASSERT(obj->is<ArrayBufferViewObject>());
+
+    *length = obj->is<DataViewObject>()
+              ? obj->as<DataViewObject>().byteLength()
+              : obj->as<TypedArrayObject>().byteLength();
+
+    *data = static_cast<uint8_t*>(obj->is<DataViewObject>()
+                                  ? obj->as<DataViewObject>().dataPointer()
+                                  : obj->as<TypedArrayObject>().viewData());
+}
+
 JS_FRIEND_API(JSObject *)
 JS_GetObjectAsArrayBuffer(JSObject *obj, uint32_t *length, uint8_t **data)
 {
@@ -1454,5 +1487,13 @@ JS_GetObjectAsArrayBuffer(JSObject *obj, uint32_t *length, uint8_t **data)
     *data = AsArrayBuffer(obj).dataPointer();
 
     return obj;
+}
+
+JS_FRIEND_API(void)
+js::GetArrayBufferLengthAndData(JSObject *obj, uint32_t *length, uint8_t **data)
+{
+    MOZ_ASSERT(IsArrayBuffer(obj));
+    *length = AsArrayBuffer(obj).byteLength();
+    *data = AsArrayBuffer(obj).dataPointer();
 }
 

@@ -1203,8 +1203,10 @@ Navigator::SendBeacon(const nsAString& aUrl,
         return false;
       }
   
-      rv = strStream->SetData(reinterpret_cast<char*>(aData.Value().GetAsArrayBufferView().Data()),
-                              aData.Value().GetAsArrayBufferView().Length());
+      ArrayBufferView& view = aData.Value().GetAsArrayBufferView();
+      view.ComputeLengthAndData();
+      rv = strStream->SetData(reinterpret_cast<char*>(view.Data()),
+                              view.Length());
   
       if (NS_FAILED(rv)) {
         aRv.Throw(NS_ERROR_FAILURE);
