@@ -72,7 +72,9 @@ describe("loop.shared.router", function() {
       notifier = {
         notify: sandbox.spy(),
         warn: sandbox.spy(),
-        error: sandbox.spy()
+        warnL10n: sandbox.spy(),
+        error: sandbox.spy(),
+        errorL10n: sandbox.spy()
       };
     });
 
@@ -117,10 +119,21 @@ describe("loop.shared.router", function() {
         sinon.assert.calledOnce(router.endCall);
       });
 
+      it("should warn the user that the session has ended", function() {
+        conversation.trigger("session:ended");
+
+        sinon.assert.calledOnce(notifier.warnL10n);
+        sinon.assert.calledWithExactly(notifier.warnL10n,
+                                       "call_has_ended");
+      });
+
       it("should warn the user when peer hangs up", function() {
         conversation.trigger("session:peer-hungup");
 
-        sinon.assert.calledOnce(notifier.warn);
+        sinon.assert.calledOnce(notifier.warnL10n);
+        sinon.assert.calledWithExactly(notifier.warnL10n,
+                                       "peer_ended_conversation");
+
       });
 
       it("should call endCall() when peer hangs up", function() {
@@ -132,7 +145,9 @@ describe("loop.shared.router", function() {
       it("should warn the user when network disconnects", function() {
         conversation.trigger("session:network-disconnected");
 
-        sinon.assert.calledOnce(notifier.warn);
+        sinon.assert.calledOnce(notifier.warnL10n);
+        sinon.assert.calledWithExactly(notifier.warnL10n,
+                                       "network_disconnected");
       });
 
       it("should call endCall() when network disconnects", function() {
