@@ -17,229 +17,185 @@
 
 namespace webrtc {
 
-VPMContentAnalysis::VPMContentAnalysis(bool runtime_cpu_detection):
-_origFrame(NULL),
-_prevFrame(NULL),
-_width(0),
-_height(0),
-_skipNum(1),
-_border(8),
-_motionMagnitude(0.0f),
-_spatialPredErr(0.0f),
-_spatialPredErrH(0.0f),
-_spatialPredErrV(0.0f),
-_firstFrame(true),
-_CAInit(false),
-_cMetrics(NULL)
-{
-    ComputeSpatialMetrics = &VPMContentAnalysis::ComputeSpatialMetrics_C;
-    TemporalDiffMetric = &VPMContentAnalysis::TemporalDiffMetric_C;
+VPMContentAnalysis::VPMContentAnalysis(bool runtime_cpu_detection)
+    : orig_frame_(NULL),
+      prev_frame_(NULL),
+      width_(0),
+      height_(0),
+      skip_num_(1),
+      border_(8),
+      motion_magnitude_(0.0f),
+      spatial_pred_err_(0.0f),
+      spatial_pred_err_h_(0.0f),
+      spatial_pred_err_v_(0.0f),
+      first_frame_(true),
+      ca_Init_(false),
+      content_metrics_(NULL) {
+  ComputeSpatialMetrics = &VPMContentAnalysis::ComputeSpatialMetrics_C;
+  TemporalDiffMetric = &VPMContentAnalysis::TemporalDiffMetric_C;
 
-    if (runtime_cpu_detection)
-    {
+  if (runtime_cpu_detection) {
 #if defined(WEBRTC_ARCH_X86_FAMILY)
-        if (WebRtc_GetCPUInfo(kSSE2))
-        {
-            ComputeSpatialMetrics =
-                          &VPMContentAnalysis::ComputeSpatialMetrics_SSE2;
-            TemporalDiffMetric = &VPMContentAnalysis::TemporalDiffMetric_SSE2;
-        }
+    if (WebRtc_GetCPUInfo(kSSE2)) {
+      ComputeSpatialMetrics = &VPMContentAnalysis::ComputeSpatialMetrics_SSE2;
+      TemporalDiffMetric = &VPMContentAnalysis::TemporalDiffMetric_SSE2;
+    }
 #endif
-    }
-
-    Release();
+  }
+  Release();
 }
 
-VPMContentAnalysis::~VPMContentAnalysis()
-{
-    Release();
+VPMContentAnalysis::~VPMContentAnalysis() {
+  Release();
 }
 
 
-VideoContentMetrics*
-VPMContentAnalysis::ComputeContentMetrics(const I420VideoFrame& inputFrame)
-{
-    if (inputFrame.IsZeroSize())
-    {
-        return NULL;
-    }
+VideoContentMetrics* VPMContentAnalysis::ComputeContentMetrics(
+  const I420VideoFrame& inputFrame) {
+  if (inputFrame.IsZeroSize())
+    return NULL;
 
-    // Init if needed (native dimension change)
-    if (_width != inputFrame.width() || _height != inputFrame.height())
-    {
-        if (VPM_OK != Initialize(inputFrame.width(), inputFrame.height()))
-        {
-            return NULL;
-        }
-    }
-    // Only interested in the Y plane.
-    _origFrame = inputFrame.buffer(kYPlane);
+  // Init if needed (native dimension change).
+  if (width_ != inputFrame.width() || height_ != inputFrame.height()) {
+    if (VPM_OK != Initialize(inputFrame.width(), inputFrame.height()))
+      return NULL;
+  }
+  // Only interested in the Y plane.
+  orig_frame_ = inputFrame.buffer(kYPlane);
 
-    // compute spatial metrics: 3 spatial prediction errors
-    (this->*ComputeSpatialMetrics)();
+  // Compute spatial metrics: 3 spatial prediction errors.
+  (this->*ComputeSpatialMetrics)();
 
-    // compute motion metrics
-    if (_firstFrame == false)
-        ComputeMotionMetrics();
+  // Compute motion metrics
+  if (first_frame_ == false)
+    ComputeMotionMetrics();
 
-    // saving current frame as previous one: Y only
-    memcpy(_prevFrame, _origFrame, _width * _height);
+  // Saving current frame as previous one: Y only.
+  memcpy(prev_frame_, orig_frame_, width_ * height_);
 
-    _firstFrame =  false;
-    _CAInit = true;
+  first_frame_ =  false;
+  ca_Init_ = true;
 
-    return ContentMetrics();
+  return ContentMetrics();
 }
 
-int32_t
-VPMContentAnalysis::Release()
-{
-    if (_cMetrics != NULL)
-    {
-        delete _cMetrics;
-       _cMetrics = NULL;
-    }
+int32_t VPMContentAnalysis::Release() {
+  if (content_metrics_ != NULL) {
+    delete content_metrics_;
+    content_metrics_ = NULL;
+  }
 
-    if (_prevFrame != NULL)
-    {
-        delete [] _prevFrame;
-        _prevFrame = NULL;
-    }
+  if (prev_frame_ != NULL) {
+    delete [] prev_frame_;
+    prev_frame_ = NULL;
+  }
 
-    _width = 0;
-    _height = 0;
-    _firstFrame = true;
+  width_ = 0;
+  height_ = 0;
+  first_frame_ = true;
 
-    return VPM_OK;
+  return VPM_OK;
 }
 
-int32_t
-VPMContentAnalysis::Initialize(int width, int height)
-{
-   _width = width;
-   _height = height;
-   _firstFrame = true;
+int32_t VPMContentAnalysis::Initialize(int width, int height) {
+  width_ = width;
+  height_ = height;
+  first_frame_ = true;
 
-    // skip parameter: # of skipped rows: for complexity reduction
-    //  temporal also currently uses it for column reduction.
-    _skipNum = 1;
+  // skip parameter: # of skipped rows: for complexity reduction
+  //  temporal also currently uses it for column reduction.
+  skip_num_ = 1;
 
-    // use skipNum = 2 for 4CIF, WHD
-    if ( (_height >=  576) && (_width >= 704) )
-    {
-        _skipNum = 2;
-    }
-    // use skipNum = 4 for FULLL_HD images
-    if ( (_height >=  1080) && (_width >= 1920) )
-    {
-        _skipNum = 4;
-    }
+  // use skipNum = 2 for 4CIF, WHD
+  if ( (height_ >=  576) && (width_ >= 704) ) {
+    skip_num_ = 2;
+  }
+  // use skipNum = 4 for FULLL_HD images
+  if ( (height_ >=  1080) && (width_ >= 1920) ) {
+    skip_num_ = 4;
+  }
 
-    if (_cMetrics != NULL)
-    {
-        delete _cMetrics;
-    }
+  if (content_metrics_ != NULL) {
+    delete content_metrics_;
+  }
 
-    if (_prevFrame != NULL)
-    {
-        delete [] _prevFrame;
-    }
+  if (prev_frame_ != NULL) {
+    delete [] prev_frame_;
+  }
 
-    // Spatial Metrics don't work on a border of 8.  Minimum processing
-    // block size is 16 pixels.  So make sure the width and height support this.
-    if (_width <= 32 || _height <= 32)
-    {
-        _CAInit = false;
-        return VPM_PARAMETER_ERROR;
-    }
+  // Spatial Metrics don't work on a border of 8. Minimum processing
+  // block size is 16 pixels.  So make sure the width and height support this.
+  if (width_ <= 32 || height_ <= 32) {
+    ca_Init_ = false;
+    return VPM_PARAMETER_ERROR;
+  }
 
-    _cMetrics = new VideoContentMetrics();
-    if (_cMetrics == NULL)
-    {
-        return VPM_MEMORY;
-    }
+  content_metrics_ = new VideoContentMetrics();
+  if (content_metrics_ == NULL) {
+    return VPM_MEMORY;
+  }
 
-    _prevFrame = new uint8_t[_width * _height] ; // Y only
-    if (_prevFrame == NULL)
-    {
-        return VPM_MEMORY;
-    }
+  prev_frame_ = new uint8_t[width_ * height_];  // Y only.
+  if (prev_frame_ == NULL) return VPM_MEMORY;
 
-    return VPM_OK;
+  return VPM_OK;
 }
 
 
 // Compute motion metrics: magnitude over non-zero motion vectors,
 //  and size of zero cluster
-int32_t
-VPMContentAnalysis::ComputeMotionMetrics()
-{
-
-    // Motion metrics: only one is derived from normalized
-    //  (MAD) temporal difference
-    (this->*TemporalDiffMetric)();
-
-    return VPM_OK;
+int32_t VPMContentAnalysis::ComputeMotionMetrics() {
+  // Motion metrics: only one is derived from normalized
+  //  (MAD) temporal difference
+  (this->*TemporalDiffMetric)();
+  return VPM_OK;
 }
 
 // Normalized temporal difference (MAD): used as a motion level metric
 // Normalize MAD by spatial contrast: images with more contrast
 //  (pixel variance) likely have larger temporal difference
 // To reduce complexity, we compute the metric for a reduced set of points.
-int32_t
-VPMContentAnalysis::TemporalDiffMetric_C()
-{
-    // size of original frame
-    int sizei = _height;
-    int sizej = _width;
+int32_t VPMContentAnalysis::TemporalDiffMetric_C() {
+  // size of original frame
+  int sizei = height_;
+  int sizej = width_;
+  uint32_t tempDiffSum = 0;
+  uint32_t pixelSum = 0;
+  uint64_t pixelSqSum = 0;
 
-    uint32_t tempDiffSum = 0;
-    uint32_t pixelSum = 0;
-    uint64_t pixelSqSum = 0;
+  uint32_t num_pixels = 0;  // Counter for # of pixels.
+  const int width_end = ((width_ - 2*border_) & -16) + border_;
 
-    uint32_t numPixels = 0; // counter for # of pixels
+  for (int i = border_; i < sizei - border_; i += skip_num_) {
+    for (int j = border_; j < width_end; j++) {
+      num_pixels += 1;
+      int ssn =  i * sizej + j;
 
-    const int width_end = ((_width - 2*_border) & -16) + _border;
+      uint8_t currPixel  = orig_frame_[ssn];
+      uint8_t prevPixel  = prev_frame_[ssn];
 
-    for(int i = _border; i < sizei - _border; i += _skipNum)
-    {
-        for(int j = _border; j < width_end; j++)
-        {
-            numPixels += 1;
-            int ssn =  i * sizej + j;
-
-            uint8_t currPixel  = _origFrame[ssn];
-            uint8_t prevPixel  = _prevFrame[ssn];
-
-            tempDiffSum += (uint32_t)
-                            abs((int16_t)(currPixel - prevPixel));
-            pixelSum += (uint32_t) currPixel;
-            pixelSqSum += (uint64_t) (currPixel * currPixel);
-        }
+      tempDiffSum += (uint32_t)abs((int16_t)(currPixel - prevPixel));
+      pixelSum += (uint32_t) currPixel;
+      pixelSqSum += (uint64_t) (currPixel * currPixel);
     }
+  }
 
-    // default
-    _motionMagnitude = 0.0f;
+  // Default.
+  motion_magnitude_ = 0.0f;
 
-    if (tempDiffSum == 0)
-    {
-        return VPM_OK;
-    }
+  if (tempDiffSum == 0) return VPM_OK;
 
-    // normalize over all pixels
-    float const tempDiffAvg = (float)tempDiffSum / (float)(numPixels);
-    float const pixelSumAvg = (float)pixelSum / (float)(numPixels);
-    float const pixelSqSumAvg = (float)pixelSqSum / (float)(numPixels);
-    float contrast = pixelSqSumAvg - (pixelSumAvg * pixelSumAvg);
+  // Normalize over all pixels.
+  float const tempDiffAvg = (float)tempDiffSum / (float)(num_pixels);
+  float const pixelSumAvg = (float)pixelSum / (float)(num_pixels);
+  float const pixelSqSumAvg = (float)pixelSqSum / (float)(num_pixels);
+  float contrast = pixelSqSumAvg - (pixelSumAvg * pixelSumAvg);
 
-    if (contrast > 0.0)
-    {
-        contrast = sqrt(contrast);
-       _motionMagnitude = tempDiffAvg/contrast;
-    }
-
-    return VPM_OK;
-
+  if (contrast > 0.0) {
+    contrast = sqrt(contrast);
+    motion_magnitude_ = tempDiffAvg/contrast;
+  }
+  return VPM_OK;
 }
 
 // Compute spatial metrics:
@@ -249,88 +205,71 @@ VPMContentAnalysis::TemporalDiffMetric_C()
 // The metrics are a simple estimate of the up-sampling prediction error,
 // estimated assuming sub-sampling for decimation (no filtering),
 // and up-sampling back up with simple bilinear interpolation.
-int32_t
-VPMContentAnalysis::ComputeSpatialMetrics_C()
-{
-    //size of original frame
-    const int sizei = _height;
-    const int sizej = _width;
+int32_t VPMContentAnalysis::ComputeSpatialMetrics_C() {
+  const int sizei = height_;
+  const int sizej = width_;
 
-    // pixel mean square average: used to normalize the spatial metrics
-    uint32_t pixelMSA = 0;
+  // Pixel mean square average: used to normalize the spatial metrics.
+  uint32_t pixelMSA = 0;
 
-    uint32_t spatialErrSum = 0;
-    uint32_t spatialErrVSum = 0;
-    uint32_t spatialErrHSum = 0;
+  uint32_t spatialErrSum = 0;
+  uint32_t spatialErrVSum = 0;
+  uint32_t spatialErrHSum = 0;
 
-    // make sure work section is a multiple of 16
-    const int width_end = ((sizej - 2*_border) & -16) + _border;
+  // make sure work section is a multiple of 16
+  const int width_end = ((sizej - 2*border_) & -16) + border_;
 
-    for(int i = _border; i < sizei - _border; i += _skipNum)
-    {
-        for(int j = _border; j < width_end; j++)
-        {
+  for (int i = border_; i < sizei - border_; i += skip_num_) {
+    for (int j = border_; j < width_end; j++) {
+      int ssn1=  i * sizej + j;
+      int ssn2 = (i + 1) * sizej + j; // bottom
+      int ssn3 = (i - 1) * sizej + j; // top
+      int ssn4 = i * sizej + j + 1;   // right
+      int ssn5 = i * sizej + j - 1;   // left
 
-            int ssn1=  i * sizej + j;
-            int ssn2 = (i + 1) * sizej + j; // bottom
-            int ssn3 = (i - 1) * sizej + j; // top
-            int ssn4 = i * sizej + j + 1;   // right
-            int ssn5 = i * sizej + j - 1;   // left
+      uint16_t refPixel1  = orig_frame_[ssn1] << 1;
+      uint16_t refPixel2  = orig_frame_[ssn1] << 2;
 
-            uint16_t refPixel1  = _origFrame[ssn1] << 1;
-            uint16_t refPixel2  = _origFrame[ssn1] << 2;
+      uint8_t bottPixel = orig_frame_[ssn2];
+      uint8_t topPixel = orig_frame_[ssn3];
+      uint8_t rightPixel = orig_frame_[ssn4];
+      uint8_t leftPixel = orig_frame_[ssn5];
 
-            uint8_t bottPixel = _origFrame[ssn2];
-            uint8_t topPixel = _origFrame[ssn3];
-            uint8_t rightPixel = _origFrame[ssn4];
-            uint8_t leftPixel = _origFrame[ssn5];
-
-            spatialErrSum  += (uint32_t) abs((int16_t)(refPixel2
-                            - (uint16_t)(bottPixel + topPixel
-                                             + leftPixel + rightPixel)));
-            spatialErrVSum += (uint32_t) abs((int16_t)(refPixel1
-                            - (uint16_t)(bottPixel + topPixel)));
-            spatialErrHSum += (uint32_t) abs((int16_t)(refPixel1
-                            - (uint16_t)(leftPixel + rightPixel)));
-
-            pixelMSA += _origFrame[ssn1];
-        }
+      spatialErrSum  += (uint32_t) abs((int16_t)(refPixel2
+          - (uint16_t)(bottPixel + topPixel + leftPixel + rightPixel)));
+      spatialErrVSum += (uint32_t) abs((int16_t)(refPixel1
+          - (uint16_t)(bottPixel + topPixel)));
+      spatialErrHSum += (uint32_t) abs((int16_t)(refPixel1
+          - (uint16_t)(leftPixel + rightPixel)));
+      pixelMSA += orig_frame_[ssn1];
     }
+  }
 
-    // normalize over all pixels
-    const float spatialErr  = (float)(spatialErrSum >> 2);
-    const float spatialErrH = (float)(spatialErrHSum >> 1);
-    const float spatialErrV = (float)(spatialErrVSum >> 1);
-    const float norm = (float)pixelMSA;
+  // Normalize over all pixels.
+  const float spatialErr = (float)(spatialErrSum >> 2);
+  const float spatialErrH = (float)(spatialErrHSum >> 1);
+  const float spatialErrV = (float)(spatialErrVSum >> 1);
+  const float norm = (float)pixelMSA;
 
-    // 2X2:
-    _spatialPredErr = spatialErr / norm;
-
-    // 1X2:
-    _spatialPredErrH = spatialErrH / norm;
-
-    // 2X1:
-    _spatialPredErrV = spatialErrV / norm;
-
-    return VPM_OK;
+  // 2X2:
+  spatial_pred_err_ = spatialErr / norm;
+  // 1X2:
+  spatial_pred_err_h_ = spatialErrH / norm;
+  // 2X1:
+  spatial_pred_err_v_ = spatialErrV / norm;
+  return VPM_OK;
 }
 
-VideoContentMetrics*
-VPMContentAnalysis::ContentMetrics()
-{
-    if (_CAInit == false)
-    {
-        return NULL;
-    }
+VideoContentMetrics* VPMContentAnalysis::ContentMetrics() {
+  if (ca_Init_ == false) return NULL;
 
-    _cMetrics->spatial_pred_err = _spatialPredErr;
-    _cMetrics->spatial_pred_err_h = _spatialPredErrH;
-    _cMetrics->spatial_pred_err_v = _spatialPredErrV;
-    // Motion metric: normalized temporal difference (MAD)
-    _cMetrics->motion_magnitude = _motionMagnitude;
+  content_metrics_->spatial_pred_err = spatial_pred_err_;
+  content_metrics_->spatial_pred_err_h = spatial_pred_err_h_;
+  content_metrics_->spatial_pred_err_v = spatial_pred_err_v_;
+  // Motion metric: normalized temporal difference (MAD).
+  content_metrics_->motion_magnitude = motion_magnitude_;
 
-    return _cMetrics;
-
+  return content_metrics_;
 }
 
-}  // namespace
+}  // namespace webrtc

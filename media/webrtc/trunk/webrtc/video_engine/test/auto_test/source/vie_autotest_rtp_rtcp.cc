@@ -12,6 +12,7 @@
 
 #include "webrtc/engine_configurations.h"
 #include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/video_engine/include/vie_rtp_rtcp.h"
 #include "webrtc/video_engine/test/auto_test/interface/vie_autotest.h"
 #include "webrtc/video_engine/test/auto_test/interface/vie_autotest_defines.h"
 #include "webrtc/video_engine/test/libvietest/include/tb_capture_device.h"
@@ -164,10 +165,7 @@ void ViEAutoTest::ViERtpRtcpStandardTest()
     //
     // Pacing
     //
-    unsigned short recFractionsLost = 0;
-    unsigned int recCumulativeLost = 0;
-    unsigned int recExtendedMax = 0;
-    unsigned int recJitter = 0;
+    webrtc::RtcpStatistics received;
     int recRttMs = 0;
     unsigned int sentTotalBitrate = 0;
     unsigned int sentVideoBitrate = 0;
@@ -193,9 +191,8 @@ void ViEAutoTest::ViERtpRtcpStandardTest()
 
     AutoTestSleep(kAutoTestSleepTimeMs);
 
-    EXPECT_EQ(0, ViE.rtp_rtcp->GetReceivedRTCPStatistics(
-        tbChannel.videoChannel, recFractionsLost, recCumulativeLost,
-        recExtendedMax, recJitter, recRttMs));
+    EXPECT_EQ(0, ViE.rtp_rtcp->GetReceiveChannelRtcpStatistics(
+        tbChannel.videoChannel, received, recRttMs));
     EXPECT_EQ(0, ViE.rtp_rtcp->GetBandwidthUsage(
         tbChannel.videoChannel, sentTotalBitrate, sentVideoBitrate,
         sentFecBitrate, sentNackBitrate));
@@ -211,7 +208,7 @@ void ViEAutoTest::ViERtpRtcpStandardTest()
     EXPECT_GT(num_rtcp_packets, 0);
     EXPECT_GT(sentTotalBitrate, 0u);
     EXPECT_EQ(sentNackBitrate, 0u);
-    EXPECT_EQ(recCumulativeLost, 0u);
+    EXPECT_EQ(received.cumulative_lost, 0u);
 
     //
     // RTX
@@ -248,9 +245,8 @@ void ViEAutoTest::ViERtpRtcpStandardTest()
     myTransport.SetNetworkParameters(network);
     AutoTestSleep(kAutoTestSleepTimeMs);
 
-    EXPECT_EQ(0, ViE.rtp_rtcp->GetReceivedRTCPStatistics(
-        tbChannel.videoChannel, recFractionsLost, recCumulativeLost,
-        recExtendedMax, recJitter, recRttMs));
+    EXPECT_EQ(0, ViE.rtp_rtcp->GetReceiveChannelRtcpStatistics(
+        tbChannel.videoChannel, received, recRttMs));
     EXPECT_EQ(0, ViE.rtp_rtcp->GetBandwidthUsage(
         tbChannel.videoChannel, sentTotalBitrate, sentVideoBitrate,
         sentFecBitrate, sentNackBitrate));
@@ -290,13 +286,29 @@ void ViEAutoTest::ViERtpRtcpStandardTest()
     EXPECT_EQ(0, ViE.base->StartReceive(tbChannel.videoChannel));
     EXPECT_EQ(0, ViE.base->StartSend(tbChannel.videoChannel));
 
-    AutoTestSleep(kAutoTestSleepTimeMs);
-
-    unsigned short sentFractionsLost = 0;
-    unsigned int sentCumulativeLost = 0;
-    unsigned int sentExtendedMax = 0;
-    unsigned int sentJitter = 0;
+    webrtc::RtcpStatistics sent;
     int sentRttMs = 0;
+
+    // Fraction lost is a transient value that can get reset after a new rtcp
+    // report block. Make regular polls to make sure it is propagated.
+    // TODO(sprang): Replace with callbacks, when those are fully implemented.
+    int time_to_sleep = kAutoTestSleepTimeMs;
+    bool got_send_channel_frac_lost = false;
+    bool got_receive_channel_frac_lost = false;
+    while (time_to_sleep > 0) {
+      AutoTestSleep(500);
+      time_to_sleep -= 500;
+      EXPECT_EQ(0,
+                ViE.rtp_rtcp->GetSendChannelRtcpStatistics(
+                    tbChannel.videoChannel, sent, sentRttMs));
+      got_send_channel_frac_lost |= sent.fraction_lost > 0;
+      EXPECT_EQ(0,
+                ViE.rtp_rtcp->GetReceiveChannelRtcpStatistics(
+                    tbChannel.videoChannel, received, recRttMs));
+      got_receive_channel_frac_lost |= received.fraction_lost > 0;
+    }
+    EXPECT_TRUE(got_send_channel_frac_lost);
+    EXPECT_TRUE(got_receive_channel_frac_lost);
 
     EXPECT_EQ(0, ViE.rtp_rtcp->GetBandwidthUsage(
         tbChannel.videoChannel, sentTotalBitrate, sentVideoBitrate,
@@ -310,21 +322,19 @@ void ViEAutoTest::ViERtpRtcpStandardTest()
 
     AutoTestSleep(2000);
 
-    EXPECT_EQ(0, ViE.rtp_rtcp->GetSentRTCPStatistics(
-        tbChannel.videoChannel, sentFractionsLost, sentCumulativeLost,
-        sentExtendedMax, sentJitter, sentRttMs));
-    EXPECT_GT(sentCumulativeLost, 0u);
-    EXPECT_GT(sentExtendedMax, startSequenceNumber);
-    EXPECT_GT(sentJitter, 0u);
+    EXPECT_EQ(0, ViE.rtp_rtcp->GetSendChannelRtcpStatistics(
+        tbChannel.videoChannel, sent, sentRttMs));
+    EXPECT_GT(sent.cumulative_lost, 0u);
+    EXPECT_GT(sent.extended_max_sequence_number, startSequenceNumber);
+    EXPECT_GT(sent.jitter, 0u);
     EXPECT_GT(sentRttMs, 0);
 
-    EXPECT_EQ(0, ViE.rtp_rtcp->GetReceivedRTCPStatistics(
-        tbChannel.videoChannel, recFractionsLost, recCumulativeLost,
-        recExtendedMax, recJitter, recRttMs));
+    EXPECT_EQ(0, ViE.rtp_rtcp->GetReceiveChannelRtcpStatistics(
+        tbChannel.videoChannel, received, recRttMs));
 
-    EXPECT_GT(recCumulativeLost, 0u);
-    EXPECT_GT(recExtendedMax, startSequenceNumber);
-    EXPECT_GT(recJitter, 0u);
+    EXPECT_GT(received.cumulative_lost, 0u);
+    EXPECT_GT(received.extended_max_sequence_number, startSequenceNumber);
+    EXPECT_GT(received.jitter, 0u);
     EXPECT_GT(recRttMs, 0);
 
     unsigned int estimated_bandwidth = 0;
@@ -351,7 +361,8 @@ void ViEAutoTest::ViERtpRtcpStandardTest()
     }
 
     // Check that rec stats extended max is greater than what we've sent.
-    EXPECT_GE(recExtendedMax, sentExtendedMax);
+    EXPECT_GE(received.extended_max_sequence_number,
+              sent.extended_max_sequence_number);
     EXPECT_EQ(0, ViE.base->StopSend(tbChannel.videoChannel));
 
     //
@@ -486,62 +497,51 @@ void ViEAutoTest::ViERtpRtcpStandardTest()
     EXPECT_EQ(0, ViE.rtp_rtcp->SetNACKStatus(tbChannel.videoChannel, true));
     EXPECT_EQ(0, ViE.rtp_rtcp->SetTransmissionSmoothingStatus(
         tbChannel.videoChannel, true));
-    unsigned int bytes_sent_before = 0;
-    unsigned int packets_sent_before = 0;
-    unsigned int bytes_received_before = 0;
-    unsigned int packets_received_before = 0;
-    unsigned int bytes_sent_after = 0;
-    unsigned int packets_sent_after = 0;
-    unsigned int bytes_received_after = 0;
-    unsigned int packets_received_after = 0;
-    EXPECT_EQ(0, ViE.rtp_rtcp->GetRTPStatistics(tbChannel.videoChannel,
-                                                bytes_sent_before,
-                                                packets_sent_before,
-                                                bytes_received_before,
-                                                packets_received_before));
+
+    webrtc::StreamDataCounters sent_before;
+    webrtc::StreamDataCounters received_before;
+    webrtc::StreamDataCounters sent_after;
+    webrtc::StreamDataCounters received_after;
+
+    EXPECT_EQ(0, ViE.rtp_rtcp->GetRtpStatistics(tbChannel.videoChannel,
+                                                sent_before,
+                                                received_before));
     EXPECT_EQ(0, ViE.base->StartReceive(tbChannel.videoChannel));
     EXPECT_EQ(0, ViE.base->StartSend(tbChannel.videoChannel));
 
     // Real-time mode.
     AutoTestSleep(kAutoTestSleepTimeMs);
-    EXPECT_EQ(0, ViE.rtp_rtcp->GetRTPStatistics(tbChannel.videoChannel,
-                                                bytes_sent_after,
-                                                packets_sent_after,
-                                                bytes_received_after,
-                                                packets_received_after));
+    EXPECT_EQ(0, ViE.rtp_rtcp->GetRtpStatistics(tbChannel.videoChannel,
+                                                sent_after, received_after));
     if (FLAGS_include_timing_dependent_tests) {
-      EXPECT_GT(bytes_received_after, bytes_received_before);
+      EXPECT_GT(received_after.bytes, received_before.bytes);
     }
     // Simulate lost reception and verify that nothing is sent during that time.
     ViE.network->SetNetworkTransmissionState(tbChannel.videoChannel, false);
     // Allow the encoder to finish the current frame before we expect that no
     // additional packets will be sent.
     AutoTestSleep(kAutoTestSleepTimeMs);
-    bytes_received_before = bytes_received_after;
+    received_before.bytes = received_after.bytes;
     ViETest::Log("Network Down...\n");
     AutoTestSleep(kAutoTestSleepTimeMs);
-    EXPECT_EQ(0, ViE.rtp_rtcp->GetRTPStatistics(tbChannel.videoChannel,
-                                                bytes_sent_after,
-                                                packets_sent_after,
-                                                bytes_received_after,
-                                                packets_received_after));
+    EXPECT_EQ(0, ViE.rtp_rtcp->GetRtpStatistics(tbChannel.videoChannel,
+                                                sent_before,
+                                                received_before));
     if (FLAGS_include_timing_dependent_tests) {
-      EXPECT_EQ(bytes_received_before, bytes_received_after);
+      EXPECT_EQ(received_before.bytes, received_after.bytes);
     }
 
     // Network reception back. Video should now be sent.
     ViE.network->SetNetworkTransmissionState(tbChannel.videoChannel, true);
     ViETest::Log("Network Up...\n");
     AutoTestSleep(kAutoTestSleepTimeMs);
-    EXPECT_EQ(0, ViE.rtp_rtcp->GetRTPStatistics(tbChannel.videoChannel,
-                                                bytes_sent_before,
-                                                packets_sent_before,
-                                                bytes_received_before,
-                                                packets_received_before));
+    EXPECT_EQ(0, ViE.rtp_rtcp->GetRtpStatistics(tbChannel.videoChannel,
+                                                sent_before,
+                                                received_before));
     if (FLAGS_include_timing_dependent_tests) {
-      EXPECT_GT(bytes_received_before, bytes_received_after);
+      EXPECT_GT(received_before.bytes, received_after.bytes);
     }
-    bytes_received_after = bytes_received_before;
+    received_after.bytes = received_before.bytes;
     // Buffering mode.
     EXPECT_EQ(0, ViE.base->StopSend(tbChannel.videoChannel));
     EXPECT_EQ(0, ViE.base->StopReceive(tbChannel.videoChannel));
@@ -561,35 +561,29 @@ void ViEAutoTest::ViERtpRtcpStandardTest()
     // Allow the encoder to finish the current frame before we expect that no
     // additional packets will be sent.
     AutoTestSleep(kAutoTestSleepTimeMs);
-    EXPECT_EQ(0, ViE.rtp_rtcp->GetRTPStatistics(tbChannel.videoChannel,
-                                                bytes_sent_before,
-                                                packets_sent_before,
-                                                bytes_received_before,
-                                                packets_received_before));
+    EXPECT_EQ(0, ViE.rtp_rtcp->GetRtpStatistics(tbChannel.videoChannel,
+                                                sent_before,
+                                                received_before));
     if (FLAGS_include_timing_dependent_tests) {
-      EXPECT_GT(bytes_received_before, bytes_received_after);
+      EXPECT_GT(received_before.bytes, received_after.bytes);
     }
-    bytes_received_after = bytes_received_before;
+    received_after.bytes = received_before.bytes;
     AutoTestSleep(kAutoTestSleepTimeMs);
-    EXPECT_EQ(0, ViE.rtp_rtcp->GetRTPStatistics(tbChannel.videoChannel,
-                                                bytes_sent_after,
-                                                packets_sent_after,
-                                                bytes_received_after,
-                                                packets_received_after));
+    EXPECT_EQ(0, ViE.rtp_rtcp->GetRtpStatistics(tbChannel.videoChannel,
+                                                sent_before,
+                                                received_before));
     if (FLAGS_include_timing_dependent_tests) {
-      EXPECT_EQ(bytes_received_after, bytes_received_before);
+      EXPECT_EQ(received_after.bytes, received_before.bytes);
     }
     // Network reception back. Video should now be sent.
     ViETest::Log("Network Up...\n");
     ViE.network->SetNetworkTransmissionState(tbChannel.videoChannel, true);
     AutoTestSleep(kAutoTestSleepTimeMs);
-    EXPECT_EQ(0, ViE.rtp_rtcp->GetRTPStatistics(tbChannel.videoChannel,
-                                                bytes_sent_before,
-                                                packets_sent_before,
-                                                bytes_received_before,
-                                                packets_received_before));
+    EXPECT_EQ(0, ViE.rtp_rtcp->GetRtpStatistics(tbChannel.videoChannel,
+                                                sent_before,
+                                                received_before));
     if (FLAGS_include_timing_dependent_tests) {
-      EXPECT_GT(bytes_received_before, bytes_received_after);
+      EXPECT_GT(received_before.bytes, received_after.bytes);
     }
     // TODO(holmer): Verify that the decoded framerate doesn't decrease on an
     // outage when in buffering mode. This isn't currently possible because we

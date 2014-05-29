@@ -46,7 +46,7 @@ class PreemptiveExpand : public TimeStretch {
   ReturnCodes Process(const int16_t *pw16_decoded,
                       int len,
                       int old_data_len,
-                      AudioMultiVector<int16_t>* output,
+                      AudioMultiVector* output,
                       int16_t* length_change_samples);
 
  protected:
@@ -61,13 +61,23 @@ class PreemptiveExpand : public TimeStretch {
   virtual ReturnCodes CheckCriteriaAndStretch(
       const int16_t *pw16_decoded, size_t len, size_t w16_bestIndex,
       int16_t w16_bestCorr, bool w16_VAD,
-      AudioMultiVector<int16_t>* output) const;
+      AudioMultiVector* output) const;
 
  private:
   int old_data_length_per_channel_;
   int overlap_samples_;
 
   DISALLOW_COPY_AND_ASSIGN(PreemptiveExpand);
+};
+
+struct PreemptiveExpandFactory {
+  PreemptiveExpandFactory() {}
+  virtual ~PreemptiveExpandFactory() {}
+
+  virtual PreemptiveExpand* Create(
+      int sample_rate_hz,
+      size_t num_channels,
+      const BackgroundNoise& background_noise) const;
 };
 
 }  // namespace webrtc

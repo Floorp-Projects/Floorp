@@ -24,9 +24,6 @@
 #ifdef WEBRTC_VIDEO_ENGINE_CODEC_API
 #include "webrtc/video_engine/vie_codec_impl.h"
 #endif
-#ifdef WEBRTC_VIDEO_ENGINE_ENCRYPTION_API
-#include "webrtc/video_engine/vie_encryption_impl.h"
-#endif
 #ifdef WEBRTC_VIDEO_ENGINE_FILE_API
 #include "webrtc/video_engine/vie_file_impl.h"
 #endif
@@ -54,9 +51,6 @@ class VideoEngineImpl
 #ifdef WEBRTC_VIDEO_ENGINE_CAPTURE_API
       public ViECaptureImpl,
 #endif
-#ifdef WEBRTC_VIDEO_ENGINE_ENCRYPTION_API
-      public ViEEncryptionImpl,
-#endif
 #ifdef WEBRTC_VIDEO_ENGINE_FILE_API
       public ViEFileImpl,
 #endif
@@ -83,9 +77,6 @@ class VideoEngineImpl
 #endif
 #ifdef WEBRTC_VIDEO_ENGINE_CAPTURE_API
         ViECaptureImpl(ViEBaseImpl::shared_data()),
-#endif
-#ifdef WEBRTC_VIDEO_ENGINE_ENCRYPTION_API
-        ViEEncryptionImpl(ViEBaseImpl::shared_data()),
 #endif
 #ifdef WEBRTC_VIDEO_ENGINE_FILE_API
         ViEFileImpl(ViEBaseImpl::shared_data()),

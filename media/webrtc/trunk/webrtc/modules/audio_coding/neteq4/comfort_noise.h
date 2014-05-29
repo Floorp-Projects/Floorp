@@ -53,7 +53,7 @@ class ComfortNoise {
   // |output|. If this is the first in call after Reset (or first after creating
   // the object), it will also mix in comfort noise at the end of the
   // SyncBuffer object provided in the constructor.
-  int Generate(size_t requested_length, AudioMultiVector<int16_t>* output);
+  int Generate(size_t requested_length, AudioMultiVector* output);
 
   // Returns the last error code that was produced by the comfort noise
   // decoder. Returns 0 if no error has been encountered since the last reset.

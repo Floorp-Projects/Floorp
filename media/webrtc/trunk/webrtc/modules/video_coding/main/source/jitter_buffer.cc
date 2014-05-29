@@ -47,45 +47,8 @@ void FrameList::InsertFrame(VCMFrameBuffer* frame) {
   insert(rbegin().base(), FrameListPair(frame->TimeStamp(), frame));
 }
 
-// Find a Frame which (may) include seq_num
-// Note: if we don't have an end for the frame yet AND there are multiple Frames
-// with the same timestamp being input, in theory you can get packets
-// for a later Frame mixed with an earlier one where there's a reordering.
-// e.g. for <frame 1: 1 2 3> <frame 2: 4 5 6> and we receive
-//          1 2 4 3 5 6
-// or       4 1 2 3 5 6
-// we'll return <frame 1> for packet 4, and at some point it needs to move to
-// <frame 2>.  You can't key off isFirstPacket or kNaluStart because the OOO packet
-// may be 5.
-
-// This can be done by re-characterizing 4 when <frame 1> becomes complete
-// and we find it doesn't include 4.  Perhaps a better abstraction would be
-// to keep the packets in a single sorted list (per timestamp or not,
-// doesn't really matter), and then on insertion look to see if it's in a
-// complete unit (kNaluComplete or kNaluStart ... kNaluEnd sequence), and
-// remove the set *then*.
-//
-// If we instead limit multiple frames with the same timestamp to
-// kNaluComplete (single-packet) frames, it's simpler.  You do need to be
-// careful to pull off Frames only if they're contiguous in sequence number
-// to the previous frame, but that's normal since you can get 4 5 6 1 2 3
-// Note that you have to be careful reordering still:
-// <frame 1: 1> <frame 2: 2 3 4>
-// and arrival 2 1 3 4
-// means you must not match the frame created for 2 when 1 comes in
-
-VCMFrameBuffer* FrameList::FindFrame(uint16_t seq_num, uint32_t timestamp) const {
+VCMFrameBuffer* FrameList::FindFrame(uint32_t timestamp) const {
   FrameList::const_iterator it = find(timestamp);
-  // TODO(jesup): use seq_num to do the fancier version above, or
-  // rearchitect per above to keep a single list and pull out Frames as they
-  // become complete (or decodable).
-
-  // Simple version: Skip already-complete frames
-  // Note: higher level must deal with the 2 1 3 4 case above by not calling
-  // this for single-nal packets
-  while (it != end() && it->second->GetState() == kStateComplete) {
-    it++;
-  }
   if (it == end())
     return NULL;
   return it->second;
@@ -184,7 +147,6 @@ VCMJitterBuffer::VCMJitterBuffer(Clock* clock,
       incomplete_frames_(),
       last_decoded_state_(),
       first_packet_since_reset_(true),
-      receive_statistics_(),
       incoming_frame_rate_(0),
       incoming_frame_count_(0),
       time_last_incoming_frame_count_(0),
@@ -209,7 +171,6 @@ VCMJitterBuffer::VCMJitterBuffer(Clock* clock,
       average_packets_per_frame_(0.0f),
       frame_counter_(0) {
   memset(frame_buffers_, 0, sizeof(frame_buffers_));
-  memset(receive_statistics_, 0, sizeof(receive_statistics_));
 
   for (int i = 0; i < kStartNumberOfFrames; i++) {
     frame_buffers_[i] = new VCMFrameBuffer();
@@ -255,8 +216,7 @@ void VCMJitterBuffer::CopyFrom(const VCMJitterBuffer& rhs) {
     assert(max_nack_list_size_ == rhs.max_nack_list_size_);
     assert(max_packet_age_to_nack_ == rhs.max_packet_age_to_nack_);
     assert(max_incomplete_time_ms_ == rhs.max_incomplete_time_ms_);
-    memcpy(receive_statistics_, rhs.receive_statistics_,
-           sizeof(receive_statistics_));
+    receive_statistics_ = rhs.receive_statistics_;
     nack_seq_nums_.resize(rhs.nack_seq_nums_.size());
     missing_sequence_numbers_ = rhs.missing_sequence_numbers_;
     latest_received_sequence_number_ = rhs.latest_received_sequence_number_;
@@ -301,7 +261,7 @@ void VCMJitterBuffer::Start() {
   incoming_bit_count_ = 0;
   incoming_bit_rate_ = 0;
   time_last_incoming_frame_count_ = clock_->TimeInMilliseconds();
-  memset(receive_statistics_, 0, sizeof(receive_statistics_));
+  receive_statistics_.clear();
 
   num_consecutive_old_frames_ = 0;
   num_consecutive_old_packets_ = 0;
@@ -373,13 +333,9 @@ void VCMJitterBuffer::Flush() {
 }
 
 // Get received key and delta frames
-void VCMJitterBuffer::FrameStatistics(uint32_t* received_delta_frames,
-                                      uint32_t* received_key_frames) const {
-  assert(received_delta_frames);
-  assert(received_key_frames);
+std::map<FrameType, uint32_t> VCMJitterBuffer::FrameStatistics() const {
   CriticalSectionScoped cs(crit_sect_);
-  *received_delta_frames = receive_statistics_[1] + receive_statistics_[3];
-  *received_key_frames = receive_statistics_[0] + receive_statistics_[2];
+  return receive_statistics_;
 }
 
 int VCMJitterBuffer::num_discarded_packets() const {
@@ -634,21 +590,12 @@ VCMFrameBufferEnum VCMJitterBuffer::GetFrame(const VCMPacket& packet,
   }
   num_consecutive_old_packets_ = 0;
 
-  // Handle the 2 1 3 4 case (where 2 3 4 are frame 2 with the timestamp)
-  // from above, for complete nalu's (single-nalus) only.
-
-  // TODO(jesup) To handle a sequence of fragmented nalus which all are
-  // slices of the same lower-case frame (timestamp), the more complete
-  // solution for FindFrame that uses the seqNum and can move packets
-  // between sessions would be needed.
-  if (packet.completeNALU != kNaluComplete) {
-    *frame = incomplete_frames_.FindFrame(packet.seqNum, packet.timestamp);
-    if (*frame)
-      return kNoError;
-    *frame = decodable_frames_.FindFrame(packet.seqNum, packet.timestamp);
-    if (*frame && (*frame)->GetState() != kStateComplete)
-      return kNoError;
-  }
+  *frame = incomplete_frames_.FindFrame(packet.timestamp);
+  if (*frame)
+    return kNoError;
+  *frame = decodable_frames_.FindFrame(packet.timestamp);
+  if (*frame)
+    return kNoError;
 
   // No match, return empty frame.
   *frame = GetEmptyFrame();
@@ -1252,26 +1199,7 @@ void VCMJitterBuffer::CountFrame(const VCMFrameBuffer& frame) {
   // Update receive statistics. We count all layers, thus when you use layers
   // adding all key and delta frames might differ from frame count.
   if (frame.IsSessionComplete()) {
-    switch (frame.FrameType()) {
-      case kVideoFrameKey: {
-        receive_statistics_[0]++;
-        break;
-      }
-      case kVideoFrameDelta: {
-        receive_statistics_[1]++;
-        break;
-      }
-      case kVideoFrameGolden: {
-        receive_statistics_[2]++;
-        break;
-      }
-      case kVideoFrameAltRef: {
-        receive_statistics_[3]++;
-        break;
-      }
-      default:
-        assert(false);
-    }
+    ++receive_statistics_[frame.FrameType()];
   }
 }
 

@@ -13,6 +13,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "webrtc/modules/audio_coding/neteq4/accelerate.h"
+#include "webrtc/modules/audio_coding/neteq4/expand.h"
 #include "webrtc/modules/audio_coding/neteq4/mock/mock_audio_decoder.h"
 #include "webrtc/modules/audio_coding/neteq4/mock/mock_buffer_level_filter.h"
 #include "webrtc/modules/audio_coding/neteq4/mock/mock_decoder_database.h"
@@ -22,6 +24,7 @@
 #include "webrtc/modules/audio_coding/neteq4/mock/mock_dtmf_tone_generator.h"
 #include "webrtc/modules/audio_coding/neteq4/mock/mock_packet_buffer.h"
 #include "webrtc/modules/audio_coding/neteq4/mock/mock_payload_splitter.h"
+#include "webrtc/modules/audio_coding/neteq4/preemptive_expand.h"
 #include "webrtc/modules/audio_coding/neteq4/timestamp_scaler.h"
 
 using ::testing::Return;
@@ -60,6 +63,11 @@ class NetEqImplTest : public ::testing::Test {
     timestamp_scaler_ = new TimestampScaler(*decoder_database_);
     EXPECT_CALL(*decoder_database_, GetActiveCngDecoder())
         .WillOnce(ReturnNull());
+    AccelerateFactory* accelerate_factory = new AccelerateFactory;
+    ExpandFactory* expand_factory = new ExpandFactory;
+    PreemptiveExpandFactory* preemptive_expand_factory =
+        new PreemptiveExpandFactory;
+
     neteq_ = new NetEqImpl(kInitSampleRateHz,
                            buffer_level_filter_,
                            decoder_database_,
@@ -69,7 +77,10 @@ class NetEqImplTest : public ::testing::Test {
                            dtmf_tone_generator_,
                            packet_buffer_,
                            payload_splitter_,
-                           timestamp_scaler_);
+                           timestamp_scaler_,
+                           accelerate_factory,
+                           expand_factory,
+                           preemptive_expand_factory);
   }
 
   virtual ~NetEqImplTest() {
@@ -159,7 +170,7 @@ TEST_F(NetEqImplTest, InsertPacket) {
   EXPECT_CALL(*decoder_database_, IsDtmf(kPayloadType))
       .WillRepeatedly(Return(false));  // This is not DTMF.
   EXPECT_CALL(*decoder_database_, GetDecoder(kPayloadType))
-      .Times(2)
+      .Times(3)
       .WillRepeatedly(Return(&mock_decoder));
   EXPECT_CALL(*decoder_database_, IsComfortNoise(kPayloadType))
       .WillRepeatedly(Return(false));  // This is not CNG.
@@ -183,6 +194,9 @@ TEST_F(NetEqImplTest, InsertPacket) {
   // index) is a pointer, and the variable pointed to is set to kPayloadType.
   // Also invoke the function DeletePacketsAndReturnOk to properly delete all
   // packets in the list (to avoid memory leaks in the test).
+  EXPECT_CALL(*packet_buffer_, NextRtpHeader())
+      .Times(1)
+      .WillOnce(Return(&rtp_header.header));
 
   // Expectations for DTMF buffer.
   EXPECT_CALL(*dtmf_buffer_, Flush())

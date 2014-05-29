@@ -25,8 +25,6 @@ import android.graphics.PixelFormat;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
 
-import org.mozilla.gecko.mozglue.WebRTCJNITarget;
-
 public class ViEAndroidGLES20 extends GLSurfaceView
         implements GLSurfaceView.Renderer {
     private static String TAG = "WEBRTC-JR";
@@ -42,7 +40,6 @@ public class ViEAndroidGLES20 extends GLSurfaceView
     private int viewWidth = 0;
     private int viewHeight = 0;
 
-    @WebRTCJNITarget
     public static boolean UseOpenGL2(Object renderWindow) {
         return ViEAndroidGLES20.class.isInstance(renderWindow);
     }
@@ -52,7 +49,6 @@ public class ViEAndroidGLES20 extends GLSurfaceView
         init(false, 0, 0);
     }
 
-    @WebRTCJNITarget
     public ViEAndroidGLES20(Context context, boolean translucent,
             int depth, int stencil) {
         super(context);
@@ -345,7 +341,6 @@ public class ViEAndroidGLES20 extends GLSurfaceView
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
     }
 
-    @WebRTCJNITarget
     public void RegisterNativeObject(long nativeObject) {
         nativeFunctionLock.lock();
         this.nativeObject = nativeObject;
@@ -353,7 +348,6 @@ public class ViEAndroidGLES20 extends GLSurfaceView
         nativeFunctionLock.unlock();
     }
 
-    @WebRTCJNITarget
     public void DeRegisterNativeObject() {
         nativeFunctionLock.lock();
         nativeFunctionsRegisted = false;
@@ -362,7 +356,6 @@ public class ViEAndroidGLES20 extends GLSurfaceView
         nativeFunctionLock.unlock();
     }
 
-    @WebRTCJNITarget
     public void ReDraw() {
         if(surfaceCreated) {
             // Request the renderer to redraw using the render thread context.

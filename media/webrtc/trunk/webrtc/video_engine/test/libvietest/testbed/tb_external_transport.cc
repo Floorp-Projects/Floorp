@@ -404,7 +404,6 @@ bool TbExternalTransport::ViEExternalTransportProcess()
             {
                 waitTime = (unsigned int) timeToReceive;
             }
-            _crit.Leave();
             break;
         }
         _rtpPackets.pop_front();
@@ -458,7 +457,8 @@ bool TbExternalTransport::ViEExternalTransportProcess()
             }
             _vieNetwork.ReceivedRTPPacket(destination_channel,
                                           packet->packetBuffer,
-                                          packet->length);
+                                          packet->length,
+                                          webrtc::PacketTime());
             delete packet;
             packet = NULL;
         }
@@ -487,7 +487,6 @@ bool TbExternalTransport::ViEExternalTransportProcess()
             {
                 waitTime = (unsigned int) timeToReceive;
             }
-            _crit.Leave();
             break;
         }
         _rtcpPackets.pop_front();

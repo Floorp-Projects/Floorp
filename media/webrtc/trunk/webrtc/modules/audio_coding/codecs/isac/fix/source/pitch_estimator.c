@@ -8,20 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-/*
- * pitch_estimator.c
- *
- * Pitch filter functions
- *
- */
+#include "webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_estimator.h"
 
 #ifdef WEBRTC_ARCH_ARM_NEON
 #include <arm_neon.h>
 #endif
 
-#include "pitch_estimator.h"
-#include "signal_processing_library.h"
-#include "system_wrappers/interface/compile_assert.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
+#include "webrtc/system_wrappers/interface/compile_assert_c.h"
 
 /* log2[0.2, 0.5, 0.98] in Q8 */
 static const int16_t kLogLagWinQ8[3] = {

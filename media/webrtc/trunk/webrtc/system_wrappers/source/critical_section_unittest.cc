@@ -81,7 +81,7 @@ bool LockUnlockThenStopRunFunction(void* obj) {
   return false;
 }
 
-TEST_F(CritSectTest, ThreadWakesOnce) {
+TEST_F(CritSectTest, ThreadWakesOnce) NO_THREAD_SAFETY_ANALYSIS {
   CriticalSectionWrapper* crit_sect =
       CriticalSectionWrapper::CreateCriticalSection();
   ProtectedCount count(crit_sect);
@@ -110,7 +110,7 @@ bool LockUnlockRunFunction(void* obj) {
   return true;
 }
 
-TEST_F(CritSectTest, ThreadWakesTwice) {
+TEST_F(CritSectTest, ThreadWakesTwice) NO_THREAD_SAFETY_ANALYSIS {
   CriticalSectionWrapper* crit_sect =
       CriticalSectionWrapper::CreateCriticalSection();
   ProtectedCount count(crit_sect);

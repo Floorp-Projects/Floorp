@@ -116,7 +116,7 @@ TEST_F(RtpRtcpAPITest, RTCP) {
 
 TEST_F(RtpRtcpAPITest, RtxSender) {
   unsigned int ssrc = 0;
-  RtxMode rtx_mode = kRtxOff;
+  int rtx_mode = kRtxOff;
   const int kRtxPayloadType = 119;
   int payload_type = -1;
   EXPECT_EQ(0, module->SetRTXSendStatus(kRtxRetransmitted, true, 1));

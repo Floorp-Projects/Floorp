@@ -15,6 +15,8 @@
 
 namespace webrtc {
 
+namespace acm2 {
+
 struct ACMISACInst;
 class AcmAudioDecoderIsac;
 
@@ -92,6 +94,8 @@ class ACMISAC : public ACMGenericCodec {
   AcmAudioDecoderIsac* audio_decoder_;
   bool decoder_initialized_;
 };
+
+}  // namespace acm2
 
 }  // namespace webrtc
 

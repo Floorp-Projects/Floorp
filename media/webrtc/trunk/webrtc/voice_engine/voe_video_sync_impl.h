@@ -24,14 +24,11 @@ public:
 
     virtual int SetMinimumPlayoutDelay(int channel, int delayMs);
 
-    virtual int SetCurrentSyncOffset(int channel, int offsetMs);
-
     virtual int SetInitialPlayoutDelay(int channel, int delay_ms);
 
     virtual int GetDelayEstimate(int channel,
                                  int* jitter_buffer_delay_ms,
-                                 int* playout_buffer_delay_ms,
-                                 int* avsync_offset_ms);
+                                 int* playout_buffer_delay_ms);
 
     virtual int GetLeastRequiredDelayMs(int channel) const;
 

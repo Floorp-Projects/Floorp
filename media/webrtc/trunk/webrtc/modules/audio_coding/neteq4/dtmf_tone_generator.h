@@ -31,7 +31,7 @@ class DtmfToneGenerator {
   virtual ~DtmfToneGenerator() {}
   virtual int Init(int fs, int event, int attenuation);
   virtual void Reset();
-  virtual int Generate(int num_samples, AudioMultiVector<int16_t>* output);
+  virtual int Generate(int num_samples, AudioMultiVector* output);
   virtual bool initialized() const { return initialized_; }
 
  private:

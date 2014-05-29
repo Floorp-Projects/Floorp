@@ -22,18 +22,20 @@
 
 namespace webrtc {
 
-class ACMDTMFDetection;
-class ACMGenericCodec;
 class CriticalSectionWrapper;
 class RWLockWrapper;
 
+namespace acm2 {
+
+class ACMDTMFDetection;
+class ACMGenericCodec;
+
 class AudioCodingModuleImpl : public AudioCodingModule {
  public:
-  // Constructor
   explicit AudioCodingModuleImpl(int id);
-
-  // Destructor
   ~AudioCodingModuleImpl();
+
+  virtual const char* Version() const;
 
   // Change the unique identifier of this object.
   virtual int32_t ChangeUniqueId(const int32_t id);
@@ -226,6 +228,8 @@ class AudioCodingModuleImpl : public AudioCodingModule {
 
   std::vector<uint16_t> GetNackList(int round_trip_time_ms) const;
 
+  void GetDecodingCallStatistics(AudioDecodingCallStats* stats) const;
+
  private:
   int UnregisterReceiveCodecSafe(int payload_type);
 
@@ -348,6 +352,8 @@ class AudioCodingModuleImpl : public AudioCodingModule {
   uint32_t codec_timestamp_;
   bool first_10ms_data_;
 };
+
+}  // namespace acm2
 
 }  // namespace webrtc
 

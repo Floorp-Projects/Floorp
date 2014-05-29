@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>  // memset
 
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -193,6 +194,8 @@ class NetEqDecodingTest : public ::testing::Test {
                           WebRtcNetEQ_RTPInfo* rtp_info,
                           uint8_t* payload,
                           int* payload_len);
+  void WrapTest(uint16_t start_seq_no, uint32_t start_timestamp,
+                const std::set<uint16_t>& drop_seq_numbers);
 
   NETEQTEST_NetEQClass* neteq_inst_;
   std::vector<NETEQTEST_Decoder*> dec_;
@@ -505,7 +508,7 @@ TEST_F(NetEqDecodingTest, TestAverageInterArrivalTimeNegative) {
   WebRtcNetEQ_NetworkStatistics network_stats;
   ASSERT_EQ(0, WebRtcNetEQ_GetNetworkStatistics(neteq_inst_->instance(),
                                                 &network_stats));
-  EXPECT_EQ(-106911, network_stats.clockDriftPPM);
+  EXPECT_EQ(-103196, network_stats.clockDriftPPM);
 }
 
 TEST_F(NetEqDecodingTest, TestAverageInterArrivalTimePositive) {
@@ -536,7 +539,7 @@ TEST_F(NetEqDecodingTest, TestAverageInterArrivalTimePositive) {
   WebRtcNetEQ_NetworkStatistics network_stats;
   ASSERT_EQ(0, WebRtcNetEQ_GetNetworkStatistics(neteq_inst_->instance(),
                                                 &network_stats));
-  EXPECT_EQ(108352, network_stats.clockDriftPPM);
+  EXPECT_EQ(110946, network_stats.clockDriftPPM);
 }
 
 TEST_F(NetEqDecodingTest, LongCngWithClockDrift) {
@@ -698,6 +701,78 @@ TEST_F(NetEqDecodingTest, TestExtraDelay) {
       EXPECT_LE(network_stats.currentBufferSize, expected_upper_limit);
     }
   }
+}
+
+void NetEqDecodingTest::WrapTest(uint16_t start_seq_no,
+                                 uint32_t start_timestamp,
+                                 const std::set<uint16_t>& drop_seq_numbers) {
+  uint16_t seq_no = start_seq_no;
+  uint32_t timestamp = start_timestamp;
+  const int kFrameSizeMs = 30;
+  const int kSamples = kFrameSizeMs * 16;
+  const int kPayloadBytes = kSamples * 2;
+  double next_input_time_ms = 0.0;
+
+  // Insert speech for 1 second.
+  const int kSpeechDurationMs = 1000;
+  for (double t_ms = 0; t_ms < kSpeechDurationMs; t_ms += 10) {
+    // Each turn in this for loop is 10 ms.
+    while (next_input_time_ms <= t_ms) {
+      // Insert one 30 ms speech frame.
+      uint8_t payload[kPayloadBytes] = {0};
+      WebRtcNetEQ_RTPInfo rtp_info;
+      PopulateRtpInfo(seq_no, timestamp, &rtp_info);
+      if (drop_seq_numbers.find(seq_no) == drop_seq_numbers.end()) {
+        // This sequence number was not in the set to drop. Insert it.
+        ASSERT_EQ(0,
+                  WebRtcNetEQ_RecInRTPStruct(neteq_inst_->instance(),
+                                             &rtp_info,
+                                             payload,
+                                             kPayloadBytes, 0));
+      }
+      ++seq_no;
+      timestamp += kSamples;
+      next_input_time_ms += static_cast<double>(kFrameSizeMs);
+      WebRtcNetEQ_NetworkStatistics network_stats;
+      ASSERT_EQ(0, WebRtcNetEQ_GetNetworkStatistics(neteq_inst_->instance(),
+                                                    &network_stats));
+      // Expect preferred and actual buffer size to be no more than 2 frames.
+      EXPECT_LE(network_stats.preferredBufferSize, kFrameSizeMs * 2);
+      EXPECT_LE(network_stats.currentBufferSize, kFrameSizeMs * 2);
+    }
+    // Pull out data once.
+    ASSERT_TRUE(kBlockSize16kHz == neteq_inst_->recOut(out_data_));
+    // Expect delay (in samples) to be less than 2 packets.
+    EXPECT_LE(timestamp - neteq_inst_->getSpeechTimeStamp(),
+              static_cast<uint32_t>(kSamples * 2));
+  }
+}
+
+TEST_F(NetEqDecodingTest, SequenceNumberWrap) {
+  // Start with a sequence number that will soon wrap.
+  std::set<uint16_t> drop_seq_numbers;  // Don't drop any packets.
+  WrapTest(0xFFFF - 5, 0, drop_seq_numbers);
+}
+
+TEST_F(NetEqDecodingTest, SequenceNumberWrapAndDrop) {
+  // Start with a sequence number that will soon wrap.
+  std::set<uint16_t> drop_seq_numbers;
+  drop_seq_numbers.insert(0xFFFF);
+  drop_seq_numbers.insert(0x0);
+  WrapTest(0xFFFF - 5, 0, drop_seq_numbers);
+}
+
+TEST_F(NetEqDecodingTest, TimestampWrap) {
+  // Start with a timestamp that will soon wrap.
+  std::set<uint16_t> drop_seq_numbers;
+  WrapTest(0, 0xFFFFFFFF - 1000, drop_seq_numbers);
+}
+
+TEST_F(NetEqDecodingTest, TimestampAndSequenceNumberWrap) {
+  // Start with a timestamp and a sequence number that will wrap at the same
+  // time.
+  std::set<uint16_t> drop_seq_numbers;
+  WrapTest(0xFFFF - 2, 0xFFFFFFFF - 1000, drop_seq_numbers);
 }
 
 }  // namespace

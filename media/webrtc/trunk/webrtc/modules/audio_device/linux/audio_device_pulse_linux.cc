@@ -33,35 +33,6 @@ namespace webrtc
 //                              Static Methods
 // ============================================================================
 
-bool AudioDeviceLinuxPulse::PulseAudioIsSupported()
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, -1, "%s",
-                 __FUNCTION__);
-
-    bool pulseAudioIsSupported(true);
-
-    // Check that we can initialize
-    AudioDeviceLinuxPulse* admPulse = new AudioDeviceLinuxPulse(-1);
-    if (admPulse->InitPulseAudio() == -1)
-    {
-        pulseAudioIsSupported = false;
-    }
-    admPulse->TerminatePulseAudio();
-    delete admPulse;
-
-    if (pulseAudioIsSupported)
-    {
-        WEBRTC_TRACE(kTraceStateInfo, kTraceAudioDevice, -1,
-                     "*** Linux Pulse Audio is supported ***");
-    } else
-    {
-        WEBRTC_TRACE(kTraceStateInfo, kTraceAudioDevice, -1,
-                     "*** Linux Pulse Audio is NOT supported => will revert to the ALSA API ***");
-    }
-
-    return (pulseAudioIsSupported);
-}
-
 AudioDeviceLinuxPulse::AudioDeviceLinuxPulse(const int32_t id) :
     _ptrAudioBuffer(NULL),
     _critSect(*CriticalSectionWrapper::CreateCriticalSection()),
@@ -231,7 +202,6 @@ int32_t AudioDeviceLinuxPulse::Init()
     _recWarning = 0;
     _recError = 0;
 
-#ifdef USE_X11
     //Get X display handle for typing detection
     _XDisplay = XOpenDisplay(NULL);
     if (!_XDisplay)
@@ -239,7 +209,6 @@ int32_t AudioDeviceLinuxPulse::Init()
         WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
           "  failed to open X display, typing detection will not work");
     }
-#endif
 
     // RECORDING
     const char* threadName = "webrtc_audio_module_rec_thread";
@@ -354,13 +323,11 @@ int32_t AudioDeviceLinuxPulse::Terminate()
         return -1;
     }
 
-#ifdef USE_X11
     if (_XDisplay)
     {
       XCloseDisplay(_XDisplay);
       _XDisplay = NULL;
     }
-#endif
 
     _initialized = false;
     _outputDeviceIsSpecified = false;
@@ -2646,7 +2613,7 @@ int32_t AudioDeviceLinuxPulse::ReadRecordedData(const void* bufferData,
 int32_t AudioDeviceLinuxPulse::ProcessRecordedData(
     int8_t *bufferData,
     uint32_t bufferSizeInSamples,
-    uint32_t recDelay)
+    uint32_t recDelay) EXCLUSIVE_LOCKS_REQUIRED(_critSect)
 {
     uint32_t currentMicLevel(0);
     uint32_t newMicLevel(0);
@@ -3114,7 +3081,7 @@ bool AudioDeviceLinuxPulse::RecThreadProcess()
 }
 
 bool AudioDeviceLinuxPulse::KeyPressed() const{
-#ifdef USE_X11
+
   char szKey[32];
   unsigned int i = 0;
   char state = 0;
@@ -3132,8 +3099,5 @@ bool AudioDeviceLinuxPulse::KeyPressed() const{
   // Save old state
   memcpy((char*)_oldKeyState, (char*)szKey, sizeof(_oldKeyState));
   return (state != 0);
-#else
-  return false;
-#endif
 }
 }

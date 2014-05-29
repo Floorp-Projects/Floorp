@@ -25,7 +25,7 @@ public:
     virtual int32_t Start() = 0;
     virtual int32_t Stop() = 0;
 
-    virtual int32_t RegisterModule(const Module* module) = 0;
+    virtual int32_t RegisterModule(Module* module) = 0;
     virtual int32_t DeRegisterModule(const Module* module) = 0;
 protected:
     virtual ~ProcessThread();

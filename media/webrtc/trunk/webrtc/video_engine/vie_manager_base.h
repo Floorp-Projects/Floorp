@@ -11,11 +11,13 @@
 #ifndef WEBRTC_VIDEO_ENGINE_VIE_MANAGER_BASE_H_
 #define WEBRTC_VIDEO_ENGINE_VIE_MANAGER_BASE_H_
 
+#include "webrtc/system_wrappers/interface/thread_annotations.h"
+
 namespace webrtc {
 
 class RWLockWrapper;
 
-class ViEManagerBase {
+class LOCKABLE ViEManagerBase {
   friend class ViEManagedItemScopedBase;
   friend class ViEManagerScopedBase;
   friend class ViEManagerWriteScoped;
@@ -25,24 +27,25 @@ class ViEManagerBase {
 
  private:
   // Exclusive lock, used by ViEManagerWriteScoped.
-  void WriteLockManager();
+  void WriteLockManager() EXCLUSIVE_LOCK_FUNCTION();
 
   // Releases exclusive lock, used by ViEManagerWriteScoped.
-  void ReleaseWriteLockManager();
+  void ReleaseWriteLockManager() UNLOCK_FUNCTION();
 
   // Increases lock count, used by ViEManagerScopedBase.
-  void ReadLockManager() const;
+  void ReadLockManager() const SHARED_LOCK_FUNCTION();
 
   // Releases the lock count, used by ViEManagerScopedBase.
-  void ReleaseLockManager() const;
+  void ReleaseLockManager() const UNLOCK_FUNCTION();
 
   RWLockWrapper& instance_rwlock_;
 };
 
-class ViEManagerWriteScoped {
+class SCOPED_LOCKABLE ViEManagerWriteScoped {
  public:
-  explicit ViEManagerWriteScoped(ViEManagerBase* vie_manager);
-  ~ViEManagerWriteScoped();
+  explicit ViEManagerWriteScoped(ViEManagerBase* vie_manager)
+      EXCLUSIVE_LOCK_FUNCTION(vie_manager);
+  ~ViEManagerWriteScoped() UNLOCK_FUNCTION();
 
  private:
   ViEManagerBase* vie_manager_;

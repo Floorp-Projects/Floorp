@@ -29,7 +29,6 @@ SharedData::SharedData(const Config& config) :
     _channelManager(_gInstanceCounter, config),
     _engineStatistics(_gInstanceCounter),
     _audioDevicePtr(NULL),
-    audioproc_(NULL),
     _moduleProcessThreadPtr(ProcessThread::CreateProcessThread()),
     _externalRecording(false),
     _externalPlayout(false)
@@ -76,9 +75,9 @@ void SharedData::set_audio_processing(AudioProcessing* audioproc) {
   _outputMixerPtr->SetAudioProcessingModule(audioproc);
 }
 
-uint16_t SharedData::NumOfSendingChannels() {
+int SharedData::NumOfSendingChannels() {
   ChannelManager::Iterator it(&_channelManager);
-  uint16_t sending_channels = 0;
+  int sending_channels = 0;
 
   for (ChannelManager::Iterator it(&_channelManager); it.IsValid();
        it.Increment()) {
@@ -87,6 +86,19 @@ uint16_t SharedData::NumOfSendingChannels() {
   }
 
   return sending_channels;
+}
+
+int SharedData::NumOfPlayingChannels() {
+  ChannelManager::Iterator it(&_channelManager);
+  int playout_channels = 0;
+
+  for (ChannelManager::Iterator it(&_channelManager); it.IsValid();
+       it.Increment()) {
+    if (it.GetChannel()->Playing())
+      ++playout_channels;
+  }
+
+  return playout_channels;
 }
 
 void SharedData::SetLastError(int32_t error) const {

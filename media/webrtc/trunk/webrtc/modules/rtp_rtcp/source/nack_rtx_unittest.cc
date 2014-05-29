@@ -343,27 +343,3 @@ TEST_F(RtpRtcpRtxNackTest, RtxNack) {
   EXPECT_EQ(kTestNumberOfRtxPackets, transport_.count_rtx_ssrc_);
   EXPECT_TRUE(ExpectedPacketsReceived());
 }
-
-TEST_F(RtpRtcpRtxNackTest, RTXAllNoLoss) {
-  RunRtxTest(kRtxAll, 0);
-  EXPECT_EQ(kTestSequenceNumber, *(receiver_.sequence_numbers_.begin()));
-  EXPECT_EQ(kTestSequenceNumber + kTestNumberOfPackets - 1,
-      *(receiver_.sequence_numbers_.rbegin()));
-  // We have transmitted all packets twice, and loss was set to 0.
-  EXPECT_EQ(kTestNumberOfPackets * 2u, receiver_.sequence_numbers_.size());
-  // Half of the packets should be via RTX.
-  EXPECT_EQ(static_cast<int>(kTestNumberOfPackets),
-      transport_.count_rtx_ssrc_);
-}
-
-TEST_F(RtpRtcpRtxNackTest, RTXAllWithLoss) {
-  int loss = 10;
-  RunRtxTest(kRtxAll, loss);
-  EXPECT_EQ(kTestSequenceNumber, *(receiver_.sequence_numbers_.begin()));
-  EXPECT_EQ(kTestSequenceNumber + kTestNumberOfPackets - 1,
-      *(receiver_.sequence_numbers_.rbegin()));
-  // Got everything but lost packets.
-  EXPECT_EQ(2u * (kTestNumberOfPackets - kTestNumberOfPackets / loss),
-      receiver_.sequence_numbers_.size());
-  EXPECT_EQ(static_cast<int>(kTestNumberOfPackets), transport_.count_rtx_ssrc_);
-}

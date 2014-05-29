@@ -118,11 +118,9 @@ public:
     void PlayFileEnded(int32_t id);
     void RecordFileEnded(int32_t id);
 
-    // so ExternalPlayoutData() can insert far-end audio from the audio drivers
-    void APMAnalyzeReverseStream(AudioFrame &audioFrame);
-
 private:
     OutputMixer(uint32_t instanceId);
+    void APMAnalyzeReverseStream();
     int InsertInbandDtmfTone();
 
     // uses

@@ -231,9 +231,6 @@ class VCMQmResolution : public VCMQmMethod {
   // Output: the spatial and/or temporal scale change.
   int SelectResolution(VCMResolutionScale** qm);
 
-  // Update with current system load
-  void SetCPULoadState(CPULoadState state);
-
  private:
   // Set the default resolution action.
   void SetDefaultAction();
@@ -341,7 +338,6 @@ class VCMQmResolution : public VCMQmMethod {
   // large: i.e., (4/3) ^{kDownActionHistorySize} <= kMaxDownSample.
   ResolutionAction down_action_history_[kDownActionHistorySize];
   int num_layers_;
-  CPULoadState loadstate_;
 };
 
 // Robustness settings class.

@@ -32,7 +32,7 @@
 #include "unpack_bits.h"
 #include "index_conv_dec.h"
 #endif
-#ifndef WEBRTC_BIG_ENDIAN
+#ifndef WEBRTC_ARCH_BIG_ENDIAN
 #include "swap_bytes.h"
 #endif
 
@@ -489,7 +489,7 @@ void WebRtcIlbcfix_EncodeImpl(
   WebRtcIlbcfix_PackBits(bytes, iLBCbits_inst, iLBCenc_inst->mode);
 #endif
 
-#ifndef WEBRTC_BIG_ENDIAN
+#ifndef WEBRTC_ARCH_BIG_ENDIAN
   /* Swap bytes for LITTLE ENDIAN since the packbits()
      function assumes BIG_ENDIAN machine */
 #ifdef SPLIT_10MS

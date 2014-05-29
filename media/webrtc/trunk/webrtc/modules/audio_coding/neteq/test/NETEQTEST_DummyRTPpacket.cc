@@ -31,116 +31,121 @@ int NETEQTEST_DummyRTPpacket::readFromFile(FILE *fp)
 
     uint16_t length, plen;
     uint32_t offset;
+    int packetLen;
 
-    if (fread(&length, 2, 1, fp) == 0)
-    {
+    bool readNextPacket = true;
+    while (readNextPacket) {
+      readNextPacket = false;
+      if (fread(&length, 2, 1, fp) == 0)
+      {
         reset();
         return -2;
-    }
-    length = ntohs(length);
+      }
+      length = ntohs(length);
 
-    if (fread(&plen, 2, 1, fp) == 0)
-    {
+      if (fread(&plen, 2, 1, fp) == 0)
+      {
         reset();
         return -1;
-    }
-    int packetLen = ntohs(plen);
+      }
+      packetLen = ntohs(plen);
 
-    if (fread(&offset, 4, 1, fp) == 0)
-    {
+      if (fread(&offset, 4, 1, fp) == 0)
+      {
         reset();
         return -1;
-    }
-    // Store in local variable until we have passed the reset below.
-    uint32_t receiveTime = ntohl(offset);
+      }
+      // Store in local variable until we have passed the reset below.
+      uint32_t receiveTime = ntohl(offset);
 
-    // Use length here because a plen of 0 specifies rtcp.
-    length = (uint16_t) (length - _kRDHeaderLen);
+      // Use length here because a plen of 0 specifies rtcp.
+      length = (uint16_t) (length - _kRDHeaderLen);
 
-    // check buffer size
-    if (_datagram && _memSize < length + 1)
-    {
+      // check buffer size
+      if (_datagram && _memSize < length + 1)
+      {
         reset();
-    }
+      }
 
-    if (!_datagram)
-    {
+      if (!_datagram)
+      {
         // Add one extra byte, to be able to fake a dummy payload of one byte.
         _datagram = new uint8_t[length + 1];
         _memSize = length + 1;
-    }
-    memset(_datagram, 0, length + 1);
+      }
+      memset(_datagram, 0, length + 1);
 
-    if (length == 0)
-    {
+      if (length == 0)
+      {
         _datagramLen = 0;
         return packetLen;
-    }
+      }
 
-    // Read basic header
-    if (fread(_datagram, 1, _kBasicHeaderLen, fp)
-        != (size_t)_kBasicHeaderLen)
-    {
+      // Read basic header
+      if (fread(_datagram, 1, _kBasicHeaderLen, fp)
+          != (size_t)_kBasicHeaderLen)
+      {
         reset();
         return -1;
-    }
-    _receiveTime = receiveTime;
-    _datagramLen = _kBasicHeaderLen;
-    int header_length = _kBasicHeaderLen;
+      }
+      _receiveTime = receiveTime;
+      _datagramLen = _kBasicHeaderLen;
+      int header_length = _kBasicHeaderLen;
 
-    // Parse the basic header
-    WebRtcNetEQ_RTPInfo tempRTPinfo;
-    int P, X, CC;
-    parseBasicHeader(&tempRTPinfo, &P, &X, &CC);
+      // Parse the basic header
+      WebRtcNetEQ_RTPInfo tempRTPinfo;
+      int P, X, CC;
+      parseBasicHeader(&tempRTPinfo, &P, &X, &CC);
 
-    // Check if we have to extend the header
-    if (X != 0 || CC != 0)
-    {
+      // Check if we have to extend the header
+      if (X != 0 || CC != 0)
+      {
         int newLen = _kBasicHeaderLen + CC * 4 + X * 4;
         assert(_memSize >= newLen + 1);
 
         // Read extension from file
         size_t readLen = newLen - _kBasicHeaderLen;
         if (fread(_datagram + _kBasicHeaderLen, 1, readLen,
-            fp) != readLen)
+                  fp) != readLen)
         {
-            reset();
-            return -1;
+          reset();
+          return -1;
         }
         _datagramLen = newLen;
         header_length = newLen;
 
         if (X != 0)
         {
-            int totHdrLen = calcHeaderLength(X, CC);
-            assert(_memSize >= totHdrLen);
+          int totHdrLen = calcHeaderLength(X, CC);
+          assert(_memSize >= totHdrLen);
 
-            // Read extension from file
-            size_t readLen = totHdrLen - newLen;
-            if (fread(_datagram + newLen, 1, readLen, fp)
-                != readLen)
-            {
-                reset();
-                return -1;
-            }
-            _datagramLen = totHdrLen;
-            header_length = totHdrLen;
+          // Read extension from file
+          size_t readLen = totHdrLen - newLen;
+          if (fread(_datagram + newLen, 1, readLen, fp)
+              != readLen)
+          {
+            reset();
+            return -1;
+          }
+          _datagramLen = totHdrLen;
+          header_length = totHdrLen;
         }
-    }
-    // Make sure that we have at least one byte of dummy payload.
-    _datagramLen = std::max(static_cast<int>(length), header_length + 1);
-    assert(_datagramLen <= _memSize);
+      }
+      // Make sure that we have at least one byte of dummy payload.
+      _datagramLen = std::max(static_cast<int>(length), header_length + 1);
+      assert(_datagramLen <= _memSize);
 
-    if (!_blockList.empty() && _blockList.count(payloadType()) > 0)
-    {
+      if (!_blockList.empty() && _blockList.count(payloadType()) > 0)
+      {
         // discard this payload
-        return readFromFile(fp);
-    }
+        readNextPacket = true;
+      }
 
-    if (_filterSSRC && _selectSSRC != SSRC())
-    {
+      if (_filterSSRC && _selectSSRC != SSRC())
+      {
         // Discard this payload.
-        return(readFromFile(fp));
+        readNextPacket = true;
+      }
     }
 
     return packetLen;

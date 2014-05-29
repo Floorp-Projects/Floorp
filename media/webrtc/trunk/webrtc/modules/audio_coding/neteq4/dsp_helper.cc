@@ -80,7 +80,7 @@ int DspHelper::RampSignal(int16_t* signal,
   return RampSignal(signal, length, factor, increment, signal);
 }
 
-int DspHelper::RampSignal(AudioMultiVector<int16_t>* signal,
+int DspHelper::RampSignal(AudioMultiVector* signal,
                           size_t start_index,
                           size_t length,
                           int factor,
