@@ -124,7 +124,7 @@ loop.conversation = (function(OT, mozL10n) {
    */
   function init() {
     router = new ConversationRouter({
-      conversation: new loop.shared.models.ConversationModel(),
+      conversation: new loop.shared.models.ConversationModel({}, {sdk: OT}),
       notifier: new sharedViews.NotificationListView({el: "#messages"})
     });
     Backbone.history.start();
