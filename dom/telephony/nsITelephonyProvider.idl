@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(c25d3993-6481-4e12-acee-55e32f6e1454)]
+[scriptable, uuid(cd83030f-31eb-40c0-8f0e-0edef3527eec)]
 interface nsITelephonyListener : nsISupports
 {
   /**
@@ -18,8 +18,6 @@ interface nsITelephonyListener : nsISupports
    *        One of the nsITelephonyProvider::CALL_STATE_* values.
    * @param number
    *        Number of the other party.
-   * @param isActive
-   *        Indicates whether this call is the currently active one.
    * @param isOutgoing
    *        Indicates whether this call is outgoing or incoming.
    * @param isEmergency
@@ -37,7 +35,6 @@ interface nsITelephonyListener : nsISupports
                         in unsigned long callIndex,
                         in unsigned short callState,
                         in AString number,
-                        in boolean isActive,
                         in boolean isOutgoing,
                         in boolean isEmergency,
                         in boolean isConference,
@@ -74,8 +71,6 @@ interface nsITelephonyListener : nsISupports
    *        One of the nsITelephonyProvider::CALL_STATE_* values.
    * @param number
    *        Number of the other party.
-   * @param isActive
-   *        Indicates whether this call is the active one.
    * @param isOutgoing
    *        Indicates whether this call is outgoing or incoming.
    * @param isConference
@@ -91,7 +86,6 @@ interface nsITelephonyListener : nsISupports
                           in unsigned long callIndex,
                           in unsigned short callState,
                           in AString number,
-                          in boolean isActive,
                           in boolean isOutgoing,
                           in boolean isEmergency,
                           in boolean isConference,
