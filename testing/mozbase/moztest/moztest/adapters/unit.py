@@ -18,7 +18,6 @@ testsuites"""
 class StructuredTestResult(TextTestResult):
     def __init__(self, *args, **kwargs):
         self.logger = kwargs.pop('logger')
-        self.test_list = kwargs.pop("test_list", [])
         self.result_callbacks = kwargs.pop('result_callbacks', [])
         self.passed = 0
         self.testsRun = 0
@@ -33,7 +32,7 @@ class StructuredTestResult(TextTestResult):
         return debug_info
 
     def startTestRun(self):
-        self.logger.suite_start(tests=self.test_list)
+        pass
 
     def startTest(self, test):
         self.testsRun += 1
@@ -43,13 +42,13 @@ class StructuredTestResult(TextTestResult):
         pass
 
     def stopTestRun(self):
-        self.logger.suite_end()
+        pass
 
     def addError(self, test, err):
         self.errors.append((test, self._exc_info_to_string(err, test)))
         extra = self.call_callbacks(test, "ERROR")
         self.logger.test_end(test.id(),
-                             "ERROR",
+                            "ERROR",
                              message=self._exc_info_to_string(err, test),
                              expected="PASS",
                              extra=extra)
@@ -96,14 +95,9 @@ class StructuredTestRunner(unittest.TextTestRunner):
     def __init__(self, **kwargs):
         """TestRunner subclass designed for structured logging.
 
-        :params logger: A ``StructuredLogger`` to use for logging the test run.
-        :params test_list: An optional list of tests that will be passed along
-            the `suite_start` message.
-
+        :params logger: a StructuredLogger to use for logging the test run.
         """
-
         self.logger = kwargs.pop("logger")
-        self.test_list = kwargs.pop("test_list", [])
         self.result_callbacks = kwargs.pop("result_callbacks", [])
         unittest.TextTestRunner.__init__(self, **kwargs)
 
@@ -111,8 +105,7 @@ class StructuredTestRunner(unittest.TextTestRunner):
         return self.resultclass(self.stream,
                                 self.descriptions,
                                 self.verbosity,
-                                logger=self.logger,
-                                test_list=self.test_list)
+                                logger=self.logger)
 
     def run(self, test):
         """Run the given test case or test suite."""
