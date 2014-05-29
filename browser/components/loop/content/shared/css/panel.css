@@ -1,0 +1,60 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Panel styles */
+
+.spacer {
+  margin-bottom: 1em;
+}
+
+.share {
+  background: #f2f2f2;
+}
+
+.share .description {
+  background: #f7f7f7 url("../img/icon_32.png") no-repeat 1em 1.5em;
+  border-bottom: 1px solid #c3c3c3;
+  padding: 1em 1em 0 4em;
+}
+
+.share .description .field {
+  padding-bottom: 1em;
+  border-bottom: 1px dotted #ddd;
+}
+
+.share .description select {
+  float: right;
+}
+
+.share .description .preview video {
+  background: #ccc;
+  float: right;
+  width: 180px;
+}
+
+.share .action {
+  clear: right;
+  padding: 1em;
+  border-top: 1px solid #fafafa;
+}
+
+.share .action p {
+  margin: 0 0 1em 0;
+}
+
+.share .action input {
+  font-size: .9em;
+  width: 60%;
+  padding: .4em;
+}
+
+/* Specific cases */
+
+.share.generate-url .action {
+  text-align: center;
+}
+
+.share .action .messages p {
+  margin: 0;
+}
