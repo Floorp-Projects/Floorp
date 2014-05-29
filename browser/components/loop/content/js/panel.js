@@ -32,8 +32,8 @@ loop.panel = (function(_, mozL10n) {
       '<div class="action">',
       '  <p class="invite">',
       '    <input type="text" name="caller" data-l10n-id="caller">',
-      '    <a class="get-url btn btn-success disabled" href=""',
-      '       data-l10n-id="get_a_call_url"></a>',
+      '    <button class="get-url btn btn-success disabled" href=""',
+      '       data-l10n-id="get_a_call_url"></button>',
       '  </p>',
       '  <p class="result hide">',
       '    <input id="call-url" type="url" readonly>',
@@ -46,7 +46,7 @@ loop.panel = (function(_, mozL10n) {
 
     events: {
       "keyup input[name=caller]": "changeButtonState",
-      "click a.get-url": "getCallUrl",
+      "click .get-url": "getCallUrl",
       "click a.go-back": "goBack"
     },
 
@@ -76,6 +76,7 @@ loop.panel = (function(_, mozL10n) {
       }.bind(this);
 
       this.client.requestCallUrl(this.getNickname(), callback);
+      this.setPending();
     },
 
     goBack: function(event) {
@@ -93,12 +94,18 @@ loop.panel = (function(_, mozL10n) {
       this.$(".description p").text(__("share_link_url"));
     },
 
+    setPending: function() {
+      this.$("[name=caller]").addClass("pending");
+      this.$(".get-url").addClass("disabled").attr("disabled", "disabled");
+    },
+
     changeButtonState: function() {
       var enabled = !!this.$("input[name=caller]").val();
-      if (enabled)
-        this.$("a.get-url").removeClass("disabled");
-      else
-        this.$("a.get-url").addClass("disabled");
+      if (enabled) {
+        this.$(".get-url").removeClass("disabled");
+      } else {
+        this.$(".get-url").addClass("disabled");
+      }
     }
   });
 

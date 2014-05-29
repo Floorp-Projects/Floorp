@@ -10,6 +10,7 @@ browser.jar:
   content/browser/loop/shared/css/conversation.css   (content/shared/css/conversation.css)
   content/browser/loop/shared/img/icon_32.png        (content/shared/img/icon_32.png)
   content/browser/loop/shared/img/icon_64.png        (content/shared/img/icon_64.png)
+  content/browser/loop/shared/img/loading-icon.gif   (content/shared/img/loading-icon.gif)
   content/browser/loop/shared/js/client.js           (content/shared/js/client.js)
   content/browser/loop/shared/js/models.js           (content/shared/js/models.js)
   content/browser/loop/shared/js/router.js           (content/shared/js/router.js)
