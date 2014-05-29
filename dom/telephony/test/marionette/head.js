@@ -22,6 +22,7 @@ let emulator = (function() {
   function run(cmd, callback) {
     pendingCmdCount++;
     originalRunEmulatorCmd(cmd, function(result) {
+      is(result[result.length - 1], "OK", "emulator command should be OK.");
       pendingCmdCount--;
       if (callback && typeof callback === "function") {
         callback(result);
