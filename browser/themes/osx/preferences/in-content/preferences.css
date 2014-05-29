@@ -4,6 +4,20 @@
 
 %include ../../../shared/incontentprefs/preferences.css
 
+prefpane .groupbox-title {
+  background: none;
+  margin-bottom: 0;
+}
+
+tabs {
+  padding-right: 0;
+  padding-left: 0;
+}
+
+tab[selected] {
+  text-shadow: none;
+}
+
 menulist:not([editable="true"]) > menupopup > menuitem[checked="true"]::before,
 menulist:not([editable="true"]) > menupopup > menuitem[selected="true"]::before {
   display: none;

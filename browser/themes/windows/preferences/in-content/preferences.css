@@ -4,6 +4,10 @@
 
 %include ../../../shared/incontentprefs/preferences.css
 
+caption {
+  background-color: transparent;
+}
+
 menulist:not([editable="true"]) > .menulist-dropmarker {
   margin-top: 1px;
   margin-bottom: 1px;
