@@ -1203,7 +1203,7 @@ inline JSObject *
 GetInnerObject(JSObject *obj)
 {
     if (js::InnerObjectOp op = obj->getClass()->ext.innerObject) {
-        JS::AutoAssertNoGC nogc;
+        JS::AutoSuppressGCAnalysis nogc;
         return op(obj);
     }
     return obj;

@@ -426,7 +426,7 @@ class ForkJoinContext : public ThreadSafeContext
 
     // ForkJoinContext is allocated on the stack. It would be dangerous to GC
     // with it live because of the GC pointer fields stored in the context.
-    JS::AutoAssertNoGC nogc_;
+    JS::AutoSuppressGCAnalysis nogc_;
 };
 
 // Locks a JSContext for its scope. Be very careful, because locking a
