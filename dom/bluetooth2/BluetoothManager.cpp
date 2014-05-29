@@ -9,6 +9,7 @@
 #include "BluetoothCommon.h"
 #include "BluetoothAdapter.h"
 #include "BluetoothService.h"
+#include "BluetoothReplyRunnable.h"
 
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/dom/BluetoothManager2Binding.h"
@@ -29,6 +30,62 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(BluetoothManager, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(BluetoothManager, DOMEventTargetHelper)
 
+class GetAdaptersTask : public BluetoothReplyRunnable
+{
+ public:
+  GetAdaptersTask(BluetoothManager* aManager)
+    : BluetoothReplyRunnable(nullptr)
+    , mManager(aManager)
+  { }
+
+  bool
+  ParseSuccessfulReply(JS::MutableHandle<JS::Value> aValue)
+  {
+    /**
+     * Unwrap BluetoothReply.BluetoothReplySuccess.BluetoothValue =
+     *   BluetoothNamedValue[]
+     *     |
+     *     |__ BluetoothNamedValue =
+     *     |     {"Adapter", BluetoothValue = BluetoothNamedValue[]}
+     *     |
+     *     |__ BluetoothNamedValue =
+     *     |     {"Adapter", BluetoothValue = BluetoothNamedValue[]}
+     *     ...
+     */
+
+    // Extract the array of all adapters' properties
+    const BluetoothValue& adaptersProperties =
+      mReply->get_BluetoothReplySuccess().value();
+    NS_ENSURE_TRUE(adaptersProperties.type() ==
+                   BluetoothValue::TArrayOfBluetoothNamedValue, false);
+
+    const InfallibleTArray<BluetoothNamedValue>& adaptersPropertiesArray =
+      adaptersProperties.get_ArrayOfBluetoothNamedValue();
+
+    // Append a BluetoothAdapter into adapters array for each properties array
+    uint32_t numAdapters = adaptersPropertiesArray.Length();
+    for (uint32_t i = 0; i < numAdapters; i++) {
+      MOZ_ASSERT(adaptersPropertiesArray[i].name().EqualsLiteral("Adapter"));
+
+      const BluetoothValue& properties = adaptersPropertiesArray[i].value();
+      mManager->AppendAdapter(properties);
+    }
+
+    aValue.setUndefined();
+    return true;
+  }
+
+  void
+  ReleaseMembers()
+  {
+    BluetoothReplyRunnable::ReleaseMembers();
+    mManager = nullptr;
+  }
+
+private:
+  nsRefPtr<BluetoothManager> mManager;
+};
+
 BluetoothManager::BluetoothManager(nsPIDOMWindow *aWindow)
   : DOMEventTargetHelper(aWindow)
   , mDefaultAdapterIndex(-1)
@@ -37,6 +94,13 @@ BluetoothManager::BluetoothManager(nsPIDOMWindow *aWindow)
   MOZ_ASSERT(IsDOMBinding());
 
   ListenToBluetoothSignal(true);
+
+  // Query adapters list from bluetooth backend
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
+  nsRefPtr<BluetoothReplyRunnable> result = new GetAdaptersTask(this);
+  NS_ENSURE_SUCCESS_VOID(bs->GetAdaptersInternal(result));
 }
 
 BluetoothManager::~BluetoothManager()
