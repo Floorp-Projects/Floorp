@@ -114,8 +114,7 @@ class CycleCollectedJSRuntime
   friend class IncrementalFinalizeRunnable;
 protected:
   CycleCollectedJSRuntime(JSRuntime* aParentRuntime,
-                          uint32_t aMaxbytes,
-                          JSUseHelperThreads aUseHelperThreads);
+                          uint32_t aMaxbytes);
   virtual ~CycleCollectedJSRuntime();
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;

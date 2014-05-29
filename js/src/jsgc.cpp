@@ -2348,11 +2348,6 @@ js::GetCPUCount()
 bool
 GCHelperState::init()
 {
-    if (!rt->useHelperThreads()) {
-        backgroundAllocation = false;
-        return true;
-    }
-
 #ifdef JS_THREADSAFE
     if (!(done = PR_NewCondVar(rt->gc.lock)))
         return false;
@@ -2360,6 +2355,8 @@ GCHelperState::init()
     backgroundAllocation = (GetCPUCount() >= 2);
 
     WorkerThreadState().ensureInitialized();
+#else
+    backgroundAllocation = false;
 #endif /* JS_THREADSAFE */
 
     return true;
@@ -2368,7 +2365,7 @@ GCHelperState::init()
 void
 GCHelperState::finish()
 {
-    if (!rt->useHelperThreads() || !rt->gc.lock) {
+    if (!rt->gc.lock) {
         JS_ASSERT(state_ == IDLE);
         return;
     }
@@ -2495,8 +2492,6 @@ GCHelperState::work()
 void
 GCHelperState::startBackgroundSweep(bool shouldShrink)
 {
-    JS_ASSERT(rt->useHelperThreads());
-
 #ifdef JS_THREADSAFE
     AutoLockWorkerThreadState workerLock;
     AutoLockGC lock(rt);
@@ -2512,8 +2507,6 @@ GCHelperState::startBackgroundSweep(bool shouldShrink)
 void
 GCHelperState::startBackgroundShrink()
 {
-    JS_ASSERT(rt->useHelperThreads());
-
 #ifdef JS_THREADSAFE
     switch (state()) {
       case IDLE:
@@ -2538,11 +2531,6 @@ GCHelperState::startBackgroundShrink()
 void
 GCHelperState::waitBackgroundSweepEnd()
 {
-    if (!rt->useHelperThreads()) {
-        JS_ASSERT(state_ == IDLE);
-        return;
-    }
-
 #ifdef JS_THREADSAFE
     AutoLockGC lock(rt);
     while (state() == SWEEPING)
@@ -2555,11 +2543,6 @@ GCHelperState::waitBackgroundSweepEnd()
 void
 GCHelperState::waitBackgroundSweepOrAllocEnd()
 {
-    if (!rt->useHelperThreads()) {
-        JS_ASSERT(state_ == IDLE);
-        return;
-    }
-
 #ifdef JS_THREADSAFE
     AutoLockGC lock(rt);
     if (state() == ALLOCATING)
@@ -2575,8 +2558,6 @@ GCHelperState::waitBackgroundSweepOrAllocEnd()
 inline void
 GCHelperState::startBackgroundAllocationIfIdle()
 {
-    JS_ASSERT(rt->useHelperThreads());
-
 #ifdef JS_THREADSAFE
     if (state_ == IDLE)
         startBackgroundThread(ALLOCATING);
@@ -4003,7 +3984,7 @@ GCRuntime::beginSweepPhase(bool lastGC)
     gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP);
 
 #ifdef JS_THREADSAFE
-    sweepOnBackgroundThread = !lastGC && rt->useHelperThreads();
+    sweepOnBackgroundThread = !lastGC;
 #endif
 
 #ifdef DEBUG
@@ -4991,10 +4972,11 @@ JS::ShrinkGCBuffers(JSRuntime *rt)
     AutoLockGC lock(rt);
     JS_ASSERT(!rt->isHeapBusy());
 
-    if (!rt->useHelperThreads())
-        ExpireChunksAndArenas(rt, true);
-    else
-        rt->gc.startBackgroundShrink();
+#ifdef JS_THREADSAFE
+    rt->gc.startBackgroundShrink();
+#else
+    ExpireChunksAndArenas(rt, true);
+#endif
 }
 
 void

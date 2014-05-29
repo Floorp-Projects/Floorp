@@ -50,9 +50,6 @@ JS_SetGrayGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
 extern JS_FRIEND_API(JSString *)
 JS_GetAnonymousString(JSRuntime *rt);
 
-extern JS_FRIEND_API(void)
-JS_SetIsWorkerRuntime(JSRuntime *rt);
-
 extern JS_FRIEND_API(JSObject *)
 JS_FindCompilationScope(JSContext *cx, JS::HandleObject obj);
 
