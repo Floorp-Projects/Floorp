@@ -30,7 +30,7 @@ describe("loop.conversation", function() {
     var conversation;
 
     beforeEach(function() {
-      conversation = new loop.shared.models.ConversationModel();
+      conversation = new loop.shared.models.ConversationModel({}, {sdk: {}});
     });
 
     describe("Routes", function() {
