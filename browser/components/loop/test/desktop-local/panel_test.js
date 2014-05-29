@@ -26,61 +26,6 @@ describe("loop.panel", function() {
     sandbox.restore();
   });
 
-  describe("loop.panel.NotificationView", function() {
-    describe("#render", function() {
-      it("should render template with model attribute values", function() {
-        var view = new loop.panel.NotificationView({
-          el: $("#fixtures"),
-          model: new loop.panel.NotificationModel({
-            level: "error",
-            message: "plop"
-          })
-        });
-
-        view.render();
-
-        expect(view.$(".message").text()).eql("plop");
-      });
-    });
-  });
-
-  describe("loop.panel.NotificationListView", function() {
-    describe("Collection events", function() {
-      var coll, testNotif, view;
-
-      beforeEach(function() {
-        sandbox.stub(loop.panel.NotificationListView.prototype, "render");
-        testNotif = new loop.panel.NotificationModel({
-          level: "error",
-          message: "plop"
-        });
-        coll = new loop.panel.NotificationCollection();
-        view = new loop.panel.NotificationListView({collection: coll});
-      });
-
-      it("should render on notification added to the collection", function() {
-        coll.add(testNotif);
-
-        sinon.assert.calledOnce(view.render);
-      });
-
-      it("should render on notification removed from the collection",
-        function() {
-          coll.add(testNotif);
-          coll.remove(testNotif);
-
-          sinon.assert.calledTwice(view.render);
-        });
-
-      it("should render on collection reset",
-        function() {
-          coll.reset();
-
-          sinon.assert.calledOnce(view.render);
-        });
-    });
-  });
-
   describe("loop.panel.PanelView", function() {
     beforeEach(function() {
       $("#fixtures").append([
@@ -104,7 +49,7 @@ describe("loop.panel", function() {
       ].join(""));
     });
 
-    describe("#getCallurl", function() {
+    describe("#getCallUrl", function() {
       it("should request a call url to the server", function() {
         var requestCallUrl = sandbox.stub(loop.shared.Client.prototype,
                                           "requestCallUrl");
@@ -114,6 +59,20 @@ describe("loop.panel", function() {
 
         sinon.assert.calledOnce(requestCallUrl);
         sinon.assert.calledWith(requestCallUrl, "foo");
+      });
+
+      it("should notify the user when the operation failed", function() {
+        var requestCallUrl = sandbox.stub(
+          loop.shared.Client.prototype, "requestCallUrl", function(_, cb) {
+            cb("fake error");
+          });
+        var view = new loop.panel.PanelView();
+        sandbox.stub(view.notifier, "notify");
+
+        view.getCallUrl({preventDefault: sandbox.spy()});
+
+        sinon.assert.calledOnce(view.notifier.notify);
+        sinon.assert.calledWithMatch(view.notifier.notify, {level: "error"});
       });
     });
 
@@ -125,6 +84,15 @@ describe("loop.panel", function() {
         view.onCallUrlReceived("http://call.me/");
 
         expect(view.$("#call-url").val()).eql("http://call.me/");
+      });
+
+      it("should reset all pending notifications", function() {
+        var view = new loop.panel.PanelView().render();
+        sandbox.stub(view.notifier, "clear");
+
+        view.onCallUrlReceived("http://call.me/");
+
+        sinon.assert.calledOnce(view.notifier.clear, "clear");
       });
     });
   });
