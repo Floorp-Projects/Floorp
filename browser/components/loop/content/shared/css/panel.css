@@ -4,6 +4,12 @@
 
 /* Panel styles */
 
+.panel {
+  /* XXX the Social API panel behaves weirdly on inner element size changes,
+     adding unwanted scrollbars; quickfix is to hide these for now. */
+  overflow: hidden;
+}
+
 .spacer {
   margin-bottom: 1em;
 }
@@ -55,6 +61,6 @@
   text-align: center;
 }
 
-.share .action .messages p {
-  margin: 0;
+.panel #messages .alert {
+  margin-bottom: 0;
 }
