@@ -2,91 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*global loop*/
+/* global loop:true */
+
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 var loop = loop || {};
-loop.panel = (function(_, __) {
+loop.panel = (function(TB, mozl10n) {
   "use strict";
 
   var baseServerUrl = Services.prefs.getCharPref("loop.server"),
-      panelView;
-
-  /**
-   * Panel initialisation.
-   */
-  function init() {
-    panelView = new PanelView();
-    panelView.render();
-  }
-
-  /**
-   * Notification model.
-   */
-  var NotificationModel = Backbone.Model.extend({
-    defaults: {
-      level: "info",
-      message: ""
-    }
-  });
-
-  /**
-   * Notification collection
-   */
-  var NotificationCollection = Backbone.Collection.extend({
-    model: NotificationModel
-  });
-
-  /**
-   * Notification view.
-   */
-  var NotificationView = Backbone.View.extend({
-    template: _.template([
-      '<div class="alert alert-<%- level %>">',
-      '  <button class="close"></button>',
-      '  <p class="message"><%- message %></p>',
-      '</div>'
-    ].join("")),
-
-    events: {
-      "click .close": "dismiss"
-    },
-
-    dismiss: function() {
-      this.$el.addClass("fade-out");
-      setTimeout(function() {
-        this.collection.remove(this.model);
-        this.remove();
-      }.bind(this), 500);
-    },
-
-    render: function() {
-      this.$el.html(this.template(this.model.toJSON()));
-      return this;
-    }
-  });
-
-  /**
-   * Notification list view.
-   */
-  var NotificationListView = Backbone.View.extend({
-    initialize: function() {
-      this.listenTo(this.collection, "reset add remove", this.render);
-    },
-
-    render: function() {
-      this.$el.html(this.collection.map(function(notification) {
-        return new NotificationView({
-          model: notification,
-          collection: this.collection
-        }).render().$el;
-      }.bind(this)));
-      return this;
-    }
-  });
+      panelView,
+      // aliasing translation function as __ for concision
+      __ = mozl10n.get;
 
   /**
    * Panel view.
+   *
+   * XXX view layout changes should be handled by a router really.
    */
   var PanelView = Backbone.View.extend({
     el: "#default-view",
@@ -101,19 +33,9 @@ loop.panel = (function(_, __) {
       this.client = new loop.shared.Client({
         baseServerUrl: baseServerUrl
       });
-      this.notificationCollection = new NotificationCollection();
-      this.notificationListView = new NotificationListView({
-        el: this.$(".messages"),
-        collection: this.notificationCollection
-      });
-      this.notificationListView.render();
-    },
-
-    notify: function(message, level) {
-      this.notificationCollection.add({
-        level: level || "info",
-        message: message
-      });
+      this.notifier = new loop.shared.views.NotificationListView({
+        el: this.$(".messages")
+      }).render();
     },
 
     getCallUrl: function(event) {
@@ -121,7 +43,10 @@ loop.panel = (function(_, __) {
       var nickname = this.$("input[name=caller]").val();
       var callback = function(err, callUrl) {
         if (err) {
-          this.notify(__("unable_retrieve_url"), "error");
+          this.notifier.notify({
+            message: __("unable_retrieve_url"),
+            level: "error"
+          });
           return;
         }
         this.onCallUrlReceived(callUrl);
@@ -137,7 +62,7 @@ loop.panel = (function(_, __) {
     },
 
     onCallUrlReceived: function(callUrl) {
-      this.notificationCollection.reset();
+      this.notifier.clear();
       this.$(".action .invite").hide();
       this.$(".action .invite input").val("");
       this.$(".action .result input").val(callUrl);
@@ -154,12 +79,16 @@ loop.panel = (function(_, __) {
     }
   });
 
+  /**
+   * Panel initialisation.
+   */
+  function init() {
+    panelView = new PanelView();
+    panelView.render();
+  }
+
   return {
     init: init,
-    NotificationModel: NotificationModel,
-    NotificationCollection: NotificationCollection,
-    NotificationView: NotificationView,
-    NotificationListView: NotificationListView,
     PanelView: PanelView
   };
-})(_, document.mozL10n.get);
+})(_, document.mozL10n);

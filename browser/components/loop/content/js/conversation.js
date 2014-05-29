@@ -2,15 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*global loop*/
+/* global loop:true */
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 var loop = loop || {};
-loop.conversation = (function(TB) {
+loop.conversation = (function(TB, mozl10n) {
   "use strict";
 
-  var baseServerUrl = Services.prefs.getCharPref("loop.server");
+  var baseServerUrl = Services.prefs.getCharPref("loop.server"),
+      // aliasing translation function as __ for concision
+      __ = mozl10n.get;
 
   /**
    * App router.
@@ -24,9 +26,17 @@ loop.conversation = (function(TB) {
    */
   var conversation;
 
+  /**
+   * Conversation router.
+   *
+   * Required options:
+   * - {loop.shared.models.ConversationModel} conversation Conversation model.
+   * - {loop.shared.components.Notifier}      notifier     Notifier component.
+   */
   var ConversationRouter = loop.shared.router.BaseRouter.extend({
     _conversation: undefined,
-    activeView: undefined,
+    _notifier:     undefined,
+    activeView:    undefined,
 
     routes: {
       "start/:version": "start",
@@ -52,6 +62,11 @@ loop.conversation = (function(TB) {
         throw new Error("missing required conversation");
       }
       this._conversation = options.conversation;
+
+      if (!options.notifier) {
+        throw new Error("missing required notifier");
+      }
+      this._notifier = options.notifier;
 
       this.listenTo(this._conversation, "session:ready", this._onSessionReady);
       this.listenTo(this._conversation, "session:ended", this._onSessionEnded);
@@ -97,6 +112,7 @@ loop.conversation = (function(TB) {
         // XXX: notify user that something has gone wrong.
         console.error("Error: navigated to conversation route without " +
           "the start route to initialise the call first");
+        this._notifier.notify(__("cannot_start_call_session_not_ready"));
         return;
       }
 
@@ -121,7 +137,12 @@ loop.conversation = (function(TB) {
    */
   function init() {
     conversation = new loop.shared.models.ConversationModel();
-    router = new ConversationRouter({conversation: conversation});
+    router = new ConversationRouter({
+      conversation: conversation,
+      notifier: new loop.shared.views.NotificationListView({
+        el: "#messages"
+      })
+    });
     Backbone.history.start();
   }
 
@@ -129,4 +150,4 @@ loop.conversation = (function(TB) {
     ConversationRouter: ConversationRouter,
     init: init
   };
-})(window.TB);
+})(window.TB, document.mozL10n);

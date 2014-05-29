@@ -10,10 +10,12 @@ describe("loop.conversation", function() {
   "use strict";
 
   var ConversationRouter = loop.conversation.ConversationRouter,
-      sandbox;
+      sandbox,
+      notifier;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
+    notifier = {notify: sandbox.spy()};
   });
 
   afterEach(function() {
@@ -33,13 +35,22 @@ describe("loop.conversation", function() {
           new ConversationRouter();
         }).to.Throw(Error, /missing required conversation/);
       });
+
+      it("should require a notifier", function() {
+        expect(function() {
+          new ConversationRouter({conversation: conversation});
+        }).to.Throw(Error, /missing required notifier/);
+      });
     });
 
     describe("Routes", function() {
       var router;
 
       beforeEach(function() {
-        router = new ConversationRouter({conversation: conversation});
+        router = new ConversationRouter({
+          conversation: conversation,
+          notifier: notifier
+        });
         sandbox.stub(router, "loadView");
       });
 
@@ -83,6 +94,13 @@ describe("loop.conversation", function() {
 
             sinon.assert.notCalled(router.loadView);
         });
+
+        it("should notify the user when session is not set",
+          function() {
+            router.conversation();
+
+            sinon.assert.calledOnce(router._notifier.notify);
+        });
       });
 
       describe("#ended", function() {
@@ -113,7 +131,8 @@ describe("loop.conversation", function() {
         function() {
           sandbox.stub(ConversationRouter.prototype, "navigate");
           var router = new ConversationRouter({
-            conversation: conversation
+            conversation: conversation,
+            notifier: notifier
           });
 
           conversation.setReady(fakeSessionData);
@@ -126,7 +145,8 @@ describe("loop.conversation", function() {
         function() {
           sandbox.stub(ConversationRouter.prototype, "navigate");
           var router = new ConversationRouter({
-            conversation: conversation
+            conversation: conversation,
+            notifier: notifier
           });
 
           conversation.trigger("session:ended");
