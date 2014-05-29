@@ -624,5 +624,5 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 #endif
 
 @BINPATH@/components/DataStore.manifest
-@BINPATH@/components/DataStoreImpl.js
+@BINPATH@/components/DataStoreService.js
 @BINPATH@/components/dom_datastore.xpt

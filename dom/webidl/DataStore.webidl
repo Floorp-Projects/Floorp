@@ -108,10 +108,3 @@ dictionary DataStoreTask {
   DataStoreKey? id;
   any data;
 };
-
-// For internal use.
-dictionary DataStoreRevisionData {
-  DOMString revisionId = "";
-  unsigned long objectId = 0;
-  DOMString operation = "";
-};
