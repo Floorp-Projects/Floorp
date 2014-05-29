@@ -111,6 +111,7 @@ loop.webapp = (function($, _, OT) {
   var WebappRouter = loop.shared.router.BaseConversationRouter.extend({
     routes: {
       "":                    "home",
+      "unsupported":         "unsupported",
       "call/ongoing/:token": "loadConversation",
       "call/:token":         "initiate"
     },
@@ -150,6 +151,10 @@ loop.webapp = (function($, _, OT) {
      */
     home: function() {
       this.loadView(new HomeView());
+    },
+
+    unsupported: function() {
+      this.loadView(new sharedViews.UnsupportedView());
     },
 
     /**
@@ -196,6 +201,8 @@ loop.webapp = (function($, _, OT) {
       notifier: new sharedViews.NotificationListView({el: "#messages"})
     });
     Backbone.history.start();
+    if (!OT.checkSystemRequirements())
+      router.navigate("unsupported", {trigger: true});
   }
 
   return {

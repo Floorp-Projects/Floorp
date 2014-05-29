@@ -29,6 +29,22 @@ describe("loop.webapp", function() {
     sandbox.restore();
   });
 
+  describe("#init", function() {
+    it("should navigate to the unsupported route if the sdk detects the" +
+       "browser is unsupported", function() {
+         var WebappRouter = loop.webapp.WebappRouter;
+         sandbox.stub(window.OT, "checkSystemRequirements").returns(false);
+         sandbox.stub(WebappRouter.prototype, "navigate");
+
+         loop.webapp.init();
+
+         sinon.assert.calledOnce(WebappRouter.prototype.navigate);
+         sinon.assert.calledWithExactly(WebappRouter.prototype.navigate,
+                                        "unsupported", {trigger: true});
+       });
+
+  });
+
   describe("WebappRouter", function() {
     var router, conversation;
 
@@ -143,6 +159,16 @@ describe("loop.webapp", function() {
             sinon.assert.calledOnce(router.navigate);
             sinon.assert.calledWithMatch(router.navigate, "call/fakeToken");
           });
+      });
+
+      describe("#unsupported", function() {
+        it("should load the UnsupportedView", function() {
+          router.unsupported();
+
+          sinon.assert.calledOnce(router.loadView);
+          sinon.assert.calledWith(router.loadView,
+            sinon.match.instanceOf(sharedViews.UnsupportedView));
+        });
       });
     });
 
