@@ -528,11 +528,7 @@ public class TopSitesPanel extends HomeFragment {
 
             // If there is no url, then show "add bookmark".
             if (type == TopSites.TYPE_BLANK) {
-                // Wait until thumbnails are loaded before showing anything.
-                if (mThumbnails != null) {
-                    view.blankOut();
-                }
-
+                view.blankOut();
                 return;
             }
 
