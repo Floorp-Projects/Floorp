@@ -108,10 +108,15 @@ img {
   border: 1px solid #f77;
 }
 
+.alert.alert-warning {
+  background: #fcf8e3;
+  border: 1px solid #fbeed5;
+}
+
 .alert .close {
   position: relative;
-  top: 0;
-  right: -.8em;
+  top: -.2em;
+  right: -1em;
 }
 
 /* Misc */
