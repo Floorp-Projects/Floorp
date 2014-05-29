@@ -9,16 +9,14 @@
 #include "BluetoothCommon.h"
 #include "BluetoothAdapter.h"
 #include "BluetoothService.h"
-#include "BluetoothReplyRunnable.h"
 
-#include "DOMRequest.h"
+#include "mozilla/dom/bluetooth/BluetoothTypes.h"
+#include "mozilla/dom/BluetoothManager2Binding.h"
+#include "mozilla/Services.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsIPermissionManager.h"
 #include "nsThreadUtils.h"
-#include "mozilla/dom/bluetooth/BluetoothTypes.h"
-#include "mozilla/dom/BluetoothManager2Binding.h"
-#include "mozilla/Services.h"
 
 using namespace mozilla;
 
@@ -31,156 +29,71 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(BluetoothManager, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(BluetoothManager, DOMEventTargetHelper)
 
-class GetAdapterTask : public BluetoothReplyRunnable
-{
-public:
-  GetAdapterTask(BluetoothManager* aManager,
-                 nsIDOMDOMRequest* aReq) :
-    BluetoothReplyRunnable(aReq),
-    mManagerPtr(aManager)
-  {
-  }
-
-  bool
-  ParseSuccessfulReply(JS::MutableHandle<JS::Value> aValue)
-  {
-    aValue.setUndefined();
-
-    const BluetoothValue& v = mReply->get_BluetoothReplySuccess().value();
-    if (v.type() != BluetoothValue::TArrayOfBluetoothNamedValue) {
-      BT_WARNING("Not a BluetoothNamedValue array!");
-      SetError(NS_LITERAL_STRING("BluetoothReplyTypeError"));
-      return false;
-    }
-
-    if (!mManagerPtr->GetOwner()) {
-      BT_WARNING("Bluetooth manager was disconnected from owner window.");
-
-      // Stop to create adapter since owner window of Bluetooth manager was
-      // gone. These is no need to create a DOMEvent target which has no owner
-      // to reply to.
-      return false;
-    }
-
-    const InfallibleTArray<BluetoothNamedValue>& values =
-      v.get_ArrayOfBluetoothNamedValue();
-    nsRefPtr<BluetoothAdapter> adapter =
-      BluetoothAdapter::Create(mManagerPtr->GetOwner(), values);
-
-    nsresult rv;
-    nsIScriptContext* sc = mManagerPtr->GetContextForEventHandlers(&rv);
-    if (!sc) {
-      BT_WARNING("Cannot create script context!");
-      SetError(NS_LITERAL_STRING("BluetoothScriptContextError"));
-      return false;
-    }
-
-    AutoPushJSContext cx(sc->GetNativeContext());
-
-    JS::Rooted<JSObject*> scope(cx, sc->GetWindowProxy());
-    JSAutoCompartment ac(cx, scope);
-    rv = nsContentUtils::WrapNative(cx, adapter, aValue);
-    if (NS_FAILED(rv)) {
-      BT_WARNING("Cannot create native object!");
-      SetError(NS_LITERAL_STRING("BluetoothNativeObjectError"));
-      return false;
-    }
-
-    return true;
-  }
-
-  void
-  ReleaseMembers()
-  {
-    BluetoothReplyRunnable::ReleaseMembers();
-    mManagerPtr = nullptr;
-  }
-
-private:
-  nsRefPtr<BluetoothManager> mManagerPtr;
-};
-
 BluetoothManager::BluetoothManager(nsPIDOMWindow *aWindow)
   : DOMEventTargetHelper(aWindow)
-  , BluetoothPropertyContainer(BluetoothObjectType::TYPE_MANAGER)
+  , mDefaultAdapterIndex(-1)
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(IsDOMBinding());
 
-  mPath.Assign('/');
-
-  BluetoothService* bs = BluetoothService::Get();
-  NS_ENSURE_TRUE_VOID(bs);
-  bs->RegisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_MANAGER), this);
+  ListenToBluetoothSignal(true);
 }
 
 BluetoothManager::~BluetoothManager()
 {
-  BluetoothService* bs = BluetoothService::Get();
-  NS_ENSURE_TRUE_VOID(bs);
-  bs->UnregisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_MANAGER), this);
+  ListenToBluetoothSignal(false);
 }
 
 void
 BluetoothManager::DisconnectFromOwner()
 {
   DOMEventTargetHelper::DisconnectFromOwner();
-
-  BluetoothService* bs = BluetoothService::Get();
-  NS_ENSURE_TRUE_VOID(bs);
-  bs->UnregisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_MANAGER), this);
+  ListenToBluetoothSignal(false);
 }
 
 void
-BluetoothManager::SetPropertyByValue(const BluetoothNamedValue& aValue)
-{
-#ifdef DEBUG
-    const nsString& name = aValue.name();
-    nsCString warningMsg;
-    warningMsg.AssignLiteral("Not handling manager property: ");
-    warningMsg.Append(NS_ConvertUTF16toUTF8(name));
-    BT_WARNING(warningMsg.get());
-#endif
-}
-
-bool
-BluetoothManager::GetEnabled(ErrorResult& aRv)
+BluetoothManager::ListenToBluetoothSignal(bool aStart)
 {
   BluetoothService* bs = BluetoothService::Get();
-  if (!bs) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return false;
-  }
+  NS_ENSURE_TRUE_VOID(bs);
 
-  return bs->IsEnabled();
+  if (aStart) {
+    bs->RegisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_MANAGER), this);
+  } else {
+    bs->UnregisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_MANAGER), this);
+  }
 }
 
-already_AddRefed<dom::DOMRequest>
-BluetoothManager::GetDefaultAdapter(ErrorResult& aRv)
+BluetoothAdapter*
+BluetoothManager::GetDefaultAdapter()
 {
-  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
-  if (!win) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
+  return (DefaultAdapterExists()) ? mAdapters[mDefaultAdapterIndex] : nullptr;
+}
+
+void
+BluetoothManager::AppendAdapter(const BluetoothValue& aValue)
+{
+  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
+
+  // Create a new BluetoothAdapter and append it to adapters array
+  const InfallibleTArray<BluetoothNamedValue>& values =
+    aValue.get_ArrayOfBluetoothNamedValue();
+  nsRefPtr<BluetoothAdapter> adapter =
+    BluetoothAdapter::Create(GetOwner(), values);
+
+  mAdapters.AppendElement(adapter);
+
+  // Set this adapter as default adapter if no adapter exists
+  if (!DefaultAdapterExists()) {
+    MOZ_ASSERT(mAdapters.Length() == 1);
+    ReselectDefaultAdapter();
   }
+}
 
-  nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  nsRefPtr<BluetoothReplyRunnable> results =
-    new GetAdapterTask(this, request);
-
-  BluetoothService* bs = BluetoothService::Get();
-  if (!bs) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsresult rv = bs->GetDefaultAdapterPathInternal(results);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
-
-  return request.forget();
+void
+BluetoothManager::GetAdapters(nsTArray<nsRefPtr<BluetoothAdapter> >& aAdapters)
+{
+  aAdapters = mAdapters;
 }
 
 // static
@@ -195,36 +108,115 @@ BluetoothManager::Create(nsPIDOMWindow* aWindow)
 }
 
 void
-BluetoothManager::Notify(const BluetoothSignal& aData)
+BluetoothManager::HandleAdapterAdded(const BluetoothValue& aValue)
 {
-  BT_LOGD("[M] %s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(aData.name()).get());
+  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
 
-  if (aData.name().EqualsLiteral("AdapterAdded")) {
-    DispatchTrustedEvent(NS_LITERAL_STRING("adapteradded"));
-  } else if (aData.name().EqualsLiteral("Enabled")) {
-    DispatchTrustedEvent(NS_LITERAL_STRING("enabled"));
-  } else if (aData.name().EqualsLiteral("Disabled")) {
-    DispatchTrustedEvent(NS_LITERAL_STRING("disabled"));
-  } else {
-#ifdef DEBUG
-    nsCString warningMsg;
-    warningMsg.AssignLiteral("Not handling manager signal: ");
-    warningMsg.Append(NS_ConvertUTF16toUTF8(aData.name()));
-    BT_WARNING(warningMsg.get());
-#endif
-  }
+  AppendAdapter(aValue);
+
+  // Notify application of added adapter
+  BluetoothAdapterEventInit init;
+  init.mAdapter = mAdapters.LastElement();
+  DispatchAdapterEvent(NS_LITERAL_STRING("adapteradded"), init);
 }
 
-bool
-BluetoothManager::IsConnected(uint16_t aProfileId, ErrorResult& aRv)
+void
+BluetoothManager::HandleAdapterRemoved(const BluetoothValue& aValue)
 {
-  BluetoothService* bs = BluetoothService::Get();
-  if (!bs) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return false;
+  MOZ_ASSERT(aValue.type() == BluetoothValue::TnsString);
+  MOZ_ASSERT(DefaultAdapterExists());
+
+  // Remove the adapter of given address from adapters array
+  nsString addressToRemove = aValue.get_nsString();
+
+  uint32_t numAdapters = mAdapters.Length();
+  for (uint32_t i = 0; i < numAdapters; i++) {
+    nsString address;
+    mAdapters[i]->GetAddress(address);
+    if (address.Equals(addressToRemove)) {
+      mAdapters.RemoveElementAt(i);
+
+      if (mDefaultAdapterIndex == (int)i) {
+        ReselectDefaultAdapter();
+      }
+      break;
+    }
   }
 
-  return bs->IsConnected(aProfileId);
+  // Notify application of removed adapter
+  BluetoothAdapterEventInit init;
+  init.mAddress = addressToRemove;
+  DispatchAdapterEvent(NS_LITERAL_STRING("adapterremoved"), init);
+}
+
+void
+BluetoothManager::ReselectDefaultAdapter()
+{
+  // Select the first of existing/remaining adapters as default adapter
+  mDefaultAdapterIndex = mAdapters.IsEmpty() ? -1 : 0;
+
+  // Notify application of default adapter change
+  DispatchAttributeEvent();
+}
+
+void
+BluetoothManager::DispatchAdapterEvent(const nsAString& aType,
+                                       const BluetoothAdapterEventInit& aInit)
+{
+  nsRefPtr<BluetoothAdapterEvent> event =
+    BluetoothAdapterEvent::Constructor(this, aType, aInit);
+
+  DispatchTrustedEvent(event);
+}
+
+void
+BluetoothManager::DispatchAttributeEvent()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Wrap default adapter
+  AutoJSContext cx;
+  JS::Rooted<JS::Value> value(cx, JS::NullValue());
+  if (DefaultAdapterExists()) {
+    BluetoothAdapter* adapter = mAdapters[mDefaultAdapterIndex];
+    nsCOMPtr<nsIGlobalObject> global =
+      do_QueryInterface(adapter->GetParentObject());
+    NS_ENSURE_TRUE_VOID(global);
+
+    JS::Rooted<JSObject*> scope(cx, global->GetGlobalJSObject());
+    NS_ENSURE_TRUE_VOID(scope);
+
+    JSAutoCompartment ac(cx, scope);
+    if (!ToJSValue(cx, adapter, &value)) {
+      JS_ClearPendingException(cx);
+      return;
+    }
+  }
+
+  // Notify application of default adapter change
+  RootedDictionary<BluetoothAttributeEventInit> init(cx);
+  init.mAttr = (uint16_t)BluetoothManagerAttribute::DefaultAdapter;
+  init.mValue = value;
+  nsRefPtr<BluetoothAttributeEvent> event =
+    BluetoothAttributeEvent::Constructor(this,
+                                         NS_LITERAL_STRING("attributechanged"),
+                                         init);
+  DispatchTrustedEvent(event);
+}
+
+void
+BluetoothManager::Notify(const BluetoothSignal& aData)
+{
+  BT_LOGD("[M] %s", NS_ConvertUTF16toUTF8(aData.name()).get());
+
+  if (aData.name().EqualsLiteral("AdapterAdded")) {
+    HandleAdapterAdded(aData.value());
+  } else if (aData.name().EqualsLiteral("AdapterRemoved")) {
+    HandleAdapterRemoved(aData.value());
+  } else {
+    BT_WARNING("Not handling manager signal: %s",
+               NS_ConvertUTF16toUTF8(aData.name()).get());
+  }
 }
 
 JSObject*
