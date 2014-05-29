@@ -50,11 +50,11 @@ class OveruseFrameDetectorTest : public ::testing::Test {
 
     EXPECT_CALL(*(observer_.get()), OveruseDetected()).Times(1);
 
-    InsertFramesWithInterval(50, regular_frame_interval_ms);
+    InsertFramesWithInterval(200, regular_frame_interval_ms);
     InsertFramesWithInterval(50, 110);
     overuse_detector_->Process();
 
-    InsertFramesWithInterval(50, regular_frame_interval_ms);
+    InsertFramesWithInterval(200, regular_frame_interval_ms);
     InsertFramesWithInterval(50, 110);
     overuse_detector_->Process();
   }
@@ -74,25 +74,112 @@ class OveruseFrameDetectorTest : public ::testing::Test {
 };
 
 TEST_F(OveruseFrameDetectorTest, TriggerOveruse) {
+  overuse_detector_->set_min_process_count_before_reporting(0);
   TriggerOveruse();
 }
 
 TEST_F(OveruseFrameDetectorTest, OveruseAndRecover) {
+  overuse_detector_->set_min_process_count_before_reporting(0);
   TriggerOveruse();
   TriggerNormalUsage();
 }
 
 TEST_F(OveruseFrameDetectorTest, DoubleOveruseAndRecover) {
+  overuse_detector_->set_min_process_count_before_reporting(0);
   TriggerOveruse();
   TriggerOveruse();
   TriggerNormalUsage();
 }
 
+TEST_F(OveruseFrameDetectorTest, TriggerNormalUsageWithMinProcessCount) {
+  overuse_detector_->set_min_process_count_before_reporting(1);
+  InsertFramesWithInterval(900, 33);
+  overuse_detector_->Process();
+  EXPECT_EQ(-1, overuse_detector_->last_capture_jitter_ms());
+  clock_->AdvanceTimeMilliseconds(5000);
+  overuse_detector_->Process();
+  EXPECT_GT(overuse_detector_->last_capture_jitter_ms(), 0);
+}
+
 TEST_F(OveruseFrameDetectorTest, ConstantOveruseGivesNoNormalUsage) {
+  overuse_detector_->set_min_process_count_before_reporting(0);
   EXPECT_CALL(*(observer_.get()), NormalUsage()).Times(0);
 
   for(size_t i = 0; i < 64; ++i)
     TriggerOveruse();
+}
+
+TEST_F(OveruseFrameDetectorTest, LastCaptureJitter) {
+  overuse_detector_->set_min_process_count_before_reporting(0);
+  EXPECT_EQ(-1, overuse_detector_->last_capture_jitter_ms());
+  TriggerOveruse();
+  EXPECT_GT(overuse_detector_->last_capture_jitter_ms(), 0);
+}
+
+TEST_F(OveruseFrameDetectorTest, NoCaptureQueueDelay) {
+  EXPECT_EQ(overuse_detector_->CaptureQueueDelayMsPerS(), 0);
+  overuse_detector_->FrameCaptured(320, 180);
+  overuse_detector_->FrameProcessingStarted();
+  EXPECT_EQ(overuse_detector_->CaptureQueueDelayMsPerS(), 0);
+}
+
+TEST_F(OveruseFrameDetectorTest, CaptureQueueDelay) {
+  overuse_detector_->FrameCaptured(320, 180);
+  clock_->AdvanceTimeMilliseconds(100);
+  overuse_detector_->FrameProcessingStarted();
+  EXPECT_EQ(overuse_detector_->CaptureQueueDelayMsPerS(), 100);
+}
+
+TEST_F(OveruseFrameDetectorTest, CaptureQueueDelayMultipleFrames) {
+  overuse_detector_->FrameCaptured(320, 180);
+  clock_->AdvanceTimeMilliseconds(10);
+  overuse_detector_->FrameCaptured(320, 180);
+  clock_->AdvanceTimeMilliseconds(20);
+
+  overuse_detector_->FrameProcessingStarted();
+  EXPECT_EQ(overuse_detector_->CaptureQueueDelayMsPerS(), 30);
+  overuse_detector_->FrameProcessingStarted();
+  EXPECT_EQ(overuse_detector_->CaptureQueueDelayMsPerS(), 20);
+}
+
+TEST_F(OveruseFrameDetectorTest, CaptureQueueDelayResetAtResolutionSwitch) {
+  overuse_detector_->FrameCaptured(320, 180);
+  clock_->AdvanceTimeMilliseconds(10);
+  overuse_detector_->FrameCaptured(321, 180);
+  clock_->AdvanceTimeMilliseconds(20);
+
+  overuse_detector_->FrameProcessingStarted();
+  EXPECT_EQ(overuse_detector_->CaptureQueueDelayMsPerS(), 20);
+}
+
+TEST_F(OveruseFrameDetectorTest, CaptureQueueDelayNoMatchingCapturedFrame) {
+  overuse_detector_->FrameCaptured(320, 180);
+  clock_->AdvanceTimeMilliseconds(100);
+  overuse_detector_->FrameProcessingStarted();
+  EXPECT_EQ(overuse_detector_->CaptureQueueDelayMsPerS(), 100);
+  // No new captured frame. The last delay should be reported.
+  overuse_detector_->FrameProcessingStarted();
+  EXPECT_EQ(overuse_detector_->CaptureQueueDelayMsPerS(), 100);
+}
+
+TEST_F(OveruseFrameDetectorTest, EncodedFrame) {
+  const int kInitialAvgEncodeTimeInMs = 5;
+  EXPECT_EQ(kInitialAvgEncodeTimeInMs, overuse_detector_->AvgEncodeTimeMs());
+  for (int i = 0; i < 30; i++) {
+    clock_->AdvanceTimeMilliseconds(33);
+    overuse_detector_->FrameEncoded(2);
+  }
+  EXPECT_EQ(2, overuse_detector_->AvgEncodeTimeMs());
+}
+
+TEST_F(OveruseFrameDetectorTest, EncodedUsage) {
+  for (int i = 0; i < 30; i++) {
+    overuse_detector_->FrameCaptured(320, 180);
+    clock_->AdvanceTimeMilliseconds(5);
+    overuse_detector_->FrameEncoded(5);
+    clock_->AdvanceTimeMilliseconds(33-5);
+  }
+  EXPECT_EQ(15, overuse_detector_->EncodeUsagePercent());
 }
 
 }  // namespace webrtc

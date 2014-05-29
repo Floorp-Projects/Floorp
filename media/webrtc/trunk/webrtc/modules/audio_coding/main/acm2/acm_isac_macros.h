@@ -15,6 +15,8 @@
 
 namespace webrtc {
 
+namespace acm2 {
+
 #ifdef WEBRTC_CODEC_ISAC
 #define ACM_ISAC_CREATE            WebRtcIsac_Create
 #define ACM_ISAC_FREE              WebRtcIsac_Free
@@ -69,6 +71,8 @@ namespace webrtc {
 #define ACM_ISAC_DECODERCU         WebRtcIsacfix_Decode  // No special RCU
                                                          // decoder
 #endif
+
+}  // namespace acm2
 
 }  // namespace webrtc
 

@@ -10,25 +10,17 @@
   'variables': {
     'neteq_dependencies': [
       'G711',
+      'G722',
       'PCM16B',
+      'iLBC',
+      'iSAC',
+      'iSACFix',
       'CNG',
       '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
       '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
     ],
     'neteq_defines': [],
     'conditions': [
-      ['include_g722==1', {
-        'neteq_dependencies': ['G722'],
-        'neteq_defines': ['WEBRTC_CODEC_G722',],
-      }],
-      ['include_ilbc==1', {
-        'neteq_dependencies': ['iLBC'],
-        'neteq_defines': ['WEBRTC_CODEC_ILBC',],
-      }],
-      ['include_isac==1', {
-        'neteq_dependencies': ['iSAC', 'iSACFix',],
-        'neteq_defines': ['WEBRTC_CODEC_ISAC', 'WEBRTC_CODEC_ISACFIX',],
-      }],
       ['include_opus==1', {
         'neteq_dependencies': ['webrtc_opus',],
         'neteq_defines': ['WEBRTC_CODEC_OPUS',],
@@ -47,10 +39,12 @@
       ],
       'include_dirs': [
         'interface',
+        '<(webrtc_root)',
       ],
       'direct_dependent_settings': {
         'include_dirs': [
           'interface',
+          '<(webrtc_root)',
         ],
       },
       'sources': [
@@ -135,7 +129,6 @@
             '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
             '<(webrtc_root)/test/test.gyp:test_support_main',
           ],
-# FIX for include_isac/etc
           'defines': [
             'AUDIO_DECODER_UNITTEST',
             'WEBRTC_CODEC_G722',
@@ -169,7 +162,7 @@
           'dependencies': [
             '<(DEPTH)/testing/gmock.gyp:gmock',
             '<(DEPTH)/testing/gtest.gyp:gtest',
-            '<(webrtc_root)/test/test.gyp:test_support_main',
+            'PCM16B',  # Needed by neteq_performance_test.
           ],
           'direct_dependent_settings': {
             'include_dirs': [
@@ -184,6 +177,8 @@
             'tools/audio_loop.h',
             'tools/input_audio_file.cc',
             'tools/input_audio_file.h',
+            'tools/neteq_performance_test.cc',
+            'tools/neteq_performance_test.h',
             'tools/rtp_generator.cc',
             'tools/rtp_generator.h',
           ],
@@ -209,10 +204,10 @@
               'target_name': 'audio_decoder_unittests_run',
               'type': 'none',
               'dependencies': [
-                '<(import_isolate_path):import_isolate_gypi',
                 'audio_decoder_unittests',
               ],
               'includes': [
+                '../../../build/isolate.gypi',
                 'audio_decoder_unittests.isolate',
               ],
               'sources': [

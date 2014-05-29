@@ -12,6 +12,7 @@
 
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/desktop_region.h"
 #include "webrtc/modules/desktop_capture/screen_capturer_mock_objects.h"
@@ -28,6 +29,11 @@ namespace webrtc {
 class ScreenCapturerTest : public testing::Test {
  public:
   SharedMemory* CreateSharedMemory(size_t size);
+
+  virtual void SetUp() OVERRIDE {
+    capturer_.reset(
+        ScreenCapturer::Create(DesktopCaptureOptions::CreateDefault()));
+  }
 
  protected:
   scoped_ptr<ScreenCapturer> capturer_;
@@ -53,8 +59,16 @@ SharedMemory* ScreenCapturerTest::CreateSharedMemory(size_t size) {
   return new FakeSharedMemory(new char[size], size);
 }
 
+TEST_F(ScreenCapturerTest, GetScreenListAndSelectScreen) {
+  webrtc::ScreenCapturer::ScreenList screens;
+  EXPECT_TRUE(capturer_->GetScreenList(&screens));
+  for(webrtc::ScreenCapturer::ScreenList::iterator it = screens.begin();
+      it != screens.end(); ++it) {
+    EXPECT_TRUE(capturer_->SelectScreen(it->id));
+  }
+}
+
 TEST_F(ScreenCapturerTest, StartCapturer) {
-  capturer_.reset(ScreenCapturer::Create());
   capturer_->SetMouseShapeObserver(&mouse_observer_);
   capturer_->Start(&callback_);
 }
@@ -71,7 +85,6 @@ TEST_F(ScreenCapturerTest, Capture) {
       .Times(AnyNumber())
       .WillRepeatedly(Return(static_cast<SharedMemory*>(NULL)));
 
-  capturer_.reset(ScreenCapturer::Create());
   capturer_->Start(&callback_);
   capturer_->Capture(DesktopRegion());
 
@@ -106,7 +119,6 @@ TEST_F(ScreenCapturerTest, UseSharedBuffers) {
       .Times(AnyNumber())
       .WillRepeatedly(Invoke(this, &ScreenCapturerTest::CreateSharedMemory));
 
-  capturer_.reset(ScreenCapturer::Create());
   capturer_->Start(&callback_);
   capturer_->Capture(DesktopRegion());
 

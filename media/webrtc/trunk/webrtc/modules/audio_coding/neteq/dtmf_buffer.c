@@ -93,7 +93,7 @@ int16_t WebRtcNetEQ_DtmfInsertEvent(dtmf_inst_t *DTMFdec_inst,
     if (len == 4)
     {
         EventStart = encoded;
-#ifdef WEBRTC_BIG_ENDIAN
+#ifdef WEBRTC_ARCH_BIG_ENDIAN
         value=((*EventStart)>>8);
         endEvent=((*EventStart)&0x80)>>7;
         Volume=((*EventStart)&0x3F);

@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "webrtc/modules/media_file/source/media_file_utility.h"
+
 #include <assert.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -15,7 +17,6 @@
 #include "webrtc/common_types.h"
 #include "webrtc/engine_configurations.h"
 #include "webrtc/modules/interface/module_common_types.h"
-#include "webrtc/modules/media_file/source/media_file_utility.h"
 #include "webrtc/system_wrappers/interface/file_wrapper.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
@@ -609,13 +610,13 @@ int32_t ModuleFileUtility::ReadWavHeader(InStream& wav)
         //                 special cases?
         if(_wavFormatObj.nSamplesPerSec == 44100)
         {
-            _readSizeBytes = 441 * _wavFormatObj.nChannels *
+            _readSizeBytes = 440 * _wavFormatObj.nChannels *
                 (_wavFormatObj.nBitsPerSample / 8);
         } else if(_wavFormatObj.nSamplesPerSec == 22050) {
-            _readSizeBytes = 220 * _wavFormatObj.nChannels * // XXX inexact!
+            _readSizeBytes = 220 * _wavFormatObj.nChannels *
                 (_wavFormatObj.nBitsPerSample / 8);
         } else if(_wavFormatObj.nSamplesPerSec == 11025) {
-            _readSizeBytes = 110 * _wavFormatObj.nChannels * // XXX inexact!
+            _readSizeBytes = 110 * _wavFormatObj.nChannels *
                 (_wavFormatObj.nBitsPerSample / 8);
         } else {
             _readSizeBytes = (_wavFormatObj.nSamplesPerSec/100) *
@@ -677,22 +678,22 @@ int32_t ModuleFileUtility::InitWavCodec(uint32_t samplesPerSec,
         {
             strcpy(codec_info_.plname, "L16");
             _codecId = kCodecL16_16kHz;
-            codec_info_.pacsize = 110; // XXX inexact!
-            codec_info_.plfreq = 11000; // XXX inexact!
+            codec_info_.pacsize = 110;
+            codec_info_.plfreq = 11000;
         }
         else if(samplesPerSec == 22050)
         {
             strcpy(codec_info_.plname, "L16");
             _codecId = kCodecL16_16kHz;
-            codec_info_.pacsize = 220; // XXX inexact!
-            codec_info_.plfreq = 22000; // XXX inexact!
+            codec_info_.pacsize = 220;
+            codec_info_.plfreq = 22000;
         }
         else if(samplesPerSec == 44100)
         {
             strcpy(codec_info_.plname, "L16");
             _codecId = kCodecL16_16kHz;
-            codec_info_.pacsize = 441;
-            codec_info_.plfreq = 44100;
+            codec_info_.pacsize = 440;
+            codec_info_.plfreq = 44000;
         }
         else if(samplesPerSec == 48000)
         {
@@ -1125,6 +1126,8 @@ int32_t ModuleFileUtility::WriteWavHeader(
 {
 
     // Frame size in bytes for 10 ms of audio.
+    // TODO (hellner): 44.1 kHz has 440 samples frame size. Doesn't seem to
+    //                 be taken into consideration here!
     int32_t frameSize = (freq / 100) * bytesPerSample * channels;
 
     // Calculate the number of full frames that the wave file contain.

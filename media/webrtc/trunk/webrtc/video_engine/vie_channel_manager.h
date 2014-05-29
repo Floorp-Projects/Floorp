@@ -28,7 +28,7 @@ namespace webrtc {
 class Config;
 class CriticalSectionWrapper;
 class ProcessThread;
-class RtcpRttObserver;
+class RtcpRttStats;
 class ViEChannel;
 class ViEEncoder;
 class VoEVideoSync;
@@ -49,10 +49,9 @@ class ViEChannelManager: private ViEManagerBase {
 
   void SetModuleProcessThread(ProcessThread* module_process_thread);
 
-  void SetLoadManager(CPULoadStateCallbackInvoker* load_manager);
-
   // Creates a new channel. 'channel_id' will be the id of the created channel.
-  int CreateChannel(int* channel_id);
+  int CreateChannel(int* channel_id,
+                    const Config* config);
 
   // Creates a new channel grouped with |original_channel|. The new channel
   // will get its own |ViEEncoder| if |sender| is set to true. It will be a
@@ -76,10 +75,6 @@ class ViEChannelManager: private ViEManagerBase {
   // Adds a channel to include when sending REMB.
   bool SetRembStatus(int channel_id, bool sender, bool receiver);
 
-  // Switches a channel and its associated group to use (or not) the absolute
-  // send time header extension with |id|.
-  bool SetReceiveAbsoluteSendTimeStatus(int channel_id, bool enable, int id);
-
   // Updates the SSRCs for a channel. If one of the SSRCs already is registered,
   // it will simply be ignored and no error is returned.
   void UpdateSsrcs(int channel_id, const std::list<unsigned int>& ssrcs);
@@ -91,7 +86,7 @@ class ViEChannelManager: private ViEManagerBase {
                            ViEEncoder* vie_encoder,
                            RtcpBandwidthObserver* bandwidth_observer,
                            RemoteBitrateEstimator* remote_bitrate_estimator,
-                           RtcpRttObserver* rtcp_rtt_observer,
+                           RtcpRttStats* rtcp_rtt_stats,
                            RtcpIntraFrameObserver* intra_frame_observer,
                            bool sender);
 
@@ -137,8 +132,7 @@ class ViEChannelManager: private ViEManagerBase {
 
   VoiceEngine* voice_engine_;
   ProcessThread* module_process_thread_;
-  const Config& config_;
-  CPULoadStateCallbackInvoker* load_manager_;
+  const Config& engine_config_;
 };
 
 class ViEChannelManagerScoped: private ViEManagerScopedBase {

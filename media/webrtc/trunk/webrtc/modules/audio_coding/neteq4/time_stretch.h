@@ -58,7 +58,7 @@ class TimeStretch {
   // PreemptiveExpand.
   ReturnCodes Process(const int16_t* input,
                       size_t input_len,
-                      AudioMultiVector<int16_t>* output,
+                      AudioMultiVector* output,
                       int16_t* length_change_samples);
 
  protected:
@@ -75,7 +75,7 @@ class TimeStretch {
   virtual ReturnCodes CheckCriteriaAndStretch(
       const int16_t* input, size_t input_length, size_t peak_index,
       int16_t best_correlation, bool active_speech,
-      AudioMultiVector<int16_t>* output) const = 0;
+      AudioMultiVector* output) const = 0;
 
   static const int kCorrelationLen = 50;
   static const int kLogCorrelationLen = 6;  // >= log2(kCorrelationLen).

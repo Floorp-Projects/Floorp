@@ -20,6 +20,17 @@
       eintr_wrapper_result;                                       \
     })
 
+#define IGNORE_EINTR(x) ({                \
+      typeof(x) eintr_wrapper_result;     \
+      do {                                                        \
+        eintr_wrapper_result = (x);                               \
+        if (eintr_wrapper_result == -1 && errno == EINTR) {       \
+          eintr_wrapper_result = 0;                               \
+        }                                                         \
+      } while (0);                                                \
+      eintr_wrapper_result;                                       \
+    })
+
 namespace webrtc {
 
 const LowLatencyEvent::Handle LowLatencyEvent::kInvalidHandle = -1;
@@ -61,7 +72,7 @@ bool LowLatencyEvent::Close(Handle* handle) {
   if (*handle == kInvalidHandle) {
     return false;
   }
-  int retval = HANDLE_EINTR(close(*handle));
+  int retval = IGNORE_EINTR(close(*handle));
   *handle = kInvalidHandle;
   return retval == 0;
 }

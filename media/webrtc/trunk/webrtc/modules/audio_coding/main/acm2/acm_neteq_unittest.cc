@@ -10,4 +10,6 @@
 
 // This file contains unit tests for ACM's NetEQ wrapper (class ACMNetEQ).
 
-namespace webrtc {}  // namespace
+namespace webrtc {
+
+namespace acm2 {}  // namespace

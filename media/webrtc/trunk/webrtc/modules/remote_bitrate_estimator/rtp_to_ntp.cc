@@ -18,8 +18,6 @@ namespace webrtc {
 
 namespace synchronization {
 
-const double kNtpFracPerMs = 4.294967296E6;
-
 RtcpMeasurement::RtcpMeasurement()
     : ntp_secs(0), ntp_frac(0), rtp_timestamp(0) {}
 

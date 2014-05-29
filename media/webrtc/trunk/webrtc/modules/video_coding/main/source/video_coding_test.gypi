@@ -21,13 +21,6 @@
          '<(webrtc_root)/test/metrics.gyp:metrics',
          '<(webrtc_root)/common_video/common_video.gyp:common_video',
       ],
-      'include_dirs': [
-         '../../../interface',
-         '../../codecs/vp8/include',
-         '../../../../system_wrappers/interface',
-          '../../../../common_video/interface',
-         '../source',
-      ],
       'sources': [
         # headers
         '../test/codec_database_test.h',

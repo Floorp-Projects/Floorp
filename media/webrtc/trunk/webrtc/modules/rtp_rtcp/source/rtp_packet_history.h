@@ -59,22 +59,26 @@ class RTPPacketHistory {
   // copied.
   // stored_time_ms: returns the time when the packet was stored.
   // type: returns the storage type set in PutRTPPacket.
-  bool GetRTPPacket(uint16_t sequence_number,
-                    uint32_t min_elapsed_time_ms,
-                    uint8_t* packet,
-                    uint16_t* packet_length,
-                    int64_t* stored_time_ms,
-                    StorageType* type) const;
+  bool GetPacketAndSetSendTime(uint16_t sequence_number,
+                               uint32_t min_elapsed_time_ms,
+                               bool retransmit,
+                               uint8_t* packet,
+                               uint16_t* packet_length,
+                               int64_t* stored_time_ms);
+
+  bool GetBestFittingPacket(uint8_t* packet, uint16_t* packet_length,
+                            int64_t* stored_time_ms);
 
   bool HasRTPPacket(uint16_t sequence_number) const;
 
-  void UpdateResendTime(uint16_t sequence_number);
-
  private:
+  void GetPacket(int index, uint8_t* packet, uint16_t* packet_length,
+                 int64_t* stored_time_ms) const;
   void Allocate(uint16_t number_to_store);
   void Free();
   void VerifyAndAllocatePacketLength(uint16_t packet_length);
   bool FindSeqNum(uint16_t sequence_number, int32_t* index) const;
+  int FindBestFittingPacket(uint16_t size) const;
 
  private:
   Clock* clock_;
@@ -87,7 +91,7 @@ class RTPPacketHistory {
   std::vector<uint16_t> stored_seq_nums_;
   std::vector<uint16_t> stored_lengths_;
   std::vector<int64_t> stored_times_;
-  std::vector<int64_t> stored_resend_times_;
+  std::vector<int64_t> stored_send_times_;
   std::vector<StorageType> stored_types_;
 };
 }  // namespace webrtc

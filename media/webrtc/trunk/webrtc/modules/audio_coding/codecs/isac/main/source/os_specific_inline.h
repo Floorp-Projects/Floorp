@@ -15,8 +15,7 @@
 #include <math.h>
 #include "typedefs.h"
 
-// TODO(turaj): switch to WEBRTC_POSIX when available
-#if defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#if defined(WEBRTC_POSIX)
 #define WebRtcIsac_lrint lrint
 #elif (defined(WEBRTC_ARCH_X86) && defined(WIN32))
 static __inline long int WebRtcIsac_lrint(double x_dbl) {

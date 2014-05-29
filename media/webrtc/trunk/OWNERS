@@ -1,5 +1,12 @@
-henrike@webrtc.org
-mallinath@webrtc.org
-perkj@webrtc.org
-wu@webrtc.org
+andrew@webrtc.org
+henrika@webrtc.org
+mflodman@webrtc.org
+niklas.enbom@webrtc.org
+tina.legrand@webrtc.org
 tommi@webrtc.org
+per-file *.isolate=kjellander@webrtc.org
+per-file .gitignore=*
+per-file AUTHORS=*
+per-file DEPS=*
+per-file WATCHLISTS=*
+per-file webrtc_examples.gyp=*

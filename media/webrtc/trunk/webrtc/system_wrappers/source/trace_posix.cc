@@ -17,10 +17,6 @@
 #include <sys/time.h>
 #include <time.h>
 
-#ifdef WEBRTC_ANDROID
-#include <pthread.h>
-#endif
-
 #if defined(_DEBUG)
 #define BUILDMODE "d"
 #elif defined(DEBUG)
@@ -56,7 +52,7 @@ int32_t TracePosix::AddTime(char* trace_message, const TraceLevel level) const {
   }
   struct tm buffer;
   const struct tm* system_time =
-    localtime_r((const time_t *)(&system_time_high_res.tv_sec), &buffer);
+    localtime_r(&system_time_high_res.tv_sec, &buffer);
 
   const uint32_t ms_time = system_time_high_res.tv_usec / 1000;
   uint32_t prev_tickCount = 0;

@@ -10,7 +10,6 @@
 
 #include "webrtc/modules/interface/module_common_types.h"
 #include "webrtc/modules/video_coding/main/source/packet.h"
-#include "webrtc/modules/rtp_rtcp/source/rtp_format_h264.h"
 
 #include <assert.h>
 
@@ -91,46 +90,33 @@ void VCMPacket::Reset() {
   memset(&codecSpecificHeader, 0, sizeof(RTPVideoHeader));
 }
 
-void VCMPacket::CopyCodecSpecifics(const RTPVideoHeader& videoHeader) {
-  switch (videoHeader.codec) {
-    case kRtpVideoVp8: {
-      // Handle all packets within a frame as depending on the previous packet
-      // TODO(holmer): This should be changed to make fragments independent
-      // when the VP8 RTP receiver supports fragments.
-      if (isFirstPacket && markerBit)
-          completeNALU = kNaluComplete;
-      else if (isFirstPacket)
-          completeNALU = kNaluStart;
-      else if (markerBit)
-          completeNALU = kNaluEnd;
-      else
-          completeNALU = kNaluIncomplete;
+void VCMPacket::CopyCodecSpecifics(const RTPVideoHeader& videoHeader)
+{
+    switch(videoHeader.codec)
+    {
+        case kRtpVideoVp8:
+            {
+                // Handle all packets within a frame as depending on the previous packet
+                // TODO(holmer): This should be changed to make fragments independent
+                // when the VP8 RTP receiver supports fragments.
+                if (isFirstPacket && markerBit)
+                    completeNALU = kNaluComplete;
+                else if (isFirstPacket)
+                    completeNALU = kNaluStart;
+                else if (markerBit)
+                    completeNALU = kNaluEnd;
+                else
+                    completeNALU = kNaluIncomplete;
 
-      codec = kVideoCodecVP8;
-      break;
+                codec = kVideoCodecVP8;
+                break;
+            }
+        default:
+            {
+                codec = kVideoCodecUnknown;
+                break;
+            }
     }
-    case kRtpVideoH264: {
-      uint8_t nal_type = videoHeader.codecHeader.H264.nalu_header & RtpFormatH264::kH264NAL_TypeMask;
-      isFirstPacket = videoHeader.isFirstPacket;
-      if (isFirstPacket) {
-        insertStartCode = true;
-      }
-      if (videoHeader.codecHeader.H264.single_nalu) {
-         completeNALU = kNaluComplete;
-      } else if (isFirstPacket)
-         completeNALU = kNaluStart;
-      else if (markerBit)
-         completeNALU = kNaluEnd;
-      else
-         completeNALU = kNaluIncomplete;
-      codec = kVideoCodecH264;
-      break;
-    }
-    default: {
-      codec = kVideoCodecUnknown;
-      break;
-    }
-  }
 }
 
-}  // namespace webrtc
+}

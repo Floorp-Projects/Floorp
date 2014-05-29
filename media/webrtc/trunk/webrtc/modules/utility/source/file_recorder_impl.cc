@@ -342,31 +342,6 @@ int32_t FileRecorderImpl::WriteEncodedAudioData(
 
 
 #ifdef WEBRTC_MODULE_UTILITY_VIDEO
-class AudioFrameFileInfo
-{
-    public:
-       AudioFrameFileInfo(const int8_t* audioData,
-                     const uint16_t audioSize,
-                     const uint16_t audioMS,
-                     const TickTime& playoutTS)
-           : _audioData(), _audioSize(audioSize), _audioMS(audioMS),
-             _playoutTS(playoutTS)
-       {
-           if(audioSize > MAX_AUDIO_BUFFER_IN_BYTES)
-           {
-               assert(false);
-               _audioSize = 0;
-               return;
-           }
-           memcpy(_audioData, audioData, audioSize);
-       };
-    // TODO (hellner): either turn into a struct or provide get/set functions.
-    int8_t   _audioData[MAX_AUDIO_BUFFER_IN_BYTES];
-    uint16_t _audioSize;
-    uint16_t _audioMS;
-    TickTime _playoutTS;
-};
-
 AviRecorder::AviRecorder(uint32_t instanceID, FileFormats fileFormat)
     : FileRecorderImpl(instanceID, fileFormat),
       _videoOnly(false),
@@ -545,49 +520,39 @@ int32_t AviRecorder::ProcessAudio()
         {
             // Syncronize audio to the current frame to process by throwing away
             // audio samples with older timestamp than the video frame.
-            uint32_t numberOfAudioElements =
-                _audioFramesToWrite.GetSize();
-            for (uint32_t i = 0; i < numberOfAudioElements; ++i)
+            size_t numberOfAudioElements =
+                _audioFramesToWrite.size();
+            for (size_t i = 0; i < numberOfAudioElements; ++i)
             {
-                AudioFrameFileInfo* frameInfo =
-                    (AudioFrameFileInfo*)_audioFramesToWrite.First()->GetItem();
-                if(frameInfo)
+                AudioFrameFileInfo* frameInfo = _audioFramesToWrite.front();
+                if(TickTime::TicksToMilliseconds(
+                       frameInfo->_playoutTS.Ticks()) <
+                   frameToProcess->render_time_ms())
                 {
-                    if(TickTime::TicksToMilliseconds(
-                           frameInfo->_playoutTS.Ticks()) <
-                       frameToProcess->render_time_ms())
-                    {
-                        delete frameInfo;
-                        _audioFramesToWrite.PopFront();
-                    } else
-                    {
-                        break;
-                    }
+                    delete frameInfo;
+                    _audioFramesToWrite.pop_front();
+                } else
+                {
+                    break;
                 }
             }
         }
     }
     // Write all audio up to current timestamp.
     int32_t error = 0;
-    uint32_t numberOfAudioElements = _audioFramesToWrite.GetSize();
-    for (uint32_t i = 0; i < numberOfAudioElements; ++i)
+    size_t numberOfAudioElements = _audioFramesToWrite.size();
+    for (size_t i = 0; i < numberOfAudioElements; ++i)
     {
-        AudioFrameFileInfo* frameInfo =
-            (AudioFrameFileInfo*)_audioFramesToWrite.First()->GetItem();
-        if(frameInfo)
+        AudioFrameFileInfo* frameInfo = _audioFramesToWrite.front();
+        if((TickTime::Now() - frameInfo->_playoutTS).Milliseconds() > 0)
         {
-            if((TickTime::Now() - frameInfo->_playoutTS).Milliseconds() > 0)
-            {
-                _moduleFile->IncomingAudioData(frameInfo->_audioData,
-                                               frameInfo->_audioSize);
-                _writtenAudioMS += frameInfo->_audioMS;
-                delete frameInfo;
-                _audioFramesToWrite.PopFront();
-            } else {
-                break;
-            }
+            _moduleFile->IncomingAudioData(frameInfo->_audioData,
+                                           frameInfo->_audioSize);
+            _writtenAudioMS += frameInfo->_audioMS;
+            delete frameInfo;
+            _audioFramesToWrite.pop_front();
         } else {
-            _audioFramesToWrite.PopFront();
+            break;
         }
     }
     return error;
@@ -762,7 +727,7 @@ int32_t AviRecorder::WriteEncodedAudioData(
     {
         return -1;
     }
-    if (_audioFramesToWrite.GetSize() > kMaxAudioBufferQueueLength)
+    if (_audioFramesToWrite.size() > kMaxAudioBufferQueueLength)
     {
         StopRecording();
         return -1;
@@ -771,15 +736,15 @@ int32_t AviRecorder::WriteEncodedAudioData(
 
     if(playoutTS)
     {
-        _audioFramesToWrite.PushBack(new AudioFrameFileInfo(audioBuffer,
-                                                            bufferLength,
-                                                            millisecondsOfData,
-                                                            *playoutTS));
+        _audioFramesToWrite.push_back(new AudioFrameFileInfo(audioBuffer,
+                                                             bufferLength,
+                                                             millisecondsOfData,
+                                                             *playoutTS));
     } else {
-        _audioFramesToWrite.PushBack(new AudioFrameFileInfo(audioBuffer,
-                                                            bufferLength,
-                                                            millisecondsOfData,
-                                                            TickTime::Now()));
+        _audioFramesToWrite.push_back(new AudioFrameFileInfo(audioBuffer,
+                                                             bufferLength,
+                                                             millisecondsOfData,
+                                                             TickTime::Now()));
     }
     _timeEvent.Set();
     return 0;

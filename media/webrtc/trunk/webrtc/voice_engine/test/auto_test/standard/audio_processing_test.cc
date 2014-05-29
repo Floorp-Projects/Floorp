@@ -140,7 +140,7 @@ class AudioProcessingTest : public AfterStreamingFixture {
 
 #if !defined(WEBRTC_IOS) && !defined(WEBRTC_ANDROID)
 
-TEST_F(AudioProcessingTest, AgcIsOnByDefault) {
+TEST_F(AudioProcessingTest, DISABLED_AgcIsOnByDefault) {
   bool agc_enabled = false;
   webrtc::AgcModes agc_mode = webrtc::kAgcAdaptiveAnalog;
 
@@ -149,7 +149,7 @@ TEST_F(AudioProcessingTest, AgcIsOnByDefault) {
   EXPECT_EQ(webrtc::kAgcAdaptiveAnalog, agc_mode);
 }
 
-TEST_F(AudioProcessingTest, CanEnableAgcWithAllModes) {
+TEST_F(AudioProcessingTest, DISABLED_CanEnableAgcWithAllModes) {
   TryEnablingAgcWithMode(webrtc::kAgcAdaptiveDigital);
   TryEnablingAgcWithMode(webrtc::kAgcAdaptiveAnalog);
   TryEnablingAgcWithMode(webrtc::kAgcFixedDigital);
@@ -248,7 +248,7 @@ TEST_F(AudioProcessingTest, CanSetAecmMode) {
   TryEnablingAecmWithMode(webrtc::kAecmSpeakerphone, false);
 }
 
-TEST_F(AudioProcessingTest, RxAgcShouldBeOffByDefault) {
+TEST_F(AudioProcessingTest, DISABLED_RxAgcShouldBeOffByDefault) {
   bool rx_agc_enabled = true;
   webrtc::AgcModes agc_mode = webrtc::kAgcDefault;
 
@@ -257,12 +257,12 @@ TEST_F(AudioProcessingTest, RxAgcShouldBeOffByDefault) {
   EXPECT_EQ(webrtc::kAgcAdaptiveDigital, agc_mode);
 }
 
-TEST_F(AudioProcessingTest, CanTurnOnDigitalRxAcg) {
+TEST_F(AudioProcessingTest, DISABLED_CanTurnOnDigitalRxAcg) {
   TryEnablingRxAgcWithMode(webrtc::kAgcAdaptiveDigital);
   TryEnablingRxAgcWithMode(webrtc::kAgcFixedDigital);
 }
 
-TEST_F(AudioProcessingTest, CannotTurnOnAdaptiveAnalogRxAgc) {
+TEST_F(AudioProcessingTest, DISABLED_CannotTurnOnAdaptiveAnalogRxAgc) {
   EXPECT_EQ(-1, voe_apm_->SetRxAgcStatus(
       channel_, true, webrtc::kAgcAdaptiveAnalog));
 }

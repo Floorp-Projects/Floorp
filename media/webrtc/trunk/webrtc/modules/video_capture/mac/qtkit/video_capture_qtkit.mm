@@ -15,20 +15,6 @@
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
-class nsAutoreleasePool {
-public:
-    nsAutoreleasePool()
-    {
-        mLocalPool = [[NSAutoreleasePool alloc] init];
-    }
-    ~nsAutoreleasePool()
-    {
-        [mLocalPool release];
-    }
-private:
-    NSAutoreleasePool *mLocalPool;
-};
-
 namespace webrtc
 {
 
@@ -55,7 +41,6 @@ VideoCaptureMacQTKit::VideoCaptureMacQTKit(const int32_t id) :
 VideoCaptureMacQTKit::~VideoCaptureMacQTKit()
 {
 
-    nsAutoreleasePool localPool;
     WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, _id,
                  "~VideoCaptureMacQTKit() called");
     if(_captureDevice)
@@ -85,8 +70,6 @@ int32_t VideoCaptureMacQTKit::Init(
     // Store the device name
     _deviceUniqueId = new char[nameLength+1];
     memcpy(_deviceUniqueId, iDeviceUniqueIdUTF8,nameLength+1);
-
-    nsAutoreleasePool localPool;
 
     _captureDevice = [[VideoCaptureMacQTKitObjC alloc] init];
     if(NULL == _captureDevice)
@@ -181,7 +164,6 @@ int32_t VideoCaptureMacQTKit::StartCapture(
     const VideoCaptureCapability& capability)
 {
 
-    nsAutoreleasePool localPool;
     _captureWidth = capability.width;
     _captureHeight = capability.height;
     _captureFrameRate = capability.maxFPS;
@@ -198,7 +180,6 @@ int32_t VideoCaptureMacQTKit::StartCapture(
 
 int32_t VideoCaptureMacQTKit::StopCapture()
 {
-    nsAutoreleasePool localPool;
     [_captureDevice stopCapture];
     _isCapturing = false;
     return 0;

@@ -24,7 +24,6 @@ LOCAL_SRC_FILES := \
     ../../source/vie_autotest_base.cc \
     ../../source/vie_autotest_capture.cc \
     ../../source/vie_autotest_codec.cc \
-    ../../source/vie_autotest_encryption.cc \
     ../../source/vie_autotest_file.cc \
     ../../source/vie_autotest_image_process.cc \
     ../../source/vie_autotest_loopback.cc \
@@ -35,7 +34,7 @@ LOCAL_SRC_FILES := \
     ../../source/tb_capture_device.cc \
     ../../source/tb_external_transport.cc \
     ../../source/tb_interfaces.cc \
-    ../../source/tb_video_channel.cc 
+    ../../source/tb_video_channel.cc
 
 LOCAL_CFLAGS := \
     '-DWEBRTC_TARGET_PC' \
@@ -57,7 +56,7 @@ LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/../../../../../modules/video_coding/codecs/interface \
     $(LOCAL_PATH)/../../../../../modules/video_render/main/interface \
     $(LOCAL_PATH)/../../../../../voice_engine/include \
-    $(LOCAL_PATH)/../../../../../system_wrappers/interface 
+    $(LOCAL_PATH)/../../../../../system_wrappers/interface
 
 LOCAL_PRELINK_MODULE := false
 
@@ -69,7 +68,7 @@ LOCAL_SHARED_LIBRARIES := \
     libGLESv2
 
 # the following line is for NDK build
-LOCAL_LDLIBS     := $(LIBS_PATH)/VideoEngine_android_gcc.a -llog -lgcc 
+LOCAL_LDLIBS     := $(LIBS_PATH)/VideoEngine_android_gcc.a -llog -lgcc
 
 ifndef NDK_ROOT
 include external/stlport/libstlport.mk

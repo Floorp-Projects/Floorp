@@ -35,6 +35,11 @@ class WEBRTC_DLLEXPORT ViEEncoderObserver {
   virtual void OutgoingRate(const int video_channel,
                             const unsigned int framerate,
                             const unsigned int bitrate) = 0;
+
+  // This method is called whenever the state of the SuspendBelowMinBitrate
+  // changes, i.e., when |is_suspended| toggles.
+  virtual void SuspendChange(int video_channel, bool is_suspended) = 0;
+
  protected:
   virtual ~ViEEncoderObserver() {}
 };
@@ -55,6 +60,16 @@ class WEBRTC_DLLEXPORT ViEDecoderObserver {
   virtual void IncomingRate(const int video_channel,
                             const unsigned int framerate,
                             const unsigned int bitrate) = 0;
+
+  // Called periodically with decoder timing information.  All values are
+  // "current" snapshots unless decorated with a min_/max_ prefix.
+  virtual void DecoderTiming(int decode_ms,
+                             int max_decode_ms,
+                             int current_delay_ms,
+                             int target_delay_ms,
+                             int jitter_buffer_ms,
+                             int min_playout_delay_ms,
+                             int render_delay_ms) = 0;
 
   // This method is called when the decoder needs a new key frame from encoder
   // on the sender.
@@ -176,6 +191,16 @@ class WEBRTC_DLLEXPORT ViECodec {
                                   const char* file_name_utf8) = 0;
   // Disables recording of debugging information.
   virtual int StopDebugRecording(int video_channel) = 0;
+
+  // Lets the sender suspend video when the rate drops below
+  // |threshold_bps|, and turns back on when the rate goes back up above
+  // |threshold_bps| + |window_bps|.
+  // This is under development; not tested.
+  virtual void SuspendBelowMinBitrate(int video_channel) = 0;
+
+  // TODO(holmer): Remove this default implementation when possible.
+  virtual bool GetSendSideDelay(int video_channel, int* avg_delay_ms,
+                                int* max_delay_ms) const { return false; }
 
  protected:
   ViECodec() {}

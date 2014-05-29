@@ -18,8 +18,6 @@
 
 namespace webrtc {
 
-#define REQUIRED_JNI_VERSION JNI_VERSION_1_4
-
 class AudioManagerJni {
  public:
   AudioManagerJni();
@@ -36,7 +34,6 @@ class AudioManagerJni {
   // It has to be called for this class' APIs to be successful. Calling
   // ClearAndroidAudioDeviceObjects will prevent this class' APIs to be called
   // successfully if SetAndroidAudioDeviceObjects is not called after it.
-  static void SetAndroidAudioDeviceObjects(void* jvm, void* context);
   static void SetAndroidAudioDeviceObjects(void* jvm, void* env,
                                            void* context);
   // This function must be called when the AudioManagerJni class is no
@@ -44,9 +41,9 @@ class AudioManagerJni {
   // SetAndroidAudioDeviceObjects.
   static void ClearAndroidAudioDeviceObjects();
 
-  bool low_latency_supported() { return low_latency_supported_; }
-  int native_output_sample_rate() { return native_output_sample_rate_; }
-  int native_buffer_size() { return native_buffer_size_; }
+  bool low_latency_supported() const { return low_latency_supported_; }
+  int native_output_sample_rate() const { return native_output_sample_rate_; }
+  int native_buffer_size() const { return native_buffer_size_; }
 
  private:
   bool HasDeviceObjects();

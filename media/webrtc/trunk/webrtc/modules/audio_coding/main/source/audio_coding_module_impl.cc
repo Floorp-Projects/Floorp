@@ -18,10 +18,11 @@
 #include "webrtc/engine_configurations.h"
 #include "webrtc/modules/audio_coding/main/source/acm_codec_database.h"
 #include "webrtc/modules/audio_coding/main/acm2/acm_common_defs.h"
+#include "webrtc/modules/audio_coding/main/acm2/call_statistics.h"
 #include "webrtc/modules/audio_coding/main/source/acm_dtmf_detection.h"
 #include "webrtc/modules/audio_coding/main/source/acm_generic_codec.h"
 #include "webrtc/modules/audio_coding/main/source/acm_resampler.h"
-#include "webrtc/modules/audio_coding/main/source/nack.h"
+#include "webrtc/modules/audio_coding/main/acm2/nack.h"
 #include "webrtc/system_wrappers/interface/clock.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/logging.h"
@@ -154,7 +155,6 @@ AudioCodingModuleImpl::AudioCodingModuleImpl(const int32_t id, Clock* clock)
       last_detected_tone_(kACMToneEnd),
       callback_crit_sect_(CriticalSectionWrapper::CreateCriticalSection()),
       secondary_send_codec_inst_(),
-      secondary_encoder_(NULL),
       initial_delay_ms_(0),
       num_packets_accumulated_(0),
       num_bytes_accumulated_(0),
@@ -2274,6 +2274,9 @@ int32_t AudioCodingModuleImpl::PlayoutData10Ms(
   {
     CriticalSectionScoped lock(acm_crit_sect_);
 
+    // Update call statistics.
+    call_stats_.DecodedByNetEq(audio_frame->speech_type_);
+
     if (update_nack) {
       assert(nack_.get());
       nack_->UpdateLastDecodedPacket(decoded_seq_num, decoded_timestamp);
@@ -2880,6 +2883,9 @@ bool AudioCodingModuleImpl::GetSilence(int desired_sample_rate_hz,
     return false;
   }
 
+  // Record call to silence generator.
+  call_stats_.DecodedBySilenceGenerator();
+
   // We stop accumulating packets, if the number of packets or the total size
   // exceeds a threshold.
   int max_num_packets;
@@ -3002,12 +3008,13 @@ int AudioCodingModuleImpl::LeastRequiredDelayMs() const {
 
 int AudioCodingModuleImpl::EnableNack(size_t max_nack_list_size) {
   // Don't do anything if |max_nack_list_size| is out of range.
-  if (max_nack_list_size == 0 || max_nack_list_size > Nack::kNackListSizeLimit)
+  if (max_nack_list_size == 0 ||
+      max_nack_list_size > acm2::Nack::kNackListSizeLimit)
     return -1;
 
   CriticalSectionScoped lock(acm_crit_sect_);
   if (!nack_enabled_) {
-    nack_.reset(Nack::Create(kNackThresholdPackets));
+    nack_.reset(acm2::Nack::Create(kNackThresholdPackets));
     nack_enabled_ = true;
 
     // Sampling rate might need to be updated if we change from disable to
@@ -3024,6 +3031,16 @@ void AudioCodingModuleImpl::DisableNack() {
   CriticalSectionScoped lock(acm_crit_sect_);
   nack_.reset();  // Memory is released.
   nack_enabled_ = false;
+}
+
+const char* AudioCodingModuleImpl::Version() const {
+  return kLegacyAcmVersion;
+}
+
+void AudioCodingModuleImpl::GetDecodingCallStatistics(
+      AudioDecodingCallStats* call_stats) const {
+  CriticalSectionScoped lock(acm_crit_sect_);
+  *call_stats = call_stats_.GetDecodingStatistics();
 }
 
 }  // namespace acm1

@@ -11,12 +11,16 @@
 #ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_SCREEN_CAPTURER_H_
 #define WEBRTC_MODULES_DESKTOP_CAPTURE_SCREEN_CAPTURER_H_
 
+#include <vector>
+
+#include "webrtc/modules/desktop_capture/desktop_capture_types.h"
 #include "webrtc/modules/desktop_capture/desktop_capturer.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
 
+class DesktopCaptureOptions;
 struct MouseCursorShape;
 
 // Class used to capture video frames asynchronously.
@@ -39,6 +43,13 @@ struct MouseCursorShape;
 //    Since data can be read while another capture action is happening.
 class ScreenCapturer : public DesktopCapturer {
  public:
+  // Use a struct to represent a screen although it has only an id for now,
+  // because we may want to add more fields (e.g. description) in the future.
+  struct Screen {
+    ScreenId id;
+  };
+  typedef std::vector<Screen> ScreenList;
+
   // Provides callbacks used by the capturer to pass captured video frames and
   // mouse cursor shapes to the processing pipeline.
   //
@@ -57,6 +68,10 @@ class ScreenCapturer : public DesktopCapturer {
   virtual ~ScreenCapturer() {}
 
   // Creates platform-specific capturer.
+  //
+  // TODO(sergeyu): Remove all Create() methods except the first one.
+  // crbug.com/172183
+  static ScreenCapturer* Create(const DesktopCaptureOptions& options);
   static ScreenCapturer* Create();
 
 #if defined(WEBRTC_LINUX)
@@ -73,6 +88,15 @@ class ScreenCapturer : public DesktopCapturer {
   // remain valid until the capturer is destroyed.
   virtual void SetMouseShapeObserver(
       MouseShapeObserver* mouse_shape_observer) = 0;
+
+  // Get the list of screens (not containing kFullDesktopScreenId). Returns
+  // false in case of a failure.
+  virtual bool GetScreenList(ScreenList* screens) = 0;
+
+  // Select the screen to be captured. Returns false in case of a failure (e.g.
+  // if there is no screen with the specified id). If this is never called, the
+  // full desktop is captured.
+  virtual bool SelectScreen(ScreenId id) = 0;
 };
 
 }  // namespace webrtc

@@ -16,16 +16,6 @@
         '<(webrtc_root)/common_video/common_video.gyp:common_video',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
-
-      'cflags_mozilla': [
-        '$(NSPR_CFLAGS)',
-      ],
-
-      'include_dirs': [
-        'include',
-        '../interface',
-        '<(webrtc_root)/common_video/libyuv/include',
-      ],
       'sources': [
         'device_info_impl.cc',
         'device_info_impl.h',
@@ -46,10 +36,7 @@
           ],
         }, {  # include_internal_video_capture == 1
           'conditions': [
-            ['include_v4l2_video_capture==1', {
-              'include_dirs': [
-                'linux',
-              ],
+            ['OS=="linux"', {
               'sources': [
                 'linux/device_info_linux.cc',
                 'linux/device_info_linux.h',
@@ -70,9 +57,6 @@
                 'mac/qtkit/video_capture_qtkit_utility.h',
                 'mac/video_capture_mac.mm',
               ],
-              'include_dirs': [
-                'mac',
-              ],
               'link_settings': {
                 'xcode_settings': {
                   'OTHER_LDFLAGS': [
@@ -82,15 +66,8 @@
               },
             }],  # mac
             ['OS=="win"', {
-              'conditions': [
-                ['build_with_mozilla==0', {
-                  'dependencies': [
-                    '<(DEPTH)/third_party/winsdk_samples/winsdk_samples.gyp:directshow_baseclasses',
-                  ],
-                }],
-              ],
-              'include_dirs': [
-                'windows',
+              'dependencies': [
+                '<(DEPTH)/third_party/winsdk_samples/winsdk_samples.gyp:directshow_baseclasses',
               ],
               'sources': [
                 'windows/device_info_ds.cc',
@@ -106,10 +83,6 @@
                 'windows/video_capture_factory_windows.cc',
                 'windows/video_capture_mf.cc',
                 'windows/video_capture_mf.h',
-                'windows/BasePin.cpp',
-                'windows/BaseFilter.cpp',
-                'windows/BaseInputPin.cpp',
-                'windows/MediaType.cpp',
               ],
               'link_settings': {
                 'libraries': [
@@ -118,8 +91,9 @@
               },
             }],  # win
             ['OS=="android"', {
-              'include_dirs': [
-                'android',
+              'dependencies': [
+                '<(DEPTH)/third_party/icu/icu.gyp:icuuc',
+                '<(DEPTH)/third_party/jsoncpp/jsoncpp.gyp:jsoncpp',
               ],
               'sources': [
                 'android/device_info_android.cc',
@@ -167,15 +141,12 @@
             '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
             '<(DEPTH)/testing/gtest.gyp:gtest',
           ],
-          'include_dirs': [
-            'include',
-          ],
           'sources': [
             'test/video_capture_unittest.cc',
             'test/video_capture_main_mac.mm',
           ],
           'conditions': [
-            ['OS!="win" and OS!="android"', {
+            ['OS=="mac" or OS=="linux"', {
               'cflags': [
                 '-Wno-write-strings',
               ],
@@ -183,15 +154,11 @@
                 '-lpthread -lm',
               ],
             }],
-            ['include_v4l2_video_capture==1', {
-              'libraries': [
-                '-lXext',
-                '-lX11',
-              ],
-            }],
             ['OS=="linux"', {
               'libraries': [
                 '-lrt',
+                '-lXext',
+                '-lX11',
               ],
             }],
             ['OS=="mac"', {
@@ -222,10 +189,10 @@
               'target_name': 'video_capture_tests_run',
               'type': 'none',
               'dependencies': [
-                '<(import_isolate_path):import_isolate_gypi',
                 'video_capture_tests',
               ],
               'includes': [
+                '../../build/isolate.gypi',
                 'video_capture_tests.isolate',
               ],
               'sources': [

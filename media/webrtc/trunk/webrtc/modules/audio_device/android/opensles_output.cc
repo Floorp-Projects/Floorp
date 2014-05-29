@@ -11,17 +11,14 @@
 #include "webrtc/modules/audio_device/android/opensles_output.h"
 
 #include <assert.h>
-#include <dlfcn.h>
 
+#include "webrtc/modules/audio_device/android/opensles_common.h"
 #include "webrtc/modules/audio_device/android/fine_audio_buffer.h"
 #include "webrtc/modules/audio_device/android/single_rw_fifo.h"
 #include "webrtc/modules/audio_device/audio_device_buffer.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/thread_wrapper.h"
 #include "webrtc/system_wrappers/interface/trace.h"
-
-using webrtc_opensl::kDefaultSampleRate;
-using webrtc_opensl::kNumChannels;
 
 #define VOID_RETURN
 #define OPENSL_RETURN_ON_FAILURE(op, ret_val)                    \
@@ -66,53 +63,35 @@ OpenSlesOutput::OpenSlesOutput(const int32_t id)
       speaker_sampling_rate_(kDefaultSampleRate),
       buffer_size_samples_(0),
       buffer_size_bytes_(0),
-      playout_delay_(0),
-      opensles_lib_(NULL) {
+      playout_delay_(0) {
 }
 
 OpenSlesOutput::~OpenSlesOutput() {
 }
 
+int32_t OpenSlesOutput::SetAndroidAudioDeviceObjects(void* javaVM,
+                                                     void* env,
+                                                     void* context) {
+  AudioManagerJni::SetAndroidAudioDeviceObjects(javaVM, env, context);
+  return 0;
+}
+
+void OpenSlesOutput::ClearAndroidAudioDeviceObjects() {
+  AudioManagerJni::ClearAndroidAudioDeviceObjects();
+}
+
 int32_t OpenSlesOutput::Init() {
   assert(!initialized_);
 
-  /* Try to dynamically open the OpenSLES library */
-  opensles_lib_ = dlopen("libOpenSLES.so", RTLD_LAZY);
-  if (!opensles_lib_) {
-      WEBRTC_TRACE(kTraceError, kTraceAudioDevice, id_,
-                   "  failed to dlopen OpenSLES library");
-      return -1;
-  }
-
-  f_slCreateEngine = (slCreateEngine_t)dlsym(opensles_lib_, "slCreateEngine");
-  SL_IID_ENGINE_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_ENGINE");
-  SL_IID_BUFFERQUEUE_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_BUFFERQUEUE");
-  SL_IID_ANDROIDCONFIGURATION_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_ANDROIDCONFIGURATION");
-  SL_IID_PLAY_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_PLAY");
-  SL_IID_ANDROIDSIMPLEBUFFERQUEUE_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_ANDROIDSIMPLEBUFFERQUEUE");
-  SL_IID_VOLUME_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_VOLUME");
-
-  if (!f_slCreateEngine ||
-      !SL_IID_ENGINE_ ||
-      !SL_IID_BUFFERQUEUE_ ||
-      !SL_IID_ANDROIDCONFIGURATION_ ||
-      !SL_IID_PLAY_ ||
-      !SL_IID_ANDROIDSIMPLEBUFFERQUEUE_ ||
-      !SL_IID_VOLUME_) {
-      WEBRTC_TRACE(kTraceError, kTraceAudioDevice, id_,
-                   "  failed to find OpenSLES function");
-      return -1;
-  }
-
   // Set up OpenSl engine.
-  OPENSL_RETURN_ON_FAILURE(f_slCreateEngine(&sles_engine_, 1, kOption, 0,
+  OPENSL_RETURN_ON_FAILURE(slCreateEngine(&sles_engine_, 1, kOption, 0,
                                           NULL, NULL),
                            -1);
   OPENSL_RETURN_ON_FAILURE((*sles_engine_)->Realize(sles_engine_,
                                                     SL_BOOLEAN_FALSE),
                            -1);
   OPENSL_RETURN_ON_FAILURE((*sles_engine_)->GetInterface(sles_engine_,
-                                                         SL_IID_ENGINE_,
+                                                         SL_IID_ENGINE,
                                                          &sles_engine_itf_),
                            -1);
   // Set up OpenSl output mix.
@@ -144,7 +123,6 @@ int32_t OpenSlesOutput::Terminate() {
   initialized_ = false;
   speaker_initialized_ = false;
   play_initialized_ = false;
-  dlclose(opensles_lib_);
   return 0;
 }
 
@@ -170,7 +148,6 @@ int32_t OpenSlesOutput::PlayoutIsAvailable(bool& available) {  // NOLINT
 
 int32_t OpenSlesOutput::InitPlayout() {
   assert(initialized_);
-  assert(!play_initialized_);
   play_initialized_ = true;
   return 0;
 }
@@ -207,6 +184,7 @@ int32_t OpenSlesOutput::StartPlayout() {
 int32_t OpenSlesOutput::StopPlayout() {
   StopCbThreads();
   DestroyAudioPlayer();
+  playing_ = false;
   return 0;
 }
 
@@ -333,7 +311,6 @@ void OpenSlesOutput::UpdatePlayoutDelay() {
 }
 
 bool OpenSlesOutput::SetLowLatency() {
-#if !defined(WEBRTC_GONK)
   if (!audio_manager_.low_latency_supported()) {
     return false;
   }
@@ -342,9 +319,6 @@ bool OpenSlesOutput::SetLowLatency() {
   speaker_sampling_rate_ = audio_manager_.native_output_sample_rate();
   assert(speaker_sampling_rate_ > 0);
   return true;
-#else
-  return false;
-#endif
 }
 
 void OpenSlesOutput::CalculateNumFifoBuffersNeeded() {
@@ -430,7 +404,7 @@ bool OpenSlesOutput::CreateAudioPlayer() {
   // Note the interfaces still need to be initialized. This only tells OpenSl
   // that the interfaces will be needed at some point.
   SLInterfaceID ids[kNumInterfaces] = {
-    SL_IID_BUFFERQUEUE_, SL_IID_VOLUME_, SL_IID_ANDROIDCONFIGURATION_ };
+    SL_IID_BUFFERQUEUE, SL_IID_VOLUME, SL_IID_ANDROIDCONFIGURATION };
   SLboolean req[kNumInterfaces] = {
     SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE };
   OPENSL_RETURN_ON_FAILURE(
@@ -443,11 +417,11 @@ bool OpenSlesOutput::CreateAudioPlayer() {
                                                     SL_BOOLEAN_FALSE),
                            false);
   OPENSL_RETURN_ON_FAILURE(
-      (*sles_player_)->GetInterface(sles_player_, SL_IID_PLAY_,
+      (*sles_player_)->GetInterface(sles_player_, SL_IID_PLAY,
                                     &sles_player_itf_),
       false);
   OPENSL_RETURN_ON_FAILURE(
-      (*sles_player_)->GetInterface(sles_player_, SL_IID_BUFFERQUEUE_,
+      (*sles_player_)->GetInterface(sles_player_, SL_IID_BUFFERQUEUE,
                                     &sles_player_sbq_itf_),
       false);
   return true;

@@ -12,6 +12,7 @@
       'target_name': 'audio_device',
       'type': 'static_library',
       'dependencies': [
+        'webrtc_utility',
         '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
@@ -46,16 +47,11 @@
         'dummy/audio_device_utility_dummy.h',
       ],
       'conditions': [
-        ['build_with_mozilla==1', {
-          'cflags_mozilla': [
-            '$(NSPR_CFLAGS)',
-          ],
-        }],
-        ['OS=="linux" or include_alsa_audio==1 or include_pulse_audio==1', {
+        ['OS=="linux"', {
           'include_dirs': [
             'linux',
           ],
-        }], # OS=="linux" or include_alsa_audio==1 or include_pulse_audio==1
+        }], # OS==linux
         ['OS=="ios"', {
           'include_dirs': [
             'ios',
@@ -73,24 +69,9 @@
         }],
         ['OS=="android"', {
           'include_dirs': [
-            '/widget/android',
             'android',
           ],
         }], # OS==android
-        ['moz_widget_toolkit_gonk==1', {
-          'cflags_mozilla': [
-            '-I$(ANDROID_SOURCE)/frameworks/wilhelm/include',
-            '-I$(ANDROID_SOURCE)/system/media/wilhelm/include',
-          ],
-          'include_dirs': [
-            'android',
-          ],
-        }], # moz_widget_toolkit_gonk==1
-        ['enable_android_opensl==1', {
-          'include_dirs': [
-	    'opensl',
-          ],
-        }], # enable_android_opensl
         ['include_internal_audio_device==0', {
           'defines': [
             'WEBRTC_DUMMY_AUDIO_BUILD',
@@ -98,8 +79,14 @@
         }],
         ['include_internal_audio_device==1', {
           'sources': [
+            'linux/alsasymboltable_linux.cc',
+            'linux/alsasymboltable_linux.h',
+            'linux/audio_device_alsa_linux.cc',
+            'linux/audio_device_alsa_linux.h',
             'linux/audio_device_utility_linux.cc',
             'linux/audio_device_utility_linux.h',
+            'linux/audio_mixer_manager_alsa_linux.cc',
+            'linux/audio_mixer_manager_alsa_linux.h',
             'linux/latebindingsymboltable_linux.cc',
             'linux/latebindingsymboltable_linux.h',
             'ios/audio_device_ios.cc',
@@ -123,98 +110,60 @@
             'win/audio_device_utility_win.h',
             'win/audio_mixer_manager_win.cc',
             'win/audio_mixer_manager_win.h',
-            # used externally for getUserMedia
-            'opensl/single_rw_fifo.cc',
-            'opensl/single_rw_fifo.h',
+            'android/audio_device_template.h',
+            'android/audio_device_utility_android.cc',
+            'android/audio_device_utility_android.h',
+            'android/audio_manager_jni.cc',
+            'android/audio_manager_jni.h',
+            'android/audio_record_jni.cc',
+            'android/audio_record_jni.h',
+            'android/audio_track_jni.cc',
+            'android/audio_track_jni.h',
+            'android/fine_audio_buffer.cc',
+            'android/fine_audio_buffer.h',
+            'android/low_latency_event_posix.cc',
+            'android/low_latency_event.h',
+            'android/opensles_common.cc',
+            'android/opensles_common.h',
+            'android/opensles_input.cc',
+            'android/opensles_input.h',
+            'android/opensles_output.cc',
+            'android/opensles_output.h',
+            'android/single_rw_fifo.cc',
+            'android/single_rw_fifo.h',
           ],
           'conditions': [
             ['OS=="android"', {
-              'sources': [
-                'opensl/audio_manager_jni.cc',
-                'opensl/audio_manager_jni.h',
-                'android/audio_device_jni_android.cc',
-                'android/audio_device_jni_android.h',
-               ],
-            }],
-            ['OS=="android" or moz_widget_toolkit_gonk==1', {
               'link_settings': {
                 'libraries': [
                   '-llog',
                   '-lOpenSLES',
                 ],
               },
-              'conditions': [
-                ['enable_android_opensl==1', {
-                  'sources': [
-                    'opensl/audio_device_opensles.cc',
-                    'opensl/audio_device_opensles.h',
-                    'opensl/fine_audio_buffer.cc',
-                    'opensl/fine_audio_buffer.h',
-                    'opensl/low_latency_event_posix.cc',
-                    'opensl/low_latency_event.h',
-                    'opensl/opensles_common.cc',
-                    'opensl/opensles_common.h',
-                    'opensl/opensles_input.cc',
-                    'opensl/opensles_input.h',
-                    'opensl/opensles_output.h',
-                    'shared/audio_device_utility_shared.cc',
-                    'shared/audio_device_utility_shared.h',
-                  ],
-                }, {
-                  'sources': [
-                    'shared/audio_device_utility_shared.cc',
-                    'shared/audio_device_utility_shared.h',
-                    'android/audio_device_jni_android.cc',
-                    'android/audio_device_jni_android.h',
-                  ],
-                }],
-                ['enable_android_opensl_output==1', {
-                  'sources': [
-                    'opensl/opensles_output.cc'
-                  ],
-                  'defines': [
-                    'WEBRTC_ANDROID_OPENSLES_OUTPUT',
-                  ]},
-                ],
-              ],
             }],
             ['OS=="linux"', {
+              'defines': [
+                'LINUX_ALSA',
+              ],
               'link_settings': {
                 'libraries': [
                   '-ldl','-lX11',
                 ],
               },
-            }],
-            ['include_alsa_audio==1', {
-              'cflags_mozilla': [
-                '$(MOZ_ALSA_CFLAGS)',
-              ],
-              'defines': [
-                'LINUX_ALSA',
-              ],
-              'sources': [
-                'linux/alsasymboltable_linux.cc',
-                'linux/alsasymboltable_linux.h',
-                'linux/audio_device_alsa_linux.cc',
-                'linux/audio_device_alsa_linux.h',
-                'linux/audio_mixer_manager_alsa_linux.cc',
-                'linux/audio_mixer_manager_alsa_linux.h',
-              ],
-            }],
-            ['include_pulse_audio==1', {
-              'cflags_mozilla': [
-                '$(MOZ_PULSEAUDIO_CFLAGS)',
-              ],
-              'defines': [
-                'LINUX_PULSE',
-              ],
-              'sources': [
-                'linux/audio_device_pulse_linux.cc',
-                'linux/audio_device_pulse_linux.h',
-                'linux/audio_mixer_manager_pulse_linux.cc',
-                'linux/audio_mixer_manager_pulse_linux.h',
-                'linux/pulseaudiosymboltable_linux.cc',
-                'linux/pulseaudiosymboltable_linux.h',
+              'conditions': [
+                ['include_pulse_audio==1', {
+                  'defines': [
+                    'LINUX_PULSE',
+                  ],
+                  'sources': [
+                    'linux/audio_device_pulse_linux.cc',
+                    'linux/audio_device_pulse_linux.h',
+                    'linux/audio_mixer_manager_pulse_linux.cc',
+                    'linux/audio_mixer_manager_pulse_linux.h',
+                    'linux/pulseaudiosymboltable_linux.cc',
+                    'linux/pulseaudiosymboltable_linux.h',
+                  ],
+                }],
               ],
             }],
             ['OS=="mac" or OS=="ios"', {
@@ -285,10 +234,10 @@
               'target_name': 'audio_device_tests_run',
               'type': 'none',
               'dependencies': [
-                '<(import_isolate_path):import_isolate_gypi',
                 'audio_device_tests',
               ],
               'includes': [
+                '../../build/isolate.gypi',
                 'audio_device_tests.isolate',
               ],
               'sources': [
@@ -323,3 +272,4 @@
     }], # include_tests
   ],
 }
+
