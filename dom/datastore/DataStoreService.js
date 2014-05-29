@@ -16,7 +16,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
-Cu.import('resource://gre/modules/DataStoreImpl.jsm');
 Cu.import("resource://gre/modules/DataStoreDB.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 
@@ -350,10 +349,16 @@ DataStoreService.prototype = {
     }
 
     for (let i = 0; i < aStores.length; ++i) {
-      let obj = new DataStore(aWindow, aStores[i].name,
-                              aStores[i].owner, aStores[i].readOnly);
+      let obj = Cc["@mozilla.org/dom/datastore;1"]
+                  .createInstance(Ci.nsIDataStore);
+      if (!obj || !obj.wrappedJSObject) {
+        dump("Failed to create a DataStore object.\n");
+        return;
+      }
 
-      let storeImpl = aWindow.DataStoreImpl._create(aWindow, obj);
+      obj.init(aWindow, aStores[i].name, aStores[i].owner, aStores[i].readOnly);
+
+      let storeImpl = aWindow.DataStoreImpl._create(aWindow, obj.wrappedJSObject);
 
       let exposedStore = new aWindow.DataStore();
       exposedStore.setDataStoreImpl(storeImpl);
