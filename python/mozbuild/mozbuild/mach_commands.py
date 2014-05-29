@@ -418,8 +418,7 @@ class Build(MachCommandBase):
             # Fennec doesn't have useful output from just building. We should
             # arguably make the build action useful for Fennec. Another day...
             if self.substs['MOZ_BUILD_APP'] != 'mobile/android':
-                app_path = self.get_binary_path('app')
-                print('To take your build for a test drive, run: %s' % app_path)
+                print('To take your build for a test drive, run: |mach run|')
             app = self.substs['MOZ_BUILD_APP']
             if app in ('browser', 'mobile/android'):
                 print('For more information on what to do now, see '
