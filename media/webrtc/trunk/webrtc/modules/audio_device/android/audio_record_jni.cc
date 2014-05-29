@@ -784,7 +784,7 @@ int32_t AudioRecordJni::SetRecordingSampleRate(const uint32_t samplesPerSec) {
   }
 
   // set the recording sample rate to use
-  _samplingFreqin = samplesPerSec;
+  _samplingFreqIn = samplesPerSec;
 
   // Update the AudioDeviceBuffer
   _ptrAudioBuffer->SetRecordingSampleRate(samplesPerSec);

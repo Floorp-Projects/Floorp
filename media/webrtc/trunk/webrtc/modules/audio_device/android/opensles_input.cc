@@ -74,10 +74,16 @@ OpenSlesInput::~OpenSlesInput() {
 int32_t OpenSlesInput::SetAndroidAudioDeviceObjects(void* javaVM,
                                                     void* env,
                                                     void* context) {
+#if !defined(WEBRTC_GONK)
+  AudioManagerJni::SetAndroidAudioDeviceObjects(javaVM, env, context);
+#endif
   return 0;
 }
 
 void OpenSlesInput::ClearAndroidAudioDeviceObjects() {
+#if !defined(WEBRTC_GONK)
+  AudioManagerJni::ClearAndroidAudioDeviceObjects();
+#endif
 }
 
 int32_t OpenSlesInput::Init() {
