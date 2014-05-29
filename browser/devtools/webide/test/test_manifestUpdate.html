@@ -60,7 +60,7 @@
             is(json.name, "xxx", "manifest written on disc");
 
             // Make the manifest invalid on disk
-            delete json.name
+            delete json.name;
             let Encoder = new TextEncoder();
             data = Encoder.encode(JSON.stringify(json));
             yield OS.File.writeAtomic(manifestPath, data , {tmpPath: manifestPath + ".tmp"});
