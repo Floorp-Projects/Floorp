@@ -61,7 +61,10 @@ loop.webapp = (function($, TB) {
 
     initiate: function(event) {
       event.preventDefault();
-      this.model.initiate(baseServerUrl);
+      this.model.initiate({
+        baseServerUrl: baseServerUrl,
+        outgoing: true
+      });
     }
   });
 
