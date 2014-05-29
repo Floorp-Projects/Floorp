@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
+  content/browser/loop/conversation.html             (content/conversation.html)
   content/browser/loop/panel.html                    (content/panel.html)
   content/browser/loop/shared/css/common.css         (content/shared/css/common.css)
   content/browser/loop/shared/css/panel.css          (content/shared/css/panel.css)
@@ -14,6 +15,6 @@ browser.jar:
   content/browser/loop/shared/libs/backbone-1.1.2.js (content/shared/libs/backbone-1.1.2.js)
   content/browser/loop/libs/l10n.js                  (content/libs/l10n.js)
   content/browser/loop/js/fxcom.js                   (content/js/fxcom.js)
+  content/browser/loop/js/conversation.js            (content/js/conversation.js)
   content/browser/loop/js/client.js                  (content/js/client.js)
   content/browser/loop/js/panel.js                   (content/js/panel.js)
-
