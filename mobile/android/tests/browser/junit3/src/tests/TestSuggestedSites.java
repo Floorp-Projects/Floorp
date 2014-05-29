@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import org.json.JSONArray;
@@ -241,5 +242,29 @@ public class TestSuggestedSites extends BrowserTestCase {
         assertFalse(suggestedSites.contains("foo"));
         assertNull(suggestedSites.getImageUrlForUrl("foo"));
         assertNull(suggestedSites.getBackgroundColorForUrl("foo"));
+    }
+
+    public void testLocaleChanges() {
+        resources.setSuggestedSitesResource(generateSites(3));
+
+        SuggestedSites suggestedSites = new SuggestedSites(context);
+
+        // Initial load with predefined locale
+        Cursor c = suggestedSites.get(DEFAULT_LIMIT, Locale.UK);
+        assertEquals(3, c.getCount());
+        c.close();
+
+        resources.setSuggestedSitesResource(generateSites(5));
+
+        // Second load with same locale should return same results
+        // even though the contents of the resource have changed.
+        c = suggestedSites.get(DEFAULT_LIMIT, Locale.UK);
+        assertEquals(3, c.getCount());
+        c.close();
+
+        // Changing the locale forces the cached list to be refreshed.
+        c = suggestedSites.get(DEFAULT_LIMIT, Locale.US);
+        assertEquals(5, c.getCount());
+        c.close();
     }
 }
