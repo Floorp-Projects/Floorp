@@ -171,7 +171,7 @@ DarwinGamepadService::DeviceAdded(IOHIDDeviceRef device)
   sprintf(buffer, "%x-%x-%s", vendorId, productId, product_name);
   nsRefPtr<GamepadService> service(GamepadService::GetService());
   mGamepads[slot].mSuperIndex = service->AddGamepad(buffer,
-                                                    mozilla::dom::NoMapping,
+                                                    mozilla::dom::GamepadMappingType::_empty,
                                                     (int)mGamepads[slot].numButtons(),
                                                     (int)mGamepads[slot].numAxes());
 }
