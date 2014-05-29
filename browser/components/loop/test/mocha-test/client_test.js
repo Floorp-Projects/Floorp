@@ -65,5 +65,48 @@ describe("loop.Client", function() {
         }));
       });
     });
+
+    describe("#requestCallsInfo", function() {
+      var client;
+
+      beforeEach(function() {
+        client = new loop.Client({baseApiUrl: "http://fake.api"});
+      });
+
+      it("should request data for all calls", function() {
+        var callback = sinon.spy();
+        client.requestCallsInfo(callback);
+
+        expect(requests).to.have.length.of(1);
+        expect(requests[0].url).to.be.equal("http://fake.api/calls?version=0");
+        expect(requests[0].method).to.be.equal("GET");
+
+        requests[0].respond(200, {"Content-Type": "application/json"},
+                                 '{"calls": [{"apiKey": "fake"}]}');
+        sinon.assert.calledWithExactly(callback, null, [{apiKey: "fake"}]);
+      });
+
+      it("should send an error when the request fails", function() {
+        var callback = sinon.spy();
+        client.requestCallsInfo(callback);
+
+        requests[0].respond(400, {"Content-Type": "application/json"},
+                                 '{"error": "my error"}');
+        sinon.assert.calledWithMatch(callback, sinon.match(function(err) {
+          return /HTTP error 400: Bad Request; my error/.test(err.message);
+        }));
+      });
+
+      it("should send an error if the data is not valid", function() {
+        var callback = sinon.spy();
+        client.requestCallsInfo(callback);
+
+        requests[0].respond(200, {"Content-Type": "application/json"},
+                                 '{"bad": {}}');
+        sinon.assert.calledWithMatch(callback, sinon.match(function(err) {
+          return /Invalid calls data received/.test(err.message);
+        }));
+      });
+    });
   });
 });
