@@ -144,19 +144,21 @@ function countEntries(name, value, then) {
     obj.value = value;
 
   var count = 0;
-  SpecialPowers.formHistory.count(obj, { handleResult: function (result) { count = result },
+  SpecialPowers.formHistory.count(obj, SpecialPowers.wrapCallbackObject({ handleResult: function (result) { count = result },
                                          handleError: function (error) {
-                                           do_throw("Error occurred searching form history: " + error);
+                                           ok(false, "Error occurred searching form history: " + error.message);
+                                           SimpleTest.finish();
                                          },
                                          handleCompletion: function (reason) { if (!reason) then(count); }
-                                       });
+                                       }));
 }
 
 // Wrapper around FormHistory.update which handles errors. Calls then() when done.
 function updateFormHistory(changes, then) {
-  SpecialPowers.formHistory.update(changes, { handleError: function (error) {
-                                                do_throw("Error occurred updating form history: " + error);
+  SpecialPowers.formHistory.update(changes, SpecialPowers.wrapCallbackObject({ handleError: function (error) {
+                                                ok(false, "Error occurred updating form history: " + error.message);
+                                                SimpleTest.finish();
                                               },
                                               handleCompletion: function (reason) { if (!reason) then(); },
-                                            });
+                                            }));
 }

@@ -10,6 +10,7 @@
 #include "mozilla/dom/TabChild.h"
 #include "jsfriendapi.h"
 #include "xpcprivate.h"
+#include "mozilla/Preferences.h"
 
 using namespace js;
 using namespace JS;
@@ -144,11 +145,22 @@ ObjectToIdMap::remove(JSObject *obj)
     table_->remove(obj);
 }
 
+bool JavaScriptShared::sLoggingInitialized;
+bool JavaScriptShared::sLoggingEnabled;
+bool JavaScriptShared::sStackLoggingEnabled;
+
 JavaScriptShared::JavaScriptShared(JSRuntime *rt)
   : rt_(rt),
     refcount_(1),
     lastId_(0)
 {
+    if (!sLoggingInitialized) {
+        sLoggingInitialized = true;
+        Preferences::AddBoolVarCache(&sLoggingEnabled,
+                                     "dom.ipc.cpows.log.enabled", false);
+        Preferences::AddBoolVarCache(&sStackLoggingEnabled,
+                                     "dom.ipc.cpows.log.stack", false);
+    }
 }
 
 bool
