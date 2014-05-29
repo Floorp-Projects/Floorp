@@ -2499,7 +2499,6 @@ TabChild::InitRenderingState()
       if (!sTabChildren) {
         sTabChildren = new TabChildMap;
       }
-      MOZ_ASSERT(!sTabChildren->Get(id));
       sTabChildren->Put(id, this);
       mLayersId = id;
     }
@@ -2709,14 +2708,14 @@ TabChild::GetFrom(uint64_t aLayersId)
 }
 
 void
-TabChild::DidComposite(uint64_t aTransactionId)
+TabChild::DidComposite()
 {
   MOZ_ASSERT(mWidget);
   MOZ_ASSERT(mWidget->GetLayerManager());
   MOZ_ASSERT(mWidget->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT);
 
   ClientLayerManager *manager = static_cast<ClientLayerManager*>(mWidget->GetLayerManager());
-  manager->DidComposite(aTransactionId);
+  manager->DidComposite();
 }
 
 NS_IMETHODIMP
