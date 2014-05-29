@@ -94,7 +94,7 @@ function injectLoopAPI(targetWindow) {
      * sooner, this function is a no-op; this ensures we always have the latest
      * expiry time for a url.
      *
-     * This is used to deterimine whether or not we should be registering with the
+     * This is used to determine whether or not we should be registering with the
      * push server on start.
      *
      * @param {Integer} expiryTimeSeconds The seconds since epoch of the expiry time
@@ -106,6 +106,28 @@ function injectLoopAPI(targetWindow) {
       writable: true,
       value: function(expiryTimeSeconds) {
         MozLoopService.noteCallUrlExpiry(expiryTimeSeconds);
+      }
+    },
+
+    /**
+     * Return any preference under "loop." that's coercible to a character
+     * preference.
+     *
+     * @param {String} prefName The name of the pref without the preceding
+     * "loop."
+     *
+     * Any errors thrown by the Mozilla pref API are logged to the console
+     * and cause null to be returned. This includes the case of the preference
+     * not being found.
+     *
+     * @return {String} on success, null on error
+     */
+    getLoopCharPref: {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: function(prefName) {
+        return MozLoopService.getLoopCharPref(prefName);
       }
     }
   };
