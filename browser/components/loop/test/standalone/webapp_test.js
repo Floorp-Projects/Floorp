@@ -28,23 +28,63 @@ describe("loop.webapp", function() {
   });
 
   describe("WebappRouter", function() {
-    var conversation;
+    var router, conversation;
 
     beforeEach(function() {
       conversation = new sharedModels.ConversationModel();
+      router = new loop.webapp.WebappRouter({
+        conversation: conversation,
+        notifier: notifier
+      });
+      sandbox.stub(router, "loadView");
+      sandbox.stub(router, "navigate");
+    });
+
+    describe("#startCall", function() {
+      it("should navigate back home if session token is missing", function() {
+        router.startCall();
+
+        sinon.assert.calledOnce(router.navigate);
+        sinon.assert.calledWithMatch(router.navigate, "home");
+      });
+
+      it("should notify the user if session token is missing", function() {
+        router.startCall();
+
+        sinon.assert.calledOnce(notifier.error);
+        // XXX test for message contents (needs stubbing L10n)
+      });
+
+      it("should navigate to call/ongoing/:token if session token is available",
+        function() {
+          conversation.set("loopToken", "fake");
+
+          router.startCall();
+
+          sinon.assert.calledOnce(router.navigate);
+          sinon.assert.calledWithMatch(router.navigate, "call/ongoing/fake");
+        });
+    });
+
+    describe("#endCall", function() {
+      it("should navigate to home if session token is unset", function() {
+        router.endCall();
+
+        sinon.assert.calledOnce(router.navigate);
+        sinon.assert.calledWithMatch(router.navigate, "home");
+      });
+
+      it("should navigate to call/:token if session token is set", function() {
+        conversation.set("loopToken", "fake");
+
+        router.endCall();
+
+        sinon.assert.calledOnce(router.navigate);
+        sinon.assert.calledWithMatch(router.navigate, "call/fake");
+      });
     });
 
     describe("Routes", function() {
-      var router;
-
-      beforeEach(function() {
-        router = new loop.webapp.WebappRouter({
-          conversation: conversation,
-          notifier: notifier
-        });
-        sandbox.stub(router, "loadView");
-      });
-
       describe("#home", function() {
         it("should load the HomeView", function() {
           router.home();
@@ -86,30 +126,18 @@ describe("loop.webapp", function() {
           }));
         });
 
-        it("should redirect to #call/{token} if session isn't ready",
+        it("should navigate to #call/{token} if session isn't ready",
           function() {
-            conversation.set("loopToken", "fakeToken");
-            sandbox.stub(router, "navigate");
-
-            router.conversation();
+            router.conversation("fakeToken");
 
             sinon.assert.calledOnce(router.navigate);
             sinon.assert.calledWithMatch(router.navigate, "call/fakeToken");
           });
-
-        it("should redirect to #home if no call token is set", function() {
-          sandbox.stub(router, "navigate");
-
-          router.conversation();
-
-          sinon.assert.calledOnce(router.navigate);
-          sinon.assert.calledWithMatch(router.navigate, "home");
-        });
       });
     });
 
     describe("Events", function() {
-      var router, fakeSessionData;
+      var fakeSessionData;
 
       beforeEach(function() {
         fakeSessionData = {
@@ -117,20 +145,15 @@ describe("loop.webapp", function() {
           sessionToken: "sessionToken",
           apiKey:       "apiKey"
         };
-        sandbox.stub(loop.webapp.WebappRouter.prototype, "navigate");
         conversation.set("loopToken", "fakeToken");
-        router = new loop.webapp.WebappRouter({
-          conversation: conversation,
-          notifier: notifier
-        });
       });
 
-      it("should navigate to call/ongoing once the call session is ready",
+      it("should navigate to call/ongoing/:token once call session is ready",
         function() {
           conversation.trigger("session:ready");
 
           sinon.assert.calledOnce(router.navigate);
-          sinon.assert.calledWith(router.navigate, "call/ongoing");
+          sinon.assert.calledWith(router.navigate, "call/ongoing/fakeToken");
         });
 
       it("should navigate to call/{token} when conversation ended", function() {
