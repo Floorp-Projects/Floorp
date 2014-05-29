@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global loop, sinon */
+/*global loop, sinon, it, beforeEach, afterEach, describe, hawk */
 
 var expect = chai.expect;
 
@@ -12,7 +12,9 @@ describe("loop.shared.Client", function() {
   var sandbox,
       fakeXHR,
       requests = [],
-      callback;
+      callback,
+      mozLoop,
+      fakeToken;
 
   var fakeErrorRes = JSON.stringify({
       status: "errors",
@@ -32,6 +34,7 @@ describe("loop.shared.Client", function() {
       requests.push(xhr);
     };
     callback = sinon.spy();
+    fakeToken = "fakeTokenText";
   });
 
   afterEach(function() {
@@ -53,15 +56,15 @@ describe("loop.shared.Client", function() {
       beforeEach(function() {
         window.navigator.mozLoop = {
           ensureRegistered: sinon.stub().callsArgWith(0, null),
-          noteCallUrlExpiry: sinon.spy()
+          noteCallUrlExpiry: sinon.spy(),
+          getLoopCharPref: sandbox.stub()
+            .returns(null)
+            .withArgs("hawk-session-token")
+            .returns(fakeToken)
         };
         client = new loop.shared.Client(
-          {baseServerUrl: "http://fake.api"}
+          {baseServerUrl: "http://fake.api", mozLoop: window.navigator.mozLoop}
         );
-      });
-
-      afterEach(function() {
-        delete window.navigator.mozLoop;
       });
 
       it("should ensure loop is registered", function() {
@@ -86,7 +89,22 @@ describe("loop.shared.Client", function() {
         expect(requests[0].method).to.be.equal("POST");
         expect(requests[0].url).to.be.equal("http://fake.api/call-url/");
         expect(requests[0].requestBody).to.be.equal('callerId=foo');
+      });
 
+      it("should set the XHR Authorization header", function() {
+        sandbox.stub(hawk.client, "header").returns( {field: fakeToken} );
+        client._credentials = {
+          // XXX we probably really want to stub out external module calls
+          // eg deriveHawkCredentials, rather supplying them with valid arguments
+          // like we're doing here:
+          key: 'werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn',
+          algorithm: 'sha256',
+          user: 'Steve'
+        };
+
+        client.requestCallUrl("foo", callback);
+
+        expect(requests[0].requestHeaders.Authorization).to.equal(fakeToken);
       });
 
       it("should request a call url", function() {
@@ -144,7 +162,15 @@ describe("loop.shared.Client", function() {
       var client;
 
       beforeEach(function() {
-        client = new loop.shared.Client({baseServerUrl: "http://fake.api"});
+        mozLoop = {
+          getLoopCharPref: sandbox.stub()
+            .returns(null)
+            .withArgs("hawk-session-token")
+            .returns(fakeToken)
+        };
+        client = new loop.shared.Client(
+          {baseServerUrl: "http://fake.api", mozLoop: mozLoop}
+        );
       });
 
       it("should prevent launching a conversation when version is missing",
@@ -164,6 +190,22 @@ describe("loop.shared.Client", function() {
         requests[0].respond(200, {"Content-Type": "application/json"},
                                  '{"calls": [{"apiKey": "fake"}]}');
         sinon.assert.calledWithExactly(callback, null, [{apiKey: "fake"}]);
+      });
+
+      it("should set the XHR Authorization header", function() {
+        sandbox.stub(hawk.client, "header").returns( {field: fakeToken} );
+        // XXX we probably really want to stub out external module calls
+        // eg deriveHawkCredentials, rather supplying them with valid arguments
+        // like we're doing here:
+        client._credentials = {
+          key: 'werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn',
+          algorithm: 'sha256',
+          user: 'Steve'
+        };
+
+        client.requestCallsInfo("foo", callback);
+
+        expect(requests[0].requestHeaders.Authorization).to.equal(fakeToken);
       });
 
       it("should send an error when the request fails", function() {
@@ -191,7 +233,9 @@ describe("loop.shared.Client", function() {
       var client;
 
       beforeEach(function() {
-        client = new loop.shared.Client({baseServerUrl: "http://fake.api"});
+        client = new loop.shared.Client(
+          {baseServerUrl: "http://fake.api", mozLoop: undefined}
+        );
       });
 
       it("should prevent launching a conversation when token is missing",
@@ -234,7 +278,7 @@ describe("loop.shared.Client", function() {
       });
 
       it("should send an error if the data is not valid", function() {
-        client.requestCallsInfo("fake", callback);
+        client.requestCallInfo("fake", callback);
 
         requests[0].respond(200, {"Content-Type": "application/json"},
                             '{"bad": "one"}');
