@@ -73,9 +73,9 @@ describe("loop.conversation", function() {
           router.conversation();
 
           sinon.assert.calledOnce(router.loadView);
-          sinon.assert.calledWithMatch(router.loadView, {
-            $el: {selector: "#conversation"}
-          });
+          sinon.assert.calledWith(router.loadView, sinon.match(function(obj) {
+            return obj instanceof loop.shared.views.ConversationView;
+          }));
         });
 
         it("should not load the ConversationView if session is not set",
