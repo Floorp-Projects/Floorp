@@ -250,21 +250,6 @@ uint32_t const CacheObserver::MemoryCacheCapacity()
   return sAutoMemoryCacheCapacity = capacity;
 }
 
-void CacheObserver::SchduleAutoDelete()
-{
-  // Auto-delete not set
-  if (sAutoDeleteCacheVersion == -1)
-    return;
-
-  // Don't autodelete the same version of the cache user has setup
-  // to use.
-  int32_t activeVersion = UseNewCache() ? 1 : 0;
-  if (sAutoDeleteCacheVersion == activeVersion)
-    return;
-
-  CacheStorageService::WipeCacheDirectory(sAutoDeleteCacheVersion);
-}
-
 // static
 bool const CacheObserver::UseNewCache()
 {
@@ -444,7 +429,8 @@ CacheObserver::Observe(nsISupports* aSubject,
   }
 
   if (!strcmp(aTopic, "sessionstore-windows-restored")) {
-    SchduleAutoDelete();
+    uint32_t activeVersion = UseNewCache() ? 1 : 0;
+    CacheStorageService::CleaupCacheDirectories(sAutoDeleteCacheVersion, activeVersion);
     return NS_OK;
   }
 

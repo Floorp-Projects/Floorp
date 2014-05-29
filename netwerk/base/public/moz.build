@@ -78,6 +78,7 @@ XPIDL_SOURCES += [
     'nsIProxyInfo.idl',
     'nsIRandomGenerator.idl',
     'nsIRedirectChannelRegistrar.idl',
+    'nsIRedirectHistory.idl',
     'nsIRedirectResultListener.idl',
     'nsIRequest.idl',
     'nsIRequestObserver.idl',

@@ -44,7 +44,7 @@ interface nsIApplicationReputationService : nsISupports {
  * downloaded file. nsIApplicationReputationService.Start() may only be called
  * once with a single query.
  */
-[scriptable, uuid(2c781cbe-ab0c-4c53-b06e-f0cb56f8a30b)]
+[scriptable, uuid(812d7509-a9a3-446e-a66f-3ed8cc91ebd0)]
 interface nsIApplicationReputationQuery : nsISupports {
   /*
    * The nsIURI from which the file was downloaded. This may not be null.
@@ -81,6 +81,12 @@ interface nsIApplicationReputationQuery : nsISupports {
    * binary, if it is signed.
    */
   readonly attribute nsIArray signatureInfo;
+
+  /*
+   * The nsIArray of nsIPrincipal of redirects that lead to this download. The
+   * most recent redirect is the last element.
+   */
+  readonly attribute nsIArray redirects;
 };
 
 [scriptable, function, uuid(9a228470-cfe5-11e2-8b8b-0800200c9a66)]

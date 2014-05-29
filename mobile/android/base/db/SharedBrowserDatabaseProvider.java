@@ -12,6 +12,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.Build;
 import android.util.Log;
 
 /**
@@ -48,7 +49,11 @@ public abstract class SharedBrowserDatabaseProvider extends AbstractPerProfileDa
             final DatabaseHelperFactory<BrowserDatabaseHelper> helperFactory = new DatabaseHelperFactory<BrowserDatabaseHelper>() {
                 @Override
                 public BrowserDatabaseHelper makeDatabaseHelper(Context context, String databasePath) {
-                    return new BrowserDatabaseHelper(context, databasePath);
+                    final BrowserDatabaseHelper helper = new BrowserDatabaseHelper(context, databasePath);
+                    if (Build.VERSION.SDK_INT >= 16) {
+                        helper.setWriteAheadLoggingEnabled(true);
+                    }
+                    return helper;
                 }
             };
 

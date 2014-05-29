@@ -11,7 +11,7 @@ interface nsICancelable;
 interface nsIMIMEInfo;
 interface nsIFile;
 
-[scriptable, uuid(0c81b265-34b8-472d-be98-099b2512e3ec)]
+[scriptable, uuid(37ec75d3-97ad-4da8-afaa-eabe5b4afd73)]
 interface nsITransfer : nsIWebProgressListener2 {
 
     /**
@@ -76,6 +76,14 @@ interface nsITransfer : nsIWebProgressListener2 {
      */
     void setSignatureInfo(in nsIArray aSignatureInfo);
 
+    /*
+     * Used to notify the transfer object of the redirects associated with the
+     * channel that terminated in the downloaded file.  Must be called on the
+     * main thread, only after the download has finished successfully.
+     * @param aRedirects The nsIArray of nsIPrincipal of redirected URIs
+     *        associated with the downloaded file.
+     */
+    void setRedirects(in nsIArray aRedirects);
 };
 
 %{C++

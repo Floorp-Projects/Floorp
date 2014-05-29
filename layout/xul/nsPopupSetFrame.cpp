@@ -43,41 +43,41 @@ nsPopupSetFrame::GetType() const
   return nsGkAtoms::popupSetFrame;
 }
 
-nsresult
+void
 nsPopupSetFrame::AppendFrames(ChildListID     aListID,
                               nsFrameList&    aFrameList)
 {
   if (aListID == kPopupList) {
     AddPopupFrameList(aFrameList);
-    return NS_OK;
+    return;
   }
-  return nsBoxFrame::AppendFrames(aListID, aFrameList);
+  nsBoxFrame::AppendFrames(aListID, aFrameList);
 }
 
-nsresult
+void
 nsPopupSetFrame::RemoveFrame(ChildListID     aListID,
                              nsIFrame*       aOldFrame)
 {
   if (aListID == kPopupList) {
     RemovePopupFrame(aOldFrame);
-    return NS_OK;
+    return;
   }
-  return nsBoxFrame::RemoveFrame(aListID, aOldFrame);
+  nsBoxFrame::RemoveFrame(aListID, aOldFrame);
 }
 
-nsresult
+void
 nsPopupSetFrame::InsertFrames(ChildListID     aListID,
                               nsIFrame*       aPrevFrame,
                               nsFrameList&    aFrameList)
 {
   if (aListID == kPopupList) {
     AddPopupFrameList(aFrameList);
-    return NS_OK;
+    return;
   }
-  return nsBoxFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
+  nsBoxFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
 }
 
-nsresult
+void
 nsPopupSetFrame::SetInitialChildList(ChildListID     aListID,
                                      nsFrameList&    aChildList)
 {
@@ -85,9 +85,9 @@ nsPopupSetFrame::SetInitialChildList(ChildListID     aListID,
     NS_ASSERTION(mPopupList.IsEmpty(),
                  "SetInitialChildList on non-empty child list");
     AddPopupFrameList(aChildList);
-    return NS_OK;
+    return;
   }
-  return nsBoxFrame::SetInitialChildList(aListID, aChildList);
+  nsBoxFrame::SetInitialChildList(aListID, aChildList);
 }
 
 const nsFrameList&

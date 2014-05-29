@@ -48,6 +48,7 @@ class GlobalWorkerThreadState
     typedef Vector<AsmJSParallelTask*, 0, SystemAllocPolicy> AsmJSParallelTaskVector;
     typedef Vector<ParseTask*, 0, SystemAllocPolicy> ParseTaskVector;
     typedef Vector<SourceCompressionTask*, 0, SystemAllocPolicy> SourceCompressionTaskVector;
+    typedef Vector<GCHelperState *, 0, SystemAllocPolicy> GCHelperStateVector;
 
     // List of available threads, or null if the thread state has not been initialized.
     WorkerThread *threads;
@@ -80,6 +81,9 @@ class GlobalWorkerThreadState
 
     // Source compression worklist.
     SourceCompressionTaskVector compressionWorklist_;
+
+    // Runtimes which have sweeping / allocating work to do.
+    GCHelperStateVector gcHelperWorklist_;
 
   public:
     GlobalWorkerThreadState();
@@ -150,10 +154,16 @@ class GlobalWorkerThreadState
         return compressionWorklist_;
     }
 
+    GCHelperStateVector &gcHelperWorklist() {
+        JS_ASSERT(isLocked());
+        return gcHelperWorklist_;
+    }
+
     bool canStartAsmJSCompile();
     bool canStartIonCompile();
     bool canStartParseTask();
     bool canStartCompressionTask();
+    bool canStartGCHelperTask();
 
     uint32_t harvestFailedAsmJSJobs() {
         JS_ASSERT(isLocked());
@@ -240,8 +250,11 @@ struct WorkerThread
     /* Any source being compressed on this thread. */
     SourceCompressionTask *compressionTask;
 
+    /* Any GC state for background sweeping or allocating being performed. */
+    GCHelperState *gcHelperState;
+
     bool idle() const {
-        return !ionBuilder && !asmData && !parseTask && !compressionTask;
+        return !ionBuilder && !asmData && !parseTask && !compressionTask && !gcHelperState;
     }
 
     void destroy();
@@ -250,6 +263,7 @@ struct WorkerThread
     void handleIonWorkload();
     void handleParseWorkload();
     void handleCompressionWorkload();
+    void handleGCHelperWorkload();
 
     static void ThreadMain(void *arg);
     void threadLoop();
