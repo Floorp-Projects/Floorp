@@ -70,6 +70,8 @@ ImageData::Constructor(const GlobalObject& aGlobal,
                        const Optional<uint32_t>& aHeight,
                        ErrorResult& aRv)
 {
+  aData.ComputeLengthAndData();
+
   uint32_t length = aData.Length();
   if (length == 0 || length % 4) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);

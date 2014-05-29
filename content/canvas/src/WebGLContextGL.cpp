@@ -2131,7 +2131,8 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
     if (!isReadTypeValid)
         return ErrorInvalidEnum("readPixels: Bad type", type);
 
-    int dataType = JS_GetArrayBufferViewType(pixels.Value().Obj());
+    const ArrayBufferView& pixbuf = pixels.Value();
+    int dataType = JS_GetArrayBufferViewType(pixbuf.Obj());
 
     // Check the pixels param type
     if (dataType != requiredDataType)
@@ -2149,11 +2150,15 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
     if (!checked_neededByteLength.isValid())
         return ErrorInvalidOperation("readPixels: integer overflow computing the needed buffer size");
 
-    uint32_t dataByteLen = JS_GetTypedArrayByteLength(pixels.Value().Obj());
+    // Compute length and data.  Don't reenter after this point, lest the
+    // precomputed go out of sync with the instant length/data.
+    pixbuf.ComputeLengthAndData();
+
+    uint32_t dataByteLen = pixbuf.Length();
     if (checked_neededByteLength.value() > dataByteLen)
         return ErrorInvalidOperation("readPixels: buffer too small");
 
-    void* data = pixels.Value().Data();
+    void* data = pixbuf.Data();
     if (!data) {
         ErrorOutOfMemory("readPixels: buffer storage is null. Did we run out of memory?");
         return rv.Throw(NS_ERROR_OUT_OF_MEMORY);
@@ -3266,6 +3271,8 @@ WebGLContext::CompressedTexImage2D(GLenum target, GLint level, GLenum internalfo
         return;
     }
 
+    view.ComputeLengthAndData();
+
     uint32_t byteLength = view.Length();
     if (!ValidateCompTexImageDataSize(target, internalformat, width, height, byteLength, func)) {
         return;
@@ -3308,6 +3315,8 @@ WebGLContext::CompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset,
     WebGLTexture *tex = activeBoundTextureForTarget(target);
     MOZ_ASSERT(tex);
     WebGLTexture::ImageInfo& levelInfo = tex->ImageInfoAt(target, level);
+
+    view.ComputeLengthAndData();
 
     uint32_t byteLength = view.Length();
     if (!ValidateCompTexImageDataSize(target, format, width, height, byteLength, func))
@@ -3700,10 +3709,24 @@ WebGLContext::TexImage2D(GLenum target, GLint level,
     if (IsContextLost())
         return;
 
+    void* data;
+    uint32_t length;
+    int jsArrayType;
+    if (pixels.IsNull()) {
+        data = nullptr;
+        length = 0;
+        jsArrayType = -1;
+    } else {
+        const ArrayBufferView& view = pixels.Value();
+        view.ComputeLengthAndData();
+
+        data = view.Data();
+        length = view.Length();
+        jsArrayType = int(JS_GetArrayBufferViewType(view.Obj()));
+    }
+
     return TexImage2D_base(target, level, internalformat, width, height, 0, border, format, type,
-                           pixels.IsNull() ? 0 : pixels.Value().Data(),
-                           pixels.IsNull() ? 0 : pixels.Value().Length(),
-                           pixels.IsNull() ? -1 : (int)JS_GetArrayBufferViewType(pixels.Value().Obj()),
+                           data, length, jsArrayType,
                            WebGLTexelFormat::Auto, false);
 }
 
@@ -3721,6 +3744,8 @@ WebGLContext::TexImage2D(GLenum target, GLint level,
     }
 
     Uint8ClampedArray arr(pixels->GetDataObject());
+    arr.ComputeLengthAndData();
+
     return TexImage2D_base(target, level, internalformat, pixels->Width(),
                            pixels->Height(), 4*pixels->Width(), 0,
                            format, type, arr.Data(), arr.Length(), -1,
@@ -3834,10 +3859,13 @@ WebGLContext::TexSubImage2D(GLenum target, GLint level,
     if (pixels.IsNull())
         return ErrorInvalidValue("texSubImage2D: pixels must not be null!");
 
+    const ArrayBufferView& view = pixels.Value();
+    view.ComputeLengthAndData();
+
     return TexSubImage2D_base(target, level, xoffset, yoffset,
                               width, height, 0, format, type,
-                              pixels.Value().Data(), pixels.Value().Length(),
-                              JS_GetArrayBufferViewType(pixels.Value().Obj()),
+                              view.Data(), view.Length(),
+                              JS_GetArrayBufferViewType(view.Obj()),
                               WebGLTexelFormat::Auto, false);
 }
 
@@ -3854,6 +3882,8 @@ WebGLContext::TexSubImage2D(GLenum target, GLint level,
         return ErrorInvalidValue("texSubImage2D: pixels must not be null!");
 
     Uint8ClampedArray arr(pixels->GetDataObject());
+    arr.ComputeLengthAndData();
+
     return TexSubImage2D_base(target, level, xoffset, yoffset,
                               pixels->Width(), pixels->Height(),
                               4*pixels->Width(), format, type,

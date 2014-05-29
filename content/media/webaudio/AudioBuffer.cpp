@@ -130,6 +130,8 @@ void
 AudioBuffer::CopyFromChannel(const Float32Array& aDestination, uint32_t aChannelNumber,
                              uint32_t aStartInChannel, ErrorResult& aRv)
 {
+  aDestination.ComputeLengthAndData();
+
   uint32_t length = aDestination.Length();
   CheckedInt<uint32_t> end = aStartInChannel;
   end += length;
@@ -156,6 +158,8 @@ AudioBuffer::CopyToChannel(JSContext* aJSContext, const Float32Array& aSource,
                            uint32_t aChannelNumber, uint32_t aStartInChannel,
                            ErrorResult& aRv)
 {
+  aSource.ComputeLengthAndData();
+
   uint32_t length = aSource.Length();
   CheckedInt<uint32_t> end = aStartInChannel;
   end += length;
