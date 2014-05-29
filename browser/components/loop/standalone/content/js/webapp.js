@@ -113,7 +113,7 @@ loop.webapp = (function($, OT, webl10n) {
   var WebappRouter = loop.shared.router.BaseConversationRouter.extend({
     routes: {
       "":                    "home",
-      "call/ongoing/:token": "conversation",
+      "call/ongoing/:token": "loadConversation",
       "call/:token":         "initiate"
     },
 
@@ -126,14 +126,14 @@ loop.webapp = (function($, OT, webl10n) {
      * @override {loop.shared.router.BaseConversationRouter.startCall}
      */
     startCall: function() {
-      var route;
-      if (this._conversation.get("loopToken")) {
-        route = "call/ongoing/" + this._conversation.get("loopToken");
-      } else {
-        route = "home";
+      if (!this._conversation.get("loopToken")) {
         this._notifier.error(__("missing_conversation_info"));
+        this.navigate("home", {trigger: true});
+      } else {
+        this.navigate("call/ongoing/" + this._conversation.get("loopToken"), {
+          trigger: true
+        });
       }
-      this.navigate(route, {trigger: true});
     },
 
     /**
@@ -156,11 +156,16 @@ loop.webapp = (function($, OT, webl10n) {
 
     /**
      * Loads conversation launcher view, setting the received conversation token
-     * to the current conversation model.
+     * to the current conversation model. If a session is currently established,
+     * terminates it first.
      *
      * @param  {String} loopToken Loop conversation token.
      */
     initiate: function(loopToken) {
+      // Check if a session is ongoing; if so, terminate it
+      if (this._conversation.get("ongoing")) {
+        this._conversation.endSession();
+      }
       this._conversation.set("loopToken", loopToken);
       this.loadView(new ConversationFormView({
         model: this._conversation,
@@ -172,9 +177,9 @@ loop.webapp = (function($, OT, webl10n) {
      * Loads conversation establishment view.
      *
      */
-    conversation: function(loopToken) {
+    loadConversation: function(loopToken) {
       if (!this._conversation.isSessionReady()) {
-        // User has loaded this url directly, need to actually setup the call
+        // User has loaded this url directly, actually setup the call.
         return this.navigate("call/" + loopToken, {trigger: true});
       }
       this.loadView(new sharedViews.ConversationView({
@@ -189,7 +194,7 @@ loop.webapp = (function($, OT, webl10n) {
    */
   function init() {
     router = new WebappRouter({
-      conversation: new sharedModels.ConversationModel(),
+      conversation: new sharedModels.ConversationModel({}, {sdk: OT}),
       notifier: new sharedViews.NotificationListView({el: "#messages"})
     });
     Backbone.history.start();

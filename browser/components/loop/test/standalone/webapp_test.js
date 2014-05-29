@@ -31,7 +31,7 @@ describe("loop.webapp", function() {
     var router, conversation;
 
     beforeEach(function() {
-      conversation = new sharedModels.ConversationModel();
+      conversation = new sharedModels.ConversationModel({}, {sdk: {}});
       router = new loop.webapp.WebappRouter({
         conversation: conversation,
         notifier: notifier
@@ -90,14 +90,13 @@ describe("loop.webapp", function() {
           router.home();
 
           sinon.assert.calledOnce(router.loadView);
-          sinon.assert.calledWith(router.loadView, sinon.match(function(obj) {
-            return obj instanceof loop.webapp.HomeView;
-          }));
+          sinon.assert.calledWith(router.loadView,
+            sinon.match.instanceOf(loop.webapp.HomeView));
         });
       });
 
       describe("#initiate", function() {
-        it("should set the token to the conversation model", function() {
+        it("should set the token on the conversation model", function() {
           router.initiate("fakeToken");
 
           expect(conversation.get("loopToken")).eql("fakeToken");
@@ -107,28 +106,36 @@ describe("loop.webapp", function() {
           router.initiate("fakeToken");
 
           sinon.assert.calledOnce(router.loadView);
-          sinon.assert.calledWith(router.loadView, sinon.match(function(obj) {
-            return obj instanceof loop.webapp.ConversationFormView;
-          }));
+          sinon.assert.calledWith(router.loadView,
+            sinon.match.instanceOf(loop.webapp.ConversationFormView));
+        });
+
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=991118
+        it("should terminate any ongoing call session", function() {
+          sinon.stub(conversation, "endSession");
+          conversation.set("ongoing", true);
+
+          router.initiate("fakeToken");
+
+          sinon.assert.calledOnce(conversation.endSession);
         });
       });
 
-      describe("#conversation", function() {
+      describe("#loadConversation", function() {
         it("should load the ConversationView if session is set", function() {
           sandbox.stub(sharedViews.ConversationView.prototype, "initialize");
           conversation.set("sessionId", "fakeSessionId");
 
-          router.conversation();
+          router.loadConversation();
 
           sinon.assert.calledOnce(router.loadView);
-          sinon.assert.calledWith(router.loadView, sinon.match(function(obj) {
-            return obj instanceof sharedViews.ConversationView;
-          }));
+          sinon.assert.calledWith(router.loadView,
+            sinon.match.instanceOf(sharedViews.ConversationView));
         });
 
         it("should navigate to #call/{token} if session isn't ready",
           function() {
-            router.conversation("fakeToken");
+            router.loadConversation("fakeToken");
 
             sinon.assert.calledOnce(router.navigate);
             sinon.assert.calledWithMatch(router.navigate, "call/fakeToken");
@@ -199,7 +206,7 @@ describe("loop.webapp", function() {
       var conversation, initiate, view, fakeSubmitEvent;
 
       beforeEach(function() {
-        conversation = new sharedModels.ConversationModel();
+        conversation = new sharedModels.ConversationModel({}, {sdk: {}});
         view = new loop.webapp.ConversationFormView({
           model: conversation,
           notifier: notifier
@@ -237,7 +244,7 @@ describe("loop.webapp", function() {
       beforeEach(function() {
         conversation = new sharedModels.ConversationModel({
           loopToken: "fake"
-        });
+        }, {sdk: {}});
         view = new loop.webapp.ConversationFormView({
           model: conversation,
           notifier: notifier
