@@ -133,6 +133,10 @@ Wrapper::Wrapper(unsigned flags, bool hasPrototype) : DirectProxyHandler(&sWrapp
     setHasPrototype(hasPrototype);
 }
 
+Wrapper::~Wrapper()
+{
+}
+
 Wrapper Wrapper::singleton((unsigned)0);
 Wrapper Wrapper::singletonWithPrototype((unsigned)0, true);
 JSObject *Wrapper::defaultProto = TaggedProto::LazyProto;
@@ -170,6 +174,10 @@ ErrorCopier::~ErrorCopier()
 
 CrossCompartmentWrapper::CrossCompartmentWrapper(unsigned flags, bool hasPrototype)
   : Wrapper(CROSS_COMPARTMENT | flags, hasPrototype)
+{
+}
+
+CrossCompartmentWrapper::~CrossCompartmentWrapper()
 {
 }
 

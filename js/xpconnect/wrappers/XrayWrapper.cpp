@@ -1619,6 +1619,11 @@ XrayWrapper<Base, Traits>::XrayWrapper(unsigned flags)
     Base::setHasPrototype(Traits::HasPrototype);
 }
 
+template <typename Base, typename Traits>
+XrayWrapper<Base, Traits>::~XrayWrapper()
+{
+}
+
 namespace XrayUtils {
 
 JSObject *
