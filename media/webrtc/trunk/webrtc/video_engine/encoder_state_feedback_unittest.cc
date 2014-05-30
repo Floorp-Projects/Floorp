@@ -30,7 +30,7 @@ class TestProcessThread : public ProcessThread {
   ~TestProcessThread() {}
   virtual int32_t Start() { return 0; }
   virtual int32_t Stop() { return 0; }
-  virtual int32_t RegisterModule(const Module* module) { return 0; }
+  virtual int32_t RegisterModule(Module* module) { return 0; }
   virtual int32_t DeRegisterModule(const Module* module) { return 0; }
 };
 

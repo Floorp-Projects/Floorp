@@ -29,15 +29,13 @@ namespace webrtc {
 #define VPM_UNINITIALIZED       -5
 #define VPM_UNIMPLEMENTED       -6
 
-enum VideoFrameResampling
-{
-  // TODO: Do we still need crop/pad?
-    kNoRescaling,         // disables rescaling
-    kFastRescaling,       // point
-    kBiLinear,            // bi-linear interpolation
-    kBox,                 // Box inteprolation
+enum VideoFrameResampling {
+  kNoRescaling,         // Disables rescaling.
+  kFastRescaling,       // Point filter.
+  kBiLinear,            // Bi-linear interpolation.
+  kBox,                 // Box inteprolation.
 };
 
-}  // namespace
+}  // namespace webrtc
 
-#endif
+#endif  // WEBRTC_MODULES_INTERFACE_VIDEO_PROCESSING_DEFINES_H

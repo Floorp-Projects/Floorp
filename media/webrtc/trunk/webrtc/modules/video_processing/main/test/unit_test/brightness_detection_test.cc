@@ -19,24 +19,24 @@ TEST_F(VideoProcessingModuleTest, BrightnessDetection)
     uint32_t frameNum = 0;
     int32_t brightnessWarning = 0;
     uint32_t warningCount = 0;
-    scoped_array<uint8_t> video_buffer(new uint8_t[_frame_length]);
-    while (fread(video_buffer.get(), 1, _frame_length, _sourceFile) ==
-           _frame_length)
+    scoped_array<uint8_t> video_buffer(new uint8_t[frame_length_]);
+    while (fread(video_buffer.get(), 1, frame_length_, source_file_) ==
+           frame_length_)
     {
       EXPECT_EQ(0, ConvertToI420(kI420, video_buffer.get(), 0, 0,
-                                 _width, _height,
-                                 0, kRotateNone, &_videoFrame));
+                                 width_, height_,
+                                 0, kRotateNone, &video_frame_));
         frameNum++;
         VideoProcessingModule::FrameStats stats;
-        ASSERT_EQ(0, _vpm->GetFrameStats(&stats, _videoFrame));
-        ASSERT_GE(brightnessWarning = _vpm->BrightnessDetection(_videoFrame,
+        ASSERT_EQ(0, vpm_->GetFrameStats(&stats, video_frame_));
+        ASSERT_GE(brightnessWarning = vpm_->BrightnessDetection(video_frame_,
                                                                 stats), 0);
         if (brightnessWarning != VideoProcessingModule::kNoWarning)
         {
             warningCount++;
         }
     }
-    ASSERT_NE(0, feof(_sourceFile)) << "Error reading source file";
+    ASSERT_NE(0, feof(source_file_)) << "Error reading source file";
 
     // Expect few warnings
     float warningProportion = static_cast<float>(warningCount) / frameNum * 100;
@@ -44,21 +44,21 @@ TEST_F(VideoProcessingModuleTest, BrightnessDetection)
     printf("Stock foreman: %.1f %%\n", warningProportion);
     EXPECT_LT(warningProportion, 10);
 
-    rewind(_sourceFile);
+    rewind(source_file_);
     frameNum = 0;
     warningCount = 0;
-    while (fread(video_buffer.get(), 1, _frame_length, _sourceFile) ==
-        _frame_length &&
+    while (fread(video_buffer.get(), 1, frame_length_, source_file_) ==
+        frame_length_ &&
         frameNum < 300)
     {
         EXPECT_EQ(0, ConvertToI420(kI420, video_buffer.get(), 0, 0,
-                                   _width, _height,
-                                   0, kRotateNone, &_videoFrame));
+                                   width_, height_,
+                                   0, kRotateNone, &video_frame_));
         frameNum++;
 
-        uint8_t* frame = _videoFrame.buffer(kYPlane);
+        uint8_t* frame = video_frame_.buffer(kYPlane);
         uint32_t yTmp = 0;
-        for (int yIdx = 0; yIdx < _width * _height; yIdx++)
+        for (int yIdx = 0; yIdx < width_ * height_; yIdx++)
         {
             yTmp = frame[yIdx] << 1;
             if (yTmp > 255)
@@ -69,8 +69,8 @@ TEST_F(VideoProcessingModuleTest, BrightnessDetection)
         }
 
         VideoProcessingModule::FrameStats stats;
-        ASSERT_EQ(0, _vpm->GetFrameStats(&stats, _videoFrame));
-        ASSERT_GE(brightnessWarning = _vpm->BrightnessDetection(_videoFrame,
+        ASSERT_EQ(0, vpm_->GetFrameStats(&stats, video_frame_));
+        ASSERT_GE(brightnessWarning = vpm_->BrightnessDetection(video_frame_,
                                                                 stats), 0);
         EXPECT_NE(VideoProcessingModule::kDarkWarning, brightnessWarning);
         if (brightnessWarning == VideoProcessingModule::kBrightWarning)
@@ -78,35 +78,35 @@ TEST_F(VideoProcessingModuleTest, BrightnessDetection)
             warningCount++;
         }
     }
-    ASSERT_NE(0, feof(_sourceFile)) << "Error reading source file";
+    ASSERT_NE(0, feof(source_file_)) << "Error reading source file";
 
     // Expect many brightness warnings
     warningProportion = static_cast<float>(warningCount) / frameNum * 100;
     printf("Bright foreman: %.1f %%\n", warningProportion);
     EXPECT_GT(warningProportion, 95);
 
-    rewind(_sourceFile);
+    rewind(source_file_);
     frameNum = 0;
     warningCount = 0;
-    while (fread(video_buffer.get(), 1, _frame_length, _sourceFile) ==
-        _frame_length && frameNum < 300)
+    while (fread(video_buffer.get(), 1, frame_length_, source_file_) ==
+        frame_length_ && frameNum < 300)
     {
         EXPECT_EQ(0, ConvertToI420(kI420, video_buffer.get(), 0, 0,
-                                   _width, _height,
-                                   0, kRotateNone, &_videoFrame));
+                                   width_, height_,
+                                   0, kRotateNone, &video_frame_));
         frameNum++;
 
-        uint8_t* y_plane = _videoFrame.buffer(kYPlane);
+        uint8_t* y_plane = video_frame_.buffer(kYPlane);
         int32_t yTmp = 0;
-        for (int yIdx = 0; yIdx < _width * _height; yIdx++)
+        for (int yIdx = 0; yIdx < width_ * height_; yIdx++)
         {
             yTmp = y_plane[yIdx] >> 1;
             y_plane[yIdx] = static_cast<uint8_t>(yTmp);
         }
 
         VideoProcessingModule::FrameStats stats;
-        ASSERT_EQ(0, _vpm->GetFrameStats(&stats, _videoFrame));
-        ASSERT_GE(brightnessWarning = _vpm->BrightnessDetection(_videoFrame,
+        ASSERT_EQ(0, vpm_->GetFrameStats(&stats, video_frame_));
+        ASSERT_GE(brightnessWarning = vpm_->BrightnessDetection(video_frame_,
                                                                 stats), 0);
         EXPECT_NE(VideoProcessingModule::kBrightWarning, brightnessWarning);
         if (brightnessWarning == VideoProcessingModule::kDarkWarning)
@@ -114,7 +114,7 @@ TEST_F(VideoProcessingModuleTest, BrightnessDetection)
             warningCount++;
         }
     }
-    ASSERT_NE(0, feof(_sourceFile)) << "Error reading source file";
+    ASSERT_NE(0, feof(source_file_)) << "Error reading source file";
 
     // Expect many darkness warnings
     warningProportion = static_cast<float>(warningCount) / frameNum * 100;

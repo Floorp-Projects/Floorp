@@ -92,8 +92,13 @@ class ChannelManager {
     DISALLOW_COPY_AND_ASSIGN(Iterator);
   };
 
-  // CreateChannel will always return a valid ChannelOwner instance.
+  // CreateChannel will always return a valid ChannelOwner instance. The channel
+  // is created either based on internal configuration, i.e. |config_|, by
+  // calling CreateChannel(), or using and external configuration
+  // |external_config| if the overloaded method
+  // CreateChannel(const Config& external_config) is called.
   ChannelOwner CreateChannel();
+  ChannelOwner CreateChannel(const Config& external_config);
 
   // ChannelOwner.channel() will be NULL if channel_id is invalid or no longer
   // exists. This should be checked with ChannelOwner::IsValid().
@@ -106,6 +111,9 @@ class ChannelManager {
   size_t NumOfChannels() const;
 
  private:
+  // Create a channel given a configuration, |config|.
+  ChannelOwner CreateChannelInternal(const Config& config);
+
   uint32_t instance_id_;
 
   Atomic32 last_channel_id_;

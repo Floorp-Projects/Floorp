@@ -31,19 +31,19 @@ int32_t Brighten(I420VideoFrame* frame, int delta) {
     return VPM_PARAMETER_ERROR;
   }
 
-  int numPixels = frame->width() * frame->height();
+  int num_pixels = frame->width() * frame->height();
 
-  int lookUp[256];
+  int look_up[256];
   for (int i = 0; i < 256; i++) {
     int val = i + delta;
-    lookUp[i] = ((((val < 0) ? 0 : val) > 255) ? 255 : val);
+    look_up[i] = ((((val < 0) ? 0 : val) > 255) ? 255 : val);
   }
 
-  uint8_t* tempPtr = frame->buffer(kYPlane);
+  uint8_t* temp_ptr = frame->buffer(kYPlane);
 
-  for (int i = 0; i < numPixels; i++) {
-    *tempPtr = static_cast<uint8_t>(lookUp[*tempPtr]);
-    tempPtr++;
+  for (int i = 0; i < num_pixels; i++) {
+    *temp_ptr = static_cast<uint8_t>(look_up[*temp_ptr]);
+    temp_ptr++;
   }
   return VPM_OK;
 }

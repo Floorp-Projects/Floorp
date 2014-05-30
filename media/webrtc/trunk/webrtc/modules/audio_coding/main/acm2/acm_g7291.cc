@@ -21,6 +21,8 @@
 
 namespace webrtc {
 
+namespace acm2 {
+
 #ifndef WEBRTC_CODEC_G729_1
 
 ACMG729_1::ACMG729_1(int16_t /* codec_id */)
@@ -236,5 +238,7 @@ int16_t ACMG729_1::SetBitRateSafe(const int32_t rate) {
 }
 
 #endif
+
+}  // namespace acm2
 
 }  // namespace webrtc

@@ -19,6 +19,8 @@ struct GSMFR_decinst_t_;
 
 namespace webrtc {
 
+namespace acm2 {
+
 class ACMGSMFR : public ACMGenericCodec {
  public:
   explicit ACMGSMFR(int16_t codec_id);
@@ -44,6 +46,8 @@ class ACMGSMFR : public ACMGenericCodec {
 
   GSMFR_encinst_t_* encoder_inst_ptr_;
 };
+
+}  // namespace acm2
 
 }  // namespace webrtc
 

@@ -20,9 +20,8 @@ namespace webrtc {
 
 Atomic32::Atomic32(int32_t initial_value)
     : value_(initial_value) {
-  // Make sure that the counter variable we're using is of the same size
-  // as what the API expects.
-  COMPILE_ASSERT(sizeof(value_) == sizeof(LONG));
+  COMPILE_ASSERT(sizeof(value_) == sizeof(LONG),
+                 counter_variable_is_the_expected_size);
   assert(Is32bitAligned());
 }
 

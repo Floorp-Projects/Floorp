@@ -21,41 +21,59 @@
 namespace webrtc {
 namespace test {
 
+// Setup a log file to write the output to instead of stdout because we don't
+// want those numbers to be picked up as perf numbers.
+class VideoQualityAnalysisTest : public ::testing::Test {
+ protected:
+  static void SetUpTestCase() {
+    std::string log_filename = webrtc::test::OutputPath() +
+        "VideoQualityAnalysisTest.log";
+    logfile_ = fopen(log_filename.c_str(), "w");
+    ASSERT_TRUE(logfile_ != NULL);
+  }
+  static void TearDownTestCase() {
+    ASSERT_EQ(0, fclose(logfile_));
+  }
+  static FILE* logfile_;
+};
+FILE* VideoQualityAnalysisTest::logfile_ = NULL;
 
-TEST(VideoQualityAnalysisTest, PrintAnalysisResultsEmpty) {
+TEST_F(VideoQualityAnalysisTest, PrintAnalysisResultsEmpty) {
   ResultsContainer result;
-  PrintAnalysisResults("Empty", &result);
+  PrintAnalysisResults(logfile_, "Empty", &result);
 }
 
-TEST(VideoQualityAnalysisTest, PrintAnalysisResultsOneFrame) {
+TEST_F(VideoQualityAnalysisTest, PrintAnalysisResultsOneFrame) {
   ResultsContainer result;
   result.frames.push_back(AnalysisResult(0, 35.0, 0.9));
-  PrintAnalysisResults("OneFrame", &result);
+  PrintAnalysisResults(logfile_, "OneFrame", &result);
 }
 
-TEST(VideoQualityAnalysisTest, PrintAnalysisResultsThreeFrames) {
+TEST_F(VideoQualityAnalysisTest, PrintAnalysisResultsThreeFrames) {
   ResultsContainer result;
   result.frames.push_back(AnalysisResult(0, 35.0, 0.9));
   result.frames.push_back(AnalysisResult(1, 34.0, 0.8));
   result.frames.push_back(AnalysisResult(2, 33.0, 0.7));
-  PrintAnalysisResults("ThreeFrames", &result);
+  PrintAnalysisResults(logfile_, "ThreeFrames", &result);
 }
 
-TEST(VideoQualityAnalysisTest, PrintMaxRepeatedAndSkippedFramesInvalidFile) {
+TEST_F(VideoQualityAnalysisTest, PrintMaxRepeatedAndSkippedFramesInvalidFile) {
   std::string stats_filename = OutputPath() + "non-existing-stats-file.txt";
   remove(stats_filename.c_str());
-  PrintMaxRepeatedAndSkippedFrames("NonExistingStatsFile", stats_filename);
+  PrintMaxRepeatedAndSkippedFrames(logfile_, "NonExistingStatsFile",
+                                   stats_filename);
 }
 
-TEST(VideoQualityAnalysisTest, PrintMaxRepeatedAndSkippedFramesEmptyStatsFile) {
+TEST_F(VideoQualityAnalysisTest,
+       PrintMaxRepeatedAndSkippedFramesEmptyStatsFile) {
   std::string stats_filename = OutputPath() + "empty-stats.txt";
   std::ofstream stats_file;
   stats_file.open(stats_filename.c_str());
   stats_file.close();
-  PrintMaxRepeatedAndSkippedFrames("EmptyStatsFile", stats_filename);
+  PrintMaxRepeatedAndSkippedFrames(logfile_, "EmptyStatsFile", stats_filename);
 }
 
-TEST(VideoQualityAnalysisTest, PrintMaxRepeatedAndSkippedFramesNormalFile) {
+TEST_F(VideoQualityAnalysisTest, PrintMaxRepeatedAndSkippedFramesNormalFile) {
   std::string stats_filename = OutputPath() + "stats.txt";
   std::ofstream stats_file;
   stats_file.open(stats_filename.c_str());
@@ -65,7 +83,7 @@ TEST(VideoQualityAnalysisTest, PrintMaxRepeatedAndSkippedFramesNormalFile) {
   stats_file << "frame_0004 0106\n";
   stats_file.close();
 
-  PrintMaxRepeatedAndSkippedFrames("NormalStatsFile", stats_filename);
+  PrintMaxRepeatedAndSkippedFrames(logfile_, "NormalStatsFile", stats_filename);
 }
 
 

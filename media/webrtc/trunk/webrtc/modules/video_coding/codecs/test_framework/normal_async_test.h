@@ -118,7 +118,6 @@ protected:
     int                     _encFrameCnt;
     int                     _decFrameCnt;
     bool                    _requestKeyFrame;
-    unsigned int            _testNo;
     unsigned int            _lengthEncFrame;
     FrameQueueTuple*        _frameToDecode;
     bool                    _appendNext;

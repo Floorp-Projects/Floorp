@@ -2754,7 +2754,7 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
   // rules we might stop matching; if the after change notification, the
   // ones we might have started matching.
   if (cascade) {
-    if (aData->mAttribute == aData->mElement->GetIDAttributeName()) {
+    if (aData->mAttribute == nsGkAtoms::id) {
       nsIAtom* id = aData->mElement->GetID();
       if (id) {
         AtomSelectorEntry *entry =
@@ -2769,7 +2769,7 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
       EnumerateSelectors(cascade->mPossiblyNegatedIDSelectors, &data);
     }
     
-    if (aData->mAttribute == aData->mElement->GetClassAttributeName()) {
+    if (aData->mAttribute == nsGkAtoms::_class) {
       const nsAttrValue* elementClasses = aData->mElement->GetClasses();
       if (elementClasses) {
         int32_t atomCount = elementClasses->GetAtomCount();

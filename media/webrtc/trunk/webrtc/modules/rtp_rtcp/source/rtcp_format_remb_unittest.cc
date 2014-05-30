@@ -58,6 +58,8 @@ class TestTransport : public Transport {
 
 class RtcpFormatRembTest : public ::testing::Test {
  protected:
+  static const uint32_t kRemoteBitrateEstimatorMinBitrateBps = 30000;
+
   RtcpFormatRembTest()
       : over_use_detector_options_(),
         system_clock_(Clock::GetRealTimeClock()),
@@ -66,7 +68,8 @@ class RtcpFormatRembTest : public ::testing::Test {
         remote_bitrate_estimator_(
             RemoteBitrateEstimatorFactory().Create(
                 &remote_bitrate_observer_,
-                system_clock_)) {}
+                system_clock_,
+                kRemoteBitrateEstimatorMinBitrateBps)) {}
   virtual void SetUp();
   virtual void TearDown();
 

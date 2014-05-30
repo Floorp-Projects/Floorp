@@ -36,6 +36,7 @@ DEFINE_string(reverse_file, "reverse.pcm",
 DEFINE_string(delay_file, "delay.int32", "The name of the delay file.");
 DEFINE_string(drift_file, "drift.int32", "The name of the drift file.");
 DEFINE_string(level_file, "level.int32", "The name of the level file.");
+DEFINE_string(keypress_file, "keypress.bool", "The name of the keypress file.");
 DEFINE_string(settings_file, "settings.txt", "The name of the settings file.");
 DEFINE_bool(full, false,
             "Unpack the full set of files (normally not needed).");
@@ -105,6 +106,7 @@ int main(int argc, char* argv[]) {
   FILE* delay_file = NULL;
   FILE* drift_file = NULL;
   FILE* level_file = NULL;
+  FILE* keypress_file = NULL;
   if (FLAGS_full) {
     delay_file = fopen(FLAGS_delay_file.c_str(), "wb");
     if (delay_file == NULL) {
@@ -119,6 +121,11 @@ int main(int argc, char* argv[]) {
     level_file = fopen(FLAGS_level_file.c_str(), "wb");
     if (level_file == NULL) {
       printf("Unable to open %s\n", FLAGS_level_file.c_str());
+      return 1;
+    }
+    keypress_file = fopen(FLAGS_keypress_file.c_str(), "wb");
+    if (keypress_file == NULL) {
+      printf("Unable to open %s\n", FLAGS_keypress_file.c_str());
       return 1;
     }
   }
@@ -185,6 +192,14 @@ int main(int argc, char* argv[]) {
           int32_t level = msg.level();
           if (fwrite(&level, sizeof(int32_t), 1, level_file) != 1) {
             printf("Error when writing to %s\n", FLAGS_level_file.c_str());
+            return 1;
+          }
+        }
+
+        if (msg.has_keypress()) {
+          bool keypress = msg.keypress();
+          if (fwrite(&keypress, sizeof(bool), 1, keypress_file) != 1) {
+            printf("Error when writing to %s\n", FLAGS_keypress_file.c_str());
             return 1;
           }
         }

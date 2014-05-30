@@ -255,14 +255,6 @@ public:
 #undef ERROR_EVENT
 #undef FORWARDED_EVENT
 #undef EVENT
-  void GetClassName(mozilla::dom::DOMString& aClassName)
-  {
-    GetAttr(kNameSpaceID_None, nsGkAtoms::_class, aClassName);
-  }
-  void SetClassName(const nsAString& aClassName)
-  {
-    SetAttr(kNameSpaceID_None, nsGkAtoms::_class, aClassName, true);
-  }
   mozilla::dom::Element* GetOffsetParent()
   {
     mozilla::CSSIntRect rcFrame;
@@ -321,14 +313,6 @@ public:
 
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
-  NS_IMETHOD GetId(nsAString& aId) MOZ_FINAL {
-    mozilla::dom::Element::GetId(aId);
-    return NS_OK;
-  }
-  NS_IMETHOD SetId(const nsAString& aId) MOZ_FINAL {
-    mozilla::dom::Element::SetId(aId);
-    return NS_OK;
-  }
   NS_IMETHOD GetTitle(nsAString& aTitle) MOZ_FINAL {
     nsString title;
     GetTitle(title);
