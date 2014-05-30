@@ -1761,7 +1761,6 @@ function WifiWorker() {
 
   this.wantScanResults = [];
 
-  this._allowWpaEap = false;
   this._needToEnableNetworks = false;
   this._highestPriority = -1;
 
@@ -1965,12 +1964,6 @@ function WifiWorker() {
       self._enableAllNetworks();
       WifiManager.saveConfig(function() {})
     });
-
-    try {
-      self._allowWpaEap = (WifiManager.getCapabilities().eapMethod.indexOf("SIM") != -1);
-    } catch (e) {
-      self._allowWpaEap = false;
-    }
 
     // Notify everybody, even if they didn't ask us to come up.
     WifiManager.getMacAddress(function (mac) {
@@ -2282,18 +2275,6 @@ function WifiWorker() {
                 ("wep_key0" in known && known.wep_key0)) {
               network.password = "*";
             }
-          } else if (!self._allowWpaEap &&
-                     (eapIndex = network.security.indexOf("WPA-EAP")) >= 0) {
-            // Don't offer to connect to WPA-EAP networks unless one has been
-            // configured through other means (e.g. it was added directly to
-            // wpa_supplicant.conf). Here, we have an unknown WPA-EAP network,
-            // so we ignore it entirely if it only supports WPA-EAP, otherwise
-            // we take EAP out of the list and offer the rest of the
-            // security.
-            if (network.security.length === 1)
-              continue;
-
-            network.security.splice(eapIndex, 1);
           }
 
           self.networksArray.push(network);
