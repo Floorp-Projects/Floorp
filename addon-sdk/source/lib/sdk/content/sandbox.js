@@ -132,11 +132,6 @@ const WorkerSandbox = Class({
         principals = EXPANDED_PRINCIPALS.concat(window);
     }
 
-    // Instantiate trusted code in another Sandbox in order to prevent content
-    // script from messing with standard classes used by proxy and API code.
-    let apiSandbox = sandbox(principals, { wantXrays: true, sameZoneAs: window });
-    apiSandbox.console = console;
-
     // Create the sandbox and bind it to window in order for content scripts to
     // have access to all standard globals (window, document, ...)
     let content = sandbox(principals, {
@@ -171,9 +166,7 @@ const WorkerSandbox = Class({
     });
 
     // Load trusted code that will inject content script API.
-    // We need to expose JS objects defined in same principal in order to
-    // avoid having any kind of wrapper.
-    load(apiSandbox, CONTENT_WORKER_URL);
+    let ContentWorker = load(content, CONTENT_WORKER_URL);
 
     // prepare a clean `self.options`
     let options = 'contentScriptOptions' in worker ?
@@ -189,9 +182,8 @@ const WorkerSandbox = Class({
     // content priviledges
     // https://developer.mozilla.org/en/XPConnect_wrappers#Other_security_wrappers
     let onEvent = onContentEvent.bind(null, this);
-    // `ContentWorker` is defined in CONTENT_WORKER_URL file
     let chromeAPI = createChromeAPI();
-    let result = apiSandbox.ContentWorker.inject(content, chromeAPI, onEvent, options);
+    let result = Cu.waiveXrays(ContentWorker).inject(content, chromeAPI, onEvent, options);
 
     // Merge `emitToContent` and `hasListenerFor` into our private
     // model of the WorkerSandbox so we can communicate with content
