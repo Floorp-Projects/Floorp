@@ -88,7 +88,7 @@
                     tooltiptext="&paneGeneral.title;"
                     align="center">
         <image class="category-icon"/>
-        <label class="category-name" flex="1" value="&paneGeneral.title;"/>
+        <label class="category-name" flex="1">&paneGeneral.title;</label>
       </richlistitem>
 
       <richlistitem id="category-content"
@@ -98,7 +98,7 @@
                     tooltiptext="&paneContent.title;"
                     align="center">
         <image class="category-icon"/>
-        <label class="category-name" flex="1" value="&paneContent.title;"/>
+        <label class="category-name" flex="1">&paneContent.title;</label>
       </richlistitem>
 
       <richlistitem id="category-application"
@@ -108,7 +108,7 @@
                     tooltiptext="&paneApplications.title;"
                     align="center">
         <image class="category-icon"/>
-        <label class="category-name" flex="1" value="&paneApplications.title;"/>
+        <label class="category-name" flex="1">&paneApplications.title;</label>
       </richlistitem>
 
       <richlistitem id="category-privacy"
@@ -118,7 +118,7 @@
                     tooltiptext="&panePrivacy.title;"
                     align="center">
         <image class="category-icon"/>
-        <label class="category-name" flex="1" value="&panePrivacy.title;"/>
+        <label class="category-name" flex="1">&panePrivacy.title;</label>
       </richlistitem>
 
       <richlistitem id="category-security"
@@ -128,7 +128,7 @@
                     tooltiptext="&paneSecurity.title;"
                     align="center">
         <image class="category-icon"/>
-        <label class="category-name" flex="1" value="&paneSecurity.title;"/>
+        <label class="category-name" flex="1">&paneSecurity.title;</label>
       </richlistitem>
 
 #ifdef MOZ_SERVICES_SYNC
@@ -139,7 +139,7 @@
                     tooltiptext="&paneSync.title;"
                     align="center">
         <image class="category-icon"/>
-        <label class="category-name" flex="1" value="&paneSync.title;"/>
+        <label class="category-name" flex="1">&paneSync.title;</label>
       </richlistitem>
 #endif
 
@@ -150,7 +150,7 @@
                     tooltiptext="&paneAdvanced.title;"
                     align="center">
         <image class="category-icon"/>
-        <label class="category-name" flex="1" value="&paneAdvanced.title;"/>
+        <label class="category-name" flex="1">&paneAdvanced.title;</label>
       </richlistitem>
     </richlistbox>
 
