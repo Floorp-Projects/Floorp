@@ -61,7 +61,7 @@ class Expand {
 
   // The main method to produce concealment data. The data is appended to the
   // end of |output|.
-  int Process(AudioMultiVector<int16_t>* output);
+  int Process(AudioMultiVector* output);
 
   // Prepare the object to do extra expansion during normal operation following
   // a period of expands.
@@ -116,8 +116,8 @@ class Expand {
     int16_t ar_gain_scale;
     int16_t voice_mix_factor; /* Q14 */
     int16_t current_voice_mix_factor; /* Q14 */
-    AudioVector<int16_t> expand_vector0;
-    AudioVector<int16_t> expand_vector1;
+    AudioVector expand_vector0;
+    AudioVector expand_vector1;
     bool onset;
     int16_t mute_slope; /* Q20 */
   };
@@ -139,9 +139,9 @@ class Expand {
   SyncBuffer* sync_buffer_;
   RandomVector* random_vector_;
   bool first_expand_;
-  int fs_hz_;
-  size_t num_channels_;
-  size_t overlap_length_;
+  const int fs_hz_;
+  const size_t num_channels_;
+  const size_t overlap_length_;
   int consecutive_expands_;
   int16_t max_lag_;
   size_t expand_lags_[kNumLags];
@@ -151,6 +151,17 @@ class Expand {
   scoped_array<ChannelParameters> channel_parameters_;
 
   DISALLOW_COPY_AND_ASSIGN(Expand);
+};
+
+struct ExpandFactory {
+  ExpandFactory() {}
+  virtual ~ExpandFactory() {}
+
+  virtual Expand* Create(BackgroundNoise* background_noise,
+                         SyncBuffer* sync_buffer,
+                         RandomVector* random_vector,
+                         int fs,
+                         size_t num_channels) const;
 };
 
 }  // namespace webrtc

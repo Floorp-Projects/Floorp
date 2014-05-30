@@ -133,7 +133,12 @@ void VCMDecodingState::UpdateSyncState(const VCMFrameBuffer* frame) {
     // Sync will be broken if continuity is true for layers but not for the
     // other methods (PictureId and SeqNum).
     if (UsingPictureId(frame)) {
-      full_sync_ = ContinuousPictureId(frame->PictureId());
+      // First check for a valid tl0PicId.
+      if (frame->Tl0PicId() - tl0_pic_id_ > 1) {
+        full_sync_ = false;
+      } else {
+        full_sync_ = ContinuousPictureId(frame->PictureId());
+      }
     } else {
       full_sync_ = ContinuousSeqNum(static_cast<uint16_t>(
           frame->GetLowSeqNum()));
@@ -157,20 +162,21 @@ bool VCMDecodingState::ContinuousFrame(const VCMFrameBuffer* frame) const {
   // When in the initial state we always require a key frame to start decoding.
   if (in_initial_state_)
     return false;
-
-  if (!ContinuousLayer(frame->TemporalId(), frame->Tl0PicId())) {
-    // Base layers are not continuous or temporal layers are inactive.
-    // In the presence of temporal layers, check for Picture ID/sequence number
-    // continuity if sync can be restored by this frame.
-    if (!full_sync_ && !frame->LayerSync())
-      return false;
-    else if (UsingPictureId(frame)) {
-      return ContinuousPictureId(frame->PictureId());
-    } else {
-      return ContinuousSeqNum(static_cast<uint16_t>(frame->GetLowSeqNum()));
-    }
+  if (ContinuousLayer(frame->TemporalId(), frame->Tl0PicId()))
+    return true;
+  // tl0picId is either not used, or should remain unchanged.
+  if (frame->Tl0PicId() != tl0_pic_id_)
+    return false;
+  // Base layers are not continuous or temporal layers are inactive.
+  // In the presence of temporal layers, check for Picture ID/sequence number
+  // continuity if sync can be restored by this frame.
+  if (!full_sync_ && !frame->LayerSync())
+    return false;
+  if (UsingPictureId(frame)) {
+    return ContinuousPictureId(frame->PictureId());
+  } else {
+    return ContinuousSeqNum(static_cast<uint16_t>(frame->GetLowSeqNum()));
   }
-  return true;
 }
 
 bool VCMDecodingState::ContinuousPictureId(int picture_id) const {

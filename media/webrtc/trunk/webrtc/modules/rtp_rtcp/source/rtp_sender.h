@@ -21,6 +21,7 @@
 #include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
 #include "webrtc/modules/rtp_rtcp/source/bitrate.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_header_extension.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_packet_history.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_rtcp_config.h"
 #include "webrtc/modules/rtp_rtcp/source/ssrc_database.h"
 #include "webrtc/modules/rtp_rtcp/source/video_codec_information.h"
@@ -30,7 +31,6 @@
 namespace webrtc {
 
 class CriticalSectionWrapper;
-class RTPPacketHistory;
 class RTPSenderAudio;
 class RTPSenderVideo;
 
@@ -63,7 +63,7 @@ class RTPSenderInterface {
       PacedSender::Priority priority) = 0;
 };
 
-class RTPSender : public Bitrate, public RTPSenderInterface {
+class RTPSender : public RTPSenderInterface, public Bitrate::Observer {
  public:
   RTPSender(const int32_t id, const bool audio, Clock *clock,
             Transport *transport, RtpAudioFeedback *audio_feedback,
@@ -77,6 +77,10 @@ class RTPSender : public Bitrate, public RTPSenderInterface {
   uint32_t VideoBitrateSent() const;
   uint32_t FecOverheadRate() const;
   uint32_t NackOverheadRate() const;
+
+  // Returns true if the statistics have been calculated, and false if no frame
+  // was sent within the statistics window.
+  bool GetSendSideDelay(int* avg_send_delay_ms, int* max_send_delay_ms) const;
 
   void SetTargetSendBitrate(const uint32_t bits);
 
@@ -134,10 +138,6 @@ class RTPSender : public Bitrate, public RTPSenderInterface {
       VideoCodecInformation *codec_info = NULL,
       const RTPVideoTypeHeader * rtp_type_hdr = NULL);
 
-  int BuildPaddingPacket(uint8_t* packet, int header_length, int32_t bytes);
-  int SendPadData(int payload_type, uint32_t timestamp, int64_t capture_time_ms,
-                  int32_t bytes, StorageType store,
-                  bool force_full_size_packets, bool only_pad_after_markerbit);
   // RTP header extension
   int32_t SetTransmissionTimeOffset(
       const int32_t transmission_time_offset);
@@ -167,7 +167,8 @@ class RTPSender : public Bitrate, public RTPSenderInterface {
                               const RTPHeader &rtp_header,
                               const int64_t now_ms) const;
 
-  bool TimeToSendPacket(uint16_t sequence_number, int64_t capture_time_ms);
+  bool TimeToSendPacket(uint16_t sequence_number, int64_t capture_time_ms,
+                        bool retransmission);
   int TimeToSendPadding(int bytes);
 
   // NACK.
@@ -186,9 +187,9 @@ class RTPSender : public Bitrate, public RTPSenderInterface {
   bool ProcessNACKBitRate(const uint32_t now);
 
   // RTX.
-  void SetRTXStatus(RtxMode mode, bool set_ssrc, uint32_t ssrc);
+  void SetRTXStatus(int mode, bool set_ssrc, uint32_t ssrc);
 
-  void RTXStatus(RtxMode* mode, uint32_t* ssrc, int* payload_type) const;
+  void RTXStatus(int* mode, uint32_t* ssrc, int* payload_type) const;
 
   void SetRtxPayloadType(int payloadType);
 
@@ -263,11 +264,35 @@ class RTPSender : public Bitrate, public RTPSenderInterface {
   int32_t SetFecParameters(const FecProtectionParams *delta_params,
                            const FecProtectionParams *key_params);
 
+  virtual void RegisterFrameCountObserver(FrameCountObserver* observer);
+  virtual FrameCountObserver* GetFrameCountObserver() const;
+
+  int SendPadData(int payload_type, uint32_t timestamp, int64_t capture_time_ms,
+                  int32_t bytes, StorageType store,
+                  bool force_full_size_packets, bool only_pad_after_markerbit);
+
+  // Called on update of RTP statistics.
+  void RegisterRtpStatisticsCallback(StreamDataCountersCallback* callback);
+  StreamDataCountersCallback* GetRtpStatisticsCallback() const;
+
+  // Called on new send bitrate estimate.
+  void RegisterBitrateObserver(BitrateStatisticsObserver* observer);
+  BitrateStatisticsObserver* GetBitrateObserver() const;
+
+  uint32_t BitrateSent() const;
+
+  virtual void BitrateUpdated(const BitrateStatistics& stats) OVERRIDE;
+
  protected:
   int32_t CheckPayloadType(const int8_t payload_type,
                            RtpVideoCodecTypes *video_type);
 
  private:
+  // Maps capture time in milliseconds to send-side delay in milliseconds.
+  // Send-side delay is the difference between transmission time and capture
+  // time.
+  typedef std::map<int64_t, int> SendDelayMap;
+
   int CreateRTPHeader(uint8_t* header, int8_t payload_type,
                       uint32_t ssrc, bool marker_bit,
                       uint32_t timestamp, uint16_t sequence_number,
@@ -275,14 +300,34 @@ class RTPSender : public Bitrate, public RTPSenderInterface {
 
   void UpdateNACKBitRate(const uint32_t bytes, const uint32_t now);
 
+  bool PrepareAndSendPacket(uint8_t* buffer,
+                            uint16_t length,
+                            int64_t capture_time_ms,
+                            bool send_over_rtx);
+
+  int SendRedundantPayloads(int payload_type, int bytes);
+
   bool SendPaddingAccordingToBitrate(int8_t payload_type,
                                      uint32_t capture_timestamp,
                                      int64_t capture_time_ms);
+  int BuildPaddingPacket(uint8_t* packet, int header_length, int32_t bytes);
 
   void BuildRtxPacket(uint8_t* buffer, uint16_t* length,
                       uint8_t* buffer_rtx);
 
   bool SendPacketToNetwork(const uint8_t *packet, uint32_t size);
+
+  void UpdateDelayStatistics(int64_t capture_time_ms, int64_t now_ms);
+
+  void UpdateRtpStats(const uint8_t* buffer,
+                      uint32_t size,
+                      const RTPHeader& header,
+                      bool is_rtx,
+                      bool is_retransmit);
+  bool IsFecPacket(const uint8_t* buffer, const RTPHeader& header) const;
+
+  Clock* clock_;
+  Bitrate bitrate_sent_;
 
   int32_t id_;
   const bool audio_configured_;
@@ -311,12 +356,17 @@ class RTPSender : public Bitrate, public RTPSenderInterface {
   int32_t nack_byte_count_[NACK_BYTECOUNT_SIZE];
   Bitrate nack_bitrate_;
 
-  RTPPacketHistory *packet_history_;
+  RTPPacketHistory packet_history_;
 
   // Statistics
   scoped_ptr<CriticalSectionWrapper> statistics_crit_;
-  uint32_t packets_sent_;
-  uint32_t payload_bytes_sent_;
+  SendDelayMap send_delays_;
+  std::map<FrameType, uint32_t> frame_counts_;
+  FrameCountObserver* frame_count_observer_;
+  StreamDataCounters rtp_stats_;
+  StreamDataCounters rtx_rtp_stats_;
+  StreamDataCountersCallback* rtp_stats_callback_;
+  BitrateStatisticsObserver* bitrate_callback_;
 
   // RTP variables
   bool start_time_stamp_forced_;
@@ -330,11 +380,12 @@ class RTPSender : public Bitrate, public RTPSenderInterface {
   uint32_t ssrc_;
   uint32_t timestamp_;
   int64_t capture_time_ms_;
+  int64_t last_timestamp_time_ms_;
   bool last_packet_marker_bit_;
   uint8_t num_csrcs_;
   uint32_t csrcs_[kRtpCsrcSize];
   bool include_csrcs_;
-  RtxMode rtx_;
+  int rtx_;
   uint32_t ssrc_rtx_;
   int payload_type_rtx_;
 };

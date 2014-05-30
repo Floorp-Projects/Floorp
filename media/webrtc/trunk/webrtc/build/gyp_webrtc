@@ -1,0 +1,80 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2014 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+# This script is used to run GYP for WebRTC. It contains selected parts of the
+# main function from the src/build/gyp_chromium file.
+
+import glob
+import os
+import shlex
+import sys
+
+script_dir = os.path.dirname(os.path.realpath(__file__))
+checkout_root = os.path.abspath(os.path.join(script_dir, os.pardir, os.pardir))
+chrome_build_dir = os.path.join(checkout_root, 'build')
+
+sys.path.insert(0, chrome_build_dir)
+import gyp_chromium
+import gyp_helper
+
+sys.path.insert(0, os.path.join(checkout_root, 'tools', 'gyp', 'pylib'))
+import gyp
+
+
+if __name__ == '__main__':
+  args = sys.argv[1:]
+
+  if int(os.environ.get('GYP_CHROMIUM_NO_ACTION', 0)):
+    print 'Skipping gyp_webrtc due to GYP_CHROMIUM_NO_ACTION env var.'
+    sys.exit(0)
+
+  if 'SKIP_WEBRTC_GYP_ENV' not in os.environ:
+    # Update the environment based on webrtc.gyp_env
+    gyp_env_path = os.path.join(os.path.dirname(checkout_root),
+                                'webrtc.gyp_env')
+    gyp_helper.apply_gyp_environment_from_file(gyp_env_path)
+
+  # This could give false positives since it doesn't actually do real option
+  # parsing.  Oh well.
+  gyp_file_specified = False
+  for arg in args:
+    if arg.endswith('.gyp'):
+      gyp_file_specified = True
+      break
+
+  # If we didn't get a file, assume 'all.gyp' in the root of the checkout.
+  if not gyp_file_specified:
+    args.append(os.path.join(checkout_root, 'all.gyp'))
+
+  # There shouldn't be a circular dependency relationship between .gyp files,
+  args.append('--no-circular-check')
+
+  # Default to ninja unless GYP_GENERATORS is set.
+  if not os.environ.get('GYP_GENERATORS'):
+    os.environ['GYP_GENERATORS'] = 'ninja'
+
+  # Enforce gyp syntax checking. This adds about 20% execution time.
+  args.append('--check')
+
+  supplemental_includes = gyp_chromium.GetSupplementalFiles()
+  if not gyp_chromium.RunGN(supplemental_includes):
+    sys.exit(1)
+  args.extend(['-I' + i for i in
+               gyp_chromium.additional_include_files(supplemental_includes,
+                                                     args)])
+
+  # Set the gyp depth variable to the root of the checkout.
+  args.append('--depth=' + os.path.relpath(checkout_root))
+
+  print 'Updating projects from gyp files...'
+  sys.stdout.flush()
+
+  # Off we go...
+  sys.exit(gyp.main(args))

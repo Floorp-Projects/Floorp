@@ -124,7 +124,7 @@ class AudioDecoder {
   // applicable (e.g., for RED and DTMF/AVT types).
   static AudioDecoder* CreateAudioDecoder(NetEqDecoder codec_type);
 
-  size_t channels() { return channels_; }
+  size_t channels() const { return channels_; }
 
  protected:
   static SpeechType ConvertSpeechType(int16_t type);

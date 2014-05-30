@@ -17,6 +17,7 @@
 
 #include <algorithm>
 
+#include "webrtc/common.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/modules/interface/module_common_types.h"
 #include "webrtc/system_wrappers/interface/cpu_features_wrapper.h"
@@ -34,6 +35,8 @@
 
 using webrtc::AudioFrame;
 using webrtc::AudioProcessing;
+using webrtc::Config;
+using webrtc::DelayCorrection;
 using webrtc::EchoCancellation;
 using webrtc::GainControl;
 using webrtc::NoiseSuppression;
@@ -106,6 +109,7 @@ void usage() {
   printf("  --no_echo_metrics\n");
   printf("  --no_delay_logging\n");
   printf("  --aec_suppression_level LEVEL  [0 - 2]\n");
+  printf("  --extended_filter\n");
   printf("\n  -aecm    Echo control mobile\n");
   printf("  --aecm_echo_path_in_file FILE\n");
   printf("  --aecm_echo_path_out_file FILE\n");
@@ -133,7 +137,8 @@ void usage() {
   printf("\n");
   printf("Modifiers:\n");
   printf("  --noasm            Disable SSE optimization.\n");
-  printf("  --delay DELAY      Add DELAY ms to input value.\n");
+  printf("  --add_delay DELAY  Add DELAY ms to input value.\n");
+  printf("  --delay DELAY      Override input delay with DELAY ms.\n");
   printf("  --perf             Measure performance.\n");
   printf("  --quiet            Suppress text output.\n");
   printf("  --no_progress      Suppress progress.\n");
@@ -194,6 +199,7 @@ void void_main(int argc, char* argv[]) {
   bool verbose = true;
   bool progress = true;
   int extra_delay_ms = 0;
+  int override_delay_ms = 0;
   //bool interleaved = true;
 
   ASSERT_EQ(apm->kNoError, apm->level_estimator()->Enable(true));
@@ -226,9 +232,6 @@ void void_main(int argc, char* argv[]) {
       ASSERT_EQ(1, sscanf(argv[i], "%d", &sample_rate_hz));
       samples_per_channel = sample_rate_hz / 100;
 
-      ASSERT_EQ(apm->kNoError,
-                apm->set_sample_rate_hz(sample_rate_hz));
-
     } else if (strcmp(argv[i], "-ch") == 0) {
       i++;
       ASSERT_LT(i + 1, argc) << "Specify number of channels after -ch";
@@ -236,17 +239,10 @@ void void_main(int argc, char* argv[]) {
       i++;
       ASSERT_EQ(1, sscanf(argv[i], "%d", &num_capture_output_channels));
 
-      ASSERT_EQ(apm->kNoError,
-                apm->set_num_channels(num_capture_input_channels,
-                                      num_capture_output_channels));
-
     } else if (strcmp(argv[i], "-rch") == 0) {
       i++;
       ASSERT_LT(i, argc) << "Specify number of channels after -rch";
       ASSERT_EQ(1, sscanf(argv[i], "%d", &num_render_channels));
-
-      ASSERT_EQ(apm->kNoError,
-                apm->set_num_reverse_channels(num_render_channels));
 
     } else if (strcmp(argv[i], "-aec") == 0) {
       ASSERT_EQ(apm->kNoError, apm->echo_cancellation()->Enable(true));
@@ -288,6 +284,11 @@ void void_main(int argc, char* argv[]) {
                 apm->echo_cancellation()->set_suppression_level(
                     static_cast<webrtc::EchoCancellation::SuppressionLevel>(
                         suppression_level)));
+
+    } else if (strcmp(argv[i], "--extended_filter") == 0) {
+      Config config;
+      config.Set<DelayCorrection>(new DelayCorrection(true));
+      apm->SetExtraOptions(config);
 
     } else if (strcmp(argv[i], "-aecm") == 0) {
       ASSERT_EQ(apm->kNoError, apm->echo_control_mobile()->Enable(true));
@@ -430,9 +431,13 @@ void void_main(int argc, char* argv[]) {
       // We need to reinitialize here if components have already been enabled.
       ASSERT_EQ(apm->kNoError, apm->Initialize());
 
-    } else if (strcmp(argv[i], "--delay") == 0) {
+    } else if (strcmp(argv[i], "--add_delay") == 0) {
       i++;
       ASSERT_EQ(1, sscanf(argv[i], "%d", &extra_delay_ms));
+
+    } else if (strcmp(argv[i], "--delay") == 0) {
+      i++;
+      ASSERT_EQ(1, sscanf(argv[i], "%d", &override_delay_ms));
 
     } else if (strcmp(argv[i], "--perf") == 0) {
       perf_testing = true;
@@ -622,9 +627,9 @@ void void_main(int argc, char* argv[]) {
         const Init msg = event_msg.init();
 
         ASSERT_TRUE(msg.has_sample_rate());
-        ASSERT_EQ(apm->kNoError,
-            apm->set_sample_rate_hz(msg.sample_rate()));
-
+        // TODO(bjornv): Replace set_sample_rate_hz() when we have a smarter
+        // AnalyzeReverseStream().
+        ASSERT_EQ(apm->kNoError, apm->set_sample_rate_hz(msg.sample_rate()));
         ASSERT_TRUE(msg.has_device_sample_rate());
         ASSERT_EQ(apm->kNoError,
                   apm->echo_cancellation()->set_device_sample_rate_hz(
@@ -632,13 +637,7 @@ void void_main(int argc, char* argv[]) {
 
         ASSERT_TRUE(msg.has_num_input_channels());
         ASSERT_TRUE(msg.has_num_output_channels());
-        ASSERT_EQ(apm->kNoError,
-            apm->set_num_channels(msg.num_input_channels(),
-                                  msg.num_output_channels()));
-
         ASSERT_TRUE(msg.has_num_reverse_channels());
-        ASSERT_EQ(apm->kNoError,
-            apm->set_num_reverse_channels(msg.num_reverse_channels()));
 
         samples_per_channel = msg.sample_rate() / 100;
         far_frame.sample_rate_hz_ = msg.sample_rate();
@@ -715,8 +714,12 @@ void void_main(int argc, char* argv[]) {
 
         ASSERT_EQ(apm->kNoError,
                   apm->gain_control()->set_stream_analog_level(msg.level()));
+        delay_ms = msg.delay() + extra_delay_ms;
+        if (override_delay_ms) {
+          delay_ms = override_delay_ms;
+        }
         ASSERT_EQ(apm->kNoError,
-                  apm->set_stream_delay_ms(msg.delay() + extra_delay_ms));
+                  apm->set_stream_delay_ms(delay_ms));
         apm->echo_cancellation()->set_stream_drift_samples(msg.drift());
 
         int err = apm->ProcessStream(&near_frame);
@@ -814,8 +817,9 @@ void void_main(int argc, char* argv[]) {
                   1,
                   event_file));
 
-        ASSERT_EQ(apm->kNoError,
-            apm->set_sample_rate_hz(sample_rate_hz));
+        // TODO(bjornv): Replace set_sample_rate_hz() when we have a smarter
+        // AnalyzeReverseStream().
+        ASSERT_EQ(apm->kNoError, apm->set_sample_rate_hz(sample_rate_hz));
 
         ASSERT_EQ(apm->kNoError,
                   apm->echo_cancellation()->set_device_sample_rate_hz(
@@ -918,8 +922,12 @@ void void_main(int argc, char* argv[]) {
         const int capture_level_in = capture_level;
         ASSERT_EQ(apm->kNoError,
                   apm->gain_control()->set_stream_analog_level(capture_level));
+        delay_ms += extra_delay_ms;
+        if (override_delay_ms) {
+          delay_ms = override_delay_ms;
+        }
         ASSERT_EQ(apm->kNoError,
-                  apm->set_stream_delay_ms(delay_ms + extra_delay_ms));
+                  apm->set_stream_delay_ms(delay_ms));
         apm->echo_cancellation()->set_stream_drift_samples(drift_samples);
 
         int err = apm->ProcessStream(&near_frame);
