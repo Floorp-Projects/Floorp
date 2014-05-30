@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "AndroidJNIWrapper.h"
 #include "webrtc/modules/video_capture/android/video_capture_android.h"
 
 #include "webrtc/modules/utility/interface/helpers_android.h"
