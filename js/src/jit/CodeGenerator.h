@@ -230,6 +230,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitTypeOfV(LTypeOfV *lir);
     bool visitOutOfLineTypeOfV(OutOfLineTypeOfV *ool);
     bool visitToIdV(LToIdV *lir);
+    template<typename T> bool emitLoadElementT(LLoadElementT *lir, const T &source);
+    bool visitLoadElementT(LLoadElementT *lir);
     bool visitLoadElementV(LLoadElementV *load);
     bool visitLoadElementHole(LLoadElementHole *lir);
     bool visitStoreElementT(LStoreElementT *lir);

@@ -2553,7 +2553,7 @@ LIRGenerator::visitLoadElement(MLoadElement *ins)
       case MIRType_Value:
       {
         LLoadElementV *lir = new(alloc()) LLoadElementV(useRegister(ins->elements()),
-                                               useRegisterOrConstant(ins->index()));
+                                                        useRegisterOrConstant(ins->index()));
         if (ins->fallible() && !assignSnapshot(lir))
             return false;
         return defineBox(lir, ins);
@@ -2565,7 +2565,7 @@ LIRGenerator::visitLoadElement(MLoadElement *ins)
       default:
       {
         LLoadElementT *lir = new(alloc()) LLoadElementT(useRegister(ins->elements()),
-                                               useRegisterOrConstant(ins->index()));
+                                                        useRegisterOrConstant(ins->index()));
         if (ins->fallible() && !assignSnapshot(lir))
             return false;
         return define(lir, ins);
