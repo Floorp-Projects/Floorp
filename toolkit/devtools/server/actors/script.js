@@ -15,9 +15,11 @@ const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const { dbg_assert, dumpn, update } = DevToolsUtils;
 const { SourceMapConsumer, SourceMapGenerator } = require("source-map");
 const { defer, resolve, reject, all } = require("devtools/toolkit/deprecated-sync-thenables");
-const {CssLogic} = require("devtools/styleinspector/css-logic");
+const { CssLogic } = require("devtools/styleinspector/css-logic");
 
-Cu.import("resource://gre/modules/NetUtil.jsm");
+DevToolsUtils.defineLazyGetter(this, "NetUtil", () => {
+  return Cu.import("resource://gre/modules/NetUtil.jsm", {}).NetUtil;
+});
 
 let B2G_ID = "{3c2e2abc-06d4-11e1-ac3b-374f68613e61}";
 
@@ -3072,7 +3074,14 @@ ObjectActor.prototype = {
     };
 
     if (this.obj.class != "DeadObject") {
-      let raw = Cu.unwaiveXrays(this.obj.unsafeDereference());
+      let raw = this.obj.unsafeDereference();
+
+      // If Cu is not defined, we are running on a worker thread, where xrays
+      // don't exist.
+      if (Cu) {
+        raw = Cu.unwaiveXrays(raw);
+      }
+
       if (!DevToolsUtils.isSafeJSObject(raw)) {
         raw = null;
       }
@@ -3829,7 +3838,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
   },
 
   function CSSMediaRule({obj, threadActor}, aGrip, aRawObj) {
-    if (!aRawObj || !(aRawObj instanceof Ci.nsIDOMCSSMediaRule)) {
+    if (!aRawObj || Ci && !(aRawObj instanceof Ci.nsIDOMCSSMediaRule)) {
       return false;
     }
     aGrip.preview = {
@@ -3840,7 +3849,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
   },
 
   function CSSStyleRule({obj, threadActor}, aGrip, aRawObj) {
-    if (!aRawObj || !(aRawObj instanceof Ci.nsIDOMCSSStyleRule)) {
+    if (!aRawObj || Ci && !(aRawObj instanceof Ci.nsIDOMCSSStyleRule)) {
       return false;
     }
     aGrip.preview = {
@@ -3852,15 +3861,15 @@ DebuggerServer.ObjectActorPreviewers.Object = [
 
   function ObjectWithURL({obj, threadActor}, aGrip, aRawObj) {
     if (!aRawObj ||
-        !(aRawObj instanceof Ci.nsIDOMCSSImportRule ||
-          aRawObj instanceof Ci.nsIDOMCSSStyleSheet ||
-          aRawObj instanceof Ci.nsIDOMLocation ||
-          aRawObj instanceof Ci.nsIDOMWindow)) {
+        Ci && !(aRawObj instanceof Ci.nsIDOMCSSImportRule ||
+                aRawObj instanceof Ci.nsIDOMCSSStyleSheet ||
+                aRawObj instanceof Ci.nsIDOMLocation ||
+                aRawObj instanceof Ci.nsIDOMWindow)) {
       return false;
     }
 
     let url;
-    if (aRawObj instanceof Ci.nsIDOMWindow && aRawObj.location) {
+    if (Ci && (aRawObj instanceof Ci.nsIDOMWindow) && aRawObj.location) {
       url = aRawObj.location.href;
     } else if (aRawObj.href) {
       url = aRawObj.href;
@@ -3880,14 +3889,14 @@ DebuggerServer.ObjectActorPreviewers.Object = [
     if (!aRawObj ||
         obj.class != "DOMStringList" &&
         obj.class != "DOMTokenList" &&
-        !(aRawObj instanceof Ci.nsIDOMMozNamedAttrMap ||
-          aRawObj instanceof Ci.nsIDOMCSSRuleList ||
-          aRawObj instanceof Ci.nsIDOMCSSValueList ||
-          aRawObj instanceof Ci.nsIDOMFileList ||
-          aRawObj instanceof Ci.nsIDOMFontFaceList ||
-          aRawObj instanceof Ci.nsIDOMMediaList ||
-          aRawObj instanceof Ci.nsIDOMNodeList ||
-          aRawObj instanceof Ci.nsIDOMStyleSheetList)) {
+        Ci && !(aRawObj instanceof Ci.nsIDOMMozNamedAttrMap ||
+                aRawObj instanceof Ci.nsIDOMCSSRuleList ||
+                aRawObj instanceof Ci.nsIDOMCSSValueList ||
+                aRawObj instanceof Ci.nsIDOMFileList ||
+                aRawObj instanceof Ci.nsIDOMFontFaceList ||
+                aRawObj instanceof Ci.nsIDOMMediaList ||
+                aRawObj instanceof Ci.nsIDOMNodeList ||
+                aRawObj instanceof Ci.nsIDOMStyleSheetList)) {
       return false;
     }
 
@@ -3916,7 +3925,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
   }, // ArrayLike
 
   function CSSStyleDeclaration({obj, threadActor}, aGrip, aRawObj) {
-    if (!aRawObj || !(aRawObj instanceof Ci.nsIDOMCSSStyleDeclaration)) {
+    if (!aRawObj || Ci && !(aRawObj instanceof Ci.nsIDOMCSSStyleDeclaration)) {
       return false;
     }
 
@@ -3938,7 +3947,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
   },
 
   function DOMNode({obj, threadActor}, aGrip, aRawObj) {
-    if (obj.class == "Object" || !aRawObj || !(aRawObj instanceof Ci.nsIDOMNode)) {
+    if (obj.class == "Object" || !aRawObj || Ci && !(aRawObj instanceof Ci.nsIDOMNode)) {
       return false;
     }
 
@@ -3948,9 +3957,9 @@ DebuggerServer.ObjectActorPreviewers.Object = [
       nodeName: aRawObj.nodeName,
     };
 
-    if (aRawObj instanceof Ci.nsIDOMDocument && aRawObj.location) {
+    if (Ci && (aRawObj instanceof Ci.nsIDOMDocument) && aRawObj.location) {
       preview.location = threadActor.createValueGrip(aRawObj.location.href);
-    } else if (aRawObj instanceof Ci.nsIDOMDocumentFragment) {
+    } else if (Ci && (aRawObj instanceof Ci.nsIDOMDocumentFragment)) {
       preview.childNodesLength = aRawObj.childNodes.length;
 
       if (threadActor._gripDepth < 2) {
@@ -3963,7 +3972,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
           }
         }
       }
-    } else if (aRawObj instanceof Ci.nsIDOMElement) {
+    } else if (Ci && (aRawObj instanceof Ci.nsIDOMElement)) {
       // Add preview for DOM element attributes.
       if (aRawObj instanceof Ci.nsIDOMHTMLElement) {
         preview.nodeName = preview.nodeName.toLowerCase();
@@ -3978,10 +3987,10 @@ DebuggerServer.ObjectActorPreviewers.Object = [
           break;
         }
       }
-    } else if (aRawObj instanceof Ci.nsIDOMAttr) {
+    } else if (Ci && (aRawObj instanceof Ci.nsIDOMAttr)) {
       preview.value = threadActor.createValueGrip(aRawObj.value);
-    } else if (aRawObj instanceof Ci.nsIDOMText ||
-               aRawObj instanceof Ci.nsIDOMComment) {
+    } else if (Ci && (aRawObj instanceof Ci.nsIDOMText) ||
+               Ci && (aRawObj instanceof Ci.nsIDOMComment)) {
       preview.textContent = threadActor.createValueGrip(aRawObj.textContent);
     }
 
@@ -3989,7 +3998,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
   }, // DOMNode
 
   function DOMEvent({obj, threadActor}, aGrip, aRawObj) {
-    if (!aRawObj || !(aRawObj instanceof Ci.nsIDOMEvent)) {
+    if (!aRawObj || Ci && !(aRawObj instanceof Ci.nsIDOMEvent)) {
       return false;
     }
 
@@ -4005,9 +4014,9 @@ DebuggerServer.ObjectActorPreviewers.Object = [
     }
 
     let props = [];
-    if (aRawObj instanceof Ci.nsIDOMMouseEvent) {
+    if (Ci && (aRawObj instanceof Ci.nsIDOMMouseEvent)) {
       props.push("buttons", "clientX", "clientY", "layerX", "layerY");
-    } else if (aRawObj instanceof Ci.nsIDOMKeyEvent) {
+    } else if (Ci && (aRawObj instanceof Ci.nsIDOMKeyEvent)) {
       let modifiers = [];
       if (aRawObj.altKey) {
         modifiers.push("Alt");
@@ -4025,10 +4034,10 @@ DebuggerServer.ObjectActorPreviewers.Object = [
       preview.modifiers = modifiers;
 
       props.push("key", "charCode", "keyCode");
-    } else if (aRawObj instanceof Ci.nsIDOMTransitionEvent ||
-               aRawObj instanceof Ci.nsIDOMAnimationEvent) {
+    } else if (Ci && (aRawObj instanceof Ci.nsIDOMTransitionEvent) ||
+               Ci && (aRawObj instanceof Ci.nsIDOMAnimationEvent)) {
       props.push("animationName", "pseudoElement");
-    } else if (aRawObj instanceof Ci.nsIDOMClipboardEvent) {
+    } else if (Ci && (aRawObj instanceof Ci.nsIDOMClipboardEvent)) {
       props.push("clipboardData");
     }
 
@@ -4071,7 +4080,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
   }, // DOMEvent
 
   function DOMException({obj, threadActor}, aGrip, aRawObj) {
-    if (!aRawObj || !(aRawObj instanceof Ci.nsIDOMDOMException)) {
+    if (!aRawObj || Ci && !(aRawObj instanceof Ci.nsIDOMDOMException)) {
       return false;
     }
 
@@ -5493,10 +5502,11 @@ function convertToUnicode(aString, aCharset=null) {
  * @param String aPrefix
  *        An optional prefix for the reported error message.
  */
-function reportError(aError, aPrefix="") {
+let oldReportError = reportError;
+reportError = function(aError, aPrefix="") {
   dbg_assert(aError instanceof Error, "Must pass Error objects to reportError");
   let msg = aPrefix + aError.message + ":\n" + aError.stack;
-  Cu.reportError(msg);
+  oldReportError(msg);
   dumpn(msg);
 }
 
