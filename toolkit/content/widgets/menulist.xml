@@ -68,7 +68,10 @@
 
     <implementation implements="nsIDOMXULMenuListElement, nsIDOMEventListener">
       <constructor>
-        this.setInitialSelection()
+        this.mInputField = null;
+        this.mSelectedInternal = null;
+        this.menuBoxObject = this.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
+        this.setInitialSelection();
       </constructor>
 
       <method name="setInitialSelection">
@@ -145,14 +148,6 @@
           ]]>
         </getter>
       </property>
-
-      <field name="menuBoxObject" readonly="true">
-        this.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject)
-      </field>
-
-      <field name="mSelectedInternal">
-        null
-      </field>
 
       <method name="contains">
         <parameter name="item"/>
@@ -457,8 +452,6 @@
           ]]>
         </body>
       </method>
-
-      <field name="mInputField">null</field>
 
       <property name="inputField" readonly="true">
         <getter><![CDATA[
