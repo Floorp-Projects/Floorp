@@ -6,6 +6,7 @@
 
 #include "gfxCrashReporterUtils.h"
 #include "mozilla/Preferences.h"
+#include "nsDebug.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsPrintfCString.h"
@@ -20,7 +21,9 @@ namespace mozilla {
 namespace gl {
 
 GLLibraryEGL sEGLLibrary;
-
+#ifdef MOZ_B2G
+ThreadLocal<EGLContext> GLLibraryEGL::sCurrentContext;
+#endif
 // should match the order of EGLExtensions, and be null-terminated.
 static const char *sEGLExtensionNames[] = {
     "EGL_KHR_image_base",
@@ -103,6 +106,10 @@ GLLibraryEGL::EnsureInitialized()
     }
 
     mozilla::ScopedGfxFeatureReporter reporter("EGL");
+
+#ifdef MOZ_B2G
+    NS_ABORT_IF_FALSE(sCurrentContext.init());
+#endif
 
 #ifdef XP_WIN
 #ifdef MOZ_WEBGL
