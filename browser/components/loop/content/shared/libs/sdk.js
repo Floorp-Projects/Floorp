@@ -1,18 +1,20 @@
 /**
- * @license  OpenTok JavaScript Library v2.2.4.1
+ * @license  OpenTok JavaScript Library v2.2.5
  * http://www.tokbox.com/
  *
- * Copyright (c) 2013 TokBox, Inc.
+ * Copyright (c) 2014 TokBox, Inc.
+ * Released under the MIT license
+ * http://opensource.org/licenses/MIT
  *
- * Date: March 27 05:49:25 2014
+ * Date: May 22 07:14:18 2014
  */
 
 (function(window) {
   if (!window.OT) window.OT = {};
 
   OT.properties = {
-    version: 'v2.2.4.1',         // The current version (eg. v2.0.4) (This is replaced by gradle)
-    build: 'e42c038',    // The current build hash (This is replaced by gradle)
+    version: 'v2.2.5',         // The current version (eg. v2.0.4) (This is replaced by gradle)
+    build: '12d9384',    // The current build hash (This is replaced by gradle)
 
     // Whether or not to turn on debug logging by default
     debug: 'false',
@@ -48,12 +50,14 @@
 
 })(window);
 /**
- * @license  Common JS Helpers on OpenTok 0.2.0 da024f2 master
+ * @license  Common JS Helpers on OpenTok 0.2.0 1f056b9 master
  * http://www.tokbox.com/
  *
  * Copyright (c) 2014 TokBox, Inc.
+ * Released under the MIT license
+ * http://opensource.org/licenses/MIT
  *
- * Date: March 17 02:18:55 2014
+ * Date: May 19 04:04:43 2014
  *
  */
 
@@ -103,8 +107,8 @@
     }
   };
 
-  OTHelpers.forEach = function(array, iter) {
-    return _each.call(array, iter);
+  OTHelpers.forEach = function(array, iter, ctx) {
+    return _each.call(array, iter, ctx);
   };
 
   var _map = Array.prototype.map || function(iter, ctx) {
@@ -374,7 +378,11 @@
       }
     }
 
-    return {browser: browser, version: version};
+    return {
+      browser: browser,
+      version: version,
+      iframeNeedsLoad: userAgent.indexOf('webkit') < 0
+    };
   }();
 
   OTHelpers.browser = function() {
@@ -418,7 +426,7 @@
       };
     }
 
-    Object.defineProperties(self, propsDefinition);
+    OTHelpers.defineProperties(self, propsDefinition);
   };
 
   var generatePropertyFunction = function(object, getter, setter) {
@@ -506,8 +514,13 @@
   };
 
 
-/// Stolen from Underscore, this needs replacing
-
+// These next bits are included from Underscore.js. The original copyright
+// notice is below.
+//
+// http://underscorejs.org
+// (c) 2009-2011 Jeremy Ashkenas, DocumentCloud Inc.
+// (c) 2011-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+// Underscore may be freely distributed under the MIT license.
 
   // Invert the keys and values of an object. The values must be serializable.
   OTHelpers.invert = function(obj) {
@@ -647,7 +660,7 @@
   OTHelpers.statable = function(self, possibleStates, initialState, stateChanged,
     stateChangedFailed) {
     var previousState,
-        currentState = initialState;
+        currentState = self.currentState = initialState;
 
     var setState = function(state) {
       if (currentState !== state) {
@@ -658,8 +671,8 @@
           return;
         }
 
-        previousState = currentState;
-        currentState = state;
+        self.previousState = previousState = currentState;
+        self.currentState = currentState = state;
         if (stateChanged && OTHelpers.isFunction(stateChanged)) stateChanged(state, previousState);
       }
     };
@@ -689,16 +702,6 @@
     self.isNot = function (/* state0:String, state1:String, ..., stateN:String */) {
       return OTHelpers.arrayIndexOf(arguments, currentState) === -1;
     };
-
-    Object.defineProperties(self, {
-      state: {
-        get: function() { return currentState; }
-      },
-
-      previousState: {
-        get: function() { return previousState; }
-      }
-    });
 
     return setState;
   };
@@ -863,7 +866,14 @@ OTHelpers.useLogHelpers = function(on){
     on.NONE     = 0;
 
     var _logLevel = on.NONE,
-        _logs = [];
+        _logs = [],
+        _canApplyConsole = true;
+
+    try {
+        Function.prototype.bind.call(window.console.log, window.console);
+    } catch (err) {
+        _canApplyConsole = false;
+    }
 
     // Some objects can't be logged in the console, mostly these are certain
     // types of native objects that are exposed to JS. This is only really a
@@ -897,7 +907,7 @@ OTHelpers.useLogHelpers = function(on){
                     // the desired console method isn't a real object, which means
                     // that we can't use apply on it. We force it to be a real object
                     // using Function.bind, assuming that's available.
-                    if (cons[method].apply || Function.prototype.bind) {
+                    if (cons[method].apply || _canApplyConsole) {
                         if (!cons[method].apply) {
                             cons[method] = Function.prototype.bind.call(cons[method], cons);
                         }
@@ -933,7 +943,7 @@ OTHelpers.useLogHelpers = function(on){
 
     on.setLogLevel = function(level) {
         _logLevel = typeof(level) === 'number' ? level : 0;
-        on.debug("OT.setLogLevel(" + _logLevel + ")");
+        on.debug("TB.setLogLevel(" + _logLevel + ")");
         return _logLevel;
     };
 
@@ -1694,6 +1704,10 @@ OTHelpers.roundFloat = function(value, places) {
 // DOM helpers
 (function(window, OTHelpers, undefined) {
 
+OTHelpers.isElementNode = function(node) {
+    return node && typeof node === 'object' && node.nodeType == 1;
+};
+
 // Returns true if the client supports element.classList
 OTHelpers.supportsClassList = function() {
     var hasSupport = typeof(document !== "undefined") && ("classList" in document.createElement("a"));
@@ -1734,8 +1748,8 @@ OTHelpers.emptyElement = function(element) {
     return element;
 };
 
-OTHelpers.createElement = function(nodeName, attributes, innerHTML) {
-    var element = document.createElement(nodeName);
+OTHelpers.createElement = function(nodeName, attributes, children, doc) {
+    var element = (doc || document).createElement(nodeName);
 
     if (attributes) {
         for (var name in attributes) {
@@ -1756,8 +1770,18 @@ OTHelpers.createElement = function(nodeName, attributes, innerHTML) {
         }
     }
 
-    if (innerHTML) {
-        element.innerHTML = innerHTML;
+    var setChildren = function(child) {
+        if(typeof child === 'string') {
+            element.innerHTML = element.innerHTML + child;
+        } else {
+            element.appendChild(child);
+        }
+    };
+
+    if(OTHelpers.isArray(children)) {
+        OTHelpers.forEach(children, setChildren);
+    } else if(children) {
+        setChildren(children);
     }
 
     return element;
@@ -1795,6 +1819,7 @@ OTHelpers.on = function(element, eventName,  handler) {
           if (oldHandler) oldHandler.apply(this, arguments);
         };
     }
+    return element;
 };
 
 // Helper function for removing event listeners from dom elements.
@@ -1973,58 +1998,178 @@ OTHelpers.observeNodeOrChildNodeRemoval = function(element, onChange) {
 
 (function(window, OTHelpers, undefined) {
 
-OTHelpers.Modal = function(title, body) {
-    /*jshint multistr:true*/
-    var tmpl = "\
-        <header>\
-            <h1><%= title %></h1>\
-        </header>\
-        <div class='OT_dialog-body'>\
-            <%= body %>\
-        </div>\
-    ";
+  OTHelpers.Modal = function(options) {
 
-    this.el = OTHelpers.createElement("section", {
-            className: "OT_root OT_dialog OT_modal"
-        },
-        OTHelpers.template(tmpl, {
-            title: title,
-            body: body
-        })
-    );
+    OTHelpers.eventing(this, true);
 
-    // We're going to center the element in the window. We need to add the
-    // element to the body before we do, otherwise we can't calculate the dialog's
-    // widths and heights. This means we need to hide the element first.
-    this.el.style.display = 'none';
-    document.body.appendChild(this.el);
-    OTHelpers.centerElement(this.el);
-    OTHelpers.show(this.el);
+    var callback = arguments[arguments.length - 1];
+
+    if(!OTHelpers.isFunction(callback)) {
+      throw new Error('OTHelpers.Modal2 must be given a callback');
+    }
+
+    if(arguments.length < 2) {
+      options = {};
+    }
+
+    var domElement = document.createElement('iframe');
+
+    domElement.id = options.id || OTHelpers.uuid();
+    domElement.style.position = 'absolute';
+    domElement.style.position = 'fixed';
+    domElement.style.height = '100%';
+    domElement.style.width = '100%';
+    domElement.style.top = '0px';
+    domElement.style.left = '0px';
+    domElement.style.right = '0px';
+    domElement.style.bottom = '0px';
+    domElement.style.zIndex = 1000;
+    domElement.style.border = '0';
+
+    try {
+      domElement.style.backgroundColor = 'rgba(0,0,0,0.2)';
+    } catch (err) {
+      // Old IE browsers don't support rgba and we still want to show the upgrade message
+      // but we just make the background of the iframe completely transparent.
+      domElement.style.backgroundColor = 'transparent';
+      domElement.setAttribute('allowTransparency', 'true');
+    }
+
+    domElement.scrolling = 'no';
+    domElement.setAttribute('scrolling', 'no');
+
+    var wrappedCallback = function() {
+      var doc = domElement.contentDocument || domElement.contentWindow.document;
+      doc.body.style.backgroundColor = 'transparent';
+      doc.body.style.border = 'none';
+      callback(
+        domElement.contentWindow,
+        doc
+      );
+    };
+
+    document.body.appendChild(domElement);
+    
+    if(OTHelpers.browserVersion().iframeNeedsLoad) {
+      OTHelpers.on(domElement, 'load', wrappedCallback);
+    } else {
+      setTimeout(wrappedCallback);
+    }
 
     this.close = function() {
-        OTHelpers.removeElement(this.el);
-        this.el = null;
-        return this;
+      OTHelpers.removeElement(domElement);
+      this.trigger('closed');
+      this.element = domElement = null;
+      return this;
     };
-};
 
-// Custom alert dialog
-OTHelpers.tbAlert = function(title, message) {
-    var modal = new OTHelpers.Modal(title, "<div>" + message + "</div>");
-    OTHelpers.addClass(modal.el, "OT_tbalert");
+    this.element = domElement;
 
-    var closeBtn = OTHelpers.createElement("input", {
-            className: "OT_closeButton",
-            type: "button",
-            value: "close"
-    });
-    modal.el.appendChild(closeBtn);
+  };
+  
+})(window, window.OTHelpers);
 
-    closeBtn.onclick = function() {
-        if (modal) modal.close();
-        modal = null;
-    };
-};
+/*
+ * getComputedStyle from 
+ * https://github.com/jonathantneal/Polyfills-for-IE8/blob/master/getComputedStyle.js
+
+// tb_require('../helpers.js')
+// tb_require('./dom.js')
+
+/*jshint strict: false, eqnull: true, browser:true, smarttabs:true*/
+
+(function(window, OTHelpers, undefined) {
+
+  /*jshint eqnull: true, browser: true */
+
+
+  function getPixelSize(element, style, property, fontSize) {
+    var sizeWithSuffix = style[property],
+        size = parseFloat(sizeWithSuffix),
+        suffix = sizeWithSuffix.split(/\d/)[0],
+        rootSize;
+
+    fontSize = fontSize != null ?
+      fontSize : /%|em/.test(suffix) && element.parentElement ?
+        getPixelSize(element.parentElement, element.parentElement.currentStyle, 'fontSize', null) :
+        16;
+    rootSize = property === 'fontSize' ?
+      fontSize : /width/i.test(property) ? element.clientWidth : element.clientHeight;
+
+    return (suffix === 'em') ?
+      size * fontSize : (suffix === 'in') ?
+        size * 96 : (suffix === 'pt') ?
+          size * 96 / 72 : (suffix === '%') ?
+            size / 100 * rootSize : size;
+  }
+
+  function setShortStyleProperty(style, property) {
+    var
+    borderSuffix = property === 'border' ? 'Width' : '',
+    t = property + 'Top' + borderSuffix,
+    r = property + 'Right' + borderSuffix,
+    b = property + 'Bottom' + borderSuffix,
+    l = property + 'Left' + borderSuffix;
+
+    style[property] = (style[t] === style[r] === style[b] === style[l] ? [style[t]]
+    : style[t] === style[b] && style[l] === style[r] ? [style[t], style[r]]
+    : style[l] === style[r] ? [style[t], style[r], style[b]]
+    : [style[t], style[r], style[b], style[l]]).join(' ');
+  }
+
+  function CSSStyleDeclaration(element) {
+    var currentStyle = element.currentStyle,
+        style = this,
+        fontSize = getPixelSize(element, currentStyle, 'fontSize', null),
+        property;
+
+    for (property in currentStyle) {
+      if (/width|height|margin.|padding.|border.+W/.test(property) && style[property] !== 'auto') {
+        style[property] = getPixelSize(element, currentStyle, property, fontSize) + 'px';
+      } else if (property === 'styleFloat') {
+        /*jshint -W069 */
+        style['float'] = currentStyle[property];
+      } else {
+        style[property] = currentStyle[property];
+      }
+    }
+
+    setShortStyleProperty(style, 'margin');
+    setShortStyleProperty(style, 'padding');
+    setShortStyleProperty(style, 'border');
+
+    style.fontSize = fontSize + 'px';
+
+    return style;
+  }
+
+  CSSStyleDeclaration.prototype = {
+    constructor: CSSStyleDeclaration,
+    getPropertyPriority: function () {},
+    getPropertyValue: function ( prop ) {
+      return this[prop] || '';
+    },
+    item: function () {},
+    removeProperty: function () {},
+    setProperty: function () {},
+    getPropertyCSSValue: function () {}
+  };
+
+  function getComputedStyle(element) {
+    return new CSSStyleDeclaration(element);
+  }
+
+
+  OTHelpers.getComputedStyle = function(element) {
+    if(element &&
+        element.ownerDocument &&
+        element.ownerDocument.defaultView &&
+        element.ownerDocument.defaultView.getComputedStyle) {
+      return element.ownerDocument.defaultView.getComputedStyle(element);
+    } else {
+      return getComputedStyle(element);
+    }
+  };
 
 })(window, window.OTHelpers);
 
@@ -2181,146 +2326,146 @@ OTHelpers.centerElement = function(element, width, height) {
 
 // tb_require('../helpers.js')
 // tb_require('./dom.js')
+// tb_require('./getcomputedstyle.js')
 
 (function(window, OTHelpers, undefined) {
 
-var displayStateCache = {},
-    defaultDisplays = {};
+  var displayStateCache = {},
+      defaultDisplays = {};
 
-var defaultDisplayValueForElement = function(element) {
-    if (defaultDisplays[element.ownerDocument] && defaultDisplays[element.ownerDocument][element.nodeName]) {
+  var defaultDisplayValueForElement = function(element) {
+      if (defaultDisplays[element.ownerDocument] &&
+        defaultDisplays[element.ownerDocument][element.nodeName]) {
         return defaultDisplays[element.ownerDocument][element.nodeName];
-    }
+      }
 
-    if (!defaultDisplays[element.ownerDocument]) defaultDisplays[element.ownerDocument] = {};
+      if (!defaultDisplays[element.ownerDocument]) defaultDisplays[element.ownerDocument] = {};
     
-    // We need to know what display value to use for this node. The easiest way
-    // is to actually create a node and read it out.
-    var testNode = element.ownerDocument.createElement(element.nodeName),
-        defaultDisplay;
+      // We need to know what display value to use for this node. The easiest way
+      // is to actually create a node and read it out.
+      var testNode = element.ownerDocument.createElement(element.nodeName),
+          defaultDisplay;
 
-    element.ownerDocument.body.appendChild(testNode);
-    defaultDisplay = defaultDisplays[element.ownerDocument][element.nodeName] = OTHelpers.css(testNode, 'display');
+      element.ownerDocument.body.appendChild(testNode);
+      defaultDisplay = defaultDisplays[element.ownerDocument][element.nodeName] =
+        OTHelpers.css(testNode, 'display');
 
-    OTHelpers.removeElement(testNode);
-    testNode = null;
+      OTHelpers.removeElement(testNode);
+      testNode = null;
 
-    return defaultDisplay;
-};
+      return defaultDisplay;
+    };
 
-var isHidden = function(element) {
-    var computedStyle = element.ownerDocument.defaultView.getComputedStyle(element, null);
+  var isHidden = function(element) {
+    var computedStyle = OTHelpers.getComputedStyle(element);
     return computedStyle.getPropertyValue('display') === 'none';
-};
+  };
 
-OTHelpers.show = function(element) {
-    var display = element.style.display; 
-        //,
-        // computedStyle = element.ownerDocument.defaultView.getComputedStyle(element, null),
-        // computedDisplay = computedStyle.getPropertyValue('display');
+  OTHelpers.show = function(element) {
+    var display = element.style.display;
 
     if (display === '' || display === 'none') {
-        element.style.display = displayStateCache[element] || '';
-        delete displayStateCache[element];
+      element.style.display = displayStateCache[element] || '';
+      delete displayStateCache[element];
     }
 
     if (isHidden(element)) {
-        // It's still hidden so there's probably a stylesheet that declares this 
-        // element as display:none;
-        displayStateCache[element] = 'none';
+      // It's still hidden so there's probably a stylesheet that declares this
+      // element as display:none;
+      displayStateCache[element] = 'none';
 
-        element.style.display = defaultDisplayValueForElement(element);
+      element.style.display = defaultDisplayValueForElement(element);
     }
 
     return this;
-};
+  };
 
-OTHelpers.hide = function(element) {
+  OTHelpers.hide = function(element) {
     if (element.style.display === 'none') return;
 
     displayStateCache[element] = element.style.display;
     element.style.display = 'none';
 
     return this;
-};
+  };
 
-OTHelpers.css = function(element, nameOrHash, value) {
+  OTHelpers.css = function(element, nameOrHash, value) {
     if (typeof(nameOrHash) !== 'string') {
-        var style = element.style;
+      var style = element.style;
 
-        for (var cssName in nameOrHash) {
-            style[cssName] = nameOrHash[cssName];
-        }
+      for (var cssName in nameOrHash) {
+        style[cssName] = nameOrHash[cssName];
+      }
 
-        return this;
+      return this;
+
+    } else if (value !== undefined) {
+      element.style[nameOrHash] = value;
+      return this;
+
+    } else {
+      // Normalise vendor prefixes from the form MozTranform to -moz-transform
+      // except for ms extensions, which are weird...
+
+      var name = nameOrHash.replace( /([A-Z]|^ms)/g, '-$1' ).toLowerCase(),
+          computedStyle = OTHelpers.getComputedStyle(element),
+          currentValue = computedStyle.getPropertyValue(name);
+
+      if (currentValue === '') {
+        currentValue = element.style[name];
+      }
+
+      return currentValue;
     }
-    else if (value !== undefined) {
-        element.style[nameOrHash] = value;
-        return this;
-    }
-    else {
-        // Normalise vendor prefixes from the form MozTranform to -moz-transform
-        // except for ms extensions, which are weird...
-        var name = nameOrHash.replace( /([A-Z]|^ms)/g, "-$1" ).toLowerCase(),
-            computedStyle = element.ownerDocument.defaultView.getComputedStyle(element, null),
-            currentValue = computedStyle.getPropertyValue(name);
-
-        if (currentValue === '') {
-            currentValue = element.style[name];
-        }
-
-        return currentValue;
-    }
-};
+  };
 
 
 // Apply +styles+ to +element+ while executing +callback+, restoring the previous
 // styles after the callback executes.
-OTHelpers.applyCSS = function(element, styles, callback) {
+  OTHelpers.applyCSS = function(element, styles, callback) {
     var oldStyles = {},
         name,
         ret;
 
     // Backup the old styles
     for (name in styles) {
-        if (styles.hasOwnProperty(name)) {
-            // We intentionally read out of style here, instead of using the css
-            // helper. This is because the css helper uses querySelector and we
-            // only want to pull values out of the style (domeElement.style) hash.
-            oldStyles[name] = element.style[name];
+      if (styles.hasOwnProperty(name)) {
+        // We intentionally read out of style here, instead of using the css
+        // helper. This is because the css helper uses querySelector and we
+        // only want to pull values out of the style (domeElement.style) hash.
+        oldStyles[name] = element.style[name];
 
-            OTHelpers.css(element, name, styles[name]);
-        }
+        OTHelpers.css(element, name, styles[name]);
+      }
     }
 
     ret = callback();
 
     // Restore the old styles
     for (name in styles) {
-        if (styles.hasOwnProperty(name)) {
-            OTHelpers.css(element, name, oldStyles[name] || '');
-        }
+      if (styles.hasOwnProperty(name)) {
+        OTHelpers.css(element, name, oldStyles[name] || '');
+      }
     }
 
     return ret;
-};
+  };
 
 // Make +element+ visible while executing +callback+.
-OTHelpers.makeVisibleAndYield = function(element, callback) {
-    // find whether it's the element or an ancester that's display none and 
+  OTHelpers.makeVisibleAndYield = function(element, callback) {
+    // find whether it's the element or an ancester that's display none and
     // then apply to whichever it is
     var targetElement = OTHelpers.findElementWithDisplayNone(element);
     if (!targetElement) return;
 
     return OTHelpers.applyCSS(targetElement, {
-            display: "block",
-            visibility: "hidden"
-        },
-        callback
-    );
-};
+      display: 'block',
+      visibility: 'hidden'
+    }, callback);
+  };
 
 })(window, window.OTHelpers);
+
 // AJAX helpers
 
 /*jshint browser:true, smarttabs:true*/
@@ -2349,7 +2494,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
 
     var done = function(error, event) {
       if(error) {
-        callback(error);
+        callback(error, event && event.target && event.target.responseText);
       } else {
         var response;
 
@@ -2357,7 +2502,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
           response = JSON.parse(event.target.responseText);
         } catch(e) {
           // Badly formed JSON
-          callback(e);
+          callback(e, event && event.target && event.target.responseText);
           return;
         }
 
@@ -2488,6 +2633,237 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
   };
 
 })(window, window.OTHelpers);
+!(function() {
+
+  OT.Dialogs = {};
+
+  var addCss = function(document, url, callback) {
+    var head = document.head || document.getElementsByTagName('head')[0];
+    var cssTag = OT.$.createElement('link', {
+      type: 'text/css',
+      media: 'screen',
+      rel: 'stylesheet',
+      href: url
+    });
+    head.appendChild(cssTag);
+    OT.$.on(cssTag, 'error', function(error) {
+      OT.error('Could not load CSS for dialog', url, error && error.message || error);
+    });
+    OT.$.on(cssTag, 'load', callback);
+  };
+
+  var addDialogCSS = function(document, urls, callback) {
+    var allURLs = [
+      '//fonts.googleapis.com/css?family=Didact+Gothic',
+      OT.properties.cssURL
+    ].concat(urls);
+    var remainingStylesheets = allURLs.length;
+    OT.$.forEach(allURLs, function(stylesheetUrl) {
+      addCss(document, stylesheetUrl, function() {
+        if(--remainingStylesheets <= 0) {
+          callback();
+        }
+      });
+    });
+
+  };
+  
+  var templateElement = function(classes, children, tagName) {
+    var el = OT.$.createElement(tagName || 'div', { 'class': classes }, children, this);
+    el.on = OT.$.bind(OT.$.on, OT.$, el);
+    return el;
+  };
+
+  OT.Dialogs.AllowDeny = {};
+  OT.Dialogs.AllowDeny.Chrome = {};
+  OT.Dialogs.AllowDeny.Firefox = {};
+
+  OT.Dialogs.AllowDeny.Chrome.initialPrompt = function() {
+    var modal = new OT.$.Modal(function(window, document) {
+
+      var el = templateElement.bind(document),
+          close, root;
+
+      close = el('OT_closeButton', '&times;')
+        .on('click', function() {
+          modal.close();
+        });
+
+      root = el('OT_root OT_dialog OT_dialog-allow-deny-chrome-first', [
+        close,
+        el('OT_dialog-messages', [
+          el('OT_dialog-messages-main', 'Allow camera and mic access'),
+          el('OT_dialog-messages-minor', 'Click the Allow button in the upper-right corner ' +
+            'of your browser to enable real-time communication.'),
+          el('OT_dialog-allow-highlight-chrome')
+        ])
+      ]);
+
+      addDialogCSS(document, [], function() {
+        document.body.appendChild(root);
+      });
+
+    });
+    return modal;
+  };
+
+  OT.Dialogs.AllowDeny.Chrome.previouslyDenied = function(website) {
+    var modal = new OT.$.Modal(function(window, document) {
+
+      var el = templateElement.bind(document),
+          close,
+          root;
+
+      close = el('OT_closeButton', '&times;')
+        .on('click', function() {
+          modal.close();
+        });
+
+      root = el('OT_root OT_dialog OT_dialog-allow-deny-chrome-pre-denied', [
+        close,
+        el('OT_dialog-messages', [
+          el('OT_dialog-messages-main', 'Allow camera and mic access'),
+          el('OT_dialog-messages-minor', [
+            'To interact with this app, follow these 3 steps:',
+            el('OT_dialog-3steps', [
+              el('OT_dialog-3steps-step', [
+                el('OT_dialog-3steps-step-num', '1'),
+                'Find this icon in the URL bar and click it',
+                el('OT_dialog-allow-camera-icon')
+              ]),
+              el('OT_dialog-3steps-seperator'),
+              el('OT_dialog-3steps-step', [
+                el('OT_dialog-3steps-step-num', '2'),
+                'Select "Ask if ' + website + ' wants to access your camera and mic" ' +
+                  'and then click Done.'
+              ]),
+              el('OT_dialog-3steps-seperator'),
+              el('OT_dialog-3steps-step', [
+                el('OT_dialog-3steps-step-num', '3'),
+                'Refresh your browser.'
+              ])
+            ])
+          ])
+        ])
+      ]);
+
+      addDialogCSS(document, [], function() {
+        document.body.appendChild(root);
+      });
+
+    });
+    return modal;
+  };
+
+  OT.Dialogs.AllowDeny.Chrome.deniedNow = function() {
+    var modal = new OT.$.Modal(function(window, document) {
+
+      var el = templateElement.bind(document),
+          root;
+
+      root = el('OT_root OT_dialog-blackout',
+        el('OT_dialog OT_dialog-allow-deny-chrome-now-denied', [
+          el('OT_dialog-messages', [
+            el('OT_dialog-messages-main ',
+              el('OT_dialog-allow-camera-icon')
+            ),
+            el('OT_dialog-messages-minor',
+              'Find & click this icon to allow camera and mic access.'
+            )
+          ])
+        ])
+      );
+
+      addDialogCSS(document, [], function() {
+        document.body.appendChild(root);
+      });
+
+    });
+    return modal;
+  };
+
+  OT.Dialogs.AllowDeny.Firefox.maybeDenied = function() {
+    var modal = new OT.$.Modal(function(window, document) {
+
+      var el = templateElement.bind(document),
+          close,
+          root;
+
+      close = el('OT_closeButton', '&times;')
+        .on('click', function() {
+          modal.close();
+        });
+
+      root = el('OT_root OT_dialog OT_dialog-allow-deny-firefox-maybe-denied', [
+        close,
+        el('OT_dialog-messages', [
+          el('OT_dialog-messages-main', 'Please allow camera & mic access'),
+          el('OT_dialog-messages-minor', [
+            'To interact with this app, follow these 3 steps:',
+            el('OT_dialog-3steps', [
+              el('OT_dialog-3steps-step', [
+                el('OT_dialog-3steps-step-num', '1'),
+                'Reload the page, or click the camera icon ' +
+                  'in the browser URL bar.'
+              ]),
+              el('OT_dialog-3steps-seperator'),
+              el('OT_dialog-3steps-step', [
+                el('OT_dialog-3steps-step-num', '2'),
+                'In the menu, select your camera & mic.'
+              ]),
+              el('OT_dialog-3steps-seperator'),
+              el('OT_dialog-3steps-step', [
+                el('OT_dialog-3steps-step-num', '3'),
+                'Click "Share Selected Devices."'
+              ])
+            ])
+          ])
+        ])
+      ]);
+
+      addDialogCSS(document, [], function() {
+        document.body.appendChild(root);
+      });
+
+    });
+    return modal;
+  };
+
+
+  OT.Dialogs.AllowDeny.Firefox.denied = function() {
+    var modal = new OT.$.Modal(function(window, document) {
+
+      var el = templateElement.bind(document),
+          btn = templateElement.bind(document, 'OT_dialog-button OT_dialog-button-large'),
+          root,
+          refreshButton;
+
+      refreshButton = btn('Reload')
+        .on('click', function() {
+          modal.trigger('refresh');
+        });
+
+      root = el('OT_root OT_dialog-blackout',
+        el('OT_dialog OT_dialog-allow-deny-firefox-denied', [
+          el('OT_dialog-messages', [
+            el('OT_dialog-messages-minor',
+              'Access to camera and microphone has been denied. ' +
+              'Click the button to reload page.'
+            )
+          ]),
+          el('OT_dialog-single-button', refreshButton)
+        ])
+      );
+
+      addDialogCSS(document, [], function() {
+        document.body.appendChild(root);
+      });
+
+    });
+    return modal;
+  };
+
+})();
 !(function(window) {
 
   /* global OTHelpers */
@@ -2499,6 +2875,25 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
 
   // Allow events to be bound on OT
   OT.$.eventing(OT);
+
+  // REMOVE THIS POST IE MERGE
+
+  OT.$.defineGetters = function(self, getters, enumerable) {
+    var propsDefinition = {};
+
+    if (enumerable === void 0) enumerable = false;
+
+    for (var key in getters) {
+      propsDefinition[key] = {
+        get: getters[key],
+        enumerable: enumerable
+      };
+    }
+
+    Object.defineProperties(self, propsDefinition);
+  };
+
+  // STOP REMOVING HERE
 
   // OT.$.Modal was OT.Modal before the great common-js-helpers move
   OT.Modal = OT.$.Modal;
@@ -2622,7 +3017,6 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
       window.location.protocol.indexOf('chrome-extension') >= 0)) {
       props.assetURL = props.cdnURLSSL + '/webrtc/' + props.version;
       props.loggingURL = props.loggingURLSSL;
-      props.apiURL = props.apiURLSSL;
     } else {
       props.assetURL = props.cdnURL + '/webrtc/' + props.version;
     }
@@ -3105,10 +3499,11 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
       }
     });
 
-    this.addError = function(errorMsg, helpMsg) {
+    this.addError = function(errorMsg, helpMsg, classNames) {
       container.innerHTML = '<p>' + errorMsg +
-        ' <span class="ot-help-message">' + helpMsg + '</span></p>';
-      OT.$.addClass(container, 'OT_subscriber_error');
+        (helpMsg ? ' <span class="ot-help-message">' + helpMsg + '</span>' : '') +
+        '</p>';
+      OT.$.addClass(container, classNames || 'OT_subscriber_error');
       if(container.querySelector('p').offsetHeight > container.offsetHeight) {
         container.querySelector('span').style.display = 'none';
       }
@@ -3218,15 +3613,15 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
   };
 
   gumNamesToMessages = {
-    PermissionDeniedError: 'User denied permission for scripts from this origin to ' +
-      'access the media device.',
+    PermissionDeniedError: 'End-user denied permission to hardware devices',
     NotSupportedError: 'A constraint specified is not supported by the browser.',
-    ConstraintNotSatisfiedError: 'One of the mandatory constraints could not be satisfied.',
+    ConstraintNotSatisfiedError: 'It\'s not possible to satisfy one or more constraints ' +
+      'passed into the getUserMedia function',
     OverconstrainedError: 'Due to changes in the environment, one or more mandatory ' +
       'constraints can no longer be satisfied.',
-    NoDevicesFoundError: 'No video or audio input devices are available on this machine.',
-    HardwareUnavailableError: 'The selected audio or video input devices are not available, ' +
-      'possibly because they are in use by another application.'
+    NoDevicesFoundError: 'No voice or video input devices are available on this machine.',
+    HardwareUnavailableError: 'The selected voice or video devices are unavailable. Verify ' +
+      'that the chosen devices are not in use by another application.'
   };
 
 // Map vendor error strings to names and messages
@@ -4191,11 +4586,16 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
 
     // Uses HTML5 local storage to save a client ID.
     this.getClientGuid = function() {
-      var  guid = OT.$.getCookie('opentok_client_id');
+      var guid = OT.$.getCookie('opentok_client_id');
       if (!guid) {
         guid = OT.$.uuid();
         OT.$.setCookie('opentok_client_id', guid);
       }
+      // once we have a guid, memoise this function so if cookies & local storage are disabled
+      // we still hand back the same guid each call within this page at least. OPENTOK-14015
+      this.getClientGuid = function() {
+        return guid;
+      };
       return guid;
     };
   };
@@ -4383,15 +4783,6 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
 *   The default resolution for a stream (if you do not specify a resolution) is 640x480 pixels.
 *   If the client system cannot support the resolution you requested, the the stream will use the 
 *   next largest setting supported.
-*   </p>
-*   <p>
-*   The actual resolution used by the Publisher is set as the <code>videoHeight</code> and 
-*   <code>videoWidth</code> properties of the Publisher object. The actual resolution of a
-*   Subscriber video stream is set as the <code>videoWidth</code> and <code>videoHeight</code> 
-*   properties of the Subscriber object. These may differ from the values of the 
-*   <code>resolution</code> property passed in as the <code>properties</code> property of the
-*   <code>OT.initPublisher()</code> method, if the browser does not support the requested
-*   resolution.
 *   </p>
 *   <p>
 *   For OpenTok cloud-enabled sessions, lowering the frame rate or lowering the resolution reduces
@@ -4881,16 +5272,6 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
           this.trigger('update:'+event.target.id, event);
         }.bind(this),
 
-        onModelIdUpdate = function onModelIdUpdate (oldId, newId) {
-          if (_byId[oldId] === void 0) return;
-
-          // Match their old index to their new id and remove any
-          // reference to the old one.
-          var index = _byId[oldId];
-          delete _byId[oldId];
-          _byId[newId] = index;
-        }.bind(this),
-
         onModelDestroy = function onModelDestroyed (event) {
           this.remove(event.target, event.reason);
         }.bind(this);
@@ -4901,7 +5282,6 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
       _models.forEach(function(model) {
         model.off('updated', onModelUpdate, this);
         model.off('destroyed', onModelDestroy, this);
-        model.off('idUpdated', onModelIdUpdate, this);
       }, this);
 
       _models = [];
@@ -4992,7 +5372,6 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
 
       model.on('updated', onModelUpdate, this);
       model.on('destroyed', onModelDestroy, this);
-      model.on('idUpdated', onModelIdUpdate, this);
 
       this.trigger('add', model);
       this.trigger('add:'+id, model);
@@ -5014,7 +5393,6 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
 
       model.off('updated', onModelUpdate, this);
       model.off('destroyed', onModelDestroy, this);
-      model.off('idUpdated', onModelIdUpdate, this);
 
       this.trigger('remove', model, reason);
       this.trigger('remove:'+id, model, reason);
@@ -5082,6 +5460,12 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
   *
   *   <li><code>streamDestroyed</code> &#151; See <a href="StreamEvent.html#preventDefault">
   *   StreamEvent.preventDefault()</a>.</li>
+  *
+  *   <li><code>accessDialogOpened</code> &#151; See the
+  *   <a href="Publisher.html#event:accessDialogOpened">accessDialogOpened event</a>.</li>
+  *
+  *   <li><code>accessDenied</code> &#151; See the <a href="Publisher.html#event:accessDenied">
+  *   accessDenied event</a>.</li>
   *
   * </ul>
   *
@@ -5165,7 +5549,6 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
     API_RESPONSE_FAILURE: 1014,
     UNABLE_TO_PUBLISH: 1500,
     UNABLE_TO_SUBSCRIBE: 1501,
-    UNABLE_TO_SIGNAL: 1510,
     UNABLE_TO_FORCE_DISCONNECT: 1520,
     UNABLE_TO_FORCE_UNPUBLISH: 1530
   };
@@ -5189,15 +5572,6 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
   *   </td>
   *   <td>
   *   <b>title</b>
-  *   </td>
-  *  </tr>
-  *  <tr>
-  *   <td>
-  *   1000
-  *
-  *   </td>
-  *   <td>
-  *   Failed To Load
   *   </td>
   *  </tr>
   *
@@ -5302,15 +5676,6 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
   *
   *  <tr>
   *    <td>
-  *    1510
-  *    </td>
-  *    <td>
-  *    Unable to Signal
-  *    </td>
-  *   </tr>
-  *
-  *  <tr>
-  *    <td>
   *    1520
   *    </td>
   *    <td>
@@ -5361,6 +5726,11 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
   *  <p>Check the <code>message</code> property for more details about the error.</p>
   *
   * @property {String} message The error message.
+  *
+  * @property {Object} target The object that the event pertains to. For an
+  * <code>exception</code> event, this will be an object other than the OT object
+  * (such as a Session object or a Publisher object).
+  *
   * @property {String} title The error title.
   * @augments Event
   */
@@ -5499,7 +5869,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
  * <pre>
  * session.on("streamCreated", function(event) {
  *   // streamContainer is a DOM element
- *   subscriber = session.subscribe(event.stream, streamContainer);
+ *   subscriber = session.subscribe(event.stream, targetElement);
  * }).connect(token);
  * </pre>
  *
@@ -5521,7 +5891,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
  * starts</p>
  *
  * <pre>
- * var publisher = session.publish(publisherContainer)
+ * var publisher = session.publish(targetElement)
  *   .on("streamCreated", function(event) {
  *     console.log("Publisher started streaming.");
  *   );
@@ -5534,7 +5904,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
  * when the streaming stops:</p>
  *
  * <pre>
- * var publisher = session.publish(publisherContainer)
+ * var publisher = session.publish(targetElement)
  *   .on("streamDestroyed", function(event) {
  *     event.preventDefault();
  *     console.log("Publisher stopped streaming.");
@@ -5877,7 +6247,25 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
 /* jshint ignore:start */
 // https://code.google.com/p/stringencoding/
 // An implementation of http://encoding.spec.whatwg.org/#api
-//
+
+/**
+ * @license  Copyright 2014 Joshua Bell
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Original source: https://github.com/inexorabletash/text-encoding
+ ***/
+
 (function(global) {
   'use strict';
 
@@ -8546,6 +8934,10 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
     //// Private Event Handlers
     var webSocketConnected = function webSocketConnected () {
           if (connectTimeout) clearTimeout(connectTimeout);
+          if (this.isNot('connecting')) {
+            OT.debug('webSocketConnected reached in state other than connecting');
+            return;
+          }
 
           // Connect to Rumor by registering our connection id and the
           // app server address to notify if we disconnect.
@@ -8565,10 +8957,18 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
             lastMessageTimestamp = OT.$.now();
             sendKeepAlive();
           }, WEB_SOCKET_KEEP_ALIVE_INTERVAL);
-        },
+        }.bind(this),
 
         webSocketConnectTimedOut = function webSocketConnectTimedOut () {
+          var webSocketWas = webSocket;
           error('Timed out while waiting for the Rumor socket to connect.');
+          // This will prevent a socket eventually connecting
+          // But call it _after_ the error just in case any of
+          // the callbacks fire synchronously, breaking the error
+          // handling code.
+          try {
+            webSocketWas.close();
+          } catch(x) {}
         },
 
         webSocketError = function webSocketError () {},
@@ -9113,7 +9513,14 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
 
     return message;
   };
-
+  
+  OT.Raptor.parseIceServers = function (message) {
+    try {
+      return JSON.parse(message.data).content.iceServers;
+    } catch (e) {
+      return [];
+    }
+  };
 
   OT.Raptor.Message = {};
 
@@ -9670,8 +10077,8 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
                                                       minBitrate,
                                                       maxBitrate);
 
-      this.publish(message, function(error) {
-        completion(error, streamId);
+      this.publish(message, function(error, message) {
+        completion(error, streamId, message);
       });
     };
 
@@ -9833,7 +10240,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
   };
 
   OT.Raptor.Dispatcher.prototype.onClose = function(reason) {
-    this.trigger('close', reason);
+    this.emit('close', reason);
   };
 
 
@@ -9848,10 +10255,6 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
       var error;
 
       if (rumorMessage.isError) {
-        // error = new OT.Error(OT.ExceptionCodes.CONNECT_REJECTED,
-        //   connectErrorReasons[message.payload.reason] || "Failed to connect");
-        // @todo This is wrong. We don't know what operation was actually failing,
-        //        we can only blindly trigger the completion handler
         error = new OT.Error(rumorMessage.status);
       }
 
@@ -10059,8 +10462,8 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
 
   OT.Raptor.Dispatcher.prototype.dispatchArchive = function (message) {
     switch (message.method) {
-      case 'create':
-        this.emit('archive#create', message.content);
+      case 'created':
+        this.emit('archive#created', message.content);
         break;
       
       case 'updated':
@@ -10155,7 +10558,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
         state.streams.push( parseAndAddStreamToSession(streamParams, session) );
       });
       
-      content.archives.forEach(function(archiveParams) {
+      (content.archive || content.archives).forEach(function(archiveParams) {
         state.archives.push( parseAndAddArchiveToSession(archiveParams, session) );
       });
 
@@ -10379,7 +10782,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
                                signalType, data);
     });
 
-    dispatcher.on('archive#create', function(archive) {
+    dispatcher.on('archive#created', function(archive) {
       parseAndAddArchiveToSession(archive, session);
     });
 
@@ -10559,6 +10962,11 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
    *   <td><b>Description</b></td>
    * </tr>
    * <tr>
+   *   <td>1010</td>
+   *   <td>The client is not connected to the OpenTok session. Check that client connects
+   *     successfully and has not disconnected before calling forceDisconnect().</td>
+   * </tr>
+   * <tr>
    *   <td>1520</td>
    *   <td>Unable to force disconnect. The client's token does not have the role set to moderator.
    *     Once the client has connected to the session, the <code>capabilities</code> property of
@@ -10572,6 +10980,11 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
    * <tr>
    *   <td><b><code>code</code></b></td>
    *   <td><b>Description</b></td>
+   * </tr>
+   * <tr>
+   *   <td>1010</td>
+   *   <td>The client is not connected to the OpenTok session. Check that client connects
+   *     successfully and has not disconnected before calling forceUnpublish().</td>
    * </tr>
    * <tr>
    *   <td>1530</td>
@@ -10595,9 +11008,9 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
    * </tr>
    * <tr>
    *   <td>1010</td>
-   *   <td>Cannot publish: the client is not connected to the OpenTok session. Check that your
-   *     application makes the client connect successfully before trying to publish. And check
-   *     that the client has not disconnected before trying to publish.</td>
+   *   <td>The client is not connected to the OpenTok session. Check that the client connects
+   *     successfully before trying to publish. And check that the client has not disconnected
+   *     before trying to publish.</td>
    * </tr>
    * <tr>
    *   <td>1500</td>
@@ -10620,10 +11033,22 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
    *   <td><b>Description</b></td>
    * </tr>
    * <tr>
-   *   <td>1510</td>
-   *   <td>Unable to signal. Check that the <code>to</code> property of the signal parameter is
-   *     set to a valid Connection object. Also, make sure that you are connected to the
-   *     session.</td>
+   *     <td>400</td>
+   *     <td>One of the signal properties &mdash; data, type, or to &mdash;
+   *                 is invalid. Or the data cannot be parsed as JSON.</td>
+   * </tr>
+   * <tr>
+   *   <td>404</td> <td>The to connection does not exist.</td>
+   * </tr>
+   * <tr>
+   *   <td>413</td> <td>The type string exceeds the maximum length (128 bytes),
+   *     or the data string exceeds the maximum size (8 kB).</td>
+   * </tr>
+   * <tr>
+   *   <td>500</td>
+   *   <td>The client is not connected to the OpenTok session. Check that the client connects
+   *     successfully before trying to signal. And check that the client has not disconnected before
+   *     trying to publish.</td>
    * </tr>
    * </tbody></table>
    *
@@ -10694,7 +11119,6 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
   };
 
   var errorsCodesToTitle = {
-    1000: 'Failed To Load',
     1004: 'Authentication error',
     1005: 'Invalid Session ID',
     1006: 'Connect Failed',
@@ -10707,24 +11131,10 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
     1013: 'Connection Failed',
     1014: 'API Response Failure',
     1500: 'Unable to Publish',
-    1510: 'Unable to Signal',
     1520: 'Unable to Force Disconnect',
     1530: 'Unable to Force Unpublish',
-    1540: 'Unable to record archive',
-    1550: 'Unable to play back archive',
-    1560: 'Unable to create archive',
-    1570: 'Unable to load archive',
     2000: 'Internal Error',
     2001: 'Embed Failed',
-    3000: 'Archive load exception',
-    3001: 'Archive create exception',
-    3002: 'Playback stop exception',
-    3003: 'Playback start exception',
-    3004: 'Record start exception',
-    3005: 'Record stop exception',
-    3006: 'Archive load exception',
-    3007: 'Session recording in progress',
-    3008: 'Archive recording internal failure',
     4000: 'WebSocket Connection Failed',
     4001: 'WebSocket Network Disconnected'
   };
@@ -11046,9 +11456,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
  * <code>height</code>. Both are numbers. The <code>width</code> property is the width of the
  * encoded stream; the <code>height</code> property is the height of the encoded stream. (These
  * are independent of the actual width of Publisher and Subscriber objects corresponding to the
- * stream.) The height and width of the <code>videoDimensions</code> of a Stream object may differ
- * from the <code>videoHeight</code> dimensions of a Subcriber object using the stream, if the
- * browser does not support the resolution of the stream. This property can change if a stream
+ * stream.) This property can change if a stream
  * published from an iOS device resizes, based on a change in the device orientation. When this
  * occurs, the {@link Session} object dispatches a <code>streamPropertyChanged</code> event (see
  * {@link StreamPropertyChangedEvent}.)
@@ -11541,7 +11949,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
     );
   };
 
-  /**
+  /*
    * Negotiates a WebRTC PeerConnection.
    *
    * Responsible for:
@@ -11583,7 +11991,10 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
           if (!_peerConnection) {
             try {
               OT.debug('Creating peer connection config "' + JSON.stringify(config) + '".');
-
+              if (!config.iceServers || config.iceServers.length === 0) {
+                // This should never happen unless something is misconfigured
+                OT.error('No ice servers present');
+              }
               _peerConnection = OT.$.createPeerConnection(config, {
                 optional: [
                   { DtlsSrtpKeyAgreement: true }
@@ -11831,6 +12242,12 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
 
       return this;
     };
+    
+    this.setIceServers = function (iceServers) {
+      if (iceServers) {
+        config.iceServers = iceServers;
+      }
+    };
 
     this.registerMessageDelegate = function(delegateFn) {
       return _messageDelegates.push(delegateFn);
@@ -12072,7 +12489,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
 })(window);
 !(function() {
 
-  /**
+  /*
    * Abstracts PeerConnection related stuff away from OT.Publisher.
    *
    * Responsible for:
@@ -12177,18 +12594,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
     };
 
     // Init
-    this.init = function() {
-      var iceServers = session.sessionInfo.iceServers.map(function(is) {
-        var iceServer = OT.$.clone(is);
-
-        if (iceServer.url.trim().substr(0, 5) === 'turn:') {
-          // Make the username sessionId:connectionId:streamId for tracking purposes.
-          iceServer.username = session.id + '.' + session.connection.id + '.' + streamId;
-        }
-
-        return iceServer;
-      });
-
+    this.init = function(iceServers) {
       _peerConnection = OT.PeerConnections.add(remoteConnection, streamId, {
         iceServers: iceServers
       });
@@ -12214,7 +12620,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
 })(window);
 !(function() {
 
-  /**
+  /*
    * Abstracts PeerConnection related stuff away from OT.Subscriber.
    *
    * Responsible for:
@@ -12319,7 +12725,9 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
           tracks = stream[method]();
 
           for (var k=0, numTracks=tracks.length; k < numTracks; ++k){
-            tracks[k].enabled=enabled;
+            // Only change the enabled property if it's different
+            // otherwise we get flickering of the video
+            if (tracks[k].enabled !== enabled) tracks[k].enabled=enabled;
           }
         }
       };
@@ -12367,20 +12775,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
 
     // Init
     this.init = function() {
-      var iceServers = session.sessionInfo.iceServers.map(function(is) {
-        var iceServer = OT.$.clone(is);
-
-        if (iceServer.url.trim().substr(0, 5) === 'turn:') {
-          // Make the username sessionId:connectionId:streamId for tracking purposes.
-          iceServer.username = session.id + '.' + session.connection.id + '.' + stream.id;
-        }
-
-        return iceServer;
-      });
-
-      _peerConnection = OT.PeerConnections.add(remoteConnection, stream.streamId, {
-        iceServers: iceServers
-      });
+      _peerConnection = OT.PeerConnections.add(remoteConnection, stream.streamId, {});
 
       _peerConnection.on({
         close: _onPeerClosed,
@@ -12421,11 +12816,13 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
           }));
         }
 
-        session._.subscriberCreate(stream, subscriber, channelsToSubscribeTo, function(err) {
-          if (err) {
-            this.trigger('error', null, err.message, this, 'Subscribe');
-          }
-        }.bind(this));
+        session._.subscriberCreate(stream, subscriber, channelsToSubscribeTo,
+          function(err, message) {
+            if (err) {
+              this.trigger('error', null, err.message, this, 'Subscribe');
+            }
+            _peerConnection.setIceServers(OT.Raptor.parseIceServers(message));
+          }.bind(this));
       }
     };
   };
@@ -13280,7 +13677,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
 })(window);
 !(function() {
 
-/**
+/*
  * A Publishers Microphone.
  *
  * TODO
@@ -13603,19 +14000,16 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
  *
  *  var session = OT.initSession(apiKey, sessionID);
  *  session.on("sessionConnected", function(event) {
- *
- *      var publisherContainer = document.getElementById('publisherContainer');
- *          // This example assumes that a publisherContainer div exists
- *
- *      var publisherProperties = {width: 400, height:300, name:"Bob's stream"};
- *      publisher = OT.initPublisher(publisherContainer, publisherProperties);
- *      session.publish(publisher);
+ *    // This example assumes that a DOM element with the ID 'publisherElement' exists
+ *    var publisherProperties = {width: 400, height:300, name:"Bob's stream"};
+ *    publisher = OT.initPublisher('publisherElement', publisherProperties);
+ *    session.publish(publisher);
  *  });
  *  session.connect(token);
  *  </pre>
  *
  *      <p>This example creates a Publisher object and adds its video to a DOM element
- *      named <code>publisherContainer</code> by calling the <code>OT.initPublisher()</code>
+ *      with the ID <code>publisherElement</code> by calling the <code>OT.initPublisher()</code>
  *      method. It then publishes a stream to the session by calling
  *      the <code>publish()</code> method of the Session object.</p>
  *
@@ -13626,16 +14020,8 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
  * @property {Element} element The HTML DOM element containing the Publisher.
  * @property {String} id The DOM ID of the Publisher.
  * @property {Stream} stream The {@link Stream} object corresponding the the stream of
- * the Publihser.
+ * the Publisher.
  * @property {Session} session The {@link Session} to which the Publisher belongs.
- * @property {Number} videoHeight The height, in pixels, of the Publisher video. This may
- * differ from the <code>resolution</code> property passed in as the <code>properties</code>
- * property of the <code>OT.initPublisher()</code> method, if the browser does not support
- * the requested resolution.
- * @property {Number} videoWidth The width, in pixels, of the Publisher video. This may differ
- * from the <code>resolution</code> property passed in as the <code>properties</code> property
- * of the <code>OT.initPublisher()</code> method, if the browser does not support the requested
- * resolution.
  *
  * @see <a href="OT.html#initPublisher">OT.initPublisher</a>
  * @see <a href="Session.html#publish">Session.publish()</a>
@@ -13670,7 +14056,8 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
         _validFrameRates = [ 1, 7, 15, 30 ],
         _qosIntervals = {},
         _prevStats,
-        _state;
+        _state,
+        _iceServers;
 
     _validResolutions = {
       '320x240': {width: 320, height: 240},
@@ -13835,24 +14222,77 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
           logAnalyticsEvent('publish', 'Failure', 'reason',
             'GetUserMedia:Publisher Access Denied: Permission Denied');
 
+          var browser = OT.$.browserVersion();
+
           var event = new OT.Event(OT.Event.names.ACCESS_DENIED),
             defaultAction = function() {
-              if (!event.isDefaultPrevented() && _container) _container.destroy();
+              if(!event.isDefaultPrevented()) {
+                if(browser.browser === 'Chrome') {
+                  if (_container) {
+                    _container.addError('', null, 'OT_publisher-denied-chrome');
+                  }
+                  if(!accessDialogWasOpened) {
+                    OT.Dialogs.AllowDeny.Chrome.previouslyDenied(window.location.hostname);
+                  } else {
+                    OT.Dialogs.AllowDeny.Chrome.deniedNow();
+                  }
+                } else if(browser.browser === 'Firefox') {
+                  if(_container) {
+                    _container.addError('', 'Click the reload button in the URL bar to change ' +
+                      'camera & mic settings.', 'OT_publisher-denied-firefox');
+                  }
+                  OT.Dialogs.AllowDeny.Firefox.denied().on({
+                    refresh: function() {
+                      window.location.reload();
+                    }
+                  });
+                }
+              }
             };
 
           this.dispatchEvent(event, defaultAction);
         },
 
+        accessDialogPrompt,
+        accessDialogFirefoxTimeout,
+        accessDialogWasOpened = false,
+
         onAccessDialogOpened = function() {
+
+          accessDialogWasOpened = true;
+
           logAnalyticsEvent('accessDialog', 'Opened', '', '');
 
+          var browser = OT.$.browserVersion();
+
           this.dispatchEvent(
-            new OT.Event(OT.Event.names.ACCESS_DIALOG_OPENED, false)
+            new OT.Event(OT.Event.names.ACCESS_DIALOG_OPENED, true),
+            function(event) {
+              if(!event.isDefaultPrevented()) {
+                if(browser.browser === 'Chrome') {
+                  accessDialogPrompt = OT.Dialogs.AllowDeny.Chrome.initialPrompt();
+                } else if(browser.browser === 'Firefox') {
+                  accessDialogFirefoxTimeout = setTimeout(function() {
+                    accessDialogPrompt = OT.Dialogs.AllowDeny.Firefox.maybeDenied();
+                  }, 7000);
+                }
+              }
+            }
           );
         },
 
         onAccessDialogClosed = function() {
           logAnalyticsEvent('accessDialog', 'Closed', '', '');
+
+          if(accessDialogFirefoxTimeout) {
+            clearTimeout(accessDialogFirefoxTimeout);
+            accessDialogFirefoxTimeout = null;
+          }
+
+          if(accessDialogPrompt) {
+            accessDialogPrompt.close();
+            accessDialogPrompt = null;
+          }
 
           this.dispatchEvent(
             new OT.Event(OT.Event.names.ACCESS_DIALOG_CLOSED, false)
@@ -13921,15 +14361,6 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
           _stream = stream;
           _stream.on('destroyed', this.disconnect, this);
 
-          var oldGuid = _guid;
-          _guid = OT.Publisher.nextId();
-
-          // Our publisher has changed guids, let people that rely
-          // on the GUID be non-volatile know.
-          if (oldGuid) {
-            this.trigger('idUpdated', oldGuid, _guid);
-          }
-
           _state.set('Publishing');
           _publishStartTime = new Date();
 
@@ -13985,7 +14416,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
               error: onPeerConnectionFailure
             }, this);
 
-            peerConnection.init();
+            peerConnection.init(_iceServers);
           }
 
           return peerConnection;
@@ -14018,7 +14449,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
               break;
 
             case 'showArchiveStatus':
-              logAnalyticsEvent('showArchiveStatus', 'styleChange', 'mode', value);
+              logAnalyticsEvent('showArchiveStatus', 'styleChange', 'mode', value ? 'on': 'off');
               _chrome.archive.setShowArchiveStatus(value);
               break;
 
@@ -14036,7 +14467,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
           if(this.getStyle('bugDisplayMode') === 'off') {
             logAnalyticsEvent('bugDisplayMode', 'createChrome', 'mode', 'off');
           }
-          if(this.getStyle('showArchiveStatus') === 'off') {
+          if(!this.getStyle('showArchiveStatus')) {
             logAnalyticsEvent('showArchiveStatus', 'createChrome', 'mode', 'off');
           }
           _chrome = new OT.Chrome({
@@ -14398,7 +14829,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
 
           _state.set('PublishingToSession');
 
-          var onStreamRegistered = function(err, streamId) {
+          var onStreamRegistered = function(err, streamId, message) {
             if (err) {
               // @todo we should respect err.code here and translate it to the local
               // client equivalent.
@@ -14412,6 +14843,8 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
             }
 
             _streamId = streamId;
+            
+            _iceServers = OT.Raptor.parseIceServers(message);
           }.bind(this);
               
           // We set the streamWidth and streamHeight to be the minimum of the requested
@@ -14612,6 +15045,12 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
 	/**
 	* Dispatched when the user has clicked the Deny button, preventing the
 	* app from having access to the camera and microphone.
+	* <p>
+	* The default behavior of this event is to display a user interface element
+	* in the Publisher object, indicating that that user has denied access to
+	* the camera and microphone. Call the <code>preventDefault()</code> method
+	* method of the event object in the event listener to prevent this message
+	* from being displayed.
 	* @see Event
 	* @name accessDenied
 	* @event
@@ -14621,6 +15060,10 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
 	/**
 	* Dispatched when the Allow/Deny dialog box is opened. (This is the dialog box in which
 	* the user can grant the app access to the camera and microphone.)
+	* <p>
+	* The default behavior of this event is to display a message in the browser that instructs
+	* the user how to enable the camera and microphone. Call the <code>preventDefault()</code>
+	* method of the event object in the event listener to prevent this message from being displayed.
 	* @see Event
 	* @name accessDialogOpened
 	* @event
@@ -14649,9 +15092,9 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
 	 * The publisher has stopped streaming to the session. The default behavior is that
 	 * the Publisher object is removed from the HTML DOM). The Publisher object dispatches a 
 	 * <code>destroyed</code> event when the element is removed from the HTML DOM. If you call the 
-	 * <code>preventDefault()</code> method in the event listener for the 
-	 * <code>streamDestroyed</code> event, the default behavior is prevented, and you 
-	 * can, optionally, retain the Publisher for reuse or clean it up using your own code.
+	 * <code>preventDefault()</code> method of the event object in the event listener, the default
+	 * behavior is prevented, and you can, optionally, retain the Publisher for reuse or clean it up
+	 * using your own code.
 	 * @name streamDestroyed
 	 * @event
 	 * @memberof Publisher
@@ -14682,12 +15125,6 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
  * @property {Element} element The HTML DOM element containing the Subscriber.
  * @property {String} id The DOM ID of the Subscriber.
  * @property {Stream} stream The stream to which you are subscribing.
- * @property {Number} videoHeight The height, in pixels, of the Subscriber video in the HTML DOM.
- * This may differ from the <code>videoHeight</code> dimensions of the Stream object, if the
- * browser does not support the resolution of the stream.
- * @property {Number} videoWidth The width, in pixels, of the Subscriber video in the HTML DOM.
- * This may differ from the <code>videoWidth</code> dimensions of the Stream object, if the
- * browser does not support the resolution of the stream.
  *
  * @class Subscriber
  * @augments EventDispatcher
@@ -15561,10 +15998,39 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
 	* Dispatched when the OpenTok media server stops sending video to the subscriber.
 	* This feature of the OpenTok media server has a subscriber drop the video stream
 	* when connectivity degrades. The subscriber continues to receive the audio stream,
-	* if there is one. This feature is only available in sessions that use the OpenTok
-	* media server, not in peer-to-peer sessions.
+	* if there is one.
+	* <p>
+	* If connectivity improves to support video again, the Subscriber object dispatches
+	* a videoEnabled event, and the Subscriber resumes receiving video.
+	* <p>
+	* This feature is only available in sessions that use the OpenTok media server,
+	* not in peer-to-peer sessions.
+	*
 	* @see Event
+	* @see event:videoEnabled
 	* @name videoDisabled
+	* @event
+	* @memberof Subscriber
+	*/
+
+	/**
+	* Dispatched when the OpenTok media server resumes sending video to the subscriber
+	* after video was previously disabled.
+	* <p>
+	* The OpenTok media server has a subscriber drop the video stream when connectivity
+	* degrades (and the Subscriber dispatches a videoDisabled event). When the connectivity
+	* improves to support video the Subscriber dispatches the videoEnabled event and
+	* video resumes.
+	* <p>
+	* To prevent video from resuming, in the <code>videoEnabled</code> event listener,
+	* call <code>subscribeToVideo(false)</code> on the Subscriber object.
+	* <p>
+	* This feature is only available in sessions that use the OpenTok media server,
+	* not in peer-to-peer sessions.
+	*
+	* @see Event
+	* @see event:videoDisabled
+	* @name videoEnabled
 	* @event
 	* @memberof Subscriber
 	*/
@@ -15584,8 +16050,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
 
   var parseErrorFromJSONDocument,
       onGetResponseCallback,
-      onGetErrorCallback,
-      normaliseIceServers;
+      onGetErrorCallback;
 
   OT.SessionInfo = function(jsonDocument) {
     var sessionJSON = jsonDocument[0];
@@ -15608,21 +16073,13 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
       sessionJSON.properties.p2p &&
       sessionJSON.properties.p2p.preference &&
       sessionJSON.properties.p2p.preference.value === 'enabled';
-
-    this.iceServers = sessionJSON.ice_servers ? normaliseIceServers(sessionJSON.ice_servers) : [];
-
-    if(this.iceServers.length === 0) {
-      // We haven't got any ICE Servers from Anvil, default to something
-      OT.warn('SessionInfo contained not ICE Servers, using the default');
-      this.iceServers = [ {'url': 'stun:stun.l.google.com:19302'} ];
-    }
   };
 
   // Retrieves Session Info for +session+. The SessionInfo object will be passed
   // to the +onSuccess+ callback. The +onFailure+ callback will be passed an error
   // object and the DOMEvent that relates to the error.
   OT.SessionInfo.get = function(session, onSuccess, onFailure) {
-    var sessionInfoURL = OT.properties.apiURL + '/session/' + session.id + '?extended=true',
+    var sessionInfoURL = OT.properties.apiURLSSL + '/session/' + session.id + '?extended=true',
 
         startTime = OT.$.now(),
 
@@ -15632,11 +16089,11 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
           if (error === false) {
             onGetResponseCallback(session, onSuccess, sessionInfo);
           } else {
-            onGetErrorCallback(session, onFailure, error);
+            onGetErrorCallback(session, onFailure, error, JSON.stringify(sessionInfo));
           }
         };
 
-    session.logEvent('getSessionInfo', 'Attempt', 'api_url', OT.properties.apiURL);
+    session.logEvent('getSessionInfo', 'Attempt', 'api_url', OT.properties.apiURLSSL);
 
     OT.$.getJSON(sessionInfoURL, {
       headers: {
@@ -15645,10 +16102,11 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
       }
     }, function(error, sessionInfo) {
       if(error) {
+        var responseText = sessionInfo;
         console.log('getJSON said error:', error);
         onGetErrorCallback(session, onFailure,
-          new OT.Error(error.target && error.target.status, error.message ||
-            'Could not connect to the OpenTok API Server.'));
+          new OT.Error(error.target && error.target.status || error.code, error.message ||
+            'Could not connect to the OpenTok API Server.'), responseText);
       } else {
         validateRawSessionInfo(sessionInfo);
       }
@@ -15686,69 +16144,22 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
     } else {
       return {
         code: null,
-        message: 'Unknown error: getSessionInfo JSON response was badly formed ' +
-            jsonDocument.toString.substring(0, 1000)
+        message: 'Unknown error: getSessionInfo JSON response was badly formed'
       };
     }
   };
 
   onGetResponseCallback = function(session, onSuccess, rawSessionInfo) {
-    session.logEvent('getSessionInfo', 'Success', 'api_url', OT.properties.apiURL);
+    session.logEvent('getSessionInfo', 'Success', 'api_url', OT.properties.apiURLSSL);
 
     onSuccess( new OT.SessionInfo(rawSessionInfo) );
   };
 
-  onGetErrorCallback = function(session, onFailure, error) {
+  onGetErrorCallback = function(session, onFailure, error, responseText) {
     session.logEvent('Connect', 'Failure', 'errorMessage',
-      'GetSessionInfo:' + error.code + ':' + error.message);
+      'GetSessionInfo:' + error.code + ':' + error.message + ':' + responseText);
 
     onFailure(error, session);
-  };
-
-  // This is ugly. Here we are handling the following:
-  // 1. Firefox doesn't support TURN until version 25. We fallback to STUN
-  // in previous versions.
-  //
-  // 2. In FF >= 23 the new syntax for declaring Ice Servers with credentials
-  // is used. i.e. url, credential, and username as opposed to just url and credential.
-  //
-  // 3. FF >= 27 supports the TURN transport parameter, in older versions we need
-  // to strip it out.
-  //
-  normaliseIceServers = function (iceServers) {
-    if (!iceServers) return [];
-
-    var userAgent = (typeof navigator !== 'undefined') &&
-          navigator.userAgent.match(/(Firefox)\/([0-9]+\.[0-9]+)/),
-        firefoxVersion = userAgent ? parseFloat(userAgent[2], 10) : void 0,
-        bits;
-
-    return iceServers.map(function(iceServer) {
-      // We don't need to normalise STUN, just pass it on through
-      if (iceServer.url.trim().substr(0, 5) !== 'turn:') {
-        return iceServer;
-      }
-
-      if (userAgent !== null) {
-        // TURN is broken in these versions of FF: Fallback to STUN.
-        if (firefoxVersion < 25) {
-          return {url: iceServer.url.replace('turn:', 'stun:')};
-        }
-
-        // FF < 27 doesn't support the TURN transport parameter, so we strip it out
-        if (firefoxVersion < 27 && iceServer.url.indexOf('?') !== -1) {
-          iceServer.url = iceServer.url.trim().split('?')[0];
-        }
-      }
-
-      bits = iceServer.url.trim().split(/[:@]/);
-
-      return {
-        username: bits[1],
-        credential: iceServer.credential,
-        url: bits[0] + ':' + bits[2]
-      };
-    });
   };
 
 })(window);
@@ -16022,7 +16433,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
       if(propertyName === 'status' && newValue === 'stopped') {
         this.dispatchEvent(new OT.ArchiveEvent('archiveStopped', archive));
       } else {
-        this.dispatchEvent(new OT.ArhiveEvent('archiveUpdated', archive));
+        this.dispatchEvent(new OT.ArchiveEvent('archiveUpdated', archive));
       }
     };
 
@@ -16524,9 +16935,9 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
   *                 // See https://dashboard.tokbox.com/projects
   * var session = OT.initSession(apiKey, sessionID);
   * session.on("sessionConnected", function (event) {
-  *     var divProps = {width: 400, height:300, name:"Bob's stream"};
+  *     var publisherOptions = {width: 400, height:300, name:"Bob's stream"};
   *     // This assumes that there is a DOM element with the ID 'publisher':
-  *     publisher = OT.initPublisher('publisher', divProps);
+  *     publisher = OT.initPublisher('publisher', publisherOptions);
   *     session.publish(publisher);
   * });
   * session.connect(token);
@@ -16763,7 +17174,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
   *
   * <h5>Example</h5>
   *
-  * The following code subscribes to other clients streams:
+  * The following code subscribes to other clients' streams:
   *
   * <pre>
   * var apiKey = ""; // Replace with your API key. See https://dashboard.tokbox.com/projects
@@ -16772,7 +17183,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
   *
   * var session = OT.initSession(apiKey, sessionID);
   * session.on("streamCreated", function(event) {
-  *   subscriber = session.subscribe(streamContainer);
+  *   subscriber = session.subscribe(event.stream, targetElement);
   * });
   * session.connect(token);
   * </pre>
@@ -17203,8 +17614,9 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
   *   <li><code>to</code> &mdash; (Array) An array of <a href="Connection.html">Connection</a>
   *      objects, corresponding to clients that the message is to be sent to. If you do not
   *      specify this property, the signal is sent to all clients connected to the session.</li>
-  *   <li><code>data</code> &mdash; (Signal) The data to send. The limit to the size of data
-  *     string is 8kB.</li>
+  *   <li><code>data</code> &mdash; (String) The data to send. The limit to the length of data
+  *     string is 8kB. Do not set the data string to <code>null</code> or
+  *     <code>undefined</code>.</li>
   *   <li><code>type</code> &mdash; (String) The type of the signal. You can use the type to
   *     filter signals when setting an event handler for the <code>signal:type</code> event
   *     (where you replace <code>type</code> with the type string). The maximum length of the
@@ -17238,7 +17650,7 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
   *                        or the data string exceeds the maximum size (8 kB).</td>
   *         </tr>
   *         <tr>
-  *           <td>500</td> <td>The WebSocket connection is down.</td>
+  *           <td>500</td> <td>You are not connected to the OpenTok session.</td>
   *         </tr>
   *      </table>
   *   </li>
@@ -17265,6 +17677,12 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
       if (OT.$.isFunction(_options)) {
         _completion = _options;
         _options = null;
+      }
+
+      if (this.isNot('connected')) {
+        var notConnectedErrorMsg = 'Unable to send signal - you are not connected to the session.';
+        dispatchError(500, notConnectedErrorMsg, _completion);
+        return;
       }
 
       _socket.signal(_options, _completion);
@@ -17362,6 +17780,13 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
   */
 
     this.forceDisconnect = function(connectionOrConnectionId, completionHandler) {
+      if (this.isNot('connected')) {
+        var notConnectedErrorMsg = 'Cannot call forceDisconnect(). You are not ' +
+                                   'connected to the session.';
+        dispatchError(OT.ExceptionCodes.NOT_CONNECTED, notConnectedErrorMsg, completionHandler);
+        return;
+      }
+
       var notPermittedErrorMsg = 'This token does not allow forceDisconnect. ' +
         'The role must be at least `moderator` to enable this functionality';
 
@@ -17445,6 +17870,13 @@ OTHelpers.makeVisibleAndYield = function(element, callback) {
   * @memberOf Session
   */
     this.forceUnpublish = function(streamOrStreamId, completionHandler) {
+      if (this.isNot('connected')) {
+        var notConnectedErrorMsg = 'Cannot call forceUnpublish(). You are not ' +
+                                   'connected to the session.';
+        dispatchError(OT.ExceptionCodes.NOT_CONNECTED, notConnectedErrorMsg, completionHandler);
+        return;
+      }
+
       var notPermittedErrorMsg = 'This token does not allow forceUnpublish. ' +
         'The role must be at least `moderator` to enable this functionality';
 
