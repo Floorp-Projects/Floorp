@@ -3297,7 +3297,6 @@ struct GlobalProperties {
     }
     bool Parse(JSContext *cx, JS::HandleObject obj);
     bool Define(JSContext *cx, JS::HandleObject obj);
-    bool CSS : 1;
     bool Promise : 1;
     bool indexedDB : 1;
     bool XMLHttpRequest : 1;

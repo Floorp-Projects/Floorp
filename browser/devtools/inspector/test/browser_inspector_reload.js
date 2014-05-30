@@ -21,10 +21,7 @@ function test() {
     }, content);
   }, true);
 
-  // Reload should reselect the currently selected markup view element.
-  // This should work even when an element whose selector needs escaping
-  // is selected (bug 100228).
-  content.location = "data:text/html,<p id='1'>p</p>";
+  content.location = "data:text/html,<p>p</p>";
 
   function startInspectorTests(aToolbox)
   {

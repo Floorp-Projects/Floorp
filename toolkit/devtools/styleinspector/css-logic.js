@@ -50,7 +50,6 @@ const RX_PSEUDO = /\s*:?:([\w-]+)(\(?\)?)\s*/g;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.importGlobalProperties(['CSS']);
 
 function CssLogic()
 {
@@ -866,17 +865,12 @@ function positionInNodeList(element, nodeList) {
  */
 CssLogic.findCssSelector = function CssLogic_findCssSelector(ele) {
   var document = ele.ownerDocument;
-  if (!document.contains(ele)) {
-    throw new Error('findCssSelector received element not inside document');
-  }
-
-  // document.querySelectorAll("#id") returns multiple if elements share an ID
-  if (ele.id && document.querySelectorAll('#' + CSS.escape(ele.id)).length === 1) {
-    return '#' + CSS.escape(ele.id);
+  if (ele.id && document.getElementById(ele.id) === ele) {
+    return '#' + ele.id;
   }
 
   // Inherently unique by tag name
-  var tagName = ele.localName;
+  var tagName = ele.tagName.toLowerCase();
   if (tagName === 'html') {
     return 'html';
   }
@@ -887,12 +881,16 @@ CssLogic.findCssSelector = function CssLogic_findCssSelector(ele) {
     return 'body';
   }
 
+  if (ele.parentNode == null) {
+    console.log('danger: ' + tagName);
+  }
+
   // We might be able to find a unique class name
   var selector, index, matches;
   if (ele.classList.length > 0) {
     for (var i = 0; i < ele.classList.length; i++) {
       // Is this className unique by itself?
-      selector = '.' + CSS.escape(ele.classList.item(i));
+      selector = '.' + ele.classList.item(i);
       matches = document.querySelectorAll(selector);
       if (matches.length === 1) {
         return selector;
