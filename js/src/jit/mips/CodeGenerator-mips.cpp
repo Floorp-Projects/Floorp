@@ -1862,25 +1862,6 @@ CodeGeneratorMIPS::visitGuardClass(LGuardClass *guard)
 }
 
 bool
-CodeGeneratorMIPS::visitImplicitThis(LImplicitThis *lir)
-{
-    Register callee = ToRegister(lir->callee());
-    const ValueOperand out = ToOutValue(lir);
-
-    // The implicit |this| is always |undefined| if the function's environment
-    // is the current global.
-    masm.loadPtr(Address(callee, JSFunction::offsetOfEnvironment()), out.typeReg());
-    GlobalObject *global = &gen->info().script()->global();
-
-    // TODO: OOL stub path.
-    if (!bailoutCmpPtr(Assembler::NotEqual, out.typeReg(), ImmGCPtr(global), lir->snapshot()))
-        return false;
-
-    masm.moveValue(UndefinedValue(), out);
-    return true;
-}
-
-bool
 CodeGeneratorMIPS::visitInterruptCheck(LInterruptCheck *lir)
 {
     OutOfLineCode *ool = oolCallVM(InterruptCheckInfo, lir, (ArgList()), StoreNothing());
