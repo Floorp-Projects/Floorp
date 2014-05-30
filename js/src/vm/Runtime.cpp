@@ -850,8 +850,8 @@ JSRuntime::assertCanLock(RuntimeLock which)
     switch (which) {
       case ExclusiveAccessLock:
         JS_ASSERT(exclusiveAccessOwner != PR_GetCurrentThread());
-      case WorkerThreadStateLock:
-        JS_ASSERT(!WorkerThreadState().isLocked());
+      case HelperThreadStateLock:
+        JS_ASSERT(!HelperThreadState().isLocked());
       case InterruptLock:
         JS_ASSERT(!currentThreadOwnsInterruptLock());
       case GCLock:

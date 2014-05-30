@@ -15,6 +15,7 @@
 #include "nsNetUtil.h"
 
 #include "nsICachingChannel.h"
+#include "nsIPrincipal.h"
 #include "nsISeekableStream.h"
 #include "nsITimedChannel.h"
 #include "nsIEncodedChannel.h"
@@ -1857,6 +1858,13 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
   newChannel->SetLoadGroup(mLoadGroup);
   newChannel->SetNotificationCallbacks(mCallbacks);
   newChannel->SetLoadFlags(newLoadFlags);
+
+  // If our owner is a null principal it will have been set as a security
+  // measure, so we want to propagate it to the new channel.
+  nsCOMPtr<nsIPrincipal> ownerPrincipal = do_QueryInterface(mOwner);
+  if (ownerPrincipal && ownerPrincipal->GetIsNullPrincipal()) {
+    newChannel->SetOwner(mOwner);
+  }
 
   // Try to preserve the privacy bit if it has been overridden
   if (mPrivateBrowsingOverriden) {

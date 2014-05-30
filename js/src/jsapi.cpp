@@ -610,7 +610,7 @@ JS_ShutDown(void)
 #endif
 
 #ifdef JS_THREADSAFE
-    WorkerThreadState().finish();
+    HelperThreadState().finish();
 #endif
 
     PRMJ_NowShutdown();
@@ -4732,7 +4732,7 @@ JS::FinishOffThreadScript(JSContext *maybecx, JSRuntime *rt, void *token)
     if (maybecx)
         lfc.construct(maybecx);
 
-    return WorkerThreadState().finishParseTask(maybecx, rt, token);
+    return HelperThreadState().finishParseTask(maybecx, rt, token);
 #else
     MOZ_ASSUME_UNREACHABLE("Off thread compilation is not available.");
 #endif

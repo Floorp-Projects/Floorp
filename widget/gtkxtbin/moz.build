@@ -8,10 +8,9 @@ EXPORTS += [
     'gtk2xtbin.h',
 ]
 
-if CONFIG['MOZ_ENABLE_GTK2']:
-    SOURCES += [
-        'gtk2xtbin.c',
-    ]
+SOURCES += [
+    'gtk2xtbin.c',
+]
 
 FINAL_LIBRARY = 'xul'
 

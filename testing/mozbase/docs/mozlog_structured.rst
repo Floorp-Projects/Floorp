@@ -1,10 +1,14 @@
 :mod:`mozlog.structured` --- Structured logging for test output
 ===============================================================
 
-``mozlog.structured`` is a library designed for logging the execution
-and results of test harnesses. The canonical output format is JSON,
-with one line of JSON per log entry. It is *not* based on the stdlib
-logging module, although it shares several concepts with this module.
+:py:mod:`mozlog.structured` is a library designed for logging the
+execution and results of test harnesses. The internal data model is a
+stream of JSON-compatible objects, with one object per log entry. The
+default output format is line-based, with one JSON object serialized
+per line.
+
+:py:mod:`mozlog.structured` is *not* based on the stdlib logging
+module, although it shares several concepts with it.
 
 One notable difference between this module and the standard logging
 module is the way that loggers are created. The structured logging
@@ -12,7 +16,7 @@ module does not require that loggers with a specific name are
 singleton objects accessed through a factory function. Instead the
 ``StructuredLogger`` constructor may be used directly. However all
 loggers with the same name share the same internal state (the "Borg"
-pattern). In particular the list of handlers functions is the same for
+pattern). In particular the list of handler functions is the same for
 all loggers with the same name.
 
 Logging is threadsafe, with access to handlers protected by a
@@ -55,7 +59,11 @@ emitted:
   Emitted when the testsuite starts running.
 
   ``tests``
-    A list of test_ids (list).
+    A list of test ids. Test ids can either be strings or lists of
+    strings (an example of the latter is reftests where the id has the
+    form [test_url, ref_type, ref_url]) and are assumed to be unique
+    within a given testsuite. In cases where the test list is not
+    known upfront an empty list may be passed (list).
 
   ``run_info``
     An optional dictionary describing the properties of the
@@ -74,7 +82,7 @@ emitted:
 
 ``test_status``
   Emitted for a test which has subtests to record the result of a
-  single subtest
+  single subtest.
 
   ``test``
     The same unique id for the test as in the ``test_start`` message.
@@ -105,7 +113,7 @@ emitted:
     ``CRASH``, ``ASSERT``, ``SKIP``).
 
   ``expected``
-    The expected status, or emitted if the expected status matches the
+    The expected status, or omitted if the expected status matches the
     actual status (string enum, same as ``status``).
 
 ``process_output``
@@ -130,6 +138,55 @@ emitted:
 
   ``message``
     Text of the log message.
+
+Testsuite Protocol
+------------------
+
+When used for testsuites, the following structured logging messages must be emitted:
+
+ * One ``suite_start`` message before any ``test_*`` messages
+
+ * One ``test_start`` message per test that is run
+
+ * One ``test_status`` message per subtest that is run. This might be
+   zero if the test type doesn't have the notion of subtests.
+
+ * One ``test_end`` message per test that is run, after the
+   ``test_start`` and any ``test_status`` messages for that same test.
+
+ * One ``suite_end`` message after all ``test_*`` messages have been
+   emitted.
+
+The above mandatory events may be interspersed with ``process_output``
+and ``log`` events, as required.
+
+Subtests
+~~~~~~~~
+
+The purpose of subtests is to deal with situations where a single test
+produces more than one result, and the exact details of the number of
+results is not known ahead of time. For example consider a test
+harness that loads JavaScript-based tests in a browser. Each url
+loaded would be a single test, with corresponding ``test_start`` and
+``test_end`` messages. If there can be more than one JS-defined test
+on a page, however, it it useful to track the results of those tests
+seperately. Therefore each of those tests is a subtest, and one
+``test_status`` message must be generated for each subtest result.
+
+Subtests must have a name that is unique within their parent test.
+
+Whether or not a test has subtests changes the meaning of the
+``status`` property on the test itself. When the test does not have
+any subtests, this property is the actual test result such as ``PASS``
+or ``FAIL`` . When a test does have subtests, the test itself does not
+have a result as-such; it isn't meaningful to describe it as having a
+``PASS`` result, especially if the subtests did not all pass. Instead
+this property is used to hold information about whether the test ran
+without error. If no errors were detected the test must be given the
+status ``OK``. Otherwise the test may get the status ``ERROR`` (for
+e.g. uncaught JS exceptions), ``TIMEOUT`` (if no results were reported
+in the allowed time) or ``CRASH`` (if the test caused the process
+under test to crash).
 
 StructuredLogger Objects
 ------------------------
@@ -220,13 +277,13 @@ The `mozlog.structured.commandline` module provides integration with
 the `argparse` module to provide uniform logging-related command line
 arguments to programs using `mozlog.structured`. Each known formatter
 gets a command line argument of the form ``--log-{name}``, which takes
-the name of a file to log to with that format of `-` to indicate stdout.
+the name of a file to log to with that format, or ``-`` to indicate stdout.
 
 .. automodule:: mozlog.structured.commandline
   :members:
 
-Examples
---------
+Simple Examples
+---------------
 
 Log to stdout::
 
@@ -261,7 +318,7 @@ Count the number of tests that timed out in a testsuite::
 
    from mozlog.structured import reader
 
-   count = 0;
+   count = 0
 
    def handle_test_end(data):
        global count
@@ -272,3 +329,117 @@ Count the number of tests that timed out in a testsuite::
                    {"test_end": handle_test_end})
 
    print count
+
+More Complete Example
+---------------------
+
+This example shows a complete toy testharness set up to used
+structured logging. It is avaliable as `structured_example.py <_static/structured_example.py>`_:
+
+.. literalinclude:: _static/structured_example.py
+
+Each global function with a name starting
+``test_`` represents a test. A passing test returns without
+throwing. A failing test throws a :py:class:`TestAssertion` exception
+via the :py:func:`assert_equals` function. Throwing anything else is
+considered an error in the test. There is also a :py:func:`expected`
+decorator that is used to annotate tests that are expected to do
+something other than pass.
+
+The main entry point to the test runner is via that :py:func:`main`
+function. This is responsible for parsing command line
+arguments, and initiating the test run. Although the test harness
+itself does not provide any command line arguments, the
+:py:class:`ArgumentParser` object is populated by
+:py:meth:`commandline.add_logging_group`, which provides a generic
+set of structured logging arguments appropriate to all tools producing
+structured logging.
+
+The values of these command line arguments are used to create a
+:py:class:`mozlog.structured.StructuredLogger` object populated with the
+specified handlers and formatters in
+:py:func:`commandline.setup_logging`. The third argument to this
+function is the default arguments to use. In this case the default
+is to output raw (i.e. JSON-formatted) logs to stdout.
+
+The main test harness is provided by the :py:class:`TestRunner`
+class. This class is responsible for scheduling all the tests and
+logging all the results. It is passed the :py:obj:`logger` object
+created from the command line arguments. The :py:meth:`run` method
+starts the test run. Before the run is started it logs a
+``suite_start`` message containing the id of each test that will run,
+and after the testrun is done it logs a ``suite_end`` message.
+
+Individual tests are run in the :py:meth:`run_test` method. For each
+test this logs a ``test_start`` message. It then runs the test and
+logs a ``test_end`` message containing the test name, status, expected
+status, and any informational message about the reason for the
+result. In this test harness there are no subtests, so the
+``test_end`` message has the status of the test and there are no
+``test_status`` messages.
+
+Example Output
+~~~~~~~~~~~~~~
+
+When run without providing any command line options, the raw
+structured log messages are sent to stdout::
+
+  $ python structured_example.py
+
+  {"source": "structured-example", "tests": ["test_that_has_an_error", "test_that_fails", "test_expected_fail", "test_that_passes"], "thread": "MainThread", "time": 1401446682787, "action": "suite_start", "pid": 18456}
+  {"source": "structured-example", "thread": "MainThread", "time": 1401446682787, "action": "log", "message": "Running tests", "level": "INFO", "pid": 18456}
+  {"source": "structured-example", "test": "test_that_has_an_error", "thread": "MainThread", "time": 1401446682787, "action": "test_start", "pid": 18456}
+  {"status": "ERROR", "thread": "MainThread", "pid": 18456, "source": "structured-example", "test": "test_that_has_an_error", "time": 1401446682788, "action": "test_end", "message": "Traceback (most recent call last):\n  File \"structured_example.py\", line 61, in run_test\n    func()\n  File \"structured_example.py\", line 31, in test_that_has_an_error\n    assert_equals(2, 1 + \"1\")\nTypeError: unsupported operand type(s) for +: 'int' and 'str'\n", "expected": "PASS"}
+  {"source": "structured-example", "test": "test_that_fails", "thread": "MainThread", "time": 1401446682788, "action": "test_start", "pid": 18456}
+  {"status": "FAIL", "thread": "MainThread", "pid": 18456, "source": "structured-example", "test": "test_that_fails", "time": 1401446682788, "action": "test_end", "message": "1 not equal to 2", "expected": "PASS"}
+  {"source": "structured-example", "test": "test_expected_fail", "thread": "MainThread", "time": 1401446682788, "action": "test_start", "pid": 18456}
+  {"status": "FAIL", "thread": "MainThread", "pid": 18456, "source": "structured-example", "test": "test_expected_fail", "time": 1401446682788, "action": "test_end", "message": "4 not equal to 5"}
+  {"source": "structured-example", "test": "test_that_passes", "thread": "MainThread", "time": 1401446682788, "action": "test_start", "pid": 18456}
+  {"status": "PASS", "source": "structured-example", "test": "test_that_passes", "thread": "MainThread", "time": 1401446682789, "action": "test_end", "pid": 18456}
+  {"action": "suite_end", "source": "structured-example", "pid": 18456, "thread": "MainThread", "time": 1401446682789}
+
+The structured logging module provides a number of command line
+options::
+
+  $ python structured_example.py --help
+
+  usage: structured_example.py [-h] [--log-unittest LOG_UNITTEST]
+                               [--log-raw LOG_RAW] [--log-html LOG_HTML]
+                               [--log-xunit LOG_XUNIT]
+                               [--log-mach_terminal LOG_MACH_TERMINAL]
+                               [--log-mach LOG_MACH]
+
+  optional arguments:
+    -h, --help            show this help message and exit
+
+  Output Logging:
+    Options for logging output. Each option represents a possible logging
+    format and takes a filename to write that format to, or '-' to write to
+    stdout.
+
+    --log-unittest LOG_UNITTEST
+                          Unittest style output
+    --log-raw LOG_RAW     Raw structured log messages
+    --log-html LOG_HTML   HTML report
+    --log-xunit LOG_XUNIT
+                          xUnit compatible XML
+    --log-mach_terminal LOG_MACH_TERMINAL
+                          Colored mach-like output for use in a tty
+    --log-mach LOG_MACH   Uncolored mach-like output
+
+In order to get human-readable output on stdout and the structured log
+data to go to the file ``structured.log``, we would run::
+
+  $ python structured_example.py --log-mach=- --log-raw=structured.log
+
+  0:00.00 SUITE_START: MainThread 4
+  0:01.00 LOG: MainThread INFO Running tests
+  0:01.00 TEST_START: MainThread test_that_has_an_error
+  0:01.00 TEST_END: MainThread Harness status ERROR, expected PASS. Subtests passed 0/0. Unexpected 1
+  0:01.00 TEST_START: MainThread test_that_fails
+  0:01.00 TEST_END: MainThread Harness status FAIL, expected PASS. Subtests passed 0/0. Unexpected 1
+  0:01.00 TEST_START: MainThread test_expected_fail
+  0:02.00 TEST_END: MainThread Harness status FAIL. Subtests passed 0/0. Unexpected 0
+  0:02.00 TEST_START: MainThread test_that_passes
+  0:02.00 TEST_END: MainThread Harness status PASS. Subtests passed 0/0. Unexpected 0
+  0:02.00 SUITE_END: MainThread
