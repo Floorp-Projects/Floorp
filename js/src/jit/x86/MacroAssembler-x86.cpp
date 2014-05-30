@@ -387,6 +387,35 @@ MacroAssemblerX86::branchTestValue(Condition cond, const ValueOperand &value, co
     }
 }
 
+template <typename T>
+void
+MacroAssemblerX86::storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T &dest,
+                                     MIRType slotType)
+{
+    if (valueType == MIRType_Double) {
+        storeDouble(value.reg().typedReg().fpu(), dest);
+        return;
+    }
+
+    // Store the type tag if needed.
+    if (valueType != slotType)
+        storeTypeTag(ImmType(ValueTypeFromMIRType(valueType)), Operand(dest));
+
+    // Store the payload.
+    if (value.constant())
+        storePayload(value.value(), Operand(dest));
+    else
+        storePayload(value.reg().typedReg().gpr(), Operand(dest));
+}
+
+template void
+MacroAssemblerX86::storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const Address &dest,
+                                     MIRType slotType);
+
+template void
+MacroAssemblerX86::storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const BaseIndex &dest,
+                                     MIRType slotType);
+
 #ifdef JSGC_GENERATIONAL
 
 void

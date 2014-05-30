@@ -1591,14 +1591,35 @@ CodeGenerator::visitLoadSlotV(LLoadSlotV *lir)
 }
 
 bool
-CodeGenerator::visitStoreSlotV(LStoreSlotV *store)
+CodeGenerator::visitStoreSlotT(LStoreSlotT *lir)
 {
-    Register base = ToRegister(store->slots());
-    int32_t offset = store->mir()->slot() * sizeof(Value);
+    Register base = ToRegister(lir->slots());
+    int32_t offset = lir->mir()->slot() * sizeof(js::Value);
+    Address dest(base, offset);
 
-    const ValueOperand value = ToValue(store, LStoreSlotV::Value);
+    if (lir->mir()->needsBarrier())
+        emitPreBarrier(dest, lir->mir()->slotType());
 
-    if (store->mir()->needsBarrier())
+    MIRType valueType = lir->mir()->value()->type();
+    ConstantOrRegister value;
+    if (lir->value()->isConstant())
+        value = ConstantOrRegister(*lir->value()->toConstant());
+    else
+        value = TypedOrValueRegister(valueType, ToAnyRegister(lir->value()));
+
+    masm.storeUnboxedValue(value, valueType, dest, lir->mir()->slotType());
+    return true;
+}
+
+bool
+CodeGenerator::visitStoreSlotV(LStoreSlotV *lir)
+{
+    Register base = ToRegister(lir->slots());
+    int32_t offset = lir->mir()->slot() * sizeof(Value);
+
+    const ValueOperand value = ToValue(lir, LStoreSlotV::Value);
+
+    if (lir->mir()->needsBarrier())
        emitPreBarrier(Address(base, offset), MIRType_Value);
 
     masm.storeValue(value, Address(base, offset));
@@ -5659,6 +5680,25 @@ CodeGenerator::emitStoreHoleCheck(Register elements, const LAllocation *index, L
     return bailoutFrom(&bail, snapshot);
 }
 
+void
+CodeGenerator::emitStoreElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
+                                     Register elements, const LAllocation *index)
+{
+    ConstantOrRegister v;
+    if (value->isConstant())
+        v = ConstantOrRegister(*value->toConstant());
+    else
+        v = TypedOrValueRegister(valueType, ToAnyRegister(value));
+
+    if (index->isConstant()) {
+        Address dest(elements, ToInt32(index) * sizeof(js::Value));
+        masm.storeUnboxedValue(v, valueType, dest, elementType);
+    } else {
+        BaseIndex dest(elements, ToRegister(index), TimesEight);
+        masm.storeUnboxedValue(v, valueType, dest, elementType);
+    }
+}
+
 bool
 CodeGenerator::visitStoreElementT(LStoreElementT *store)
 {
@@ -5671,8 +5711,8 @@ CodeGenerator::visitStoreElementT(LStoreElementT *store)
     if (store->mir()->needsHoleCheck() && !emitStoreHoleCheck(elements, index, store->snapshot()))
         return false;
 
-    storeElementTyped(store->value(), store->mir()->value()->type(), store->mir()->elementType(),
-                      elements, index);
+    emitStoreElementTyped(store->value(), store->mir()->value()->type(), store->mir()->elementType(),
+                          elements, index);
     return true;
 }
 
@@ -5714,8 +5754,8 @@ CodeGenerator::visitStoreElementHoleT(LStoreElementHoleT *lir)
         emitPreBarrier(elements, index, lir->mir()->elementType());
 
     masm.bind(ool->rejoinStore());
-    storeElementTyped(lir->value(), lir->mir()->value()->type(), lir->mir()->elementType(),
-                      elements, index);
+    emitStoreElementTyped(lir->value(), lir->mir()->value()->type(), lir->mir()->elementType(),
+                          elements, index);
 
     masm.bind(ool->rejoin());
     return true;
@@ -5820,8 +5860,8 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
         // The inline path for StoreElementHoleT does not always store the type tag,
         // so we do the store on the OOL path. We use MIRType_None for the element type
         // so that storeElementTyped will always store the type tag.
-        storeElementTyped(ins->toStoreElementHoleT()->value(), valueType, MIRType_None, elements,
-                          index);
+        emitStoreElementTyped(ins->toStoreElementHoleT()->value(), valueType, MIRType_None,
+                              elements, index);
         masm.jump(ool->rejoin());
     } else {
         // Jump to the inline path where we will store the value.

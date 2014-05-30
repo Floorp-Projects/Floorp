@@ -41,9 +41,6 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     template<typename T>
     void storeViewTypeElement(ArrayBufferView::ViewType vt, const LAllocation *value,
                                         const T &dstAddr);
-    void storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
-                           Register elements, const LAllocation *index);
-
   public:
     CodeGeneratorX86(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm);
 
@@ -52,7 +49,6 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitBoxFloatingPoint(LBoxFloatingPoint *box);
     bool visitUnbox(LUnbox *unbox);
     bool visitValue(LValue *value);
-    bool visitStoreSlotT(LStoreSlotT *store);
     bool visitCompareB(LCompareB *lir);
     bool visitCompareBAndBranch(LCompareBAndBranch *lir);
     bool visitCompareV(LCompareV *lir);
