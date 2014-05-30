@@ -2263,8 +2263,8 @@ js::IsTypedArrayThisCheck(JS::IsAcceptableThis test)
 }
 #undef CHECK
 
-static JSObject *
-InitArrayBufferClass(JSContext *cx)
+JSObject *
+js_InitArrayBufferClass(JSContext *cx, HandleObject obj)
 {
     Rooted<GlobalObject*> global(cx, cx->compartment()->maybeGlobal());
     if (global->isStandardClassResolved(JSProto_ArrayBuffer))
@@ -2453,11 +2453,11 @@ DataViewObject::neuter(void *newData)
 }
 
 JSObject *
-js_InitTypedArrayClasses(JSContext *cx, HandleObject obj)
+js_InitDataViewClass(JSContext *cx, HandleObject obj)
 {
     if (!DataViewObject::initClass(cx))
         return nullptr;
-    return InitArrayBufferClass(cx);
+    return &cx->global()->getPrototype(JSProto_DataView).toObject();
 }
 
 bool

@@ -82,7 +82,7 @@
     real(URIError,              18,     js_InitExceptionClasses,   OCLASP(Error)) \
     real(Iterator,              19,     js_InitIteratorClasses,    OCLASP(PropertyIterator)) \
     real(StopIteration,         20,     js_InitIteratorClasses,    OCLASP(StopIteration)) \
-    real(ArrayBuffer,           21,     js_InitTypedArrayClasses,  &js::ArrayBufferObject::protoClass) \
+    real(ArrayBuffer,           21,     js_InitArrayBufferClass,   &js::ArrayBufferObject::protoClass) \
     real(Int8Array,             22,     js_InitViaClassSpec,       TYPED_ARRAY_CLASP(TYPE_INT8)) \
     real(Uint8Array,            23,     js_InitViaClassSpec,       TYPED_ARRAY_CLASP(TYPE_UINT8)) \
     real(Int16Array,            24,     js_InitViaClassSpec,       TYPED_ARRAY_CLASP(TYPE_INT16)) \
@@ -96,7 +96,7 @@
     real(WeakMap,               32,     js_InitWeakMapClass,       OCLASP(WeakMap)) \
     real(Map,                   33,     js_InitMapClass,           OCLASP(Map)) \
     real(Set,                   34,     js_InitSetClass,           OCLASP(Set)) \
-    real(DataView,              35,     js_InitTypedArrayClasses,  OCLASP(DataView)) \
+    real(DataView,              35,     js_InitDataViewClass,      OCLASP(DataView)) \
 IF_SAB(real,imaginary)(SharedArrayBuffer,       36,     js_InitSharedArrayBufferClass, &js::SharedArrayBufferObject::protoClass) \
 IF_INTL(real,imaginary) (Intl,                  37,     js_InitIntlClass,          CLASP(Intl)) \
 IF_BDATA(real,imaginary)(TypedObject,           38,     js_InitTypedObjectModuleObject,   OCLASP(TypedObjectModule)) \
