@@ -178,18 +178,15 @@ CodeGeneratorX86::visitLoadElementT(LLoadElementT *load)
             return false;
     }
 
-    if (load->mir()->type() == MIRType_Double) {
-        FloatRegister fpreg = ToFloatRegister(load->output());
-        if (load->mir()->loadDoubles()) {
-            if (source.kind() == Operand::MEM_REG_DISP)
-                masm.loadDouble(source.toAddress(), fpreg);
-            else
-                masm.loadDouble(source.toBaseIndex(), fpreg);
-        } else {
-            masm.loadInt32OrDouble(source, fpreg);
-        }
+    AnyRegister output = ToAnyRegister(load->output());
+
+    if (load->mir()->loadDoubles()) {
+        if (source.kind() == Operand::MEM_REG_DISP)
+            masm.loadDouble(source.toAddress(), output.fpu());
+        else
+            masm.loadDouble(source.toBaseIndex(), output.fpu());
     } else {
-        masm.movl(masm.ToPayload(source), ToRegister(load->output()));
+        masm.loadUnboxedValue(source, load->mir()->type(), output);
     }
 
     return true;
