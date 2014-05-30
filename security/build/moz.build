@@ -12,3 +12,8 @@ if CONFIG['MOZ_FOLD_LIBS']:
 
 if CONFIG['OS_TARGET'] == 'WINNT':
     DEFFILE = 'nss3.def'
+
+if CONFIG['OS_ARCH'] == 'Linux' and \
+   CONFIG['MOZ_FOLD_LIBS'] and \
+   CONFIG['GCC_USE_GNU_LD']:
+    LD_VERSION_SCRIPT = 'nss3.def'
