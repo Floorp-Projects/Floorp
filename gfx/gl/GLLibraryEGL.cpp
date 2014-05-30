@@ -108,7 +108,7 @@ GLLibraryEGL::EnsureInitialized()
     mozilla::ScopedGfxFeatureReporter reporter("EGL");
 
 #ifdef MOZ_B2G
-    NS_ABORT_IF_FALSE(sCurrentContext.init(), "TLS init failed");
+    NS_ABORT_IF_FALSE(sCurrentContext.init());
 #endif
 
 #ifdef XP_WIN
