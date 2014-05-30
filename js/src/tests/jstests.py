@@ -5,6 +5,8 @@ The JS Shell Test Harness.
 See the adjacent README.txt for more details.
 """
 
+from __future__ import print_function
+
 import os, sys, textwrap
 from os.path import abspath, dirname, realpath
 from copy import copy
@@ -195,7 +197,7 @@ def parse_args():
             options.show_output = True
         try:
             options.output_fp = open(options.output_file, 'w')
-        except IOError, ex:
+        except IOError as ex:
             raise SystemExit("Failed to open output file: " + str(ex))
 
     options.show = options.show_cmd or options.show_output
@@ -291,7 +293,7 @@ def main():
     skip_list, test_list = load_tests(options, requested_paths, excluded_paths)
 
     if not test_list:
-        print 'no tests selected'
+        print('no tests selected')
         return 1
 
     test_dir = dirname(abspath(__file__))
@@ -305,7 +307,7 @@ def main():
 
         cmd = test_list[0].get_command(TestCase.js_cmd_prefix)
         if options.show_cmd:
-            print list2cmdline(cmd)
+            print(list2cmdline(cmd))
         if test_dir not in ('', '.'):
             os.chdir(test_dir)
         call(cmd)
