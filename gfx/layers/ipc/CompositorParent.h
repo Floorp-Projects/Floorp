@@ -124,7 +124,8 @@ public:
                                    const TargetConfig& aTargetConfig,
                                    bool aIsFirstPaint,
                                    bool aScheduleComposite,
-                                   uint32_t aPaintSequenceNumber) MOZ_OVERRIDE;
+                                   uint32_t aPaintSequenceNumber,
+                                   bool aIsRepeatTransaction) MOZ_OVERRIDE;
   virtual void ForceComposite(LayerTransactionParent* aLayerTree) MOZ_OVERRIDE;
   virtual bool SetTestSampleTime(LayerTransactionParent* aLayerTree,
                                  const TimeStamp& aTime) MOZ_OVERRIDE;
@@ -158,7 +159,8 @@ public:
 
   virtual void ScheduleComposition();
   void NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstPaint,
-      bool aScheduleComposite, uint32_t aPaintSequenceNumber);
+      bool aScheduleComposite, uint32_t aPaintSequenceNumber,
+      bool aIsRepeatTransaction);
 
   /**
    * Check rotation info and schedule a rendering task if needed.

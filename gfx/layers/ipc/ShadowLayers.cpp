@@ -465,6 +465,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
                                      uint64_t aId,
                                      bool aScheduleComposite,
                                      uint32_t aPaintSequenceNumber,
+                                     bool aIsRepeatTransaction,
                                      bool* aSent)
 {
   *aSent = false;
@@ -582,7 +583,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
         !mShadowManager->IPCOpen() ||
         !mShadowManager->SendUpdate(cset, aId, targetConfig, mIsFirstPaint,
                                     aScheduleComposite, aPaintSequenceNumber,
-                                    aReplies)) {
+                                    aIsRepeatTransaction, aReplies)) {
       MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
       return false;
     }
@@ -594,7 +595,8 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
     if (!HasShadowManager() ||
         !mShadowManager->IPCOpen() ||
         !mShadowManager->SendUpdateNoSwap(cset, aId, targetConfig, mIsFirstPaint,
-                                          aPaintSequenceNumber, aScheduleComposite)) {
+                                          aPaintSequenceNumber, aScheduleComposite,
+                                          aIsRepeatTransaction)) {
       MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
       return false;
     }
