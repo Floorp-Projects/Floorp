@@ -52,44 +52,20 @@ let FramerateActor = exports.FramerateActor = protocol.ActorClass({
   }),
 
   /**
-   * Stops monitoring framerate, returning the recorded values at an
-   * interval defined by the specified resolution, in milliseconds.
+   * Stops monitoring framerate, returning the recorded values.
    */
-  stopRecording: method(function(resolution = 100) {
+  stopRecording: method(function() {
     if (!this._recording) {
-      return {};
+      return [];
     }
     this._recording = false;
 
-    let timeline = {};
-    let ticks = this._ticks;
-    let totalTicks = ticks.length;
-
     // We don't need to store the ticks array for future use, release it.
+    let ticks = this._ticks;
     this._ticks = null;
-
-    // If the refresh driver didn't get a chance to tick before the
-    // recording was stopped, assume framerate was 0.
-    if (totalTicks == 0) {
-      timeline[resolution] = 0;
-      return timeline;
-    }
-
-    let pivotTick = 0;
-    let lastTick = ticks[totalTicks - 1];
-
-    for (let bucketTime = resolution; bucketTime < lastTick; bucketTime += resolution) {
-      let frameCount = 0;
-      while (ticks[pivotTick++] < bucketTime) frameCount++;
-
-      let framerate = 1000 / (resolution / frameCount);
-      timeline[bucketTime] = framerate;
-    }
-
-    return timeline;
+    return ticks;
   }, {
-    request: { resolution: Arg(0, "nullable:number") },
-    response: { timeline: RetVal("json") }
+    response: { timeline: RetVal("array:number") }
   }),
 
   /**
@@ -115,5 +91,52 @@ let FramerateFront = exports.FramerateFront = protocol.FrontClass(FramerateActor
   initialize: function(client, { framerateActor }) {
     protocol.Front.prototype.initialize.call(this, client, { actor: framerateActor });
     this.manage(this);
+  },
+
+  /**
+   * Plots the frames per second on a timeline.
+   *
+   * @param array ticks
+   *        The raw data received from the framerate actor, which represents
+   *        the elapsed time on each refresh driver tick.
+   * @param number interval
+   *        The maximum amount of time to wait between calculations.
+   * @return array
+   *         A collection of { delta, value } objects representing the
+   *         framerate value at every delta time.
+   */
+  plotFPS: function(ticks, interval = 100) {
+    let timeline = [];
+    let totalTicks = ticks.length;
+
+    // If the refresh driver didn't get a chance to tick before the
+    // recording was stopped, assume framerate was 0.
+    if (totalTicks == 0) {
+      timeline.push({ delta: 0, value: 0 });
+      timeline.push({ delta: interval, value: 0 });
+      return timeline;
+    }
+
+    let frameCount = 0;
+    let prevTime = ticks[0];
+
+    for (let i = 1; i < totalTicks; i++) {
+      let currTime = ticks[i];
+      frameCount++;
+
+      let elapsedTime = currTime - prevTime;
+      if (elapsedTime < interval) {
+        continue;
+      }
+
+      let framerate = 1000 / (elapsedTime / frameCount);
+      timeline.push({ delta: prevTime, value: framerate });
+      timeline.push({ delta: currTime, value: framerate });
+
+      frameCount = 0;
+      prevTime = currTime;
+    }
+
+    return timeline;
   }
 });
