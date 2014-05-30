@@ -70,7 +70,7 @@ function loadSubScript(aURL)
                    (e.fileName ? "at " + e.fileName + " : " + e.lineNumber + "\n" : "") +
                    e + " - " + e.stack + "\n";
     dump(errorStr);
-    Cu.reportError(errorStr);
+    reportError(errorStr);
     throw e;
   }
 }
@@ -1026,7 +1026,7 @@ DebuggerServerConnection.prototype = {
 
   _unknownError: function DSC__unknownError(aPrefix, aError) {
     let errorString = aPrefix + ": " + DevToolsUtils.safeErrorString(aError);
-    Cu.reportError(errorString);
+    reportError(errorString);
     dumpn(errorString);
     return {
       error: "unknownError",

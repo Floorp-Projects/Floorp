@@ -34,6 +34,7 @@ startTestWithPermissions(['mobileconnection'], function() {
     .then(() => gDial("112"))
     .then(call => { outCall = call; })
     .then(() => gRemoteAnswer(outCall))
+    .then(() => gDelay(1000))  // See Bug 1018051 for the purpose of the delay.
     .then(() => gRemoteHangUp(outCall))
     .then(null, () => {
       ok(false, "promise rejects during test.");
