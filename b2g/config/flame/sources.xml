@@ -118,7 +118,7 @@
   <!-- Flame specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="e8a318f7690092e639ba88891606f4183e846d3f"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="34ed8345250bb97262d70a052217a92e83444ede"/>
-  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="218bcff6200f9b9e054467da963b7209e43ad287"/>
+  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="76f960b9512ec5c4726b5f52dd94bdf3c07e5071"/>
   <project name="kernel/msm" path="kernel" revision="228d59147ff524e90774c566eef03260cc6857b8"/>
   <project name="platform/bootable/recovery" path="bootable/recovery" revision="f2914eacee9120680a41463708bb6ee8291749fc"/>
   <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="81c4a859d75d413ad688067829d21b7ba9205f81"/>
