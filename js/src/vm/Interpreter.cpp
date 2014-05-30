@@ -60,28 +60,8 @@ using mozilla::NumberEqualsInt32;
 using mozilla::PodCopy;
 using JS::ForOfIterator;
 
-/*
- * Note: when Clang 3.2 (32-bit) inlines the two functions below in Interpret,
- * the conservative stack scanner leaks a ton of memory and this negatively
- * influences performance. The MOZ_NEVER_INLINE is a temporary workaround until
- * we can remove the conservative scanner. See bug 849526 for more info.
- */
-#if defined(__clang__) && defined(JS_CPU_X86)
-static MOZ_NEVER_INLINE bool
-#else
-static bool
-#endif
-ToBooleanOp(const InterpreterRegs &regs)
-{
-    return ToBoolean(regs.stackHandleAt(-1));
-}
-
 template <bool Eq>
-#if defined(__clang__) && defined(JS_CPU_X86)
-static MOZ_NEVER_INLINE bool
-#else
-static bool
-#endif
+static MOZ_ALWAYS_INLINE bool
 LooseEqualityOp(JSContext *cx, InterpreterRegs &regs)
 {
     HandleValue rval = regs.stackHandleAt(-1);
@@ -1850,7 +1830,7 @@ CASE(JSOP_GOTO)
 
 CASE(JSOP_IFEQ)
 {
-    bool cond = ToBooleanOp(REGS);
+    bool cond = ToBoolean(REGS.stackHandleAt(-1));
     REGS.sp--;
     if (!cond)
         BRANCH(GET_JUMP_OFFSET(REGS.pc));
@@ -1859,7 +1839,7 @@ END_CASE(JSOP_IFEQ)
 
 CASE(JSOP_IFNE)
 {
-    bool cond = ToBooleanOp(REGS);
+    bool cond = ToBoolean(REGS.stackHandleAt(-1));
     REGS.sp--;
     if (cond)
         BRANCH(GET_JUMP_OFFSET(REGS.pc));
@@ -1868,7 +1848,7 @@ END_CASE(JSOP_IFNE)
 
 CASE(JSOP_OR)
 {
-    bool cond = ToBooleanOp(REGS);
+    bool cond = ToBoolean(REGS.stackHandleAt(-1));
     if (cond)
         ADVANCE_AND_DISPATCH(GET_JUMP_OFFSET(REGS.pc));
 }
@@ -1876,7 +1856,7 @@ END_CASE(JSOP_OR)
 
 CASE(JSOP_AND)
 {
-    bool cond = ToBooleanOp(REGS);
+    bool cond = ToBoolean(REGS.stackHandleAt(-1));
     if (!cond)
         ADVANCE_AND_DISPATCH(GET_JUMP_OFFSET(REGS.pc));
 }
@@ -2273,7 +2253,7 @@ END_CASE(JSOP_MOD)
 
 CASE(JSOP_NOT)
 {
-    bool cond = ToBooleanOp(REGS);
+    bool cond = ToBoolean(REGS.stackHandleAt(-1));
     REGS.sp--;
     PUSH_BOOLEAN(!cond);
 }
