@@ -2016,14 +2016,6 @@ CodeGeneratorX86Shared::visitEffectiveAddress(LEffectiveAddress *ins)
     return true;
 }
 
-Operand
-CodeGeneratorX86Shared::createArrayElementOperand(Register elements, const LAllocation *index)
-{
-    if (index->isConstant())
-        return Operand(elements, ToInt32(index) * sizeof(js::Value));
-
-    return Operand(elements, ToRegister(index), TimesEight);
-}
 bool
 CodeGeneratorX86Shared::generateInvalidateEpilogue()
 {

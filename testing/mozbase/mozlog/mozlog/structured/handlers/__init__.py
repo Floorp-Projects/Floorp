@@ -23,7 +23,7 @@ class BaseHandler(object):
 
 
 class LogLevelFilter(object):
-    """Handler that filters out messages with action:log and a level
+    """Handler that filters out messages with action of log and a level
     lower than some specified level.
 
     :param inner: Handler to use for messages that pass this filter
