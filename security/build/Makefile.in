@@ -353,7 +353,22 @@ nss3.def: $(nss_def_files) $(DEPTH)/db/sqlite3/src/sqlite-processed.def
 	echo EXPORTS >> $@.tmp
 	grep -v -h -e ^LIBRARY -e ^EXPORTS -e ^\; $^ >> $@.tmp
 	mv $@.tmp $@
-endif
+else
+ifdef GCC_USE_GNU_LD
+sqlite_def_file := $(topsrcdir)/db/sqlite3/src/sqlite.def
+nspr_def_file := $(srcdir)/nspr-dummy.def
+
+nss3.def: $(nss_def_files) $(sqlite_def_file) $(nspr_def_file)
+	@$(call py_action,convert_def_file, \
+	  $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) -o $@ \
+	  $(addprefix --nss-file=,$(nss_def_files)) \
+	  $(sqlite_def_file) $(nspr_def_file))
+
+GARBAGE += \
+  nss3.def \
+  $(NULL)
+endif # GCC_USE_GNU_LD
+endif # WINNT
 
 ifneq (,$(filter WINNT,$(OS_ARCH)))
 SDK_LIBRARY = $(IMPORT_LIBRARY)
