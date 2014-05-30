@@ -3,14 +3,14 @@ package org.mozilla.gecko.tests;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract.Event;
+import org.mozilla.gecko.TelemetryContract.Method;
+import org.mozilla.gecko.TelemetryContract.Reason;
+import org.mozilla.gecko.TelemetryContract.Session;
 
 import android.util.Log;
 
 public class testUITelemetry extends JavascriptTest {
-    // Prefix used to distinguish test events and sessions from
-    // real ones. Used by the javascript part of the test.
-    static final String TEST_PREFIX = "TEST-";
-
     public testUITelemetry() {
         super("testUITelemetry.js");
     }
@@ -26,18 +26,24 @@ public class testUITelemetry extends JavascriptTest {
 
         Log.i("GeckoTest", "Adding telemetry events.");
         try {
-            Telemetry.sendUIEvent(TEST_PREFIX + "enone", "method0");
-            Telemetry.startUISession(TEST_PREFIX + "foo");
-            Telemetry.sendUIEvent(TEST_PREFIX + "efoo", "method1");
-            Telemetry.startUISession(TEST_PREFIX + "foo");
-            Telemetry.sendUIEvent(TEST_PREFIX + "efoo", "method2");
-            Telemetry.startUISession(TEST_PREFIX + "bar");
-            Telemetry.sendUIEvent(TEST_PREFIX + "efoobar", "method3", "foobarextras");
-            Telemetry.stopUISession(TEST_PREFIX + "foo", "reasonfoo");
-            Telemetry.sendUIEvent(TEST_PREFIX + "ebar", "method4", "barextras");
-            Telemetry.stopUISession(TEST_PREFIX + "bar", "reasonbar");
-            Telemetry.stopUISession(TEST_PREFIX + "bar", "reasonbar2");
-            Telemetry.sendUIEvent(TEST_PREFIX + "enone", "method5");
+            Telemetry.sendUIEvent(Event._TEST1, Method._TEST1);
+            Telemetry.startUISession(Session._TEST_STARTED_TWICE);
+            Telemetry.sendUIEvent(Event._TEST2, Method._TEST1);
+
+            // We can only start one session per name, so this call should be ignored.
+            Telemetry.startUISession(Session._TEST_STARTED_TWICE);
+
+            Telemetry.sendUIEvent(Event._TEST2, Method._TEST2);
+            Telemetry.startUISession(Session._TEST_STOPPED_TWICE);
+            Telemetry.sendUIEvent(Event._TEST3, Method._TEST1, "foobarextras");
+            Telemetry.stopUISession(Session._TEST_STARTED_TWICE, Reason._TEST1);
+            Telemetry.sendUIEvent(Event._TEST4, Method._TEST1, "barextras");
+            Telemetry.stopUISession(Session._TEST_STOPPED_TWICE, Reason._TEST2);
+
+            // This session is already stopped, so this call should be ignored.
+            Telemetry.stopUISession(Session._TEST_STOPPED_TWICE, Reason._TEST_IGNORED);
+
+            Telemetry.sendUIEvent(Event._TEST1, Method._TEST1);
         } catch (Exception e) {
             Log.e("GeckoTest", "Oops.", e);
         }
