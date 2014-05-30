@@ -12,11 +12,11 @@
 #define WEBRTC_TEST_CHANNEL_TRANSPORT_UDP_SOCKET2_MANAGER_WINDOWS_H_
 
 #include <winsock2.h>
+#include <list>
 
 #include "webrtc/system_wrappers/interface/atomic32.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
-#include "webrtc/system_wrappers/interface/list_wrapper.h"
 #include "webrtc/system_wrappers/interface/thread_wrapper.h"
 #include "webrtc/test/channel_transport/udp_socket2_win.h"
 #include "webrtc/test/channel_transport/udp_socket_manager_wrapper.h"
@@ -91,6 +91,27 @@ private:
     Atomic32 _inUse;
 };
 
+class UdpSocket2WorkerWindows
+{
+public:
+    UdpSocket2WorkerWindows(HANDLE ioCompletionHandle);
+    virtual ~UdpSocket2WorkerWindows();
+
+    virtual bool Start();
+    virtual bool Stop();
+    virtual int32_t Init();
+    virtual void SetNotAlive();
+protected:
+    static bool Run(ThreadObj obj);
+    bool Process();
+private:
+    HANDLE _ioCompletionHandle;
+    ThreadWrapper*_pThread;
+    static int32_t _numOfWorkers;
+    int32_t _workerNumber;
+    volatile bool _stop;
+    bool _init;
+};
 
 class UdpSocket2ManagerWindows : public UdpSocketManager
 {
@@ -115,6 +136,7 @@ public:
     int32_t PushIoContext(PerIoContext* pIoContext);
 
 private:
+    typedef std::list<UdpSocket2WorkerWindows*> WorkerList;
     bool StopWorkerThreads();
     bool StartWorkerThreads();
     bool AddSocketPrv(UdpSocket2Windows* s);
@@ -129,33 +151,11 @@ private:
     volatile bool _stopped;
     bool _init;
     int32_t _numActiveSockets;
-    ListWrapper _workerThreadsList;
+    WorkerList _workerThreadsList;
     EventWrapper* _event;
 
     HANDLE _ioCompletionHandle;
     IoContextPool _ioContextPool;
-};
-
-class UdpSocket2WorkerWindows
-{
-public:
-    UdpSocket2WorkerWindows(HANDLE ioCompletionHandle);
-    virtual ~UdpSocket2WorkerWindows();
-
-    virtual bool Start();
-    virtual bool Stop();
-    virtual int32_t Init();
-    virtual void SetNotAlive();
-protected:
-    static bool Run(ThreadObj obj);
-    bool Process();
-private:
-    HANDLE _ioCompletionHandle;
-    ThreadWrapper*_pThread;
-    static int32_t _numOfWorkers;
-    int32_t _workerNumber;
-    volatile bool _stop;
-    bool _init;
 };
 
 }  // namespace test

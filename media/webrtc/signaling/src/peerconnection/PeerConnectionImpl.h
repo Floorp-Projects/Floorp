@@ -528,6 +528,10 @@ public:
   // is called to start the list over.
   void ClearSdpParseErrorMessages();
 
+  void OnAddIceCandidateError() {
+    ++mAddCandidateErrorCount;
+  }
+
   // Called to retreive the list of parsing errors.
   const std::vector<std::string> &GetSdpParseErrors();
 
@@ -707,6 +711,7 @@ private:
 
   // Holder for error messages from parsing SDP
   std::vector<std::string> mSDPParseErrorMessages;
+  unsigned int mAddCandidateErrorCount;
 
   bool mTrickle;
 

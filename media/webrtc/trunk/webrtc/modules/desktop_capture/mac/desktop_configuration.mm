@@ -110,15 +110,8 @@ MacDesktopConfiguration MacDesktopConfiguration::GetCurrent(Origin origin) {
     MacDisplayConfiguration display_config =
         GetConfigurationForScreen([screens objectAtIndex: i]);
 
-    // Handling mixed-DPI is hard, so we only return displays that match the
-    // "primary" display's DPI.  The primary display is always the first in the
-    // list returned by [NSScreen screens].
-    if (i == 0) {
+    if (i == 0)
       desktop_config.dip_to_pixel_scale = display_config.dip_to_pixel_scale;
-    } else if (desktop_config.dip_to_pixel_scale !=
-               display_config.dip_to_pixel_scale) {
-      continue;
-    }
 
     // Cocoa uses bottom-up coordinates, so if the caller wants top-down then
     // we need to invert the positions of secondary monitors relative to the
@@ -126,8 +119,16 @@ MacDesktopConfiguration MacDesktopConfiguration::GetCurrent(Origin origin) {
     if (i > 0 && origin == TopLeftOrigin) {
       InvertRectYOrigin(desktop_config.displays[0].bounds,
                         &display_config.bounds);
-      InvertRectYOrigin(desktop_config.displays[0].pixel_bounds,
-                        &display_config.pixel_bounds);
+      // |display_bounds| is density dependent, so we need to convert the
+      // primay monitor's position into the secondary monitor's density context.
+      float scaling_factor = display_config.dip_to_pixel_scale /
+          desktop_config.displays[0].dip_to_pixel_scale;
+      DesktopRect primary_bounds = DesktopRect::MakeLTRB(
+          desktop_config.displays[0].pixel_bounds.left() * scaling_factor,
+          desktop_config.displays[0].pixel_bounds.top() * scaling_factor,
+          desktop_config.displays[0].pixel_bounds.right() * scaling_factor,
+          desktop_config.displays[0].pixel_bounds.bottom() * scaling_factor);
+      InvertRectYOrigin(primary_bounds, &display_config.pixel_bounds);
     }
 
     // Add the display to the configuration.
@@ -141,6 +142,35 @@ MacDesktopConfiguration MacDesktopConfiguration::GetCurrent(Origin origin) {
   }
 
   return desktop_config;
+}
+
+// For convenience of comparing MacDisplayConfigurations in
+// MacDesktopConfiguration::Equals.
+bool operator==(const MacDisplayConfiguration& left,
+                const MacDisplayConfiguration& right) {
+  return left.id == right.id &&
+      left.bounds.equals(right.bounds) &&
+      left.pixel_bounds.equals(right.pixel_bounds) &&
+      left.dip_to_pixel_scale == right.dip_to_pixel_scale;
+}
+
+bool MacDesktopConfiguration::Equals(const MacDesktopConfiguration& other) {
+  return bounds.equals(other.bounds) &&
+      pixel_bounds.equals(other.pixel_bounds) &&
+      dip_to_pixel_scale == other.dip_to_pixel_scale &&
+      displays == other.displays;
+}
+
+// Finds the display configuration with the specified id.
+const MacDisplayConfiguration*
+MacDesktopConfiguration::FindDisplayConfigurationById(
+    CGDirectDisplayID id) {
+  for (MacDisplayConfigurations::const_iterator it = displays.begin();
+      it != displays.end(); ++it) {
+    if (it->id == id)
+      return &(*it);
+  }
+  return NULL;
 }
 
 }  // namespace webrtc

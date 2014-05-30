@@ -42,9 +42,6 @@ DOMCI_CLASS(TreeColumn)
 DOMCI_CLASS(CSSMozDocumentRule)
 DOMCI_CLASS(CSSSupportsRule)
 
-// WindowUtils
-DOMCI_CLASS(WindowUtils)
-
 // XSLTProcessor
 DOMCI_CLASS(XSLTProcessor)
 

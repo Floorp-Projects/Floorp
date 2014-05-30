@@ -169,13 +169,15 @@ inline To implicit_cast(From const &f) {
 // the expression is false, most compilers will issue a warning/error
 // containing the name of the variable.
 
+// Avoid multiple definitions for webrtc
+#if !defined(COMPILE_ASSERT)
 template <bool>
 struct CompileAssert {
 };
 
-#undef COMPILE_ASSERT
 #define COMPILE_ASSERT(expr, msg) \
   typedef CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1]
+#endif
 
 // Implementation details of COMPILE_ASSERT:
 //

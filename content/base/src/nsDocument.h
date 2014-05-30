@@ -1692,7 +1692,7 @@ private:
   mozilla::LayoutDeviceToScreenScale mScaleFloat;
   mozilla::CSSToLayoutDeviceScale mPixelRatio;
   bool mAutoSize, mAllowZoom, mAllowDoubleTapZoom, mValidScaleFloat, mValidMaxScale, mScaleStrEmpty, mWidthStrEmpty;
-  mozilla::CSSIntSize mViewportSize;
+  mozilla::CSSSize mViewportSize;
 
   nsrefcnt mStackRefCnt;
   bool mNeedsReleaseAfterStackRefCntRelease;

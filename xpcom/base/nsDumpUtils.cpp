@@ -13,7 +13,7 @@
 #include "nsIObserverService.h"
 #include "mozilla/ClearOnShutdown.h"
 
-#if defined(XP_LINUX) || defined(__FreeBSD__) || defined(XP_MACOSX) // {
+#ifdef XP_UNIX // {
 #include "mozilla/Preferences.h"
 #include <fcntl.h>
 #include <unistd.h>
@@ -427,7 +427,7 @@ FifoWatcher::OnFileCanReadWithoutBlocking(int aFd)
   LOG("Got unexpected value from fifo; ignoring it.");
 }
 
-#endif // XP_LINUX }
+#endif // XP_UNIX }
 
 // In Android case, this function will open a file named aFilename under
 // /data/local/tmp/"aFoldername".
