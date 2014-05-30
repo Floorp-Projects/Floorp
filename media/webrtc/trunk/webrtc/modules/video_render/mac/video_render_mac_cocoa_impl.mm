@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "engine_configurations.h"
+#include "webrtc/engine_configurations.h"
 #if defined(COCOA_RENDERING)
 
 #import "cocoa_render_view.h"

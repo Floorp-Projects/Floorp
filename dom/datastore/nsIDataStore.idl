@@ -1,0 +1,23 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMWindow;
+
+// NOTE: This is a temporary interface.
+// It will be removed in the next patches for rewriting DataStore in C++.
+[scriptable, uuid(0b41fef5-14ba-48b0-923c-3d8fb64692ae)]
+interface nsIDataStore : nsISupports
+{
+  void init(in nsIDOMWindow window,
+            in DOMString name,
+            in DOMString manifestURL,
+            in boolean readOnly);
+
+  attribute jsval exposedObject;
+
+  void retrieveRevisionId(in jsval cb);
+};

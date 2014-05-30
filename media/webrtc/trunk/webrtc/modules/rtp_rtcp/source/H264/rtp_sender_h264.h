@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_H264_RTP_SENDER_H264_H_
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_H264_RTP_SENDER_H264_H_
 
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 #include "ModuleRTPRTCPConfig.h"
 #include "rtp_rtcp_defines.h"
 #include "h264_information.h"

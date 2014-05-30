@@ -19,6 +19,8 @@ struct G729_decinst_t_;
 
 namespace webrtc {
 
+namespace acm2 {
+
 class ACMG729 : public ACMGenericCodec {
  public:
   explicit ACMG729(int16_t codec_id);
@@ -48,6 +50,8 @@ class ACMG729 : public ACMGenericCodec {
 
   G729_encinst_t_* encoder_inst_ptr_;
 };
+
+}  // namespace acm2
 
 }  // namespace webrtc
 

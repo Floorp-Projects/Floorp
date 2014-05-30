@@ -9,20 +9,12 @@
 #include "DOMSVGNumberList.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDOMSVGNumber.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ErrorResult.h"
+#include "nsWrapperCache.h"
 
 class nsSVGElement;
-
-// We make DOMSVGNumber a pseudo-interface to allow us to QI to it in order to
-// check that the objects that scripts pass to DOMSVGNumberList methods are our
-// *native* number objects.
-//
-// {2CA92412-2E1F-4DDB-A16C-52B3B582270D}
-#define MOZILLA_DOMSVGNUMBER_IID \
-  { 0x2CA92412, 0x2E1F, 0x4DDB, \
-    { 0xA1, 0x6C, 0x52, 0xB3, 0xB5, 0x82, 0x27, 0x0D } }
 
 #define MOZ_SVG_LIST_INDEX_BIT_COUNT 27 // supports > 134 million list items
 
@@ -41,15 +33,14 @@ namespace mozilla {
  *
  * See the comment in DOMSVGLength.h (yes, LENGTH), which applies here too.
  */
-class DOMSVGNumber MOZ_FINAL : public nsIDOMSVGNumber
+class DOMSVGNumber MOZ_FINAL : public nsISupports
+                             , public nsWrapperCache
 {
   friend class AutoChangeNumberNotifier;
 
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOMSVGNUMBER_IID)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(DOMSVGNumber)
-  NS_DECL_NSIDOMSVGNUMBER
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGNumber)
 
   /**
    * Generic ctor for DOMSVGNumber objects that are created for an attribute.
@@ -63,7 +54,7 @@ public:
    * Ctor for creating the objects returned by SVGSVGElement.createSVGNumber(),
    * which do not initially belong to an attribute.
    */
-  DOMSVGNumber();
+  explicit DOMSVGNumber(nsISupports* aParent);
 
   ~DOMSVGNumber() {
     // Our mList's weak ref to us must be nulled out when we die. If GC has
@@ -78,7 +69,7 @@ public:
    * Create an unowned copy. The caller is responsible for the first AddRef().
    */
   DOMSVGNumber* Clone() {
-    DOMSVGNumber *clone = new DOMSVGNumber();
+    DOMSVGNumber *clone = new DOMSVGNumber(mParent);
     clone->mValue = ToSVGNumber();
     return clone;
   }
@@ -128,6 +119,23 @@ public:
 
   float ToSVGNumber();
 
+  nsISupports* GetParentObject()
+  {
+    return mParent;
+  }
+
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+
+  static already_AddRefed<DOMSVGNumber>
+  Constructor(const dom::GlobalObject& aGlobal, ErrorResult& aRv);
+
+  static already_AddRefed<DOMSVGNumber>
+  Constructor(const dom::GlobalObject& aGlobal, float aValue, ErrorResult& aRv);
+
+  float Value();
+
+  void SetValue(float aValue, ErrorResult& aRv);
+
 private:
 
   nsSVGElement* Element() {
@@ -154,6 +162,7 @@ private:
 #endif
 
   nsRefPtr<DOMSVGNumberList> mList;
+  nsCOMPtr<nsISupports> mParent;
 
   // Bounds for the following are checked in the ctor, so be sure to update
   // that if you change the capacity of any of the following.
@@ -165,8 +174,6 @@ private:
   // The following member is only used when we're not in a list:
   float mValue;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(DOMSVGNumber, MOZILLA_DOMSVGNUMBER_IID)
 
 } // namespace mozilla
 

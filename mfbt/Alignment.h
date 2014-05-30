@@ -21,14 +21,14 @@ namespace mozilla {
 template<typename T>
 class AlignmentFinder
 {
-    struct Aligner
-    {
-        char c;
-        T t;
-    };
+  struct Aligner
+  {
+    char mChar;
+    T mT;
+  };
 
-  public:
-    static const size_t alignment = sizeof(Aligner) - sizeof(T);
+public:
+  static const size_t alignment = sizeof(Aligner) - sizeof(T);
 };
 
 #define MOZ_ALIGNOF(T) mozilla::AlignmentFinder<T>::alignment
@@ -71,31 +71,31 @@ struct AlignedElem;
 template<>
 struct AlignedElem<1>
 {
-    MOZ_ALIGNED_DECL(uint8_t elem, 1);
+  MOZ_ALIGNED_DECL(uint8_t elem, 1);
 };
 
 template<>
 struct AlignedElem<2>
 {
-    MOZ_ALIGNED_DECL(uint8_t elem, 2);
+  MOZ_ALIGNED_DECL(uint8_t elem, 2);
 };
 
 template<>
 struct AlignedElem<4>
 {
-    MOZ_ALIGNED_DECL(uint8_t elem, 4);
+  MOZ_ALIGNED_DECL(uint8_t elem, 4);
 };
 
 template<>
 struct AlignedElem<8>
 {
-    MOZ_ALIGNED_DECL(uint8_t elem, 8);
+  MOZ_ALIGNED_DECL(uint8_t elem, 8);
 };
 
 template<>
 struct AlignedElem<16>
 {
-    MOZ_ALIGNED_DECL(uint8_t elem, 16);
+  MOZ_ALIGNED_DECL(uint8_t elem, 16);
 };
 
 /*
@@ -111,25 +111,27 @@ struct AlignedElem<16>
 template<size_t Nbytes>
 struct AlignedStorage
 {
-    union U {
-      char bytes[Nbytes];
-      uint64_t _;
-    } u;
+  union U
+  {
+    char mBytes[Nbytes];
+    uint64_t mDummy;
+  } u;
 
-    const void* addr() const { return u.bytes; }
-    void* addr() { return u.bytes; }
+  const void* addr() const { return u.mBytes; }
+  void* addr() { return u.mBytes; }
 };
 
 template<typename T>
 struct AlignedStorage2
 {
-    union U {
-      char bytes[sizeof(T)];
-      uint64_t _;
-    } u;
+  union U
+  {
+    char mBytes[sizeof(T)];
+    uint64_t mDummy;
+  } u;
 
-    const T* addr() const { return reinterpret_cast<const T*>(u.bytes); }
-    T* addr() { return static_cast<T*>(static_cast<void*>(u.bytes)); }
+  const T* addr() const { return reinterpret_cast<const T*>(u.mBytes); }
+  T* addr() { return static_cast<T*>(static_cast<void*>(u.mBytes)); }
 };
 
 } /* namespace mozilla */

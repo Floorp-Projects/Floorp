@@ -66,6 +66,7 @@
 #ifdef MOZ_XUL
 #include "nsXULElement.h"
 #endif /* MOZ_XUL */
+#include "nsSVGElement.h"
 #include "nsFrameManager.h"
 #include "nsFrameSelection.h"
 #ifdef DEBUG
@@ -137,6 +138,32 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+
+nsIAtom*
+nsIContent::DoGetID() const
+{
+  MOZ_ASSERT(HasID(), "Unexpected call");
+  MOZ_ASSERT(IsElement(), "Only elements can have IDs");
+
+  return AsElement()->GetParsedAttr(nsGkAtoms::id)->GetAtomValue();
+}
+
+const nsAttrValue*
+nsIContent::DoGetClasses() const
+{
+  MOZ_ASSERT(HasFlag(NODE_MAY_HAVE_CLASS), "Unexpected call");
+  MOZ_ASSERT(IsElement(), "Only elements can have classes");
+
+  if (IsSVG()) {
+    const nsAttrValue* animClass =
+      static_cast<const nsSVGElement*>(this)->GetAnimatedClassName();
+    if (animClass) {
+      return animClass;
+    }
+  }
+
+  return AsElement()->GetParsedAttr(nsGkAtoms::_class);
+}
 
 NS_IMETHODIMP
 Element::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -469,15 +496,12 @@ Element::WrapObject(JSContext *aCx)
 }
 
 nsDOMTokenList*
-Element::GetClassList()
+Element::ClassList()
 {
-  Element::nsDOMSlots *slots = DOMSlots();
+  Element::nsDOMSlots* slots = DOMSlots();
 
   if (!slots->mClassList) {
-    nsIAtom* classAttr = GetClassAttributeName();
-    if (classAttr) {
-      slots->mClassList = new nsDOMTokenList(this, classAttr);
-    }
+    slots->mClassList = new nsDOMTokenList(this, nsGkAtoms::_class);
   }
 
   return slots->mClassList;
@@ -486,7 +510,7 @@ Element::GetClassList()
 void
 Element::GetClassList(nsISupports** aClassList)
 {
-  NS_IF_ADDREF(*aClassList = GetClassList());
+  NS_ADDREF(*aClassList = ClassList());
 }
 
 already_AddRefed<nsIHTMLCollection>
@@ -739,31 +763,22 @@ Element::AddToIdTable(nsIAtom* aId)
 void
 Element::RemoveFromIdTable()
 {
-  if (HasID()) {
-    RemoveFromIdTable(DoGetID());
+  if (!HasID()) {
+    return;
   }
-}
 
-void
-Element::RemoveFromIdTable(nsIAtom* aId)
-{
-  NS_ASSERTION(HasID(), "Node doesn't have an ID?");
+  nsIAtom* id = DoGetID();
   if (HasFlag(NODE_IS_IN_SHADOW_TREE)) {
     ShadowRoot* containingShadow = GetContainingShadow();
     // Check for containingShadow because it may have
     // been deleted during unlinking.
     if (containingShadow) {
-      containingShadow->RemoveFromIdTable(this, aId);
+      containingShadow->RemoveFromIdTable(this, id);
     }
   } else {
     nsIDocument* doc = GetCurrentDoc();
     if (doc && (!IsInAnonymousSubtree() || doc->IsXUL())) {
-      // id can be null during mutation events evilness. Also, XUL elements
-      // loose their proto attributes during cc-unlink, so this can happen
-      // during cc-unlink too.
-      if (aId) {
-        doc->RemoveFromIdTable(this, aId);
-      }
+      doc->RemoveFromIdTable(this, id);
     }
   }
 }
@@ -1573,12 +1588,6 @@ Element::GetAttributeChangeHint(const nsIAtom* aAttribute,
   return nsChangeHint(0);
 }
 
-nsIAtom *
-Element::GetClassAttributeName() const
-{
-  return nullptr;
-}
-
 bool
 Element::FindAttributeDependence(const nsIAtom* aAttribute,
                                  const MappedAttributeEntry* const aMaps[],
@@ -2056,6 +2065,27 @@ Element::ParseAttribute(int32_t aNamespaceID,
                         const nsAString& aValue,
                         nsAttrValue& aResult)
 {
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aAttribute == nsGkAtoms::_class) {
+      SetFlags(NODE_MAY_HAVE_CLASS);
+      aResult.ParseAtomArray(aValue);
+      return true;
+    }
+    if (aAttribute == nsGkAtoms::id) {
+      // Store id as an atom.  id="" means that the element has no id,
+      // not that it has an emptystring as the id.
+      RemoveFromIdTable();
+      if (aValue.IsEmpty()) {
+        ClearHasID();
+        return false;
+      }
+      aResult.ParseAtom(aValue);
+      SetHasID();
+      AddToIdTable(aResult.GetAtomValue());
+      return true;
+    }
+  }
+
   return false;
 }
 
@@ -2170,6 +2200,12 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   // The id-handling code, and in the future possibly other code, need to
   // react to unexpected attribute changes.
   nsMutationGuard::DidMutate();
+
+  if (aName == nsGkAtoms::id && aNameSpaceID == kNameSpaceID_None) {
+    // Have to do this before clearing flag. See RemoveFromIdTable
+    RemoveFromIdTable();
+    ClearHasID();
+  }
 
   bool hadValidDir = false;
   bool hadDirAuto = false;

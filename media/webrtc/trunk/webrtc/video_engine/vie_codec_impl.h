@@ -70,6 +70,9 @@ class ViECodecImpl
   virtual int StartDebugRecording(int video_channel,
                                   const char* file_name_utf8);
   virtual int StopDebugRecording(int video_channel);
+  virtual void SuspendBelowMinBitrate(int video_channel);
+  virtual bool GetSendSideDelay(int video_channel, int* avg_delay_ms,
+                                int* max_delay_ms) const;
 
  protected:
   explicit ViECodecImpl(ViESharedData* shared_data);

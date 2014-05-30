@@ -25,30 +25,26 @@
 //   http://msdn.microsoft.com/en-us/library/b0084kay.aspx
 //   http://www.agner.org/optimize/calling_conventions.pdf
 //   or with gcc, run: "echo | gcc -E -dM -"
-// TODO(andrew): replace WEBRTC_LITTLE_ENDIAN with WEBRTC_ARCH_LITTLE_ENDIAN.
 #if defined(_M_X64) || defined(__x86_64__)
 #define WEBRTC_ARCH_X86_FAMILY
 #define WEBRTC_ARCH_X86_64
 #define WEBRTC_ARCH_64_BITS
 #define WEBRTC_ARCH_LITTLE_ENDIAN
-#define WEBRTC_LITTLE_ENDIAN
 #elif defined(_M_IX86) || defined(__i386__)
 #define WEBRTC_ARCH_X86_FAMILY
 #define WEBRTC_ARCH_X86
 #define WEBRTC_ARCH_32_BITS
 #define WEBRTC_ARCH_LITTLE_ENDIAN
-#define WEBRTC_LITTLE_ENDIAN
 #elif defined(__ARMEL__)
-// TODO(andrew): We'd prefer to control platform defines here, but this is
+// TODO(ajm): We'd prefer to control platform defines here, but this is
 // currently provided by the Android makefiles. Commented to avoid duplicate
 // definition warnings.
 //#define WEBRTC_ARCH_ARM
-// TODO(andrew): Chromium uses the following two defines. Should we switch?
+// TODO(ajm): Chromium uses the following two defines. Should we switch?
 //#define WEBRTC_ARCH_ARM_FAMILY
 //#define WEBRTC_ARCH_ARMEL
 #define WEBRTC_ARCH_32_BITS
 #define WEBRTC_ARCH_LITTLE_ENDIAN
-#define WEBRTC_LITTLE_ENDIAN
 #elif defined(__powerpc64__)
 #define WEBRTC_ARCH_PPC64 1
 #define WEBRTC_ARCH_64_BITS 1
@@ -137,6 +133,10 @@
 #error Please add support for your architecture in typedefs.h
 #endif
 
+#if !(defined(WEBRTC_ARCH_LITTLE_ENDIAN) ^ defined(WEBRTC_ARCH_BIG_ENDIAN))
+#error Define either WEBRTC_ARCH_LITTLE_ENDIAN or WEBRTC_ARCH_BIG_ENDIAN
+#endif
+
 #if defined(__SSE2__) || defined(_MSC_VER)
 #define WEBRTC_USE_SSE2
 #endif
@@ -169,8 +169,25 @@ typedef unsigned __int64    uint64_t;
 // (because it won't see this pragma).
 #pragma clang diagnostic ignored "-Wc++11-extensions"
 #define OVERRIDE override
+#elif defined(__GNUC__) && __cplusplus >= 201103 && \
+    (__GNUC__ * 10000 + __GNUC_MINOR__ * 100) >= 40700
+// GCC 4.7 supports explicit virtual overrides when C++11 support is enabled.
+#define OVERRIDE override
 #else
 #define OVERRIDE
 #endif
+
+// Annotate a function indicating the caller must examine the return value.
+// Use like:
+//   int foo() WARN_UNUSED_RESULT;
+// TODO(ajm): Hack to avoid multiple definitions until the base/ of webrtc and
+// libjingle are merged.
+#if !defined(WARN_UNUSED_RESULT)
+#if defined(__GNUC__)
+#define WARN_UNUSED_RESULT __attribute__((warn_unused_result))
+#else
+#define WARN_UNUSED_RESULT
+#endif
+#endif  // WARN_UNUSED_RESULT
 
 #endif  // WEBRTC_TYPEDEFS_H_

@@ -5276,6 +5276,20 @@
     "n_buckets": "50",
     "description": "The number of calls made during a session."
   },
+  "WEBRTC_ICE_ADD_CANDIDATE_ERRORS_GIVEN_SUCCESS": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "30",
+    "n_buckets": "29",
+    "description": "The number of times AddIceCandidate failed on a given PeerConnection, given that ICE succeeded."
+  },
+  "WEBRTC_ICE_ADD_CANDIDATE_ERRORS_GIVEN_FAILURE": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "30",
+    "n_buckets": "29",
+    "description": "The number of times AddIceCandidate failed on a given PeerConnection, given that ICE failed."
+  },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_TRACERDETACH_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
