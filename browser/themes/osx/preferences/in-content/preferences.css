@@ -19,6 +19,14 @@ menulist:not([editable="true"]) > .menulist-dropmarker {
   -moz-margin-start: 0;
 }
 
+.checkbox-icon {
+  margin-right: 0;
+}
+
+.radio-icon {
+  -moz-margin-end: 0;
+}
+
 .numberbox-input-box {
   -moz-appearance: none;
   border-width: 0;
