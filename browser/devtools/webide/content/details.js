@@ -8,7 +8,7 @@ const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
 const {AppProjects} = require("devtools/app-manager/app-projects");
 const {AppValidator} = require("devtools/app-manager/app-validator");
-const {AppManager} = require("devtools/app-manager");
+const {AppManager} = require("devtools/webide/app-manager");
 
 window.addEventListener("load", function onLoad() {
   window.removeEventListener("load", onLoad);
