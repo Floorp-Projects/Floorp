@@ -80,9 +80,8 @@ MOZ_PKG_APPNAME = $(MOZ_APP_DISPLAYNAME)
 endif
 MOZ_PKG_APPNAME_LC = $(shell echo $(MOZ_PKG_APPNAME) | tr '[A-Z]' '[a-z]')
 
-
 ifndef MOZ_PKG_LONGVERSION
-MOZ_PKG_LONGVERSION = $(shell echo $(MOZ_PKG_VERSION))
+MOZ_PKG_LONGVERSION = $(MOZ_PKG_VERSION)
 endif
 
 ifeq (,$(filter-out Darwin, $(OS_ARCH))) # Mac
