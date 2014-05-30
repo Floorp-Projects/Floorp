@@ -933,6 +933,10 @@ public class BrowserToolbar extends ThemedRelativeLayout
         return (uiMode == UIMode.EDIT);
     }
 
+    public boolean isAnimating() {
+        return isAnimatingEntry;
+    }
+
     public void startEditing(String url, PropertyAnimator animator) {
         if (isEditing()) {
             return;
