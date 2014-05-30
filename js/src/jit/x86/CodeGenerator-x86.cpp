@@ -138,58 +138,6 @@ CodeGeneratorX86::visitUnbox(LUnbox *unbox)
 }
 
 bool
-CodeGeneratorX86::visitStoreSlotT(LStoreSlotT *store)
-{
-    Register base = ToRegister(store->slots());
-    int32_t offset = store->mir()->slot() * sizeof(js::Value);
-
-    const LAllocation *value = store->value();
-    MIRType valueType = store->mir()->value()->type();
-
-    if (store->mir()->needsBarrier())
-        emitPreBarrier(Address(base, offset), store->mir()->slotType());
-
-    if (valueType == MIRType_Double) {
-        masm.storeDouble(ToFloatRegister(value), Operand(base, offset));
-        return true;
-    }
-
-    // Store the type tag if needed.
-    if (valueType != store->mir()->slotType())
-        masm.storeTypeTag(ImmType(ValueTypeFromMIRType(valueType)), Operand(base, offset));
-
-    // Store the payload.
-    if (value->isConstant())
-        masm.storePayload(*value->toConstant(), Operand(base, offset));
-    else
-        masm.storePayload(ToRegister(value), Operand(base, offset));
-
-    return true;
-}
-
-void
-CodeGeneratorX86::storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
-                                    Register elements, const LAllocation *index)
-{
-    Operand dest = createArrayElementOperand(elements, index);
-
-    if (valueType == MIRType_Double) {
-        masm.storeDouble(ToFloatRegister(value), dest);
-        return;
-    }
-
-    // Store the type tag if needed.
-    if (valueType != elementType)
-        masm.storeTypeTag(ImmType(ValueTypeFromMIRType(valueType)), dest);
-
-    // Store the payload.
-    if (value->isConstant())
-        masm.storePayload(*value->toConstant(), dest);
-    else
-        masm.storePayload(ToRegister(value), dest);
-}
-
-bool
 CodeGeneratorX86::visitCompareB(LCompareB *lir)
 {
     MCompare *mir = lir->mir();
