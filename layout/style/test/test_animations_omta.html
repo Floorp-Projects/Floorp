@@ -1856,16 +1856,25 @@ addAsyncTest(function *() {
   advance_clock(0); // Trigger animation
   advance_clock(1200); // Skip past end of animation's entire active duration
   check_events([{ type: 'animationstart', target: gDiv,
-                  // Bug 1007513 - elapsedTime should be 0 below
-                  animationName: 'anim2', elapsedTime: 1.1,
+                  animationName: 'anim2', elapsedTime: 0,
                   pseudoElement: "" },
                 { type: 'animationend', target: gDiv,
-                  // Bug 1007513 - elapsedTime should be 1 below
-                  animationName: 'anim2', elapsedTime: 1.1,
+                  animationName: 'anim2', elapsedTime: 1,
                   pseudoElement: "" }],
                "events after skipping over animation interval");
   done_div();
 });
+
+/*
+ * Bug 1007513 - AnimationEvent.elapsedTime should be animation time
+ *
+ * There is no OMTA-version of this test since it is specific to the
+ * contents of animation events which are dispatched on the main thread.
+ *
+ * We *do* provide an OMTA-version of some tests regarding the *dispatch* of
+ * events to catch possible regressions if in future event dispatch is tied
+ * to animation throttling.
+ */
 
 //----------------------------------------------------------------------
 //
