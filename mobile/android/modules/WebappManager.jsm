@@ -29,6 +29,31 @@ XPCOMUtils.defineLazyGetter(this, "Strings", function() {
   return Services.strings.createBundle("chrome://browser/locale/webapp.properties");
 });
 
+/**
+ * Get the formatted plural form of a string.  Escapes semicolons in arguments
+ * to provide to the formatter before formatting the string, then unescapes them
+ * after getting its plural form, to avoid tripping up the plural form getter
+ * with a semicolon in one of the formatter's arguments, since the plural forms
+ * of localized strings are delimited by semicolons.
+ *
+ * Ideally, we'd get the plural form first and then format the string,
+ * so we wouldn't have to escape/unescape the semicolons; but that would require
+ * changes to nsIStringBundle and PluralForm.jsm.
+ *
+ * @param stringName {String} the string to get the formatted plural form of
+ * @param formatterArgs {Array} of {String} args to provide to the formatter
+ * @param pluralNum {Number} the number that determines the plural form
+ * @returns {String} the formatted plural form of the string
+ */
+function getFormattedPluralForm(stringName, formatterArgs, pluralNum) {
+  // Escape semicolons by replacing them with ESC characters.
+  let escapedArgs = [arg.replace(/;/g, String.fromCharCode(0x1B)) for (arg of formatterArgs)];
+  let formattedString = Strings.formatStringFromName(stringName, escapedArgs, escapedArgs.length);
+  let pluralForm = PluralForm.get(pluralNum, formattedString);
+  let unescapedString = pluralForm.replace(String.fromCharCode(0x1B), ";", "g");
+  return unescapedString;
+}
+
 let Log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog;
 let debug = Log.d.bind(null, "WebappManager");
 
@@ -319,9 +344,9 @@ this.WebappManager = {
       } else {
         let names = [manifestUrlToApp[url].name for (url of outdatedApps)].join(", ");
         let accepted = yield this._notify({
-          title: PluralForm.get(outdatedApps.length, Strings.GetStringFromName("downloadUpdateTitle")).
+          title: PluralForm.get(outdatedApps.length, Strings.GetStringFromName("retrieveUpdateTitle")).
                  replace("#1", outdatedApps.length),
-          message: Strings.formatStringFromName("downloadUpdateMessage", [names], 1),
+          message: getFormattedPluralForm("retrieveUpdateMessage", [names], outdatedApps.length),
           icon: "drawable://alert_app",
         }).dismissed;
 
@@ -403,9 +428,9 @@ this.WebappManager = {
     // Notify the user that we're in the progress of downloading updates.
     let downloadingNames = [app.name for (app of aApps)].join(", ");
     let notification = this._notify({
-      title: PluralForm.get(aApps.length, Strings.GetStringFromName("downloadingUpdateTitle")).
+      title: PluralForm.get(aApps.length, Strings.GetStringFromName("retrievingUpdateTitle")).
              replace("#1", aApps.length),
-      message: Strings.formatStringFromName("downloadingUpdateMessage", [downloadingNames], 1),
+      message: getFormattedPluralForm("retrievingUpdateMessage", [downloadingNames], aApps.length),
       icon: "drawable://alert_download_animation",
       // TODO: make this a determinate progress indicator once we can determine
       // the sizes of the APKs and observe their progress.
@@ -435,9 +460,9 @@ this.WebappManager = {
     if (downloadFailedApps.length > 0) {
       let downloadFailedNames = [app.name for (app of downloadFailedApps)].join(", ");
       this._notify({
-        title: PluralForm.get(downloadFailedApps.length, Strings.GetStringFromName("downloadFailedTitle")).
+        title: PluralForm.get(downloadFailedApps.length, Strings.GetStringFromName("retrievalFailedTitle")).
                replace("#1", downloadFailedApps.length),
-        message: Strings.formatStringFromName("downloadFailedMessage", [downloadFailedNames], 1),
+        message: getFormattedPluralForm("retrievalFailedMessage", [downloadFailedNames], downloadFailedApps.length),
         icon: "drawable://alert_app",
       });
     }
@@ -453,7 +478,7 @@ this.WebappManager = {
     let accepted = yield this._notify({
       title: PluralForm.get(downloadedApks.length, Strings.GetStringFromName("installUpdateTitle")).
              replace("#1", downloadedApks.length),
-      message: Strings.formatStringFromName("installUpdateMessage", [downloadedNames], 1),
+      message: getFormattedPluralForm("installUpdateMessage2", [downloadedNames], downloadedApks.length),
       icon: "drawable://alert_app",
     }).dismissed;
 

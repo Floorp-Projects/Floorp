@@ -278,6 +278,10 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
    * See ContentObserver and WebAudioInstrumenter for more details.
    */
   setup: method(function({ reload }) {
+    // Used to track when something is happening with the web audio API
+    // the first time, to ultimately fire `start-context` event
+    this._firstNodeCreated = false;
+
     if (this._initialized) {
       return;
     }
@@ -293,10 +297,6 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
       startRecording: true,
       performReload: reload
     });
-
-    // Used to track when something is happening with the web audio API
-    // the first time, to ultimately fire `start-context` event
-    this._firstNodeCreated = false;
   }, {
     request: { reload: Option(0, "boolean") },
     oneway: true
