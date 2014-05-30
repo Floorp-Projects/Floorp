@@ -138,17 +138,6 @@ CodeGeneratorX86::visitUnbox(LUnbox *unbox)
 }
 
 bool
-CodeGeneratorX86::visitLoadSlotV(LLoadSlotV *load)
-{
-    const ValueOperand out = ToOutValue(load);
-    Register base = ToRegister(load->input());
-    int32_t offset = load->mir()->slot() * sizeof(js::Value);
-
-    masm.loadValue(Address(base, offset), out);
-    return true;
-}
-
-bool
 CodeGeneratorX86::visitLoadSlotT(LLoadSlotT *load)
 {
     Register base = ToRegister(load->input());
