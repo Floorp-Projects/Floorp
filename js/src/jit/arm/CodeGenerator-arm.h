@@ -183,7 +183,6 @@ class CodeGeneratorARM : public CodeGeneratorShared
     bool visitDouble(LDouble *ins);
     bool visitFloat32(LFloat32 *ins);
 
-    bool visitLoadSlotV(LLoadSlotV *load);
     bool visitLoadSlotT(LLoadSlotT *load);
     bool visitStoreSlotT(LStoreSlotT *load);
 
