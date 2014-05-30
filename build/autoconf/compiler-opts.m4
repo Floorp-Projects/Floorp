@@ -122,6 +122,12 @@ MOZ_ARG_ENABLE_STRING(debug,
   fi ],
   MOZ_DEBUG=)
 
+if test -z "$MOZ_DEBUG"; then
+    MOZ_NO_DEBUG_RTL=1
+fi
+
+AC_SUBST(MOZ_NO_DEBUG_RTL)
+
 MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG -DTRACING"
 MOZ_ARG_WITH_STRING(debug-label,
 [  --with-debug-label=LABELS
