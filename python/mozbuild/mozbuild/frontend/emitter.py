@@ -249,6 +249,7 @@ class TreeMetadataEmitter(LoggingMixin):
             'DEFFILE',
             'SDK_LIBRARY',
             'WIN32_EXE_LDFLAGS',
+            'LD_VERSION_SCRIPT',
         ]
         for v in varlist:
             if v in sandbox and sandbox[v]:
