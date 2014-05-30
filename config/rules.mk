@@ -510,6 +510,10 @@ ifeq ($(OS_ARCH),Linux)
 ifdef IS_COMPONENT
 EXTRA_DSO_LDOPTS += -Wl,-Bsymbolic
 endif
+ifdef LD_VERSION_SCRIPT
+EXTRA_DSO_LDOPTS += -Wl,--version-script,$(LD_VERSION_SCRIPT)
+EXTRA_DEPS += $(LD_VERSION_SCRIPT)
+endif
 endif
 
 #

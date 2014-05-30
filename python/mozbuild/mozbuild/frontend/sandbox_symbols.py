@@ -359,6 +359,12 @@ VARIABLES = {
         This variable can only be used on Windows.
         """, None),
 
+    'LD_VERSION_SCRIPT': (unicode, unicode,
+        """The linker version script for shared libraries.
+
+        This variable can only be used on Linux.
+        """, None),
+
     'RESOURCE_FILES': (HierarchicalStringListWithFlagsFactory({'preprocess': bool}), list,
         """List of resources to be exported, and in which subdirectories.
 
