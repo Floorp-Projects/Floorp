@@ -540,21 +540,53 @@ GetScreenEnabled()
 }
 
 void
-SetScreenEnabled(bool enabled)
+SetScreenEnabled(bool aEnabled)
 {
-  GetGonkDisplay()->SetEnabled(enabled);
-  sScreenEnabled = enabled;
+  GetGonkDisplay()->SetEnabled(aEnabled);
+  sScreenEnabled = aEnabled;
+}
+
+bool
+GetKeyLightEnabled()
+{
+  hal::LightConfiguration config;
+  hal_impl::GetLight(hal::eHalLightID_Buttons, &config);
+  return (config.color() != 0x00000000);
+}
+
+void
+SetKeyLightEnabled(bool aEnabled)
+{
+  hal::LightConfiguration config;
+  config.mode() = hal::eHalLightMode_User;
+  config.flash() = hal::eHalLightFlash_None;
+  config.flashOnMS() = config.flashOffMS() = 0;
+  config.color() = 0x00000000;
+
+  if (aEnabled) {
+    // Convert the value in [0, 1] to an int between 0 and 255 and then convert
+    // it to a color. Note that the high byte is FF, corresponding to the alpha
+    // channel.
+    double brightness = GetScreenBrightness();
+    uint32_t val = static_cast<int>(round(brightness * 255.0));
+    uint32_t color = (0xff<<24) + (val<<16) + (val<<8) + val;
+
+    config.color() = color;
+  }
+
+  hal_impl::SetLight(hal::eHalLightID_Buttons, config);
+  hal_impl::SetLight(hal::eHalLightID_Keyboard, config);
 }
 
 double
 GetScreenBrightness()
 {
-  hal::LightConfiguration aConfig;
+  hal::LightConfiguration config;
   hal::LightType light = hal::eHalLightID_Backlight;
 
-  hal::GetLight(light, &aConfig);
+  hal_impl::GetLight(light, &config);
   // backlight is brightness only, so using one of the RGB elements as value.
-  int brightness = aConfig.color() & 0xFF;
+  int brightness = config.color() & 0xFF;
   return brightness / 255.0;
 }
 
@@ -571,16 +603,19 @@ SetScreenBrightness(double brightness)
 
   // Convert the value in [0, 1] to an int between 0 and 255 and convert to a color
   // note that the high byte is FF, corresponding to the alpha channel.
-  int val = static_cast<int>(round(brightness * 255));
+  uint32_t val = static_cast<int>(round(brightness * 255.0));
   uint32_t color = (0xff<<24) + (val<<16) + (val<<8) + val;
 
-  hal::LightConfiguration aConfig;
-  aConfig.mode() = hal::eHalLightMode_User;
-  aConfig.flash() = hal::eHalLightFlash_None;
-  aConfig.flashOnMS() = aConfig.flashOffMS() = 0;
-  aConfig.color() = color;
-  hal::SetLight(hal::eHalLightID_Backlight, aConfig);
-  hal::SetLight(hal::eHalLightID_Buttons, aConfig);
+  hal::LightConfiguration config;
+  config.mode() = hal::eHalLightMode_User;
+  config.flash() = hal::eHalLightFlash_None;
+  config.flashOnMS() = config.flashOffMS() = 0;
+  config.color() = color;
+  hal_impl::SetLight(hal::eHalLightID_Backlight, config);
+  if (GetKeyLightEnabled()) {
+    hal_impl::SetLight(hal::eHalLightID_Buttons, config);
+    hal_impl::SetLight(hal::eHalLightID_Keyboard, config);
+  }
 }
 
 static Monitor* sInternalLockCpuMonitor = nullptr;
