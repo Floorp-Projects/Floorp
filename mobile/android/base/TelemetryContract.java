@@ -5,11 +5,17 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.mozglue.RobocopTarget;
+
 /**
  * Holds data definitions for our UI Telemetry implementation.
  *
+ * Note that enum values of "_TEST*" are reserved for testing and
+ * should not be changed without changing the associated tests.
+ *
  * See mobile/android/base/docs/index.rst for a full dictionary.
  */
+@RobocopTarget
 public interface TelemetryContract {
 
     /**
@@ -64,6 +70,12 @@ public interface TelemetryContract {
         // Stop holding a resource (reader, bookmark, etc) for viewing later.
         // Note: Only used in JavaScript for now, but here for completeness.
         UNSAVE("unsave.1"),
+
+        // VALUES BELOW THIS LINE ARE EXCLUSIVE TO TESTING.
+        _TEST1("_test_event_1.1"),
+        _TEST2("_test_event_2.1"),
+        _TEST3("_test_event_3.1"),
+        _TEST4("_test_event_4.1"),
         ;
 
         private final String string;
@@ -124,6 +136,10 @@ public interface TelemetryContract {
 
         // Action triggered from a suggestion provided to the user.
         SUGGESTION("suggestion"),
+
+        // VALUES BELOW THIS LINE ARE EXCLUSIVE TO TESTING.
+        _TEST1("_test_method_1"),
+        _TEST2("_test_method_2"),
         ;
 
         private final String string;
@@ -164,6 +180,10 @@ public interface TelemetryContract {
         // Started when a Reader viewer becomes active in the foreground.
         // Note: Only used in JavaScript for now, but here for completeness.
         READER("reader.1"),
+
+        // VALUES BELOW THIS LINE ARE EXCLUSIVE TO TESTING.
+        _TEST_STARTED_TWICE("_test_session_started_twice.1"),
+        _TEST_STOPPED_TWICE("_test_session_stopped_twice.1"),
         ;
 
         private final String string;
@@ -190,6 +210,11 @@ public interface TelemetryContract {
 
         // No reason is specified.
         NONE(null),
+
+        // VALUES BELOW THIS LINE ARE EXCLUSIVE TO TESTING.
+        _TEST1("_test_reason_1"),
+        _TEST2("_test_reason_2"),
+        _TEST_IGNORED("_test_reason_ignored"),
         ;
 
         private final String string;
