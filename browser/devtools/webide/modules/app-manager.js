@@ -20,6 +20,7 @@ const AppActorFront = require("devtools/app-actor-front");
 const {getDeviceFront} = require("devtools/server/actors/device");
 const {setTimeout} = require("sdk/timers");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
+const {USBRuntime, SimulatorRuntime, gLocalRuntime, gRemoteRuntime} = require("devtools/webide/runtimes");
 
 const Strings = Services.strings.createBundle("chrome://webide/content/webide.properties");
 
@@ -41,7 +42,10 @@ exports.AppManager = AppManager = {
     this.webAppsStore = new WebappsStore(this.connection);
     this.webAppsStore.on("store-ready", this.onWebAppsStoreready);
 
-    this.runtimeList = {usb: [], simulator: []};
+    this.runtimeList = {usb: [], simulator: [], custom: [gRemoteRuntime]};
+    if (Services.prefs.getBoolPref("devtools.webide.enableLocalRuntime")) {
+      this.runtimeList.custom.push(gLocalRuntime);
+    }
     this.trackUSBRuntimes();
     this.trackSimulatorRuntimes();
   },
@@ -276,9 +280,14 @@ exports.AppManager = AppManager = {
     }
     this.connection.on(Connection.Events.CONNECTED, onConnectedOrDisconnected);
     this.connection.on(Connection.Events.DISCONNECTED, onConnectedOrDisconnected);
-    this.selectedRuntime.connect(this.connection).then(
-      () => {},
-      () => {deferred.reject()});
+    try {
+      this.selectedRuntime.connect(this.connection).then(
+        () => {},
+        () => {deferred.reject()});
+    } catch(e) {
+      console.error(e);
+      deferred.reject();
+    }
 
     return deferred.promise;
   },
@@ -537,56 +546,3 @@ exports.AppManager = AppManager = {
 }
 
 EventEmitter.decorate(AppManager);
-
-/* RUNTIMES */
-
-function USBRuntime(id) {
-  this.id = id;
-}
-
-USBRuntime.prototype = {
-  connect: function(connection) {
-    let device = Devices.getByName(this.id);
-    if (!device) {
-      console.error("Can't find device: " + id);
-      return promise.reject();
-    }
-    return device.connect().then((port) => {
-      connection.host = "localhost";
-      connection.port = port;
-      connection.connect();
-    });
-  },
-  getID: function() {
-    return this.id;
-  },
-  getName: function() {
-    return this.id;
-  },
-}
-
-function SimulatorRuntime(version) {
-  this.version = version;
-}
-
-SimulatorRuntime.prototype = {
-  connect: function(connection) {
-    let port = ConnectionManager.getFreeTCPPort();
-    let simulator = Simulator.getByVersion(this.version);
-    if (!simulator || !simulator.launch) {
-      console.error("Can't find simulator: " + this.version);
-      return promise.reject();
-    }
-    return simulator.launch({port: port}).then(() => {
-      connection.port = port;
-      connection.keepConnecting = true;
-      connection.connect();
-    });
-  },
-  getID: function() {
-    return this.version;
-  },
-  getName: function() {
-    return this.version;
-  },
-}
