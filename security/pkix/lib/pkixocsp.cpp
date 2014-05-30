@@ -56,12 +56,14 @@ public:
           const CERTCertificate& cert,
           CERTCertificate& issuerCert,
           PRTime time,
+          uint16_t maxLifetimeInDays,
           PRTime* thisUpdate,
           PRTime* validThrough)
     : trustDomain(trustDomain)
     , cert(cert)
     , issuerCert(issuerCert)
     , time(time)
+    , maxLifetimeInDays(maxLifetimeInDays)
     , certStatus(CertStatus::Unknown)
     , thisUpdate(thisUpdate)
     , validThrough(validThrough)
@@ -78,6 +80,7 @@ public:
   const CERTCertificate& cert;
   CERTCertificate& issuerCert;
   const PRTime time;
+  const uint16_t maxLifetimeInDays;
   CertStatus certStatus;
   PRTime* thisUpdate;
   PRTime* validThrough;
@@ -337,6 +340,7 @@ SECStatus
 VerifyEncodedOCSPResponse(TrustDomain& trustDomain,
                           const CERTCertificate* cert,
                           CERTCertificate* issuerCert, PRTime time,
+                          uint16_t maxOCSPLifetimeInDays,
                           const SECItem* encodedResponse,
                           PRTime* thisUpdate,
                           PRTime* validThrough)
@@ -355,9 +359,8 @@ VerifyEncodedOCSPResponse(TrustDomain& trustDomain,
     SetErrorToMalformedResponseOnBadDERError();
     return SECFailure;
   }
-
-  Context context(trustDomain, *cert, *issuerCert, time, thisUpdate,
-                  validThrough);
+  Context context(trustDomain, *cert, *issuerCert, time, maxOCSPLifetimeInDays,
+                  thisUpdate, validThrough);
 
   if (der::Nested(input, der::SEQUENCE,
                   bind(OCSPResponse, _1, ref(context))) != der::Success) {
@@ -672,9 +675,8 @@ SingleResponse(der::Input& input, Context& context)
   //    be available about the status of the certificate (nextUpdate) is
   //    greater than the current time.
 
-  // We won't accept any OCSP responses that are more than 10 days old, even if
-  // the nextUpdate time is further in the future.
-  static const PRTime OLDEST_ACCEPTABLE = INT64_C(10) * ONE_DAY;
+  const PRTime maxLifetime =
+    context.maxLifetimeInDays * ONE_DAY;
 
   PRTime thisUpdate;
   if (der::GeneralizedTime(input, thisUpdate) != der::Success) {
@@ -699,10 +701,10 @@ SingleResponse(der::Input& input, Context& context)
     if (nextUpdate < thisUpdate) {
       return der::Fail(SEC_ERROR_OCSP_MALFORMED_RESPONSE);
     }
-    if (nextUpdate - thisUpdate <= OLDEST_ACCEPTABLE) {
+    if (nextUpdate - thisUpdate <= maxLifetime) {
       notAfter = nextUpdate;
     } else {
-      notAfter = thisUpdate + OLDEST_ACCEPTABLE;
+      notAfter = thisUpdate + maxLifetime;
     }
   } else {
     // NSS requires all OCSP responses without a nextUpdate to be recent.
