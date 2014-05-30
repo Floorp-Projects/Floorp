@@ -29,7 +29,7 @@ ViEAutoTestMain::ViEAutoTestMain() {
   index_to_test_method_map_[1] = "RunsBaseTestWithoutErrors";
   index_to_test_method_map_[2] = "RunsCaptureTestWithoutErrors";
   index_to_test_method_map_[3] = "RunsCodecTestWithoutErrors";
-  index_to_test_method_map_[4] = "RunsEncryptionTestWithoutErrors";
+  index_to_test_method_map_[4] = "[unused]";
   index_to_test_method_map_[5] = "RunsImageProcessTestWithoutErrors";
   index_to_test_method_map_[6] = "RunsNetworkTestWithoutErrors";
   index_to_test_method_map_[7] = "RunsRenderTestWithoutErrors";
@@ -49,6 +49,11 @@ int ViEAutoTestMain::RunTests(int argc, char** argv) {
   int result;
   if (FLAGS_automated) {
     // Run in automated mode.
+#if defined(WEBRTC_LINUX)
+    // All window-related tests are disabled on Linux for now.
+    // See https://code.google.com/p/chromium/issues/detail?id=318760
+    return 0;
+#endif
     result = RUN_ALL_TESTS();
   } else if (FLAGS_auto_custom_call) {
     // Run automated custom call.

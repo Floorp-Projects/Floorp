@@ -23,12 +23,9 @@ interface nsIDOMHTMLMenuElement;
 interface nsIDOMHTMLElement : nsIDOMElement
 {
   // metadata attributes
-           attribute DOMString        id;
            attribute DOMString        title;
            attribute DOMString        lang;
            attribute DOMString        dir;
-  [binaryname(DOMClassName)]
-           attribute DOMString        className;
   readonly attribute nsISupports      dataset;
 
            attribute boolean                        itemScope;

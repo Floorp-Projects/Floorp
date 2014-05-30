@@ -22,7 +22,6 @@ LOCAL_MODULE_TAGS := tests
 
 LOCAL_SRC_FILES := \
     src/org/webrtc/vieautotest/ViEAutotest.java \
-    $(MY_CAPTURE_PATH)/CaptureCapabilityAndroid.java \
     $(MY_CAPTURE_PATH)/VideoCaptureAndroid.java \
     $(MY_CAPTURE_PATH)/VideoCaptureDeviceInfoAndroid.java \
     $(MY_RENDER_PATH)/ViEAndroidGLES20.java \

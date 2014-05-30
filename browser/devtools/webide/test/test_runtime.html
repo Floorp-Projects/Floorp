@@ -55,7 +55,7 @@
           yield win.Cmds.showRuntimePanel();
 
           let panelNode = win.document.querySelector("#runtime-panel");
-          let items = panelNode.querySelectorAll(".runtime-panel-item-usbruntime");
+          let items = panelNode.querySelectorAll(".runtime-panel-item-usb");
           is(items.length, 1, "Found one runtime button");
 
           let deferred = promise.defer();
@@ -66,6 +66,8 @@
           items[0].click();
 
           yield deferred.promise;
+
+          is(Object.keys(DebuggerServer._connections).length, 1, "Connected");
 
           yield nextTick();
 
@@ -97,11 +99,24 @@
 
           yield win.Cmds.disconnectRuntime();
 
+          is(Object.keys(DebuggerServer._connections).length, 0, "Disconnected");
 
           ok(win.AppManager.selectedProject, "A project is still selected");
           ok(!isPlayActive(), "play button is disabled 6");
           ok(!isStopActive(), "stop button is disabled 6");
 
+          deferred = promise.defer();
+          win.AppManager.connection.once(
+              win.Connection.Events.CONNECTED,
+              () => deferred.resolve());
+
+          win.document.querySelectorAll(".runtime-panel-item-custom")[1].click();
+
+          yield deferred.promise;
+
+          is(Object.keys(DebuggerServer._connections).length, 1, "Locally connected");
+
+          yield win.Cmds.disconnectRuntime();
 
           yield closeWebIDE(win);
 

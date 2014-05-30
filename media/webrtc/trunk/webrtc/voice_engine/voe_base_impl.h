@@ -39,6 +39,7 @@ public:
     virtual int Terminate();
 
     virtual int CreateChannel();
+    virtual int CreateChannel(const Config& config);
 
     virtual int DeleteChannel(int channel);
 
@@ -67,6 +68,8 @@ public:
     virtual int GetVersion(char version[1024]);
 
     virtual int LastError();
+
+    virtual AudioTransport* audio_transport() { return this; }
 
     // AudioTransport
     virtual int32_t
@@ -98,6 +101,10 @@ public:
                                 int current_volume,
                                 bool key_pressed,
                                 bool need_audio_processing);
+
+    virtual void OnData(int voe_channel, const void* audio_data,
+                        int bits_per_sample, int sample_rate,
+                        int number_of_channels, int number_of_frames);
 
     // AudioDeviceObserver
     virtual void OnErrorIsReported(ErrorCode error);
@@ -133,6 +140,10 @@ private:
 
     int32_t AddBuildInfo(char* str) const;
     int32_t AddVoEVersion(char* str) const;
+
+    // Initialize channel by setting Engine Information then initializing
+    // channel.
+    int InitializeChannel(voe::ChannelOwner* channel_owner);
 #ifdef WEBRTC_EXTERNAL_TRANSPORT
     int32_t AddExternalTransportBuild(char* str) const;
 #endif

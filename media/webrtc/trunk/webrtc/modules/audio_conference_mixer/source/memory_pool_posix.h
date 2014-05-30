@@ -12,9 +12,9 @@
 #define WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_SOURCE_MEMORY_POOL_GENERIC_H_
 
 #include <assert.h>
+#include <list>
 
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/list_wrapper.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -40,7 +40,7 @@ private:
 
     bool _terminate;
 
-    ListWrapper _memoryPool;
+    std::list<MemoryType*> _memoryPool;
 
     uint32_t _initialPoolSize;
     uint32_t _createdMemory;
@@ -51,7 +51,6 @@ template<class MemoryType>
 MemoryPoolImpl<MemoryType>::MemoryPoolImpl(int32_t initialPoolSize)
     : _crit(CriticalSectionWrapper::CreateCriticalSection()),
       _terminate(false),
-      _memoryPool(),
       _initialPoolSize(initialPoolSize),
       _createdMemory(0),
       _outstandingMemory(0)
@@ -76,20 +75,17 @@ int32_t MemoryPoolImpl<MemoryType>::PopMemory(MemoryType*& memory)
         memory = NULL;
         return -1;
     }
-    ListItem* item = _memoryPool.First();
-    if(item == NULL)
-    {
+    if (_memoryPool.empty()) {
         // _memoryPool empty create new memory.
         CreateMemory(_initialPoolSize);
-        item = _memoryPool.First();
-        if(item == NULL)
+        if(_memoryPool.empty())
         {
             memory = NULL;
             return -1;
         }
     }
-    memory = static_cast<MemoryType*>(item->GetItem());
-    _memoryPool.Erase(item);
+    memory = _memoryPool.front();
+    _memoryPool.pop_front();
     _outstandingMemory++;
     return 0;
 }
@@ -103,7 +99,7 @@ int32_t MemoryPoolImpl<MemoryType>::PushMemory(MemoryType*& memory)
     }
     CriticalSectionScoped cs(_crit);
     _outstandingMemory--;
-    if(_memoryPool.GetSize() > (_initialPoolSize << 1))
+    if(_memoryPool.size() > (_initialPoolSize << 1))
     {
         // Reclaim memory if less than half of the pool is unused.
         _createdMemory--;
@@ -111,7 +107,7 @@ int32_t MemoryPoolImpl<MemoryType>::PushMemory(MemoryType*& memory)
         memory = NULL;
         return 0;
     }
-    _memoryPool.PushBack(static_cast<void*>(memory));
+    _memoryPool.push_back(memory);
     memory = NULL;
     return 0;
 }
@@ -127,21 +123,15 @@ template<class MemoryType>
 int32_t MemoryPoolImpl<MemoryType>::Terminate()
 {
     CriticalSectionScoped cs(_crit);
-    assert(_createdMemory == _outstandingMemory + _memoryPool.GetSize());
+    assert(_createdMemory == _outstandingMemory + _memoryPool.size());
 
     _terminate = true;
     // Reclaim all memory.
     while(_createdMemory > 0)
     {
-        ListItem* item = _memoryPool.First();
-        if(item == NULL)
-        {
-            // There is memory that hasn't been returned yet.
-            return -1;
-        }
-        MemoryType* memory = static_cast<MemoryType*>(item->GetItem());
+        MemoryType* memory = _memoryPool.front();
+        _memoryPool.pop_front();
         delete memory;
-        _memoryPool.Erase(item);
         _createdMemory--;
     }
     return 0;
@@ -158,7 +148,7 @@ int32_t MemoryPoolImpl<MemoryType>::CreateMemory(
         {
             return -1;
         }
-        _memoryPool.PushBack(static_cast<void*>(memory));
+        _memoryPool.push_back(memory);
         _createdMemory++;
     }
     return 0;

@@ -65,6 +65,7 @@
 #include "ActiveLayerTracker.h"
 
 #include "AudioChannelService.h"
+#include "mozilla/dom/DataStoreService.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -410,6 +411,8 @@ nsLayoutStatics::Shutdown()
   nsDOMMutationObserver::Shutdown();
 
   AudioChannelService::Shutdown();
+
+  DataStoreService::Shutdown();
 
   ContentParent::ShutDown();
 

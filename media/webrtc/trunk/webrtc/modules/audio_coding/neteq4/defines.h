@@ -47,11 +47,5 @@ enum Modes {
   kModeUndefined = -1
 };
 
-#ifdef NETEQ4_VERBOSE_LOGGING
-#define NETEQ_LOG_VERBOSE LOG(LS_VERBOSE)
-#else
-#define NETEQ_LOG_VERBOSE while(false)LOG(LS_VERBOSE)
-#endif
-
 }  // namespace webrtc
 #endif  // WEBRTC_MODULES_AUDIO_CODING_NETEQ4_DEFINES_H_

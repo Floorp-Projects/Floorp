@@ -163,6 +163,11 @@ int PayloadSplitter::SplitAudio(PacketList* packet_list,
     if (!info) {
       return kUnknownPayloadType;
     }
+    // No splitting for a sync-packet.
+    if (packet->sync_packet) {
+      ++it;
+      continue;
+    }
     PacketList new_packets;
     switch (info->codec_type) {
       case kDecoderPCMu:
@@ -326,7 +331,6 @@ void PayloadSplitter::SplitBySamples(const Packet* packet,
     new_packet->primary = packet->primary;
     new_packet->payload = new uint8_t[len];
     memcpy(new_packet->payload, payload_ptr, len);
-    payload_ptr += len;
     new_packets->push_back(new_packet);
   }
 }

@@ -2189,6 +2189,7 @@ ia64*-hpux*)
         dnl both SSSE3 and SSE4.1.
         HAVE_TOOLCHAIN_SUPPORT_MSSSE3=1
         HAVE_TOOLCHAIN_SUPPORT_MSSE4_1=1
+        MOZ_MEMORY=1
     fi
     AC_DEFINE(HAVE_SNPRINTF)
     AC_DEFINE(_WINDOWS)
@@ -7114,16 +7115,13 @@ else
     ;;
   *-mingw*)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
-    if test -z "$MOZ_DEBUG"; then
-      WIN32_CRT_LIBS="msvcrt.lib msvcprt.lib"
-    else
-      WIN32_CRT_LIBS="msvcrtd.lib msvcprtd.lib"
-    fi
+    export MOZ_NO_DEBUG_RTL=1
+    WIN32_CRT_LIBS="msvcrt.lib msvcprt.lib"
     dnl Look for a broken crtdll.obj
     WIN32_CRTDLL_FULLPATH=`lib -nologo -list $WIN32_CRT_LIBS | grep crtdll\\.obj`
     lib -NOLOGO -OUT:crtdll.obj $WIN32_CRT_LIBS -EXTRACT:$WIN32_CRTDLL_FULLPATH
     if grep -q '__imp__\{0,1\}free' crtdll.obj; then
-      MOZ_GLUE_LDFLAGS='-LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt'
+      MOZ_GLUE_LDFLAGS='-LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcprt -DEFAULTLIB:mozcrt'
       dnl Also pass this to NSPR/NSS
       DLLFLAGS="$DLLFLAGS $MOZ_GLUE_LDFLAGS"
     else
@@ -9215,6 +9213,9 @@ if test -z "$MOZ_NATIVE_NSPR"; then
         ac_configure_args="$ac_configure_args --disable-debug"
     else
         ac_configure_args="$ac_configure_args --enable-debug"
+        if test -n "$MOZ_NO_DEBUG_RTL"; then
+            ac_configure_args="$ac_configure_args --disable-debug-rtl"
+        fi
     fi
     if test "$MOZ_OPTIMIZE" = "1"; then
         ac_configure_args="$ac_configure_args --enable-optimize"
