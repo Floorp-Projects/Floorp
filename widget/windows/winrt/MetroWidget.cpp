@@ -77,7 +77,7 @@ UINT sDefaultBrowserMsgId = RegisterWindowMessageW(L"DefaultBrowserClosing");
 } }
 
 // WM_GETOBJECT id pulled from uia headers
-#define UiaRootObjectId -25
+#define MOZOBJID_UIAROOT -25
 
 namespace mozilla {
 namespace widget {
@@ -892,7 +892,7 @@ MetroWidget::WindowProcedure(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLPara
       // UiaReturnRawElementProvider passing the return result from FrameworkView
       // OnAutomationProviderRequested as the hwnd (me scratches head) which results in
       // GetLastError always being set to invalid handle (6) after CallWindowProc returns.
-      if (dwObjId == UiaRootObjectId && gProviderRoot) {
+      if (dwObjId == MOZOBJID_UIAROOT && gProviderRoot) {
         ComPtr<IRawElementProviderSimple> simple;
         gProviderRoot.As(&simple);
         if (simple) {
