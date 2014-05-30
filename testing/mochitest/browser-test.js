@@ -110,24 +110,23 @@ function Tester(aTests, aDumper, aCallback) {
   });
 
   this._uncaughtErrorObserver = function({message, date, fileName, stack, lineNumber}) {
-    let text = "Once bug 991040 has landed, THIS ERROR WILL CAUSE A TEST FAILURE.\n" + message;
-    let error = text;
+    let error = message;
     if (fileName || lineNumber) {
       error = {
         fileName: fileName,
         lineNumber: lineNumber,
-        message: text,
+        message: message,
         toString: function() {
-          return text;
+          return message;
         }
       };
     }
     this.currentTest.addResult(
       new testResult(
-	/*success*/ true,
+	/*success*/false,
         /*name*/"A promise chain failed to handle a rejection",
         /*error*/error,
-        /*known*/true,
+        /*known*/false,
         /*stack*/stack));
     }.bind(this);
 }
