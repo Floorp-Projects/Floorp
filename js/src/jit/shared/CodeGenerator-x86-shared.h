@@ -97,8 +97,6 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     bool generateEpilogue();
     bool generateOutOfLineCode();
 
-    Operand createArrayElementOperand(Register elements, const LAllocation *index);
-
     void emitCompare(MCompare::CompareType type, const LAllocation *left, const LAllocation *right);
 
     // Emits a branch that directs control flow to the true block if |cond| is
