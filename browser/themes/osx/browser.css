@@ -3616,6 +3616,8 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   }
 }
 
+/* Translation */
+
 .translate-notification-icon,
 #translate-notification-icon {
   list-style-image: url(chrome://browser/skin/translation-16.png);
@@ -3640,6 +3642,123 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
     list-style-image: url(chrome://browser/skin/translation-16@2x.png);
     -moz-image-region: rect(0px, 64px, 32px, 32px);
   }
+}
+
+%include ../shared/translation/infobar.inc.css
+
+notification[value="translation"] {
+  color: #484848;
+  background-color: #EFEFEF;
+  background-image: none;
+  border-top: none;
+  border-bottom: 1px solid #c4c4c4;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+.translate-infobar-element {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+button.translate-infobar-element {
+  background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.1)) repeat scroll 0% 0% padding-box transparent;
+  color: #333333;
+  border: 1px solid;
+  border-color: rgba(23, 51, 78, 0.15) rgba(23, 51, 78, 0.17) rgba(23, 51, 78, 0.2);
+  box-shadow: 0px 0px 2px rgba(255, 255, 255, 0.5) inset, 0px 1px 0px rgba(255, 255, 255, 0.2);
+  transition-property: background-color, border-color, box-shadow;
+  transition-duration: 150ms;
+  min-height: 22px;
+  min-width: 0;
+  padding: 0 0.8em !important;
+  margin-left: 0.25em;
+  margin-right: 0.25em;
+}
+
+button.translate-infobar-element .button-text {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+label.translate-infobar-element {
+  padding-top: 2px;
+}
+
+button.translate-infobar-element:hover {
+  background: #f0f0f0;
+  box-shadow: 0 1px 0 hsla(0,0%,100%,.1) inset,  0 0 0 1px hsla(0,0%,100%,.05) inset,  0 1px 0 hsla(210,54%,20%,.01),  0 0 4px hsla(206,100%,20%,.1);
+}
+
+button.translate-infobar-element:active {
+  box-shadow: 0 1px 1px hsla(211,79%,6%,.1) inset,  0 0 1px hsla(211,79%,6%,.2) inset;
+  transition-duration: 0ms;
+}
+
+button.translate-infobar-element[anonid="translate"] {
+  color: #ffffff;
+  background-image: linear-gradient(#4cb1ff, #1793e5);
+  box-shadow: 0 1px 0 hsla(0,0%,100%,.2) inset,  0 0 0 1px hsla(0,0%,100%,.1) inset,  0 1px 0 hsla(210,54%,20%,.03);
+  border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.17) hsla(210,54%,20%,.2);
+  padding: 0 1.1em  !important;;
+}
+
+button.translate-infobar-element[anonid="translate"]:hover {
+  background-image: linear-gradient(#66bdff, #0d9eff);
+}
+
+button.translate-infobar-element.options-menu-button {
+  -moz-padding-start: 0.5em !important;
+  -moz-padding-end: 0.3em !important;
+}
+
+button.translate-infobar-element.options-menu-button > .button-box > .button-menu-dropmarker {
+  display: -moz-box;
+  list-style-image: url("chrome://browser/skin/toolbarbutton-dropmarker.png");
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+@media (min-resolution: 1.25dppx) {
+  button.translate-infobar-element.options-menu-button > .button-box > .button-menu-dropmarker {
+    list-style-image: url("chrome://browser/skin/toolbarbutton-dropmarker@2x.png");
+  }
+
+  button.translate-infobar-element.options-menu-button > .button-box > .button-menu-dropmarker > .dropmarker-icon {
+    width: 7px;
+  }
+}
+
+menulist.translate-infobar-element {
+  text-shadow: 0 1px 1px #FEFFFE;
+  border: 1px solid;
+  border-color: rgba(23, 51, 78, 0.15) rgba(23, 51, 78, 0.17) rgba(23, 51, 78, 0.2);
+  box-shadow: 0 1px 1px 0 #FFFFFF, inset 0 2px 2px 0 #FFFFFF;
+  background-color: #F1F1F1;
+  background-image: linear-gradient(#FFFFFF, rgba(255,255,255,0.1));
+  color: #333333;
+  padding: 0;
+}
+
+menulist.translate-infobar-element > .menulist-label-box {
+  padding-top: 1px;
+  -moz-padding-start: 0.3em;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+menulist.translate-infobar-element:hover {
+  background-image: linear-gradient(#FFFFFF, rgba(255,255,255,0.6));
+}
+
+menulist.translate-infobar-element[open="true"] {
+  background-image: linear-gradient(rgba(255,255,255,0.1),
+                                    rgba(255,255,255,0.6));
+}
+
+menulist.translate-infobar-element > .menulist-dropmarker {
+  display: -moz-box;
+  list-style-image: url("chrome://global/skin/icons/menulist-dropmarker.png");
 }
 
 
