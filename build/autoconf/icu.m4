@@ -85,11 +85,11 @@ if test -n "$ENABLE_INTL_API"; then
             WINNT)
                 ICU_LIB_NAMES="icuin icuuc icudt"
                 if test -n "$MOZ_SHARED_ICU"; then
-                    DBG_SUFFIX=
+                    MOZ_ICU_DBG_SUFFIX=
                     if test -n "$MOZ_DEBUG"; then
-                        DBG_SUFFIX=d
+                        MOZ_ICU_DBG_SUFFIX=d
                     fi
-                    MOZ_ICU_LIBS='$(foreach lib,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/target/lib/$(LIB_PREFIX)$(lib)$(DBG_SUFFIX).$(LIB_SUFFIX))'
+                    MOZ_ICU_LIBS='$(foreach lib,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/target/lib/$(LIB_PREFIX)$(lib)$(MOZ_ICU_DBG_SUFFIX).$(LIB_SUFFIX))'
                 fi
                 ;;
             Darwin)
@@ -113,7 +113,7 @@ if test -n "$ENABLE_INTL_API"; then
     fi
 fi
 
-AC_SUBST(DBG_SUFFIX)
+AC_SUBST(MOZ_ICU_DBG_SUFFIX)
 AC_SUBST(ENABLE_INTL_API)
 AC_SUBST(ICU_LIB_NAMES)
 AC_SUBST(MOZ_ICU_LIBS)

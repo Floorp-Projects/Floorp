@@ -9,15 +9,10 @@ ifdef ENABLE_INTL_API
   ifndef MOZ_NATIVE_ICU
   # Library names: On Windows, ICU uses modified library names for static
   # and debug libraries.
-    ifeq ($(OS_ARCH),WINNT)
-      ifdef MOZ_DEBUG
-        ICU_LIB_SUFFIX=d
-      endif
-    endif # WINNT
     ifdef MOZ_SHARED_ICU
       ifeq ($(OS_ARCH),WINNT)
         ifdef JS_SHARED_LIBRARY
-          ICU_FILES := $(foreach libname,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/target/lib/$(libname)$(ICU_LIB_SUFFIX)$(MOZ_ICU_VERSION).dll)
+          ICU_FILES := $(foreach libname,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/target/lib/$(libname)$(MOZ_ICU_DBG_SUFFIX)$(MOZ_ICU_VERSION).dll)
         endif
       else # ! WINNT
         ifeq ($(OS_ARCH),Darwin)
@@ -39,7 +34,7 @@ ifdef ENABLE_INTL_API
     else # !MOZ_SHARED_ICU
       ifeq ($(OS_ARCH),WINNT)
         ICU_LIB_RENAME = $(foreach libname,$(ICU_LIB_NAMES),\
-                             cp -p $(DEPTH)/intl/icu/target/lib/s$(libname)$(ICU_LIB_SUFFIX).lib $(DEPTH)/intl/icu/target/lib/$(libname).lib;)
+                             cp -p $(DEPTH)/intl/icu/target/lib/s$(libname)$(MOZ_ICU_DBG_SUFFIX).lib $(DEPTH)/intl/icu/target/lib/$(libname).lib;)
       endif
     endif # MOZ_SHARED_ICU
   endif # !MOZ_NATIVE_ICU
