@@ -33,12 +33,11 @@
       hidden="true"
       data-category="paneContent">
   <image class="header-icon"/>
-  <label class="header-name"
-         value="&paneContent.title;"/>
+  <label class="header-name">&paneContent.title;</label>
 </hbox>
 
 <groupbox id="miscGroup" data-category="paneContent" hidden="true">
-  <caption label="&popups.label;"/>
+  <caption><label>&popups.label;</label></caption>
 
   <grid id="contentGrid">
     <columns>
@@ -63,7 +62,7 @@
 
 <!-- Fonts and Colors -->
 <groupbox id="fontsGroup" data-category="paneContent" hidden="true">
-  <caption label="&fontsAndColors.label;"/>
+  <caption><label>&fontsAndColors.label;</label></caption>
 
   <grid id="fontsGrid">
     <columns>
@@ -124,7 +123,7 @@
 
 <!-- Languages -->
 <groupbox id="languagesGroup" data-category="paneContent" hidden="true">
-  <caption label="&languages.label;"/>
+  <caption><label>&languages.label;</label></caption>
 
   <hbox id="languagesBox" align="center">
     <description flex="1" control="chooseLanguage">&chooseLanguage.label;</description>
