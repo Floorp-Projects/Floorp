@@ -309,7 +309,8 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSynthVoiceRegistry,
 #endif
 
 #ifdef MOZ_WIDGET_GONK
-NS_GENERIC_FACTORY_CONSTRUCTOR(AudioManager)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(AudioManager,
+                                         AudioManager::GetInstance)
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(AudioChannelAgent)

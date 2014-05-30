@@ -44,7 +44,7 @@ let gSyncPane = {
   needsUpdate: function () {
     this.page = PAGE_NEEDS_UPDATE;
     let label = document.getElementById("loginError");
-    label.value = Weave.Utils.getErrorString(Weave.Status.login);
+    label.textContent = Weave.Utils.getErrorString(Weave.Status.login);
     label.className = "error";
   },
 
@@ -180,7 +180,7 @@ let gSyncPane = {
       this.needsUpdate();
     } else {
       this.page = PAGE_HAS_ACCOUNT;
-      document.getElementById("accountName").value = Weave.Service.identity.account;
+      document.getElementById("accountName").textContent = Weave.Service.identity.account;
       document.getElementById("syncComputerName").value = Weave.Service.clientsEngine.localName;
       document.getElementById("tosPP").hidden = this._usingCustomServer;
     }

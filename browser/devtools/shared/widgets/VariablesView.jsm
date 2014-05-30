@@ -3698,6 +3698,10 @@ VariablesView.stringifiers.byObjectKind = {
         if (attrs.id) {
           result += "#" + attrs.id;
         }
+
+        if (attrs.class) {
+          result += "." + attrs.class.trim().replace(/\s+/, ".");
+        }
         return result + ">";
       }
 

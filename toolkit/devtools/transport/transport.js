@@ -8,14 +8,14 @@
 // an SDK module (see bug 1000814)
 (function (factory) { // Module boilerplate
   if (this.module && module.id.indexOf("transport") >= 0) { // require
-    factory(require, exports);
+    factory.call(this, require, exports);
   } else { // loadSubScript
     if (this.require) {
-      factory(require, this);
+      factory.call(this, require, this);
     } else {
       const Cu = Components.utils;
       const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-      factory(devtools.require, this);
+      factory.call(this, devtools.require, this);
     }
   }
 }).call(this, function (require, exports) {
@@ -23,8 +23,6 @@
 "use strict";
 
 const { Cc, Ci, Cr, Cu, CC } = require("chrome");
-const { Promise: promise } =
-  Cu.import("resource://gre/modules/Promise.jsm", {});
 const Services = require("Services");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const { dumpn, dumpv } = DevToolsUtils;
@@ -32,9 +30,14 @@ const StreamUtils = require("devtools/toolkit/transport/stream-utils");
 const { Packet, JSONPacket, BulkPacket } =
   require("devtools/toolkit/transport/packets");
 
-const Pipe = CC("@mozilla.org/pipe;1", "nsIPipe", "init");
-const ScriptableInputStream = CC("@mozilla.org/scriptableinputstream;1",
-                                 "nsIScriptableInputStream", "init");
+DevToolsUtils.defineLazyGetter(this, "Pipe", () => {
+  return CC("@mozilla.org/pipe;1", "nsIPipe", "init");
+});
+
+DevToolsUtils.defineLazyGetter(this, "ScriptableInputStream", () => {
+  return CC("@mozilla.org/scriptableinputstream;1",
+            "nsIScriptableInputStream", "init");
+});
 
 const PACKET_HEADER_MAX = 200;
 

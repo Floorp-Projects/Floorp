@@ -19,7 +19,22 @@ var _cleanupFunctions = [];
 var _pendingTimers = [];
 var _profileInitialized = false;
 
+// Register the testing-common resource protocol early, to have access to its
+// modules.
+_register_modules_protocol_handler();
+
 let _Promise = Components.utils.import("resource://gre/modules/Promise.jsm", this).Promise;
+
+// Support a common assertion library, Assert.jsm.
+let AssertCls = Components.utils.import("resource://testing-common/Assert.jsm", null).Assert;
+// Pass a custom report function for xpcshell-test style reporting.
+let Assert = new AssertCls(function(err, message, stack) {
+  if (err) {
+    do_report_result(false, err.message, err.stack);
+  } else {
+    do_report_result(true, message, stack);
+  }
+});
 
 let _log = function (action, params) {
   if (typeof _XPCSHELL_PROCESS != "undefined") {
@@ -313,34 +328,48 @@ function do_get_idle() {
 // Map resource://test/ to current working directory and
 // resource://testing-common/ to the shared test modules directory.
 function _register_protocol_handlers() {
-  let (ios = Components.classes["@mozilla.org/network/io-service;1"]
-             .getService(Components.interfaces.nsIIOService)) {
-    let protocolHandler =
-      ios.getProtocolHandler("resource")
-         .QueryInterface(Components.interfaces.nsIResProtocolHandler);
-    let curDirURI = ios.newFileURI(do_get_cwd());
-    protocolHandler.setSubstitution("test", curDirURI);
+  let ios = Components.classes["@mozilla.org/network/io-service;1"]
+                      .getService(Components.interfaces.nsIIOService);
+  let protocolHandler =
+    ios.getProtocolHandler("resource")
+       .QueryInterface(Components.interfaces.nsIResProtocolHandler);
 
-    if (this._TESTING_MODULES_DIR) {
-      let modulesFile = Components.classes["@mozilla.org/file/local;1"].
-                        createInstance(Components.interfaces.nsILocalFile);
-      modulesFile.initWithPath(_TESTING_MODULES_DIR);
+  let curDirURI = ios.newFileURI(do_get_cwd());
+  protocolHandler.setSubstitution("test", curDirURI);
 
-      if (!modulesFile.exists()) {
-        throw new Error("Specified modules directory does not exist: " +
-                        _TESTING_MODULES_DIR);
-      }
+  _register_modules_protocol_handler();
+}
 
-      if (!modulesFile.isDirectory()) {
-        throw new Error("Specified modules directory is not a directory: " +
-                        _TESTING_MODULES_DIR);
-      }
-
-      let modulesURI = ios.newFileURI(modulesFile);
-
-      protocolHandler.setSubstitution("testing-common", modulesURI);
-    }
+function _register_modules_protocol_handler() {
+  if (!this._TESTING_MODULES_DIR) {
+    throw new Error("Please define a path where the testing modules can be " +
+                    "found in a variable called '_TESTING_MODULES_DIR' before " +
+                    "head.js is included.");
   }
+
+  let ios = Components.classes["@mozilla.org/network/io-service;1"]
+                      .getService(Components.interfaces.nsIIOService);
+  let protocolHandler =
+    ios.getProtocolHandler("resource")
+       .QueryInterface(Components.interfaces.nsIResProtocolHandler);
+
+  let modulesFile = Components.classes["@mozilla.org/file/local;1"].
+                    createInstance(Components.interfaces.nsILocalFile);
+  modulesFile.initWithPath(_TESTING_MODULES_DIR);
+
+  if (!modulesFile.exists()) {
+    throw new Error("Specified modules directory does not exist: " +
+                    _TESTING_MODULES_DIR);
+  }
+
+  if (!modulesFile.isDirectory()) {
+    throw new Error("Specified modules directory is not a directory: " +
+                    _TESTING_MODULES_DIR);
+  }
+
+  let modulesURI = ios.newFileURI(modulesFile);
+
+  protocolHandler.setSubstitution("testing-common", modulesURI);
 }
 
 function _execute_test() {
@@ -363,23 +392,11 @@ function _execute_test() {
   // _TEST_FILE is dynamically defined by <runxpcshelltests.py>.
   _load_files(_TEST_FILE);
 
-  // Support a common assertion library, Assert.jsm.
-  let Assert = Components.utils.import("resource://testing-common/Assert.jsm", null).Assert;
-  // Pass a custom report function for xpcshell-test style reporting.
-  let assertImpl = new Assert(function(err, message, stack) {
-    if (err) {
-      do_report_result(false, err.message, err.stack);
-    } else {
-      do_report_result(true, message, stack);
-    }
-  });
-  // Allow Assert.jsm methods to be tacked to the current scope.
-  this.export_assertions = function() {
-    for (let func in assertImpl) {
-      this[func] = assertImpl[func].bind(assertImpl);
-    }
-  };
-  this.Assert = assertImpl;
+  // Tack Assert.jsm methods to the current scope.
+  this.Assert = Assert;
+  for (let func in Assert) {
+    this[func] = Assert[func].bind(Assert);
+  }
 
   try {
     do_test_pending("MAIN run_test");
@@ -687,12 +704,7 @@ function do_note_exception(ex, text) {
 }
 
 function _do_check_neq(left, right, stack, todo) {
-  if (!stack)
-    stack = Components.stack.caller;
-
-  var text = _wrap_with_quotes_if_necessary(left) + " != " +
-             _wrap_with_quotes_if_necessary(right);
-  do_report_result(left != right, text, stack, todo);
+  Assert.notEqual(left, right);
 }
 
 function do_check_neq(left, right, stack) {
@@ -747,10 +759,7 @@ function _do_check_eq(left, right, stack, todo) {
 }
 
 function do_check_eq(left, right, stack) {
-  if (!stack)
-    stack = Components.stack.caller;
-
-  _do_check_eq(left, right, stack, false);
+  Assert.equal(left, right);
 }
 
 function todo_check_eq(left, right, stack) {
@@ -761,10 +770,7 @@ function todo_check_eq(left, right, stack) {
 }
 
 function do_check_true(condition, stack) {
-  if (!stack)
-    stack = Components.stack.caller;
-
-  do_check_eq(condition, true, stack);
+  Assert.ok(condition);
 }
 
 function todo_check_true(condition, stack) {
@@ -775,10 +781,7 @@ function todo_check_true(condition, stack) {
 }
 
 function do_check_false(condition, stack) {
-  if (!stack)
-    stack = Components.stack.caller;
-
-  do_check_eq(condition, false, stack);
+  Assert.ok(!condition, stack);
 }
 
 function todo_check_false(condition, stack) {
@@ -788,163 +791,15 @@ function todo_check_false(condition, stack) {
   todo_check_eq(condition, false, stack);
 }
 
-function do_check_null(condition, stack=Components.stack.caller) {
-  do_check_eq(condition, null, stack);
+function do_check_null(condition, stack) {
+  Assert.equal(condition, null);
 }
 
 function todo_check_null(condition, stack=Components.stack.caller) {
   todo_check_eq(condition, null, stack);
 }
-
-/**
- * Check that |value| matches |pattern|.
- *
- * A |value| matches a pattern |pattern| if any one of the following is true:
- *
- * - |value| and |pattern| are both objects; |pattern|'s enumerable
- *   properties' values are valid patterns; and for each enumerable
- *   property |p| of |pattern|, plus 'length' if present at all, |value|
- *   has a property |p| whose value matches |pattern.p|. Note that if |j|
- *   has other properties not present in |p|, |j| may still match |p|.
- *
- * - |value| and |pattern| are equal string, numeric, or boolean literals
- *
- * - |pattern| is |undefined| (this is a wildcard pattern)
- *
- * - typeof |pattern| == "function", and |pattern(value)| is true.
- *
- * For example:
- *
- * do_check_matches({x:1}, {x:1})       // pass
- * do_check_matches({x:1}, {})          // fail: all pattern props required
- * do_check_matches({x:1}, {x:2})       // fail: values must match
- * do_check_matches({x:1}, {x:1, y:2})  // pass: extra props tolerated
- *
- * // Property order is irrelevant.
- * do_check_matches({x:"foo", y:"bar"}, {y:"bar", x:"foo"}) // pass
- *
- * do_check_matches({x:undefined}, {x:1}) // pass: 'undefined' is wildcard
- * do_check_matches({x:undefined}, {x:2})
- * do_check_matches({x:undefined}, {y:2}) // fail: 'x' must still be there
- *
- * // Patterns nest.
- * do_check_matches({a:1, b:{c:2,d:undefined}}, {a:1, b:{c:2,d:3}})
- *
- * // 'length' property counts, even if non-enumerable.
- * do_check_matches([3,4,5], [3,4,5])     // pass
- * do_check_matches([3,4,5], [3,5,5])     // fail; value doesn't match
- * do_check_matches([3,4,5], [3,4,5,6])   // fail; length doesn't match
- *
- * // functions in patterns get applied.
- * do_check_matches({foo:function (v) v.length == 2}, {foo:"hi"}) // pass
- * do_check_matches({foo:function (v) v.length == 2}, {bar:"hi"}) // fail
- * do_check_matches({foo:function (v) v.length == 2}, {foo:"hello"}) // fail
- *
- * // We don't check constructors, prototypes, or classes. However, if
- * // pattern has a 'length' property, we require values to match that as
- * // well, even if 'length' is non-enumerable in the pattern. So arrays
- * // are useful as patterns.
- * do_check_matches({0:0, 1:1, length:2}, [0,1])  // pass
- * do_check_matches({0:1}, [1,2])                 // pass
- * do_check_matches([0], {0:0, length:1})         // pass
- *
- * Notes:
- *
- * The 'length' hack gives us reasonably intuitive handling of arrays.
- *
- * This is not a tight pattern-matcher; it's only good for checking data
- * from well-behaved sources. For example:
- * - By default, we don't mind values having extra properties.
- * - We don't check for proxies or getters.
- * - We don't check the prototype chain.
- * However, if you know the values are, say, JSON, which is pretty
- * well-behaved, and if you want to tolerate additional properties
- * appearing on the JSON for backward-compatibility, then do_check_matches
- * is ideal. If you do want to be more careful, you can use function
- * patterns to implement more stringent checks.
- */
-function do_check_matches(pattern, value, stack=Components.stack.caller, todo=false) {
-  var matcher = pattern_matcher(pattern);
-  var text = "VALUE: " + uneval(value) + "\nPATTERN: " + uneval(pattern) + "\n";
-  var diagnosis = []
-  if (matcher(value, diagnosis)) {
-    do_report_result(true, "value matches pattern:\n" + text, stack, todo);
-  } else {
-    text = ("value doesn't match pattern:\n" +
-            text +
-            "DIAGNOSIS: " +
-            format_pattern_match_failure(diagnosis[0]) + "\n");
-    do_report_result(false, text, stack, todo);
-  }
-}
-
-function todo_check_matches(pattern, value, stack=Components.stack.caller) {
-  do_check_matches(pattern, value, stack, true);
-}
-
-// Return a pattern-matching function of one argument, |value|, that
-// returns true if |value| matches |pattern|.
-//
-// If the pattern doesn't match, and the pattern-matching function was
-// passed its optional |diagnosis| argument, the pattern-matching function
-// sets |diagnosis|'s '0' property to a JSON-ish description of the portion
-// of the pattern that didn't match, which can be formatted legibly by
-// format_pattern_match_failure.
-function pattern_matcher(pattern) {
-  function explain(diagnosis, reason) {
-    if (diagnosis) {
-      diagnosis[0] = reason;
-    }
-    return false;
-  }
-  if (typeof pattern == "function") {
-    return pattern;
-  } else if (typeof pattern == "object" && pattern) {
-    var matchers = [[p, pattern_matcher(pattern[p])] for (p in pattern)];
-    // Kludge: include 'length', if not enumerable. (If it is enumerable,
-    // we picked it up in the array comprehension, above.
-    var ld = Object.getOwnPropertyDescriptor(pattern, 'length');
-    if (ld && !ld.enumerable) {
-      matchers.push(['length', pattern_matcher(pattern.length)])
-    }
-    return function (value, diagnosis) {
-      if (!(value && typeof value == "object")) {
-        return explain(diagnosis, "value not object");
-      }
-      for (let [p, m] of matchers) {
-        var element_diagnosis = [];
-        if (!(p in value && m(value[p], element_diagnosis))) {
-          return explain(diagnosis, { property:p,
-                                      diagnosis:element_diagnosis[0] });
-        }
-      }
-      return true;
-    };
-  } else if (pattern === undefined) {
-    return function(value) { return true; };
-  } else {
-    return function (value, diagnosis) {
-      if (value !== pattern) {
-        return explain(diagnosis, "pattern " + uneval(pattern) + " not === to value " + uneval(value));
-      }
-      return true;
-    };
-  }
-}
-
-// Format an explanation for a pattern match failure, as stored in the
-// second argument to a matching function.
-function format_pattern_match_failure(diagnosis, indent="") {
-  var a;
-  if (!diagnosis) {
-    a = "Matcher did not explain reason for mismatch.";
-  } else if (typeof diagnosis == "string") {
-    a = diagnosis;
-  } else if (diagnosis.property) {
-    a = "Property " + uneval(diagnosis.property) + " of object didn't match:\n";
-    a += format_pattern_match_failure(diagnosis.diagnosis, indent + "  ");
-  }
-  return indent + a;
+function do_check_matches(pattern, value) {
+  Assert.deepEqual(pattern, value);
 }
 
 // Check that |func| throws an nsIException that has

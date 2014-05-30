@@ -279,21 +279,28 @@ static inline void profiler_tracing(const char* aCategory, const char* aInfo,
 // ac_add_options --enable-systace
 //#define MOZ_USE_SYSTRACE
 #ifdef MOZ_USE_SYSTRACE
-# define ATRACE_TAG ATRACE_TAG_GRAPHICS
+# define ATRACE_TAG ATRACE_TAG_ALWAYS
 // We need HAVE_ANDROID_OS to be defined for Trace.h.
 // If its not set we will set it temporary and remove it.
 # ifndef HAVE_ANDROID_OS
 #   define HAVE_ANDROID_OS
 #   define REMOVE_HAVE_ANDROID_OS
 # endif
+// Android source code will include <cutils/trace.h> before this. There is no
+// HAVE_ANDROID_OS defined in Firefox OS build at that time. Enabled it globally
+// will cause other build break. So atrace_begin and atrace_end are not defined.
+// It will cause a build-break when we include <utils/Trace.h>. Use undef
+// _LIBS_CUTILS_TRACE_H will force <cutils/trace.h> to define atrace_begin and
+// atrace_end with defined HAVE_ANDROID_OS again. Then there is no build-break.
+# undef _LIBS_CUTILS_TRACE_H
 # include <utils/Trace.h>
-# define MOZ_PLATFORM_TRACING ATRACE_CALL();
+# define MOZ_PLATFORM_TRACING(name) ATRACE_NAME(name);
 # ifdef REMOVE_HAVE_ANDROID_OS
 #  undef HAVE_ANDROID_OS
 #  undef REMOVE_HAVE_ANDROID_OS
 # endif
 #else
-# define MOZ_PLATFORM_TRACING
+# define MOZ_PLATFORM_TRACING(name)
 #endif
 
 // we want the class and function name but can't easily get that using preprocessor macros
@@ -303,8 +310,8 @@ static inline void profiler_tracing(const char* aCategory, const char* aInfo,
 #define SAMPLER_APPEND_LINE_NUMBER_EXPAND(id, line) SAMPLER_APPEND_LINE_NUMBER_PASTE(id, line)
 #define SAMPLER_APPEND_LINE_NUMBER(id) SAMPLER_APPEND_LINE_NUMBER_EXPAND(id, __LINE__)
 
-#define PROFILER_LABEL(name_space, info) MOZ_PLATFORM_TRACING mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__)
-#define PROFILER_LABEL_PRINTF(name_space, info, ...) MOZ_PLATFORM_TRACING mozilla::SamplerStackFramePrintfRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__, __VA_ARGS__)
+#define PROFILER_LABEL(name_space, info) MOZ_PLATFORM_TRACING(name_space "::" info) mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__)
+#define PROFILER_LABEL_PRINTF(name_space, info, ...) MOZ_PLATFORM_TRACING(name_space "::" info) mozilla::SamplerStackFramePrintfRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__, __VA_ARGS__)
 
 #define PROFILER_MARKER(info) mozilla_sampler_add_marker(info)
 #define PROFILER_MARKER_PAYLOAD(info, payload) mozilla_sampler_add_marker(info, payload)
