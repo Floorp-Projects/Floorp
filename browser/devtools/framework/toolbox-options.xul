@@ -44,6 +44,9 @@
         </vbox>
         <label value="&options.context.inspector;"/>
         <vbox id="inspector-options" class="options-groupbox">
+          <checkbox label="&options.showUserAgentStyles.label;"
+                    tooltiptext="&options.showUserAgentStyles.tooltip;"
+                    data-pref="devtools.inspector.showUserAgentStyles"/>
           <hbox align="center">
             <label value="&options.defaultColorUnit.label;"
               control="defaultColorUnitMenuList"

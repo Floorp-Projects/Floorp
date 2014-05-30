@@ -22,4 +22,5 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1004726 requires a clobber for B2G Emulator builds
+Bug 1003764 - Oh snap, Waldo did it again.
+

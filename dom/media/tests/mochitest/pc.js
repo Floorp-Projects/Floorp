@@ -1296,15 +1296,6 @@ PeerConnectionWrapper.prototype = {
   },
 
   /**
-   * Returns the readyState.
-   *
-   * @returns {string}
-   */
-  get readyState() {
-    return this._pc.readyState;
-  },
-
-  /**
    * Returns the remote description.
    *
    * @returns {object} The remote description

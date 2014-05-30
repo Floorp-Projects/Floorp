@@ -89,7 +89,6 @@ NS_IMPL_QUERY_INTERFACE(StartTransactionRunnable, nsIRunnable)
 
 } // anonymous namespace
 
-
 // static
 already_AddRefed<IDBTransaction>
 IDBTransaction::CreateInternal(IDBDatabase* aDatabase,
@@ -115,6 +114,15 @@ IDBTransaction::CreateInternal(IDBDatabase* aDatabase,
   transaction->mDatabaseInfo = aDatabase->Info();
   transaction->mObjectStoreNames.AppendElements(aObjectStoreNames);
   transaction->mObjectStoreNames.Sort();
+
+  // Remove any duplicate object store names
+  const uint32_t count = transaction->mObjectStoreNames.Length();
+  for (uint32_t index = count - 1; index > 0 && count > 0; index--) {
+    if (transaction->mObjectStoreNames[index] ==
+        transaction->mObjectStoreNames[index - 1]) {
+      transaction->mObjectStoreNames.RemoveElementAt(index);
+    }
+  }
 
   IndexedDBTransactionChild* actor = nullptr;
 
@@ -945,7 +953,7 @@ CommitHelper::WriteAutoIncrementCounts()
 
     rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), info->id);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("ai"),
                                info->nextAutoIncrementId);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -953,7 +961,7 @@ CommitHelper::WriteAutoIncrementCounts()
     rv = stmt->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  
+
   return NS_OK;
 }
 

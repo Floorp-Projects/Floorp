@@ -1269,7 +1269,7 @@ struct JSRuntime : public JS::shadow::Runtime,
         return liveRuntimesCount > 0;
     }
 
-    JSRuntime(JSRuntime *parentRuntime, JSUseHelperThreads useHelperThreads);
+    JSRuntime(JSRuntime *parentRuntime);
     ~JSRuntime();
 
     bool init(uint32_t maxbytes);
@@ -1335,27 +1335,11 @@ struct JSRuntime : public JS::shadow::Runtime,
   private:
     JS::RuntimeOptions options_;
 
-    JSUseHelperThreads useHelperThreads_;
-
     // Settings for how helper threads can be used.
     bool parallelIonCompilationEnabled_;
     bool parallelParsingEnabled_;
 
-    // True iff this is a DOM Worker runtime.
-    bool isWorkerRuntime_;
-
   public:
-
-    // This controls whether the JSRuntime is allowed to create any helper
-    // threads at all. This means both specific threads (background GC thread)
-    // and the general JS worker thread pool.
-    bool useHelperThreads() const {
-#ifdef JS_THREADSAFE
-        return useHelperThreads_ == JS_USE_HELPER_THREADS;
-#else
-        return false;
-#endif
-    }
 
     // Note: these values may be toggled dynamically (in response to about:config
     // prefs changing).
@@ -1363,22 +1347,21 @@ struct JSRuntime : public JS::shadow::Runtime,
         parallelIonCompilationEnabled_ = value;
     }
     bool canUseParallelIonCompilation() const {
-        return useHelperThreads() &&
-               parallelIonCompilationEnabled_;
+#ifdef JS_THREADSAFE
+        return parallelIonCompilationEnabled_;
+#else
+        return false;
+#endif
     }
     void setParallelParsingEnabled(bool value) {
         parallelParsingEnabled_ = value;
     }
     bool canUseParallelParsing() const {
-        return useHelperThreads() &&
-               parallelParsingEnabled_;
-    }
-
-    void setIsWorkerRuntime() {
-        isWorkerRuntime_ = true;
-    }
-    bool isWorkerRuntime() const {
-        return isWorkerRuntime_;
+#ifdef JS_THREADSAFE
+        return parallelParsingEnabled_;
+#else
+        return false;
+#endif
     }
 
     const JS::RuntimeOptions &options() const {
