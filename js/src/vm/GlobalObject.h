@@ -245,15 +245,10 @@ class GlobalObject : public JSObject
     bool dataViewClassInitialized() const {
         return classIsInitialized(JSProto_DataView);
     }
-    bool typedArrayClassesInitialized() const {
-        // This alias exists only for clarity: in reality all the typed array
-        // classes constitute a (semi-)coherent whole.
-        return classIsInitialized(JSProto_DataView);
-    }
 
     Value createArrayFromBufferHelper(uint32_t slot) const {
-        JS_ASSERT(typedArrayClassesInitialized());
         JS_ASSERT(FROM_BUFFER_UINT8 <= slot && slot <= FROM_BUFFER_UINT8CLAMPED);
+        JS_ASSERT(!getSlot(slot).isUndefined());
         return getSlot(slot);
     }
 
