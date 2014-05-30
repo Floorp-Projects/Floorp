@@ -55,7 +55,7 @@ bool LogMessage::Loggable(LoggingSeverity sev) {
 
 LogMessage::~LogMessage() {
   const std::string& str = print_stream_.str();
-  WEBRTC_TRACE(WebRtcSeverity(severity_), kTraceUndefined, 0, str.c_str());
+  Trace::Add(WebRtcSeverity(severity_), kTraceUndefined, 0, str.c_str());
 }
 
 }  // namespace webrtc

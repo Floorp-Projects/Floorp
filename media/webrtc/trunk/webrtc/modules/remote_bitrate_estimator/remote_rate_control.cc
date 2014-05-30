@@ -22,8 +22,8 @@ namespace webrtc {
 
 const unsigned int kDefaultRttMs = 200;
 
-RemoteRateControl::RemoteRateControl()
-    : min_configured_bit_rate_(30000),
+RemoteRateControl::RemoteRateControl(uint32_t min_bitrate_bps)
+    : min_configured_bit_rate_(min_bitrate_bps),
     max_configured_bit_rate_(30000000),
     current_bit_rate_(max_configured_bit_rate_),
     max_hold_rate_(0),
@@ -45,7 +45,7 @@ RemoteRateControl::RemoteRateControl()
 }
 
 void RemoteRateControl::Reset() {
-  *this = RemoteRateControl();
+  *this = RemoteRateControl(min_configured_bit_rate_);
   came_from_state_ = kRcHold;
 }
 

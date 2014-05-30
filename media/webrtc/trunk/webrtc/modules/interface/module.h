@@ -13,7 +13,7 @@
 
 #include <assert.h>
 
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 

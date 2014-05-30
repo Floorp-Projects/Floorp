@@ -22,6 +22,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "GeckoProfiler.h"
+#include "mozilla/layers/TransactionIdAllocator.h"
 
 class nsPresContext;
 class nsIPresShell;
@@ -62,16 +63,14 @@ public:
   virtual void DidRefresh() = 0;
 };
 
-class nsRefreshDriver MOZ_FINAL : public nsISupports {
+class nsRefreshDriver MOZ_FINAL : public mozilla::layers::TransactionIdAllocator,
+                                  public nsARefreshObserver {
 public:
   nsRefreshDriver(nsPresContext *aPresContext);
   ~nsRefreshDriver();
 
   static void InitializeStatics();
   static void Shutdown();
-
-  // nsISupports implementation
-  NS_DECL_ISUPPORTS
 
   /**
    * Methods for testing, exposed via nsIDOMWindowUtils.  See
@@ -272,6 +271,17 @@ public:
 
   bool IsInRefresh() { return mInRefresh; }
 
+  // mozilla::layers::TransactionIdAllocator
+  virtual uint64_t GetTransactionId() MOZ_OVERRIDE;
+  void NotifyTransactionCompleted(uint64_t aTransactionId) MOZ_OVERRIDE;
+  void RevokeTransactionId(uint64_t aTransactionId) MOZ_OVERRIDE;
+
+  bool IsWaitingForPaint();
+
+  // nsARefreshObserver
+  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) { return TransactionIdAllocator::AddRef(); }
+  NS_IMETHOD_(MozExternalRefCountType) Release(void) { return TransactionIdAllocator::Release(); }
+  virtual void WillRefresh(mozilla::TimeStamp aTime);
 private:
   typedef nsTObserverArray<nsARefreshObserver*> ObserverArray;
   typedef nsTHashtable<nsISupportsHashKey> RequestTable;
@@ -314,6 +324,8 @@ private:
     return mFrameRequestCallbackDocs.Length() != 0;
   }
 
+  void FinishedWaitingForTransaction();
+
   mozilla::RefreshDriverTimer* ChooseTimer() const;
   mozilla::RefreshDriverTimer *mActiveTimer;
 
@@ -323,12 +335,27 @@ private:
   nsPresContext *mPresContext; // weak; pres context passed in constructor
                                // and unset in Disconnect
 
+  nsRefPtr<nsRefreshDriver> mRootRefresh;
+
+  // The most recently allocated transaction id.
+  uint64_t mPendingTransaction;
+  // The most recently completed transaction id.
+  uint64_t mCompletedTransaction;
+
   uint32_t mFreezeCount;
   bool mThrottled;
   bool mTestControllingRefreshes;
   bool mViewManagerFlushIsPending;
   bool mRequestedHighPrecision;
   bool mInRefresh;
+
+  // True if the refresh driver is suspended waiting for transaction
+  // id's to be returned and shouldn't do any work during Tick().
+  bool mWaitingForTransaction;
+  // True if Tick() was skipped because of mWaitingForTransaction and
+  // we should schedule a new Tick immediately when resumed instead
+  // of waiting until the next interval.
+  uint32_t mSkippedPaints;
 
   int64_t mMostRecentRefreshEpochTime;
   mozilla::TimeStamp mMostRecentRefresh;

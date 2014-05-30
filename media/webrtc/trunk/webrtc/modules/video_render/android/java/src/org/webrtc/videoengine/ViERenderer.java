@@ -11,13 +11,21 @@
 package org.webrtc.videoengine;
 
 import android.content.Context;
+import android.util.Log;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
+
+import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.util.ThreadUtils;
 
 public class ViERenderer {
+    private final static String TAG = "WEBRTC-ViEREnderer";
 
     // View used for local rendering that Cameras can use for Video Overlay.
-    private static SurfaceHolder g_localRenderer;
+    private static SurfaceHolder g_localRenderer = null;
 
     public static SurfaceView CreateRenderer(Context context) {
         return CreateRenderer(context, false);
@@ -44,11 +52,43 @@ public class ViERenderer {
     // ViECapture::AllocateCaptureDevice
     // LinearLayout.addview
     // ViECapture::StartCapture
-    public static SurfaceView CreateLocalRenderer(Context context) {
-        SurfaceView localRender = new SurfaceView(context);
-        g_localRenderer = localRender.getHolder();
-        g_localRenderer.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        return localRender;
+    public static void CreateLocalRenderer() {
+        View cameraView = GeckoAppShell.getGeckoInterface().getCameraView();
+        if (cameraView != null && (cameraView instanceof SurfaceView)) {
+            SurfaceView localRender = (SurfaceView)cameraView;
+            g_localRenderer = localRender.getHolder();
+        }
+
+        ThreadUtils.getUiHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    GeckoAppShell.getGeckoInterface().enableCameraView();
+                } catch (Exception e) {
+                    Log.e(TAG, "CreateLocalRenderer enableCameraView exception: "
+                          + e.getLocalizedMessage());
+                }
+            }
+        });
+    }
+
+    public static void DestroyLocalRenderer() {
+        if (g_localRenderer != null) {
+            g_localRenderer = null;
+
+            ThreadUtils.getUiHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        GeckoAppShell.getGeckoInterface().disableCameraView();
+                    } catch (Exception e) {
+                        Log.e(TAG,
+                              "DestroyLocalRenderer disableCameraView exception: " +
+                              e.getLocalizedMessage());
+                    }
+                }
+            });
+        }
     }
 
     public static SurfaceHolder GetLocalRenderer() {

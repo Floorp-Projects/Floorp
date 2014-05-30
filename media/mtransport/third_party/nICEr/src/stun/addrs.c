@@ -53,8 +53,8 @@ static char *RCSSTRING __UNUSED__="$Id: addrs.c,v 1.2 2008/04/28 18:21:30 ekr Ex
 #undef __unused
 #include <linux/sysctl.h>
 #endif
-#include <net/if.h>
 #ifndef LINUX
+#include <net/if.h>
 #if !defined(__OpenBSD__) && !defined(__NetBSD__)
 #include <net/if_var.h>
 #endif

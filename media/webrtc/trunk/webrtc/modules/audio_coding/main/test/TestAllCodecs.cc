@@ -99,9 +99,9 @@ void TestPack::reset_payload_size() {
   payload_size_ = 0;
 }
 
-TestAllCodecs::TestAllCodecs(int test_mode)
-    : acm_a_(AudioCodingModule::Create(0)),
-      acm_b_(AudioCodingModule::Create(1)),
+TestAllCodecs::TestAllCodecs(int test_mode, const Config& config)
+    : acm_a_(config.Get<AudioCodingModuleFactory>().Create(0)),
+      acm_b_(config.Get<AudioCodingModuleFactory>().Create(1)),
       channel_a_to_b_(NULL),
       test_count_(0),
       packet_size_samples_(0),
