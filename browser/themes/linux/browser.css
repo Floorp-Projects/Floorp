@@ -52,6 +52,9 @@
 }
 
 #TabsToolbar:not([collapsed="true"]) + #nav-bar {
+  border-top: 1px solid hsla(0,0%,0%,.3) !important;
+  background-clip: padding-box;
+  margin-top: -1px; /* Move up into the TabsToolbar for the inner highlight at the top of the nav-bar */
   /* Position the toolbar above the bottom of background tabs */
   position: relative;
   z-index: 1;
@@ -1721,21 +1724,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 #TabsToolbar {
   min-height: 0;
   padding: 0;
-  position: relative;
   margin-bottom: -@tabToolbarNavbarOverlap@;
-}
-
-/*
- * Draw the bottom border of the tabstrip:
- */
-#TabsToolbar::after {
-  content: "";
-  position: absolute;
-  bottom: @tabToolbarNavbarOverlap@;
-  left: 0;
-  right: 0;
-  z-index: 0;
-  border-bottom: 1px solid hsla(0,0%,0%,.3);
 }
 
 #TabsToolbar:not(:-moz-lwtheme) {
