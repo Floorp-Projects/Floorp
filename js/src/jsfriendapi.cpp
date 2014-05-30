@@ -969,6 +969,8 @@ JS::IncrementalObjectBarrier(JSObject *obj)
 
     JS_ASSERT(!obj->zone()->runtimeFromMainThread()->isHeapMajorCollecting());
 
+    AutoMarkInDeadZone amn(obj->zone());
+
     JSObject::writeBarrierPre(obj);
 }
 
@@ -984,6 +986,8 @@ JS::IncrementalReferenceBarrier(void *ptr, JSGCTraceKind kind)
                  : cell->tenuredZone();
 
     JS_ASSERT(!zone->runtimeFromMainThread()->isHeapMajorCollecting());
+
+    AutoMarkInDeadZone amn(zone);
 
     if (kind == JSTRACE_OBJECT)
         JSObject::writeBarrierPre(static_cast<JSObject*>(cell));
