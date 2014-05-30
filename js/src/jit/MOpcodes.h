@@ -109,7 +109,6 @@ namespace jit {
     _(StringReplace)                                                        \
     _(Lambda)                                                               \
     _(LambdaArrow)                                                          \
-    _(ImplicitThis)                                                         \
     _(Slots)                                                                \
     _(Elements)                                                             \
     _(ConstantElements)                                                     \

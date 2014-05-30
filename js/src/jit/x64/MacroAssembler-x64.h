@@ -1237,6 +1237,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             unboxNonDouble(Operand(src), dest.gpr());
     }
 
+    template <typename T>
+    void storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T &dest, MIRType slotType);
+
     void loadInstructionPointerAfterCall(Register dest) {
         loadPtr(Address(StackPointer, 0x0), dest);
     }

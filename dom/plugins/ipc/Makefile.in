@@ -4,7 +4,13 @@
 
 include $(topsrcdir)/config/rules.mk
 
+ifneq ($(MOZ_WIDGET_TOOLKIT),gtk3)
+CXXFLAGS += $(TK_CFLAGS)
+else
+# Force build against gtk+2 for struct offsets and such.
+CXXFLAGS += $(MOZ_GTK2_CFLAGS)
+endif
+
 CXXFLAGS += \
-  $(TK_CFLAGS) \
   $(MOZ_CAIRO_CFLAGS) \
   $(NULL)

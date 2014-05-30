@@ -1273,10 +1273,8 @@ jit::BuildPhiReverseMapping(MIRGraph &graph)
     //             break statement is present, the exit block will forward
     //             directly to the break block.
     for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++) {
-        if (block->numPredecessors() < 2) {
-            JS_ASSERT(block->phisEmpty());
+        if (block->phisEmpty())
             continue;
-        }
 
         // Assert on the above.
         for (size_t j = 0; j < block->numPredecessors(); j++) {
@@ -1523,13 +1521,7 @@ jit::AssertExtendedGraphCoherency(MIRGraph &graph)
                 successorWithPhis++;
 
         JS_ASSERT(successorWithPhis <= 1);
-        JS_ASSERT_IF(successorWithPhis, block->successorWithPhis() != nullptr);
-
-        // I'd like to assert this, but it's not necc. true.  Sometimes we set this
-        // flag to non-nullptr just because a successor has multiple preds, even if it
-        // does not actually have any phis.
-        //
-        // JS_ASSERT_IF(!successorWithPhis, block->successorWithPhis() == nullptr);
+        JS_ASSERT((successorWithPhis != 0) == (block->successorWithPhis() != nullptr));
     }
 
     AssertDominatorTree(graph);

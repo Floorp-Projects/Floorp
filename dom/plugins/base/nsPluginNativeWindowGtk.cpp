@@ -17,7 +17,11 @@
 #include <gdk/gdkx.h>
 #include <gdk/gdk.h>
 
+#if (GTK_MAJOR_VERSION == 3)
+#include <gtk/gtkx.h>
+#else
 #include "gtk2xtbin.h"
+#endif
 #include "mozilla/X11Util.h"
 
 class nsPluginNativeWindowGtk : public nsPluginNativeWindow {

@@ -1091,6 +1091,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
             load32(address, dest.gpr());
     }
 
+    template <typename T>
+    void storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T &dest,
+                           MIRType slotType);
+
     void moveValue(const Value &val, const ValueOperand &dest);
 
     void moveValue(const ValueOperand &src, const ValueOperand &dest) {
@@ -1185,10 +1189,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
     void storePayload(const Value &val, Operand dest);
     void storePayload(Register src, Operand dest);
-    void storePayload(const Value &val, Register base, Register index, int32_t shift = defaultShift);
-    void storePayload(Register src, Register base, Register index, int32_t shift = defaultShift);
+    void storePayload(const Value &val, const BaseIndex &dest);
+    void storePayload(Register src, const BaseIndex &dest);
     void storeTypeTag(ImmTag tag, Operand dest);
-    void storeTypeTag(ImmTag tag, Register base, Register index, int32_t shift = defaultShift);
+    void storeTypeTag(ImmTag tag, const BaseIndex &dest);
 
     void makeFrameDescriptor(Register frameSizeReg, FrameType type) {
         ma_lsl(Imm32(FRAMESIZE_SHIFT), frameSizeReg, frameSizeReg);
