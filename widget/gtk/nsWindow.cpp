@@ -2268,7 +2268,10 @@ nsWindow::UpdateAlpha(gfxPattern* aPattern, nsIntRect aBoundsRect)
                                 stride, SurfaceFormat::A8);
 
     if (drawTarget) {
-        drawTarget->FillRect(Rect(0, 0, aBoundsRect.width, aBoundsRect.height),
+        Matrix transform = Matrix::Translation(-aBoundsRect.x, -aBoundsRect.y);
+        drawTarget->SetTransform(transform);
+
+        drawTarget->FillRect(Rect(aBoundsRect.x, aBoundsRect.y, aBoundsRect.width, aBoundsRect.height),
                              *aPattern->GetPattern(drawTarget),
                              DrawOptions(1.0, CompositionOp::OP_SOURCE));
     }
