@@ -1565,6 +1565,17 @@ CodeGenerator::visitSlots(LSlots *lir)
 }
 
 bool
+CodeGenerator::visitLoadSlotT(LLoadSlotT *lir)
+{
+    Register base = ToRegister(lir->slots());
+    int32_t offset = lir->mir()->slot() * sizeof(js::Value);
+    AnyRegister result = ToAnyRegister(lir->output());
+
+    masm.loadUnboxedValue(Address(base, offset), lir->mir()->type(), result);
+    return true;
+}
+
+bool
 CodeGenerator::visitLoadSlotV(LLoadSlotV *lir)
 {
     ValueOperand dest = ToOutValue(lir);
