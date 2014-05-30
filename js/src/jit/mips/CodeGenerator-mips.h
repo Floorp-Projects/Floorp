@@ -229,9 +229,6 @@ class CodeGeneratorMIPS : public CodeGeneratorShared
     // Functions for LTestVAndBranch.
     Register splitTagForTest(const ValueOperand &value);
 
-    void storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
-                           Register elements, const LAllocation *index);
-
   public:
     CodeGeneratorMIPS(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm);
 
@@ -242,8 +239,6 @@ class CodeGeneratorMIPS : public CodeGeneratorShared
     bool visitValue(LValue *value);
     bool visitDouble(LDouble *ins);
     bool visitFloat32(LFloat32 *ins);
-
-    bool visitStoreSlotT(LStoreSlotT *load);
 
     bool visitGuardShape(LGuardShape *guard);
     bool visitGuardObjectType(LGuardObjectType *guard);

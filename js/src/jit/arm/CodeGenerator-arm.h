@@ -164,9 +164,6 @@ class CodeGeneratorARM : public CodeGeneratorShared
     // Functions for LTestVAndBranch.
     Register splitTagForTest(const ValueOperand &value);
 
-    void storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
-                           Register elements, const LAllocation *index);
-
     bool divICommon(MDiv *mir, Register lhs, Register rhs, Register output, LSnapshot *snapshot,
                     Label &done);
     bool modICommon(MMod *mir, Register lhs, Register rhs, Register output, LSnapshot *snapshot,
@@ -182,8 +179,6 @@ class CodeGeneratorARM : public CodeGeneratorShared
     bool visitValue(LValue *value);
     bool visitDouble(LDouble *ins);
     bool visitFloat32(LFloat32 *ins);
-
-    bool visitStoreSlotT(LStoreSlotT *load);
 
     bool visitGuardShape(LGuardShape *guard);
     bool visitGuardObjectType(LGuardObjectType *guard);

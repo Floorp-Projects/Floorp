@@ -133,63 +133,6 @@ CodeGeneratorX64::visitUnbox(LUnbox *unbox)
     return true;
 }
 
-void
-CodeGeneratorX64::storeUnboxedValue(const LAllocation *value, MIRType valueType,
-                                    Operand dest, MIRType slotType)
-{
-    if (valueType == MIRType_Double) {
-        masm.storeDouble(ToFloatRegister(value), dest);
-        return;
-    }
-
-    // For known integers and booleans, we can just store the unboxed value if
-    // the slot has the same type.
-    if ((valueType == MIRType_Int32 || valueType == MIRType_Boolean) && slotType == valueType) {
-        if (value->isConstant()) {
-            Value val = *value->toConstant();
-            if (valueType == MIRType_Int32)
-                masm.movl(Imm32(val.toInt32()), dest);
-            else
-                masm.movl(Imm32(val.toBoolean() ? 1 : 0), dest);
-        } else {
-            masm.movl(ToRegister(value), dest);
-        }
-        return;
-    }
-
-    if (value->isConstant()) {
-        masm.moveValue(*value->toConstant(), ScratchReg);
-        masm.movq(ScratchReg, dest);
-    } else {
-        masm.storeValue(ValueTypeFromMIRType(valueType), ToRegister(value), dest);
-    }
-}
-
-bool
-CodeGeneratorX64::visitStoreSlotT(LStoreSlotT *store)
-{
-    Register base = ToRegister(store->slots());
-    int32_t offset = store->mir()->slot() * sizeof(js::Value);
-
-    const LAllocation *value = store->value();
-    MIRType valueType = store->mir()->value()->type();
-    MIRType slotType = store->mir()->slotType();
-
-    if (store->mir()->needsBarrier())
-        emitPreBarrier(Address(base, offset), slotType);
-
-    storeUnboxedValue(value, valueType, Operand(base, offset), slotType);
-    return true;
-}
-
-void
-CodeGeneratorX64::storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
-                                    Register elements, const LAllocation *index)
-{
-    Operand dest = createArrayElementOperand(elements, index);
-    storeUnboxedValue(value, valueType, dest, elementType);
-}
-
 bool
 CodeGeneratorX64::visitCompareB(LCompareB *lir)
 {
