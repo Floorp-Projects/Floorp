@@ -25,6 +25,7 @@
 #include "jit/IonLinker.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/IonSpewer.h"
+#include "jit/Lowering.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MoveEmitter.h"
 #include "jit/ParallelFunctions.h"
@@ -7686,6 +7687,38 @@ CodeGenerator::visitToIdV(LToIdV *lir)
 
     masm.bind(ool->rejoin());
     return true;
+}
+
+template<typename T>
+bool
+CodeGenerator::emitLoadElementT(LLoadElementT *lir, const T &source)
+{
+    if (LIRGenerator::allowTypedElementHoleCheck()) {
+        if (lir->mir()->needsHoleCheck()) {
+            Assembler::Condition cond = masm.testMagic(Assembler::Equal, source);
+            if (!bailoutIf(cond, lir->snapshot()))
+                return false;
+        }
+    } else {
+        MOZ_ASSERT(!lir->mir()->needsHoleCheck());
+    }
+
+    AnyRegister output = ToAnyRegister(lir->output());
+    if (lir->mir()->loadDoubles())
+        masm.loadDouble(source, output.fpu());
+    else
+        masm.loadUnboxedValue(source, lir->mir()->type(), output);
+    return true;
+}
+
+bool
+CodeGenerator::visitLoadElementT(LLoadElementT *lir)
+{
+    Register elements = ToRegister(lir->elements());
+    const LAllocation *index = lir->index();
+    if (index->isConstant())
+        return emitLoadElementT(lir, Address(elements, ToInt32(index) * sizeof(js::Value)));
+    return emitLoadElementT(lir, BaseIndex(elements, ToRegister(index), TimesEight));
 }
 
 bool

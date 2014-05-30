@@ -1784,38 +1784,6 @@ CodeGeneratorMIPS::visitStoreSlotT(LStoreSlotT *store)
     return true;
 }
 
-bool
-CodeGeneratorMIPS::visitLoadElementT(LLoadElementT *load)
-{
-    Register base = ToRegister(load->elements());
-    if (load->mir()->type() == MIRType_Double) {
-        FloatRegister fpreg = ToFloatRegister(load->output());
-        if (load->index()->isConstant()) {
-            Address source(base, ToInt32(load->index()) * sizeof(Value));
-            if (load->mir()->loadDoubles())
-                masm.loadDouble(source, fpreg);
-            else
-                masm.loadInt32OrDouble(source, fpreg);
-        } else {
-            Register index = ToRegister(load->index());
-            if (load->mir()->loadDoubles())
-                masm.loadDouble(BaseIndex(base, index, TimesEight), fpreg);
-            else
-                masm.loadInt32OrDouble(base, index, fpreg);
-        }
-    } else {
-        if (load->index()->isConstant()) {
-            Address source(base, ToInt32(load->index()) * sizeof(Value));
-            masm.load32(source, ToRegister(load->output()));
-        } else {
-            BaseIndex source(base, ToRegister(load->index()), TimesEight);
-            masm.load32(source, ToRegister(load->output()));
-        }
-    }
-    MOZ_ASSERT(!load->mir()->needsHoleCheck());
-    return true;
-}
-
 void
 CodeGeneratorMIPS::storeElementTyped(const LAllocation *value, MIRType valueType,
                                      MIRType elementType, Register elements,
