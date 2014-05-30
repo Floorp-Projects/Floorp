@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGLContext.h"
+#include "WebGLContextUtils.h"
 #include "WebGLTexture.h"
 #include "GLContext.h"
 #include "ScopedGLHelpers.h"
@@ -49,7 +50,7 @@ int64_t
 WebGLTexture::ImageInfo::MemoryUsage() const {
     if (mImageDataStatus == WebGLImageDataStatus::NoImageData)
         return 0;
-    int64_t bitsPerTexel = WebGLContext::GetBitsPerTexel(mInternalFormat, mType);
+    int64_t bitsPerTexel = WebGLContext::GetBitsPerTexel(mWebGLFormat, mWebGLType);
     return int64_t(mWidth) * int64_t(mHeight) * bitsPerTexel/8;
 }
 
@@ -333,7 +334,7 @@ WebGLTexture::ResolvedFakeBlackStatus() {
         }
     }
 
-    if (ImageInfoBase().mType == LOCAL_GL_FLOAT &&
+    if (ImageInfoBase().mWebGLType == LOCAL_GL_FLOAT &&
         !Context()->IsExtensionEnabled(WebGLExtensionID::OES_texture_float_linear))
     {
         if (mMinFilter == LOCAL_GL_LINEAR ||
@@ -353,7 +354,7 @@ WebGLTexture::ResolvedFakeBlackStatus() {
                                       "Try enabling the OES_texture_float_linear extension if supported.", msg_rendering_as_black);
             mFakeBlackStatus = WebGLTextureFakeBlackStatus::IncompleteTexture;
         }
-    } else if (ImageInfoBase().mType == LOCAL_GL_HALF_FLOAT_OES &&
+    } else if (ImageInfoBase().mWebGLType == LOCAL_GL_HALF_FLOAT_OES &&
                !Context()->IsExtensionEnabled(WebGLExtensionID::OES_texture_half_float_linear))
     {
         if (mMinFilter == LOCAL_GL_LINEAR ||
@@ -442,7 +443,9 @@ WebGLTexture::DoDeferredImageInitialization(GLenum imageTarget, GLint level)
     mContext->MakeContextCurrent();
     gl::ScopedBindTexture autoBindTex(mContext->gl, GLName(), mTarget);
 
-    WebGLTexelFormat texelformat = GetWebGLTexelFormat(imageInfo.mInternalFormat, imageInfo.mType);
+    GLenum format = imageInfo.mWebGLFormat;
+    GLenum type = imageInfo.mWebGLType;
+    WebGLTexelFormat texelformat = GetWebGLTexelFormat(format, type);
     uint32_t texelsize = WebGLTexelConversions::TexelBytesForFormat(texelformat);
     CheckedUint32 checked_byteLength
         = WebGLContext::GetImageSize(
@@ -453,12 +456,17 @@ WebGLTexture::DoDeferredImageInitialization(GLenum imageTarget, GLint level)
     MOZ_ASSERT(checked_byteLength.isValid()); // should have been checked earlier
     void *zeros = calloc(1, checked_byteLength.value());
 
-    GLenum format = WebGLTexelConversions::GLFormatForTexelFormat(texelformat);
+    gl::GLContext* gl = mContext->gl;
+    GLenum driverType = DriverTypeFromType(gl, type);
+    GLenum driverInternalFormat = LOCAL_GL_NONE;
+    GLenum driverFormat = LOCAL_GL_NONE;
+    DriverFormatsFromFormatAndType(gl, format, type, &driverInternalFormat, &driverFormat);
+
     mContext->GetAndFlushUnderlyingGLErrors();
-    mContext->gl->fTexImage2D(imageTarget, level, imageInfo.mInternalFormat,
-                              imageInfo.mWidth, imageInfo.mHeight,
-                              0, format, imageInfo.mType,
-                              zeros);
+    gl->fTexImage2D(imageTarget, level, driverInternalFormat,
+                    imageInfo.mWidth, imageInfo.mHeight,
+                    0, driverFormat, driverType,
+                    zeros);
     GLenum error = mContext->GetAndFlushUnderlyingGLErrors();
 
     free(zeros);

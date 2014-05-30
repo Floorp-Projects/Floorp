@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<title>WebGL test: bug 1003607</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="driver-info.js"></script>
+<script src="webgl-util.js"></script>
+<body>
+<canvas id="c"></canvas>
+<script>
+
+// Give ourselves a scope to return early from:
+(function() {
+  var gl = WebGLUtil.getWebGL('c');
+  if (!gl) {
+    todo(false, 'WebGL is unavailable.');
+    return;
+  }
+
+  // Catch actual WebGLUtil errors, not GL errors.
+  function errorFunc(str) {
+    ok(false, 'Error: ' + str);
+  }
+  WebGLUtil.setErrorFunc(errorFunc);
+
+  function checkGLError(func, info, reference) {
+    var error = gl.getError();
+    var prefix = info ? ('[' + info + '] ') : '';
+    var text = 'gl.getError should be 0x' + reference.toString(16) +
+               ', was 0x' + error.toString(16) + '.';
+    func(error == reference, prefix + text);
+  }
+
+  // Begin test:
+  if (!gl.getExtension('OES_texture_float')) {
+    todo(false, 'Not having this extension is fine.');
+    return;
+  }
+  var tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  checkGLError(ok, 'texture parameter setup should succeed', gl.NO_ERROR);
+
+  // Generate data
+  var width = 2;
+  var height = 2;
+  var numChannels = 4;
+  var data = new Float32Array(width * height * numChannels);
+  for (var ii = 0; ii < data.length; ++ii) {
+    data[ii] = 10000;
+  }
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.FLOAT, data);
+  checkGLError(ok, 'floating-point texture allocation should succeed', gl.NO_ERROR);
+
+  // Try respecifying data
+  gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, gl.RGBA, gl.FLOAT, data);
+  checkGLError(ok, 'floating-point texture sub image should succeed', gl.NO_ERROR);
+})();
+
+</script>
