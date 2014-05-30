@@ -268,6 +268,7 @@ GLContextEGL::~GLContextEGL()
 #endif
 
     sEGLLibrary.fDestroyContext(EGL_DISPLAY(), mContext);
+    sEGLLibrary.UnsetCachedCurrentContext();
 
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION < 17
     if (!mIsOffscreen) {
@@ -381,7 +382,18 @@ GLContextEGL::MakeCurrentImpl(bool aForce) {
     // Assume that EGL has the same problem as WGL does,
     // where MakeCurrent with an already-current context is
     // still expensive.
-    if (aForce || sEGLLibrary.fGetCurrentContext() != mContext) {
+    bool hasDifferentContext = false;
+    if (sEGLLibrary.CachedCurrentContext() != mContext) {
+        // even if the cached context doesn't match the current one
+        // might still
+        if (sEGLLibrary.fGetCurrentContext() != mContext) {
+            hasDifferentContext = true;
+        } else {
+            sEGLLibrary.SetCachedCurrentContext(mContext);
+        }
+    }
+
+    if (aForce || hasDifferentContext) {
         EGLSurface surface = mSurfaceOverride != EGL_NO_SURFACE
                               ? mSurfaceOverride
                               : mSurface;
@@ -402,7 +414,11 @@ GLContextEGL::MakeCurrentImpl(bool aForce) {
                 printf_stderr("EGL Error: 0x%04x\n", eglError);
 #endif
             }
+        } else {
+            sEGLLibrary.SetCachedCurrentContext(mContext);
         }
+    } else {
+        MOZ_ASSERT(sEGLLibrary.CachedCurrentContext() == sEGLLibrary.fGetCurrentContext());
     }
 
     return succeeded;
