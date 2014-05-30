@@ -1,0 +1,27 @@
+The tools here run an end-to-end audio quality test on Linux using PulseAudio.
+
+INSTALLATION
+The test depends on PulseAudio virtual devices (null sinks). Without additional
+arguments, run_audio_test.py expects a pair of sinks named "capture" and
+"render". To create these devices at machine startup, place the provided
+default.pa file in ~/.pulse. Alternately, the "pacmd" commands therein can be
+run on the command-line to create the devices.
+
+Similarly, place the provided daemon.conf file in ~/.pulse to use high quality
+resampling in PulseAudio. This will reduce the resampling impact on the outcome
+of the test.
+
+Build all WebRTC targets as usual (or just the audio_e2e_harness target) to
+generate the VoiceEngine harness.
+
+USAGE
+Run run_audio_test.py to start. The script has reasonable defaults and will
+use the expected location of audio_e2e_harness. Some settings will usually
+be provided by the user, particularly the comparison tool command-line and
+regular expression to extract the quality metric.
+
+An example command-line, run from trunk/
+
+webrtc/tools/e2e_quality/audio/run_audio_test.py \
+--input=data/voice_engine/audio_short16.pcm --output=e2e_audio_out.pcm \
+--codec=L16 --compare="comparison-tool" --regexp="(\d\.\d{3})"

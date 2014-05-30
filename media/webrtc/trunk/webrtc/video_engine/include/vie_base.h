@@ -21,6 +21,10 @@
 
 #include "webrtc/common_types.h"
 
+#if defined(ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD) && !defined(MOZ_WIDGET_GONK)
+#include <jni.h>
+#endif
+
 namespace webrtc {
 
 class Config;
@@ -60,10 +64,10 @@ class WEBRTC_DLLEXPORT VideoEngine {
   // user receives callbacks for generated trace messages.
   static int SetTraceCallback(TraceCallback* callback);
 
+#if defined(ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD) && !defined(MOZ_WIDGET_GONK)
   // Android specific.
-  // Provides VideoEngine with pointers to objects supplied by the Java
-  // applications JNI interface.
-  static int SetAndroidObjects(void* java_vm, void* java_context);
+  static int SetAndroidObjects(JavaVM* java_vm);
+#endif
 
  protected:
   VideoEngine() {}
@@ -114,6 +118,25 @@ class WEBRTC_DLLEXPORT ViEBase {
   // NOTE: This is still very experimental functionality.
   virtual int RegisterCpuOveruseObserver(int channel,
                                          CpuOveruseObserver* observer) = 0;
+
+  // Gets cpu overuse measures.
+  // capture_jitter_ms: The current estimated jitter in ms based on incoming
+  //                    captured frames.
+  // avg_encode_time_ms: The average encode time in ms.
+  // encode_usage_percent: The average encode time divided by the average time
+  //                       difference between incoming captured frames.
+  // capture_queue_delay_ms_per_s: The current time delay between an incoming
+  //                               captured frame until the frame is being
+  //                               processed. The delay is expressed in ms
+  //                               delay per second.
+  // TODO(asapersson): Remove default implementation.
+  virtual int CpuOveruseMeasures(int channel,
+                                 int* capture_jitter_ms,
+                                 int* avg_encode_time_ms,
+                                 int* encode_usage_percent,
+                                 int* capture_queue_delay_ms_per_s) {
+    return -1;
+  }
 
   // Changing the current state of the host CPU. Encoding engines
   // can adapt their behavior if needed. (Optional)

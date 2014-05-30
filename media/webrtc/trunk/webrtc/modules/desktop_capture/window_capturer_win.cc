@@ -102,19 +102,19 @@ class WindowCapturerWin : public WindowCapturer {
   // HWND and HDC for the currently selected window or NULL if window is not
   // selected.
   HWND window_;
-  HDC window_dc_;
 
   // dwmapi.dll is used to determine if desktop compositing is enabled.
   HMODULE dwmapi_library_;
   DwmIsCompositionEnabledFunc is_composition_enabled_func_;
+
+  DesktopSize previous_size_;
 
   DISALLOW_COPY_AND_ASSIGN(WindowCapturerWin);
 };
 
 WindowCapturerWin::WindowCapturerWin()
     : callback_(NULL),
-      window_(NULL),
-      window_dc_(NULL) {
+      window_(NULL) {
   // Try to load dwmapi.dll dynamically since it is not available on XP.
   dwmapi_library_ = LoadLibrary(L"dwmapi.dll");
   if (dwmapi_library_) {
@@ -149,17 +149,11 @@ bool WindowCapturerWin::GetWindowList(WindowList* windows) {
 }
 
 bool WindowCapturerWin::SelectWindow(WindowId id) {
-  if (window_dc_)
-    ReleaseDC(window_, window_dc_);
-
-  window_ = reinterpret_cast<HWND>(id);
-  window_dc_ = GetWindowDC(window_);
-  if (!window_dc_) {
-    LOG(LS_WARNING) << "Failed to select window: " << GetLastError();
-    window_ = NULL;
+  HWND window = reinterpret_cast<HWND>(id);
+  if (!IsWindow(window) || !IsWindowVisible(window) || IsIconic(window))
     return false;
-  }
-
+  window_ = window;
+  previous_size_.set(0, 0);
   return true;
 }
 
@@ -171,13 +165,17 @@ void WindowCapturerWin::Start(Callback* callback) {
 }
 
 void WindowCapturerWin::Capture(const DesktopRegion& region) {
-  if (!window_dc_) {
+  if (!window_) {
     LOG(LS_ERROR) << "Window hasn't been selected: " << GetLastError();
     callback_->OnCaptureCompleted(NULL);
     return;
   }
 
-  assert(window_);
+  // Stop capturing if the window has been minimized or hidden.
+  if (IsIconic(window_) || !IsWindowVisible(window_)) {
+    callback_->OnCaptureCompleted(NULL);
+    return;
+  }
 
   RECT rect;
   if (!GetWindowRect(window_, &rect)) {
@@ -186,16 +184,24 @@ void WindowCapturerWin::Capture(const DesktopRegion& region) {
     return;
   }
 
-  scoped_ptr<DesktopFrameWin> frame(DesktopFrameWin::Create(
-      DesktopSize(rect.right - rect.left, rect.bottom - rect.top),
-      NULL, window_dc_));
-  if (!frame.get()) {
+  HDC window_dc = GetWindowDC(window_);
+  if (!window_dc) {
+    LOG(LS_WARNING) << "Failed to get window DC: " << GetLastError();
     callback_->OnCaptureCompleted(NULL);
     return;
   }
 
-  HDC mem_dc = CreateCompatibleDC(window_dc_);
-  SelectObject(mem_dc, frame->bitmap());
+  scoped_ptr<DesktopFrameWin> frame(DesktopFrameWin::Create(
+      DesktopSize(rect.right - rect.left, rect.bottom - rect.top),
+      NULL, window_dc));
+  if (!frame.get()) {
+    ReleaseDC(window_, window_dc);
+    callback_->OnCaptureCompleted(NULL);
+    return;
+  }
+
+  HDC mem_dc = CreateCompatibleDC(window_dc);
+  HGDIOBJ previous_object = SelectObject(mem_dc, frame->bitmap());
   BOOL result = FALSE;
 
   // When desktop composition (Aero) is enabled each window is rendered to a
@@ -203,21 +209,33 @@ void WindowCapturerWin::Capture(const DesktopRegion& region) {
   // window is occluded. PrintWindow() is slower but lets rendering the window
   // contents to an off-screen device context when Aero is not available.
   // PrintWindow() is not supported by some applications.
-
+  //
   // If Aero is enabled, we prefer BitBlt() because it's faster and avoids
   // window flickering. Otherwise, we prefer PrintWindow() because BitBlt() may
   // render occluding windows on top of the desired window.
+  //
+  // When composition is enabled the DC returned by GetWindowDC() doesn't always
+  // have window frame rendered correctly. Windows renders it only once and then
+  // caches the result between captures. We hack it around by calling
+  // PrintWindow() whenever window size changes - it somehow affects what we
+  // get from BitBlt() on the subsequent captures.
 
-  if (!IsAeroEnabled())
+  if (!IsAeroEnabled() ||
+      (!previous_size_.is_empty() && !previous_size_.equals(frame->size()))) {
     result = PrintWindow(window_, mem_dc, 0);
+  }
 
   // Aero is enabled or PrintWindow() failed, use BitBlt.
   if (!result) {
     result = BitBlt(mem_dc, 0, 0, frame->size().width(), frame->size().height(),
-                    window_dc_, 0, 0, SRCCOPY);
+                    window_dc, 0, 0, SRCCOPY);
   }
 
+  SelectObject(mem_dc, previous_object);
   DeleteDC(mem_dc);
+  ReleaseDC(window_, window_dc);
+
+  previous_size_ = frame->size();
 
   if (!result) {
     LOG(LS_ERROR) << "Both PrintWindow() and BitBlt() failed.";
@@ -230,7 +248,7 @@ void WindowCapturerWin::Capture(const DesktopRegion& region) {
 }  // namespace
 
 // static
-WindowCapturer* WindowCapturer::Create() {
+WindowCapturer* WindowCapturer::Create(const DesktopCaptureOptions& options) {
   return new WindowCapturerWin();
 }
 

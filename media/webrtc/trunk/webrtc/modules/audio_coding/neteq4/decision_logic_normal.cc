@@ -44,7 +44,7 @@ Operations DecisionLogicNormal::GetDecisionSpecialized(
 
   uint32_t target_timestamp = sync_buffer.end_timestamp();
   uint32_t available_timestamp = 0;
-  int is_cng_packet = 0;
+  bool is_cng_packet = false;
   if (packet_header) {
     available_timestamp = packet_header->timestamp;
     is_cng_packet =
@@ -70,8 +70,7 @@ Operations DecisionLogicNormal::GetDecisionSpecialized(
   // Check if the required packet is available.
   if (target_timestamp == available_timestamp) {
     return ExpectedPacketAvailable(prev_mode, play_dtmf);
-  } else if (available_timestamp > target_timestamp) {
-    // TODO(hlundin): Consider wrap-around too?
+  } else if (IsNewerTimestamp(available_timestamp, target_timestamp)) {
     return FuturePacketAvailable(sync_buffer, expand, decoder_frame_length,
                                  prev_mode, target_timestamp,
                                  available_timestamp, play_dtmf);

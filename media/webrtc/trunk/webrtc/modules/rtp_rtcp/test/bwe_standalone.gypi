@@ -17,10 +17,6 @@
         'udp_transport',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
-      'include_dirs': [
-        '../interface',
-        '../../interface',
-      ],
       'sources': [
         'BWEStandAlone/BWEStandAlone.cc',
         'BWEStandAlone/TestLoadGenerator.cc',
@@ -36,11 +32,6 @@
               },
            ],
           ],
-
-      'include_dirs': [
-          ],
-      'link_settings': {
-          },
     },
 
     {
@@ -53,14 +44,6 @@
       'include_dirs': [
           '/opt/matlab2010a/extern/include',
           ],
-      # 'direct_dependent_settings': {
-      #     'defines': [
-      #         'MATLAB',
-      #         ],
-      #     'include_dirs': [
-      #         'BWEStandAlone',
-      #         ],
-      #     },
       'export_dependent_settings': [
           'matlab_plotting_include',
           ],
@@ -93,9 +76,6 @@
       'target_name': 'matlab_plotting_include',
       'type': 'none',
       'direct_dependent_settings': {
-          'defines': [
-#              'MATLAB',
-              ],
           'include_dirs': [
               'BWEStandAlone',
               ],

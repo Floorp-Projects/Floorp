@@ -14,10 +14,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <list>
 #include <map>
 
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/list_wrapper.h"
 #include "webrtc/system_wrappers/interface/thread_wrapper.h"
 #include "webrtc/test/channel_transport/udp_socket_manager_wrapper.h"
 #include "webrtc/test/channel_transport/udp_socket_wrapper.h"
@@ -74,14 +74,16 @@ protected:
     void UpdateSocketMap();
 
 private:
+    typedef std::list<UdpSocketWrapper*> SocketList;
+    typedef std::list<SOCKET> FdList;
     ThreadWrapper* _thread;
     CriticalSectionWrapper* _critSectList;
 
     fd_set _readFds;
 
     std::map<SOCKET, UdpSocketPosix*> _socketMap;
-    ListWrapper _addList;
-    ListWrapper _removeList;
+    SocketList _addList;
+    FdList _removeList;
 };
 
 }  // namespace test
