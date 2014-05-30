@@ -25,6 +25,7 @@ def do_defered_imports():
 
 
 class HTMLFormatter(base.BaseFormatter):
+    """Formatter that produces a simple HTML-formatted report."""
     def __init__(self):
         do_defered_imports()
         self.suite_name = None
