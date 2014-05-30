@@ -298,7 +298,7 @@ struct ThreadSafeContext : ContextFriendFields,
     }
 };
 
-struct WorkerThread;
+struct HelperThread;
 
 class ExclusiveContext : public ThreadSafeContext
 {
@@ -309,14 +309,14 @@ class ExclusiveContext : public ThreadSafeContext
     friend void JSScript::initCompartment(ExclusiveContext *cx);
     friend class jit::IonContext;
 
-    // The worker on which this context is running, if this is not a JSContext.
-    WorkerThread *workerThread_;
+    // The thread on which this context is running, if this is not a JSContext.
+    HelperThread *helperThread_;
 
   public:
 
     ExclusiveContext(JSRuntime *rt, PerThreadData *pt, ContextKind kind)
       : ThreadSafeContext(rt, pt, kind),
-        workerThread_(nullptr),
+        helperThread_(nullptr),
         enterCompartmentDepth_(0)
     {}
 
@@ -352,8 +352,8 @@ class ExclusiveContext : public ThreadSafeContext
     inline void enterNullCompartment();
     inline void leaveCompartment(JSCompartment *oldCompartment);
 
-    void setWorkerThread(WorkerThread *workerThread);
-    WorkerThread *workerThread() const { return workerThread_; }
+    void setHelperThread(HelperThread *helperThread);
+    HelperThread *helperThread() const { return helperThread_; }
 
     // Threads with an ExclusiveContext may freely access any data in their
     // compartment and zone.
@@ -391,7 +391,7 @@ class ExclusiveContext : public ThreadSafeContext
         return runtime_->scriptDataTable();
     }
 
-    // Methods specific to any WorkerThread for the context.
+    // Methods specific to any HelperThread for the context.
     frontend::CompileError &addPendingCompileError();
     void addPendingOverRecursed();
 };

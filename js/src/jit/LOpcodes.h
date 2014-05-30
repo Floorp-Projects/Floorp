@@ -163,7 +163,6 @@
     _(LambdaArrow)                  \
     _(LambdaForSingleton)           \
     _(LambdaPar)                    \
-    _(ImplicitThis)                 \
     _(Slots)                        \
     _(Elements)                     \
     _(ConvertElementsToDoubles)     \

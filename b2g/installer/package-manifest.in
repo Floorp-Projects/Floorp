@@ -96,6 +96,10 @@
 @BINPATH@/res/drawable-hdpi
 @BINPATH@/res/layout
 #endif
+#ifdef MOZ_GTK3
+@BINPATH@/@DLL_PREFIX@mozgtk@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@mozgtk2@DLL_SUFFIX@
+#endif
 
 [browser]
 ; [Base Browser Files]
@@ -217,7 +221,7 @@
 @BINPATH@/components/exthelper.xpt
 @BINPATH@/components/fastfind.xpt
 @BINPATH@/components/feeds.xpt
-#ifdef MOZ_GTK2
+#ifdef MOZ_GTK
 @BINPATH@/components/filepicker.xpt
 #endif
 @BINPATH@/components/find.xpt

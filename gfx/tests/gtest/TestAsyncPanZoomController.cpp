@@ -139,6 +139,11 @@ public:
     ReentrantMonitorAutoEnter lock(mMonitor);
     return mFrameMetrics;
   }
+
+  void AssertStateIsReset() {
+    ReentrantMonitorAutoEnter lock(mMonitor);
+    EXPECT_EQ(NOTHING, mState);
+  }
 };
 
 class TestAPZCTreeManager : public APZCTreeManager {
@@ -841,6 +846,7 @@ TEST_F(AsyncPanZoomControllerTester, ShortPress) {
   EXPECT_CALL(*mcc, HandleSingleTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(1);
   mcc->RunDelayedTask();
 
+  apzc->AssertStateIsReset();
   apzc->Destroy();
 }
 
@@ -865,6 +871,7 @@ TEST_F(AsyncPanZoomControllerTester, MediumPress) {
   EXPECT_CALL(*mcc, HandleSingleTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(1);
   mcc->RunDelayedTask();
 
+  apzc->AssertStateIsReset();
   apzc->Destroy();
 }
 
@@ -934,6 +941,7 @@ DoLongPressTest(bool aShouldUseTouchAction, uint32_t aBehavior) {
   apzc->ContentReceivedTouch(false);
   check.Call("postHandleLongTapUp");
 
+  apzc->AssertStateIsReset();
   apzc->Destroy();
 }
 
@@ -1020,6 +1028,7 @@ DoLongPressPreventDefaultTest(bool aShouldUseTouchAction, uint32_t aBehavior) {
   EXPECT_EQ(ScreenPoint(), pointOut);
   EXPECT_EQ(ViewTransform(), viewTransformOut);
 
+  apzc->AssertStateIsReset();
   apzc->Destroy();
 }
 
