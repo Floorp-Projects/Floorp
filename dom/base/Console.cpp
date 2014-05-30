@@ -15,6 +15,7 @@
 #include "nsGlobalWindow.h"
 #include "nsJSUtils.h"
 #include "nsPerformance.h"
+#include "ScriptSettings.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "xpcprivate.h"
@@ -323,7 +324,8 @@ private:
       wp = wp->GetParent();
     }
 
-    AutoPushJSContext cx(wp->ParentJSContext());
+    AutoJSAPI jsapi;
+    JSContext* cx = jsapi.cx();
     ClearException ce(cx);
 
     nsPIDOMWindow* window = wp->GetWindow();
@@ -331,6 +333,8 @@ private:
 
     nsRefPtr<nsGlobalWindow> win = static_cast<nsGlobalWindow*>(window);
     NS_ENSURE_TRUE_VOID(win);
+
+    JSAutoCompartment ac(cx, win->GetWrapperPreserveColor());
 
     ErrorResult error;
     nsRefPtr<Console> console = win->GetConsole(error);
