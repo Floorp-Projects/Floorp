@@ -60,6 +60,7 @@
 <!ENTITY projectPanel_runtimeApps "Runtime Apps">
 <!ENTITY runtimePanel_USBDevices "USB Devices">
 <!ENTITY runtimePanel_simulators "Simulators">
+<!ENTITY runtimePanel_custom "Custom">
 
 <!-- Lense -->
 <!ENTITY details_valid_header "valid">
