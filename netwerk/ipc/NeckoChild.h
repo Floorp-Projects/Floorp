@@ -57,8 +57,7 @@ protected:
                                                   const uint32_t& aFlags) MOZ_OVERRIDE;
   virtual bool DeallocPDNSRequestChild(PDNSRequestChild*) MOZ_OVERRIDE;
   virtual PRemoteOpenFileChild*
-    AllocPRemoteOpenFileChild(const SerializedLoadContext& aSerialized,
-                              const URIParams&,
+    AllocPRemoteOpenFileChild(const URIParams&,
                               const OptionalURIParams&) MOZ_OVERRIDE;
   virtual bool DeallocPRemoteOpenFileChild(PRemoteOpenFileChild*) MOZ_OVERRIDE;
   virtual PRtspControllerChild* AllocPRtspControllerChild() MOZ_OVERRIDE;

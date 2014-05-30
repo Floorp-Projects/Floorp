@@ -175,8 +175,7 @@ RemoteOpenFileChild::Init(nsIURI* aRemoteOpenUri, nsIURI* aAppUri)
 nsresult
 RemoteOpenFileChild::AsyncRemoteFileOpen(int32_t aFlags,
                                          nsIRemoteOpenFileListener* aListener,
-                                         nsITabChild* aTabChild,
-                                         nsILoadContext *aLoadContext)
+                                         nsITabChild* aTabChild)
 {
   if (!mFile) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -228,8 +227,7 @@ RemoteOpenFileChild::AsyncRemoteFileOpen(int32_t aFlags,
   OptionalURIParams appUri;
   SerializeURI(mAppURI, appUri);
 
-  IPC::SerializedLoadContext loadContext(aLoadContext);
-  gNeckoChild->SendPRemoteOpenFileConstructor(this, loadContext, uri, appUri);
+  gNeckoChild->SendPRemoteOpenFileConstructor(this, uri, appUri);
 
   // The chrome process now has a logical ref to us until it calls Send__delete.
   AddIPDLReference();
