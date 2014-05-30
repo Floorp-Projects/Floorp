@@ -785,6 +785,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   bool mCancelAllPendingRunnables;
   bool mPeriodicGCTimerRunning;
   bool mIdleGCTimerRunning;
+  bool mWorkerScriptExecutedSuccessfully;
 
 #ifdef DEBUG
   PRThread* mPRThread;
@@ -805,6 +806,11 @@ public:
   Constructor(const GlobalObject& aGlobal, const nsAString& aScriptURL,
               bool aIsChromeWorker, WorkerType aWorkerType,
               const nsACString& aSharedWorkerName,
+              LoadInfo* aLoadInfo, ErrorResult& aRv);
+
+  static already_AddRefed<WorkerPrivate>
+  Constructor(JSContext* aCx, const nsAString& aScriptURL, bool aIsChromeWorker,
+              WorkerType aWorkerType, const nsACString& aSharedWorkerName,
               LoadInfo* aLoadInfo, ErrorResult& aRv);
 
   static bool
@@ -1062,6 +1068,23 @@ public:
 #else
   { }
 #endif
+
+  void
+  SetWorkerScriptExecutedSuccessfully()
+  {
+    AssertIsOnWorkerThread();
+    // Should only be called once!
+    MOZ_ASSERT(!mWorkerScriptExecutedSuccessfully);
+    mWorkerScriptExecutedSuccessfully = true;
+  }
+
+  // Only valid after CompileScriptRunnable has finished running!
+  bool
+  WorkerScriptExecutedSuccessfully() const
+  {
+    AssertIsOnWorkerThread();
+    return mWorkerScriptExecutedSuccessfully;
+  }
 
 private:
   WorkerPrivate(JSContext* aCx, WorkerPrivate* aParent,

@@ -371,6 +371,9 @@ pref("apz.printtree", false);
 // Layerize scrollable subframes to allow async panning
 pref("apz.subframe.enabled", false);
 
+// APZ testing (bug 961289)
+pref("apz.test.logging_enabled", false);
+
 #ifdef XP_MACOSX
 // Whether to run in native HiDPI mode on machines with "Retina"/HiDPI display;
 //   <= 0 : hidpi mode disabled, display will just use pixel-based upscaling
@@ -3738,6 +3741,7 @@ pref("layers.draw-tile-borders", false);
 pref("layers.draw-bigimage-borders", false);
 pref("layers.frame-counter", false);
 pref("layers.enable-tiles", false);
+pref("layers.low-precision-buffer", false);
 pref("layers.tile-width", 256);
 pref("layers.tile-height", 256);
 // Max number of layers per container. See Overwrite in mobile prefs.

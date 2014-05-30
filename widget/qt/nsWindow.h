@@ -151,6 +151,8 @@ public:
 
     virtual uint32_t GetGLFrameBufferFormat() MOZ_OVERRIDE;
 
+    mozilla::TemporaryRef<mozilla::gfx::DrawTarget> StartRemoteDrawing() MOZ_OVERRIDE;
+
     // Widget notifications
     virtual void OnPaint();
     virtual nsEventStatus focusInEvent(QFocusEvent* aEvent);

@@ -6577,10 +6577,10 @@ nsLayoutUtils::WantSubAPZC()
 }
 
 /* static */ void
-nsLayoutUtils::LogTestDataForPaint(nsIPresShell* aPresShell,
-                                   ViewID aScrollId,
-                                   const std::string& aKey,
-                                   const std::string& aValue)
+nsLayoutUtils::DoLogTestDataForPaint(nsIPresShell* aPresShell,
+                                     ViewID aScrollId,
+                                     const std::string& aKey,
+                                     const std::string& aValue)
 {
   nsRefPtr<LayerManager> lm = aPresShell->GetPresContext()->GetRootPresContext()
       ->GetPresShell()->GetLayerManager();

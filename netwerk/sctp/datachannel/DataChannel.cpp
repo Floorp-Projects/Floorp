@@ -625,7 +625,7 @@ DataChannelConnection::CompleteConnect(TransportFlow *flow, TransportLayer::Stat
   // Note: currently this doesn't actually notify the application
   NS_DispatchToMainThread(new DataChannelOnMessageAvailable(
                             DataChannelOnMessageAvailable::ON_CONNECTION,
-                            this, false));
+                            this));
   return;
 }
 
@@ -1455,7 +1455,7 @@ DataChannelConnection::HandleAssociationChangeEvent(const struct sctp_assoc_chan
 
       NS_DispatchToMainThread(new DataChannelOnMessageAvailable(
                                 DataChannelOnMessageAvailable::ON_CONNECTION,
-                                this, true));
+                                this));
       LOG(("DTLS connect() succeeded!  Entering connected mode"));
 
       // Open any streams pending...

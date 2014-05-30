@@ -7,3 +7,5 @@ MOZ_B2G=1
 MOZ_MULET=1
 
 . ${srcdir}/browser/confvars.sh
+
+MOZ_BUNDLED_FONTS=1

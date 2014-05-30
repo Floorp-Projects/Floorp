@@ -574,6 +574,9 @@ GDIFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
 gfxGDIFontList::gfxGDIFontList()
     : mFontSubstitutes(50)
 {
+#ifdef MOZ_BUNDLED_FONTS
+    ActivateBundledFonts();
+#endif
 }
 
 static void
@@ -1092,3 +1095,47 @@ gfxGDIFontList::CreateFontInfoData()
 
     return fi.forget();
 }
+
+#ifdef MOZ_BUNDLED_FONTS
+
+void
+gfxGDIFontList::ActivateBundledFonts()
+{
+    nsCOMPtr<nsIFile> localDir;
+    nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(localDir));
+    if (NS_FAILED(rv)) {
+        return;
+    }
+    if (NS_FAILED(localDir->Append(NS_LITERAL_STRING("fonts")))) {
+        return;
+    }
+    bool isDir;
+    if (NS_FAILED(localDir->IsDirectory(&isDir)) || !isDir) {
+        return;
+    }
+
+    nsCOMPtr<nsISimpleEnumerator> e;
+    rv = localDir->GetDirectoryEntries(getter_AddRefs(e));
+    if (NS_FAILED(rv)) {
+        return;
+    }
+
+    bool hasMore;
+    while (NS_SUCCEEDED(e->HasMoreElements(&hasMore)) && hasMore) {
+        nsCOMPtr<nsISupports> entry;
+        if (NS_FAILED(e->GetNext(getter_AddRefs(entry)))) {
+            break;
+        }
+        nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
+        if (!file) {
+            continue;
+        }
+        nsCString path;
+        if (NS_FAILED(file->GetNativePath(path))) {
+            continue;
+        }
+        AddFontResourceEx(path.get(), FR_PRIVATE, nullptr);
+    }
+}
+
+#endif
