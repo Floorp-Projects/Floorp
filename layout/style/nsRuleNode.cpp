@@ -223,9 +223,21 @@ struct CalcLengthCalcOps : public css::BasicCoordCalcOps,
   }
 };
 
-static inline nscoord ScaleCoord(const nsCSSValue &aValue, float factor)
+static inline nscoord ScaleCoordRound(const nsCSSValue& aValue, float aFactor)
 {
-  return NSToCoordRoundWithClamp(aValue.GetFloatValue() * factor);
+  return NSToCoordRoundWithClamp(aValue.GetFloatValue() * aFactor);
+}
+
+static inline nscoord ScaleViewportCoordTrunc(const nsCSSValue& aValue,
+                                              nscoord aViewportSize)
+{
+  // For units (like percentages and viewport units) where authors might
+  // repeatedly use a value and expect some multiple of the value to be
+  // smaller than a container, we need to use floor rather than round.
+  // We need to use division by 100.0 rather than multiplication by 0.1f
+  // to avoid introducing error.
+  return NSToCoordTruncClamped(aValue.GetFloatValue() *
+                               aViewportSize / 100.0f);
 }
 
 already_AddRefed<nsFontMetrics>
@@ -351,18 +363,22 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
     // for an increased cost to dynamic changes to the viewport size
     // when viewport units are in use.
     case eCSSUnit_ViewportWidth: {
-      return ScaleCoord(aValue, 0.01f * CalcViewportUnitsScale(aPresContext).width);
+      nscoord viewportWidth = CalcViewportUnitsScale(aPresContext).width;
+      return ScaleViewportCoordTrunc(aValue, viewportWidth);
     }
     case eCSSUnit_ViewportHeight: {
-      return ScaleCoord(aValue, 0.01f * CalcViewportUnitsScale(aPresContext).height);
+      nscoord viewportHeight = CalcViewportUnitsScale(aPresContext).height;
+      return ScaleViewportCoordTrunc(aValue, viewportHeight);
     }
     case eCSSUnit_ViewportMin: {
       nsSize vuScale(CalcViewportUnitsScale(aPresContext));
-      return ScaleCoord(aValue, 0.01f * min(vuScale.width, vuScale.height));
+      nscoord viewportMin = min(vuScale.width, vuScale.height);
+      return ScaleViewportCoordTrunc(aValue, viewportMin);
     }
     case eCSSUnit_ViewportMax: {
       nsSize vuScale(CalcViewportUnitsScale(aPresContext));
-      return ScaleCoord(aValue, 0.01f * max(vuScale.width, vuScale.height));
+      nscoord viewportMax = max(vuScale.width, vuScale.height);
+      return ScaleViewportCoordTrunc(aValue, viewportMax);
     }
     // While we could deal with 'rem' units correctly by simply not
     // caching any data that uses them in the rule tree, it's valuable
@@ -415,7 +431,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
         rootFontSize = rootStyleFont->mFont.size;
       }
 
-      return ScaleCoord(aValue, float(rootFontSize));
+      return ScaleCoordRound(aValue, float(rootFontSize));
     }
     default:
       // Fall through to the code for units that can't be stored in the
@@ -436,13 +452,13 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
     case eCSSUnit_EM: {
       // CSS2.1 specifies that this unit scales to the computed font
       // size, not the em-width in the font metrics, despite the name.
-      return ScaleCoord(aValue, float(aFontSize));
+      return ScaleCoordRound(aValue, float(aFontSize));
     }
     case eCSSUnit_XHeight: {
       nsRefPtr<nsFontMetrics> fm =
         GetMetricsFor(aPresContext, aStyleContext, styleFont,
                       aFontSize, aUseUserFontSet);
-      return ScaleCoord(aValue, float(fm->XHeight()));
+      return ScaleCoordRound(aValue, float(fm->XHeight()));
     }
     case eCSSUnit_Char: {
       nsRefPtr<nsFontMetrics> fm =
@@ -451,8 +467,8 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       gfxFloat zeroWidth = (fm->GetThebesFontGroup()->GetFontAt(0)
                             ->GetMetrics().zeroOrAveCharWidth);
 
-      return ScaleCoord(aValue, ceil(aPresContext->AppUnitsPerDevPixel() *
-                                     zeroWidth));
+      return ScaleCoordRound(aValue, ceil(aPresContext->AppUnitsPerDevPixel() *
+                                          zeroWidth));
     }
     default:
       NS_NOTREACHED("unexpected unit");
