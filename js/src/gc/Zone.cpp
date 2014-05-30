@@ -35,8 +35,6 @@ JS::Zone::Zone(JSRuntime *rt)
     data(nullptr),
     isSystem(false),
     usedByExclusiveThread(false),
-    scheduledForDestruction(false),
-    maybeAlive(true),
     active(false),
     jitZone_(nullptr),
     gcState_(NoGC),
