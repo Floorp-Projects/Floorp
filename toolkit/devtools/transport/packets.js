@@ -25,16 +25,17 @@
  */
 
 const { Cc, Ci, Cu } = require("chrome");
-const { Promise: promise } =
-  Cu.import("resource://gre/modules/Promise.jsm", {});
 const Heritage = require("sdk/core/heritage");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const { dumpn, dumpv } = DevToolsUtils;
 const StreamUtils = require("devtools/toolkit/transport/stream-utils");
 
-const unicodeConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                         .createInstance(Ci.nsIScriptableUnicodeConverter);
-unicodeConverter.charset = "UTF-8";
+DevToolsUtils.defineLazyGetter(this, "unicodeConverter", () => {
+  const unicodeConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                           .createInstance(Ci.nsIScriptableUnicodeConverter);
+  unicodeConverter.charset = "UTF-8";
+  return unicodeConverter;
+});
 
 // The transport's previous check ensured the header length did not exceed 20
 // characters.  Here, we opt for the somewhat smaller, but still large limit of
