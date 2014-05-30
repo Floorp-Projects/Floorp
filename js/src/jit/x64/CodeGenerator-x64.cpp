@@ -156,17 +156,6 @@ CodeGeneratorX64::loadUnboxedValue(Operand source, MIRType type, const LDefiniti
     }
 }
 
-bool
-CodeGeneratorX64::visitLoadSlotT(LLoadSlotT *load)
-{
-    Register base = ToRegister(load->input());
-    int32_t offset = load->mir()->slot() * sizeof(js::Value);
-
-    loadUnboxedValue(Operand(base, offset), load->mir()->type(), load->output());
-
-    return true;
-}
-
 void
 CodeGeneratorX64::storeUnboxedValue(const LAllocation *value, MIRType valueType,
                                     Operand dest, MIRType slotType)

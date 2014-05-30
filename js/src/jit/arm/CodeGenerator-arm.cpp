@@ -1728,19 +1728,6 @@ CodeGeneratorARM::visitNotF(LNotF *ins)
 }
 
 bool
-CodeGeneratorARM::visitLoadSlotT(LLoadSlotT *load)
-{
-    Register base = ToRegister(load->input());
-    int32_t offset = load->mir()->slot() * sizeof(js::Value);
-
-    if (load->mir()->type() == MIRType_Double)
-        masm.loadInt32OrDouble(Operand(base, offset), ToFloatRegister(load->output()));
-    else
-        masm.ma_ldr(Operand(base, offset + NUNBOX32_PAYLOAD_OFFSET), ToRegister(load->output()));
-    return true;
-}
-
-bool
 CodeGeneratorARM::visitStoreSlotT(LStoreSlotT *store)
 {
 
