@@ -25,21 +25,26 @@ function test_banana_environment()
 
   gThreadClient.addOneTimeListener("paused",
     function(aEvent, aPacket) {
-      do_check_matches({type:"paused", frame:
-                        {environment:
-                         {type: "function", function: {name: "banana3"},
-                          parent:
-                          {type: "block", bindings: {variables: {banana3:undefined}},
-                           parent:
-                           {type: "function", function: {name: "banana2"},
-                            parent:
-                            {type:"block", bindings: {variables: {banana2:undefined}},
-                             parent:
-                             {type:"block", bindings: {variables: {banana2:undefined}},
-                              parent:
-                              {type:"function", function: {name: "banana"}}}}}}}}},
-                       aPacket,
-                       { Object:Object, Array:Array });
+      equal(aPacket.type, "paused");
+      let env = aPacket.frame.environment;
+      equal(env.type, "function");
+      equal(env.function.name, "banana3");
+      let parent = env.parent;
+      equal(parent.type, "block");
+      ok("banana3" in parent.bindings.variables);
+      parent = parent.parent;
+      equal(parent.type, "function");
+      equal(parent.function.name, "banana2");
+      parent = parent.parent;
+      equal(parent.type, "block");
+      ok("banana2" in parent.bindings.variables);
+      parent = parent.parent;
+      equal(parent.type, "block");
+      ok("banana2" in parent.bindings.variables);
+      parent = parent.parent;
+      equal(parent.type, "function");
+      equal(parent.function.name, "banana");
+
       gThreadClient.resume(function () {
                              finishClient(gClient);
                            });

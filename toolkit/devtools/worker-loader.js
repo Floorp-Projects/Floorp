@@ -102,13 +102,8 @@ function createModule(id) {
 //
 // TODO: Remove this when the whitelist becomes empty
 let chromeWhitelist = [
-  "devtools/toolkit/transport/transport",
-  "devtools/toolkit/transport/stream-utils",
-  "devtools/toolkit/transport/packets",
   "devtools/toolkit/DevToolsUtils",
   "devtools/toolkit/event-emitter",
-  "devtools/server/actors/script",
-  "devtools/styleinspector/css-logic",
 ];
 
 // Create a CommonJS loader with the following options:
@@ -199,9 +194,9 @@ function WorkerDebuggerLoader(options) {
       //
       // TODO: Remove this when the whitelist becomes empty
       if (id === "chrome" && chromeWhitelist.indexOf(requirer.id) < 0) {
-        return { CC: undefined, Cc: undefined, ChromeWorker: undefined,
-                 Cm: undefined, Ci: undefined, Cu: undefined, Cr: undefined,
-                 components: undefined };
+        return { CC: undefined, Cc: undefined,
+                 ChromeWorker: undefined, Cm: undefined, Ci: undefined, Cu: undefined,
+                 Cr: undefined, components: undefined };
       }
 
       // Built-in modules are cached by id rather than URL, so try to find the
@@ -347,6 +342,7 @@ if (typeof Components === "object") {
       createSandbox: createSandbox,
       globals: {
         "promise": Promise,
+        "reportError": Cu.reportError,
       },
       loadInSandbox: loadInSandbox,
       modules: {
