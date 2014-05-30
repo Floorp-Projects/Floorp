@@ -68,9 +68,7 @@ parent:
 
   PDNSRequest(nsCString hostName, uint32_t flags);
 
-  PRemoteOpenFile(SerializedLoadContext loadContext,
-                  URIParams fileuri,
-                  OptionalURIParams appuri);
+  PRemoteOpenFile(URIParams fileuri, OptionalURIParams appuri);
 
   HTMLDNSPrefetch(nsString hostname, uint16_t flags);
   CancelHTMLDNSPrefetch(nsString hostname, uint16_t flags, nsresult reason);

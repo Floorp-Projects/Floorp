@@ -269,9 +269,7 @@ NeckoChild::DeallocPDNSRequestChild(PDNSRequestChild* aChild)
 }
 
 PRemoteOpenFileChild*
-NeckoChild::AllocPRemoteOpenFileChild(const SerializedLoadContext& aSerialized,
-                                      const URIParams&,
-                                      const OptionalURIParams&)
+NeckoChild::AllocPRemoteOpenFileChild(const URIParams&, const OptionalURIParams&)
 {
   // We don't allocate here: instead we always use IPDL constructor that takes
   // an existing RemoteOpenFileChild
