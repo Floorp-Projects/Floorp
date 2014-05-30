@@ -2098,15 +2098,6 @@ LIRGenerator::visitLambdaPar(MLambdaPar *ins)
 }
 
 bool
-LIRGenerator::visitImplicitThis(MImplicitThis *ins)
-{
-    JS_ASSERT(ins->callee()->type() == MIRType_Object);
-
-    LImplicitThis *lir = new(alloc()) LImplicitThis(useRegister(ins->callee()));
-    return assignSnapshot(lir) && defineBox(lir, ins);
-}
-
-bool
 LIRGenerator::visitSlots(MSlots *ins)
 {
     return define(new(alloc()) LSlots(useRegisterAtStart(ins->object())), ins);

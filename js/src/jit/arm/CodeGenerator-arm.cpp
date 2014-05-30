@@ -1837,25 +1837,6 @@ CodeGeneratorARM::visitGuardClass(LGuardClass *guard)
 }
 
 bool
-CodeGeneratorARM::visitImplicitThis(LImplicitThis *lir)
-{
-    Register callee = ToRegister(lir->callee());
-    const ValueOperand out = ToOutValue(lir);
-
-    // The implicit |this| is always |undefined| if the function's environment
-    // is the current global.
-    masm.ma_ldr(DTRAddr(callee, DtrOffImm(JSFunction::offsetOfEnvironment())), out.typeReg());
-    masm.ma_cmp(out.typeReg(), ImmGCPtr(&gen->info().script()->global()));
-
-    // TODO: OOL stub path.
-    if (!bailoutIf(Assembler::NotEqual, lir->snapshot()))
-        return false;
-
-    masm.moveValue(UndefinedValue(), out);
-    return true;
-}
-
-bool
 CodeGeneratorARM::visitInterruptCheck(LInterruptCheck *lir)
 {
     OutOfLineCode *ool = oolCallVM(InterruptCheckInfo, lir, (ArgList()), StoreNothing());

@@ -3503,24 +3503,6 @@ class LLambdaPar : public LInstructionHelper<1, 2, 2>
     }
 };
 
-// Determines the implicit |this| value for function calls.
-class LImplicitThis : public LInstructionHelper<BOX_PIECES, 1, 0>
-{
-  public:
-    LIR_HEADER(ImplicitThis)
-
-    explicit LImplicitThis(const LAllocation &callee) {
-        setOperand(0, callee);
-    }
-
-    const MImplicitThis *mir() const {
-        return mir_->toImplicitThis();
-    }
-    const LAllocation *callee() {
-        return getOperand(0);
-    }
-};
-
 // Load the "slots" member out of a JSObject.
 //   Input: JSObject pointer
 //   Output: slots pointer

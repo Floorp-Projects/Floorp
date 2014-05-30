@@ -188,7 +188,6 @@ class CodeGeneratorARM : public CodeGeneratorShared
     bool visitGuardShape(LGuardShape *guard);
     bool visitGuardObjectType(LGuardObjectType *guard);
     bool visitGuardClass(LGuardClass *guard);
-    bool visitImplicitThis(LImplicitThis *lir);
 
     bool visitInterruptCheck(LInterruptCheck *lir);
 
