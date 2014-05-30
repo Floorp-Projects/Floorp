@@ -18,6 +18,8 @@ const EventEmitter = require("devtools/toolkit/event-emitter");
  * @param {Object} options
  *        - emptyText {string}: text to display when no entries in the table.
  *        - defaultType {string}: The default type of the tree items. For ex. 'js'
+ *        - sorted {boolean}: Defaults to true. If true, tree items are kept in
+ *        lexical order. If false, items will be kept in insertion order.
  */
 function TreeWidget(node, options={}) {
   EventEmitter.decorate(this);
@@ -26,9 +28,9 @@ function TreeWidget(node, options={}) {
   this.window = this.document.defaultView;
   this._parent = node;
 
-  let {emptyText, defaultType} = options;
-  this.emptyText = emptyText || "";
-  this.defaultType = defaultType;
+  this.emptyText = options.emptyText || "";
+  this.defaultType = options.defaultType;
+  this.sorted = options.sorted !== false;
 
   this.setupRoot();
 
@@ -245,7 +247,7 @@ TreeWidget.prototype = {
    *        its id.
    */
   add: function(items) {
-    this.root.add(items, this.defaultType);
+    this.root.add(items, this.defaultType, this.sorted);
     for (let i = 0; i < items.length; i++) {
       if (items[i].attachment) {
         this.attachments.set(JSON.stringify(
@@ -459,8 +461,11 @@ TreeItem.prototype = {
    *        Same as TreeWidget.add method's argument
    * @param {string} defaultType
    *        The default type of the item to be used when items[i].type is null
+   * @param {boolean} sorted
+   *        true if the tree items are inserted in a lexically sorted manner.
+   *        Otherwise, false if the item are to be appended to their parent.
    */
-  add: function(items, defaultType) {
+  add: function(items, defaultType, sorted) {
     if (items.length == this.level) {
       // This is the exit condition of recursive TreeItem.add calls
       return;
@@ -470,7 +475,7 @@ TreeItem.prototype = {
     if (this.items.has(id)) {
       // An item with same id already exists, thus calling the add method of that
       // child to add the passed node at correct position.
-      this.items.get(id).add(items, defaultType);
+      this.items.get(id).add(items, defaultType, sorted);
       return;
     }
     // No item with the id `id` exists, so we create one and call the add
@@ -486,19 +491,27 @@ TreeItem.prototype = {
     }
     let treeItem = new TreeItem(this.document, this, node || label,
                                 items[this.level].type || defaultType);
-    let nextSibling = [...this.items.values()].find(child => {
-      return child.label.textContent >= label;
-    });
-    treeItem.add(items, defaultType);
+
+    treeItem.add(items, defaultType, sorted);
     treeItem.node.setAttribute("data-id", JSON.stringify(
       items.slice(0, this.level + 1).map(item => item.id || item)
     ));
-    // Inserting this newly created item at correct position
-    if (nextSibling) {
-      this.children.insertBefore(treeItem.node, nextSibling.node);
+
+    if (sorted) {
+      // Inserting this newly created item at correct position
+      let nextSibling = [...this.items.values()].find(child => {
+        return child.label.textContent >= label;
+      });
+
+      if (nextSibling) {
+        this.children.insertBefore(treeItem.node, nextSibling.node);
+      } else {
+        this.children.appendChild(treeItem.node);
+      }
     } else {
       this.children.appendChild(treeItem.node);
     }
+
     if (this.label) {
       this.label.removeAttribute("empty");
     }
