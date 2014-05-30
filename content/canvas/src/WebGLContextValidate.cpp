@@ -158,6 +158,21 @@ ErrorInvalidEnumWithName(WebGLContext* ctx, const char* msg, GLenum glenum, WebG
 }
 
 /**
+ * Same as ErrorInvalidOperation but uses NameFrom to print displayable
+ * name for \a glenum.
+ */
+static void
+ErrorInvalidOperationWithName(WebGLContext* ctx, const char* msg, GLenum glenum,
+                              WebGLTexImageFunc func)
+{
+    const char* name = NameFrom(glenum);
+    if (name)
+        ctx->ErrorInvalidOperation("%s: %s %s", InfoFrom(func), msg, name);
+    else
+        ctx->ErrorInvalidOperation("%s: %s 0x%04X", InfoFrom(func), msg, glenum);
+}
+
+/**
  * Return true if the format is valid for source calls.
  */
 static bool
@@ -1389,8 +1404,8 @@ WebGLContext::ValidateTexImage(GLuint dims, GLenum target,
         /* Require the format and type to match that of the existing
          * texture as created
          */
-        if (imageInfo.InternalFormat() != format ||
-            imageInfo.Type() != type)
+        if (imageInfo.WebGLFormat() != format ||
+            imageInfo.WebGLType() != type)
         {
             ErrorInvalidOperation("%s: format or type doesn't match the existing texture",
                                   info);
@@ -1399,13 +1414,28 @@ WebGLContext::ValidateTexImage(GLuint dims, GLenum target,
     }
 
     /* Additional checks for depth textures */
-    if (target != LOCAL_GL_TEXTURE_2D &&
-        (format == LOCAL_GL_DEPTH_COMPONENT ||
-         format == LOCAL_GL_DEPTH_STENCIL))
+    if (format == LOCAL_GL_DEPTH_COMPONENT ||
+        format == LOCAL_GL_DEPTH_STENCIL)
     {
-        ErrorInvalidOperation("%s: with format of %s target must be TEXTURE_2D",
-                              info, NameFrom(format));
-        return false;
+        if (func == WebGLTexImageFunc::TexSubImage || IsCopyFunc(func)) {
+            ErrorInvalidOperationWithName(this, "called with format/internalformat",
+                                          format, func);
+            return false;
+        }
+
+        if (func == WebGLTexImageFunc::TexImage &&
+            target != LOCAL_GL_TEXTURE_2D)
+        {
+            ErrorInvalidOperation("%s: with format of %s target must be TEXTURE_2D",
+                                  info, NameFrom(format));
+            return false;
+        }
+
+        if (func == WebGLTexImageFunc::TexImage && level != 0) {
+            ErrorInvalidOperation("%s: with format of %s target, level must be 0",
+                                  info, NameFrom(format));
+            return false;
+        }
     }
 
     /* Additional checks for compressed textures */
