@@ -48,17 +48,21 @@ if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
       CFLAGS=
       ac_configure_args="$ac_configure_args LD=link CPP=\"cl -nologo -EP\" \
                          CXXCPP=\"cl -nologo -EP\" SHELL=sh.exe"
+      rtl=
+      if test -n "$MOZ_DEBUG"; then
+        rtl=" -DUSE_DEBUG_RTL"
+      fi
       case "${target_cpu}" in
       x86_64)
         # Need target since MSYS tools into mozilla-build may be 32bit
         ac_configure_args="$ac_configure_args \
-                           CC=\"$_topsrcdir/js/src/ctypes/libffi/msvcc.sh -m64\" \
-                           CXX=\"$_topsrcdir/js/src/ctypes/libffi/msvcc.sh -m64\""
+                           CC=\"$_topsrcdir/js/src/ctypes/libffi/msvcc.sh -m64$rtl\" \
+                           CXX=\"$_topsrcdir/js/src/ctypes/libffi/msvcc.sh -m64$rtl\""
         ;;
       *)
         ac_configure_args="$ac_configure_args \
-                           CC=$_topsrcdir/js/src/ctypes/libffi/msvcc.sh \
-                           CXX=$_topsrcdir/js/src/ctypes/libffi/msvcc.sh"
+                           CC=\"$_topsrcdir/js/src/ctypes/libffi/msvcc.sh$rtl\" \
+                           CXX=\"$_topsrcdir/js/src/ctypes/libffi/msvcc.sh$rtl\""
         ;;
       esac
     fi
