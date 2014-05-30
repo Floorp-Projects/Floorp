@@ -3944,9 +3944,6 @@ js_InitStringClass(JSContext *cx, HandleObject obj)
     if (!ctor)
         return nullptr;
 
-    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_String, ctor, proto))
-        return nullptr;
-
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return nullptr;
 
@@ -3955,6 +3952,9 @@ js_InitStringClass(JSContext *cx, HandleObject obj)
     {
         return nullptr;
     }
+
+    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_String, ctor, proto))
+        return nullptr;
 
     /*
      * Define escape/unescape, the URI encode/decode functions, and maybe
