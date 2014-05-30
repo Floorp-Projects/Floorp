@@ -6138,5 +6138,20 @@
     "high": 1000,
     "n_buckets": 10,
     "description": "The number of times a sync successfully completed in this session"
+  },
+  "WEAVE_CUSTOM_LEGACY_SERVER_CONFIGURATION": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether legacy Sync is configured to use a custom server"
+  },
+  "WEAVE_CUSTOM_FXA_SERVER_CONFIGURATION": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether FxA Sync is configured to use a custom authentication server"
+  },
+  "WEAVE_CUSTOM_TOKEN_SERVER_CONFIGURATION": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether FxA Sync is configured to use a custom token server"
   }
 }
