@@ -2963,6 +2963,151 @@ this.INFO_REC_EXTENDED_DISPLAY_CONNECTED_NUMBER = 0x9A;
 this.INFO_REC_EXTENDED_DISPLAY_TEXT = 0x9B;
 
 /**
+ * The table for MCC/MNC which the length of MNC is 3.
+ *
+ * This table is built from below links.
+ * - http://www.itu.int/pub/T-SP-E.212B-2013
+ * - http://en.wikipedia.org/wiki/Mobile_Network_Code
+ */
+this.PLMN_HAVING_3DIGITS_MNC = {
+  // Puerto Rico.
+  "330":
+    ["110", // América Móvil
+     "120"  // PR Wireless
+    ],
+  // Trinidad and Tobago.
+  "374":
+    ["130", // Digicel Trinidad and Tobago Ltd.
+     "140"  // LaqTel Ltd.
+    ],
+  // India.
+  "405":
+    ["000", // Shyam Telelink Ltd.
+     "005", // Reliance, Delhi
+     "006", // Reliance, Gujarat
+     "007", // Reliance, Haryana
+     "009", // Reliance, J&K
+     "010", // Reliance, Karnataka
+     "011", // Reliance, Kerala
+     "012", // Reliance, Andhra Pradesh
+     "013", // Reliance, Maharashtr
+     "014", // Reliance, Madhya Pradesh
+     "018", // Reliance, Punjab
+     "020", // Reliance, Tamilnadu
+     "021", // Reliance, UP (East)
+     "022", // Reliance, UP (West)
+     "025", // TATA DOCOMO, Andhra Pradesh
+     "026", // TATA DOCOMO, Assam
+     "027", // TATA DOCOMO, Bihar
+     "028", // TATA DOCOMO, Chennai
+     "029", // TATA DOCOMO, Delhi
+     "030", // TATA DOCOMO, Gujarat
+     "031", // TATA DOCOMO, Haryana
+     "032", // TATA DOCOMO, Himachal Pradesh
+     "033", // Reliance, Bihar
+     "034", // TATA DOCOMO, Kamataka
+     "035", // TATA DOCOMO, Kerala
+     "036", // TATA DOCOMO, Kolkata
+     "037", // TATA DOCOMO, Maharashtra
+     "038", // TATA DOCOMO, Madhya Pradesh
+     "039", // TATA DOCOMO, Mumbai
+     "040", // Reliance, Chennai
+     "041", // TATA DOCOMO, Orissa
+     "042", // TATA DOCOMO, Punjab
+     "043", // TATA DOCOMO, Rajasthan
+     "044", // TATA DOCOMO, Tamilnadu
+     "045", // TATA DOCOMO, UP (East)
+     "046", // TATA DOCOMO, UP (West)
+     "047", // TATA DOCOMO, West Bengal
+     "750", // Vodafone IN, J&K
+     "751", // Vodafone IN, Assam
+     "752", // Vodafone IN, Bihar
+     "753", // Vodafone IN, Orissa
+     "754", // Vodafone IN, Himachal Pradesh
+     "755", // Vodafone IN, North East
+     "756", // Vodafone IN, Madhya Pradesh & Chhattisgarh
+     "799", // Idea, MUMBAI
+     "800", // Aircell, Delhi
+     "801", // Aircell, Andhra Pradesh
+     "802", // Aircell, Gujarat
+     "803", // Aircell, Kamataka
+     "804", // Aircell, Maharashtra
+     "805", // Aircell, Mumbai
+     "806", // Aircell, Rajasthan
+     "807", // Aircell, Haryana
+     "808", // Aircell, Madhya Pradesh
+     "809", // Aircell, Kerala
+     "810", // Aircell, Uttar Pradesh (East)
+     "811", // Aircell, Uttar Pradesh (West)
+     "812", // Aircell, Punjab
+     "818", // Uninor, Uttar Pradesh (West)
+     "819", // Uninor, Andhra Pradesh
+     "820", // Uninor, Karnataka
+     "821", // Uninor, Kerala
+     "822", // Uninor, Kolkata
+     "824", // Videocon, Assam
+     "827", // Videocon, Gujarat
+     "834", // Videocon, Madhya Pradesh
+     "840", // Jio, West Bengal
+     "844", // Uninor, Delhi & NCR
+     "845", // IDEA, Assam
+     "846", // IDEA, Jammu & Kashmir
+     "847", // IDEA, Karnataka
+     "848", // IDEA, Kolkata
+     "849", // IDEA, North East
+     "850", // IDEA, Orissa
+     "851", // IDEA, Punjab
+     "852", // IDEA, Tamil Nadu
+     "853", // IDEA, West Bengal
+     "854", // Jio, Andra Pradesh
+     "855", // Jio, Assam
+     "856", // Jio, Bihar
+     "857", // Jio, Gujarat
+     "858", // Jio, Haryana
+     "859", // Jio, Himachal Pradesh
+     "860", // Jio, Jammu Kashmir
+     "861", // Jio, Karnataka
+     "862", // Jio, Kerala
+     "863", // Jio, Madhyya Pradesh
+     "864", // Jio, Maharashtra
+     "865", // Jio, North East
+     "866", // Jio, Orissa
+     "867", // Jio, Punjab
+     "868", // Jio, Rajasthan
+     "869", // Jio, Tamil Nadu Chennai
+     "870", // Jio, Uttar Pradesh West
+     "871", // Jio, Uttar Pradesh East
+     "872", // Jio, Delhi
+     "873", // Jio, Kolkatta
+     "874", // Jio, Mumbai
+     "875", // Uninor, Assam
+     "880", // Uninor, West Bengal
+     "881", // S Tel, Assam
+     "908", // IDEA, Andhra Pradesh
+     "909", // IDEA, Delhi
+     "910", // IDEA, Haryana
+     "911", // Etisalat, Maharashtra
+     "912", // Etisalat, Andhra Pradesh
+     "913", // Etisalat, Delhi & NCR
+     "914", // Etisalat, Gujarat
+     "917", // Etisalat, Kerala
+     "927", // Uninor, Gujarat
+     "929"  // Uninor, Maharashtra
+    ],
+  // Malaysia.
+  "502":
+    ["150", // Tune Talk Sdn Bhd
+     "151", // Baraka Telecom Sdn Bhd (MVNE)
+     "152", // YTL Communications Sdn Bhd
+     "156"  // Altel Communications Sdn Bhd
+    ],
+  // Brazil.
+  "724":
+    ["055"  // Sercomtel
+    ]
+};
+
+/**
  * The table for MCC which the length of MNC is 3
  *
  * This table is built from below links.
@@ -2992,7 +3137,6 @@ this.MCC_TABLE_FOR_MNC_LENGTH_IS_3 = [
   "365",  // Anguilla
   "366",  // Dominica
   "376",  // Turks and Caicos Islands
-  "405",  // India
   "708",  // Honduras
   "722",  // Argentina
   "732",  // Colombia
