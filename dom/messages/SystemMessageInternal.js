@@ -585,18 +585,20 @@ SystemMessageInternal.prototype = {
     // and we don't need to load the app to handle messages.
     let onlyShowApp = (aMsgSentStatus === MSG_SENT_SUCCESS) && showApp;
 
-    // We don't need to send the full object to observers.
-    let page = { pageURL: aPage.pageURL,
-                 manifestURL: aPage.manifestURL,
-                 type: aPage.type,
-                 extra: aExtra,
-                 target: aMessage.target,
-                 onlyShowApp: onlyShowApp,
-                 showApp: showApp };
-    debug("Asking to open " + JSON.stringify(page));
-    Services.obs.notifyObservers(this,
-                                 "system-messages-open-app",
-                                 JSON.stringify(page));
+    debug("Asking to open pageURL: " + aPage.pageURL +
+          ", manifestURL: " + aPage.manifestURL + ", type: " + aPage.type +
+          ", target: " + JSON.stringify(aMessage.target) +
+          ", showApp: " + showApp + ", onlyShowApp: " + onlyShowApp +
+          ", extra: " + JSON.stringify(aExtra));
+
+    let glue = Cc["@mozilla.org/dom/messages/system-message-glue;1"]
+                 .createInstance(Ci.nsISystemMessageGlue);
+    if (glue) {
+      glue.openApp(aPage.pageURL, aPage.manifestURL, aPage.type, aMessage.target,
+                   showApp, onlyShowApp, aExtra);
+    } else {
+      debug("Error! The UI glue component is not implemented.");
+    }
   },
 
   _isPageMatched: function(aPage, aType, aPageURL, aManifestURL) {
