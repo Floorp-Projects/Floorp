@@ -77,9 +77,6 @@
 *|*::-moz-list-bullet, *|*::-moz-list-number {
   display: inline;
   vertical-align: baseline;
-  /* Note that this padding is suppressed for some CJK numbering styles;
-   * see bug 934072 */
-  -moz-padding-end: 0.5em;
 }
 
 /* Links */
