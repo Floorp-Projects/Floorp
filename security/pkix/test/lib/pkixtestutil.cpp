@@ -634,7 +634,7 @@ GenerateKeyPair(/*out*/ ScopedSECKEYPublicKey& publicKey,
 // Certificates
 
 static SECItem* TBSCertificate(PLArenaPool* arena, long version,
-                               SECItem* serialNumber, SECOidTag signature,
+                               const SECItem* serialNumber, SECOidTag signature,
                                const SECItem* issuer, PRTime notBefore,
                                PRTime notAfter, const SECItem* subject,
                                const SECKEYPublicKey* subjectPublicKey,
@@ -646,7 +646,7 @@ static SECItem* TBSCertificate(PLArenaPool* arena, long version,
 //         signatureValue       BIT STRING  }
 SECItem*
 CreateEncodedCertificate(PLArenaPool* arena, long version,
-                         SECOidTag signature, SECItem* serialNumber,
+                         SECOidTag signature, const SECItem* serialNumber,
                          const SECItem* issuerNameDER, PRTime notBefore,
                          PRTime notAfter, const SECItem* subjectNameDER,
                          /*optional*/ SECItem const* const* extensions,
@@ -697,7 +697,7 @@ CreateEncodedCertificate(PLArenaPool* arena, long version,
 //                           -- If present, version MUST be v3 --  }
 static SECItem*
 TBSCertificate(PLArenaPool* arena, long versionValue,
-               SECItem* serialNumber, SECOidTag signatureOidTag,
+               const SECItem* serialNumber, SECOidTag signatureOidTag,
                const SECItem* issuer, PRTime notBeforeTime,
                PRTime notAfterTime, const SECItem* subject,
                const SECKEYPublicKey* subjectPublicKey,
@@ -815,6 +815,23 @@ TBSCertificate(PLArenaPool* arena, long versionValue,
   }
 
   return output.Squash(arena, der::SEQUENCE);
+}
+
+const SECItem*
+ASCIIToDERName(PLArenaPool* arena, const char* cn)
+{
+  ScopedPtr<CERTName, CERT_DestroyName> certName(CERT_AsciiToName(cn));
+  if (!certName) {
+    return nullptr;
+  }
+  return SEC_ASN1EncodeItem(arena, nullptr, certName.get(),
+                            SEC_ASN1_GET(CERT_NameTemplate));
+}
+
+SECItem*
+CreateEncodedSerialNumber(PLArenaPool* arena, long serialNumberValue)
+{
+  return Integer(arena, serialNumberValue);
 }
 
 // BasicConstraints ::= SEQUENCE {
