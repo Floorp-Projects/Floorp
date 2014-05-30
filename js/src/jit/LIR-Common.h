@@ -4721,8 +4721,14 @@ class LLoadSlotT : public LInstructionHelper<1, 1, 0>
   public:
     LIR_HEADER(LoadSlotT)
 
-    explicit LLoadSlotT(const LAllocation &in) {
-        setOperand(0, in);
+    explicit LLoadSlotT(const LAllocation &slots) {
+        setOperand(0, slots);
+    }
+    const LAllocation *slots() {
+        return getOperand(0);
+    }
+    const LDefinition *output() {
+        return this->getDef(0);
     }
     const MLoadSlot *mir() const {
         return mir_->toLoadSlot();
