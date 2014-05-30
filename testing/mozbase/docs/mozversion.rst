@@ -29,10 +29,10 @@ Options
 ---binary
 '''''''''
 
-This is the path to the target application binary. If this is omitted then
-the current directory is checked for the existance of an application.ini file.
-If not found, then it is assumed the target application is a remote Firefox OS
-instance.
+This is the path to the target application binary or .apk. If this is omitted
+then the current directory is checked for the existance of an
+application.ini file. If not found, then it is assumed the target
+application is a remote Firefox OS instance.
 
 
 ---sources
@@ -56,6 +56,10 @@ Firefox::
     platform_buildid: 20131205075310
     platform_changeset: 39faf812aaec
     platform_repository: http://hg.mozilla.org/releases/mozilla-release
+
+Firefox for Android::
+
+    $ mozversion --binary=/path/to/firefox.apk
 
 Firefox OS::
 

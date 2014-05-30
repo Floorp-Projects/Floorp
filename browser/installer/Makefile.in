@@ -72,7 +72,9 @@ DEFINES += -DMOZ_CHILD_PROCESS_NAME=$(MOZ_CHILD_PROCESS_NAME)
 
 # Set MSVC dlls version to package, if any.
 ifdef WIN32_REDIST_DIR
+ifdef MOZ_NO_DEBUG_RTL
 DEFINES += -DMOZ_MSVC_REDIST=$(_MSC_VER)
+endif
 endif
 
 ifneq (,$(filter WINNT Darwin Android,$(OS_TARGET)))
@@ -136,6 +138,7 @@ endif
 ifdef MOZ_JEMALLOC3
 DEFINES += -DMOZ_JEMALLOC3
 endif
+DEFINES += -DMOZ_ICU_DBG_SUFFIX=$(MOZ_ICU_DBG_SUFFIX)
 
 libs::
 	$(MAKE) -C $(DEPTH)/browser/locales langpack

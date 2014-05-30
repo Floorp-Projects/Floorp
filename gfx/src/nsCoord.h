@@ -268,6 +268,52 @@ inline nscoord NSToCoordCeilClamped(double aValue)
   return NSToCoordCeil(aValue);
 }
 
+// The NSToCoordTrunc* functions remove the fractional component of
+// aValue, and are thus equivalent to NSToCoordFloor* for positive
+// values and NSToCoordCeil* for negative values.
+
+inline nscoord NSToCoordTrunc(float aValue)
+{
+  // There's no need to use truncf() since it matches the default
+  // rules for float to integer conversion.
+  return nscoord(aValue);
+}
+
+inline nscoord NSToCoordTrunc(double aValue)
+{
+  // There's no need to use trunc() since it matches the default
+  // rules for float to integer conversion.
+  return nscoord(aValue);
+}
+
+inline nscoord NSToCoordTruncClamped(float aValue)
+{
+#ifndef NS_COORD_IS_FLOAT
+  // Bounds-check before converting out of float, to avoid overflow
+  if (aValue >= nscoord_MAX) {
+    return nscoord_MAX;
+  }
+  if (aValue <= nscoord_MIN) {
+    return nscoord_MIN;
+  }
+#endif
+  return NSToCoordTrunc(aValue);
+}
+
+inline nscoord NSToCoordTruncClamped(double aValue)
+{
+#ifndef NS_COORD_IS_FLOAT
+  // Bounds-check before converting out of double, to avoid overflow
+  if (aValue >= nscoord_MAX) {
+    return nscoord_MAX;
+  }
+  if (aValue <= nscoord_MIN) {
+    return nscoord_MIN;
+  }
+#endif
+  return NSToCoordTrunc(aValue);
+}
+
 /*
  * Int Rounding Functions
  */

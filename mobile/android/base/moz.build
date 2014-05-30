@@ -83,16 +83,20 @@ stjar.javac_flags = ['-Xlint:none']
 
 if CONFIG['MOZ_WEBRTC']:
     video_root = TOPSRCDIR + '/media/webrtc/trunk/webrtc/modules/video_capture/android/java/src/org/webrtc/videoengine/'
+    video_render_root = TOPSRCDIR + '/media/webrtc/trunk/webrtc/modules/video_render/android/java/src/org/webrtc/videoengine/'
     audio_root = TOPSRCDIR + '/media/webrtc/trunk/webrtc/modules/audio_device/android/java/src/org/webrtc/voiceengine/'
     wrjar = add_java_jar('webrtc')
     wrjar.sources += [
         video_root + 'CaptureCapabilityAndroid.java',
         video_root + 'VideoCaptureAndroid.java',
         video_root + 'VideoCaptureDeviceInfoAndroid.java',
+        video_render_root + 'ViEAndroidGLES20.java',
+        video_render_root + 'ViERenderer.java',
     ]
     wrjar.sources += [
         audio_root + 'AudioManagerAndroid.java',
-        audio_root + 'WebRTCAudioDevice.java',
+        audio_root + 'WebRtcAudioRecord.java',
+        audio_root + 'WebRtcAudioTrack.java',
     ]
     wrjar.extra_jars = [
         'gecko-R.jar',

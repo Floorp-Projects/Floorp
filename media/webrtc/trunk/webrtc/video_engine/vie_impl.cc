@@ -63,19 +63,11 @@ bool VideoEngine::Delete(VideoEngine*& video_engine) {
     return false;
   }
 #endif
-#ifdef WEBRTC_VIDEO_ENGINE_ENCRYPTION_API
-  ViEEncryptionImpl* vie_encryption = vie_impl;
-  if (vie_encryption->GetCount() > 0) {
-    WEBRTC_TRACE(kTraceError, kTraceVideo, kModuleId,
-                 "ViEEncryption ref count: %d", vie_encryption->GetCount());
-    return false;
-  }
-#endif
 #ifdef WEBRTC_VIDEO_ENGINE_EXTERNAL_CODEC_API
   ViEExternalCodecImpl* vie_external_codec = vie_impl;
   if (vie_external_codec->GetCount() > 0) {
     WEBRTC_TRACE(kTraceError, kTraceVideo, kModuleId,
-                 "ViEEncryption ref count: %d", vie_encryption->GetCount());
+        "ViEExternalCodec ref count: %d", vie_external_codec->GetCount());
     return false;
   }
 #endif
@@ -163,12 +155,12 @@ int VideoEngine::SetTraceCallback(TraceCallback* callback) {
   return Trace::SetTraceCallback(callback);
 }
 
-int VideoEngine::SetAndroidObjects(void* javaVM, void* javaContext) {
+#if defined(ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD) && !defined(WEBRTC_GONK)
+int VideoEngine::SetAndroidObjects(JavaVM* javaVM) {
   WEBRTC_TRACE(kTraceApiCall, kTraceVideo, kModuleId,
                "SetAndroidObjects()");
 
-#if defined(WEBRTC_ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD)
-  if (SetCaptureAndroidVM(javaVM, javaContext) != 0) {
+  if (SetCaptureAndroidVM(javaVM) != 0) {
     WEBRTC_TRACE(kTraceError, kTraceVideo, kModuleId,
                  "Could not set capture Android VM");
     return -1;
@@ -181,11 +173,7 @@ int VideoEngine::SetAndroidObjects(void* javaVM, void* javaContext) {
   }
 #endif
   return 0;
-#else
-  WEBRTC_TRACE(kTraceError, kTraceVideo, kModuleId,
-               "WEBRTC_ANDROID not defined for VideoEngine::SetAndroidObjects");
-  return -1;
-#endif
 }
+#endif
 
 }  // namespace webrtc

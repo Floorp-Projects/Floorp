@@ -292,5 +292,32 @@
     url.hostname = "";
     is(url.href, "http://localhost/", "Empty hostname is ignored");
   </script>
+
+  <script>
+    /** Test for Bug 960014 **/
+    var url = new URL("http://localhost/");
+    url.hostname = "[2001::1]";
+    is(url.hostname, "[2001::1]", "IPv6 hostname");
+    is(url.href, "http://[2001::1]/");
+
+    url.hostname = "[::192.9.5.5]";
+    is(url.hostname, "[::192.9.5.5]", "IPv6 hostname");
+    is(url.href, "http://[::192.9.5.5]/");
+
+    url = new URL("http://localhost/");
+    url.hostname = "[::]";
+    is(url.hostname, "[::]", "IPv6 hostname");
+
+    url = new URL("http://localhost/");
+    url.host = "[2001::1]:30";
+    is(url.hostname, "[2001::1]", "IPv6 hostname");
+    is(url.port, 30, "Port");
+    is(url.host, "[2001::1]:30", "IPv6 host");
+
+    url = new URL("http://localhost/");
+    // This should silently fail since it's missing the brackets
+    url.hostname = "2001::1";
+    is(url.hostname, "localhost", "Setting bad hostname fails");
+  </script>
 </body>
 </html>

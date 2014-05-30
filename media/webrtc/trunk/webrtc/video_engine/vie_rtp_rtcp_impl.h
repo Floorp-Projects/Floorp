@@ -97,23 +97,17 @@ class ViERTP_RTCPImpl
   virtual int SetReceiveAbsoluteSendTimeStatus(int video_channel,
                                                bool enable,
                                                int id);
+  virtual int SetRtcpXrRrtrStatus(int video_channel, bool enable);
   virtual int SetTransmissionSmoothingStatus(int video_channel, bool enable);
-  virtual int GetReceivedRTCPStatistics(const int video_channel,
-                                        uint16_t& fraction_lost,
-                                        unsigned int& cumulative_lost,
-                                        unsigned int& extended_max,
-                                        unsigned int& jitter,
-                                        int& rtt_ms) const;
-  virtual int GetSentRTCPStatistics(const int video_channel,
-                                    uint16_t& fraction_lost,
-                                    unsigned int& cumulative_lost,
-                                    unsigned int& extended_max,
-                                    unsigned int& jitter, int& rtt_ms) const;
-  virtual int GetRTPStatistics(const int video_channel,
-                               unsigned int& bytes_sent,
-                               unsigned int& packets_sent,
-                               unsigned int& bytes_received,
-                               unsigned int& packets_received) const;
+  virtual int GetReceiveChannelRtcpStatistics(const int video_channel,
+                                              RtcpStatistics& basic_stats,
+                                              int& rtt_ms) const;
+  virtual int GetSendChannelRtcpStatistics(const int video_channel,
+                                           RtcpStatistics& basic_stats,
+                                           int& rtt_ms) const;
+  virtual int GetRtpStatistics(const int video_channel,
+                               StreamDataCounters& sent,
+                               StreamDataCounters& received) const;
   virtual int GetRemoteRTCPSenderInfo(const int video_channel,
                                       SenderInfo* sender_info) const;
   virtual int GetBandwidthUsage(const int video_channel,
@@ -127,6 +121,8 @@ class ViERTP_RTCPImpl
   virtual int GetEstimatedReceiveBandwidth(
       const int video_channel,
       unsigned int* estimated_bandwidth) const;
+  virtual int GetReceiveBandwidthEstimatorStats(
+      const int video_channel, ReceiveBandwidthEstimatorStats* output) const;
   virtual int StartRTPDump(const int video_channel,
                            const char file_nameUTF8[1024],
                            RTPDirections direction);
@@ -137,6 +133,31 @@ class ViERTP_RTCPImpl
   virtual int RegisterRTCPObserver(const int video_channel,
                                    ViERTCPObserver& observer);
   virtual int DeregisterRTCPObserver(const int video_channel);
+
+  virtual int RegisterSendChannelRtcpStatisticsCallback(
+      int channel, RtcpStatisticsCallback* callback);
+  virtual int DeregisterSendChannelRtcpStatisticsCallback(
+      int channel, RtcpStatisticsCallback* callback);
+  virtual int RegisterReceiveChannelRtcpStatisticsCallback(
+        int channel, RtcpStatisticsCallback* callback);
+    virtual int DeregisterReceiveChannelRtcpStatisticsCallback(
+        int channel, RtcpStatisticsCallback* callback);
+  virtual int RegisterSendChannelRtpStatisticsCallback(
+      int channel, StreamDataCountersCallback* callback);
+  virtual int DeregisterSendChannelRtpStatisticsCallback(
+      int channel, StreamDataCountersCallback* callback);
+  virtual int RegisterReceiveChannelRtpStatisticsCallback(
+      int channel, StreamDataCountersCallback* callback);
+  virtual int DeregisterReceiveChannelRtpStatisticsCallback(
+      int channel, StreamDataCountersCallback* callback);
+  virtual int RegisterSendBitrateObserver(
+      int channel, BitrateStatisticsObserver* callback);
+  virtual int DeregisterSendBitrateObserver(
+      int channel, BitrateStatisticsObserver* callback);
+  virtual int RegisterSendFrameCountObserver(
+      int channel, FrameCountObserver* callback);
+  virtual int DeregisterSendFrameCountObserver(
+      int channel, FrameCountObserver* callback);
 
  protected:
   explicit ViERTP_RTCPImpl(ViESharedData* shared_data);

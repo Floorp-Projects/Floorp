@@ -318,8 +318,9 @@ nsDOMWindowUtils::GetViewportInfo(uint32_t aDisplayWidth,
   *aAllowZoom = info.IsZoomAllowed();
   *aMinZoom = info.GetMinZoom().scale;
   *aMaxZoom = info.GetMaxZoom().scale;
-  *aWidth = info.GetSize().width;
-  *aHeight = info.GetSize().height;
+  CSSIntSize size = gfx::RoundedToInt(info.GetSize());
+  *aWidth = size.width;
+  *aHeight = size.height;
   *aAutoSize = info.IsAutoSizeEnabled();
   return NS_OK;
 }

@@ -15,10 +15,12 @@
 
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 
-// Number of samples in a low/high-band frame.
+#include <assert.h>
+
+// Maximum number of samples in a low/high-band frame.
 enum
 {
-    kBandFrameLength = 160
+    kMaxBandFrameLength = 240  // 10 ms at 48 kHz.
 };
 
 // QMF filter coefficients in Q16.
@@ -116,34 +118,37 @@ void WebRtcSpl_AllPassQMF(int32_t* in_data, int16_t data_length,
     filter_state[5] = out_data[data_length - 1]; // y[N-1], becomes y[-1] next time
 }
 
-void WebRtcSpl_AnalysisQMF(const int16_t* in_data, int16_t* low_band,
-                           int16_t* high_band, int32_t* filter_state1,
-                           int32_t* filter_state2)
+void WebRtcSpl_AnalysisQMF(const int16_t* in_data, int in_data_length,
+                           int16_t* low_band, int16_t* high_band,
+                           int32_t* filter_state1, int32_t* filter_state2)
 {
     int16_t i;
     int16_t k;
     int32_t tmp;
-    int32_t half_in1[kBandFrameLength];
-    int32_t half_in2[kBandFrameLength];
-    int32_t filter1[kBandFrameLength];
-    int32_t filter2[kBandFrameLength];
+    int32_t half_in1[kMaxBandFrameLength];
+    int32_t half_in2[kMaxBandFrameLength];
+    int32_t filter1[kMaxBandFrameLength];
+    int32_t filter2[kMaxBandFrameLength];
+    const int band_length = in_data_length / 2;
+    assert(in_data_length % 2 == 0);
+    assert(band_length <= kMaxBandFrameLength);
 
     // Split even and odd samples. Also shift them to Q10.
-    for (i = 0, k = 0; i < kBandFrameLength; i++, k += 2)
+    for (i = 0, k = 0; i < band_length; i++, k += 2)
     {
         half_in2[i] = WEBRTC_SPL_LSHIFT_W32((int32_t)in_data[k], 10);
         half_in1[i] = WEBRTC_SPL_LSHIFT_W32((int32_t)in_data[k + 1], 10);
     }
 
     // All pass filter even and odd samples, independently.
-    WebRtcSpl_AllPassQMF(half_in1, kBandFrameLength, filter1, WebRtcSpl_kAllPassFilter1,
-                         filter_state1);
-    WebRtcSpl_AllPassQMF(half_in2, kBandFrameLength, filter2, WebRtcSpl_kAllPassFilter2,
-                         filter_state2);
+    WebRtcSpl_AllPassQMF(half_in1, band_length, filter1,
+                         WebRtcSpl_kAllPassFilter1, filter_state1);
+    WebRtcSpl_AllPassQMF(half_in2, band_length, filter2,
+                         WebRtcSpl_kAllPassFilter2, filter_state2);
 
     // Take the sum and difference of filtered version of odd and even
     // branches to get upper & lower band.
-    for (i = 0; i < kBandFrameLength; i++)
+    for (i = 0; i < band_length; i++)
     {
         tmp = filter1[i] + filter2[i] + 1024;
         tmp = WEBRTC_SPL_RSHIFT_W32(tmp, 11);
@@ -156,20 +161,21 @@ void WebRtcSpl_AnalysisQMF(const int16_t* in_data, int16_t* low_band,
 }
 
 void WebRtcSpl_SynthesisQMF(const int16_t* low_band, const int16_t* high_band,
-                            int16_t* out_data, int32_t* filter_state1,
-                            int32_t* filter_state2)
+                            int band_length, int16_t* out_data,
+                            int32_t* filter_state1, int32_t* filter_state2)
 {
     int32_t tmp;
-    int32_t half_in1[kBandFrameLength];
-    int32_t half_in2[kBandFrameLength];
-    int32_t filter1[kBandFrameLength];
-    int32_t filter2[kBandFrameLength];
+    int32_t half_in1[kMaxBandFrameLength];
+    int32_t half_in2[kMaxBandFrameLength];
+    int32_t filter1[kMaxBandFrameLength];
+    int32_t filter2[kMaxBandFrameLength];
     int16_t i;
     int16_t k;
+    assert(band_length <= kMaxBandFrameLength);
 
     // Obtain the sum and difference channels out of upper and lower-band channels.
     // Also shift to Q10 domain.
-    for (i = 0; i < kBandFrameLength; i++)
+    for (i = 0; i < band_length; i++)
     {
         tmp = (int32_t)low_band[i] + (int32_t)high_band[i];
         half_in1[i] = WEBRTC_SPL_LSHIFT_W32(tmp, 10);
@@ -178,15 +184,15 @@ void WebRtcSpl_SynthesisQMF(const int16_t* low_band, const int16_t* high_band,
     }
 
     // all-pass filter the sum and difference channels
-    WebRtcSpl_AllPassQMF(half_in1, kBandFrameLength, filter1, WebRtcSpl_kAllPassFilter2,
-                         filter_state1);
-    WebRtcSpl_AllPassQMF(half_in2, kBandFrameLength, filter2, WebRtcSpl_kAllPassFilter1,
-                         filter_state2);
+    WebRtcSpl_AllPassQMF(half_in1, band_length, filter1,
+                         WebRtcSpl_kAllPassFilter2, filter_state1);
+    WebRtcSpl_AllPassQMF(half_in2, band_length, filter2,
+                         WebRtcSpl_kAllPassFilter1, filter_state2);
 
     // The filtered signals are even and odd samples of the output. Combine
     // them. The signals are Q10 should shift them back to Q0 and take care of
     // saturation.
-    for (i = 0, k = 0; i < kBandFrameLength; i++)
+    for (i = 0, k = 0; i < band_length; i++)
     {
         tmp = WEBRTC_SPL_RSHIFT_W32(filter2[i] + 512, 10);
         out_data[k++] = WebRtcSpl_SatW32ToW16(tmp);
