@@ -18,39 +18,45 @@ using namespace mozilla::gl;
 /* static */ const char*
 WebGLContext::GetExtensionString(WebGLExtensionID ext)
 {
-    // must match WebGLExtensionID.
-    // Once we can use variadic templates, EnumeratedArray should get a constructor
-    // allowing to initialize it directly without using this auxiliary plain array.
-    static const char *kExtensionNames[] = {
-        "ANGLE_instanced_arrays",
-        "EXT_color_buffer_half_float",
-        "EXT_frag_depth",
-        "EXT_sRGB",
-        "EXT_texture_filter_anisotropic",
-        "OES_element_index_uint",
-        "OES_standard_derivatives",
-        "OES_texture_float",
-        "OES_texture_float_linear",
-        "OES_texture_half_float",
-        "OES_texture_half_float_linear",
-        "OES_vertex_array_object",
-        "WEBGL_color_buffer_float",
-        "WEBGL_compressed_texture_atc",
-        "WEBGL_compressed_texture_etc1",
-        "WEBGL_compressed_texture_pvrtc",
-        "WEBGL_compressed_texture_s3tc",
-        "WEBGL_debug_renderer_info",
-        "WEBGL_debug_shaders",
-        "WEBGL_depth_texture",
-        "WEBGL_draw_buffers",
-        "WEBGL_lose_context"
-    };
-
     typedef EnumeratedArray<WebGLExtensionID, WebGLExtensionID::Max, const char*>
             names_array_t;
-    static const names_array_t kExtensionNamesEnumeratedArray(kExtensionNames);
+    static names_array_t sExtensionNamesEnumeratedArray;
 
-    return kExtensionNamesEnumeratedArray[ext];
+    static bool initialized = false;
+
+    if (!initialized) {
+        initialized = true;
+
+#define WEBGL_EXTENSION_IDENTIFIER(x) \
+        sExtensionNamesEnumeratedArray[WebGLExtensionID::x] = #x;
+
+        WEBGL_EXTENSION_IDENTIFIER(ANGLE_instanced_arrays)
+        WEBGL_EXTENSION_IDENTIFIER(EXT_color_buffer_half_float)
+        WEBGL_EXTENSION_IDENTIFIER(EXT_frag_depth)
+        WEBGL_EXTENSION_IDENTIFIER(EXT_sRGB)
+        WEBGL_EXTENSION_IDENTIFIER(EXT_texture_filter_anisotropic)
+        WEBGL_EXTENSION_IDENTIFIER(OES_element_index_uint)
+        WEBGL_EXTENSION_IDENTIFIER(OES_standard_derivatives)
+        WEBGL_EXTENSION_IDENTIFIER(OES_texture_float)
+        WEBGL_EXTENSION_IDENTIFIER(OES_texture_float_linear)
+        WEBGL_EXTENSION_IDENTIFIER(OES_texture_half_float)
+        WEBGL_EXTENSION_IDENTIFIER(OES_texture_half_float_linear)
+        WEBGL_EXTENSION_IDENTIFIER(OES_vertex_array_object)
+        WEBGL_EXTENSION_IDENTIFIER(WEBGL_color_buffer_float)
+        WEBGL_EXTENSION_IDENTIFIER(WEBGL_compressed_texture_atc)
+        WEBGL_EXTENSION_IDENTIFIER(WEBGL_compressed_texture_etc1)
+        WEBGL_EXTENSION_IDENTIFIER(WEBGL_compressed_texture_pvrtc)
+        WEBGL_EXTENSION_IDENTIFIER(WEBGL_compressed_texture_s3tc)
+        WEBGL_EXTENSION_IDENTIFIER(WEBGL_debug_renderer_info)
+        WEBGL_EXTENSION_IDENTIFIER(WEBGL_debug_shaders)
+        WEBGL_EXTENSION_IDENTIFIER(WEBGL_depth_texture)
+        WEBGL_EXTENSION_IDENTIFIER(WEBGL_draw_buffers)
+        WEBGL_EXTENSION_IDENTIFIER(WEBGL_lose_context)
+
+#undef WEBGL_EXTENSION_IDENTIFIER
+    }
+
+    return sExtensionNamesEnumeratedArray[ext];
 }
 
 bool
