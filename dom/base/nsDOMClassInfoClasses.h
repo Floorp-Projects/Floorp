@@ -15,7 +15,6 @@ DOMCI_CLASS(CSSCharsetRule)
 DOMCI_CLASS(CSSImportRule)
 DOMCI_CLASS(CSSMediaRule)
 DOMCI_CLASS(CSSNameSpaceRule)
-DOMCI_CLASS(CSSStyleSheet)
 
 // XUL classes
 #ifdef MOZ_XUL
@@ -42,9 +41,6 @@ DOMCI_CLASS(TreeColumn)
 
 DOMCI_CLASS(CSSMozDocumentRule)
 DOMCI_CLASS(CSSSupportsRule)
-
-// other SVG classes
-DOMCI_CLASS(SVGNumber)
 
 // XSLTProcessor
 DOMCI_CLASS(XSLTProcessor)

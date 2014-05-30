@@ -7,4 +7,4 @@ PREF_JS_EXPORTS = $(srcdir)/webide-prefs.js
 include $(topsrcdir)/config/rules.mk
 
 libs::
-	$(NSINSTALL) $(srcdir)/modules/*.js $(FINAL_TARGET)/modules/devtools
+	$(NSINSTALL) $(srcdir)/modules/*.js $(FINAL_TARGET)/modules/devtools/webide

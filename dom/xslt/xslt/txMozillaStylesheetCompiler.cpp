@@ -118,13 +118,12 @@ NS_IMETHODIMP
 txStylesheetSink::HandleStartElement(const char16_t *aName,
                                      const char16_t **aAtts,
                                      uint32_t aAttsCount,
-                                     int32_t aIndex,
                                      uint32_t aLineNumber)
 {
     NS_PRECONDITION(aAttsCount % 2 == 0, "incorrect aAttsCount");
 
     nsresult rv =
-        mCompiler->startElement(aName, aAtts, aAttsCount / 2, aIndex);
+        mCompiler->startElement(aName, aAtts, aAttsCount / 2);
     if (NS_FAILED(rv)) {
         mCompiler->cancel(rv);
 

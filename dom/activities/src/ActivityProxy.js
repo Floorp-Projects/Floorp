@@ -52,16 +52,28 @@ ActivityProxy.prototype = {
                        appId != Ci.nsIScriptSecurityManager.UNKNOWN_APP_ID)
                         ? DOMApplicationRegistry.getManifestURLByLocalId(appId)
                         : null;
-    cpmm.sendAsyncMessage("Activity:Start", { id: this.id,
-                                              options: {
-                                                name: aOptions.name,
-                                                data: aOptions.data
-                                              },
-                                              manifestURL: manifestURL,
-                                              pageURL: aWindow.document.location.href });
+
+    // Only let certified apps enumerate providers for this filter.
+    if (aOptions.getFilterResults === true &&
+        principal.appStatus != Ci.nsIPrincipal.APP_STATUS_CERTIFIED) {
+      Services.DOMRequest.fireError(this.activity, "SecurityError");
+      Services.obs.notifyObservers(null, "Activity:Error", null);
+      return;
+    }
 
     cpmm.addMessageListener("Activity:FireSuccess", this);
     cpmm.addMessageListener("Activity:FireError", this);
+
+    cpmm.sendAsyncMessage("Activity:Start",
+      {
+        id: this.id,
+        options: {
+          name: aOptions.name,
+          data: aOptions.data
+        },
+        getFilterResults: aOptions.getFilterResults,
+        manifestURL: manifestURL,
+        pageURL: aWindow.document.location.href });
   },
 
   receiveMessage: function actProxy_receiveMessage(aMessage) {

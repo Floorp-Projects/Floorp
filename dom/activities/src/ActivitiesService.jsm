@@ -11,6 +11,10 @@ const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
+Cu.import("resource://gre/modules/AppsUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "DOMApplicationRegistry",
+  "resource://gre/modules/Webapps.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ActivitiesServiceFilter",
   "resource://gre/modules/ActivitiesServiceFilter.jsm");
@@ -276,9 +280,43 @@ let Activities = {
         }
       };
 
-      let glue = Cc["@mozilla.org/dom/activities/ui-glue;1"]
-                   .createInstance(Ci.nsIActivityUIGlue);
-      glue.chooseActivity(aMsg.options, aResults.options, getActivityChoice);
+      let caller = Activities.callers[aMsg.id];
+      if (aMsg.getFilterResults === true &&
+          caller.mm.assertAppHasStatus(Ci.nsIPrincipal.APP_STATUS_CERTIFIED)) {
+        // Certified apps can ask to just get the picker data.
+
+        // We want to return the manifest url, icon url and app name.
+        // The app name needs to be picked up from the localized manifest.
+        let reg = DOMApplicationRegistry;
+        let ids = aResults.options.map((aItem) => {
+          return { id: reg._appIdForManifestURL(aItem.manifest) }
+        });
+
+        reg._readManifests(ids).then((aManifests) => {
+          let results = [];
+          aManifests.forEach((aManifest, i) => {
+            let manifestURL = aResults.options[i].manifest;
+            let helper = new ManifestHelper(aManifest.manifest, manifestURL);
+            results.push({
+              manifestURL: manifestURL,
+              iconURL: aResults.options[i].icon,
+              appName: helper.name
+            });
+          });
+
+          // Now fire success with the array of choices.
+          caller.mm.sendAsyncMessage("Activity:FireSuccess",
+            {
+              "id": aMsg.id,
+              "result": results
+            });
+          delete Activities.callers[aMsg.id];
+        });
+      } else {
+        let glue = Cc["@mozilla.org/dom/activities/ui-glue;1"]
+                     .createInstance(Ci.nsIActivityUIGlue);
+        glue.chooseActivity(aMsg.options, aResults.options, getActivityChoice);
+      }
     };
 
     let errorCb = function errorCb(aError) {
