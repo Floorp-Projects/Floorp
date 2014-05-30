@@ -23,13 +23,8 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     ValueOperand ToOutValue(LInstruction *ins);
     ValueOperand ToTempValue(LInstruction *ins, size_t pos);
 
-
-    void loadUnboxedValue(Operand source, MIRType type, const LDefinition *dest);
     void storeUnboxedValue(const LAllocation *value, MIRType valueType,
                            Operand dest, MIRType slotType);
-
-    void storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
-                           Register elements, const LAllocation *index);
 
   public:
     CodeGeneratorX64(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm);
@@ -38,12 +33,6 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     bool visitValue(LValue *value);
     bool visitBox(LBox *box);
     bool visitUnbox(LUnbox *unbox);
-    bool visitLoadSlotV(LLoadSlotV *ins);
-    bool visitLoadSlotT(LLoadSlotT *load);
-    bool visitStoreSlotT(LStoreSlotT *store);
-    bool visitLoadElementT(LLoadElementT *load);
-    bool visitImplicitThis(LImplicitThis *lir);
-    bool visitInterruptCheck(LInterruptCheck *lir);
     bool visitCompareB(LCompareB *lir);
     bool visitCompareBAndBranch(LCompareBAndBranch *lir);
     bool visitCompareV(LCompareV *lir);

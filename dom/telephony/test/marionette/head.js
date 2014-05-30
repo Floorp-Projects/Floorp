@@ -58,6 +58,23 @@ let emulator = (function() {
   /**
    * @return Promise
    */
+  function delay(ms) {
+    let deferred = Promise.defer();
+
+    let startTime = Date.now();
+    waitFor(function() {
+      deferred.resolve();
+    },function() {
+      let duration = Date.now() - startTime;
+      return (duration >= ms);
+    });
+
+    return deferred.promise;
+  }
+
+  /**
+   * @return Promise
+   */
   function clearCalls() {
     let deferred = Promise.defer();
 
@@ -1016,6 +1033,7 @@ let emulator = (function() {
    * Public members.
    */
 
+  this.gDelay = delay;
   this.gCheckInitialState = checkInitialState;
   this.gClearCalls = clearCalls;
   this.gOutCallStrPool = outCallStrPool;
