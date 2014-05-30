@@ -21,75 +21,59 @@
     <content>
       <xul:hbox class="notification-inner outset" flex="1" xbl:inherits="type">
         <xul:hbox anonid="details" align="center" flex="1">
-          <xul:image class="translate-infobar-element messageImage"
-                     anonid="messageImage"/>
+          <xul:image anonid="messageImage" class="messageImage"/>
           <xul:deck anonid="translationStates" selectedIndex="0">
 
             <!-- offer to translate -->
             <xul:hbox class="translate-offer-box" align="center">
-              <xul:label class="translate-infobar-element" value="&translation.thisPageIsIn.label;"/>
-              <xul:menulist class="translate-infobar-element" anonid="detectedLanguage">
+              <xul:label value="&translation.thisPageIsIn.label;"/>
+              <xul:menulist anonid="detectedLanguage">
                 <xul:menupopup/>
               </xul:menulist>
-              <xul:label class="translate-infobar-element" value="&translation.translateThisPage.label;"/>
-              <xul:button class="translate-infobar-element"
-                          label="&translation.translate.button;"
-                          anonid="translate"
+              <xul:label value="&translation.translateThisPage.label;"/>
+              <xul:button label="&translation.translate.button;" anonid="translate"
                           oncommand="document.getBindingParent(this).translate();"/>
-              <xul:button class="translate-infobar-element"
-                          label="&translation.notNow.button;" anonid="notNow"
+              <xul:button label="&translation.notNow.button;" anonid="notNow"
                           oncommand="document.getBindingParent(this).close();"/>
             </xul:hbox>
 
             <!-- translating -->
-            <xul:hbox class="translating-box" pack="center">
-              <xul:label class="translate-infobar-element"
-                         value="&translation.translatingContent.label;"/>
-            </xul:hbox>
+            <xul:vbox class="translating-box" pack="center">
+              <xul:label value="&translation.translatingContent.label;"/>
+            </xul:vbox>
 
             <!-- translated -->
             <xul:hbox class="translated-box" align="center">
-              <xul:label class="translate-infobar-element"
-                         value="&translation.translatedFrom.label;"/>
-              <xul:menulist class="translate-infobar-element"
-                            anonid="fromLanguage"
+              <xul:label value="&translation.translatedFrom.label;"/>
+              <xul:menulist anonid="fromLanguage"
                             oncommand="document.getBindingParent(this).translate()">
                 <xul:menupopup/>
               </xul:menulist>
-              <xul:label class="translate-infobar-element"
-                         value="&translation.translatedTo.label;"/>
+              <xul:label value="&translation.translatedTo.label;"/>
               <xul:menulist anonid="toLanguage"
                             oncommand="document.getBindingParent(this).translate()">
                 <xul:menupopup/>
               </xul:menulist>
               <xul:label value="&translation.translatedToSuffix.label;"/>
               <xul:button anonid="showOriginal"
-                          class="translate-infobar-element"
                           label="&translation.showOriginal.button;"
                           oncommand="document.getBindingParent(this).showOriginal();"/>
               <xul:button anonid="showTranslation"
-                          class="translate-infobar-element"
                           label="&translation.showTranslation.button;"
                           oncommand="document.getBindingParent(this).showTranslation();"/>
             </xul:hbox>
 
             <!-- error -->
             <xul:hbox class="translation-error" align="center">
-              <xul:label class="translate-infobar-element"
-                         value="&translation.errorTranslating.label;"/>
-              <xul:button class="translate-infobar-element"
-                          label="&translation.tryAgain.button;"
-                          anonid="tryAgain"
+              <xul:label value="&translation.errorTranslating.label;"/>
+              <xul:button label="&translation.tryAgain.button;" anonid="tryAgain"
                           oncommand="document.getBindingParent(this).translate();"/>
             </xul:hbox>
 
           </xul:deck>
           <xul:spacer flex="1"/>
 
-          <xul:button type="menu"
-                      class="translate-infobar-element options-menu-button"
-                      anonid="translate-infobar-element"
-                      label="&translation.options.menu;">
+          <xul:button type="menu" anonid="options" label="&translation.options.menu;">
             <xul:menupopup onpopupshowing="document.getBindingParent(this).optionsShowing();">
               <xul:menuitem anonid="neverForLanguage"
                             oncommand="document.getBindingParent(this).neverForLanguage();"/>
