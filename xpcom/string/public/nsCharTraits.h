@@ -162,7 +162,7 @@ struct nsCharTraits<char16_t>
   {
     for (char_type* s = aStr1; aN--; ++s, ++aStr2) {
       NS_ASSERTION(!(*aStr2 & ~0x7F), "Unexpected non-ASCII character");
-      *s = *aStr2;
+      *s = static_cast<char_type>(*aStr2);
     }
     return aStr1;
   }
@@ -194,8 +194,10 @@ struct nsCharTraits<char16_t>
   {
     for (; aN--; ++aStr1, ++aStr2) {
       NS_ASSERTION(!(*aStr2 & ~0x7F), "Unexpected non-ASCII character");
-      if (!eq_int_type(to_int_type(*aStr1), to_int_type(*aStr2))) {
-        return to_int_type(*aStr1) - to_int_type(*aStr2);
+      if (!eq_int_type(to_int_type(*aStr1),
+                       to_int_type(static_cast<char_type>(*aStr2)))) {
+        return to_int_type(*aStr1) -
+               to_int_type(static_cast<char_type>(*aStr2));
       }
     }
 
@@ -214,8 +216,10 @@ struct nsCharTraits<char16_t>
         return 1;
       }
       NS_ASSERTION(!(*aStr2 & ~0x7F), "Unexpected non-ASCII character");
-      if (!eq_int_type(to_int_type(*aStr1), to_int_type(*aStr2))) {
-        return to_int_type(*aStr1) - to_int_type(*aStr2);
+      if (!eq_int_type(to_int_type(*aStr1),
+                       to_int_type(static_cast<char_type>(*aStr2)))) {
+        return to_int_type(*aStr1) -
+               to_int_type(static_cast<char_type>(*aStr2));
       }
     }
 
@@ -248,8 +252,9 @@ struct nsCharTraits<char16_t>
       NS_ASSERTION(!(*aStr2 >= 'A' && *aStr2 <= 'Z'),
                    "Unexpected uppercase character");
       char_type lower_s1 = ASCIIToLower(*aStr1);
-      if (lower_s1 != to_char_type(*aStr2)) {
-        return to_int_type(lower_s1) - to_int_type(*aStr2);
+      if (lower_s1 != static_cast<char_type>(*aStr2)) {
+        return to_int_type(lower_s1) -
+               to_int_type(static_cast<char_type>(*aStr2));
       }
     }
 
@@ -271,8 +276,9 @@ struct nsCharTraits<char16_t>
       NS_ASSERTION(!(*aStr2 >= 'A' && *aStr2 <= 'Z'),
                    "Unexpected uppercase character");
       char_type lower_s1 = ASCIIToLower(*aStr1);
-      if (lower_s1 != to_char_type(*aStr2)) {
-        return to_int_type(lower_s1) - to_int_type(*aStr2);
+      if (lower_s1 != static_cast<char_type>(*aStr2)) {
+        return to_int_type(lower_s1) -
+               to_int_type(static_cast<char_type>(*aStr2));
       }
     }
 
