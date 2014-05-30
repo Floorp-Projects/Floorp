@@ -886,13 +886,6 @@ nsIContent::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse)
   return false;
 }
 
-const nsAttrValue*
-FragmentOrElement::DoGetClasses() const
-{
-  NS_NOTREACHED("Shouldn't ever be called");
-  return nullptr;
-}
-
 NS_IMETHODIMP
 FragmentOrElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {

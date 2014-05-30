@@ -157,8 +157,7 @@ protected:
   bool IsMonolithicContainer(nsINodeInfo* aNodeInfo);
 
   nsresult HandleStartElement(const char16_t *aName, const char16_t **aAtts, 
-                              uint32_t aAttsCount, int32_t aIndex, 
-                              uint32_t aLineNumber,
+                              uint32_t aAttsCount, uint32_t aLineNumber,
                               bool aInterruptable);
   nsresult HandleEndElement(const char16_t *aName, bool aInterruptable);
   nsresult HandleCharacterData(const char16_t *aData, uint32_t aLength,

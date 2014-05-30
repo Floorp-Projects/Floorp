@@ -159,6 +159,7 @@ function checkSample(anim, expectedValue, sampleTime, caseNum)
     " (values: '" + anim.getAttribute('values') + "')," +
     "t=" + sampleTime +
     ": Unexpected sample value:";
+  is(typeof anim.targetElement.className, "object");
   is(anim.targetElement.className.animVal, expectedValue, msg);
 }
 
