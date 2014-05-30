@@ -35,6 +35,10 @@ public:
     // The statistics are reset after the query.
     virtual int GetNetworkStatistics(int channel, NetworkStatistics& stats) = 0;
 
+    // Get statistics of calls to AudioCodingModule::PlayoutData10Ms().
+    virtual int GetDecodingCallStatistics(
+        int channel, AudioDecodingCallStats* stats) const = 0;
+
 protected:
     VoENetEqStats() {}
     virtual ~VoENetEqStats() {}

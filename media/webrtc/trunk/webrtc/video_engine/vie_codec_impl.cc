@@ -182,14 +182,14 @@ int ViECodecImpl::SetSendCodec(const int video_channel,
                                        video_codec_internal.height *
                                        video_codec_internal.maxFramerate)
                                        / 1000;
-    if (video_codec_internal.startBitrate > video_codec_internal.maxBitrate) {
-      // Don't limit the set start bitrate.
-      video_codec_internal.maxBitrate = video_codec_internal.startBitrate;
-    }
     WEBRTC_TRACE(kTraceInfo, kTraceVideo,
                  ViEId(shared_data_->instance_id(), video_channel),
                  "%s: New max bitrate set to %d kbps", __FUNCTION__,
                  video_codec_internal.maxBitrate);
+  }
+
+  if (video_codec_internal.startBitrate > video_codec_internal.maxBitrate) {
+    video_codec_internal.startBitrate = video_codec_internal.maxBitrate;
   }
 
   VideoCodec encoder;
@@ -729,6 +729,43 @@ int ViECodecImpl::StopDebugRecording(int video_channel) {
     return -1;
   }
   return vie_encoder->StopDebugRecording();
+}
+
+void ViECodecImpl::SuspendBelowMinBitrate(int video_channel) {
+  ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
+  ViEEncoder* vie_encoder = cs.Encoder(video_channel);
+  if (!vie_encoder) {
+    WEBRTC_TRACE(kTraceError, kTraceVideo,
+                 ViEId(shared_data_->instance_id(), video_channel),
+                 "%s: No encoder %d", __FUNCTION__, video_channel);
+    return;
+  }
+  vie_encoder->SuspendBelowMinBitrate();
+  ViEChannel* vie_channel = cs.Channel(video_channel);
+  if (!vie_channel) {
+    WEBRTC_TRACE(kTraceError, kTraceVideo,
+                 ViEId(shared_data_->instance_id(), video_channel),
+                 "%s: No channel %d", __FUNCTION__, video_channel);
+    return;
+  }
+  // Must enable pacing when enabling SuspendBelowMinBitrate. Otherwise, no
+  // padding will be sent when the video is suspended so the video will be
+  // unable to recover.
+  vie_channel->SetTransmissionSmoothingStatus(true);
+}
+
+bool ViECodecImpl::GetSendSideDelay(int video_channel, int* avg_delay_ms,
+                                   int* max_delay_ms) const {
+  ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
+  ViEChannel* vie_channel = cs.Channel(video_channel);
+  if (!vie_channel) {
+    WEBRTC_TRACE(kTraceError, kTraceVideo,
+                 ViEId(shared_data_->instance_id(), video_channel),
+                 "%s: No channel %d", __FUNCTION__, video_channel);
+    shared_data_->SetLastError(kViECodecInvalidChannelId);
+    return false;
+  }
+  return vie_channel->GetSendSideDelay(avg_delay_ms, max_delay_ms);
 }
 
 bool ViECodecImpl::CodecValid(const VideoCodec& video_codec) {

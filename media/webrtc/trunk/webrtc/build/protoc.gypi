@@ -105,7 +105,6 @@
         '--cpp_out', '<(cc_generator_options)<(cc_dir)',
         '--python_out', '<(py_dir)',
       ],
-      'msvs_cygwin_shell': 0,
       'message': 'Generating C++ and Python code from <(RULE_INPUT_PATH)',
       'process_outputs_as_sources': 1,
     },

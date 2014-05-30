@@ -223,6 +223,7 @@ int32_t FecReceiverImpl::ProcessReceivedFec() {
       crit_sect_->Enter();
     }
     if (fec_->DecodeFEC(&received_packet_list_, &recovered_packet_list_) != 0) {
+      crit_sect_->Leave();
       return -1;
     }
     assert(received_packet_list_.empty());

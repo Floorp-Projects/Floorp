@@ -104,19 +104,11 @@ endif # MOZ_FOLD_LIBS
 endif # MOZ_NATIVE_NSPR
 ifdef MOZ_SHARED_ICU
 ifeq ($(OS_TARGET), WINNT)
-ifdef MOZ_DEBUG
 JSSHELL_BINS += \
-  $(DIST)/bin/icudtd$(MOZ_ICU_VERSION).dll \
-  $(DIST)/bin/icuind$(MOZ_ICU_VERSION).dll \
-  $(DIST)/bin/icuucd$(MOZ_ICU_VERSION).dll \
+  $(DIST)/bin/icudt$(MOZ_ICU_DBG_SUFFIX)$(MOZ_ICU_VERSION).dll \
+  $(DIST)/bin/icuin$(MOZ_ICU_DBG_SUFFIX)$(MOZ_ICU_VERSION).dll \
+  $(DIST)/bin/icuuc$(MOZ_ICU_DBG_SUFFIX)$(MOZ_ICU_VERSION).dll \
   $(NULL)
-else
-JSSHELL_BINS += \
-  $(DIST)/bin/icudt$(MOZ_ICU_VERSION).dll \
-  $(DIST)/bin/icuin$(MOZ_ICU_VERSION).dll \
-  $(DIST)/bin/icuuc$(MOZ_ICU_VERSION).dll \
-  $(NULL)
-endif # MOZ_DEBUG
 else
 ifeq ($(OS_TARGET), Darwin)
 JSSHELL_BINS += \

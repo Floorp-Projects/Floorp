@@ -70,27 +70,28 @@ protected:
 
 enum TraceModule
 {
-    kTraceUndefined          = 0,
+    kTraceUndefined              = 0,
     // not a module, triggered from the engine code
-    kTraceVoice              = 0x0001,
+    kTraceVoice                  = 0x0001,
     // not a module, triggered from the engine code
-    kTraceVideo              = 0x0002,
+    kTraceVideo                  = 0x0002,
     // not a module, triggered from the utility code
-    kTraceUtility            = 0x0003,
-    kTraceRtpRtcp            = 0x0004,
-    kTraceTransport          = 0x0005,
-    kTraceSrtp               = 0x0006,
-    kTraceAudioCoding        = 0x0007,
-    kTraceAudioMixerServer   = 0x0008,
-    kTraceAudioMixerClient   = 0x0009,
-    kTraceFile               = 0x000a,
-    kTraceAudioProcessing    = 0x000b,
-    kTraceVideoCoding        = 0x0010,
-    kTraceVideoMixer         = 0x0011,
-    kTraceAudioDevice        = 0x0012,
-    kTraceVideoRenderer      = 0x0014,
-    kTraceVideoCapture       = 0x0015,
-    kTraceVideoPreocessing   = 0x0016
+    kTraceUtility                = 0x0003,
+    kTraceRtpRtcp                = 0x0004,
+    kTraceTransport              = 0x0005,
+    kTraceSrtp                   = 0x0006,
+    kTraceAudioCoding            = 0x0007,
+    kTraceAudioMixerServer       = 0x0008,
+    kTraceAudioMixerClient       = 0x0009,
+    kTraceFile                   = 0x000a,
+    kTraceAudioProcessing        = 0x000b,
+    kTraceVideoCoding            = 0x0010,
+    kTraceVideoMixer             = 0x0011,
+    kTraceAudioDevice            = 0x0012,
+    kTraceVideoRenderer          = 0x0014,
+    kTraceVideoCapture           = 0x0015,
+    kTraceVideoPreocessing       = 0x0016,
+    kTraceRemoteBitrateEstimator = 0x0017,
 };
 
 enum TraceLevel
@@ -139,7 +140,6 @@ enum FileFormats
     kFileFormatPcm32kHzFile   = 9
 };
 
-
 enum ProcessingTypes
 {
     kPlaybackPerChannel = 0,
@@ -147,6 +147,15 @@ enum ProcessingTypes
     kRecordingPerChannel,
     kRecordingAllChannelsMixed,
     kRecordingPreprocessing
+};
+
+enum FrameType
+{
+    kFrameEmpty            = 0,
+    kAudioFrameSpeech      = 1,
+    kAudioFrameCN          = 2,
+    kVideoFrameKey         = 3,    // independent frame
+    kVideoFrameDelta       = 4,    // depends on the previus frame
 };
 
 // Interface for encrypting and decrypting regular data and rtp/rtcp packets.
@@ -226,6 +235,82 @@ protected:
     Transport() {}
 };
 
+// Statistics for an RTCP channel
+struct RtcpStatistics {
+  RtcpStatistics()
+    : fraction_lost(0),
+      cumulative_lost(0),
+      extended_max_sequence_number(0),
+      jitter(0) {}
+
+  uint8_t fraction_lost;
+  uint32_t cumulative_lost;
+  uint32_t extended_max_sequence_number;
+  uint32_t jitter;
+};
+
+// Callback, called whenever a new rtcp report block is transmitted.
+class RtcpStatisticsCallback {
+ public:
+  virtual ~RtcpStatisticsCallback() {}
+
+  virtual void StatisticsUpdated(const RtcpStatistics& statistics,
+                                 uint32_t ssrc) = 0;
+};
+
+// Data usage statistics for a (rtp) stream
+struct StreamDataCounters {
+  StreamDataCounters()
+   : bytes(0),
+     header_bytes(0),
+     padding_bytes(0),
+     packets(0),
+     retransmitted_packets(0),
+     fec_packets(0) {}
+
+  uint32_t bytes;  // Payload bytes, excluding RTP headers and padding.
+  uint32_t header_bytes;  // Number of bytes used by RTP headers.
+  uint32_t padding_bytes;  // Number of padding bytes.
+  uint32_t packets;  // Number of packets.
+  uint32_t retransmitted_packets;  // Number of retransmitted packets.
+  uint32_t fec_packets;  // Number of redundancy packets.
+};
+
+// Callback, called whenever byte/packet counts have been updated.
+class StreamDataCountersCallback {
+ public:
+  virtual ~StreamDataCountersCallback() {}
+
+  virtual void DataCountersUpdated(const StreamDataCounters& counters,
+                                   uint32_t ssrc) = 0;
+};
+
+// Rate statistics for a stream
+struct BitrateStatistics {
+  BitrateStatistics() : bitrate_bps(0), packet_rate(0), timestamp_ms(0) {}
+
+  uint32_t bitrate_bps;   // Bitrate in bits per second.
+  uint32_t packet_rate;   // Packet rate in packets per second.
+  uint64_t timestamp_ms;  // Ntp timestamp in ms at time of rate estimation.
+};
+
+// Callback, used to notify an observer whenever new rates have been estimated.
+class BitrateStatisticsObserver {
+ public:
+  virtual ~BitrateStatisticsObserver() {}
+
+  virtual void Notify(const BitrateStatistics& stats, uint32_t ssrc) = 0;
+};
+
+// Callback, used to notify an observer whenever frame counts have been updated
+class FrameCountObserver {
+ public:
+  virtual ~FrameCountObserver() {}
+  virtual void FrameCountUpdated(FrameType frame_type,
+                                 uint32_t frame_count,
+                                 const unsigned int ssrc) = 0;
+};
+
 // ==================================================================
 // Voice specific types
 // ==================================================================
@@ -239,17 +324,6 @@ struct CodecInst
     int pacsize;
     int channels;
     int rate;  // bits/sec unlike {start,min,max}Bitrate elsewhere in this file!
-};
-
-enum FrameType
-{
-    kFrameEmpty            = 0,
-    kAudioFrameSpeech      = 1,
-    kAudioFrameCN          = 2,
-    kVideoFrameKey         = 3,    // independent frame
-    kVideoFrameDelta       = 4,    // depends on the previus frame
-    kVideoFrameGolden      = 5,    // depends on a old known previus frame
-    kVideoFrameAltRef      = 6
 };
 
 // RTP
@@ -308,6 +382,25 @@ struct NetworkStatistics           // NETEQ statistics
     int maxWaitingTimeMs;
     // added samples in off mode due to packet loss
     int addedSamples;
+};
+
+// Statistics for calls to AudioCodingModule::PlayoutData10Ms().
+struct AudioDecodingCallStats {
+  AudioDecodingCallStats()
+      : calls_to_silence_generator(0),
+        calls_to_neteq(0),
+        decoded_normal(0),
+        decoded_plc(0),
+        decoded_cng(0),
+        decoded_plc_cng(0) {}
+
+  int calls_to_silence_generator;  // Number of calls where silence generated,
+                                   // and NetEq was disengaged from decoding.
+  int calls_to_neteq;  // Number of calls to NetEq.
+  int decoded_normal;  // Number of calls where audio RTP packet decoded.
+  int decoded_plc;  // Number of calls resulted in PLC.
+  int decoded_cng;  // Number of calls where comfort noise generated due to DTX.
+  int decoded_plc_cng;  // Number of calls resulted where PLC faded to CNG.
 };
 
 typedef struct
@@ -522,13 +615,9 @@ struct VideoCodecH264
     size_t         ppsLen;
 };
 
-// Unknown specific
-struct VideoCodecGeneric
-{
-};
-
 // Video codec types
-enum VideoCodecType {
+enum VideoCodecType
+{
     kVideoCodecVP8,
     kVideoCodecH264,
     kVideoCodecI420,
@@ -542,7 +631,6 @@ union VideoCodecUnion
 {
     VideoCodecVP8       VP8;
     VideoCodecH264      H264;
-    VideoCodecGeneric   Generic;
 };
 
 
@@ -636,6 +724,22 @@ public:
     virtual void AddObserver(CPULoadStateObserver* aObserver) = 0;
     virtual void RemoveObserver(CPULoadStateObserver* aObserver) = 0;
     virtual ~CPULoadStateCallbackInvoker() {};
+};
+
+// This structure will have the information about when packet is actually
+// received by socket.
+struct PacketTime {
+  PacketTime() : timestamp(-1), max_error_us(-1) {}
+  PacketTime(int64_t timestamp, int64_t max_error_us)
+      : timestamp(timestamp), max_error_us(max_error_us) {
+  }
+
+  int64_t timestamp;    // Receive time after socket delivers the data.
+  int64_t max_error_us; // Earliest possible time the data could have arrived,
+                        // indicating the potential error in the |timestamp|
+                        // value,in case the system is busy.
+                        // For example, the time of the last select() call.
+                        // If unknown, this value will be set to zero.
 };
 
 }  // namespace webrtc

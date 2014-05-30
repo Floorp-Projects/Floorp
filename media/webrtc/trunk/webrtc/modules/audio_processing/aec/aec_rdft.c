@@ -42,7 +42,7 @@ ALIGN16_BEG float ALIGN16_END cftmdl_wk1r[4];
 
 static int ip[16];
 
-static void bitrv2_32(int *ip, float *a) {
+static void bitrv2_32(int* ip, float* a) {
   const int n = 32;
   int j, j1, k, k1, m, m2;
   float xr, xi, yr, yi;
@@ -116,7 +116,7 @@ static void bitrv2_32(int *ip, float *a) {
   }
 }
 
-static void bitrv2_128(float *a) {
+static void bitrv2_128(float* a) {
   /*
       Following things have been attempted but are no faster:
       (a) Storing the swap indexes in a LUT (index calculations are done
@@ -146,7 +146,7 @@ static void bitrv2_128(float *a) {
       a[j1 + 1] = yi;
       a[k1 + 0] = xr;
       a[k1 + 1] = xi;
-      j1 +=  8;
+      j1 += 8;
       k1 += 16;
       xr = a[j1 + 0];
       xi = a[j1 + 1];
@@ -166,7 +166,7 @@ static void bitrv2_128(float *a) {
       a[j1 + 1] = yi;
       a[k1 + 0] = xr;
       a[k1 + 1] = xi;
-      j1 +=  8;
+      j1 += 8;
       k1 += 16;
       xr = a[j1 + 0];
       xi = a[j1 + 1];
@@ -265,7 +265,7 @@ static void makewt_32(void) {
 }
 
 static void makect_32(void) {
-  float *c = rdft_w + 32;
+  float* c = rdft_w + 32;
   const int nc = 32;
   int j, nch;
   float delta;
@@ -281,7 +281,7 @@ static void makect_32(void) {
   }
 }
 
-static void cft1st_128_C(float *a) {
+static void cft1st_128_C(float* a) {
   const int n = 128;
   int j, k1, k2;
   float wk1r, wk1i, wk2r, wk2i, wk3r, wk3i;
@@ -385,7 +385,7 @@ static void cft1st_128_C(float *a) {
   }
 }
 
-static void cftmdl_128_C(float *a) {
+static void cftmdl_128_C(float* a) {
   const int l = 8;
   const int n = 128;
   const int m = 32;
@@ -394,7 +394,7 @@ static void cftmdl_128_C(float *a) {
   float x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
 
   for (j0 = 0; j0 < l; j0 += 2) {
-    j1 = j0 +  8;
+    j1 = j0 + 8;
     j2 = j0 + 16;
     j3 = j0 + 24;
     x0r = a[j0 + 0] + a[j1 + 0];
@@ -416,7 +416,7 @@ static void cftmdl_128_C(float *a) {
   }
   wk1r = rdft_w[2];
   for (j0 = m; j0 < l + m; j0 += 2) {
-    j1 = j0 +  8;
+    j1 = j0 + 8;
     j2 = j0 + 16;
     j3 = j0 + 24;
     x0r = a[j0 + 0] + a[j1 + 0];
@@ -452,7 +452,7 @@ static void cftmdl_128_C(float *a) {
     wk3r = rdft_wk3ri_first[k1 + 0];
     wk3i = rdft_wk3ri_first[k1 + 1];
     for (j0 = k; j0 < l + k; j0 += 2) {
-      j1 = j0 +  8;
+      j1 = j0 + 8;
       j2 = j0 + 16;
       j3 = j0 + 24;
       x0r = a[j0 + 0] + a[j1 + 0];
@@ -483,7 +483,7 @@ static void cftmdl_128_C(float *a) {
     wk3r = rdft_wk3ri_second[k1 + 0];
     wk3i = rdft_wk3ri_second[k1 + 1];
     for (j0 = k + m; j0 < l + (k + m); j0 += 2) {
-      j1 = j0 +  8;
+      j1 = j0 + 8;
       j2 = j0 + 16;
       j3 = j0 + 24;
       x0r = a[j0 + 0] + a[j1 + 0];
@@ -512,7 +512,7 @@ static void cftmdl_128_C(float *a) {
   }
 }
 
-static void cftfsub_128(float *a) {
+static void cftfsub_128(float* a) {
   int j, j1, j2, j3, l;
   float x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
 
@@ -542,7 +542,7 @@ static void cftfsub_128(float *a) {
   }
 }
 
-static void cftbsub_128(float *a) {
+static void cftbsub_128(float* a) {
   int j, j1, j2, j3, l;
   float x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
 
@@ -573,14 +573,14 @@ static void cftbsub_128(float *a) {
   }
 }
 
-static void rftfsub_128_C(float *a) {
-  const float *c = rdft_w + 32;
+static void rftfsub_128_C(float* a) {
+  const float* c = rdft_w + 32;
   int j1, j2, k1, k2;
   float wkr, wki, xr, xi, yr, yi;
 
   for (j1 = 1, j2 = 2; j2 < 64; j1 += 1, j2 += 2) {
     k2 = 128 - j2;
-    k1 =  32 - j1;
+    k1 = 32 - j1;
     wkr = 0.5f - c[k1];
     wki = c[j1];
     xr = a[j2 + 0] - a[k2 + 0];
@@ -594,15 +594,15 @@ static void rftfsub_128_C(float *a) {
   }
 }
 
-static void rftbsub_128_C(float *a) {
-  const float *c = rdft_w + 32;
+static void rftbsub_128_C(float* a) {
+  const float* c = rdft_w + 32;
   int j1, j2, k1, k2;
   float wkr, wki, xr, xi, yr, yi;
 
   a[1] = -a[1];
   for (j1 = 1, j2 = 2; j2 < 64; j1 += 1, j2 += 2) {
     k2 = 128 - j2;
-    k1 =  32 - j1;
+    k1 = 32 - j1;
     wkr = 0.5f - c[k1];
     wki = c[j1];
     xr = a[j2 + 0] - a[k2 + 0];
@@ -617,7 +617,7 @@ static void rftbsub_128_C(float *a) {
   a[65] = -a[65];
 }
 
-void aec_rdft_forward_128(float *a) {
+void aec_rdft_forward_128(float* a) {
   float xi;
   bitrv2_128(a);
   cftfsub_128(a);
@@ -627,7 +627,7 @@ void aec_rdft_forward_128(float *a) {
   a[1] = xi;
 }
 
-void aec_rdft_inverse_128(float *a) {
+void aec_rdft_inverse_128(float* a) {
   a[1] = 0.5f * (a[0] - a[1]);
   a[0] -= a[1];
   rftbsub_128(a);

@@ -84,6 +84,8 @@ public:
     uint32_t ntp_frac;
     uint32_t rtp_timestamp;
 
+    uint32_t xr_originator_ssrc;
+    bool xr_dlrr_item;
     RTCPVoIPMetric*  VoIPMetric;
 
 private:

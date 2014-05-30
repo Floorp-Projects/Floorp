@@ -18,14 +18,14 @@
 #import <QTKit/QTKit.h>
 #include <sys/time.h>
 
-#include "common_types.h"
-#import "webrtc/modules/video_render//mac/cocoa_render_view.h"
-#include "module_common_types.h"
-#include "process_thread.h"
-#include "tick_util.h"
-#include "trace.h"
-#include "video_render_defines.h"
-#include "video_render.h"
+#import "webrtc/modules/video_render/mac/cocoa_render_view.h"
+#include "webrtc/common_types.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/utility/interface/process_thread.h"
+#include "webrtc/modules/video_render/include/video_render.h"
+#include "webrtc/modules/video_render/include/video_render_defines.h"
+#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 using namespace webrtc;
 
