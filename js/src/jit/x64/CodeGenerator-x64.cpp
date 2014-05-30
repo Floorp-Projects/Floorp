@@ -182,26 +182,6 @@ CodeGeneratorX64::visitStoreSlotT(LStoreSlotT *store)
     return true;
 }
 
-bool
-CodeGeneratorX64::visitLoadElementT(LLoadElementT *load)
-{
-    Operand source = createArrayElementOperand(ToRegister(load->elements()), load->index());
-    AnyRegister output = ToAnyRegister(load->output());
-
-    if (load->mir()->loadDoubles()) {
-        if (source.kind() == Operand::MEM_REG_DISP)
-            masm.loadDouble(source.toAddress(), output.fpu());
-        else
-            masm.loadDouble(source.toBaseIndex(), output.fpu());
-    } else {
-        masm.loadUnboxedValue(source, load->mir()->type(), output);
-    }
-
-    JS_ASSERT(!load->mir()->needsHoleCheck());
-    return true;
-}
-
-
 void
 CodeGeneratorX64::storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
                                     Register elements, const LAllocation *index)

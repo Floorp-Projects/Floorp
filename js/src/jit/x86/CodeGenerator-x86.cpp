@@ -167,31 +167,6 @@ CodeGeneratorX86::visitStoreSlotT(LStoreSlotT *store)
     return true;
 }
 
-bool
-CodeGeneratorX86::visitLoadElementT(LLoadElementT *load)
-{
-    Operand source = createArrayElementOperand(ToRegister(load->elements()), load->index());
-
-    if (load->mir()->needsHoleCheck()) {
-        Assembler::Condition cond = masm.testMagic(Assembler::Equal, source);
-        if (!bailoutIf(cond, load->snapshot()))
-            return false;
-    }
-
-    AnyRegister output = ToAnyRegister(load->output());
-
-    if (load->mir()->loadDoubles()) {
-        if (source.kind() == Operand::MEM_REG_DISP)
-            masm.loadDouble(source.toAddress(), output.fpu());
-        else
-            masm.loadDouble(source.toBaseIndex(), output.fpu());
-    } else {
-        masm.loadUnboxedValue(source, load->mir()->type(), output);
-    }
-
-    return true;
-}
-
 void
 CodeGeneratorX86::storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
                                     Register elements, const LAllocation *index)
