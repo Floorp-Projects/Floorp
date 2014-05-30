@@ -500,8 +500,7 @@ NeckoParent::DeallocPDNSRequestParent(PDNSRequestParent* aParent)
 }
 
 PRemoteOpenFileParent*
-NeckoParent::AllocPRemoteOpenFileParent(const SerializedLoadContext& aSerialized,
-                                        const URIParams& aURI,
+NeckoParent::AllocPRemoteOpenFileParent(const URIParams& aURI,
                                         const OptionalURIParams& aAppURI)
 {
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
@@ -524,21 +523,17 @@ NeckoParent::AllocPRemoteOpenFileParent(const SerializedLoadContext& aSerialized
       nsRefPtr<TabParent> tabParent =
         static_cast<TabParent*>(Manager()->ManagedPBrowserParent()[i]);
       uint32_t appId = tabParent->OwnOrContainingAppId();
-      // Note: this enforces that SerializedLoadContext.appID is one of the apps
-      // in the child process, but there's currently no way to verify the
-      // request is not from a different app in that process.
-      if (appId == aSerialized.mAppId) {
-        nsresult rv = appsService->GetAppByLocalId(appId, getter_AddRefs(mozApp));
-        if (NS_FAILED(rv) || !mozApp) {
-          break;
-        }
-        rv = mozApp->HasPermission("webapps-manage", &hasManage);
-        if (NS_FAILED(rv)) {
-          break;
-        }
-        haveValidBrowser = true;
-        break;
+      nsresult rv = appsService->GetAppByLocalId(appId, getter_AddRefs(mozApp));
+      if (NS_FAILED(rv) || !mozApp) {
+        continue;
       }
+      hasManage = false;
+      rv = mozApp->HasPermission("webapps-manage", &hasManage);
+      if (NS_FAILED(rv)) {
+        continue;
+      }
+      haveValidBrowser = true;
+      break;
     }
 
     if (!haveValidBrowser) {
@@ -626,11 +621,9 @@ NeckoParent::AllocPRemoteOpenFileParent(const SerializedLoadContext& aSerialized
 }
 
 bool
-NeckoParent::RecvPRemoteOpenFileConstructor(
-                PRemoteOpenFileParent* aActor,
-                const SerializedLoadContext& aSerialized,
-                const URIParams& aFileURI,
-                const OptionalURIParams& aAppURI)
+NeckoParent::RecvPRemoteOpenFileConstructor(PRemoteOpenFileParent* aActor,
+                                            const URIParams& aFileURI,
+                                            const OptionalURIParams& aAppURI)
 {
   return static_cast<RemoteOpenFileParent*>(aActor)->OpenSendCloseDelete();
 }
