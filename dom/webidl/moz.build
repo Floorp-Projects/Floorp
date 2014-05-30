@@ -391,6 +391,7 @@ WEBIDL_FILES = [
     'SVGMatrix.webidl',
     'SVGMetadataElement.webidl',
     'SVGMPathElement.webidl',
+    'SVGNumber.webidl',
     'SVGNumberList.webidl',
     'SVGPathElement.webidl',
     'SVGPathSeg.webidl',

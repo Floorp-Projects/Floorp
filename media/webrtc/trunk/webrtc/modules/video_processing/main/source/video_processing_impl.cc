@@ -17,277 +17,204 @@
 
 namespace webrtc {
 
-namespace
-{
-    void
-    SetSubSampling(VideoProcessingModule::FrameStats* stats,
-                   const int32_t width,
-                   const int32_t height)
-    {
-        if (width * height >= 640 * 480)
-        {
-            stats->subSamplWidth = 3;
-            stats->subSamplHeight = 3;
-        }
-        else if (width * height >= 352 * 288)
-        {
-            stats->subSamplWidth = 2;
-            stats->subSamplHeight = 2;
-        }
-        else if (width * height >= 176 * 144)
-        {
-            stats->subSamplWidth = 1;
-            stats->subSamplHeight = 1;
-        }
-        else
-        {
-            stats->subSamplWidth = 0;
-            stats->subSamplHeight = 0;
-        }
-    }
-}
-
-VideoProcessingModule*
-VideoProcessingModule::Create(const int32_t id)
-{
-
-    return new VideoProcessingModuleImpl(id);
-}
-
-void
-VideoProcessingModule::Destroy(VideoProcessingModule* module)
-{
-    if (module)
-    {
-        delete static_cast<VideoProcessingModuleImpl*>(module);
-    }
-}
-
-int32_t
-VideoProcessingModuleImpl::ChangeUniqueId(const int32_t id)
-{
-    CriticalSectionScoped mutex(&_mutex);
-    _id = id;
-    _brightnessDetection.ChangeUniqueId(id);
-    _deflickering.ChangeUniqueId(id);
-    _denoising.ChangeUniqueId(id);
-    _framePreProcessor.ChangeUniqueId(id);
-    return VPM_OK;
-}
-
-int32_t
-VideoProcessingModuleImpl::Id() const
-{
-    CriticalSectionScoped mutex(&_mutex);
-    return _id;
-}
-
-VideoProcessingModuleImpl::VideoProcessingModuleImpl(const int32_t id) :
-    _id(id),
-    _mutex(*CriticalSectionWrapper::CreateCriticalSection())
-{
-    _brightnessDetection.ChangeUniqueId(id);
-    _deflickering.ChangeUniqueId(id);
-    _denoising.ChangeUniqueId(id);
-    _framePreProcessor.ChangeUniqueId(id);
-    WEBRTC_TRACE(webrtc::kTraceMemory, webrtc::kTraceVideoPreocessing, _id,
-                 "Created");
-}
-
-
-VideoProcessingModuleImpl::~VideoProcessingModuleImpl()
-{
-    WEBRTC_TRACE(webrtc::kTraceMemory, webrtc::kTraceVideoPreocessing, _id,
-                 "Destroyed");
-    
-    delete &_mutex;
-}
-
-void
-VideoProcessingModuleImpl::Reset()
-{
-    CriticalSectionScoped mutex(&_mutex);
-    _deflickering.Reset();
-    _denoising.Reset();
-    _brightnessDetection.Reset();
-    _framePreProcessor.Reset();
-
-}
-
-int32_t
-VideoProcessingModule::GetFrameStats(FrameStats* stats,
-                                     const I420VideoFrame& frame)
-{
-    if (frame.IsZeroSize())
-    {
-        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoPreocessing, -1,
-                     "zero size frame");
-        return VPM_PARAMETER_ERROR;
-    }
-    
-    int width = frame.width();
-    int height = frame.height();
-
-    ClearFrameStats(stats); // The histogram needs to be zeroed out.
-    SetSubSampling(stats, width, height);
-
-    const uint8_t* buffer = frame.buffer(kYPlane);
-    // Compute histogram and sum of frame
-    for (int i = 0; i < height; i += (1 << stats->subSamplHeight))
-    {
-        int k = i * width;
-        for (int j = 0; j < width; j += (1 << stats->subSamplWidth))
-        { 
-            stats->hist[buffer[k + j]]++;
-            stats->sum += buffer[k + j];
-        }
-    }
-
-    stats->numPixels = (width * height) / ((1 << stats->subSamplWidth) *
-        (1 << stats->subSamplHeight));
-    assert(stats->numPixels > 0);
-
-    // Compute mean value of frame
-    stats->mean = stats->sum / stats->numPixels;
-    
-    return VPM_OK;
-}
-
-bool
-VideoProcessingModule::ValidFrameStats(const FrameStats& stats)
-{
-    if (stats.numPixels == 0)
-    {
-        return false;
-    }
-
-    return true;
-}
-
-void
-VideoProcessingModule::ClearFrameStats(FrameStats* stats)
-{
-    stats->mean = 0;
-    stats->sum = 0;
-    stats->numPixels = 0;
+namespace {
+void  SetSubSampling(VideoProcessingModule::FrameStats* stats,
+                     const int32_t width,
+                     const int32_t height) {
+  if (width * height >= 640 * 480) {
+    stats->subSamplWidth = 3;
+    stats->subSamplHeight = 3;
+  } else if (width * height >= 352 * 288) {
+    stats->subSamplWidth = 2;
+    stats->subSamplHeight = 2;
+  } else if (width * height >= 176 * 144) {
+    stats->subSamplWidth = 1;
+    stats->subSamplHeight = 1;
+  } else {
     stats->subSamplWidth = 0;
     stats->subSamplHeight = 0;
-    memset(stats->hist, 0, sizeof(stats->hist));
+  }
 }
-
-int32_t
-VideoProcessingModule::ColorEnhancement(I420VideoFrame* frame)
-{
-    return VideoProcessing::ColorEnhancement(frame);
-}
-
-int32_t
-VideoProcessingModule::Brighten(I420VideoFrame* frame, int delta)
-{
-    return VideoProcessing::Brighten(frame, delta);
-}
-
-int32_t
-VideoProcessingModuleImpl::Deflickering(I420VideoFrame* frame,
-                                        FrameStats* stats)
-{
-    CriticalSectionScoped mutex(&_mutex);
-    return _deflickering.ProcessFrame(frame, stats);
-}
-
-int32_t
-VideoProcessingModuleImpl::Denoising(I420VideoFrame* frame)
-{
-    CriticalSectionScoped mutex(&_mutex);
-    return _denoising.ProcessFrame(frame);
-}
-
-int32_t
-VideoProcessingModuleImpl::BrightnessDetection(const I420VideoFrame& frame,
-                                               const FrameStats& stats)
-{
-    CriticalSectionScoped mutex(&_mutex);
-    return _brightnessDetection.ProcessFrame(frame, stats);
-}
-
-
-void 
-VideoProcessingModuleImpl::EnableTemporalDecimation(bool enable)
-{
-    CriticalSectionScoped mutex(&_mutex);
-    _framePreProcessor.EnableTemporalDecimation(enable);
-}
-
-
-void 
-VideoProcessingModuleImpl::SetInputFrameResampleMode(VideoFrameResampling
-                                                     resamplingMode)
-{
-    CriticalSectionScoped cs(&_mutex);
-    _framePreProcessor.SetInputFrameResampleMode(resamplingMode);
-}
-
-int32_t
-VideoProcessingModuleImpl::SetMaxFrameRate(uint32_t maxFrameRate)
-{
-    CriticalSectionScoped cs(&_mutex);
-    return _framePreProcessor.SetMaxFrameRate(maxFrameRate);
-
-}
-
-int32_t
-VideoProcessingModuleImpl::SetTargetResolution(uint32_t width,
-                                               uint32_t height,
-                                               uint32_t frameRate)
-{
-    CriticalSectionScoped cs(&_mutex);
-    return _framePreProcessor.SetTargetResolution(width, height, frameRate);
-}
-
-
-uint32_t
-VideoProcessingModuleImpl::DecimatedFrameRate()
-{
-    CriticalSectionScoped cs(&_mutex);
-    return  _framePreProcessor.DecimatedFrameRate();
-}
-
-
-uint32_t
-VideoProcessingModuleImpl::DecimatedWidth() const
-{
-    CriticalSectionScoped cs(&_mutex);
-    return _framePreProcessor.DecimatedWidth();
-}
-
-uint32_t
-VideoProcessingModuleImpl::DecimatedHeight() const
-{
-    CriticalSectionScoped cs(&_mutex);
-    return _framePreProcessor.DecimatedHeight();
-}
-
-int32_t
-VideoProcessingModuleImpl::PreprocessFrame(const I420VideoFrame& frame,
-                                           I420VideoFrame **processedFrame)
-{
-    CriticalSectionScoped mutex(&_mutex);
-    return _framePreProcessor.PreprocessFrame(frame, processedFrame);
-}
-
-VideoContentMetrics*
-VideoProcessingModuleImpl::ContentMetrics() const
-{
-    CriticalSectionScoped mutex(&_mutex);
-    return _framePreProcessor.ContentMetrics();
-}
-
-
-void
-VideoProcessingModuleImpl::EnableContentAnalysis(bool enable)
-{
-    CriticalSectionScoped mutex(&_mutex);
-    _framePreProcessor.EnableContentAnalysis(enable);
-}
-
 }  // namespace
+
+VideoProcessingModule* VideoProcessingModule::Create(const int32_t id) {
+  return new VideoProcessingModuleImpl(id);
+}
+
+void VideoProcessingModule::Destroy(VideoProcessingModule* module) {
+  if (module)
+    delete static_cast<VideoProcessingModuleImpl*>(module);
+}
+
+int32_t VideoProcessingModuleImpl::ChangeUniqueId(const int32_t id) {
+  CriticalSectionScoped mutex(&mutex_);
+  id_ = id;
+  brightness_detection_.ChangeUniqueId(id);
+  deflickering_.ChangeUniqueId(id);
+  denoising_.ChangeUniqueId(id);
+  frame_pre_processor_.ChangeUniqueId(id);
+  return VPM_OK;
+}
+
+int32_t VideoProcessingModuleImpl::Id() const {
+  CriticalSectionScoped mutex(&mutex_);
+  return id_;
+}
+
+VideoProcessingModuleImpl::VideoProcessingModuleImpl(const int32_t id)
+    : id_(id),
+    mutex_(*CriticalSectionWrapper::CreateCriticalSection()) {
+  brightness_detection_.ChangeUniqueId(id);
+  deflickering_.ChangeUniqueId(id);
+  denoising_.ChangeUniqueId(id);
+  frame_pre_processor_.ChangeUniqueId(id);
+  WEBRTC_TRACE(webrtc::kTraceMemory, webrtc::kTraceVideoPreocessing, id_,
+               "Created");
+}
+
+VideoProcessingModuleImpl::~VideoProcessingModuleImpl() {
+  WEBRTC_TRACE(webrtc::kTraceMemory, webrtc::kTraceVideoPreocessing, id_,
+               "Destroyed");
+  delete &mutex_;
+}
+
+void VideoProcessingModuleImpl::Reset() {
+  CriticalSectionScoped mutex(&mutex_);
+  deflickering_.Reset();
+  denoising_.Reset();
+  brightness_detection_.Reset();
+  frame_pre_processor_.Reset();
+}
+
+int32_t VideoProcessingModule::GetFrameStats(FrameStats* stats,
+                                             const I420VideoFrame& frame) {
+  if (frame.IsZeroSize()) {
+    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoPreocessing, -1,
+                 "zero size frame");
+    return VPM_PARAMETER_ERROR;
+  }
+
+  int width = frame.width();
+  int height = frame.height();
+
+  ClearFrameStats(stats);  // The histogram needs to be zeroed out.
+  SetSubSampling(stats, width, height);
+
+  const uint8_t* buffer = frame.buffer(kYPlane);
+  // Compute histogram and sum of frame
+  for (int i = 0; i < height; i += (1 << stats->subSamplHeight)) {
+    int k = i * width;
+    for (int j = 0; j < width; j += (1 << stats->subSamplWidth)) {
+      stats->hist[buffer[k + j]]++;
+      stats->sum += buffer[k + j];
+    }
+  }
+
+  stats->num_pixels = (width * height) / ((1 << stats->subSamplWidth) *
+                     (1 << stats->subSamplHeight));
+  assert(stats->num_pixels > 0);
+
+  // Compute mean value of frame
+  stats->mean = stats->sum / stats->num_pixels;
+
+  return VPM_OK;
+}
+
+bool VideoProcessingModule::ValidFrameStats(const FrameStats& stats) {
+  if (stats.num_pixels == 0) return false;
+  return true;
+}
+
+void VideoProcessingModule::ClearFrameStats(FrameStats* stats) {
+  stats->mean = 0;
+  stats->sum = 0;
+  stats->num_pixels = 0;
+  stats->subSamplWidth = 0;
+  stats->subSamplHeight = 0;
+  memset(stats->hist, 0, sizeof(stats->hist));
+}
+
+int32_t VideoProcessingModule::ColorEnhancement(I420VideoFrame* frame) {
+  return VideoProcessing::ColorEnhancement(frame);
+}
+
+int32_t VideoProcessingModule::Brighten(I420VideoFrame* frame, int delta) {
+  return VideoProcessing::Brighten(frame, delta);
+}
+
+int32_t VideoProcessingModuleImpl::Deflickering(I420VideoFrame* frame,
+                                                FrameStats* stats) {
+  CriticalSectionScoped mutex(&mutex_);
+  return deflickering_.ProcessFrame(frame, stats);
+}
+
+int32_t VideoProcessingModuleImpl::Denoising(I420VideoFrame* frame) {
+  CriticalSectionScoped mutex(&mutex_);
+  return denoising_.ProcessFrame(frame);
+}
+
+int32_t VideoProcessingModuleImpl::BrightnessDetection(
+  const I420VideoFrame& frame,
+  const FrameStats& stats) {
+  CriticalSectionScoped mutex(&mutex_);
+  return brightness_detection_.ProcessFrame(frame, stats);
+}
+
+
+void VideoProcessingModuleImpl::EnableTemporalDecimation(bool enable) {
+  CriticalSectionScoped mutex(&mutex_);
+  frame_pre_processor_.EnableTemporalDecimation(enable);
+}
+
+
+void VideoProcessingModuleImpl::SetInputFrameResampleMode(VideoFrameResampling
+                                                          resampling_mode) {
+  CriticalSectionScoped cs(&mutex_);
+  frame_pre_processor_.SetInputFrameResampleMode(resampling_mode);
+}
+
+int32_t VideoProcessingModuleImpl::SetMaxFramerate(uint32_t max_frame_rate) {
+  CriticalSectionScoped cs(&mutex_);
+  return frame_pre_processor_.SetMaxFramerate(max_frame_rate);
+}
+
+int32_t VideoProcessingModuleImpl::SetTargetResolution(uint32_t width,
+                                                       uint32_t height,
+                                                       uint32_t frame_rate) {
+  CriticalSectionScoped cs(&mutex_);
+  return frame_pre_processor_.SetTargetResolution(width, height, frame_rate);
+}
+
+uint32_t VideoProcessingModuleImpl::Decimatedframe_rate() {
+  CriticalSectionScoped cs(&mutex_);
+  return  frame_pre_processor_.Decimatedframe_rate();
+}
+
+uint32_t VideoProcessingModuleImpl::DecimatedWidth() const {
+  CriticalSectionScoped cs(&mutex_);
+  return frame_pre_processor_.DecimatedWidth();
+}
+
+uint32_t VideoProcessingModuleImpl::DecimatedHeight() const {
+  CriticalSectionScoped cs(&mutex_);
+  return frame_pre_processor_.DecimatedHeight();
+}
+
+int32_t VideoProcessingModuleImpl::PreprocessFrame(
+    const I420VideoFrame& frame,
+    I420VideoFrame **processed_frame) {
+  CriticalSectionScoped mutex(&mutex_);
+  return frame_pre_processor_.PreprocessFrame(frame, processed_frame);
+}
+
+VideoContentMetrics* VideoProcessingModuleImpl::ContentMetrics() const {
+  CriticalSectionScoped mutex(&mutex_);
+  return frame_pre_processor_.ContentMetrics();
+}
+
+void VideoProcessingModuleImpl::EnableContentAnalysis(bool enable) {
+  CriticalSectionScoped mutex(&mutex_);
+  frame_pre_processor_.EnableContentAnalysis(enable);
+}
+
+}  // namespace webrtc

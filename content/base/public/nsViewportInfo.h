@@ -32,7 +32,7 @@ class MOZ_STACK_CLASS nsViewportInfo
       mAllowZoom(aAllowZoom),
       mAllowDoubleTapZoom(aAllowDoubleTapZoom)
     {
-        mSize = mozilla::gfx::RoundedToInt(mozilla::ScreenSize(aDisplaySize) / mDefaultZoom);
+        mSize = mozilla::ScreenSize(aDisplaySize) / mDefaultZoom;
         mozilla::CSSToLayoutDeviceScale pixelRatio(1.0f);
         mMinZoom = pixelRatio * kViewportMinScale;
         mMaxZoom = pixelRatio * kViewportMaxScale;
@@ -42,7 +42,7 @@ class MOZ_STACK_CLASS nsViewportInfo
     nsViewportInfo(const mozilla::CSSToScreenScale& aDefaultZoom,
                    const mozilla::CSSToScreenScale& aMinZoom,
                    const mozilla::CSSToScreenScale& aMaxZoom,
-                   const mozilla::CSSIntSize& aSize,
+                   const mozilla::CSSSize& aSize,
                    bool aAutoSize,
                    bool aAllowZoom,
                    bool aAllowDoubleTapZoom) :
@@ -62,7 +62,7 @@ class MOZ_STACK_CLASS nsViewportInfo
     mozilla::CSSToScreenScale GetMinZoom() { return mMinZoom; }
     mozilla::CSSToScreenScale GetMaxZoom() { return mMaxZoom; }
 
-    mozilla::CSSIntSize GetSize() { return mSize; }
+    mozilla::CSSSize GetSize() { return mSize; }
 
     bool IsAutoSizeEnabled() { return mAutoSize; }
     bool IsZoomAllowed() { return mAllowZoom; }
@@ -90,7 +90,7 @@ class MOZ_STACK_CLASS nsViewportInfo
     mozilla::CSSToScreenScale mMaxZoom;
 
     // The size of the viewport, specified by the <meta name="viewport"> tag.
-    mozilla::CSSIntSize mSize;
+    mozilla::CSSSize mSize;
 
     // Whether or not we should automatically size the viewport to the device's
     // width. This is true if the document has been optimized for mobile, and

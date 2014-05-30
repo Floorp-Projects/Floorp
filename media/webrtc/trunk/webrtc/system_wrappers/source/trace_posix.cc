@@ -17,10 +17,6 @@
 #include <sys/time.h>
 #include <time.h>
 
-#ifdef WEBRTC_ANDROID
-#include <pthread.h>
-#endif
-
 #if defined(_DEBUG)
 #define BUILDMODE "d"
 #elif defined(DEBUG)

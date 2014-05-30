@@ -20,10 +20,10 @@ size_t SyncBuffer::FutureLength() const {
   return Size() - next_index_;
 }
 
-void SyncBuffer::PushBack(const AudioMultiVector<int16_t>& append_this) {
+void SyncBuffer::PushBack(const AudioMultiVector& append_this) {
   size_t samples_added = append_this.Size();
-  AudioMultiVector<int16_t>::PushBack(append_this);
-  AudioMultiVector<int16_t>::PopFront(samples_added);
+  AudioMultiVector::PushBack(append_this);
+  AudioMultiVector::PopFront(samples_added);
   if (samples_added <= next_index_) {
     next_index_ -= samples_added;
   } else {
@@ -44,7 +44,7 @@ void SyncBuffer::PushFrontZeros(size_t length) {
 void SyncBuffer::InsertZerosAtIndex(size_t length, size_t position) {
   position = std::min(position, Size());
   length = std::min(length, Size() - position);
-  AudioMultiVector<int16_t>::PopBack(length);
+  AudioMultiVector::PopBack(length);
   for (size_t channel = 0; channel < Channels(); ++channel) {
     channels_[channel]->InsertZerosAt(length, position);
   }
@@ -58,15 +58,15 @@ void SyncBuffer::InsertZerosAtIndex(size_t length, size_t position) {
   }
 }
 
-void SyncBuffer::ReplaceAtIndex(const AudioMultiVector<int16_t>& insert_this,
+void SyncBuffer::ReplaceAtIndex(const AudioMultiVector& insert_this,
                                 size_t length,
                                 size_t position) {
   position = std::min(position, Size());  // Cap |position| in the valid range.
   length = std::min(length, Size() - position);
-  AudioMultiVector<int16_t>::OverwriteAt(insert_this, length, position);
+  AudioMultiVector::OverwriteAt(insert_this, length, position);
 }
 
-void SyncBuffer::ReplaceAtIndex(const AudioMultiVector<int16_t>& insert_this,
+void SyncBuffer::ReplaceAtIndex(const AudioMultiVector& insert_this,
                                 size_t position) {
   ReplaceAtIndex(insert_this, insert_this.Size(), position);
 }

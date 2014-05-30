@@ -5276,6 +5276,20 @@
     "n_buckets": "50",
     "description": "The number of calls made during a session."
   },
+  "WEBRTC_ICE_ADD_CANDIDATE_ERRORS_GIVEN_SUCCESS": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "30",
+    "n_buckets": "29",
+    "description": "The number of times AddIceCandidate failed on a given PeerConnection, given that ICE succeeded."
+  },
+  "WEBRTC_ICE_ADD_CANDIDATE_ERRORS_GIVEN_FAILURE": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "30",
+    "n_buckets": "29",
+    "description": "The number of times AddIceCandidate failed on a given PeerConnection, given that ICE failed."
+  },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_TRACERDETACH_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -6124,5 +6138,20 @@
     "high": 1000,
     "n_buckets": 10,
     "description": "The number of times a sync successfully completed in this session"
+  },
+  "WEAVE_CUSTOM_LEGACY_SERVER_CONFIGURATION": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether legacy Sync is configured to use a custom server"
+  },
+  "WEAVE_CUSTOM_FXA_SERVER_CONFIGURATION": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether FxA Sync is configured to use a custom authentication server"
+  },
+  "WEAVE_CUSTOM_TOKEN_SERVER_CONFIGURATION": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether FxA Sync is configured to use a custom token server"
   }
 }

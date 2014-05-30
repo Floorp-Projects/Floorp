@@ -71,6 +71,7 @@ const bool kDefaultAgcState =
 #else
   true;
 #endif
+const GainControl::Mode kDefaultRxAgcMode = GainControl::kAdaptiveDigital;
 
 // Codec
 // Min init target rate for iSAC-wb
@@ -121,20 +122,6 @@ enum { kVoiceEngineMinRtpExtensionId = 1 };
 enum { kVoiceEngineMaxRtpExtensionId = 14 };
 
 }  // namespace webrtc
-
-// TODO(ajm): we shouldn't be using the precompiler for this.
-// Use enums or bools as appropriate.
-#define WEBRTC_VOICE_ENGINE_RX_AGC_DEFAULT_STATE false
-    // AudioProcessing RX AGC off
-#define WEBRTC_VOICE_ENGINE_RX_NS_DEFAULT_STATE false
-    // AudioProcessing RX NS off
-#define WEBRTC_VOICE_ENGINE_RX_HP_DEFAULT_STATE false
-    // AudioProcessing RX High Pass Filter off
-
-#define WEBRTC_VOICE_ENGINE_RX_AGC_DEFAULT_MODE GainControl::kAdaptiveDigital
-    // AudioProcessing AGC mode
-#define WEBRTC_VOICE_ENGINE_RX_NS_DEFAULT_MODE NoiseSuppression::kModerate
-    // AudioProcessing RX NS mode
 
 // ----------------------------------------------------------------------------
 //  Build information macros
