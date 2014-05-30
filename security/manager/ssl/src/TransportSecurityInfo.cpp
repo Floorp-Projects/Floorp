@@ -707,13 +707,7 @@ AppendErrorTextMismatch(const nsString &host,
     useSAN = GetSubjectAltNames(nssCert.get(), component, allNames, nameCount);
 
   if (!useSAN) {
-    char *certName = nullptr;
-    // currently CERT_FindNSStringExtension is not being exported by NSS.
-    // If it gets exported, enable the following line.
-    //   certName = CERT_FindNSStringExtension(nssCert, SEC_OID_NS_CERT_EXT_SSL_SERVER_NAME);
-    // However, it has been discussed to treat the extension as obsolete and ignore it.
-    if (!certName)
-      certName = CERT_GetCommonName(&nssCert->subject);
+    char *certName = CERT_GetCommonName(&nssCert->subject);
     if (certName) {
       ++nameCount;
       allNames.Assign(NS_ConvertUTF8toUTF16(certName));
