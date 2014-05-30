@@ -49,14 +49,31 @@ namespace mozilla {
  */
 class MallocAllocPolicy
 {
-  public:
-    void* malloc_(size_t bytes) { return malloc(bytes); }
-    void* calloc_(size_t bytes) { return calloc(bytes, 1); }
-    void* realloc_(void* p, size_t oldBytes, size_t bytes) { return realloc(p, bytes); }
-    void free_(void* p) { free(p); }
-    void reportAllocOverflow() const {}
-};
+public:
+  void* malloc_(size_t aBytes)
+  {
+    return malloc(aBytes);
+  }
 
+  void* calloc_(size_t aBytes)
+  {
+    return calloc(aBytes, 1);
+  }
+
+  void* realloc_(void* aPtr, size_t aOldBytes, size_t aBytes)
+  {
+    return realloc(aPtr, aBytes);
+  }
+
+  void free_(void* aPtr)
+  {
+    free(aPtr);
+  }
+
+  void reportAllocOverflow() const
+  {
+  }
+};
 
 } // namespace mozilla
 
