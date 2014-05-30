@@ -72,7 +72,8 @@ public:
   // Note: currently only PR_RDONLY is supported for 'flags'
   nsresult AsyncRemoteFileOpen(int32_t aFlags,
                                nsIRemoteOpenFileListener* aListener,
-                               nsITabChild* aTabChild);
+                               nsITabChild* aTabChild,
+                               nsILoadContext *aLoadContext);
 
   void ReleaseIPDLReference()
   {
