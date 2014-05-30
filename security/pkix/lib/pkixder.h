@@ -151,9 +151,12 @@ public:
   }
 
   template <uint16_t N>
-  bool MatchBytes(const uint8_t (&toMatch)[N])
+  bool MatchRest(const uint8_t (&toMatch)[N])
   {
-    if (EnsureLength(N) != Success) {
+    // Normally we use EnsureLength which compares (input + len < end), but
+    // here we want to be sure that there is nothing following the matched
+    // bytes
+    if (static_cast<size_t>(end - input) != N) {
       return false;
     }
     if (memcmp(input, toMatch, N)) {
