@@ -40,6 +40,7 @@ namespace webrtc {
 
 class AudioDeviceModule;
 class AudioProcessing;
+class AudioTransport;
 class Config;
 
 const int kVoEDefault = -1;
@@ -134,7 +135,10 @@ public:
     virtual int Terminate() = 0;
 
     // Creates a new channel and allocates the required resources for it.
+    // One can use |config| to configure the channel. Currently that is used for
+    // choosing between ACM1 and ACM2, when creating Audio Coding Module.
     virtual int CreateChannel() = 0;
+    virtual int CreateChannel(const Config& config) = 0;
 
     // Deletes an existing channel and releases the utilized resources.
     virtual int DeleteChannel(int channel) = 0;
@@ -180,6 +184,10 @@ public:
 
     // Gets the NetEQ playout mode for a specified |channel| number.
     virtual int GetNetEQPlayoutMode(int channel, NetEqModes& mode) = 0;
+
+    // TODO(xians): Make the interface pure virtual after libjingle
+    // implements the interface in its FakeWebRtcVoiceEngine.
+    virtual AudioTransport* audio_transport() { return NULL; }
 
 protected:
     VoEBase() {}

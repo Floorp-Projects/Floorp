@@ -21,6 +21,7 @@ namespace webrtc
 {
 
 class Clock;
+class EncodedImageCallback;
 class VideoEncoder;
 class VideoDecoder;
 struct CodecSpecificInfo;
@@ -376,6 +377,18 @@ public:
     virtual int32_t RegisterReceiveStatisticsCallback(
                                VCMReceiveStatisticsCallback* receiveStats) = 0;
 
+    // Register a decoder timing callback which will be called to deliver
+    // information about the timing of the decoder in the receiving side of the
+    // VCM, for instance the current and maximum frame decode latency.
+    //
+    // Input:
+    //      - decoderTiming  : The callback object to register.
+    //
+    // Return value      : VCM_OK, on success.
+    //                     < 0,         on error.
+    virtual int32_t RegisterDecoderTimingCallback(
+        VCMDecoderTimingCallback* decoderTiming) = 0;
+
     // Register a frame type request callback. This callback will be called when the
     // module needs to request specific frame types from the send side.
     //
@@ -582,6 +595,20 @@ public:
 
     // Disables recording of debugging information.
     virtual int StopDebugRecording() = 0;
+
+    // Lets the sender suspend video when the rate drops below
+    // |threshold_bps|, and turns back on when the rate goes back up above
+    // |threshold_bps| + |window_bps|.
+    virtual void SuspendBelowMinBitrate() = 0;
+
+    // Returns true if SuspendBelowMinBitrate is engaged and the video has been
+    // suspended due to bandwidth limitations; otherwise false.
+    virtual bool VideoSuspended() const = 0;
+
+    virtual void RegisterPreDecodeImageCallback(
+        EncodedImageCallback* observer) = 0;
+    virtual void RegisterPostEncodeImageCallback(
+        EncodedImageCallback* post_encode_callback) = 0;
 };
 
 }  // namespace webrtc

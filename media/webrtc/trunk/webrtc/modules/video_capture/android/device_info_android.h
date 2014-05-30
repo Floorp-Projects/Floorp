@@ -24,19 +24,18 @@ namespace webrtc
 namespace videocapturemodule
 {
 
-// Android logging, uncomment to print trace to
-// logcat instead of trace file/callback
-// #include <android/log.h>
-// #define WEBRTC_TRACE(a,b,c,...)
-// __android_log_print(ANDROID_LOG_DEBUG, "*WEBRTCN*", __VA_ARGS__)
-
 class DeviceInfoAndroid : public DeviceInfoImpl {
-
  public:
-  static void SetAndroidCaptureClasses(jclass capabilityClass);
-  DeviceInfoAndroid(const int32_t id);
-  int32_t Init();
+  static void Initialize(JNIEnv* env);
+
+  DeviceInfoAndroid(int32_t id);
   virtual ~DeviceInfoAndroid();
+
+  // Set |*index| to the index of the camera matching |deviceUniqueIdUTF8|, or
+  // return false if no match.
+  bool FindCameraIndex(const char* deviceUniqueIdUTF8, size_t* index);
+
+  virtual int32_t Init();
   virtual uint32_t NumberOfDevices();
   virtual int32_t GetDeviceName(
       uint32_t deviceNumber,
@@ -56,9 +55,14 @@ class DeviceInfoAndroid : public DeviceInfoImpl {
       uint32_t /*positionY*/) { return -1; }
   virtual int32_t GetOrientation(const char* deviceUniqueIdUTF8,
                                  VideoCaptureRotation& orientation);
+
+  // Populate |min_mfps| and |max_mfps| with the supported range of the device.
+  void GetFpsRange(const char* deviceUniqueIdUTF8,
+                   int* min_mfps,
+                   int* max_mfps);
+
  private:
-  bool IsDeviceNameMatches(const char* name, const char* deviceUniqueIdUTF8);
-  enum {_expectedCaptureDelay = 190};
+  enum { kExpectedCaptureDelay = 190};
 };
 
 }  // namespace videocapturemodule

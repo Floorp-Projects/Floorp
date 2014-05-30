@@ -27,7 +27,7 @@ TEST(DtmfToneGenerator, CreateAndDestroy) {
 TEST(DtmfToneGenerator, TestErrors) {
   DtmfToneGenerator tone_gen;
   const int kNumSamples = 10;
-  AudioMultiVector<int16_t> signal(1);  // One channel.
+  AudioMultiVector signal(1);  // One channel.
 
   // Try to generate tones without initializing.
   EXPECT_EQ(DtmfToneGenerator::kNotInitialized,
@@ -62,7 +62,7 @@ TEST(DtmfToneGenerator, TestTones) {
   DtmfToneGenerator tone_gen;
   const int kAttenuation = 0;
   const int kNumSamples = 10;
-  AudioMultiVector<int16_t> signal(1);  // One channel.
+  AudioMultiVector signal(1);  // One channel.
 
   // Low and high frequencies for events 0 through 15.
   const double low_freq_hz[] = { 941.0, 697.0, 697.0, 697.0, 770.0, 770.0,
@@ -106,8 +106,8 @@ TEST(DtmfToneGenerator, TestTones) {
 TEST(DtmfToneGenerator, TestAmplitudes) {
   DtmfToneGenerator tone_gen;
   const int kNumSamples = 10;
-  AudioMultiVector<int16_t> signal(1);  // One channel.
-  AudioMultiVector<int16_t> ref_signal(1);  // One channel.
+  AudioMultiVector signal(1);  // One channel.
+  AudioMultiVector ref_signal(1);  // One channel.
 
   const int fs_vec[] = { 8000, 16000, 32000, 48000 };
   const int event_vec[] = { 0, 4, 9, 13 };  // Test a few events.

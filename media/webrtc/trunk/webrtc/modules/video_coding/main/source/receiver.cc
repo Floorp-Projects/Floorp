@@ -238,8 +238,9 @@ void VCMReceiver::ReceiveStatistics(uint32_t* bitrate,
 
 void VCMReceiver::ReceivedFrameCount(VCMFrameCount* frame_count) const {
   assert(frame_count);
-  jitter_buffer_.FrameStatistics(&frame_count->numDeltaFrames,
-                                 &frame_count->numKeyFrames);
+  std::map<FrameType, uint32_t> counts(jitter_buffer_.FrameStatistics());
+  frame_count->numDeltaFrames = counts[kVideoFrameDelta];
+  frame_count->numKeyFrames = counts[kVideoFrameKey];
 }
 
 uint32_t VCMReceiver::DiscardedPackets() const {

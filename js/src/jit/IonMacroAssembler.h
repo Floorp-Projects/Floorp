@@ -645,11 +645,10 @@ class MacroAssembler : public MacroAssemblerSpecific
             branch32(cond, length, Imm32(key.constant()), label);
     }
 
-    void branchTestNeedsBarrier(Condition cond, Register scratch, Label *label) {
+    void branchTestNeedsBarrier(Condition cond, Label *label) {
         JS_ASSERT(cond == Zero || cond == NonZero);
         CompileZone *zone = GetIonContext()->compartment->zone();
-        movePtr(ImmPtr(zone->addressOfNeedsBarrier()), scratch);
-        Address needsBarrierAddr(scratch, 0);
+        AbsoluteAddress needsBarrierAddr(zone->addressOfNeedsBarrier());
         branchTest32(cond, needsBarrierAddr, Imm32(0x1), label);
     }
 

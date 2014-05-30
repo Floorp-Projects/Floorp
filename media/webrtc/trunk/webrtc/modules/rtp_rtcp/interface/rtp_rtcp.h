@@ -63,7 +63,7 @@ class RtpRtcp : public Module {
     RtcpFeedback* rtcp_feedback;
     RtcpIntraFrameObserver* intra_frame_callback;
     RtcpBandwidthObserver* bandwidth_callback;
-    RtcpRttObserver* rtt_observer;
+    RtcpRttStats* rtt_stats;
     RtpAudioFeedback* audio_messages;
     RemoteBitrateEstimator* remote_bitrate_estimator;
     PacedSender* paced_sender;
@@ -251,7 +251,7 @@ class RtpRtcp : public Module {
     /*
     * Turn on/off sending RTX (RFC 4588) on a specific SSRC.
     */
-    virtual int32_t SetRTXSendStatus(RtxMode mode, bool set_ssrc,
+    virtual int32_t SetRTXSendStatus(int modes, bool set_ssrc,
                                      uint32_t ssrc) = 0;
 
     // Sets the payload type to use when sending RTX packets. Note that this
@@ -261,7 +261,7 @@ class RtpRtcp : public Module {
     /*
     * Get status of sending RTX (RFC 4588) on a specific SSRC.
     */
-    virtual int32_t RTXSendStatus(RtxMode* mode, uint32_t* ssrc,
+    virtual int32_t RTXSendStatus(int* modes, uint32_t* ssrc,
                                   int* payloadType) const = 0;
 
     /*
@@ -301,6 +301,13 @@ class RtpRtcp : public Module {
                              uint32_t* nackRate) const = 0;
 
     /*
+    *   Called on any new send bitrate estimate.
+    */
+    virtual void RegisterVideoBitrateObserver(
+        BitrateStatisticsObserver* observer) = 0;
+    virtual BitrateStatisticsObserver* GetVideoBitrateObserver() const = 0;
+
+    /*
     *   Used by the codec module to deliver a video or audio frame for
     *   packetization.
     *
@@ -324,10 +331,25 @@ class RtpRtcp : public Module {
         const RTPFragmentationHeader* fragmentation = NULL,
         const RTPVideoHeader* rtpVideoHdr = NULL) = 0;
 
-    virtual bool TimeToSendPacket(uint32_t ssrc, uint16_t sequence_number,
-                                  int64_t capture_time_ms) = 0;
+    virtual bool TimeToSendPacket(uint32_t ssrc,
+                                  uint16_t sequence_number,
+                                  int64_t capture_time_ms,
+                                  bool retransmission) = 0;
 
     virtual int TimeToSendPadding(int bytes) = 0;
+
+    virtual void RegisterSendFrameCountObserver(
+        FrameCountObserver* observer) = 0;
+    virtual FrameCountObserver* GetSendFrameCountObserver() const = 0;
+
+    virtual bool GetSendSideDelay(int* avg_send_delay_ms,
+                                  int* max_send_delay_ms) const = 0;
+
+    // Called on generation of new statistics after an RTP send.
+    virtual void RegisterSendChannelRtpStatisticsCallback(
+        StreamDataCountersCallback* callback) = 0;
+    virtual StreamDataCountersCallback*
+        GetSendChannelRtpStatisticsCallback() const = 0;
 
     /**************************************************************************
     *
@@ -417,12 +439,6 @@ class RtpRtcp : public Module {
     *   return -1 on failure else 0
     */
     virtual int32_t ResetRTT(const uint32_t remoteSSRC)= 0 ;
-
-    /*
-     * Sets the estimated RTT, to be used for receive only modules without
-     * possibility of calculating its own RTT.
-     */
-    virtual void SetRtt(uint32_t rtt) = 0;
 
     /*
      *   Get time of last rr, as well as packets received remotely
@@ -521,6 +537,13 @@ class RtpRtcp : public Module {
         const RTCPVoIPMetric* VoIPMetric) = 0;
 
     /*
+    *   (XR) Receiver Reference Time Report
+    */
+    virtual void SetRtcpXrRrtrStatus(bool enable) = 0;
+
+    virtual bool RtcpXrRrtrStatus() const = 0;
+
+    /*
     *  (REMB) Receiver Estimated Max Bitrate
     */
     virtual bool REMB() const = 0;
@@ -593,6 +616,12 @@ class RtpRtcp : public Module {
 
     // Returns true if the module is configured to store packets.
     virtual bool StorePackets() const = 0;
+
+    // Called on receipt of RTCP report block from remote side.
+    virtual void RegisterSendChannelRtcpStatisticsCallback(
+        RtcpStatisticsCallback* callback) = 0;
+    virtual RtcpStatisticsCallback*
+        GetSendChannelRtcpStatisticsCallback() = 0;
 
     /**************************************************************************
     *

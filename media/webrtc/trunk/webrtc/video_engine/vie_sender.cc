@@ -21,49 +21,16 @@ namespace webrtc {
 ViESender::ViESender(int channel_id)
     : channel_id_(channel_id),
       critsect_(CriticalSectionWrapper::CreateCriticalSection()),
-      external_encryption_(NULL),
-      encryption_buffer_(NULL),
       transport_(NULL),
       rtp_dump_(NULL) {
 }
 
 ViESender::~ViESender() {
-  if (encryption_buffer_) {
-    delete[] encryption_buffer_;
-    encryption_buffer_ = NULL;
-  }
-
   if (rtp_dump_) {
     rtp_dump_->Stop();
     RtpDump::DestroyRtpDump(rtp_dump_);
     rtp_dump_ = NULL;
   }
-}
-
-int ViESender::RegisterExternalEncryption(Encryption* encryption) {
-  CriticalSectionScoped cs(critsect_.get());
-  if (external_encryption_) {
-    return -1;
-  }
-  encryption_buffer_ = new uint8_t[kViEMaxMtu];
-  if (encryption_buffer_ == NULL) {
-    return -1;
-  }
-  external_encryption_ = encryption;
-  return 0;
-}
-
-int ViESender::DeregisterExternalEncryption() {
-  CriticalSectionScoped cs(critsect_.get());
-  if (external_encryption_ == NULL) {
-    return -1;
-  }
-  if (encryption_buffer_) {
-    delete[] encryption_buffer_;
-    encryption_buffer_ = NULL;
-  }
-  external_encryption_ = NULL;
-  return 0;
 }
 
 int ViESender::RegisterSendTransport(Transport* transport) {
@@ -134,29 +101,13 @@ int ViESender::SendPacket(int vie_id, const void* data, int len) {
   }
   assert(ChannelId(vie_id) == channel_id_);
 
-  // TODO(mflodman) Change decrypt to get rid of this cast.
-  void* tmp_ptr = const_cast<void*>(data);
-  unsigned char* send_packet = static_cast<unsigned char*>(tmp_ptr);
-
-  // Data length for packets sent to possible encryption and to the transport.
-  int send_packet_length = len;
-
   if (rtp_dump_) {
-    rtp_dump_->DumpPacket(send_packet, send_packet_length);
+    rtp_dump_->DumpPacket(static_cast<const uint8_t*>(data),
+                          static_cast<uint16_t>(len));
   }
 
-  if (external_encryption_) {
-    // Encryption buffer size.
-    int encrypted_packet_length = kViEMaxMtu;
-
-    external_encryption_->encrypt(channel_id_, send_packet, encryption_buffer_,
-                                  send_packet_length, &encrypted_packet_length);
-    send_packet = encryption_buffer_;
-    send_packet_length = encrypted_packet_length;
-  }
-  const int bytes_sent = transport_->SendPacket(channel_id_, send_packet,
-                                                send_packet_length);
-  if (bytes_sent != send_packet_length) {
+  const int bytes_sent = transport_->SendPacket(channel_id_, data, len);
+  if (bytes_sent != len) {
     WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideo, channel_id_,
                  "ViESender::SendPacket - Transport failed to send RTP packet");
   }
@@ -165,43 +116,22 @@ int ViESender::SendPacket(int vie_id, const void* data, int len) {
 
 int ViESender::SendRTCPPacket(int vie_id, const void* data, int len) {
   CriticalSectionScoped cs(critsect_.get());
-
   if (!transport_) {
     return -1;
   }
-
   assert(ChannelId(vie_id) == channel_id_);
 
-  // Prepare for possible encryption and sending.
-  // TODO(mflodman) Change decrypt to get rid of this cast.
-  void* tmp_ptr = const_cast<void*>(data);
-  unsigned char* send_packet = static_cast<unsigned char*>(tmp_ptr);
-
-  // Data length for packets sent to possible encryption and to the transport.
-  int send_packet_length = len;
-
   if (rtp_dump_) {
-    rtp_dump_->DumpPacket(send_packet, send_packet_length);
+    rtp_dump_->DumpPacket(static_cast<const uint8_t*>(data),
+                          static_cast<uint16_t>(len));
   }
 
-  if (external_encryption_) {
-    // Encryption buffer size.
-    int encrypted_packet_length = kViEMaxMtu;
-
-    external_encryption_->encrypt_rtcp(
-        channel_id_, send_packet, encryption_buffer_, send_packet_length,
-        &encrypted_packet_length);
-    send_packet = encryption_buffer_;
-    send_packet_length = encrypted_packet_length;
-  }
-
-  const int bytes_sent = transport_->SendRTCPPacket(channel_id_, send_packet,
-                                                    send_packet_length);
-  if (bytes_sent != send_packet_length) {
+  const int bytes_sent = transport_->SendRTCPPacket(channel_id_, data, len);
+  if (bytes_sent != len) {
     WEBRTC_TRACE(
         webrtc::kTraceWarning, webrtc::kTraceVideo, channel_id_,
         "ViESender::SendRTCPPacket - Transport failed to send RTCP packet"
-        " (%d vs %d)", bytes_sent, send_packet_length);
+        " (%d vs %d)", bytes_sent, len);
   }
   return bytes_sent;
 }

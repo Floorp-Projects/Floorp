@@ -30,6 +30,7 @@ FileWrapper* FileWrapper::Create() {
 FileWrapperImpl::FileWrapperImpl()
     : rw_lock_(RWLockWrapper::CreateRWLock()),
       id_(NULL),
+      managed_file_handle_(true),
       open_(false),
       looping_(false),
       read_only_(false),
@@ -39,7 +40,7 @@ FileWrapperImpl::FileWrapperImpl()
 }
 
 FileWrapperImpl::~FileWrapperImpl() {
-  if (id_ != NULL) {
+  if (id_ != NULL && managed_file_handle_) {
     fclose(id_);
   }
 }
@@ -71,8 +72,7 @@ int FileWrapperImpl::Flush() {
   return FlushImpl();
 }
 
-int FileWrapperImpl::FileName(char* file_name_utf8,
-                              size_t size) const {
+int FileWrapperImpl::FileName(char* file_name_utf8, size_t size) const {
   ReadLockScoped read(*rw_lock_);
   size_t length = strlen(file_name_utf8_);
   if (length > kMaxFileNameSize) {
@@ -100,6 +100,8 @@ bool FileWrapperImpl::Open() const {
 int FileWrapperImpl::OpenFile(const char* file_name_utf8, bool read_only,
                               bool loop, bool text) {
   WriteLockScoped write(*rw_lock_);
+  if (id_ != NULL && !managed_file_handle_)
+    return -1;
   size_t length = strlen(file_name_utf8);
   if (length > kMaxFileNameSize - 1) {
     return -1;
@@ -154,11 +156,35 @@ int FileWrapperImpl::OpenFile(const char* file_name_utf8, bool read_only,
       fclose(id_);
     }
     id_ = tmp_id;
+    managed_file_handle_ = true;
     looping_ = loop;
     open_ = true;
     return 0;
   }
   return -1;
+}
+
+int FileWrapperImpl::OpenFromFileHandle(FILE* handle,
+                                        bool manage_file,
+                                        bool read_only,
+                                        bool loop) {
+  WriteLockScoped write(*rw_lock_);
+  if (!handle)
+    return -1;
+
+  if (id_ != NULL) {
+    if (managed_file_handle_)
+      fclose(id_);
+    else
+      return -1;
+  }
+
+  id_ = handle;
+  managed_file_handle_ = manage_file;
+  read_only_ = read_only;
+  looping_ = loop;
+  open_ = true;
+  return 0;
 }
 
 int FileWrapperImpl::Read(void* buf, int length) {
@@ -233,7 +259,8 @@ bool FileWrapperImpl::Write(const void* buf, int length) {
 
 int FileWrapperImpl::CloseFileImpl() {
   if (id_ != NULL) {
-    fclose(id_);
+    if (managed_file_handle_)
+      fclose(id_);
     id_ = NULL;
   }
   memset(file_name_utf8_, 0, kMaxFileNameSize);
