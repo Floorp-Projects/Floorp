@@ -1185,6 +1185,10 @@ var gBrowserInit = {
     gDataNotificationInfoBar.init();
 #endif
 
+#ifdef MOZ_LOOP
+    LoopUI.initialize();
+#endif
+
     gBrowserThumbnails.init();
 
     // Add Devtools menuitems and listeners
