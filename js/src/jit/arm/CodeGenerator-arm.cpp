@@ -1837,21 +1837,6 @@ CodeGeneratorARM::visitGuardClass(LGuardClass *guard)
 }
 
 bool
-CodeGeneratorARM::visitInterruptCheck(LInterruptCheck *lir)
-{
-    OutOfLineCode *ool = oolCallVM(InterruptCheckInfo, lir, (ArgList()), StoreNothing());
-    if (!ool)
-        return false;
-
-    void *interrupt = (void*)GetIonContext()->runtime->addressOfInterrupt();
-    masm.load32(AbsoluteAddress(interrupt), lr);
-    masm.ma_cmp(lr, Imm32(0));
-    masm.ma_b(ool->entry(), Assembler::NonZero);
-    masm.bind(ool->rejoin());
-    return true;
-}
-
-bool
 CodeGeneratorARM::generateInvalidateEpilogue()
 {
     // Ensure that there is enough space in the buffer for the OsiPoint

@@ -1225,6 +1225,9 @@ class OutOfLineInterruptCheckImplicit : public OutOfLineCodeBase<CodeGenerator>
     }
 };
 
+typedef bool (*InterruptCheckFn)(JSContext *);
+static const VMFunction InterruptCheckInfo = FunctionInfo<InterruptCheckFn>(InterruptCheck);
+
 bool
 CodeGenerator::visitOutOfLineInterruptCheckImplicit(OutOfLineInterruptCheckImplicit *ool)
 {
@@ -8743,6 +8746,19 @@ CodeGenerator::visitAssertRangeV(LAssertRangeV *ins)
 
     masm.assumeUnreachable("Incorrect range for Value.");
     masm.bind(&done);
+    return true;
+}
+
+bool
+CodeGenerator::visitInterruptCheck(LInterruptCheck *lir)
+{
+    OutOfLineCode *ool = oolCallVM(InterruptCheckInfo, lir, (ArgList()), StoreNothing());
+    if (!ool)
+        return false;
+
+    AbsoluteAddress interruptAddr(GetIonContext()->runtime->addressOfInterrupt());
+    masm.branch32(Assembler::NotEqual, interruptAddr, Imm32(0), ool->entry());
+    masm.bind(ool->rejoin());
     return true;
 }
 

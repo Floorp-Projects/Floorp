@@ -190,19 +190,6 @@ CodeGeneratorX86::storeElementTyped(const LAllocation *value, MIRType valueType,
 }
 
 bool
-CodeGeneratorX86::visitInterruptCheck(LInterruptCheck *lir)
-{
-    OutOfLineCode *ool = oolCallVM(InterruptCheckInfo, lir, (ArgList()), StoreNothing());
-    if (!ool)
-        return false;
-
-    masm.cmpl(Operand(AbsoluteAddress(GetIonContext()->runtime->addressOfInterrupt())), Imm32(0));
-    masm.j(Assembler::NonZero, ool->entry());
-    masm.bind(ool->rejoin());
-    return true;
-}
-
-bool
 CodeGeneratorX86::visitCompareB(LCompareB *lir)
 {
     MCompare *mir = lir->mir();
