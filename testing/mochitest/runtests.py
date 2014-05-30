@@ -481,9 +481,19 @@ class MochitestUtilsMixin(object):
         info[k] = v
 
       # Bug 883858 - return all tests including disabled tests
-      tests = manifest.active_tests(disabled=True, options=options, **info)
-      paths = []
       testPath = self.getTestPath(options)
+      if testPath.endswith('.html') or \
+         testPath.endswith('.xhtml') or \
+         testPath.endswith('.xul') or \
+         testPath.endswith('.js'):
+          # In the case where we have a single file, we don't want to filter based on options such as subsuite.
+          tests = manifest.active_tests(disabled=True, options=None, **info)
+          for test in tests:
+              if 'disabled' in test:
+                  del test['disabled']
+      else:
+          tests = manifest.active_tests(disabled=True, options=options, **info)
+      paths = []
 
       for test in tests:
         pathAbs = os.path.abspath(test['path'])

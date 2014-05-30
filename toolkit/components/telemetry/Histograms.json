@@ -2328,6 +2328,14 @@
     "n_buckets": 20,
     "description": "Time spent loading plugin DLL and obtaining metadata (ms)"
   },
+  "PLUGIN_STARTUP_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "5000",
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "Time spent starting up plugins (ms)"
+  },
   "PLUGIN_SHUTDOWN_MS": {
     "expires_in_version": "never",
     "kind": "exponential",

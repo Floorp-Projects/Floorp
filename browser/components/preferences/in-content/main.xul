@@ -91,18 +91,16 @@
       class="header"
       data-category="paneGeneral">
   <image class="header-icon"/>
-  <label class="header-name"
-         value="&paneGeneral.title;"/>
+  <label class="header-name">&paneGeneral.title;</label>
 </hbox>
 
 <!-- Startup -->
 <groupbox id="startupGroup" data-category="paneGeneral">
-  <caption label="&startup.label;"/>
+  <caption><label>&startup.label;</label></caption>
 
   <hbox align="center">
-    <label value="&startupPage.label;"
-           accesskey="&startupPage.accesskey;"
-           control="browserStartupPage"/>
+    <label accesskey="&startupPage.accesskey;"
+           control="browserStartupPage">&startupPage.label;</label>
     <menulist id="browserStartupPage"
               preference="browser.startup.page">
       <menupopup>
@@ -120,9 +118,8 @@
   </hbox>
   <separator class="thin"/>
   <hbox align="center">
-    <label value="&homepage.label;"
-           accesskey="&homepage.accesskey;"
-           control="browserHomePage"/>
+    <label accesskey="&homepage.accesskey;"
+           control="browserHomePage">&homepage.label;</label>
     <textbox id="browserHomePage"
              class="padded uri-element"
              flex="1"
@@ -156,7 +153,7 @@
 
 <!-- Downloads -->
 <groupbox id="downloadsGroup" data-category="paneGeneral">
-  <caption label="&downloads.label;"/>
+  <caption><label>&downloads.label;</label></caption>
 
   <radiogroup id="saveWhere"
               preference="browser.download.useDownloadDir"
@@ -195,7 +192,7 @@
 
 <!-- Tab preferences -->
 <groupbox data-category="paneGeneral">
-    <caption label="&tabsGroup.label;"/>
+    <caption><label>&tabsGroup.label;</label></caption>
     <checkbox id="linkTargeting" label="&newWindowsAsTabs.label;"
               accesskey="&newWindowsAsTabs.accesskey;"
               preference="browser.link.open_newwindow"

@@ -253,26 +253,7 @@ DEFAULT_GMAKE_FLAGS += MAKE_OBJDIR='$$(INSTALL) -D $$(OBJDIR)'
 # it, creating race conditions. See bug #836220
 DEFAULT_GMAKE_FLAGS += TARGETS='$$(LIBRARY) $$(SHARED_LIBRARY) $$(PROGRAM)'
 
-ifdef MOZ_NSS_PATCH
-# If we're applying a patch, we'll copy the NSS source to the objdir
-# and build it from there.
-NSS_SRCDIR = $(CURDIR)/nss
-
-# This will copy and patch the NSS source for every build.
-# Since we "cp -p", it won't force rebuilds for most files, just
-# for patched files, but that's easier than trying to track
-# dependencies for patched files.
-export::
-	rm -rf $(NSS_SRCDIR)
-	$(NSINSTALL) -D $(NSS_SRCDIR)/security
-	cp -Rp $(topsrcdir)/security/nss $(NSS_SRCDIR)/security
-	cp -Rp $(topsrcdir)/security/coreconf $(NSS_SRCDIR)/security
-	cp -Rp $(topsrcdir)/security/dbm $(NSS_SRCDIR)/security
-	cp -Rp $(topsrcdir)/dbm $(NSS_SRCDIR)
-	(cd $(NSS_SRCDIR) && patch -p1 < $(abspath $(MOZ_NSS_PATCH)))
-else
 NSS_SRCDIR = $(topsrcdir)
-endif
 
 NSS_DIRS =
 ifndef MOZ_FOLD_LIBS
