@@ -992,6 +992,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_ldr(Operand(address.base, address.offset), ScratchRegister);
         branchTest32(cond, ScratchRegister, imm, label);
     }
+    void branchTest32(Condition cond, AbsoluteAddress address, Imm32 imm, Label *label) {
+        loadPtr(address, ScratchRegister);
+        branchTest32(cond, ScratchRegister, imm, label);
+    }
     void branchTestPtr(Condition cond, Register lhs, Register rhs, Label *label) {
         branchTest32(cond, lhs, rhs, label);
     }
