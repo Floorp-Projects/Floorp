@@ -84,7 +84,7 @@ class ProfileEntry
     void setCppFrame(void *aSp, uint32_t aLine) volatile {
         flags |= IS_CPP_ENTRY;
         spOrScript = aSp;
-        lineOrPc = aLine;
+        lineOrPc = static_cast<int32_t>(aLine);
     }
 
     void setFlag(Flags flag) volatile {
@@ -109,7 +109,7 @@ class ProfileEntry
     }
     uint32_t line() const volatile {
         MOZ_ASSERT(!isJs());
-        return lineOrPc;
+        return static_cast<uint32_t>(lineOrPc);
     }
 
     // We can't know the layout of JSScript, so look in vm/SPSProfiler.cpp.
