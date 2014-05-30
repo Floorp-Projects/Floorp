@@ -1755,17 +1755,6 @@ CodeGeneratorMIPS::visitNotF(LNotF *ins)
 }
 
 bool
-CodeGeneratorMIPS::visitLoadSlotV(LLoadSlotV *load)
-{
-    const ValueOperand out = ToOutValue(load);
-    Register base = ToRegister(load->input());
-    int32_t offset = load->mir()->slot() * sizeof(js::Value);
-
-    masm.loadValue(Address(base, offset), out);
-    return true;
-}
-
-bool
 CodeGeneratorMIPS::visitLoadSlotT(LLoadSlotT *load)
 {
     Register base = ToRegister(load->input());
