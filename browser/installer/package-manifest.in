@@ -85,7 +85,6 @@
 #endif
 #ifdef XP_WIN32
 @BINPATH@/plugin-hang-ui@BIN_SUFFIX@
-#ifndef MOZ_DEBUG
 #if MOZ_MSVC_REDIST == 1600
 @BINPATH@/msvcp100.dll
 @BINPATH@/msvcr100.dll
@@ -95,7 +94,6 @@
 #elif MOZ_MSVC_REDIST == 1800
 @BINPATH@/msvcp120.dll
 @BINPATH@/msvcr120.dll
-#endif
 #endif
 #endif
 #ifndef MOZ_NATIVE_ICU

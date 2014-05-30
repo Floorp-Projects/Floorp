@@ -49,7 +49,7 @@ if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
       ac_configure_args="$ac_configure_args LD=link CPP=\"cl -nologo -EP\" \
                          CXXCPP=\"cl -nologo -EP\" SHELL=sh.exe"
       rtl=
-      if test -n "$MOZ_DEBUG"; then
+      if test -z "$MOZ_NO_DEBUG_RTL" -a -n "$MOZ_DEBUG"; then
         rtl=" -DUSE_DEBUG_RTL"
       fi
       case "${target_cpu}" in
