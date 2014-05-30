@@ -228,7 +228,7 @@ public:
 
   Result EnsureLength(uint16_t len)
   {
-    if (input + len > end) {
+    if (static_cast<size_t>(end - input) < len) {
       return Fail(SEC_ERROR_BAD_DER);
     }
     return Success;
