@@ -53,7 +53,8 @@ const gUnnamedProcessStr = "Main Process";
 
 let gIsDiff = false;
 
-const DMDFile = "out.dmd";
+const gAnalyzeReportsFile = "reports.dmd";
+const gAnalyzeHeapFile    = "heap.dmd";
 
 //---------------------------------------------------------------------------
 
@@ -298,7 +299,10 @@ function onLoad()
                             "collection log.\n" +
                             "WARNING: These logs may be large (>1GB).";
 
-  const DMDEnabledDesc = "Run DMD analysis and save it to '" + DMDFile + "'.\n";
+  const AnalyzeReportsDesc = "Analyze memory reports coverage and save the "
+                             "output to '" + gAnalyzeReportsFile + "'.\n";
+  const AnalyzeHeapDesc = "Analyze heap usage and save the output to '" +
+                          gAnalyzeHeapFile + "'.\n";
   const DMDDisabledDesc = "DMD is not running. Please re-start with $DMD and " +
                           "the other relevant environment variables set " +
                           "appropriately.";
@@ -359,12 +363,20 @@ function onLoad()
   if (gMgr.isDMDEnabled) {
     let row5 = appendElement(ops, "div", "opsRow");
 
-    appendElementWithText(row5, "div", "opsRowLabel", "Save DMD output");
-    let enableButton = gMgr.isDMDRunning;
-    let dmdButton =
-      appendButton(row5, enableButton ? DMDEnabledDesc : DMDDisabledDesc,
-                   doDMD, "Save", "dmdButton");
-    dmdButton.disabled = !enableButton;
+    appendElementWithText(row5, "div", "opsRowLabel", "DMD operations");
+    let enableButtons = gMgr.isDMDRunning;
+
+    let analyzeReportsButton =
+      appendButton(row5,
+                   enableButtons ? AnalyzeReportsDesc : DMDDisabledDesc,
+                   doAnalyzeReports, "Analyze reports");
+    analyzeReportsButton.disabled = !enableButtons;
+
+    let analyzeHeapButton =
+      appendButton(row5,
+                   enableButtons ? AnalyzeHeapDesc : DMDDisabledDesc,
+                   doAnalyzeHeap, "Analyze heap");
+    analyzeHeapButton.disabled = !enableButtons;
   }
 
   // Generate the main div, where content ("section" divs) will go.  It's
@@ -445,12 +457,24 @@ function saveGCLogAndVerboseCCLog()
   dumpGCLogAndCCLog(true);
 }
 
-function doDMD()
+function doAnalyzeReports()
 {
   updateMainAndFooter('Saving DMD output...', HIDE_FOOTER);
   try {
-    let x = DMDReportAndDump('out.dmd');
-    updateMainAndFooter('Saved DMD output to ' + DMDFile, HIDE_FOOTER);
+    let x = DMDAnalyzeReports(gAnalyzeReportsFile);
+    updateMainAndFooter('Saved DMD output to ' + gAnalyzeReportsFile,
+                        HIDE_FOOTER);
+  } catch (ex) {
+    updateMainAndFooter(ex.toString(), HIDE_FOOTER);
+  }
+}
+
+function doAnalyzeHeap()
+{
+  updateMainAndFooter('Saving DMD output...', HIDE_FOOTER);
+  try {
+    let x = DMDAnalyzeHeap(gAnalyzeHeapFile);
+    updateMainAndFooter('Saved DMD output to ' + gAnalyzeHeapFile, HIDE_FOOTER);
   } catch (ex) {
     updateMainAndFooter(ex.toString(), HIDE_FOOTER);
   }

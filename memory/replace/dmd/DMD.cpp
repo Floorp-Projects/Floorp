@@ -44,6 +44,7 @@
 // PAGE_SIZE.  Nb: sysconf() is expensive, but it's only used for (the obsolete
 // and rarely used) valloc.
 #define MOZ_REPLACE_ONLY_MEMALIGN 1
+
 #ifdef XP_WIN
 #define PAGE_SIZE GetPageSize()
 static long GetPageSize()
@@ -291,7 +292,7 @@ class Options
     Stress    // do some performance stress tests
   };
 
-  char* mDMDEnvVar;   // a saved copy, for printing during Dump()
+  char* mDMDEnvVar;   // a saved copy, for later printing
 
   NumOption<size_t>   mSampleBelowSize;
   NumOption<uint32_t> mMaxFrames;
@@ -610,7 +611,8 @@ class LocationService
     uint32_t    mInUse:1;   // is the entry used?
 
     Entry()
-      : mPc(0), mFunction(nullptr), mLibrary(nullptr), mLOffset(0), mFileName(nullptr), mLineNo(0), mInUse(0)
+      : mPc(0), mFunction(nullptr), mLibrary(nullptr), mLOffset(0),
+        mFileName(nullptr), mLineNo(0), mInUse(0)
     {}
 
     ~Entry()
@@ -648,12 +650,12 @@ class LocationService
     }
   };
 
-  // A direct-mapped cache.  When doing a dump just after starting desktop
-  // Firefox (which is similar to dumping after a longer-running session,
-  // thanks to the limit on how many records we dump), a cache with 2^24
-  // entries (which approximates an infinite-entry cache) has a ~91% hit rate.
-  // A cache with 2^12 entries has a ~83% hit rate, and takes up ~85 KiB (on
-  // 32-bit platforms) or ~150 KiB (on 64-bit platforms).
+  // A direct-mapped cache.  When doing AnalyzeReports just after starting
+  // desktop Firefox (which is similar to analyzing after a longer-running
+  // session, thanks to the limit on how many records we print), a cache with
+  // 2^24 entries (which approximates an infinite-entry cache) has a ~91% hit
+  // rate.  A cache with 2^12 entries has a ~83% hit rate, and takes up ~85 KiB
+  // (on 32-bit platforms) or ~150 KiB (on 64-bit platforms).
   static const size_t kNumEntries = 1 << 12;
   static const size_t kMask = kNumEntries - 1;
   Entry mEntries[kNumEntries];
@@ -793,7 +795,7 @@ public:
 
   void Sort()
   {
-    qsort(mPcs, mLength, sizeof(mPcs[0]), StackTrace::QsortCmp);
+    qsort(mPcs, mLength, sizeof(mPcs[0]), StackTrace::Cmp);
   }
 
   void Print(const Writer& aWriter, LocationService* aLocService) const;
@@ -823,7 +825,7 @@ private:
     st->mLength++;
   }
 
-  static int QsortCmp(const void* aA, const void* aB)
+  static int Cmp(const void* aA, const void* aB)
   {
     const void* const a = *static_cast<const void* const*>(aA);
     const void* const b = *static_cast<const void* const*>(aB);
@@ -844,7 +846,7 @@ void
 StackTrace::Print(const Writer& aWriter, LocationService* aLocService) const
 {
   if (mLength == 0) {
-    W("   (empty)\n");  // StackTrace::Get() must have failed
+    W("    (empty)\n");  // StackTrace::Get() must have failed
     return;
   }
 
@@ -973,8 +975,8 @@ class Block
   // - Ptr: |mReportStackTrace| - stack trace where this block was reported.
   //   nullptr if not reported.
   // - Tag bit 0: |mReportedOnAlloc| - was the block reported immediately on
-  //   allocation?  If so, DMD must not clear the report at the end of Dump().
-  //   Only relevant if |mReportStackTrace| is non-nullptr.
+  //   allocation?  If so, DMD must not clear the report at the end of
+  //   AnalyzeReports(). Only relevant if |mReportStackTrace| is non-nullptr.
   //
   // |mPtr| is used as the key in BlockTable, so it's ok for this member
   // to be |mutable|.
@@ -1417,7 +1419,7 @@ public:
     mSampled = mSampled || aRecordSize.IsSampled();
   }
 
-  static int Cmp(const RecordSize& aA, const RecordSize& aB)
+  static int CmpByUsable(const RecordSize& aA, const RecordSize& aB)
   {
     // Primary sort: put bigger usable sizes first.
     if (aA.Usable() > aB.Usable()) return -1;
@@ -1464,14 +1466,15 @@ public:
   void Print(const Writer& aWriter, LocationService* aLocService,
              uint32_t aM, uint32_t aN, const char* aStr, const char* astr,
              size_t aCategoryUsableSize, size_t aCumulativeUsableSize,
-             size_t aTotalUsableSize) const;
+             size_t aTotalUsableSize, bool aShowCategoryPercentage,
+             bool aShowReportedAt) const;
 
-  static int QsortCmp(const void* aA, const void* aB)
+  static int CmpByUsable(const void* aA, const void* aB)
   {
     const Record* const a = *static_cast<const Record* const*>(aA);
     const Record* const b = *static_cast<const Record* const*>(aB);
 
-    return RecordSize::Cmp(a->mRecordSize, b->mRecordSize);
+    return RecordSize::CmpByUsable(a->mRecordSize, b->mRecordSize);
   }
 };
 
@@ -1481,7 +1484,8 @@ void
 Record::Print(const Writer& aWriter, LocationService* aLocService,
               uint32_t aM, uint32_t aN, const char* aStr, const char* astr,
               size_t aCategoryUsableSize, size_t aCumulativeUsableSize,
-              size_t aTotalUsableSize) const
+              size_t aTotalUsableSize, bool aShowCategoryPercentage,
+              bool aShowReportedAt) const
 {
   bool showTilde = mRecordSize.IsSampled();
 
@@ -1500,24 +1504,28 @@ Record::Print(const Writer& aWriter, LocationService* aLocService,
     Percent(mRecordSize.Usable(), aTotalUsableSize),
     Percent(aCumulativeUsableSize, aTotalUsableSize));
 
-  W("  %4.2f%% of %s (%4.2f%% cumulative)\n",
-    Percent(mRecordSize.Usable(), aCategoryUsableSize),
-    astr,
-    Percent(aCumulativeUsableSize, aCategoryUsableSize));
+  if (aShowCategoryPercentage) {
+    W("  %4.2f%% of %s (%4.2f%% cumulative)\n",
+      Percent(mRecordSize.Usable(), aCategoryUsableSize),
+      astr,
+      Percent(aCumulativeUsableSize, aCategoryUsableSize));
+  }
 
   W("  Allocated at {\n");
   mAllocStackTrace->Print(aWriter, aLocService);
   W("  }\n");
 
-  if (mReportStackTrace1) {
-    W("  Reported at {\n");
-    mReportStackTrace1->Print(aWriter, aLocService);
-    W("  }\n");
-  }
-  if (mReportStackTrace2) {
-    W("  Reported again at {\n");
-    mReportStackTrace2->Print(aWriter, aLocService);
-    W("  }\n");
+  if (aShowReportedAt) {
+    if (mReportStackTrace1) {
+      W("  Reported at {\n");
+      mReportStackTrace1->Print(aWriter, aLocService);
+      W("  }\n");
+    }
+    if (mReportStackTrace2) {
+      W("  Reported again at {\n");
+      mReportStackTrace2->Print(aWriter, aLocService);
+      W("  }\n");
+    }
   }
 
   W("}\n\n");
@@ -1808,9 +1816,11 @@ ReportOnAlloc(const void* aPtr)
 
 static void
 PrintSortedRecords(const Writer& aWriter, LocationService* aLocService,
+                   int (*aCmp)(const void*, const void*),
                    const char* aStr, const char* astr,
                    const RecordTable& aRecordTable,
-                   size_t aCategoryUsableSize, size_t aTotalUsableSize)
+                   size_t aCategoryUsableSize, size_t aTotalUsableSize,
+                   bool aShowCategoryPercentage, bool aShowReportedAt)
 {
   StatusMsg("  creating and sorting %s heap block record array...\n", astr);
 
@@ -1823,7 +1833,7 @@ PrintSortedRecords(const Writer& aWriter, LocationService* aLocService,
     recordArray.infallibleAppend(&r.front());
   }
   qsort(recordArray.begin(), recordArray.length(), sizeof(recordArray[0]),
-        Record::QsortCmp);
+        aCmp);
 
   WriteSeparator();
 
@@ -1845,7 +1855,8 @@ PrintSortedRecords(const Writer& aWriter, LocationService* aLocService,
     cumulativeUsableSize += r->GetRecordSize().Usable();
     if (i < maxRecords) {
       r->Print(aWriter, aLocService, i+1, numRecords, aStr, astr,
-               aCategoryUsableSize, cumulativeUsableSize, aTotalUsableSize);
+               aCategoryUsableSize, cumulativeUsableSize, aTotalUsableSize,
+               aShowCategoryPercentage, aShowReportedAt);
     } else if (i == maxRecords) {
       W("# %s: stopping after %s heap block records\n\n", aStr,
         Show(maxRecords, gBuf1, kBufLen));
@@ -1910,10 +1921,14 @@ SizeOf(Sizes* aSizes)
   SizeOfInternal(aSizes);
 }
 
-void
-ClearReportsInternal()
+MOZ_EXPORT void
+ClearReports()
 {
-  MOZ_ASSERT(gStateLock->IsLocked());
+  if (!gIsDMDRunning) {
+    return;
+  }
+
+  AutoLockState lock;
 
   // Unreport all blocks that were marked reported by a memory reporter.  This
   // excludes those that were reported on allocation, because they need to keep
@@ -1923,77 +1938,230 @@ ClearReportsInternal()
   }
 }
 
-MOZ_EXPORT void
-ClearReports()
-{
-  if (!gIsDMDRunning) {
-    return;
-  }
-
-  AutoLockState lock;
-  ClearReportsInternal();
-}
-
 MOZ_EXPORT bool
 IsRunning()
 {
   return gIsDMDRunning;
 }
 
-MOZ_EXPORT void
-Dump(Writer aWriter)
+// AnalyzeReports() and AnalyzeHeap() have a lot in common. This abstract class
+// encapsulates the operations that are not shared.
+class Analyzer
+{
+public:
+  virtual const char* AnalyzeFunctionName() const = 0;
+
+  virtual RecordTable* ProcessBlock(const Block& aBlock) = 0;
+
+  virtual void PrintRecords(const Writer& aWriter,
+                            LocationService* aLocService) const = 0;
+  virtual void PrintSummary(const Writer& aWriter, bool aShowTilde) const = 0;
+  virtual void PrintStats(const Writer& aWriter) const = 0;
+
+  struct RecordKindData
+  {
+    RecordTable mRecordTable;
+    size_t mUsableSize;
+    size_t mNumBlocks;
+
+    RecordKindData(size_t aN)
+      : mUsableSize(0), mNumBlocks(0)
+    {
+      mRecordTable.init(aN);
+    }
+
+    void processBlock(const Block& aBlock)
+    {
+      mUsableSize += aBlock.UsableSize();
+      mNumBlocks++;
+    }
+  };
+};
+
+class ReportsAnalyzer MOZ_FINAL : public Analyzer
+{
+  RecordKindData mUnreported;
+  RecordKindData mOnceReported;
+  RecordKindData mTwiceReported;
+
+  size_t mTotalUsableSize;
+  size_t mTotalNumBlocks;
+
+public:
+  ReportsAnalyzer()
+    : mUnreported(1024), mOnceReported(1024), mTwiceReported(0),
+      mTotalUsableSize(0), mTotalNumBlocks(0)
+  {}
+
+  ~ReportsAnalyzer()
+  {
+    ClearReports();
+  }
+
+  virtual const char* AnalyzeFunctionName() const { return "AnalyzeReports"; }
+
+  virtual RecordTable* ProcessBlock(const Block& aBlock)
+  {
+    RecordKindData* data;
+    uint32_t numReports = aBlock.NumReports();
+    if (numReports == 0) {
+      data = &mUnreported;
+    } else if (numReports == 1) {
+      data = &mOnceReported;
+    } else {
+      MOZ_ASSERT(numReports == 2);
+      data = &mTwiceReported;
+    }
+    data->processBlock(aBlock);
+
+    mTotalUsableSize += aBlock.UsableSize();
+    mTotalNumBlocks++;
+
+    return &data->mRecordTable;
+  }
+
+  virtual void PrintRecords(const Writer& aWriter,
+                            LocationService* aLocService) const
+  {
+    PrintSortedRecords(aWriter, aLocService, Record::CmpByUsable,
+                       "Twice-reported", "twice-reported",
+                       mTwiceReported.mRecordTable,
+                       mTwiceReported.mUsableSize, mTotalUsableSize,
+                       /* showCategoryPercentage = */ true,
+                       /* showReportedAt = */ true);
+
+    PrintSortedRecords(aWriter, aLocService, Record::CmpByUsable,
+                       "Unreported", "unreported",
+                       mUnreported.mRecordTable,
+                       mUnreported.mUsableSize, mTotalUsableSize,
+                       /* showCategoryPercentage = */ true,
+                       /* showReportedAt = */ true);
+
+    PrintSortedRecords(aWriter, aLocService, Record::CmpByUsable,
+                       "Once-reported", "once-reported",
+                       mOnceReported.mRecordTable,
+                       mOnceReported.mUsableSize, mTotalUsableSize,
+                       /* showCategoryPercentage = */ true,
+                       /* showReportedAt = */ true);
+  }
+
+  virtual void PrintSummary(const Writer& aWriter, bool aShowTilde) const
+  {
+    W("  Total:          %12s bytes (%6.2f%%) in %7s blocks (%6.2f%%)\n",
+      Show(mTotalUsableSize, gBuf1, kBufLen, aShowTilde),
+      100.0,
+      Show(mTotalNumBlocks,  gBuf2, kBufLen, aShowTilde),
+      100.0);
+
+    W("  Unreported:     %12s bytes (%6.2f%%) in %7s blocks (%6.2f%%)\n",
+      Show(mUnreported.mUsableSize, gBuf1, kBufLen, aShowTilde),
+      Percent(mUnreported.mUsableSize, mTotalUsableSize),
+      Show(mUnreported.mNumBlocks, gBuf2, kBufLen, aShowTilde),
+      Percent(mUnreported.mNumBlocks, mTotalNumBlocks));
+
+    W("  Once-reported:  %12s bytes (%6.2f%%) in %7s blocks (%6.2f%%)\n",
+      Show(mOnceReported.mUsableSize, gBuf1, kBufLen, aShowTilde),
+      Percent(mOnceReported.mUsableSize, mTotalUsableSize),
+      Show(mOnceReported.mNumBlocks, gBuf2, kBufLen, aShowTilde),
+      Percent(mOnceReported.mNumBlocks, mTotalNumBlocks));
+
+    W("  Twice-reported: %12s bytes (%6.2f%%) in %7s blocks (%6.2f%%)\n",
+      Show(mTwiceReported.mUsableSize, gBuf1, kBufLen, aShowTilde),
+      Percent(mTwiceReported.mUsableSize, mTotalUsableSize),
+      Show(mTwiceReported.mNumBlocks, gBuf2, kBufLen, aShowTilde),
+      Percent(mTwiceReported.mNumBlocks, mTotalNumBlocks));
+  }
+
+  virtual void PrintStats(const Writer& aWriter) const
+  {
+    size_t unreportedSize =
+      mUnreported.mRecordTable.sizeOfIncludingThis(MallocSizeOf);
+    W("    Unreported table:     %10s bytes (%s entries, %s used)\n",
+      Show(unreportedSize,                      gBuf1, kBufLen),
+      Show(mUnreported.mRecordTable.capacity(), gBuf2, kBufLen),
+      Show(mUnreported.mRecordTable.count(),    gBuf3, kBufLen));
+
+    size_t onceReportedSize =
+      mOnceReported.mRecordTable.sizeOfIncludingThis(MallocSizeOf);
+    W("    Once-reported table:  %10s bytes (%s entries, %s used)\n",
+      Show(onceReportedSize,                      gBuf1, kBufLen),
+      Show(mOnceReported.mRecordTable.capacity(), gBuf2, kBufLen),
+      Show(mOnceReported.mRecordTable.count(),    gBuf3, kBufLen));
+
+    size_t twiceReportedSize =
+      mTwiceReported.mRecordTable.sizeOfIncludingThis(MallocSizeOf);
+    W("    Twice-reported table: %10s bytes (%s entries, %s used)\n",
+      Show(twiceReportedSize,                      gBuf1, kBufLen),
+      Show(mTwiceReported.mRecordTable.capacity(), gBuf2, kBufLen),
+      Show(mTwiceReported.mRecordTable.count(),    gBuf3, kBufLen));
+  }
+};
+
+class HeapAnalyzer MOZ_FINAL : public Analyzer
+{
+  RecordKindData mLive;
+
+public:
+  HeapAnalyzer() : mLive(1024) {}
+
+  virtual const char* AnalyzeFunctionName() const { return "AnalyzeHeap"; }
+
+  virtual RecordTable* ProcessBlock(const Block& aBlock)
+  {
+    mLive.processBlock(aBlock);
+
+    return &mLive.mRecordTable;
+  }
+
+  virtual void PrintRecords(const Writer& aWriter,
+                            LocationService* aLocService) const
+  {
+    size_t totalUsableSize = mLive.mUsableSize;
+    PrintSortedRecords(aWriter, aLocService, Record::CmpByUsable,
+                       "Live", "live", mLive.mRecordTable, totalUsableSize,
+                       mLive.mUsableSize,
+                       /* showReportedAt = */ false,
+                       /* showCategoryPercentage = */ false);
+  }
+
+  virtual void PrintSummary(const Writer& aWriter, bool aShowTilde) const
+  {
+    W("  Total: %s bytes in %s blocks\n",
+      Show(mLive.mUsableSize, gBuf1, kBufLen, aShowTilde),
+      Show(mLive.mNumBlocks,  gBuf2, kBufLen, aShowTilde));
+  }
+
+  virtual void PrintStats(const Writer& aWriter) const
+  {
+    size_t liveSize = mLive.mRecordTable.sizeOfIncludingThis(MallocSizeOf);
+    W("    Live table:           %10s bytes (%s entries, %s used)\n",
+      Show(liveSize,                      gBuf1, kBufLen),
+      Show(mLive.mRecordTable.capacity(), gBuf2, kBufLen),
+      Show(mLive.mRecordTable.count(),    gBuf3, kBufLen));
+  }
+};
+
+static void
+AnalyzeImpl(Analyzer *aAnalyzer, const Writer& aWriter)
 {
   if (!gIsDMDRunning) {
-    const char* msg = "cannot Dump();  DMD was not enabled at startup\n";
-    StatusMsg("%s", msg);
-    W("%s", msg);
     return;
   }
 
   AutoBlockIntercepts block(Thread::Fetch());
   AutoLockState lock;
 
-  static int dumpCount = 1;
-  StatusMsg("Dump %d {\n", dumpCount++);
+  static int analysisCount = 1;
+  StatusMsg("%s %d {\n", aAnalyzer->AnalyzeFunctionName(), analysisCount++);
 
   StatusMsg("  gathering heap block records...\n");
-
-  RecordTable unreportedRecordTable;
-  (void)unreportedRecordTable.init(1024);
-  size_t unreportedUsableSize = 0;
-  size_t unreportedNumBlocks = 0;
-
-  RecordTable onceReportedRecordTable;
-  (void)onceReportedRecordTable.init(1024);
-  size_t onceReportedUsableSize = 0;
-  size_t onceReportedNumBlocks = 0;
-
-  RecordTable twiceReportedRecordTable;
-  (void)twiceReportedRecordTable.init(0);
-  size_t twiceReportedUsableSize = 0;
-  size_t twiceReportedNumBlocks = 0;
 
   bool anyBlocksSampled = false;
 
   for (BlockTable::Range r = gBlockTable->all(); !r.empty(); r.popFront()) {
     const Block& b = r.front();
+    RecordTable* table = aAnalyzer->ProcessBlock(b);
 
-    RecordTable* table;
-    uint32_t numReports = b.NumReports();
-    if (numReports == 0) {
-      unreportedUsableSize += b.UsableSize();
-      unreportedNumBlocks++;
-      table = &unreportedRecordTable;
-    } else if (numReports == 1) {
-      onceReportedUsableSize += b.UsableSize();
-      onceReportedNumBlocks++;
-      table = &onceReportedRecordTable;
-    } else {
-      MOZ_ASSERT(numReports == 2);
-      twiceReportedUsableSize += b.UsableSize();
-      twiceReportedNumBlocks++;
-      table = &twiceReportedRecordTable;
-    }
     RecordKey key(b);
     RecordTable::AddPtr p = table->lookupForAdd(key);
     if (!p) {
@@ -2004,63 +2172,24 @@ Dump(Writer aWriter)
 
     anyBlocksSampled = anyBlocksSampled || b.IsSampled();
   }
-  size_t totalUsableSize =
-    unreportedUsableSize + onceReportedUsableSize + twiceReportedUsableSize;
-  size_t totalNumBlocks =
-    unreportedNumBlocks + onceReportedNumBlocks + twiceReportedNumBlocks;
 
   WriteSeparator();
   W("Invocation {\n");
   W("  $DMD = '%s'\n", gOptions->DMDEnvVar());
+  W("  Function = %s\n", aAnalyzer->AnalyzeFunctionName());
   W("  Sample-below size = %lld\n", (long long)(gOptions->SampleBelowSize()));
   W("}\n\n");
 
   // Allocate this on the heap instead of the stack because it's fairly large.
   LocationService* locService = InfallibleAllocPolicy::new_<LocationService>();
 
-  PrintSortedRecords(aWriter, locService,
-                     "Twice-reported", "twice-reported",
-                     twiceReportedRecordTable,
-                     twiceReportedUsableSize, totalUsableSize);
-
-  PrintSortedRecords(aWriter, locService,
-                     "Unreported", "unreported",
-                     unreportedRecordTable,
-                     unreportedUsableSize, totalUsableSize);
-
-  PrintSortedRecords(aWriter, locService,
-                     "Once-reported", "once-reported",
-                     onceReportedRecordTable,
-                     onceReportedUsableSize, totalUsableSize);
-
-  bool showTilde = anyBlocksSampled;
+  aAnalyzer->PrintRecords(aWriter, locService);
 
   WriteSeparator();
   W("Summary {\n");
 
-  W("  Total:          %12s bytes (%6.2f%%) in %7s blocks (%6.2f%%)\n",
-    Show(totalUsableSize, gBuf1, kBufLen, showTilde),
-    100.0,
-    Show(totalNumBlocks,  gBuf2, kBufLen, showTilde),
-    100.0);
-
-  W("  Unreported:     %12s bytes (%6.2f%%) in %7s blocks (%6.2f%%)\n",
-    Show(unreportedUsableSize, gBuf1, kBufLen, showTilde),
-    Percent(unreportedUsableSize, totalUsableSize),
-    Show(unreportedNumBlocks, gBuf2, kBufLen, showTilde),
-    Percent(unreportedNumBlocks, totalNumBlocks));
-
-  W("  Once-reported:  %12s bytes (%6.2f%%) in %7s blocks (%6.2f%%)\n",
-    Show(onceReportedUsableSize, gBuf1, kBufLen, showTilde),
-    Percent(onceReportedUsableSize, totalUsableSize),
-    Show(onceReportedNumBlocks, gBuf2, kBufLen, showTilde),
-    Percent(onceReportedNumBlocks, totalNumBlocks));
-
-  W("  Twice-reported: %12s bytes (%6.2f%%) in %7s blocks (%6.2f%%)\n",
-    Show(twiceReportedUsableSize, gBuf1, kBufLen, showTilde),
-    Percent(twiceReportedUsableSize, totalUsableSize),
-    Show(twiceReportedNumBlocks, gBuf2, kBufLen, showTilde),
-    Percent(twiceReportedNumBlocks, totalNumBlocks));
+  bool showTilde = anyBlocksSampled;
+  aAnalyzer->PrintSummary(aWriter, showTilde);
 
   W("}\n\n");
 
@@ -2072,7 +2201,7 @@ Dump(Writer aWriter)
     WriteSeparator();
     W("Execution measurements {\n");
 
-    W("  Data structures that persist after Dump() ends:\n");
+    W("  Data structures that persist after Dump() ends {\n");
 
     W("    Used stack traces:    %10s bytes\n",
       Show(sizes.mStackTracesUsed, gBuf1, kBufLen));
@@ -2090,33 +2219,16 @@ Dump(Writer aWriter)
       Show(gBlockTable->capacity(), gBuf2, kBufLen),
       Show(gBlockTable->count(),    gBuf3, kBufLen));
 
-    W("\n  Data structures that are destroyed after Dump() ends:\n");
+    W("  }\n");
+    W("  Data structures that are destroyed after Dump() ends {\n");
 
-    size_t unreportedSize =
-      unreportedRecordTable.sizeOfIncludingThis(MallocSizeOf);
-    W("    Unreported table:     %10s bytes (%s entries, %s used)\n",
-      Show(unreportedSize,                   gBuf1, kBufLen),
-      Show(unreportedRecordTable.capacity(), gBuf2, kBufLen),
-      Show(unreportedRecordTable.count(),    gBuf3, kBufLen));
-
-    size_t onceReportedSize =
-      onceReportedRecordTable.sizeOfIncludingThis(MallocSizeOf);
-    W("    Once-reported table:  %10s bytes (%s entries, %s used)\n",
-      Show(onceReportedSize,                   gBuf1, kBufLen),
-      Show(onceReportedRecordTable.capacity(), gBuf2, kBufLen),
-      Show(onceReportedRecordTable.count(),    gBuf3, kBufLen));
-
-    size_t twiceReportedSize =
-      twiceReportedRecordTable.sizeOfIncludingThis(MallocSizeOf);
-    W("    Twice-reported table: %10s bytes (%s entries, %s used)\n",
-      Show(twiceReportedSize,                   gBuf1, kBufLen),
-      Show(twiceReportedRecordTable.capacity(), gBuf2, kBufLen),
-      Show(twiceReportedRecordTable.count(),    gBuf3, kBufLen));
+    aAnalyzer->PrintStats(aWriter);
 
     W("    Location service:     %10s bytes\n",
       Show(locService->SizeOfIncludingThis(), gBuf1, kBufLen));
 
-    W("\n  Counts:\n");
+    W("  }\n");
+    W("  Counts {\n");
 
     size_t hits   = locService->NumCacheHits();
     size_t misses = locService->NumCacheMisses();
@@ -2130,14 +2242,27 @@ Dump(Writer aWriter)
       "%4.1f%% hit rate, %.1f%% occupancy at end\n",
       Percent(hits, requests), Percent(count, capacity));
 
+    W("  }\n");
     W("}\n\n");
   }
 
   InfallibleAllocPolicy::delete_(locService);
 
-  ClearReportsInternal(); // Use internal version, we already have the lock.
-
   StatusMsg("}\n");
+}
+
+MOZ_EXPORT void
+AnalyzeReports(const Writer& aWriter)
+{
+  ReportsAnalyzer aAnalyzer;
+  AnalyzeImpl(&aAnalyzer, aWriter);
+}
+
+MOZ_EXPORT void
+AnalyzeHeap(const Writer& aWriter)
+{
+  HeapAnalyzer analyzer;
+  AnalyzeImpl(&analyzer, aWriter);
 }
 
 //---------------------------------------------------------------------------
@@ -2180,11 +2305,12 @@ RunTestMode(FILE* fp)
   // The first part of this test requires sampling to be disabled.
   gOptions->SetSampleBelowSize(1);
 
-  // Dump 1.  Zero for everything.
-  Dump(writer);
+  // AnalyzeReports 1.  Zero for everything.
+  AnalyzeReports(writer);
+  AnalyzeHeap(writer);
 
-  // Dump 2: 1 freed, 9 out of 10 unreported.
-  // Dump 3: still present and unreported.
+  // AnalyzeReports 2: 1 freed, 9 out of 10 unreported.
+  // AnalyzeReports 3: still present and unreported.
   int i;
   char* a;
   for (i = 0; i < 10; i++) {
@@ -2194,94 +2320,94 @@ RunTestMode(FILE* fp)
   free(a);
 
   // Min-sized block.
-  // Dump 2: reported.
-  // Dump 3: thrice-reported.
+  // AnalyzeReports 2: reported.
+  // AnalyzeReports 3: thrice-reported.
   char* a2 = (char*) malloc(0);
   Report(a2);
 
   // Operator new[].
-  // Dump 2: reported.
-  // Dump 3: reportedness carries over, due to ReportOnAlloc.
+  // AnalyzeReports 2: reported.
+  // AnalyzeReports 3: reportedness carries over, due to ReportOnAlloc.
   char* b = new char[10];
   ReportOnAlloc(b);
 
   // ReportOnAlloc, then freed.
-  // Dump 2: freed, irrelevant.
-  // Dump 3: freed, irrelevant.
+  // AnalyzeReports 2: freed, irrelevant.
+  // AnalyzeReports 3: freed, irrelevant.
   char* b2 = new char;
   ReportOnAlloc(b2);
   free(b2);
 
-  // Dump 2: reported 4 times.
-  // Dump 3: freed, irrelevant.
+  // AnalyzeReports 2: reported 4 times.
+  // AnalyzeReports 3: freed, irrelevant.
   char* c = (char*) calloc(10, 3);
   Report(c);
   for (int i = 0; i < 3; i++) {
     Report(c);
   }
 
-  // Dump 2: ignored.
-  // Dump 3: irrelevant.
+  // AnalyzeReports 2: ignored.
+  // AnalyzeReports 3: irrelevant.
   Report((void*)(intptr_t)i);
 
   // jemalloc rounds this up to 8192.
-  // Dump 2: reported.
-  // Dump 3: freed.
+  // AnalyzeReports 2: reported.
+  // AnalyzeReports 3: freed.
   char* e = (char*) malloc(4096);
   e = (char*) realloc(e, 4097);
   Report(e);
 
   // First realloc is like malloc;  second realloc is shrinking.
-  // Dump 2: reported.
-  // Dump 3: re-reported.
+  // AnalyzeReports 2: reported.
+  // AnalyzeReports 3: re-reported.
   char* e2 = (char*) realloc(nullptr, 1024);
   e2 = (char*) realloc(e2, 512);
   Report(e2);
 
   // First realloc is like malloc;  second realloc creates a min-sized block.
   // XXX: on Windows, second realloc frees the block.
-  // Dump 2: reported.
-  // Dump 3: freed, irrelevant.
+  // AnalyzeReports 2: reported.
+  // AnalyzeReports 3: freed, irrelevant.
   char* e3 = (char*) realloc(nullptr, 1023);
 //e3 = (char*) realloc(e3, 0);
   MOZ_ASSERT(e3);
   Report(e3);
 
-  // Dump 2: freed, irrelevant.
-  // Dump 3: freed, irrelevant.
+  // AnalyzeReports 2: freed, irrelevant.
+  // AnalyzeReports 3: freed, irrelevant.
   char* f = (char*) malloc(64);
   free(f);
 
-  // Dump 2: ignored.
-  // Dump 3: irrelevant.
+  // AnalyzeReports 2: ignored.
+  // AnalyzeReports 3: irrelevant.
   Report((void*)(intptr_t)0x0);
 
-  // Dump 2: mixture of reported and unreported.
-  // Dump 3: all unreported.
+  // AnalyzeReports 2: mixture of reported and unreported.
+  // AnalyzeReports 3: all unreported.
   foo();
   foo();
 
-  // Dump 2: twice-reported.
-  // Dump 3: twice-reported.
+  // AnalyzeReports 2: twice-reported.
+  // AnalyzeReports 3: twice-reported.
   char* g1 = (char*) malloc(77);
   ReportOnAlloc(g1);
   ReportOnAlloc(g1);
 
-  // Dump 2: twice-reported.
-  // Dump 3: once-reported.
+  // AnalyzeReports 2: twice-reported.
+  // AnalyzeReports 3: once-reported.
   char* g2 = (char*) malloc(78);
   Report(g2);
   ReportOnAlloc(g2);
 
-  // Dump 2: twice-reported.
-  // Dump 3: once-reported.
+  // AnalyzeReports 2: twice-reported.
+  // AnalyzeReports 3: once-reported.
   char* g3 = (char*) malloc(79);
   ReportOnAlloc(g3);
   Report(g3);
 
   // All the odd-ball ones.
-  // Dump 2: all unreported.
-  // Dump 3: all freed, irrelevant.
+  // AnalyzeReports 2: all unreported.
+  // AnalyzeReports 3: all freed, irrelevant.
   // XXX: no memalign on Mac
 //void* x = memalign(64, 65);           // rounds up to 128
 //UseItOrLoseIt(x);
@@ -2294,8 +2420,9 @@ RunTestMode(FILE* fp)
 //UseItOrLoseIt(z);
 //aligned_alloc(64, 256);               // XXX: C11 only
 
-  // Dump 2.
-  Dump(writer);
+  // AnalyzeReports 2.
+  AnalyzeReports(writer);
+  AnalyzeHeap(writer);
 
   //---------
 
@@ -2309,8 +2436,9 @@ RunTestMode(FILE* fp)
 //free(y);
 //free(z);
 
-  // Dump 3.
-  Dump(writer);
+  // AnalyzeReports 3.
+  AnalyzeReports(writer);
+  AnalyzeHeap(writer);
 
   //---------
 
@@ -2373,8 +2501,9 @@ RunTestMode(FILE* fp)
   // At the end we're 64 bytes into the current sample so we report ~1,424
   // bytes of allocation overall, which is 64 less than the real value 1,488.
 
-  // Dump 4.
-  Dump(writer);
+  // AnalyzeReports 4.
+  AnalyzeReports(writer);
+  AnalyzeHeap(writer);
 }
 
 //---------------------------------------------------------------------------
@@ -2450,7 +2579,7 @@ RunStressMode(FILE* fp)
   stress1(); stress1(); stress1(); stress1(); stress1();
   stress1(); stress1(); stress1(); stress1(); stress1();
 
-  Dump(writer);
+  AnalyzeReports(writer);
 }
 
 }   // namespace dmd
