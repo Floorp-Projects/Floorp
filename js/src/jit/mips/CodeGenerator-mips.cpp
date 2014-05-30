@@ -1862,20 +1862,6 @@ CodeGeneratorMIPS::visitGuardClass(LGuardClass *guard)
 }
 
 bool
-CodeGeneratorMIPS::visitInterruptCheck(LInterruptCheck *lir)
-{
-    OutOfLineCode *ool = oolCallVM(InterruptCheckInfo, lir, (ArgList()), StoreNothing());
-    if (!ool)
-        return false;
-
-    masm.branch32(Assembler::NotEqual,
-                  AbsoluteAddress(GetIonContext()->runtime->addressOfInterrupt()), Imm32(0),
-                  ool->entry());
-    masm.bind(ool->rejoin());
-    return true;
-}
-
-bool
 CodeGeneratorMIPS::generateInvalidateEpilogue()
 {
     // Ensure that there is enough space in the buffer for the OsiPoint
