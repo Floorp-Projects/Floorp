@@ -62,6 +62,9 @@ extern const PRTime ONE_DAY;
 SECStatus GenerateKeyPair(/*out*/ ScopedSECKEYPublicKey& publicKey,
                           /*out*/ ScopedSECKEYPrivateKey& privateKey);
 
+// The result will be owned by the arena
+const SECItem* ASCIIToDERName(PLArenaPool* arena, const char* cn);
+
 ///////////////////////////////////////////////////////////////////////////////
 // Encode Certificates
 
@@ -80,7 +83,8 @@ enum Version { v1 = 0, v2 = 1, v3 = 2 };
 // The return value, if non-null, is owned by the arena in the context and
 // MUST NOT be freed.
 SECItem* CreateEncodedCertificate(PLArenaPool* arena, long version,
-                                  SECOidTag signature, SECItem* serialNumber,
+                                  SECOidTag signature,
+                                  const SECItem* serialNumber,
                                   const SECItem* issuerNameDER,
                                   PRTime notBefore, PRTime notAfter,
                                   const SECItem* subjectNameDER,
@@ -88,6 +92,8 @@ SECItem* CreateEncodedCertificate(PLArenaPool* arena, long version,
                      /*optional*/ SECKEYPrivateKey* issuerPrivateKey,
                                   SECOidTag signatureHashAlg,
                           /*out*/ ScopedSECKEYPrivateKey& privateKey);
+
+SECItem* CreateEncodedSerialNumber(PLArenaPool* arena, long value);
 
 MOZILLA_PKIX_ENUM_CLASS ExtensionCriticality { NotCritical = 0, Critical = 1 };
 
