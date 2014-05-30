@@ -920,7 +920,6 @@ void
 MPhi::removeOperand(size_t index)
 {
     JS_ASSERT(index < numOperands());
-    JS_ASSERT(numOperands() > 1);
     JS_ASSERT(getUseFor(index)->index() == index);
     JS_ASSERT(getUseFor(index)->consumer() == this);
 
