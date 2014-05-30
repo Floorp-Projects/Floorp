@@ -93,11 +93,20 @@ MemoryStats.dump = function (logger,
         }, null, /* anonymize = */ false);
     }
 
+    // This is the old, deprecated function.
     if (dumpDMD && typeof(DMDReportAndDump) != undefined) {
+        var basename = "dmd-" + testNumber + "-deprecated.txt";
+        var dumpfile = MemoryStats.constructPathname(dumpOutputDirectory,
+                                                     basename);
+        logger.info(testURL + " | DMD-DUMP-deprecated " + dumpfile);
+        DMDReportAndDump(dumpfile);
+    }
+
+    if (dumpDMD && typeof(DMDAnalyzeReports) != undefined) {
         var basename = "dmd-" + testNumber + ".txt";
         var dumpfile = MemoryStats.constructPathname(dumpOutputDirectory,
                                                      basename);
         logger.info(testURL + " | DMD-DUMP " + dumpfile);
-        DMDReportAndDump(dumpfile);
+        DMDAnalyzeReports(dumpfile);
     }
 };
