@@ -134,29 +134,6 @@ CodeGeneratorX64::visitUnbox(LUnbox *unbox)
 }
 
 void
-CodeGeneratorX64::loadUnboxedValue(Operand source, MIRType type, const LDefinition *dest)
-{
-    switch (type) {
-      case MIRType_Double:
-        masm.loadInt32OrDouble(source, ToFloatRegister(dest));
-        break;
-
-      case MIRType_Object:
-      case MIRType_String:
-        masm.unboxObject(source, ToRegister(dest));
-        break;
-
-      case MIRType_Int32:
-      case MIRType_Boolean:
-        masm.movl(source, ToRegister(dest));
-        break;
-
-      default:
-        MOZ_ASSUME_UNREACHABLE("unexpected type");
-    }
-}
-
-void
 CodeGeneratorX64::storeUnboxedValue(const LAllocation *value, MIRType valueType,
                                     Operand dest, MIRType slotType)
 {
@@ -209,15 +186,15 @@ bool
 CodeGeneratorX64::visitLoadElementT(LLoadElementT *load)
 {
     Operand source = createArrayElementOperand(ToRegister(load->elements()), load->index());
+    AnyRegister output = ToAnyRegister(load->output());
 
     if (load->mir()->loadDoubles()) {
-        FloatRegister fpreg = ToFloatRegister(load->output());
         if (source.kind() == Operand::MEM_REG_DISP)
-            masm.loadDouble(source.toAddress(), fpreg);
+            masm.loadDouble(source.toAddress(), output.fpu());
         else
-            masm.loadDouble(source.toBaseIndex(), fpreg);
+            masm.loadDouble(source.toBaseIndex(), output.fpu());
     } else {
-        loadUnboxedValue(source, load->mir()->type(), load->output());
+        masm.loadUnboxedValue(source, load->mir()->type(), output);
     }
 
     JS_ASSERT(!load->mir()->needsHoleCheck());

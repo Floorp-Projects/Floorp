@@ -1782,8 +1782,8 @@ CodeGeneratorARM::visitLoadElementT(LLoadElementT *load)
             Address source(base, ToInt32(load->index()) * sizeof(Value));
             masm.load32(source, ToRegister(load->output()));
         } else {
-            masm.ma_ldr(DTRAddr(base, DtrRegImmShift(ToRegister(load->index()), LSL, 3)),
-                        ToRegister(load->output()));
+            BaseIndex source(base, ToRegister(load->index()), TimesEight);
+            masm.load32(source, ToRegister(load->output()));
         }
     }
     JS_ASSERT(!load->mir()->needsHoleCheck());
