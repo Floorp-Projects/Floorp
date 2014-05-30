@@ -87,9 +87,9 @@ function tryActors(aReachables, aCompleted) {
     gClient.request({ to: actor, type: 'echo', value: 'tango'}, // phone home
                     (aResponse) => {
                       if (aReachables.has(actor))
-                        do_check_matches({ from: actor, type: 'echo', value: 'tango' }, aResponse);
+                        do_check_matches({ from: actor, to: actor, type: 'echo', value: 'tango' }, aResponse);
                       else
-                        do_check_matches({ from: actor, error: 'noSuchActor' }, aResponse);
+                        do_check_matches({ from: actor, error: 'noSuchActor', message: "No such actor for ID: " + actor }, aResponse);
 
                       if (--count == 0)
                         do_execute_soon(aCompleted, "tryActors callback " + aCompleted.name);
