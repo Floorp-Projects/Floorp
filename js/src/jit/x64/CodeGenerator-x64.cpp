@@ -191,24 +191,6 @@ CodeGeneratorX64::storeElementTyped(const LAllocation *value, MIRType valueType,
 }
 
 bool
-CodeGeneratorX64::visitImplicitThis(LImplicitThis *lir)
-{
-    Register callee = ToRegister(lir->callee());
-
-    // The implicit |this| is always |undefined| if the function's environment
-    // is the current global.
-    GlobalObject *global = &gen->info().script()->global();
-    masm.cmpPtr(Operand(callee, JSFunction::offsetOfEnvironment()), ImmGCPtr(global));
-
-    // TODO: OOL stub path.
-    if (!bailoutIf(Assembler::NotEqual, lir->snapshot()))
-        return false;
-
-    masm.moveValue(UndefinedValue(), ToOutValue(lir));
-    return true;
-}
-
-bool
 CodeGeneratorX64::visitInterruptCheck(LInterruptCheck *lir)
 {
     OutOfLineCode *ool = oolCallVM(InterruptCheckInfo, lir, (ArgList()), StoreNothing());
