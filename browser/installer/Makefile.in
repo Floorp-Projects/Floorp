@@ -136,6 +136,7 @@ endif
 ifdef MOZ_JEMALLOC3
 DEFINES += -DMOZ_JEMALLOC3
 endif
+DEFINES += -DMOZ_ICU_DBG_SUFFIX=$(MOZ_ICU_DBG_SUFFIX)
 
 libs::
 	$(MAKE) -C $(DEPTH)/browser/locales langpack
