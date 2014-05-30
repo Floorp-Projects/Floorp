@@ -1274,6 +1274,8 @@ pref("devtools.inspector.remote", false);
 pref("devtools.inspector.show_pseudo_elements", true);
 // The default size for image preview tooltips in the rule-view/computed-view/markup-view
 pref("devtools.inspector.imagePreviewTooltipSize", 300);
+// Enable user agent style inspection in rule-view
+pref("devtools.inspector.showUserAgentStyles", false);
 
 // DevTools default color unit
 pref("devtools.defaultColorUnit", "hex");

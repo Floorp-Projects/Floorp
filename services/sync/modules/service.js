@@ -968,7 +968,7 @@ Sync11Service.prototype = {
           && (username || password || passphrase)) {
         Svc.Obs.notify("weave:service:setup-complete");
       }
-      this._log.info("Logging in user " + this.identity.username);
+      this._log.info("Logging in the user.");
       this._updateCachedURLs();
 
       if (!this.verifyLogin()) {
