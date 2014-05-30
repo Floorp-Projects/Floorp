@@ -42,9 +42,6 @@ DOMCI_CLASS(TreeColumn)
 DOMCI_CLASS(CSSMozDocumentRule)
 DOMCI_CLASS(CSSSupportsRule)
 
-// other SVG classes
-DOMCI_CLASS(SVGNumber)
-
 // WindowUtils
 DOMCI_CLASS(WindowUtils)
 
