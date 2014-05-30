@@ -8,6 +8,7 @@
 #include "GLContext.h"
 #include "mozilla/CheckedInt.h"
 #include "WebGLBuffer.h"
+#include "WebGLContextUtils.h"
 #include "WebGLFramebuffer.h"
 #include "WebGLProgram.h"
 #include "WebGLRenderbuffer.h"
@@ -630,7 +631,7 @@ WebGLContext::BindFakeBlackTexturesHelper(
         }
 
         bool alpha = s == WebGLTextureFakeBlackStatus::UninitializedImageData &&
-                     FormatHasAlpha(boundTexturesArray[i]->ImageInfoBase().InternalFormat());
+                     FormatHasAlpha(boundTexturesArray[i]->ImageInfoBase().WebGLFormat());
         ScopedDeletePtr<FakeBlackTexture>&
             blackTexturePtr = alpha
                               ? transparentTextureScopedPtr
