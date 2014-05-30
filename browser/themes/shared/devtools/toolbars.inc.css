@@ -709,7 +709,7 @@
   opacity: 1;
 }
 
-.theme-dark .devtools-tab[selected] {
+.theme-dark .devtools-tabbar .devtools-tab[selected] {
   color: #f5f7fa;
   background-color: #1a4666;
   box-shadow: 0 2px 0 #d7f1ff inset,
@@ -717,7 +717,7 @@
               0 -2px 0 rgba(0,0,0,.2) inset;
 }
 
-.theme-light .devtools-tab[selected] {
+.theme-light .devtools-tabbar .devtools-tab[selected] {
   color: #f5f7fa;
   background-color: #4c9ed9;
   box-shadow: 0 2px 0 #d7f1ff inset,

@@ -228,6 +228,9 @@ typedef GeckoContentController::APZStateChange APZStateChange;
  * Maximum amount of time while panning before sending a viewport change. This
  * will asynchronously repaint the page. It is also forced when panning stops.
  *
+ * "apz.test.logging_enabled"
+ * Enable logging of APZ test data (see bug 961289).
+ *
  * "apz.touch_start_tolerance"
  * Constant describing the tolerance in distance we use, multiplied by the
  * device DPI, before we start panning the screen. This is to prevent us from

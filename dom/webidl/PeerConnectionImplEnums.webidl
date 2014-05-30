@@ -6,14 +6,6 @@
  * This is in a separate file so it can be shared with unittests.
  */
 
-enum PCImplReadyState {
-  "New",
-  "Negotiating",
-  "Active",
-  "Closing",
-  "Closed"
-};
-
 /* Must be in the same order as comparable fsmdef_states_t in fsmdef_states.h */
 enum PCImplSignalingState {
   "SignalingInvalid",

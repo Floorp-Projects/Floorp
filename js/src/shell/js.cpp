@@ -2887,9 +2887,7 @@ WorkerMain(void *arg)
 {
     WorkerInput *input = (WorkerInput *) arg;
 
-    JSRuntime *rt = JS_NewRuntime(8L * 1024L * 1024L,
-                                  JS_USE_HELPER_THREADS,
-                                  input->runtime);
+    JSRuntime *rt = JS_NewRuntime(8L * 1024L * 1024L, input->runtime);
     if (!rt) {
         js_delete(input);
         return;
@@ -6284,7 +6282,7 @@ main(int argc, char **argv, char **envp)
         return 1;
 
     /* Use the same parameters as the browser in xpcjsruntime.cpp. */
-    rt = JS_NewRuntime(32L * 1024L * 1024L, JS_USE_HELPER_THREADS);
+    rt = JS_NewRuntime(32L * 1024L * 1024L);
     if (!rt)
         return 1;
 

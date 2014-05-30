@@ -66,16 +66,19 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
 {
   unsigned narenas;
   size_t active, allocated, mapped, page, pdirty;
+  size_t lg_chunk;
 
   CTL_GET("arenas.narenas", narenas);
   CTL_GET("arenas.page", page);
   CTL_GET("stats.active", active);
   CTL_GET("stats.allocated", allocated);
   CTL_GET("stats.mapped", mapped);
+  CTL_GET("opt.lg_chunk", lg_chunk);
 
   /* get the summation for all arenas, i == narenas */
   CTL_I_GET("stats.arenas.0.pdirty", pdirty, narenas);
 
+  stats->chunksize = 1 << lg_chunk;
   stats->mapped = mapped;
   stats->allocated = allocated;
   stats->waste = active - allocated;
@@ -84,6 +87,7 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
   // We could get this value out of base.c::base_pages, but that really should
   // be an upstream change, so don't worry about it for now.
   stats->bookkeeping = 0;
+  stats->bin_unused = 0;
 }
 
 MOZ_JEMALLOC_API void

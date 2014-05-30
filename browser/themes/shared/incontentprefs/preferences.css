@@ -847,3 +847,7 @@ description > html|a {
   margin-top: 8px;
   margin-bottom: 8px;
 }
+
+.indent {
+  -moz-margin-start: 33px;
+}

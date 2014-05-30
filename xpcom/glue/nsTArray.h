@@ -1696,6 +1696,7 @@ public:
 template <class TArrayBase, size_t N>
 class nsAutoArrayBase : public TArrayBase
 {
+  static_assert(N != 0, "nsAutoArrayBase<TArrayBase, 0> should be specialized");
 public:
   typedef nsAutoArrayBase<TArrayBase, N> self_type;
   typedef TArrayBase base_type;
@@ -1755,6 +1756,24 @@ private:
                          ? MOZ_ALIGNOF(Header) : MOZ_ALIGNOF(elem_type)> mAlign;
   };
 };
+
+//
+// Specialization of nsAutoArrayBase<TArrayBase, N> for the case where N == 0.
+// nsAutoArrayBase<TArrayBase, 0> behaves exactly like TArrayBase, but without
+// this specialization, it stores a useless inline header.
+//
+// We do have many nsAutoArrayBase<TArrayBase, 0> objects in memory: about
+// 2,000 per tab as of May 2014. These are typically not explicitly
+// nsAutoArrayBase<TArrayBase, 0> but rather nsAutoArrayBase<TArrayBase, N>
+// for some value N depending on template parameters, in generic code.
+//
+// For that reason, we optimize this case with the below partial specialization,
+// which ensures that nsAutoArrayBase<TArrayBase, 0> is just like TArrayBase,
+// without any inline header overhead.
+//
+template <class TArrayBase>
+class nsAutoArrayBase<TArrayBase, 0> : public TArrayBase
+{};
 
 //
 // nsAutoTArray<E, N> is an infallible vector class with N elements of inline

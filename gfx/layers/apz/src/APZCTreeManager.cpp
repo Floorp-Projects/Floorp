@@ -22,6 +22,7 @@
 #include "nsThreadUtils.h"              // for NS_IsMainThread
 #include "mozilla/gfx/Logging.h"        // for gfx::TreeLog
 #include "UnitTransforms.h"             // for ViewAs
+#include "gfxPrefs.h"                   // for gfxPrefs
 
 #include <algorithm>                    // for std::stable_sort
 
@@ -127,9 +128,11 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
   // For testing purposes, we log some data to the APZTestData associated with
   // the layers id that originated this update.
   APZTestData* testData = nullptr;
-  if (CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(aOriginatingLayersId)) {
-    testData = &state->mApzTestData;
-    testData->StartNewPaint(aPaintSequenceNumber);
+  if (gfxPrefs::APZTestLoggingEnabled()) {
+    if (CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(aOriginatingLayersId)) {
+      testData = &state->mApzTestData;
+      testData->StartNewPaint(aPaintSequenceNumber);
+    }
   }
   APZPaintLogHelper paintLogger(testData, aPaintSequenceNumber);
 
