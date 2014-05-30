@@ -279,13 +279,6 @@ public:
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               int32_t aModType) const;
 
-  /**
-   * Returns an atom holding the name of the "class" attribute on this
-   * content node (if applicable).  Returns null if there is no
-   * "class" attribute for this type of content node.
-   */
-  virtual nsIAtom *GetClassAttributeName() const;
-
   inline Directionality GetDirectionality() const {
     if (HasFlag(NODE_HAS_DIRECTION_RTL)) {
       return eDir_RTL;
@@ -587,8 +580,20 @@ public:
   {
     SetAttr(kNameSpaceID_None, nsGkAtoms::id, aId, true);
   }
+  void GetClassName(nsAString& aClassName)
+  {
+    GetAttr(kNameSpaceID_None, nsGkAtoms::_class, aClassName);
+  }
+  void GetClassName(DOMString& aClassName)
+  {
+    GetAttr(kNameSpaceID_None, nsGkAtoms::_class, aClassName);
+  }
+  void SetClassName(const nsAString& aClassName)
+  {
+    SetAttr(kNameSpaceID_None, nsGkAtoms::_class, aClassName, true);
+  }
 
-  nsDOMTokenList* GetClassList();
+  nsDOMTokenList* ClassList();
   nsDOMAttributeMap* Attributes()
   {
     nsDOMSlots* slots = DOMSlots();
@@ -862,8 +867,6 @@ public:
     const nsAttrValue* mValue;
   };
 
-  // Be careful when using this method. This does *NOT* handle
-  // XUL prototypes. You may want to use GetAttrInfo.
   const nsAttrValue* GetParsedAttr(nsIAtom* aAttr) const
   {
     return mAttrsAndChildren.GetAttr(aAttr);
@@ -1128,8 +1131,7 @@ protected:
    * Add/remove this element to the documents id cache
    */
   void AddToIdTable(nsIAtom* aId);
-  void RemoveFromIdTable(); // checks HasID() and uses DoGetID()
-  void RemoveFromIdTable(nsIAtom* aId);
+  void RemoveFromIdTable();
 
   /**
    * Functions to carry out event default actions for links of all types
@@ -1362,6 +1364,26 @@ typedef mozilla::dom::Element Element;                                        \
 NS_IMETHOD GetTagName(nsAString& aTagName) MOZ_FINAL                          \
 {                                                                             \
   Element::GetTagName(aTagName);                                              \
+  return NS_OK;                                                               \
+}                                                                             \
+NS_IMETHOD GetId(nsAString& aId) MOZ_FINAL                                    \
+{                                                                             \
+  Element::GetId(aId);                                                        \
+  return NS_OK;                                                               \
+}                                                                             \
+NS_IMETHOD SetId(const nsAString& aId) MOZ_FINAL                              \
+{                                                                             \
+  Element::SetId(aId);                                                        \
+  return NS_OK;                                                               \
+}                                                                             \
+NS_IMETHOD GetClassName(nsAString& aClassName) MOZ_FINAL                      \
+{                                                                             \
+  Element::GetClassName(aClassName);                                          \
+  return NS_OK;                                                               \
+}                                                                             \
+NS_IMETHOD SetClassName(const nsAString& aClassName) MOZ_FINAL                \
+{                                                                             \
+  Element::SetClassName(aClassName);                                          \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetClassList(nsISupports** aClassList) MOZ_FINAL                   \
