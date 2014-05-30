@@ -285,22 +285,6 @@ function TracingTransport(childTransport) {
   this.checkIndex = 0;
 }
 
-function deepEqual(a, b) {
-  if (a === b)
-    return true;
-  if (typeof a != "object" || typeof b != "object")
-    return false;
-  if (a === null || b === null)
-    return false;
-  if (Object.keys(a).length != Object.keys(b).length)
-    return false;
-  for (let k in a) {
-    if (!deepEqual(a[k], b[k]))
-      return false;
-  }
-  return true;
-}
-
 TracingTransport.prototype = {
   // Remove actor names
   normalize: function(packet) {
@@ -338,13 +322,13 @@ TracingTransport.prototype = {
   expectSend: function(expected) {
     let packet = this.packets[this.checkIndex++];
     do_check_eq(packet.type, "sent");
-    do_check_true(deepEqual(packet.packet, this.normalize(expected)));
+    deepEqual(packet.packet, this.normalize(expected));
   },
 
   expectReceive: function(expected) {
     let packet = this.packets[this.checkIndex++];
     do_check_eq(packet.type, "received");
-    do_check_true(deepEqual(packet.packet, this.normalize(expected)));
+    deepEqual(packet.packet, this.normalize(expected));
   },
 
   // Write your tests, call dumpLog at the end, inspect the output,
