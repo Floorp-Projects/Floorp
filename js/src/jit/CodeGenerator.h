@@ -350,6 +350,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitAssertRangeF(LAssertRangeF *ins);
     bool visitAssertRangeV(LAssertRangeV *ins);
 
+    bool visitInterruptCheck(LInterruptCheck *lir);
     bool visitRecompileCheck(LRecompileCheck *ins);
 
   private:

@@ -249,8 +249,6 @@ class CodeGeneratorMIPS : public CodeGeneratorShared
     bool visitGuardObjectType(LGuardObjectType *guard);
     bool visitGuardClass(LGuardClass *guard);
 
-    bool visitInterruptCheck(LInterruptCheck *lir);
-
     bool visitNegI(LNegI *lir);
     bool visitNegD(LNegD *lir);
     bool visitNegF(LNegF *lir);

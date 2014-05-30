@@ -53,7 +53,6 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitUnbox(LUnbox *unbox);
     bool visitValue(LValue *value);
     bool visitStoreSlotT(LStoreSlotT *store);
-    bool visitInterruptCheck(LInterruptCheck *lir);
     bool visitCompareB(LCompareB *lir);
     bool visitCompareBAndBranch(LCompareBAndBranch *lir);
     bool visitCompareV(LCompareV *lir);
