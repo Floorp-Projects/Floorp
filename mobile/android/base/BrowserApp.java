@@ -1522,6 +1522,10 @@ abstract public class BrowserApp extends GeckoApp
             throw new IllegalArgumentException("Cannot handle null URLs in enterEditingMode");
         }
 
+        if (mBrowserToolbar.isEditing() || mBrowserToolbar.isAnimating()) {
+            return;
+        }
+
         final Tab selectedTab = Tabs.getInstance().getSelectedTab();
         mTargetTabForEditingMode = (selectedTab != null ? selectedTab.getId() : null);
 
