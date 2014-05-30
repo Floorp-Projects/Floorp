@@ -321,13 +321,6 @@ public:
   }
 
   /**
-   * Returns an atom holding the name of the attribute of type ID on
-   * this content node (if applicable).  Returns null for non-element
-   * content nodes.
-   */
-  virtual nsIAtom *GetIDAttributeName() const = 0;
-
-  /**
    * Set attribute values. All attribute values are assumed to have a
    * canonical string representation that can be used for these
    * methods. The SetAttr method is assumed to perform a translation
@@ -831,8 +824,7 @@ public:
 
   /**
    * Get the ID of this content node (the atom corresponding to the
-   * value of the null-namespace attribute whose name is given by
-   * GetIDAttributeName().  This may be null if there is no ID.
+   * value of the id attribute).  This may be null if there is no ID.
    */
   nsIAtom* GetID() const {
     if (HasID()) {
@@ -843,8 +835,7 @@ public:
 
   /**
    * Get the class list of this content node (this corresponds to the
-   * value of the null-namespace attribute whose name is given by
-   * GetClassAttributeName()).  This may be null if there are no
+   * value of the class attribute).  This may be null if there are no
    * classes, but that's not guaranteed.
    */
   const nsAttrValue* GetClasses() const {
@@ -957,14 +948,14 @@ protected:
    * Hook for implementing GetID.  This is guaranteed to only be
    * called if HasID() is true.
    */
-  virtual nsIAtom* DoGetID() const = 0;
+  nsIAtom* DoGetID() const;
 
 private:
   /**
    * Hook for implementing GetClasses.  This is guaranteed to only be
    * called if the NODE_MAY_HAVE_CLASS flag is set.
    */
-  virtual const nsAttrValue* DoGetClasses() const = 0;
+  const nsAttrValue* DoGetClasses() const;
 
 public:
 #ifdef DEBUG

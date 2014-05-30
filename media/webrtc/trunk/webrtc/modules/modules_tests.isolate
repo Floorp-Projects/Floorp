@@ -21,7 +21,6 @@
       'variables': {
         'command': [
           '../../testing/test_env.py',
-          '../../tools/swarm_client/googletest/run_test_cases.py',
           '<(PRODUCT_DIR)/modules_tests<(EXECUTABLE_SUFFIX)',
         ],
         'isolate_dependency_tracked': [
@@ -31,10 +30,10 @@
           '../../resources/foreman_cif.yuv',
           '../../resources/paris_qcif.yuv',
           '../../testing/test_env.py',
-          '../../tools/swarm_client/run_isolated.py',
-          '../../tools/swarm_client/googletest/run_test_cases.py',
-          '../../tools/swarm_client/third_party/upload.py',
           '<(PRODUCT_DIR)/modules_tests<(EXECUTABLE_SUFFIX)',
+        ],
+        'isolate_dependency_untracked': [
+          '../../tools/swarming_client/',
         ],
       },
     }],

@@ -412,16 +412,13 @@ var mathMLNode = document.createElementNS(MATHML_NS, "math");
 content.appendChild(mathMLNode);
 testClassList(mathMLNode);
 
-// Nodes not meant to be styled have a null classList property.
-
 var xmlNode = document.createElementNS(null, "foo");
 content.appendChild(xmlNode);
-is(xmlNode.classList, null, "classList is not null for plain XML nodes");
+testClassList(xmlNode);
 
 var fooNode = document.createElementNS("http://example.org/foo", "foo");
 content.appendChild(fooNode);
-is(fooNode.classList, null, "classList is not null for nodes in " +
-                            " http://example.org/foo namespace");
+testClassList(fooNode);
 
 </script>
 </pre>

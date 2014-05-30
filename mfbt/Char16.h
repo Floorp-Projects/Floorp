@@ -32,8 +32,8 @@
     */
 #  define MOZ_UTF16_HELPER(s) L##s
 #  define _CHAR16T
-   typedef wchar_t char16_t;
-   typedef unsigned int char32_t;
+typedef wchar_t char16_t;
+typedef unsigned int char32_t;
 #else
    /* C++11 has a builtin char16_t type. */
 #  define MOZ_UTF16_HELPER(s) u##s
@@ -61,86 +61,108 @@
    */
 class char16ptr_t
 {
-  private:
-    const char16_t* ptr;
-    static_assert(sizeof(char16_t) == sizeof(wchar_t), "char16_t and wchar_t sizes differ");
+private:
+  const char16_t* mPtr;
+  static_assert(sizeof(char16_t) == sizeof(wchar_t),
+                "char16_t and wchar_t sizes differ");
 
-  public:
-    char16ptr_t(const char16_t* p) : ptr(p) {}
-    char16ptr_t(const wchar_t* p) : ptr(reinterpret_cast<const char16_t*>(p)) {}
+public:
+  char16ptr_t(const char16_t* aPtr) : mPtr(aPtr) {}
+  char16ptr_t(const wchar_t* aPtr) :
+    mPtr(reinterpret_cast<const char16_t*>(aPtr))
+  {}
 
-    /* Without this, nullptr assignment would be ambiguous. */
-    constexpr char16ptr_t(decltype(nullptr)) : ptr(nullptr) {}
+  /* Without this, nullptr assignment would be ambiguous. */
+  constexpr char16ptr_t(decltype(nullptr)) : mPtr(nullptr) {}
 
-    operator const char16_t*() const {
-      return ptr;
-    }
-    operator const wchar_t*() const {
-      return reinterpret_cast<const wchar_t*>(ptr);
-    }
-    operator const void*() const {
-      return ptr;
-    }
-    operator bool() const {
-      return ptr != nullptr;
-    }
-    operator std::wstring() const {
-      return std::wstring(static_cast<const wchar_t*>(*this));
-    }
+  operator const char16_t*() const
+  {
+    return mPtr;
+  }
+  operator const wchar_t*() const
+  {
+    return reinterpret_cast<const wchar_t*>(mPtr);
+  }
+  operator const void*() const
+  {
+    return mPtr;
+  }
+  operator bool() const
+  {
+    return mPtr != nullptr;
+  }
+  operator std::wstring() const
+  {
+    return std::wstring(static_cast<const wchar_t*>(*this));
+  }
 
-    /* Explicit cast operators to allow things like (char16_t*)str. */
-    explicit operator char16_t*() const {
-      return const_cast<char16_t*>(ptr);
-    }
-    explicit operator wchar_t*() const {
-      return const_cast<wchar_t*>(static_cast<const wchar_t*>(*this));
-    }
+  /* Explicit cast operators to allow things like (char16_t*)str. */
+  explicit operator char16_t*() const
+  {
+    return const_cast<char16_t*>(mPtr);
+  }
+  explicit operator wchar_t*() const
+  {
+    return const_cast<wchar_t*>(static_cast<const wchar_t*>(*this));
+  }
 
-    /**
-     * Some Windows API calls accept BYTE* but require that data actually be WCHAR*.
-     * Supporting this requires explicit operators to support the requisite explicit
-     * casts.
-     */
-    explicit operator const char*() const {
-      return reinterpret_cast<const char*>(ptr);
-    }
-    explicit operator const unsigned char*() const {
-      return reinterpret_cast<const unsigned char*>(ptr);
-    }
-    explicit operator unsigned char*() const {
-      return const_cast<unsigned char*>(reinterpret_cast<const unsigned char*>(ptr));
-    }
-    explicit operator void*() const {
-      return const_cast<char16_t*>(ptr);
-    }
+  /**
+   * Some Windows API calls accept BYTE* but require that data actually be WCHAR*.
+   * Supporting this requires explicit operators to support the requisite explicit
+   * casts.
+   */
+  explicit operator const char*() const
+  {
+    return reinterpret_cast<const char*>(mPtr);
+  }
+  explicit operator const unsigned char*() const
+  {
+    return reinterpret_cast<const unsigned char*>(mPtr);
+  }
+  explicit operator unsigned char*() const
+  {
+    return const_cast<unsigned char*>(reinterpret_cast<const unsigned char*>(mPtr));
+  }
+  explicit operator void*() const
+  {
+    return const_cast<char16_t*>(mPtr);
+  }
 
-    /* Some operators used on pointers. */
-    char16_t operator[](size_t i) const {
-      return ptr[i];
-    }
-    bool operator==(const char16ptr_t &x) const {
-      return ptr == x.ptr;
-    }
-    bool operator==(decltype(nullptr)) const {
-      return ptr == nullptr;
-    }
-    bool operator!=(const char16ptr_t &x) const {
-      return ptr != x.ptr;
-    }
-    bool operator!=(decltype(nullptr)) const {
-      return ptr != nullptr;
-    }
-    char16ptr_t operator+(size_t add) const {
-      return char16ptr_t(ptr + add);
-    }
-    ptrdiff_t operator-(const char16ptr_t &other) const {
-      return ptr - other.ptr;
-    }
+  /* Some operators used on pointers. */
+  char16_t operator[](size_t aIndex) const
+  {
+    return mPtr[aIndex];
+  }
+  bool operator==(const char16ptr_t &aOther) const
+  {
+    return mPtr == aOther.mPtr;
+  }
+  bool operator==(decltype(nullptr)) const
+  {
+    return mPtr == nullptr;
+  }
+  bool operator!=(const char16ptr_t &aOther) const
+  {
+    return mPtr != aOther.mPtr;
+  }
+  bool operator!=(decltype(nullptr)) const
+  {
+    return mPtr != nullptr;
+  }
+  char16ptr_t operator+(size_t aValue) const
+  {
+    return char16ptr_t(mPtr + aValue);
+  }
+  ptrdiff_t operator-(const char16ptr_t &aOther) const
+  {
+    return mPtr - aOther.mPtr;
+  }
 };
 
 inline decltype((char*)0-(char*)0)
-operator-(const char16_t* x, const char16ptr_t y) {
-  return x - static_cast<const char16_t*>(y);
+operator-(const char16_t* aX, const char16ptr_t aY)
+{
+  return aX - static_cast<const char16_t*>(aY);
 }
 
 #else

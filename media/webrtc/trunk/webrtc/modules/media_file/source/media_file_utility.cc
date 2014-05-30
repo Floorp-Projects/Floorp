@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "webrtc/modules/media_file/source/media_file_utility.h"
+
 #include <assert.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -15,7 +17,6 @@
 #include "webrtc/common_types.h"
 #include "webrtc/engine_configurations.h"
 #include "webrtc/modules/interface/module_common_types.h"
-#include "webrtc/modules/media_file/source/media_file_utility.h"
 #include "webrtc/system_wrappers/interface/file_wrapper.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 

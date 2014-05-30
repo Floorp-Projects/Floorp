@@ -11,6 +11,8 @@
 #include "MediaConduitInterface.h"
 #include "MediaEngineWrapper.h"
 
+// conflicts with #include of scoped_ptr.h
+#undef FF
 // Video Engine Includes
 #include "webrtc/common_types.h"
 #ifdef FF

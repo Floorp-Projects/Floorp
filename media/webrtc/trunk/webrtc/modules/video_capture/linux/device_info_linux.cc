@@ -236,16 +236,10 @@ int32_t DeviceInfoLinux::CreateCapabilityMap(
     }
 
     // now fd will point to the matching device
-    // reset old capability map
-    for (std::map<int, VideoCaptureCapability*>::iterator it =
-             _captureCapabilities.begin();
-         it != _captureCapabilities.end();
-         ++it) {
-      delete it->second;
-    }
+    // reset old capability list.
     _captureCapabilities.clear();
 
-    int size = FillCapabilityMap(fd);
+    int size = FillCapabilities(fd);
     close(fd);
 
     // Store the new used device name
@@ -271,7 +265,7 @@ bool DeviceInfoLinux::IsDeviceNameMatches(const char* name,
     return false;
 }
 
-int32_t DeviceInfoLinux::FillCapabilityMap(int fd)
+int32_t DeviceInfoLinux::FillCapabilities(int fd)
 {
 
     // set image format
@@ -308,39 +302,39 @@ int32_t DeviceInfoLinux::FillCapabilityMap(int fd)
                 if ((video_fmt.fmt.pix.width == size[i][0])
                     && (video_fmt.fmt.pix.height == size[i][1]))
                 {
-                    VideoCaptureCapability *cap = new VideoCaptureCapability();
-                    cap->width = video_fmt.fmt.pix.width;
-                    cap->height = video_fmt.fmt.pix.height;
-                    cap->expectedCaptureDelay = 120;
+                    VideoCaptureCapability cap;
+                    cap.width = video_fmt.fmt.pix.width;
+                    cap.height = video_fmt.fmt.pix.height;
+                    cap.expectedCaptureDelay = 120;
                     if (videoFormats[fmts] == V4L2_PIX_FMT_YUYV)
                     {
-                        cap->rawType = kVideoYUY2;
+                        cap.rawType = kVideoYUY2;
                     }
                     else if (videoFormats[fmts] == V4L2_PIX_FMT_YUV420)
                     {
-                        cap->rawType = kVideoI420;
+                        cap.rawType = kVideoI420;
                     }
                     else if (videoFormats[fmts] == V4L2_PIX_FMT_MJPEG)
                     {
-                        cap->rawType = kVideoMJPEG;
+                        cap.rawType = kVideoMJPEG;
                     }
 
                     // get fps of current camera mode
                     // V4l2 does not have a stable method of knowing so we just guess.
-                    if(cap->width >= 800 && cap->rawType != kVideoMJPEG)
+                    if(cap.width >= 800 && cap.rawType != kVideoMJPEG)
                     {
-                        cap->maxFPS = 15;
+                        cap.maxFPS = 15;
                     }
                     else
                     {
-                        cap->maxFPS = 30;
+                        cap.maxFPS = 30;
                     }
 
-                    _captureCapabilities[index] = cap;
+                    _captureCapabilities.push_back(cap);
                     index++;
                     WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _id,
                                "Camera capability, width:%d height:%d type:%d fps:%d",
-                               cap->width, cap->height, cap->rawType, cap->maxFPS);
+                               cap.width, cap.height, cap.rawType, cap.maxFPS);
                 }
             }
         }

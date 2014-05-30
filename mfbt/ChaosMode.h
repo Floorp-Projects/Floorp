@@ -19,21 +19,21 @@ namespace mozilla {
  */
 class ChaosMode
 {
-  public:
-    static bool isActive()
-    {
-      // Flip this to true to activate chaos mode
-      return false;
-    }
+public:
+  static bool isActive()
+  {
+    // Flip this to true to activate chaos mode
+    return false;
+  }
 
-    /**
-     * Returns a somewhat (but not uniformly) random uint32_t < aBound.
-     * Not to be used for anything except ChaosMode, since it's not very random.
-     */
-    static uint32_t randomUint32LessThan(uint32_t aBound)
-    {
-      return uint32_t(rand()) % aBound;
-    }
+  /**
+   * Returns a somewhat (but not uniformly) random uint32_t < aBound.
+   * Not to be used for anything except ChaosMode, since it's not very random.
+   */
+  static uint32_t randomUint32LessThan(uint32_t aBound)
+  {
+    return uint32_t(rand()) % aBound;
+  }
 };
 
 } /* namespace mozilla */

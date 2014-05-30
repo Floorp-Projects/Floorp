@@ -178,8 +178,8 @@ private:
     bool KeyPressed() const;
 
 private:
-    void Lock() { _critSect.Enter(); };
-    void UnLock() { _critSect.Leave(); };
+    void Lock() EXCLUSIVE_LOCK_FUNCTION(_critSect) { _critSect.Enter(); };
+    void UnLock() UNLOCK_FUNCTION(_critSect) { _critSect.Leave(); };
 private:
     inline int32_t InputSanityCheckAfterUnlockedPeriod() const;
     inline int32_t OutputSanityCheckAfterUnlockedPeriod() const;

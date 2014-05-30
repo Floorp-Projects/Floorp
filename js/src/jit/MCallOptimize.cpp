@@ -165,6 +165,8 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
         return inlineToObject(callInfo);
     if (native == intrinsic_ToInteger)
         return inlineToInteger(callInfo);
+    if (native == intrinsic_ToString)
+        return inlineToString(callInfo);
 
     // TypedObject intrinsics.
     if (native == intrinsic_ObjectIsTypedObject)
@@ -1911,6 +1913,22 @@ IonBuilder::inlineToInteger(CallInfo &callInfo)
     MToInt32 *toInt32 = MToInt32::New(alloc(), callInfo.getArg(0));
     current->add(toInt32);
     current->push(toInt32);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineToString(CallInfo &callInfo)
+{
+    if (callInfo.argc() != 1 || callInfo.constructing())
+        return InliningStatus_NotInlined;
+
+    if (getInlineReturnType() != MIRType_String)
+        return InliningStatus_NotInlined;
+
+    callInfo.setImplicitlyUsedUnchecked();
+    MToString *toString = MToString::New(alloc(), callInfo.getArg(0));
+    current->add(toString);
+    current->push(toString);
     return InliningStatus_Inlined;
 }
 

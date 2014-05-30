@@ -112,6 +112,16 @@ class Operand
         JS_ASSERT(kind() == MEM_ADDRESS32);
         return reinterpret_cast<void *>(disp_);
     }
+
+    bool containsReg(Register r) const {
+        switch (kind()) {
+          case REG:          return r.code() == reg();
+          case MEM_REG_DISP: return r.code() == base();
+          case MEM_SCALE:    return r.code() == base() || r.code() == index();
+          default: MOZ_CRASH("Unexpected Operand kind");
+        }
+        return false;
+    }
 };
 
 class AssemblerX86Shared : public AssemblerShared
@@ -884,6 +894,9 @@ class AssemblerX86Shared : public AssemblerShared
             break;
           case Operand::MEM_REG_DISP:
             masm.testl_i32m(rhs.value, lhs.disp(), lhs.base());
+            break;
+          case Operand::MEM_ADDRESS32:
+            masm.testl_i32m(rhs.value, lhs.address());
             break;
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");

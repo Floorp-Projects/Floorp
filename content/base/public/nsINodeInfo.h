@@ -160,22 +160,6 @@ public:
     return mInner.mExtraName;
   }
 
-  /*
-   * Get and set the ID attribute atom for this node.
-   * See http://www.w3.org/TR/1998/REC-xml-19980210#sec-attribute-types
-   * for the definition of an ID attribute.
-   *
-   */
-  nsIAtom* GetIDAttributeAtom() const
-  {
-    return mIDAttributeAtom;
-  }
-
-  void SetIDAttributeAtom(nsIAtom* aID)
-  {
-    mIDAttributeAtom = aID;
-  }
-
   /**
    * Get the owning node info manager. Only to be used inside Gecko, you can't
    * really do anything with the pointer outside Gecko anyway.
@@ -330,7 +314,6 @@ protected:
 
   nsNodeInfoInner mInner;
 
-  nsCOMPtr<nsIAtom> mIDAttributeAtom;
   nsRefPtr<nsNodeInfoManager> mOwnerManager;
 
   /*

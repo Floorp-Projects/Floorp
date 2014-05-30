@@ -1154,7 +1154,7 @@ void AudioMixerManagerMac::logCAMsg(const TraceLevel level,
     assert(msg != NULL);
     assert(err != NULL);
 
-#ifdef WEBRTC_BIG_ENDIAN
+#ifdef WEBRTC_ARCH_BIG_ENDIAN
     WEBRTC_TRACE(level, module, id, "%s: %.4s", msg, err);
 #else
     // We need to flip the characters in this case.

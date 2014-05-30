@@ -1,12 +1,23 @@
-#ifndef VPM_COLOR_ENHANCEMENT_PRIVATE_H
-#define VPM_COLOR_ENHANCEMENT_PRIVATE_H
+/*
+ *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree. An additional intellectual property rights grant can be found
+ *  in the file PATENTS.  All contributing project authors may
+ *  be found in the AUTHORS file in the root of the source tree.
+ */
+
+#ifndef WEBRTC_MODULES_VIDEO_PROCESSING_MAIN_SOURCE_COLOR_ENHANCEMENT_PRIVATE_H_
+#define WEBRTC_MODULES_VIDEO_PROCESSING_MAIN_SOURCE_COLOR_ENHANCEMENT_PRIVATE_H_
 
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
+namespace VideoProcessing {
 
-//Table created with Matlab script createTable.m
-//Usage:
+// Table created with Matlab script createTable.m
+// Usage:
 //    Umod=colorTable[U][V]
 //    Vmod=colorTable[V][U]
 static const uint8_t colorTable[256][256] = {
@@ -268,6 +279,8 @@ static const uint8_t colorTable[256][256] = {
     {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255}
 };
 
-}  // namespace
 
-#endif // VPM_COLOR_ENHANCEMENT_PRIVATE_H
+}  // namespace VideoProcessing
+}  // namespace webrtc
+
+#endif // WEBRTC_MODULES_VIDEO_PROCESSING_MAIN_SOURCE_COLOR_ENHANCEMENT_PRIVATE_H_

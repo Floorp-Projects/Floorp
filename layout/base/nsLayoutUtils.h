@@ -75,6 +75,7 @@ class HTMLVideoElement;
 } // namespace dom
 namespace layers {
 class Layer;
+class ClientLayerManager;
 }
 }
 
@@ -2309,6 +2310,8 @@ namespace mozilla {
       nsPresContext *mPresContext;
       bool mOldValue;
     };
+
+    void MaybeSetupTransactionIdAllocator(layers::LayerManager* aManager, nsView* aView);
 
   }
 }

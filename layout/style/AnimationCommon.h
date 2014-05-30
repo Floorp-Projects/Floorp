@@ -310,6 +310,19 @@ struct ElementAnimation
     return (IsPaused() ? mPauseStart : aTime) - mStartTime - mDelay;
   }
 
+  // Return the duration of the active interval.
+  mozilla::TimeDuration ActiveDuration() const {
+    return mTiming.mIterationDuration.MultDouble(mTiming.mIterationCount);
+  }
+
+  // Return the duration from the start the active interval to the point where
+  // the animation begins playback. This is zero unless the animation has
+  // a negative delay in which case it is the absolute value of the delay.
+  // This is used for setting the elapsedTime member of AnimationEvents.
+  mozilla::TimeDuration InitialAdvance() const {
+    return std::max(TimeDuration(), mDelay * -1);
+  }
+
   // This function takes as input the timing parameters of an animation and
   // returns the computed timing at the specified moment.
   //

@@ -3129,9 +3129,9 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
 
 #if defined(XP_MACOSX) || defined(DARWIN)
     // MacOS has a gargantuan default stack size of 8MB. Go wild with 7MB,
-    // and give trusted script 140k extra. The stack is huge on mac anyway.
+    // and give trusted script 180k extra. The stack is huge on mac anyway.
     const size_t kStackQuota = 7 * 1024 * 1024;
-    const size_t kTrustedScriptBuffer = 140 * 1024;
+    const size_t kTrustedScriptBuffer = 180 * 1024;
 #elif defined(MOZ_ASAN)
     // ASan requires more stack space due to red-zones, so give it double the
     // default (2MB on 32-bit, 4MB on 64-bit). ASAN stack frame measurements

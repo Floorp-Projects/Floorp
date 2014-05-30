@@ -23,10 +23,6 @@
 namespace webrtc {
 namespace test {
 
-// Disable for TSan v2, see
-// https://code.google.com/p/webrtc/issues/detail?id=2334 for details.
-#if !defined(THREAD_SANITIZER)
-
 TEST(UdpSocketManager, CreateCallsInitAndDoesNotLeakMemory) {
   int32_t id = 42;
   uint8_t threads = 1;
@@ -83,8 +79,6 @@ TEST(UdpSocketManager, UnremovedSocketsGetCollectedAtManagerDeletion) {
   UdpSocketManager::Return();
 #endif
 }
-
-#endif // if !defined(THREAD_SANITIZER)
 
 }  // namespace test
 }  // namespace webrtc
