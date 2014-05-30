@@ -285,39 +285,6 @@ GetOIDText(SECItem *oid, nsINSSComponent *nssComponent, nsAString &text)
   case SEC_OID_PKCS1_RSA_PSS_SIGNATURE:
     bundlekey = "CertDumpRSAPSSSignature";
     break;
-  case SEC_OID_NS_CERT_EXT_CERT_TYPE:
-    bundlekey = "CertDumpCertType";
-    break;
-  case SEC_OID_NS_CERT_EXT_BASE_URL:
-    bundlekey = "CertDumpNSCertExtBaseUrl";
-    break;
-  case SEC_OID_NS_CERT_EXT_REVOCATION_URL:
-    bundlekey = "CertDumpNSCertExtRevocationUrl";
-    break;
-  case SEC_OID_NS_CERT_EXT_CA_REVOCATION_URL:
-    bundlekey = "CertDumpNSCertExtCARevocationUrl";
-    break;
-  case SEC_OID_NS_CERT_EXT_CERT_RENEWAL_URL:
-    bundlekey = "CertDumpNSCertExtCertRenewalUrl";
-    break;
-  case SEC_OID_NS_CERT_EXT_CA_POLICY_URL:
-    bundlekey = "CertDumpNSCertExtCAPolicyUrl";
-    break;
-  case SEC_OID_NS_CERT_EXT_SSL_SERVER_NAME:
-    bundlekey = "CertDumpNSCertExtSslServerName";
-    break;
-  case SEC_OID_NS_CERT_EXT_COMMENT:
-    bundlekey = "CertDumpNSCertExtComment";
-    break;
-  case SEC_OID_NS_CERT_EXT_LOST_PASSWORD_URL:
-    bundlekey = "CertDumpNSCertExtLostPasswordUrl";
-    break;
-  case SEC_OID_NS_CERT_EXT_CERT_RENEWAL_TIME:
-    bundlekey = "CertDumpNSCertExtCertRenewalTime";
-    break;
-  case SEC_OID_NETSCAPE_AOLSCREENNAME:
-    bundlekey = "CertDumpNetscapeAolScreenname";
-    break;
   case SEC_OID_AVA_COUNTRY_NAME:
     bundlekey = "CertDumpAVACountry";
     break;
@@ -671,61 +638,6 @@ ProcessRawBytes(nsINSSComponent *nssComponent, SECItem *data,
   }
   return NS_OK;
 }    
-
-static nsresult
-ProcessNSCertTypeExtensions(SECItem  *extData, 
-                            nsAString &text,
-                            nsINSSComponent *nssComponent)
-{
-  nsAutoString local;
-  SECItem decoded;
-  decoded.data = nullptr;
-  decoded.len  = 0;
-  if (SECSuccess != SEC_ASN1DecodeItem(nullptr, &decoded, 
-		SEC_ASN1_GET(SEC_BitStringTemplate), extData)) {
-    nssComponent->GetPIPNSSBundleString("CertDumpExtensionFailure", local);
-    text.Append(local.get());
-    return NS_OK;
-  }
-  unsigned char nsCertType = decoded.data[0];
-  nsMemory::Free(decoded.data);
-  if (nsCertType & NS_CERT_TYPE_SSL_CLIENT) {
-    nssComponent->GetPIPNSSBundleString("VerifySSLClient", local);
-    text.Append(local.get());
-    text.AppendLiteral(SEPARATOR);
-  }
-  if (nsCertType & NS_CERT_TYPE_SSL_SERVER) {
-    nssComponent->GetPIPNSSBundleString("VerifySSLServer", local);
-    text.Append(local.get());
-    text.AppendLiteral(SEPARATOR);
-  }
-  if (nsCertType & NS_CERT_TYPE_EMAIL) {
-    nssComponent->GetPIPNSSBundleString("CertDumpCertTypeEmail", local);
-    text.Append(local.get());
-    text.AppendLiteral(SEPARATOR);
-  }
-  if (nsCertType & NS_CERT_TYPE_OBJECT_SIGNING) {
-    nssComponent->GetPIPNSSBundleString("VerifyObjSign", local);
-    text.Append(local.get());
-    text.AppendLiteral(SEPARATOR);
-  }
-  if (nsCertType & NS_CERT_TYPE_SSL_CA) {
-    nssComponent->GetPIPNSSBundleString("VerifySSLCA", local);
-    text.Append(local.get());
-    text.AppendLiteral(SEPARATOR);
-  }
-  if (nsCertType & NS_CERT_TYPE_EMAIL_CA) {
-    nssComponent->GetPIPNSSBundleString("CertDumpEmailCA", local);
-    text.Append(local.get());
-    text.AppendLiteral(SEPARATOR);
-  }
-  if (nsCertType & NS_CERT_TYPE_OBJECT_SIGNING_CA) {
-    nssComponent->GetPIPNSSBundleString("VerifyObjSign", local);
-    text.Append(local.get());
-    text.AppendLiteral(SEPARATOR);
-  }
-  return NS_OK;
-}
 
 static nsresult
 ProcessKeyUsageExtension(SECItem *extData, nsAString &text,
@@ -1610,9 +1522,6 @@ ProcessExtensionData(SECOidTag oidTag, SECItem *extData,
 {
   nsresult rv;
   switch (oidTag) {
-  case SEC_OID_NS_CERT_EXT_CERT_TYPE:
-    rv = ProcessNSCertTypeExtensions(extData, text, nssComponent);
-    break;
   case SEC_OID_X509_KEY_USAGE:
     rv = ProcessKeyUsageExtension(extData, text, nssComponent);
     break;
@@ -1640,18 +1549,6 @@ ProcessExtensionData(SECOidTag oidTag, SECItem *extData,
     break;
   case SEC_OID_X509_AUTH_INFO_ACCESS:
     rv = ProcessAuthInfoAccess(extData, text, nssComponent);
-    break;
-  case SEC_OID_NS_CERT_EXT_BASE_URL:
-  case SEC_OID_NS_CERT_EXT_REVOCATION_URL:
-  case SEC_OID_NS_CERT_EXT_CA_REVOCATION_URL:
-  case SEC_OID_NS_CERT_EXT_CA_CERT_URL:
-  case SEC_OID_NS_CERT_EXT_CERT_RENEWAL_URL:
-  case SEC_OID_NS_CERT_EXT_CA_POLICY_URL:
-  case SEC_OID_NS_CERT_EXT_HOMEPAGE_URL:
-  case SEC_OID_NS_CERT_EXT_COMMENT:
-  case SEC_OID_NS_CERT_EXT_SSL_SERVER_NAME:
-  case SEC_OID_NS_CERT_EXT_LOST_PASSWORD_URL:
-    rv = ProcessIA5String(extData, text, nssComponent);
     break;
   default:
     if (oidTag == SEC_OID(MS_CERT_EXT_CERTTYPE)) {
