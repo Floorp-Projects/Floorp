@@ -1,5 +1,7 @@
 # Multiprocess activities with a push-driven divide-process-collect model.
 
+from __future__ import print_function
+
 from threading import Thread, Lock
 from Queue import Queue, Empty
 from datetime import datetime
@@ -19,12 +21,14 @@ class Source:
 
         sink = Sink(self.results)
         self.workers = [ Worker(_+1, self.tasks, sink, self.timeout, self.verbose) for _ in range(worker_count) ]
-        if self.verbose: print '[P] Starting workers.'
+        if self.verbose:
+            print('[P] Starting workers.')
         for w in self.workers:
             w.t0 = t0
             w.start()
         ans = self.join_workers()
-        if self.verbose: print '[P] Finished.'
+        if self.verbose:
+            print('[P] Finished.')
         return ans
 
     def join_workers(self):
@@ -66,7 +70,7 @@ class Worker(Thread):
         if self.verbose:
             dd = datetime.now() - self.t0
             dt = dd.seconds + 1e-6 * dd.microseconds
-            print '[W%d %.3f] %s' % (self.id, dt, msg)
+            print('[W%d %.3f] %s' % (self.id, dt, msg))
 
     def run(self):
         try:
