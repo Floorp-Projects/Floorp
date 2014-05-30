@@ -3282,6 +3282,35 @@ MacroAssemblerARMCompat::extractTag(const BaseIndex &address, Register scratch)
     return extractTag(Address(scratch, address.offset), scratch);
 }
 
+template <typename T>
+void
+MacroAssemblerARMCompat::storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T &dest,
+                                           MIRType slotType)
+{
+    if (valueType == MIRType_Double) {
+        storeDouble(value.reg().typedReg().fpu(), dest);
+        return;
+    }
+
+    // Store the type tag if needed.
+    if (valueType != slotType)
+        storeTypeTag(ImmType(ValueTypeFromMIRType(valueType)), dest);
+
+    // Store the payload.
+    if (value.constant())
+        storePayload(value.value(), dest);
+    else
+        storePayload(value.reg().typedReg().gpr(), dest);
+}
+
+template void
+MacroAssemblerARMCompat::storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const Address &dest,
+                                           MIRType slotType);
+
+template void
+MacroAssemblerARMCompat::storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const BaseIndex &dest,
+                                           MIRType slotType);
+
 void
 MacroAssemblerARMCompat::moveValue(const Value &val, Register type, Register data)
 {
@@ -3468,28 +3497,39 @@ MacroAssemblerARMCompat::storePayload(Register src, Operand dest)
 }
 
 void
-MacroAssemblerARMCompat::storePayload(const Value &val, Register base, Register index, int32_t shift)
+MacroAssemblerARMCompat::storePayload(const Value &val, const BaseIndex &dest)
 {
+    unsigned shift = ScaleToShift(dest.scale);
+    MOZ_ASSERT(dest.offset == 0);
+
     jsval_layout jv = JSVAL_TO_IMPL(val);
     if (val.isMarkable())
         ma_mov(ImmGCPtr((gc::Cell *)jv.s.payload.ptr), ScratchRegister);
     else
         ma_mov(Imm32(jv.s.payload.i32), ScratchRegister);
-    JS_STATIC_ASSERT(NUNBOX32_PAYLOAD_OFFSET == 0);
+
     // If NUNBOX32_PAYLOAD_OFFSET is not zero, the memory operand [base + index << shift + imm]
     // cannot be encoded into a single instruction, and cannot be integrated into the as_dtr call.
-    as_dtr(IsStore, 32, Offset, ScratchRegister, DTRAddr(base, DtrRegImmShift(index, LSL, shift)));
+    JS_STATIC_ASSERT(NUNBOX32_PAYLOAD_OFFSET == 0);
+
+    as_dtr(IsStore, 32, Offset, ScratchRegister,
+           DTRAddr(dest.base, DtrRegImmShift(dest.index, LSL, shift)));
 }
+
 void
-MacroAssemblerARMCompat::storePayload(Register src, Register base, Register index, int32_t shift)
+MacroAssemblerARMCompat::storePayload(Register src, const BaseIndex &dest)
 {
-    JS_ASSERT((shift < 32) && (shift >= 0));
+    unsigned shift = ScaleToShift(dest.scale);
+    MOZ_ASSERT(shift < 32 && shift >= 0);
+    MOZ_ASSERT(dest.offset == 0);
+
     // If NUNBOX32_PAYLOAD_OFFSET is not zero, the memory operand [base + index << shift + imm]
     // cannot be encoded into a single instruction, and cannot be integrated into the as_dtr call.
     JS_STATIC_ASSERT(NUNBOX32_PAYLOAD_OFFSET == 0);
+
     // Technically, shift > -32 can be handle by changing LSL to ASR, but should never come up,
     // and this is one less code path to get wrong.
-    as_dtr(IsStore, 32, Offset, src, DTRAddr(base, DtrRegImmShift(index, LSL, shift)));
+    as_dtr(IsStore, 32, Offset, src, DTRAddr(dest.base, DtrRegImmShift(dest.index, LSL, shift)));
 }
 
 void
@@ -3505,9 +3545,15 @@ MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, Operand dest) {
 }
 
 void
-MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, Register base, Register index, int32_t shift) {
-    JS_ASSERT(base != ScratchRegister);
-    JS_ASSERT(index != ScratchRegister);
+MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, const BaseIndex &dest)
+{
+    Register base = dest.base;
+    Register index = dest.index;
+    unsigned shift = ScaleToShift(dest.scale);
+    MOZ_ASSERT(dest.offset == 0);
+    MOZ_ASSERT(base != ScratchRegister);
+    MOZ_ASSERT(index != ScratchRegister);
+
     // A value needs to be store a value int base + index << shift + 4.
     // Arm cannot handle this in a single operand, so a temp register is required.
     // However, the scratch register is presently in use to hold the immediate that

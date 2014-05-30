@@ -978,6 +978,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
             movl(Operand(src), dest.gpr());
     }
 
+    template <typename T>
+    void storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T &dest,
+                           MIRType slotType);
+
     void rshiftPtr(Imm32 imm, Register dest) {
         shrl(imm, dest);
     }

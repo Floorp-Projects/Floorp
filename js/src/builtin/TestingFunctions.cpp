@@ -1573,11 +1573,11 @@ Neuter(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
-WorkerThreadCount(JSContext *cx, unsigned argc, jsval *vp)
+HelperThreadCount(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 #ifdef JS_THREADSAFE
-    args.rval().setInt32(WorkerThreadState().threadCount);
+    args.rval().setInt32(HelperThreadState().threadCount);
 #else
     args.rval().setInt32(0);
 #endif
@@ -1905,9 +1905,9 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  \"same-data\" will leave it set to its original value, to mimic eg\n"
 "  asm.js ArrayBuffer neutering."),
 
-    JS_FN_HELP("workerThreadCount", WorkerThreadCount, 0, 0,
-"workerThreadCount()",
-"  Returns the number of worker threads available for off-main-thread tasks."),
+    JS_FN_HELP("helperThreadCount", HelperThreadCount, 0, 0,
+"helperThreadCount()",
+"  Returns the number of helper threads available for off-main-thread tasks."),
 
     JS_FN_HELP("startTraceLogger", EnableTraceLogger, 0, 0,
 "startTraceLogger()",

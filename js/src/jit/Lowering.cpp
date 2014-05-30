@@ -2098,15 +2098,6 @@ LIRGenerator::visitLambdaPar(MLambdaPar *ins)
 }
 
 bool
-LIRGenerator::visitImplicitThis(MImplicitThis *ins)
-{
-    JS_ASSERT(ins->callee()->type() == MIRType_Object);
-
-    LImplicitThis *lir = new(alloc()) LImplicitThis(useRegister(ins->callee()));
-    return assignSnapshot(lir) && defineBox(lir, ins);
-}
-
-bool
 LIRGenerator::visitSlots(MSlots *ins)
 {
     return define(new(alloc()) LSlots(useRegisterAtStart(ins->object())), ins);
@@ -2553,7 +2544,7 @@ LIRGenerator::visitLoadElement(MLoadElement *ins)
       case MIRType_Value:
       {
         LLoadElementV *lir = new(alloc()) LLoadElementV(useRegister(ins->elements()),
-                                               useRegisterOrConstant(ins->index()));
+                                                        useRegisterOrConstant(ins->index()));
         if (ins->fallible() && !assignSnapshot(lir))
             return false;
         return defineBox(lir, ins);
@@ -2565,7 +2556,7 @@ LIRGenerator::visitLoadElement(MLoadElement *ins)
       default:
       {
         LLoadElementT *lir = new(alloc()) LLoadElementT(useRegister(ins->elements()),
-                                               useRegisterOrConstant(ins->index()));
+                                                        useRegisterOrConstant(ins->index()));
         if (ins->fallible() && !assignSnapshot(lir))
             return false;
         return define(lir, ins);

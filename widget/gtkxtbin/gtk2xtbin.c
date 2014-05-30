@@ -83,9 +83,7 @@ xt_event_prepare (GSource*  source_data,
 {   
   int mask;
 
-  GDK_THREADS_ENTER();
   mask = XPending(xtdisplay);
-  GDK_THREADS_LEAVE();
 
   return (gboolean)mask;
 }
@@ -93,16 +91,12 @@ xt_event_prepare (GSource*  source_data,
 static gboolean
 xt_event_check (GSource*  source_data)
 {
-  GDK_THREADS_ENTER ();
-
   if (xt_event_poll_fd.revents & G_IO_IN) {
     int mask;
     mask = XPending(xtdisplay);
-    GDK_THREADS_LEAVE ();
     return (gboolean)mask;
   }
 
-  GDK_THREADS_LEAVE ();
   return FALSE;
 }   
 
@@ -117,8 +111,6 @@ xt_event_dispatch (GSource*  source_data,
 
   ac = XtDisplayToApplicationContext(xtdisplay);
 
-  GDK_THREADS_ENTER ();
-
   /* Process only real X traffic here.  We only look for data on the
    * pipe, limit it to XTBIN_MAX_EVENTS and only call
    * XtAppProcessEvent so that it will look for X events.  There's no
@@ -127,8 +119,6 @@ xt_event_dispatch (GSource*  source_data,
   for (i=0; i < XTBIN_MAX_EVENTS && XPending(xtdisplay); i++) {
     XtAppProcessEvent(ac, XtIMXEvent);
   }
-
-  GDK_THREADS_LEAVE ();
 
   return TRUE;  
 }
