@@ -31,20 +31,18 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JoinElementTxn)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
 NS_IMETHODIMP JoinElementTxn::Init(nsEditor   *aEditor,
-                                   nsIDOMNode *aLeftNode,
-                                   nsIDOMNode *aRightNode)
+                                   nsINode *aLeftNode,
+                                   nsINode *aRightNode)
 {
   NS_PRECONDITION((aEditor && aLeftNode && aRightNode), "null arg");
   if (!aEditor || !aLeftNode || !aRightNode) { return NS_ERROR_NULL_POINTER; }
   mEditor = aEditor;
-  mLeftNode = do_QueryInterface(aLeftNode);
-  nsCOMPtr<nsIDOMNode>leftParent;
-  nsresult result = mLeftNode->GetParentNode(getter_AddRefs(leftParent));
-  NS_ENSURE_SUCCESS(result, result);
+  mLeftNode = aLeftNode;
+  nsCOMPtr<nsINode> leftParent = mLeftNode->GetParentNode();
   if (!mEditor->IsModifiableNode(leftParent)) {
     return NS_ERROR_FAILURE;
   }
-  mRightNode = do_QueryInterface(aRightNode);
+  mRightNode = aRightNode;
   mOffset = 0;
   return NS_OK;
 }
@@ -56,13 +54,11 @@ NS_IMETHODIMP JoinElementTxn::DoTransaction(void)
   if (!mEditor || !mLeftNode || !mRightNode) { return NS_ERROR_NOT_INITIALIZED; }
 
   // get the parent node
-  nsCOMPtr<nsINode> leftNode = do_QueryInterface(mLeftNode);
-  nsCOMPtr<nsINode> leftParent = leftNode->GetParentNode();
+  nsCOMPtr<nsINode> leftParent = mLeftNode->GetParentNode();
   NS_ENSURE_TRUE(leftParent, NS_ERROR_NULL_POINTER);
 
   // verify that mLeftNode and mRightNode have the same parent
-  nsCOMPtr<nsINode> rightNode = do_QueryInterface(mRightNode);
-  nsCOMPtr<nsINode> rightParent = rightNode->GetParentNode();
+  nsCOMPtr<nsINode> rightParent = mRightNode->GetParentNode();
   NS_ENSURE_TRUE(rightParent, NS_ERROR_NULL_POINTER);
 
   if (leftParent != rightParent) {
@@ -72,11 +68,10 @@ NS_IMETHODIMP JoinElementTxn::DoTransaction(void)
 
   // set this instance mParent. 
   // Other methods will see a non-null mParent and know all is well
-  mParent = leftParent->AsDOMNode();
-  mOffset = leftNode->Length();
+  mParent = leftParent;
+  mOffset = mLeftNode->Length();
 
-  nsCOMPtr<nsINode> parent = do_QueryInterface(mParent);
-  return mEditor->JoinNodesImpl(rightNode, leftNode, parent);
+  return mEditor->JoinNodesImpl(mRightNode, mLeftNode, mParent);
 }
 
 //XXX: what if instead of split, we just deleted the unneeded children of mRight
@@ -86,31 +81,26 @@ NS_IMETHODIMP JoinElementTxn::UndoTransaction(void)
   NS_ASSERTION(mRightNode && mLeftNode && mParent, "bad state");
   if (!mRightNode || !mLeftNode || !mParent) { return NS_ERROR_NOT_INITIALIZED; }
   // first, massage the existing node so it is in its post-split state
-  nsresult result;
-  nsCOMPtr<nsIDOMNode>resultNode;
   nsCOMPtr<nsIDOMCharacterData>rightNodeAsText = do_QueryInterface(mRightNode);
+  ErrorResult rv;
   if (rightNodeAsText)
   {
-    result = rightNodeAsText->DeleteData(0, mOffset);
+    rv = rightNodeAsText->DeleteData(0, mOffset);
+    NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
   }
   else
   {
-    nsCOMPtr<nsIDOMNode>child;
-    result = mRightNode->GetFirstChild(getter_AddRefs(child));
-    nsCOMPtr<nsIDOMNode>nextSibling;
-    uint32_t i;
-    for (i=0; i<mOffset; i++)
+    for (nsCOMPtr<nsINode> child = mRightNode->GetFirstChild();
+         child;
+         child = child->GetNextSibling())
     {
-      if (NS_FAILED(result)) {return result;}
-      if (!child) {return NS_ERROR_NULL_POINTER;}
-      child->GetNextSibling(getter_AddRefs(nextSibling));
-      result = mLeftNode->AppendChild(child, getter_AddRefs(resultNode));
-      child = do_QueryInterface(nextSibling);
+      mLeftNode->AppendChild(*child, rv);
+      NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
     }
   }
   // second, re-insert the left node into the tree
-  result = mParent->InsertBefore(mLeftNode, mRightNode, getter_AddRefs(resultNode));
-  return result;
+  mParent->InsertBefore(*mLeftNode, mRightNode, rv);
+  return rv.ErrorCode();
 }
 
 NS_IMETHODIMP JoinElementTxn::GetTxnDescription(nsAString& aString)
