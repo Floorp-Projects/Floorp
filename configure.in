@@ -8131,7 +8131,13 @@ AC_SUBST(MOZ_PIXMAN_LIBS)
 # Check for headers defining standard int types.
 if test -n "$COMPILE_ENVIRONMENT"; then
     MOZ_CHECK_HEADERS(stdint.h inttypes.h sys/int_types.h)
+
+    if test "${ac_cv_header_inttypes_h}" = "yes"; then
+        HAVE_INTTYPES_H=1
+    fi
 fi
+
+AC_SUBST(HAVE_INTTYPES_H)
 
 if test "$MOZ_TREE_CAIRO"; then
     MOZ_CAIRO_CFLAGS='-I$(LIBXUL_DIST)/include/cairo'
