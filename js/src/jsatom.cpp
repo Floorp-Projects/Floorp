@@ -452,7 +452,7 @@ js::Atomize(ExclusiveContext *cx, const char *bytes, size_t length, InternBehavi
          * js::AtomizeString rarely has to copy the temp string we make.
          */
         jschar inflated[ATOMIZE_BUF_MAX];
-        InflateStringToBuffer(bytes, length, inflated);
+        CopyAndInflateChars(inflated, bytes, length);
         return AtomizeAndCopyChars(cx, inflated, length, ib);
     }
 
