@@ -1937,6 +1937,13 @@ MacroAssemblerARMCompat::and32(Imm32 imm, Register dest)
 }
 
 void
+MacroAssemblerARMCompat::and32(const Address &src, Register dest)
+{
+    load32(src, ScratchRegister);
+    ma_and(ScratchRegister, dest, SetCond);
+}
+
+void
 MacroAssemblerARMCompat::addPtr(Register src, Register dest)
 {
     ma_add(src, dest);

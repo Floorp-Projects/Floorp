@@ -2780,8 +2780,8 @@ FlattenSubstrings(JSContext *cx, const jschar *chars,
     JSFatInlineString *str = js_NewGCFatInlineString<CanGC>(cx);
     if (!str)
         return nullptr;
-    jschar *buf = str->init(outputLen);
 
+    jschar *buf = str->initTwoByte(outputLen);
     size_t pos = 0;
     for (size_t i = 0; i < rangesLen; i++) {
         PodCopy(buf + pos, chars + ranges[i].start, ranges[i].length);

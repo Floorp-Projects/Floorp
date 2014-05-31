@@ -577,6 +577,17 @@ class JSLinearString : public JSString
     bool isLinear() const MOZ_DELETE;
     JSLinearString &asLinear() const MOZ_DELETE;
 
+  protected:
+    /* Returns void pointer to latin1/twoByte chars, for finalizers. */
+    MOZ_ALWAYS_INLINE
+    void *nonInlineCharsRaw() const {
+        JS_ASSERT(!isInline());
+        static_assert(offsetof(JSLinearString, d.s.u2.nonInlineCharsTwoByte) ==
+                      offsetof(JSLinearString, d.s.u2.nonInlineCharsLatin1),
+                      "nonInlineCharsTwoByte and nonInlineCharsLatin1 must have same offset");
+        return (void *)d.s.u2.nonInlineCharsTwoByte;
+    }
+
   public:
     MOZ_ALWAYS_INLINE
     const jschar *nonInlineChars() const {
@@ -734,7 +745,8 @@ class JSInlineString : public JSFlatString
     template <js::AllowGC allowGC>
     static inline JSInlineString *new_(js::ThreadSafeContext *cx);
 
-    inline jschar *init(size_t length);
+    inline jschar *initTwoByte(size_t length);
+    inline char *initLatin1(size_t length);
 
     inline void resetLength(size_t length);
 
@@ -822,7 +834,8 @@ class JSFatInlineString : public JSInlineString
                                               INLINE_EXTENSION_CHARS_TWO_BYTE
                                               -1 /* null terminator */;
 
-    inline jschar *init(size_t length);
+    inline jschar *initTwoByte(size_t length);
+    inline char *initLatin1(size_t length);
 
     static bool latin1LengthFits(size_t length) {
         return length <= MAX_LENGTH_LATIN1;
@@ -924,24 +937,36 @@ class ScopedThreadSafeStringInspector
   private:
     JSString *str_;
     ScopedJSFreePtr<jschar> scopedChars_;
-    const jschar *chars_;
+    union {
+        const jschar *twoByteChars_;
+        const char *latin1Chars_;
+    };
+    enum State { Uninitialized, Latin1, TwoByte };
+    State state_;
 
   public:
     explicit ScopedThreadSafeStringInspector(JSString *str)
       : str_(str),
-        chars_(nullptr)
+        state_(Uninitialized)
     { }
 
-    bool ensureChars(ThreadSafeContext *cx);
+    bool ensureChars(ThreadSafeContext *cx, const JS::AutoCheckCannotGC &nogc);
 
-    const jschar *chars() {
-        JS_ASSERT(chars_);
-        return chars_;
+    bool hasTwoByteChars() const { return state_ == TwoByte; }
+    bool hasLatin1Chars() const { return state_ == Latin1; }
+
+    const jschar *twoByteChars() const {
+        MOZ_ASSERT(state_ == TwoByte);
+        return twoByteChars_;
+    }
+    const char *latin1Chars() const {
+        MOZ_ASSERT(state_ == Latin1);
+        return latin1Chars_;
     }
 
-    JS::TwoByteChars range() {
-        JS_ASSERT(chars_);
-        return JS::TwoByteChars(chars_, str_->length());
+    JS::TwoByteChars twoByteRange() const {
+        MOZ_ASSERT(state_ == TwoByte);
+        return JS::TwoByteChars(twoByteChars_, str_->length());
     }
 };
 

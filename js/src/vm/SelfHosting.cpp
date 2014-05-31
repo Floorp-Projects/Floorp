@@ -279,11 +279,12 @@ intrinsic_ParallelSpew(ThreadSafeContext *cx, unsigned argc, Value *vp)
     JS_ASSERT(args.length() == 1);
     JS_ASSERT(args[0].isString());
 
+    AutoCheckCannotGC nogc;
     ScopedThreadSafeStringInspector inspector(args[0].toString());
-    if (!inspector.ensureChars(cx))
+    if (!inspector.ensureChars(cx, nogc))
         return false;
 
-    ScopedJSFreePtr<char> bytes(TwoByteCharsToNewUTF8CharsZ(cx, inspector.range()).c_str());
+    ScopedJSFreePtr<char> bytes(TwoByteCharsToNewUTF8CharsZ(cx, inspector.twoByteRange()).c_str());
     parallel::Spew(parallel::SpewOps, bytes);
 
     args.rval().setUndefined();
