@@ -99,7 +99,7 @@ MOZILLA_PKIX_ENUM_CLASS ExtensionCriticality { NotCritical = 0, Critical = 1 };
 
 // The return value, if non-null, is owned by the arena and MUST NOT be freed.
 SECItem* CreateEncodedBasicConstraints(PLArenaPool* arena, bool isCA,
-                                       long pathLenConstraint,
+                                       /*optional*/ long* pathLenConstraint,
                                        ExtensionCriticality criticality);
 
 // ekus must be non-null and must must point to a SEC_OID_UNKNOWN-terminated
