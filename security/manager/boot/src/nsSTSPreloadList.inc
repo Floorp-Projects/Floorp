@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1411812424704000);
+const PRTime gPreloadListExpirationTime = INT64_C(1412417248737000);
 
 class nsSTSPreload
 {
@@ -144,6 +144,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "mailbox.org", false },
   { "makeyourlaws.org", true },
   { "manage.zenpayroll.com", false },
+  { "manageprojects.com", true },
   { "manager.linode.com", false },
   { "market.android.com", true },
   { "matteomarescotti.name", true },
@@ -219,13 +220,16 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "talkgadget.google.com", true },
   { "tent.io", true },
   { "therapynotes.com", false },
+  { "tinfoilsecurity.com", false },
   { "torproject.org", false },
   { "translate.googleapis.com", true },
   { "twitter.com", false },
   { "ubertt.org", true },
+  { "usaa.com", false },
   { "vmoagents.com", false },
   { "w-spotlight.appspot.com", true },
   { "wallet.google.com", true },
+  { "waveapps.com", true },
   { "webfilings-eu-mirror.appspot.com", true },
   { "webfilings-eu.appspot.com", true },
   { "webfilings-mirror-hrd.appspot.com", true },
@@ -260,7 +264,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "www.gov.uk", false },
   { "www.grc.com", false },
   { "www.heliosnet.com", true },
-  { "www.intercom.io", false },
   { "www.irccloud.com", false },
   { "www.linode.com", false },
   { "www.lookout.com", false },
@@ -273,6 +276,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "www.simbolo.co.uk", false },
   { "www.simple.com", false },
   { "www.therapynotes.com", false },
+  { "www.tinfoilsecurity.com", false },
   { "www.torproject.org", false },
   { "www.twitter.com", false },
   { "www.usaa.com", false },
