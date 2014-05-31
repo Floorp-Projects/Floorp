@@ -262,6 +262,13 @@ CopyAndInflateChars(jschar *dst, const char *src, size_t srclen)
         dst[i] = (unsigned char) src[i];
 }
 
+inline void
+CopyAndInflateChars(jschar *dst, const JS::Latin1Char *src, size_t srclen)
+{
+    for (size_t i = 0; i < srclen; i++)
+        dst[i] = src[i];
+}
+
 /*
  * Deflate JS chars to bytes into a buffer. 'bytes' must be large enough for
  * 'length chars. The buffer is NOT null-terminated. The destination length

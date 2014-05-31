@@ -4199,10 +4199,10 @@ js::StringToSource(JSContext *cx, JSString *str)
 }
 
 static bool
-EqualCharsLatin1TwoByte(const char *s1, const jschar *s2, size_t len)
+EqualCharsLatin1TwoByte(const Latin1Char *s1, const jschar *s2, size_t len)
 {
-    for (const char *s1end = s1 + len; s1 < s1end; s1++, s2++) {
-        if (jschar((unsigned char)*s1) != *s2)
+    for (const Latin1Char *s1end = s1 + len; s1 < s1end; s1++, s2++) {
+        if (jschar(*s1) != *s2)
             return false;
     }
     return true;
