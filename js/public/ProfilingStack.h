@@ -8,6 +8,7 @@
 #define js_ProfilingStack_h
 
 #include "mozilla/NullPtr.h"
+#include "mozilla/TypedEnum.h"
 
 #include "jsbytecode.h"
 #include "jstypes.h"
@@ -63,17 +64,20 @@ class ProfileEntry
         FRAME_LABEL_COPY = 0x02
     };
 
-    enum class Category {
+    MOZ_BEGIN_NESTED_ENUM_CLASS(Category, uint32_t)
         OTHER    = 0x04,
         CSS      = 0x08,
-        JS       = 0x16,
-        GC       = 0x32,
-        CC       = 0x64,
-        NETWORK  = 0x128,
-        GRAPHICS = 0x256,
-        STORAGE  = 0x512,
-        EVENTS   = 0x1024
-    };
+        JS       = 0x10,
+        GC       = 0x20,
+        CC       = 0x40,
+        NETWORK  = 0x80,
+        GRAPHICS = 0x100,
+        STORAGE  = 0x200,
+        EVENTS   = 0x400,
+
+        FIRST    = OTHER,
+        LAST     = EVENTS
+    MOZ_END_NESTED_ENUM_CLASS(Category)
 
     // All of these methods are marked with the 'volatile' keyword because SPS's
     // representation of the stack is stored such that all ProfileEntry
@@ -99,15 +103,15 @@ class ProfileEntry
         lineOrPc = aLine;
     }
 
-    void setFlag(Flags flag) volatile {
+    void setFlag(uint32_t flag) volatile {
         MOZ_ASSERT(flag != IS_CPP_ENTRY);
         flags |= flag;
     }
-    void unsetFlag(Flags flag) volatile {
+    void unsetFlag(uint32_t flag) volatile {
         MOZ_ASSERT(flag != IS_CPP_ENTRY);
         flags &= ~flag;
     }
-    bool hasFlag(Flags flag) const volatile {
+    bool hasFlag(uint32_t flag) const volatile {
         return bool(flags & uint32_t(flag));
     }
 
