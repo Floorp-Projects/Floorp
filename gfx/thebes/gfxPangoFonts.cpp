@@ -20,8 +20,6 @@
 #include "gfxFT2Utils.h"
 #include "harfbuzz/hb.h"
 #include "harfbuzz/hb-ot.h"
-#include "gfxHarfBuzzShaper.h"
-#include "gfxGraphiteShaper.h"
 #include "nsUnicodeProperties.h"
 #include "nsUnicodeScriptCodes.h"
 #include "gfxFontconfigUtils.h"
@@ -662,14 +660,6 @@ public:
 
 protected:
     virtual already_AddRefed<gfxFont> GetSmallCapsFont();
-
-    virtual bool ShapeText(gfxContext      *aContext,
-                           const char16_t *aText,
-                           uint32_t         aOffset,
-                           uint32_t         aLength,
-                           int32_t          aScript,
-                           gfxShapedText   *aShapedText,
-                           bool             aPreferPlatformShaping);
 
 private:
     gfxFcFont(cairo_scaled_font_t *aCairoFont, gfxFcFontEntry *aFontEntry,
@@ -1562,42 +1552,6 @@ gfxFcFont::GetSmallCapsFont()
     cairo_scaled_font_destroy(smallFont);
 
     return font.forget();
-}
-
-bool
-gfxFcFont::ShapeText(gfxContext      *aContext,
-                     const char16_t *aText,
-                     uint32_t         aOffset,
-                     uint32_t         aLength,
-                     int32_t          aScript,
-                     gfxShapedText   *aShapedText,
-                     bool             aPreferPlatformShaping)
-{
-    bool ok = false;
-
-    if (FontCanSupportGraphite()) {
-        if (gfxPlatform::GetPlatform()->UseGraphiteShaping()) {
-            if (!mGraphiteShaper) {
-                mGraphiteShaper = new gfxGraphiteShaper(this);
-            }
-            ok = mGraphiteShaper->ShapeText(aContext, aText, aOffset, aLength,
-                                            aScript, aShapedText);
-        }
-    }
-
-    if (!ok) {
-        if (!mHarfBuzzShaper) {
-            mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
-        }
-        ok = mHarfBuzzShaper->ShapeText(aContext, aText, aOffset, aLength,
-                                        aScript, aShapedText);
-    }
-
-    NS_WARN_IF_FALSE(ok, "shaper failed, expect scrambled or missing text");
-
-    PostShapingFixup(aContext, aText, aOffset, aLength, aShapedText);
-
-    return ok;
 }
 
 /* static */ void
