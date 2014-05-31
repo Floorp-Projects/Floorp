@@ -19,6 +19,7 @@
 #include "gc/Marking.h"
 #include "gc/Rooting.h"
 #include "js/CharacterEncoding.h"
+#include "js/GCAPI.h"
 #include "js/RootingAPI.h"
 
 class JSDependentString;
@@ -637,6 +638,13 @@ class JSLinearString : public JSString
         return JS::TwoByteChars(chars(), length());
     }
 
+    jschar latin1OrTwoByteChar(size_t index) const {
+        MOZ_ASSERT(JSString::isLinear());
+        MOZ_ASSERT(index < length());
+        JS::AutoCheckCannotGC nogc;
+        return hasLatin1Chars() ? latin1Chars(nogc)[index] : twoByteChars(nogc)[index];
+    }
+
     /* Temporary, unsafe helper function for bug 998392. Don't use for anything else. */
     void debugUnsafeConvertToLatin1();
 };
@@ -1157,23 +1165,23 @@ JSString::getChar(js::ExclusiveContext *cx, size_t index, jschar *code)
      *   test.charCodeAt(x + 1)
      * }
      */
-    const jschar *chars;
+    JSString *str;
     if (isRope()) {
         JSRope *rope = &asRope();
         if (uint32_t(index) < rope->leftChild()->length()) {
-            chars = rope->leftChild()->getChars(cx);
+            str = rope->leftChild();
         } else {
-            chars = rope->rightChild()->getChars(cx);
+            str = rope->rightChild();
             index -= rope->leftChild()->length();
         }
     } else {
-        chars = getChars(cx);
+        str = this;
     }
 
-    if (!chars)
+    if (!str->ensureLinear(cx))
         return false;
 
-    *code = chars[index];
+    *code = str->asLinear().latin1OrTwoByteChar(index);
     return true;
 }
 
