@@ -125,7 +125,6 @@ static Result
 BuildForwardInner(TrustDomain& trustDomain,
                   BackCert& subject,
                   PRTime time,
-                  EndEntityOrCA endEntityOrCA,
                   KeyPurposeId requiredEKUIfPresent,
                   const CertPolicyId& requiredPolicy,
                   CERTCertificate* potentialIssuerCertToDup,
@@ -163,15 +162,9 @@ BuildForwardInner(TrustDomain& trustDomain,
     return rv;
   }
 
-  unsigned int newSubCACount = subCACount;
-  if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
-    newSubCACount = subCACount + 1;
-  } else {
-    PR_ASSERT(newSubCACount == 0);
-  }
   rv = BuildForward(trustDomain, potentialIssuer, time, EndEntityOrCA::MustBeCA,
                     KU_KEY_CERT_SIGN, requiredEKUIfPresent, requiredPolicy,
-                    nullptr, newSubCACount, results);
+                    nullptr, subCACount, results);
   if (rv != Success) {
     return rv;
   }
@@ -202,13 +195,6 @@ BuildForward(TrustDomain& trustDomain,
              unsigned int subCACount,
              /*out*/ ScopedCERTCertList& results)
 {
-  // Avoid stack overflows and poor performance by limiting cert length.
-  // XXX: 6 is not enough for chains.sh anypolicywithlevel.cfg tests
-  static const size_t MAX_DEPTH = 8;
-  if (subCACount >= MAX_DEPTH - 1) {
-    return Fail(RecoverableError, SEC_ERROR_UNKNOWN_ISSUER);
-  }
-
   Result rv;
 
   TrustLevel trustLevel;
@@ -265,6 +251,18 @@ BuildForward(TrustDomain& trustDomain,
     return rv;
   }
 
+  if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
+    // Avoid stack overflows and poor performance by limiting cert chain
+    // length.
+    static const unsigned int MAX_SUBCA_COUNT = 6;
+    if (subCACount >= MAX_SUBCA_COUNT) {
+      return Fail(RecoverableError, SEC_ERROR_UNKNOWN_ISSUER);
+    }
+    ++subCACount;
+  } else {
+    PR_ASSERT(subCACount == 0);
+  }
+
   // Find a trusted issuer.
   // TODO(bug 965136): Add SKI/AKI matching optimizations
   ScopedCERTCertList candidates;
@@ -280,9 +278,8 @@ BuildForward(TrustDomain& trustDomain,
 
   for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
        !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
-    rv = BuildForwardInner(trustDomain, subject, time, endEntityOrCA,
-                           requiredEKUIfPresent, requiredPolicy,
-                           n->cert, subCACount, results);
+    rv = BuildForwardInner(trustDomain, subject, time, requiredEKUIfPresent,
+                           requiredPolicy, n->cert, subCACount, results);
     if (rv == Success) {
       // If we found a valid chain but deferred reporting an error with the
       // end-entity certificate, report it now.
