@@ -517,6 +517,9 @@ ContentClientDoubleBuffered::EnsureBackBufferIfFrontBuffer()
 {
   if (!mTextureClient && mFrontClient) {
     CreateBackBuffer(mFrontBufferRect);
+
+    mBufferRect = mFrontBufferRect;
+    mBufferRotation = mFrontBufferRotation;
   }
 }
 
