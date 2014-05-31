@@ -258,7 +258,7 @@ JSInlineString::initTwoByte(size_t length)
     return d.inlineStorageTwoByte;
 }
 
-MOZ_ALWAYS_INLINE char *
+MOZ_ALWAYS_INLINE JS::Latin1Char *
 JSInlineString::initLatin1(size_t length)
 {
     JS_ASSERT(latin1LengthFits(length));
@@ -276,7 +276,7 @@ JSFatInlineString::initTwoByte(size_t length)
     return d.inlineStorageTwoByte;
 }
 
-MOZ_ALWAYS_INLINE char *
+MOZ_ALWAYS_INLINE JS::Latin1Char *
 JSFatInlineString::initLatin1(size_t length)
 {
     JS_ASSERT(latin1LengthFits(length));

@@ -240,7 +240,7 @@ CopyChars(jschar *dest, const JSLinearString &str)
 
 template <>
 void
-CopyChars(char *dest, const JSLinearString &str)
+CopyChars(Latin1Char *dest, const JSLinearString &str)
 {
     AutoCheckCannotGC nogc;
     PodCopy(dest, str.latin1Chars(nogc), str.length());
@@ -409,7 +409,7 @@ JSRope::flattenInternal(ExclusiveContext *maybecx)
 {
     if (hasTwoByteChars())
         return flattenInternal<b, jschar>(maybecx);
-    return flattenInternal<b, char>(maybecx);
+    return flattenInternal<b, Latin1Char>(maybecx);
 }
 
 JSFlatString *
@@ -459,7 +459,7 @@ js::ConcatStrings(ThreadSafeContext *cx,
             return nullptr;
 
         if (isLatin1) {
-            char *buf = str->initLatin1(wholeLength);
+            Latin1Char *buf = str->initLatin1(wholeLength);
             PodCopy(buf, leftInspector.latin1Chars(), leftLen);
             PodCopy(buf + leftLen, rightInspector.latin1Chars(), rightLen);
             buf[wholeLength] = 0;

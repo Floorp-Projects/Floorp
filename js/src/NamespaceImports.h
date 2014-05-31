@@ -66,6 +66,7 @@ using JS::UndefinedValue;
 
 using JS::IsPoisonedPtr;
 
+using JS::Latin1Char;
 using JS::Latin1CharsZ;
 using JS::ConstTwoByteChars;
 using JS::TwoByteChars;
