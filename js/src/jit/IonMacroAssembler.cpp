@@ -882,6 +882,26 @@ MacroAssembler::loadStringChars(Register str, Register dest)
 }
 
 void
+MacroAssembler::loadStringChar(Register str, Register index, Register output)
+{
+    MOZ_ASSERT(str != output);
+    MOZ_ASSERT(index != output);
+
+    loadStringChars(str, output);
+
+    Label isLatin1, done;
+    branchTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
+                 Imm32(JSString::LATIN1_CHARS_BIT), &isLatin1);
+    load16ZeroExtend(BaseIndex(output, index, TimesTwo), output);
+    jump(&done);
+
+    bind(&isLatin1);
+    load8ZeroExtend(BaseIndex(output, index, TimesOne), output);
+
+    bind(&done);
+}
+
+void
 MacroAssembler::checkInterruptFlagPar(Register tempReg, Label *fail)
 {
 #ifdef JS_THREADSAFE

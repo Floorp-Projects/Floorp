@@ -5487,9 +5487,7 @@ CodeGenerator::visitCharCodeAt(LCharCodeAt *lir)
         return false;
 
     masm.branchIfRope(str, ool->entry());
-
-    masm.loadStringChars(str, output);
-    masm.load16ZeroExtend(BaseIndex(output, index, TimesTwo, 0), output);
+    masm.loadStringChar(str, index, output);
 
     masm.bind(ool->rejoin());
     return true;
