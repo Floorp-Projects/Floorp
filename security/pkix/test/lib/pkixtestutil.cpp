@@ -652,7 +652,7 @@ CreateEncodedCertificate(PLArenaPool* arena, long version,
                          /*optional*/ SECItem const* const* extensions,
                          /*optional*/ SECKEYPrivateKey* issuerPrivateKey,
                          SECOidTag signatureHashAlg,
-                         /*out*/ ScopedSECKEYPrivateKey& privateKey)
+                         /*out*/ ScopedSECKEYPrivateKey& privateKeyResult)
 {
   PR_ASSERT(arena);
   PR_ASSERT(issuerNameDER);
@@ -662,8 +662,12 @@ CreateEncodedCertificate(PLArenaPool* arena, long version,
     return nullptr;
   }
 
+  // It may be the case that privateKeyResult refers to the
+  // ScopedSECKEYPrivateKey that owns issuerPrivateKey; thus, we can't set
+  // privateKeyResult until after we're done with issuerPrivateKey.
   ScopedSECKEYPublicKey publicKey;
-  if (GenerateKeyPair(publicKey, privateKey) != SECSuccess) {
+  ScopedSECKEYPrivateKey privateKeyTemp;
+  if (GenerateKeyPair(publicKey, privateKeyTemp) != SECSuccess) {
     return nullptr;
   }
 
@@ -675,10 +679,17 @@ CreateEncodedCertificate(PLArenaPool* arena, long version,
     return nullptr;
   }
 
-  return MaybeLogOutput(SignedData(arena, tbsCertificate,
-                                   issuerPrivateKey ? issuerPrivateKey
-                                                    : privateKey.get(),
-                                   signatureHashAlg, false, nullptr), "cert");
+  SECItem*
+    result(MaybeLogOutput(SignedData(arena, tbsCertificate,
+                                     issuerPrivateKey ? issuerPrivateKey
+                                                      : privateKeyTemp.get(),
+                                     signatureHashAlg, false, nullptr),
+                          "cert"));
+  if (!result) {
+    return nullptr;
+  }
+  privateKeyResult = privateKeyTemp.release();
+  return result;
 }
 
 // TBSCertificate  ::=  SEQUENCE  {
@@ -839,7 +850,7 @@ CreateEncodedSerialNumber(PLArenaPool* arena, long serialNumberValue)
 //         pathLenConstraint       INTEGER (0..MAX) OPTIONAL }
 SECItem*
 CreateEncodedBasicConstraints(PLArenaPool* arena, bool isCA,
-                              long pathLenConstraintValue,
+                              /*optional*/ long* pathLenConstraintValue,
                               ExtensionCriticality criticality)
 {
   PR_ASSERT(arena);
@@ -856,12 +867,14 @@ CreateEncodedBasicConstraints(PLArenaPool* arena, bool isCA,
     }
   }
 
-  SECItem* pathLenConstraint(Integer(arena, pathLenConstraintValue));
-  if (!pathLenConstraint) {
-    return nullptr;
-  }
-  if (value.Add(pathLenConstraint) != der::Success) {
-    return nullptr;
+  if (pathLenConstraintValue) {
+    SECItem* pathLenConstraint(Integer(arena, *pathLenConstraintValue));
+    if (!pathLenConstraint) {
+      return nullptr;
+    }
+    if (value.Add(pathLenConstraint) != der::Success) {
+      return nullptr;
+    }
   }
 
   return Extension(arena, SEC_OID_X509_BASIC_CONSTRAINTS, criticality, value);
