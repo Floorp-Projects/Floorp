@@ -586,7 +586,27 @@ class JSLinearString : public JSString
     }
 
     MOZ_ALWAYS_INLINE
+    const char *nonInlineLatin1Chars(const JS::AutoCheckCannotGC &nogc) const {
+        JS_ASSERT(!isInline());
+        JS_ASSERT(hasLatin1Chars());
+        return d.s.u2.nonInlineCharsLatin1;
+    }
+
+    MOZ_ALWAYS_INLINE
+    const jschar *nonInlineTwoByteChars(const JS::AutoCheckCannotGC &nogc) const {
+        JS_ASSERT(!isInline());
+        JS_ASSERT(hasTwoByteChars());
+        return d.s.u2.nonInlineCharsTwoByte;
+    }
+
+    MOZ_ALWAYS_INLINE
     const jschar *chars() const;
+
+    MOZ_ALWAYS_INLINE
+    const char *latin1Chars(const JS::AutoCheckCannotGC &nogc) const;
+
+    MOZ_ALWAYS_INLINE
+    const jschar *twoByteChars(const JS::AutoCheckCannotGC &nogc) const;
 
     JS::TwoByteChars range() const {
         JS_ASSERT(JSString::isLinear());
@@ -710,9 +730,6 @@ class JSInlineString : public JSFlatString
     static const size_t MAX_LENGTH_LATIN1 = NUM_INLINE_CHARS_LATIN1 - 1;
     static const size_t MAX_LENGTH_TWO_BYTE = NUM_INLINE_CHARS_TWO_BYTE - 1;
 
-    /* Hide chars(), inlineChars() is more efficient. */
-    const jschar *chars() const MOZ_DELETE;
-
   public:
     template <js::AllowGC allowGC>
     static inline JSInlineString *new_(js::ThreadSafeContext *cx);
@@ -722,10 +739,24 @@ class JSInlineString : public JSFlatString
     inline void resetLength(size_t length);
 
     MOZ_ALWAYS_INLINE
-    const jschar *inlineChars() const {
+    const jschar *chars() const {
+        JS_ASSERT(JSString::isInline());
         JS_ASSERT(hasTwoByteChars());
-        const char *p = reinterpret_cast<const char *>(this);
-        return reinterpret_cast<const jschar *>(p + offsetOfInlineStorage());
+        return d.inlineStorageTwoByte;
+    }
+
+    MOZ_ALWAYS_INLINE
+    const char *latin1Chars(const JS::AutoCheckCannotGC &nogc) const {
+        JS_ASSERT(JSString::isInline());
+        JS_ASSERT(hasLatin1Chars());
+        return d.inlineStorageLatin1;
+    }
+
+    MOZ_ALWAYS_INLINE
+    const jschar *twoByteChars(const JS::AutoCheckCannotGC &nogc) const {
+        JS_ASSERT(JSString::isInline());
+        JS_ASSERT(hasTwoByteChars());
+        return d.inlineStorageTwoByte;
     }
 
     static bool latin1LengthFits(size_t length) {
@@ -1177,7 +1208,23 @@ JSLinearString::chars() const
 {
     JS_ASSERT(JSString::isLinear());
     JS_ASSERT(hasTwoByteChars());
-    return isInline() ? asInline().inlineChars() : nonInlineChars();
+    return isInline() ? asInline().chars() : nonInlineChars();
+}
+
+MOZ_ALWAYS_INLINE const char *
+JSLinearString::latin1Chars(const JS::AutoCheckCannotGC &nogc) const
+{
+    JS_ASSERT(JSString::isLinear());
+    JS_ASSERT(hasLatin1Chars());
+    return isInline() ? asInline().latin1Chars(nogc) : nonInlineLatin1Chars(nogc);
+}
+
+MOZ_ALWAYS_INLINE const jschar *
+JSLinearString::twoByteChars(const JS::AutoCheckCannotGC &nogc) const
+{
+    JS_ASSERT(JSString::isLinear());
+    JS_ASSERT(hasTwoByteChars());
+    return isInline() ? asInline().twoByteChars(nogc) : nonInlineTwoByteChars(nogc);
 }
 
 inline js::PropertyName *
