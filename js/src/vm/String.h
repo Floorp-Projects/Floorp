@@ -296,6 +296,11 @@ class JSString : public js::gc::BarrieredCell<JSString>
     /* Avoid lame compile errors in JSRope::flatten */
     friend class JSRope;
 
+  protected:
+    template <typename CharT>
+    MOZ_ALWAYS_INLINE
+    void setNonInlineChars(const CharT *chars);
+
   public:
     /* All strings have length. */
 
@@ -531,6 +536,10 @@ class JSRope : public JSString
     bool copyNonPureCharsZ(js::ThreadSafeContext *cx, js::ScopedJSFreePtr<jschar> &out) const;
 
     enum UsingBarrier { WithIncrementalBarrier, NoBarrier };
+
+    template<UsingBarrier b, typename CharT>
+    JSFlatString *flattenInternal(js::ExclusiveContext *cx);
+
     template<UsingBarrier b>
     JSFlatString *flattenInternal(js::ExclusiveContext *cx);
 
@@ -595,6 +604,10 @@ class JSLinearString : public JSString
         JS_ASSERT(hasTwoByteChars());
         return d.s.u2.nonInlineCharsTwoByte;
     }
+
+    template<typename CharT>
+    MOZ_ALWAYS_INLINE
+    const CharT *nonInlineChars(const JS::AutoCheckCannotGC &nogc) const;
 
     MOZ_ALWAYS_INLINE
     const char *nonInlineLatin1Chars(const JS::AutoCheckCannotGC &nogc) const {
@@ -1226,6 +1239,34 @@ JSString::base() const
     JS_ASSERT(hasBase());
     JS_ASSERT(!d.s.u3.base->isInline());
     return d.s.u3.base;
+}
+
+template<>
+MOZ_ALWAYS_INLINE const jschar *
+JSLinearString::nonInlineChars(const JS::AutoCheckCannotGC &nogc) const
+{
+    return nonInlineTwoByteChars(nogc);
+}
+
+template<>
+MOZ_ALWAYS_INLINE const char *
+JSLinearString::nonInlineChars(const JS::AutoCheckCannotGC &nogc) const
+{
+    return nonInlineLatin1Chars(nogc);
+}
+
+template<>
+MOZ_ALWAYS_INLINE void
+JSString::setNonInlineChars(const jschar *chars)
+{
+    d.s.u2.nonInlineCharsTwoByte = chars;
+}
+
+template<>
+MOZ_ALWAYS_INLINE void
+JSString::setNonInlineChars(const char *chars)
+{
+    d.s.u2.nonInlineCharsLatin1 = chars;
 }
 
 MOZ_ALWAYS_INLINE const jschar *
