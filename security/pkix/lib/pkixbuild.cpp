@@ -200,7 +200,7 @@ BuildForward(TrustDomain& trustDomain,
   // XXX: 6 is not enough for chains.sh anypolicywithlevel.cfg tests
   static const size_t MAX_DEPTH = 8;
   if (subCACount >= MAX_DEPTH - 1) {
-    return RecoverableError;
+    return Fail(RecoverableError, SEC_ERROR_UNKNOWN_ISSUER);
   }
 
   Result rv;
