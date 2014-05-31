@@ -69,12 +69,12 @@ AddRegion(nsIntRegion& aDest, const nsIntRegion& aSource)
   aDest.SimplifyOutward(20);
 }
 
+
 static nsIntRegion
-TransformRegion(const nsIntRegion& aRegion, const gfx3DMatrix& aTransform)
+TransformRegion(nsIntRegion& aRegion, const gfx3DMatrix& aTransform)
 {
-  nsIntRegion result;
-  AddTransformedRegion(result, aRegion, aTransform);
-  return result;
+  aRegion.Transform(aTransform);
+  return aRegion;
 }
 
 /**
