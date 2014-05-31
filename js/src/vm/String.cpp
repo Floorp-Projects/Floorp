@@ -405,21 +405,39 @@ js::ConcatStrings(ThreadSafeContext *cx,
     if (!JSString::validateLength(cx, wholeLength))
         return nullptr;
 
-    if (JSFatInlineString::twoByteLengthFits(wholeLength) && cx->isJSContext()) {
+    bool isLatin1 = left->hasLatin1Chars() && right->hasLatin1Chars();
+    bool canUseFatInline = isLatin1
+                           ? JSFatInlineString::latin1LengthFits(wholeLength)
+                           : JSFatInlineString::twoByteLengthFits(wholeLength);
+    if (canUseFatInline && cx->isJSContext()) {
         JSFatInlineString *str = js_NewGCFatInlineString<allowGC>(cx);
         if (!str)
             return nullptr;
 
+        AutoCheckCannotGC nogc;
         ScopedThreadSafeStringInspector leftInspector(left);
         ScopedThreadSafeStringInspector rightInspector(right);
-        if (!leftInspector.ensureChars(cx) || !rightInspector.ensureChars(cx))
+        if (!leftInspector.ensureChars(cx, nogc) || !rightInspector.ensureChars(cx, nogc))
             return nullptr;
 
-        jschar *buf = str->init(wholeLength);
-        PodCopy(buf, leftInspector.chars(), leftLen);
-        PodCopy(buf + leftLen, rightInspector.chars(), rightLen);
+        if (isLatin1) {
+            char *buf = str->initLatin1(wholeLength);
+            PodCopy(buf, leftInspector.latin1Chars(), leftLen);
+            PodCopy(buf + leftLen, rightInspector.latin1Chars(), rightLen);
+            buf[wholeLength] = 0;
+        } else {
+            jschar *buf = str->initTwoByte(wholeLength);
+            if (leftInspector.hasTwoByteChars())
+                PodCopy(buf, leftInspector.twoByteChars(), leftLen);
+            else
+                CopyAndInflateChars(buf, leftInspector.latin1Chars(), leftLen);
+            if (rightInspector.hasTwoByteChars())
+                PodCopy(buf + leftLen, rightInspector.twoByteChars(), rightLen);
+            else
+                CopyAndInflateChars(buf + leftLen, rightInspector.latin1Chars(), rightLen);
+            buf[wholeLength] = 0;
+        }
 
-        buf[wholeLength] = 0;
         return str;
     }
 
@@ -530,27 +548,35 @@ JSFlatString::isIndexSlow(uint32_t *indexp) const
 }
 
 bool
-ScopedThreadSafeStringInspector::ensureChars(ThreadSafeContext *cx)
+ScopedThreadSafeStringInspector::ensureChars(ThreadSafeContext *cx, const AutoCheckCannotGC &nogc)
 {
-    if (chars_)
+    if (state_ != Uninitialized)
         return true;
 
     if (cx->isExclusiveContext()) {
         JSLinearString *linear = str_->ensureLinear(cx->asExclusiveContext());
         if (!linear)
             return false;
-        chars_ = linear->chars();
+        if (linear->hasTwoByteChars()) {
+            state_ = TwoByte;
+            twoByteChars_ = linear->twoByteChars(nogc);
+        } else {
+            state_ = Latin1;
+            latin1Chars_ = linear->latin1Chars(nogc);
+        }
     } else {
         if (str_->hasPureChars()) {
-            chars_ = str_->pureChars();
+            state_ = TwoByte;
+            twoByteChars_ = str_->pureChars();
         } else {
             if (!str_->copyNonPureChars(cx, scopedChars_))
                 return false;
-            chars_ = scopedChars_;
+            state_ = TwoByte;
+            twoByteChars_ = scopedChars_;
         }
     }
 
-    JS_ASSERT(chars_);
+    MOZ_ASSERT(state_ != Uninitialized);
     return true;
 }
 
