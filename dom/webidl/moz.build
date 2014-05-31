@@ -212,6 +212,7 @@ WEBIDL_FILES = [
     'IDBRequest.webidl',
     'IDBTransaction.webidl',
     'IDBVersionChangeEvent.webidl',
+    'Identity.webidl',
     'ImageData.webidl',
     'ImageDocument.webidl',
     'InputEvent.webidl',
