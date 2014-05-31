@@ -10,6 +10,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/RangedPtr.h"
+#include "mozilla/TypeTraits.h"
 
 #include "gc/Marking.h"
 
@@ -18,6 +19,7 @@
 
 using namespace js;
 
+using mozilla::IsSame;
 using mozilla::PodCopy;
 using mozilla::RangedPtr;
 using mozilla::RoundUpPow2;
@@ -137,8 +139,9 @@ JSLinearString::debugUnsafeConvertToLatin1()
     d.u1.flags |= LATIN1_CHARS_BIT;
 }
 
+template <typename CharT>
 static MOZ_ALWAYS_INLINE bool
-AllocChars(ThreadSafeContext *maybecx, size_t length, jschar **chars, size_t *capacity)
+AllocChars(ThreadSafeContext *maybecx, size_t length, CharT **chars, size_t *capacity)
 {
     /*
      * String length doesn't include the null char, so include it here before
@@ -158,9 +161,9 @@ AllocChars(ThreadSafeContext *maybecx, size_t length, jschar **chars, size_t *ca
     /* Like length, capacity does not include the null char, so take it out. */
     *capacity = numChars - 1;
 
-    JS_STATIC_ASSERT(JSString::MAX_LENGTH * sizeof(jschar) < UINT32_MAX);
-    size_t bytes = numChars * sizeof(jschar);
-    *chars = (jschar *)(maybecx ? maybecx->malloc_(bytes) : js_malloc(bytes));
+    JS_STATIC_ASSERT(JSString::MAX_LENGTH * sizeof(CharT) < UINT32_MAX);
+    size_t bytes = numChars * sizeof(CharT);
+    *chars = (CharT *)(maybecx ? maybecx->malloc_(bytes) : js_malloc(bytes));
     return *chars != nullptr;
 }
 
@@ -220,7 +223,30 @@ JSRope::copyNonPureCharsInternal(ThreadSafeContext *cx, ScopedJSFreePtr<jschar> 
     return true;
 }
 
-template<JSRope::UsingBarrier b>
+template <typename CharT>
+static void
+CopyChars(CharT *dest, const JSLinearString &str);
+
+template <>
+void
+CopyChars(jschar *dest, const JSLinearString &str)
+{
+    AutoCheckCannotGC nogc;
+    if (str.hasTwoByteChars())
+        PodCopy(dest, str.twoByteChars(nogc), str.length());
+    else
+        CopyAndInflateChars(dest, str.latin1Chars(nogc), str.length());
+}
+
+template <>
+void
+CopyChars(char *dest, const JSLinearString &str)
+{
+    AutoCheckCannotGC nogc;
+    PodCopy(dest, str.latin1Chars(nogc), str.length());
+}
+
+template<JSRope::UsingBarrier b, typename CharT>
 JSFlatString *
 JSRope::flattenInternal(ExclusiveContext *maybecx)
 {
@@ -257,9 +283,9 @@ JSRope::flattenInternal(ExclusiveContext *maybecx)
      */
     const size_t wholeLength = length();
     size_t wholeCapacity;
-    jschar *wholeChars;
+    CharT *wholeChars;
     JSString *str = this;
-    jschar *pos;
+    CharT *pos;
 
     /*
      * JSString::flattenData is a tagged pointer to the parent node.
@@ -269,6 +295,8 @@ JSRope::flattenInternal(ExclusiveContext *maybecx)
     static const uintptr_t Tag_FinishNode = 0x0;
     static const uintptr_t Tag_VisitRightChild = 0x1;
 
+    AutoCheckCannotGC nogc;
+
     /* Find the left most string, containing the first string. */
     JSRope *leftMostRope = this;
     while (leftMostRope->leftChild()->isRope())
@@ -277,7 +305,7 @@ JSRope::flattenInternal(ExclusiveContext *maybecx)
     if (leftMostRope->leftChild()->isExtensible()) {
         JSExtensibleString &left = leftMostRope->leftChild()->asExtensible();
         size_t capacity = left.capacity();
-        if (capacity >= wholeLength) {
+        if (capacity >= wholeLength && left.hasTwoByteChars() == IsSame<CharT, jschar>::value) {
             /*
              * Simulate a left-most traversal from the root to leftMost->leftChild()
              * via first_visit_node
@@ -298,9 +326,9 @@ JSRope::flattenInternal(ExclusiveContext *maybecx)
                 JSString::writeBarrierPre(str->d.s.u2.left);
                 JSString::writeBarrierPre(str->d.s.u3.right);
             }
-            str->d.s.u2.nonInlineCharsTwoByte = left.nonInlineChars();
+            str->setNonInlineChars(left.nonInlineChars<CharT>(nogc));
             wholeCapacity = capacity;
-            wholeChars = const_cast<jschar *>(left.nonInlineChars());
+            wholeChars = const_cast<CharT *>(left.nonInlineChars<CharT>(nogc));
             pos = wholeChars + left.d.u1.length;
             JS_STATIC_ASSERT(!(EXTENSIBLE_FLAGS & DEPENDENT_FLAGS));
             left.d.u1.flags ^= (EXTENSIBLE_FLAGS | DEPENDENT_FLAGS);
@@ -322,7 +350,7 @@ JSRope::flattenInternal(ExclusiveContext *maybecx)
         }
 
         JSString &left = *str->d.s.u2.left;
-        str->d.s.u2.nonInlineCharsTwoByte = pos;
+        str->setNonInlineChars(pos);
         StringWriteBarrierPostRemove(maybecx, &str->d.s.u2.left);
         if (left.isRope()) {
             /* Return to this node when 'left' done, then goto visit_right_child. */
@@ -330,9 +358,8 @@ JSRope::flattenInternal(ExclusiveContext *maybecx)
             str = &left;
             goto first_visit_node;
         }
-        size_t len = left.length();
-        PodCopy(pos, left.asLinear().chars(), len);
-        pos += len;
+        CopyChars(pos, left.asLinear());
+        pos += left.length();
     }
     visit_right_child: {
         JSString &right = *str->d.s.u3.right;
@@ -342,25 +369,30 @@ JSRope::flattenInternal(ExclusiveContext *maybecx)
             str = &right;
             goto first_visit_node;
         }
-        size_t len = right.length();
-        PodCopy(pos, right.asLinear().chars(), len);
-        pos += len;
+        CopyChars(pos, right.asLinear());
+        pos += right.length();
     }
     finish_node: {
         if (str == this) {
             JS_ASSERT(pos == wholeChars + wholeLength);
             *pos = '\0';
             str->d.u1.length = wholeLength;
-            str->d.u1.flags = EXTENSIBLE_FLAGS;
-            str->d.s.u2.nonInlineCharsTwoByte = wholeChars;
+            if (IsSame<CharT, jschar>::value)
+                str->d.u1.flags = EXTENSIBLE_FLAGS;
+            else
+                str->d.u1.flags = EXTENSIBLE_FLAGS | LATIN1_CHARS_BIT;
+            str->setNonInlineChars(wholeChars);
             str->d.s.u3.capacity = wholeCapacity;
             StringWriteBarrierPostRemove(maybecx, &str->d.s.u2.left);
             StringWriteBarrierPostRemove(maybecx, &str->d.s.u3.right);
             return &this->asFlat();
         }
         uintptr_t flattenData = str->d.u1.flattenData;
-        str->d.u1.flags = DEPENDENT_FLAGS;
-        str->d.u1.length = pos - str->d.s.u2.nonInlineCharsTwoByte;
+        if (IsSame<CharT, jschar>::value)
+            str->d.u1.flags = DEPENDENT_FLAGS;
+        else
+            str->d.u1.flags = DEPENDENT_FLAGS | LATIN1_CHARS_BIT;
+        str->d.u1.length = pos - str->asLinear().nonInlineChars<CharT>(nogc);
         str->d.s.u3.base = (JSLinearString *)this;       /* will be true on exit */
         StringWriteBarrierPost(maybecx, (JSString **)&str->d.s.u3.base);
         str = (JSString *)(flattenData & ~Tag_Mask);
@@ -371,17 +403,23 @@ JSRope::flattenInternal(ExclusiveContext *maybecx)
     }
 }
 
+template<JSRope::UsingBarrier b>
+JSFlatString *
+JSRope::flattenInternal(ExclusiveContext *maybecx)
+{
+    if (hasTwoByteChars())
+        return flattenInternal<b, jschar>(maybecx);
+    return flattenInternal<b, char>(maybecx);
+}
+
 JSFlatString *
 JSRope::flatten(ExclusiveContext *maybecx)
 {
-#if JSGC_INCREMENTAL
+#ifdef JSGC_INCREMENTAL
     if (zone()->needsBarrier())
         return flattenInternal<WithIncrementalBarrier>(maybecx);
-    else
-        return flattenInternal<NoBarrier>(maybecx);
-#else
-    return flattenInternal<NoBarrier>(maybecx);
 #endif
+    return flattenInternal<NoBarrier>(maybecx);
 }
 
 template <AllowGC allowGC>
