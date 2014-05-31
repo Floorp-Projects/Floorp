@@ -4198,6 +4198,37 @@ js::StringToSource(JSContext *cx, JSString *str)
     return js_QuoteString(cx, str, '"');
 }
 
+static bool
+EqualCharsLatin1TwoByte(const char *s1, const jschar *s2, size_t len)
+{
+    for (const char *s1end = s1 + len; s1 < s1end; s1++, s2++) {
+        if (jschar((unsigned char)*s1) != *s2)
+            return false;
+    }
+    return true;
+}
+
+static bool
+EqualChars(JSLinearString *str1, JSLinearString *str2)
+{
+    MOZ_ASSERT(str1->length() == str2->length());
+
+    size_t len = str1->length();
+
+    AutoCheckCannotGC nogc;
+    if (str1->hasTwoByteChars()) {
+        if (str2->hasTwoByteChars())
+            return PodEqual(str1->twoByteChars(nogc), str2->twoByteChars(nogc), len);
+
+        return EqualCharsLatin1TwoByte(str2->latin1Chars(nogc), str1->twoByteChars(nogc), len);
+    }
+
+    if (str2->hasLatin1Chars())
+        return PodEqual(str1->latin1Chars(nogc), str2->latin1Chars(nogc), len);
+
+    return EqualCharsLatin1TwoByte(str1->latin1Chars(nogc), str2->twoByteChars(nogc), len);
+}
+
 bool
 js::EqualStrings(JSContext *cx, JSString *str1, JSString *str2, bool *result)
 {
@@ -4219,7 +4250,7 @@ js::EqualStrings(JSContext *cx, JSString *str1, JSString *str2, bool *result)
     if (!linear2)
         return false;
 
-    *result = PodEqual(linear1->chars(), linear2->chars(), length1);
+    *result = EqualChars(linear1, linear2);
     return true;
 }
 
@@ -4233,7 +4264,7 @@ js::EqualStrings(JSLinearString *str1, JSLinearString *str2)
     if (length1 != str2->length())
         return false;
 
-    return PodEqual(str1->chars(), str2->chars(), length1);
+    return EqualChars(str1, str2);
 }
 
 static bool
