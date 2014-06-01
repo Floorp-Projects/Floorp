@@ -34,3 +34,6 @@ if CONFIG['_MSC_VER']:
     # Always enter a Windows program through wmain, whether or not we're
     # a console application.
     WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    RCINCLUDE = 'xpcshell.rc'

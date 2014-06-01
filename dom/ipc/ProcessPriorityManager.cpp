@@ -982,7 +982,7 @@ ParticularProcessPriorityManager::ComputePriority()
   }
 
   if (isVisible) {
-    return HasAppType("keyboard") ?
+    return HasAppType("inputmethod") ?
       PROCESS_PRIORITY_FOREGROUND_KEYBOARD :
       PROCESS_PRIORITY_FOREGROUND;
   }

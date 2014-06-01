@@ -238,6 +238,10 @@ ClippedImage::GetFrameInternal(const nsIntSize& aViewportSize,
     RefPtr<DrawTarget> target = gfxPlatform::GetPlatform()->
       CreateOffscreenContentDrawTarget(IntSize(mClip.width, mClip.height),
                                        SurfaceFormat::B8G8R8A8);
+    if (!target) {
+      NS_ERROR("Could not create a DrawTarget");
+      return nullptr;
+    }
 
     nsRefPtr<gfxContext> ctx = new gfxContext(target);
 

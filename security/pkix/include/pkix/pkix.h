@@ -121,6 +121,7 @@ SECStatus VerifyEncodedOCSPResponse(TrustDomain& trustDomain,
                                     const CERTCertificate* cert,
                                     CERTCertificate* issuerCert,
                                     PRTime time,
+                                    uint16_t maxLifetimeInDays,
                                     const SECItem* encodedResponse,
                  /* optional out */ PRTime* thisUpdate,
                  /* optional out */ PRTime* validThrough);

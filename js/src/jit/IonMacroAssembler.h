@@ -381,6 +381,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void loadStringChars(Register str, Register dest);
+    void loadStringChar(Register str, Register index, Register output);
 
     void branchIfRope(Register str, Label *label) {
         Address flags(str, JSString::offsetOfFlags());

@@ -111,6 +111,9 @@ class MacroAssemblerX86Shared : public Assembler
     void and32(Register src, Register dest) {
         andl(src, dest);
     }
+    void and32(const Address &src, Register dest) {
+        andl(Operand(src), dest);
+    }
     void and32(Imm32 imm, Register dest) {
         andl(imm, dest);
     }
