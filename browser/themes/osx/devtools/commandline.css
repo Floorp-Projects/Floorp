@@ -12,8 +12,7 @@
 #gcli-tooltip-root {
   border: 1px solid hsl(206,37%,4%);
   box-shadow: 0 1px 0 hsla(209,29%,72%,.25) inset;
-  background-image: url(background-noise-toolbar.png),
-                    linear-gradient(hsla(209,18%,18%,0.9), hsl(209,23%,18%));
+  background-image: linear-gradient(hsla(209,18%,18%,0.9), hsl(209,23%,18%));
   border-radius: 3px;
 }
 
@@ -36,7 +35,6 @@
   border-left: 1px solid hsl(206,37%,4%);
   border-right: 1px solid hsl(206,37%,4%);
   background-color: hsl(209,23%,18%);
-  background-image: url(background-noise-toolbar.png);
 }
 
 .gcli-tt-description,

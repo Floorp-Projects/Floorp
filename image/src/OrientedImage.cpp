@@ -113,6 +113,11 @@ OrientedImage::GetFrame(uint32_t aWhichFrame,
   mozilla::RefPtr<DrawTarget> target =
     gfxPlatform::GetPlatform()->
       CreateOffscreenContentDrawTarget(IntSize(width, height), surfaceFormat);
+  if (!target) {
+    NS_ERROR("Could not create a DrawTarget");
+    return nullptr;
+  }
+
 
   // Create our drawable.
   RefPtr<SourceSurface> innerSurface =
