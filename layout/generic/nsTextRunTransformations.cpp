@@ -18,6 +18,7 @@
 #include "nsIPersistentProperties2.h"
 #include "nsNetUtil.h"
 #include "GreekCasing.h"
+#include "IrishCasing.h"
 
 // Unicode characters needing special casing treatment in tr/az languages
 #define LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE  0x0130
@@ -225,9 +226,10 @@ GetParametersForInner(nsTransformedTextRun* aTextRun, uint32_t* aFlags,
 // same setting here, if the behavior is shared by other languages.
 enum LanguageSpecificCasingBehavior {
   eLSCB_None,    // default non-lang-specific behavior
-  eLSCB_Turkish, // preserve dotted/dotless-i distinction in uppercase
   eLSCB_Dutch,   // treat "ij" digraph as a unit for capitalization
-  eLSCB_Greek    // strip accent when uppercasing Greek vowels
+  eLSCB_Greek,   // strip accent when uppercasing Greek vowels
+  eLSCB_Irish,   // keep prefix letters as lowercase when uppercasing Irish
+  eLSCB_Turkish  // preserve dotted/dotless-i distinction in uppercase
 };
 
 static LanguageSpecificCasingBehavior
@@ -245,6 +247,9 @@ GetCasingFor(const nsIAtom* aLang)
   }
   if (aLang == nsGkAtoms::el) {
     return eLSCB_Greek;
+  }
+  if (aLang == nsGkAtoms::ga_ie) {
+    return eLSCB_Irish;
   }
   return eLSCB_None;
 }
@@ -279,6 +284,8 @@ nsCaseTransformTextRunFactory::TransformString(
 
   LanguageSpecificCasingBehavior languageSpecificCasing = GetCasingFor(lang);
   mozilla::GreekCasing::State greekState;
+  mozilla::IrishCasing::State irishState;
+  uint32_t irishMark = uint32_t(-1); // location of possible prefix letter(s)
 
   for (uint32_t i = 0; i < length; ++i) {
     uint32_t ch = str[i];
@@ -293,11 +300,14 @@ nsCaseTransformTextRunFactory::TransformString(
         lang = styleContext->StyleFont()->mLanguage;
         languageSpecificCasing = GetCasingFor(lang);
         greekState.Reset();
+        irishState.Reset();
+        irishMark = uint32_t(-1);
       }
     }
 
     int extraChars = 0;
     const mozilla::unicode::MultiCharMapping *mcm;
+    bool inhibitBreakBefore = false; // have we just deleted preceding hyphen?
 
     if (NS_IS_HIGH_SURROGATE(ch) && i < length - 1 &&
         NS_IS_LOW_SURROGATE(str[i + 1])) {
@@ -401,6 +411,59 @@ nsCaseTransformTextRunFactory::TransformString(
         break;
       }
 
+      if (languageSpecificCasing == eLSCB_Irish) {
+        bool mark;
+        uint8_t action;
+        ch = mozilla::IrishCasing::UpperCase(ch, irishState, mark, action);
+        if (mark) {
+          irishMark = aConvertedString.Length();
+          break;
+        } else if (action) {
+          nsString& str = aConvertedString; // shorthand
+          switch (action) {
+          case 1:
+            // lowercase a single prefix letter
+            NS_ASSERTION(str.Length() > 0 && irishMark < str.Length(),
+                         "bad irishMark!");
+            str.SetCharAt(ToLowerCase(str[irishMark]), irishMark);
+            irishMark = uint32_t(-1);
+            break;
+          case 2:
+            // lowercase two prefix letters (immediately before current pos)
+            NS_ASSERTION(str.Length() >= 2 && irishMark == str.Length() - 2,
+                         "bad irishMark!");
+            str.SetCharAt(ToLowerCase(str[irishMark]), irishMark);
+            str.SetCharAt(ToLowerCase(str[irishMark + 1]), irishMark + 1);
+            irishMark = uint32_t(-1);
+            break;
+          case 3:
+            // lowercase one prefix letter, and delete following hyphen
+            // (which must be the immediately-preceding char)
+            NS_ASSERTION(str.Length() >= 2 && irishMark == str.Length() - 2,
+                         "bad irishMark!");
+            str.Replace(irishMark, 2, ToLowerCase(str[irishMark]));
+            aDeletedCharsArray[irishMark + 1] = true;
+            // Remove the trailing entries (corresponding to the deleted hyphen)
+            // from the auxiliary arrays.
+            aCharsToMergeArray.SetLength(aCharsToMergeArray.Length() - 1);
+            if (aTextRun) {
+              aStyleArray->SetLength(aStyleArray->Length() - 1);
+              aCanBreakBeforeArray->SetLength(aCanBreakBeforeArray->Length() - 1);
+              inhibitBreakBefore = true;
+            }
+            mergeNeeded = true;
+            irishMark = uint32_t(-1);
+            break;
+          }
+          // ch has been set to the uppercase for current char;
+          // No need to check for SpecialUpper here as none of the characters
+          // that could trigger an Irish casing action have special mappings.
+          break;
+        }
+        // If we didn't have any special action to perform, fall through
+        // to check for special uppercase (ß)
+      }
+
       mcm = mozilla::unicode::SpecialUpper(ch);
       if (mcm) {
         int j = 0;
@@ -468,7 +531,8 @@ nsCaseTransformTextRunFactory::TransformString(
       aCharsToMergeArray.AppendElement(false);
       if (aTextRun) {
         aStyleArray->AppendElement(styleContext);
-        aCanBreakBeforeArray->AppendElement(aTextRun->CanBreakLineBefore(i));
+        aCanBreakBeforeArray->AppendElement(inhibitBreakBefore ? false :
+                                            aTextRun->CanBreakLineBefore(i));
       }
 
       if (IS_IN_BMP(ch)) {
