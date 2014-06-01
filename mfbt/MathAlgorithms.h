@@ -205,7 +205,7 @@ namespace detail {
     uint32_t hi = uint32_t(u >> 32);
     if (hi != 0)
       return CountLeadingZeroes32(hi);
-    return 32 + CountLeadingZeroes32(uint32_t(u));
+    return 32u + CountLeadingZeroes32(uint32_t(u));
 #  endif
   }
 
@@ -220,7 +220,7 @@ namespace detail {
     uint32_t lo = uint32_t(u);
     if (lo != 0)
       return CountTrailingZeroes32(lo);
-    return 32 + CountTrailingZeroes32(uint32_t(u >> 32));
+    return 32u + CountTrailingZeroes32(uint32_t(u >> 32));
 #  endif
   }
 
@@ -351,7 +351,7 @@ class CeilingLog2<T, 4>
   public:
     static uint_fast8_t compute(const T t) {
       // Check for <= 1 to avoid the == 0 undefined case.
-      return t <= 1 ? 0 : 32 - CountLeadingZeroes32(t - 1);
+      return t <= 1 ? 0u : 32u - CountLeadingZeroes32(t - 1);
     }
 };
 
@@ -400,7 +400,7 @@ class FloorLog2<T, 4>
 {
   public:
     static uint_fast8_t compute(const T t) {
-      return 31 - CountLeadingZeroes32(t | 1);
+      return 31u - CountLeadingZeroes32(t | 1);
     }
 };
 
@@ -409,7 +409,7 @@ class FloorLog2<T, 8>
 {
   public:
     static uint_fast8_t compute(const T t) {
-      return 63 - CountLeadingZeroes64(t | 1);
+      return 63u - CountLeadingZeroes64(t | 1);
     }
 };
 

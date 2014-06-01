@@ -65,7 +65,7 @@ gfxFT2Font::ShapeText(gfxContext      *aContext,
         }
     }
 
-    if (!ok && gfxPlatform::GetPlatform()->UseHarfBuzzForScript(aScript)) {
+    if (!ok) {
         if (!mHarfBuzzShaper) {
             mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
         }

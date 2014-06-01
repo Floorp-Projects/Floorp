@@ -589,9 +589,9 @@ struct Atom {
     uint32_t flags;
     uint32_t length;
     union {
-        const char *nonInlineCharsLatin1;
+        const JS::Latin1Char *nonInlineCharsLatin1;
         const jschar *nonInlineCharsTwoByte;
-        char inlineStorageLatin1[1];
+        JS::Latin1Char inlineStorageLatin1[1];
         jschar inlineStorageTwoByte[1];
     };
 };

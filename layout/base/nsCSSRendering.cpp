@@ -5002,6 +5002,10 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
     RefPtr<DrawTarget> srcSlice = gfxPlatform::GetPlatform()->
       CreateOffscreenContentDrawTarget(IntSize(srcRect.width, srcRect.height),
                              SurfaceFormat::B8G8R8A8);
+    if (!srcSlice) {
+      NS_ERROR("Could not create DrawTarget for element");
+      return;
+    }
     nsRefPtr<gfxContext> ctx = new gfxContext(srcSlice);
 
     // grab the entire source
