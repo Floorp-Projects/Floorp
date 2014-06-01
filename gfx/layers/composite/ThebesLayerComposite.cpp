@@ -111,7 +111,8 @@ ThebesLayerComposite::RenderLayer(const nsIntRect& aClipRect)
   if (!mBuffer || !mBuffer->IsAttached()) {
     return;
   }
-  PROFILER_LABEL("ThebesLayerComposite", "RenderLayer");
+  PROFILER_LABEL("ThebesLayerComposite", "RenderLayer",
+    js::ProfileEntry::Category::GRAPHICS);
 
   MOZ_ASSERT(mBuffer->GetCompositor() == mCompositeManager->GetCompositor() &&
              mBuffer->GetLayer() == this,

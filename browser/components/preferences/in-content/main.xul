@@ -89,13 +89,16 @@
 
 <hbox id="header-general"
       class="header"
+      hidden="true"
       data-category="paneGeneral">
   <image class="header-icon"/>
   <label class="header-name">&paneGeneral.title;</label>
 </hbox>
 
 <!-- Startup -->
-<groupbox id="startupGroup" data-category="paneGeneral">
+<groupbox id="startupGroup"
+          data-category="paneGeneral"
+          hidden="true">
   <caption><label>&startup.label;</label></caption>
 
   <hbox align="center">
@@ -152,7 +155,9 @@
 </groupbox>
 
 <!-- Downloads -->
-<groupbox id="downloadsGroup" data-category="paneGeneral">
+<groupbox id="downloadsGroup"
+          data-category="paneGeneral"
+          hidden="true">
   <caption><label>&downloads.label;</label></caption>
 
   <radiogroup id="saveWhere"
@@ -191,7 +196,8 @@
 </groupbox>
 
 <!-- Tab preferences -->
-<groupbox data-category="paneGeneral">
+<groupbox data-category="paneGeneral"
+          hidden="true">
     <caption><label>&tabsGroup.label;</label></caption>
     <checkbox id="linkTargeting" label="&newWindowsAsTabs.label;"
               accesskey="&newWindowsAsTabs.accesskey;"
