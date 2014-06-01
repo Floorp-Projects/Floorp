@@ -375,8 +375,15 @@ FindInflectionPoints(const BezierControlPoints &aControlPoints,
       // Instead of a linear acceleration change we have a constant
       // acceleration change. This means the equation has no solution
       // and there are no inflection points, unless the constant is 0.
-      // In that case the curve is a straight line, but we'll let
-      // FlattenBezierCurveSegment deal with this.
+      // In that case the curve is a straight line, essentially that means
+      // the easiest way to deal with is is by saying there's an inflection
+      // point at t == 0. The inflection point approximation range found will
+      // automatically extend into infinity.
+      if (c == 0) {
+        *aCount = 1;
+        *aT1 = 0;
+        return;
+      }
       *aCount = 0;
       return;
     }
