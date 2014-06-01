@@ -9,6 +9,7 @@ DIRS += ['internal']
 EXPORTS += [
     'GreekCasing.h',
     'ICUUtils.h',
+    'IrishCasing.h',
     'nsBidiUtils.h',
     'nsSpecialCasingData.h',
     'nsUnicharUtils.h',
