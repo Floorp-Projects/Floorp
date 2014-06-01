@@ -15,6 +15,7 @@
 #include "nsJARProtocolHandler.h"
 #include "nsIRemoteOpenFileListener.h"
 #include "nsProxyRelease.h"
+#include "SerializedLoadContext.h"
 
 // needed to alloc/free NSPR file descriptors
 #include "private/pprio.h"
@@ -175,7 +176,8 @@ RemoteOpenFileChild::Init(nsIURI* aRemoteOpenUri, nsIURI* aAppUri)
 nsresult
 RemoteOpenFileChild::AsyncRemoteFileOpen(int32_t aFlags,
                                          nsIRemoteOpenFileListener* aListener,
-                                         nsITabChild* aTabChild)
+                                         nsITabChild* aTabChild,
+                                         nsILoadContext *aLoadContext)
 {
   if (!mFile) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -227,7 +229,8 @@ RemoteOpenFileChild::AsyncRemoteFileOpen(int32_t aFlags,
   OptionalURIParams appUri;
   SerializeURI(mAppURI, appUri);
 
-  gNeckoChild->SendPRemoteOpenFileConstructor(this, uri, appUri);
+  IPC::SerializedLoadContext loadContext(aLoadContext);
+  gNeckoChild->SendPRemoteOpenFileConstructor(this, loadContext, uri, appUri);
 
   // The chrome process now has a logical ref to us until it calls Send__delete.
   AddIPDLReference();

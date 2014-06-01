@@ -32,6 +32,8 @@ function init_all() {
 
   let categories = document.getElementById("categories");
   categories.addEventListener("select", event => gotoPref(event.target.value));
+
+  gotoPref("paneGeneral");
 }
 
 function selectCategory(name) {

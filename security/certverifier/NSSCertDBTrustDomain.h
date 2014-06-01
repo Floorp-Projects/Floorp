@@ -90,7 +90,8 @@ private:
   static const PRTime ServerFailureDelay = 5 * 60 * PR_USEC_PER_SEC;
   SECStatus VerifyAndMaybeCacheEncodedOCSPResponse(
     const CERTCertificate* cert, CERTCertificate* issuerCert, PRTime time,
-    const SECItem* encodedResponse, EncodedResponseSource responseSource);
+    uint16_t maxLifetimeInDays, const SECItem* encodedResponse,
+    EncodedResponseSource responseSource);
 
   const SECTrustType mCertDBTrustType;
   const OCSPFetching mOCSPFetching;

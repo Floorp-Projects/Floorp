@@ -656,7 +656,7 @@ void TransportLayerDtls::Handshake() {
         }
         // Fall through
       case PR_WOULD_BLOCK_ERROR:
-        MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "Would have blocked");
+        MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "Handshake would have blocked");
         if (mode_ == DGRAM) {
           PRIntervalTime timeout;
           rv = DTLS_GetHandshakeTimeout(ssl_fd_, &timeout);
@@ -715,7 +715,7 @@ void TransportLayerDtls::PacketReceived(TransportLayer* layer,
 
       if (err == PR_WOULD_BLOCK_ERROR) {
         // This gets ignored
-        MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "Would have blocked");
+        MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Receive would have blocked");
       } else {
         MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "NSS Error " << err);
         TL_SET_STATE(TS_ERROR);
@@ -750,7 +750,7 @@ TransportResult TransportLayerDtls::SendPacket(const unsigned char *data,
 
   if (err == PR_WOULD_BLOCK_ERROR) {
     // This gets ignored
-    MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "Would have blocked");
+    MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Send would have blocked");
     return TE_WOULDBLOCK;
   }
 

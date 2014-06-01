@@ -2392,7 +2392,9 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
   // large images will decode a bit and post themselves to the event loop
   // to finish decoding.
   if (!mDecoded && !mInDecoder && mHasSourceData && aDecodeType == SYNCHRONOUS_NOTIFY_AND_SOME_DECODE) {
-    PROFILER_LABEL_PRINTF("RasterImage", "DecodeABitOf", "%s", GetURIString().get());
+    PROFILER_LABEL_PRINTF("RasterImage", "DecodeABitOf",
+      js::ProfileEntry::Category::GRAPHICS, "%s", GetURIString().get());
+
     DecodePool::Singleton()->DecodeABitOf(this, DECODE_SYNC);
     return NS_OK;
   }
@@ -2411,7 +2413,8 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
 nsresult
 RasterImage::SyncDecode()
 {
-  PROFILER_LABEL_PRINTF("RasterImage", "SyncDecode", "%s", GetURIString().get());;
+  PROFILER_LABEL_PRINTF("RasterImage", "SyncDecode",
+    js::ProfileEntry::Category::GRAPHICS, "%s", GetURIString().get());
 
   // If we have a size decoder open, make sure we get the size
   if (mDecoder && mDecoder->IsSizeDecode()) {

@@ -1503,14 +1503,14 @@ ForkJoinShared::executePortion(PerThreadData *perThread, ThreadPoolWorker *worke
     // WARNING: This code runs ON THE PARALLEL WORKER THREAD.
     // Be careful when accessing cx_.
 
-    // ForkJoinContext already contains an AutoAssertNoGC; however, the analysis
-    // does not propagate this type information. We duplicate the assertion
-    // here for maximum clarity.
-    JS::AutoAssertNoGC nogc(runtime());
-
     Allocator *allocator = allocators_[worker->id()];
     ForkJoinContext cx(perThread, worker, allocator, this, &records_[worker->id()]);
     AutoSetForkJoinContext autoContext(&cx);
+
+    // ForkJoinContext already contains an AutoSuppressGCAnalysis; however, the
+    // analysis does not propagate this type information. We duplicate the
+    // assertion here for maximum clarity.
+    JS::AutoSuppressGCAnalysis nogc;
 
 #ifdef DEBUG
     // Set the maximum worker and slice number for prettier spewing.
@@ -1622,7 +1622,7 @@ ForkJoinContext::ForkJoinContext(PerThreadData *perThreadData, ThreadPoolWorker 
     shared_(shared),
     worker_(worker),
     acquiredJSContext_(false),
-    nogc_(shared->runtime())
+    nogc_()
 {
     /*
      * Unsafely set the zone. This is used to track malloc counters and to

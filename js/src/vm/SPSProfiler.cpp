@@ -143,7 +143,7 @@ SPSProfiler::markEvent(const char *event)
 {
     JS_ASSERT(enabled());
     if (eventMarker_) {
-        JS::AutoAssertNoGC nogc;
+        JS::AutoSuppressGCAnalysis nogc;
         eventMarker_(event);
     }
 }
