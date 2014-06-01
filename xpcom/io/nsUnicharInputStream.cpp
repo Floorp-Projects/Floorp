@@ -20,8 +20,6 @@
 #include <unistd.h>
 #endif
 
-#define STRING_BUFFER_SIZE 8192
-
 class StringUnicharInputStream MOZ_FINAL : public nsIUnicharInputStream
 {
 public:
@@ -161,10 +159,19 @@ UTF8InputStream::UTF8InputStream() :
 nsresult
 UTF8InputStream::Init(nsIInputStream* aStream)
 {
-  if (!mByteData.SetCapacity(STRING_BUFFER_SIZE) ||
-      !mUnicharData.SetCapacity(STRING_BUFFER_SIZE)) {
+  // This value ensures the nsTArray header can be added and it'll still fit
+  // into 8 KiB (for mByteData) and 16 KiB (for mUnicharData).
+  static const size_t BufferLength = 8192 - sizeof(nsTArrayHeader);
+
+  // Fill() requires that mUnicharData's capacity is greater than or equal to
+  // mByteData's capacity.
+  if (!mByteData.SetCapacity(BufferLength) ||
+      !mUnicharData.SetCapacity(mByteData.Capacity())) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  // If this assertion fails then BufferLength needs tweaking.
+  MOZ_ASSERT(mByteData.Capacity() == BufferLength);
+
   mInput = aStream;
 
   return NS_OK;
