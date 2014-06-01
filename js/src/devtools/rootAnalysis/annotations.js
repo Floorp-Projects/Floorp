@@ -138,7 +138,7 @@ var ignoreFunctions = {
     "PR_ExplodeTime" : true,
     "PR_ErrorInstallTable" : true,
     "PR_SetThreadPrivate" : true,
-    "JSObject* js::GetWeakmapKeyDelegate(JSObject*)" : true, // FIXME: mark with AutoAssertNoGC instead
+    "JSObject* js::GetWeakmapKeyDelegate(JSObject*)" : true, // FIXME: mark with AutoSuppressGCAnalysis instead
     "uint8 NS_IsMainThread()" : true,
 
     // FIXME!
@@ -161,7 +161,7 @@ var ignoreFunctions = {
 
     // Bug 948646 - the only thing AutoJSContext's constructor calls
     // is an Init() routine whose entire body is covered with an
-    // AutoAssertNoGC. AutoSafeJSContext is the same thing, just with
+    // AutoSuppressGCAnalysis. AutoSafeJSContext is the same thing, just with
     // a different value for the 'aSafe' parameter.
     "void mozilla::AutoJSContext::AutoJSContext(mozilla::detail::GuardObjectNotifier*)" : true,
     "void mozilla::AutoSafeJSContext::~AutoSafeJSContext(int32)" : true,
@@ -230,7 +230,7 @@ function isSuppressConstructor(name)
 {
     return name.indexOf("::AutoSuppressGC") != -1
         || name.indexOf("::AutoEnterAnalysis") != -1
-        || name.indexOf("::AutoAssertNoGC") != -1
+        || name.indexOf("::AutoSuppressGCAnalysis") != -1
         || name.indexOf("::AutoIgnoreRootingHazards") != -1;
 }
 

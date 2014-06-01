@@ -407,13 +407,6 @@ public:
      */
     bool UseGraphiteShaping();
 
-    /**
-     * Whether to use the harfbuzz shaper (depending on script complexity).
-     *
-     * This allows harfbuzz to be enabled selectively via the preferences.
-     */
-    bool UseHarfBuzzForScript(int32_t aScriptCode);
-
     // check whether format is supported on a platform or not (if unclear, returns true)
     virtual bool IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlags) { return false; }
 
@@ -640,9 +633,6 @@ protected:
     // whether to always search font cmaps globally 
     // when doing system font fallback
     int8_t  mFallbackUsesCmaps;
-
-    // which scripts should be shaped with harfbuzz
-    int32_t mUseHarfBuzzScripts;
 
     // max character limit for words in word cache
     int32_t mWordCacheCharLimit;

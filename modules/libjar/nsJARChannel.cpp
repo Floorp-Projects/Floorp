@@ -375,8 +375,11 @@ nsJARChannel::LookupFile()
 
             // Open file on parent: OnRemoteFileOpenComplete called when done
             nsCOMPtr<nsITabChild> tabChild;
-            NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, tabChild);
-            rv = remoteFile->AsyncRemoteFileOpen(PR_RDONLY, this, tabChild.get());
+            NS_QueryNotificationCallbacks(this, tabChild);
+            nsCOMPtr<nsILoadContext> loadContext;
+            NS_QueryNotificationCallbacks(this, loadContext);
+            rv = remoteFile->AsyncRemoteFileOpen(PR_RDONLY, this, tabChild,
+                                                 loadContext);
             NS_ENSURE_SUCCESS(rv, rv);
         }
     }

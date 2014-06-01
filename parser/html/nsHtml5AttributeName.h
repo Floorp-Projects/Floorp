@@ -265,6 +265,7 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_RADIUS;
     static nsHtml5AttributeName* ATTR_RESULT;
     static nsHtml5AttributeName* ATTR_REPEAT;
+    static nsHtml5AttributeName* ATTR_SRCSET;
     static nsHtml5AttributeName* ATTR_RSPACE;
     static nsHtml5AttributeName* ATTR_ROTATE;
     static nsHtml5AttributeName* ATTR_RQUOTE;
