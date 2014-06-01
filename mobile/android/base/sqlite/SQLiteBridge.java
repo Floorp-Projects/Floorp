@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.text.TextUtils;
 import android.util.Log;
+
 import org.mozilla.gecko.mozglue.RobocopTarget;
 
 import java.util.ArrayList;
@@ -26,8 +27,9 @@ public class SQLiteBridge {
 
     // Path to the database. If this database was not opened with openDatabase, we reopen it every query.
     private String mDb;
-    // pointer to the database if it was opened with openDatabase
-    protected long mDbPointer = 0;
+
+    // Pointer to the database if it was opened with openDatabase. 0 implies closed.
+    protected volatile long mDbPointer = 0L;
 
     // Values remembered after a query.
     private long[] mQueryResults;
@@ -37,6 +39,12 @@ public class SQLiteBridge {
 
     private static final int RESULT_INSERT_ROW_ID = 0;
     private static final int RESULT_ROWS_CHANGED = 1;
+
+    // Shamelessly cribbed from db/sqlite3/src/moz.build.
+    private static final int DEFAULT_PAGE_SIZE_BYTES = 32768;
+
+    // The same size we use elsewhere.
+    private static final int MAX_WAL_SIZE_BYTES = 524288;
 
     // JNI code in $(topdir)/mozglue/android/..
     private static native MatrixBlobCursor sqliteCall(String aDb, String aQuery,
@@ -254,9 +262,12 @@ public class SQLiteBridge {
             bridge = new SQLiteBridge(path);
             bridge.mDbPointer = SQLiteBridge.openDatabase(path);
         } catch (SQLiteBridgeException ex) {
-            // catch and rethrow as a SQLiteException to match SQLiteDatabase
+            // Catch and rethrow as a SQLiteException to match SQLiteDatabase.
             throw new SQLiteException(ex.getMessage());
         }
+
+        prepareWAL(bridge);
+
         return bridge;
     }
 
@@ -264,11 +275,11 @@ public class SQLiteBridge {
         if (isOpen()) {
           closeDatabase(mDbPointer);
         }
-        mDbPointer = 0;
+        mDbPointer = 0L;
     }
 
     public boolean isOpen() {
-        return mDbPointer > 0;
+        return mDbPointer != 0;
     }
 
     public void beginTransaction() throws SQLiteBridgeException {
@@ -322,6 +333,52 @@ public class SQLiteBridge {
         if (isOpen()) {
             Log.e(LOGTAG, "Bridge finalized without closing the database");
             close();
+        }
+    }
+
+    private static void prepareWAL(final SQLiteBridge bridge) {
+        // Prepare for WAL mode. If we can, we switch to journal_mode=WAL, then
+        // set the checkpoint size appropriately. If we can't, then we fall back
+        // to truncating and synchronous writes.
+        final Cursor cursor = bridge.internalQuery("PRAGMA journal_mode=WAL", null);
+        try {
+            if (cursor.moveToFirst()) {
+                String journalMode = cursor.getString(0);
+                Log.d(LOGTAG, "Journal mode: " + journalMode);
+                if ("wal".equals(journalMode)) {
+                    // Success! Let's make sure we autocheckpoint at a reasonable interval.
+                    final int pageSizeBytes = bridge.getPageSizeBytes();
+                    final int checkpointPageCount = MAX_WAL_SIZE_BYTES / pageSizeBytes;
+                    bridge.internalQuery("PRAGMA wal_autocheckpoint=" + checkpointPageCount, null).close();
+                } else {
+                    if (!"truncate".equals(journalMode)) {
+                        Log.w(LOGTAG, "Unable to activate WAL journal mode. Using truncate instead.");
+                        bridge.internalQuery("PRAGMA journal_mode=TRUNCATE", null).close();
+                    }
+                    Log.w(LOGTAG, "Not using WAL mode: using synchronous=FULL instead.");
+                    bridge.internalQuery("PRAGMA synchronous=FULL", null).close();
+                }
+            }
+        } finally {
+            cursor.close();
+        }
+    }
+
+    private int getPageSizeBytes() {
+        if (!isOpen()) {
+            throw new IllegalStateException("Database not open.");
+        }
+
+        final Cursor cursor = internalQuery("PRAGMA page_size", null);
+        try {
+            if (!cursor.moveToFirst()) {
+                Log.w(LOGTAG, "Unable to retrieve page size.");
+                return DEFAULT_PAGE_SIZE_BYTES;
+            }
+
+            return cursor.getInt(0);
+        } finally {
+            cursor.close();
         }
     }
 }

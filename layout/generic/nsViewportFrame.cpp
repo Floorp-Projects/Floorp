@@ -48,7 +48,9 @@ ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists)
 {
-  PROFILER_LABEL("ViewportFrame", "BuildDisplayList");
+  PROFILER_LABEL("ViewportFrame", "BuildDisplayList",
+    js::ProfileEntry::Category::GRAPHICS);
+
   nsIFrame* kid = mFrames.FirstChild();
   if (!kid)
     return;

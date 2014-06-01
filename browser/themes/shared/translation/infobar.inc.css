@@ -26,10 +26,6 @@ notification[value="translation"][state="translating"] .messageImage {
   }
 }
 
-notification[value="translation"] {
-  min-height: 40px;
-}
-
 notification[value="translation"] button,
 notification[value="translation"] menulist {
   -moz-appearance: none;
@@ -40,26 +36,7 @@ notification[value="translation"] menulist {
   -moz-border-left-colors: none;
   border-radius: 2px;
   min-width: 0;
-  min-height: 30px;
-  -moz-padding-end: 1ch;
   box-shadow: 0 1px rgba(255, 255, 255, 0.5), 0 1px rgba(255, 255, 255, 0.5) inset;
-}
-
-notification[value="translation"] button > .button-box,
-notification[value="translation"] button[type="menu"] > .button-box > .button-menu-dropmarker {
-  padding: 0;
-  -moz-margin-start: 3ch;
-}
-
-notification[value="translation"] button:not([type="menu"]) > .button-box {
-  -moz-margin-end: 3ch;
-}
-
-notification[value="translation"] button,
-notification[value="translation"] menulist,
-notification[value="translation"] menulist > .menulist-label-box {
-  -moz-margin-start: 1ch;
-  -moz-margin-end: 1ch;
 }
 
 notification[value="translation"] menulist > .menulist-dropmarker {

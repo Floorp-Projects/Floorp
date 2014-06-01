@@ -2437,7 +2437,9 @@ nsWindow::DrawWindowUnderlay(LayerManagerComposite* aManager, nsIntRect aRect)
 void
 nsWindow::DrawWindowOverlay(LayerManagerComposite* aManager, nsIntRect aRect)
 {
-    PROFILER_LABEL("nsWindow", "DrawWindowOverlay");
+    PROFILER_LABEL("nsWindow", "DrawWindowOverlay",
+        js::ProfileEntry::Category::GRAPHICS);
+
     JNIEnv *env = GetJNIForThread();
 
     AutoLocalJNIFrame jniFrame(env);
