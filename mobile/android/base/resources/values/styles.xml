@@ -452,11 +452,12 @@
     <style name="RemoteTabsPanelChildBase">
         <item name="android:paddingLeft">16dp</item>
         <item name="android:paddingRight">16dp</item>
+        <item name="android:paddingTop">62dp</item>
+        <item name="android:orientation">vertical</item>
     </style>
 
     <style name="RemoteTabsPanelChild" parent="RemoteTabsPanelChildBase">
-        <item name="android:orientation">vertical</item>
-        <item name="android:paddingTop">62dp</item>
+        <!-- We set values in landscape. -->
     </style>
 
     <style name="RemoteTabsSectionBase">
@@ -469,14 +470,14 @@
         <!-- We set values in landscape. -->
     </style>
 
-    <style name="RemoteTabsSection.Resend" parent="RemoteTabsSectionBase">
-        <!-- We set values in landscape. -->
-    </style>
-
-    <style name="RemoteTabsItem">
+    <style name="RemoteTabsItemBase">
         <item name="android:layout_marginBottom">28dp</item>
         <item name="android:layout_gravity">center</item>
         <item name="android:gravity">center</item>
+    </style>
+
+    <style name="RemoteTabsItem" parent="RemoteTabsItemBase">
+        <!-- We set values in landscape. -->
     </style>
 
     <style name="RemoteTabsItem.ButtonBase">

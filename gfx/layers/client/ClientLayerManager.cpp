@@ -183,7 +183,9 @@ ClientLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
                                            void* aCallbackData,
                                            EndTransactionFlags)
 {
-  PROFILER_LABEL("ClientLayerManager", "EndTransactionInternal");
+  PROFILER_LABEL("ClientLayerManager", "EndTransactionInternal",
+    js::ProfileEntry::Category::GRAPHICS);
+
 #ifdef MOZ_LAYERS_HAVE_LOG
   MOZ_LAYERS_LOG(("  ----- (beginning paint)"));
   Log();
