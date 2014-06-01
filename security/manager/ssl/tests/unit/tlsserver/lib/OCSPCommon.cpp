@@ -113,6 +113,12 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
     context.thisUpdate = oldNow;
     context.nextUpdate = oldNow + 10 * PR_USEC_PER_SEC;
   }
+  if (aORT == ORTLongValidityAlmostExpired) {
+    context.thisUpdate = now - (320 * oneDay);
+  }
+  if (aORT == ORTAncientAlmostExpired) {
+    context.thisUpdate = now - (640 * oneDay);
+  }
   if (aORT == ORTRevoked) {
     context.certStatus = 1;
   }

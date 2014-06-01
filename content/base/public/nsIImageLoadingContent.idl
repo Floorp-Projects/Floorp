@@ -37,7 +37,7 @@ interface nsIFrame;
  * interface to mirror this interface when changing it.
  */
 
-[scriptable, builtinclass, uuid(e3968acd-b796-4ca3-aec0-e7f0880f2219)]
+[scriptable, builtinclass, uuid(256a5283-ebb5-4430-8e15-5ada92156ef7)]
 interface nsIImageLoadingContent : imgINotificationObserver
 {
   /**
@@ -159,6 +159,13 @@ interface nsIImageLoadingContent : imgINotificationObserver
    * as PR_FALSE to revert ImageState() to its original behaviour.
    */
   void forceImageState(in boolean aForce, in unsigned long long aState);
+
+  /**
+   * The intrinsic size and width of this content. May differ from actual image
+   * size due to things like responsive image density.
+   */
+  readonly attribute unsigned long    naturalWidth;
+  readonly attribute unsigned long    naturalHeight;
 
   /**
    * A visible count is stored, if it is non-zero then this image is considered

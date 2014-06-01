@@ -120,7 +120,7 @@ StringBuffer::appendInflated(const char *cstr, size_t cstrlen)
     size_t lengthBefore = length();
     if (!cb.growByUninitialized(cstrlen))
         return false;
-    InflateStringToBuffer(cstr, cstrlen, begin() + lengthBefore);
+    CopyAndInflateChars(begin() + lengthBefore, cstr, cstrlen);
     return true;
 }
 

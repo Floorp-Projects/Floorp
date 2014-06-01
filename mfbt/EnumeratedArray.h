@@ -59,12 +59,6 @@ class EnumeratedArray
         mArray[i] = aOther.mArray[i];
     }
 
-    explicit EnumeratedArray(const ValueType (&aOther)[Size])
-    {
-      for (size_t i = 0; i < Size; i++)
-        mArray[i] = aOther[i];
-    }
-
     ValueType& operator[](IndexType aIndex)
     {
       return mArray[size_t(aIndex)];

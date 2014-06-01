@@ -137,7 +137,7 @@ class gcstats::StatisticsSerializer
             return nullptr;
         }
 
-        InflateStringToBuffer(buf, nchars, out);
+        CopyAndInflateChars(out, buf, nchars);
         js_free(buf);
 
         out[nchars] = 0;
