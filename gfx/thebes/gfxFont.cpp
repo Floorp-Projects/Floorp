@@ -2790,7 +2790,9 @@ struct GlyphBuffer {
                 FlushStroke(aCR, aContextPaint, aGlobalMatrix);
             }
             if (int(aDrawMode) & int(DrawMode::GLYPH_FILL)) {
-                PROFILER_LABEL("GlyphBuffer", "cairo_show_glyphs");
+                PROFILER_LABEL("GlyphBuffer", "Flush::cairo_show_glyphs",
+                    js::ProfileEntry::Category::GRAPHICS);
+
                 nsRefPtr<gfxPattern> pattern;
                 if (aContextPaint &&
                     !!(pattern = aContextPaint->GetFillPattern(aGlobalMatrix))) {

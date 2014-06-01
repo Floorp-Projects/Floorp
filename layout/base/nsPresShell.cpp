@@ -3966,8 +3966,8 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
   // Make sure that we don't miss things added to mozFlushType!
   MOZ_ASSERT(static_cast<uint32_t>(flushType) <= ArrayLength(flushTypeNames));
 
-  PROFILER_LABEL_PRINTF("layout", "Flush", "(Flush_%s)",
-                      flushTypeNames[flushType - 1]);
+  PROFILER_LABEL_PRINTF("PresShell", "Flush",
+    js::ProfileEntry::Category::GRAPHICS, "(Flush_%s)", flushTypeNames[flushType - 1]);
 #endif
 
 #ifdef ACCESSIBILITY
@@ -5813,7 +5813,9 @@ PresShell::Paint(nsView*        aViewToPaint,
                  const nsRegion& aDirtyRegion,
                  uint32_t        aFlags)
 {
-  PROFILER_LABEL("Paint", "PresShell::Paint");
+  PROFILER_LABEL("PresShell", "Paint",
+    js::ProfileEntry::Category::GRAPHICS);
+
   NS_ASSERTION(!mIsDestroying, "painting a destroyed PresShell");
   NS_ASSERTION(aViewToPaint, "null view");
 
@@ -8370,7 +8372,9 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   nsIURI *uri = mDocument->GetDocumentURI();
   if (uri)
     uri->GetSpec(docURL);
-  PROFILER_LABEL_PRINTF("layout", "DoReflow", "(%s)", docURL.get());
+
+  PROFILER_LABEL_PRINTF("PresShell", "DoReflow",
+    js::ProfileEntry::Category::GRAPHICS, "(%s)", docURL.get());
 
   if (mReflowContinueTimer) {
     mReflowContinueTimer->Cancel();

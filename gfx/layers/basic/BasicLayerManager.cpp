@@ -570,7 +570,9 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
                                           void* aCallbackData,
                                           EndTransactionFlags aFlags)
 {
-  PROFILER_LABEL("BasicLayerManager", "EndTransactionInternal");
+  PROFILER_LABEL("BasicLayerManager", "EndTransactionInternal",
+    js::ProfileEntry::Category::GRAPHICS);
+
 #ifdef MOZ_LAYERS_HAVE_LOG
   MOZ_LAYERS_LOG(("  ----- (beginning paint)"));
   Log();
@@ -880,7 +882,9 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
                               DrawThebesLayerCallback aCallback,
                               void* aCallbackData)
 {
-  PROFILER_LABEL("BasicLayerManager", "PaintLayer");
+  PROFILER_LABEL("BasicLayerManager", "PaintLayer",
+    js::ProfileEntry::Category::GRAPHICS);
+
   PaintLayerContext paintLayerContext(aTarget, aLayer, aCallback, aCallbackData);
 
   // Don't attempt to paint layers with a singular transform, cairo will

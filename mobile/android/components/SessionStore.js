@@ -842,7 +842,11 @@ SessionStore.prototype = {
     let closedTab = closedTabs.splice(aIndex, 1).shift();
 
     // create a new tab and bring to front
-    let params = { selected: true };
+    let params = {
+      selected: true,
+      isPrivate: closedTab.isPrivate,
+      desktopMode: closedTab.desktopMode
+    };
     let tab = aWindow.BrowserApp.addTab(closedTab.entries[closedTab.index - 1].url, params);
     this._restoreHistory(closedTab, tab.browser.sessionHistory);
 

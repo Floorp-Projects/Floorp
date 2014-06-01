@@ -658,7 +658,9 @@ ClientTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
 
     const nsIntRect bounds = aPaintRegion.GetBounds();
     {
-      PROFILER_LABEL("ClientTiledLayerBuffer", "PaintThebesSingleBufferAlloc");
+      PROFILER_LABEL("ClientTiledLayerBuffer", "PaintThebesSingleBufferAlloc",
+        js::ProfileEntry::Category::GRAPHICS);
+
       gfxImageFormat format =
         gfxPlatform::GetPlatform()->OptimalFormatForContent(
           GetContentType());
@@ -686,7 +688,8 @@ ClientTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
     }
     start = PR_IntervalNow();
 #endif
-    PROFILER_LABEL("ClientTiledLayerBuffer", "PaintThebesSingleBufferDraw");
+    PROFILER_LABEL("ClientTiledLayerBuffer", "PaintThebesSingleBufferDraw",
+      js::ProfileEntry::Category::GRAPHICS);
 
     mCallback(mThebesLayer, ctxt, aPaintRegion, DrawRegionClip::CLIP_NONE, nsIntRegion(), mCallbackData);
   }
@@ -706,7 +709,9 @@ ClientTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   start = PR_IntervalNow();
 #endif
 
-  PROFILER_LABEL("ClientTiledLayerBuffer", "PaintThebesUpdate");
+  PROFILER_LABEL("ClientTiledLayerBuffer", "PaintThebesUpdate",
+    js::ProfileEntry::Category::GRAPHICS);
+
   Update(aNewValidRegion, aPaintRegion);
 
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
@@ -727,7 +732,8 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
                                     const nsIntPoint& aTileOrigin,
                                     const nsIntRegion& aDirtyRegion)
 {
-  PROFILER_LABEL("ClientTiledLayerBuffer", "ValidateTile");
+  PROFILER_LABEL("ClientTiledLayerBuffer", "ValidateTile",
+    js::ProfileEntry::Category::GRAPHICS);
 
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
   if (aDirtyRegion.IsComplex()) {
@@ -962,7 +968,9 @@ ClientTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInval
     // non-low-precision paint, as in that situation, we're about to override
     // front-end's page/viewport metrics.
     if (!aPaintData->mFirstPaint || drawingLowPrecision) {
-      PROFILER_LABEL("ContentClient", "Abort painting");
+      PROFILER_LABEL("ClientTiledLayerBuffer", "ComputeProgressiveUpdateRegion",
+        js::ProfileEntry::Category::GRAPHICS);
+
       aRegionToPaint.SetEmpty();
       return aIsRepeated;
     }
