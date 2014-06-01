@@ -227,7 +227,7 @@ private:
     }
     static PLHashNumber HashKey(const void* aKey)
     {
-        return NS_PTR_TO_INT32(aKey) >> 2;
+        return static_cast<PLHashNumber>(NS_PTR_TO_INT32(aKey) >> 2);
     }
     static const PLHashAllocOps kAllocOps;
 

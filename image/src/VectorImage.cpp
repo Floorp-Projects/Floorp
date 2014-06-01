@@ -720,6 +720,11 @@ VectorImage::GetFrame(uint32_t aWhichFrame,
     CreateOffscreenContentDrawTarget(IntSize(imageIntSize.width,
                                              imageIntSize.height),
                                      SurfaceFormat::B8G8R8A8);
+  if (!dt) {
+    NS_ERROR("Could not create a DrawTarget");
+    return nullptr;
+  }
+
   nsRefPtr<gfxContext> context = new gfxContext(dt);
 
   nsresult rv = Draw(context, GraphicsFilter::FILTER_NEAREST, gfxMatrix(),

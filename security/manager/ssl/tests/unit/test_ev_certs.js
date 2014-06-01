@@ -210,6 +210,65 @@ function add_tests_in_mode(useMozillaPKIX)
     });
   });
 
+  // Bug 991815 old but valid intermediates are OK
+  add_test(function () {
+    clearOCSPCache();
+    let ocspResponder = startOCSPResponder(SERVER_PORT, "www.example.com", [],
+                          "test_ev_certs",
+                          isDebugBuild ? ["int-ev-valid", "ev-valid"]
+                                       : ["ev-valid"],
+                          [], [],
+                          isDebugBuild ? ["longvalidityalmostold", "good"]
+                                       : ["good"]);
+    check_ee_for_ev("ev-valid", isDebugBuild);
+    ocspResponder.stop(run_next_test);
+  });
+
+  // Bug 991815 old but valid end-entities are NOT OK for EV
+  // Unfortunatelly because of soft-fail we consider these OK for DV
+  // libpkix does not enforce the age restriction and thus EV is valid
+  add_test(function () {
+    clearOCSPCache();
+    // Since Mozilla::pkix does not consider the old amost invalid OCSP
+    // response valid, it does not cache the old response and thus
+    // makes a separate request for DV
+    let debugCertNickArray = ["int-ev-valid", "ev-valid", "ev-valid"];
+    let debugResponseArray = ["good", "longvalidityalmostold",
+                              "longvalidityalmostold"];
+    if (!useMozillaPKIX) {
+      debugCertNickArray = ["int-ev-valid", "ev-valid"];
+      debugResponseArray = ["good", "longvalidityalmostold"];
+    }
+    let ocspResponder = startOCSPResponder(SERVER_PORT, "www.example.com", [],
+                          "test_ev_certs",
+                          isDebugBuild ? debugCertNickArray : ["ev-valid"],
+                          [], [],
+                          isDebugBuild ? debugResponseArray
+                                       : ["longvalidityalmostold"]);
+    check_ee_for_ev("ev-valid", !useMozillaPKIX && isDebugBuild);
+    ocspResponder.stop(run_next_test);
+  });
+
+  // Bug 991815 Valid but Ancient (almost two year old) responses are Not OK for
+  // EV (still OK for soft fail DV)
+  add_test(function () {
+    clearOCSPCache();
+    let debugCertNickArray = ["int-ev-valid", "ev-valid", "ev-valid"];
+    let debugResponseArray = ["good", "ancientstillvalid",
+                              "ancientstillvalid"];
+    if (!useMozillaPKIX) {
+      debugCertNickArray = ["int-ev-valid", "ev-valid"];
+      debugResponseArray = ["good", "ancientstillvalid"];
+    }
+    let ocspResponder = startOCSPResponder(SERVER_PORT, "www.example.com", [],
+                          "test_ev_certs",
+                          isDebugBuild ? debugCertNickArray : ["ev-valid"],
+                          [], [],
+                          isDebugBuild ? debugResponseArray
+                                       : ["ancientstillvalid"]);
+    check_ee_for_ev("ev-valid", !useMozillaPKIX && isDebugBuild);
+    ocspResponder.stop(run_next_test);
+  });
 }
 
 // bug 950240: add FLAG_MUST_BE_EV to CertVerifier::VerifyCert

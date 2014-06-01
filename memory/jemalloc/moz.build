@@ -43,6 +43,8 @@ FORCE_STATIC_LIB = True
 if CONFIG['_MSC_VER']:
     DEFINES['DLLEXPORT'] = True
     LOCAL_INCLUDES += ['src/include/msvc_compat']
+    if not CONFIG['HAVE_INTTYPES_H']:
+        LOCAL_INCLUDES += ['src/include/msvc_compat/C99']
 
 if CONFIG['OS_TARGET'] == 'Linux':
     # For mremap

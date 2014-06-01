@@ -1,5 +1,7 @@
 #!/bin/sh
 
+PLATFORM=`uname`
+
 # Default srcdir to this directory
 srcdir=
 
@@ -35,14 +37,31 @@ fi
 
 echo "$LLVMCONFIG"
 
+LLVMLIBS="core mc analysis asmparser mcparser bitreader"
 LLVMCXXFLAGS=`$LLVMCONFIG --cxxflags`
 LLVMLDFLAGS=`$LLVMCONFIG --ldflags`
+LLVMLDFLAGS="$LLVMLDFLAGS `$LLVMCONFIG --libs $LLVMLIBS`"
+
+if [ $PLATFORM == Darwin ]; then
+  DSO_LDOPTS="-dynamiclib -shared"
+  CLANGLDFLAGS="-lclangFrontend -lclangDriver -lclangSerialization \
+                 -lclangParse -lclangSema -lclangAnalysis -lclangEdit -lclangAST \
+                 -lclangLex -lclangBasic -lclangASTMatchers"
+  DLL_SUFFIX="dylib"
+else
+  DSO_LDOPTS="-shared"
+  CLANGLDFLAGS=-lclangASTMatchers
+  DLL_SUFFIX="so"
+fi
+
 CXXFLAGS="$CXXFLAGS $LLVMCXXFLAGS -fno-rtti -fno-exceptions"
-LDFLAGS="$LDFLAGS $LLVMLDFLAGS"
+LDFLAGS="$LDFLAGS $LLVMLDFLAGS $CLANGLDFLAGS"
 
 cat $srcdir/Makefile.in | sed \
   -e "s%@CXX@%$CXX%" \
   -e "s%@CXXFLAGS@%$CXXFLAGS%" \
   -e "s%@LDFLAGS@%$LDFLAGS%" \
   -e "s%@srcdir@%$srcdir%" \
+  -e "s%@DSO_LDOPTS@%$DSO_LDOPTS%" \
+  -e "s%@DLL_SUFFIX@%$DLL_SUFFIX%" \
   > Makefile

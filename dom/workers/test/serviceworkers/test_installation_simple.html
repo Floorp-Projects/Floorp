@@ -1,0 +1,79 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 930348 - test stub Navigator ServiceWorker utilities.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  function simpleRegister() {
+    var p = navigator.serviceWorker.register("/fake_worker.js");
+    ok(p instanceof Promise, "register() should return a Promise");
+    return Promise.resolve();
+  }
+
+  function sameOriginWorker() {
+    p = navigator.serviceWorker.register("http://some-other-origin/worker.js");
+    return p.then(function(w) {
+      ok(false, "Worker from different origin should fail");
+    }, function(e) {
+      ok(e.name === "SecurityError", "Should fail with a SecurityError");
+    });
+  }
+
+  function sameOriginScope() {
+    p = navigator.serviceWorker.register("worker.js", { scope: "http://www.example.com/*" });
+    return p.then(function(w) {
+      ok(false, "Worker controlling scope for different origin should fail");
+    }, function(e) {
+      ok(e.name === "SecurityError", "Should fail with a SecurityError");
+    });
+  }
+
+  function httpsOnly() {
+    var promise = new Promise(function(resolve) {
+      SpecialPowers.pushPrefEnv({'set': [["dom.serviceWorkers.testing.enabled", false]] }, resolve);
+    });
+
+    return promise.then(function() {
+      return navigator.serviceWorker.register("/worker.js");
+    }).then(function(w) {
+      ok(false, "non-HTTPS pages cannot register ServiceWorkers");
+    }, function(e) {
+      ok(e.name === "SecurityError", "Should fail with a SecurityError");
+    });
+  }
+
+  function runTest() {
+    simpleRegister()
+      .then(sameOriginWorker)
+      .then(sameOriginScope)
+      .then(httpsOnly)
+      // put more tests here.
+      .then(function() {
+        SimpleTest.finish();
+      }).catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+        SimpleTest.finish();
+      });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
+

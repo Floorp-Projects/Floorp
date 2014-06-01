@@ -10,6 +10,7 @@ api.simple.com: did not receive HSTS header
 apis.google.com: did not receive HSTS header (error ignored - included regardless)
 app.lookout.com: could not connect to host
 appengine.google.com: did not receive HSTS header (error ignored - included regardless)
+appseccalifornia.org: could not connect to host
 bassh.net: did not receive HSTS header
 bcrook.com: max-age too low: 86400
 betnet.fr: could not connect to host
@@ -25,10 +26,10 @@ checkout.google.com: did not receive HSTS header (error ignored - included regar
 chrome-devtools-frontend.appspot.com: did not receive HSTS header (error ignored - included regardless)
 chrome.google.com: did not receive HSTS header (error ignored - included regardless)
 cloud.google.com: did not receive HSTS header (error ignored - included regardless)
-cloudns.com.au: could not connect to host
 code.google.com: did not receive HSTS header (error ignored - included regardless)
 codereview.chromium.org: did not receive HSTS header (error ignored - included regardless)
 crate.io: did not receive HSTS header
+crbug.com: did not receive HSTS header
 crowdcurity.com: did not receive HSTS header
 crypto.is: did not receive HSTS header
 csawctf.poly.edu: did not receive HSTS header
@@ -103,7 +104,7 @@ simon.butcher.name: max-age too low: 2629743
 sites.google.com: did not receive HSTS header (error ignored - included regardless)
 sol.io: could not connect to host
 souyar.de: could not connect to host
-souyar.net: did not receive HSTS header
+souyar.net: could not connect to host
 souyar.us: could not connect to host
 spreadsheets.google.com: did not receive HSTS header (error ignored - included regardless)
 square.com: did not receive HSTS header
@@ -118,11 +119,9 @@ talk.google.com: did not receive HSTS header (error ignored - included regardles
 talkgadget.google.com: did not receive HSTS header (error ignored - included regardless)
 translate.googleapis.com: did not receive HSTS header (error ignored - included regardless)
 uprotect.it: could not connect to host
-usaa.com: did not receive HSTS header
 wallet.google.com: did not receive HSTS header (error ignored - included regardless)
 webmail.mayfirst.org: did not receive HSTS header
 wepay.com: max-age too low: 2592000
-wf-bigsky-master.appspot.com: did not receive HSTS header (error ignored - included regardless)
 whonix.org: did not receive HSTS header
 www.calyxinstitute.org: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 125"  data: no]
 www.cueup.com: did not receive HSTS header
@@ -132,6 +131,7 @@ www.gmail.com: did not receive HSTS header (error ignored - included regardless)
 www.googlemail.com: did not receive HSTS header (error ignored - included regardless)
 www.gov.uk: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 125"  data: no]
 www.greplin.com: could not connect to host
+www.intercom.io: did not receive HSTS header
 www.jitsi.org: did not receive HSTS header
 www.lastpass.com: did not receive HSTS header
 www.ledgerscope.net: did not receive HSTS header
