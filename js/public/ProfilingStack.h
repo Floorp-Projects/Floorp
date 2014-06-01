@@ -8,6 +8,7 @@
 #define js_ProfilingStack_h
 
 #include "mozilla/NullPtr.h"
+#include "mozilla/TypedEnum.h"
 
 #include "jsbytecode.h"
 #include "jstypes.h"
@@ -63,6 +64,21 @@ class ProfileEntry
         FRAME_LABEL_COPY = 0x02
     };
 
+    MOZ_BEGIN_NESTED_ENUM_CLASS(Category, uint32_t)
+        OTHER    = 0x04,
+        CSS      = 0x08,
+        JS       = 0x10,
+        GC       = 0x20,
+        CC       = 0x40,
+        NETWORK  = 0x80,
+        GRAPHICS = 0x100,
+        STORAGE  = 0x200,
+        EVENTS   = 0x400,
+
+        FIRST    = OTHER,
+        LAST     = EVENTS
+    MOZ_END_NESTED_ENUM_CLASS(Category)
+
     // All of these methods are marked with the 'volatile' keyword because SPS's
     // representation of the stack is stored such that all ProfileEntry
     // instances are volatile. These methods would not be available unless they
@@ -84,18 +100,18 @@ class ProfileEntry
     void setCppFrame(void *aSp, uint32_t aLine) volatile {
         flags |= IS_CPP_ENTRY;
         spOrScript = aSp;
-        lineOrPc = aLine;
+        lineOrPc = static_cast<int32_t>(aLine);
     }
 
-    void setFlag(Flags flag) volatile {
+    void setFlag(uint32_t flag) volatile {
         MOZ_ASSERT(flag != IS_CPP_ENTRY);
         flags |= flag;
     }
-    void unsetFlag(Flags flag) volatile {
+    void unsetFlag(uint32_t flag) volatile {
         MOZ_ASSERT(flag != IS_CPP_ENTRY);
         flags &= ~flag;
     }
-    bool hasFlag(Flags flag) const volatile {
+    bool hasFlag(uint32_t flag) const volatile {
         return bool(flags & uint32_t(flag));
     }
 
@@ -109,7 +125,7 @@ class ProfileEntry
     }
     uint32_t line() const volatile {
         MOZ_ASSERT(!isJs());
-        return lineOrPc;
+        return static_cast<uint32_t>(lineOrPc);
     }
 
     // We can't know the layout of JSScript, so look in vm/SPSProfiler.cpp.

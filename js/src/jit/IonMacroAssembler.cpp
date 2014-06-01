@@ -484,7 +484,7 @@ MacroAssembler::nurseryAllocate(Register result, Register slots, gc::AllocKind a
     int totalSize = thingSize + nDynamicSlots * sizeof(HeapSlot);
     loadPtr(AbsoluteAddress(nursery.addressOfPosition()), result);
     computeEffectiveAddress(Address(result, totalSize), temp);
-    branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(nursery.addressOfCurrentEnd()), temp, fail);
+    branchPtr(Assembler::Below, AbsoluteAddress(nursery.addressOfCurrentEnd()), temp, fail);
     storePtr(temp, AbsoluteAddress(nursery.addressOfPosition()));
 
     if (nDynamicSlots)
@@ -877,6 +877,26 @@ MacroAssembler::loadStringChars(Register str, Register dest)
 
     bind(&isInline);
     computeEffectiveAddress(Address(str, JSInlineString::offsetOfInlineStorage()), dest);
+
+    bind(&done);
+}
+
+void
+MacroAssembler::loadStringChar(Register str, Register index, Register output)
+{
+    MOZ_ASSERT(str != output);
+    MOZ_ASSERT(index != output);
+
+    loadStringChars(str, output);
+
+    Label isLatin1, done;
+    branchTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
+                 Imm32(JSString::LATIN1_CHARS_BIT), &isLatin1);
+    load16ZeroExtend(BaseIndex(output, index, TimesTwo), output);
+    jump(&done);
+
+    bind(&isLatin1);
+    load8ZeroExtend(BaseIndex(output, index, TimesOne), output);
 
     bind(&done);
 }

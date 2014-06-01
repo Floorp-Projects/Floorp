@@ -310,15 +310,15 @@ static inline void profiler_tracing(const char* aCategory, const char* aInfo,
 #define SAMPLER_APPEND_LINE_NUMBER_EXPAND(id, line) SAMPLER_APPEND_LINE_NUMBER_PASTE(id, line)
 #define SAMPLER_APPEND_LINE_NUMBER(id) SAMPLER_APPEND_LINE_NUMBER_EXPAND(id, __LINE__)
 
-#define PROFILER_LABEL(name_space, info) MOZ_PLATFORM_TRACING(name_space "::" info) mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__)
-#define PROFILER_LABEL_PRINTF(name_space, info, ...) MOZ_PLATFORM_TRACING(name_space "::" info) mozilla::SamplerStackFramePrintfRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__, __VA_ARGS__)
+#define PROFILER_LABEL(name_space, info, category) MOZ_PLATFORM_TRACING(name_space "::" info) mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, category, __LINE__)
+#define PROFILER_LABEL_PRINTF(name_space, info, category, ...) MOZ_PLATFORM_TRACING(name_space "::" info) mozilla::SamplerStackFramePrintfRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, category, __LINE__, __VA_ARGS__)
 
 #define PROFILER_MARKER(info) mozilla_sampler_add_marker(info)
 #define PROFILER_MARKER_PAYLOAD(info, payload) mozilla_sampler_add_marker(info, payload)
 #define PROFILER_MAIN_THREAD_MARKER(info)  MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread"); mozilla_sampler_add_marker(info)
 
-#define PROFILER_MAIN_THREAD_LABEL(name_space, info)  MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread"); mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__)
-#define PROFILER_MAIN_THREAD_LABEL_PRINTF(name_space, info, ...)  MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread"); mozilla::SamplerStackFramePrintfRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__, __VA_ARGS__)
+#define PROFILER_MAIN_THREAD_LABEL(name_space, info, category)  MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread"); mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, category, __LINE__)
+#define PROFILER_MAIN_THREAD_LABEL_PRINTF(name_space, info, category, ...)  MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread"); mozilla::SamplerStackFramePrintfRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, category, __LINE__, __VA_ARGS__)
 
 
 /* FIXME/bug 789667: memory constraints wouldn't much of a problem for
@@ -367,8 +367,10 @@ namespace mozilla {
 class MOZ_STACK_CLASS SamplerStackFrameRAII {
 public:
   // we only copy the strings at save time, so to take multiple parameters we'd need to copy them then.
-  SamplerStackFrameRAII(const char *aInfo, uint32_t line) {
-    mHandle = mozilla_sampler_call_enter(aInfo, this, false, line);
+  SamplerStackFrameRAII(const char *aInfo,
+    js::ProfileEntry::Category aCategory, uint32_t line)
+  {
+    mHandle = mozilla_sampler_call_enter(aInfo, aCategory, this, false, line);
   }
   ~SamplerStackFrameRAII() {
     mozilla_sampler_call_exit(mHandle);
@@ -381,7 +383,9 @@ static const int SAMPLER_MAX_STRING = 128;
 class MOZ_STACK_CLASS SamplerStackFramePrintfRAII {
 public:
   // we only copy the strings at save time, so to take multiple parameters we'd need to copy them then.
-  SamplerStackFramePrintfRAII(const char *aDefault, uint32_t line, const char *aFormat, ...) {
+  SamplerStackFramePrintfRAII(const char *aInfo,
+    js::ProfileEntry::Category aCategory, uint32_t line, const char *aFormat, ...)
+  {
     if (profiler_is_active() && !profiler_in_privacy_mode()) {
       va_list args;
       va_start(args, aFormat);
@@ -391,15 +395,15 @@ public:
       // the vargs.
 #if _MSC_VER
       _vsnprintf(buff, SAMPLER_MAX_STRING, aFormat, args);
-      _snprintf(mDest, SAMPLER_MAX_STRING, "%s %s", aDefault, buff);
+      _snprintf(mDest, SAMPLER_MAX_STRING, "%s %s", aInfo, buff);
 #else
       ::vsnprintf(buff, SAMPLER_MAX_STRING, aFormat, args);
-      ::snprintf(mDest, SAMPLER_MAX_STRING, "%s %s", aDefault, buff);
+      ::snprintf(mDest, SAMPLER_MAX_STRING, "%s %s", aInfo, buff);
 #endif
-      mHandle = mozilla_sampler_call_enter(mDest, this, true, line);
+      mHandle = mozilla_sampler_call_enter(mDest, aCategory, this, true, line);
       va_end(args);
     } else {
-      mHandle = mozilla_sampler_call_enter(aDefault, this, false, line);
+      mHandle = mozilla_sampler_call_enter(aInfo, aCategory, this, false, line);
     }
   }
   ~SamplerStackFramePrintfRAII() {
@@ -419,8 +423,8 @@ inline PseudoStack* mozilla_get_pseudo_stack(void)
   return tlsPseudoStack.get();
 }
 
-inline void* mozilla_sampler_call_enter(const char *aInfo, void *aFrameAddress,
-                                        bool aCopy, uint32_t line)
+inline void* mozilla_sampler_call_enter(const char *aInfo,
+  js::ProfileEntry::Category aCategory, void *aFrameAddress, bool aCopy, uint32_t line)
 {
   // check if we've been initialized to avoid calling pthread_getspecific
   // with a null tlsStack which will return undefined results.
@@ -435,7 +439,7 @@ inline void* mozilla_sampler_call_enter(const char *aInfo, void *aFrameAddress,
   if (!stack) {
     return stack;
   }
-  stack->push(aInfo, aFrameAddress, aCopy, line);
+  stack->push(aInfo, aCategory, aFrameAddress, aCopy, line);
 
   // The handle is meant to support future changes
   // but for now it is simply use to save a call to

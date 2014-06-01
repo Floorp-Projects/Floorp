@@ -609,7 +609,9 @@ Statement::Execute()
 NS_IMETHODIMP
 Statement::ExecuteStep(bool *_moreResults)
 {
-  PROFILER_LABEL("storage", "Statement::ExecuteStep");
+  PROFILER_LABEL("Statement", "ExecuteStep",
+    js::ProfileEntry::Category::STORAGE);
+
   if (!mDBStatement)
     return NS_ERROR_NOT_INITIALIZED;
 

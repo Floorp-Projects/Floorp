@@ -52,6 +52,9 @@ public:
     aURL = mURL;
   }
 
+  WorkerPrivate*
+  GetWorkerPrivate() const;
+
 private:
   // This class can only be created from the RuntimeService.
   ServiceWorker(nsPIDOMWindow* aWindow, SharedWorker* aSharedWorker);

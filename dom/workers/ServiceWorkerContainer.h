@@ -36,6 +36,7 @@ public:
   explicit ServiceWorkerContainer(nsPIDOMWindow* aWindow)
     : mWindow(aWindow)
   {
+    // FIXME(nsm): Bug 983497. Here the NSW should hook into SWM to be notified of events.
     SetIsDOMBinding();
   }
 
@@ -82,7 +83,9 @@ public:
                                        ErrorResult& aRv);
 private:
   ~ServiceWorkerContainer()
-  { }
+  {
+    // FIXME(nsm): Bug 983497. Unhook from events.
+  }
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
 };

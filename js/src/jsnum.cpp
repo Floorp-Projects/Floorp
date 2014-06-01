@@ -605,7 +605,7 @@ js::Int32ToString(ThreadSafeContext *cx, int32_t si)
     jschar *start = BackfillInt32InBuffer(si, buffer,
                                           JSFatInlineString::MAX_LENGTH_TWO_BYTE + 1, &length);
 
-    PodCopy(str->init(length), start, length + 1);
+    PodCopy(str->initTwoByte(length), start, length + 1);
 
     CacheNumber(cx, si, str);
     return str;
@@ -1437,7 +1437,7 @@ js::IndexToString(JSContext *cx, uint32_t index)
     *end = '\0';
     RangedPtr<jschar> start = BackfillIndexInCharBuffer(index, end);
 
-    jschar *dst = str->init(end - start);
+    jschar *dst = str->initTwoByte(end - start);
     PodCopy(dst, start.get(), end - start + 1);
 
     c->dtoaCache.cache(10, index, str);
@@ -1533,11 +1533,12 @@ CharsToNumber(ThreadSafeContext *cx, const jschar *chars, size_t length, double 
 bool
 js::StringToNumber(ThreadSafeContext *cx, JSString *str, double *result)
 {
+    AutoCheckCannotGC nogc;
     ScopedThreadSafeStringInspector inspector(str);
-    if (!inspector.ensureChars(cx))
+    if (!inspector.ensureChars(cx, nogc))
         return false;
 
-    return CharsToNumber(cx, inspector.chars(), str->length(), result);
+    return CharsToNumber(cx, inspector.twoByteChars(), str->length(), result);
 }
 
 bool
