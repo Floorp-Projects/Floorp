@@ -181,9 +181,7 @@ nsDOMWindowUtils::GetLayerTransaction()
 NS_IMETHODIMP
 nsDOMWindowUtils::GetImageAnimationMode(uint16_t *aMode)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   NS_ENSURE_ARG_POINTER(aMode);
   *aMode = 0;
@@ -198,9 +196,7 @@ nsDOMWindowUtils::GetImageAnimationMode(uint16_t *aMode)
 NS_IMETHODIMP
 nsDOMWindowUtils::SetImageAnimationMode(uint16_t aMode)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsPresContext* presContext = GetPresContext();
   if (presContext) {
@@ -215,9 +211,7 @@ nsDOMWindowUtils::GetDocCharsetIsForced(bool *aIsForced)
 {
   *aIsForced = false;
 
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsIDocument* doc = GetDocument();
   *aIsForced = doc &&
@@ -229,9 +223,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GetDocumentMetadata(const nsAString& aName,
                                       nsAString& aValue)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsIDocument* doc = GetDocument();
   if (doc) {
@@ -247,9 +239,7 @@ nsDOMWindowUtils::GetDocumentMetadata(const nsAString& aName,
 NS_IMETHODIMP
 nsDOMWindowUtils::Redraw(uint32_t aCount, uint32_t *aDurationOut)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   if (aCount == 0)
     aCount = 1;
@@ -328,9 +318,7 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
                                            nsIDOMElement* aElement,
                                            uint32_t aPriority)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsIPresShell* presShell = GetPresShell();
   if (!presShell) {
@@ -453,9 +441,7 @@ nsDOMWindowUtils::SetDisplayPortBaseForElement(int32_t aX,
                                                int32_t aHeight,
                                                nsIDOMElement* aElement)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsIPresShell* presShell = GetPresShell();
   if (!presShell) {
@@ -505,9 +491,7 @@ nsDOMWindowUtils::SetResolution(float aXResolution, float aYResolution)
 NS_IMETHODIMP
 nsDOMWindowUtils::GetResolution(float* aXResolution, float* aYResolution)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsIPresShell* presShell = GetPresShell();
   if (!presShell) {
@@ -529,9 +513,7 @@ nsDOMWindowUtils::GetResolution(float* aXResolution, float* aYResolution)
 
 NS_IMETHODIMP
 nsDOMWindowUtils::GetIsResolutionSet(bool* aIsResolutionSet) {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsIPresShell* presShell = GetPresShell();
   if (!presShell) {
@@ -715,9 +697,7 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
                                        bool *aPreventDefault,
                                        bool aIsSynthesized)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   // get the widget to send the event to
   nsPoint offset;
@@ -810,9 +790,7 @@ nsDOMWindowUtils::SendPointerEvent(const nsAString& aType,
                                    uint8_t aOptionalArgCount,
                                    bool* aPreventDefault)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   // get the widget to send the event to
   nsPoint offset;
@@ -884,9 +862,7 @@ nsDOMWindowUtils::SendWheelEvent(float aX,
                                  int32_t aLineOrPageDeltaY,
                                  uint32_t aOptions)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   // get the widget to send the event to
   nsPoint offset;
@@ -1022,9 +998,7 @@ nsDOMWindowUtils::SendTouchEventCommon(const nsAString& aType,
                                        bool aToWindow,
                                        bool* aPreventDefault)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   // get the widget to send the event to
   nsPoint offset;
@@ -1100,9 +1074,7 @@ nsDOMWindowUtils::SendKeyEvent(const nsAString& aType,
                                uint32_t aAdditionalFlags,
                                bool* aDefaultActionTaken)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   // get the widget to send the event to
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -1214,9 +1186,7 @@ nsDOMWindowUtils::SendNativeKeyEvent(int32_t aNativeKeyboardLayout,
                                      const nsAString& aCharacters,
                                      const nsAString& aUnmodifiedCharacters)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   // get the widget to send the event to
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -1234,9 +1204,7 @@ nsDOMWindowUtils::SendNativeMouseEvent(int32_t aScreenX,
                                        int32_t aModifierFlags,
                                        nsIDOMElement* aElement)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   // get the widget to send the event to
   nsCOMPtr<nsIWidget> widget = GetWidgetForElement(aElement);
@@ -1258,9 +1226,7 @@ nsDOMWindowUtils::SendNativeMouseScrollEvent(int32_t aScreenX,
                                              uint32_t aAdditionalFlags,
                                              nsIDOMElement* aElement)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   // get the widget to send the event to
   nsCOMPtr<nsIWidget> widget = GetWidgetForElement(aElement);
@@ -1284,9 +1250,7 @@ nsDOMWindowUtils::SendNativeTouchPoint(uint32_t aPointerId,
                                        double aPressure,
                                        uint32_t aOrientation)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
@@ -1308,9 +1272,7 @@ nsDOMWindowUtils::SendNativeTouchTap(int32_t aScreenX,
                                      int32_t aScreenY,
                                      bool aLongTap)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
@@ -1322,9 +1284,7 @@ nsDOMWindowUtils::SendNativeTouchTap(int32_t aScreenX,
 NS_IMETHODIMP
 nsDOMWindowUtils::ClearNativeTouchSequence()
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
@@ -1336,9 +1296,7 @@ nsDOMWindowUtils::ClearNativeTouchSequence()
 NS_IMETHODIMP
 nsDOMWindowUtils::ActivateNativeMenuItemAt(const nsAString& indexString)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   // get the widget to send the event to
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -1351,9 +1309,7 @@ nsDOMWindowUtils::ActivateNativeMenuItemAt(const nsAString& indexString)
 NS_IMETHODIMP
 nsDOMWindowUtils::ForceUpdateNativeMenuAt(const nsAString& indexString)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   // get the widget to send the event to
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -1407,9 +1363,7 @@ nsDOMWindowUtils::GetWidgetForElement(nsIDOMElement* aElement)
 NS_IMETHODIMP
 nsDOMWindowUtils::Focus(nsIDOMElement* aElement)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mWindow);
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -1429,13 +1383,7 @@ nsDOMWindowUtils::GarbageCollect(nsICycleCollectorListener *aListener,
 {
   PROFILER_LABEL("nsDOMWindowUtils", "GarbageCollect",
     js::ProfileEntry::Category::GC);
-
-  // Always permit this in debug builds.
-#ifndef DEBUG
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-#endif
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsJSContext::GarbageCollectNow(JS::gcreason::DOM_UTILS);
   nsJSContext::CycleCollectNow(aListener, aExtraForgetSkippableCalls);
@@ -1447,12 +1395,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::CycleCollect(nsICycleCollectorListener *aListener,
                                int32_t aExtraForgetSkippableCalls)
 {
-  // Always permit this in debug builds.
-#ifndef DEBUG
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-#endif
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsJSContext::CycleCollectNow(aListener, aExtraForgetSkippableCalls);
   return NS_OK;
@@ -1461,9 +1404,7 @@ nsDOMWindowUtils::CycleCollect(nsICycleCollectorListener *aListener,
 NS_IMETHODIMP
 nsDOMWindowUtils::RunNextCollectorTimer()
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsJSContext::RunNextCollectorTimer();
 
@@ -1479,9 +1420,7 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
                                          int32_t aModifiers,
                                          uint32_t aClickCount)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   // get the widget to send the event to
   nsPoint offset;
@@ -1546,9 +1485,7 @@ nsDOMWindowUtils::ElementFromPoint(float aX, float aY,
                                    bool aFlushLayout,
                                    nsIDOMElement** aReturn)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_STATE(doc);
@@ -1568,9 +1505,7 @@ nsDOMWindowUtils::NodesFromRect(float aX, float aY,
                                 bool aFlushLayout,
                                 nsIDOMNodeList** aReturn)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_STATE(doc);
@@ -1583,9 +1518,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GetTranslationNodes(nsIDOMNode* aRoot,
                                       nsITranslationNodeList** aRetVal)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   NS_ENSURE_ARG_POINTER(aRetVal);
   nsCOMPtr<nsIContent> root = do_QueryInterface(aRoot);
@@ -1686,9 +1619,7 @@ nsDOMWindowUtils::CompareCanvases(nsIDOMHTMLCanvasElement *aCanvas1,
                                   uint32_t* aMaxDifference,
                                   uint32_t* retVal)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   if (aCanvas1 == nullptr ||
       aCanvas2 == nullptr ||
@@ -1754,9 +1685,7 @@ nsDOMWindowUtils::CompareCanvases(nsIDOMHTMLCanvasElement *aCanvas1,
 NS_IMETHODIMP
 nsDOMWindowUtils::GetIsMozAfterPaintPending(bool *aResult)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = false;
@@ -1770,9 +1699,7 @@ nsDOMWindowUtils::GetIsMozAfterPaintPending(bool *aResult)
 NS_IMETHODIMP
 nsDOMWindowUtils::ClearMozAfterPaintEvents()
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsPresContext* presContext = GetPresContext();
   if (!presContext)
@@ -1784,9 +1711,7 @@ nsDOMWindowUtils::ClearMozAfterPaintEvents()
 NS_IMETHODIMP
 nsDOMWindowUtils::DisableNonTestMouseEvents(bool aDisable)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
@@ -1801,9 +1726,7 @@ nsDOMWindowUtils::DisableNonTestMouseEvents(bool aDisable)
 NS_IMETHODIMP
 nsDOMWindowUtils::SuppressEventHandling(bool aSuppress)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
@@ -1819,9 +1742,7 @@ nsDOMWindowUtils::SuppressEventHandling(bool aSuppress)
 
 static nsresult
 getScrollXYAppUnits(nsWeakPtr aWindow, bool aFlushLayout, nsPoint& aScrollPos) {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(aWindow);
   nsCOMPtr<nsIDocument> doc = window ? window->GetExtantDoc() : nullptr;
@@ -1869,9 +1790,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GetScrollbarSize(bool aFlushLayout, int32_t* aWidth,
                                                       int32_t* aHeight)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   *aWidth = 0;
   *aHeight = 0;
@@ -1900,9 +1819,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GetBoundsWithoutFlushing(nsIDOMElement *aElement,
                                            nsIDOMClientRect** aResult)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
@@ -1928,9 +1845,7 @@ nsDOMWindowUtils::GetBoundsWithoutFlushing(nsIDOMElement *aElement,
 NS_IMETHODIMP
 nsDOMWindowUtils::GetRootBounds(nsIDOMClientRect** aResult)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsIDocument* doc = GetDocument();
   NS_ENSURE_STATE(doc);
@@ -1961,9 +1876,7 @@ nsDOMWindowUtils::GetRootBounds(nsIDOMClientRect** aResult)
 NS_IMETHODIMP
 nsDOMWindowUtils::GetIMEIsOpen(bool *aState)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   NS_ENSURE_ARG_POINTER(aState);
 
@@ -1987,9 +1900,7 @@ nsDOMWindowUtils::GetIMEIsOpen(bool *aState)
 NS_IMETHODIMP
 nsDOMWindowUtils::GetIMEStatus(uint32_t *aState)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   NS_ENSURE_ARG_POINTER(aState);
 
@@ -2005,9 +1916,7 @@ nsDOMWindowUtils::GetIMEStatus(uint32_t *aState)
 NS_IMETHODIMP
 nsDOMWindowUtils::GetFocusedInputType(char** aType)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   NS_ENSURE_ARG_POINTER(aType);
 
@@ -2025,9 +1934,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::FindElementWithViewId(nsViewID aID,
                                         nsIDOMElement** aResult)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsRefPtr<nsIContent> content = nsLayoutUtils::FindContentFor(aID);
   return content ? CallQueryInterface(content, aResult) : NS_OK;
@@ -2056,9 +1963,7 @@ nsDOMWindowUtils::GetFullZoom(float* aFullZoom)
 {
   *aFullZoom = 1.0f;
 
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsPresContext* presContext = GetPresContext();
   if (!presContext) {
@@ -2076,9 +1981,7 @@ nsDOMWindowUtils::DispatchDOMEventViaPresShell(nsIDOMNode* aTarget,
                                                bool aTrusted,
                                                bool* aRetVal)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   NS_ENSURE_STATE(aEvent);
   aEvent->SetTrusted(aTrusted);
@@ -2117,9 +2020,7 @@ nsDOMWindowUtils::SendCompositionEvent(const nsAString& aType,
                                        const nsAString& aData,
                                        const nsAString& aLocale)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   // get the widget to send the event to
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -2160,9 +2061,7 @@ nsDOMWindowUtils::CreateCompositionStringSynthesizer(
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = nullptr;
 
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_NOT_AVAILABLE);
@@ -2180,9 +2079,7 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
 {
   *aResult = nullptr;
 
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
@@ -2282,9 +2179,7 @@ nsDOMWindowUtils::SendSelectionSetEvent(uint32_t aOffset,
 {
   *aResult = false;
 
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   // get the widget to send the event to
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -2313,9 +2208,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::SendContentCommandEvent(const nsAString& aType,
                                           nsITransferable * aTransferable)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   // get the widget to send the event to
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -2353,9 +2246,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GetClassName(JS::Handle<JS::Value> aObject, JSContext* aCx,
                                char** aName)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   // Our argument must be a non-null object.
   if (aObject.isPrimitive()) {
@@ -2374,9 +2265,7 @@ nsDOMWindowUtils::GetVisitedDependentComputedStyle(
 {
   aResult.Truncate();
 
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
@@ -2396,9 +2285,7 @@ nsDOMWindowUtils::GetVisitedDependentComputedStyle(
 NS_IMETHODIMP
 nsDOMWindowUtils::EnterModalState()
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
@@ -2410,9 +2297,7 @@ nsDOMWindowUtils::EnterModalState()
 NS_IMETHODIMP
 nsDOMWindowUtils::LeaveModalState()
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
@@ -2424,9 +2309,7 @@ nsDOMWindowUtils::LeaveModalState()
 NS_IMETHODIMP
 nsDOMWindowUtils::IsInModalState(bool *retval)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
@@ -2440,9 +2323,7 @@ nsDOMWindowUtils::GetParent(JS::Handle<JS::Value> aObject,
                             JSContext* aCx,
                             JS::MutableHandle<JS::Value> aParent)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   // First argument must be an object.
   if (aObject.isPrimitive()) {
@@ -2465,9 +2346,7 @@ nsDOMWindowUtils::GetParent(JS::Handle<JS::Value> aObject,
 NS_IMETHODIMP
 nsDOMWindowUtils::GetOuterWindowID(uint64_t *aWindowID)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
@@ -2480,9 +2359,7 @@ nsDOMWindowUtils::GetOuterWindowID(uint64_t *aWindowID)
 NS_IMETHODIMP
 nsDOMWindowUtils::GetCurrentInnerWindowID(uint64_t *aWindowID)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_NOT_AVAILABLE);
@@ -2500,9 +2377,7 @@ nsDOMWindowUtils::GetCurrentInnerWindowID(uint64_t *aWindowID)
 NS_IMETHODIMP
 nsDOMWindowUtils::SuspendTimeouts()
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
@@ -2515,9 +2390,7 @@ nsDOMWindowUtils::SuspendTimeouts()
 NS_IMETHODIMP
 nsDOMWindowUtils::ResumeTimeouts()
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
@@ -2530,9 +2403,7 @@ nsDOMWindowUtils::ResumeTimeouts()
 NS_IMETHODIMP
 nsDOMWindowUtils::GetLayerManagerType(nsAString& aType)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget)
@@ -2550,9 +2421,7 @@ nsDOMWindowUtils::GetLayerManagerType(nsAString& aType)
 NS_IMETHODIMP
 nsDOMWindowUtils::GetLayerManagerRemote(bool* retval)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget)
@@ -2569,9 +2438,7 @@ nsDOMWindowUtils::GetLayerManagerRemote(bool* retval)
 NS_IMETHODIMP
 nsDOMWindowUtils::StartFrameTimeRecording(uint32_t *startIndex)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   NS_ENSURE_ARG_POINTER(startIndex);
 
@@ -2598,9 +2465,7 @@ nsDOMWindowUtils::StopFrameTimeRecording(uint32_t   startIndex,
                                          uint32_t  *frameCount,
                                          float    **frameIntervals)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   NS_ENSURE_ARG_POINTER(frameCount);
   NS_ENSURE_ARG_POINTER(frameIntervals);
@@ -2630,9 +2495,7 @@ nsDOMWindowUtils::StopFrameTimeRecording(uint32_t   startIndex,
 NS_IMETHODIMP
 nsDOMWindowUtils::BeginTabSwitch()
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget)
@@ -2673,9 +2536,7 @@ ComputeAnimationValue(nsCSSProperty aProperty,
 NS_IMETHODIMP
 nsDOMWindowUtils::AdvanceTimeAndRefresh(int64_t aMilliseconds)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsRefreshDriver* driver = GetPresContext()->RefreshDriver();
   driver->AdvanceTimeAndRefresh(aMilliseconds);
@@ -2691,9 +2552,7 @@ nsDOMWindowUtils::AdvanceTimeAndRefresh(int64_t aMilliseconds)
 NS_IMETHODIMP
 nsDOMWindowUtils::RestoreNormalRefresh()
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   // Kick the compositor out of test mode before the refresh driver, so that
   // the refresh driver doesn't send an update that gets ignored by the
@@ -2712,9 +2571,7 @@ nsDOMWindowUtils::RestoreNormalRefresh()
 NS_IMETHODIMP
 nsDOMWindowUtils::GetIsTestControllingRefreshes(bool *aResult)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsPresContext* pc = GetPresContext();
   *aResult =
@@ -2779,9 +2636,7 @@ nsDOMWindowUtils::ComputeAnimationDistance(nsIDOMElement* aElement,
                                            const nsAString& aValue2,
                                            double* aResult)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsresult rv;
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement, &rv);
@@ -2825,9 +2680,7 @@ nsDOMWindowUtils::RenderDocument(const nsRect& aRect,
                                  nscolor aBackgroundColor,
                                  gfxContext* aThebesContext)
 {
-    if (!nsContentUtils::IsCallerChrome()) {
-      return NS_ERROR_DOM_SECURITY_ERR;
-    }
+    MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
     nsCOMPtr<nsIDocument> doc = GetDocument();
     NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
@@ -2843,9 +2696,7 @@ nsDOMWindowUtils::RenderDocument(const nsRect& aRect,
 NS_IMETHODIMP 
 nsDOMWindowUtils::GetCursorType(int16_t *aCursor)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   NS_ENSURE_ARG_POINTER(aCursor);
 
@@ -2878,9 +2729,7 @@ nsDOMWindowUtils::GetCursorType(int16_t *aCursor)
 NS_IMETHODIMP
 nsDOMWindowUtils::GetDisplayDPI(float *aDPI)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget)
@@ -2896,9 +2745,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GetOuterWindowWithId(uint64_t aWindowID,
                                        nsIDOMWindow** aWindow)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   // XXX This method is deprecated.  See bug 865664.
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
@@ -2915,9 +2762,7 @@ nsDOMWindowUtils::GetOuterWindowWithId(uint64_t aWindowID,
 NS_IMETHODIMP
 nsDOMWindowUtils::GetContainerElement(nsIDOMElement** aResult)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
@@ -2933,9 +2778,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::WrapDOMFile(nsIFile *aFile,
                               nsIDOMFile **aDOMFile)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   if (!aFile) {
     return NS_ERROR_FAILURE;
@@ -2980,9 +2823,7 @@ CheckLeafLayers(Layer* aLayer, const nsIntPoint& aOffset, nsIntRegion* aCoveredR
 NS_IMETHODIMP
 nsDOMWindowUtils::LeafLayersPartitionWindow(bool* aResult)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   *aResult = true;
 #ifdef DEBUG
@@ -3014,9 +2855,7 @@ nsDOMWindowUtils::LeafLayersPartitionWindow(bool* aResult)
 NS_IMETHODIMP
 nsDOMWindowUtils::GetMayHaveTouchEventListeners(bool* aResult)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
@@ -3029,9 +2868,7 @@ nsDOMWindowUtils::GetMayHaveTouchEventListeners(bool* aResult)
 NS_IMETHODIMP
 nsDOMWindowUtils::CheckAndClearPaintedState(nsIDOMElement* aElement, bool* aResult)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   if (!aElement) {
     return NS_ERROR_INVALID_ARG;
@@ -3066,9 +2903,7 @@ nsDOMWindowUtils::CheckAndClearPaintedState(nsIDOMElement* aElement, bool* aResu
 NS_IMETHODIMP
 nsDOMWindowUtils::EnableDialogs()
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
@@ -3117,9 +2952,7 @@ GetFileOrBlob(const nsAString& aName, JS::Handle<JS::Value> aBlobParts,
               JS::Handle<JS::Value> aParameters, JSContext* aCx,
               uint8_t aOptionalArgCount, nsISupports** aResult)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsresult rv;
 
@@ -3152,9 +2985,7 @@ nsDOMWindowUtils::GetFile(const nsAString& aName, JS::Handle<JS::Value> aBlobPar
                           JS::Handle<JS::Value> aParameters, JSContext* aCx,
                           uint8_t aOptionalArgCount, nsIDOMFile** aResult)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsISupports> file;
   nsresult rv = GetFileOrBlob(aName, aBlobParts, aParameters, aCx,
@@ -3172,9 +3003,7 @@ nsDOMWindowUtils::GetBlob(JS::Handle<JS::Value> aBlobParts,
                           JS::Handle<JS::Value> aParameters, JSContext* aCx,
                           uint8_t aOptionalArgCount, nsIDOMBlob** aResult)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsISupports> blob;
   nsresult rv = GetFileOrBlob(NullString(), aBlobParts, aParameters, aCx,
@@ -3191,9 +3020,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GetFileId(JS::Handle<JS::Value> aFile, JSContext* aCx,
                             int64_t* aResult)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   if (!aFile.isPrimitive()) {
     JSObject* obj = aFile.toObjectOrNull();
@@ -3225,9 +3052,7 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName, int64_t aId,
                                     int32_t* aSliceRefCnt, JSContext* aCx,
                                     bool* aResult)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
@@ -3268,9 +3093,7 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName, int64_t aId,
 NS_IMETHODIMP
 nsDOMWindowUtils::IsIncrementalGCEnabled(JSContext* cx, bool* aResult)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   *aResult = JS::IsIncrementalGCEnabled(JS_GetRuntime(cx));
   return NS_OK;
@@ -3279,9 +3102,7 @@ nsDOMWindowUtils::IsIncrementalGCEnabled(JSContext* cx, bool* aResult)
 NS_IMETHODIMP
 nsDOMWindowUtils::StartPCCountProfiling(JSContext* cx)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   js::StartPCCountProfiling(cx);
   return NS_OK;
@@ -3290,9 +3111,7 @@ nsDOMWindowUtils::StartPCCountProfiling(JSContext* cx)
 NS_IMETHODIMP
 nsDOMWindowUtils::StopPCCountProfiling(JSContext* cx)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   js::StopPCCountProfiling(cx);
   return NS_OK;
@@ -3301,9 +3120,7 @@ nsDOMWindowUtils::StopPCCountProfiling(JSContext* cx)
 NS_IMETHODIMP
 nsDOMWindowUtils::PurgePCCounts(JSContext* cx)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   js::PurgePCCounts(cx);
   return NS_OK;
@@ -3312,9 +3129,7 @@ nsDOMWindowUtils::PurgePCCounts(JSContext* cx)
 NS_IMETHODIMP
 nsDOMWindowUtils::GetPCCountScriptCount(JSContext* cx, int32_t *result)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   *result = js::GetPCCountScriptCount(cx);
   return NS_OK;
@@ -3323,9 +3138,7 @@ nsDOMWindowUtils::GetPCCountScriptCount(JSContext* cx, int32_t *result)
 NS_IMETHODIMP
 nsDOMWindowUtils::GetPCCountScriptSummary(int32_t script, JSContext* cx, nsAString& result)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   JSString *text = js::GetPCCountScriptSummary(cx, script);
   if (!text)
@@ -3342,9 +3155,7 @@ nsDOMWindowUtils::GetPCCountScriptSummary(int32_t script, JSContext* cx, nsAStri
 NS_IMETHODIMP
 nsDOMWindowUtils::GetPCCountScriptContents(int32_t script, JSContext* cx, nsAString& result)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   JSString *text = js::GetPCCountScriptContents(cx, script);
   if (!text)
@@ -3361,9 +3172,7 @@ nsDOMWindowUtils::GetPCCountScriptContents(int32_t script, JSContext* cx, nsAStr
 NS_IMETHODIMP
 nsDOMWindowUtils::GetPaintingSuppressed(bool *aPaintingSuppressed)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
@@ -3380,9 +3189,7 @@ nsDOMWindowUtils::GetPaintingSuppressed(bool *aPaintingSuppressed)
 NS_IMETHODIMP
 nsDOMWindowUtils::GetPlugins(JSContext* cx, JS::MutableHandle<JS::Value> aPlugins)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_STATE(doc);
@@ -3476,9 +3283,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::SetContentDocumentFixedPositionMargins(float aTop, float aRight,
                                                          float aBottom, float aLeft)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   if (!(aTop >= 0.0f && aRight >= 0.0f && aBottom >= 0.0f && aLeft >= 0.0f)) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -3502,9 +3307,7 @@ nsresult
 nsDOMWindowUtils::RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement,
                                             const nsAString& aNewOrigin)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_STATE(doc);
@@ -3516,9 +3319,7 @@ nsDOMWindowUtils::RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement,
 nsresult
 nsDOMWindowUtils::RemoteFrameFullscreenReverted()
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_STATE(doc);
@@ -3530,9 +3331,7 @@ nsDOMWindowUtils::RemoteFrameFullscreenReverted()
 nsresult
 nsDOMWindowUtils::ExitFullscreen()
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsIDocument::ExitFullscreen(nullptr, /* async */ false);
   return NS_OK;
@@ -3543,9 +3342,7 @@ nsDOMWindowUtils::SelectAtPoint(float aX, float aY, uint32_t aSelectBehavior,
                                 bool *_retval)
 {
   *_retval = false;
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsSelectionAmount amount;
   switch (aSelectBehavior) {
@@ -3635,9 +3432,7 @@ convertSheetType(uint32_t aSheetType)
 NS_IMETHODIMP
 nsDOMWindowUtils::LoadSheet(nsIURI *aSheetURI, uint32_t aSheetType)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   NS_ENSURE_ARG_POINTER(aSheetURI);
   NS_ENSURE_ARG(aSheetType == AGENT_SHEET ||
@@ -3655,9 +3450,7 @@ nsDOMWindowUtils::LoadSheet(nsIURI *aSheetURI, uint32_t aSheetType)
 NS_IMETHODIMP
 nsDOMWindowUtils::RemoveSheet(nsIURI *aSheetURI, uint32_t aSheetType)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   NS_ENSURE_ARG_POINTER(aSheetURI);
   NS_ENSURE_ARG(aSheetType == AGENT_SHEET ||
@@ -3676,9 +3469,7 @@ nsDOMWindowUtils::RemoveSheet(nsIURI *aSheetURI, uint32_t aSheetType)
 NS_IMETHODIMP
 nsDOMWindowUtils::GetIsHandlingUserInput(bool* aHandlingUserInput)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   *aHandlingUserInput = EventStateManager::IsHandlingUserInput();
 
@@ -3688,9 +3479,7 @@ nsDOMWindowUtils::GetIsHandlingUserInput(bool* aHandlingUserInput)
 NS_IMETHODIMP
 nsDOMWindowUtils::AllowScriptsToClose()
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
   static_cast<nsGlobalWindow*>(window.get())->AllowScriptsToClose();
@@ -3700,9 +3489,7 @@ nsDOMWindowUtils::AllowScriptsToClose()
 NS_IMETHODIMP
 nsDOMWindowUtils::GetIsParentWindowMainWidgetVisible(bool* aIsVisible)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   // this should reflect the "is parent window visible" logic in
   // nsWindowWatcher::OpenWindowInternal()
@@ -3737,9 +3524,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::IsNodeDisabledForEvents(nsIDOMNode* aNode, bool* aRetVal)
 {
   *aRetVal = false;
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
   nsCOMPtr<nsINode> n = do_QueryInterface(aNode);
   nsINode* node = n;
   while (node) {
@@ -3791,9 +3576,7 @@ nsDOMWindowUtils::DispatchEventToChromeOnly(nsIDOMEventTarget* aTarget,
                                             bool* aRetVal)
 {
   *aRetVal = false;
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
   NS_ENSURE_STATE(aTarget && aEvent);
   aEvent->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
   aTarget->DispatchEvent(aEvent, aRetVal);
@@ -3803,9 +3586,7 @@ nsDOMWindowUtils::DispatchEventToChromeOnly(nsIDOMEventTarget* aTarget,
 NS_IMETHODIMP
 nsDOMWindowUtils::RunInStableState(nsIRunnable *runnable)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsIAppShell> appShell(do_GetService(kAppShellCID));
   if (!appShell) {
@@ -3818,9 +3599,7 @@ nsDOMWindowUtils::RunInStableState(nsIRunnable *runnable)
 NS_IMETHODIMP
 nsDOMWindowUtils::RunBeforeNextEvent(nsIRunnable *runnable)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsIAppShell> appShell(do_GetService(kAppShellCID));
   if (!appShell) {
@@ -3835,9 +3614,7 @@ nsDOMWindowUtils::GetOMTAStyle(nsIDOMElement* aElement,
                                const nsAString& aProperty,
                                nsAString& aResult)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<Element> element = do_QueryInterface(aElement);
   if (!element) {
@@ -3898,9 +3675,7 @@ nsDOMWindowUtils::GetOMTAOrComputedStyle(nsIDOMElement* aElement,
                                          const nsAString& aProperty,
                                          nsAString& aResult)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   // Try to get OMTA style
   nsresult rv = GetOMTAStyle(aElement, aProperty, aResult);
@@ -3925,9 +3700,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GetContentAPZTestData(JSContext* aContext,
                                         JS::MutableHandleValue aOutContentTestData)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   if (nsIWidget* widget = GetWidget()) {
     nsRefPtr<LayerManager> lm = widget->GetLayerManager();
@@ -3946,9 +3719,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GetCompositorAPZTestData(JSContext* aContext,
                                            JS::MutableHandleValue aOutCompositorTestData)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   if (nsIWidget* widget = GetWidget()) {
     nsRefPtr<LayerManager> lm = widget->GetLayerManager();
@@ -3968,9 +3739,7 @@ nsDOMWindowUtils::GetCompositorAPZTestData(JSContext* aContext,
 NS_IMETHODIMP
 nsDOMWindowUtils::GetAudioMuted(bool* aMuted)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
 
@@ -3981,9 +3750,7 @@ nsDOMWindowUtils::GetAudioMuted(bool* aMuted)
 NS_IMETHODIMP
 nsDOMWindowUtils::SetAudioMuted(bool aMuted)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
 
@@ -3994,9 +3761,7 @@ nsDOMWindowUtils::SetAudioMuted(bool aMuted)
 NS_IMETHODIMP
 nsDOMWindowUtils::GetAudioVolume(float* aVolume)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
 
@@ -4007,9 +3772,7 @@ nsDOMWindowUtils::GetAudioVolume(float* aVolume)
 NS_IMETHODIMP
 nsDOMWindowUtils::SetAudioVolume(float aVolume)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
 
