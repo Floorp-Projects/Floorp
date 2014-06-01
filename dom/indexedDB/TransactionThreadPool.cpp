@@ -154,7 +154,8 @@ TransactionThreadPool::Cleanup()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  PROFILER_MAIN_THREAD_LABEL("IndexedDB", "TransactionThreadPool::Cleanup");
+  PROFILER_MAIN_THREAD_LABEL("TransactionThreadPool", "Cleanup",
+    js::ProfileEntry::Category::STORAGE);
 
   nsresult rv = mThreadPool->Shutdown();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -206,8 +207,8 @@ TransactionThreadPool::FinishTransaction(IDBTransaction* aTransaction)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aTransaction, "Null pointer!");
 
-  PROFILER_MAIN_THREAD_LABEL("IndexedDB",
-                             "TransactionThreadPool::FinishTransaction");
+  PROFILER_MAIN_THREAD_LABEL("TransactionThreadPool", "FinishTransaction",
+    js::ProfileEntry::Category::STORAGE);
 
   // AddRef here because removing from the hash will call Release.
   nsRefPtr<IDBTransaction> transaction(aTransaction);
@@ -417,9 +418,8 @@ TransactionThreadPool::AbortTransactionsForDatabase(IDBDatabase* aDatabase)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aDatabase, "Null pointer!");
 
-  PROFILER_MAIN_THREAD_LABEL("IndexedDB",
-                             "TransactionThreadPool::"
-                             "AbortTransactionsForDatabase");
+  PROFILER_MAIN_THREAD_LABEL("TransactionThreadPool", "AbortTransactionsForDatabase",
+    js::ProfileEntry::Category::STORAGE);
 
   // Get list of transactions for this database id
   DatabaseTransactionInfo* dbTransactionInfo;
@@ -501,8 +501,8 @@ TransactionThreadPool::MaybeFireCallback(DatabasesCompleteCallback aCallback)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  PROFILER_MAIN_THREAD_LABEL("IndexedDB",
-                             "TransactionThreadPool::MaybeFireCallback");
+  PROFILER_MAIN_THREAD_LABEL("TransactionThreadPool", "MaybeFireCallback",
+    js::ProfileEntry::Category::STORAGE);
 
   for (uint32_t index = 0; index < aCallback.mDatabases.Length(); index++) {
     IDBDatabase* database = aCallback.mDatabases[index];
@@ -573,7 +573,8 @@ TransactionThreadPool::TransactionQueue::Run()
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
-  PROFILER_LABEL("IndexedDB", "TransactionQueue::Run");
+  PROFILER_LABEL("TransactionQueue", "Run",
+    js::ProfileEntry::Category::STORAGE);
 
   IDB_PROFILER_MARK("IndexedDB Transaction %llu: Beginning database work",
                     "IDBTransaction[%llu] DT Start",
@@ -643,7 +644,8 @@ FinishTransactionRunnable::Run()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  PROFILER_MAIN_THREAD_LABEL("IndexedDB", "FinishTransactionRunnable::Run");
+  PROFILER_MAIN_THREAD_LABEL("FinishTransactionRunnable", "Run",
+    js::ProfileEntry::Category::STORAGE);
 
   if (!gThreadPool) {
     NS_ERROR("Running after shutdown!");

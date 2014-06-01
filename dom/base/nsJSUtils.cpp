@@ -196,7 +196,9 @@ nsJSUtils::EvaluateString(JSContext* aCx,
                           JS::MutableHandle<JS::Value> aRetValue,
                           void **aOffThreadToken)
 {
-  PROFILER_LABEL("JS", "EvaluateString");
+  PROFILER_LABEL("nsJSUtils", "EvaluateString",
+    js::ProfileEntry::Category::JS);
+
   MOZ_ASSERT_IF(aCompileOptions.versionSet,
                 aCompileOptions.version != JSVERSION_UNKNOWN);
   MOZ_ASSERT_IF(aEvaluateOptions.coerceToString, aEvaluateOptions.needResult);
