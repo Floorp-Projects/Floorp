@@ -115,12 +115,8 @@ static bool test_basic_array(ElementType *data,
   }
   if (!ary.AppendElements(copy))
     return false;
-  size_t cap = ary.Capacity();
   ary.RemoveElementsAt(copy.Length(), copy.Length());
   ary.Compact();
-  if (ary.Capacity() == cap)
-    return false;
-
   ary.Clear();
   if (ary.IndexOf(extra) != ary.NoIndex)
     return false;
