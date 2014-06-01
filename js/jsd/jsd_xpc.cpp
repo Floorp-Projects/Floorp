@@ -1681,7 +1681,7 @@ jsdContext::SetOptions(uint32_t options)
     /* don't let users change this option, they'd just be shooting themselves
      * in the foot. */
     if (JS::ContextOptionsRef(mJSCx).privateIsNSISupports() !=
-        (options & JSOPTION_PRIVATE_IS_NSISUPPORTS))
+        !!(options & JSOPTION_PRIVATE_IS_NSISUPPORTS))
         return NS_ERROR_ILLEGAL_VALUE;
 
     JS::ContextOptionsRef(mJSCx).setExtraWarnings(options & JSOPTION_EXTRA_WARNINGS)
