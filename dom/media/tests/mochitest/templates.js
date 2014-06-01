@@ -135,6 +135,16 @@ var commandsPeerConnection = [
     }
   ],
   [
+    'PC_REMOTE_SET_LOCAL_DESCRIPTION',
+    function (test) {
+      test.setLocalDescription(test.pcRemote, test.pcRemote._last_answer, STABLE, function () {
+        is(test.pcRemote.signalingState, STABLE,
+           "signalingState after remote setLocalDescription is 'stable'");
+        test.next();
+      });
+    }
+  ],
+  [
     'PC_LOCAL_GET_ANSWER',
     function (test) {
       if (test.pcRemote) {
@@ -157,16 +167,6 @@ var commandsPeerConnection = [
       test.setRemoteDescription(test.pcLocal, test._remote_answer, STABLE, function () {
         is(test.pcLocal.signalingState, STABLE,
            "signalingState after local setRemoteDescription is 'stable'");
-        test.next();
-      });
-    }
-  ],
-  [
-    'PC_REMOTE_SET_LOCAL_DESCRIPTION',
-    function (test) {
-      test.setLocalDescription(test.pcRemote, test.pcRemote._last_answer, STABLE, function () {
-        is(test.pcRemote.signalingState, STABLE,
-           "signalingState after remote setLocalDescription is 'stable'");
         test.next();
       });
     }
