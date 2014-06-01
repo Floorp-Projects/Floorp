@@ -17,6 +17,7 @@
 #include "nsTextFrameUtils.h"
 #include "nsIPersistentProperties2.h"
 #include "nsNetUtil.h"
+#include "GreekCasing.h"
 
 // Unicode characters needing special casing treatment in tr/az languages
 #define LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE  0x0130
@@ -277,7 +278,7 @@ nsCaseTransformTextRunFactory::TransformString(
   const nsIAtom* lang = aLanguage;
 
   LanguageSpecificCasingBehavior languageSpecificCasing = GetCasingFor(lang);
-  GreekCasing::State greekState;
+  mozilla::GreekCasing::State greekState;
 
   for (uint32_t i = 0; i < length; ++i) {
     uint32_t ch = str[i];
@@ -396,7 +397,7 @@ nsCaseTransformTextRunFactory::TransformString(
       }
 
       if (languageSpecificCasing == eLSCB_Greek) {
-        ch = GreekCasing::UpperCase(ch, greekState);
+        ch = mozilla::GreekCasing::UpperCase(ch, greekState);
         break;
       }
 
