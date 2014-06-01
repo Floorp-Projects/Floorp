@@ -1461,10 +1461,7 @@ public:
 
         pattern->m_allocator->stopAllocator();
 
-        if (result != JSRegExpMatch && result != JSRegExpNoMatch)
-            output[0] = offsetError;
-        else
-            ASSERT((result == JSRegExpMatch) == (output[0] != offsetNoMatch));
+        ASSERT((result == JSRegExpMatch) == (output[0] != offsetNoMatch));
         return output[0];
     }
 
