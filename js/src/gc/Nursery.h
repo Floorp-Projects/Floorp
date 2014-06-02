@@ -111,9 +111,6 @@ class Nursery
     /* Free a slots array. */
     void freeSlots(JSContext *cx, HeapSlot *slots);
 
-    /* Add a slots to our tracking list if it is out-of-line. */
-    void notifyInitialSlots(gc::Cell *cell, HeapSlot *slots);
-
     typedef Vector<types::TypeObject *, 0, SystemAllocPolicy> TypeObjectList;
 
     /*
@@ -156,24 +153,8 @@ class Nursery
     }
 
 #ifdef JS_GC_ZEAL
-    /*
-     * In debug and zeal builds, these bytes indicate the state of an unused
-     * segment of nursery-allocated memory.
-     */
-    void enterZealMode() {
-        if (isEnabled())
-            numActiveChunks_ = NumNurseryChunks;
-    }
-    void leaveZealMode() {
-        if (isEnabled()) {
-            JS_ASSERT(isEmpty());
-            setCurrentChunk(0);
-            currentStart_ = start();
-        }
-    }
-#else
-    void enterZealMode() {}
-    void leaveZealMode() {}
+    void enterZealMode();
+    void leaveZealMode();
 #endif
 
   private:
@@ -254,10 +235,6 @@ class Nursery
         return chunk(numActiveChunks_ - 1).end();
     }
 
-    MOZ_ALWAYS_INLINE bool isFullyGrown() const {
-        return numActiveChunks_ == NumNurseryChunks;
-    }
-
     MOZ_ALWAYS_INLINE uintptr_t currentEnd() const {
         JS_ASSERT(runtime_);
         JS_ASSERT(currentEnd_ == chunk(currentChunk_).end());
@@ -305,13 +282,13 @@ class Nursery
                                       uint32_t nelems);
 
     /* Free malloced pointers owned by freed things in the nursery. */
-    void freeHugeSlots(JSRuntime *rt);
+    void freeHugeSlots();
 
     /*
      * Frees all non-live nursery-allocated things at the end of a minor
      * collection.
      */
-    void sweep(JSRuntime *rt);
+    void sweep();
 
     /* Change the allocable space provided by the nursery. */
     void growAllocableSpace();
