@@ -949,7 +949,7 @@ public:
    * @param aAttr    name of attribute.
    * @param aValue   Boolean value of attribute.
    */
-  NS_HIDDEN_(bool) GetBoolAttr(nsIAtom* aAttr) const
+  bool GetBoolAttr(nsIAtom* aAttr) const
   {
     return HasAttr(kNameSpaceID_None, aAttr);
   }
@@ -962,7 +962,7 @@ public:
    * @param aAttr    name of attribute.
    * @param aValue   Boolean value of attribute.
    */
-  NS_HIDDEN_(nsresult) SetBoolAttr(nsIAtom* aAttr, bool aValue);
+  nsresult SetBoolAttr(nsIAtom* aAttr, bool aValue);
 
   /**
    * Retrieve the ratio of font-size-inflated text font size to computed font
