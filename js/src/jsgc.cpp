@@ -2437,6 +2437,8 @@ GCHelperState::work()
     JS_ASSERT(!thread);
     thread = PR_GetCurrentThread();
 
+    TraceLogger *logger = TraceLoggerForCurrentThread();
+
     switch (state()) {
 
       case IDLE:
@@ -2444,22 +2446,14 @@ GCHelperState::work()
         break;
 
       case SWEEPING: {
-#if JS_TRACE_LOGGING
-        AutoTraceLog logger(TraceLogging::getLogger(TraceLogging::GC_BACKGROUND),
-                            TraceLogging::GC_SWEEPING_START,
-                            TraceLogging::GC_SWEEPING_STOP);
-#endif
+        AutoTraceLog logSweeping(logger, TraceLogger::GCSweeping);
         doSweep();
         JS_ASSERT(state() == SWEEPING);
         break;
       }
 
       case ALLOCATING: {
-#if JS_TRACE_LOGGING
-        AutoTraceLog logger(TraceLogging::getLogger(TraceLogging::GC_BACKGROUND),
-                            TraceLogging::GC_ALLOCATING_START,
-                            TraceLogging::GC_ALLOCATING_STOP);
-#endif
+        AutoTraceLog logAllocation(logger, TraceLogger::GCAllocation);
         do {
             Chunk *chunk;
             {
