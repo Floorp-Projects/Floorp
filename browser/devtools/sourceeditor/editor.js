@@ -1,3 +1,4 @@
+/* -*- Mode: js; tab-width: 2; indent-tabs-mode: nil; js-indent-level: 2; fill-column: 80 -*- */
 /* vim:set ts=2 sw=2 sts=2 et tw=80:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,6 +20,11 @@ const XUL_NS      = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.x
 // Maximum allowed margin (in number of lines) from top or bottom of the editor
 // while shifting to a line which was initially out of view.
 const MAX_VERTICAL_OFFSET = 3;
+
+// Match @Scratchpad/N:LINE[:COLUMN] or (LINE[:COLUMN]) anywhere at an end of
+// line in text selection.
+const RE_SCRATCHPAD_ERROR = /(?:@Scratchpad\/\d+:|\()(\d+):?(\d+)?(?:\)|\n)/;
+const RE_JUMP_TO_LINE = /^(\d+):?(\d+)?/;
 
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const events  = require("devtools/toolkit/event-emitter");
@@ -752,7 +758,28 @@ Editor.prototype = {
     div.appendChild(txt);
     div.appendChild(inp);
 
-    this.openDialog(div, (line) => this.setCursor({ line: line - 1, ch: 0 }));
+    if (!this.hasMultipleSelections()) {
+      let cm = editors.get(this);
+      let sel = cm.getSelection();
+      // Scratchpad inserts and selects a comment after an error happens:
+      // "@Scratchpad/1:10:2". Parse this to get the line and column.
+      // In the string above this is line 10, column 2.
+      let match = sel.match(RE_SCRATCHPAD_ERROR);
+      if (match) {
+        let [ , line, column ] = match;
+        inp.value = column ? line + ":" + column : line;
+        inp.selectionStart = inp.selectionEnd = inp.value.length;
+      }
+    }
+
+    this.openDialog(div, (line) => {
+      // Handle LINE:COLUMN as well as LINE
+      let match = line.toString().match(RE_JUMP_TO_LINE);
+      if (match) {
+        let [ , line, column ] = match;
+        this.setCursor({line: line - 1, ch: column ? column - 1 : 0 });
+      }
+    });
   },
 
   /**
