@@ -32,8 +32,8 @@ class nsStyleSheetService MOZ_FINAL
   , public nsIMemoryReporter
 {
  public:
-  nsStyleSheetService() NS_HIDDEN;
-  ~nsStyleSheetService() NS_HIDDEN;
+  nsStyleSheetService();
+  ~nsStyleSheetService();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTYLESHEETSERVICE

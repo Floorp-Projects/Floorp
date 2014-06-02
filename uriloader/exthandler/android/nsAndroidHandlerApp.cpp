@@ -58,7 +58,7 @@ nsAndroidHandlerApp::SetDetailedDescription(const nsAString & aDescription)
 // XXX Workaround for bug 986975 to maintain the existing broken semantics
 template<>
 struct nsISharingHandlerApp::COMTypeInfo<nsAndroidHandlerApp, void> {
-  static const nsIID kIID NS_HIDDEN;
+  static const nsIID kIID;
 };
 const nsIID nsISharingHandlerApp::COMTypeInfo<nsAndroidHandlerApp, void>::kIID = NS_IHANDLERAPP_IID;
 

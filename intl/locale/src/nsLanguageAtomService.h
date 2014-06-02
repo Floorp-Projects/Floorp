@@ -30,7 +30,7 @@ public:
   virtual nsIAtom* GetLanguageGroup(nsIAtom *aLanguage,
                                                 nsresult *aError);
 
-  nsLanguageAtomService() NS_HIDDEN;
+  nsLanguageAtomService();
 
 private:
   NS_HIDDEN ~nsLanguageAtomService() { }
