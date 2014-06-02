@@ -1505,6 +1505,7 @@ pref("image.mem.max_decoded_image_kb", 256000);
 // XXX This is a temporary development server. The production one will be
 // coming soon.
 pref("loop.server", "http://loop.dev.mozaws.net");
+pref("loop.do_not_disturb", false);
 #endif
 
 // serverURL to be assigned by services team
