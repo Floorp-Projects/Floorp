@@ -163,12 +163,11 @@ function getFileListing(basePath, testPath, dir, srvScope)
   var uri = getResolvedURI(basePath);
   var chromeDir = getChromeDir(uri);
   chromeDir.appendRelativePath(dir);
-  basePath += '/' + dir.replace(/\\/g, '/');
+  basePath += '/' + dir;
 
   if (testPath == "false" || testPath == false) {
     testPath = "";
   }
-  testPath = testPath.replace(/\\\\/g, '\\').replace(/\\/g, '/');
 
   var ioSvc = Components.classes["@mozilla.org/network/io-service;1"].
               getService(Components.interfaces.nsIIOService);

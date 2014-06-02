@@ -190,7 +190,7 @@ class MochitestRunner(MozbuildObject):
         jsdebugger=False, debug_on_failure=False, start_at=None, end_at=None,
         e10s=False, dmd=False, dump_output_directory=None,
         dump_about_memory_after_test=False, dump_dmd_after_test=False,
-        install_extension=None, quiet=False, environment=[], app_override=None, runByDir=False,
+        install_extension=None, quiet=False, environment=[], app_override=None,
         useTestMediaDevices=False, **kwargs):
         """Runs a mochitest.
 
@@ -316,7 +316,6 @@ class MochitestRunner(MozbuildObject):
         options.dumpOutputDirectory = dump_output_directory
         options.quiet = quiet
         options.environment = environment
-        options.runByDir = runByDir
         options.useTestMediaDevices = useTestMediaDevices
 
         options.failureFile = failure_file_path
@@ -526,12 +525,6 @@ def MochitestCommand(func):
                              metavar='NAME=VALUE', dest='environment',
                              help="Sets the given variable in the application's environment")
     func = setenv(func)
-
-    runbydir = CommandArgument('--run-by-dir', default=False,
-                                 action='store_true',
-                                 dest='runByDir',
-        help='Run each directory in a single browser instance with a fresh profile.')
-    func = runbydir(func)
 
     test_media = CommandArgument('--use-test-media-devices', default=False,
                                  action='store_true',
