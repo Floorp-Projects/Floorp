@@ -85,7 +85,13 @@ add_task(function*() {
   ok(otherTB.querySelector("#sync-button"), "Sync button is on other toolbar, too.");
 
   let wasInformedCorrectlyOfAreaDisappearing = false;
-  let windowClosed = null;
+  //XXXgijs So we could be using promiseWindowClosed here. However, after
+  // repeated random oranges, I'm instead relying on onWindowClosed below to
+  // fire appropriately - it is linked to an unload event as well, and so
+  // reusing it prevents a potential race between unload handlers where the
+  // one from promiseWindowClosed could fire before the onWindowClosed
+  // (and therefore onAreaNodeRegistered) one, causing the test to fail.
+  let windowCloseDeferred = Promise.defer();
   listener = {
     onAreaNodeUnregistered: function(aArea, aNode, aReason) {
       if (aArea == TOOLBARID) {
@@ -96,8 +102,7 @@ add_task(function*() {
     },
     onWindowClosed: function(aWindow) {
       if (aWindow == otherWin) {
-        info("Got window closed notification for correct window.");
-        windowClosed = aWindow;
+        windowCloseDeferred.resolve(aWindow);
       } else {
         info("Other window was closed!");
         info("Other window title: " + (aWindow.document && aWindow.document.title));
@@ -106,7 +111,8 @@ add_task(function*() {
     },
   };
   CustomizableUI.addListener(listener);
-  yield promiseWindowClosed(otherWin);
+  otherWin.close();
+  let windowClosed = yield windowCloseDeferred.promise;
 
   is(windowClosed, otherWin, "Window should have sent onWindowClosed notification.");
   ok(wasInformedCorrectlyOfAreaDisappearing, "Should be told about window closing.");
