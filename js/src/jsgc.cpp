@@ -1115,14 +1115,14 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     mallocBytes(0),
     mallocGCTriggered(false),
     scriptAndCountsVector(nullptr),
-    helperState(rt),
+    inUnsafeRegion(0),
     alwaysPreserveCode(false),
 #ifdef DEBUG
     noGCOrAllocationCheck(0),
 #endif
     lock(nullptr),
     lockOwner(nullptr),
-    inUnsafeRegion(0)
+    helperState(rt)
 {
 }
 
