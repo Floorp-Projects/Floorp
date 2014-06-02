@@ -4,8 +4,10 @@
 
 this.EXPORTED_SYMBOLS = ["LightweightThemeConsumer"];
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
+const {utils: Cu} = Components;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeImageOptimizer",
   "resource://gre/modules/addons/LightweightThemeImageOptimizer.jsm");
@@ -28,12 +30,10 @@ this.LightweightThemeConsumer =
   this._lastScreenWidth = screen.width;
   this._lastScreenHeight = screen.height;
 
-  Components.classes["@mozilla.org/observer-service;1"]
-            .getService(Components.interfaces.nsIObserverService)
-            .addObserver(this, "lightweight-theme-styling-update", false);
+  Services.obs.addObserver(this, "lightweight-theme-styling-update", false);
 
   var temp = {};
-  Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", temp);
+  Cu.import("resource://gre/modules/LightweightThemeManager.jsm", temp);
   this._update(temp.LightweightThemeManager.currentThemeForDisplay);
   this._win.addEventListener("resize", this);
 }
@@ -60,6 +60,10 @@ LightweightThemeConsumer.prototype = {
     this._lastData = lastData;
   },
 
+  getData: function() {
+    return this._enabled ? Cu.cloneInto(this._lastData, this._win) : null;
+  },
+
   observe: function (aSubject, aTopic, aData) {
     if (aTopic != "lightweight-theme-styling-update")
       return;
@@ -84,9 +88,7 @@ LightweightThemeConsumer.prototype = {
   destroy: function () {
     if (!PrivateBrowsingUtils.isWindowPrivate(this._win) ||
         PrivateBrowsingUtils.permanentPrivateBrowsing) {
-      Components.classes["@mozilla.org/observer-service;1"]
-                .getService(Components.interfaces.nsIObserverService)
-                .removeObserver(this, "lightweight-theme-styling-update");
+      Services.obs.removeObserver(this, "lightweight-theme-styling-update");
 
       this._win.removeEventListener("resize", this);
     }
@@ -159,6 +161,8 @@ LightweightThemeConsumer.prototype = {
       }
     }
 #endif
+    Services.obs.notifyObservers(this._win, "lightweight-theme-window-updated",
+                                 JSON.stringify(aData));
   }
 }
 

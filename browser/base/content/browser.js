@@ -4546,6 +4546,9 @@ var TabsInTitlebar = {
     }
 
     ToolbarIconColor.inferFromText();
+    if (CustomizationHandler.isCustomizing()) {
+      gCustomizeMode.updateLWTStyling();
+    }
   },
 
   _sizePlaceholder: function (type, width) {
