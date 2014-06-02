@@ -53,7 +53,7 @@ class NS_COM_GLUE nsSupportsWeakReference : public nsISupportsWeakReference
   };
 
 #undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY NS_VISIBILITY_HIDDEN
+#define IMETHOD_VISIBILITY
 
 inline
 nsSupportsWeakReference::~nsSupportsWeakReference()
