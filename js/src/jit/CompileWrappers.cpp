@@ -122,6 +122,12 @@ CompileRuntime::hadOutOfMemory()
     return runtime()->hadOutOfMemory;
 }
 
+bool
+CompileRuntime::profilingScripts()
+{
+    return runtime()->profilingScripts;
+}
+
 const JSAtomState &
 CompileRuntime::names()
 {
