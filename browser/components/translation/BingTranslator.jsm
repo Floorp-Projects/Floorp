@@ -334,7 +334,7 @@ let BingTokenManager = {
     let deferred = Promise.defer();
     this._pendingRequest = deferred.promise;
     request.post(params.join("&"), function(err) {
-      this._pendingRequest = null;
+      BingTokenManager._pendingRequest = null;
 
       if (err) {
         deferred.reject(err);
