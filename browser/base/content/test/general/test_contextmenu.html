@@ -449,7 +449,13 @@ function runTest(testNum) {
 
     case 19:
         // Context menu for element with assigned content context menu
-        checkContextMenu(["+Plain item",          {type: "", icon: "", checked: false, disabled: false},
+        checkContextMenu(["context-navigation", null,
+                              ["context-back",         false,
+                               "context-forward",      false,
+                               "context-reload",       true,
+                               "context-bookmarkpage", true], null,
+                          "---",                  null,
+                          "+Plain item",          {type: "", icon: "", checked: false, disabled: false},
                           "+Disabled item",       {type: "", icon: "", checked: false, disabled: true},
                           "+Item w/ textContent", {type: "", icon: "", checked: false, disabled: false},
                           "---",                  null,
@@ -468,12 +474,6 @@ function runTest(testNum) {
                                "+Radio3",             {type: "checkbox", icon: "", checked: false, disabled: false},
                                "---",                 null,
                                "+Checkbox",           {type: "checkbox", icon: "", checked: false, disabled: false}], null,
-                          "---",                  null,
-                          "context-navigation", null,
-                              ["context-back",         false,
-                               "context-forward",      false,
-                               "context-reload",       true,
-                               "context-bookmarkpage", true], null,
                           "---",                  null,
                           "context-savepage",     true,
                           "---",                  null,
@@ -501,13 +501,13 @@ function runTest(testNum) {
 
     case 20:
         // Context menu for DOM Fullscreen mode (NOTE: this is *NOT* on an img)
-        checkContextMenu(["context-leave-dom-fullscreen", true,
-                          "---",                          null,
-                          "context-navigation", null,
+        checkContextMenu(["context-navigation", null,
                               ["context-back",            false,
                                "context-forward",         false,
                                "context-reload",          true,
                                "context-bookmarkpage",    true], null,
+                          "---",                          null,
+                          "context-leave-dom-fullscreen", true,
                           "---",                          null,
                           "context-savepage",             true,
                           "---",                          null,
@@ -694,14 +694,14 @@ function runTest(testNum) {
 
     case 27:
         // Context menu for click-to-play blocked plugin
-        checkContextMenu(["context-ctp-play",     true,
-                          "context-ctp-hide",     true,
-                          "---",                  null,
-                          "context-navigation", null,
+        checkContextMenu(["context-navigation", null,
                               ["context-back",         false,
                                "context-forward",      false,
                                "context-reload",       true,
                                "context-bookmarkpage", true], null,
+                          "---",                  null,
+                          "context-ctp-play",     true,
+                          "context-ctp-hide",     true,
                           "---",                  null,
                           "context-savepage",     true,
                           "---",                  null,
