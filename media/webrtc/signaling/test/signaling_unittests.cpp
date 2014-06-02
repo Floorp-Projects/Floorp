@@ -477,6 +477,12 @@ TestObserver::OnIceCandidate(uint16_t level,
 {
   std::cout << name << ": onIceCandidate [" << level << "/"
             << mid << "] " << candidate << std::endl;
+
+  // Check for duplicates.
+  for (auto it = candidates.begin(); it != candidates.end(); ++it) {
+    EXPECT_NE(*it, candidate) << "Duplicate candidate";
+  }
+
   candidates.push_back(candidate);
   return NS_OK;
 }

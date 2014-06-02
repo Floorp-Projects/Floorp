@@ -71,14 +71,6 @@ public:
     virtual cairo_scaled_font_t *GetCairoScaledFont();
 
 protected:
-    virtual bool ShapeText(gfxContext     *aContext,
-                           const char16_t *aText,
-                           uint32_t        aOffset,
-                           uint32_t        aLength,
-                           int32_t         aScript,
-                           gfxShapedText  *aShapedText,
-                           bool            aPreferPlatformShaping = false);
-
     bool GetFakeMetricsForArialBlack(DWRITE_FONT_METRICS *aFontMetrics);
 
     void ComputeMetrics(AntialiasOption anAAOption);
