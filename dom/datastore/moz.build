@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIDataStore.idl',
     'nsIDataStoreService.idl',
 ]
 
@@ -14,15 +13,11 @@ XPIDL_MODULE = 'dom_datastore'
 EXPORTS.mozilla.dom += [
     'DataStore.h',
     'DataStoreCursor.h',
-    'DataStoreService.h',
 ]
 
 SOURCES += [
     'DataStore.cpp',
     'DataStoreCursor.cpp',
-    'DataStoreDB.cpp',
-    'DataStoreRevision.cpp',
-    'DataStoreService.cpp',
 ]
 
 LOCAL_INCLUDES += [
@@ -31,18 +26,17 @@ LOCAL_INCLUDES += [
 
 EXTRA_COMPONENTS += [
     'DataStore.manifest',
-    'DataStoreImpl.js',
+    'DataStoreService.js',
 ]
 
 EXTRA_JS_MODULES += [
     'DataStoreChangeNotifier.jsm',
     'DataStoreCursorImpl.jsm',
     'DataStoreDB.jsm',
+    'DataStoreImpl.jsm',
+    'DataStoreServiceInternal.jsm',
 ]
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 
-include('/ipc/chromium/chromium-config.mozbuild')
-
 FINAL_LIBRARY = 'xul'
-FAIL_ON_WARNINGS = True
