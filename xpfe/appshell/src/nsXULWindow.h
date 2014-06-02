@@ -101,10 +101,10 @@ protected:
    mozilla::dom::Element* GetWindowDOMElement() const;
 
    // See nsIDocShellTreeOwner for docs on next two methods
-   NS_HIDDEN_(nsresult) ContentShellAdded(nsIDocShellTreeItem* aContentShell,
+   nsresult ContentShellAdded(nsIDocShellTreeItem* aContentShell,
                                           bool aPrimary, bool aTargetable,
                                           const nsAString& aID);
-   NS_HIDDEN_(nsresult) ContentShellRemoved(nsIDocShellTreeItem* aContentShell);
+   nsresult ContentShellRemoved(nsIDocShellTreeItem* aContentShell);
    NS_IMETHOD SizeShellTo(nsIDocShellTreeItem* aShellItem, int32_t aCX, 
       int32_t aCY);
    NS_IMETHOD ExitModalLoop(nsresult aStatus);

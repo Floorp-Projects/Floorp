@@ -206,6 +206,13 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         return &TypedArrayObject::protoClasses[ArrayTypeID()];
     }
 
+    static JSObject *CreatePrototype(JSContext *cx, JSProtoKey key)
+    {
+        return cx->global()->createBlankPrototype(cx, protoClass());
+    }
+
+    static bool FinishClassInit(JSContext *cx, HandleObject ctor, HandleObject proto);
+
     static inline const Class *instanceClass()
     {
         return &TypedArrayObject::classes[ArrayTypeID()];
@@ -481,24 +488,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         return DefineNativeProperty(cx, proto, id, UndefinedHandleValue,
                                     JS_DATA_TO_FUNC_PTR(PropertyOp, getter), nullptr,
                                     attrs);
-    }
-
-    static
-    bool defineGetters(JSContext *cx, HandleObject proto)
-    {
-        if (!DefineGetter(cx, proto, cx->names().length, Getter<lengthValue>))
-            return false;
-
-        if (!DefineGetter(cx, proto, cx->names().buffer, BufferGetter))
-            return false;
-
-        if (!DefineGetter(cx, proto, cx->names().byteLength, Getter<byteLengthValue>))
-            return false;
-
-        if (!DefineGetter(cx, proto, cx->names().byteOffset, Getter<byteOffsetValue>))
-            return false;
-
-        return true;
     }
 
     /* subarray(start[, end]) */
@@ -1149,54 +1138,63 @@ class Int8ArrayObject : public TypedArrayObjectTemplate<int8_t> {
     enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_INT8 };
     static const JSProtoKey key = JSProto_Int8Array;
     static const JSFunctionSpec jsfuncs[];
+    static const JSPropertySpec jsprops[];
 };
 class Uint8ArrayObject : public TypedArrayObjectTemplate<uint8_t> {
   public:
     enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_UINT8 };
     static const JSProtoKey key = JSProto_Uint8Array;
     static const JSFunctionSpec jsfuncs[];
+    static const JSPropertySpec jsprops[];
 };
 class Int16ArrayObject : public TypedArrayObjectTemplate<int16_t> {
   public:
     enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_INT16 };
     static const JSProtoKey key = JSProto_Int16Array;
     static const JSFunctionSpec jsfuncs[];
+    static const JSPropertySpec jsprops[];
 };
 class Uint16ArrayObject : public TypedArrayObjectTemplate<uint16_t> {
   public:
     enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_UINT16 };
     static const JSProtoKey key = JSProto_Uint16Array;
     static const JSFunctionSpec jsfuncs[];
+    static const JSPropertySpec jsprops[];
 };
 class Int32ArrayObject : public TypedArrayObjectTemplate<int32_t> {
   public:
     enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_INT32 };
     static const JSProtoKey key = JSProto_Int32Array;
     static const JSFunctionSpec jsfuncs[];
+    static const JSPropertySpec jsprops[];
 };
 class Uint32ArrayObject : public TypedArrayObjectTemplate<uint32_t> {
   public:
     enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_UINT32 };
     static const JSProtoKey key = JSProto_Uint32Array;
     static const JSFunctionSpec jsfuncs[];
+    static const JSPropertySpec jsprops[];
 };
 class Float32ArrayObject : public TypedArrayObjectTemplate<float> {
   public:
     enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_FLOAT32 };
     static const JSProtoKey key = JSProto_Float32Array;
     static const JSFunctionSpec jsfuncs[];
+    static const JSPropertySpec jsprops[];
 };
 class Float64ArrayObject : public TypedArrayObjectTemplate<double> {
   public:
     enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_FLOAT64 };
     static const JSProtoKey key = JSProto_Float64Array;
     static const JSFunctionSpec jsfuncs[];
+    static const JSPropertySpec jsprops[];
 };
 class Uint8ClampedArrayObject : public TypedArrayObjectTemplate<uint8_clamped> {
   public:
     enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_UINT8_CLAMPED };
     static const JSProtoKey key = JSProto_Uint8ClampedArray;
     static const JSFunctionSpec jsfuncs[];
+    static const JSPropertySpec jsprops[];
 };
 
 } /* anonymous namespace */
@@ -2042,23 +2040,46 @@ TypedArrayObject::setElement(TypedArrayObject &obj, uint32_t index, double d)
  */
 
 #ifndef RELEASE_BUILD
-# define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                     \
-const JSFunctionSpec _typedArray##Object::jsfuncs[] = {                            \
-    JS_SELF_HOSTED_FN("@@iterator", "ArrayValues", 0, 0),                          \
-    JS_FN("subarray", _typedArray##Object::fun_subarray, 2, JSFUN_GENERIC_NATIVE), \
-    JS_FN("set", _typedArray##Object::fun_set, 2, JSFUN_GENERIC_NATIVE),           \
-    JS_FN("move", _typedArray##Object::fun_move, 3, JSFUN_GENERIC_NATIVE),         \
-    JS_FS_END                                                                      \
-}
+# define EXPERIMENTAL_FUNCTIONS(_t) JS_FN("move", _t##Object::fun_move, 3, JSFUN_GENERIC_NATIVE),
 #else
-# define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                     \
+# define EXPERIMENTAL_FUNCTIONS(_t)
+#endif
+
+#define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                      \
 const JSFunctionSpec _typedArray##Object::jsfuncs[] = {                            \
     JS_SELF_HOSTED_FN("@@iterator", "ArrayValues", 0, 0),                          \
     JS_FN("subarray", _typedArray##Object::fun_subarray, 2, JSFUN_GENERIC_NATIVE), \
     JS_FN("set", _typedArray##Object::fun_set, 2, JSFUN_GENERIC_NATIVE),           \
+    EXPERIMENTAL_FUNCTIONS(_typedArray)                                            \
     JS_FS_END                                                                      \
-}
-#endif
+};                                                                                 \
+/* These next 3 functions are brought to you by the buggy GCC we use to build      \
+   B2G ICS. Older GCC versions have a bug in which they fail to compile            \
+   reinterpret_casts of templated functions with the message: "insufficient        \
+   contextual information to determine type". JS_PSG needs to                      \
+   reinterpret_cast<JSPropertyOp>, so this causes problems for us here.            \
+                                                                                   \
+   We could restructure all this code to make this nicer, but since ICS isn't      \
+   going to be around forever (and since this bug is fixed with the newer GCC      \
+   versions we use on JB and KK), the workaround here is designed for ease of      \
+   removal. When you stop seeing ICS Emulator builds on TBPL, remove these 3       \
+   JSNatives and insert the templated callee directly into the JS_PSG below. */    \
+bool _typedArray##_lengthGetter(JSContext *cx, unsigned argc, Value *vp) {         \
+    return _typedArray##Object::Getter<_typedArray##Object::lengthValue>(cx, argc, vp); \
+}                                                                                  \
+bool _typedArray##_byteLengthGetter(JSContext *cx, unsigned argc, Value *vp) {     \
+    return _typedArray##Object::Getter<_typedArray##Object::byteLengthValue>(cx, argc, vp); \
+}                                                                                  \
+bool _typedArray##_byteOffsetGetter(JSContext *cx, unsigned argc, Value *vp) {     \
+    return _typedArray##Object::Getter<_typedArray##Object::byteOffsetValue>(cx, argc, vp); \
+}                                                                                  \
+const JSPropertySpec _typedArray##Object::jsprops[] = {                            \
+    JS_PSG("length", _typedArray##_lengthGetter, JSPROP_PERMANENT),                \
+    JS_PSG("buffer", _typedArray##Object::BufferGetter, JSPROP_PERMANENT),         \
+    JS_PSG("byteLength", _typedArray##_byteLengthGetter, JSPROP_PERMANENT),        \
+    JS_PSG("byteOffset", _typedArray##_byteOffsetGetter, JSPROP_PERMANENT),        \
+    JS_PS_END                                                                      \
+};
 
 #define IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Name,NativeType)                                    \
   JS_FRIEND_API(JSObject *) JS_New ## Name ## Array(JSContext *cx, uint32_t nelements)          \
@@ -2162,35 +2183,29 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     JS_EnumerateStub,                                                          \
     JS_ResolveStub,                                                            \
     JS_ConvertStub,                                                            \
-    nullptr,                 /* finalize */                                    \
+    nullptr,                 /* finalize    */                                 \
     nullptr,                 /* call        */                                 \
     nullptr,                 /* hasInstance */                                 \
     nullptr,                 /* construct   */                                 \
     ArrayBufferViewObject::trace, /* trace  */                                 \
+    {                                                                          \
+        GenericCreateConstructor<_typedArray##Object::class_constructor,       \
+                                 NAME_OFFSET(_typedArray), 3>,                 \
+        _typedArray##Object::CreatePrototype,                                  \
+        nullptr,                                                               \
+        _typedArray##Object::jsfuncs,                                          \
+        _typedArray##Object::jsprops,                                          \
+        _typedArray##Object::FinishClassInit                                   \
+    }                                                                          \
 }
 
-template<class ArrayType>
-static inline bool
-InitTypedArrayClass(JSContext *cx)
+template<typename NativeType>
+bool
+TypedArrayObjectTemplate<NativeType>::FinishClassInit(JSContext *cx,
+                                                      HandleObject ctor,
+                                                      HandleObject proto)
 {
-    Rooted<GlobalObject*> global(cx, cx->compartment()->maybeGlobal());
-    if (global->isStandardClassResolved(ArrayType::key))
-        return true;
-
-    RootedObject proto(cx, global->createBlankPrototype(cx, ArrayType::protoClass()));
-    if (!proto)
-        return false;
-
-    RootedFunction ctor(cx);
-    ctor = global->createConstructor(cx, ArrayType::class_constructor,
-                                     ClassName(ArrayType::key, cx), 3);
-    if (!ctor)
-        return false;
-
-    if (!LinkConstructorAndPrototype(cx, ctor, proto))
-        return false;
-
-    RootedValue bytesValue(cx, Int32Value(ArrayType::BYTES_PER_ELEMENT));
+    RootedValue bytesValue(cx, Int32Value(BYTES_PER_ELEMENT));
 
     if (!JSObject::defineProperty(cx, ctor,
                                   cx->names().BYTES_PER_ELEMENT, bytesValue,
@@ -2204,37 +2219,28 @@ InitTypedArrayClass(JSContext *cx)
         return false;
     }
 
-    if (!ArrayType::defineGetters(cx, proto))
-        return false;
-
-    if (!JS_DefineFunctions(cx, proto, ArrayType::jsfuncs))
-        return false;
-
     RootedFunction fun(cx);
     fun =
         NewFunction(cx, NullPtr(),
-                    ArrayBufferObject::createTypedArrayFromBuffer<typename ArrayType::ThisType>,
-                    0, JSFunction::NATIVE_FUN, global, NullPtr());
+                    ArrayBufferObject::createTypedArrayFromBuffer<ThisType>,
+                    0, JSFunction::NATIVE_FUN, cx->global(), NullPtr());
     if (!fun)
         return false;
 
-    if (!GlobalObject::initBuiltinConstructor(cx, global, ArrayType::key, ctor, proto))
-        return false;
-
-    global->setCreateArrayFromBuffer<typename ArrayType::ThisType>(fun);
+    cx->global()->setCreateArrayFromBuffer<ThisType>(fun);
 
     return true;
-}
+};
 
-IMPL_TYPED_ARRAY_STATICS(Int8Array);
-IMPL_TYPED_ARRAY_STATICS(Uint8Array);
-IMPL_TYPED_ARRAY_STATICS(Int16Array);
-IMPL_TYPED_ARRAY_STATICS(Uint16Array);
-IMPL_TYPED_ARRAY_STATICS(Int32Array);
-IMPL_TYPED_ARRAY_STATICS(Uint32Array);
-IMPL_TYPED_ARRAY_STATICS(Float32Array);
-IMPL_TYPED_ARRAY_STATICS(Float64Array);
-IMPL_TYPED_ARRAY_STATICS(Uint8ClampedArray);
+IMPL_TYPED_ARRAY_STATICS(Int8Array)
+IMPL_TYPED_ARRAY_STATICS(Uint8Array)
+IMPL_TYPED_ARRAY_STATICS(Int16Array)
+IMPL_TYPED_ARRAY_STATICS(Uint16Array)
+IMPL_TYPED_ARRAY_STATICS(Int32Array)
+IMPL_TYPED_ARRAY_STATICS(Uint32Array)
+IMPL_TYPED_ARRAY_STATICS(Float32Array)
+IMPL_TYPED_ARRAY_STATICS(Float64Array)
+IMPL_TYPED_ARRAY_STATICS(Uint8ClampedArray)
 
 const Class TypedArrayObject::classes[ScalarTypeDescr::TYPE_MAX] = {
     IMPL_TYPED_ARRAY_FAST_CLASS(Int8Array),
@@ -2277,8 +2283,8 @@ js::IsTypedArrayThisCheck(JS::IsAcceptableThis test)
 }
 #undef CHECK
 
-static JSObject *
-InitArrayBufferClass(JSContext *cx)
+JSObject *
+js_InitArrayBufferClass(JSContext *cx, HandleObject obj)
 {
     Rooted<GlobalObject*> global(cx, cx->compartment()->maybeGlobal());
     if (global->isStandardClassResolved(JSProto_ArrayBuffer))
@@ -2292,6 +2298,12 @@ InitArrayBufferClass(JSContext *cx)
                                                       cx->names().ArrayBuffer, 1));
     if (!ctor)
         return nullptr;
+
+    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_ArrayBuffer,
+                                              ctor, arrayBufferProto))
+    {
+        return nullptr;
+    }
 
     if (!LinkConstructorAndPrototype(cx, ctor, arrayBufferProto))
         return nullptr;
@@ -2312,12 +2324,6 @@ InitArrayBufferClass(JSContext *cx)
 
     if (!JS_DefineFunctions(cx, arrayBufferProto, ArrayBufferObject::jsfuncs))
         return nullptr;
-
-    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_ArrayBuffer,
-                                              ctor, arrayBufferProto))
-    {
-        return nullptr;
-    }
 
     return arrayBufferProto;
 }
@@ -2467,23 +2473,11 @@ DataViewObject::neuter(void *newData)
 }
 
 JSObject *
-js_InitTypedArrayClasses(JSContext *cx, HandleObject obj)
+js_InitDataViewClass(JSContext *cx, HandleObject obj)
 {
-    if (!InitTypedArrayClass<Int8ArrayObject>(cx) ||
-        !InitTypedArrayClass<Uint8ArrayObject>(cx) ||
-        !InitTypedArrayClass<Int16ArrayObject>(cx) ||
-        !InitTypedArrayClass<Uint16ArrayObject>(cx) ||
-        !InitTypedArrayClass<Int32ArrayObject>(cx) ||
-        !InitTypedArrayClass<Uint32ArrayObject>(cx) ||
-        !InitTypedArrayClass<Float32ArrayObject>(cx) ||
-        !InitTypedArrayClass<Float64ArrayObject>(cx) ||
-        !InitTypedArrayClass<Uint8ClampedArrayObject>(cx) ||
-        !DataViewObject::initClass(cx))
-    {
+    if (!DataViewObject::initClass(cx))
         return nullptr;
-    }
-
-    return InitArrayBufferClass(cx);
+    return &cx->global()->getPrototype(JSProto_DataView).toObject();
 }
 
 bool

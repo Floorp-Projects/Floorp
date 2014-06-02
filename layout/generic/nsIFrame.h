@@ -2653,7 +2653,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
   // convenience.
   virtual void SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
                          bool aRemoveOverflowAreas = false) = 0;
-  NS_HIDDEN_(nsresult) Layout(nsBoxLayoutState& aBoxLayoutState);
+  nsresult Layout(nsBoxLayoutState& aBoxLayoutState);
   // Box methods.  Note that these do NOT just get the CSS border, padding,
   // etc.  They also talk to nsITheme.
   virtual nsresult GetBorderAndPadding(nsMargin& aBorderAndPadding);
@@ -2662,7 +2662,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
   virtual nsresult GetMargin(nsMargin& aMargin)=0;
   virtual void SetLayoutManager(nsBoxLayout* aLayout) { }
   virtual nsBoxLayout* GetLayoutManager() { return nullptr; }
-  NS_HIDDEN_(nsresult) GetClientRect(nsRect& aContentRect);
+  nsresult GetClientRect(nsRect& aContentRect);
 
   // For nsSprocketLayout
   virtual Valignment GetVAlign() const = 0;
@@ -2671,7 +2671,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
   bool IsHorizontal() const { return (mState & NS_STATE_IS_HORIZONTAL) != 0; }
   bool IsNormalDirection() const { return (mState & NS_STATE_IS_DIRECTION_NORMAL) != 0; }
 
-  NS_HIDDEN_(nsresult) Redraw(nsBoxLayoutState& aState);
+  nsresult Redraw(nsBoxLayoutState& aState);
   virtual nsresult RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIFrame* aChild)=0;
   // XXX take this out after we've branched
   virtual bool GetMouseThrough() const { return false; }
