@@ -21,8 +21,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.0.266';
-PDFJS.build = '5b16323';
+PDFJS.version = '1.0.277';
+PDFJS.build = '250d394';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -15606,7 +15606,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                 assert(isName(type),
                   'XObject should have a Name subtype');
 
-                if ('Form' == type.name) {
+                if (type.name === 'Form') {
                   stateManager.save();
                   return self.buildFormXObject(resources, xobj, null,
                                                operatorList,
@@ -15615,10 +15615,15 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                       stateManager.restore();
                       next(resolve, reject);
                     }, reject);
-                } else if ('Image' == type.name) {
+                } else if (type.name === 'Image') {
                   self.buildPaintImageXObject(resources, xobj, false,
                     operatorList, name, imageCache);
                   args = [];
+                  continue;
+                } else if (type.name === 'PS') {
+                  // PostScript XObjects are unused when viewing documents.
+                  // See section 4.7.1 of Adobe's PDF reference.
+                  info('Ignored XObject subtype PS');
                   continue;
                 } else {
                   error('Unhandled XObject subtype ' + type.name);
@@ -15651,18 +15656,31 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
               break;
             case OPS.showSpacedText:
               var arr = args[0];
+              var combinedGlyphs = [];
               var arrLength = arr.length;
               for (i = 0; i < arrLength; ++i) {
-                if (isString(arr[i])) {
-                  arr[i] = self.handleText(arr[i], stateManager.state);
+                var arrItem = arr[i];
+                if (isString(arrItem)) {
+                  Array.prototype.push.apply(combinedGlyphs,
+                    self.handleText(arrItem, stateManager.state));
+                } else if (isNum(arrItem)) {
+                  combinedGlyphs.push(arrItem);
                 }
               }
+              args[0] = combinedGlyphs;
+              fn = OPS.showText;
               break;
             case OPS.nextLineShowText:
+              operatorList.addOp(OPS.nextLine);
               args[0] = self.handleText(args[0], stateManager.state);
+              fn = OPS.showText;
               break;
             case OPS.nextLineSetSpacingShowText:
-              args[2] = self.handleText(args[2], stateManager.state);
+              operatorList.addOp(OPS.nextLine);
+              operatorList.addOp(OPS.setWordSpacing, [args.shift()]);
+              operatorList.addOp(OPS.setCharSpacing, [args.shift()]);
+              args[0] = self.handleText(args[0], stateManager.state);
+              fn = OPS.showText;
               break;
             case OPS.setTextRenderingMode:
               stateManager.state.textRenderingMode = args[0];
