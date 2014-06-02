@@ -23,10 +23,10 @@ public:
 private:
   ~nsGNOMEShellService() {}
 
-  NS_HIDDEN_(bool) KeyMatchesAppName(const char *aKeyValue) const;
-  NS_HIDDEN_(bool) CheckHandlerMatchesAppName(const nsACString& handler) const;
+  bool KeyMatchesAppName(const char *aKeyValue) const;
+  bool CheckHandlerMatchesAppName(const nsACString& handler) const;
 
-  NS_HIDDEN_(bool) GetAppPathFromLauncher();
+  bool GetAppPathFromLauncher();
   bool mCheckedThisSession;
   bool mUseLocaleFilenames;
   nsCString    mAppPath;

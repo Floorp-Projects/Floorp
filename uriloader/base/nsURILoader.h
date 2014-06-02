@@ -38,7 +38,7 @@ protected:
    * Equivalent to nsIURILoader::openChannel, but allows specifying whether the
    * channel is opened already.
    */
-  NS_HIDDEN_(nsresult) OpenChannel(nsIChannel* channel,
+  nsresult OpenChannel(nsIChannel* channel,
                                    uint32_t aFlags,
                                    nsIInterfaceRequestor* aWindowContext,
                                    bool aChannelOpen,

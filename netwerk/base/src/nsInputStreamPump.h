@@ -32,7 +32,7 @@ public:
     nsInputStreamPump(); 
     ~nsInputStreamPump();
 
-    static NS_HIDDEN_(nsresult)
+    static nsresult
                       Create(nsInputStreamPump  **result,
                              nsIInputStream      *stream,
                              int64_t              streamPos = -1,
@@ -53,7 +53,7 @@ public:
      *
      * Do not call before asyncRead. Do not call after onStopRequest.
      */
-    NS_HIDDEN_(nsresult) PeekStream(PeekSegmentFun callback, void *closure);
+    nsresult PeekStream(PeekSegmentFun callback, void *closure);
 
     /**
      * Dispatched (to the main thread) by OnStateStop if it's called off main

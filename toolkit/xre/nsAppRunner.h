@@ -65,10 +65,10 @@ extern bool gLogConsoleErrors;
  */
 nsresult NS_CreateNativeAppSupport(nsINativeAppSupport* *aResult);
 
-NS_HIDDEN_(nsresult)
+nsresult
 NS_NewToolkitProfileService(nsIToolkitProfileService* *aResult);
 
-NS_HIDDEN_(nsresult)
+nsresult
 NS_NewToolkitProfileFactory(nsIFactory* *aResult);
 
 /**
@@ -88,11 +88,11 @@ NS_NewToolkitProfileFactory(nsIFactory* *aResult);
  * @return NS_ERROR_FILE_ACCESS_DENIED to indicate that the profile
  *         directory cannot be unlocked.
  */
-NS_HIDDEN_(nsresult)
+nsresult
 NS_LockProfilePath(nsIFile* aPath, nsIFile* aTempPath,
                    nsIProfileUnlocker* *aUnlocker, nsIProfileLock* *aResult);
 
-NS_HIDDEN_(void)
+void
 WriteConsoleLog();
 
 #ifdef XP_WIN
