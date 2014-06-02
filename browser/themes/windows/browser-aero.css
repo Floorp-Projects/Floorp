@@ -123,17 +123,13 @@
   }
 
   /* Artificially draw window borders that are covered by lwtheme, see bug 591930. */
-  #main-window[sizemode="normal"] > #titlebar > #titlebar-content:-moz-lwtheme {
+  #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme {
     border-top: 2px solid;
     -moz-border-top-colors: @glassActiveBorderColor@ rgba(255,255,255,.6);
   }
 
-  #main-window[sizemode="normal"] > #titlebar > #titlebar-content:-moz-lwtheme:-moz-window-inactive {
+  #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme:-moz-window-inactive {
     -moz-border-top-colors: @glassInactiveBorderColor@ rgba(255,255,255,.6);
-  }
-
-  #main-window[sizemode="normal"] #titlebar-buttonbox:-moz-lwtheme {
-    margin-top: -2px;
   }
 
   @media (-moz-windows-default-theme) {
@@ -296,13 +292,13 @@
     }
 
     /* Render a window top border for lwthemes: */
-    #main-window[tabsintitlebar][sizemode="normal"] #titlebar-content:-moz-lwtheme {
+    #main-window[tabsintitlebar][sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme {
       background-image: linear-gradient(to bottom,
             @glassActiveBorderColor@ 0, @glassActiveBorderColor@ 1px,
             rgba(255,255,255,.6) 1px, rgba(255,255,255,.6) 2px, transparent 2px);
     }
 
-    #main-window[tabsintitlebar][sizemode="normal"] #titlebar-content:-moz-lwtheme:-moz-window-inactive {
+    #main-window[tabsintitlebar][sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme:-moz-window-inactive {
       background-image: linear-gradient(to bottom,
             @glassInactiveBorderColor@ 0, @glassInactiveBorderColor@ 1px,
             rgba(255,255,255,.6) 1px, rgba(255,255,255,.6) 2px, transparent 2px);

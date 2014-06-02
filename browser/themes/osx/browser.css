@@ -4359,6 +4359,25 @@ window > chatbox {
   background-attachment: fixed;
 }
 
+#main-window[tabsintitlebar][customization-lwtheme] > #titlebar:-moz-lwtheme,
+#main-window[customization-lwtheme] > #tab-view-deck:-moz-lwtheme {
+  background-repeat: no-repeat;
+  background-position: right top;
+  background-attachment: fixed;
+  /* The image will get set from CustomizeMode.jsm */
+  background-image: none;
+  background-color: transparent;
+}
+
+#main-window[customization-lwtheme]:-moz-lwtheme {
+  background-image: url("chrome://browser/skin/customizableui/customizeMode-gridTexture.png"),
+                    url("chrome://browser/skin/customizableui/background-noise-toolbar.png");
+  background-color: rgb(178,178,178);
+  background-repeat: repeat;
+  background-attachment: fixed;
+  background-position: left top;
+}
+
 #main-window[customize-entered] #browser-bottombox,
 #main-window[customize-entered] #navigator-toolbox > toolbar:not(#TabsToolbar),
 #main-window[customize-entered] #customization-container {
