@@ -3778,6 +3778,6 @@ protected:
                                    bool aUseFontSet,
                                    void *closure);
 
-    static NS_HIDDEN_(nsILanguageAtomService*) gLangService;
+    static nsILanguageAtomService* gLangService;
 };
 #endif

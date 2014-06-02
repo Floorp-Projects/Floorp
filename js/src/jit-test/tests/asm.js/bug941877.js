@@ -1,5 +1,13 @@
-(function(stdlib, n, heap) {
-    "use asm"
+load(libdir + "asm.js");
+
+function FunctionBody(f) {
+    var str = f.toString();
+    var firstBrace = str.indexOf('{');
+    var lastBrace = str.lastIndexOf('}');
+    return str.substr(firstBrace + 1, lastBrace - firstBrace - 1);
+}
+
+var F = (function (stdlib, n, heap) {
     var Int16ArrayView = new stdlib.Int16Array(heap);
     function f(i0, d1) {
         i0 = i0 | 0
@@ -16,15 +24,22 @@
         (((i3 - (0 < 0)) >>> ((.0 < -0) + (.0 > .0))) / 0) >> (0 + (((0 + 0) ^
 (9 > 0)) | 0))
     }
-})(this, null, new ArrayBuffer(4096));
+    return f;
+});
 
-(function(stdlib, n, heap) {
-    "use asm"
+var compiled = asmCompile('stdlib', 'n', 'heap', USE_ASM + FunctionBody(F));
+asmLink(compiled, this, null, new ArrayBuffer(4096))();
+
+var F = (function(stdlib, n, heap) {
     var Float64ArrayView = new stdlib.Float64Array(heap)
     function f() {
         Float64ArrayView[0] = +(0xffffffff / 0xffffffff >> 0)
     }
-})(this, null, new ArrayBuffer(4096));
+    return f;
+});
+
+var compiled = asmCompile('stdlib', 'n', 'heap', USE_ASM + FunctionBody(F));
+asmLink(compiled, this, null, new ArrayBuffer(4096))();
 
 function test0(x)
 {
@@ -56,55 +71,57 @@ assertEq(test2(23, 0), NaN);
 
 function test3()
 {
-    "use asm";
     function f(x, y)
     {
         x = x|0;
         y = y|0;
         var t = 0;
-        t = (x % y) > -2;
+        t = (((x|0) % (y|0))|0) > -2;
         return t|0;
     }
     return f;
 }
-assertEq(test3()(4294967290, 4294967295), 1);
-assertEq(test3()(4294967290, 4294967295), 1);
+var compiled = asmCompile(USE_ASM + FunctionBody(test3));
+var linked = asmLink(compiled);
+assertEq(linked(4294967290, 4294967295), 1);
+assertEq(linked(4294967290, 4294967295), 1);
 
 function test4()
 {
-    "use asm";
     function f(x, y)
     {
         x = x|0;
         y = y|0;
         var t = 0;
-        t = ((x>>>0) % (y>>>0)) > -2;
+        t = (((x>>>0) % (y>>>0)) >>> 0) > 0;
         return t|0;
     }
     return f;
 }
-assertEq(test4()(4294967290, 4294967295), 1);
-assertEq(test4()(4294967290, 4294967295), 1);
+var compiled = asmCompile(USE_ASM + FunctionBody(test4));
+var linked = asmLink(compiled);
+assertEq(linked(4294967290, 4294967295), 1);
+assertEq(linked(4294967290, 4294967295), 1);
 
 function test5()
 {
-    "use asm";
     function f(x, y)
     {
         x = x|0;
         y = y|0;
-        var t = 0;
-        t = ((x>>>0) % (y>>>0)) * 1.01;
+        var t = 0.;
+        t = +(((x>>>0) % (y>>>0)) >>> 0) * 1.01;
         return +t;
     }
     return f;
 }
-assertEq(test5()(4294967290, 4294967295), 4337916962.9);
-assertEq(test5()(4294967290, 4294967295), 4337916962.9);
+var compiled = asmCompile(USE_ASM + FunctionBody(test5));
+var linked = asmLink(compiled);
+assertEq(linked(4294967290, 4294967295), 4337916962.9);
+assertEq(linked(4294967290, 4294967295), 4337916962.9);
 
 function test6()
 {
-    "use asm";
     function f(x, y)
     {
         x = x|0;
@@ -113,12 +130,13 @@ function test6()
     }
     return f;
 }
-assertEq(test6()(23847, 7), 1);
-assertEq(test6()(23848, 7), 2);
+var compiled = asmCompile(USE_ASM + FunctionBody(test6));
+var linked = asmLink(compiled);
+assertEq(linked(23847, 7), 1);
+assertEq(linked(23848, 7), 2);
 
 function test7()
 {
-    "use asm";
     function f(x)
     {
         x = x|0;
@@ -126,12 +144,13 @@ function test7()
     }
     return f;
 }
-assertEq(test7()(23847, 7), 2980);
-assertEq(test7()(23848, 7), 2981);
+var compiled = asmCompile(USE_ASM + FunctionBody(test7));
+var linked = asmLink(compiled);
+assertEq(linked(23847, 7), 2980);
+assertEq(linked(23848, 7), 2981);
 
 function test8()
 {
-    "use asm";
     function f(i,j)
     {
         i=i|0;j=j|0;
@@ -139,5 +158,7 @@ function test8()
     }
     return f;
 }
-assertEq(test8()(2147483647, 0), 0);
-assertEq(test8()(2147483646, 0), 0);
+var compiled = asmCompile(USE_ASM + FunctionBody(test8));
+var linked = asmLink(compiled);
+assertEq(linked(2147483647, 0), 0);
+assertEq(linked(2147483646, 0), 0);
