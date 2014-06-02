@@ -19,9 +19,6 @@
 #include "vm/ErrorObject.h"
 
 extern JSObject *
-js_InitTypedArrayClasses(JSContext *cx, js::HandleObject obj);
-
-extern JSObject *
 js_InitSharedArrayBufferClass(JSContext *cx, js::HandleObject obj);
 
 namespace js {
