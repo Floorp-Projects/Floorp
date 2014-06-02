@@ -71,12 +71,13 @@ public:
 
 protected:
     /* override to ensure the cairo font is set up properly */
-    virtual bool ShapeText(gfxContext     *aContext,
+    virtual bool ShapeText(gfxContext      *aContext,
                            const char16_t *aText,
-                           uint32_t        aOffset,
-                           uint32_t        aLength,
-                           int32_t         aScript,
-                           gfxShapedText  *aShapedText);
+                           uint32_t         aOffset,
+                           uint32_t         aLength,
+                           int32_t          aScript,
+                           gfxShapedText   *aShapedText,
+                           bool             aPreferPlatformShaping);
 
     void Initialize(); // creates metrics and Cairo fonts
 
