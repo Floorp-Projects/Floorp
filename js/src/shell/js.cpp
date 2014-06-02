@@ -51,7 +51,6 @@
 #ifdef XP_WIN
 # include "jswin.h"
 #endif
-#include "jsworkers.h"
 #include "jswrapper.h"
 #include "prmjtime.h"
 
@@ -65,6 +64,7 @@
 #include "shell/jsheaptools.h"
 #include "shell/jsoptparse.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/HelperThreads.h"
 #include "vm/Monitor.h"
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
