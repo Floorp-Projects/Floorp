@@ -3144,7 +3144,7 @@ pref("font.name.monospace.ko", "Fira Mono OT");
 pref("font.name.serif.th", "Charis SIL Compact");
 pref("font.name.sans-serif.th", "Fira Sans OT");
 pref("font.name.monospace.th", "Fira Mono OT");
-pref("font.name-list.sans-serif.th", "Fira Sans OT, Droid Sans Thai");
+pref("font.name-list.sans-serif.th", "Fira Sans OT, Noto Sans Thai, Droid Sans Thai");
 
 pref("font.name.serif.tr", "Charis SIL Compact");
 pref("font.name.sans-serif.tr", "Fira Sans OT");
