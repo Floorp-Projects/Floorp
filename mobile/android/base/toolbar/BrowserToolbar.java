@@ -149,6 +149,8 @@ public class BrowserToolbar extends ThemedRelativeLayout
     private OnFocusChangeListener focusChangeListener;
     private OnStartEditingListener startEditingListener;
     private OnStopEditingListener stopEditingListener;
+    private final PropertyAnimator.PropertyAnimationListener showEditingPhoneAnimationListener;
+    private final PropertyAnimator.PropertyAnimationListener stopEditingPhoneAnimationListener;
 
     private final BrowserApp activity;
     private boolean hasSoftMenuButton;
@@ -240,6 +242,41 @@ public class BrowserToolbar extends ThemedRelativeLayout
         }
 
         setUIMode(UIMode.DISPLAY);
+
+        // Create these listeners here, once, to avoid constructing new listeners
+        // each time they are set on an animator (i.e. each time the url bar is clicked).
+        showEditingPhoneAnimationListener = new PropertyAnimator.PropertyAnimationListener() {
+            @Override
+            public void onPropertyAnimationStart() { /* Do nothing */ }
+
+            @Override
+            public void onPropertyAnimationEnd() {
+                isAnimatingEntry = false;
+            }
+        };
+
+        stopEditingPhoneAnimationListener = new PropertyAnimator.PropertyAnimationListener() {
+            @Override
+            public void onPropertyAnimationStart() { /* Do nothing */ }
+
+            @Override
+            public void onPropertyAnimationEnd() {
+                urlBarTranslatingEdge.setVisibility(View.INVISIBLE);
+                if (shouldShrinkURLBar) {
+                    urlBarEntry.setLayoutParams(urlBarEntryDefaultLayoutParams);
+                }
+
+                PropertyAnimator buttonsAnimator = new PropertyAnimator(300);
+                urlDisplayLayout.prepareStopEditingAnimation(buttonsAnimator);
+                buttonsAnimator.start();
+
+                isAnimatingEntry = false;
+
+                // Trigger animation to update the tabs counter once the
+                // tabs button is back on screen.
+                updateTabCountAndAnimate(Tabs.getInstance().getDisplayCount());
+            }
+        };
     }
 
     @Override
@@ -1041,18 +1078,8 @@ public class BrowserToolbar extends ThemedRelativeLayout
 
         showUrlEditLayout(animator);
 
-        animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
-            @Override
-            public void onPropertyAnimationStart() {
-            }
-
-            @Override
-            public void onPropertyAnimationEnd() {
-                isAnimatingEntry = false;
-            }
-        });
-
-        isAnimatingEntry = true;
+        animator.addPropertyAnimationListener(showEditingPhoneAnimationListener);
+        isAnimatingEntry = true; // To be correct, this should be called last.
     }
 
     /**
@@ -1169,31 +1196,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
 
         hideUrlEditLayout(contentAnimator);
 
-        contentAnimator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
-            @Override
-            public void onPropertyAnimationStart() {
-            }
-
-            @Override
-            public void onPropertyAnimationEnd() {
-                if (urlBarTranslatingEdge != null) {
-                    urlBarTranslatingEdge.setVisibility(View.INVISIBLE);
-                    if (shouldShrinkURLBar) {
-                        urlBarEntry.setLayoutParams(urlBarEntryDefaultLayoutParams);
-                    }
-                }
-
-                PropertyAnimator buttonsAnimator = new PropertyAnimator(300);
-                urlDisplayLayout.prepareStopEditingAnimation(buttonsAnimator);
-                buttonsAnimator.start();
-
-                isAnimatingEntry = false;
-
-                // Trigger animation to update the tabs counter once the
-                // tabs button is back on screen.
-                updateTabCountAndAnimate(Tabs.getInstance().getDisplayCount());
-            }
-        });
+        contentAnimator.addPropertyAnimationListener(stopEditingPhoneAnimationListener);
 
         isAnimatingEntry = true;
         contentAnimator.start();
