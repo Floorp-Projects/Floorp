@@ -16,6 +16,10 @@
 
 #include "nsUUIDGenerator.h"
 
+#ifdef ANDROID
+extern "C" NS_EXPORT void arc4random_buf(void *, size_t);
+#endif
+
 using namespace mozilla;
 
 NS_IMPL_ISUPPORTS(nsUUIDGenerator, nsIUUIDGenerator)
@@ -126,6 +130,9 @@ nsUUIDGenerator::GenerateUUIDInPlace(nsID* aId)
   setstate(mState);
 #endif
 
+#ifdef HAVE_ARC4RANDOM_BUF
+  arc4random_buf(aId, sizeof(nsID));
+#else /* HAVE_ARC4RANDOM_BUF */
   size_t bytesLeft = sizeof(nsID);
   while (bytesLeft > 0) {
 #ifdef HAVE_ARC4RANDOM
@@ -150,6 +157,7 @@ nsUUIDGenerator::GenerateUUIDInPlace(nsID* aId)
 
     bytesLeft -= toWrite;
   }
+#endif /* HAVE_ARC4RANDOM_BUF */
 
   /* Put in the version */
   aId->m2 &= 0x0fff;
