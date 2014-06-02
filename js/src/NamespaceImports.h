@@ -41,7 +41,7 @@ class SourceBufferHolder;
 
 class HandleValueArray;
 
-class AutoCheckCannotGC;
+class JS_PUBLIC_API(AutoCheckCannotGC);
 
 }
 
