@@ -84,6 +84,8 @@
 
 #customization-container {
   background-color: rgb(247,247,247);
+  color: black;
+  text-shadow: none;
 }
 
 #customization-palette,

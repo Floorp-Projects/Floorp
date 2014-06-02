@@ -167,10 +167,7 @@ CustomizeMode.prototype = {
         toolbarVisibilityBtn.removeAttribute("hidden");
       }
 
-      // Disable lightweight themes while in customization mode since
-      // they don't have large enough images to pad the full browser window.
-      if (this.document.documentElement._lightweightTheme)
-        this.document.documentElement._lightweightTheme.disable();
+      this.updateLWTStyling();
 
       CustomizableUI.dispatchToolboxEvent("beforecustomization", {}, window);
       CustomizableUI.notifyStartCustomizing(this.window);
@@ -223,6 +220,9 @@ CustomizeMode.prototype = {
       customizer.hidden = false;
 
       yield this._doTransition(true);
+
+      Services.obs.addObserver(this, "lightweight-theme-window-updated", false);
+
 
       // Let everybody in this window know that we're about to customize.
       CustomizableUI.dispatchToolboxEvent("customizationstarting", {}, window);
@@ -366,6 +366,9 @@ CustomizeMode.prototype = {
       yield this.depopulatePalette();
 
       yield this._doTransition(false);
+      this.removeLWTStyling();
+
+      Services.obs.removeObserver(this, "lightweight-theme-window-updated", false);
 
       let browser = document.getElementById("browser");
       if (this.browser.selectedBrowser.currentURI.spec == kAboutURI) {
@@ -445,9 +448,6 @@ CustomizeMode.prototype = {
         mainView.setAttribute("context", this._mainViewContext);
       }
 
-      if (this.document.documentElement._lightweightTheme)
-        this.document.documentElement._lightweightTheme.enable();
-
       let customizableToolbars = document.querySelectorAll("toolbar[customizable=true]:not([autohide=true])");
       for (let toolbar of customizableToolbars)
         toolbar.removeAttribute("customizing");
@@ -471,17 +471,22 @@ CustomizeMode.prototype = {
   },
 
   /**
-   * The customize mode transition has 3 phases when entering:
+   * The customize mode transition has 4 phases when entering:
    * 1) Pre-customization mode
    *    This is the starting phase of the browser.
-   * 2) customize-entering
+   * 2) LWT swapping
+   *    This is where we swap some of the lightweight theme styles in order
+   *    to make them work in customize mode. We set/unset a customization-
+   *    lwtheme attribute iff we're using a lightweight theme.
+   * 3) customize-entering
    *    This phase is a transition, optimized for smoothness.
-   * 3) customize-entered
+   * 4) customize-entered
    *    After the transition completes, this phase draws all of the
    *    expensive detail that isn't necessary during the second phase.
    *
    * Exiting customization mode has a similar set of phases, but in reverse
-   * order - customize-entered, customize-exiting, pre-customization mode.
+   * order - customize-entered, customize-exiting, remove LWT swapping,
+   * pre-customization mode.
    *
    * When in the customize-entering, customize-entered, or customize-exiting
    * phases, there is a "customizing" attribute set on the main-window to simplify
@@ -530,6 +535,80 @@ CustomizeMode.prototype = {
     let catchAll = () => customizeTransitionEnd("timedout");
     let catchAllTimeout = this.window.setTimeout(catchAll, kMaxTransitionDurationMs);
     return deferred.promise;
+  },
+
+  updateLWTStyling: function(aData) {
+    let docElement = this.document.documentElement;
+    if (!aData) {
+      let lwt = docElement._lightweightTheme;
+      aData = lwt.getData();
+    }
+    let headerURL = aData && aData.headerURL;
+    if (!headerURL) {
+      this.removeLWTStyling();
+      return;
+    }
+
+    let deck = this.document.getElementById("tab-view-deck");
+    let headerImageRef = this._getHeaderImageRef(aData);
+    docElement.setAttribute("customization-lwtheme", "true");
+
+    let toolboxRect = this.window.gNavToolbox.getBoundingClientRect();
+    let height = toolboxRect.bottom;
+
+#ifdef XP_MACOSX
+    let drawingInTitlebar = !docElement.hasAttribute("drawtitle");
+    let titlebar = this.document.getElementById("titlebar");
+    if (drawingInTitlebar) {
+      titlebar.style.backgroundImage = headerImageRef;
+    } else {
+      titlebar.style.removeProperty("background-image");
+    }
+#endif
+
+    let limitedBG = "-moz-image-rect(" + headerImageRef + ", 0, 100%, " +
+                    height + ", 0)";
+
+    let ridgeStart = height - 1;
+    let ridgeCenter = (ridgeStart + 1) + "px";
+    let ridgeEnd = (ridgeStart + 2) + "px";
+    ridgeStart = ridgeStart + "px";
+
+    let ridge = "linear-gradient(to bottom, " +
+                                 "transparent " + ridgeStart +
+                                 ", rgba(0,0,0,0.25) " + ridgeStart +
+                                 ", rgba(0,0,0,0.25) " + ridgeCenter +
+                                 ", rgba(255,255,255,0.5) " + ridgeCenter +
+                                 ", rgba(255,255,255,0.5) " + ridgeEnd + ", " +
+                                 "transparent " + ridgeEnd + ")";
+    deck.style.backgroundImage = ridge + ", " + limitedBG;
+
+    /* Remove the background styles from the <window> so we can style it instead. */
+    docElement.style.removeProperty("background-image");
+    docElement.style.removeProperty("background-color");
+  },
+
+  removeLWTStyling: function() {
+#ifdef XP_MACOSX
+    let affectedNodes = ["tab-view-deck", "titlebar"];
+#else
+    let affectedNodes = ["tab-view-deck"];
+#endif
+    for (let id of affectedNodes) {
+      let node = this.document.getElementById(id);
+      node.style.removeProperty("background-image");
+    }
+    let docElement = this.document.documentElement;
+    docElement.removeAttribute("customization-lwtheme");
+    let data = docElement._lightweightTheme.getData();
+    if (data && data.headerURL) {
+      docElement.style.backgroundImage = this._getHeaderImageRef(data);
+      docElement.style.backgroundColor = data.accentcolor || "white";
+    }
+  },
+
+  _getHeaderImageRef: function(aData) {
+    return "url(\"" + aData.headerURL.replace(/"/g, '\\"') + "\")";
   },
 
   maybeShowTip: function(aAnchor) {
@@ -1033,6 +1112,7 @@ CustomizeMode.prototype = {
       toolbar.removeAttribute("customizing");
     }
     this._onUIChange();
+    this.updateLWTStyling();
   },
 
   onWidgetMoved: function(aWidgetId, aArea, aOldPosition, aNewPosition) {
@@ -1208,17 +1288,29 @@ CustomizeMode.prototype = {
     }
   },
 
-#ifdef CAN_DRAW_IN_TITLEBAR
   observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "nsPref:changed":
         this._updateResetButton();
-        this._updateTitlebarButton();
         this._updateUndoResetButton();
+#ifdef CAN_DRAW_IN_TITLEBAR
+        this._updateTitlebarButton();
+#endif
+        break;
+      case "lightweight-theme-window-updated":
+        if (aSubject == this.window) {
+          aData = JSON.parse(aData);
+          if (!aData) {
+            this.removeLWTStyling();
+          } else {
+            this.updateLWTStyling(aData);
+          }
+        }
         break;
     }
   },
 
+#ifdef CAN_DRAW_IN_TITLEBAR
   _updateTitlebarButton: function() {
     let drawInTitlebar = true;
     try {
