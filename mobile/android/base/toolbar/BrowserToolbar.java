@@ -1021,13 +1021,10 @@ public class BrowserToolbar extends ThemedRelativeLayout
             final int curveTranslation) {
         showUrlEditLayout();
 
-        if (urlBarTranslatingEdge != null) {
-            ViewHelper.setTranslationX(urlBarTranslatingEdge, entryTranslation);
-        }
-
         // Prevent taps through the editing mode cancel button (bug 1001243).
         tabsButton.setEnabled(false);
 
+        ViewHelper.setTranslationX(urlBarTranslatingEdge, entryTranslation);
         ViewHelper.setTranslationX(tabsButton, curveTranslation);
         ViewHelper.setTranslationX(tabsCounter, curveTranslation);
         ViewHelper.setTranslationX(actionItemBar, curveTranslation);
@@ -1070,12 +1067,9 @@ public class BrowserToolbar extends ThemedRelativeLayout
         urlDisplayLayout.prepareStartEditingAnimation();
 
         // Slide toolbar elements.
-        if (urlBarTranslatingEdge != null) {
-            animator.attach(urlBarTranslatingEdge,
-                            PropertyAnimator.Property.TRANSLATION_X,
-                            entryTranslation);
-        }
-
+        animator.attach(urlBarTranslatingEdge,
+                        PropertyAnimator.Property.TRANSLATION_X,
+                        entryTranslation);
         animator.attach(tabsButton,
                         PropertyAnimator.Property.TRANSLATION_X,
                         curveTranslation);
@@ -1160,16 +1154,14 @@ public class BrowserToolbar extends ThemedRelativeLayout
 
         updateTabCountAndAnimate(Tabs.getInstance().getDisplayCount());
 
-        if (urlBarTranslatingEdge != null) {
-            urlBarTranslatingEdge.setVisibility(View.INVISIBLE);
-            ViewHelper.setTranslationX(urlBarTranslatingEdge, 0);
-            if (shouldShrinkURLBar) {
-                urlBarEntry.setLayoutParams(urlBarEntryDefaultLayoutParams);
-            }
+        if (shouldShrinkURLBar) {
+            urlBarEntry.setLayoutParams(urlBarEntryDefaultLayoutParams);
         }
 
         tabsButton.setEnabled(true);
 
+        urlBarTranslatingEdge.setVisibility(View.INVISIBLE);
+        ViewHelper.setTranslationX(urlBarTranslatingEdge, 0);
         ViewHelper.setTranslationX(tabsButton, 0);
         ViewHelper.setTranslationX(tabsCounter, 0);
         ViewHelper.setTranslationX(actionItemBar, 0);
@@ -1204,12 +1196,9 @@ public class BrowserToolbar extends ThemedRelativeLayout
         contentAnimator.setUseHardwareLayer(false);
 
         // Slide the toolbar back to its original size.
-        if (urlBarTranslatingEdge != null) {
-            contentAnimator.attach(urlBarTranslatingEdge,
-                                   PropertyAnimator.Property.TRANSLATION_X,
-                                   0);
-        }
-
+        contentAnimator.attach(urlBarTranslatingEdge,
+                               PropertyAnimator.Property.TRANSLATION_X,
+                               0);
         contentAnimator.attach(tabsButton,
                                PropertyAnimator.Property.TRANSLATION_X,
                                0);
