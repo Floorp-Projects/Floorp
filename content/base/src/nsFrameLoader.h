@@ -174,7 +174,7 @@ public:
   NS_DECL_NSIFRAMELOADER
   NS_DECL_NSICONTENTVIEWMANAGER
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
-  NS_HIDDEN_(nsresult) CheckForRecursiveLoad(nsIURI* aURI);
+  nsresult CheckForRecursiveLoad(nsIURI* aURI);
   nsresult ReallyStartLoading();
   void Finalize();
   nsIDocShell* GetExistingDocShell() { return mDocShell; }
@@ -372,7 +372,7 @@ private:
 
   // Updates the subdocument position and size. This gets called only
   // when we have our own in-process DocShell.
-  NS_HIDDEN_(nsresult) UpdateBaseWindowPositionAndSize(nsSubDocumentFrame *aIFrame);
+  nsresult UpdateBaseWindowPositionAndSize(nsSubDocumentFrame *aIFrame);
   nsresult CheckURILoad(nsIURI* aURI);
   void FireErrorEvent();
   nsresult ReallyStartLoadingInternal();

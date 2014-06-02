@@ -58,8 +58,8 @@ static const uint32_t GRAY = 1;
  * Constants used to indicate whether a chunk is part of the tenured heap or the
  * nusery.
  */
-const uintptr_t ChunkLocationNursery = 0;
-const uintptr_t ChunkLocationTenuredHeap = 1;
+const uint32_t ChunkLocationNursery = 0;
+const uint32_t ChunkLocationTenuredHeap = 1;
 
 #ifdef JS_DEBUG
 /* When downcasting, ensure we are actually the right type. */

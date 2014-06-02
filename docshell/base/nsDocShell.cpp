@@ -542,7 +542,7 @@ static void
 SendPing(void *closure, nsIContent *content, nsIURI *uri, nsIIOService *ios)
 {
   SendPingInfo *info = static_cast<SendPingInfo *>(closure);
-  if (info->numPings >= info->maxPings)
+  if (info->maxPings > -1 && info->numPings >= info->maxPings)
     return;
 
   if (info->requireSameHost) {

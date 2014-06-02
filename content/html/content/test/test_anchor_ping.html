@@ -39,7 +39,7 @@ let tests = [
   // Ensure that sending pings is enabled.
   function* setup() {
     Services.prefs.setBoolPref("browser.send_pings", true);
-    Services.prefs.setIntPref("browser.send_pings.max_per_link", 4);
+    Services.prefs.setIntPref("browser.send_pings.max_per_link", -1);
 
     SimpleTest.registerCleanupFunction(() => {
       Services.prefs.clearUserPref("browser.send_pings");

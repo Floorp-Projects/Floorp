@@ -795,6 +795,15 @@ HBUnicodeDecompose(hb_unicode_funcs_t *ufuncs,
                    hb_codepoint_t     *b,
                    void               *user_data)
 {
+#ifdef MOZ_WIDGET_ANDROID
+    // Hack for the SamsungDevanagari font, bug 1012365:
+    // support U+0972 by decomposing it.
+    if (ab == 0x0972) {
+        *a = 0x0905;
+        *b = 0x0945;
+        return true;
+    }
+#endif
     return nsUnicodeNormalizer::DecomposeNonRecursively(ab, a, b);
 }
 

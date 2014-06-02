@@ -20,10 +20,10 @@ public:
   NS_DECL_NSIGCONFSERVICE
 
   nsGConfService() : mClient(nullptr) {}
-  NS_HIDDEN_(nsresult) Init();
+  nsresult Init();
 
 private:
-  ~nsGConfService() NS_HIDDEN;
+  ~nsGConfService();
 
   GConfClient *mClient;
 };

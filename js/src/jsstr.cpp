@@ -22,6 +22,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/TypeTraits.h"
 
 #include <ctype.h>
 #include <string.h>
@@ -66,6 +67,7 @@ using namespace js::unicode;
 using mozilla::CheckedInt;
 using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
+using mozilla::IsSame;
 using mozilla::PodCopy;
 using mozilla::PodEqual;
 using mozilla::SafeCast;
@@ -1007,52 +1009,57 @@ static const uint32_t sBMHCharSetSize = 256; /* ISO-Latin-1 */
 static const uint32_t sBMHPatLenMax   = 255; /* skip table element is uint8_t */
 static const int      sBMHBadPattern  = -2;  /* return value if pat is not ISO-Latin-1 */
 
-int
-js_BoyerMooreHorspool(const jschar *text, uint32_t textlen,
-                      const jschar *pat, uint32_t patlen)
+template <typename TextChar, typename PatChar>
+static int
+BoyerMooreHorspool(const TextChar *text, uint32_t textLen, const PatChar *pat, uint32_t patLen)
 {
-    uint8_t skip[sBMHCharSetSize];
+    JS_ASSERT(0 < patLen && patLen <= sBMHPatLenMax);
 
-    JS_ASSERT(0 < patlen && patlen <= sBMHPatLenMax);
+    uint8_t skip[sBMHCharSetSize];
     for (uint32_t i = 0; i < sBMHCharSetSize; i++)
-        skip[i] = (uint8_t)patlen;
-    uint32_t m = patlen - 1;
-    for (uint32_t i = 0; i < m; i++) {
-        jschar c = pat[i];
+        skip[i] = uint8_t(patLen);
+
+    uint32_t patLast = patLen - 1;
+    for (uint32_t i = 0; i < patLast; i++) {
+        PatChar c = pat[i];
         if (c >= sBMHCharSetSize)
             return sBMHBadPattern;
-        skip[c] = (uint8_t)(m - i);
+        skip[c] = uint8_t(patLast - i);
     }
-    jschar c;
-    for (uint32_t k = m;
-         k < textlen;
-         k += ((c = text[k]) >= sBMHCharSetSize) ? patlen : skip[c]) {
-        for (uint32_t i = k, j = m; ; i--, j--) {
+
+    for (uint32_t k = patLast; k < textLen; ) {
+        for (uint32_t i = k, j = patLast; ; i--, j--) {
             if (text[i] != pat[j])
                 break;
             if (j == 0)
                 return static_cast<int>(i);  /* safe: max string size */
         }
+
+        TextChar c = text[k];
+        k += (c >= sBMHCharSetSize) ? patLen : skip[c];
     }
     return -1;
 }
 
+template <typename TextChar, typename PatChar>
 struct MemCmp {
     typedef uint32_t Extent;
-    static MOZ_ALWAYS_INLINE Extent computeExtent(const jschar *, uint32_t patlen) {
-        return (patlen - 1) * sizeof(jschar);
+    static MOZ_ALWAYS_INLINE Extent computeExtent(const PatChar *, uint32_t patLen) {
+        return (patLen - 1) * sizeof(PatChar);
     }
-    static MOZ_ALWAYS_INLINE bool match(const jschar *p, const jschar *t, Extent extent) {
+    static MOZ_ALWAYS_INLINE bool match(const PatChar *p, const TextChar *t, Extent extent) {
+        MOZ_ASSERT(sizeof(TextChar) == sizeof(PatChar));
         return memcmp(p, t, extent) == 0;
     }
 };
 
+template <typename TextChar, typename PatChar>
 struct ManualCmp {
-    typedef const jschar *Extent;
-    static MOZ_ALWAYS_INLINE Extent computeExtent(const jschar *pat, uint32_t patlen) {
-        return pat + patlen;
+    typedef const PatChar *Extent;
+    static MOZ_ALWAYS_INLINE Extent computeExtent(const PatChar *pat, uint32_t patLen) {
+        return pat + patLen;
     }
-    static MOZ_ALWAYS_INLINE bool match(const jschar *p, const jschar *t, Extent extent) {
+    static MOZ_ALWAYS_INLINE bool match(const PatChar *p, const TextChar *t, Extent extent) {
         for (; p != extent; ++p, ++t) {
             if (*p != *t)
                 return false;
@@ -1061,18 +1068,20 @@ struct ManualCmp {
     }
 };
 
-template <class InnerMatch>
+template <class InnerMatch, typename TextChar, typename PatChar>
 static int
-UnrolledMatch(const jschar *text, uint32_t textlen, const jschar *pat, uint32_t patlen)
+UnrolledMatch(const TextChar *text, uint32_t textLen, const PatChar *pat, uint32_t patLen)
 {
-    JS_ASSERT(patlen > 0 && textlen > 0);
-    const jschar *textend = text + textlen - (patlen - 1);
-    const jschar p0 = *pat;
-    const jschar *const patNext = pat + 1;
-    const typename InnerMatch::Extent extent = InnerMatch::computeExtent(pat, patlen);
+    JS_ASSERT(patLen > 0);
+    JS_ASSERT(textLen > 0);
+
+    const TextChar *textend = text + textLen - (patLen - 1);
+    const PatChar p0 = *pat;
+    const PatChar *const patNext = pat + 1;
+    const typename InnerMatch::Extent extent = InnerMatch::computeExtent(pat, patLen);
     uint8_t fixup;
 
-    const jschar *t = text;
+    const TextChar *t = text;
     switch ((textend - t) & 7) {
       case 0: if (*t++ == p0) { fixup = 8; goto match; }
       case 7: if (*t++ == p0) { fixup = 7; goto match; }
@@ -1107,13 +1116,13 @@ UnrolledMatch(const jschar *text, uint32_t textlen, const jschar *pat, uint32_t 
     return -1;
 }
 
+template <typename TextChar, typename PatChar>
 static MOZ_ALWAYS_INLINE int
-StringMatch(const jschar *text, uint32_t textlen,
-            const jschar *pat, uint32_t patlen)
+StringMatch(const TextChar *text, uint32_t textLen, const PatChar *pat, uint32_t patLen)
 {
-    if (patlen == 0)
+    if (patLen == 0)
         return 0;
-    if (textlen < patlen)
+    if (textLen < patLen)
         return -1;
 
 #if defined(__i386__) || defined(_M_IX86) || defined(__i386)
@@ -1121,9 +1130,9 @@ StringMatch(const jschar *text, uint32_t textlen,
      * Given enough registers, the unrolled loop below is faster than the
      * following loop. 32-bit x86 does not have enough registers.
      */
-    if (patlen == 1) {
-        const jschar p0 = *pat;
-        for (const jschar *c = text, *end = text + textlen; c != end; ++c) {
+    if (patLen == 1) {
+        const PatChar p0 = *pat;
+        for (const TextChar *c = text, *end = text + textLen; c != end; ++c) {
             if (*c == p0)
                 return c - text;
         }
@@ -1136,48 +1145,50 @@ StringMatch(const jschar *text, uint32_t textlen,
      * the basic linear scan due to initialization cost and a more complex loop
      * body. While the correct threshold is input-dependent, we can make a few
      * conservative observations:
-     *  - When |textlen| is "big enough", the initialization time will be
+     *  - When |textLen| is "big enough", the initialization time will be
      *    proportionally small, so the worst-case slowdown is minimized.
-     *  - When |patlen| is "too small", even the best case for BMH will be
-     *    slower than a simple scan for large |textlen| due to the more complex
+     *  - When |patLen| is "too small", even the best case for BMH will be
+     *    slower than a simple scan for large |textLen| due to the more complex
      *    loop body of BMH.
      * From this, the values for "big enough" and "too small" are determined
      * empirically. See bug 526348.
      */
-    if (textlen >= 512 && patlen >= 11 && patlen <= sBMHPatLenMax) {
-        int index = js_BoyerMooreHorspool(text, textlen, pat, patlen);
+    if (textLen >= 512 && patLen >= 11 && patLen <= sBMHPatLenMax) {
+        int index = BoyerMooreHorspool(text, textLen, pat, patLen);
         if (index != sBMHBadPattern)
             return index;
     }
 
     /*
      * For big patterns with large potential overlap we want the SIMD-optimized
-     * speed of memcmp. For small patterns, a simple loop is faster.
+     * speed of memcmp. For small patterns, a simple loop is faster. We also can't
+     * use memcmp if one of the strings is TwoByte and the other is Latin1.
      *
      * FIXME: Linux memcmp performance is sad and the manual loop is faster.
      */
     return
 #if !defined(__linux__)
-           patlen > 128 ? UnrolledMatch<MemCmp>(text, textlen, pat, patlen)
-                        :
+        (patLen > 128 && IsSame<TextChar, PatChar>::value)
+            ? UnrolledMatch<MemCmp<TextChar, PatChar>>(text, textLen, pat, patLen)
+            :
 #endif
-                          UnrolledMatch<ManualCmp>(text, textlen, pat, patlen);
+              UnrolledMatch<ManualCmp<TextChar, PatChar>>(text, textLen, pat, patLen);
 }
 
 static const size_t sRopeMatchThresholdRatioLog2 = 5;
 
 bool
-js::StringHasPattern(const jschar *text, uint32_t textlen,
-                     const jschar *pat, uint32_t patlen)
+js::StringHasPattern(const jschar *text, uint32_t textLen,
+                     const jschar *pat, uint32_t patLen)
 {
-    return StringMatch(text, textlen, pat, patlen) != -1;
+    return StringMatch(text, textLen, pat, patLen) != -1;
 }
 
 int
-js::StringFindPattern(const jschar *text, uint32_t textlen,
-                      const jschar *pat, uint32_t patlen)
+js::StringFindPattern(const jschar *text, uint32_t textLen,
+                      const jschar *pat, uint32_t patLen)
 {
-    return StringMatch(text, textlen, pat, patlen);
+    return StringMatch(text, textLen, pat, patLen);
 }
 
 // When an algorithm does not need a string represented as a single linear
@@ -1236,15 +1247,15 @@ class StringSegmentRange
  * the 'match' outparam (-1 for not found).
  */
 static bool
-RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, uint32_t patlen, int *match)
+RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, uint32_t patLen, int *match)
 {
     JS_ASSERT(textstr->isRope());
 
-    if (patlen == 0) {
+    if (patLen == 0) {
         *match = 0;
         return true;
     }
-    if (textstr->length() < patlen) {
+    if (textstr->length() < patLen) {
         *match = -1;
         return true;
     }
@@ -1273,7 +1284,7 @@ RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, uint32_t patlen, 
                 const jschar *chars = textstr->getChars(cx);
                 if (!chars)
                     return false;
-                *match = StringMatch(chars, textstrlen, pat, patlen);
+                *match = StringMatch(chars, textstrlen, pat, patLen);
                 return true;
             }
             if (!r.popFront())
@@ -1289,7 +1300,7 @@ RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, uint32_t patlen, 
         JSLinearString *outer = *outerp;
         const jschar *chars = outer->chars();
         size_t len = outer->length();
-        int matchResult = StringMatch(chars, len, pat, patlen);
+        int matchResult = StringMatch(chars, len, pat, patLen);
         if (matchResult != -1) {
             /* Matched! */
             *match = pos + matchResult;
@@ -1297,11 +1308,11 @@ RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, uint32_t patlen, 
         }
 
         /* Try to find a match starting in 'outer' and running into other nodes. */
-        const jschar *const text = chars + (patlen > len ? 0 : len - patlen + 1);
+        const jschar *const text = chars + (patLen > len ? 0 : len - patLen + 1);
         const jschar *const textend = chars + len;
         const jschar p0 = *pat;
         const jschar *const p1 = pat + 1;
-        const jschar *const patend = pat + patlen;
+        const jschar *const patend = pat + patLen;
         for (const jschar *t = text; t != textend; ) {
             if (*t++ != p0)
                 continue;
@@ -1333,6 +1344,32 @@ RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, uint32_t patlen, 
 
     *match = -1;
     return true;
+}
+
+static int32_t
+IndexOfImpl(JSLinearString *text, JSLinearString *pat, uint32_t start)
+{
+    MOZ_ASSERT(start <= text->length());
+    uint32_t textLen = text->length() - start;
+    uint32_t patLen = pat->length();
+
+    int match;
+    AutoCheckCannotGC nogc;
+    if (text->hasLatin1Chars()) {
+        const Latin1Char *textChars = text->latin1Chars(nogc) + start;
+        if (pat->hasLatin1Chars())
+            match = StringMatch(textChars, textLen, pat->latin1Chars(nogc), patLen);
+        else
+            match = StringMatch(textChars, textLen, pat->twoByteChars(nogc), patLen);
+    } else {
+        const jschar *textChars = text->twoByteChars(nogc) + start;
+        if (pat->hasLatin1Chars())
+            match = StringMatch(textChars, textLen, pat->latin1Chars(nogc), patLen);
+        else
+            match = StringMatch(textChars, textLen, pat->twoByteChars(nogc), patLen);
+    }
+
+    return (match == -1) ? -1 : start + match;
 }
 
 /* ES6 20121026 draft 15.5.4.24. */
@@ -1367,22 +1404,16 @@ str_contains(JSContext *cx, unsigned argc, Value *vp)
 
     // Step 8
     uint32_t textLen = str->length();
-    const jschar *textChars = str->getChars(cx);
-    if (!textChars)
-        return false;
 
     // Step 9
     uint32_t start = Min(Max(pos, 0U), textLen);
 
-    // Step 10
-    uint32_t searchLen = searchStr->length();
-    const jschar *searchChars = searchStr->chars();
+    // Steps 10 and 11
+    JSLinearString *text = str->ensureLinear(cx);
+    if (!text)
+        return false;
 
-    // Step 11
-    textChars += start;
-    textLen -= start;
-    int match = StringMatch(textChars, textLen, searchChars, searchLen);
-    args.rval().setBoolean(match != -1);
+    args.rval().setBoolean(IndexOfImpl(text, searchStr, start) != -1);
     return true;
 }
 
@@ -1418,23 +1449,46 @@ str_indexOf(JSContext *cx, unsigned argc, Value *vp)
 
    // Step 8
     uint32_t textLen = str->length();
-    const jschar *textChars = str->getChars(cx);
-    if (!textChars)
-        return false;
 
     // Step 9
     uint32_t start = Min(Max(pos, 0U), textLen);
 
-    // Step 10
-    uint32_t searchLen = searchStr->length();
-    const jschar *searchChars = searchStr->chars();
+    // Steps 10 and 11
+    JSLinearString *text = str->ensureLinear(cx);
+    if (!text)
+        return false;
 
-    // Step 11
-    textChars += start;
-    textLen -= start;
-    int match = StringMatch(textChars, textLen, searchChars, searchLen);
-    args.rval().setInt32((match == -1) ? -1 : start + match);
+    args.rval().setInt32(IndexOfImpl(text, searchStr, start));
     return true;
+}
+
+template <typename TextChar, typename PatChar>
+static int32_t
+LastIndexOfImpl(const TextChar *text, size_t textLen, const PatChar *pat, size_t patLen,
+                size_t start)
+{
+    MOZ_ASSERT(patLen > 0);
+    MOZ_ASSERT(patLen <= textLen);
+    MOZ_ASSERT(start <= textLen - patLen);
+
+    const PatChar p0 = *pat;
+    const PatChar *patNext = pat + 1;
+    const PatChar *patEnd = pat + patLen;
+
+    for (const TextChar *t = text + start; t >= text; --t) {
+        if (*t == p0) {
+            const TextChar *t1 = t + 1;
+            for (const PatChar *p1 = patNext; p1 < patEnd; ++p1, ++t1) {
+                if (*t1 != *p1)
+                    goto break_continue;
+            }
+
+            return static_cast<int32_t>(t - text);
+        }
+      break_continue:;
+    }
+
+    return -1;
 }
 
 static bool
@@ -1445,27 +1499,25 @@ str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
     if (!textstr)
         return false;
 
-    size_t textlen = textstr->length();
-
-    Rooted<JSLinearString*> patstr(cx, ArgToRootedString(cx, args, 0));
-    if (!patstr)
+    Rooted<JSLinearString*> pat(cx, ArgToRootedString(cx, args, 0));
+    if (!pat)
         return false;
 
-    size_t patlen = patstr->length();
-
-    int i = textlen - patlen; // Start searching here
-    if (i < 0) {
+    size_t textLen = textstr->length();
+    size_t patLen = pat->length();
+    int start = textLen - patLen; // Start searching here
+    if (start < 0) {
         args.rval().setInt32(-1);
         return true;
     }
 
-    if (args.length() > 1) {
+    if (args.hasDefined(1)) {
         if (args[1].isInt32()) {
-            int j = args[1].toInt32();
-            if (j <= 0)
-                i = 0;
-            else if (j < i)
-                i = j;
+            int i = args[1].toInt32();
+            if (i <= 0)
+                start = 0;
+            else if (i < start)
+                start = i;
         } else {
             double d;
             if (!ToNumber(cx, args[1], &d))
@@ -1473,44 +1525,39 @@ str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
             if (!IsNaN(d)) {
                 d = ToInteger(d);
                 if (d <= 0)
-                    i = 0;
-                else if (d < i)
-                    i = (int)d;
+                    start = 0;
+                else if (d < start)
+                    start = int(d);
             }
         }
     }
 
-    if (patlen == 0) {
-        args.rval().setInt32(i);
+    if (patLen == 0) {
+        args.rval().setInt32(start);
         return true;
     }
 
-    const jschar *text = textstr->getChars(cx);
+    JSLinearString *text = textstr->ensureLinear(cx);
     if (!text)
         return false;
 
-    const jschar *pat = patstr->chars();
-
-    const jschar *t = text + i;
-    const jschar *textend = text - 1;
-    const jschar p0 = *pat;
-    const jschar *patNext = pat + 1;
-    const jschar *patEnd = pat + patlen;
-
-    for (; t != textend; --t) {
-        if (*t == p0) {
-            const jschar *t1 = t + 1;
-            for (const jschar *p1 = patNext; p1 != patEnd; ++p1, ++t1) {
-                if (*t1 != *p1)
-                    goto break_continue;
-            }
-            args.rval().setInt32(t - text);
-            return true;
-        }
-      break_continue:;
+    int32_t res;
+    AutoCheckCannotGC nogc;
+    if (text->hasLatin1Chars()) {
+        const Latin1Char *textChars = text->latin1Chars(nogc);
+        if (pat->hasLatin1Chars())
+            res = LastIndexOfImpl(textChars, textLen, pat->latin1Chars(nogc), patLen, start);
+        else
+            res = LastIndexOfImpl(textChars, textLen, pat->twoByteChars(nogc), patLen, start);
+    } else {
+        const jschar *textChars = text->twoByteChars(nogc);
+        if (pat->hasLatin1Chars())
+            res = LastIndexOfImpl(textChars, textLen, pat->latin1Chars(nogc), patLen, start);
+        else
+            res = LastIndexOfImpl(textChars, textLen, pat->twoByteChars(nogc), patLen, start);
     }
 
-    args.rval().setInt32(-1);
+    args.rval().setInt32(res);
     return true;
 }
 
@@ -1701,7 +1748,7 @@ class FlatMatch
 {
     RootedAtom patstr;
     const jschar *pat;
-    size_t       patlen;
+    size_t       patLen;
     int32_t      match_;
 
     friend class StringRegExpGuard;
@@ -1709,7 +1756,7 @@ class FlatMatch
   public:
     explicit FlatMatch(JSContext *cx) : patstr(cx) {}
     JSLinearString *pattern() const { return patstr; }
-    size_t patternLength() const { return patlen; }
+    size_t patternLength() const { return patLen; }
 
     /*
      * Note: The match is -1 when the match is performed successfully,
@@ -1855,13 +1902,13 @@ class MOZ_STACK_CLASS StringRegExpGuard
             return nullptr;
 
         fm.pat = fm.patstr->chars();
-        fm.patlen = fm.patstr->length();
+        fm.patLen = fm.patstr->length();
 
         if (optarg < argc)
             return nullptr;
 
         if (checkMetaChars &&
-            (fm.patlen > MAX_FLAT_PAT_LEN || HasRegExpMetaChars(fm.pat, fm.patlen))) {
+            (fm.patLen > MAX_FLAT_PAT_LEN || HasRegExpMetaChars(fm.pat, fm.patLen))) {
             return nullptr;
         }
 
@@ -1870,12 +1917,12 @@ class MOZ_STACK_CLASS StringRegExpGuard
          * long as possible.
          */
         if (textstr->isRope()) {
-            if (!RopeMatch(cx, textstr, fm.pat, fm.patlen, &fm.match_))
+            if (!RopeMatch(cx, textstr, fm.pat, fm.patLen, &fm.match_))
                 return nullptr;
         } else {
             const jschar *text = textstr->asLinear().chars();
-            size_t textlen = textstr->length();
-            fm.match_ = StringMatch(text, textlen, fm.pat, fm.patlen);
+            size_t textLen = textstr->length();
+            fm.match_ = StringMatch(text, textLen, fm.pat, fm.patLen);
         }
         return &fm;
     }
@@ -3944,6 +3991,9 @@ js_InitStringClass(JSContext *cx, HandleObject obj)
     if (!ctor)
         return nullptr;
 
+    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_String, ctor, proto))
+        return nullptr;
+
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return nullptr;
 
@@ -3952,9 +4002,6 @@ js_InitStringClass(JSContext *cx, HandleObject obj)
     {
         return nullptr;
     }
-
-    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_String, ctor, proto))
-        return nullptr;
 
     /*
      * Define escape/unescape, the URI encode/decode functions, and maybe

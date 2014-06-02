@@ -68,7 +68,7 @@ protected:
 
   // Get the pres shell from mPresShell and return it only if it is still
   // attached to the DOM window.
-  NS_HIDDEN_(already_AddRefed<nsIPresShell>) GetPresShell();
+  already_AddRefed<nsIPresShell> GetPresShell();
 
   void ReleaseStrongMemberVariables();
 

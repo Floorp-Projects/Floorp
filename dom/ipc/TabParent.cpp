@@ -2012,10 +2012,26 @@ TabParent::InjectTouchEvent(const nsAString& aType,
   event.modifiers = aModifiers;
   event.time = PR_IntervalNow();
 
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mFrameElement);
+  if (!content || !content->OwnerDoc()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIDocument* doc = content->OwnerDoc();
+  if (!doc || !doc->GetShell()) {
+    return NS_ERROR_FAILURE;
+  }
+  nsPresContext* presContext = doc->GetShell()->GetPresContext();
+
   event.touches.SetCapacity(aCount);
   for (uint32_t i = 0; i < aCount; ++i) {
+    LayoutDeviceIntPoint pt =
+      LayoutDeviceIntPoint::FromAppUnitsRounded(
+        CSSPoint::ToAppUnits(CSSPoint(aXs[i], aYs[i])),
+        presContext->AppUnitsPerDevPixel());
+
     nsRefPtr<Touch> t = new Touch(aIdentifiers[i],
-                                  nsIntPoint(aXs[i], aYs[i]),
+                                  LayoutDeviceIntPoint::ToUntyped(pt),
                                   nsIntPoint(aRxs[i], aRys[i]),
                                   aRotationAngles[i],
                                   aForces[i]);
