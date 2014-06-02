@@ -66,7 +66,7 @@ public:
   ~nsXMLNameSpaceMap() { Clear(); }
 
 private:
-  nsXMLNameSpaceMap() NS_HIDDEN;  // use Create() to create new instances
+  nsXMLNameSpaceMap();  // use Create() to create new instances
 
   nsTArray<nsNameSpaceEntry> mNameSpaces;
 };
