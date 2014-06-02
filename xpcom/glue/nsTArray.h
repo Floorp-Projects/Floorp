@@ -391,25 +391,13 @@ protected:
 
   ~nsTArray_base();
 
-  // For a required capacity, computes how many bytes should be allocated to
-  // minimize slop, and how many elements will fit in that space.
-  // @param capacity     The required capacity.
-  // @param elemSize     The size of an array element.
-  // @param capacity     The computed size, in bytes (outparam).
-  // @param capacity     The resulting capacity (outparam).
-  void GoodSizeForCapacity(size_t capacity, size_t elemSize,
-                           size_t& nbytes, size_t& newCapacity);
-
   // Resize the storage if necessary to achieve the requested capacity.
   // @param capacity     The requested number of array elements.
   // @param elemSize     The size of an array element.
   // @return False if insufficient memory is available; true otherwise.
   typename Alloc::ResultTypeProxy EnsureCapacity(size_type capacity, size_type elemSize);
 
-  // Resize the storage to the minimum required amount. Note that this won't
-  // reallocate the storage buffer if it wouldn't actually result in us using
-  // less memory, which is the case when the number of bytes removed is less
-  // than the slop that would result from the new size.
+  // Resize the storage to the minimum required amount.
   // @param elemSize     The size of an array element.
   // @param elemAlign    The alignment in bytes of an array element.
   void ShrinkCapacity(size_type elemSize, size_t elemAlign);
@@ -1380,10 +1368,10 @@ public:
   // Allocation
   //
 
-  // This method may increase the capacity of this array object to the
-  // specified amount, or possibly more.  This method may be called in advance
-  // of several AppendElement operations to minimize heap re-allocations.  This
-  // method will not reduce the number of elements in this array.
+  // This method may increase the capacity of this array object by the
+  // specified amount.  This method may be called in advance of several
+  // AppendElement operations to minimize heap re-allocations.  This method
+  // will not reduce the number of elements in this array.
   // @param capacity  The desired capacity of this array.
   // @return True if the operation succeeded; false if we ran out of memory
   typename Alloc::ResultType SetCapacity(size_type capacity) {
