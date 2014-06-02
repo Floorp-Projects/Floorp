@@ -942,6 +942,12 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   regionStripesColor: LINE_GRAPH_REGION_STRIPES_COLOR,
 
   /**
+   * Points that are too close too each other in the graph will not be rendered.
+   * This scalar specifies the required minimum squared distance between points.
+   */
+  minDistanceBetweenPoints: LINE_GRAPH_MIN_SQUARED_DISTANCE_BETWEEN_POINTS,
+
+  /**
    * Renders the graph on a canvas.
    * @see AbstractCanvasGraph.prototype.buildGraphImage
    */
@@ -1007,7 +1013,7 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
       }
 
       let distance = distSquared(prevX, prevY, currX, currY);
-      if (distance > LINE_GRAPH_MIN_SQUARED_DISTANCE_BETWEEN_POINTS) {
+      if (distance > this.minDistanceBetweenPoints) {
         ctx.lineTo(currX, currY);
         prevX = currX;
         prevY = currY;
