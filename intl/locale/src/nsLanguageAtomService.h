@@ -33,7 +33,7 @@ public:
   nsLanguageAtomService();
 
 private:
-  NS_HIDDEN ~nsLanguageAtomService() { }
+  ~nsLanguageAtomService() { }
 
 protected:
   nsresult InitLangGroupTable();

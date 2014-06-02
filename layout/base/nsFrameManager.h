@@ -39,7 +39,7 @@ struct UndisplayedNode {
     MOZ_COUNT_CTOR(mozilla::UndisplayedNode);
   }
 
-  NS_HIDDEN ~UndisplayedNode()
+  ~UndisplayedNode()
   {
     MOZ_COUNT_DTOR(mozilla::UndisplayedNode);
 
@@ -76,7 +76,7 @@ class nsFrameManager : public nsFrameManagerBase
   typedef nsIFrame::ChildListID ChildListID;
 
 public:
-  nsFrameManager(nsIPresShell *aPresShell, nsStyleSet* aStyleSet) NS_HIDDEN {
+  nsFrameManager(nsIPresShell *aPresShell, nsStyleSet* aStyleSet) {
     mPresShell = aPresShell;
     mStyleSet = aStyleSet;
     MOZ_ASSERT(mPresShell, "need a pres shell");
