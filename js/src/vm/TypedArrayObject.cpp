@@ -2042,23 +2042,19 @@ TypedArrayObject::setElement(TypedArrayObject &obj, uint32_t index, double d)
  */
 
 #ifndef RELEASE_BUILD
-# define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                     \
-const JSFunctionSpec _typedArray##Object::jsfuncs[] = {                            \
-    JS_SELF_HOSTED_FN("@@iterator", "ArrayValues", 0, 0),                          \
-    JS_FN("subarray", _typedArray##Object::fun_subarray, 2, JSFUN_GENERIC_NATIVE), \
-    JS_FN("set", _typedArray##Object::fun_set, 2, JSFUN_GENERIC_NATIVE),           \
-    JS_FN("move", _typedArray##Object::fun_move, 3, JSFUN_GENERIC_NATIVE),         \
-    JS_FS_END                                                                      \
-}
+# define EXPERIMENTAL_FUNCTIONS(_t) JS_FN("move", _t##Object::fun_move, 3, JSFUN_GENERIC_NATIVE),
 #else
-# define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                     \
+# define EXPERIMENTAL_FUNCTIONS(_t)
+#endif
+
+#define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                      \
 const JSFunctionSpec _typedArray##Object::jsfuncs[] = {                            \
     JS_SELF_HOSTED_FN("@@iterator", "ArrayValues", 0, 0),                          \
     JS_FN("subarray", _typedArray##Object::fun_subarray, 2, JSFUN_GENERIC_NATIVE), \
     JS_FN("set", _typedArray##Object::fun_set, 2, JSFUN_GENERIC_NATIVE),           \
+    EXPERIMENTAL_FUNCTIONS(_typedArray)                                            \
     JS_FS_END                                                                      \
 }
-#endif
 
 #define IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Name,NativeType)                                    \
   JS_FRIEND_API(JSObject *) JS_New ## Name ## Array(JSContext *cx, uint32_t nelements)          \
