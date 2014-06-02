@@ -3466,8 +3466,10 @@ Zone::findOutgoingEdges(ComponentFinder<JS::Zone> &finder)
     for (CompartmentsInZoneIter comp(this); !comp.done(); comp.next())
         comp->findOutgoingEdges(finder);
 
-    for (ZoneSet::Range r = gcZoneGroupEdges.all(); !r.empty(); r.popFront())
-        finder.addEdgeTo(r.front());
+    for (ZoneSet::Range r = gcZoneGroupEdges.all(); !r.empty(); r.popFront()) {
+        if (r.front()->isGCMarking())
+            finder.addEdgeTo(r.front());
+    }
     gcZoneGroupEdges.clear();
 }
 
@@ -3506,6 +3508,12 @@ GCRuntime::findZoneGroups()
     zoneGroups = finder.getResultsList();
     currentZoneGroup = zoneGroups;
     zoneGroupIndex = 0;
+
+    for (Zone *head = currentZoneGroup; head; head = head->nextGroup()) {
+        for (Zone *zone = head; zone; zone = zone->nextNodeInGroup())
+            JS_ASSERT(zone->isGCMarking());
+    }
+
     JS_ASSERT_IF(!isIncremental, !currentZoneGroup->nextGroup());
 }
 
@@ -3521,6 +3529,9 @@ GCRuntime::getNextZoneGroup()
         abortSweepAfterCurrentGroup = false;
         return;
     }
+
+    for (Zone *zone = currentZoneGroup; zone; zone = zone->nextNodeInGroup())
+        JS_ASSERT(zone->isGCMarking());
 
     if (!isIncremental)
         ComponentFinder<Zone>::mergeGroups(currentZoneGroup);
