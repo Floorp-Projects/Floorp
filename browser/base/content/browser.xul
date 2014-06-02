@@ -312,7 +312,7 @@
                 oncommand="BrowserFullScreen();"/>
     </menupopup>
 
-    <menupopup id="contentAreaContextMenu" pagemenu="start"
+    <menupopup id="contentAreaContextMenu" pagemenu="#page-menu-separator"
                onpopupshowing="if (event.target != this)
                                  return true;
                                gContextMenu = new nsContextMenu(this, event.shiftKey);
