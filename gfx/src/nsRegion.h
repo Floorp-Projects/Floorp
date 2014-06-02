@@ -19,6 +19,7 @@
 #include "xpcom-config.h"               // for CPP_THROW_NEW
 
 class nsIntRegion;
+class gfx3DMatrix;
 
 #include "pixman.h"
 
@@ -221,6 +222,7 @@ public:
   nsRegion ConvertAppUnitsRoundIn (int32_t aFromAPP, int32_t aToAPP) const;
   nsRegion& ScaleRoundOut(float aXScale, float aYScale);
   nsRegion& ScaleInverseRoundOut(float aXScale, float aYScale);
+  nsRegion& Transform (const gfx3DMatrix &aTransform);
   nsIntRegion ScaleToOutsidePixels (float aXScale, float aYScale, nscoord aAppUnitsPerPixel) const;
   nsIntRegion ScaleToInsidePixels (float aXScale, float aYScale, nscoord aAppUnitsPerPixel) const;
   nsIntRegion ScaleToNearestPixels (float aXScale, float aYScale, nscoord aAppUnitsPerPixel) const;
@@ -533,6 +535,12 @@ public:
   nsIntRegion& ScaleRoundOut (float aXScale, float aYScale)
   {
     mImpl.ScaleRoundOut(aXScale, aYScale);
+    return *this;
+  }
+
+  nsIntRegion& Transform (const gfx3DMatrix &aTransform)
+  {
+    mImpl.Transform(aTransform);
     return *this;
   }
 

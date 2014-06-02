@@ -133,16 +133,13 @@ VcmSIPCCBinding::VcmSIPCCBinding ()
 
 class VcmIceOpaque : public NrIceOpaque {
  public:
-  VcmIceOpaque(cc_streamid_t stream_id,
-               cc_call_handle_t call_handle,
+  VcmIceOpaque(cc_call_handle_t call_handle,
                uint16_t level) :
-      stream_id_(stream_id),
       call_handle_(call_handle),
       level_(level) {}
 
   virtual ~VcmIceOpaque() {}
 
-  cc_streamid_t stream_id_;
   cc_call_handle_t call_handle_;
   uint16_t level_;
 };
@@ -172,8 +169,8 @@ void VcmSIPCCBinding::CandidateReady(NrIceMediaStream* stream,
     MOZ_ASSERT(opaque);
 
     VcmIceOpaque *vcm_opaque = static_cast<VcmIceOpaque *>(opaque);
-    CSFLogDebug(logTag, "Candidate ready on call %u, level %u",
-                vcm_opaque->call_handle_, vcm_opaque->level_);
+    CSFLogDebug(logTag, "Candidate ready on call %u, level %u: %s",
+                vcm_opaque->call_handle_, vcm_opaque->level_, candidate.c_str());
 
     char *candidate_tmp = (char *)malloc(candidate.size() + 1);
     if (!candidate_tmp)
@@ -595,11 +592,15 @@ static short vcmRxAllocICE_s(TemporaryRef<NrIceCtx> ctx_in,
   *candidatesp = nullptr;
   *candidate_ctp = 0;
 
-  // Set the opaque so we can correlate events.
-  stream->SetOpaque(new VcmIceOpaque(stream_id, call_handle, level));
+  // This can be called multiple times; don't connect to the signal more than
+  // once (see bug 1018473 for an explanation).
+  if (!stream->opaque()) {
+    // Set the opaque so we can correlate events.
+    stream->SetOpaque(new VcmIceOpaque(call_handle, level));
 
-  // Attach ourself to the candidate signal.
-  VcmSIPCCBinding::connectCandidateSignal(stream);
+    // Attach ourself to the candidate signal.
+    VcmSIPCCBinding::connectCandidateSignal(stream);
+  }
 
   std::vector<std::string> candidates = stream->GetCandidates();
   CSFLogDebug( logTag, "%s: Got %lu candidates", __FUNCTION__, (unsigned long) candidates.size());

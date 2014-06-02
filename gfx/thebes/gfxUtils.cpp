@@ -724,6 +724,9 @@ gfxUtils::TransformRectToRect(const gfxRect& aFrom, const IntPoint& aToTopLeft,
   return m;
 }
 
+/* This function is sort of shitty. We truncate doubles
+ * to ints then convert those ints back to doubles to make sure that
+ * they equal the doubles that we got in. */
 bool
 gfxUtils::GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut)
 {
