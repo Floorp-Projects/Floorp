@@ -6788,11 +6788,18 @@ HTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
     }
     case VALIDITY_STATE_RANGE_OVERFLOW:
     {
+      static const char kNumberOverTemplate[] = "FormValidationNumberRangeOverflow";
+      static const char kDateOverTemplate[] = "FormValidationDateRangeOverflow";
+      static const char kTimeOverTemplate[] = "FormValidationTimeRangeOverflow";
+
+      const char* msgTemplate;
       nsXPIDLString message;
 
       nsAutoString maxStr;
       if (mType == NS_FORM_INPUT_NUMBER ||
           mType == NS_FORM_INPUT_RANGE) {
+        msgTemplate = kNumberOverTemplate;
+
         //We want to show the value as parsed when it's a number
         Decimal maximum = GetMaximum();
         MOZ_ASSERT(!maximum.isNaN());
@@ -6802,25 +6809,34 @@ HTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
         maxStr.AssignASCII(buf);
         MOZ_ASSERT(ok, "buf not big enough");
       } else if (mType == NS_FORM_INPUT_DATE || mType == NS_FORM_INPUT_TIME) {
+        msgTemplate = mType == NS_FORM_INPUT_DATE ? kDateOverTemplate : kTimeOverTemplate;
         GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxStr);
       } else {
+        msgTemplate = kNumberOverTemplate;
         NS_NOTREACHED("Unexpected input type");
       }
 
       const char16_t* params[] = { maxStr.get() };
       rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                                 "FormValidationRangeOverflow",
+                                                 msgTemplate,
                                                  params, message);
       aValidationMessage = message;
       break;
     }
     case VALIDITY_STATE_RANGE_UNDERFLOW:
     {
+      static const char kNumberUnderTemplate[] = "FormValidationNumberRangeUnderflow";
+      static const char kDateUnderTemplate[] = "FormValidationDateRangeUnderflow";
+      static const char kTimeUnderTemplate[] = "FormValidationTimeRangeUnderflow";
+
+      const char* msgTemplate;
       nsXPIDLString message;
 
       nsAutoString minStr;
       if (mType == NS_FORM_INPUT_NUMBER ||
           mType == NS_FORM_INPUT_RANGE) {
+        msgTemplate = kNumberUnderTemplate;
+
         Decimal minimum = GetMinimum();
         MOZ_ASSERT(!minimum.isNaN());
 
@@ -6829,14 +6845,16 @@ HTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
         minStr.AssignASCII(buf);
         MOZ_ASSERT(ok, "buf not big enough");
       } else if (mType == NS_FORM_INPUT_DATE || mType == NS_FORM_INPUT_TIME) {
+        msgTemplate = mType == NS_FORM_INPUT_DATE ? kDateUnderTemplate : kTimeUnderTemplate;
         GetAttr(kNameSpaceID_None, nsGkAtoms::min, minStr);
       } else {
+        msgTemplate = kNumberUnderTemplate;
         NS_NOTREACHED("Unexpected input type");
       }
 
       const char16_t* params[] = { minStr.get() };
       rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                                 "FormValidationRangeUnderflow",
+                                                 msgTemplate,
                                                  params, message);
       aValidationMessage = message;
       break;
