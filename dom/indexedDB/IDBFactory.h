@@ -75,7 +75,7 @@ public:
                          IDBFactory** aFactory);
 
   // Called when using IndexedDB from a JS component or a JSM in a different
-  // process or from a C++ component.
+  // process.
   static nsresult Create(ContentParent* aContentParent,
                          IDBFactory** aFactory);
 
