@@ -1437,6 +1437,35 @@ str_indexOf(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+template <typename TextChar, typename PatChar>
+static int32_t
+LastIndexOfImpl(const TextChar *text, size_t textLen, const PatChar *pat, size_t patLen,
+                size_t start)
+{
+    MOZ_ASSERT(patLen > 0);
+    MOZ_ASSERT(patLen <= textLen);
+    MOZ_ASSERT(start <= textLen - patLen);
+
+    const PatChar p0 = *pat;
+    const PatChar *patNext = pat + 1;
+    const PatChar *patEnd = pat + patLen;
+
+    for (const TextChar *t = text + start; t >= text; --t) {
+        if (*t == p0) {
+            const TextChar *t1 = t + 1;
+            for (const PatChar *p1 = patNext; p1 < patEnd; ++p1, ++t1) {
+                if (*t1 != *p1)
+                    goto break_continue;
+            }
+
+            return static_cast<int32_t>(t - text);
+        }
+      break_continue:;
+    }
+
+    return -1;
+}
+
 static bool
 str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -1445,27 +1474,25 @@ str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
     if (!textstr)
         return false;
 
-    size_t textlen = textstr->length();
-
-    Rooted<JSLinearString*> patstr(cx, ArgToRootedString(cx, args, 0));
-    if (!patstr)
+    Rooted<JSLinearString*> pat(cx, ArgToRootedString(cx, args, 0));
+    if (!pat)
         return false;
 
-    size_t patlen = patstr->length();
-
-    int i = textlen - patlen; // Start searching here
-    if (i < 0) {
+    size_t textLen = textstr->length();
+    size_t patLen = pat->length();
+    int start = textLen - patLen; // Start searching here
+    if (start < 0) {
         args.rval().setInt32(-1);
         return true;
     }
 
-    if (args.length() > 1) {
+    if (args.hasDefined(1)) {
         if (args[1].isInt32()) {
-            int j = args[1].toInt32();
-            if (j <= 0)
-                i = 0;
-            else if (j < i)
-                i = j;
+            int i = args[1].toInt32();
+            if (i <= 0)
+                start = 0;
+            else if (i < start)
+                start = i;
         } else {
             double d;
             if (!ToNumber(cx, args[1], &d))
@@ -1473,44 +1500,39 @@ str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
             if (!IsNaN(d)) {
                 d = ToInteger(d);
                 if (d <= 0)
-                    i = 0;
-                else if (d < i)
-                    i = (int)d;
+                    start = 0;
+                else if (d < start)
+                    start = int(d);
             }
         }
     }
 
-    if (patlen == 0) {
-        args.rval().setInt32(i);
+    if (patLen == 0) {
+        args.rval().setInt32(start);
         return true;
     }
 
-    const jschar *text = textstr->getChars(cx);
+    JSLinearString *text = textstr->ensureLinear(cx);
     if (!text)
         return false;
 
-    const jschar *pat = patstr->chars();
-
-    const jschar *t = text + i;
-    const jschar *textend = text - 1;
-    const jschar p0 = *pat;
-    const jschar *patNext = pat + 1;
-    const jschar *patEnd = pat + patlen;
-
-    for (; t != textend; --t) {
-        if (*t == p0) {
-            const jschar *t1 = t + 1;
-            for (const jschar *p1 = patNext; p1 != patEnd; ++p1, ++t1) {
-                if (*t1 != *p1)
-                    goto break_continue;
-            }
-            args.rval().setInt32(t - text);
-            return true;
-        }
-      break_continue:;
+    int32_t res;
+    AutoCheckCannotGC nogc;
+    if (text->hasLatin1Chars()) {
+        const Latin1Char *textChars = text->latin1Chars(nogc);
+        if (pat->hasLatin1Chars())
+            res = LastIndexOfImpl(textChars, textLen, pat->latin1Chars(nogc), patLen, start);
+        else
+            res = LastIndexOfImpl(textChars, textLen, pat->twoByteChars(nogc), patLen, start);
+    } else {
+        const jschar *textChars = text->twoByteChars(nogc);
+        if (pat->hasLatin1Chars())
+            res = LastIndexOfImpl(textChars, textLen, pat->latin1Chars(nogc), patLen, start);
+        else
+            res = LastIndexOfImpl(textChars, textLen, pat->twoByteChars(nogc), patLen, start);
     }
 
-    args.rval().setInt32(-1);
+    args.rval().setInt32(res);
     return true;
 }
 
