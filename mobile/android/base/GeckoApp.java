@@ -499,10 +499,6 @@ public abstract class GeckoApp
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        if (mToast != null) {
-            mToast.onSaveInstanceState(outState);
-        }
-
         outState.putBoolean(SAVED_STATE_IN_BACKGROUND, isApplicationInBackground());
         outState.putString(SAVED_STATE_PRIVATE_SESSION, mPrivateBrowsingSession);
     }
