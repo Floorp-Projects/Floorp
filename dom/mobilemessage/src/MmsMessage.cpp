@@ -485,11 +485,11 @@ MmsMessage::GetSender(nsAString& aSender)
 NS_IMETHODIMP
 MmsMessage::GetReceivers(JSContext* aCx, JS::MutableHandle<JS::Value> aReceivers)
 {
-  JS::Rooted<JSObject*> reveiversObj(aCx);
-  nsresult rv = nsTArrayToJSArray(aCx, mReceivers, reveiversObj.address());
+  JS::Rooted<JSObject*> receiversObj(aCx);
+  nsresult rv = nsTArrayToJSArray(aCx, mReceivers, &receiversObj);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aReceivers.setObject(*reveiversObj);
+  aReceivers.setObject(*receiversObj);
   return NS_OK;
 }
 

@@ -104,7 +104,7 @@ public:
     }
 
     AutoPushJSContext cx(sc->GetNativeContext());
-    JSObject* JsDevices = nullptr;
+    JS::Rooted<JSObject*> JsDevices(cx);
     rv = nsTArrayToJSArray(cx, devices, &JsDevices);
     if (!JsDevices) {
       BT_WARNING("Cannot create JS array!");
@@ -260,7 +260,7 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
 
     AutoPushJSContext cx(sc->GetNativeContext());
     JS::Rooted<JSObject*> uuids(cx);
-    if (NS_FAILED(nsTArrayToJSArray(cx, mUuids, uuids.address()))) {
+    if (NS_FAILED(nsTArrayToJSArray(cx, mUuids, &uuids))) {
       BT_WARNING("Cannot set JS UUIDs object!");
       return;
     }
@@ -276,8 +276,7 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
 
     AutoPushJSContext cx(sc->GetNativeContext());
     JS::Rooted<JSObject*> deviceAddresses(cx);
-    if (NS_FAILED(nsTArrayToJSArray(cx, mDeviceAddresses,
-                                    deviceAddresses.address()))) {
+    if (NS_FAILED(nsTArrayToJSArray(cx, mDeviceAddresses, &deviceAddresses))) {
       BT_WARNING("Cannot set JS Devices object!");
       return;
     }

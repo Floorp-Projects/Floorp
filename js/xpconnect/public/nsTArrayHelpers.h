@@ -14,7 +14,7 @@
 template <class T>
 inline nsresult
 nsTArrayToJSArray(JSContext* aCx, const nsTArray<T>& aSourceArray,
-                  JSObject** aResultArray)
+                  JS::MutableHandle<JSObject*> aResultArray)
 {
   MOZ_ASSERT(aCx);
 
@@ -45,7 +45,7 @@ nsTArrayToJSArray(JSContext* aCx, const nsTArray<T>& aSourceArray,
     return NS_ERROR_FAILURE;
   }
 
-  *aResultArray = arrayObj;
+  aResultArray.set(arrayObj);
   return NS_OK;
 }
 
@@ -53,7 +53,7 @@ template <>
 inline nsresult
 nsTArrayToJSArray<nsString>(JSContext* aCx,
                             const nsTArray<nsString>& aSourceArray,
-                            JSObject** aResultArray)
+                            JS::MutableHandle<JSObject*> aResultArray)
 {
   MOZ_ASSERT(aCx);
 
@@ -85,7 +85,7 @@ nsTArrayToJSArray<nsString>(JSContext* aCx,
     return NS_ERROR_FAILURE;
   }
 
-  *aResultArray = arrayObj;
+  aResultArray.set(arrayObj);
   return NS_OK;
 }
 
