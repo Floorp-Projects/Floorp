@@ -246,7 +246,7 @@ protected:
 };
 
 #undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY NS_VISIBILITY_HIDDEN
+#define IMETHOD_VISIBILITY
 
 // An event that can be used to call a method on a class.  The class type must
 // support reference counting. This event supports Revoke for use
