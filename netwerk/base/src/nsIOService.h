@@ -78,8 +78,8 @@ private:
     // These shouldn't be called directly:
     // - construct using GetInstance
     // - destroy using Release
-    nsIOService() NS_HIDDEN;
-    ~nsIOService() NS_HIDDEN;
+    nsIOService();
+    ~nsIOService();
 
     nsresult TrackNetworkLinkStatusForOffline();
 

@@ -18,7 +18,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHELLSERVICE
 
-  nsresult Init() NS_HIDDEN;
+  nsresult Init();
 
 private:
   ~nsGNOMEShellService() {}

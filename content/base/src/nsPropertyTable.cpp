@@ -40,8 +40,8 @@ public:
   PropertyList(nsIAtom*           aName,
                NSPropertyDtorFunc aDtorFunc,
                void*              aDtorData,
-               bool               aTransfer) NS_HIDDEN;
-  ~PropertyList() NS_HIDDEN;
+               bool               aTransfer);
+  ~PropertyList();
 
   // Removes the property associated with the given object, and destroys
   // the property value

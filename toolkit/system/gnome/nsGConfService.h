@@ -23,7 +23,7 @@ public:
   nsresult Init();
 
 private:
-  ~nsGConfService() NS_HIDDEN;
+  ~nsGConfService();
 
   GConfClient *mClient;
 };

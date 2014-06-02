@@ -66,7 +66,7 @@
  * Other examples:
  *
  * NS_HIDDEN_(int) someMethod();
- * SomeCtor() NS_HIDDEN;
+ * SomeCtor();
  */
 
 #ifdef HAVE_VISIBILITY_HIDDEN_ATTRIBUTE

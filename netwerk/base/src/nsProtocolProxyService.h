@@ -36,14 +36,14 @@ public:
     NS_DECL_NSIPROTOCOLPROXYSERVICE
     NS_DECL_NSIOBSERVER
 
-    nsProtocolProxyService() NS_HIDDEN;
+    nsProtocolProxyService();
 
     nsresult Init();
 
 protected:
     friend class nsAsyncResolveRequest;
 
-    ~nsProtocolProxyService() NS_HIDDEN;
+    ~nsProtocolProxyService();
 
     /**
      * This method is called whenever a preference may have changed or

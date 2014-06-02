@@ -31,8 +31,8 @@ public:
                    nsRenderingContext* aRenderingContext = nullptr,
                    // see OuterReflowState() below
                    const nsHTMLReflowState* aOuterReflowState = nullptr,
-                   uint16_t aReflowDepth = 0) NS_HIDDEN;
-  nsBoxLayoutState(const nsBoxLayoutState& aState) NS_HIDDEN;
+                   uint16_t aReflowDepth = 0);
+  nsBoxLayoutState(const nsBoxLayoutState& aState);
 
   nsPresContext* PresContext() const { return mPresContext; }
   nsIPresShell* PresShell() const { return mPresContext->PresShell(); }

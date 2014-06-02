@@ -67,9 +67,9 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     };
 
     // nsMIMEInfoBase methods
-    nsMIMEInfoBase(const char *aMIMEType = "") NS_HIDDEN;
-    nsMIMEInfoBase(const nsACString& aMIMEType) NS_HIDDEN;
-    nsMIMEInfoBase(const nsACString& aType, HandlerClass aClass) NS_HIDDEN;
+    nsMIMEInfoBase(const char *aMIMEType = "");
+    nsMIMEInfoBase(const nsACString& aMIMEType);
+    nsMIMEInfoBase(const nsACString& aType, HandlerClass aClass);
     virtual ~nsMIMEInfoBase();        // must be virtual, as the the base class's Release should call the subclass's destructor
 
     void SetMIMEType(const nsACString & aMIMEType) { mSchemeOrType = aMIMEType; }
