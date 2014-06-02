@@ -101,5 +101,6 @@ class MarionetteTransport(object):
     def close(self):
         """ Close the socket.
         """
-        self.sock.close()
+        if self.sock:
+            self.sock.close()
         self.sock = None
