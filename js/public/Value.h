@@ -254,6 +254,7 @@ typedef union jsval_layout
             uint32_t       boo;     // Don't use |bool| -- it must be four bytes.
             JSString       *str;
             JSObject       *obj;
+            js::gc::Cell   *cell;
             void           *ptr;
             JSWhyMagic     why;
             size_t         word;
@@ -561,10 +562,10 @@ JSVAL_IS_GCTHING_IMPL(jsval_layout l)
     return (uint32_t)l.s.tag >= (uint32_t)JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET;
 }
 
-static inline void *
+static inline js::gc::Cell *
 JSVAL_TO_GCTHING_IMPL(jsval_layout l)
 {
-    return l.s.payload.ptr;
+    return l.s.payload.cell;
 }
 
 static inline bool
@@ -777,12 +778,12 @@ JSVAL_IS_GCTHING_IMPL(jsval_layout l)
     return l.asBits >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET;
 }
 
-static inline void *
+static inline js::gc::Cell *
 JSVAL_TO_GCTHING_IMPL(jsval_layout l)
 {
     uint64_t ptrBits = l.asBits & JSVAL_PAYLOAD_MASK;
     MOZ_ASSERT((ptrBits & 0x7) == 0);
-    return (void *)ptrBits;
+    return reinterpret_cast<js::gc::Cell *>(ptrBits);
 }
 
 static inline bool
@@ -1160,7 +1161,7 @@ class Value
         return JSVAL_TO_OBJECT_IMPL(data);
     }
 
-    void *toGCThing() const {
+    js::gc::Cell *toGCThing() const {
         MOZ_ASSERT(isGCThing());
         return JSVAL_TO_GCTHING_IMPL(data);
     }
