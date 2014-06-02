@@ -483,24 +483,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject
                                     attrs);
     }
 
-    static
-    bool defineGetters(JSContext *cx, HandleObject proto)
-    {
-        if (!DefineGetter(cx, proto, cx->names().length, Getter<lengthValue>))
-            return false;
-
-        if (!DefineGetter(cx, proto, cx->names().buffer, BufferGetter))
-            return false;
-
-        if (!DefineGetter(cx, proto, cx->names().byteLength, Getter<byteLengthValue>))
-            return false;
-
-        if (!DefineGetter(cx, proto, cx->names().byteOffset, Getter<byteOffsetValue>))
-            return false;
-
-        return true;
-    }
-
     /* subarray(start[, end]) */
     static bool
     fun_subarray_impl(JSContext *cx, CallArgs args)
@@ -1149,54 +1131,63 @@ class Int8ArrayObject : public TypedArrayObjectTemplate<int8_t> {
     enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_INT8 };
     static const JSProtoKey key = JSProto_Int8Array;
     static const JSFunctionSpec jsfuncs[];
+    static const JSPropertySpec jsprops[];
 };
 class Uint8ArrayObject : public TypedArrayObjectTemplate<uint8_t> {
   public:
     enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_UINT8 };
     static const JSProtoKey key = JSProto_Uint8Array;
     static const JSFunctionSpec jsfuncs[];
+    static const JSPropertySpec jsprops[];
 };
 class Int16ArrayObject : public TypedArrayObjectTemplate<int16_t> {
   public:
     enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_INT16 };
     static const JSProtoKey key = JSProto_Int16Array;
     static const JSFunctionSpec jsfuncs[];
+    static const JSPropertySpec jsprops[];
 };
 class Uint16ArrayObject : public TypedArrayObjectTemplate<uint16_t> {
   public:
     enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_UINT16 };
     static const JSProtoKey key = JSProto_Uint16Array;
     static const JSFunctionSpec jsfuncs[];
+    static const JSPropertySpec jsprops[];
 };
 class Int32ArrayObject : public TypedArrayObjectTemplate<int32_t> {
   public:
     enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_INT32 };
     static const JSProtoKey key = JSProto_Int32Array;
     static const JSFunctionSpec jsfuncs[];
+    static const JSPropertySpec jsprops[];
 };
 class Uint32ArrayObject : public TypedArrayObjectTemplate<uint32_t> {
   public:
     enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_UINT32 };
     static const JSProtoKey key = JSProto_Uint32Array;
     static const JSFunctionSpec jsfuncs[];
+    static const JSPropertySpec jsprops[];
 };
 class Float32ArrayObject : public TypedArrayObjectTemplate<float> {
   public:
     enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_FLOAT32 };
     static const JSProtoKey key = JSProto_Float32Array;
     static const JSFunctionSpec jsfuncs[];
+    static const JSPropertySpec jsprops[];
 };
 class Float64ArrayObject : public TypedArrayObjectTemplate<double> {
   public:
     enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_FLOAT64 };
     static const JSProtoKey key = JSProto_Float64Array;
     static const JSFunctionSpec jsfuncs[];
+    static const JSPropertySpec jsprops[];
 };
 class Uint8ClampedArrayObject : public TypedArrayObjectTemplate<uint8_clamped> {
   public:
     enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_UINT8_CLAMPED };
     static const JSProtoKey key = JSProto_Uint8ClampedArray;
     static const JSFunctionSpec jsfuncs[];
+    static const JSPropertySpec jsprops[];
 };
 
 } /* anonymous namespace */
@@ -2054,7 +2045,14 @@ const JSFunctionSpec _typedArray##Object::jsfuncs[] = {                         
     JS_FN("set", _typedArray##Object::fun_set, 2, JSFUN_GENERIC_NATIVE),           \
     EXPERIMENTAL_FUNCTIONS(_typedArray)                                            \
     JS_FS_END                                                                      \
-}
+};                                                                                 \
+const JSPropertySpec _typedArray##Object::jsprops[] = {                            \
+    JS_PSG("length", _typedArray##Object::Getter<lengthValue>, JSPROP_PERMANENT),  \
+    JS_PSG("buffer", _typedArray##Object::BufferGetter, JSPROP_PERMANENT),         \
+    JS_PSG("byteLength", _typedArray##Object::Getter<byteLengthValue>, JSPROP_PERMANENT), \
+    JS_PSG("byteOffset", _typedArray##Object::Getter<byteOffsetValue>, JSPROP_PERMANENT), \
+    JS_PS_END                                                                      \
+};
 
 #define IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Name,NativeType)                                    \
   JS_FRIEND_API(JSObject *) JS_New ## Name ## Array(JSContext *cx, uint32_t nelements)          \
@@ -2203,7 +2201,7 @@ InitTypedArrayClass(JSContext *cx)
         return false;
     }
 
-    if (!ArrayType::defineGetters(cx, proto))
+    if (!JS_DefineProperties(cx, proto, ArrayType::jsprops))
         return false;
 
     if (!JS_DefineFunctions(cx, proto, ArrayType::jsfuncs))
@@ -2222,15 +2220,15 @@ InitTypedArrayClass(JSContext *cx)
     return true;
 }
 
-IMPL_TYPED_ARRAY_STATICS(Int8Array);
-IMPL_TYPED_ARRAY_STATICS(Uint8Array);
-IMPL_TYPED_ARRAY_STATICS(Int16Array);
-IMPL_TYPED_ARRAY_STATICS(Uint16Array);
-IMPL_TYPED_ARRAY_STATICS(Int32Array);
-IMPL_TYPED_ARRAY_STATICS(Uint32Array);
-IMPL_TYPED_ARRAY_STATICS(Float32Array);
-IMPL_TYPED_ARRAY_STATICS(Float64Array);
-IMPL_TYPED_ARRAY_STATICS(Uint8ClampedArray);
+IMPL_TYPED_ARRAY_STATICS(Int8Array)
+IMPL_TYPED_ARRAY_STATICS(Uint8Array)
+IMPL_TYPED_ARRAY_STATICS(Int16Array)
+IMPL_TYPED_ARRAY_STATICS(Uint16Array)
+IMPL_TYPED_ARRAY_STATICS(Int32Array)
+IMPL_TYPED_ARRAY_STATICS(Uint32Array)
+IMPL_TYPED_ARRAY_STATICS(Float32Array)
+IMPL_TYPED_ARRAY_STATICS(Float64Array)
+IMPL_TYPED_ARRAY_STATICS(Uint8ClampedArray)
 
 const Class TypedArrayObject::classes[ScalarTypeDescr::TYPE_MAX] = {
     IMPL_TYPED_ARRAY_FAST_CLASS(Int8Array),
