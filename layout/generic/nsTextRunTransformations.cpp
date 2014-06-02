@@ -276,6 +276,8 @@ nsCaseTransformTextRunFactory::TransformString(
 
   bool capitalizeDutchIJ = false;
   bool prevIsLetter = false;
+  bool ntPrefix = false; // true immediately after a word-initial 'n' or 't'
+                         // when doing Irish lowercasing
   uint32_t sigmaIndex = uint32_t(-1);
   nsIUGenCategory::nsUGenCategory cat;
 
@@ -331,6 +333,24 @@ nsCaseTransformTextRunFactory::TransformString(
         }
       }
 
+      cat = mozilla::unicode::GetGenCategory(ch);
+
+      if (languageSpecificCasing == eLSCB_Irish &&
+          cat == nsIUGenCategory::kLetter) {
+        // See bug 1018805 for Irish lowercasing requirements
+        if (!prevIsLetter && (ch == 'n' || ch == 't')) {
+          ntPrefix = true;
+        } else {
+          if (ntPrefix && mozilla::IrishCasing::IsUpperVowel(ch)) {
+            aConvertedString.Append('-');
+            ++extraChars;
+          }
+          ntPrefix = false;
+        }
+      } else {
+        ntPrefix = false;
+      }
+
       // Special lowercasing behavior for Greek Sigma: note that this is listed
       // as context-sensitive in Unicode's SpecialCasing.txt, but is *not* a
       // language-specific mapping; it applies regardless of the language of
@@ -348,8 +368,6 @@ nsCaseTransformTextRunFactory::TransformString(
       // was a letter, CAPITAL SIGMA maps to FINAL SIGMA and we record the
       // position in the converted string; if we then encounter another letter,
       // that FINAL SIGMA is replaced with a standard SMALL SIGMA.
-
-      cat = mozilla::unicode::GetGenCategory(ch);
 
       // If sigmaIndex is not -1, it marks where we have provisionally mapped
       // a CAPITAL SIGMA to FINAL SIGMA; if we now find another letter, we

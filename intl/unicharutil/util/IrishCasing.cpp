@@ -208,33 +208,36 @@ const uint8_t IrishCasing::sUcClasses[26] = {
   kClass_letter
 };
 
+uint8_t
+IrishCasing::GetClass(uint32_t aCh)
+{
+  using mozilla::unicode::GetGenCategory;
+  if (aCh >= 'a' && aCh <= 'z') {
+    return sLcClasses[aCh - 'a'];
+  } else if (aCh >= 'A' && aCh <= 'Z') {
+    return sUcClasses[aCh - 'A'];
+  } else if (GetGenCategory(aCh) == nsIUGenCategory::kLetter) {
+    if (aCh == a_ACUTE || aCh == e_ACUTE || aCh == i_ACUTE ||
+        aCh == o_ACUTE || aCh == u_ACUTE) {
+      return kClass_vowel;
+    } else if (aCh == A_ACUTE || aCh == E_ACUTE || aCh == I_ACUTE ||
+               aCh == O_ACUTE || aCh == U_ACUTE) {
+      return kClass_Vowel;
+    } else {
+      return kClass_letter;
+    }
+  } else if (aCh == '-' || aCh == HYPHEN || aCh == NO_BREAK_HYPHEN) {
+    return kClass_hyph;
+  } else {
+    return kClass_other;
+  }
+}
+
 uint32_t
 IrishCasing::UpperCase(uint32_t aCh, State& aState,
                        bool& aMarkPos, uint8_t& aAction)
 {
-  using mozilla::unicode::GetGenCategory;
-  uint8_t cls;
-
-  if (aCh >= 'a' && aCh <= 'z') {
-    cls = sLcClasses[aCh - 'a'];
-  } else if (aCh >= 'A' && aCh <= 'Z') {
-    cls = sUcClasses[aCh - 'A'];
-  } else if (GetGenCategory(aCh) == nsIUGenCategory::kLetter) {
-    if (aCh == a_ACUTE || aCh == e_ACUTE || aCh == i_ACUTE ||
-        aCh == o_ACUTE || aCh == u_ACUTE) {
-      cls = kClass_vowel;
-    } else if (aCh == A_ACUTE || aCh == E_ACUTE || aCh == I_ACUTE ||
-               aCh == O_ACUTE || aCh == U_ACUTE) {
-      cls = kClass_Vowel;
-    } else {
-      cls = kClass_letter;
-    }
-  } else if (aCh == '-' || aCh == HYPHEN || aCh == NO_BREAK_HYPHEN) {
-    cls = kClass_hyph;
-  } else {
-    cls = kClass_other;
-  }
-
+  uint8_t cls = GetClass(aCh);
   uint8_t stateEntry = sUppercaseStateTable[cls][aState];
   aMarkPos = !!(stateEntry & kMarkPositionFlag);
   aAction = (stateEntry & kActionMask) >> kActionShift;

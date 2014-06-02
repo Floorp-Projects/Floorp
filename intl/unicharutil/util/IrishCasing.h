@@ -101,6 +101,14 @@ public:
 
   static uint32_t UpperCase(uint32_t aCh, State& aState,
                             bool& aMarkPos, uint8_t& aAction);
+
+  static bool IsUpperVowel(uint32_t aCh)
+  {
+    return GetClass(aCh) == kClass_Vowel;
+  }
+
+private:
+  static uint8_t GetClass(uint32_t aCh);
 };
 
 } // namespace mozilla
