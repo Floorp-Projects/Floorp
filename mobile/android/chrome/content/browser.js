@@ -7523,13 +7523,6 @@ let Reader = {
         let url = aData;
         this.removeArticleFromCache(url, function(success) {
           this.log("Reader:Remove success=" + success + ", url=" + url);
-
-          if (success) {
-            sendMessageToJava({
-              type: "Reader:Removed",
-              url: url
-            });
-          }
         }.bind(this));
         break;
       }
