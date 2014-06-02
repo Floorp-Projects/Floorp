@@ -3025,7 +3025,7 @@ nsDOMWindowUtils::GetFileId(JS::Handle<JS::Value> aFile, JSContext* aCx,
   if (!aFile.isPrimitive()) {
     JSObject* obj = aFile.toObjectOrNull();
 
-    FileHandle* fileHandle;
+    FileHandle* fileHandle = nullptr;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(FileHandle, obj, fileHandle))) {
       *aResult = fileHandle->GetFileId();
       return NS_OK;
