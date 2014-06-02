@@ -857,7 +857,7 @@ bin/libfreebl_32int64_3.so
 #endif
 
 @BINPATH@/components/DataStore.manifest
-@BINPATH@/components/DataStoreImpl.js
+@BINPATH@/components/DataStoreService.js
 @BINPATH@/components/dom_datastore.xpt
 
 
