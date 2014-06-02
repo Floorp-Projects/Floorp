@@ -7,7 +7,7 @@
 
 interface nsIDOMWindow;
 
-[scriptable, uuid(0a050c4f-d292-4a14-8712-09bc1019840a)]
+[scriptable, uuid(bd02d09c-41ab-47b7-9319-57aa8e5059b0)]
 interface nsIDataStoreService : nsISupports
 {
   void installDataStore(in unsigned long appId,
@@ -24,4 +24,12 @@ interface nsIDataStoreService : nsISupports
 
   nsISupports getDataStores(in nsIDOMWindow window,
                             in DOMString name);
+
+  // This is an array of objects composed by:
+  // - readOnly: boolean
+  // - name: DOMString
+  // - owner: DOMString
+  // - enabled: true/false - true if this dataStore is ready to be used.
+  jsval getDataStoresInfo(in DOMString name,
+                          in unsigned long appId);
 };
