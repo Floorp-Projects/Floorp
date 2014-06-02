@@ -49,6 +49,8 @@ public:
     bool Validate(GLenum type, uint32_t max_allowed, size_t first, size_t count,
                   uint32_t* out_upperBound);
 
+    bool IsElementArrayUsedWithMultipleTypes() const;
+
     WebGLContext *GetParentObject() const {
         return Context();
     }
