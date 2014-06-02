@@ -375,6 +375,42 @@ var commandsDataChannel = [
     }
   ],
   [
+    'PC_LOCAL_SETUP_DATA_CHANNEL_CALLBACK',
+    function (test) {
+      test.waitForInitialDataChannel(test.pcLocal, function () {
+        ok(true, test.pcLocal + " dataChannels[0] switched to 'open'");
+      }, function () {
+        ok(false, test.pcLocal + " initial dataChannels[0] failed to switch to 'open'");
+        unexpectedEventAndFinish(this, 'timeout')
+      });
+      test.next();
+    }
+  ],
+  [
+    'PC_REMOTE_SETUP_DATA_CHANNEL_CALLBACK',
+    function (test) {
+      test.waitForInitialDataChannel(test.pcRemote, function () {
+        ok(true, test.pcRemote + " dataChannels[0] switched to 'open'");
+      }, function () {
+        ok(false, test.pcRemote + " initial dataChannels[0] failed to switch to 'open'");
+        unexpectedEventAndFinish(this, 'timeout');
+      });
+      test.next();
+    }
+  ],
+  [
+    'PC_REMOTE_SET_LOCAL_DESCRIPTION',
+    function (test) {
+      test.setLocalDescription(test.pcRemote, test.pcRemote._last_answer, STABLE,
+        function () {
+          is(test.pcRemote.signalingState, STABLE,
+             "signalingState after remote setLocalDescription is 'stable'");
+          test.next();
+        }
+      );
+    }
+  ],
+  [
     'PC_LOCAL_SET_REMOTE_DESCRIPTION',
     function (test) {
       test.setRemoteDescription(test.pcLocal, test.pcRemote._last_answer, STABLE,
@@ -386,18 +422,25 @@ var commandsDataChannel = [
     }
   ],
   [
-    'PC_REMOTE_SET_LOCAL_DESCRIPTION',
+    'PC_LOCAL_VERIFY_DATA_CHANNEL_STATE',
     function (test) {
-      test.setLocalDescription(test.pcRemote, test.pcRemote._last_answer, STABLE,
-        function (sourceChannel, targetChannel) {
-          is(sourceChannel.readyState, "open", test.pcLocal + " is in state: 'open'");
-          is(targetChannel.readyState, "open", test.pcRemote + " is in state: 'open'");
-
-          is(test.pcRemote.signalingState, STABLE,
-             "signalingState after remote setLocalDescription is 'stable'");
-          test.next();
-        }
-      );
+      test.waitForInitialDataChannel(test.pcLocal, function() {
+        test.next();
+      }, function() {
+        ok(false, test.pcLocal + " initial dataChannels[0] failed to switch to 'open'");
+        unexpectedEventAndFinish(this, 'timeout')
+      });
+    }
+  ],
+  [
+    'PC_REMOTE_VERIFY_DATA_CHANNEL_STATE',
+    function (test) {
+      test.waitForInitialDataChannel(test.pcRemote, function() {
+        test.next();
+      }, function() {
+        ok(false, test.pcRemote + " initial dataChannels[0] failed to switch to 'open'");
+        unexpectedEventAndFinish(this, 'timeout');
+      });
     }
   ],
   [
