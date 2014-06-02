@@ -402,7 +402,18 @@ AbstractHealthReporter.prototype = Object.freeze({
       // The database needs to be shut down by the end of shutdown
       // phase profileBeforeChange.
       Metrics.Storage.shutdown.addBlocker("FHR: Flushing storage shutdown",
-        this._promiseShutdown);
+        this._promiseShutdown,
+        () => ({
+            shutdownInitiated: this._shutdownInitiated,
+            initialized: this._initialized,
+            shutdownRequested: this._shutdownRequested,
+            initializeHadError: this._initializeHadError,
+            providerManagerInProgress: this._providerManagerInProgress,
+            storageInProgress: this._storageInProgress,
+            hasProviderManager: !!this._providerManager,
+            hasStorage: !!this._storage,
+            shutdownComplete: this.shutdownComplete
+          }));
 
       try {
         this._storageInProgress = true;
@@ -571,7 +582,7 @@ AbstractHealthReporter.prototype = Object.freeze({
     if (this._initializeHadError) {
       this._log.warn("Initialization had error. Shutting down immediately.");
     } else {
-      if (this._providerManagerInProcess) {
+      if (this._providerManagerInProgress) {
         this._log.warn("Provider manager is in progress of initializing. " +
                        "Waiting to finish.");
         return;
