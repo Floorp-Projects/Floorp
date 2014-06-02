@@ -11,7 +11,7 @@
  * Fully reads the required amount of data. Keeps reading until all the
  * data is retrieved or an error is hit.
  */
-NS_HIDDEN_(nsresult) ZW_ReadData(nsIInputStream *aStream, char *aBuffer, uint32_t aCount)
+nsresult ZW_ReadData(nsIInputStream *aStream, char *aBuffer, uint32_t aCount)
 {
     while (aCount > 0) {
         uint32_t read;
@@ -31,7 +31,7 @@ NS_HIDDEN_(nsresult) ZW_ReadData(nsIInputStream *aStream, char *aBuffer, uint32_
  * Fully writes the required amount of data. Keeps writing until all the
  * data is written or an error is hit.
  */
-NS_HIDDEN_(nsresult) ZW_WriteData(nsIOutputStream *aStream, const char *aBuffer,
+nsresult ZW_WriteData(nsIOutputStream *aStream, const char *aBuffer,
                                   uint32_t aCount)
 {
     while (aCount > 0) {

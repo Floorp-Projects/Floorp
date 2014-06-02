@@ -89,48 +89,48 @@ public:
    * Destroy should be called when the frame tree managed by the frame
    * manager is no longer being displayed.
    */
-  NS_HIDDEN_(void) Destroy();
+  void Destroy();
 
   // Placeholder frame functions
-  NS_HIDDEN_(nsPlaceholderFrame*) GetPlaceholderFrameFor(const nsIFrame* aFrame);
-  NS_HIDDEN_(nsresult)
+  nsPlaceholderFrame* GetPlaceholderFrameFor(const nsIFrame* aFrame);
+  nsresult
     RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame);
 
-  NS_HIDDEN_(void)
+  void
     UnregisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame);
 
-  NS_HIDDEN_(void)      ClearPlaceholderFrameMap();
+  void      ClearPlaceholderFrameMap();
 
   // Mapping undisplayed content
-  NS_HIDDEN_(nsStyleContext*) GetUndisplayedContent(nsIContent* aContent);
-  NS_HIDDEN_(mozilla::UndisplayedNode*)
+  nsStyleContext* GetUndisplayedContent(nsIContent* aContent);
+  mozilla::UndisplayedNode*
     GetAllUndisplayedContentIn(nsIContent* aParentContent);
-  NS_HIDDEN_(void) SetUndisplayedContent(nsIContent* aContent,
+  void SetUndisplayedContent(nsIContent* aContent,
                                          nsStyleContext* aStyleContext);
-  NS_HIDDEN_(void) ChangeUndisplayedContent(nsIContent* aContent,
+  void ChangeUndisplayedContent(nsIContent* aContent,
                                             nsStyleContext* aStyleContext);
-  NS_HIDDEN_(void) ClearUndisplayedContentIn(nsIContent* aContent,
+  void ClearUndisplayedContentIn(nsIContent* aContent,
                                              nsIContent* aParentContent);
-  NS_HIDDEN_(void) ClearAllUndisplayedContentIn(nsIContent* aParentContent);
+  void ClearAllUndisplayedContentIn(nsIContent* aParentContent);
 
   // Functions for manipulating the frame model
-  NS_HIDDEN_(void) AppendFrames(nsContainerFrame* aParentFrame,
-                                ChildListID       aListID,
-                                nsFrameList&      aFrameList);
+  void AppendFrames(nsContainerFrame* aParentFrame,
+                    ChildListID       aListID,
+                    nsFrameList&      aFrameList);
 
-  NS_HIDDEN_(void) InsertFrames(nsContainerFrame* aParentFrame,
-                                ChildListID       aListID,
-                                nsIFrame*         aPrevFrame,
-                                nsFrameList&      aFrameList);
+  void InsertFrames(nsContainerFrame* aParentFrame,
+                    ChildListID       aListID,
+                    nsIFrame*         aPrevFrame,
+                    nsFrameList&      aFrameList);
 
-  NS_HIDDEN_(void) RemoveFrame(ChildListID     aListID,
-                               nsIFrame*       aOldFrame);
+  void RemoveFrame(ChildListID     aListID,
+                   nsIFrame*       aOldFrame);
 
   /*
    * Notification that a frame is about to be destroyed. This allows any
    * outstanding references to the frame to be cleaned up.
    */
-  NS_HIDDEN_(void)     NotifyDestroyingFrame(nsIFrame* aFrame);
+  void     NotifyDestroyingFrame(nsIFrame* aFrame);
 
   /*
    * Capture/restore frame state for the frame subtree rooted at aFrame.
@@ -141,23 +141,23 @@ public:
    * of aFrame.
    */
 
-  NS_HIDDEN_(void) CaptureFrameState(nsIFrame*              aFrame,
+  void CaptureFrameState(nsIFrame*              aFrame,
                                      nsILayoutHistoryState* aState);
 
-  NS_HIDDEN_(void) RestoreFrameState(nsIFrame*              aFrame,
+  void RestoreFrameState(nsIFrame*              aFrame,
                                      nsILayoutHistoryState* aState);
 
   /*
    * Add/restore state for one frame
    */
-  NS_HIDDEN_(void) CaptureFrameStateFor(nsIFrame*              aFrame,
+  void CaptureFrameStateFor(nsIFrame*              aFrame,
                                         nsILayoutHistoryState* aState);
 
-  NS_HIDDEN_(void) RestoreFrameStateFor(nsIFrame*              aFrame,
+  void RestoreFrameStateFor(nsIFrame*              aFrame,
                                         nsILayoutHistoryState* aState);
 
-  NS_HIDDEN_(nsIPresShell*) GetPresShell() const { return mPresShell; }
-  NS_HIDDEN_(nsPresContext*) GetPresContext() const {
+  nsIPresShell* GetPresShell() const { return mPresShell; }
+  nsPresContext* GetPresContext() const {
     return mPresShell->GetPresContext();
   }
 };

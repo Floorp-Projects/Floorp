@@ -71,7 +71,7 @@ public:
    * Initializes internal state. Will be called automatically when
    * this service is first instantiated.
    */
-  NS_HIDDEN_(nsresult) Init();
+  nsresult Init();
  
   /**
    * Given a mimetype and an extension, looks up a mime info from the OS.
@@ -109,7 +109,7 @@ public:
   virtual nsresult GetFileTokenForPath(const char16_t * platformAppPath,
                                        nsIFile ** aFile);
 
-  virtual NS_HIDDEN_(nsresult) OSProtocolHandlerExists(const char *aScheme,
+  virtual nsresult OSProtocolHandlerExists(const char *aScheme,
                                                        bool *aExists) = 0;
 
 protected:
@@ -121,7 +121,7 @@ protected:
    * @param aContentType The type to search for.
    * @param aMIMEInfo    [inout] The mime info, if found
    */
-  NS_HIDDEN_(nsresult) FillMIMEInfoForMimeTypeFromExtras(
+  nsresult FillMIMEInfoForMimeTypeFromExtras(
     const nsACString& aContentType, nsIMIMEInfo * aMIMEInfo);
   /**
    * Searches the "extra" array of MIMEInfo objects for an object
@@ -131,7 +131,7 @@ protected:
    *
    * @see FillMIMEInfoForMimeTypeFromExtras
    */
-  NS_HIDDEN_(nsresult) FillMIMEInfoForExtensionFromExtras(
+  nsresult FillMIMEInfoForExtensionFromExtras(
     const nsACString& aExtension, nsIMIMEInfo * aMIMEInfo);
 
   /**
@@ -140,7 +140,7 @@ protected:
    * @param aMIMEType [out] The found MIME type.
    * @return true if the extension was found, false otherwise.
    */
-  NS_HIDDEN_(bool) GetTypeFromExtras(const nsACString& aExtension,
+  bool GetTypeFromExtras(const nsACString& aExtension,
                                        nsACString& aMIMEType);
 
 #ifdef PR_LOGGING

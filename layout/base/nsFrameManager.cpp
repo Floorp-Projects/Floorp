@@ -87,18 +87,18 @@ public:
   UndisplayedMap(uint32_t aNumBuckets = 16) NS_HIDDEN;
   ~UndisplayedMap(void) NS_HIDDEN;
 
-  NS_HIDDEN_(UndisplayedNode*) GetFirstNode(nsIContent* aParentContent);
+  UndisplayedNode* GetFirstNode(nsIContent* aParentContent);
 
-  NS_HIDDEN_(nsresult) AddNodeFor(nsIContent* aParentContent,
+  nsresult AddNodeFor(nsIContent* aParentContent,
                                   nsIContent* aChild, nsStyleContext* aStyle);
 
-  NS_HIDDEN_(void) RemoveNodeFor(nsIContent* aParentContent,
+  void RemoveNodeFor(nsIContent* aParentContent,
                                  UndisplayedNode* aNode);
 
-  NS_HIDDEN_(void) RemoveNodesFor(nsIContent* aParentContent);
+  void RemoveNodesFor(nsIContent* aParentContent);
 
   // Removes all entries from the hash table
-  NS_HIDDEN_(void)  Clear(void);
+  void  Clear(void);
 
 protected:
   /**
@@ -106,8 +106,8 @@ protected:
    * is a <xbl:children> element, |**aParentContent| is set to
    * the parent of the children element.
    */
-  NS_HIDDEN_(PLHashEntry**) GetEntryFor(nsIContent** aParentContent);
-  NS_HIDDEN_(void)          AppendNodeFor(UndisplayedNode* aNode,
+  PLHashEntry** GetEntryFor(nsIContent** aParentContent);
+  void          AppendNodeFor(UndisplayedNode* aNode,
                                           nsIContent* aParentContent);
 
   PLHashTable*  mTable;

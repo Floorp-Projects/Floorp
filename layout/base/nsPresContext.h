@@ -160,16 +160,16 @@ public:
   /**
    * Initialize the presentation context from a particular device.
    */
-  NS_HIDDEN_(nsresult) Init(nsDeviceContext* aDeviceContext);
+  nsresult Init(nsDeviceContext* aDeviceContext);
 
   /**
    * Set the presentation shell that this context is bound to.
    * A presentation context may only be bound to a single shell.
    */
-  NS_HIDDEN_(void) SetShell(nsIPresShell* aShell);
+  void SetShell(nsIPresShell* aShell);
 
 
-  NS_HIDDEN_(nsPresContextType) Type() const { return mType; }
+  nsPresContextType Type() const { return mType; }
 
   /**
    * Get the PresentationShell that this context is bound to.
@@ -260,7 +260,7 @@ public:
   void MediaFeatureValuesChanged(StyleRebuildType aShouldRebuild,
                                  nsChangeHint aChangeHint = nsChangeHint(0));
   void PostMediaFeatureValuesChangedEvent();
-  NS_HIDDEN_(void) HandleMediaFeatureValuesChangedEvent();
+  void HandleMediaFeatureValuesChangedEvent();
   void FlushPendingMediaFeatureValuesChanged() {
     if (mPendingMediaFeatureValuesChanged)
       MediaFeatureValuesChanged(eRebuildStyleIfNeeded);
@@ -281,14 +281,14 @@ public:
   /**
    * Notify the context that the document's compatibility mode has changed
    */
-  NS_HIDDEN_(void) CompatibilityModeChanged();
+  void CompatibilityModeChanged();
 
   /**
    * Access the image animation mode for this context
    */
   uint16_t     ImageAnimationMode() const { return mImageAnimationMode; }
-  virtual NS_HIDDEN_(void) SetImageAnimationModeExternal(uint16_t aMode);
-  NS_HIDDEN_(void) SetImageAnimationModeInternal(uint16_t aMode);
+  virtual void SetImageAnimationModeExternal(uint16_t aMode);
+  void SetImageAnimationModeInternal(uint16_t aMode);
 #ifdef MOZILLA_INTERNAL_API
   void SetImageAnimationMode(uint16_t aMode)
   { SetImageAnimationModeInternal(aMode); }
@@ -350,7 +350,7 @@ public:
    * the user's preference for font size for that generic and the
    * given language.
    */
-  NS_HIDDEN_(const nsFont*) GetDefaultFont(uint8_t aFontID,
+  const nsFont* GetDefaultFont(uint8_t aFontID,
                                            nsIAtom *aLanguage) const;
 
   /** Get a cached boolean pref, by its type */
@@ -413,7 +413,7 @@ public:
   bool GetFocusRingOnAnything() const { return mFocusRingOnAnything; }
   uint8_t GetFocusRingStyle() const { return mFocusRingStyle; }
 
-  NS_HIDDEN_(void) SetContainer(nsIDocShell* aContainer);
+  void SetContainer(nsIDocShell* aContainer);
 
   virtual nsISupports* GetContainerWeakExternal() const;
   nsISupports* GetContainerWeakInternal() const;
@@ -471,7 +471,7 @@ public:
    * Sets whether the presentation context can scroll for a paginated
    * context.
    */
-  NS_HIDDEN_(void) SetPaginatedScrolling(bool aResult);
+  void SetPaginatedScrolling(bool aResult);
 
   /**
    * Return true if this presentation context can scroll for paginated
@@ -710,7 +710,7 @@ public:
    *
    *  @lina 07/12/2000
    */
-  NS_HIDDEN_(void) SetBidiEnabled() const;
+  void SetBidiEnabled() const;
 
   /**
    *  Set visual or implicit mode into the pres context.
@@ -743,7 +743,7 @@ public:
   /**
    * Set the Bidi options for the presentation context
    */
-  NS_HIDDEN_(void) SetBidi(uint32_t aBidiOptions,
+  void SetBidi(uint32_t aBidiOptions,
                            bool aForceRestyle = false);
 
   /**
@@ -751,7 +751,7 @@ public:
    * Not inline so consumers of nsPresContext are not forced to
    * include nsIDocument.
    */
-  NS_HIDDEN_(uint32_t) GetBidi() const;
+  uint32_t GetBidi() const;
 
   /**
    * Render only Selection
@@ -763,12 +763,12 @@ public:
 
   bool IsRenderingOnlySelection() const { return mIsRenderingOnlySelection; }
 
-  NS_HIDDEN_(bool) IsTopLevelWindowInactive();
+  bool IsTopLevelWindowInactive();
 
   /*
    * Obtain a native them for rendering our widgets (both form controls and html)
    */
-  NS_HIDDEN_(nsITheme*) GetTheme();
+  nsITheme* GetTheme();
 
   /*
    * Notify the pres context that the theme has changed.  An internal switch
@@ -776,28 +776,28 @@ public:
    * Otherwise, the OS is telling us that the native theme for the platform
    * has changed.
    */
-  NS_HIDDEN_(void) ThemeChanged();
+  void ThemeChanged();
 
   /*
    * Notify the pres context that the resolution of the user interface has
    * changed. This happens if a window is moved between HiDPI and non-HiDPI
    * displays, so that the ratio of points to device pixels changes.
    */
-  NS_HIDDEN_(void) UIResolutionChanged();
+  void UIResolutionChanged();
 
   /**
    * Recursively notify all remote leaf descendants of a given message manager
    * that the resolution of the user interface has changed.
    */
-  NS_HIDDEN_(void) NotifyUIResolutionChanged(nsIMessageBroadcaster* aManager);
+  void NotifyUIResolutionChanged(nsIMessageBroadcaster* aManager);
 
   /*
    * Notify the pres context that a system color has changed
    */
-  NS_HIDDEN_(void) SysColorChanged();
+  void SysColorChanged();
 
   /** Printing methods below should only be used for Medium() == print **/
-  NS_HIDDEN_(void) SetPrintSettings(nsIPrintSettings *aPrintSettings);
+  void SetPrintSettings(nsIPrintSettings *aPrintSettings);
 
   nsIPrintSettings* GetPrintSettings() { return mPrintSettings; }
 
@@ -808,10 +808,10 @@ public:
      docshell if it's the most recent prescontext for the docshell.  Returns
      whether the prescontext is now being shown.
   */
-  NS_HIDDEN_(bool) EnsureVisible();
+  bool EnsureVisible();
 
 #ifdef MOZ_REFLOW_PERF
-  NS_HIDDEN_(void) CountReflows(const char * aName,
+  void CountReflows(const char * aName,
                                 nsIFrame * aFrame);
 #endif
 
@@ -853,8 +853,8 @@ public:
 
   bool             SupressingResizeReflow() const { return mSupressResizeReflow; }
 
-  virtual NS_HIDDEN_(gfxUserFontSet*) GetUserFontSetExternal();
-  NS_HIDDEN_(gfxUserFontSet*) GetUserFontSetInternal();
+  virtual gfxUserFontSet* GetUserFontSetExternal();
+  gfxUserFontSet* GetUserFontSetInternal();
 #ifdef MOZILLA_INTERNAL_API
   gfxUserFontSet* GetUserFontSet() { return GetUserFontSetInternal(); }
 #else
@@ -1035,25 +1035,25 @@ public:
 
 protected:
   friend class nsRunnableMethod<nsPresContext>;
-  NS_HIDDEN_(void) ThemeChangedInternal();
-  NS_HIDDEN_(void) SysColorChangedInternal();
-  NS_HIDDEN_(void) UIResolutionChangedInternal();
+  void ThemeChangedInternal();
+  void SysColorChangedInternal();
+  void UIResolutionChangedInternal();
 
-  static NS_HIDDEN_(bool)
+  static bool
   UIResolutionChangedSubdocumentCallback(nsIDocument* aDocument, void* aData);
 
-  NS_HIDDEN_(void) SetImgAnimations(nsIContent *aParent, uint16_t aMode);
-  NS_HIDDEN_(void) SetSMILAnimations(nsIDocument *aDoc, uint16_t aNewMode,
+  void SetImgAnimations(nsIContent *aParent, uint16_t aMode);
+  void SetSMILAnimations(nsIDocument *aDoc, uint16_t aNewMode,
                                      uint16_t aOldMode);
-  NS_HIDDEN_(void) GetDocumentColorPreferences();
+  void GetDocumentColorPreferences();
 
-  NS_HIDDEN_(void) PreferenceChanged(const char* aPrefName);
-  static NS_HIDDEN_(void) PrefChangedCallback(const char*, void*);
+  void PreferenceChanged(const char* aPrefName);
+  static void PrefChangedCallback(const char*, void*);
 
-  NS_HIDDEN_(void) UpdateAfterPreferencesChanged();
-  static NS_HIDDEN_(void) PrefChangedUpdateTimerCallback(nsITimer *aTimer, void *aClosure);
+  void UpdateAfterPreferencesChanged();
+  static void PrefChangedUpdateTimerCallback(nsITimer *aTimer, void *aClosure);
 
-  NS_HIDDEN_(void) GetUserPreferences();
+  void GetUserPreferences();
 
   // Allow nsAutoPtr<LangGroupFontPrefs> dtor to access this protected struct's
   // dtor:
@@ -1127,7 +1127,7 @@ protected:
     mLangGroupFontPrefs.mLangGroup = nullptr;
   }
 
-  NS_HIDDEN_(void) UpdateCharSet(const nsCString& aCharSet);
+  void UpdateCharSet(const nsCString& aCharSet);
 
 public:
   void DoChangeCharSet(const nsCString& aCharSet);

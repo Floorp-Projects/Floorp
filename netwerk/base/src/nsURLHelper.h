@@ -34,33 +34,33 @@ enum netCoalesceFlags
 //----------------------------------------------------------------------------
 
 /* shutdown frees URL parser */
-NS_HIDDEN_(void) net_ShutdownURLHelper();
+void net_ShutdownURLHelper();
 #ifdef XP_MACOSX
-NS_HIDDEN_(void) net_ShutdownURLHelperOSX();
+void net_ShutdownURLHelperOSX();
 #endif
 
 /* access URL parsers */
-NS_HIDDEN_(nsIURLParser *) net_GetAuthURLParser();
-NS_HIDDEN_(nsIURLParser *) net_GetNoAuthURLParser();
-NS_HIDDEN_(nsIURLParser *) net_GetStdURLParser();
+nsIURLParser * net_GetAuthURLParser();
+nsIURLParser * net_GetNoAuthURLParser();
+nsIURLParser * net_GetStdURLParser();
 
 /* convert between nsIFile and file:// URL spec 
  * net_GetURLSpecFromFile does an extra stat, so callers should
  * avoid it if possible in favor of net_GetURLSpecFromActualFile
  * and net_GetURLSpecFromDir */
-NS_HIDDEN_(nsresult) net_GetURLSpecFromFile(nsIFile *, nsACString &);
-NS_HIDDEN_(nsresult) net_GetURLSpecFromDir(nsIFile *, nsACString &);
-NS_HIDDEN_(nsresult) net_GetURLSpecFromActualFile(nsIFile *, nsACString &);
-NS_HIDDEN_(nsresult) net_GetFileFromURLSpec(const nsACString &, nsIFile **);
+nsresult net_GetURLSpecFromFile(nsIFile *, nsACString &);
+nsresult net_GetURLSpecFromDir(nsIFile *, nsACString &);
+nsresult net_GetURLSpecFromActualFile(nsIFile *, nsACString &);
+nsresult net_GetFileFromURLSpec(const nsACString &, nsIFile **);
 
 /* extract file path components from file:// URL */
-NS_HIDDEN_(nsresult) net_ParseFileURL(const nsACString &inURL,
+nsresult net_ParseFileURL(const nsACString &inURL,
                                       nsACString &outDirectory,
                                       nsACString &outFileBaseName,
                                       nsACString &outFileExtension);
 
 /* handle .. in dirs while resolving URLs (path is UTF-8) */
-NS_HIDDEN_(void) net_CoalesceDirs(netCoalesceFlags flags, char* path);
+void net_CoalesceDirs(netCoalesceFlags flags, char* path);
 
 /**
  * Resolves a relative path string containing "." and ".."
@@ -75,7 +75,7 @@ NS_HIDDEN_(void) net_CoalesceDirs(netCoalesceFlags flags, char* path);
  *
  * @return a new string, representing canonical uri
  */
-NS_HIDDEN_(nsresult) net_ResolveRelativePath(const nsACString &relativePath,
+nsresult net_ResolveRelativePath(const nsACString &relativePath,
                                              const nsACString &basePath,
                                              nsACString &result);
 
@@ -87,13 +87,13 @@ NS_HIDDEN_(nsresult) net_ResolveRelativePath(const nsACString &relativePath,
  * @param endPos    end of scheme; index of colon (may be null)
  * @param scheme    scheme copied to this buffer on return (may be null)
  */
-NS_HIDDEN_(nsresult) net_ExtractURLScheme(const nsACString &inURI,
+nsresult net_ExtractURLScheme(const nsACString &inURI,
                                           uint32_t *startPos, 
                                           uint32_t *endPos,
                                           nsACString *scheme = nullptr);
 
 /* check that the given scheme conforms to RFC 2396 */
-NS_HIDDEN_(bool) net_IsValidScheme(const char *scheme, uint32_t schemeLen);
+bool net_IsValidScheme(const char *scheme, uint32_t schemeLen);
 
 inline bool net_IsValidScheme(const nsAFlatCString &scheme)
 {
@@ -116,7 +116,7 @@ inline bool net_IsValidScheme(const nsAFlatCString &scheme)
  * @param result the out param to write to if filtering happens
  * @return whether result was written to
  */
-NS_HIDDEN_(bool) net_FilterURIString(const char *str, nsACString& result);
+bool net_FilterURIString(const char *str, nsACString& result);
 
 #if defined(XP_WIN)
 /**
@@ -132,7 +132,7 @@ NS_HIDDEN_(bool) net_FilterURIString(const char *str, nsACString& result);
  *
  * @returns false if aURL is already normalized.  Otherwise, returns true.
  */
-NS_HIDDEN_(bool) net_NormalizeFileURL(const nsACString &aURL,
+bool net_NormalizeFileURL(const nsACString &aURL,
                                         nsCString &aResultBuf);
 #endif
 
@@ -141,15 +141,15 @@ NS_HIDDEN_(bool) net_NormalizeFileURL(const nsACString &aURL,
  */
 
 /* convert to lower case */
-NS_HIDDEN_(void) net_ToLowerCase(char* str, uint32_t length);
-NS_HIDDEN_(void) net_ToLowerCase(char* str);
+void net_ToLowerCase(char* str, uint32_t length);
+void net_ToLowerCase(char* str);
 
 /**
  * returns pointer to first character of |str| in the given set.  if not found,
  * then |end| is returned.  stops prematurely if a null byte is encountered,
  * and returns the address of the null byte.
  */
-NS_HIDDEN_(char *) net_FindCharInSet(const char *str, const char *end, const char *set);
+char * net_FindCharInSet(const char *str, const char *end, const char *set);
 
 /**
  * returns pointer to first character of |str| NOT in the given set.  if all
@@ -157,13 +157,13 @@ NS_HIDDEN_(char *) net_FindCharInSet(const char *str, const char *end, const cha
  * included in |set|, then stops prematurely if a null byte is encountered,
  * and returns the address of the null byte.
  */
-NS_HIDDEN_(char *) net_FindCharNotInSet(const char *str, const char *end, const char *set);
+char * net_FindCharNotInSet(const char *str, const char *end, const char *set);
 
 /**
  * returns pointer to last character of |str| NOT in the given set.  if all
  * characters are in the given set, then |str - 1| is returned.
  */
-NS_HIDDEN_(char *) net_RFindCharNotInSet(const char *str, const char *end, const char *set);
+char * net_RFindCharNotInSet(const char *str, const char *end, const char *set);
 
 /**
  * Parses a content-type header and returns the content type and
@@ -173,7 +173,7 @@ NS_HIDDEN_(char *) net_RFindCharNotInSet(const char *str, const char *end, const
  * true.  Note that aContentCharset can be empty even if aHadCharset
  * is true.
  */
-NS_HIDDEN_(void) net_ParseContentType(const nsACString &aHeaderStr,
+void net_ParseContentType(const nsACString &aHeaderStr,
                                       nsACString       &aContentType,
                                       nsACString       &aContentCharset,
                                       bool*          aHadCharset);
@@ -186,7 +186,7 @@ NS_HIDDEN_(void) net_ParseContentType(const nsACString &aHeaderStr,
  * it's possible to have aContentCharset empty and *aHadCharset true when
  * *aCharsetStart is nonnegative; this corresponds to charset="".
  */
-NS_HIDDEN_(void) net_ParseContentType(const nsACString &aHeaderStr,
+void net_ParseContentType(const nsACString &aHeaderStr,
                                       nsACString       &aContentType,
                                       nsACString       &aContentCharset,
                                       bool             *aHadCharset,
@@ -215,16 +215,16 @@ inline char *net_RFindCharNotInSet(const char *str, const char *set)
  * This function returns true if the given hostname does not include any
  * restricted characters.  Otherwise, false is returned.
  */
-NS_HIDDEN_(bool) net_IsValidHostName(const nsCSubstring &host);
+bool net_IsValidHostName(const nsCSubstring &host);
 
 /**
  * Checks whether the IPv4 address is valid according to RFC 3986 section 3.2.2.
  */
-NS_HIDDEN_(bool) net_IsValidIPv4Addr(const char *addr, int32_t addrLen);
+bool net_IsValidIPv4Addr(const char *addr, int32_t addrLen);
 
 /**
  * Checks whether the IPv6 address is valid according to RFC 3986 section 3.2.2.
  */
-NS_HIDDEN_(bool) net_IsValidIPv6Addr(const char *addr, int32_t addrLen);
+bool net_IsValidIPv6Addr(const char *addr, int32_t addrLen);
 
 #endif // !nsURLHelper_h__

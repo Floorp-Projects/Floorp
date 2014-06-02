@@ -969,53 +969,53 @@ public:
                               int32_t aNamespaceID,
                               nsIContent **aResult) MOZ_OVERRIDE;
 
-  virtual NS_HIDDEN_(void) Sanitize();
+  virtual void Sanitize();
 
-  virtual NS_HIDDEN_(void) EnumerateSubDocuments(nsSubDocEnumFunc aCallback,
+  virtual void EnumerateSubDocuments(nsSubDocEnumFunc aCallback,
                                                  void *aData);
 
-  virtual NS_HIDDEN_(bool) CanSavePresentation(nsIRequest *aNewRequest);
-  virtual NS_HIDDEN_(void) Destroy();
-  virtual NS_HIDDEN_(void) RemovedFromDocShell();
-  virtual NS_HIDDEN_(already_AddRefed<nsILayoutHistoryState>) GetLayoutHistoryState() const;
+  virtual bool CanSavePresentation(nsIRequest *aNewRequest);
+  virtual void Destroy();
+  virtual void RemovedFromDocShell();
+  virtual already_AddRefed<nsILayoutHistoryState> GetLayoutHistoryState() const;
 
-  virtual NS_HIDDEN_(void) BlockOnload();
-  virtual NS_HIDDEN_(void) UnblockOnload(bool aFireSync);
+  virtual void BlockOnload();
+  virtual void UnblockOnload(bool aFireSync);
 
-  virtual NS_HIDDEN_(void) AddStyleRelevantLink(mozilla::dom::Link* aLink);
-  virtual NS_HIDDEN_(void) ForgetLink(mozilla::dom::Link* aLink);
+  virtual void AddStyleRelevantLink(mozilla::dom::Link* aLink);
+  virtual void ForgetLink(mozilla::dom::Link* aLink);
 
-  NS_HIDDEN_(void) ClearBoxObjectFor(nsIContent* aContent);
+  void ClearBoxObjectFor(nsIContent* aContent);
   already_AddRefed<nsIBoxObject> GetBoxObjectFor(mozilla::dom::Element* aElement,
                                                  mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
 
-  virtual NS_HIDDEN_(Element*)
+  virtual Element*
     GetAnonymousElementByAttribute(nsIContent* aElement,
                                    nsIAtom* aAttrName,
                                    const nsAString& aAttrValue) const;
 
-  virtual NS_HIDDEN_(Element*) ElementFromPointHelper(float aX, float aY,
+  virtual Element* ElementFromPointHelper(float aX, float aY,
                                                       bool aIgnoreRootScrollFrame,
                                                       bool aFlushLayout);
 
-  virtual NS_HIDDEN_(nsresult) NodesFromRectHelper(float aX, float aY,
+  virtual nsresult NodesFromRectHelper(float aX, float aY,
                                                    float aTopSize, float aRightSize,
                                                    float aBottomSize, float aLeftSize,
                                                    bool aIgnoreRootScrollFrame,
                                                    bool aFlushLayout,
                                                    nsIDOMNodeList** aReturn);
 
-  virtual NS_HIDDEN_(void) FlushSkinBindings();
+  virtual void FlushSkinBindings();
 
-  virtual NS_HIDDEN_(nsresult) InitializeFrameLoader(nsFrameLoader* aLoader);
-  virtual NS_HIDDEN_(nsresult) FinalizeFrameLoader(nsFrameLoader* aLoader);
-  virtual NS_HIDDEN_(void) TryCancelFrameLoaderInitialization(nsIDocShell* aShell);
-  virtual NS_HIDDEN_(bool) FrameLoaderScheduledToBeFinalized(nsIDocShell* aShell);
-  virtual NS_HIDDEN_(nsIDocument*)
+  virtual nsresult InitializeFrameLoader(nsFrameLoader* aLoader);
+  virtual nsresult FinalizeFrameLoader(nsFrameLoader* aLoader);
+  virtual void TryCancelFrameLoaderInitialization(nsIDocShell* aShell);
+  virtual bool FrameLoaderScheduledToBeFinalized(nsIDocShell* aShell);
+  virtual nsIDocument*
     RequestExternalResource(nsIURI* aURI,
                             nsINode* aRequestingNode,
                             ExternalResourceLoad** aPendingLoad);
-  virtual NS_HIDDEN_(void)
+  virtual void
     EnumerateExternalResources(nsSubDocEnumFunc aCallback, void* aData);
 
   nsTArray<nsCString> mHostObjectURIs;
@@ -1099,9 +1099,9 @@ public:
   virtual void MozSetImageElement(const nsAString& aImageElementId,
                                   Element* aElement) MOZ_OVERRIDE;
 
-  virtual NS_HIDDEN_(nsresult) AddImage(imgIRequest* aImage);
-  virtual NS_HIDDEN_(nsresult) RemoveImage(imgIRequest* aImage, uint32_t aFlags);
-  virtual NS_HIDDEN_(nsresult) SetImageLockingState(bool aLocked);
+  virtual nsresult AddImage(imgIRequest* aImage);
+  virtual nsresult RemoveImage(imgIRequest* aImage, uint32_t aFlags);
+  virtual nsresult SetImageLockingState(bool aLocked);
 
   // AddPlugin adds a plugin-related element to mPlugins when the element is
   // added to the tree.
