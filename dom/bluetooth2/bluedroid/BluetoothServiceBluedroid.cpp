@@ -808,30 +808,45 @@ BluetoothServiceBluedroid::StopInternal()
 }
 
 nsresult
-BluetoothServiceBluedroid::GetDefaultAdapterPathInternal(
+BluetoothServiceBluedroid::GetAdaptersInternal(
   BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  BluetoothValue v = InfallibleTArray<BluetoothNamedValue>();
+  /**
+   * Wrap BluetoothValue =
+   *   BluetoothNamedValue[]
+   *     |
+   *     |__ BluetoothNamedValue =
+   *     |     {"Adapter", BluetoothValue = BluetoothNamedValue[]}
+   *     |
+   *     |__ BluetoothNamedValue =
+   *     |     {"Adapter", BluetoothValue = BluetoothNamedValue[]}
+   *     ...
+   */
+  BluetoothValue adaptersProperties = InfallibleTArray<BluetoothNamedValue>();
+  uint32_t numAdapters = 1; // Bluedroid supports single adapter only
 
-  BT_APPEND_NAMED_VALUE(v.get_ArrayOfBluetoothNamedValue(),
-                        "Address", sAdapterBdAddress);
+  for (uint32_t i = 0; i < numAdapters; i++) {
+    BluetoothValue properties = InfallibleTArray<BluetoothNamedValue>();
 
-  BT_APPEND_NAMED_VALUE(v.get_ArrayOfBluetoothNamedValue(),
-                        "Name", sAdapterBdName);
+    // TODO: Revise here based on new BluetoothAdapter interface
+    BT_APPEND_NAMED_VALUE(properties.get_ArrayOfBluetoothNamedValue(),
+                          "Address", sAdapterBdAddress);
+    BT_APPEND_NAMED_VALUE(properties.get_ArrayOfBluetoothNamedValue(),
+                          "Name", sAdapterBdName);
+    BT_APPEND_NAMED_VALUE(properties.get_ArrayOfBluetoothNamedValue(),
+                          "Discoverable", sAdapterDiscoverable);
+    BT_APPEND_NAMED_VALUE(properties.get_ArrayOfBluetoothNamedValue(),
+                          "DiscoverableTimeout", sAdapterDiscoverableTimeout);
+    BT_APPEND_NAMED_VALUE(properties.get_ArrayOfBluetoothNamedValue(),
+                          "Devices", sAdapterBondedAddressArray);
 
-  BT_APPEND_NAMED_VALUE(v.get_ArrayOfBluetoothNamedValue(),
-                        "Discoverable", sAdapterDiscoverable);
+    BT_APPEND_NAMED_VALUE(adaptersProperties.get_ArrayOfBluetoothNamedValue(),
+                          "Adapter", properties);
+  }
 
-  BT_APPEND_NAMED_VALUE(v.get_ArrayOfBluetoothNamedValue(),
-                        "DiscoverableTimeout", sAdapterDiscoverableTimeout);
-
-  BT_APPEND_NAMED_VALUE(v.get_ArrayOfBluetoothNamedValue(),
-                        "Devices", sAdapterBondedAddressArray);
-
-  DispatchBluetoothReply(aRunnable, v, EmptyString());
-
+  DispatchBluetoothReply(aRunnable, adaptersProperties, EmptyString());
   return NS_OK;
 }
 

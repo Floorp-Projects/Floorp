@@ -118,7 +118,7 @@ public:
 
   void AppendAllSheets(nsTArray<nsCSSStyleSheet*>& aArray);
 
-  NS_HIDDEN_(void) Traverse(nsIContent *aContent,
+  void Traverse(nsIContent *aContent,
                             nsCycleCollectionTraversalCallback &cb);
 
   NS_DECL_CYCLE_COLLECTION_CLASS(nsBindingManager)
