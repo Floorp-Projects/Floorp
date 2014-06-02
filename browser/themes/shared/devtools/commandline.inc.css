@@ -28,6 +28,12 @@
   margin: auto 10px;
 }
 
+.developer-toolbar-button > .toolbarbutton-icon,
+#developer-toolbar-closebutton > .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
+}
+
 #developer-toolbar-toolbox-button {
   list-style-image: url("chrome://browser/skin/devtools/toggle-tools.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
@@ -49,6 +55,25 @@
   -moz-image-region: rect(0px, 64px, 16px, 48px);
 }
 
+@media (min-resolution: 2dppx) {
+  #developer-toolbar-toolbox-button {
+    list-style-image: url("chrome://browser/skin/devtools/toggle-tools@2x.png");
+    -moz-image-region: rect(0px, 32px, 32px, 0px);
+  }
+
+  #developer-toolbar-toolbox-button:hover {
+    -moz-image-region: rect(0px, 64px, 32px, 32px);
+  }
+
+  #developer-toolbar-toolbox-button:hover:active {
+    -moz-image-region: rect(0px, 96px, 32px, 64px);
+  }
+
+  #developer-toolbar-toolbox-button[checked=true] {
+    -moz-image-region: rect(0px, 128px, 32px, 96px);
+  }
+}
+
 #developer-toolbar-closebutton {
   list-style-image: url("chrome://browser/skin/devtools/close.png");
   -moz-appearance: none;
@@ -57,6 +82,12 @@
   min-width: 16px;
   width: 16px;
   opacity: 0.6;
+}
+
+@media (min-resolution: 2dppx) {
+  #developer-toolbar-closebutton {
+    list-style-image: url("chrome://browser/skin/devtools/close@2x.png");
+  }
 }
 
 #developer-toolbar-closebutton > .toolbarbutton-icon {
@@ -109,7 +140,6 @@ html|*#gcli-output-frame {
 .gclitoolbar-input-node {
   -moz-appearance: none;
   color: hsl(210,30%,85%);
-  padding-left: 20px;
   background-color: #242b33;
   background-repeat: no-repeat;
   background-position: 4px center;
@@ -118,12 +148,33 @@ html|*#gcli-output-frame {
               -1px 0 0 hsla(206,37%,4%,.2) inset;
   line-height: 32px;
   outline-style: none;
-  background-image: -moz-image-rect(url("chrome://browser/skin/devtools/commandline-icon.png"), 0, 16, 16, 0);
+  padding: 0;
 }
 
 .gclitoolbar-input-node[focused="true"] {
-  background-image: -moz-image-rect(url("chrome://browser/skin/devtools/commandline-icon.png"), 0, 32, 16, 16);
   background-color: #232e38;
+}
+
+.gclitoolbar-input-node::before {
+  content: "";
+  display: inline-block;
+  -moz-box-ordinal-group: 0;
+  width: 16px;
+  height: 16px;
+  margin: 0 2px;
+  background-image: url("chrome://browser/skin/devtools/commandline-icon.png");
+  background-position: 0 center;
+  background-size: 32px 16px;
+}
+
+.gclitoolbar-input-node[focused="true"]::before {
+  background-position: -16px center;
+}
+
+@media (min-resolution: 2dppx) {
+  .gclitoolbar-input-node::before {
+    background-image: url("chrome://browser/skin/devtools/commandline-icon@2x.png");
+  }
 }
 
 .gclitoolbar-input-node > .textbox-input-box > html|*.textbox-input::-moz-selection {
