@@ -421,6 +421,30 @@ ArrayBufferObject::dataPointer() const {
 }
 
 void
+ArrayBufferObject::setNewData(ObjectElements *newHeader, uint32_t byteLength)
+{
+    JS_ASSERT(!isAsmJSArrayBuffer());
+    JS_ASSERT(!isSharedArrayBuffer());
+
+#ifdef JSGC_GENERATIONAL
+    ObjectElements *oldHeader = ObjectElements::fromElements(elements);
+    JS_ASSERT(oldHeader != newHeader);
+    JSRuntime *rt = runtimeFromMainThread();
+    if (hasDynamicElements())
+        rt->gcNursery.notifyRemovedElements(this, oldHeader);
+#endif
+
+    elements = newHeader->elements();
+
+#ifdef JSGC_GENERATIONAL
+    if (hasDynamicElements())
+        rt->gcNursery.notifyNewElements(this, newHeader);
+#endif
+
+    initElementsHeader(newHeader, byteLength);
+}
+
+void
 ArrayBufferObject::changeContents(JSContext *cx, ObjectElements *newHeader)
 {
     JS_ASSERT(!isAsmJSArrayBuffer());
@@ -451,22 +475,8 @@ ArrayBufferObject::changeContents(JSContext *cx, ObjectElements *newHeader)
     // being transferred, so null it out
     SetViewList(this, nullptr);
 
-#ifdef JSGC_GENERATIONAL
-    ObjectElements *oldHeader = ObjectElements::fromElements(elements);
-    JS_ASSERT(oldHeader != newHeader);
-    JSRuntime *rt = runtimeFromMainThread();
-    if (hasDynamicElements())
-        rt->gcNursery.notifyRemovedElements(this, oldHeader);
-#endif
+    setNewData(newHeader, byteLengthCopy);
 
-    elements = newHeader->elements();
-
-#ifdef JSGC_GENERATIONAL
-    if (hasDynamicElements())
-        rt->gcNursery.notifyNewElements(this, newHeader);
-#endif
-
-    initElementsHeader(newHeader, byteLengthCopy);
     InitViewList(this, viewListHead);
 }
 
@@ -479,7 +489,7 @@ ArrayBufferObject::neuter(ObjectElements *newHeader, JSContext *cx)
     if (hasStealableContents() && oldHeader != newHeader) {
         MOZ_ASSERT(newHeader);
 
-        changeContents(cx, newHeader);
+        setNewData(newHeader, byteLength());
 
         FreeOp fop(cx->runtime(), false);
         fop.free_(oldHeader);
@@ -797,9 +807,16 @@ ArrayBufferObject::stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffe
 
     // If the elements were transferrable, revert the buffer back to using
     // inline storage so it doesn't attempt to free the stolen elements when
-    // finalized.
-    if (stolen)
-        buffer->changeContents(cx, ObjectElements::fromElements(buffer->fixedElements()));
+    // finalized.  Be careful to preserve the view list in the process.
+    if (stolen) {
+        ArrayBufferViewObject *viewListHead = GetViewList(buffer);
+
+        SetViewList(buffer, nullptr);
+
+        buffer->setNewData(ObjectElements::fromElements(buffer->fixedElements()), 0);
+
+        InitViewList(buffer, viewListHead);
+    }
 
     buffer->neuter(newHeader, cx);
     return true;
