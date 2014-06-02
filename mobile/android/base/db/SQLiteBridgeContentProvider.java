@@ -6,14 +6,14 @@ package org.mozilla.gecko.db;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.Collection;
-import java.util.Iterator;
+
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoThread;
-import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
 import org.mozilla.gecko.sqlite.SQLiteBridgeException;
+
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -35,12 +35,50 @@ import android.util.Log;
  */
 
 public abstract class SQLiteBridgeContentProvider extends ContentProvider {
+    private static final String ERROR_MESSAGE_DATABASE_IS_LOCKED = "Can't step statement: (5) database is locked";
+
     private HashMap<String, SQLiteBridge> mDatabasePerProfile;
     protected Context mContext = null;
     private final String mLogTag;
 
     protected SQLiteBridgeContentProvider(String logTag) {
         mLogTag = logTag;
+    }
+
+    /**
+     * Subclasses must override this to allow error reporting code to compose
+     * the correct histogram name.
+     *
+     * Ensure that you define the new histograms if you define a new class!
+     */
+    protected abstract String getTelemetryPrefix();
+
+    /**
+     * Errors are recorded in telemetry using an enumerated histogram.
+     *
+     * <https://developer.mozilla.org/en-US/docs/Mozilla/Performance/
+     * Adding_a_new_Telemetry_probe#Choosing_a_Histogram_Type>
+     *
+     * These are the allowable enumeration values. Keep these in sync with the
+     * histogram definition!
+     *
+     */
+    private static enum TelemetryErrorOp {
+        BULKINSERT (0),
+        DELETE     (1),
+        INSERT     (2),
+        QUERY      (3),
+        UPDATE     (4);
+
+        private final int bucket;
+
+        TelemetryErrorOp(final int bucket) {
+            this.bucket = bucket;
+        }
+
+        public int getBucket() {
+            return bucket;
+        }
     }
 
     @Override
@@ -255,7 +293,7 @@ public abstract class SQLiteBridgeContentProvider extends ContentProvider {
         try {
             deleted = db.delete(getTable(uri), selection, selectionArgs);
         } catch (SQLiteBridgeException ex) {
-            Log.e(mLogTag, "Error deleting record", ex);
+            reportError(ex, TelemetryErrorOp.DELETE);
             throw ex;
         }
 
@@ -291,7 +329,7 @@ public abstract class SQLiteBridgeContentProvider extends ContentProvider {
                 db.setTransactionSuccessful();
             }
         } catch (SQLiteBridgeException ex) {
-            Log.e(mLogTag, "Error inserting in db", ex);
+            reportError(ex, TelemetryErrorOp.INSERT);
             throw ex;
         } finally {
             if (useTransaction) {
@@ -312,7 +350,6 @@ public abstract class SQLiteBridgeContentProvider extends ContentProvider {
             return 0;
         }
 
-        long id = -1;
         int rowsAdded = 0;
 
         String table = getTable(uri);
@@ -323,12 +360,12 @@ public abstract class SQLiteBridgeContentProvider extends ContentProvider {
                 ContentValues values = new ContentValues(initialValues);
                 setupDefaults(uri, values);
                 onPreInsert(values, uri, db);
-                id = db.insert(table, null, values);
+                db.insert(table, null, values);
                 rowsAdded++;
             }
             db.setTransactionSuccessful();
         } catch (SQLiteBridgeException ex) {
-            Log.e(mLogTag, "Error inserting in db", ex);
+            reportError(ex, TelemetryErrorOp.BULKINSERT);
             throw ex;
         } finally {
             db.endTransaction();
@@ -360,7 +397,7 @@ public abstract class SQLiteBridgeContentProvider extends ContentProvider {
         try {
             updated = db.update(getTable(uri), values, selection, selectionArgs);
         } catch (SQLiteBridgeException ex) {
-            Log.e(mLogTag, "Error updating table", ex);
+            reportError(ex, TelemetryErrorOp.UPDATE);
             throw ex;
         }
 
@@ -386,11 +423,30 @@ public abstract class SQLiteBridgeContentProvider extends ContentProvider {
             cursor = db.query(getTable(uri), projection, selection, selectionArgs, null, null, sortOrder, null);
             onPostQuery(cursor, uri, db);
         } catch (SQLiteBridgeException ex) {
-            Log.e(mLogTag, "Error querying database", ex);
+            reportError(ex, TelemetryErrorOp.QUERY);
             throw ex;
         }
 
         return cursor;
+    }
+
+    private String getHistogram(SQLiteBridgeException e) {
+        // If you add values here, make sure to update
+        // toolkit/components/telemetry/Histograms.json.
+        if (ERROR_MESSAGE_DATABASE_IS_LOCKED.equals(e.getMessage())) {
+            return getTelemetryPrefix() + "_LOCKED";
+        }
+        return null;
+    }
+
+    protected void reportError(SQLiteBridgeException e, TelemetryErrorOp op) {
+        Log.e(mLogTag, "Error in database " + op.name(), e);
+        final String histogram = getHistogram(e);
+        if (histogram == null) {
+            return;
+        }
+
+        Telemetry.HistogramAdd(histogram, op.getBucket());
     }
 
     protected abstract String getDBName();
