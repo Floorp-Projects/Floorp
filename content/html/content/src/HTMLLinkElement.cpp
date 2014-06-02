@@ -252,11 +252,6 @@ HTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
 void
 HTMLLinkElement::UpdateImport()
 {
-  if (!Preferences::GetBool("dom.webcomponents.enabled")) {
-    // For now imports are hidden behind a pref...
-    return;
-  }
-
   // 1. link node should be attached to the document.
   nsCOMPtr<nsIDocument> doc = GetCurrentDoc();
   if (!doc) {
@@ -291,6 +286,11 @@ HTMLLinkElement::UpdateImport()
   nsCOMPtr<nsIURI> uri = GetHrefURI();
   if (!uri) {
     mImportLoader = nullptr;
+    return;
+  }
+
+  if (!Preferences::GetBool("dom.webcomponents.enabled")) {
+    // For now imports are hidden behind a pref...
     return;
   }
 
