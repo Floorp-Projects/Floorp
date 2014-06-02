@@ -154,9 +154,13 @@ ArchiveRequest::ReaderReady(nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList,
       rv = GetFileResult(cx, &result, aFileList);
       break;
 
-      case GetFiles:
-        rv = GetFilesResult(cx, &result, aFileList);
-        break;
+    case GetFiles:
+      rv = GetFilesResult(cx, &result, aFileList);
+      break;
+
+    default:
+      rv = NS_ERROR_UNEXPECTED;
+      break;
   }
 
   if (NS_FAILED(rv)) {
