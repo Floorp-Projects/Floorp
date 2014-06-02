@@ -174,6 +174,7 @@ class ArrayBufferObject : public JSObject
 
     void addView(ArrayBufferViewObject *view);
 
+    void setNewData(ObjectElements *newHeader, uint32_t byteLength);
     void changeContents(JSContext *cx, ObjectElements *newHeader);
 
     /*
