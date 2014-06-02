@@ -481,8 +481,6 @@ function PeerConnectionTest(options) {
   else
     this.pcRemote = null;
 
-  this.connected = false;
-
   // Create command chain instance and assign default commands
   this.chain = new CommandChain(this, options.commands);
   if (!options.is_local) {
@@ -510,7 +508,7 @@ function PeerConnectionTest(options) {
  *        Callback to execute when the peer connection has been closed successfully
  */
 PeerConnectionTest.prototype.close = function PCT_close(onSuccess) {
-  info("Closing peer connections. Connection state=" + this.connected);
+  info("Closing peer connections");
 
   var self = this;
   var closeTimeout = null;
@@ -533,7 +531,6 @@ PeerConnectionTest.prototype.close = function PCT_close(onSuccess) {
         is(self.pcRemote.signalingState, "closed", "pcRemote is in 'closed' state");
       }
       clearTimeout(closeTimeout);
-      self.connected = false;
       everythingClosed = true;
       onSuccess();
     }
@@ -983,7 +980,7 @@ DataChannelTest.prototype = Object.create(PeerConnectionTest.prototype, {
 
       // Method to synchronize all asynchronous events.
       function check_next_test() {
-        if (self.connected && localChannel && remoteChannel) {
+        if (localChannel && remoteChannel) {
           onSuccess(localChannel, remoteChannel);
         }
       }
@@ -1048,8 +1045,7 @@ DataChannelTest.prototype = Object.create(PeerConnectionTest.prototype, {
   setLocalDescription : {
     /**
      * Sets the local description for the specified peer connection instance
-     * and automatically handles the failure case. In case for the final call
-     * it will setup the requested datachannel.
+     * and automatically handles the failure case.
      *
      * @param {PeerConnectionWrapper} peer
               The peer connection wrapper to run the command on
@@ -1059,70 +1055,52 @@ DataChannelTest.prototype = Object.create(PeerConnectionTest.prototype, {
      *        Callback to execute if the local description was set successfully
      */
     value : function DCT_setLocalDescription(peer, desc, state, onSuccess) {
-      // If the peer has a remote offer we are in the final call, and have
-      // to wait for the datachannel connection to be open. It will also set
-      // the local description internally.
-      if (peer.signalingState === 'have-remote-offer') {
-        this.waitForInitialDataChannel(peer, desc, state, onSuccess);
-      }
-      else {
-        PeerConnectionTest.prototype.setLocalDescription.call(this, peer,
+      PeerConnectionTest.prototype.setLocalDescription.call(this, peer,
                                                               desc, state, onSuccess);
-      }
 
     }
   },
 
   waitForInitialDataChannel : {
     /**
-     * Create an initial data channel before the peer connection has been connected
+     * Wait for the initial data channel to get into the open state
      *
      * @param {PeerConnectionWrapper} peer
-              The peer connection wrapper to run the command on
-     * @param {mozRTCSessionDescription} desc
-     *        Session description for the local description request
+     *        The peer connection wrapper to run the command on
      * @param {Function} onSuccess
      *        Callback when the creation was successful
      */
-    value : function DCT_waitForInitialDataChannel(peer, desc, state, onSuccess) {
-      var self = this;
+    value : function DCT_waitForInitialDataChannel(peer, onSuccess, onFailure) {
+      var dcConnectionTimeout = null;
 
-      var targetPeer = peer;
-      var targetChannel = null;
-
-      var sourcePeer = (peer == this.pcLocal) ? this.pcRemote : this.pcLocal;
-      var sourceChannel = null;
-
-      // Method to synchronize all asynchronous events which current happen
-      // due to a non-predictable flow. With bug 875346 fixed we will be able
-      // to simplify this code.
-      function check_next_test() {
-        if (self.connected && sourceChannel && targetChannel) {
-          onSuccess(sourceChannel, targetChannel);
-        }
+      function dataChannelConnected(channel) {
+        clearTimeout(dcConnectionTimeout);
+        is(channel.readyState, "open", peer + " dataChannels[0] is in state: 'open'");
+        onSuccess();
       }
 
-      // Register 'onopen' handler for the first local data channel
-      sourcePeer.dataChannels[0].onopen = function (channel) {
-        sourceChannel = channel;
-        check_next_test();
-      };
+      if ((peer.dataChannels.length >= 1) &&
+          (peer.dataChannels[0].readyState === "open")) {
+        is(peer.dataChannels[0].readyState, "open", peer + " dataChannels[0] is in state: 'open'");
+        onSuccess();
+        return;
+      }
 
-      // Register handlers for the target peer
-      targetPeer.registerDataChannelOpenEvents(function (channel) {
-        targetChannel = channel;
-        check_next_test();
-      });
+      // TODO: drno: convert dataChannels into an object and make
+      //             registerDataChannelOPenEvent a generic function
+      if (peer == this.pcLocal) {
+        peer.dataChannels[0].onopen = dataChannelConnected;
+      } else {
+        peer.registerDataChannelOpenEvents(dataChannelConnected);
+      }
 
-      PeerConnectionTest.prototype.setLocalDescription.call(this, targetPeer, desc,
-        state,
-        function () {
-          self.connected = true;
-          check_next_test();
-        }
-      );
+      dcConnectionTimeout = setTimeout(function () {
+        info(peer + " timed out while waiting for dataChannels[0] to connect");
+        onFailure();
+      }, 60000);
     }
   }
+
 });
 
 /**
@@ -2089,10 +2067,7 @@ PeerConnectionWrapper.prototype = {
     info(this + ": Register callbacks for 'ondatachannel' and 'onopen'");
 
     this.ondatachannel = function (targetChannel) {
-      targetChannel.onopen = function (targetChannel) {
-        onDataChannelOpened(targetChannel);
-      };
-
+      targetChannel.onopen = onDataChannelOpened;
       this.dataChannels.push(targetChannel);
     };
   },
