@@ -13174,21 +13174,38 @@ class GlobalGenRoots():
 
         structs = []
 
+        def memberToAtomCacheMember(binaryNameFor, m):
+            binaryMemberName = binaryNameFor(m.identifier.name)
+            return ClassMember(CGDictionary.makeIdName(binaryMemberName),
+                               "InternedStringId", visibility="public")
+        def buildAtomCacheStructure(idlobj, binaryNameFor, members):
+            classMembers = [memberToAtomCacheMember(binaryNameFor, m)
+                            for m in members]
+            structName = idlobj.identifier.name + "Atoms"
+            return (structName,
+                    CGWrapper(CGClass(structName,
+                                      bases=None,
+                                      isStruct=True,
+                                      members=classMembers), post='\n'))
+
         for dict in dictionaries:
-            dictMembers = dict.members
-            if len(dictMembers) == 0:
+            if len(dict.members) == 0:
                 continue
 
-            classMembers = [ClassMember(CGDictionary.makeIdName(m.identifier.name),
-                                        "InternedStringId",
-                                        visibility="public") for m in dictMembers]
+            structs.append(buildAtomCacheStructure(dict, lambda x: x, dict.members))
 
-            structName = dict.identifier.name + "Atoms"
-            structs.append((structName,
-                            CGWrapper(CGClass(structName,
-                                              bases=None,
-                                              isStruct=True,
-                                              members=classMembers), post='\n')))
+        for d in (config.getDescriptors(isJSImplemented=True) +
+                  config.getDescriptors(isCallback=True)):
+            members = [m for m in d.interface.members if m.isAttr() or m.isMethod()]
+            if d.interface.isJSImplemented() and d.interface.ctor():
+                # We'll have an __init() method.
+                members.append(FakeMember('__init'))
+            if len(members) == 0:
+                continue
+
+            structs.append(buildAtomCacheStructure(d.interface,
+                                                   lambda x: d.binaryNameFor(x),
+                                                   members))
 
         structs.sort()
         generatedStructs = [struct for structName, struct in structs]
