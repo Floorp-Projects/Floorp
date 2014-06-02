@@ -942,6 +942,12 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   regionStripesColor: LINE_GRAPH_REGION_STRIPES_COLOR,
 
   /**
+   * Points that are too close too each other in the graph will not be rendered.
+   * This scalar specifies the required minimum squared distance between points.
+   */
+  minDistanceBetweenPoints: LINE_GRAPH_MIN_SQUARED_DISTANCE_BETWEEN_POINTS,
+
+  /**
    * Renders the graph on a canvas.
    * @see AbstractCanvasGraph.prototype.buildGraphImage
    */
@@ -958,16 +964,16 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     let firstTick;
     let lastTick;
 
-    for (let [tick, value] of Iterator(this._data)) {
+    for (let { delta, value } of this._data) {
       maxValue = Math.max(value, maxValue);
       minValue = Math.min(value, minValue);
       sumValues += value;
       totalTicks++;
 
       if (!firstTick) {
-        firstTick = tick;
+        firstTick = delta;
       } else {
-        lastTick = tick;
+        lastTick = delta;
       }
     }
 
@@ -997,23 +1003,23 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     let prevX = 0;
     let prevY = 0;
 
-    for (let [tick, value] of Iterator(this._data)) {
-      let currX = tick * dataScaleX;
+    for (let { delta, value } of this._data) {
+      let currX = delta * dataScaleX;
       let currY = height - value * dataScaleY;
 
-      if (tick == firstTick) {
+      if (delta == firstTick) {
         ctx.moveTo(-LINE_GRAPH_STROKE_WIDTH, height);
         ctx.lineTo(-LINE_GRAPH_STROKE_WIDTH, currY);
       }
 
       let distance = distSquared(prevX, prevY, currX, currY);
-      if (distance > LINE_GRAPH_MIN_SQUARED_DISTANCE_BETWEEN_POINTS) {
+      if (distance > this.minDistanceBetweenPoints) {
         ctx.lineTo(currX, currY);
         prevX = currX;
         prevY = currY;
       }
 
-      if (tick == lastTick) {
+      if (delta == lastTick) {
         ctx.lineTo(width + LINE_GRAPH_STROKE_WIDTH, currY);
         ctx.lineTo(width + LINE_GRAPH_STROKE_WIDTH, height);
       }

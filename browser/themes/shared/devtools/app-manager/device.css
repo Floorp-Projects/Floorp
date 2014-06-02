@@ -322,6 +322,10 @@ header {
   overflow: auto;
 }
 
+.browser-tabs.hidden {
+  display: none;
+}
+
 .app, .browser-tab {
   display: flex;
   align-items: center;

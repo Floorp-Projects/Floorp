@@ -2346,8 +2346,8 @@ NS_SniffContent(const char* aSnifferType, nsIRequest* aRequest,
                 nsACString& aSniffedType)
 {
   typedef nsCategoryCache<nsIContentSniffer> ContentSnifferCache;
-  extern NS_HIDDEN_(ContentSnifferCache*) gNetSniffers;
-  extern NS_HIDDEN_(ContentSnifferCache*) gDataSniffers;
+  extern ContentSnifferCache* gNetSniffers;
+  extern ContentSnifferCache* gDataSniffers;
   ContentSnifferCache* cache = nullptr;
   if (!strcmp(aSnifferType, NS_CONTENT_SNIFFER_CATEGORY)) {
     if (!gNetSniffers) {
