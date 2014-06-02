@@ -1,0 +1,226 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "gtest/gtest.h"
+#include "MP4Reader.h"
+#include "MP4Decoder.h"
+#include "SharedThreadPool.h"
+#include "MockMediaResource.h"
+#include "MockMediaDecoderOwner.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/dom/TimeRanges.h"
+#include "mtransport/runnable_utils.h"
+
+using namespace mozilla;
+using namespace mozilla::dom;
+
+class TestBinding
+{
+public:
+  nsRefPtr<MP4Decoder> decoder;
+  nsRefPtr<MockMediaResource> resource;
+  nsRefPtr<MP4Reader> reader;
+
+  TestBinding(const char* aFileName = "gizmo.mp4")
+    : decoder(new MP4Decoder())
+    , resource(new MockMediaResource(aFileName))
+    , reader(new MP4Reader(decoder))
+  {
+    EXPECT_EQ(NS_OK, Preferences::SetBool(
+                       "media.fragmented-mp4.use-blank-decoder", true));
+
+    EXPECT_EQ(NS_OK, resource->Open(nullptr));
+    decoder->SetResource(resource);
+
+    reader->Init(nullptr);
+
+    nsCOMPtr<nsIThread> thread;
+    nsresult rv = NS_NewThread(getter_AddRefs(thread),
+                               WrapRunnable(this, &TestBinding::ReadMetadata));
+    EXPECT_EQ(NS_OK, rv);
+    thread->Shutdown();
+  }
+
+  virtual ~TestBinding()
+  {
+    decoder = nullptr;
+    resource = nullptr;
+    reader = nullptr;
+    SharedThreadPool::SpinUntilShutdown();
+  }
+
+private:
+  void ReadMetadata()
+  {
+    MediaInfo info;
+    MetadataTags* tags;
+    EXPECT_EQ(NS_OK, reader->ReadMetadata(&info, &tags));
+  }
+};
+
+TEST(MP4Reader, BufferedRange)
+{
+  TestBinding b;
+
+  // Video 3-4 sec, audio 2.986666-4.010666 sec
+  b.resource->MockAddBufferedRange(248400, 327455);
+
+  nsRefPtr<TimeRanges> ranges = new TimeRanges();
+  EXPECT_EQ(NS_OK, b.reader->GetBuffered(ranges, 0));
+  EXPECT_EQ(1U, ranges->Length());
+  double start = 0;
+  EXPECT_EQ(NS_OK, ranges->Start(0, &start));
+  EXPECT_NEAR(270000 / 90000.0, start, 0.000001);
+  double end = 0;
+  EXPECT_EQ(NS_OK, ranges->End(0, &end));
+  EXPECT_NEAR(360000 / 90000.0, end, 0.000001);
+}
+
+TEST(MP4Reader, BufferedRangeMissingLastByte)
+{
+  TestBinding b;
+
+  // Dropping the last byte of the video
+  b.resource->MockClearBufferedRanges();
+  b.resource->MockAddBufferedRange(248400, 324912);
+  b.resource->MockAddBufferedRange(324913, 327455);
+
+  nsRefPtr<TimeRanges> ranges = new TimeRanges();
+  EXPECT_EQ(NS_OK, b.reader->GetBuffered(ranges, 0));
+  EXPECT_EQ(1U, ranges->Length());
+  double start = 0;
+  EXPECT_EQ(NS_OK, ranges->Start(0, &start));
+  EXPECT_NEAR(270000.0 / 90000.0, start, 0.000001);
+  double end = 0;
+  EXPECT_EQ(NS_OK, ranges->End(0, &end));
+  EXPECT_NEAR(357000 / 90000.0, end, 0.000001);
+}
+
+TEST(MP4Reader, BufferedRangeSyncFrame)
+{
+  TestBinding b;
+
+  // Check that missing the first byte at 2 seconds skips right through to 3
+  // seconds because of a missing sync frame
+  b.resource->MockClearBufferedRanges();
+  b.resource->MockAddBufferedRange(146336, 327455);
+
+  nsRefPtr<TimeRanges> ranges = new TimeRanges();
+  EXPECT_EQ(NS_OK, b.reader->GetBuffered(ranges, 0));
+  EXPECT_EQ(1U, ranges->Length());
+  double start = 0;
+  EXPECT_EQ(NS_OK, ranges->Start(0, &start));
+  EXPECT_NEAR(270000.0 / 90000.0, start, 0.000001);
+  double end = 0;
+  EXPECT_EQ(NS_OK, ranges->End(0, &end));
+  EXPECT_NEAR(360000 / 90000.0, end, 0.000001);
+}
+
+TEST(MP4Reader, CompositionOrder)
+{
+  TestBinding b("mediasource_test.mp4");
+
+  // The first 5 video samples of this file are:
+  // Video timescale=2500
+  // Frame Start  Size  Time  Duration  Sync
+  //     1    48  5455   166        83  Yes
+  //     2  5503   145   249        83
+  //     3  6228   575   581        83
+  //     4  7383   235   415        83
+  //     5  8779   183   332        83
+  //     6  9543   191   498        83
+  //
+  // Audio timescale=44100
+  //     1  5648   580     0      1024  Yes
+  //     2  6803   580  1024      1058  Yes
+  //     3  7618   581  2082      1014  Yes
+  //     4  8199   580  3096      1015  Yes
+  //     5  8962   581  4111      1014  Yes
+  //     6  9734   580  5125      1014  Yes
+  //     7 10314   581  6139      1059  Yes
+  //     8 11207   580  7198      1014  Yes
+  //     9 12035   581  8212      1014  Yes
+  //    10 12616   580  9226      1015  Yes
+  //    11 13220   581  10241     1014  Yes
+
+  b.resource->MockClearBufferedRanges();
+  // First two frames in decoding + first audio frame
+  b.resource->MockAddBufferedRange(48, 5503);   // Video 1
+  b.resource->MockAddBufferedRange(5503, 5648); // Video 2
+  b.resource->MockAddBufferedRange(6228, 6803); // Video 3
+
+  // Audio - 5 frames; 0 - 139206 us
+  b.resource->MockAddBufferedRange(5648, 6228);
+  b.resource->MockAddBufferedRange(6803, 7383);
+  b.resource->MockAddBufferedRange(7618, 8199);
+  b.resource->MockAddBufferedRange(8199, 8779);
+  b.resource->MockAddBufferedRange(8962, 9563);
+  b.resource->MockAddBufferedRange(9734, 10314);
+  b.resource->MockAddBufferedRange(10314, 10895);
+  b.resource->MockAddBufferedRange(11207, 11787);
+  b.resource->MockAddBufferedRange(12035, 12616);
+  b.resource->MockAddBufferedRange(12616, 13196);
+  b.resource->MockAddBufferedRange(13220, 13901);
+
+  nsRefPtr<TimeRanges> ranges = new TimeRanges();
+  EXPECT_EQ(NS_OK, b.reader->GetBuffered(ranges, 0));
+  EXPECT_EQ(2U, ranges->Length());
+
+  double start = 0;
+  EXPECT_EQ(NS_OK, ranges->Start(0, &start));
+  EXPECT_NEAR(166.0 / 2500.0, start, 0.000001);
+  double end = 0;
+  EXPECT_EQ(NS_OK, ranges->End(0, &end));
+  EXPECT_NEAR(332.0 / 2500.0, end, 0.000001);
+
+  start = 0;
+  EXPECT_EQ(NS_OK, ranges->Start(1, &start));
+  EXPECT_NEAR(581.0 / 2500.0, start, 0.000001);
+  end = 0;
+  EXPECT_EQ(NS_OK, ranges->End(1, &end));
+  EXPECT_NEAR(11255.0 / 44100.0, end, 0.000001);
+}
+
+TEST(MP4Reader, Normalised)
+{
+  TestBinding b("mediasource_test.mp4");
+
+  // The first 5 video samples of this file are:
+  // Video timescale=2500
+  // Frame Start  Size  Time  Duration  Sync
+  //     1    48  5455   166        83  Yes
+  //     2  5503   145   249        83
+  //     3  6228   575   581        83
+  //     4  7383   235   415        83
+  //     5  8779   183   332        83
+  //     6  9543   191   498        83
+  //
+  // Audio timescale=44100
+  //     1  5648   580     0      1024  Yes
+  //     2  6803   580  1024      1058  Yes
+  //     3  7618   581  2082      1014  Yes
+  //     4  8199   580  3096      1015  Yes
+  //     5  8962   581  4111      1014  Yes
+  //     6  9734   580  5125      1014  Yes
+  //     7 10314   581  6139      1059  Yes
+  //     8 11207   580  7198      1014  Yes
+  //     9 12035   581  8212      1014  Yes
+  //    10 12616   580  9226      1015  Yes
+  //    11 13220   581  10241     1014  Yes
+
+  b.resource->MockClearBufferedRanges();
+  b.resource->MockAddBufferedRange(48, 13901);
+
+  nsRefPtr<TimeRanges> ranges = new TimeRanges();
+  EXPECT_EQ(NS_OK, b.reader->GetBuffered(ranges, 0));
+  EXPECT_EQ(1U, ranges->Length());
+
+  double start = 0;
+  EXPECT_EQ(NS_OK, ranges->Start(0, &start));
+  EXPECT_NEAR(166.0 / 2500.0, start, 0.000001);
+  double end = 0;
+  EXPECT_EQ(NS_OK, ranges->End(0, &end));
+  EXPECT_NEAR(11255.0 / 44100.0, end, 0.000001);
+}
