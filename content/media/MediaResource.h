@@ -147,6 +147,10 @@ public:
     mEnd = 0;
   }
 
+  bool Contains(const MediaByteRange& aByteRange) const {
+    return aByteRange.mStart >= mStart && aByteRange.mEnd <= mEnd;
+  }
+
   int64_t mStart, mEnd;
 };
 
