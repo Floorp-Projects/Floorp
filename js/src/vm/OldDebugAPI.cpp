@@ -843,34 +843,6 @@ JS_DumpCompartmentPCCounts(JSContext *cx)
         if (script->hasScriptCounts())
             JS_DumpPCCounts(cx, script);
     }
-
-#if defined(JS_ION)
-    for (unsigned thingKind = FINALIZE_OBJECT0; thingKind < FINALIZE_OBJECT_LIMIT; thingKind++) {
-        for (ZoneCellIter i(cx->zone(), (AllocKind) thingKind); !i.done(); i.next()) {
-            JSObject *obj = i.get<JSObject>();
-            if (obj->compartment() != cx->compartment())
-                continue;
-
-            if (obj->is<AsmJSModuleObject>()) {
-                AsmJSModule &module = obj->as<AsmJSModuleObject>().module();
-
-                Sprinter sprinter(cx);
-                if (!sprinter.init())
-                    return;
-
-                fprintf(stdout, "--- Asm.js Module ---\n");
-
-                for (size_t i = 0; i < module.numFunctionCounts(); i++) {
-                    jit::IonScriptCounts *counts = module.functionCounts(i);
-                    DumpIonScriptCounts(&sprinter, counts);
-                }
-
-                fputs(sprinter.string(), stdout);
-                fprintf(stdout, "--- END Asm.js Module ---\n");
-            }
-        }
-    }
-#endif
 }
 
 JS_FRIEND_API(bool)
