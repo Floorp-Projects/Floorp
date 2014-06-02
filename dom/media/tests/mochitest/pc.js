@@ -566,11 +566,14 @@ PeerConnectionTest.prototype.close = function PCT_close(onSuccess) {
       self.waitingForRemote = true;
       self.pcRemote.close();
     }
-    verifyClosed();
+    // give the signals handlers time to fire
+    setTimeout(verifyClosed, 1000);
   }
 
   closeTimeout = setTimeout(function() {
-    ok(false, "Closing PeerConnections timed out!");
+    var closed = ((self.pcLocal && (self.pcLocal.signalingState === "closed")) &&
+      (self.pcRemote && (self.pcRemote.signalingState === "closed")));
+    ok(closed, "Closing PeerConnections timed out");
     // it is not a success, but the show must go on
     onSuccess();
   }, 60000);
@@ -794,53 +797,173 @@ DataChannelTest.prototype = Object.create(PeerConnectionTest.prototype, {
      * Close the open data channels, followed by the underlying peer connection
      *
      * @param {Function} onSuccess
-     *        Callback to execute when the connection has been closed
+     *        Callback to execute when all connections have been closed
      */
     value : function DCT_close(onSuccess) {
       var self = this;
+      var pendingDcClose = []
+      var closeTimeout = null;
 
-      function _closeChannels() {
-        var length = self.pcLocal.dataChannels.length;
+      info("DataChannelTest.close() called");
 
-        if (length > 0) {
-          self.closeDataChannel(length - 1, function () {
-            _closeChannels();
-          });
+      function _closePeerConnection() {
+        info("DataChannelTest closing PeerConnection");
+        PeerConnectionTest.prototype.close.call(self, onSuccess);
+      }
+
+      function _closePeerConnectionCallback(index) {
+        info("_closePeerConnection called with index " + index);
+        var pos = pendingDcClose.indexOf(index);
+        if (pos != -1) {
+          pendingDcClose.splice(pos, 1);
         }
         else {
-          PeerConnectionTest.prototype.close.call(self, onSuccess);
+          info("_closePeerConnection index " + index + " is missing from pendingDcClose: " + pendingDcClose);
+        }
+        if (pendingDcClose.length === 0) {
+          clearTimeout(closeTimeout);
+          _closePeerConnection();
         }
       }
 
-      _closeChannels();
+      var myDataChannels = null;
+      if (self.pcLocal) {
+        myDataChannels = self.pcLocal.dataChannels;
+      }
+      else if (self.pcRemote) {
+        myDataChannels = self.pcRemote.dataChannels;
+      }
+      var length = myDataChannels.length;
+      for (var i = 0; i < length; i++) {
+        var dataChannel = myDataChannels[i];
+        if (dataChannel.readyState !== "closed") {
+          pendingDcClose.push(i);
+          self.closeDataChannels(i, _closePeerConnectionCallback);
+        }
+      }
+      if (pendingDcClose.length === 0) {
+        _closePeerConnection();
+      }
+      else {
+        closeTimeout = setTimeout(function() {
+          ok(false, "Failed to properly close data channels: " +
+            pendingDcClose);
+          _closePeerConnection();
+        }, 60000);
+      }
     }
   },
 
-  closeDataChannel : {
+  closeDataChannels : {
     /**
-     * Close the specified data channel
+     * Close the specified data channels
      *
      * @param {Number} index
-     *        Index of the data channel to close on both sides
+     *        Index of the data channels to close on both sides
      * @param {Function} onSuccess
-     *        Callback to execute when the data channel has been closed
+     *        Callback to execute when the data channels has been closed
      */
-    value : function DCT_closeDataChannel(index, onSuccess) {
-      var localChannel = this.pcLocal.dataChannels[index];
-      var remoteChannel = this.pcRemote.dataChannels[index];
+    value : function DCT_closeDataChannels(index, onSuccess) {
+      info("_closeDataChannels called with index: " + index);
+      var localChannel = null;
+      if (this.pcLocal) {
+        localChannel = this.pcLocal.dataChannels[index];
+      }
+      var remoteChannel = null;
+      if (this.pcRemote) {
+        remoteChannel = this.pcRemote.dataChannels[index];
+      }
 
       var self = this;
+      var wait = false;
+      var pollingMode = false;
+      var everythingClosed = false;
+      var verifyInterval = null;
+      var remoteCloseTimer = null;
 
-      // Register handler for remote channel, cause we have to wait until
-      // the current close operation has been finished.
-      remoteChannel.onclose = function () {
-        self.pcRemote.dataChannels.splice(index, 1);
+      function _allChannelsAreClosed() {
+        var ret = null;
+        if (localChannel) {
+          ret = (localChannel.readyState === "closed");
+        }
+        if (remoteChannel) {
+          if (ret !== null) {
+            ret = (ret && (remoteChannel.readyState === "closed"));
+          }
+          else {
+            ret = (remoteChannel.readyState === "closed");
+          }
+        }
+        return ret;
+      }
 
-        onSuccess(remoteChannel);
-      };
+      function verifyClosedChannels() {
+        if (everythingClosed) {
+          // safety protection against events firing late
+          return;
+        }
+        if (_allChannelsAreClosed) {
+          ok(true, "DataChannel(s) have reached 'closed' state for data channel " + index);
+          if (remoteCloseTimer !== null) {
+            clearTimeout(remoteCloseTimer);
+          }
+          if (verifyInterval !== null) {
+            clearInterval(verifyInterval);
+          }
+          everythingClosed = true;
+          onSuccess(index);
+        }
+        else {
+          info("Still waiting for DataChannel closure");
+        }
+      }
 
-      localChannel.close();
-      this.pcLocal.dataChannels.splice(index, 1);
+      if ((localChannel) && (localChannel.readyState !== "closed")) {
+        // in case of steeplechase there is no far end, so we can only poll
+        if (remoteChannel) {
+          remoteChannel.onclose = function () {
+            is(remoteChannel.readyState, "closed", "remoteChannel is in state 'closed'");
+            verifyClosedChannels();
+          };
+        }
+        else {
+          pollingMode = true;
+          verifyInterval = setInterval(verifyClosedChannels, 1000);
+        }
+
+        localChannel.close();
+        wait = true;
+      }
+      if ((remoteChannel) && (remoteChannel.readyState !== "closed")) {
+        if (localChannel) {
+          localChannel.onclose = function () {
+            is(localChannel.readyState, "closed", "localChannel is in state 'closed'");
+            verifyClosedChannels();
+          };
+
+          // Apparently we are running a local test which has both ends of the
+          // data channel locally available, so by default lets wait for the
+          // remoteChannel.onclose handler from above to confirm closure on both
+          // ends.
+          remoteCloseTimer = setTimeout(function() {
+            todo(false, "localChannel.close() did not resulted in close signal on remote side");
+            remoteChannel.close();
+            verifyClosedChannels();
+          }, 30000);
+        }
+        else {
+          pollingMode = true;
+          verifyTimer = setInterval(verifyClosedChannels, 1000);
+
+          remoteChannel.close();
+        }
+
+        wait = true;
+      }
+
+      if (!wait) {
+        onSuccess(index);
+      }
     }
   },
 

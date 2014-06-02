@@ -565,29 +565,5 @@ var commandsDataChannel = [
         test.next();
       });
     }
-  ],
-  [
-    'CLOSE_LAST_OPENED_DATA_CHANNEL2',
-    function (test) {
-      var channels = test.pcRemote.dataChannels;
-
-      test.closeDataChannel(channels.length - 1, function (channel) {
-        is(channel.readyState, "closed", "Channel is in state: 'closed'");
-
-        test.next();
-      });
-    }
-  ],
-  [
-    'CLOSE_LAST_OPENED_DATA_CHANNEL',
-    function (test) {
-      var channels = test.pcRemote.dataChannels;
-
-      test.closeDataChannel(channels.length - 1, function (channel) {
-        is(channel.readyState, "closed", "Channel is in state: 'closed'");
-
-        test.next();
-      });
-    }
   ]
 ];
