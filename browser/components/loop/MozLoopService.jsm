@@ -201,6 +201,24 @@ let MozLoopServiceInternal = {
   },
 
   /**
+   * Retrieves MozLoopService "do not disturb" pref value.
+   *
+   * @return {Boolean} aFlag
+   */
+  get doNotDisturb() {
+    return Services.prefs.getBoolPref("loop.do_not_disturb");
+  },
+
+  /**
+   * Sets MozLoopService "do not disturb" pref value.
+   *
+   * @param {Boolean} aFlag
+   */
+  set doNotDisturb(aFlag) {
+    Services.prefs.setBoolPref("loop.do_not_disturb", Boolean(aFlag));
+  },
+
+  /**
    * Starts the initialization of the service, which goes and registers
    * with the push server and the loop server.
    *
@@ -327,6 +345,10 @@ let MozLoopServiceInternal = {
    * @param {String} version The version information from the server.
    */
   onHandleNotification: function(version) {
+    if (this.doNotDisturb) {
+      return;
+    }
+
     this.openChatWindow(null, "LooP", "about:loopconversation#start/" + version);
   },
 
@@ -501,6 +523,24 @@ this.MozLoopService = {
       }
 
       return JSON.stringify(stringData[key]);
+  },
+
+  /**
+   * Retrieves MozLoopService "do not disturb" value.
+   *
+   * @return {Boolean}
+   */
+  get doNotDisturb() {
+    return MozLoopServiceInternal.doNotDisturb;
+  },
+
+  /**
+   * Sets MozLoopService "do not disturb" value.
+   *
+   * @param {Boolean} aFlag
+   */
+  set doNotDisturb(aFlag) {
+    MozLoopServiceInternal.doNotDisturb = aFlag;
   },
 
   /**

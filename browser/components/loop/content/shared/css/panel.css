@@ -49,12 +49,17 @@
   margin: 0 0 1em 0;
 }
 
-.share .action input {
+.share .action p.dnd {
+  margin-top: 1em;
+}
+
+.share .action input[type="text"],
+.share .action input[type="url"] {
   border: 1px solid #ccc; /* Overriding background style for a text input (see
                              below) resets its borders to a weird beveled style;
                              defining a default 1px border solves the issue. */
   font-size: .9em;
-  width: 60%;
+  width: 65%;
   padding: .5em;
 }
 
@@ -72,10 +77,6 @@
 }
 
 /* Specific cases */
-
-.share.generate-url .action {
-  text-align: center;
-}
 
 .panel #messages .alert {
   margin-bottom: 0;
