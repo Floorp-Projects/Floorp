@@ -26,6 +26,20 @@ this.EXPORTED_SYMBOLS = ["injectLoopAPI"];
 function injectLoopAPI(targetWindow) {
   let api = {
     /**
+     * Sets and gets the "do not disturb" mode activation flag.
+     */
+    doNotDisturb: {
+      enumerable: true,
+      configurable: true,
+      get: function() {
+        return MozLoopService.doNotDisturb;
+      },
+      set: function(aFlag) {
+        MozLoopService.doNotDisturb = aFlag;
+      }
+    },
+
+    /**
      * Returns the url for the Loop server from preferences.
      *
      * @return {String} The Loop server url

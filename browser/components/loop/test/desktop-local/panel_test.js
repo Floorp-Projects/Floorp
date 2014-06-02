@@ -35,7 +35,8 @@ describe("loop.panel", function() {
       errorL10n: sandbox.spy()
     };
 
-    window.navigator.mozLoop = {
+    navigator.mozLoop = {
+      doNotDisturb: true,
       get serverUrl() {
         return "http://example.com";
       },
@@ -46,11 +47,11 @@ describe("loop.panel", function() {
         return "en-US";
       }
     };
-    document.mozL10n.initialize(window.navigator.mozLoop);
+    document.mozL10n.initialize(navigator.mozLoop);
   });
 
   afterEach(function() {
-    delete window.navigator.mozLoop;
+    delete navigator.mozLoop;
     $("#fixtures").empty();
     sandbox.restore();
   });
@@ -153,6 +154,51 @@ describe("loop.panel", function() {
               done();
             });
           });
+      });
+    });
+  });
+
+  describe("loop.panel.DoNotDisturbView", function() {
+    var view;
+
+    beforeEach(function() {
+      $("#fixtures").append('<div id="dnd-view"></div>');
+      view = new loop.panel.DoNotDisturbView({el: $("#dnd-view")});
+    });
+
+    describe("#toggle", function() {
+      beforeEach(function() {
+        navigator.mozLoop.doNotDisturb = false;
+      });
+
+      it("should toggle the value of mozLoop.doNotDisturb", function() {
+        view.toggle();
+
+        expect(navigator.mozLoop.doNotDisturb).eql(true);
+      });
+
+      it("should update the DnD checkbox value", function() {
+        view.toggle();
+
+        expect(view.$("input").is(":checked")).eql(true);
+      });
+    });
+
+    describe("render", function() {
+      it("should check the dnd checkbox when dnd is enabled", function() {
+        navigator.mozLoop.doNotDisturb = false;
+
+        view.render();
+
+        expect(view.$("input").is(":checked")).eql(false);
+      });
+
+      it("should uncheck the dnd checkbox when dnd is disabled", function() {
+        navigator.mozLoop.doNotDisturb = true;
+
+        view.render();
+
+        expect(view.$("input").is(":checked")).eql(true);
       });
     });
   });
@@ -263,6 +309,18 @@ describe("loop.panel", function() {
       describe("changeButtonState", function() {
          it("should do set the disabled state if there is no text");
          it("should do set the enabled state if there is text");
+      });
+    });
+
+    describe("#render", function() {
+      it("should render a DoNotDisturbView", function() {
+        var renderDnD = sandbox.stub(loop.panel.DoNotDisturbView.prototype,
+                                     "render");
+        var view = new loop.panel.PanelView({notifier: notifier});
+
+        view.render();
+
+        sinon.assert.calledOnce(renderDnD);
       });
     });
   });
