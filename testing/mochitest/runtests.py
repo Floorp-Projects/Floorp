@@ -417,7 +417,7 @@ class MochitestUtilsMixin(object):
 
   def getTestPath(self, options):
     if options.ipcplugins:
-      return "dom/plugins/test"
+      return "dom/plugins/test/mochitest"
     else:
       return options.testPath
 
@@ -451,24 +451,7 @@ class MochitestUtilsMixin(object):
         Build a manifest of tests to run and write out a json file for the harness to read
     """
     manifest = None
-
-    testRoot = self.getTestRoot(options)
-    # testdir refers to 'mochitest' here.
-    testdir = SCRIPT_DIR.split(os.getcwd())[-1]
-    testdir = testdir.strip(os.sep)
-    testRootAbs = os.path.abspath(os.path.join(testdir, testRoot))
-    if isinstance(options.manifestFile, TestManifest):
-        manifest = options.manifestFile
-    elif options.manifestFile and os.path.isfile(options.manifestFile):
-      manifestFileAbs = os.path.abspath(options.manifestFile)
-      assert manifestFileAbs.startswith(testRootAbs)
-      manifest = TestManifest([options.manifestFile], strict=False)
-    else:
-      masterName = self.getTestFlavor(options) + '.ini'
-      masterPath = os.path.join(testdir, testRoot, masterName)
-
-      if os.path.exists(masterPath):
-        manifest = TestManifest([masterPath], strict=False)
+    manifest = self.getTestManifest(options)
 
     if manifest:
       # Python 2.6 doesn't allow unicode keys to be used for keyword
@@ -482,6 +465,7 @@ class MochitestUtilsMixin(object):
 
       # Bug 883858 - return all tests including disabled tests
       testPath = self.getTestPath(options)
+      testPath = testPath.replace('\\', '/')
       if testPath.endswith('.html') or \
          testPath.endswith('.xhtml') or \
          testPath.endswith('.xul') or \
@@ -497,8 +481,8 @@ class MochitestUtilsMixin(object):
 
       for test in tests:
         pathAbs = os.path.abspath(test['path'])
-        assert pathAbs.startswith(testRootAbs)
-        tp = pathAbs[len(testRootAbs):].replace('\\', '/').strip('/')
+        assert pathAbs.startswith(self.testRootAbs)
+        tp = pathAbs[len(self.testRootAbs):].replace('\\', '/').strip('/')
 
         # Filter out tests if we are using --test-path
         if testPath and not tp.startswith(testPath):
@@ -522,7 +506,7 @@ class MochitestUtilsMixin(object):
       paths.sort(path_sort)
 
       # Bug 883865 - add this functionality into manifestDestiny
-      with open(os.path.join(testdir, 'tests.json'), 'w') as manifestFile:
+      with open(os.path.join(SCRIPT_DIR, 'tests.json'), 'w') as manifestFile:
         manifestFile.write(json.dumps({'tests': paths}))
       options.manifestFile = 'tests.json'
 
@@ -1065,9 +1049,9 @@ class Mochitest(MochitestUtilsMixin):
 
     return browserEnv
 
-  def cleanup(self, manifest, options):
+  def cleanup(self, options):
     """ remove temporary files and profile """
-    os.remove(manifest)
+    os.remove(self.manifest)
     del self.profile
     if options.pidFile != "":
       try:
@@ -1186,7 +1170,8 @@ class Mochitest(MochitestUtilsMixin):
              timeout=-1,
              onLaunch=None,
              webapprtChrome=False,
-             screenshotOnFail=False):
+             screenshotOnFail=False,
+             testPath=None):
     """
     Run the app, log the duration it took to execute, return the status code.
     Kills the app if it runs for longer than |maxTime| seconds, or outputs nothing for |timeout| seconds.
@@ -1250,7 +1235,7 @@ class Mochitest(MochitestUtilsMixin):
 
       def timeoutHandler():
         browserProcessId = outputHandler.browserProcessId
-        self.handleTimeout(timeout, proc, utilityPath, debuggerInfo, browserProcessId)
+        self.handleTimeout(timeout, proc, utilityPath, debuggerInfo, browserProcessId, testPath)
       kp_kwargs = {'kill_on_timeout': False,
                    'cwd': SCRIPT_DIR,
                    'onTimeout': [timeoutHandler]}
@@ -1339,6 +1324,58 @@ class Mochitest(MochitestUtilsMixin):
   def runTests(self, options, onLaunch=None):
     """ Prepare, configure, run tests and cleanup """
 
+    # Create variables to count the number of passes, fails, todos.
+    self.countpass = 0
+    self.countfail = 0
+    self.counttodo = 0
+
+    self.testRoot = self.getTestRoot(options)
+    self.testRootAbs = os.path.join(SCRIPT_DIR, self.testRoot)
+
+    if not options.runByDir:
+      return self.doTests(options, onLaunch)
+
+    dirs = self.getDirectories(options)
+    
+    if options.totalChunks > 1:
+      chunkSize = int(len(dirs) / options.totalChunks) + 1
+      start = chunkSize * (options.thisChunk-1)
+      end = chunkSize * (options.thisChunk)
+      dirs = dirs[start:end]
+
+    options.totalChunks = None
+    options.thisChunk = None
+    options.chunkByDir = 0
+    inputTestPath = self.getTestPath(options)
+    for dir in dirs:
+      options.manifestFile = None
+
+      if inputTestPath and not inputTestPath.startswith(dir):
+        continue
+
+      options.testPath = dir
+      print "testpath: %s" % options.testPath
+
+      options.profilePath = tempfile.mkdtemp()
+      self.urlOpts = []
+      self.doTests(options, onLaunch)
+
+    # printing total number of tests
+    if options.browserChrome:
+      print "TEST-INFO | checking window state"
+      print "Browser Chrome Test Summary"
+      print "\tPassed: %s" % self.countpass
+      print "\tFailed: %s" % self.countfail
+      print "\tTodo: %s" % self.counttodo
+      print "*** End BrowserChrome Test Results ***"
+    else:
+      print "0 INFO TEST-START | Shutdown"
+      print "1 INFO Passed:  %s" % self.countpass
+      print "2 INFO Failed:  %s" % self.countfail
+      print "3 INFO Todo:    %s" % self.counttodo
+      print "4 INFO SimpleTest FINISHED"
+
+  def doTests(self, options, onLaunch=None):
     # get debugger info, a dict of:
     # {'path': path to the debugger (string),
     #  'interactive': whether the debugger is interactive or not (bool)
@@ -1359,22 +1396,31 @@ class Mochitest(MochitestUtilsMixin):
 
     self.leak_report_file = os.path.join(options.profilePath, "runtests_leaks.log")
 
-    browserEnv = self.buildBrowserEnv(options, debuggerInfo is not None)
-    if browserEnv is None:
+    self.browserEnv = self.buildBrowserEnv(options, debuggerInfo is not None)
+    if self.browserEnv is None:
       return 1
 
     # buildProfile sets self.profile .
     # This relies on sideeffects and isn't very stateful:
     # https://bugzilla.mozilla.org/show_bug.cgi?id=919300
-    manifest = self.buildProfile(options)
-    if manifest is None:
+    self.manifest = self.buildProfile(options)
+    if self.manifest is None:
       return 1
 
     try:
       self.startServers(options, debuggerInfo)
 
       testURL = self.buildTestPath(options)
-      self.buildURLOptions(options, browserEnv)
+      with open(os.path.join(SCRIPT_DIR, 'tests.json')) as fHandle:
+        tests = json.load(fHandle)
+
+      count = 0
+      for test in tests['tests']:
+        count += 1
+      if count == 0:
+        return 1
+
+      self.buildURLOptions(options, self.browserEnv)
       if self.urlOpts:
         testURL += "?" + "&".join(self.urlOpts)
 
@@ -1408,7 +1454,7 @@ class Mochitest(MochitestUtilsMixin):
       log.info("runtests.py | Running tests: start.\n")
       try:
         status = self.runApp(testURL,
-                             browserEnv,
+                             self.browserEnv,
                              options.app,
                              profile=self.profile,
                              extraArgs=options.browserArgs,
@@ -1418,7 +1464,8 @@ class Mochitest(MochitestUtilsMixin):
                              timeout=timeout,
                              onLaunch=onLaunch,
                              webapprtChrome=options.webapprtChrome,
-                             screenshotOnFail=options.screenshotOnFail
+                             screenshotOnFail=options.screenshotOnFail,
+                             testPath=options.testPath
         )
       except KeyboardInterrupt:
         log.info("runtests.py | Received keyboard interrupt.\n");
@@ -1443,15 +1490,18 @@ class Mochitest(MochitestUtilsMixin):
 
     log.info("runtests.py | Running tests: end.")
 
-    if manifest is not None:
-      self.cleanup(manifest, options)
+    if self.manifest is not None:
+      self.cleanup(options)
 
     return status
 
-  def handleTimeout(self, timeout, proc, utilityPath, debuggerInfo, browserProcessId):
+  def handleTimeout(self, timeout, proc, utilityPath, debuggerInfo, browserProcessId, testPath=None):
     """handle process output timeout"""
     # TODO: bug 913975 : _processOutput should call self.processOutputLine one more time one timeout (I think)
-    log.info("TEST-UNEXPECTED-FAIL | %s | application timed out after %d seconds with no output", self.lastTestSeen, int(timeout))
+    if testPath:
+      log.info("TEST-UNEXPECTED-FAIL | %s | application timed out after %d seconds with no output on %s", self.lastTestSeen, int(timeout), testPath)
+    else:
+      log.info("TEST-UNEXPECTED-FAIL | %s | application timed out after %d seconds with no output", self.lastTestSeen, int(timeout))
     browserProcessId = browserProcessId or proc.pid
     self.killAndGetStack(browserProcessId, utilityPath, debuggerInfo, dump_screen=not debuggerInfo)
 
@@ -1498,6 +1548,7 @@ class Mochitest(MochitestUtilsMixin):
               self.metro_subprocess_id,
               self.trackShutdownLeaks,
               self.log,
+              self.countline,
               ]
 
     def stackFixer(self):
@@ -1550,6 +1601,20 @@ class Mochitest(MochitestUtilsMixin):
 
     # output line handlers:
     # these take a line and return a line
+    def countline(self, line):
+      val = 0
+      try:
+        val = int(line.split(':')[-1].strip())
+      except ValueError, e:
+        return line
+
+      if "Passed:" in line:
+        self.harness.countpass += val
+      elif "Failed:" in line:
+        self.harness.countfail += val
+      elif "Todo:" in line:
+        self.harness.counttodo += val
+      return line
 
     def fix_stack(self, line):
       if self.stackFixerFunction:
@@ -1599,13 +1664,12 @@ class Mochitest(MochitestUtilsMixin):
     "Creates a test configuration file for customizing test execution."
     options.logFile = options.logFile.replace("\\", "\\\\")
     options.testPath = options.testPath.replace("\\", "\\\\")
-    testRoot = self.getTestRoot(options)
 
     if "MOZ_HIDE_RESULTS_TABLE" in os.environ and os.environ["MOZ_HIDE_RESULTS_TABLE"] == "1":
       options.hideResultsTable = True
 
     d = dict(options.__dict__)
-    d['testRoot'] = testRoot
+    d['testRoot'] = self.testRoot
     content = json.dumps(d)
 
     with open(os.path.join(options.profilePath, "testConfig.js"), "w") as config:
@@ -1641,6 +1705,51 @@ class Mochitest(MochitestUtilsMixin):
     for path in self.getExtensionsToInstall(options):
       self.installExtensionFromPath(options, path)
 
+  def getTestManifest(self, options):
+    if isinstance(options.manifestFile, TestManifest):
+        manifest = options.manifestFile
+    elif options.manifestFile and os.path.isfile(options.manifestFile):
+      manifestFileAbs = os.path.abspath(options.manifestFile)
+      assert manifestFileAbs.startswith(SCRIPT_DIR)
+      manifest = TestManifest([options.manifestFile], strict=False)
+    elif options.manifestFile and os.path.isfile(os.path.join(SCRIPT_DIR, options.manifestFile)):
+      manifestFileAbs = os.path.abspath(os.path.join(SCRIPT_DIR, options.manifestFile))
+      assert manifestFileAbs.startswith(SCRIPT_DIR)
+      manifest = TestManifest([manifestFileAbs], strict=False)
+    else:
+      masterName = self.getTestFlavor(options) + '.ini'
+      masterPath = os.path.join(SCRIPT_DIR, self.testRoot, masterName)
+
+      if os.path.exists(masterPath):
+        manifest = TestManifest([masterPath], strict=False)
+
+    return manifest
+
+  def getDirectories(self, options):
+    """
+        Make the list of directories by parsing manifests
+    """
+    info = {}
+    for k, v in mozinfo.info.items():
+      if isinstance(k, unicode):
+        k = k.encode('ascii')
+      info[k] = v
+
+    dirlist = []
+
+    manifest = self.getTestManifest(options)
+    tests = manifest.active_tests(disabled=False, options=options, **info)
+    for test in tests:
+      pathAbs = os.path.abspath(test['path'])
+      assert pathAbs.startswith(self.testRootAbs)
+      tp = pathAbs[len(self.testRootAbs):].replace('\\', '/').strip('/')
+
+      rootdir = '/'.join(tp.split('/')[:-1])
+      if rootdir not in dirlist:
+        dirlist.append(rootdir)
+
+    dirlist.sort()
+    return dirlist
 
 def main():
 
