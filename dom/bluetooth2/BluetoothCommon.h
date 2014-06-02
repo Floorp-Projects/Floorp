@@ -58,6 +58,12 @@ extern bool gBluetoothDebugFlag;
 #endif
 
 /**
+ * Prints 'R'ELEASE build logs for WebBluetooth API v2.
+ */
+#define BT_API2_LOGR(msg, ...)                                       \
+  BT_LOGR("[WEBBT-API2] " msg, ##__VA_ARGS__)
+
+/**
  * Wrap literal name and value into a BluetoothNamedValue
  * and append it to the array.
  */
