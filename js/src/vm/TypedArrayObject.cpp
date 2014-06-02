@@ -2053,11 +2053,31 @@ const JSFunctionSpec _typedArray##Object::jsfuncs[] = {                         
     EXPERIMENTAL_FUNCTIONS(_typedArray)                                            \
     JS_FS_END                                                                      \
 };                                                                                 \
+/* These next 3 functions are brought to you by the buggy GCC we use to build      \
+   B2G ICS. Older GCC versions have a bug in which they fail to compile            \
+   reinterpret_casts of templated functions with the message: "insufficient        \
+   contextual information to determine type". JS_PSG needs to                      \
+   reinterpret_cast<JSPropertyOp>, so this causes problems for us here.            \
+                                                                                   \
+   We could restructure all this code to make this nicer, but since ICS isn't      \
+   going to be around forever (and since this bug is fixed with the newer GCC      \
+   versions we use on JB and KK), the workaround here is designed for ease of      \
+   removal. When you stop seeing ICS Emulator builds on TBPL, remove these 3       \
+   JSNatives and insert the templated callee directly into the JS_PSG below. */    \
+bool _typedArray##_lengthGetter(JSContext *cx, unsigned argc, Value *vp) {         \
+    return _typedArray##Object::Getter<_typedArray##Object::lengthValue>(cx, argc, vp); \
+}                                                                                  \
+bool _typedArray##_byteLengthGetter(JSContext *cx, unsigned argc, Value *vp) {     \
+    return _typedArray##Object::Getter<_typedArray##Object::byteLengthValue>(cx, argc, vp); \
+}                                                                                  \
+bool _typedArray##_byteOffsetGetter(JSContext *cx, unsigned argc, Value *vp) {     \
+    return _typedArray##Object::Getter<_typedArray##Object::byteOffsetValue>(cx, argc, vp); \
+}                                                                                  \
 const JSPropertySpec _typedArray##Object::jsprops[] = {                            \
-    JS_PSG("length", _typedArray##Object::Getter<lengthValue>, JSPROP_PERMANENT),  \
+    JS_PSG("length", _typedArray##_lengthGetter, JSPROP_PERMANENT),                \
     JS_PSG("buffer", _typedArray##Object::BufferGetter, JSPROP_PERMANENT),         \
-    JS_PSG("byteLength", _typedArray##Object::Getter<byteLengthValue>, JSPROP_PERMANENT), \
-    JS_PSG("byteOffset", _typedArray##Object::Getter<byteOffsetValue>, JSPROP_PERMANENT), \
+    JS_PSG("byteLength", _typedArray##_byteLengthGetter, JSPROP_PERMANENT),        \
+    JS_PSG("byteOffset", _typedArray##_byteOffsetGetter, JSPROP_PERMANENT),        \
     JS_PS_END                                                                      \
 };
 
