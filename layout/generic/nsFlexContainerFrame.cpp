@@ -1759,12 +1759,16 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
     PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
            (" available free space = %d\n", availableFreeSpace));
 
-    MOZ_ASSERT((isUsingFlexGrow && availableFreeSpace >= 0) ||
-               (!isUsingFlexGrow && availableFreeSpace <= 0),
-               "The sign of our free space should never disagree with the "
-               "type of flexing (grow/shrink) that we're doing. Any potential "
-               "disagreement should've made us use the other type of flexing, "
-               "or should've been resolved in FreezeItemsEarly");
+
+    // The sign of our free space should agree with the type of flexing
+    // (grow/shrink) that we're doing (except if we've had integer overflow;
+    // then, all bets are off). Any disagreement should've made us use the
+    // other type of flexing, or should've been resolved in FreezeItemsEarly.
+    // XXXdholbert If & when bug 765861 is fixed, we should upgrade this
+    // assertion to be fatal except in documents with enormous lengths.
+    NS_ASSERTION((isUsingFlexGrow && availableFreeSpace >= 0) ||
+                 (!isUsingFlexGrow && availableFreeSpace <= 0),
+                 "availableFreeSpace's sign should match isUsingFlexGrow");
 
     // If we have any free space available, give each flexible item a portion
     // of availableFreeSpace.
