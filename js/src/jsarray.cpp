@@ -831,23 +831,6 @@ js::ObjectMayHaveExtraIndexedProperties(JSObject *obj)
     return false;
 }
 
-const Class ArrayObject::class_ = {
-    "Array",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
-    array_addProperty,
-    JS_DeletePropertyStub,   /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub,
-    nullptr,
-    nullptr,        /* call        */
-    nullptr,        /* hasInstance */
-    nullptr,        /* construct   */
-    nullptr         /* trace       */
-};
-
 static bool
 AddLengthProperty(ExclusiveContext *cx, HandleObject obj)
 {
@@ -3070,14 +3053,11 @@ js_Array(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-JSObject *
-js_InitArrayClass(JSContext *cx, HandleObject obj)
+static JSObject *
+CreateArrayPrototype(JSContext *cx, JSProtoKey key)
 {
-    JS_ASSERT(obj->isNative());
-
-    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
-
-    RootedObject proto(cx, global->getOrCreateObjectPrototype(cx));
+    JS_ASSERT(key == JSProto_Array);
+    RootedObject proto(cx, cx->global()->getOrCreateObjectPrototype(cx));
     if (!proto)
         return nullptr;
 
@@ -3099,14 +3079,6 @@ js_InitArrayClass(JSContext *cx, HandleObject obj)
     if (!arrayProto || !JSObject::setSingletonType(cx, arrayProto) || !AddLengthProperty(cx, arrayProto))
         return nullptr;
 
-    RootedFunction ctor(cx);
-    ctor = global->createConstructor(cx, js_Array, cx->names().Array, 1);
-    if (!ctor)
-        return nullptr;
-
-    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_Array, ctor, arrayProto))
-        return nullptr;
-
     /*
      * The default 'new' type of Array.prototype is required by type inference
      * to have unknown properties, to simplify handling of e.g. heterogenous
@@ -3116,17 +3088,31 @@ js_InitArrayClass(JSContext *cx, HandleObject obj)
     if (!JSObject::setNewTypeUnknown(cx, &ArrayObject::class_, arrayProto))
         return nullptr;
 
-    if (!LinkConstructorAndPrototype(cx, ctor, arrayProto))
-        return nullptr;
-
-    if (!DefinePropertiesAndBrand(cx, arrayProto, nullptr, array_methods) ||
-        !DefinePropertiesAndBrand(cx, ctor, nullptr, array_static_methods))
-    {
-        return nullptr;
-    }
-
     return arrayProto;
 }
+
+const Class ArrayObject::class_ = {
+    "Array",
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
+    array_addProperty,
+    JS_DeletePropertyStub,   /* delProperty */
+    JS_PropertyStub,         /* getProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    nullptr,
+    nullptr,        /* call        */
+    nullptr,        /* hasInstance */
+    nullptr,        /* construct   */
+    nullptr,        /* trace       */
+    {
+        GenericCreateConstructor<js_Array, NAME_OFFSET(Array), 1>,
+        CreateArrayPrototype,
+        array_static_methods,
+        array_methods
+    }
+};
 
 /*
  * Array allocation functions.
