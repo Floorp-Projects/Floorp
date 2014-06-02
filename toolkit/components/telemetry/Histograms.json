@@ -5734,6 +5734,24 @@
     "extended_statistics_ok": true,
     "description": "Time spent to open an existing cache entry"
   },
+  "SQLITEBRIDGE_PROVIDER_PASSWORDS_LOCKED": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": "10",
+    "description": "The number of errors using the PasswordsProvider due to a locked DB."
+  },
+  "SQLITEBRIDGE_PROVIDER_FORMS_LOCKED": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": "10",
+    "description": "The number of errors using the FormHistoryProvider due to a locked DB."
+  },
+  "SQLITEBRIDGE_PROVIDER_HOME_LOCKED": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": "10",
+    "description": "The number of errors using the HomeProvider due to a locked DB."
+  },
   "SSL_TLS12_INTOLERANCE_REASON_PRE": {
     "expires_in_version": "never",
     "kind": "enumerated",
