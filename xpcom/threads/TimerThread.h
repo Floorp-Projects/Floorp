@@ -33,14 +33,14 @@ public:
   typedef mozilla::TimeDuration TimeDuration;
 
   TimerThread();
-  NS_HIDDEN_(nsresult) InitLocks();
+  nsresult InitLocks();
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSIOBSERVER
 
-  NS_HIDDEN_(nsresult) Init();
-  NS_HIDDEN_(nsresult) Shutdown();
+  nsresult Init();
+  nsresult Shutdown();
 
   nsresult AddTimer(nsTimerImpl* aTimer);
   nsresult TimerDelayChanged(nsTimerImpl* aTimer);

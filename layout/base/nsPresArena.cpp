@@ -40,7 +40,7 @@ nsPresArena::~nsPresArena()
   PL_FinishArenaPool(&mPool);
 }
 
-NS_HIDDEN_(void*)
+void*
 nsPresArena::Allocate(uint32_t aCode, size_t aSize)
 {
   NS_ABORT_IF_FALSE(aSize > 0, "PresArena cannot allocate zero bytes");
@@ -98,7 +98,7 @@ nsPresArena::Allocate(uint32_t aCode, size_t aSize)
   return result;
 }
 
-NS_HIDDEN_(void)
+void
 nsPresArena::Free(uint32_t aCode, void* aPtr)
 {
   // Try to recycle this entry.

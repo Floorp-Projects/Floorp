@@ -343,8 +343,8 @@ public:
   // two TimeStamps, or scaling TimeStamps, is nonsense and must never
   // be allowed.
 
-  static NS_HIDDEN_(nsresult) Startup();
-  static NS_HIDDEN_(void) Shutdown();
+  static nsresult Startup();
+  static void Shutdown();
 
 private:
   friend struct IPC::ParamTraits<mozilla::TimeStamp>;
