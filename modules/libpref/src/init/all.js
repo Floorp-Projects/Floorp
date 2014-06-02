@@ -1565,6 +1565,9 @@ pref("security.csp.newbackend.enable", false);
 pref("security.mixed_content.block_active_content", false);
 pref("security.mixed_content.block_display_content", false);
 
+// Disable pinning checks by default.
+pref("security.cert_pinning.enforcement_level", 0);
+
 // Modifier key prefs: default to Windows settings,
 // menu access key = alt, accelerator key = control.
 // Use 17 for Ctrl, 18 for Alt, 224 for Meta, 91 for Win, 0 for none. Mac settings in macprefs.js
