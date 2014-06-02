@@ -2187,6 +2187,9 @@ InitTypedArrayClass(JSContext *cx)
     if (!ctor)
         return false;
 
+    if (!GlobalObject::initBuiltinConstructor(cx, global, ArrayType::key, ctor, proto))
+        return false;
+
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return false;
 
@@ -2216,9 +2219,6 @@ InitTypedArrayClass(JSContext *cx)
                     ArrayBufferObject::createTypedArrayFromBuffer<typename ArrayType::ThisType>,
                     0, JSFunction::NATIVE_FUN, global, NullPtr());
     if (!fun)
-        return false;
-
-    if (!GlobalObject::initBuiltinConstructor(cx, global, ArrayType::key, ctor, proto))
         return false;
 
     global->setCreateArrayFromBuffer<typename ArrayType::ThisType>(fun);
@@ -2293,6 +2293,12 @@ InitArrayBufferClass(JSContext *cx)
     if (!ctor)
         return nullptr;
 
+    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_ArrayBuffer,
+                                              ctor, arrayBufferProto))
+    {
+        return nullptr;
+    }
+
     if (!LinkConstructorAndPrototype(cx, ctor, arrayBufferProto))
         return nullptr;
 
@@ -2312,12 +2318,6 @@ InitArrayBufferClass(JSContext *cx)
 
     if (!JS_DefineFunctions(cx, arrayBufferProto, ArrayBufferObject::jsfuncs))
         return nullptr;
-
-    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_ArrayBuffer,
-                                              ctor, arrayBufferProto))
-    {
-        return nullptr;
-    }
 
     return arrayBufferProto;
 }
