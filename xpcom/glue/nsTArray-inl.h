@@ -100,44 +100,6 @@ bool
 IsTwiceTheRequiredBytesRepresentableAsUint32(size_t capacity, size_t elemSize);
 
 template<class Alloc, class Copy>
-void
-nsTArray_base<Alloc, Copy>::GoodSizeForCapacity(size_t capacity,
-                                                size_t elemSize,
-                                                size_t& nbytes,
-                                                size_t& newCapacity)
-{
-  // We increase our capacity so that |capacity * elemSize + sizeof(Header)| is
-  // a size that minimizes slop -- if |nbytes| is less than |pageSize| we round
-  // up to the next power of two, otherwise we round up to the next multiple of
-  // |pageSize|.
-  const size_t pageSizeBytes = 12;
-  const size_t pageSize = 1 << pageSizeBytes;
-
-  nbytes = capacity * elemSize + sizeof(Header);
-  if (nbytes >= pageSize) {
-    // Round up to the next multiple of pageSize.
-    nbytes = pageSize * ((nbytes + pageSize - 1) / pageSize);
-  } else {
-    // Round up to the next power of two.  See
-    // http://graphics.stanford.edu/~seander/bithacks.html
-    nbytes = nbytes - 1;
-    nbytes |= nbytes >> 1;
-    nbytes |= nbytes >> 2;
-    nbytes |= nbytes >> 4;
-    nbytes |= nbytes >> 8;
-    nbytes |= nbytes >> 16;
-    nbytes++;
-
-    MOZ_ASSERT((nbytes & (nbytes - 1)) == 0,
-               "nsTArray's allocation size should be a power of two!");
-  }
-
-  // How many elements can we fit in |nbytes|?
-  newCapacity = (nbytes - sizeof(Header)) / elemSize;
-  MOZ_ASSERT(newCapacity >= capacity, "Didn't enlarge the array enough!");
-}
-
-template<class Alloc, class Copy>
 typename Alloc::ResultTypeProxy
 nsTArray_base<Alloc, Copy>::EnsureCapacity(size_type capacity, size_type elemSize) {
   // This should be the most common case so test this first
@@ -154,38 +116,68 @@ nsTArray_base<Alloc, Copy>::EnsureCapacity(size_type capacity, size_type elemSiz
     return Alloc::FailureResult();
   }
 
-  size_t nbytes, newCapacity;
-  GoodSizeForCapacity(capacity, elemSize, nbytes, newCapacity);
-
-  Header *header;
   if (mHdr == EmptyHdr()) {
     // Malloc() new data
-    header = static_cast<Header*>(Alloc::Malloc(nbytes));
-    if (!header) {
+    Header *header = static_cast<Header*>
+                     (Alloc::Malloc(sizeof(Header) + capacity * elemSize));
+    if (!header)
       return Alloc::FailureResult();
-    }
     header->mLength = 0;
+    header->mCapacity = capacity;
     header->mIsAutoArray = 0;
+    mHdr = header;
 
-  } else if (UsesAutoArrayBuffer() || !Copy::allowRealloc) {
-    // Malloc() and copy
-    header = static_cast<Header*>(Alloc::Malloc(nbytes));
-    if (!header) {
-      return Alloc::FailureResult();
-    }
-    Copy::CopyHeaderAndElements(header, mHdr, Length(), elemSize);
-
-    if (!UsesAutoArrayBuffer()) {
-      Alloc::Free(mHdr);
-    }
-  } else {
-    // Realloc() existing data
-    header = static_cast<Header*>(Alloc::Realloc(mHdr, nbytes));
-    if (!header) {
-      return Alloc::FailureResult();
-    }
+    return Alloc::SuccessResult();
   }
 
+  // We increase our capacity so |capacity * elemSize + sizeof(Header)| is the
+  // next power of two, if this value is less than pageSize bytes, or otherwise
+  // so it's the next multiple of pageSize.
+  const size_t pageSizeBytes = 12;
+  const size_t pageSize = 1 << pageSizeBytes;
+
+  size_t minBytes = capacity * elemSize + sizeof(Header);
+  size_t bytesToAlloc;
+  if (minBytes >= pageSize) {
+    // Round up to the next multiple of pageSize.
+    bytesToAlloc = pageSize * ((minBytes + pageSize - 1) / pageSize);
+  }
+  else {
+    // Round up to the next power of two.  See
+    // http://graphics.stanford.edu/~seander/bithacks.html
+    bytesToAlloc = minBytes - 1;
+    bytesToAlloc |= bytesToAlloc >> 1;
+    bytesToAlloc |= bytesToAlloc >> 2;
+    bytesToAlloc |= bytesToAlloc >> 4;
+    bytesToAlloc |= bytesToAlloc >> 8;
+    bytesToAlloc |= bytesToAlloc >> 16;
+    bytesToAlloc++;
+
+    MOZ_ASSERT((bytesToAlloc & (bytesToAlloc - 1)) == 0,
+               "nsTArray's allocation size should be a power of two!");
+  }
+
+  Header *header;
+  if (UsesAutoArrayBuffer() || !Copy::allowRealloc) {
+    // Malloc() and copy
+    header = static_cast<Header*>(Alloc::Malloc(bytesToAlloc));
+    if (!header)
+      return Alloc::FailureResult();
+
+    Copy::CopyHeaderAndElements(header, mHdr, Length(), elemSize);
+
+    if (!UsesAutoArrayBuffer())
+      Alloc::Free(mHdr);
+  } else {
+    // Realloc() existing data
+    header = static_cast<Header*>(Alloc::Realloc(mHdr, bytesToAlloc));
+    if (!header)
+      return Alloc::FailureResult();
+  }
+
+  // How many elements can we fit in bytesToAlloc?
+  size_t newCapacity = (bytesToAlloc - sizeof(Header)) / elemSize;
+  MOZ_ASSERT(newCapacity >= capacity, "Didn't enlarge the array enough!");
   header->mCapacity = newCapacity;
 
   mHdr = header;
@@ -223,17 +215,12 @@ nsTArray_base<Alloc, Copy>::ShrinkCapacity(size_type elemSize, size_t elemAlign)
     return;
   }
 
-  // Only shrink if it would actually result in us using less memory.
-  size_t nbytes, newCapacity;
-  GoodSizeForCapacity(length, elemSize, nbytes, newCapacity);
-  if (newCapacity < Capacity()) {
-    void *ptr = Alloc::Realloc(mHdr, nbytes);
-    if (!ptr) {
-      return;
-    }
-    mHdr = static_cast<Header*>(ptr);
-    mHdr->mCapacity = newCapacity;
-  }
+  size_type size = sizeof(Header) + length * elemSize;
+  void *ptr = Alloc::Realloc(mHdr, size);
+  if (!ptr)
+    return;
+  mHdr = static_cast<Header*>(ptr);
+  mHdr->mCapacity = length;
 }
 
 template<class Alloc, class Copy>
