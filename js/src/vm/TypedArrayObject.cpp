@@ -206,6 +206,13 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         return &TypedArrayObject::protoClasses[ArrayTypeID()];
     }
 
+    static JSObject *CreatePrototype(JSContext *cx, JSProtoKey key)
+    {
+        return cx->global()->createBlankPrototype(cx, protoClass());
+    }
+
+    static bool FinishClassInit(JSContext *cx, HandleObject ctor, HandleObject proto);
+
     static inline const Class *instanceClass()
     {
         return &TypedArrayObject::classes[ArrayTypeID()];
@@ -2156,38 +2163,29 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     JS_EnumerateStub,                                                          \
     JS_ResolveStub,                                                            \
     JS_ConvertStub,                                                            \
-    nullptr,                 /* finalize */                                    \
+    nullptr,                 /* finalize    */                                 \
     nullptr,                 /* call        */                                 \
     nullptr,                 /* hasInstance */                                 \
     nullptr,                 /* construct   */                                 \
     ArrayBufferViewObject::trace, /* trace  */                                 \
+    {                                                                          \
+        GenericCreateConstructor<_typedArray##Object::class_constructor,       \
+                                 NAME_OFFSET(_typedArray), 3>,                 \
+        _typedArray##Object::CreatePrototype,                                  \
+        nullptr,                                                               \
+        _typedArray##Object::jsfuncs,                                          \
+        _typedArray##Object::jsprops,                                          \
+        _typedArray##Object::FinishClassInit                                   \
+    }                                                                          \
 }
 
-template<class ArrayType>
-static inline bool
-InitTypedArrayClass(JSContext *cx)
+template<typename NativeType>
+bool
+TypedArrayObjectTemplate<NativeType>::FinishClassInit(JSContext *cx,
+                                                      HandleObject ctor,
+                                                      HandleObject proto)
 {
-    Rooted<GlobalObject*> global(cx, cx->compartment()->maybeGlobal());
-    if (global->isStandardClassResolved(ArrayType::key))
-        return true;
-
-    RootedObject proto(cx, global->createBlankPrototype(cx, ArrayType::protoClass()));
-    if (!proto)
-        return false;
-
-    RootedFunction ctor(cx);
-    ctor = global->createConstructor(cx, ArrayType::class_constructor,
-                                     ClassName(ArrayType::key, cx), 3);
-    if (!ctor)
-        return false;
-
-    if (!GlobalObject::initBuiltinConstructor(cx, global, ArrayType::key, ctor, proto))
-        return false;
-
-    if (!LinkConstructorAndPrototype(cx, ctor, proto))
-        return false;
-
-    RootedValue bytesValue(cx, Int32Value(ArrayType::BYTES_PER_ELEMENT));
+    RootedValue bytesValue(cx, Int32Value(BYTES_PER_ELEMENT));
 
     if (!JSObject::defineProperty(cx, ctor,
                                   cx->names().BYTES_PER_ELEMENT, bytesValue,
@@ -2201,24 +2199,18 @@ InitTypedArrayClass(JSContext *cx)
         return false;
     }
 
-    if (!JS_DefineProperties(cx, proto, ArrayType::jsprops))
-        return false;
-
-    if (!JS_DefineFunctions(cx, proto, ArrayType::jsfuncs))
-        return false;
-
     RootedFunction fun(cx);
     fun =
         NewFunction(cx, NullPtr(),
-                    ArrayBufferObject::createTypedArrayFromBuffer<typename ArrayType::ThisType>,
-                    0, JSFunction::NATIVE_FUN, global, NullPtr());
+                    ArrayBufferObject::createTypedArrayFromBuffer<ThisType>,
+                    0, JSFunction::NATIVE_FUN, cx->global(), NullPtr());
     if (!fun)
         return false;
 
-    global->setCreateArrayFromBuffer<typename ArrayType::ThisType>(fun);
+    cx->global()->setCreateArrayFromBuffer<ThisType>(fun);
 
     return true;
-}
+};
 
 IMPL_TYPED_ARRAY_STATICS(Int8Array)
 IMPL_TYPED_ARRAY_STATICS(Uint8Array)
@@ -2463,20 +2455,8 @@ DataViewObject::neuter(void *newData)
 JSObject *
 js_InitTypedArrayClasses(JSContext *cx, HandleObject obj)
 {
-    if (!InitTypedArrayClass<Int8ArrayObject>(cx) ||
-        !InitTypedArrayClass<Uint8ArrayObject>(cx) ||
-        !InitTypedArrayClass<Int16ArrayObject>(cx) ||
-        !InitTypedArrayClass<Uint16ArrayObject>(cx) ||
-        !InitTypedArrayClass<Int32ArrayObject>(cx) ||
-        !InitTypedArrayClass<Uint32ArrayObject>(cx) ||
-        !InitTypedArrayClass<Float32ArrayObject>(cx) ||
-        !InitTypedArrayClass<Float64ArrayObject>(cx) ||
-        !InitTypedArrayClass<Uint8ClampedArrayObject>(cx) ||
-        !DataViewObject::initClass(cx))
-    {
+    if (!DataViewObject::initClass(cx))
         return nullptr;
-    }
-
     return InitArrayBufferClass(cx);
 }
 
