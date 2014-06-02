@@ -68,7 +68,6 @@ class CompileRuntime
     bool signalHandlersInstalled();
     bool jitSupportsFloatingPoint();
     bool hadOutOfMemory();
-    bool profilingScripts();
 
     const JSAtomState &names();
     const StaticStrings &staticStrings();

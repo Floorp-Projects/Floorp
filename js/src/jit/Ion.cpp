@@ -1746,9 +1746,14 @@ OffThreadCompilationAvailable(JSContext *cx)
     //
     // Require cpuCount > 1 so that Ion compilation jobs and main-thread
     // execution are not competing for the same resources.
+    //
+    // Skip off thread compilation if PC count profiling is enabled, as
+    // CodeGenerator::maybeCreateScriptCounts will not attach script profiles
+    // when running off thread.
     return cx->runtime()->canUseParallelIonCompilation()
         && HelperThreadState().cpuCount > 1
-        && cx->runtime()->gc.incrementalState == gc::NO_INCREMENTAL;
+        && cx->runtime()->gc.incrementalState == gc::NO_INCREMENTAL
+        && !cx->runtime()->profilingScripts;
 #else
     return false;
 #endif
@@ -1983,9 +1988,10 @@ CheckScriptSize(JSContext *cx, JSScript* script)
         if (cx->runtime()->canUseParallelIonCompilation() && cpuCount > 1) {
             // Even if off thread compilation is enabled, there are cases where
             // compilation must still occur on the main thread. Don't compile
-            // in these cases, but do not forbid compilation so that the script
-            // may be compiled later.
-            if (!OffThreadCompilationAvailable(cx)) {
+            // in these cases (except when profiling scripts, as compilations
+            // occurring with profiling should reflect those without), but do
+            // not forbid compilation so that the script may be compiled later.
+            if (!OffThreadCompilationAvailable(cx) && !cx->runtime()->profilingScripts) {
                 IonSpew(IonSpew_Abort,
                         "Script too large for main thread, skipping (%u bytes) (%u locals/args)",
                         script->length(), numLocalsAndArgs);
