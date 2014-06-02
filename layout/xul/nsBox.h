@@ -47,7 +47,7 @@ public:
   virtual nsresult SetDebug(nsBoxLayoutState& aState, bool aDebug) MOZ_OVERRIDE;
 
   virtual nsresult DumpBox(FILE* out) MOZ_OVERRIDE;
-  NS_HIDDEN_(void) PropagateDebug(nsBoxLayoutState& aState);
+  void PropagateDebug(nsBoxLayoutState& aState);
 #endif
 
   nsBox();
@@ -60,7 +60,7 @@ rollbox.
   virtual bool DoesClipChildren();
   virtual bool ComputesOwnOverflowArea() = 0;
 
-  NS_HIDDEN_(nsresult) SyncLayout(nsBoxLayoutState& aBoxLayoutState);
+  nsresult SyncLayout(nsBoxLayoutState& aBoxLayoutState);
 
   bool DoesNeedRecalc(const nsSize& aSize);
   bool DoesNeedRecalc(nscoord aCoord);
@@ -91,13 +91,13 @@ protected:
   
   virtual void GetLayoutFlags(uint32_t& aFlags);
 
-  NS_HIDDEN_(nsresult) BeginLayout(nsBoxLayoutState& aState);
+  nsresult BeginLayout(nsBoxLayoutState& aState);
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
-  NS_HIDDEN_(nsresult) EndLayout(nsBoxLayoutState& aState);
+  nsresult EndLayout(nsBoxLayoutState& aState);
 
 #ifdef DEBUG_LAYOUT
   virtual void GetBoxName(nsAutoString& aName);
-  NS_HIDDEN_(void) PropagateDebug(nsBoxLayoutState& aState);
+  void PropagateDebug(nsBoxLayoutState& aState);
 #endif
 
   static bool gGotTheme;

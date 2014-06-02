@@ -291,7 +291,7 @@ class nsScannerSharedSubstring
         }
 
         // Acquire a copy-on-write reference to the given substring.
-      NS_HIDDEN_(void) Rebind(const nsScannerIterator& aStart,
+      void Rebind(const nsScannerIterator& aStart,
                               const nsScannerIterator& aEnd);
 
        // Get a mutable reference to this string
@@ -309,8 +309,8 @@ class nsScannerSharedSubstring
     private:
       typedef nsScannerBufferList::Buffer Buffer;
 
-      NS_HIDDEN_(void) ReleaseBuffer();
-      NS_HIDDEN_(void) MakeMutable();
+      void ReleaseBuffer();
+      void MakeMutable();
 
       nsDependentSubstring  mString;
       Buffer               *mBuffer;

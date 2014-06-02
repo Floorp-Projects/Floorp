@@ -33,7 +33,7 @@ class nsIconChannel MOZ_FINAL : public nsIChannel {
      * Must be called before calling any other function on this object.
      * If this method fails, no other function must be called on this object.
      */
-    NS_HIDDEN_(nsresult) Init(nsIURI* aURI);
+    nsresult Init(nsIURI* aURI);
   private:
     /**
      * The channel to the temp icon file (e.g. to /tmp/2qy9wjqw.html).
