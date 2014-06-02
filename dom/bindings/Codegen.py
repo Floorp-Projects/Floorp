@@ -10442,7 +10442,29 @@ class CGNamespacedEnum(CGThing):
     def define(self):
         return ""
 
+def initIdsClassMethod(identifiers, atomCacheName):
+    idinit = ['!atomsCache->%s.init(cx, "%s")' %
+              (CGDictionary.makeIdName(id),
+               id)
+              for id in identifiers]
+    idinit.reverse()
+    body = fill(
+        """
+        MOZ_ASSERT(!*reinterpret_cast<jsid**>(atomsCache));
 
+        // Initialize these in reverse order so that any failure leaves the first one
+        // uninitialized.
+        if (${idinit}) {
+          return false;
+        }
+        return true;
+        """,
+        idinit=" ||\n    ".join(idinit))
+    return ClassMethod("InitIds", "bool", [
+        Argument("JSContext*", "cx"),
+        Argument("%s*" % atomCacheName, "atomsCache")
+    ], static=True, body=body, visibility="private")
+        
 class CGDictionary(CGThing):
     def __init__(self, dictionary, descriptorProvider):
         self.dictionary = dictionary
@@ -10616,29 +10638,8 @@ class CGDictionary(CGThing):
 
     def initIdsMethod(self):
         assert self.needToInitIds
-        idinit = ['!atomsCache->%s.init(cx, "%s")' %
-                  (CGDictionary.makeIdName(m.identifier.name),
-                   m.identifier.name)
-                  for m in self.dictionary.members]
-        idinit.reverse()
-        body = fill(
-            """
-            MOZ_ASSERT(!*reinterpret_cast<jsid**>(atomsCache));
-
-            // Initialize these in reverse order so that any failure leaves the first one
-            // uninitialized.
-            if (${idinit}) {
-              return false;
-            }
-            return true;
-            """,
-            idinit=" ||\n    ".join(idinit))
-
-        return ClassMethod("InitIds", "bool", [
-            Argument("JSContext*", "cx"),
-            Argument("%sAtoms*" % self.makeClassName(self.dictionary),
-                     "atomsCache"),
-        ], static=True, body=body, visibility="private")
+        return initIdsClassMethod([m.identifier.name for m in self.dictionary.members],
+                                  "%sAtoms" % self.makeClassName(self.dictionary))             
 
     def traceDictionaryMethod(self):
         body = ""
