@@ -48,6 +48,7 @@ if CONFIG['OS_TARGET'] != 'Android':
 EXPORTS.mp4_demuxer += [
     'binding/include/mp4_demuxer/AnnexB.h',
     'binding/include/mp4_demuxer/DecoderData.h',
+    'binding/include/mp4_demuxer/Interval.h',
     'binding/include/mp4_demuxer/mp4_demuxer.h',
 ]
 
@@ -64,6 +65,7 @@ UNIFIED_SOURCES += [
     'binding/Adts.cpp',
     'binding/AnnexB.cpp',
     'binding/DecoderData.cpp',
+    'binding/Index.cpp',
     'binding/mp4_demuxer.cpp',
     'frameworks/av/media/libstagefright/DataSource.cpp',
     'frameworks/av/media/libstagefright/ESDS.cpp',
