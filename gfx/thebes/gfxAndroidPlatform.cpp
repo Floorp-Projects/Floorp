@@ -176,8 +176,8 @@ gfxAndroidPlatform::GetCommonFallbackFonts(const uint32_t aCh,
     static const char kMotoyaLMaru[] = "MotoyaLMaru";
 
     if (IS_IN_BMP(aCh)) {
-        // try language-specific "Droid Sans *" fonts for certain blocks,
-        // as most devices probably have these
+        // try language-specific "Droid Sans *" and "Noto Sans *" fonts for
+        // certain blocks, as most devices probably have these
         uint8_t block = (aCh >> 8) & 0xff;
         switch (block) {
         case 0x05:
@@ -188,12 +188,15 @@ gfxAndroidPlatform::GetCommonFallbackFonts(const uint32_t aCh,
             aFontList.AppendElement("Droid Sans Arabic");
             break;
         case 0x09:
+            aFontList.AppendElement("Noto Sans Devanagari");
             aFontList.AppendElement("Droid Sans Devanagari");
             break;
         case 0x0b:
+            aFontList.AppendElement("Noto Sans Tamil");
             aFontList.AppendElement("Droid Sans Tamil");
             break;
         case 0x0e:
+            aFontList.AppendElement("Noto Sans Thai");
             aFontList.AppendElement("Droid Sans Thai");
             break;
         case 0x10: case 0x2d:
