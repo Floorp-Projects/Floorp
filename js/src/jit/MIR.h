@@ -9724,33 +9724,25 @@ class MProfilerStackOp : public MNullaryInstruction
   public:
     enum Type {
         Enter,        // a function has begun executing and it is not inline
-        Exit,         // any function has exited (inlined or normal)
-        InlineEnter,  // an inline function has begun executing
-
-        InlineExit    // all instructions of an inline function are done, a
-                      // return from the inline function could have occurred
-                      // before this boundary
+        Exit          // any function has exited and is not inline
     };
 
   private:
     JSScript *script_;
     Type type_;
-    unsigned inlineLevel_;
 
-    MProfilerStackOp(JSScript *script, Type type, unsigned inlineLevel)
-      : script_(script), type_(type), inlineLevel_(inlineLevel)
+    MProfilerStackOp(JSScript *script, Type type)
+      : script_(script), type_(type)
     {
-        JS_ASSERT_IF(type != InlineExit, script != nullptr);
-        JS_ASSERT_IF(type == InlineEnter, inlineLevel != 0);
+        JS_ASSERT(script);
         setGuard();
     }
 
   public:
     INSTRUCTION_HEADER(ProfilerStackOp)
 
-    static MProfilerStackOp *New(TempAllocator &alloc, JSScript *script, Type type,
-                                  unsigned inlineLevel = 0) {
-        return new(alloc) MProfilerStackOp(script, type, inlineLevel);
+    static MProfilerStackOp *New(TempAllocator &alloc, JSScript *script, Type type) {
+        return new(alloc) MProfilerStackOp(script, type);
     }
 
     JSScript *script() {
@@ -9759,10 +9751,6 @@ class MProfilerStackOp : public MNullaryInstruction
 
     Type type() {
         return type_;
-    }
-
-    unsigned inlineLevel() {
-        return inlineLevel_;
     }
 
     AliasSet getAliasSet() const {
