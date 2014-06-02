@@ -235,6 +235,9 @@ IDBFactory::Create(ContentParent* aContentParent,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
   NS_ASSERTION(nsContentUtils::IsCallerChrome(), "Only for chrome!");
+  NS_ASSERTION(aContentParent, "Null ContentParent!");
+
+  NS_ASSERTION(!nsContentUtils::GetCurrentJSContext(), "Should be called from C++");
 
   // We need to get this information before we push a null principal to avoid
   // IsCallerChrome() assertion in quota manager.

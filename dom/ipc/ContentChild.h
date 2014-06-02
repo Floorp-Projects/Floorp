@@ -157,10 +157,6 @@ public:
     virtual bool
     RecvAudioChannelNotify() MOZ_OVERRIDE;
 
-    virtual bool
-    RecvDataStoreNotify(const uint32_t& aAppId, const nsString& aName,
-                        const nsString& aManifestURL) MOZ_OVERRIDE;
-
     virtual PTestShellChild* AllocPTestShellChild() MOZ_OVERRIDE;
     virtual bool DeallocPTestShellChild(PTestShellChild*) MOZ_OVERRIDE;
     virtual bool RecvPTestShellConstructor(PTestShellChild*) MOZ_OVERRIDE;

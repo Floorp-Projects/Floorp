@@ -6,6 +6,8 @@
 
 'use strict'
 
+this.EXPORTED_SYMBOLS = ["DataStore"];
+
 function debug(s) {
   //dump('DEBUG DataStore: ' + s + '\n');
 }
@@ -57,16 +59,17 @@ function validateId(aId) {
 }
 
 /* DataStore object */
-function DataStore() {
+this.DataStore = function(aWindow, aName, aOwner, aReadOnly) {
   debug("DataStore created");
+  this.init(aWindow, aName, aOwner, aReadOnly);
 }
 
-DataStore.prototype = {
+this.DataStore.prototype = {
   classDescription: "DataStore XPCOM Component",
   classID: Components.ID("{db5c9602-030f-4bff-a3de-881a8de370f2}"),
   contractID: "@mozilla.org/dom/datastore-impl;1",
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDataStore, Ci.nsISupports,
-                                         Ci.nsIObserver]),
+  QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsISupports,
+                                         Components.interfaces.nsIObserver]),
 
   callbacks: [],
 
@@ -533,5 +536,3 @@ DataStore.prototype = {
     return exposedCursor;
   }
 };
-
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([DataStore]);

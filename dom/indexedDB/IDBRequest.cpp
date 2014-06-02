@@ -327,7 +327,7 @@ IDBRequest::WrapObject(JSContext* aCx)
 }
 
 JS::Value
-IDBRequest::GetResult(mozilla::ErrorResult& aRv) const
+IDBRequest::GetResult(JSContext* aCx, mozilla::ErrorResult& aRv) const
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
