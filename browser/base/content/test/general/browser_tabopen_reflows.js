@@ -56,7 +56,7 @@ const EXPECTED_REFLOWS = [
 ];
 
 const PREF_PRELOAD = "browser.newtab.preload";
-const PREF_NEWTAB_DIRECTORYSOURCE = "browser.newtabpage.directorySource";
+const PREF_NEWTAB_DIRECTORYSOURCE = "browser.newtabpage.directory.source";
 
 /*
  * This test ensures that there are no unexpected
@@ -64,26 +64,51 @@ const PREF_NEWTAB_DIRECTORYSOURCE = "browser.newtabpage.directorySource";
  */
 function test() {
   waitForExplicitFinish();
+  let DirectoryLinksProvider = Cu.import("resource://gre/modules/DirectoryLinksProvider.jsm", {}).DirectoryLinksProvider;
+  let NewTabUtils = Cu.import("resource://gre/modules/NewTabUtils.jsm", {}).NewTabUtils;
+  let Promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 
-  Services.prefs.setBoolPref(PREF_PRELOAD, false);
-  Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE, "data:application/json,{}");
+  // resolves promise when directory links are downloaded and written to disk
+  function watchLinksChangeOnce() {
+    let deferred = Promise.defer();
+    let observer = {
+      onManyLinksChanged: () => {
+        DirectoryLinksProvider.removeObserver(observer);
+        NewTabUtils.links.populateCache(() => {
+          NewTabUtils.allPages.update();
+          deferred.resolve();
+        }, true);
+      }
+    };
+    observer.onDownloadFail = observer.onManyLinksChanged;
+    DirectoryLinksProvider.addObserver(observer);
+    return deferred.promise;
+  };
+
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref(PREF_PRELOAD);
     Services.prefs.clearUserPref(PREF_NEWTAB_DIRECTORYSOURCE);
+    return watchLinksChangeOnce();
   });
 
-  // Add a reflow observer and open a new tab.
-  docShell.addWeakReflowObserver(observer);
-  BrowserOpenTab();
+  // run tests when directory source change completes
+  watchLinksChangeOnce().then(() => {
+    // Add a reflow observer and open a new tab.
+    docShell.addWeakReflowObserver(observer);
+    BrowserOpenTab();
 
-  // Wait until the tabopen animation has finished.
-  waitForTransitionEnd(function () {
-    // Remove reflow observer and clean up.
-    docShell.removeWeakReflowObserver(observer);
-    gBrowser.removeCurrentTab();
-
-    finish();
+    // Wait until the tabopen animation has finished.
+    waitForTransitionEnd(function () {
+      // Remove reflow observer and clean up.
+      docShell.removeWeakReflowObserver(observer);
+      gBrowser.removeCurrentTab();
+      finish();
+    });
   });
+
+  Services.prefs.setBoolPref(PREF_PRELOAD, false);
+  // set directory source to empty links
+  Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE, "data:application/json,{}");
 }
 
 let observer = {

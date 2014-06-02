@@ -334,6 +334,10 @@ private:
      */
     void ShutDownProcess(bool aCloseWithError);
 
+    // Perform any steps necesssary to gracefully shtudown the message
+    // manager and null out mMessageManager.
+    void ShutDownMessageManager();
+
     PCompositorParent*
     AllocPCompositorParent(mozilla::ipc::Transport* aTransport,
                            base::ProcessId aOtherProcess) MOZ_OVERRIDE;

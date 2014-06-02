@@ -10,6 +10,7 @@ const kOtherInterfaceName = 'ril';
 var server;
 var step = 0;
 var loginFinished = false;
+var loginSuccessCount = 0;
 
 function xhr_handler(metadata, response) {
   response.setStatusLine(metadata.httpVersion, 200, 'OK');
@@ -33,6 +34,16 @@ function fakeUIResponse() {
       do_check_eq(++step, 2);
     }
   }, 'captive-portal-login', false);
+
+  Services.obs.addObserver(function observe(subject, topic, data) {
+    if (topic === 'captive-portal-login-success') {
+      loginSuccessCount++;
+      if (loginSuccessCount > 1) {
+        throw "We should only receive 'captive-portal-login-success' once";
+      }
+      do_check_eq(++step, 4);
+    }
+  }, 'captive-portal-login-success', false);
 }
 
 function test_multiple_requests() {
@@ -53,11 +64,11 @@ function test_multiple_requests() {
   let otherCallback = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsICaptivePortalCallback]),
     prepare: function prepare() {
-      do_check_eq(++step, 4);
+      do_check_eq(++step, 5);
       gCaptivePortalDetector.finishPreparation(kOtherInterfaceName);
     },
     complete: function complete(success) {
-      do_check_eq(++step, 5);
+      do_check_eq(++step, 6);
       do_check_true(success);
       gServer.stop(do_test_finished);
     }
