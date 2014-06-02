@@ -284,9 +284,9 @@ public:
                                  nsTArray<nsString>& aNames) MOZ_OVERRIDE;
 
   // nsContentList public methods
-  NS_HIDDEN_(uint32_t) Length(bool aDoFlush);
-  NS_HIDDEN_(nsIContent*) Item(uint32_t aIndex, bool aDoFlush);
-  NS_HIDDEN_(mozilla::dom::Element*)
+  uint32_t Length(bool aDoFlush);
+  nsIContent* Item(uint32_t aIndex, bool aDoFlush);
+  mozilla::dom::Element*
   NamedItem(const nsAString& aName, bool aDoFlush);
 
   // nsIMutationObserver

@@ -35,8 +35,8 @@ public:
   static nsresult Create(nsISupports* aOuter,
                          const nsIID& aIID, void** aResult);
 
-  NS_HIDDEN_(nsresult) FlushMemory(const char16_t* aReason, bool aImmediate);
-  NS_HIDDEN_(nsresult) RunFlushers(const char16_t* aReason);
+  nsresult FlushMemory(const char16_t* aReason, bool aImmediate);
+  nsresult RunFlushers(const char16_t* aReason);
 
 protected:
   struct FlushEvent : public nsIRunnable
