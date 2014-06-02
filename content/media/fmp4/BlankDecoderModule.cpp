@@ -73,6 +73,7 @@ public:
   }
 
   virtual nsresult Flush() MOZ_OVERRIDE {
+    mTaskQueue->Flush();
     return NS_OK;
   }
 
