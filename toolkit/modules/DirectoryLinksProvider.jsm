@@ -14,6 +14,7 @@ const XMLHttpRequest =
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
@@ -21,6 +22,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm")
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
+XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => {
+  return new TextDecoder();
+});
 
 // The filename where directory links are stored locally
 const DIRECTORY_LINKS_FILE = "directoryLinks.json";
@@ -32,7 +36,7 @@ const PREF_MATCH_OS_LOCALE = "intl.locale.matchOS";
 const PREF_SELECTED_LOCALE = "general.useragent.locale";
 
 // The preference that tells where to obtain directory links
-const PREF_DIRECTORY_SOURCE = "browser.newtabpage.directorySource";
+const PREF_DIRECTORY_SOURCE = "browser.newtabpage.directory.source";
 
 // The frecency of a directory link
 const DIRECTORY_FRECENCY = 1000;
@@ -52,7 +56,13 @@ let DirectoryLinksProvider = {
 
   __linksURL: null,
 
-  _observers: [],
+  _observers: new Set(),
+
+  // links download deferred, resolved upon download completion
+  _downloadDeferred: null,
+
+  // download default interval is 24 hours in milliseconds
+  _downloadIntervalMS: 86400000,
 
   get _observedPrefs() Object.freeze({
     linksURL: PREF_DIRECTORY_SOURCE,
@@ -111,8 +121,9 @@ let DirectoryLinksProvider = {
       if (aData == this._observedPrefs["linksURL"]) {
         delete this.__linksURL;
       }
-      this._callObservers("onManyLinksChanged");
     }
+    // force directory download on changes to any of the observed prefs
+    this._fetchAndCacheLinksIfNecessary(true);
   },
 
   _addPrefsObserver: function DirectoryLinksProvider_addObserver() {
@@ -129,38 +140,6 @@ let DirectoryLinksProvider = {
     }
   },
 
-  /**
-   * Fetches the current set of directory links.
-   * @param aCallback a callback that is provided a set of links.
-   */
-  _fetchLinks: function DirectoryLinksProvider_fetchLinks(aCallback) {
-    try {
-      NetUtil.asyncFetch(this._linksURL, (aInputStream, aResult, aRequest) => {
-        let output;
-        if (Components.isSuccessCode(aResult)) {
-          try {
-            let json = NetUtil.readInputStreamToString(aInputStream,
-                                                       aInputStream.available(),
-                                                       {charset: "UTF-8"});
-            let locale = this.locale;
-            output = JSON.parse(json)[locale];
-          }
-          catch (e) {
-            Cu.reportError(e);
-          }
-        }
-        else {
-          Cu.reportError(new Error("the fetch of " + this._linksURL + "was unsuccessful"));
-        }
-        aCallback(output || []);
-      });
-    }
-    catch (e) {
-      Cu.reportError(e);
-      aCallback([]);
-    }
-  },
-
   _fetchAndCacheLinks: function DirectoryLinksProvider_fetchAndCacheLinks(uri) {
     let deferred = Promise.defer();
     let xmlHttp = new XMLHttpRequest();
@@ -172,11 +151,9 @@ let DirectoryLinksProvider = {
       if (this.status && this.status != 200) {
         json = "{}";
       }
-      let directoryLinksFilePath = OS.Path.join(OS.Constants.Path.localProfileDir, DIRECTORY_LINKS_FILE);
-      OS.File.writeAtomic(directoryLinksFilePath, json, {tmpPath: directoryLinksFilePath + ".tmp"})
+      OS.File.writeAtomic(self._directoryFilePath, json, {tmpPath: self._directoryFilePath + ".tmp"})
         .then(() => {
           deferred.resolve();
-          self._callObservers("onManyLinksChanged");
         },
         () => {
           deferred.reject("Error writing uri data in profD.");
@@ -198,11 +175,92 @@ let DirectoryLinksProvider = {
   },
 
   /**
+   * Downloads directory links if needed
+   * @return promise resolved immediately if no download needed, or upon completion
+   */
+  _fetchAndCacheLinksIfNecessary: function DirectoryLinksProvider_fetchAndCacheLinksIfNecessary(forceDownload=false) {
+    if (this._downloadDeferred) {
+      // fetching links already - just return the promise
+      return this._downloadDeferred.promise;
+    }
+
+    if (forceDownload || this._needsDownload) {
+      this._downloadDeferred = Promise.defer();
+      this._fetchAndCacheLinks(this._linksURL).then(() => {
+        // the new file was successfully downloaded and cached, so update a timestamp
+        this._lastDownloadMS = Date.now();
+        this._downloadDeferred.resolve();
+        this._downloadDeferred = null;
+        this._callObservers("onManyLinksChanged")
+      },
+      error => {
+        this._downloadDeferred.resolve();
+        this._downloadDeferred = null;
+        this._callObservers("onDownloadFail");
+      });
+      return this._downloadDeferred.promise;
+    }
+
+    // download is not needed
+    return Promise.resolve();
+  },
+
+  /**
+   * @return true if download is needed, false otherwise
+   */
+  get _needsDownload () {
+    // fail if last download occured less then 24 hours ago
+    if ((Date.now() - this._lastDownloadMS) > this._downloadIntervalMS) {
+      return true;
+    }
+    return false;
+  },
+
+  /**
+   * Reads directory links file and parses its content
+   * @return a promise resolved to valid list of links or [] if read or parse fails
+   */
+  _readDirectoryLinksFile: function DirectoryLinksProvider_readDirectoryLinksFile() {
+    return OS.File.read(this._directoryFilePath).then(binaryData => {
+      let output;
+      try {
+        let locale = this.locale;
+        let json = gTextDecoder.decode(binaryData);
+        output = JSON.parse(json)[locale];
+      }
+      catch (e) {
+        Cu.reportError(e);
+      }
+      return output || [];
+    },
+    error => {
+      Cu.reportError(error);
+      return [];
+    });
+  },
+
+  /**
+   * Submits counts of shown directory links for each type and
+   * triggers directory download if sponsored link was shown
+   *
+   * @param object keyed on types containing counts
+   * @return download promise
+   */
+  reportShownCount: function DirectoryLinksProvider_reportShownCount(directoryCount) {
+    if (directoryCount.sponsored > 0
+        || directoryCount.affiliate > 0
+        || directoryCount.organic > 0) {
+      return this._fetchAndCacheLinksIfNecessary();
+    }
+    return Promise.resolve();
+  },
+
+  /**
    * Gets the current set of directory links.
    * @param aCallback The function that the array of links is passed to.
    */
   getLinks: function DirectoryLinksProvider_getLinks(aCallback) {
-    this._fetchLinks(rawLinks => {
+    this._readDirectoryLinksFile().then(rawLinks => {
       // all directory links have a frecency of DIRECTORY_FRECENCY
       aCallback(rawLinks.map((link, position) => {
         link.frecency = DIRECTORY_FRECENCY;
@@ -214,6 +272,19 @@ let DirectoryLinksProvider = {
 
   init: function DirectoryLinksProvider_init() {
     this._addPrefsObserver();
+    // setup directory file path and last download timestamp
+    this._directoryFilePath = OS.Path.join(OS.Constants.Path.localProfileDir, DIRECTORY_LINKS_FILE);
+    this._lastDownloadMS = 0;
+    return Task.spawn(function() {
+      // get the last modified time of the links file if it exists
+      let doesFileExists = yield OS.File.exists(this._directoryFilePath);
+      if (doesFileExists) {
+        let fileInfo = yield OS.File.stat(this._directoryFilePath);
+        this._lastDownloadMS = Date.parse(fileInfo.lastModificationDate);
+      }
+      // fetch directory on startup without force
+      yield this._fetchAndCacheLinksIfNecessary();
+    }.bind(this));
   },
 
   /**
@@ -226,7 +297,11 @@ let DirectoryLinksProvider = {
   },
 
   addObserver: function DirectoryLinksProvider_addObserver(aObserver) {
-    this._observers.push(aObserver);
+    this._observers.add(aObserver);
+  },
+
+  removeObserver: function DirectoryLinksProvider_removeObserver(aObserver) {
+    this._observers.delete(aObserver);
   },
 
   _callObservers: function DirectoryLinksProvider__callObservers(aMethodName, aArg) {
@@ -242,8 +317,6 @@ let DirectoryLinksProvider = {
   },
 
   _removeObservers: function() {
-    while (this._observers.length) {
-      this._observers.pop();
-    }
+    this._observers.clear();
   }
 };
