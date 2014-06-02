@@ -22,8 +22,8 @@
 
 namespace stagefright {
 
-struct DataSource;
-struct String8;
+class DataSource;
+class String8;
 
 struct ID3 {
     enum Version {
