@@ -400,7 +400,7 @@ function focusSearchBoxUsingShortcut(panelWin, callback) {
     altKey: modifiersAttr.match("alt"),
     metaKey: modifiersAttr.match("meta"),
     accelKey: modifiersAttr.match("accel")
-  }
+  };
 
   let searchBox = panelWin.document.getElementById("inspector-searchbox");
   searchBox.addEventListener("focus", function onFocus() {
@@ -423,6 +423,60 @@ function getComputedPropertyValue(aName)
       return value.textContent;
     }
   }
+}
+
+function isNodeCorrectlyHighlighted(node, prefix="") {
+  let boxModel = getBoxModelStatus();
+  let helper = new LayoutHelpers(window.content);
+
+  prefix += (prefix ? " " : "") + node.nodeName;
+  prefix += (node.id ? "#" + node.id : "");
+  prefix += (node.classList.length ? "." + [...node.classList].join(".") : "");
+  prefix += " ";
+
+  let quads = helper.getAdjustedQuads(node, "content");
+  let {p1:cp1, p2:cp2, p3:cp3, p4:cp4} = boxModel.content.points;
+  is(cp1.x, quads.p1.x, prefix + "content point 1 x co-ordinate is correct");
+  is(cp1.y, quads.p1.y, prefix + "content point 1 y co-ordinate is correct");
+  is(cp2.x, quads.p2.x, prefix + "content point 2 x co-ordinate is correct");
+  is(cp2.y, quads.p2.y, prefix + "content point 2 y co-ordinate is correct");
+  is(cp3.x, quads.p3.x, prefix + "content point 3 x co-ordinate is correct");
+  is(cp3.y, quads.p3.y, prefix + "content point 3 y co-ordinate is correct");
+  is(cp4.x, quads.p4.x, prefix + "content point 4 x co-ordinate is correct");
+  is(cp4.y, quads.p4.y, prefix + "content point 4 y co-ordinate is correct");
+
+  quads = helper.getAdjustedQuads(node, "padding");
+  let {p1:pp1, p2:pp2, p3:pp3, p4:pp4} = boxModel.padding.points;
+  is(pp1.x, quads.p1.x, prefix + "padding point 1 x co-ordinate is correct");
+  is(pp1.y, quads.p1.y, prefix + "padding point 1 y co-ordinate is correct");
+  is(pp2.x, quads.p2.x, prefix + "padding point 2 x co-ordinate is correct");
+  is(pp2.y, quads.p2.y, prefix + "padding point 2 y co-ordinate is correct");
+  is(pp3.x, quads.p3.x, prefix + "padding point 3 x co-ordinate is correct");
+  is(pp3.y, quads.p3.y, prefix + "padding point 3 y co-ordinate is correct");
+  is(pp4.x, quads.p4.x, prefix + "padding point 4 x co-ordinate is correct");
+  is(pp4.y, quads.p4.y, prefix + "padding point 4 y co-ordinate is correct");
+
+  quads = helper.getAdjustedQuads(node, "border");
+  let {p1:bp1, p2:bp2, p3:bp3, p4:bp4} = boxModel.border.points;
+  is(bp1.x, quads.p1.x, prefix + "border point 1 x co-ordinate is correct");
+  is(bp1.y, quads.p1.y, prefix + "border point 1 y co-ordinate is correct");
+  is(bp2.x, quads.p2.x, prefix + "border point 2 x co-ordinate is correct");
+  is(bp2.y, quads.p2.y, prefix + "border point 2 y co-ordinate is correct");
+  is(bp3.x, quads.p3.x, prefix + "border point 3 x co-ordinate is correct");
+  is(bp3.y, quads.p3.y, prefix + "border point 3 y co-ordinate is correct");
+  is(bp4.x, quads.p4.x, prefix + "border point 4 x co-ordinate is correct");
+  is(bp4.y, quads.p4.y, prefix + "border point 4 y co-ordinate is correct");
+
+  quads = helper.getAdjustedQuads(node, "margin");
+  let {p1:mp1, p2:mp2, p3:mp3, p4:mp4} = boxModel.margin.points;
+  is(mp1.x, quads.p1.x, prefix + "margin point 1 x co-ordinate is correct");
+  is(mp1.y, quads.p1.y, prefix + "margin point 1 y co-ordinate is correct");
+  is(mp2.x, quads.p2.x, prefix + "margin point 2 x co-ordinate is correct");
+  is(mp2.y, quads.p2.y, prefix + "margin point 2 y co-ordinate is correct");
+  is(mp3.x, quads.p3.x, prefix + "margin point 3 x co-ordinate is correct");
+  is(mp3.y, quads.p3.y, prefix + "margin point 3 y co-ordinate is correct");
+  is(mp4.x, quads.p4.x, prefix + "margin point 4 x co-ordinate is correct");
+  is(mp4.y, quads.p4.y, prefix + "margin point 4 y co-ordinate is correct");
 }
 
 function getContainerForRawNode(markupView, rawNode)
