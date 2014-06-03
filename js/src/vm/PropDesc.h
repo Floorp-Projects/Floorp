@@ -124,7 +124,6 @@ struct PropDesc {
      * new property descriptor JSObject and defining properties on it.
      */
     void initFromPropertyDescriptor(Handle<JSPropertyDescriptor> desc);
-    void populatePropertyDescriptor(HandleObject obj, MutableHandle<JSPropertyDescriptor> desc) const;
     bool makeObject(JSContext *cx);
 
     /* Reset the descriptor entirely. */
@@ -281,11 +280,6 @@ class PropDescOperations
 
     JSPropertyOp getter() const { return desc()->getter(); }
     JSStrictPropertyOp setter() const { return desc()->setter(); }
-
-    void populatePropertyDescriptor(HandleObject obj,
-                                    MutableHandle<JSPropertyDescriptor> descriptor) const {
-        desc()->populatePropertyDescriptor(obj, descriptor);
-    }
 };
 
 template <typename Outer>
