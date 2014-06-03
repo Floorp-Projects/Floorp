@@ -26,6 +26,7 @@ namespace jit {
     _(Ursh)                                     \
     _(Add)                                      \
     _(Sub)                                      \
+    _(Mod)                                      \
     _(NewObject)                                \
     _(NewDerivedTypedObject)
 
@@ -189,6 +190,18 @@ class RSub MOZ_FINAL : public RInstruction
 
   public:
     RINSTRUCTION_HEADER_(Sub)
+
+    virtual uint32_t numOperands() const {
+        return 2;
+    }
+
+    bool recover(JSContext *cx, SnapshotIterator &iter) const;
+};
+
+class RMod MOZ_FINAL : public RInstruction
+{
+  public:
+    RINSTRUCTION_HEADER_(Mod)
 
     virtual uint32_t numOperands() const {
         return 2;
