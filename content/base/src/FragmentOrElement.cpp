@@ -153,14 +153,33 @@ nsIContent::FindFirstNonChromeOnlyAccessContent() const
 nsIContent*
 nsIContent::GetFlattenedTreeParent() const
 {
-  if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
-    nsIContent* parent = GetXBLInsertionParent();
-    if (parent) {
-      return parent;
+  nsIContent* parent = nullptr;
+
+  nsTArray<nsIContent*>* destInsertionPoints = GetExistingDestInsertionPoints();
+  if (destInsertionPoints && !destInsertionPoints->IsEmpty()) {
+    // This node was distributed into an insertion point. The last node in
+    // the list of destination insertion insertion points is where this node
+    // appears in the composed tree (see Shadow DOM spec).
+    nsIContent* lastInsertionPoint = destInsertionPoints->LastElement();
+    parent = lastInsertionPoint->GetParent();
+  } else if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+    parent = GetXBLInsertionParent();
+  }
+
+  if (!parent) {
+    parent = GetParent();
+  }
+
+  // Shadow roots never shows up in the flattened tree. Return the host
+  // instead.
+  if (parent && parent->HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+    ShadowRoot* parentShadowRoot = ShadowRoot::FromNode(parent);
+    if (parentShadowRoot) {
+      return parentShadowRoot->GetHost();
     }
   }
 
-  return GetParent();
+  return parent;
 }
 
 nsIContent::IMEState
