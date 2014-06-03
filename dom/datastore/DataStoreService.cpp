@@ -407,13 +407,18 @@ AddPermissionsEnumerator(const uint32_t& aAppId,
 class MOZ_STACK_CLASS AddAccessPermissionsData
 {
 public:
-  AddAccessPermissionsData(const nsAString& aName, bool aReadOnly)
-    : mName(aName)
+  AddAccessPermissionsData(uint32_t aAppId, const nsAString& aName,
+                           const nsAString& aOriginURL, bool aReadOnly)
+    : mAppId(aAppId)
+    , mName(aName)
+    , mOriginURL(aOriginURL)
     , mReadOnly(aReadOnly)
     , mResult(NS_OK)
   {}
 
+  uint32_t mAppId;
   nsString mName;
+  nsString mOriginURL;
   bool mReadOnly;
   nsresult mResult;
 };
@@ -434,7 +439,7 @@ AddAccessPermissionsEnumerator(const uint32_t& aAppId,
   // ReadOnly is decided by the owner first.
   bool readOnly = aInfo->mReadOnly || data->mReadOnly;
 
-  data->mResult = ResetPermission(aAppId, aInfo->mOriginURL,
+  data->mResult = ResetPermission(data->mAppId, data->mOriginURL,
                                   aInfo->mManifestURL,
                                   permission, readOnly);
   return NS_FAILED(data->mResult) ? PL_DHASH_STOP : PL_DHASH_NEXT;
@@ -1184,7 +1189,7 @@ DataStoreService::AddAccessPermissions(uint32_t aAppId, const nsAString& aName,
     return NS_OK;
   }
 
-  AddAccessPermissionsData data(aName, aReadOnly);
+  AddAccessPermissionsData data(aAppId, aName, aOriginURL, aReadOnly);
   apps->EnumerateRead(AddAccessPermissionsEnumerator, &data);
   return data.mResult;
 }
