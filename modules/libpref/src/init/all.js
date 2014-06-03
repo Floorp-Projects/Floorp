@@ -4151,6 +4151,16 @@ pref("snav.enabled", false);
 // Turn off touch caret by default.
 pref("touchcaret.enabled", false);
 
+// Maximum distance to the center of touch caret (in app unit square) which
+// will be accepted to drag touch caret (0 means only in the bounding box of touch
+// caret is accepted)
+pref("touchcaret.distance.threshold", 1500);
+
+// We'll start to increment time when user release the control of touch caret.
+// When time exceed this expiration time, we'll hide touch caret.
+// In milliseconds. (0 means disable this feature)
+pref("touchcaret.expiration.time", 3000);
+
 // Wakelock is disabled by default.
 pref("dom.wakelock.enabled", false);
 
