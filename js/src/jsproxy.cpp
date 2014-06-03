@@ -683,11 +683,7 @@ ParsePropertyDescriptorObject(JSContext *cx, HandleObject obj, const Value &v,
         return false;
     if (complete)
         d.complete();
-    desc.object().set(obj);
-    desc.value().set(d.hasValue() ? d.value() : UndefinedValue());
-    desc.setAttributes(d.attributes());
-    desc.setGetter(d.getter());
-    desc.setSetter(d.setter());
+    d.populatePropertyDescriptor(obj, desc);
     return true;
 }
 
