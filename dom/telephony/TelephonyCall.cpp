@@ -46,7 +46,7 @@ TelephonyCall::Create(Telephony* aTelephony, uint32_t aServiceId,
 
 TelephonyCall::TelephonyCall(nsPIDOMWindow* aOwner)
   : DOMEventTargetHelper(aOwner),
-    mCallState(nsITelephonyProvider::CALL_STATE_UNKNOWN),
+    mCallState(nsITelephonyService::CALL_STATE_UNKNOWN),
     mLive(false)
 {
 }
@@ -68,34 +68,34 @@ TelephonyCall::ChangeStateInternal(uint16_t aCallState, bool aFireEvents)
 
   nsString stateString;
   switch (aCallState) {
-    case nsITelephonyProvider::CALL_STATE_DIALING:
+    case nsITelephonyService::CALL_STATE_DIALING:
       stateString.AssignLiteral("dialing");
       break;
-    case nsITelephonyProvider::CALL_STATE_ALERTING:
+    case nsITelephonyService::CALL_STATE_ALERTING:
       stateString.AssignLiteral("alerting");
       break;
-    case nsITelephonyProvider::CALL_STATE_CONNECTING:
+    case nsITelephonyService::CALL_STATE_CONNECTING:
       stateString.AssignLiteral("connecting");
       break;
-    case nsITelephonyProvider::CALL_STATE_CONNECTED:
+    case nsITelephonyService::CALL_STATE_CONNECTED:
       stateString.AssignLiteral("connected");
       break;
-    case nsITelephonyProvider::CALL_STATE_HOLDING:
+    case nsITelephonyService::CALL_STATE_HOLDING:
       stateString.AssignLiteral("holding");
       break;
-    case nsITelephonyProvider::CALL_STATE_HELD:
+    case nsITelephonyService::CALL_STATE_HELD:
       stateString.AssignLiteral("held");
       break;
-    case nsITelephonyProvider::CALL_STATE_RESUMING:
+    case nsITelephonyService::CALL_STATE_RESUMING:
       stateString.AssignLiteral("resuming");
       break;
-    case nsITelephonyProvider::CALL_STATE_DISCONNECTING:
+    case nsITelephonyService::CALL_STATE_DISCONNECTING:
       stateString.AssignLiteral("disconnecting");
       break;
-    case nsITelephonyProvider::CALL_STATE_DISCONNECTED:
+    case nsITelephonyService::CALL_STATE_DISCONNECTED:
       stateString.AssignLiteral("disconnected");
       break;
-    case nsITelephonyProvider::CALL_STATE_INCOMING:
+    case nsITelephonyService::CALL_STATE_INCOMING:
       stateString.AssignLiteral("incoming");
       break;
     default:
@@ -105,7 +105,7 @@ TelephonyCall::ChangeStateInternal(uint16_t aCallState, bool aFireEvents)
   mState = stateString;
   mCallState = aCallState;
 
-  if (aCallState == nsITelephonyProvider::CALL_STATE_DISCONNECTED) {
+  if (aCallState == nsITelephonyService::CALL_STATE_DISCONNECTED) {
     NS_ASSERTION(mLive, "Should be live!");
     mLive = false;
     if (mGroup) {
@@ -159,7 +159,7 @@ TelephonyCall::NotifyError(const nsAString& aError)
   mError = new DOMError(GetOwner(), aError);
 
   // Do the state transitions
-  ChangeStateInternal(nsITelephonyProvider::CALL_STATE_DISCONNECTED, true);
+  ChangeStateInternal(nsITelephonyService::CALL_STATE_DISCONNECTED, true);
 
   nsresult rv = DispatchCallEvent(NS_LITERAL_STRING("error"), this);
   if (NS_FAILED(rv)) {
@@ -209,44 +209,44 @@ TelephonyCall::GetGroup() const
 void
 TelephonyCall::Answer(ErrorResult& aRv)
 {
-  if (mCallState != nsITelephonyProvider::CALL_STATE_INCOMING) {
+  if (mCallState != nsITelephonyService::CALL_STATE_INCOMING) {
     NS_WARNING("Answer on non-incoming call ignored!");
     return;
   }
 
-  nsresult rv = mTelephony->Provider()->AnswerCall(mServiceId, mCallIndex);
+  nsresult rv = mTelephony->Service()->AnswerCall(mServiceId, mCallIndex);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
   }
 
-  ChangeStateInternal(nsITelephonyProvider::CALL_STATE_CONNECTING, true);
+  ChangeStateInternal(nsITelephonyService::CALL_STATE_CONNECTING, true);
 }
 
 void
 TelephonyCall::HangUp(ErrorResult& aRv)
 {
-  if (mCallState == nsITelephonyProvider::CALL_STATE_DISCONNECTING ||
-      mCallState == nsITelephonyProvider::CALL_STATE_DISCONNECTED) {
+  if (mCallState == nsITelephonyService::CALL_STATE_DISCONNECTING ||
+      mCallState == nsITelephonyService::CALL_STATE_DISCONNECTED) {
     NS_WARNING("HangUp on previously disconnected call ignored!");
     return;
   }
 
-  nsresult rv = mCallState == nsITelephonyProvider::CALL_STATE_INCOMING ?
-                mTelephony->Provider()->RejectCall(mServiceId, mCallIndex) :
-                mTelephony->Provider()->HangUp(mServiceId, mCallIndex);
+  nsresult rv = mCallState == nsITelephonyService::CALL_STATE_INCOMING ?
+                mTelephony->Service()->RejectCall(mServiceId, mCallIndex) :
+                mTelephony->Service()->HangUp(mServiceId, mCallIndex);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
   }
 
-  ChangeStateInternal(nsITelephonyProvider::CALL_STATE_DISCONNECTING, true);
+  ChangeStateInternal(nsITelephonyService::CALL_STATE_DISCONNECTING, true);
 }
 
 void
 TelephonyCall::Hold(ErrorResult& aRv)
 {
-  if (mCallState != nsITelephonyProvider::CALL_STATE_CONNECTED) {
+  if (mCallState != nsITelephonyService::CALL_STATE_CONNECTED) {
     NS_WARNING("Hold non-connected call ignored!");
     return;
   }
@@ -261,7 +261,7 @@ TelephonyCall::Hold(ErrorResult& aRv)
     return;
   }
 
-  nsresult rv = mTelephony->Provider()->HoldCall(mServiceId, mCallIndex);
+  nsresult rv = mTelephony->Service()->HoldCall(mServiceId, mCallIndex);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
@@ -274,13 +274,13 @@ TelephonyCall::Hold(ErrorResult& aRv)
     return;
   }
 
-  ChangeStateInternal(nsITelephonyProvider::CALL_STATE_HOLDING, true);
+  ChangeStateInternal(nsITelephonyService::CALL_STATE_HOLDING, true);
 }
 
 void
 TelephonyCall::Resume(ErrorResult& aRv)
 {
-  if (mCallState != nsITelephonyProvider::CALL_STATE_HELD) {
+  if (mCallState != nsITelephonyService::CALL_STATE_HELD) {
     NS_WARNING("Resume non-held call ignored!");
     return;
   }
@@ -295,11 +295,11 @@ TelephonyCall::Resume(ErrorResult& aRv)
     return;
   }
 
-  nsresult rv = mTelephony->Provider()->ResumeCall(mServiceId, mCallIndex);
+  nsresult rv = mTelephony->Service()->ResumeCall(mServiceId, mCallIndex);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
   }
 
-  ChangeStateInternal(nsITelephonyProvider::CALL_STATE_RESUMING, true);
+  ChangeStateInternal(nsITelephonyService::CALL_STATE_RESUMING, true);
 }

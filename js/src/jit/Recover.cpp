@@ -364,6 +364,33 @@ RSub::recover(JSContext *cx, SnapshotIterator &iter) const
     return true;
 }
 
+
+bool
+MMod::writeRecoverData(CompactBufferWriter &writer) const
+{
+	MOZ_ASSERT(canRecoverOnBailout());
+	writer.writeUnsigned(uint32_t(RInstruction::Recover_Mod));
+	return true;
+}
+
+RMod::RMod(CompactBufferReader &reader)
+{ }
+
+bool
+RMod::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+	RootedValue lhs(cx, iter.read());
+	RootedValue rhs(cx, iter.read());
+	RootedValue result(cx);
+
+	MOZ_ASSERT(!lhs.isObject() && !rhs.isObject());
+	if (!js::ModValues(cx, &lhs, &rhs, &result))
+		return false;
+
+	iter.storeInstructionResult(result);
+	return true;
+}
+
 bool
 MNewObject::writeRecoverData(CompactBufferWriter &writer) const
 {
