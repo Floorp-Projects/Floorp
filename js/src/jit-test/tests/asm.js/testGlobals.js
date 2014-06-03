@@ -123,7 +123,7 @@ var global = this;
 var ab = new ArrayBuffer(4096);
 var p = new Proxy(global,
                   {has:function(name) { f1(global, null, ab); return true},
-                   getOwnPropertyDescriptor:function(name) { return {value:Int32Array}}});
+                   getOwnPropertyDescriptor:function(name) { return {configurable:true, value:Int32Array}}});
 new Int32Array(ab)[4] = 42;
 assertEq(f1(p, null, ab)(), 42);
 

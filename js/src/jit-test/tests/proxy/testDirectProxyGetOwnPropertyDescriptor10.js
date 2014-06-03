@@ -23,7 +23,8 @@ assertEq(desc1.writable, false);
 assertEq(desc1.enumerable, true);
 assertEq(desc1.configurable, true);
 
-var desc = {};
+// The returned descriptor must agree in configurability.
+var desc = { configurable : true };
 var desc1 = Object.getOwnPropertyDescriptor(new Proxy(target, {
     getOwnPropertyDescriptor: function (target, name) {
         return desc;
@@ -33,4 +34,4 @@ assertEq(desc1 == desc, false);
 assertEq(desc1.value, undefined);
 assertEq(desc1.writable, false);
 assertEq(desc1.enumerable, false);
-assertEq(desc1.configurable, false);
+assertEq(desc1.configurable, true);
