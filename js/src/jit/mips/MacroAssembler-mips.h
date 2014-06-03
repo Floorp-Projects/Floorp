@@ -741,6 +741,10 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         ma_lw(SecondScratchReg, address);
         branchTest32(cond, SecondScratchReg, imm, label);
     }
+    void branchTest32(Condition cond, AbsoluteAddress address, Imm32 imm, Label *label) {
+        loadPtr(address, ScratchRegister);
+        branchTest32(cond, ScratchRegister, imm, label);
+    }
     void branchTestPtr(Condition cond, Register lhs, Register rhs, Label *label) {
         branchTest32(cond, lhs, rhs, label);
     }
@@ -1039,8 +1043,10 @@ public:
         }
     }
 
+    void and32(Register src, Register dest);
     void and32(Imm32 imm, Register dest);
     void and32(Imm32 imm, const Address &dest);
+    void and32(const Address &src, Register dest);
     void or32(Imm32 imm, const Address &dest);
     void xor32(Imm32 imm, Register dest);
     void xorPtr(Imm32 imm, Register dest);
@@ -1116,6 +1122,7 @@ public:
     void storePtr(ImmPtr imm, const Address &address);
     void storePtr(ImmGCPtr imm, const Address &address);
     void storePtr(Register src, const Address &address);
+    void storePtr(Register src, const BaseIndex &address);
     void storePtr(Register src, AbsoluteAddress dest);
     void storeDouble(FloatRegister src, Address addr) {
         ma_sd(src, addr);
@@ -1165,6 +1172,7 @@ public:
     }
 
     void subPtr(Imm32 imm, const Register dest);
+    void subPtr(const Address &addr, const Register dest);
     void subPtr(Register src, const Address &dest);
     void addPtr(Imm32 imm, const Register dest);
     void addPtr(Imm32 imm, const Address &dest);
@@ -1193,6 +1201,9 @@ public:
 
     void rshiftPtr(Imm32 imm, Register dest) {
         ma_srl(dest, dest, imm);
+    }
+    void rshiftPtrArithmetic(Imm32 imm, Register dest) {
+        ma_sra(dest, dest, imm);
     }
     void lshiftPtr(Imm32 imm, Register dest) {
         ma_sll(dest, dest, imm);
