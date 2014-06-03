@@ -1,0 +1,116 @@
+#!/usr/bin/env python
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+"""
+This scripts sets up a virtualenv and installs TPS into it.
+It's probably best to specify a path NOT inside the repo, otherwise
+all the virtualenv files will show up in e.g. hg status.
+"""
+
+import optparse
+import os
+import shutil
+import subprocess
+import sys
+import urllib
+
+here = os.path.dirname(os.path.abspath(__file__))
+usage_message = """
+***********************************************************************
+
+To run TPS, activate the virtualenv using:
+    source {TARGET}/{BIN_NAME}
+
+To change your TPS config, please edit the file:
+    {TARGET}/config.json
+
+To execute tps use:
+    runtps --binary=/path/to/firefox
+
+See runtps --help for all options
+
+***********************************************************************
+"""
+virtualenv_url = 'https://raw.github.com/pypa/virtualenv/1.9.1/virtualenv.py'
+
+if sys.platform == 'win32':
+    bin_name = os.path.join('Scripts', 'activate.bat')
+    activate_env = os.path.join('Scripts', 'activate_this.py')
+else:
+    bin_name = os.path.join('bin', 'activate')
+    activate_env = os.path.join('bin', 'activate_this.py')
+
+def main():
+    parser = optparse.OptionParser('Usage: %prog [options] path_to_venv')
+    parser.add_option('-p', '--python',
+                      type='string',
+                      dest='python',
+                      metavar='PYTHON_BIN',
+                      default=None,
+                      help='The Python interpreter to use.')
+    (options, args) = parser.parse_args(args=None, values=None)
+
+    if len(args) != 1:
+         parser.error('Path to the environment has to be specified')
+    target = args[0]
+    assert(target)
+
+    # Create a virtual environment
+    urllib.urlretrieve(virtualenv_url, 'virtualenv.py')
+    cmd_args = [sys.executable, 'virtualenv.py', target]
+    if options.python:
+        cmd_args.extend(['-p', options.python])
+    subprocess.check_call(cmd_args)
+
+    # Activate tps environment
+
+    tps_env = os.path.join(target, activate_env)
+    execfile(tps_env, dict(__file__=tps_env))
+
+    # Install TPS in environment
+    subprocess.check_call(['python', os.path.join(here, 'setup.py'),
+                           'install'])
+
+    # Get the path to tests and extensions directory by checking check where
+    # the tests and extensions directories are located
+    sync_dir = os.path.abspath(os.path.join(here, '..', '..', 'services',
+                                            'sync'))
+    if os.path.exists(sync_dir):
+        testdir = os.path.join(sync_dir, 'tests', 'tps')
+        extdir = os.path.join(sync_dir, 'tps', 'extensions')
+    else:
+        testdir = os.path.join(here, 'tests')
+        extdir = os.path.join(here, 'extensions')
+
+    assert(os.path.exists(testdir))
+    assert(os.path.exists(extdir))
+
+    # Update config file
+    config_in_path = os.path.join(here, 'config', 'config.json.in')
+    replacements = {'__TESTDIR__': testdir, '__EXTENSIONDIR__': extdir}
+    lines = []
+    with open(config_in_path) as config:
+        for line in config:
+            for source_string, target_string in replacements.iteritems():
+                line = line.replace(source_string, target_string)
+            lines.append(line)
+
+    with open(os.path.join(target, 'config.json'), 'w') as config:
+        for line in lines:
+            config.write(line)
+
+    # Clean up files created by setup.py
+    shutil.rmtree(os.path.join(here, 'build'))
+    shutil.rmtree(os.path.join(here, 'dist'))
+    shutil.rmtree(os.path.join(here, 'tps.egg-info'))
+    os.remove(os.path.join(here, 'virtualenv.py'))
+    os.remove(os.path.join(here, 'virtualenv.pyc'))
+
+    # Print the user instructions
+    print usage_message.format(TARGET=target,
+                               BIN_NAME=bin_name)
+
+if __name__ == "__main__":
+    main()
