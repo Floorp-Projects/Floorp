@@ -534,46 +534,102 @@ void CacheStorageService::DropPrivateBrowsingEntries()
     DoomStorageEntries(keys[i], nullptr, true, nullptr);
 }
 
+namespace { // anon
+
+class CleaupCacheDirectoriesRunnable : public nsRunnable
+{
+public:
+  NS_DECL_NSIRUNNABLE
+  static bool Post(uint32_t aVersion, uint32_t aActive);
+
+private:
+  CleaupCacheDirectoriesRunnable(uint32_t aVersion, uint32_t aActive)
+    : mVersion(aVersion), mActive(aActive)
+  {
+    nsCacheService::GetDiskCacheDirectory(getter_AddRefs(mCache1Dir));
+    CacheFileIOManager::GetCacheDirectory(getter_AddRefs(mCache2Dir));
+#if defined(MOZ_WIDGET_ANDROID)
+    CacheFileIOManager::GetProfilelessCacheDirectory(getter_AddRefs(mCache2Profileless));
+#endif
+  }
+
+  virtual ~CleaupCacheDirectoriesRunnable() {}
+  uint32_t mVersion, mActive;
+  nsCOMPtr<nsIFile> mCache1Dir, mCache2Dir;
+#if defined(MOZ_WIDGET_ANDROID)
+  nsCOMPtr<nsIFile> mCache2Profileless;
+#endif
+};
+
 // static
-void CacheStorageService::CleaupCacheDirectories(uint32_t aVersion, uint32_t aActive)
+bool CleaupCacheDirectoriesRunnable::Post(uint32_t aVersion, uint32_t aActive)
 {
   // CleaupCacheDirectories is called regardless what cache version is set up to use.
   // To obtain the cache1 directory we must unfortunatelly instantiate the old cache
   // service despite it may not be used at all...  This also initialize nsDeleteDir.
   nsCOMPtr<nsICacheService> service = do_GetService(NS_CACHESERVICE_CONTRACTID);
+  if (!service)
+    return false;
 
-  // Schedule delete of both the cache1 and cache2 remaining trashes.
-  nsCOMPtr<nsIFile> cache1Dir, cache2Dir;
-  nsCacheService::GetDiskCacheDirectory(getter_AddRefs(cache1Dir));
-  CacheFileIOManager::GetCacheDirectory(getter_AddRefs(cache2Dir));
+  nsCOMPtr<nsIEventTarget> thread;
+  service->GetCacheIOTarget(getter_AddRefs(thread));
+  if (!thread)
+    return false;
 
-  // Make sure we schedule just once in case CleaupCacheDirectories gets called
-  // multiple times from some reason.
-  static bool runOnce = (
-    cache1Dir && NS_SUCCEEDED(nsDeleteDir::RemoveOldTrashes(cache1Dir)),
-    cache2Dir && NS_SUCCEEDED(nsDeleteDir::RemoveOldTrashes(cache2Dir))
-  );
+  nsRefPtr<CleaupCacheDirectoriesRunnable> r =
+    new CleaupCacheDirectoriesRunnable(aVersion, aActive);
+  thread->Dispatch(r, NS_DISPATCH_NORMAL);
+  return true;
+}
 
-  if (!runOnce) {
-    NS_WARNING("Could not start deletion of some of the old cache trashes");
+NS_IMETHODIMP CleaupCacheDirectoriesRunnable::Run()
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  if (mCache1Dir) {
+    nsDeleteDir::RemoveOldTrashes(mCache1Dir);
   }
+  if (mCache2Dir) {
+    nsDeleteDir::RemoveOldTrashes(mCache2Dir);
+  }
+#if defined(MOZ_WIDGET_ANDROID)
+  if (mCache2Profileless) {
+    // Always delete the profileless cache on Android
+    nsDeleteDir::DeleteDir(mCache2Profileless, true, 30000);
+  }
+#endif
 
   // Delete the non-active version cache data right now
-  if (aVersion == aActive) {
-    return;
+  if (mVersion == mActive) {
+    return NS_OK;
   }
 
-  switch (aVersion) {
+  switch (mVersion) {
   case 0:
-    if (cache1Dir) {
-      nsDeleteDir::DeleteDir(cache1Dir, true, 30000);
+    if (mCache1Dir) {
+      nsDeleteDir::DeleteDir(mCache1Dir, true, 30000);
     }
     break;
   case 1:
-    if (cache2Dir) {
-      nsDeleteDir::DeleteDir(cache2Dir, true, 30000);
+    if (mCache2Dir) {
+      nsDeleteDir::DeleteDir(mCache2Dir, true, 30000);
     }
     break;
+  }
+
+  return NS_OK;
+}
+
+} // anon
+
+// static
+void CacheStorageService::CleaupCacheDirectories(uint32_t aVersion, uint32_t aActive)
+{
+  // Make sure we schedule just once in case CleaupCacheDirectories gets called
+  // multiple times from some reason.
+  static bool runOnce = CleaupCacheDirectoriesRunnable::Post(aVersion, aActive);
+  if (!runOnce) {
+    NS_WARNING("Could not start cache trashes cleanup");
   }
 }
 

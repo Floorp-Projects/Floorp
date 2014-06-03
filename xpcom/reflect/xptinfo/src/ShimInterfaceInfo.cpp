@@ -361,6 +361,40 @@ struct ComponentsInterfaceShimEntry {
 #define DEFINE_SHIM(name) \
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOM ## name, name)
 
+/**
+ * These shim entries allow us to make old XPIDL interfaces implementing DOM
+ * APIs as non-scriptable in order to save some runtime memory on Firefox OS,
+ * without breaking the entries under Components.interfaces which might both
+ * be used by our code and add-ons.  Specifically, the shim entries provide
+ * the following:
+ *
+ * * Components.interfaces.nsIFoo entries.  These entries basically work
+ *   almost exactly as the usual ones that you would get through the
+ *   XPIDL machinery.  Specifically, they have the right name, they reflect
+ *   the right IID, and they will work properly when passed to QueryInterface.
+ *
+ * * Components.interfaces.nsIFoo.CONSTANT values.  These entries will have
+ *   the right name and the right value for most integer types.  Note that
+ *   support for non-numerical constants is untested and will probably not
+ *   work out of the box.
+ *
+ * FAQ:
+ * * When should I add an entry to the list here?
+ *   Only if you're making an XPIDL interfaces which has a corresponding
+ *   WebIDL interface non-scriptable.
+ * * When should I remove an entry from this list?
+ *   If you are completely removing an XPIDL interface from the code base.  If
+ *   you forget to do so, the compiler will remind you.
+ * * How should I add an entry to the list here?
+ *   First, make sure that the XPIDL interface in question is non-scriptable
+ *   and also has a corresponding WebIDL interface.  Then, add two include
+ *   entries above, one for the XPIDL interface and one for the WebIDL
+ *   interface, and add a shim entry below.  If the name of the XPIDL
+ *   interface only has an "nsIDOM" prefix prepended to the WebIDL name, you
+ *   can use the DEFINE_SHIM macro and pass in the name of the WebIDL
+ *   interface.  Otherwise, use DEFINE_SHIM_WITH_CUSTOM_INTERFACE.
+ */
+
 const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
 {
   DEFINE_SHIM(AnimationEvent),

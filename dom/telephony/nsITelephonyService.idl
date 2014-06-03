@@ -15,7 +15,7 @@ interface nsITelephonyListener : nsISupports
    * @param callIndex
    *        Call identifier assigned by the RIL.
    * @param callState
-   *        One of the nsITelephonyProvider::CALL_STATE_* values.
+   *        One of the nsITelephonyService::CALL_STATE_* values.
    * @param number
    *        Number of the other party.
    * @param isOutgoing
@@ -26,8 +26,8 @@ interface nsITelephonyListener : nsISupports
    *        Indicates whether this call is a conference call.
    * @param isSwitchable
    *        Indicates whether this call can be switched between states of
-   *        nsITelephonyProvider::CALL_STATE_CONNECTED and
-   *        nsITelephonyProvider::CALL_STATE_HELD.
+   *        nsITelephonyService::CALL_STATE_CONNECTED and
+   *        nsITelephonyService::CALL_STATE_HELD.
    * @param isMergeable
    *        Indicates whether this call be be added into a conference.
    */
@@ -46,21 +46,21 @@ interface nsITelephonyListener : nsISupports
    * conference call state changes.
    *
    * @param callState
-   *        Possible values are: nsITelephonyProvider::CALL_STATE_UNKNOWN,
-   *        nsITelephonyProvider::CALL_STATE_HELD,
-   *        nsITelephonyProvider::CALL_STATE_CONNECTED.
+   *        Possible values are: nsITelephonyService::CALL_STATE_UNKNOWN,
+   *        nsITelephonyService::CALL_STATE_HELD,
+   *        nsITelephonyService::CALL_STATE_CONNECTED.
    */
   void conferenceCallStateChanged(in unsigned short callState);
 
   /**
-   * Called when enumeration asked by nsITelephonyProvider::enumerateCalls
+   * Called when enumeration asked by nsITelephonyService::enumerateCalls
    * is completed.
    */
   void enumerateCallStateComplete();
 
   /**
-   * Called when nsITelephonyProvider is asked to enumerate the current
-   * telephony call state (nsITelephonyProvider::enumerateCalls). This is
+   * Called when nsITelephonyService is asked to enumerate the current
+   * telephony call state (nsITelephonyService::enumerateCalls). This is
    * called once per call that is currently managed by the RIL.
    *
    * @param clientId
@@ -68,7 +68,7 @@ interface nsITelephonyListener : nsISupports
    * @param callIndex
    *        Call identifier assigned by the RIL.
    * @param callState
-   *        One of the nsITelephonyProvider::CALL_STATE_* values.
+   *        One of the nsITelephonyService::CALL_STATE_* values.
    * @param number
    *        Number of the other party.
    * @param isOutgoing
@@ -77,8 +77,8 @@ interface nsITelephonyListener : nsISupports
    *        Indicates whether this call is a conference call.
    * @param isSwitchable
    *        Indicates whether this call can be switched between states of
-   *        nsITelephonyProvider::CALL_STATE_CONNECTED and
-   *        nsITelephonyProvider::CALL_STATE_HELD.
+   *        nsITelephonyService::CALL_STATE_CONNECTED and
+   *        nsITelephonyService::CALL_STATE_HELD.
    * @param isMergeable
    *        Indicates whether this call be be added into a conference.
    */
@@ -100,7 +100,7 @@ interface nsITelephonyListener : nsISupports
    * @param callIndex
    *        Call identifier assigned by the RIL. -1 if not specified
    * @param notification
-   *        One of the nsITelephonyProvider::NOTIFICATION_* values.
+   *        One of the nsITelephonyService::NOTIFICATION_* values.
    */
   void supplementaryServiceNotification(in unsigned long clientId,
                                         in long callIndex,
@@ -159,18 +159,18 @@ interface nsITelephonyCallback : nsISupports
 };
 
 %{C++
-#define TELEPHONY_PROVIDER_CID \
+#define TELEPHONY_SERVICE_CID \
   { 0x9cf8aa52, 0x7c1c, 0x4cde, { 0x97, 0x4e, 0xed, 0x2a, 0xa0, 0xe7, 0x35, 0xfa } }
-#define TELEPHONY_PROVIDER_CONTRACTID \
-  "@mozilla.org/telephony/telephonyprovider;1"
+#define TELEPHONY_SERVICE_CONTRACTID \
+  "@mozilla.org/telephony/telephonyservice;1"
 %}
 
 /**
  * XPCOM component (in the content process) that provides the telephony
  * information.
  */
-[scriptable, uuid(b16ca98f-994f-4ae1-8c2d-e7b18e08d1f3)]
-interface nsITelephonyProvider : nsISupports
+[scriptable, uuid(4ff3ecb7-b024-4752-9dd6-c3623c6e6b8a)]
+interface nsITelephonyService : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
   const unsigned short CALL_STATE_DIALING = 1;

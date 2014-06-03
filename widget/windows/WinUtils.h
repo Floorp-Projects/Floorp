@@ -411,8 +411,10 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
-  AsyncDeleteAllFaviconsFromDisk();
+  AsyncDeleteAllFaviconsFromDisk(bool aIgnoreRecent = false);
   virtual ~AsyncDeleteAllFaviconsFromDisk();
+private:
+  bool mIgnoreRecent;
 };
 
 class FaviconHelper

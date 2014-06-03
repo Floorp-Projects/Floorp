@@ -5250,7 +5250,8 @@ static const JSJitInfo dom_x_getterinfo = {
     JSVAL_TYPE_UNKNOWN, /* returnType */
     true,     /* isInfallible. False in setters. */
     true,     /* isMovable */
-    false,    /* isInSlot */
+    false,    /* isAlwaysInSlot */
+    false,    /* isLazilyCachedInSlot */
     false,    /* isTypedMethod */
     0         /* slotIndex */
 };
@@ -5264,7 +5265,8 @@ static const JSJitInfo dom_x_setterinfo = {
     JSVAL_TYPE_UNKNOWN, /* returnType */
     false,    /* isInfallible. False in setters. */
     false,    /* isMovable. */
-    false,    /* isInSlot */
+    false,    /* isAlwaysInSlot */
+    false,    /* isLazilyCachedInSlot */
     false,    /* isTypedMethod */
     0         /* slotIndex */
 };
@@ -5278,7 +5280,8 @@ static const JSJitInfo doFoo_methodinfo = {
     JSVAL_TYPE_UNKNOWN, /* returnType */
     false,    /* isInfallible. False in setters. */
     false,    /* isMovable */
-    false,    /* isInSlot */
+    false,    /* isAlwaysInSlot */
+    false,    /* isLazilyCachedInSlot */
     false,    /* isTypedMethod */
     0         /* slotIndex */
 };
