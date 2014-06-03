@@ -4,6 +4,19 @@
 <body>
 <div id="message"></div>
 <script>
+// Specifies whether we are using fake streams to run this automation
+var useFakeStreams = true;
+try {
+  var audioDevice = SpecialPowers.getCharPref("media.audio_loopback_dev");
+  var videoDevice = SpecialPowers.getCharPref("media.video_loopback_dev");
+  dump("TEST DEVICES: Using media devices:\n");
+  dump("audio: " + audioDevice + "\nvideo: " + videoDevice + "\n");
+  useFakeStreams = false;
+} catch (e) {
+  dump("TEST DEVICES: No test devices found (in media.{audio,video}_loopback_dev, using fake streams.\n");
+  useFakeStreams = true;
+}
+
 function message(m) {
   document.getElementById("message").innerHTML = m;
   window.parent.postMessage(m, "*");
@@ -12,8 +25,11 @@ function message(m) {
 var gStream;
 
 function requestDevice(aAudio, aVideo) {
-  window.navigator.mozGetUserMedia({video: aVideo, audio: aAudio, fake: true},
-                                   function(stream) {
+  var opts = {video: aVideo, audio: aAudio};
+  if (useFakeStreams) {
+    opts.fake = true;
+  }
+  window.navigator.mozGetUserMedia(opts, function(stream) {
     gStream = stream;
     message("ok");
   }, function(err) { message("error: " + err); });
