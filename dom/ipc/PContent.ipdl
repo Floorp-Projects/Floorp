@@ -262,6 +262,14 @@ struct PrefSetting {
   MaybePrefValue userValue;
 };
 
+struct DataStoreSetting {
+  nsString name;
+  nsString originURL;
+  nsString manifestURL;
+  bool readOnly;
+  bool enabled;
+};
+
 intr protocol PContent
 {
     parent opens PCompositor;
@@ -337,6 +345,9 @@ child:
     async AudioChannelNotify();
 
     async SpeakerManagerNotify();
+
+    async DataStoreNotify(uint32_t aAppId, nsString aName,
+                          nsString aManifestURL);
 
     /**
      * Dump this process's GC and CC logs to the provided files.
@@ -549,6 +560,9 @@ parent:
 
     async AudioChannelChangedNotification();
     async AudioChannelChangeDefVolChannel(int32_t aChannel, bool aHidden);
+
+    sync DataStoreGetStores(nsString aName, Principal aPrincipal)
+        returns (DataStoreSetting[] dataStores);
 
     async FilePathUpdateNotify(nsString aType,
                                nsString aStorageName,

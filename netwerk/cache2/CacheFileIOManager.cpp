@@ -1342,10 +1342,33 @@ CacheFileIOManager::OnProfile()
   CacheObserver::ParentDirOverride(getter_AddRefs(directory));
 
 #if defined(MOZ_WIDGET_ANDROID)
+  nsCOMPtr<nsIFile> profilelessDirectory;
   char* cachePath = getenv("CACHE_DIRECTORY");
   if (!directory && cachePath && *cachePath) {
     rv = NS_NewNativeLocalFile(nsDependentCString(cachePath),
                                true, getter_AddRefs(directory));
+    if (NS_SUCCEEDED(rv)) {
+      // Save this directory as the profileless path.
+      rv = directory->Clone(getter_AddRefs(profilelessDirectory));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Add profile leaf name to the directory name to distinguish
+      // multiple profiles Fennec supports.
+      nsCOMPtr<nsIFile> profD;
+      rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                  getter_AddRefs(profD));
+
+      nsAutoCString leafName;
+      if (NS_SUCCEEDED(rv)) {
+        rv = profD->GetNativeLeafName(leafName);
+      }
+      if (NS_SUCCEEDED(rv)) {
+        rv = directory->AppendNative(leafName);
+      }
+      if (NS_FAILED(rv)) {
+        directory = nullptr;
+      }
+    }
   }
 #endif
 
@@ -1366,6 +1389,15 @@ CacheFileIOManager::OnProfile()
 
   // All functions return a clone.
   ioMan->mCacheDirectory.swap(directory);
+
+#if defined(MOZ_WIDGET_ANDROID)
+  if (profilelessDirectory) {
+    rv = profilelessDirectory->Append(NS_LITERAL_STRING("cache2"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  ioMan->mCacheProfilelessDirectory.swap(profilelessDirectory);
+#endif
 
   if (ioMan->mCacheDirectory) {
     CacheIndex::Init(ioMan->mCacheDirectory);
@@ -2221,9 +2253,25 @@ void CacheFileIOManager::GetCacheDirectory(nsIFile** result)
     return;
   }
 
-  nsCOMPtr<nsIFile> file = ioMan->mCacheDirectory;
-  file.forget(result);
+  ioMan->mCacheDirectory->Clone(result);
 }
+
+#if defined(MOZ_WIDGET_ANDROID)
+
+// static
+void CacheFileIOManager::GetProfilelessCacheDirectory(nsIFile** result)
+{
+  *result = nullptr;
+
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
+  if (!ioMan) {
+    return;
+  }
+
+  ioMan->mCacheProfilelessDirectory->Clone(result);
+}
+
+#endif
 
 // static
 nsresult

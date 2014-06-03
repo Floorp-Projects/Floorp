@@ -453,9 +453,9 @@ private:
 
 class MacroAssemblerARMCompat : public MacroAssemblerARM
 {
+    bool inCall_;
     // Number of bytes the stack is adjusted inside a call to C. Calls to C may
     // not be nested.
-    bool inCall_;
     uint32_t args_;
     // The actual number of arguments that were passed, used to assert that
     // the initial number of arguments declared was correct.
@@ -576,7 +576,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
 
     void appendCallSite(const CallSiteDesc &desc) {
-        enoughMemory_ &= append(CallSite(desc, currentOffset(), framePushed_));
+        // Add an extra sizeof(void*) to include the return address that was
+        // pushed by the call instruction (see CallSite::stackDepth).
+        enoughMemory_ &= append(CallSite(desc, currentOffset(), framePushed_ + sizeof(void*)));
     }
 
     void call(const CallSiteDesc &desc, const Register reg) {
@@ -1530,7 +1532,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     bool buildOOLFakeExitFrame(void *fakeReturnAddr);
 
   private:
-    void callWithABIPre(uint32_t *stackAdjust);
+    void callWithABIPre(uint32_t *stackAdjust, bool callFromAsmJS = false);
     void callWithABIPost(uint32_t stackAdjust, MoveOp::Type result);
 
   public:
