@@ -548,11 +548,17 @@ private:
   {
     nsCacheService::GetDiskCacheDirectory(getter_AddRefs(mCache1Dir));
     CacheFileIOManager::GetCacheDirectory(getter_AddRefs(mCache2Dir));
+#if defined(MOZ_WIDGET_ANDROID)
+    CacheFileIOManager::GetProfilelessCacheDirectory(getter_AddRefs(mCache2Profileless));
+#endif
   }
 
   virtual ~CleaupCacheDirectoriesRunnable() {}
   uint32_t mVersion, mActive;
   nsCOMPtr<nsIFile> mCache1Dir, mCache2Dir;
+#if defined(MOZ_WIDGET_ANDROID)
+  nsCOMPtr<nsIFile> mCache2Profileless;
+#endif
 };
 
 // static
@@ -586,6 +592,12 @@ NS_IMETHODIMP CleaupCacheDirectoriesRunnable::Run()
   if (mCache2Dir) {
     nsDeleteDir::RemoveOldTrashes(mCache2Dir);
   }
+#if defined(MOZ_WIDGET_ANDROID)
+  if (mCache2Profileless) {
+    // Always delete the profileless cache on Android
+    nsDeleteDir::DeleteDir(mCache2Profileless, true, 30000);
+  }
+#endif
 
   // Delete the non-active version cache data right now
   if (mVersion == mActive) {
