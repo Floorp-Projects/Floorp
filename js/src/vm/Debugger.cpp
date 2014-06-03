@@ -5371,19 +5371,16 @@ DebuggerObject_defineProperties(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     AutoIdVector ids(cx);
-    AutoPropDescArrayRooter descs(cx);
+    AutoPropDescVector descs(cx);
     if (!ReadPropertyDescriptors(cx, props, false, &ids, &descs))
         return false;
     size_t n = ids.length();
 
-    AutoPropDescArrayRooter unwrappedDescs(cx);
+    AutoPropDescVector unwrappedDescs(cx);
     for (size_t i = 0; i < n; i++) {
-        if (!unwrappedDescs.append())
+        if (!unwrappedDescs.append(PropDesc()))
             return false;
-        Handle<PropDesc> wrapped = Handle<PropDesc>::fromMarkedLocation(&descs[i]);
-        MutableHandle<PropDesc> unwrapped =
-            MutableHandle<PropDesc>::fromMarkedLocation(&unwrappedDescs[i]);
-        if (!dbg->unwrapPropDescInto(cx, obj, wrapped, unwrapped))
+        if (!dbg->unwrapPropDescInto(cx, obj, descs[i], unwrappedDescs[i]))
             return false;
         if (!unwrappedDescs[i].checkGetter(cx) || !unwrappedDescs[i].checkSetter(cx))
             return false;
@@ -5391,17 +5388,18 @@ DebuggerObject_defineProperties(JSContext *cx, unsigned argc, Value *vp)
 
     {
         AutoIdVector rewrappedIds(cx);
-        AutoPropDescArrayRooter rewrappedDescs(cx);
+        AutoPropDescVector rewrappedDescs(cx);
 
         Maybe<AutoCompartment> ac;
         ac.construct(cx, obj);
-        RootedId id(cx);
         for (size_t i = 0; i < n; i++) {
-            if (!rewrappedIds.append(JSID_VOID) || !rewrappedDescs.append())
+            if (!rewrappedIds.append(JSID_VOID) || !rewrappedDescs.append(PropDesc()))
                 return false;
-            id = ids[i];
-            if (!unwrappedDescs[i].wrapInto(cx, obj, id, rewrappedIds[i].address(), &rewrappedDescs[i]))
+            if (!unwrappedDescs[i].get().wrapInto(cx, obj, ids[i], rewrappedIds[i].address(),
+                                                  rewrappedDescs[i].address()))
+            {
                 return false;
+            }
         }
 
         ErrorCopier ec(ac, dbg->toJSObject());
