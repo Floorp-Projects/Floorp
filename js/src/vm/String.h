@@ -659,7 +659,7 @@ class JSDependentString : public JSLinearString
     friend class JSString;
     JSFlatString *undepend(js::ExclusiveContext *cx);
 
-    void init(js::ThreadSafeContext *cx, JSLinearString *base, const jschar *chars,
+    void init(js::ThreadSafeContext *cx, JSLinearString *base, size_t start,
               size_t length);
 
     /* Vacuous and therefore unimplemented. */
@@ -669,9 +669,18 @@ class JSDependentString : public JSLinearString
     /* Hide chars(), nonInlineChars() is more efficient. */
     const jschar *chars() const MOZ_DELETE;
 
+    /* The offset of this string's chars in base->chars(). */
+    size_t baseOffset() const {
+        MOZ_ASSERT(JSString::isDependent());
+        JS::AutoCheckCannotGC nogc;
+        size_t offset = twoByteChars(nogc) - base()->twoByteChars(nogc);
+        MOZ_ASSERT(offset < base()->length());
+        return offset;
+    }
+
   public:
     static inline JSLinearString *new_(js::ExclusiveContext *cx, JSLinearString *base,
-                                       const jschar *chars, size_t length);
+                                       size_t start, size_t length);
 };
 
 JS_STATIC_ASSERT(sizeof(JSDependentString) == sizeof(JSString));
