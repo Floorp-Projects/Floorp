@@ -50,12 +50,12 @@ USING_BLUETOOTH_NAMESPACE
 static nsString sAdapterBdAddress;
 static nsString sAdapterBdName;
 static InfallibleTArray<nsString> sAdapterBondedAddressArray;
-static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sChangeDiscoveryRunnableArray;
 
 // Static variables below should only be used on *main thread*
 static const bt_interface_t* sBtInterface;
 static nsTArray<nsRefPtr<BluetoothProfileController> > sControllerArray;
 static nsTArray<int> sRequestedDeviceCountArray;
+static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sChangeDiscoveryRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sSetPropertyRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sGetDeviceRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sBondingRunnableArray;
@@ -549,18 +549,33 @@ DeviceFoundCallback(int aNumProperties, bt_property_t *aProperties)
   }
 }
 
+class DiscoveryStateChangedCallbackTask MOZ_FINAL : public nsRunnable
+{
+public:
+  NS_IMETHOD
+  Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!sChangeDiscoveryRunnableArray.IsEmpty()) {
+      BluetoothValue values(true);
+      DispatchBluetoothReply(sChangeDiscoveryRunnableArray[0],
+                             values, EmptyString());
+
+      sChangeDiscoveryRunnableArray.RemoveElementAt(0);
+    }
+
+    return NS_OK;
+  }
+};
+
 static void
 DiscoveryStateChangedCallback(bt_discovery_state_t aState)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  if (!sChangeDiscoveryRunnableArray.IsEmpty()) {
-    BluetoothValue values(true);
-    DispatchBluetoothReply(sChangeDiscoveryRunnableArray[0],
-                           values, EmptyString());
-
-    sChangeDiscoveryRunnableArray.RemoveElementAt(0);
-  }
+  // Redirect to main thread to avoid racing problem
+  NS_DispatchToMainThread(new DiscoveryStateChangedCallbackTask());
 }
 
 static void
