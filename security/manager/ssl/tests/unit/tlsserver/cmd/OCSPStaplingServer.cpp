@@ -49,6 +49,7 @@ const OCSPHost sOCSPHosts[] =
   { "ocsp-stapling-delegated-from-intermediate.example.com", ORTDelegatedIncluded, "invalidDelegatedSignerFromIntermediate" },
   { "ocsp-stapling-delegated-keyUsage-crlSigning.example.com", ORTDelegatedIncluded, "invalidDelegatedSignerKeyUsageCrlSigning" },
   { "ocsp-stapling-delegated-wrong-extKeyUsage.example.com", ORTDelegatedIncluded, "invalidDelegatedSignerWrongExtKeyUsage" },
+  { "ocsp-stapling-ancient-valid.example.com", ORTAncientAlmostExpired, nullptr},
   { nullptr, ORTNull, nullptr }
 };
 
