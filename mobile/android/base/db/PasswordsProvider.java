@@ -29,6 +29,8 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
     static final String TABLE_PASSWORDS = "moz_logins";
     static final String TABLE_DELETED_PASSWORDS = "moz_deleted_logins";
 
+    private static final String TELEMETRY_TAG = "SQLITEBRIDGE_PROVIDER_PASSWORDS";
+
     private static final int PASSWORDS = 100;
     private static final int DELETED_PASSWORDS = 101;
 
@@ -89,6 +91,11 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
     @Override
     protected String getDBName(){
         return DB_FILENAME;
+    }
+
+    @Override
+    protected String getTelemetryPrefix() {
+        return TELEMETRY_TAG;
     }
 
     @Override
