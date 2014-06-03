@@ -1115,7 +1115,9 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     mallocBytes(0),
     mallocGCTriggered(false),
     scriptAndCountsVector(nullptr),
+#ifdef DEBUG
     inUnsafeRegion(0),
+#endif
     alwaysPreserveCode(false),
 #ifdef DEBUG
     noGCOrAllocationCheck(0),
@@ -5614,6 +5616,7 @@ JS::GetGCNumber()
 }
 #endif
 
+#ifdef DEBUG
 JS::AutoAssertOnGC::AutoAssertOnGC()
   : runtime(nullptr), gcNumber(0)
 {
@@ -5659,3 +5662,4 @@ JS::AutoAssertOnGC::VerifyIsSafeToGC(JSRuntime *rt)
     if (rt->gc.inUnsafeRegion > 0)
         MOZ_CRASH("[AutoAssertOnGC] possible GC in GC-unsafe region");
 }
+#endif
