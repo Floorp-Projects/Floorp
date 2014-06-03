@@ -229,7 +229,7 @@ TelephonyListener::NotifyError(uint32_t aServiceId,
     // instead of CallStateChanged(). We need to reset the call array state
     // via setting CALL_STATE_DISCONNECTED
     hfp->HandleCallStateChanged(aCallIndex,
-                                nsITelephonyProvider::CALL_STATE_DISCONNECTED,
+                                nsITelephonyService::CALL_STATE_DISCONNECTED,
                                 aError, EmptyString(), false, false, true);
     BT_WARNING("Reset the call state due to call transition ends abnormally");
   }
@@ -283,8 +283,8 @@ TelephonyListener::NotifyCdmaCallWaiting(uint32_t aServiceId,
 bool
 TelephonyListener::Listen(bool aStart)
 {
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  nsCOMPtr<nsITelephonyService> provider =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(provider, false);
 
   nsresult rv;
@@ -394,8 +394,8 @@ BluetoothRilListener::ServiceChanged(uint32_t aClientId, bool aRegistered)
 void
 BluetoothRilListener::EnumerateCalls()
 {
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  nsCOMPtr<nsITelephonyService> provider =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE_VOID(provider);
 
   nsCOMPtr<nsITelephonyListener> listener(

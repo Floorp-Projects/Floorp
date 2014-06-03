@@ -80,8 +80,8 @@ TelephonyParent::RecvRegisterListener()
 {
   NS_ENSURE_TRUE(!mRegistered, true);
 
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  nsCOMPtr<nsITelephonyService> provider =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
   mRegistered = NS_SUCCEEDED(provider->RegisterListener(this));
@@ -93,8 +93,8 @@ TelephonyParent::RecvUnregisterListener()
 {
   NS_ENSURE_TRUE(mRegistered, true);
 
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  nsCOMPtr<nsITelephonyService> provider =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
   mRegistered = !NS_SUCCEEDED(provider->UnregisterListener(this));
@@ -105,8 +105,8 @@ bool
 TelephonyParent::RecvHangUpCall(const uint32_t& aClientId,
                                 const uint32_t& aCallIndex)
 {
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  nsCOMPtr<nsITelephonyService> provider =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
   provider->HangUp(aClientId, aCallIndex);
@@ -117,8 +117,8 @@ bool
 TelephonyParent::RecvAnswerCall(const uint32_t& aClientId,
                                 const uint32_t& aCallIndex)
 {
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  nsCOMPtr<nsITelephonyService> provider =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
   provider->AnswerCall(aClientId, aCallIndex);
@@ -129,8 +129,8 @@ bool
 TelephonyParent::RecvRejectCall(const uint32_t& aClientId,
                                 const uint32_t& aCallIndex)
 {
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  nsCOMPtr<nsITelephonyService> provider =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
   provider->RejectCall(aClientId, aCallIndex);
@@ -141,8 +141,8 @@ bool
 TelephonyParent::RecvHoldCall(const uint32_t& aClientId,
                               const uint32_t& aCallIndex)
 {
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  nsCOMPtr<nsITelephonyService> provider =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
   provider->HoldCall(aClientId, aCallIndex);
@@ -153,8 +153,8 @@ bool
 TelephonyParent::RecvResumeCall(const uint32_t& aClientId,
                                 const uint32_t& aCallIndex)
 {
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  nsCOMPtr<nsITelephonyService> provider =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
   provider->ResumeCall(aClientId, aCallIndex);
@@ -164,8 +164,8 @@ TelephonyParent::RecvResumeCall(const uint32_t& aClientId,
 bool
 TelephonyParent::RecvConferenceCall(const uint32_t& aClientId)
 {
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  nsCOMPtr<nsITelephonyService> provider =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
   provider->ConferenceCall(aClientId);
@@ -176,8 +176,8 @@ bool
 TelephonyParent::RecvSeparateCall(const uint32_t& aClientId,
                                   const uint32_t& aCallIndex)
 {
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  nsCOMPtr<nsITelephonyService> provider =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
   provider->SeparateCall(aClientId, aCallIndex);
@@ -187,8 +187,8 @@ TelephonyParent::RecvSeparateCall(const uint32_t& aClientId,
 bool
 TelephonyParent::RecvHoldConference(const uint32_t& aClientId)
 {
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  nsCOMPtr<nsITelephonyService> provider =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
   provider->HoldConference(aClientId);
@@ -198,8 +198,8 @@ TelephonyParent::RecvHoldConference(const uint32_t& aClientId)
 bool
 TelephonyParent::RecvResumeConference(const uint32_t& aClientId)
 {
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  nsCOMPtr<nsITelephonyService> provider =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
   provider->ResumeConference(aClientId);
@@ -209,8 +209,8 @@ TelephonyParent::RecvResumeConference(const uint32_t& aClientId)
 bool
 TelephonyParent::RecvStartTone(const uint32_t& aClientId, const nsString& aTone)
 {
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  nsCOMPtr<nsITelephonyService> provider =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
   provider->StartTone(aClientId, aTone);
@@ -220,8 +220,8 @@ TelephonyParent::RecvStartTone(const uint32_t& aClientId, const nsString& aTone)
 bool
 TelephonyParent::RecvStopTone(const uint32_t& aClientId)
 {
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  nsCOMPtr<nsITelephonyService> provider =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
   provider->StopTone(aClientId);
@@ -233,8 +233,8 @@ TelephonyParent::RecvGetMicrophoneMuted(bool* aMuted)
 {
   *aMuted = false;
 
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  nsCOMPtr<nsITelephonyService> provider =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
   provider->GetMicrophoneMuted(aMuted);
@@ -244,8 +244,8 @@ TelephonyParent::RecvGetMicrophoneMuted(bool* aMuted)
 bool
 TelephonyParent::RecvSetMicrophoneMuted(const bool& aMuted)
 {
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  nsCOMPtr<nsITelephonyService> provider =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
   provider->SetMicrophoneMuted(aMuted);
@@ -257,8 +257,8 @@ TelephonyParent::RecvGetSpeakerEnabled(bool* aEnabled)
 {
   *aEnabled = false;
 
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  nsCOMPtr<nsITelephonyService> provider =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
   provider->GetSpeakerEnabled(aEnabled);
@@ -268,8 +268,8 @@ TelephonyParent::RecvGetSpeakerEnabled(bool* aEnabled)
 bool
 TelephonyParent::RecvSetSpeakerEnabled(const bool& aEnabled)
 {
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  nsCOMPtr<nsITelephonyService> provider =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
   provider->SetSpeakerEnabled(aEnabled);
@@ -395,8 +395,8 @@ TelephonyRequestParent::DoRequest(const EnumerateCallsRequest& aRequest)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  nsCOMPtr<nsITelephonyService> provider =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   if (provider) {
     rv = provider->EnumerateCalls(this);
   }
@@ -411,8 +411,8 @@ TelephonyRequestParent::DoRequest(const EnumerateCallsRequest& aRequest)
 bool
 TelephonyRequestParent::DoRequest(const DialRequest& aRequest)
 {
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  nsCOMPtr<nsITelephonyService> provider =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   if (provider) {
     provider->Dial(aRequest.clientId(), aRequest.number(),
                    aRequest.isEmergency(), this);
