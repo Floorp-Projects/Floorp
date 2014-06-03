@@ -248,8 +248,8 @@ this.WebappManager = {
     message.app.manifest = aData.manifest;
     message.app.apkPackageName = aData.apkPackageName;
     message.profilePath = aData.profilePath;
-    message.autoInstall = true;
     message.mm = mm;
+    message.apkInstall = true;
 
     DOMApplicationRegistry.registryReady.then(() => {
       switch (aData.type) { // can be hosted or packaged.
