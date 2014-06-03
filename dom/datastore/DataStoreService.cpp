@@ -150,7 +150,7 @@ RejectPromise(nsPIDOMWindow* aWindow, Promise* aPromise, nsresult aRv)
                          NS_LITERAL_STRING("An error occurred"));
   }
 
-  aPromise->MaybeReject(error);
+  aPromise->MaybeRejectBrokenly(error);
 }
 
 void
