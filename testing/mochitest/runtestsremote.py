@@ -247,7 +247,8 @@ class MochiRemote(Mochitest):
             log.warn("Unable to retrieve log file (%s) from remote device",
                 self.remoteLog)
         self._dm.removeDir(self.remoteProfile)
-        Mochitest.cleanup(self, manifest, options)
+        if manifest is not None:
+            Mochitest.cleanup(self, manifest, options)
 
     def findPath(self, paths, filename = None):
         for path in paths:
