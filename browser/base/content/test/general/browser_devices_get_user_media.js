@@ -60,7 +60,7 @@ function expectNoObserverCalled() {
     if (gObservedTopics[topic])
       is(gObservedTopics[topic], 0, topic + " notification unexpected");
   }
-  gObservedTopics = {}
+  gObservedTopics = {};
 }
 
 function promiseMessage(aMessage, aAction) {
@@ -816,7 +816,7 @@ function test() {
      finish();
     });
   }, true);
-  let rootDir = getRootDirectory(gTestPath)
+  let rootDir = getRootDirectory(gTestPath);
   rootDir = rootDir.replace("chrome://mochitests/content/",
                             "https://example.com/");
   content.location = rootDir + "get_user_media.html";
