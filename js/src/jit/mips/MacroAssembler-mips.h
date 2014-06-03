@@ -494,7 +494,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     }
 
     CodeOffsetLabel movWithPatch(ImmWord imm, Register dest) {
-        CodeOffsetLabel label = currentOffset();
+        CodeOffsetLabel label = CodeOffsetLabel(currentOffset());
         ma_liPatchable(dest, Imm32(imm.value));
         return label;
     }
@@ -547,6 +547,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void unboxString(const ValueOperand &operand, Register dest);
     void unboxString(const Address &src, Register dest);
     void unboxObject(const ValueOperand &src, Register dest);
+    void unboxObject(const Address &src, Register dest);
     void unboxValue(const ValueOperand &src, AnyRegister dest);
     void unboxPrivate(const ValueOperand &src, Register dest);
 
