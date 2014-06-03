@@ -136,7 +136,7 @@
 .devtools-menulist > .menulist-dropmarker {
   -moz-appearance: none;
   display: -moz-box;
-  list-style-image: url("chrome://browser/skin/devtools/dropmarker.png");
+  list-style-image: url("chrome://browser/skin/devtools/dropmarker.svg");
   -moz-box-align: center;
   min-width: 16px;
 }
@@ -168,7 +168,7 @@
 .devtools-toolbarbutton[type=menu] > .toolbarbutton-menu-dropmarker,
 .devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-dropmarker {
   -moz-appearance: none !important;
-  list-style-image: url("chrome://browser/skin/devtools/dropmarker.png");
+  list-style-image: url("chrome://browser/skin/devtools/dropmarker.svg");
   -moz-box-align: center;
   padding: 0 3px;
 }
