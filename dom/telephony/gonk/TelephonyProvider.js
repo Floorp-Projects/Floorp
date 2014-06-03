@@ -11,8 +11,11 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
-var RIL = {};
-Cu.import("resource://gre/modules/ril_consts.js", RIL);
+XPCOMUtils.defineLazyGetter(this, "RIL", function () {
+  let obj = {};
+  Cu.import("resource://gre/modules/ril_consts.js", obj);
+  return obj;
+});
 
 const GONK_TELEPHONYPROVIDER_CONTRACTID =
   "@mozilla.org/telephony/gonktelephonyprovider;1";
