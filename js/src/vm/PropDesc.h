@@ -12,8 +12,6 @@
 
 namespace js {
 
-class Debugger;
-
 static inline JSPropertyOp
 CastAsPropertyOp(JSObject *object)
 {
@@ -183,6 +181,11 @@ struct PropDesc {
         MOZ_ASSERT(hasValue());
         return HandleValue::fromMarkedLocation(&value_);
     }
+    void setValue(const Value &value) {
+        MOZ_ASSERT(!isUndefined());
+        value_ = value;
+        hasValue_ = true;
+    }
 
     JSObject * getterObject() const {
         MOZ_ASSERT(!isUndefined());
@@ -206,6 +209,17 @@ struct PropDesc {
         return HandleValue::fromMarkedLocation(&set_);
     }
 
+    void setGetter(const Value &getter) {
+        MOZ_ASSERT(!isUndefined());
+        get_ = getter;
+        hasGet_ = true;
+    }
+    void setSetter(const Value &setter) {
+        MOZ_ASSERT(!isUndefined());
+        set_ = setter;
+        hasSet_ = true;
+    }
+
     /*
      * Unfortunately the values produced by these methods are used such that
      * we can't assert anything here.  :-(
@@ -224,9 +238,6 @@ struct PropDesc {
      */
     bool checkGetter(JSContext *cx);
     bool checkSetter(JSContext *cx);
-
-    bool unwrapDebuggerObjectsInto(JSContext *cx, Debugger *dbg, HandleObject obj,
-                                   PropDesc *unwrapped) const;
 
     bool wrapInto(JSContext *cx, HandleObject obj, const jsid &id, jsid *wrappedId,
                   PropDesc *wrappedDesc) const;
@@ -298,6 +309,16 @@ class MutablePropDescOperations : public PropDescOperations<Outer>
     }
     bool makeObject(JSContext *cx) {
         return desc()->makeObject(cx);
+    }
+
+    void setValue(const Value &value) {
+        desc()->setValue(value);
+    }
+    void setGetter(const Value &getter) {
+        desc()->setGetter(getter);
+    }
+    void setSetter(const Value &setter) {
+        desc()->setSetter(setter);
     }
 
     void setUndefined() { desc()->setUndefined(); }
