@@ -235,13 +235,17 @@ typedef GeckoContentController::APZStateChange APZStateChange;
  * opposite axis creates the effect of the page moving away from you along a
  * "z" axis.
  *
- * "apz.overscroll.snap_back_accel"
- * Amount of acceleration applied during the snap-back animation.
+ * "apz.overscroll.snap_back.spring_stiffness"
+ * The stiffness of the spring used in the physics model for the overscroll
+ * snap-back animation.
  *
- * "apz.overscroll.snap_back_init_vel"
- * Initial velocity of a snap-back animation along one axis.
- * Units: screen pixels per millisecond
- * requests.
+ * "apz.overscroll.snap_back.spring_damping"
+ * The friction of the spring used in the physics model for the overscroll
+ * snap-back animation.
+ *
+ * "apz.overscroll.snap_back.mass"
+ * The mass of the page in the physics model for the overscroll snap-back
+ * animation.
  *
  * "apz.pan_repaint_interval"
  * Maximum amount of time while panning before sending a viewport change. This
@@ -490,11 +494,7 @@ private:
 class OverscrollSnapBackAnimation: public AsyncPanZoomAnimation {
 public:
   OverscrollSnapBackAnimation(AsyncPanZoomController& aApzc)
-    : mApzc(aApzc)
-  {
-    mApzc.mX.StartSnapBack();
-    mApzc.mY.StartSnapBack();
-  }
+    : mApzc(aApzc) {}
 
   virtual bool Sample(FrameMetrics& aFrameMetrics,
                       const TimeDuration& aDelta) MOZ_OVERRIDE
