@@ -21,25 +21,35 @@ namespace js {
 
 template <AllowGC allowGC>
 static MOZ_ALWAYS_INLINE JSInlineString *
+AllocateFatInlineString(ThreadSafeContext *cx, size_t len, jschar **chars)
+{
+    MOZ_ASSERT(JSFatInlineString::twoByteLengthFits(len));
+
+    if (JSInlineString::twoByteLengthFits(len)) {
+        JSInlineString *str = JSInlineString::new_<allowGC>(cx);
+        if (!str)
+            return nullptr;
+        *chars = str->initTwoByte(len);
+        return str;
+    }
+
+    JSFatInlineString *str = JSFatInlineString::new_<allowGC>(cx);
+    if (!str)
+        return nullptr;
+    *chars = str->initTwoByte(len);
+    return str;
+}
+
+template <AllowGC allowGC>
+static MOZ_ALWAYS_INLINE JSInlineString *
 NewFatInlineString(ThreadSafeContext *cx, JS::Latin1Chars chars)
 {
     size_t len = chars.length();
-    JS_ASSERT(JSFatInlineString::twoByteLengthFits(len));
 
-    JSInlineString *str;
     jschar *p;
-    if (JSInlineString::twoByteLengthFits(len)) {
-        str = JSInlineString::new_<allowGC>(cx);
-        if (!str)
-            return nullptr;
-        p = str->initTwoByte(len);
-    } else {
-        JSFatInlineString *fatstr = JSFatInlineString::new_<allowGC>(cx);
-        if (!fatstr)
-            return nullptr;
-        p = fatstr->initTwoByte(len);
-        str = fatstr;
-    }
+    JSInlineString *str = AllocateFatInlineString<allowGC>(cx, len, &p);
+    if (!str)
+        return nullptr;
 
     for (size_t i = 0; i < len; ++i)
         p[i] = static_cast<jschar>(chars[i]);
@@ -51,28 +61,16 @@ template <AllowGC allowGC>
 static MOZ_ALWAYS_INLINE JSInlineString *
 NewFatInlineString(ExclusiveContext *cx, JS::TwoByteChars chars)
 {
-    size_t len = chars.length();
-
     /*
      * Don't bother trying to find a static atom; measurement shows that not
      * many get here (for one, Atomize is catching them).
      */
-    JS_ASSERT(JSFatInlineString::twoByteLengthFits(len));
 
-    JSInlineString *str;
+    size_t len = chars.length();
     jschar *storage;
-    if (JSInlineString::twoByteLengthFits(len)) {
-        str = JSInlineString::new_<allowGC>(cx);
-        if (!str)
-            return nullptr;
-        storage = str->initTwoByte(len);
-    } else {
-        JSFatInlineString *fatstr = JSFatInlineString::new_<allowGC>(cx);
-        if (!fatstr)
-            return nullptr;
-        storage = fatstr->initTwoByte(len);
-        str = fatstr;
-    }
+    JSInlineString *str = AllocateFatInlineString<allowGC>(cx, len, &storage);
+    if (!str)
+        return nullptr;
 
     mozilla::PodCopy(storage, chars.start().get(), len);
     storage[len] = 0;
@@ -139,52 +137,53 @@ JSRope::markChildren(JSTracer *trc)
 }
 
 MOZ_ALWAYS_INLINE void
-JSDependentString::init(js::ThreadSafeContext *cx, JSLinearString *base, const jschar *chars,
+JSDependentString::init(js::ThreadSafeContext *cx, JSLinearString *base, size_t start,
                         size_t length)
 {
-    JS_ASSERT(!js::IsPoisonedPtr(base));
+    MOZ_ASSERT(!js::IsPoisonedPtr(base));
+    MOZ_ASSERT(start + length <= base->length());
     d.u1.length = length;
     d.u1.flags = DEPENDENT_FLAGS;
-    d.s.u2.nonInlineCharsTwoByte = chars;
+    JS::AutoCheckCannotGC nogc;
+    d.s.u2.nonInlineCharsTwoByte = base->twoByteChars(nogc) + start;
     d.s.u3.base = base;
     js::StringWriteBarrierPost(cx, reinterpret_cast<JSString **>(&d.s.u3.base));
 }
 
 MOZ_ALWAYS_INLINE JSLinearString *
-JSDependentString::new_(js::ExclusiveContext *cx,
-                        JSLinearString *baseArg, const jschar *chars, size_t length)
+JSDependentString::new_(js::ExclusiveContext *cx, JSLinearString *baseArg, size_t start,
+                        size_t length)
 {
     /* Try to avoid long chains of dependent strings. */
-    while (baseArg->isDependent())
+    while (baseArg->isDependent()) {
+        start += baseArg->asDependent().baseOffset();
         baseArg = baseArg->asDependent().base();
-
-    JS_ASSERT(baseArg->isFlat());
-
-    /*
-     * The chars we are pointing into must be owned by something in the chain
-     * of dependent or undepended strings kept alive by our base pointer.
-     */
-#ifdef DEBUG
-    for (JSLinearString *b = baseArg; ; b = b->base()) {
-        if (chars >= b->chars() && chars < b->chars() + b->length() &&
-            length <= b->length() - (chars - b->chars()))
-        {
-            break;
-        }
     }
-#endif
+
+    MOZ_ASSERT(start + length <= baseArg->length());
+    MOZ_ASSERT(baseArg->isFlat());
 
     /*
      * Do not create a string dependent on inline chars from another string,
      * both to avoid the awkward moving-GC hazard this introduces and because it
      * is more efficient to immediately undepend here.
      */
-    if (JSFatInlineString::twoByteLengthFits(length))
-        return js::NewFatInlineString<js::CanGC>(cx, JS::TwoByteChars(chars, length));
+    if (JSFatInlineString::twoByteLengthFits(length)) {
+        JS::Rooted<JSLinearString*> base(cx, baseArg);
+        jschar *chars;
+        JSInlineString *s = js::AllocateFatInlineString<js::CanGC>(cx, length, &chars);
+        if (!s)
+            return nullptr;
+
+        JS::AutoCheckCannotGC nogc;
+        mozilla::PodCopy(chars, base->twoByteChars(nogc) + start, length);
+        chars[length] = 0;
+        return s;
+    }
 
     JSDependentString *str = (JSDependentString *)js_NewGCString<js::NoGC>(cx);
     if (str) {
-        str->init(cx, baseArg, chars, length);
+        str->init(cx, baseArg, start, length);
         return str;
     }
 
@@ -193,7 +192,7 @@ JSDependentString::new_(js::ExclusiveContext *cx,
     str = (JSDependentString *)js_NewGCString<js::CanGC>(cx);
     if (!str)
         return nullptr;
-    str->init(cx, base, chars, length);
+    str->init(cx, base, start, length);
     return str;
 }
 
