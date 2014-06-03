@@ -59,63 +59,6 @@ PropDesc::checkSetter(JSContext *cx)
     return true;
 }
 
-static bool
-CheckArgCompartment(JSContext *cx, JSObject *obj, HandleValue v,
-                    const char *methodname, const char *propname)
-{
-    if (v.isObject() && v.toObject().compartment() != obj->compartment()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEBUG_COMPARTMENT_MISMATCH,
-                             methodname, propname);
-        return false;
-    }
-    return true;
-}
-
-/*
- * Convert Debugger.Objects in desc to debuggee values.
- * Reject non-callable getters and setters.
- */
-bool
-PropDesc::unwrapDebuggerObjectsInto(JSContext *cx, Debugger *dbg, HandleObject obj,
-                                    PropDesc *unwrapped) const
-{
-    MOZ_ASSERT(!isUndefined());
-
-    *unwrapped = *this;
-
-    if (unwrapped->hasValue()) {
-        RootedValue value(cx, unwrapped->value_);
-        if (!dbg->unwrapDebuggeeValue(cx, &value) ||
-            !CheckArgCompartment(cx, obj, value, "defineProperty", "value"))
-        {
-            return false;
-        }
-        unwrapped->value_ = value;
-    }
-
-    if (unwrapped->hasGet()) {
-        RootedValue get(cx, unwrapped->get_);
-        if (!dbg->unwrapDebuggeeValue(cx, &get) ||
-            !CheckArgCompartment(cx, obj, get, "defineProperty", "get"))
-        {
-            return false;
-        }
-        unwrapped->get_ = get;
-    }
-
-    if (unwrapped->hasSet()) {
-        RootedValue set(cx, unwrapped->set_);
-        if (!dbg->unwrapDebuggeeValue(cx, &set) ||
-            !CheckArgCompartment(cx, obj, set, "defineProperty", "set"))
-        {
-            return false;
-        }
-        unwrapped->set_ = set;
-    }
-
-    return true;
-}
-
 /*
  * Rewrap *idp and the fields of *desc for the current compartment.  Also:
  * defining a property on a proxy requires pd_ to contain a descriptor object,
