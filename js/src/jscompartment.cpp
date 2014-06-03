@@ -495,6 +495,41 @@ JSCompartment::wrap(JSContext *cx, AutoIdVector &props)
     return true;
 }
 
+bool
+JSCompartment::wrap(JSContext *cx, MutableHandle<PropDesc> desc)
+{
+    if (desc.isUndefined())
+        return true;
+
+    JSCompartment *comp = cx->compartment();
+
+    if (desc.hasValue()) {
+        RootedValue value(cx, desc.value());
+        if (!comp->wrap(cx, &value))
+            return false;
+        desc.setValue(value);
+    }
+    if (desc.hasGet()) {
+        RootedValue get(cx, desc.getterValue());
+        if (!comp->wrap(cx, &get))
+            return false;
+        desc.setGetter(get);
+    }
+    if (desc.hasSet()) {
+        RootedValue set(cx, desc.setterValue());
+        if (!comp->wrap(cx, &set))
+            return false;
+        desc.setSetter(set);
+    }
+    if (desc.descriptorValue().isObject()) {
+        RootedObject descObj(cx, &desc.descriptorValue().toObject());
+        if (!comp->wrap(cx, &descObj))
+            return false;
+        desc.setDescriptorObject(descObj);
+    }
+    return true;
+}
+
 /*
  * This method marks pointers that cross compartment boundaries. It should be
  * called only for per-compartment GCs, since full GCs naturally follow pointers
