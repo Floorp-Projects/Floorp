@@ -64,7 +64,6 @@ struct PropDesc {
     }
 
   public:
-    friend void JS::AutoGCRooter::trace(JSTracer *trc);
     friend struct GCMethods<PropDesc>;
 
     void trace(JSTracer *trc);
