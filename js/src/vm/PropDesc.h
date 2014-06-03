@@ -34,7 +34,7 @@ struct PropDesc {
      * Original object from which this descriptor derives, passed through for
      * the benefit of proxies.
      */
-    Value pd_;
+    JSObject *descObj_;
 
     Value value_, get_, set_;
 
@@ -53,7 +53,7 @@ struct PropDesc {
     bool isUndefined_ : 1;
 
     explicit PropDesc(const Value &v)
-      : pd_(UndefinedValue()),
+      : descObj_(nullptr),
         value_(v),
         get_(UndefinedValue()), set_(UndefinedValue()),
         attrs(0),
@@ -80,7 +80,7 @@ struct PropDesc {
 
     PropDesc(const Value &v, Writability writable,
              Enumerability enumerable, Configurability configurable)
-      : pd_(UndefinedValue()),
+      : descObj_(nullptr),
         value_(v),
         get_(UndefinedValue()), set_(UndefinedValue()),
         attrs((writable ? 0 : JSPROP_READONLY) |
@@ -138,8 +138,11 @@ struct PropDesc {
     bool hasEnumerable() const { MOZ_ASSERT(!isUndefined()); return hasEnumerable_; }
     bool hasConfigurable() const { MOZ_ASSERT(!isUndefined()); return hasConfigurable_; }
 
-    Value pd() const { MOZ_ASSERT(!isUndefined()); return pd_; }
-    void clearPd() { pd_ = UndefinedValue(); }
+    Value descriptorValue() const {
+        MOZ_ASSERT(!isUndefined());
+        return descObj_ ? ObjectValue(*descObj_) : UndefinedValue();
+    }
+    void clearDescriptorObject() { descObj_ = nullptr; }
 
     uint8_t attributes() const { MOZ_ASSERT(!isUndefined()); return attrs; }
 
@@ -261,7 +264,7 @@ class PropDescOperations
     bool hasEnumerable() const { return desc()->hasEnumerable(); }
     bool hasConfigurable() const { return desc()->hasConfigurable(); }
 
-    Value pd() const { return desc()->pd(); }
+    Value descriptorValue() const { return desc()->descriptorValue(); }
 
     uint8_t attributes() const { return desc()->attributes(); }
 
@@ -321,7 +324,7 @@ class MutablePropDescOperations : public PropDescOperations<Outer>
     }
 
     void setUndefined() { desc()->setUndefined(); }
-    void clearPd() { desc()->clearPd(); }
+    void clearDescriptorObject() { desc()->clearDescriptorObject(); }
 };
 
 } /* namespace JS */
@@ -333,8 +336,7 @@ struct GCMethods<PropDesc> {
     static PropDesc initial() { return PropDesc(); }
     static ThingRootKind kind() { return THING_ROOT_PROP_DESC; }
     static bool poisoned(const PropDesc &desc) {
-        return (desc.pd_.isGCThing() &&
-                JS::IsPoisonedPtr(desc.pd_.toGCThing())) ||
+        return JS::IsPoisonedPtr(desc.descObj_) ||
                (desc.value_.isGCThing() &&
                 JS::IsPoisonedPtr(desc.value_.toGCThing())) ||
                (desc.get_.isGCThing() &&

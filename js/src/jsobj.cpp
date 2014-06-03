@@ -268,7 +268,7 @@ js::NewPropertyDescriptorObject(JSContext *cx, Handle<PropertyDescriptor> desc,
     d.initFromPropertyDescriptor(desc);
     if (!d.makeObject(cx))
         return false;
-    vp.set(d.pd());
+    vp.set(d.descriptorValue());
     return true;
 }
 
@@ -276,7 +276,7 @@ void
 PropDesc::initFromPropertyDescriptor(Handle<PropertyDescriptor> desc)
 {
     isUndefined_ = false;
-    pd_.setUndefined();
+    descObj_ = nullptr;
     attrs = uint8_t(desc.attributes());
     JS_ASSERT_IF(attrs & JSPROP_READONLY, !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
     if (desc.hasGetterOrSetterObject()) {
@@ -333,7 +333,7 @@ PropDesc::makeObject(JSContext *cx)
         return false;
     }
 
-    pd_.setObject(*obj);
+    descObj_ = obj;
     return true;
 }
 
@@ -443,7 +443,7 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
     RootedObject desc(cx, &v.toObject());
 
     /* Make a copy of the descriptor. We might need it later. */
-    pd_ = v;
+    descObj_ = desc;
 
     isUndefined_ = false;
 
@@ -1048,7 +1048,7 @@ js::DefineProperty(JSContext *cx, HandleObject obj, HandleId id, const PropDesc 
          * TrapDefineOwnProperty directly
          */
         if (obj->is<ProxyObject>()) {
-            RootedValue pd(cx, desc.pd());
+            RootedValue pd(cx, desc.descriptorValue());
             return Proxy::defineProperty(cx, obj, id, pd);
         }
         return Reject(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE, throwError, rval);
@@ -1135,7 +1135,7 @@ js::DefineProperties(JSContext *cx, HandleObject obj, HandleObject props)
          */
         if (obj->is<ProxyObject>()) {
             for (size_t i = 0, len = ids.length(); i < len; i++) {
-                RootedValue pd(cx, descs[i].pd());
+                RootedValue pd(cx, descs[i].descriptorValue());
                 if (!Proxy::defineProperty(cx, obj, ids[i], pd))
                     return false;
             }
