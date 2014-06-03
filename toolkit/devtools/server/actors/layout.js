@@ -30,6 +30,7 @@ const protocol = require("devtools/server/protocol");
 const {method, Arg, RetVal, types} = protocol;
 const events = require("sdk/event/core");
 const Heritage = require("sdk/core/heritage");
+const {setTimeout, clearTimeout} = require("sdk/timers");
 const EventEmitter = require("devtools/toolkit/event-emitter");
 
 exports.register = function(handle) {
@@ -148,7 +149,6 @@ exports.ReflowFront = protocol.FrontClass(ReflowActor, {
  */
 function Observable(tabActor, callback) {
   this.tabActor = tabActor;
-  this.win = tabActor.window;
   this.callback = callback;
 }
 
@@ -199,7 +199,6 @@ Observable.prototype = {
   destroy: function() {
     this.stop();
     this.callback = null;
-    this.win = null;
     this.tabActor = null;
   }
 };
@@ -236,6 +235,8 @@ function LayoutChangesObserver(tabActor) {
 
   EventEmitter.decorate(this);
 }
+
+exports.LayoutChangesObserver = LayoutChangesObserver;
 
 LayoutChangesObserver.prototype = Heritage.extend(Observable.prototype, {
   /**
@@ -281,12 +282,20 @@ LayoutChangesObserver.prototype = Heritage.extend(Observable.prototype, {
       this.emit("reflows", this.reflows);
       this.reflows = [];
     }
-    this.eventLoopTimer = this.win.setTimeout(this._startEventLoop,
+    this.eventLoopTimer = this._setTimeout(this._startEventLoop,
       this.EVENT_BATCHING_DELAY);
   },
 
   _stopEventLoop: function() {
-    this.win.clearTimeout(this.eventLoopTimer);
+    this._clearTimeout(this.eventLoopTimer);
+  },
+
+  // Exposing set/clearTimeout here to let tests override them if needed
+  _setTimeout: function(cb, ms) {
+    return setTimeout(cb, ms);
+  },
+  _clearTimeout: function(t) {
+    return clearTimeout(t);
   },
 
   /**
@@ -362,21 +371,60 @@ exports.releaseLayoutChangesObserver = releaseLayoutChangesObserver;
  */
 function ReflowObserver(tabActor, callback) {
   Observable.call(this, tabActor, callback);
-  this.docshell = this.win.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIWebNavigation)
-                     .QueryInterface(Ci.nsIDocShell);
+
+  this._onWindowReady = this._onWindowReady.bind(this);
+  events.on(this.tabActor, "window-ready", this._onWindowReady);
+  this._onWindowDestroyed = this._onWindowDestroyed.bind(this);
+  events.on(this.tabActor, "window-destroyed", this._onWindowDestroyed);
 }
 
 ReflowObserver.prototype = Heritage.extend(Observable.prototype, {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIReflowObserver,
     Ci.nsISupportsWeakReference]),
 
+  _onWindowReady: function({window}) {
+    if (this.observing) {
+      this._startListeners([window]);
+    }
+  },
+
+  _onWindowDestroyed: function({window}) {
+    if (this.observing) {
+      this._stopListeners([window]);
+    }
+  },
+
   _start: function() {
-    this.docshell.addWeakReflowObserver(this);
+    this._startListeners(this.tabActor.windows);
   },
 
   _stop: function() {
-    this.docshell.removeWeakReflowObserver(this);
+    if (this.tabActor.attached && this.tabActor.docShell) {
+      // It's only worth stopping if the tabActor is still attached
+      this._stopListeners(this.tabActor.windows);
+    }
+  },
+
+  _startListeners: function(windows) {
+    for (let window of windows) {
+      let docshell = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIWebNavigation)
+                     .QueryInterface(Ci.nsIDocShell);
+      docshell.addWeakReflowObserver(this);
+    }
+  },
+
+  _stopListeners: function(windows) {
+    for (let window of windows) {
+      // Corner cases where a global has already been freed may happen, in which
+      // case, no need to remove the observer
+      try {
+        let docshell = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIWebNavigation)
+                       .QueryInterface(Ci.nsIDocShell);
+        docshell.removeWeakReflowObserver(this);
+      } catch (e) {}
+    }
   },
 
   reflow: function(start, end) {
@@ -388,7 +436,13 @@ ReflowObserver.prototype = Heritage.extend(Observable.prototype, {
   },
 
   destroy: function() {
+    if (this._isDestroyed) {
+      return;
+    }
+    this._isDestroyed = true;
+
+    events.off(this.tabActor, "window-ready", this._onWindowReady);
+    events.off(this.tabActor, "window-destroyed", this._onWindowDestroyed);
     Observable.prototype.destroy.call(this);
-    this.docshell = null;
   }
 });
