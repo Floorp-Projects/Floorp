@@ -13,8 +13,8 @@ const Ci = Components.interfaces;
 
 this.EXPORTED_SYMBOLS = ["DOMApplicationRegistry"];
 
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AppsUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 function debug(s) {
   //dump("-*- AppsServiceChild.jsm: " + s + "\n");
