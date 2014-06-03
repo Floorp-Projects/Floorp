@@ -27,7 +27,7 @@
 #include "nsContentCID.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "mozilla/dom/ProgressEvent.h"
+#include "nsIDOMProgressEvent.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
@@ -2725,19 +2725,25 @@ HTMLInputElement::DispatchProgressEvent(const nsAString& aType,
 {
   NS_ASSERTION(!aType.IsEmpty(), "missing event type");
 
-  ProgressEventInit init;
-  init.mBubbles = false;
-  init.mCancelable = true; // XXXkhuey why?
-  init.mLengthComputable = aLengthComputable;
-  init.mLoaded = aLoaded;
-  init.mTotal = (aTotal == UINT64_MAX) ? 0 : aTotal;
+  nsCOMPtr<nsIDOMEvent> event;
+  nsresult rv = NS_NewDOMProgressEvent(getter_AddRefs(event), this,
+                                       nullptr, nullptr);
+  if (NS_FAILED(rv)) {
+    return;
+  }
 
-  nsRefPtr<ProgressEvent> event =
-    ProgressEvent::Constructor(this, aType, init);
+  nsCOMPtr<nsIDOMProgressEvent> progress = do_QueryInterface(event);
+  if (!progress) {
+    return;
+  }
+
+  progress->InitProgressEvent(aType, false, true, aLengthComputable,
+                              aLoaded, (aTotal == UINT64_MAX) ? 0 : aTotal);
+
   event->SetTrusted(true);
 
   bool doDefaultAction;
-  nsresult rv = DispatchEvent(event, &doDefaultAction);
+  rv = DispatchEvent(event, &doDefaultAction);
   if (NS_SUCCEEDED(rv) && !doDefaultAction) {
     CancelDirectoryPickerScanIfRunning();
   }
