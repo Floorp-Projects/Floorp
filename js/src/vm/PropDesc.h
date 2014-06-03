@@ -127,8 +127,8 @@ struct PropDesc {
     void initFromPropertyDescriptor(Handle<JSPropertyDescriptor> desc);
     bool makeObject(JSContext *cx);
 
-    void setUndefined() { isUndefined_ = true; }
-
+    /* Reset the descriptor entirely. */
+    void setUndefined();
     bool isUndefined() const { return isUndefined_; }
 
     bool hasGet() const { MOZ_ASSERT(!isUndefined()); return hasGet_; }
