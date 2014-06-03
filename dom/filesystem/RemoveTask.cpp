@@ -185,7 +185,7 @@ RemoveTask::HandlerCallback()
   if (HasError()) {
     nsRefPtr<DOMError> domError = new DOMError(mFileSystem->GetWindow(),
       mErrorValue);
-    mPromise->MaybeRejectBrokenly(domError);
+    mPromise->MaybeReject(domError);
     mPromise = nullptr;
     return;
   }
