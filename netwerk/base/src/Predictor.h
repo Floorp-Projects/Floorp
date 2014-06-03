@@ -3,10 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_net_Seer_h
-#define mozilla_net_Seer_h
+#ifndef mozilla_net_Predictor_h
+#define mozilla_net_Predictor_h
 
-#include "nsINetworkSeer.h"
+#include "nsINetworkPredictor.h"
 
 #include "nsCOMPtr.h"
 #include "nsIDNSListener.h"
@@ -14,13 +14,12 @@
 #include "nsIObserver.h"
 #include "nsISpeculativeConnect.h"
 #include "nsProxyRelease.h"
-
 #include "mozilla/Mutex.h"
 #include "mozilla/storage/StatementCache.h"
 #include "mozilla/TimeStamp.h"
 
 class nsIDNSService;
-class nsINetworkSeerVerifier;
+class nsINetworkPredictorVerifier;
 class nsIThread;
 class nsITimer;
 
@@ -31,40 +30,40 @@ class mozIStorageStatement;
 namespace mozilla {
 namespace net {
 
-typedef nsMainThreadPtrHandle<nsINetworkSeerVerifier> SeerVerifierHandle;
+typedef nsMainThreadPtrHandle<nsINetworkPredictorVerifier> PredictorVerifierHandle;
 
-class SeerPredictionRunner;
-struct SeerTelemetryAccumulators;
-class SeerDNSListener;
+class PredictionRunner;
+struct PredictorTelemetryAccumulators;
+class PredictorDNSListener;
 
-class Seer : public nsINetworkSeer
-           , public nsIObserver
-           , public nsISpeculativeConnectionOverrider
-           , public nsIInterfaceRequestor
+class Predictor : public nsINetworkPredictor
+                , public nsIObserver
+                , public nsISpeculativeConnectionOverrider
+                , public nsIInterfaceRequestor
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSINETWORKSEER
+  NS_DECL_NSINETWORKPREDICTOR
   NS_DECL_NSIOBSERVER
   NS_DECL_NSISPECULATIVECONNECTIONOVERRIDER
   NS_DECL_NSIINTERFACEREQUESTOR
 
-  Seer();
-  virtual ~Seer();
+  Predictor();
+  virtual ~Predictor();
 
   nsresult Init();
   void Shutdown();
   static nsresult Create(nsISupports *outer, const nsIID& iid, void **result);
 
 private:
-  friend class SeerPredictionEvent;
-  friend class SeerLearnEvent;
-  friend class SeerResetEvent;
-  friend class SeerPredictionRunner;
-  friend class SeerDBShutdownRunner;
-  friend class SeerCommitTimerInitEvent;
-  friend class SeerNewTransactionEvent;
-  friend class SeerCleanupEvent;
+  friend class PredictionEvent;
+  friend class LearnEvent;
+  friend class PredictorResetEvent;
+  friend class PredictionRunner;
+  friend class PredictorDBShutdownRunner;
+  friend class PredictorCommitTimerInitEvent;
+  friend class PredictorNewTransactionEvent;
+  friend class PredictorCleanupEvent;
 
   void CheckForAndDeleteOldDBFile();
   nsresult EnsureInitStorage();
@@ -77,12 +76,12 @@ private:
 
   void PredictForLink(nsIURI *targetURI,
                       nsIURI *sourceURI,
-                      nsINetworkSeerVerifier *verifier);
+                      nsINetworkPredictorVerifier *verifier);
   void PredictForPageload(const UriInfo &dest,
-                          SeerVerifierHandle &verifier,
+                          PredictorVerifierHandle &verifier,
                           int stackCount,
                           TimeStamp &predictStartTime);
-  void PredictForStartup(SeerVerifierHandle &verifier,
+  void PredictForStartup(PredictorVerifierHandle &verifier,
                          TimeStamp &predictStartTime);
 
   // Whether we're working on a page or an origin
@@ -116,7 +115,7 @@ private:
                           int globalDegradation);
   void SetupPrediction(int confidence,
                        const nsACString &uri,
-                       SeerPredictionRunner *runner);
+                       PredictionRunner *runner);
 
   bool LookupTopLevel(QueryType queryType,
                       const nsACString &key,
@@ -130,7 +129,7 @@ private:
   bool TryPredict(QueryType queryType,
                   const TopLevelInfo &info,
                   PRTime now,
-                  SeerVerifierHandle &verifier,
+                  PredictorVerifierHandle &verifier,
                   TimeStamp &predictStartTime);
   bool WouldRedirect(const TopLevelInfo &info,
                      PRTime now,
@@ -222,14 +221,14 @@ private:
   int32_t mQueueSize;
   mozilla::Mutex mQueueSizeLock;
 
-  nsAutoPtr<SeerTelemetryAccumulators> mAccumulators;
+  nsAutoPtr<PredictorTelemetryAccumulators> mAccumulators;
 
-  nsRefPtr<SeerDNSListener> mDNSListener;
+  nsRefPtr<PredictorDNSListener> mDNSListener;
 
   nsCOMPtr<nsITimer> mCommitTimer;
 
-#ifdef SEER_TESTS
-  friend class SeerPrepareForDnsTestEvent;
+#ifdef PREDICTOR_TESTS
+  friend class PredictorPrepareForDnsTestEvent;
   void PrepareForDnsTestInternal(int64_t timestamp, const nsACString &uri);
 #endif
 
@@ -242,4 +241,4 @@ private:
 } // ::mozilla::net
 } // ::mozilla
 
-#endif // mozilla_net_Seer_h
+#endif // mozilla_net_Predictor_h
