@@ -8,7 +8,7 @@
 #include "nsDOMFile.h"
 #include "nsError.h"
 #include "nsIDOMEvent.h"
-#include "mozilla/dom/ProgressEvent.h"
+#include "nsIDOMProgressEvent.h"
 #include "nsComponentManagerUtils.h"
 
 #define ERROR_STR "error"
@@ -105,21 +105,27 @@ FileIOObject::DispatchError(nsresult rv, nsAString& finalEvent)
 nsresult
 FileIOObject::DispatchProgressEvent(const nsAString& aType)
 {
-  ProgressEventInit init;
-  init.mBubbles = false;
-  init.mCancelable = false;
-  init.mLoaded = mTransferred;
+  nsCOMPtr<nsIDOMEvent> event;
+  nsresult rv = NS_NewDOMProgressEvent(getter_AddRefs(event), this,
+                                       nullptr, nullptr);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mTotal != kUnknownSize) {
-    init.mLengthComputable = true;
-    init.mTotal = mTotal;
-  } else {
-    init.mLengthComputable = false;
-    init.mTotal = 0;
-  }
-  nsRefPtr<ProgressEvent> event =
-    ProgressEvent::Constructor(this, aType, init);
   event->SetTrusted(true);
+  nsCOMPtr<nsIDOMProgressEvent> progress = do_QueryInterface(event);
+  NS_ENSURE_TRUE(progress, NS_ERROR_UNEXPECTED);
+
+  bool known;
+  uint64_t size;
+  if (mTotal != kUnknownSize) {
+    known = true;
+    size = mTotal;
+  } else {
+    known = false;
+    size = 0;
+  }
+  rv = progress->InitProgressEvent(aType, false, false, known,
+                                   mTransferred, size);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 }

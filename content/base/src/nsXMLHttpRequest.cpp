@@ -16,7 +16,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "nsDOMBlobBuilder.h"
 #include "nsIDOMDocument.h"
-#include "mozilla/dom/ProgressEvent.h"
+#include "nsIDOMProgressEvent.h"
 #include "nsIJARChannel.h"
 #include "nsIJARURI.h"
 #include "nsLayoutCID.h"
@@ -1465,15 +1465,21 @@ nsXMLHttpRequest::DispatchProgressEvent(DOMEventTargetHelper* aTarget,
                          aType.EqualsLiteral(TIMEOUT_STR) ||
                          aType.EqualsLiteral(ABORT_STR);
 
-  ProgressEventInit init;
-  init.mBubbles = false;
-  init.mCancelable = false;
-  init.mLengthComputable = aLengthComputable;
-  init.mLoaded = aLoaded;
-  init.mTotal = (aTotal == UINT64_MAX) ? 0 : aTotal;
+  nsCOMPtr<nsIDOMEvent> event;
+  nsresult rv = NS_NewDOMProgressEvent(getter_AddRefs(event), this,
+                                       nullptr, nullptr);
+  if (NS_FAILED(rv)) {
+    return;
+  }
 
-  nsRefPtr<ProgressEvent> event =
-    ProgressEvent::Constructor(aTarget, aType, init);
+  nsCOMPtr<nsIDOMProgressEvent> progress = do_QueryInterface(event);
+  if (!progress) {
+    return;
+  }
+
+  progress->InitProgressEvent(aType, false, false, aLengthComputable,
+                              aLoaded, (aTotal == UINT64_MAX) ? 0 : aTotal);
+
   event->SetTrusted(true);
 
   aTarget->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
