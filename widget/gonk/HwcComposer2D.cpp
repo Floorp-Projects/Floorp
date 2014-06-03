@@ -259,6 +259,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
 
     LayerRenderState state = aLayer->GetRenderState();
     nsIntSize surfaceSize;
+    bool skipLayer = false;
 
     if (state.mSurface.get()) {
         surfaceSize = state.mSize;
@@ -267,7 +268,11 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
             fillColor = true;
         } else {
             LOGD("%s Layer doesn't have a gralloc buffer", aLayer->Name());
+#if ANDROID_VERSION >= 18
+            skipLayer = true;
+#else
             return false;
+#endif
         }
     }
     // Buffer rotation is not to be confused with the angled rotation done by a transform matrix
@@ -335,8 +340,8 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     buffer_handle_t handle = fillColor ? nullptr : state.mSurface->getNativeBuffer()->handle;
     hwcLayer.handle = handle;
 
-    hwcLayer.flags = 0;
     hwcLayer.hints = 0;
+    hwcLayer.flags = skipLayer ? HWC_SKIP_LAYER : 0;
     hwcLayer.blending = isOpaque ? HWC_BLENDING_NONE : HWC_BLENDING_PREMULT;
 #if ANDROID_VERSION >= 17
     hwcLayer.compositionType = HWC_FRAMEBUFFER;
