@@ -179,15 +179,6 @@ NSSCertDBTrustDomain::CheckRevocation(
     return SECFailure;
   }
 
-  // Bug 991815: The BR allow OCSP for intermediates to be up to one year old.
-  // Since this affects EV there is no reason why DV should be more strict
-  // so all intermediatates are allowed to have OCSP responses up to one year
-  // old.
-  uint16_t maxOCSPLifetimeInDays = 10;
-  if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
-    maxOCSPLifetimeInDays = 365;
-  }
-
   // If we have a stapled OCSP response then the verification of that response
   // determines the result unless the OCSP response is expired. We make an
   // exception for expired responses because some servers, nginx in particular,
@@ -196,7 +187,6 @@ NSSCertDBTrustDomain::CheckRevocation(
     PR_ASSERT(endEntityOrCA == MustBeEndEntity);
     SECStatus rv = VerifyAndMaybeCacheEncodedOCSPResponse(cert, issuerCert,
                                                           time,
-                                                          maxOCSPLifetimeInDays,
                                                           stapledOCSPResponse,
                                                           ResponseWasStapled);
     if (rv == SECSuccess) {
@@ -378,7 +368,6 @@ NSSCertDBTrustDomain::CheckRevocation(
   }
 
   SECStatus rv = VerifyAndMaybeCacheEncodedOCSPResponse(cert, issuerCert, time,
-                                                        maxOCSPLifetimeInDays,
                                                         response,
                                                         ResponseIsFromNetwork);
   if (rv == SECSuccess || mOCSPFetching != FetchOCSPForDVSoftFail) {
@@ -402,14 +391,13 @@ NSSCertDBTrustDomain::CheckRevocation(
 SECStatus
 NSSCertDBTrustDomain::VerifyAndMaybeCacheEncodedOCSPResponse(
   const CERTCertificate* cert, CERTCertificate* issuerCert, PRTime time,
-  uint16_t maxLifetimeInDays, const SECItem* encodedResponse,
-  EncodedResponseSource responseSource)
+  const SECItem* encodedResponse, EncodedResponseSource responseSource)
 {
   PRTime thisUpdate = 0;
   PRTime validThrough = 0;
   SECStatus rv = VerifyEncodedOCSPResponse(*this, cert, issuerCert, time,
-                                           maxLifetimeInDays, encodedResponse,
-                                           &thisUpdate, &validThrough);
+                                           encodedResponse, &thisUpdate,
+                                           &validThrough);
   PRErrorCode error = (rv == SECSuccess ? 0 : PR_GetError());
   // validThrough is only trustworthy if the response successfully verifies
   // or it indicates a revoked or unknown certificate.
