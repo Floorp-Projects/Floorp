@@ -958,6 +958,8 @@ pref("apz.subframe.enabled", true);
 pref("apz.overscroll.enabled", false);
 pref("apz.overscroll.fling_friction", "0.02");
 pref("apz.overscroll.fling_stopped_threshold", "0.4");
+pref("apz.overscroll.clamping", "0.5");
+pref("apz.overscroll.z_effect", "0.2");
 pref("apz.overscroll.snap_back_accel", "0.003");
 pref("apz.overscroll.snap_back_init_vel", "1");
 
